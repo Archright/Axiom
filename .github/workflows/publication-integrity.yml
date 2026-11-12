@@ -133,11 +133,12 @@ jobs:
           fi
       - uses: ./.github/actions/setup-axiom-toolchain
         with:
-          # nim scope: these jobs run `nim c` over stdlib + in-repo modules and
-          # never invoke lean/lake. The action still provisions + pins z3/jq
-          # (its scope contract), and the nimble package closure stays in the
-          # payload because config/integrity.nims' manifest bootstrap compiles
-          # feature_manifest_generator (import checksums/sha2) on every compile.
+          # nim scope: these jobs compile standalone evaluators with
+          # --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath and never
+          # invoke lean/lake. The nimble package closure stays in the payload
+          # because publication_sbom_eval and publication_report import
+          # core/crypto/hash_kernel (checksums/sha2), resolved deterministically
+          # from nimble.lock (.packages.checksums.{version,checksums.sha1}).
           # ~/.elan is the only dropped path — it dominates the 1.16GB full
           # payload. Exact-key restore + fingerprint verify + fail-closed
           # install are unchanged; only the payload's scope is narrower.
@@ -147,7 +148,14 @@ jobs:
       - name: "[adjudicate] publication_secret_eval"
         run: |
           set -euo pipefail
-          nim c --hints:off --warnings:off --path:. --path:src \
+          CHECKSUMS_VER="$(jq -r '.packages.checksums.version // empty' nimble.lock)"
+          CHECKSUMS_SHA1="$(jq -r '.packages.checksums.checksums.sha1 // empty' nimble.lock)"
+          [ -n "$CHECKSUMS_VER" ] && [ -n "$CHECKSUMS_SHA1" ] || { echo "FATAL: cannot resolve checksums pin from nimble.lock" >&2; exit 1; }
+          CHECKSUMS_PATH="$HOME/.nimble/pkgs2/checksums-${CHECKSUMS_VER}-${CHECKSUMS_SHA1}"
+          [ -d "$CHECKSUMS_PATH" ] && [ -f "$CHECKSUMS_PATH/checksums/sha2.nim" ] || { echo "FATAL: lockfile-pinned checksums package missing at $CHECKSUMS_PATH" >&2; exit 1; }
+          nim c --hints:off --warnings:off \
+            --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath \
+            --path:. --path:src --path:"$CHECKSUMS_PATH" \
             --nimcache:build/nimcache/vsi_secret_eval \
             -o:build/vsi_secret_eval tools/ci/publication_secret_eval.nim
           ./build/vsi_secret_eval \
@@ -346,11 +354,12 @@ jobs:
           fi
       - uses: ./.github/actions/setup-axiom-toolchain
         with:
-          # nim scope: these jobs run `nim c` over stdlib + in-repo modules and
-          # never invoke lean/lake. The action still provisions + pins z3/jq
-          # (its scope contract), and the nimble package closure stays in the
-          # payload because config/integrity.nims' manifest bootstrap compiles
-          # feature_manifest_generator (import checksums/sha2) on every compile.
+          # nim scope: these jobs compile standalone evaluators with
+          # --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath and never
+          # invoke lean/lake. The nimble package closure stays in the payload
+          # because publication_sbom_eval and publication_report import
+          # core/crypto/hash_kernel (checksums/sha2), resolved deterministically
+          # from nimble.lock (.packages.checksums.{version,checksums.sha1}).
           # ~/.elan is the only dropped path — it dominates the 1.16GB full
           # payload. Exact-key restore + fingerprint verify + fail-closed
           # install are unchanged; only the payload's scope is narrower.
@@ -360,7 +369,14 @@ jobs:
       - name: "[adjudicate] publication_license_eval"
         run: |
           set -euo pipefail
-          nim c --hints:off --warnings:off --path:. --path:src \
+          CHECKSUMS_VER="$(jq -r '.packages.checksums.version // empty' nimble.lock)"
+          CHECKSUMS_SHA1="$(jq -r '.packages.checksums.checksums.sha1 // empty' nimble.lock)"
+          [ -n "$CHECKSUMS_VER" ] && [ -n "$CHECKSUMS_SHA1" ] || { echo "FATAL: cannot resolve checksums pin from nimble.lock" >&2; exit 1; }
+          CHECKSUMS_PATH="$HOME/.nimble/pkgs2/checksums-${CHECKSUMS_VER}-${CHECKSUMS_SHA1}"
+          [ -d "$CHECKSUMS_PATH" ] && [ -f "$CHECKSUMS_PATH/checksums/sha2.nim" ] || { echo "FATAL: lockfile-pinned checksums package missing at $CHECKSUMS_PATH" >&2; exit 1; }
+          nim c --hints:off --warnings:off \
+            --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath \
+            --path:. --path:src --path:"$CHECKSUMS_PATH" \
             --nimcache:build/nimcache/vsi_license_eval \
             -o:build/vsi_license_eval tools/ci/publication_license_eval.nim
           # ScanCode prefixes emitted paths with the scan-root directory NAME
@@ -420,11 +436,12 @@ jobs:
           echo "osv-scanner exited $code (see security-policy.yml exitCodeAdjudication)"
       - uses: ./.github/actions/setup-axiom-toolchain
         with:
-          # nim scope: these jobs run `nim c` over stdlib + in-repo modules and
-          # never invoke lean/lake. The action still provisions + pins z3/jq
-          # (its scope contract), and the nimble package closure stays in the
-          # payload because config/integrity.nims' manifest bootstrap compiles
-          # feature_manifest_generator (import checksums/sha2) on every compile.
+          # nim scope: these jobs compile standalone evaluators with
+          # --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath and never
+          # invoke lean/lake. The nimble package closure stays in the payload
+          # because publication_sbom_eval and publication_report import
+          # core/crypto/hash_kernel (checksums/sha2), resolved deterministically
+          # from nimble.lock (.packages.checksums.{version,checksums.sha1}).
           # ~/.elan is the only dropped path — it dominates the 1.16GB full
           # payload. Exact-key restore + fingerprint verify + fail-closed
           # install are unchanged; only the payload's scope is narrower.
@@ -434,7 +451,14 @@ jobs:
       - name: "[adjudicate] publication_dependency_eval"
         run: |
           set -euo pipefail
-          nim c --hints:off --warnings:off --path:. --path:src \
+          CHECKSUMS_VER="$(jq -r '.packages.checksums.version // empty' nimble.lock)"
+          CHECKSUMS_SHA1="$(jq -r '.packages.checksums.checksums.sha1 // empty' nimble.lock)"
+          [ -n "$CHECKSUMS_VER" ] && [ -n "$CHECKSUMS_SHA1" ] || { echo "FATAL: cannot resolve checksums pin from nimble.lock" >&2; exit 1; }
+          CHECKSUMS_PATH="$HOME/.nimble/pkgs2/checksums-${CHECKSUMS_VER}-${CHECKSUMS_SHA1}"
+          [ -d "$CHECKSUMS_PATH" ] && [ -f "$CHECKSUMS_PATH/checksums/sha2.nim" ] || { echo "FATAL: lockfile-pinned checksums package missing at $CHECKSUMS_PATH" >&2; exit 1; }
+          nim c --hints:off --warnings:off \
+            --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath \
+            --path:. --path:src --path:"$CHECKSUMS_PATH" \
             --nimcache:build/nimcache/vsi_dependency_eval \
             -o:build/vsi_dependency_eval tools/ci/publication_dependency_eval.nim
           ./build/vsi_dependency_eval \
@@ -463,11 +487,12 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup-axiom-toolchain
         with:
-          # nim scope: these jobs run `nim c` over stdlib + in-repo modules and
-          # never invoke lean/lake. The action still provisions + pins z3/jq
-          # (its scope contract), and the nimble package closure stays in the
-          # payload because config/integrity.nims' manifest bootstrap compiles
-          # feature_manifest_generator (import checksums/sha2) on every compile.
+          # nim scope: these jobs compile standalone evaluators with
+          # --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath and never
+          # invoke lean/lake. The nimble package closure stays in the payload
+          # because publication_sbom_eval and publication_report import
+          # core/crypto/hash_kernel (checksums/sha2), resolved deterministically
+          # from nimble.lock (.packages.checksums.{version,checksums.sha1}).
           # ~/.elan is the only dropped path — it dominates the 1.16GB full
           # payload. Exact-key restore + fingerprint verify + fail-closed
           # install are unchanged; only the payload's scope is narrower.
@@ -477,7 +502,14 @@ jobs:
       - name: "[adjudicate] publication_provenance_validator"
         run: |
           set -euo pipefail
-          nim c --hints:off --warnings:off --path:. --path:src \
+          CHECKSUMS_VER="$(jq -r '.packages.checksums.version // empty' nimble.lock)"
+          CHECKSUMS_SHA1="$(jq -r '.packages.checksums.checksums.sha1 // empty' nimble.lock)"
+          [ -n "$CHECKSUMS_VER" ] && [ -n "$CHECKSUMS_SHA1" ] || { echo "FATAL: cannot resolve checksums pin from nimble.lock" >&2; exit 1; }
+          CHECKSUMS_PATH="$HOME/.nimble/pkgs2/checksums-${CHECKSUMS_VER}-${CHECKSUMS_SHA1}"
+          [ -d "$CHECKSUMS_PATH" ] && [ -f "$CHECKSUMS_PATH/checksums/sha2.nim" ] || { echo "FATAL: lockfile-pinned checksums package missing at $CHECKSUMS_PATH" >&2; exit 1; }
+          nim c --hints:off --warnings:off \
+            --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath \
+            --path:. --path:src --path:"$CHECKSUMS_PATH" \
             --nimcache:build/nimcache/vsi_provenance \
             -o:build/vsi_provenance tools/ci/publication_provenance_validator.nim
           ./build/vsi_provenance --out "$RUNNER_TEMP/report_provenance.json"
@@ -516,11 +548,12 @@ jobs:
           test -s "$RUNNER_TEMP/sbom.json"
       - uses: ./.github/actions/setup-axiom-toolchain
         with:
-          # nim scope: these jobs run `nim c` over stdlib + in-repo modules and
-          # never invoke lean/lake. The action still provisions + pins z3/jq
-          # (its scope contract), and the nimble package closure stays in the
-          # payload because config/integrity.nims' manifest bootstrap compiles
-          # feature_manifest_generator (import checksums/sha2) on every compile.
+          # nim scope: these jobs compile standalone evaluators with
+          # --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath and never
+          # invoke lean/lake. The nimble package closure stays in the payload
+          # because publication_sbom_eval and publication_report import
+          # core/crypto/hash_kernel (checksums/sha2), resolved deterministically
+          # from nimble.lock (.packages.checksums.{version,checksums.sha1}).
           # ~/.elan is the only dropped path — it dominates the 1.16GB full
           # payload. Exact-key restore + fingerprint verify + fail-closed
           # install are unchanged; only the payload's scope is narrower.
@@ -530,7 +563,14 @@ jobs:
       - name: "[adjudicate] publication_sbom_eval"
         run: |
           set -euo pipefail
-          nim c --hints:off --warnings:off --path:. --path:src \
+          CHECKSUMS_VER="$(jq -r '.packages.checksums.version // empty' nimble.lock)"
+          CHECKSUMS_SHA1="$(jq -r '.packages.checksums.checksums.sha1 // empty' nimble.lock)"
+          [ -n "$CHECKSUMS_VER" ] && [ -n "$CHECKSUMS_SHA1" ] || { echo "FATAL: cannot resolve checksums pin from nimble.lock" >&2; exit 1; }
+          CHECKSUMS_PATH="$HOME/.nimble/pkgs2/checksums-${CHECKSUMS_VER}-${CHECKSUMS_SHA1}"
+          [ -d "$CHECKSUMS_PATH" ] && [ -f "$CHECKSUMS_PATH/checksums/sha2.nim" ] || { echo "FATAL: lockfile-pinned checksums package missing at $CHECKSUMS_PATH" >&2; exit 1; }
+          nim c --hints:off --warnings:off \
+            --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath \
+            --path:. --path:src --path:"$CHECKSUMS_PATH" \
             --nimcache:build/nimcache/vsi_sbom_eval \
             -o:build/vsi_sbom_eval tools/ci/publication_sbom_eval.nim
           ./build/vsi_sbom_eval \
@@ -588,11 +628,12 @@ jobs:
           path: ${{ runner.temp }}/dims
       - uses: ./.github/actions/setup-axiom-toolchain
         with:
-          # nim scope: these jobs run `nim c` over stdlib + in-repo modules and
-          # never invoke lean/lake. The action still provisions + pins z3/jq
-          # (its scope contract), and the nimble package closure stays in the
-          # payload because config/integrity.nims' manifest bootstrap compiles
-          # feature_manifest_generator (import checksums/sha2) on every compile.
+          # nim scope: these jobs compile standalone evaluators with
+          # --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath and never
+          # invoke lean/lake. The nimble package closure stays in the payload
+          # because publication_sbom_eval and publication_report import
+          # core/crypto/hash_kernel (checksums/sha2), resolved deterministically
+          # from nimble.lock (.packages.checksums.{version,checksums.sha1}).
           # ~/.elan is the only dropped path — it dominates the 1.16GB full
           # payload. Exact-key restore + fingerprint verify + fail-closed
           # install are unchanged; only the payload's scope is narrower.
@@ -602,7 +643,14 @@ jobs:
       - name: "[verdict] publication_report — the single bound conclusion"
         run: |
           set -euo pipefail
-          nim c --hints:off --warnings:off --path:. --path:src \
+          CHECKSUMS_VER="$(jq -r '.packages.checksums.version // empty' nimble.lock)"
+          CHECKSUMS_SHA1="$(jq -r '.packages.checksums.checksums.sha1 // empty' nimble.lock)"
+          [ -n "$CHECKSUMS_VER" ] && [ -n "$CHECKSUMS_SHA1" ] || { echo "FATAL: cannot resolve checksums pin from nimble.lock" >&2; exit 1; }
+          CHECKSUMS_PATH="$HOME/.nimble/pkgs2/checksums-${CHECKSUMS_VER}-${CHECKSUMS_SHA1}"
+          [ -d "$CHECKSUMS_PATH" ] && [ -f "$CHECKSUMS_PATH/checksums/sha2.nim" ] || { echo "FATAL: lockfile-pinned checksums package missing at $CHECKSUMS_PATH" >&2; exit 1; }
+          nim c --hints:off --warnings:off \
+            --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath \
+            --path:. --path:src --path:"$CHECKSUMS_PATH" \
             --nimcache:build/nimcache/vsi_report \
             -o:build/vsi_report tools/ci/publication_report.nim
           D="$RUNNER_TEMP/dims"
