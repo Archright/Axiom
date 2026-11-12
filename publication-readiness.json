@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 2,
+  "storageLocation": "out-of-tree (refs/heads/axiom/attestations)",
+  "targetCommitSha": "c021c33801455a481e05b75c396d95c84bbdc45d",
+  "targetTreeSha": "3e93c7b236a8e0e9ac5d49c15b5f5d6e35b12c31",
+  "verdict": "ELIGIBLE",
+  "publicationEligible": true,
+  "capsuleDigestSha256": "23a7235fa87d2eb6928786b3abe834116e02273f4663692b8fef2033de285bd5",
+  "dimensions": {
+    "secret-scan": "PASS",
+    "license-scan": "PASS",
+    "dependency-scan": "PASS",
+    "provenance": "PASS",
+    "sbom": "PASS"
+  },
+  "requiredChecks": {
+    "admission-check": "SUCCESS",
+    "axiom-operational-slice": "SUCCESS",
+    "bsec-integrity": "SUCCESS",
+    "debt-registry-gate": "SUCCESS",
+    "generation-acceptance": "SUCCESS",
+    "publication-integrity": "SUCCESS"
+  },
+  "blockers": [],
+  "unresolvedUnknowns": [],
+  "unresolvedUnknownCount": 0,
+  "runnerIdentityVerified": true,
+  "runnerEvidenceDigestSha256": "f8e7f4eed553affca400d89b4a100ad027bdf66f415fc2ba8a21061edfb3c25c"
+}
