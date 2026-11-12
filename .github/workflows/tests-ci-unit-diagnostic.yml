@@ -60,6 +60,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup-axiom-toolchain
         with:
+          # nim scope — std-only test compile; no lean/lake. The nimble package
+          # closure stays in the payload (action nim-scope verification stamp).
+          provision-scope: nim
           cache-build-source: ${{ github.sha }}
       - name: "Diagnostic: admission-check stage-dispatch contract (test_admission_check_stages)"
         # --skipParentCfg --skipProjCfg: standalone compile outside the Test
@@ -69,4 +72,4 @@ jobs:
         # RED diagnostic signal in this job's log; it does not gate merges.
         run: |
           set -euo pipefail
-          nim c -r --hints:off --skipParentCfg --skipProjCfg --nimcache:build/nimcache/tests_ci_unit_diag -o:build/tests_ci_unit_diag/test_admission_check_stages tests/ci/test_admission_check_stages.nim
+          nim c -r --hints:off --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath --nimcache:build/nimcache/tests_ci_unit_diag -o:build/tests_ci_unit_diag/test_admission_check_stages tests/ci/test_admission_check_stages.nim

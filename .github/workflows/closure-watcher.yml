@@ -96,9 +96,11 @@
 #   사건**이다 — RED는 drift-signal.yml(workflow_run)이 담당하고, 본 감시자는
 #   그와 중복 보고하지 않는다. 그래서 schedule 실행의 conclusion은 판정 입력이
 #   아니다: 실행이 있었고 RED라면 drift-signal이 신호를 낸다.
-# - 대상: workflow id 391703936 (admission-ssot-drift — gh api 실측 2026-10-22:
-#   id/name/path/state 확인. numeric id는 파일 경로와 무관한 repo 고정 식별자).
-#   drift cron = 매일 04:37 UTC (37 4 * * *).
+# - 대상: workflow file admission-ssot-drift.yml — **path-primary** 식별자.
+#   GitHub REST `GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}`는
+#   숫자 id와 파일명을 모두 받는다(공식 문서), `gh run list --workflow=`도
+#   동일하다. numeric id 391703936은 저장소 재생성(Gen-2/3/4) 후 404다
+#   (2026-11-13 gh api 실측). drift cron = 매일 04:37 UTC (37 4 * * *).
 # - 임계: 26h (하루 주기 + 2h 유예). GitHub는 schedule 지연 SLA를 두지 않는다
 #   (공식 문서) — 본 저장소 자체 관측 최대 지연 5.5h(원장, 위 latency 계약)가
 #   있으므로 유예를 둔다. STALE 판정은 fail-closed(적색)이며 동시에 issue를
@@ -123,7 +125,7 @@
 # 임의로 좁혀 "누락 자동 감지"를 주장하지 않는다.
 #
 # [착지 직후 첫 실행의 예상 동작 — STALE이 정상]
-# 실측(2026-10-22, gh run list -R Archright/Axiom --workflow=391703936 -L 10):
+# 실측(2026-10-22, gh run list -R Archright/Axiom --workflow=admission-ssot-drift.yml -L 10):
 #   최근 실행 4건이 **전부 workflow_dispatch**이고 schedule 실행은 **하나도
 #   없다**. 따라서 본 감시자가 착지 직후 처음 도는 시점에는 마지막 schedule
 #   실행이 존재하지 않아 **STALE 판정이 정상 동작**이다(발행 경로의 첫 실측).
@@ -200,10 +202,12 @@ jobs:
           echo "watching HEAD=${HEAD_SHA}"
           echo "head_sha=${HEAD_SHA}" >> "$GITHUB_OUTPUT"
 
-      # 핀 통일 — 인라인 choosenim 금지. provision-scope: full = deriver의
-      # in-place nim c에 nim 컴파일러 필수(#666에서 실측된 결속 — z3+jq만으로는
-      # "nim: command not found" fail-closed). cache-build-source는 필수 입력 —
-      # 이 잡이 빌드하는 트리는 main HEAD 그 자체다.
+      # 핀 통일 — 인라인 choosenim 금지. provision-scope: nim = deriver의
+      # in-place nim c에 nim 컴파일러 + nimble 폐포를 공급한다(액션의 nim-scope
+      # 검증 스탬프가 ~/.nimble/pkgs2를 요구한다). deriver는 lean/lake를 쓰지
+      # 않으므로 full의 ~/.elan(1.16GB)은 불필요하다(#666에서 실측된 결속 —
+      # z3+jq만으로는 "nim: command not found" fail-closed).
+      # cache-build-source는 필수 입력 — 이 잡이 빌드하는 트리는 main HEAD 그 자체다.
       # fixture 모드에서는 deriver를 실행하지 않으므로 프로비전·유도를 건너뛴다 —
       # 스킵 사유는 아래 inject 스텝의 모드 판정 라인으로 명시된다(은닉 스킵 금지).
       - name: Provision pinned toolchain
@@ -212,7 +216,7 @@ jobs:
         with:
           cache-save-enabled: 'false'
           cache-build-source: ${{ github.sha }}
-          provision-scope: 'full'
+          provision-scope: 'nim'
 
       - name: Derive closure at HEAD and extract the pin (fail-closed)
         if: env.DRIFT_TEST != 'true'
@@ -544,9 +548,12 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      # admission-ssot-drift의 workflow id (gh api 실측 2026-10-22:
-      # id=391703936, name=admission-ssot-drift, state=active).
-      DRIFT_WORKFLOW_ID: '391703936'
+      # admission-ssot-drift를 **파일명**으로 식별한다(path-primary —
+      # config/policy/merge_admission.json v1.19.0의 식별자 회전 규약과 동일).
+      # 숫자 workflow id는 저장소 재생성에서 살아남지 못한다(구 391703936은
+      # 404 — 2026-11-13 gh api 실측). gh api .../workflows/{workflow_id}와
+      # gh run list --workflow= 모두 파일명을 받는다.
+      DRIFT_WORKFLOW_ID: 'admission-ssot-drift.yml'
       # drift cron은 매일 04:37 UTC — 하루 주기에 2h 유예를 더한 임계.
       DRIFT_FRESHNESS_MAX_AGE_HOURS: '26'
     steps:
@@ -633,7 +640,7 @@ jobs:
 
           {
             echo "## drift schedule freshness"
-            echo "- 대상 워크플로: admission-ssot-drift (workflow id ${DRIFT_WORKFLOW_ID})"
+            echo "- 대상 워크플로: admission-ssot-drift (workflow ${DRIFT_WORKFLOW_ID})"
             echo "- 대상 cron: 매일 04:37 UTC (37 4 * * *)"
             echo "- 임계: ${MAX_AGE_HOURS}h (마지막 schedule 실행의 경과 시간)"
             echo "- 판정 시각: ${NOW} (UTC)"
@@ -708,7 +715,7 @@ jobs:
             echo
             echo "### 1. 발생 대상"
             echo
-            echo "- 대상 워크플로: \`admission-ssot-drift\` (workflow id \`${DRIFT_WORKFLOW_ID}\`)"
+            echo "- 대상 워크플로: \`admission-ssot-drift\` (workflow \`${DRIFT_WORKFLOW_ID}\`)"
             echo "- 대상 cron: 매일 04:37 UTC (\`37 4 * * *\`)"
             echo "- 감시자: \`closure-watcher\` (cron \`17 */6 * * *\`)"
             echo "- 감시자 run: ${RUN_URL}"

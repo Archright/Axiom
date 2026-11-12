@@ -73,14 +73,47 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          gh pr view "$PR_NUMBER" --json files --jq '.files[].path' | tee /tmp/pr_files.txt
-          if grep -qxE \
-            '(\.github/actions/setup-axiom-toolchain/.*|\.github/workflows/(admission-check|certificate-mint|runner-pool-acceptance|repository_surface|bsec-integrity|debt-registry-gate|generation-acceptance)\.yml|\.github/dependabot\.yml|config/policy/merge_admission\.json|config/app_landing_binding\.json|config/executor_authority\.json|config/trusted_writer_set\.json|src/cli/merge_cli\.nim|src/core/trusted/trust_boundary\.nim|src/verification/verification_subject\.nim|experiments/act2-wp-toml-b1-input-integrity/bsec/replay\.sh|\.github/CODEOWNERS)' \
-            /tmp/pr_files.txt; then
+          # The trust surface is CONSUMED from its SSOT, never duplicated:
+          # config/policy/merge_admission.json .trustSurface[] at main (base
+          # policy — never the PR's own copy). The previous hardcoded list
+          # drifted twice (v1.17.0 added axiom-operational-slice.yml; v1.20.0
+          # added publication-integrity.yml + 15 compliance/evaluator paths), so
+          # Dependabot PRs touching those files were armed as if they were not
+          # trust surface. An unreadable policy fails CLOSED: a guard that
+          # cannot see the surface must never conclude "not trust surface".
+          if ! TRUST=$(gh api -H "Accept: application/vnd.github.raw" \
+                       "repos/$REPO/contents/config/policy/merge_admission.json?ref=main"); then
             echo "TRUST_SURFACE=1" >> "$GITHUB_OUTPUT"
-            echo "::notice::trust-surface file in diff — NOT arming (manual merge path, MUST-T2; exclude-paths is the primary control, this guard is the second line)."
+            echo "::error::trustSurface fetch failed — NOT arming (fail-closed)."
+            exit 0
+          fi
+          if [ -z "$TRUST" ] || ! printf '%s\n' "$TRUST" | jq -r '.trustSurface[]' > /tmp/trust_surface.txt; then
+            echo "TRUST_SURFACE=1" >> "$GITHUB_OUTPUT"
+            echo "::error::trustSurface parse failed — NOT arming (fail-closed)."
+            exit 0
+          fi
+          # Self-protection paths stay local: the policy that owns the list
+          # cannot protect itself, the armer, or the code-owner gate.
+          printf '%s\n' \
+            '.github/dependabot.yml' \
+            '.github/workflows/dependabot-auto-merge.yml' \
+            '.github/CODEOWNERS' >> /tmp/trust_surface.txt
+          gh pr view "$PR_NUMBER" --json files --jq '.files[].path' > /tmp/pr_files.txt
+          HIT=""
+          while IFS= read -r pat; do
+            [ -n "$pat" ] || continue
+            while IFS= read -r f; do
+              [ -n "$f" ] || continue
+              # shellcheck disable=SC2053
+              if [[ "$f" == $pat ]]; then HIT="$HIT $f"; fi
+            done < /tmp/pr_files.txt
+          done < /tmp/trust_surface.txt
+          if [ -n "$HIT" ]; then
+            echo "TRUST_SURFACE=1" >> "$GITHUB_OUTPUT"
+            echo "::notice::trust-surface file in diff — NOT arming (manual merge path, MUST-T2). Matched:${HIT}"
           else
             echo "TRUST_SURFACE=0" >> "$GITHUB_OUTPUT"
           fi
