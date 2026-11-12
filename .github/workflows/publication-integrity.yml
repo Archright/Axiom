@@ -59,11 +59,21 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: "[scope] fetch the declared publication-surface refspecs"
-        # security-policy.yml secretScan.fetchRefspecs — the scan scope is
-        # EXACTLY the refs that belong to the publication surface (branches +
-        # tags + HEAD). Closed/unmerged PR refs (refs/pull/*/head) are outside
-        # the publication surface and are audited separately in the
-        # non-blocking informational step on workflow_dispatch/schedule.
+        # SSOT: compliance/policy/security-policy.yml secretScan.fetchRefspecs
+        # (comment at :28-36, value at :38-40) — the publication surface is
+        # origin/main + HEAD (PR merge commit / merge-group commit / main) +
+        # every refs/pull/*/head server ref: the refs that become visible when
+        # the repository is made public.
+        #
+        # Out-of-tree evidence ledgers (refs/heads/axiom/{evidence-cas,
+        # certificates,attestations}) and non-default branches are NOT
+        # publication surface. Scanning them was a live defect (2026-11-13):
+        # every merge_group mint appends a CAS record whose evidenceKey is a
+        # fresh 64-hex content address, so gitleaks flags
+        # `<64-hex>.json:generic-api-key` — a fingerprint no static baseline
+        # can ever contain (causally impossible: the key does not exist when
+        # the baseline lands). The scan now consumes the declared scope
+        # instead of inventing a wider one.
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
@@ -71,7 +81,7 @@ jobs:
           AUTH_HDR="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
           git -c "http.https://github.com/.extraheader=$AUTH_HDR" fetch --no-tags --prune origin \
             '+refs/heads/*:refs/remotes/origin/*' \
-            '+refs/tags/*:refs/tags/*'
+            '+refs/pull/*/head:refs/remotes/pr/*'
       - name: "[tool] gitleaks 8.30.1 (release tarball + sha256 verification)"
         run: |
           set -euo pipefail
@@ -90,9 +100,12 @@ jobs:
           # baseline owns the triage), so `|| true` here is NOT a bypass:
           # the evaluator below fails on any fingerprint outside the
           # baseline and UNKNOWNs on a missing/unparsable report.
+          # SSOT: security-policy.yml secretScan.historyScopeLogOpts (:37).
+          # git rev-list semantics: origin/main + HEAD are positive revisions;
+          # the --glob adds every fetched refs/remotes/pr/* server PR ref.
           "$RUNNER_TEMP/gitleaks-bin/gitleaks" git \
             --redact=100 \
-            --log-opts "--branches --tags --remotes=origin HEAD" \
+            --log-opts "origin/main HEAD --glob=refs/remotes/pr/*" \
             --report-format json \
             --report-path "$RUNNER_TEMP/gitleaks_history.json" \
             --no-banner --exit-code 1 . || true
@@ -106,31 +119,12 @@ jobs:
             --report-path "$RUNNER_TEMP/gitleaks_tree.json" \
             --no-banner --exit-code 1 . || true
           test -s "$RUNNER_TEMP/gitleaks_tree.json"
-      - name: "[audit] informational closed-PR ref scan (non-blocking)"
-        if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          AUTH_HDR="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
-          git -c "http.https://github.com/.extraheader=$AUTH_HDR" fetch --no-tags --prune origin \
-            '+refs/pull/*/head:refs/remotes/pr/*' || true
-          if git for-each-ref --format='%(refname)' refs/remotes/pr/ | grep -q .; then
-            "$RUNNER_TEMP/gitleaks-bin/gitleaks" git \
-              --redact=100 \
-              --log-opts "--glob=refs/remotes/pr/* --not --branches --tags --remotes=origin" \
-              --report-format json \
-              --report-path "$RUNNER_TEMP/gitleaks_pr_audit.json" \
-              --no-banner --exit-code 1 . || true
-            if [ -s "$RUNNER_TEMP/gitleaks_pr_audit.json" ]; then
-              pr_findings="$(jq 'length' "$RUNNER_TEMP/gitleaks_pr_audit.json" 2>/dev/null || echo 0)"
-              if [ "${pr_findings:-0}" -gt 0 ]; then
-                echo "::warning::Unmerged/closed PR refs (refs/pull/*/head) outside the publication surface contain ${pr_findings} redacted finding(s). Run tools/ci/publication_self_heal.sh --audit-refs and --support-bundle to remediate."
-              fi
-            fi
-            rm -f "$RUNNER_TEMP/gitleaks_pr_audit.json"
-            git for-each-ref --format='%(refname)' refs/remotes/pr/ | xargs -r -n1 git update-ref -d || true
-          fi
+      # The former informational closed-PR-ref audit lived here. It is gone by
+      # construction: refs/pull/*/head are part of the declared publication
+      # surface now, so the history leg above already adjudicates them —
+      # keeping a second, non-blocking lane would recompute the same commit
+      # set and report a verdict the gate does not use (the duplicated-lane
+      # anti-pattern). A polluted PR ref is now a blocking FAIL.
       - uses: ./.github/actions/setup-axiom-toolchain
         with:
           # nim scope: these jobs compile standalone evaluators with
