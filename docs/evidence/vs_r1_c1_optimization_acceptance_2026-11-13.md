@@ -31,6 +31,7 @@
 | `config/vendors.nims` | `CONTROLLED` | DEBT#417 이후 목적 상실(inert)된 `nimcache_leases` 쉘 포크 제거 |
 | `data/architecture_debt.json` | `CONTROLLED` | `bin/debt_engine --regen-arch` 정합화 (`debt_engine --validate` 1610/1610 PASS) |
 | `config/trusted_writer_set.json` | `CONTROLLED` (`trustSurface`) | `bin/reanchor_pin --ref HEAD --write`로 변경된 클로저 멤버 SHA 재앵커 (멤버십 수 890개 불변) |
+| `compliance/policy/secret-scan-baseline.json` | `CONTROLLED` (`trustSurface`) | `origin/main` 전진(`12a9d8d`, PR #1 착지)으로 생성된 `origin/axiom/evidence-cas` 레저의 CAS `evidenceKey` 5건을 `synthetic-hash-or-cas-key`로 트리아지 등록 (§5.1) |
 
 ---
 
@@ -106,6 +107,18 @@
 | Debt Engine & Theater Schema | `./bin/debt_engine --validate && python3 tests/ci/test_debt_schema_theater_rule.py` | `1610/1610 passed, 0 failed` (`exit 0`) |
 | Layer Enforcement & Negative Liveness | `make check-layer-enforcement check-layer-negative` | `PASS` (`exit 0`) |
 | Proof Unit / Reconcile / Epoch / Mirror / Workflow Syntax | `bin/proof_unit_consistency_gate && bin/proof_reconcile_gate && bin/epoch_transaction_gate && make check-merge-admission-cert-mirror check-workflow-shell-syntax` | 전부 `PASS` (`exit 0`) |
+
+---
+
+## 5.1 Main 동기화 및 publication-integrity `secret-scan` 정본 갱신 (2026-11-13)
+
+PR #1 착지(`origin/main` `c021c33` → `12a9d8d`) 직후 `axiom/evidence-cas` 레저 브랜치에 5개의 CAS 레코드(`1378e20b…`, `55df844e…`, `21c9c18a…`, `53f06f99…`, `52c0f719….json`)가 추가되었다. 각 파일의 `"evidenceKey"` 64-hex 값이 gitleaks `generic-api-key` 규칙(line 1, col 87–165)에 매칭되어 `publication-integrity`의 `secret-scan`이 `FAIL (new=5)`로 판정했다.
+
+- **동기화**: `./bin/ax git sync` (승인된 rebase 경로) → `main` `12a9d8d` 위로 리베이스; `bin/reanchor_pin --ref HEAD` `OK no-drift`.
+- **트리아지**: 5건 모두 SHA-256 CAS 주소(비밀 아님)이므로 `classification: "synthetic-hash-or-cas-key"`로 `historyFindings`에 **spanFingerprint**(`<file>:generic-api-key:1:1:87:165`) 단위 등록 — baseline은 commit-SHA 독립이므로 레저 append마다 재등록이 필요 없다.
+- **로컬 판정 (clean-tree 기준 — `git archive HEAD`로 추출한 트리에서 `gitleaks dir` 실행, CI와 동일 스코프)**:
+  - `publication_secret_eval: PASS (history=398 tree=393 baseline=791 new=0)` (`exit 0`)
+  - 참고: 작업 트리에는 `build/`(nimcache)와 `.axiom/cache/`가 존재하며 이는 git 추적 대상이 아니므로 CI 스코프(tree=393)와 로컬 미정리 트리 스코프(tree=832)가 다르다. CI 판정은 항상 clean checkout 기준이다.
 
 ---
 
