@@ -37,21 +37,85 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup-axiom-toolchain
+        id: setup-tc
         with:
           cache-build-source: ${{ github.sha }}
+      - name: "S5 gate: B-verified supply-reuse eligibility (5-member SHA-256 + 4x SourceCoherence)"
+        id: s5-gate
+        if: steps.setup-tc.outputs.b-cache-hit == 'true'
+        env:
+          EXPECT_B_IDENTITY: ${{ steps.setup-tc.outputs.b-identity }}
+          EXPECT_B_KEY: ${{ steps.setup-tc.outputs.b-key }}
+        run: |
+          set -uo pipefail
+          probe_fail=0
+          if [ ! -f build/.axiom-b-fingerprint.json ]; then
+            echo "[S5] gate: FAIL — build/.axiom-b-fingerprint.json missing; eligibility withheld"
+            probe_fail=1
+          elif ! jq -e --arg bsha "$EXPECT_B_IDENTITY" --arg bkey "$EXPECT_B_KEY" \
+            '.schema == "axiom-b-fingerprint-v1" and .buildSha == $bsha and .bKey == $bkey' \
+            build/.axiom-b-fingerprint.json >/dev/null 2>&1; then
+            echo "[S5] gate: FAIL — fingerprint manifest identity mismatch; eligibility withheld"
+            probe_fail=1
+          else
+            for f in bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas proofs/.lake/build/bin/ircheck; do
+              if [ ! -x "$f" ]; then
+                echo "[S5] gate: FAIL — required supply binary missing or not executable: $f"
+                probe_fail=1
+              else
+                exp_sha="$(jq -r --arg k "$f" '.files[$k] // empty' build/.axiom-b-fingerprint.json 2>/dev/null || true)"
+                act_sha="$(sha256sum "$f" | cut -d' ' -f1)"
+                if [ -z "$exp_sha" ] || [ "$exp_sha" != "$act_sha" ]; then
+                  echo "[S5] gate: FAIL — SHA-256 mismatch for $f (expected=$exp_sha actual=$act_sha)"
+                  probe_fail=1
+                fi
+              fi
+            done
+          fi
+          for b in bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas; do
+            if [ -x "$b" ] && AXIOM_ROOT= "$b" --check-provenance >/dev/null 2>&1; then
+              echo "[S5] gate: OK — restored $b embedded BuildSourceHash == live trusted tree"
+            else
+              echo "[S5] gate: FAIL — restored $b provenance mismatch (SourceCoherence FATAL); eligibility withheld"
+              probe_fail=1
+            fi
+          done
+          if [ "$probe_fail" -eq 0 ]; then
+            echo "s5-skip=true" >> "$GITHUB_OUTPUT"
+            echo "[S5] gate: ELIGIBLE — 5/5 SHA-256 digests and 4/4 SourceCoherence probes passed; 4-binary recompile skipped"
+          else
+            echo "[S5] gate: DISCARD — purging B-cache paths to enforce clean cold build"
+            rm -rf build/nimcache .axiom/cache proofs/.lake proofs/build
+            rm -f build/.axiom-b-fingerprint.json bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas
+          fi
       - name: Build the release verifier (ci-compile authority)
         # make ci-compile (ci/checker.mk) is THE release build authority:
         # -d:release + AXIOM_HERMETIC_BUILDING=1 for ax/gate_hook/precompile_gates/
         # install_ax_cas; on a B-layer cache HIT it skips recompiles and instead
         # re-asserts each restored binary's provenance via --check-provenance
         # (fail-closed). `make build` was a -d:allowMissingZ3 nim-check build.
-        run: make ci-compile
+        env:
+          AXIOM_S5_BUILD_SKIP: ${{ steps.s5-gate.outputs.s5-skip == 'true' && '1' || '0' }}
+        run: |
+          set -euo pipefail
+          if [ "$AXIOM_S5_BUILD_SKIP" = "1" ]; then
+            echo "SUPPLY REUSE — verified payload restored; measuring build_env.nim VerifierBuildId then skipping 4-binary recompile (J3 §3.1)"
+            make -f ci/checker.mk ci-compile-hermetic-measure
+            AXIOM_S5_BUILD_SKIP=1 make ci-compile -j4
+          else
+            echo "S5 COLD BUILD — verified supply absent; purging residual B-cache paths and compiling from clean state with -j4"
+            rm -rf build/nimcache .axiom/cache proofs/.lake proofs/build
+            rm -f build/.axiom-b-fingerprint.json bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas
+            make ci-compile -j4
+          fi
       - name: Build the Lean reference extractor (ircheck)
         # The canonical prove path seals subject binding via
         # proofs/.lake/build/bin/ircheck (lakefile.lean: `lean_exe ircheck`).
         # On a cold B-layer cache (new head SHA) it is not restored, and the
         # reference-extractor miss demotes the node to NOT_VERIFIABLE — so
-        # build it from the checked-out tree before proving.
+        # build it from the checked-out tree before proving. On a verified
+        # B-layer HIT, Lake's content-addressed .trace files verify that
+        # proofs/**/*.lean hashes match and replay in ~5s without recompiling.
         run: lake build ircheck
         working-directory: proofs
       - name: Restore tracked build metadata after make build
@@ -60,7 +124,7 @@ jobs:
       - name: R3 relocation-invariance measurement (wp5)
         run: |
           set -euo pipefail
-          nim c --path:src -d:release --hints:off -o:bin/wp5_relocation_measure tools/ci/wp5_relocation_measure.nim
+          AXIOM_HERMETIC_BUILDING=1 nim c --path:src -d:release --hints:off -o:bin/wp5_relocation_measure tools/ci/wp5_relocation_measure.nim
           mkdir -p logs
           bin/wp5_relocation_measure --repo-root . --out logs/r3_relocation.json
           jq -e --arg head "$GITHUB_SHA" \
@@ -84,15 +148,10 @@ jobs:
         # engineBuild mirrors attestation_orchestrator.verifierEngineBuildId:
         # a 64-hex VerifierBuildId is recorded ONLY when the source hash it was
         # measured for equals the compiled BuildSourceHash; every other value
-        # (including the .default "unmeasured" seed) is recorded as
-        # "unmeasured" — never a stale-but-plausible identity.
-        # ci-compile-hermetic-measure (checker.mk) runs the full hermetic
-        # pass BEFORE the guarded compiles, so a cold CI build measures a
-        # real 64-hex id; reaching this guard with "unmeasured" means the
-        # measurement wiring regressed — fail, never publish it.
-        # Any mismatch fails the job before the evidence can be consumed as
-        # acceptance (upload stays if:always() so the failing evidence itself
-        # is preserved for diagnosis).
+        # (including the .default "unmeasured" seed) is a measurement regression
+        # and fails closed. Furthermore, measured VerifierBuildId on disk must
+        # equal the binary's persisted state (.executionIdentity.verifierBuildId)
+        # and the emitted manifest (.toolchain.engineBuild) — 3-way identity.
         run: |
           set -euo pipefail
           fail() { echo "PROVENANCE ASSERT FAIL: $1" >&2; exit 1; }
@@ -110,9 +169,10 @@ jobs:
           if printf '%s' "$RAW_ENGINE_BUILD" | grep -Eq '^[0-9a-f]{64}$' && [ "$FILE_VB_SOURCE_HASH" = "$FILE_BUILD_SOURCE_HASH" ]; then
             ENGINE_BUILD="$RAW_ENGINE_BUILD"
           else
-            ENGINE_BUILD="unmeasured"
-            echo "INFO: engineBuild is unmeasured for this tree (VerifierBuildId='$RAW_ENGINE_BUILD' VerifierBuildSourceHash='$FILE_VB_SOURCE_HASH') — recorded as-is"
+            fail "engineBuild is unmeasured for this tree (VerifierBuildId='$RAW_ENGINE_BUILD' VerifierBuildSourceHash='$FILE_VB_SOURCE_HASH' BuildSourceHash='$FILE_BUILD_SOURCE_HASH') — fail-closed"
           fi
+          STATE_ENGINE_BUILD="$(jq -r '.executionIdentity.verifierBuildId // empty' logs/ax_proof_state.json)"
+          [ "$STATE_ENGINE_BUILD" = "$ENGINE_BUILD" ] || fail "state verifierBuildId '$STATE_ENGINE_BUILD' != measured ENGINE_BUILD '$ENGINE_BUILD' (split-brain between restored binary and build_env.nim)"
           DIRTY="$(git status --porcelain -- src ':(exclude)src/generated' config.nims config/effects.nims src/gate/config.nims Makefile axiom.nimble axiom.lock proofs/lean-toolchain)"
           [ -z "$DIRTY" ] || fail "verifier build inputs dirty vs HEAD: $DIRTY"
           CERT="$(cat logs/verify_contract_e2e_cert_path.txt)"
@@ -123,7 +183,7 @@ jobs:
           [ "$(jq -r '.sourceTree.buildSourceHash' logs/run-manifest.json)" = "$ACTUAL_BUILD_SOURCE_HASH" ] || fail "manifest buildSourceHash != $ACTUAL_BUILD_SOURCE_HASH"
           sha256sum logs/run-manifest.json | awk '{print $1}' | tee logs/run-manifest.sha256
           cat logs/run-manifest.json
-          echo "PROVENANCE ASSERTION: OK — gitHead/binary.sha256/engineBuild/buildSourceHash expected==actual (tree=$ACTUAL_BUILD_SOURCE_HASH engine=$ENGINE_BUILD)"
+          echo "PROVENANCE ASSERTION: OK — gitHead/binary.sha256/engineBuild/buildSourceHash expected==actual==state (tree=$ACTUAL_BUILD_SOURCE_HASH engine=$ENGINE_BUILD)"
       - name: Determinism ratchet — cold serial↔parallel prove equality (DEBT#508)
         # The end-to-end determinism ratchet (DEBT#508 closure). Two COLD
         # `ax prove --limit 20` legs (workers=1 / workers=2, sibling vaults
@@ -142,7 +202,7 @@ jobs:
         # this PR's own run of this check self-validates the new step.
         run: |
           set -euo pipefail
-          nim c --hints:off --nimcache:build/nimcache/debt508_ratchet -o:build/debt508_ratchet tests/gateway/deterministic_parallel_proof_test.nim
+          AXIOM_HERMETIC_BUILDING=1 nim c --hints:off --nimcache:build/nimcache/debt508_ratchet -o:build/debt508_ratchet tests/gateway/deterministic_parallel_proof_test.nim
           ./build/debt508_ratchet
       - name: Observation-reuse contract — L4 acceptance reader (state transitions + call budget)
         # The L4 reader (tools/ci/landing_observe.sh --main <sha>) is the surface
@@ -159,7 +219,7 @@ jobs:
         # this PR's own run of this check self-validates the new step.
         run: |
           set -euo pipefail
-          nim c --hints:off --nimcache:build/nimcache/landing_observe_contract -o:build/landing_observe_contract tests/ci/test_landing_observe_acceptance.nim
+          AXIOM_HERMETIC_BUILDING=1 nim c --hints:off --nimcache:build/nimcache/landing_observe_contract -o:build/landing_observe_contract tests/ci/test_landing_observe_acceptance.nim
           ./build/landing_observe_contract
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
