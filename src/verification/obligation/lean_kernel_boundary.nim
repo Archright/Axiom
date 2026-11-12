@@ -196,12 +196,25 @@ proc resolveLeanBinaryPath*(): string {.
   if leanCmd.len > 0:
     return leanCmd
 
+  let lakePath = findExe("lake")
+  let memoKey = getCurrentDir() & "|" & getEnv("PATH", "") & "|" &
+    getEnv("ELAN_HOME", "") & "|" & getEnv("ELAN_TOOLCHAIN", "") & "|" &
+    measuredFileDigest("lean-toolchain") & "|" &
+    measuredFileDigest("proofs/lean-toolchain") & "|" &
+    measuredFileDigest("lakefile.toml") & "|" &
+    measuredFileDigest("proofs/lakefile.lean") & "|" &
+    lakePath
+  let cachedPath = lookupCachedLeanPath(memoKey)
+  if cachedPath.len > 0:
+    return cachedPath
+
   # Primary: lake env which lean (requires lakefile.toml in CWD or parent)
   var (output, exitCode) = execCmdWithTimeout(
     "lake env which lean", timeoutMs = 10_000)
   if exitCode == 0 and output.strip().len > 0:
     let path = output.strip()
     if fileExists(path):
+      storeCachedLeanPath(memoKey, path)
       return path
 
   # Fallback: elan which lean (queries elan toolchain config)
@@ -210,15 +223,16 @@ proc resolveLeanBinaryPath*(): string {.
   if exitCode == 0 and output.strip().len > 0:
     let path = output.strip()
     if fileExists(path):
+      storeCachedLeanPath(memoKey, path)
       return path
 
   # Last resort: resolve from lake binary's parent directory.
   # In elan layouts this may point to a shim, not the real toolchain
   # binary — see QUIRK(DEBT#427).
-  let lakePath = findExe("lake")
   if lakePath.len > 0:
     let candidate = parentDir(lakePath) / "lean"
     if fileExists(candidate):
+      storeCachedLeanPath(memoKey, candidate)
       return candidate
 
   ""
@@ -249,29 +263,11 @@ proc measureToolchainBundleFingerprint*(
       try: readFile("lean-toolchain")
       except CatchableError: ""
     else: ""
-  let leanToolchainDigest =
-    if leanToolchainContent.len > 0: sha256Hex(leanToolchainContent)
-    else: ""
-  let proofsLeanToolchainDigest =
-    if fileExists("proofs/lean-toolchain"):
-      try: sha256Hex(readFile("proofs/lean-toolchain"))
-      except CatchableError: ""
-    else: ""
-  let lakeManifestDigest =
-    if fileExists("lake-manifest.json"):
-      try: sha256Hex(readFile("lake-manifest.json"))
-      except CatchableError: ""
-    else: ""
-  let proofsLakeManifestDigest =
-    if fileExists("proofs/lake-manifest.json"):
-      try: sha256Hex(readFile("proofs/lake-manifest.json"))
-      except CatchableError: ""
-    else: ""
-  let lakefileDigest =
-    if fileExists("lakefile.toml"):
-      try: sha256Hex(readFile("lakefile.toml"))
-      except CatchableError: ""
-    else: ""
+  let leanToolchainDigest = measuredFileDigest("lean-toolchain")
+  let proofsLeanToolchainDigest = measuredFileDigest("proofs/lean-toolchain")
+  let lakeManifestDigest = measuredFileDigest("lake-manifest.json")
+  let proofsLakeManifestDigest = measuredFileDigest("proofs/lake-manifest.json")
+  let lakefileDigest = measuredFileDigest("lakefile.toml")
   let evalImplDigest = evaluationImplementationDigest(
     measureEvaluationImplementationDigests())
   sha256Hex(
@@ -372,12 +368,7 @@ proc canonicalLeanKernelCheck*(
     return err("canonicalLeanKernelCheck: cannot resolve lean executable")
 
   # 3. Capture lean binary digest (the real kernel binary).
-  let leanDigest =
-    try:
-      let exeContent = readFile(leanExePath)
-      sha256Hex(exeContent)
-    except CatchableError:
-      ""
+  let leanDigest = measuredBinaryDigest(leanExePath)
   if leanDigest.len != 64:
     return err("canonicalLeanKernelCheck: cannot digest lean binary " & leanExePath)
 
@@ -385,12 +376,7 @@ proc canonicalLeanKernelCheck*(
   let lakePath = findExe("lake")
   if lakePath.len == 0:
     return err("canonicalLeanKernelCheck: cannot resolve lake executable")
-  let lakeDigest =
-    try:
-      let exeContent = readFile(lakePath)
-      sha256Hex(exeContent)
-    except CatchableError:
-      ""
+  let lakeDigest = measuredBinaryDigest(lakePath)
   if lakeDigest.len != 64:
     return err("canonicalLeanKernelCheck: cannot digest lake binary " & lakePath)
 

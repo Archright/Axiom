@@ -398,7 +398,13 @@ block hermeticPreBuild:
     
     let hbBin = "bin/hermetic_build"
     let hbSrc = "tools/hermetic_build.nim"
-    if not fileExists(hbBin):
+    var hbStale = not fileExists(hbBin)
+    if not hbStale:
+      let hbBinMtime = staticExec("stat -c %Y " & hbBin).strip()
+      let hbSrcMtime = staticExec("stat -c %Y " & hbSrc).strip()
+      if hbBinMtime.len == 0 or (hbSrcMtime.len > 0 and hbSrcMtime > hbBinMtime):
+        hbStale = true
+    if hbStale:
       echo "[hermetic] Building " & hbBin & " from " & hbSrc
       exec "nim c --hints:off -o:" & hbBin & " " & hbSrc
     # 환경 해시 기반 건너뛰기: hermetic build input이 변하지 않았으면 매 nim c마다
@@ -406,20 +412,24 @@ block hermeticPreBuild:
     # 다이제스트는 std/hashes hash() — 프로세스 간 결정성 실증됨 (실험 2026-08-07:
     # hash() 상수 seed, std/sha1·sha2는 NimScript VM에서 컴파일 불가).
     #
-    # Hermetic cache (content-addressed key + materialize restore):
-    #   - Key: config/SSOT file hashes ▸ manifest.d/*.json ▸ src/ content hash ▸
-    #     cheap lean fingerprint. VCS state (git HEAD, .git/index) is NOT part of
-    #     the key: it is incidental input, not build input. Rationale and the
-    #     removed dirty-marker are recorded in
-    #     docs/spec/config_nims_hermetic_cache_quirk.md (DEBT#417).
-    #   - HIT: restore the cached build_env.nim body (cheap).
-    #   - MISS: run `bin/hermetic_build` (type registry / invariant hash / scope
-    #     lock / manifest / debt codegen), then atomically stamp with temp+mv.
-    #   - Scope: this key governs AXIOM ORCHESTRATION timing only. It never
-    #     decides what the compiler recompiles — that is Nim's authority.
+    # Hermetic cache (Single Authority delegation to bin/hermetic_build):
+    #   - Key: VerifierBuildId inputs + config/*.nims + manifest.d/*.json +
+    #     src/ content hash + cheap lean fingerprint. VCS state (git HEAD,
+    #     .git/index) is NOT part of the key.
+    #   - Case A (Full HIT): envHash matches stamp AND build_env.nim is coherent
+    #     with liveSourceHash, VerifierBuildId, and gitHeadRef → zero writes
+    #     (both build_env.nim and hermetic_env_hash.txt preserve mtime & inode).
+    #   - Case B (Git-HEAD-only HIT): envHash matches stamp AND build_env.nim is
+    #     coherent except BuildEnvGitHash → delegate to `bin/hermetic_build --materialize`.
+    #   - Case C (MISS): delegate to `bin/hermetic_build` (or `--generate-build-env`
+    #     under AXIOM_FAST_BUILD=1) and atomically stamp hermetic_env_hash.txt
+    #     using a PID-unique temp file + mv.
     let envCachePath = ".axiom/cache/hermetic_env_hash.txt"
     var envHash = ""
-    for p in ["config.nims", "config/lint.nims", "config/strict.nims", "axiom.nimble", hbSrc,
+    for p in ["config.nims", "config/effects.nims", "src/gate/config.nims",
+              "Makefile", "axiom.nimble", "axiom.lock", "proofs/lean-toolchain",
+              "config/lint.nims", "config/strict.nims", "config/integrity.nims",
+              "config/paths.nims", "config/vendors.nims", hbSrc,
               "src/gate/topology_spec.nim", "config/gates.manifest.toml",
               "src/generated/build_env.nim.default"]:
       if fileExists(p):
@@ -432,18 +442,12 @@ block hermeticPreBuild:
       manifestPaths.sort()
       for p in manifestPaths:
         envHash &= $hash(readFile(p))
-    # Source content: this is the signal the removed VCS terms used to proxy for.
-    # computeSourceTreeHash already runs unconditionally below (the BuildSourceHash
-    # fill-in), so folding it in here adds no extra filesystem cost.
-    envHash &= computeSourceTreeHash("src")
+    # Compute liveSourceHash once per hermeticPreBuild invocation and fold into envHash.
+    let liveSourceHash = computeSourceTreeHash("src")
+    envHash &= liveSourceHash
     # Git HEAD resolution via pure .git file reads — NO gorge (§17 quirk: gorge
     # returns empty under `nim check`, so it cannot be used here). Deterministic:
     # identical HEAD → identical SHA.
-    # This value feeds ONLY __AXIOM_GIT_HASH__ in build_env.nim below. It is
-    # deliberately NOT folded into envHash: a commit that changes no source or
-    # config must not invalidate the orchestration cache, and the product constant
-    # stays correct because build_env.nim's content change makes Nim recompile its
-    # importers through the compiler's own authority.
     let gitHeadPath = ".git/HEAD"
     var gitHeadRef = ""
     let envGitHash = getEnv("AXIOM_GIT_HASH", "")
@@ -467,91 +471,55 @@ block hermeticPreBuild:
     var cachedHash = ""
     if fileExists(envCachePath):
       cachedHash = readFile(envCachePath).strip()
-    if envHash == cachedHash:
-      echo "[hermetic] Environment unchanged (HIT)"
-    else:
-      echo "[hermetic] Environment changed (MISS)"
-      # MISS no longer clears build/nimcache. The purge made Axiom the authority
-      # over recompile decisions, and since hermetic_build itself runs `git status`
-      # / `git diff` (tools/hermetic_build.nim:1248,1256,1726) — which makes git
-      # rewrite .git/index's stat cache — the old key contained the very signal its
-      # own MISS path produced. One MISS therefore locked the cache cold for every
-      # later build. Removing the VCS key terms and the purge together returns
-      # recompile decisions to the compiler.
-      # See docs/spec/config_nims_hermetic_cache_quirk.md (DEBT#417).
 
-    # Restore build_env.nim from the cached body, or fall back to the static .default
-    # template. The NimScript exec mechanism does not reliably run compiled binaries,
-    # so we use readFile/writeFile/copyFile instead of exec hbBin.
     let targetPath = "src/generated/build_env.nim"
     let defaultPath = "src/generated/build_env.nim.default"
     let bodyPath = ".axiom/cache/build_env.body"
 
-    if fileExists(bodyPath):
-      let body = readFile(bodyPath)
-      # Coherence guard: if body has a numeric BuildSourceHash (old/stale
-      # body cache format), skip it — do not overwrite build_env.nim with
-      # a stale value. Fall through to the elif/else branches below.
-      let numericHashPattern = "BuildSourceHash* = \""
-      let hashIdx = body.find(numericHashPattern)
-      var staleBody = false
-      if hashIdx >= 0:
-        let afterQuote = body[hashIdx + numericHashPattern.len .. ^1]
-        let endQuote = afterQuote.find('"')
-        if endQuote > 0:
-          let hashValue = afterQuote[0 ..< endQuote]
-          if hashValue != "__AXIOM_BUILD_SOURCE_HASH__":
-            staleBody = true
-      if staleBody:
-        echo "[hermetic] body cache has stale BuildSourceHash — skipping body restore"
-        # FAIL-CLOSED fallback: the stale body must not block bootstrap. Emit the
-        # static .default template when build_env.nim is absent so nim check/c can
-        # compile (constants.nim imports generated/build_env). The guard's intent is
-        # preserved — no stale VALUE is ever written; a later hermetic_build run
-        # regenerates the true body with the live source-tree hash.
-        if not fileExists(targetPath):
-          writeFile(targetPath, readFile(defaultPath))
-          echo "[hermetic] build_env.nim created from .default template (stale body skipped)"
-      else:
-        var content = body.replace("__AXIOM_GIT_HASH__", gitHeadRef)
-        # Replace BuildSourceHash placeholder with live source-tree hash
-        let liveSourceHash = computeSourceTreeHash("src")
-        content = content.replace("BuildSourceHash* = \"" & "__AXIOM_BUILD_SOURCE_HASH__" & "\"",
-                                  "BuildSourceHash* = \"" & liveSourceHash & "\"")
-        # Preserve the measured verifier identity lines. The NimScript VM cannot
-        # compute the sha256 build manifest, so the live values are measured by
-        # bin/hermetic_build and kept by the previous build_env.nim. The
-        # VerifierBuildSourceHash cross-check against the live BuildSourceHash
-        # (attestation_orchestrator.verifierEngineBuildId) rejects a stale id as
-        # "unmeasured" — a plain `nim c` after an edit without hermetic_build
-        # must never emit a certificate under an old engine identity.
-        let liveEnvPath = "src/generated/build_env.nim"
-        if fileExists(liveEnvPath):
-          var liveIdLine = ""
-          var liveSourceLine = ""
-          for line in readFile(liveEnvPath).splitLines():
-            if line.startsWith("  VerifierBuildId* = "):
-              liveIdLine = line
-            elif line.startsWith("  VerifierBuildSourceHash* = "):
-              liveSourceLine = line
-          if liveIdLine.len > 0 or liveSourceLine.len > 0:
-            var kept: seq[string] = @[]
-            for line in content.splitLines():
-              if line.startsWith("  VerifierBuildId* = ") and liveIdLine.len > 0:
-                kept.add(liveIdLine)
-              elif line.startsWith("  VerifierBuildSourceHash* = ") and
-                  liveSourceLine.len > 0:
-                kept.add(liveSourceLine)
-              else:
-                kept.add(line)
-            content = kept.join("\n")
-        writeFile(targetPath, content)
-        echo "[hermetic] build_env.nim restored from cache body"
-    elif not fileExists(targetPath):
-      writeFile(targetPath, readFile(defaultPath))
-      echo "[hermetic] build_env.nim created from .default template"
+    # Read-only validity & coherence check on src/generated/build_env.nim.
+    # bin/hermetic_build is the SOLE writer of src/generated/build_env.nim.
+    var buildEnvValid = false
+    var gitHashMatches = false
+    if fileExists(targetPath):
+      let envContent = readFile(targetPath)
+      let hasSourceHash = envContent.contains("BuildSourceHash* = \"" & liveSourceHash & "\"")
+      let hasVerifierSourceHash = envContent.contains("VerifierBuildSourceHash* = \"" & liveSourceHash & "\"")
+      var hasValidVerifierId = false
+      for line in envContent.splitLines():
+        if line.startsWith("  VerifierBuildId* = \"") and line.endsWith("\""):
+          let val = line["  VerifierBuildId* = \"".len .. ^2]
+          if val.len == 64:
+            hasValidVerifierId = true
+            for ch in val:
+              if ch notin {'0'..'9', 'a'..'f'}:
+                hasValidVerifierId = false
+                break
+          break
+      buildEnvValid = hasSourceHash and hasVerifierSourceHash and hasValidVerifierId
+      gitHashMatches = envContent.contains("BuildEnvGitHash* = \"" & gitHeadRef & "\"")
+
+    let isHit = (envHash == cachedHash) and buildEnvValid
+    if isHit and gitHashMatches:
+      # Case A — Full HIT: zero writes to build_env.nim and hermetic_env_hash.txt
+      echo "[hermetic] Environment unchanged (HIT)"
+    elif isHit and not gitHashMatches and fileExists(bodyPath):
+      # Case B — Git-HEAD-only change: materialize via bin/hermetic_build
+      echo "[hermetic] Environment unchanged (HIT)"
+      exec hbBin & " --materialize"
     else:
-      echo "[hermetic] build_env.nim already present"
+      # Case C — MISS: delegate to bin/hermetic_build (sole writer)
+      echo "[hermetic] Environment changed (MISS)"
+      if getEnv("AXIOM_FAST_BUILD") == "1":
+        exec hbBin & " --generate-build-env"
+      else:
+        exec hbBin
+        if not dirExists(".axiom/cache"):
+          mkDir(".axiom/cache")
+        let pid = staticExec("echo $PPID").strip()
+        let stampSuffix = if pid.len > 0: pid else: "0"
+        let stampTmpPath = ".axiom/cache/.hermetic_env_hash.tmp." & stampSuffix
+        writeFile(stampTmpPath, envHash)
+        exec "mv " & stampTmpPath & " " & envCachePath
 
     # Sync topology SSOT with manifest.d/*.json
     # Stale-binary guard: sync_topology EMBEDS the topology spec at compile
@@ -563,7 +531,7 @@ block hermeticPreBuild:
     # NimScript target).
     let syncBin = "bin/sync_topology"
     let syncSrc = "tools/sync_topology.nim"
-    let syncSpecSrcs = ["src/gate/topology_spec.nim", "src/gate/helper_spec.nim",
+    let syncSpecSrcs = [syncSrc, "src/gate/topology_spec.nim", "src/gate/helper_spec.nim",
                         "src/gate/framework/topology_types.nim"]
     var syncStale = not fileExists(syncBin)
     if not syncStale:
@@ -582,19 +550,6 @@ block hermeticPreBuild:
     echo "[hermetic] Syncing topology..."
     exec syncBin
 
-    # Type-registry drift hygiene (T0): regenerate the type registry ONLY when the
-    # environment changed (MISS). This drops removed symbols so a stale
-    # type_registry_metadata.json never survives a `nim c`. On HIT the registry is
-    # already in sync — skipping keeps the fast path fast.
-    if getEnv("AXIOM_FAST_BUILD") != "1" and envHash != cachedHash:
-      let trBin = "bin/hermetic_build"
-      let trSrc = "tools/hermetic_build.nim"
-      if not fileExists(trBin):
-        echo "[hermetic] Building " & trBin
-        exec "nim c --hints:off -o:" & trBin & " " & trSrc
-      echo "[hermetic] Regenerating type registry..."
-      exec trBin
-
     # Decision binding integrity check (audit mode - warn only)
     let dbBin = "bin/decision_binding_checker"
     let dbSrc = "tools/decision_binding_checker.nim"
@@ -605,20 +560,7 @@ block hermeticPreBuild:
       echo "[hermetic] Checking decision bindings (audit)..."
       exec dbBin & " --escalation-threshold 30"
 
-    if not dirExists(".axiom/cache"):
-      mkDir(".axiom/cache")
-    # Same cache artifact / co-restored unit (C4): stamp+pkgs2 coupling —
-    # witness that pkgs2 was materialized from this exact lock at some
-    # point (C2), NOT proof of current-state satisfaction. Stamp writes
-    # via temp+mv for safety. NOT filesystem atomicity.
-    let stampTmpPath = ".axiom/cache/.hermetic_env_hash.tmp"
-    writeFile(stampTmpPath, envHash)
-    exec "mv " & stampTmpPath & " " & envCachePath
-
     # Final guard: ensure build_env.nim exists for nim check/c imports.
-    # The stale-body guard preserves VALUE correctness (no stale hash restored)
-    # but the FILE must exist for compilation. .default template is the
-    # accepted fallback; a later hermetic_build run regenerates the true body.
     if not fileExists(targetPath):
       writeFile(targetPath, readFile(defaultPath))
       echo "[hermetic] build_env.nim created from .default template (final guard)"
