@@ -3170,12 +3170,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:51991c4e43d35403079dfe14f8ea4e37c99ddcf6b9f6c370887d0a078bdb2ad6",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:18335a1cd8784775cbd2382d676f6745c7e720aa0e0c2ab49e5b6847bbc38a1b",
       "count": 7,
       "file": "src/personas/legislator.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:4506228355d2987bddfba424d5c137ef3fad40a5c137c53ce255dd1a0be374c6"
+      "rawContentHash": "sha256:315a07242f5cc27503f51658f770f1b3a84e194d8452ec2d5478e1f01f94776a"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
@@ -3890,12 +3890,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:a4722d37203aa63f117a02980e4b3f224bae95e4de3b720cb669d669c8d770d3",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:7db80124269938c49d7c1fe355ed40c973bd0c630b22187165f1d10fb85207b1",
       "count": 1,
       "file": "src/verification/llm_backend.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:4473aaf266c3d9643a0c221eb6b6000d94aafef8dcd0582fa2204f9c2f8fe523"
+      "rawContentHash": "sha256:769a59c1dc684fdc7675c2650bb94f1c30d8dffe77d9dd3652cbea2efcd380b1"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
