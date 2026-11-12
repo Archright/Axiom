@@ -132,3 +132,43 @@ PR #1 착지(`origin/main` `c021c33` → `12a9d8d`) 직후 `axiom/evidence-cas` 
   - *"투두리스트 재정렬하고 백그라운드 병렬 서브에이전트로 모두 진행해. 권한이 필요한 부분은 전면 승인한다."*
 - **Executor 기록**: `agent under explicit delegation from wintrover (2026-11-13)`.
 - **준수 사항**: `--auto` arming 사용 금지(`MUST-T1`); PR 생성 후 6개 필수 체크(`admission-check`, `bsec-integrity`, `debt-registry-gate`, `generation-acceptance`, `axiom-operational-slice`, `publication-integrity`)가 모두 `success`로 완료된 것을 L1 관측으로 확인한 뒤, 단발 수동 큐 진입 명령 `gh pr merge <N> --merge`만 실행한다.
+
+---
+
+## 7. Canonical `main` 착지 및 프로덕션 수용 (Post-Merge Acceptance)
+
+### 7.1 GitHub 착지 증거 (merge authority = GitHub)
+
+| 항목 | 관측값 |
+|---|---|
+| PR | **#2 MERGED** (`mergedAt 2026-11-12T18:07:29Z`, `mergedBy wintrover`) |
+| merge commit (native MERGE) | `13e1604a89fc4dc29783f2049107de1111f899dc` — parents `bd62a4557d36f6b99f8a2a8d5446bd7488d7ca12` + `71a9fed42a7fbde5b612e78b092e59d2872c3595` (2-parent MERGE, `git rev-list --parents`) |
+| `main` tip | `13e1604a89fc4dc29783f2049107de1111f899dc` (`repos/Archright/Axiom/git/ref/heads/main`) |
+| Merge Queue | `gh pr merge 2 --merge` → `gh-readonly-queue/main/pr-2-…` `merge_group` 워크플로 **9/9 success**: `admission-gate`, `axiom-operational-slice`, `bsec-integrity`, `debt-registry-gate`, `generation-acceptance`, `landing-integrity`, `observer-manifest-consistency`, `probe-merge-queue`, `publication-integrity` |
+| post-merge `main` CI | `axiom-operational-slice` **success** (run `43276548000`, head `13e1604`) — prove → 동일 인증서 커널 replay → verdict/provenance assert → determinism ratchet → observation-reuse contract 포함 |
+| `publication-integrity` (dispatch) | `bd62a45` run `43275230893` **success** (선행 실패 `12a9d8d` run `43263885083`는 §5.1의 CAS `evidenceKey` 원인과 동일) |
+
+### 7.2 Canonical `main` 로컬 수용 (실행 명령 + 관측)
+
+실행 위치: `13e1604a89fc4dc29783f2049107de1111f899dc` 체크아웃, clean working tree.
+
+| # | 명령 | 관측 결과 |
+|---|---|---|
+| 1 | `git rev-list --parents -n 1 HEAD` | 2-parent native MERGE (위 표) |
+| 2 | `make -f ci/checker.mk ci-compile -j4` | `exit 0` |
+| 3 | `./bin/ax --check-provenance` | `AXIOM_PROVENANCE: OK — embedded BuildSourceHash == live src tree (vs1-tree-hash/1:-5133378971984752489)` (`exit 0`) |
+| 4 | `make verify-contract-release-e2e-full` | `[cert] Verify: PASS (kernel re-execution — lean=re-executed, z3=unsat, leanchecker=passed)`; `G7 pass (tier=dual-verified status=verified cert=data/trusted/certificates/e57ee939….json)`; `✅ verify-contract-release-e2e-full PASSED` (`exit 0`) |
+| 5 | `AXIOM_HERMETIC_BUILDING=1 nim c -r tests/unit/test_capture_toolchain_fingerprint.nim` | `Results: 15 passed, 0 failed` (`exit 0`) |
+| 6 | `make perf-check` | `[PERF OK] LeanKernelVerification: 0.1% change` (`exit 0`, 상한 5.0%) |
+| 7 | `./bin/ax report --json` ×3 + `strace -f -e trace=execve` | wall **0.18 / 0.19 / 0.19 s**; 총 `execve` **26회**; `lake` execve **2회** = `lake env which lean` 논리 실행 **1회**(elan shim + 실툴체인 바이너리) |
+| 8 | `git status --short` | 출력 없음 (clean) |
+
+### 7.3 Trust Parity 재확인 (landed commit 기준)
+
+- **J2 Evidence Equivalence**: `git diff --stat c021c33 13e1604 -- data/trusted/` → **변경 0건**. `data/trusted/certificates/e57ee939….json`은 baseline 대비 **바이트 동일**(`git diff --quiet` → `IDENTICAL(bytes)`), `verificationTier=dual-verified`, `status=certGreen`. §3.1의 `identityDigest 3fbc5d0d…`는 `trustCommitId 62034512…` 시점의 journal claim identity이며, 착지 후에도 추적 증거 집합 자체가 불변임을 위 diff가 직접 증명한다.
+- **J1 Semantic Parity (결정론)**: 동일 상태에서 `./bin/ax report --canonical-digest` 2회 → `2258bee293dbb698979a500bf64aeaf8ed018869323f9152092f6d5ee9841a7c` **완전 일치**. 이 값은 `canonicalProjectionHash(report proof state)`(`src/cli/report_cli.nim:336-355`)로, 입력 상태가 `ax prove` 실행에 따라 진화하므로 **시점 간 절대값 비교는 동등성 입력이 아니다** — 변경 전/후 코드의 동일-상태 바이트 동일성은 §3.1에서 이미 기록되었다. `--canonical-digest`는 지원 표면(`src/cli/report_cli.nim:332`)임을 확인했다.
+- **J3 Cache Soundness**: 재사용 경로의 SHA-256/`executionEpoch` 재검증과 단일 발행 권한은 §1–§3의 변경 표면에서 그대로 유지되며, 위 4·5번 실행이 실제 커널 재실행·변조 배터리 통과로 이를 재확인한다.
+
+### 7.4 잔여 관찰 (범위 밖, 기록만)
+
+- `verify-contract-release-e2e-full` 로그의 `IR pipeline FAIL: calcDynamicTimeoutCore / safeSpeedupRatioCore`(Proof Summary 2/4)는 이번 변경 이전부터 존재하는 엔진 동작이며 G7 판정(`dual-verified`)과 독립이다. 기회적 리팩터링 금지(§0.12)에 따라 이번 범위에서 변경하지 않는다.
