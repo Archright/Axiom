@@ -1,0 +1,18 @@
+// pr-head/manipulated-2.executor_authority.json — MANIPULATED UNTRUSTED PR
+// HEAD fixture (V-A'4 scenario 2): the PR head copy of
+// config/executor_authority.json declares the PR's OWN executor blob E2
+// (b1561094...) as trusted (self-registration attempt — the circular-trust
+// shape that the phased set design denies). Post-merge on main, E2 becomes a
+// legitimate member; but membership is read from the MAIN checkout only.
+// In Phase 0, main's set is {E1}: the bind that consults MAIN (never this
+// PR-head file) must still deny an E2-head attest — proving the add-E2
+// manipulation has NO effect on issuance.
+{
+  "schemaVersion": 1,
+  "policyId": "axiom-executor-authority-v1",
+  "phase": "phase0",
+  "trusted": [
+    "65a3c58f305baf46dd9e044316b46a19ccd01ba7",
+    "b1561094dd557c800d5e4a65f4e5fc70000621d0"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "executionIdentity": {
+    "aud": "axiom-admission-v1",
+    "event_name": "workflow_run",
+    "iat": 0,
+    "issuer": "token.actions.githubusercontent.com",
+    "jti": "jti-artifact",
+    "nbf": 0,
+    "repository": "Archright/Axiom",
+    "run_attempt": 1,
+    "run_id": "424242",
+    "workflow_ref": "Archright/Axiom/.github/workflows/auto_merge.yml@refs/heads/main",
+    "workflow_sha": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+  },
+  "payload": {
+    "evaluatedAt": "2026-09-13T07:24:20Z",
+    "evaluatedMainSha": "4444444444444444444444444444444444444444",
+    "headSha": "6666666666666666666666666666666666666666",
+    "landingCandidateSha": "9999999999999999999999999999999999999999",
+    "landingParent1": "8888888888888888888888888888888888888888",
+    "ledgerCertId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+    "prNumber": 69,
+    "reasonCode": "",
+    "runAttempt": "1",
+    "runId": "424242",
+    "schemaVersion": "axiom.admission.v1",
+    "verdict": "mergeGo"
+  }
+}

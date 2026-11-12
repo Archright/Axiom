@@ -1,0 +1,372 @@
+// config/policy/contract_layer.schema.json
+// Canonical Contract Layer — immutable schemas for metrics, projections, and anchors.
+// SSOT: docs/spec/canonical_contract_policy_layer.md §2
+// Version: v2.0.0 (Phase 0 metric contract expansion)
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Canonical Contract Layer schemas. MetricSpec defines observable metrics; ProjectionSpec maps canonical repository state to metric observations; Anchor identifies code elements by path+symbol+kind (line numbers are derived evidence only, never identity). All fields use camelCase. Deterministic key ordering enforced.",
+  "title": "Axiom Canonical Contract Layer",
+  "description": "Immutable schemas defining the contract between the repository state and the policy evaluation engine. These types are versioned and must not change without a new major version.",
+  "definitions": {
+    "MetricSpec": {
+      "type": "object",
+      "required": ["metricId", "source", "projection", "comparison", "normalization", "version"],
+      "properties": {
+        "metricId": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]{2,}$",
+          "description": "Unique identifier for this metric (e.g., DEBT_REGISTRY_OPEN, SLOC_EFFECTIVE)."
+        },
+        "metricCategory": {
+          "type": "string",
+          "enum": ["bcImportLint", "bcLayerViolation", "bcEffectViolation", "bcNimtryViolation", "bcDebtRegistryOpen", "bcDebtRegistryClosed"],
+          "description": "Budget category this metric belongs to."
+        },
+        "source": {
+          "type": "object",
+          "required": ["path", "format"],
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Repository-relative path to the source of truth (file or directory glob)."
+            },
+            "format": {
+              "type": "string",
+              "enum": ["json", "toml", "nim", "lean", "text"],
+              "description": "Format of the source artifact."
+            },
+            "selector": {
+              "type": "string",
+              "description": "Optional JSONPath/TOMLKey/NimExpr selector within the source file."
+            }
+          },
+          "additionalProperties": false
+        },
+        "projection": {
+          "type": "string",
+          "description": "ProjectionSpec id that transforms canonical repository state into this metric's raw value."
+        },
+        "comparison": {
+          "type": "object",
+          "required": ["operator", "threshold"],
+          "properties": {
+            "operator": {
+              "type": "string",
+              "enum": ["eq", "lte", "gte", "lt", "gt", "within", "regex"],
+              "description": "Comparison operator applied to the metric value."
+            },
+            "threshold": {
+              "oneOf": [
+                {"type": "number"},
+                {"type": "string"}
+              ],
+              "description": "Threshold value for comparison (number for numeric ops, string for regex)."
+            }
+          },
+          "additionalProperties": false
+        },
+        "normalization": {
+          "type": "object",
+          "required": ["method"],
+          "properties": {
+            "method": {
+              "type": "string",
+              "enum": ["none", "ratio", "percentile", "log", "zscore"],
+              "description": "Normalization method applied before comparison."
+            },
+            "params": {
+              "type": "object",
+              "description": "Optional normalization parameters (method-dependent)."
+            }
+          },
+          "additionalProperties": false
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Semantic version of this MetricSpec definition. Increment on structural changes."
+        },
+        "contract": {
+          "type": "object",
+          "required": ["projection", "tolerance", "comparison", "normalization", "directionMapping", "version", "rationale"],
+          "properties": {
+            "projection": {
+              "type": "object",
+              "required": ["kind", "scope", "selector", "aggregation"],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": ["count", "sum", "max", "min", "avg", "exists", "regexMatch", "parseJsonField"],
+                  "description": "Projection kind — how the raw value is derived from canonical state."
+                },
+                "scope": {
+                  "type": "string",
+                  "description": "Repository-relative path scope for the projection."
+                },
+                "selector": {
+                  "type": "string",
+                  "description": "Selector expression (regex, jsonpath, ast:expr) within the scope."
+                },
+                "aggregation": {
+                  "type": "string",
+                  "enum": ["sum", "count", "avg", "max", "min"],
+                  "description": "Aggregation method applied to projection results."
+                }
+              },
+              "additionalProperties": false
+            },
+            "tolerance": {
+              "type": "object",
+              "required": ["mode"],
+              "properties": {
+                "mode": {
+                  "type": "string",
+                  "enum": ["disabled", "absolute", "percentage"],
+                  "description": "Tolerance mode. 'disabled' means no tolerance — exact comparison."
+                },
+                "value": {
+                  "type": "number",
+                  "description": "Tolerance value (only meaningful when mode is 'absolute' or 'percentage')."
+                }
+              },
+              "additionalProperties": false
+            },
+            "comparison": {
+              "type": "object",
+              "required": ["operator", "threshold"],
+              "properties": {
+                "operator": {
+                  "type": "string",
+                  "enum": ["eq", "lte", "gte", "lt", "gt", "within", "regex"],
+                  "description": "Comparison operator applied to the metric value."
+                },
+                "threshold": {
+                  "oneOf": [
+                    {"type": "number"},
+                    {"type": "string"}
+                  ],
+                  "description": "Threshold value for comparison (number for numeric ops, string for regex)."
+                }
+              },
+              "additionalProperties": false
+            },
+            "normalization": {
+              "type": "object",
+              "required": ["method"],
+              "properties": {
+                "method": {
+                  "type": "string",
+                  "enum": ["none", "ratio", "percentile", "log", "zscore"],
+                  "description": "Normalization method applied before comparison."
+                },
+                "params": {
+                  "type": "object",
+                  "description": "Optional normalization parameters (method-dependent)."
+                }
+              },
+              "additionalProperties": false
+            },
+            "directionMapping": {
+              "type": "object",
+              "description": "Maps comparison operators to directional outcome labels (IMPROVEMENT/REGRESSION/MAINTAINED/PASS)."
+            },
+            "version": {
+              "type": "string",
+              "pattern": "^\\d+\\.\\d+\\.\\d+$",
+              "description": "Semantic version of this contract definition."
+            },
+            "rationale": {
+              "type": "string",
+              "description": "Human-readable justification for this metric contract."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "ProjectionSpec": {
+      "type": "object",
+      "required": ["projectionId", "canonicalState", "observations", "version"],
+      "properties": {
+        "projectionId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Unique identifier for this projection (e.g., debtRegistryOpenCount)."
+        },
+        "canonicalState": {
+          "type": "object",
+          "required": ["hashAlgorithm", "scope"],
+          "properties": {
+            "hashAlgorithm": {
+              "type": "string",
+              "enum": ["sha256", "sha512"],
+              "description": "Hash algorithm used for canonical state fingerprinting."
+            },
+            "scope": {
+              "type": "array",
+              "items": {"type": "string"},
+              "minItems": 1,
+              "description": "List of repository-relative paths included in the canonical state snapshot."
+            }
+          },
+          "additionalProperties": false
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "extraction"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the observation extracted from canonical state."
+              },
+              "extraction": {
+                "type": "object",
+                "required": ["method"],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "enum": ["count", "sum", "max", "min", "avg", "exists", "regexMatch", "parseJsonField"],
+                    "description": "Extraction method applied to the canonical state."
+                  },
+                  "field": {
+                    "type": "string",
+                    "description": "Optional field name for parseJsonField extraction."
+                  },
+                  "predicate": {
+                    "type": "string",
+                    "description": "Optional filter predicate (JSONPath-like expression)."
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "description": "Observations extracted from canonical state via this projection."
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Semantic version of this ProjectionSpec definition."
+        }
+      },
+      "additionalProperties": false
+    },
+    "Anchor": {
+      "type": "object",
+      "required": ["path", "symbol", "semanticKind"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Repository-relative path to the source file containing the symbol."
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Symbol name as it appears in Nim AST (proc/type/const/var name). Line numbers MUST NOT be part of identity."
+        },
+        "semanticKind": {
+          "type": "string",
+          "enum": ["proc", "func", "type", "var", "const", "template", "macro", "iterator", "field"],
+          "description": "Nim AST node kind of the anchored symbol."
+        },
+        "derivedEvidence": {
+          "type": "object",
+          "properties": {
+            "lineRange": {
+              "type": "string",
+              "description": "Optional line range (e.g., '42-87') for human-readable reference. Never used for identity comparison."
+            },
+            "canonicalSyntaxHash": {
+              "type": "string",
+              "pattern": "^nim-pnode-canonical-v2:[a-f0-9]{64}$",
+              "description": "SHA-256 hash of the canonical PNode representation (excluding info/comments/synthetic nodes)."
+            }
+          },
+          "additionalProperties": false,
+          "description": "Derived evidence fields. Line numbers appear here only as optional human-readable reference, never as identity components."
+        }
+      },
+      "additionalProperties": false
+    },
+    "Observation": {
+      "type": "object",
+      "required": ["observationId", "metricId", "value", "result", "timestamp", "stateHash"],
+      "properties": {
+        "observationId": {
+          "type": "string",
+          "pattern": "^obs_[a-f0-9]{32}$",
+          "description": "Deterministic SHA-256 prefix of (metricId + timestamp + value)."
+        },
+        "metricId": {
+          "type": "string",
+          "description": "Reference to the MetricSpec this observation belongs to."
+        },
+        "value": {
+          "oneOf": [
+            {"type": "number"},
+            {"type": "string"},
+            {"type": "boolean"}
+          ],
+          "description": "The measured value of this observation."
+        },
+        "observedValue": {
+          "type": "integer",
+          "description": "Integer observation value used for metric identity and dedup (okMetricEvaluation kind only)."
+        },
+        "direction": {
+          "type": "string",
+          "enum": ["IMPROVEMENT", "REGRESSION", "MAINTAINED"],
+          "description": "Direction of change relative to baseline (okMetricEvaluation kind only)."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["PASS", "DRIFT", "INFO"],
+          "description": "Observation status (okMetricEvaluation kind only)."
+        },
+        "result": {
+          "type": "string",
+          "enum": ["PASS", "DRIFT"],
+          "description": "Evaluator-decided result: PASS means within threshold, DRIFT means deviation detected."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of when this observation was recorded."
+        },
+        "stateHash": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "description": "SHA-256 hash of the canonical repository state at observation time."
+        },
+        "projectionRef": {
+          "type": "string",
+          "description": "Optional reference to the ProjectionSpec used to derive this observation."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"$ref": {"const": "#/definitions/MetricSpec"}}},
+      "then": {"$ref": "#/definitions/MetricSpec"}
+    },
+    {
+      "if": {"properties": {"$ref": {"const": "#/definitions/ProjectionSpec"}}},
+      "then": {"$ref": "#/definitions/ProjectionSpec"}
+    },
+    {
+      "if": {"properties": {"$ref": {"const": "#/definitions/Anchor"}}},
+      "then": {"$ref": "#/definitions/Anchor"}
+    },
+    {
+      "if": {"properties": {"$ref": {"const": "#/definitions/Observation"}}},
+      "then": {"$ref": "#/definitions/Observation"}
+    }
+  ]
+}

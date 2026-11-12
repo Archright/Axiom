@@ -1,0 +1,14 @@
+=== case: contrast ===
+input_file: inputs/contrast.toml
+decode_outcome: decode SUCCESS (no exception)
+process_effect: none - config accepted, node would continue startup
+field agent-string present: true
+agent_string_bytes_hex: 6E 69 6D 62 75 73 C2 80
+agent_string_utf8: well-formed-UTF8
+agent_string_len: 8
+devp2p_hello_clientId_wire_hex: 88 6E 69 6D 62 75 73 C2 80  (RLP string framing + clientId bytes, devp2p_wire.nim:103,129)
+field allowed-origins present: true
+allowed_origin[0]_bytes_hex: 68 74 74 70 3A 2F 2F 6C 6F 63 61 6C 68 6F 73 74 3A 38 30 38 30 C2 80
+allowed_origin[0]_utf8: well-formed-UTF8
+allowed_origin[0]_parseUri: scheme=http hostname=6C 6F 63 61 6C 68 6F 73 74 port=38 30 38 30 C2 80 path=(empty)
+cors_decision vs Origin <http://localhost:8080>: Http403 Origin not allowed

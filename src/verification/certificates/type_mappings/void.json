@@ -1,0 +1,8 @@
+{
+  "nimType": "void",
+  "leanType": "Unit",
+  "smtSort": "Unit",
+  "mappingProofObligation": "nim_lean_void_iso",
+  "verified": false,
+  "sourceHash": ""
+}

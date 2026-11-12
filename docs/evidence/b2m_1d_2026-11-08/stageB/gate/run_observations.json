@@ -1,0 +1,124 @@
+{
+ "run1": {
+  "bwrap_exit": "0",
+  "t_start": "2026-11-08T16:43:36,933642534+09:00",
+  "t_end": "2026-11-08T16:44:25,362035432+09:00",
+  "id_line": "uid=1000 gid=1000 groups=1000,65534",
+  "home_absent_line": "ls: cannot access '/home': No such file or directory",
+  "root_absent_line": "ls: cannot access '/root': No such file or directory",
+  "curl_exit": 6,
+  "unpack": {
+   "kind": "Already decompressed",
+   "files": 1478,
+   "already": null,
+   "verbatim": "Already decompressed 1478 file(s)"
+  },
+  "built_lines": [
+   [
+    "1801",
+    "AsBool.TypesExternal",
+    "2.8"
+   ],
+   [
+    "1801",
+    "AsBool.Types",
+    "2.1"
+   ],
+   [
+    "1801",
+    "AsBool.Funs",
+    "1.8"
+   ],
+   [
+    "1801",
+    "AsBool.Spec",
+    "1.8"
+   ],
+   [
+    "1801",
+    "AsBool",
+    "1.6"
+   ]
+  ],
+  "jobs_total": 1801,
+  "build_completed_line": "Build completed successfully (1801 jobs).",
+  "axiom_lines": [
+   "'AsBool.Spec.as_bool_bool_some' depends on axioms: [propext, Quot.sound]",
+   "'AsBool.Spec.as_bool_non_bool_none' depends on axioms: [propext, Quot.sound]"
+  ],
+  "sorryAx_count": 0,
+  "olean_digests": {
+   "AsBool.olean": "e5b1ef421f5ebccb6aa35ebeff066db35dd944e97dbfcace61362c8d43340d58",
+   "AsBool/Funs.olean": "bdf7f0ff6dfc84804d36a640348e9a5af6fe9f1d7e8c8a63b41ce099a6133ad9",
+   "AsBool/Spec.olean": "5f604d403600172d402091048aebdba1e646c39a30fbe19ff095dfec6601f816",
+   "AsBool/Types.olean": "d66574f5f531a479d158654351aef301446b61ab7da47684526360a2fd396db8",
+   "AsBool/TypesExternal.olean": "a41a0bed960f683f4134dddd3edb72da8cd067f369ea66c5d516404ff8bd09b8"
+  },
+  "ro_mount_checks": {
+   "toolchain_readonly": "ok",
+   "cache_readonly": "ok",
+   "inputs_readonly": "ok"
+  }
+ },
+ "run2": {
+  "bwrap_exit": "0",
+  "t_start": "2026-11-08T16:48:53,867243207+09:00",
+  "t_end": "2026-11-08T16:49:46,199006060+09:00",
+  "id_line": "uid=1000 gid=1000 groups=1000,65534",
+  "home_absent_line": "ls: cannot access '/home': No such file or directory",
+  "root_absent_line": "ls: cannot access '/root': No such file or directory",
+  "curl_exit": 6,
+  "unpack": {
+   "kind": "Already decompressed",
+   "files": 1478,
+   "already": null,
+   "verbatim": "Already decompressed 1478 file(s)"
+  },
+  "built_lines": [
+   [
+    "1801",
+    "AsBool.TypesExternal",
+    "3.1"
+   ],
+   [
+    "1801",
+    "AsBool.Types",
+    "1.9"
+   ],
+   [
+    "1801",
+    "AsBool.Funs",
+    "1.6"
+   ],
+   [
+    "1801",
+    "AsBool.Spec",
+    "1.7"
+   ],
+   [
+    "1801",
+    "AsBool",
+    "1.6"
+   ]
+  ],
+  "jobs_total": 1801,
+  "build_completed_line": "Build completed successfully (1801 jobs).",
+  "axiom_lines": [
+   "'AsBool.Spec.as_bool_bool_some' depends on axioms: [propext, Quot.sound]",
+   "'AsBool.Spec.as_bool_non_bool_none' depends on axioms: [propext, Quot.sound]"
+  ],
+  "sorryAx_count": 0,
+  "olean_digests": {
+   "AsBool.olean": "e5b1ef421f5ebccb6aa35ebeff066db35dd944e97dbfcace61362c8d43340d58",
+   "AsBool/Funs.olean": "bdf7f0ff6dfc84804d36a640348e9a5af6fe9f1d7e8c8a63b41ce099a6133ad9",
+   "AsBool/Spec.olean": "5f604d403600172d402091048aebdba1e646c39a30fbe19ff095dfec6601f816",
+   "AsBool/Types.olean": "d66574f5f531a479d158654351aef301446b61ab7da47684526360a2fd396db8",
+   "AsBool/TypesExternal.olean": "a41a0bed960f683f4134dddd3edb72da8cd067f369ea66c5d516404ff8bd09b8"
+  },
+  "ro_mount_checks": {
+   "toolchain_readonly": "ok",
+   "cache_readonly": "ok",
+   "inputs_readonly": "ok"
+  }
+ }
+}

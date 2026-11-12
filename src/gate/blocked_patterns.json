@@ -1,0 +1,86 @@
+{
+  "version": "1.0.0",
+  "description": "Critical debt patterns that block pipeline. Per AGENTS.md S0.2 First-Principles: these are NOT advisory - they are physical barriers.",
+  "enforcement": {
+    "pre_commit": "changed_files_only",
+    "pre_push": "full_tree",
+    "full_tree": "ignore_cache"
+  },
+  "critical_blockers": [
+    {
+      "id": "BLOCK#001",
+      "name": "import_encapsulation_violation",
+      "severity": "critical",
+      "description": "core/orchestration/ and core/gateway/ must not directly import verification/. Use verification_interface.nim instead.",
+      "pattern": {
+        "files_in": ["src/core/orchestration/", "src/core/gateway/"],
+        "forbidden_import_prefixes": ["verification.", "verification/"]
+      },
+      "action": "abort",
+      "remediation": "Replace 'import verification.X' with 'import core/contract/verification_interface'"
+    },
+    {
+      "id": "BLOCK#002",
+      "name": "bare_except_clauses",
+      "severity": "critical",
+      "description": "Bare 'except:' catches Defects. Use 'except CatchableError:' per Nim best practices.",
+      "pattern": {
+        "files_in": ["src/core/", "src/gate/", "src/verification/"],
+        "regex": "^\\s+except:\\s*$"
+      },
+      "action": "abort",
+      "remediation": "Replace 'except:' with 'except CatchableError:'"
+    },
+    {
+      "id": "BLOCK#003",
+      "name": "stub_test_files",
+      "severity": "critical",
+      "description": "Test files with check true density > 50% violate AGENTS.md S0.8 No Stub Files.",
+      "pattern": {
+        "files_in": ["tests/"],
+        "metric": "check_true_density",
+        "threshold": 0.5
+      },
+      "action": "abort",
+      "remediation": "Replace stub assertions with observable behavior verification"
+    },
+    {
+      "id": "BLOCK#004",
+      "name": "zombie_imports",
+      "severity": "critical",
+      "description": "Imports referencing deleted or non-existent modules.",
+      "pattern": {
+        "files_in": ["src/", "tests/"],
+        "check": "import_target_exists"
+      },
+      "action": "abort",
+      "remediation": "Remove or update the import to reference a valid module"
+    },
+    {
+      "id": "BLOCK#005",
+      "name": "acyclic_missing_on_ref_object",
+      "severity": "high",
+      "description": "ref object without {.acyclic.} annotation - ORC cycle collector overhead per AGENTS.md S0.6a.",
+      "pattern": {
+        "files_in": ["src/core/", "src/verification/", "src/gate/"],
+        "regex": "= ref object",
+        "missing_annotation": "{.acyclic.}"
+      },
+      "action": "abort",
+      "remediation": "Add {.acyclic.} pragma to the ref object type"
+    },
+    {
+      "id": "BLOCK#006",
+      "name": "include_statements_outside_parts",
+      "severity": "critical",
+      "description": "include statements outside _parts/ file splitting violate AGENTS.md S2.6.",
+      "pattern": {
+        "files_in": ["src/"],
+        "regex": "^include ",
+        "exceptions": ["_part"]
+      },
+      "action": "abort",
+      "remediation": "Convert include to import/export pattern"
+    }
+  ]
+}

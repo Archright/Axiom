@@ -1,0 +1,15 @@
+{
+  "id": "manifest-consistency-gate",
+  "name": "Axiom manifest consistency gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/manifest_consistency_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/gate/manifest.d/|src/gate/gate_manifest.schema.json|src/gate/runners/",
+  "passFilenames": false,
+  "weight": "medium",
+  "category": "policy",
+  "severity": "error",
+  "execution_mode": "interpreted"
+}

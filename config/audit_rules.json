@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": 1,
+  "description": "Axiom audit rules catalog metadata — rule_id, version, domain, severity, default_action, mutation_allowed.",
+  "rules": [
+    { "rule_id": "DIR-BIN-001", "version": "1", "domain": "directory", "severity": "high", "default_action": "flag", "mutation_allowed": false },
+    { "rule_id": "DIR-BIN-002", "version": "1", "domain": "directory", "severity": "medium", "default_action": "flag", "mutation_allowed": false },
+    { "rule_id": "DIR-BIN-003", "version": "1", "domain": "directory", "severity": "medium", "default_action": "flag", "mutation_allowed": false },
+    { "rule_id": "DIR-ART-001", "version": "1", "domain": "directory", "severity": "low", "default_action": "flag", "mutation_allowed": false },
+    { "rule_id": "DATA-001", "version": "1", "domain": "data", "severity": "high", "default_action": "flag", "mutation_allowed": false },
+    { "rule_id": "TOOL-001", "version": "1", "domain": "tool", "severity": "medium", "default_action": "flag", "mutation_allowed": false },
+    { "rule_id": "TEST-001", "version": "1", "domain": "test", "severity": "low", "default_action": "flag", "mutation_allowed": false },
+    { "rule_id": "DOC-LINK-001", "version": "1", "domain": "documentation", "severity": "medium", "default_action": "flag", "mutation_allowed": false },
+    { "rule_id": "DOC-CLA-001", "version": "1", "domain": "documentation", "severity": "high", "default_action": "flag", "mutation_allowed": false },
+    { "rule_id": "QUIRK-001", "version": "1", "domain": "quirk", "severity": "low", "default_action": "document", "mutation_allowed": false },
+    { "rule_id": "QUIRK-002", "version": "1", "domain": "quirk", "severity": "low", "default_action": "document", "mutation_allowed": false },
+    { "rule_id": "QUIRK-003", "version": "1", "domain": "quirk", "severity": "low", "default_action": "document", "mutation_allowed": false },
+    { "rule_id": "QUIRK-004", "version": "1", "domain": "quirk", "severity": "low", "default_action": "document", "mutation_allowed": false },
+    { "rule_id": "TC-001", "version": "1", "domain": "toolchain", "severity": "medium", "default_action": "flag", "mutation_allowed": false },
+    { "rule_id": "LOG-001", "version": "1", "domain": "log", "severity": "low", "default_action": "flag", "mutation_allowed": false },
+    { "rule_id": "LOG-002", "version": "1", "domain": "log", "severity": "low", "default_action": "flag", "mutation_allowed": false },
+    { "rule_id": "LOG-003", "version": "1", "domain": "log", "severity": "low", "default_action": "flag", "mutation_allowed": false },
+    { "rule_id": "AUD-001", "version": "1", "domain": "audit", "severity": "info", "default_action": "flag", "mutation_allowed": false },
+    { "rule_id": "AUD-002", "version": "1", "domain": "audit", "severity": "info", "default_action": "flag", "mutation_allowed": false },
+    { "rule_id": "AUD-003", "version": "1", "domain": "audit", "severity": "info", "default_action": "flag", "mutation_allowed": false }
+  ]
+}

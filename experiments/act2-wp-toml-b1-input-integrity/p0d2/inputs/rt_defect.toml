@@ -1,0 +1,3 @@
+# P0-D2-RT case 2: DEFECT INPUT - hex escapes in basic-string values
+value = "caf\xE9"
+ctrl = "\x80"

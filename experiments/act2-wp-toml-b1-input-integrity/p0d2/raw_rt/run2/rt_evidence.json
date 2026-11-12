@@ -1,0 +1,280 @@
+{
+  "schema": "ax.p0d2.rt-evidence/v1",
+  "invariantId": "roundtrip.identity",
+  "key": "roundtrip.identity",
+  "scope": "toml-flavor=Toml;version=1.1.0;runtimeFlags=Toml_v110_Flags{TomlInlineTableNewline,TomlInlineTableTrailingComma,TomlHexEscape,TomlHourMinute,TomlStrictComma};options=default(init, no overrides);callForm=Toml.decode(text,T)/Toml.encode(value) (nim-serialization generic; TomlWriter.init and TomlReader.init both union flags+flavorRuntimeFlags: writer.nim:30-40, reader.nim:53-66)",
+  "subject": "nim-toml-serialization@4aa8e2223649fc0837c490a4acfca7b8b1e756f9/probe=p0d2_rt_probe/input=rt_defect.toml:05e0d797408507abaee83e427d67bd2e2d68f197744fe06944e310905926c7ad",
+  "verdict": "UNKNOWN",
+  "classification": {
+    "label": "제한된 실험 증거 (limited experimental evidence)",
+    "관측": "고정 입력(inputs/rt_baseline.toml, rt_defect.toml, rt_unicode.toml; sha256 고정)에서 문자열 왕복 불변식(roundtrip.identity) 위반이 재현됨 - defect 입력에서 decode(encode(intent)) != intent (raw byte E9 != UTF-8 C3 A9), raw_rt/run{1,2}에 바이트 수준 재현.",
+    "판정": "UNKNOWN - 제품 계약의 모순 규칙(docs/spec/productization_contract.md:168: same key AND same scope AND same subject AND 상충 value -> UNKNOWN)에 따른 판정.",
+    "상태·tier 쌍": {
+      "status": "certRed",
+      "verificationTier": "vtNone",
+      "tierLabel": "none",
+      "비고": "certRed + vtNone을 계약 어휘에 따라 투영한 제한적 실험 결과 - 계약 산출 어휘 그대로: certRed는 SAT/반례 전용 (src/core/types/verification_tier.nim:98), 반례에 solver 증거가 없으면 tier = tierFromResults(false,false) = vtNone (verification_tier.nim:32-40,139-141; DECISION-0630 - tier는 저장 증거의 순수 함수), status/verificationTier는 저장 증거에서 투영된다 (src/verification/cert_writer.nim:303,362)."
+    },
+    "범위 제한": "deriveClaim을 통한 claim authority(src/core/trusted/claim_authority.nim:17-20 - claim은 캡처된 solver 증거로부터만 파생; certificate/status는 절대 deriveClaim 입력이 아님), identityDigest, trustCommitId 결속 (docs/spec/productization_contract.md:304-305)을 갖춘 정식 계약 적합 인서트가 아님. D2의 반례는 solverSat -> derivePipelineClaim 경로가 아니라 Nim 왕복 probe의 고정 입력 관측에서 왔다. 따라서 상태·tier 쌍은 계약 어휘의 투영이며, 이 슬라이스의 어떤 산출물도 계약이 발행하는 형식 인서트로 표시·소비되어서는 안 된다. tierCounts는 단일 모순 artifact에 존재하지 않는다(§7b 미적용)."
+  },
+  "contractOutput": {
+    "관측 결과": "D2 reproduced at nim-toml-serialization@4aa8e22: the encoder (writer.nim:131-163 writeValue, TomlHexEscape active by default via writer.nim:30-40) emits U+00E9 as the codepoint escape \\xE9 (encoder_output bytes 22 63 61 66 5C 78 45 39 22); the decoder (lexer.nim:416-430 scanHexEscape, res.add char(code) at lexer.nim:429) decodes the authored \\xE9 to the RAW BYTE E9 (decoded_value = 63 61 66 E9, invalid UTF-8) instead of U+00E9's UTF-8 encoding C3 A9. decode(encode(intent)) != intent on this path (roundtrip_identity_holds: false) - roundtrip.identity violated. The \\u00E9 form decodes correctly to 63 61 66 C3 A9 via scanUnicode (lexer.nim:399-415): the correct decoder path exists in the same lexer, but the default encoder never emits it for U+0080..U+00FF.",
+    "판정": "UNKNOWN",
+    "사유": "Expected-vs-observed conflict: under key=roundtrip.identity, the same scope (Toml flavor 'Toml', v1.1.0, runtime flags Toml_v110_Flags incl. TomlHexEscape, default options, call form Toml.decode/Toml.encode) and the same subject (pinned commit + probe + defect input), the contract expects decode(encode(intent)) == intent (TOML v1.1.0 defines \\xHH as U+00HH; strings are sequences of Unicode characters), while the pinned build observably yields decode(encode(intent)) != intent with the raw byte E9 in place of C3 A9. Per docs/spec/productization_contract.md:168 (same key AND same scope AND same subject AND conflicting value -> UNKNOWN), the verdict function returns UNKNOWN. This UNKNOWN is the contract's verdict FOR an observed contradiction, not 'insufficient evidence': the contradiction itself is fully observed, byte-exactly, and reproducibly (see commands + output digests).",
+    "증거": {
+      "inputs": {
+        "baseline": {
+          "sha256": "sha256:a8b78ab80a9fe9394cf756f64bc51d82ccb7ef05e45ee241300b8bea8d5937da",
+          "bytesHex": "23 20 50 30 2D 44 32 2D 52 54 20 63 61 73 65 20 31 3A 20 42 41 53 45 4C 49 4E 45 20 2D 20 70 6C 61 69 6E 20 41 53 43 49 49 20 73 74 72 69 6E 67 2C 20 6E 6F 20 68 65 78 20 65 73 63 61 70 65 0A 76 61 6C 75 65 20 3D 20 22 68 65 6C 6C 6F 20 77 6F 72 6C 64 22 0A 63 74 72 6C 20 3D 20 22 70 6C 61 69 6E 22 0A"
+        },
+        "defect": {
+          "sha256": "sha256:05e0d797408507abaee83e427d67bd2e2d68f197744fe06944e310905926c7ad",
+          "bytesHex": "23 20 50 30 2D 44 32 2D 52 54 20 63 61 73 65 20 32 3A 20 44 45 46 45 43 54 20 49 4E 50 55 54 20 2D 20 68 65 78 20 65 73 63 61 70 65 73 20 69 6E 20 62 61 73 69 63 2D 73 74 72 69 6E 67 20 76 61 6C 75 65 73 0A 76 61 6C 75 65 20 3D 20 22 63 61 66 5C 78 45 39 22 0A 63 74 72 6C 20 3D 20 22 5C 78 38 30 22 0A"
+        },
+        "unicode": {
+          "sha256": "sha256:ece1775fed0bad89fc3ca110ba4ea0682538df51b96fbb8cb58c2087ee5a29b4",
+          "bytesHex": "23 20 50 30 2D 44 32 2D 52 54 20 63 61 73 65 20 33 3A 20 55 4E 49 43 4F 44 45 20 45 53 43 41 50 45 20 2D 20 73 61 6D 65 20 69 6E 74 65 6E 64 65 64 20 76 61 6C 75 65 73 20 76 69 61 20 75 58 58 58 58 20 65 73 63 61 70 65 73 0A 76 61 6C 75 65 20 3D 20 22 63 61 66 5C 75 30 30 45 39 22 0A 63 74 72 6C 20 3D 20 22 5C 75 30 30 38 30 22 0A"
+        }
+      },
+      "decisiveBytes": {
+        "defect_decoded_value_hex": "63 61 66 E9 (raw byte 0xE9; INVALID UTF-8)",
+        "unicode_decoded_value_hex": "63 61 66 C3 A9 (U+00E9 correct UTF-8 via scanUnicode)",
+        "encoder_output_bytes_hex_defect": "76 61 6C 75 65 20 3D 20 22 63 61 66 5C 78 45 39 22 0A 63 74 72 6C 20 3D 20 22 5C 78 38 30 22 0A",
+        "encoder_output_bytes_hex_unicode": "76 61 6C 75 65 20 3D 20 22 63 61 66 5C 78 45 39 22 0A 63 74 72 6C 20 3D 20 22 5C 78 38 30 22 0A",
+        "roundtrip_value_bytes_hex_defect": "63 61 66 E9",
+        "roundtrip_value_bytes_hex_unicode": "63 61 66 E9",
+        "ref_utf8_U00E9_hex": "C3 A9 (independent std/unicode oracle)",
+        "ref_utf8_U0080_hex": "C2 80",
+        "defect_ctrl_decoded_hex": "80 (raw byte 0x80; unicode-path control: C2 80)"
+      },
+      "reproductionConditions": {
+        "command": "bash experiments/act2-wp-toml-b1-input-integrity/p0d2/replay_rt.sh",
+        "runs": {
+          "baseline": {
+            "exitCode": 0,
+            "stdoutDigest": "sha256:0130b2cb03a3749df87636c1d4b6d143fb7e91cf72bb0ad07baac47f57399dfd",
+            "stderrDigest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout": "=== case: baseline ===\ninput_bytes_hex: 23 20 50 30 2D 44 32 2D 52 54 20 63 61 73 65 20 31 3A 20 42 41 53 45 4C 49 4E 45 20 2D 20 70 6C 61 69 6E 20 41 53 43 49 49 20 73 74 72 69 6E 67 2C 20 6E 6F 20 68 65 78 20 65 73 63 61 70 65 0A 76 61 6C 75 65 20 3D 20 22 68 65 6C 6C 6F 20 77 6F 72 6C 64 22 0A 63 74 72 6C 20 3D 20 22 70 6C 61 69 6E 22 0A\ndecode_outcome: SUCCESS\ndecoded_value_bytes_hex: 68 65 6C 6C 6F 20 77 6F 72 6C 64\ndecoded_value_utf8: well-formed-UTF8\ndecoded_ctrl_bytes_hex: 70 6C 61 69 6E\ndecoded_ctrl_utf8: well-formed-UTF8\nauthored_decode_matches_intent_value: true\nauthored_decode_matches_intent_ctrl: true\nencoder_output_bytes_hex: 76 61 6C 75 65 20 3D 20 22 68 65 6C 6C 6F 20 77 6F 72 6C 64 22 0A 63 74 72 6C 20 3D 20 22 70 6C 61 69 6E 22 0A\nencoder_output_text: value = \"hello world\"\\x0Actrl = \"plain\"\\x0A\nroundtrip_value_bytes_hex: 68 65 6C 6C 6F 20 77 6F 72 6C 64\nroundtrip_ctrl_bytes_hex: 70 6C 61 69 6E\nroundtrip_value_utf8: well-formed-UTF8\nroundtrip_identity_holds: true\nref_utf8_U00E9_hex: C3 A9\nref_utf8_U0080_hex: C2 80\n"
+          },
+          "defect": {
+            "exitCode": 0,
+            "stdoutDigest": "sha256:5f2bb15d5c9535a60a6d5b9261524af04a83f67bd44cabc762d025b38b2ef4b8",
+            "stderrDigest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout": "=== case: defect ===\ninput_bytes_hex: 23 20 50 30 2D 44 32 2D 52 54 20 63 61 73 65 20 32 3A 20 44 45 46 45 43 54 20 49 4E 50 55 54 20 2D 20 68 65 78 20 65 73 63 61 70 65 73 20 69 6E 20 62 61 73 69 63 2D 73 74 72 69 6E 67 20 76 61 6C 75 65 73 0A 76 61 6C 75 65 20 3D 20 22 63 61 66 5C 78 45 39 22 0A 63 74 72 6C 20 3D 20 22 5C 78 38 30 22 0A\ndecode_outcome: SUCCESS\ndecoded_value_bytes_hex: 63 61 66 E9\ndecoded_value_utf8: INVALID-UTF8(first-bad-offset=3)\ndecoded_ctrl_bytes_hex: 80\ndecoded_ctrl_utf8: INVALID-UTF8(first-bad-offset=0)\nauthored_decode_matches_intent_value: false\nauthored_decode_matches_intent_ctrl: false\nencoder_output_bytes_hex: 76 61 6C 75 65 20 3D 20 22 63 61 66 5C 78 45 39 22 0A 63 74 72 6C 20 3D 20 22 5C 78 38 30 22 0A\nencoder_output_text: value = \"caf\\x5CxE9\"\\x0Actrl = \"\\x5Cx80\"\\x0A\nroundtrip_value_bytes_hex: 63 61 66 E9\nroundtrip_ctrl_bytes_hex: 80\nroundtrip_value_utf8: INVALID-UTF8(first-bad-offset=3)\nroundtrip_identity_holds: false\nref_utf8_U00E9_hex: C3 A9\nref_utf8_U0080_hex: C2 80\n"
+          },
+          "unicode": {
+            "exitCode": 0,
+            "stdoutDigest": "sha256:36348ab0d64e4ec971d475d6657000689e16254f2c85083ecebb8b1fb51c017d",
+            "stderrDigest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout": "=== case: unicode ===\ninput_bytes_hex: 23 20 50 30 2D 44 32 2D 52 54 20 63 61 73 65 20 33 3A 20 55 4E 49 43 4F 44 45 20 45 53 43 41 50 45 20 2D 20 73 61 6D 65 20 69 6E 74 65 6E 64 65 64 20 76 61 6C 75 65 73 20 76 69 61 20 75 58 58 58 58 20 65 73 63 61 70 65 73 0A 76 61 6C 75 65 20 3D 20 22 63 61 66 5C 75 30 30 45 39 22 0A 63 74 72 6C 20 3D 20 22 5C 75 30 30 38 30 22 0A\ndecode_outcome: SUCCESS\ndecoded_value_bytes_hex: 63 61 66 C3 A9\ndecoded_value_utf8: well-formed-UTF8\ndecoded_ctrl_bytes_hex: C2 80\ndecoded_ctrl_utf8: well-formed-UTF8\nauthored_decode_matches_intent_value: true\nauthored_decode_matches_intent_ctrl: true\nencoder_output_bytes_hex: 76 61 6C 75 65 20 3D 20 22 63 61 66 5C 78 45 39 22 0A 63 74 72 6C 20 3D 20 22 5C 78 38 30 22 0A\nencoder_output_text: value = \"caf\\x5CxE9\"\\x0Actrl = \"\\x5Cx80\"\\x0A\nroundtrip_value_bytes_hex: 63 61 66 E9\nroundtrip_ctrl_bytes_hex: 80\nroundtrip_value_utf8: INVALID-UTF8(first-bad-offset=3)\nroundtrip_identity_holds: false\nref_utf8_U00E9_hex: C3 A9\nref_utf8_U0080_hex: C2 80\n"
+          }
+        },
+        "rawArtifacts": "p0d2/raw_rt/ (rt_ prefixed run dirs)"
+      }
+    }
+  },
+  "assuranceTier": {
+    "tier": "vtNone",
+    "label": "none",
+    "enum": "VerificationTier (src/core/types/verification_tier.nim: vtNone/vtZ3Only/vtLeanOnly/vtDual/vtKInduction/vtUfAbstract)",
+    "grounding": "tierFromEvidence(CertificateEvidence(z3Passed=false, leanVerified=false)) = vtNone per verification_tier.nim:139-141 (tierFromEvidence -> tierFromResults) and the exhaustive truth table at verification_tier.nim:32-40 (DECISION-0630: tier is a PURE function of stored evidence; status may never exceed evidence). This refutation carries NO Z3 unsat and NO Lean kernel artifact - its evidentiary procedure is a deterministic local byte-level replay (commands + exit codes + SHA-256 output digests, pinned commit + toolchain). A concrete counterexample refutes; it does not verify, so no solver tier is claimed."
+  },
+  "observations": [
+    {
+      "key": "roundtrip.identity",
+      "scope": "toml-flavor=Toml;version=1.1.0;runtimeFlags=Toml_v110_Flags{TomlInlineTableNewline,TomlInlineTableTrailingComma,TomlHexEscape,TomlHourMinute,TomlStrictComma};options=default(init, no overrides);callForm=Toml.decode(text,T)/Toml.encode(value) (nim-serialization generic; TomlWriter.init and TomlReader.init both union flags+flavorRuntimeFlags: writer.nim:30-40, reader.nim:53-66)",
+      "subject": "nim-toml-serialization@4aa8e2223649fc0837c490a4acfca7b8b1e756f9/probe=p0d2_rt_probe/input=rt_defect.toml:05e0d797408507abaee83e427d67bd2e2d68f197744fe06944e310905926c7ad",
+      "value": "expected: decode(encode(intent)) == intent; '\\xE9' denotes U+00E9 and must decode to the UTF-8 sequence C3 A9 (TOML v1.1.0; README.md:64-69 implements v1.1.0, README.md:78-80 enables \\xHH by default)"
+    },
+    {
+      "key": "roundtrip.identity",
+      "scope": "toml-flavor=Toml;version=1.1.0;runtimeFlags=Toml_v110_Flags{TomlInlineTableNewline,TomlInlineTableTrailingComma,TomlHexEscape,TomlHourMinute,TomlStrictComma};options=default(init, no overrides);callForm=Toml.decode(text,T)/Toml.encode(value) (nim-serialization generic; TomlWriter.init and TomlReader.init both union flags+flavorRuntimeFlags: writer.nim:30-40, reader.nim:53-66)",
+      "subject": "nim-toml-serialization@4aa8e2223649fc0837c490a4acfca7b8b1e756f9/probe=p0d2_rt_probe/input=rt_defect.toml:05e0d797408507abaee83e427d67bd2e2d68f197744fe06944e310905926c7ad",
+      "value": "observed: decode('caf\\xE9') = 63 61 66 E9 (raw byte, invalid UTF-8) != 63 61 66 C3 A9; decode(encode(intent)) != intent (encoder emits \\xE9, lexer scanHexEscape inserts the raw byte)"
+    },
+    {
+      "key": "roundtrip.identity",
+      "scope": "toml-flavor=Toml;version=1.1.0;runtimeFlags=Toml_v110_Flags{TomlInlineTableNewline,TomlInlineTableTrailingComma,TomlHexEscape,TomlHourMinute,TomlStrictComma};options=default(init, no overrides);callForm=Toml.decode(text,T)/Toml.encode(value) (nim-serialization generic; TomlWriter.init and TomlReader.init both union flags+flavorRuntimeFlags: writer.nim:30-40, reader.nim:53-66)",
+      "subject": "nim-toml-serialization@4aa8e2223649fc0837c490a4acfca7b8b1e756f9/probe=p0d2_rt_probe/input=rt_baseline.toml:a8b78ab80a9fe9394cf756f64bc51d82ccb7ef05e45ee241300b8bea8d5937da",
+      "value": "observed: escape-free ASCII input roundtrips identically (baseline sanity gate; decode_outcome SUCCESS, roundtrip_identity_holds: true)"
+    },
+    {
+      "key": "roundtrip.identity",
+      "scope": "toml-flavor=Toml;version=1.1.0;runtimeFlags=Toml_v110_Flags{TomlInlineTableNewline,TomlInlineTableTrailingComma,TomlHexEscape,TomlHourMinute,TomlStrictComma};options=default(init, no overrides);callForm=Toml.decode(text,T)/Toml.encode(value) (nim-serialization generic; TomlWriter.init and TomlReader.init both union flags+flavorRuntimeFlags: writer.nim:30-40, reader.nim:53-66)",
+      "subject": "nim-toml-serialization@4aa8e2223649fc0837c490a4acfca7b8b1e756f9/probe=p0d2_rt_probe/input=rt_unicode.toml:ece1775fed0bad89fc3ca110ba4ea0682538df51b96fbb8cb58c2087ee5a29b4",
+      "value": "observed: decode('caf\\u00E9') = 63 61 66 C3 A9 (correct UTF-8 via scanUnicode, lexer.nim:399-415) and ctrl '\\u0080' -> C2 80; the decoder path is correct - the violation on this subject is the encoder's re-encoding of the same values to \\xHH (roundtrip_identity_holds: false)"
+    },
+    {
+      "key": "roundtrip.identity",
+      "scope": "toml-flavor=Toml;version=1.1.0;runtimeFlags=Toml_v110_Flags{TomlInlineTableNewline,TomlInlineTableTrailingComma,TomlHexEscape,TomlHourMinute,TomlStrictComma};options=default(init, no overrides);callForm=Toml.decode(text,T)/Toml.encode(value) (nim-serialization generic; TomlWriter.init and TomlReader.init both union flags+flavorRuntimeFlags: writer.nim:30-40, reader.nim:53-66)",
+      "subject": "nim-toml-serialization@4aa8e2223649fc0837c490a4acfca7b8b1e756f9/probe=p0d2_rt_probe/input=rt_baseline.toml:a8b78ab80a9fe9394cf756f64bc51d82ccb7ef05e45ee241300b8bea8d5937da",
+      "value": "expected: decode(encode(intent)) == intent; escape-free ASCII input must roundtrip identically (same rule applied to the baseline subject so its expected/observed pair is complete)"
+    },
+    {
+      "key": "roundtrip.identity",
+      "scope": "toml-flavor=Toml;version=1.1.0;runtimeFlags=Toml_v110_Flags{TomlInlineTableNewline,TomlInlineTableTrailingComma,TomlHexEscape,TomlHourMinute,TomlStrictComma};options=default(init, no overrides);callForm=Toml.decode(text,T)/Toml.encode(value) (nim-serialization generic; TomlWriter.init and TomlReader.init both union flags+flavorRuntimeFlags: writer.nim:30-40, reader.nim:53-66)",
+      "subject": "nim-toml-serialization@4aa8e2223649fc0837c490a4acfca7b8b1e756f9/probe=p0d2_rt_probe/input=rt_unicode.toml:ece1775fed0bad89fc3ca110ba4ea0682538df51b96fbb8cb58c2087ee5a29b4",
+      "value": "expected: decode(encode(intent)) == intent; '\\u00E9' denotes U+00E9 and must decode to the UTF-8 sequence C3 A9 (TOML v1.1.0), so the observed \\xHH re-encoding conflicts under the same rule (same rule applied to the unicode subject so its expected/observed pair is complete)"
+    }
+  ],
+  "contradictionRule": "same key AND same scope AND same subject AND conflicting value -> UNKNOWN (docs/spec/productization_contract.md:168); rows 1-2 above are the conflicting pair (rows 5-6 replicate the expected row under the baseline/unicode subjects so each case's expected/observed pair is complete; observed rows 3-4 do not conflict with their expected rows on their own subject)",
+  "commands": [
+    {
+      "cmd": "bash experiments/act2-wp-toml-b1-input-integrity/p0d2/replay_rt.sh",
+      "exitCode": 0,
+      "outputDigest": "sha256:b34f3f7cf963ed6c925f9c9985fe2d1ddf61b017e2c96342eace8280b6710f69",
+      "outputArtifacts": [
+        "baseline.out",
+        "defect.out",
+        "unicode.out",
+        "baseline.err",
+        "defect.err",
+        "unicode.err",
+        "baseline.exit",
+        "defect.exit",
+        "unicode.exit",
+        "build.log"
+      ]
+    },
+    {
+      "cmd": "cd $P0D2_RT_ENV && nim c --warnings:off --hints:off --mm:orc --skipUserCfg --skipParentCfg --skipProjCfg --nimcache:$P0D2_RT_ENV/build/nimcache_rt --path:$P0D2_RT_ENV/deps/serialization --path:$P0D2_RT_ENV/deps/toml_serialization --path:$P0D2_RT_ENV/deps/stew --path:$P0D2_RT_ENV/deps/faststreams --path:$P0D2_RT_ENV/deps/results --out:$P0D2_RT_ENV/bin/p0d2_rt_probe $P0D2_RT_ENV/probe.nim",
+      "exitCode": 0,
+      "outputDigest": "sha256:b34f3f7cf963ed6c925f9c9985fe2d1ddf61b017e2c96342eace8280b6710f69"
+    },
+    {
+      "cmd": "cd $P0D2_RT_ENV && nim c --warnings:off --hints:off --mm:orc --skipUserCfg --skipParentCfg --skipProjCfg --nimcache:$P0D2_RT_ENV/build/nimcache_canon --path:<Axiom3>/src --path:<nimble-pkgs2>/checksums-0.2.2-6357ab195ec23e0e0a54d4d8b5e0212456bf899e --out:$P0D2_RT_ENV/bin/p0d2_canon $P0D2_RT_ENV/canon.nim",
+      "exitCode": 0,
+      "outputDigest": "sha256:b34f3f7cf963ed6c925f9c9985fe2d1ddf61b017e2c96342eace8280b6710f69"
+    },
+    {
+      "cmd": "cd $P0D2_RT_ENV && $P0D2_RT_ENV/bin/p0d2_rt_probe baseline inputs/rt_baseline.toml",
+      "exitCode": 0,
+      "outputDigest": "sha256:0130b2cb03a3749df87636c1d4b6d143fb7e91cf72bb0ad07baac47f57399dfd"
+    },
+    {
+      "cmd": "cd $P0D2_RT_ENV && $P0D2_RT_ENV/bin/p0d2_rt_probe defect inputs/rt_defect.toml",
+      "exitCode": 0,
+      "outputDigest": "sha256:5f2bb15d5c9535a60a6d5b9261524af04a83f67bd44cabc762d025b38b2ef4b8"
+    },
+    {
+      "cmd": "cd $P0D2_RT_ENV && $P0D2_RT_ENV/bin/p0d2_rt_probe unicode inputs/rt_unicode.toml",
+      "exitCode": 0,
+      "outputDigest": "sha256:36348ab0d64e4ec971d475d6657000689e16254f2c85083ecebb8b1fb51c017d"
+    }
+  ],
+  "canonicalization": {
+    "tool": "p0d2_canon (probes/p0d2_canon.nim)",
+    "ssot": "src/core/utils/canonical_projection.nim canonicalProjectionHash (single implementation; volatile-key list per docs/spec/productization_contract.md §6)",
+    "cmd": "$P0D2_RT_ENV/bin/p0d2_canon <RUN_DIR>/rt_evidence.json <RUN_DIR>/rt_canonical.json -> rt_canonical.sha256",
+    "note": "the canon transform is not a commands[] row: its output digest is a function of this evidence file itself (self-reference); identity is attested by rt_canonical.sha256 beside this file and by the two-run comparison in RT_EXPERIMENT.md"
+  },
+  "sources": [
+    {
+      "file": "toml_serialization/writer.nim",
+      "lines": "30-40",
+      "symbol": "TomlWriter.init",
+      "sha256": "sha256:50248ca7ad9c6d0ad58265b0c056ef6777aae95c4333a531b38f39ca2cf4624d",
+      "repoRef": "4aa8e2223649fc0837c490a4acfca7b8b1e756f9"
+    },
+    {
+      "file": "toml_serialization/writer.nim",
+      "lines": "131-163",
+      "symbol": "writeValue(TomlWriter, string)",
+      "sha256": "sha256:50248ca7ad9c6d0ad58265b0c056ef6777aae95c4333a531b38f39ca2cf4624d",
+      "repoRef": "4aa8e2223649fc0837c490a4acfca7b8b1e756f9"
+    },
+    {
+      "file": "toml_serialization/lexer.nim",
+      "lines": "399-415",
+      "symbol": "scanUnicode",
+      "sha256": "sha256:19d69eed84f74c51fa1784b2e71a4525abc8d2b8aa854c567565d2d603133f4d",
+      "repoRef": "4aa8e2223649fc0837c490a4acfca7b8b1e756f9"
+    },
+    {
+      "file": "toml_serialization/lexer.nim",
+      "lines": "416-430",
+      "symbol": "scanHexEscape",
+      "sha256": "sha256:19d69eed84f74c51fa1784b2e71a4525abc8d2b8aa854c567565d2d603133f4d",
+      "repoRef": "4aa8e2223649fc0837c490a4acfca7b8b1e756f9"
+    },
+    {
+      "file": "toml_serialization/reader.nim",
+      "lines": "53-66",
+      "symbol": "TomlReader.init",
+      "sha256": "sha256:9e860006d4a26533beddcd762e21390fb7bafb5cf45ab1547ad96efacff569b5",
+      "repoRef": "4aa8e2223649fc0837c490a4acfca7b8b1e756f9"
+    },
+    {
+      "file": "toml_serialization/format.nim",
+      "lines": "24-36",
+      "symbol": "Toml_v110_Flags/flavorRuntimeFlags",
+      "sha256": "sha256:98656e3e3c6527ac8ff144ed328c69bcc651736cc7a8e40add93bc343f415b03",
+      "repoRef": "4aa8e2223649fc0837c490a4acfca7b8b1e756f9"
+    },
+    {
+      "file": "toml_serialization.nim",
+      "lines": "22-24",
+      "symbol": "Toml.setReader/Toml.setWriter",
+      "sha256": "sha256:648fe2c8028f0ce07a49d87e70c08326ac700268388544e53c3e32b64abaef2d",
+      "repoRef": "4aa8e2223649fc0837c490a4acfca7b8b1e756f9"
+    },
+    {
+      "file": "tests/test_decoder.nim",
+      "lines": "156",
+      "symbol": "Toml.decode(rawToml, Example)",
+      "sha256": "sha256:8d3876e76d9fb28c524b64c134fc0c8a4db6afe4fbe09cfdd0e562f68c469dbf",
+      "repoRef": "4aa8e2223649fc0837c490a4acfca7b8b1e756f9"
+    },
+    {
+      "file": "tests/test_encoder.nim",
+      "lines": "190",
+      "symbol": "Toml.encode(v)",
+      "sha256": "sha256:bca71ed1dcd89fb14848d44662f8fb8f63c1f1f213be45ee604aad8f447a8034",
+      "repoRef": "4aa8e2223649fc0837c490a4acfca7b8b1e756f9"
+    }
+  ],
+  "environment": {
+    "target": {
+      "repo": "status-im/nim-toml-serialization",
+      "commit": "4aa8e2223649fc0837c490a4acfca7b8b1e756f9",
+      "introductionRange": "7352976..4aa8e22 (provenance note only; the verification subject is the single commit above)",
+      "versionDeclared": "nimble 0.2.18; TOML flavor Toml = v1.1.0 (format.nim:37-38, README.md:64-69)",
+      "materialization": "git -C <clone> archive <commit> | tar -x (clone untouched; git status --porcelain empty before and after)"
+    },
+    "nim": {
+      "path": "$HOME/.choosenim/toolchains/nim-2.2.10/bin/nim",
+      "versionLine": "nim: Nim Compiler Version 2.2.10 [Linux: amd64]"
+    },
+    "dependencies": {
+      "pins": {
+        "nim-serialization": "4092500cea76154576539371709ae801afbd2a9d",
+        "nim-faststreams": "50889cd16ec8771106cdd0eeea460039e8571e06",
+        "nim-stew": "83eb1157963b7f49351dbdd858355fa990bbe23c",
+        "nim-results": "df8113dda4c2d74d460a8fa98252b0b771bf1f27 (arnetheduck)"
+      },
+      "manifest": "probes/p0d2_rt_deps.SHA256SUMS (sha256 -c on every replay; subject repo has no nimble.lock)",
+      "canonToolDeps": "Axiom3 src + nimble checksums-0.2.2-6357ab195ec23e0e0a54d4d8b5e0212456bf899e"
+    },
+    "buildFlags": "--warnings:off --hints:off --mm:orc --skipUserCfg --skipParentCfg --skipProjCfg --nimcache:$P0D2_RT_ENV/build/nimcache_rt --path:<5 pinned dep dirs> --out:$P0D2_RT_ENV/bin/p0d2_rt_probe (neutral cwd $P0D2_RT_ENV)",
+    "toml": {
+      "flavor": "Toml",
+      "version": "1.1.0",
+      "runtimeFlags": "Toml_v110_Flags = {TomlInlineTableNewline, TomlInlineTableTrailingComma, TomlHexEscape, TomlHourMinute, TomlStrictComma}",
+      "options": "default (Format.init; no overrides; both reader and writer union flavorRuntimeFlags)",
+      "callForm": {
+        "decode": "Toml.decode(text: string, RtConf)",
+        "encode": "Toml.encode(intent: RtConf): string"
+      }
+    },
+    "platform": "Linux 6.17.0-42-generic x86_64",
+    "stackLimitKB": "8192"
+  },
+  "collection": {
+    "collector": "p0d2-rt-replay (replay_rt.sh)",
+    "method": "deterministic-local-replay",
+    "generatedAt": "2026-10-12T01:16:19Z"
+  },
+  "runtimeMeta": {
+    "runId": "523d23d4-e159-4a7e-b147-877fcfe3b069"
+  }
+}

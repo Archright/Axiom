@@ -1,0 +1,125 @@
+{
+ "audit_id": "d76_landing_audit",
+ "target": "orgs/Archright (.github repository landing history)",
+ "window": {
+  "since": "2026-10-16",
+  "until": "2026-10-31",
+  "base_sha_H_new": "29094836bc4488280d98c22665470dcb2e54da1a",
+  "head_sha": "d76caf956000175bbc78f9b25bced842c02992a5"
+ },
+ "method": "GET-only GitHub REST API via gh CLI (authenticated as wintrover, admin:org). No PUT/POST/DELETE issued.",
+ "endpoints": [
+  {
+   "endpoint": "repos/Archright/.github/compare/29094836bc...d76caf95",
+   "purpose": "landing chain (first-parent merges)",
+   "query_utc": "2026-11-02T03:14:38Z",
+   "events_or_items": 13,
+   "saved_as": "compare_raw.json"
+  },
+  {
+   "endpoint": "repos/Archright/.github/commits/29094836bc...",
+   "purpose": "window base commit verification",
+   "query_utc": "2026-11-02T03:15:22Z",
+   "events_or_items": 1,
+   "saved_as": "hnew_commit.json"
+  },
+  {
+   "endpoint": "orgs/Archright/rulesets/25218071/history (paginated)",
+   "purpose": "ruleset version listing",
+   "query_utc": "2026-11-02T03:15:29Z",
+   "events_or_items": 27,
+   "saved_as": "ruleset_25218071/history.json"
+  },
+  {
+   "endpoint": "orgs/Archright/rulesets/23943917/history (paginated)",
+   "purpose": "ruleset version listing",
+   "query_utc": "2026-11-02T03:15:30Z",
+   "events_or_items": 48,
+   "saved_as": "ruleset_23943917/history.json"
+  },
+  {
+   "endpoint": "orgs/Archright/rulesets/{25218071,23943917}/history/{version_id} (one call per version)",
+   "purpose": "verbatim state snapshots",
+   "query_utc": "2026-11-02T03:22:06Z",
+   "events_or_items": {
+    "25218071": 27,
+    "23943917": 48
+   },
+   "saved_as": "ruleset_*/versions/<version_id>.json"
+  },
+  {
+   "endpoint": "orgs/Archright/audit-log?phrase=created:2026-10-16..2026-10-31 action:repository_ruleset.update (paginated)",
+   "purpose": "ruleset update events",
+   "query_utc": "2026-11-02T03:19:13Z",
+   "events_or_items": {
+    "returned": 101,
+    "action_field_verified": 101,
+    "discarded_action_mismatch": 0
+   },
+   "saved_as": "audit_log_ruleset_events.json (merged)"
+  },
+  {
+   "endpoint": "orgs/Archright/audit-log?...action:repository_ruleset.create (paginated)",
+   "purpose": "ruleset create events",
+   "query_utc": "2026-11-02T03:19:13Z",
+   "events_or_items": {
+    "returned": 2,
+    "action_field_verified": 2,
+    "discarded_action_mismatch": 0
+   },
+   "saved_as": "audit_log_ruleset_events.json (merged)"
+  },
+  {
+   "endpoint": "orgs/Archright/audit-log?...action:repository_ruleset.destroy (paginated)",
+   "purpose": "ruleset destroy events",
+   "query_utc": "2026-11-02T03:19:13Z",
+   "events_or_items": {
+    "returned": 2,
+    "action_field_verified": 2,
+    "discarded_action_mismatch": 0
+   },
+   "saved_as": "audit_log_ruleset_events.json (merged)"
+  },
+  {
+   "endpoint": "repos/Archright/.github/compare/7fffee31...bcfc1bbd",
+   "purpose": "file_diff for PR #248",
+   "query_utc": "2026-11-02T03:23:00Z",
+   "events_or_items": 2,
+   "saved_as": "filediff_248.json"
+  },
+  {
+   "endpoint": "repos/Archright/.github/compare/58a2c546...3fcc2b5c",
+   "purpose": "file_diff for PR #250",
+   "query_utc": "2026-11-02T03:23:00Z",
+   "events_or_items": 1,
+   "saved_as": "filediff_250.json"
+  },
+  {
+   "endpoint": "repos/Archright/.github/commits/{5bfc911448,ade11572,74b415c4}",
+   "purpose": "identify pre-window pins",
+   "query_utc": "2026-11-02T03:22:06Z",
+   "events_or_items": 3,
+   "saved_as": "not saved (verification only)"
+  }
+ ],
+ "snapshot_integrity": {
+  "digest_files": [
+   "ruleset_25218071/digests.sha256",
+   "ruleset_23943917/digests.sha256"
+  ],
+  "note": "sha256sum over every version snapshot file, sorted by numeric version_id"
+ },
+ "derived_outputs": [
+  "landings.json",
+  "audit_log_ruleset_events.json",
+  "mapping.json",
+  "mapping.tsv",
+  "state_diff_report.json",
+  "audit_landing_history.sh"
+ ],
+ "caveats": [
+  "The audit-log 'phrase' qualifier silently falls back to the whole log if the action name is unknown; every returned event's .action field was verified to equal the queried action; 0 mismatches found.",
+  "Audit log rate limit: 1750 requests/hour for the audit-log endpoint.",
+  "snapshot updated_at fields are KST (+09:00); converted to UTC (minus 9h) in derived outputs."
+ ]
+}

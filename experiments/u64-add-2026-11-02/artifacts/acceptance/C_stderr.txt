@@ -1,0 +1,11 @@
+[INFO] ledger_side_ref: phase=ledger-request url=https://api.github.com/repos/Archright/Axiom/git/ref/heads/axiom/evidence-cas elapsed_ms=341 status=200 OK
+[INFO] ledger_side_ref: phase=ledger-request url=https://api.github.com/repos/Archright/Axiom/git/commits/58c2d7d40cfe42b3afeff48b2f7aed9c5f226dbb elapsed_ms=295 outcome=ok
+[INFO] ledger_side_ref: phase=ledger-request url=https://api.github.com/repos/Archright/Axiom/git/trees/d1ef600ceab78c25371faaa309fbd2ead6ee3548?recursive=1 elapsed_ms=1056 outcome=ok
+[INFO] ledger_side_ref: phase=ledger-request url=https://api.github.com/repos/Archright/Axiom/git/ref/heads/axiom/evidence-cas elapsed_ms=323 status=200 OK
+[INFO] ledger_side_ref: phase=ledger-request url=https://api.github.com/repos/Archright/Axiom/git/commits/8381e90b279035c7afa2848d2f386e458d7d8284 elapsed_ms=287 outcome=ok
+[INFO] ledger_side_ref: phase=ledger-request url=https://api.github.com/repos/Archright/Axiom/git/trees/4f00cf949288f49c2e5edfe867df341adf5bf8b5?recursive=1 elapsed_ms=986 outcome=ok
+[INFO] ledger_side_ref: phase=ledger-request url=https://api.github.com/repos/Archright/Axiom/git/blobs/34d6589543a90299ba89ab66e2029b07ce61fe79 elapsed_ms=310 outcome=ok
+[AXIOM][rust-lane] charon pinned='0.1.281 (798016509139eb51f0d764645f76d068d34ba5f6)' measured='0.1.281 (798016509139eb51f0d764645f76d068d34ba5f6)' ok=true
+[AXIOM][rust-lane] ledger transport armed (live); repo=Archright/Axiom
+[AXIOM][rust-lane] verified: axiom_u64_probe::u64_echo → /tmp/cold_u64add_state_C/build/certificates/5e7fb80989ae05e55da39c0d4efe0112e72632cc45ae520d2cf192d3f83c81a9.json
+[AXIOM][rust-lane] done: verified=1/1 failed=0 unknown=0 error=0

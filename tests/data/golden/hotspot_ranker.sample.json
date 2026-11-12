@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/hotspot_ranker.sh",
+  "description": "Automated Debt Decay — Hotspot Deficit Guard. Exponential decay floor: debt score must decrease proportionally over time",
+  "inputSample": {
+    "args": []
+  },
+  "outputSample": {
+    "stdout": "hotspot_ranker: debt_score=14.2 (floor=15.0), PASS",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

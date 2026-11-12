@@ -1,0 +1,17 @@
+{
+  "id": "external-cli-smoke",
+  "name": "Axiom external CLI smoke gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/external_cli_smoke.nim",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/|src/semantic_proofs|lakefile|lean-toolchain|axiom.nimble|config.nims",
+  "passFilenames": false,
+  "weight": "medium",
+  "category": "rule",
+  "after": [
+    "cli-build"
+  ],
+  "severity": "error"
+}

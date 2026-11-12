@@ -1,0 +1,139 @@
+{
+  "dimension": "license-scan-sharding J1 (semantic parity + set completeness)",
+  "epoch": "ci-frozen-2026-11-10-pi-shard",
+  "measuredAtUtc": "2026-11-10T08:12:02Z",
+  "branch": "workstream/pi-license-shard",
+  "head": "8ab6b83b1ad0eba514ac760bde872edfcd935ba7",
+  "environment": {
+    "scanner": "scancode-toolkit==32.5.0 + pluggy==1.5.0 (/tmp/j1-venv)",
+    "host": "Linux 6.17.0-42-generic, 16 cores (shard legs run in parallel per protocol)",
+    "tree": "git archive HEAD -> /tmp/j1-export (tracked files only, no .git; local build outputs excluded)"
+  },
+  "verdicts": {
+    "overall": "FAIL",
+    "verdict_full": "FAIL",
+    "eval_full_exit": 1,
+    "verdict_merged": "PASS",
+    "eval_merged_exit": 0,
+    "verdict_note": "verdicts DIFFER -> J1 FAIL per protocol. The merged PASS is vacuous: merged.json holds a 3-file scan surface (see rootCause 1). In the real workflow the merge-step set-completeness check exits 1 before adjudication runs, so this PASS could never be produced by CI - recorded to show that verdict equality alone would mask a broken scan surface (why completeness gates BEFORE adjudication).",
+    "parity_exit": 2,
+    "parity_missing_in_candidate": 6565,
+    "parity_new_in_candidate": 0,
+    "selftest_exit": 0,
+    "selftest_note": "tcb_judgments selftest 12/12 fixtures passed - every judgment FAIL path is alive",
+    "completeness_pass": false,
+    "completeness_merged": { "missing_from_merged": 6573, "unexpected_in_merged": 0, "duplicate_file_paths": 0 },
+    "completeness_full": { "missing_from_full": 8, "unexpected_in_full": 0, "duplicate_file_paths": 0 }
+  },
+  "timing": {
+    "full_wall_seconds": 505.4,
+    "full_wall_human": "8m25.409s (scancode total 502.87s, scan 498.15s, errors 0)",
+    "shard0_wall_seconds": 41.1,
+    "shard1_wall_seconds": 41.5,
+    "shard_wall_note": "shard wall times are NOT a parallelization speedup: the shard scans dropped ~99.9% of their input files (rootCause 1) - the wall time reflects a near-empty scan, not half the work. The full scan (6568 files, 505s) is the only valid throughput measurement in this run."
+  },
+  "fileCounts": {
+    "tracked": 6576,
+    "full_files": 6568,
+    "full_dirs": 650,
+    "full_entries": 7218,
+    "merged_files": 3,
+    "merged_dirs": 1300,
+    "merged_entries": 1303,
+    "merged_duplicate_dir_paths": 650,
+    "shard0_report_file_entries": 2,
+    "shard1_report_file_entries": 1,
+    "vcs_default_ignored_tracked_files": 8
+  },
+  "scanReports": {
+    "full.json": { "sha256": "2e36a679907e6740ca6d2655fd5ac2a4c025a5086dba4b0d9b9b9a17da88648a", "bytes": 3484065 },
+    "merged.json": { "sha256": "3effd9e2facc28093e98768e56ab49afcbe91c9af94fb523c638f6e5cd6e48a3" },
+    "shard0.json": { "sha256": "35a4b344d2cf14ae475dd84bd910f0784fb6924a0d7af0a4fd4a862f3e07cf49", "bytes": 294058 },
+    "shard1.json": { "sha256": "8c8adba65d5668d8740edf5c4d4c9184bafbb82dcd65d96daaa9d08b051ead73", "bytes": 293800 },
+    "report_license_full.json": { "sha256": "9e66352b6e2cc2de49382afeed5b7e61222528ebf82d87fec9f575dacaca01bf" },
+    "report_license_merged.json": { "sha256": "ce0896118c273974a407d21dabf26112f6bdd7c6690dd715e456176d2839af44" },
+    "parity_baseline.json": { "sha256": "2103c940b3c240b5a349609f1fb4d66173378193dbbc739a8ee77c4297f4f403" },
+    "parity_candidate.json": { "sha256": "92eb0e620fb968d143f6dc8f1abcf4a731e2e295e8d6ec939ae8a5fcf1d19032" },
+    "note": "full/merged/shard0/shard1 scan reports (multi-MB) are not committed; sha256 recorded above. Evaluator outputs and projection maps are committed next to this summary."
+  },
+  "rootCauses": [
+    {
+      "id": 1,
+      "title": "shard file-list scan drops ~99.9% of input files (workflow shard topology cannot pass)",
+      "measured": "shard0: 3288 input paths -> 2 file entries (topology.json, topology_policy.json); shard1: 3288 -> 1 (topology.lock); each shard report also carries the full 650-entry directory inventory",
+      "mechanism": [
+        "xargs splits each shard list (~162,204 / ~162,188 bytes) into 2 scancode invocations because it exceeds the xargs default command buffer (131,072 bytes) - the workflow comment estimated ~115KB which fits kernel ARG_MAX (2,097,152) but not the xargs buffer; each later invocation overwrites --json-pp output of the earlier one (observed split: shard0 2515+773 args, shard1 2510+778 args; per-invocation scanned files 33+2 and 13+1)",
+        "ScanCode 32.5.0 converts a multi-file (>=2) input list into a scan of the common-prefix root ('.' for a tree-spanning list) with the input paths re-injected as --include patterns (scancode/cli.py:616-649, 'FIXME: support the multiple root better')",
+        "include matching (commoncode/fileset.py:101-148): patterns without '/' (root-level file names) are fnmatch-matched against path SEGMENTS - they hit any file with that basename at any depth (e.g. a 'README.md' arg matched 13 README.md files across the tree); patterns with '/' (subdirectory paths) are matched against the full resource path '<cwd-basename>/<repo-rel>' - the cwd-basename prefix ('j1-export/') is not in the pattern, so ALL subdirectory file args silently fail to match and are dropped, with exit 0",
+        "deterministic verification: a Python re-implementation of the include semantics predicted the per-invocation scanned-file counts and exact paths (shard0: 33+2, shard1: 13+1, e.g. batch2 = topology.json + topology_policy.json / topology.lock) - exact match with the measured reports",
+        "direct probes: 4 root-level file args -> 4 file entries scanned; 4 subdirectory file args -> 0 file entries scanned (exit 0); single-file arg scans the file but emits the bare BASENAME ('MIT.txt') with 0 directory entries; directory arg ('LICENSES/') emits 'LICENSES/<rel>'"
+      ],
+      "workflowImpact": "license-scan-shards jobs fail closed at the per-shard self-check (comm -3 shard_files.txt vs report_paths.txt is non-empty) and, failing that, the license-scan merge step fails its set-completeness check - the fail-closed safety net holds (no silent partial pass reaches adjudication), but the shard topology itself can never pass"
+    },
+    {
+      "id": 2,
+      "title": "ScanCode default-ignores .gitignore/.gitattributes (8 tracked files invisible in ANY topology)",
+      "measured": "tracked 6576 vs full-scan file entries 6568: .gitattributes, .gitignore and 6 nested .gitignore files are never emitted; the pre-branch live report shows the same gap (6575 tracked -> 6567 files) - this gap predates the shard change and was invisible because the old topology never compared the scan surface to git ls-files",
+      "mechanism": "commoncode/ignore.py ignores_VCS ('.gitignore', '.gitattributes': 'Default ignore: Git config artifact') - name-based default ignore applied in both '.'-scans and file-list scans",
+      "workflowImpact": "even a correct shard implementation would fail the set-equality check (== git ls-files) by exactly these 8 files; the new completeness check is stricter than the scan surface the scanner can actually produce"
+    },
+    {
+      "id": 3,
+      "title": "branch's new epoch_record document triggers a denied-family GPL-3.0-only detection (independent of sharding)",
+      "measured": "full.json evaluator verdict FAIL (exit 1): docs/evidence/epoch_record_pi_shard_2026-11-10.md -> gpl-3.0-only, 'neither declared (source-origin.yml) nor attributed (license-attribution.yml)', deniedFamily=true; the detection matches line 89 (negative-control prose naming the GPL-3.0 full-text file)",
+      "crossCheck": "the other two branch-changed files carry only pre-existing, attributed detections (docs/spec/publication_integrity_gate.md composite expression and workflow 'JSON' - both present in the pre-branch live report with attribution entries at license-attribution.yml:166/192); the epoch record is absent from the live report (new file) and has no attribution entry",
+      "workflowImpact": "even a fully corrected scan topology fails the license-scan dimension on this branch as committed - the old single-scan topology would fail identically; remediation (attribution entry vs document rewording vs rollback) is a main-agent decision, per protocol the data was not modified"
+    }
+  ],
+  "metricsNote": {
+    "filesScanned": "full=7218 (files+dirs), merged=1303 (3 files + 650x2 duplicated dirs): the metric is files.len (publication_license_eval.nim:396) and includes directory entries; the verdict loop consumes only type=='file' entries (publication_license_eval.nim:310-312), so the metric difference is not a verdict input - but merged carries DUPLICATED directory entries because each shard report emits the full directory inventory and the jq merge concatenates both"
+  },
+  "commands": [
+    "# 0. same-tree export (tracked files only, no .git)",
+    "mkdir -p /tmp/j1 && rm -rf /tmp/j1-export && mkdir -p /tmp/j1-export",
+    "git archive HEAD | tar -x -C /tmp/j1-export",
+    "git ls-files | LC_ALL=C sort > /tmp/j1/tracked.txt   # 6576 paths",
+    "# 1. full scan (baseline)",
+    "cd /tmp/j1-export && /tmp/j1-venv/bin/scancode --license --copyright --processes 4 --json-pp /tmp/j1/full.json .   # exit 0, 7218 entries (6568 files + 650 dirs)",
+    "# 2. shard split (workflow-identical round-robin)",
+    "awk 'NR%2==0' /tmp/j1/tracked.txt > /tmp/j1/shard0.txt   # 3288",
+    "awk 'NR%2==1' /tmp/j1/tracked.txt > /tmp/j1/shard1.txt   # 3288",
+    "# 3. shard scans (workflow-identical xargs single-batch intent, run in parallel; nproc=16)",
+    "cd /tmp/j1-export && xargs -a /tmp/j1/shard0.txt /tmp/j1-venv/bin/scancode --license --copyright --processes 4 --json-pp /tmp/j1/shard0.json   # exit 0 but only 2 file entries (xargs split + include drop)",
+    "cd /tmp/j1-export && xargs -a /tmp/j1/shard1.txt /tmp/j1-venv/bin/scancode --license --copyright --processes 4 --json-pp /tmp/j1/shard1.json   # exit 0 but only 1 file entry",
+    "# 4. merge (workflow jq expression, verbatim from .github/workflows/publication-integrity.yml merge step)",
+    "jq -s '{headers: .[0].headers, files: (map(.files) | add | sort_by(.path)), license_detections: (map(.license_detections) | add | group_by(.identifier) | map(.[0] + {detection_count: (map(.detection_count) | add)}))}' /tmp/j1/shard0.json /tmp/j1/shard1.json > /tmp/j1/merged.json",
+    "# 5. set completeness (workflow semantics; PFX = basename of /tmp/j1-export)",
+    "jq -r '.files[] | select(.type==\"file\") | .path' /tmp/j1/merged.json | sed 's|^j1-export/||' | LC_ALL=C sort -u > /tmp/j1/merged_set.txt",
+    "jq -r '.files[] | select(.type==\"file\") | .path' /tmp/j1/full.json | sed 's|^j1-export/||' | LC_ALL=C sort > /tmp/j1/full_paths.txt",
+    "LC_ALL=C sort /tmp/j1/tracked.txt > /tmp/j1/tracked_set.txt",
+    "LC_ALL=C comm -3 /tmp/j1/tracked_set.txt /tmp/j1/merged_set.txt | wc -l   # 6573 -> FAIL",
+    "LC_ALL=C comm -3 /tmp/j1/tracked_set.txt /tmp/j1/full_paths.txt | wc -l   # 8 -> FAIL",
+    "# 6. evaluator double run",
+    "nim c --hints:off --warnings:off --path:. --path:src --nimcache:build/nimcache/vsi_license_eval_j1 -o:/tmp/j1/vsi_license_eval tools/ci/publication_license_eval.nim",
+    "/tmp/j1/vsi_license_eval --scan /tmp/j1/full.json --policy compliance/policy/license-policy.yml --origin compliance/provenance/source-origin.yml --attribution compliance/provenance/license-attribution.yml --strip-prefix j1-export --out /tmp/j1/report_license_full.json   # exit 1 FAIL",
+    "/tmp/j1/vsi_license_eval --scan /tmp/j1/merged.json --policy compliance/policy/license-policy.yml --origin compliance/provenance/source-origin.yml --attribution compliance/provenance/license-attribution.yml --strip-prefix j1-export --out /tmp/j1/report_license_merged.json   # exit 0 PASS (vacuous, 3-file surface)",
+    "# 7. J1 parity (per-symbol) + selftest",
+    "nim c --hints:off --warnings:off --skipParentCfg --skipProjCfg --nimcache:build/nimcache/tcb_j1 --path:~/.choosenim/toolchains/nim-2.2.10 --path:. --path:src --path:tools --path:~/.nimble/pkgs2/checksums-0.2.2-* -o:/tmp/j1/tcb_judgments tools/ci/tcb_judgments.nim",
+    "jq -S '<per-file signature projection: path(key) = license_detections[].license_expression_spdx|license_expression + detected_license_expression_spdx + copyrights holder/line sorted>' /tmp/j1/full.json > /tmp/j1/parity_baseline.json   # 6568 keys",
+    "jq -S '<same>' /tmp/j1/merged.json > /tmp/j1/parity_candidate.json   # 3 keys",
+    "/tmp/j1/tcb_judgments --judgment parity --baseline /tmp/j1/parity_baseline.json --candidate /tmp/j1/parity_candidate.json   # exit 2: 6565 missing in candidate",
+    "/tmp/j1/tcb_judgments selftest   # exit 0, 12/12",
+    "# 8. provenance (workflow-identical, defaults + --out)",
+    "nim c --hints:off --warnings:off --path:. --path:src --nimcache:build/nimcache/vsi_provenance_j1 -o:/tmp/j1/vsi_provenance tools/ci/publication_provenance_validator.nim",
+    "/tmp/j1/vsi_provenance --out /tmp/j1/report_provenance.json   # exit 0 PASS - 6576 files covered, 0 violations"
+  ],
+  "provenanceCheck": {
+    "verdict": "PASS",
+    "exit": 0,
+    "detail": "publication_provenance_validator (workflow-identical invocation: default policy/origin paths + --out): 6576/6576 tracked files covered, 0 violations"
+  },
+  "evidenceFiles": [
+    "summary.json (this file)",
+    "report_license_full.json - evaluator output over the full scan (FAIL, 1 denied-family violation)",
+    "report_license_merged.json - evaluator output over the merged shard report (vacuous PASS)",
+    "parity_baseline.json - per-file signature projection of full.json (6568 symbols)",
+    "parity_candidate.json - per-file signature projection of merged.json (3 symbols)",
+    "completeness.txt - comm/uniq set-completeness output for merged and full"
+  ]
+}

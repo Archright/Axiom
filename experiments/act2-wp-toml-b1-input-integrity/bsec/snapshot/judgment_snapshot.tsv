@@ -1,0 +1,33 @@
+# snapshot/judgment_snapshot.tsv — the judgment-time baseline replay.sh freshness compares against
+# Predicate (OR — any one fires): see replay.sh (cmd_freshness). Values are what the record pinned at
+# judgment/bundle time (2026-10-11). A value of UNRECORDED means the predicate can never be
+# affirmed for that row -> fail-closed RE-EVALUATE REQUIRED (an unpinned identifier cannot
+# prove the world did not move).
+# 2026-10-12 residue binding: rows for nimbus-eth1 (vendor submodule pin 73529768), stickyshell
+# and click were ADDED, binding ALREADY-RECORDED judgment-time pins (p0d2/target.md;
+# followup/exposure/consumers.tsv; DEFERRED.md D2/D3) into the predicate — no new
+# world-observation was made when adding them. stickyshell/click consumer commits are
+# UNRECORDED (never pinned at judgment time): those rows are structurally fail-closed until
+# a commit is pinned.
+# field	scope	value	evidence
+subject_head	subject	4aa8e2223649fc0837c490a4acfca7b8b1e756f9	git -C $SUBJECT rev-parse HEAD at bundle time
+consumer_commit	nph	2cacf6cc28116e4046e0b67a13545af5c4e756bd	fresh-clone re-verification (capdelta/capdelta.md §1); local clone path below
+consumer_path	nph	/tmp/bsec_consumer/nph	ephemeral /tmp clone — freshness fails closed (RE-EVALUATE) if it disappears
+consumer_commit	imthemes	d67592d4746031f47e962176736a976dcc040dc9	S1 call-site evidence (evidence/callsite.md): Patitotective/ImThemes @ d67592d = upstream HEAD at judgment time, lock-pinned (nimble.lock vcsRevision -> toml_serialization b5b387e6); verified by GitHub API + lock chain
+consumer_path	imthemes	identity-via-gh-api-and-lock	no local checkout recorded; identity anchored on consumer_commit + nimble.lock chain (evidence/callsite.md). If a local checkout is later required for re-verification, freshness must re-pin it
+consumer_dep_commit	nph→nim-toml-serialization	b5b387e6fb2a7cc75d54a269b07cc6218361bd46	nimbledeps snapshot vcsRevision (pkgs2 dir hash 76ae1c2a); dynamic probe = probe_nph_profile; range-instability warning in offline/callform/consumer_nph.txt
+consumer_dep_commit	imthemes→nim-toml-serialization	b5b387e6fb2a7cc75d54a269b07cc6218361bd46	via nimble.lock chain niprefs 0.3.5 @ 30f522ac1888ae2930e833ab6c5d954baf3e8702; dynamic probe = probe_imthemes_profile
+dep_set	library-slice	build-bundle:deps-vendored	serialization b5473564e80a4908cf6c5a038e4c4a6ca7de2223; faststreams 059bc2f52546ac14b583639c33372c14b1d46fa3; stew 4382b18f04b3c43c8409bfcd6b62063773b2bbaa; per-file sha256 = MANIFEST (bsec/offline/ entries)
+observation_date	subject	2026-10-11	B-1 execution + consumer capdelta/link experiments + pin probes + bundle assembly all 2026-10-11 (Asia/Seoul)
+consumer_repo	nph	https://github.com/arnetheduck/nph	upstream repo for freshness remote query (git ls-remote) when no local checkout is available
+consumer_repo	imthemes	https://github.com/Patitotective/ImThemes	upstream repo for freshness remote query (git ls-remote); identity anchored on consumer_commit d67592d + nimble.lock chain
+consumer_commit	nimbus-eth1	97d1f982c67fcff9b7f18b74e075179d9d5a7df1	judgment-time upstream master observed via GitHub contents API (p0d2/target.md §Consumer identity) — pins the same vendor submodule sha as the extraction anchor 0c0230857dd8dbd5961e092add7cdfcd4a04ba66; freshness term = ls-remote HEAD vs this value
+consumer_path	nimbus-eth1	identity-via-gh-api-and-contents-api	no local checkout recorded; identity anchored on consumer_commit + vendor submodule contents query (p0d2/target.md)
+consumer_repo	nimbus-eth1	https://github.com/status-im/nimbus-eth1	upstream repo for freshness remote query (git ls-remote) when no local checkout is available
+consumer_dep_commit	nimbus-eth1→nim-toml-serialization	73529768ced17720f78fb5b57191e863f8d8a9c1	vendor/nim-toml-serialization submodule pin — the pin where the P0 contrast executed (TomlHexEscape active); verified twice via GitHub contents API at 0c023085 and at master 97d1f982 (p0d2/target.md)
+consumer_commit	stickyshell	UNRECORDED	classification-only evidence (followup/exposure/consumers.tsv row; DEFERRED.md D2): decode form recorded (src/sth.nim:8,12) but no clone made and no commit pinned at judgment time — this row can never affirm until a commit is pinned
+consumer_commit	click	UNRECORDED	classification-only evidence (followup/exposure/consumers.tsv row; DEFERRED.md D3): decode form recorded (src/compile.nim:40-41) but no clone made and no commit pinned at judgment time — this row can never affirm until a commit is pinned
+consumer_repo	stickyshell	https://github.com/xTrayambak/stickyshell	upstream repo recorded for future re-pinning; unreachable by freshness while consumer_commit is UNRECORDED
+consumer_repo	click	https://github.com/ab9st8/click	upstream repo recorded for future re-pinning; unreachable by freshness while consumer_commit is UNRECORDED
+consumer_dep_commit	stickyshell→nim-toml-serialization	b5b387e6fb2a7cc75d54a269b07cc6218361bd46	floating tag resolution observed at classification time (no lock; followup/exposure/consumers.tsv; DEFERRED.md D2) — resolution can move on any new in-range tag
+consumer_dep_commit	click→nim-toml-serialization	b5b387e6fb2a7cc75d54a269b07cc6218361bd46	floating tag resolution observed at classification time (no lock; followup/exposure/consumers.tsv; DEFERRED.md D3) — resolution can move on any new in-range tag

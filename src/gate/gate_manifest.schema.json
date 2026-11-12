@@ -1,0 +1,178 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Axiom Gate Manifest",
+  "description": "Build-time discovery manifest for Axiom quality gates. Each entry defines one gate's metadata for compile-time scanning.",
+  "type": "object",
+  "required": ["gates"],
+  "properties": {
+    "gates": {
+      "type": "array",
+      "description": "Sorted list of all registered gates (by id ascending).",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "layer", "entry", "stages", "weight"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique gate identifier (kebab-case).",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable gate name.",
+            "minLength": 1
+          },
+          "layer": {
+            "type": "string",
+            "enum": ["meta", "functional"],
+            "description": "Architecture layer: meta (L1, no process spawning) or functional (L2, may spawn processes)."
+          },
+          "entry": {
+            "type": "string",
+            "description": "Path to the gate runner binary or source, relative to project root."
+          },
+          "stages": {
+            "type": "array",
+            "description": "Execution stages at which this gate's verdict is wired to fire. Semantics (Orphan Gate Authority Closure, 2026-10-08): 'pre-commit' / 'pre-push' = invoked directly by the corresponding .githooks hook (machine-verified by manifest-consistency-gate Check 10); 'ci' = dispatched by an active AXIOM_CI=1 gate_hook production lane (none exists since ci.yml retirement fa069d610 — no gate may declare 'ci' until such a lane is restored); 'manual' = standalone direct-run contract via the documented runner interface (standalone binary, legacy manifest-driven dispatch, in-process case, or Makefile/NORMATIVE doc invocation), not dispatched by any automated stage. Declared stages MUST have call-site evidence; hook call-sites MUST be declared. minItems 1: a gate scheduled nowhere and invoked by no documented contract must be removed from the manifest (DEBT#425 precedent), not declared with an empty array.",
+            "items": {
+              "type": "string",
+              "enum": ["pre-commit", "pre-push", "manual", "ci"]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "filesPattern": {
+            "type": "string",
+            "description": "Regex or pipe-delimited pattern for matching changed files that trigger this gate. Empty string means always trigger."
+          },
+          "passFilenames": {
+            "type": "boolean",
+            "description": "If true, matched filenames are passed as arguments to the gate runner.",
+            "default": false
+          },
+          "priority": {
+            "type": "integer",
+            "description": "Execution priority (higher = earlier within same id). Default 0.",
+            "default": 0
+          },
+          "weight": {
+            "type": "string",
+            "enum": ["light", "medium", "heavy"],
+            "description": "Resource cost classification: light (<100MB, <1s), medium (single-process), heavy (full test suite / multi-process)."
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["warn", "error"],
+            "description": "Failure severity: error (blocking) or warn (advisory).",
+            "default": "error"
+          },
+          "always_run": {
+            "type": "boolean",
+            "description": "If true, gate runs even when change-set is empty (opt-in).",
+            "default": false
+          },
+          "tier": {
+            "type": "integer",
+            "enum": [1, 2],
+            "description": "Execution tier for DAG orchestration: 1 = fast-path (light gates), 2 = deep-path (heavy/compilation gates). Default 1.",
+            "default": 1
+          },
+          "hermeticity": {
+            "type": "string",
+            "enum": ["hermetic", "transient"],
+            "description": "Cache policy determinism: hermetic (result depends only on declared inputs) or transient (depends on external mutable state). Default hermetic.",
+            "default": "hermetic"
+          },
+          "after": {
+            "type": "array",
+            "description": "DAG dependency: gate IDs that must complete before this gate runs. Default [].",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "default": []
+          },
+          "depsDirs": {
+            "type": "array",
+            "description": "Dependency directories for Merkle fallback memoization when entry is empty.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "argsTemplate": {
+            "type": "array",
+            "description": "CLI argument template with placeholders ($repoRoot, $mode, $maxJobs).",
+            "items": {
+              "type": "string"
+            }
+          },
+          "envVars": {
+            "type": "array",
+            "description": "Environment variables to set before running this gate.",
+            "items": {
+              "type": "object",
+              "required": ["name", "value"],
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Environment variable name."
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Environment variable value."
+                }
+              }
+            }
+          },
+          "envDependencies": {
+            "type": "array",
+            "description": "External state dependencies for context-aware cache keys.",
+            "items": {
+              "type": "object",
+              "required": ["kind", "key"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": ["gitConfig", "envVar"],
+                  "description": "Dependency kind: gitConfig or envVar."
+                },
+                "key": {
+                  "type": "string",
+                  "description": "Configuration key or environment variable name."
+                }
+              }
+            }
+          },
+          "execution_mode": {
+            "type": "string",
+            "enum": ["aot", "interpreted"],
+            "description": "Execution policy: aot (pre-compiled binary) or interpreted (nim e at runtime).",
+            "default": "aot"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["theorem", "rule", "policy"],
+            "description": "Taxonomy classification for gate governance. Default rule.",
+            "default": "rule"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of the gate's purpose."
+          },
+          "checks": {
+            "type": "array",
+            "description": "Structured check definitions (used by auto-heal and similar gates)."
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "description": "Per-gate or per-check timeout in seconds."
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

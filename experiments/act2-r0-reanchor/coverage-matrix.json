@@ -1,0 +1,806 @@
+{
+  "schemaVersion": 1,
+  "subjectRevision": "c75502ceedb5ed2a37b7b5e4744fc71313682859",
+  "canonicalOrderSource": "repo:experiments/act2-wp4h1-intrinsic/canonical/intrinsic-ranking.json",
+  "interpretation": "Historical reports = 과거 상태 이해·감사 자료(현재 authority 아님). Current manifest + current canonical result = 현재 authority. 이 표는 과거 주장과 현재 유효성의 대조이지 Verified 목록이 아니다. 외부 symbol Verified=0이 R0의 핵심 발견.",
+  "rules": {
+    "attemptedMissingRule": "행에 시도 기록이 없으면 attempted=false",
+    "openPredicate": "attempted==false OR lastVerdict in [none, pre_sieved, psSkip, timeout, inconclusive]",
+    "closureNotOpen": "번역 완전성 closure는 fact-gate CLOSED — OPEN 아님",
+    "campaignStateTransition": {
+      "runTerminal": [
+        "PASS",
+        "FAIL",
+        "BLOCKED",
+        "INCONCLUSIVE"
+      ],
+      "rule": "RUN TERMINAL ≠ CAMPAIGN TERMINAL",
+      "transitions": {
+        "PASS": {
+          "currentTruth": "VERIFIED"
+        },
+        "FAIL": {
+          "currentTruth": "FAILED"
+        },
+        "BLOCKED": {
+          "currentTruth": "OPEN (retained)",
+          "action": "record nextPrerequisite, same target"
+        },
+        "INCONCLUSIVE": {
+          "currentTruth": "OPEN (retained)",
+          "action": "record cause, same target"
+        }
+      },
+      "campaignTerminalDerivation": "derived: (currentTruth != \"OPEN\") — 저장 금지",
+      "openPredicateRelation": "openPredicate은 bootstrap 시 OPEN 발견 규칙; 전이 이후에는 campaignStateTransition이 권위 — 재유도 금지",
+      "note": "OPEN 행의 currentTruth는 bootstrap 이후 재유도하지 않고 전이 규칙이 권위"
+    },
+    "openPredicateNormalization": {
+      "members": [
+        "none",
+        "pre_sieved",
+        "psSkip",
+        "timeout",
+        "inconclusive"
+      ],
+      "normSteps": [
+        "1. toLowerCase",
+        "2. remove parenthetical segments — regex \\([^)]*\\) 반복 적용",
+        "3. tokenize on non-word runs (word char = [A-Za-z0-9_], underscore 포함)",
+        "4. drop empty tokens"
+      ],
+      "matchMode": "any token equals a member (case-insensitive) OR any token has a member as whole-word prefix (member 뒤가 non-word char 또는 token 끝)",
+      "boundaryRule": "whole-word boundary = [^A-Za-z0-9_] 또는 token 끝",
+      "exactMemberMatches": [
+        "pre_sieved",
+        "timeout"
+      ],
+      "normalizedMemberMatches": [],
+      "decoratedVerdictsEvaluated": 15,
+      "decoratedVerdicts": [
+        "A2-script-pocketed-but-not-z3-executable",
+        "AMBIGUOUS(5/6); REPLACE(1/6)",
+        "Case B; rpoResolved",
+        "Failed + vacuous",
+        "PASS (V2)",
+        "Unsupported (E2E); sat (Z3 typing)",
+        "Vacuous (erratum)",
+        "Vacuous; Z3 sat (2건)",
+        "Verified + M1 Incomplete",
+        "elNoObligation/elProofCandidate",
+        "hardEligible=6",
+        "legacy-unverified ×6,806",
+        "vacuous (expected)",
+        "vacuous (postcondition)",
+        "verified=0 (correct zero)"
+      ],
+      "note": "\"Incomplete\"·\"Vacuous\"·\"Unsupported\" 등은 계획 predicate 멤버가 아니므로 OPEN을 유발하지 않음(의도된 규칙, 확장 금지). 정확 일치 2행(pre_sieved, timeout)만 OPEN. 변형된 결합어(예: Incompleteskip)는 실측 없음."
+    }
+  },
+  "rows": [
+    {
+      "sortKey": 1,
+      "target": "bitops2.getBitsBE",
+      "wp": "WP4-b",
+      "reportedStatus": "InfrastructureFailure — axiom_engine.nim:719 slice crash exit 2 (L79)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp4b-proof-execution-anchor/wp4b-result.md",
+        "repo:experiments/act2-wp4b-proof-execution-anchor/wp4b-inventory.json",
+        "repo:experiments/act2-wp4b-proof-execution-anchor/wp4b-shortlist.json"
+      ],
+      "subjectBound": true,
+      "reproducible": "no",
+      "reproducibleNote": "719 crash는 wp4c에서 제거, 재현 시점 rev 미기록",
+      "attempted": true,
+      "lastVerdict": "InfrastructureFailure",
+      "verdictAuthority": "repo:experiments/act2-wp4b-proof-execution-anchor/wp4b-result.md",
+      "currentTruth": "superseded (wp4c V2에서 결함 제거 확인)",
+      "historicalTruth": "superseded (wp4c V2에서 결함 제거 확인)"
+    },
+    {
+      "sortKey": 2,
+      "target": "bitops2.getBitsBE",
+      "wp": "WP4-c",
+      "reportedStatus": "V2 PASS(crash 제거); V3 미해결·국소화 (L8)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp4c-symbol-syntax-robustness/wp4c-regression-result.md",
+        "repo:experiments/act2-wp4c-symbol-syntax-robustness/wp4c-v3-frontier-localization.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "frontier drop 조건 verified_frontier.nim:23-25 현행 코드로 재검증",
+      "attempted": true,
+      "lastVerdict": "PASS (V2)",
+      "verdictAuthority": "repo:experiments/act2-wp4c-symbol-syntax-robustness/wp4c-regression-result.md",
+      "currentTruth": "historical (V3 국소화 — 현행 대조 필요)",
+      "historicalTruth": "historical (V3 국소화 — 현행 대조 필요)"
+    },
+    {
+      "sortKey": 3,
+      "target": "bitops2.getBitsBE (func/template identity)",
+      "wp": "WP4-d-0",
+      "reportedStatus": "PASS — decl-text discriminator (L39)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp4d-symbol-identity/wp4d0-final-verdict.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "",
+      "attempted": true,
+      "lastVerdict": "PASS",
+      "verdictAuthority": "repo:experiments/act2-wp4d-symbol-identity/wp4d0-final-verdict.md",
+      "currentTruth": "historical (identity 판정 — proof 아님)",
+      "historicalTruth": "historical (identity 판정 — proof 아님)"
+    },
+    {
+      "sortKey": 4,
+      "target": "bitops2.getBitsBE",
+      "wp": "WP4-d-4",
+      "reportedStatus": "Incomplete — V3 FIXED, A4 psSkip illFormed (L34, L85)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp4d-symbol-identity/wp4d4-result.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "",
+      "attempted": true,
+      "lastVerdict": "Incomplete",
+      "verdictAuthority": "repo:experiments/act2-wp4d-symbol-identity/wp4d4-result.md",
+      "currentTruth": "historical",
+      "historicalTruth": "historical"
+    },
+    {
+      "sortKey": 5,
+      "target": "canonical --target fail-closed",
+      "wp": "WP4-e",
+      "reportedStatus": "PASS — NotFound/Ambiguous exit 2 (L12-14)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp4d-symbol-identity/wp4e-failclosed-target.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "",
+      "attempted": true,
+      "lastVerdict": "PASS",
+      "verdictAuthority": "repo:experiments/act2-wp4d-symbol-identity/wp4e-failclosed-target.md",
+      "currentTruth": "historical (fail-closed 설계 — 현행 계약 대조)",
+      "historicalTruth": "historical (fail-closed 설계 — 현행 계약 대조)"
+    },
+    {
+      "sortKey": 6,
+      "target": "bitops2.getBitsBE",
+      "wp": "WP4-f A",
+      "reportedStatus": "국소화: illFormed 직접 원인 = postcondition vacuous (L21)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp4d-symbol-identity/wp4f-phase-a-localization.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "",
+      "attempted": true,
+      "lastVerdict": "vacuous (postcondition)",
+      "verdictAuthority": "repo:experiments/act2-wp4d-symbol-identity/wp4f-phase-a-localization.md",
+      "currentTruth": "historical",
+      "historicalTruth": "historical"
+    },
+    {
+      "sortKey": 7,
+      "target": "bitops2.getBitsBE (Anchor#1)",
+      "wp": "WP4-h-1",
+      "reportedStatus": "Incomplete/measurement success (L124)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp4h1-intrinsic/ACT2-WP4h1-intrinsic-report.md",
+        "repo:experiments/act2-wp4h1-intrinsic/canonical/inventory.json",
+        "repo:experiments/act2-wp4h1-intrinsic/canonical/intrinsic-ranking.json",
+        "repo:experiments/act2-wp4h1-intrinsic/canonical/anchor.json"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "",
+      "attempted": true,
+      "lastVerdict": "Incomplete",
+      "verdictAuthority": "repo:experiments/act2-wp4h1-intrinsic/ACT2-WP4h1-intrinsic-report.md",
+      "currentTruth": "historical",
+      "historicalTruth": "historical"
+    },
+    {
+      "sortKey": 8,
+      "target": "bitops2.getBitsBE",
+      "wp": "ACT2-WP4-3",
+      "reportedStatus": "Unsupported/ExecutionTerminated — erGuardHardReject, empty SMT (L57, L75)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp4h1-intrinsic/ACT2-WP4-3-first-kernel-proof-attempt.md",
+        "repo:experiments/act2-wp4h1-intrinsic/proof-attempt/manifest.json"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "",
+      "attempted": true,
+      "lastVerdict": "Unsupported",
+      "verdictAuthority": "repo:experiments/act2-wp4h1-intrinsic/ACT2-WP4-3-first-kernel-proof-attempt.md",
+      "currentTruth": "superseded (후속 wp4d-4에서 frontier 입성 달성)",
+      "historicalTruth": "superseded (후속 wp4d-4에서 frontier 입성 달성)"
+    },
+    {
+      "sortKey": 9,
+      "target": "bitops2.getBitsBE",
+      "wp": "WP4-h-2",
+      "reportedStatus": "A2-script-pocketed-but-not-z3-executable (L128, md5 f75cba83…)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp4h2-lowering/WP4-h-2-lowering-localization.md",
+        "repo:experiments/act2-wp4h2-lowering/canonical/lowering-localization.json"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "",
+      "attempted": true,
+      "lastVerdict": "A2-script-pocketed-but-not-z3-executable",
+      "verdictAuthority": "repo:experiments/act2-wp4h2-lowering/WP4-h-2-lowering-localization.md",
+      "currentTruth": "historical",
+      "historicalTruth": "historical"
+    },
+    {
+      "sortKey": 10,
+      "target": "bitops2.getBitsBE",
+      "wp": "WP4-h-3",
+      "reportedStatus": "typing established(결정론, Z3 sat); E2E Unsupported (L74-75, L113)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp4h3-proofir/canonical/ACT2-WP4h3-proofir-report.md",
+        "repo:experiments/act2-wp4h3-proofir/probe/run1.smt2",
+        "repo:experiments/act2-wp4h3-proofir/probe/run2.smt2",
+        "repo:experiments/act2-wp4h3-proofir/probe/wp4h3_lowered.smt2",
+        "repo:experiments/act2-wp4h3-proofir/probe/z3_output.txt",
+        "workspace-untracked:experiments/act2-wp4h3-proofir/runs/proof_state.json",
+        "workspace-untracked:experiments/act2-wp4h3-proofir/runs/prove_getbitsBE_run1.log",
+        "workspace-untracked:experiments/act2-wp4h3-proofir/runs/prove_trajectory.jsonl"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "run1.smt2==run2.smt2 보존 + run log 보존",
+      "attempted": true,
+      "lastVerdict": "Unsupported (E2E); sat (Z3 typing)",
+      "verdictAuthority": "repo:experiments/act2-wp4h3-proofir/canonical/ACT2-WP4h3-proofir-report.md",
+      "currentTruth": "historical, unverified-now (sat=자명성 — proof 아님, 보고서도 명시)",
+      "historicalTruth": "historical, unverified-now (sat=자명성 — proof 아님, 보고서도 명시)"
+    },
+    {
+      "sortKey": 11,
+      "target": "bitops2.getBitsBE",
+      "wp": "WP4-i",
+      "reportedStatus": "premise REFUTED — 원인=payload_bridge.nim CWD read (L55, L61); 새 경계 Missing preconditions: has_loop (L95)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wpi-structural-ingress/canonical/ACT2-WP4i-structural-ingress-report.md",
+        "repo:experiments/act2-wpi-structural-ingress/canonical/signature_corpus.json",
+        "repo:experiments/act2-wpi-structural-ingress/canonical/signature_corpus_run1.json",
+        "repo:experiments/act2-wpi-structural-ingress/canonical/signature_corpus_run2.json"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "수정 subjectResolver/external_ir_materializer 현행 엔진 존속",
+      "attempted": true,
+      "lastVerdict": "REFUTED",
+      "verdictAuthority": "repo:experiments/act2-wpi-structural-ingress/canonical/ACT2-WP4i-structural-ingress-report.md",
+      "currentTruth": "refuted (원인 귀속 정정됨 — 정정된 경계가 현재 기술 상태, R0 확인)",
+      "historicalTruth": "refuted (원인 귀속 정정됨 — 정정된 경계가 현재 기술 상태, R0 확인)"
+    },
+    {
+      "sortKey": 12,
+      "target": "bitops2.getBitsBE",
+      "wp": "WP4-j",
+      "reportedStatus": "Incomplete — pre_sieved, UAP requests=1 results=0 (L105-107, L170)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "workspace-untracked:experiments/act2-wpj-obligation-driven-sieve/canonical/ACT2-WP4j-report.md",
+        "workspace-untracked:experiments/act2-wpj-obligation-driven-sieve/canonical/evidence/trajectory_run12.jsonl",
+        "workspace-untracked:experiments/act2-wpj-obligation-driven-sieve/corpus/decision_corpus.json",
+        "workspace-untracked:experiments/act2-wpj-obligation-driven-sieve/runs/prove_getbitsBE_wpj_replay.log",
+        "workspace-untracked:experiments/act2-wpj-obligation-driven-sieve/runs/prove_trajectory_wpj.jsonl",
+        "repo:experiments/act2-r0-atom-getbitsbe/verdict.json",
+        "repo:experiments/act2-r0-atom-getbitsbe/atom-reproduction.json",
+        "repo:experiments/act2-r0-atom-getbitsbe/run_state/ax_proof_state.json",
+        "repo:experiments/act2-r0-atom-getbitsbe/logs/stdout.log",
+        "repo:experiments/act2-r0-atom-getbitsbe/logs/stderr.log",
+        "repo:experiments/act2-r0-atom-getbitsbe/solver/z3_telemetry.jsonl",
+        "repo:experiments/act2-r0-atom-getbitsbe/completeness/df2ff30d5f73102dd89274c1df96ea9a922e935954714e81808e60fc8a60691c.json",
+        "repo:experiments/act2-r0-atom-getbitsbe/completeness/df2ff30d5f73102dd89274c1df96ea9a922e935954714e81808e60fc8a60691c.witness.json",
+        "repo:experiments/act2-r0-atom-getbitsbe/state_seed/baseline.json",
+        "repo:experiments/act2-r0-atom-getbitsbe/state_seed/verification_scope.lock",
+        "repo:experiments/act2-r0-atom-getbitsbe/archival/ax_prove_trajectory.jsonl"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "atomRun: BLOCKED (2026-10-01, verdict.json) — 재관측 gateVerdict=FAIL, pre_sieved=1, obligationAttemptedCount=0, translationLossFree=false; corpus + replay log 보존",
+      "attempted": true,
+      "lastVerdict": "blocked",
+      "verdictAuthority": "repo:experiments/act2-r0-atom-getbitsbe/verdict.json",
+      "currentTruth": "OPEN",
+      "historicalTruth": "historical (j.1이 \"0 results\" 계측 해소 — 모순#6)"
+    },
+    {
+      "sortKey": 13,
+      "target": "bitops2.getBitsBE",
+      "wp": "WP4-k",
+      "reportedStatus": "Incomplete + InfrastructureFailure(PERSIST FAIL) — O9/O10/O11 closed; erratum: Z3 도달 → Vacuous 정정 (L155, L233-247)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "workspace-untracked:experiments/act2-wpk-obligation-execution/canonical/ACT2-WP4k-report.md",
+        "workspace-untracked:experiments/act2-wpk-obligation-execution/canonical/ACT2-WP4k-phaseB-contract.md",
+        "workspace-untracked:experiments/act2-wpk-obligation-execution/probe/phaseA-measurements.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "ledger·telemetry 보존",
+      "attempted": true,
+      "lastVerdict": "Vacuous (erratum)",
+      "verdictAuthority": "workspace-untracked:experiments/act2-wpk-obligation-execution/canonical/ACT2-WP4k-report.md",
+      "currentTruth": "superseded-by-own-erratum — 최종 판정 Vacuous(sat)",
+      "historicalTruth": "superseded-by-own-erratum — 최종 판정 Vacuous(sat)"
+    },
+    {
+      "sortKey": 14,
+      "target": "bitops2.getBitsBE",
+      "wp": "WP4-j.1",
+      "reportedStatus": "Vacuous — Z3 실호출 2건 sat, golden digest d9f9af27… 정확 일치 (L150, L68)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "workspace-untracked:experiments/act2-wpj1-strategy-admission/canonical/ACT2-WP4j1-report.md",
+        "workspace-untracked:experiments/act2-wpj1-strategy-admission/probe/getBitsBE-decision-ledger.json",
+        "workspace-untracked:experiments/act2-wpj1-strategy-admission/probe/getBitsBE-decision-ledger-v2.json",
+        "workspace-untracked:experiments/act2-wpj1-strategy-admission/probe/golden-script-digest-match.md",
+        "workspace-untracked:experiments/act2-wpj1-strategy-admission/probe/phaseB-measurements.md",
+        "workspace-untracked:experiments/act2-wpj1-strategy-admission/probe/telemetry-pre-runA.jsonl",
+        "workspace-untracked:experiments/act2-wpj1-strategy-admission/probe/telemetry-pre-runB.jsonl",
+        "workspace-untracked:experiments/act2-wpj1-strategy-admission/probe/telemetry-post-runA.jsonl",
+        "workspace-untracked:experiments/act2-wpj1-strategy-admission/probe/telemetry-post-runB.jsonl",
+        "workspace-untracked:experiments/act2-wpj1-strategy-admission/runs/runA-stdout.txt",
+        "workspace-untracked:experiments/act2-wpj1-strategy-admission/runs/runB-stdout.txt"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "",
+      "attempted": true,
+      "lastVerdict": "Vacuous; Z3 sat (2건)",
+      "verdictAuthority": "workspace-untracked:experiments/act2-wpj1-strategy-admission/canonical/ACT2-WP4j1-report.md",
+      "currentTruth": "historical, unverified-now (sat — 만족성은 증명 아님)",
+      "historicalTruth": "historical, unverified-now (sat — 만족성은 증명 아님)"
+    },
+    {
+      "sortKey": 15,
+      "target": "bitops2.getBitsBE",
+      "wp": "WP4-j.2",
+      "reportedStatus": "substrate 성공 + lossy 판정 → fact 미주입 (translationLossFree=false, bindingUniverseComplete=false, 15 vs 12/13) → Incomplete (L79-82)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "workspace-untracked:experiments/act2-wpj2-semantic-facts/canonical/ACT2-WP4j2-report.md",
+        "workspace-untracked:experiments/act2-wpj2-semantic-facts/probe/ingress-fidelity.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "게이트 필드 현행 src/core/trusted/semantic_fact_types.nim·axiom_ir.nim 존속",
+      "attempted": true,
+      "lastVerdict": "Incomplete",
+      "verdictAuthority": "workspace-untracked:experiments/act2-wpj2-semantic-facts/canonical/ACT2-WP4j2-report.md",
+      "currentTruth": "historical",
+      "historicalTruth": "historical"
+    },
+    {
+      "sortKey": 16,
+      "target": "bitops2.getBitsBE",
+      "wp": "WP4-j.3+j.4",
+      "reportedStatus": "j.3 완료; j.4 ladder 14/14; fact 주입 차단(completeness 게이트 15 vs 13) → Incomplete (L103-106, L133)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "workspace-untracked:experiments/act2-wpj2-semantic-facts/canonical/ACT2-WP4j34-report.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "",
+      "attempted": true,
+      "lastVerdict": "Incomplete",
+      "verdictAuthority": "workspace-untracked:experiments/act2-wpj2-semantic-facts/canonical/ACT2-WP4j34-report.md",
+      "currentTruth": "historical — 캠페인 중단점 (R0 재관측 출발점)",
+      "historicalTruth": "historical — 캠페인 중단점 (R0 재관측 출발점)"
+    },
+    {
+      "sortKey": 17,
+      "target": "base36.decodedLength",
+      "wp": "WP2-a",
+      "reportedStatus": "Incomplete → 경계 PASS V1~V7, 대상 심볼 status=timeout (L88 V7 PASS)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp2-subject-scoped-execution/wp2-result.md",
+        "workspace-untracked:experiments/act2-wp2-subject-scoped-execution/wp2-analysis.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "scope.lock 7a4cd3eb/baseline c75ac9e6 digest 기록",
+      "attempted": true,
+      "lastVerdict": "timeout",
+      "verdictAuthority": "repo:experiments/act2-wp2-subject-scoped-execution/wp2-result.md",
+      "currentTruth": "OPEN",
+      "historicalTruth": "historical — 판정 자체가 Verified 아님 명시; E2E 대상 base32 편향 기재(모순#4)"
+    },
+    {
+      "sortKey": 18,
+      "target": "base36.decodedLength",
+      "wp": "WP3-a",
+      "reportedStatus": "Vacuous — T3 tautology REJECT, exit=2 (L48)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp3-exact-external-proof-outcome/wp3-result.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "",
+      "attempted": true,
+      "lastVerdict": "Vacuous",
+      "verdictAuthority": "repo:experiments/act2-wp3-exact-external-proof-outcome/wp3-result.md",
+      "currentTruth": "historical (다중 보고서 일치 — R0 재관측)",
+      "historicalTruth": "historical (다중 보고서 일치 — R0 재관측)"
+    },
+    {
+      "sortKey": 19,
+      "target": "base36.decodedLength",
+      "wp": "WP3-b",
+      "reportedStatus": "Vacuous (L128) + 라우팅·tcVerifiedProof 승격 2 BLOCKER fixed (L15)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp3-exact-external-proof-outcome/wp3b-result.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "tcVerifiedProof 게이트 현행 src/core/trusted/trust_commit.nim 존속",
+      "attempted": true,
+      "lastVerdict": "Vacuous",
+      "verdictAuthority": "repo:experiments/act2-wp3-exact-external-proof-outcome/wp3b-result.md",
+      "currentTruth": "historical (fix 현행 존속 추정 — R0 확인)",
+      "historicalTruth": "historical (fix 현행 존속 추정 — R0 확인)"
+    },
+    {
+      "sortKey": 20,
+      "target": "base36.encode/decodedLength",
+      "wp": "WP4-a PA",
+      "reportedStatus": "elNoObligation/elProofCandidate (L38-39)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp4a-external-proof-candidate-semantics/wp4a-analysis.md",
+        "repo:experiments/act2-wp4a-external-proof-candidate-semantics/wp4a-probe.json"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "",
+      "attempted": true,
+      "lastVerdict": "elNoObligation/elProofCandidate",
+      "verdictAuthority": "repo:experiments/act2-wp4a-external-proof-candidate-semantics/wp4a-analysis.md",
+      "currentTruth": "historical, unverified-now (eligibility 분류)",
+      "historicalTruth": "historical, unverified-now (eligibility 분류)"
+    },
+    {
+      "sortKey": 21,
+      "target": "base36.decodedLength",
+      "wp": "WP4-a B-2b",
+      "reportedStatus": "Failed(main) + cross-validation vacuous, solverInvocationCount=1 (L79)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "workspace-untracked:experiments/act2-wp4a-external-proof-candidate-semantics/wp4a-b2b-measurement.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "no",
+      "reproducibleNote": "Leanstral/UAP 실패 경로 의존 + 이후 엔진 수정 + 기전 상충(모순#1) 미해소",
+      "attempted": true,
+      "lastVerdict": "Failed + vacuous",
+      "verdictAuthority": "workspace-untracked:experiments/act2-wp4a-external-proof-candidate-semantics/wp4a-b2b-measurement.md",
+      "currentTruth": "conflicted — WP3-a/B-5b의 tautology REJECT와 기전 상충, 미해소",
+      "historicalTruth": "conflicted — WP3-a/B-5b의 tautology REJECT와 기전 상충, 미해소"
+    },
+    {
+      "sortKey": 22,
+      "target": "base36.decodedLength",
+      "wp": "WP4-a B-5/5b",
+      "reportedStatus": "InfrastructureFailure → fixed (CWD source-acquisition); tautology REJECT 유지",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp4a-external-proof-candidate-semantics/wp4a-b5-cwd-sourcing-defect.md",
+        "repo:experiments/act2-wp4a-external-proof-candidate-semantics/wp4a-b5b-result.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "fixed 상태 재검증; 수정 src/infrastructure/external_ir_materializer.nim 현행 존속 — 결함 재현은 no",
+      "attempted": true,
+      "lastVerdict": "tautology REJECT",
+      "verdictAuthority": "repo:experiments/act2-wp4a-external-proof-candidate-semantics/wp4a-b5b-result.md",
+      "currentTruth": "historical (fix 현행 존속 — R0 재검증)",
+      "historicalTruth": "historical (fix 현행 존속 — R0 재검증)"
+    },
+    {
+      "sortKey": 23,
+      "target": "계약 개정 §10",
+      "wp": "WP0-a",
+      "reportedStatus": "COMPLETE (verdict L73)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "workspace-untracked:experiments/act2-wp0-execution-context/wp0a-completion-verdict.md"
+      ],
+      "subjectBound": false,
+      "reproducible": "likely",
+      "reproducibleNote": "rev pin Axiom@f7dd583ca 기록·git 객체 존재; §10 현재 docs/spec/productization_contract.md:345 존속",
+      "attempted": true,
+      "lastVerdict": "COMPLETE",
+      "verdictAuthority": "workspace-untracked:experiments/act2-wp0-execution-context/wp0a-completion-verdict.md",
+      "currentTruth": "maintained — §10 현행 계약 존속 확인",
+      "historicalTruth": "maintained — §10 현행 계약 존속 확인"
+    },
+    {
+      "sortKey": 24,
+      "target": "external exec context (self-run verified=1)",
+      "wp": "WP0-b/c",
+      "reportedStatus": "Verified + M1 Incomplete (L54-55)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "workspace-untracked:experiments/act2-wp0-execution-context/wp0bc-completion-report.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "self-run 재실행; rev pin 있음",
+      "attempted": true,
+      "lastVerdict": "Verified + M1 Incomplete",
+      "verdictAuthority": "workspace-untracked:experiments/act2-wp0-execution-context/wp0bc-completion-report.md",
+      "currentTruth": "historical, unverified-now — 보고서 L64가 \"verified=1은 Axiom 자기 커널 스코프\"임을 자체 명시",
+      "historicalTruth": "historical, unverified-now — 보고서 L64가 \"verified=1은 Axiom 자기 커널 스코프\"임을 자체 명시"
+    },
+    {
+      "sortKey": 25,
+      "target": "endians2.nim::swapBytesNim",
+      "wp": "WP1",
+      "reportedStatus": "Partial PASS — E1–E3 PASS, E4 Blocked:S3-registry-static, E5 Unsupported(PNode→NimNode-boundary) (L48)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "workspace-untracked:experiments/act2-wp1-external-symbol-ingress/wp1-result.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "probe·subject 존속; engine rev 미기록 → git log 대조 필요",
+      "attempted": true,
+      "lastVerdict": "Partial PASS",
+      "verdictAuthority": "workspace-untracked:experiments/act2-wp1-external-symbol-ingress/wp1-result.md",
+      "currentTruth": "historical, unverified-now (외부 Verified=0)",
+      "historicalTruth": "historical, unverified-now (외부 Verified=0)"
+    },
+    {
+      "sortKey": 26,
+      "target": "endians2.nim::swapBytesNim",
+      "wp": "WP1.5",
+      "reportedStatus": "PASS — E4 admitted(soExternalSubject), E5 CanonicalNoObligation (L24)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "workspace-untracked:experiments/act2-wp15-universe-semantic-boundary/wp15-result.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "",
+      "attempted": true,
+      "lastVerdict": "PASS",
+      "verdictAuthority": "workspace-untracked:experiments/act2-wp15-universe-semantic-boundary/wp15-result.md",
+      "currentTruth": "historical, unverified-now (ingress 분류 판정 — proof 아님)",
+      "historicalTruth": "historical, unverified-now (ingress 분류 판정 — proof 아님)"
+    },
+    {
+      "sortKey": 27,
+      "target": "nim-stew trust journal 6,806",
+      "wp": "WP3-c",
+      "reportedStatus": "DEBT#445 등록, legacy-unverified ×6,806 (result L10-31)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp3c-historical-trust-debt/wp3c-result.md",
+        "repo:experiments/act2-wp3c-historical-trust-debt/output/manifest.json",
+        "repo:experiments/act2-wp3c-historical-trust-debt/output/manifest_runA.json",
+        "repo:experiments/act2-wp3c-historical-trust-debt/output/manifest_runB.json",
+        "repo:experiments/act2-wp3c-historical-trust-debt/forensic/forensic_manifest.json",
+        "repo:experiments/act2-wp3c-historical-trust-debt/forensic/nim-stew-data/trusted/journal/3ab50cc271cdc3166d6ad39c9b34f7a01a2c0626fdd08cfecdb33107135c2aad.json"
+      ],
+      "subjectBound": true,
+      "reproducible": "no",
+      "reproducibleNote": "data/trusted/journal/ 6,806 원본 상태 소실(스냅샷 manifest만 보존)",
+      "attempted": true,
+      "lastVerdict": "legacy-unverified ×6,806",
+      "verdictAuthority": "repo:experiments/act2-wp3c-historical-trust-debt/wp3c-result.md",
+      "currentTruth": "maintained — data/debt_registry.json:3464에 DEBT#445 현존, manifestDigest a42bf17d… 일치(행 중 유일)",
+      "historicalTruth": "maintained — data/debt_registry.json:3464에 DEBT#445 현존, manifestDigest a42bf17d… 일치(행 중 유일)"
+    },
+    {
+      "sortKey": 28,
+      "target": "registry field supply",
+      "wp": "WP4-a B-1",
+      "reportedStatus": "PASS (registry 230, L136-139)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp4a-external-proof-candidate-semantics/wp4a-b1-registry-measurement.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "",
+      "attempted": true,
+      "lastVerdict": "PASS",
+      "verdictAuthority": "repo:experiments/act2-wp4a-external-proof-candidate-semantics/wp4a-b1-registry-measurement.md",
+      "currentTruth": "historical (현행 registry 수치 재확인 필요)",
+      "historicalTruth": "historical (현행 registry 수치 재확인 필요)"
+    },
+    {
+      "sortKey": 29,
+      "target": "nim-stew 전 트리 46 symbols",
+      "wp": "WP4-f C",
+      "reportedStatus": "verified=0/40 \"correct zero\", A4 통과 0 (L7, L71)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp4d-symbol-identity/wp4f-phase-c-anchor-inventory.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "",
+      "attempted": true,
+      "lastVerdict": "verified=0 (correct zero)",
+      "verdictAuthority": "repo:experiments/act2-wp4d-symbol-identity/wp4f-phase-c-anchor-inventory.md",
+      "currentTruth": "historical — 외부 Verified=0 원칙과 정합 (R0 재관측 시 동일 예상)",
+      "historicalTruth": "historical — 외부 Verified=0 원칙과 정합 (R0 재관측 시 동일 예상)"
+    },
+    {
+      "sortKey": 30,
+      "target": "reference vault 6 certs",
+      "wp": "WP4-g.0",
+      "reportedStatus": "5/6 AMBIGUOUS, 1/6 REPLACE (L97-98)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp4g-cert-reconcile/wp4g0-authority-audit.md"
+      ],
+      "subjectBound": false,
+      "reproducible": "no",
+      "reproducibleNote": "기준 cert 커밋 f3d17f0e/891b6dae/4b0301c13 git 객체 소실 확인",
+      "attempted": true,
+      "lastVerdict": "AMBIGUOUS(5/6); REPLACE(1/6)",
+      "verdictAuthority": "repo:experiments/act2-wp4g-cert-reconcile/wp4g0-authority-audit.md",
+      "currentTruth": "historical, unverified-now (기준 cert 소실로 재검증 불가)",
+      "historicalTruth": "historical, unverified-now (기준 cert 소실로 재검증 불가)"
+    },
+    {
+      "sortKey": 31,
+      "target": "proximityScore",
+      "wp": "WP4-g.1",
+      "reportedStatus": "Case A 아님 (NC1 PASS/NC2 dvcPbtFailed/NC3 PASS) → Case B; Phase D rpoResolved (phase-a L15/L41)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp4g1-cert-reconcile-semantics/wp4g1-phase-a.md",
+        "repo:experiments/act2-wp4g1-cert-reconcile-semantics/wp4g1-phase-d.md"
+      ],
+      "subjectBound": false,
+      "reproducible": "no",
+      "reproducibleNote": "891b6dae 소실",
+      "attempted": true,
+      "lastVerdict": "Case B; rpoResolved",
+      "verdictAuthority": "repo:experiments/act2-wp4g1-cert-reconcile-semantics/wp4g1-phase-a.md",
+      "currentTruth": "historical, unverified-now",
+      "historicalTruth": "historical, unverified-now"
+    },
+    {
+      "sortKey": 32,
+      "target": "ax cert reconcile primitives",
+      "wp": "WP4-g.2",
+      "reportedStatus": "Verified — RESOLVED EXIT=0 / full check EXIT=2 / apply REFUSED (L39-78)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp4g-cert-reconcile/wp4g2-phase-e.md"
+      ],
+      "subjectBound": false,
+      "reproducible": "likely",
+      "reproducibleNote": "부분 — primitive 동작은 현행 CLI로 재검증 가능, cert 대상은 소실",
+      "attempted": true,
+      "lastVerdict": "Verified",
+      "verdictAuthority": "repo:experiments/act2-wp4g-cert-reconcile/wp4g2-phase-e.md",
+      "currentTruth": "historical (primitive 판정 — R0 재검증)",
+      "historicalTruth": "historical (primitive 판정 — R0 재검증)"
+    },
+    {
+      "sortKey": 33,
+      "target": "nim-stew 458 symbols / 6 anchor",
+      "wp": "WP22→h0",
+      "reportedStatus": "1차 Empty → hardEligible=6 확정 (result L4-6)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-wp22-proof-slice-discovery/act2-wp22-result.md",
+        "repo:experiments/act2-wp22-proof-slice-discovery/wp4-h-0-forensic-closure.md",
+        "repo:experiments/act2-wp22-proof-slice-discovery/runs_v4/run1/inventory.json",
+        "repo:experiments/act2-wp22-proof-slice-discovery/runs_v4/run1/ranking.json",
+        "repo:experiments/act2-wp22-proof-slice-discovery/runs_v4/run2/inventory.json",
+        "repo:experiments/act2-wp22-proof-slice-discovery/runs_v4/run2/ranking.json",
+        "repo:experiments/act2-wp22-proof-slice-discovery/runs_v4/run3/inventory.json",
+        "repo:experiments/act2-wp22-proof-slice-discovery/runs_v4/run3/ranking.json",
+        "repo:experiments/act2-wp22-proof-slice-discovery/selected-anchor.md",
+        "repo:experiments/act2-wp22-proof-slice-discovery/inventory.json"
+      ],
+      "subjectBound": true,
+      "reproducible": "likely",
+      "reproducibleNote": "runs_v4 + probe 보존",
+      "attempted": true,
+      "lastVerdict": "hardEligible=6",
+      "verdictAuthority": "repo:experiments/act2-wp22-proof-slice-discovery/act2-wp22-result.md",
+      "currentTruth": "superseded → 해소 (SUPERSEDED 명시; 최종 hardEligible=6 — R0 재확정)",
+      "historicalTruth": "superseded → 해소 (SUPERSEDED 명시; 최종 hardEligible=6 — R0 재확정)"
+    },
+    {
+      "sortKey": 34,
+      "target": "rebase V4b witness",
+      "wp": "act2-1-pr13",
+      "reportedStatus": "baseline capture; vacuous expected; V1 solver reach=1 (L29-55)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act2-1-pr13-integration-closure/pre-rebase-witness.md"
+      ],
+      "subjectBound": true,
+      "reproducible": "no",
+      "reproducibleNote": "pre-rebase 트리 상태 소실(witness 스냅샷만 보존)",
+      "attempted": true,
+      "lastVerdict": "vacuous (expected)",
+      "verdictAuthority": "repo:experiments/act2-1-pr13-integration-closure/pre-rebase-witness.md",
+      "currentTruth": "historical (witness; vacuous는 wp3/b5b와 일치)",
+      "historicalTruth": "historical (witness; vacuous는 wp3/b5b와 일치)"
+    },
+    {
+      "sortKey": 35,
+      "target": "빌드 프로토콜 (warm)",
+      "wp": "act3-o1",
+      "reportedStatus": "GO — CC 599→51 (−91.5%), ArtifactOutputDigest 81b04430… cold==warm (L68-74)",
+      "evidenceExists": true,
+      "evidencePaths": [
+        "repo:experiments/act3-o1-verified-warm-protocol/o1-phase-a.md",
+        "repo:experiments/act3-o1-verified-warm-protocol/results/cold_build_output.txt",
+        "repo:experiments/act3-o1-verified-warm-protocol/results/cold_build_output.txt.metrics",
+        "repo:experiments/act3-o1-verified-warm-protocol/results/rebuild_probe.txt",
+        "repo:experiments/act3-o1-verified-warm-protocol/results/warm_build_output.txt",
+        "repo:experiments/act3-o1-verified-warm-protocol/results/warm_build_output.txt.metrics"
+      ],
+      "subjectBound": false,
+      "reproducible": "likely",
+      "reproducibleNote": "results/ 빌드 출력 보존",
+      "attempted": true,
+      "lastVerdict": "GO",
+      "verdictAuthority": "repo:experiments/act3-o1-verified-warm-protocol/o1-phase-a.md",
+      "currentTruth": "historical (warm 프로토콜 채택 여부 R0 확인)",
+      "historicalTruth": "historical (warm 프로토콜 채택 여부 R0 확인)"
+    }
+  ],
+  "openSummary": {
+    "count": 2,
+    "firstOpenTarget": {
+      "sortKey": 12,
+      "target": "bitops2.getBitsBE",
+      "lastVerdict": "blocked"
+    },
+    "lastRunVerdictOfFirst": "blocked",
+    "rows": [
+      {
+        "sortKey": 12,
+        "target": "bitops2.getBitsBE",
+        "lastVerdict": "blocked",
+        "wp": "WP4-j",
+        "historicalTruth": "historical (j.1이 \"0 results\" 계측 해소 — 모순#6)"
+      },
+      {
+        "sortKey": 17,
+        "target": "base36.decodedLength",
+        "lastVerdict": "timeout",
+        "wp": "WP2-a",
+        "historicalTruth": "historical — 판정 자체가 Verified 아님 명시; E2E 대상 base32 편향 기재(모순#4)"
+      }
+    ]
+  }
+}

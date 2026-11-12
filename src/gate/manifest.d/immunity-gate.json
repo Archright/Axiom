@@ -1,0 +1,15 @@
+{
+  "id": "immunity-gate",
+  "name": "Axiom unified immunity gate",
+  "layer": "meta",
+  "entry": "src/gate/runners/immunity_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/core/|data/immunity_baseline.json|logs/break_glass/",
+  "passFilenames": false,
+  "weight": "heavy",
+  "category": "policy",
+  "severity": "error",
+  "execution_mode": "interpreted"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "layer-enforcement-gate",
+  "name": "Layer Enforcement Gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/layer_enforcement_gate",
+  "stages": [
+    "pre-commit",
+    "pre-push"
+  ],
+  "filesPattern": "*.nim",
+  "passFilenames": false,
+  "weight": "medium",
+  "category": "rule",
+  "severity": "error"
+}

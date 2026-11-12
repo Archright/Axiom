@@ -1,0 +1,14 @@
+{
+  "id": "anti-theater-gate",
+  "name": "Anti-Theater Gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/anti_theater_gate",
+  "stages": [
+    "pre-commit"
+  ],
+  "filesPattern": "*.nim|Makefile|*.mk|.circleci",
+  "passFilenames": false,
+  "weight": "light",
+  "category": "rule",
+  "severity": "error"
+}

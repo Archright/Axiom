@@ -1,0 +1,2189 @@
+{
+  "window": "2026-10-16..2026-10-31",
+  "method": "consecutive-pair field diff of state snapshots (canonical form: workflows[].sha stripped)",
+  "conclusion_25218071": "WITHIN WINDOW (2026-10-17T00:07Z onward): every consecutive transition changed ONLY workflows[].sha. One in-window non-sha change: 2026-10-16T07:17:09Z — monitored workflow PATH changed admission-gate.yml -> admission-gate-v2.yml (ruleset creation era; 25218071 created 2026-10-16T04:51:14Z). enforcement=active, conditions, bypass_actors, rules structure otherwise invariant across all 26 pairs.",
+  "conclusion_23943917": "WITHIN WINDOW: every consecutive transition changed ONLY workflows[].sha. All 15 non-sha changes are PRE-WINDOW baseline (2026-10-09..2026-10-15): 14x enforcement toggle disabled<->active, 1x removal of workflows[0].ref field (main). enforcement=active, conditions, bypass_actors, rules structure otherwise invariant across all 47 pairs.",
+  "rulesets": [
+    {
+      "ruleset_id": 25218071,
+      "snapshots_compared": 27,
+      "consecutive_pairs": 26,
+      "pairs_with_non_sha_changes": [
+        {
+          "from_version": 53444931,
+          "to_version": 53456595,
+          "to_updated_at_utc": "2026-10-16T07:17:09Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate.yml",
+              "sha": "ade11572052d9bce01242df452d05ab38ed78eb0"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "5bfc911448a56d3e600aa06552291fb405898a46"
+            }
+          ],
+          "non_sha_changes": {
+            "rules_nosha": {
+              "old": [
+                {
+                  "type": "workflows",
+                  "parameters": {
+                    "do_not_enforce_on_create": false,
+                    "workflows": [
+                      {
+                        "repository_id": 1182157951,
+                        "path": ".github/workflows/admission-gate.yml"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "new": [
+                {
+                  "type": "workflows",
+                  "parameters": {
+                    "do_not_enforce_on_create": false,
+                    "workflows": [
+                      {
+                        "repository_id": 1182157951,
+                        "path": ".github/workflows/admission-gate-v2.yml"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        }
+      ],
+      "pairs_sha_only": [
+        53577668,
+        53591851,
+        53609138,
+        53678422,
+        53691938,
+        53936795,
+        53952477,
+        53981662,
+        53991019,
+        53994754,
+        53998410,
+        53998810,
+        54003007,
+        54008437,
+        54012480,
+        54018603,
+        54021858,
+        54024971,
+        54029230,
+        54041505,
+        54066286,
+        54109898,
+        54150575,
+        55302688,
+        55644506
+      ],
+      "pairs_no_change": [],
+      "all_diffs": [
+        {
+          "from_version": 53444931,
+          "to_version": 53456595,
+          "to_updated_at_utc": "2026-10-16T07:17:09Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate.yml",
+              "sha": "ade11572052d9bce01242df452d05ab38ed78eb0"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "5bfc911448a56d3e600aa06552291fb405898a46"
+            }
+          ],
+          "non_sha_changes": {
+            "rules_nosha": {
+              "old": [
+                {
+                  "type": "workflows",
+                  "parameters": {
+                    "do_not_enforce_on_create": false,
+                    "workflows": [
+                      {
+                        "repository_id": 1182157951,
+                        "path": ".github/workflows/admission-gate.yml"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "new": [
+                {
+                  "type": "workflows",
+                  "parameters": {
+                    "do_not_enforce_on_create": false,
+                    "workflows": [
+                      {
+                        "repository_id": 1182157951,
+                        "path": ".github/workflows/admission-gate-v2.yml"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 53456595,
+          "to_version": 53577668,
+          "to_updated_at_utc": "2026-10-17T00:07:33Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "5bfc911448a56d3e600aa06552291fb405898a46"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "29094836bc4488280d98c22665470dcb2e54da1a"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53577668,
+          "to_version": 53591851,
+          "to_updated_at_utc": "2026-10-17T04:54:45Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "29094836bc4488280d98c22665470dcb2e54da1a"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "2c81072d4a68d701bde15a212db91aab1ae4cc5d"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53591851,
+          "to_version": 53609138,
+          "to_updated_at_utc": "2026-10-17T10:57:17Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "2c81072d4a68d701bde15a212db91aab1ae4cc5d"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "484f00894995e49b7cd58b366feba66eb438427e"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53609138,
+          "to_version": 53678422,
+          "to_updated_at_utc": "2026-10-18T09:04:20Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "484f00894995e49b7cd58b366feba66eb438427e"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "758a8769cb8d466100672717e0f9f638339ee693"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53678422,
+          "to_version": 53691938,
+          "to_updated_at_utc": "2026-10-18T13:31:34Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "758a8769cb8d466100672717e0f9f638339ee693"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "67e1aa9de71222faa6722c243ca233bfd9820193"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53691938,
+          "to_version": 53936795,
+          "to_updated_at_utc": "2026-10-20T09:43:27Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "67e1aa9de71222faa6722c243ca233bfd9820193"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53936795,
+          "to_version": 53952477,
+          "to_updated_at_utc": "2026-10-20T12:18:08Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "527bf0e9a95d9eb4db1c89d594d80bf1fdff48c0"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53952477,
+          "to_version": 53981662,
+          "to_updated_at_utc": "2026-10-20T15:43:35Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "527bf0e9a95d9eb4db1c89d594d80bf1fdff48c0"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53981662,
+          "to_version": 53991019,
+          "to_updated_at_utc": "2026-10-20T16:52:52Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "3eb1a7f8b5136bf1431097581538d05e509f222a"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53991019,
+          "to_version": 53994754,
+          "to_updated_at_utc": "2026-10-20T17:22:00Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "3eb1a7f8b5136bf1431097581538d05e509f222a"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53994754,
+          "to_version": 53998410,
+          "to_updated_at_utc": "2026-10-20T17:53:36Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "30a32d959f1314800c7e1de3b968f5a59a30740d"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53998410,
+          "to_version": 53998810,
+          "to_updated_at_utc": "2026-10-20T17:56:46Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "30a32d959f1314800c7e1de3b968f5a59a30740d"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "b1925f501cfb0c6fc508c18c9284b9722f5f84fe"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53998810,
+          "to_version": 54003007,
+          "to_updated_at_utc": "2026-10-20T18:21:02Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "b1925f501cfb0c6fc508c18c9284b9722f5f84fe"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54003007,
+          "to_version": 54008437,
+          "to_updated_at_utc": "2026-10-20T18:54:04Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "bc568cf4982c1dee9da28e614057c47ba93d7efa"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54008437,
+          "to_version": 54012480,
+          "to_updated_at_utc": "2026-10-20T19:20:53Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "bc568cf4982c1dee9da28e614057c47ba93d7efa"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54012480,
+          "to_version": 54018603,
+          "to_updated_at_utc": "2026-10-20T20:07:24Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "1504a10c83bb667cb869ab91167719299ff888b1"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54018603,
+          "to_version": 54021858,
+          "to_updated_at_utc": "2026-10-20T20:36:09Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "1504a10c83bb667cb869ab91167719299ff888b1"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54021858,
+          "to_version": 54024971,
+          "to_updated_at_utc": "2026-10-20T21:03:22Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "73d7022452dceb080d5568997e2b3992b553de15"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54024971,
+          "to_version": 54029230,
+          "to_updated_at_utc": "2026-10-20T21:46:30Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "73d7022452dceb080d5568997e2b3992b553de15"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "1bfb5ed7e5b82dc89a5e9c2694ec122e3ba73ff5"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54029230,
+          "to_version": 54041505,
+          "to_updated_at_utc": "2026-10-21T00:00:00Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "1bfb5ed7e5b82dc89a5e9c2694ec122e3ba73ff5"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "fb73fbb56a52f776378140d72924fbb6837f5404"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54041505,
+          "to_version": 54066286,
+          "to_updated_at_utc": "2026-10-21T05:48:24Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "fb73fbb56a52f776378140d72924fbb6837f5404"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "c1752d7ebbcff1d01d82c922a5f97d5b86622880"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54066286,
+          "to_version": 54109898,
+          "to_updated_at_utc": "2026-10-21T12:16:14Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "c1752d7ebbcff1d01d82c922a5f97d5b86622880"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "2bcbcb8c58a9f36453dc3f2e09751e1eefd60b2b"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54109898,
+          "to_version": 54150575,
+          "to_updated_at_utc": "2026-10-21T16:21:48Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "2bcbcb8c58a9f36453dc3f2e09751e1eefd60b2b"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "7fffee318b9fada32d13dd9c88d74869e343f9cc"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54150575,
+          "to_version": 55302688,
+          "to_updated_at_utc": "2026-10-29T09:04:40Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "7fffee318b9fada32d13dd9c88d74869e343f9cc"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "58a2c54666f25c8f9ebb96a8229eacaad01ad978"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 55302688,
+          "to_version": 55644506,
+          "to_updated_at_utc": "2026-10-31T07:16:28Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "58a2c54666f25c8f9ebb96a8229eacaad01ad978"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "d76caf956000175bbc78f9b25bced842c02992a5"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        }
+      ],
+      "non_sha_in_window_pairs": [
+        {
+          "from_version": 53444931,
+          "to_version": 53456595,
+          "to_updated_at_utc": "2026-10-16T07:17:09Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/admission-gate.yml",
+              "sha": "ade11572052d9bce01242df452d05ab38ed78eb0"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/admission-gate-v2.yml",
+              "sha": "5bfc911448a56d3e600aa06552291fb405898a46"
+            }
+          ],
+          "non_sha_changes": {
+            "rules_nosha": {
+              "old": [
+                {
+                  "type": "workflows",
+                  "parameters": {
+                    "do_not_enforce_on_create": false,
+                    "workflows": [
+                      {
+                        "repository_id": 1182157951,
+                        "path": ".github/workflows/admission-gate.yml"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "new": [
+                {
+                  "type": "workflows",
+                  "parameters": {
+                    "do_not_enforce_on_create": false,
+                    "workflows": [
+                      {
+                        "repository_id": 1182157951,
+                        "path": ".github/workflows/admission-gate-v2.yml"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        }
+      ]
+    },
+    {
+      "ruleset_id": 23943917,
+      "snapshots_compared": 48,
+      "consecutive_pairs": 47,
+      "pairs_with_non_sha_changes": [
+        {
+          "from_version": 50787902,
+          "to_version": 52556120,
+          "to_updated_at_utc": "2026-10-09T10:52:15Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "active",
+              "new": "disabled"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52556120,
+          "to_version": 52556143,
+          "to_updated_at_utc": "2026-10-09T10:52:24Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "disabled",
+              "new": "active"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52556143,
+          "to_version": 52593269,
+          "to_updated_at_utc": "2026-10-09T16:05:33Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "active",
+              "new": "disabled"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52593269,
+          "to_version": 52593307,
+          "to_updated_at_utc": "2026-10-09T16:05:51Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "disabled",
+              "new": "active"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52593307,
+          "to_version": 52599696,
+          "to_updated_at_utc": "2026-10-09T17:08:35Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "active",
+              "new": "disabled"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52599696,
+          "to_version": 52599712,
+          "to_updated_at_utc": "2026-10-09T17:08:41Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "disabled",
+              "new": "active"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52599712,
+          "to_version": 52600545,
+          "to_updated_at_utc": "2026-10-09T17:17:05Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "active",
+              "new": "disabled"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52600545,
+          "to_version": 52600553,
+          "to_updated_at_utc": "2026-10-09T17:17:08Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "disabled",
+              "new": "active"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52600553,
+          "to_version": 52616010,
+          "to_updated_at_utc": "2026-10-09T19:06:11Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "active",
+              "new": "disabled"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52616010,
+          "to_version": 52616090,
+          "to_updated_at_utc": "2026-10-09T19:06:39Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "disabled",
+              "new": "active"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52616090,
+          "to_version": 52674293,
+          "to_updated_at_utc": "2026-10-10T11:04:44Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "active",
+              "new": "disabled"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52674293,
+          "to_version": 52674301,
+          "to_updated_at_utc": "2026-10-10T11:04:50Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "disabled",
+              "new": "active"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52674301,
+          "to_version": 52680020,
+          "to_updated_at_utc": "2026-10-10T13:21:59Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "active",
+              "new": "disabled"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52680020,
+          "to_version": 52680025,
+          "to_updated_at_utc": "2026-10-10T13:22:06Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "disabled",
+              "new": "active"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52680025,
+          "to_version": 53287319,
+          "to_updated_at_utc": "2026-10-15T06:30:53Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "e968b5c0c20b7c63adaad74a235c31392b6ac497"
+            }
+          ],
+          "non_sha_changes": {
+            "rules_nosha": {
+              "old": [
+                {
+                  "type": "workflows",
+                  "parameters": {
+                    "do_not_enforce_on_create": false,
+                    "workflows": [
+                      {
+                        "repository_id": 1182157951,
+                        "path": ".github/workflows/landing-integrity.yml",
+                        "ref": "main"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "new": [
+                {
+                  "type": "workflows",
+                  "parameters": {
+                    "do_not_enforce_on_create": false,
+                    "workflows": [
+                      {
+                        "repository_id": 1182157951,
+                        "path": ".github/workflows/landing-integrity.yml"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        }
+      ],
+      "pairs_sha_only": [
+        53348833,
+        53376823,
+        53389942,
+        53395299,
+        53399407,
+        53438786,
+        53577671,
+        53591852,
+        53609141,
+        53678426,
+        53691940,
+        53936799,
+        53952478,
+        53981666,
+        53991025,
+        53994760,
+        53998412,
+        53998814,
+        54003010,
+        54008442,
+        54012484,
+        54018607,
+        54021860,
+        54024973,
+        54029231,
+        54041506,
+        54066289,
+        54109903,
+        54150579,
+        54428085,
+        55302691,
+        55644508
+      ],
+      "pairs_no_change": [],
+      "all_diffs": [
+        {
+          "from_version": 50787902,
+          "to_version": 52556120,
+          "to_updated_at_utc": "2026-10-09T10:52:15Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "active",
+              "new": "disabled"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52556120,
+          "to_version": 52556143,
+          "to_updated_at_utc": "2026-10-09T10:52:24Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "disabled",
+              "new": "active"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52556143,
+          "to_version": 52593269,
+          "to_updated_at_utc": "2026-10-09T16:05:33Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "active",
+              "new": "disabled"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52593269,
+          "to_version": 52593307,
+          "to_updated_at_utc": "2026-10-09T16:05:51Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "disabled",
+              "new": "active"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52593307,
+          "to_version": 52599696,
+          "to_updated_at_utc": "2026-10-09T17:08:35Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "active",
+              "new": "disabled"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52599696,
+          "to_version": 52599712,
+          "to_updated_at_utc": "2026-10-09T17:08:41Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "disabled",
+              "new": "active"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52599712,
+          "to_version": 52600545,
+          "to_updated_at_utc": "2026-10-09T17:17:05Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "active",
+              "new": "disabled"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52600545,
+          "to_version": 52600553,
+          "to_updated_at_utc": "2026-10-09T17:17:08Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "disabled",
+              "new": "active"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52600553,
+          "to_version": 52616010,
+          "to_updated_at_utc": "2026-10-09T19:06:11Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "active",
+              "new": "disabled"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52616010,
+          "to_version": 52616090,
+          "to_updated_at_utc": "2026-10-09T19:06:39Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "disabled",
+              "new": "active"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52616090,
+          "to_version": 52674293,
+          "to_updated_at_utc": "2026-10-10T11:04:44Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "active",
+              "new": "disabled"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52674293,
+          "to_version": 52674301,
+          "to_updated_at_utc": "2026-10-10T11:04:50Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "disabled",
+              "new": "active"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52674301,
+          "to_version": 52680020,
+          "to_updated_at_utc": "2026-10-10T13:21:59Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "active",
+              "new": "disabled"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52680020,
+          "to_version": 52680025,
+          "to_updated_at_utc": "2026-10-10T13:22:06Z",
+          "workflows_sha_changed": false,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "non_sha_changes": {
+            "enforcement": {
+              "old": "disabled",
+              "new": "active"
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 52680025,
+          "to_version": 53287319,
+          "to_updated_at_utc": "2026-10-15T06:30:53Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": null
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "e968b5c0c20b7c63adaad74a235c31392b6ac497"
+            }
+          ],
+          "non_sha_changes": {
+            "rules_nosha": {
+              "old": [
+                {
+                  "type": "workflows",
+                  "parameters": {
+                    "do_not_enforce_on_create": false,
+                    "workflows": [
+                      {
+                        "repository_id": 1182157951,
+                        "path": ".github/workflows/landing-integrity.yml",
+                        "ref": "main"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "new": [
+                {
+                  "type": "workflows",
+                  "parameters": {
+                    "do_not_enforce_on_create": false,
+                    "workflows": [
+                      {
+                        "repository_id": 1182157951,
+                        "path": ".github/workflows/landing-integrity.yml"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "verdict": "NON_SHA_FIELD_CHANGED"
+        },
+        {
+          "from_version": 53287319,
+          "to_version": 53348833,
+          "to_updated_at_utc": "2026-10-15T14:36:14Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "e968b5c0c20b7c63adaad74a235c31392b6ac497"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "135644a30291f2956e90b09a819fa7fe43371dd4"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53348833,
+          "to_version": 53376823,
+          "to_updated_at_utc": "2026-10-15T17:31:49Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "135644a30291f2956e90b09a819fa7fe43371dd4"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "f26306b453707ced953e827421fa9f995e39002b"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53376823,
+          "to_version": 53389942,
+          "to_updated_at_utc": "2026-10-15T19:04:25Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "f26306b453707ced953e827421fa9f995e39002b"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "b26fbbd882139a726c41271c7b1082b386b33c94"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53389942,
+          "to_version": 53395299,
+          "to_updated_at_utc": "2026-10-15T19:35:38Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "b26fbbd882139a726c41271c7b1082b386b33c94"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "f26306b453707ced953e827421fa9f995e39002b"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53395299,
+          "to_version": 53399407,
+          "to_updated_at_utc": "2026-10-15T20:10:46Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "f26306b453707ced953e827421fa9f995e39002b"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "74b415c414c0a501a1df125ad92289f0bac17bde"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53399407,
+          "to_version": 53438786,
+          "to_updated_at_utc": "2026-10-16T03:18:55Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "74b415c414c0a501a1df125ad92289f0bac17bde"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "ade11572052d9bce01242df452d05ab38ed78eb0"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53438786,
+          "to_version": 53577671,
+          "to_updated_at_utc": "2026-10-17T00:07:33Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "ade11572052d9bce01242df452d05ab38ed78eb0"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "29094836bc4488280d98c22665470dcb2e54da1a"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53577671,
+          "to_version": 53591852,
+          "to_updated_at_utc": "2026-10-17T04:54:45Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "29094836bc4488280d98c22665470dcb2e54da1a"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "2c81072d4a68d701bde15a212db91aab1ae4cc5d"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53591852,
+          "to_version": 53609141,
+          "to_updated_at_utc": "2026-10-17T10:57:18Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "2c81072d4a68d701bde15a212db91aab1ae4cc5d"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "484f00894995e49b7cd58b366feba66eb438427e"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53609141,
+          "to_version": 53678426,
+          "to_updated_at_utc": "2026-10-18T09:04:21Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "484f00894995e49b7cd58b366feba66eb438427e"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "758a8769cb8d466100672717e0f9f638339ee693"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53678426,
+          "to_version": 53691940,
+          "to_updated_at_utc": "2026-10-18T13:31:35Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "758a8769cb8d466100672717e0f9f638339ee693"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "67e1aa9de71222faa6722c243ca233bfd9820193"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53691940,
+          "to_version": 53936799,
+          "to_updated_at_utc": "2026-10-20T09:43:29Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "67e1aa9de71222faa6722c243ca233bfd9820193"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53936799,
+          "to_version": 53952478,
+          "to_updated_at_utc": "2026-10-20T12:18:09Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "527bf0e9a95d9eb4db1c89d594d80bf1fdff48c0"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53952478,
+          "to_version": 53981666,
+          "to_updated_at_utc": "2026-10-20T15:43:37Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "527bf0e9a95d9eb4db1c89d594d80bf1fdff48c0"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53981666,
+          "to_version": 53991025,
+          "to_updated_at_utc": "2026-10-20T16:52:54Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "3eb1a7f8b5136bf1431097581538d05e509f222a"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53991025,
+          "to_version": 53994760,
+          "to_updated_at_utc": "2026-10-20T17:22:02Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "3eb1a7f8b5136bf1431097581538d05e509f222a"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53994760,
+          "to_version": 53998412,
+          "to_updated_at_utc": "2026-10-20T17:53:37Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "30a32d959f1314800c7e1de3b968f5a59a30740d"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53998412,
+          "to_version": 53998814,
+          "to_updated_at_utc": "2026-10-20T17:56:48Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "30a32d959f1314800c7e1de3b968f5a59a30740d"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "b1925f501cfb0c6fc508c18c9284b9722f5f84fe"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 53998814,
+          "to_version": 54003010,
+          "to_updated_at_utc": "2026-10-20T18:21:03Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "b1925f501cfb0c6fc508c18c9284b9722f5f84fe"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54003010,
+          "to_version": 54008442,
+          "to_updated_at_utc": "2026-10-20T18:54:06Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "bc568cf4982c1dee9da28e614057c47ba93d7efa"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54008442,
+          "to_version": 54012484,
+          "to_updated_at_utc": "2026-10-20T19:20:55Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "bc568cf4982c1dee9da28e614057c47ba93d7efa"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54012484,
+          "to_version": 54018607,
+          "to_updated_at_utc": "2026-10-20T20:07:26Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "1504a10c83bb667cb869ab91167719299ff888b1"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54018607,
+          "to_version": 54021860,
+          "to_updated_at_utc": "2026-10-20T20:36:11Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "1504a10c83bb667cb869ab91167719299ff888b1"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54021860,
+          "to_version": 54024973,
+          "to_updated_at_utc": "2026-10-20T21:03:23Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "73d7022452dceb080d5568997e2b3992b553de15"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54024973,
+          "to_version": 54029231,
+          "to_updated_at_utc": "2026-10-20T21:46:31Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "73d7022452dceb080d5568997e2b3992b553de15"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "1bfb5ed7e5b82dc89a5e9c2694ec122e3ba73ff5"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54029231,
+          "to_version": 54041506,
+          "to_updated_at_utc": "2026-10-21T00:00:02Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "1bfb5ed7e5b82dc89a5e9c2694ec122e3ba73ff5"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "fb73fbb56a52f776378140d72924fbb6837f5404"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54041506,
+          "to_version": 54066289,
+          "to_updated_at_utc": "2026-10-21T05:48:25Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "fb73fbb56a52f776378140d72924fbb6837f5404"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "c1752d7ebbcff1d01d82c922a5f97d5b86622880"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54066289,
+          "to_version": 54109903,
+          "to_updated_at_utc": "2026-10-21T12:16:16Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "c1752d7ebbcff1d01d82c922a5f97d5b86622880"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "2bcbcb8c58a9f36453dc3f2e09751e1eefd60b2b"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54109903,
+          "to_version": 54150579,
+          "to_updated_at_utc": "2026-10-21T16:21:49Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "2bcbcb8c58a9f36453dc3f2e09751e1eefd60b2b"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "7fffee318b9fada32d13dd9c88d74869e343f9cc"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54150579,
+          "to_version": 54428085,
+          "to_updated_at_utc": "2026-10-23T06:30:57Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "7fffee318b9fada32d13dd9c88d74869e343f9cc"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "bcfc1bbdea3bf143080c5d314966faf28b74ffd1"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 54428085,
+          "to_version": 55302691,
+          "to_updated_at_utc": "2026-10-29T09:04:41Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "bcfc1bbdea3bf143080c5d314966faf28b74ffd1"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "58a2c54666f25c8f9ebb96a8229eacaad01ad978"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        },
+        {
+          "from_version": 55302691,
+          "to_version": 55644508,
+          "to_updated_at_utc": "2026-10-31T07:16:30Z",
+          "workflows_sha_changed": true,
+          "workflows_sha_old": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "58a2c54666f25c8f9ebb96a8229eacaad01ad978"
+            }
+          ],
+          "workflows_sha_new": [
+            {
+              "path": ".github/workflows/landing-integrity.yml",
+              "sha": "d76caf956000175bbc78f9b25bced842c02992a5"
+            }
+          ],
+          "non_sha_changes": {},
+          "verdict": "sha_only"
+        }
+      ],
+      "non_sha_in_window_pairs": []
+    }
+  ]
+}

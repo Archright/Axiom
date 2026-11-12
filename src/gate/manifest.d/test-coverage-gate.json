@@ -1,0 +1,14 @@
+{
+  "id": "test-coverage-gate",
+  "name": "Axiom test coverage gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/test_coverage_gate.nim",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/**",
+  "passFilenames": false,
+  "weight": "light",
+  "category": "rule",
+  "severity": "error"
+}

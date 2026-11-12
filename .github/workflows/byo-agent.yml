@@ -1,0 +1,399 @@
+# BYO-Agent Phase 3 — reusable proposition-verification workflow (Job 2 surface).
+#
+# Contract SSOT: docs/spec/byo_agent_proposition_contract.md
+#   §8  exit transition — ax prove exit 0 (PROVED) and 1 (DISPROVED) are BOTH
+#       in-contract verification completions: they must not fail the workflow
+#       and must not bypass reporting. exit 2 (canonical refusal) / 3
+#       (INPUT_REJECTED) / other = failure, fail-closed (no state claim).
+#   §9  2-Job minimum-trust slice — this workflow is the Job-2 ("Axiom")
+#       surface. It consumes the caller's Job-1 artifact as DATA ONLY; it
+#       never executes caller-supplied binaries (the bin/ax it runs is built
+#       here from inputs.axiom-ref). LLM/API keys stay in the caller's Job 1.
+#   §5  trust boundary — the subject identity comes from the workflow inputs
+#       (AXIOM_SUBJECT_REPOSITORY / AXIOM_SUBJECT_COMMIT env), and the engine
+#       fail-closed rejects any propositions-document claim that disagrees
+#       (SUBJECT_MISMATCH, exit 3).
+#   §7  Zero-Footprint — the subject checkout lives in a subdirectory
+#       (./subject); propositions and Axiom state live outside the subject
+#       tree (AXIOM_STATE_DIR under runner.temp). The subject tree is
+#       read-only for the whole run.
+#   §10 deployment — callers pin `axiom-ref` to a full 40-hex SHA. While
+#       Axiom is private, org-repo callers must pass the AXIOM_READ_TOKEN
+#       secret (same-org callers may rely on their own GITHUB_TOKEN only when
+#       the caller repository IS Archright/Axiom — the same-repo selftest
+#       case). Non-org external repositories cannot resolve this workflow at
+#       all, and same-org PUBLIC callers cannot either — the organization
+#       access level admits PRIVATE callers only (GitHub-documented
+#       accessibility: caller public → public targets only; "Access is
+#       allowed only from private repositories"). See the contract §10/§10(b').
+#
+# Local-action reference (`uses: ./.github/actions/setup-axiom-toolchain`)
+# resolves against THIS (Axiom) repository when the workflow is invoked via
+# workflow_call, and its keygen hashes CWD-relative paths — so the workspace
+# root must hold the Axiom tree. That is why the Axiom checkout is the root
+# checkout and the subject is checked out into ./subject (probe-verified:
+# wintrover/axiom-reuse-probe README, Probe B).
+#
+# Reporting (dry-run=false): gh credentials are injected ONLY into the report
+# step (GH_TOKEN). github.token is scoped to the caller repository, so an
+# external subject repository needs SUBJECT_REPORT_TOKEN passed by the caller.
+# Job-level `issues: write` exists because the caller's token permissions are
+# the ceiling for a called workflow (GitHub: the called workflow can only
+# downgrade, never elevate) and §9 Job 2 = contents:read + issues:write.
+
+name: 'BYO-Agent proposition prove'
+
+on:
+  workflow_call:
+    inputs:
+      proposal-artifact:
+        description: 'Name of the artifact (produced by the caller''s Job 1) carrying the propositions JSON document.'
+        required: true
+        type: string
+      subject-repository:
+        description: 'Authoritative subject repository slug (owner/repo). Declared to the engine via AXIOM_SUBJECT_REPOSITORY.'
+        required: true
+        type: string
+      subject-commit:
+        description: 'Full 40-hex subject commit under verification. Declared to the engine via AXIOM_SUBJECT_COMMIT.'
+        required: true
+        type: string
+      subject-ref:
+        description: 'Git ref to check the subject repository out at. Defaults to subject-commit.'
+        required: false
+        type: string
+        default: ''
+      axiom-ref:
+        description: 'Full 40-hex SHA of the Archright/Axiom commit to check out, build and run (SHA-pinned reusable workflow contract, §10).'
+        required: true
+        type: string
+      proposals-path:
+        description: 'Relative path of the propositions JSON document inside the proposal artifact.'
+        required: false
+        type: string
+        default: 'proposals.json'
+      dry-run:
+        description: 'When true (default) the run stops after verification + evidence upload; upstream reporting is skipped.'
+        required: false
+        type: boolean
+        default: true
+      replay-dep-pins:
+        description: 'Pinned replay dependency checkouts exported as AXIOM_REPLAY_DEP_PATHS (engine replay design (b) — verbatim dep roots, no store discovery). One "owner/repo <full 40-hex sha>" per line; empty → engine nimble-store discovery (design (a)).'
+        required: false
+        type: string
+        default: |
+          status-im/nim-serialization b5473564e80a4908cf6c5a038e4c4a6ca7de2223
+          status-im/nim-faststreams 059bc2f52546ac14b583639c33372c14b1d46fa3
+          status-im/nim-stew 4382b18f04b3c43c8409bfcd6b62063773b2bbaa
+          arnetheduck/nim-results df8113dda4c2d74d460a8fa98252b0b771bf1f27
+    secrets:
+      AXIOM_READ_TOKEN:
+        description: 'Read token for the private Archright/Axiom checkout. Required only for callers outside the Archright org; same-repo callers may leave it unset (falls back to github.token).'
+        required: false
+      SUBJECT_REPORT_TOKEN:
+        description: 'Token for `gh issue create` against the subject repository (dry-run=false only). Required when the subject is not the caller repository; falls back to github.token otherwise.'
+        required: false
+    outputs:
+      ax_prove_exit:
+        description: 'ax prove exit code (§8 — 0 and 1 are both in-contract completions; 0 does NOT imply every proposition PROVED).'
+        value: ${{ jobs.prove.outputs.ax_prove_exit }}
+      ax_verdict:
+        description: 'First unit propositionVerdict from the persisted proof state ("n/a" when no state was persisted).'
+        value: ${{ jobs.prove.outputs.ax_verdict }}
+      ax_attribution:
+        description: 'First unit bugAttribution from the persisted proof state ("n/a" when no state was persisted).'
+        value: ${{ jobs.prove.outputs.ax_attribution }}
+      ax_spec:
+        description: 'First unit adoptedSpecRef.specId from the persisted proof state ("n/a" when no state was persisted).'
+        value: ${{ jobs.prove.outputs.ax_spec }}
+      ax_target:
+        description: 'First unit targetSymbol from the persisted proof state ("n/a" when no state was persisted).'
+        value: ${{ jobs.prove.outputs.ax_target }}
+
+jobs:
+  prove:
+    name: 'prove — build Axiom from pinned SHA, verify propositions, transition exits'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      # §9 Job 2 — consumed only by the report step (dry-run=false); the
+      # called workflow cannot elevate above the caller's calling-job
+      # permissions, so callers that intend dry-run=false must grant
+      # issues: write on the calling job as well.
+      issues: write
+    outputs:
+      ax_prove_exit: ${{ steps.prove.outputs.ax_prove_exit }}
+      ax_verdict: ${{ steps.prove.outputs.ax_verdict }}
+      ax_attribution: ${{ steps.prove.outputs.ax_attribution }}
+      ax_spec: ${{ steps.prove.outputs.ax_spec }}
+      ax_target: ${{ steps.prove.outputs.ax_target }}
+    steps:
+      - name: 'Validate contract inputs (fail-closed pins)'
+        env:
+          WANT_SUBJECT_COMMIT: ${{ inputs.subject-commit }}
+          WANT_AXIOM_REF: ${{ inputs.axiom-ref }}
+        run: |
+          set -euo pipefail
+          check_sha() {
+            printf '%s' "$1" | grep -Eq '^[0-9a-fA-F]{40}$' || {
+              echo "::error::$2 must be a full 40-hex commit SHA (got '$(printf '%s' "$1" | head -c 12)…') — §10 SHA-pinned contract"
+              exit 1
+            }
+          }
+          check_sha "$WANT_SUBJECT_COMMIT" 'subject-commit'
+          check_sha "$WANT_AXIOM_REF" 'axiom-ref'
+
+      - name: 'Checkout Axiom at the pinned SHA (workspace root — action CWD contract)'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: Archright/Axiom
+          ref: ${{ inputs.axiom-ref }}
+          token: ${{ secrets.AXIOM_READ_TOKEN || github.token }}
+          persist-credentials: false
+
+      - name: 'Checkout subject repository into ./subject (Zero-Footprint, §7)'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ inputs.subject-repository }}
+          ref: ${{ inputs.subject-ref || inputs.subject-commit }}
+          path: subject
+          persist-credentials: false
+
+      # Replay dependency provisioning (contract §9 dep row): the engine's
+      # ce-replay resolves the D2AgentSubjectDepPackages stack
+      # (serialization, faststreams, stew, results) at replay-compile time.
+      # A bare runner has an empty nimble store, so store discovery
+      # (design (a)) fail-closes into UNKNOWN (first selftest run
+      # 41469574000 — docs/evidence/byo_agent_phase3_selftest_deps_fix_2026-11-03.md).
+      # The pins below are the exact commits the local acceptance store
+      # resolved (pkgs2 nimblemeta vcsRevision), staged as explicit
+      # checkouts and exported via AXIOM_REPLAY_DEP_PATHS — engine design
+      # (b): verbatim dep roots, no store discovery, content-deterministic.
+      - name: 'Stage pinned replay dependencies (AXIOM_REPLAY_DEP_PATHS — engine design (b))'
+        env:
+          DEP_PINS: ${{ inputs.replay-dep-pins }}
+        run: |
+          set -euo pipefail
+          deps="${RUNNER_TEMP}/byoa/deps"
+          mkdir -p "$deps"
+          paths=""
+          while IFS=' ' read -r slug sha; do
+            [ -n "$slug" ] || continue
+            printf '%s' "$slug" | grep -Eq '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$' || {
+              echo "::error::replay-dep-pins entry is not owner/repo: '$slug'"; exit 1; }
+            printf '%s' "$sha" | grep -Eq '^[0-9a-fA-F]{40}$' || {
+              echo "::error::replay-dep-pins sha for $slug is not a full 40-hex commit (§10 pin contract): '$sha'"; exit 1; }
+            name="${slug##*/}"
+            dest="$deps/$name"
+            if [ ! -d "$dest" ]; then
+              git clone --quiet "https://github.com/$slug" "$dest"
+            fi
+            git -C "$dest" checkout --quiet "$sha"
+            echo "staged replay dep: $slug @ $sha"
+            paths="${paths:+$paths:}$dest"
+          done < <(printf '%s\n' "$DEP_PINS")
+          if [ -n "$paths" ]; then
+            echo "AXIOM_REPLAY_DEP_PATHS=$paths" >> "$GITHUB_ENV"
+          else
+            echo "no replay-dep-pins — engine falls back to nimble store discovery (design (a))"
+          fi
+
+      - name: 'Setup pinned toolchain (two-layer memo; B-reader only)'
+        uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          cache-save-enabled: 'false'
+          cache-build-source: ${{ inputs.axiom-ref }}
+
+      - name: 'Build bin/ax from the pinned tree (repository-standard ci-compile)'
+        run: make ci-compile -j4
+
+      - name: 'Download propositions artifact (Job-1 boundary — data only, §9)'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ${{ inputs.proposal-artifact }}
+          path: '${{ runner.temp }}/byoa/incoming'
+
+      - name: 'Seed AXIOM_STATE_DIR (scope lock + baseline) and stage evidence dir'
+        env:
+          PROPOSALS_FILE: ${{ inputs.proposals-path }}
+        run: |
+          set -euo pipefail
+          state="${RUNNER_TEMP}/axiom-state"
+          evidence="${RUNNER_TEMP}/byoa/evidence"
+          mkdir -p "$state/data" "$state/logs" "$evidence"
+          # Standard seeding (demonstrated by the bytesview canonical-main
+          # acceptance E2E): the state dir's scope lock + baseline come from
+          # THIS Axiom tree; the propositions intake installs its registry
+          # overlay under $AXIOM_STATE_DIR/specs/.
+          cp data/verification_scope.lock data/baseline.json "$state/data/"
+          # proposals-path is caller input — basename-checked and resolved
+          # under the download dir only (no traversal out of it).
+          incoming="${RUNNER_TEMP}/byoa/incoming"
+          props="$(basename "$PROPOSALS_FILE")"
+          [ -f "$incoming/$props" ] || {
+            echo "::error::proposals file not found in artifact: $PROPOSALS_FILE"; exit 1; }
+          cp "$incoming/$props" "$evidence/proposals.json"
+          # §11 reproducibility evidence — the proposals document's digest is
+          # seeded beside the copy (part of the 4-tuple reproducibility
+          # identity: proposalSHA256, subjectCommit, axiomCommit,
+          # canonicalRunDigest).
+          sha256sum "$evidence/proposals.json" > "$evidence/proposals.sha256"
+          echo "proposals sha256: $(cat "$evidence/proposals.sha256")"
+          {
+            echo "AXIOM_STATE_DIR=$state"
+            echo "AXIOM_EVIDENCE_DIR=$evidence"
+            echo "AXIOM_PROOF_STATE=$state/logs/ax_proof_state.json"
+            echo "AXIOM_PROPOSALS_FILE=$evidence/proposals.json"
+          } >> "$GITHUB_ENV"
+
+      - name: 'Prove propositions (§8 exit transition: 0/1 continue, ≥2 fail)'
+        id: prove
+        env:
+          AXIOM_SUBJECT_REPOSITORY: ${{ inputs.subject-repository }}
+          AXIOM_SUBJECT_COMMIT: ${{ inputs.subject-commit }}
+          AXIOM_REF_INPUT: ${{ inputs.axiom-ref }}
+          DRY_RUN_INPUT: ${{ inputs.dry-run }}
+          PROPOSAL_ARTIFACT: ${{ inputs.proposal-artifact }}
+        timeout-minutes: 90
+        run: |
+          set -euo pipefail
+          evidence="$AXIOM_EVIDENCE_DIR"
+          state_file="$AXIOM_PROOF_STATE"
+          set +e
+          bin/ax prove --proposals "$AXIOM_PROPOSALS_FILE" \
+            --project "$GITHUB_WORKSPACE/subject" \
+            >"$evidence/prove.log" 2>&1
+          ec=$?
+          set -e
+          echo "ax_prove_exit=$ec" >> "$GITHUB_OUTPUT"
+          cat "$evidence/prove.log"
+
+          # Honest accounting: an in-contract exit (0/1) without a persisted
+          # proof state is a broken run, not a verdict.
+          if [ "$ec" -le 1 ] && [ ! -f "$state_file" ]; then
+            echo "::error::ax prove exited $ec but no proof state was persisted at $state_file — cannot account this run"
+            exit 2
+          fi
+
+          # Display projection for the summary (receipt SSOT stays §4/§10 of
+          # the reporting contract — this is presentation only). Refusal
+          # paths (§6) legitimately leave no state — defaults stay honest
+          # "n/a". A PRESENT but unparsable state aborts here (fail-closed):
+          # a broken state is a broken run, not a display concern.
+          verdict="n/a"; attribution="n/a"; spec="n/a"; target="n/a"
+          if [ -f "$state_file" ]; then
+            verdict="$(jq -r '(((.reportJson.display // .display).units // [])[0].propositionVerdict) // "n/a"' "$state_file" 2>/dev/null)"
+            attribution="$(jq -r '(((.reportJson.display // .display).units // [])[0].bugAttribution) // "n/a"' "$state_file" 2>/dev/null)"
+            spec="$(jq -r '(((.reportJson.display // .display).units // [])[0].adoptedSpecRef.specId) // "n/a"' "$state_file" 2>/dev/null)"
+            target="$(jq -r '(((.reportJson.display // .display).units // [])[0].targetSymbol) // "n/a"' "$state_file" 2>/dev/null)"
+            verdict="${verdict:-n/a}"
+            attribution="${attribution:-n/a}"
+            spec="${spec:-n/a}"
+            target="${target:-n/a}"
+          fi
+          echo "ax_verdict=$verdict" >> "$GITHUB_OUTPUT"
+          echo "ax_attribution=$attribution" >> "$GITHUB_OUTPUT"
+          echo "ax_spec=$spec" >> "$GITHUB_OUTPUT"
+          echo "ax_target=$target" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## BYO-Agent proposition prove"
+            echo ""
+            echo "| field | value |"
+            echo "|---|---|"
+            echo "| ax_prove_exit | \`$ec\` (0=PROVED, 1=DISPROVED — both in-contract, §8) |"
+            echo "| propositionVerdict | $verdict |"
+            echo "| bugAttribution | $attribution |"
+            echo "| specId | $spec |"
+            echo "| target | $target |"
+            echo "| subject | $AXIOM_SUBJECT_REPOSITORY@$AXIOM_SUBJECT_COMMIT |"
+            echo "| axiom-ref | $AXIOM_REF_INPUT |"
+            echo "| dry-run | $DRY_RUN_INPUT |"
+            echo "| evidence | ax_proof_state.json + prove.log + proposals.json → artifact \`byoa-evidence-$PROPOSAL_ARTIFACT\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # §3 capability rollup — the per-proposition two-axis projection
+          # (display.propositions[]): capability (CAPABLE/INCAPABLE + reason)
+          # and verification (attempted + machine verdict). INCAPABLE
+          # propositions never produced a unit block — showing them here is
+          # the honest capability disclosure, not a verification claim.
+          if [ -f "$state_file" ]; then
+            assessed="$(jq '[(((.reportJson.display // .display).propositions) // [])] | length' "$state_file")"
+            verified="$(jq '[(((.reportJson.display // .display).propositions) // [])[] | select(.verification.attempted == true)] | length' "$state_file")"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "### 명제 capability 롤업 (§3 — display.propositions[])" >> "$GITHUB_STEP_SUMMARY"
+            if [ "$assessed" -gt 0 ]; then
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "| id | capability | attempted | verdict |" >> "$GITHUB_STEP_SUMMARY"
+              echo "|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+              jq -r '(((.reportJson.display // .display).propositions) // [])[:10][] | [.id, .capability.status, (.capability.reason // ""), (.verification.attempted | tostring), (.verification.verdict // "null")] | @tsv' "$state_file" 2>/dev/null \
+                | while IFS=$'\t' read -r pid cstatus creason cattempted cverdict; do
+                    if [ -n "$creason" ]; then cstatus="$cstatus ($creason)"; fi
+                    echo "| $pid | $cstatus | $cattempted | $cverdict |" >> "$GITHUB_STEP_SUMMARY"
+                  done
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "검증 완료(verified): $verified / 평가(assessed): $assessed" >> "$GITHUB_STEP_SUMMARY"
+              if [ "$verified" -eq 0 ]; then
+                echo "" >> "$GITHUB_STEP_SUMMARY"
+                echo "**검증을 수행할 수 있는 명제가 없었습니다 — 이 결과는 저장소가 안전하다는 의미가 아닙니다.**" >> "$GITHUB_STEP_SUMMARY"
+              fi
+            else
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "propositions rollup 없음 — 명제 문서 없이 실행된 런이거나 state가 persistence 전에 종료했다" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+
+          if [ "$ec" -gt 1 ]; then
+            case "$ec" in
+              2) reason="engine internal error (5-state vocabulary INTERNAL_ERROR bucket — out-of-contract execution failure; a lane-unequipped proposition is NOT exit 2, it surfaces as that proposition's INCAPABLE on an in-contract exit 0/1)" ;;
+              3) reason="INPUT_REJECTED (§6 — BAD_SCHEMA / NO_PROPOSALS / SUBJECT_MISMATCH / MULTIPLE_TARGETS)" ;;
+              *) reason="out-of-contract failure (5-state exit vocabulary 0/1/2/3/4)" ;;
+            esac
+            echo "::error::ax prove exit=$ec — $reason"
+            exit "$ec"
+          fi
+          echo "ax prove exit=$ec — in-contract verification completion (§8); workflow continues"
+
+      - name: 'Persist proof state + propositions copy into evidence dir'
+        if: always() && steps.prove.outputs.ax_prove_exit != ''
+        run: |
+          set -euo pipefail
+          if [ -f "$AXIOM_PROOF_STATE" ]; then
+            cp "$AXIOM_PROOF_STATE" "$AXIOM_EVIDENCE_DIR/ax_proof_state.json"
+          else
+            echo "no proof state persisted (refusal path exits without a state record, §6) — log-only evidence"
+          fi
+          # Receipts (§10 SSOT data/upstream_reports/) exist only after a
+          # reporting run — copied when present, honestly absent otherwise.
+          if [ -d data/upstream_reports ]; then
+            find data/upstream_reports -type f -name '*.json' -exec cp {} "$AXIOM_EVIDENCE_DIR/" \;
+          fi
+          ls -la "$AXIOM_EVIDENCE_DIR"
+
+      - name: 'Upload evidence artifact (state, log, propositions, receipts)'
+        if: always() && steps.prove.outputs.ax_prove_exit != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: 'byoa-evidence-${{ inputs.proposal-artifact }}'
+          path: '${{ env.AXIOM_EVIDENCE_DIR }}'
+          if-no-files-found: error
+
+      - name: 'Report upstream (dry-run=false only; GH_TOKEN isolated to this step)'
+        if: inputs.dry-run == false && steps.prove.outputs.ax_prove_exit != ''
+        id: report
+        env:
+          GH_TOKEN: ${{ secrets.SUBJECT_REPORT_TOKEN || github.token }}
+        run: |
+          set -euo pipefail
+          state_file="$AXIOM_PROOF_STATE"
+          # §11 reporting gate: BUG_FOUND/BUG_SUSPECTED ∧ DISPROVED only.
+          # UNKNOWN / NOT_DISPROVED units are never reported upstream.
+          reportable="$(jq '[((.reportJson.display // .display).units // [])[] | select((.bugAttribution == "BUG_FOUND" or .bugAttribution == "BUG_SUSPECTED") and .propositionVerdict == "DISPROVED")] | length' "$state_file")"
+          echo "reportable_units=$reportable" >> "$GITHUB_OUTPUT"
+          if [ "$reportable" -eq 0 ]; then
+            echo "0 reportable units (§11 — UNKNOWN/NOT_DISPROVED are never reported upstream); reporting skipped honestly"
+            exit 0
+          fi
+          bin/ax report --upstream --state-file "$state_file" --json \
+            | tee "${RUNNER_TEMP}/byoa/report-upstream.log"

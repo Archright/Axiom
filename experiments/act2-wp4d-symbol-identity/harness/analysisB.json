@@ -1,0 +1,12 @@
+{
+  "verificationQueue": ["stew/bits.nim::getBitsBE", "stew/bits.nim::bytesToBitsBE"],
+  "state": {
+    "nodes": [
+      {"id": "stew/bits.nim::getBitsBE", "dependencyIds": []},
+      {"id": "stew/bits.nim::bytesToBitsBE", "dependencyIds": ["stew/bits.nim::getBitsBE"]}
+    ]
+  },
+  "obligationIds": ["obl_getbitsbe_1", "obl_getbitsbe_2"],
+  "solverReplayKeys": ["z3/obl_getbitsbe_1", "z3/obl_getbitsbe_2"],
+  "verifiedSetBits": [0, 1]
+}

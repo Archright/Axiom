@@ -1,0 +1,3269 @@
+{
+  "window": "2026-10-16..2026-10-31",
+  "window_base": {
+    "pr": 227,
+    "sha": "29094836bc4488280d98c22665470dcb2e54da1a",
+    "merged_at_utc": "2026-10-16T23:52:42Z",
+    "doc": "docs/evidence/generation_promotion_hnew_2026-10-17.md (explicit; spot-verified 5 mentions)",
+    "note": "H_new = merge base of window, included per audit spec; not one of the 21 window rows"
+  },
+  "row_count": 21,
+  "join_rules": "repin_act_auditlog matches org rulesets {25218071,23943917} update events with new workflows sha == landing sha; other-org/repo-level events within +/-6h of merge listed separately; state_snapshot matches any saved snapshot pinning the sha",
+  "rows": [
+    {
+      "pr": 228,
+      "merge_fact": {
+        "pr": 228,
+        "merge_sha": "2c81072d4a68d701bde15a212db91aab1ae4cc5d",
+        "merged_at_utc": "2026-10-17T04:18:10Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-17T04:54:44Z",
+            "delta_seconds_from_merge": 2194,
+            "before_sha": "29094836bc4488280d98c22665470dcb2e54da1a",
+            "after_sha": "2c81072d4a68d701bde15a212db91aab1ae4cc5d",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-17T04:54:45Z",
+            "delta_seconds_from_merge": 2195,
+            "before_sha": "29094836bc4488280d98c22665470dcb2e54da1a",
+            "after_sha": "2c81072d4a68d701bde15a212db91aab1ae4cc5d",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [],
+        "repo_level_ruleset_events_near": [
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-17T00:07:17Z",
+            "delta_seconds_from_merge": -15053,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-17T00:08:02Z",
+            "delta_seconds_from_merge": -15008,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 23943134,
+            "ruleset_name": "probe-main",
+            "timestamp_utc": "2026-10-17T02:32:54Z",
+            "delta_seconds_from_merge": -6316,
+            "rule_types": [
+              "pull_request"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 23943134,
+            "ruleset_name": "probe-main",
+            "timestamp_utc": "2026-10-17T02:47:03Z",
+            "delta_seconds_from_merge": -5467,
+            "rule_types": [],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 23943134,
+            "ruleset_name": "probe-main",
+            "timestamp_utc": "2026-10-17T02:47:09Z",
+            "delta_seconds_from_merge": -5461,
+            "rule_types": [],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ]
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 53591851,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-17T04:54:45Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 53591852,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-17T04:54:45Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "explicit",
+        "doc": "docs/evidence/mg_evidence_gate_canary2_2026-10-17.md",
+        "correction": "reclassified repin_only->explicit 2026-11-02: doc lines 20-22 record readback result (sha-only change, byte-identical elsewhere) — direct read verified, agent-52 conservative default overridden"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "readback spot-check: spot-verified: doc exists, '#228' mentioned 1x",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    },
+    {
+      "pr": 229,
+      "merge_fact": {
+        "pr": 229,
+        "merge_sha": "484f00894995e49b7cd58b366feba66eb438427e",
+        "merged_at_utc": "2026-10-17T10:55:56Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-17T10:57:17Z",
+            "delta_seconds_from_merge": 81,
+            "before_sha": "2c81072d4a68d701bde15a212db91aab1ae4cc5d",
+            "after_sha": "484f00894995e49b7cd58b366feba66eb438427e",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-17T10:57:18Z",
+            "delta_seconds_from_merge": 82,
+            "before_sha": "2c81072d4a68d701bde15a212db91aab1ae4cc5d",
+            "after_sha": "484f00894995e49b7cd58b366feba66eb438427e",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [],
+        "repo_level_ruleset_events_near": [
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-17T10:56:54Z",
+            "delta_seconds_from_merge": 58,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-17T10:57:49Z",
+            "delta_seconds_from_merge": 113,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ]
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 53609138,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-17T10:57:17Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 53609141,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-17T10:57:18Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "repin_only",
+        "doc": "docs/evidence/lane_fix_operational_verdict_2026-10-18.md"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "readback spot-check: not spot-verified (classification taken from known-doc rubric)",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    },
+    {
+      "pr": 230,
+      "merge_fact": {
+        "pr": 230,
+        "merge_sha": "758a8769cb8d466100672717e0f9f638339ee693",
+        "merged_at_utc": "2026-10-18T09:02:56Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-18T09:04:20Z",
+            "delta_seconds_from_merge": 84,
+            "before_sha": "484f00894995e49b7cd58b366feba66eb438427e",
+            "after_sha": "758a8769cb8d466100672717e0f9f638339ee693",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-18T09:04:21Z",
+            "delta_seconds_from_merge": 85,
+            "before_sha": "484f00894995e49b7cd58b366feba66eb438427e",
+            "after_sha": "758a8769cb8d466100672717e0f9f638339ee693",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [],
+        "repo_level_ruleset_events_near": [
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-18T09:03:59Z",
+            "delta_seconds_from_merge": 63,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-18T09:05:14Z",
+            "delta_seconds_from_merge": 138,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-18T13:31:04Z",
+            "delta_seconds_from_merge": 16088,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-18T13:32:26Z",
+            "delta_seconds_from_merge": 16170,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ]
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 53678422,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-18T09:04:20Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 53678426,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-18T09:04:21Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "repin_only",
+        "doc": "docs/evidence/mg_reuse_cutover_e2e_2026-10-18.md"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "readback spot-check: not spot-verified (classification taken from known-doc rubric)",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    },
+    {
+      "pr": 231,
+      "merge_fact": {
+        "pr": 231,
+        "merge_sha": "67e1aa9de71222faa6722c243ca233bfd9820193",
+        "merged_at_utc": "2026-10-18T13:29:41Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-18T13:31:34Z",
+            "delta_seconds_from_merge": 113,
+            "before_sha": "758a8769cb8d466100672717e0f9f638339ee693",
+            "after_sha": "67e1aa9de71222faa6722c243ca233bfd9820193",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-18T13:31:35Z",
+            "delta_seconds_from_merge": 114,
+            "before_sha": "758a8769cb8d466100672717e0f9f638339ee693",
+            "after_sha": "67e1aa9de71222faa6722c243ca233bfd9820193",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [],
+        "repo_level_ruleset_events_near": [
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-18T09:03:59Z",
+            "delta_seconds_from_merge": -15942,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-18T09:05:14Z",
+            "delta_seconds_from_merge": -15867,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-18T13:31:04Z",
+            "delta_seconds_from_merge": 83,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-18T13:32:26Z",
+            "delta_seconds_from_merge": 165,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ]
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 53691938,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-18T13:31:34Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 53691940,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-18T13:31:35Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "explicit",
+        "doc": "docs/evidence/mg_reuse_cutover_e2e_2026-10-18.md (addendum; #231 mentioned 1x)"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "ROLLBACK: pin moved BACKWARD 67e1aa9de7 -> 22a9a0ed26 at 2026-10-20T09:43:27Z (25218071)",
+        "ROLLBACK: pin moved BACKWARD 67e1aa9de7 -> 22a9a0ed26 at 2026-10-20T09:43:29Z (23943917)",
+        "readback spot-check: not spot-verified (classification taken from known-doc rubric)",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    },
+    {
+      "pr": 232,
+      "merge_fact": {
+        "pr": 232,
+        "merge_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+        "merged_at_utc": "2026-10-20T09:42:12Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-20T09:43:27Z",
+            "delta_seconds_from_merge": 75,
+            "before_sha": "67e1aa9de71222faa6722c243ca233bfd9820193",
+            "after_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-20T09:43:29Z",
+            "delta_seconds_from_merge": 77,
+            "before_sha": "67e1aa9de71222faa6722c243ca233bfd9820193",
+            "after_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-20T15:43:35Z",
+            "delta_seconds_from_merge": 21683,
+            "before_sha": "527bf0e9a95d9eb4db1c89d594d80bf1fdff48c0",
+            "after_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-20T15:43:37Z",
+            "delta_seconds_from_merge": 21685,
+            "before_sha": "527bf0e9a95d9eb4db1c89d594d80bf1fdff48c0",
+            "after_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-20T17:22:00Z",
+            "delta_seconds_from_merge": 27588,
+            "before_sha": "3eb1a7f8b5136bf1431097581538d05e509f222a",
+            "after_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-20T17:22:02Z",
+            "delta_seconds_from_merge": 27590,
+            "before_sha": "3eb1a7f8b5136bf1431097581538d05e509f222a",
+            "after_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-20T18:21:01Z",
+            "delta_seconds_from_merge": 31129,
+            "before_sha": "b1925f501cfb0c6fc508c18c9284b9722f5f84fe",
+            "after_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-20T18:21:03Z",
+            "delta_seconds_from_merge": 31131,
+            "before_sha": "b1925f501cfb0c6fc508c18c9284b9722f5f84fe",
+            "after_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-20T19:20:53Z",
+            "delta_seconds_from_merge": 34721,
+            "before_sha": "bc568cf4982c1dee9da28e614057c47ba93d7efa",
+            "after_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-20T19:20:55Z",
+            "delta_seconds_from_merge": 34723,
+            "before_sha": "bc568cf4982c1dee9da28e614057c47ba93d7efa",
+            "after_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-20T20:36:09Z",
+            "delta_seconds_from_merge": 39237,
+            "before_sha": "1504a10c83bb667cb869ab91167719299ff888b1",
+            "after_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-20T20:36:11Z",
+            "delta_seconds_from_merge": 39239,
+            "before_sha": "1504a10c83bb667cb869ab91167719299ff888b1",
+            "after_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [],
+        "repo_level_ruleset_events_near": [
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T09:15:26Z",
+            "delta_seconds_from_merge": -1606,
+            "rule_types": [],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T09:15:50Z",
+            "delta_seconds_from_merge": -1582,
+            "rule_types": [],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T09:43:05Z",
+            "delta_seconds_from_merge": 53,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T09:43:56Z",
+            "delta_seconds_from_merge": 104,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T12:14:18Z",
+            "delta_seconds_from_merge": 9126,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T12:26:38Z",
+            "delta_seconds_from_merge": 9866,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ]
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 53936795,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-20T09:43:27Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 53936799,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-20T09:43:29Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          },
+          {
+            "version_id": 53981662,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-20T15:43:35Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 53981666,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-20T15:43:37Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          },
+          {
+            "version_id": 53994754,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-20T17:22:00Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 53994760,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-20T17:22:02Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          },
+          {
+            "version_id": 54003007,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-20T18:21:02Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 54003010,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-20T18:21:03Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          },
+          {
+            "version_id": 54012480,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-20T19:20:53Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 54012484,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-20T19:20:55Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          },
+          {
+            "version_id": 54021858,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-20T20:36:09Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 54021860,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-20T20:36:11Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "prereg_only",
+        "doc": "docs/evidence/rotation_allowlist_vs1_preflight_prereg_2026-10-20.md"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "readback spot-check: spot-verified: doc exists, '#232' 0 mentions (consistent with prereg_only)",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    },
+    {
+      "pr": 233,
+      "merge_fact": {
+        "pr": 233,
+        "merge_sha": "527bf0e9a95d9eb4db1c89d594d80bf1fdff48c0",
+        "merged_at_utc": "2026-10-20T11:11:48Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-20T12:18:08Z",
+            "delta_seconds_from_merge": 3980,
+            "before_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "after_sha": "527bf0e9a95d9eb4db1c89d594d80bf1fdff48c0",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-20T12:18:09Z",
+            "delta_seconds_from_merge": 3981,
+            "before_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "after_sha": "527bf0e9a95d9eb4db1c89d594d80bf1fdff48c0",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [],
+        "repo_level_ruleset_events_near": [
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T09:15:26Z",
+            "delta_seconds_from_merge": -6982,
+            "rule_types": [],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T09:15:50Z",
+            "delta_seconds_from_merge": -6958,
+            "rule_types": [],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T09:43:05Z",
+            "delta_seconds_from_merge": -5323,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T09:43:56Z",
+            "delta_seconds_from_merge": -5272,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T12:14:18Z",
+            "delta_seconds_from_merge": 3750,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T12:26:38Z",
+            "delta_seconds_from_merge": 4490,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:02:36Z",
+            "delta_seconds_from_merge": 21048,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:02:40Z",
+            "delta_seconds_from_merge": 21052,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ]
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 53952477,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-20T12:18:08Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 53952478,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-20T12:18:09Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "explicit",
+        "doc": "docs/evidence/lane_activation_observation_2026-10-20.md"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "ROLLBACK: pin moved BACKWARD 527bf0e9a9 -> 22a9a0ed26 at 2026-10-20T15:43:35Z (25218071)",
+        "ROLLBACK: pin moved BACKWARD 527bf0e9a9 -> 22a9a0ed26 at 2026-10-20T15:43:37Z (23943917)",
+        "readback spot-check: spot-verified: doc exists, '#233' mentioned 1x",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    },
+    {
+      "pr": 235,
+      "merge_fact": {
+        "pr": 235,
+        "merge_sha": "3eb1a7f8b5136bf1431097581538d05e509f222a",
+        "merged_at_utc": "2026-10-20T16:51:15Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-20T16:52:52Z",
+            "delta_seconds_from_merge": 97,
+            "before_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "after_sha": "3eb1a7f8b5136bf1431097581538d05e509f222a",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-20T16:52:54Z",
+            "delta_seconds_from_merge": 99,
+            "before_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "after_sha": "3eb1a7f8b5136bf1431097581538d05e509f222a",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [],
+        "repo_level_ruleset_events_near": [
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T12:14:18Z",
+            "delta_seconds_from_merge": -16617,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T12:26:38Z",
+            "delta_seconds_from_merge": -15877,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:02:36Z",
+            "delta_seconds_from_merge": 681,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:02:40Z",
+            "delta_seconds_from_merge": 685,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:53:35Z",
+            "delta_seconds_from_merge": 3740,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:53:39Z",
+            "delta_seconds_from_merge": 3744,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T18:54:02Z",
+            "delta_seconds_from_merge": 7367,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T18:54:07Z",
+            "delta_seconds_from_merge": 7372,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T20:10:52Z",
+            "delta_seconds_from_merge": 11977,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T20:10:55Z",
+            "delta_seconds_from_merge": 11980,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:03:21Z",
+            "delta_seconds_from_merge": 15126,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:03:25Z",
+            "delta_seconds_from_merge": 15130,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:43:52Z",
+            "delta_seconds_from_merge": 17557,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:45:21Z",
+            "delta_seconds_from_merge": 17646,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ]
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 53991019,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-20T16:52:52Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 53991025,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-20T16:52:54Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "absent",
+        "doc": "NONE - no individual doc (rubric: #235-#243 absent)"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "ROLLBACK: pin moved BACKWARD 3eb1a7f8b5 -> 22a9a0ed26 at 2026-10-20T17:22:00Z (25218071)",
+        "ROLLBACK: pin moved BACKWARD 3eb1a7f8b5 -> 22a9a0ed26 at 2026-10-20T17:22:02Z (23943917)",
+        "readback spot-check: not spot-verified (classification taken from known-doc rubric)",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    },
+    {
+      "pr": 236,
+      "merge_fact": {
+        "pr": 236,
+        "merge_sha": "30a32d959f1314800c7e1de3b968f5a59a30740d",
+        "merged_at_utc": "2026-10-20T17:52:31Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-20T17:53:36Z",
+            "delta_seconds_from_merge": 65,
+            "before_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "after_sha": "30a32d959f1314800c7e1de3b968f5a59a30740d",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-20T17:53:37Z",
+            "delta_seconds_from_merge": 66,
+            "before_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "after_sha": "30a32d959f1314800c7e1de3b968f5a59a30740d",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [],
+        "repo_level_ruleset_events_near": [
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T12:14:18Z",
+            "delta_seconds_from_merge": -20293,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T12:26:38Z",
+            "delta_seconds_from_merge": -19553,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:02:36Z",
+            "delta_seconds_from_merge": -2995,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:02:40Z",
+            "delta_seconds_from_merge": -2991,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:53:35Z",
+            "delta_seconds_from_merge": 64,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:53:39Z",
+            "delta_seconds_from_merge": 68,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T18:54:02Z",
+            "delta_seconds_from_merge": 3691,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T18:54:07Z",
+            "delta_seconds_from_merge": 3696,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T20:10:52Z",
+            "delta_seconds_from_merge": 8301,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T20:10:55Z",
+            "delta_seconds_from_merge": 8304,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:03:21Z",
+            "delta_seconds_from_merge": 11450,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:03:25Z",
+            "delta_seconds_from_merge": 11454,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:43:52Z",
+            "delta_seconds_from_merge": 13881,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:45:21Z",
+            "delta_seconds_from_merge": 13970,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ]
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 53998410,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-20T17:53:36Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 53998412,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-20T17:53:37Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "absent",
+        "doc": "NONE - no individual doc (rubric: #235-#243 absent)"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "readback spot-check: not spot-verified (classification taken from known-doc rubric)",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    },
+    {
+      "pr": 238,
+      "merge_fact": {
+        "pr": 238,
+        "merge_sha": "b1925f501cfb0c6fc508c18c9284b9722f5f84fe",
+        "merged_at_utc": "2026-10-20T17:56:03Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-20T17:56:46Z",
+            "delta_seconds_from_merge": 43,
+            "before_sha": "30a32d959f1314800c7e1de3b968f5a59a30740d",
+            "after_sha": "b1925f501cfb0c6fc508c18c9284b9722f5f84fe",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-20T17:56:48Z",
+            "delta_seconds_from_merge": 45,
+            "before_sha": "30a32d959f1314800c7e1de3b968f5a59a30740d",
+            "after_sha": "b1925f501cfb0c6fc508c18c9284b9722f5f84fe",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [],
+        "repo_level_ruleset_events_near": [
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T12:14:18Z",
+            "delta_seconds_from_merge": -20505,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T12:26:38Z",
+            "delta_seconds_from_merge": -19765,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:02:36Z",
+            "delta_seconds_from_merge": -3207,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:02:40Z",
+            "delta_seconds_from_merge": -3203,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:53:35Z",
+            "delta_seconds_from_merge": -148,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:53:39Z",
+            "delta_seconds_from_merge": -144,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T18:54:02Z",
+            "delta_seconds_from_merge": 3479,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T18:54:07Z",
+            "delta_seconds_from_merge": 3484,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T20:10:52Z",
+            "delta_seconds_from_merge": 8089,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T20:10:55Z",
+            "delta_seconds_from_merge": 8092,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:03:21Z",
+            "delta_seconds_from_merge": 11238,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:03:25Z",
+            "delta_seconds_from_merge": 11242,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:43:52Z",
+            "delta_seconds_from_merge": 13669,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:45:21Z",
+            "delta_seconds_from_merge": 13758,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ]
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 53998810,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-20T17:56:46Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 53998814,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-20T17:56:48Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "absent",
+        "doc": "NONE - no individual doc (rubric: #235-#243 absent)"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "ROLLBACK: pin moved BACKWARD b1925f501c -> 22a9a0ed26 at 2026-10-20T18:21:01Z (25218071)",
+        "ROLLBACK: pin moved BACKWARD b1925f501c -> 22a9a0ed26 at 2026-10-20T18:21:03Z (23943917)",
+        "readback spot-check: not spot-verified (classification taken from known-doc rubric)",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    },
+    {
+      "pr": 239,
+      "merge_fact": {
+        "pr": 239,
+        "merge_sha": "bc568cf4982c1dee9da28e614057c47ba93d7efa",
+        "merged_at_utc": "2026-10-20T18:53:12Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-20T18:54:04Z",
+            "delta_seconds_from_merge": 52,
+            "before_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "after_sha": "bc568cf4982c1dee9da28e614057c47ba93d7efa",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-20T18:54:06Z",
+            "delta_seconds_from_merge": 54,
+            "before_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "after_sha": "bc568cf4982c1dee9da28e614057c47ba93d7efa",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [
+          {
+            "ruleset_id": 25514358,
+            "ruleset_name": "generation-shadow-evaluate",
+            "timestamp_utc": "2026-10-21T00:51:36Z",
+            "delta_seconds_from_merge": 21504,
+            "rule_types": [
+              "workflows"
+            ],
+            "new_workflows_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "old_workflows_sha": "fb73fbb56a52f776378140d72924fbb6837f5404",
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ],
+        "repo_level_ruleset_events_near": [
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:02:36Z",
+            "delta_seconds_from_merge": -6636,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:02:40Z",
+            "delta_seconds_from_merge": -6632,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:53:35Z",
+            "delta_seconds_from_merge": -3577,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:53:39Z",
+            "delta_seconds_from_merge": -3573,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T18:54:02Z",
+            "delta_seconds_from_merge": 50,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T18:54:07Z",
+            "delta_seconds_from_merge": 55,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T20:10:52Z",
+            "delta_seconds_from_merge": 4660,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T20:10:55Z",
+            "delta_seconds_from_merge": 4663,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:03:21Z",
+            "delta_seconds_from_merge": 7809,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:03:25Z",
+            "delta_seconds_from_merge": 7813,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:43:52Z",
+            "delta_seconds_from_merge": 10240,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:45:21Z",
+            "delta_seconds_from_merge": 10329,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ]
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 54008437,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-20T18:54:04Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 54008442,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-20T18:54:06Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "absent",
+        "doc": "NONE - no individual doc (rubric: #235-#243 absent)"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "ROLLBACK: pin moved BACKWARD bc568cf498 -> 22a9a0ed26 at 2026-10-20T19:20:53Z (25218071)",
+        "ROLLBACK: pin moved BACKWARD bc568cf498 -> 22a9a0ed26 at 2026-10-20T19:20:55Z (23943917)",
+        "readback spot-check: not spot-verified (classification taken from known-doc rubric)",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    },
+    {
+      "pr": 240,
+      "merge_fact": {
+        "pr": 240,
+        "merge_sha": "1504a10c83bb667cb869ab91167719299ff888b1",
+        "merged_at_utc": "2026-10-20T19:51:39Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-20T20:07:24Z",
+            "delta_seconds_from_merge": 945,
+            "before_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "after_sha": "1504a10c83bb667cb869ab91167719299ff888b1",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-20T20:07:26Z",
+            "delta_seconds_from_merge": 947,
+            "before_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "after_sha": "1504a10c83bb667cb869ab91167719299ff888b1",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [
+          {
+            "ruleset_id": 25514358,
+            "ruleset_name": "generation-shadow-evaluate",
+            "timestamp_utc": "2026-10-21T00:51:36Z",
+            "delta_seconds_from_merge": 17997,
+            "rule_types": [
+              "workflows"
+            ],
+            "new_workflows_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "old_workflows_sha": "fb73fbb56a52f776378140d72924fbb6837f5404",
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ],
+        "repo_level_ruleset_events_near": [
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:02:36Z",
+            "delta_seconds_from_merge": -10143,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:02:40Z",
+            "delta_seconds_from_merge": -10139,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:53:35Z",
+            "delta_seconds_from_merge": -7084,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:53:39Z",
+            "delta_seconds_from_merge": -7080,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T18:54:02Z",
+            "delta_seconds_from_merge": -3457,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T18:54:07Z",
+            "delta_seconds_from_merge": -3452,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T20:10:52Z",
+            "delta_seconds_from_merge": 1153,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T20:10:55Z",
+            "delta_seconds_from_merge": 1156,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:03:21Z",
+            "delta_seconds_from_merge": 4302,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:03:25Z",
+            "delta_seconds_from_merge": 4306,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:43:52Z",
+            "delta_seconds_from_merge": 6733,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:45:21Z",
+            "delta_seconds_from_merge": 6822,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ]
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 54018603,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-20T20:07:24Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 54018607,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-20T20:07:26Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "absent",
+        "doc": "NONE - no individual doc (rubric: #235-#243 absent)"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "ROLLBACK: pin moved BACKWARD 1504a10c83 -> 22a9a0ed26 at 2026-10-20T20:36:09Z (25218071)",
+        "ROLLBACK: pin moved BACKWARD 1504a10c83 -> 22a9a0ed26 at 2026-10-20T20:36:11Z (23943917)",
+        "readback spot-check: not spot-verified (classification taken from known-doc rubric)",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    },
+    {
+      "pr": 241,
+      "merge_fact": {
+        "pr": 241,
+        "merge_sha": "73d7022452dceb080d5568997e2b3992b553de15",
+        "merged_at_utc": "2026-10-20T21:02:36Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-20T21:03:22Z",
+            "delta_seconds_from_merge": 46,
+            "before_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "after_sha": "73d7022452dceb080d5568997e2b3992b553de15",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-20T21:03:23Z",
+            "delta_seconds_from_merge": 47,
+            "before_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "after_sha": "73d7022452dceb080d5568997e2b3992b553de15",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [
+          {
+            "ruleset_id": 25514358,
+            "ruleset_name": "generation-shadow-evaluate",
+            "timestamp_utc": "2026-10-21T00:51:36Z",
+            "delta_seconds_from_merge": 13740,
+            "rule_types": [
+              "workflows"
+            ],
+            "new_workflows_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "old_workflows_sha": "fb73fbb56a52f776378140d72924fbb6837f5404",
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ],
+        "repo_level_ruleset_events_near": [
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:02:36Z",
+            "delta_seconds_from_merge": -14400,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:02:40Z",
+            "delta_seconds_from_merge": -14396,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:53:35Z",
+            "delta_seconds_from_merge": -11341,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:53:39Z",
+            "delta_seconds_from_merge": -11337,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T18:54:02Z",
+            "delta_seconds_from_merge": -7714,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T18:54:07Z",
+            "delta_seconds_from_merge": -7709,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T20:10:52Z",
+            "delta_seconds_from_merge": -3104,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T20:10:55Z",
+            "delta_seconds_from_merge": -3101,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:03:21Z",
+            "delta_seconds_from_merge": 45,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:03:25Z",
+            "delta_seconds_from_merge": 49,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:43:52Z",
+            "delta_seconds_from_merge": 2476,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:45:21Z",
+            "delta_seconds_from_merge": 2565,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ]
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 54024971,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-20T21:03:22Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 54024973,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-20T21:03:23Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "absent",
+        "doc": "NONE - no individual doc (rubric: #235-#243 absent)"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "readback spot-check: not spot-verified (classification taken from known-doc rubric)",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    },
+    {
+      "pr": 242,
+      "merge_fact": {
+        "pr": 242,
+        "merge_sha": "1bfb5ed7e5b82dc89a5e9c2694ec122e3ba73ff5",
+        "merged_at_utc": "2026-10-20T21:42:27Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-20T21:46:30Z",
+            "delta_seconds_from_merge": 243,
+            "before_sha": "73d7022452dceb080d5568997e2b3992b553de15",
+            "after_sha": "1bfb5ed7e5b82dc89a5e9c2694ec122e3ba73ff5",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-20T21:46:31Z",
+            "delta_seconds_from_merge": 244,
+            "before_sha": "73d7022452dceb080d5568997e2b3992b553de15",
+            "after_sha": "1bfb5ed7e5b82dc89a5e9c2694ec122e3ba73ff5",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [
+          {
+            "ruleset_id": 25514358,
+            "ruleset_name": "generation-shadow-evaluate",
+            "timestamp_utc": "2026-10-21T00:51:36Z",
+            "delta_seconds_from_merge": 11349,
+            "rule_types": [
+              "workflows"
+            ],
+            "new_workflows_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "old_workflows_sha": "fb73fbb56a52f776378140d72924fbb6837f5404",
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ],
+        "repo_level_ruleset_events_near": [
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:02:36Z",
+            "delta_seconds_from_merge": -16791,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:02:40Z",
+            "delta_seconds_from_merge": -16787,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:53:35Z",
+            "delta_seconds_from_merge": -13732,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T17:53:39Z",
+            "delta_seconds_from_merge": -13728,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T18:54:02Z",
+            "delta_seconds_from_merge": -10105,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T18:54:07Z",
+            "delta_seconds_from_merge": -10100,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T20:10:52Z",
+            "delta_seconds_from_merge": -5495,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T20:10:55Z",
+            "delta_seconds_from_merge": -5492,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:03:21Z",
+            "delta_seconds_from_merge": -2346,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:03:25Z",
+            "delta_seconds_from_merge": -2342,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:43:52Z",
+            "delta_seconds_from_merge": 85,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:45:21Z",
+            "delta_seconds_from_merge": 174,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ]
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 54029230,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-20T21:46:30Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 54029231,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-20T21:46:31Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "absent",
+        "doc": "NONE - no individual doc (rubric: #235-#243 absent)"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "readback spot-check: not spot-verified (classification taken from known-doc rubric)",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    },
+    {
+      "pr": 243,
+      "merge_fact": {
+        "pr": 243,
+        "merge_sha": "fb73fbb56a52f776378140d72924fbb6837f5404",
+        "merged_at_utc": "2026-10-20T23:54:44Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-21T00:00:00Z",
+            "delta_seconds_from_merge": 316,
+            "before_sha": "1bfb5ed7e5b82dc89a5e9c2694ec122e3ba73ff5",
+            "after_sha": "fb73fbb56a52f776378140d72924fbb6837f5404",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-21T00:00:02Z",
+            "delta_seconds_from_merge": 318,
+            "before_sha": "1bfb5ed7e5b82dc89a5e9c2694ec122e3ba73ff5",
+            "after_sha": "fb73fbb56a52f776378140d72924fbb6837f5404",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [
+          {
+            "ruleset_id": 25514358,
+            "ruleset_name": "generation-shadow-evaluate",
+            "timestamp_utc": "2026-10-21T00:51:36Z",
+            "delta_seconds_from_merge": 3412,
+            "rule_types": [
+              "workflows"
+            ],
+            "new_workflows_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "old_workflows_sha": "fb73fbb56a52f776378140d72924fbb6837f5404",
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ],
+        "repo_level_ruleset_events_near": [
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T18:54:02Z",
+            "delta_seconds_from_merge": -18042,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T18:54:07Z",
+            "delta_seconds_from_merge": -18037,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T20:10:52Z",
+            "delta_seconds_from_merge": -13432,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T20:10:55Z",
+            "delta_seconds_from_merge": -13429,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:03:21Z",
+            "delta_seconds_from_merge": -10283,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:03:25Z",
+            "delta_seconds_from_merge": -10279,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:43:52Z",
+            "delta_seconds_from_merge": -7852,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-20T21:45:21Z",
+            "delta_seconds_from_merge": -7763,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ]
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 54041505,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-21T00:00:00Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 54041506,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-21T00:00:02Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "absent",
+        "doc": "NONE - no individual doc (rubric: #235-#243 absent)"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "readback spot-check: not spot-verified (classification taken from known-doc rubric)",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    },
+    {
+      "pr": 245,
+      "merge_fact": {
+        "pr": 245,
+        "merge_sha": "c1752d7ebbcff1d01d82c922a5f97d5b86622880",
+        "merged_at_utc": "2026-10-21T05:47:24Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-21T05:48:24Z",
+            "delta_seconds_from_merge": 60,
+            "before_sha": "fb73fbb56a52f776378140d72924fbb6837f5404",
+            "after_sha": "c1752d7ebbcff1d01d82c922a5f97d5b86622880",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-21T05:48:25Z",
+            "delta_seconds_from_merge": 61,
+            "before_sha": "fb73fbb56a52f776378140d72924fbb6837f5404",
+            "after_sha": "c1752d7ebbcff1d01d82c922a5f97d5b86622880",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [
+          {
+            "ruleset_id": 25514358,
+            "ruleset_name": "generation-shadow-evaluate",
+            "timestamp_utc": "2026-10-21T00:51:36Z",
+            "delta_seconds_from_merge": -17748,
+            "rule_types": [
+              "workflows"
+            ],
+            "new_workflows_sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+            "old_workflows_sha": "fb73fbb56a52f776378140d72924fbb6837f5404",
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ],
+        "repo_level_ruleset_events_near": []
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 54066286,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-21T05:48:24Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 54066289,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-21T05:48:25Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "explicit",
+        "doc": "docs/evidence/ci_generation_repair_2026-10-21.md"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "readback spot-check: not spot-verified (classification taken from known-doc rubric)",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    },
+    {
+      "pr": 246,
+      "merge_fact": {
+        "pr": 246,
+        "merge_sha": "2bcbcb8c58a9f36453dc3f2e09751e1eefd60b2b",
+        "merged_at_utc": "2026-10-21T12:16:10Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-21T12:16:14Z",
+            "delta_seconds_from_merge": 4,
+            "before_sha": "c1752d7ebbcff1d01d82c922a5f97d5b86622880",
+            "after_sha": "2bcbcb8c58a9f36453dc3f2e09751e1eefd60b2b",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-21T12:16:16Z",
+            "delta_seconds_from_merge": 6,
+            "before_sha": "c1752d7ebbcff1d01d82c922a5f97d5b86622880",
+            "after_sha": "2bcbcb8c58a9f36453dc3f2e09751e1eefd60b2b",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [],
+        "repo_level_ruleset_events_near": []
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 54109898,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-21T12:16:14Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 54109903,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-21T12:16:16Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "explicit",
+        "doc": "docs/evidence/v5_generation_acceptance_a_2026-10-21.md"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "readback spot-check: not spot-verified (classification taken from known-doc rubric)",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    },
+    {
+      "pr": 247,
+      "merge_fact": {
+        "pr": 247,
+        "merge_sha": "7fffee318b9fada32d13dd9c88d74869e343f9cc",
+        "merged_at_utc": "2026-10-21T16:21:43Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-21T16:21:48Z",
+            "delta_seconds_from_merge": 5,
+            "before_sha": "2bcbcb8c58a9f36453dc3f2e09751e1eefd60b2b",
+            "after_sha": "7fffee318b9fada32d13dd9c88d74869e343f9cc",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-21T16:21:49Z",
+            "delta_seconds_from_merge": 6,
+            "before_sha": "2bcbcb8c58a9f36453dc3f2e09751e1eefd60b2b",
+            "after_sha": "7fffee318b9fada32d13dd9c88d74869e343f9cc",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [],
+        "repo_level_ruleset_events_near": [
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-21T21:15:40Z",
+            "delta_seconds_from_merge": 17637,
+            "rule_types": [
+              "required_status_checks"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ]
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 54150575,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-21T16:21:48Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 54150579,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-21T16:21:49Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "indirect",
+        "doc": "docs/evidence/epoch_record_mint_retention_2026-10-29.md"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "readback spot-check: spot-verified: doc exists, '#247' 0 mentions (consistent with indirect)",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    },
+    {
+      "pr": 248,
+      "merge_fact": {
+        "pr": 248,
+        "merge_sha": "bcfc1bbdea3bf143080c5d314966faf28b74ffd1",
+        "merged_at_utc": "2026-10-23T06:12:49Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-23T06:30:57Z",
+            "delta_seconds_from_merge": 1088,
+            "before_sha": "7fffee318b9fada32d13dd9c88d74869e343f9cc",
+            "after_sha": "bcfc1bbdea3bf143080c5d314966faf28b74ffd1",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [],
+        "repo_level_ruleset_events_near": []
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 54428085,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-23T06:30:57Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "drift-recorded",
+        "doc": "docs/evidence/epoch_record_mint_retention_2026-10-29.md"
+      },
+      "file_diff": {
+        "status": "collected",
+        "source": "compare 7fffee31...bcfc1bbd",
+        "ahead_by": 2,
+        "files": [
+          {
+            "filename": ".github/workflows/landing-integrity.yml",
+            "change": "modified +3/-3"
+          },
+          {
+            "filename": ".github/workflows/pin-promotion-gate.yml",
+            "change": "modified +1/-1"
+          }
+        ]
+      },
+      "notes": [
+        "SINGLE-RULESET: only ruleset 23943917 repinned; the other org ruleset skipped this sha",
+        "readback spot-check: not spot-verified (classification taken from known-doc rubric)"
+      ]
+    },
+    {
+      "pr": 249,
+      "merge_fact": {
+        "pr": 249,
+        "merge_sha": "58a2c54666f25c8f9ebb96a8229eacaad01ad978",
+        "merged_at_utc": "2026-10-29T09:03:13Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-29T09:04:40Z",
+            "delta_seconds_from_merge": 87,
+            "before_sha": "7fffee318b9fada32d13dd9c88d74869e343f9cc",
+            "after_sha": "58a2c54666f25c8f9ebb96a8229eacaad01ad978",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-29T09:04:41Z",
+            "delta_seconds_from_merge": 88,
+            "before_sha": "bcfc1bbdea3bf143080c5d314966faf28b74ffd1",
+            "after_sha": "58a2c54666f25c8f9ebb96a8229eacaad01ad978",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [],
+        "repo_level_ruleset_events_near": []
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 55302688,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-29T09:04:40Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 55302691,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-29T09:04:41Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "explicit",
+        "doc": "docs/evidence/epoch_record_mint_retention_2026-10-29.md"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "readback spot-check: spot-verified: doc exists, '#249' mentioned 1x",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    },
+    {
+      "pr": 250,
+      "merge_fact": {
+        "pr": 250,
+        "merge_sha": "3fcc2b5c802d62c89dcb30997e79049d9c83bd84",
+        "merged_at_utc": "2026-10-31T02:27:42Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [],
+        "other_org_ruleset_events_near": [],
+        "repo_level_ruleset_events_near": [
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-31T03:50:12Z",
+            "delta_seconds_from_merge": 4950,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-31T07:17:35Z",
+            "delta_seconds_from_merge": 17393,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ]
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": []
+      },
+      "readback_act_doc": {
+        "class": "absent",
+        "doc": "NONE — no doc found referencing #250"
+      },
+      "file_diff": {
+        "status": "collected",
+        "source": "compare 58a2c546...3fcc2b5c",
+        "ahead_by": 3,
+        "files": [
+          {
+            "filename": ".github/workflows/pin-promotion-gate.yml",
+            "change": "modified +50/-32"
+          }
+        ]
+      },
+      "notes": [
+        "UNKNOWN/NO-ORG-REPIN: no org-ruleset audit event pinned 3fcc2b5c80",
+        "readback spot-check: not spot-verified (classification taken from known-doc rubric)"
+      ]
+    },
+    {
+      "pr": 251,
+      "merge_fact": {
+        "pr": 251,
+        "merge_sha": "d76caf956000175bbc78f9b25bced842c02992a5",
+        "merged_at_utc": "2026-10-31T07:14:27Z",
+        "source": "compare API repos/Archright/.github/compare"
+      },
+      "repin_act_auditlog": {
+        "matching_org_events": [
+          {
+            "ruleset_id": 25218071,
+            "ruleset_name": "axiom-admission-gate",
+            "timestamp_utc": "2026-10-31T07:16:28Z",
+            "delta_seconds_from_merge": 121,
+            "before_sha": "58a2c54666f25c8f9ebb96a8229eacaad01ad978",
+            "after_sha": "d76caf956000175bbc78f9b25bced842c02992a5",
+            "actor": "wintrover"
+          },
+          {
+            "ruleset_id": 23943917,
+            "ruleset_name": "landing-integrity",
+            "timestamp_utc": "2026-10-31T07:16:30Z",
+            "delta_seconds_from_merge": 123,
+            "before_sha": "58a2c54666f25c8f9ebb96a8229eacaad01ad978",
+            "after_sha": "d76caf956000175bbc78f9b25bced842c02992a5",
+            "actor": "wintrover"
+          }
+        ],
+        "other_org_ruleset_events_near": [],
+        "repo_level_ruleset_events_near": [
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-31T03:50:12Z",
+            "delta_seconds_from_merge": -12255,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          },
+          {
+            "ruleset_id": 20303214,
+            "ruleset_name": "main",
+            "timestamp_utc": "2026-10-31T07:17:35Z",
+            "delta_seconds_from_merge": 188,
+            "rule_types": [
+              "merge_queue"
+            ],
+            "new_workflows_sha": null,
+            "old_workflows_sha": null,
+            "actor": "wintrover",
+            "note": "proximity-only event (within +/-6h of merge; not a pin match for this landing)"
+          }
+        ]
+      },
+      "state_snapshot": {
+        "snapshots_pinning_this_sha": [
+          {
+            "version_id": 55644506,
+            "ruleset_id": 25218071,
+            "updated_at_utc": "2026-10-31T07:16:28Z",
+            "enforcement": "active",
+            "path": ".github/workflows/admission-gate-v2.yml"
+          },
+          {
+            "version_id": 55644508,
+            "ruleset_id": 23943917,
+            "updated_at_utc": "2026-10-31T07:16:30Z",
+            "enforcement": "active",
+            "path": ".github/workflows/landing-integrity.yml"
+          }
+        ]
+      },
+      "readback_act_doc": {
+        "class": "explicit",
+        "doc": "docs/evidence/resid22_org_repin_closure_2026-11-02.md"
+      },
+      "file_diff": {
+        "status": "not_collected"
+      },
+      "notes": [
+        "readback spot-check: spot-verified: doc exists, '#251' mentioned 1x",
+        "file_diff: not_collected (outside #248/#250 scope)"
+      ]
+    }
+  ],
+  "audit_meta": {
+    "corrections": {
+      "pr_228_readback": "repin_only -> explicit; basis: docs/evidence/mg_evidence_gate_canary2_2026-10-17.md:20-22"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "script": "tools/ci/pbt_seed_parser.py",
+  "description": "PBT Seed Parser — parses structured [PBT-SEED] and [PBT-FAILED] output from test runners, extracts seed/test/status tuples, writes JSON log to data/pbt_seed_log.json",
+  "inputSample": {
+    "args": [],
+    "stdin": "[PBT-SEED] seed=abc123 test=RaceConditionCheck status=PASS\n[PBT-SEED] seed=def456 test=MemorySafety status=PASS\n[PBT-FAILED] seed=ghi789 test=LogicCorrectness status=FAIL"
+  },
+  "outputSample": {
+    "stdout": "pbt_seed_parser: 3 entries parsed, 2 PASS, 1 FAIL",
+    "stderr": "Summary: 2 passed, 1 failed"
+  },
+  "exitCode": 0
+}

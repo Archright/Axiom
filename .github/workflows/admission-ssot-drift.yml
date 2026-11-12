@@ -1,0 +1,194 @@
+# admission-ssot-drift — 상시 required-check SSOT 드리프트 감지 (ADR-0035 §4).
+#
+# 정본 계약: docs/adr/0035-admission-ssot.md §4 (드리프트 감지 ≠ 병합 시점 강제).
+# policy SSOT: config/policy/merge_admission.json (기계 판독 정규 원본) —
+#   기대 집합 = requiredValidations[].job ∪ requiredWorkflowDetection.verdictJob.
+#
+# 이 워크플로는 **required check가 아니다** — required 집합은 그대로 3개
+# (admission-check / bsec-integrity / debt-registry-gate). 병합을 막지 않으며
+# GitHub 상태를 변경하지 않는다(GET 전용 관측 — monitor purity 게이트 대상).
+# 드리프트가 있으면 이 job 자체가 RED로 loudly 실패한다(관측 신호).
+#
+# 3변 대조(ADR-0035 §3 — 같은 값 3곳 복사는 SSOT가 아님):
+#   leg 1  policy ↔ 상수     : 정적 — src/cli/merge_cli.nim의 RequiredChecks /
+#                               RequiredWorkflowIds 대조 (credential 불필요).
+#   leg 2  policy ↔ ruleset  : live ruleset 20303214 — 실측(2026-10-21,
+#                               run 39603184495): job 자신의 GITHUB_TOKEN으로
+#                               판정 가능(4/4 PASS). 진단 App token은
+#                               더 제한된 credential이다.
+#                               [2026-11-07 매핑 — v1.19.0 hybrid authority
+#                               rotation] 20303214은 구 저장소 소속 id로
+#                               현행 repo에서 404 — leg 2는 이제 모니터의
+#                               이름 해석("main")이 판정한다(관측 당시
+#                               id 26702792).
+#   leg 3  policy ↔ producer : 착지 완료된 merge_group run의 head_sha(= main의
+#                               merge commit) check-runs 생산 App 확인 —
+#                               checks:read 필요(작업 GITHUB_TOKEN으로 가능).
+#
+# credential 2단 계약 (fail-closed, 명시적):
+#   tier 1 (diagnostic-app): 진단 App 시크릿이 등록된 경우 — job 안에서
+#     installation token을 민팅(diagnostic-authority.yml과 동일 패턴)하고
+#     rulesets API를 읽는다 → 3개 다 판정.
+#   tier 2 (job-token): 진단 App이 아직 등록되지 않은 경우(현행 — 진단 App
+#     등록은 인간 게이트, docs/spec/diagnostic_execution_delegation.md §2;
+#     GitHub API로 App을 만들 수 없다) — job 자신의 GITHUB_TOKEN을 쓴다.
+#     실측: 이 토큰은 repository ruleset을 읽을 수 있다 → 3개 다 판정된다.
+#     ruleset 읽기가 실패하면 모니터가 그 leg을 NOT PERFORMED로 명시 보고한다
+#     (degraded mode — 조용한 생략 금지). 부분 판정을 전체 GREEN으로
+#     위장하지 않는다.
+#
+# 권한 상한: contents:read / actions:read / checks:read — 최소 상한.
+# 외부 action은 커밋 SHA 고정(repo 정책 sha_pinning_required).
+
+name: admission-ssot-drift
+
+on:
+  schedule:
+    # 매일 04:37 UTC — 정각( :00 ) 회피(herd window), 낮 시간대 회피.
+    - cron: '37 4 * * *'
+  workflow_dispatch:
+    inputs:
+      observe_sha:
+        description: '관찰할 SHA (비우면 최신 merge_group head를 자동 선택).'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  actions: read
+  checks: read
+
+concurrency:
+  group: admission-ssot-drift
+  cancel-in-progress: false
+
+jobs:
+  admission-ssot-drift:
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 30
+    # protected environment — 진단 App 시크릿(DIAG_APP_ID / DIAG_APP_PRIVATE_KEY)의
+    # 보관 위치(diagnostic-authority.yml과 동일). environment 보호 규칙이 없으므로
+    # schedule 발화도 승인 대기로 정지하지 않는다(측정 2026-10-21:
+    # protection_rules = []).
+    environment: diagnostic-authority
+    steps:
+      # ── credential 계층 판정 — 명시적 출력(조용한 폴백 금지) ──
+      - name: "[tier] Select the diagnostic credential tier (explicit — no silent fallback)"
+        id: tier
+        env:
+          DIAG_APP_ID: ${{ secrets.DIAG_APP_ID }}
+          DIAG_APP_PRIVATE_KEY_PRESENT: ${{ secrets.DIAG_APP_PRIVATE_KEY != '' }}
+        run: |
+          set -euo pipefail
+          if [ -n "$DIAG_APP_ID" ] && [ "$DIAG_APP_PRIVATE_KEY_PRESENT" = "true" ]; then
+            echo "tier=diagnostic-app" >> "$GITHUB_OUTPUT"
+            echo "credential tier: diagnostic-app — the diagnostic installation token is minted in-job (leg 2 included)."
+          else
+            echo "tier=job-token" >> "$GITHUB_OUTPUT"
+            echo "::warning::credential tier: job-token — the diagnostic App is NOT registered (human registration gate, docs/spec/diagnostic_execution_delegation.md §2). The job's own GITHUB_TOKEN is used instead. MEASURED 2026-10-21 (run 39603184495): this token CAN read the repository ruleset (ruleset drift 4/4 PASS), so the ruleset leg IS performed; if that read ever fails, the monitor reports the leg as NOT PERFORMED (degraded mode) instead of silently skipping it."
+            {
+              echo "## credential tier"
+              echo "- diagnostic App secrets: ABSENT (the diagnostic App is not registered — human gate)"
+              echo "- credential used: the job's own GITHUB_TOKEN (contents/actions/checks: read)"
+              echo "- leg 2 (policy <-> ruleset): PERFORMED with this token (measured 2026-10-21 — ruleset drift 4/4 PASS); on read failure it is reported as NOT PERFORMED by the monitor, never silently skipped"
+              echo "- legs 1 (policy <-> constants) and 3 (policy <-> live producer) are performed"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # ── tier 1: 진단 installation token을 job 안에서 민팅 (로컬로 나가지 않음) ──
+      - name: "Mint diagnostic installation token (in-job, same-job consumption, pinned action)"
+        id: diag-token
+        if: steps.tier.outputs.tier == 'diagnostic-app'
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ secrets.DIAG_APP_ID }}
+          private-key: ${{ secrets.DIAG_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          # 진단 App 설치 권한 상한의 per-issuance reduction — rulesets API는
+          # Administration:read를 요구한다(docs/spec/diagnostic_execution_delegation.md §2·§3).
+          permission-contents: read
+          permission-metadata: read
+          permission-checks: read
+          permission-actions: read
+          permission-administration: read
+
+      - name: "[mask] Register the token as masked (defense in depth — never print it)"
+        if: steps.tier.outputs.tier == 'diagnostic-app'
+        env:
+          DIAG_TOKEN: ${{ steps.diag-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          echo "::add-mask::$DIAG_TOKEN"
+          echo "token masked; it is consumed in-job only and revoked by the action's post step"
+
+      # ── 툴체인 — repository_surface.yml / diagnostic-authority.yml과 동일 공급 경로 ──
+      - uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          skip-nimble-install: 'true'
+          cache-save-enabled: 'false'
+          cache-build-source: ${{ github.sha }}
+
+      - name: "[diagnose] Admission SSOT drift — policy ↔ constants ↔ ruleset ↔ live producer"
+        env:
+          AXIOM_DIAG_TOKEN: ${{ steps.diag-token.outputs.token }}
+          AXIOM_DIAG_STRICT: ${{ steps.tier.outputs.tier == 'diagnostic-app' && '1' || '0' }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          OBSERVE_SHA: ${{ inputs.observe_sha }}
+        run: |
+          set -euo pipefail
+          SUMMARY="$GITHUB_STEP_SUMMARY"
+
+          # ── 관찰 SHA — **착지 완료된** 최신 merge_group head(실제 랜딩 베뉴) ──
+          # 주의(2026-10-21 실측 정정): 진행 중(in_progress) run의 head_sha를
+          # 관찰하면 그 run의 check-run(특히 'admission-check')이 아직 생성되지
+          # 않아 producer leg이 'missing != clean'으로 FALSE RED를 낸다
+          # (첫 dispatch run 39603184495가 정확히 그 사례). 따라서 착지가
+          # **완료·성공**한 run만 관찰한다 — 그 head_sha는 main의 merge commit
+          # (= 실제 착지 커밋)이며, 그 커밋의 check-run에는 required 3-context가
+          # 모두 존재한다.
+          SHA="$OBSERVE_SHA"
+          if [ -z "$SHA" ]; then
+            SHA=$(gh api "repos/$REPO/actions/runs?event=merge_group&per_page=20" --jq '[.workflow_runs[] | select(.status=="completed" and .conclusion=="success")][0].head_sha // ""' 2>/dev/null || true)
+            SHA="${SHA:-}"
+          fi
+          if [ -z "$SHA" ]; then
+            echo "::error::admission-ssot-drift: no completed merge_group landing to observe (latest completed+successful merge_group run could not be resolved) — the producer leg has no evidence (fail-closed: unobserved != clean)"
+            exit 1
+          fi
+          echo "observation SHA: $SHA"
+
+          nim c --hints:off -o:bin/ssot_drift_monitor tools/merge_ruleset_drift_monitor.nim
+
+          ARGS="--policy-file config/policy/merge_admission.json --merge-cli-source src/cli/merge_cli.nim --repo $REPO --observe-sha $SHA"
+          if [ "${{ steps.tier.outputs.tier }}" != "diagnostic-app" ]; then
+            # tier 2: Administration:read credential가 없다 — ruleset leg은
+            # 통째로 불가하므로, 실패 시 명시적 DEGRADED MODE로 내려간다
+            # (monitor가 NOT PERFORMED로 보고한다 — 부분 판정을 전체 GREEN으로
+            #  위장하지 않는다).
+            ARGS="$ARGS --allow-unavailable-ruleset"
+          fi
+
+          set +e
+          # shellcheck disable=SC2086
+          bin/ssot_drift_monitor $ARGS 2>&1 | tee -a "$SUMMARY"
+          RC=${PIPESTATUS[0]}
+          set -e
+
+          {
+            echo "## admission SSOT drift"
+            echo "- monitor exit: $RC (0 = every performed leg holds, 1 = drift / fail-closed)"
+            echo "- credential tier: ${{ steps.tier.outputs.tier }}"
+            echo "- observation SHA: $SHA"
+          } >> "$SUMMARY"
+
+          if [ "$RC" -ne 0 ]; then
+            echo "::error::admission-ssot-drift: the required-check SSOT drifted from the live platform (monitor exit $RC) — see the summary above. This workflow is NOT a required check; it is the standing drift signal."
+            exit 1
+          fi
+          echo "admission-ssot-drift: OK — the policy SSOT, the compiled-in constants and the live platform agree on the required-check set."

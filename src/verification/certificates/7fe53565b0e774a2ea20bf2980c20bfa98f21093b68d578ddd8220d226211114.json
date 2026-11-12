@@ -1,0 +1,59 @@
+{
+  "modulePath": "src/verification/analyzer/analyzer_shared_json.nim",
+  "functionName": "firstBoolCore",
+  "fingerprint": "85e6be515c6013b86e9b0b2611b5970f0b6d21e5ce025f9dc3d21c3f128bf68d",
+  "sourceHash": "153ff3d3ae5e76e3e57773863e2591bb747cfb1e0b7cda258ed6c3523eb27722",
+  "trusted": true,
+  "status": "certLeanVerified",
+  "reason": "uap-lean-verified",
+  "kernel": true,
+  "solverStatus": "sat",
+  "winningStrategy": "lean-replay",
+  "solverMeta": {
+    "leanCompilerVerified": true,
+    "negativeTestResult": false,
+    "vacuityChecked": true,
+    "vacuityProven": false,
+    "solverVersion": "4.13.3",
+    "solverProvenance": "spHeuristic",
+    "z3Executed": true
+  },
+  "verificationTier": "lean-verified",
+  "leanProposition": "",
+  "irHash": "7fe53565b0e774a2ea20bf2980c20bfa98f21093b68d578ddd8220d226211114",
+  "translationVersion": "axiom-ir-smt-v1",
+  "schemaVersion": "axiom.certificate.v3",
+  "claim": {
+    "type": "verification",
+    "status": "certLeanVerified",
+    "modulePath": "src/verification/analyzer/analyzer_shared_json.nim",
+    "functionName": "firstBoolCore"
+  },
+  "inputHash": "sha256:e2ac2a9d7fb3c3815fb897ddf19c0b21bac7bc7e9f26a37af3ca7d720542c374",
+  "toolchainIdentity": {
+    "axiomVersion": "v0.3.7",
+    "nim": "2.2.10",
+    "z3": "4.13.3",
+    "lean": "4.29.0"
+  },
+  "solverInvocation": {
+    "engine": "z3",
+    "version": "4.13.3",
+    "strategy": "lean-replay",
+    "mode": "lean-replay"
+  },
+  "solverInputDigest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "solverResultDigest": "sha256:8371743e431b6147fc72888dcc21c6e3b452cb11b645fbb09d91f486adf88428",
+  "identityDigest": "655997d581f026eb7ed3eda1ecbe79f4d73fb95475f3ddb0faa6ffdb5b47ddd2",
+  "trustCommitId": "fc5470bfff378d0a2ec1bed9162745ddc40656df2d21300304c3b1eeb70ac6ee",
+  "attestation": {
+    "authority": "axiom",
+    "policyVersion": "axiom.certificate.v3",
+    "claimDigest": "sha256:44293fcac6958002328fe72974c040cc5a9dbfe4fa837d562f4b0333bfcced7f",
+    "journalRef": "fc5470bfff378d0a2ec1bed9162745ddc40656df2d21300304c3b1eeb70ac6ee"
+  },
+  "provenance": {
+    "journalCommitId": "fc5470bfff378d0a2ec1bed9162745ddc40656df2d21300304c3b1eeb70ac6ee",
+    "certificateDigest": "655997d581f026eb7ed3eda1ecbe79f4d73fb95475f3ddb0faa6ffdb5b47ddd2"
+  }
+}

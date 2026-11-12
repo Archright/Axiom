@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "specs": {
+    "axiom_u64_probe::u64_echo": {
+      "post": "result == x",
+      "conditions": ["0 <= x", "x <= 18446744073709551615"]
+    },
+    "axiom_u64_probe::u64_seven": {
+      "post": "result == 7",
+      "conditions": ["0 <= x", "x <= 18446744073709551615"]
+    },
+    "axiom_u64_probe::u64_seven_mutant": {
+      "post": "result == 7",
+      "conditions": ["0 <= x", "x <= 18446744073709551615"]
+    },
+    "axiom_u64_probe::u64_add": {
+      "post": "result == a + b",
+      "conditions": ["0 <= a", "a <= 18446744073709551615", "0 <= b", "b <= 18446744073709551615", "a + b <= 18446744073709551615"]
+    },
+    "axiom_u64_probe::u64_add_mutant": {
+      "post": "result == a + b",
+      "conditions": ["0 <= a", "a <= 18446744073709551615", "0 <= b", "b <= 18446744073709551615", "a + b <= 18446744073709551615"]
+    }
+  }
+}

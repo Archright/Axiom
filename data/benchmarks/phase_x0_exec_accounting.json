@@ -1,0 +1,225 @@
+{
+  "schemaVersion": "2.0",
+  "toolVersion": "0.3.0",
+  "experiment": "phase_x0_execution_accounting",
+  "measurementSource": "production_canonical",
+  "measurementCompensated": false,
+  "compensationSource": "production_canonical",
+  "branch": "feat/x1-canonical-run-result",
+  "head": "0e9978a54365b1bdc6720f16e99688ef5a021686",
+  "timestamp": "2026-9-7T0:23:0",
+  "command": "AXIOM_CI=1 bin/ax prove --limit 25 (full-frontier, clean state)",
+  "canonical": {
+    "requiredCount": 5,
+    "notRequiredCount": 0,
+    "unresolvedDecisionCount": 12,
+    "satisfiedCount": 0,
+    "unsatisfiedCount": 0,
+    "pendingCount": 5,
+    "contestedCount": 4,
+    "satisfiedByFresh": 0,
+    "satisfiedByReused": 0,
+    "preSievedCount": 0,
+    "attemptedCount": 17,
+    "notAttemptedCount": 0,
+    "freshExecutionCount": 0,
+    "executedCount": 17,
+    "runOutcome": {
+      "planComplete": false,
+      "executionComplete": true,
+      "verificationComplete": false
+    },
+    "gateVerdict": "FAIL",
+    "units": [
+      {
+        "unitId": "src/core/orchestrator/orchestrator_api.nim::normalizeMaxWorkers",
+        "requirementDecision": "REQUIRED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONTESTED",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      },
+      {
+        "unitId": "src/core/orchestrator/orchestrator_topology_worker.nim::calcDynamicTimeoutCore",
+        "requirementDecision": "REQUIRED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONSISTENT",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      },
+      {
+        "unitId": "src/core/orchestrator/orchestrator_topology_worker.nim::clampTimeoutMs",
+        "requirementDecision": "REQUIRED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONTESTED",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      },
+      {
+        "unitId": "src/core/orchestrator/orchestrator_topology_worker.nim::timeoutDiagnosisForNode",
+        "requirementDecision": "UNRESOLVED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONSISTENT",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      },
+      {
+        "unitId": "src/core/orchestrator/orchestrator_vault.nim::addNodeExecutionStat",
+        "requirementDecision": "UNRESOLVED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONSISTENT",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      },
+      {
+        "unitId": "src/core/orchestrator/orchestrator_vault.nim::addNodeReport",
+        "requirementDecision": "UNRESOLVED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONSISTENT",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      },
+      {
+        "unitId": "src/core/orchestrator/orchestrator_vault.nim::safeSpeedupRatioCore",
+        "requirementDecision": "REQUIRED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONTESTED",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      },
+      {
+        "unitId": "src/core/topology/topology_dependency.nim::proximityScore",
+        "requirementDecision": "REQUIRED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONTESTED",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      },
+      {
+        "unitId": "src/core/topology/topology_engine.nim::findTopologyMetricIndex",
+        "requirementDecision": "UNRESOLVED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONSISTENT",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      },
+      {
+        "unitId": "src/core/topology/topology_engine.nim::findTopologySymbolIndex",
+        "requirementDecision": "UNRESOLVED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONSISTENT",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      },
+      {
+        "unitId": "src/core/trusted/private/ir_to_smt_chunk3.nim::generateOverflowAssertions",
+        "requirementDecision": "UNRESOLVED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONSISTENT",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      },
+      {
+        "unitId": "src/core/trusted/private/ir_to_smt_chunk3.nim::generateOverflowDefines",
+        "requirementDecision": "UNRESOLVED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONSISTENT",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      },
+      {
+        "unitId": "src/core/vault/vault_manager_spec.nim::axiomSpecToJsonNode",
+        "requirementDecision": "UNRESOLVED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONSISTENT",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      },
+      {
+        "unitId": "src/gate/gate_rules_module_classifier.nim::initModuleClassificationCache",
+        "requirementDecision": "UNRESOLVED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONSISTENT",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      },
+      {
+        "unitId": "src/gate/gate_rules_normalization.nim::normalizedEntries",
+        "requirementDecision": "UNRESOLVED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONSISTENT",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      },
+      {
+        "unitId": "src/verification/analyzer/analyzer_shared_json.nim::firstBoolCore",
+        "requirementDecision": "UNRESOLVED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONSISTENT",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      },
+      {
+        "unitId": "src/verification/analyzer/analyzer_shared_json.nim::firstIntCore",
+        "requirementDecision": "UNRESOLVED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONSISTENT",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      }
+    ],
+    "anomalies": [],
+    "derivations": [
+      "RequirementDecision is derived from the eligibility/OGR basis only (canonical OGR authority — backends do not decide obligation existence); units without a basis are UNRESOLVED, never NOT_REQUIRED",
+      "VerificationOutcome is defined only for REQUIRED units; runtime statuses verified/inductive_valid → SATISFIED, failed/timeout → UNSATISFIED, no_obligation/not_verifiable/pre_sieved/blocked/skipped/vacuous/absent → PENDING",
+      "Consistency: CONTESTED iff canonical OGR REQUIRED ∧ runtime no_obligation report (deterministic mapping); other runtime verdicts default to CONSISTENT",
+      "ExecutionEvidence ATTEMPTED iff the unit has a per-wave runtime verdict record; units never processed by the runtime are NOT_ATTEMPTED",
+      "SatisfactionSource: SATISFIED + invocation witness → FRESH; SATISFIED + cache reuse → REUSED; NOT_REQUIRED (no obligation) → PRE_SIEVED; else NONE",
+      "freshExecutionCount = |FreshExecutionObservedSet| = distinct units with evidenceSource=terminal_verdict_proxy (a runtime verdict proxying a genuine solver/proof invocation; cache hits excluded). Evidence hierarchy: dispatch-only < terminal-verdict-proxy < solver-observed < invocation-witness; invocation-witness emission is an X2 entry condition. It is NOT obligationAttemptedCount (obligation-WEIGHTED — loop_driver.nim:934 adds the node's whole obligationCount — and never incremented on the parallel path) — DEBT#458",
+      "executedCount = units with a runtime verdict record; equal to attemptedCount by construction in this reducer (evidence ATTEMPTED ⇔ runtime verdict present)",
+      "verificationComplete=false (GateVerdict=FAIL) when contestedCount>0 ∨ unsatisfiedCount>0 ∨ unresolvedDecisionCount>0 ∨ pendingCount>0 — fail-closed"
+    ]
+  },
+  "legacy": {
+    "legacyCompletedCount": 16,
+    "legacyUncompletedRequiredCount": 7,
+    "legacyClosureComplete": false,
+    "note": "LEGACY projection only — completedCount is a mixed aggregate (Verified+NoObligation+InductiveValid, closure_evaluation.nim:66-68) and the merged report carries only the last wave's nodeReports+executionStats (last-wave merge defect, axiom_engine.nim:1049-1059). Not canonical; see the canonical block."
+  },
+  "Plan": {
+    "universeCount": 23,
+    "requiredCount": 23,
+    "reusableCount": 0,
+    "preSievedCount": 17,
+    "freshCount": 0
+  },
+  "Execution": {
+    "invocationCount": 17,
+    "cacheHitCount": 0,
+    "blockedCount": 0,
+    "failedCount": 0,
+    "timeoutCount": 0,
+    "unresolvedCount": 6
+  },
+  "DAG": {
+    "nodeCount": 17,
+    "edgeCount": 0,
+    "criticalPath": 1,
+    "maxWidth": 17,
+    "averageWidth": 17.0
+  },
+  "Time": {
+    "planningMs": 2518,
+    "cacheClassificationMs": 0,
+    "freshExecutionMs": 0,
+    "reductionMs": -2518,
+    "totalWallMs": 2518
+  },
+  "Case": "unclassified",
+  "caseRationale": "freshCount=0 (canonical freshExecutionCount) and freshExecutionMs=0 (totalSolverTimeMs) — the run reached no genuine proof obligation (all reachable candidates classified no_obligation/pre-sieved). Phase X cases A–E decompose an actual solver-cost run; with zero attempted obligations (~5 frontier candidates, clean state) there is no prover work to decompose. Not a planner/cache/scheduler/prover bottleneck. See derivations + report doc for the measurement-availability limitation.",
+  "derivations": [
+    "X0 freshCount = canonical freshExecutionCount (0) — |FreshExecutionSet|, NOT obligationAttemptedCount (defective: obligation-weighted, parallel path never increments — DEBT#458)",
+    "edgeCount=0 (all nodes at depth 0 or no nodeReports)",
+    "DAG computed over merged per-wave nodeReports (17 distinct units) — last-wave merge defect compensated (DEBT#458)"
+  ]
+}

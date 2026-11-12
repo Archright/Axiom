@@ -1,0 +1,8 @@
+{
+  "nimType": "bool",
+  "leanType": "Bool",
+  "smtSort": "Bool",
+  "mappingProofObligation": "nim_lean_bool_iso",
+  "verified": false,
+  "sourceHash": ""
+}

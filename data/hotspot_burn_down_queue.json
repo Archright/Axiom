@@ -1,0 +1,2336 @@
+{
+  "version": "1.0.0",
+  "total_untested": 465,
+  "by_priority": {
+    "critical": 248,
+    "high": 170,
+    "medium": 47
+  },
+  "queue": [
+    {
+      "module": "src/core/api/axiom_api_helpers.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/api/axiom_api_session.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/api/axiom_api_session_helpers.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/api/axiom_api_session_ops.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/api/axiom_api_session_proof.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/api/axiom_api_session_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/api/axiom_api_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/api/axiom_api_types_1.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/api/axiom_api_types_2.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/api/axiom_api_verify.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/application/bounded_concepts.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/application/healing_context.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/application/lean_context.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/application/persona_context_init.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/application/verification_context.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/ast/tree_sitter_ast_bridge.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/ast/tree_sitter_node_mapper.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/audit/burn_down_queue.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/audit/hotspot_analyzer.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/audit/hotspot_gate.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/audit/hotspot_render.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/audit/sad_gate.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/bmc/bmc_artifacts.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/bmc/bmc_race.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/bmc/bmc_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/bmc/bmc_variable_map.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/boundary/boundary_extraction_core.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/boundary/boundary_extraction_helpers.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/boundary/boundary_extraction_main.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/boundary/boundary_extraction_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/boundary/boundary_extractor_part1.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/boundary/boundary_extractor_part1_part1.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/boundary/layer_guard.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/boundary/type_registry.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/boundary/verification_interface.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/config/constants.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/contract/contract_ast_extractor.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/contract/contract_param_util.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/contract/contract_smtlib2.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/contract/contract_text_extractor.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/contract/contract_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/contract/heal_hint_manager.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/contract/verification_interface.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/contracts/universal_pipeline_contract.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/coverage/coverage_bridge.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/diagnostics/diagnostics_engine_helpers.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/diagnostics/diagnostics_engine_main.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/diagnostics/pattern_guard.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/domains/gateway/gateway_generator.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/domains/gateway/gateway_spec.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/encoding/smt_atom_generator.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/encoding/smt_hints.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/encoding/smt_to_lean/private/arithmetic_expr.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/encoding/smt_to_lean_codegen.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/encoding/smt_to_lean_codegen_part1.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/encoding/smt_to_lean_translate.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/encoding/smt_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/encoding/smtlib2_sanitizer.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/encoding/vfs.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/file_utils.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/gate/gate_evaluators.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/gate/layer_guard.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/gateway/gateway_constraint.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/gateway/gateway_helpers.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/gateway/gateway_json.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/gateway/gateway_macros.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/gateway/gateway_main.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/gateway/gateway_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/identity/axiom_env.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/identity/axiom_identity.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/identity/tree_sitter_path.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/integrity/integrity_refinement_loop.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/integrity/integrity_refinement_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/io/file_utils.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/json/json_safe.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/json/json_scan_parse.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/json/json_scan_skip.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/json/json_utils_scan.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/json/std_redirect.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/judge/lean_replay.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/judge/tautology_checker.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/judge/the_judge_constants.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/judge/the_judge_eval.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/judge/the_judge_lean.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/judge/the_judge_query.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/judge/the_judge_query_part1.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/judge/the_judge_query_part2.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/logic/axiom_verification_context.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/logic/lean_diagnostic.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/logic/pipeline_builder.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/logic/pipeline_core_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/logic/pipeline_verdict_engine.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/logic/refinement_controller.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/logic/refinement_invariant.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/logic/refinement_predicate.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/logic/refinement_profile.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/logic/refinement_query.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/logic/refinement_string.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/logic/semantic_theorem_builder.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/logic/smt_logic.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/logic/universal_translation_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/orchestration/pipeline_config.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/orchestration/pipeline_dispatch.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/orchestration/pipeline_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/orchestrator/cegar_bmc_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/orchestrator/cegar_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/orchestrator/cfg_builder.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/orchestrator/orchestrator_api.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/orchestrator/orchestrator_topology.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/orchestrator/orchestrator_topology_depth.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/orchestrator/orchestrator_topology_emit.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/orchestrator/orchestrator_topology_worker.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/orchestrator/orchestrator_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/orchestrator/orchestrator_vault.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/orchestrator/protocols.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/parsers/nav.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/parsers/pred.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/parsers/safe_parsers.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/parsers/tree_sitter/bindings.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/parsers/tree_sitter/node.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/parsers/tree_sitter/nodes.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/parsers/tree_sitter_extractor.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/parsers/tree_sitter_parse.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/parsers/tree_sitter_parser.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/parsers/tree_sitter_query.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/parsers/tree_sitter_tokenizer.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/policy/architecture_policy_part1.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/policy/architecture_policy_part2.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/policy/architecture_policy_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/policy/macro_helpers.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/policy/parse_helpers.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/policy/parser_gen.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/policy/parsers/parse_canonical.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/policy/parsers/parse_cohesion.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/policy/parsers/parse_dry.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/policy/parsers/parse_forbidden.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/policy/parsers/parse_impure_procedures_whitelist.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/policy/parsers/parse_informational.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/policy/parsers/parse_interfaces.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/policy/parsers/parse_layers.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/policy/parsers/parse_meta.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/policy/parsers/parse_ocp.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/policy/parsers/parse_surface_area.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/policy/section_parsers.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/profiles/bitcoin_script_profile.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/profiles/target_profile.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/proof/axiom_lemmas.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/proof/function_source_extractor.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/proof/proof_artifact.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/pure_deps/json_parse.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/safe_parsers.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/session/session_parser_enum_types_1.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/session/session_parser_enum_types_2.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/session/session_parser_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/session/session_parser_validators.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/solver/bare_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/solver/construct_arithmetic.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/solver/construct_base.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/solver/construct_logical.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/solver/encoding_properties.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/solver/encoding_transition.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/solver/equivalence_checker.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/solver/expr/construct_arithmetic.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/solver/expr/construct_base.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/solver/expr/construct_logical.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/solver/expr_serialize.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/solver/interfaces.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/solver/type_serialize.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/solver/wrappers.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/solver/z3_telemetry.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/sorter/sorter_core_algo.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/sorter/sorter_core_index.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/sorter/sorter_core_index_base.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/sorter/sorter_core_index_table.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/spec/spec_generator_helpers.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/spec/spec_generator_main.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/spec/spec_generator_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/symbol_graph/error_bridge.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/symbol_graph/global_symbol_graph_builder_part1.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/symbol_graph/global_symbol_graph_query.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/sync/sync_utils_process.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/sync/sync_utils_resource.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/telemetry/trace_normalizer.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/test_audit/sad_gate.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/test_support/cli_fuzzer_harness.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/test_support/export_injector.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/test_support/pbt_gate.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/test_support/sandbox_guard.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/topology/declaration.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/topology/explain.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/topology/import_graph.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/topology/lock_update.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/topology/manifest.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/topology/plan.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/topology/rewrite.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/topology/staging.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/topology/suggest.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/topology/topology_dependency.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/topology/topology_parser.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/topology/topology_symbol_scanner.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/topology/topology_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/translator/ast_to_lean_bridge.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/translator/nim_ast_to_json_nodes.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/translator/universal_mapper.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/translator/universal_mapper_part1.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/translator/universal_mapper_part2.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/trusted/architecture_invariants.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/trusted/asset_collector.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/trusted/cbor.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/trusted/effect_shim.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/trusted/lean_util.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/trusted/monad.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/trusted/provenance_guard.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/trusted/provider_interface.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/trusted/runtime_context.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/trusted/stdlib_shield.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/type_registry.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/type_system/liquid_inference.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/ast_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/axiom_ir.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/domain_utils.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/function_verification_summary.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/global_symbol_graph_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/heal_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/hubs/judge_hub.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/lean_lsp_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/pipeline_core_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/remediation_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/semantic_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/symbolic_types_exec.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/symbolic_types_expr.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/symbolic_types_lean.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/symbolic_types_parse.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/type_mapping.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/universe_types.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/verification_unit.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/types/workflow_state.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/utils/file_utils.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/utils/ident_utils.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/utils/io_utils_isolation.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/utils/parallel_utils.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/vault/vault_factory.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/vault/vault_manager_spec.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/vault/vault_manager_storage.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/verified_axioms/axiom_catalog_validator.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/verified_axioms/verified_axioms_catalog.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/verified_axioms/verified_axioms_catalog_part1.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/core/verified_axioms/verified_axioms_core.nim",
+      "domain": "core",
+      "priority": "critical"
+    },
+    {
+      "module": "src/gate/architecture_ast_facts.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/cohesion_enforce.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/gate_rules.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/gate_rules_architecture.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/gate_rules_module_classifier.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/gate_rules_normalization.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/gate_types.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/gates.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/git.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/call_graph.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/dry_queries.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/effect_queries.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/facade_queries.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/feature_universe.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/forbidden_patterns.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/interface_auditor.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/io_module_registry.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/nimtry_cache.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/nimtry_cli.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/nimtry_extract.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/nimtry_extract_part1.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/nimtry_extract_part2.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/nimtry_extract_part3.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/nimtry_extract_part3_part1.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/nimtry_extract_part3_part2.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/nimtry_extract_types.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/nimtry_policy_lock.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/nimtry_query.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/nimtry_registry.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/soc_queries.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/solid_queries.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/solid_queries_dip_ocp.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/ssot_queries.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/nimtry/test_hygiene.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/orchestrator_hook.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/orchestrator_hook_part1.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/orchestrator_hook_part2.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/quality_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/rule_patterns.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/agent_preflight.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/architecture_guard.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/axiom_codemod.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/binary_freshness_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/context7_evidence_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/context_size_guard.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/dag_enforcement_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/debt_blocker/private/checks.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/debt_blocker_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/debt_scan_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/dependency_rules_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/doc_completeness_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/drnim_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/gate_self_check.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/gateway_test_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/hotspot_enforcement_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/hotspot_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/import_encapsulation_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/integrity_test.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/intent_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/isolated_check.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/memory_policy_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/nim_check_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/nimtry_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/quality_audit_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/quality_gate_marker.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/quality_gate_runner.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/spec_binding/private/checks.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/spec_binding/private/source_extract.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/spec_binding_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/test_coverage_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/topology_policy_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/validate_architecture.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/validate_runners.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/runners/verification_auditor_gate.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/semantic_alias_mapper.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/gate/semaphore.nim",
+      "domain": "gate",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/abstract_provider.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/abstract_provider_types.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/analyzer/analyzer_shared_cert.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/analyzer/analyzer_shared_json.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/analyzer/stage_01_ast_extract.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/analyzer/stage_02_fingerprint.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/analyzer/stage_03_dependency.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/analyzer/stage_04_gate_check.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/analyzer/stage_05_lean_bridge.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/analyzer/stage_06_proof_synth.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/analyzer/stage_07_certificate.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/analyzer/stage_08_reporter.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/analyzer/stage_adapters.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/analyzer/string_pool.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/batch_uap/private/loop_driver.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/batch_uap/private/request_builder.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/cegar_adapter.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/cegar_bmc_bridge.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/cert_builder.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/cert_fingerprinter.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/cert_writer.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/certificate_applier.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/cli_bridge.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/composition/bmc_registry.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/composition/cegar_registry.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/composition/healing_registry.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/composition/leanstral_registry.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/composition/scan_registry.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/contract_source_extractor.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/discovery_error.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/gate_rule_adapter.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/healing_orchestrator.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/hint_processor.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/hub.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/inductive_proof_emitter.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/layer1_bmc.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/lean_hint_db.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/lean_lsp_compiler.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/lean_lsp_feedback.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/lean_lsp_proof_search.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/lean_lsp_protocol.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/lean_lsp_tactic.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/lean_spec_generator.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/leanstral_repl.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/llm_backend.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/loop_invariant_synthesis.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_core_runner.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_core_runner_part1.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_core_runner_part2.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_core_types.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_lean_spec_inference_part1.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_lean_spec_inference_part2.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_lean_spec_inference_part3.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_negative_scan_part1.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_negative_scan_part2.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_negative_scan_part3.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_stage_cegar_bridge.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_stage_detective.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_stage_judge.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_stage_k_induction.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_stage_legislator.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_stage_scribe.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_stage_swat.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_state_types.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_transition_engine.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/pipeline_types.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/proof/arithmetic_type_directed_pipeline.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/proof_linkage.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/proof_state_builder.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/proof_state_convergence.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/proof_state_projection.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/proof_summarizer.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/proof_synthesis_engine.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/proof_synthesis_engine_part1.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/proof_synthesis_engine_part2.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/proof_universe_commit.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/report_engine.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/reporter.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/smt_hint_validation.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/solver/cached_fixedpoint.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/solver/fixedpoint_engine.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/solver/fixedpoint_types.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/solver/proof_cache.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/solver/provers.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/solver/provider_impl.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/solver/triviality_filter.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/solver/z3_pool.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/spacer_chc_router.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/spacer_integration_gate.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/static_rules.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/thought_dashboard.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/translation_validator.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/unified_trajectory.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/verification/unified_trajectory_types.nim",
+      "domain": "verification",
+      "priority": "high"
+    },
+    {
+      "module": "src/cli/action_interpreter_cli.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/action_output_cli.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/action_plan_cli.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/ax_workflow_cli.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/axiom_engine.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/cli_io.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/cli_io_error.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/cli_io_input.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/cli_surface_generated.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/cli_types.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/commands/observability.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/commands/topology_cli.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/config_loader.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/convergence_sidecar.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/execution_policy.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/payload_bridge.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/report_format.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/report_layout.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/report_render.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/scaffold_cli.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/topology_cli.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/version.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/wf_planning.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/wf_render.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/wf_runners_common.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/wf_semantic.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/wf_state.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/wf_state_parsing.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/cli/wf_state_vacuity.nim",
+      "domain": "cli",
+      "priority": "medium"
+    },
+    {
+      "module": "src/frontend/frontend_interface.nim",
+      "domain": "frontend",
+      "priority": "medium"
+    },
+    {
+      "module": "src/frontend/nim/nim_frontend.nim",
+      "domain": "frontend",
+      "priority": "medium"
+    },
+    {
+      "module": "src/infrastructure/topology_executor.nim",
+      "domain": "infrastructure",
+      "priority": "medium"
+    },
+    {
+      "module": "src/mcp/mcp_params.nim",
+      "domain": "mcp",
+      "priority": "medium"
+    },
+    {
+      "module": "src/mcp/protocol.nim",
+      "domain": "mcp",
+      "priority": "medium"
+    },
+    {
+      "module": "src/mcp/server.nim",
+      "domain": "mcp",
+      "priority": "medium"
+    },
+    {
+      "module": "src/mcp/tools.nim",
+      "domain": "mcp",
+      "priority": "medium"
+    },
+    {
+      "module": "src/personas/legislator_feedback.nim",
+      "domain": "personas",
+      "priority": "medium"
+    },
+    {
+      "module": "src/sieve/ast_inspector.nim",
+      "domain": "sieve",
+      "priority": "medium"
+    },
+    {
+      "module": "src/sieve/sieve_bridge.nim",
+      "domain": "sieve",
+      "priority": "medium"
+    },
+    {
+      "module": "src/sieve/sieve_engine.nim",
+      "domain": "sieve",
+      "priority": "medium"
+    },
+    {
+      "module": "src/sieve/sieve_rules.nim",
+      "domain": "sieve",
+      "priority": "medium"
+    },
+    {
+      "module": "src/sieve/sieve_types.nim",
+      "domain": "sieve",
+      "priority": "medium"
+    },
+    {
+      "module": "src/sieve/subjective_logic.nim",
+      "domain": "sieve",
+      "priority": "medium"
+    },
+    {
+      "module": "src/ui/ax_tui_reporter.nim",
+      "domain": "ui",
+      "priority": "medium"
+    },
+    {
+      "module": "src/ui/ax_tui_reporter_part1.nim",
+      "domain": "ui",
+      "priority": "medium"
+    },
+    {
+      "module": "src/ui/ax_tui_reporter_part2.nim",
+      "domain": "ui",
+      "priority": "medium"
+    },
+    {
+      "module": "src/ui/notion_semantic_mapper.nim",
+      "domain": "ui",
+      "priority": "medium"
+    }
+  ]
+}

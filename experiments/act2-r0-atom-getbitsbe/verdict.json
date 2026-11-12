@@ -1,0 +1,50 @@
+{
+  "verdictAuthority": {
+    "source": "runOutcome",
+    "fields": {
+      "planComplete": true,
+      "executionComplete": true,
+      "verificationComplete": false,
+      "gateVerdict": "FAIL",
+      "dominantState": "pre_sieved",
+      "statusCountsPreSieved": 1,
+      "obligationAttemptedCount": 0,
+      "decisionRationale": "P2 rule 3.4: gateVerdict=FAIL && statusCounts non-zero = pre_sieved only (failed=0, timeout=0, vacuous=0, skipped=0, blocked=0) && statusCounts.pre_sieved=1>=1 && obligationAttemptedCount==0 && fact-gate completeness evidence translationLossFree=false (bindingUniverseComplete=false, opaque-boundary-present, sourceBindingCount=15 vs irBindingCount=13, irDigest df2ff30d5f73102dd89274c1df96ea9a922e935954714e81808e60fc8a60691c) -> BLOCKED"
+    },
+    "verdict": "BLOCKED"
+  },
+  "consistencyEvidence": {
+    "statusCounts": {
+      "verified": 0,
+      "inductive_valid": 0,
+      "failed": 0,
+      "skipped": 0,
+      "timeout": 0,
+      "blocked": 0,
+      "vacuous": 0,
+      "pre_sieved": 1,
+      "reused": 0
+    },
+    "unsatisfiedCount": 0,
+    "pendingCount": 1,
+    "contestedCount": 0,
+    "obligationAttemptedCount": 0,
+    "exitCode": 2,
+    "exitProvenance": "stderr: 'Diagnosis-Gate passed=false (verified 0/1)' + runAccounting.gateVerdict=FAIL + 'verified=0/40' -> CLI verification-failure exit code 2 (same-class R0 exitCode=2)",
+    "stderrSha256": "e955ce2ae78c6a75e1c60da6a636e5aac20718d409d6000a6ebc5b7d0bfd95cd",
+    "consistencyFlags": [
+      "runOutcome.gateVerdict=FAIL == runAccounting.gateVerdict=FAIL == trajectory skRunAccounting.gateVerdict=FAIL (3-source 동일)",
+      "statusCounts.pre_sieved=1 유일 non-zero — 지배상태 pre_sieved",
+      "obligationAttemptedCount=0 (executionStats) — P2 rule 3.4 충족; runAccounting.pendingCount=1, contestedCount=0, unsatisfiedCount=0 일치",
+      "completeness evidence byte-identical to R0: df2ff30d5f….json sha256 c80cce759cfa5fbc8e2a39bd7463bfdfd02615b99211ba2d4842933ec2148990 (R0 기록 'v1 c80cce75… = v3 c80cce75…' 일치), witness byte-identical sha256 fdb0d821…",
+      "z3_telemetry envelope digest set 11/11 identical to R0 v3; R0 기록 digest d067de0283743d9117ac7a7e900452bd6d7a0fab013e734e (sat) 존재",
+      "UAP requests=1 results=0 (stderr Verification-Gate WARN) — obligationAttemptedCount=0와 정합",
+      "cross-validation vacuous (no postconditions) die=6e32d25386399a01a6316512a3cd3979de432aafa2adc2f5d55c650cc2e6e113 — consistency PASS",
+      "canonicalRunDigest=ba1ecb85131e91b1adfe22574d50237ec8c588f1e6ba203d2681fec4c304e504, runOutcomeDigest=05b436143d9f96736d46b84b2ef4ae1331ca98c5e11c9704267a704343462b5e (trajectory skRunAccounting)",
+      "toolchain shims identical to R0 toolchainDigest: .elan/bin/lake e0f4b30b…, .elan/bin/lean e0f4b30b…, .local/bin/z3 4c13bd5b…, /usr/bin/git 2a8c18fb…",
+      "stderr 내 getBitsBE smBMC/pkZ3Bmc psFail + StructuralAST srNoTransformApplied skip — R0 proofSummary 동일 클래스"
+    ],
+    "schemaConflict": null
+  },
+  "nextPrerequisite": "fact-gate 해소: completeness translationLossFree=true (현재 opaque-boundary-present, sourceBindingCount=15 vs irBindingCount=13) 또는 UAP 결과 생산 (requests=1 results=0). getBitsBE는 smBMC/pkZ3Bmc psFail + StructuralAST srNoTransformApplied — structural 변환 미적용; sieve structural_ast(io_boundary) refactor 뒤 재검증 필요."
+}

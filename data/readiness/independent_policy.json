@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "independentPolicyId": "axiom-independent-readiness-v1",
+  "ratifiedAt": "2026-08-19T00:00:00Z",
+  "ratifiedBeforeCollection": true,
+  "supersedes": "repo self-assessment tools/readiness_evaluator.nim + config/readiness_policy.json (NOT reused as independent criteria; repo evaluator used only as mechanical engine where semantics match)",
+  "productContract":
+    "v1: local dev CLI for verifying AI-generated Nim code. Surfaces: ax prove, ax report (ax status = candidate). Outputs: machine-readable verification result (JSON) + provenance-bearing local replay-bound verification artifact. Core promise: same canonical input + same execution contract -> reproducible verification result. Non-goals: CI platform, enterprise orchestration, portable standalone certification, certification/legal/regulatory guarantee.",
+  "stateSemantics": {
+    "FAIL": "refuting evidence exists",
+    "UNPROVEN": "required evidence insufficient (never promoted to PASS)",
+    "PASS": "required evidence present and consistent",
+    "NOT_APPLICABLE": "item in the pre-ratified scope exclusions only"
+  },
+  "blockingPolicy": {
+    "NO_GO": "any CRITICAL invariant in {FAIL, UNPROVEN}",
+    "CONDITIONAL_GO": "all CRITICAL in {PASS} and at least one NON_CRITICAL in {FAIL, UNPROVEN}",
+    "GO": "all invariants in {PASS} (or pre-ratified NOT_APPLICABLE)"
+  },
+  "preRatifiedNotApplicable": [
+    "ax status as a primary product surface (v1 contract: Candidate surface only; not registered in CLI dispatch)",
+    "portable standalone self-contained certificate (v1 non-goal; artifact is local replay-bound only)",
+    "single synthesized canonicalInputHash field (v1 contract uses (sourceHash, irHash) pair as input identity)"
+  ],
+  "invariants": {
+    "R1": { "name": "Canonical Product Execution", "criticality": "CRITICAL",
+      "observationKeys": ["canonicalCommandFixed", "proveExitCode", "proveSignalAbsent", "verificationExecutionDone", "resultWritten", "negativeControlExit", "internalErrorSignal"] },
+    "R2": { "name": "Canonical Input/Output Contract", "criticality": "CRITICAL",
+      "observationKeys": ["inputNormalized", "sourceHashPresent", "irHashPresent", "machineReadableJson", "jsonSchemaVersion", "resultDeterministic", "humanLogOnly"] },
+    "R3": { "name": "Verification Result Integrity", "criticality": "CRITICAL",
+      "observationKeys": ["dualEvidenceGated", "z3OnlyCannotProduceGreen", "vacuousExcluded", "obligationPresent", "z3VsDualDistinguishable", "theaterGuardActive"] },
+    "R4": { "name": "Evidence / Certificate Integrity", "criticality": "CRITICAL",
+      "observationKeys": ["certClaim", "certAttestation", "certInputHash", "certProvenance", "certToolchainIdentity", "certProofDigest", "certSolverInvocation", "certSolverInputDigest", "certSolverResultDigest", "provenanceResolvable", "noEmptyFieldPromotion"] },
+    "R5": { "name": "Determinism / Reproducibility (Observed Determinism)", "criticality": "CRITICAL",
+      "observationKeys": ["observedTwoRunIdentical", "certificateShaIdentical", "canonicalProjectionIdentical", "inputFingerprintStable", "configHashStable", "solverIdentityStable", "cachePolicyDeterministic", "telemetryExcluded", "noCacheContamination"] },
+    "R6": { "name": "Runtime State Boundary", "criticality": "CRITICAL",
+      "observationKeys": ["treeCleanAfterRun", "noTrackedMutation", "cacheEphemeral", "tmpEphemeral", "journalEphemeral", "gitignoredBoundary"] },
+    "R7": { "name": "CLI Product Contract", "criticality": "CRITICAL",
+      "observationKeys": ["commandExists", "helpSurface", "helpMatchesBehavior", "successExit0", "verificationFailExit1", "invalidInputExitDefined", "internalErrorExitDefined", "jsonSchemaVersion", "stdoutStderrSplit"] },
+    "R8": { "name": "Productization Blocking Surface", "criticality": "CRITICAL",
+      "observationKeys": ["r8a_execute", "r8a_verify", "r8a_canonicalize", "r8a_attest", "r8a_persist", "r8a_reproduce", "r8bRedesignDomain", "r8bRedesignExecution", "r8bRedesignEvidence", "r8bRedesignPersistence", "r8bRedesignCli"] }
+  }
+}

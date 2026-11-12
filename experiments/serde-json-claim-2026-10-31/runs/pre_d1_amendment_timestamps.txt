@@ -1,0 +1,11 @@
+2026-10-31T20:28:55+09:00
+2026-10-31 20:28:47.810412064 +0900 experiments/serde-json-claim-2026-10-31/FREEZE.md
+2026-10-31 20:01:29.758145678 +0900 experiments/serde-json-claim-2026-10-31/axiom.specs.json
+2026-10-31 20:01:29.758145678 +0900 experiments/serde-json-claim-2026-10-31/inputs/verification_scope.rust_targets.json
+order-proof: FREEZE.md §9 (Amendment 1) written BEFORE axiom.specs.json/rust_targets.json edits and BEFORE runs/d1/ creation; d1 not yet executed at 2026-10-31T20:28:55+09:00
+--- appended after step-B edits, captured 2026-10-31T20:29:33+09:00 ---
+2026-10-31 20:28:47.810412064 +0900 experiments/serde-json-claim-2026-10-31/FREEZE.md
+2026-10-31 20:29:08.479549859 +0900 experiments/serde-json-claim-2026-10-31/axiom.specs.json
+2026-10-31 20:29:14.558590152 +0900 experiments/serde-json-claim-2026-10-31/inputs/verification_scope.rust_targets.json
+2026-10-31 20:29:33.920717804 +0900 experiments/serde-json-claim-2026-10-31/runs/pre_d1_amendment_timestamps.txt
+order-proof: FREEZE.md §9 mtime 20:28:47 < axiom.specs.json 20:29:08 < rust_targets.json 20:29:14 < runs/d1 first command; d1 not yet executed at 2026-10-31T20:29:33+09:00

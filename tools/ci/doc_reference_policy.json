@@ -1,0 +1,86 @@
+{
+  "docs/audit/productization_readiness_2026-08-17.md": {
+    "policy": "HISTORICAL_ALLOWED",
+    "comment": "Superseded historical audit result; authoritative decision is tracked CONDITIONAL-GO_2026-08-17.md. Absence in fresh clone is expected (INVARIANT-DRP-3)."
+  },
+  "docs/audit/report_counts.json": {
+    "policy": "GENERATED_ALLOWED",
+    "reproducerTarget": "make audit-dir-doc",
+    "comment": "Deterministically regenerated debt report produced by tools/debt_engine.nim via make audit-dir-doc. Absence allowed only because the canonical reproducer target exists and is confirmed by the validator (INVARIANT-DRP-4/4a)."
+  },
+  "docs/spec/self_hosted_ci_migration.md": {
+    "policy": "HISTORICAL_ALLOWED",
+    "comment": "Deleted in the CI=0 cutover (2026-09-20, evidence: data/reports/ci0-cutover-20260920/). AGENTS.md (kept unchanged per architect decision) still cites it as the historical self-hosted CI migration rationale; absence is expected and the reference documents deleted history, not a live dependency (INVARIANT-DRP-3)."
+  },
+  "docs/spec/incremental_ci_contract.md": {
+    "policy": "HISTORICAL_ALLOWED",
+    "comment": "Deleted in the CI=0 cutover (2026-09-20). Surviving references from live spec docs and ADR-0017/0018/0019 are historical anchors (ADR-0017 is the preserved P2 contract reference copy); absence is expected and not a live dependency (INVARIANT-DRP-3)."
+  },
+  "src/gate/runners/publication_scope_gate.nim": {
+    "policy": "HISTORICAL_ALLOWED",
+    "comment": "Retired and deleted in the CI=0 cutover (2026-09-20) — the gate validated deleted .github/workflows job-level guards. References from publication_scope_parser_quirks.md (quirk SSOT) and certification_continuity_contract.md document the historical machine enforcement, not a live dependency (INVARIANT-DRP-3)."
+  },
+  "tools/ci/verification_crosscheck.nim": {
+    "policy": "HISTORICAL_ALLOWED",
+    "comment": "Deleted in the CI=0 cutover (2026-09-20) — workflow-only verification crosscheck tool with zero local consumers. verification_oracle_contract.md cites it as historical design context; absence is expected (INVARIANT-DRP-3)."
+  },
+  "tools/ci/ci_health_checker.nim": {
+    "policy": "HISTORICAL_ALLOWED",
+    "comment": "Deleted in the CI=0 cutover (2026-09-20) — GitHub Actions pipeline health poller with no CI to poll. References from environment_inputs.md and nim_json_getordefault_quirk.md document historical environment inputs; absence is expected (INVARIANT-DRP-3)."
+  },
+  "docs/ci/scale_set_authority_decision_2026-09-20.md": {
+    "policy": "HISTORICAL_ALLOWED",
+    "comment": "Deleted in the CI=0 cutover (2026-09-20) with the rest of docs/ci/ (runner-infra decision records). Referenced by ADR-0023 and productization_entry_contract_v1.md as point-in-time decisions; absence is expected (INVARIANT-DRP-3)."
+  },
+  "docs/ci/optimization-2026-09-08.md": {
+    "policy": "HISTORICAL_ALLOWED",
+    "comment": "Deleted in the CI=0 cutover (2026-09-20) with the rest of docs/ci/. Referenced by preserved ADR-0023; absence is expected (INVARIANT-DRP-3)."
+  },
+  "docs/ci/demand_driven_capacity_d0_decision_2026-09-08.md": {
+    "policy": "HISTORICAL_ALLOWED",
+    "comment": "Deleted in the CI=0 cutover (2026-09-20) with the rest of docs/ci/. Referenced by preserved ADR-0023; absence is expected (INVARIANT-DRP-3)."
+  },
+  "docs/spec/ci_admission_contract.md": {
+    "policy": "HISTORICAL_ALLOWED",
+    "comment": "Deleted in the CI=0 cutover (2026-09-20) — CI admission surface no longer exists. Referenced by preserved ADR-0021 as the historical authority contract; absence is expected (INVARIANT-DRP-3)."
+  },
+  "src/generated/build_env.nim": {
+    "policy": "GENERATED_ALLOWED",
+    "reproducerTarget": "make check-decision-binding",
+    "comment": "Hermetic-build frozen constants produced by bin/hermetic_build at first compile (config.nims -> copyFile from .default, or hermetic_build materialize). Deliberately UNTRACKED + gitignored per docs/spec/nim_effect_system_quirks.md blanket-purity design. Absent only pre-build; reproducer generates it (INVARIANT-DRP-4/4a)."
+  },
+  "src/infrastructure/sync_signing.nim": {
+    "policy": "HISTORICAL_ALLOWED",
+    "comment": "Deleted 2026-09-29 (P12 delegation, ADR-0025 Amendment B) — HMAC commit-metadata signing (gateway Phase 4b) removed as a GitHub-native signing duplicate. References from github_delegation_residuals.md (deletion record) and rule_proposal_protocol.md §5.2 (descriptive only — tools/rule_proposal.nim implements its own self-contained HMAC for approval signatures) document history/design, not a live dependency (INVARIANT-DRP-3)."
+  },
+  "tools/setup_branch_protection.nim": {
+    "policy": "HISTORICAL_ALLOWED",
+    "comment": "Decommissioned and deleted 2026-10-12 (M7 delegated-execution slice) — legacy branch-protection payload targeted the pre-ruleset required check (all-gates-passed) and measured zero callers, zero build wiring, zero debt-registry references at deletion. docs/spec/merge_authority_integrity.md §10 cites it as the decommission record, not a live dependency (INVARIANT-DRP-3)."
+  },
+  "docs/versioning.md": {
+    "policy": "EXTERNAL_ALLOWED",
+    "comment": "Denotes the CHARON upstream repository doc (the Charon pin consumer contract), never an Axiom repo file — referenced from docs/spec/llbc_quirks.md Q9 (charon 0.1.281 measured 2026-10-12). Unclassified default MUST_EXIST mis-classified the upstream path as a repo-relative target."
+  }
+,
+  "src/rest/data/fpt-2026-03-10/repos.json": {
+    "policy": "EXTERNAL_ALLOWED",
+    "comment": "Denotes the github/docs upstream repository source snapshot (REST rules schema supplying WorkflowFileReference), never an Axiom repo file — referenced from docs/spec/gh_automerge_merge_queue_quirks.md Q9 (fetched 2026-11-02 via Context7 /github/docs). Unclassified default MUST_EXIST mis-classified the upstream path as a repo-relative target."
+  },
+  "src/graphql/data/fpt/schema-actions.json": {
+    "policy": "EXTERNAL_ALLOWED",
+    "comment": "Denotes the github/docs upstream repository GraphQL schema source (WorkflowFileReferenceInput), never an Axiom repo file — referenced from docs/spec/gh_automerge_merge_queue_quirks.md Q9 (fetched 2026-11-02 via Context7 /github/docs). Unclassified default MUST_EXIST mis-classified the upstream path as a repo-relative target."
+  }
+,
+  "docs/evidence/resid22_org_repin_closure_2026-11-02.md": {
+    "policy": "HISTORICAL_ALLOWED",
+    "comment": "Deleted in the publication clean-origin history rewrite (2026-11-08; main 2c48285d→df378f60, rewrite window audited in PR #25 docs/evidence/sal10_publication/E7_laneb_history_rewrite_execution.md). ADR-0040 cites it as the point-in-time repin closure evidence; the reference documents deleted history, not a live dependency (INVARIANT-DRP-3)."
+  },
+  "docs/evidence/ci_cost_b2_selection_b4_prereg_2026-11-02.md": {
+    "policy": "HISTORICAL_ALLOWED",
+    "comment": "Deleted in the publication clean-origin history rewrite (2026-11-08; PR #25 E7 audit). docs/spec/workflow_run_name_filter_quirks.md cites it as the B4 selection prereg evidence; historical anchor, not a live dependency (INVARIANT-DRP-3)."
+  },
+  "docs/evidence/ci_provider_failover_2026-10-23.md": {
+    "policy": "HISTORICAL_ALLOWED",
+    "comment": "Deleted in the publication clean-origin history rewrite (2026-11-08; PR #25 E7 audit). docs/spec/ci_provider_failover_quirks.md cites it as the failover observation evidence; historical anchor, not a live dependency (INVARIANT-DRP-3)."
+  }
+}

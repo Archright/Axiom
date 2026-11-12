@@ -1,0 +1,60 @@
+{
+  "specId": "SPEC-B36-COUT",
+  "specOrigin": "soExplicit",
+  "ruleId": "external:stew/base36/out-sizing-cout",
+  "ruleVersion": "1.0.0",
+  "contract": "docs/spec/nim_stew_base36_cout_contract.md",
+  "claimOwnership": {
+    "owner": "axiom-defined-rule",
+    "contract": "docs/spec/nim_stew_base36_cout_contract.md",
+    "adoptionRef": "docs/evidence/nim_stew_base36_cout_slice_2026-10-10.md"
+  },
+  "description": "Out-of-tree explicit spec (Axiom-owned) for the output-sizing bound C_out over stew/base36.nim decodedLength vs decode outlen. The subject tree (nim-stew @ 1853f20bdfeda61331a0b7e02f7aace0e88a0dfe clone) is READ-ONLY; this file is the only legitimate place the claim may live. Loaded via explicitSpecFromOverlay, which pins origin to soExplicit and fails closed otherwise. The obligation is rendered OPEN over L with a literal domain pin (3 <= L and L <= 3) so the SAT model binds L=3 and the exact-input gate can fire; a closed arithmetic proposition would starve the model-binding and P4 pre-revalidation.",
+  "subject": {
+    "repository": "nim-stew (status-im/nim-stew @ 1853f20bdfeda61331a0b7e02f7aace0e88a0dfe, unmodified READ-ONLY clone)",
+    "commit": "1853f20bdfeda61331a0b7e02f7aace0e88a0dfe",
+    "module": "stew/base36.nim",
+    "symbols": ["decodedLength", "decode"],
+    "sourceLines": "57-60, 123-210",
+    "blobSha256": "b8a42a6ac6d1057fca0be079aac5750463729fdad771823f1be53b8723a5e0a8"
+  },
+  "canonicalSpecIR": [
+    "3 <= L",
+    "L <= 3",
+    "decodedLength(L) >= 2"
+  ],
+  "claimConstant": {
+    "K": 2,
+    "meaning": "decoded output length of s='kzz' observed by an external read-only probe (decode Success, outlen=2)",
+    "provenance": "EXTERNAL_OBSERVATION — pinned as a claim constant by the contract's K-pin condition; NOT a pipeline-produced fact (see contract §3)"
+  },
+  "canonicalDecisionVector": {
+    "input": "kzz",
+    "L": 3,
+    "bufferNeed": 6,
+    "observedStatus": "Success",
+    "observedOutlen": 2,
+    "observedBytes": "05 0F",
+    "decodedLengthAtL": 1,
+    "violationFormula": "((3*179) div 277) >= 2",
+    "violationValue": false
+  },
+  "theorem": {
+    "statement": "forall L : Int, 3 <= L and L <= 3 -> decodedLength(L) >= 2 (instance obligation, open over L; the universal C_out is refuted by the five-link evidence chain in the contract §2)",
+    "character": "single-instance refutation obligation of the universal Axiom-owned contract C_out; the instance is a counterexample witness, not the claim itself"
+  },
+  "semanticCaveats": [
+    "Nim int is pointer-width signed; K=2 and L=3 are width-independent, but decodedLength(L) = (L*179) div 277 can OverflowDefect for L > high(int) div 179 — out of domain.",
+    "Nim div truncates toward zero; for positive operands truncation coincides with floor. 3*179 = 537 = 277*1 + 260, so decodedLength(3) = 1 unambiguously.",
+    "rvAgree means propertyHolds == false on the observed carrier result; it does NOT validate the K observation (decode semantics) — see contract §3 non-claim."
+  ],
+  "nonClaims": [
+    "NOT a memory-safety claim (decode fail-closes pre-write)",
+    "NOT a claim that upstream promised an upper bound (docstring says 'estimated')",
+    "NOT about encodedLength",
+    "NOT valid for invalid/empty inputs",
+    "NOT a claim that the pipeline verified decode's semantics (K is an external observation)",
+    "NOT a claim that all inputs at every length violate (exists-type sweep only)",
+    "NOT a claim that nim-stew was modified or annotated in-tree (Zero-Footprint)"
+  ]
+}

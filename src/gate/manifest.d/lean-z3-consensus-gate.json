@@ -1,0 +1,15 @@
+{
+  "id": "lean-z3-consensus-gate",
+  "name": "Lean-Z3 consensus gate (dual-kernel proof verification)",
+  "layer": "functional",
+  "entry": "src/gate/runners/lean_z3_consensus_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "proofs/",
+  "passFilenames": false,
+  "weight": "medium",
+  "category": "theorem",
+  "severity": "error",
+  "execution_mode": "interpreted"
+}

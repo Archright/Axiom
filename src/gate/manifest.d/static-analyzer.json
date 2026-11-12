@@ -1,0 +1,14 @@
+{
+  "id": "static-analyzer",
+  "name": "Consolidated static analyzer (Track B)",
+  "layer": "functional",
+  "entry": "tools/static_analyzer",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/",
+  "passFilenames": false,
+  "weight": "medium",
+  "category": "policy",
+  "severity": "error"
+}

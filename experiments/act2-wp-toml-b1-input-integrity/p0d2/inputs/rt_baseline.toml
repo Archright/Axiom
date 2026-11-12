@@ -1,0 +1,3 @@
+# P0-D2-RT case 1: BASELINE - plain ASCII string, no hex escape
+value = "hello world"
+ctrl = "plain"

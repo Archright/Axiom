@@ -1,0 +1,9 @@
+{
+  "renames": [
+    {"old": "src/gate/gate_list.nim", "new": "src/gate/manifest.d/_index.json"},
+    {"old": "src/gate/gate_diagnostic.nim", "new": "src/gate/gate_types_impl.nim"},
+    {"old": "bin/nimtry", "new": "src/gate/nimtry/nimtry_cli.nim"},
+    {"old": "python3 tools/ci/debt_scan.py", "new": "nim c tools/ci/debt_scan.nim"},
+    {"old": "tools/verify_symbol.sh", "new": "tools/verify_symbol.nim"}
+  ]
+}

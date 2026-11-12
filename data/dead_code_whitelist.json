@@ -1,0 +1,8 @@
+{
+  "version": "1.0.0",
+  "note": "Whitelist for symbols that appear dead but are used via macro/dynamic dispatch/config. Entries with expiry are auto-validated monthly.",
+  "entries": [
+    {"symbol": "shouldSkipGate", "reason": "deprecated proc, callers in tests only", "expiry": "2026-07-31"},
+    {"symbol": "shouldSkipGateLegacy", "reason": "deprecated proc, forwarding stub", "expiry": "2026-07-31"}
+  ]
+}

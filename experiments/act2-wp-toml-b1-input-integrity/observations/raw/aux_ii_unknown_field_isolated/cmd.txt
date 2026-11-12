@@ -1,0 +1,1 @@
+/tmp/toml_b1_repro/bin/harness record ./experiments/act2-wp-toml-b1-input-integrity/inputs/aux_ii_unknown_field_isolated.toml

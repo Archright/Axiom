@@ -1,0 +1,92 @@
+{
+  "repo": "Archright/Axiom",
+  "workflow": "closure-watcher.yml",
+  "cron": "17 */6 * * *",
+  "window": {
+    "start": "2026-10-09T21:20:31Z",
+    "end": "2026-10-11T12:54:58Z"
+  },
+  "registered_after": "2026-10-09T21:20:30Z",
+  "on_time_minutes": 60,
+  "missed_cutoff_hours": 6,
+  "summary": {
+    "expected_slots": 7,
+    "observed_slots": 5,
+    "on_time": 2,
+    "late": 3,
+    "missed": 2,
+    "pending": 0,
+    "cancelled": 0,
+    "hollow": 0,
+    "runs_cancelled": 0,
+    "skipped_jobs_in_green_runs": 0,
+    "unattributed_runs": 0
+  },
+  "slots": [
+    {
+      "slot": "2026-10-10T00:17:00Z",
+      "state": "late",
+      "run_id": 38028948066,
+      "started_at": "2026-10-10T05:51:50Z",
+      "delay_minutes": 334.8,
+      "conclusion": "success",
+      "extra_runs": [],
+      "jobs_total": 1,
+      "jobs_skipped": 0
+    },
+    {
+      "slot": "2026-10-10T06:17:00Z",
+      "state": "missed"
+    },
+    {
+      "slot": "2026-10-10T12:17:00Z",
+      "state": "on_time",
+      "run_id": 38052214094,
+      "started_at": "2026-10-10T12:30:34Z",
+      "delay_minutes": 13.6,
+      "conclusion": "failure",
+      "extra_runs": [],
+      "jobs_total": 1,
+      "jobs_skipped": 0
+    },
+    {
+      "slot": "2026-10-10T18:17:00Z",
+      "state": "late",
+      "run_id": 38088676610,
+      "started_at": "2026-10-10T21:42:55Z",
+      "delay_minutes": 205.9,
+      "conclusion": "success",
+      "extra_runs": [],
+      "jobs_total": 1,
+      "jobs_skipped": 0
+    },
+    {
+      "slot": "2026-10-11T00:17:00Z",
+      "state": "late",
+      "run_id": 38115808935,
+      "started_at": "2026-10-11T05:45:18Z",
+      "delay_minutes": 328.3,
+      "conclusion": "success",
+      "extra_runs": [],
+      "jobs_total": 1,
+      "jobs_skipped": 0
+    },
+    {
+      "slot": "2026-10-11T06:17:00Z",
+      "state": "missed"
+    },
+    {
+      "slot": "2026-10-11T12:17:00Z",
+      "state": "on_time",
+      "run_id": 38140682632,
+      "started_at": "2026-10-11T12:48:35Z",
+      "delay_minutes": 31.6,
+      "conclusion": "failure",
+      "extra_runs": [],
+      "jobs_total": 3,
+      "jobs_skipped": 0
+    }
+  ],
+  "unattributed_runs": [],
+  "confidence_note": "rule of three: 0-miss claim at 95% confidence requires N >= 60 slots (15 days at 4 slots/day); below that this ledger is a window-in-progress, not a proof"
+}

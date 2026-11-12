@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "commitSha": "63ff22586c29d1496f4ba005badb48f0533bd145",
+  "branch": "",
+  "checkedAt": "2026-08-02T01:57:07Z",
+  "overallStatus": "success",
+  "jobs": [
+    {
+      "name": "verify-static",
+      "status": "success",
+      "conclusion": "success",
+      "durationSec": 49,
+      "detailsUrl": "",
+      "jobNumber": 2843
+    },
+    {
+      "name": "test-unit-release",
+      "status": "success",
+      "conclusion": "success",
+      "durationSec": 15,
+      "detailsUrl": "",
+      "jobNumber": 2846
+    },
+    {
+      "name": "test-unit-perf",
+      "status": "success",
+      "conclusion": "success",
+      "durationSec": 18,
+      "detailsUrl": "",
+      "jobNumber": 2844
+    },
+    {
+      "name": "test-unit-pbt",
+      "status": "success",
+      "conclusion": "success",
+      "durationSec": 44,
+      "detailsUrl": "",
+      "jobNumber": 2845
+    },
+    {
+      "name": "test-unit-debug",
+      "status": "success",
+      "conclusion": "success",
+      "durationSec": 31,
+      "detailsUrl": "",
+      "jobNumber": 2847
+    },
+    {
+      "name": "verify-integration",
+      "status": "success",
+      "conclusion": "success",
+      "durationSec": 35,
+      "detailsUrl": "",
+      "jobNumber": 2848
+    },
+    {
+      "name": "verify-coverage-guard",
+      "status": "success",
+      "conclusion": "success",
+      "durationSec": 28,
+      "detailsUrl": "",
+      "jobNumber": 2849
+    },
+    {
+      "name": "generate-docs",
+      "status": "success",
+      "conclusion": "success",
+      "durationSec": 22,
+      "detailsUrl": "",
+      "jobNumber": 2850
+    },
+    {
+      "name": "setup",
+      "status": "success",
+      "conclusion": "success",
+      "durationSec": 11,
+      "detailsUrl": "",
+      "jobNumber": 2834
+    }
+  ],
+  "failureReason": "",
+  "consecutiveFailures": 0
+}

@@ -1,0 +1,14 @@
+{
+  "id": "binary-artifact-gate",
+  "name": "Axiom binary artifact gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/binary_artifact_gate.nim",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "",
+  "passFilenames": true,
+  "weight": "medium",
+  "category": "rule",
+  "severity": "error"
+}

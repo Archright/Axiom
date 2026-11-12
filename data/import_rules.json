@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "description": "AST-based import boundary rules for axiomLayerGuard macro. Complements forbidden_imports.json with per-layer forbid/allow lists.",
+  "rules": {
+    "src/core/": {
+      "forbidden": ["infrastructure/", "gate/", "cli/", "verification/", "ui/", "frontend/"],
+      "allowed_exceptions": ["core/interfaces/", "core/boundary/"],
+      "severity": "error"
+    },
+    "src/infrastructure/": {
+      "forbidden": ["gate/", "cli/", "verification/"],
+      "allowed_exceptions": [],
+      "severity": "error"
+    },
+    "src/verification/": {
+      "forbidden": ["cli/", "ui/", "frontend/"],
+      "allowed_exceptions": [],
+      "severity": "error"
+    },
+    "src/cli/": {
+      "forbidden": ["ui/", "frontend/"],
+      "allowed_exceptions": [],
+      "severity": "error"
+    }
+  }
+}

@@ -1,0 +1,195 @@
+{
+  "dimension": "license-scan-sharding J1 iteration 2 (staged single-root shard topology — post-restructure verification)",
+  "epoch": "ci-frozen-2026-11-10-pi-shard",
+  "measuredAtUtc": "2026-11-10T10:34:04Z",
+  "branch": "workstream/pi-license-shard",
+  "scanHead": "78d3ed5cf5e8af260b197b27538a9cd30c60c322",
+  "pushNote": "the scan tree is scanHead (clean tree, git status empty). This evidence commit adds ONLY the 6 *_iteration2 evidence files in this directory plus one attribution line (see attributionLoop). The multi-MB scan reports (full.json/merged.json/shard0.json/shard1.json) are NOT committed — sha256 recorded in scanReports. Scan-tree↔push-tree delta = these evidence files + the one-line attribution atom; the attribution addition is a detection-neutral fixed point and the evidence files' own detectable atoms follow the iteration-1 precedent (accounted by the NEXT accounting cycle; the workflow triggers on pull_request/merge_group/schedule, not branch push).",
+  "environment": {
+    "scanner": "scancode-toolkit==32.5.0 + pluggy==1.5.0 (/tmp/j1-venv)",
+    "host": "Linux 6.17.0-42-generic, 16 cores (both shard legs ran in parallel locally, 4 processes each, cores shared; CI matrix legs run on separate runners)",
+    "tree": "git archive HEAD | tar -x -C /tmp/j2f-export (tracked files only, no .git); git 2.43.0 + git-lfs/3.4.1 smudges the sole LFS object on archive — see timing.lfsStagingNote"
+  },
+  "verdicts": {
+    "overall": "PASS",
+    "verdict_full": "PASS",
+    "eval_full_exit": 0,
+    "verdict_merged": "PASS",
+    "eval_merged_exit": 0,
+    "verdict_note": "both legs PASS with byte-identical evaluator reports (sha256 equal) — the restructured topology preserves the adjudication surface exactly (files=7226 entries, licenseDetections=58 files, copyrightDetections=43 files)",
+    "parity_exit": 0,
+    "parity_symbols": 6574,
+    "parity_note": "baseline (full.json projection, 6574 keys) and candidate (merged.json projection, 6574 keys) are byte-identical (sha256 equal); tcb_judgments parity PASS",
+    "selftest_exit": 0,
+    "selftest_note": "tcb_judgments selftest 12/12 fixtures passed — every judgment FAIL path is alive",
+    "completeness_pass": true,
+    "completeness_merged": { "missing_from_merged": 0, "unexpected_in_merged": 0, "duplicate_file_paths": 0 },
+    "completeness_full": { "missing_from_full": 0, "unexpected_in_full": 0, "duplicate_file_paths": 0 },
+    "provenance": { "verdict": "PASS", "exit": 0, "detail": "publication_provenance_validator (workflow-identical invocation: default policy/origin paths + --out): 6582/6582 tracked files covered, 0 violations" }
+  },
+  "attributionLoop": {
+    "initialVerdict": "FAIL (both legs, exit 1): gpl-2.0-or-later on compliance/provenance/license-attribution.yml — 'neither declared (source-origin.yml) nor attributed (license-attribution.yml)'",
+    "cause": "self-referential atom: commit 78d3ed5cf5 added the parity_baseline.json attribution entry whose cover expression '(MIT OR GPL-2.0-or-later)' placed the atom text INSIDE the attribution file itself; the final-run scan (tree 78d3ed5cf5) therefore detects it in that file, which had no cover for it",
+    "fix": "added exactly '- \"GPL-2.0-or-later\"' to the existing self-referential entry for compliance/provenance/license-attribution.yml (classification documentary-mention — an atom of a DENIED family forces documentary-mention per the file's REVIEW RULE). No other entry touched; no scan re-run — the evaluator consumes the fixed scan JSON, so only the adjudication input changed (protocol's exact-atom loop)",
+    "result": "both evaluator legs re-run: PASS exit 0",
+    "fixedPoint": "the added string is the accounted atom itself — it introduces no new (file, atom) pair; a future scan of the push tree detects the same atom in the same file, now accounted (detection-neutral accounting)",
+    "intermediateRunDifference": "the intermediate run (tree 8a6b8b9388) passed without this atom because the parity cover string existed only in the then-uncommitted working-tree attribution file (adjudication input), not in the scanned tree; committing it in 78d3ed5cf5 surfaced the atom in the final scan"
+  },
+  "timing": {
+    "full_wall_seconds": 513.63,
+    "full_wall_human": "8m33.63s (/usr/bin/time -v wall; scancode total 511.11s, scan 506.46s, errors 0)",
+    "shard0_wall_seconds": 289.37,
+    "shard0_detail": "289.37s wall (scancode total 286.77s, scan 282.71s, errors 0); 3250 files + 535 dirs; exit 0",
+    "shard1_wall_seconds": 315.22,
+    "shard1_detail": "315.22s wall (scancode total 312.69s, scan 308.61s, errors 0); 3324 files + 534 dirs; exit 0",
+    "parallel_wall_seconds": 315.22,
+    "parallel_wall_note": "legs ran concurrently (4 processes each, 16 shared cores): staged-scan wall = max leg = 315.22s vs full 513.63s -> 1.63x local wall ratio. CI legs run on separate runners; the CI-level wall improvement is epoch_record §4.4 production acceptance's measurement, not this local number.",
+    "staging_bytes_shard0": 42822954,
+    "staging_bytes_shard1": 42822953,
+    "staging_balance_note": "deterministic size-greedy split on git ls-tree -r -l blob sizes (sizes desc, path tiebreak, lighter-shard assignment): shard delta = 1 byte",
+    "lfsStagingNote": "the sole Git LFS file docs/spec/SVF-SVC_Software_Verification_Using_SVF.pdf (git blob = 133-byte pointer; smudged content = 10,076,526 bytes) lands in shard1. git archive on this host (git 2.43.0 + git-lfs 3.4.1) applies the LFS smudge (measured: git archive of that path emits 10,076,526 bytes), so the local stage1 on-disk size is 42,822,953 - 133 + 10,076,526 = 52,899,346 bytes (du -sb and st_size sum agree exactly). Verdict-neutral: that file yields zero license/copyright detections in the scan and its path is emitted either way. CI checkout (actions/checkout without lfs: true) stages the 133-byte pointer, so CI staging bytes equal the partition sums exactly; the split itself is computed from ls-tree blob sizes and is identical in both environments."
+  },
+  "fileCounts": {
+    "tracked": 6582,
+    "expected_vcs_filtered": 6574,
+    "vcs_default_ignored_tracked_files": 8,
+    "full_files": 6574,
+    "full_dirs": 652,
+    "full_entries": 7226,
+    "shard0_files": 3250,
+    "shard0_dirs": 535,
+    "shard1_files": 3324,
+    "shard1_dirs": 534,
+    "merged_files": 6574,
+    "merged_dirs": 652,
+    "merged_entries": 7226,
+    "merged_pre_dedup_entries": 7643,
+    "merged_pre_dedup_dir_emissions": 1069,
+    "merged_duplicate_dir_emissions_removed": 417,
+    "merged_duplicate_file_paths": 0
+  },
+  "evaluatorReport": {
+    "filesScanned": 7226,
+    "filesWithLicenseDetection": 58,
+    "filesWithCopyrightDetection": 43,
+    "noiseDetections": 74,
+    "attributionEntries": 63,
+    "attributionUsedLicenses": 152,
+    "attributionUnusedLicenses": 1,
+    "attributionUnusedCopyrights": 4,
+    "unusedNote": "stale-entry cleanup signal, not a failure (license-attribution.yml header contract)"
+  },
+  "scanReports": {
+    "full.json": { "sha256": "4bff7470a0150dee2bac8784ef6465ab0ad66c2b5bd23fa1afc49585ddd4df6a", "bytes": 3810866 },
+    "merged.json": { "sha256": "f8ca7203329251a48f53e583571b734374843775f0649fec90bd9b7da3cde80d", "bytes": 3802436, "determinism": "re-run of the workflow jq over shard0.json+shard1.json produced sha256-identical output" },
+    "shard0.json": { "sha256": "2a4537dab185e0491836720b8bd807e6f98c2a9271b9157bae97ec39c192fd13", "bytes": 1653924 },
+    "shard1.json": { "sha256": "f15a46b56944270d15dbcf6a0d064c85481ace0f92395a8a3e798f99feab522b", "bytes": 2323215 },
+    "report_license_full_iteration2.json": { "sha256": "f3c88fa28dfa5b2d15486fa4826351a24d6ce6bfe9ec3fd78b8258939d5a65b5", "bytes": 771 },
+    "report_license_merged_iteration2.json": { "sha256": "f3c88fa28dfa5b2d15486fa4826351a24d6ce6bfe9ec3fd78b8258939d5a65b5", "bytes": 771, "note": "byte-identical to the full report (identical verdict surface)" },
+    "parity_baseline_iteration2.json": { "sha256": "5fe394d857e6597d3b036160997349b6ae992e5d6bc4e95afbdffc0c0182a2ff", "bytes": 776871 },
+    "parity_candidate_iteration2.json": { "sha256": "5fe394d857e6597d3b036160997349b6ae992e5d6bc4e95afbdffc0c0182a2ff", "bytes": 776871, "note": "byte-identical to the baseline projection" },
+    "report_provenance.json": { "sha256": "7459b1f41250518dcffbfdacffb627bf9bd655b73a00b4d18287f0ebc1f976b2" },
+    "note": "full/merged/shard0/shard1 scan reports (multi-MB) are not committed; sha256 recorded above. Evaluator outputs and projection maps are committed next to this summary."
+  },
+  "rootCauseResolution": [
+    {
+      "id": 1,
+      "iteration1Title": "shard file-list scan drops ~99.9% of input files (workflow shard topology cannot pass)",
+      "resolution": "RESOLVED by 8a6b8b9388 — shard legs scan a STAGED SINGLE ROOT (tar -C export -T shardN.txt | tar -x into <stage>/j2-export, scan argument = 'j2-export'): every shard input path is emitted as '<arg>/<rel>'. Per-leg self-check (input list == emitted file-path set, prefix-stripped, comm -3 == 0) measured 0-diff on both legs (3250 / 3324 files)."
+    },
+    {
+      "id": 2,
+      "iteration1Title": "ScanCode default-ignores .gitignore/.gitattributes (8 tracked files invisible in ANY topology)",
+      "resolution": "RESOLVED by 8a6b8b9388 — the workflow's expected-set derivation applies the scanner's ignores_VCS name list (lowercased path-name match, faithful to commoncode/ignore.py) to git ls-tree HEAD: E = 6574 = 6582 - 8. Both the full and merged path sets equal E exactly (comm 0, duplicates 0)."
+    },
+    {
+      "id": 3,
+      "iteration1Title": "epoch_record GPL-3.0-only detection (denied-family atom unaccounted on this branch)",
+      "resolution": "RESOLVED — 8a6b8b9388 (epoch_record attribution entry, documentary-mention) and 78d3ed5cf5 (iteration-1 evidence-file atoms: spec MIT; summary.json MIT+GPL-3.0-only; report_license_full.json GPL-3.0-only; parity_baseline.json 12 license atoms + 21 copyright holders). This iteration's own new atom (attributionLoop) is accounted in this evidence commit."
+    }
+  ],
+  "intermediateRun": {
+    "tree": "8a6b8b9388 (post-restructure, pre-evidence-commit)",
+    "measuredAt": "2026-11-10 (local, /tmp/j2)",
+    "verdicts": "all PASS — evaluator full/merged exit 0 (same counts: 7226 entries, 58 license-detection files, 43 copyright-detection files), parity exit 0 (6574/6574 symbols), selftest 12/12 exit 0, completeness merged/full == E (comm 0, dup 0, dirs 652/652), provenance PASS 6582",
+    "timing": { "full_wall_seconds": 523.2, "shard0_wall_seconds": 285.42, "shard1_wall_seconds": 312.62 },
+    "partition_bytes": [42819930, 42819929],
+    "pre_dedup_dir_emissions": 1067,
+    "merged_dirs": 652,
+    "scan_shas": {
+      "full.json": "f7a1c2df13f44cce3ae6cc44884e7fcc8e4f28e10c491d74c1c7aad04e0dc2c2",
+      "merged.json": "0ddb7614f12974a0d8024f38171db68834238bcc3d4b4ca8279ff7040642ff0a",
+      "shard0.json": "1a4f3f3c8e5e221dada20adfbb0f3a9a4e07dad3b2c688bb903a27cec6d81753",
+      "shard1.json": "f539098bd695159e24c3998087e6cb87467cb8d138e449dd56c4adfef096d4c6"
+    },
+    "report_shas": {
+      "report_license_full.json": "aeda448c7d3fca71a11f59b0e68e17e2ad7c7dac1ad5763883868b9154210758",
+      "report_license_merged.json": "aeda448c7d3fca71a11f59b0e68e17e2ad7c7dac1ad5763883868b9154210758",
+      "parity_baseline.json": "5e5ba4f03d548804de1cca3d38998785c58d031a609a23e508fc5ab9dfa20ee6",
+      "parity_candidate.json": "5e5ba4f03d548804de1cca3d38998785c58d031a609a23e508fc5ab9dfa20ee6"
+    },
+    "attribution_state_note": "the evaluator ran against the working-tree attribution file that already carried the 4 iteration-1 evidence-file entries (that loop ran during the intermediate run); the scanned tree's attribution file (8a6b8b9388 committed state) did not yet contain them, so no gpl-2.0-or-later detection existed in that scan. Committing them (78d3ed5cf5) surfaced the self-referential atom in the final run."
+  },
+  "topologyValidation": [
+    "workflow YAML parses; make check-workflow-shell-syntax 275/275",
+    "evaluator and tcb_judgments compile exit 0 (nim 2.2.10; tcb_judgments needs an absolute --path for ~/.nimble/pkgs2/checksums-0.2.2-6357ab195ec23e0e0a54d4d8b5e0212456bf899e — a ~ tilde is not expanded by bash)",
+    "partition dry run: NF!=5 count 0, E = 6574 = 6582-8, shards disjoint, union == E, byte sums deterministic",
+    "mini e2e (200 synthetic files x 2 legs): per-leg self-check diff 0, merge dedup correct, re-merge byte-identical",
+    "single-root emission smoke (/tmp/j2-smoke): scan argument 'j2-export' emits 'j2-export/notice.txt' (root-level file) and 'j2-export/sub/dir/nested.txt' (nested file); exit 0; MIT/zlib/Apache-2.0 detections normal; directory entries are staging ancestors only"
+  ],
+  "deviations": [
+    "per-leg independent staging roots (/tmp/j2f/stage0, /tmp/j2f/stage1) mirror the workflow matrix runner isolation — the protocol text's single-path notation is unsatisfiable under local parallel execution",
+    "prefix asymmetry: the final full-scan export root is 'j2f-export' (emitted paths j2f-export/<rel>) while the shard staging roots are 'j2-export' (the protocol's staging name) — evaluator --strip-prefix j2f-export (full.json) vs --strip-prefix j2-export (merged.json), parity projections sub('^j2f-export/') vs sub('^j2-export/'); every comparison runs on repo-relative normalized paths, so verdicts are unaffected",
+    "workflow scan-step PFX double definition removed (self-check logic byte-preserved) — landed in 8a6b8b9388",
+    "VCS filter applies tolower() to the ls-tree path before name matching — faithful to the scanner's lowercase name matching (landed in 8a6b8b9388)",
+    "shell log filename bug fixed for the final run (shard${s}_scan.log; the intermediate run's 'shard$s_scan.log' was parsed by bash as an undefined variable, so both legs wrote /tmp/j2/shard.log — JSON outputs and wall measurements were unaffected)",
+    "epoch_record §4.7 records the intermediate-run numbers (protocol explicit precedence over the design doc's implementation-commit binding); this final run confirms every verdict and adds the one-atom attribution loop recorded here",
+    "final-run attribution loop: one new self-referential atom (gpl-2.0-or-later on license-attribution.yml itself, introduced by 78d3ed5cf5's parity cover string) — accounted in THIS evidence commit per the protocol's exact-atom loop",
+    "the *_iteration2 evidence files themselves carry detectable atom strings (this summary names gpl-2.0-or-later; the report/projection copies quote scan data). Per the iteration-1 precedent (5d11709d38 evidence committed unaccounted, accounted one scan-cycle later by 78d3ed5cf5) they are the NEXT accounting cycle's input — the workflow does not trigger on branch push (on: pull_request/merge_group/schedule), so no CI run goes red before the main agent's PR decision"
+  ],
+  "commands": [
+    "# 0. same-tree export + input sets (final official run; scan tree = 78d3ed5cf5, clean)",
+    "cd /workspace/Axiom && rm -rf /tmp/j2f /tmp/j2f-export && mkdir -p /tmp/j2f /tmp/j2f-export",
+    "git archive HEAD | tar -x -C /tmp/j2f-export",
+    "git ls-files | LC_ALL=C sort > /tmp/j2f/tracked.txt   # 6582 paths",
+    "git ls-tree -r -l HEAD | awk 'tolower($5) !~ /(^|\\/)(\\.bzr|\\.bzrignore|\\.git|\\.gitignore|\\.gitattributes|\\.hg|\\.hgignore|\\.repo|\\.svn|\\.svnignore|\\.tfignore|vssver\\.scc|cvs|\\.cvsignore)$/ {print $5}' | LC_ALL=C sort > /tmp/j2f/expected.txt   # 6574 (VCS-filtered; workflow-identical filter)",
+    "# 1. full scan (baseline)",
+    "cd /tmp/j2f-export && /usr/bin/time -v /tmp/j1-venv/bin/scancode --license --copyright --processes 4 --json-pp /tmp/j2f/full.json .   # exit 0; 7226 entries (6574 files + 652 dirs); wall 8m33.63s; paths emitted as j2f-export/<rel> (cwd-basename quirk, spec §5)",
+    "# 2. deterministic size-greedy shard split (workflow semantics)",
+    "for s in 0 1; do git ls-tree -r -l HEAD | awk 'tolower($5) !~ /<same VCS filter>/ {print $4, $5}' | LC_ALL=C sort -k1,1rn -k2,2 | awk -v s=\"$s\" 'BEGIN{w0=0; w1=0} { if (w0 <= w1) { w0 += $1; t=0 } else { w1 += $1; t=1 } if (t == s) print $2 }' | LC_ALL=C sort > /tmp/j2f/shard$s.txt; done   # 3250 / 3324 paths; 42,822,954 / 42,822,953 bytes",
+    "# 3. shard legs: staged single-root scans (run in parallel; 4 processes each)",
+    "for s in 0 1; do rm -rf /tmp/j2f/stage$s && mkdir -p /tmp/j2f/stage$s/j2-export; done",
+    "tar -C /tmp/j2f-export -cf - -T /tmp/j2f/shard0.txt | tar -C /tmp/j2f/stage0/j2-export -xf -",
+    "tar -C /tmp/j2f-export -cf - -T /tmp/j2f/shard1.txt | tar -C /tmp/j2f/stage1/j2-export -xf -",
+    "cd /tmp/j2f/stage0 && /tmp/j1-venv/bin/scancode --license --copyright --processes 4 --json-pp /tmp/j2f/shard0.json j2-export   # exit 0; wall 289.37s; 3250 files + 535 dirs",
+    "cd /tmp/j2f/stage1 && /tmp/j1-venv/bin/scancode --license --copyright --processes 4 --json-pp /tmp/j2f/shard1.json j2-export   # exit 0; wall 315.22s; 3324 files + 534 dirs",
+    "# 4. per-leg set self-check (workflow semantics): input list == emitted file-path set",
+    "jq -r '.files[] | select(.type==\"file\") | .path' /tmp/j2f/shard0.json | sed 's|^j2-export/||' | LC_ALL=C sort | LC_ALL=C comm -3 /tmp/j2f/shard0.txt - | wc -l   # 0",
+    "jq -r '.files[] | select(.type==\"file\") | .path' /tmp/j2f/shard1.json | sed 's|^j2-export/||' | LC_ALL=C sort | LC_ALL=C comm -3 /tmp/j2f/shard1.txt - | wc -l   # 0",
+    "# 5. merge (workflow jq expression verbatim, incl. dedup)",
+    "jq -s '{headers: .[0].headers, files: (map(.files) | add | sort_by(.path) | group_by(.path) | map(.[0])), license_detections: (map(.license_detections) | add | group_by(.identifier) | map(.[0] + {detection_count: (map(.detection_count) | add)}))}' /tmp/j2f/shard0.json /tmp/j2f/shard1.json > /tmp/j2f/merged.json   # deterministic: re-run produced sha256-identical output",
+    "# 6. set completeness (workflow semantics; expected = VCS-filtered ls-tree set)",
+    "jq -r '.files[] | select(.type==\"file\") | .path' /tmp/j2f/merged.json | sed 's|^j2-export/||' | LC_ALL=C sort > /tmp/j2f/merged_paths.txt",
+    "jq -r '.files[] | select(.type==\"file\") | .path' /tmp/j2f/full.json | sed 's|^j2f-export/||' | LC_ALL=C sort > /tmp/j2f/full_paths.txt",
+    "LC_ALL=C comm -3 /tmp/j2f/expected.txt /tmp/j2f/merged_paths.txt | wc -l   # 0",
+    "LC_ALL=C comm -3 /tmp/j2f/expected.txt /tmp/j2f/full_paths.txt | wc -l     # 0",
+    "# 7. evaluator double run (binary compiled once in J1: nim c --hints:off --warnings:off --path:. --path:src -o:/tmp/j1/vsi_license_eval tools/ci/publication_license_eval.nim)",
+    "/tmp/j1/vsi_license_eval --scan /tmp/j2f/full.json --policy compliance/policy/license-policy.yml --origin compliance/provenance/source-origin.yml --attribution compliance/provenance/license-attribution.yml --strip-prefix j2f-export --out /tmp/j2f/report_license_full.json   # first run FAIL exit 1 (gpl-2.0-or-later self-reference) -> exact-atom attribution loop -> re-run PASS exit 0",
+    "/tmp/j1/vsi_license_eval --scan /tmp/j2f/merged.json --policy compliance/policy/license-policy.yml --origin compliance/provenance/source-origin.yml --attribution compliance/provenance/license-attribution.yml --strip-prefix j2-export --out /tmp/j2f/report_license_merged.json   # same loop; PASS exit 0",
+    "# 8. J1 parity (per-file signature projection) + selftest",
+    "jq -S 'def sig: ({detections: [(.license_detections // [])[] | (.license_expression_spdx // .license_expression // \"\")], fileExpr: (.detected_license_expression_spdx // \"\"), copyrights: [(.copyrights // [])[] | {holder: (.copyright // .value // \"\"), line: (.start_line // 0)}] | sort_by(.holder, .line)} | tojson); [.files[] | select(.type == \"file\") | {(.path | sub(\"^j2f-export/\"; \"\") | sub(\"^\\\\./\"; \"\")): sig}] | add' /tmp/j2f/full.json > /tmp/j2f/parity_baseline.json     # 6574 keys",
+    "jq -S 'def sig: ({detections: [(.license_detections // [])[] | (.license_expression_spdx // .license_expression // \"\")], fileExpr: (.detected_license_expression_spdx // \"\"), copyrights: [(.copyrights // [])[] | {holder: (.copyright // .value // \"\"), line: (.start_line // 0)}] | sort_by(.holder, .line)} | tojson); [.files[] | select(.type == \"file\") | {(.path | sub(\"^j2-export/\"; \"\") | sub(\"^\\\\./\"; \"\")): sig}] | add' /tmp/j2f/merged.json > /tmp/j2f/parity_candidate.json  # 6574 keys",
+    "/tmp/j1/tcb_judgments --judgment parity --baseline /tmp/j2f/parity_baseline.json --candidate /tmp/j2f/parity_candidate.json   # exit 0 PASS",
+    "/tmp/j1/tcb_judgments selftest   # exit 0, 12/12",
+    "# 9. provenance (workflow-identical)",
+    "/tmp/j1/vsi_provenance --out /tmp/j2f/report_provenance.json   # exit 0 PASS — 6582 files covered"
+  ],
+  "evidenceFiles": [
+    "summary_iteration2.json (this file)",
+    "report_license_full_iteration2.json — evaluator output over the full scan (PASS; byte-identical to the merged-leg report)",
+    "report_license_merged_iteration2.json — evaluator output over the merged shard report (PASS)",
+    "parity_baseline_iteration2.json — per-file signature projection of full.json (6574 symbols)",
+    "parity_candidate_iteration2.json — per-file signature projection of merged.json (6574 symbols; byte-identical to baseline)",
+    "completeness_iteration2.txt — comm/uniq set-completeness output for merged and full vs the VCS-filtered expected set, plus merge dedup accounting"
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "1.0",
+  "toolVersion": "0.1.0",
+  "measuredAt": "2026-9-5T10:21:29",
+  "host": {
+    "nim_version": "2.2.10",
+    "axiom_version": "[Axiom] Source changed. Auto-rebuilding... (bin/ax)",
+    "toolchain": "nim-2.2.10"
+  },
+  "metrics": [
+    {
+      "name": "T_identity_source_tree_hash",
+      "valueMs": 103.844,
+      "valueUs": 103844,
+      "label": "computeSourceTreeHash over src/",
+      "methodology": "Walks src/ recursively, filters .nim files (excl. /generated/), sorts, concatenates content, SHA-256; called on actual repo source tree."
+    },
+    {
+      "name": "T_identity_canonical_scope_digest",
+      "valueMs": 1.82,
+      "valueUs": 1820,
+      "label": "canonicalScopeDigest over verification_scope.lock",
+      "methodology": "Reads data/verification_scope.lock, parses kernel_symbols/kernel_exempt_symbols/kernel_total/vksTotal, constructs CanonicalScopeInput, calls canonicalScopeDigest (pure SHA-256 of sorted parts)."
+    },
+    {
+      "name": "T_identity_combineHashes_10",
+      "valueMs": 0.079,
+      "valueUs": 79,
+      "label": "combineHashes on 10 parts (compositional digest scaling probe)",
+      "methodology": "Calls combineHashes (domain-separator SHA-256) on 10 synthetic string parts; measures compositional digest cost scaling."
+    },
+    {
+      "name": "T_identity_combineHashes_100",
+      "valueMs": 0.592,
+      "valueUs": 592,
+      "label": "combineHashes on 100 parts (compositional digest scaling probe)",
+      "methodology": "Calls combineHashes (domain-separator SHA-256) on 100 synthetic string parts; measures compositional digest cost scaling."
+    },
+    {
+      "name": "T_identity_combineHashes_1000",
+      "valueMs": 5.898,
+      "valueUs": 5898,
+      "label": "combineHashes on 1000 parts (compositional digest scaling probe)",
+      "methodology": "Calls combineHashes (domain-separator SHA-256) on 1000 synthetic string parts; measures compositional digest cost scaling."
+    },
+    {
+      "name": "T_selection",
+      "valueMs": 0.045,
+      "valueUs": 45,
+      "label": "T_selection_baseline (frontier-based, pre-S1)",
+      "methodology": "Calls selectFrontierNodes from frontier_selection.nim with a bounded frontier of 5 nodes, --target filter for one canonical symbol, eligibility gate, and limit=1. Exercises the --target-filtered selection path that exists today."
+    },
+    {
+      "name": "T_full",
+      "valueMs": -1.0,
+      "valueUs": -1,
+      "label": "NOT_MEASURED",
+      "methodology": "T_full was not measured (timed out after 30s). Command to run later: bin/ax prove --limit 5 --smt-timeout 4000"
+    },
+    {
+      "name": "T_accelerated",
+      "valueMs": -1.0,
+      "valueUs": -1,
+      "label": "NOT_MEASURED",
+      "methodology": "T_accelerated was not measured (exit code 2). Command to run later: bin/ax prove --limit 5 --smt-timeout 4000 --target src/core/vault/vault_manager_spec.nim::axiomSpecToJsonNode"
+    }
+  ],
+  "ratio": {
+    "selected": 23,
+    "universe": 40,
+    "value": 0.575,
+    "methodology": "VKS count (23 non-exempt kernel symbols from verification_scope.lock) divided by kernel_total (40). This is the Selected/Universe ratio achieved by the bounded run. VKS = kernel_symbols excluding exempt symbols."
+  },
+  "notes": [
+    "T_identity_dependency_graph_digest: NOT_MEASURED -- dependencyGraphDigest requires TopologyAnalysis (topology_engine, canonical_projection, etc.) which has transitive link dependencies unavailable in standalone tool context. To measure, run as part of a full project build.",
+    "T_full: NOT_MEASURED -- timed out after 30s. Command to run later: bin/ax prove --limit 5 --smt-timeout 4000",
+    "T_accelerated: NOT_MEASURED -- exit code 2. Command to run later: bin/ax prove --limit 5 --smt-timeout 4000 --target src/core/vault/vault_manager_spec.nim::axiomSpecToJsonNode"
+  ]
+}

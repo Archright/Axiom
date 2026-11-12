@@ -1,0 +1,28 @@
+{
+  "capturedAt": "<TIMESTAMP>",
+  "funcCount": 4,
+  "funcs": [
+    "classStr",
+    "classifyGate",
+    "groupByTimestamp",
+    "severityStr"
+  ],
+  "linesOfCode": 459,
+  "module": "axiom_status",
+  "path": "src/cli/axiom_status.nim",
+  "procCount": 12,
+  "procs": [
+    "durationNsToDisplay",
+    "extractLogSnippet",
+    "isRecentlyModified",
+    "loadHistory",
+    "loadSeverityMap",
+    "loadSlaMap",
+    "parseTimestamp",
+    "renderFormatted",
+    "renderGateDetail",
+    "renderHistory",
+    "renderJson",
+    "runStatusCli*"
+  ]
+}

@@ -1,0 +1,63 @@
+{
+"attestation": {
+"algorithm": "Ed25519",
+"authority": "axiom",
+"claimDigest": "sha256:11f7dabc3fd201d5c5b13ed35dce1353520e2b2ff48ccae2b57e2fc394cb072f",
+"journalRef": "85ba962976b4b71e84cac5123425bba21dacf2371d9b7b09c06f3b473ebd685d",
+"policyVersion": "axiom.certificate.v3",
+"publicKeyId": "sha256:9a17da4859fa2ee34a5b349c1ee8dabb8e116e8f612c9cfa4f836da8a9337f37",
+"signature": "c2b8462d0ef1077833cad35df44dff38bf7b6d8c8c02f58fb9554223670c34f316d6068f340078ddaaf5bcd74a8cfc10ad43890359d91ff6a8949b3dc1d2bd0c"
+},
+"claim": {
+"functionName": "calcDynamicTimeoutCore",
+"modulePath": "src/core/orchestrator/orchestrator_topology_worker.nim",
+"status": "certZ3Candidate",
+"type": "verification"
+},
+"fingerprint": "49cef3270d557b860620c665d6d3443c20fa1b7f68ecd40bb189819e1311c15f",
+"functionName": "calcDynamicTimeoutCore",
+"identityDigest": "a23df36d87af7aef1968d39ee112caea74b81649f75f01bd5b9709dda114f69b",
+"inputHash": "sha256:c62d1213fa396c7cd273349e94ca25dbe4a50077b7f2f5eca2376f71fada4c04",
+"irHash": "93079fe23d613d467a95b3950f3100b89c4bf3806f3bc8ce56bad978d50acf0e",
+"kernel": true,
+"leanProposition": "",
+"modulePath": "src/core/orchestrator/orchestrator_topology_worker.nim",
+"provenance": {
+"certificateDigest": "a23df36d87af7aef1968d39ee112caea74b81649f75f01bd5b9709dda114f69b",
+"journalCommitId": "85ba962976b4b71e84cac5123425bba21dacf2371d9b7b09c06f3b473ebd685d"
+},
+"reason": "reclassified:migration certZ3Verified→certZ3Candidate (C0.4)",
+"schemaVersion": "axiom.certificate.v3",
+"smtlib2": "(set-logic QF_BV)\n(set-option :rlimit 30000000)\n(define-fun no_overflow_add ((a (_ BitVec 64)) (b (_ BitVec 64))) Bool\n  (let ((sum (bvadd a b)))\n    (not (or\n      (and (bvsgt a #x0000000000000000) (bvsgt b #x0000000000000000) (bvslt sum #x0000000000000000))\n      (and (bvslt a #x0000000000000000) (bvslt b #x0000000000000000) (bvsgt sum #x0000000000000000))))))\n(define-fun no_underflow_add ((a (_ BitVec 64)) (b (_ BitVec 64))) Bool\n  (let ((sum (bvadd a b)))\n    (not (and (bvslt a #x0000000000000000) (bvslt b #x0000000000000000) (bvsgt sum #x0000000000000000)))))\n(define-fun no_overflow_mul ((_a (_ BitVec 64)) (_b (_ BitVec 64))) Bool\n  (let ((p (bvmul _a _b)))\n    (and (or (= _a #x0000000000000000) (= _b #x0000000000000000) (= (bvsdiv p _a) _b))\n         (not (and (= _a #x8000000000000000) (= _b #xFFFFFFFFFFFFFFFF)))\n         (not (and (= _a #xFFFFFFFFFFFFFFFF) (= _b #x8000000000000000))))))\n(define-fun no_underflow_mul ((_a (_ BitVec 64)) (_b (_ BitVec 64))) Bool\n  (let ((p (bvmul _a _b)))\n    (and (or (= _a #x0000000000000000) (= _b #x0000000000000000) (= (bvsdiv p _a) _b))\n         (not (and (= _a #x8000000000000000) (= _b #xFFFFFFFFFFFFFFFF)))\n         (not (and (= _a #xFFFFFFFFFFFFFFFF) (= _b #x8000000000000000))))))\n(define-fun no_overflow_sub ((a (_ BitVec 64)) (b (_ BitVec 64))) Bool\n  (let ((diff (bvsub a b)))\n    (not (and (bvsgt a #x0000000000000000) (bvslt b #x0000000000000000) (bvslt diff #x0000000000000000)))))\n(define-fun no_underflow_sub ((a (_ BitVec 64)) (b (_ BitVec 64))) Bool\n  (let ((diff (bvsub a b)))\n    (not (and (bvslt a #x0000000000000000) (bvsgt b #x0000000000000000) (bvsgt diff #x0000000000000000)))))\n(declare-fun requestTimeoutMs () (_ BitVec 64))\n(declare-fun dependencyDepth () (_ BitVec 64))\n(declare-fun impactedNodeCount () (_ BitVec 64))\n(declare-fun complexityWeight () (_ BitVec 64))\n(define-fun calcDynamicTimeoutCore_impl ((requestTimeoutMs (_ BitVec 64)) (dependencyDepth (_ BitVec 64)) (impactedNodeCount (_ BitVec 64)) (complexityWeight (_ BitVec 64))) (_ BitVec 64)\n  (let ((rawTimeoutMs (ite (bvsgt requestTimeoutMs #x0000000000000000) requestTimeoutMs (bvadd (bvadd (bvadd #x0000000000001388 (bvmul dependencyDepth #x0000000000002710)) (bvmul (ite (bvslt impactedNodeCount #x0000000000000006) impactedNodeCount #x0000000000000006) #x0000000000001770)) (ite (bvslt (bvmul complexityWeight #x00000000000001F4) #x000000000000DEA8) (bvmul complexityWeight #x00000000000001F4) #x000000000000DEA8))))) (ite (bvslt rawTimeoutMs #x0000000000001388) #x0000000000001388 (ite (bvsgt rawTimeoutMs #x000000000001D4C0) #x000000000001D4C0 rawTimeoutMs))))\n(assert (and (and (bvsge dependencyDepth #x0000000000000000) (bvsge impactedNodeCount #x0000000000000000)) (bvsge complexityWeight #x0000000000000000)))\n(assert (let ((result (calcDynamicTimeoutCore_impl requestTimeoutMs dependencyDepth impactedNodeCount complexityWeight))) (not (and (bvsge result #x0000000000001388) (bvsle result #x000000000001D4C0)))))\n(check-sat)",
+"solverInputDigest": "sha256:f02ceca2912031f160607b697bed19e18a7f4144f4cf9b9ee04eef4041132ca0",
+"solverInvocation": {
+"engine": "z3",
+"mode": "none",
+"strategy": "none",
+"version": "4.13.3"
+},
+"solverMeta": {
+"leanCompilerVerified": false,
+"negativeTestResult": false,
+"solverProvenance": "spZ3SAT",
+"solverVersion": "4.13.3",
+"vacuityChecked": true,
+"vacuityProven": false,
+"z3Executed": true
+},
+"solverResultDigest": "sha256:dc506d78a013309b784f43dd19665ae63c722aa534e7b0afbdfd781d8d278368",
+"solverStatus": "unsat",
+"sourceHash": "bfd304fc19e6e88509dab02dc049860d153c7e8764beadb40af571fb13a7a4dd",
+"status": "certZ3Candidate",
+"toolchainIdentity": {
+"axiomVersion": "v0.3.7",
+"lean": "4.29.0",
+"nim": "2.2.10",
+"z3": "4.13.3"
+},
+"translationVersion": "axiom-ir-smt-v1",
+"trustCommitId": "85ba962976b4b71e84cac5123425bba21dacf2371d9b7b09c06f3b473ebd685d",
+"trusted": true,
+"verificationTier": "z3-verified",
+"winningStrategy": "none"
+}

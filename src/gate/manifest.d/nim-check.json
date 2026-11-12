@@ -1,0 +1,22 @@
+{
+  "id": "nim-check",
+  "name": "Axiom nim check gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/nim_check_gate.nim",
+  "stages": [
+    "pre-commit"
+  ],
+  "filesPattern": ".nim|axiom.nimble|config.nims",
+  "passFilenames": true,
+  "weight": "heavy",
+  "category": "rule",
+  "argsTemplate": [
+    "$repoRoot",
+    "$mode",
+    "$maxJobs"
+  ],
+  "severity": "error",
+  "depsDirs": [
+    "bin/nim_check_gate"
+  ]
+}

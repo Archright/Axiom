@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "error": true,
+  "message": "No CIRCLECI_TOKEN or GITHUB_TOKEN env var set",
+  "errorCode": 401,
+  "timestamp": "2026-09-01T10:08:19Z"
+}

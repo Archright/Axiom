@@ -1,0 +1,513 @@
+byte	hex	flavor	emitted_basic	emitted_literal	valid_v100	valid_v110	note
+0	00	v100	"\u0000"	"\u0000"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+1	01	v100	"\u0001"	"\u0001"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+2	02	v100	"\u0002"	"\u0002"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+3	03	v100	"\u0003"	"\u0003"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+4	04	v100	"\u0004"	"\u0004"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+5	05	v100	"\u0005"	"\u0005"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+6	06	v100	"\u0006"	"\u0006"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+7	07	v100	"\u0007"	"\u0007"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+8	08	v100	"\b"	"\b"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+9	09	v100	"\t"	"\t"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+10	0A	v100	"\n"	"\n"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+11	0B	v100	"\u000B"	"\u000B"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+12	0C	v100	"\f"	"\f"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+13	0D	v100	"\r"	"\r"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+14	0E	v100	"\u000E"	"\u000E"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+15	0F	v100	"\u000F"	"\u000F"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+16	10	v100	"\u0010"	"\u0010"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+17	11	v100	"\u0011"	"\u0011"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+18	12	v100	"\u0012"	"\u0012"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+19	13	v100	"\u0013"	"\u0013"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+20	14	v100	"\u0014"	"\u0014"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+21	15	v100	"\u0015"	"\u0015"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+22	16	v100	"\u0016"	"\u0016"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+23	17	v100	"\u0017"	"\u0017"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+24	18	v100	"\u0018"	"\u0018"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+25	19	v100	"\u0019"	"\u0019"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+26	1A	v100	"\u001A"	"\u001A"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+27	1B	v100	"\e"	"\e"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \e: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+28	1C	v100	"\u001C"	"\u001C"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+29	1D	v100	"\u001D"	"\u001D"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+30	1E	v100	"\u001E"	"\u001E"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+31	1F	v100	"\u001F"	"\u001F"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+32	20	v100	" "	" "	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+33	21	v100	"!"	"!"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+34	22	v100	"\""	"\""	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+35	23	v100	"#"	"#"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+36	24	v100	"$"	"$"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+37	25	v100	"%"	"%"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+38	26	v100	"&"	"&"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+39	27	v100	"\'"	"\'"	INVALID	INVALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \' is not an escape in either version (reserved both; writer.nim:153)
+40	28	v100	"("	"("	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+41	29	v100	")"	")"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+42	2A	v100	"*"	"*"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+43	2B	v100	"+"	"+"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+44	2C	v100	","	","	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+45	2D	v100	"-"	"-"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+46	2E	v100	"."	"."	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+47	2F	v100	"/"	"/"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+48	30	v100	"0"	"0"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+49	31	v100	"1"	"1"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+50	32	v100	"2"	"2"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+51	33	v100	"3"	"3"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+52	34	v100	"4"	"4"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+53	35	v100	"5"	"5"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+54	36	v100	"6"	"6"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+55	37	v100	"7"	"7"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+56	38	v100	"8"	"8"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+57	39	v100	"9"	"9"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+58	3A	v100	":"	":"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+59	3B	v100	";"	";"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+60	3C	v100	"<"	"<"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+61	3D	v100	"="	"="	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+62	3E	v100	">"	">"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+63	3F	v100	"?"	"?"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+64	40	v100	"@"	"@"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+65	41	v100	"A"	"A"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+66	42	v100	"B"	"B"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+67	43	v100	"C"	"C"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+68	44	v100	"D"	"D"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+69	45	v100	"E"	"E"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+70	46	v100	"F"	"F"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+71	47	v100	"G"	"G"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+72	48	v100	"H"	"H"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+73	49	v100	"I"	"I"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+74	4A	v100	"J"	"J"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+75	4B	v100	"K"	"K"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+76	4C	v100	"L"	"L"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+77	4D	v100	"M"	"M"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+78	4E	v100	"N"	"N"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+79	4F	v100	"O"	"O"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+80	50	v100	"P"	"P"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+81	51	v100	"Q"	"Q"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+82	52	v100	"R"	"R"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+83	53	v100	"S"	"S"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+84	54	v100	"T"	"T"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+85	55	v100	"U"	"U"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+86	56	v100	"V"	"V"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+87	57	v100	"W"	"W"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+88	58	v100	"X"	"X"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+89	59	v100	"Y"	"Y"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+90	5A	v100	"Z"	"Z"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+91	5B	v100	"["	"["	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+92	5C	v100	"\\"	"\\"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+93	5D	v100	"]"	"]"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+94	5E	v100	"^"	"^"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+95	5F	v100	"_"	"_"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+96	60	v100	"`"	"`"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+97	61	v100	"a"	"a"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+98	62	v100	"b"	"b"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+99	63	v100	"c"	"c"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+100	64	v100	"d"	"d"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+101	65	v100	"e"	"e"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+102	66	v100	"f"	"f"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+103	67	v100	"g"	"g"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+104	68	v100	"h"	"h"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+105	69	v100	"i"	"i"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+106	6A	v100	"j"	"j"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+107	6B	v100	"k"	"k"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+108	6C	v100	"l"	"l"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+109	6D	v100	"m"	"m"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+110	6E	v100	"n"	"n"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+111	6F	v100	"o"	"o"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+112	70	v100	"p"	"p"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+113	71	v100	"q"	"q"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+114	72	v100	"r"	"r"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+115	73	v100	"s"	"s"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+116	74	v100	"t"	"t"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+117	75	v100	"u"	"u"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+118	76	v100	"v"	"v"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+119	77	v100	"w"	"w"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+120	78	v100	"x"	"x"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+121	79	v100	"y"	"y"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+122	7A	v100	"z"	"z"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+123	7B	v100	"{"	"{"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+124	7C	v100	"|"	"|"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+125	7D	v100	"}"	"}"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+126	7E	v100	"~"	"~"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+127	7F	v100	"\u007F"	"\u007F"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+128	80	v100	"\u0080"	"\u0080"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+129	81	v100	"\u0081"	"\u0081"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+130	82	v100	"\u0082"	"\u0082"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+131	83	v100	"\u0083"	"\u0083"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+132	84	v100	"\u0084"	"\u0084"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+133	85	v100	"\u0085"	"\u0085"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+134	86	v100	"\u0086"	"\u0086"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+135	87	v100	"\u0087"	"\u0087"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+136	88	v100	"\u0088"	"\u0088"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+137	89	v100	"\u0089"	"\u0089"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+138	8A	v100	"\u008A"	"\u008A"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+139	8B	v100	"\u008B"	"\u008B"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+140	8C	v100	"\u008C"	"\u008C"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+141	8D	v100	"\u008D"	"\u008D"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+142	8E	v100	"\u008E"	"\u008E"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+143	8F	v100	"\u008F"	"\u008F"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+144	90	v100	"\u0090"	"\u0090"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+145	91	v100	"\u0091"	"\u0091"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+146	92	v100	"\u0092"	"\u0092"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+147	93	v100	"\u0093"	"\u0093"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+148	94	v100	"\u0094"	"\u0094"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+149	95	v100	"\u0095"	"\u0095"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+150	96	v100	"\u0096"	"\u0096"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+151	97	v100	"\u0097"	"\u0097"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+152	98	v100	"\u0098"	"\u0098"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+153	99	v100	"\u0099"	"\u0099"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+154	9A	v100	"\u009A"	"\u009A"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+155	9B	v100	"\u009B"	"\u009B"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+156	9C	v100	"\u009C"	"\u009C"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+157	9D	v100	"\u009D"	"\u009D"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+158	9E	v100	"\u009E"	"\u009E"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+159	9F	v100	"\u009F"	"\u009F"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+160	A0	v100	"\u00A0"	"\u00A0"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+161	A1	v100	"\u00A1"	"\u00A1"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+162	A2	v100	"\u00A2"	"\u00A2"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+163	A3	v100	"\u00A3"	"\u00A3"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+164	A4	v100	"\u00A4"	"\u00A4"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+165	A5	v100	"\u00A5"	"\u00A5"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+166	A6	v100	"\u00A6"	"\u00A6"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+167	A7	v100	"\u00A7"	"\u00A7"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+168	A8	v100	"\u00A8"	"\u00A8"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+169	A9	v100	"\u00A9"	"\u00A9"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+170	AA	v100	"\u00AA"	"\u00AA"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+171	AB	v100	"\u00AB"	"\u00AB"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+172	AC	v100	"\u00AC"	"\u00AC"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+173	AD	v100	"\u00AD"	"\u00AD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+174	AE	v100	"\u00AE"	"\u00AE"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+175	AF	v100	"\u00AF"	"\u00AF"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+176	B0	v100	"\u00B0"	"\u00B0"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+177	B1	v100	"\u00B1"	"\u00B1"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+178	B2	v100	"\u00B2"	"\u00B2"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+179	B3	v100	"\u00B3"	"\u00B3"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+180	B4	v100	"\u00B4"	"\u00B4"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+181	B5	v100	"\u00B5"	"\u00B5"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+182	B6	v100	"\u00B6"	"\u00B6"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+183	B7	v100	"\u00B7"	"\u00B7"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+184	B8	v100	"\u00B8"	"\u00B8"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+185	B9	v100	"\u00B9"	"\u00B9"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+186	BA	v100	"\u00BA"	"\u00BA"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+187	BB	v100	"\u00BB"	"\u00BB"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+188	BC	v100	"\u00BC"	"\u00BC"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+189	BD	v100	"\u00BD"	"\u00BD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+190	BE	v100	"\u00BE"	"\u00BE"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+191	BF	v100	"\u00BF"	"\u00BF"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+192	C0	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+193	C1	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+194	C2	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+195	C3	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+196	C4	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+197	C5	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+198	C6	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+199	C7	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+200	C8	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+201	C9	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+202	CA	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+203	CB	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+204	CC	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+205	CD	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+206	CE	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+207	CF	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+208	D0	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+209	D1	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+210	D2	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+211	D3	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+212	D4	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+213	D5	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+214	D6	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+215	D7	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+216	D8	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+217	D9	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+218	DA	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+219	DB	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+220	DC	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+221	DD	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+222	DE	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+223	DF	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+224	E0	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+225	E1	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+226	E2	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+227	E3	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+228	E4	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+229	E5	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+230	E6	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+231	E7	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+232	E8	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+233	E9	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+234	EA	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+235	EB	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+236	EC	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+237	ED	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+238	EE	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+239	EF	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+240	F0	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+241	F1	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+242	F2	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+243	F3	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+244	F4	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+245	F5	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+246	F6	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+247	F7	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+248	F8	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+249	F9	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+250	FA	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+251	FB	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+252	FC	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+253	FD	v100	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+254	FE	v100	"\u00FE"	"\u00FE"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+255	FF	v100	"\u00FF"	"\u00FF"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+0	00	v110	"\x00"	"\x00"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+1	01	v110	"\x01"	"\x01"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+2	02	v110	"\x02"	"\x02"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+3	03	v110	"\x03"	"\x03"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+4	04	v110	"\x04"	"\x04"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+5	05	v110	"\x05"	"\x05"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+6	06	v110	"\x06"	"\x06"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+7	07	v110	"\x07"	"\x07"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+8	08	v110	"\b"	"\b"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+9	09	v110	"\t"	"\t"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+10	0A	v110	"\n"	"\n"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+11	0B	v110	"\x0B"	"\x0B"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+12	0C	v110	"\f"	"\f"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+13	0D	v110	"\r"	"\r"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+14	0E	v110	"\x0E"	"\x0E"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+15	0F	v110	"\x0F"	"\x0F"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+16	10	v110	"\x10"	"\x10"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+17	11	v110	"\x11"	"\x11"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+18	12	v110	"\x12"	"\x12"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+19	13	v110	"\x13"	"\x13"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+20	14	v110	"\x14"	"\x14"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+21	15	v110	"\x15"	"\x15"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+22	16	v110	"\x16"	"\x16"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+23	17	v110	"\x17"	"\x17"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+24	18	v110	"\x18"	"\x18"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+25	19	v110	"\x19"	"\x19"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+26	1A	v110	"\x1A"	"\x1A"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+27	1B	v110	"\e"	"\e"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \e: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+28	1C	v110	"\x1C"	"\x1C"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+29	1D	v110	"\x1D"	"\x1D"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+30	1E	v110	"\x1E"	"\x1E"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+31	1F	v110	"\x1F"	"\x1F"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+32	20	v110	" "	" "	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+33	21	v110	"!"	"!"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+34	22	v110	"\""	"\""	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+35	23	v110	"#"	"#"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+36	24	v110	"$"	"$"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+37	25	v110	"%"	"%"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+38	26	v110	"&"	"&"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+39	27	v110	"\'"	"\'"	INVALID	INVALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \' is not an escape in either version (reserved both; writer.nim:153)
+40	28	v110	"("	"("	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+41	29	v110	")"	")"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+42	2A	v110	"*"	"*"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+43	2B	v110	"+"	"+"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+44	2C	v110	","	","	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+45	2D	v110	"-"	"-"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+46	2E	v110	"."	"."	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+47	2F	v110	"/"	"/"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+48	30	v110	"0"	"0"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+49	31	v110	"1"	"1"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+50	32	v110	"2"	"2"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+51	33	v110	"3"	"3"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+52	34	v110	"4"	"4"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+53	35	v110	"5"	"5"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+54	36	v110	"6"	"6"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+55	37	v110	"7"	"7"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+56	38	v110	"8"	"8"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+57	39	v110	"9"	"9"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+58	3A	v110	":"	":"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+59	3B	v110	";"	";"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+60	3C	v110	"<"	"<"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+61	3D	v110	"="	"="	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+62	3E	v110	">"	">"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+63	3F	v110	"?"	"?"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+64	40	v110	"@"	"@"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+65	41	v110	"A"	"A"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+66	42	v110	"B"	"B"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+67	43	v110	"C"	"C"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+68	44	v110	"D"	"D"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+69	45	v110	"E"	"E"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+70	46	v110	"F"	"F"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+71	47	v110	"G"	"G"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+72	48	v110	"H"	"H"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+73	49	v110	"I"	"I"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+74	4A	v110	"J"	"J"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+75	4B	v110	"K"	"K"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+76	4C	v110	"L"	"L"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+77	4D	v110	"M"	"M"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+78	4E	v110	"N"	"N"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+79	4F	v110	"O"	"O"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+80	50	v110	"P"	"P"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+81	51	v110	"Q"	"Q"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+82	52	v110	"R"	"R"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+83	53	v110	"S"	"S"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+84	54	v110	"T"	"T"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+85	55	v110	"U"	"U"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+86	56	v110	"V"	"V"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+87	57	v110	"W"	"W"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+88	58	v110	"X"	"X"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+89	59	v110	"Y"	"Y"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+90	5A	v110	"Z"	"Z"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+91	5B	v110	"["	"["	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+92	5C	v110	"\\"	"\\"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+93	5D	v110	"]"	"]"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+94	5E	v110	"^"	"^"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+95	5F	v110	"_"	"_"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+96	60	v110	"`"	"`"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+97	61	v110	"a"	"a"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+98	62	v110	"b"	"b"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+99	63	v110	"c"	"c"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+100	64	v110	"d"	"d"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+101	65	v110	"e"	"e"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+102	66	v110	"f"	"f"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+103	67	v110	"g"	"g"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+104	68	v110	"h"	"h"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+105	69	v110	"i"	"i"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+106	6A	v110	"j"	"j"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+107	6B	v110	"k"	"k"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+108	6C	v110	"l"	"l"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+109	6D	v110	"m"	"m"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+110	6E	v110	"n"	"n"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+111	6F	v110	"o"	"o"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+112	70	v110	"p"	"p"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+113	71	v110	"q"	"q"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+114	72	v110	"r"	"r"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+115	73	v110	"s"	"s"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+116	74	v110	"t"	"t"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+117	75	v110	"u"	"u"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+118	76	v110	"v"	"v"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+119	77	v110	"w"	"w"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+120	78	v110	"x"	"x"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+121	79	v110	"y"	"y"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+122	7A	v110	"z"	"z"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+123	7B	v110	"{"	"{"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+124	7C	v110	"|"	"|"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+125	7D	v110	"}"	"}"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+126	7E	v110	"~"	"~"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+127	7F	v110	"\x7F"	"\x7F"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+128	80	v110	"\x80"	"\x80"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+129	81	v110	"\x81"	"\x81"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+130	82	v110	"\x82"	"\x82"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+131	83	v110	"\x83"	"\x83"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+132	84	v110	"\x84"	"\x84"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+133	85	v110	"\x85"	"\x85"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+134	86	v110	"\x86"	"\x86"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+135	87	v110	"\x87"	"\x87"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+136	88	v110	"\x88"	"\x88"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+137	89	v110	"\x89"	"\x89"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+138	8A	v110	"\x8A"	"\x8A"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+139	8B	v110	"\x8B"	"\x8B"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+140	8C	v110	"\x8C"	"\x8C"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+141	8D	v110	"\x8D"	"\x8D"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+142	8E	v110	"\x8E"	"\x8E"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+143	8F	v110	"\x8F"	"\x8F"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+144	90	v110	"\x90"	"\x90"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+145	91	v110	"\x91"	"\x91"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+146	92	v110	"\x92"	"\x92"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+147	93	v110	"\x93"	"\x93"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+148	94	v110	"\x94"	"\x94"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+149	95	v110	"\x95"	"\x95"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+150	96	v110	"\x96"	"\x96"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+151	97	v110	"\x97"	"\x97"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+152	98	v110	"\x98"	"\x98"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+153	99	v110	"\x99"	"\x99"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+154	9A	v110	"\x9A"	"\x9A"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+155	9B	v110	"\x9B"	"\x9B"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+156	9C	v110	"\x9C"	"\x9C"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+157	9D	v110	"\x9D"	"\x9D"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+158	9E	v110	"\x9E"	"\x9E"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+159	9F	v110	"\x9F"	"\x9F"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+160	A0	v110	"\xA0"	"\xA0"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+161	A1	v110	"\xA1"	"\xA1"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+162	A2	v110	"\xA2"	"\xA2"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+163	A3	v110	"\xA3"	"\xA3"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+164	A4	v110	"\xA4"	"\xA4"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+165	A5	v110	"\xA5"	"\xA5"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+166	A6	v110	"\xA6"	"\xA6"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+167	A7	v110	"\xA7"	"\xA7"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+168	A8	v110	"\xA8"	"\xA8"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+169	A9	v110	"\xA9"	"\xA9"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+170	AA	v110	"\xAA"	"\xAA"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+171	AB	v110	"\xAB"	"\xAB"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+172	AC	v110	"\xAC"	"\xAC"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+173	AD	v110	"\xAD"	"\xAD"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+174	AE	v110	"\xAE"	"\xAE"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+175	AF	v110	"\xAF"	"\xAF"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+176	B0	v110	"\xB0"	"\xB0"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+177	B1	v110	"\xB1"	"\xB1"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+178	B2	v110	"\xB2"	"\xB2"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+179	B3	v110	"\xB3"	"\xB3"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+180	B4	v110	"\xB4"	"\xB4"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+181	B5	v110	"\xB5"	"\xB5"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+182	B6	v110	"\xB6"	"\xB6"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+183	B7	v110	"\xB7"	"\xB7"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+184	B8	v110	"\xB8"	"\xB8"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+185	B9	v110	"\xB9"	"\xB9"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+186	BA	v110	"\xBA"	"\xBA"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+187	BB	v110	"\xBB"	"\xBB"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+188	BC	v110	"\xBC"	"\xBC"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+189	BD	v110	"\xBD"	"\xBD"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+190	BE	v110	"\xBE"	"\xBE"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+191	BF	v110	"\xBF"	"\xBF"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+192	C0	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+193	C1	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+194	C2	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+195	C3	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+196	C4	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+197	C5	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+198	C6	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+199	C7	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+200	C8	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+201	C9	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+202	CA	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+203	CB	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+204	CC	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+205	CD	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+206	CE	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+207	CF	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+208	D0	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+209	D1	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+210	D2	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+211	D3	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+212	D4	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+213	D5	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+214	D6	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+215	D7	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+216	D8	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+217	D9	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+218	DA	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+219	DB	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+220	DC	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+221	DD	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+222	DE	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+223	DF	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+224	E0	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+225	E1	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+226	E2	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+227	E3	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+228	E4	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+229	E5	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+230	E6	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+231	E7	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+232	E8	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+233	E9	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+234	EA	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+235	EB	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+236	EC	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+237	ED	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+238	EE	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+239	EF	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+240	F0	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+241	F1	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+242	F2	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+243	F3	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+244	F4	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+245	F5	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+246	F6	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+247	F7	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+248	F8	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+249	F9	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+250	FA	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+251	FB	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+252	FC	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+253	FD	v110	"\uFFFD"	"\uFFFD"	VALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits
+254	FE	v110	"\xFE"	"\xFE"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)
+255	FF	v110	"\xFF"	"\xFF"	INVALID	VALID	writer has no literal-string emission path (writer.nim:131-164); token shown is the basic-string form it emits; \xHH: reserved escape in v1.0.0; listed escape in v1.1.0 (SPEC_BASELINE §1)

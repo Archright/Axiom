@@ -1,0 +1,21 @@
+===[A] merged.json vs expected (workflow set-completeness; expected = VCS-filtered git ls-tree HEAD set, 6574)===
+merged file entries: 6574
+duplicates (uniq -d): 0
+comm -3 line count: 0
+missing from merged (expected-only): 0
+unexpected in merged: 0
+
+===[B] full.json vs expected (same semantics)===
+full file entries: 6574
+duplicates (uniq -d): 0
+comm -3 line count: 0
+missing from full (expected-only): 0
+unexpected in full: 0
+
+===[C] merge dedup accounting (workflow jq)===
+pre-dedup file entries: 6574 (3250 + 3324; disjoint partition, 0 file duplicates)
+pre-dedup directory emissions: 1069 (535 + 534)
+merged directory entries (post group_by(.path)): 652
+duplicate directory emissions removed: 417
+merged total entries: 7226 (6574 files + 652 dirs)
+merge determinism: re-run of the workflow jq over shard0.json+shard1.json produced sha256-identical merged.json

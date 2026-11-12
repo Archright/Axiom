@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/split_large_file.sh",
+  "description": "Split a large .nim file into _core (pure logic) and _io (I/O operations) modules for effect isolation",
+  "inputSample": {
+    "args": ["src/core/large_module.nim"]
+  },
+  "outputSample": {
+    "stdout": "split_large_file: src/core/large_module_core.nim (42 procs) + src/core/large_module_io.nim (3 procs)",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

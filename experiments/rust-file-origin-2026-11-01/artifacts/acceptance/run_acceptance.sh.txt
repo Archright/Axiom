@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# ① rust-file-origin-2026-11-01 cold acceptance runner (fixed MERGE_SHA checkout)
+# Governing protocol: experiments/rust-file-origin-2026-11-01/OBSERVATION.md §6
+# + tmp/acceptance_4th_slice_runbook.md (④ A/B/C/D form)
+# Prereq (run before this script, from repo root @ MERGE_SHA):
+#   make build
+#   bin/ax --check-provenance
+#   nim c --hints:off -o:build/skreport_compare_tool tests/skreport_compare_tool.nim
+# GITHUB_TOKEN is never echoed. Verdicts are observations — no pre-fixed outcomes.
+set -uo pipefail
+REPO=".4"
+JSON="<workspace>/json"
+T="/tmp/axiom-accept1"
+LOCK_SEED="$REPO/experiments/serde-json-claim-2026-10-31/state_d1/data/verification_scope.lock"
+CARGO_LOCK_SRC="$REPO/experiments/serde-json-claim-2026-10-31/inputs/Cargo.lock"
+TARGET='serde_json::error::parse_line_col'
+cd "$REPO"
+export CARGO_NET_OFFLINE=true
+GITHUB_TOKEN="$(gh auth token)"
+export GITHUB_TOKEN
+
+run_one() { # $1=label $2=subject_root $3=lockmode byte|jq
+  local X="$1" SUBJ="$2" MODE="$3"
+  rm -rf "$T/state_$X" "$T/vault_$X"
+  mkdir -p "$T/state_$X/data" "$T/vault_$X"
+  if [ "$MODE" = "jq" ]; then
+    jq -S . "$LOCK_SEED" > "$T/state_$X/data/verification_scope.lock"
+  else
+    cp "$LOCK_SEED" "$T/state_$X/data/verification_scope.lock"
+  fi
+  (cd "$SUBJ" && find . -type f -not -path './.git/*' -print0 | sort -z | xargs -0 sha256sum) > "$T/subject_$X.pre.manifest"
+  cp "$CARGO_LOCK_SRC" "$SUBJ/Cargo.lock"
+  AXIOM_STATE_DIR="$T/state_$X" AXIOM_PROVE_VAULT_DIR="$T/vault_$X" \
+    "$REPO/bin/ax" prove --project "$SUBJ" --target "$TARGET" > "$T/run_$X.stdout.log" 2>&1
+  echo "$?" > "$T/run_$X.exit"
+  rm -f "$SUBJ/Cargo.lock"
+  (cd "$SUBJ" && find . -type f -not -path './.git/*' -print0 | sort -z | xargs -0 sha256sum) > "$T/subject_$X.post.manifest"
+  jq -S .extra "$T/state_$X/logs/ax_prove_trajectory.jsonl" > "$T/payload_$X.json"
+  find "$T/state_$X/.axiom/rust-lane" -name 'skreport-identity.json' -exec cp {} "$T/sidecar_$X.json" \;
+  jq -S '.identity.embeddedContentAttested // "ABSENT"' "$T/sidecar_$X.json" > "$T/embedded_$X.json"
+}
+
+run_one a "$JSON" byte
+run_one b "$T/json_b" byte
+run_one c "$T/json_c" byte
+run_one d "$T/json_b" jq
+
+CMP="$REPO/build/skreport_compare_tool"
+"$CMP" "$T/payload_a.json" "$T/sidecar_a.json" "$T/payload_b.json" "$T/sidecar_b.json" \
+  "$JSON" "$T/state_a" "$T/json_b" "$T/state_b" > "$T/cmp_ab.json" 2> "$T/cmp_ab.stderr.log"
+echo "$?" > "$T/cmp_ab.exit"
+"$CMP" "$T/payload_c.json" "$T/sidecar_c.json" "$T/payload_a.json" "$T/sidecar_a.json" \
+  "$T/json_c" "$T/state_c" "$JSON" "$T/state_a" > "$T/cmp_ca.json" 2> "$T/cmp_ca.stderr.log"
+echo "$?" > "$T/cmp_ca.exit"
+"$CMP" "$T/payload_d.json" "$T/sidecar_d.json" "$T/payload_a.json" "$T/sidecar_a.json" \
+  "$T/json_b" "$T/state_d" "$JSON" "$T/state_a" > "$T/cmp_da.json" 2> "$T/cmp_da.stderr.log"
+echo "$?" > "$T/cmp_da.exit"
+
+echo "=== summary ==="
+for X in a b c d; do
+  echo "run_$X exit=$(cat "$T/run_$X.exit") pre=$(sha256sum "$T/subject_$X.pre.manifest" | cut -d' ' -f1) post=$(sha256sum "$T/subject_$X.post.manifest" | cut -d' ' -f1)"
+done
+for P in ab ca da; do
+  echo "cmp_$P exit=$(cat "$T/cmp_$P.exit") verdict=$(jq -r '.verdict // "PARSE_ERR"' "$T/cmp_$P.json" 2>/dev/null)"
+done
+echo "=== embeddedContentAttested (A/B/C/D) ==="
+for X in a b c d; do
+  echo -n "embedded_$X: "
+  tr -d '\n' < "$T/embedded_$X.json" | head -c 220
+  echo
+done

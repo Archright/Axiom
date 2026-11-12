@@ -1,0 +1,698 @@
+[integrity] merkle concat: sha256sum:sha256sum:sha256sum:sha256sum:
+[integrity] expected: 62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[integrity] actual:   62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[Axiom] Checking feature_manifest.json freshness (content-hash)...
+⚠️ [Bootstrap] src/generated/build_env.nim not found.
+  Run `nimble hermetic` (or `bin/hermetic_build`) to populate real values.
+  Falling back to build_env.nim.default constants.
+feature_manifest.json ensured fresh
+⚠️ [Bootstrap] src/generated/build_env.nim not found.
+  Run `nimble hermetic` (or `bin/hermetic_build`) to populate real values.
+  Falling back to build_env.nim.default constants.
+[sync_certs] Manifest fresh (6 entries)
+⚠️ [Bootstrap] src/generated/build_env.nim not found.
+  Run `nimble hermetic` (or `bin/hermetic_build`) to populate real values.
+  Falling back to build_env.nim.default constants.
+[hermetic] Building bin/hermetic_build from tools/hermetic_build.nim
+[integrity] merkle concat: sha256sum:sha256sum:sha256sum:sha256sum:
+[integrity] expected: 62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[integrity] actual:   62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+⚠️ [Bootstrap] src/generated/build_env.nim not found.
+  Run `nimble hermetic` (or `bin/hermetic_build`) to populate real values.
+  Falling back to build_env.nim.default constants.
+[hermetic] Environment changed (MISS)
+[hermetic] build_env.nim created from .default template
+[hermetic] Building bin/sync_topology from tools/sync_topology.nim
+[integrity] merkle concat: sha256sum:sha256sum:sha256sum:sha256sum:
+[integrity] expected: 62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[integrity] actual:   62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[hermetic] Syncing topology...
+[sync_topology] Root: <user-home>/.cache/axiom/purity-check
+[sync_topology] Syncing manifest.d/*.json...
+  Manifests: 0 written, 56 unchanged
+[sync_topology] Syncing _index.json...
+  Index: unchanged
+[sync_topology] Syncing manifest_registry.nim...
+  Registry: unchanged
+[sync_topology] Syncing gate_registry.nim...
+  Gate registry: unchanged
+[sync_topology] Syncing helper_registry.nim...
+  Helper registry: unchanged
+[sync_topology] Syncing gates.manifest.toml...
+  Manifest TOML: unchanged
+[sync_topology] Done.
+[hermetic] Regenerating type registry...
+[hermetic] Building bin/decision_binding_checker from tools/decision_binding_checker.nim
+[integrity] merkle concat: sha256sum:sha256sum:sha256sum:sha256sum:
+[integrity] expected: 62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[integrity] actual:   62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[hermetic] Checking decision bindings (audit)...
+[decision-binding] Loaded 259 active waiver(s) from decision_binding.waiver.json
+[decision-binding] Found 3 violation(s)
+  MergeAdmissible (<user-home>/.cache/axiom/purity-check/src/cli/merge_cli.nim:94) multiple returns without axiomDecision
+  canonicalizeEnvValue (<user-home>/.cache/axiom/purity-check/src/verification/obligation/identity.nim:52) multiple returns without axiomDecision
+  loadCASEntryByKey (<user-home>/.cache/axiom/purity-check/src/verification/canonical_cache.nim:149) returns Result/Option without axiomDecision
+[decision-binding] WARN: 3 function(s) missing {.axiomDecision.} pragma — escalation threshold 30 days not yet reached
+Hint: used config file '<user-home>/.choosenim/toolchains/nim-2.2.10/config/nim.cfg' [Conf]
+Hint: used config file '<user-home>/.choosenim/toolchains/nim-2.2.10/config/config.nims' [Conf]
+Hint: used config file '<user-home>/.cache/axiom/purity-check/config.nims' [Conf]
+.............................................................................................................................................................................................................................................................................................................................................................
+<user-home>/.cache/axiom/purity-check/src/core/trusted/semantic_profile.nim(90, 6) Hint: 'ProfileHash' should be: 'profileHash' [Name]
+....................
+<user-home>/.cache/axiom/purity-check/src/cli/selection_state.nim(25, 6) Hint: 'stateJoin' is declared but not used [XDeclaredButNotUsed]
+............................
+<user-home>/.cache/axiom/purity-check/src/cli/topology_cli.nim(368, 7) Hint: 'scanStart' is declared but not used [XDeclaredButNotUsed]
+.............................................................................
+<user-home>/.cache/axiom/purity-check/src/core/interfaces/io_executor.nim(11, 18) Hint: duplicate import of 'discard_result_linter'; previous import here: <user-home>/.cache/axiom/purity-check/src/core/interfaces/io_executor.nim(1, 2) [DuplicateModuleImport]
+.....................................
+<user-home>/.cache/axiom/purity-check/src/core/trusted/claim_authority.nim(124, 11) Hint: conversion from string to itself is pointless [ConvFromXtoItselfNotNeeded]
+................................
+<user-home>/.cache/axiom/purity-check/src/verification/cert_writer.nim(186, 3) Hint: 'ExistingCertificateState' is declared but not used [XDeclaredButNotUsed]
+<user-home>/.cache/axiom/purity-check/src/verification/cert_writer.nim(95, 6) Hint: 'uapScopeDigest' is declared but not used [XDeclaredButNotUsed]
+<user-home>/.cache/axiom/purity-check/src/verification/cert_writer.nim(98, 6) Hint: 'uapConfigDigest' is declared but not used [XDeclaredButNotUsed]
+..................................
+<user-home>/.cache/axiom/purity-check/src/core/judge/lean_replay.nim(25, 3) Hint: 'leanCommand' is declared but not used [XDeclaredButNotUsed]
+.....................................
+<user-home>/.cache/axiom/purity-check/src/cli/wf_render.nim(55, 9) Hint: 'totalWallTimeMs' is declared but not used [XDeclaredButNotUsed]
+<user-home>/.cache/axiom/purity-check/src/cli/wf_render.nim(61, 9) Hint: 'hotspotLabel' is declared but not used [XDeclaredButNotUsed]
+<user-home>/.cache/axiom/purity-check/src/cli/wf_render.nim(62, 9) Hint: 'hotspotElapsedMs' is declared but not used [XDeclaredButNotUsed]
+......................................................................................................................................................................
+<user-home>/.cache/axiom/purity-check/src/verification/obligation/canonical_verification.nim(71, 12) Hint: duplicate import of 'strutils'; previous import here: <user-home>/.cache/axiom/purity-check/src/verification/obligation/canonical_verification.nim(38, 13) [DuplicateModuleImport]
+<user-home>/.cache/axiom/purity-check/src/verification/obligation/canonical_verification.nim(517, 9) Hint: 'lowering' is declared but not used [XDeclaredButNotUsed]
+..................................................................
+<user-home>/.cache/axiom/purity-check/src/verification/verified_set_hydration.nim(140, 7) Hint: 'schemaVersion' is declared but not used [XDeclaredButNotUsed]
+<user-home>/.cache/axiom/purity-check/src/verification/verified_set_hydration.nim(175, 10) Hint: 'claimStore' is declared but not used [XDeclaredButNotUsed]
+................................................
+<user-home>/.cache/axiom/purity-check/src/cli/axiom_status.nim(424, 7) Hint: 'latest' is declared but not used [XDeclaredButNotUsed]
+.....................
+<user-home>/.cache/axiom/purity-check/src/core/debt/debt_events.nim(554, 6) Hint: 'flushFsync' is declared but not used [XDeclaredButNotUsed]
+...
+<user-home>/.cache/axiom/purity-check/src/cli/debt_cli.nim(720, 11) Hint: 'category' is declared but not used [XDeclaredButNotUsed]
+<user-home>/.cache/axiom/purity-check/src/cli/debt_cli.nim(824, 11) Hint: 'category' is declared but not used [XDeclaredButNotUsed]
+<user-home>/.cache/axiom/purity-check/src/cli/debt_cli.nim(981, 11) Hint: 'description' is declared but not used [XDeclaredButNotUsed]
+........
+<user-home>/.cache/axiom/purity-check/src/cli/merge_cli.nim(94, 23) Hint: 'V' should be: 'v' [Name]
+<user-home>/.cache/axiom/purity-check/src/cli/merge_cli.nim(94, 6) Hint: 'MergeAdmissible' should be: 'mergeAdmissible' [Name]
+........
+CC: add_scalar
+CC: fe
+CC: ge
+CC: key_exchange
+CC: keypair
+CC: sc
+CC: seed
+CC: sha512
+CC: sign
+CC: verify
+CC: system/exceptions.nim
+CC: std/private/threadtypes.nim
+CC: std/private/digitsutils.nim
+CC: std/assertions.nim
+CC: std/private/dragonbox.nim
+CC: std/formatfloat.nim
+CC: std/objectdollar.nim
+CC: system/dollars.nim
+CC: std/typedthreads.nim
+CC: system/repr_v2.nim
+CC: std/syncio.nim
+CC: system.nim
+CC: parseutils.nim
+CC: math.nim
+CC: algorithm.nim
+CC: unicode.nim
+CC: strutils.nim
+CC: pathnorm.nim
+CC: std/oserrors.nim
+CC: std/staticos.nim
+CC: posix.nim
+CC: std/private/oscommon.nim
+CC: std/private/ospaths2.nim
+CC: std/private/ossymlinks.nim
+CC: options.nim
+CC: times.nim
+CC: std/private/osfiles.nim
+CC: std/private/osdirs.nim
+CC: std/envvars.nim
+CC: std/private/osappdirs.nim
+CC: std/cmdline.nim
+CC: os.nim
+CC: hashes.nim
+CC: strtabs.nim
+CC: streams.nim
+CC: deques.nim
+CC: std/monotimes.nim
+CC: osproc.nim
+CC: sets.nim
+CC: std/exitprocs.nim
+CC: cli_types.nim
+CC: cli_outcome.nim
+CC: action_plan_cli.nim
+CC: tables.nim
+CC: core/types/results.nim
+CC: core/parsers/safe_parsers.nim
+CC: checksums/private/sha_utils.nim
+CC: checksums/sha2.nim
+CC: core/crypto/hash_kernel.nim
+CC: core/trusted/axiom_ir_types.nim
+CC: core/trusted/symbol_table_types.nim
+CC: core/trusted/axiom_ir.nim
+CC: core/trusted/axiom_ir_helpers.nim
+CC: shared/canonical_ast.nim
+CC: core/trusted/ast_to_ir.nim
+CC: core/trusted/env_types.nim
+CC: lexbase.nim
+CC: parsejson.nim
+CC: json.nim
+CC: core/trusted/axiom_pragmas.nim
+CC: core/trusted/core_pure_utils.nim
+CC: infrastructure/logging_facade.nim
+CC: cli_io_error.nim
+CC: core/pure/json_parse.nim
+CC: core/json/json_safe.nim
+CC: core/resilience/resilience_config.nim
+CC: core/types/vkd_types.nim
+CC: core/telemetry/verification_scope.nim
+CC: core/interfaces/logging_hub.nim
+CC: core/trusted/stdlib_shield.nim
+CC: core/utils/io_utils_isolation.nim
+CC: core/io/io_utils.nim
+CC: core/utils/repo_root.nim
+CC: core/utils/canonical_projection.nim
+CC: sequtils.nim
+CC: verification/report_engine.nim
+CC: report_cli.nim
+CC: action_output_cli.nim
+CC: action_invariants_sync.nim
+CC: strformat.nim
+CC: core/json/json_utils.nim
+CC: core/types/verification_tier.nim
+CC: core/types/asi_types.nim
+CC: core/types/certificate_types.nim
+CC: core/gate/gate_memo.nim
+CC: nativesockets.nim
+CC: dynlib.nim
+CC: openssl.nim
+CC: ssl_certs.nim
+CC: net.nim
+CC: gate/daemon/gate_daemon_types.nim
+CC: gate/daemon/gate_daemon_client.nim
+CC: axiom_cache.nim
+CC: cli_surface_generated.nim
+CC: config_loader.nim
+CC: infrastructure/process_utils.nim
+CC: verification/lean_build_sandbox.nim
+CC: lean_verify_cmd.nim
+CC: core/types/z3_solver_config.nim
+CC: core/identity/axiom_identity.nim
+CC: core/types/error_types.nim
+CC: core/types/solver_types.nim
+CC: core/types/smt_types.nim
+CC: core/types/verification_types.nim
+CC: core/types/lean_types.nim
+CC: core/solver/expr_serialize.nim
+CC: core/symbolic/symbolic_types_expr.nim
+CC: core/types/translation_types.nim
+CC: core/gateway/gateway_json.nim
+CC: core/trusted/smt_sort.nim
+CC: core/gateway/gateway_helpers.nim
+CC: core/types/hubs/sync_resource_hub.nim
+CC: winlean.nim
+CC: core/sync/sync_utils_process.nim
+CC: core/utils/text_utils.nim
+CC: core/encoding/smt_types.nim
+CC: core/encoding/smt_to_lean/private/parser.nim
+CC: core/encoding/smt_to_lean/private/arithmetic_expr.nim
+CC: core/encoding/smt_to_lean_translate.nim
+CC: core/gateway/gateway_main.nim
+CC: core/vault/vault_manager_spec.nim
+CC: core/sorter/sorter_core_index_base.nim
+CC: core/sorter/sorter_core_index_table.nim
+CC: core/topology/symbol_interning.nim
+CC: core/io/file_utils.nim
+CC: core/vault/vault_manager_storage.nim
+CC: core/sorter/sorter_core_algo.nim
+CC: core/orchestrator/orchestrator_report_types.nim
+CC: core/orchestrator/orchestrator_request_types.nim
+CC: core/orchestrator/cegar_types.nim
+CC: compiler/pathutils.nim
+CC: compiler/llstream.nim
+CC: compiler/lineinfos.nim
+CC: compiler/platform.nim
+CC: terminal.nim
+CC: compiler/options.nim
+CC: compiler/msgs.nim
+CC: compiler/wordrecg.nim
+CC: compiler/idents.nim
+CC: compiler/nimlexbase.nim
+CC: compiler/lexer.nim
+CC: compiler/nodekinds.nim
+CC: compiler/ast.nim
+CC: compiler/parser.nim
+CC: core/parser_utils.nim
+CC: core/symbolic/cfg_types.nim
+CC: core/orchestrator/cfg_builder.nim
+CC: core/orchestrator/orchestrator_parallel_types.nim
+CC: core/gate/gate_evaluators.nim
+CC: core/parsers/pnode_nav.nim
+CC: core/encoding/type_logic_registry.nim
+CC: core/types/hubs/param_type_info_hub.nim
+CC: core/types/hubs/semantic_hint_hub.nim
+CC: core/boundary/boundary_extraction_types.nim
+CC: core/boundary/boundary_extraction_helpers.nim
+CC: core/type_system/liquid_inference.nim
+CC: core/boundary/boundary_extraction_main.nim
+CC: core/boundary/private/boundary_context.nim
+CC: core/boundary/private/trivial_filter.nim
+CC: core/boundary/meta_extractor.nim
+CC: core/boundary/private/boundary_phases.nim
+CC: core/boundary/boundary_extractor_part1.nim
+CC: pcre.nim
+CC: rtarrays.nim
+CC: re.nim
+CC: core/topology/declaration.nim
+CC: core/topology/plan.nim
+CC: core/topology/topology_types.nim
+CC: core/topology/topology_dependency.nim
+CC: core/topology/topology_parser.nim
+CC: core/topology/topology_symbol_scanner.nim
+CC: core/utils/axiom_error.nim
+CC: core/topology/merkle_cache.nim
+CC: core/topology/node_filter.nim
+CC: core/topology/topology_engine.nim
+CC: payload_bridge.nim
+CC: core/judge/tautology_checker.nim
+CC: core/metrics.nim
+CC: core/telemetry/metrics.nim
+CC: proof_gate.nim
+CC: queue_limit.nim
+CC: core/trusted/specification_artifact.nim
+CC: core/trusted/assurance_profile.nim
+CC: core/trusted/dependency_snapshot.nim
+CC: core/trusted/solver_invocation.nim
+CC: core/trusted/evidence_calculus.nim
+CC: core/proof/proof_integrity.nim
+CC: core/trusted/fingerprint_generator.nim
+CC: infrastructure/cas_index.nim
+CC: core/trusted/append_store.nim
+CC: core/trusted/scope_identity.nim
+CC: core/trusted/trust_commit.nim
+CC: core/proof/source_fingerprint.nim
+CC: verification/certificate_identity.nim
+CC: ed25519.nim
+CC: infrastructure/certificate_attestation.nim
+CC: verification/certificate_verifier.nim
+CC: verification/state_manager.nim
+CC: verification/proof_state_projection.nim
+CC: verification/state_persistence.nim
+CC: shared/proof_hydration.nim
+CC: verification/obligation/metrics_io.nim
+CC: shared/baseline_snapshot_core.nim
+CC: selection_state.nim
+CC: frontier_selection.nim
+CC: core/types/hubs/proof_hub.nim
+CC: core/integrity/integrity_refinement_types.nim
+CC: core/solver/equivalence_checker.nim
+CC: core/types/hubs/refactoring_hub.nim
+CC: core/interfaces/ast_inspector.nim
+CC: core/diagnostics/pattern_guard.nim
+CC: core/types/obligation_evidence.nim
+CC: core/types/refactor_task_types.nim
+CC: core/diagnostics/refactoring_engine.nim
+CC: core/proof/proof_artifact.nim
+CC: core/types/workflow_state.nim
+CC: core/types/pipeline_core_types.nim
+CC: core/logic/pipeline_fingerprint_engine.nim
+CC: core/logic/smt_logic.nim
+CC: core/trusted/lean_util.nim
+CC: core/types/remediation_types.nim
+CC: core/contracts/universal_pipeline_contract.nim
+CC: core/diagnostics/diagnostics_engine_helpers.nim
+CC: topology_cli.nim
+CC: cli_io_input.nim
+CC: wf_state_parsing.nim
+CC: wf_state_vacuity.nim
+CC: verification/unified_trajectory_types.nim
+CC: verification/unified_trajectory.nim
+CC: verification/cert_vault_role.nim
+CC: verification/certificate_eligibility.nim
+CC: core/types/hubs/pragma_pattern_hub.nim
+CC: core/policy/architecture_policy_types.nim
+CC: core/policy/parse_helpers.nim
+CC: core/policy/section_parsers.nim
+CC: core/policy/parsers/parse_informational.nim
+CC: core/policy/parsers/parse_meta.nim
+CC: core/policy/parsers/parse_dry.nim
+CC: core/policy/parsers/parse_surface_area.nim
+CC: core/policy/parsers/parse_cohesion.nim
+CC: core/policy/parsers/parse_forbidden.nim
+CC: core/policy/parsers/parse_canonical.nim
+CC: core/policy/parsers/parse_interfaces.nim
+CC: core/policy/parsers/parse_layers.nim
+CC: core/policy/parsers/parse_ocp.nim
+CC: core/policy/parsers/parse_impure_procedures_whitelist.nim
+CC: core/policy/architecture_policy_part1.nim
+CC: core/policy/architecture_policy_part2.nim
+CC: verification/proof_state_builder.nim
+CC: core/logic/lean_diagnostic.nim
+CC: heapqueue.nim
+CC: asyncfutures.nim
+CC: core/types/lean_lsp_types.nim
+CC: selectors.nim
+CC: asyncmacro.nim
+CC: asyncdispatch.nim
+CC: verification/lean_lsp_protocol.nim
+CC: core/proof/proof_budget.nim
+CC: verification/lean_lsp_compiler.nim
+CC: verification/lean_lsp_tactic.nim
+CC: core/trusted/runtime_context.nim
+CC: verification/lean_lsp_client.nim
+CC: verification/lean_lsp_feedback.nim
+CC: verification/integrity_ledger.nim
+CC: core/symbolic/global_symbol_graph_types.nim
+CC: core/symbol_graph/global_symbol_graph_builder_part1.nim
+CC: core/interfaces/io_executor.nim
+CC: core/interfaces/git_operations.nim
+CC: core/symbol_graph/global_symbol_graph_builder_part2.nim
+CC: verification/global_symbol_graph.nim
+CC: core/symbol_graph/global_symbol_graph_query.nim
+CC: verification/llm_backend.nim
+CC: verification/leanstral_gateway.nim
+CC: verification/ast_extractor.nim
+CC: core/types/hubs/effect_hub.nim
+CC: core/types/frontend_ir.nim
+CC: core/identity/axiom_prelude.nim
+CC: frontend/frontend_interface.nim
+CC: frontend/nim/weaver.nim
+CC: frontend/nim/nim_frontend.nim
+CC: verification/leanstral_prompt.nim
+CC: core/trusted/claim_authority.nim
+CC: core/trusted/provenance_guard.nim
+CC: core/trusted/cert_v2.nim
+CC: core/trusted/claim_projection.nim
+CC: verification/obligation/obligation_types.nim
+CC: verification/obligation/no_obligation_provenance.nim
+CC: verification/obligation/obligation_ir.nim
+CC: verification/obligation/lean_kernel_boundary.nim
+CC: verification/obligation/lean_evidence.nim
+CC: core/boundary/persona_interface.nim
+CC: core/bmc/bmc_generic.nim
+CC: core/orchestrator/cegar_bmc_types.nim
+CC: core/bmc/bmc_types.nim
+CC: core/solver/encoding_transition.nim
+CC: core/solver/induction.nim
+CC: core/solver/smtlib_emitter.nim
+CC: core/solver/z3_result_parser.nim
+CC: core/solver/z3_telemetry.nim
+CC: core/solver/solver_bridge.nim
+CC: verification/pipeline_state_types.nim
+CC: verification/obligation/identity.nim
+CC: verification/canonical_json.nim
+CC: verification/obligation/kernel_acceptance_authority.nim
+CC: verification/canonical_certificate_payload.nim
+CC: verification/cert_writer.nim
+CC: core/symbolic/symbolic_types_parse.nim
+CC: core/symbolic/symbolic_types_exec.nim
+CC: verification/analyzer/stage_01_ast_extract.nim
+CC: gate/gate_rules_module_classifier.nim
+CC: core/judge/lean_replay.nim
+CC: verification/abstract_provider_types.nim
+CC: verification/abstract_provider.nim
+CC: verification/loop_invariant_synthesis.nim
+CC: std/sysrand.nim
+CC: random.nim
+CC: std/tempfiles.nim
+CC: verification/solver/z3_pool.nim
+CC: verification/solver/provers.nim
+CC: core/trusted/reasoning_recorder.nim
+CC: core/proof/proof_vacuity_gate.nim
+CC: core/proof/axiom_lemmas.nim
+CC: core/logic/semantic_theorem_builder.nim
+CC: core/translator/universal_assembler.nim
+CC: verification/leanstral_repl.nim
+CC: verification/proof_synthesis_engine_part1.nim
+CC: verification/proof_synthesis_engine_part2.nim
+CC: core/trusted/lean_goal.nim
+CC: core/trusted/theorem_writer.nim
+CC: core/trusted/ir_to_lean.nim
+CC: wf_state.nim
+CC: report_format.nim
+CC: ui/notion_semantic_mapper.nim
+CC: wf_render.nim
+CC: core/parsers/expression_parser.nim
+CC: core/orchestrator/orchestrator_topology_depth.nim
+CC: core/orchestrator/orchestrator_topology_worker.nim
+CC: core/orchestrator/orchestrator_topology_emit.nim
+CC: core/orchestrator/orchestrator_vault.nim
+CC: std/tasks.nim
+CC: malebolgia.nim
+CC: wf_runners.nim
+CC: core/types/universe_types.nim
+CC: core/orchestration/pipeline_config.nim
+CC: verification/solver/fixedpoint_types.nim
+CC: core/boundary/verification_interface.nim
+CC: core/application/persona_context.nim
+CC: verification/pipeline_lean_spec_inference_part1.nim
+CC: verification/pipeline_lean_spec_inference_part2.nim
+CC: verification/pipeline_lean_spec_inference_part3.nim
+CC: verification/composition/leanstral_registry.nim
+CC: core/trusted/effect_shim.nim
+CC: verification/pipeline_negative_scan_part1.nim
+CC: verification/pipeline_negative_scan_part2.nim
+CC: verification/pipeline_negative_scan_part3.nim
+CC: verification/pipeline_core_runner_part1.nim
+CC: verification/pipeline_core_runner_part2.nim
+CC: verification/composition/scan_registry.nim
+CC: verification/layer1_bmc.nim
+CC: verification/pipeline_stage_swat.nim
+CC: core/boundary/cfg_builder.nim
+CC: core/bmc/transition_adapter.nim
+CC: core/solver/encoding_validity.nim
+CC: verification/solver/unsat_core_slicer.nim
+CC: verification/solver/fixedpoint_engine.nim
+CC: verification/solver/pdr_engine.nim
+CC: verification/cegar_engine.nim
+CC: verification/inductive_proof_emitter.nim
+CC: verification/spacer_chc_router.nim
+CC: verification/pipeline_stage_k_induction.nim
+CC: verification/composition/bmc_registry.nim
+CC: verification/composition/cegar_registry.nim
+CC: core/logic/pipeline_healing_logic.nim
+CC: verification/healing_orchestrator.nim
+CC: verification/composition/healing_registry.nim
+CC: core/application/persona_context_init.nim
+CC: core/bmc/bmc_variable_map.nim
+CC: verification/pipeline_effect.nim
+CC: core/orchestration/pipeline_types.nim
+CC: core/translator/universal_mapper_part1.nim
+CC: core/translator/universal_mapper_part2.nim
+CC: core/json/json_scan_skip.nim
+CC: core/logic/pipeline_trace_artifacts.nim
+CC: core/logic/pipeline_verdict_engine.nim
+CC: personas/detective.nim
+CC: core/types/verification_unit.nim
+CC: core/application/verification_orchestration.nim
+CC: core/resilience/error_context.nim
+CC: core/resilience/error_classifier.nim
+CC: core/cache/ttl_cache.nim
+CC: core/cache/proof_cache.nim
+CC: personas/legislator.nim
+CC: personas/llm_response_guard.nim
+CC: personas/legislator_feedback.nim
+CC: personas/strategy_registry.nim
+CC: personas/shape_handlers/linear_arithmetic.nim
+CC: personas/shape_handlers/equality.nim
+CC: personas/shape_handlers/inductive_structure.nim
+CC: personas/shape_handlers/finite_equality.nim
+CC: personas/shape_handlers/general.nim
+CC: personas/shape_handlers/unknown.nim
+CC: personas/strategy_handlers/rfl.nim
+CC: personas/strategy_handlers/omega.nim
+CC: personas/strategy_handlers/decide.nim
+CC: personas/strategy_handlers/native_decide.nim
+CC: personas/strategy_handlers/simp.nim
+CC: personas/strategy_handlers/simp_omega.nim
+CC: personas/strategy_handlers/grind.nim
+CC: personas/strategy_handlers/aesop.nim
+CC: personas/strategy_handlers/llm_fallback.nim
+CC: personas/judge_automation.nim
+CC: personas/judge.nim
+CC: personas/scribe.nim
+CC: core/interfaces/git_ops_hub.nim
+CC: infrastructure/bypass_audit.nim
+CC: core/orchestration/pipeline_dispatch.nim
+CC: core/topology/verified_set.nim
+CC: core/topology/verified_frontier.nim
+CC: gate/semantic_alias_mapper.nim
+CC: core/types/function_verification_summary.nim
+CC: core/trusted/verification_result_types.nim
+CC: sieve/subjective_logic.nim
+CC: sieve/sieve_types.nim
+CC: sieve/sieve_refactor_bridge.nim
+CC: verification/certificate_hydration.nim
+CC: verification/batch_uap/private/types.nim
+CC: verification/batch_uap/certificate_hydration_runner.nim
+CC: core/trusted/ir_elaborate_sorts.nim
+CC: core/trusted/ir_tree_ops.nim
+CC: core/trusted/ir_to_smt.nim
+CC: core/trusted/evidence_capture.nim
+CC: core/trusted/private/chc_types.nim
+CC: core/trusted/private/chc_build_result.nim
+CC: core/trusted/verification_model_types.nim
+CC: core/trusted/private/transition_formula_builder.nim
+CC: core/trusted/private/identity_mapping.nim
+CC: core/trusted/private/verification_obligations.nim
+CC: core/trusted/private/semantic_identity.nim
+CC: core/trusted/private/loop_transition_lowering.nim
+CC: core/trusted/private/ir_state_sort.nim
+CC: core/trusted/private/ir_loop_to_horn.nim
+CC: core/trusted/contract_synthesis.nim
+CC: verification/obligation/semantic_target_extractor.nim
+CC: verification/obligation/post_satisfaction.nim
+CC: verification/obligation/canonical_obligation_generator.nim
+CC: verification/obligation/verification_decision_authority.nim
+CC: verification/obligation/canonical_verification.nim
+CC: core/trusted/ir_inline_pass.nim
+CC: verification/cross_validation.nim
+CC: sieve/trivial_lean_router.nim
+CC: core/trusted/pnode_to_canon.nim
+CC: infrastructure/external_ir_materializer.nim
+CC: engine/proof_certificate.nim
+CC: verification/obligation/canonical_outcome.nim
+CC: core/telemetry/complexity.nim
+CC: verification/ax_tautology.nim
+CC: verification/ax_classify.nim
+CC: verification/ax_implication.nim
+CC: verification/admissibility.nim
+CC: verification/obligation/verified_fragment.nim
+CC: verification/obligation/candidate_eligibility.nim
+CC: core/trusted/candidate_evidence.nim
+CC: core/trusted/backend_capability.nim
+CC: verification/solver_adapter.nim
+CC: verification/obligation_discharger.nim
+CC: verification/evidence_validator.nim
+CC: verification/counterexample_validator.nim
+CC: verification/batch_uap/ir_pipeline_runner.nim
+CC: core/logic/axiom_verification_context.nim
+CC: core/translator/nim_ast_to_json_nodes.nim
+CC: verification/batch_uap/private/request_builder.nim
+CC: sieve/sieve_bridge.nim
+CC: sieve/sieve_rules.nim
+CC: sieve/sieve_engine.nim
+CC: gate/framework/topology_types.nim
+CC: gate/topology_spec.nim
+CC: core/gate/static_project_matrix.nim
+CC: gate/gate_contract.nim
+CC: verification/batch_uap/ast_hash.nim
+CC: verification/batch_uap/cache_middleware.nim
+CC: core/proof/function_source_extractor.nim
+CC: verification/solver/triviality_filter.nim
+CC: verification/proof/arithmetic_type_directed_pipeline.nim
+CC: verification/spacer_integration_gate.nim
+CC: verification/batch_uap/stages.nim
+CC: verification/pipeline_phase.nim
+CC: verification/pipeline_transition.nim
+CC: verification/pipeline_stage_detective.nim
+CC: verification/pipeline_stage_judge.nim
+CC: verification/pipeline_stage_legislator.nim
+CC: verification/pipeline_stage_postprocess.nim
+CC: verification/pipeline_stage_scribe.nim
+CC: verification/pipeline_transition_engine.nim
+CC: verification/universal_pipeline.nim
+CC: verification/batch_uap/loop_depth_scheduler.nim
+CC: verification/batch_uap/loop_topology.nim
+CC: verification/cert_promotion.nim
+CC: verification/io_axiom_builder.nim
+CC: verification/batch_uap/instrumentation.nim
+CC: verification/batch_uap/pbt_adapter.nim
+CC: verification/batch_uap/loop_driver.nim
+CC: core/types/residual_monad.nim
+CC: core/progress/lexicographic_terminator.nim
+CC: verification/batch_uap/refactor_executor.nim
+CC: verification/batch_uap/refactor_vfs.nim
+CC: core/trusted/claim_store.nim
+CC: core/trusted/claim_store_persist.nim
+CC: core/trusted/claim_authoritative_index.nim
+CC: core/trusted/authoritative_hydration.nim
+CC: verification/verified_set_hydration.nim
+CC: core/context/run_context.nim
+CC: verification/vault_manifest.nim
+CC: core/proof/proof_universe_lock.nim
+CC: verification/proof_universe_commit.nim
+CC: axiom_engine.nim
+CC: baseline_cli.nim
+CC: core/types/debt_types.nim
+CC: budget_cli.nim
+CC: verification/cert_reconcile.nim
+CC: cert_cli.nim
+CC: infrastructure/hermetic_sandbox.nim
+CC: check_cli.nim
+CC: check_spec_cli.nim
+CC: commands/command_registry.nim
+CC: core/interfaces/file_io_executor.nim
+CC: core/audit/hotspot_analyzer.nim
+CC: core/audit/burn_down_queue.nim
+CC: core/audit/hotspot_render.nim
+CC: core/topology/policy.nim
+CC: core/types/hubs/topology_hub.nim
+CC: core/topology/lock.nim
+CC: core/topology/explain.nim
+CC: core/topology/manifest.nim
+CC: core/topology/suggest.nim
+CC: core/topology/staging.nim
+CC: core/topology/rewrite.nim
+CC: core/topology/lock_update.nim
+CC: core/topology/apply.nim
+CC: core/topology/gate_ops.nim
+CC: infrastructure/logger.nim
+CC: infrastructure/topology_executor.nim
+CC: commands/topology_cli.nim
+CC: core/gate/state_ledger.nim
+CC: commands/observability.nim
+CC: config_cli.nim
+CC: cst_cli.nim
+CC: dag_cli.nim
+CC: core/contracts/z3_extraction.nim
+CC: gate_cli.nim
+CC: git_cli.nim
+CC: infra_cli.nim
+CC: io_cli.nim
+CC: lint_cli.nim
+CC: core/release/version_derive.nim
+CC: release_cli.nim
+CC: axiom_status.nim
+CC: scaffold_cli.nim
+CC: core/trusted/project_setup.nim
+CC: scope_cli.nim
+CC: core/utils/shadow_digests.nim
+CC: shadow_cli.nim
+CC: shape_cli.nim
+CC: version_cli.nim
+CC: vkd_sync_cli.nim
+CC: verify_cli.nim
+CC: core/debt/debt_observation.nim
+CC: core/debt/debt_identity.nim
+CC: core/debt/debt_classifier.nim
+CC: core/debt/debt_budget.nim
+CC: core/debt/debt_provenance.nim
+CC: core/debt/debt_audit.nim
+CC: core/debt/debt_events.nim
+CC: core/debt/debt_projection.nim
+CC: core/debt/debt_pipeline.nim
+CC: sync_budget.nim
+CC: debt_cli.nim
+CC: base64.nim
+CC: uri.nim
+CC: httpcore.nim
+CC: httpclient.nim
+CC: merge_cli.nim
+CC: action_interpreter_cli.nim
+CC: core/encoding/smt_hints.nim
+CC: wf_planning.nim
+CC: verification/pipeline_core_types.nim
+CC: wf_semantic.nim
+CC: lifecycle.nim
+CC: gate/lib/runner_common.nim
+CC: main.nim
+Hint:  [Link]
+Hint: mm: arc; threads: on; opt: none (DEBUG BUILD, `-d:release` generates faster code)
+263261 lines; 28.230s; 1013.297MiB peakmem; proj: <user-home>/.cache/axiom/purity-check/src/cli/main.nim; out: <user-home>/.cache/axiom/purity-check/bin/ax [SuccessX]

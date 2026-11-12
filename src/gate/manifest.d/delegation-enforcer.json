@@ -1,0 +1,13 @@
+{
+  "id": "delegation-enforcer",
+  "name": "Axiom delegation enforcer",
+  "layer": "functional",
+  "entry": "src/gate/runners/delegation_enforcer.nim",
+  "stages": [
+    "manual"
+  ],
+  "passFilenames": false,
+  "weight": "medium",
+  "category": "policy",
+  "severity": "error"
+}

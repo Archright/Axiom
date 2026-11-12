@@ -1,0 +1,411 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://axiom-project.org/schemas/debt_schema.json",
+  "title": "Axiom Debt File Schema",
+  "description": "JSON Schema for all Axiom debt-tracking JSON files: architecture_debt.json, debt_registry.json, and debt_ledger.json.",
+  "definitions": {
+    "severityEnum": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low"],
+      "description": "Canonical debt severity level. Prefer these values for new entries."
+    },
+    "statusEnum": {
+      "type": "string",
+      "enum": ["open", "closed", "accepted", "deferred", "in_progress"],
+      "description": "Canonical lifecycle status. Prefer these values for new entries."
+    },
+    "iso8601String": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+      "description": "ISO 8601 datetime string with UTC 'Z' suffix (e.g. 2026-06-18T13:27:57Z)."
+    },
+    "debtId": {
+      "type": "string",
+      "pattern": "^DEBT(-CI)?#\\d{3,}$",
+      "description": "Canonical debt identifier (DEBT#NNN or higher, or legacy DEBT-CI#NNN)."
+    },
+    "fileRef": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Relative file or directory path within the project."
+    },
+    "contentHash": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Content hash of the tracked file (hex digest or signed integer string)."
+    },
+    "ArchitectureDebtFile": {
+      "type": "object",
+      "description": "Schema for data/architecture_debt.json — per-file debt tracking.",
+      "required": ["version", "entries"],
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Schema version (currently 1)."
+        },
+        "entries": {
+          "type": "array",
+          "description": "Array of per-file debt entries.",
+          "items": {
+            "$ref": "#/definitions/ArchitectureDebtEntry"
+          }
+        }
+      }
+    },
+    "ArchitectureDebtEntry": {
+      "type": "object",
+      "description": "A single architecture debt record for one source file.",
+      "required": ["file", "count", "firstSeen", "lastSeen", "contentHash"],
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "$ref": "#/definitions/fileRef",
+          "description": "Relative path to the source file."
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of debt items detected in this file."
+        },
+        "firstSeen": {
+          "description": "Timestamp when this debt was first detected (ISO 8601) or empty if unknown.",
+          "oneOf": [
+            { "$ref": "#/definitions/iso8601String" },
+            { "type": "string", "const": "" }
+          ]
+        },
+        "lastSeen": {
+          "description": "Timestamp when this debt was last detected (ISO 8601) or empty if unknown.",
+          "oneOf": [
+            { "$ref": "#/definitions/iso8601String" },
+            { "type": "string", "const": "" }
+          ]
+        },
+        "contentHash": {
+          "$ref": "#/definitions/contentHash",
+          "description": "Content hash of the file at last scan."
+        }
+      }
+    },
+    "DebtRegistryFile": {
+      "type": "object",
+      "description": "Schema for data/debt_registry.json — canonical SSOT for tracked debts.",
+      "required": ["version", "generatedAt", "scanner", "entries"],
+      "additionalProperties": false,
+      "properties": {
+        "$schema": {
+          "type": "string",
+          "description": "JSON Schema draft URI (structural metadata only, not validated as a keyword)."
+        },
+        "$comment": {
+          "type": "string",
+          "description": "Human-readable schema note for tools that do not consume formal validation."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Registry version."
+        },
+        "generatedAt": {
+          "type": ["string", "null"],
+          "description": "UTC generation timestamp (ISO 8601), or null when the registry was hand-maintained."
+        },
+        "scanner": {
+          "type": "string",
+          "description": "Origin of the registry update."
+        },
+        "entries": {
+          "type": "array",
+          "description": "Array of canonical debt entries.",
+          "items": {
+            "$ref": "#/definitions/DebtRegistryEntry"
+          }
+        }
+      }
+    },
+    "DebtRegistryEntry": {
+      "type": "object",
+      "description": "A single canonical debt record in the registry.",
+      "required": ["category", "description", "id", "severity", "source", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Debt category (e.g. Compiler Hygiene, Architecture / SoC)."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable description of the debt."
+        },
+        "files": {
+          "type": "array",
+          "description": "Live-target references — existence is enforced by debt_engine --validate for open/deferred entries. May be empty or absent for system-wide issues; line annotations (e.g. src/foo.nim:12-34) are permitted and do not affect existence.",
+          "items": {
+            "$ref": "#/definitions/fileRef"
+          }
+        },
+        "historicalFiles": {
+          "type": "array",
+          "description": "Historical-record references — existence exempt (live-target refs live in `files`).",
+          "items": {
+            "$ref": "#/definitions/fileRef"
+          }
+        },
+        "file": {
+          "type": "string",
+          "description": "Single-file alias used by theater skip matching."
+        },
+        "id": {
+          "$ref": "#/definitions/debtId",
+          "description": "Canonical debt identifier."
+        },
+        "severity": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Severity level; prefer canonical values from severityEnum but freeform values like 'info' or 'n/a' are allowed."
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Origin of the debt entry (e.g. markdown, lint, gate)."
+        },
+        "status": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Lifecycle status; prefer canonical values from statusEnum but freeform annotations are allowed."
+        },
+        "title": {
+          "type": "string",
+          "description": "Short human-readable title."
+        },
+        "impact": {
+          "type": "string",
+          "description": "Impact level such as 'low', 'medium', 'high', or 'critical'."
+        },
+        "resolution": {
+          "type": "string",
+          "description": "Resolution status — freeform (e.g. FIXED, WONT_FIX, UNRESOLVED, or long-form policy notes)."
+        },
+        "lastVerifiedAt": {
+          "$ref": "#/definitions/iso8601String",
+          "description": "UTC ISO 8601 timestamp when this entry was last verified."
+        },
+        "resolutionNote": {
+          "type": "string",
+          "description": "Freeform note explaining the resolution."
+        },
+        "resolvedAt": {
+          "type": "string",
+          "description": "When the entry was resolved — ISO 8601 datetime or date-only (legacy entries)."
+        },
+        "resolvedBy": {
+          "type": "string",
+          "description": "Who/what resolved the entry."
+        },
+        "note": {
+          "type": "string",
+          "description": "Freeform note."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Entry kind discriminator."
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Exact procedure/function/macro signature or artifact symbol."
+        },
+        "contentHash": {
+          "$ref": "#/definitions/contentHash",
+          "description": "Content hash of the tracked artifact (sha256: digest)."
+        },
+        "lineRange": {
+          "type": "string",
+          "description": "Human-readable line range hint (e.g. src/foo.nim:12-34; src/bar.nim:1-5)."
+        },
+        "binding": {
+          "type": "string",
+          "enum": ["nim_pragma", "registry_disposition"],
+          "description": "Binding-type declaration: how this entry binds to the audited artifact. Absent = legacy interpretation (nim_pragma binding — unchanged behavior, no extra requirement). \"registry_disposition\" = the registry entry itself is the binding medium (documented disposition for why no {.axiomDebt.} marker exists) and requires bindingRationale. Any other value — including the reserved \"comment_marker\" — is rejected by this enum."
+        },
+        "bindingRationale": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "description": "One-line reason required when binding == \"registry_disposition\": the reason plus explicit trace pointers (the entry's own resolution/source fields, and external doc path + item ID when applicable, e.g. ADR-0029, ADR-0038, DEBT#466-470). Must contain at least one non-whitespace character. Mechanical format validation only — it does not prove the semantic legitimacy of the disposition."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "binding": {"const": "registry_disposition"}
+            },
+            "required": ["binding"]
+          },
+          "then": {
+            "required": ["bindingRationale"],
+            "properties": {
+              "bindingRationale": {"type": "string", "minLength": 1, "pattern": "\\S"}
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["category", "id"],
+            "properties": {
+              "category": {"type": "string", "pattern": "^Theater/"},
+              "id": {"type": "string", "pattern": "^DEBT#(35[7-9]|3[6-9][0-9]|[4-9][0-9]{2}|[0-9]{4,})$"}
+            }
+          },
+          "then": {
+            "required": ["symbol", "contentHash", "lineRange", "resolution", "lastVerifiedAt"],
+            "properties": {
+              "symbol": {"type": "string", "minLength": 1},
+              "contentHash": {"type": "string", "minLength": 1},
+              "lineRange": {"type": "string", "minLength": 1},
+              "resolution": {"type": "string", "minLength": 1},
+              "lastVerifiedAt": {"$ref": "#/definitions/iso8601String"}
+            }
+          }
+        }
+      ]
+    },
+    "budgetCategoryEnum": {
+      "type": "string",
+      "enum": ["bcImportLint", "bcLayerViolation", "bcEffectViolation", "bcNimtryViolation", "bcDebtRegistryOpen", "bcDebtRegistryClosed"],
+      "description": "Budget category identifier for debt_ledger.json v1.1.0 records."
+    },
+    "severityBudgetEnum": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "description": "Budget severity level for v1.1.0 ledger records."
+    },
+    "statusBudgetEnum": {
+      "type": "string",
+      "enum": ["open", "closed"],
+      "description": "Budget record lifecycle status for v1.1.0 ledger records."
+    },
+    "resolutionEnum": {
+      "type": "string",
+      "enum": ["WONT_FIX", "FIXED"],
+      "description": "Resolution status for v1.1.0 budget ledger records."
+    },
+    "BudgetRecord": {
+      "type": "object",
+      "description": "A single budget metric record in data/debt_ledger.json v1.1.0.",
+      "required": ["id", "category", "description", "budgetCategory", "metric", "baseline", "target", "current", "severity", "source", "status", "resolution", "lastVerifiedAt"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^BUDGET#\\d{3}$",
+          "description": "Aggregate budget metric identifier (e.g. BUDGET#001). NOT a registry debt identity — cross-reference debt_registry for DEBT# IDs."
+        },
+        "category": {
+          "type": "string",
+          "const": "BudgetCategory",
+          "description": "Fixed discriminator value identifying this as a budget ledger record."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable description of the budget metric."
+        },
+        "budgetCategory": {
+          "$ref": "#/definitions/budgetCategoryEnum",
+          "description": "Specific budget category."
+        },
+        "metric": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Metric name being tracked."
+        },
+        "baseline": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Baseline value for the metric."
+        },
+        "target": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Target value for the metric."
+        },
+        "current": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Current measured value for the metric."
+        },
+        "severity": {
+          "$ref": "#/definitions/severityBudgetEnum",
+          "description": "Severity of the budget gap."
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Origin of the budget metric (e.g. debt_budgets.json)."
+        },
+        "status": {
+          "$ref": "#/definitions/statusBudgetEnum",
+          "description": "Current lifecycle status."
+        },
+        "resolution": {
+          "$ref": "#/definitions/resolutionEnum",
+          "description": "Resolution status."
+        },
+        "lastVerifiedAt": {
+          "$ref": "#/definitions/iso8601String",
+          "description": "ISO 8601 datetime when this record was last verified."
+        }
+      }
+    },
+    "DebtLedgerFile": {
+      "type": "object",
+      "description": "Schema for data/debt_ledger.json — budget metrics ledger v1.1.0.",
+      "required": ["version", "generated", "description", "totalRecords", "records"],
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "1.1.0",
+          "description": "Schema version. v1.1.0 ONLY — any other version is fail-closed rejected by all consumers."
+        },
+        "generated": {
+          "$ref": "#/definitions/iso8601String",
+          "description": "ISO 8601 datetime when this ledger was generated."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Purpose of this ledger file."
+        },
+        "totalRecords": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of budget records in the records array."
+        },
+        "records": {
+          "type": "array",
+          "description": "Array of budget metric records.",
+          "items": {
+            "$ref": "#/definitions/BudgetRecord"
+          }
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/definitions/ArchitectureDebtFile"
+    },
+    {
+      "$ref": "#/definitions/DebtRegistryFile"
+    },
+    {
+      "$ref": "#/definitions/DebtLedgerFile"
+    }
+  ]
+}

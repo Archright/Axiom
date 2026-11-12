@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/bypass_expiry_gate.py",
+  "description": "Check bypass_audit.jsonl for expired temporary bypasses — fails if any bypass has passed its expiry date",
+  "inputSample": {
+    "args": []
+  },
+  "outputSample": {
+    "stdout": "bypass_expiry: PASS (0 expired bypasses, 2 active bypasses within window)",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

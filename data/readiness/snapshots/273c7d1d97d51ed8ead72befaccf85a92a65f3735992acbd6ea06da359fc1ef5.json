@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "manifestId": "axiom-independent-readiness-evidence-v1",
+  "generatedAt": "2026-08-19T00:00:00Z",
+  "repoIdentity": {
+    "head": "2e31b258799d8ae25e173ba16c2eb3188f663977",
+    "branch": "main",
+    "workingTreeClean": true,
+    "treeDigest": "sha256:10e0e6b72c59ed66aab82751276eebf8da3f0956"
+  },
+  "toolchain": { "nim": "2.2.10", "z3": "4.13.3", "lean": "4.29.0" },
+  "policyDigest": "617f6e7e04a3d405cfe293dc456a995e30f7701295b9e4337134e06aefa70769",
+  "collection": {
+    "runIds": ["C1", "C2", "C3", "C4", "C5", "C6"],
+    "method": "parallel-subagent evidence collectors (sensors); observations only, no verdicts; supplemented by repo contract/source reading",
+    "note": "Pre-existing untracked entries: data/readiness/independent_policy.json, tmp/, tools/argv_probe.nim, tools/verification/replay_probe.nim (parent harness, not modified by collectors)"
+  },
+  "observations": {
+    "R1": [
+      {"obsId":"C1-02","key":"proveExitCode","value":1,"scope":"runtime","subject":"bin/ax prove --limit 1","evidence":"command"},
+      {"obsId":"C1-03","key":"proveSignalAbsent","value":true,"scope":"runtime","subject":"no SIGSEGV/SIGABRT signal; exitCode=1 (normal verification-failure state)","evidence":"command"},
+      {"obsId":"C1-06","key":"verificationExecutionDone","value":true,"scope":"runtime","subject":"real execution: topology scan 2050 files, IR extraction 21/229, SMT classification, Proof Summary Pass=4/Fail=0/TO=0/Skip=17/Error=0, [AXIOM TRUST] commit, [Depth 1/1]","evidence":"bin/ax prove --limit 1 stdout"},
+      {"obsId":"C1-07","key":"proveVerdictFailed","value":"FAILED for target gate_rules_normalization.nim::normalizedEntries","scope":"runtime","subject":"single limited target verdict","evidence":"bin/ax prove --limit 1"},
+      {"obsId":"C1-09","key":"reportExitCode","value":1,"scope":"runtime","subject":"bin/ax report --json exit code (verification-failure state)","evidence":"command"},
+      {"obsId":"C1-10","key":"reportValidJson","value":true,"scope":"runtime","subject":"report --json output parses as JSON","evidence":"python3 json.load"},
+      {"obsId":"C1-13","key":"negativeControlExit","value":1,"scope":"runtime","subject":"bin/ax prove --no-such-flag exits 1, clean invalid-input report","evidence":"command"},
+      {"obsId":"C1-18","key":"topLevelSignalHandlerAbsent","value":false,"scope":"source","subject":"no top-level SIGSEGV/SIGABRT handler at CLI boundary","evidence":"src/cli/main.nim"},
+      {"obsId":"C1-24","key":"topLevelExceptionHandlerAbsent","value":false,"scope":"source","subject":"runMain has no try/except catch-all; interpretCliActions catches Exception at action_interpreter_cli.nim:177","evidence":"src/cli/main.nim:111"},
+      {"obsId":"C1-25","key":"treeCleanAfterRun","value":true,"scope":"runtime","subject":"git status --porcelain --untracked-files=no empty after runs","evidence":"git status"}
+    ],
+    "R2": [
+      {"obsId":"C2-01","key":"inputNormalized","value":true,"scope":"source","subject":"canonical input identity type exists","evidence":"src/verification/certificate_identity.nim:15-33"},
+      {"obsId":"C2-02","key":"sourceHashPresent","value":true,"scope":"source","subject":"sourceHash part of input identity","evidence":"certificate_identity.nim:19-20"},
+      {"obsId":"C2-03","key":"sourceHashDerivation","value":"deterministic sha256Hex of normalized source","scope":"source","subject":"computeAxiomFingerprint","evidence":"src/core/identity/axiom_identity.nim:36-37"},
+      {"obsId":"C2-04","key":"irHashPresent","value":true,"scope":"source","subject":"irHash = deterministic sha256 of canonicalized IR","evidence":"src/core/trusted/axiom_ir.nim:447-451"},
+      {"obsId":"C2-05","key":"jsonSchemaVersion","value":"axiom.report.v1","scope":"source","subject":"report JSON schema identity","evidence":"src/core/utils/constants.nim:64"},
+      {"obsId":"C2-07","key":"machineReadableJson","value":true,"scope":"runtime","subject":"report JSON parseable with schemaVersion axiom.report.v1","evidence":"bin/ax report --json"},
+      {"obsId":"C2-09","key":"resultDeterministic","value":true,"scope":"runtime","subject":"run1 vs run2 report JSON byte-identical (cmp)","evidence":"cmp /tmp/ax_r2_run1.json /tmp/ax_r2_run2.json"},
+      {"obsId":"C2-10","key":"humanLogOnly","value":false,"scope":"source","subject":"JSON is the product result; human dashboard only in non-JSON mode","evidence":"src/cli/report_cli.nim:45-48"},
+      {"obsId":"C2-11","key":"canonicalResultArtifact","value":"certificate JSON files (CAS) under .axiom/vault/<irHash>.json; report is a projection","scope":"source","subject":"canonical result artifact identifier","evidence":"src/core/io/io_utils.nim:155-156"}
+    ],
+    "R3": [
+      {"obsId":"C3-01","key":"dualEvidenceGated","value":true,"scope":"source","subject":"certGreen requires z3Passed AND leanVerified","evidence":"src/verification/certificate_manager.nim:64"},
+      {"obsId":"C3-03","key":"z3VsDualDistinguishable","value":true,"scope":"source","subject":"vtDual->certGreen; vtZ3Only->certZ3Verified (never certGreen)","evidence":"src/verification/cert_writer.nim:150-157"},
+      {"obsId":"C3-04","key":"z3OnlyCannotProduceGreen","value":true,"scope":"source","subject":"tierFromResults yields vtDual only when z3 AND lean both succeed; tierToCertStatus(vtZ3Only)=certZ3Verified","evidence":"src/core/types/verification_tier.nim:37"},
+      {"obsId":"C3-06","key":"vacuousExcluded","value":true,"scope":"source","subject":"NoObligation-derived certs NOT upgraded to certGreen (theater guard)","evidence":"src/verification/proof_state_projection.nim:211-218"},
+      {"obsId":"C3-07","key":"noObligationExcludedFromVerified","value":true,"scope":"source","subject":"certNoObligation increments certifiedExempt, not verified","evidence":"src/verification/proof_state_builder.nim:163-164"},
+      {"obsId":"C3-09","key":"obligationPresent","value":true,"scope":"source","subject":"isVkdAdmissible requires isDeepVerified AND admissibleEvidence (dual Z3 AND Lean) AND status certGreen","evidence":"src/core/proof/proof_integrity.nim:154-182"},
+      {"obsId":"C3-10","key":"metricsVkd","value":{"verified":0,"total":23,"ratio":0.0},"scope":"runtime","subject":"report JSON metrics.vkd (canonical certGreen-only)","evidence":"bin/ax report --json"},
+      {"obsId":"C3-11","key":"summaryVerifiedLegacyVsCanonical","value":"summary.verified counts certGreen+certVerifiedAxiom+certZ3Verified+certLeanVerified+certDualVerified; metrics.vkd=canonical certGreen-only","scope":"source","subject":"verified counter semantics","evidence":"src/cli/report_cli.nim:412-427"},
+      {"obsId":"C3-18","key":"theaterGuardActive","value":true,"scope":"source","subject":"self-heal fingerprint match never promotes to certGreen; status derived from evidence","evidence":"src/verification/analyzer/stage_02_fingerprint.nim:107-125"}
+    ],
+    "R4": [
+      {"obsId":"C4-01","key":"certClaim","value":true,"scope":"artifact","subject":"v3 cert build/certificates/4ec55e9c....json claim present+non-empty","evidence":"build/certificates/4ec55e9c8e848346f5d876e9e54540a8944f499b9067af73769c526455c2aac4.json"},
+      {"obsId":"C4-01b","key":"certAttestation","value":true,"scope":"artifact","subject":"attestation present+non-empty","evidence":"same v3 cert"},
+      {"obsId":"C4-01c","key":"certInputHash","value":true,"scope":"artifact","subject":"inputHash present+non-empty","evidence":"same v3 cert"},
+      {"obsId":"C4-01d","key":"certProvenance","value":true,"scope":"artifact","subject":"provenance present+non-empty","evidence":"same v3 cert"},
+      {"obsId":"C4-01e","key":"certToolchainIdentity","value":true,"scope":"artifact","subject":"toolchainIdentity present+non-empty","evidence":"same v3 cert"},
+      {"obsId":"C4-01f","key":"certSolverInvocation","value":true,"scope":"artifact","subject":"solverInvocation present+non-empty","evidence":"same v3 cert"},
+      {"obsId":"C4-01g","key":"certSolverInputDigest","value":true,"scope":"artifact","subject":"solverInputDigest present+non-empty","evidence":"same v3 cert"},
+      {"obsId":"C4-01h","key":"certSolverResultDigest","value":true,"scope":"artifact","subject":"solverResultDigest present+non-empty","evidence":"same v3 cert"},
+      {"obsId":"C4-01i","key":"certIdentityDigest","value":true,"scope":"artifact","subject":"identityDigest present+non-empty","evidence":"same v3 cert"},
+      {"obsId":"C4-01j","key":"certProofDigest","value":null,"scope":"artifact","subject":"proofDigest key absent (optional per contract; proof-artifact pipeline unimplemented)","evidence":"same v3 cert"},
+      {"obsId":"C4-04","key":"canonicalVaultV3Certs","value":0,"scope":"artifact","subject":"no v3 JSON certificates in canonical vault src/verification/certificates/","evidence":"src/verification/certificates/"},
+      {"obsId":"C4-06","key":"provenanceResolvable","value":true,"scope":"artifact","subject":"provenance.journalCommitId resolves to data/trusted/journal/<id>.json; claim->attestation->toolchain->solver->input chain reconstructible","evidence":"build/certificates/4ec55e9c....json + data/trusted/journal/f1bdc238....json"},
+      {"obsId":"C4-07","key":"promotionGateEvidenceValidation","value":false,"scope":"source","subject":"promotion gate (cert_promotion.nim:57-91) checks identity+status only; does NOT check v3 field completeness or kernel/tool acceptance","evidence":"src/verification/cert_promotion.nim:57-91"},
+      {"obsId":"C4-15","key":"noEmptyFieldPromotion","value":false,"scope":"source","subject":"isPromotionAllowedStatus includes certGreen/certLeanVerified/certNoObligation/certYellow regardless of v3 field population; a pre-v3 cert with green status would be promoted","evidence":"src/verification/cert_promotion.nim:57-62"},
+      {"obsId":"C4-14","key":"proofDigestUnimplemented","value":true,"scope":"source","subject":"proofDigest never written by writeCertificateFromUapResult; tests assert key absent","evidence":"tests/unit/test_cert_writer_v3.nim:107,186,211"}
+    ],
+    "R5": [
+      {"obsId":"C5-A/B","key":"observedTwoRunIdentical","value":true,"scope":"runtime","subject":"bin/ax report --json run A/B stdout + stderr byte-identical (cmp -s); exit 1 both","evidence":"cmp -s /tmp/ax_A.out /tmp/ax_B.out"},
+      {"obsId":"C5-02","key":"certificateShaIdentical","value":"not-applicable/not-observed","scope":"runtime","subject":"no v3 cert generated by report-only determinism run (prove not run to bound time)","evidence":"C5 method note"},
+      {"obsId":"C5-03","key":"canonicalProjectionDefined","value":true,"scope":"docs","subject":"canonicalProjectionHash=SHA-256(sorted included-fields JSON); telemetry excluded","evidence":"docs/spec/productization_contract.md:194-207"},
+      {"obsId":"C5-04","key":"toolchainSaltDeterministic","value":true,"scope":"source","subject":"computeToolchainSalt=sha256(schemaVer v2 & nim --version first line)","evidence":"src/core/gate/gate_memo.nim:212-226"},
+      {"obsId":"C5-05","key":"cacheKeyDeterministic","value":true,"scope":"source","subject":"composite lock hash = deterministic pipe-joined sha256 of inputs; cache identity never includes wall-clock","evidence":"src/core/gate/gate_memo.nim:244-263"},
+      {"obsId":"C5-06","key":"z3DeterministicBudget","value":true,"scope":"docs","subject":"z3 rlimit 30,000,000 steps; z3SafetyNetMs wall-clock is liveness-only, never a solve decision","evidence":"docs/spec/z3_pool_determinism.md:28-38"},
+      {"obsId":"C5-07","key":"z3SeedPinned","value":true,"scope":"docs","subject":"random-seed 0, sat.random_seed 0, fp.spacer.random_seed 0 pinned at buildZ3QueryEnvelope","evidence":"docs/spec/z3_pool_determinism.md:118-121"},
+      {"obsId":"C5-08","key":"crossVersionNonDeterminismCaveat","value":true,"scope":"docs","subject":"rlimit non-monotonic across Z3 versions; determinism bound = fixed binary+query+rlimit","evidence":"docs/spec/z3_pool_determinism.md:170-179"},
+      {"obsId":"C5-09","key":"cacheWarmColdAsymmetryNotExcluded","value":true,"scope":"note","subject":"A/B runs sequential on same machine; warm/cold cache asymmetry not explicitly excluded (system cache files may make second run warmer)","evidence":"C5 method note"}
+    ],
+    "R6": [
+      {"obsId":"C6-01","key":"treeCleanAfterRun","value":true,"scope":"runtime","subject":"git status + git diff --name-only HEAD empty across two runs","evidence":"git status --porcelain --untracked-files=no"},
+      {"obsId":"C6-04","key":"cacheEphemeral","value":true,"scope":"source","subject":"build/, .cache/, logs/, .axiom/, data/proof_cache/ gitignored","evidence":".gitignore:26,77-78,83,295-297,317,416"},
+      {"obsId":"C6-06","key":"logsTrackedException","value":"logs/audit/tier_classification.json is tracked","scope":"source","subject":"violates filesystem contract logs EPHEMERAL rule","evidence":"git ls-files logs/ ; .gitignore:83"},
+      {"obsId":"C6-05","key":"tmpBoundaryLeak","value":false,"scope":"source","subject":"tmp/ not gitignored and not in filesystem contract; contains stale logs","evidence":"git check-ignore -v tmp/ (none)"},
+      {"obsId":"C6-11","key":"proofCacheUndocumented","value":false,"scope":"source","subject":"data/proof_cache/ gitignored but undocumented in filesystem_contract.md","evidence":"grep proof_cache docs/spec/filesystem_contract.md (none)"},
+      {"obsId":"C6-08","key":"filesystemContractVersion","value":"V1 (not V2)","scope":"docs","subject":"docs/spec/filesystem_contract.md header is V1","evidence":"filesystem_contract.md:1"},
+      {"obsId":"C6-13","key":"noTrackedMutation","value":true,"scope":"runtime","subject":"no tracked source/config/data baseline modified; only gitignored src/generated/build_env.nim touched","evidence":"git diff --name-only HEAD = empty"},
+      {"obsId":"C6-09","key":"journalEphemeral","value":true,"scope":"docs","subject":"logs/ classified EPHEMERAL runtime-only; canonical promotion only to data/ or docs/","evidence":"filesystem_contract.md:222-230"}
+    ],
+    "R7": [
+      {"obsId":"C7-heap","key":"commandExists","value":true,"scope":"runtime","subject":"ax prove and ax report exist (ax help lists both); no ax status in dispatch","evidence":"bin/ax help"},
+      {"obsId":"C7-01","key":"helpSurface","value":true,"scope":"runtime","subject":"ax help lists ax prove/ax report/ax cert/ax verify etc","evidence":"bin/ax help"},
+      {"obsId":"C7-02","key":"helpMatchesBehavior","value":true,"scope":"runtime","subject":"help text matches observed commands; ax status absent (candidate/dead code per contract)","evidence":"bin/ax help; src/cli/action_plan_cli.nim:230-333"},
+      {"obsId":"C1-02","key":"successExit0","value":"not-observed-this-tree","scope":"runtime","subject":"verify-progression classified this tree as verification-failure so exits were 1; success 0 exists in contract","evidence":"docs/spec/productization_contract.md:218-241"},
+      {"obsId":"C1-09","key":"verificationFailureExit1","value":1,"scope":"runtime","subject":"ax report --json exit 1 on verification-failure state; ax prove exit 1","evidence":"bin/ax report --json; wf_runners.nim:58-67"},
+      {"obsId":"C1-13","key":"invalidInputExit","value":1,"scope":"runtime","subject":"unknown option exits 1; contract target is 3 (OPEN-ITEM drift 3->1)","evidence":"bin/ax prove --no-such-flag; action_plan_cli.nim:233,242"},
+      {"obsId":"C1-18","key":"internalErrorExit","value":"no handler; SIGSEGV(139) is out-of-contract (OPEN-ITEM); target 2 not implemented","scope":"source","subject":"no top-level handler at CLI boundary","evidence":"docs/spec/productization_contract.md (v1 Exit-State); src/cli/main.nim"},
+      {"obsId":"C2-05","key":"jsonSchemaVersion","value":"axiom.report.v1","scope":"source","subject":"report JSON schema version","evidence":"src/core/utils/constants.nim:64"},
+      {"obsId":"C1-12","key":"stdoutStderrSplit","value":true,"scope":"runtime","subject":"report --json stderr empty, JSON on stdout; error diagnostics to stderr","evidence":"bin/ax report --json (stderr empty)"}
+    ],
+    "R8": [
+      {"obsId":"C1-06","key":"r8a_execute","value":true,"scope":"runtime","subject":"ax prove executes (real topology scan + IR + SMT + proof summary)","evidence":"bin/ax prove --limit 1"},
+      {"obsId":"C1-07","key":"r8a_verify","value":true,"scope":"runtime","subject":"verification engine produced verdicts (Pass=4/Fail=0/Skip=17; target FAILED)","evidence":"bin/ax prove --limit 1"},
+      {"obsId":"C2-05/6a","key":"r8a_canonicalize","value":true,"scope":"source","subject":"canonical input (sourceHash+irHash) + report schemaVersion axiom.report.v1","evidence":"certificate_identity.nim; constants.nim:64"},
+      {"obsId":"C4-06","key":"r8a_attest","value":true,"scope":"artifact","subject":"v3 cert attestation + provenance.journalCommitId resolvable","evidence":"build/certificates/4ec55e9c....json"},
+      {"obsId":"C4-04","key":"r8a_persist","value":false,"scope":"artifact","subject":"canonical vault has 0 v3 certs; v3 cert exists only in transient build/certificates/","evidence":"src/verification/certificates/ (0 v3 JSON)"},
+      {"obsId":"C5-A/B","key":"r8a_reproduce","value":true,"scope":"runtime","subject":"report JSON byte-identical A/B (observed)","evidence":"bin/ax report --json A/B"},
+      {"obsId":"C7-heap","key":"r8b_redesignCli","value":false,"scope":"source","subject":"no CLI contract redesign needed to run slice; only additive/cleanup gaps (status cmd, invalid-input exit drift)","evidence":"ax help"},
+      {"obsId":"C4-07/15","key":"r8b_evidenceModelRedesign","value":false,"scope":"source","subject":"evidence model exists (v3 cert + trust journal); gaps are enforcement/coverage, not model redesign","evidence":"cert_promotion.nim; provenance_contract_v3.md"},
+      {"obsId":"C3-10","key":"r8b_verificationCoverageGap","value":true,"scope":"runtime","subject":"VKD 0/23 and obligation pipelines producing IR FAIL (ObliSemanticNoApplicable) — engine not closing verification for kernel scope","evidence":"bin/ax report --json metrics.vkd=0; prove stderr IR FAIL"}
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "nimType": "uint64",
+  "leanType": "Nat",
+  "smtSort": "Int",
+  "mappingProofObligation": "nim_lean_uint64_iso",
+  "verified": false,
+  "sourceHash": ""
+}

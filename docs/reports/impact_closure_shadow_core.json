@@ -1,0 +1,138 @@
+{
+  "base": "ac80ea06af784db915dbfd34df4db81d8d7b7bdc~1",
+  "head": "ac80ea06af784db915dbfd34df4db81d8d7b7bdc",
+  "changeFingerprint": "sha256:22fcbd4a23b9ba5455d0269582d51f381b1aecc99912b8d433147549ac69b8ed",
+  "changedFiles": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "status": "M",
+      "blobHash": "c710d8c42bed4895ecf6dac403ea9a7f66cf1a99"
+    },
+    {
+      "path": ".github/workflows/self-hosted-canary.yml",
+      "status": "A",
+      "blobHash": "c82901d937a191cc34b4ed3766dbe01b4a7d6f6f"
+    },
+    {
+      "path": "docs/spec/productization_contract.md",
+      "status": "M",
+      "blobHash": "c2200b209944f876397d8aadbda64610cb88d61b"
+    },
+    {
+      "path": "docs/spec/self_hosted_ci_migration.md",
+      "status": "M",
+      "blobHash": "fee98018e9034aaa1bf1cadaba78f3c2a9dabd58"
+    },
+    {
+      "path": "src/cli/report_cli.nim",
+      "status": "M",
+      "blobHash": "a42c138fc0acb3202e4378f1590e673b4b5feb0c"
+    },
+    {
+      "path": "src/core/utils/canonical_projection.nim",
+      "status": "A",
+      "blobHash": "4856bae504ef1e34b6a25a257d842555ff4fd423"
+    },
+    {
+      "path": "src/generated/type_registry_metadata.json",
+      "status": "M",
+      "blobHash": "9680f066745513338ecb4ccaa28868a18e39c251"
+    }
+  ],
+  "selectedWorkUnits": [
+    {
+      "id": "W1",
+      "name": "verify-static",
+      "reason": "direct path match: src/cli/report_cli.nim, src/core/utils/canonical_projection.nim, src/generated/type_registry_metadata.json; generated code change propagates",
+      "duration_minutes": "16.0",
+      "provenance": "[gh-run]",
+      "isContainer": true
+    },
+    {
+      "id": "W10",
+      "name": "verify-coverage-guard",
+      "reason": "conservative over-approximation (§3.2): src/ changes may affect coverage instrumentation; generated code change propagates",
+      "duration_minutes": "2.05",
+      "provenance": "[gh-run]",
+      "isContainer": false
+    },
+    {
+      "id": "W11",
+      "name": "generate-docs",
+      "reason": "direct path match: src/core/utils/canonical_projection.nim, src/generated/type_registry_metadata.json",
+      "duration_minutes": "1.80",
+      "provenance": "[gh-run]",
+      "isContainer": false
+    },
+    {
+      "id": "W2",
+      "name": "ci-bootstrap",
+      "reason": "direct path match: src/cli/report_cli.nim, src/core/utils/canonical_projection.nim; generated code change propagates",
+      "duration_minutes": "5.33",
+      "provenance": "[migration-doc]",
+      "isContainer": true
+    },
+    {
+      "id": "W3",
+      "name": "verify-contract-release-e2e-full",
+      "reason": "depends_on_W2_output: ci-bootstrap (W2) produces bin/ax which W3 tests; generated code change propagates",
+      "duration_minutes": "0.13",
+      "provenance": "[critical-path-report]",
+      "isContainer": false
+    },
+    {
+      "id": "W4",
+      "name": "verify-contract",
+      "reason": "direct path match: src/cli/report_cli.nim, src/core/utils/canonical_projection.nim, src/generated/type_registry_metadata.json; generated code change propagates",
+      "duration_minutes": "16.83",
+      "provenance": "[migration-doc]",
+      "isContainer": true
+    },
+    {
+      "id": "W5",
+      "name": "ci-unit-tests",
+      "reason": "direct path match: src/cli/report_cli.nim, src/core/utils/canonical_projection.nim, src/generated/type_registry_metadata.json; generated code change propagates",
+      "duration_minutes": "12.30",
+      "provenance": "[migration-doc]",
+      "isContainer": true
+    },
+    {
+      "id": "W6",
+      "name": "verify-all",
+      "reason": "direct path match: src/cli/report_cli.nim, src/core/utils/canonical_projection.nim, src/generated/type_registry_metadata.json; generated code change propagates",
+      "duration_minutes": "4.25",
+      "provenance": "[migration-doc]",
+      "isContainer": true
+    },
+    {
+      "id": "W7",
+      "name": "ci-gates",
+      "reason": "direct path match: src/cli/report_cli.nim, src/core/utils/canonical_projection.nim, src/generated/type_registry_metadata.json; generated code change propagates",
+      "duration_minutes": "3.15",
+      "provenance": "[migration-doc]",
+      "isContainer": true
+    },
+    {
+      "id": "W8",
+      "name": "test-gateway",
+      "reason": "semantic: gateway binaries compile from src/; changed src/ files: src/cli/report_cli.nim, src/core/utils/canonical_projection.nim, src/generated/type_registry_metadata.json; generated code change propagates",
+      "duration_minutes": "11.88",
+      "provenance": "[migration-doc]",
+      "isContainer": true
+    }
+  ],
+  "costComparison": {
+    "estimatedAffectedClosure_minutes": 73.72,
+    "fullPipeline_baseline_minutes": 73.7,
+    "savings_minutes": -0.01999999999999602,
+    "savings_percent": -0.027137042062409793
+  },
+  "limitations": [
+    "import_graph.nim cannot be imported (checksums/sha2 dependency gap in Nim 2.2.10); core transitive-dependency resolution is reimplemented inline (same BFS algorithm)",
+    "ci-lake-build (W9) duration is UNKNOWN; excluded from cost sums",
+    "Normative doc → cache-key invalidation (G4) is not yet wired; conservative over-approximation applied",
+    "Makefile pervasive-invocation over-approximation may over-claim W1–W9 for recipe-level changes",
+    "Gate-target closure beyond src/core/ is a known gap (import_graph.nim is core-only per handoff note)"
+  ],
+  "determinism": "identical (base, head, repo state) inputs produce byte-identical output; all sets sorted, no timestamps in body"
+}

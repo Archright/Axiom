@@ -1,0 +1,1723 @@
+{
+  "_schema": "axiom-topology-declaration/v1",
+  "lock_revision": 14,
+  "enforcement_phase": "monitoring",
+  "domains": {
+    "core": {
+      "description": "core domain",
+      "strict": false,
+      "target_strict": false,
+      "subdomains": {
+        "unmapped": {
+          "description": "Pending human classification",
+          "paths": []
+        },
+        "policy": {
+          "description": "policy submodule",
+          "paths": [
+            "src/core/policy/"
+          ]
+        },
+        "solver": {
+          "description": "solver submodule",
+          "paths": [
+            "src/core/solver/"
+          ]
+        },
+        "sync": {
+          "description": "sync submodule",
+          "paths": [
+            "src/core/sync/"
+          ]
+        },
+        "sorter": {
+          "description": "sorter submodule",
+          "paths": [
+            "src/core/sorter/"
+          ]
+        },
+        "types": {
+          "description": "types submodule",
+          "paths": [
+            "src/core/types/"
+          ]
+        },
+        "logic": {
+          "description": "logic submodule",
+          "paths": [
+            "src/core/logic/"
+          ]
+        },
+        "session": {
+          "description": "session submodule",
+          "paths": [
+            "src/core/session/"
+          ]
+        },
+        "orchestration": {
+          "description": "orchestration submodule",
+          "paths": [
+            "src/core/orchestration/"
+          ]
+        },
+        "profiles": {
+          "description": "profiles submodule",
+          "paths": [
+            "src/core/profiles/"
+          ]
+        },
+        "json": {
+          "description": "json submodule",
+          "paths": [
+            "src/core/json/"
+          ]
+        },
+        "encoding": {
+          "description": "encoding submodule",
+          "paths": [
+            "src/core/encoding/"
+          ]
+        },
+        "spec": {
+          "description": "spec submodule",
+          "paths": [
+            "src/core/spec/"
+          ]
+        },
+        "symbol_graph": {
+          "description": "symbol_graph submodule",
+          "paths": [
+            "src/core/symbol_graph/"
+          ]
+        },
+        "type_system": {
+          "description": "type_system submodule",
+          "paths": [
+            "src/core/type_system/"
+          ]
+        },
+        "gateway": {
+          "description": "gateway submodule",
+          "paths": [
+            "src/core/gateway/"
+          ]
+        },
+        "telemetry": {
+          "description": "Telemetry, diagnostics, and metrics collection",
+          "paths": [
+            "src/core/telemetry/"
+          ]
+        },
+        "utils": {
+          "description": "utils submodule",
+          "paths": [
+            "src/core/utils/"
+          ]
+        },
+        "parsers": {
+          "description": "parsers submodule",
+          "paths": [
+            "src/core/parsers/"
+          ]
+        },
+        "integrity": {
+          "description": "integrity submodule",
+          "paths": [
+            "src/core/integrity/"
+          ]
+        },
+        "topology": {
+          "description": "topology submodule",
+          "paths": [
+            "src/core/topology/"
+          ]
+        },
+        "contract": {
+          "description": "contract submodule",
+          "paths": [
+            "src/core/contract/"
+          ]
+        },
+        "bmc": {
+          "description": "bmc submodule",
+          "paths": [
+            "src/core/bmc/"
+          ]
+        },
+        "identity": {
+          "description": "identity submodule",
+          "paths": [
+            "src/core/identity/"
+          ]
+        },
+        "translator": {
+          "description": "translator submodule",
+          "paths": [
+            "src/core/translator/"
+          ]
+        },
+        "proof": {
+          "description": "proof submodule",
+          "paths": [
+            "src/core/proof/"
+          ]
+        },
+        "diagnostics": {
+          "description": "diagnostics submodule",
+          "paths": [
+            "src/core/diagnostics/"
+          ]
+        },
+        "io": {
+          "description": "io submodule",
+          "paths": [
+            "src/core/io/"
+          ]
+        },
+        "trusted": {
+          "description": "trusted submodule",
+          "paths": [
+            "src/core/trusted/"
+          ]
+        },
+        "verified_axioms": {
+          "description": "verified_axioms submodule",
+          "paths": [
+            "src/core/verified_axioms/"
+          ]
+        },
+        "assets": {
+          "description": "assets submodule",
+          "paths": [
+            "src/core/assets/"
+          ]
+        },
+        "boundary": {
+          "description": "boundary submodule",
+          "paths": [
+            "src/core/boundary/"
+          ]
+        },
+        "root": {
+          "description": "Root-level source files directly under src/",
+          "paths": [
+            "src/core/"
+          ]
+        },
+        "judge": {
+          "description": "judge submodule",
+          "paths": [
+            "src/core/judge/"
+          ]
+        },
+        "api": {
+          "description": "api submodule",
+          "paths": [
+            "src/core/api/"
+          ]
+        },
+        "orchestrator": {
+          "description": "orchestrator submodule",
+          "paths": [
+            "src/core/orchestrator/"
+          ]
+        },
+        "gate": {
+          "description": "gate submodule",
+          "paths": [
+            "src/core/gate/"
+          ]
+        },
+        "vault": {
+          "description": "vault submodule",
+          "paths": [
+            "src/core/vault/"
+          ]
+        }
+      }
+    },
+    "verification": {
+      "description": "verification domain",
+      "strict": false,
+      "target_strict": false,
+      "subdomains": {
+        "unmapped": {
+          "description": "Pending human classification",
+          "paths": []
+        },
+        "solver": {
+          "description": "solver submodule",
+          "paths": [
+            "src/verification/solver/"
+          ]
+        },
+        "certificates": {
+          "description": "certificates submodule",
+          "paths": [
+            "src/verification/certificates/"
+          ]
+        },
+        "analyzer": {
+          "description": "analyzer submodule",
+          "paths": [
+            "src/verification/analyzer/"
+          ]
+        },
+        "root": {
+          "description": "Root files in src/verification/",
+          "paths": [
+            "src/verification"
+          ]
+        }
+      }
+    },
+    "cli": {
+      "description": "cli domain",
+      "strict": false,
+      "target_strict": false,
+      "subdomains": {
+        "unmapped": {
+          "description": "Pending human classification",
+          "paths": []
+        },
+        "commands": {
+          "description": "commands submodule",
+          "paths": [
+            "src/cli/commands/"
+          ]
+        },
+        "root": {
+          "description": "Root files in src/cli/",
+          "paths": [
+            "src/cli"
+          ]
+        }
+      }
+    },
+    "gate": {
+      "description": "gate domain",
+      "strict": false,
+      "target_strict": false,
+      "subdomains": {
+        "unmapped": {
+          "description": "Pending human classification",
+          "paths": []
+        },
+        "nimtry": {
+          "description": "nimtry submodule",
+          "paths": [
+            "src/gate/nimtry/"
+          ]
+        },
+        "runners": {
+          "description": "runners submodule",
+          "paths": [
+            "src/gate/runners/"
+          ]
+        },
+        "root": {
+          "description": "Root files in src/gate/",
+          "paths": [
+            "src/gate"
+          ]
+        }
+      }
+    },
+    "personas": {
+      "description": "personas domain",
+      "strict": false,
+      "target_strict": false,
+      "subdomains": {
+        "unmapped": {
+          "description": "Pending human classification",
+          "paths": []
+        },
+        "root": {
+          "description": "Root files in src/personas/",
+          "paths": [
+            "src/personas"
+          ]
+        }
+      }
+    },
+    "sieve": {
+      "description": "sieve domain",
+      "strict": false,
+      "target_strict": false,
+      "subdomains": {
+        "unmapped": {
+          "description": "Pending human classification",
+          "paths": []
+        },
+        "root": {
+          "description": "Root files in src/sieve/",
+          "paths": [
+            "src/sieve"
+          ]
+        }
+      }
+    },
+    "semantic_proofs": {
+      "description": "semantic_proofs domain",
+      "strict": false,
+      "target_strict": false,
+      "subdomains": {
+        "unmapped": {
+          "description": "Pending human classification",
+          "paths": []
+        },
+        "lib": {
+          "description": "lib submodule",
+          "paths": [
+            "src/semantic_proofs/lib/"
+          ]
+        },
+        "root": {
+          "description": "Root files in src/semantic_proofs/",
+          "paths": [
+            "src/semantic_proofs"
+          ]
+        }
+      }
+    },
+    "frontend": {
+      "description": "frontend domain",
+      "strict": false,
+      "target_strict": false,
+      "subdomains": {
+        "unmapped": {
+          "description": "Pending human classification",
+          "paths": []
+        },
+        "nim": {
+          "description": "nim submodule",
+          "paths": [
+            "src/frontend/nim/"
+          ]
+        },
+        "root": {
+          "description": "Root files in src/frontend/",
+          "paths": [
+            "src/frontend"
+          ]
+        }
+      }
+    },
+    "mcp": {
+      "description": "mcp domain",
+      "strict": false,
+      "target_strict": false,
+      "subdomains": {
+        "unmapped": {
+          "description": "Pending human classification",
+          "paths": []
+        },
+        "root": {
+          "description": "Root files in src/mcp/",
+          "paths": [
+            "src/mcp"
+          ]
+        }
+      }
+    },
+    "ui": {
+      "description": "ui domain",
+      "strict": false,
+      "target_strict": false,
+      "subdomains": {
+        "root": {
+          "description": "Root files in src/ui/",
+          "paths": [
+            "src/ui"
+          ]
+        }
+      }
+    },
+    "execution": {
+      "description": "I/O-bound verification engine and runner entry points",
+      "strict": false,
+      "target_strict": false,
+      "subdomains": {
+        "root": {
+          "description": "Root execution engine files",
+          "paths": [
+            "src/engine/"
+          ]
+        }
+      }
+    },
+    "interface": {
+      "description": "External communication boundary — API surface, hints, vacuity gates",
+      "strict": false,
+      "target_strict": false,
+      "subdomains": {
+        "unmapped": {
+          "description": "Pending human classification",
+          "paths": []
+        },
+        "root": {
+          "description": "Root API surface files",
+          "paths": [
+            "src/api/"
+          ]
+        }
+      }
+    }
+  },
+  "mapping": {
+    "by_pattern": [
+      {
+        "pattern": "src/api/*.nim",
+        "domain": "interface",
+        "subdomain": "root"
+      },
+      {
+        "pattern": "src/engine/*.nim",
+        "domain": "execution",
+        "subdomain": "root"
+      },
+      {
+        "pattern": "src/cli/*.nim",
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      {
+        "pattern": "src/cli/commands/**",
+        "domain": "cli",
+        "subdomain": "commands"
+      },
+      {
+        "pattern": "src/core/*.nim",
+        "domain": "core",
+        "subdomain": "root"
+      },
+      {
+        "pattern": "src/core/api/**",
+        "domain": "core",
+        "subdomain": "api"
+      },
+      {
+        "pattern": "src/core/assets/**",
+        "domain": "core",
+        "subdomain": "assets"
+      },
+      {
+        "pattern": "src/core/bmc/**",
+        "domain": "core",
+        "subdomain": "bmc"
+      },
+      {
+        "pattern": "src/core/boundary/**",
+        "domain": "core",
+        "subdomain": "boundary"
+      },
+      {
+        "pattern": "src/core/contract/**",
+        "domain": "core",
+        "subdomain": "contract"
+      },
+      {
+        "pattern": "src/core/diagnostics/**",
+        "domain": "core",
+        "subdomain": "diagnostics"
+      },
+      {
+        "pattern": "src/core/encoding/**",
+        "domain": "core",
+        "subdomain": "encoding"
+      },
+      {
+        "pattern": "src/core/gate/**",
+        "domain": "core",
+        "subdomain": "gate"
+      },
+      {
+        "pattern": "src/core/gateway/**",
+        "domain": "core",
+        "subdomain": "gateway"
+      },
+      {
+        "pattern": "src/core/identity/**",
+        "domain": "core",
+        "subdomain": "identity"
+      },
+      {
+        "pattern": "src/core/integrity/**",
+        "domain": "core",
+        "subdomain": "integrity"
+      },
+      {
+        "pattern": "src/core/io/**",
+        "domain": "core",
+        "subdomain": "io"
+      },
+      {
+        "pattern": "src/core/json/**",
+        "domain": "core",
+        "subdomain": "json"
+      },
+      {
+        "pattern": "src/core/judge/**",
+        "domain": "core",
+        "subdomain": "judge"
+      },
+      {
+        "pattern": "src/core/logic/**",
+        "domain": "core",
+        "subdomain": "logic"
+      },
+      {
+        "pattern": "src/core/orchestration/**",
+        "domain": "core",
+        "subdomain": "orchestration"
+      },
+      {
+        "pattern": "src/core/orchestrator/**",
+        "domain": "core",
+        "subdomain": "orchestrator"
+      },
+      {
+        "pattern": "src/core/parsers/**",
+        "domain": "core",
+        "subdomain": "parsers"
+      },
+      {
+        "pattern": "src/core/policy/**",
+        "domain": "core",
+        "subdomain": "policy"
+      },
+      {
+        "pattern": "src/core/profiles/**",
+        "domain": "core",
+        "subdomain": "profiles"
+      },
+      {
+        "pattern": "src/core/proof/**",
+        "domain": "core",
+        "subdomain": "proof"
+      },
+      {
+        "pattern": "src/core/session/**",
+        "domain": "core",
+        "subdomain": "session"
+      },
+      {
+        "pattern": "src/core/solver/**",
+        "domain": "core",
+        "subdomain": "solver"
+      },
+      {
+        "pattern": "src/core/sorter/**",
+        "domain": "core",
+        "subdomain": "sorter"
+      },
+      {
+        "pattern": "src/core/spec/**",
+        "domain": "core",
+        "subdomain": "spec"
+      },
+      {
+        "pattern": "src/core/symbol_graph/**",
+        "domain": "core",
+        "subdomain": "symbol_graph"
+      },
+      {
+        "pattern": "src/core/sync/**",
+        "domain": "core",
+        "subdomain": "sync"
+      },
+      {
+        "pattern": "src/core/telemetry/**",
+        "domain": "core",
+        "subdomain": "telemetry"
+      },
+      {
+        "pattern": "src/core/topology/**",
+        "domain": "core",
+        "subdomain": "topology"
+      },
+      {
+        "pattern": "src/core/translator/**",
+        "domain": "core",
+        "subdomain": "translator"
+      },
+      {
+        "pattern": "src/core/trusted/**",
+        "domain": "core",
+        "subdomain": "trusted"
+      },
+      {
+        "pattern": "src/core/type_system/**",
+        "domain": "core",
+        "subdomain": "type_system"
+      },
+      {
+        "pattern": "src/core/types/**",
+        "domain": "core",
+        "subdomain": "types"
+      },
+      {
+        "pattern": "src/core/utils/**",
+        "domain": "core",
+        "subdomain": "utils"
+      },
+      {
+        "pattern": "src/core/vault/**",
+        "domain": "core",
+        "subdomain": "vault"
+      },
+      {
+        "pattern": "src/core/verified_axioms/**",
+        "domain": "core",
+        "subdomain": "verified_axioms"
+      },
+      {
+        "pattern": "src/frontend/*.nim",
+        "domain": "frontend",
+        "subdomain": "root"
+      },
+      {
+        "pattern": "src/frontend/nim/**",
+        "domain": "frontend",
+        "subdomain": "nim"
+      },
+      {
+        "pattern": "src/gate/*.nim",
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      {
+        "pattern": "src/gate/nimtry/**",
+        "domain": "gate",
+        "subdomain": "nimtry"
+      },
+      {
+        "pattern": "src/gate/runners/**",
+        "domain": "gate",
+        "subdomain": "runners"
+      },
+      {
+        "pattern": "src/mcp/*.nim",
+        "domain": "mcp",
+        "subdomain": "root"
+      },
+      {
+        "pattern": "src/personas/*.nim",
+        "domain": "personas",
+        "subdomain": "root"
+      },
+      {
+        "pattern": "src/semantic_proofs/*.nim",
+        "domain": "semantic_proofs",
+        "subdomain": "root"
+      },
+      {
+        "pattern": "src/semantic_proofs/lib/**",
+        "domain": "semantic_proofs",
+        "subdomain": "lib"
+      },
+      {
+        "pattern": "src/sieve/*.nim",
+        "domain": "sieve",
+        "subdomain": "root"
+      },
+      {
+        "pattern": "src/ui/*.nim",
+        "domain": "ui",
+        "subdomain": "root"
+      },
+      {
+        "pattern": "src/verification/*.nim",
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      {
+        "pattern": "src/verification/analyzer/**",
+        "domain": "verification",
+        "subdomain": "analyzer"
+      },
+      {
+        "pattern": "src/verification/certificates/**",
+        "domain": "verification",
+        "subdomain": "certificates"
+      },
+      {
+        "pattern": "src/verification/solver/**",
+        "domain": "verification",
+        "subdomain": "solver"
+      },
+      {
+        "pattern": "src/core/solver/*.nim",
+        "domain": "core",
+        "subdomain": "solver"
+      },
+      {
+        "pattern": "src/core/parsers/tree_sitter/*.nim",
+        "domain": "core",
+        "subdomain": "parsers.tree_sitter"
+      },
+      {
+        "pattern": "src/core/parsers/tree_sitter/query/*.nim",
+        "domain": "core",
+        "subdomain": "parsers.tree_sitter.query"
+      },
+      {
+        "pattern": "src/gate/nimtry/*.nim",
+        "domain": "gate",
+        "subdomain": "nimtry"
+      },
+      {
+        "pattern": "src/verification/analyzer/*.nim",
+        "domain": "verification",
+        "subdomain": "analyzer"
+      },
+      {
+        "pattern": "src/verification/analyzer/stages/*.nim",
+        "domain": "verification",
+        "subdomain": "analyzer.stages"
+      }
+    ],
+    "by_file": {
+      "src/api.nim": {
+        "domain": "interface",
+        "subdomain": "root"
+      },
+      "src/cli/action_interpreter_cli.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/action_output_cli.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/action_plan_cli.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/ax_workflow_cli.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/ax_workflow_shortcuts.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/axiom_engine.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/cli_io.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/cli_io_error.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/cli_io_input.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/cli_surface_generated.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/cli_types.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/commands/observability.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/commands/topology_cli.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/config_loader.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/convergence_sidecar.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/execution_policy.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/main.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/payload_bridge.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/report_cli.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/report_format.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/report_layout.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/report_render.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/topology_cli.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/version.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/wf_planning.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/wf_render.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/wf_runners.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/wf_runners_common.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/wf_semantic.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/wf_state.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/wf_state_parsing.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/cli/wf_state_vacuity.nim": {
+        "domain": "cli",
+        "subdomain": "root"
+      },
+      "src/core/constants.nim": {
+        "domain": "core",
+        "subdomain": "root"
+      },
+      "src/core/serde.nim": {
+        "domain": "core",
+        "subdomain": "root"
+      },
+      "src/core/std_redirect.nim": {
+        "domain": "core",
+        "subdomain": "root"
+      },
+      "src/engine.nim": {
+        "domain": "execution",
+        "subdomain": "root"
+      },
+      "src/frontend/frontend_interface.nim": {
+        "domain": "frontend",
+        "subdomain": "root"
+      },
+      "src/frontend/nim/nim_frontend.nim": {
+        "domain": "frontend",
+        "subdomain": "root"
+      },
+      "src/frontend/nim/weaver.nim": {
+        "domain": "frontend",
+        "subdomain": "root"
+      },
+      "src/gate/architecture_ast_facts.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/cohesion_enforce.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/gate_list.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/gate_registry.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/gate_rules.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/gate_rules_architecture.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/gate_rules_module_classifier.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/gate_rules_normalization.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/gate_types.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/gate_utils.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/gates.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/git.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/logic_binding_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/call_graph.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/dry_queries.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/feature_universe.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/forbidden_patterns.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/interface_auditor.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/io_module_registry.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/nimtry_cache.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/nimtry_cli.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/nimtry_extract.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/nimtry_extract_part1.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/nimtry_extract_part2.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/nimtry_extract_part3.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/nimtry_extract_part3_part1.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/nimtry_extract_part3_part2.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/nimtry_extract_types.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/nimtry_query.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/soc_queries.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/solid_queries.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/ssot_queries.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/nimtry/test_hygiene.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/orchestrator.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/orchestrator_hook.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/orchestrator_hook_part1.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/orchestrator_hook_part2.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/quality_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/rule_patterns.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/agent_preflight.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/architecture_guard.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/binary_freshness_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/cli_build.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/context_size_guard.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/dag_enforcement_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/debt_scan_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/dependency_rules_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/doc_completeness_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/drnim_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/external_cli_smoke.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/gate_hook.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/gate_self_check.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/gateway_test_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/import_encapsulation_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/integrity_test.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/intent_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/isolated_check.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/nim_check_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/policy_validator.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/procedure_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/proof_universe_lock_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/quality_audit_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/quality_gate_marker.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/quality_gate_runner.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/sentinel.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/spec_binding_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/spec_presence_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/test_coverage_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/topology_policy_gate.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/unified_sentry.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/unstaged_guard.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/validate_architecture.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/runners/validate_runners.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/semantic_alias_mapper.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/semaphore.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/tag_parser.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/gate/types.nim": {
+        "domain": "gate",
+        "subdomain": "root"
+      },
+      "src/mcp/mcp_params.nim": {
+        "domain": "mcp",
+        "subdomain": "root"
+      },
+      "src/mcp/protocol.nim": {
+        "domain": "mcp",
+        "subdomain": "root"
+      },
+      "src/mcp/server.nim": {
+        "domain": "mcp",
+        "subdomain": "root"
+      },
+      "src/mcp/tools.nim": {
+        "domain": "mcp",
+        "subdomain": "root"
+      },
+      "src/personas/detective.nim": {
+        "domain": "personas",
+        "subdomain": "root"
+      },
+      "src/personas/judge.nim": {
+        "domain": "personas",
+        "subdomain": "root"
+      },
+      "src/personas/legislator.nim": {
+        "domain": "personas",
+        "subdomain": "root"
+      },
+      "src/personas/legislator_feedback.nim": {
+        "domain": "personas",
+        "subdomain": "root"
+      },
+      "src/personas/scribe.nim": {
+        "domain": "personas",
+        "subdomain": "root"
+      },
+      "src/personas/swat.nim": {
+        "domain": "personas",
+        "subdomain": "root"
+      },
+      "src/sieve/ast_inspector.nim": {
+        "domain": "sieve",
+        "subdomain": "root"
+      },
+      "src/sieve/sieve_bridge.nim": {
+        "domain": "sieve",
+        "subdomain": "root"
+      },
+      "src/sieve/sieve_engine.nim": {
+        "domain": "sieve",
+        "subdomain": "root"
+      },
+      "src/sieve/sieve_rules.nim": {
+        "domain": "sieve",
+        "subdomain": "root"
+      },
+      "src/sieve/sieve_types.nim": {
+        "domain": "sieve",
+        "subdomain": "root"
+      },
+      "src/sieve/subjective_logic.nim": {
+        "domain": "sieve",
+        "subdomain": "root"
+      },
+      "src/ui/ax_tui_reporter.nim": {
+        "domain": "ui",
+        "subdomain": "root"
+      },
+      "src/ui/ax_tui_reporter_part1.nim": {
+        "domain": "ui",
+        "subdomain": "root"
+      },
+      "src/ui/ax_tui_reporter_part2.nim": {
+        "domain": "ui",
+        "subdomain": "root"
+      },
+      "src/ui/notion_semantic_mapper.nim": {
+        "domain": "ui",
+        "subdomain": "root"
+      },
+      "src/verification/abstract_provider.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/analyzer.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/analyzer/analyzer_pipeline.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/analyzer/analyzer_shared_cert.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/analyzer/analyzer_shared_json.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/analyzer/stage_01_ast_extract.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/analyzer/stage_02_fingerprint.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/analyzer/stage_03_dependency.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/analyzer/stage_04_gate_check.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/analyzer/stage_05_lean_bridge.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/analyzer/stage_06_proof_synth.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/analyzer/stage_07_certificate.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/analyzer/stage_08_reporter.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/analyzer/stage_adapters.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/ast_extractor.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/batch_uap_orchestrator.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/cegar_bmc_bridge.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/cegar_engine.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/cert_builder.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/cert_fingerprinter.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/cert_writer.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/certificate_applier.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/certificate_manager.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/cli_bridge.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/contract_source_extractor.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/dependency_analyzer.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/discovery_error.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/ecosystem_linkage.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/fingerprint_engine.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/gate_rule_adapter.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/global_symbol_graph.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/healing_orchestrator.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/hint_processor.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/inductive_proof_emitter.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/integrity_guard.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/integrity_ledger.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/integrity_sentinel.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/layer1_bmc.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/lean_hint_db.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/lean_lsp.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/lean_lsp_client.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/lean_lsp_compiler.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/lean_lsp_feedback.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/lean_lsp_proof_search.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/lean_lsp_protocol.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/lean_lsp_tactic.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/lean_skeleton.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/lean_spec_generator.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/leanstral_gateway.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/leanstral_prompt.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/llm_backend.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/loop_invariant_synthesis.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/orchestrator.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/pipeline_core_runner.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/pipeline_core_runner_part1.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/pipeline_core_runner_part2.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/pipeline_core_types.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/pipeline_lean_spec_inference.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/pipeline_lean_spec_inference_part1.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/pipeline_lean_spec_inference_part2.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/pipeline_lean_spec_inference_part3.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/pipeline_negative_scan.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/pipeline_negative_scan_part1.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/pipeline_negative_scan_part2.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/pipeline_negative_scan_part3.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/pipeline_state_types.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/pipeline_types.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/proof_linkage.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/proof_state_builder.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/proof_state_convergence.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/proof_state_projection.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/proof_summarizer.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/proof_synthesis_engine.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/proof_synthesis_engine_part1.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/proof_synthesis_engine_part2.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/proof_universe_commit.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/proof_universe_lock.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/proof_universe_lock_io.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/report_engine.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/reporter.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/semantic_graph.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/smt_hint_validation.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/solver/fixedpoint_engine.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/solver/provers.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/solver/provider_impl.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/solver/z3_pool.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/state_manager.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/static_rules.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/tactic_backtrack.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/thought_dashboard.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/translation_validator.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/unified_trajectory.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/universal_pipeline.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/universal_pipeline_core.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/vault_index.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      },
+      "src/verification/verification_facade.nim": {
+        "domain": "verification",
+        "subdomain": "root"
+      }
+    }
+  }
+}

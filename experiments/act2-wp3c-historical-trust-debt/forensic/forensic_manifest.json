@@ -1,0 +1,17 @@
+{
+  "schema": "forensic-subject-manifest.v1",
+  "forensicOrigin": "nim-stew@c75502c untracked data/ pollution (pre-WP3c)",
+  "capturedAt": "2026-08-28T02:12:00Z",
+  "collectionMethod": "cp -p from <workspace>/nim-stew/data into forensic/nim-stew-data; sha256sum over preserved bytes; original untracked file left in place",
+  "preservedRoot": "experiments/act2-wp3c-historical-trust-debt/forensic/nim-stew-data",
+  "entries": [
+    {
+      "canonicalRelativePath": "trusted/journal/3ab50cc271cdc3166d6ad39c9b34f7a01a2c0626fdd08cfecdb33107135c2aad.json",
+      "sha256": "519aca4c70e1c78846be6ace6c7798643a15d4aa113c6d73fec0e266f15394e9",
+      "kind": "tcVerifiedProof",
+      "solverInvocation": "proof-universe-lock:v33",
+      "sourceOfPollution": "prior WP ExternalSubject journal-routing defect (class fixed by WP3-b commitVerification(run,result)+ArtifactResolver(stateRoot))"
+    }
+  ],
+  "policy": "Historical pollution: never delete, never reinterpret, hash-pin. This copy is evidence only; NEVER used as an M1 run fixture."
+}

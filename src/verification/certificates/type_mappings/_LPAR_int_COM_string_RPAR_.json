@@ -1,0 +1,8 @@
+{
+  "nimType": "(int,string)",
+  "leanType": "Prod Int String",
+  "smtSort": "Prod",
+  "mappingProofObligation": "nim_lean_intstring_iso",
+  "verified": false,
+  "sourceHash": ""
+}

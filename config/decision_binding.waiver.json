@@ -1,0 +1,1254 @@
+{
+  "grandfather": [
+    {
+      "file": "src/core/trusted/architecture_invariants.nim",
+      "reason": "Pre-existing core invariants predate decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/static_gate_scanner.nim",
+      "reason": "Pre-existing gate scanner predates decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/runners/debt_scan_gate.nim",
+      "reason": "Pre-existing debt gate predates decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/solver/z3_pool.nim",
+      "reason": "Highest violation count (17) \u2014 core Z3 solver pool predates decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/vault/vault_factory.nim",
+      "reason": "High violation count (13) \u2014 vault factory predates decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/io/io_utils.nim",
+      "reason": "High violation count (12) \u2014 IO utils predate decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/encoding/smt_to_lean/private/parser.nim",
+      "reason": "High violation count (12) \u2014 SMT to Lean parser predates decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/schema/task_schema.nim",
+      "reason": "High violation count (11) \u2014 task schema predate decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/interfaces/git_operations.nim",
+      "reason": "High violation count (11) \u2014 git operations predate decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/manifest_parser.nim",
+      "reason": "High violation count (10) \u2014 manifest parser predates decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/types/results.nim",
+      "reason": "High violation count (9) \u2014 core types predate decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/gateway/gateway_json.nim",
+      "reason": "High violation count (9) \u2014 gateway JSON predates decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/session/session_parser_validators.nim",
+      "reason": "High violation count (8) \u2014 session parser predates decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/proof/proof_universe_lock.nim",
+      "reason": "High violation count (8) \u2014 proof universe lock predates decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/json/json_utils.nim",
+      "reason": "High violation count (7) \u2014 JSON utils predate decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/json/json_scan_parse.nim",
+      "reason": "High violation count (7) \u2014 JSON scan parse predates decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/solver/wp_simplifier.nim",
+      "reason": "High violation count (6) \u2014 WP simplifier predates decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/proof_state_projection.nim",
+      "reason": "High violation count (6) \u2014 proof state projection predates decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/ast_extractor.nim",
+      "reason": "High violation count (6) \u2014 AST extractor predates decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/sieve/sieve_rules.nim",
+      "reason": "High violation count (6) \u2014 sieve rules predate decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/personas/legislator.nim",
+      "reason": "High violation count (6) \u2014 legislator persona predates decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/engine/dag_executor.nim",
+      "reason": "High violation count (6) \u2014 DAG executor predates decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/verifier/legislator.nim",
+      "reason": "High violation count (6) \u2014 core verifier predates decision-binding policy",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/cli/action_output_cli.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/cli/action_plan_cli.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/cli/cli_io_input.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/cli/cli_surface_generated.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/cli/debug_mode.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/cli/gate_ring_buffer.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/cli/payload_bridge.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/cli/precompile_gates.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/cli/report_cli.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/cli/run_gate.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/cli/selection_state.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/cli/subagent_orchestrator.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/cli/wf_render.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/cli/wf_runners.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/cli/wf_state_parsing.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/cli/wf_state_vacuity.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/api/axiom_api_helpers.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/api/axiom_api_session_helpers.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/api/axiom_api_session_ops.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/api/axiom_api_session_proof.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/api/axiom_api_verify.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/audit/burn_down_queue.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/audit/sad_gate.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/bmc/bmc_engine.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/boundary/abstract_spec_lowering.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/boundary/axiom_registry_loader.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/boundary/boundary_extractor_part1_part1.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/boundary/gateway/gateway_generator.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/boundary/private/semantic_hint_factory.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/cache/proof_cache.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/cache/ttl_cache.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/contract/contract_ast_extractor.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/contract/contract_param_util.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/contract/contract_smtlib2.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/contracts/universal_pipeline_contract.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/contracts/z3_extraction.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/diagnostics/diagnostics_engine_helpers.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/diagnostics/diagnostics_engine_main.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/encoding/smt_to_lean/private/arithmetic_expr.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/encoding/smt_to_lean_codegen.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/encoding/smt_to_lean_translate.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/encoding/smtlib2_sanitizer.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/encoding/smtlib2_util.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/gate/artifact_manifest.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/gate/atomic_deploy.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/gate/cache_manifest.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/gate/file_hash_cache.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/gate/gate_cas.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/gate/gate_memo.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/gate/gate_vfs.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/gate/merkle_vfs.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/gate/overlay_mount.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/gate/resource_limits.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/gate/transitive_hash.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/gateway/gateway_helpers.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/gateway/gateway_main.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/gateway/gateway_types.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/integrity/refinement_types.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/interfaces/io_executor.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/ir/ir_generator.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/ir/ir_to_lean.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/json/json_safe.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/json/json_scan_skip.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/judge/lean_replay.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/judge/smart_search.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/judge/the_judge_eval.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/judge/the_judge_query_part2.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/logic/pipeline_fingerprint_engine.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/logic/pipeline_trace_artifacts.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/logic/refinement_controller.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/logic/refinement_invariant.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/macros/enforce_linear.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/observer/scanner.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/orchestrator/cfg_builder.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/orchestrator/orchestrator_topology_worker.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/orchestrator/orchestrator_vault.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/parsers/collect.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/parsers/expression_parser.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/parsers/lean.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/parsers/safe_parsers.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/proof/axiom_lemmas.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/proof/function_source_extractor.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/proof/proof_budget.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/release/version_derive.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/schema/cst_schema.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/session/session_parser.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/solver/smt2_lexer.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/sorter/sorter_core_index_table.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/spec/spec_generator_main.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/symbol_graph/global_symbol_graph_builder_part1.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/symbol_graph/global_symbol_graph_builder_part2.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/symbolic/symbolic_types_exec.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/symbolic/symbolic_types_parse.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/sync/sync_utils_process.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/text/text_utils.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/topology/declaration.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/topology/lock.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/topology/merkle_cache.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/topology/policy.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/topology/suggest.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/topology/symbol_interning.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/topology/topology_engine.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/translator/ast_to_lean_bridge.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/translator/nim_ast_to_json_nodes.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/translator/universal_mapper_part1.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/trusted/ast_to_ir.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/trusted/axiom_boot_compiler.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/trusted/axiom_ir.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/trusted/axiom_pragmas_lite.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/trusted/axiom_pragmas_macros.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/trusted/axiom_pragmas_procs.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/trusted/effect_inference_engine.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/trusted/io_boundary.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/trusted/ir_to_lean.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/trusted/layer_enforcement.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/trusted/provenance_guard.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/trusted/smt_sort.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/trusted/stdlib_shield.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/trusted/theorem_writer.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/type_system/liquid_inference.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/types/asi_types.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/types/certificate_types.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/types/debt_types.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/types/domain_utils.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/types/function_verification_summary.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/types/quarantine.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/types/type_mapping.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/types/vkd_types.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/utils/text_utils.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/vault/vault_manager_spec.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/vault/vault_manager_storage.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/verified_axioms/verified_axioms_catalog_part1.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/core/verified_axioms/verified_axioms_core.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/engine/atomic_ops.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/engine/task_dag.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/action_cache.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/architecture_ast_facts.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/attestation.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/cache/soundness_cache_types.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/daemon/gate_daemon_client.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/gate_cache.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/gate_dag.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/gate_rules_module_classifier.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/gate_utils.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/gateway.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/in_process_gates.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/logic_binding_gate.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/manifest_provider.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/nimtry/nimtry_cli.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/nimtry/solid_queries_dip_ocp.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/orchestrator/hook/analyzer.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/orchestrator/hook/context.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/orchestrator/hook/executor.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/orchestrator/hook/memo.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/orchestrator_hook.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/pipeline.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/pipeline_orchestrator.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/predicates/types.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/runners/asset_hygiene_gate.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/runners/axiom_codemod.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/runners/binary_freshness_gate.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/runners/core_invariant_gate.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/runners/decision_binding_gate.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/runners/documentation_first_gate.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/runners/import_encapsulation_gate.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/runners/import_normalizer.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/runners/lean_z3_consensus_gate.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/runners/manifest_consistency_gate.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/runners/release_version_gate.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/runners/semantic_boundary_guard.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/runners/unified_gate_runner.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/types.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/utils/git_wrapper.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/utils/inprocess_dispatch.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/utils/plumbing.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/gate/utils/shell_ast_analyzer.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/infrastructure/cas_index.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/infrastructure/gate_signing/proof_verifier.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/infrastructure/gate_signing/smtlib2_parser.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/infrastructure/gate_signing/z3_proof_to_lean.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/infrastructure/vfs_intern.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/personas/detective.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/personas/judge_automation.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/personas/llm_response_guard.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/ui/ax_tui_reporter_part1.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/abstract_provider.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/analyzer/analyzer_shared_cert.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/analyzer/stage_01_ast_extract.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/ax_classify.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/ax_implication.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/ax_tautology.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/batch_uap/loop_driver.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/batch_uap/private/request_builder.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/certificate_hydration.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/certificate_manager.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/contract_source_extractor.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/ecosystem_linkage.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/fingerprint_engine.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/integrity_guard.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/integrity_ledger.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/lean_lsp_protocol.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/lean_repl_bridge.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/leanstral_prompt.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/leanstral_repl.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/llm_backend.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/loop_invariant_synthesis.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/orchestrator/healing_orchestrator.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/orchestrator/private/healing_orchestrator_part1.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/pipeline_core_types.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/pipeline_lean_spec_inference_part1.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/pipeline_lean_spec_inference_part2.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/pipeline_negative_scan_part2.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/pipeline_transition.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/proof_linkage.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/proof_state_builder.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/report_engine.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/router.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/semantics/translator.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/solver/fixedpoint_engine.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/solver/proof_cache.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/solver/provers.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/solver/triviality_filter.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/spacer_chc_router.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/state_manager.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/static_rules.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/symbolic_test_synth.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    },
+    {
+      "file": "src/verification/tactic_backtrack.nim",
+      "reason": "Grandfathered legacy code - pending rationale extraction",
+      "expires": "2026-12-31"
+    }
+  ]
+}

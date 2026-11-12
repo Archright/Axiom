@@ -1,0 +1,169 @@
+{
+  "kind": "workflow-jq-contract-fixture-capture",
+  "description": "Verbatim `gh api` GET response bodies consumed by tools/ci/test_workflow_jq_contracts.sh. These are MEASURED inputs — the exact data shapes that fired the Q16/Q17 jq data-shape defects on 2026-11-01. Hand-written mocks are the defect class itself and must not replace them (the harness carries negative controls that fail if these fixtures are sanitized).",
+  "captured_at_utc": {
+    "start": "2026-11-01T14:57:25Z",
+    "end": "2026-11-01T14:57:37Z",
+    "note": "per-file mtime UTC; local capture session 2026-11-01 KST"
+  },
+  "tool": {
+    "gh": "gh version 2.102.0 (2026-09-30)",
+    "jq": "jq-1.7",
+    "method": "gh api GET — raw response body written verbatim (no --jq reformatting, no pretty-printing)"
+  },
+  "rate_limit": {
+    "checked_before": true,
+    "core_remaining_before_session": 3017,
+    "core_remaining_after_capture": 4941,
+    "note": "capture cost: 5 GET calls (4 fixtures + this check); limit reset mid-session"
+  },
+  "rate_limit_2026_11_02_session": {
+    "checked_before": true,
+    "core_remaining_at_session_start": 1851,
+    "core_remaining_after_captures": 1849,
+    "note": "2026-11-02 session cost: measured-404 capture (1 GET), artifacts envelope page capture (1 GET), rate_limit checks (2 GET); plus bounded read-only --paginate shape measurements (releases 1 page, cli/cli tags 3 pages, run-41298669695 jobs 2 pages) recorded under q19_paginate_measurements. An earlier unbounded artifacts --paginate probe was intentionally killed for pacing (read-only; no secondary limit tripped — all subsequent calls succeeded)."
+  },
+  "schema_basis": [
+    {
+      "claim": "workflow-jobs REST response job object: labels = array of string; runner_id/runner_name/runner_group_name = string|integer or null; steps = array of {name,status,conclusion,number,started_at,completed_at}; job conclusion enum success/failure/neutral/cancelled/skipped/timed_out/action_required|null",
+      "authority": "GitHub official OpenAPI spec via Context7 MCP (/github/docs, src/rest/data/fpt-2026-03-10/actions.json, fetched 2026-11-01)",
+      "doc_section": "https://docs.github.com/en/rest/actions/workflow-jobs (List jobs for a workflow run)"
+    },
+    {
+      "claim": "Q16: `[.labels[]?.name]` on this schema is a jq runtime error (exit 5) — labels elements are strings, not {name} objects",
+      "authority": "docs/spec/ci_provider_failover_quirks.md Q16 (measured 2026-11-01, run 41261811139/job 124716440849 logs + local reproduction) + PR #1160 merge 0ba17ad36"
+    },
+    {
+      "claim": "Q17: object shorthand `{name,…}` on an array input is a jq runtime error (exit 5) — ACC_NON_SKIP is an array",
+      "authority": "docs/spec/ci_provider_failover_quirks.md Q17 (measured 2026-11-01, router runs 41295714292/41295753737/41296106985 logs) + PR #1163 merge 7b41645e"
+    },
+    {
+      "claim": "canary job identity pinned values (runner_group_id=0, runner_group_name=\"GitHub Actions\", runner_id=1000035433, runner_name=\"GitHub Actions 1000035433\", labels=[\"ubuntu-24.04\"], steps=3)",
+      "authority": "docs/evidence/ci_provider_ghec_return_acceptance_2026-11-01.md §3 item 3"
+    },
+    {
+      "claim": "run 41298669695 acceptance verdict (executed=12 blocked=0 all_ghec=true, 12 [acceptance-job] rows, all runner_group_id=0) — the run the first return_acceptance=confirmed write was bound to",
+      "authority": "docs/evidence/ci_provider_ghec_return_acceptance_2026-11-01.md §6 termination footnote"
+    },
+    {
+      "claim": "gh api error bodies land on STDOUT (not stderr) and the process exits nonzero: measured 404 body {\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/actions/workflow-jobs#list-jobs-for-a-workflow-run\",\"status\":\"404\"} + stderr 'gh: Not Found (HTTP 404)'",
+      "authority": "measured 2026-11-02 (gh 2.102.0, GET repos/Archright/Axiom/actions/runs/1/jobs?per_page=100 → HTTP 404); consistent with quirks Q18 (measured 2026-11-01) and the gh manual's documented error-output behavior"
+    },
+    {
+      "claim": "err403_rate_limit_composed.json is COMPOSED, not captured: GitHub responds to a primary-rate-limit breach with 403 (or 429) and x-ratelimit-remaining: 0; the error body follows the {message, documentation_url, status} schema measured on the live 404 above and on the 2026-11-01 incident body recorded in quirks Q18 ({\"message\":\"API rate limit exceeded…\",\"status\":\"403\"}). Message wording per the documented primary-rate-limit message form; IP 192.0.2.10 is an RFC 5737 documentation address. Deliberately inducing a real rate limit is forbidden by the repair task, so no verbatim 403 capture exists",
+      "authority": "Context7 MCP (/github/docs): content/rest/using-the-rest-api/rate-limits-for-the-rest-api.md + content/rest/using-the-rest-api/troubleshooting-the-rest-api.md (fetched 2026-11-02); body schema: live measured 404 (this manifest) + docs/spec/ci_provider_failover_quirks.md Q18 (measured 2026-11-01)"
+    },
+    {
+      "claim": "Q19 gh --paginate page-shape semantics: official manual says 'Each page is a separate JSON array or object' (+ '--slurp' to wrap); MEASURED on gh 2.102.0: top-level-ARRAY endpoint pages are merged into ONE JSON array (repos/cli/cli/tags?per_page=100 → 210 tags over 3 pages → jq saw exactly 1 document), while object-ENVELOPE endpoints emit each page as a separate JSON object concatenated on stdout (run 41298669695 jobs?per_page=20 → 2 pages → jq -s slurped 2 {total_count,jobs} envelopes). ci-provider-router.yml's `jq -sc '[.[].jobs[]]'` consumes the envelope-concatenation form; release-ship.yml:151 relies on the array-merge form",
+      "authority": "Context7 MCP (/websites/cli_github_manual, cli.github.com/manual/gh_api, fetched 2026-11-02) for the documented sentence; measured 2026-11-02 (gh 2.102.0, read-only GETs) for both behaviors; docs/spec/ci_provider_failover_quirks.md Q19"
+    }
+  ],
+  "captures": [
+    {
+      "file": "canary_run_41289547761_jobs.json",
+      "method": "GET",
+      "url": "repos/Archright/Axiom/actions/runs/41289547761/jobs",
+      "url_note": "no query params — byte-faithful to ghec-canary.yml:81 which calls the endpoint without per_page",
+      "run_id": 41289547761,
+      "run_kind": "ghec-canary (force_trial, PR #1160 post-merge verification)",
+      "total_count": 1,
+      "expected_pinned": {
+        "jobs[0].id": 124797734698,
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions",
+        "runner_id": 1000035433,
+        "runner_name": "GitHub Actions 1000035433",
+        "labels": ["ubuntu-24.04"],
+        "steps": 3,
+        "conclusion": "success"
+      },
+      "defect_role": "Q16 killing shape — labels is a string array, so the pre-fix `[.labels[]?.name]` exits 5 on this fixture (negative control 4a)"
+    },
+    {
+      "file": "run_41298669695_jobs_p1.json",
+      "method": "GET",
+      "url": "repos/Archright/Axiom/actions/runs/41298669695/jobs?per_page=100",
+      "url_note": "per_page=100 — byte-faithful to ci-provider-router.yml:357 (--paginate, single page since total_count=22 < 100)",
+      "run_id": 41298669695,
+      "run_kind": "admission-gate merge_group (head aa155017) — the observed run for the first return_acceptance=confirmed write (router run 41299411602)",
+      "total_count": 22,
+      "shape": "12 executed GHEC jobs (runner_group_id=0) + 10 skipped jobs (conclusion=skipped, all runner fields null) — exercises both disjuncts of the ACC_NON_SKIP exclusion",
+      "expected_pinned": {
+        "total": 22,
+        "acc_non_skip": 12,
+        "acc_executed": 12,
+        "acc_blocked": 0,
+        "acc_all_ghec": true,
+        "golden_rows": "expected_run_41298669695_acceptance_rows.jsonl (12 rows)"
+      },
+      "defect_role": "Q17 killing shape — ACC_NON_SKIP is an array, so the pre-fix object shorthand `{name,…}` exits 5 on this fixture (negative control 4b)"
+    },
+    {
+      "file": "run_41312498699_jobs_p1.json",
+      "method": "GET",
+      "url": "repos/Archright/Axiom/actions/runs/41312498699/jobs?per_page=100",
+      "run_id": 41312498699,
+      "run_kind": "required workflow run (post-confirmed epoch)",
+      "total_count": 1,
+      "shape": "1 executed GHEC job — single-row acceptance path",
+      "expected_pinned": {
+        "total": 1,
+        "acc_executed": 1,
+        "acc_blocked": 0,
+        "acc_all_ghec": true,
+        "golden_rows": "expected_run_41312498699_acceptance_rows.jsonl (1 row)"
+      },
+      "defect_role": "Q17 single-row distribution (`.[] |` must yield exactly one line, not an array dump)"
+    },
+    {
+      "file": "err404_jobs_run_not_found.json",
+      "method": "GET",
+      "url": "repos/Archright/Axiom/actions/runs/1/jobs?per_page=100",
+      "url_note": "nonexistent run id 1 — the exact :357 fetch shape under a 404; GET-only, no side effects",
+      "verbatim": true,
+      "http_status": 404,
+      "gh_exit_code": 1,
+      "gh_stderr": "gh: Not Found (HTTP 404)",
+      "defect_role": "Q19 killing input #1 — pre-fix :357 pipeline feeds this body to `jq -sc '[.[].jobs[]]'` → 'Cannot iterate over null' exit 5, killing the step with return_acceptance stuck at its current value (pending silence, Q17 family); post-fix it drives the UNKNOWN-record fallback"
+    },
+    {
+      "file": "err403_rate_limit_composed.json",
+      "method": "COMPOSED (official schema — see schema_basis; real rate-limit induction forbidden)",
+      "url": "n/a",
+      "verbatim": false,
+      "defect_role": "Q19 killing input #2 — the 2026-11-01 incident's transport failure class (Q18 measured 250-run 403 burst); drives the same UNKNOWN-record fallback and the has(\"message\") contamination gate"
+    },
+    {
+      "file": "artifacts_envelope_page1_perpage1.json",
+      "method": "GET",
+      "url": "repos/Archright/Axiom/actions/artifacts?per_page=1",
+      "url_note": "per_page=1 keeps the capture at one small verbatim envelope (1 artifact row, total_count=9864); the probe :220 fetch shape consumes {total_count, artifacts[]} envelopes page by page",
+      "verbatim": true,
+      "http_status": 200,
+      "defect_role": "probe :220 happy-path pin — `jq -c '.artifacts'` over this envelope must yield exactly the 1-artifact array, byte-identical before and after the fetch-protection repair"
+    }
+  ],
+  "omitted_captures": [
+    {
+      "run_id": 41312498886,
+      "url": "repos/Archright/Axiom/actions/runs/41312498886/jobs?per_page=100",
+      "reason": "captured during the session and found shape-identical to run 41298669695 (22 jobs = 12 executed + 10 skipped, all_ghec=true; differs only in job ids/timestamps) — omitted from the committed fixture set as a redundant duplicate; the contract matrix is fully covered by the three retained fixtures"
+    }
+  ],
+  "determinism": "Fixtures are committed static files; the regression test performs zero network calls. Golden row files were generated once at capture time by the extracted live workflow jq programs and are asserted byte-exact thereafter.",
+  "q19_paginate_measurements": {
+    "measured_at_utc": "2026-11-02",
+    "tool": "gh version 2.102.0 (2026-09-30)",
+    "array_endpoint_merge": {
+      "url": "repos/cli/cli/tags?per_page=100 (210 tags → 3 pages)",
+      "observation": "gh api --paginate stdout contained ONE JSON document — jq 'length' printed exactly one output line (210), not one per page",
+      "consumer": "release-ship.yml:151 `gh api --paginate .../releases | jq '[.[] | select(.tag_name == $v)]'` depends on this merged shape"
+    },
+    "object_envelope_concat": {
+      "url": "repos/Archright/Axiom/actions/runs/41298669695/jobs?per_page=20 (22 jobs → 2 pages)",
+      "observation": "stdout was 2 concatenated JSON objects; jq -s slurped [2, [true, true]] — two {total_count, jobs} envelopes",
+      "consumer": "ci-provider-router.yml jobs fetch `jq -sc '[.[].jobs[]]'` consumes this concatenated-envelope stream"
+    },
+    "documented_basis": "gh manual (cli.github.com/manual/gh_api, fetched 2026-11-02 via Context7 /websites/cli_github_manual): 'In --paginate mode, all pages of results will sequentially be requested… Each page is a separate JSON array or object. Pass --slurp to wrap all pages of JSON arrays or objects into an outer JSON array.' — the documented 'separate JSON array' wording does NOT hold for top-level-array endpoints on gh 2.102.0 (they merge); mismatch documented as quirks Q19"
+  }
+}

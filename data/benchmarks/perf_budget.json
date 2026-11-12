@@ -1,0 +1,10 @@
+{
+  "LeanKernelVerification": {
+    "budget_us": 2000000,
+    "max_allowed_regression_pct": 5.0
+  },
+  "Z3AstExtraction": {
+    "budget_us": 500000,
+    "max_allowed_regression_pct": 3.0
+  }
+}

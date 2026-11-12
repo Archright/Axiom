@@ -1,0 +1,18 @@
+# Axiom Project Configuration Template
+# Copy to axiom.toml and customize
+
+[project]
+name = "my-project"  # TODO: Your project name
+version = "0.1.0"
+
+[auth]
+api_key = "${AXIOM_API_KEY}"  # Set via environment variable
+
+[gate]
+# TODO: Configure your gates
+enabled_gates = ["quality", "security", "performance"]
+
+[audit]
+# TODO: Configure audit storage
+backend = "jsonl"  # Options: jsonl, sqlite, memory
+log_path = "logs/audit.jsonl"

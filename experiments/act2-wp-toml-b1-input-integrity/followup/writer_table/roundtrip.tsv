@@ -1,0 +1,1055 @@
+case	hex	context	flavor	emitted_file	emitted_doc	lib_read	tomllib_v100_oracle	bytes_preserved	note
+b00	00	string	v100	esc_v100/b00.toml	  v="\u0000"	OK	OK	value_bytes_preserved=true	
+b01	01	string	v100	esc_v100/b01.toml	  v="\u0001"	OK	OK	value_bytes_preserved=true	
+b02	02	string	v100	esc_v100/b02.toml	  v="\u0002"	OK	OK	value_bytes_preserved=true	
+b03	03	string	v100	esc_v100/b03.toml	  v="\u0003"	OK	OK	value_bytes_preserved=true	
+b04	04	string	v100	esc_v100/b04.toml	  v="\u0004"	OK	OK	value_bytes_preserved=true	
+b05	05	string	v100	esc_v100/b05.toml	  v="\u0005"	OK	OK	value_bytes_preserved=true	
+b06	06	string	v100	esc_v100/b06.toml	  v="\u0006"	OK	OK	value_bytes_preserved=true	
+b07	07	string	v100	esc_v100/b07.toml	  v="\u0007"	OK	OK	value_bytes_preserved=true	
+b08	08	string	v100	esc_v100/b08.toml	  v="\b"	OK	OK	value_bytes_preserved=true	
+b09	09	string	v100	esc_v100/b09.toml	  v="\t"	OK	OK	value_bytes_preserved=true	
+b0A	0A	string	v100	esc_v100/b0A.toml	  v="\n"	OK	OK	value_bytes_preserved=true	
+b0B	0B	string	v100	esc_v100/b0B.toml	  v="\u000B"	OK	OK	value_bytes_preserved=true	
+b0C	0C	string	v100	esc_v100/b0C.toml	  v="\f"	OK	OK	value_bytes_preserved=true	
+b0D	0D	string	v100	esc_v100/b0D.toml	  v="\r"	OK	OK	value_bytes_preserved=true	
+b0E	0E	string	v100	esc_v100/b0E.toml	  v="\u000E"	OK	OK	value_bytes_preserved=true	
+b0F	0F	string	v100	esc_v100/b0F.toml	  v="\u000F"	OK	OK	value_bytes_preserved=true	
+b10	10	string	v100	esc_v100/b10.toml	  v="\u0010"	OK	OK	value_bytes_preserved=true	
+b11	11	string	v100	esc_v100/b11.toml	  v="\u0011"	OK	OK	value_bytes_preserved=true	
+b12	12	string	v100	esc_v100/b12.toml	  v="\u0012"	OK	OK	value_bytes_preserved=true	
+b13	13	string	v100	esc_v100/b13.toml	  v="\u0013"	OK	OK	value_bytes_preserved=true	
+b14	14	string	v100	esc_v100/b14.toml	  v="\u0014"	OK	OK	value_bytes_preserved=true	
+b15	15	string	v100	esc_v100/b15.toml	  v="\u0015"	OK	OK	value_bytes_preserved=true	
+b16	16	string	v100	esc_v100/b16.toml	  v="\u0016"	OK	OK	value_bytes_preserved=true	
+b17	17	string	v100	esc_v100/b17.toml	  v="\u0017"	OK	OK	value_bytes_preserved=true	
+b18	18	string	v100	esc_v100/b18.toml	  v="\u0018"	OK	OK	value_bytes_preserved=true	
+b19	19	string	v100	esc_v100/b19.toml	  v="\u0019"	OK	OK	value_bytes_preserved=true	
+b1A	1A	string	v100	esc_v100/b1A.toml	  v="\u001A"	OK	OK	value_bytes_preserved=true	
+b1B	1B	string	v100	esc_v100/b1B.toml	  v="\e"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib RAISE confirms v1.0.0 reserved-escape verdict
+b1C	1C	string	v100	esc_v100/b1C.toml	  v="\u001C"	OK	OK	value_bytes_preserved=true	
+b1D	1D	string	v100	esc_v100/b1D.toml	  v="\u001D"	OK	OK	value_bytes_preserved=true	
+b1E	1E	string	v100	esc_v100/b1E.toml	  v="\u001E"	OK	OK	value_bytes_preserved=true	
+b1F	1F	string	v100	esc_v100/b1F.toml	  v="\u001F"	OK	OK	value_bytes_preserved=true	
+b20	20	string	v100	esc_v100/b20.toml	  v=" "	OK	OK	value_bytes_preserved=true	
+b21	21	string	v100	esc_v100/b21.toml	  v="!"	OK	OK	value_bytes_preserved=true	
+b22	22	string	v100	esc_v100/b22.toml	  v="\""	OK	OK	value_bytes_preserved=true	
+b23	23	string	v100	esc_v100/b23.toml	  v="#"	OK	OK	value_bytes_preserved=true	
+b24	24	string	v100	esc_v100/b24.toml	  v="$"	OK	OK	value_bytes_preserved=true	
+b25	25	string	v100	esc_v100/b25.toml	  v="%"	OK	OK	value_bytes_preserved=true	
+b26	26	string	v100	esc_v100/b26.toml	  v="&"	OK	OK	value_bytes_preserved=true	
+b27	27	string	v100	esc_v100/b27.toml	  v="\'"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib RAISE confirms v1.0.0 reserved-escape verdict
+b28	28	string	v100	esc_v100/b28.toml	  v="("	OK	OK	value_bytes_preserved=true	
+b29	29	string	v100	esc_v100/b29.toml	  v=")"	OK	OK	value_bytes_preserved=true	
+b2A	2A	string	v100	esc_v100/b2A.toml	  v="*"	OK	OK	value_bytes_preserved=true	
+b2B	2B	string	v100	esc_v100/b2B.toml	  v="+"	OK	OK	value_bytes_preserved=true	
+b2C	2C	string	v100	esc_v100/b2C.toml	  v=","	OK	OK	value_bytes_preserved=true	
+b2D	2D	string	v100	esc_v100/b2D.toml	  v="-"	OK	OK	value_bytes_preserved=true	
+b2E	2E	string	v100	esc_v100/b2E.toml	  v="."	OK	OK	value_bytes_preserved=true	
+b2F	2F	string	v100	esc_v100/b2F.toml	  v="/"	OK	OK	value_bytes_preserved=true	
+b30	30	string	v100	esc_v100/b30.toml	  v="0"	OK	OK	value_bytes_preserved=true	
+b31	31	string	v100	esc_v100/b31.toml	  v="1"	OK	OK	value_bytes_preserved=true	
+b32	32	string	v100	esc_v100/b32.toml	  v="2"	OK	OK	value_bytes_preserved=true	
+b33	33	string	v100	esc_v100/b33.toml	  v="3"	OK	OK	value_bytes_preserved=true	
+b34	34	string	v100	esc_v100/b34.toml	  v="4"	OK	OK	value_bytes_preserved=true	
+b35	35	string	v100	esc_v100/b35.toml	  v="5"	OK	OK	value_bytes_preserved=true	
+b36	36	string	v100	esc_v100/b36.toml	  v="6"	OK	OK	value_bytes_preserved=true	
+b37	37	string	v100	esc_v100/b37.toml	  v="7"	OK	OK	value_bytes_preserved=true	
+b38	38	string	v100	esc_v100/b38.toml	  v="8"	OK	OK	value_bytes_preserved=true	
+b39	39	string	v100	esc_v100/b39.toml	  v="9"	OK	OK	value_bytes_preserved=true	
+b3A	3A	string	v100	esc_v100/b3A.toml	  v=":"	OK	OK	value_bytes_preserved=true	
+b3B	3B	string	v100	esc_v100/b3B.toml	  v=";"	OK	OK	value_bytes_preserved=true	
+b3C	3C	string	v100	esc_v100/b3C.toml	  v="<"	OK	OK	value_bytes_preserved=true	
+b3D	3D	string	v100	esc_v100/b3D.toml	  v="="	OK	OK	value_bytes_preserved=true	
+b3E	3E	string	v100	esc_v100/b3E.toml	  v=">"	OK	OK	value_bytes_preserved=true	
+b3F	3F	string	v100	esc_v100/b3F.toml	  v="?"	OK	OK	value_bytes_preserved=true	
+b40	40	string	v100	esc_v100/b40.toml	  v="@"	OK	OK	value_bytes_preserved=true	
+b41	41	string	v100	esc_v100/b41.toml	  v="A"	OK	OK	value_bytes_preserved=true	
+b42	42	string	v100	esc_v100/b42.toml	  v="B"	OK	OK	value_bytes_preserved=true	
+b43	43	string	v100	esc_v100/b43.toml	  v="C"	OK	OK	value_bytes_preserved=true	
+b44	44	string	v100	esc_v100/b44.toml	  v="D"	OK	OK	value_bytes_preserved=true	
+b45	45	string	v100	esc_v100/b45.toml	  v="E"	OK	OK	value_bytes_preserved=true	
+b46	46	string	v100	esc_v100/b46.toml	  v="F"	OK	OK	value_bytes_preserved=true	
+b47	47	string	v100	esc_v100/b47.toml	  v="G"	OK	OK	value_bytes_preserved=true	
+b48	48	string	v100	esc_v100/b48.toml	  v="H"	OK	OK	value_bytes_preserved=true	
+b49	49	string	v100	esc_v100/b49.toml	  v="I"	OK	OK	value_bytes_preserved=true	
+b4A	4A	string	v100	esc_v100/b4A.toml	  v="J"	OK	OK	value_bytes_preserved=true	
+b4B	4B	string	v100	esc_v100/b4B.toml	  v="K"	OK	OK	value_bytes_preserved=true	
+b4C	4C	string	v100	esc_v100/b4C.toml	  v="L"	OK	OK	value_bytes_preserved=true	
+b4D	4D	string	v100	esc_v100/b4D.toml	  v="M"	OK	OK	value_bytes_preserved=true	
+b4E	4E	string	v100	esc_v100/b4E.toml	  v="N"	OK	OK	value_bytes_preserved=true	
+b4F	4F	string	v100	esc_v100/b4F.toml	  v="O"	OK	OK	value_bytes_preserved=true	
+b50	50	string	v100	esc_v100/b50.toml	  v="P"	OK	OK	value_bytes_preserved=true	
+b51	51	string	v100	esc_v100/b51.toml	  v="Q"	OK	OK	value_bytes_preserved=true	
+b52	52	string	v100	esc_v100/b52.toml	  v="R"	OK	OK	value_bytes_preserved=true	
+b53	53	string	v100	esc_v100/b53.toml	  v="S"	OK	OK	value_bytes_preserved=true	
+b54	54	string	v100	esc_v100/b54.toml	  v="T"	OK	OK	value_bytes_preserved=true	
+b55	55	string	v100	esc_v100/b55.toml	  v="U"	OK	OK	value_bytes_preserved=true	
+b56	56	string	v100	esc_v100/b56.toml	  v="V"	OK	OK	value_bytes_preserved=true	
+b57	57	string	v100	esc_v100/b57.toml	  v="W"	OK	OK	value_bytes_preserved=true	
+b58	58	string	v100	esc_v100/b58.toml	  v="X"	OK	OK	value_bytes_preserved=true	
+b59	59	string	v100	esc_v100/b59.toml	  v="Y"	OK	OK	value_bytes_preserved=true	
+b5A	5A	string	v100	esc_v100/b5A.toml	  v="Z"	OK	OK	value_bytes_preserved=true	
+b5B	5B	string	v100	esc_v100/b5B.toml	  v="["	OK	OK	value_bytes_preserved=true	
+b5C	5C	string	v100	esc_v100/b5C.toml	  v="\\"	OK	OK	value_bytes_preserved=true	
+b5D	5D	string	v100	esc_v100/b5D.toml	  v="]"	OK	OK	value_bytes_preserved=true	
+b5E	5E	string	v100	esc_v100/b5E.toml	  v="^"	OK	OK	value_bytes_preserved=true	
+b5F	5F	string	v100	esc_v100/b5F.toml	  v="_"	OK	OK	value_bytes_preserved=true	
+b60	60	string	v100	esc_v100/b60.toml	  v="`"	OK	OK	value_bytes_preserved=true	
+b61	61	string	v100	esc_v100/b61.toml	  v="a"	OK	OK	value_bytes_preserved=true	
+b62	62	string	v100	esc_v100/b62.toml	  v="b"	OK	OK	value_bytes_preserved=true	
+b63	63	string	v100	esc_v100/b63.toml	  v="c"	OK	OK	value_bytes_preserved=true	
+b64	64	string	v100	esc_v100/b64.toml	  v="d"	OK	OK	value_bytes_preserved=true	
+b65	65	string	v100	esc_v100/b65.toml	  v="e"	OK	OK	value_bytes_preserved=true	
+b66	66	string	v100	esc_v100/b66.toml	  v="f"	OK	OK	value_bytes_preserved=true	
+b67	67	string	v100	esc_v100/b67.toml	  v="g"	OK	OK	value_bytes_preserved=true	
+b68	68	string	v100	esc_v100/b68.toml	  v="h"	OK	OK	value_bytes_preserved=true	
+b69	69	string	v100	esc_v100/b69.toml	  v="i"	OK	OK	value_bytes_preserved=true	
+b6A	6A	string	v100	esc_v100/b6A.toml	  v="j"	OK	OK	value_bytes_preserved=true	
+b6B	6B	string	v100	esc_v100/b6B.toml	  v="k"	OK	OK	value_bytes_preserved=true	
+b6C	6C	string	v100	esc_v100/b6C.toml	  v="l"	OK	OK	value_bytes_preserved=true	
+b6D	6D	string	v100	esc_v100/b6D.toml	  v="m"	OK	OK	value_bytes_preserved=true	
+b6E	6E	string	v100	esc_v100/b6E.toml	  v="n"	OK	OK	value_bytes_preserved=true	
+b6F	6F	string	v100	esc_v100/b6F.toml	  v="o"	OK	OK	value_bytes_preserved=true	
+b70	70	string	v100	esc_v100/b70.toml	  v="p"	OK	OK	value_bytes_preserved=true	
+b71	71	string	v100	esc_v100/b71.toml	  v="q"	OK	OK	value_bytes_preserved=true	
+b72	72	string	v100	esc_v100/b72.toml	  v="r"	OK	OK	value_bytes_preserved=true	
+b73	73	string	v100	esc_v100/b73.toml	  v="s"	OK	OK	value_bytes_preserved=true	
+b74	74	string	v100	esc_v100/b74.toml	  v="t"	OK	OK	value_bytes_preserved=true	
+b75	75	string	v100	esc_v100/b75.toml	  v="u"	OK	OK	value_bytes_preserved=true	
+b76	76	string	v100	esc_v100/b76.toml	  v="v"	OK	OK	value_bytes_preserved=true	
+b77	77	string	v100	esc_v100/b77.toml	  v="w"	OK	OK	value_bytes_preserved=true	
+b78	78	string	v100	esc_v100/b78.toml	  v="x"	OK	OK	value_bytes_preserved=true	
+b79	79	string	v100	esc_v100/b79.toml	  v="y"	OK	OK	value_bytes_preserved=true	
+b7A	7A	string	v100	esc_v100/b7A.toml	  v="z"	OK	OK	value_bytes_preserved=true	
+b7B	7B	string	v100	esc_v100/b7B.toml	  v="{"	OK	OK	value_bytes_preserved=true	
+b7C	7C	string	v100	esc_v100/b7C.toml	  v="|"	OK	OK	value_bytes_preserved=true	
+b7D	7D	string	v100	esc_v100/b7D.toml	  v="}"	OK	OK	value_bytes_preserved=true	
+b7E	7E	string	v100	esc_v100/b7E.toml	  v="~"	OK	OK	value_bytes_preserved=true	
+b7F	7F	string	v100	esc_v100/b7F.toml	  v="\u007F"	OK	OK	value_bytes_preserved=true	
+b80	80	string	v100	esc_v100/b80.toml	  v="\u0080"	OK	OK	value_bytes_preserved=false	
+b81	81	string	v100	esc_v100/b81.toml	  v="\u0081"	OK	OK	value_bytes_preserved=false	
+b82	82	string	v100	esc_v100/b82.toml	  v="\u0082"	OK	OK	value_bytes_preserved=false	
+b83	83	string	v100	esc_v100/b83.toml	  v="\u0083"	OK	OK	value_bytes_preserved=false	
+b84	84	string	v100	esc_v100/b84.toml	  v="\u0084"	OK	OK	value_bytes_preserved=false	
+b85	85	string	v100	esc_v100/b85.toml	  v="\u0085"	OK	OK	value_bytes_preserved=false	
+b86	86	string	v100	esc_v100/b86.toml	  v="\u0086"	OK	OK	value_bytes_preserved=false	
+b87	87	string	v100	esc_v100/b87.toml	  v="\u0087"	OK	OK	value_bytes_preserved=false	
+b88	88	string	v100	esc_v100/b88.toml	  v="\u0088"	OK	OK	value_bytes_preserved=false	
+b89	89	string	v100	esc_v100/b89.toml	  v="\u0089"	OK	OK	value_bytes_preserved=false	
+b8A	8A	string	v100	esc_v100/b8A.toml	  v="\u008A"	OK	OK	value_bytes_preserved=false	
+b8B	8B	string	v100	esc_v100/b8B.toml	  v="\u008B"	OK	OK	value_bytes_preserved=false	
+b8C	8C	string	v100	esc_v100/b8C.toml	  v="\u008C"	OK	OK	value_bytes_preserved=false	
+b8D	8D	string	v100	esc_v100/b8D.toml	  v="\u008D"	OK	OK	value_bytes_preserved=false	
+b8E	8E	string	v100	esc_v100/b8E.toml	  v="\u008E"	OK	OK	value_bytes_preserved=false	
+b8F	8F	string	v100	esc_v100/b8F.toml	  v="\u008F"	OK	OK	value_bytes_preserved=false	
+b90	90	string	v100	esc_v100/b90.toml	  v="\u0090"	OK	OK	value_bytes_preserved=false	
+b91	91	string	v100	esc_v100/b91.toml	  v="\u0091"	OK	OK	value_bytes_preserved=false	
+b92	92	string	v100	esc_v100/b92.toml	  v="\u0092"	OK	OK	value_bytes_preserved=false	
+b93	93	string	v100	esc_v100/b93.toml	  v="\u0093"	OK	OK	value_bytes_preserved=false	
+b94	94	string	v100	esc_v100/b94.toml	  v="\u0094"	OK	OK	value_bytes_preserved=false	
+b95	95	string	v100	esc_v100/b95.toml	  v="\u0095"	OK	OK	value_bytes_preserved=false	
+b96	96	string	v100	esc_v100/b96.toml	  v="\u0096"	OK	OK	value_bytes_preserved=false	
+b97	97	string	v100	esc_v100/b97.toml	  v="\u0097"	OK	OK	value_bytes_preserved=false	
+b98	98	string	v100	esc_v100/b98.toml	  v="\u0098"	OK	OK	value_bytes_preserved=false	
+b99	99	string	v100	esc_v100/b99.toml	  v="\u0099"	OK	OK	value_bytes_preserved=false	
+b9A	9A	string	v100	esc_v100/b9A.toml	  v="\u009A"	OK	OK	value_bytes_preserved=false	
+b9B	9B	string	v100	esc_v100/b9B.toml	  v="\u009B"	OK	OK	value_bytes_preserved=false	
+b9C	9C	string	v100	esc_v100/b9C.toml	  v="\u009C"	OK	OK	value_bytes_preserved=false	
+b9D	9D	string	v100	esc_v100/b9D.toml	  v="\u009D"	OK	OK	value_bytes_preserved=false	
+b9E	9E	string	v100	esc_v100/b9E.toml	  v="\u009E"	OK	OK	value_bytes_preserved=false	
+b9F	9F	string	v100	esc_v100/b9F.toml	  v="\u009F"	OK	OK	value_bytes_preserved=false	
+bA0	A0	string	v100	esc_v100/bA0.toml	  v="\u00A0"	OK	OK	value_bytes_preserved=false	
+bA1	A1	string	v100	esc_v100/bA1.toml	  v="\u00A1"	OK	OK	value_bytes_preserved=false	
+bA2	A2	string	v100	esc_v100/bA2.toml	  v="\u00A2"	OK	OK	value_bytes_preserved=false	
+bA3	A3	string	v100	esc_v100/bA3.toml	  v="\u00A3"	OK	OK	value_bytes_preserved=false	
+bA4	A4	string	v100	esc_v100/bA4.toml	  v="\u00A4"	OK	OK	value_bytes_preserved=false	
+bA5	A5	string	v100	esc_v100/bA5.toml	  v="\u00A5"	OK	OK	value_bytes_preserved=false	
+bA6	A6	string	v100	esc_v100/bA6.toml	  v="\u00A6"	OK	OK	value_bytes_preserved=false	
+bA7	A7	string	v100	esc_v100/bA7.toml	  v="\u00A7"	OK	OK	value_bytes_preserved=false	
+bA8	A8	string	v100	esc_v100/bA8.toml	  v="\u00A8"	OK	OK	value_bytes_preserved=false	
+bA9	A9	string	v100	esc_v100/bA9.toml	  v="\u00A9"	OK	OK	value_bytes_preserved=false	
+bAA	AA	string	v100	esc_v100/bAA.toml	  v="\u00AA"	OK	OK	value_bytes_preserved=false	
+bAB	AB	string	v100	esc_v100/bAB.toml	  v="\u00AB"	OK	OK	value_bytes_preserved=false	
+bAC	AC	string	v100	esc_v100/bAC.toml	  v="\u00AC"	OK	OK	value_bytes_preserved=false	
+bAD	AD	string	v100	esc_v100/bAD.toml	  v="\u00AD"	OK	OK	value_bytes_preserved=false	
+bAE	AE	string	v100	esc_v100/bAE.toml	  v="\u00AE"	OK	OK	value_bytes_preserved=false	
+bAF	AF	string	v100	esc_v100/bAF.toml	  v="\u00AF"	OK	OK	value_bytes_preserved=false	
+bB0	B0	string	v100	esc_v100/bB0.toml	  v="\u00B0"	OK	OK	value_bytes_preserved=false	
+bB1	B1	string	v100	esc_v100/bB1.toml	  v="\u00B1"	OK	OK	value_bytes_preserved=false	
+bB2	B2	string	v100	esc_v100/bB2.toml	  v="\u00B2"	OK	OK	value_bytes_preserved=false	
+bB3	B3	string	v100	esc_v100/bB3.toml	  v="\u00B3"	OK	OK	value_bytes_preserved=false	
+bB4	B4	string	v100	esc_v100/bB4.toml	  v="\u00B4"	OK	OK	value_bytes_preserved=false	
+bB5	B5	string	v100	esc_v100/bB5.toml	  v="\u00B5"	OK	OK	value_bytes_preserved=false	
+bB6	B6	string	v100	esc_v100/bB6.toml	  v="\u00B6"	OK	OK	value_bytes_preserved=false	
+bB7	B7	string	v100	esc_v100/bB7.toml	  v="\u00B7"	OK	OK	value_bytes_preserved=false	
+bB8	B8	string	v100	esc_v100/bB8.toml	  v="\u00B8"	OK	OK	value_bytes_preserved=false	
+bB9	B9	string	v100	esc_v100/bB9.toml	  v="\u00B9"	OK	OK	value_bytes_preserved=false	
+bBA	BA	string	v100	esc_v100/bBA.toml	  v="\u00BA"	OK	OK	value_bytes_preserved=false	
+bBB	BB	string	v100	esc_v100/bBB.toml	  v="\u00BB"	OK	OK	value_bytes_preserved=false	
+bBC	BC	string	v100	esc_v100/bBC.toml	  v="\u00BC"	OK	OK	value_bytes_preserved=false	
+bBD	BD	string	v100	esc_v100/bBD.toml	  v="\u00BD"	OK	OK	value_bytes_preserved=false	
+bBE	BE	string	v100	esc_v100/bBE.toml	  v="\u00BE"	OK	OK	value_bytes_preserved=false	
+bBF	BF	string	v100	esc_v100/bBF.toml	  v="\u00BF"	OK	OK	value_bytes_preserved=false	
+bC0	C0	string	v100	esc_v100/bC0.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bC1	C1	string	v100	esc_v100/bC1.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bC2	C2	string	v100	esc_v100/bC2.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bC3	C3	string	v100	esc_v100/bC3.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bC4	C4	string	v100	esc_v100/bC4.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bC5	C5	string	v100	esc_v100/bC5.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bC6	C6	string	v100	esc_v100/bC6.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bC7	C7	string	v100	esc_v100/bC7.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bC8	C8	string	v100	esc_v100/bC8.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bC9	C9	string	v100	esc_v100/bC9.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bCA	CA	string	v100	esc_v100/bCA.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bCB	CB	string	v100	esc_v100/bCB.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bCC	CC	string	v100	esc_v100/bCC.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bCD	CD	string	v100	esc_v100/bCD.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bCE	CE	string	v100	esc_v100/bCE.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bCF	CF	string	v100	esc_v100/bCF.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bD0	D0	string	v100	esc_v100/bD0.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bD1	D1	string	v100	esc_v100/bD1.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bD2	D2	string	v100	esc_v100/bD2.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bD3	D3	string	v100	esc_v100/bD3.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bD4	D4	string	v100	esc_v100/bD4.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bD5	D5	string	v100	esc_v100/bD5.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bD6	D6	string	v100	esc_v100/bD6.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bD7	D7	string	v100	esc_v100/bD7.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bD8	D8	string	v100	esc_v100/bD8.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bD9	D9	string	v100	esc_v100/bD9.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bDA	DA	string	v100	esc_v100/bDA.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bDB	DB	string	v100	esc_v100/bDB.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bDC	DC	string	v100	esc_v100/bDC.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bDD	DD	string	v100	esc_v100/bDD.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bDE	DE	string	v100	esc_v100/bDE.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bDF	DF	string	v100	esc_v100/bDF.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bE0	E0	string	v100	esc_v100/bE0.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bE1	E1	string	v100	esc_v100/bE1.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bE2	E2	string	v100	esc_v100/bE2.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bE3	E3	string	v100	esc_v100/bE3.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bE4	E4	string	v100	esc_v100/bE4.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bE5	E5	string	v100	esc_v100/bE5.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bE6	E6	string	v100	esc_v100/bE6.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bE7	E7	string	v100	esc_v100/bE7.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bE8	E8	string	v100	esc_v100/bE8.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bE9	E9	string	v100	esc_v100/bE9.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bEA	EA	string	v100	esc_v100/bEA.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bEB	EB	string	v100	esc_v100/bEB.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bEC	EC	string	v100	esc_v100/bEC.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bED	ED	string	v100	esc_v100/bED.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bEE	EE	string	v100	esc_v100/bEE.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bEF	EF	string	v100	esc_v100/bEF.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bF0	F0	string	v100	esc_v100/bF0.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bF1	F1	string	v100	esc_v100/bF1.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bF2	F2	string	v100	esc_v100/bF2.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bF3	F3	string	v100	esc_v100/bF3.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bF4	F4	string	v100	esc_v100/bF4.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bF5	F5	string	v100	esc_v100/bF5.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bF6	F6	string	v100	esc_v100/bF6.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bF7	F7	string	v100	esc_v100/bF7.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bF8	F8	string	v100	esc_v100/bF8.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bF9	F9	string	v100	esc_v100/bF9.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bFA	FA	string	v100	esc_v100/bFA.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bFB	FB	string	v100	esc_v100/bFB.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bFC	FC	string	v100	esc_v100/bFC.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bFD	FD	string	v100	esc_v100/bFD.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	
+bFE	FE	string	v100	esc_v100/bFE.toml	  v="\u00FE"	OK	OK	value_bytes_preserved=false	
+bFF	FF	string	v100	esc_v100/bFF.toml	  v="\u00FF"	OK	OK	value_bytes_preserved=false	
+b00	00	string	v110	esc_v110/b00.toml	  v="\x00"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b01	01	string	v110	esc_v110/b01.toml	  v="\x01"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b02	02	string	v110	esc_v110/b02.toml	  v="\x02"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b03	03	string	v110	esc_v110/b03.toml	  v="\x03"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b04	04	string	v110	esc_v110/b04.toml	  v="\x04"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b05	05	string	v110	esc_v110/b05.toml	  v="\x05"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b06	06	string	v110	esc_v110/b06.toml	  v="\x06"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b07	07	string	v110	esc_v110/b07.toml	  v="\x07"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b08	08	string	v110	esc_v110/b08.toml	  v="\b"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b09	09	string	v110	esc_v110/b09.toml	  v="\t"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b0A	0A	string	v110	esc_v110/b0A.toml	  v="\n"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b0B	0B	string	v110	esc_v110/b0B.toml	  v="\x0B"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b0C	0C	string	v110	esc_v110/b0C.toml	  v="\f"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b0D	0D	string	v110	esc_v110/b0D.toml	  v="\r"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b0E	0E	string	v110	esc_v110/b0E.toml	  v="\x0E"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b0F	0F	string	v110	esc_v110/b0F.toml	  v="\x0F"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b10	10	string	v110	esc_v110/b10.toml	  v="\x10"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b11	11	string	v110	esc_v110/b11.toml	  v="\x11"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b12	12	string	v110	esc_v110/b12.toml	  v="\x12"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b13	13	string	v110	esc_v110/b13.toml	  v="\x13"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b14	14	string	v110	esc_v110/b14.toml	  v="\x14"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b15	15	string	v110	esc_v110/b15.toml	  v="\x15"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b16	16	string	v110	esc_v110/b16.toml	  v="\x16"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b17	17	string	v110	esc_v110/b17.toml	  v="\x17"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b18	18	string	v110	esc_v110/b18.toml	  v="\x18"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b19	19	string	v110	esc_v110/b19.toml	  v="\x19"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b1A	1A	string	v110	esc_v110/b1A.toml	  v="\x1A"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b1B	1B	string	v110	esc_v110/b1B.toml	  v="\e"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b1C	1C	string	v110	esc_v110/b1C.toml	  v="\x1C"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b1D	1D	string	v110	esc_v110/b1D.toml	  v="\x1D"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b1E	1E	string	v110	esc_v110/b1E.toml	  v="\x1E"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b1F	1F	string	v110	esc_v110/b1F.toml	  v="\x1F"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b20	20	string	v110	esc_v110/b20.toml	  v=" "	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b21	21	string	v110	esc_v110/b21.toml	  v="!"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b22	22	string	v110	esc_v110/b22.toml	  v="\""	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b23	23	string	v110	esc_v110/b23.toml	  v="#"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b24	24	string	v110	esc_v110/b24.toml	  v="$"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b25	25	string	v110	esc_v110/b25.toml	  v="%"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b26	26	string	v110	esc_v110/b26.toml	  v="&"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b27	27	string	v110	esc_v110/b27.toml	  v="\'"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b28	28	string	v110	esc_v110/b28.toml	  v="("	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b29	29	string	v110	esc_v110/b29.toml	  v=")"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b2A	2A	string	v110	esc_v110/b2A.toml	  v="*"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b2B	2B	string	v110	esc_v110/b2B.toml	  v="+"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b2C	2C	string	v110	esc_v110/b2C.toml	  v=","	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b2D	2D	string	v110	esc_v110/b2D.toml	  v="-"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b2E	2E	string	v110	esc_v110/b2E.toml	  v="."	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b2F	2F	string	v110	esc_v110/b2F.toml	  v="/"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b30	30	string	v110	esc_v110/b30.toml	  v="0"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b31	31	string	v110	esc_v110/b31.toml	  v="1"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b32	32	string	v110	esc_v110/b32.toml	  v="2"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b33	33	string	v110	esc_v110/b33.toml	  v="3"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b34	34	string	v110	esc_v110/b34.toml	  v="4"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b35	35	string	v110	esc_v110/b35.toml	  v="5"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b36	36	string	v110	esc_v110/b36.toml	  v="6"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b37	37	string	v110	esc_v110/b37.toml	  v="7"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b38	38	string	v110	esc_v110/b38.toml	  v="8"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b39	39	string	v110	esc_v110/b39.toml	  v="9"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b3A	3A	string	v110	esc_v110/b3A.toml	  v=":"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b3B	3B	string	v110	esc_v110/b3B.toml	  v=";"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b3C	3C	string	v110	esc_v110/b3C.toml	  v="<"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b3D	3D	string	v110	esc_v110/b3D.toml	  v="="	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b3E	3E	string	v110	esc_v110/b3E.toml	  v=">"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b3F	3F	string	v110	esc_v110/b3F.toml	  v="?"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b40	40	string	v110	esc_v110/b40.toml	  v="@"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b41	41	string	v110	esc_v110/b41.toml	  v="A"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b42	42	string	v110	esc_v110/b42.toml	  v="B"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b43	43	string	v110	esc_v110/b43.toml	  v="C"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b44	44	string	v110	esc_v110/b44.toml	  v="D"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b45	45	string	v110	esc_v110/b45.toml	  v="E"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b46	46	string	v110	esc_v110/b46.toml	  v="F"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b47	47	string	v110	esc_v110/b47.toml	  v="G"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b48	48	string	v110	esc_v110/b48.toml	  v="H"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b49	49	string	v110	esc_v110/b49.toml	  v="I"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b4A	4A	string	v110	esc_v110/b4A.toml	  v="J"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b4B	4B	string	v110	esc_v110/b4B.toml	  v="K"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b4C	4C	string	v110	esc_v110/b4C.toml	  v="L"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b4D	4D	string	v110	esc_v110/b4D.toml	  v="M"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b4E	4E	string	v110	esc_v110/b4E.toml	  v="N"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b4F	4F	string	v110	esc_v110/b4F.toml	  v="O"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b50	50	string	v110	esc_v110/b50.toml	  v="P"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b51	51	string	v110	esc_v110/b51.toml	  v="Q"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b52	52	string	v110	esc_v110/b52.toml	  v="R"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b53	53	string	v110	esc_v110/b53.toml	  v="S"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b54	54	string	v110	esc_v110/b54.toml	  v="T"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b55	55	string	v110	esc_v110/b55.toml	  v="U"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b56	56	string	v110	esc_v110/b56.toml	  v="V"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b57	57	string	v110	esc_v110/b57.toml	  v="W"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b58	58	string	v110	esc_v110/b58.toml	  v="X"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b59	59	string	v110	esc_v110/b59.toml	  v="Y"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b5A	5A	string	v110	esc_v110/b5A.toml	  v="Z"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b5B	5B	string	v110	esc_v110/b5B.toml	  v="["	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b5C	5C	string	v110	esc_v110/b5C.toml	  v="\\"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b5D	5D	string	v110	esc_v110/b5D.toml	  v="]"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b5E	5E	string	v110	esc_v110/b5E.toml	  v="^"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b5F	5F	string	v110	esc_v110/b5F.toml	  v="_"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b60	60	string	v110	esc_v110/b60.toml	  v="`"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b61	61	string	v110	esc_v110/b61.toml	  v="a"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b62	62	string	v110	esc_v110/b62.toml	  v="b"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b63	63	string	v110	esc_v110/b63.toml	  v="c"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b64	64	string	v110	esc_v110/b64.toml	  v="d"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b65	65	string	v110	esc_v110/b65.toml	  v="e"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b66	66	string	v110	esc_v110/b66.toml	  v="f"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b67	67	string	v110	esc_v110/b67.toml	  v="g"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b68	68	string	v110	esc_v110/b68.toml	  v="h"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b69	69	string	v110	esc_v110/b69.toml	  v="i"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b6A	6A	string	v110	esc_v110/b6A.toml	  v="j"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b6B	6B	string	v110	esc_v110/b6B.toml	  v="k"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b6C	6C	string	v110	esc_v110/b6C.toml	  v="l"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b6D	6D	string	v110	esc_v110/b6D.toml	  v="m"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b6E	6E	string	v110	esc_v110/b6E.toml	  v="n"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b6F	6F	string	v110	esc_v110/b6F.toml	  v="o"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b70	70	string	v110	esc_v110/b70.toml	  v="p"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b71	71	string	v110	esc_v110/b71.toml	  v="q"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b72	72	string	v110	esc_v110/b72.toml	  v="r"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b73	73	string	v110	esc_v110/b73.toml	  v="s"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b74	74	string	v110	esc_v110/b74.toml	  v="t"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b75	75	string	v110	esc_v110/b75.toml	  v="u"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b76	76	string	v110	esc_v110/b76.toml	  v="v"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b77	77	string	v110	esc_v110/b77.toml	  v="w"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b78	78	string	v110	esc_v110/b78.toml	  v="x"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b79	79	string	v110	esc_v110/b79.toml	  v="y"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b7A	7A	string	v110	esc_v110/b7A.toml	  v="z"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b7B	7B	string	v110	esc_v110/b7B.toml	  v="{"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b7C	7C	string	v110	esc_v110/b7C.toml	  v="|"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b7D	7D	string	v110	esc_v110/b7D.toml	  v="}"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b7E	7E	string	v110	esc_v110/b7E.toml	  v="~"	OK	OK	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b7F	7F	string	v110	esc_v110/b7F.toml	  v="\x7F"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b80	80	string	v110	esc_v110/b80.toml	  v="\x80"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b81	81	string	v110	esc_v110/b81.toml	  v="\x81"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b82	82	string	v110	esc_v110/b82.toml	  v="\x82"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b83	83	string	v110	esc_v110/b83.toml	  v="\x83"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b84	84	string	v110	esc_v110/b84.toml	  v="\x84"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b85	85	string	v110	esc_v110/b85.toml	  v="\x85"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b86	86	string	v110	esc_v110/b86.toml	  v="\x86"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b87	87	string	v110	esc_v110/b87.toml	  v="\x87"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b88	88	string	v110	esc_v110/b88.toml	  v="\x88"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b89	89	string	v110	esc_v110/b89.toml	  v="\x89"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b8A	8A	string	v110	esc_v110/b8A.toml	  v="\x8A"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b8B	8B	string	v110	esc_v110/b8B.toml	  v="\x8B"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b8C	8C	string	v110	esc_v110/b8C.toml	  v="\x8C"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b8D	8D	string	v110	esc_v110/b8D.toml	  v="\x8D"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b8E	8E	string	v110	esc_v110/b8E.toml	  v="\x8E"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b8F	8F	string	v110	esc_v110/b8F.toml	  v="\x8F"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b90	90	string	v110	esc_v110/b90.toml	  v="\x90"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b91	91	string	v110	esc_v110/b91.toml	  v="\x91"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b92	92	string	v110	esc_v110/b92.toml	  v="\x92"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b93	93	string	v110	esc_v110/b93.toml	  v="\x93"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b94	94	string	v110	esc_v110/b94.toml	  v="\x94"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b95	95	string	v110	esc_v110/b95.toml	  v="\x95"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b96	96	string	v110	esc_v110/b96.toml	  v="\x96"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b97	97	string	v110	esc_v110/b97.toml	  v="\x97"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b98	98	string	v110	esc_v110/b98.toml	  v="\x98"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b99	99	string	v110	esc_v110/b99.toml	  v="\x99"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b9A	9A	string	v110	esc_v110/b9A.toml	  v="\x9A"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b9B	9B	string	v110	esc_v110/b9B.toml	  v="\x9B"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b9C	9C	string	v110	esc_v110/b9C.toml	  v="\x9C"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b9D	9D	string	v110	esc_v110/b9D.toml	  v="\x9D"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b9E	9E	string	v110	esc_v110/b9E.toml	  v="\x9E"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+b9F	9F	string	v110	esc_v110/b9F.toml	  v="\x9F"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bA0	A0	string	v110	esc_v110/bA0.toml	  v="\xA0"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bA1	A1	string	v110	esc_v110/bA1.toml	  v="\xA1"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bA2	A2	string	v110	esc_v110/bA2.toml	  v="\xA2"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bA3	A3	string	v110	esc_v110/bA3.toml	  v="\xA3"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bA4	A4	string	v110	esc_v110/bA4.toml	  v="\xA4"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bA5	A5	string	v110	esc_v110/bA5.toml	  v="\xA5"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bA6	A6	string	v110	esc_v110/bA6.toml	  v="\xA6"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bA7	A7	string	v110	esc_v110/bA7.toml	  v="\xA7"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bA8	A8	string	v110	esc_v110/bA8.toml	  v="\xA8"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bA9	A9	string	v110	esc_v110/bA9.toml	  v="\xA9"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bAA	AA	string	v110	esc_v110/bAA.toml	  v="\xAA"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bAB	AB	string	v110	esc_v110/bAB.toml	  v="\xAB"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bAC	AC	string	v110	esc_v110/bAC.toml	  v="\xAC"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bAD	AD	string	v110	esc_v110/bAD.toml	  v="\xAD"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bAE	AE	string	v110	esc_v110/bAE.toml	  v="\xAE"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bAF	AF	string	v110	esc_v110/bAF.toml	  v="\xAF"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bB0	B0	string	v110	esc_v110/bB0.toml	  v="\xB0"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bB1	B1	string	v110	esc_v110/bB1.toml	  v="\xB1"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bB2	B2	string	v110	esc_v110/bB2.toml	  v="\xB2"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bB3	B3	string	v110	esc_v110/bB3.toml	  v="\xB3"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bB4	B4	string	v110	esc_v110/bB4.toml	  v="\xB4"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bB5	B5	string	v110	esc_v110/bB5.toml	  v="\xB5"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bB6	B6	string	v110	esc_v110/bB6.toml	  v="\xB6"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bB7	B7	string	v110	esc_v110/bB7.toml	  v="\xB7"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bB8	B8	string	v110	esc_v110/bB8.toml	  v="\xB8"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bB9	B9	string	v110	esc_v110/bB9.toml	  v="\xB9"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bBA	BA	string	v110	esc_v110/bBA.toml	  v="\xBA"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bBB	BB	string	v110	esc_v110/bBB.toml	  v="\xBB"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bBC	BC	string	v110	esc_v110/bBC.toml	  v="\xBC"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bBD	BD	string	v110	esc_v110/bBD.toml	  v="\xBD"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bBE	BE	string	v110	esc_v110/bBE.toml	  v="\xBE"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bBF	BF	string	v110	esc_v110/bBF.toml	  v="\xBF"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bC0	C0	string	v110	esc_v110/bC0.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bC1	C1	string	v110	esc_v110/bC1.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bC2	C2	string	v110	esc_v110/bC2.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bC3	C3	string	v110	esc_v110/bC3.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bC4	C4	string	v110	esc_v110/bC4.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bC5	C5	string	v110	esc_v110/bC5.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bC6	C6	string	v110	esc_v110/bC6.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bC7	C7	string	v110	esc_v110/bC7.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bC8	C8	string	v110	esc_v110/bC8.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bC9	C9	string	v110	esc_v110/bC9.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bCA	CA	string	v110	esc_v110/bCA.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bCB	CB	string	v110	esc_v110/bCB.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bCC	CC	string	v110	esc_v110/bCC.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bCD	CD	string	v110	esc_v110/bCD.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bCE	CE	string	v110	esc_v110/bCE.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bCF	CF	string	v110	esc_v110/bCF.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bD0	D0	string	v110	esc_v110/bD0.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bD1	D1	string	v110	esc_v110/bD1.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bD2	D2	string	v110	esc_v110/bD2.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bD3	D3	string	v110	esc_v110/bD3.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bD4	D4	string	v110	esc_v110/bD4.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bD5	D5	string	v110	esc_v110/bD5.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bD6	D6	string	v110	esc_v110/bD6.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bD7	D7	string	v110	esc_v110/bD7.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bD8	D8	string	v110	esc_v110/bD8.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bD9	D9	string	v110	esc_v110/bD9.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bDA	DA	string	v110	esc_v110/bDA.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bDB	DB	string	v110	esc_v110/bDB.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bDC	DC	string	v110	esc_v110/bDC.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bDD	DD	string	v110	esc_v110/bDD.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bDE	DE	string	v110	esc_v110/bDE.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bDF	DF	string	v110	esc_v110/bDF.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bE0	E0	string	v110	esc_v110/bE0.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bE1	E1	string	v110	esc_v110/bE1.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bE2	E2	string	v110	esc_v110/bE2.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bE3	E3	string	v110	esc_v110/bE3.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bE4	E4	string	v110	esc_v110/bE4.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bE5	E5	string	v110	esc_v110/bE5.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bE6	E6	string	v110	esc_v110/bE6.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bE7	E7	string	v110	esc_v110/bE7.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bE8	E8	string	v110	esc_v110/bE8.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bE9	E9	string	v110	esc_v110/bE9.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bEA	EA	string	v110	esc_v110/bEA.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bEB	EB	string	v110	esc_v110/bEB.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bEC	EC	string	v110	esc_v110/bEC.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bED	ED	string	v110	esc_v110/bED.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bEE	EE	string	v110	esc_v110/bEE.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bEF	EF	string	v110	esc_v110/bEF.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bF0	F0	string	v110	esc_v110/bF0.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bF1	F1	string	v110	esc_v110/bF1.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bF2	F2	string	v110	esc_v110/bF2.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bF3	F3	string	v110	esc_v110/bF3.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bF4	F4	string	v110	esc_v110/bF4.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bF5	F5	string	v110	esc_v110/bF5.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bF6	F6	string	v110	esc_v110/bF6.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bF7	F7	string	v110	esc_v110/bF7.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bF8	F8	string	v110	esc_v110/bF8.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bF9	F9	string	v110	esc_v110/bF9.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bFA	FA	string	v110	esc_v110/bFA.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bFB	FB	string	v110	esc_v110/bFB.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bFC	FC	string	v110	esc_v110/bFC.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bFD	FD	string	v110	esc_v110/bFD.toml	  v="\uFFFD"	OK	OK	value_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bFE	FE	string	v110	esc_v110/bFE.toml	  v="\xFE"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+bFF	FF	string	v110	esc_v110/bFF.toml	  v="\xFF"	OK	RAISE (Unescaped '\' in a string (at line 1, column 8))	value_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+0	00	key	v100	keys_v100/b00.toml	  "\u0000"=7	OK	OK	key_bytes_preserved=true	
+1	01	key	v100	keys_v100/b01.toml	  "\u0001"=7	OK	OK	key_bytes_preserved=true	
+2	02	key	v100	keys_v100/b02.toml	  "\u0002"=7	OK	OK	key_bytes_preserved=true	
+3	03	key	v100	keys_v100/b03.toml	  "\u0003"=7	OK	OK	key_bytes_preserved=true	
+4	04	key	v100	keys_v100/b04.toml	  "\u0004"=7	OK	OK	key_bytes_preserved=true	
+5	05	key	v100	keys_v100/b05.toml	  "\u0005"=7	OK	OK	key_bytes_preserved=true	
+6	06	key	v100	keys_v100/b06.toml	  "\u0006"=7	OK	OK	key_bytes_preserved=true	
+7	07	key	v100	keys_v100/b07.toml	  "\u0007"=7	OK	OK	key_bytes_preserved=true	
+8	08	key	v100	keys_v100/b08.toml	  "\b"=7	OK	OK	key_bytes_preserved=true	
+9	09	key	v100	keys_v100/b09.toml	  "\t"=7	OK	OK	key_bytes_preserved=true	
+10	0A	key	v100	keys_v100/b0A.toml	  "\n"=7	OK	OK	key_bytes_preserved=true	
+11	0B	key	v100	keys_v100/b0B.toml	  "\u000B"=7	OK	OK	key_bytes_preserved=true	
+12	0C	key	v100	keys_v100/b0C.toml	  "\f"=7	OK	OK	key_bytes_preserved=true	
+13	0D	key	v100	keys_v100/b0D.toml	  "\r"=7	OK	OK	key_bytes_preserved=true	
+14	0E	key	v100	keys_v100/b0E.toml	  "\u000E"=7	OK	OK	key_bytes_preserved=true	
+15	0F	key	v100	keys_v100/b0F.toml	  "\u000F"=7	OK	OK	key_bytes_preserved=true	
+16	10	key	v100	keys_v100/b10.toml	  "\u0010"=7	OK	OK	key_bytes_preserved=true	
+17	11	key	v100	keys_v100/b11.toml	  "\u0011"=7	OK	OK	key_bytes_preserved=true	
+18	12	key	v100	keys_v100/b12.toml	  "\u0012"=7	OK	OK	key_bytes_preserved=true	
+19	13	key	v100	keys_v100/b13.toml	  "\u0013"=7	OK	OK	key_bytes_preserved=true	
+20	14	key	v100	keys_v100/b14.toml	  "\u0014"=7	OK	OK	key_bytes_preserved=true	
+21	15	key	v100	keys_v100/b15.toml	  "\u0015"=7	OK	OK	key_bytes_preserved=true	
+22	16	key	v100	keys_v100/b16.toml	  "\u0016"=7	OK	OK	key_bytes_preserved=true	
+23	17	key	v100	keys_v100/b17.toml	  "\u0017"=7	OK	OK	key_bytes_preserved=true	
+24	18	key	v100	keys_v100/b18.toml	  "\u0018"=7	OK	OK	key_bytes_preserved=true	
+25	19	key	v100	keys_v100/b19.toml	  "\u0019"=7	OK	OK	key_bytes_preserved=true	
+26	1A	key	v100	keys_v100/b1A.toml	  "\u001A"=7	OK	OK	key_bytes_preserved=true	
+27	1B	key	v100	keys_v100/b1B.toml	  "\e"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	
+28	1C	key	v100	keys_v100/b1C.toml	  "\u001C"=7	OK	OK	key_bytes_preserved=true	
+29	1D	key	v100	keys_v100/b1D.toml	  "\u001D"=7	OK	OK	key_bytes_preserved=true	
+30	1E	key	v100	keys_v100/b1E.toml	  "\u001E"=7	OK	OK	key_bytes_preserved=true	
+31	1F	key	v100	keys_v100/b1F.toml	  "\u001F"=7	OK	OK	key_bytes_preserved=true	
+32	20	key	v100	keys_v100/b20.toml	  " "=7	OK	OK	key_bytes_preserved=true	
+33	21	key	v100	keys_v100/b21.toml	  !=7	FAIL (1, 3) illegal character "!"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+34	22	key	v100	keys_v100/b22.toml	  "\""=7	OK	OK	key_bytes_preserved=true	
+35	23	key	v100	keys_v100/b23.toml	  "#"=7	OK	OK	key_bytes_preserved=true	
+36	24	key	v100	keys_v100/b24.toml	  $=7	FAIL (1, 3) illegal character "$"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+37	25	key	v100	keys_v100/b25.toml	  %=7	FAIL (1, 3) illegal character "%"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+38	26	key	v100	keys_v100/b26.toml	  &=7	FAIL (1, 3) illegal character "&"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+39	27	key	v100	keys_v100/b27.toml	  "\'"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	
+40	28	key	v100	keys_v100/b28.toml	  (=7	FAIL (1, 3) illegal character "("	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+41	29	key	v100	keys_v100/b29.toml	  )=7	FAIL (1, 3) illegal character ")"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+42	2A	key	v100	keys_v100/b2A.toml	  *=7	FAIL (1, 3) illegal character "*"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+43	2B	key	v100	keys_v100/b2B.toml	  +=7	FAIL (1, 3) illegal character "+"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+44	2C	key	v100	keys_v100/b2C.toml	  ,=7	FAIL (1, 3) illegal character ","	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+45	2D	key	v100	keys_v100/b2D.toml	  -=7	OK	OK	key_bytes_preserved=true	
+46	2E	key	v100	keys_v100/b2E.toml	  "."=7	OK	OK	key_bytes_preserved=true	
+47	2F	key	v100	keys_v100/b2F.toml	  /=7	FAIL (1, 3) illegal character "/"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+48	30	key	v100	keys_v100/b30.toml	  0=7	OK	OK	key_bytes_preserved=true	
+49	31	key	v100	keys_v100/b31.toml	  1=7	OK	OK	key_bytes_preserved=true	
+50	32	key	v100	keys_v100/b32.toml	  2=7	OK	OK	key_bytes_preserved=true	
+51	33	key	v100	keys_v100/b33.toml	  3=7	OK	OK	key_bytes_preserved=true	
+52	34	key	v100	keys_v100/b34.toml	  4=7	OK	OK	key_bytes_preserved=true	
+53	35	key	v100	keys_v100/b35.toml	  5=7	OK	OK	key_bytes_preserved=true	
+54	36	key	v100	keys_v100/b36.toml	  6=7	OK	OK	key_bytes_preserved=true	
+55	37	key	v100	keys_v100/b37.toml	  7=7	OK	OK	key_bytes_preserved=true	
+56	38	key	v100	keys_v100/b38.toml	  8=7	OK	OK	key_bytes_preserved=true	
+57	39	key	v100	keys_v100/b39.toml	  9=7	OK	OK	key_bytes_preserved=true	
+58	3A	key	v100	keys_v100/b3A.toml	  :=7	FAIL (1, 3) illegal character ":"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+59	3B	key	v100	keys_v100/b3B.toml	  ;=7	FAIL (1, 3) illegal character ";"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+60	3C	key	v100	keys_v100/b3C.toml	  <=7	FAIL (1, 3) illegal character "<"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+61	3D	key	v100	keys_v100/b3D.toml	  ==7	FAIL (1, 3) key name missing	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+62	3E	key	v100	keys_v100/b3E.toml	  >=7	FAIL (1, 3) illegal character ">"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+63	3F	key	v100	keys_v100/b3F.toml	  ?=7	FAIL (1, 3) illegal character "?"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+64	40	key	v100	keys_v100/b40.toml	  @=7	FAIL (1, 3) illegal character "@"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+65	41	key	v100	keys_v100/b41.toml	  A=7	OK	OK	key_bytes_preserved=true	
+66	42	key	v100	keys_v100/b42.toml	  B=7	OK	OK	key_bytes_preserved=true	
+67	43	key	v100	keys_v100/b43.toml	  C=7	OK	OK	key_bytes_preserved=true	
+68	44	key	v100	keys_v100/b44.toml	  D=7	OK	OK	key_bytes_preserved=true	
+69	45	key	v100	keys_v100/b45.toml	  E=7	OK	OK	key_bytes_preserved=true	
+70	46	key	v100	keys_v100/b46.toml	  F=7	OK	OK	key_bytes_preserved=true	
+71	47	key	v100	keys_v100/b47.toml	  G=7	OK	OK	key_bytes_preserved=true	
+72	48	key	v100	keys_v100/b48.toml	  H=7	OK	OK	key_bytes_preserved=true	
+73	49	key	v100	keys_v100/b49.toml	  I=7	OK	OK	key_bytes_preserved=true	
+74	4A	key	v100	keys_v100/b4A.toml	  J=7	OK	OK	key_bytes_preserved=true	
+75	4B	key	v100	keys_v100/b4B.toml	  K=7	OK	OK	key_bytes_preserved=true	
+76	4C	key	v100	keys_v100/b4C.toml	  L=7	OK	OK	key_bytes_preserved=true	
+77	4D	key	v100	keys_v100/b4D.toml	  M=7	OK	OK	key_bytes_preserved=true	
+78	4E	key	v100	keys_v100/b4E.toml	  N=7	OK	OK	key_bytes_preserved=true	
+79	4F	key	v100	keys_v100/b4F.toml	  O=7	OK	OK	key_bytes_preserved=true	
+80	50	key	v100	keys_v100/b50.toml	  P=7	OK	OK	key_bytes_preserved=true	
+81	51	key	v100	keys_v100/b51.toml	  Q=7	OK	OK	key_bytes_preserved=true	
+82	52	key	v100	keys_v100/b52.toml	  R=7	OK	OK	key_bytes_preserved=true	
+83	53	key	v100	keys_v100/b53.toml	  S=7	OK	OK	key_bytes_preserved=true	
+84	54	key	v100	keys_v100/b54.toml	  T=7	OK	OK	key_bytes_preserved=true	
+85	55	key	v100	keys_v100/b55.toml	  U=7	OK	OK	key_bytes_preserved=true	
+86	56	key	v100	keys_v100/b56.toml	  V=7	OK	OK	key_bytes_preserved=true	
+87	57	key	v100	keys_v100/b57.toml	  W=7	OK	OK	key_bytes_preserved=true	
+88	58	key	v100	keys_v100/b58.toml	  X=7	OK	OK	key_bytes_preserved=true	
+89	59	key	v100	keys_v100/b59.toml	  Y=7	OK	OK	key_bytes_preserved=true	
+90	5A	key	v100	keys_v100/b5A.toml	  Z=7	OK	OK	key_bytes_preserved=true	
+91	5B	key	v100	keys_v100/b5B.toml	  [=7	FAIL (1, 4) ']' expected	RAISE (Invalid initial character for a key part (at line 1, column 4))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+92	5C	key	v100	keys_v100/b5C.toml	  \=7	FAIL (1, 3) illegal character "\\"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+93	5D	key	v100	keys_v100/b5D.toml	  ]=7	FAIL (1, 3) illegal character "]"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+94	5E	key	v100	keys_v100/b5E.toml	  ^=7	FAIL (1, 3) illegal character "^"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+95	5F	key	v100	keys_v100/b5F.toml	  _=7	OK	OK	key_bytes_preserved=true	
+96	60	key	v100	keys_v100/b60.toml	  `=7	FAIL (1, 3) illegal character "`"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+97	61	key	v100	keys_v100/b61.toml	  a=7	OK	OK	key_bytes_preserved=true	
+98	62	key	v100	keys_v100/b62.toml	  b=7	OK	OK	key_bytes_preserved=true	
+99	63	key	v100	keys_v100/b63.toml	  c=7	OK	OK	key_bytes_preserved=true	
+100	64	key	v100	keys_v100/b64.toml	  d=7	OK	OK	key_bytes_preserved=true	
+101	65	key	v100	keys_v100/b65.toml	  e=7	OK	OK	key_bytes_preserved=true	
+102	66	key	v100	keys_v100/b66.toml	  f=7	OK	OK	key_bytes_preserved=true	
+103	67	key	v100	keys_v100/b67.toml	  g=7	OK	OK	key_bytes_preserved=true	
+104	68	key	v100	keys_v100/b68.toml	  h=7	OK	OK	key_bytes_preserved=true	
+105	69	key	v100	keys_v100/b69.toml	  i=7	OK	OK	key_bytes_preserved=true	
+106	6A	key	v100	keys_v100/b6A.toml	  j=7	OK	OK	key_bytes_preserved=true	
+107	6B	key	v100	keys_v100/b6B.toml	  k=7	OK	OK	key_bytes_preserved=true	
+108	6C	key	v100	keys_v100/b6C.toml	  l=7	OK	OK	key_bytes_preserved=true	
+109	6D	key	v100	keys_v100/b6D.toml	  m=7	OK	OK	key_bytes_preserved=true	
+110	6E	key	v100	keys_v100/b6E.toml	  n=7	OK	OK	key_bytes_preserved=true	
+111	6F	key	v100	keys_v100/b6F.toml	  o=7	OK	OK	key_bytes_preserved=true	
+112	70	key	v100	keys_v100/b70.toml	  p=7	OK	OK	key_bytes_preserved=true	
+113	71	key	v100	keys_v100/b71.toml	  q=7	OK	OK	key_bytes_preserved=true	
+114	72	key	v100	keys_v100/b72.toml	  r=7	OK	OK	key_bytes_preserved=true	
+115	73	key	v100	keys_v100/b73.toml	  s=7	OK	OK	key_bytes_preserved=true	
+116	74	key	v100	keys_v100/b74.toml	  t=7	OK	OK	key_bytes_preserved=true	
+117	75	key	v100	keys_v100/b75.toml	  u=7	OK	OK	key_bytes_preserved=true	
+118	76	key	v100	keys_v100/b76.toml	  v=7	OK	OK	key_bytes_preserved=true	
+119	77	key	v100	keys_v100/b77.toml	  w=7	OK	OK	key_bytes_preserved=true	
+120	78	key	v100	keys_v100/b78.toml	  x=7	OK	OK	key_bytes_preserved=true	
+121	79	key	v100	keys_v100/b79.toml	  y=7	OK	OK	key_bytes_preserved=true	
+122	7A	key	v100	keys_v100/b7A.toml	  z=7	OK	OK	key_bytes_preserved=true	
+123	7B	key	v100	keys_v100/b7B.toml	  {=7	FAIL (1, 3) illegal character "{"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+124	7C	key	v100	keys_v100/b7C.toml	  |=7	FAIL (1, 3) illegal character "|"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+125	7D	key	v100	keys_v100/b7D.toml	  }=7	FAIL (1, 3) illegal character "}"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+126	7E	key	v100	keys_v100/b7E.toml	  ~=7	FAIL (1, 3) illegal character "~"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+127	7F	key	v100	keys_v100/b7F.toml	  "\u007F"=7	OK	OK	key_bytes_preserved=true	
+128	80	key	v100	keys_v100/b80.toml	  "\u0080"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 80 != input 80
+129	81	key	v100	keys_v100/b81.toml	  "\u0081"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 81 != input 81
+130	82	key	v100	keys_v100/b82.toml	  "\u0082"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 82 != input 82
+131	83	key	v100	keys_v100/b83.toml	  "\u0083"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 83 != input 83
+132	84	key	v100	keys_v100/b84.toml	  "\u0084"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 84 != input 84
+133	85	key	v100	keys_v100/b85.toml	  "\u0085"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 85 != input 85
+134	86	key	v100	keys_v100/b86.toml	  "\u0086"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 86 != input 86
+135	87	key	v100	keys_v100/b87.toml	  "\u0087"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 87 != input 87
+136	88	key	v100	keys_v100/b88.toml	  "\u0088"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 88 != input 88
+137	89	key	v100	keys_v100/b89.toml	  "\u0089"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 89 != input 89
+138	8A	key	v100	keys_v100/b8A.toml	  "\u008A"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 8A != input 8A
+139	8B	key	v100	keys_v100/b8B.toml	  "\u008B"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 8B != input 8B
+140	8C	key	v100	keys_v100/b8C.toml	  "\u008C"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 8C != input 8C
+141	8D	key	v100	keys_v100/b8D.toml	  "\u008D"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 8D != input 8D
+142	8E	key	v100	keys_v100/b8E.toml	  "\u008E"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 8E != input 8E
+143	8F	key	v100	keys_v100/b8F.toml	  "\u008F"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 8F != input 8F
+144	90	key	v100	keys_v100/b90.toml	  "\u0090"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 90 != input 90
+145	91	key	v100	keys_v100/b91.toml	  "\u0091"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 91 != input 91
+146	92	key	v100	keys_v100/b92.toml	  "\u0092"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 92 != input 92
+147	93	key	v100	keys_v100/b93.toml	  "\u0093"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 93 != input 93
+148	94	key	v100	keys_v100/b94.toml	  "\u0094"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 94 != input 94
+149	95	key	v100	keys_v100/b95.toml	  "\u0095"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 95 != input 95
+150	96	key	v100	keys_v100/b96.toml	  "\u0096"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 96 != input 96
+151	97	key	v100	keys_v100/b97.toml	  "\u0097"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 97 != input 97
+152	98	key	v100	keys_v100/b98.toml	  "\u0098"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 98 != input 98
+153	99	key	v100	keys_v100/b99.toml	  "\u0099"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 99 != input 99
+154	9A	key	v100	keys_v100/b9A.toml	  "\u009A"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 9A != input 9A
+155	9B	key	v100	keys_v100/b9B.toml	  "\u009B"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 9B != input 9B
+156	9C	key	v100	keys_v100/b9C.toml	  "\u009C"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 9C != input 9C
+157	9D	key	v100	keys_v100/b9D.toml	  "\u009D"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 9D != input 9D
+158	9E	key	v100	keys_v100/b9E.toml	  "\u009E"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 9E != input 9E
+159	9F	key	v100	keys_v100/b9F.toml	  "\u009F"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 9F != input 9F
+160	A0	key	v100	keys_v100/bA0.toml	  "\u00A0"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 A0 != input A0
+161	A1	key	v100	keys_v100/bA1.toml	  "\u00A1"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 A1 != input A1
+162	A2	key	v100	keys_v100/bA2.toml	  "\u00A2"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 A2 != input A2
+163	A3	key	v100	keys_v100/bA3.toml	  "\u00A3"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 A3 != input A3
+164	A4	key	v100	keys_v100/bA4.toml	  "\u00A4"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 A4 != input A4
+165	A5	key	v100	keys_v100/bA5.toml	  "\u00A5"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 A5 != input A5
+166	A6	key	v100	keys_v100/bA6.toml	  "\u00A6"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 A6 != input A6
+167	A7	key	v100	keys_v100/bA7.toml	  "\u00A7"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 A7 != input A7
+168	A8	key	v100	keys_v100/bA8.toml	  "\u00A8"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 A8 != input A8
+169	A9	key	v100	keys_v100/bA9.toml	  "\u00A9"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 A9 != input A9
+170	AA	key	v100	keys_v100/bAA.toml	  "\u00AA"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 AA != input AA
+171	AB	key	v100	keys_v100/bAB.toml	  "\u00AB"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 AB != input AB
+172	AC	key	v100	keys_v100/bAC.toml	  "\u00AC"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 AC != input AC
+173	AD	key	v100	keys_v100/bAD.toml	  "\u00AD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 AD != input AD
+174	AE	key	v100	keys_v100/bAE.toml	  "\u00AE"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 AE != input AE
+175	AF	key	v100	keys_v100/bAF.toml	  "\u00AF"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 AF != input AF
+176	B0	key	v100	keys_v100/bB0.toml	  "\u00B0"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 B0 != input B0
+177	B1	key	v100	keys_v100/bB1.toml	  "\u00B1"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 B1 != input B1
+178	B2	key	v100	keys_v100/bB2.toml	  "\u00B2"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 B2 != input B2
+179	B3	key	v100	keys_v100/bB3.toml	  "\u00B3"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 B3 != input B3
+180	B4	key	v100	keys_v100/bB4.toml	  "\u00B4"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 B4 != input B4
+181	B5	key	v100	keys_v100/bB5.toml	  "\u00B5"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 B5 != input B5
+182	B6	key	v100	keys_v100/bB6.toml	  "\u00B6"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 B6 != input B6
+183	B7	key	v100	keys_v100/bB7.toml	  "\u00B7"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 B7 != input B7
+184	B8	key	v100	keys_v100/bB8.toml	  "\u00B8"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 B8 != input B8
+185	B9	key	v100	keys_v100/bB9.toml	  "\u00B9"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 B9 != input B9
+186	BA	key	v100	keys_v100/bBA.toml	  "\u00BA"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 BA != input BA
+187	BB	key	v100	keys_v100/bBB.toml	  "\u00BB"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 BB != input BB
+188	BC	key	v100	keys_v100/bBC.toml	  "\u00BC"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 BC != input BC
+189	BD	key	v100	keys_v100/bBD.toml	  "\u00BD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 BD != input BD
+190	BE	key	v100	keys_v100/bBE.toml	  "\u00BE"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 BE != input BE
+191	BF	key	v100	keys_v100/bBF.toml	  "\u00BF"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C2 BF != input BF
+192	C0	key	v100	keys_v100/bC0.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input C0
+193	C1	key	v100	keys_v100/bC1.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input C1
+194	C2	key	v100	keys_v100/bC2.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input C2
+195	C3	key	v100	keys_v100/bC3.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input C3
+196	C4	key	v100	keys_v100/bC4.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input C4
+197	C5	key	v100	keys_v100/bC5.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input C5
+198	C6	key	v100	keys_v100/bC6.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input C6
+199	C7	key	v100	keys_v100/bC7.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input C7
+200	C8	key	v100	keys_v100/bC8.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input C8
+201	C9	key	v100	keys_v100/bC9.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input C9
+202	CA	key	v100	keys_v100/bCA.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input CA
+203	CB	key	v100	keys_v100/bCB.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input CB
+204	CC	key	v100	keys_v100/bCC.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input CC
+205	CD	key	v100	keys_v100/bCD.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input CD
+206	CE	key	v100	keys_v100/bCE.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input CE
+207	CF	key	v100	keys_v100/bCF.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input CF
+208	D0	key	v100	keys_v100/bD0.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input D0
+209	D1	key	v100	keys_v100/bD1.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input D1
+210	D2	key	v100	keys_v100/bD2.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input D2
+211	D3	key	v100	keys_v100/bD3.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input D3
+212	D4	key	v100	keys_v100/bD4.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input D4
+213	D5	key	v100	keys_v100/bD5.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input D5
+214	D6	key	v100	keys_v100/bD6.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input D6
+215	D7	key	v100	keys_v100/bD7.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input D7
+216	D8	key	v100	keys_v100/bD8.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input D8
+217	D9	key	v100	keys_v100/bD9.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input D9
+218	DA	key	v100	keys_v100/bDA.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input DA
+219	DB	key	v100	keys_v100/bDB.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input DB
+220	DC	key	v100	keys_v100/bDC.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input DC
+221	DD	key	v100	keys_v100/bDD.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input DD
+222	DE	key	v100	keys_v100/bDE.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input DE
+223	DF	key	v100	keys_v100/bDF.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input DF
+224	E0	key	v100	keys_v100/bE0.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input E0
+225	E1	key	v100	keys_v100/bE1.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input E1
+226	E2	key	v100	keys_v100/bE2.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input E2
+227	E3	key	v100	keys_v100/bE3.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input E3
+228	E4	key	v100	keys_v100/bE4.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input E4
+229	E5	key	v100	keys_v100/bE5.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input E5
+230	E6	key	v100	keys_v100/bE6.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input E6
+231	E7	key	v100	keys_v100/bE7.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input E7
+232	E8	key	v100	keys_v100/bE8.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input E8
+233	E9	key	v100	keys_v100/bE9.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input E9
+234	EA	key	v100	keys_v100/bEA.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input EA
+235	EB	key	v100	keys_v100/bEB.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input EB
+236	EC	key	v100	keys_v100/bEC.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input EC
+237	ED	key	v100	keys_v100/bED.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input ED
+238	EE	key	v100	keys_v100/bEE.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input EE
+239	EF	key	v100	keys_v100/bEF.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input EF
+240	F0	key	v100	keys_v100/bF0.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input F0
+241	F1	key	v100	keys_v100/bF1.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input F1
+242	F2	key	v100	keys_v100/bF2.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input F2
+243	F3	key	v100	keys_v100/bF3.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input F3
+244	F4	key	v100	keys_v100/bF4.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input F4
+245	F5	key	v100	keys_v100/bF5.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input F5
+246	F6	key	v100	keys_v100/bF6.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input F6
+247	F7	key	v100	keys_v100/bF7.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input F7
+248	F8	key	v100	keys_v100/bF8.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input F8
+249	F9	key	v100	keys_v100/bF9.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input F9
+250	FA	key	v100	keys_v100/bFA.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input FA
+251	FB	key	v100	keys_v100/bFB.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input FB
+252	FC	key	v100	keys_v100/bFC.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input FC
+253	FD	key	v100	keys_v100/bFD.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input FD
+254	FE	key	v100	keys_v100/bFE.toml	  "\u00FE"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C3 BE != input FE
+255	FF	key	v100	keys_v100/bFF.toml	  "\u00FF"=7	OK	OK	key_bytes_preserved=false	decoded key bytes C3 BF != input FF
+mc:dot	612E62	key_multi	v100	keys_v100/mc_dot.toml	  "a.b"=7	OK	OK	key_bytes_preserved=true	
+mc:space	612062	key_multi	v100	keys_v100/mc_space.toml	  "a b"=7	OK	OK	key_bytes_preserved=true	
+mc:dquote	612262	key_multi	v100	keys_v100/mc_dquote.toml	  "a\"b"=7	OK	OK	key_bytes_preserved=true	
+mc:squote	612762	key_multi	v100	keys_v100/mc_squote.toml	  "a\'b"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 7))	key_bytes_preserved=true	
+mc:hash	612362	key_multi	v100	keys_v100/mc_hash.toml	  "a#b"=7	OK	OK	key_bytes_preserved=true	
+mc:lbrack	615B62	key_multi	v100	keys_v100/mc_lbrack.toml	  a[b=7	FAIL (1, 5) expected '"="'	RAISE (Expected '=' after a key in a key/value pair (at line 1, column 4))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+mc:rbrack	615D62	key_multi	v100	keys_v100/mc_rbrack.toml	  a]b=7	FAIL (1, 5) expected '"="'	RAISE (Expected '=' after a key in a key/value pair (at line 1, column 4))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+mc:eq	613D62	key_multi	v100	keys_v100/mc_eq.toml	  a=b=7	FAIL (1, 5) illegal character "b"	RAISE (Invalid value (at line 1, column 5))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+mc:lbrace	617B62	key_multi	v100	keys_v100/mc_lbrace.toml	  a{b=7	FAIL (1, 4) illegal character "{"	RAISE (Expected '=' after a key in a key/value pair (at line 1, column 4))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+mc:rbrace	617D62	key_multi	v100	keys_v100/mc_rbrace.toml	  a}b=7	FAIL (1, 4) illegal character "}"	RAISE (Expected '=' after a key in a key/value pair (at line 1, column 4))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+mc:comma	612C62	key_multi	v100	keys_v100/mc_comma.toml	  a,b=7	FAIL (1, 4) illegal character ","	RAISE (Expected '=' after a key in a key/value pair (at line 1, column 4))	key_bytes_preserved=-	library re-parse fails: output cannot be consumed by its own reader
+mc:newline	610A62	key_multi	v100	keys_v100/mc_newline.toml	  "a\nb"=7	OK	OK	key_bytes_preserved=true	
+mc:eacute	C3A9	key_multi	v100	keys_v100/mc_eacute.toml	  "\u00E9"=7	OK	OK	key_bytes_preserved=true	
+mc:uni	C98ECA9E	key_multi	v100	keys_v100/mc_uni.toml	  "\u024E\u029E"=7	OK	OK	key_bytes_preserved=true	
+mc:lone_e9	E9	key_multi	v100	keys_v100/mc_lone_e9.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	decoded key bytes EF BF BD != input E9
+0	00	key	v110	keys_v110/b00.toml	  "\x00"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+1	01	key	v110	keys_v110/b01.toml	  "\x01"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+2	02	key	v110	keys_v110/b02.toml	  "\x02"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+3	03	key	v110	keys_v110/b03.toml	  "\x03"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+4	04	key	v110	keys_v110/b04.toml	  "\x04"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+5	05	key	v110	keys_v110/b05.toml	  "\x05"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+6	06	key	v110	keys_v110/b06.toml	  "\x06"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+7	07	key	v110	keys_v110/b07.toml	  "\x07"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+8	08	key	v110	keys_v110/b08.toml	  "\b"=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+9	09	key	v110	keys_v110/b09.toml	  "\t"=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+10	0A	key	v110	keys_v110/b0A.toml	  "\n"=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+11	0B	key	v110	keys_v110/b0B.toml	  "\x0B"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+12	0C	key	v110	keys_v110/b0C.toml	  "\f"=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+13	0D	key	v110	keys_v110/b0D.toml	  "\r"=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+14	0E	key	v110	keys_v110/b0E.toml	  "\x0E"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+15	0F	key	v110	keys_v110/b0F.toml	  "\x0F"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+16	10	key	v110	keys_v110/b10.toml	  "\x10"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+17	11	key	v110	keys_v110/b11.toml	  "\x11"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+18	12	key	v110	keys_v110/b12.toml	  "\x12"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+19	13	key	v110	keys_v110/b13.toml	  "\x13"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+20	14	key	v110	keys_v110/b14.toml	  "\x14"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+21	15	key	v110	keys_v110/b15.toml	  "\x15"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+22	16	key	v110	keys_v110/b16.toml	  "\x16"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+23	17	key	v110	keys_v110/b17.toml	  "\x17"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+24	18	key	v110	keys_v110/b18.toml	  "\x18"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+25	19	key	v110	keys_v110/b19.toml	  "\x19"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+26	1A	key	v110	keys_v110/b1A.toml	  "\x1A"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+27	1B	key	v110	keys_v110/b1B.toml	  "\e"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+28	1C	key	v110	keys_v110/b1C.toml	  "\x1C"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+29	1D	key	v110	keys_v110/b1D.toml	  "\x1D"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+30	1E	key	v110	keys_v110/b1E.toml	  "\x1E"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+31	1F	key	v110	keys_v110/b1F.toml	  "\x1F"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+32	20	key	v110	keys_v110/b20.toml	  " "=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+33	21	key	v110	keys_v110/b21.toml	  !=7	FAIL (1, 3) illegal character "!"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+34	22	key	v110	keys_v110/b22.toml	  "\""=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+35	23	key	v110	keys_v110/b23.toml	  "#"=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+36	24	key	v110	keys_v110/b24.toml	  $=7	FAIL (1, 3) illegal character "$"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+37	25	key	v110	keys_v110/b25.toml	  %=7	FAIL (1, 3) illegal character "%"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+38	26	key	v110	keys_v110/b26.toml	  &=7	FAIL (1, 3) illegal character "&"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+39	27	key	v110	keys_v110/b27.toml	  "\'"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+40	28	key	v110	keys_v110/b28.toml	  (=7	FAIL (1, 3) illegal character "("	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+41	29	key	v110	keys_v110/b29.toml	  )=7	FAIL (1, 3) illegal character ")"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+42	2A	key	v110	keys_v110/b2A.toml	  *=7	FAIL (1, 3) illegal character "*"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+43	2B	key	v110	keys_v110/b2B.toml	  +=7	FAIL (1, 3) illegal character "+"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+44	2C	key	v110	keys_v110/b2C.toml	  ,=7	FAIL (1, 3) illegal character ","	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+45	2D	key	v110	keys_v110/b2D.toml	  -=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+46	2E	key	v110	keys_v110/b2E.toml	  "."=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+47	2F	key	v110	keys_v110/b2F.toml	  /=7	FAIL (1, 3) illegal character "/"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+48	30	key	v110	keys_v110/b30.toml	  0=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+49	31	key	v110	keys_v110/b31.toml	  1=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+50	32	key	v110	keys_v110/b32.toml	  2=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+51	33	key	v110	keys_v110/b33.toml	  3=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+52	34	key	v110	keys_v110/b34.toml	  4=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+53	35	key	v110	keys_v110/b35.toml	  5=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+54	36	key	v110	keys_v110/b36.toml	  6=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+55	37	key	v110	keys_v110/b37.toml	  7=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+56	38	key	v110	keys_v110/b38.toml	  8=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+57	39	key	v110	keys_v110/b39.toml	  9=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+58	3A	key	v110	keys_v110/b3A.toml	  :=7	FAIL (1, 3) illegal character ":"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+59	3B	key	v110	keys_v110/b3B.toml	  ;=7	FAIL (1, 3) illegal character ";"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+60	3C	key	v110	keys_v110/b3C.toml	  <=7	FAIL (1, 3) illegal character "<"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+61	3D	key	v110	keys_v110/b3D.toml	  ==7	FAIL (1, 3) key name missing	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+62	3E	key	v110	keys_v110/b3E.toml	  >=7	FAIL (1, 3) illegal character ">"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+63	3F	key	v110	keys_v110/b3F.toml	  ?=7	FAIL (1, 3) illegal character "?"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+64	40	key	v110	keys_v110/b40.toml	  @=7	FAIL (1, 3) illegal character "@"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+65	41	key	v110	keys_v110/b41.toml	  A=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+66	42	key	v110	keys_v110/b42.toml	  B=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+67	43	key	v110	keys_v110/b43.toml	  C=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+68	44	key	v110	keys_v110/b44.toml	  D=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+69	45	key	v110	keys_v110/b45.toml	  E=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+70	46	key	v110	keys_v110/b46.toml	  F=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+71	47	key	v110	keys_v110/b47.toml	  G=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+72	48	key	v110	keys_v110/b48.toml	  H=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+73	49	key	v110	keys_v110/b49.toml	  I=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+74	4A	key	v110	keys_v110/b4A.toml	  J=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+75	4B	key	v110	keys_v110/b4B.toml	  K=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+76	4C	key	v110	keys_v110/b4C.toml	  L=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+77	4D	key	v110	keys_v110/b4D.toml	  M=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+78	4E	key	v110	keys_v110/b4E.toml	  N=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+79	4F	key	v110	keys_v110/b4F.toml	  O=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+80	50	key	v110	keys_v110/b50.toml	  P=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+81	51	key	v110	keys_v110/b51.toml	  Q=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+82	52	key	v110	keys_v110/b52.toml	  R=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+83	53	key	v110	keys_v110/b53.toml	  S=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+84	54	key	v110	keys_v110/b54.toml	  T=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+85	55	key	v110	keys_v110/b55.toml	  U=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+86	56	key	v110	keys_v110/b56.toml	  V=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+87	57	key	v110	keys_v110/b57.toml	  W=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+88	58	key	v110	keys_v110/b58.toml	  X=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+89	59	key	v110	keys_v110/b59.toml	  Y=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+90	5A	key	v110	keys_v110/b5A.toml	  Z=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+91	5B	key	v110	keys_v110/b5B.toml	  [=7	FAIL (1, 4) ']' expected	RAISE (Invalid initial character for a key part (at line 1, column 4))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+92	5C	key	v110	keys_v110/b5C.toml	  \=7	FAIL (1, 3) illegal character "\\"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+93	5D	key	v110	keys_v110/b5D.toml	  ]=7	FAIL (1, 3) illegal character "]"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+94	5E	key	v110	keys_v110/b5E.toml	  ^=7	FAIL (1, 3) illegal character "^"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+95	5F	key	v110	keys_v110/b5F.toml	  _=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+96	60	key	v110	keys_v110/b60.toml	  `=7	FAIL (1, 3) illegal character "`"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+97	61	key	v110	keys_v110/b61.toml	  a=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+98	62	key	v110	keys_v110/b62.toml	  b=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+99	63	key	v110	keys_v110/b63.toml	  c=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+100	64	key	v110	keys_v110/b64.toml	  d=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+101	65	key	v110	keys_v110/b65.toml	  e=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+102	66	key	v110	keys_v110/b66.toml	  f=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+103	67	key	v110	keys_v110/b67.toml	  g=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+104	68	key	v110	keys_v110/b68.toml	  h=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+105	69	key	v110	keys_v110/b69.toml	  i=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+106	6A	key	v110	keys_v110/b6A.toml	  j=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+107	6B	key	v110	keys_v110/b6B.toml	  k=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+108	6C	key	v110	keys_v110/b6C.toml	  l=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+109	6D	key	v110	keys_v110/b6D.toml	  m=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+110	6E	key	v110	keys_v110/b6E.toml	  n=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+111	6F	key	v110	keys_v110/b6F.toml	  o=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+112	70	key	v110	keys_v110/b70.toml	  p=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+113	71	key	v110	keys_v110/b71.toml	  q=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+114	72	key	v110	keys_v110/b72.toml	  r=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+115	73	key	v110	keys_v110/b73.toml	  s=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+116	74	key	v110	keys_v110/b74.toml	  t=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+117	75	key	v110	keys_v110/b75.toml	  u=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+118	76	key	v110	keys_v110/b76.toml	  v=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+119	77	key	v110	keys_v110/b77.toml	  w=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+120	78	key	v110	keys_v110/b78.toml	  x=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+121	79	key	v110	keys_v110/b79.toml	  y=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+122	7A	key	v110	keys_v110/b7A.toml	  z=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+123	7B	key	v110	keys_v110/b7B.toml	  {=7	FAIL (1, 3) illegal character "{"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+124	7C	key	v110	keys_v110/b7C.toml	  |=7	FAIL (1, 3) illegal character "|"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+125	7D	key	v110	keys_v110/b7D.toml	  }=7	FAIL (1, 3) illegal character "}"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+126	7E	key	v110	keys_v110/b7E.toml	  ~=7	FAIL (1, 3) illegal character "~"	RAISE (Invalid statement (at line 1, column 3))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+127	7F	key	v110	keys_v110/b7F.toml	  "\x7F"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+128	80	key	v110	keys_v110/b80.toml	  "\x80"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+129	81	key	v110	keys_v110/b81.toml	  "\x81"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+130	82	key	v110	keys_v110/b82.toml	  "\x82"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+131	83	key	v110	keys_v110/b83.toml	  "\x83"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+132	84	key	v110	keys_v110/b84.toml	  "\x84"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+133	85	key	v110	keys_v110/b85.toml	  "\x85"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+134	86	key	v110	keys_v110/b86.toml	  "\x86"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+135	87	key	v110	keys_v110/b87.toml	  "\x87"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+136	88	key	v110	keys_v110/b88.toml	  "\x88"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+137	89	key	v110	keys_v110/b89.toml	  "\x89"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+138	8A	key	v110	keys_v110/b8A.toml	  "\x8A"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+139	8B	key	v110	keys_v110/b8B.toml	  "\x8B"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+140	8C	key	v110	keys_v110/b8C.toml	  "\x8C"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+141	8D	key	v110	keys_v110/b8D.toml	  "\x8D"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+142	8E	key	v110	keys_v110/b8E.toml	  "\x8E"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+143	8F	key	v110	keys_v110/b8F.toml	  "\x8F"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+144	90	key	v110	keys_v110/b90.toml	  "\x90"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+145	91	key	v110	keys_v110/b91.toml	  "\x91"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+146	92	key	v110	keys_v110/b92.toml	  "\x92"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+147	93	key	v110	keys_v110/b93.toml	  "\x93"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+148	94	key	v110	keys_v110/b94.toml	  "\x94"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+149	95	key	v110	keys_v110/b95.toml	  "\x95"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+150	96	key	v110	keys_v110/b96.toml	  "\x96"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+151	97	key	v110	keys_v110/b97.toml	  "\x97"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+152	98	key	v110	keys_v110/b98.toml	  "\x98"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+153	99	key	v110	keys_v110/b99.toml	  "\x99"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+154	9A	key	v110	keys_v110/b9A.toml	  "\x9A"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+155	9B	key	v110	keys_v110/b9B.toml	  "\x9B"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+156	9C	key	v110	keys_v110/b9C.toml	  "\x9C"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+157	9D	key	v110	keys_v110/b9D.toml	  "\x9D"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+158	9E	key	v110	keys_v110/b9E.toml	  "\x9E"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+159	9F	key	v110	keys_v110/b9F.toml	  "\x9F"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+160	A0	key	v110	keys_v110/bA0.toml	  "\xA0"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+161	A1	key	v110	keys_v110/bA1.toml	  "\xA1"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+162	A2	key	v110	keys_v110/bA2.toml	  "\xA2"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+163	A3	key	v110	keys_v110/bA3.toml	  "\xA3"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+164	A4	key	v110	keys_v110/bA4.toml	  "\xA4"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+165	A5	key	v110	keys_v110/bA5.toml	  "\xA5"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+166	A6	key	v110	keys_v110/bA6.toml	  "\xA6"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+167	A7	key	v110	keys_v110/bA7.toml	  "\xA7"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+168	A8	key	v110	keys_v110/bA8.toml	  "\xA8"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+169	A9	key	v110	keys_v110/bA9.toml	  "\xA9"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+170	AA	key	v110	keys_v110/bAA.toml	  "\xAA"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+171	AB	key	v110	keys_v110/bAB.toml	  "\xAB"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+172	AC	key	v110	keys_v110/bAC.toml	  "\xAC"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+173	AD	key	v110	keys_v110/bAD.toml	  "\xAD"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+174	AE	key	v110	keys_v110/bAE.toml	  "\xAE"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+175	AF	key	v110	keys_v110/bAF.toml	  "\xAF"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+176	B0	key	v110	keys_v110/bB0.toml	  "\xB0"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+177	B1	key	v110	keys_v110/bB1.toml	  "\xB1"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+178	B2	key	v110	keys_v110/bB2.toml	  "\xB2"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+179	B3	key	v110	keys_v110/bB3.toml	  "\xB3"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+180	B4	key	v110	keys_v110/bB4.toml	  "\xB4"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+181	B5	key	v110	keys_v110/bB5.toml	  "\xB5"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+182	B6	key	v110	keys_v110/bB6.toml	  "\xB6"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+183	B7	key	v110	keys_v110/bB7.toml	  "\xB7"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+184	B8	key	v110	keys_v110/bB8.toml	  "\xB8"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+185	B9	key	v110	keys_v110/bB9.toml	  "\xB9"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+186	BA	key	v110	keys_v110/bBA.toml	  "\xBA"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+187	BB	key	v110	keys_v110/bBB.toml	  "\xBB"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+188	BC	key	v110	keys_v110/bBC.toml	  "\xBC"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+189	BD	key	v110	keys_v110/bBD.toml	  "\xBD"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+190	BE	key	v110	keys_v110/bBE.toml	  "\xBE"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+191	BF	key	v110	keys_v110/bBF.toml	  "\xBF"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+192	C0	key	v110	keys_v110/bC0.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input C0
+193	C1	key	v110	keys_v110/bC1.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input C1
+194	C2	key	v110	keys_v110/bC2.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input C2
+195	C3	key	v110	keys_v110/bC3.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input C3
+196	C4	key	v110	keys_v110/bC4.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input C4
+197	C5	key	v110	keys_v110/bC5.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input C5
+198	C6	key	v110	keys_v110/bC6.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input C6
+199	C7	key	v110	keys_v110/bC7.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input C7
+200	C8	key	v110	keys_v110/bC8.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input C8
+201	C9	key	v110	keys_v110/bC9.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input C9
+202	CA	key	v110	keys_v110/bCA.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input CA
+203	CB	key	v110	keys_v110/bCB.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input CB
+204	CC	key	v110	keys_v110/bCC.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input CC
+205	CD	key	v110	keys_v110/bCD.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input CD
+206	CE	key	v110	keys_v110/bCE.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input CE
+207	CF	key	v110	keys_v110/bCF.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input CF
+208	D0	key	v110	keys_v110/bD0.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input D0
+209	D1	key	v110	keys_v110/bD1.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input D1
+210	D2	key	v110	keys_v110/bD2.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input D2
+211	D3	key	v110	keys_v110/bD3.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input D3
+212	D4	key	v110	keys_v110/bD4.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input D4
+213	D5	key	v110	keys_v110/bD5.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input D5
+214	D6	key	v110	keys_v110/bD6.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input D6
+215	D7	key	v110	keys_v110/bD7.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input D7
+216	D8	key	v110	keys_v110/bD8.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input D8
+217	D9	key	v110	keys_v110/bD9.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input D9
+218	DA	key	v110	keys_v110/bDA.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input DA
+219	DB	key	v110	keys_v110/bDB.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input DB
+220	DC	key	v110	keys_v110/bDC.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input DC
+221	DD	key	v110	keys_v110/bDD.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input DD
+222	DE	key	v110	keys_v110/bDE.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input DE
+223	DF	key	v110	keys_v110/bDF.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input DF
+224	E0	key	v110	keys_v110/bE0.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input E0
+225	E1	key	v110	keys_v110/bE1.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input E1
+226	E2	key	v110	keys_v110/bE2.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input E2
+227	E3	key	v110	keys_v110/bE3.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input E3
+228	E4	key	v110	keys_v110/bE4.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input E4
+229	E5	key	v110	keys_v110/bE5.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input E5
+230	E6	key	v110	keys_v110/bE6.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input E6
+231	E7	key	v110	keys_v110/bE7.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input E7
+232	E8	key	v110	keys_v110/bE8.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input E8
+233	E9	key	v110	keys_v110/bE9.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input E9
+234	EA	key	v110	keys_v110/bEA.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input EA
+235	EB	key	v110	keys_v110/bEB.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input EB
+236	EC	key	v110	keys_v110/bEC.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input EC
+237	ED	key	v110	keys_v110/bED.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input ED
+238	EE	key	v110	keys_v110/bEE.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input EE
+239	EF	key	v110	keys_v110/bEF.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input EF
+240	F0	key	v110	keys_v110/bF0.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input F0
+241	F1	key	v110	keys_v110/bF1.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input F1
+242	F2	key	v110	keys_v110/bF2.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input F2
+243	F3	key	v110	keys_v110/bF3.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input F3
+244	F4	key	v110	keys_v110/bF4.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input F4
+245	F5	key	v110	keys_v110/bF5.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input F5
+246	F6	key	v110	keys_v110/bF6.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input F6
+247	F7	key	v110	keys_v110/bF7.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input F7
+248	F8	key	v110	keys_v110/bF8.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input F8
+249	F9	key	v110	keys_v110/bF9.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input F9
+250	FA	key	v110	keys_v110/bFA.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input FA
+251	FB	key	v110	keys_v110/bFB.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input FB
+252	FC	key	v110	keys_v110/bFC.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input FC
+253	FD	key	v110	keys_v110/bFD.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input FD
+254	FE	key	v110	keys_v110/bFE.toml	  "\xFE"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+255	FF	key	v110	keys_v110/bFF.toml	  "\xFF"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+mc:dot	612E62	key_multi	v110	keys_v110/mc_dot.toml	  "a.b"=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+mc:space	612062	key_multi	v110	keys_v110/mc_space.toml	  "a b"=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+mc:dquote	612262	key_multi	v110	keys_v110/mc_dquote.toml	  "a\"b"=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+mc:squote	612762	key_multi	v110	keys_v110/mc_squote.toml	  "a\'b"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 7))	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+mc:hash	612362	key_multi	v110	keys_v110/mc_hash.toml	  "a#b"=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+mc:lbrack	615B62	key_multi	v110	keys_v110/mc_lbrack.toml	  a[b=7	FAIL (1, 5) expected '"="'	RAISE (Expected '=' after a key in a key/value pair (at line 1, column 4))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+mc:rbrack	615D62	key_multi	v110	keys_v110/mc_rbrack.toml	  a]b=7	FAIL (1, 5) expected '"="'	RAISE (Expected '=' after a key in a key/value pair (at line 1, column 4))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+mc:eq	613D62	key_multi	v110	keys_v110/mc_eq.toml	  a=b=7	FAIL (1, 5) illegal character "b"	RAISE (Invalid value (at line 1, column 5))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+mc:lbrace	617B62	key_multi	v110	keys_v110/mc_lbrace.toml	  a{b=7	FAIL (1, 4) illegal character "{"	RAISE (Expected '=' after a key in a key/value pair (at line 1, column 4))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+mc:rbrace	617D62	key_multi	v110	keys_v110/mc_rbrace.toml	  a}b=7	FAIL (1, 4) illegal character "}"	RAISE (Expected '=' after a key in a key/value pair (at line 1, column 4))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+mc:comma	612C62	key_multi	v110	keys_v110/mc_comma.toml	  a,b=7	FAIL (1, 4) illegal character ","	RAISE (Expected '=' after a key in a key/value pair (at line 1, column 4))	key_bytes_preserved=-	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; library re-parse fails: output cannot be consumed by its own reader
+mc:newline	610A62	key_multi	v110	keys_v110/mc_newline.toml	  "a\nb"=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+mc:eacute	C3A9	key_multi	v110	keys_v110/mc_eacute.toml	  "\xE9"=7	OK	RAISE (Unescaped '\' in a string (at line 1, column 6))	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes E9 != input C3A9
+mc:uni	C98ECA9E	key_multi	v110	keys_v110/mc_uni.toml	  "\u024E\u029E"=7	OK	OK	key_bytes_preserved=true	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight
+mc:lone_e9	E9	key_multi	v110	keys_v110/mc_lone_e9.toml	  "\uFFFD"=7	OK	OK	key_bytes_preserved=false	tomllib is v1.0.0-only: RAISE expected for v1.1.0-only syntax, no v1.1.0 verdict weight; decoded key bytes EF BF BD != input E9

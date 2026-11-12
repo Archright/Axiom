@@ -1,0 +1,13 @@
+{
+  "id": "intent-gate",
+  "name": "Axiom intent gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/intent_gate.nim",
+  "stages": [
+    "manual"
+  ],
+  "passFilenames": false,
+  "weight": "light",
+  "category": "policy",
+  "severity": "error"
+}

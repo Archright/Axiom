@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# build/command_template.txt — the single build command replay.sh run executes.
+# Reproduction-critical properties:
+#   * builds from the BUNDLE's vendored dependency copies — shipped as the
+#     content-addressed archive offline/deps.tar.gz (per-member hashes in the
+#     experiment-root MANIFEST), extracted by bsec/replay.sh run into the
+#     throwaway staging dir that @DEPS@ points at. It never consults
+#     ~/.nimble/pkgs2 (the prior repro.sh flaw: it consumed pkgs2 without
+#     verifying any recorded sha256). Every archive byte is hash-enforced by
+#     MANIFEST via `replay.sh verify` BEFORE this command runs.
+#   * subject files come from the READ-ONLY subject checkout, hash-checked against
+#     ../subject/blobs_consumed_sha256.tsv before this command runs.
+#   * explicit --path set -> cwd-independent; cwd is /tmp (Axiom3's nimble.lock would
+#     otherwise kill nimblePath; --skipParentCfg/--skipUserCfg/--skipProjCfg keep the
+#     Axiom3 hermetic bootstrap out of the build).
+#   * binary + nimcache go to /tmp only.
+#
+# replay.sh run expands: @SUBJECT@ -> subject checkout, @BSEC@ -> this bsec dir,
+#                 @NIMCACHE@, @BIN@ -> /tmp paths, @HARNESS@ -> ../probes/harness.nim
+#
+nim c --mm:orc --skipUserCfg --skipParentCfg --skipProjCfg \
+  --verbosity:0 --hints:off --warnings:off \
+  --nimcache:@NIMCACHE@ --out:@BIN@ \
+  --path:@SUBJECT@ \
+  --path:@DEPS@/serialization-0.5.4 \
+  --path:@DEPS@/faststreams-0.5.2 \
+  --path:@DEPS@/stew-0.5.0 \
+  @HARNESS@

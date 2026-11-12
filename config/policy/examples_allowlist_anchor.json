@@ -1,0 +1,59 @@
+// config/policy/examples_allowlist_anchor.json
+// Example instance: Allowlist anchor exemption for an immutable gate runner.
+// Demonstrates Anchor-based subject binding with derivedEvidence (line numbers as evidence only).
+// SSOT: docs/spec/canonical_contract_policy_layer.md §4.2
+
+{
+  "$schema": "../contract_layer.schema.json",
+  "$comment": "Example: Allowlist anchor exempts import_encapsulation_gate.nim from import boundary enforcement. Line numbers are derived evidence only, never identity.",
+  "anchor": {
+    "path": "src/gate/runners/import_encapsulation_gate.nim",
+    "symbol": "importEncapsulationGate",
+    "semanticKind": "proc",
+    "derivedEvidence": {
+      "lineRange": "1-121",
+      "canonicalSyntaxHash": "nim-pnode-canonical-v2:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "policy": {
+    "policyId": "IMPORT_ALLOWLIST",
+    "rule": "ALLOWLIST_EXEMPT",
+    "severity": "INFO",
+    "description": "Allowlisted symbols exempt from import encapsulation enforcement. Immutable per AGENTS.md §-1.",
+    "version": "1.0.0"
+  },
+  "policyBinding": {
+    "bindingId": "BIND-IMPLT01",
+    "policyRef": "IMPORT_ALLOWLIST",
+    "subject": {
+      "type": "anchor",
+      "anchor": {
+        "path": "src/gate/runners/import_encapsulation_gate.nim",
+        "symbol": "importEncapsulationGate",
+        "semanticKind": "proc"
+      }
+    },
+    "justification": "AGENTS.md §-1 — Immutable file: import_encapsulation_gate.nim cannot be modified by agents. Import boundary exceptions are explicitly authorized by architect.",
+    "owner": "architect",
+    "createdAt": "2026-06-01T00:00:00Z",
+    "expires": null
+  },
+  "decision": {
+    "decisionId": "dec_aabbccdd11223344556677889900aabbccddeeff00112233445566778899aabb",
+    "observationRef": "obs_import_boundary_check_pass",
+    "policyBindingRef": "BIND-IMPLT01",
+    "disposition": "INFO",
+    "evidence": {
+      "inputHashes": {
+        "observation": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "policyBinding": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "repositoryState": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "reproducibleFrom": [
+        "obs_import_boundary_check_pass",
+        "BIND-IMPLT01",
+        "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+      ]
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "version": "2.0",
+  "description": "Compile-time command policy SSOT (v2). Wrappers embed blocked subcommands via staticRead macro. Context-aware: policies differ by Git operational state. AGENTS.md section 2: merge/rebase blocked.",
+  "policies": [
+    {
+      "tool": "git",
+      "description": "AGENTS.md section 2 Rebase-Only Sync. Direct merge/rebase/cherry-pick/revert prohibited. Force operations blocked in all contexts.",
+      "blockedSubcommands": [
+        "merge",
+        "rebase",
+        "rebase-interactive",
+        "am",
+        "am-3way",
+        "cherry-pick",
+        "revert"
+      ],
+      "blockedFlags": [
+        "--force",
+        "--force-with-lease"
+      ],
+      "alternatives": [
+        "git rebase"
+      ],
+      "blockedInContext": {
+        "gsContextFree": ["push --force", "push -f", "reset --hard"],
+        "gsRebasing": ["push", "reset"],
+        "gsMerging": ["push", "reset", "checkout"]
+      },
+      "allowedInContext": {
+        "gsRebasing": ["rebase --continue", "rebase --abort", "rebase --skip", "rebase --quit", "rebase --edit-todo", "rebase --show-current-patch"],
+        "gsRebasingConflict": ["rebase --continue", "rebase --abort", "rebase --skip", "rebase --quit"],
+        "gsMerging": ["merge --continue", "merge --abort"],
+        "gsCherryPick": ["cherry-pick --continue", "cherry-pick --abort", "cherry-pick --quit"],
+        "gsReverting": ["revert --continue", "revert --abort", "revert --quit"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+[AXIOM][rust-lane] charon pinned='0.1.281 (798016509139eb51f0d764645f76d068d34ba5f6)' measured='0.1.281 (798016509139eb51f0d764645f76d068d34ba5f6)' ok=true
+[AXIOM][rust-lane] ledger transport armed (live); repo=Archright/Axiom
+[AXIOM][rust-lane] done: verified=0/1 failed=0 unknown=1 error=0
+[AXIOM][rust-lane] §6c identity sidecar skipped: claim identity unmeasurable: target 'axiom_u64_probe::u64_add' is not declared in vks_rust (no spec identity to bind)

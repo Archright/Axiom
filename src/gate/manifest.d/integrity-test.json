@@ -1,0 +1,18 @@
+{
+  "id": "integrity-test",
+  "name": "Axiom integrity check gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/integrity_test",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/|tests/|axiom.nimble|config.nims",
+  "passFilenames": false,
+  "weight": "heavy",
+  "category": "theorem",
+  "after": [
+    "cli-build"
+  ],
+  "severity": "error",
+  "execution_mode": "interpreted"
+}

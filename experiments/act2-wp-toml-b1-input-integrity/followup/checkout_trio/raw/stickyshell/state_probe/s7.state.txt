@@ -1,0 +1,1 @@
+DECODE_RESULT=RAISE msg=[(5, 1) illegal character "!"]

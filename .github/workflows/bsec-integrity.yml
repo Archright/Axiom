@@ -1,0 +1,166 @@
+# =============================================================================
+# bsec-integrity — hardened 2-tree verifier for the bsec replay judge.
+#
+# Trust boundary — 2-TREE EXECUTION (mirrors the GATE A doctrine,
+# admission-check.yml:5-6: "GATE A: verifier program is built from BASE;
+# PR tree is data only"):
+#   * The VERIFIER PROGRAM is the `trusted/` tree — checked out from the BASE
+#     sha (pull_request.base.sha | merge_group.base_sha). A candidate commit
+#     can never supply or modify the program that judges it.
+#   * The CANDIDATE tree (`candidate/`, the merge/merge-group commit) is
+#     checked out as DATA and is NEVER executed — no scripts, no build files,
+#     no dependencies from it. Nothing is ever run from `candidate/`.
+#   * The SUBJECT repo (status-im/nim-toml-serialization) is checked out as
+#     data at its pinned snapshot SHA (p0d2/RT_EXPERIMENT.md:129).
+#   * The ONLY executed program is the trusted tree's replay.sh, with exactly
+#     two verbs:
+#       replay.sh verify   — READ-ONLY (manifest hashes, ledger chain,
+#                            reference integrity, subject blobs)
+#       replay.sh judge    — re-derives verdicts as a PURE function of
+#                            observations + rules; gates on verify; writes
+#                            only to /tmp scratch
+#     The `run` verb is NEVER invoked here (it compiles subject-tree code);
+#     `freshness` is not part of the check contract.
+#
+# Required-check posture (fail-closed by construction):
+#   * NO path filters — a workflow-level skip would leave the required check
+#     unreported, and an unreported required check blocks (or times out) the
+#     merge queue instead of failing fast.
+#   * NO conditional `if:` skip on the job — a skipped job can report success;
+#     this check must always report a REAL conclusion (success or failure).
+#   * Bare job id `bsec-integrity` — the job id IS the check-context string in
+#     this repo. Do NOT add a job-level `name:` — it would change the reported
+#     check context and silently detach the ruleset binding (cf.
+#     admission-check.yml CHECK NAMES vs RequiredChecks comment).
+#   * NO concurrency block (B3 precedent, admission-check.yml:162-167): a
+#     cancelled required check reports no conclusion; run-level orchestration
+#     belongs to the org gate, not to this file.
+#
+# Least privilege / supply-chain hardening:
+#   * `permissions: contents: read` ONLY — no secrets access, no write token.
+#   * Every external action is pinned to its FULL commit SHA (repo convention,
+#     e.g. admission-check.yml, probe-merge-queue.yml).
+#   * EVERY checkout uses `persist-credentials: false` — no token reaches any
+#     worktree, so no checked-out content can exfiltrate it.
+#
+# Runtime: hosted `ubuntu-24.04` (jq preinstalled). Do NOT retarget to the
+# self-hosted 러너 — jq 미설치 (measured 2026-09-08,
+# axiom-ci runner-3; admission-check.yml:492-493) and replay.sh's ledger
+# verification consumes jq (bsec/replay.sh ensure_jq).
+#
+# Interface note (2026-10-12): bsec/replay.sh is being parameterized in
+# parallel — env `AXIOM_TARGET_TREE` will make data paths resolve against the
+# target tree while the script itself runs from its own trusted location.
+# replay.sh already consumes `SUBJECT_REPO` (replay.sh:113) and
+# `AXIOM_LEDGER_BASE` (replay.sh:466, ledger git gate B). This workflow is
+# written against that AXIOM_TARGET_TREE interface; until the parameterization
+# lands, replay.sh still derives REPO_ROOT from its own location
+# (BASH_SOURCE — replay.sh:102-104), i.e. the trusted tree.
+# =============================================================================
+
+name: bsec-integrity
+
+on:
+  pull_request:
+    branches: [main]
+  merge_group:
+    types: [checks_requested]
+    branches: [main]
+
+# Least privilege: read-only. No secrets, no write token — this workflow only
+# checks out public/first-party trees and runs the trusted verifier.
+permissions:
+  contents: read
+
+jobs:
+  # Bare job id = check context string ("bsec-integrity"). No `name:` here —
+  # see the required-check posture comment in the header.
+  bsec-integrity:
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 10
+    steps:
+      # ── Step 1: TRUSTED base — the verifier program tree (GATE A) ────────
+      - name: "[trusted] checkout BASE — verifier program tree"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (repo sha-pin)
+        with:
+          ref: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          path: trusted
+          persist-credentials: false
+          fetch-depth: 1
+
+      # ── Step 2: CANDIDATE as data — the merge/merge-group commit ─────────
+      # fetch-depth: 0 so the base commit object (Gate B's trusted base) is
+      # resolvable inside this worktree; enforced fail-closed by the
+      # cat-file self-assertion step below.
+      - name: "[candidate] checkout H — data only, NEVER executed"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (repo sha-pin)
+        with:
+          ref: ${{ github.sha }}
+          path: candidate
+          persist-credentials: false
+          fetch-depth: 0
+
+      # ── Step 3: PARSE-POISON LINT — parse + bash -n over EVERY workflow ──
+      # file at the merge ref (C1 wiring — design
+      # docs/design/workflow_parse_poison_lint_wiring_design_2026-10-14.md §5;
+      # quirk SSOT docs/spec/gh_run_observation_quirks.md Q4). The EXECUTED
+      # program is the TRUSTED (base) copy of the lint; the SCANNED tree is
+      # candidate (the merge ref's .github/workflows — the landing→rotation
+      # exposure, design §3). Nothing from candidate/ executes. The step is
+      # UNCONDITIONAL (required-check posture, design §4): no `if:`, no path
+      # filters — a lint FAIL fails the job → red required check blocks the
+      # merge.
+      - name: "[lint] workflow parse-poison + shell syntax (validate_workflow_shell.sh)"
+        run: bash trusted/tools/ci/validate_workflow_shell.sh --scan-dir ../candidate/.github/workflows
+
+      # ── Step 4: SUBJECT — pinned snapshot SHA, data only ─────────────────
+      # Canonical URL per p0d2/RT_EXPERIMENT.md:129 and the bsec judgment
+      # snapshot; the same pin replay.sh's subject gates verify against.
+      - name: "[subject] checkout nim-toml-serialization @ pinned SHA"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (repo sha-pin)
+        with:
+          repository: status-im/nim-toml-serialization
+          ref: 4aa8e2223649fc0837c490a4acfca7b8b1e756f9
+          path: subject
+          persist-credentials: false
+          fetch-depth: 1
+
+      # ── Step 5: env exports for the trusted verifier ─────────────────────
+      - name: "[env] export verifier inputs"
+        run: |
+          echo "SUBJECT_REPO=${{ github.workspace }}/subject" >> "$GITHUB_ENV"
+          echo "AXIOM_TARGET_TREE=${{ github.workspace }}/candidate" >> "$GITHUB_ENV"
+          echo "AXIOM_LEDGER_BASE=${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}" >> "$GITHUB_ENV"
+
+      # ── Step 6: fail-closed base-object self-assertion BEFORE the checker
+      # (mirrors replay.sh ledger git gate B posture, replay.sh:475-477:
+      # "trusted base is not a resolvable commit: … (fail-closed)"). The base
+      # must be a resolvable commit object in the candidate worktree, or the
+      # run fails before any judgment is produced.
+      # Field-name fix (2026-10-12): merge_group payloads carry `base_sha`
+      # (snake_case — see the header comment), not `base.sha`; the wrong path
+      # resolved to empty and failed every merge-group run (run 38211567381).
+      # Per the bsec README contract, an UNSET base falls back to merge-base
+      # or vacuous-pass; only a NON-EMPTY unresolvable base is operator error.
+      - name: "[gate] base commit resolvable in candidate tree (fail-closed)"
+        run: |
+          set -euo pipefail
+          if [ -z "${AXIOM_LEDGER_BASE:-}" ]; then
+            AXIOM_LEDGER_BASE=$(git -C candidate merge-base HEAD origin/main 2>/dev/null || true)
+            echo "AXIOM_LEDGER_BASE=$AXIOM_LEDGER_BASE" >> "$GITHUB_ENV"
+          fi
+          if [ -z "${AXIOM_LEDGER_BASE:-}" ]; then
+            echo "ledger git gate B: no trusted base resolved — vacuous pass (bootstrap)"
+            exit 0
+          fi
+          git -C candidate cat-file -e "${AXIOM_LEDGER_BASE}^{commit}"
+
+      # ── Step 7: the ONLY executed JUDGE — the trusted tree's replay.sh ───
+      # Never `run` (it compiles tree code). Nothing from candidate/ executes.
+      - name: "[verify] trusted replay.sh verify (read-only)"
+        run: |
+          bash trusted/experiments/act2-wp-toml-b1-input-integrity/bsec/replay.sh verify
+
+      - name: "[judge] trusted replay.sh judge (pure derivation + cross-check)"
+        run: |
+          bash trusted/experiments/act2-wp-toml-b1-input-integrity/bsec/replay.sh judge

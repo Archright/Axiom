@@ -1,0 +1,51 @@
+{
+  "version": "4.1.0",
+  "root_primitives": [
+    "axiom_api",
+    "boundary_extractor",
+    "cegar_types",
+    "cfg_builder",
+    "constants",
+    "contract_ast_extractor",
+    "domain_types",
+    "expression_parser",
+    "file_utils",
+    "graph",
+    "io_utils",
+    "json",
+    "layer_guard",
+    "meta_extractor",
+    "metrics",
+    "orchestrator_types",
+    "remediation_types",
+    "results",
+    "safe_parsers",
+    "smtlib2_util",
+    "sorter_core",
+    "std_redirect",
+    "tautology_checker",
+    "text_utils",
+    "trace",
+    "type_registry",
+    "persona_interface",
+    "axiom_codec",
+    "codec",
+    "deterministic_cas_key"
+  ],
+  "layer_rules": {
+    "layers": [
+      "L0_infrastructure",
+      "L1_core_engine",
+      "L2_domain",
+      "L3_application",
+      "L4_interface"
+    ],
+    "allowed_dependencies": {
+      "L0_infrastructure": [],
+      "L1_core_engine": ["L0_infrastructure"],
+      "L2_domain": ["L0_infrastructure", "L1_core_engine"],
+      "L3_application": ["L0_infrastructure", "L1_core_engine", "L2_domain"],
+      "L4_interface": ["L0_infrastructure", "L1_core_engine", "L2_domain", "L3_application"]
+    }
+  }
+}

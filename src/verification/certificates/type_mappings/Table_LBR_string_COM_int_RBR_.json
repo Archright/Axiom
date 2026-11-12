@@ -1,0 +1,8 @@
+{
+  "nimType": "Table[string,int]",
+  "leanType": "List (Prod String Int)",
+  "smtSort": "(List (Prod String Int))",
+  "mappingProofObligation": "nim_lean_Tablestringint_iso",
+  "verified": false,
+  "sourceHash": ""
+}

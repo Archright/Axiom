@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/nimtry_snapshot.sh",
+  "description": "Capture a nimtry violation snapshot — runs nimtry (or reuses cached output), parses violations by rule, and writes timestamped snapshot to logs/nimtry_history/",
+  "inputSample": {
+    "args": []
+  },
+  "outputSample": {
+    "stdout": "nimtry_snapshot: captured 5 violations across 3 rules, saved to logs/nimtry_history/2026-06-18.json",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

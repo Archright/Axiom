@@ -1,0 +1,102 @@
+{
+  "schema": "ci-structural-duplicate-census/v1",
+  "measuredAt": "2026-09-30T11:40:00Z",
+  "windowUtc": "2026-09-30T10:28:05Z..11:17:35Z",
+  "branch": "fix/ci-build-identity-closure",
+  "method": "REST only (gh api runs/jobs/jobs/{id}/logs + git/commits); completed runs only; no polling loops",
+  "cycles": [
+    {
+      "pr": 404,
+      "branch": "chore/post-adoption-cleanup",
+      "pullRequestRun": {
+        "id": 36702598836,
+        "event": "pull_request",
+        "headSha": "2264cf5a5e95b2e67a7262280799794028b3247d",
+        "headTree": "74ffa2957f16db978fe1ee8a4037f30881782558",
+        "wallS": 419
+      },
+      "mergeGroupRun": {
+        "id": 36703362000,
+        "event": "merge_group",
+        "headSha": "2731b568480ee7b39bea6a3f1a927f5cd7392816",
+        "headTree": "c5f999f768f75ba383c98b7b2e50628e1c691065",
+        "wallS": 406
+      },
+      "publishers": [
+        {"id": 36703314113, "triggerRun": 36702598836, "verdict": "skip", "reason": "tree(build_sha)=c5f999f7 != tree(head_sha)=74ffa295 (ahead invariant absent)"},
+        {"id": 36704039495, "triggerRun": 36703362000, "verdict": "publish", "key": "axiom-b-c5f999f7...-3cfae1a..."}
+      ],
+      "baseTree": "6f2ba8e9732ebd31fbd613650dea307ddd1f057e",
+      "laneMergeRef": "d7d7c40098281efad3319f0ef2496973356acbdb",
+      "treeEquality": "tree(H)=74ffa295 != tree(G/M)=c5f999f7 (ahead-invariant absent)"
+    },
+    {
+      "pr": 405,
+      "branch": "docs/agents-2-3-authority-adapter-separation",
+      "pullRequestRun": {
+        "id": 36706133783,
+        "event": "pull_request",
+        "headSha": "b7eaa2b409b9b78f6e8df20457ad7018848b1b05",
+        "headTree": "f94164db62efe71cf01ba164024ab490f5e6177f",
+        "wallS": 398
+      },
+      "mergeGroupRun": {
+        "id": 36706884472,
+        "event": "merge_group",
+        "headSha": "1ef4e7229b562ba299d258f5cb6eba69b0fafbc1",
+        "headTree": "f94164db62efe71cf01ba164024ab490f5e6177f",
+        "wallS": 410
+      },
+      "publishers": [
+        {"id": 36706820963, "triggerRun": 36706133783, "verdict": "publish", "key": "axiom-b-f94164db...-14fc017c...", "consumedBy": "merge_group lane B-hit (36706884472/ci-bootstrap 11:12:35Z)"},
+        {"id": 36707601415, "triggerRun": 36706884472, "verdict": "publish", "key": "axiom-b-f94164db...-3cfae1a..."}
+      ],
+      "baseTree": "c5f999f768f75ba383c98b7b2e50628e1c691065",
+      "laneMergeRef": "ab8b9e1bedee759b1ae33d871bf1e33d03d8b22c",
+      "treeEquality": "tree(H)=tree(merge ref)=tree(G/M)=f94164db (ahead-invariant holds)"
+    }
+  ],
+  "compiler": "recipe_hash=d807d8979864bbe7d544dd87c633d20b14fc017c8435e0bfc89b5e1d688f882c (full) / fp-suffix old-image=14fc017c..., new-image=3cfae1a...",
+  "compileEvents": [
+    {"cycle": "A", "phase": "pr", "job": "build-base-artifacts", "identityTree": "6f2ba8e9", "bCache": "miss", "durationS": 182, "class": "A", "note": "first occurrence in window"},
+    {"cycle": "A", "phase": "mg", "job": "build-base-artifacts", "identityTree": "6f2ba8e9", "bCache": "miss", "durationS": 195, "class": "B", "sub": "identity-fixable", "note": "same b-key as PR phase; no seeder exists for base keys"},
+    {"cycle": "A", "phase": "pr", "job": "ci-bootstrap", "identityTree": "c5f999f7", "bCache": "miss", "durationS": 169, "class": "A", "note": "first occurrence in window"},
+    {"cycle": "A", "phase": "mg", "job": "ci-bootstrap", "identityTree": "c5f999f7", "bCache": "miss", "durationS": 134, "class": "B", "sub": "identity-fixable", "note": "publisher skip (tree mismatch) + publisher fp drift (3cfae1a vs 14fc017c)"},
+    {"cycle": "B", "phase": "pr", "job": "build-base-artifacts", "identityTree": "c5f999f7", "bCache": "miss", "durationS": 188, "class": "B", "sub": "identity-fixable", "note": "cross-cycle duplicate of A lane identity; base keys never seeded"},
+    {"cycle": "B", "phase": "mg", "job": "build-base-artifacts", "identityTree": "c5f999f7", "bCache": "miss", "durationS": 187, "class": "B", "sub": "identity-fixable", "note": "2nd cold base compile in cycle"},
+    {"cycle": "B", "phase": "pr", "job": "ci-bootstrap", "identityTree": "f94164db", "bCache": "miss", "durationS": 182, "class": "A", "note": "first occurrence in window"},
+    {"cycle": "B", "phase": "mg", "job": "ci-bootstrap", "identityTree": "f94164db", "bCache": "hit", "durationS": 86, "class": "B", "sub": "identity-fixable", "note": "restore OK + recompile (J3 mtime bottom, S5 blocked); seeding chain worked"}
+  ],
+  "classificationSummary": {
+    "compileA": 3,
+    "compileB": 5,
+    "compileBIdentityFixable": 5,
+    "compileBAuthorityContract": 0,
+    "consumptionObservationC": "admission-check restores 4 (3 miss, 1 hit), mint rt prepare 4 (B(i)-flagged, no compile), publisher fires 4 (publish 3 / skip 1), skipped jobs (no compute)",
+    "unclassified": 0
+  },
+  "metrics": {
+    "baseColdPerCycle": 2,
+    "baseJobWallS": {"A-pr": 238, "A-mg": 247, "B-pr": 247, "B-mg": 239},
+    "laneHot": {"B-mg": true, "A-mg": false},
+    "publisherPublish": 3,
+    "publisherSkip": 1,
+    "compilesPerIdentity": {"6f2ba8e9": 2, "c5f999f7": 4, "f94164db": 2},
+    "bCacheWritesInWindow": ["axiom-b-c5f999f7...-3cfae1a...", "axiom-b-f94164db...-14fc017c...", "axiom-b-f94164db...-3cfae1a..."]
+  },
+  "unknowns": [
+    "c5f999f7 compiles before the window (pr-403 cycle lane) — not measured",
+    "explicit policy requiring fresh base compile per gate run — not found (B(ii) basis absent)",
+    "a-cache-hit/b-cache-hit literal markers — 0 occurrences in observed logs (equivalent signals used)",
+    "mint rt payload exact contents — not log-verified",
+    "pr-403 cycle (runs 36694529252/36695386436, publishers 36695234678/36696034758) — out of window, unclassified",
+    "publisher runner image selection rule — platform-assigned, observed only"
+  ],
+  "registration": {
+    "config": "config/repository_surface.json",
+    "defaultClass": "FROZEN",
+    "wildcard": "docs/**",
+    "registrationRequired": false,
+    "note": "optional CONTROLLED promotion follows precedent (ci_toolchain_scope_2026-09-30.md etc.) — decision delegated to parent agent"
+  }
+}

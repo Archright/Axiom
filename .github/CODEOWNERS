@@ -1,0 +1,80 @@
+# Architecture governance — Lead Dev approval required
+# These paths are protected and require architect sign-off
+
+# Architecture constraint files
+/tests/architecture_constraints.nim    @Archright/architect
+/tests/architecture_rules.toml        @Archright/architect
+
+# Templates — standardization maintained by architect
+/templates/                           @Archright/architect
+
+# Core Domain types — breaking changes affect all layers
+/src/core/domain_types.nim            @Archright/architect
+/src/core/gate_types.nim              @Archright/architect
+
+# Configuration
+/axiom.toml                           @Archright/architect
+/.github/                             @Archright/architect
+/Makefile                             @Archright/architect
+
+# Repository Surface governance
+/config/repository_surface.json        @Archright/architect
+/config/publication_scope.json         @Archright/architect
+/tools/surface_guard.nim               @Archright/architect
+/tools/product_surface_closure.nim     @Archright/architect
+
+# Merge admission & execution authority — trustSurface (merge_cli.nim Pass 2.8)
+/config/policy/merge_admission.json         @Archright/architect
+/config/executor_authority.json             @Archright/architect
+/src/cli/merge_cli.nim                      @Archright/architect
+/src/verification/verification_subject.nim  @Archright/architect
+/src/core/trusted/trust_boundary.nim        @Archright/architect
+
+# Landing/attestation platform trust config (external landing-integrity workflow invariant)
+/config/app_landing_binding.json            @Archright/architect
+/config/trusted_writer_set.json             @Archright/architect
+/AGENTS.md                                  @Archright/architect
+
+# Tier C — gateway execution closure (ADR-0021 execution authority; 실행 코드
+# 변경 = rotation, subject 변경과 구분 — plan "보호 계층" 목록 그대로)
+/ci/checker.mk                             @Archright/architect
+/tools/ci/derive_checker_closure.nim       @Archright/architect
+/tools/ci/impact_closure_selector.nim      @Archright/architect
+/tools/ci/proof_reconcile_gate.nim         @Archright/architect
+/tests/gateway/all_gateway_runner.nim      @Archright/architect
+
+# ── Surface-policy alignment (2026-10-05) ──────────────────────────────────
+# config/repository_surface.json classes.FROZEN 열거 14개 중 CODEOWNERS에 없던
+# 6개 경로를 결속한다. 근거: PRD #475가 FROZEN인 /config.nims을 수정하고도
+# merge되었다 — 정책은 그 파일을 보호 대상이라 선언하지만 승인 권한을 배정한
+# 주체가 없었다. 열거와 승인 권한의 출처를 일치시킨다.
+# ruleset 20303214 require_code_owner_review는 아직 false다(단일 승인자 deadlock,
+# docs/agents/rules_workflow.md §2.3). 이 항목들은 지금은 리뷰 *요청* 대상이며,
+# 플립 이후 merge 선행 요건이 된다. 플립 전까지 merge를 막지는 않는다.
+/config.nims                            @Archright/architect
+/config/policy/                          @Archright/architect
+/.githooks/                              @Archright/architect
+/tools/hooks/                            @Archright/architect
+/src/gate/                               @Archright/architect
+/vendor/                                 @Archright/architect
+
+
+# bsec-integrity 필수 체크의 신뢰 검사기 + 레코드 (merge_admission.json v1.12.0
+# trustSurface 확장 — trust-surface-codeowners 커버리지 요구 충족; 검사기 자체는
+# base-sourced 2-tree 실행으로 보호되고, 이 커버리지는 승인 권한 결속을 닫는다).
+/experiments/act2-wp-toml-b1-input-integrity/bsec/   @Archright/architect
+
+# publication-integrity 게이트의 정책·판정기 (merge_admission.json v1.20.0
+# trustSurface 확장 — v1.12.0 bsec 선례와 같은 커버리지 클로저. PR #45이
+# trustSurface 열거를 먼저 착지시키고 이 결속이 누락되어 trust-surface-codeowners
+# 가 base 기준 FAIL(2026-11-09 실측, PR #50 라운드) — 본 커밋이 그 차이를 닫는다.
+/compliance/policy/                             @Archright/architect
+/compliance/provenance/                         @Archright/architect
+/tools/ci/publication_yaml.nim                  @Archright/architect
+/tools/ci/publication_origin.nim                @Archright/architect
+/tools/ci/publication_secret_eval.nim           @Archright/architect
+/tools/ci/publication_license_eval.nim          @Archright/architect
+/tools/ci/publication_dependency_eval.nim       @Archright/architect
+/tools/ci/publication_sbom_eval.nim             @Archright/architect
+/tools/ci/publication_provenance_validator.nim  @Archright/architect
+/tools/ci/publication_report.nim                @Archright/architect

@@ -1,0 +1,41 @@
+# Axiom Project Rules — Auto-loaded by Cursor/Claude Code
+
+## ⚠️ CRITICAL: Quirk & Debt Tracking Policy (AGENTS.md §0.5c)
+
+When you encounter "quirk", "hack", "workaround", "fixme", "xxx", "nolint" in source code comments:
+
+1. **NEVER remove or "fix" structured QUIRK markers** — they are formal tracking, NOT theater.
+2. **Structured format ONLY**: `QUIRK(DEBT#xxx)` or `# axiom:quirk(DEBT#xxx)` is the ONLY allowed form.
+3. **Bare euphemisms are THEATER**: Standalone `# hack`, `# workaround` without DEBT# ID = §0.9 violation.
+4. **Double-binding required**: `QUIRK(DEBT#xxx)` MUST have corresponding `{.axiomDebt: "DEBT#xxx", kind: "quirk".}` pragma.
+
+## Quick Decision Tree (for agents)
+
+```
+[ "quirk" / "hack" / "workaround" detected ]
+  │
+  ├─→ [ Has DEBT#xxx ID? ] ──NO──→ ❌ THEATER (blocked by architecture_invariants.nim)
+  │        │
+  │       YES
+  │        │
+  ├─→ [ Has {.axiomDebt.} pragma? ] ──NO──→ Add pragma first
+  │        │
+  │       YES
+  │        │
+  └─→ ✅ VALID SPEC (do NOT modify/remove)
+```
+
+## Mandatory Reading Before Modifying Gate Code
+
+- Read AGENTS.md §0.9 (Theater Prohibition) before touching any gate runner
+- Read AGENTS.md §0.5c (Debt/Quirk Spec) before modifying debt/quirk markers
+- Check `data/debt_registry.json` before investigating suspected theater (0-token skip if entry exists)
+
+## Project Constitution (SSOT)
+
+Full rules: Read `AGENTS.md` (root of project) — it is the Single Source of Truth.
+Key sections:
+- §0.2: First-Principles Elegance (Ideal, Elegant, Fundamental, Deterministic)
+- §0.6: Static First Enforcement (func + raises:[])
+- §0.9: Theater Prohibition (6 canonical signatures)
+- §0.5c: Debt Classification & Structured QUIRK Spec (NEW)

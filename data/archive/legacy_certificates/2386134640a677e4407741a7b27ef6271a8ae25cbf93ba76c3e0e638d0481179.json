@@ -1,0 +1,24 @@
+{
+  "modulePath": "src/verification/proof_state_builder.nim",
+  "functionName": "getUnifiedAsiFixed4",
+  "fingerprint": "1ef8926936b1ceae057c5c94d9684e5fb537703c4c0b1a8409870bf974589554",
+  "sourceHash": "2c93c3e0c54a1630aeddf2323477ea9f4940e23a7fad5f5178b0542f102b7eaa",
+  "trusted": true,
+  "status": "certLeanVerified",
+  "reason": "uap-lean-verified",
+  "kernel": false,
+  "solverStatus": "sat",
+  "winningStrategy": "lean-replay",
+  "solverMeta": {
+    "leanCompilerVerified": true,
+    "negativeTestResult": false,
+    "vacuityChecked": true,
+    "vacuityProven": false,
+    "solverVersion": "4.13.3",
+    "solverProvenance": "spHeuristic",
+    "z3Executed": true
+  },
+  "verificationTier": "lean-verified",
+  "leanProposition": "",
+  "irHash": "2386134640a677e4407741a7b27ef6271a8ae25cbf93ba76c3e0e638d0481179"
+}

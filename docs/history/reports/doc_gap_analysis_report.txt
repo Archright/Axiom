@@ -1,0 +1,388 @@
+==========================================================================================
+AXIOM_ENTERPRISE DOCUMENTATION GAP ANALYSIS REPORT
+==========================================================================================
+
+Date: 2026-05-26
+Source root: ./src
+Total .nim files analyzed: 357
+
+==========================================================================================
+1. MODULE-LEVEL DOCUMENTATION
+==========================================================================================
+  Files WITH module-level ## doc:    231 / 357 (64%)
+  Files WITHOUT module-level ## doc: 126 / 357 (35%)
+
+--- By Directory ---
+Directory                                     Files  With Doc Coverage
+----------------------------------------------------------------------
+(root)                                             1        0      0%
+api                                                1        0      0%
+cli                                               43       29     67%
+cli/commands                                      18       12     66%
+core                                             101       69     68%
+core/contracts                                     1        1    100%
+core/logic                                        15       12     80%
+core/parsers/tree_sitter                           4        4    100%
+core/parsers/tree_sitter/query                     4        1     25%
+core/solver                                       11        6     54%
+core/solver/expr                                   3        3    100%
+core/trusted                                       8        6     75%
+core/type_system                                   2        2    100%
+core/types                                         9        7     77%
+core/utils                                         1        1    100%
+engine                                             1        0      0%
+frontend                                           1        1    100%
+frontend/nim                                       2        1     50%
+frontend/pseudocode                                1        1    100%
+gate                                              20        9     45%
+gate/generators                                    2        2    100%
+gate/macros                                        1        0      0%
+gate/nimtry                                        8        6     75%
+gate/runners                                      13        2     15%
+mcp                                                5        1     20%
+metrics                                            1        1    100%
+personas                                           5        1     20%
+translator                                         2        1     50%
+types                                              1        1    100%
+ui                                                 2        0      0%
+verification                                      59       40     67%
+verification/analyzer                              2        2    100%
+verification/analyzer/stages                       8        8    100%
+verification/certificate                           1        1    100%
+
+==========================================================================================
+2. FUNCTION-LEVEL DOCUMENTATION (PROC/FUNC/METHOD/TEMPLATE/MACRO/ITERATOR)
+==========================================================================================
+  Total symbols defined:                  2514
+  Symbols WITH doc comments:              1124 (44%)
+  Symbols WITHOUT doc comments:           1390
+
+--- By Directory ---
+Directory                                     Syms   Docced  Cov%   Exported  ExpDoc  Exp% 
+------------------------------------------------------------------------------------------
+(root)                                             0       0   N/A         0       0  N/A
+api                                                7       7  100%         7       7 100%
+cli                                              282     163   57%       282     163  57%
+cli/commands                                     131      30   22%       131      30  22%
+core                                             882     418   47%       882     418  47%
+core/contracts                                     1       0    0%         1       0   0%
+core/logic                                       114      97   85%       114      97  85%
+core/parsers/tree_sitter                          26      23   88%        26      23  88%
+core/parsers/tree_sitter/query                    34      31   91%        34      31  91%
+core/solver                                       44      22   50%        44      22  50%
+core/solver/expr                                  16      16  100%        16      16 100%
+core/trusted                                      35      32   91%        35      32  91%
+core/type_system                                  13       9   69%        13       9  69%
+core/types                                        44      31   70%        44      31  70%
+core/utils                                         2       1   50%         2       1  50%
+engine                                             3       3  100%         3       3 100%
+frontend                                           5       1   20%         5       1  20%
+frontend/nim                                      14       5   35%        14       5  35%
+frontend/pseudocode                                5       1   20%         5       1  20%
+gate                                             104       0    0%       104       0   0%
+gate/generators                                    8       0    0%         8       0   0%
+gate/macros                                        2       0    0%         2       0   0%
+gate/nimtry                                       27       4   14%        27       4  14%
+gate/runners                                      51       1    1%        51       1   1%
+mcp                                               51      30   58%        51      30  58%
+metrics                                            2       0    0%         2       0   0%
+personas                                           9       5   55%         9       5  55%
+translator                                        41       2    4%        41       2   4%
+types                                              1       1  100%         1       1 100%
+ui                                                40      11   27%        40      11  27%
+verification                                     472     176   37%       472     176  37%
+verification/analyzer                             18       0    0%        18       0   0%
+verification/analyzer/stages                      23       2    8%        23       2   8%
+verification/certificate                           7       2   28%         7       2  28%
+
+==========================================================================================
+3. LARGE FUNCTIONS (>20 LINES) WITHOUT DOCS IN src/core/
+==========================================================================================
+  Total: 103 undocumented large functions
+
+  core/boundary_extractor.nim (11 funcs, 917 undocumented lines):
+    Line   709 | proc     extractBoundaries                        (402 lines)
+    Line   186 | func     convertExpressionToSmtLean               (186 lines)
+    Line    47 | func     typeToBoundaryConstraints                (57 lines)
+    Line   628 | func     computeInformationGain                   (50 lines)
+    Line   500 | func     collectConditionalReturnConditions       (46 lines)
+    Line  1159 | proc     injectVirtualHintToSource                (46 lines)
+    Line   405 | func     collectControlFlowConditions             (38 lines)
+    Line   142 | proc     extractParamsFromSourceRegex             (24 lines)
+    ... and 3 more
+
+  core/orchestrator.nim (8 funcs, 488 undocumented lines):
+    Line   470 | proc     runAxiomOrchestrationLoop                (108 lines)
+    Line    78 | proc     executeParallelTask                      (89 lines)
+    Line   364 | proc     handleParallelResult                     (75 lines)
+    Line   289 | proc     promoteVerifiedResult                    (74 lines)
+    Line   240 | proc     enqueueParallelWorkItem                  (48 lines)
+    Line   202 | proc     registerTerminalNodeStatus               (37 lines)
+    Line   440 | proc     prepareParallelInputs                    (29 lines)
+    Line   173 | proc     runParallelDepth                         (28 lines)
+
+  core/global_symbol_graph_builder.nim (6 funcs, 342 undocumented lines):
+    Line    11 | proc     extractSymbolsFromSourceFallback         (124 lines)
+    Line   136 | proc     loadIncrementalGraphCache                (59 lines)
+    Line   425 | proc     loadGlobalSymbolGraphCache               (59 lines)
+    Line   199 | proc     saveIncrementalGraphCache                (45 lines)
+    Line   391 | proc     saveGlobalSymbolGraphCache               (33 lines)
+    Line   368 | proc     computeSourceMerkleRoot                  (22 lines)
+
+  core/topology_engine.nim (9 funcs, 342 undocumented lines):
+    Line   175 | func     detectKeywordDeclaration                 (94 lines)
+    Line   270 | func     detectCStyleDeclaration                  (58 lines)
+    Line   599 | func     buildMetric                              (45 lines)
+    Line   511 | func     computeInterfaceDistances                (28 lines)
+    Line   397 | func     beginTopologySymbol                      (27 lines)
+    Line   361 | func     extractCallTargets                       (26 lines)
+    Line   852 | func     jsonToTopologySymbol                     (22 lines)
+    Line   136 | func     parseIdentifierAt                        (21 lines)
+    ... and 1 more
+
+  core/the_judge_query.nim (7 funcs, 256 undocumented lines):
+    Line    81 | func     normalizeLeanTokens                      (83 lines)
+    Line   411 | func     buildLeanVariableDeclarations            (39 lines)
+    Line    48 | func     tokenizeLeanProp                         (32 lines)
+    Line   191 | func     sanitizeLean4Forall                      (31 lines)
+    Line   323 | func     inferLeanTypeFromUsage                   (24 lines)
+    Line   451 | func     buildLeanQuery                           (24 lines)
+    Line   348 | func     rewriteLeanFieldProjection               (23 lines)
+
+  core/integrity_refinement_loop.nim (5 funcs, 159 undocumented lines):
+    Line    18 | func     pushOpcodeBlock                          (45 lines)
+    Line   344 | func     refineInvariantRegistry                  (36 lines)
+    Line   316 | func     refreshSuspiciousInvariants              (27 lines)
+    Line   289 | func     markDependentsSuspicious                 (26 lines)
+    Line   141 | func     pushDecision                             (25 lines)
+
+  core/cfg_builder.nim (1 funcs, 152 undocumented lines):
+    Line    66 | func     buildCfgFromStatementList                (152 lines)
+
+  core/axiom_api.nim (3 funcs, 144 undocumented lines):
+    Line   194 | func     parseProofArtifactNode                   (84 lines)
+    Line   150 | func     proofArtifactToJsonNode                  (35 lines)
+    Line   462 | func     semanticPayloadResponse                  (25 lines)
+
+  core/complexity_index.nim (4 funcs, 138 undocumented lines):
+    Line    91 | func     computeCouplingIndex                     (42 lines)
+    Line   145 | func     computeAxiomComplexityIndex              (42 lines)
+    Line    60 | func     computeCognitiveComplexity               (30 lines)
+    Line    66 | proc     scan                                     (24 lines)
+
+  core/types/symbolic_types_exec.nim (3 funcs, 135 undocumented lines):
+    Line    96 | func     executeBlockSymbolically                 (78 lines)
+    Line    56 | func     evalVarSection                           (32 lines)
+    Line    30 | func     evalAssignment                           (25 lines)
+
+  core/smart_search.nim (2 funcs, 134 undocumented lines):
+    Line    91 | func     analyzeBottleneckAstImpl                 (100 lines)
+    Line    56 | func     extractHintFromLine                      (34 lines)
+
+  core/gateway.nim (3 funcs, 127 undocumented lines):
+    Line   278 | macro    makeEnumGateway                          (61 lines)
+    Line   234 | macro    makeGateway                              (43 lines)
+    Line   409 | func     scanSmtDeclaredSymbolFromLine            (23 lines)
+
+  core/type_system/liquid_inference.nim (2 funcs, 123 undocumented lines):
+    Line   163 | proc     collectDeclarations                      (72 lines)
+    Line   236 | proc     addLoopBounds                            (51 lines)
+
+  core/spec_generator.nim (3 funcs, 98 undocumented lines):
+    Line   376 | func     leanDefaultForType                       (37 lines)
+    Line   484 | func     sortStructuresByDependencies             (36 lines)
+    Line   334 | proc     parseFunctions                           (25 lines)
+
+  core/logic/pipeline_trace_artifacts.nim (3 funcs, 91 undocumented lines):
+    Line   120 | func     buildGenericNimPoc                       (39 lines)
+    Line   171 | proc     buildPocSnippet                          (29 lines)
+    Line    57 | func     readJsonStringArray                      (23 lines)
+
+  core/the_judge_lean.nim (3 funcs, 89 undocumented lines):
+    Line   193 | func     extractVariableUsages                    (37 lines)
+    Line   130 | func     collectBoundVariables                    (29 lines)
+    Line    91 | func     isLeanReservedIdent                      (23 lines)
+
+  core/smt_to_lean_translate.nim (3 funcs, 85 undocumented lines):
+    Line   287 | proc     generateLeanTheorem                      (37 lines)
+    Line    70 | func     buildPrimitiveAndTactics                 (24 lines)
+    Line   248 | func     sanitizeLeanSource                       (24 lines)
+
+  core/proof_universe_lock.nim (2 funcs, 78 undocumented lines):
+    Line   168 | proc     computeProofUniverseLock                 (47 lines)
+    Line    58 | proc     graphSnapshotJson                        (31 lines)
+
+  core/proof_vacuity_gate.nim (2 funcs, 76 undocumented lines):
+    Line   236 | func     validateVacuityParts                     (49 lines)
+    Line    86 | func     tokenizeRelations                        (27 lines)
+
+  core/type_registry.nim (2 funcs, 70 undocumented lines):
+    Line   105 | func     heuristicFieldWeight                     (48 lines)
+    Line    37 | func     canonicalizeTypeName                     (22 lines)
+
+  core/diagnostics_engine.nim (3 funcs, 69 undocumented lines):
+    Line   221 | func     rationaleFromSignals                     (25 lines)
+    Line   353 | func     structuralRationale                      (23 lines)
+    Line   247 | func     selfHealingGuidanceFromSignals           (21 lines)
+
+  core/solver/z3_result_parser.nim (3 funcs, 69 undocumented lines):
+    Line    12 | func     parseStatusLine                          (24 lines)
+    Line    95 | func     parseDefineFunBlock                      (23 lines)
+    Line    72 | func     consumeLeadingExpr                       (22 lines)
+
+  core/metrics.nim (2 funcs, 58 undocumented lines):
+    Line   120 | func     computeEntropyWeightedAsi                (31 lines)
+    Line   152 | func     computeInformationGainWeightedAsi        (27 lines)
+
+  core/axiom_ir.nim (1 funcs, 55 undocumented lines):
+    Line   218 | func     parseNimToIR                             (55 lines)
+
+  core/cross_validator.nim (1 funcs, 52 undocumented lines):
+    Line    35 | proc     validateSmtLeanConsistency               (52 lines)
+
+  core/verified_axioms_catalog.nim (2 funcs, 51 undocumented lines):
+    Line   641 | func     verifiedAxiomName                        (29 lines)
+    Line   607 | func     axiomMatchesLeanProposition              (22 lines)
+
+  core/smt_to_lean_codegen.nim (1 funcs, 43 undocumented lines):
+    Line   618 | proc     parseArithmeticFunction                  (43 lines)
+
+  core/bmc_engine.nim (1 funcs, 39 undocumented lines):
+    Line    73 | func     applyTransition                          (39 lines)
+
+  core/smtlib2_util.nim (1 funcs, 38 undocumented lines):
+    Line    74 | proc     isCertifiedExemptFunctionSource          (38 lines)
+
+  core/meta_extractor.nim (1 funcs, 31 undocumented lines):
+    Line    20 | proc     extractFfiParamsFromAst                  (31 lines)
+
+  core/solver/expr_serialize.nim (1 funcs, 30 undocumented lines):
+    Line     7 | func     toSmt                                    (30 lines)
+
+  core/solver/z3_pool.nim (1 funcs, 27 undocumented lines):
+    Line   203 | proc     selectZ3WorkerIndex                      (27 lines)
+
+  core/contract_text_extractor.nim (1 funcs, 26 undocumented lines):
+    Line    99 | proc     extractBracketContract                   (26 lines)
+
+  core/asset_collector.nim (1 funcs, 25 undocumented lines):
+    Line    49 | proc     collectFunctions                         (25 lines)
+
+  core/vault_factory.nim (1 funcs, 25 undocumented lines):
+    Line    50 | proc     loadVaultStore                           (25 lines)
+
+
+==========================================================================================
+4. EXPORTED (PUBLIC) SYMBOLS WITHOUT DOCUMENTATION
+==========================================================================================
+  Total: 1390 undocumented exported symbols
+
+--- Top 20 files with most undocumented exported symbols ---
+#    Count  File                                                             
+--------------------------------------------------------------------------------
+1    52     verification/pipeline_lean_spec_inference.nim
+2    42     cli/commands/observability.nim
+3    37     core/topology_engine.nim
+4    37     verification/lean_lsp.nim
+5    31     core/gateway.nim
+6    28     translator/universal_mapper.nim
+7    26     core/spec_generator.nim
+8    25     core/boundary_extractor.nim
+9    23     gate/runners/gate_hook.nim
+10   22     cli/evidence_cli.nim
+11   22     core/proof_vacuity_gate.nim
+12   22     gate/architecture_policy.nim
+13   21     ui/ax_tui_reporter.nim
+14   21     gate/architecture_ast_extractor.nim
+15   20     verification/pipeline_negative_scan.nim
+16   19     core/the_judge_query.nim
+17   18     cli/commands/heal_batch_scheduler.nim
+18   17     mcp/axiom_mcp.nim
+19   17     core/verified_axioms_catalog.nim
+20   17     verification/proof_state_projection.nim
+
+==========================================================================================
+5. TOP 20 LEAST-DOCUMENTED FILES
+==========================================================================================
+#    Score   Syms   Docs    Lines  ModDoc   File
+---------------------------------------------------------------------------------------------------------
+1    0.000   0      0/0     4      NO       api.nim
+2    0.000   2      0/2     56     NO       cli/action_interpreter_cli.nim
+3    0.000   0      0/0     15     NO       cli/ax.nim
+4    0.000   0      0/0     164    NO       cli/cli_types.nim
+5    0.000   1      0/1     88     NO       cli/commands/gate.nim
+6    0.000   18     0/18    253    NO       cli/commands/heal_batch_scheduler.nim
+7    0.000   22     0/22    429    NO       cli/evidence_cli.nim
+8    0.000   5      0/5     77     NO       core/asset_collector.nim
+9    0.000   0      0/0     113    NO       core/constants.nim
+10   0.000   0      0/0     232    NO       core/integrity_refinement_types.nim
+11   0.000   0      0/0     159    NO       core/logic/pipeline_core_types.nim
+12   0.000   0      0/0     31     NO       core/logic/universal_translation_types.nim
+13   0.000   22     0/22    333    NO       core/proof_vacuity_gate.nim
+14   0.000   1      0/1     37     NO       core/solver/expr_serialize.nim
+15   0.000   0      0/0     20     NO       core/solver/interfaces.nim
+16   0.000   0      0/0     87     NO       core/solver/types.nim
+17   0.000   0      0/0     7      NO       core/the_judge_constants.nim
+18   0.000   1      0/1     31     NO       core/trusted/smt.nim
+19   0.000   0      0/0     24     NO       core/trusted_base.nim
+20   0.000   1      0/1     26     NO       core/version.nim
+
+==========================================================================================
+6. TOP 20 BEST-DOCUMENTED FILES (REFERENCE)
+==========================================================================================
+#    Score   Syms   Docs    Lines  ModDoc   File
+---------------------------------------------------------------------------------------------------------
+1    1.000   1      1/1     292    YES      cli/basic_commands_cli.nim
+2    1.000   1      1/1     7      YES      cli/cli_io_error.nim
+3    1.000   6      6/6     52     YES      cli/cli_io_input.nim
+4    1.000   8      8/8     138    YES      cli/commands/heal_parsing.nim
+5    1.000   1      1/1     149    YES      cli/commands/vault_sync.nim
+6    1.000   1      1/1     11     YES      cli/mcp_command_cli.nim
+7    1.000   3      3/3     104    YES      cli/proof_json_cli.nim
+8    1.000   7      7/7     50     YES      cli/report_format.nim
+9    1.000   3      3/3     70     YES      cli/report_layout.nim
+10   1.000   13     13/13    120    YES      cli/report_render.nim
+11   1.000   1      1/1     327    YES      cli/symbolic_cli.nim
+12   1.000   5      5/5     131    YES      cli/wf_planning.nim
+13   1.000   6      6/6     266    YES      cli/wf_render.nim
+14   1.000   4      4/4     333    YES      cli/wf_semantic.nim
+15   1.000   5      5/5     152    YES      cli/wf_state_parsing.nim
+16   1.000   4      4/4     68     YES      core/axiom_identity.nim
+17   1.000   4      4/4     78     YES      core/bmc_types.nim
+18   1.000   3      3/3     230    YES      core/contract_ast_extractor.nim
+19   1.000   4      4/4     67     YES      core/contract_param_util.nim
+20   1.000   1      1/1     55     YES      core/contract_smtlib2.nim
+
+==========================================================================================
+7. KEY RECOMMENDATIONS
+==========================================================================================
+
+Priority 1 — Add module-level docs to these 127 files (36% of codebase):
+  The worst offenders are in these directories:
+
+Priority 2 — Document exported symbols in core/ (highest impact):
+  Top files:
+    1. verification/pipeline_lean_spec_inference.nim — 52 undocumented exported symbols
+    2. cli/commands/observability.nim — 42 undocumented exported symbols
+    3. core/topology_engine.nim — 37 undocumented exported symbols
+    4. verification/lean_lsp.nim — 37 undocumented exported symbols
+    5. core/gateway.nim — 31 undocumented exported symbols
+    6. translator/universal_mapper.nim — 28 undocumented exported symbols
+    7. core/spec_generator.nim — 26 undocumented exported symbols
+    8. core/boundary_extractor.nim — 25 undocumented exported symbols
+    9. gate/runners/gate_hook.nim — 23 undocumented exported symbols
+    10. cli/evidence_cli.nim — 22 undocumented exported symbols
+
+Priority 3 — Focus on large functions in core/:
+  103 large (>20 lines) undocumented functions in core/
+  Top files to address:
+    core/boundary_extractor.nim: 11 functions, 917 undocumented lines
+    core/orchestrator.nim: 8 functions, 488 undocumented lines
+    core/global_symbol_graph_builder.nim: 6 functions, 342 undocumented lines
+    core/topology_engine.nim: 9 functions, 342 undocumented lines
+    core/the_judge_query.nim: 7 functions, 256 undocumented lines
+    core/integrity_refinement_loop.nim: 5 functions, 159 undocumented lines
+    core/cfg_builder.nim: 1 functions, 152 undocumented lines
+    core/axiom_api.nim: 3 functions, 144 undocumented lines
+    core/complexity_index.nim: 4 functions, 138 undocumented lines
+    core/types/symbolic_types_exec.nim: 3 functions, 135 undocumented lines

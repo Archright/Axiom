@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "kind": "envAllowlist-measurement-amendment",
+  "supersedes": "atom-reproduction.json / r0-evidence-manifest.json 의 PATH 자리표시자 기록 (\"<host PATH, 24 entries>\")",
+  "measuredAt": "2026-10-01T18:10:40+09:00",
+  "runRef": "act2atom_getbitsbe_1790833655 (atom run)",
+  "envValues": {
+    "PATH": "<user-home>/.elan/bin:<user-home>/.local/bin:<user-home>/.kimi-code/bin:<user-home>/.opencode/bin:<user-home>/.bun/bin:<user-home>/.nvm/versions/node/v24.16.0/bin:<user-home>/.choosenim/toolchains/nim-2.2.10/bin:<user-home>/.nimble/bin:<user-home>/.local/bin:<user-home>/.local/bin:<user-home>/.elan/bin:<user-home>/.cargo/bin:<user-home>/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+    "HOME": "$STATE/home (tilded 기록)",
+    "ELAN_HOME": "<user-home>/.elan",
+    "TMPDIR": "$STATE/tmp",
+    "AXIOM_STATE_DIR": "$STATE",
+    "LANG": "C",
+    "LC_ALL": "C",
+    "GIT_CONFIG_NOSYSTEM": "1"
+  },
+  "amendmentsFromR0": [
+    "HOME→state home scaffold",
+    "GIT_CONFIG_NOSYSTEM=1",
+    "ELAN_HOME explicit"
+  ],
+  "notes": [
+    "R0는 수치 envAllowlistDigest 미기록(값 객체 기록 방식) — 본 파일이 실측 정본",
+    "PATH 24→22 entries = 호스트 셸 드리프트, R0 기록과 충돌 없음",
+    "state는 tilded 논리 기록 — 절대경로 금지 규칙 준수(HOME/TMPDIR/AXIOM_STATE_DIR은 $STATE 접두 논리값)",
+    "envAllowlistSha256 계산 방법: envValues를 키 LC_ALL=C 사전순 정렬 후 jq -S -c (안정 JSON 직렬화, $STATE 리터럴 그대로)로 직렬화한 문자열의 sha256"
+  ],
+  "envAllowlistSha256": "aa23f6728ce9bade367b43d56e558cee00834999d40ef10f5f5c392368274631"
+}

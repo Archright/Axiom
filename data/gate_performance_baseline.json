@@ -1,0 +1,132 @@
+{
+  "architecture-config-gate": {
+    "expectedPassRate": 0.83,
+    "maxDurationMs": 35000,
+    "criticality": "high"
+  },
+  "asset-hygiene-gate": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 32000,
+    "criticality": "medium"
+  },
+  "binary-artifact-gate": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 30000,
+    "criticality": "medium"
+  },
+  "context-size-guard": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 37000,
+    "criticality": "medium"
+  },
+  "debt-blocker": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 35000,
+    "criticality": "medium"
+  },
+  "debt-reduction-gate": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 10000,
+    "criticality": "medium"
+  },
+  "delegation-enforcer": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 22000,
+    "criticality": "medium"
+  },
+  "doc-completeness-gate": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 32000,
+    "criticality": "medium"
+  },
+  "documentation-first-gate": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 32000,
+    "criticality": "medium"
+  },
+  "gate-self-check": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 2000,
+    "criticality": "high"
+  },
+  "hermetic-test-gate": {
+    "expectedPassRate": 0.77,
+    "maxDurationMs": 30000,
+    "criticality": "low"
+  },
+  "import-encapsulation-gate": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 24000,
+    "criticality": "medium"
+  },
+  "integrity-workflow": {
+    "expectedPassRate": 0.5,
+    "maxDurationMs": 39000,
+    "criticality": "high"
+  },
+  "intent-gate": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 28000,
+    "criticality": "medium"
+  },
+  "language-ban-gate": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 25000,
+    "criticality": "medium"
+  },
+  "logging-policy-gate": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 55000,
+    "criticality": "medium"
+  },
+  "magic-number-sniffer": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 30000,
+    "criticality": "medium"
+  },
+  "manifest-consistency-gate": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 31000,
+    "criticality": "medium"
+  },
+  "memory-policy-gate": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 39000,
+    "criticality": "medium"
+  },
+  "nimtry": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 10000,
+    "criticality": "medium"
+  },
+  "policy-validator": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 9000,
+    "criticality": "medium"
+  },
+  "procedure-gate": {
+    "expectedPassRate": 0.5,
+    "maxDurationMs": 30000,
+    "criticality": "medium"
+  },
+  "quality-gate-marker": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 2000,
+    "criticality": "high"
+  },
+  "quality-gate-runner": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 39000,
+    "criticality": "medium"
+  },
+  "spec-binding-gate": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 43000,
+    "criticality": "medium"
+  },
+  "unstaged-guard": {
+    "expectedPassRate": 1.0,
+    "maxDurationMs": 2000,
+    "criticality": "high"
+  }
+}

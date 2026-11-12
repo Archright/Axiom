@@ -1,0 +1,279 @@
+# Gate Infrastructure Debt Audit
+## Date: 2026-05-27
+## Author: Sub-agent (Kimi Code CLI)
+## Source Files: src/gate/gates.nim, src/gate/runners/gate_hook.nim, src/gate/types.nim, bin/, src/gate/runners/
+
+===============================================================================
+## 1. BINARY STATUS PER gates.nim REGISTRATION
+===============================================================================
+
+There are 14 gate registrations in gates.nim. Each has an `entry` field pointing
+to a path under `src/gate/runners/`. Binaries exist either in `bin/` (canonical)
+or in `src/gate/runners/` (legacy in-source build).
+
+LEGEND:
+  [OK]      = binary present in canonical bin/ location
+  [RUNNER]  = binary present in src/gate/runners/ but NOT in bin/
+  [NOBIN]   = no binary anywhere
+  [NOSRC]   = no source file at the entry path
+  [GHOST]   = registered in gates.nim but entry path doesn't exist
+
+  Gate ID                    Entry                              Bin        Status
+  ───────────────────────────────────────────────────────────────────────────────
+  gate-self-check            src/gate/runners/gate_self_check   bin/       [OK]
+  sentinel                   src/gate/runners/sentinel          -          [RUNNER]
+  cli-build                  src/gate/runners/cli_build          -          [RUNNER]
+  external-cli-smoke         src/gate/runners/external_cli_smoke bin/       [OK]
+  external-cli-smoke-hard    (same entry)                       -          [OK] (same bin)
+  procedure-gate             src/gate/runners/procedure_gate     -          [RUNNER]
+  nim-check                  src/gate/runners/nim_check          -          [GHOST] [NOSRC]
+  drnim                      src/gate/runners/drnim_gate         -          [RUNNER]
+  gateway-test               src/gate/runners/gateway_test       -          [GHOST] [NOSRC]
+  integrity-test             src/gate/runners/integrity_test     -          [RUNNER]
+  asi-hard-gate              src/gate/runners/asi_hard_gate      -          [RUNNER]
+  context7-evidence-gate     src/gate/runners/context7_evidence_gate bin/   [OK]
+  architecture-gate          src/gate/runners/architecture_gate  -          [RUNNER] [STALE]
+  quality-gate-marker        src/gate/runners/quality_gate_marker -         [RUNNER]
+
+===============================================================================
+## 2. GHOST GATES (registered but entry path has no source file)
+===============================================================================
+
+  A. "nim-check" → entry: "src/gate/runners/nim_check"
+     - File "src/gate/runners/nim_check.nim" does NOT exist.
+     - gate_hook.nim bypasses this by implementing inline: runNimCheckTier1().
+     - The entry in gates.nim is a ghost — if any dispatch code tries to
+       compile/run it, it will fail with a missing file error.
+
+  B. "gateway-test" → entry: "src/gate/runners/gateway_test"
+     - File "src/gate/runners/gateway_test.nim" does NOT exist.
+     - gate_hook.nim has a standalone implementation: runGatewayTest().
+     - Same ghost status as nim-check.
+
+  RISK: If runAllGatesParallel or any dynamic gate scanning tool (e.g., an
+  IDE plugin or CI script) reads gates.nim and tries to execute these entries,
+  they will fail with a "file not found" error.
+
+===============================================================================
+## 3. STALE GATES — architecture-gate
+===============================================================================
+
+  A. Status
+     - Registered in gates.nim with priority 15
+     - Binary exists at src/gate/runners/architecture_gate (compiled Nim ELF)
+     - NO binary in bin/ (canonical location)
+     - Source: src/gate/runners/architecture_gate.nim (a thin wrapper that
+       auto-compiles src/gate/architecture_gate.nim)
+     - NEVER invoked by gate_hook.nim
+
+  B. gate_hook.nim evidence of replacement:
+     Line 8-9 comment: "Tier 2d: nimtry --full-tree (unified architecture analysis)"
+     Line 258: runNimtryGate() calls "bin/nimtry --full-tree"
+     Line 438-440: "Tier 2d: Nimtry gate (architecture replacement)"
+
+  C. The architecture_gate.nim source at src/gate/ is still present;
+     its compiled binary exists but is never used. The wrapper at
+     src/gate/runners/architecture_gate.nim also remains but is dead code.
+
+  D. Recommendation: Remove architecture-gate from gates.nim and optionally
+     remove the stale source files (architecture_gate.nim in both locations,
+     architecture_policy.nim, rule_patterns.nim, architecture_ast_*.nim) if
+     they are not referenced by nimtry.
+
+===============================================================================
+## 4. GATES NOT IN gates.nim BUT ACTIVE IN gate_hook.nim (Orphan Entries)
+===============================================================================
+
+  Gate                   Source                              Tier in gate_hook
+  ─────────────────────────────────────────────────────────────────────────────
+  intent_gate            src/gate/runners/intent_gate.nim    T0a (BDD Contract)
+  spec_presence_gate     src/gate/runners/spec_presence_gate T0b
+  test_coverage_gate     src/gate/runners/test_coverage_gate T0c
+  policy_validator       src/gate/runners/policy_validator   T2b
+  nimtry_gate            src/gate/nimtry/nimtry_cli.nim      T2d (arch repl.)
+  context_size_guard     src/gate/context_size_guard.nim     T2e
+  memory_policy_gate     src/gate/memory_policy_gate.nim     T2f
+
+  These 7 gates are fully functional and have binaries in bin/, but they are
+  NOT registered in gates.nim. If gates.nim is the SSOT for gate inventory,
+  then they are "undocumented" gates. If gate_hook.nim is the actual SSOT,
+  then gates.nim is the stale artifact.
+
+===============================================================================
+## 5. GATES REGISTERED IN gates.nim BUT NOT INVOKED BY gate_hook.nim
+===============================================================================
+
+  Gate ID                Used in gate_hook?    Notes
+  ─────────────────────────────────────────────────────────────────────────────
+  external-cli-smoke     NO                    Completely orphaned
+  external-cli-smoke-hard NO                   Same entry, also orphaned
+  drnim                  NO                    Orphaned (legacy dr Nim gate)
+  architecture-gate      NO                    Replaced by nimtry
+  gate-self-check        NO                    Binary exists but never invoked
+  gateway-test           NO                    Inline runGatewayTest exists but
+                                               as a separate function in
+                                               gates.nim (collects + builds +
+                                               runs test binaries), not as
+                                               the gate_hook pipeline stage
+
+  The external-cli-smoke gates are the most concerning — they have priority 2
+  and envVars set, suggesting they were intended to be part of the pipeline but
+  were never wired into gate_hook.nim's runPreCommit/runPrePush.
+
+===============================================================================
+## 6. BIN EXECUTABLES WITH NO GATE CONFIGURATION
+===============================================================================
+
+  Binary             Source (if found)                    Notes
+  ─────────────────────────────────────────────────────────────────────────────
+  unified_sentry     src/gate/runners/unified_sentry.nim  NOT registered in
+                                                          gates.nim or
+                                                          gate_hook.nim
+
+  Note: Most other binaries in bin/ are test runners (e.g., *_test) and CLI
+  binaries (ax, main, server) — these are not gate binaries. unified_sentry
+  stands out as a gate-like binary with no configuration entry anywhere.
+
+===============================================================================
+## 7. INLINE IMPLEMENTATION DUPLICATION
+===============================================================================
+
+  Several gates have BOTH a standalone runner binary AND an inline implementation
+  in gate_hook.nim, creating two divergent code paths:
+
+  Gate                 Standalone binary                    Inline in gate_hook
+  ─────────────────────────────────────────────────────────────────────────────
+  sentinel             src/gate/runners/sentinel.nim        runSentinel() (L142)
+  cli-build            src/gate/runners/cli_build.nim       runCliBuild() (L152)
+  procedure-gate       src/gate/runners/procedure_gate.nim  runProcedureGate() (L186)
+  quality-gate-marker  src/gate/runners/quality_gate_marker runQualityGateMarker() (L147)
+
+  The standalone binaries are effectively dead code since gate_hook.nim's
+  inline implementations are what actually run during git hooks. The binaries
+  may only serve as documentation or potential CI entry points.
+
+===============================================================================
+## 8. TIER STRUCTURE MISMATCH: gates.nim vs gate_hook.nim
+===============================================================================
+
+  gates.nim has a flat priority-based ordering (0-100).
+  gate_hook.nim implements a strict Tier structure (T0-T3) with AND-gating.
+
+  gates.nim priorities:     gate_hook.nim tiers:
+    0  gate-self-check      T0: BDD Contract Gates
+    0  sentinel              T0b: intent + spec + test_coverage
+    0  cli-build             T1: nim check
+    2  external-cli-smoke    T2a: CLI build
+    2  external-cli-smoke-h  T2b: policy_validator
+    5  procedure-gate        T2c: procedure_gate
+    5  nim-check             T2d: nimtry (arch. replacement)
+   10  drnim                 T2e: context_size_guard
+   10  context7-evidence     T2f: memory_policy_gate
+   10  integrity-test        T2g: context7_evidence_gate
+   15  gateway-test          T3: asi_hard_gate (pre-push only)
+   15  asi-hard-gate
+   15  architecture-gate
+  100 quality-gate-marker
+
+  The priority values in gates.nim have NO relation to the actual execution
+  order enforced by gate_hook.nim. They are vestigial.
+
+===============================================================================
+## 9. ERROR HANDLING & EDGE CASES
+===============================================================================
+
+  A. Missing binary fallback in gate_hook.nim:
+     - runNimtryGate(): auto-compiles if bin/nimtry missing or source newer
+     - runContextSizeGuard(): same pattern
+     - runMemoryPolicyGate(): same pattern
+     - runContext7EvidenceGate(): same pattern
+     - runTier0(): all 3 sub-gates (intent, spec, test) auto-compile
+     - runCliBuild(): does NOT check for stale binary — runs refresh_cli_binaries
+     - runProcedureGate(): requires bin/main but does NOT auto-compile it
+     - runAsiHardGate(): checks src/gate/runners/asi_hard_gate but NOT bin/
+
+  B. runProcedureGate() requires bin/main which is ~12MB and has no auto-compile
+     fallback — it just fails with message "missing bin/main (run Axiom-cli-build)"
+
+  C. sentinel and quality-gate-marker use discard on execCmd, ignoring errors.
+     This means failure to write git config markers is silently ignored.
+
+  D. runIntegrityTest() uses discard on the result — it always passes even if the
+     test fails.
+
+  E. No single-entry-point dispatch: gates.nim defines allGates() but
+     gate_hook.nim implements its own inline pipeline. The allGates() function
+     is never called by any production code path.
+
+  F. No isMainModule guards in gates.nim — the module exports functions but if
+     compiled as a standalone binary, it would produce a no-op binary.
+
+===============================================================================
+## 10. SUMMARY OF TECHNICAL DEBT ITEMS
+===============================================================================
+
+  [P1] Ghost entries: "nim-check" and "gateway-test" have no source files at
+       their declared entry paths in gates.nim. Fix: either create stub source
+       files or remove the entries.
+
+  [P1] Dead "architecture-gate": registered in gates.nim, has runner binary,
+       but is NEVER invoked (replaced by nimtry). Must be removed from gates.nim.
+
+  [P1] "external-cli-smoke" and "external-cli-smoke-hard" are registered in
+       gates.nim but NEVER wired into gate_hook.nim. Two orphaned gate configs.
+
+  [P2] "drnim" gate is registered in gates.nim but NEVER invoked by gate_hook.
+       Legacy gate — verify if it should be removed or integrated.
+
+  [P2] "gate-self-check" has both bin/gate_self_check and runner binary, but is
+       NEVER called in gate_hook.nim nor any pre-commit/push path.
+
+  [P2] 7 active gates in gate_hook.nim are NOT registered in gates.nim:
+       intent_gate, spec_presence_gate, test_coverage_gate, policy_validator,
+       nimtry, context_size_guard, memory_policy_gate.
+       SSOT violation — gates.nim is incomplete.
+
+  [P2] Inline duplication: 4 gates (sentinel, cli-build, procedure-gate,
+       quality-gate-marker) have both standalone runners AND inline code in
+       gate_hook.nim. Two code paths, risk of divergence.
+
+  [P3] `unified_sentry` binary at bin/unified_sentry has source at
+       src/gate/runners/unified_sentry.nim but NO configuration entry anywhere.
+
+  [P3] gates.nim priority values are vestigial — gate_hook.nim uses a
+       completely different tier-based ordering. Priority can be removed.
+
+  [P3] runProcedureGate() has a hard dependency on bin/main without auto-compile
+       fallback — fragile.
+
+  [P3] sentinel/quality-gate-marker silently ignore execCmd failures — could
+       mask real issues.
+
+===============================================================================
+## RECOMMENDATIONS
+===============================================================================
+
+  1. **Fix SSOT**: Decide whether gates.nim or gate_hook.nim is the gate
+     inventory SSOT. If gate_hook.nim (which is the actual runtime), either
+     update gates.nim to match or remove it.
+
+  2. **Remove ghost entries**: Remove "nim-check" and "gateway-test" from
+     gates.nim, or create their source files.
+
+  3. **Remove stale architecture-gate**: Remove from gates.nim, and optionally
+     delete src/gate/runners/architecture_gate.nim + dependencies.
+
+  4. **Wire or remove external-cli-smoke**: Either add it to the
+     gate_hook.nim pipeline or remove from gates.nim.
+
+  5. **Add missing registrations**: Add intent_gate, spec_presence_gate,
+     test_coverage_gate, policy_validator, nimtry, context_size_guard,
+     memory_policy_gate to gates.nim.
+
+  6. **Consolidate inline vs standalone**: For the 4 duplicated gates,
+     either reference the standalone binary in gate_hook.nim or delete
+     the standalone source.
+
+  7. **Add unified_sentry** to gate configuration if it is a functional gate.
+
+===============================================================================

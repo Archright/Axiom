@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "snapshotLineage": [
+    {
+      "label": "BEFORE (reconstructed)",
+      "immutable": false,
+      "note": "Reconstructed Before: canonical digest matches decision.independent.20260819T093022Z.json evidenceManifestDigest via evaluator method, but observation-level collection revision is NOT proven (working tree already contains R4/R7 impl).",
+      "snapshotPath": "snapshots/273c7d1d97d51ed8ead72befaccf85a92a65f3735992acbd6ea06da359fc1ef5.json",
+      "evidenceManifestSnapshotDigest": "273c7d1d97d51ed8ead72befaccf85a92a65f3735992acbd6ea06da359fc1ef5",
+      "evidenceManifestCanonicalDigest": "d6a8abc5990739e1de7dd929ad0abcf06a2b0aae3db23a25449242f9c6958854",
+      "runIds": [
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6"
+      ],
+      "generatedAt": "2026-08-19T00:00:00Z",
+      "matchedDecisionArtifact": "decision.independent.20260819T093022Z.json"
+    },
+    {
+      "label": "AFTER (incremental, mixed-revision)",
+      "immutable": true,
+      "note": "Incremental post-change evidence snapshot: mixed-revision (R4 2 obs + R7 invalidInputExit at S2 current code; R8 and others inherited). Not a whole-current-code snapshot. InternalErrorExit NOT re-collected (exit-2 semantics unconfirmed). Evaluator stays unchanged.",
+      "snapshotPath": "snapshots/2f2299ae857578329de5e6220f7320953019cdb85b9574b30b70c6216e2af984.json",
+      "evidenceManifestSnapshotDigest": "2f2299ae857578329de5e6220f7320953019cdb85b9574b30b70c6216e2af984",
+      "evidenceManifestCanonicalDigest": "b1c21216e7554681811953e6783a3e6f99639b3777fffdaedda7d96b0812be05",
+      "runIds": [
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6",
+        "S2-recollect"
+      ],
+      "recollectedObservations": [
+        "R4/C4-15-S2",
+        "R4/C4-07-S2",
+        "R7/C1-13-S2"
+      ],
+      "generatedAt": "2026-08-19T21:15:00Z"
+    }
+  ]
+}

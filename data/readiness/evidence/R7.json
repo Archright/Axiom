@@ -1,0 +1,213 @@
+{
+ "schemaVersion": 1,
+ "invariantId": "R7",
+ "repoIdentity": {
+  "head": "ba773d0631b5757525b16d8fd62e220492e98e76",
+  "branch": "chore/r2-r8-snapshot-regen",
+  "workingTreeClean": true,
+  "treeDigest": "5a6f99db4cd26f6a5d365e29c60b378f52bc11b04126efe05757c76ee0f80bae"
+ },
+ "toolchain": {
+  "nim": "2.2.10",
+  "z3": "4.13.3",
+  "lean": "leanprover/lean4:v4.33.0"
+ },
+ "collection": {
+  "collector": "readiness-regen-2026-10-13-r2-r8",
+  "method": "manual",
+  "generatedAt": "2026-10-13T09:08:36Z",
+  "freshUntil": "2026-11-12T09:08:36Z"
+ },
+ "observations": [
+  {
+   "key": "hermeticEnvNotRequired",
+   "value": true,
+   "scope": "env",
+   "subject": "AXIOM_HERMETIC unset in environment; bin/ax --version returns v0.3.7 without hermetic env"
+  },
+  {
+   "key": "runDeterminism_byteLevel",
+   "value": "IDENTICAL",
+   "scope": "log",
+   "subject": "Full log sha256 A=B=24d0e59ed01012f5fd47c5fbe7026e416a3530925b71aef9a8400868890e3581 — 0 diff lines (stronger than H1 audit where 7 timing-only lines differed; warm-cache runs at this head are byte-identical incl. timing lines)"
+  },
+  {
+   "key": "runDeterminism_semantic",
+   "value": "IDENTICAL",
+   "scope": "log",
+   "subject": "Critical-line extraction (VERIFIED|verified|Pass:|Fail:) sha256 identical: d3c0dcde5a275eeb47244df5e6c36ff464063b60316c4d1c1c218f293896569a. Both runs: Pass=1, Fail=3, verifiedRatio=0.0000, normalizeMaxWorkers=[NOT_VERIFIABLE]"
+  },
+  {
+   "key": "runA_exitCode",
+   "value": 0,
+   "scope": "result",
+   "subject": "./bin/ax prove --target normalizeMaxWorkers completed (cache-warm)"
+  },
+  {
+   "key": "runB_exitCode",
+   "value": 0,
+   "scope": "result",
+   "subject": "./bin/ax prove --target normalizeMaxWorkers completed (cache-warm second run)"
+  },
+  {
+   "key": "proofCacheLocation",
+   "value": ".axiom/proof_cache/<source_sha>_<target_sha>/manifest.json",
+   "scope": "cache",
+   "subject": "src/core/proof/proof_cache.nim:49-62 — deterministic salted key, no timestamps in key"
+  },
+  {
+   "key": "merkleCacheLocation",
+   "value": "src/core/topology/merkle_cache.nim",
+   "scope": "cache",
+   "subject": "CST structure serialized via serializeCstStructure() — deterministic index-based child iteration"
+  },
+  {
+   "key": "fingerprintCacheLocation",
+   "value": ".axiom/cache/ + topology_engine primeTransitiveFingerprintCache()",
+   "scope": "cache",
+   "subject": "cache priming uses topo-sorted nodes (deterministic ordering)"
+  },
+  {
+   "key": "noNondeterministicStateInCaches",
+   "value": true,
+   "scope": "code",
+   "subject": "grep -E 'random|Random|shuffle|Shuffle' on proof_cache.nim and merkle_cache.nim returns zero matches"
+  },
+  {
+   "key": "serializationStability",
+   "value": "json pretty() with explicit field ordering",
+   "scope": "code",
+   "subject": "proof_cache.nim:158 writeFile(tmpPath, manifest.pretty()) — stdlib json.pretty() deterministic from ordered table keys"
+  },
+  {
+   "key": "certificateIdentityDigest",
+   "value": "191f288293089c06a8dd7e39df09c6ebd91daf492fee300b6e4bedba4777fb2b",
+   "scope": "artifact",
+   "subject": "build/certificates/657f1afd….json — functionName=normalizeMaxWorkers, modulePath=src/core/orchestrator/orchestrator_api.nim, identityDigest present and non-empty"
+  },
+  {
+   "key": "toolchainIdentityConstants",
+   "value": "BuildEnvZ3Version=4.13.3, BuildEnvCommitCount=0, BuildEnvGitHash=0000000, BuildEnvBuildDate=1970-01-01, BuildEnvLeanSourceHash=\"\", BuildSourceHash=702801473998028402",
+   "scope": "code",
+   "subject": "src/generated/build_env.nim:2-11 — committed placeholder constants (hermetic_build not run for this worktree build; H1 audit recorded populated values 1346/0f826eb3 — honest drift, see R7-INC-002)"
+  },
+  {
+   "key": "claimedScope",
+   "value": [
+    "vkd"
+   ],
+   "scope": "vkd-contract",
+   "subject": "policy r7.coverageSubjects + formula |VKS ∩ certGreen|/|VKS|, VKS=23 (kernel 40 - exempt 17), numeratorAllowed=[isVkdAdmissible]"
+  },
+  {
+   "key": "verifiedEmitterScope",
+   "value": [
+    "vkd"
+   ],
+   "scope": "vkd-emission",
+   "subject": "VKD metrics emitted by product: data/baseline.json metrics.vkd"
+  },
+  {
+   "key": "measuredCoverage",
+   "value": 0.0,
+   "scope": "vkd",
+   "subject": "data/baseline.json metrics.vkd: verified=0, total=23, ratio=0.0 (canonical SSOT at this head) — below r7.vkdMinThreshold 0.5 → R7 FAIL (non-critical)"
+  },
+  {
+   "key": "verifiedRatioOverall",
+   "value": 0.0,
+   "scope": "runtime",
+   "subject": "prove run verifiedRatio=0.0000, verified=0/40 (H1 audit: 0.0250 — honest drift, positive control no longer verifies)"
+  }
+ ],
+ "incidents": [
+  {
+   "id": "R7-INC-001",
+   "severity": "low",
+   "summary": "Byte-level determinism improved: A/B logs fully identical",
+   "detail": "H1 audit recorded 7 timing-varying lines between runs A and B. At ba773d0631 the warm-cache A/B logs are byte-identical (sha256 24d0e59e… both, 0 diff lines) — timing lines stable at 0ms on cached pipeline results."
+  },
+  {
+   "id": "R7-INC-002",
+   "severity": "info",
+   "summary": "build_env.nim carries placeholder constants (hermetic_build not run)",
+   "detail": "Committed src/generated/build_env.nim has CommitCount=0, GitHash=0000000, BuildDate=1970-01-01, empty LeanSourceHash. H1 audit recorded populated values. Toolchain identity is still pinned via the toolchain envelope (nim 2.2.10 / z3 4.13.3 / lean v4.33.0) and vendored z3."
+  }
+ ],
+ "sources": [
+  {
+   "file": "src/generated/build_env.nim",
+   "symbol": "BuildEnv constants",
+   "sha256": "live",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76",
+   "lines": "2-11"
+  },
+  {
+   "file": "src/core/proof/proof_cache.nim",
+   "symbol": "ProofEntry/computeCacheKey/writeFileOpt",
+   "sha256": "live",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76",
+   "lines": "49-62,158"
+  },
+  {
+   "file": "src/core/topology/merkle_cache.nim",
+   "symbol": "serializeCstStructure",
+   "sha256": "live",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76",
+   "lines": "1-91"
+  },
+  {
+   "file": "src/core/topology/topology_engine.nim",
+   "symbol": "cached entry access",
+   "sha256": "live",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76",
+   "lines": "346-381"
+  },
+  {
+   "file": "config/readiness_policy.json",
+   "symbol": "r7 coverageSubjects/vkdMinThreshold",
+   "sha256": "live",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76",
+   "lines": "272-288"
+  },
+  {
+   "file": "data/baseline.json",
+   "symbol": "metrics.vkd canonical SSOT",
+   "sha256": "live",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76"
+  },
+  {
+   "file": "build/certificates/657f1afdb25f09ee3f7e0ed8a900cb423cf31ac70a4e79700f02e8085cc21551.json",
+   "symbol": "identityDigest",
+   "sha256": "8c1e92ea515eefbdf2901eae8098d45ef882c09de3092e9578b34c2a7e58eedd",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76"
+  }
+ ],
+ "commands": [
+  {
+   "cmd": "timeout 2400 ./bin/ax prove --target normalizeMaxWorkers > tmp/r7_a.log 2>&1",
+   "exitCode": 0,
+   "outputDigest": "sha256:24d0e59ed01012f5fd47c5fbe7026e416a3530925b71aef9a8400868890e3581"
+  },
+  {
+   "cmd": "timeout 2400 ./bin/ax prove --target normalizeMaxWorkers > tmp/r7_b.log 2>&1",
+   "exitCode": 0,
+   "outputDigest": "sha256:24d0e59ed01012f5fd47c5fbe7026e416a3530925b71aef9a8400868890e3581"
+  },
+  {
+   "cmd": "grep 'VERIFIED\\|verified\\|Pass:\\|Fail:' tmp/r7_a.log | sha256sum",
+   "exitCode": 0,
+   "outputDigest": "sha256:d3c0dcde5a275eeb47244df5e6c36ff464063b60316c4d1c1c218f293896569a"
+  },
+  {
+   "cmd": "grep 'VERIFIED\\|verified\\|Pass:\\|Fail:' tmp/r7_b.log | sha256sum",
+   "exitCode": 0,
+   "outputDigest": "sha256:d3c0dcde5a275eeb47244df5e6c36ff464063b60316c4d1c1c218f293896569a"
+  },
+  {
+   "cmd": "grep -rnE 'random|Random|shuffle|Shuffle' src/core/proof/proof_cache.nim src/core/topology/merkle_cache.nim | wc -l",
+   "exitCode": 0,
+   "stdout": "0"
+  }
+ ]
+}

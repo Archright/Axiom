@@ -1,0 +1,257 @@
+# All 14 accessors are exported only via toml_serialization/value_ops (toml_serialization.nim does NOT re-export them).
+# Columns: accessor	receiver_kind	target_T	arg	compiles	observed_outcome	code_citation
+# NOTE: TomlKind has NO Date/Time members (types.nim:59-68) - date-only/time-only values are kind DateTime; no Date/Time receiver rows can exist.
+# accessors.tsv — Task 1: accessor x receiver-kind matrix (nim-toml-serialization @4aa8e2223649fc0837c490a4acfca7b8b1e756f9)
+# arg: key for string-key accessors (a=present, absent=missing), index for int-key accessors (1 in-range, 99 out-of-range), - = none.
+# observed_outcome: debug build; -d:release produced the IDENTICAL outcome for every row (verified join in raw/runs.tsv; asserts stay enabled at -d:release).
+# receiver_kind: constructed per q1_matrix.nim; Nil = TomlValueRef(nil).
+contains_key	Array	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:105-108
+contains_key	Array	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:105-108
+contains_key	Bool	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:105-108
+contains_key	Bool	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:105-108
+contains_key	DateTime	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:105-108
+contains_key	DateTime	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:105-108
+contains_key	Float	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:105-108
+contains_key	Float	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:105-108
+contains_key	InlineTable	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:105-108
+contains_key	InlineTable	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:105-108
+contains_key	Int	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:105-108
+contains_key	Int	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:105-108
+contains_key	Nil	-	a	yes	SIGSEGV, exit 139 (kill -11); no handler runs	value_ops.nim:105-108
+contains_key	Nil	-	absent	yes	SIGSEGV, exit 139 (kill -11); no handler runs	value_ops.nim:105-108
+contains_key	String	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:105-108
+contains_key	String	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:105-108
+contains_key	Table	-	a	yes	OK: RESULT contains=true 	value_ops.nim:105-108
+contains_key	Table	-	absent	yes	OK: RESULT contains=false 	value_ops.nim:105-108
+contains_key	Tables	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:105-108
+contains_key	Tables	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:105-108
+contains_val	Array	-	-	yes	OK: RESULT contains=true 	value_ops.nim:110-113
+contains_val	Bool	-	-	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:110-113
+contains_val	DateTime	-	-	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:110-113
+contains_val	Float	-	-	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:110-113
+contains_val	InlineTable	-	-	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:110-113
+contains_val	Int	-	-	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:110-113
+contains_val	Nil	-	-	yes	SIGSEGV, exit 139 (kill -11); no handler runs	value_ops.nim:110-113
+contains_val	String	-	-	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:110-113
+contains_val	Table	-	-	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:110-113
+contains_val	Tables	-	-	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:110-113
+copy	Array	-	-	yes	OK: RESULT copykind=Array 	value_ops.nim:153-196
+copy	Bool	-	-	yes	OK: RESULT copykind=Bool 	value_ops.nim:153-196
+copy	DateTime	-	-	yes	OK: RESULT copykind=DateTime 	value_ops.nim:153-196
+copy	Float	-	-	yes	OK: RESULT copykind=Float 	value_ops.nim:153-196
+copy	InlineTable	-	-	yes	OK: RESULT copykind=InlineTable 	value_ops.nim:153-196
+copy	Int	-	-	yes	OK: RESULT copykind=Int 	value_ops.nim:153-196
+copy	Nil	-	-	yes	SIGSEGV, exit 139 (kill -11); no handler runs	value_ops.nim:153-196
+copy	String	-	-	yes	OK: RESULT copykind=String 	value_ops.nim:153-196
+copy	Table	-	-	yes	OK: RESULT copykind=Table 	value_ops.nim:153-196
+copy	Tables	-	-	yes	OK: RESULT copykind=Tables 	value_ops.nim:153-196
+curly_get	Array	-	a	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_get	Array	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_get	Bool	-	a	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_get	Bool	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_get	DateTime	-	a	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_get	DateTime	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_get	Float	-	a	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_get	Float	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_get	InlineTable	-	a	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_get	InlineTable	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_get	Int	-	a	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_get	Int	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_get	Nil	-	a	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_get	Nil	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_get	String	-	a	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_get	String	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_get	Table	-	a	yes	OK: RESULT isNil=false 	value_ops.nim:120-128
+curly_get	Table	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_get	Tables	-	a	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_get	Tables	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:120-128
+curly_set	Array	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:136-144
+curly_set	Array	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:136-144
+curly_set	Bool	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:136-144
+curly_set	Bool	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:136-144
+curly_set	DateTime	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:136-144
+curly_set	DateTime	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:136-144
+curly_set	Float	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:136-144
+curly_set	Float	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:136-144
+curly_set	InlineTable	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:136-144
+curly_set	InlineTable	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:136-144
+curly_set	Int	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:136-144
+curly_set	Int	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:136-144
+curly_set	Nil	-	a	yes	SIGSEGV, exit 139 (kill -11); no handler runs	value_ops.nim:136-144
+curly_set	Nil	-	absent	yes	SIGSEGV, exit 139 (kill -11); no handler runs	value_ops.nim:136-144
+curly_set	String	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:136-144
+curly_set	String	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:136-144
+curly_set	Table	-	a	yes	OK: RESULT curlyset-completed 	value_ops.nim:136-144
+curly_set	Table	-	absent	yes	OK: RESULT curlyset-completed 	value_ops.nim:136-144
+curly_set	Tables	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:136-144
+curly_set	Tables	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:136-144
+delete	Array	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:146-151
+delete	Array	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:146-151
+delete	Bool	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:146-151
+delete	Bool	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:146-151
+delete	DateTime	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:146-151
+delete	DateTime	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:146-151
+delete	Float	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:146-151
+delete	Float	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:146-151
+delete	InlineTable	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:146-151
+delete	InlineTable	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:146-151
+delete	Int	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:146-151
+delete	Int	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:146-151
+delete	Nil	-	a	yes	SIGSEGV, exit 139 (kill -11); no handler runs	value_ops.nim:146-151
+delete	Nil	-	absent	yes	SIGSEGV, exit 139 (kill -11); no handler runs	value_ops.nim:146-151
+delete	String	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:146-151
+delete	String	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:146-151
+delete	Table	-	a	yes	OK: RESULT delete-completed 	value_ops.nim:146-151
+delete	Table	-	absent	yes	IndexDefect raised, exit 1	value_ops.nim:146-151
+delete	Tables	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:146-151
+delete	Tables	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:146-151
+get_typed	Array	int	a	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	Array	int	absent	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	Bool	int	a	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	Bool	int	absent	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	DateTime	int	a	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	DateTime	int	absent	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	Float	int	a	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	Float	int	absent	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	InlineTable	int	a	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	InlineTable	int	absent	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	Int	int	a	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	Int	int	absent	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	Nil	int	a	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	Nil	int	absent	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	String	int	a	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	String	int	absent	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	Table	int	a	yes (T=int here; per-T verdicts: innervalue.tsv)	OK: RESULT v=7 	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	Table	int	absent	yes (T=int here; per-T verdicts: innervalue.tsv)	SIGSEGV, exit 139 (kill -11); no handler runs	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	Tables	int	a	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:86-87 (+innerValue:14-68)
+get_typed	Tables	int	absent	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:86-87 (+innerValue:14-68)
+get_untyped	Array	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:79-84
+get_untyped	Array	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:79-84
+get_untyped	Bool	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:79-84
+get_untyped	Bool	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:79-84
+get_untyped	DateTime	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:79-84
+get_untyped	DateTime	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:79-84
+get_untyped	Float	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:79-84
+get_untyped	Float	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:79-84
+get_untyped	InlineTable	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:79-84
+get_untyped	InlineTable	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:79-84
+get_untyped	Int	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:79-84
+get_untyped	Int	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:79-84
+get_untyped	Nil	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:79-84
+get_untyped	Nil	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:79-84
+get_untyped	String	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:79-84
+get_untyped	String	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:79-84
+get_untyped	Table	-	a	yes	OK: RESULT isNil=false 	value_ops.nim:79-84
+get_untyped	Table	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:79-84
+get_untyped	Tables	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:79-84
+get_untyped	Tables	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:79-84
+getordefault	Array	-	a	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+getordefault	Array	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+getordefault	Bool	-	a	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+getordefault	Bool	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+getordefault	DateTime	-	a	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+getordefault	DateTime	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+getordefault	Float	-	a	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+getordefault	Float	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+getordefault	InlineTable	-	a	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+getordefault	InlineTable	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+getordefault	Int	-	a	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+getordefault	Int	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+getordefault	Nil	-	a	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+getordefault	Nil	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+getordefault	String	-	a	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+getordefault	String	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+getordefault	Table	-	a	yes	OK: RESULT isNil=false 	value_ops.nim:130-134
+getordefault	Table	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+getordefault	Tables	-	a	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+getordefault	Tables	-	absent	yes	OK: RESULT isNil=true 	value_ops.nim:130-134
+haskey	Array	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:100-103
+haskey	Array	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:100-103
+haskey	Bool	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:100-103
+haskey	Bool	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:100-103
+haskey	DateTime	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:100-103
+haskey	DateTime	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:100-103
+haskey	Float	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:100-103
+haskey	Float	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:100-103
+haskey	InlineTable	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:100-103
+haskey	InlineTable	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:100-103
+haskey	Int	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:100-103
+haskey	Int	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:100-103
+haskey	Nil	-	a	yes	SIGSEGV, exit 139 (kill -11); no handler runs	value_ops.nim:100-103
+haskey	Nil	-	absent	yes	SIGSEGV, exit 139 (kill -11); no handler runs	value_ops.nim:100-103
+haskey	String	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:100-103
+haskey	String	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:100-103
+haskey	Table	-	a	yes	OK: RESULT hasKey=true 	value_ops.nim:100-103
+haskey	Table	-	absent	yes	OK: RESULT hasKey=false 	value_ops.nim:100-103
+haskey	Tables	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:100-103
+haskey	Tables	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:100-103
+idx_typed	Array	int	1	yes (T=int here; per-T verdicts: innervalue.tsv)	OK: RESULT v=8 	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	Array	int	99	yes (T=int here; per-T verdicts: innervalue.tsv)	IndexDefect raised, exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	Bool	int	1	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	Bool	int	99	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	DateTime	int	1	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	DateTime	int	99	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	Float	int	1	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	Float	int	99	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	InlineTable	int	1	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	InlineTable	int	99	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	Int	int	1	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	Int	int	99	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	Nil	int	1	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	Nil	int	99	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	String	int	1	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	String	int	99	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	Table	int	1	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	Table	int	99	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	Tables	int	1	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_typed	Tables	int	99	yes (T=int here; per-T verdicts: innervalue.tsv)	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:97-98 (+innerValue:14-68)
+idx_untyped	Array	-	1	yes	OK: RESULT isNil=false 	value_ops.nim:89-95
+idx_untyped	Array	-	99	yes	IndexDefect raised, exit 1	value_ops.nim:89-95
+idx_untyped	Bool	-	1	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:89-95
+idx_untyped	Bool	-	99	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:89-95
+idx_untyped	DateTime	-	1	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:89-95
+idx_untyped	DateTime	-	99	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:89-95
+idx_untyped	Float	-	1	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:89-95
+idx_untyped	Float	-	99	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:89-95
+idx_untyped	InlineTable	-	1	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:89-95
+idx_untyped	InlineTable	-	99	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:89-95
+idx_untyped	Int	-	1	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:89-95
+idx_untyped	Int	-	99	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:89-95
+idx_untyped	Nil	-	1	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:89-95
+idx_untyped	Nil	-	99	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:89-95
+idx_untyped	String	-	1	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:89-95
+idx_untyped	String	-	99	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:89-95
+idx_untyped	Table	-	1	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:89-95
+idx_untyped	Table	-	99	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:89-95
+idx_untyped	Tables	-	1	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:89-95
+idx_untyped	Tables	-	99	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:89-95
+len	Array	-	-	yes	OK: RESULT len=3 	value_ops.nim:70-77
+len	Bool	-	-	yes	OK: RESULT len=0 	value_ops.nim:70-77
+len	DateTime	-	-	yes	OK: RESULT len=0 	value_ops.nim:70-77
+len	Float	-	-	yes	OK: RESULT len=0 	value_ops.nim:70-77
+len	InlineTable	-	-	yes	OK: RESULT len=0 	value_ops.nim:70-77
+len	Int	-	-	yes	OK: RESULT len=0 	value_ops.nim:70-77
+len	Nil	-	-	yes	SIGSEGV, exit 139 (kill -11); no handler runs	value_ops.nim:70-77
+len	String	-	-	yes	OK: RESULT len=0 	value_ops.nim:70-77
+len	Table	-	-	yes	OK: RESULT len=1 	value_ops.nim:70-77
+len	Tables	-	-	yes	OK: RESULT len=0 	value_ops.nim:70-77
+set	Array	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:115-118
+set	Array	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:115-118
+set	Bool	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:115-118
+set	Bool	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:115-118
+set	DateTime	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:115-118
+set	DateTime	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:115-118
+set	Float	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:115-118
+set	Float	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:115-118
+set	InlineTable	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:115-118
+set	InlineTable	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:115-118
+set	Int	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:115-118
+set	Int	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:115-118
+set	Nil	-	a	yes	SIGSEGV, exit 139 (kill -11); no handler runs	value_ops.nim:115-118
+set	Nil	-	absent	yes	SIGSEGV, exit 139 (kill -11); no handler runs	value_ops.nim:115-118
+set	String	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:115-118
+set	String	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:115-118
+set	Table	-	a	yes	OK: RESULT set-completed 	value_ops.nim:115-118
+set	Table	-	absent	yes	OK: RESULT set-completed 	value_ops.nim:115-118
+set	Tables	-	a	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:115-118
+set	Tables	-	absent	yes	AssertionDefect raised (catchable in principle), exit 1	value_ops.nim:115-118

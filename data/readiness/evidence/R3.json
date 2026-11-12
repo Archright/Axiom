@@ -1,0 +1,216 @@
+{
+ "schemaVersion": 1,
+ "invariantId": "R3",
+ "repoIdentity": {
+  "head": "381f08e4f8acda102928095413709a7c7042df61",
+  "branch": "fix/r3-wp5-certified-control",
+  "workingTreeClean": true,
+  "treeDigest": "7dd8b7dfcc31b7bbf2f08d542bdd51bc4dd315bdd5ae72295630ec8b7263d675"
+ },
+ "toolchain": {
+  "nim": "Nim Compiler Version 2.2.10 [Linux: amd64]",
+  "z3": "Z3 version 4.13.3 - 64 bit",
+  "lean": "Lean (version 4.33.0, x86_64-unknown-linux-gnu, commit d8b18978322de05a8f3dba51ef03cf5461676c17, Release)"
+ },
+ "collection": {
+  "collector": "tools/ci/wp5_relocation_measure.nim",
+  "method": "automated",
+  "generatedAt": "2026-10-19T08:50:48Z",
+  "freshUntil": "2026-11-18T17:50:48Z"
+ },
+ "observations": [
+  {
+   "key": "reportDeterminismWarmState",
+   "value": true,
+   "scope": "runtime",
+   "subject": "./bin/ax report --json run twice consecutively \u2014 byte-identical stdout (sha256 436ade3522dd6329aaa1ada3a2069d4c38b3b63d3edac981c02ff0d04d1b7a56 both), exit 0 both"
+  },
+  {
+   "key": "reportExitCode",
+   "value": 0,
+   "scope": "surface",
+   "subject": "./bin/ax report --json exits 0 at this head (H1 audit recorded 1 in verification-failure state; exit semantics drifted \u2014 recorded honestly, see INC-R3-002)"
+  },
+  {
+   "key": "reportIsProjection",
+   "value": true,
+   "scope": "surface",
+   "subject": "report emits axiom.report.v1 JSON projection incl. runtimeMeta (hotspotElapsedMs, totalWallTimeMs) \u2014 state-sensitive fields live in the projection, not the canonical identity"
+  },
+  {
+   "key": "canonicalResultLocatedInCertificate",
+   "value": true,
+   "scope": "artifact",
+   "subject": "canonical result carried by certificate identityDigest/inputHash; report is a projection"
+  },
+  {
+   "key": "certIdentityDigest",
+   "value": "191f288293089c06a8dd7e39df09c6ebd91daf492fee300b6e4bedba4777fb2b",
+   "scope": "artifact",
+   "subject": "build/certificates/657f1afd\u2026.json identityDigest \u2014 non-empty; provenance .certificateDigest identical"
+  },
+  {
+   "key": "certFileStableHash",
+   "value": "8c1e92ea515eefbdf2901eae8098d45ef882c09de3092e9578b34c2a7e58eedd",
+   "scope": "artifact",
+   "subject": "cert raw-file sha256, hashed twice, identical"
+  },
+  {
+   "key": "canonicalProjectionHashEqual",
+   "value": true,
+   "scope": "artifact",
+   "subject": "ax report --canonical-digest run twice: 5a5bc9473b8671382a54eb462985e9ee5bfe89a40a30cf02da0fe23cc2d2103e both runs (canonical projection SSOT canonical_projection.nim)"
+  },
+  {
+   "key": "canonicalInputHash",
+   "value": "sha256:b67a3b09c23d03eaa9bf1fbde6e969bee58fe7eac6f48d43defb4384b05483f8",
+   "scope": "artifact",
+   "subject": "cert 657f1afd\u2026 inputHash (module+scope canonical input digest)"
+  },
+  {
+   "key": "configHash",
+   "value": "1c27b74604cde596810de317c0faf0af4976a502364aef1c4302c7f8534454c6",
+   "scope": "config",
+   "subject": "report executionIdentity.executionConfigDigest \u2014 identical across both report runs"
+  },
+  {
+   "key": "solverIdentity",
+   "value": "z3_4.13.3",
+   "scope": "toolchain",
+   "subject": "cert toolchainIdentity.z3=4.13.3 + solverInvocation{engine:z3, version:4.13.3}; vendored z3"
+  },
+  {
+   "key": "cachePolicy",
+   "value": ".axiom/proof_cache/<source_sha>_<target_sha>/manifest.json",
+   "scope": "cache",
+   "subject": "src/core/proof/proof_cache.nim:49-62 \u2014 proofCacheDir='.axiom/proof_cache', key = sha256(sourceContent & compilerVersion & z3Hash & flags) split sourceSha_targetSha; no timestamps in key; wp5 relocation runs use cold (fresh AXIOM_STATE_DIR per run)"
+  },
+  {
+   "key": "canonicalExecutionFingerprint",
+   "value": "0059031ee6912266d56bf7a4f3ea12e6f89280a675a9693521d64ac19b10ff91",
+   "scope": "execution-contract",
+   "subject": "sha256('nim=2.2.10|z3=4.13.3|lean=4.33.0|buildSourceHash=702801473998028402|scopeHash=1c27b74604cde596810de317c0faf0af4976a502364aef1c4302c7f8534454c6') \u2014 buildSourceHash from src/generated/build_env.nim, scopeHash=executionConfigDigest"
+  },
+  {
+   "key": "environmentControlled",
+   "value": true,
+   "scope": "env",
+   "subject": "toolchain pinned (nim 2.2.10, z3 4.13.3 vendored, lean via elan leanprover/lean4:v4.33.0); R7 A/B prove logs byte-identical (24d0e59e\u2026)"
+  },
+  {
+   "key": "pathIndependentProjectionEqual",
+   "value": true,
+   "scope": "runtime",
+   "subject": "same logical subject at two physical roots (distinct AXIOM_STATE_DIR), cold cache policy"
+  },
+  {
+   "key": "subjectRunProjectionHashEqual",
+   "value": true,
+   "scope": "runtime",
+   "subject": "two cold subject-scoped prove runs of the same subject root"
+  }
+ ],
+ "incidents": [
+  {
+   "id": "INC-R3-001",
+   "severity": "info",
+   "summary": "Relocation invariance measurement fails closed \u2014 wp5 negative control did NOT flip",
+   "detail": "tools/ci/wp5_relocation_measure.nim ran 4 times at this head; every run aborted exit 4: 'negative control did NOT flip the digest (false_post digest == 19660a8eaf3f743762de25f861eacd22fcbfe8970b8ef3ed876ba2fb4043a716)'. The canonical projection digest is not sensitive to the falsified-postcondition mutation of the probe subject, so the harness (by design) refuses to mint pathIndependentProjectionEqual / subjectRunProjectionHashEqual evidence. Both keys honestly ABSENT here \u2192 evaluator judges R3 UNKNOWN (fail-closed, never silent PASS). Raw logs: /tmp/wp5_run4.log; workdirs /tmp/axiom_wp5_relocation_*/.",
+   "resolution": "Resolved by fix commit 381f08e4f8ac (branch fix/r3-wp5-certified-control): the probe subject was outside the certified-subset wire set (if-expression body = ckIfExpr, rejected in any shape; doc-comment contract parsed by no extractor), so positive and false-post both collapsed to the same NO_ELIGIBLE_OBLIGATION projection. Replaced with the certified-subset subjectProximity (early-return ckIfStmt + non-constant division) whose contract rides the {.axiom: [...]} pragma channel; workdir moved under the repo (gitignored tmp/) so the subject-binding seal measures a resolvable git identity. Measured at two different outer AXIOM_STATE_DIR roots (/tmp/axiom_wp5_outer_a, /tmp/axiom_wp5_outer_b), both exit 0, workingTreeClean=true: digests A=B=A2=commentOnly=0a46b3a282add165\u2026, false_post=6c6b2347f30ef218 (control flips; positive verified by the canonical Lean path, false post lean_kernel_rejected with byte-identical body). pathIndependentProjectionEqual=true, subjectRunProjectionHashEqual=true emitted by the tool itself."
+  },
+  {
+   "id": "INC-R3-002",
+   "severity": "info",
+   "summary": "report --json exits 0 at this head (H1 audit recorded 1)",
+   "detail": "Exit semantics drifted: report --json now exits 0 with verifiedRatio=0.0. The determinism property (byte-identical repeat output) still holds; exit-code mapping is recorded under R5."
+  }
+ ],
+ "sources": [
+  {
+   "file": "src/cli/report_cli.nim",
+   "symbol": "--canonical-digest CLI surface",
+   "sha256": "live",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76",
+   "lines": "331,402,415"
+  },
+  {
+   "file": "src/core/proof/proof_cache.nim",
+   "symbol": "proofCacheDir/computeCacheKey",
+   "sha256": "live",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76",
+   "lines": "49-62"
+  },
+  {
+   "file": "build/certificates/657f1afdb25f09ee3f7e0ed8a900cb423cf31ac70a4e79700f02e8085cc21551.json",
+   "symbol": "normalizeMaxWorkers v3 certificate (inputHash/identityDigest/toolchainIdentity)",
+   "sha256": "8c1e92ea515eefbdf2901eae8098d45ef882c09de3092e9578b34c2a7e58eedd",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76"
+  },
+  {
+   "file": "tmp/r3_wp5_relocation.json",
+   "symbol": "wp5 attempt 1 output (not written \u2014 exit 4)",
+   "sha256": "absent-fail-closed",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76"
+  },
+  {
+   "file": "tools/ci/wp5_relocation_measure.nim",
+   "symbol": "relocation measurement instrument",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76"
+  },
+  {
+   "file": "tmp/r3_report1.out",
+   "symbol": "report --json run1 stdout",
+   "sha256": "436ade3522dd6329aaa1ada3a2069d4c38b3b63d3edac981c02ff0d04d1b7a56",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76"
+  }
+ ],
+ "commands": [
+  {
+   "cmd": "timeout 120 ./bin/ax report --json > tmp/r3_report1.out 2> tmp/r3_report1.err",
+   "exitCode": 0,
+   "outputDigest": "sha256:436ade3522dd6329aaa1ada3a2069d4c38b3b63d3edac981c02ff0d04d1b7a56"
+  },
+  {
+   "cmd": "timeout 120 ./bin/ax report --json > tmp/r3_report2.out 2> tmp/r3_report2.err",
+   "exitCode": 0,
+   "outputDigest": "sha256:436ade3522dd6329aaa1ada3a2069d4c38b3b63d3edac981c02ff0d04d1b7a56"
+  },
+  {
+   "cmd": "./bin/ax report --canonical-digest",
+   "exitCode": 0,
+   "outputDigest": "sha256:5a5bc9473b8671382a54eb462985e9ee5bfe89a40a30cf02da0fe23cc2d2103e"
+  },
+  {
+   "cmd": "./bin/ax report --canonical-digest (run2)",
+   "exitCode": 0,
+   "outputDigest": "sha256:5a5bc9473b8671382a54eb462985e9ee5bfe89a40a30cf02da0fe23cc2d2103e"
+  },
+  {
+   "cmd": "bin/wp5_relocation_measure --repo-root . --out tmp/r3_wp5_relocation.json",
+   "exitCode": 4,
+   "note": "fail-closed: negative control did NOT flip (false_post digest == 19660a8eaf3f743762de25f861eacd22fcbfe8970b8ef3ed876ba2fb4043a716); no evidence minted"
+  },
+  {
+   "cmd": "bin/wp5_relocation_measure --repo-root . --out tmp/r3_wp5_relocation_run2.json",
+   "exitCode": 4
+  },
+  {
+   "cmd": "bin/wp5_relocation_measure --repo-root . --out tmp/r3_wp5_relocation_run3.json",
+   "exitCode": 4
+  },
+  {
+   "cmd": "bin/wp5_relocation_measure --repo-root . --out tmp/r3_wp5_run4.json",
+   "exitCode": 4
+  },
+  {
+   "cmd": "bin/wp5_relocation_measure --repo-root . --out /tmp/r3_final_rootA_outer.json (outer AXIOM_STATE_DIR=/tmp/axiom_wp5_outer_a)",
+   "exitCode": 0,
+   "outputDigest": "sha256:7f9d4bee479f66c58ca29402078c49861b01f40c07efac2b5952129647b93c3a"
+  },
+  {
+   "cmd": "bin/wp5_relocation_measure --repo-root . --out /tmp/r3_final_rootB_outer.json (outer AXIOM_STATE_DIR=/tmp/axiom_wp5_outer_b)",
+   "exitCode": 0,
+   "outputDigest": "sha256:bf6759d948c118c30ed92295c3a9de06323a93c9ff418f68674b4f0068637afc"
+  }
+ ]
+}

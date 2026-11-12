@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "description": "Data-driven import boundary enforcement. config.nims reads this via gorge().",
+  "rules": [
+    {
+      "source": "src/gate/",
+      "forbidden": ["core/io/"],
+      "must_use_hub": ["core/axiom_pragmas", "core/results", "core/domain_types"]
+    },
+    {
+      "source": "src/engine/",
+      "forbidden": ["core/io/"],
+      "must_use_hub": ["core/axiom_pragmas", "core/results"]
+    },
+    {
+      "source": "src/cli/",
+      "forbidden": [],
+      "must_use_hub": ["core/axiom_pragmas", "core/results"]
+    },
+    {
+      "source": "src/verification/",
+      "forbidden": [],
+      "must_use_hub": ["core/axiom_pragmas", "core/results"]
+    }
+  ]
+}

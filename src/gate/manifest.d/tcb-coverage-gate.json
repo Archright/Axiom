@@ -1,0 +1,17 @@
+{
+  "id": "tcb-coverage-gate",
+  "name": "Axiom TCB coverage gate",
+  "layer": "functional",
+  "entry": "tools/ci/tcb_coverage_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/core/trusted/",
+  "passFilenames": false,
+  "weight": "medium",
+  "category": "theorem",
+  "argsTemplate": [
+    "$repoRoot"
+  ],
+  "severity": "warn"
+}

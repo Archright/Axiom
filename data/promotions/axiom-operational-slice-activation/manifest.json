@@ -1,0 +1,95 @@
+{
+ "schema": "axiom.promotion-manifest.v1",
+ "promotion": "axiom-operational-slice-activation",
+ "phase": "1-bootstrap",
+ "recordedAt": "2026-10-22T07:02:56Z",
+ "authority": {
+  "mergeAuthority": "GitHub (ruleset 20303214 merge queue — P12 delegation)",
+  "activationAuthority": "operator ruleset PUT (wintrover, org admin)",
+  "policySSOT": "config/policy/merge_admission.json v1.17.0"
+ },
+ "candidate": {
+  "pr": 1040,
+  "headSha": "eabd36339723617a35c97b8c3cef92d4d04fad59",
+  "mergeCommit": "0b2564b270d305ff497b129bfc84d06ba66fef3c",
+  "mergedAt": "2026-10-22T06:08:16Z",
+  "selfRunPullRequest": {
+   "id": 39729070462,
+   "conclusion": "success",
+   "note": "axiom-operational-slice job: prove [VERIFIED] -> cert verify --kernel PASS (lean re-executed, z3 unsat, leanchecker passed) -> G7 PASSED -> run-manifest emitted and uploaded (report verdict PASS/PASS, verified=1, SATISFIED/FRESH, cert certGreen dual-verified)"
+  },
+  "selfRunMergeGroup": {
+   "id": 39730216506,
+   "event": "merge_group",
+   "conclusion": "success",
+   "note": "same chain on the queue's merge group; report canonicalDigest b540c4f005fa33c7e843a0a18b1fb2a69c19c122543f16ce9f085820a9f8fda4 identical to the PR venue run"
+  }
+ },
+ "productionRun": {
+  "id": 39732087479,
+  "event": "push",
+  "conclusion": "success",
+  "headSha": "0b2564b270d305ff497b129bfc84d06ba66fef3c",
+  "note": "main landing execution immediately after the merge; head_sha == mergeCommit"
+ },
+ "probe": {
+  "pr": 1041,
+  "closedWithoutMerge": true,
+  "mutation": "src/core/orchestrator/orchestrator_api.nim normalizeMaxWorkers return 1 -> return 0 (violates declared postcondition result >= 1)",
+  "run": {
+   "id": 39734214059,
+   "event": "pull_request",
+   "conclusion": "failure",
+   "headSha": "07cb1e84c00c71477e7776c68dd743061e9a68c3"
+  },
+  "enforcementEvidence": {
+   "isRequired": true,
+   "mergeStateStatus": "BLOCKED",
+   "causalChain": "normalizeMaxWorkers psFail (counterexample found) -> unsatisfiedCount=1 => GateVerdict=FAIL -> make verify-contract-release-e2e-full Error 1 -> check FAILURE",
+   "secondaryDetection": "debt-registry-gate FAILURE + admission-check FAILURE (stale-cert mechanisms); bsec-integrity and generation-acceptance SUCCESS (attribution: the new check is a primary blocker)",
+   "localPreDetection": "pre-commit stale-cert gate detected the mutation before push"
+  }
+ },
+ "uniqueness": {
+  "workflowId": 392498537,
+  "workflowPath": ".github/workflows/axiom-operational-slice.yml",
+  "registryState": "active",
+  "verifiedAt": "2026-10-22T06:14:34Z",
+  "evidence": "sole job-name occurrence on origin/main; exactly 1 check-run named axiom-operational-slice per head SHA; platform-assigned workflow id 392498537, no registry collision"
+ },
+ "activation": {
+  "rulesetId": 20303214,
+  "method": "PUT /repos/Archright/Axiom/rulesets/20303214",
+  "executedAt": "2026-10-22T06:14:34Z",
+  "expectedChecks": [
+   "admission-check",
+   "bsec-integrity",
+   "debt-registry-gate",
+   "generation-acceptance",
+   "axiom-operational-slice"
+  ],
+  "readback": {
+   "provenance": "operator-promotion-adapter (org admin gh readback — job GITHUB_TOKEN cannot read this: MUST#8)",
+   "fetchedAt": "2026-10-22T06:14:34Z",
+   "actualChecks": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice"
+   ],
+   "integrationIds": {
+    "admission-check": 15368,
+    "bsec-integrity": 15368,
+    "debt-registry-gate": 15368,
+    "generation-acceptance": 15368,
+    "axiom-operational-slice": 15368
+   },
+   "enforcement": "active",
+   "otherRulesPreserved": ["deletion", "non_fast_forward", "pull_request", "required_status_checks", "merge_queue"],
+   "bypassActors": [],
+   "equal": true
+  }
+ },
+ "bootstrapClause": "ADR-0037 — the operational slice landed through the merge queue (PR #1040) BEFORE the operator ruleset PUT (operator-PUT-first ordering; the GPA L2 promotion-pending exception stays hardcoded to generation-acceptance). Activation preconditions: self-PR green (PR + merge_group), production run green on the merge commit, uniqueness verified, negative control blocked (FAILURE + isRequired=true + mergeStateStatus=BLOCKED, closed without merge). This policy-mirror PR is the rotation-path landing (trustSurface hit: TRUST_SURFACE_MODIFIED, manual merge lane)."
+}

@@ -1,0 +1,478 @@
+[
+  {
+    "a1StateClass": "Unknown",
+    "divisionCount": 2,
+    "expectedSieveDecision": "seRetry",
+    "functionName": "encode",
+    "hasDivision": true,
+    "hasIndex": true,
+    "hasLoop": true,
+    "hasRecursion": false,
+    "hasShift": true,
+    "indexCount": 13,
+    "intrinsicObligationKinds": [
+      {
+        "kind": "okSafetyDiv",
+        "rationale": "Division/modulo by symbolic operand(s): type, type. Division by a non-constant divisor requires a safety obligation to ensure the divisor is non-zero and the result fits the type."
+      },
+      {
+        "kind": "okSafetyIndex",
+        "rationale": "Indexing with symbolic operand(s): A: byte|char, next, next - 1, next, next - 1, next, next, next, next - 1, next, next - 1. Array/seq indexing with a non-constant index requires a safety obligation to ensure bounds safety."
+      }
+    ],
+    "loopCount": 1,
+    "modulePath": "stew/base10.nim",
+    "paramTypes": [
+      "typedesc[Base10]",
+      "SomeUnsignedInt",
+      "var openArray[A]",
+      "int8"
+    ],
+    "returnType": "Result[int8, cstring]",
+    "selectedHealingPatternIfReached": "has_loop → pkAddLoopInvariant",
+    "shiftCount": 2,
+    "signatureText": "func encode[A: byte|char](B: typedesc[Base10], value: SomeUnsignedInt,\n                          output: var openArray[A],\n                          length: int8): Result[int8, cstring] ="
+  },
+  {
+    "a1StateClass": "Unknown",
+    "divisionCount": 1,
+    "expectedSieveDecision": "seRetry",
+    "functionName": "decode",
+    "hasDivision": true,
+    "hasIndex": true,
+    "hasLoop": true,
+    "hasRecursion": false,
+    "hasShift": false,
+    "indexCount": 16,
+    "intrinsicObligationKinds": [
+      {
+        "kind": "okSafetyIndex",
+        "rationale": "Indexing with symbolic operand(s): byte, i, byte, i + j, cast[int8, i + j, j, byte, byte, i + j, cast[int8, i + j, j, byte. Array/seq indexing with a non-constant index requires a safety obligation to ensure bounds safety."
+      }
+    ],
+    "loopCount": 4,
+    "modulePath": "stew/base32.nim",
+    "paramTypes": [
+      "typedesc[Base32Types]",
+      "openArray[T]",
+      "var openArray[byte]",
+      "var int"
+    ],
+    "returnType": "Base32Status",
+    "selectedHealingPatternIfReached": "has_loop → pkAddLoopInvariant",
+    "shiftCount": 0,
+    "signatureText": "func decode*[T: byte|char](btype: typedesc[Base32Types], instr: openArray[T],\n             outbytes: var openArray[byte], outlen: var int): Base32Status ="
+  },
+  {
+    "a1StateClass": "Unknown",
+    "divisionCount": 0,
+    "expectedSieveDecision": "seRetry",
+    "functionName": "getBit",
+    "hasDivision": false,
+    "hasIndex": true,
+    "hasLoop": false,
+    "hasRecursion": true,
+    "hasShift": false,
+    "indexCount": 3,
+    "intrinsicObligationKinds": [
+      {
+        "kind": "okSafetyIndex",
+        "rationale": "Indexing with symbolic operand(s): byte, byteIndex pos, byte. Array/seq indexing with a non-constant index requires a safety obligation to ensure bounds safety."
+      }
+    ],
+    "loopCount": 0,
+    "modulePath": "stew/bitops2.nim",
+    "paramTypes": [
+      "openArray[byte]",
+      "Natural"
+    ],
+    "returnType": "bool {.inline.}",
+    "selectedHealingPatternIfReached": "has_recursion → pkAddDecreaseMeasure",
+    "shiftCount": 0,
+    "signatureText": "func getBit*(bytes: openArray[byte], pos: Natural): bool {.inline.} ="
+  },
+  {
+    "a1StateClass": "OrphanObligation",
+    "divisionCount": 2,
+    "expectedSieveDecision": "preSievedBlocked",
+    "functionName": "getBitsBE",
+    "hasDivision": true,
+    "hasIndex": true,
+    "hasLoop": false,
+    "hasRecursion": true,
+    "hasShift": true,
+    "indexCount": 4,
+    "intrinsicObligationKinds": [
+      {
+        "kind": "okSafetyDiv",
+        "rationale": "Division/modulo by symbolic operand(s): resultBits, resultBits. Division by a non-constant divisor requires a safety obligation to ensure the divisor is non-zero and the result fits the type."
+      },
+      {
+        "kind": "okSafetyIndex",
+        "rationale": "Indexing with symbolic operand(s): byte, ptr UncheckedArray[T, byte. Array/seq indexing with a non-constant index requires a safety obligation to ensure bounds safety."
+      },
+      {
+        "kind": "okSafetyShift",
+        "rationale": "Shift by symbolic operand(s): firstLimbUnusedBits, firstLimbUnusedBits. Bit shifting by a non-constant amount requires a safety obligation to ensure the shift amount is within the valid bit-width range."
+      }
+    ],
+    "loopCount": 0,
+    "modulePath": "stew/bitops2.nim",
+    "paramTypes": [
+      "openArray[byte]",
+      "HSlice",
+      "type[SomeUnsignedInt]"
+    ],
+    "returnType": "T",
+    "selectedHealingPatternIfReached": "none (pre-sieved at loop_driver.nim:900)",
+    "shiftCount": 5,
+    "signatureText": "func getBitsBE*(data: openArray[byte], slice: HSlice, T: type[SomeUnsignedInt]): T ="
+  },
+  {
+    "a1StateClass": "Unknown",
+    "divisionCount": 0,
+    "expectedSieveDecision": "seAdmit",
+    "functionName": "leadingZeros",
+    "hasDivision": false,
+    "hasIndex": false,
+    "hasLoop": false,
+    "hasRecursion": true,
+    "hasShift": false,
+    "indexCount": 0,
+    "intrinsicObligationKinds": [],
+    "loopCount": 0,
+    "modulePath": "stew/bitops2.nim",
+    "paramTypes": [
+      "SomeInteger"
+    ],
+    "returnType": "int {.inline.}",
+    "selectedHealingPatternIfReached": "has_recursion → pkAddDecreaseMeasure",
+    "shiftCount": 0,
+    "signatureText": "func leadingZeros*(x: SomeInteger): int {.inline.} ="
+  },
+  {
+    "a1StateClass": "Unknown",
+    "divisionCount": 0,
+    "expectedSieveDecision": "seAdmit",
+    "functionName": "nextPow2Nim",
+    "hasDivision": false,
+    "hasIndex": false,
+    "hasLoop": false,
+    "hasRecursion": true,
+    "hasShift": true,
+    "indexCount": 0,
+    "intrinsicObligationKinds": [],
+    "loopCount": 0,
+    "modulePath": "stew/bitops2.nim",
+    "paramTypes": [
+      "SomeUnsignedInt"
+    ],
+    "returnType": "SomeUnsignedInt",
+    "selectedHealingPatternIfReached": "has_recursion → pkAddDecreaseMeasure",
+    "shiftCount": 6,
+    "signatureText": "func nextPow2Nim(x: SomeUnsignedInt): SomeUnsignedInt ="
+  },
+  {
+    "a1StateClass": "Unknown",
+    "divisionCount": 0,
+    "expectedSieveDecision": "seRetry",
+    "functionName": "rotateLeft",
+    "hasDivision": false,
+    "hasIndex": false,
+    "hasLoop": false,
+    "hasRecursion": false,
+    "hasShift": true,
+    "indexCount": 0,
+    "intrinsicObligationKinds": [
+      {
+        "kind": "okSafetyShift",
+        "rationale": "Shift by symbolic operand(s): amount. Bit shifting by a non-constant amount requires a safety obligation to ensure the shift amount is within the valid bit-width range."
+      }
+    ],
+    "loopCount": 0,
+    "modulePath": "stew/bitops2.nim",
+    "paramTypes": [
+      "SomeUnsignedInt",
+      "SomeInteger"
+    ],
+    "returnType": "SomeUnsignedInt {.inline.}",
+    "selectedHealingPatternIfReached": "structural_ast (no specific healing pattern; soft misses only)",
+    "shiftCount": 2,
+    "signatureText": "func rotateLeft*(v: SomeUnsignedInt, amount: SomeInteger):\n    SomeUnsignedInt {.inline.} ="
+  },
+  {
+    "a1StateClass": "Unknown",
+    "divisionCount": 0,
+    "expectedSieveDecision": "seRetry",
+    "functionName": "rotateRight",
+    "hasDivision": false,
+    "hasIndex": false,
+    "hasLoop": false,
+    "hasRecursion": false,
+    "hasShift": true,
+    "indexCount": 0,
+    "intrinsicObligationKinds": [
+      {
+        "kind": "okSafetyShift",
+        "rationale": "Shift by symbolic operand(s): amount, bit, bit. Bit shifting by a non-constant amount requires a safety obligation to ensure the shift amount is within the valid bit-width range."
+      }
+    ],
+    "loopCount": 0,
+    "modulePath": "stew/bitops2.nim",
+    "paramTypes": [
+      "SomeUnsignedInt",
+      "SomeInteger"
+    ],
+    "returnType": "SomeUnsignedInt {.inline.}",
+    "selectedHealingPatternIfReached": "structural_ast (no specific healing pattern; soft misses only)",
+    "shiftCount": 5,
+    "signatureText": "func rotateRight*(v: SomeUnsignedInt, amount: SomeInteger):\n    SomeUnsignedInt {.inline.} ="
+  },
+  {
+    "a1StateClass": "Unknown",
+    "divisionCount": 0,
+    "expectedSieveDecision": "seRetry",
+    "functionName": "setBit",
+    "hasDivision": false,
+    "hasIndex": false,
+    "hasLoop": false,
+    "hasRecursion": true,
+    "hasShift": true,
+    "indexCount": 0,
+    "intrinsicObligationKinds": [
+      {
+        "kind": "okSafetyShift",
+        "rationale": "Shift by symbolic operand(s): bit. Bit shifting by a non-constant amount requires a safety obligation to ensure the shift amount is within the valid bit-width range."
+      }
+    ],
+    "loopCount": 0,
+    "modulePath": "stew/bitops2.nim",
+    "paramTypes": [
+      "var BitIndexable",
+      "Natural"
+    ],
+    "returnType": "",
+    "selectedHealingPatternIfReached": "has_recursion → pkAddDecreaseMeasure",
+    "shiftCount": 1,
+    "signatureText": "func setBit*(x: var BitIndexable, bit: Natural) {.inline.} ="
+  },
+  {
+    "a1StateClass": "Unknown",
+    "divisionCount": 0,
+    "expectedSieveDecision": "seAdmit",
+    "functionName": "trailingZeros",
+    "hasDivision": false,
+    "hasIndex": false,
+    "hasLoop": false,
+    "hasRecursion": true,
+    "hasShift": false,
+    "indexCount": 0,
+    "intrinsicObligationKinds": [],
+    "loopCount": 0,
+    "modulePath": "stew/bitops2.nim",
+    "paramTypes": [
+      "SomeUnsignedInt"
+    ],
+    "returnType": "int {.inline.}",
+    "selectedHealingPatternIfReached": "has_recursion → pkAddDecreaseMeasure",
+    "shiftCount": 0,
+    "signatureText": "func trailingZeros*(x: SomeUnsignedInt): int {.inline.} ="
+  },
+  {
+    "a1StateClass": "Unknown",
+    "divisionCount": 0,
+    "expectedSieveDecision": "seRetry",
+    "functionName": "compareArrays",
+    "hasDivision": false,
+    "hasIndex": true,
+    "hasLoop": true,
+    "hasRecursion": true,
+    "hasShift": false,
+    "indexCount": 5,
+    "intrinsicObligationKinds": [
+      {
+        "kind": "okSafetyIndex",
+        "rationale": "Indexing with symbolic operand(s): i, i, i. Array/seq indexing with a non-constant index requires a safety obligation to ensure bounds safety."
+      }
+    ],
+    "loopCount": 2,
+    "modulePath": "stew/bitseqs.nim",
+    "paramTypes": [
+      "a",
+      "openArray[T]"
+    ],
+    "returnType": "int",
+    "selectedHealingPatternIfReached": "has_loop → pkAddLoopInvariant",
+    "shiftCount": 0,
+    "signatureText": "func compareArrays[T](a, b: openArray[T]): int ="
+  },
+  {
+    "a1StateClass": "Unknown",
+    "divisionCount": 0,
+    "expectedSieveDecision": "seRetry",
+    "functionName": "loadLEBytes",
+    "hasDivision": false,
+    "hasIndex": true,
+    "hasLoop": true,
+    "hasRecursion": true,
+    "hasShift": true,
+    "indexCount": 1,
+    "intrinsicObligationKinds": [
+      {
+        "kind": "okSafetyIndex",
+        "rationale": "Indexing with symbolic operand(s): byte. Array/seq indexing with a non-constant index requires a safety obligation to ensure bounds safety."
+      },
+      {
+        "kind": "okSafetyShift",
+        "rationale": "Shift by symbolic operand(s): shift. Bit shifting by a non-constant amount requires a safety obligation to ensure the shift amount is within the valid bit-width range."
+      }
+    ],
+    "loopCount": 1,
+    "modulePath": "stew/bitseqs.nim",
+    "paramTypes": [
+      "type",
+      "openArray[byte]"
+    ],
+    "returnType": "WordType",
+    "selectedHealingPatternIfReached": "has_loop → pkAddLoopInvariant",
+    "shiftCount": 1,
+    "signatureText": "func loadLEBytes(WordType: type, bytes: openArray[byte]): WordType ="
+  },
+  {
+    "a1StateClass": "Unknown",
+    "divisionCount": 2,
+    "expectedSieveDecision": "seRetry",
+    "functionName": "storeLEBytes",
+    "hasDivision": true,
+    "hasIndex": true,
+    "hasLoop": true,
+    "hasRecursion": true,
+    "hasShift": true,
+    "indexCount": 5,
+    "intrinsicObligationKinds": [
+      {
+        "kind": "okSafetyDiv",
+        "rationale": "Division/modulo by symbolic operand(s): sizeof, sizeof. Division by a non-constant divisor requires a safety obligation to ensure the divisor is non-zero and the result fits the type."
+      },
+      {
+        "kind": "okSafetyIndex",
+        "rationale": "Indexing with symbolic operand(s): byte, i, ptr WordType, ptr WordType. Array/seq indexing with a non-constant index requires a safety obligation to ensure bounds safety."
+      },
+      {
+        "kind": "okSafetyShift",
+        "rationale": "Shift by symbolic operand(s): shift, markerPos. Bit shifting by a non-constant amount requires a safety obligation to ensure the shift amount is within the valid bit-width range."
+      }
+    ],
+    "loopCount": 2,
+    "modulePath": "stew/bitseqs.nim",
+    "paramTypes": [
+      "SomeUnsignedInt",
+      "var openArray[byte]"
+    ],
+    "returnType": "",
+    "selectedHealingPatternIfReached": "has_loop → pkAddLoopInvariant",
+    "shiftCount": 2,
+    "signatureText": "func storeLEBytes(value: SomeUnsignedInt, dst: var openArray[byte]) ="
+  },
+  {
+    "a1StateClass": "Unknown",
+    "divisionCount": 0,
+    "expectedSieveDecision": "seRetry",
+    "functionName": "fromBytesBE",
+    "hasDivision": false,
+    "hasIndex": true,
+    "hasLoop": false,
+    "hasRecursion": false,
+    "hasShift": false,
+    "indexCount": 2,
+    "intrinsicObligationKinds": [
+      {
+        "kind": "okSafetyIndex",
+        "rationale": "Indexing with symbolic operand(s): byte. Array/seq indexing with a non-constant index requires a safety obligation to ensure bounds safety."
+      }
+    ],
+    "loopCount": 0,
+    "modulePath": "stew/endians2.nim",
+    "paramTypes": [
+      "typedesc[SomeEndianInt]",
+      "openArray[byte]"
+    ],
+    "returnType": "T {.inline.}",
+    "selectedHealingPatternIfReached": "structural_ast (no specific healing pattern; soft misses only)",
+    "shiftCount": 0,
+    "signatureText": "func fromBytesBE*(\n    T: typedesc[SomeEndianInt],\n    x: openArray[byte]): T {.inline.} ="
+  },
+  {
+    "a1StateClass": "Unknown",
+    "divisionCount": 0,
+    "expectedSieveDecision": "seAdmit",
+    "functionName": "swapBytesNim",
+    "hasDivision": false,
+    "hasIndex": false,
+    "hasLoop": false,
+    "hasRecursion": true,
+    "hasShift": false,
+    "indexCount": 0,
+    "intrinsicObligationKinds": [],
+    "loopCount": 0,
+    "modulePath": "stew/endians2.nim",
+    "paramTypes": [
+      "uint8"
+    ],
+    "returnType": "uint8",
+    "selectedHealingPatternIfReached": "has_recursion → pkAddDecreaseMeasure",
+    "shiftCount": 0,
+    "signatureText": "func swapBytesNim(x: uint8): uint8 = x"
+  },
+  {
+    "a1StateClass": "Unknown",
+    "divisionCount": 0,
+    "expectedSieveDecision": "seAdmit",
+    "functionName": "toBytesBE",
+    "hasDivision": false,
+    "hasIndex": false,
+    "hasLoop": false,
+    "hasRecursion": false,
+    "hasShift": false,
+    "indexCount": 0,
+    "intrinsicObligationKinds": [],
+    "loopCount": 0,
+    "modulePath": "stew/endians2.nim",
+    "paramTypes": [
+      "SomeEndianInt"
+    ],
+    "returnType": "array[sizeof(x), byte] {.inline.}",
+    "selectedHealingPatternIfReached": "none",
+    "shiftCount": 0,
+    "signatureText": "func toBytesBE*(x: SomeEndianInt):\n    array[sizeof(x), byte] {.inline.} ="
+  },
+  {
+    "a1StateClass": "Unknown",
+    "divisionCount": 0,
+    "expectedSieveDecision": "seRetry",
+    "functionName": "scan",
+    "hasDivision": false,
+    "hasIndex": true,
+    "hasLoop": false,
+    "hasRecursion": false,
+    "hasShift": false,
+    "indexCount": 1,
+    "intrinsicObligationKinds": [
+      {
+        "kind": "okSafetyIndex",
+        "rationale": "Indexing with symbolic operand(s): byte. Array/seq indexing with a non-constant index requires a safety obligation to ensure bounds safety."
+      }
+    ],
+    "loopCount": 0,
+    "modulePath": "stew/leb128.nim",
+    "paramTypes": [
+      "type SomeUnsignedInt",
+      "openArray[byte]",
+      "type Leb128"
+    ],
+    "returnType": "int8 {.noinit.}",
+    "selectedHealingPatternIfReached": "structural_ast (no specific healing pattern; soft misses only)",
+    "shiftCount": 0,
+    "signatureText": "func scan*(\n    I: type SomeUnsignedInt,\n    x: openArray[byte],\n    T: type Leb128): int8 {.noinit.} ="
+  }
+]

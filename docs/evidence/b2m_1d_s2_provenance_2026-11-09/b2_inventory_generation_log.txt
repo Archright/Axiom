@@ -1,0 +1,32 @@
+# 출처: ~/.kimi-code/sessions/wd_axiom4_a9f6347fc418/session_a99ee6f7-5141-41af-a18c-ae24fd834b49/agents/agent-115/wire.jsonl
+# (B-2 Stage A — capsule inventory 생성 관측 원문, 2026-11-04. tool.result로 pair된 실행 로그)
+# 원본 정본 위치 /tmp/b2_progress.log·/tmp/b2_run1/ — 소실. 아래는 세션 wire 보존분 원문 그대로.
+
+[2026-11-04T16:15:53+09:00] [stage3] inventory raw 생성 시작 (~11G 해싱)
+
+real	0m36.143s
+user	0m11.870s
+sys	0m8.455s
+raw_gen_rc=0
+nul_count=180040 newline_split_count=180040 (동일하면 개행 포함 파일명 없음)
+180040 /tmp/b2_inventory_raw.txt
+[2026-11-04T16:16:30+09:00] [stage3] inventory raw 생성 종료
+[2026-11-04T16:16:30+09:00] [stage3] inventory.json 작성 시작
+inventory_file_count=180040
+inventory_total_bytes=11353320247
+per_dir inputs: files=153082 bytes=7759453116
+per_dir toolchain: files=17925 bytes=3137937793
+per_dir cache: files=9031 bytes=455355304
+per_dir provenance: files=2 bytes=574034
+subtree inputs/leanproj/deps/aeneas-lean/ : 1d5bd051b63b3af0e75810de372e8bdf36ab62354878bc9e8145a7f50175f567
+subtree inputs/leanproj/.lake/packages/ : 11509afcd86ac32000ffe4c9d77143175f801a69bafdd2534513d27c4c885f9d
+subtree cache/ : bd84699134ce5115d85245871af2f8eb15deccb754774e7f8c4f9a4eae3babff
+sha256(inventory.json)=742ec2c0f78c3490621d42c67e6f88698f5588422f95b1fcf612a5af9f1d781e
+inventory_build_rc=0
+[2026-11-04T16:16:30+09:00] [stage3] inventory.json 작성 종료
+
+# 참고: 동일 subtree digest 3종은 커밋된 정본 docs/evidence/b2_hermetic_proof_capsule_2026-11-04.md
+# §5.2 generation.json stage_b_inputs(172-174행)에도 기록:
+#   deps_aeneas_lean_tree_digest: 1d5bd051b63b3af0e75810de372e8bdf36ab62354878bc9e8145a7f50175f567
+#   lake_packages_tree_digest:    11509afcd86ac32000ffe4c9d77143175f801a69bafdd2534513d27c4c885f9d
+#   cache_inventory_digest:       bd84699134ce5115d85245871af2f8eb15deccb754774e7f8c4f9a4eae3babff

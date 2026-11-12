@@ -1,0 +1,197 @@
+# diagnostic-authority — M7 위임 실행 워크플로 (진단 execution의 Actions 위임).
+#
+# 정본 계약: docs/spec/diagnostic_execution_delegation.md (§3 워크플로 계약).
+# watch identity("감시 identity는 merge 상태를 바꿀 수 없다")의 구조적 성립을 위해
+# 진단 credential은 로컬로 가져오지 않는다 — 대신 진단 EXECUTION 자체를 보호된
+# GitHub Actions 환경으로 위임한다:
+#   * 단기 발급 installation 토큰을 job 안에서 민팅한다
+#     (pinned actions/create-github-app-token — release-ship.yml과 동일 핀).
+#   * explicit permission-* + repositories 입력 — 기본 상속 없음(최소 권한 상한,
+#     진단 App 설치 상한의 per-issuance reduction).
+#   * 진단 명령은 같은 job에서 토큰과 함께 실행 — 토큰은 러너 밖으로 나가지 않고
+#     (actions/create-github-app-token의 post step이 job 종료 시 revoke), 로컬
+#     프로세스는 발급 루트(App PEM)에 접근할 수 없다.
+# 토큰은 log/artifact에 기록되지 않는다(add-mask + 출력 금지 + artifact 업로드 없음).
+#
+# 실효 스코프 증거 규칙 (§3): 액션 outputs는 token/installation-id/app-slug뿐이고
+# 발급 응답의 permissions/repositories/expires_at은 노출하지 않는다(실측 —
+# action.yml@bcd2ba4). 요청측 지정만으로는 실효 스코프 입증이 아니므로, 응답
+# 관측이 없는 한 실효 스코프는 UNKNOWN으로 기록한다 — "지정했다"를 "검증됐다"로
+# 서술하지 않는다(AGENTS.md §2.2 · merge_authority_integrity.md M6 UNKNOWN 어휘).
+#
+# 인간 게이트(§2 등록 스펙): 진단 App 생성은 GitHub에 API가 없다 — 인간이 먼저
+# App을 등록하고 protected environment `diagnostic-authority`에
+# DIAG_APP_ID / DIAG_APP_PRIVATE_KEY를 예치한다(release-authority 선례 —
+# release-ship.yml:193,219-225). 시크릿 부재 시 이 워크플로는 아래 step에서
+# 실패한다 — 그게 fail-closed다(조용한 우회 없음).
+#
+# 무권한 증명: 최상위 permissions = contents: read 단일, external action은 커밋
+# SHA 고정(repo 정책 sha_pinning_required), workflow_dispatch 단일 트리거
+# (push/pull_request 발화 없음 — 관측 대상 아님, observation.yml 선례).
+# canary drill은 진단 App 권한 상한 안의 WRITE 시도로(merge-affecting), TEST
+# 대상에만 수행된다 — 운영 main 병합·운영 ruleset PUT은 스크립트가 구조적으로
+# 거부한다(tools/ci/m7_canary_drill.sh §guards).
+
+name: diagnostic-authority
+
+on:
+  workflow_dispatch:
+    inputs:
+      diag_pr:
+        description: 'PR number for PR-bound diagnostics (landing_observe.sh + ax merge --dry-run). Empty = repo-scope diagnostics only.'
+        required: false
+        default: ''
+      diag_main_sha:
+        description: 'AXIOM_MAIN_SHA (event-frozen base anchor) for ax merge --dry-run. Required when diag_pr is set.'
+        required: false
+        default: ''
+      run_canary:
+        description: 'Run the canary deny drill (merge-affecting WRITE attempts against the TEST target — denial is the expected outcome).'
+        required: false
+        default: 'false'
+      canary_pr:
+        description: 'TEST PR number for the canary deny drill (must be a test PR — never a production landing).'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  delegated-diagnostics:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    # protected environment: required reviewers — the human gate that releases
+    # the environment-scoped secrets (DIAG_APP_ID / DIAG_APP_PRIVATE_KEY).
+    environment: diagnostic-authority
+    steps:
+      # ── fail-closed registration gate — 시크릿 부재 = 명확한 메시지로 종료 ──
+      # 진단 App 미등록 상태에서는 이 job이 실패한다. 이 실패가 등록 게이트의
+      # 집행점이다(조용한 폴백·우회 경로 없음 — release-ship.yml 선례).
+      - name: "[gate] Fail closed when diagnostic App secrets are absent (human registration gate)"
+        env:
+          DIAG_APP_ID: ${{ secrets.DIAG_APP_ID }}
+          DIAG_APP_PRIVATE_KEY_PRESENT: ${{ secrets.DIAG_APP_PRIVATE_KEY != '' }}
+        run: |
+          set -euo pipefail
+          if [ -z "$DIAG_APP_ID" ] || [ "$DIAG_APP_PRIVATE_KEY_PRESENT" != "true" ]; then
+            echo "::error::diagnostic-authority: DIAG_APP_ID / DIAG_APP_PRIVATE_KEY absent from environment 'diagnostic-authority' — the diagnostic App is not registered yet (human gate, docs/spec/diagnostic_execution_delegation.md §2). Failing closed: no diagnostic credential, no delegated execution."
+            exit 1
+          fi
+          echo "registration gate: DIAG_APP_ID present (id never printed), DIAG_APP_PRIVATE_KEY present"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # ── in-job minting — explicit ceiling, never default inheritance ──
+      - name: "Mint diagnostic installation token (in-job, same-job consumption, pinned action)"
+        id: diag-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ secrets.DIAG_APP_ID }}
+          private-key: ${{ secrets.DIAG_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          # 진단 App 설치 권한 상한(read-only 5개)의 per-issuance reduction:
+          # 요청 자체가 상한과 동일한 최소 집합만 요구한다 — 미지정 권한의 기본
+          # 상속을 만들지 않는다(docs/spec/diagnostic_execution_delegation.md §2·§3).
+          permission-contents: read
+          permission-metadata: read
+          permission-merge-queues: read
+          permission-pull-requests: read
+          permission-checks: read
+
+      - name: "[mask] Register the token as masked (defense in depth — never print it)"
+        env:
+          DIAG_TOKEN: ${{ steps.diag-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          echo "::add-mask::$DIAG_TOKEN"
+          echo "token masked; it is consumed in-job only and revoked by the action's post step"
+
+      # ── issuance evidence — response 관측이 없는 축은 UNKNOWN으로 기록한다 ──
+      - name: "[evidence] Record issuance evidence (token never printed)"
+        env:
+          DIAG_TOKEN: ${{ steps.diag-token.outputs.token }}
+          DIAG_INSTALLATION_ID: ${{ steps.diag-token.outputs.installation-id }}
+          DIAG_APP_SLUG: ${{ steps.diag-token.outputs.app-slug }}
+        run: |
+          set -euo pipefail
+          {
+            echo "## issuance evidence"
+            echo "- action outputs observed: installation-id=${DIAG_INSTALLATION_ID:-UNKNOWN} app-slug=${DIAG_APP_SLUG:-UNKNOWN}"
+            echo "- requested per-issuance reduction: contents=read metadata=read merge-queues=read pull-requests=read checks=read; repositories=${{ github.event.repository.name }}"
+            echo "- effective scope (response permissions/repositories/expires_at): UNKNOWN — the pinned action does not expose the issuance response (action.yml@bcd2ba4 outputs = token/installation-id/app-slug only); request-side specification is NOT verified scope (docs/spec/diagnostic_execution_delegation.md §3)"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # ── 툴체인 — repository_surface.yml과 동일 공급 경로(pinned Nim 2.2.10) ──
+      - uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          skip-nimble-install: 'true'
+          cache-save-enabled: 'false'
+          cache-build-source: ${{ github.sha }}
+
+      # repository_surface.yml 선례 — surface_guard 빌드의 integrity manifest
+      # bootstrap이 nimble 비-stdlib 패키지(checksums/sha2)를 요구한다. 캐시 writer
+      # 부재 시 신선 러너 컴파일 실패 → 동일 단일 패키지 핀 설치.
+      - name: "Provision nimble packages (diagnostic tool compiles)"
+        run: nimble install -y checksums@0.2.2
+
+      - name: "[diagnose] Delegated diagnostics (credential-source enforced — AXIOM_DIAG_STRICT=1)"
+        env:
+          AXIOM_DIAG_TOKEN: ${{ steps.diag-token.outputs.token }}
+          AXIOM_DIAG_STRICT: '1'
+          DIAG_PR: ${{ inputs.diag_pr }}
+          DIAG_MAIN_SHA: ${{ inputs.diag_main_sha }}
+        run: |
+          set -euo pipefail
+          SUMMARY="$GITHUB_STEP_SUMMARY"
+          {
+            echo "## delegated diagnostics"
+            echo "- runner credential posture: no gh-auth keyring on the runner — the only credential is the in-job minted AXIOM_DIAG_TOKEN (strict mode refuses any other source)"
+          } >> "$SUMMARY"
+
+          echo "== merge_ruleset_drift_monitor (ruleset drift — GET-only) =="
+          nim c --hints:off -o:bin/diag_ruleset_monitor tools/merge_ruleset_drift_monitor.nim
+          bin/diag_ruleset_monitor; RC=$?
+          echo "- merge_ruleset_drift_monitor: exit=$RC (0=EXPECTED holds, 1=DRIFT/fail-closed)" >> "$SUMMARY"
+
+          echo "== observe_fault_streak (queue observation aggregate — GET-only) =="
+          nim c --hints:off -o:bin/diag_fault_streak tools/ci/observe_fault_streak.nim
+          bin/diag_fault_streak; RC=$?
+          echo "- observe_fault_streak: exit=$RC (2=OBSERVER-FAULT fail-closed)" >> "$SUMMARY"
+
+          if [ -n "$DIAG_PR" ]; then
+            echo "== landing_observe.sh (authority-first single-pass — GET-only) =="
+            bash tools/ci/landing_observe.sh "$DIAG_PR"; RC=$?
+            echo "- landing_observe PR#$DIAG_PR: exit=$RC (0=TERMINAL_SUCCESS 1=TERMINAL_FAIL 2=UNKNOWN 3=PROGRESSING)" >> "$SUMMARY"
+          else
+            echo "- landing_observe: SKIPPED (diag_pr not provided)"
+          fi
+
+          if [ -n "$DIAG_PR" ] && [ -n "$DIAG_MAIN_SHA" ]; then
+            echo "== ax merge --dry-run (admission predicate diagnostic) =="
+            nim c -d:release --hints:off -o:bin/ax src/cli/main.nim
+            AXIOM_MAIN_SHA="$DIAG_MAIN_SHA" bin/ax merge "$DIAG_PR" --dry-run; RC=$?
+            echo "- ax merge --dry-run PR#$DIAG_PR: exit=$RC (0=GO/TRUST_SURFACE_MODIFIED, 1=deny)" >> "$SUMMARY"
+          else
+            echo "- ax merge --dry-run: SKIPPED (diag_pr/diag_main_sha not provided)"
+          fi
+
+      # ── canary deny training — 같은 토큰으로 merge-affecting WRITE 시도 → 거부 캡처 ──
+      # TEST 대상만. 운영 main 병합·운영 ruleset(20303214) PUT은 스크립트가 거부한다.
+      # [2026-11-07 매핑 — v1.19.0] 20303214은 구 저장소 id — 현행 Trust Anchor는
+      # 26702792(동적 발견 없이 상수, drills 전 가드 검증 포함: m7_canary_drill.sh).
+      - name: "[canary] Deny drill — merge-affecting writes MUST be denied (TEST targets only)"
+        if: ${{ inputs.run_canary == 'true' }}
+        env:
+          AXIOM_DIAG_TOKEN: ${{ steps.diag-token.outputs.token }}
+          CANARY_PR: ${{ inputs.canary_pr }}
+        run: |
+          set -euo pipefail
+          if [ -z "$CANARY_PR" ]; then
+            echo "::error::run_canary=true but canary_pr is empty — refusing to run the drill without an explicit TEST target (fail-closed)"
+            exit 2
+          fi
+          bash tools/ci/m7_canary_drill.sh --canary-pr "$CANARY_PR" | tee -a "$GITHUB_STEP_SUMMARY"

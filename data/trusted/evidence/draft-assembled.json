@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "axiom.attestation.evidence.v1",
+  "subjectId": "0000000000000000000000000000000000000000000000000000000000000000",
+  "prNumber": 449,
+  "prHeadSha": "ccbf226526c3eebd81591d31a4aaf14ab771c69b",
+  "leanSource": "theorem axiom_continuity_probe_sanity (x : Int) (r : Int)\n    (h1 : r = if x * 2 > 100 then 0 else x * 2)\n    (h2 : x * 2 > 100) :\n    r = 0 := by\n  simp [h1, h2]\n",
+  "smtlib2": "(declare-const x Int)\n(declare-const r Int)\n(define-fun doubled () Int (* x 2))\n(assert (=> (> doubled 100) (= r 0)))\n(assert (=> (<= doubled 100) (= r doubled)))\n(assert (> doubled 100))\n(assert (= r doubled))\n(check-sat)\n",
+  "funcSource": "import core/trusted/layer_declaration\naxiomLayer \"infrastructure\"\n{.push raises: [].}\n\nfunc continuityProductionProbe*(x: int): int =\n  let doubled = x * 2\n  if doubled > 100:\n    return 0\n  doubled\n\nfunc continuityProbeSaturation*(x: int): int =\n  if x < 0:\n    return 0\n  x\n",
+  "funcPath": "src/verification/continuity_probe.nim",
+  "funcName": "continuityProductionProbe",
+  "policyDigest": "f30b193528d99cba80f704d8f03b6821316f8456e8412801c2e080367485606f",
+  "scopeDigest": "7a4cd3eb0e85bcee3a8e454760421bc77c83199abe943944010ad9941ed3d630",
+  "envDigest": "d7ecd4c96550022e4f19058cb7258c872e9c2725b7fe49213b57bcb69ff3b5ec",
+  "toolchainIdentity": "nim-2.2.10|lean-4.33.0|z3-4.13.3"
+}

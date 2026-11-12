@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "invariantId": "R1",
+  "repoIdentity": {
+    "head": "ba773d0631b5757525b16d8fd62e220492e98e76",
+    "branch": "chore/r2-r8-snapshot-regen",
+    "workingTreeClean": true,
+    "treeDigest": "5a6f99db4cd26f6a5d365e29c60b378f52bc11b04126efe05757c76ee0f80bae"
+  },
+  "toolchain": {
+    "nim": "2.2.10",
+    "z3": "4.13.3",
+    "lean": "leanprover/lean4:v4.33.0"
+  },
+  "collection": {
+    "collector": "tools/collect_evidence_probe.nim",
+    "method": "automated",
+    "generatedAt": "2026-10-13T09:08:36Z",
+    "freshUntil": "2026-11-12T09:08:36Z"
+  },
+  "observations": [
+    {
+      "key": "documentedCommand",
+      "value": [
+        "ax prove",
+        "ax report",
+        "ax cert verify"
+      ],
+      "scope": "doc",
+      "subject": "README.md"
+    },
+    {
+      "key": "commandExists",
+      "value": true,
+      "scope": "surface",
+      "subject": "ax prove"
+    },
+    {
+      "key": "commandExists",
+      "value": true,
+      "scope": "surface",
+      "subject": "ax report"
+    },
+    {
+      "key": "commandExists",
+      "value": true,
+      "scope": "surface",
+      "subject": "ax cert verify"
+    },
+    {
+      "key": "promiseOutputExists",
+      "value": false,
+      "scope": "artifact",
+      "subject": "json-report: ax report --json top-level schemaVersion"
+    },
+    {
+      "key": "promiseOutputExists",
+      "value": false,
+      "scope": "artifact",
+      "subject": "v3 certificate artifact under build/certificates/"
+    }
+  ],
+  "incidents": [
+    {
+      "id": "R1-OBS-001",
+      "severity": "info",
+      "summary": "ax report --json exited 3 (verification-failure state; JSON still emitted on stdout)"
+    }
+  ],
+  "sources": [
+    {
+      "file": "README.md",
+      "sha256": "37b80219e61632f1554052f85049d7ddd8ba68d7672248e0cff4f49ebe9c06ba",
+      "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76",
+      "symbol": "documented run steps"
+    },
+    {
+      "file": "docs/spec/productization_contract.md",
+      "sha256": "d1df0fc077a2822e48dce01c88ae82831d8d69863674143aa92cf28dd8bc5247",
+      "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76",
+      "symbol": "R1 contract"
+    }
+  ],
+  "commands": [
+    {
+      "cmd": "bin/ax --version",
+      "exitCode": 0,
+      "stdoutDigest": "3265de1af71871dffe53bc98d1315c346f6799e915b40025e97849911aed1338",
+      "stderrDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputDigest": "3265de1af71871dffe53bc98d1315c346f6799e915b40025e97849911aed1338"
+    },
+    {
+      "cmd": "bin/ax help",
+      "exitCode": 0,
+      "stdoutDigest": "50b886fac8b3b894cb01f8c12eda1a8529f6a8443023a501ce0a696ef48f6f25",
+      "stderrDigest": "9155aeadb4595dbc25f0742693b2874ca06a77516b4736a5305a7fc68d7a5705",
+      "outputDigest": "d16ee33f3f027e3bae2f8ef1bbfc3feb641cf93eb20abc3058182ee2a3e68194"
+    },
+    {
+      "cmd": "bin/ax prove --help",
+      "exitCode": 0,
+      "stdoutDigest": "50b886fac8b3b894cb01f8c12eda1a8529f6a8443023a501ce0a696ef48f6f25",
+      "stderrDigest": "9155aeadb4595dbc25f0742693b2874ca06a77516b4736a5305a7fc68d7a5705",
+      "outputDigest": "d16ee33f3f027e3bae2f8ef1bbfc3feb641cf93eb20abc3058182ee2a3e68194"
+    },
+    {
+      "cmd": "bin/ax report --help",
+      "exitCode": 0,
+      "stdoutDigest": "50b886fac8b3b894cb01f8c12eda1a8529f6a8443023a501ce0a696ef48f6f25",
+      "stderrDigest": "9155aeadb4595dbc25f0742693b2874ca06a77516b4736a5305a7fc68d7a5705",
+      "outputDigest": "d16ee33f3f027e3bae2f8ef1bbfc3feb641cf93eb20abc3058182ee2a3e68194"
+    },
+    {
+      "cmd": "bin/ax report --json",
+      "exitCode": 3,
+      "stdoutDigest": "f9ef40dadf2c56aed483a2dcd5b032f879cd8c1efefaf9026913c5931164d1d3",
+      "stderrDigest": "db1b2a33fe965c2d319e3ee2e82c5902673ed8cb81f190b640f6b8f9d46748e2",
+      "outputDigest": "2135fdc48ef3776a48ac743714c625633186c38b5fcd6dba103e4aa922429306"
+    }
+  ]
+}

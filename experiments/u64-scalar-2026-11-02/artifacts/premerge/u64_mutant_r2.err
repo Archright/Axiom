@@ -1,0 +1,7 @@
+[INFO] ledger_side_ref: phase=ledger-request url=https://api.github.com/repos/Archright/Axiom/git/ref/heads/axiom/evidence-cas elapsed_ms=376 status=200 OK
+[INFO] ledger_side_ref: phase=ledger-request url=https://api.github.com/repos/Archright/Axiom/git/commits/81fb8705a00d2185ac344d16935d7cae119bfe07 elapsed_ms=274 outcome=ok
+[INFO] ledger_side_ref: phase=ledger-request url=https://api.github.com/repos/Archright/Axiom/git/trees/27ee29657d5b34cbd0390be6df9e98db7b0a44ee?recursive=1 elapsed_ms=524 outcome=ok
+[AXIOM][rust-lane] charon pinned='0.1.281 (798016509139eb51f0d764645f76d068d34ba5f6)' measured='0.1.281 (798016509139eb51f0d764645f76d068d34ba5f6)' ok=true
+[AXIOM][rust-lane] ledger transport armed (live); repo=Archright/Axiom
+[AXIOM][rust-lane] axiom_u64_probe::u64_seven_mutant → unknown (stage=kernel): spec declined by kernel; counterexample unconfirmed (cvUnresolved precedent, ir_pipeline_runner.nim:1450-1458): canonicalLeanKernelCheck: exit code 1: /tmp/axiom_kc_bb72db4641b0924a73185b01badcc87206f6f708ff8c07e59f09b8478690c3e6.lean:8:2: error: omega could not prove the goal: | a possible counterexample may satisfy the constraints | a ≥ 0 | where | a := _x
+[AXIOM][rust-lane] done: verified=0/1 failed=0 unknown=1 error=0

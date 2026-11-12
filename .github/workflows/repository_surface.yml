@@ -1,0 +1,75 @@
+# repository-surface — Product Surface 판정 관측 전용 check (required check 아님;
+# merge authority 변경 없음). 판정 정책은 PR의 정책이 아니라 BASE_SHA(main 쪽)의
+# 정책을 사용한다 — self-modifying loophole 차단. 부트스트랩: base에 정책이 없는
+# 최초 rollout PR은 POLICY_MISSING FAIL이 예상 동작이며 merge 가능(필수 체크 아님).
+# axiom-ci 러너 풀에서 실행(GitHub 호스팅 러너 과금 한도와 무관 — 관측
+# 가용성은 러너 플릿 가용성에만 의존). Nim 2.2.10은 setup-axiom-toolchain 액션이
+# PATH에 주입(호스트 시스템 PATH에 없음 — 16샤드 관례와 동일한 공급 경로).
+# 버전 단언은 grep이 마지막 명령이라 nim 부재 시 반드시 실패한다(fail-closed).
+# authority-first Phase6 probe: trusted definition change path
+#
+# PR 자동 관측이 복원되었다(2026-09-22): pull_request(main) 트리거로 발화된
+# repository-surface 판정이 관측된다. 이 job은 조언적 관측(advvisory)이며 required
+# check가 아니다 — FAIL 관측은 PR에 남지만 merge를 닫지 않는다. merge authority는
+# GitHub ruleset(CODEOWNERS + required checks + merge queue)이고, 로컬 pre-push
+# 게이트(Makefile: check-repository-surface ← push-admissibility)도 우회 가능한
+# preflight일 뿐 집행점이 아니다.
+name: repository-surface
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repository-surface-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  repository-surface:
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      # Restore-only cache reader (no save post-step) — no cache-write races;
+      # nimble install은 액션 차원에서 skip하고, guard 빌드가 필요로 하는
+      # 유일한 nimble 의존(checksums)만 아래 전용 스텝에서 핀 설치한다.
+      - uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          skip-nimble-install: 'true'
+          cache-save-enabled: 'false'
+          cache-build-source: ${{ github.sha }}
+
+      - name: Verify pinned Nim 2.2.10 (fail-closed)
+        run: nim --version | grep -F '2.2.10'
+
+      - name: Resolve BASE_SHA (merge-base with main)
+        run: |
+          BASE_SHA=$(git merge-base origin/main HEAD)
+          echo "BASE_SHA=$BASE_SHA" >> "$GITHUB_ENV"
+          echo "BASE_SHA=$BASE_SHA"
+
+      - name: Extract base policy (base-policy binding)
+        run: git show "$BASE_SHA:config/repository_surface.json" > /tmp/base_policy.json
+
+      - name: Provision nimble packages (surface guard)
+        # surface_guard 빌드의 integrity manifest bootstrap이
+        # tools/feature_manifest_generator.nim을 재컴파일하며, 이 파일은 nimble
+        # 패키지 checksums/sha2(비-stdlib)를 import한다. 캐시 writer 부재 시
+        # 신선 러너에 패키지가 없어 컴파일 실패 → 단일 패키지를 핀 설치
+        # (config/paths.nims injectAxiomDependencies가 ~/.nimble/pkgs2에서
+        # checksums-* 디렉터리를 자동 path 주입).
+        run: nimble install -y checksums@0.2.2
+
+      - name: Build surface guard
+        run: mkdir -p build && nim c --hints:off -d:release --nimcache:.nimcache_surface_guard -o:build/surface_guard tools/surface_guard.nim
+
+      - name: Classify PR diff (BASE_SHA...HEAD)
+        run: |
+          git diff --name-status "$BASE_SHA...HEAD" | tee /tmp/changes.name-status
+          build/surface_guard --policy /tmp/base_policy.json --diff /tmp/changes.name-status

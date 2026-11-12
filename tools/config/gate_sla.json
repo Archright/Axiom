@@ -1,0 +1,126 @@
+{
+  "default_timeout_sec": 120,
+  "commit_default_timeout_sec": 5,
+  "commit_buffer_sec": 0,
+  "gates": {
+    "asset-hygiene-gate": {
+      "timeout_sec": 120
+    },
+    "binary-artifact-gate": {
+      "timeout_sec": 120
+    },
+    "binary-freshness-gate": {
+      "timeout_sec": 120
+    },
+    "cli-build": {
+      "timeout_sec": 30
+    },
+    "core-invariant-gate": {
+      "timeout_sec": 60
+    },
+    "coverage-ratchet-gate": {
+      "timeout_sec": 120
+    },
+    "debt-integrity-gate": {
+      "timeout_sec": 120
+    },
+    "delegation-enforcer": {
+      "timeout_sec": 120
+    },
+    "doc-completeness-gate": {
+      "timeout_sec": 120
+    },
+    "documentation-first-gate": {
+      "timeout_sec": 120
+    },
+    "external-cli-smoke": {
+      "timeout_sec": 120
+    },
+    "gate-self-check": {
+      "timeout_sec": 60
+    },
+    "gateway-test": {
+      "timeout_sec": 300,
+      "_note": "No telemetry data; preserving legacy SLA entry"
+    },
+    "golden-master-gate": {
+      "timeout_sec": 120
+    },
+    "hermetic-test-gate": {
+      "timeout_sec": 120
+    },
+    "hotspot-gate": {
+      "timeout_sec": 120
+    },
+    "immunity-gate": {
+      "timeout_sec": 300
+    },
+    "import-encapsulation-gate": {
+      "timeout_sec": 120
+    },
+    "integrity-test": {
+      "timeout_sec": 30
+    },
+    "integrity-workflow": {
+      "timeout_sec": 120
+    },
+    "intent-gate": {
+      "timeout_sec": 120
+    },
+    "language-ban-gate": {
+      "timeout_sec": 120
+    },
+    "logging-policy-gate": {
+      "timeout_sec": 120
+    },
+    "manifest-consistency-gate": {
+      "timeout_sec": 120
+    },
+    "mcp-tool-usage-gate": {
+      "timeout_sec": 120
+    },
+    "monotonic-whitelist-gate": {
+      "timeout_sec": 120
+    },
+    "nim-check": {
+      "timeout_sec": 30,
+      "_note": "No telemetry data; preserving legacy SLA entry"
+    },
+    "policy-validator": {
+      "timeout_sec": 120
+    },
+    "procedure-gate": {
+      "timeout_sec": 120
+    },
+    "proof-universe-lock-gate": {
+      "timeout_sec": 30,
+      "_note": "No telemetry data; preserving legacy SLA entry"
+    },
+    "quality-gate-runner": {
+      "timeout_sec": 120
+    },
+    "readiness-start-gate": {
+      "timeout_sec": 450,
+      "_note": "E2E vertical slice compile (~15s) + 3x prove/report replay (~190s) + readiness evaluator"
+    },
+    "reliability-gate": {
+      "timeout_sec": 120
+    },
+    "spec-binding-gate": {
+      "timeout_sec": 120
+    },
+    "spec-presence-gate": {
+      "timeout_sec": 60
+    },
+    "test-coverage-gate": {
+      "timeout_sec": 60
+    },
+    "unstaged-guard": {
+      "timeout_sec": 60
+    },
+    "verification-auditor": {
+      "timeout_sec": 120
+    }
+  },
+  "orchestrator_buffer_sec": 30
+}

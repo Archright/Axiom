@@ -1,0 +1,24 @@
+{
+  "description": "Scopes SKIPPED entirely by doc_path_validator.nim (DEBT#403). Entries in 'archived' cover retrospective/retired documents (historical refs, no longer active claims). Entries in 'skippedDocs' cover forward-plan scopes (e.g. docs/design/) whose normal function is to reference future file paths that do not yet exist — such refs are normative for design documents and must not be treated as stale. Both lists use the same glob/semantics as the whitelist (directory prefix with trailing '/', exact files, glob patterns).",
+  "archived": [
+    "docs/history/",
+    "docs/evidence/",
+    "docs/reports/",
+    "docs/audit/",
+    "docs/spec/gate_cgroup_isolation.md",
+    "docs/spec/z3_ffi_architecture.md",
+    "docs/spec/z3_static_linking.md",
+    "docs/spec/legacy_migration_roadmap.md",
+    "docs/spec/shadow_execution.md",
+    "docs/spec/pipeline_overhaul_retirement.md",
+    "docs/spec/architecture_v2.md",
+    "docs/spec/threadpool_migration.md",
+    "docs/spec/two_phase_verification.md",
+    "docs/DEBT_REGISTRY.md",
+    "docs/false-positives.md",
+    "docs/known-limitations.md"
+  ],
+  "skippedDocs": [
+    "docs/design/"
+  ]
+}

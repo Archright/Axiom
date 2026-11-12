@@ -1,0 +1,19 @@
+{
+  "id": "conflict-marker-gate",
+  "name": "Axiom conflict marker gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/conflict_marker_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/",
+  "passFilenames": true,
+  "weight": "medium",
+  "category": "rule",
+  "argsTemplate": [
+    "$repoRoot",
+    "$mode",
+    "$maxJobs"
+  ],
+  "severity": "error"
+}

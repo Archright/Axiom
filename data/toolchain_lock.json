@@ -1,0 +1,24 @@
+{
+  "description": "Toolchain hash lock for deterministic builds. Update when upgrading tools. NOTE (2026-08-31, ADR-0020 Phase 0): lean/lake were re-pinned DIRECTLY to the elan toolchain binaries (v4.33.0) instead of the ~/.local/bin symlinks — the symlinks resolve to elan dispatch shims whose bytes change on elan updates while the underlying toolchain is unchanged, which broke verification without any toolchain change.",
+  "locked_at": "2026-08-31T08:30:00.000Z",
+  "nim": {
+    "version": "Nim Compiler Version 2.2.10 [Linux: amd64]",
+    "binary_sha256": "d955005687bea4d3ca6c5813792789987405343a1e8b8c0a8b3a22b9c23936cf",
+    "path": "<user-home>/.choosenim/toolchains/nim-2.2.10/bin/nim"
+  },
+  "z3": {
+    "version": "Z3 version 4.13.3 - 64 bit",
+    "binary_sha256": "4c13bd5b2526453ba7f88ffd852bbaec80a8132638cbe60ed3463dbc98952711",
+    "path": "<user-home>/.local/bin/z3"
+  },
+  "lean": {
+    "version": "Lean (version 4.33.0, x86_64-unknown-linux-gnu, commit d8b18978322de05a8f3dba51ef03cf5461676c17, Release)",
+    "binary_sha256": "e8baaa71855a616dc351028f3ad2200051b0671f423a1696a100e809302d5550",
+    "path": "<user-home>/.elan/toolchains/leanprover--lean4---v4.33.0/bin/lean"
+  },
+  "lake": {
+    "version": "Lake version 5.0.0-src+d8b1897 (Lean version 4.33.0)",
+    "binary_sha256": "60330ab6f07dce20f3fa9ebb08e8b984ea9549eac172afeb15d9d2227060e2b3",
+    "path": "<user-home>/.elan/toolchains/leanprover--lean4---v4.33.0/bin/lake"
+  }
+}

@@ -1,0 +1,42 @@
+# callform/consumer_nph.txt — call-site evidence for consumer nph (arnetheduck/nph)
+# Sources: bsec/capdelta/capdelta.md (fresh-clone re-verification), bsec/link_b_consumer/ (C0-C12
+# byte-recorded), bsec/evidence/probes/probe_nph_profile.nim + raw log, and a recorded plan
+# reference (rocket-white-tiger-black-widow.md §반박②) that is NOT present in this repo
+# (establishing run; NOT re-proven there).
+
+consumer            = nph (https://github.com/arnetheduck/nph)
+consumer_commit     = 2cacf6cc28116e4046e0b67a13545af5c4e756bd
+                      (fresh GitHub clone re-verification at judgment/bundle time 2026-10-11;
+                       `--version` -> prerelease-0-g2cacf6c; local clone /tmp/bsec_consumer/nph)
+resolved_dep_commit = b5b387e6fb2a7cc75d54a269b07cc6218361bd46  (nim-toml-serialization, 2025-09-25)
+                      — from nph's installed dependency snapshot (nimbledeps/pkgs2, nimblemeta
+                      vcsRevision; pkgs2 install-dir hash for the same copy: 76ae1c2a).
+                      STABILITY WARNING: nph declares `requires ">= 0.2.18 & < 0.3.0"`; that range
+                      also matches 4aa8e2223649fc0837c490a4acfca7b8b1e756f9 (2026-09-11), where the
+                      default flavor DOES carry TomlHexEscape — see probe_head_profile (same
+                      "0.2.18" version string, different security behavior). The resolved commit is
+                      an observation about the snapshot, not a property of the declared range.
+call_form           = src/nph.nim:103 `Toml.loadFile(configFile, NphConfig)` — UN-KEYED typed
+                      decode of NphConfig{exclude, extend-exclude, include: seq[string];
+                      color: Option[bool]}; config default `.nph.toml` (src/nph.nim:320).
+                      CI wrapper: arnetheduck/nph-action@v1 runs `./nph .` on the PR checkout,
+                      then `git diff --exit-code` (action.yml :42-49, :58-64).
+flags               = none (no flags argument at the call site)
+flavor              = bare `Toml` symbol; AT THE RESOLVED DEP COMMIT b5b387e6 this flavor has
+                      NO v1.1.0 flag binding (format.nim does not exist there) -> runtimeFlags {}
+                      -> TomlHexEscape INACTIVE (dynamically confirmed: probe_nph_profile REJECTS
+                      \x45 and \x80 at this exact call form).
+
+# Structural facts underpinning the B-SEC-01 x nph verdict (all re-verified at 2cacf6cc):
+#  - src/nph.nim:429 `if file in explicitFiles or matchesFilters(...)` with :327/:334/:370
+#    populating explicitFiles for EVERY infile source -> matchesFilters NEVER evaluated ->
+#    exclude/extend-exclude/include are dead code; only `color` is live (--diff ANSI only).
+#  - C0-C12 (link_b_consumer/raw/): C1(dup exclude) == C2(valid) == C0(baseline) byte-identical;
+#    C3(dup color t+f) == C4(color=false); C5(dup color f+t) == C6(color=true) — last-wins both
+#    directions with NO third state; C7(dup+4 fields+`!!!`+[[attacker_table]] garbage) output
+#    byte-identical to C8(valid truncated); C10b(3 fields + `!!!`) -> Warning -> rejected
+#    (mechanism proof: trailing bytes ARE reached when a field is unfilled); C9 warning-path
+#    control fires; C10 == C11 == C12 in-place touched-file manifests identical.
+#  - Protection boundary: nph-action judges `git diff` of the attacker's OWN PR content;
+#    an attacker who can write .nph.toml can equally write .nim files; no CODEOWNERS
+#    (5 surveyed adopters + nph repo itself re-verified empty at 2cacf6cc).

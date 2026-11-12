@@ -1,0 +1,57 @@
+{
+  "schema": "bug-attribution-grounds-v1",
+  "specId": "SPEC-B36-COUT",
+  "subjectCommit": "1853f20bdfeda61331a0b7e02f7aace0e88a0dfe",
+  "moduleSha256": "b8a42a6ac6d1057fca0be079aac5750463729fdad771823f1be53b8723a5e0a8",
+  "requirementSourceStatus": "recordedDisclaiming",
+  "requirementSourceRefs": [
+    "docs/spec/nim_stew_base36_cout_contract.md §7 — docstring 'estimated' 면책 기록 ('NOT a claim that upstream promised an upper bound'; stew/base36.nim:58-59)",
+    "docs/spec/nim_stew_base36_cout_contract.md §1 — README/pinned RFC sizing 규범 부재 기록"
+  ],
+  "anomaly": {
+    "observationQuartet": {
+      "exactCommit": "1853f20bdfeda61331a0b7e02f7aace0e88a0dfe",
+      "exactInput": {
+        "s": "kzz",
+        "L": 3
+      },
+      "violationStatement": "decodedLength(3) = 1 < outlen = 2 (C_out 위반)",
+      "reproduction": {
+        "observedOutput": {
+          "status": "Success",
+          "outlen": 2,
+          "bytes": "05 0F"
+        },
+        "replayCommand": "nim c --hints:off --path:/tmp/b36slice/nim-stew -o:/tmp/b36slice/cout_probe_bin experiments/bug-verdict-e2e/cout_probe.nim && /tmp/b36slice/cout_probe_bin",
+        "toolchain": "Nim Compiler Version 2.2.10 [Linux: amd64]",
+        "hostPlatform": "linux-amd64",
+        "source": "docs/evidence/nim_stew_base36_cout_slice_2026-10-10.md — 링크 3 (K의 외부 관측: cmd + 출력, 주체 트리 외부 프로브)"
+      }
+    }
+  },
+  "confirmation": {
+    "grounds": {
+      "E1": {
+        "present": false,
+        "refs": []
+      },
+      "E2": {
+        "present": false,
+        "refs": []
+      },
+      "E3": {
+        "present": false,
+        "refs": []
+      }
+    }
+  },
+  "corroboration": {
+    "machineRef": {
+      "specId": "SPEC-B36-COUT",
+      "verdict": "vsDisproved",
+      "replayVerdict": "rvAgree"
+    },
+    "note": "corroboration ONLY — M 무효화 시 보강 가치만 감소하며 C-carried 재현 요건을 결코 충족하지 않는다 (glossary §2.4a; C는 자립)"
+  },
+  "recordDigest": "177e7d1ef4f46ea933b6bbb9d6fbce8084f36cf60763cfdabee3bc21040e7fa2"
+}

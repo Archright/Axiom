@@ -1,0 +1,199 @@
+[
+  {
+    "id": "M001",
+    "class": "build-config",
+    "classificationState": "classified",
+    "triggerFile": "Makefile",
+    "mutationDescription": "Makefile recipe mutation: append '# soundness-test' comment to a recipe line. Makefile is the CI pervasive invocation mechanism (contract §3.2).",
+    "expectedAffected": [
+      "W1",
+      "W2",
+      "W4",
+      "W5",
+      "W6",
+      "W7",
+      "W9"
+    ],
+    "expectedAffectedDerivation": "makefile-target: local-verify-static→W1 (Makefile:278), ci-bootstrap→W2 (Makefile:812), verify-contract→W4 (Makefile:421/446 ifeq fan-out), verify-all→W6 (Makefile:104). ci-unit-tests→W5, ci-gates→W7, ci-lake-build→W9 referenced CI-only Makefile targets deleted at CI=0 cutover (2026-09-20) — their W ids stay in expectedAffected per the Makefile pervasive-invocation over-approximation (contract §3.2).",
+    "declaredOracleRef": "makefile-target"
+  },
+  {
+    "id": "M002",
+    "class": "build-config",
+    "classificationState": "classified",
+    "triggerFile": "config.nims",
+    "mutationDescription": "config.nims mutation: append '# soundness-test' comment. config.nims is a build-configuration file consumed by ci-bootstrap; W3 depends_on_W2_output.",
+    "expectedAffected": [
+      "W2",
+      "W3"
+    ],
+    "expectedAffectedDerivation": "catalog: config.nims matches W2 pathPattern; W3 depends_on_W2_output (ci-bootstrap produces bin/ax which W3 tests). Conservative superset of minimal closure {W2}.",
+    "declaredOracleRef": "catalog"
+  },
+  {
+    "id": "M003",
+    "class": "build-config",
+    "classificationState": "classified",
+    "triggerFile": "axiom.nimble",
+    "mutationDescription": "axiom.nimble mutation: append '# soundness-test' comment. axiom.nimble defines the nimble package manifest consumed by ci-bootstrap; W3 depends_on_W2_output.",
+    "expectedAffected": [
+      "W2",
+      "W3"
+    ],
+    "expectedAffectedDerivation": "catalog: axiom.nimble matches W2 pathPattern; W3 depends_on_W2_output. Conservative superset of minimal closure {W2}.",
+    "declaredOracleRef": "catalog"
+  },
+  {
+    "id": "M004",
+    "class": "implementation",
+    "classificationState": "classified",
+    "triggerFile": "src/core/asset_collector.nim",
+    "mutationDescription": "Core implementation mutation: append '# soundness-test' comment to a core module. Changes implementation logic that downstream modules depend on.",
+    "expectedAffected": [
+      "W1",
+      "W2",
+      "W3",
+      "W4",
+      "W5",
+      "W6",
+      "W7",
+      "W8",
+      "W10",
+      "W11"
+    ],
+    "expectedAffectedDerivation": "catalog: src/core/asset_collector.nim matches W1,W2,W4,W5,W6,W7,W11 via pathPatterns (Step 1); semantic rules add W3 (depends_on_W2_output), W8 (gateway_binaries_compile_src), W10 (conservative over-approximation for src/ changes). Full closure per selector §7.",
+    "declaredOracleRef": "catalog"
+  },
+  {
+    "id": "M005",
+    "class": "implementation",
+    "classificationState": "classified",
+    "triggerFile": "src/core/ast_hash.nim",
+    "mutationDescription": "Core implementation mutation: append '# soundness-test' comment to a core AST-hash module. Changes hashing logic used across the core.",
+    "expectedAffected": [
+      "W1",
+      "W2",
+      "W3",
+      "W4",
+      "W5",
+      "W6",
+      "W7",
+      "W8",
+      "W10",
+      "W11"
+    ],
+    "expectedAffectedDerivation": "catalog: src/core/ast_hash.nim matches W1,W2,W4,W5,W6,W7,W11 via pathPatterns; semantic rules add W3,W8,W10 via src/core/ and src/ dependency closure.",
+    "declaredOracleRef": "catalog"
+  },
+  {
+    "id": "M006",
+    "class": "dependency-edge",
+    "classificationState": "classified",
+    "triggerFile": "src/core/ast_kernel.nim",
+    "mutationDescription": "Dependency-edge mutation: append '# soundness-test' comment to a core module imported by many downstream modules. Changes import-graph topology conservatively.",
+    "expectedAffected": [
+      "W1",
+      "W2",
+      "W4",
+      "W5",
+      "W6",
+      "W7",
+      "W11"
+    ],
+    "expectedAffectedDerivation": "dependency-edge: ast_kernel.nim is imported by multiple src/core/ modules; conservative closure via direct pathPattern matches (W1,W2,W4,W5,W6,W7,W11). Import-graph reachability only; W3,W8,W10 excluded because the edge-class oracle counts only direct dependency closure, not the broader semantic over-approximation.",
+    "declaredOracleRef": "catalog"
+  },
+  {
+    "id": "M007",
+    "class": "dependency-edge",
+    "classificationState": "classified",
+    "triggerFile": "src/core/debt/debt_events.nim",
+    "mutationDescription": "Dependency-edge mutation: append '# soundness-test' comment to a core debt module imported by downstream consumers. Changes import-graph edges.",
+    "expectedAffected": [
+      "W1",
+      "W2",
+      "W4",
+      "W5",
+      "W6",
+      "W7",
+      "W11"
+    ],
+    "expectedAffectedDerivation": "dependency-edge: debt_events.nim is imported by other src/core/ modules; conservative closure via direct pathPattern matches (W1,W2,W4,W5,W6,W7,W11). Import-graph reachability only.",
+    "declaredOracleRef": "catalog"
+  },
+  {
+    "id": "M008",
+    "class": "generated-artifact",
+    "classificationState": "classified",
+    "triggerFile": "src/generated/gate_registry.nim",
+    "mutationDescription": "Generated-artifact mutation: append '# soundness-test' comment to a generated gate-registry file. Generated code propagates to all compilation-dependent units.",
+    "expectedAffected": [
+      "W1",
+      "W2",
+      "W4",
+      "W5",
+      "W6",
+      "W7",
+      "W11"
+    ],
+    "expectedAffectedDerivation": "catalog: src/generated/gate_registry.nim matches W1,W4,W5,W6,W7,W11 via pathPatterns (src/generated/, src/, *.nim); plus W2 via src/generated/ Step-4 propagation (generated code affects compilation). Conservative superset of direct closure.",
+    "declaredOracleRef": "catalog"
+  },
+  {
+    "id": "M009",
+    "class": "generated-artifact",
+    "classificationState": "classified",
+    "triggerFile": "src/generated/manifest_registry.nim",
+    "mutationDescription": "Generated-artifact mutation: append '# soundness-test' comment to a generated manifest-registry file. Propagates to all compilation-dependent units.",
+    "expectedAffected": [
+      "W1",
+      "W2",
+      "W4",
+      "W5",
+      "W6",
+      "W7",
+      "W11"
+    ],
+    "expectedAffectedDerivation": "catalog: src/generated/manifest_registry.nim matches W1,W4,W5,W6,W7,W11 via pathPatterns; plus W2 via src/generated/ Step-4 propagation.",
+    "declaredOracleRef": "catalog"
+  },
+  {
+    "id": "M010",
+    "class": "contract-document",
+    "classificationState": "classified",
+    "triggerFile": "docs/spec/productization_contract.md",
+    "mutationDescription": "Contract-document mutation: append a normative clause comment to the v1 product contract spec. Normative spec changes affect contract and gate verification (§6.3 gap G4).",
+    "expectedAffected": [
+      "W4",
+      "W7"
+    ],
+    "expectedAffectedDerivation": "catalog: docs/spec/ changes affect W4 (verify-contract) and W7 (ci-gates) per selector Step 7 (contract §6.3 gap G4: normative doc → cache-key invalidation not wired, conservative over-approximation applied). Prior trigger docs/spec/incremental_ci_contract.md was deleted at CI=0 cutover (2026-09-20); reassigned to the surviving normative contract docs/spec/productization_contract.md (enforced by W4 verify-contract Productization Contract Preservation).",
+    "declaredOracleRef": "catalog"
+  },
+  {
+    "id": "M011",
+    "class": "contract-document",
+    "classificationState": "classified",
+    "triggerFile": "docs/spec/verification_density.md",
+    "mutationDescription": "Contract-document mutation: append a normative clause comment to the verification density spec. Normative spec changes affect contract and gate verification (VKD definition referenced from src/core/types/asi_types.nim).",
+    "expectedAffected": [
+      "W4",
+      "W7"
+    ],
+    "expectedAffectedDerivation": "catalog: docs/spec/ changes affect W4 and W7 per selector Step 7. VKD definition (§0.11) is referenced from src/core/types/asi_types.nim; conservative over-approximation applied.",
+    "declaredOracleRef": "catalog"
+  },
+  {
+    "id": "M012",
+    "class": "contract-document",
+    "classificationState": "classified",
+    "triggerFile": "config/readiness_policy.json",
+    "mutationDescription": "Contract-document mutation: append a policy field comment to the readiness policy config. Policy changes affect the readiness start gate and verify-contract.",
+    "expectedAffected": [
+      "W4",
+      "W7"
+    ],
+    "expectedAffectedDerivation": "catalog: config/readiness_policy.json matches both W4 and W7 pathPatterns directly (W4 includes config/readiness_policy.json; W7 includes config/readiness_policy.json). readiness_start_gate reads this file.",
+    "declaredOracleRef": "catalog"
+  }
+]

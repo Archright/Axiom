@@ -1,0 +1,7 @@
+harness_mode=value_default
+input_file=./experiments/act2-wp-toml-b1-input-integrity/inputs/contrast_t2_bytes_same_as_t2.toml
+input_len=50
+decode_call=Toml.decode(input, TomlValueRef)
+DECODE_RESULT=RAISE
+EXCEPTION_TYPE=TomlError
+EXCEPTION_MSG=[(2, 3) duplicate table key not allowed: 'a']

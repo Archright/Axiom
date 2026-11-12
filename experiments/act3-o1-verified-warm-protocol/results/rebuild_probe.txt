@@ -1,0 +1,4 @@
+B2_CC_LINES=0
+B2_ELAPSED_MS=15030
+B2_TARGET=src/gate/topology_spec.nim
+B2_WARM_CC_BEFORE_TOUCH=51

@@ -1,0 +1,669 @@
+# license-attribution — audited detection attributions for the
+# publication-integrity license-scan (tools/ci/publication_license_eval.nim).
+#
+# WHY THIS EXISTS: a text-pattern scanner cannot distinguish a license
+# GRANT (the file is shipped under that license) from a license MENTION
+# (a document that names licenses, quotes a notice, or lists subject
+# paths). This file records the audited conclusion for each such
+# detection, per (file, license-atom) and (file, copyright-holder) —
+# the ORT/ScanCode "license conclusions" idiom, grounded in the audited
+# evidence docs:
+#   - docs/evidence/sal10_publication/B1_third_party_inventory.md (what is
+#     third-party, and what each file's license IS)
+#   - docs/evidence/sal10_publication/B2_copyright_report.md (the copyright
+#     line inventory)
+#
+# FAIL-CLOSED PROPERTY: entries are EXACT (file, atom) and (file, holder)
+# pairs — there is NO file glob, NO license glob, NO catch-all. A NEW
+# detection has no entry here and FAILS the gate. Adding an entry is a
+# visible, reviewed act (a diff in this file), never a silent rule
+# weakening (AGENTS.md §0.9).
+#
+# REVIEW RULE: an attribution for an atom of a DENIED license family
+# (license-policy.yml deniedLicenseFamilies) must use classification
+# "documentary-mention" — the reviewer explicitly asserts the text is
+# ABOUT the license, not a grant of it.
+#
+# Classification vocabulary (closed set, enforced by the evaluator):
+#   self-license-text        — the SAL-1.0 / CLA legal text itself
+#                              (ScanCode has no SAL rule, so it decomposes
+#                              into clause-level rule matches)
+#   documentary-mention      — a document naming/quoting licenses or
+#                              copyright lines (incl. the policy and
+#                              notices that list DENIED family names)
+#   subject-manifest-record  — a manifest/blob listing of third-party
+#                              subject files (paths only, no grant)
+#   upstream-header          — a real upstream header inside an
+#                              already-declared THIRD_PARTY file
+#   spurious-scanner-match   — a rule false-positive on path/comment
+#                              tokens (e.g. 2-token rules matching
+#                              "json/LICENSE-APACHE" path components)
+#
+# Stale entries (detection no longer occurs) are counted as unused in the
+# report — a cleanup signal, not a failure.
+#
+# Format contract: restricted YAML subset consumed by
+# tools/ci/publication_yaml.nim (flat mappings, quoted strings, `- ` lists,
+# 2-space indent).
+
+schemaVersion: "1"
+policyId: "axiom-license-attribution-v1"
+basis: "docs/evidence/sal10_publication/B1_third_party_inventory.md + B2_copyright_report.md"
+
+attributions:
+  # ── self-license-text ──────────────────────────────────────────────────
+  - file: "LICENSE"
+    classification: "self-license-text"
+    evidence: "the SAL 1.0 text itself; ScanCode has no SAL rule so it decomposes into clause refs (Apache-2.0-derived sections + generic clauses); B2 §1"
+    licenses:
+      - "Apache-2.0"
+      - "LicenseRef-scancode-generic-cla"
+      - "LicenseRef-scancode-other-permissive"
+      - "LicenseRef-scancode-proprietary-license"
+      - "LicenseRef-scancode-unknown-license-reference"
+      - "LicenseRef-scancode-warranty-disclaimer"
+    copyrights:
+      - "Copyright in Third-Party Materials"
+  - file: "README.md"
+    classification: "self-license-text"
+    evidence: "README license section quotes the SAL notice; same clause-level decomposition as LICENSE"
+    licenses:
+      - "Apache-2.0"
+      - "LicenseRef-scancode-generic-cla"
+      - "LicenseRef-scancode-other-permissive"
+      - "LicenseRef-scancode-proprietary-license"
+      - "LicenseRef-scancode-unknown-license-reference"
+      - "LicenseRef-scancode-warranty-disclaimer"
+  - file: "CLA/Corporate-CLA.md"
+    classification: "self-license-text"
+    evidence: "Axiom's own Corporate CLA legal text; scancode CLA rules match the contribution terms"
+    licenses:
+      - "LicenseRef-scancode-generic-cla"
+      - "LicenseRef-scancode-unknown"
+      - "LicenseRef-scancode-unknown-license-reference"
+  - file: "CLA/Individual-CLA.md"
+    classification: "self-license-text"
+    evidence: "Axiom's own Individual CLA legal text; scancode CLA rules match the contribution terms"
+    licenses:
+      - "LicenseRef-scancode-generic-cla"
+      - "LicenseRef-scancode-unknown"
+      - "LicenseRef-scancode-unknown-license-reference"
+
+  # ── documentary-mention ────────────────────────────────────────────────
+  - file: "THIRD-PARTY-NOTICES.md"
+    classification: "documentary-mention"
+    evidence: "the distribution notices quote third-party license/copyright lines verbatim (B1 §1-§7), including the LibTomCrypt header line quoted in §1's embedded-header note for sha512.c"
+    licenses:
+      - "Apache-2.0"
+      - "CC-BY-4.0"
+      - "JSON"
+      - "LicenseRef-scancode-public-domain-disclaimer"
+      - "LicenseRef-scancode-unknown-license-reference"
+      - "MIT"
+      - "Zlib"
+    copyrights:
+      - "Orson Peters"
+      - "Status Research & Development GmbH"
+      - "Eugene Kabanov"
+      - "Andreas Rumpf"
+      - "Nim Contributors"
+      - "Tom St Denis"
+  - file: "compliance/policy/license-policy.yml"
+    classification: "documentary-mention"
+    evidence: "the allowlist + deniedLicenseFamilies policy names license ids as text; the DENY families (GPL/AGPL/LGPL/CC-BY-NC/SSPL) appear here AS the deny list, not as grants"
+    licenses:
+      - "AGPL-3.0-or-later"
+      - "Apache-2.0"
+      - "CC-BY-4.0"
+      - "CC-BY-NC-4.0"
+      - "GPL-1.0-or-later"
+      - "LGPL-2.0-or-later"
+      - "LicenseRef-scancode-unknown-license-reference"
+      - "MIT"
+      - "SSPL-1.0"
+      - "Zlib"
+  - file: "compliance/policy/provenance-policy.yml"
+    classification: "documentary-mention"
+    evidence: "the provenance policy lists required upstream license file paths (LICENSE-APACHE, LICENSE-MIT) inside deps.tar.gz under requiredDepsArchiveLicenses"
+    licenses:
+      - "Apache-2.0"
+      - "MIT"
+  - file: "compliance/provenance/source-origin.yml"
+    classification: "documentary-mention"
+    evidence: "the provenance SSOT names licenses and quotes third-party copyright strings inside its THIRD_PARTY declarations"
+    licenses:
+      - "Apache-2.0"
+      - "CC-BY-4.0"
+      - "MIT"
+      - "Zlib"
+    copyrights:
+      - "Orson Peters"
+      - "Status Research & Development GmbH"
+      - "Copyright (c) 2017 Nim Authors"
+      - "Suhyok Yoon"
+      - "Eugene Kabanov"
+      - "Erick Tryzelaar, David Tolnay, and serde-rs contributors"
+  - file: "compliance/provenance/license-attribution.yml"
+    classification: "documentary-mention"
+    evidence: "this file IS the attribution record — it quotes the detected license atoms and copyright strings it accounts for, so the scanner detects the quoted strings in the file itself (self-referential by construction; the quoted set is exactly the entry set)"
+    licenses:
+      - "Apache-2.0"
+      - "CC-BY-4.0"
+      - "CC-BY-NC-4.0"
+      - "CC-BY-NC-ND-3.0"
+      - "AGPL-3.0-or-later"
+      - "GPL-1.0-or-later"
+      - "GPL-2.0-or-later"
+      - "GPL-3.0-only"
+      - "LGPL-2.0-or-later"
+      - "JSON"
+      - "MIT"
+      - "SSPL-1.0"
+    copyrights:
+      - "Copyright in Third-Party Materials"
+      - "Copyright (c) 2017 Nim Authors"
+      - "concurrency group - YAML"
+      - "INCLUDE SIDE-EFFECT"
+      - "Trade-offs Slight"
+      - "Selected Admissible"
+      - "VALID"
+      - "GROUNDING Claim"
+      - "GROUNDING"
+      - "let start i inc - Nim"
+      - "tokens.add($c) inc - Nim"
+      - "copyrights .copyrights"
+  - file: "docs/spec/publication_integrity_gate.md"
+    classification: "documentary-mention"
+    evidence: "the gate spec names the denied license families and allowed licenses as policy text (§3.2, §4); the §5 J1-quirk text quotes the measured single-file-argument emission example 'MIT.txt' (a path form, not a grant)"
+    licenses:
+      - "Apache-2.0"
+      - "CC-BY-4.0"
+      - "CC-BY-NC-4.0"
+      - "AGPL-3.0-or-later"
+      - "GPL-1.0-or-later"
+      - "LGPL-2.0-or-later"
+      - "MIT"
+      - "SSPL-1.0"
+  - file: "docs/evidence/sal10_publication/VS_I_publication_integrity_landing.md"
+    classification: "documentary-mention"
+    evidence: "the landing record's §3.3 names the negative-control plan item (a full-text denied-family license file on a throwaway branch) — plan prose, not a grant"
+    licenses:
+      - "GPL-3.0-only"
+  - file: "docs/evidence/sal10_publication/VS_I_activation_observations.md"
+    classification: "documentary-mention"
+    evidence: "the activation observations' §2.2 records the executed NC-2 license negative-control (the 35,149-byte full-text fixture file on a closed throwaway branch, PR #48) — observation prose, not a grant"
+    licenses:
+      - "GPL-3.0-only"
+  - file: "docs/evidence/sal10_publication/E10_gen3_repo_recreation.md"
+    classification: "documentary-mention"
+    evidence: "the gen-3 recreation record's Phase 6b quotes the executed NC-2 license negative-control verdict atoms (gpl-3.0-only deniedFamily detection on the closed throwaway branch, PR #7) and names the dimension report files (report_*.json — the scancode json atom) — observation prose and record filenames, not grants (VS-I §2.2 precedent applied to the gen-3 record)"
+    licenses:
+      - "GPL-3.0-only"
+      - "JSON"
+  - file: "docs/evidence/epoch_record_pi_shard_2026-11-10.md"
+    classification: "documentary-mention"
+    evidence: "the epoch record §4 verification plan names the GPL-3.0 full-text file as the negative-control input — the mention is ABOUT the denied-family license (a deny experiment), not a grant"
+    licenses:
+      - "GPL-3.0-only"
+  - file: "docs/evidence/epoch_record_pi_toolscope_2026-11-12.md"
+    classification: "spurious-scanner-match"
+    evidence: "the epoch record quotes artifact and policy paths ('report_license.json', 'summary.json', 'merge_admission.json', 'source-origin.yml') while describing the J2 comparison and the attribution contract; the 2-token json_8.RULE matches the '.json' filename token — path text, not a grant (same class as .github/workflows/publication-integrity.yml and experiments/serde-json-claim-2026-10-31/*/subject_manifest_*.sha256)"
+    licenses:
+      - "JSON"
+  - file: "data/ci_optimization/pi_shard_j1_2026-11-10/summary.json"
+    classification: "documentary-mention"
+    evidence: "the J1 iteration-1 measurement summary records the evaluator verdict atoms (incl. the denied-family GPL-3.0-only FAIL and the MIT atom of the vacuous merged pass) as scan-report data — recorded detections, not grants"
+    licenses:
+      - "MIT"
+      - "GPL-3.0-only"
+  - file: "data/ci_optimization/pi_shard_j1_2026-11-10/report_license_full.json"
+    classification: "documentary-mention"
+    evidence: "the committed evaluator output over the full scan records the denied-family violation atom (gpl-3.0-only on the epoch record) as FAIL evidence — the recorded detection, not a grant"
+    licenses:
+      - "GPL-3.0-only"
+  - file: "data/ci_optimization/pi_shard_j1_2026-11-10/parity_baseline.json"
+    classification: "documentary-mention"
+    evidence: "the per-file signature projection map quotes every scanned file's detected license atoms and copyright holder lines verbatim (it IS the parity projection of the full scan — scan data, not grants)"
+    licenses:
+      - "Apache-2.0"
+      - "LicenseRef-scancode-proprietary-license"
+      - "CC-BY-4.0"
+      - "MIT"
+      - "Zlib"
+      - "GPL-3.0-only"
+      - "CC-BY-NC-ND-3.0"
+      - "GPL-1.0-or-later"
+      - "AGPL-3.0-or-later"
+      - "LGPL-2.0-or-later"
+      - "CC-BY-NC-4.0"
+      - "SSPL-1.0"
+    copyrights:
+      - "concurrency group"
+      - "Suhyok Yoon"
+      - "Copyright in Third-Party Materials"
+      - "niv (ed25519.nim bindings)"
+      - "Eugene Kabanov"
+      - "Andreas Rumpf"
+      - "Nim Contributors"
+      - "Orson Peters"
+      - "Status Research & Development GmbH"
+      - "VALID"
+      - "GROUNDING Claim"
+      - "GROUNDING"
+      - "INCLUDE SIDE-EFFECT"
+      - "Trade-offs Slight"
+      - "let start i inc"
+      - "tokens.add($c) inc"
+      - "Copyright (c) 2017 Nim Authors"
+      - "Selected Admissible"
+      - "documentation_first_gate_types.nim"
+      - "example_gate_pre_check.nim"
+      - "fail-closed gate_concept.nim"
+  - file: "data/ci_optimization/pi_shard_j1_2026-11-10/parity_baseline_iteration2.json"
+    classification: "documentary-mention"
+    evidence: "the iteration-2 per-file signature projection map quotes every scanned file's detected license atoms and copyright holder lines verbatim (it IS the parity baseline projection of the final full scan — scan data, not grants)"
+    licenses:
+      - "Apache-2.0"
+      - "LicenseRef-scancode-proprietary-license"
+      - "CC-BY-4.0"
+      - "MIT"
+      - "Zlib"
+      - "GPL-3.0-only"
+      - "CC-BY-NC-ND-3.0"
+      - "GPL-1.0-or-later"
+      - "AGPL-3.0-or-later"
+      - "LGPL-2.0-or-later"
+      - "CC-BY-NC-4.0"
+      - "SSPL-1.0"
+    copyrights:
+      - "concurrency group"
+      - "Suhyok Yoon"
+      - "Copyright in Third-Party Materials"
+      - "niv (ed25519.nim bindings)"
+      - "Eugene Kabanov"
+      - "Andreas Rumpf"
+      - "Nim Contributors"
+      - "Orson Peters"
+      - "Status Research & Development GmbH"
+      - "VALID"
+      - "GROUNDING Claim"
+      - "GROUNDING"
+      - "INCLUDE SIDE-EFFECT"
+      - "Trade-offs Slight"
+      - "let start i inc"
+      - "tokens.add($c) inc"
+      - "Copyright (c) 2017 Nim Authors"
+      - "Selected Admissible"
+      - "documentation_first_gate_types.nim"
+      - "example_gate_pre_check.nim"
+      - "fail-closed gate_concept.nim"
+  - file: "data/ci_optimization/pi_shard_j1_2026-11-10/parity_candidate_iteration2.json"
+    classification: "documentary-mention"
+    evidence: "the iteration-2 per-file signature projection of the merged shard scan (byte-identical to the baseline projection) quotes every scanned file's detected license atoms and copyright holder lines verbatim — scan data, not grants"
+    licenses:
+      - "Apache-2.0"
+      - "LicenseRef-scancode-proprietary-license"
+      - "CC-BY-4.0"
+      - "MIT"
+      - "Zlib"
+      - "GPL-3.0-only"
+      - "CC-BY-NC-ND-3.0"
+      - "GPL-1.0-or-later"
+      - "AGPL-3.0-or-later"
+      - "LGPL-2.0-or-later"
+      - "CC-BY-NC-4.0"
+      - "SSPL-1.0"
+    copyrights:
+      - "concurrency group"
+      - "Suhyok Yoon"
+      - "Copyright in Third-Party Materials"
+      - "niv (ed25519.nim bindings)"
+      - "Eugene Kabanov"
+      - "Andreas Rumpf"
+      - "Nim Contributors"
+      - "Orson Peters"
+      - "Status Research & Development GmbH"
+      - "VALID"
+      - "GROUNDING Claim"
+      - "GROUNDING"
+      - "INCLUDE SIDE-EFFECT"
+      - "Trade-offs Slight"
+      - "let start i inc"
+      - "tokens.add($c) inc"
+      - "Copyright (c) 2017 Nim Authors"
+      - "Selected Admissible"
+      - "documentation_first_gate_types.nim"
+      - "example_gate_pre_check.nim"
+      - "fail-closed gate_concept.nim"
+  - file: "data/ci_optimization/pi_shard_j1_2026-11-10/summary_iteration2.json"
+    classification: "documentary-mention"
+    evidence: "the iteration-2 measurement summary records the evaluator verdict atoms (incl. the denied-family gpl-2.0-or-later attribution-loop FAIL and the accounted GPL-3.0-only/GPL-1.0-or-later atoms) as scan-report data, and quotes the parity jq expression's '.copyrights' field references which the scanner matches as a holder line — recorded commands/detections, not grants"
+    licenses:
+      - "Apache-2.0"
+      - "GPL-1.0-or-later"
+      - "GPL-2.0-or-later"
+      - "GPL-3.0-only"
+      - "MIT"
+    copyrights:
+      - "copyrights .copyrights"
+  - file: "data/ci_optimization/pi_toolscope_2026-11-12/summary.json"
+    classification: "spurious-scanner-match"
+    evidence: "the J2 measurement summary quotes its own artifact paths ('publication-report-license-scan/report_license.json', line 44) and the 2-token json_8.RULE matches the '.json' filename token — path text, not a grant (same rule class and precedent as experiments/serde-json-claim-2026-10-31/runs/d1/subject_manifest_post.sha256)"
+    licenses:
+      - "JSON"
+  - file: "docs/evidence/sal10_publication/E9_clean_origin_isolation.md"
+    classification: "documentary-mention"
+    evidence: "the E9 clean-origin isolation audit lists the third-party assets incl. the CC-BY-4.0 SVF-SVC PDF"
+    licenses:
+      - "CC-BY-4.0"
+  - file: ".github/workflows/publication-integrity.yml"
+    classification: "spurious-scanner-match"
+    evidence: "workflow flag strings '--format json' / 'spdx-json' hit the 2-token json rule — flag text, not a grant"
+    licenses:
+      - "JSON"
+  - file: "tests/ci/test_publication_gate_tools.nim"
+    classification: "documentary-mention"
+    evidence: "negative-path contract fixtures quote denied-family license ids (GPL-3.0-only etc.) inside quoted YAML/JSON strings to exercise the evaluator FAIL paths — quoted test data, not a grant"
+    licenses:
+      - "GPL-1.0-or-later"
+      - "GPL-3.0-only"
+  - file: "tools/ci/publication_license_eval.nim"
+    classification: "spurious-scanner-match"
+    evidence: "comment/doc text naming policy paths and the attribution file hits the unknown-license-reference rule"
+    licenses:
+      - "LicenseRef-scancode-unknown-license-reference"
+  - file: "docs/evidence/sal10_publication/B0_historical_license_report.md"
+    classification: "documentary-mention"
+    evidence: "historical license report quotes license names and LICENSE clauses"
+    licenses:
+      - "Apache-2.0"
+      - "LicenseRef-scancode-proprietary-license"
+  - file: "docs/evidence/sal10_publication/B1_third_party_inventory.md"
+    classification: "documentary-mention"
+    evidence: "the audited third-party inventory quotes license names/holders, incl. the CC-BY-NC-ND-3.0-licensed cited paper in §1-D"
+    licenses:
+      - "Apache-2.0"
+      - "CC-BY-4.0"
+      - "CC-BY-NC-ND-3.0"
+      - "MIT"
+    copyrights:
+      - "Orson Peters"
+      - "Status Research & Development GmbH"
+  - file: "docs/evidence/sal10_publication/B2_copyright_report.md"
+    classification: "documentary-mention"
+    evidence: "the copyright audit quotes file lines verbatim (incl. the Suhyok Yoon LICENSE lines of §2)"
+    licenses:
+      - "Apache-2.0"
+      - "LicenseRef-scancode-proprietary-license"
+      - "MIT"
+    copyrights:
+      - "Suhyok Yoon"
+  - file: "docs/evidence/sal10_publication/DEPS_REPACKAGE_PROCEDURE.md"
+    classification: "documentary-mention"
+    evidence: "repackage procedure quotes the status-im deps headers and license names (B1 §1-C)"
+    licenses:
+      - "Apache-2.0"
+      - "CC-BY-4.0"
+      - "MIT"
+      - "Zlib"
+    copyrights:
+      - "Status Research & Development GmbH"
+      - "Eugene Kabanov"
+      - "niv (ed25519.nim bindings)"
+  - file: "docs/evidence/sal10_publication/E6_repo_recreation.md"
+    classification: "documentary-mention"
+    evidence: "repo recreation report cites the CC-BY-4.0 SVF-SVC PDF source"
+    licenses:
+      - "CC-BY-4.0"
+  - file: "docs/history/reports/phase_s_integration_report.md"
+    classification: "documentary-mention"
+    evidence: "integration report quotes proprietary-license markers from LICENSE text"
+    licenses:
+      - "LicenseRef-scancode-proprietary-license"
+  - file: "docs/spec/filesystem_contract.md"
+    classification: "documentary-mention"
+    evidence: "spec contribution-terms wording matches the generic CLA rule"
+    licenses:
+      - "LicenseRef-scancode-generic-cla"
+  - file: "docs/spec/PDF_REFERENCES.md"
+    classification: "documentary-mention"
+    evidence: "bibliography lists the papers' licenses (one CC-BY-NC-ND-3.0 paper cited; B1 §1-D/§5 REMOVE manifest)"
+    licenses:
+      - "CC-BY-4.0"
+      - "CC-BY-NC-ND-3.0"
+  - file: "experiments/act2-wp-toml-b1-input-integrity/env/toolchain.md"
+    classification: "documentary-mention"
+    evidence: "Nim toolchain banner capture quotes Andreas Rumpf's copyright (B2 §1)"
+    copyrights:
+      - "Andreas Rumpf"
+  - file: "experiments/act2-wp-toml-b1-input-integrity/observations/raw/env.txt"
+    classification: "documentary-mention"
+    evidence: "Nim toolchain banner capture quotes Andreas Rumpf's copyright (B2 §1)"
+    copyrights:
+      - "Andreas Rumpf"
+  - file: "experiments/nim-libp2p-bytesview-slice-e2e/discovery/04_c2_fact_reverification.md"
+    classification: "documentary-mention"
+    evidence: "quotes the libp2p bytesview Apache-2.0 OR MIT header under verification (B1 §1-B)"
+    licenses:
+      - "Apache-2.0"
+      - "MIT"
+    copyrights:
+      - "Status Research & Development GmbH"
+  - file: "experiments/nim-libp2p-bytesview-slice-e2e/discovery/12_stageB_wiring_unittest.md"
+    classification: "documentary-mention"
+    evidence: "quotes bytesview header lines (B1 §1-B)"
+    licenses:
+      - "Apache-2.0"
+      - "MIT"
+
+  # ── subject-manifest-record ────────────────────────────────────────────
+  - file: "experiments/act2-wp-toml-b1-input-integrity/MANIFEST"
+    classification: "subject-manifest-record"
+    evidence: "manifest listing deps.tar.gz contents incl. LICENSE-APACHE/LICENSE-MIT of the status-im deps (B1 §1-C); paths only, no grant"
+    licenses:
+      - "Apache-2.0"
+      - "MIT"
+  - file: "experiments/act2-wp-toml-b1-input-integrity/bsec/offline/subject/blobs_git.txt"
+    classification: "subject-manifest-record"
+    evidence: "git blob listing of the status-im dep sources; license-name tokens from subject paths (B1 §1-C)"
+    licenses:
+      - "Apache-2.0"
+      - "MIT"
+
+  # ── spurious-scanner-match (path/comment token false positives) ───────
+  - file: "experiments/serde-json-claim-2026-10-31/runs/d1/subject_manifest_post.sha256"
+    classification: "spurious-scanner-match"
+    evidence: "sha256 listing lines contain subject paths (<workspace>/json/LICENSE-APACHE etc.); 2-token aho rules (json_5.RULE, apache-2.0_161.RULE) match path tokens, not license grants"
+    licenses:
+      - "Apache-2.0"
+      - "JSON"
+      - "MIT"
+  - file: "experiments/serde-json-claim-2026-10-31/runs/d1/subject_manifest_pre.sha256"
+    classification: "spurious-scanner-match"
+    evidence: "same path-token false positives as d1/subject_manifest_post.sha256"
+    licenses:
+      - "Apache-2.0"
+      - "JSON"
+      - "MIT"
+  - file: "experiments/serde-json-claim-2026-10-31/runs/d2/subject_manifest_post.sha256"
+    classification: "spurious-scanner-match"
+    evidence: "same path-token false positives as d1/subject_manifest_post.sha256"
+    licenses:
+      - "Apache-2.0"
+      - "JSON"
+      - "MIT"
+  - file: "experiments/serde-json-claim-2026-10-31/runs/d2/subject_manifest_pre.sha256"
+    classification: "spurious-scanner-match"
+    evidence: "same path-token false positives as d1/subject_manifest_post.sha256"
+    licenses:
+      - "Apache-2.0"
+      - "JSON"
+      - "MIT"
+  - file: "experiments/serde-json-claim-2026-10-31/runs/d3/subject_manifest_post.sha256"
+    classification: "spurious-scanner-match"
+    evidence: "same path-token false positives as d1/subject_manifest_post.sha256"
+    licenses:
+      - "Apache-2.0"
+      - "JSON"
+      - "MIT"
+  - file: "experiments/serde-json-claim-2026-10-31/runs/d3/subject_manifest_pre.sha256"
+    classification: "spurious-scanner-match"
+    evidence: "same path-token false positives as d1/subject_manifest_post.sha256"
+    licenses:
+      - "Apache-2.0"
+      - "JSON"
+      - "MIT"
+  - file: "experiments/serde-json-claim-2026-10-31/runs/d4/subject_manifest_post.sha256"
+    classification: "spurious-scanner-match"
+    evidence: "same path-token false positives as d1/subject_manifest_post.sha256"
+    licenses:
+      - "Apache-2.0"
+      - "JSON"
+      - "MIT"
+  - file: "experiments/serde-json-claim-2026-10-31/runs/d4/subject_manifest_pre.sha256"
+    classification: "spurious-scanner-match"
+    evidence: "same path-token false positives as d1/subject_manifest_post.sha256"
+    licenses:
+      - "Apache-2.0"
+      - "JSON"
+      - "MIT"
+  - file: "experiments/serde-json-claim-2026-10-31/runs/d5/subject_manifest_post.sha256"
+    classification: "spurious-scanner-match"
+    evidence: "same path-token false positives as d1/subject_manifest_post.sha256"
+    licenses:
+      - "Apache-2.0"
+      - "JSON"
+      - "MIT"
+  - file: "experiments/serde-json-claim-2026-10-31/runs/d5/subject_manifest_pre.sha256"
+    classification: "spurious-scanner-match"
+    evidence: "same path-token false positives as d1/subject_manifest_post.sha256"
+    licenses:
+      - "Apache-2.0"
+      - "JSON"
+      - "MIT"
+  - file: "experiments/serde-json-claim-2026-10-31/runs/probe/subject_manifest_post.sha256"
+    classification: "spurious-scanner-match"
+    evidence: "same path-token false positives as d1/subject_manifest_post.sha256"
+    licenses:
+      - "Apache-2.0"
+      - "JSON"
+      - "MIT"
+  - file: "experiments/serde-json-claim-2026-10-31/runs/probe/subject_manifest_pre.sha256"
+    classification: "spurious-scanner-match"
+    evidence: "same path-token false positives as d1/subject_manifest_post.sha256"
+    licenses:
+      - "Apache-2.0"
+      - "JSON"
+      - "MIT"
+  - file: "experiments/serde-json-escape-slice-2026-11/runs/run1/subject_manifest_post.sha256"
+    classification: "spurious-scanner-match"
+    evidence: "sha256 listing lines contain subject paths (<workspace>/json/LICENSE-APACHE etc.); 2-token aho rules (json_5.RULE, apache-2.0_161.RULE) match path tokens, not license grants"
+    licenses:
+      - "Apache-2.0"
+      - "JSON"
+      - "MIT"
+  - file: "experiments/serde-json-escape-slice-2026-11/runs/run1/subject_manifest_with_lock.sha256"
+    classification: "spurious-scanner-match"
+    evidence: "same path-token false positives as run1/subject_manifest_post.sha256"
+    licenses:
+      - "Apache-2.0"
+      - "JSON"
+      - "MIT"
+  - file: "experiments/serde-json-escape-slice-2026-11/runs/d2/subject_manifest_post.sha256"
+    classification: "spurious-scanner-match"
+    evidence: "same path-token false positives as run1/subject_manifest_post.sha256"
+    licenses:
+      - "Apache-2.0"
+      - "JSON"
+      - "MIT"
+  - file: "experiments/sidecar-adoption-e2e/runs/subject_tree_post.sha256"
+    classification: "spurious-scanner-match"
+    evidence: "sha256 listing lines contain subject paths with LICENSE-APACHE/LICENSE-MIT components; 2-token path matches, no grant"
+    licenses:
+      - "Apache-2.0"
+      - "MIT"
+  - file: "experiments/sidecar-adoption-e2e/runs/subject_tree_pre.sha256"
+    classification: "spurious-scanner-match"
+    evidence: "same path-token false positives as subject_tree_post.sha256"
+    licenses:
+      - "Apache-2.0"
+      - "MIT"
+  - file: "tools/ci/publication_provenance_validator.nim"
+    classification: "spurious-scanner-match"
+    evidence: "the unknown-license-reference rule matches the https://doi.org/... source URLs cited in doc comments"
+    licenses:
+      - "LicenseRef-scancode-unknown-license-reference"
+  - file: "tools/release/bundle_tool.nim"
+    classification: "spurious-scanner-match"
+    evidence: "json_5.RULE 2-token match on comment lines mentioning 'json' adjacent to 'license' words (lines 70-71)"
+    licenses:
+      - "JSON"
+  - file: ".github/workflows/observation.yml"
+    classification: "spurious-scanner-match"
+    evidence: "'(c) . concurrency group' — YAML concurrency-cancel block; the (c) token is a code artifact (B2: '(c)' grep noise)"
+    copyrights:
+      - "concurrency group"
+  - file: "docs/evidence/verifications/when_is_main_module_classification_2026_06_07.txt"
+    classification: "spurious-scanner-match"
+    evidence: "'(c) INCLUDE SIDE-EFFECT' — compiler probe output line, not a holder"
+    copyrights:
+      - "INCLUDE SIDE-EFFECT"
+  - file: "docs/history/helper_ssot_classification_2026-08-08.md"
+    classification: "spurious-scanner-match"
+    evidence: "'(c) <file>.nim' — parenthesized file names in prose, not holders"
+    copyrights:
+      - "documentation_first_gate_types.nim"
+      - "example_gate_pre_check.nim"
+      - "fail-closed gate_concept.nim"
+  - file: "docs/history/zero-string-feasibility-review-2026-05-27.md"
+    classification: "spurious-scanner-match"
+    evidence: "'(c) Trade-offs Slight' — prose table fragment, not a holder"
+    copyrights:
+      - "Trade-offs Slight"
+  - file: "docs/spec/admissible_candidate_selection.md"
+    classification: "spurious-scanner-match"
+    evidence: "'Selected (c) Admissible (c)' — spec prose, not a holder"
+    copyrights:
+      - "Selected Admissible"
+  - file: "experiments/act2-wp-toml-b1-input-integrity/followup/writer_table/escapes.tsv"
+    classification: "spurious-scanner-match"
+    evidence: "'(c) (c) VALID' — TSV table cell content, not a holder"
+    copyrights:
+      - "VALID"
+  - file: "experiments/act2-wp-toml-b1-input-integrity/followup/writer_table/keys.tsv"
+    classification: "spurious-scanner-match"
+    evidence: "'(c) (c) VALID' — TSV table cell content, not a holder"
+    copyrights:
+      - "VALID"
+  - file: "experiments/act2-wp-toml-b1-input-integrity/p0d2g/discovery/agentA_raw.md"
+    classification: "spurious-scanner-match"
+    evidence: "'(c) GROUNDING - Claim' — discovery log heading, not a holder"
+    copyrights:
+      - "GROUNDING Claim"
+  - file: "experiments/act2-wp-toml-b1-input-integrity/p0d2g/discovery/agentB_raw.md"
+    classification: "spurious-scanner-match"
+    evidence: "'(c) GROUNDING.' — discovery log heading, not a holder"
+    copyrights:
+      - "GROUNDING"
+  - file: "src/core/encoding/smt_to_lean/private/arithmetic_expr.nim"
+    classification: "spurious-scanner-match"
+    evidence: "'(c) tokens.add($c) inc' — Nim code with a parenthesized parameter and an inc call, not a holder (B2: '(c)' code-param noise)"
+    copyrights:
+      - "tokens.add($c) inc"
+  - file: "src/core/proof/proof_vacuity_gate.nim"
+    classification: "spurious-scanner-match"
+    evidence: "'(c) let start i inc' — Nim code with a parenthesized parameter, not a holder (B2: '(c)' code-param noise)"
+    copyrights:
+      - "let start i inc"
+
+  # ── upstream-header ────────────────────────────────────────────────────
+  - file: "vendor/ed25519/ed25519/readme.md"
+    classification: "upstream-header"
+    evidence: "upstream orlp/ed25519 readme states the zlib licensing + links; the Zlib atom is already declared — this covers the extra unknown-reference match on link text (B1 §1-A)"
+    licenses:
+      - "LicenseRef-scancode-unknown-license-reference"
+  - file: "vendor/ed25519/ed25519/src/sha512.c"
+    classification: "upstream-header"
+    evidence: "ref10-heritage public-domain disclaimer inside the orlp/ed25519 tree (B1 §1-A: src/*.{c,h} zlib; sha512.c carries the ref10 notice)"
+    licenses:
+      - "LicenseRef-scancode-public-domain-disclaimer"

@@ -1,0 +1,14 @@
+{
+  "id": "documentation-first-gate",
+  "name": "Axiom documentation first gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/documentation_first_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/|docs/|AGENTS.md",
+  "passFilenames": true,
+  "weight": "light",
+  "category": "policy",
+  "severity": "error"
+}

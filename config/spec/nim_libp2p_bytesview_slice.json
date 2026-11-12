@@ -1,0 +1,64 @@
+{
+  "specId": "SPEC-LIBP2P-BV-SLICE",
+  "specOrigin": "soExplicit",
+  "ruleId": "external:libp2p/bytesview/slice-length-law",
+  "ruleVersion": "1.0.0",
+  "contract": "docs/spec/nim_libp2p_bytesview_slice_contract.md",
+  "claimOwnership": {
+    "owner": "axiom-defined-rule",
+    "contract": "docs/spec/nim_libp2p_bytesview_slice_contract.md",
+    "adoptionRef": "user-approved mission (plan archangel-cable-plastic-man v3, 2026-10-22): nim-libp2p C2 bytesview slice",
+    "provenance": "The proposition CONTENT was authored by the investigation agent chain (contradiction-candidate survey + fact re-verification + two critique rounds; raw outputs preserved in experiments/nim-libp2p-bytesview-slice-e2e/discovery/ at the evidence PR) — no human authored the content; the AUTHORITY for verifying against it is the explicit adoption act (this committed overlay + contract, user-approved). Authorship confers NO authority."
+  },
+  "description": "Out-of-tree explicit spec for the slice-length defect of nim-libp2p's BytesView.toOpenArray. The template body (libp2p/utils/bytesview.nim:18-19) `v.data.toOpenArray(v.rpos + b, v.rpos + e - b)` yields length e-2b+1 — exactly b elements short of the inclusive view-relative law e-b+1 (Nim system toOpenArray semantics — official example s.toOpenArray(1,3) == [1,2,3], 3 elements) — and coinciding with a half-open law e-b only at b=1 (where the template's inclusive interval is mis-derived by subtracting the start offset twice). Two CONSTRUCTED-IR carriers (the subject is a template, not a materializable func): bvSliceLenActual (defect — b pinned at 1, model e-1, adopted law result == e; every e in the domain is a counterexample) and bvSliceLenControl (control — b pinned at 0, model e+1, law result == e+1; solver-level injection guard). The adopted LAW is DATA, not engine prose: canonicalSpecIR names one law symbol per carrier (bvSliceLenLaw1, bvSliceLenLaw0) and states its body, so the obligation (model == law) is fully determined by this document and the engine hardcodes no law content. A confirmed counterexample is replayed against the ORIGINAL template through a stamped harness observing len(bv.toOpenArray(1, e)) on BytesView.init(@[byte 1, 2, 3, 4, 5, 6]) — the observation, not the model, decides. The subject tree is READ-ONLY (Zero-Footprint).",
+  "subject": {
+    "repository": "status-im/nim-libp2p (local READ-ONLY clone <workspace>/nim-libp2p @ a130a7f32219909bdcda14b7f1e64d0804fc832c; origin iftech/nim-libp2p fork of status-im/nim-libp2p)",
+    "commit": "a130a7f32219909bdcda14b7f1e64d0804fc832c",
+    "module": "libp2p/utils/bytesview.nim",
+    "symbols": ["toOpenArray"],
+    "sourceLines": "18-19",
+    "blobSha256": "b205c969ba04f4199d8fd4a121d4b6fccdc82c426e336add0e1e9fd0e961e5ee"
+  },
+  "canonicalSpecIR": [
+    "1 <= e",
+    "e <= 5",
+    "bvSliceLenLaw1(e) == e",
+    "bvSliceLenActual(e) == (e - 1)",
+    "bvSliceLenLaw0(e) == (e + 1)",
+    "bvSliceLenControl(e) == (e + 1)"
+  ],
+  "carriers": [
+    {
+      "name": "bvSliceLenActual",
+      "kind": "defect",
+      "groundingSymbol": "toOpenArray",
+      "groundingLines": "18-19",
+      "grounding": "bytesview.nim:18-19 — the template's actual index arithmetic with b pinned at 1: underlying inclusive range [rpos+1, rpos+e-1], length = e - 2*1 + 1 = e - 1; machine-extracted model, not a carried body (the subject is a template)"
+    },
+    {
+      "name": "bvSliceLenControl",
+      "kind": "control",
+      "groundingSymbol": "toOpenArray",
+      "groundingLines": "18-19, 21-22",
+      "grounding": "at b=0 the actual length is e+1, equal to the inclusive law e-0+1 — the b=0 path exercised by the production call sites (noise.nim:314,333: 32-byte destinations) and by the sibling `data` template's inclusive idiom (bytesview.nim:21-22); injection guard only"
+    }
+  ],
+  "semanticCaveats": [
+    "toOpenArray is a template — the carriers are CONSTRUCTED IR; the solver verifies the ADOPTED MODEL, and the subject connection is the stamped replay harness, which imports libp2p/utils/bytesview and expands the template from the defining module (Nim manual: template symbols are bound from the definition scope)",
+    "the adopted law is stated as DATA in canonicalSpecIR (bvSliceLenLaw1 = e at b = 1, bvSliceLenLaw0 = e + 1 at b = 0) — the engine parses the named definitions and hardcodes no law content; the two carriers' obligations are the model-equals-law equalities over the SAME domain variable",
+    "the domain 1 <= e <= 5 is bound to the replay fixture BytesView.init(@[byte 1, 2, 3, 4, 5, 6]) with rpos = 0 (a view-relative inclusive [1..e] is valid up to e = 5)",
+    "each carrier has exactly ONE model parameter (e); b is fixed at 1 (defect) / 0 (control) — a deliberate narrowing required by the single-parameter replay contract",
+    "the defect claim (e - 1) == e is violated for EVERY e in the domain — the solver selects one witness; the replay observes that pinned instance on the subject's actual bytes",
+    "the replay observation is the integer length echoed between the AXIOM_REPLAY_BEGIN/AXIOM_REPLAY_END markers",
+    "subject pins use the module file's content sha256; git object IDs (a SHA-1 repo) are a different hash kind and are recorded separately in the run evidence"
+  ],
+  "nonClaims": [
+    "NOT a claim that the inclusive law holds or fails for any (b, e) outside the pinned carriers (b fixed per carrier, e within 1..5)",
+    "NOT a claim about the subject's b=0 runtime behavior — the control is a solver-level injection guard; the subject is never executed for it",
+    "NOT a claim that the pipeline extracted or verified the original template body — the model is constructed IR; the subject connection is the stamped replay harness observation only",
+    "NOT a general theorem about BytesView.toOpenArray for arbitrary b and e",
+    "NOT a claim that nim-libp2p was modified or annotated in-tree (Zero-Footprint) — the fix decision belongs to the subject's maintainers",
+    "NOT a claim about nim-libp2p's overall correctness, safety, or memory safety",
+    "NOT a fully-autonomous proposition discovery — the rule's justification (Nim official inclusive toOpenArray semantics + production call-site requirements) was established by external investigation and adopted by an explicit user-approved act"
+  ]
+}

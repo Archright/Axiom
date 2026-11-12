@@ -1,0 +1,7 @@
+port=9494
+delay=1
+maxLineLength=250
+maxConcurrentClients=16
+customMessages.len=1
+cm=[BANNER-FIRST]
+DECODE_RESULT=OK

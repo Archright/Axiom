@@ -1,0 +1,48 @@
+{
+  "kind": "release-ship-freeze-contract-fixture-set",
+  "description": "Fixture set for the release-ship freeze idempotency contract group of tools/ci/test_workflow_jq_contracts.sh (section 5, 2026-11-02). The freeze ⑥ check consumes `gh api --paginate repos/.../releases` whose output SHAPE is gh-version-dependent (page bodies printed as a single merged array vs. concatenated documents), and the freeze ⑤ check pins the idempotency judgment table (same tag+same SHA = NO-OP / same tag+different SHA = FAIL / absent = proceed / unclear = fail-closed). This directory is a separate case group — it shares nothing with the sibling canary/router fixtures in the parent directory, so parallel contract work cannot collide.",
+  "measured": [
+    {
+      "file": "rel_releases_p1_2026-11-02.json",
+      "method": "GET (verbatim response body, no reformatting)",
+      "url": "repos/Archright/Axiom/releases?per_page=100",
+      "captured_at": "2026-11-02 (local session, KST)",
+      "tool": "gh 2.102.0 (2026-09-30), jq-1.7",
+      "result": "[] — the repository holds ZERO published releases at capture time (2 bytes)",
+      "role": "verbatim empty-array page; also live evidence that `gh api --paginate` on a single empty page emits ONE array document (local single-page observation)"
+    }
+  ],
+  "synthesized": [
+    {
+      "files": ["rel_releases_two_page_p1.json", "rel_releases_two_page_p2.json"],
+      "shape": "two JSON-array documents; p1 rows tag_name v0.5.4/v0.5.5, p2 row tag_name v0.5.6",
+      "why": "the killing shape for the pre-fix ⑥ program is the DOCUMENT BOUNDARY (two array docs concatenated on the stream), which cannot be captured live on a repository with fewer releases than one page (measured: 0 releases). The stream `cat p1 p2` emulates the legacy gh --paginate concatenated-document output; the negative control in the harness asserts the pre-fix program emits a multi-line count on exactly this stream, so the killing shape cannot be silently sanitized away.",
+      "rows_note": "rows are schema-faithful subsets of the List-releases response (id/tag_name/name/draft/prerelease/created_at/published_at/author/html_url/target_commitish + url family); the freeze contract consumes tag_name only — extra fields exist to keep rows realistic, not as contract surface"
+    },
+    {
+      "file": "rel_releases_nonarray_doc.json",
+      "shape": "one non-array (object) document — GitHub error-envelope field set",
+      "why": "pins the fail-closed path: a --paginate stream that is not entirely array documents must be a jq error (non-zero exit), never a silent count"
+    },
+    {
+      "file": "rel_releases_empty_stream.json",
+      "shape": "zero bytes",
+      "why": "empty stdin boundary — jq -s yields the empty accumulator, count 0, proceed"
+    },
+    {
+      "file": "rel_releases_empty_array.json",
+      "shape": "single empty array document",
+      "why": "zero-release boundary in array form — count 0, proceed"
+    }
+  ],
+  "harness_built_objects": {
+    "note": "git refs / git tags response bodies used by the ⑤/⑦ scenarios are built in-harness (not committed) because they encode the SCENARIO MATRIX (which SHA each tag points at), not measured repository state",
+    "schema_basis": [
+      {
+        "claim": "GET /repos/{owner}/{repo}/git/ref/tags/{tag} → {ref, object: {sha, type}} where type is \"commit\" (lightweight) or \"tag\" (annotated; sha = tag object OID)",
+        "authority": "docs.github.com/en/rest/git/refs (Get a reference); annotated peel via GET /repos/{owner}/{repo}/git/tags/{tag_sha} → {sha, tag, object: {sha, type: \"commit\"}}"
+      }
+    ]
+  },
+  "determinism": "All fixtures are committed static files; the harness performs zero network calls (mock `gh` on PATH dispatches on the request path and cats the fixture bodies verbatim). The freeze step script under test is extracted from the LIVE workflow YAML at run time (fail-closed on restructuring), never copied into the test."
+}

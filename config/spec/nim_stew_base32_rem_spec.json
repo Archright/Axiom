@@ -1,0 +1,51 @@
+{
+  "specId": "SPEC-B32-REM-RANGE",
+  "specOrigin": "soExplicit",
+  "ruleId": "external:stew/base32/rem-range",
+  "ruleVersion": "1.1.0",
+  "contract": "docs/spec/nim_stew_base32_rem_binding_contract.md",
+  "claimOwnership": {
+    "owner": "axiom-defined-rule",
+    "contract": "docs/spec/nim_stew_base32_rem_binding_contract.md",
+    "adoptionRef": "docs/spec/nim_stew_base32_rem_binding_contract.md"
+  },
+  "description": "Out-of-tree explicit spec (Axiom-owned) for the remainder-range relational theorem over stew/base32.nim decodedLength. The subject tree (nim-stew, unmodified READ-ONLY clone) is never written; this file is the only legitimate place the claim may live. Loaded via the same explicitSpecFromOverlay authority path as the base36 sizing overlay, which pins origin to soExplicit and fails closed otherwise.",
+  "subject": {
+    "repository": "nim-stew (status-im/nim-stew, unmodified READ-ONLY clone)",
+    "module": "stew/base32.nim",
+    "symbols": ["decodedLength"],
+    "sourceLines": "79-83"
+  },
+  "canonicalSpecIR": [
+    "0 <= length",
+    "length mod 8 >= 0",
+    "length mod 8 <= 7"
+  ],
+  "theorem": {
+    "statement": "forall length : Int, 0 <= length -> let reminder = length mod 8 in reminder >= 0 and reminder <= 7",
+    "dividend": "length",
+    "divisor": 8,
+    "character": "remainder-range relational theorem over the Nim `mod` term the subject body computes (`let reminder = length mod 8`, stew/base32.nim:80), stated as a postcondition on the term, not on the result of decodedLength"
+  },
+  "semanticCaveats": [
+    "Nim `mod` truncates toward zero (sign follows the dividend); Lean `Int.emod` (`%`) is always nonnegative for a nonzero divisor. They coincide exactly on the nonnegative-dividend domain, which is why `0 <= length` is a discharged hypothesis of the proposition, not prose (Int.tmod_eq_emod_of_nonneg).",
+    "Nim int is pointer-width signed; the proposition is width-uniform on the stated domain because it constrains only the remainder of a division by a positive constant.",
+    "{.push raises: [].} does NOT track or prevent DivByZeroDefect for a non-constant divisor; the divisor here is the literal 8, so the defect is statically unreachable.",
+    "Subject selection measured 2026-10-07: the sibling symbol encodedLength (mod 5, stew/base32.nim:71) is OUTSIDE the certified-subset extraction wire set — its `when btype is ...` AST node fails the §2.1a extraction-agreement differential (measured: EA_UNSUPPORTED, ckWhenStmt, eaAgreed=false), so no seal of any claim over it is possible (fail-closed by design). decodedLength is the mod-using subject inside the same instruction window (base32.nim:71-82) whose EA legs agree (measured: EA_AGREE, byte-equal serialized IR)."
+  ],
+  "certificateIdentity": [
+    "target int width and the host (cpu, os, triple)",
+    "rem semantic profile: Nim mod truncated vs Lean emod nonnegative — coincident on the nonnegative-dividend domain (rem=lean-emod/nim-mod/coincident-nonneg-dividend-domain identity segment)",
+    "modelprofile segment: the verified domain's SemanticProfileV1Hash (modelprofile=... identity segment)",
+    "domain precondition as an IRFuncDef.preConditions entry (0 <= length), not prose",
+    "pinned Nim 2.2.10",
+    "subject hash and IR digest of the derived IRFuncDef"
+  ],
+  "nonClaims": [
+    "NOT a claim about decodedLength's return value (no sizing theorem here — that is the base36 relational slice's shape)",
+    "NOT a claim about encodedLength (mod 5): its `when btype is ...` is outside the certified-subset extraction wire set — the §2.1a seal is structurally unavailable (measured EA_UNSUPPORTED); stating a claim over it would be unverifiable theater",
+    "NOT a buffer-safety claim about base32 encode or decode",
+    "NOT valid for negative length (truncated-mod sign divergence; 0 <= length is a discharged hypothesis)",
+    "NOT a claim that nim-stew was modified or annotated in-tree (Zero-Footprint)"
+  ]
+}

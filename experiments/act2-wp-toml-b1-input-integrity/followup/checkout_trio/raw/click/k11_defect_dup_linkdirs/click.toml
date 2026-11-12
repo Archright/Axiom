@@ -1,0 +1,12 @@
+compiler    = "echo-first"
+compiler    = "echo-second"
+name        = "clickarm"
+extensions  = [".c"]
+outputDir   = "build"
+auxOutput   = true
+ignoreDirs  = [".vscode"]
+ignoreFiles = []
+flags       = ["-Wall"]
+libs        = []
+includes    = []
+linkDirs    = ["realdir"]

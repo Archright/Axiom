@@ -1,0 +1,36 @@
+# Axiom .dockerignore — exclude build artifacts and non-essential files from Docker context
+# Keeps only files referenced by .circleci/Dockerfile.ci COPY commands:
+#   axiom.nimble, config.nims, config/, AGENTS.md, src/, data/command_policy.json
+
+# ── Version control & build caches ──────────────────────────────────────────────
+.git/
+.lake/
+.nimcache*/
+nimblecache/
+
+# ── Runtime artifacts ───────────────────────────────────────────────────────────
+tmp/
+logs/
+build/
+vendor/
+
+# ── Non-source directories (not referenced by Dockerfile.ci) ────────────────────
+docs/
+!docs/agents/
+!docs/spec/
+tests/
+scripts/
+# tools/ is required by config.nims hermeticPreBuild (hermetic_build.nim, sync_topology.nim)
+
+# ── Editor & agent metadata ─────────────────────────────────────────────────────
+.opencode/
+.github/
+.circleci/
+
+# ── Interpreted scripts & temp files ────────────────────────────────────────────
+*.log
+*.tmp
+*.py
+*.sh
+*.bash
+__pycache__/

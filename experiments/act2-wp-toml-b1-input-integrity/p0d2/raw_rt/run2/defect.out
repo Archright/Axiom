@@ -1,0 +1,17 @@
+=== case: defect ===
+input_bytes_hex: 23 20 50 30 2D 44 32 2D 52 54 20 63 61 73 65 20 32 3A 20 44 45 46 45 43 54 20 49 4E 50 55 54 20 2D 20 68 65 78 20 65 73 63 61 70 65 73 20 69 6E 20 62 61 73 69 63 2D 73 74 72 69 6E 67 20 76 61 6C 75 65 73 0A 76 61 6C 75 65 20 3D 20 22 63 61 66 5C 78 45 39 22 0A 63 74 72 6C 20 3D 20 22 5C 78 38 30 22 0A
+decode_outcome: SUCCESS
+decoded_value_bytes_hex: 63 61 66 E9
+decoded_value_utf8: INVALID-UTF8(first-bad-offset=3)
+decoded_ctrl_bytes_hex: 80
+decoded_ctrl_utf8: INVALID-UTF8(first-bad-offset=0)
+authored_decode_matches_intent_value: false
+authored_decode_matches_intent_ctrl: false
+encoder_output_bytes_hex: 76 61 6C 75 65 20 3D 20 22 63 61 66 5C 78 45 39 22 0A 63 74 72 6C 20 3D 20 22 5C 78 38 30 22 0A
+encoder_output_text: value = "caf\x5CxE9"\x0Actrl = "\x5Cx80"\x0A
+roundtrip_value_bytes_hex: 63 61 66 E9
+roundtrip_ctrl_bytes_hex: 80
+roundtrip_value_utf8: INVALID-UTF8(first-bad-offset=3)
+roundtrip_identity_holds: false
+ref_utf8_U00E9_hex: C3 A9
+ref_utf8_U0080_hex: C2 80

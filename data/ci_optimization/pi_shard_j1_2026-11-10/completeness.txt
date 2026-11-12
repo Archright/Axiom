@@ -1,0 +1,33 @@
+===[A] merged.json vs tracked (workflow semantics)===
+merged file entries: 3
+duplicates (uniq -d): 0
+comm -3 line count: 6573
+missing from merged (tracked-only): 6573
+unexpected in merged: 0
+-- first 10 missing:
+.axiom_root
+.config/nimtry/allowed_imports.lock
+.cursorrules
+.dockerignore
+.editorconfig
+.env.example
+.envrc
+.envrc.example
+.gitattributes
+.githooks/pre-commit
+
+===[B] full.json vs tracked (same semantics)===
+full file entries: 6568
+duplicates (uniq -d): 0
+comm -3 line count: 8
+missing from full (tracked-only): 8
+unexpected in full: 0
+-- the 8 missing:
+.gitattributes
+.gitignore
+experiments/act2-wp-toml-b1-input-integrity/p0d2f/.gitignore
+experiments/act2-wp-toml-b1-input-integrity/p0d2g/.gitignore
+experiments/nim-libp2p-bytesview-slice-e2e/.gitignore
+experiments/nim-libp2p-varint-roundtrip-e2e/.gitignore
+experiments/sidecar-adoption-e2e/.gitignore
+vendor/ed25519/.gitignore

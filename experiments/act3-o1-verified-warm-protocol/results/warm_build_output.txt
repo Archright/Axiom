@@ -1,0 +1,150 @@
+[integrity] merkle concat: sha256sum:sha256sum:sha256sum:sha256sum:
+[integrity] expected: 62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[integrity] actual:   62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[Axiom] Checking feature_manifest.json freshness (content-hash)...
+⚠️ [Bootstrap] src/generated/build_env.nim not found.
+  Run `nimble hermetic` (or `bin/hermetic_build`) to populate real values.
+  Falling back to build_env.nim.default constants.
+feature_manifest.json ensured fresh
+⚠️ [Bootstrap] src/generated/build_env.nim not found.
+  Run `nimble hermetic` (or `bin/hermetic_build`) to populate real values.
+  Falling back to build_env.nim.default constants.
+[sync_certs] Manifest fresh (6 entries)
+⚠️ [Bootstrap] src/generated/build_env.nim not found.
+  Run `nimble hermetic` (or `bin/hermetic_build`) to populate real values.
+  Falling back to build_env.nim.default constants.
+[hermetic] Building bin/hermetic_build from tools/hermetic_build.nim
+[integrity] merkle concat: sha256sum:sha256sum:sha256sum:sha256sum:
+[integrity] expected: 62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[integrity] actual:   62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+⚠️ [Bootstrap] src/generated/build_env.nim not found.
+  Run `nimble hermetic` (or `bin/hermetic_build`) to populate real values.
+  Falling back to build_env.nim.default constants.
+[hermetic] Environment changed (MISS)
+[hermetic] build_env.nim created from .default template
+[hermetic] Building bin/sync_topology from tools/sync_topology.nim
+[integrity] merkle concat: sha256sum:sha256sum:sha256sum:sha256sum:
+[integrity] expected: 62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[integrity] actual:   62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[hermetic] Syncing topology...
+[sync_topology] Root: <user-home>/.cache/axiom/purity-check
+[sync_topology] Syncing manifest.d/*.json...
+  Manifests: 0 written, 56 unchanged
+[sync_topology] Syncing _index.json...
+  Index: unchanged
+[sync_topology] Syncing manifest_registry.nim...
+  Registry: unchanged
+[sync_topology] Syncing gate_registry.nim...
+  Gate registry: unchanged
+[sync_topology] Syncing helper_registry.nim...
+  Helper registry: unchanged
+[sync_topology] Syncing gates.manifest.toml...
+  Manifest TOML: unchanged
+[sync_topology] Done.
+[hermetic] Regenerating type registry...
+[hermetic] Building bin/decision_binding_checker from tools/decision_binding_checker.nim
+[integrity] merkle concat: sha256sum:sha256sum:sha256sum:sha256sum:
+[integrity] expected: 62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[integrity] actual:   62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[hermetic] Checking decision bindings (audit)...
+[decision-binding] Loaded 259 active waiver(s) from decision_binding.waiver.json
+[decision-binding] Found 3 violation(s)
+  MergeAdmissible (<user-home>/.cache/axiom/purity-check/src/cli/merge_cli.nim:94) multiple returns without axiomDecision
+  canonicalizeEnvValue (<user-home>/.cache/axiom/purity-check/src/verification/obligation/identity.nim:52) multiple returns without axiomDecision
+  loadCASEntryByKey (<user-home>/.cache/axiom/purity-check/src/verification/canonical_cache.nim:149) returns Result/Option without axiomDecision
+[decision-binding] WARN: 3 function(s) missing {.axiomDecision.} pragma — escalation threshold 30 days not yet reached
+Hint: used config file '<user-home>/.choosenim/toolchains/nim-2.2.10/config/nim.cfg' [Conf]
+Hint: used config file '<user-home>/.choosenim/toolchains/nim-2.2.10/config/config.nims' [Conf]
+Hint: used config file '<user-home>/.cache/axiom/purity-check/config.nims' [Conf]
+.............................................................................................................................................................................................................................................................................................................................................................
+<user-home>/.cache/axiom/purity-check/src/core/trusted/semantic_profile.nim(90, 6) Hint: 'ProfileHash' should be: 'profileHash' [Name]
+....................
+<user-home>/.cache/axiom/purity-check/src/cli/selection_state.nim(25, 6) Hint: 'stateJoin' is declared but not used [XDeclaredButNotUsed]
+............................
+<user-home>/.cache/axiom/purity-check/src/cli/topology_cli.nim(368, 7) Hint: 'scanStart' is declared but not used [XDeclaredButNotUsed]
+.............................................................................
+<user-home>/.cache/axiom/purity-check/src/core/interfaces/io_executor.nim(11, 18) Hint: duplicate import of 'discard_result_linter'; previous import here: <user-home>/.cache/axiom/purity-check/src/core/interfaces/io_executor.nim(1, 2) [DuplicateModuleImport]
+.....................................
+<user-home>/.cache/axiom/purity-check/src/core/trusted/claim_authority.nim(124, 11) Hint: conversion from string to itself is pointless [ConvFromXtoItselfNotNeeded]
+................................
+<user-home>/.cache/axiom/purity-check/src/verification/cert_writer.nim(186, 3) Hint: 'ExistingCertificateState' is declared but not used [XDeclaredButNotUsed]
+<user-home>/.cache/axiom/purity-check/src/verification/cert_writer.nim(95, 6) Hint: 'uapScopeDigest' is declared but not used [XDeclaredButNotUsed]
+<user-home>/.cache/axiom/purity-check/src/verification/cert_writer.nim(98, 6) Hint: 'uapConfigDigest' is declared but not used [XDeclaredButNotUsed]
+..................................
+<user-home>/.cache/axiom/purity-check/src/core/judge/lean_replay.nim(25, 3) Hint: 'leanCommand' is declared but not used [XDeclaredButNotUsed]
+.....................................
+<user-home>/.cache/axiom/purity-check/src/cli/wf_render.nim(55, 9) Hint: 'totalWallTimeMs' is declared but not used [XDeclaredButNotUsed]
+<user-home>/.cache/axiom/purity-check/src/cli/wf_render.nim(61, 9) Hint: 'hotspotLabel' is declared but not used [XDeclaredButNotUsed]
+<user-home>/.cache/axiom/purity-check/src/cli/wf_render.nim(62, 9) Hint: 'hotspotElapsedMs' is declared but not used [XDeclaredButNotUsed]
+......................................................................................................................................................................
+<user-home>/.cache/axiom/purity-check/src/verification/obligation/canonical_verification.nim(71, 12) Hint: duplicate import of 'strutils'; previous import here: <user-home>/.cache/axiom/purity-check/src/verification/obligation/canonical_verification.nim(38, 13) [DuplicateModuleImport]
+<user-home>/.cache/axiom/purity-check/src/verification/obligation/canonical_verification.nim(517, 9) Hint: 'lowering' is declared but not used [XDeclaredButNotUsed]
+..................................................................
+<user-home>/.cache/axiom/purity-check/src/verification/verified_set_hydration.nim(140, 7) Hint: 'schemaVersion' is declared but not used [XDeclaredButNotUsed]
+<user-home>/.cache/axiom/purity-check/src/verification/verified_set_hydration.nim(175, 10) Hint: 'claimStore' is declared but not used [XDeclaredButNotUsed]
+................................................
+<user-home>/.cache/axiom/purity-check/src/cli/axiom_status.nim(424, 7) Hint: 'latest' is declared but not used [XDeclaredButNotUsed]
+.....................
+<user-home>/.cache/axiom/purity-check/src/core/debt/debt_events.nim(554, 6) Hint: 'flushFsync' is declared but not used [XDeclaredButNotUsed]
+...
+<user-home>/.cache/axiom/purity-check/src/cli/debt_cli.nim(720, 11) Hint: 'category' is declared but not used [XDeclaredButNotUsed]
+<user-home>/.cache/axiom/purity-check/src/cli/debt_cli.nim(824, 11) Hint: 'category' is declared but not used [XDeclaredButNotUsed]
+<user-home>/.cache/axiom/purity-check/src/cli/debt_cli.nim(981, 11) Hint: 'description' is declared but not used [XDeclaredButNotUsed]
+........
+<user-home>/.cache/axiom/purity-check/src/cli/merge_cli.nim(94, 23) Hint: 'V' should be: 'v' [Name]
+<user-home>/.cache/axiom/purity-check/src/cli/merge_cli.nim(94, 6) Hint: 'MergeAdmissible' should be: 'mergeAdmissible' [Name]
+........
+CC: system/exceptions.nim
+CC: std/private/digitsutils.nim
+CC: std/assertions.nim
+CC: std/private/dragonbox.nim
+CC: std/formatfloat.nim
+CC: system/dollars.nim
+CC: std/typedthreads.nim
+CC: std/syncio.nim
+CC: system.nim
+CC: parseutils.nim
+CC: math.nim
+CC: algorithm.nim
+CC: unicode.nim
+CC: strutils.nim
+CC: pathnorm.nim
+CC: std/oserrors.nim
+CC: posix.nim
+CC: std/private/oscommon.nim
+CC: std/private/ospaths2.nim
+CC: std/private/ossymlinks.nim
+CC: options.nim
+CC: times.nim
+CC: std/private/osfiles.nim
+CC: std/private/osdirs.nim
+CC: std/envvars.nim
+CC: std/private/osappdirs.nim
+CC: std/cmdline.nim
+CC: os.nim
+CC: hashes.nim
+CC: strtabs.nim
+CC: streams.nim
+CC: osproc.nim
+CC: tables.nim
+CC: core/types/results.nim
+CC: checksums/private/sha_utils.nim
+CC: checksums/sha2.nim
+CC: lexbase.nim
+CC: parsejson.nim
+CC: json.nim
+CC: core/trusted/axiom_pragmas.nim
+CC: core/trusted/core_pure_utils.nim
+CC: infrastructure/logging_facade.nim
+CC: core/interfaces/logging_hub.nim
+CC: core/types/certificate_types.nim
+CC: terminal.nim
+CC: compiler/ast.nim
+CC: core/interfaces/io_executor.nim
+CC: core/interfaces/git_operations.nim
+CC: gate/framework/topology_types.nim
+CC: gate/topology_spec.nim
+CC: core/gate/static_project_matrix.nim
+Hint:  [Link]
+Hint: mm: arc; threads: on; opt: none (DEBUG BUILD, `-d:release` generates faster code)
+263261 lines; 19.911s; 1013.297MiB peakmem; proj: <user-home>/.cache/axiom/purity-check/src/cli/main.nim; out: <user-home>/.cache/axiom/purity-check/bin/ax [SuccessX]

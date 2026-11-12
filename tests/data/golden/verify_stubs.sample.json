@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/verify_stubs.sh",
+  "description": "Forwarding Stub integrity verification — ensures stubs contain only import/export, no business logic (AGENTS.md §1.3b)",
+  "inputSample": {
+    "args": []
+  },
+  "outputSample": {
+    "stdout": "verify_stubs: 48 stubs verified, all contain only import+export",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

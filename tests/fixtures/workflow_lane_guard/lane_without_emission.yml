@@ -1,0 +1,48 @@
+# workflow_lane_guard fixture — DESIGNED VERDICT: FAIL (<lane-stderr-guard>).
+# Shape of the reverted 4-lane blob 2c94c991418dfd89e665ce4ec3efdcc86ffd2e93
+# (.github/workflows/admission-check.yml GO step, live 2026-10-13→10-14): the
+# parallel lanes redirect stdout/stderr into per-lane run.log files and never
+# re-emit them — the merge_group evidence-loss class the lane-stderr guard in
+# tools/ci/validate_workflow_shell.sh exists to block (prereg
+# docs/evidence/merge_latency_decision_prereg_2026-10-14.md §8, amendment
+# 2026-10-15; C1 audit docs/evidence/slice_c_p1_evidence_audit_2026-10-15.md).
+# Companion: lane_with_emission.yml — same lanes plus the emission markers
+# (designed verdict: PASS).
+name: lane-guard-fixture-negative
+jobs:
+  attest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "[check] GO-critical admission tests (fixture — lane, no emission)"
+        run: |
+          set -e
+          LANE_ROOT=/tmp/go-critical-lanes
+          rm -rf "$LANE_ROOT"
+          mkdir -p "$LANE_ROOT"
+          lane_run() { # lane_run <slug> <test-path>
+            local slug="$1" t="$2" rc=0
+            local d="$LANE_ROOT/$slug"
+            mkdir -p "$d"
+            make test-fast-one T="$t" \
+              OUT="/tmp/opencode/ax-one-$slug" > "$d/run.log" 2>&1 || rc=$?
+            echo "$rc" > "$d/status"
+            return "$rc"
+          }
+          LANE_PIDS=""
+          for t in tests/unit/proof_integrity_test.nim \
+                   tests/unit/test_s1a_lean_golden.nim; do
+            case "$t" in
+              tests/unit/proof_integrity_test.nim) lane_run pi "$t" & LANE_PIDS="$LANE_PIDS $!" ;;
+              tests/unit/test_s1a_lean_golden.nim) lane_run s1a "$t" & LANE_PIDS="$LANE_PIDS $!" ;;
+            esac
+          done
+          FAILS=0
+          for p in $LANE_PIDS; do wait "$p" || FAILS=$((FAILS + 1)); done
+          d="$LANE_ROOT/pi"
+          if [ ! -f "$d/status" ]; then
+            echo "[admission-tests] FAIL — lane produced no status file"
+            exit 1
+          fi
+          if [ "$FAILS" -ne 0 ]; then
+            exit 1
+          fi

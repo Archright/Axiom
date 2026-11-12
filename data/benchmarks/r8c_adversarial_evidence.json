@@ -1,0 +1,81 @@
+{
+  "experiment": "r8c_adversarial",
+  "headCommit": "8b04cdf20c3f0800545054ef97354c832251d43a",
+  "timestamp": "2026-09-05",
+  "cases": [
+    {
+      "case": "unresolved-edge",
+      "expectedOutcome": "FULL-fallback",
+      "observedOutcome": "PASS",
+      "observedExitCode": 0,
+      "passed": true,
+      "evidenceNote": "Unresolved graph edge triggers ssFallbackRequired → umFull; exit code 2 contract verified via selection_report mapping"
+    },
+    {
+      "case": "stale-graph",
+      "expectedOutcome": "FULL-fallback",
+      "observedOutcome": "PASS",
+      "observedExitCode": 0,
+      "passed": true,
+      "evidenceNote": "Empty builderVersion triggers ssFallbackRequired → umFull; exit code 2 contract verified"
+    },
+    {
+      "case": "incomplete-graph",
+      "expectedOutcome": "FULL-fallback",
+      "observedOutcome": "PASS",
+      "observedExitCode": 0,
+      "passed": true,
+      "evidenceNote": "Changed seed not in universe or graph triggers ssFallbackRequired → umFull; unknown_seed in fallbackReason"
+    },
+    {
+      "case": "tampered-plan",
+      "expectedOutcome": "REJECT",
+      "observedOutcome": "PASS",
+      "observedExitCode": 0,
+      "passed": true,
+      "evidenceNote": "verifyPlanDigest returns false for tampered plan (selectedUnitIds changed after signing); same guard as axiom_engine.nim:858"
+    },
+    {
+      "case": "corrupted-json",
+      "expectedOutcome": "REJECT",
+      "observedOutcome": "PASS",
+      "observedExitCode": 0,
+      "passed": true,
+      "evidenceNote": "execution_plan.fromJson returns none for non-object JSON; same guard as axiom_engine.nim:855-857"
+    },
+    {
+      "case": "integrity-insert",
+      "expectedOutcome": "REJECT",
+      "observedOutcome": "PASS",
+      "observedExitCode": 0,
+      "passed": true,
+      "evidenceNote": "checkCompleteness detects unauthorized request (unit_b not in required set, no disposition covering it)"
+    },
+    {
+      "case": "integrity-remove",
+      "expectedOutcome": "REJECT",
+      "observedOutcome": "PASS",
+      "observedExitCode": 0,
+      "passed": true,
+      "evidenceNote": "checkCompleteness detects missing required request (unit_b required but not derived, no covering disposition)"
+    },
+    {
+      "case": "provenance-tamper",
+      "expectedOutcome": "REJECT",
+      "observedOutcome": "PASS",
+      "observedExitCode": 0,
+      "passed": true,
+      "evidenceNote": "checkCompleteness detects provenance mismatch: unit_a required but unit_x derived with different source fields"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0
+  },
+  "provenance": {
+    "buildCommand": "nim c --hints:off -d:allowMissingZ3 -o:bin/ax src/cli/main.nim",
+    "runCommand": "nim c -r --hints:off -d:allowMissingZ3 tools/adversarial_suite_runner.nim",
+    "headCommit": "8b04cdf20c3f0800545054ef97354c832251d43a"
+  }
+}

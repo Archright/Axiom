@@ -1,0 +1,229 @@
+CODE DEBT SCAN RESULTS — 2026-06-07
+====================================
+Scanner: automated grep/sed/cat sweep
+Working directory: ../Axiom-core
+Scope: src/, tests/ (READ-ONLY audit, no source files modified)
+
+========================================================================
+[C-01] test_v3_config.nim — STUB FILE
+========================================================================
+Status: CONFIRMED — STUB
+Location: src/gate/test_v3_config.nim
+
+Content:
+  {.push raises: [CatchableError].}
+  when isMainModule:
+    echo "test"
+
+Severity: MEDIUM
+Violation: AGENTS.md §0.8 No Stub Files — file contains only a trivial
+           echo with no meaningful logic or verification.
+Action: Delete or replace with actual v3 config test logic.
+
+========================================================================
+[C-02] echo "hi" / echo "test" DEBUG LEFTOVERS IN src/
+========================================================================
+Status: CONFIRMED — 2 occurrences
+
+  src/core/global_symbol_graph_builder_part2.nim:313  echo "hi"
+  src/gate/test_v3_config.nim:4                       echo "test"
+
+Severity: HIGH (echo "hi") / MEDIUM (echo "test")
+The "hi" echo in global_symbol_graph_builder_part2.nim is a clear
+debug leftover in production code. The "test" echo is the stub from C-01.
+Action: Remove `echo "hi"` from line 313 of global_symbol_graph_builder_part2.nim.
+
+========================================================================
+[C-03] proc CANDIDATES FOR func CONVERSION (src/core/)
+========================================================================
+Status: ~30 proc declarations with {.raises: [].} found
+
+Sample (first 30):
+  architecture_policy_part2.nim:13  validateMandatorySections*  (pure)
+  architecture_policy_part2.nim:29  parseArchitecturePolicy*    (pure parse)
+  architecture_policy_part2.nim:63  loadArchitecturePolicy*     (I/O — keep proc)
+  boundary_extraction_helpers.nim:103 loadSourceFromNodeId*     (I/O — keep proc)
+  refactoring_engine.nim:61         computeSynergyMetrics*      (pure)
+  smt_to_lean_codegen_part1.nim:457 generateAndWriteSmtQuery*  (I/O — keep proc)
+  shell_bridge.nim:7,17,26          runCommandInDir/checkToolAvailable/runCommandSeqInDir (I/O — keep proc)
+  axiom_api_session_proof.nim:121   generateProofFromSession*   (I/O — keep proc)
+  reasoning_recorder.nim:20,26      recordReasoningEvent*/drainThreadReasoningTrail* (thread-local I/O)
+  tree_sitter_path.nim:15,24,28     parserLibPath/nimParserLib/leanParserLib (env lookup — borderline)
+  vault_factory.nim:51,77,83,...    10 procs (file/DB I/O — keep proc)
+  global_symbol_graph_builder_part2.nim:16,187,207,241  (file I/O — keep proc)
+  axiom_api_session_helpers.nim:152 parseStoredProofResponse* (pure parse)
+  tree_sitter_parse.nim:37          parseNimRes*               (pure parse)
+
+Severity: LOW
+Note: Per AGENTS.md §0.6, proc is permitted at the I/O boundary.
+Many of these legitimately do I/O. True candidates for func conversion:
+  - computeSynergyMetrics (refactoring_engine.nim:61)
+  - parseArchitecturePolicy (architecture_policy_part2.nim:29)
+  - parseStoredProofResponse (axiom_api_session_helpers.nim:152)
+  - parseNimRes (tree_sitter_parse.nim:37)
+Action: Audit each candidate individually against the Side Effect Registry
+        (docs/spec/nim_effect_system_quirks.md) before converting.
+
+========================================================================
+[C-04] BACKWARD-COMPAT RE-EXPORT FACADES
+========================================================================
+Status: CONFIRMED — 21 references across 17 files
+
+File breakdown:
+  cli/ax_workflow_cli.nim:3           "Re-export hub for backward compatibility"
+  cli/cli_io.nim:3,12                CLI IO backward compat + sanitizeToken re-export
+  core/verified_axioms_core.nim:14,57,84  Legacy types + Unicode normalization compat
+  core/solver/types.nim:82            Serialization functions re-export
+  core/tautology_prover.nim:56        Tautology checker re-export
+  core/metrics.nim:87                 Retained for backward compat with tests only
+  core/contract_param_util.nim:32     Parameter name detection (backward compat)
+  core/logic/semantic_theorem_builder.nim:29  Re-export from axiom_lemmas
+  core/sorter_core.nim:3              Facade: re-exports sorter_core_index + algo
+  core/bmc_race.nim:4                 BMC Race re-export module
+  verification/global_symbol_graph.nim:9    Temporary wrapper
+  verification/fingerprint_engine.nim:8     Kept for backward compat callers
+  verification/lean_skeleton.nim:17,33      buildLeanSkeletonPremises + legacy funcs
+  verification/proof_universe_lock.nim:10   Wrapper for downstream imports
+  verification/pipeline_lean_spec_inference_parts/...:350  Heuristic retained for compat
+  verification/orchestrator.nim:342         Local aliases for internal helpers
+  gate/runners/architecture_gate.nim:10     Wrapper to nimtry (deprecated)
+
+Severity: MEDIUM
+These facades accumulate import surface area and mask the true dependency graph.
+Over time, callers should be migrated and facades removed.
+Action: Triage into (a) still-needed, (b) removable after caller migration,
+        (c) removable immediately. Prioritize (c).
+
+========================================================================
+[C-05] MAGIC NUMBERS
+========================================================================
+Status: PARTIAL — limited findings
+
+the_judge_lean.nim:162 area:
+  - `96` in `min(prop.len, start + 96)` — unnamed limit constant
+  - Int64 boundaries (-9223372036854775808..9223372036854775807) — these are
+    standard Int64 limits, acceptable in SMT encoding context
+
+interface_auditor.nim:82 area:
+  - `threshold: float = 3.0` — default parameter, acceptable but could use
+    a named constant for clarity
+
+Severity: LOW
+Action: Extract `96` in the_judge_lean.nim to a named constant (e.g.,
+        `MaxFieldScanLength = 96`).
+
+========================================================================
+[C-06] DEPRECATED FUNCS IN metrics.nim
+========================================================================
+Status: CONFIRMED — 5 deprecated functions
+
+  Line  92: computeAsi*(verified, total: int; avgRetryCount: float)
+  Line 100: computeAsi*(verified: int; universe: AsiUniverse; avgRetryCount: float)
+  Line 104: computeAxiomaticIntegrity*(verified: int; universe: AsiUniverse)
+  Line 108: computeFormalProofIntegrity*(verified: int; universe: AsiUniverse; avgRetryCount: float)
+  Line 112: computeSplitAsi*(formalVerified, axiomaticVerified: int; ...)
+
+All marked: deprecated: "Use computeInformationGainWeightedAsi"
+Line 88 notes: "Local suppression: deprecated functions call each other internally."
+
+Severity: MEDIUM
+Action: Verify no external callers remain. If tests are the only callers
+        (per line 87 comment), migrate tests to computeInformationGainWeightedAsi
+        and delete the deprecated overloads.
+
+========================================================================
+[C-07] REMOVED IMPORT TOMBSTONE COMMENTS
+========================================================================
+Status: CONFIRMED — 4 tombstones
+
+  cli/axiom_engine.nim:25
+    # import ../metrics/asi_replayer  # REMOVED: module deleted
+  core/solver/equivalence_checker.nim:11
+    # import ../../verification/cegar_engine — REMOVED: unused
+  verification/translation_validator.nim:8
+    # import ../gate/gate_rules — REMOVED: all types in core/domain_types
+  gate/gate_rules.nim:19
+    # import ../verification/proof_linkage — REMOVED: AxiomLinkageResult in core/domain_types
+
+Severity: LOW (harmless but noisy)
+Tombstone comments serve as historical context but accumulate clutter.
+Action: Move tombstone rationale to docs/history/ and delete the comments.
+
+========================================================================
+[C-08] TODO/FIXME/HACK/XXX/WORKAROUND COMMENTS
+========================================================================
+Status: CONFIRMED
+
+--- src/ (8 findings) ---
+src/core/refactoring_engine.nim:272    TODO: compose nested calls into single function
+src/core/refactoring_engine.nim:286    TODO: isolate I/O boundary — extract proc wrapper
+src/core/diagnostics_engine_main.nim:356  TODO: Upgrade to tree-sitter AST queries (Phase 4)
+src/core/json_utils_scan.nim:33        \uXXXX — false positive (Unicode escape literal)
+src/core/axiom_contract.nim:130-131,147  Intentional: validates that user refs are NOT TODO/FIXME
+src/core/axiom_prelude.nim:13,199      \uXXXX — false positive (documentation about Unicode)
+
+  Genuine TODOs: 3 (refactoring_engine x2, diagnostics_engine_main x1)
+  False positives (Unicode escapes): 3
+  Intentional validator logic: 1
+
+--- tests/ (5 findings) ---
+tests/unit/axiom_contract_test.nim:39     [TODO] — intentional test constraint
+tests/unit/axiom_contract_test.nim:129    Test for TODO placeholder validation
+tests/unit/axiom_contract_test.nim:146    Test for FIXME placeholder validation
+tests/unit/axiom_contract_test.nim:148    [FIXME] — intentional test constraint
+tests/test_utils/lean_compat_adapter.nim:25  TODO: replace with buildUniversalLeanSource
+
+  Genuine TODOs: 1 (lean_compat_adapter.nim:25)
+  Intentional test fixtures: 4
+
+Severity: LOW-MEDIUM
+Genuine TODOs: 4 total (3 in src/, 1 in tests/)
+Action: Create tracking issues for the 4 genuine TODOs:
+  1. refactoring_engine.nim:272 — compose nested calls
+  2. refactoring_engine.nim:286 — isolate I/O boundary
+  3. diagnostics_engine_main.nim:356 — tree-sitter AST upgrade (Phase 4)
+  4. lean_compat_adapter.nim:25 — replace buildUniversalLeanSource
+
+========================================================================
+[BONUS] ECHO STATEMENTS IN src/ (outside when isMainModule)
+========================================================================
+Status: 7 candidates found (after exclusions)
+
+LEGITIMATE (production output):
+  src/cli/main.nim:32                     echo axiomVersionWithPrefix (version display)
+  src/mcp/server.nim:177                  echo response (MCP protocol output)
+  src/gate/logic_binding_gate.nim:51      echo "Logic-Binding Gate PASSED" (gate status)
+  src/gate/generators/certified_exempt_generator.nim:54  echo "Generated ..." (build output)
+  src/gate/context_size_guard.nim:62      echo "[context-size-guard] PASS ..." (diagnostic)
+
+DEBUG LEFTOVER:
+  src/core/global_symbol_graph_builder_part2.nim:313  echo "hi"  ← REMOVE
+  src/gate/test_v3_config.nim:4                       echo "test" ← STUB (see C-01)
+
+Severity: HIGH for echo "hi", MEDIUM for echo "test"
+
+========================================================================
+SUMMARY TABLE
+========================================================================
+ID     | Finding                          | Count | Severity | Action
+-------|----------------------------------|-------|----------|---------------------------
+C-01   | test_v3_config.nim stub          |   1   | MEDIUM   | Delete or implement
+C-02   | echo debug leftovers             |   2   | HIGH     | Remove echo "hi"
+C-03   | proc→func candidates             |  ~4   | LOW      | Audit individually
+C-04   | backward-compat facades          |  21   | MEDIUM   | Triage and migrate callers
+C-05   | Magic numbers                    |   1   | LOW      | Extract to named constant
+C-06   | Deprecated funcs in metrics.nim  |   5   | MEDIUM   | Migrate tests, delete
+C-07   | REMOVED tombstone comments       |   4   | LOW      | Move to docs/history/
+C-08   | Genuine TODO/FIXME comments      |   4   | LOW-MED  | Create tracking issues
+BONUS  | Debug echo statements            |   2   | HIGH     | Remove
+
+TOTAL ACTIONABLE ITEMS: 44
+  HIGH severity:    3 items (echo "hi" x1, echo "test" x1, debug echoes x2 — overlapping)
+  MEDIUM severity: 27 items (stub x1, facades x21, deprecated x5)
+  LOW severity:    14 items (proc candidates x4, magic x1, tombstones x4, TODOs x4, misc x1)
+
+TOP PRIORITY ACTIONS:
+  1. Remove `echo "hi"` from global_symbol_graph_builder_part2.nim:313
+  2. Delete or implement src/gate/test_v3_config.nim (stub)
+  3. Migrate test callers of deprecated metrics.nim functions
+  4. Triage backward-compat facades for removal candidates

@@ -1,0 +1,6 @@
+{
+  "version": "1.0",
+  "gate_id": "logging-policy-gate",
+  "description": "Approved exceptions for logging-policy-gate false positives. Each entry has a TTL (expires field). Expired entries are automatically ignored.",
+  "exceptions": []
+}

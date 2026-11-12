@@ -1,0 +1,223 @@
+DIRECTORY DEBT SCAN RESULTS — 2026-06-07
+=========================================
+Project: Axiom-core (Integrity Proof Engine)
+Scan scope: Full working tree excluding .git/ internals
+Scanner: directory_debt_scan (read-only audit)
+
+================================================================================
+[D-01] GARBAGE FILE '0:'
+================================================================================
+Status:       CONFIRMED — git-tracked zero-byte artifact
+Path:         ./0:
+Type:         empty file (0 bytes)
+Created:      2026-06-06 14:21
+Git-tracked:  YES
+Severity:     LOW (cosmetic, zero functional impact)
+Action:       `git rm 0:` — likely an accidental shell typo (colon in filename)
+
+================================================================================
+[D-02] STALE ELF BINARIES IN src/
+================================================================================
+Status:       CONFIRMED — 10 compiled binaries sitting inside source tree
+Git-tracked:  NO (all 10 are UNTRACKED, so .gitignore works for src/)
+Total size:   8.7 MB on disk in src/
+
+  UNTRACKED  144K  src/personas/legislator_feedback
+  UNTRACKED  496K  src/personas/detective
+  UNTRACKED   96K  src/personas/persona_interface
+  UNTRACKED  496K  src/personas/judge
+  UNTRACKED  6.0M  src/cli/main              ← largest
+  UNTRACKED   96K  src/core/lean_replay
+  UNTRACKED  140K  src/verification/cegar_engine
+  UNTRACKED  560K  src/verification/universal_pipeline
+  UNTRACKED  560K  src/verification/batch_uap_orchestrator
+  UNTRACKED  212K  src/gate/generators/cli_surface_generator
+
+Severity:     MEDIUM
+Mitigating:   Not git-tracked, so no repo bloat. But pollutes source tree,
+              may confuse tooling, and `nim c` output should go to build/.
+Action:       Add `rm -f src/**/*.elf; find src/ -type f -executable -delete`
+              to build cleanup script, or configure nim to output to build/.
+
+================================================================================
+[D-03] EMPTY TOP-LEVEL DIRECTORIES
+================================================================================
+Status:       CONFIRMED — 3 empty directories
+
+  cli/               0 files   ← empty, no source, no .gitkeep
+  mcp-notion-server/ 0 files   ← empty placeholder
+  vendor/            0 files   ← empty, no gitmodules content
+
+Severity:     LOW
+Action:       Either populate with .gitkeep + rationale README, or remove.
+              `cli/` is suspicious — the real CLI is at src/cli/.
+
+================================================================================
+[D-04] EMPTY SUBDIRECTORIES
+================================================================================
+Empty dirs found (excluding .git/):
+
+  ./cli
+  ./mcp-notion-server
+  ./vendor
+  ./logs/effect_system_fix
+
+  (Also 7 empty nimcache dirs under build/gateway-tests/ — acceptable)
+
+Severity:     LOW
+Action:       `logs/effect_system_fix/` is an empty log dir — remove or
+              document why it exists.
+
+================================================================================
+[D-05] __pycache__ DIRECTORIES
+================================================================================
+Status:       CONFIRMED — 1 instance
+
+  ./tools/__pycache__
+
+Severity:     LOW (should be in .gitignore)
+Action:       Verify .gitignore contains `__pycache__/`. If tracked: `git rm -r --cached`.
+
+================================================================================
+[D-06] LARGE GIT-TRACKED FILES (TOP 20)
+================================================================================
+Git repo bloat analysis — files tracked by git sorted by size:
+
+  3.8M   src/core/assets/seed_symbol_graph.json    ← seed data asset
+  3.1M   docs/spec/program_synthesis.pdf            ← PDF in git
+  720K   docs/spec/Subjective_logic.pdf             ← PDF in git
+  716K   tests/features/tactic_backtrack_test        ← ELF binary TRACKED
+  712K   tests/features/pattern_guard_test           ← ELF binary TRACKED
+  528K   tests/features/k_induction_test             ← ELF binary TRACKED
+  412K   tests/features/complexity_entropy_test      ← ELF binary TRACKED
+  308K   docs/spec/Temporal_Induction_by_...pdf
+  228K   docs/spec/cegar.pdf
+  188K   docs/spec/Checking_Safety_Properties...pdf
+  156K   docs/DEBT_REGISTRY.md
+  140K   docs/history/2026_05_refactoring.md
+   84K   .agents/skills/axiom-quality-gate/SKILL.md
+   76K   verifications/nim_check_main_2026-06-03.txt
+   76K   docs/evidence/verifications/nim_check_main_2026-06-03.txt (duplicate)
+   52K   docs/history/architecture-refactor-waves.md
+   48K   docs/history/unverified_commits_audit.md
+   44K   experimental/tests/gateway/gateway_solver_test.nim
+   40K   src/ui/ax_tui_reporter_parts/ax_tui_reporter_part2.nim
+   40K   docs/reports/technical_debt_context7_...md
+
+Severity:     HIGH for git-tracked ELF binaries, MEDIUM for PDFs
+Action:
+  - 4 ELF binaries in tests/features/ are GIT-TRACKED (~2.4 MB).
+    These are compiled test binaries, not source. Add to .gitignore
+    and `git rm --cached`.
+  - 7 PDFs in docs/spec/ total ~5.7 MB. Consider Git LFS or external hosting.
+  - seed_symbol_graph.json (3.8 MB) — large JSON asset; consider LFS if
+    it changes frequently.
+  - `verifications/nim_check_main_2026-06-03.txt` duplicated at two paths.
+
+================================================================================
+[D-07] BUILD ARTIFACTS ON DISK
+================================================================================
+  build/   70 MB  (all under build/gateway-tests/)
+  logs/    2.3 MB
+
+Severity:     MEDIUM
+Mitigating:   build/ and logs/ likely in .gitignore (not git-tracked).
+Action:       Periodic cleanup: `rm -rf build/gateway-tests/nimcache`
+              Consider adding to a `make clean` target.
+
+================================================================================
+[BONUS-1] FILES WITH SUSPICIOUS NAMES (root level)
+================================================================================
+  ./0:                  ← garbage file (see D-01)
+  ./nimble.lock         ← expected (995 bytes)
+  ./lean-toolchain      ← expected (25 bytes)
+  ./lake-manifest.json  ← expected (122 bytes)
+
+Severity:     LOW (only `0:` is suspicious)
+
+================================================================================
+[BONUS-2] NIMCACHE DIRECTORIES
+================================================================================
+  ./build/gateway-tests/nimcache   ← expected build cache location
+
+Severity:     NONE (properly in build/)
+
+================================================================================
+[BONUS-3] ALL ELF BINARIES ON DISK (comprehensive)
+================================================================================
+Total ELF count on disk: 30 binaries
+
+  In src/ (UNTRACKED, 10 binaries):    8.7 MB
+  In tests/features/ (TRACKED, 4):     2.4 MB
+  In tests/gateway/ (compiled, 10):    ~3.5 MB
+  In bin/ (intended, 2):               2.5 MB  (nimtry, clean_unused_imports)
+  In root (ax symlink/script):         6.0 MB
+
+  Key concern: 4 ELF binaries GIT-TRACKED in tests/features/ — these are
+  build artifacts committed to source control.
+
+================================================================================
+[BONUS-4] DUPLICATE EVIDENCE FILES
+================================================================================
+  verifications/nim_check_main_2026-06-03.txt           (76K)
+  docs/evidence/verifications/nim_check_main_2026-06-03.txt  (76K)
+
+  Same content, two locations. Violates SSOT principle.
+  Action: Keep one, symlink or reference the other.
+
+================================================================================
+DIRECTORY SIZE SUMMARY
+================================================================================
+  src/              18 MB
+  docs/             7.7 MB
+  tests/            7.6 MB
+  bin/              2.6 MB
+  logs/             2.3 MB
+  build/            70 MB
+  tools/            144 KB
+  experimental/     168 KB
+  verifications/    256 KB
+
+================================================================================
+SEVERITY SUMMARY TABLE
+================================================================================
+  ID     Finding                          Severity  Git-Tracked?  Action
+  ─────  ───────────────────────────────  ────────  ────────────  ──────────────
+  D-01   Garbage file '0:'                LOW       YES           git rm
+  D-02   ELF binaries in src/ (10)        MEDIUM    NO            delete/clean
+  D-03   Empty top-level dirs (3)         LOW       YES           remove or fill
+  D-04   Empty subdirs (4)                LOW       YES           remove
+  D-05   __pycache__ (1)                  LOW       verify        .gitignore check
+  D-06   Git-tracked ELF in tests/ (4)   HIGH      YES           git rm --cached
+  D-06   PDFs in docs/spec/ (7, 5.7MB)   MEDIUM    YES           consider LFS
+  D-06   seed_symbol_graph.json (3.8MB)   MEDIUM    YES           consider LFS
+  D-06   Duplicate verification file      LOW       YES           deduplicate
+  D-07   build/ 70MB on disk              MEDIUM    NO            periodic clean
+  B-1    Garbage file '0:'               LOW       YES           (same as D-01)
+  B-3    4 tracked ELF test binaries     HIGH      YES           (same as D-06)
+  B-4    Duplicate nim_check evidence     LOW       YES           SSOT fix
+
+================================================================================
+TOP PRIORITY ACTIONS (recommended order)
+================================================================================
+  1. git rm --cached tests/features/{tactic_backtrack_test,pattern_guard_test,
+     k_induction_test,complexity_entropy_test}
+     Add *.elf-like pattern to .gitignore. Saves ~2.4 MB from repo.
+
+  2. git rm 0:
+     Remove garbage file from repo.
+
+  3. Add __pycache__/ and build artifacts to .gitignore (verify).
+
+  4. Deduplicate verifications/nim_check_main_2026-06-03.txt.
+
+  5. Consider Git LFS for PDFs in docs/spec/ (5.7 MB).
+
+  6. Clean stale ELF binaries from src/ tree.
+     find src/ -type f -executable -delete
+
+  7. Remove or document empty directories (cli/, mcp-notion-server/, vendor/).
+
+================================================================================
+END OF SCAN — 2026-06-07T07:36 KST
+================================================================================

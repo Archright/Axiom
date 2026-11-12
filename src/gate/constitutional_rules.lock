@@ -1,0 +1,2 @@
+# Deprecated. The canonical architecture policy is src/gate/architecture_policy.lock.
+# This file is retained only as a transition marker and is not read by architecture_gate.

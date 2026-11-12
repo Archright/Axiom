@@ -1,0 +1,277 @@
+{
+  "source": "git churn analysis + complexity_report.json",
+  "tiers": {
+    "tier1": {
+      "description": "Top 10% churned modules — 100% test coverage required",
+      "modules": [
+        {
+          "churn_count": 180,
+          "path": "src/cli/wf_state.nim",
+          "rank": 1
+        },
+        {
+          "churn_count": 144,
+          "path": "src/cli/topology_cli.nim",
+          "rank": 2
+        },
+        {
+          "churn_count": 132,
+          "path": "src/cli/report_cli.nim",
+          "rank": 3
+        },
+        {
+          "churn_count": 129,
+          "path": "src/verification/analyzer.nim",
+          "rank": 4
+        },
+        {
+          "churn_count": 117,
+          "note": "deleted — retained for churn history",
+          "path": "src/cli/asi_cli.nim",
+          "rank": 5
+        },
+        {
+          "churn_count": 117,
+          "path": "src/core/logic/pipeline_healing_logic.nim",
+          "rank": 6
+        },
+        {
+          "churn_count": 108,
+          "path": "src/cli/axiom_engine.nim",
+          "rank": 7
+        },
+        {
+          "churn_count": 108,
+          "path": "src/verification/healing_orchestrator.nim",
+          "rank": 8
+        },
+        {
+          "churn_count": 105,
+          "path": "src/core/judge/smart_search.nim",
+          "rank": 9
+        },
+        {
+          "churn_count": 102,
+          "path": "src/cli/axiom_status.nim",
+          "rank": 10
+        }
+      ],
+      "threshold": 1.0,
+      "top_percent": 10
+    },
+    "tier2": {
+      "description": "Next 20% churned modules (10%–30%) — 80% test coverage required",
+      "modules": [
+        {
+          "path": "src/core/session/session_parser_validators.nim",
+          "rank": 11
+        },
+        {
+          "path": "src/core/gate/gate_memo.nim",
+          "rank": 12
+        },
+        {
+          "path": "src/core/spec/spec_generator_helpers.nim",
+          "rank": 13
+        },
+        {
+          "path": "src/core/boundary/boundary_extraction_helpers.nim",
+          "rank": 14
+        },
+        {
+          "path": "src/core/schema/schema_utils.nim",
+          "rank": 15
+        },
+        {
+          "path": "src/core/diagnostics/diagnostics_engine_main.nim",
+          "rank": 16
+        },
+        {
+          "path": "src/core/diagnostics/pattern_guard.nim",
+          "rank": 17
+        },
+        {
+          "path": "src/core/topology/topology_parser.nim",
+          "rank": 18
+        },
+        {
+          "path": "src/core/type_system/liquid_inference.nim",
+          "rank": 19
+        },
+        {
+          "path": "src/core/boundary/boundary_extraction_main.nim",
+          "rank": 20
+        },
+        {
+          "path": "src/core/contract/contract_ast_extractor.nim",
+          "rank": 21
+        },
+        {
+          "path": "src/core/proof/proof_vacuity_gate.nim",
+          "rank": 22
+        },
+        {
+          "path": "src/core/translator/ast_to_lean_bridge.nim",
+          "rank": 23
+        },
+        {
+          "path": "src/core/contract/contract_text_extractor.nim",
+          "rank": 24
+        },
+        {
+          "path": "src/core/judge/smart_search.nim",
+          "rank": 25
+        },
+        {
+          "path": "src/core/codec/codec_codegen.nim",
+          "rank": 26
+        },
+        {
+          "path": "src/core/symbol_graph/global_symbol_graph_builder_part1.nim",
+          "rank": 27
+        },
+        {
+          "path": "src/core/translator/nim_ast_to_json_nodes.nim",
+          "rank": 28
+        },
+        {
+          "path": "src/core/translator/universal_mapper_part1.nim",
+          "rank": 29
+        },
+        {
+          "path": "src/core/boundary/complexity_index.nim",
+          "rank": 30
+        }
+      ],
+      "threshold": 0.8,
+      "top_percent": 30
+    },
+    "tier3": {
+      "description": "Remaining modules (30%–100%) — 50% test coverage required",
+      "modules": [
+        {
+          "path": "src/core/gate/merkle_vfs.nim",
+          "rank": 31
+        },
+        {
+          "path": "src/core/encoding/smt_to_lean_translate.nim",
+          "rank": 32
+        },
+        {
+          "path": "src/core/schema/task_schema.nim",
+          "rank": 33
+        },
+        {
+          "path": "src/core/json/json_scan_skip.nim",
+          "rank": 34
+        },
+        {
+          "path": "src/core/logic/lean_diagnostic.nim",
+          "rank": 35
+        },
+        {
+          "path": "src/core/spec/spec_generator_main.nim",
+          "rank": 36
+        },
+        {
+          "path": "src/core/gate/gate_cas.nim",
+          "rank": 37
+        },
+        {
+          "path": "src/core/diagnostics/diagnostics_engine_helpers.nim",
+          "rank": 38
+        },
+        {
+          "path": "src/core/solver/z3_result_parser.nim",
+          "rank": 39
+        },
+        {
+          "path": "src/core/trusted/import_parser.nim",
+          "rank": 40
+        },
+        {
+          "path": "src/core/judge/the_judge_query_part1.nim",
+          "rank": 41
+        },
+        {
+          "path": "src/core/solver/smt2_lexer.nim",
+          "rank": 42
+        },
+        {
+          "path": "src/core/parsers/tree_sitter_extractor.nim",
+          "rank": 43
+        },
+        {
+          "path": "src/core/translator/universal_assembler.nim",
+          "rank": 44
+        },
+        {
+          "path": "src/core/gateway/gateway_main.nim",
+          "rank": 45
+        },
+        {
+          "path": "src/core/boundary/private/boundary_phases.nim",
+          "rank": 46
+        },
+        {
+          "path": "src/core/topology/declaration.nim",
+          "rank": 47
+        },
+        {
+          "path": "src/core/judge/the_judge_lean.nim",
+          "rank": 48
+        },
+        {
+          "path": "src/core/api/axiom_api_session_ops.nim",
+          "rank": 49
+        },
+        {
+          "path": "src/core/topology/import_graph.nim",
+          "rank": 50
+        },
+        {
+          "path": "src/core/analysis/cfg_builder.nim",
+          "rank": 51
+        },
+        {
+          "path": "src/core/json/json_utils_scan.nim",
+          "rank": 52
+        },
+        {
+          "path": "src/core/parsers/cst_offset_extractor.nim",
+          "rank": 53
+        },
+        {
+          "path": "src/core/topology/lock.nim",
+          "rank": 54
+        },
+        {
+          "path": "src/core/proof/proof_universe_lock.nim",
+          "rank": 55
+        },
+        {
+          "path": "src/core/schema/io_schema.nim",
+          "rank": 56
+        },
+        {
+          "path": "src/core/judge/the_judge_query_part2.nim",
+          "rank": 57
+        },
+        {
+          "path": "src/core/diagnostics/refactoring_engine.nim",
+          "rank": 58
+        },
+        {
+          "path": "src/core/parsers/nav.nim",
+          "rank": 59
+        },
+        {
+          "path": "src/core/symbolic/symbolic_types_exec.nim",
+          "rank": 60
+        }
+      ],
+      "threshold": 0.5,
+      "top_percent": 100
+    }
+  }
+}

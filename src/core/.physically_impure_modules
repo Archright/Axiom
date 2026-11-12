@@ -1,0 +1,32 @@
+#
+axiom_api
+file_utils
+ecosystem_linkage
+gateway
+global_symbol_graph
+io_utils
+json_utils
+# Last updated: 2026-05-05
+lean_diagnostic
+orchestrator
+orchestrator_topology
+orchestrator_vault
+# Physically Impure Modules in src/core/
+pipeline_verdict_engine
+# {.push raises: [].} still applies to all modules.
+#   - scripts/gates/guardian_compliance_scanner.nim (skips noSideEffect audit)
+#   - scripts/gates/inject_core_pragmas.nim (skips noSideEffect injection)
+semantic_graph
+smart_search
+solver_bridge
+spec_generator
+state_manager
+shell_bridge
+sync_utils
+# These modules perform physical side effects: file system IO, network IO,
+# They MUST NOT receive {.push noSideEffect.} at module scope.
+# This list is consumed by:
+# time acquisition, mutable global state mutation, or process execution.
+vault_factory
+vault_manager
+z3_pool

@@ -1,0 +1,578 @@
+# h4-routing-measure — H4 라우팅 스윕 측정 워크플로 (실행판, 정책 v14 등록)
+#
+# dispatch-only 측정판 (Owner 결정 #14 — 비권위, required check 아님):
+#   r1-select / r2-admission / r3-shard × runner class (h1-x64/h2-arm64/h3-slim).
+# 설계 근거: docs/evidence/h4_routing_protocol.md (실험·예산·신뢰 경계 판정),
+# 실행 규약: docs/evidence/s2_protocol.md (trace 사전등록·역균형·ingest·중단규칙).
+# 원본 초안: docs/evidence/h4_routing_workflow_draft.yml (비집행 보존).
+#
+name: h4-routing-measure
+
+on:
+  workflow_dispatch:
+    inputs:
+      experiment:
+        description: '측정 실험 R1(select) / R2(admission) / R3(shard) / R5(holdout 종단 실증)'
+        type: choice
+        options: [r1-select, r2-admission, r3-shard, r5-holdout]
+      candidate:
+        description: 'r5-holdout 후보: c0(기준 x64) | c3(select→slim + shard→arm)'
+        type: choice
+        options: [c0, c3]
+        default: c0
+      runner:
+        description: 'candidate runner class. r1/r2: h1-x64|h3-slim. r3: h1-x64|h2-arm64'
+        type: choice
+        options: [h1-x64, h2-arm64, h3-slim]
+      iter:
+        description: 'Pre-registered pair slot (1..n) — 주문은 trace 매핑 표를 따른다'
+        type: number
+        default: 1
+      ref:
+        description: '고정 측정 ref (SHA) — 모든 측정 run의 check-out 대상'
+        type: string
+        default: 0000000000000000000000000000000000000000
+      main-ref:
+        description: 'R1b diff 기준 main SHA (고정) — 빈 값이면 미사용'
+        type: string
+        default: ''
+      pr-number:
+        description: 'R2 pin-identity 입력: 고정 실측 PR 번호 (PR API 재도출 대체)'
+        type: number
+        default: 0
+      b-sha:
+        description: 'R2 pin-identity 입력: 고정 측정 PR의 base.sha (B)'
+        type: string
+        default: '0000000000000000000000000000000000000000'
+      h-sha:
+        description: 'R2 pin-identity 입력: 고정 측정 PR의 head.sha (H)'
+        type: string
+        default: '0000000000000000000000000000000000000000'
+      tree-oid:
+        description: 'R2 pin-identity 입력: H의 HEAD^{tree} OID'
+        type: string
+        default: '0000000000000000000000000000000000000000'
+      payload-run:
+        description: 'warm run ID (payload 업로더) — measure 레그 cross-run 다운로드 원천 (비었으면 동일 런)'
+        type: string
+        default: ''
+      warm:
+        description: 'true = provisioning run (B 페이로드/아티팩트 생성; 절대 ingest 금지)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  # ── warm: 실험별 페이로드 provisioning (미수집) ──────────────────────────────
+  provision:
+    if: ${{ inputs.warm == true }}
+    # R2 warm은 항상 H1 (x64 bin/ax가 H1/H3 양쪽 측정 레그에 공급됨 — 프로토콜 §2 R2)
+    # R3 warm은 아치별 1회 (H1 키트는 H1 레그, H2 키트는 H2 레그)
+    runs-on: ${{ inputs.experiment == 'r2-admission' && 'ubuntu-24.04' || inputs.runner == 'h3-slim' && 'ubuntu-slim' || (inputs.runner == 'h2-arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04') }}
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: write   # artifact upload (B-cache가 아닌 아티팩트 경로)
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          clean: true
+          fetch-depth: 1
+
+      # 공통 툴체인 (arm: hw-smoke yml:73-107 recipe / slim: 프로파일 — apt 없음)
+      # PATH는 $GITHUB_PATH로 영속(단계 간 전달 — export는 단계 내 한정이라는
+      # hw-smoke 4단계 교훈과 동일한 결함 클래스).
+      # r1-select: 양측 동일 provision(교란 해소 — P5 §5.1, S1) — Measured R1의
+      # 내장 인라인 툴체인만 사용, 선행 provision 생략으로 h1/h3 동일 조건 보장
+      - name: Provision toolchain (arch/class-conditional bootstrap)
+        if: ${{ inputs.experiment != 'r1-select' }}
+        run: |
+          set -euo pipefail
+          echo "arch=$(uname -m) nproc=$(nproc)"
+          # Lean/lake는 R2 warm의 `lake build ircheck`에 필수 — 전 runner 공통
+          curl -sSfL https://elan.lean-lang.org/elan-init.sh -o /tmp/elan-init.sh
+          sh /tmp/elan-init.sh -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+          if [ "${{ inputs.runner }}" = "h3-slim" ]; then
+            # slim-프로파일: nim 공식 tarball 우선 (apt 금지)
+            curl -sSfL "https://nim-lang.org/download/nim-2.2.10-linux_x64.tar.xz" -o /tmp/nim.tar.xz
+            mkdir -p "$HOME/.nim-official"
+            tar -xJf /tmp/nim.tar.xz -C "$HOME/.nim-official" --strip-components=1
+            echo "$HOME/.nim-official/bin" >> "$GITHUB_PATH"
+            Z3V=4.13.3
+            curl -sL "https://github.com/Z3Prover/z3/releases/download/z3-${Z3V}/z3-${Z3V}-x64-glibc-2.35.zip" -o /tmp/z3.zip
+            unzip -q /tmp/z3.zip -d /tmp/z3 && find /tmp/z3 -type f -name z3 -exec cp {} /tmp/z3bin \; -quit
+            echo "/tmp" >> "$GITHUB_PATH"
+          else
+            # H1/H2: hw-smoke 실증 recipe (choosenim → tarball fallback)
+            # nimble 의존성(action.yml:293 패턴) — checksums 없으면 ci-bootstrap 실패
+            # (R2 warm 2차 실패 36150250555 실증: hash_kernel → checksums/sha2 부재)
+            curl -sSfL https://nim-lang.org/choosenim/init.sh -o /tmp/choosenim-init.sh
+            if sh /tmp/choosenim-init.sh -y; then
+              "$HOME/.nimble/bin/choosenim" 2.2.10
+              export PATH="$HOME/.nimble/bin:$PATH"
+              [ -f "$HOME/.choosenim/toolchains/nim-2.2.10/compiler/ast.nim" ] || {
+                echo "::error::FAIL: compiler sources unavailable after choosenim pin"; exit 1; }
+              "$HOME/.nimble/bin/nimble" install -y
+              echo "$HOME/.nimble/bin" >> "$GITHUB_PATH"
+            else
+              NIMV=2.2.10
+              ARCH=$([ "$(uname -m)" = "aarch64" ] && echo arm64 || echo x64)
+              curl -sSfL "https://nim-lang.org/download/nim-${NIMV}-linux_${ARCH}.tar.xz" -o /tmp/nim.tar.xz
+              NMROOT="$HOME/.choosenim/toolchains/nim-${NIMV}"
+              mkdir -p "$NMROOT" && tar -xJf /tmp/nim.tar.xz -C "$NMROOT" --strip-components=1
+              export PATH="$NMROOT/bin:$PATH"
+              "$NMROOT/bin/nimble" install -y
+              echo "$NMROOT/bin" >> "$GITHUB_PATH"
+            fi
+            # libpcre3 — GH-hosted 이미지 미포함 (action.yml:235-251 패턴, production
+            # run 35949574909가 정확히 같은 `bin/ax scope hash` dlopen 실패로 추가).
+            # bin/ax 실행 필수(r2/r3 warm); slim은 apt 불가(B13) — 측정 레그의 런타임
+            # fail-closed가 판정하므로 provision에서는 제외.
+            if [ "${{ inputs.runner }}" != "h3-slim" ]; then
+              if ldconfig -p 2>/dev/null | grep -q 'libpcre\.so'; then
+                echo "libpcre present — skip install"
+              else
+                sudo apt-get -o DPkg::Lock::Timeout=300 update -qq
+                sudo apt-get -o DPkg::Lock::Timeout=300 install -y -qq libpcre3
+              fi
+              ldconfig -p | grep 'libpcre\.so\.3'
+            fi
+          fi
+          # $GITHUB_PATH는 다음 단계부터 적용 — 동일 단계 검증은 인라인 export 필요
+          export PATH="$HOME/.elan/bin:$HOME/.nimble/bin:$HOME/.nim-official/bin:$PATH"
+          command -v nim >/dev/null && nim --version | head -1
+          command -v lake >/dev/null || { echo "::error::FAIL: lake missing after elan install"; exit 1; }
+        timeout-minutes: 25
+
+      # ── R2 warm: build-base-artifacts recipe (admission-check.yml:100-177) ──
+      - name: R2 provision — base artifacts (bin/ax, ircheck) + manifest
+        if: ${{ inputs.experiment == 'r2-admission' }}
+        run: |
+          set -euo pipefail
+          make ci-bootstrap
+          cd proofs && lake build ircheck && cd ..
+          test -x proofs/.lake/build/bin/ircheck
+          : > manifest.txt
+          { echo "build_sha = ${{ inputs.ref }}"
+            echo "recipe_id = ci-bootstrap@$(sha256sum Makefile | cut -d' ' -f1)"
+          } >> manifest.txt
+          for f in bin/ax bin/install_ax_cas proofs/.lake/build/bin/ircheck; do
+            test -x "$f" || { echo "FAIL: $f"; exit 1; }
+            sha256sum "$f" >> manifest.txt
+          done
+        timeout-minutes: 25
+
+      # ── R3 warm: ci-bootstrap recipe (runner-pool:240-304), 아치별 1회 ──
+      - name: R3 provision — bootstrap binaries + manifest
+        if: ${{ inputs.experiment == 'r3-shard' }}
+        run: |
+          set -euo pipefail
+          make ci-compile
+          : > manifest.txt
+          { echo "build_sha = ${{ inputs.ref }}"
+            echo "recipe_id = ci-compile@$(sha256sum Makefile | cut -d' ' -f1)"
+          } >> manifest.txt
+          for f in bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas; do
+            test -x "$f" || { echo "FAIL: $f"; exit 1; }
+            sha256sum "$f" >> manifest.txt
+          done
+        timeout-minutes: 25
+
+      - name: Upload experiment payload (exp- 네임스페이스 artifact)
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          # R2: 페이로드는 항상 H1 빌드(h1-x64 접미사 고정) — H3 레그가 동일 바이트 소비
+          # R3: 아치별 1회 빌드 → runner 접미사로 분리 (동일 이름 중복 다운로드 방지)
+          name: exp-h4-${{ inputs.experiment }}-${{ inputs.experiment == 'r2-admission' && 'h1-x64' || inputs.runner }}-payload
+          path: |
+            bin/ax
+            bin/gate_hook
+            bin/precompile_gates
+            bin/install_ax_cas
+            proofs/.lake/build/bin/ircheck
+            manifest.txt
+          if-no-files-found: error
+          retention-days: 14
+
+  # ── measure: 실험별 measured recipe (warm=false일 때 단독 실행) ──────────────
+  measure:
+    if: ${{ inputs.warm != true && inputs.experiment != 'r5-holdout' }}
+    runs-on: ${{ inputs.runner == 'h3-slim' && 'ubuntu-slim' || (inputs.runner == 'h2-arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04') }}
+    timeout-minutes: ${{ inputs.runner == 'h3-slim' && 14 || 45 }}
+    permissions:
+      contents: read
+      actions: read   # exp 페이로드 download-artifact
+    env:
+      AXIOM_PROVE_WORKERS: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          clean: true
+          fetch-depth: 0
+
+      # 툴체인: H1/H2 = setup-axiom-toolchain restore-only / H3 = slim-프로파일
+      - uses: ./.github/actions/setup-axiom-toolchain
+        if: ${{ inputs.runner != 'h3-slim' }}
+        with:
+          cache-save-enabled: 'false'
+          cache-build-source: exp-${{ inputs.ref }}
+          # h2(arm, A-miss): composite nimble은 buildtemp 사본에서 axiom을 빌드하다
+          # generated/build_env 미포함으로 실패(36167601151 실증). warm의 인트리
+          # nimble(시드 가드 작동)은 성공했으므로 → composite 스킵 + warm 동일 시퀀스
+          # 를 아래 별도 단계로 재현. h1(A-hit, stamp skip)은 무변경.
+          skip-nimble-install: ${{ inputs.runner == 'h2-arm64' }}
+      - name: Project deps (warm-equivalent in-tree sequence, h2 전용)
+        if: ${{ inputs.runner == 'h2-arm64' }}
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.choosenim/toolchains/nim-2.2.10/bin:$PATH"
+          # warm h2 실증 시퀀스: 워크스페이스 인트리 bare nimble install
+          # (config.nims 시드 가드가 build_env를 인젝션 → axiom 빌드 성공, 36167114737)
+          nimble install -y
+          echo "deps installed (warm-equivalent, in-tree)"
+      - name: Slim-profile toolchain (H3 전용 — apt 불가, B13)
+        if: ${{ inputs.runner == 'h3-slim' && inputs.experiment != 'r1-select' }}
+        run: |
+          set -euo pipefail
+          curl -sSfL https://elan.lean-lang.org/elan-init.sh -o /tmp/elan-init.sh
+          sh /tmp/elan-init.sh -y --default-toolchain none
+          export PATH="$HOME/.elan/bin:$PATH"
+          if curl -sSfL https://nim-lang.org/choosenim/init.sh -o /tmp/choosenim-init.sh \
+             && sh /tmp/choosenim-init.sh -y; then
+            export PATH="$HOME/.nimble/bin:$PATH"
+          else
+            NIMV=2.2.10
+            curl -sSfL "https://nim-lang.org/download/nim-${NIMV}-linux_x64.tar.xz" -o /tmp/nim.tar.xz
+            mkdir -p "$HOME/.nim-official"
+            tar -xJf /tmp/nim.tar.xz -C "$HOME/.nim-official" --strip-components=1
+            export PATH="$HOME/.nim-official/bin:$PATH"
+          fi
+          Z3V=4.13.3
+          curl -sL "https://github.com/Z3Prover/z3/releases/download/z3-${Z3V}/z3-${Z3V}-x64-glibc-2.35.zip" -o /tmp/z3.zip
+          unzip -q /tmp/z3.zip -d /tmp/z3 && find /tmp/z3 -name z3 -type f -exec cp {} /tmp/z3bin \; -quit
+          export PATH="/tmp/z3bin:$PATH"
+          # libpcre3 slim 존재 프로브 (action.yml:250 패턴) — R2 전용
+          # (R1 측정: selector/verifier는 PCRE 미링크 — ldd 실측, 진행 중 libpcre 불요.
+          #  slim 부재는 해당 바이너리의 실행 fail-closed가 스스로 판정한다.
+          #  R2는 bin/ax 실행이 필수 → 사전 프로브 유지. R3는 slim 미사용.)
+          if [ "${{ inputs.experiment }}" = "r2-admission" ]; then
+            ldconfig -p | grep -q 'libpcre\.so\.3' \
+              || { echo "::error::FAIL: libpcre.so.3 absent on slim (B13) — H3 job-2 실행 불가"; exit 1; }
+          else
+            echo "libpcre probe skipped (experiment=${{ inputs.experiment }} — runtime fail-closed owns the judgment)"
+          fi
+
+      # provisioning 전제 확인 (fail-closed — gateway-jobs-measure.yml:196-202 패턴)
+      - name: 'Download exp payload (R2: H1 키트 / R3: 해당 아치 키트)'
+        if: ${{ inputs.experiment != 'r1-select' }}
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: exp-h4-${{ inputs.experiment }}-${{ inputs.experiment == 'r2-admission' && 'h1-x64' || inputs.runner }}-payload
+          # v4는 기본적으로 동일 런만 검색 — warm은 별도 런이라 run-id 지정 필수
+          # (R2 measure 4/4 실패 36155684765 등 실증: Artifact not found)
+          # cross-run 다운로드에는 github-token이 추가로 필수(action.yml 명시 —
+          # 미지정 시 run-id를 무시하고 현재 런으로 폴백: R3 measure 0/4 실증)
+          run-id: ${{ inputs.payload-run != '' && inputs.payload-run || github.run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ github.workspace }}
+
+      - name: Restore payload executable bits (zip은 permission 비트 보존 안 함)
+        if: ${{ inputs.experiment != 'r1-select' }}
+        run: |
+          set -euo pipefail
+          # upload-artifact zip은 실행 비트를 잃는다 — test -x 검증이
+          # "missing"으로 오판되는 것 방지(실증: 36162675660 — 다운로드 SHA
+          # 일치 성공 후 bin/ax test -x 실패). 부재/비실행을 구분 진단.
+          # ircheck은 R2 warm만 빌드(R3 warm 미생성 — 사전점검 F1 예측 실증
+          # 36164551036: 구분 진단이 정확히 여기서 차단).
+          FILES="bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas manifest.txt"
+          if [ "${{ inputs.experiment }}" = "r2-admission" ]; then
+            FILES="$FILES proofs/.lake/build/bin/ircheck"
+          fi
+          for f in $FILES; do
+            if [ ! -e "$f" ]; then echo "::error::FAIL: $f not extracted (structure mismatch)"; exit 1; fi
+          done
+          for f in $FILES; do case "$f" in *.txt) ;; *) chmod +x "$f";; esac; done
+          ls -la bin/ax manifest.txt
+
+      - name: Verify provisioned prerequisites (fail-closed)
+        run: |
+          set -euo pipefail
+          case "${{ inputs.experiment }}" in
+            r1-select)
+              git rev-parse --verify HEAD >/dev/null
+              echo "r1: fixed ref checked out (${{ inputs.ref }})" ;;
+            r2-admission)
+              test -x bin/ax && test -x bin/install_ax_cas && test -x proofs/.lake/build/bin/ircheck \
+                || { echo "FAIL: payload missing — warm dispatch 먼저 (${{ inputs.experiment }})"; exit 1; }
+              awk -F' = ' '/^build_sha =/{print $2; exit}' manifest.txt | grep -qx "${{ inputs.ref }}" \
+                || { echo "FAIL: build_sha != ref — B 페이로드 아님"; exit 1; }
+              ./bin/ax --version >/dev/null ;;
+            r3-shard)
+              for f in bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas; do
+                test -x "$f" || { echo "FAIL: $f missing — warm dispatch 먼저"; exit 1; }
+              done
+              awk -F' = ' '/^build_sha =/{print $2; exit}' manifest.txt | grep -qx "${{ inputs.ref }}" ;;
+          esac
+          echo "iter=${{ inputs.iter }} runner=${{ inputs.runner }} ref=${{ inputs.ref }} arch=$(uname -m)"
+
+      # ── R1 measured: select recipe (runner-pool:92-158), 양쪽 byte-동일 ──
+      - name: 'Measured R1 — select (impact-closure, --require-certain)'
+        if: ${{ inputs.experiment == 'r1-select' }}
+        run: |
+          set -euo pipefail
+          export CHOOSENIM_NO_COLOR=1 CHOOSE_NIM_QUIET=1
+          curl -sSf https://nim-lang.org/choosenim/init.sh | sh -s -- -y
+          "$HOME/.nimble/bin/choosenim" 2.2.10
+          export PATH="$HOME/.nimble/bin:$PATH"
+          nim --version | grep -F '2.2.10'
+          nim c --hints:off --skipParentCfg --skipProjCfg --path:src -o:bin/impact-closure tools/ci/impact_closure_selector.nim
+          nim c --hints:off --skipParentCfg --skipProjCfg --path:src -o:bin/proof_reconcile_gate tools/ci/proof_reconcile_gate.nim
+          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+            BASE_REF="HEAD~1"
+          else
+            BASE_REF="HEAD"
+          fi
+          set +e
+          bin/impact-closure --base "$BASE_REF" --head HEAD --output decision-report.json --decision-out decision.json --require-certain
+          rc=$?
+          set -e
+          case "$rc" in 0|2) ;; *) echo "FAIL: selector exit $rc"; exit 1;; esac
+          jq -r .mode decision.json
+        timeout-minutes: 12
+
+      # ── R2 measured: admission job-2 커널 실행부 (admission-check.yml:193-507) ──
+      - name: '[candidate] Checkout H into _candidate/ (data-only, R2 전용)'
+        if: ${{ inputs.experiment == 'r2-admission' }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.h-sha }}
+          path: _candidate
+          clean: true
+          fetch-depth: 1
+
+      - name: 'Measured R2 — admission job-2 kernel (B-built bin/ax)'
+        if: ${{ inputs.experiment == 'r2-admission' }}
+        env:
+          PR_NUMBER: ${{ inputs.pr-number }}
+        run: |
+          set -euo pipefail
+          # pin-identity: production의 PR-API 재도출(admission-check.yml:262-293) 대체 —
+          # API 지연은 러너 클래스와 무관한 노이즈라 양측 공통 제외(프로토콜 §2 R2).
+          B="${{ inputs.b-sha }}"; H="${{ inputs.h-sha }}"; TREE="${{ inputs.tree-oid }}"
+          printf '%s' "$B" | grep -qE '^[0-9a-f]{40}$' || { echo "FAIL: b-sha"; exit 1; }
+          printf '%s' "$H" | grep -qE '^[0-9a-f]{40}$' || { echo "FAIL: h-sha"; exit 1; }
+          test "$(git -C "$GITHUB_WORKSPACE/_candidate" rev-parse 'HEAD^{tree}')" = "$TREE" \
+            || { echo "FAIL: treeOID mismatch"; exit 1; }
+          chmod +x bin/ax bin/install_ax_cas proofs/.lake/build/bin/ircheck
+          # (1) D9 evidence staging (admission-check.yml:305-369 포트 — draft@B + funcSource@H)
+          WORK="$GITHUB_WORKSPACE"; CAND="$WORK/_candidate"
+          DRAFT="$WORK/data/certification/evidence-draft.json"
+          OUT="$WORK/data/trusted/evidence/draft-assembled.json"
+          [ -f "$DRAFT" ] || { echo "FAIL: evidence-draft.json missing at ref"; exit 1; }
+          mkdir -p "$WORK/data/trusted/evidence"
+          parsed="$(sed -E 's|^[[:space:]]*//.*$||' "$DRAFT" | jq -e .)" || exit 1
+          LEAN_SOURCE="$(printf '%s' "$parsed" | jq -r '.leanSource')"
+          SMTLIB2="$(printf '%s' "$parsed" | jq -r '.smtlib2')"
+          FUNC_SOURCE="$(printf '%s' "$parsed" | jq -r '.funcSource')"
+          FUNC_PATH="$(printf '%s' "$parsed" | jq -r '.funcPath')"
+          FUNC_NAME="$(printf '%s' "$parsed" | jq -r '.funcName')"
+          TID="$(printf '%s' "$parsed" | jq -r '.toolchainIdentity')"
+          h_src="$(git -C "$CAND" show "$H:$FUNC_PATH" 2>/dev/null)" \
+            || { echo "FAIL: git show $FUNC_PATH@H"; exit 1; }
+          [ "$h_src" = "$FUNC_SOURCE" ] || { echo "FAIL: funcSource byte-match vs H"; exit 1; }
+          POLICY_DIGEST="$(sha256sum "$WORK/config/policy/merge_admission.json" | cut -d' ' -f1)"
+          SCOPE_DIGEST="$(sha256sum "$WORK/data/verification_scope.lock" | cut -d' ' -f1)"
+          ENV_DIGEST="$(printf 'axiom-attestation-env-v1|%s' "$TID" | sha256sum | cut -d' ' -f1)"
+          # v2 record, No-LLBC lane: the Rust extraction binding pair
+          # (llbcDigest/rustToolchainIdentity) is honestly ABSENT (the parser
+          # folds absence to "" — never fabricated). prNumber must be a JSON
+          # int (strict parser rejects a string); funcName is record-required.
+          jq -n --argjson pr "${{ inputs.pr-number }}" --arg lean "$LEAN_SOURCE" \
+            --arg smt "$SMTLIB2" --arg func "$FUNC_SOURCE" --arg fp "$FUNC_PATH" \
+            --arg fname "$FUNC_NAME" \
+            --arg pd "$POLICY_DIGEST" --arg sd "$SCOPE_DIGEST" --arg ed "$ENV_DIGEST" \
+            --arg tid "$TID" \
+            '{schemaVersion:"axiom.attestation.evidence.v2", subjectId:"0000000000000000000000000000000000000000000000000000000000000000",
+              prNumber:$pr, prHeadSha:"${{ inputs.h-sha }}", leanSource:$lean, smtlib2:$smt,
+              funcSource:$func, funcPath:$fp, funcName:$fname,
+              policyDigest:$pd, scopeDigest:$sd,
+              envDigest:$ed, toolchainIdentity:$tid}' > "$OUT"
+          jq -e . "$OUT" >/dev/null
+          # (2) subject-register + attest --witness-only (admission-check.yml:377-439)
+          REG_OUT="$(bin/ax cert subject-register --base "$B" --head-tree "$TREE" \
+            --pr "${{ inputs.pr-number }}" --evidence "$OUT" 2>&1)" || { echo "$REG_OUT"; exit 1; }
+          SID="$(printf '%s\n' "$REG_OUT" | sed -n 's/.*Subject registered: \([0-9a-f]\{64\}\).*/\1/p')"
+          printf '%s' "$SID" | grep -qE '^[0-9a-f]{64}$' || { echo "FAIL: subjectId parse"; exit 1; }
+          jq --arg sid "$SID" '.subjectId = $sid' "$OUT" > "data/trusted/evidence/$SID.json"
+          bin/ax cert attest --witness-only --ref "$H" --pr "${{ inputs.pr-number }}" \
+            --evidence "$WORK/data/trusted/evidence/$SID.json" --merge-sha "${{ github.sha }}" \
+            --tool-commit "$B" --run-id "${{ github.run_id }}" --run-attempt "${{ github.run_attempt }}" \
+            --out witness.json
+          sha256sum witness.json | awk '{print $1}' > witness.sha256
+          # (3) D6 ledger consult + scope/baseline + merge dry-run (:449-507)
+          GITHUB_TOKEN="$GITHUB_TOKEN" bin/ax cert ledger-list | grep -qx "$SID" || true
+          ./bin/install_ax_cas
+          bin/ax scope hash
+          bin/ax baseline check
+          GITHUB_TOKEN="$GITHUB_TOKEN" bin/ax merge "${{ inputs.pr-number }}" --dry-run --json \
+            > admission-verdict.log 2>&1 || { tail -20 admission-verdict.log; exit 1; }
+          echo "R2 KERNEL OK — B=${B:0:12} H=${H:0:12} PR=#${{ inputs.pr-number }}"
+        timeout-minutes: 30
+
+      # ── R3 measured: gateway-shard SHARD_COUNT=8 INDEX=0 (runner-pool:382-429) ──
+      - name: 'Measured R3 — gateway shard partition 0/8'
+        if: ${{ inputs.experiment == 'r3-shard' }}
+        run: |
+          set -euo pipefail
+          chmod +x bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas
+          make ci-bootstrap-cheap
+          make test-gateway-shard-audit SHARD_COUNT=8
+          mkdir -p bin build
+          nim c --hints:off -d:release -o:bin/run_gate src/cli/run_gate.nim
+          nim c --hints:off -d:release -o:bin/nimtry src/gate/nimtry.nim
+          nim c --hints:off -d:release -o:build/git_wrapper src/gate/utils/git_wrapper.nim
+          nim c --hints:off -d:release -o:build/command_policy_gate src/gate/utils/command_policy_gate.nim
+          nim c --hints:off -d:release -o:bin/hotspot_coverage_gate src/gate/runners/hotspot_coverage_gate.nim
+          nim c --hints:off -d:release -o:bin/conflict_marker_gate src/gate/runners/conflict_marker_gate.nim
+          nim c --hints:off -d:release -o:bin/golden_master_gate src/gate/runners/golden_master_gate.nim
+          nim c --hints:off -d:release -o:bin/all_gateway_runner tests/gateway/all_gateway_runner.nim
+          mapfile -t FILES < <(ls tests/gateway/*_feature_test.nim | sort | awk -v s=0 -v n=8 'NR % n == s')
+          echo "shard_files=${#FILES[@]}"
+          AXIOM_JOBS=2 ./bin/all_gateway_runner --skip-known-failing=config/known_failing_gateway.txt \
+            --probe-known-failing --junit-output=build/gateway-junit.xml "${FILES[@]}"
+          test -f build/gateway-junit.xml
+        timeout-minutes: 30
+
+      - name: Upload measured junit/records
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: exp-h4-${{ inputs.experiment }}-${{ inputs.runner }}-i${{ inputs.iter }}
+          path: |
+            build/gateway-junit.xml
+            decision.json
+            decision-report.json
+            witness.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ── r5-holdout: 종단 composed 실증 (P5 §7) — select-leg → shard-leg 단일 체인,
+  #    run-level ingest가 체인 전체 W(queue+exec)를 관측. c* = C3 vs 기준 C0 일회용.
+  #    payload: R3 warm v3 (ref=ff23a41aa — composite fix #253/#254 포함 checkout,
+  #    build_sha 일치): c0→h1 36171663825 / c3→h2 36171668535 (dispatch 시 payload-run 지정)
+  r5-select-leg:
+    if: ${{ inputs.experiment == 'r5-holdout' }}
+    runs-on: ${{ inputs.candidate == 'c3' && 'ubuntu-slim' || 'ubuntu-24.04' }}
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          clean: true
+          # selector는 HEAD~1..HEAD diff 필요 — 기본 fetch-depth=1이면 부모 부재
+          # (holdout 1차 36182800048 실증: unknown revision exit 128)
+          fetch-depth: 0
+      - name: 'R5 select-leg (= Measured R1 동형 — 내장 인라인 provision, 양측 동일)'
+        run: |
+          set -euo pipefail
+          export CHOOSENIM_NO_COLOR=1 CHOOSE_NIM_QUIET=1
+          curl -sSf https://nim-lang.org/choosenim/init.sh | sh -s -- -y
+          "$HOME/.nimble/bin/choosenim" 2.2.10
+          export PATH="$HOME/.nimble/bin:$PATH"
+          nim --version | grep -F '2.2.10'
+          nim c --hints:off --skipParentCfg --skipProjCfg --path:src -o:bin/impact-closure tools/ci/impact_closure_selector.nim
+          nim c --hints:off --skipParentCfg --skipProjCfg --path:src -o:bin/proof_reconcile_gate tools/ci/proof_reconcile_gate.nim
+          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+            BASE_REF="HEAD~1"
+          else
+            BASE_REF="HEAD"
+          fi
+          set +e
+          bin/impact-closure --base "$BASE_REF" --head HEAD --output decision-report.json --decision-out decision.json --require-certain
+          rc=$?
+          set -e
+          case "$rc" in 0|2) ;; *) echo "FAIL: selector exit $rc"; exit 1;; esac
+          jq -r .mode decision.json
+
+  r5-shard-leg:
+    if: ${{ inputs.experiment == 'r5-holdout' }}
+    needs: r5-select-leg
+    runs-on: ${{ inputs.candidate == 'c3' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: 35
+    permissions:
+      contents: read
+      actions: read
+    env:
+      AXIOM_PROVE_WORKERS: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          clean: true
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          cache-save-enabled: 'false'
+          cache-build-source: exp-${{ inputs.ref }}
+          skip-nimble-install: ${{ inputs.candidate == 'c3' }}
+      - name: 'Project deps (warm-equivalent in-tree, c3/arm 전용)'
+        if: ${{ inputs.candidate == 'c3' }}
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.choosenim/toolchains/nim-2.2.10/bin:$PATH"
+          nimble install -y
+          echo "deps installed (warm-equivalent, in-tree)"
+      - name: 'Download exp payload (R5 — payload-run 지정 필수)'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: exp-h4-r3-shard-${{ inputs.candidate == 'c3' && 'h2-arm64' || 'h1-x64' }}-payload
+          run-id: ${{ inputs.payload-run }}
+          github-token: ${{ github.token }}
+          path: ${{ github.workspace }}
+      - name: 'Verify + chmod payload (r5: 4바이너리+manifest)'
+        run: |
+          set -euo pipefail
+          for f in bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas manifest.txt; do
+            [ -e "$f" ] || { echo "::error::FAIL: $f not extracted"; exit 1; }
+          done
+          chmod +x bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas
+          awk -F' = ' '/^build_sha =/{print $2; exit}' manifest.txt | grep -qx "${{ inputs.ref }}" \
+            || { echo "FAIL: build_sha != ref"; exit 1; }
+          echo "r5 payload verified (candidate=${{ inputs.candidate }})"
+      - name: 'R5 shard-leg (= Measured R3 동형, INDEX=0/8)'
+        run: |
+          set -euo pipefail
+          make ci-bootstrap-cheap
+          make test-gateway-shard-audit SHARD_COUNT=8
+          mkdir -p bin build
+          nim c --hints:off -d:release -o:bin/run_gate src/cli/run_gate.nim
+          nim c --hints:off -d:release -o:bin/nimtry src/gate/nimtry.nim
+          nim c --hints:off -d:release -o:build/git_wrapper src/gate/utils/git_wrapper.nim
+          nim c --hints:off -d:release -o:build/command_policy_gate src/gate/utils/command_policy_gate.nim
+          nim c --hints:off -d:release -o:bin/hotspot_coverage_gate src/gate/runners/hotspot_coverage_gate.nim
+          nim c --hints:off -d:release -o:bin/conflict_marker_gate src/gate/runners/conflict_marker_gate.nim
+          nim c --hints:off -d:release -o:bin/golden_master_gate src/gate/runners/golden_master_gate.nim
+          nim c --hints:off -d:release -o:bin/all_gateway_runner tests/gateway/all_gateway_runner.nim
+          mapfile -t FILES < <(ls tests/gateway/*_feature_test.nim | sort | awk -v s=0 -v n=8 'NR % n == s')
+          echo "shard_files=${#FILES[@]}"
+          AXIOM_JOBS=2 ./bin/all_gateway_runner --skip-known-failing=config/known_failing_gateway.txt \
+            --probe-known-failing --junit-output=build/gateway-junit.xml "${FILES[@]}"
+          test -f build/gateway-junit.xml
+          echo "R5 CHAIN DONE candidate=${{ inputs.candidate }}"
+        timeout-minutes: 30
+      - name: Upload r5 junit
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: exp-h4-r5-${{ inputs.candidate }}-i${{ inputs.iter }}
+          path: build/gateway-junit.xml
+          if-no-files-found: warn
+          retention-days: 14

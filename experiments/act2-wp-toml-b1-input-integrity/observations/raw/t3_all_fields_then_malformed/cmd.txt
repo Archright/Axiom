@@ -1,0 +1,1 @@
+/tmp/toml_b1_repro/bin/harness record ./experiments/act2-wp-toml-b1-input-integrity/inputs/t3_all_fields_then_malformed.toml

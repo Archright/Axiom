@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "policyId": "axiom-observation-gates-v1",
+  "description": "관측 모드 게이트 대상 목록 — ADR-0033(authority-declaration)의 (b) writer 축 기록 값이다. 이 파일은 '무엇을 관측하는가'의 대상 목록만 담으며, 신원 등록 필드(workflow id, blob oid, sha)를 갖지 않는다 — 신원은 소비 시 재유도된다(H:observation.yml == B:observation.yml, gateSourceBlobOid; ADR-0033 신뢰 뿌리 고정 조항: 관측 오라클·관측 스위치 정책이 새 신뢰 뿌리가 되는 것을 금지). policy@B 소비 패턴(src/gate/slice_catalog.nim의 config/policy/epoch_manifest.json 선례): B 체크아웃에서 읽히므로 이 파일의 변경이 관측 자신의 승격을 선언하는 루프홀은 base-policy binding이 차단한다. observedGates[].gate는 src/gate/manifest.d/<gate>.json에 등록된 게이트 id와 정확히 일치해야 하며, 관측 결과는 merge 권한을 부여·거부하지 않는다(결정 #13(6) 유지). 등재: config/repository_surface.json v72 (CONTROLLED); 본문 생성 = 관측 워크플로 배선 슬라이스 PR-β1.",
+  "observedGates": [
+    {
+      "gate": "manifest-consistency-gate"
+    }
+  ]
+}

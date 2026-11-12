@@ -1,0 +1,273 @@
+{
+  "schemaVersion": 1,
+  "campaign": "ACT2-R0",
+  "date": "2026-10-01",
+  "subjectAuthority": {
+    "gitCommit": "c75502ceedb5ed2a37b7b5e4744fc71313682859",
+    "gitCommitMatchesOriginMaster": true,
+    "statusPorcelain": [
+      "?? data/"
+    ],
+    "untrackedNimPaths": [],
+    "axiomToml": "absent",
+    "ingressManifestEntryCount": 87,
+    "ingressDigest": "978d826944f301260c64169b813262c50e068f27f26d24c9cae5f0a07517a0a3",
+    "ingressManifestRawSha256": "f1b059ff489694709eb796e8545a2e2f98675f0189961787671da4203f32ad4c",
+    "treeFileCount": 95,
+    "equality": {
+      "layer1": {
+        "result": "PASS (path-level, .nims 제외)",
+        "detail": "v3 .axiom/cache/git_file_list.json 생성 성공(pre-created .axiom/cache — v1 ENOENT 결함 해소). files 86건 중 *.nim 86건. subject_authority ingressManifest의 subject:.nim(86건, config.nims 제외)과 비교: missing=0, extra=0 — 86/86 완전 일치. gitIndexHash=6b38830d1f29de8f3b48c55a429827005d78e65a35dbc2c6a8a439aeaedb9986."
+      },
+      "layer2": {
+        "result": "unable",
+        "detail": "런타임 sourceFingerprint 미기록: ax_proof_state.json runtimeMeta = {totalWallTimeMs, hotspotElapsedMs, hotspotLabel} — v1/v3 모두 subject 키 구조적으로 미존재(스키마에 필드 없음). $STATE3 산출물(ax_proof_state·trajectory·vsr_ledger·global_symbol_graph·evidence)에서 'sourceFingerprint' 문자열 0건(유일 출현 = execution_observe_v3.log 본문 — 실행 로그 텍스트). 독립 재계산(정확 복제, v1과 동일 절차) = e9d0250442574eba9496465567ed61f60186498228ed691d7bbea8ec3e55565f (경로 87건 = ingressManifest 87키와 일치). 런타임 값이 없어 match/mismatch 판정 불가 — 'unable' 유지."
+      },
+      "layer3_axiomToml": "absent — ingress 없음",
+      "declaration": "subject authority = ingress closure (*.nim/*.nims [+axiom.toml if present]) of nim-stew@c75502c; data/ excluded (node_filter.nim:24-32,98; run_context.nim:107-158; axiom_engine.nim:1188-1194)"
+    }
+  },
+  "executionAuthority": {
+    "axiomCommit": "827329cbd8a95d614c09aa600cb7385307e66178",
+    "buildEnvCommitCount": 1910,
+    "buildSourceHash": "2739333566168504023",
+    "axBinarySha256": "fd7c36b1026c78605a5fac72d9a06edb468eb2f1aa805373873f541e4da3884b",
+    "rebuiltInWorktree": "Axiom-worktree-r0",
+    "sourceCoherence": "PASS (bin/ax --version exit 0)",
+    "executionIngressDigest": "2237e13ab4edf759ac590879210de69e6f355e0e1991fcfe8451793e0adc33fd",
+    "executionIngressEntryCount": 4688,
+    "executionIngressRawPath": "/tmp/exec_ingress_manifest_v2.txt",
+    "toolchainDigest": {
+      "toolchain:lean": "e0f4b30b29c565625189744847dfef5f132b6322c5e452dbebfeae780c9749e5",
+      "toolchain:lake": "e0f4b30b29c565625189744847dfef5f132b6322c5e452dbebfeae780c9749e5",
+      "toolchain:z3": "4c13bd5b2526453ba7f88ffd852bbaec80a8132638cbe60ed3463dbc98952711",
+      "toolchain:git": "2a8c18fbf43da9f692d75474c72bea9dfd796c260b0f3dfe456376abc3bbd668"
+    },
+    "toolchainIdentityDisplayOnly": "nim-2.2.10|lean-4.33.0|z3-4.13.3",
+    "executionIngressDigestV1": "aa85077292e4422957fae4eb100ba53911914903397509e6b9c3ec96c0fbff49",
+    "straceSubsetVerification": "PASS — 미선언 ingress 0, AF_INET 0, AF_UNIX nscd probe만 20건(ENOENT, 연결 성립 0, systemIPCAllowlist에 amendment)",
+    "derivedWithinStateRule": {
+      "rule": "state: paths written by the run and later re-read are derived outputs, not ingress (수정9). Check: every state successful read is either a stateSeed entry or a path that was written earlier in the same run. Cache/artifact probes with ENOENT (topology_merkle.json, stew_bitops2_nim__getBitsBE.json certificate, universe_merkle.lock absent-fresh seed) = miss probes, no ingress.",
+      "stateSeedCovered": [
+        "data/verification_scope.lock",
+        "data/baseline.json",
+        "data/universe_merkle.lock (absent-fresh)"
+      ],
+      "derivedClasses": [
+        "logs/*",
+        "build/certificates/*",
+        "tmp/axexec-*.out",
+        "tmp/axiom_*.lean",
+        "tmp/axiom_probe*.lean",
+        "tmp/axiom_z3_probe.smt2",
+        ".axiom/cache/evidence/*",
+        ".axiom/cache/node_selection_state.json*",
+        ".axiom/cache/topology_*",
+        "logs/global_symbol_graph*",
+        "logs/z3_telemetry.jsonl",
+        "logs/audit/vsr_ledger.jsonl",
+        "logs/ax_proof_state.json*",
+        "logs/ax_prove_trajectory.jsonl",
+        ".axiom/cache/git_file_list.json"
+      ]
+    },
+    "systemIPCAllowlist": {
+      "entries": [
+        {
+          "path": "/var/run/nscd/socket",
+          "kind": "AF_UNIX pathname socket",
+          "v1Observation": "20 connect attempts, all -1 ENOENT, 0 connections established, pids = /bin/bash processes (ax lake wrappers, glibc NSS probe)",
+          "rationale": "glibc NSS nscd probe executed inside bash; removal requires product change (forbidden); no data exchange occurs (all ENOENT)",
+          "undeclaredUnixIPC": 0,
+          "requiresRatification": true
+        }
+      ]
+    }
+  },
+  "stateSeed": {
+    "manifestRaw": "/tmp/state_seed_manifest_v2.txt",
+    "digest": "34b5e10f081968ad80b557e23d36abbcaddd1d12440b7daacc83b3f5178daf7a",
+    "entries": {
+      "state:data/verification_scope.lock": "7a4cd3eb0e85bcee3a8e454760421bc77c83199abe943944010ad9941ed3d630",
+      "state:data/baseline.json": "085caf2cc17f2b6cbadc9c567bc25477529898d0089cd5491011bbe44362933a",
+      "state:data/universe_merkle.lock": "absent-fresh",
+      "dir:state:data": "scaffold",
+      "dir:state:tmp": "scaffold",
+      "dir:state:home": "scaffold",
+      "dir:state:.axiom": "scaffold",
+      "dir:state:.axiom/cache": "scaffold (git_file_list.json write target — v1 ENOENT 결함 해소)"
+    }
+  },
+  "envAllowlist": {
+    "values": {
+      "PATH": "<host PATH 24-entry, env -i 고정>",
+      "HOME": "/tmp/act2r0_witness_v3_1790824830/home",
+      "ELAN_HOME": "<user-home>/.elan",
+      "TMPDIR": "/tmp/act2r0_witness_v3_1790824830/tmp",
+      "AXIOM_STATE_DIR": "/tmp/act2r0_witness_v3_1790824830",
+      "LANG": "C",
+      "LC_ALL": "C",
+      "GIT_CONFIG_NOSYSTEM": "1"
+    },
+    "amendments": [
+      "HOME→state home scaffold (git config 중립화 — v1 ~/.gitconfig 18회·~/.config/git/ignore 5회 읽기 제거, v3 0회 실측)",
+      "GIT_CONFIG_NOSYSTEM=1 (system gitconfig /etc/gitconfig 제거 — v1 1회 읽기 → v3 0회)",
+      "ELAN_HOME=<user-home>/.elan (v2 divergence 근거: HOME 중립화로 elan 툴체인 발견 실패→다운로드 시도→netns 차단→'Lean compiler dysfunctional'→exit 0·executionComplete=false; amendment 후 v3 exit 2 same-class 복원)"
+    ]
+  },
+  "historicalJournal": {
+    "path": "workspace-untracked:nim-stew/data/trusted/journal/3ab50cc271cdc3166d6ad39c9b34f7a01a2c0626fdd08cfecdb33107135c2aad.json",
+    "sha256": "519aca4c70e1c78846be6ace6c7798643a15d4aa113c6d73fec0e266f15394e9",
+    "provenance": "unqualified — DEBT data/debt_registry.json:3466",
+    "subjectBinding": "none"
+  },
+  "restoredHistoricalEvidence": [
+    {
+      "path": "repo:repo:experiments/act2-wp0-execution-context/wp0a-completion-verdict.md",
+      "sha256": "d0f0d5cee9bc4e107997a14f2c52f1f4ff70f3e7d3e90ccb1a65df8d841381bc"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wp0-execution-context/wp0bc-completion-report.md",
+      "sha256": "41586ad3f5854f17933a261ca7a0f8e55342f2c5e9135a554f40498729a653ec"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wp1-external-symbol-ingress/wp1-result.md",
+      "sha256": "03cb082139dbaf092204e777505d761424aba285570b219795a1e4d23b07e7a1"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wp15-universe-semantic-boundary/wp15-result.md",
+      "sha256": "67db375f0bade22513aa02ff7beef1850b686a6736dfb3997a507e3ba217ce60"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wp4a-external-proof-candidate-semantics/wp4a-b2b-measurement.md",
+      "sha256": "77ee95bdf9d3f91b131d09187f89dbcec09ff63a1b3aba5204011e0d50104e29"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wp4h3-proofir/runs/proof_state.json",
+      "sha256": "50c6c6a014ad0bce0596a4e6d726cc967099d3fe06f5491c737d68c1219f8f85"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wp4h3-proofir/runs/prove_getbitsBE_run1.log",
+      "sha256": "e65e0ab36885191ed114578b4d97ceb87b6e1c3924cd5e886502161ec650f7b7"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wp4h3-proofir/runs/prove_trajectory.jsonl",
+      "sha256": "22db7d65e51a211faa0df76d2112e02ab97ef3c0aef542cd855e1e2f0b8c9d4f"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj-obligation-driven-sieve/canonical/ACT2-WP4j-report.md",
+      "sha256": "97df5ac74fcd7c212787e2c6767708f580050b733e307459bae5b1e0b0c58865"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj-obligation-driven-sieve/canonical/evidence/trajectory_run12.jsonl",
+      "sha256": "22db7d65e51a211faa0df76d2112e02ab97ef3c0aef542cd855e1e2f0b8c9d4f"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj-obligation-driven-sieve/corpus/decision_corpus.json",
+      "sha256": "779285f628380a077bcbd518f3718d39ea30a73660d560cc848453964a268973"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj-obligation-driven-sieve/corpus/_run_hashes.txt",
+      "sha256": "9c42d4e6ad0545d221ab1caf3973a31e5d37652090587d17a3cf4c5c46114594"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj-obligation-driven-sieve/runs/prove_getBitsBE_wpj_replay.log",
+      "sha256": "e65e0ab36885191ed114578b4d97ceb87b6e1c3924cd5e886502161ec650f7b7"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj-obligation-driven-sieve/runs/prove_trajectory_wpj.jsonl",
+      "sha256": "22db7d65e51a211faa0df76d2112e02ab97ef3c0aef542cd855e1e2f0b8c9d4f"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj1-strategy-admission/canonical/ACT2-WP4j1-report.md",
+      "sha256": "565bcf5a89afe8ad4f2456c240fb69601e4a6ee32f89b6561bdb5eb4523a58bd"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj1-strategy-admission/probe/getBitsBE-decision-ledger.json",
+      "sha256": "4f10f1b411219229581bf0b2e1c1bcbf4f5ccdf1ac39b2ae9d10fe4a0ba837f9"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj1-strategy-admission/probe/getBitsBE-decision-ledger-v2.json",
+      "sha256": "caa98bde11a8da18709b0290c927fe91129813100feb3af8c02cddf4ded0372f"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj1-strategy-admission/probe/golden-script-digest-match.md",
+      "sha256": "ec1e9271a326d0903b7a2b27a48ad5b9554a1a0936787c11f65e52d068727f7e"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj1-strategy-admission/probe/phaseB-measurements.md",
+      "sha256": "65b56e2b64e02306e50759508ae3144683d976bec184788139a7a1b56298d5ff"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj1-strategy-admission/probe/telemetry-pre-runA.jsonl",
+      "sha256": "4b706d68eec87de74950400f4953e9abf161cb7ab1862e9282d9364c172cf693"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj1-strategy-admission/probe/telemetry-pre-runB.jsonl",
+      "sha256": "e2a3815d2c489a712f175c75b6e229b02cfc0691a397ca8157baea4895700db5"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj1-strategy-admission/probe/telemetry-post-runA.jsonl",
+      "sha256": "e2a3815d2c489a712f175c75b6e229b02cfc0691a397ca8157baea4895700db5"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj1-strategy-admission/probe/telemetry-post-runB.jsonl",
+      "sha256": "f653a8f1fd75febcdac7f78cdc4ccd5dd79bca4112da39497e40c14fb9b2446f"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj1-strategy-admission/runs/runA-stdout.txt",
+      "sha256": "f886c2ec8cc0ccc902357cc992a275470e50b29bdb9d7a5b74ed13368500cafa"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj1-strategy-admission/runs/runB-stdout.txt",
+      "sha256": "f886c2ec8cc0ccc902357cc992a275470e50b29bdb9d7a5b74ed13368500cafa"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj2-semantic-facts/canonical/ACT2-WP4j2-report.md",
+      "sha256": "1864dd5933978dc2a806091fecf5c34f525a67e7c15ed95df298db5ba5d62759"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj2-semantic-facts/canonical/ACT2-WP4j34-report.md",
+      "sha256": "80a24b0f54dab1300096efcb75a0504f82eddf0633789ea5d8564fa2ea691773"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpj2-semantic-facts/probe/ingress-fidelity.md",
+      "sha256": "7610a81a467e4a3d99aae775aa49dccf7166582f031070d1de774f97f29b1995"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpk-obligation-execution/canonical/ACT2-WP4k-report.md",
+      "sha256": "d71d2e4b65642cee22215538791abda07a544779011d339c7b13388063684de3"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpk-obligation-execution/canonical/ACT2-WP4k-phaseB-contract.md",
+      "sha256": "4c1ba64a87c49312d9cf3fb83f09a7e4a0dbf78d42dc73223df69c2d1429c652"
+    },
+    {
+      "path": "repo:repo:experiments/act2-wpk-obligation-execution/probe/phaseA-measurements.md",
+      "sha256": "dbf70f9165c57dfebe246723cda296e76d1ca320787d17d4b8be15f56d1c6e60"
+    }
+  ],
+  "irrecoverable": [
+    "cfdc76cab",
+    "/tmp/act21_witness_0",
+    "nim-stew-clean-c75502c",
+    "089251924",
+    "f7dd583+uncommitted delta",
+    "cert 기준커밋 f3d17f0e/891b6dae/4b0301c1"
+  ],
+  "reproduction": {
+    "summary": "v3 canonical: exit 2, same-class(4중 일치), 미선언 ingress 0, AF_INET connect 0, AF_UNIX nscd probe 20건(ENOENT), nodeId=stew/bitops2.nim::getBitsBE, verified=0/40, gateVerdict FAIL",
+    "digest": "see reproduction.json (executionIngressDigest=2237e13ab4edf759ac590879210de69e6f355e0e1991fcfe8451793e0adc33fd, stateSeedDigest=34b5e10f081968ad80b557e23d36abbcaddd1d12440b7daacc83b3f5178daf7a)",
+    "reproductionFileSha256": "25ce68d202ea0c56054ecf6ac0f1ae14fc39903bea2b9f3f38c9cc9554f9c1e0"
+  },
+  "firstOpenTarget": {
+    "target": "bitops2.getBitsBE",
+    "sortKey": 12,
+    "lastVerdict": "pre_sieved",
+    "currentTruth": "OPEN",
+    "wp": "WP4-j",
+    "nodeIdForm": "stew/bitops2.nim::getBitsBE",
+    "note": "jq -r '.rows | sort_by(.sortKey) | map(select(.currentTruth==\"OPEN\")) | .[0].target' → bitops2.getBitsBE. 2순위 OPEN: base36.decodedLength(sortKey 17, timeout) — 실행하지 않음."
+  },
+  "pathNormalization": "subject:/repo:/state:/toolchain:/env: logical prefixes only"
+}

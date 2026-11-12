@@ -1,0 +1,12 @@
+{
+  "script": "tools/hooks/kimi_pre_tool_use.nim",
+  "description": "Kimi Code CLI PreToolUse hook — minimal defense-in-depth layer that blocks direct interpreter invocation attempts inside the Axiom-core project boundary",
+  "inputSample": {
+    "env": {"TOOL_NAME": "Bash", "TOOL_INPUT": "python3 src/core/main.py"}
+  },
+  "outputSample": {
+    "stdout": "BLOCKED: direct interpreter invocation forbidden in Axiom-core",
+    "stderr": ""
+  },
+  "exitCode": 1
+}

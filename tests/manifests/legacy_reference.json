@@ -1,0 +1,7 @@
+{
+  "fixture": "tests/fixtures/legacy_reference.nim",
+  "sha256": "37578888697715cbe5f1db9350a2e7f62cc1ebd3a3ac1fb63c9bd86a513bb126",
+  "identity": "immutable-source-snapshot",
+  "provenance": "production countEffectiveSLOC at git 9a5c404f6",
+  "ratifiedAt": "2026-08-12"
+}

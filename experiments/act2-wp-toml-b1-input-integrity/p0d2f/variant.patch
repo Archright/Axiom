@@ -1,0 +1,45 @@
+diff --git a/d2kernels.nim b/d2kernels.nim
+new file mode 100644
+index 0000000..e182021
+--- /dev/null
++++ b/d2kernels.nim
+@@ -0,0 +1,39 @@
++## D2 formal kernels — mechanical extraction from nim-toml-serialization
++## Subject pin: 4aa8e2223649fc0837c490a4acfca7b8b1e756f9 (variant record: variant.patch;
++## this file is the ONLY delta from the baseline tree).
++##
++## Pragma shim: the external IR materializer reads the `{.axiom: [pre/post].}`
++## spec off the raw AST (src/infrastructure/external_ir_materializer.nim:273-298,
++## keyword expression form only). The counterexample-model replay compiles THIS
++## module with the real Nim compiler (src/verification/counterexample_replay.nim:499-504),
++## so the pragma must also be legal Nim: this user-pragma template mirrors Axiom's
++## own pattern (src/core/trusted/axiom_pragmas_macros.nim:11). An `untyped`
++## pragma argument is carried as syntax without semantic analysis, so the spec
++## payload is inert at compile time.
++template axiom*(val: untyped = "") {.pragma.}
++
++## Spec spelling note (2026-10-17): the byte-length law is spelled WITHOUT `if`
++## because the external-spec Canon frontend marks if-expressions lossy in pragma
++## context (toCanonKind lacks nkElifExpr/nkElseExpr; convertExprCanon lacks a
++## ckIfStmt arm — empirically established, see runs/defect.err of this slice).
++## On [0,255]: `1 + (code div 128)` is IDENTICAL to the piecewise law
++## (code < 128 -> 1; code >= 128 -> 2). S1 semantics unchanged, spelling only.
++
++## Defect kernel — extraction of scanHexEscape, lexer.nim:428-429
++## (`when T is string: res.add char(code)`): appending `char(code)` contributes
++## exactly ONE raw byte, for any code point.
++## Original lexer.nim sha256 @4aa8e22:
++## 19d69eed84f74c51fa1784b2e71a4525abc8d2b8aa854c567565d2d603133f4d
++func d2HexEscapeAppendLen*(code: int): int {.axiom: [
++    pre: (code >= 0 and code <= 255),
++    post: (result == (1 + (code div 128)))].} =
++  1
++
++## Control kernel — domain specialization ([0x00..0xFF], RFC 3629) of
++## scanUnicode, lexer.nim:413-414 (`res.add unicode.toUTF8(Rune(code))`):
++## the UTF-8 encoding of U+00HH occupies 1 byte below 0x80, 2 bytes from 0x80.
++## Body spelled with div/add for the same ingestion reason as the spec above.
++func d2Utf8AppendLen*(code: int): int {.axiom: [
++    pre: (code >= 0 and code <= 255),
++    post: (result == (1 + (code div 128)))].} =
++  1 + (code div 128)

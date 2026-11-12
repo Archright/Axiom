@@ -1,0 +1,31 @@
+# innervalue.tsv — Task 2: innerValue (value_ops.nim:14-68) instantiation per T
+# Question per row: does `node[k, T]` compile (typed accessor, value_ops.nim:86-87)?
+# If yes: runtime behavior for present+matching kind / mismatching kind / absent key.
+# Subject: nim-toml-serialization @4aa8e2223649fc0837c490a4acfca7b8b1e756f9
+# Evidence: probes/q2c_*.nim (compile verdicts), probes/q2r_*.nim (runtime), raw/.
+# T	compiles	compile_verbatim	cite	matching_kind	mismatching_kind	absent_key
+int	yes	-	value_ops.nim:15-19	returns intVal (7); Float kind converts via T(n.floatVal) (1.5 -> 1, truncation); String/Bool kinds return default 0	SIGSEGV exit 139 (nil.innerValue, value_ops.nim:16); debug AND -d:release; except Defect never runs
+int32	yes	-	value_ops.nim:15-19	returns 7	for value in int32 range converts; out-of-range value (5000000000) raises RangeDefect at value_ops.nim:17 ("value out of range: 5000000000 notin -2147483648 .. 2147483647", exit 1) — NOT a silent truncation; String kind -> 0	SIGSEGV exit 139 (debug AND release)
+int64	yes	-	value_ops.nim:15-19	returns intVal exactly (5000000000 ok)	Float -> 1.0->1; String -> 0	SIGSEGV exit 139
+uint	yes	-	value_ops.nim:15-19	returns 7	Float -> 1; String -> 0	SIGSEGV exit 139
+uint64	yes	-	value_ops.nim:15-19	returns 7; intVal -1 -> 18446744073709551615 (bit-pattern wrap, NO RangeDefect)	Float -> 1; String -> 0	SIGSEGV exit 139
+float	yes	-	value_ops.nim:15-19	returns floatVal (1.5); Int kind converts T(n.intVal) (7 -> 7.0)	String/Bool -> 0.0	SIGSEGV exit 139
+float32	yes	-	value_ops.nim:15-19	same shape as float	String -> 0.0	SIGSEGV exit 139
+bool	yes	-	value_ops.nim:20-22	Bool kind -> n.boolVal (true)	ANY other kind -> default false (Int 1 -> false; no truthiness)	SIGSEGV exit 139
+string	yes	-	value_ops.nim:23-25	String kind -> n.stringVal ("hi")	ANY other kind -> default "" (Int/Float/Bool -> empty string)	SIGSEGV exit 139
+TomlDate	NO	value_ops.nim(32,19) Error: undeclared field: 'dateDimte' for type types.TomlValueRef [type declared in .../types.nim(106,3)]	value_ops.nim:29-32	UNREACHABLE — typo dead branch (repairing the typo still fails: Option.get out of scope, value_ops.nim imports neither std/options nor exports it; see dateDimte.md)	UNREACHABLE	UNREACHABLE
+TomlTime	NO	value_ops.nim(36,19) Error: undeclared field: 'dateDimte' for type types.TomlValueRef [type declared in .../types.nim(106,3)]	value_ops.nim:33-36	UNREACHABLE — same double defect as TomlDate	UNREACHABLE	UNREACHABLE
+TomlDateTime	yes	-	value_ops.nim:26-28	DateTime kind -> full TomlDateTime value: Z datetime gives date+time+zone all Some; date-only gives date=Some time=None; time-only gives date=None time=Some	any other kind -> all-Options-None TomlDateTime (Int 7 -> none/none/none)	SIGSEGV exit 139
+TomlValueRef	NO	value_ops.nim(68,12) Error: Failed to convert to unsupported type: TomlValueRef from TOML	value_ops.nim:66-68 (.error)	-	-	-
+seq[TomlValueRef]	NO	value_ops.nim(47,17) Error: type mismatch: got 'seq[TomlTableRef]' for 'n.tablesVal' but expected 'seq[TomlValueRef]'	value_ops.nim:42-51	-	-	- (seq branch is DEAD for this T: Tables branch fails instantiation)
+seq[int]	NO	value_ops.nim(45,17) Error: type mismatch (n.arrayVal is seq[TomlValueRef], expected seq[int])	value_ops.nim:42-51	-	-	- (no seq[T] compiles: Array branch needs seq[TomlValueRef], Tables branch needs seq[TomlTableRef]; no T satisfies both)
+seq[TomlTableRef]	NO	value_ops.nim(45,17) Error: type mismatch (n.arrayVal is seq[TomlValueRef], expected seq[TomlTableRef])	value_ops.nim:42-51	-	-	- (mirror of seq[int])
+array[3, TomlValueRef]	NO	value_ops.nim(59,21) Error: type mismatch: got 'TomlTableRef' for 'x' but expected 'TomlValueRef = ref TomlValue'	value_ops.nim:52-65	-	-	- (array branch DEAD for every element type, same dual-branch conflict as seq)
+object (Conf)	NO	value_ops.nim(68,12) Error: Failed to convert to unsupported type: Conf from TOML	value_ops.nim:66-68 (.error)	-	-	-
+Option[int]	NO	value_ops.nim(68,12) Error: Failed to convert to unsupported type: Option[system.int] from TOML	value_ops.nim:66-68 (.error)	-	-	- (innerValue has NO Option branch at all)
+Option[TomlDate]	NO	value_ops.nim(68,12) Error: Failed to convert to unsupported type: Option[types.TomlDate] from TOML	value_ops.nim:66-68 (.error)	-	-	-
+enum (Fruit)	NO	value_ops.nim(40,46) Error: parseEnum(n.stringVal) can raise an unlisted exception: ref ValueError	value_ops.nim:37-41 + push raises:[] at :8	-	-	- (enum branch DEAD for EVERY enum type: parseEnum's ValueError violates the module-wide raises:[])
+# Compiler cross-evidence: every q2c_* compile of the typed accessor emits
+# value_ops.nim(86,77) Hint: '[]' cannot raise 'KeyError' [XCannotRaiseY] —
+# the declared raises:[KeyError] (value_ops.nim:86) is contradicted by the
+# compiler's own effect analysis (KeyError never fires; absent key -> SIGSEGV).

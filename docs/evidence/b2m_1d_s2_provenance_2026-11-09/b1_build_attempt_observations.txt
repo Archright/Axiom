@@ -1,0 +1,47 @@
+# b1(gate_a) 세션 빌드 반복 관측 — 출처 원문 (2026-11-09 추출)
+# 출처: ~/.kimi-code/sessions/wd_axiom4_a9f6347fc418/session_a99ee6f7-5141-41af-a18c-ae24fd834b49/agents/agent-98/wire.jsonl
+# (B-1 Gate A leanproj 구축 세션 — root .lake/build가 반복 빌드로 형성됐음의 관측 증거)
+
+## exit code 관측 집계 (wire 내 문자열 발생 수 — tool.call/result 중복 포함)
+lake_build_exit=1 → 12회 관측 (실패 빌드)
+lake_build_exit=0 → 4회 관측 (성공 빌드)
+lake_build_mut_exit=1 → 2회 관측 (mutation 대조 빌드 실패 — leanproj_mut 별도 dir)
+'Build completed successfully (1801 jobs)' → 9회 관측
+
+## 실패 빌드 오류 원문 발췌 (예시 3건 — 전문은 wire.jsonl 보존)
+1) module 구문 오류:
+   lake_build_exit=1 wall_ms=4271
+   ✖ [1800/1801] Building AsBool (758ms)
+   error: AsBool.lean:1:0: cannot import non-`module` AsBool.Spec from `module`
+   error: build failed
+
+2) Types.lean 생성 코드 오류:
+   ✖ [1797/1801] Building AsBool.Types (1.6s)
+   error: AsBool/Types.lean:36:0: Constructor field `F64` of `serde_json.number.N.Float` contains universe level metavariables
+   error: AsBool/Types.lean:42:6: Unknown identifier `number.N`
+   error: AsBool/Types.lean:48:0: (kernel) arg #1 of '_nested.serde_json.map.Map_2.mk' contains a non valid occurrence of the datatypes being declared
+   error: build failed
+
+3) TypesExternal.lean 오류:
+   ✖ [1798/1801] Building AsBool/TypesExternal (1.8s)
+   error: AsBool/TypesExternal.lean:40:10: Constructor field `toFloat64` of `Aeneas.Std.F64.mk` contains universe level metavariables
+   error: build failed
+
+## 최종 빌드 (B-1 증거 문서 §4.6 커밋 기록 — docs/evidence/b1_gate_a_minimal_proof_2026-11-04.md:176)
+최종 빌드: `lake build` → exit 0, "Build completed successfully (1801 jobs)" (deps 재사용 상태에서 wall ~5 s)
+
+## B-2 run1 관측 (커밋 기록 — docs/evidence/b2_hermetic_proof_capsule_2026-11-04.md §5.3)
+== [2] force fresh root compile ==
+== [3] cache unpack ==
+Already decompressed 9031 file(s)
+== [4] build ==
+✔ [1796/1801] Built AsBool.TypesExternal (5.5s)
+✔ [1797/1801] Built AsBool.Types (2.2s)
+✔ [1798/1801] Built AsBool.Funs (1.8s)
+✔ [1799/1801] Built AsBool.Spec (1.7s)
+✔ [1800/1801] Built AsBool (1.5s)
+Build completed successfully (1801 jobs).
+
+# 해석 근거: b1 leanproj root .lake/build는 단일 클린 빌드 산출(80파일·4,745,083B —
+# b2m_1d Stage B′ run1 실측)이 아니라, 실패를 반복한 점진적 빌드의 최종 상태다.
+# B-2 캡슐 inputs은 이 상태를 그대로 봉입(cp -a)했고 stage_b.sh [2]가 빌드 전 삭제한다.

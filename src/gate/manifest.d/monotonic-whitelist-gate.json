@@ -1,0 +1,15 @@
+{
+  "id": "monotonic-whitelist-gate",
+  "name": "Axiom monotonic whitelist gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/monotonic_whitelist_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/gate/architecture_policy.lock",
+  "passFilenames": false,
+  "weight": "medium",
+  "category": "policy",
+  "severity": "error",
+  "execution_mode": "interpreted"
+}

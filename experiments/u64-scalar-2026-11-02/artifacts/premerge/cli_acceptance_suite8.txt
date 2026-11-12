@@ -1,0 +1,34 @@
+  provenanceValidationError (.4/src/verification/attestation_witness.nim:177) multiple returns without axiomDecision
+  semanticValidationError (.4/src/verification/attestation_witness.nim:197) multiple returns without axiomDecision
+[Suite] rust lane product-CLI — positive: add_u8 verified, cert minted (N=3 determinism)
+  [OK] full run ×3: exit follows the mutant's confirmation shape (1 when CONFIRMED in a clean worktree; 0 when the Zero-Footprint replay gate fail-closes in a dirty one); the report JSON is NOT on stdout
+  [OK] vault cert-set digest identical across N=3; exactly one cert per run
+  [OK] minted cert: axiom.certificate.v3 with non-empty identity/evidence digests
+  [OK] trajectory report: add_u8 verified; mutant CONFIRMED kernel decline (failed); is_zero out-of-subset — distinct verbatim reasons; summary 1/3
+  [OK] lane re-extracts every run into the state workDir (the committed fixture LLBC is never consumed)
+[Suite] rust lane product-CLI — out-of-scope: --target is_zero
+  [OK] exit 0; zero certificates minted
+  [OK] trajectory report: exactly the is_zero target, fail-closed unknown with the out-of-subset grammar reason
+[Suite] rust lane product-CLI — unresolved target: --target nosuch
+  [OK] exit 3 (CliError INVALID_INPUT) with the canonical refusal on stderr; no report document is produced at all
+[Suite] rust lane product-CLI — perfect-ASI lever (AXIOM_REQUIRE_PERFECT_ASI=1)
+  [OK] exit 1 — the lever flips only the exit projection, not the verdicts
+[Suite] rust lane product-CLI — charon absent: fail-closed extraction
+  [OK] exit 0 is RULE-DERIVED (unknown-only = no-obligation CONTINUE run); zero certificates; no verified claim anywhere
+  [OK] every declared target unknown with the runner's crNotFound reason; charon.ok=false in the report
+[Suite] rust lane product-CLI — guard probe: declaration-free attempts (N=3 determinism)
+  [OK] ×3 runs: exit 0 everywhere (unknown-only = CONTINUE); stdout empty; the pinned-charon log line
+  [OK] trajectory report: 4 targets, ALL unknown, the four expected reason classes (offset declined+sat, replay-CONFIRMED; bump0 discharged; echo zero-goals; tri out-of-subset)
+  [OK] NO certificate in the fresh vault — a discharged guard is non-claiming (undeclared), nothing mints
+  [OK] N=3 determinism: identical {name,status} sets, identical reason strings (deterministic by contract), identical summary
+[Suite] rust lane product-CLI — impl identity: DEBT#510 ambiguity + structured names (axiom_impl_probe)
+  [OK] (A) bare 'speak' → exit 3 INVALID_INPUT; the Ambiguous refusal names BOTH owner-qualified fullNames on stderr; no report document
+  [OK] (D) bare 'add_u8' → exit 3 Ambiguous across the m1/m2 pair (the DEBT#510 same-last-segment pair, both candidates named)
+  [OK] (B) exact 'axiom_impl_probe::m1::Dog::speak' → exit 0; ONE unknown target whose NAME is the structured full name (the impl method is ADDRESSABLE); honest out-of-subset reason (region generic); zero certificates
+  [OK] (C) exact 'axiom_impl_probe::m2::Cat::speak' → the SAME shape on m2 — the selection is identity-driven (Dog and Cat are DISTINCT decls, not a first document-order match)
+  [OK] (E) exact 'axiom_impl_probe::m1::add_u8' → exit 0; the undeclared guard-attempt reason (kernel-declined + Z3 SAT, UNCONFIRMED — the replay binds only src/lib.rs; add_u8 lives in m1); deterministic reason across runs
+[Suite] rust lane product-CLI — u64 boundary: echo verified, mutant kernel-decline, add WALL (axiom_u64_probe)
+  [OK] (A) u64_echo (declared) → exit 0; verified with ONE certificate; the cert filename IS the entry's irHash (content-addressed)
+  [OK] (B) u64_seven_mutant (declared) → kernel decline; the confirmation shape follows the subject-binding contract — a materialized crate (or a clean tracked checkout) CONFIRMS the refuting model on the real toolchain (failed, exit 1); a dirty tracked checkout fail-closes to the honest unconfirmed unknown (exit 0). Zero certificates either way
+  [OK] (C) u64_add (undeclared) → THE WALL: exit 0, out-of-subset fail-closed unknown with the named full-width '+' reason; zero certificates
+  [OK] (D) u64_seven (undeclared, spec exists but not declared) → exit 0; the declaration-free guard attempt with ZERO mechanical goals (the constant body has no guard obligation); no certificate

@@ -1,0 +1,14 @@
+{
+  "id": "mcp-tool-usage-gate",
+  "name": "Axiom MCP tool usage gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/mcp_tool_usage_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/|docs/|AGENTS.md",
+  "passFilenames": true,
+  "weight": "light",
+  "category": "rule",
+  "severity": "error"
+}

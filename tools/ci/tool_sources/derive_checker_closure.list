@@ -1,0 +1,3 @@
+tools/ci/derive_checker_closure.nim
+src/core/trusted/layer_declaration.nim
+src/core/trusted/axiom_pragmas_lite.nim

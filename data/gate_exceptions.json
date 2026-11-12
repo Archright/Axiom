@@ -1,0 +1,20 @@
+{
+  "version": "1.0",
+  "description": "Gate-level quarantine manifest. Entries override gate pass/fail for known upstream issues. TTL-based expiry forces re-evaluation.",
+  "exceptions": [
+    {
+      "id": "nimtry-indexdefect-001",
+      "gateId": "nimtry-gate",
+      "errorSignature": "IndexDefect: targetToString nkBracketExpr safeLen",
+      "knownIssue": true,
+      "severity": "known-issue",
+      "reason": "nimtry library bug: targetToString accesses n[1] on nkBracketExpr without safeLen>=2 guard (nimtry_extract_part3_part1.nim:217). Upstream fix required.",
+      "added": "2026-06-19",
+      "expires": "2026-07-19",
+      "ttlDays": 30,
+      "requiresReEval": true,
+      "reEvalCommand": "nim c -r src/gate/runners/nimtry_gate src/",
+      "issueRef": "axiom-core#quarantine-nimtry-indexdefect"
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "schema": "bug-attribution-grounds-v1",
+  "specId": "SPEC-LIBP2P-BV-SLICE",
+  "subjectCommit": "a130a7f32219909bdcda14b7f1e64d0804fc832c",
+  "moduleSha256": "b205c969ba04f4199d8fd4a121d4b6fccdc82c426e336add0e1e9fd0e961e5ee",
+  "requirementSourceStatus": "unrecorded",
+  "requirementSourceRefs": [
+    "Nim std lib system module — system.toOpenArray(x, first, last) INCLUSIVE semantics (lib/system.nim toOpenArray; both bounds inclusive, length = last - first + 1)",
+    "Nim official documentation example — s.toOpenArray(1, 3) == [1, 2, 3]: 3 elements for the inclusive (1, 3) pair"
+  ],
+  "anomaly": {
+    "observationQuartet": {
+      "exactCommit": "a130a7f32219909bdcda14b7f1e64d0804fc832c",
+      "exactInput": {
+        "e": 4,
+        "b": 1,
+        "rpos": 0,
+        "fixture": "BytesView.init(@[byte 1, 2, 3, 4, 5, 6])"
+      },
+      "violationStatement": "the adopted inclusive view-relative slice-length law (len(bv.toOpenArray(b, e)) == e - b + 1) demands length 4 for (b=1, e=4) on the pinned fixture; the pinned subject observation is 3 — the template (libp2p/utils/bytesview.nim:18-19) computes v.data.toOpenArray(v.rpos + b, v.rpos + e - b), subtracting the start offset twice (actual length e - 2b + 1 = e - 1)",
+      "reproduction": {
+        "observedOutput": {
+          "status": "Success",
+          "echoedLength": 3,
+          "elements": "02 03 04",
+          "markers": "AXIOM_REPLAY_BEGIN / AXIOM_REPLAY_END"
+        },
+        "replayCommand": "nim c --hints:off --warnings:off --skipUserCfg --path:<workspace>/nim-libp2p --nimcache:tmp/bv_grounds_replay/nimcache -o:tmp/bv_grounds_replay/replay_harness_bin tmp/bv_grounds_replay/replay_harness.nim && ./tmp/bv_grounds_replay/replay_harness_bin — harness body: import libp2p/utils/bytesview; var bv = BytesView.init(@[byte 1, 2, 3, 4, 5, 6]); echo \"AXIOM_REPLAY_BEGIN\"; echo $(bv.toOpenArray(1, 4).len); echo \"AXIOM_REPLAY_END\" (the stamped bv-slice-len-v1 template, <module>=libp2p/utils/bytesview, <lit>=4)",
+        "toolchain": "Nim Compiler Version 2.2.10 [Linux: amd64]",
+        "hostPlatform": "linux-amd64",
+        "source": "Nim system toOpenArray inclusive semantics (external expected-behavior source): lib/system.nim toOpenArray + official example s.toOpenArray(1, 3) == [1, 2, 3] — 3 elements; the replay observation is the integer length echoed between the markers on the pinned subject bytes (sha256 b205c969ba04f4199d8fd4a121d4b6fccdc82c426e336add0e1e9fd0e961e5ee)"
+      }
+    }
+  },
+  "confirmation": {
+    "grounds": {
+      "E1": {
+        "present": false,
+        "refs": []
+      },
+      "E2": {
+        "present": false,
+        "refs": []
+      },
+      "E3": {
+        "present": false,
+        "refs": []
+      }
+    }
+  },
+  "corroboration": {
+    "machineRef": {
+      "specId": "SPEC-LIBP2P-BV-SLICE",
+      "verdict": "vsDisproved",
+      "replayVerdict": "rvAgree"
+    },
+    "note": "corroboration ONLY — M 무효화 시 보강 가치만 감소하며 C-carried 재현 요건을 결코 충족하지 않는다 (glossary §2.4a; C는 자립)"
+  },
+  "recordDigest": "52a643b23ca7dece7bfb4ca2fbb654ae9b67fdd0fc678a754eedd1f07449c930"
+}

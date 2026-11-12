@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://axiom.local/verification_subject.schema.json",
+  "title": "VerificationSubject",
+  "description": "Certified subject record for a materialized merge candidate M (certification continuity contract v10 §1, INV-1..INV-3). One immutable record per subject, stored under data/trusted/subjects/<subjectId>.json. subjectId = sha256Hex('axiom.subject.v1\\n' + candidateRef + '\\x1f' + candidateCommit + '\\x1f' + treeDigest + '\\x1f' + baseSha) — the canonical identity wire (hash-kernel SSOT). The store is append-only: an existing subjectId is never overwritten. Enforcement: src/verification/subject_store.nim + src/verification/verification_subject.nim.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "subjectId",
+    "candidateRef",
+    "candidateCommit",
+    "treeDigest",
+    "baseSha",
+    "parentCommit",
+    "createdAt",
+    "provenance"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "axiom.subject.v1"
+    },
+    "subjectId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "sha256 of the canonical identity wire — the record's immutable key."
+    },
+    "candidateRef": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The candidate ref label the subject was constructed under (e.g. refs/queue/...)."
+    },
+    "candidateCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "Git OID of the constructed chain tip M (the certification subject)."
+    },
+    "treeDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "64-hex sha256 over the constructed tree OID (hash-kernel sha256Hex of the materializer tipTree)."
+    },
+    "baseSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "Construction base tip B."
+    },
+    "parentCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "Parent of the candidate — equal to baseSha at construction (provenance, not identity)."
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO8601 UTC construction timestamp ('yyyy-MM-ddTHH:mm:ssZ')."
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "scheme"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Construction path — the sanctioned value is 'merge_materializer'."
+        },
+        "scheme": {
+          "const": "axiom.subject.v1"
+        }
+      }
+    }
+  }
+}

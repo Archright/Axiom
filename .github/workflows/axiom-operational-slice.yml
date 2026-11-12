@@ -1,0 +1,184 @@
+# axiom-operational-slice — the product's operational slice, as a required check.
+#
+# This job runs the REAL `ax prove` and replays the SAME certificate through the
+# Lean kernel via `make verify-contract-release-e2e-full` — the certificate the
+# prove produced is the certificate the kernel accepts.
+# The job id IS the check-run context; the job is designed to become a required
+# check. It must NEVER be conditionally skipped: a skipped required check reports
+# success — so no job-level or step-level `if:` may gate it. `if: always()` on
+# the artifact upload only widens execution (evidence survives a failure).
+# Producers: `tools/ci/run_manifest.jq` + Makefile `verify-contract-release-e2e-full`.
+
+name: axiom-operational-slice
+
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: axiom-operational-slice-${{ github.event.pull_request.number || github.event.merge_group.head_sha || github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  # The job id IS the check-run context — do not add a job-level `name:` key
+  # (it would rename the context and break required-check registration).
+  axiom-operational-slice:
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          cache-build-source: ${{ github.sha }}
+      - name: Build the release verifier (ci-compile authority)
+        # make ci-compile (ci/checker.mk) is THE release build authority:
+        # -d:release + AXIOM_HERMETIC_BUILDING=1 for ax/gate_hook/precompile_gates/
+        # install_ax_cas; on a B-layer cache HIT it skips recompiles and instead
+        # re-asserts each restored binary's provenance via --check-provenance
+        # (fail-closed). `make build` was a -d:allowMissingZ3 nim-check build.
+        run: make ci-compile
+      - name: Build the Lean reference extractor (ircheck)
+        # The canonical prove path seals subject binding via
+        # proofs/.lake/build/bin/ircheck (lakefile.lean: `lean_exe ircheck`).
+        # On a cold B-layer cache (new head SHA) it is not restored, and the
+        # reference-extractor miss demotes the node to NOT_VERIFIABLE — so
+        # build it from the checked-out tree before proving.
+        run: lake build ircheck
+        working-directory: proofs
+      - name: Restore tracked build metadata after make build
+        run: git restore src/generated/build_metadata.json
+
+      - name: R3 relocation-invariance measurement (wp5)
+        run: |
+          set -euo pipefail
+          nim c --path:src -d:release --hints:off -o:bin/wp5_relocation_measure tools/ci/wp5_relocation_measure.nim
+          mkdir -p logs
+          bin/wp5_relocation_measure --repo-root . --out logs/r3_relocation.json
+          jq -e --arg head "$GITHUB_SHA" \
+                --arg td "$(printf '%s' "$(git ls-tree -r HEAD)" | sha256sum | cut -d' ' -f1)" '
+            .schemaVersion == 1 and .invariantId == "R3" and
+            .repoIdentity.workingTreeClean == true and
+            .repoIdentity.head == $head and .repoIdentity.treeDigest == $td and
+            ([.observations[] | select(.key=="pathIndependentProjectionEqual")  | .value] == [true]) and
+            ([.observations[] | select(.key=="subjectRunProjectionHashEqual")  | .value] == [true]) and
+            ([.observations[] | select(.key=="negativeControlDigestDifferent") | .value] == [true]) and
+            ([.observations[] | select(.key=="commentOnlyProjectionStable")    | .value] == [true]) and
+            ([.incidents[]? | select(.severity == "warning")] | length == 0)
+          ' logs/r3_relocation.json
+          sha256sum logs/r3_relocation.json | awk '{print $1}' | tee logs/r3_relocation.sha256
+      - name: Prove, replay the same certificate through the kernel, assert the verdict
+        run: make verify-contract-release-e2e-full
+      - name: Emit the run manifest and assert provenance (expected vs actual, fail-closed)
+        # expected: git + src/generated/build_env.nim (declared identity of this
+        #   checkout; hermetic_build is the SSOT writer of that file)
+        # actual:   the built binary's own verdict (bin/ax --check-provenance)
+        # engineBuild mirrors attestation_orchestrator.verifierEngineBuildId:
+        # a 64-hex VerifierBuildId is recorded ONLY when the source hash it was
+        # measured for equals the compiled BuildSourceHash; every other value
+        # (including the .default "unmeasured" seed) is recorded as
+        # "unmeasured" — never a stale-but-plausible identity.
+        # ci-compile-hermetic-measure (checker.mk) runs the full hermetic
+        # pass BEFORE the guarded compiles, so a cold CI build measures a
+        # real 64-hex id; reaching this guard with "unmeasured" means the
+        # measurement wiring regressed — fail, never publish it.
+        # Any mismatch fails the job before the evidence can be consumed as
+        # acceptance (upload stays if:always() so the failing evidence itself
+        # is preserved for diagnosis).
+        run: |
+          set -euo pipefail
+          fail() { echo "PROVENANCE ASSERT FAIL: $1" >&2; exit 1; }
+          EXPECTED_GIT_HEAD="$(git rev-parse HEAD)"
+          EXPECTED_BIN_SHA="$(sha256sum bin/ax | cut -d' ' -f1)"
+          ENV_FILE="src/generated/build_env.nim"
+          RAW_ENGINE_BUILD="$(sed -n 's/^  VerifierBuildId\* = "\(.*\)"$/\1/p' "$ENV_FILE")"
+          FILE_BUILD_SOURCE_HASH="$(sed -n 's/^  BuildSourceHash\* = "\(.*\)"$/\1/p' "$ENV_FILE")"
+          FILE_VB_SOURCE_HASH="$(sed -n 's/^  VerifierBuildSourceHash\* = "\(.*\)"$/\1/p' "$ENV_FILE")"
+          [ -n "$FILE_BUILD_SOURCE_HASH" ] || fail "$ENV_FILE has an empty BuildSourceHash (seeded .default, seed guard did not run)"
+          PROV_OUT="$(bin/ax --check-provenance)" || fail "--check-provenance rejected bin/ax"
+          ACTUAL_BUILD_SOURCE_HASH="$(printf '%s\n' "$PROV_OUT" | sed -n 's/.*live src tree (\(.*\))$/\1/p')"
+          [ -n "$ACTUAL_BUILD_SOURCE_HASH" ] || fail "unparseable provenance verdict: $PROV_OUT"
+          [ "$ACTUAL_BUILD_SOURCE_HASH" = "$FILE_BUILD_SOURCE_HASH" ] || fail "binary-embedded tree hash $ACTUAL_BUILD_SOURCE_HASH != $ENV_FILE BuildSourceHash $FILE_BUILD_SOURCE_HASH"
+          if printf '%s' "$RAW_ENGINE_BUILD" | grep -Eq '^[0-9a-f]{64}$' && [ "$FILE_VB_SOURCE_HASH" = "$FILE_BUILD_SOURCE_HASH" ]; then
+            ENGINE_BUILD="$RAW_ENGINE_BUILD"
+          else
+            ENGINE_BUILD="unmeasured"
+            echo "INFO: engineBuild is unmeasured for this tree (VerifierBuildId='$RAW_ENGINE_BUILD' VerifierBuildSourceHash='$FILE_VB_SOURCE_HASH') — recorded as-is"
+          fi
+          DIRTY="$(git status --porcelain -- src ':(exclude)src/generated' config.nims config/effects.nims src/gate/config.nims Makefile axiom.nimble axiom.lock proofs/lean-toolchain)"
+          [ -z "$DIRTY" ] || fail "verifier build inputs dirty vs HEAD: $DIRTY"
+          CERT="$(cat logs/verify_contract_e2e_cert_path.txt)"
+          jq -n -S -c -j --slurpfile cert "$CERT" --slurpfile st logs/ax_proof_state.json --slurpfile rep logs/verify_contract_e2e_report.json --arg certPath "$CERT" --arg scopeHash "$(bin/ax scope hash)" --arg gitHead "$EXPECTED_GIT_HEAD" --arg binSha "$EXPECTED_BIN_SHA" --arg engineBuild "$ENGINE_BUILD" --arg buildSourceHash "$ACTUAL_BUILD_SOURCE_HASH" --arg lockSha "$(sha256sum data/verification_scope.lock | cut -d' ' -f1)" --arg canon "$(bin/ax report --canonical-digest)" --arg certSha "$(sha256sum "$CERT" | cut -d' ' -f1)" --arg node "src/core/orchestrator/orchestrator_api.nim::normalizeMaxWorkers" --argjson proveExit 0 --argjson kernelExit 0 --argjson reportExit "$(cat logs/verify_contract_e2e_report_exit.txt)" --arg kernelOut "$(cat logs/verify_contract_e2e_kernel.out)" -f tools/ci/run_manifest.jq > logs/run-manifest.json
+          [ "$(jq -r '.sourceTree.gitHead' logs/run-manifest.json)" = "$EXPECTED_GIT_HEAD" ] || fail "manifest gitHead != $EXPECTED_GIT_HEAD"
+          [ "$(jq -r '.binary.sha256' logs/run-manifest.json)" = "$EXPECTED_BIN_SHA" ] || fail "manifest binary.sha256 != $EXPECTED_BIN_SHA"
+          [ "$(jq -r '.toolchain.engineBuild' logs/run-manifest.json)" = "$ENGINE_BUILD" ] || fail "manifest engineBuild != $ENGINE_BUILD"
+          [ "$(jq -r '.sourceTree.buildSourceHash' logs/run-manifest.json)" = "$ACTUAL_BUILD_SOURCE_HASH" ] || fail "manifest buildSourceHash != $ACTUAL_BUILD_SOURCE_HASH"
+          sha256sum logs/run-manifest.json | awk '{print $1}' | tee logs/run-manifest.sha256
+          cat logs/run-manifest.json
+          echo "PROVENANCE ASSERTION: OK — gitHead/binary.sha256/engineBuild/buildSourceHash expected==actual (tree=$ACTUAL_BUILD_SOURCE_HASH engine=$ENGINE_BUILD)"
+      - name: Determinism ratchet — cold serial↔parallel prove equality (DEBT#508)
+        # The end-to-end determinism ratchet (DEBT#508 closure). Two COLD
+        # `ax prove --limit 20` legs (workers=1 / workers=2, sibling vaults
+        # under one base temp dir, .axiom/cache snapshot-restored before each
+        # leg) must agree on: the SHA-256 normalized-output digest, the vault
+        # certificate substance digest, the documented exit pair serial=1 /
+        # parallel=0 (the PR #1085 "Known non-claims" VS-1 Phase-1 accounting
+        # divergence — pinned, drift fails loudly), and ZERO timeout lines
+        # (guarded on the RAW output before any normalization — a timeout is
+        # a failure, never a filter target). Wired here because this check is
+        # the live required surface that runs the real prove path on every
+        # PR/merge_group/main push; the gateway landing lane that would carry
+        # it via the LG policy is SL-09 (not yet promoted — epoch N+7).
+        # Coherent generation (AGENTS.md §2.5): single atomic step addition to
+        # this workflow's existing job — the check identity is unchanged and
+        # this PR's own run of this check self-validates the new step.
+        run: |
+          set -euo pipefail
+          nim c --hints:off --nimcache:build/nimcache/debt508_ratchet -o:build/debt508_ratchet tests/gateway/deterministic_parallel_proof_test.nim
+          ./build/debt508_ratchet
+      - name: Observation-reuse contract — L4 acceptance reader (state transitions + call budget)
+        # The L4 reader (tools/ci/landing_observe.sh --main <sha>) is the surface
+        # every observation-cost claim would be reported from: its exit codes
+        # (one per state: 0 SUCCESS / 1 FAILURE / 2 UNKNOWN / 3 PENDING /
+        # 4 STALE / 5 NOT_RUN) and its API-call budget (cold 3, warm cache 2,
+        # --offline 0). The same file is listed in `make test-unit`, which no CI
+        # target runs — a check no CI target executes is a declaration, not a
+        # check (AGENTS.md §0.9). Executed here, in this job, so the guard runs
+        # on every pull_request / merge_group / main push.
+        # Zero network: a stub `gh` on PATH plus fixture artifacts in a temp dir.
+        # Coherent generation (AGENTS.md §2.5): single atomic step addition to
+        # this workflow's existing job — the check identity is unchanged and
+        # this PR's own run of this check self-validates the new step.
+        run: |
+          set -euo pipefail
+          nim c --hints:off --nimcache:build/nimcache/landing_observe_contract -o:build/landing_observe_contract tests/ci/test_landing_observe_acceptance.nim
+          ./build/landing_observe_contract
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: axiom-operational-slice-evidence
+          path: |
+            logs/verify_contract_e2e_report.json
+            logs/verify_contract_e2e_report_exit.txt
+            logs/verify_contract_e2e_cert_path.txt
+            logs/verify_contract_e2e_kernel.out
+            logs/run-manifest.json
+            logs/run-manifest.sha256
+            logs/ax_proof_state.json
+      - name: Upload R3 relocation evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: axiom-operational-slice-r3
+          path: |
+            logs/r3_relocation.json
+            logs/r3_relocation.sha256
+          retention-days: 30

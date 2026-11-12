@@ -1,0 +1,119 @@
+## Topology Policy Parser
+## AGENTS.md Topology Contract §Phase A
+## Parses topology_policy.json into a typed structure.
+
+import core/trusted/layer_declaration
+axiomLayer "domain"
+import core/results
+import std/[json, strutils, tables]
+{.push raises: [].}
+# axiomIoBoundary
+
+type
+  TransitionalDetection* = object
+    patterns*: seq[string]
+    generalizedRule*: string
+
+  PolicyDefaults* = object
+    maxDirectoryFiles*: int
+    allowTransitionalModules*: bool
+    transitionalMaxAgeDays*: int
+    collapseSingletons*: bool
+    forbidEmptyDirectories*: bool
+    transitionalDetection*: TransitionalDetection
+
+  PolicyException* = object
+    path*: string
+    reason*: string
+    collapseSingletons*: bool
+    suppressAudit*: seq[string]
+    suppressUntil*: string
+
+  SeverityRules* = Table[string, string]
+
+  TopologyPolicy* = object
+    schema*: string
+    namespaceUuid*: string
+    defaults*: PolicyDefaults
+    severityRules*: SeverityRules
+    exceptions*: seq[PolicyException]
+
+func parseSeverityRules*(j: JsonNode): SeverityRules =
+  result = initTable[string, string]()
+  if j.kind != JObject:
+    return
+  for key, val in j.pairs:
+    result[key] = val.getStr("warning")
+
+proc parseTopologyPolicy*(path: string): Result[TopologyPolicy, string] =
+  let j =
+    try: parseFile(path)
+    except CatchableError as e:
+      return err("topology policy unreadable: " & e.msg & " — failing closed per §0.9")
+  try:
+    if not j.hasKey("_schema") or j{"_schema"}.getStr("").len == 0:
+      return err("topology policy corrupt: missing _schema — failing closed per §0.9")
+    if not j.hasKey("defaults") or j{"defaults"}.kind != JObject:
+      return err("topology policy corrupt: missing defaults — failing closed per §0.9")
+  except CatchableError as e:
+    return err("topology policy parse error: " & e.msg & " — failing closed per §0.9")
+  var policy = TopologyPolicy(
+    schema: j{"_schema"}.getStr,
+    namespaceUuid: j{"namespaceUuid"}.getStr
+  )
+  policy.defaults.maxDirectoryFiles = j{"defaults"}{"maxDirectoryFiles"}.getInt
+  policy.defaults.allowTransitionalModules = j{"defaults"}{"allowTransitionalModules"}.getBool
+  policy.defaults.transitionalMaxAgeDays = j{"defaults"}{"transitionalMaxAgeDays"}.getInt
+  policy.defaults.collapseSingletons = j{"defaults"}{"collapseSingletons"}.getBool
+  policy.defaults.forbidEmptyDirectories = j{"defaults"}{"forbidEmptyDirectories"}.getBool
+  policy.defaults.transitionalDetection.patterns = @[]
+  for p in j{"defaults"}{"transitionalDetection"}{"patterns"}:
+    policy.defaults.transitionalDetection.patterns.add(p.getStr)
+  policy.defaults.transitionalDetection.generalizedRule =
+    j{"defaults"}{"transitionalDetection"}{"generalizedRule"}.getStr
+
+  policy.severityRules = initTable[string, string]()
+  if j.hasKey("severityRules"):
+    policy.severityRules = parseSeverityRules(j{"severityRules"})
+
+  policy.exceptions = @[]
+  if j.hasKey("exceptions") and j{"exceptions"}.kind == JArray:
+    for e in j{"exceptions"}:
+      var suppressAudit: seq[string] = @[]
+      if e.hasKey("suppressAudit"):
+        for s in e{"suppressAudit"}:
+          suppressAudit.add(s.getStr)
+      var suppressUntil = ""
+      if e.hasKey("suppressUntil"):
+        suppressUntil = e{"suppressUntil"}.getStr
+      policy.exceptions.add(PolicyException(
+        path: e{"path"}.getStr,
+        reason: e{"reason"}.getStr,
+        collapseSingletons: e{"collapseSingletons"}.getBool,
+        suppressAudit: suppressAudit,
+        suppressUntil: suppressUntil
+      ))
+  ok(policy)
+
+func findException*(policy: TopologyPolicy, dirPath: string): PolicyException =
+  for ex in policy.exceptions:
+    if dirPath.startsWith(ex.path):
+      return ex
+  result = PolicyException(path: "")
+
+func isException*(policy: TopologyPolicy, dirPath: string): bool =
+  for ex in policy.exceptions:
+    if dirPath.startsWith(ex.path):
+      return true
+  return false
+
+func getMaxDirectoryFiles*(policy: TopologyPolicy, dirPath: string): int =
+  for ex in policy.exceptions:
+    if dirPath.startsWith(ex.path):
+      return -1  # unlimited
+  return policy.defaults.maxDirectoryFiles
+
+func getSeverity*(policy: TopologyPolicy, kind: string): string =
+  policy.severityRules.getOrDefault(kind, "warning")
+
+{.pop}

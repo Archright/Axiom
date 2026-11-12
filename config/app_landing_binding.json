@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "policyId": "axiom-landing-app-binding-v1",
+  "status": "READY",
+  "description": "Landing App identity binding — the runtime mutation authority for CAS landings (migration Phase B+C). Filled in by a GitHub org admin AFTER creating the GitHub App (user/org-admin action — an agent cannot create Apps via gh). The Landing App is the ONLY authority that mutates refs/heads/main via the updateRefs CAS path; this file is on the merge-admission trust surface, so a PR changing it denies auto-merge until manually re-reviewed.",
+  "app_id": "4879411",
+  "installation_id": "160192931",
+  "webhook_secret_ref": "PENDING",
+  "pinned_deploy_commit": "52aa6e70a6c3783e22a3f05ccf2a34d07f348eb2",
+  "notes": [
+    "Do NOT edit app_id/installation_id/webhook_secret_ref by hand-guessing — fill from the org-level App creation result + gh api installation query (checklist in the Phase B+C delivery report).",
+    "status transitions: PENDING_APP_CREATION -> READY when app_id + installation_id are populated by the admin; the Landing App CLI fails closed on any non-READY status.",
+    "webhook_secret_ref: fill with the secret-name reference used by the out-of-repo webhook bridge (never the secret value).",
+    "pinned_deploy_commit: the main-SHA the App's landing code is pinned to (deployment pinning; filled at first deploy)."
+  ]
+}

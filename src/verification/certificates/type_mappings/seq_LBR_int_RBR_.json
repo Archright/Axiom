@@ -1,0 +1,8 @@
+{
+  "nimType": "seq[int]",
+  "leanType": "List Int",
+  "smtSort": "(List Int)",
+  "mappingProofObligation": "nim_lean_seqint_iso",
+  "verified": false,
+  "sourceHash": ""
+}

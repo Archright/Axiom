@@ -1,0 +1,34 @@
+{
+  "capturedAt": "<TIMESTAMP>",
+  "funcCount": 21,
+  "funcs": [
+    "axProofStatusValue*",
+    "computeSmartDiagnosisDepth",
+    "computeSmartDiagnosisDepth*",
+    "computeSmartQueueLimit",
+    "computeSmartQueueLimit*",
+    "computeTopologyNodeDepths*",
+    "findStructuralDiagnosisIndex",
+    "jsonFromStructuralDiagnosis",
+    "jsonFromTopologyAnalysis*",
+    "jsonFromTopologyFrontier*",
+    "jsonFromTopologyQueue",
+    "jsonFromTopologyQueueEntry",
+    "mapAxProofStatus*",
+    "mapSemanticProofStatus*",
+    "nodeIdsToLabels*",
+    "renderVerifyTopologySummaryLines*",
+    "semanticProofFailureReason*",
+    "semanticProofLabel*",
+    "semanticProofNodeId*",
+    "structuralDiagnosisForNode",
+    "topologyImpactIndex*"
+  ],
+  "linesOfCode": 337,
+  "module": "topology_cli",
+  "path": "src/cli/topology_cli.nim",
+  "procCount": 1,
+  "procs": [
+    "analyzeTopologySourceRoot*"
+  ]
+}

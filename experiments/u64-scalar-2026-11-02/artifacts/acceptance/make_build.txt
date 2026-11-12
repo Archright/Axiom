@@ -1,0 +1,271 @@
+=== [Φ1] Generating build metadata ===
+nim c --hints:off --skipParentCfg --skipProjCfg --path:<user-home>/.choosenim/toolchains/nim-2.2.10 --path:. --path:src --path:tools --path:<user-home>/.nimble/pkgs2/checksums-0.2.2-6357ab195ec23e0e0a54d4d8b5e0212456bf899e --path:<user-home>/.nimble/pkgs2/fusion-1.2-408bde8679bce63dfb6f424e107eb37c5eb31510 -o:bin/build_metadata_generator tools/build_metadata_generator.nim
+bin/build_metadata_generator
+[build_metadata] Wrote src/generated/build_metadata.json (1319 source files, 54 manifests, 76 runners)
+✅ build_metadata.json generated
+=== [3/4] Full Build ===
+nim c --hints:off -d:allowMissingZ3 -o:bin/ax src/cli/main.nim
+[integrity] merkle concat: sha256sum:sha256sum:sha256sum:sha256sum:
+[integrity] expected: 62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[integrity] actual:   62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[Axiom] Checking feature_manifest.json freshness (content-hash)...
+⚠️ [Bootstrap] src/generated/build_env.nim not found.
+  Seeded from build_env.nim.default constants (run `nimble hermetic` for real values).
+[coherence] build_env.nim seed guard: injected live BuildSourceHash 7211238942987599411
+feature_manifest.json ensured fresh
+[sync_certs] Manifest fresh (5 entries)
+⚠️ [Bootstrap] src/generated/build_env.nim not found.
+  Seeded from build_env.nim.default constants (run `nimble hermetic` for real values).
+[hermetic] Building bin/hermetic_build from tools/hermetic_build.nim
+[integrity] merkle concat: sha256sum:sha256sum:sha256sum:sha256sum:
+[integrity] expected: 62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[integrity] actual:   62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[nimcache] 1 concurrent build(s) hold build/nimcache — purge yielded (sole ownership unproven)
+[coherence] build_env.nim seed guard: injected live BuildSourceHash 7211238942987599411
+[hermetic] Environment changed (MISS)
+[hermetic] build_env.nim already present
+[hermetic] Building bin/sync_topology from tools/sync_topology.nim
+[integrity] merkle concat: sha256sum:sha256sum:sha256sum:sha256sum:
+[integrity] expected: 62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[integrity] actual:   62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[nimcache] 1 concurrent build(s) hold build/nimcache — purge yielded (sole ownership unproven)
+[hermetic] Syncing topology...
+[sync_topology] Root: /tmp/cold_u64_main
+[sync_topology] Syncing manifest.d/*.json...
+  Manifests: 0 written, 54 unchanged
+[sync_topology] Syncing _index.json...
+  Index: unchanged
+[sync_topology] Syncing manifest_registry.nim...
+  Registry: unchanged
+[sync_topology] Syncing gate_registry.nim...
+  Gate registry: unchanged
+[sync_topology] Syncing helper_registry.nim...
+  Helper registry: unchanged
+[sync_topology] Syncing gates.manifest.toml...
+  Manifest TOML: unchanged
+[sync_topology] Syncing config/gates.json...
+  Gate config: unchanged
+[sync_topology] Done.
+[hermetic] Regenerating type registry...
+[hermetic] Building bin/decision_binding_checker from tools/decision_binding_checker.nim
+[integrity] merkle concat: sha256sum:sha256sum:sha256sum:sha256sum:
+[integrity] expected: 62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[integrity] actual:   62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b
+[nimcache] 1 concurrent build(s) hold build/nimcache — purge yielded (sole ownership unproven)
+[hermetic] Checking decision bindings (audit)...
+[decision-binding] Loaded 259 active waiver(s) from decision_binding.waiver.json
+[decision-binding] Found 48 violation(s)
+  loadEvidenceRecordForRegister (/tmp/cold_u64_main/src/cli/cert_cli.nim:627) returns Result/Option without axiomDecision
+  persistRegisteredSubject (/tmp/cold_u64_main/src/cli/cert_cli.nim:675) returns Result/Option without axiomDecision
+  ledgerHasSubjectCert (/tmp/cold_u64_main/src/cli/cert_cli.nim:820) returns Result/Option without axiomDecision
+  ledgerRecordConsistentWith (/tmp/cold_u64_main/src/cli/cert_cli.nim:1220) returns Result/Option without axiomDecision
+  validateCoutOverlayNode (/tmp/cold_u64_main/src/cli/axiom_engine.nim:1229) returns Result/Option without axiomDecision
+  validateCoutOverlayNode (/tmp/cold_u64_main/src/cli/axiom_engine.nim:1254) returns Result/Option without axiomDecision
+  validateTomlD2AgentOverlayNode (/tmp/cold_u64_main/src/cli/axiom_engine.nim:1533) returns Result/Option without axiomDecision
+  validateTomlD2AgentOverlayNode (/tmp/cold_u64_main/src/cli/axiom_engine.nim:1553) returns Result/Option without axiomDecision
+  validateSidecarOverlayNode (/tmp/cold_u64_main/src/cli/axiom_engine.nim:2467) returns Result/Option without axiomDecision
+  loadNimSidecarOverlayDomain (/tmp/cold_u64_main/src/cli/axiom_engine.nim:2474) returns Result/Option without axiomDecision
+  validateSidecarOverlayNode (/tmp/cold_u64_main/src/cli/axiom_engine.nim:2489) returns Result/Option without axiomDecision
+  parseTrustSurfaceJson (/tmp/cold_u64_main/src/cli/merge_cli.nim:754) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  rotationAllowlistOk (/tmp/cold_u64_main/src/cli/merge_cli.nim:803) returns Result/Option without axiomDecision
+  trustSurfaceOutcome (/tmp/cold_u64_main/src/cli/merge_cli.nim:1200) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  MergeAdmissible (/tmp/cold_u64_main/src/cli/merge_cli.nim:1233) multiple returns without axiomDecision
+  checkedStr (/tmp/cold_u64_main/src/cli/merge_cli.nim:1562) multiple returns without axiomDecision
+  parseLayerPairRegistry (/tmp/cold_u64_main/src/cli/merge_cli.nim:1760) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  loadTrustSurface (/tmp/cold_u64_main/src/cli/merge_cli.nim:1860) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  collectCertificateContinuityFacts (/tmp/cold_u64_main/src/cli/merge_cli.nim:1963) returns Result/Option without axiomDecision
+  parseMergeSuccess (/tmp/cold_u64_main/src/cli/merge_cli.nim:2189) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  requestGitHubPut (/tmp/cold_u64_main/src/cli/merge_cli.nim:2205) returns Result/Option without axiomDecision
+  performMerge (/tmp/cold_u64_main/src/cli/merge_cli.nim:2238) returns Result/Option without axiomDecision
+  observePullState (/tmp/cold_u64_main/src/cli/merge_cli.nim:2282) returns Result/Option without axiomDecision
+  resolveMergeShapeApi (/tmp/cold_u64_main/src/cli/merge_cli.nim:2351) returns Result/Option without axiomDecision
+  resolveMergeShapeLocal (/tmp/cold_u64_main/src/cli/merge_cli.nim:2382) returns Result/Option without axiomDecision
+  loadLedgerCertFor (/tmp/cold_u64_main/src/cli/merge_cli.nim:2420) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  scanLedgerContinuityCertNode (/tmp/cold_u64_main/src/cli/merge_cli.nim:2568) returns Result/Option without axiomDecision
+  collectCertificateContinuityFacts (/tmp/cold_u64_main/src/cli/merge_cli.nim:2632) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  parseActiveKernelSymbols (/tmp/cold_u64_main/src/cli/merge_cli.nim:2680) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  vaultManifestIndex (/tmp/cold_u64_main/src/cli/merge_cli.nim:2705) returns Result/Option without axiomDecision
+  safeSpecRelPath (/tmp/cold_u64_main/src/cli/upstream_report_cli.nim:318) multiple returns without axiomDecision
+  parseFindingEvidence (/tmp/cold_u64_main/src/cli/upstream_report_cli.nim:397) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  selectDisplayBlock (/tmp/cold_u64_main/src/cli/upstream_report_cli.nim:439) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  selectReportableUnits (/tmp/cold_u64_main/src/cli/upstream_report_cli.nim:453) returns Result/Option without axiomDecision
+  evalLinearRhs (/tmp/cold_u64_main/src/cli/upstream_report_cli.nim:531) returns Result/Option without axiomDecision
+  evalClauseValue (/tmp/cold_u64_main/src/cli/upstream_report_cli.nim:555) returns Result/Option without axiomDecision
+  classifyGhOutcome (/tmp/cold_u64_main/src/cli/upstream_report_cli.nim:784) multiple returns without axiomDecision
+  parseIssueView (/tmp/cold_u64_main/src/cli/upstream_report_cli.nim:878) returns Result/Option without axiomDecision
+  parseIssueRefList (/tmp/cold_u64_main/src/cli/upstream_report_cli.nim:893) returns Result/Option without axiomDecision
+  decodeGhContentsJson (/tmp/cold_u64_main/src/cli/upstream_report_cli.nim:907) returns Result/Option without axiomDecision
+  receiptFromJson (/tmp/cold_u64_main/src/cli/upstream_report_cli.nim:1144) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  parseUpstreamFlags (/tmp/cold_u64_main/src/cli/upstream_report_cli.nim:1281) returns Result/Option without axiomDecision
+  loadSpecOverlay (/tmp/cold_u64_main/src/cli/upstream_report_cli.nim:1387) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  loadReceipt (/tmp/cold_u64_main/src/cli/upstream_report_cli.nim:1403) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  saveReceiptAtomic (/tmp/cold_u64_main/src/cli/upstream_report_cli.nim:1418) returns Result/Option without axiomDecision
+  verifyCertBinding (/tmp/cold_u64_main/src/cli/landing_cli.nim:106) multiple returns without axiomDecision
+  fetchPrHead (/tmp/cold_u64_main/src/cli/landing_cli.nim:150) returns Result/Option without axiomDecision
+  compareStatus (/tmp/cold_u64_main/src/cli/landing_cli.nim:167) returns Result/Option without axiomDecision
+  validateSubjectPinObject (/tmp/cold_u64_main/src/cli/external_subject_registry.nim:227) returns Result/Option without axiomDecision
+  validateOwnershipObject (/tmp/cold_u64_main/src/cli/external_subject_registry.nim:254) returns Result/Option without axiomDecision
+  fromJsonResult (/tmp/cold_u64_main/src/core/types/request_result.nim:119) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  changeDescriptorFromJson (/tmp/cold_u64_main/src/core/types/candidate_identity.nim:204) returns Result/Option without axiomDecision
+  candidateStateIdentityFromJson (/tmp/cold_u64_main/src/core/types/candidate_identity.nim:211) returns Result/Option without axiomDecision
+  candidateProvenanceFromJson (/tmp/cold_u64_main/src/core/types/candidate_identity.nim:218) returns Result/Option without axiomDecision
+  verificationContextIdentityFromJson (/tmp/cold_u64_main/src/core/types/candidate_identity.nim:233) returns Result/Option without axiomDecision
+  candidateEvidenceDigestFromJson (/tmp/cold_u64_main/src/core/types/candidate_identity.nim:242) returns Result/Option without axiomDecision
+  materializedCandidateFromJson (/tmp/cold_u64_main/src/core/types/candidate_identity.nim:251) returns Result/Option without axiomDecision
+  materializationRecordFromJson (/tmp/cold_u64_main/src/core/types/candidate_identity.nim:263) returns Result/Option without axiomDecision
+  fromJson (/tmp/cold_u64_main/src/core/types/execution_plan.nim:66) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  fromJson (/tmp/cold_u64_main/src/core/types/request_id.nim:32) returns Result/Option without axiomDecision
+  countCallDepth (/tmp/cold_u64_main/src/core/diagnostics/pattern_guard.nim:247) multiple returns without axiomDecision
+  commonAncestorDir (/tmp/cold_u64_main/src/core/gate/trust_commit_scope_scan.nim:268) multiple returns without axiomDecision
+  parseDerivedSet (/tmp/cold_u64_main/src/core/policy/rotation_closure_facts.nim:86) returns Result/Option without axiomDecision
+  pinClosureLineSet (/tmp/cold_u64_main/src/core/policy/rotation_closure_facts.nim:102) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  verifyRatchetDowngradeSignature (/tmp/cold_u64_main/src/core/trusted/ratchet_authority.nim:57) multiple returns without axiomDecision
+  validateClaimOwnership (/tmp/cold_u64_main/src/core/trusted/bug_attribution_grounds.nim:116) returns Result/Option without axiomDecision
+  validateGroundsFile (/tmp/cold_u64_main/src/core/trusted/bug_attribution_grounds.nim:378) returns Result/Option without axiomDecision
+  explicitSpecFromOverlay (/tmp/cold_u64_main/src/core/trusted/specification_artifact.nim:68) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  measuredBinaryDigest (/tmp/cold_u64_main/src/verification/obligation/measured_digests.nim:56) multiple returns without axiomDecision
+  containsIdentToken (/tmp/cold_u64_main/src/verification/obligation/canonical_verification.nim:384) multiple returns without axiomDecision
+  measureSubjectGitRef (/tmp/cold_u64_main/src/verification/obligation/canonical_verification.nim:865) multiple returns without axiomDecision
+  measureCompositeCarrierTypename (/tmp/cold_u64_main/src/verification/obligation/canonical_verification.nim:1186) multiple returns without axiomDecision
+  rejectionToken (/tmp/cold_u64_main/src/verification/obligation/candidate_eligibility.nim:97) returns Result/Option without axiomDecision
+  canonicalizeEnvValue (/tmp/cold_u64_main/src/verification/obligation/identity.nim:53) multiple returns without axiomDecision
+  rustTemplateSkeleton (/tmp/cold_u64_main/src/verification/rust_obligation_render.nim:111) multiple returns without axiomDecision
+  rustExtractorIdentityDigest (/tmp/cold_u64_main/src/verification/rust_obligation_render.nim:666) multiple returns without axiomDecision
+  loadCASEntryByKey (/tmp/cold_u64_main/src/verification/canonical_cache.nim:149) returns Result/Option without axiomDecision
+  parseJudgmentSubject (/tmp/cold_u64_main/src/verification/judgment_cas.nim:358) returns Result/Option without axiomDecision
+  collectChainedDigest (/tmp/cold_u64_main/src/verification/judgment_cas.nim:531) returns Result/Option without axiomDecision
+  deriveSubjectTreeClosure (/tmp/cold_u64_main/src/verification/judgment_cas.nim:563) returns Result/Option without axiomDecision
+  collectTestSourceClosure (/tmp/cold_u64_main/src/verification/judgment_cas.nim:583) returns Result/Option without axiomDecision
+  collectGoldenFixturesDigest (/tmp/cold_u64_main/src/verification/judgment_cas.nim:599) returns Result/Option without axiomDecision
+  subjectSourceClosure (/tmp/cold_u64_main/src/verification/judgment_cas.nim:661) returns Result/Option without axiomDecision
+  subjectFixturesDigest (/tmp/cold_u64_main/src/verification/judgment_cas.nim:675) returns Result/Option without axiomDecision
+  collectRecipeDigest (/tmp/cold_u64_main/src/verification/judgment_cas.nim:689) returns Result/Option without axiomDecision
+  compilerPinsDigest (/tmp/cold_u64_main/src/verification/judgment_cas.nim:695) returns Result/Option without axiomDecision
+  collectToolchainBundleDigest (/tmp/cold_u64_main/src/verification/judgment_cas.nim:707) returns Result/Option without axiomDecision
+  collectJudgmentClosure (/tmp/cold_u64_main/src/verification/judgment_cas.nim:806) returns Result/Option without axiomDecision
+  validateS1aJudgmentPayloadNode (/tmp/cold_u64_main/src/verification/judgment_cas.nim:944) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  validateProofIntegrityPayloadNode (/tmp/cold_u64_main/src/verification/judgment_cas.nim:1065) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  validateD2GoldenPayloadNode (/tmp/cold_u64_main/src/verification/judgment_cas.nim:1122) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  validateD2PersistPayloadNode (/tmp/cold_u64_main/src/verification/judgment_cas.nim:1185) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  validateJudgmentPayloadNode (/tmp/cold_u64_main/src/verification/judgment_cas.nim:1235) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  writeJudgmentEvidenceFile (/tmp/cold_u64_main/src/verification/judgment_cas.nim:1279) returns Result/Option without axiomDecision
+  parseJudgmentEvidenceFile (/tmp/cold_u64_main/src/verification/judgment_cas.nim:1305) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  writeSubjectEvidenceFile (/tmp/cold_u64_main/src/verification/judgment_cas.nim:1411) returns Result/Option without axiomDecision
+  writeProofIntegrityJudgmentEvidenceFile (/tmp/cold_u64_main/src/verification/judgment_cas.nim:1431) returns Result/Option without axiomDecision
+  buildJudgmentRecord (/tmp/cold_u64_main/src/verification/judgment_cas.nim:1723) returns Result/Option without axiomDecision
+  validateJudgmentWitnessNode (/tmp/cold_u64_main/src/verification/judgment_cas.nim:1779) multiple returns without axiomDecision
+  judgmentRootRecordMarkerShape (/tmp/cold_u64_main/src/verification/judgment_cas.nim:1813) multiple returns without axiomDecision
+  writeJudgmentDecisionFile (/tmp/cold_u64_main/src/verification/judgment_cas.nim:1859) returns Result/Option without axiomDecision
+  verifyJudgmentReuse (/tmp/cold_u64_main/src/verification/judgment_cas.nim:1909) multiple returns without axiomDecision
+  runJudgmentAttestBranchForSubject (/tmp/cold_u64_main/src/verification/judgment_cas.nim:1954) returns Result/Option without axiomDecision
+  runJudgmentAttestBranch (/tmp/cold_u64_main/src/verification/judgment_cas.nim:2117) returns Result/Option without axiomDecision
+  parseExecutionVerdict (/tmp/cold_u64_main/src/verification/judgment_cas.nim:2184) returns Result/Option without axiomDecision
+  validateJudgmentExecutionRecord (/tmp/cold_u64_main/src/verification/judgment_cas.nim:2244) multiple returns without axiomDecision
+  appendExecutionRecord (/tmp/cold_u64_main/src/verification/judgment_cas.nim:2327) returns Result/Option without axiomDecision
+  validateExtractionJobRecord (/tmp/cold_u64_main/src/verification/extraction_provenance.nim:164) multiple returns without axiomDecision
+  jobRecordFromJson (/tmp/cold_u64_main/src/verification/extraction_provenance.nim:224) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  extractionJobRecordFromPayload (/tmp/cold_u64_main/src/verification/extraction_provenance.nim:262) returns Result/Option without axiomDecision
+  extractionJobKey (/tmp/cold_u64_main/src/verification/extraction_provenance.nim:316) returns Result/Option without axiomDecision
+  fileSha256Hex (/tmp/cold_u64_main/src/verification/extraction_provenance.nim:330) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  llbcFileDigest (/tmp/cold_u64_main/src/verification/extraction_provenance.nim:344) returns Result/Option without axiomDecision
+  ledgerCertId (/tmp/cold_u64_main/src/verification/ledger_side_ref.nim:77) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  shaFromObject (/tmp/cold_u64_main/src/verification/ledger_side_ref.nim:96) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  shaFromNode (/tmp/cold_u64_main/src/verification/ledger_side_ref.nim:105) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  ledgerScanIndexFromTree (/tmp/cold_u64_main/src/verification/ledger_side_ref.nim:114) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  listEntriesFromTree (/tmp/cold_u64_main/src/verification/ledger_side_ref.nim:152) returns Result/Option without axiomDecision
+  decodeBlobContent (/tmp/cold_u64_main/src/verification/ledger_side_ref.nim:164) returns Result/Option without axiomDecision
+  blobEntrySha (/tmp/cold_u64_main/src/verification/ledger_side_ref.nim:190) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  fetchTipTree (/tmp/cold_u64_main/src/verification/ledger_side_ref.nim:217) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  listLedgerCertIds (/tmp/cold_u64_main/src/verification/ledger_side_ref.nim:260) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  listRefEntryNames (/tmp/cold_u64_main/src/verification/ledger_side_ref.nim:279) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  openLedgerScanIndex (/tmp/cold_u64_main/src/verification/ledger_side_ref.nim:316) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  downloadLedgerCertificateAtBlob (/tmp/cold_u64_main/src/verification/ledger_side_ref.nim:370) returns Result/Option without axiomDecision
+  downloadLedgerCertificate (/tmp/cold_u64_main/src/verification/ledger_side_ref.nim:381) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  validateEvidenceRecord (/tmp/cold_u64_main/src/verification/evidence_ledger.nim:167) multiple returns without axiomDecision
+  evidenceRecordFromJson (/tmp/cold_u64_main/src/verification/evidence_ledger.nim:200) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  evidenceKeysFromNames (/tmp/cold_u64_main/src/verification/evidence_ledger.nim:243) returns Result/Option without axiomDecision
+  blobShaForKey (/tmp/cold_u64_main/src/verification/evidence_ledger.nim:258) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  decodeEvidenceBlob (/tmp/cold_u64_main/src/verification/evidence_ledger.nim:281) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  parseEvidenceRecord (/tmp/cold_u64_main/src/verification/evidence_ledger.nim:294) returns Result/Option without axiomDecision
+  isOid40 (/tmp/cold_u64_main/src/verification/admission_artifact.nim:87) multiple returns without axiomDecision
+  mintAdmissionPayload (/tmp/cold_u64_main/src/verification/admission_artifact.nim:96) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  decodeExecutionIdentityClaims (/tmp/cold_u64_main/src/verification/admission_artifact.nim:140) returns Result/Option without axiomDecision
+  admissionPayloadDigest (/tmp/cold_u64_main/src/verification/admission_artifact.nim:202) returns Result/Option without axiomDecision
+  artifactPayloadFromEnvelope (/tmp/cold_u64_main/src/verification/admission_artifact.nim:216) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  validateAttestationInputs (/tmp/cold_u64_main/src/verification/attestation_orchestrator.nim:266) multiple returns without axiomDecision
+  inputsFromJson (/tmp/cold_u64_main/src/verification/attestation_orchestrator.nim:299) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  parseAttestationEvidenceText (/tmp/cold_u64_main/src/verification/attestation_orchestrator.nim:350) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  reuseIrHashFromPayload (/tmp/cold_u64_main/src/verification/attestation_orchestrator.nim:562) returns Result/Option without axiomDecision
+  isEarlyReturnIfWire (/tmp/cold_u64_main/src/verification/ast_wire.nim:173) multiple returns without axiomDecision
+  provenanceValidationError (/tmp/cold_u64_main/src/verification/attestation_witness.nim:177) multiple returns without axiomDecision
+  semanticValidationError (/tmp/cold_u64_main/src/verification/attestation_witness.nim:197) multiple returns without axiomDecision
+  parseWitnessBundleText (/tmp/cold_u64_main/src/verification/attestation_witness.nim:428) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  signWitness (/tmp/cold_u64_main/src/verification/attestation_witness.nim:490) returns Result/Option without axiomDecision
+  computeTestClosureDigest (/tmp/cold_u64_main/src/verification/verification_query_engine.nim:98) returns Result/Option without axiomDecision
+  computeBaselineDigest (/tmp/cold_u64_main/src/verification/verification_query_engine.nim:129) returns Result/Option without axiomDecision
+  computeLockDigest (/tmp/cold_u64_main/src/verification/verification_query_engine.nim:139) returns Result/Option without axiomDecision
+  computePolicyDigest (/tmp/cold_u64_main/src/verification/verification_query_engine.nim:149) returns Result/Option without axiomDecision
+  dependencyDomain (/tmp/cold_u64_main/src/verification/producer_identity.nim:73) multiple returns without axiomDecision
+  verifyContinuity (/tmp/cold_u64_main/src/verification/continuity_check.nim:76) multiple returns without axiomDecision
+  verifyContinuityCertDetailed (/tmp/cold_u64_main/src/verification/continuity_check.nim:132) multiple returns without axiomDecision
+  irBytesEqual (/tmp/cold_u64_main/src/verification/extraction_agreement.nim:81) multiple returns without axiomDecision
+  normalizeLeanForDifferential (/tmp/cold_u64_main/src/verification/renderer_differential.nim:278) multiple returns without axiomDecision
+  parseSubjectText (/tmp/cold_u64_main/src/verification/subject_store.nim:43) returns Result/Option without axiomDecision
+  saveSubject (/tmp/cold_u64_main/src/verification/subject_store.nim:54) returns Result/Option without axiomDecision
+  loadSubject (/tmp/cold_u64_main/src/verification/subject_store.nim:74) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  listSubjects (/tmp/cold_u64_main/src/verification/subject_store.nim:87) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  findSubjectsByHeadSha (/tmp/cold_u64_main/src/verification/subject_store.nim:106) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  isFullCertClaim (/tmp/cold_u64_main/src/verification/cert_reconcile.nim:865) multiple returns without axiomDecision
+  parseNimblePkgDirName (/tmp/cold_u64_main/src/verification/counterexample_replay.nim:233) returns Result/Option without axiomDecision
+  versionRank (/tmp/cold_u64_main/src/verification/counterexample_replay.nim:251) returns Result/Option without axiomDecision
+  newestPkgDir (/tmp/cold_u64_main/src/verification/counterexample_replay.nim:296) returns Result/Option without axiomDecision
+  evalConcreteBinOp (/tmp/cold_u64_main/src/verification/counterexample_replay.nim:323) returns Result/Option without axiomDecision
+  evalConcreteUnaryOp (/tmp/cold_u64_main/src/verification/counterexample_replay.nim:370) returns Result/Option without axiomDecision
+  evalConcreteIr (/tmp/cold_u64_main/src/verification/counterexample_replay.nim:380) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  evaluatePostconditions (/tmp/cold_u64_main/src/verification/counterexample_replay.nim:427) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  parseConcreteLiteral (/tmp/cold_u64_main/src/verification/counterexample_replay.nim:440) returns Result/Option without axiomDecision
+  decideReplayVerdict (/tmp/cold_u64_main/src/verification/counterexample_replay.nim:465) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  ceReplayModulePath (/tmp/cold_u64_main/src/verification/counterexample_replay.nim:635) multiple returns without axiomDecision
+  subjectTreeNeedsDepRoots (/tmp/cold_u64_main/src/verification/counterexample_replay.nim:770) multiple returns without axiomDecision
+  isCertifiedNoEffectPath (/tmp/cold_u64_main/src/verification/semantic_set_derivation.nim:238) multiple returns without axiomDecision
+  parseLsTreeZ (/tmp/cold_u64_main/src/verification/semantic_set_derivation.nim:384) returns Result/Option without axiomDecision
+  isHexLen (/tmp/cold_u64_main/src/verification/semantic_set_derivation.nim:465) multiple returns without axiomDecision
+  runGitOrErr (/tmp/cold_u64_main/src/verification/semantic_set_derivation.nim:473) returns Result/Option without axiomDecision
+  probeTreeResolvable (/tmp/cold_u64_main/src/verification/semantic_set_derivation.nim:510) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  listTreeUniverse (/tmp/cold_u64_main/src/verification/semantic_set_derivation.nim:524) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  verifyPartition (/tmp/cold_u64_main/src/verification/semantic_set_derivation.nim:546) returns Result/Option without axiomDecision
+  probeCharonVersion (/tmp/cold_u64_main/src/verification/charon_runner.nim:186) multiple returns without axiomDecision
+  runPinnedCharonCargo (/tmp/cold_u64_main/src/verification/charon_runner.nim:215) multiple returns without axiomDecision
+  lowerPostconditionModel (/tmp/cold_u64_main/src/verification/batch_uap/ir_pipeline_runner.nim:443) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  isHexOfLen (/tmp/cold_u64_main/src/verification/verification_subject.nim:76) multiple returns without axiomDecision
+  isValidIso8601Zulu (/tmp/cold_u64_main/src/verification/verification_subject.nim:84) multiple returns without axiomDecision
+  subjectFromJson (/tmp/cold_u64_main/src/verification/verification_subject.nim:202) returns Result/Option without axiomDecision; multiple returns without axiomDecision
+  isAxiomAllowed (/tmp/cold_u64_main/src/verification/kernel_reexecution.nim:61) multiple returns without axiomDecision
+  evaluateObservedAxioms (/tmp/cold_u64_main/src/verification/kernel_reexecution.nim:138) multiple returns without axiomDecision
+  z3ResultVerdict (/tmp/cold_u64_main/src/verification/kernel_reexecution.nim:169) multiple returns without axiomDecision
+  loadCertJsonForReexecution (/tmp/cold_u64_main/src/verification/kernel_reexecution.nim:203) returns Result/Option without axiomDecision
+  reexecuteLean (/tmp/cold_u64_main/src/verification/kernel_reexecution.nim:259) multiple returns without axiomDecision
+  reexecuteZ3 (/tmp/cold_u64_main/src/verification/kernel_reexecution.nim:316) multiple returns without axiomDecision
+  subjectCertJournalBind (/tmp/cold_u64_main/src/verification/subject_continuity_writer.nim:226) returns Result/Option without axiomDecision
+  subjectCertSignAndWrite (/tmp/cold_u64_main/src/verification/subject_continuity_writer.nim:234) returns Result/Option without axiomDecision
+  readBlobs (/tmp/cold_u64_main/src/verification/tested_tree_closure.nim:295) returns Result/Option without axiomDecision
+  readBlob (/tmp/cold_u64_main/src/verification/tested_tree_closure.nim:357) returns Result/Option without axiomDecision
+  lockEntryName (/tmp/cold_u64_main/src/verification/tested_tree_closure.nim:394) multiple returns without axiomDecision
+  validateVerifierIdentityInputs (/tmp/cold_u64_main/src/verification/evidence_cas.nim:267) multiple returns without axiomDecision
+  validateEvidenceKeyInputs (/tmp/cold_u64_main/src/verification/evidence_cas.nim:328) multiple returns without axiomDecision
+  collectChainedFileDigest (/tmp/cold_u64_main/src/verification/evidence_cas.nim:365) returns Result/Option without axiomDecision
+  collectZ3Pin (/tmp/cold_u64_main/src/verification/evidence_cas.nim:389) returns Result/Option without axiomDecision
+  collectLeanPin (/tmp/cold_u64_main/src/verification/evidence_cas.nim:404) returns Result/Option without axiomDecision
+  collectRecipeDigest (/tmp/cold_u64_main/src/verification/evidence_cas.nim:421) returns Result/Option without axiomDecision
+  collectZ3ChecksumPolicyDigest (/tmp/cold_u64_main/src/verification/evidence_cas.nim:428) returns Result/Option without axiomDecision
+  collectEvidenceDraftDigest (/tmp/cold_u64_main/src/verification/evidence_cas.nim:434) returns Result/Option without axiomDecision
+  collectScopeDigest (/tmp/cold_u64_main/src/verification/evidence_cas.nim:441) returns Result/Option without axiomDecision
+  collectPolicyDigest (/tmp/cold_u64_main/src/verification/evidence_cas.nim:448) returns Result/Option without axiomDecision
+  collectArtifactDigests (/tmp/cold_u64_main/src/verification/evidence_cas.nim:457) returns Result/Option without axiomDecision
+  collectVerifierIdentityInputs (/tmp/cold_u64_main/src/verification/evidence_cas.nim:473) returns Result/Option without axiomDecision
+  markStrictGeneration (/tmp/cold_u64_main/src/infrastructure/evidence_artifact_io.nim:264) multiple returns without axiomDecision
+  saveCompletenessBinding (/tmp/cold_u64_main/src/infrastructure/evidence_artifact_io.nim:392) multiple returns without axiomDecision
+  executePlan (/tmp/cold_u64_main/src/engine/plan_executor.nim:64) returns Result/Option without axiomDecision
+[decision-binding] WARN: 48 function(s) missing {.axiomDecision.} pragma — escalation threshold 30 days not yet reached
+✅ Build successful
+

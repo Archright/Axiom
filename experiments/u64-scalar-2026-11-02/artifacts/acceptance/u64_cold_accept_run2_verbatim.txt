@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# ③ u64 cold acceptance run2 — clean-porcelain re-run at fixed MERGE_SHA d1e59a9f.
+# run1 observed: build-stamped metadata dirtied the worktree -> B Zero-Footprint
+# porcelain fail-close (cvUnresolved). run2 re-runs all four cases with the
+# tracked file restored to HEAD (porcelain empty) on the SAME built engine.
+set -u
+COLD=/tmp/cold_u64_main
+LOGDIR=/tmp/cold_u64_logs
+TOKEN="$(gh auth token)"
+CHARON=<user-home>/.cargo/bin/charon
+run_case () {
+  NAME="$1"; TARGET="$2"
+  rm -rf "/tmp/cold_u64_state_$NAME" "/tmp/cold_u64_vault_$NAME"
+  mkdir -p "/tmp/cold_u64_state_$NAME/data" "/tmp/cold_u64_vault_$NAME"
+  cp "$COLD/data/verification_scope.lock" "/tmp/cold_u64_state_$NAME/data/"
+  cd "$COLD/tests/fixtures/rust/axiom_u64_probe"
+  AXIOM_STATE_DIR="/tmp/cold_u64_state_$NAME" AXIOM_VAULT_DIR="/tmp/cold_u64_vault_$NAME" \
+    AXIOM_CHARON_BIN="$CHARON" GITHUB_TOKEN="$TOKEN" \
+    "$COLD/bin/ax" prove --project . --target "$TARGET" \
+    > "$LOGDIR/${NAME}2_stdout.txt" 2> "$LOGDIR/${NAME}2_stderr.txt"
+  echo "EXIT_${NAME}2=$?" >> "$LOGDIR/exits2.txt"
+  cd "$COLD"
+  cp "/tmp/cold_u64_state_$NAME/logs/ax_prove_trajectory.jsonl" "$LOGDIR/${NAME}2_trajectory.jsonl" 2>/dev/null || true
+}
+cd "$COLD"
+run_case A axiom_u64_probe::u64_echo
+run_case B axiom_u64_probe::u64_seven_mutant
+run_case C axiom_u64_probe::u64_add
+run_case D axiom_u64_probe::u64_seven
+echo "== exits2 =="
+cat "$LOGDIR/exits2.txt"
+echo "== verdicts2 (full reason for B) =="
+for N in A B C D; do
+  python3 - "$LOGDIR/${N}2_trajectory.jsonl" "$N" <<'EOF'
+import json, sys
+path, tag = sys.argv[1], sys.argv[2]
+try:
+    for line in open(path):
+        d = json.loads(line)
+        if d.get('phase') == 'skReport':
+            for t in d.get('extra', {}).get('targets', []):
+                print(tag, t['name'], '|', t['status'], '|', t['reason'])
+except FileNotFoundError:
+    print(tag, 'NO TRAJECTORY')
+EOF
+done
+echo "== certs2 =="
+ls /tmp/cold_u64_state_A/build/certificates/ 2>/dev/null || echo "A: no certs dir"
+echo "== porcelain after run2 =="
+git status --porcelain > "$LOGDIR/run2_post_porcelain.txt" 2>&1 || true
+cat "$LOGDIR/run2_post_porcelain.txt"
+echo "PORCELAIN_EMPTY_AFTER=$([ -s "$LOGDIR/run2_post_porcelain.txt" ] && echo NO || echo YES)"
+echo "== subject immutability run2 =="
+sha256sum tests/fixtures/rust/axiom_u64_probe/src/lib.rs tests/fixtures/rust/axiom_u64_probe/axiom_u64_probe.llbc tests/fixtures/rust/axiom_u64_probe/axiom.specs.json > "$LOGDIR/subject_sha256_run2.txt"
+diff "$LOGDIR/subject_sha256_pre.txt" "$LOGDIR/subject_sha256_run2.txt" && echo "SUBJECT_IMMUTABLE_RUN2=yes"
+echo "== C wall byte-compare run2 vs premerge =="
+python3 - "$LOGDIR/C2_trajectory.jsonl" ".4/experiments/u64-scalar-2026-11-02/artifacts/premerge/u64_add_trajectory.jsonl" <<'EOF'
+import json, sys
+def reason(p):
+    for line in open(p):
+        d = json.loads(line)
+        if d.get('phase') == 'skReport':
+            for t in d.get('extra', {}).get('targets', []):
+                return t['reason']
+    return None
+a, b = reason(sys.argv[1]), reason(sys.argv[2])
+print('RUN2==PREMERGE:', a == b)
+if a != b:
+    print('run2  :', a); print('pre   :', b)
+EOF
+echo "== A cert identity run2 vs run1 =="
+sha256sum /tmp/cold_u64_state_A/build/certificates/5e7fb809*.json 2>/dev/null
+echo "== done run2 =="

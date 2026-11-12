@@ -1,0 +1,31 @@
+# Physically Impure Modules in src/verification/
+# These modules perform physical side effects: file system IO, network IO,
+# process execution, time acquisition, mutable global state mutation, or
+# async dispatch. They MUST NOT receive {.push noSideEffect.} at module scope.
+# {.push raises: [].} still applies to all modules.
+# This list is the SSOT for verification-layer purity exemptions.
+# Date: 2026-05-04
+# Determined by: nim check src/cli/main.nim (compiler-native verification)
+analyzer
+ast_extractor
+dependency_analyzer
+discovery_error
+gate_registry
+gate_rules
+healing_orchestrator
+integrity_guard
+lean_lsp
+leanstral_gateway
+leanstral_prompt
+pipeline_core_runner
+pipeline_lean_spec_inference
+pipeline_negative_scan
+proof_summarizer
+proof_synthesis_engine
+rebuild_assets
+static_rules
+thought_dashboard
+translation_validator
+universal_pipeline
+repo_snapshot_digest  ## computeRepoSnapshotDigest walks the live tree + readFile
+observed_audit_contract  ## walks live tree + reads baseline/policy/binary

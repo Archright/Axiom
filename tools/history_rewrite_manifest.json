@@ -1,0 +1,106 @@
+{
+  "version": 4.1,
+  "method": "git-commit-tree",
+  "groups": [
+    {
+      "id": "T",
+      "endCommit": "9d81c2e8c",
+      "message": "feat(axiom): migrate 134 leaf functions to axiomImpl IR pipeline\n\nBatch migration of leaf functions across 27 modules (134 functions):\nreporter, pipeline_lean_spec_inference_part1, lean_lsp_protocol,\nast_extractor, analyzer_shared_json, analyzer_shared_cert,\ngate_rules_normalization, gate_rules_module_classifier,\ngate_rules_architecture, vault_manager_spec, topology_parser,\ntopology_dependency, metrics, global_symbol_graph_types,\nglobal_symbol_graph_query, sorter_core_index_table,\nsorter_core_index_base, tree_sitter_extractor, pred, nav, collect,\norchestrator_vault, orchestrator_topology_depth, orchestrator_api,\ncfg_builder, pipeline_healing_logic"
+    },
+    {
+      "id": "S",
+      "endCommit": "e54d933cc",
+      "message": "fix(z3/guard): Z3 query envelope + guard TTL + false-positives docs\n\n- Correct reset/set-option ordering in buildZ3QueryEnvelope\n- Enforce TTL expiry on temporaryStub annotations\n- Populate false-positives.md with 16 verified records\n- Update migration roadmap: Phase 1/2.5/3a.5 completion status"
+    },
+    {
+      "id": "R",
+      "endCommit": "ac789479b",
+      "message": "refactor(debt): directory debt consolidation (Phase 0-4) + merge fixes\n\n- Consolidate directory debt across Phases 0-4\n- Resolve build blockers and eliminate last single-file directory\n- Fix merger: separate duplicate symbol warnings from conflict exit code\n- Fix semantic-merge: read resolved content from temp file in virtualMergeBatchCmd\n- Add RuleProposal.json formal rule proposal mechanism"
+    },
+    {
+      "id": "Q",
+      "endCommit": "4479087a3",
+      "message": "fix(test): resolve 84 merge-gap test failures (effect system, naming, types)\n\n- Resolve 49 test failures: effect system, naming, identifiers, types\n- Resolve 30 remaining test compilation failures\n- Resolve final 5 merge-gap failures via staticFileExists guards\n- Remove forwarding stubs and fix active skill links"
+    },
+    {
+      "id": "P",
+      "endCommit": "f8c5721aa",
+      "message": "feat(defense): 5-Layer Defense Stack + deterministic merge auto-resolution\n\n- Implement 5-Layer Defense Stack + file splits\n- Deterministic merge conflict auto-resolution (2-Layer defense)\n- Phase H cleanup: code quality, doc links, gate manifest sync"
+    },
+    {
+      "id": "O",
+      "endCommit": "4618eb513",
+      "message": "feat(v5.1): Agent Chaos Prevention — Deterministic Sync Pipeline\n\n- Implement v5.1 Agent Chaos Prevention with Deterministic Sync Pipeline\n- Debt refactor: fix stale references (#250), remove forwarding stubs (#245), fix hardcoded paths (#253), fix SRP gate + nimcache (#252)"
+    },
+    {
+      "id": "N",
+      "endCommit": "deea19ede",
+      "message": "feat(usap): USAP v2.2 Unified Structural Alignment Pipeline (6 Phase)\n\n- Implement USAP v2.2 6-phase Unified Structural Alignment Pipeline\n- Resolve DEBT#247/#250/#255: test cleanup, doc refs, logging standardization"
+    },
+    {
+      "id": "M",
+      "endCommit": "6e3d1b8ae",
+      "message": "feat(usap): USAP v3.0 Tri-Gate Defense Model + hermetic guard isolation\n\n- Full USAP v3.0 Tri-Gate Defense Model implementation\n- Hermetic guard isolation + @axiom-hint → {.axiom.} migration\n- Post-USAP supportsCopy bug fix + cleanup\n- Resolve 5 compilation blockers"
+    },
+    {
+      "id": "L",
+      "endCommit": "ebb0802c3",
+      "message": "feat(v6): deterministic architecture bootstrapping + v6.1 language ban\n\n- Deterministic architecture bootstrapping + gate fixes\n- v6.1: language ban enforcement + config.nims gorge amputation\n- 4-phase architecture shift to eliminate Z3/Lean hang root causes\n- Refactor sync-protocol-gate PushContext/TxManifest architecture\n- Regenerate proof_witness.json + fix checker hash algorithm"
+    },
+    {
+      "id": "K",
+      "endCommit": "50c776565",
+      "message": "fix(build): import boundary remediation + Nim 2.2.10 syntax cleanup\n\n- Remediate import boundary violations across 42 files, move reverse deps\n- Resolve 5 prove issues: import boundary, Z3 vendoring, Lean contract tests, auto-baseline\n- Resolve 15+ pre-existing compilation errors for clean build\n- Bulk-fix systemic Nim 2.2.10 syntax errors across 34 files"
+    },
+    {
+      "id": "J",
+      "endCommit": "8f0ba2f06",
+      "message": "feat(structural-enforcement): Wave 1-2 compile-time layer enforcement\n\n- Wave 1: compile-time layer enforcement + debt budget\n- Wave 2: bridge modules + effect compliance + layer forwarding\n- Drive import boundary violations to 0\n- Resolve remaining tools/ compilation issues\n- Disambiguate IOError in topology_cli.nim"
+    },
+    {
+      "id": "I",
+      "endCommit": "8d0c4936c",
+      "message": "feat(v30-v31): formal verification pipeline overhaul + Z3 FFI pool\n\n- Overhaul formal verification pipeline (Batch 1-7, 17 phases)\n- Add Z3 FFI thread-local pool + IR pipeline E2E integration\n- Add z3-health-gate to prevent false-positive certificates from broken Z3"
+    },
+    {
+      "id": "H",
+      "endCommit": "4efcab091",
+      "message": "feat(ir): IR pipeline E2E integration (v3 migration + phase-4 orchestrator)\n\n- 3-stage IR migration: axiomImpl registry, serialize/deserialize, crossValidate, IR-first lookup, gate build automation\n- IR pipeline orchestrator + bridge cleanup + leanSource optimization\n- Well-Founded Metric Boundary Assertion for while-loop termination\n- Migrate 5 Tier 2 functions to axiomImpl IR pipeline\n- Remove deprecated wrapper modules (W2, W3, W4) and zero-caller functions\n- Fix coverage-ratchet path mismatch, deprecated bridge removal, legacy-uap wiring"
+    },
+    {
+      "id": "G",
+      "endCommit": "c6099409b",
+      "message": "refactor(debt): directory debt consolidation (Phase 0-4) + RuleProposal\n\n- Consolidate directory debt across Phases 0-4\n- Resolve build blockers and eliminate last single-file directory\n- Add RuleProposal.json formal rule proposal mechanism"
+    },
+    {
+      "id": "F",
+      "endCommit": "81c739647",
+      "message": "fix(test): resolve 84 merge-gap test failures (effect system, naming, types)\n\n- Resolve 49 test failures: effect system, naming, identifiers, types\n- Resolve 30 remaining test compilation failures\n- Resolve final 5 merge-gap failures via staticFileExists guards\n- Remove forwarding stubs and fix active skill links"
+    },
+    {
+      "id": "E",
+      "endCommit": "1da87ee09",
+      "message": "feat(safe-merge): gate daemon self-healing (on-demand + POSIX delegation)\n\n- Add on-demand gate daemon self-healing\n- Recover self-healing via POSIX exception delegation"
+    },
+    {
+      "id": "D",
+      "endCommit": "ba7eacd03",
+      "message": "feat(architecture): 5-phase architecture hardening\n\n- Execute 5-phase architecture hardening plan\n- Auto-fix fallout: merkle re-freeze, remove dead code, add missing constants, refresh stale hashes"
+    },
+    {
+      "id": "C",
+      "endCommit": "2ab30cfe8",
+      "message": "feat(architecture): P0-P3 compilation blockers + architecture cleanup\n\n- Resolve P0-P3 compilation blockers across the architecture\n- Restore ast_to_ir.nim implementations, add sha256_pure wrapper, dedup tokenizeImports\n- Resolve 66 stale imports, missing symbols, type fixes\n- Remove dead imports and rebuild gate_hook"
+    },
+    {
+      "id": "B",
+      "endCommit": "5bce48998",
+      "message": "feat(safe-merge): --auto-stash feature + build stabilization\n\n- Add --auto-stash to safe_merge with zero-allocation exit proc\n- Restore ast_to_ir.nim, fix gateway imports, update merkle root\n- Auto-fix round 2: dedup definitions, balance pragmas, fix stale snake_case, remove stub test, untrack ELF artifacts"
+    },
+    {
+      "id": "A",
+      "endCommit": "313339b66",
+      "message": "feat(safe-merge): worktree-aware hooksPath + auto-stash + warning cleanup\n\n- Resolve hooksPath resolution across worktrees and refresh merkle root\n- Add --auto-stash covering both source and target worktrees\n- Eliminate PtrToCstringConv warnings in safe_merge"
+    }
+  ]
+}

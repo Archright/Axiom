@@ -1,0 +1,4494 @@
+{
+  "schemaVersion": "axiom.trusted-writer-set.v1",
+  // TrustedWriterSet (ADR-0022 §4) — the set of workflows allowed to hold
+  // `contents: write`. Verdict: ALL workflows with contents:write MUST be
+  // exactly this set (⊆ ∧ ⊇ — verified by tools/ci/verify_trusted_writer_set.sh).
+  //
+  // GHEC re-land (CI=0 삭제 후 복원, 2026-09-24) + PR-1 (2026-09-26):
+  //   - admission-check.yml: UNPRIVILEGED B-pinned check producer
+  //     (top-level contents: read; NEVER a ledger writer). 트리거 =
+  //     workflow_call 단일 (Cutover — org orchestrator admission-gate @SHA).
+  //   - certificate-mint.yml: the SOLE privileged publication authority —
+  //     the single production ledger publisher (top-level contents: write,
+  //     consumed via workflow_call 단일 (Cutover) — admission-gate DAG가
+  //     mint의 유일 발화 경로).
+  //
+  // ③ write boundary 계약 (Plan ③ — Verify 기준, CE[5]):
+  //   mint job = B-pinned code만 실행
+  //            + H는 data-only input (raw SHA 미사용 — run object + PR API
+  //              재검증 + witness provenance 대조로 강제)
+  //            + write destination = ledger(refs/heads/axiom/certificates) 한정
+  //            + main 직접 mutation = 불가 (M-B 결속: main 변경 정본 행위 =
+  //              GitHub native MERGE만 — mint 경로의 refs/heads/main mutation
+  //              0건이 기계 판정되는 운영 상태, CE[5]).
+  //   contents: write는 repo-wide capability이며 path-level 아님 — "ledger
+  //   only"는 계약이며 보장 = (a) B-pinned code + architect CODEOWNER review,
+  //   (b) H data-only (위 재검증 체인), (c) M-B 결속 (verify_trusted_writer_set.sh
+  //   단일 writer 등식 + mint 코드 검토). 위반 = fail-closed + 작업 실패.
+  //
+  // trustedWriterWorkflow names the sole trusted writer
+  // (certificate-mint.yml); trustedAdmissionWorkflowSha is the git blob sha
+  // of the admission workflow whose witness runs this writer trusts
+  // (git hash-object .github/workflows/admission-check.yml — content-
+  // addressed; updated atomically with any admission-check.yml change,
+  // ADR-0022 §5). The mint reads THIS file @B (config/trusted_writer_set.json
+  // at PR base) and compares the fetched admission blob@B against this value
+  // (certificate-mint.yml step 2a) — fail-closed on any mismatch.
+  //
+  // NOTE: this file carries full-line `//` documentation comments (like
+  // config/executor_authority.json) — the verifier strips them before parsing.
+  "trustedWriterWorkflow": ".github/workflows/certificate-mint.yml",
+  "trustedAdmissionWorkflowSha": "8db2ad30b6f5d87621e44b0c480b2f0869841198",
+  "trustedCheckerTreeClosure":   {
+    "ci/checker.mk": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0d8aed6fd153f634f9b7402a75cdaf62100f313c"
+    },
+    "config.nims": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2cd93f5f35fbae62314d70b688e8ab05262a653c"
+    },
+    "config/effects.nims": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "67dc84802db5f5296ef210a87ef9cad9f69a7ddf"
+    },
+    "nimble.lock": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e7c2c6187c8bd717daff210d978b2c684dfbf9e8"
+    },
+    "src/cli/action_interpreter_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1871d3a073c923d1a7335132b31a6ce73059b105"
+    },
+    "src/cli/action_invariants_sync.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "35d1a255689c5177508d27ab79d62c04896ee7e2"
+    },
+    "src/cli/action_output_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cd9ec5af9479da2b967b76b408b270d85137823a"
+    },
+    "src/cli/action_plan_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1e6a9b41fef0c37554d7134331bef9c2fe895d37"
+    },
+    "src/cli/admission_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4ee9fe82a63469ddc216ae2c46d384db1fc29124"
+    },
+    "src/cli/ax_workflow_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f3364e8cce788b045d4b42afaebf98c61ab00bbd"
+    },
+    "src/cli/axiom_cache.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "836cecdca52d3e3cdb1f177a103263dbe1d35111"
+    },
+    "src/cli/axiom_engine.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b0be3399e61c0eb2a758dfe99ee04b8120111e99"
+    },
+    "src/cli/axiom_status.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6a0992d4affa0ec7089ce29f9a5cc1704b9c1c9c"
+    },
+    "src/cli/baseline_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "95cc6ca4335433c38e9523fe1958a5aec1d8078f"
+    },
+    "src/cli/budget_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "316ab7101727ab9a906284353c22c8455ce46906"
+    },
+    "src/cli/capability_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8a3d6613d6192fcafb23d963a57b90ee3ba6160a"
+    },
+    "src/cli/cert_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fcdbae2516508d1d2b633782cd21f16d1aec7124"
+    },
+    "src/cli/check_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "86b71e50d992ffe4b411353138f6f8d97b473811"
+    },
+    "src/cli/check_spec_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3b94dc97f698c234ba70a94d679f43a4b265bf0a"
+    },
+    "src/cli/cli_io_error.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c0e6e2e96ea0bb66c802fcc2d3b15fb4a5d1598b"
+    },
+    "src/cli/cli_io_input.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "84056f92af7d83152a65bfb361aa48120028f264"
+    },
+    "src/cli/cli_outcome.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3e775b627d250ff2c6c64aabc23b599d37127282"
+    },
+    "src/cli/cli_surface_generated.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d58980bb73f1558375ccd4baf02c42ea1a1f616f"
+    },
+    "src/cli/cli_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5cf615629f07ead2dd5beeb3ffd14954d5434b21"
+    },
+    "src/cli/commands/command_registry.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "73b1578ddf9eba4df09a94a1047143fe55a56842"
+    },
+    "src/cli/commands/observability.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e274cd4a48399542d65a8485faf9ead3a9f23ca1"
+    },
+    "src/cli/commands/topology_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0b7c1b258454d3de6a6621f9be016bfcc837fd8f"
+    },
+    "src/cli/config_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2e97aa344999073c949b089360c971fdfc5bfeb4"
+    },
+    "src/cli/config_loader.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4753abc387de662f229d7fded01ba1c6c56de75d"
+    },
+    "src/cli/cst_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "df27a4bb01401447c5b5ddc3b184deb25894f6cf"
+    },
+    "src/cli/dag_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "af1ddfb88c8f6b70c9881f0ed351d233b7341593"
+    },
+    "src/cli/debt_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d1eb438b2c3f760dae9667e27565eb5c36f0aa61"
+    },
+    "src/cli/evidence_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e14595ec6f943b0e8585ab69e865795e0e1a819c"
+    },
+    "src/cli/external_subject_registry.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "479efe14d2bc86e7191ae838bb7a11a97d8eb347"
+    },
+    "src/cli/frontier_selection.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "606a02ec0dba09ce2611a63a16dd6c22e6e1a6d5"
+    },
+    "src/cli/gate_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "913e226f3782413fea3f85daf547a7e07228bb78"
+    },
+    "src/cli/git_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "936aac3d063c9489d12c229acc28297982f45c2b"
+    },
+    "src/cli/install_ax_cas.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fa7fcc06885c66158259a79ff9d953368663070d"
+    },
+    "src/cli/io_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4b96a07186f531ce31a054362ed6876b64b5933e"
+    },
+    "src/cli/landing_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9883645dcee2ee9e30bf85ae0a1898da0f5c6a4c"
+    },
+    "src/cli/lean_verify_cmd.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ed271b48373bbf76c75cadb13509c17f93eea0a6"
+    },
+    "src/cli/lifecycle.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5d512d1dcf122e0bd27d4b2413c0290fed0aac5f"
+    },
+    "src/cli/lint_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "379fc2d43c659b3eb63bfeddb7114a5bbb170246"
+    },
+    "src/cli/main.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ddf0e35a65ec3475a7f4f15384c823bdd10d86c6"
+    },
+    "src/cli/merge_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6b397eed81fa11572df753d4cfce590040c46feb"
+    },
+    "src/cli/payload_bridge.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c33cf368bbc730ac7a86119cc1480a584262c707"
+    },
+    "src/cli/precompile_gates.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "67955828a8f9b7c337394aa89195d83860e2d89b"
+    },
+    "src/cli/proof_gate.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8c68aaf1d5787bd54afb4f047833017d89156b1c"
+    },
+    "src/cli/proposition_intake.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b8d59e863f13b9804a2281733ae7c410aa7b1a2d"
+    },
+    "src/cli/queue_limit.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4793f431b761f109595547b37519a2eaaacc4db0"
+    },
+    "src/cli/release_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9646b87d40e359c4e078e1950715052bbc64c91a"
+    },
+    "src/cli/report_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1c28d6820a43c96faf73439308643f461cd7fffc"
+    },
+    "src/cli/report_format.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5141a3a1041b1d963c5468b97396ffa36e6804a6"
+    },
+    "src/cli/run_gate.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "04ca81fced41273494c47e43ea2f1de3253e8701"
+    },
+    "src/cli/rust_lane_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e747975f9c338f5049f428345875e4f4a2fe6740"
+    },
+    "src/cli/scaffold_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "95c9e38cd6c7479994a785e504ae52bb203bbe1d"
+    },
+    "src/cli/scope_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0462fc3d2d948afd55e1bed86489e15bdd624a86"
+    },
+    "src/cli/selection_state.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "223839a76e9a3c8c267044128fd7b39e5159c1a8"
+    },
+    "src/cli/shadow_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b1c5d2b4e46e72059f31153b30c4c2f00db6deb0"
+    },
+    "src/cli/shape_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "172650adf09db4b07fa10eb631ed75188629f659"
+    },
+    "src/cli/shared/baseline_snapshot_core.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8c5b50ff2f4ebcb30e03f10406604cabf2a4a5ae"
+    },
+    "src/cli/shared/proof_hydration.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4828f1258333618987fee199df841eaa3602a928"
+    },
+    "src/cli/topology_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "46f727f3a7dd7d7ae8be46dace785254b68500ac"
+    },
+    "src/cli/upstream_report_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f854ad6aac9298ae8d11c5cde09e91837d48b6d8"
+    },
+    "src/cli/vacuity_classifier.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "992ac710487b11316d26e50672fc4811ffaf5d81"
+    },
+    "src/cli/verdict_display.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "87bd1428a2facd3cd1068caf22e0fa29391fad5c"
+    },
+    "src/cli/verify_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8a0a9af00da76f2490b8452f12d87104413df9eb"
+    },
+    "src/cli/version.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a6a5e65fe34b9e7a3603d1e63113bcbbf7e8e26c"
+    },
+    "src/cli/version_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1f0f31b9427172ec75365004613b755dceacf689"
+    },
+    "src/cli/vkd_sync_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e8001546246e47804614b82fb50c55de767189fb"
+    },
+    "src/cli/wf_planning.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ba06e24ff22a82f4eba756f9712befd6ea0f608b"
+    },
+    "src/cli/wf_render.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b54452f947d4f43125ad050d6e9fd987da69855c"
+    },
+    "src/cli/wf_runners.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2efdb92f552adff763fffd0ffb8657ae1cba8ba9"
+    },
+    "src/cli/wf_runners_common.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "62485f1dc162b222415e0be0586dda821acd2d4f"
+    },
+    "src/cli/wf_semantic.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "752261f36189b91b099a1b00a10ff92a79136db0"
+    },
+    "src/cli/wf_state.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6a98753535126e4735e44c4ee6018811e7e9d655"
+    },
+    "src/cli/wf_state_parsing.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fc56e0040a33734ca27f07350ada42687abee09f"
+    },
+    "src/cli/wf_state_vacuity.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7441f2508adf0e3a1fc13f3d006bdca228457a47"
+    },
+    "src/core/api/axiom_api.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ae5e3408768da4c61d06eb88f3641853052fb01d"
+    },
+    "src/core/api/axiom_api_helpers.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1cadd949f5f74e18f0e142e009a65c2907ae0cc6"
+    },
+    "src/core/api/axiom_api_session.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5f113c13dfa268d10aad8be6be73b90c74687b30"
+    },
+    "src/core/api/axiom_api_session_helpers.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "894dd716ed3b0b3122c5565a121f60abf8c033da"
+    },
+    "src/core/api/axiom_api_session_ops.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "50e81a6e799039ceb873489a5318f11e6ef5413e"
+    },
+    "src/core/api/axiom_api_session_proof.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4415301f09a1ffc35611618a5315426ba9e33baa"
+    },
+    "src/core/api/axiom_api_session_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "02ed8dff0c78e2f51cc9a5ca888a58a0d23f22ce"
+    },
+    "src/core/api/axiom_api_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f07fddc03d42b19a43e4625bbbd651cdabe4333b"
+    },
+    "src/core/api/axiom_api_verify.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3ad3488345ea3ee2c99c49b73545e7369ac2e587"
+    },
+    "src/core/application/persona_context.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4e628e7d032924d92a68e505080b88acb7da8c07"
+    },
+    "src/core/application/persona_context_init.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1ab19cc42950ce2c9e98570829a47330954662da"
+    },
+    "src/core/application/verification_orchestration.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c3a6f12f1497cfe8f6a4db4b0b89f56c341d5ee9"
+    },
+    "src/core/asset_collector.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5fd7d21692cdefbc92c73565d8ed705b11fb84be"
+    },
+    "src/core/ast_kernel.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5c157b088f2b9c8f47e0e37b381a3124405d2f2e"
+    },
+    "src/core/audit/burn_down_queue.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bddcfa5346c2e194818caedfa1f5b8d60638c851"
+    },
+    "src/core/audit/hotspot_analyzer.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b1632776efe0604cab1162395842711c287b6840"
+    },
+    "src/core/audit/hotspot_render.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cb3dd54e95b6f070c261d4bc9c9032ecda938ab3"
+    },
+    "src/core/axiom_pragmas.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2c7da6b96b44310dc71dc9eab2b5105b7ec62767"
+    },
+    "src/core/bmc/bmc_artifacts.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e759f1433fadadff59b3cfb941f5f6f6a292c9e6"
+    },
+    "src/core/bmc/bmc_engine.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3395e46a7b4a27930e5a80f57158e6ccb8ccc49a"
+    },
+    "src/core/bmc/bmc_generic.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1dc02e5f6ab0025bed91a9896aba5c22e0895d1b"
+    },
+    "src/core/bmc/bmc_race.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "13bb8dc1778c9e2ad641c3c98ba9e0c9fe49dd28"
+    },
+    "src/core/bmc/bmc_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a16c76e509f09d382ddee53aca2b9f3f2242ae88"
+    },
+    "src/core/bmc/bmc_variable_map.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9d4ef879a9f12bd53a058e6374dc10aab093d6e7"
+    },
+    "src/core/bmc/transition_adapter.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5f8b22a1d2d4e3621dcc076552b12ff844d37f9e"
+    },
+    "src/core/boundary/abstract_spec_lowering.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8490735a601fd8bf9aa4d81e0c86ff2f9557ce2f"
+    },
+    "src/core/boundary/axiom_pragmas_boundary.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1d0dfc5ba7c5c854d9af434adcb62c4b300860f5"
+    },
+    "src/core/boundary/axiom_registry_loader.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8eb7a0a583b0ae983a410a97d3e5bc535a75cca8"
+    },
+    "src/core/boundary/boundary_extraction_helpers.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "03d2dc96a617acf38292bd6a2bfb9784b9cb2d1b"
+    },
+    "src/core/boundary/boundary_extraction_main.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "327800dd883aca96401aca7a151ce204bc046b46"
+    },
+    "src/core/boundary/boundary_extraction_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7aaaeffd19c912a78736166c4cc64421148071b0"
+    },
+    "src/core/boundary/boundary_extractor.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cacc7d596a33eaf224cd2df90ac6c311d1b63504"
+    },
+    "src/core/boundary/boundary_extractor_part1.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c9a83b89589e7cfb493882633fca487db51cd147"
+    },
+    "src/core/boundary/boundary_extractor_part1_part1.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2298f234c8a9ea200c07c95ae3e6f213e09dd8c2"
+    },
+    "src/core/boundary/boundary_forwarding.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6f3225c597bdcc471c324308727b35b455d88470"
+    },
+    "src/core/boundary/cfg_builder.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fd175aa4e43f9fdd82b92b894a2c634807183b95"
+    },
+    "src/core/boundary/complexity_index.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8151afcd1c043107fe1a44003f8e512b22fc1e42"
+    },
+    "src/core/boundary/coverage_bridge.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ed7bac8648a1b50049aca3feaed50b7e0652736f"
+    },
+    "src/core/boundary/file_utils_boundary.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "444873baa1c7a364b6c7005f6fddc7a21a01ad3e"
+    },
+    "src/core/boundary/gateway/gateway_generator.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d3c34a64ac79acb73f7af7faef109e48aa9062e6"
+    },
+    "src/core/boundary/gateway/gateway_spec.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "536c8c2914cfa2e4732a6c6fea44a90e705f4cf9"
+    },
+    "src/core/boundary/gateway_boundary.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "18f5fd70130491d2633b9ce341c11ff35c2b1f24"
+    },
+    "src/core/boundary/meta_extractor.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f94221ad1d0d7846919125bea7b3b750a23e091b"
+    },
+    "src/core/boundary/persona_boundary.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ff0c24573573b826cff92e5c4d9c6a5beb423c0c"
+    },
+    "src/core/boundary/persona_interface.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7ac2736b3b11b02bba5ebe7bcca70a0c73b13575"
+    },
+    "src/core/boundary/policy_types_boundary.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3a145d5b624de77ad04915bd851bbf94644803cf"
+    },
+    "src/core/boundary/private/boundary_context.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1f511e5b098e48116ee045d17ab0a1d14fbcb21b"
+    },
+    "src/core/boundary/private/boundary_phases.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1e1aaf8540db835716bd7d52c656264f6a3b3449"
+    },
+    "src/core/boundary/private/semantic_hint_factory.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e0960b0d364c844c35b2b4586617d71482e611e2"
+    },
+    "src/core/boundary/private/trivial_filter.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "277e2c75946d553f4631b0e71b7831eccd69772a"
+    },
+    "src/core/boundary/results_boundary.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "978b14a3962d6c3ba62c3711cb92e52be943eb3f"
+    },
+    "src/core/boundary/verification_interface.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "91600cd32909741e0d6580ffa9be841692326ebf"
+    },
+    "src/core/cache/proof_cache.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "54efdacb9619362aa0754a2875da85a56643d19d"
+    },
+    "src/core/cache/ttl_cache.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e83b393f4f943b172f5faa459db6a8e6f21b27c9"
+    },
+    "src/core/codec/axiom_codec.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "afb3570e8bb821a066d6847f02d1ccdd920c6f56"
+    },
+    "src/core/codec/codec_codegen_funcs.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "de4b9910b9d954d691748991fee2ca417ff4765d"
+    },
+    "src/core/codec/codec_typesense.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "de7de91802b2008f8ed0f88392c1e9ab0c4b4924"
+    },
+    "src/core/config/toolchain_config.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "84e65ddf024fd902faf08eeef47d140d02f15c17"
+    },
+    "src/core/context/run_context.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b436867c8631eceb0b1d89997d5334331b0ace4b"
+    },
+    "src/core/contract/contract_ast_extractor.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4b2105916dc6cc113b04029c5379a0f76cf9c831"
+    },
+    "src/core/contract/contract_param_util.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6f4a05a2b0c2ab59b02f8dff37840a54e53070af"
+    },
+    "src/core/contract/contract_text_extractor.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8c1abef29139a199ce977da3256a0aa8aa0dda24"
+    },
+    "src/core/contract/contract_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d6dab7c2245c75c489bbbe8096fc86d6973d7d5e"
+    },
+    "src/core/contract/verification_interface.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c7f97c93e844215d0602321cc7eb6eff90e2c0e9"
+    },
+    "src/core/contracts/logic_contract.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "024f5416b8d179f4f9158816725ba0c156b66f98"
+    },
+    "src/core/contracts/orchestrator_contract.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "642772286986d3c781e902b6fc3f196d06f0441b"
+    },
+    "src/core/contracts/solver_contract.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b8ae2e1f346039eac9d10981fd74d599a53fa3de"
+    },
+    "src/core/contracts/spec_binding_macro.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "da239edfa146511001e5e9a74a8efce51336f0c4"
+    },
+    "src/core/contracts/topology_contract.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7b8c0d73f3d1ca0f7896e96f4aaac409207b30e4"
+    },
+    "src/core/contracts/universal_pipeline_contract.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1f05afadcb8e9d25cf3fd68f4968e594a8a65b21"
+    },
+    "src/core/contracts/z3_extraction.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "305917656484e8b8f6a06ede032e1b1b6dd5fcfa"
+    },
+    "src/core/crypto/hash_consolidation.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eafd5c89ccdbe8a3a2575e925851d9a8e24116a2"
+    },
+    "src/core/crypto/hash_kernel.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6b9e4f9e40979ae7c0259d90ea6947f1f7c55b32"
+    },
+    "src/core/debt/debt_audit.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ad231f13ec9dbf1dad2b2a3bd4c7d64ee6e75877"
+    },
+    "src/core/debt/debt_budget.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1fe3b24d40b0259a3b1fa0b4c112ecf475115169"
+    },
+    "src/core/debt/debt_claim.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "02f6a19b84f53f288e8787fa57c2235407b4edbb"
+    },
+    "src/core/debt/debt_classifier.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "975c62e1ecead3d3bf6c4d8c858e5c4410000ebc"
+    },
+    "src/core/debt/debt_events.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7e51a46c2937d6075015e97bb1664f20d7072597"
+    },
+    "src/core/debt/debt_identity.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bd737d2c212d532cb7650343261a07d838919d83"
+    },
+    "src/core/debt/debt_observation.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ee1e239603e565b9a3b3cc5a921bcedd2a0e7389"
+    },
+    "src/core/debt/debt_pipeline.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "78804952957b6d117d6079779e3dd961a88710a3"
+    },
+    "src/core/debt/debt_projection.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6ca462935607136692106c8973c5f947a357c6d0"
+    },
+    "src/core/debt/debt_provenance.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dedcd16be54310c1161e9a0c08d2bbcdb6f4df84"
+    },
+    "src/core/debt/integrity_patterns.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aba0c90ba0825fd71a30dd59b7f495e344781ca0"
+    },
+    "src/core/deterministic_cas_key.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "44145b78de939ee3c8a25280109063ff25356afc"
+    },
+    "src/core/diagnostics/diagnostics_engine.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "94563aa021fa9b03b6b9417121a825718bafb14d"
+    },
+    "src/core/diagnostics/diagnostics_engine_helpers.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "39b1761d7d542617ef5d9011ba2a2644c9d3bf19"
+    },
+    "src/core/diagnostics/diagnostics_engine_main.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "71047573ff9f84e17a3b1079ae28b16f88c24b62"
+    },
+    "src/core/diagnostics/pattern_guard.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d141785f1cd5e5d8977eed4fd10e70ef568829f7"
+    },
+    "src/core/diagnostics/refactoring_engine.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "414c31811bb43b075c88af0eb6026fcc97bf411d"
+    },
+    "src/core/diagnostics/strategy_plan.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f1259bb18fed9e470001dbb2f31b175b8f795cbf"
+    },
+    "src/core/domain_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7077e853600ff87a9beeb315e73ea5bafab8f303"
+    },
+    "src/core/effect_shim.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4862027708d013f669ff6129b91739a0127ab776"
+    },
+    "src/core/encoding/smt_atom_generator.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c19cc3eccde693a78b6e2598a24fb845fff3b91e"
+    },
+    "src/core/encoding/smt_hints.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5518acbade9d079d0012824441b0f463d499fc1a"
+    },
+    "src/core/encoding/smt_to_lean/private/arithmetic_expr.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e101787f9ab25dafab6b04d61d8ebec42d0e3054"
+    },
+    "src/core/encoding/smt_to_lean/private/parser.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d94596658b8287b92a667180429bb3b6b947125f"
+    },
+    "src/core/encoding/smt_to_lean_codegen.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2624ee1052db3b5f2294f1176173de75b4dc70e2"
+    },
+    "src/core/encoding/smt_to_lean_translate.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "40afcd54f5b58d4d6393bebca63713dbb84ba59e"
+    },
+    "src/core/encoding/smt_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2e64f28c2e114237c48a9577db5ee8b471fa83a2"
+    },
+    "src/core/encoding/smtlib2_util.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c064ea57b914dc21b69bdd2ce72db5c100576d1c"
+    },
+    "src/core/encoding/type_logic_registry.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fee4543eb2edc0d5e57584e0ececd64e05dd7a55"
+    },
+    "src/core/encoding/vfs.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9b0e18a54bb43928e42b5e2eeb1dfd1dbdcc1319"
+    },
+    "src/core/frontend_ir.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b3a9512298966b1a9e5bbdf441993a13debccfb9"
+    },
+    "src/core/function_verification_summary.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0e3a82afd4011be8f2992f145feb19c4238b6632"
+    },
+    "src/core/gate/architecture_policy.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ba55a805f3f05597ea1a3894c85828858bcf3fa8"
+    },
+    "src/core/gate/closure_manifest.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b7e378a2278fe5340072a03410cbe0598721a39f"
+    },
+    "src/core/gate/file_hash_cache.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "67015f9a6e407223c9156f58a54b1bb906b23617"
+    },
+    "src/core/gate/gate_cas.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d1b603188e5dcc35aff82eae83a5e950ceca69df"
+    },
+    "src/core/gate/gate_cas_gc.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cb3987d08f21afcbea1609c85f505f81f0173f23"
+    },
+    "src/core/gate/gate_context.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c2b7af5fe5d5802ca12d74dc355c0f6ae8a2d2d5"
+    },
+    "src/core/gate/gate_evaluators.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "63415adbca5a021d8ffc37fc659097e429bab008"
+    },
+    "src/core/gate/gate_memo.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7ce3e489f4c642ff368cb17d93a9aa8e9f277bd9"
+    },
+    "src/core/gate/gate_resolver.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4bdbc98c78deae3a30434ed1cc545b8bbf8a28c1"
+    },
+    "src/core/gate/gate_vfs.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "85a4e3ce5ab5763003654c47773a72e7d1c9cb9b"
+    },
+    "src/core/gate/git_index_mtime_cache.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d63d0791505adf2b5a03082fcdf4007ab52c7630"
+    },
+    "src/core/gate/git_snapshot.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0049ba19fb3fe791a54b893a0eb0ed944b1fb137"
+    },
+    "src/core/gate/hash_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fe82da2a323ebcef63df581ec0cad8717795779c"
+    },
+    "src/core/gate/merkle_vfs.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "999886fd74ec50b638ff1351d433e2b832005979"
+    },
+    "src/core/gate/resource_limits.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fb416fcd3a23d5c1d148f123a807edecd748787b"
+    },
+    "src/core/gate/state_ledger.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9136c6c881a3997e6a587207a2270f8f2603f65d"
+    },
+    "src/core/gate/state_ledger_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2303f977a4fa34926464f30bce705c60ad6f66c6"
+    },
+    "src/core/gate/static_project_matrix.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4fe16506a8eae18ff38aac4954b45e3d2aabc701"
+    },
+    "src/core/gate/symbol_hasher.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "31d43b60577144a40b0789f4199ca97d960e083e"
+    },
+    "src/core/gate/trust_commit_scope_scan.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "253de0bacb7b3a7bd09d04caff8c966199ce772b"
+    },
+    "src/core/gate/vfs_hasher.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7f522cdc13904b24dec03ae0a651ddc9a94701ba"
+    },
+    "src/core/gate/workspace_receipt.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9ce70e8ce9595ea812272805a3b478bda6219553"
+    },
+    "src/core/gateway/gateway.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "385b307252167450ccf71f1f9a0d5ee5c4d7a2d1"
+    },
+    "src/core/gateway/gateway_constraint.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "11ef7bc30898d1daf2aa42e601ab1021fbd498f5"
+    },
+    "src/core/gateway/gateway_helpers.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a19e241f70972efd9f2bf1ab5c22b7675ec627e2"
+    },
+    "src/core/gateway/gateway_json.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f7c86b24a56b2802988e3e68a1b352eb6ca3f2ef"
+    },
+    "src/core/gateway/gateway_main.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "64b54c23f1d679a147b8e748d0ecb1214c08a4f0"
+    },
+    "src/core/gateway/gateway_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bc05d43dd77f6268cc3e71d25070b0080755be55"
+    },
+    "src/core/global_symbol_graph_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "66ebf1cbcf00e4147f9de0e5aa39c3dffd0eafc2"
+    },
+    "src/core/heal_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "957488fddcf01626ee0a5abc77fb52dcc583a95d"
+    },
+    "src/core/identity/axiom_identity.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "40ea7f8cfd76d9b61965925467bbada7843afc58"
+    },
+    "src/core/identity/axiom_prelude.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2956e8d04ad68fb40a30240ca7ae8543a7077866"
+    },
+    "src/core/import_graph.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e891df11e79ec688d6375f7b7fa2b0665b6238fe"
+    },
+    "src/core/integrity/integrity_refinement_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "65fa80541e84e46762240540699039b769c77153"
+    },
+    "src/core/integrity/refinement_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "82f1e1e692104870df8bfe916b9172e57912dc80"
+    },
+    "src/core/interfaces/ast_inspector.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6618a6c49e275d159dcffc01f7785cea118ed369"
+    },
+    "src/core/interfaces/file_io_executor.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9aa35f4c847497ce6d11af1c4cfe7a26110162e0"
+    },
+    "src/core/interfaces/git_operations.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "63deaf6c88b439fe50f0408a067928882530d299"
+    },
+    "src/core/interfaces/git_ops_hub.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "04bf4370ab1f67686f1c6cce7301901b82a212a8"
+    },
+    "src/core/interfaces/io_executor.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4bed8fbc6a2e31bcfdbadc245c36a0d51a010f63"
+    },
+    "src/core/interfaces/logging_hub.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "185b0d648c3c29e787badd25af97cdafb56b520e"
+    },
+    "src/core/io/file_utils.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a6758babca939220e4295300ab6f827de10bfcba"
+    },
+    "src/core/io/io_utils.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "50ddb527ed53d224b3a6d915928ce5c696dee103"
+    },
+    "src/core/json/json_safe.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b81bfe66d9868cdf18edbdc1a77bcfa09684b332"
+    },
+    "src/core/json/json_scan_parse.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "49815d2c37ab1c2df629bd2d744532115bd02f2a"
+    },
+    "src/core/json/json_scan_skip.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3af506885a0dd4af3b65c5a6db062e38f4d6b1d6"
+    },
+    "src/core/json/json_scan_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cbeb2b71c55d12fa1f3a13e128185156ee3e5071"
+    },
+    "src/core/json/json_utils.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "185d907f378d4ce79719de4ce3e23d57e6fb5a17"
+    },
+    "src/core/json/json_utils_scan.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9e9f148ee780560b4c237be79613df920a4b679b"
+    },
+    "src/core/json/std_redirect.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7a93159cce6e744a7e324a7c670ea5e181986813"
+    },
+    "src/core/judge/lean_replay.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f7b53762059128eab82d102138674a7f3cece903"
+    },
+    "src/core/judge/smart_search.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "38b6c3c63836662d1b9228f9982cd2516804a7d6"
+    },
+    "src/core/judge/tautology_checker.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e66255db504171ab54caba9c5699dae655d55d88"
+    },
+    "src/core/judge/tautology_prover.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "204976e6f2f959bc1849606839be49ca32aa8a2e"
+    },
+    "src/core/judge/the_judge_constants.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ed3a352f25290cdc06c198cf147351f4e5ea5a1c"
+    },
+    "src/core/judge/the_judge_lean.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c47b17084fdc4cce1ad79faece18a9d958f2b96f"
+    },
+    "src/core/judge/the_judge_query_part1.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bad7fface140a6ac9744e4feca932d6e988fb4d5"
+    },
+    "src/core/judge/the_judge_query_part2.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5f96fdf14021dff30d4b20c49f584d113ca2354e"
+    },
+    "src/core/lean_lsp_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "364a7f7d8b3df6f424448c33a0f786e825883ed4"
+    },
+    "src/core/lean_util.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "770236e279a49b30fd3ec354c2fe18727907907d"
+    },
+    "src/core/ledger_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cf6942038f0fb376dbc0ac5611e220d6b019820b"
+    },
+    "src/core/lint/discard_result_linter.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "40ce57452fa714bcbec7c7a37071cc23cb11942a"
+    },
+    "src/core/logic/axiom_verification_context.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1e38bb90887e6e7ebc0d2f7566be1de77c629d00"
+    },
+    "src/core/logic/lean_diagnostic.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f20331054b2f32101081ae85150a39e814acd330"
+    },
+    "src/core/logic/pipeline_fingerprint_engine.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c904fd53aab42889f6314fa400c0f6a4028c9167"
+    },
+    "src/core/logic/pipeline_healing_logic.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e4b42df4f731e928eda85237f8027087a7281d32"
+    },
+    "src/core/logic/pipeline_trace_artifacts.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "74c1726e3be6f47886b084cf3f4c72b41c9765f7"
+    },
+    "src/core/logic/pipeline_verdict_engine.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "03f5cdc2823a3d3981baa8ae507ef08aaeec4073"
+    },
+    "src/core/logic/refinement_string.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e7c8ae00cbd49daf59e5c16ad3d364491f814250"
+    },
+    "src/core/logic/semantic_theorem_builder.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a65f09c84bad6fae749f589297f9b93bff9cc816"
+    },
+    "src/core/logic/smt_logic.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dfb7cf75029c1bfd1abd1849b28b2d255c765a49"
+    },
+    "src/core/logic/universal_translation_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "073b156841743bce3f73e92cf7967f3f2369406c"
+    },
+    "src/core/macros/best_effort.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "665594e0e9f716315c00eae15822a67c56444d69"
+    },
+    "src/core/metrics.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2479e548cb83b4a38764021a3dec2a778dea7335"
+    },
+    "src/core/orchestration/pipeline_config.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7df1f7d1dfdd860a9fc6fa9f6dfab9c36222dae8"
+    },
+    "src/core/orchestration/pipeline_dispatch.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9fd1f8922ef206c32800ef78050ed9fa62629afd"
+    },
+    "src/core/orchestration/pipeline_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e8866184da27bea24eaedf662f9b2d4744cc994e"
+    },
+    "src/core/orchestrator/cegar_bmc_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7e98eed852e07e354370de826aaa7fc063881d32"
+    },
+    "src/core/orchestrator/cegar_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "adb0b67502a18f9cd66b7f78168f55c802eaee0b"
+    },
+    "src/core/orchestrator/cfg_builder.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b5a0c9ec9086725d76e1b73562ee1e35f5cb4a48"
+    },
+    "src/core/orchestrator/orchestrator_api.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "02ee0f1992d4183c5215b721031d4c1285aeef92"
+    },
+    "src/core/orchestrator/orchestrator_context_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9f8cdca6a479dfbfea6e0a3c741903175b68562a"
+    },
+    "src/core/orchestrator/orchestrator_parallel_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "85875f36e1ba24a0e74ff2e4249797675d12e05b"
+    },
+    "src/core/orchestrator/orchestrator_report_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3042a98ccd6d44ad12bd2ec8bee35de1944a71b4"
+    },
+    "src/core/orchestrator/orchestrator_request_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3db7463f78054611172f80385d6300a079d65231"
+    },
+    "src/core/orchestrator/orchestrator_topology_depth.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3270b0b3a462037bdb4d3dbd93043682313356c7"
+    },
+    "src/core/orchestrator/orchestrator_topology_emit.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2fd249e85027f325e571057bde6ab51ed5428425"
+    },
+    "src/core/orchestrator/orchestrator_topology_worker.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "62e06927e69c08e08520508c2e7a59393416c778"
+    },
+    "src/core/orchestrator/orchestrator_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3fb4627167e8fc3ca18a6b05bb0c09e88892b885"
+    },
+    "src/core/orchestrator/orchestrator_vault.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6b8b2fd9487d231f605b13c3077a25c43866d23c"
+    },
+    "src/core/orchestrator/protocols.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b0e653eeafeb03a6707f3bbe8b85ec1ac46ad509"
+    },
+    "src/core/parser_utils.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "900c9da518e6e325936b9d62c306a3ccf3e1df8d"
+    },
+    "src/core/parsers/expression_parser.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4b95859cb2d12fbc7a1968bf6b2c3547c682f9d8"
+    },
+    "src/core/parsers/pnode_nav.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "17690e093886d1fe396060fc908865e50553a5ca"
+    },
+    "src/core/parsers/pred.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e5ee1df407fbdb8ba6d33261047a50ffc5836681"
+    },
+    "src/core/parsers/safe_parsers.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b3d07cffca5bed91fd35aaf5cd5bee2fc59a7ec3"
+    },
+    "src/core/passes/bmc_lower.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "522acaa28d42ac75c2757ff4bbf299e38b7319e6"
+    },
+    "src/core/pipeline_core_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d09a351ae79a7b2af80e2a5437991897738fbe3c"
+    },
+    "src/core/policy/architecture_policy_part1.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ec778b3fa98550e582d0a3d5d54d265b67cf63db"
+    },
+    "src/core/policy/architecture_policy_part2.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ce2f96d137bcb698816d901c21f6204cdc700ce4"
+    },
+    "src/core/policy/architecture_policy_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2f4d3b1575fc486138974e3cdd48fe5b8af0b644"
+    },
+    "src/core/policy/change_graph_facts.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "248f6d37f909d6240d262cf391a69e4c406a9728"
+    },
+    "src/core/policy/parse_helpers.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "707ecaca69fc9a4d919fddf4e2188a1202fd8dc5"
+    },
+    "src/core/policy/parsers/parse_canonical.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5ef22af83639e6c73e6dd09e381f2b7d455bf7f2"
+    },
+    "src/core/policy/parsers/parse_cohesion.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d2a01e45ee0e13d3fa960a82feba23fd1f2c7b95"
+    },
+    "src/core/policy/parsers/parse_dry.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "89e7e5e1e82720fa784616b6a76e7350894ddb04"
+    },
+    "src/core/policy/parsers/parse_forbidden.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dfe4f970d8f9acae1dca91e73f54940429bc55f6"
+    },
+    "src/core/policy/parsers/parse_impure_procedures_whitelist.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dcef5efa7726c05e9dc1e2e7a7d0454e2598dbb3"
+    },
+    "src/core/policy/parsers/parse_informational.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e693e6d45b29d0e056182ca28ed8ada697f6c821"
+    },
+    "src/core/policy/parsers/parse_interfaces.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "59968b00f18f748b4b85c9644830d6808f1ab3f8"
+    },
+    "src/core/policy/parsers/parse_layers.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9550f9ce0251f26269701811dfc5b7ef1c13eac2"
+    },
+    "src/core/policy/parsers/parse_meta.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "448f5c4840ff26312f6d449b8055816c5e2f938f"
+    },
+    "src/core/policy/parsers/parse_ocp.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f95faf0f883444a7607d1ab7730a1feb1898c29f"
+    },
+    "src/core/policy/parsers/parse_surface_area.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6d96c86cd9d3385b502d58d4ffd0379c88b9a40a"
+    },
+    "src/core/policy/rotation_closure_facts.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "72006bd5e0aa80a4e2d46e5c1ec3773c334884be"
+    },
+    "src/core/policy/section_parsers.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "768d8c71108dd6bbc15a4e3711d2ee7f20355d77"
+    },
+    "src/core/progress/lexicographic_terminator.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "67c3379693d972e6600eddd259803130b312e653"
+    },
+    "src/core/proof/axiom_lemmas.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "015e7f36a25325a8047a77b700b445d9626e2c48"
+    },
+    "src/core/proof/function_source_extractor.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c7a93ca3687a0ae049cdb31719796168e77d2c14"
+    },
+    "src/core/proof/proof_artifact.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c548ee2d0d6aaf0533218135d10230a432834b8c"
+    },
+    "src/core/proof/proof_budget.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aa55a48447dcc845207eb6d4acba0c4c0369419a"
+    },
+    "src/core/proof/proof_integrity.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2269a750602d5eb6e5c45b713582d45d6bebc0ea"
+    },
+    "src/core/proof/proof_universe_lock.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0f8bf2d27a3d1683c13719ad43898f2a2d65624f"
+    },
+    "src/core/proof/proof_vacuity_gate.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c68434635dfbacae5cce308ec0a13f0c5990214b"
+    },
+    "src/core/proof/source_fingerprint.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "14698bde5bf34e467383b6e993e0f487c1c94bf8"
+    },
+    "src/core/provenance_guard.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b3ff24366c06a8985b9458399484ac9a527cf688"
+    },
+    "src/core/pure/json_parse.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a925b88808d02c9e8bc6c2dedfd67580834b4688"
+    },
+    "src/core/reasoning_recorder.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5154005a555eece85f862779f8830234a10e30e3"
+    },
+    "src/core/release/version_derive.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4b70bb0c61e1dcf6f3df72e87804156e36c65ab2"
+    },
+    "src/core/remediation_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "27fc826a988944232c91afc46a5d69003be98f76"
+    },
+    "src/core/resilience/error_classifier.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5ee281b644c9fbe5baef189620072130523f3143"
+    },
+    "src/core/resilience/error_context.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "601881976923126ed387d80eae008a6ce1b92d96"
+    },
+    "src/core/resilience/resilience_config.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e0fcce2b569f7a990641636c22fe3803d321f5ef"
+    },
+    "src/core/results.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "38b0fed524a4ee46e1274603d86d068effed4f3e"
+    },
+    "src/core/runtime_context.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d90d8ddb9c2417e06a44fc22a8cbbd38db974305"
+    },
+    "src/core/semantic_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "df15d8cbed4c87f188a48cdb715cb7832e11262b"
+    },
+    "src/core/session/session_parser.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fa52282a10f735092495780e493c189166e72421"
+    },
+    "src/core/session/session_parser_gateway.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ea9832fec29f98cbc35296d7266a89192520f0d4"
+    },
+    "src/core/session/session_parser_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6d07612621dad0e190a610b71eeff42013817420"
+    },
+    "src/core/session/session_parser_validators.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1556f534e35b21af1d8620590ce51c8bdc08701a"
+    },
+    "src/core/sloc_policy.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ad9b5381e42ce4841a181e85420d87a8673575ce"
+    },
+    "src/core/solver/bare_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e0be1767abeb8fb6789420f806cfefb334eabbc1"
+    },
+    "src/core/solver/construct_base.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d935c1528716563fa1a9fc891042edfd521ee54f"
+    },
+    "src/core/solver/construct_logical.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4575aca466229feaa7dcfec0451763ff58f4e9cf"
+    },
+    "src/core/solver/encoding_properties.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b3cc937a2bfb87307991a50a79c049799fcd51c1"
+    },
+    "src/core/solver/encoding_transition.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6eb01c4e96edbf0a79fee9147f9abb59b16967fb"
+    },
+    "src/core/solver/encoding_validity.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "718e8a5bbb58ff775db3325b8e6f4b484225eb15"
+    },
+    "src/core/solver/equivalence_checker.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "25188a6cd656ef41dd4f7c77aec0bb42faf060bf"
+    },
+    "src/core/solver/expr_serialize.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "805bfbab59d876a0e490b3f3021c3c4c97552e15"
+    },
+    "src/core/solver/induction.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "22b4f8ae1d8d1a3385d2f19b7bc5ac7f280772d6"
+    },
+    "src/core/solver/prover_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "699139e83af0466c3c6e3c9f86bcaa27c493ff84"
+    },
+    "src/core/solver/shell_bridge.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2d023f062fb404d6dc736b1341a01fb1773ea4b5"
+    },
+    "src/core/solver/smt2_lexer.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ae9663faa188861db68cd9a67e3c48d3e1a335bc"
+    },
+    "src/core/solver/smtlib_emitter.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d3543cdb9d560812c1eb1c50a051ee08d31ae5a9"
+    },
+    "src/core/solver/solver_bridge.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ceaf08efb5cde9151b8cc49a29509b07c4876a3b"
+    },
+    "src/core/solver/type_serialize.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5473ae474519f1378f053a17461f9a5907d305cb"
+    },
+    "src/core/solver/types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dc0b60639140cc6d5fb613fdb0e96e05123b9a12"
+    },
+    "src/core/solver/z3_interactive.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "19159e94946b37e6b24230fc388578d683bc04f2"
+    },
+    "src/core/solver/z3_result_parser.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ec42a622e07467f45aeaae6773db0e531f943f0b"
+    },
+    "src/core/solver/z3_telemetry.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "827744a6c03ac3f1ebdacd9a7692820a77b5ca83"
+    },
+    "src/core/sorter/sorter_core.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5fdfc4733b4801c1a8e0aaea5ad1b5f8d4c68ef4"
+    },
+    "src/core/sorter/sorter_core_algo.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "477875a18c52605995e3c72fe5877843a24ff53f"
+    },
+    "src/core/sorter/sorter_core_index_base.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "515ce669c180e11443c7073f3da1f518baccbe9b"
+    },
+    "src/core/sorter/sorter_core_index_table.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c4be3d6ea73fb00d7eb4f48a1fbf33ce493170ee"
+    },
+    "src/core/sorter/sorter_core_ordinal_table.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7eb6e9bed08f1f35afe109ec3c3b62020349bfa1"
+    },
+    "src/core/spec/spec_generator_helpers.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5d5de63fe05a4a1ade54d3b78bfb605626cdcf82"
+    },
+    "src/core/spec/spec_generator_main.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "19192b08a33fdc231dcf3331c75ee10c0daeff77"
+    },
+    "src/core/spec/spec_generator_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e715800ff881bf1d8f1c97f23e7693ab4e2d3962"
+    },
+    "src/core/stdlib_shield.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "84172871c8ec1ea9169061b35cc38600c0fcdf91"
+    },
+    "src/core/symbol_graph/error_bridge.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "03624890be9a16effd8e873948b4e9b19683f9d1"
+    },
+    "src/core/symbol_graph/global_symbol_graph_builder_part1.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eea9f3b655eaaa9447971daf57746dd1c24252ff"
+    },
+    "src/core/symbol_graph/global_symbol_graph_builder_part2.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9cb22f58cae4756f2586d2488bcd1d878fb9d52c"
+    },
+    "src/core/symbol_graph/global_symbol_graph_query.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a31344754c58f49dd68efeffd3d8ba3b0ea9818d"
+    },
+    "src/core/symbolic/cfg_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0d19f70326ac6702ac85ca6240945daa98cf3a8c"
+    },
+    "src/core/symbolic/global_symbol_graph_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3977e7c47e1c1b67c4df6b4b81c1adb6222c0ecf"
+    },
+    "src/core/symbolic/symbolic_types_exec.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "364117c7e8e1f6079496ce93d2e5ff7a25029d23"
+    },
+    "src/core/symbolic/symbolic_types_expr.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6387b0f67d83993de3b72881638bcb61fdc3c77c"
+    },
+    "src/core/symbolic/symbolic_types_parse.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dee764f4b96560074b3ebe93afb883584bd59750"
+    },
+    "src/core/symbolic_types_expr.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7ea9796845c94449c5afd125152296841aa8222b"
+    },
+    "src/core/symbolic_types_lean.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8f0a2628f2a414cd24190e057fac93852caafeb7"
+    },
+    "src/core/sync/sync_utils_process.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "42fad54e05ae56db9c43dcd89e3ab09d40a1739d"
+    },
+    "src/core/sync/sync_utils_resource.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cfda13f374a66e5f70d54b07115e1c7ce3e0c312"
+    },
+    "src/core/telemetry/complexity.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "16a371f54fb80c0380f911e92581b8aa46b7ccf7"
+    },
+    "src/core/telemetry/metrics.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b6c669b86cb43aeb7968a56604bd18dab0e8d148"
+    },
+    "src/core/telemetry/verification_scope.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "54febdcee53e600fac2612878a2d0d2c782d1822"
+    },
+    "src/core/topology/apply.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "011ee37ee94660810ed86a6c751510c7680d7531"
+    },
+    "src/core/topology/declaration.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fb3b63e21722312a81305cd06828fe17279258c3"
+    },
+    "src/core/topology/gate_ops.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "891102c81a44ffa72592e306ec88eea88eeb30c5"
+    },
+    "src/core/topology/import_graph.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "deea2466388eb5ea48a7184e6ec2cf6f97140256"
+    },
+    "src/core/topology/lock.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dc72411d59b9ff21541615cb458d75ab8fb6b5ca"
+    },
+    "src/core/topology/lock_update.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "04791a3f7933bb1d47230a3d096b86df2822a1ce"
+    },
+    "src/core/topology/merkle_cache.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d5e271e9eb4a8077d4de98d41f90afd8d95aeb51"
+    },
+    "src/core/topology/node_filter.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2a0d8f8ffc52d731cfa4cacf7e125c2ad9b4c3fb"
+    },
+    "src/core/topology/plan.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a87dbc959f925cccf6419cda054868b3cfd0ef63"
+    },
+    "src/core/topology/policy.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "efda48a1cc207cd2df3c247eaf1accf4ffc17043"
+    },
+    "src/core/topology/rewrite.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "852341230a48c72e15830224f378f146922b6224"
+    },
+    "src/core/topology/staging.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "84d237d1f15935c372d8c2a3c1912e9f415b2574"
+    },
+    "src/core/topology/suggest.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "98b570561ac8d863f5810ce8af5a547e061b6249"
+    },
+    "src/core/topology/symbol_interning.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c52145eb73e473537968f4cd04d5b32bfba1249d"
+    },
+    "src/core/topology/topology_dependency.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9067595c1dac9c762a61647dd0425fe4ade0ea16"
+    },
+    "src/core/topology/topology_engine.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "84a12ff999c1adeacd9d95906312ba9492f16cce"
+    },
+    "src/core/topology/topology_parser.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9314d791c3be563c1d7e7fbdf65e2d180c98cac5"
+    },
+    "src/core/topology/topology_symbol_scanner.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8758f1a6cbad98dd104e9e5386a1409fd5a819dc"
+    },
+    "src/core/topology/topology_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4deea6c00e677c36e31f6cb96e46b6cfb35b5305"
+    },
+    "src/core/topology/verified_frontier.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "560d5b9517ee47fa103f20178d9ba569abaa68ed"
+    },
+    "src/core/topology/verified_set.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6ee4155108e13afd956d1a643326baf07dffb713"
+    },
+    "src/core/translator/ast_to_lean_bridge.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8e07216e94966a28525b8db83f58d3ebda849418"
+    },
+    "src/core/translator/nim_ast_to_json_nodes.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b758fc42e477199e38f119a631dcef55414f5962"
+    },
+    "src/core/translator/universal_assembler.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "786b9c3f1caa2b0972c79fadbdc251c54915f598"
+    },
+    "src/core/translator/universal_mapper.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e8c031d05559c61bc1ec272ae3e4c40335ce1323"
+    },
+    "src/core/translator/universal_mapper_part1.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3468e2349d53ad6a909253d4d84285351bc7a1e7"
+    },
+    "src/core/translator/universal_mapper_part2.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e3ba1b915fce744b462a351b8a1082cdf1ecb4ea"
+    },
+    "src/core/trusted/append_store.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "118d2fa73c255e884c44f9f59ba1dadfe5d5e3fb"
+    },
+    "src/core/trusted/architecture_invariants.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4654fdd9192ac4c2fabfa5a60190153dda0252d1"
+    },
+    "src/core/trusted/asset_collector.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8dafc5490873c5181bdf81ab0f4c90608d5967cf"
+    },
+    "src/core/trusted/assurance_profile.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f0022ad65121a6ada2622c1c28836f7ac363b6cf"
+    },
+    "src/core/trusted/ast_to_ir.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ee405af13c4a4766ecf4718e94bbd47158fce0d1"
+    },
+    "src/core/trusted/authoritative_hydration.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "88138d3ff876aad550d8ab05cc0ee27de0890b9d"
+    },
+    "src/core/trusted/axiom_ir.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9a7fb77f4c51b6bffba0c682057521880f2086b5"
+    },
+    "src/core/trusted/axiom_ir_helpers.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a159d956939eeffedafc687ffdb676dd6fa7a6c2"
+    },
+    "src/core/trusted/axiom_ir_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ddac00c6e804d03ff207d3b70ba8a08cc5e62293"
+    },
+    "src/core/trusted/axiom_pragmas.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0a9113f426f86f60bbcad94905d3800950df0267"
+    },
+    "src/core/trusted/axiom_pragmas_lite.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3f0ee862377ddf1238809ed4236326a839c2fb34"
+    },
+    "src/core/trusted/axiom_pragmas_macros.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0869afa94c125eb84050609d7ab3dc185bcc3909"
+    },
+    "src/core/trusted/axiom_pragmas_procs.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d01ab4511ec433239683f0c01123f680316e41de"
+    },
+    "src/core/trusted/axiom_pragmas_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "242992cc80526f657890c27c7e5783b49dbbcde6"
+    },
+    "src/core/trusted/axiom_pragmas_vm_helpers.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2b3446a90c162636cf785abcb37b8fee43e68b60"
+    },
+    "src/core/trusted/backend_capability.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "702d38e1f2f62225b7b03b826e004223cc61fce1"
+    },
+    "src/core/trusted/binding_inventory.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "990ac922ff27ba894f3b9c0a658ecacfb37d0e73"
+    },
+    "src/core/trusted/bug_attribution_grounds.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1af30df8e6988dfed3d4b06e76bf70be0c6c1f88"
+    },
+    "src/core/trusted/bypass_verify.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5d6ca90f9e5d5607b2b3d794925a8373097c211d"
+    },
+    "src/core/trusted/candidate_evidence.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bc7ee89fa98ddc914388138fd2ce95e501c7f0fe"
+    },
+    "src/core/trusted/cert_v2.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2260d9b368f86309a74e07b5945fad1f50174568"
+    },
+    "src/core/trusted/claim_authoritative_index.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "04af979028ccd9558a9990eaacc3b0d1751f178b"
+    },
+    "src/core/trusted/claim_authority.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "57f4348fd2a12d701efa6b9f22198aa130b305b4"
+    },
+    "src/core/trusted/claim_projection.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2517f929c09cd24dc6837ad415b10bb7e15ffcb1"
+    },
+    "src/core/trusted/claim_store.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1777de42af04d866799b6516b90d940fdaf1f71c"
+    },
+    "src/core/trusted/claim_store_persist.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e85f68553e013c9d974553b032edcb4a125d731a"
+    },
+    "src/core/trusted/completeness_binding.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "09aa36562f6f89f0c4c34238b9d989271eac9830"
+    },
+    "src/core/trusted/contract_synthesis.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b4ec773fb80283c0ac25618ab2933f9f6d3063b6"
+    },
+    "src/core/trusted/core_pure_utils.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a498981d5bd61a5fe7b093c96731a35c03dfdf3f"
+    },
+    "src/core/trusted/dependency_snapshot.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2eb02ee293b60c4517846861249a78e916fc6f86"
+    },
+    "src/core/trusted/effect_bridge.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8f4f04a63712945a1c65257806321bea142f2282"
+    },
+    "src/core/trusted/effect_shim.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6e1d741b0d492c05d7c5235d41c2805e1c37af37"
+    },
+    "src/core/trusted/env_access.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7fc4feae509f23a5344a94f12d0188eff25573fa"
+    },
+    "src/core/trusted/env_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d3458f8768514e53582466471bbb22dc1220c0a7"
+    },
+    "src/core/trusted/evidence_calculus.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "44b16051e28469351b8f713ecae44cd3507630ea"
+    },
+    "src/core/trusted/evidence_capture.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3274f6af24f1fd02f9d76775ad462b33fc5b8795"
+    },
+    "src/core/trusted/fingerprint_generator.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f84c9ed549824fcc1d508c1908cc73df86d6bd79"
+    },
+    "src/core/trusted/ir_elaborate_sorts.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ba9001837c2ea4f2fd0a6578b5a6777d0679883c"
+    },
+    "src/core/trusted/ir_inline_pass.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "490451d8810f319cf3629f8010f234bb2200bdf0"
+    },
+    "src/core/trusted/ir_to_lean.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5e2b0937044167fcde347f160ffd039d01299c2e"
+    },
+    "src/core/trusted/ir_to_smt.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2671ad42a281ab24e480b91369892d8cfd8d2ea9"
+    },
+    "src/core/trusted/ir_tree_ops.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5809c35c12859bf283a1da61855f5621f8769be2"
+    },
+    "src/core/trusted/layer_declaration.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4fe8728cf8cca81dc864556e222db46b19c1b0e9"
+    },
+    "src/core/trusted/layer_enforcement.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6e1eb144e27670227230927a47a0eb9214c3e968"
+    },
+    "src/core/trusted/layer_rules.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "17b30a8f86d2dfae3b9324da9a2daabda99fc2bc"
+    },
+    "src/core/trusted/lean_goal.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "268df41a770569ab5c4b7a3e159f151b3c5bf283"
+    },
+    "src/core/trusted/lean_util.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cb9808743087a7b25a4c309bb9d4744cc2097f3d"
+    },
+    "src/core/trusted/pnode_to_canon.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0a8631c0495bf0c9cc2340d459cf280ecd61b1e3"
+    },
+    "src/core/trusted/private/chc_build_result.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9186698878b3b7fe98c329e46f318603ac0ffd12"
+    },
+    "src/core/trusted/private/chc_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "68a5bb6cc3f494f50d4fa8839beb6e91fb840eac"
+    },
+    "src/core/trusted/private/identity_core.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9dac441b8b8c86fd1385e8507bf854fe89575fe7"
+    },
+    "src/core/trusted/private/identity_mapping.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "48a30b9e57666a5b59eac8add63e637f884a0934"
+    },
+    "src/core/trusted/private/ir_loop_to_horn.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f69ac6e6e33e2a30153052f1900eb66d1ae765da"
+    },
+    "src/core/trusted/private/ir_state_sort.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b1a488acb57166c74937137fa843ff3245a152b4"
+    },
+    "src/core/trusted/private/ir_to_smt_chunk1.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b0bebcfa36538a968edf7a8178fd29da7c0cdf78"
+    },
+    "src/core/trusted/private/ir_to_smt_chunk2.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f34c1a5fc7699950c4f4917a33871abca7c5a967"
+    },
+    "src/core/trusted/private/ir_to_smt_chunk3.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "235c32a5cb5f4705a6c7d89d118d8995ecb2536d"
+    },
+    "src/core/trusted/private/loop_transition_lowering.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d6b93dea8f6d629bb0977250869f2e870ebd441e"
+    },
+    "src/core/trusted/private/obligation_smt_lowering.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c5be3462324f34c3f432ae7dba9d94c6ac84cce6"
+    },
+    "src/core/trusted/private/semantic_identity.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "653b086ebdd05252a46a495c6565f672867fca36"
+    },
+    "src/core/trusted/private/transition_formula_builder.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dcb3db5c72c772e9ee6ab3b4943aa6f6cd02f847"
+    },
+    "src/core/trusted/private/verification_obligations.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f14cc1f471f449e6c9f1afbb09a3ce1f31afb2cd"
+    },
+    "src/core/trusted/project_setup.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "04932248ccca220bb350b386708e6613357e3955"
+    },
+    "src/core/trusted/provenance_guard.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b4b04c89f964b6dca46a608d9d55c3360e7a1c17"
+    },
+    "src/core/trusted/reasoning_recorder.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "93534e1e82814ed88d3d7473c6075305f21a7337"
+    },
+    "src/core/trusted/runtime_context.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b9a0cde76be27868cb1c9597177f2e8221df908e"
+    },
+    "src/core/trusted/rust_canonical.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "31e1aa1f9eaa4f9179eb706ce3cb43f52cdc6ac2"
+    },
+    "src/core/trusted/scope_identity.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "021a97c9cbaf3e116c2f2820c3188857862efd03"
+    },
+    "src/core/trusted/scope_version.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "95069f3cc354f9de8dfa604fbbe1fa9e2caf584a"
+    },
+    "src/core/trusted/semantic_fact_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "14ef615deb38323414d3b96d91b0ea865087ed48"
+    },
+    "src/core/trusted/semantic_profile.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "09356e43226d7fe4dd14592cfb2d3ebbf65effbd"
+    },
+    "src/core/trusted/smt_sort.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "59c37c7c537c9f9d2e9f36daf687cbc61ab6aa97"
+    },
+    "src/core/trusted/solver_invocation.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3b0a74c5e014434c8188b8b75515d7a9f4badb71"
+    },
+    "src/core/trusted/specification_artifact.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "65f588d41b9332c402331807d27b456c3cc57715"
+    },
+    "src/core/trusted/stdlib_shield.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9f75773bfc5aefa8ab3aface6f8c6ce8a71f522d"
+    },
+    "src/core/trusted/symbol_table_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3fa3087519377a503dacc4e5780a2a9ea45cdce6"
+    },
+    "src/core/trusted/theorem_writer.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a9aa2924a1d8bda33be068fb397708a2482a86d1"
+    },
+    "src/core/trusted/trust_authority_spec.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "07dda2a2e6c93577eb5fb344e3fc106d292cc910"
+    },
+    "src/core/trusted/trust_commit.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ffb57e933bfc964ce120ab94249edb9499e4bd72"
+    },
+    "src/core/trusted/type_manifest_registry.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3983b1223e8975ee08c5b43eddde1c318ae64c70"
+    },
+    "src/core/trusted/verification_model_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ad18cde6e3cebaa3cd4373e7bf8f7955c897f35f"
+    },
+    "src/core/trusted/verification_result_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "02292d3ffe8a662d5e2a53f90cb873631baa64be"
+    },
+    "src/core/trusted/verifier_build_identity.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b6c6314fbc6c23bc2c94053ee5001f0f5e1628e8"
+    },
+    "src/core/type_system/liquid_inference.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5155471c60638a6e4eeda759c05b980bb7bbb544"
+    },
+    "src/core/types/asi_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3eac60f2fba3f4e836fce4e881e57bcd05f6bb77"
+    },
+    "src/core/types/canonical_change_set.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8ece0b84d333b0bdc79bb71303259552fdb06574"
+    },
+    "src/core/types/certificate_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "12cbe3b024f4ec1a3cf7c607c7ff28014ff484e4"
+    },
+    "src/core/types/debt_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bd966db8881164fb4143741db8d5f521e8a350d2"
+    },
+    "src/core/types/domain_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a98e7b1bec9fb9572dd7d8eb4dd3938941563759"
+    },
+    "src/core/types/domain_utils.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "01950685a2aedeb81517a53e5a1df2d4061fc21c"
+    },
+    "src/core/types/error_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5b6c1262d18898b291b312b1adbb490eeffff04e"
+    },
+    "src/core/types/execution_plan.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "053f2ea5cc4c66becd522512bb774e411182c037"
+    },
+    "src/core/types/frontend_ir.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7a472fc2e13f0ca2b5c02e4ba1fa5eb10b929e83"
+    },
+    "src/core/types/function_verification_summary.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9ecb4c4a182556c711d74253f0d02a630e39f8ba"
+    },
+    "src/core/types/gate_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "014a6c2e41494eabaf9d58a7e23e235dc97edee8"
+    },
+    "src/core/types/global_symbol_graph_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "08eee29855242ccea3a40703301aec051e466afc"
+    },
+    "src/core/types/graph_artifact.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "793f5c81e13342de6b00aa86ce37a3938380106b"
+    },
+    "src/core/types/heal_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7c2bac35d82b88a7306e508d03130a5af9217f51"
+    },
+    "src/core/types/hubs/effect_hub.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2a2d8786fa1cff9c4d9c1c9c8d1fa2eb9ce6bb55"
+    },
+    "src/core/types/hubs/judge_hub.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "396607aa5812aec0199393363b0e3032f8602d0d"
+    },
+    "src/core/types/hubs/param_type_info_hub.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c8b2218e6600ed69aaa3ddc5fc840f69c850997b"
+    },
+    "src/core/types/hubs/pragma_pattern_hub.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "60b42a5c785a0eeecd4a1d637a53058a1dcbe4b1"
+    },
+    "src/core/types/hubs/proof_hub.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9927a8c68536f4d8d09ccbb8f4afcae45835b788"
+    },
+    "src/core/types/hubs/refactoring_hub.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eae43ca7737b102be01efab829563c95bb04d04d"
+    },
+    "src/core/types/hubs/semantic_hint_hub.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6e6b353c8429fe72d6b1bfcf21243b376a5d50a3"
+    },
+    "src/core/types/hubs/sorter_node_id.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f6ce1774654068464d8b12ca563061b899d2b228"
+    },
+    "src/core/types/hubs/sync_resource_hub.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5f718419def5be5c22b5c2d6fb4583d36c2c37fc"
+    },
+    "src/core/types/hubs/topology_hub.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "73c1f03703368413d351655f9b44b188790614e8"
+    },
+    "src/core/types/lean_lsp_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4d32e456f6ee5fc2e59ac6698fe8dee07f107512"
+    },
+    "src/core/types/lean_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "770bcfdd5fa4e4b04e8aa1a6fdbad8fef117a6c9"
+    },
+    "src/core/types/ledger_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "053ba5bfcdbb0d6964b6affe9ea9beecb367116c"
+    },
+    "src/core/types/obligation_evidence.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7902d8eb9e899f7f08f064c86edb78163878968c"
+    },
+    "src/core/types/pipeline_core_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0fd327cce8ff5f3f28d7e41ef83183fbeb72f6ff"
+    },
+    "src/core/types/proof_status.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0117d62db1fb03668009a0d3b47a664c6ba6c3b5"
+    },
+    "src/core/types/quarantine.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "52f0cb473d50d701873af52763b7e039d3e2b778"
+    },
+    "src/core/types/refactor_task_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8f988d6404caa9fef8e6cb0bc32aed1386e06c53"
+    },
+    "src/core/types/refinement_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b7a4d9ea06449a2f1ddc3aac167507ab6c55b0c0"
+    },
+    "src/core/types/remediation_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2e62e1e357c56a4f9ed1181c6c1617c93b4afc12"
+    },
+    "src/core/types/request_derivation_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b6600e255b725cf480f71c207fe3a4db46eb8326"
+    },
+    "src/core/types/request_id.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "76815adab07c988d3157a794255a8333ffc0cfdb"
+    },
+    "src/core/types/residual_monad.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "269a68e6c243e1d94d72a84913ae17e6a18d05a8"
+    },
+    "src/core/types/result_identity.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8b93beb7837340a47a338ef1cbbf2ab8f97b50d3"
+    },
+    "src/core/types/results.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "37b574d606b863adf5ed85eca35eaff1c66567eb"
+    },
+    "src/core/types/selection_derivation.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e63dde19017aa7b3a9d5004bf72dad4cb05121cc"
+    },
+    "src/core/types/semantic_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dc3cba880186646effaa15d62b7d7ec72431b0f9"
+    },
+    "src/core/types/smt_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8ca946172a96f298a09db79aeff3ad42ce6a2c80"
+    },
+    "src/core/types/solver_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1db91912204ff404b2228111a479c1e3ae6f2b2a"
+    },
+    "src/core/types/symbolic_types_exec.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "34a5506bc24afd05608a73531de7f1d973b360af"
+    },
+    "src/core/types/symbolic_types_lean.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1a5b6d1f9cbf8602e5d82ce4ded332ccb0b60650"
+    },
+    "src/core/types/translation_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bec987dc0464dbe398070df58e8fb70bda70e192"
+    },
+    "src/core/types/type_mapping.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "96959fd0e27f32fc7d39dd0cef6ee9f3f873cccc"
+    },
+    "src/core/types/universe_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7bb91acb20387ad6dda1b81426dfdc93f68cadbb"
+    },
+    "src/core/types/vault_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5d3e83c9d9c5ca8ac71f8cb87cd1a5fe959a6dda"
+    },
+    "src/core/types/verification_tier.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fade7ee4ac46c3bd7b6eecb0298fe44834a5b8cf"
+    },
+    "src/core/types/verification_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a3dd55ae5148027a0fe740f2cc5eb34e4b734e29"
+    },
+    "src/core/types/verification_unit.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "52931df9355e718f727804d36bd616754a486097"
+    },
+    "src/core/types/vkd_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dc8f0e29374ce0563ba96beb7b4df3675b2b679c"
+    },
+    "src/core/types/workflow_state.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d470a2501ec21503ef10990ea49562f2b40449e9"
+    },
+    "src/core/types/z3_solver_config.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1c283c64b05924e184c60e3baba5f9c588af9c35"
+    },
+    "src/core/utils/axiom_clock.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1255195b8ad57b4505d1bf199e16dd209225e807"
+    },
+    "src/core/utils/axiom_error.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "171561ab53f5f751a64553e71c04962ebdf3e8b4"
+    },
+    "src/core/utils/build_provenance.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a320344b33a1fc93131802ddb37274673916f896"
+    },
+    "src/core/utils/canonical_projection.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2ac3ab5d918e105306a2174a98f0af7b41a9ec33"
+    },
+    "src/core/utils/constants.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bb06dfb9c18186dd0c4f2fa9edde0a6f36fffea7"
+    },
+    "src/core/utils/debt_params.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cce5c6fd612b426ae27948a1ea9a72ba2ceb3780"
+    },
+    "src/core/utils/decision_algebra.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1185de289c42980f4d20301a9e7ab6783ea88eba"
+    },
+    "src/core/utils/file_utils.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a2b07a2f9833b0e0aa00de0c63e8ab4b5fda0790"
+    },
+    "src/core/utils/ident_utils.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "80359087bae963cee1255a620de8ea90f2ba6df5"
+    },
+    "src/core/utils/io_utils.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f5caa6547b01020ce80a30e71e83478a0bdb759f"
+    },
+    "src/core/utils/io_utils_isolation.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f69bc1c9687545bcfbd1aee70d282b9dbb5f6ef6"
+    },
+    "src/core/utils/path_identity.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d034f597950f9b9d82ae2a15231f25bd669fbc98"
+    },
+    "src/core/utils/repo_root.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b540599592ac0af169e591107d8a3d617a112e0a"
+    },
+    "src/core/utils/shadow_digests.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "84fdda66a9efb138015eeb12e93c82be4935c30b"
+    },
+    "src/core/utils/text_utils.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6216902ff05c4fb400f55169d1933b8480ed0e08"
+    },
+    "src/core/vault/vault_factory.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "522970c41463c82d8b06f31338a7cd10836aa519"
+    },
+    "src/core/vault/vault_index.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f7623478f26a21fc8b8f7f49ba0bbdc0a9837818"
+    },
+    "src/core/vault/vault_manager_spec.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2e05ed80c5682bbdf77e4930fe9fa4edfead9e6e"
+    },
+    "src/core/vault/vault_manager_storage.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "775bba2a51e0095c5d11e0e1bcefb6b372a41359"
+    },
+    "src/core/verified_axioms/axiom_catalog_validator.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f66b5cd6e09b2232822c0153c6f0413dec61d523"
+    },
+    "src/core/verified_axioms/verified_axioms.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5c84e08dd1ca1dba5ce9ffaa7f5980cb0ddebc60"
+    },
+    "src/core/verified_axioms/verified_axioms_catalog_part1.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "17fd3fad0af99ea9ebd97107e49c4fe0b33e4c5c"
+    },
+    "src/core/verified_axioms/verified_axioms_core.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "98cd5232f40c01b33986088741f74469be0e1020"
+    },
+    "src/core/workflow_state.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0327ff80ed658a92a89f685d24d6aef8aec30569"
+    },
+    "src/engine/proof_aggregator.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8a92b71a48f75151e16cefc99f3eae7c3187b98d"
+    },
+    "src/engine/proof_certificate.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "42681bc888ea88c41345dd3f76fa7fa458f61439"
+    },
+    "src/engine/proof_injector.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2bd15dae6f4d9ba86b43e604b8a9734b98803c88"
+    },
+    "src/frontend/frontend_interface.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7b210720f96a978ae95127cd3ef9d2e8a3c57ad9"
+    },
+    "src/frontend/nim/nim_frontend.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c31dbae872ad5972f9f00b7536a6ad9f01f7d767"
+    },
+    "src/frontend/nim/weaver.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4cc59cb6aafa3d37f3acd13a8a1cbcd1a85fda8d"
+    },
+    "src/gate/architecture_ast_facts.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aa067f8d3e2ea216d52dbccca683de4c39bf44e4"
+    },
+    "src/gate/attestation.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eddbf7e946b6c0752efa9afbe23849cbc429cc34"
+    },
+    "src/gate/cache/soundness_cache_io.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7032aa04d232b88c05879fa930e6926018538c20"
+    },
+    "src/gate/cache/soundness_cache_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "85a62806eb212f9d0713fc888f166877ca571133"
+    },
+    "src/gate/cohesion_enforce.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5b8def4bc2dc11666b9939c6818764b9d50a1abb"
+    },
+    "src/gate/config.nims": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3d86e855c790387c063b3836f6ceec21c52c85c3"
+    },
+    "src/gate/config_loader.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3f5bc290bc53dbac95f05e67fb1a9ac5549f8e29"
+    },
+    "src/gate/daemon/content_hash.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2b61ad4bce8194a3ad5f0b0da44951ecfc9aa8bf"
+    },
+    "src/gate/daemon/gate_daemon_client.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b79c20f852f58a7b9bf5b260d69f7ed34f79b332"
+    },
+    "src/gate/daemon/gate_daemon_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3fb4d1ed9b041ce5b0ba76e567e5c23ae22423ec"
+    },
+    "src/gate/daemon/invalidation_trigger.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0329d8c66fa240df4bdd5beeaa2239730b816d80"
+    },
+    "src/gate/daemon/salsa_memo.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0ee716cfb35f901f8e7b3b2f0dac3f6efc1e1709"
+    },
+    "src/gate/daemon/symbol_cas.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "be266150de9743b05df7a7a5c09ad08d41070050"
+    },
+    "src/gate/framework/topology_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2457441d8ecc36ba6136e305f38cd27cea6907cc"
+    },
+    "src/gate/gate_consts.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4fbbac0ae948cfacc1398b3cc9aca4d9654cb2ef"
+    },
+    "src/gate/gate_contract.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f76ae3e58abbb494e6e2c3145fe7ff5f2f76ef75"
+    },
+    "src/gate/gate_dag.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b839508c448c3bb6c09d9a0b63ae31ee8c3408e1"
+    },
+    "src/gate/gate_registry.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8416f2edcab167fffeeffe0656910cb88718887b"
+    },
+    "src/gate/gate_run_context.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5ba4ca2badd9c5eca16219353afd6a3e86514869"
+    },
+    "src/gate/gate_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "720fb14af298d214d8bbb84ed2595b2776bf2954"
+    },
+    "src/gate/gate_types_impl.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "34eef26cae686a6f4042ff54b92caafe0cda776b"
+    },
+    "src/gate/gate_utils.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "07576132f6db747242a2f2d9ab472ce883a61fe8"
+    },
+    "src/gate/git.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5a931633dc0f532530ba3ea2fdb7330dadf3a5f8"
+    },
+    "src/gate/lib/runner_common.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ff0618057a875b12ed8430264524a160d904fc45"
+    },
+    "src/gate/manifest_provider.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e781b4c06ad6741b8e713ec6e343f408c07893c0"
+    },
+    "src/gate/nimtry.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b785f908c8f0c6a076962be57aaf488e9690c0f0"
+    },
+    "src/gate/nimtry/call_graph.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8f908d971de5058ac888bceea013ba04e0ac9534"
+    },
+    "src/gate/nimtry/dry_queries.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7e8c936e65988387a42e3d19dd485d188a7aa4e0"
+    },
+    "src/gate/nimtry/effect_queries.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e1db42f2453fc51141b2518c41d553b26c91c584"
+    },
+    "src/gate/nimtry/facade_queries.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "41d0f26d173f8f15a875eb370bd6e72afe9874e3"
+    },
+    "src/gate/nimtry/feature_universe.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c9dfac08b646c69d2d3c4252b7a971e791784a2d"
+    },
+    "src/gate/nimtry/forbidden_patterns.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dd3357ed0a946088ea773407650f87ad70397040"
+    },
+    "src/gate/nimtry/interface_auditor.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e038cf5f6c1ca263dc7ad16998a0dac3f797c9a7"
+    },
+    "src/gate/nimtry/io_module_registry.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "56801be4c8db0a09950d6a152c088df2569d54a1"
+    },
+    "src/gate/nimtry/nimtry_cache.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ba63f2d56acf95f4a2a6b1547ed165d2c3584977"
+    },
+    "src/gate/nimtry/nimtry_cli.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "14e16a3df8527c7e3cc8b393f5153e34a4ba7177"
+    },
+    "src/gate/nimtry/nimtry_extract_part1.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c873cc5b8a5e0e865a8526173b817f20ed2cd06a"
+    },
+    "src/gate/nimtry/nimtry_extract_part3_part1.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5ea6cb81a4a366cb7df445989552b85a30b00ebd"
+    },
+    "src/gate/nimtry/nimtry_extract_part3_part2.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9338157abd81720889e9c86689912983ea39e0ee"
+    },
+    "src/gate/nimtry/nimtry_extract_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "04e60c1d5161470955c6ca81c2c957d0bae8d794"
+    },
+    "src/gate/nimtry/nimtry_policy_lock.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bbbb704ecdcabab38d6625b4b113d9d26cabbba4"
+    },
+    "src/gate/nimtry/nimtry_query.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c560f96f6936ff87bc2d4dd7fb3f5024dfc3e801"
+    },
+    "src/gate/nimtry/nimtry_registry.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "25c5f85a47d11e96a1db720d0c1bb30c517992f5"
+    },
+    "src/gate/nimtry/purity_queries.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b0501c9268d07a165acb377af589d2c03c8b3600"
+    },
+    "src/gate/nimtry/safety_queries.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e05591f1a22e28c69fdaa31d42447704a83ffaf3"
+    },
+    "src/gate/nimtry/soc_queries.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "41a67d4365039907dd10e16b08138e75289341f5"
+    },
+    "src/gate/nimtry/solid_queries.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8aa7c9646619bd2ca343d8ad83fa6f634a6da5a0"
+    },
+    "src/gate/nimtry/solid_queries_dip_ocp.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dcd83575d29e483b893d6f0f0d492405ace8f791"
+    },
+    "src/gate/nimtry/ssot_queries.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bcaa26dd675f307c305d0af2123f93ca72a7f1dd"
+    },
+    "src/gate/nimtry/test_hygiene.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "12f46a0ee4304a9e382a5294ab58510b8bb25dc2"
+    },
+    "src/gate/orchestrator/hook/analyzer.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2d5a090183abe533edc28b16cea10b4974b40005"
+    },
+    "src/gate/orchestrator/hook/context.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b2cc086a8455590a32c237a20b7dec738e10f0dc"
+    },
+    "src/gate/orchestrator/hook/executor.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7130209af0cf61029251b51102974ecf69e1cbae"
+    },
+    "src/gate/orchestrator/hook/memo.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6e8308e828ac1bc9c9771b6c000429867a682488"
+    },
+    "src/gate/orchestrator_hook.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b5c21b69d21892db3241ef13af6c2ab1e92f894c"
+    },
+    "src/gate/orchestrator_pure.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8dc4b4ffcdac8d441a042f1ac619daa5e9a069b9"
+    },
+    "src/gate/orchestrator_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d749023521e0334301547edad158b7e3b92dd74f"
+    },
+    "src/gate/rule_patterns.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c015059fd5ab232fda6f10d3fc7dbb9c39ac589e"
+    },
+    "src/gate/runners/binary_freshness_gate.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7d7094edf4de6078db758fa2834f5d55d5054a2b"
+    },
+    "src/gate/runners/conflict_marker_gate.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e435000bb14b33b66bc8175acdf0abce777d2bfb"
+    },
+    "src/gate/runners/decision_binding_gate.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0054dda0dd5f6eb90bab6703bd2dd5b2c078dbfe"
+    },
+    "src/gate/runners/delegation_enforcer.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f4840e8d455569168b10fc330b86c3a746e32998"
+    },
+    "src/gate/runners/fail_secure_state.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "930909326d3ed6abf98dd13852ed64d12d57a544"
+    },
+    "src/gate/runners/gate_hook.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f35b164394c8af8d014f56e5e1de157fb8830c64"
+    },
+    "src/gate/runners/golden_master_gate.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "765976534131b6e8990fc0c94ee3e8c1f80f9d4c"
+    },
+    "src/gate/runners/hotspot_coverage_gate.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9435c94d32dff0cc662f03ed58e7eaa7e13ab846"
+    },
+    "src/gate/runners/trust_commit_scope_gate.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c4037d769fd24692e9220e9adbdceda9edfdab47"
+    },
+    "src/gate/semantic_alias_mapper.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "84a02c9eb67a197f3aa2ef8f8a1e49b95105a1a8"
+    },
+    "src/gate/slice_hash.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aba4a4708223130d6cd542fe5a7b7b78a9d103f0"
+    },
+    "src/gate/tag_parser.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9325581e5ac590d18afc93a95259df58d739dec1"
+    },
+    "src/gate/topology_spec.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9ec142e601b8d0efcbac705dbb8388fd9aa7ab85"
+    },
+    "src/gate/types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "272189f4943f03c93963f43807a806c650a17ed2"
+    },
+    "src/gate/utils/command_policy_gate.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d5b09d741e429059419d61d567343b136c19921b"
+    },
+    "src/gate/utils/gate_run_logger.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "88ac1ad9cd76a58910fa339a7f74d8e2817ec3b4"
+    },
+    "src/gate/utils/gate_safety_macro.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8b4219c3854918c549ca94e880d65779dc5f5c5b"
+    },
+    "src/gate/utils/git_state.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3175f204d1f6507d68adc586f463f9fba9d55f36"
+    },
+    "src/gate/utils/git_wrapper.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "26a1d171d684d3bc60bf2917b58a6170b1196f54"
+    },
+    "src/gate/utils/inprocess_dispatch.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ea935ee4afe2780fd4a27cedeca168281e4ec6a8"
+    },
+    "src/gate/utils/macro_dispatcher.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5c5280a9cfb6c12de87446af16246bd368a3beac"
+    },
+    "src/gate/utils/real_git.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2171ca2d57271eb6bdfdf56c059cdd100479d12e"
+    },
+    "src/gate/utils/shell_ast_analyzer.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f008596fc2e8c4aca10f4c568819758f1cc6ad39"
+    },
+    "src/generated/gate_registry.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fcc5e60a2002854c6065ccd32be5ba663ad07d8f"
+    },
+    "src/generated/import_rules_static.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "82fd58874c5646091a275e18b23d08d72e272b30"
+    },
+    "src/infrastructure/bypass_audit.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b77ee54c1f9311534b48be2995176a6be63df721"
+    },
+    "src/infrastructure/cas_index.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "184e2a52574d69d88791b52268e286d955bdefa0"
+    },
+    "src/infrastructure/certificate_attestation.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c1528a3549a5b433ae3682efc6146898608e116b"
+    },
+    "src/infrastructure/evidence_artifact_io.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6035b716fa9a0dfd67c6514eff55f3aa438aa457"
+    },
+    "src/infrastructure/external_ir_materializer.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "da9eb1c6ffdf08fd9e26962801fddb3a82082f47"
+    },
+    "src/infrastructure/git_config.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "abeb24cb51a2f986471d6136178639c77976b7fd"
+    },
+    "src/infrastructure/hermetic_sandbox.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d5e3daf47527fc86686420871128078c07b5d104"
+    },
+    "src/infrastructure/ir_binary_codec.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e2e4701d0d4c9f343f78e9d70437060d0d6d4d2b"
+    },
+    "src/infrastructure/logger.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "273b73e277b599e88b49eeece39c7134bb8955ab"
+    },
+    "src/infrastructure/logging_facade.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "236638fad223550ad11860ee8b2052a89face93c"
+    },
+    "src/infrastructure/process_utils.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f9e0239b4a2e6046c87a5bd2bc17ffa06682fa51"
+    },
+    "src/infrastructure/provenance_probe.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "69cf0fb140ed354041d0b792d65676c0376642c4"
+    },
+    "src/infrastructure/source_identity_cache.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "19124339c82094dc305831c0c7e3e459ba39e31b"
+    },
+    "src/infrastructure/topology_executor.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9f78e66adfe607b95f740fe4066d0fea30abe4d7"
+    },
+    "src/infrastructure/vfs_intern.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "415ecabb9cdd2b3dfb05b181bb4c38db7b546ba9"
+    },
+    "src/personas/detective.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8b8e0a14874e6638b68f1dd720e3c7bca8492183"
+    },
+    "src/personas/judge.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "09f940bad10cd5185955e3de61b0bb49490a9e1e"
+    },
+    "src/personas/judge_automation.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "910dc50e012f0c8cc304e1524f05ba304cd8b208"
+    },
+    "src/personas/legislator.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5a2923e6ea22aea3e331a90417e34d5a20cc43be"
+    },
+    "src/personas/legislator_feedback.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "64a49384a65e455bb8063f7e426e905eab6c423c"
+    },
+    "src/personas/llm_response_guard.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a12c68d359e169b1f0f6b2a51100b081ee521e4c"
+    },
+    "src/personas/scribe.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3bba0110205ef06b4ab2b4bfcf85ff9b8d4746fa"
+    },
+    "src/personas/shape_handlers/equality.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7369a2da7abc1f78e53e0fe785362e2d90306c25"
+    },
+    "src/personas/shape_handlers/finite_equality.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ceb267d2d83c984b13ee158521ec0eeb67ea8905"
+    },
+    "src/personas/shape_handlers/general.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f242289c54f49bda33ef47b8febe7d89f6993967"
+    },
+    "src/personas/shape_handlers/inductive_structure.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7dd2558c8174275b7c4652701767231d5a8d7495"
+    },
+    "src/personas/shape_handlers/linear_arithmetic.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7a17a55a3439e68777cd8b74e6d8d0dd87e87e96"
+    },
+    "src/personas/shape_handlers/unknown.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9a66bc7e927d54f1a5beb0f17dca047b68eee0b8"
+    },
+    "src/personas/strategy_handlers/aesop.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d83f901b2bbc54086297440f92650f00ad55f139"
+    },
+    "src/personas/strategy_handlers/decide.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d5e51230dbaffcac259ea0cb0dbf7cc8e26b3580"
+    },
+    "src/personas/strategy_handlers/grind.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cce22e18287ffeb1fa7f7c2b4778401a57ca8294"
+    },
+    "src/personas/strategy_handlers/llm_fallback.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0ae278e7c418db8dbebc7ce92b2393a41799a249"
+    },
+    "src/personas/strategy_handlers/native_decide.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b1a29e9473a450f1a7258cd44fa02e7aefa0e68b"
+    },
+    "src/personas/strategy_handlers/omega.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "30f3e72689ebef6e8328c6f3bb17f81612de4dca"
+    },
+    "src/personas/strategy_handlers/rfl.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4683e7f7488a89d3da14b53be42a10bbe997243d"
+    },
+    "src/personas/strategy_handlers/simp.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c49bd0810b1551b118b4341f04051d76ecf5e34f"
+    },
+    "src/personas/strategy_handlers/simp_omega.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c1ed7e92fa36db746e1d2111d7076f7c294ac109"
+    },
+    "src/personas/strategy_registry.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d2b9bf5373b90229e89beacaf467d36885a0915b"
+    },
+    "src/sieve/sieve_bridge.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eabebf58c2cca5c4425e2398ec2c824667485e0b"
+    },
+    "src/sieve/sieve_engine.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a338bdc1f7695a27e7fdfd57fd8a5642c8a1b95a"
+    },
+    "src/sieve/sieve_refactor_bridge.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2198890245ccb8c0d252c388441d8b8ff0a05a37"
+    },
+    "src/sieve/sieve_rules.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "23f70f5561818a9f5543be35c238ae34cca6d217"
+    },
+    "src/sieve/sieve_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d7f81b28d1889fdcd923b630fb932aa79afecd1b"
+    },
+    "src/sieve/subjective_logic.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "edf4c553bb29c6e21df96eb33751862beade0f33"
+    },
+    "src/sieve/trivial_lean_router.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "81429e220a9e3ab48b156ceea6da41286672ab0d"
+    },
+    "src/ui/notion_semantic_mapper.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cfb3b9413b0230b040ae7fcf53540e9790d8afea"
+    },
+    "src/verification/abstract_provider.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4248a8331ab729d1bcf5de068345cabb3edc48d8"
+    },
+    "src/verification/abstract_provider_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b7b136efa920e4d0db039c1a220b75b41d90d169"
+    },
+    "src/verification/accounting/execution_context.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9e6c9acc15c898772a5271a262b0850b4ed002db"
+    },
+    "src/verification/accounting/run_accounting.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fb83f8b0742ccfc372cc0c10717f18142e423389"
+    },
+    "src/verification/admissibility.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "91495a775d83e18f549d7404e7a53c1630b01eb4"
+    },
+    "src/verification/admission_artifact.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6ca698416e88ef3a8eaabf578ad2f857c7375c60"
+    },
+    "src/verification/analyzer.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7f0949c07a5b160ce855f59b40a9104981db4e01"
+    },
+    "src/verification/ast_extractor.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2fab8d6da3a96c003d58bfeb6d0765b788223023"
+    },
+    "src/verification/ast_wire.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c026f6485e31d5b2f5b361155f49a642f0cdc3cb"
+    },
+    "src/verification/attestation_orchestrator.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e7a90ecb6f67a9084b6f41edcc240eaadfe462cf"
+    },
+    "src/verification/attestation_witness.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2204b3258697e65dae872355fb97937e39fdabb7"
+    },
+    "src/verification/ax_classify.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "02043da0aba2e813436d51a4f48fabe0b6447de0"
+    },
+    "src/verification/ax_implication.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c5b8ae9ad37018b3b5f366cfdfbfe5fa1b8b777c"
+    },
+    "src/verification/ax_tautology.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b6c07740b5717b22d87c471bcc0d3a61668a04e4"
+    },
+    "src/verification/batch_uap/ast_hash.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a2e2165a7f043931847c7a3dae9cdad02d22cf72"
+    },
+    "src/verification/batch_uap/cache_middleware.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5ee1d62d8b0f437142fc5f42100c93dd06a80d3b"
+    },
+    "src/verification/batch_uap/certificate_hydration_runner.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3084f17e2a2bd3b5864a5a8920e6348ac211a1d3"
+    },
+    "src/verification/batch_uap/instrumentation.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d231d482268c34a324bcbf2f9f01384d0d43b281"
+    },
+    "src/verification/batch_uap/ir_pipeline_runner.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3bea0654b76eaf6a16c5c5d2af1ae8991ce8c7d8"
+    },
+    "src/verification/batch_uap/loop_depth_scheduler.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2def84c86e8e5a300cc56646421b8fe05da0e0ed"
+    },
+    "src/verification/batch_uap/loop_driver.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cc198e06535e3e4ebace07a2ca7a4dbc9f6f6ad1"
+    },
+    "src/verification/batch_uap/loop_topology.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "47b2fd3e9f2e887cace1a715ba2b4bff15fcb526"
+    },
+    "src/verification/batch_uap/pbt_adapter.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "41f5d67eef87d1a8190f94135ce12c96e42ec7bb"
+    },
+    "src/verification/batch_uap/private/request_builder.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "57bafc9807f180f70098556a8f463635d01f9550"
+    },
+    "src/verification/batch_uap/private/types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7f4ab54a94f62a042c27354de3b929f257ec595f"
+    },
+    "src/verification/batch_uap/refactor_executor.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bb6212b322d3e0ffe93a58004384412ad5c8d418"
+    },
+    "src/verification/batch_uap/refactor_vfs.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "975fdbe190a2b753641a0742f1cd609e8775c910"
+    },
+    "src/verification/batch_uap/stages.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5e318900389e0b9ac41d28f077f05a4647e7f1ba"
+    },
+    "src/verification/batch_uap/unsat_core_cache.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "40d63e21e853a1bf63e5b204c03f25ef5aba0508"
+    },
+    "src/verification/canonical_certificate_payload.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6db419a3fda053a12bda681d663b98857c96b0db"
+    },
+    "src/verification/canonical_json.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7aa2fa3435b130cf886779e673d2763470e13ccd"
+    },
+    "src/verification/cegar_engine.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3b492e189ca242eb01c26ea35174075e98d7fe0e"
+    },
+    "src/verification/cert_promotion.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "30f930abdaf2f434319f32bf19a9a3b11d15563d"
+    },
+    "src/verification/cert_reconcile.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "90675d26597b6f7e17afff05745a4819132b05e8"
+    },
+    "src/verification/cert_vault_role.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d82f6abe1dff6d1ff3d005b3ada6b1374eae8084"
+    },
+    "src/verification/cert_writer.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "94139cb62ccc28294ff78614df212ca2d4e73861"
+    },
+    "src/verification/certificate_eligibility.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e92c3e3e2ca2b691efd63be0f07a4a80fbe6a714"
+    },
+    "src/verification/certificate_hydration.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "97ec6c73964b33b88b6e9cb84317524dc6bfec7e"
+    },
+    "src/verification/certificate_identity.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e2306d87c49d733f78fe113b09b5044b4f91f3e4"
+    },
+    "src/verification/certificate_manager.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "762bf74c8996e6beb31b0583af38e172d39f73f5"
+    },
+    "src/verification/certificate_verifier.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fd9f5c5df5d83c1732cd8d70fcc12f4f5f3b163b"
+    },
+    "src/verification/charon_runner.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d6f654418aa638392759f5aaf198f2c06f696dc4"
+    },
+    "src/verification/cli_bridge.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fbec964a3e7f0aa8e462b1121d5f8134a5141782"
+    },
+    "src/verification/composition/bmc_registry.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2ca7e9454eae2af0c10ab2235d2b87167a59b081"
+    },
+    "src/verification/composition/cegar_registry.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "de8b70348862179c83da6e5988b6ca56527a4178"
+    },
+    "src/verification/composition/healing_registry.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b1219c4bea5b9e6162f4d9156f6bb6c07a720098"
+    },
+    "src/verification/composition/leanstral_registry.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "99a4f1de3ab8ffae0845c55265aecc320b2ee005"
+    },
+    "src/verification/composition/scan_registry.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6f2dfd2a42409d3d6ffdb6a34ddc44c7cd0bc09e"
+    },
+    "src/verification/continuity_check.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e07a98be9401b3502c06aea96f9fc7ee8ff20c51"
+    },
+    "src/verification/contract_source_extractor.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "72f6bddc2fe6863926b9d6d7efdd2fe0ce7379a5"
+    },
+    "src/verification/counterexample_replay.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c0fb434db403dc99f76900e544d2a3c6261f35e5"
+    },
+    "src/verification/counterexample_validator.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "50bbbc8d306884f9a3bad9dcf71f4e5cd5b1f552"
+    },
+    "src/verification/cross_validation.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d3a51784ec9b6557ed534769877cad9521db1952"
+    },
+    "src/verification/discovery_error.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "25b138f41fc6040870f5c5b3617010356b8df529"
+    },
+    "src/verification/evidence_cas.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "007f4dade6c561c29a96677014b6f564ccd075cf"
+    },
+    "src/verification/evidence_ledger.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "363379a9dc686d34f27303f1cea795b04f49c7b4"
+    },
+    "src/verification/evidence_validator.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0ed6cf902379b7ddb6a46b9125518da1050e7f1e"
+    },
+    "src/verification/extraction_agreement.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0c9691b121fbdd09827220ac90103ef2b3258c2d"
+    },
+    "src/verification/extraction_provenance.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cede7994cde2e6f507ad5e0e8272f2a53e06842c"
+    },
+    "src/verification/fingerprint_engine.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b53ac55e35a965efb64ea1088d385f3c9f41332e"
+    },
+    "src/verification/global_symbol_graph.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cda2a578a05e287337ecebddab5892671047a845"
+    },
+    "src/verification/healing_orchestrator.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1d1cb3efd3fa6d724aff0b9aa66bf4ff1724e933"
+    },
+    "src/verification/inductive_proof_emitter.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bac770c7e6f7f8c7f88072435d1f251f1f30a1fb"
+    },
+    "src/verification/integrity_guard.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "12c2bbd1a903ad759c02917bbb815d901760ec84"
+    },
+    "src/verification/integrity_ledger.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9805ee5d609aa207e88b6cce4b5ff4f5240ad27f"
+    },
+    "src/verification/io_axiom_builder.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "72760f11b3d4373afa55bb41f406de892ad09056"
+    },
+    "src/verification/judgment_cas.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bc4458bbcefe32c1d76286dc54b0f0fa84039d66"
+    },
+    "src/verification/kernel_reexecution.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "941408265c5c58e90a0f79f56b12a887a36a96a5"
+    },
+    "src/verification/layer1_bmc.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c50fb447030fccde542741916c3a2c5de2752379"
+    },
+    "src/verification/lean_build_sandbox.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c13fa848a623131580b1711dcfb1f11ff50d6ac1"
+    },
+    "src/verification/lean_hint_db.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "659962cedcf78248cc12001322cf28145da0312a"
+    },
+    "src/verification/lean_lsp.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ebd1dd2a57aed7b399caabde0cdbda8776b7c4dc"
+    },
+    "src/verification/lean_lsp_client.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "edae7c60de513ad6d76037378c470e935ac5e8c2"
+    },
+    "src/verification/lean_lsp_compiler.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f8e6d58c17e35e7483583c679d58157b133258ab"
+    },
+    "src/verification/lean_lsp_feedback.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9b6d0d9224a935a1f7d8c1b870b127f43bca6e72"
+    },
+    "src/verification/lean_lsp_future.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8450e431c34228c5f72f4e3c93d0e763088e1041"
+    },
+    "src/verification/lean_lsp_proof_search.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0a2d7208922b854cd01ad4e44c8805b54447412b"
+    },
+    "src/verification/lean_lsp_protocol.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9ecb76daa6113365ac9f4ae03b4807e885774cc2"
+    },
+    "src/verification/lean_lsp_tactic.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5c475b18bb772c69c75a7d384809f6f2cbd468c2"
+    },
+    "src/verification/lean_skeleton.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "03529506e776a10038aa498afd7223a20c0b364a"
+    },
+    "src/verification/leanstral_gateway.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3a52db194d5c59b2857b5e5937b76e0db2483717"
+    },
+    "src/verification/leanstral_prompt.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1af60233aeac62e505f54017bec295424141c5b2"
+    },
+    "src/verification/leanstral_repl.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "adced0d478a02ce5e4eaa562664b8551216e52fc"
+    },
+    "src/verification/ledger_side_ref.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4b9ebab747ae2e802ebe8c297a3dfdf8b706974c"
+    },
+    "src/verification/llbc_to_canonical.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6196395bd95aebba016c764853ad7ea544149398"
+    },
+    "src/verification/llm_backend.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6221770845e0cb4f8ea8a16e3f64a9966d623ac8"
+    },
+    "src/verification/loop_invariant_synthesis.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2154eb7a06968a00fc0dc7825f6eaa38b61fe676"
+    },
+    "src/verification/obligation/candidate_eligibility.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3635d6f080dc519168854066e65f367825b9f541"
+    },
+    "src/verification/obligation/canonical_obligation_generator.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "820b74282595fa53a7b58d3630e425258c2d7da2"
+    },
+    "src/verification/obligation/canonical_outcome.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0eec330817e08be0992ce78a0e4f58bc3a84152e"
+    },
+    "src/verification/obligation/canonical_verification.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dd999706befe1a862370303e11d626b2f8aa26b5"
+    },
+    "src/verification/obligation/golden_fixture_ir.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2fd854d601f0305569bb2cc36e702d9c4a707728"
+    },
+    "src/verification/obligation/identity.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "870d95bb4aa777e7c6864c06e8a7a44f656dc198"
+    },
+    "src/verification/obligation/kernel_acceptance_authority.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a7032ae16e776f9e49290b66691318df81f483a5"
+    },
+    "src/verification/obligation/lean_evidence.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d966cc5035efd2350282b6ef656b8cafbbc0fd21"
+    },
+    "src/verification/obligation/lean_kernel_boundary.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8174d1a840039e6e3ba343f45363cb4530153403"
+    },
+    "src/verification/obligation/measured_digests.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "812a57c13d003d5a3a9f964d719ee29d088d1ada"
+    },
+    "src/verification/obligation/metrics.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7b412bd425faf70cf7b4b7dafc4761484fac77a5"
+    },
+    "src/verification/obligation/metrics_io.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "96f759fe113ec4c76125d49aba7ea8839372c231"
+    },
+    "src/verification/obligation/no_obligation_provenance.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ba6a2a0dc6d48ef9eb03a508c5cf2f94df19d44b"
+    },
+    "src/verification/obligation/obligation_ir.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f0a02b231cdaac08a5ea06f74c1e359b88345e91"
+    },
+    "src/verification/obligation/obligation_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1efb60e299030d92591e09bfd05b506ca9f829ae"
+    },
+    "src/verification/obligation/post_satisfaction.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "32f89b35b197f06b0c7fea192ace35e68771ea25"
+    },
+    "src/verification/obligation/semantic_environment.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e8be3eb9e35da23912737f360cebec87fa2f4412"
+    },
+    "src/verification/obligation/semantic_target_extractor.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bb4afe827c7015539698145c44bb960d855896a4"
+    },
+    "src/verification/obligation/toolchain_capture.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d064cf372627e5232ee819ded6c02e905dbdbd9f"
+    },
+    "src/verification/obligation/verification_decision_authority.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "35e0199e7dc0a6affed705ab2724b6c615abdc41"
+    },
+    "src/verification/obligation/verification_result_interpreter.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d65d6de216e358ae8832b0b526c1e44111563e0c"
+    },
+    "src/verification/obligation/verified_fragment.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "14d33cc7ac36d69977c9b4a3f2d3522af2fa38d2"
+    },
+    "src/verification/obligation_discharger.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4abe59a5ce8b449aca00bc1e77289be82e504969"
+    },
+    "src/verification/orchestrator.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5cefb05bcd8c28747db00cfc02c341f2325caec5"
+    },
+    "src/verification/pipeline_core_runner.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "db736330cac4aebb0dc975743dd07d23dbb597e2"
+    },
+    "src/verification/pipeline_core_runner_part1.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "321b65f74e80a76eacd7e90257013466f2e51d55"
+    },
+    "src/verification/pipeline_core_runner_part2.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3c35219de49c48760b9a626ca2c31a28b4606716"
+    },
+    "src/verification/pipeline_core_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "629c53d9f0b1d5a1704675e45563d62822471ffd"
+    },
+    "src/verification/pipeline_effect.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "66dd55c7c8f2bff1b8745f19fc276a77481ecb32"
+    },
+    "src/verification/pipeline_lean_spec_inference.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6072fee3126b8209009dbb152775cf4dd0906a79"
+    },
+    "src/verification/pipeline_lean_spec_inference_part1.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "037c20549613b20711e9e9dc841d6e6d798c010e"
+    },
+    "src/verification/pipeline_lean_spec_inference_part2.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dd308a8df4f4bfa809544f1f7d9c88160658e4e8"
+    },
+    "src/verification/pipeline_lean_spec_inference_part3.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b78a523d5cd6fbdd34b2f62548b845acb0390189"
+    },
+    "src/verification/pipeline_negative_scan.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "48ce3c72f8a9f5acb49ab0e90d5152637d14b718"
+    },
+    "src/verification/pipeline_negative_scan_part1.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7d68fc70f7a3bb567401a6c352735c51f18408c6"
+    },
+    "src/verification/pipeline_negative_scan_part2.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "411eb4a94a8569ad13979dcc9f4ad19f90d8d0e6"
+    },
+    "src/verification/pipeline_negative_scan_part3.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9ea4a51571967955768f363afafe65df8bb1cd9e"
+    },
+    "src/verification/pipeline_phase.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a5f9932292fb93160c3c459f5442f8ed8c375146"
+    },
+    "src/verification/pipeline_stage_detective.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2c119273b40fa170446852050e57d14a11cc74d8"
+    },
+    "src/verification/pipeline_stage_judge.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9200f2a6e761b030d558f7dedb6b26eeb9754cd9"
+    },
+    "src/verification/pipeline_stage_k_induction.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "14aebb076131617a7a12826886fb6f13600cc48f"
+    },
+    "src/verification/pipeline_stage_legislator.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3974b4284e7108950581004da5f50da7c1c6a711"
+    },
+    "src/verification/pipeline_stage_postprocess.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1c7bd15ef6a32f8893088fe815bf86c6d1331a3d"
+    },
+    "src/verification/pipeline_stage_scribe.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2f03dcc6e776ef99c625d8f0ec3c4566253cccec"
+    },
+    "src/verification/pipeline_stage_swat.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d8f5bcdc7533f4c22fe8c0b1f14a6b4c83d3f9c0"
+    },
+    "src/verification/pipeline_state_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4610884374cbe2475bcec8803afac9c52f0561cf"
+    },
+    "src/verification/pipeline_transition.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "48744a1d9628e35b2a36df3220f18a927b043ccc"
+    },
+    "src/verification/pipeline_transition_engine.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1368ea7815fb90065459b64bf6bc24d3e28ad80a"
+    },
+    "src/verification/proof/arithmetic_type_directed_pipeline.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bee663878c0f939ea400a34f2868da8291f306f7"
+    },
+    "src/verification/proof_linkage.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "688b1e2a8f0ccaff35c62993baa6af7b6ce39119"
+    },
+    "src/verification/proof_state_builder.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "741045faa8b780337eff550ce00ce4ac3c1fa298"
+    },
+    "src/verification/proof_state_convergence.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9f5d9e4cc489ec2e251874e5a91e57d265872c3c"
+    },
+    "src/verification/proof_state_projection.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "44812ab6ba7c3fb63e34c6d3e47cc59ccbc8c870"
+    },
+    "src/verification/proof_summarizer.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0b7436002747337c8298606a6df6c106ca91c959"
+    },
+    "src/verification/proof_synthesis_engine.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3bed601ed34289233342d9098777f4c7698f20f5"
+    },
+    "src/verification/proof_synthesis_engine_part1.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8c5f8a5f502f4bd42825fa1e1d2a85fa6fee4d1f"
+    },
+    "src/verification/proof_synthesis_engine_part2.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6b4d50158f14040903e84d58e20d0abcf9f93101"
+    },
+    "src/verification/proof_universe_commit.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7a542b025b334a758139fe9ed8e8372195541220"
+    },
+    "src/verification/report_engine.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f6bb2485a5cbcc622e6ef358bef4cc7cfd80756a"
+    },
+    "src/verification/reporter.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "57baac75981003df58cd60793d5adb71c3320b9d"
+    },
+    "src/verification/run_identity.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "130ec5227efa9818fc520044e682ac945121f4ad"
+    },
+    "src/verification/rust_ast_wire.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0cc3e1e91f56b666614686e080afa4247f88727a"
+    },
+    "src/verification/rust_extraction_agreement.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ffc9ea0e263df07b0bd10edf65aa2e8b0113d8a0"
+    },
+    "src/verification/rust_input_contract.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "760ca832c3c53be86dbf2edea19c3bce03717c69"
+    },
+    "src/verification/rust_obligation_render.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1ee6d4d1c04ee29b0929f818b4c1491133f9a2da"
+    },
+    "src/verification/rust_replay_adapter.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7283355cbf3554aa124e1e539289c45dc8fbdf1d"
+    },
+    "src/verification/rust_rust_pipeline.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6b32a3fdd23afa570c4c77d4f176cd02fee082ad"
+    },
+    "src/verification/rust_symbolic_test_synth.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2bba9499d52d50e784b542783053ce1a42dc4bb4"
+    },
+    "src/verification/selection/closure_evaluation.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "48fba7a877fb76af05abb4a3dd04b7c722db179b"
+    },
+    "src/verification/selection/request_completeness.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1ba576f43df15b2059756e73f09f6ec60e3a4a0a"
+    },
+    "src/verification/selection/request_derivation.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d03007a1d87f5a986fea516e6769c168edff2fff"
+    },
+    "src/verification/selection/request_oracle.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "81cf075ed868136fea11c8749e8c4812f6b96544"
+    },
+    "src/verification/selection/selection_digests.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b653f03546e036459eb47616957e56c80af469a5"
+    },
+    "src/verification/selection/selection_engine.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a5167bf8ff74c239541e16989c896e3eea3c453f"
+    },
+    "src/verification/semantic_graph.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "739c0d065b0d731c3b346ef792533264c8d9375e"
+    },
+    "src/verification/semantic_set_derivation.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "907df87f41247097bafc34c88639d19384ab5dd0"
+    },
+    "src/verification/solver/fixedpoint_engine.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c23f8dca86146522fbe53515d9d400094f0de4db"
+    },
+    "src/verification/solver/fixedpoint_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a9a4962b833679c3ad53e87b9b2b6a5950b230d1"
+    },
+    "src/verification/solver/pdr_engine.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e0e2eb25a2ef0cbceb806002bbfffa56060d24a8"
+    },
+    "src/verification/solver/provers.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5cbcfb6471f86da5babccbcbc9b1201df190b30b"
+    },
+    "src/verification/solver/triviality_filter.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5c77e9d04918d592b6d0c69d8ed8bff29d4e642f"
+    },
+    "src/verification/solver/unsat_core_slicer.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3aa185115d6028708768a8e207429b571e0c740f"
+    },
+    "src/verification/solver/z3_pool.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a0618c6634e5692d36e5b0b1001cac166f4434a2"
+    },
+    "src/verification/solver_adapter.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0c4a489e4e44243b0a53c3042fb4aac9d92ceb80"
+    },
+    "src/verification/spacer_chc_router.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3401a6abab801c74cd347700da7fcaa78a2128ac"
+    },
+    "src/verification/spacer_integration_gate.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5ea3c88c9ef60378291c3155bc2c1af6a44a63fa"
+    },
+    "src/verification/state_manager.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8e1688f5f9a48dc317ef9d4b663c1f80b55a5fe4"
+    },
+    "src/verification/state_persistence.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d77419e5c8838f2348d41be01c5396f2e423da88"
+    },
+    "src/verification/static_rules.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "47b100841cb853ffa23466a78208b405fe608c19"
+    },
+    "src/verification/subject_continuity_writer.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8a60cfa9e557712503d9f4801d1c4ab6f6f90313"
+    },
+    "src/verification/subject_store.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0a3f15ca499ca59d0e7d7c7fde1ea0e9ffd64bf7"
+    },
+    "src/verification/symbolic_test_synth.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "55a71e011bf7c42fbe710ce7dcbc6d92db584aa1"
+    },
+    "src/verification/tactic_backtrack.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "da481085c7dca0a280cbc2a54d740a8f619b1216"
+    },
+    "src/verification/tested_tree_closure.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "48f2d2aef9cfe5e5bb995f826116bea16d9810c9"
+    },
+    "src/verification/thought_dashboard.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4c236144ad91ce7a3380253fa8a113c0b5b82fb8"
+    },
+    "src/verification/translation_validator.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "34c4ec2edeec950d510075aa5f170658bd236352"
+    },
+    "src/verification/unified_trajectory.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5dfd98cce08f9a11de2d2c2872c2630df38b286c"
+    },
+    "src/verification/unified_trajectory_types.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d678b1e34e9de3c8006c6f9b54046faffdee4731"
+    },
+    "src/verification/universal_pipeline.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "285f75db7ad72a8c3bdde27bd7a87480773c2ba6"
+    },
+    "src/verification/vault_manifest.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ca7639f907452cec3bbe1b04f26aa7448c7e720c"
+    },
+    "src/verification/verification_subject.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5f0c0a0d84cd0d8d5f80d98df5cf2beab013b6e9"
+    },
+    "src/verification/verified_set_hydration.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1ce08124b7f59e0ccc73933ea05348118618d6ce"
+    },
+    "tests/gateway/all_gateway_runner.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "09c7a8192e73f460361b7523e1c8e1d8d0d18996"
+    },
+    "tools/ci/derive_checker_closure.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "428dacd93718424f5898f6b448c3f98bf8f0f1c0"
+    },
+    "tools/ci/impact_closure_selector.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "441ec79780e70facc812c5f528dbbd89d8c0e346"
+    },
+    "tools/ci/proof_reconcile_gate.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a56746435536e102074a86031e9edd9af624026d"
+    },
+    "tools/hermetic_build.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a766d611ce361eed296288198ea64e746fbc1b00"
+    },
+    "tools/safe_move.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "49ce6cac5c82b1ceb4e5a7c3e5bfb041f2246095"
+    },
+    "tools/setup_hooks.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8e1df4ba80c8e5a15fae6212c7a91877e98e7ad3"
+    },
+    "tools/sha256_native.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9ee3bf6d8574d859682bd4efae86603a01286e62"
+    }
+  }
+}

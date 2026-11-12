@@ -1,0 +1,53 @@
+{
+ "experiment": "r8d_shadow_determinism_v2",
+ "status": "IDENTICAL",
+ "method": "two ax prove runs (AXIOM_STATE_DIR=/tmp/r8d-a, /tmp/r8d-b) at HEAD $(git rev-parse HEAD) — semantic input identical, state dirs distinct",
+ "runs": {
+  "runA": {
+   "stateDir": "/tmp/r8d-a",
+   "exitCode": 0
+  },
+  "runB": {
+   "stateDir": "/tmp/r8d-b",
+   "exitCode": 0
+  }
+ },
+ "shadowDigests": {
+  "runA": {
+   "changeSetDigest": "",
+   "graphDigest": "",
+   "universeDigest": "",
+   "policyDigest": "",
+   "runInputSnapshotDigest": "",
+   "runResultDigest": "",
+   "closureComplete": false
+  },
+  "runB": {
+   "changeSetDigest": "",
+   "graphDigest": "",
+   "universeDigest": "",
+   "policyDigest": "",
+   "runInputSnapshotDigest": "",
+   "runResultDigest": "",
+   "closureComplete": false
+  }
+ },
+ "identicalPerStep": {
+  "changeSetDigest": true,
+  "graphDigest": true,
+  "universeDigest": true,
+  "policyDigest": true,
+  "runInputSnapshotDigest": true,
+  "runResultDigest": true,
+  "closureComplete": true
+ },
+ "provenance": {
+  "commands": [
+   "AXIOM_STATE_DIR=/tmp/r8d-a bin/ax prove --smt-timeout 4000",
+   "AXIOM_STATE_DIR=/tmp/r8d-b bin/ax prove --smt-timeout 4000"
+  ],
+  "executedAt": "2026-09-06",
+  "headCommit": "$(git rev-parse HEAD)",
+  "note": "extends r8d_shadow_determinism.json with RunInputSnapshotDigest/RunResultDigest (I-A/I-B) and closureComplete (I-C)"
+ }
+}

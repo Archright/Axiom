@@ -1,0 +1,22 @@
+== exits2 ==
+EXIT_A2=0
+EXIT_B2=1
+EXIT_C2=0
+EXIT_D2=0
+== verdicts2 (full reason for B) ==
+A axiom_u64_probe::u64_echo | verified |
+B axiom_u64_probe::u64_seven_mutant | failed | spec declined by kernel; counterexample CONFIRMED: input._x=0, propertyViolated=(= result #x0000000000000007), replay.verdict=rvAgree, replay.exitCode=0, replay.subjectGitRef=d1e59a9f5b33dc4ea78537e5f6e01249fb8a5622, replay.treeMerkle=b8107e845c8bcef5b59ea250ead13676ddaedd1f, replay.moduleSha256=ee247687234d90354f4a4fb0197cda58e0a45b55f4d9d8562fa8d6b8f34d2b6, replay.moduleSha256AfterRun=ee247687234d90354f4a4fb0197cda58e0a45b55f4d9d8562fa8d6b8f34d2b6, replay.porcelainClean=true, replay.rustVersion=rustc 1.95.0 (59807616e 2026-04-14), replay.rustcHash=bff349e72704ff70bc08a234a3847338e797065bbedde5e556808bc87b7bf7c6, replay.componentsHash=a13769c18a7a74ea492ab633b644d6c238ae81e536d30d3f168eddb57e86000e, replay.rustChannel=stable-x86_64-unknown-linux-gnu, replay.rustProfile=minimal, replay.rustComponents=cargo-x86_64-unknown-linux-gnu,rust-std-x86_64-unknown-linux-gnu,rustc-x86_64-unknown-linux-gnu, replay.rustDeclaredPin=, replay.hostPlatform=linux-amd64
+C axiom_u64_probe::u64_add | unknown | out-of-subset grammar (fail-closed): out-of-scope subject grammar — fail-closed UNKNOWN (not verified, not internal error): full-width '+' outside the closed v1 set: the no-overflow obligation 'lhs + rhs < 2^64' is unrepresentable in the IR literal domain (int64) — u64 is boundary-type-only (fail-closed; wraparound/checked semantics are the declared follow-up per docs/spec/rust_certified_subset.md §1)
+D axiom_u64_probe::u64_seven | unknown | no derivable guard obligation (attempt ran; zero mechanical goals)
+== certs2 ==
+5e7fb80989ae05e55da39c0d4efe0112e72632cc45ae520d2cf192d3f83c81a9.json
+data
+== porcelain after run2 ==
+PORCELAIN_EMPTY_AFTER=YES
+== subject immutability run2 ==
+SUBJECT_IMMUTABLE_RUN2=yes
+== C wall byte-compare run2 vs premerge ==
+RUN2==PREMERGE: True
+== A cert identity run2 vs run1 ==
+6b314ed77677574ac3c444c160abe436a0e0e572dfba33579133e715c581844b  /tmp/cold_u64_state_A/build/certificates/5e7fb809*.json
+== done run2 ==

@@ -1,0 +1,73 @@
+{
+  "vkdFixed4": "0.0000",
+  "timestamp": "c56dcec66085b68467472ec6218ab05f0e931f1bf0ba34842d1e92c3deb0adb7",
+  "totalFunctions": 40,
+  "verifiedFunctions": 0,
+  "vkdScore": 0.0,
+  "coverageRatio": 0.0,
+  "rigorScore": 0.0,
+  "soundnessMode": "safe",
+  "tierDistribution": {
+    "none": 1,
+    "z3-verified": 4,
+    "lean-verified": 2
+  },
+  "certificatesByTier": {
+    "none": [
+      "unknown"
+    ],
+    "z3-verified": [
+      "calcDynamicTimeoutCore",
+      "safeSpeedupRatioCore",
+      "clampTimeoutMs",
+      "proximityScore"
+    ],
+    "lean-verified": [
+      "normalizeMaxWorkers",
+      "firstBoolCore"
+    ]
+  },
+  "topSourceModules": [
+    {
+      "module": "src/core/orchestrator/orchestrator_topology_worker.nim",
+      "count": 2
+    },
+    {
+      "module": "src/core/orchestrator/orchestrator_api.nim",
+      "count": 1
+    },
+    {
+      "module": "src/core/topology/topology_dependency.nim",
+      "count": 1
+    },
+    {
+      "module": "unknown",
+      "count": 1
+    },
+    {
+      "module": "src/core/orchestrator/orchestrator_vault.nim",
+      "count": 1
+    },
+    {
+      "module": "src/verification/analyzer/analyzer_shared_json.nim",
+      "count": 1
+    }
+  ],
+  "kernelTotal": 40,
+  "kernelExemptTotal": 17,
+  "vksTotal": 23,
+  "kernelVerified": 0,
+  "metrics": {
+    "vkd": {
+      "verified": 0,
+      "total": 23,
+      "ratio": 0.0
+    },
+    "rawKernelCoverage": {
+      "verified": 0,
+      "total": 40,
+      "ratio": 0.0
+    },
+    "ogr": 1.0
+  }
+}

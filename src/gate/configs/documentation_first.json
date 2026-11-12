@@ -1,0 +1,109 @@
+{
+  "gateId": "documentation-first",
+  "version": "1.0.0",
+  "description": "Enforces the Documentation-First protocol (AGENTS.md §0.5). Scans staged changes for system-level trigger keywords and verifies that corresponding official documentation evidence exists.",
+  "trigger_components": [
+    {
+      "keyword": "kernel",
+      "severity": "error",
+      "description": "Linux kernel parameter changes",
+      "doc_url": "https://docs.kernel.org/admin-guide/kernel-parameters.html"
+    },
+    {
+      "keyword": "amdgpu",
+      "severity": "error",
+      "description": "AMD GPU driver configuration",
+      "doc_url": "https://docs.kernel.org/gpu/amdgpu/"
+    },
+    {
+      "keyword": "xorg",
+      "severity": "error",
+      "description": "Xorg display server configuration",
+      "doc_url": "https://www.x.org/releases/current/doc/man/man5/xorg.conf.5.xhtml"
+    },
+    {
+      "keyword": "systemd",
+      "severity": "warn",
+      "description": "systemd service/manager configuration",
+      "doc_url": "https://www.freedesktop.org/software/systemd/man/"
+    },
+    {
+      "keyword": "grub",
+      "severity": "error",
+      "description": "GRUB bootloader configuration",
+      "doc_url": "https://www.gnu.org/software/grub/manual/"
+    },
+    {
+      "keyword": "initramfs",
+      "severity": "error",
+      "description": "initramfs/initrd configuration",
+      "doc_url": "https://docs.kernel.org/admin-guide/initramfs.html"
+    },
+    {
+      "keyword": "bootloader",
+      "severity": "error",
+      "description": "Bootloader configuration (generic)",
+      "doc_url": "https://www.gnu.org/software/grub/manual/"
+    },
+    {
+      "keyword": "modeset",
+      "severity": "warn",
+      "description": "Kernel mode setting configuration",
+      "doc_url": "https://docs.kernel.org/gpu/drm-internals.html"
+    },
+    {
+      "keyword": "simpledrm",
+      "severity": "error",
+      "description": "SimpleDRM framebuffer driver",
+      "doc_url": "https://docs.kernel.org/gpu/index.html"
+    },
+    {
+      "keyword": "fbdev",
+      "severity": "warn",
+      "description": "Framebuffer device configuration",
+      "doc_url": "https://docs.kernel.org/fb/framebuffer.html"
+    },
+    {
+      "keyword": "wayland",
+      "severity": "warn",
+      "description": "Wayland display server configuration",
+      "doc_url": "https://wayland.freedesktop.org/"
+    },
+    {
+      "keyword": "lspci",
+      "severity": "warn",
+      "description": "PCI device inspection (GPU topology)",
+      "doc_url": "https://man7.org/linux/man-pages/man8/lspci.8.html"
+    }
+  ],
+  "evidence_patterns": [
+    {
+      "type": "commit_docs_url",
+      "pattern": "https?://[^\\s]+\\.(kernel\\.org|x\\.org|freedesktop\\.org|gnu\\.org)",
+      "description": "Official documentation URL in commit message"
+    },
+    {
+      "type": "evidence_file",
+      "path": "docs/evidence/",
+      "description": "Evidence file under docs/evidence/ directory"
+    }
+  ],
+  "scan_paths": [
+    "src/",
+    "tools/",
+    "data/"
+  ],
+  "exclude_patterns": [
+    "docs/",
+    "tests/",
+    ".nimcache/",
+    "nimcache/",
+    "build/",
+    "bin/",
+    "*.md",
+    "*.json",
+    "*.yaml",
+    "*.yml",
+    "*.lock"
+  ]
+}

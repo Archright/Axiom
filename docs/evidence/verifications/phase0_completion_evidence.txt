@@ -1,0 +1,44 @@
+Phase 0 — Firefighting 완료 증거
+================================
+
+조사일: 2026-05-30
+근거: docs/reports/technical_debt_context7_root_cause_analysis_2026_05_30.md
+
+Step 0.1: nimble.lock 생성 및 의존성 고정
+- 명령어: nimble lock
+- 결과: Success - The lock file is generated.
+- 검증: nimble.lock 파일 존재 확인 (1623 bytes)
+- DEBT#004 해소
+
+Step 0.2: gate/domain_types.nim → gate/gate_types.nim rename
+- 명령어: mv src/gate/domain_types.nim src/gate/gate_types.nim
+- 결과: 이미 완료됨 (gate_types.nim 존재, domain_types.nim 부재)
+- DEBT#005 해소
+
+Step 0.3: L3 cgroups v2 wrapWithCgroupsIfAvailable() 구현
+- 파일: src/gate/runners/gate_hook.nim
+- 함수 추가: wrapWithCgroupsIfAvailable* (21줄)
+- 구현: systemd-run --user --scope --slice=axiom-gate --property=CPUQuota=50% --property=IOWeight=10 --property=MemoryMax=8G
+- 검증: cgroups v2 테스트 성공 (Running as unit: run-rb8c73f1fe39b4f5b821a744ed8b7a5a5.scope)
+- DEBT#008 해소
+
+Step 0.4: GUARDIAN.md/core_rules.md SSOT 확정
+- 검증: AGENTS.md에서 GUARDIAN.md 참조 없음 (grep 결과 0건)
+- docs/agents/core_rules.md 존재 확인 (27317 bytes)
+- DEBT#014 해소
+
+Context7 공식 문서 근거:
+- Nim testament.md: static: assert로 컴파일 타임에 의존성 drift 차단 가능
+- Nim manual: distinct type은 base type과 불호환
+- Nim Memory: ORC는 reference counting + cycle collection. 외부 프로세스의 메모리는 Nim ORC와 별개로 OS가 관리.
+- Nim testament.md: static: assert와 staticExec("git ...")로 현재 브랜치의 SSOT 버전을 컴파일 타임에 검증 가능
+
+검증 커맨드:
+```bash
+nimble lock && nimble build  # 의존성 고정 + 빌드 성공
+nim check src/gate/gate_types.nim  # rename 성공
+systemd-run --user --scope --slice=axiom-gate --property=CPUQuota=50% -- echo test  # cgroups 작동
+grep -r "GUARDIAN.md" AGENTS.md  # 0건
+```
+
+Phase 0 완료. Phase 1 진행 준비 완료.

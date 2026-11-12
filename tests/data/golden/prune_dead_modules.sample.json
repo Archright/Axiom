@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/prune_dead_modules.sh",
+  "description": "Ratchet Effect: Dead Module Pruner — triple validation via rg reference count + forwarding stub detection + export symbol presence",
+  "inputSample": {
+    "args": []
+  },
+  "outputSample": {
+    "stdout": "prune_dead_modules: 0 dead modules found",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

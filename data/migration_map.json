@@ -1,0 +1,231 @@
+{
+  "version": "1.0.0",
+  "description": "Module relocation map for forwarding stub generation and import migration.",
+  "generated": "2026-06-12",
+  "mappings": [
+    {
+      "old": "src/core/file_utils.nim",
+      "new": "src/core/io/file_utils.nim",
+      "import_old": "core/file_utils",
+      "import_new": "core/io/file_utils"
+    },
+    {
+      "old": "src/core/text_utils.nim",
+      "new": "src/core/text/text_utils.nim",
+      "import_old": "core/text_utils",
+      "import_new": "core/text/text_utils"
+    },
+    {
+      "old": "src/core/io_utils.nim",
+      "new": "src/core/io/io_utils.nim",
+      "import_old": "core/io_utils",
+      "import_new": "core/io/io_utils"
+    },
+    {
+      "old": "src/core/safe_parsers.nim",
+      "new": "src/core/parsers/safe_parsers.nim",
+      "import_old": "core/safe_parsers",
+      "import_new": "core/parsers/safe_parsers"
+    },
+    {
+      "old": "src/core/axiom_pragmas.nim",
+      "new": "src/core/trusted/axiom_pragmas.nim",
+      "import_old": "core/axiom_pragmas",
+      "import_new": "core/trusted/axiom_pragmas"
+    },
+    {
+      "old": "src/core/provider_interface.nim",
+      "new": "src/core/trusted/provider_interface.nim",
+      "import_old": "core/provider_interface",
+      "import_new": "core/trusted/provider_interface"
+    },
+    {
+      "old": "src/core/type_mapping.nim",
+      "new": "src/core/types/type_mapping.nim",
+      "import_old": "core/type_mapping",
+      "import_new": "core/types/type_mapping"
+    },
+    {
+      "old": "src/core/diagnostics_engine.nim",
+      "new": "src/core/diagnostics/diagnostics_engine.nim",
+      "import_old": "core/diagnostics_engine",
+      "import_new": "core/diagnostics/diagnostics_engine"
+    },
+    {
+      "old": "src/core/refactoring_engine.nim",
+      "new": "src/core/diagnostics/refactoring_engine.nim",
+      "import_old": "core/refactoring_engine",
+      "import_new": "core/diagnostics/refactoring_engine"
+    },
+    {
+      "old": "src/core/pattern_guard.nim",
+      "new": "src/core/diagnostics/pattern_guard.nim",
+      "import_old": "core/pattern_guard",
+      "import_new": "core/diagnostics/pattern_guard"
+    },
+    {
+      "old": "src/core/shell_bridge.nim",
+      "new": "src/core/solver/shell_bridge.nim",
+      "import_old": "core/shell_bridge",
+      "import_new": "core/solver/shell_bridge"
+    },
+    {
+      "old": "src/core/spec_generator.nim",
+      "new": "src/core/spec/spec_generator.nim",
+      "import_old": "core/spec_generator",
+      "import_new": "core/spec/spec_generator"
+    },
+    {
+      "old": "src/core/tautology_prover.nim",
+      "new": "src/core/judge/tautology_prover.nim",
+      "import_old": "core/tautology_prover",
+      "import_new": "core/judge/tautology_prover"
+    },
+    {
+      "old": "src/core/gate_memo.nim",
+      "new": "src/core/gate/gate_memo.nim",
+      "import_old": "core/gate_memo",
+      "import_new": "core/gate/gate_memo"
+    },
+    {
+      "old": "src/core/cegar_engine.nim",
+      "new": "src/verification/cegar_engine.nim",
+      "import_old": "core/cegar_engine",
+      "import_new": "verification/cegar_engine"
+    },
+    {
+      "old": "src/core/semantic_graph.nim",
+      "new": "src/verification/semantic_graph.nim",
+      "import_old": "core/semantic_graph",
+      "import_new": "verification/semantic_graph"
+    },
+    {
+      "old": "src/core/integrity_ledger.nim",
+      "new": "src/verification/integrity_ledger.nim",
+      "import_old": "core/integrity_ledger",
+      "import_new": "verification/integrity_ledger"
+    },
+    {
+      "old": "src/core/global_symbol_graph.nim",
+      "new": "src/verification/global_symbol_graph.nim",
+      "import_old": "core/global_symbol_graph",
+      "import_new": "verification/global_symbol_graph"
+    },
+    {
+      "old": "src/core/test_audit/sad_gate.nim",
+      "new": "src/core/audit/sad_gate.nim",
+      "import_old": "core/test_audit/sad_gate",
+      "import_new": "core/audit/sad_gate"
+    },
+    {
+      "old": "src/core/test_audit/governance_engine.nim",
+      "new": "src/core/audit/governance_engine.nim",
+      "import_old": "core/test_audit/governance_engine",
+      "import_new": "core/audit/governance_engine"
+    },
+    {
+      "old": "src/core/solver/expr/construct_base.nim",
+      "new": "src/core/solver/construct_base.nim",
+      "import_old": "core/solver/expr/construct_base",
+      "import_new": "core/solver/construct_base"
+    },
+    {
+      "old": "src/core/solver/expr/construct_logical.nim",
+      "new": "src/core/solver/construct_logical.nim",
+      "import_old": "core/solver/expr/construct_logical",
+      "import_new": "core/solver/construct_logical"
+    },
+    {
+      "old": "src/core/solver/expr/construct_arithmetic.nim",
+      "new": "src/core/solver/construct_arithmetic.nim",
+      "import_old": "core/solver/expr/construct_arithmetic",
+      "import_new": "core/solver/construct_arithmetic"
+    },
+    {
+      "old": "src/verification/solver/induction.nim",
+      "new": "src/core/solver/induction.nim",
+      "import_old": "verification/solver/induction",
+      "import_new": "core/solver/induction"
+    },
+    {
+      "old": "src/gate/domain_types.nim",
+      "new": "src/core/types/domain_types.nim",
+      "import_old": "gate/domain_types",
+      "import_new": "core/domain_types"
+    },
+    {
+      "old": "src/core/persona_interface.nim",
+      "new": "src/core/domains/persona_interface.nim",
+      "import_old": "core/persona_interface",
+      "import_new": "core/domains/persona_interface"
+    },
+    {
+      "old": "src/core/types/ledger_types.nim",
+      "new": "src/core/vault/ledger_logic.nim",
+      "import_old": "core/types/ledger_types",
+      "import_new": "core/vault/ledger_logic",
+      "partial_extraction": true,
+      "extracted_symbols": [
+        "buildIntegrityLedger",
+        "detectFingerprintMismatches",
+        "ledgerEntryToJson",
+        "ledgerToJson"
+      ]
+    },
+    {
+      "old": "src/core/types/results.nim",
+      "new": "src/core/results.nim",
+      "import_old": "core/types/results",
+      "import_new": "core/results"
+    },
+    {
+      "old": "src/core/types/axiom_ir.nim",
+      "new": "src/core/axiom_ir.nim",
+      "import_old": "core/types/axiom_ir",
+      "import_new": "core/axiom_ir"
+    },
+    {
+      "old": "src/core/boundary/axiom_pragmas_boundary.nim",
+      "new": "src/core/axiom_pragmas.nim",
+      "import_old": "core/boundary/axiom_pragmas_boundary",
+      "import_new": "core/axiom_pragmas"
+    },
+    {
+      "old": "src/core/boundary/results_boundary.nim",
+      "new": "src/core/results.nim",
+      "import_old": "core/boundary/results_boundary",
+      "import_new": "core/results"
+    },
+    {
+      "old": "src/core/schema/task_schema.nim",
+      "new": "src/core/task_schema.nim",
+      "import_old": "core/schema/task_schema",
+      "import_new": "core/task_schema"
+    }
+  ],
+  "deletions": [
+    {
+      "file": "tests/unit/sorter_test.nim",
+      "reason": "Dead test"
+    },
+    {
+      "file": "tests/unit/architecture_gate_test.nim",
+      "reason": "Dead test"
+    },
+    {
+      "file": "tests/unit/example.nim",
+      "reason": "Not a test"
+    }
+  ],
+  "exemptions": [
+    {
+      "file": "tests/unit/nimtry_fixtures/soc_violation.nim",
+      "reason": "Intentional test fixture"
+    },
+    {
+      "file": "src/core/gate/layer_guard.nim",
+      "line": 100,
+      "reason": "Poison stub"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+// config/policy/baseline_revisions.json
+// Baseline revision chain SSOT — genesis + revisions.
+// P0-1: Baseline is NOT a Decision input.
+// P0-2/P0-3: shared revision algebra with policy chain.
+// Genesis records the committed budget snapshot values from data/debt_budgets.json.
+
+{
+  "schema": "baseline_revisions",
+  "version": "1.0.0",
+  "revisions": [
+    {
+      "revisionId": "baseline-genesis",
+      "parentRevisionId": null,
+      "rationale": "Genesis baseline: committed budget snapshot values from data/debt_budgets.json (2026-08-16)",
+      "evidenceRef": "config/policy/baseline_revisions.json",
+      "payload": {
+        "metricId": "BUDGET-SNAPSHOT",
+        "contractRevision": "contract-rev-000",
+        "subjectScope": "all-metrics",
+        "previousValue": "",
+        "newValue": "",
+        "observedEvidenceRef": "",
+        "records": {
+          "import_lint_violations": {"baseline": 36, "target": 0, "current": 21},
+          "layer_violations": {"baseline": 8, "target": 0, "current": 2},
+          "effect_violations": {"baseline": 80, "target": 0, "current": 2090},
+          "nimtry_violations": {"baseline": 704, "target": 0, "current": 0},
+          "debt_registry_open": {"baseline": 107, "target": 0, "current": 0},
+          "debt_registry_closed": {"baseline": 0, "target": 92, "current": 107}
+        }
+      }
+    },
+    {
+      "revisionId": "baseline-rev-001",
+      "parentRevisionId": "baseline-genesis",
+      "rationale": "Record contract revision reference for baseline encoder fields",
+      "evidenceRef": "config/policy/baseline_revisions.json",
+      "patches": [
+        {
+          "op": "setContractRevision",
+          "arguments": {"contractRevision": "contract-rev-001"}
+        }
+      ]
+    }
+  ]
+}

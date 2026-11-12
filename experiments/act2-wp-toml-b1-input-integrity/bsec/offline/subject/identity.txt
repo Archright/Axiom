@@ -1,0 +1,6 @@
+repo_url=https://github.com/status-im/nim-toml-serialization
+local_checkout=<workspace>/nim-toml-serialization (READ-ONLY)
+commit=4aa8e2223649fc0837c490a4acfca7b8b1e756f9
+commit_date=2026-09-11T21:38:39+00:00
+subject_head_at_bundle_time=4aa8e2223649fc0837c490a4acfca7b8b1e756f9
+declared_version_string=0.2.18 (NOTE: not an identity; identical string spans b5b387e6..4aa8e22)

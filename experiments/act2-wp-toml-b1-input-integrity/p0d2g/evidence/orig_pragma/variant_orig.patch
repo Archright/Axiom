@@ -1,0 +1,22 @@
+diff --git a/toml_serialization/lexer.nim b/toml_serialization/lexer.nim
+index 4acd2bd..e36525b 100644
+--- a/toml_serialization/lexer.nim
++++ b/toml_serialization/lexer.nim
+@@ -465,7 +465,7 @@ func stringDelimiter(kind: StringType): char {.inline.} =
+             of StringType.Basic: '\"'
+             of StringType.Literal: '\'')
+ 
+-proc scanMultiLineString[T](lex: var TomlLexer, res: var T, kind: static[StringType]) {.raises: [IOError, TomlError].} =
++proc scanMultiLineString[T](lex: var TomlLexer, res: var T, kind: static[StringType]) {.axiom: [pre: (c >= 1 and c <= 255 and c != 10 and c != 13 and c != 34 and c != 92), post: (result == ((c <= 8) or (c >= 10 and c <= 31) or (c == 127)))], raises: [IOError, TomlError].} =
+   when T isnot (string or TomlVoid):
+     {.fatal: "`scanMultiLineString` only accepts `string` or `TomlVoid`".}
+ 
+@@ -562,7 +562,7 @@ proc scanMultiLineString[T](lex: var TomlLexer, res: var T, kind: static[StringT
+   if not utf8.valid():
+     raiseTomlErr(lex, errInvalidUTF8)
+ 
+-proc scanSingleLineString[T](lex: var TomlLexer, res: var T, kind: static[StringType]) {.raises: [IOError, TomlError].} =
++proc scanSingleLineString[T](lex: var TomlLexer, res: var T, kind: static[StringType]) {.axiom: [pre: (c >= 1 and c <= 255 and c != 10 and c != 13 and c != 34 and c != 92), post: (result == ((c <= 8) or (c >= 10 and c <= 31) or (c == 127)))], raises: [IOError, TomlError].} =
+   when T isnot (string or TomlVoid):
+     {.fatal: "`scanSingleLineString` only accepts `string` or `TomlVoid`".}
+ 

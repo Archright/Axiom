@@ -1,0 +1,356 @@
+{
+  "schemaVersion": "gpa.phase0.baseline.v1",
+  "observedAtUtc": "2026-10-21T18:42:35Z",
+  "observedAtKst": "2026-10-22T03:42:35+09:00",
+  "observationMethod": "gh api (read-only) + git (read-only, origin/main tree). No repository file was written; no branch/worktree created.",
+  "probeEnv": {
+    "localRepoPath": ".",
+    "checkedOutBranch": "test/v5-acceptance-c",
+    "localHeadSha": "50a46da2ba70363ce1f0538ad0913b2bbdfa6c35",
+    "workingTreeDirty": false,
+    "workingTreeDirtyFileCount": 0,
+    "originMainSha": "e75f005c73b1aa54a179345f12b4f5e95013a1b1"
+  },
+
+  "repository": {
+    "full_name": "Archright/Axiom",
+    "repositoryId": 1182104685,
+    "default_branch": "main",
+    "private": true,
+    "archived": false,
+    "pushed_at": "2026-10-21T17:14:54Z",
+    "updated_at": "2026-10-21T17:14:56Z",
+    "openPullRequestCount": 0,
+    "openPullRequestCountMethod": "GET /repos/Archright/Axiom/pulls?state=open&per_page=100 → length = 0"
+  },
+
+  "orgRepo": {
+    "full_name": "Archright/.github",
+    "repositoryId": 1182157951,
+    "default_branch": "main",
+    "private": false,
+    "pushed_at": "2026-10-21T16:21:43Z",
+    "mainSha": "7fffee318b9fada32d13dd9c88d74869e343f9cc",
+    "mainShaCommitMeta": {
+      "message": "Merge pull request #247 from Archright/ci/pin-admission-check-v51",
+      "committerDate": "2026-10-21T16:21:43Z"
+    },
+    "workflowsAtMainSha": [
+      { "path": ".github/workflows/admission-gate-v2.yml", "blobSha": "b4444b0073125ed2aa98a52e5496e256a60c9b86", "size": 49898 },
+      { "path": ".github/workflows/landing-integrity.yml", "blobSha": "c998cfac1e492be11b013064e10215334798bd2e", "size": 21517 },
+      { "path": ".github/workflows/parse-probe.yml", "blobSha": "6b07f7b48958c3378fdc8f50bad0d59d0480e3bc", "size": 1430 },
+      { "path": ".github/workflows/pin-promotion-gate.yml", "blobSha": "21f1d0566deb761237def588db62fe83ba11e14c", "size": 15173 }
+    ]
+  },
+
+  "repoRuleset_20303214": {
+    "id": 20303214,
+    "name": "main",
+    "target": "branch",
+    "source_type": "Repository",
+    "source": "Archright/Axiom",
+    "enforcement": "active",
+    "conditions": { "ref_name": { "include": ["~DEFAULT_BRANCH"], "exclude": [] } },
+    "bypass_actors": [],
+    "current_user_can_bypass": "never",
+    "created_at": "2026-08-03T23:19:20.864+09:00",
+    "updated_at": "2026-10-21T06:45:21.360+09:00",
+    "rules": [
+      { "type": "deletion" },
+      { "type": "non_fast_forward" },
+      {
+        "type": "pull_request",
+        "parameters": {
+          "required_approving_review_count": 0,
+          "dismiss_stale_reviews_on_push": false,
+          "required_reviewers": [],
+          "require_code_owner_review": false,
+          "dismissal_restriction": { "enabled": false, "allowed_actors": [] },
+          "require_last_push_approval": false,
+          "required_review_thread_resolution": false,
+          "require_extra_approval_for_unattributed_changes": true,
+          "allowed_merge_methods": ["merge"]
+        }
+      },
+      {
+        "type": "required_status_checks",
+        "parameters": {
+          "strict_required_status_checks_policy": false,
+          "do_not_enforce_on_create": false,
+          "required_status_checks": [
+            { "context": "admission-check", "integration_id": 15368 },
+            { "context": "bsec-integrity", "integration_id": 15368 },
+            { "context": "debt-registry-gate", "integration_id": 15368 }
+          ]
+        }
+      },
+      {
+        "type": "merge_queue",
+        "parameters": {
+          "merge_method": "MERGE",
+          "max_entries_to_build": 2,
+          "min_entries_to_merge": 1,
+          "max_entries_to_merge": 1,
+          "min_entries_to_merge_wait_minutes": 0,
+          "grouping_strategy": "ALLGREEN",
+          "check_response_timeout_minutes": 120
+        }
+      }
+    ]
+  },
+
+  "orgRulesets": {
+    "listApi": { "endpoint": "GET /orgs/Archright/rulesets", "totalCount": 2, "ids": [25218071, 23943917] },
+    "25218071": {
+      "id": 25218071,
+      "name": "axiom-admission-gate",
+      "target": "branch",
+      "source_type": "Organization",
+      "source": "Archright",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": { "include": ["refs/heads/main"], "exclude": [] },
+        "repository_name": { "include": ["Axiom"], "exclude": [] }
+      },
+      "bypass_actors": [],
+      "created_at": "2026-10-16T13:51:13.748+09:00",
+      "updated_at": "2026-10-22T01:21:47.821+09:00",
+      "workflowsRule": {
+        "do_not_enforce_on_create": false,
+        "workflows": [
+          {
+            "repository_id": 1182157951,
+            "repository_id_resolvedTo": "Archright/.github",
+            "path": ".github/workflows/admission-gate-v2.yml",
+            "sha": "7fffee318b9fada32d13dd9c88d74869e343f9cc",
+            "shaKind": "commit-sha (verified: commit exists in Archright/.github; blob at that commit = b4444b0073125ed2aa98a52e5496e256a60c9b86)"
+          }
+        ]
+      }
+    },
+    "23943917": {
+      "id": 23943917,
+      "name": "landing-integrity",
+      "target": "branch",
+      "source_type": "Organization",
+      "source": "Archright",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": { "include": ["refs/heads/main"], "exclude": [] },
+        "repository_name": { "include": ["Axiom"], "exclude": [] }
+      },
+      "bypass_actors": [],
+      "created_at": "2026-09-24T23:30:36.075+09:00",
+      "updated_at": "2026-10-22T01:21:49.300+09:00",
+      "workflowsRule": {
+        "do_not_enforce_on_create": false,
+        "workflows": [
+          {
+            "repository_id": 1182157951,
+            "repository_id_resolvedTo": "Archright/.github",
+            "path": ".github/workflows/landing-integrity.yml",
+            "sha": "7fffee318b9fada32d13dd9c88d74869e343f9cc",
+            "shaKind": "commit-sha (verified: commit exists in Archright/.github; blob at that commit = c998cfac1e492be11b013064e10215334798bd2e)"
+          }
+        ]
+      }
+    },
+    "note": "Both org rulesets pin the SAME commit sha (7fffee318 = current Archright/.github main sha). The pin is a commit pin, not a branch ref: a later .github main does not invalidate it — but it does make 'org ruleset pin sha != .github main sha' a non-drift condition that a GPA monitor must not flag."
+  },
+
+  "pushRulesets": {
+    "repo_23967915": {
+      "id": 23967915,
+      "name": "execution-surface-create",
+      "target": "push",
+      "source_type": "Repository",
+      "source": "Archright/Axiom",
+      "enforcement": "active",
+      "conditions": null,
+      "rules": [
+        {
+          "type": "file_path_restriction",
+          "parameters": {
+            "restricted_file_paths": [".github/workflows/**/*", ".github/actions/**/*"],
+            "ignored_file_paths": []
+          }
+        }
+      ],
+      "bypass_actors": [
+        { "actor_id": null, "actor_type": "OrganizationAdmin", "bypass_mode": "always" },
+        { "actor_id": 29110, "actor_type": "Integration", "bypass_mode": "always" },
+        { "actor_id": 4879411, "actor_type": "Integration", "bypass_mode": "always" }
+      ],
+      "current_user_can_bypass": "always",
+      "created_at": "2026-09-25T07:54:15.957+09:00",
+      "updated_at": "2026-10-05T13:20:02.458+09:00"
+    },
+    "repo_23916707": {
+      "id": 23916707,
+      "name": "cas-probe-scratch",
+      "target": "branch",
+      "source_type": "Repository",
+      "source": "Archright/Axiom",
+      "enforcement": "active",
+      "conditions": { "ref_name": { "include": ["refs/heads/cas-probe/*"], "exclude": [] } },
+      "rules": [
+        { "type": "update" },
+        { "type": "deletion" },
+        { "type": "non_fast_forward" }
+      ],
+      "bypass_actors": [
+        { "actor_id": 4879411, "actor_type": "Integration", "bypass_mode": "always" }
+      ],
+      "current_user_can_bypass": "never",
+      "created_at": "2026-09-24T12:39:45.014+09:00",
+      "updated_at": "2026-09-24T12:39:45.126+09:00"
+    },
+    "additionalRepoRulesetsNotInBrief": [
+      { "id": 23969951, "name": "artifact-hygiene", "target": "push", "enforcement": "active" }
+    ],
+    "allRepoRulesetsListIds": [25218071, 23943917, 23969951, 23916707, 23967915, 20303214],
+    "orgRulesetsListIds": [25218071, 23943917]
+  },
+
+  "pinTripletConsistency": {
+    "claim": "epoch_manifest.productionExecutionPin == trusted_writer_set.trustedAdmissionWorkflowSha == git blob SHA of origin/main:.github/workflows/admission-check.yml",
+    "epoch_manifest_productionExecutionPin": "83260f72a8e47645f30618fc426bc1fd7561587f",
+    "trusted_writer_set_trustedAdmissionWorkflowSha": "83260f72a8e47645f30618fc426bc1fd7561587f",
+    "blob_sha_origin_main_dot_github_workflows_admission_check_yml": "83260f72a8e47645f30618fc426bc1fd7561587f",
+    "blobCommandUsed": "git rev-parse origin/main:.github/workflows/admission-check.yml",
+    "blobObjectTypeVerified": "blob",
+    "lsTreeEntry": "100644 blob 83260f72a8e47645f30618fc426bc1fd7561587f\t.github/workflows/admission-check.yml",
+    "verdict": "CONSISTENT — all three values identical",
+    "epoch_manifest_source": "git show origin/main:config/policy/epoch_manifest.json",
+    "epoch_manifest_otherFields": { "ciEpochId": "N+7", "mode": "ci-migration" },
+    "trusted_writer_set_source": "git show origin/main:config/trusted_writer_set.json",
+    "trusted_writer_set_trustedWriterWorkflow": ".github/workflows/certificate-mint.yml",
+    "trusted_writer_set_schemaVersion": "axiom.trusted-writer-set.v1",
+    "trusted_writer_set_containsFullTreeClosure": true
+  },
+
+  "policyMergeAdmission": {
+    "source": "git show origin/main:config/policy/merge_admission.json",
+    "version": "1.15.0",
+    "schemaVersion": 1,
+    "requiredValidations": [
+      { "workflowPath": ".github/workflows/bsec-integrity.yml", "workflowId": 381835906, "job": "bsec-integrity", "acceptableConclusion": "success" },
+      { "workflowPath": ".github/workflows/debt-registry-gate.yml", "workflowId": 389486255, "job": "debt-registry-gate", "acceptableConclusion": "success" }
+    ],
+    "requiredWorkflowDetection": {
+      "repositoryId": 1182157951,
+      "repositoryId_resolvedTo": "Archright/.github",
+      "workflowPath": ".github/workflows/admission-gate-v2.yml",
+      "verdictJob": "admission-check"
+    },
+    "trustSurfaceCount": 15,
+    "trustSurface": [
+      ".github/workflows/repository_surface.yml",
+      ".github/workflows/runner-pool-acceptance.yml",
+      ".github/workflows/admission-check.yml",
+      ".github/workflows/certificate-mint.yml",
+      ".github/actions/setup-axiom-toolchain/**",
+      "config/policy/merge_admission.json",
+      "config/app_landing_binding.json",
+      "config/executor_authority.json",
+      "config/trusted_writer_set.json",
+      "src/cli/merge_cli.nim",
+      "src/core/trusted/trust_boundary.nim",
+      "src/verification/verification_subject.nim",
+      ".github/workflows/bsec-integrity.yml",
+      ".github/workflows/debt-registry-gate.yml",
+      "experiments/act2-wp-toml-b1-input-integrity/bsec/replay.sh"
+    ]
+  },
+
+  "workflows": {
+    "total_count": 24,
+    "all": [
+      { "id": 357643164, "name": "scaleset-canary", "path": ".github/workflows/scaleset-canary.yml", "state": "disabled_manually" },
+      { "id": 361840406, "name": "certificate-mint", "path": ".github/workflows/certificate-mint.yml", "state": "active" },
+      { "id": 362065556, "name": "Dependency Graph", "path": "dynamic/dependabot/update-graph", "state": "active" },
+      { "id": 363023674, "name": "runner-pool-acceptance", "path": ".github/workflows/runner-pool-acceptance.yml", "state": "active" },
+      { "id": 363068798, "name": "pr-verification", "path": ".github/workflows/pr-verification.yml", "state": "disabled_manually" },
+      { "id": 363242470, "name": "repository-surface", "path": ".github/workflows/repository_surface.yml", "state": "active" },
+      { "id": 365692388, "name": "admission-check", "path": ".github/workflows/admission-check.yml", "state": "active" },
+      { "id": 365722635, "name": "probe-merge-queue", "path": ".github/workflows/probe-merge-queue.yml", "state": "active" },
+      { "id": 366563934, "name": "Dependabot Updates", "path": "dynamic/dependabot/dependabot-updates", "state": "active" },
+      { "id": 366714812, "name": "hardware-falsification-smoke", "path": ".github/workflows/hardware-falsification-smoke.yml", "state": "active" },
+      { "id": 366836206, "name": "gateway-jobs-measure", "path": ".github/workflows/gateway-jobs-measure.yml", "state": "active" },
+      { "id": 366989651, "name": "h4-routing-measure", "path": ".github/workflows/h4-routing-measure.yml", "state": "active" },
+      { "id": 367482699, "name": "release-ship", "path": ".github/workflows/release-ship.yml", "state": "active" },
+      { "id": 369728875, "name": "ci-cache-publisher", "path": ".github/workflows/ci-cache-publisher.yml", "state": "active" },
+      { "id": 380058433, "name": "closure-watcher", "path": ".github/workflows/closure-watcher.yml", "state": "active" },
+      { "id": 380195898, "name": "observer-manifest-consistency", "path": ".github/workflows/observation.yml", "state": "active" },
+      { "id": 381772341, "name": "trusted-writer-set", "path": ".github/workflows/trusted-writer-set.yml", "state": "active" },
+      { "id": 381835906, "name": "bsec-integrity", "path": ".github/workflows/bsec-integrity.yml", "state": "active" },
+      { "id": 381903746, "name": "diagnostic-authority", "path": ".github/workflows/diagnostic-authority.yml", "state": "active" },
+      { "id": 381954965, "name": "spoof-probe-a", "path": ".github/workflows/spoof-probe-a.yml", "state": "active" },
+      { "id": 381958514, "name": "spoof-probe-b", "path": ".github/workflows/spoof-probe-b.yml", "state": "active" },
+      { "id": 383466559, "name": "merge-queue-rearm", "path": ".github/workflows/merge-queue-rearm.yml", "state": "active" },
+      { "id": 389486255, "name": "debt-registry-gate", "path": ".github/workflows/debt-registry-gate.yml", "state": "active" },
+      { "id": 391703936, "name": "admission-ssot-drift", "path": ".github/workflows/admission-ssot-drift.yml", "state": "active" }
+    ]
+  },
+
+  "recentRuns": {
+    "391703936_admission-ssot-drift": {
+      "total_count": 4,
+      "scheduleEventRuns": 0,
+      "runs": [
+        { "id": 39622835490, "status": "completed", "conclusion": "success", "event": "workflow_dispatch", "created_at": "2026-10-21T15:07:22Z", "updated_at": "2026-10-21T15:10:01Z", "head_sha": "011c5127d1ab2885628c4d17e06f58f75ecf0cab", "head_branch": "main", "run_number": 4 },
+        { "id": 39610756667, "status": "completed", "conclusion": "failure", "event": "workflow_dispatch", "created_at": "2026-10-21T13:45:17Z", "updated_at": "2026-10-21T13:47:36Z", "head_sha": "30a7e8861ca96a5248b4c5bf86c4148a53c15f2c", "head_branch": "main", "run_number": 3 },
+        { "id": 39604571246, "status": "completed", "conclusion": "failure", "event": "workflow_dispatch", "created_at": "2026-10-21T13:02:50Z", "updated_at": "2026-10-21T13:05:04Z", "head_sha": "a5b92bc6ebe1", "head_branch": "main", "run_number": 2 },
+        { "id": 39603184495, "status": "completed", "conclusion": "failure", "event": "workflow_dispatch", "created_at": "2026-10-21T12:52:54Z", "updated_at": "2026-10-21T12:55:03Z", "head_sha": "ca65865d238a", "head_branch": "main", "run_number": 1 }
+      ],
+      "cronDeclaredInYaml": "37 4 * * * (daily 04:37 UTC)",
+      "workflowEnteredMainAt": "f77fea559cd3890f6aaae04435083ae8c7c119ce @ 2026-10-21T12:05:37Z",
+      "zeroScheduleRunsExplanation": "The workflow file entered main at 2026-10-21T12:05:37Z, i.e. AFTER the 2026-10-21T04:37Z cron slot. The first possible schedule fire is 2026-10-22T04:37Z, which is ~10h AFTER the observation instant (2026-10-21T18:42Z). Zero schedule runs is therefore EXPECTED, not a missed/dropped cron.",
+      "verdict": "UNKNOWN-but-explained: cron has never been observed firing; the first firing is still pending (plan UNKNOWN#2 remains open)."
+    },
+    "380058433_closure-watcher": {
+      "total_count": 48,
+      "consecutiveSuccessFromNewest": 15,
+      "runs": [
+        { "id": 39641522849, "conclusion": "success", "event": "schedule", "created_at": "2026-10-21T17:11:11Z", "updated_at": "2026-10-21T17:12:16Z", "head_sha": "40be184e42d6", "run_number": 48 },
+        { "id": 39594579551, "conclusion": "success", "event": "schedule", "created_at": "2026-10-21T11:47:32Z", "updated_at": "2026-10-21T11:49:05Z", "head_sha": "8a84ab6cd62d", "run_number": 47 },
+        { "id": 39545710687, "conclusion": "success", "event": "schedule", "created_at": "2026-10-21T04:44:42Z", "updated_at": "2026-10-21T04:45:52Z", "head_sha": "d0d23da55512", "run_number": 46 },
+        { "id": 39501739886, "conclusion": "success", "event": "schedule", "created_at": "2026-10-20T21:36:34Z", "updated_at": "2026-10-20T21:37:38Z", "head_sha": "abfb4fd71f44", "run_number": 45 },
+        { "id": 39462625905, "conclusion": "success", "event": "schedule", "created_at": "2026-10-20T17:02:08Z", "updated_at": "2026-10-20T17:04:31Z", "head_sha": "d6e87127fbae", "run_number": 44 }
+      ]
+    },
+    "383466559_merge-queue-rearm": {
+      "total_count": 267,
+      "runs": [
+        { "id": 39642086623, "conclusion": "success", "event": "pull_request_target", "created_at": "2026-10-21T17:14:56Z", "updated_at": "2026-10-21T17:15:07Z", "head_sha": "50a46da2ba70", "head_branch": "test/v5-acceptance-c", "run_number": 267 },
+        { "id": 39636927280, "conclusion": "success", "event": "pull_request_target", "created_at": "2026-10-21T16:40:48Z", "updated_at": "2026-10-21T16:41:05Z", "head_sha": "5b9d23f4362c", "head_branch": "docs/v5-acceptance-b2", "run_number": 266 },
+        { "id": 39632046475, "conclusion": "success", "event": "pull_request_target", "created_at": "2026-10-21T16:08:15Z", "updated_at": "2026-10-21T16:08:26Z", "head_sha": "ea0adc4f6220", "head_branch": "fix/v5-lane-outcome-guard", "run_number": 265 },
+        { "id": 39622003830, "conclusion": "success", "event": "pull_request_target", "created_at": "2026-10-21T15:01:17Z", "updated_at": "2026-10-21T15:02:03Z", "head_sha": "17809ba45ee6", "head_branch": "fix/drift-observation-venue", "run_number": 264 },
+        { "id": 39616003945, "conclusion": "success", "event": "pull_request_target", "created_at": "2026-10-21T14:20:22Z", "updated_at": "2026-10-21T14:26:19Z", "head_sha": "17809ba45ee6", "head_branch": "fix/drift-observation-venue", "run_number": 263 }
+      ]
+    },
+    "381835906_bsec-integrity": {
+      "total_count": 762,
+      "runs": [
+        { "id": 39639158588, "conclusion": "success", "event": "merge_group", "created_at": "2026-10-21T16:55:38Z", "updated_at": "2026-10-21T16:57:18Z", "head_sha": "e75f005c73b1", "head_branch": "gh-readonly-queue/main/pr-1021-40be184e42d6b3f49c46029e80729e0dae229f6d", "run_number": 763 },
+        { "id": 39638288281, "conclusion": "success", "event": "pull_request", "created_at": "2026-10-21T16:49:53Z", "updated_at": "2026-10-21T16:51:46Z", "head_sha": "50a46da2ba70", "head_branch": "test/v5-acceptance-c", "run_number": 762 },
+        { "id": 39635671516, "conclusion": "success", "event": "merge_group", "created_at": "2026-10-21T16:32:24Z", "updated_at": "2026-10-21T16:34:17Z", "head_sha": "40be184e42d6", "head_branch": "gh-readonly-queue/main/pr-1020-76aa3edb524165f417151cea599483e03446e7e7", "run_number": 761 },
+        { "id": 39634542902, "conclusion": "success", "event": "pull_request", "created_at": "2026-10-21T16:24:52Z", "updated_at": "2026-10-21T16:26:47Z", "head_sha": "5b9d23f4362c", "head_branch": "docs/v5-acceptance-b2", "run_number": 760 },
+        { "id": 39629067196, "conclusion": "success", "event": "merge_group", "created_at": "2026-10-21T15:48:51Z", "updated_at": "2026-10-21T15:50:40Z", "head_sha": "76aa3edb5241", "head_branch": "gh-readonly-queue/main/pr-1019-011c5127d1ab2885628c4d17e06f58f75ecf0cab", "run_number": 759 }
+      ]
+    },
+    "389486255_debt-registry-gate": {
+      "total_count": 192,
+      "runs": [
+        { "id": 39639158499, "conclusion": "success", "event": "merge_group", "created_at": "2026-10-21T16:55:38Z", "updated_at": "2026-10-21T16:57:18Z", "head_sha": "e75f005c73b1", "head_branch": "gh-readonly-queue/main/pr-1021-40be184e42d6b3f49c46029e80729e0dae229f6d", "run_number": 192 },
+        { "id": 39638288379, "conclusion": "success", "event": "pull_request", "created_at": "2026-10-21T16:49:53Z", "updated_at": "2026-10-21T16:51:14Z", "head_sha": "50a46da2ba70", "head_branch": "test/v5-acceptance-c", "run_number": 191 },
+        { "id": 39635671507, "conclusion": "success", "event": "merge_group", "created_at": "2026-10-21T16:32:24Z", "updated_at": "2026-10-21T16:33:54Z", "head_sha": "40be184e42d6", "head_branch": "gh-readonly-queue/main/pr-1020-76aa3edb524165f417151cea599483e03446e7e7", "run_number": 190 },
+        { "id": 39634543278, "conclusion": "success", "event": "pull_request", "created_at": "2026-10-21T16:24:52Z", "updated_at": "2026-10-21T16:26:31Z", "head_sha": "5b9d23f4362c", "head_branch": "docs/v5-acceptance-b2", "run_number": 189 },
+        { "id": 39629067198, "conclusion": "success", "event": "merge_group", "created_at": "2026-10-21T15:48:51Z", "updated_at": "2026-10-21T15:50:37Z", "head_sha": "76aa3edb5241", "head_branch": "gh-readonly-queue/main/pr-1019-011c5127d1ab2885628c4d17e06f58f75ecf0cab", "run_number": 188 }
+      ]
+    }
+  },
+
+  "unreadable": [],
+  "unreadableNote": "No requested baseline item was unreadable. See /tmp/gpa_phase0/authorities.md for the identity of bypass integration 29110 (unresolved) and /tmp/gpa_phase0/report.md for the full UNREADABLE/UNKNOWN list."
+}

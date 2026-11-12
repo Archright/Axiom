@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "specs": {
+    "axiom_escape_probe::is_escape": {
+      "post": "result == (ch == 34 || ch == 92 || (including_control_characters && ch < 32))",
+      "conditions": ["0 <= ch", "ch < 256", "0 <= including_control_characters", "including_control_characters < 2"]
+    },
+    "axiom_escape_probe::is_escape_mutant": {
+      "post": "result == (ch == 34 || ch == 92 || (including_control_characters && ch < 32))",
+      "conditions": ["0 <= ch", "ch < 256", "0 <= including_control_characters", "including_control_characters < 2"]
+    }
+  }
+}

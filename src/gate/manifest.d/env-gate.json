@@ -1,0 +1,14 @@
+{
+  "id": "env-gate",
+  "name": "Environment Variable Gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/env_runner",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "*.nim|Makefile|*.mk|.circleci|*.env",
+  "passFilenames": false,
+  "weight": "light",
+  "category": "validation",
+  "severity": "error"
+}

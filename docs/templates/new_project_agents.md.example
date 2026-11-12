@@ -1,0 +1,30 @@
+# AGENTS.md — [Project Name]
+
+## Architecture
+
+4-layer model:
+- **Domain** (`src/core/`): Pure logic, no I/O
+- **Gate** (`src/gate/`): Gate runners
+- **Infrastructure** (`src/verification/`): I/O, file system, subprocess
+- **Presentation** (`src/cli/`): CLI interface
+
+## SDK Interfaces
+
+This project consumes Kimi-SDK interfaces:
+- `ICommandValidator` — command validation
+- `IAuditStorage` — audit persistence
+- `IGateTelemetry` — execution metrics
+- `IEvidenceStore` — evidence verification
+- `IContextBudget` — context management
+
+## Adding New Gates
+
+1. Copy a template from `templates/`
+2. Implement the interface methods
+3. Register in `src/cli/main.nim`
+
+## Rules
+
+- Domain layer must NOT import from Infrastructure/Presentation
+- Use `func` and `{.raises: [].}` by default
+- `proc` only at I/O boundary with `{.axiomIoBoundary.}`

@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/prune_stubs.sh",
+  "description": "Automated deprecated stub pruning — finds deprecated forwarding stubs with 0 importers and deletes them (dry-run without --delete flag)",
+  "inputSample": {
+    "args": []
+  },
+  "outputSample": {
+    "stdout": "prune_stubs: found 0 deprecated stubs with 0 importers",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

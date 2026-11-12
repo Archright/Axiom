@@ -1,0 +1,81 @@
+{
+  "$schema": "./policy_schema.meta.json",
+  "title": "Axiom Gate Policy",
+  "description": "Single SSOT for all Axiom gate policies. Defines global configuration and per-rule specifications.",
+
+  "gateConfig": {
+    ## DEBT#289 remediation: bypassTokenEnv removed per Ed25519-sanctioned bypass policy.
+    ## No env-var token bypass allowed — only Ed25519-signed emergency bypass via bin/agent-bypass-commit.
+    "logPath": "logs/gate_admin.jsonl",
+    "rotation": {
+      "maxSizeMB": 10,
+      "maxFiles": 5
+    }
+  },
+
+  "rules": [
+    {
+      "id": "import-encapsulation",
+      "description": "Enforce import encapsulation boundaries between layers (no upward imports).",
+      "severity": "error",
+      "filesPattern": "src/",
+      "gateIds": ["import-encapsulation-gate"]
+    },
+    {
+      "id": "procedure-stub-detection",
+      "description": "Detect stub test files with >50% trivial assertions (check true density).",
+      "severity": "error",
+      "filesPattern": "src/|tests/",
+      "gateIds": ["procedure-gate"]
+    },
+    {
+      "id": "binary-artifact-prevention",
+      "description": "Prevent untracked binary files from being committed.",
+      "severity": "error",
+      "filesPattern": "",
+      "gateIds": ["binary-artifact-gate"]
+    },
+    {
+      "id": "architecture-invariants",
+      "description": "Verify I/O isolation in core/ and forwarding stub consistency.",
+      "severity": "error",
+      "filesPattern": "src/core/",
+      "gateIds": []
+    },
+    {
+      "id": "intent-presence",
+      "description": "Verify an intent file exists before code changes are committed.",
+      "severity": "warning",
+      "filesPattern": "",
+      "gateIds": ["intent-gate"]
+    },
+    {
+      "id": "debt-critical-block",
+      "description": "Block commits that introduce critical debt markers.",
+      "severity": "error",
+      "filesPattern": "src/|tests/",
+      "gateIds": ["debt-integrity-gate"]
+    },
+    {
+      "id": "language-ban",
+      "description": "Enforce Nim-only policy. Non-Nim source files are forbidden in src/.",
+      "severity": "error",
+      "filesPattern": "",
+      "gateIds": ["language-ban-gate"]
+    },
+    {
+      "id": "nim-check",
+      "description": "Verify all Nim source files compile without errors.",
+      "severity": "error",
+      "filesPattern": ".nim|axiom.nimble|config.nims",
+      "gateIds": ["nim-check"]
+    },
+    {
+      "id": "memory-policy",
+      "description": "Verify project policies are not stored in agent session memory.",
+      "severity": "warning",
+      "filesPattern": "AGENTS.md|src/gate/architecture_policy.lock",
+      "gateIds": []
+    }
+  ]
+}

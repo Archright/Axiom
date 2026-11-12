@@ -1,0 +1,86 @@
+{
+  "slice": "VS-1 nim-scope toolchain reuse (publication-integrity)",
+  "date": "2026-11-12",
+  "isolation": {
+    "home": "/tmp/iso/home",
+    "payload_bytes": 155249717,
+    "payload_members": [
+      "~/.nimble/pkgs2 (checksums, fusion, malebolgia, nimcrypto)",
+      "~/.choosenim/toolchains/nim-2.2.10",
+      "~/.local/bin/{z3,jq}"
+    ],
+    "elan_present": false,
+    "nimble_dir_present": true,
+    "lean_resolvable": false,
+    "lake_resolvable": false,
+    "nim_realpath_inside_payload": true
+  },
+  "compile_rc": {
+    "vsi_secret_eval": 0,
+    "vsi_license_eval": 0,
+    "vsi_dependency_eval": 0,
+    "vsi_provenance": 0,
+    "vsi_sbom_eval": 0,
+    "vsi_report": 0
+  },
+  "run_rc": {
+    "secret_eval": 0,
+    "license_eval": 0,
+    "dependency_eval": 0,
+    "provenance": 0,
+    "sbom_eval": 0,
+    "report": 0
+  },
+  "j2_dimensions": {
+    "report_secret": {
+      "baseline_artifact": "publication-report-secret-scan/report_secret.json",
+      "normalized_sha256_baseline": "481b50fa93e1c080421d9bf1528a3ce871678b1a78717b398c158a7aa93bc8d5",
+      "normalized_sha256_candidate": "481b50fa93e1c080421d9bf1528a3ce871678b1a78717b398c158a7aa93bc8d5",
+      "equal_after_key_sort": true,
+      "verdict_baseline": "PASS",
+      "verdict_candidate": "PASS"
+    },
+    "report_license": {
+      "baseline_artifact": "publication-report-license-scan/report_license.json",
+      "normalized_sha256_baseline": "a9adbfd42dcfa2fe87d18ba15f221a2cb07b53b6b146af0c428adcc4db5d0802",
+      "normalized_sha256_candidate": "a9adbfd42dcfa2fe87d18ba15f221a2cb07b53b6b146af0c428adcc4db5d0802",
+      "equal_after_key_sort": true,
+      "verdict_baseline": "PASS",
+      "verdict_candidate": "PASS"
+    },
+    "report_dependency": {
+      "baseline_artifact": "publication-report-dependency-scan/report_dependency.json",
+      "normalized_sha256_baseline": "a4d85fa4d09a31cbcdebd763d857c4783d4fab00ef1138ede7754dfc9082942b",
+      "normalized_sha256_candidate": "a4d85fa4d09a31cbcdebd763d857c4783d4fab00ef1138ede7754dfc9082942b",
+      "equal_after_key_sort": true,
+      "verdict_baseline": "PASS",
+      "verdict_candidate": "PASS"
+    },
+    "report_provenance": {
+      "baseline_artifact": "publication-report-provenance/report_provenance.json",
+      "normalized_sha256_baseline": "7d05669e281ae4b7bf54d89e66d3a7cd2d090eec40c1bf633cd350c799ea3f06",
+      "normalized_sha256_candidate": "7d05669e281ae4b7bf54d89e66d3a7cd2d090eec40c1bf633cd350c799ea3f06",
+      "equal_after_key_sort": true,
+      "verdict_baseline": "PASS",
+      "verdict_candidate": "PASS"
+    },
+    "report_sbom": {
+      "baseline_artifact": "publication-sbom-spdx-json/report_sbom.json",
+      "normalized_sha256_baseline": "e2a429f426d8af1b00196c1bfb8b7a7eb92ca4ca6558d38d29112a0c0789be60",
+      "normalized_sha256_candidate": "e2a429f426d8af1b00196c1bfb8b7a7eb92ca4ca6558d38d29112a0c0789be60",
+      "equal_after_key_sort": true,
+      "verdict_baseline": "PASS",
+      "verdict_candidate": "PASS"
+    },
+    "publication-integrity-report": {
+      "baseline_artifact": "publication-integrity-report/publication-integrity-report.json",
+      "normalized_sha256_baseline": "0f95f5ae705da9d7867684371d41962e25ec6e08945680069a151576dbe8d530",
+      "normalized_sha256_candidate": "0f95f5ae705da9d7867684371d41962e25ec6e08945680069a151576dbe8d530",
+      "equal_after_key_sort": true,
+      "verdict_baseline": "PASS",
+      "verdict_candidate": "PASS"
+    }
+  },
+  "j2_all_equal": true,
+  "note": "Evaluator inputs are the baseline run artifacts (run 42980750324). The aggregator binding commitSha/treeSha are identical to the baseline because the branch HEAD tree is the baseline tree (changes are uncommitted at probe time)."
+}

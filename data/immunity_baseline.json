@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0",
+  "auto_generated": true,
+  "description": "Unified immunity gate baseline. Auto-updated by immunity_gate on improvement. Ratchet: coverage can only go up, never down.",
+  "last_golden_build": "2026-09-03T18:41:39",
+  "raises_coverage": {
+    "total_declarations": 4046,
+    "annotated_declarations": 4004,
+    "coverage_pct": 98.96193771626297,
+    "threshold_pct": 98.96193771626297,
+    "exempt_patterns": [
+      "{.axiomIoBoundary.}",
+      "{.importc}",
+      "{.importcpp}",
+      "{.dynlib}"
+    ]
+  },
+  "quarantine": {
+    "manifest_path": "data/quarantine_manifest.json"
+  },
+  "break_glass": {
+    "audit_log_path": "logs/break_glass/audit.jsonl",
+    "max_age_hours": 48
+  }
+}

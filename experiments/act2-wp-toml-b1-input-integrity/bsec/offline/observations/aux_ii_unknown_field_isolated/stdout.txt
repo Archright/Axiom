@@ -1,0 +1,11 @@
+harness_mode=record
+input_file=./experiments/act2-wp-toml-b1-input-integrity/bsec/offline/inputs/aux_ii_unknown_field_isolated.toml
+input_len=45
+decode_call=Toml_v100.decode(input, Obj)
+DECODE_RESULT=OK
+a=[first]
+b=[second]
+c=[third]
+a_is_second=false
+b_is_third=false
+c_is_empty=false

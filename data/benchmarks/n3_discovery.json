@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "baseRef": "eaed53d8a",
+  "candidates": [
+    {
+      "id": "N3-A",
+      "mechanism": "constant",
+      "target": "topology_engine first const",
+      "status": "REJECTED_FIXTURE",
+      "reason": "\ud0c0\uae43 \ud30c\uc77c\uc5d0 const \ub77c\uc778 \ubd80\uc7ac(\ubba4\ud14c\uc774\uc158 \ubbf8\uc801\uc6a9\u2192\uc120\ud0dd 0)",
+      "impactRatio": null
+    },
+    {
+      "id": "N3-B",
+      "mechanism": "shared function body",
+      "target": "findTopologyMetricIndex",
+      "status": "OBSERVED",
+      "selected": [
+        "src/core/topology/topology_engine.nim::findTopologyMetricIndex",
+        "src/core/topology/topology_engine.nim::findTopologyNodeContext",
+        "src/core/topology/topology_engine.nim::findTopologySymbolIndex"
+      ],
+      "expectedAffected_universe": [
+        "src/core/topology/topology_engine.nim::findTopologyMetricIndex",
+        "src/core/topology/topology_engine.nim::findTopologyNodeContext",
+        "src/core/topology/topology_engine.nim::findTopologySymbolIndex"
+      ],
+      "impactRatio": 0.075,
+      "classification": "medium",
+      "planStatus": "VALID"
+    },
+    {
+      "id": "N3-C",
+      "mechanism": "contract(postcondition)",
+      "target": "proximityScore",
+      "status": "OBSERVED",
+      "selected": [
+        "src/core/topology/topology_dependency.nim::proximityScore"
+      ],
+      "expectedAffected_universe": [
+        "src/core/topology/topology_dependency.nim::proximityScore"
+      ],
+      "impactRatio": 0.025,
+      "classification": "low",
+      "planStatus": "VALID"
+    }
+  ],
+  "conclusion": "propagation \uc2e4\uc99d(\uacf5\uc720 \ubaa8\ub4c8 body \u2192 3 symbol \uc0c1\ud5a5 \uc120\ud0dd); constant \ud074\ub798\uc2a4\ub294 \uc7ac\ub300\uc0c1 \uc120\uc815 \ud544\uc694"
+}

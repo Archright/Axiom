@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "reportId": "productization-metrics-2026-08-19",
+  "generatedAt": "2026-08-19T01:45:00Z",
+  "sources": {
+    "baseline": "data/baseline.json",
+    "contract": "docs/spec/productization_contract.md",
+    "policy": "config/readiness_policy.json",
+    "readme": "README.md",
+    "evidence": "data/readiness/evidence/R7.json"
+  },
+  "absoluteVkd": {
+    "formula": "|VKS ∩ certGreen| / |VKS|  (contract §6b, numerator=isVkdAdmissible only)",
+    "kernelTotal": 40,
+    "kernelExemptTotal": 17,
+    "vksTotal": 23,
+    "verifiedInVks": 0,
+    "vkd": 0.0,
+    "vkdPercent": "0/23 = 0.0%",
+    "note": "Contract §6b measured truth (2026-08-17 Phase-3 closure): metrics.vkd = 0/23 = 0.0%. Historical 21.7% (5/23) is NOT reproducible under the current isVkdAdmissible definition and is not authoritative.",
+    "baselineField": "data/baseline.json metrics.vkd.verified = 0, vkdScore = 0.0"
+  },
+  "declaredScopeCoverage": {
+    "scopeS": "VKS (supported Nim kernel scope, 23 symbols) — contract §1 '지원되는 Nim 커널 범위 내'; README 'bounded preview' phases 1-4 v1 scope; §7 v1 Contract Scope: ax prove / ax report --json primary, ax status NOT in scope (candidate)",
+    "scopeTokensClaimed": ["vkd"],
+    "targetsInS_N": 23,
+    "verifiedInS_V": 0,
+    "coverage_V_over_N": "0/23 = 0.0",
+    "coverageRatio": 0.0,
+    "threshold": 0.5,
+    "thresholdMet": false,
+    "invariantState": "R7=FAIL (non-critical -> CONDITIONAL GO; no overclaim promotion: verifiedEmitterScope [vkd] ⊆ claimedScope [vkd])"
+  },
+  "thresholdStatus": {
+    "value": 0.5,
+    "status": "allowed",
+    "rationale": "r7.vkdMinThreshold=0.5 is the active ratified policy parameter (config/readiness_policy.json, policyId axiom-readiness-v1, contract §8 policy=data-parameter). No 'initial/placeholder' marker exists for the threshold; the CONDITIONAL-GO audit condition requires raising coverage or documenting bounded-coverage preview, NOT a threshold change. Policy not modified."
+  },
+  "verdict": {
+    "readiness": "CONDITIONAL GO",
+    "conditions": ["R7=FAIL"],
+    "criticalInvariants": "R1..R6, R8 all PASS (readiness evaluator local run 2026-08-19, evidence frozen head 0124e86161e123f30f22a5e9f10b0a52b0ebb480)"
+  }
+}

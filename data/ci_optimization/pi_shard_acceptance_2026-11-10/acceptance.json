@@ -1,0 +1,97 @@
+{
+  "dimension": "license-scan 2-shard production acceptance (epoch ci-frozen-2026-11-10-pi-shard)",
+  "measuredAtUtc": "2026-11-10T12:28:00Z",
+  "landing": {
+    "pullRequest": 68,
+    "branch": "workstream/pi-license-shard",
+    "mergeCommit": "bf96c07d5523b0b62c806e35025ba59e168e45d2",
+    "mergedAt": "2026-11-10T12:06:25Z",
+    "mergeMethod": "GitHub-native MERGE via merge queue (ALLGREEN, max_entries_to_merge=1)",
+    "workflowBlobOnMain": {
+      "sha256": "41d4f315fb9cd8a0b254e8ad4107598a7f763ca4b7e4130523fb61d22bebcc8f",
+      "identicalToBranchHead": true,
+      "diffLines": 0
+    },
+    "freezeTagIntact": "ci-frozen-2026-11-10-pi-shard @ f519fa11acf38aa4821fa5895e700a34a8088b96",
+    "rollback": "single revert of PR #68 restores frozen blob b7274382cb05841fed695c09213d3cd39ec63283 (freeze-tag anchored)"
+  },
+  "runs": {
+    "prHead": {
+      "runId": 42804169994,
+      "event": "pull_request",
+      "jobsSeconds": {"license-scan-shards-0": 757, "license-scan-shards-1": 550, "license-scan-merge": 98},
+      "dimensionWallSeconds": 855
+    },
+    "mergeGroup": {
+      "runId": 42811156530,
+      "event": "merge_group",
+      "queueBranch": "gh-readonly-queue/main/pr-68-c602a362c5c208a254e977a42765e84e4873c48f",
+      "jobsSeconds": {"license-scan-shards-0": 522, "license-scan-shards-1": 523, "license-scan-merge": 91, "aggregator": 113},
+      "dimensionWallSeconds": 614,
+      "queueToMergeWallSeconds": 750,
+      "allRequiredContextsGreen": true
+    },
+    "productionAcceptance": {
+      "runId": 42813670912,
+      "event": "workflow_dispatch",
+      "ref": "main",
+      "conclusion": "success",
+      "jobsSeconds": {"license-scan-shards-0": 623, "license-scan-shards-1": 556, "license-scan-merge": 96, "aggregator": 118},
+      "dimensionWallSeconds": 719,
+      "workflowTotalSeconds": 843
+    }
+  },
+  "baselineComparison": {
+    "baselineJobWallSeconds": [1310, 1659],
+    "dimensionWallImprovement": {
+      "vs1310": {"prHead": "-34.7%", "mergeGroup": "-53.1%", "mainDispatch": "-45.1%"},
+      "vs1659": {"prHead": "-48.5%", "mergeGroup": "-63.0%", "mainDispatch": "-56.7%"}
+    },
+    "legBalance": {
+      "prHead": "757:550 (1.38x — runner contention)",
+      "mergeGroup": "522:523 (1.00x — the deterministic size-greedy partition balances wall time when runners are comparable)",
+      "mainDispatch": "623:556 (1.12x)"
+    }
+  },
+  "verdictDeterminism": {
+    "prHead": "PASS (files=7234 licenseDetections=61 copyrightDetections=46)",
+    "mergeGroup": "PASS (files=7234 licenseDetections=61 copyrightDetections=46)",
+    "mainDispatch": "PASS (files=7234 licenseDetections=61 copyrightDetections=46)",
+    "identicalAcrossEvents": true
+  },
+  "artifactVerification": {
+    "source": "publication-report-license-scan artifact of run 42813670912 (downloaded)",
+    "reportVerdict": "PASS",
+    "violations": {"license": 0, "copyright": 0},
+    "mergedReportShape": {"entries": 7234, "files": 6582, "directories": 652, "duplicatePaths": 0}
+  },
+  "negativeControl": {
+    "reference": "PR #69 (closed unmerged, never merged by design) — run 42807009493, job 129805554290",
+    "observedChain": "shard legs PASS (the denied-family file was scanned normally by its assigned shard — no sharding regression) -> merge set-completeness PASS (file present in merged report) -> evaluator FAIL (denied-family atom unaccounted + copyright holder unaccounted) -> publication-integrity BLOCKED (mergeStateStatus BLOCKED)",
+    "verdictLine": "files=7236 licenseDetections=62 copyrightDetections=47 — exactly +1 file +1 directory +1/+1 detections vs the slice PR run",
+    "dimensionRunnerSeconds": 1795
+  },
+  "runnerMinutesAndCost": {
+    "dimensionRunnerSeconds": {"oldSingleJob": 1310, "prHead": 1405, "mergeGroup": 1136, "mainDispatch": 1275},
+    "interpretation": "wall time down 45-53% with compute roughly neutral: the merge-group run used -13% runner-seconds vs the old single job; the PR-head run +7% under runner contention. At the hosted Linux rate ($0.006/min) the dimension costs ~$0.08-0.14 per run.",
+    "billingReadback": {
+      "at": "2026-11-10T12:15:20Z",
+      "monthTotalGrossActionsPlusGhecUsd": 289.85,
+      "includedQuotaUsd": 300.0,
+      "remainingUsd": 10.15,
+      "axiomLinuxMinutesMonth": 11127,
+      "axiomLinuxMinutesToday": 3884,
+      "attribution": "the slice's per-run dimension cost (~$0.1) is a rounding error against the month's volume; included-budget pressure is driven by total CI traffic across all workflows, not by this slice"
+    }
+  },
+  "slo": {
+    "target": "merge-group admission P95 <= 480s (operational SLO, not a MUST)",
+    "observedQueueToMergeWallSeconds": 750,
+    "status": "NOT MET — this slice removed the license-scan bottleneck (dimension wall 614s at merge-group); the dominant remaining path is the other required workflows (admission-gate ~13 min in this landing). Achieving 480s is a separate follow-up scope; this record claims only the measured improvement."
+  },
+  "followUps": [
+    "admission-gate / other required workflows are now the admission-wall bottleneck (SLO scope)",
+    "content-aware partition (scan-time-weighted, not byte-weighted) would reduce the residual leg imbalance seen under contention",
+    "included compute budget ($10.15 remaining as of 12:15Z) needs month-end monitoring — driven by total traffic, not this slice"
+  ]
+}

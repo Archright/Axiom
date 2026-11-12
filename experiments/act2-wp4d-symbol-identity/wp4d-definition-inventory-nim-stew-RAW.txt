@@ -1,0 +1,4619 @@
+=== nim-stew Definition Inventory RAW ===
+Total definitions: 1390
+Total duplicate groups: 227
+Residual collisions after decl-text digest discriminator: 48
+True duplicate groups (same text, same meaning): 41
+
+--- DUPLICATE GROUP: arraybuf.nim::`[]` (3 defs) ---
+  SHA256: 9270718f9b0c5c4cb81276aad771c3c19e61ab1ca77d63992232f548dc0383de
+  Kind: template, Exported: False
+  Lines: 82-82
+  Truncated Text: 'template `[]`*[N, T](b: ArrayBuf[N, T], i: int): lent T ='
+  Full Text: 'template `[]`*[N, T](b: ArrayBuf[N, T], i: int): lent T ='
+
+  SHA256: 2544561582d3e3f8beea6cfed2d19e11bc664fdac77e8276a9d05ba5b4d4e313
+  Kind: template, Exported: False
+  Lines: 85-85
+  Truncated Text: 'template `[]`*[N, T](b: var ArrayBuf[N, T], i: int): var T ='
+  Full Text: 'template `[]`*[N, T](b: var ArrayBuf[N, T], i: int): var T ='
+
+  SHA256: e90171208e528141ecfdea91d0bfb7edce08268958bace9f20f7307bd23cf320
+  Kind: template, Exported: False
+  Lines: 91-91
+  Truncated Text: 'template `[]`*[N, T](b: ArrayBuf[N, T], i: BackwardsIndex): lent T ='
+  Full Text: 'template `[]`*[N, T](b: ArrayBuf[N, T], i: BackwardsIndex): lent T ='
+
+--- DUPLICATE GROUP: arraybuf.nim::add (2 defs) ---
+  SHA256: 79a5b019a9248148ed3c7b483a100fe682c85f3fb1d2d5fb4dda92d6e6768ced
+  Kind: template, Exported: False
+  Lines: 116-116
+  Truncated Text: 'template add*[N, T](b: var ArrayBuf[N, T], v: T) ='
+  Full Text: 'template add*[N, T](b: var ArrayBuf[N, T], v: T) ='
+
+  SHA256: d71a543b666d6d34e7cf5400881bcd2cf9b2a80b2012dacf07d0df1a0144fb55
+  Kind: template, Exported: False
+  Lines: 124-124
+  Truncated Text: 'template add*[N, T](b: var ArrayBuf[N, T], v: openArray[T]) ='
+  Full Text: 'template add*[N, T](b: var ArrayBuf[N, T], v: openArray[T]) ='
+
+--- DUPLICATE GROUP: arraybuf.nim::data (2 defs) ---
+  SHA256: eae6c0a5ed4aaf9ee5cb9e672ee0c24fdf79aeae3f9b8fff61ca5ac32334bc07
+  Kind: template, Exported: False
+  Lines: 58-58
+  Truncated Text: 'template data*(bParam: ArrayBuf): openArray ='
+  Full Text: 'template data*(bParam: ArrayBuf): openArray ='
+
+  SHA256: d2f1a4c8ae367d0a2ae7c2f2bbd30e3276c85dde07e1b82387600ff365b53d63
+  Kind: template, Exported: False
+  Lines: 64-64
+  Truncated Text: 'template data*(bParam: var ArrayBuf): var openArray ='
+  Full Text: 'template data*(bParam: var ArrayBuf): var openArray ='
+
+--- DUPLICATE GROUP: arraybuf.nim::initCopyFrom (2 defs) ---
+  SHA256: 5cf79cfaf96583e7bc785e101cdddc294d35a6749fa260c9108883997fc7bb48
+  Kind: template, Exported: False
+  Lines: 100-102
+  Truncated Text: 'template initCopyFrom*[N, T](\n_: type ArrayBuf[N, T], data: openArray[T]\n): ArrayBuf[N, T] ='
+  Full Text: 'template initCopyFrom*[N, T](\n_: type ArrayBuf[N, T], data: openArray[T]\n): ArrayBuf[N, T] ='
+
+  SHA256: 9a57f253320c41c7118341d38cc2228e9677d9a943c9d9392ce08c9be996c0f0
+  Kind: template, Exported: False
+  Lines: 107-109
+  Truncated Text: 'template initCopyFrom*[N, T](\n_: type ArrayBuf[N, T], data: array[N, T]\n): ArrayBuf[N, T] ='
+  Full Text: 'template initCopyFrom*[N, T](\n_: type ArrayBuf[N, T], data: array[N, T]\n): ArrayBuf[N, T] ='
+
+--- DUPLICATE GROUP: arrayops.nim::eachElement (2 defs) ---
+  SHA256: b383a8bfc37f5d010fa0d661f552f9031bd9b7e5c7969d3177ab970dde3da555
+  Kind: template, Exported: False
+  Lines: 16-16
+  Truncated Text: 'template eachElement(x, res, op: untyped) ='
+  Full Text: 'template eachElement(x, res, op: untyped) ='
+
+  SHA256: a1d21853291bccbd27b891e39d66a818058dd4a2f9a3da89e064d3f2bf903098
+  Kind: template, Exported: False
+  Lines: 20-20
+  Truncated Text: 'template eachElement(x, y, res, op: untyped) ='
+  Full Text: 'template eachElement(x, y, res, op: untyped) ='
+
+--- DUPLICATE GROUP: arrayops.nim::elems (2 defs) ---
+  SHA256: 97895f92345cf4b9dfca0ec482224fc06e2c30079a35714c4d003e78abee2041
+  Kind: let, Exported: False
+  Lines: 53-53
+  Truncated Text: 'let elems ='
+  Full Text: 'let elems = min(v.len, src.len)'
+
+  SHA256: 97895f92345cf4b9dfca0ec482224fc06e2c30079a35714c4d003e78abee2041
+  Kind: let, Exported: False
+  Lines: 61-61
+  Truncated Text: 'let elems ='
+  Full Text: 'let elems = min(N, src.len)'
+
+--- DUPLICATE GROUP: assign2.nim::assign (7 defs) ---
+  SHA256: 4caf343e7b16ae8820ef775617908f4d577fb1769847735b1b324e2a4e5af803
+  Kind: func, Exported: False
+  Lines: 5-5
+  Truncated Text: 'func assign*[T](tgt: var seq[T], src: openArray[T])'
+  Full Text: 'func assign*[T](tgt: var seq[T], src: openArray[T])'
+
+  SHA256: 2488e47a62f719dc477b71d16046fea305af9b4c7befb724eb3b5a95709b820a
+  Kind: func, Exported: False
+  Lines: 6-6
+  Truncated Text: 'func assign*[T](tgt: var openArray[T], src: openArray[T])'
+  Full Text: 'func assign*[T](tgt: var openArray[T], src: openArray[T])'
+
+  SHA256: e8ef7f2cbb26fd9fffe68ae81581ef34ea10f9025f36cf251d4ea65496311f92
+  Kind: func, Exported: False
+  Lines: 7-7
+  Truncated Text: 'func assign*[T](tgt: var T, src: T)'
+  Full Text: 'func assign*[T](tgt: var T, src: T)'
+
+  SHA256: 07cb71e8be4356c4cffe01e4cfb659347ad529e27234adf6408d5cabc706dab8
+  Kind: func, Exported: False
+  Lines: 26-26
+  Truncated Text: 'func assign*[T](tgt: var openArray[T], src: openArray[T]) ='
+  Full Text: 'func assign*[T](tgt: var openArray[T], src: openArray[T]) ='
+
+  SHA256: 7a0b01227c7e93d8883a7873dab72bb491be9501e2f86fe20a2425eba041656c
+  Kind: func, Exported: False
+  Lines: 34-34
+  Truncated Text: 'func assign*[T](tgt: var seq[T], src: openArray[T]) ='
+  Full Text: 'func assign*[T](tgt: var seq[T], src: openArray[T]) ='
+
+  SHA256: f11a4049308d314a1f46dabdf7e9ab136009a0bb2162b8efa5f7fdbafafc297b
+  Kind: func, Exported: False
+  Lines: 45-45
+  Truncated Text: 'func assign*(tgt: var string, src: string) ='
+  Full Text: 'func assign*(tgt: var string, src: string) ='
+
+  SHA256: 3e0fba375766e972d1bcaf54f54825a4c77d6ce498bb9d13a9b1921b7167da20
+  Kind: func, Exported: False
+  Lines: 53-53
+  Truncated Text: 'func assign*[T](tgt: var T, src: T) ='
+  Full Text: 'func assign*[T](tgt: var T, src: T) ='
+
+--- DUPLICATE GROUP: base10.nim::encode (2 defs) ---
+  SHA256: 15a1eb5fabbfd0f313e74d7eedbae72223f64f73de89041954fa578445f59822
+  Kind: func, Exported: False
+  Lines: 135-135
+  Truncated Text: 'func encode[A: byte|char](B: typedesc[Base10], value: SomeUnsignedInt,'
+  Full Text: 'func encode[A: byte|char](B: typedesc[Base10], value: SomeUnsignedInt,'
+
+  SHA256: 625c896301cbcc1fa1d046dc8a5846e2f8ecea97edde54f50c549679fdc4caec
+  Kind: func, Exported: False
+  Lines: 178-178
+  Truncated Text: 'func encode*[A: byte|char](B: typedesc[Base10], value: SomeUnsignedInt,'
+  Full Text: 'func encode*[A: byte|char](B: typedesc[Base10], value: SomeUnsignedInt,'
+
+--- DUPLICATE GROUP: base10.nim::index (2 defs) ---
+  SHA256: 7b948916ac8fd919b898dd575624ebd6efc10d58ae026ee1d0a549cecc9f1ab5
+  Kind: let, Exported: False
+  Lines: 153-153
+  Truncated Text: 'let index ='
+  Full Text: 'let index = uint8((v mod type(value)(100)) shl 1)'
+
+  SHA256: 7b948916ac8fd919b898dd575624ebd6efc10d58ae026ee1d0a549cecc9f1ab5
+  Kind: let, Exported: False
+  Lines: 169-169
+  Truncated Text: 'let index ='
+  Full Text: 'let index = uint8(v) shl 1'
+
+--- DUPLICATE GROUP: base10.nim::res (2 defs) ---
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 193-193
+  Truncated Text: 'let res ='
+  Full Text: 'let res = B.encode(v, result.data, B.encodedLength(v))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 199-199
+  Truncated Text: 'let res ='
+  Full Text: 'let res = B.encode(v, result.data, B.encodedLength(v))'
+
+--- DUPLICATE GROUP: base10.nim::toBytes (2 defs) ---
+  SHA256: 408f9b9b81be4da82951c341d1ac7392fa010ab91f352217e8b315cf3051a16e
+  Kind: func, Exported: False
+  Lines: 190-190
+  Truncated Text: 'func toBytes*[I: SomeUnsignedInt](B: typedesc[Base10], v: I): Base10Buf[I] {.'
+  Full Text: 'func toBytes*[I: SomeUnsignedInt](B: typedesc[Base10], v: I): Base10Buf[I] {.'
+
+  SHA256: 204964c9dca99a57e697ae86a056fc0d7550e99107713de633afda091dc8f9a9
+  Kind: func, Exported: False
+  Lines: 196-196
+  Truncated Text: 'func toBytes*[I: SomeUnsignedInt](v: I, B: typedesc[Base10]): Base10Buf[I] {.'
+  Full Text: 'func toBytes*[I: SomeUnsignedInt](v: I, B: typedesc[Base10]): Base10Buf[I] {.'
+
+--- DUPLICATE GROUP: base10.nim::v (2 defs) ---
+  SHA256: 7e6d40391b71a41cdd0d1e3010a6f9ec299b51f8771646cd8c5bb0c125878fd9
+  Kind: var, Exported: False
+  Lines: 52-52
+  Truncated Text: 'var v ='
+  Full Text: 'var v = T(0)'
+
+  SHA256: 7e6d40391b71a41cdd0d1e3010a6f9ec299b51f8771646cd8c5bb0c125878fd9
+  Kind: var, Exported: False
+  Lines: 149-149
+  Truncated Text: 'var v ='
+  Full Text: 'var v = value'
+
+--- DUPLICATE GROUP: base32.nim::alphabet (8 defs) ---
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 144-144
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = RFCUpperCaseAlphabet'
+
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 146-146
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = RFCLowerCaseAlphabet'
+
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 148-148
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = HEXUpperCaseAlphabet'
+
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 150-150
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = HEXLowerCaseAlphabet'
+
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 210-210
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = RFCUpperCaseAlphabet'
+
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 212-212
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = RFCLowerCaseAlphabet'
+
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 214-214
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = HEXUpperCaseAlphabet'
+
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 216-216
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = HEXLowerCaseAlphabet'
+
+--- DUPLICATE GROUP: base32.nim::ch (2 defs) ---
+  SHA256: b8d5876a4c78526a59ad22726953641792c14c35c809e42b3f582a897767c73f
+  Kind: let, Exported: False
+  Lines: 243-243
+  Truncated Text: 'let ch ='
+  Full Text: 'let ch = alphabet.decode[cast[int8](instr[i + j])]'
+
+  SHA256: b8d5876a4c78526a59ad22726953641792c14c35c809e42b3f582a897767c73f
+  Kind: let, Exported: False
+  Lines: 262-262
+  Truncated Text: 'let ch ='
+  Full Text: 'let ch = alphabet.decode[cast[int8](instr[i + j])]'
+
+--- DUPLICATE GROUP: base32.nim::decode (2 defs) ---
+  SHA256: c50043385aa41e42ac6da71a73a2fb9a8359d5104dce0737bb3fb5d1f7fc2e11
+  Kind: func, Exported: False
+  Lines: 200-200
+  Truncated Text: 'func decode*[T: byte|char](btype: typedesc[Base32Types], instr: openArray[T],'
+  Full Text: 'func decode*[T: byte|char](btype: typedesc[Base32Types], instr: openArray[T],'
+
+  SHA256: 1657c1dc9e0c5be2b16524e09ad9784559d3a4912a02afb39417d4c1897f9058
+  Kind: func, Exported: False
+  Lines: 273-273
+  Truncated Text: 'func decode*[T: byte|char](btype: typedesc[Base32Types],'
+  Full Text: 'func decode*[T: byte|char](btype: typedesc[Base32Types],'
+
+--- DUPLICATE GROUP: base32.nim::encode (2 defs) ---
+  SHA256: 75b6a92cdfea7ba2820af9640d46fda6a33d25c19f83df4d291b4d12ba2f6b5a
+  Kind: func, Exported: False
+  Lines: 135-136
+  Truncated Text: 'func encode*(btype: typedesc[Base32Types], inbytes: openArray[byte],\noutstr: var openArray[char], outlen: var int): Base32Status ='
+  Full Text: 'func encode*(btype: typedesc[Base32Types], inbytes: openArray[byte],\noutstr: var openArray[char], outlen: var int): Base32Status ='
+
+  SHA256: d2ad4001c5a9dcc5bd7c81e0ee38746368078f4eec0d3491f1d6045514d210d2
+  Kind: func, Exported: False
+  Lines: 186-187
+  Truncated Text: 'func encode*(btype: typedesc[Base32Types],\ninbytes: openArray[byte]): string {.inline.} ='
+  Full Text: 'func encode*(btype: typedesc[Base32Types],\ninbytes: openArray[byte]): string {.inline.} ='
+
+--- DUPLICATE GROUP: base32.nim::i (2 defs) ---
+  SHA256: 66c11cd49009cd3376d5fad89790472199cb8a47ca59ef0d163b44094208fa64
+  Kind: var, Exported: False
+  Lines: 163-163
+  Truncated Text: 'var i, k: int'
+  Full Text: 'var i, k: int'
+
+  SHA256: 66c11cd49009cd3376d5fad89790472199cb8a47ca59ef0d163b44094208fa64
+  Kind: var, Exported: False
+  Lines: 237-237
+  Truncated Text: 'var i, k: int'
+  Full Text: 'var i, k: int'
+
+--- DUPLICATE GROUP: base32.nim::left (2 defs) ---
+  SHA256: 949c03a90458b97249050f862b5826276231a20bb6ad64c4351198056ccf254b
+  Kind: let, Exported: False
+  Lines: 173-173
+  Truncated Text: 'let left ='
+  Full Text: 'let left = convert5to8(inbytes.toOpenArray(i, i + reminder - 1),'
+
+  SHA256: 4607fcb6e9223a8b1dc233c8374ba4093b602a1817abd8d947d72ff4a3f7dc6d
+  Kind: var, Exported: False
+  Lines: 252-252
+  Truncated Text: 'var left ='
+  Full Text: 'var left = 0'
+
+--- DUPLICATE GROUP: base32.nim::length (4 defs) ---
+  SHA256: fc8ff760e229e23db16593af94ec5af9ed25b96c8c60e30b2a0eb8c35aa2c742
+  Kind: let, Exported: False
+  Lines: 156-156
+  Truncated Text: 'let length ='
+  Full Text: 'let length = btype.encodedLength(len(inbytes))'
+
+  SHA256: 730183b0988c4a66a87ea4a5c874c8aff5f19acd7d862cc26e3e6e635a2d3031
+  Kind: var, Exported: False
+  Lines: 193-193
+  Truncated Text: 'var length ='
+  Full Text: 'var length = 0'
+
+  SHA256: fc8ff760e229e23db16593af94ec5af9ed25b96c8c60e30b2a0eb8c35aa2c742
+  Kind: let, Exported: False
+  Lines: 222-222
+  Truncated Text: 'let length ='
+  Full Text: 'let length = btype.decodedLength(len(instr))'
+
+  SHA256: 730183b0988c4a66a87ea4a5c874c8aff5f19acd7d862cc26e3e6e635a2d3031
+  Kind: var, Exported: False
+  Lines: 279-279
+  Truncated Text: 'var length ='
+  Full Text: 'var length = 0'
+
+--- DUPLICATE GROUP: base32.nim::limit (2 defs) ---
+  SHA256: 2d85e585be77cc429120e17d6b04bb35c1fbde792ea2f97c9405417cea943868
+  Kind: let, Exported: False
+  Lines: 162-162
+  Truncated Text: 'let limit ='
+  Full Text: 'let limit = len(inbytes) - reminder'
+
+  SHA256: 2d85e585be77cc429120e17d6b04bb35c1fbde792ea2f97c9405417cea943868
+  Kind: let, Exported: False
+  Lines: 235-235
+  Truncated Text: 'let limit ='
+  Full Text: 'let limit = inlen - reminder'
+
+--- DUPLICATE GROUP: base32.nim::reminder (4 defs) ---
+  SHA256: c0e420455a5e2bd37f763756f9ee41ef3a50f6ec7a08a73b44bb8c2ef47dd849
+  Kind: let, Exported: False
+  Lines: 71-71
+  Truncated Text: 'let reminder ='
+  Full Text: 'let reminder = length mod 5'
+
+  SHA256: c0e420455a5e2bd37f763756f9ee41ef3a50f6ec7a08a73b44bb8c2ef47dd849
+  Kind: let, Exported: False
+  Lines: 82-82
+  Truncated Text: 'let reminder ='
+  Full Text: 'let reminder = length mod 8'
+
+  SHA256: c0e420455a5e2bd37f763756f9ee41ef3a50f6ec7a08a73b44bb8c2ef47dd849
+  Kind: let, Exported: False
+  Lines: 161-161
+  Truncated Text: 'let reminder ='
+  Full Text: 'let reminder = len(inbytes) mod 5'
+
+  SHA256: c0e420455a5e2bd37f763756f9ee41ef3a50f6ec7a08a73b44bb8c2ef47dd849
+  Kind: let, Exported: False
+  Lines: 234-234
+  Truncated Text: 'let reminder ='
+  Full Text: 'let reminder = inlen mod 8'
+
+--- DUPLICATE GROUP: base36.nim::alphabet (5 defs) ---
+  SHA256: a4efe1f3fe52503c5e40bdc5843d5f8a785ea064c7afb9f8debe8d46e7a2951b
+  Kind: var, Exported: False
+  Lines: 39-39
+  Truncated Text: 'var alphabet: Base36Alphabet'
+  Full Text: 'var alphabet: Base36Alphabet'
+
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 65-65
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = B36LcAlphabet'
+
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 67-67
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = B36UcAlphabet'
+
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 126-126
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = B36LcAlphabet'
+
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 128-128
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = B36UcAlphabet'
+
+--- DUPLICATE GROUP: base36.nim::binsz (2 defs) ---
+  SHA256: afbfeeebb09afd8956df79b6e1bef28ee80e3a6aa2d1fef26fd2cbcb8cf35e90
+  Kind: let, Exported: False
+  Lines: 69-69
+  Truncated Text: 'let binsz ='
+  Full Text: 'let binsz = inbytes.len'
+
+  SHA256: afbfeeebb09afd8956df79b6e1bef28ee80e3a6aa2d1fef26fd2cbcb8cf35e90
+  Kind: let, Exported: False
+  Lines: 135-135
+  Truncated Text: 'let binsz ='
+  Full Text: 'let binsz = payload.len + 4'
+
+--- DUPLICATE GROUP: base36.nim::buffer (2 defs) ---
+  SHA256: 5926e062833583ee050f1cfabd8372efd1e2d9f4c1e0059075c35a504f4adb23
+  Kind: var, Exported: False
+  Lines: 75-75
+  Truncated Text: 'var buffer ='
+  Full Text: 'var buffer = newSeq[uint8](size)'
+
+  SHA256: 5926e062833583ee050f1cfabd8372efd1e2d9f4c1e0059075c35a504f4adb23
+  Kind: var, Exported: False
+  Lines: 146-146
+  Truncated Text: 'var buffer ='
+  Full Text: 'var buffer = newSeq[uint32](size)'
+
+--- DUPLICATE GROUP: base36.nim::decode (2 defs) ---
+  SHA256: 85c8020eb3f2b737ab2508da79e4c1575f850e0d88a87de8dad3e08972f7f945
+  Kind: func, Exported: False
+  Lines: 123-123
+  Truncated Text: 'func decode*[T: byte|char](btype: typedesc[Base36Types], instr: openArray[T],'
+  Full Text: 'func decode*[T: byte|char](btype: typedesc[Base36Types], instr: openArray[T],'
+
+  SHA256: 72dc82b2268e51f7b98eb61bd4e80fa79ee63a8f608e4acfd96bd156f731721d
+  Kind: func, Exported: False
+  Lines: 213-213
+  Truncated Text: 'func decode*(btype: typedesc[Base36Types], instr: string): seq[byte] {.raises: Base36Error.} ='
+  Full Text: 'func decode*(btype: typedesc[Base36Types], instr: string): seq[byte] {.raises: Base36Error.} ='
+
+--- DUPLICATE GROUP: base36.nim::encode (2 defs) ---
+  SHA256: 4188f92bc44d3b7066dddf8f16b073c7f2727e8d0bd3e7ef0d5826e1d936be0e
+  Kind: func, Exported: False
+  Lines: 62-63
+  Truncated Text: 'func encode*(btype: typedesc[Base36Types], inbytes: openArray[byte],\noutstr: var openArray[char], outlen: var int): Base36Status ='
+  Full Text: 'func encode*(btype: typedesc[Base36Types], inbytes: openArray[byte],\noutstr: var openArray[char], outlen: var int): Base36Status ='
+
+  SHA256: 83955fff95dbd06f7b7fcb716d24cb0b4cf923d872fd3e40384d72db38aef4d0
+  Kind: func, Exported: False
+  Lines: 110-111
+  Truncated Text: 'func encode*(btype: typedesc[Base36Types],\ninbytes: openArray[byte]): string {.inline.} ='
+  Full Text: 'func encode*(btype: typedesc[Base36Types],\ninbytes: openArray[byte]): string {.inline.} ='
+
+--- DUPLICATE GROUP: base36.nim::j (2 defs) ---
+  SHA256: e16f4dbbe3c8b8d2dd2cca978c24bf598ad4432a46681765f8010e99bb594959
+  Kind: var, Exported: False
+  Lines: 80-80
+  Truncated Text: 'var j ='
+  Full Text: 'var j = size - 1'
+
+  SHA256: e16f4dbbe3c8b8d2dd2cca978c24bf598ad4432a46681765f8010e99bb594959
+  Kind: var, Exported: False
+  Lines: 89-89
+  Truncated Text: 'var j ='
+  Full Text: 'var j = 0'
+
+--- DUPLICATE GROUP: base36.nim::size (4 defs) ---
+  SHA256: 56de9188476ef818831ef147637788815b76ec0db26134c7c827a790d117fc42
+  Kind: let, Exported: False
+  Lines: 74-74
+  Truncated Text: 'let size ='
+  Full Text: 'let size = btype.encodedLength(binsz - zcount)'
+
+  SHA256: caea881627752c4d25aec19ba9ea5c346d044ed3541d54f4de994c0921070bd4
+  Kind: var, Exported: False
+  Lines: 114-114
+  Truncated Text: 'var size ='
+  Full Text: 'var size = btype.encodedLength(inbytes.len) + 1'
+
+  SHA256: 56de9188476ef818831ef147637788815b76ec0db26134c7c827a790d117fc42
+  Kind: let, Exported: False
+  Lines: 145-145
+  Truncated Text: 'let size ='
+  Full Text: 'let size = (binsz + 3) div 4'
+
+  SHA256: caea881627752c4d25aec19ba9ea5c346d044ed3541d54f4de994c0921070bd4
+  Kind: var, Exported: False
+  Lines: 217-217
+  Truncated Text: 'var size ='
+  Full Text: 'var size = instr.len + 4'
+
+--- DUPLICATE GROUP: base36.nim::zcount (2 defs) ---
+  SHA256: d512db7a625aa630fbcd7c5477ce1836d3a5350df130bc1e2ee0f4c0cc3ca82d
+  Kind: var, Exported: False
+  Lines: 70-70
+  Truncated Text: 'var zcount ='
+  Full Text: 'var zcount = 0'
+
+  SHA256: d512db7a625aa630fbcd7c5477ce1836d3a5350df130bc1e2ee0f4c0cc3ca82d
+  Kind: var, Exported: False
+  Lines: 148-148
+  Truncated Text: 'var zcount ='
+  Full Text: 'var zcount = 0'
+
+--- DUPLICATE GROUP: base58.nim::alphabet (4 defs) ---
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 69-69
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = BTCAlphabet'
+
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 71-71
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = FlickrAlphabet'
+
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 142-142
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = BTCAlphabet'
+
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 144-144
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = FlickrAlphabet'
+
+--- DUPLICATE GROUP: base58.nim::binsz (2 defs) ---
+  SHA256: afbfeeebb09afd8956df79b6e1bef28ee80e3a6aa2d1fef26fd2cbcb8cf35e90
+  Kind: let, Exported: False
+  Lines: 73-73
+  Truncated Text: 'let binsz ='
+  Full Text: 'let binsz = len(inbytes)'
+
+  SHA256: afbfeeebb09afd8956df79b6e1bef28ee80e3a6aa2d1fef26fd2cbcb8cf35e90
+  Kind: let, Exported: False
+  Lines: 150-150
+  Truncated Text: 'let binsz ='
+  Full Text: 'let binsz = len(instr) + 4'
+
+--- DUPLICATE GROUP: base58.nim::buffer (2 defs) ---
+  SHA256: 5926e062833583ee050f1cfabd8372efd1e2d9f4c1e0059075c35a504f4adb23
+  Kind: var, Exported: False
+  Lines: 80-80
+  Truncated Text: 'var buffer ='
+  Full Text: 'var buffer = newSeq[uint8](size)'
+
+  SHA256: 5926e062833583ee050f1cfabd8372efd1e2d9f4c1e0059075c35a504f4adb23
+  Kind: var, Exported: False
+  Lines: 161-161
+  Truncated Text: 'var buffer ='
+  Full Text: 'var buffer = newSeq[uint32](size)'
+
+--- DUPLICATE GROUP: base58.nim::decode (2 defs) ---
+  SHA256: 7a1fa181754a325e23237a29fae457952594ede2a55c6cc1bab6ccd17b54e49c
+  Kind: func, Exported: False
+  Lines: 126-126
+  Truncated Text: 'func decode*[T: byte|char](btype: typedesc[Base58C], instr: openArray[T],'
+  Full Text: 'func decode*[T: byte|char](btype: typedesc[Base58C], instr: openArray[T],'
+
+  SHA256: 77f20e31ae4fb37b32ba60a17ec416f7f1b8896ef56c151996635057210d3b7c
+  Kind: func, Exported: False
+  Lines: 230-230
+  Truncated Text: 'func decode*(btype: typedesc[Base58C], instr: string): seq[byte] ='
+  Full Text: 'func decode*(btype: typedesc[Base58C], instr: string): seq[byte] ='
+
+--- DUPLICATE GROUP: base58.nim::encode (2 defs) ---
+  SHA256: e02ccc70287b018ecede158d9e72eff06b5762d9f6b66504c6d9dbe7401cad1b
+  Kind: func, Exported: False
+  Lines: 60-61
+  Truncated Text: 'func encode*(btype: typedesc[Base58C], inbytes: openArray[byte],\noutstr: var openArray[char], outlen: var int): Base58Status ='
+  Full Text: 'func encode*(btype: typedesc[Base58C], inbytes: openArray[byte],\noutstr: var openArray[char], outlen: var int): Base58Status ='
+
+  SHA256: 7b141244632026df366f1e2e1d4bee54f7201f109fc9ef32cc0f55573edb1c1e
+  Kind: func, Exported: False
+  Lines: 114-115
+  Truncated Text: 'func encode*(btype: typedesc[Base58C],\ninbytes: openArray[byte]): string {.inline.} ='
+  Full Text: 'func encode*(btype: typedesc[Base58C],\ninbytes: openArray[byte]): string {.inline.} ='
+
+--- DUPLICATE GROUP: base58.nim::size (4 defs) ---
+  SHA256: 56de9188476ef818831ef147637788815b76ec0db26134c7c827a790d117fc42
+  Kind: let, Exported: False
+  Lines: 79-79
+  Truncated Text: 'let size ='
+  Full Text: 'let size = ((binsz - zcount) * 138) div 100 + 1'
+
+  SHA256: caea881627752c4d25aec19ba9ea5c346d044ed3541d54f4de994c0921070bd4
+  Kind: var, Exported: False
+  Lines: 118-118
+  Truncated Text: 'var size ='
+  Full Text: 'var size = (len(inbytes) * 138) div 100 + 1'
+
+  SHA256: 56de9188476ef818831ef147637788815b76ec0db26134c7c827a790d117fc42
+  Kind: let, Exported: False
+  Lines: 160-160
+  Truncated Text: 'let size ='
+  Full Text: 'let size = (binsz + 3) div 4'
+
+  SHA256: caea881627752c4d25aec19ba9ea5c346d044ed3541d54f4de994c0921070bd4
+  Kind: var, Exported: False
+  Lines: 233-233
+  Truncated Text: 'var size ='
+  Full Text: 'var size = len(instr) + 4'
+
+--- DUPLICATE GROUP: base58.nim::zcount (2 defs) ---
+  SHA256: d512db7a625aa630fbcd7c5477ce1836d3a5350df130bc1e2ee0f4c0cc3ca82d
+  Kind: var, Exported: False
+  Lines: 74-74
+  Truncated Text: 'var zcount ='
+  Full Text: 'var zcount = 0'
+
+  SHA256: d512db7a625aa630fbcd7c5477ce1836d3a5350df130bc1e2ee0f4c0cc3ca82d
+  Kind: var, Exported: False
+  Lines: 163-163
+  Truncated Text: 'var zcount ='
+  Full Text: 'var zcount = 0'
+
+--- DUPLICATE GROUP: base64.nim::alphabet (4 defs) ---
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 82-82
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = B64Alphabet'
+
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 84-84
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = B64UrlAlphabet'
+
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 157-157
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = B64Alphabet'
+
+  SHA256: e84dfd2da2791b733f2ad8579ca3396315b9a5517ef07346dd0c6ccd296105fe
+  Kind: const, Exported: False
+  Lines: 159-159
+  Truncated Text: 'const alphabet ='
+  Full Text: 'const alphabet = B64UrlAlphabet'
+
+--- DUPLICATE GROUP: base64.nim::ch (2 defs) ---
+  SHA256: b8d5876a4c78526a59ad22726953641792c14c35c809e42b3f582a897767c73f
+  Kind: let, Exported: False
+  Lines: 187-187
+  Truncated Text: 'let ch ='
+  Full Text: 'let ch = alphabet.decode[cast[int8](instr[i + j])]'
+
+  SHA256: b8d5876a4c78526a59ad22726953641792c14c35c809e42b3f582a897767c73f
+  Kind: let, Exported: False
+  Lines: 210-210
+  Truncated Text: 'let ch ='
+  Full Text: 'let ch = alphabet.decode[cast[int8](instr[i + j])]'
+
+--- DUPLICATE GROUP: base64.nim::decode (2 defs) ---
+  SHA256: 80a2319d5263e19c3ff5f62cd9e4156c3a3aa298122a75b6dcca44a0ebca9508
+  Kind: func, Exported: False
+  Lines: 141-141
+  Truncated Text: 'func decode*[T: byte|char](btype: typedesc[Base64Types], instr: openArray[T],'
+  Full Text: 'func decode*[T: byte|char](btype: typedesc[Base64Types], instr: openArray[T],'
+
+  SHA256: 05825f31edabf0679fe53d9602916c19563f626d0321e33ed2ad816ec1848162
+  Kind: func, Exported: False
+  Lines: 226-226
+  Truncated Text: 'func decode*[T: byte|char](btype: typedesc[Base64Types],'
+  Full Text: 'func decode*[T: byte|char](btype: typedesc[Base64Types],'
+
+--- DUPLICATE GROUP: base64.nim::encode (2 defs) ---
+  SHA256: 561327623c2f56292f00b7f5e1aca989dd1177e867c1b8b9bc94d6844189748c
+  Kind: func, Exported: False
+  Lines: 71-72
+  Truncated Text: 'func encode*(btype: typedesc[Base64Types], inbytes: openArray[byte],\noutstr: var openArray[char], outlen: var int): Base64Status ='
+  Full Text: 'func encode*(btype: typedesc[Base64Types], inbytes: openArray[byte],\noutstr: var openArray[char], outlen: var int): Base64Status ='
+
+  SHA256: b7b77acfee89671f2985e3a23c8046e9cf8bccb33f74e6c77bad41db12d3cf63
+  Kind: func, Exported: False
+  Lines: 129-130
+  Truncated Text: 'func encode*(btype: typedesc[Base64Types],\ninbytes: openArray[byte]): string {.inline.} ='
+  Full Text: 'func encode*(btype: typedesc[Base64Types],\ninbytes: openArray[byte]): string {.inline.} ='
+
+--- DUPLICATE GROUP: base64.nim::i (2 defs) ---
+  SHA256: 9cd01a38229cb9b4ebfc1545afc1b0ee1741a82724b1449bd42294855256671b
+  Kind: var, Exported: False
+  Lines: 92-92
+  Truncated Text: 'var i ='
+  Full Text: 'var i = 0'
+
+  SHA256: 66c11cd49009cd3376d5fad89790472199cb8a47ca59ef0d163b44094208fa64
+  Kind: var, Exported: False
+  Lines: 180-180
+  Truncated Text: 'var i, k: int'
+  Full Text: 'var i, k: int'
+
+--- DUPLICATE GROUP: base64.nim::length (3 defs) ---
+  SHA256: fc8ff760e229e23db16593af94ec5af9ed25b96c8c60e30b2a0eb8c35aa2c742
+  Kind: let, Exported: False
+  Lines: 86-86
+  Truncated Text: 'let length ='
+  Full Text: 'let length = len(inbytes)'
+
+  SHA256: fc8ff760e229e23db16593af94ec5af9ed25b96c8c60e30b2a0eb8c35aa2c742
+  Kind: let, Exported: False
+  Lines: 165-165
+  Truncated Text: 'let length ='
+  Full Text: 'let length = btype.decodedLength(len(instr))'
+
+  SHA256: 730183b0988c4a66a87ea4a5c874c8aff5f19acd7d862cc26e3e6e635a2d3031
+  Kind: var, Exported: False
+  Lines: 232-232
+  Truncated Text: 'var length ='
+  Full Text: 'var length = 0'
+
+--- DUPLICATE GROUP: bitops2.nim::T (5 defs) ---
+  SHA256: b4d4cab51c8ac96cf721ac9f207d6980c5f498a6dbe63fb0bd508d18f745c335
+  Kind: type, Exported: False
+  Lines: 423-423
+  Truncated Text: 'type T ='
+  Full Text: 'type T = type(x)'
+
+  SHA256: b4d4cab51c8ac96cf721ac9f207d6980c5f498a6dbe63fb0bd508d18f745c335
+  Kind: type, Exported: False
+  Lines: 449-449
+  Truncated Text: 'type T ='
+  Full Text: 'type T = type(x)'
+
+  SHA256: b4d4cab51c8ac96cf721ac9f207d6980c5f498a6dbe63fb0bd508d18f745c335
+  Kind: type, Exported: False
+  Lines: 465-465
+  Truncated Text: 'type T ='
+  Full Text: 'type T = type(x)'
+
+  SHA256: b4d4cab51c8ac96cf721ac9f207d6980c5f498a6dbe63fb0bd508d18f745c335
+  Kind: type, Exported: False
+  Lines: 479-479
+  Truncated Text: 'type T ='
+  Full Text: 'type T = type(x)'
+
+  SHA256: b4d4cab51c8ac96cf721ac9f207d6980c5f498a6dbe63fb0bd508d18f745c335
+  Kind: type, Exported: False
+  Lines: 495-495
+  Truncated Text: 'type T ='
+  Full Text: 'type T = type(x)'
+
+--- DUPLICATE GROUP: bitops2.nim::amount (2 defs) ---
+  SHA256: 8fa62b7b103c4014db59538ff2d711e9d94dd0440405d4ad176c414254ca1233
+  Kind: let, Exported: False
+  Lines: 406-406
+  Truncated Text: 'let amount ='
+  Full Text: 'let amount = int(amount and mask)'
+
+  SHA256: 8fa62b7b103c4014db59538ff2d711e9d94dd0440405d4ad176c414254ca1233
+  Kind: let, Exported: False
+  Lines: 413-413
+  Truncated Text: 'let amount ='
+  Full Text: 'let amount = int(amount and mask)'
+
+--- DUPLICATE GROUP: bitops2.nim::arch64 (2 defs) ---
+  SHA256: 82016abd6ec6889fc36c7e32b073916faaf40526ea26582312f679c7cf2caef4
+  Kind: const, Exported: False
+  Lines: 177-177
+  Truncated Text: 'const arch64 ='
+  Full Text: 'const arch64 = sizeof(int) == 8'
+
+  SHA256: 82016abd6ec6889fc36c7e32b073916faaf40526ea26582312f679c7cf2caef4
+  Kind: const, Exported: False
+  Lines: 235-235
+  Truncated Text: 'const arch64 ='
+  Full Text: 'const arch64 = sizeof(int) == 8'
+
+--- DUPLICATE GROUP: bitops2.nim::bitScan (2 defs) ---
+  SHA256: 0d4eea8d23ba08f53fba1e3ad6850eb155449e067617218da9f20713ef53133e
+  Kind: template, Exported: False
+  Lines: 220-220
+  Truncated Text: 'template bitScan(fnc: untyped, x: typed): int ='
+  Full Text: 'template bitScan(fnc: untyped, x: typed): int ='
+
+  SHA256: 0d4eea8d23ba08f53fba1e3ad6850eb155449e067617218da9f20713ef53133e
+  Kind: template, Exported: False
+  Lines: 258-258
+  Truncated Text: 'template bitScan(fnc: untyped, x: typed): int ='
+  Full Text: 'template bitScan(fnc: untyped, x: typed): int ='
+
+--- DUPLICATE GROUP: bitops2.nim::bitScanForward (2 defs) ---
+  SHA256: 693a1caa56c6e73da722ff34c8f90d9cd2dd17cbf52bf0797e8e1c9524cb7913
+  Kind: func, Exported: False
+  Lines: 187-187
+  Truncated Text: 'func bitScanForward(index: ptr culong, mask: culong): cuchar {.importc: "_BitScanForward", header: "<intrin.h>".}'
+  Full Text: 'func bitScanForward(index: ptr culong, mask: culong): cuchar {.importc: "_BitScanForward", header: "<intrin.h>".}'
+
+  SHA256: 0f2e708da102d39c9f92ee444d50a7ac744cf3e6502a39517ba6550309749b9e
+  Kind: func, Exported: False
+  Lines: 243-243
+  Truncated Text: 'func bitScanForward(p: ptr uint32, b: uint32): cuchar {.importc: "_BitScanForward", header: "<immintrin.h>".}'
+  Full Text: 'func bitScanForward(p: ptr uint32, b: uint32): cuchar {.importc: "_BitScanForward", header: "<immintrin.h>".}'
+
+--- DUPLICATE GROUP: bitops2.nim::bitScanForward64 (2 defs) ---
+  SHA256: ad7862633d3b5f74d4cf60af9f5861d32bcbaaa6cdb799dc469c8d165055b5ca
+  Kind: func, Exported: False
+  Lines: 192-192
+  Truncated Text: 'func bitScanForward64(index: ptr culong, mask: uint64): cuchar {.importc: "_BitScanForward64", header: "<intrin.h>".}'
+  Full Text: 'func bitScanForward64(index: ptr culong, mask: uint64): cuchar {.importc: "_BitScanForward64", header: "<intrin.h>".}'
+
+  SHA256: 2644c30443328db33c1d7111d3a03af7d653bf3a4512155330406188629846ae
+  Kind: func, Exported: False
+  Lines: 250-250
+  Truncated Text: 'func bitScanForward64(p: ptr uint32, b: uint64): cuchar {.importc: "_BitScanForward64", header: "<immintrin.h>".}'
+  Full Text: 'func bitScanForward64(p: ptr uint32, b: uint64): cuchar {.importc: "_BitScanForward64", header: "<immintrin.h>".}'
+
+--- DUPLICATE GROUP: bitops2.nim::bitScanReverse (2 defs) ---
+  SHA256: 85c0f08d8a1cb8120d04656f5c47fc26f30c19b6f72da988ee99ed9849fbed0e
+  Kind: func, Exported: False
+  Lines: 184-184
+  Truncated Text: 'func bitScanReverse(index: ptr culong, mask: culong): cuchar {.importc: "_BitScanReverse", header: "<intrin.h>".}'
+  Full Text: 'func bitScanReverse(index: ptr culong, mask: culong): cuchar {.importc: "_BitScanReverse", header: "<intrin.h>".}'
+
+  SHA256: d145e9190d272abd121cd597f294f62ccb65b52bcafa274ac79bf372b3710686
+  Kind: func, Exported: False
+  Lines: 246-246
+  Truncated Text: 'func bitScanReverse(p: ptr uint32, b: uint32): cuchar {.importc: "_BitScanReverse", header: "<immintrin.h>".}'
+  Full Text: 'func bitScanReverse(p: ptr uint32, b: uint32): cuchar {.importc: "_BitScanReverse", header: "<immintrin.h>".}'
+
+--- DUPLICATE GROUP: bitops2.nim::bitScanReverse64 (2 defs) ---
+  SHA256: 8eedca5c5249206bcbf5f921f83ac10e168dbb9ec92540ace584ded6277a0719
+  Kind: func, Exported: False
+  Lines: 191-191
+  Truncated Text: 'func bitScanReverse64(index: ptr culong, mask: uint64): cuchar {.importc: "_BitScanReverse64", header: "<intrin.h>".}'
+  Full Text: 'func bitScanReverse64(index: ptr culong, mask: uint64): cuchar {.importc: "_BitScanReverse64", header: "<intrin.h>".}'
+
+  SHA256: d2b7bbcc0da76b32893e7ca4541d88c7c565062527c040fab7965949252ed29b
+  Kind: func, Exported: False
+  Lines: 251-251
+  Truncated Text: 'func bitScanReverse64(p: ptr uint32, b: uint64): cuchar {.importc: "_BitScanReverse64", header: "<immintrin.h>".}'
+  Full Text: 'func bitScanReverse64(p: ptr uint32, b: uint64): cuchar {.importc: "_BitScanReverse64", header: "<immintrin.h>".}'
+
+--- DUPLICATE GROUP: bitops2.nim::bitsof (2 defs) ---
+  SHA256: 670e68fbccd5c6c86edd70deb30b0adaea16f336a57657500871477f06a795e4
+  Kind: template, Exported: False
+  Lines: 29-29
+  Truncated Text: 'template bitsof*(T: typedesc[SomeInteger]): int = 8 * sizeof(T)'
+  Full Text: 'template bitsof*(T: typedesc[SomeInteger]): int = 8 * sizeof(T)'
+
+  SHA256: eb99baa94820bfa1be40f02b3ffe5e6daa4de969acf121c9d46bb5440e1c9e7c
+  Kind: template, Exported: False
+  Lines: 30-30
+  Truncated Text: 'template bitsof*(x: SomeInteger): int = 8 * sizeof(x)'
+  Full Text: 'template bitsof*(x: SomeInteger): int = 8 * sizeof(x)'
+
+--- DUPLICATE GROUP: bitops2.nim::builtin_popcnt32 (2 defs) ---
+  SHA256: 9ba46c71b9539bd876af9fbf6178c74914735016cc179bb08a7e23ec9cd9fb8a
+  Kind: func, Exported: False
+  Lines: 181-181
+  Truncated Text: 'func builtin_popcnt32(a2: uint32): uint32 {.importc: "__popcnt" header: "<intrin.h>".}'
+  Full Text: 'func builtin_popcnt32(a2: uint32): uint32 {.importc: "__popcnt" header: "<intrin.h>".}'
+
+  SHA256: 708b7cfb000abac0b61110baee8755accfc79cee1530bbcb39f373d7f77b68c8
+  Kind: func, Exported: False
+  Lines: 240-240
+  Truncated Text: 'func builtin_popcnt32(x: cint): cint {.importc: "_popcnt32" header: "<immintrin.h>".}'
+  Full Text: 'func builtin_popcnt32(x: cint): cint {.importc: "_popcnt32" header: "<immintrin.h>".}'
+
+--- DUPLICATE GROUP: bitops2.nim::builtin_popcnt64 (2 defs) ---
+  SHA256: 48e7ed2ad2fa50b7e67e609ba8ab3136d27fe5eede35d75b589ab7382008fa74
+  Kind: func, Exported: False
+  Lines: 190-190
+  Truncated Text: 'func builtin_popcnt64(a2: uint64): uint64 {.importc: "__popcnt64" header: "<intrin.h>".}'
+  Full Text: 'func builtin_popcnt64(a2: uint64): uint64 {.importc: "__popcnt64" header: "<intrin.h>".}'
+
+  SHA256: 44b74c329df51ed86ad19aa43c84a9de52df0ee61888c6b8011e6a6be2b06533
+  Kind: func, Exported: False
+  Lines: 249-249
+  Truncated Text: 'func builtin_popcnt64(x: uint64): cint {.importc: "_popcnt64" header: "<immintrin.h>".}'
+  Full Text: 'func builtin_popcnt64(x: uint64): cint {.importc: "_popcnt64" header: "<immintrin.h>".}'
+
+--- DUPLICATE GROUP: bitops2.nim::changeBit (2 defs) ---
+  SHA256: b52296c7197e43489fc7235ca7cf58ef9a2e36f8447bf81a3ffc55f9858c2027
+  Kind: func, Exported: False
+  Lines: 462-462
+  Truncated Text: 'func changeBit*(x: var BitIndexable, bit: Natural, val: bool) {.inline.} ='
+  Full Text: 'func changeBit*(x: var BitIndexable, bit: Natural, val: bool) {.inline.} ='
+
+  SHA256: 3841e9b940e92db02cb6e778c8e74a066ac6afe7cf05c8a153960f904f9ce139
+  Kind: func, Exported: False
+  Lines: 523-523
+  Truncated Text: 'func changeBit*(bytes: var openArray[byte], pos: Natural, value: bool) {.inline.} ='
+  Full Text: 'func changeBit*(bytes: var openArray[byte], pos: Natural, value: bool) {.inline.} ='
+
+--- DUPLICATE GROUP: bitops2.nim::changeBitBE (2 defs) ---
+  SHA256: 3858d9c810d5499ec9890e1cdb9531e4ea05c1eb804a4859366e3f7887d9abab
+  Kind: func, Exported: False
+  Lines: 471-471
+  Truncated Text: 'func changeBitBE*(x: var BitIndexable, bit: Natural, val: bool) {.inline.} ='
+  Full Text: 'func changeBitBE*(x: var BitIndexable, bit: Natural, val: bool) {.inline.} ='
+
+  SHA256: 3b210cc709ecb498728d3725acd273bc483ca95608d9b36d27606a8b367f0819
+  Kind: func, Exported: False
+  Lines: 529-529
+  Truncated Text: 'func changeBitBE*(bytes: var openArray[byte], pos: Natural, value: bool) {.inline.} ='
+  Full Text: 'func changeBitBE*(bytes: var openArray[byte], pos: Natural, value: bool) {.inline.} ='
+
+--- DUPLICATE GROUP: bitops2.nim::changeBitLE (2 defs) ---
+  SHA256: 6198570285feb7632aec7815fef2aaf919dd65e826660ba65d634e9141c48778
+  Kind: template, Exported: False
+  Lines: 468-468
+  Truncated Text: 'template changeBitLE*(x: var BitIndexable, bit: Natural, val: bool) ='
+  Full Text: 'template changeBitLE*(x: var BitIndexable, bit: Natural, val: bool) ='
+
+  SHA256: 567e7673385dc8524dc5d04f7e87c28214d5005c4c255d2cd29a36e903f3763d
+  Kind: template, Exported: False
+  Lines: 526-526
+  Truncated Text: 'template changeBitLE*(bytes: var openArray[byte], pos: Natural, value: bool) ='
+  Full Text: 'template changeBitLE*(bytes: var openArray[byte], pos: Natural, value: bool) ='
+
+--- DUPLICATE GROUP: bitops2.nim::checkedScan (2 defs) ---
+  SHA256: 0714f57ac8ed25b52a251c2dc59b42f7444d1df919541db88dcb49266813f863
+  Kind: template, Exported: False
+  Lines: 206-206
+  Truncated Text: 'template checkedScan(fnc: untyped, x: typed, def: typed): int ='
+  Full Text: 'template checkedScan(fnc: untyped, x: typed, def: typed): int ='
+
+  SHA256: 0714f57ac8ed25b52a251c2dc59b42f7444d1df919541db88dcb49266813f863
+  Kind: template, Exported: False
+  Lines: 253-253
+  Truncated Text: 'template checkedScan(fnc: untyped, x: typed, def: typed): int ='
+  Full Text: 'template checkedScan(fnc: untyped, x: typed, def: typed): int ='
+
+--- DUPLICATE GROUP: bitops2.nim::clearBit (2 defs) ---
+  SHA256: b972f78a6ea49a49aa036fad10e979040202994a07e9726ae8f03e4b0c70ee28
+  Kind: func, Exported: False
+  Lines: 476-476
+  Truncated Text: 'func clearBit*(x: var BitIndexable, bit: Natural) {.inline.} ='
+  Full Text: 'func clearBit*(x: var BitIndexable, bit: Natural) {.inline.} ='
+
+  SHA256: 4e312c6b7bf2d6876bf1f53922f513d82be82ca40694624680a1c751f522270b
+  Kind: func, Exported: False
+  Lines: 541-541
+  Truncated Text: 'func clearBit*(bytes: var openArray[byte], pos: Natural) {.inline.} ='
+  Full Text: 'func clearBit*(bytes: var openArray[byte], pos: Natural) {.inline.} ='
+
+--- DUPLICATE GROUP: bitops2.nim::clearBitBE (2 defs) ---
+  SHA256: 2b67006eae1ad6b58632af28fd192292e72314bafc9787d6930cca0caab532d6
+  Kind: func, Exported: False
+  Lines: 486-486
+  Truncated Text: 'func clearBitBE*(x: var BitIndexable, bit: Natural) {.inline.} ='
+  Full Text: 'func clearBitBE*(x: var BitIndexable, bit: Natural) {.inline.} ='
+
+  SHA256: 68812771ae56412541d33f198f8ec9a3d0007c2038cb84e120f3ffa5068c27fd
+  Kind: func, Exported: False
+  Lines: 547-547
+  Truncated Text: 'func clearBitBE*(bytes: var openArray[byte], pos: Natural) {.inline.} ='
+  Full Text: 'func clearBitBE*(bytes: var openArray[byte], pos: Natural) {.inline.} ='
+
+--- DUPLICATE GROUP: bitops2.nim::clearBitLE (2 defs) ---
+  SHA256: a42517858f08a3af28dd8c6d1fcded06bcadb751e4c85020ad86e124d753a7d6
+  Kind: template, Exported: False
+  Lines: 483-483
+  Truncated Text: 'template clearBitLE*(x: var BitIndexable, bit: Natural) ='
+  Full Text: 'template clearBitLE*(x: var BitIndexable, bit: Natural) ='
+
+  SHA256: b3d199e009c2a5b82f57f8efd7d245b468d24cd4f31982e5d1360d40309d8bc7
+  Kind: template, Exported: False
+  Lines: 544-544
+  Truncated Text: 'template clearBitLE*(bytes: var openArray[byte], pos: Natural) ='
+  Full Text: 'template clearBitLE*(bytes: var openArray[byte], pos: Natural) ='
+
+--- DUPLICATE GROUP: bitops2.nim::countOnesBuiltin (6 defs) ---
+  SHA256: 13cf1190d37717c26b0693fd7c27316cb753abeac34e5f689cf1c38f61530f51
+  Kind: func, Exported: False
+  Lines: 153-153
+  Truncated Text: 'func countOnesBuiltin(x: SomeUnsignedInt): int ='
+  Full Text: 'func countOnesBuiltin(x: SomeUnsignedInt): int ='
+
+  SHA256: 975b70ebc1a04e74cc88e73808ec8aca769528ad932ffeb810c48145db2620f4
+  Kind: func, Exported: False
+  Lines: 194-194
+  Truncated Text: 'func countOnesBuiltin(v: uint8|uint16): int ='
+  Full Text: 'func countOnesBuiltin(v: uint8|uint16): int ='
+
+  SHA256: eccc92638195411b58f88dde53d196a6594d6d562909bf7ca824bf0aebfa1aa0
+  Kind: func, Exported: False
+  Lines: 196-196
+  Truncated Text: 'func countOnesBuiltin(v: uint32): int ='
+  Full Text: 'func countOnesBuiltin(v: uint32): int ='
+
+  SHA256: 2a8d305a0c63e1c5d532df38d5bfca96b9f7608f91df8e88601800e8d3222f2c
+  Kind: func, Exported: False
+  Lines: 198-198
+  Truncated Text: 'func countOnesBuiltin(v: uint64): int ='
+  Full Text: 'func countOnesBuiltin(v: uint64): int ='
+
+  SHA256: 0c851e88cdfe8f181b736d241c794a32eaaf7cf08d7bc4daf0ea0359949d0543
+  Kind: func, Exported: False
+  Lines: 263-263
+  Truncated Text: 'func countOnesBuiltin(v: uint8|uint16|uint32): int ='
+  Full Text: 'func countOnesBuiltin(v: uint8|uint16|uint32): int ='
+
+  SHA256: 2a8d305a0c63e1c5d532df38d5bfca96b9f7608f91df8e88601800e8d3222f2c
+  Kind: func, Exported: False
+  Lines: 265-265
+  Truncated Text: 'func countOnesBuiltin(v: uint64): int ='
+  Full Text: 'func countOnesBuiltin(v: uint64): int ='
+
+--- DUPLICATE GROUP: bitops2.nim::countOnesNim (2 defs) ---
+  SHA256: 6ae2e3b9eea0a76eb212af75be8ae23716a7e1f83efdda44226f1b2ce687df51
+  Kind: func, Exported: False
+  Lines: 104-104
+  Truncated Text: 'func countOnesNim(x: uint8|uint16|uint32): int ='
+  Full Text: 'func countOnesNim(x: uint8|uint16|uint32): int ='
+
+  SHA256: cf2c3564befe2e1fdb73d02b5f1f8267aaa33863fc3e80c307a30e6ddb63754f
+  Kind: func, Exported: False
+  Lines: 113-113
+  Truncated Text: 'func countOnesNim(x: uint64): int ='
+  Full Text: 'func countOnesNim(x: uint64): int ='
+
+--- DUPLICATE GROUP: bitops2.nim::firstOneBuiltin (5 defs) ---
+  SHA256: 4d6492d4039b3a5f1256686d941d91f390adb8c135b3aba9a4af8fcb19680c25
+  Kind: func, Exported: False
+  Lines: 165-165
+  Truncated Text: 'func firstOneBuiltin(x: SomeUnsignedInt): int ='
+  Full Text: 'func firstOneBuiltin(x: SomeUnsignedInt): int ='
+
+  SHA256: 14d1af358f57229a061005d2f24f9a5e2995fe30e37f28b2f719075a18c7079f
+  Kind: func, Exported: False
+  Lines: 211-211
+  Truncated Text: 'func firstOneBuiltin(v: uint8|uint16|uint32): int ='
+  Full Text: 'func firstOneBuiltin(v: uint8|uint16|uint32): int ='
+
+  SHA256: f8cf4e289c22875241893142efa6e3af973ba381753b20220ac1019be31e2a9e
+  Kind: func, Exported: False
+  Lines: 214-214
+  Truncated Text: 'func firstOneBuiltin(v: uint64): int ='
+  Full Text: 'func firstOneBuiltin(v: uint64): int ='
+
+  SHA256: 14d1af358f57229a061005d2f24f9a5e2995fe30e37f28b2f719075a18c7079f
+  Kind: func, Exported: False
+  Lines: 273-273
+  Truncated Text: 'func firstOneBuiltin(v: uint8|uint16|uint32): int ='
+  Full Text: 'func firstOneBuiltin(v: uint8|uint16|uint32): int ='
+
+  SHA256: f8cf4e289c22875241893142efa6e3af973ba381753b20220ac1019be31e2a9e
+  Kind: func, Exported: False
+  Lines: 276-276
+  Truncated Text: 'func firstOneBuiltin(v: uint64): int ='
+  Full Text: 'func firstOneBuiltin(v: uint64): int ='
+
+--- DUPLICATE GROUP: bitops2.nim::firstOneNim (3 defs) ---
+  SHA256: cdf7cce4ea28809ca31729aa3d1aba290cdcf9bb53e2f70a87156e144131ee0f
+  Kind: func, Exported: False
+  Lines: 52-52
+  Truncated Text: 'func firstOneNim(x: uint32): int ='
+  Full Text: 'func firstOneNim(x: uint32): int ='
+
+  SHA256: 4e723e5ea8bb2e7f07e5c4243b9c8996fadf1ba78a9e4c28352acfa0d8887ab7
+  Kind: func, Exported: False
+  Lines: 63-63
+  Truncated Text: 'func firstOneNim(x: uint8|uint16): int = firstOneNim(x.uint32)'
+  Full Text: 'func firstOneNim(x: uint8|uint16): int = firstOneNim(x.uint32)'
+
+  SHA256: a34ed7b634a8e8a63a115087908106072569b8bd9694b387d76f31bdc7f0ab5e
+  Kind: func, Exported: False
+  Lines: 64-64
+  Truncated Text: 'func firstOneNim(x: uint64): int ='
+  Full Text: 'func firstOneNim(x: uint64): int ='
+
+--- DUPLICATE GROUP: bitops2.nim::getBit (2 defs) ---
+  SHA256: 3e9d5637b064ba868f4bd3c85d5b219cc99fdbe4baf059046427923381c8163c
+  Kind: template, Exported: False
+  Lines: 420-420
+  Truncated Text: 'template getBit*(x: BitIndexable, bit: Natural): bool ='
+  Full Text: 'template getBit*(x: BitIndexable, bit: Natural): bool ='
+
+  SHA256: 014fa1f061c07657c8ad7023206fd30d0852f5e36fa4fbe59b1e11746c4a3587
+  Kind: func, Exported: False
+  Lines: 514-514
+  Truncated Text: 'func getBit*(bytes: openArray[byte], pos: Natural): bool {.inline.} ='
+  Full Text: 'func getBit*(bytes: openArray[byte], pos: Natural): bool {.inline.} ='
+
+--- DUPLICATE GROUP: bitops2.nim::getBitBE (2 defs) ---
+  SHA256: 5d4c979e0b371a69d88a66433d5b398eb1ff92a2b8c3ff6a72db64a94ad094da
+  Kind: template, Exported: False
+  Lines: 429-429
+  Truncated Text: 'template getBitBE*(x: BitIndexable, bit: Natural): bool ='
+  Full Text: 'template getBitBE*(x: BitIndexable, bit: Natural): bool ='
+
+  SHA256: 735255580b54a732d9bda8f3525d9f64809b8454bfd1244a77d8943d833ab5a5
+  Kind: func, Exported: False
+  Lines: 520-520
+  Truncated Text: 'func getBitBE*(bytes: openArray[byte], pos: Natural): bool {.inline.} ='
+  Full Text: 'func getBitBE*(bytes: openArray[byte], pos: Natural): bool {.inline.} ='
+
+--- DUPLICATE GROUP: bitops2.nim::getBitLE (2 defs) ---
+  SHA256: ac963427b9e432a9c22c5bc7613fe04b4bd5db55c4ddc886753124aff4622d8c
+  Kind: template, Exported: False
+  Lines: 426-426
+  Truncated Text: 'template getBitLE*(x: BitIndexable, bit: Natural): bool ='
+  Full Text: 'template getBitLE*(x: BitIndexable, bit: Natural): bool ='
+
+  SHA256: 2b63f020f65ddd7da3cba8fbd54f463330d28b2d0545606f623ecdbc00b63a67
+  Kind: template, Exported: False
+  Lines: 517-517
+  Truncated Text: 'template getBitLE*(bytes: openArray[byte], pos: Natural): bool ='
+  Full Text: 'template getBitLE*(bytes: openArray[byte], pos: Natural): bool ='
+
+--- DUPLICATE GROUP: bitops2.nim::getBitsBE (2 defs) ---
+  SHA256: f1113b9954595928e692f4d8e9faae901e8c70c94ad8899178a220ed0b6799a6
+  Kind: func, Exported: False
+  Lines: 559-559
+  Truncated Text: 'func getBitsBE*(data: openArray[byte], slice: HSlice, T: type[SomeUnsignedInt]): T ='
+  Full Text: 'func getBitsBE*(data: openArray[byte], slice: HSlice, T: type[SomeUnsignedInt]): T ='
+
+  SHA256: 95c115601400476b922d010b7d19b44d13277e1ccd229c1088a8f2973b56273b
+  Kind: template, Exported: False
+  Lines: 599-599
+  Truncated Text: 'template getBitsBE*(data: openArray[byte], slice: HSlice): BiggestUInt ='
+  Full Text: 'template getBitsBE*(data: openArray[byte], slice: HSlice): BiggestUInt ='
+
+--- DUPLICATE GROUP: bitops2.nim::index (4 defs) ---
+  SHA256: bfbce32e10cbc2bd44f566afc898967366e01813b87f31f2fc69987761658ccc
+  Kind: var, Exported: False
+  Lines: 207-207
+  Truncated Text: 'var index{.noinit.}: culong'
+  Full Text: 'var index{.noinit.}: culong'
+
+  SHA256: bfbce32e10cbc2bd44f566afc898967366e01813b87f31f2fc69987761658ccc
+  Kind: var, Exported: False
+  Lines: 221-221
+  Truncated Text: 'var index{.noinit.}: culong'
+  Full Text: 'var index{.noinit.}: culong'
+
+  SHA256: bfbce32e10cbc2bd44f566afc898967366e01813b87f31f2fc69987761658ccc
+  Kind: var, Exported: False
+  Lines: 254-254
+  Truncated Text: 'var index{.noinit.}: culong'
+  Full Text: 'var index{.noinit.}: culong'
+
+  SHA256: bfbce32e10cbc2bd44f566afc898967366e01813b87f31f2fc69987761658ccc
+  Kind: var, Exported: False
+  Lines: 259-259
+  Truncated Text: 'var index{.noinit.}: culong'
+  Full Text: 'var index{.noinit.}: culong'
+
+--- DUPLICATE GROUP: bitops2.nim::log2truncBuiltin (6 defs) ---
+  SHA256: faf0c8c9aa2746954d3d4e062a9cdba77214dc54273afcf3d87d190b79b42162
+  Kind: func, Exported: False
+  Lines: 171-171
+  Truncated Text: 'func log2truncBuiltin(v: uint8|uint16|uint32): int ='
+  Full Text: 'func log2truncBuiltin(v: uint8|uint16|uint32): int ='
+
+  SHA256: 3fca64894ab7aa556a865b64383353384d9b459ef1e01e42fc287a4287e0a2f9
+  Kind: func, Exported: False
+  Lines: 173-173
+  Truncated Text: 'func log2truncBuiltin(v: uint64): int ='
+  Full Text: 'func log2truncBuiltin(v: uint64): int ='
+
+  SHA256: faf0c8c9aa2746954d3d4e062a9cdba77214dc54273afcf3d87d190b79b42162
+  Kind: func, Exported: False
+  Lines: 225-225
+  Truncated Text: 'func log2truncBuiltin(v: uint8|uint16|uint32): int ='
+  Full Text: 'func log2truncBuiltin(v: uint8|uint16|uint32): int ='
+
+  SHA256: 3fca64894ab7aa556a865b64383353384d9b459ef1e01e42fc287a4287e0a2f9
+  Kind: func, Exported: False
+  Lines: 228-228
+  Truncated Text: 'func log2truncBuiltin(v: uint64): int ='
+  Full Text: 'func log2truncBuiltin(v: uint64): int ='
+
+  SHA256: faf0c8c9aa2746954d3d4e062a9cdba77214dc54273afcf3d87d190b79b42162
+  Kind: func, Exported: False
+  Lines: 282-282
+  Truncated Text: 'func log2truncBuiltin(v: uint8|uint16|uint32): int ='
+  Full Text: 'func log2truncBuiltin(v: uint8|uint16|uint32): int ='
+
+  SHA256: 3fca64894ab7aa556a865b64383353384d9b459ef1e01e42fc287a4287e0a2f9
+  Kind: func, Exported: False
+  Lines: 285-285
+  Truncated Text: 'func log2truncBuiltin(v: uint64): int ='
+  Full Text: 'func log2truncBuiltin(v: uint64): int ='
+
+--- DUPLICATE GROUP: bitops2.nim::log2truncNim (2 defs) ---
+  SHA256: 662abf02a33133ca16bc4dfa374f4f789334c1bdcdfd6430244af9f5ea4dee04
+  Kind: func, Exported: False
+  Lines: 73-73
+  Truncated Text: 'func log2truncNim(x: uint8|uint16|uint32): int ='
+  Full Text: 'func log2truncNim(x: uint8|uint16|uint32): int ='
+
+  SHA256: 53264228323c483392b425086b93e0555700ed5d9702ab91d2c44f8350c45240
+  Kind: func, Exported: False
+  Lines: 87-87
+  Truncated Text: 'func log2truncNim(x: uint64): int ='
+  Full Text: 'func log2truncNim(x: uint64): int ='
+
+--- DUPLICATE GROUP: bitops2.nim::lookup (3 defs) ---
+  SHA256: 18326ab64fa38c3718b179baf4fe65e27789019fe6dcf9fa3d0890db438a6ef4
+  Kind: const, Exported: False
+  Lines: 55-55
+  Truncated Text: 'const lookup ='
+  Full Text: "const lookup = [0'u8, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15,"
+
+  SHA256: 34a0616e995142f6f4d9d580dbc6e0dffaba3a9845319d879d1b877ebf6eab89
+  Kind: const, Exported: False
+  Lines: 77-77
+  Truncated Text: 'const lookup: array[32, uint8] ='
+  Full Text: "const lookup: array[32, uint8] = [0'u8, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18,"
+
+  SHA256: 81f889a2e92fcdf6f25327357aa6813fcbb71b3f92c6d6892a5b64ece07dd33e
+  Kind: const, Exported: False
+  Lines: 91-91
+  Truncated Text: 'const lookup: array[64, uint8] ='
+  Full Text: "const lookup: array[64, uint8] = [0'u8, 58, 1, 59, 47, 53, 2, 60, 39, 48, 27, 54,"
+
+--- DUPLICATE GROUP: bitops2.nim::mask (8 defs) ---
+  SHA256: 03c0de22608f286b9ebea1bdeb78d0f9cffb114334d291304349e2291707cdf7
+  Kind: const, Exported: False
+  Lines: 405-405
+  Truncated Text: 'const mask ='
+  Full Text: 'const mask = 8 * sizeof(v) - 1'
+
+  SHA256: 03c0de22608f286b9ebea1bdeb78d0f9cffb114334d291304349e2291707cdf7
+  Kind: const, Exported: False
+  Lines: 412-412
+  Truncated Text: 'const mask ='
+  Full Text: 'const mask = bitsof(v) - 1'
+
+  SHA256: 8967b9a29e94f32fa5a7c48286c094c37a14f8592fbea98c92ae8f1acd31ba21
+  Kind: let, Exported: False
+  Lines: 450-450
+  Truncated Text: 'let mask ='
+  Full Text: 'let mask = T(1) shl bit'
+
+  SHA256: 8967b9a29e94f32fa5a7c48286c094c37a14f8592fbea98c92ae8f1acd31ba21
+  Kind: let, Exported: False
+  Lines: 459-459
+  Truncated Text: 'let mask ='
+  Full Text: 'let mask = mostSignificantBit(x.type) shr bit'
+
+  SHA256: 8967b9a29e94f32fa5a7c48286c094c37a14f8592fbea98c92ae8f1acd31ba21
+  Kind: let, Exported: False
+  Lines: 480-480
+  Truncated Text: 'let mask ='
+  Full Text: 'let mask = T(1) shl bit'
+
+  SHA256: 8967b9a29e94f32fa5a7c48286c094c37a14f8592fbea98c92ae8f1acd31ba21
+  Kind: let, Exported: False
+  Lines: 489-489
+  Truncated Text: 'let mask ='
+  Full Text: 'let mask = mostSignificantBit(x.type) shr bit'
+
+  SHA256: 8967b9a29e94f32fa5a7c48286c094c37a14f8592fbea98c92ae8f1acd31ba21
+  Kind: let, Exported: False
+  Lines: 496-496
+  Truncated Text: 'let mask ='
+  Full Text: 'let mask = T(1) shl bit'
+
+  SHA256: 8967b9a29e94f32fa5a7c48286c094c37a14f8592fbea98c92ae8f1acd31ba21
+  Kind: let, Exported: False
+  Lines: 505-505
+  Truncated Text: 'let mask ='
+  Full Text: 'let mask = mostSignificantBit(x.type) shr bit'
+
+--- DUPLICATE GROUP: bitops2.nim::setBit (2 defs) ---
+  SHA256: 2418c1b07895693ff7f7611d4a351addd9a39a4fefbe4ce74092a8c145596dc3
+  Kind: func, Exported: False
+  Lines: 446-446
+  Truncated Text: 'func setBit*(x: var BitIndexable, bit: Natural) {.inline.} ='
+  Full Text: 'func setBit*(x: var BitIndexable, bit: Natural) {.inline.} ='
+
+  SHA256: 366542f4e4356638c41b6c260060cd2dd8d9487bf63bcf8edbd04f1cf51285f1
+  Kind: func, Exported: False
+  Lines: 532-532
+  Truncated Text: 'func setBit*(bytes: var openArray[byte], pos: Natural) {.inline.} ='
+  Full Text: 'func setBit*(bytes: var openArray[byte], pos: Natural) {.inline.} ='
+
+--- DUPLICATE GROUP: bitops2.nim::setBitBE (2 defs) ---
+  SHA256: 183dedecf7b1a7b023017f8f40e1b3f09156fc27424c8d472cf62a286e2e3f59
+  Kind: func, Exported: False
+  Lines: 456-456
+  Truncated Text: 'func setBitBE*(x: var BitIndexable, bit: Natural) {.inline.} ='
+  Full Text: 'func setBitBE*(x: var BitIndexable, bit: Natural) {.inline.} ='
+
+  SHA256: 5007476cfc12fb7511b922a627f858a56933913cc12ae44753ba64a1370eda09
+  Kind: func, Exported: False
+  Lines: 538-538
+  Truncated Text: 'func setBitBE*(bytes: var openArray[byte], pos: Natural) {.inline.} ='
+  Full Text: 'func setBitBE*(bytes: var openArray[byte], pos: Natural) {.inline.} ='
+
+--- DUPLICATE GROUP: bitops2.nim::setBitLE (2 defs) ---
+  SHA256: ab8cfc0f2c11008584009643e25a7ecb0518578251d54080788acc0d76b75e40
+  Kind: template, Exported: False
+  Lines: 453-453
+  Truncated Text: 'template setBitLE*(x: var BitIndexable, bit: Natural) ='
+  Full Text: 'template setBitLE*(x: var BitIndexable, bit: Natural) ='
+
+  SHA256: a4cd9a690d93104142823fd460305374cb4b35e330a7cdbcfc3f55b20943e42c
+  Kind: template, Exported: False
+  Lines: 535-535
+  Truncated Text: 'template setBitLE*(bytes: var openArray[byte], pos: Natural) ='
+  Full Text: 'template setBitLE*(bytes: var openArray[byte], pos: Natural) ='
+
+--- DUPLICATE GROUP: bitops2.nim::toggleBit (2 defs) ---
+  SHA256: 5679ae8182e0fe66c3a43f68c8c0da6b2fd679975d6393f39fa1f7cfa6a2a38c
+  Kind: func, Exported: False
+  Lines: 492-492
+  Truncated Text: 'func toggleBit*(x: var BitIndexable, bit: Natural) {.inline.} ='
+  Full Text: 'func toggleBit*(x: var BitIndexable, bit: Natural) {.inline.} ='
+
+  SHA256: cdd3e4c2037f13c57dcedb547ea769969234db06190bad8e26faff3e2d99c6a6
+  Kind: func, Exported: False
+  Lines: 550-550
+  Truncated Text: 'func toggleBit*(bytes: var openArray[byte], pos: Natural) {.inline.} ='
+  Full Text: 'func toggleBit*(bytes: var openArray[byte], pos: Natural) {.inline.} ='
+
+--- DUPLICATE GROUP: bitops2.nim::toggleBitBE (2 defs) ---
+  SHA256: 718eecebfe5770a24e2bcc6dca7747aec6796726dcd325b842bb9cc3cb6270f9
+  Kind: func, Exported: False
+  Lines: 502-502
+  Truncated Text: 'func toggleBitBE*(x: var BitIndexable, bit: Natural) {.inline.} ='
+  Full Text: 'func toggleBitBE*(x: var BitIndexable, bit: Natural) {.inline.} ='
+
+  SHA256: 2350509f699bb264b7f4961d774369ea82ecde898068c58f2c9b14b7b02b0882
+  Kind: func, Exported: False
+  Lines: 556-556
+  Truncated Text: 'func toggleBitBE*(bytes: var openArray[byte], pos: Natural) {.inline.} ='
+  Full Text: 'func toggleBitBE*(bytes: var openArray[byte], pos: Natural) {.inline.} ='
+
+--- DUPLICATE GROUP: bitops2.nim::toggleBitLE (2 defs) ---
+  SHA256: 76e7efa4fba7b4abf04fe33e31a6791fb9c40a26c2b3a09cb281cc643d69c1d3
+  Kind: template, Exported: False
+  Lines: 499-499
+  Truncated Text: 'template toggleBitLE*(x: var BitIndexable, bit: Natural) ='
+  Full Text: 'template toggleBitLE*(x: var BitIndexable, bit: Natural) ='
+
+  SHA256: 39228cd2c2c3ad2acd92f1bc87efe0039f60cdf973478dae774f198c5e3f4f3f
+  Kind: template, Exported: False
+  Lines: 553-553
+  Truncated Text: 'template toggleBitLE*(bytes: var openArray[byte], pos: Natural) ='
+  Full Text: 'template toggleBitLE*(bytes: var openArray[byte], pos: Natural) ='
+
+--- DUPLICATE GROUP: bitops2.nim::v (6 defs) ---
+  SHA256: 7e6d40391b71a41cdd0d1e3010a6f9ec299b51f8771646cd8c5bb0c125878fd9
+  Kind: var, Exported: False
+  Lines: 37-37
+  Truncated Text: 'var v ='
+  Full Text: 'var v = x - 1'
+
+  SHA256: 7e6d40391b71a41cdd0d1e3010a6f9ec299b51f8771646cd8c5bb0c125878fd9
+  Kind: var, Exported: False
+  Lines: 79-79
+  Truncated Text: 'var v ='
+  Full Text: 'var v = x.uint32'
+
+  SHA256: 7e6d40391b71a41cdd0d1e3010a6f9ec299b51f8771646cd8c5bb0c125878fd9
+  Kind: var, Exported: False
+  Lines: 95-95
+  Truncated Text: 'var v ='
+  Full Text: 'var v = x'
+
+  SHA256: 7e6d40391b71a41cdd0d1e3010a6f9ec299b51f8771646cd8c5bb0c125878fd9
+  Kind: var, Exported: False
+  Lines: 108-108
+  Truncated Text: 'var v ='
+  Full Text: 'var v = x.uint32'
+
+  SHA256: 7e6d40391b71a41cdd0d1e3010a6f9ec299b51f8771646cd8c5bb0c125878fd9
+  Kind: var, Exported: False
+  Lines: 116-116
+  Truncated Text: 'var v ='
+  Full Text: 'var v = x'
+
+  SHA256: 7e6d40391b71a41cdd0d1e3010a6f9ec299b51f8771646cd8c5bb0c125878fd9
+  Kind: var, Exported: False
+  Lines: 124-124
+  Truncated Text: 'var v ='
+  Full Text: 'var v = x'
+
+--- DUPLICATE GROUP: bitseqs.nim::`[]=` (2 defs) ---
+  SHA256: 72acf43658a02c7646cb37be39499f0bdcb980998ded6f0f92dc26ac78fb05bf
+  Kind: func, Exported: False
+  Lines: 180-180
+  Truncated Text: 'func `[]=`*(s: var BitSeq, pos: Natural, value: bool) {.inline.} ='
+  Full Text: 'func `[]=`*(s: var BitSeq, pos: Natural, value: bool) {.inline.} ='
+
+  SHA256: 6aed9b5a4e4ba3899f83a24c70c7fb3361f35fbe84f717c1726dedbf41e2509d
+  Kind: template, Exported: False
+  Lines: 203-203
+  Truncated Text: 'template `[]=`*(a: var BitArray, pos: Natural, value: bool) ='
+  Full Text: 'template `[]=`*(a: var BitArray, pos: Natural, value: bool) ='
+
+--- DUPLICATE GROUP: bitseqs.nim::`[]` (2 defs) ---
+  SHA256: 57a37171db9faeb9549b53c274f88b1410df1c36eca85cf7a8c1b3407daa1332
+  Kind: func, Exported: False
+  Lines: 176-176
+  Truncated Text: 'func `[]`*(s: BitSeq, pos: Natural): bool {.inline.} ='
+  Full Text: 'func `[]`*(s: BitSeq, pos: Natural): bool {.inline.} ='
+
+  SHA256: 970cde11efed77890b55ab925801b6ee03fa62afa045cbeec082df0d6d455bfa
+  Kind: template, Exported: False
+  Lines: 200-200
+  Truncated Text: 'template `[]`*(a: BitArray, pos: Natural): bool ='
+  Full Text: 'template `[]`*(a: BitArray, pos: Natural): bool ='
+
+--- DUPLICATE GROUP: bitseqs.nim::clearBit (2 defs) ---
+  SHA256: 1b3a15fbdd037028ac683fed982b5ea3281762ae297138175003574a5baa188d
+  Kind: func, Exported: False
+  Lines: 188-188
+  Truncated Text: 'func clearBit*(s: var BitSeq, pos: Natural) {.inline.} ='
+  Full Text: 'func clearBit*(s: var BitSeq, pos: Natural) {.inline.} ='
+
+  SHA256: 84b4a23f2712d66c1d348e23f25538fde67473d4c9c1741d7b45ee92c28d2de5
+  Kind: template, Exported: False
+  Lines: 209-209
+  Truncated Text: 'template clearBit*(a: var BitArray, pos: Natural) ='
+  Full Text: 'template clearBit*(a: var BitArray, pos: Natural) ='
+
+--- DUPLICATE GROUP: bitseqs.nim::init (2 defs) ---
+  SHA256: 12cfb76c382a9ebce04eb859b97691b7ee0364cc3c94eef37c9f02e5c7ebee6b
+  Kind: func, Exported: False
+  Lines: 192-192
+  Truncated Text: 'func init*(T: type BitSeq, len: int): T ='
+  Full Text: 'func init*(T: type BitSeq, len: int): T ='
+
+  SHA256: a7b4209ba6b5f28cb965bdc7beaa781fd19b6d379d98da83c9aaacf644d3bf7d
+  Kind: func, Exported: False
+  Lines: 196-196
+  Truncated Text: 'func init*(T: type BitArray): T ='
+  Full Text: 'func init*(T: type BitArray): T ='
+
+--- DUPLICATE GROUP: bitseqs.nim::len (2 defs) ---
+  SHA256: 0aac3147a833049c3d75512c73baf9b6cfe9c85cc74e878b8b23766707471765
+  Kind: template, Exported: False
+  Lines: 40-40
+  Truncated Text: 'template len*(s: BitSeq): int ='
+  Full Text: 'template len*(s: BitSeq): int ='
+
+  SHA256: bdd4f3052e9cb8383e6169e8977033ba18e70203e2e0b29bfc0c9179347f0c06
+  Kind: template, Exported: False
+  Lines: 43-43
+  Truncated Text: 'template len*(a: BitArray): int ='
+  Full Text: 'template len*(a: BitArray): int ='
+
+--- DUPLICATE GROUP: bitseqs.nim::lhsBits (2 defs) ---
+  SHA256: 77225edc1d7712afec6254377970a7d949e5e7ce5bd3708fa9217a9910af6372
+  Kind: template, Exported: False
+  Lines: 99-99
+  Truncated Text: 'template lhsBits: auto ='
+  Full Text: 'template lhsBits: auto = (addr(lhsWord))[]'
+
+  SHA256: 77225edc1d7712afec6254377970a7d949e5e7ce5bd3708fa9217a9910af6372
+  Kind: template, Exported: False
+  Lines: 147-147
+  Truncated Text: 'template lhsBits: auto ='
+  Full Text: 'template lhsBits: auto = lhsCurrAddr[]'
+
+--- DUPLICATE GROUP: bitseqs.nim::markerPos (2 defs) ---
+  SHA256: 1855f9a0b59bb1a4e3963f129ad59cfd5df2609c31150446abab8bd7b04bc288
+  Kind: let, Exported: False
+  Lines: 54-54
+  Truncated Text: 'let markerPos ='
+  Full Text: 'let markerPos = log2trunc(lastByte)'
+
+  SHA256: 1855f9a0b59bb1a4e3963f129ad59cfd5df2609c31150446abab8bd7b04bc288
+  Kind: let, Exported: False
+  Lines: 120-120
+  Truncated Text: 'let markerPos ='
+  Full Text: 'let markerPos = log2trunc(lhsWord)'
+
+--- DUPLICATE GROUP: bitseqs.nim::rhsBits (2 defs) ---
+  SHA256: 5e61ff9003d994ff913b7b7ba503f0f021047a40b0b086e7f6f19fa0174eb9e4
+  Kind: template, Exported: False
+  Lines: 102-102
+  Truncated Text: 'template rhsBits: auto ='
+  Full Text: 'template rhsBits: auto = (addr(rhsWord))[]'
+
+  SHA256: 5e61ff9003d994ff913b7b7ba503f0f021047a40b0b086e7f6f19fa0174eb9e4
+  Kind: template, Exported: False
+  Lines: 149-149
+  Truncated Text: 'template rhsBits: auto ='
+  Full Text: 'template rhsBits: auto = rhsCurrAddr[]'
+
+--- DUPLICATE GROUP: bitseqs.nim::setBit (2 defs) ---
+  SHA256: c0b90ebfe555833ad01142768291258f530997cb658e3ced587a730f531f3899
+  Kind: func, Exported: False
+  Lines: 184-184
+  Truncated Text: 'func setBit*(s: var BitSeq, pos: Natural) {.inline.} ='
+  Full Text: 'func setBit*(s: var BitSeq, pos: Natural) {.inline.} ='
+
+  SHA256: 44161c2aa2b18c55786d0f7208bada926629780fc21b6ffd8f17b02e91f4e998
+  Kind: template, Exported: False
+  Lines: 206-206
+  Truncated Text: 'template setBit*(a: var BitArray, pos: Natural) ='
+  Full Text: 'template setBit*(a: var BitArray, pos: Natural) ='
+
+--- DUPLICATE GROUP: bitseqs.nim::shift (2 defs) ---
+  SHA256: 05534d4e5e0c07f22cc9f3c90d929f6146814536bc3544e153952625bd76aaf2
+  Kind: var, Exported: False
+  Lines: 63-63
+  Truncated Text: 'var shift ='
+  Full Text: 'var shift = 0'
+
+  SHA256: 05534d4e5e0c07f22cc9f3c90d929f6146814536bc3544e153952625bd76aaf2
+  Kind: var, Exported: False
+  Lines: 70-70
+  Truncated Text: 'var shift ='
+  Full Text: 'var shift = 0'
+
+--- DUPLICATE GROUP: bitseqs.nim::words (5 defs) ---
+  SHA256: bda41358e9fee4256de19e56f40b64de7e79eaea72e0cbad502c7830eb99ae15
+  Kind: iterator, Exported: False
+  Lines: 156-156
+  Truncated Text: 'iterator words*(x: var BitSeq): var uint ='
+  Full Text: 'iterator words*(x: var BitSeq): var uint ='
+
+  SHA256: 41363a67dc668d46d7478919a7bc223beebdc596fa523ed3b243cac881bb3a72
+  Kind: iterator, Exported: False
+  Lines: 160-160
+  Truncated Text: 'iterator words*(x: BitSeq): uint ='
+  Full Text: 'iterator words*(x: BitSeq): uint ='
+
+  SHA256: 742922ad5b45fd25355b90c39bcfee0e76d5932f64f31585b224c4ac7a497a04
+  Kind: iterator, Exported: False
+  Lines: 164-164
+  Truncated Text: 'iterator words*(a, b: BitSeq): (uint, uint) ='
+  Full Text: 'iterator words*(a, b: BitSeq): (uint, uint) ='
+
+  SHA256: f811ac981228fcdf85566a0941f30960ca5aa6471af875ae3af431c1ac73cf75
+  Kind: iterator, Exported: False
+  Lines: 168-168
+  Truncated Text: 'iterator words*(a: var BitSeq, b: BitSeq): (var uint, uint) ='
+  Full Text: 'iterator words*(a: var BitSeq, b: BitSeq): (var uint, uint) ='
+
+  SHA256: 625af970719094ad55c9b58aecd2ebe0bc61a45a3411c2a44755c00a0860d09a
+  Kind: iterator, Exported: False
+  Lines: 172-172
+  Truncated Text: 'iterator words*(a, b: var BitSeq): (var uint, var uint) ='
+  Full Text: 'iterator words*(a, b: var BitSeq): (var uint, var uint) ='
+
+--- DUPLICATE GROUP: byteutils.nim::hexToByteArray (4 defs) ---
+  SHA256: 82cb8c952f48e1be40be8afce18f8f87cdff4e8a718d3bcdad1f92166772e613
+  Kind: func, Exported: False
+  Lines: 64-65
+  Truncated Text: 'func hexToByteArray*(\nhexStr: openArray[char], output: var openArray[byte], fromIdx, toIdx: int)'
+  Full Text: 'func hexToByteArray*(\nhexStr: openArray[char], output: var openArray[byte], fromIdx, toIdx: int)'
+
+  SHA256: 1ae872bc2035ee9d1d4b653bf0f972a092357e1d1ffd7504afd29055caecfbce
+  Kind: func, Exported: False
+  Lines: 80-80
+  Truncated Text: 'func hexToByteArray*(hexStr: openArray[char], output: var openArray[byte])'
+  Full Text: 'func hexToByteArray*(hexStr: openArray[char], output: var openArray[byte])'
+
+  SHA256: f9e1c09340c94391c0fa8a9c2be60461e55131e763f2b50986b31f52cdada4a5
+  Kind: func, Exported: False
+  Lines: 92-92
+  Truncated Text: 'func hexToByteArray*[N: static[int]](hexStr: openArray[char]): array[N, byte]'
+  Full Text: 'func hexToByteArray*[N: static[int]](hexStr: openArray[char]): array[N, byte]'
+
+  SHA256: c44b1decf464330c09623dd50eb8b80ce38c93ed84f7479bb48693ba36faae1c
+  Kind: func, Exported: False
+  Lines: 103-103
+  Truncated Text: 'func hexToByteArray*(hexStr: openArray[char], N: static int): array[N, byte]'
+  Full Text: 'func hexToByteArray*(hexStr: openArray[char], N: static int): array[N, byte]'
+
+--- DUPLICATE GROUP: byteutils.nim::hexToByteArrayStrict (3 defs) ---
+  SHA256: a80b827333c3cca988e2494a34cc42d1d2b7e81ab1b9b235e9638a73c2331ccc
+  Kind: func, Exported: False
+  Lines: 114-114
+  Truncated Text: 'func hexToByteArrayStrict*(hexStr: openArray[char], output: var openArray[byte])'
+  Full Text: 'func hexToByteArrayStrict*(hexStr: openArray[char], output: var openArray[byte])'
+
+  SHA256: cd4bd4ddeca39a517853e9015a6d5fa001178f021dd960697a9a68f16941a8a6
+  Kind: func, Exported: False
+  Lines: 126-126
+  Truncated Text: 'func hexToByteArrayStrict*[N: static[int]](hexStr: openArray[char]): array[N, byte]'
+  Full Text: 'func hexToByteArrayStrict*[N: static[int]](hexStr: openArray[char]): array[N, byte]'
+
+  SHA256: 920756394d93e147349bcbca44844bf1ba7fd06d7b832751bdfc73d6bf1ad486
+  Kind: func, Exported: False
+  Lines: 137-137
+  Truncated Text: 'func hexToByteArrayStrict*(hexStr: openArray[char], N: static int): array[N, byte]'
+  Full Text: 'func hexToByteArrayStrict*(hexStr: openArray[char], N: static int): array[N, byte]'
+
+--- DUPLICATE GROUP: byteutils.nim::to0xHex (2 defs) ---
+  SHA256: 877d70475a4603233479c77e5fcbde8bb9ba47e710a69e60e2d7acfefc4a7a66
+  Kind: iterator, Exported: False
+  Lines: 208-208
+  Truncated Text: 'iterator to0xHex*(ba: openArray[byte]): char ='
+  Full Text: 'iterator to0xHex*(ba: openArray[byte]): char ='
+
+  SHA256: cfe47d8d6a7ef46fb9202a2b459d9884da3ff26efd547c377c6b0e917a4dbafe
+  Kind: func, Exported: False
+  Lines: 223-223
+  Truncated Text: 'func to0xHex*(ba: openArray[byte]): string {.inline.} ='
+  Full Text: 'func to0xHex*(ba: openArray[byte]): string {.inline.} ='
+
+--- DUPLICATE GROUP: byteutils.nim::toBytes (2 defs) ---
+  SHA256: acefc2983bf29c989967650a7f4a9999a5f3ed5eaaf4760a25795ab0b8a7ef6b
+  Kind: func, Exported: False
+  Lines: 231-231
+  Truncated Text: 'func toBytes*(s: openArray[char]): seq[byte] ='
+  Full Text: 'func toBytes*(s: openArray[char]): seq[byte] ='
+
+  SHA256: 9c68ceba3473100618b32d69c3f5956c17a5582c7c77b04dcc52a791f25b7871
+  Kind: func, Exported: False
+  Lines: 237-237
+  Truncated Text: 'func toBytes*(s: string): seq[byte] ='
+  Full Text: 'func toBytes*(s: string): seq[byte] ='
+
+--- DUPLICATE GROUP: byteutils.nim::toHex (2 defs) ---
+  SHA256: ec63518030ab7ac2e3e52eadf564b4d71036fa722ac0ed321fcaf15ee22f8fe4
+  Kind: iterator, Exported: False
+  Lines: 201-201
+  Truncated Text: 'iterator toHex*(ba: openArray[byte]): char ='
+  Full Text: 'iterator toHex*(ba: openArray[byte]): char ='
+
+  SHA256: 8abace5ecd13685648f1e54d40a158e012772053f139aed5ab3c34b88432a004
+  Kind: func, Exported: False
+  Lines: 215-215
+  Truncated Text: 'func toHex*(ba: openArray[byte]): string {.inline.} ='
+  Full Text: 'func toHex*(ba: openArray[byte]): string {.inline.} ='
+
+--- DUPLICATE GROUP: endians2.nim::swapBytesBuiltin (12 defs) ---
+  SHA256: a7fb68595c01ed6b550e81e19fd644620aeb583717c58a83329ee3bbb5acfefa
+  Kind: func, Exported: False
+  Lines: 35-35
+  Truncated Text: 'func swapBytesBuiltin(x: uint8): uint8 = x'
+  Full Text: 'func swapBytesBuiltin(x: uint8): uint8 = x'
+
+  SHA256: 188e04d7b23697692dbcc84ca20b23321a516ddecbddaea6f0ffd42266889617
+  Kind: func, Exported: False
+  Lines: 36-36
+  Truncated Text: 'func swapBytesBuiltin(x: uint16): uint16 {.'
+  Full Text: 'func swapBytesBuiltin(x: uint16): uint16 {.'
+
+  SHA256: c74825fc2fdd94fff803c1a7f042bd85c7b00235971614db7932e395467a5184
+  Kind: func, Exported: False
+  Lines: 39-39
+  Truncated Text: 'func swapBytesBuiltin(x: uint32): uint32 {.'
+  Full Text: 'func swapBytesBuiltin(x: uint32): uint32 {.'
+
+  SHA256: 9a7e79559e90914d955ee240cc5d84f452a1c98e1331f732afddcf37da6ef1ec
+  Kind: func, Exported: False
+  Lines: 42-42
+  Truncated Text: 'func swapBytesBuiltin(x: uint64): uint64 {.'
+  Full Text: 'func swapBytesBuiltin(x: uint64): uint64 {.'
+
+  SHA256: a7fb68595c01ed6b550e81e19fd644620aeb583717c58a83329ee3bbb5acfefa
+  Kind: func, Exported: False
+  Lines: 46-46
+  Truncated Text: 'func swapBytesBuiltin(x: uint8): uint8 = x'
+  Full Text: 'func swapBytesBuiltin(x: uint8): uint8 = x'
+
+  SHA256: 23bbe004d584545a59a95ff214a0c2181bf2cb4e4e53631bcbea1f3ad9c65ad5
+  Kind: func, Exported: False
+  Lines: 47-47
+  Truncated Text: 'func swapBytesBuiltin(a: uint16): uint16 {.importc: "_bswap16", nodecl.}'
+  Full Text: 'func swapBytesBuiltin(a: uint16): uint16 {.importc: "_bswap16", nodecl.}'
+
+  SHA256: 2c9958a6cbb121a13c21c82a7a480b3fcfc3518b57b50e5a3b20e6beb18bdd04
+  Kind: func, Exported: False
+  Lines: 48-48
+  Truncated Text: 'func swapBytesBuiltin(a: uint32): uint32 {.importc: "_bswap", nodec.}'
+  Full Text: 'func swapBytesBuiltin(a: uint32): uint32 {.importc: "_bswap", nodec.}'
+
+  SHA256: 1956c1ae44e9105ed91fb42a6abe8f36f6d4e326aacbb633e7b9112adcf4b0a8
+  Kind: func, Exported: False
+  Lines: 49-49
+  Truncated Text: 'func swapBytesBuiltin(a: uint64): uint64 {.importc: "_bswap64", nodecl.}'
+  Full Text: 'func swapBytesBuiltin(a: uint64): uint64 {.importc: "_bswap64", nodecl.}'
+
+  SHA256: a7fb68595c01ed6b550e81e19fd644620aeb583717c58a83329ee3bbb5acfefa
+  Kind: func, Exported: False
+  Lines: 52-52
+  Truncated Text: 'func swapBytesBuiltin(x: uint8): uint8 = x'
+  Full Text: 'func swapBytesBuiltin(x: uint8): uint8 = x'
+
+  SHA256: 042538a8b8cf417b13aa37893129e4041e487ef640effb8073dfc4535d1954c1
+  Kind: func, Exported: False
+  Lines: 53-53
+  Truncated Text: 'func swapBytesBuiltin(a: uint16): uint16 {.'
+  Full Text: 'func swapBytesBuiltin(a: uint16): uint16 {.'
+
+  SHA256: 9192b58e1f8602fc7684b0332763eff226efe9293a17c2b2889555497f134fdf
+  Kind: func, Exported: False
+  Lines: 56-56
+  Truncated Text: 'func swapBytesBuiltin(a: uint32): uint32 {.'
+  Full Text: 'func swapBytesBuiltin(a: uint32): uint32 {.'
+
+  SHA256: 8a09f6fad2cbdc11133ba35796c10831c619673314e275e0021461cde8f07f6d
+  Kind: func, Exported: False
+  Lines: 59-59
+  Truncated Text: 'func swapBytesBuiltin(a: uint64): uint64 {.'
+  Full Text: 'func swapBytesBuiltin(a: uint64): uint64 {.'
+
+--- DUPLICATE GROUP: endians2.nim::swapBytesNim (4 defs) ---
+  SHA256: cbca93cb0f70a09b4eb599a82ee22d9814a6d39a0959b32bd4db0b759282b61c
+  Kind: func, Exported: False
+  Lines: 62-62
+  Truncated Text: 'func swapBytesNim(x: uint8): uint8 = x'
+  Full Text: 'func swapBytesNim(x: uint8): uint8 = x'
+
+  SHA256: 30ae0f0174624d8563002582e69d8313a23b517cbeb7da068a30e7120e4ab956
+  Kind: func, Exported: False
+  Lines: 63-63
+  Truncated Text: 'func swapBytesNim(x: uint16): uint16 = (x shl 8) or (x shr 8)'
+  Full Text: 'func swapBytesNim(x: uint16): uint16 = (x shl 8) or (x shr 8)'
+
+  SHA256: bf4f007530ec0ed855aa1979b962a17b2d82dfbea7c2b9cd61bf0ea7a3944302
+  Kind: func, Exported: False
+  Lines: 65-65
+  Truncated Text: 'func swapBytesNim(x: uint32): uint32 ='
+  Full Text: 'func swapBytesNim(x: uint32): uint32 ='
+
+  SHA256: 141b827a30012a9ea93b901f7c7871acb913c28fc0992230631fa06d239d805c
+  Kind: func, Exported: False
+  Lines: 70-70
+  Truncated Text: 'func swapBytesNim(x: uint64): uint64 ='
+  Full Text: 'func swapBytesNim(x: uint64): uint64 ='
+
+--- DUPLICATE GROUP: endians2.nim::v (3 defs) ---
+  SHA256: f65b61f95362698acff364f6de276558a8d86a18366830871a69197489186efc
+  Kind: let, Exported: False
+  Lines: 66-66
+  Truncated Text: 'let v ='
+  Full Text: 'let v = (x shl 16) or (x shr 16)'
+
+  SHA256: 7e6d40391b71a41cdd0d1e3010a6f9ec299b51f8771646cd8c5bb0c125878fd9
+  Kind: var, Exported: False
+  Lines: 71-71
+  Truncated Text: 'var v ='
+  Full Text: 'var v = (x shl 32) or (x shr 32)'
+
+  SHA256: f65b61f95362698acff364f6de276558a8d86a18366830871a69197489186efc
+  Kind: let, Exported: False
+  Lines: 97-97
+  Truncated Text: 'let v ='
+  Full Text: 'let v ='
+
+--- DUPLICATE GROUP: enums.nim::values (2 defs) ---
+  SHA256: 43ac2490c01bd1e4c2959939c35303820aa4d39eeb719faad8b6a696d8cd2a43
+  Kind: const, Exported: False
+  Lines: 78-78
+  Truncated Text: 'const values ='
+  Full Text: 'const values = enumStrValuesArrayImpl E'
+
+  SHA256: 43ac2490c01bd1e4c2959939c35303820aa4d39eeb719faad8b6a696d8cd2a43
+  Kind: const, Exported: False
+  Lines: 85-85
+  Truncated Text: 'const values ='
+  Full Text: 'const values = @(enumStrValuesArray E)'
+
+--- DUPLICATE GROUP: interval_set.nim::`*` (4 defs) ---
+  SHA256: 61d8cf8c9f4f6e5efff59508e9f9570c98717f594df7044e6adc4b84b95597c4
+  Kind: func, Exported: False
+  Lines: 945-945
+  Truncated Text: 'func `*`*[P,S](iv, jv: Interval[P,S]): IntervalRc[P,S] ='
+  Full Text: 'func `*`*[P,S](iv, jv: Interval[P,S]): IntervalRc[P,S] ='
+
+  SHA256: 7fa3ee37a367cd91cbca68cd3aa9b32c1612b7d5d896194a205caf1868cf65ba
+  Kind: func, Exported: False
+  Lines: 957-957
+  Truncated Text: 'func `*`*[P,S](iv: IntervalRc[P,S]; jv: Interval[P,S]): IntervalRc[P,S] ='
+  Full Text: 'func `*`*[P,S](iv: IntervalRc[P,S]; jv: Interval[P,S]): IntervalRc[P,S] ='
+
+  SHA256: 173e7dc8edc3c5d211aaa45dc5dd224c6614d81bbd7d3504a3dc5f6978bd0b2b
+  Kind: func, Exported: False
+  Lines: 963-963
+  Truncated Text: 'func `*`*[P,S](iv: Interval[P,S]; jv: IntervalRc[P,S]): IntervalRc[P,S] ='
+  Full Text: 'func `*`*[P,S](iv: Interval[P,S]; jv: IntervalRc[P,S]): IntervalRc[P,S] ='
+
+  SHA256: b1627abde636a5795a21ab8abac447d08b650be41cbba1e32a47aa181b914ccb
+  Kind: func, Exported: False
+  Lines: 969-969
+  Truncated Text: 'func `*`*[P,S](iv, jv: IntervalRc[P,S]): IntervalRc[P,S] ='
+  Full Text: 'func `*`*[P,S](iv, jv: IntervalRc[P,S]): IntervalRc[P,S] ='
+
+--- DUPLICATE GROUP: interval_set.nim::`+` (4 defs) ---
+  SHA256: eae28d17164efe0e2ca0f2405052568451d0de0af21b685ffc24c001eb5323c2
+  Kind: func, Exported: False
+  Lines: 977-977
+  Truncated Text: 'func `+`*[P,S](iv, jv: Interval[P,S]): IntervalRc[P,S] ='
+  Full Text: 'func `+`*[P,S](iv, jv: Interval[P,S]): IntervalRc[P,S] ='
+
+  SHA256: 8a3909ffcb579ee36c855a9e379bb5ae15cd8f0b7034ec454b7632f12dfda413
+  Kind: func, Exported: False
+  Lines: 1001-1001
+  Truncated Text: 'func `+`*[P,S](iv: IntervalRc[P,S]; jv: Interval[P,S]): IntervalRc[P,S] ='
+  Full Text: 'func `+`*[P,S](iv: IntervalRc[P,S]; jv: Interval[P,S]): IntervalRc[P,S] ='
+
+  SHA256: ae78c3905321497263dc347e89e4514011936d204beb12cb18685cc03ed89637
+  Kind: func, Exported: False
+  Lines: 1007-1007
+  Truncated Text: 'func `+`*[P,S](iv: Interval[P,S]; jv: IntervalRc[P,S]): IntervalRc[P,S] ='
+  Full Text: 'func `+`*[P,S](iv: Interval[P,S]; jv: IntervalRc[P,S]): IntervalRc[P,S] ='
+
+  SHA256: 032594af3d5ee7adfa0aef1264756f15b197a3663ac084747ea532d45286ca8c
+  Kind: func, Exported: False
+  Lines: 1013-1013
+  Truncated Text: 'func `+`*[P,S](iv, jv: IntervalRc[P,S]): IntervalRc[P,S] ='
+  Full Text: 'func `+`*[P,S](iv, jv: IntervalRc[P,S]): IntervalRc[P,S] ='
+
+--- DUPLICATE GROUP: interval_set.nim::`-` (4 defs) ---
+  SHA256: dd88a730232f3fffceba81433a62ba78793955bb710ad9ea9d5a78845d98dd24
+  Kind: func, Exported: False
+  Lines: 1021-1021
+  Truncated Text: 'func `-`*[P,S](iv, jv: Interval[P,S]): IntervalRc[P,S] ='
+  Full Text: 'func `-`*[P,S](iv, jv: Interval[P,S]): IntervalRc[P,S] ='
+
+  SHA256: 02b445c0e595d7a7a2c86d0c4197629580d49d249ac668202186bf4271314df6
+  Kind: func, Exported: False
+  Lines: 1078-1078
+  Truncated Text: 'func `-`*[P,S](iv: IntervalRc[P,S]; jv: Interval[P,S]): IntervalRc[P,S] ='
+  Full Text: 'func `-`*[P,S](iv: IntervalRc[P,S]; jv: Interval[P,S]): IntervalRc[P,S] ='
+
+  SHA256: 372bc5ba493c74f47ecb0b3e6778d45d189f10625ac0ae164a329f033b92e44e
+  Kind: func, Exported: False
+  Lines: 1084-1084
+  Truncated Text: 'func `-`*[P,S](iv: Interval[P,S]; jv: IntervalRc[P,S]): IntervalRc[P,S] ='
+  Full Text: 'func `-`*[P,S](iv: Interval[P,S]; jv: IntervalRc[P,S]): IntervalRc[P,S] ='
+
+  SHA256: 2b262f0947cd74cc564b7a6e27427c8967b0bee9b2156437bbda4bf1cb6be4a6
+  Kind: func, Exported: False
+  Lines: 1090-1090
+  Truncated Text: 'func `-`*[P,S](iv, jv: IntervalRc[P,S]): IntervalRc[P,S] ='
+  Full Text: 'func `-`*[P,S](iv, jv: IntervalRc[P,S]): IntervalRc[P,S] ='
+
+--- DUPLICATE GROUP: interval_set.nim::`==` (5 defs) ---
+  SHA256: ebd4f0f8c9fce719ba79b904aeca35596208d11f0fe4de0cdbd856b9d203646b
+  Kind: func, Exported: False
+  Lines: 670-670
+  Truncated Text: 'func `==`*[P,S](a, b: IntervalSetRef[P,S]): bool ='
+  Full Text: 'func `==`*[P,S](a, b: IntervalSetRef[P,S]): bool ='
+
+  SHA256: d36e93fac90d7350639f34e754e51633379d22761db426320c84b47b20412954
+  Kind: func, Exported: False
+  Lines: 919-919
+  Truncated Text: 'func `==`*[P,S](iv, jv: Interval[P,S]): bool ='
+  Full Text: 'func `==`*[P,S](iv, jv: Interval[P,S]): bool ='
+
+  SHA256: 23bd52feb893eb8a1f9988b36b4ad68f37aa770724ed5b0c499af615537e4b82
+  Kind: func, Exported: False
+  Lines: 923-923
+  Truncated Text: 'func `==`*[P,S](iv: IntervalRc[P,S]; jv: Interval[P,S]): bool ='
+  Full Text: 'func `==`*[P,S](iv: IntervalRc[P,S]; jv: Interval[P,S]): bool ='
+
+  SHA256: 3483d1221694df34256bf29e3e2518639b26926eb1df47e3c5b7f73248028e00
+  Kind: func, Exported: False
+  Lines: 928-928
+  Truncated Text: 'func `==`*[P,S](iv: Interval[P,S]; jv: IntervalRc[P,S]): bool ='
+  Full Text: 'func `==`*[P,S](iv: Interval[P,S]; jv: IntervalRc[P,S]): bool ='
+
+  SHA256: fdc187ce9ce116b7ed505e3c8d9199aaf0ed51a1a28b596ba0692119994c8837
+  Kind: func, Exported: False
+  Lines: 933-933
+  Truncated Text: 'func `==`*[P,S](iv, jv: IntervalRc[P,S]): bool ='
+  Full Text: 'func `==`*[P,S](iv, jv: IntervalRc[P,S]): bool ='
+
+--- DUPLICATE GROUP: interval_set.nim::b (2 defs) ---
+  SHA256: 658ba204012f9ab03815159a6e50723b17994a1863696513e54eb5c9b8d37a8a
+  Kind: let, Exported: False
+  Lines: 357-357
+  Truncated Text: 'let b ='
+  Full Text: 'let b = rc.value.right'
+
+  SHA256: 658ba204012f9ab03815159a6e50723b17994a1863696513e54eb5c9b8d37a8a
+  Kind: let, Exported: False
+  Lines: 372-372
+  Truncated Text: 'let b ='
+  Full Text: 'let b = rc.value.right'
+
+--- DUPLICATE GROUP: interval_set.nim::covered (2 defs) ---
+  SHA256: f4826fe00d420ef9c0e253b3abcac32060e47ab0edfc48b699999df6827dcffb
+  Kind: func, Exported: False
+  Lines: 754-754
+  Truncated Text: 'func covered*[P,S](ds: IntervalSetRef[P,S]; minPt, maxPt: P): S ='
+  Full Text: 'func covered*[P,S](ds: IntervalSetRef[P,S]; minPt, maxPt: P): S ='
+
+  SHA256: 6668cff3ebbe57695371078373c6187ce29eb9b15dcb8809d439fa8a6577f620
+  Kind: func, Exported: False
+  Lines: 769-769
+  Truncated Text: 'func covered*[P,S](ds: IntervalSetRef[P,S]; iv: Interval[P,S]): S ='
+  Full Text: 'func covered*[P,S](ds: IntervalSetRef[P,S]; iv: Interval[P,S]): S ='
+
+--- DUPLICATE GROUP: interval_set.nim::ge (2 defs) ---
+  SHA256: fbad1b453c4d0e21f5c5214a0b84272cdcc8761034c79b2e26e7cdc524e268f4
+  Kind: func, Exported: False
+  Lines: 774-774
+  Truncated Text: 'func ge*[P,S](ds: IntervalSetRef[P,S]; minPt: P): IntervalRc[P,S] ='
+  Full Text: 'func ge*[P,S](ds: IntervalSetRef[P,S]; minPt: P): IntervalRc[P,S] ='
+
+  SHA256: aa3fdfe2e27f313b9fdba51737e5eae0c950616d18f6cfef17b354f3c77828c4
+  Kind: func, Exported: False
+  Lines: 789-789
+  Truncated Text: 'func ge*[P,S](ds: IntervalSetRef[P,S]): IntervalRc[P,S] ='
+  Full Text: 'func ge*[P,S](ds: IntervalSetRef[P,S]): IntervalRc[P,S] ='
+
+--- DUPLICATE GROUP: interval_set.nim::key (3 defs) ---
+  SHA256: c4a8a5e2c80f8ef424479a78abed66d0a66e028d1dc4751009f9a92c4c8e5fda
+  Kind: let, Exported: False
+  Lines: 881-881
+  Truncated Text: 'let key ='
+  Full Text: 'let key = rc.value.key'
+
+  SHA256: c4a8a5e2c80f8ef424479a78abed66d0a66e028d1dc4751009f9a92c4c8e5fda
+  Kind: let, Exported: False
+  Lines: 901-901
+  Truncated Text: 'let key ='
+  Full Text: 'let key = rc.value.key'
+
+  SHA256: c4a8a5e2c80f8ef424479a78abed66d0a66e028d1dc4751009f9a92c4c8e5fda
+  Kind: let, Exported: False
+  Lines: 911-911
+  Truncated Text: 'let key ='
+  Full Text: 'let key = rc.value.key'
+
+--- DUPLICATE GROUP: interval_set.nim::le (2 defs) ---
+  SHA256: 31a7608857fa89554480262048d7926dd348fb8303825dbf56ba17befd85eb27
+  Kind: func, Exported: False
+  Lines: 793-793
+  Truncated Text: 'func le*[P,S](ds: IntervalSetRef[P,S]; maxPt: P): IntervalRc[P,S] ='
+  Full Text: 'func le*[P,S](ds: IntervalSetRef[P,S]; maxPt: P): IntervalRc[P,S] ='
+
+  SHA256: 2cedd76eeec1500e81232ae51f86d6fb23badc5b7179665fc1fbaa4b14f7c670
+  Kind: func, Exported: False
+  Lines: 822-822
+  Truncated Text: 'func le*[P,S](ds: IntervalSetRef[P,S]): IntervalRc[P,S] ='
+  Full Text: 'func le*[P,S](ds: IntervalSetRef[P,S]): IntervalRc[P,S] ='
+
+--- DUPLICATE GROUP: interval_set.nim::left (2 defs) ---
+  SHA256: 78921806d5820c3b21f4c6749756749eab03c0365d958cb72bab2c75d80c3086
+  Kind: func, Exported: False
+  Lines: 289-289
+  Truncated Text: 'func left[P,S](kvp: DataRef[P,S]): P ='
+  Full Text: 'func left[P,S](kvp: DataRef[P,S]): P ='
+
+  SHA256: 75eefbbf5354845fa025ca79c98334e0ea0b2d2a7daa845058d4f79a935b08bb
+  Kind: func, Exported: False
+  Lines: 317-317
+  Truncated Text: 'func left[P,S](iv: Segm[P,S]): P ='
+  Full Text: 'func left[P,S](iv: Segm[P,S]): P ='
+
+--- DUPLICATE GROUP: interval_set.nim::len (3 defs) ---
+  SHA256: c062313286857dac0d57c603098b388648dcc5668cbbfc92494d54995f47b3ed
+  Kind: func, Exported: False
+  Lines: 295-295
+  Truncated Text: 'func len[P,S](kvp: DataRef[P,S]): S ='
+  Full Text: 'func len[P,S](kvp: DataRef[P,S]): S ='
+
+  SHA256: 3d8e35952c4ddd4bf0b900e50d5f9877e6894c9728939dc1fee852fac20330aa
+  Kind: func, Exported: False
+  Lines: 323-323
+  Truncated Text: 'func len[P,S](iv: Segm[P,S]): S ='
+  Full Text: 'func len[P,S](iv: Segm[P,S]): S ='
+
+  SHA256: 9731cebc7b3b1aab1900cc7e1190f624baad23c3a9e9c3f5e73ed12e5da29ce0
+  Kind: func, Exported: False
+  Lines: 1100-1100
+  Truncated Text: 'func len*[P,S](iv: Interval[P,S]): S ='
+  Full Text: 'func len*[P,S](iv: Interval[P,S]): S ='
+
+--- DUPLICATE GROUP: interval_set.nim::maxPt (2 defs) ---
+  SHA256: c27a32f8ab5d718fb0d993a96a1dd6480fbdb657904e6e2dc409c525e304b040
+  Kind: func, Exported: False
+  Lines: 332-332
+  Truncated Text: 'func maxPt[P](a, b: P): P ='
+  Full Text: 'func maxPt[P](a, b: P): P ='
+
+  SHA256: 1d6f4010d1f7f9684bba16210b9b1ec580deeeff17aece57275a77988062547f
+  Kind: func, Exported: False
+  Lines: 1113-1113
+  Truncated Text: 'func maxPt*[P,S](iv: Interval[P,S]): P ='
+  Full Text: 'func maxPt*[P,S](iv: Interval[P,S]): P ='
+
+--- DUPLICATE GROUP: interval_set.nim::merge (3 defs) ---
+  SHA256: 528c986b7bab7bb904d2e1f8d65af14c0872032a6b32269bf6906b0eeb24c213
+  Kind: func, Exported: False
+  Lines: 404-404
+  Truncated Text: 'func merge[P,S](ds: Desc[P,S]; iv: Segm[P,S]): Segm[P,S] ='
+  Full Text: 'func merge[P,S](ds: Desc[P,S]; iv: Segm[P,S]): Segm[P,S] ='
+
+  SHA256: 8fc2626a38a9d70937c55eb617205554e34619aeca15faee591fd833772bbb10
+  Kind: func, Exported: False
+  Lines: 704-704
+  Truncated Text: 'func merge*[P,S](ds: IntervalSetRef[P,S]; minPt, maxPt: P): S ='
+  Full Text: 'func merge*[P,S](ds: IntervalSetRef[P,S]; minPt, maxPt: P): S ='
+
+  SHA256: 5c9048917adfd2aeb5ef357e5f3021c85b7def8ccdca8371339a17ee0ea7c622
+  Kind: func, Exported: False
+  Lines: 724-724
+  Truncated Text: 'func merge*[P,S](ds: IntervalSetRef[P,S]; iv: Interval[P,S]): S ='
+  Full Text: 'func merge*[P,S](ds: IntervalSetRef[P,S]; iv: Interval[P,S]): S ='
+
+--- DUPLICATE GROUP: interval_set.nim::minPt (2 defs) ---
+  SHA256: 96e8c4478b9084d36b7eddd569a1a956cc0eea7380b21b22e74eff131889bbe1
+  Kind: func, Exported: False
+  Lines: 336-336
+  Truncated Text: 'func minPt[P](a, b: P): P ='
+  Full Text: 'func minPt[P](a, b: P): P ='
+
+  SHA256: 5d00047272517ff8b86dca190154c3c90ab27ea22b8e68b4813b0863a821ff26
+  Kind: func, Exported: False
+  Lines: 1109-1109
+  Truncated Text: 'func minPt*[P,S](iv: Interval[P,S]): P ='
+  Full Text: 'func minPt*[P,S](iv: Interval[P,S]): P ='
+
+--- DUPLICATE GROUP: interval_set.nim::new (3 defs) ---
+  SHA256: 847bc14f530fc39e1979a58eb6b54fa36b1fac7631e075428c7b71dff5e44d65
+  Kind: func, Exported: False
+  Lines: 300-300
+  Truncated Text: 'func new[P,S](T: type Segm[P,S]; left, right: P): T ='
+  Full Text: 'func new[P,S](T: type Segm[P,S]; left, right: P): T ='
+
+  SHA256: a4fad2dcbe3cc28524cb7ced351d448a4a20c709d81fb15b3cb062b4ac4c1816
+  Kind: func, Exported: False
+  Lines: 342-342
+  Truncated Text: 'func new[P,S](T: type Interval[P,S]; kvp: DataRef[P,S]): T ='
+  Full Text: 'func new[P,S](T: type Interval[P,S]; kvp: DataRef[P,S]): T ='
+
+  SHA256: a803d038b24be169d8914459668b4fca07c290d773b4f2bde4cb7e455cd18591
+  Kind: func, Exported: False
+  Lines: 696-696
+  Truncated Text: 'func new*[P,S](T: type Interval[P,S]; minPt, maxPt: P): T ='
+  Full Text: 'func new*[P,S](T: type Interval[P,S]; minPt, maxPt: P): T ='
+
+--- DUPLICATE GROUP: interval_set.nim::noisy (2 defs) ---
+  SHA256: 8a320dd2efe1cf537e50f73bb879cf2b4c32ccf3a00e6b62d456731b0c01ae27
+  Kind: var, Exported: False
+  Lines: 262-262
+  Truncated Text: 'var noisy* ='
+  Full Text: 'var noisy* = false'
+
+  SHA256: c251299ad348ae8cb1bc3a27ccfaf1b99fe81dba89a03acef2e567de668f32cc
+  Kind: var, Exported: False
+  Lines: 264-264
+  Truncated Text: 'var noisy ='
+  Full Text: 'var noisy = false'
+
+--- DUPLICATE GROUP: interval_set.nim::one (4 defs) ---
+  SHA256: d98d382e9415cdeb019a746943b879992739776ff4ed46f59e4cdfececf5a387
+  Kind: template, Exported: False
+  Lines: 218-218
+  Truncated Text: 'template one: untyped ='
+  Full Text: 'template one: untyped = (S.default + 1)'
+
+  SHA256: d98d382e9415cdeb019a746943b879992739776ff4ed46f59e4cdfececf5a387
+  Kind: template, Exported: False
+  Lines: 240-240
+  Truncated Text: 'template one: untyped ='
+  Full Text: 'template one: untyped = (S.default + 1)'
+
+  SHA256: d98d382e9415cdeb019a746943b879992739776ff4ed46f59e4cdfececf5a387
+  Kind: template, Exported: False
+  Lines: 244-244
+  Truncated Text: 'template one: untyped ='
+  Full Text: 'template one: untyped = (S.default + 1)'
+
+  SHA256: d98d382e9415cdeb019a746943b879992739776ff4ed46f59e4cdfececf5a387
+  Kind: template, Exported: False
+  Lines: 251-251
+  Truncated Text: 'template one: untyped ='
+  Full Text: 'template one: untyped = (S.default + 1)'
+
+--- DUPLICATE GROUP: interval_set.nim::overlap (2 defs) ---
+  SHA256: 163d828c078ae5f30bd480b59b539256d26e84e52cad247b0a0a8478ee19d590
+  Kind: func, Exported: False
+  Lines: 366-366
+  Truncated Text: 'func overlap[P,S](ds: Desc[P,S]; l, r: P): Rc[P,S] ='
+  Full Text: 'func overlap[P,S](ds: Desc[P,S]; l, r: P): Rc[P,S] ='
+
+  SHA256: f893f8bb8644d9cb3f54ec73cca961898f45944dbd6cf667fbb7a867b8314dc4
+  Kind: func, Exported: False
+  Lines: 377-377
+  Truncated Text: 'func overlap[P,S](ds: Desc[P,S]; iv: Segm[P,S]): Rc[P,S] ='
+  Full Text: 'func overlap[P,S](ds: Desc[P,S]; iv: Segm[P,S]): Rc[P,S] ='
+
+--- DUPLICATE GROUP: interval_set.nim::overlapOrLeftJoin (2 defs) ---
+  SHA256: 276fa2df63223e21120df8eb36d95837e6074d7dd2e07a6646ea7fe78c5eb202
+  Kind: func, Exported: False
+  Lines: 349-349
+  Truncated Text: 'func overlapOrLeftJoin[P,S](ds: Desc[P,S]; l, r: P): Rc[P,S] ='
+  Full Text: 'func overlapOrLeftJoin[P,S](ds: Desc[P,S]; l, r: P): Rc[P,S] ='
+
+  SHA256: 1194b82fd46605b66e6c81d1da4d0c45dd4919072cb9ca04e288f72aa294de81
+  Kind: func, Exported: False
+  Lines: 362-362
+  Truncated Text: 'func overlapOrLeftJoin[P,S](ds: Desc[P,S]; iv: Segm[P,S]): Rc[P,S] ='
+  Full Text: 'func overlapOrLeftJoin[P,S](ds: Desc[P,S]; iv: Segm[P,S]): Rc[P,S] ='
+
+--- DUPLICATE GROUP: interval_set.nim::p (3 defs) ---
+  SHA256: 35932f6a5465ec8422d3d3c2af5841959b73060c108bb80aef17bc7ab60e1bb7
+  Kind: let, Exported: False
+  Lines: 400-400
+  Truncated Text: 'let p ='
+  Full Text: 'let p = rc.value'
+
+  SHA256: 35932f6a5465ec8422d3d3c2af5841959b73060c108bb80aef17bc7ab60e1bb7
+  Kind: let, Exported: False
+  Lines: 411-411
+  Truncated Text: 'let p ='
+  Full Text: 'let p = block:'
+
+  SHA256: 35932f6a5465ec8422d3d3c2af5841959b73060c108bb80aef17bc7ab60e1bb7
+  Kind: let, Exported: False
+  Lines: 607-607
+  Truncated Text: 'let p ='
+  Full Text: 'let p = rc.value'
+
+--- DUPLICATE GROUP: interval_set.nim::pp (7 defs) ---
+  SHA256: 16be084f322caf072c8863d627c2b4634e2bc4b0c216d79a77fe0d29882bd2ea
+  Kind: proc, Exported: False
+  Lines: 199-199
+  Truncated Text: 'proc pp[P,S](n: S): string ='
+  Full Text: 'proc pp[P,S](n: S): string ='
+
+  SHA256: 2a0abb5f83a6206dd12cf08136f6d5656a70dcd054a0f990ccb23fd8f37f7dbb
+  Kind: proc, Exported: False
+  Lines: 217-217
+  Truncated Text: 'proc pp[P,S](pt: P): string ='
+  Full Text: 'proc pp[P,S](pt: P): string ='
+
+  SHA256: 18208167841df9a8c184756c40c13b04035541d88008498f2570185c4f71719a
+  Kind: proc, Exported: False
+  Lines: 233-233
+  Truncated Text: 'proc pp[P,S](ds: Desc[P,S]): string ='
+  Full Text: 'proc pp[P,S](ds: Desc[P,S]): string ='
+
+  SHA256: 0bd91acdd2e70fca5b0a29c4423200551353b51c9d65c95700c9c3118f1c0dc0
+  Kind: proc, Exported: False
+  Lines: 239-239
+  Truncated Text: 'proc pp[P,S](seg: Segm[P,S]): string ='
+  Full Text: 'proc pp[P,S](seg: Segm[P,S]): string ='
+
+  SHA256: 2495db0b04fe3045063383795c7362f561406adfcd88093fc0c8f03405431635
+  Kind: proc, Exported: False
+  Lines: 243-243
+  Truncated Text: 'proc pp[P,S](iv: Interval[P,S]): string ='
+  Full Text: 'proc pp[P,S](iv: Interval[P,S]): string ='
+
+  SHA256: 0f30d4a3eae18bbaffa6d86b0adfc1eb1597a95dceec8ef3b609d8c31e068f49
+  Kind: proc, Exported: False
+  Lines: 247-247
+  Truncated Text: 'proc pp[P,S](kvp: DataRef[P,S]): string ='
+  Full Text: 'proc pp[P,S](kvp: DataRef[P,S]): string ='
+
+  SHA256: 2c10f835676d9620ad2e54e343ef72aa12d2023e552c76b4d752dbdcaba7ddf1
+  Kind: proc, Exported: False
+  Lines: 250-250
+  Truncated Text: 'proc pp[P,S](p: var SortedSet[P,BlockRef[S]]): string ='
+  Full Text: 'proc pp[P,S](p: var SortedSet[P,BlockRef[S]]): string ='
+
+--- DUPLICATE GROUP: interval_set.nim::rc (18 defs) ---
+  SHA256: ec4653290e812f39cb59f73357032f905960d37a20642c996016d3a3ee377993
+  Kind: var, Exported: False
+  Lines: 253-253
+  Truncated Text: 'var rc ='
+  Full Text: 'var rc = p.ge(low(P))'
+
+  SHA256: f27009721291f09892ef761a569dfe4ce9dc421af6d7ad133fb4a9420ccf3e05
+  Kind: let, Exported: False
+  Lines: 354-354
+  Truncated Text: 'let rc ='
+  Full Text: 'let rc = ds.leftPos.le(r) # search for `max(a) <= r`'
+
+  SHA256: f27009721291f09892ef761a569dfe4ce9dc421af6d7ad133fb4a9420ccf3e05
+  Kind: let, Exported: False
+  Lines: 369-369
+  Truncated Text: 'let rc ='
+  Full Text: 'let rc = ds.leftPos.lt(r) # search for `max(a) < r`'
+
+  SHA256: f27009721291f09892ef761a569dfe4ce9dc421af6d7ad133fb4a9420ccf3e05
+  Kind: let, Exported: False
+  Lines: 396-396
+  Truncated Text: 'let rc ='
+  Full Text: 'let rc = ds.overlap(iv)'
+
+  SHA256: f27009721291f09892ef761a569dfe4ce9dc421af6d7ad133fb4a9420ccf3e05
+  Kind: let, Exported: False
+  Lines: 412-412
+  Truncated Text: 'let rc ='
+  Full Text: 'let rc = ds.overlapOrLeftJoin(iv)'
+
+  SHA256: f27009721291f09892ef761a569dfe4ce9dc421af6d7ad133fb4a9420ccf3e05
+  Kind: let, Exported: False
+  Lines: 473-473
+  Truncated Text: 'let rc ='
+  Full Text: 'let rc = ds.overlapOrLeftJoin(iv.left, iv.right - scalarOne)'
+
+  SHA256: f27009721291f09892ef761a569dfe4ce9dc421af6d7ad133fb4a9420ccf3e05
+  Kind: let, Exported: False
+  Lines: 603-603
+  Truncated Text: 'let rc ='
+  Full Text: 'let rc = ds.overlap(iv)'
+
+  SHA256: f27009721291f09892ef761a569dfe4ce9dc421af6d7ad133fb4a9420ccf3e05
+  Kind: let, Exported: False
+  Lines: 713-713
+  Truncated Text: 'let rc ='
+  Full Text: 'let rc = Segm[P,S].brew(minPt, maxPt)'
+
+  SHA256: f27009721291f09892ef761a569dfe4ce9dc421af6d7ad133fb4a9420ccf3e05
+  Kind: let, Exported: False
+  Lines: 738-738
+  Truncated Text: 'let rc ='
+  Full Text: 'let rc = Segm[P,S].brew(minPt, maxPt)'
+
+  SHA256: f27009721291f09892ef761a569dfe4ce9dc421af6d7ad133fb4a9420ccf3e05
+  Kind: let, Exported: False
+  Lines: 759-759
+  Truncated Text: 'let rc ='
+  Full Text: 'let rc = Segm[P,S].brew(minPt, maxPt)'
+
+  SHA256: f27009721291f09892ef761a569dfe4ce9dc421af6d7ad133fb4a9420ccf3e05
+  Kind: let, Exported: False
+  Lines: 777-777
+  Truncated Text: 'let rc ='
+  Full Text: 'let rc = ds.leftPos.ge(minPt)'
+
+  SHA256: f27009721291f09892ef761a569dfe4ce9dc421af6d7ad133fb4a9420ccf3e05
+  Kind: let, Exported: False
+  Lines: 796-796
+  Truncated Text: 'let rc ='
+  Full Text: 'let rc = ds.leftPos.le(maxPt)'
+
+  SHA256: f27009721291f09892ef761a569dfe4ce9dc421af6d7ad133fb4a9420ccf3e05
+  Kind: let, Exported: False
+  Lines: 829-829
+  Truncated Text: 'let rc ='
+  Full Text: 'let rc = ds.leftPos.le(pt)'
+
+  SHA256: f27009721291f09892ef761a569dfe4ce9dc421af6d7ad133fb4a9420ccf3e05
+  Kind: let, Exported: False
+  Lines: 847-847
+  Truncated Text: 'let rc ='
+  Full Text: 'let rc = ds.leftPos.delete(minPt)'
+
+  SHA256: f27009721291f09892ef761a569dfe4ce9dc421af6d7ad133fb4a9420ccf3e05
+  Kind: let, Exported: False
+  Lines: 857-857
+  Truncated Text: 'let rc ='
+  Full Text: 'let rc = ds.leftPos.lt(minPt)'
+
+  SHA256: ec4653290e812f39cb59f73357032f905960d37a20642c996016d3a3ee377993
+  Kind: var, Exported: False
+  Lines: 875-875
+  Truncated Text: 'var rc ='
+  Full Text: 'var rc = ds.leftPos.ge(minPt)'
+
+  SHA256: ec4653290e812f39cb59f73357032f905960d37a20642c996016d3a3ee377993
+  Kind: var, Exported: False
+  Lines: 896-896
+  Truncated Text: 'var rc ='
+  Full Text: 'var rc = ds.leftPos.le(maxPt)'
+
+  SHA256: f27009721291f09892ef761a569dfe4ce9dc421af6d7ad133fb4a9420ccf3e05
+  Kind: let, Exported: False
+  Lines: 1151-1151
+  Truncated Text: 'let rc ='
+  Full Text: 'let rc = ds.leftPos.verify'
+
+--- DUPLICATE GROUP: interval_set.nim::reduce (2 defs) ---
+  SHA256: 28b5d851fc45111cd6b55db70334902bfcd9b7f556eafccbce4d8148dd50a0ff
+  Kind: func, Exported: False
+  Lines: 729-729
+  Truncated Text: 'func reduce*[P,S](ds: IntervalSetRef[P,S]; minPt, maxPt: P): S ='
+  Full Text: 'func reduce*[P,S](ds: IntervalSetRef[P,S]; minPt, maxPt: P): S ='
+
+  SHA256: 2106f1f9ad66c71fdcfd7831cb3c74bd72993907cbd0fa2531dce8e988d20c09
+  Kind: func, Exported: False
+  Lines: 749-749
+  Truncated Text: 'func reduce*[P,S](ds: IntervalSetRef[P,S]; iv: Interval[P,S]): S ='
+  Full Text: 'func reduce*[P,S](ds: IntervalSetRef[P,S]; iv: Interval[P,S]): S ='
+
+--- DUPLICATE GROUP: interval_set.nim::right (2 defs) ---
+  SHA256: 6fe721ec786b96e803ee3ff09dcf14b2d9b5b5c8d00057188e01c58565eed257
+  Kind: func, Exported: False
+  Lines: 292-292
+  Truncated Text: 'func right[P,S](kvp: DataRef[P,S]): P ='
+  Full Text: 'func right[P,S](kvp: DataRef[P,S]): P ='
+
+  SHA256: afa14ccae8a29aa53e1f149048bb306ede6f6d5554af66e47c0ad29fede20870
+  Kind: func, Exported: False
+  Lines: 320-320
+  Truncated Text: 'func right[P,S](iv: Segm[P,S]): P ='
+  Full Text: 'func right[P,S](iv: Segm[P,S]): P ='
+
+--- DUPLICATE GROUP: interval_set.nim::s (2 defs) ---
+  SHA256: 670ee7807a951fc5cdfbee41de5010785dc3dd71004ad13067da5168f8cb1f09
+  Kind: let, Exported: False
+  Lines: 507-507
+  Truncated Text: 'let s ='
+  Full Text: 'let s = BlockRef[S](size: p.right - iv.left)'
+
+  SHA256: 670ee7807a951fc5cdfbee41de5010785dc3dd71004ad13067da5168f8cb1f09
+  Kind: let, Exported: False
+  Lines: 556-556
+  Truncated Text: 'let s ='
+  Full Text: 'let s = BlockRef[S](size: right - iv.right)'
+
+--- DUPLICATE GROUP: interval_set.nim::verify (2 defs) ---
+  SHA256: 1227b4f4af94bf44ad1b7c808d21d0116c3cb1faa82c3870810e4b7e45e979f3
+  Kind: proc, Exported: False
+  Lines: 187-188
+  Truncated Text: 'proc verify*[P,S](\nds: IntervalSetRef[P,S]): Result[void,(RbInfo,IntervalSetError)]'
+  Full Text: 'proc verify*[P,S](\nds: IntervalSetRef[P,S]): Result[void,(RbInfo,IntervalSetError)]'
+
+  SHA256: 5fea2d16ca1588f647c829a8b28497dd9dfde1229bd4341a44cebb90a02f3661
+  Kind: proc, Exported: False
+  Lines: 1146-1148
+  Truncated Text: 'proc verify*[P,S](\nds: IntervalSetRef[P,S]\n): Result[void,(RbInfo,IntervalSetError)] ='
+  Full Text: 'proc verify*[P,S](\nds: IntervalSetRef[P,S]\n): Result[void,(RbInfo,IntervalSetError)] ='
+
+--- DUPLICATE GROUP: io2.nim::`==` (3 defs) ---
+  SHA256: 03a68bf7cb3eab2b1008d50262715c37d90e78fa8a9904ce5dc8a2d279f35ca4
+  Kind: proc, Exported: False
+  Lines: 212-212
+  Truncated Text: 'proc `==`*(a: IoErrorCode, b: uint32): bool {.inline.} ='
+  Full Text: 'proc `==`*(a: IoErrorCode, b: uint32): bool {.inline.} ='
+
+  SHA256: 60ac5ec79aa905dd8f3ac38bdd81117317492306826fcb22fe31917f1a1b8cbd
+  Kind: proc, Exported: False
+  Lines: 280-280
+  Truncated Text: 'proc `==`*(a: IoErrorCode, b: cint): bool {.inline.} ='
+  Full Text: 'proc `==`*(a: IoErrorCode, b: cint): bool {.inline.} ='
+
+  SHA256: ddf25190eca2798092d9c66b487f62a2a2ff0c38dd775e80c4b103d560d9045c
+  Kind: proc, Exported: False
+  Lines: 316-316
+  Truncated Text: 'proc `==`*(a, b: IoErrorCode): bool {.borrow.}'
+  Full Text: 'proc `==`*(a, b: IoErrorCode): bool {.borrow.}'
+
+--- DUPLICATE GROUP: io2.nim::a (4 defs) ---
+  SHA256: 56d8fa9b93f98f23cdfc716b2e7bffbe3cc2a5321137414f95b8e91ca31a8944
+  Kind: var, Exported: False
+  Lines: 627-627
+  Truncated Text: 'var a: posix.Stat'
+  Full Text: 'var a: posix.Stat'
+
+  SHA256: 56d8fa9b93f98f23cdfc716b2e7bffbe3cc2a5321137414f95b8e91ca31a8944
+  Kind: var, Exported: False
+  Lines: 643-643
+  Truncated Text: 'var a: posix.Stat'
+  Full Text: 'var a: posix.Stat'
+
+  SHA256: 56d8fa9b93f98f23cdfc716b2e7bffbe3cc2a5321137414f95b8e91ca31a8944
+  Kind: var, Exported: False
+  Lines: 779-779
+  Truncated Text: 'var a: posix.Stat'
+  Full Text: 'var a: posix.Stat'
+
+  SHA256: 56d8fa9b93f98f23cdfc716b2e7bffbe3cc2a5321137414f95b8e91ca31a8944
+  Kind: var, Exported: False
+  Lines: 1264-1264
+  Truncated Text: 'var a: posix.Stat'
+  Full Text: 'var a: posix.Stat'
+
+--- DUPLICATE GROUP: io2.nim::buffer (3 defs) ---
+  SHA256: 5926e062833583ee050f1cfabd8372efd1e2d9f4c1e0059075c35a504f4adb23
+  Kind: var, Exported: False
+  Lines: 480-480
+  Truncated Text: 'var buffer ='
+  Full Text: 'var buffer = newSeq[Utf16Char](len(path) * 2 + 1)'
+
+  SHA256: 5926e062833583ee050f1cfabd8372efd1e2d9f4c1e0059075c35a504f4adb23
+  Kind: var, Exported: False
+  Lines: 506-506
+  Truncated Text: 'var buffer ='
+  Full Text: 'var buffer = $res'
+
+  SHA256: 5926e062833583ee050f1cfabd8372efd1e2d9f4c1e0059075c35a504f4adb23
+  Kind: var, Exported: False
+  Lines: 511-511
+  Truncated Text: 'var buffer ='
+  Full Text: 'var buffer = newWideCString("", int(bufsize))'
+
+--- DUPLICATE GROUP: io2.nim::curpath (2 defs) ---
+  SHA256: 2f2ce72df261d77fef465a5183d6fbe8d4945a66f4f41e5c55f5d193ca3bc92d
+  Kind: var, Exported: False
+  Lines: 662-662
+  Truncated Text: 'var curpath ='
+  Full Text: 'var curpath = dpath'
+
+  SHA256: 2f2ce72df261d77fef465a5183d6fbe8d4945a66f4f41e5c55f5d193ca3bc92d
+  Kind: var, Exported: False
+  Lines: 664-664
+  Truncated Text: 'var curpath ='
+  Full Text: 'var curpath = path'
+
+--- DUPLICATE GROUP: io2.nim::data (2 defs) ---
+  SHA256: dab2bc65aae75d27a1767ec84ca69373f275a0cddf131cc8fc57d5df986ae1c4
+  Kind: var, Exported: False
+  Lines: 1515-1515
+  Truncated Text: 'var data: seq[byte]'
+  Full Text: 'var data: seq[byte]'
+
+  SHA256: 6a025f32d8a58ee6a443f58ecb0d7759961228cd23c98480cc1bf2987dbf8502
+  Kind: var, Exported: False
+  Lines: 1521-1521
+  Truncated Text: 'var data: string'
+  Full Text: 'var data: string'
+
+--- DUPLICATE GROUP: io2.nim::errCode (16 defs) ---
+  SHA256: 4466f149026688548c0a6aed494495b31a3905a46dd70537b1ea9f0c0bcdf6c7
+  Kind: let, Exported: False
+  Lines: 500-500
+  Truncated Text: 'let errCode ='
+  Full Text: 'let errCode = ioLastError()'
+
+  SHA256: 4466f149026688548c0a6aed494495b31a3905a46dd70537b1ea9f0c0bcdf6c7
+  Kind: let, Exported: False
+  Lines: 558-558
+  Truncated Text: 'let errCode ='
+  Full Text: 'let errCode = ioLastError()'
+
+  SHA256: 4466f149026688548c0a6aed494495b31a3905a46dd70537b1ea9f0c0bcdf6c7
+  Kind: let, Exported: False
+  Lines: 575-575
+  Truncated Text: 'let errCode ='
+  Full Text: 'let errCode = ioLastError()'
+
+  SHA256: 4466f149026688548c0a6aed494495b31a3905a46dd70537b1ea9f0c0bcdf6c7
+  Kind: let, Exported: False
+  Lines: 589-589
+  Truncated Text: 'let errCode ='
+  Full Text: 'let errCode = ioLastError()'
+
+  SHA256: 4466f149026688548c0a6aed494495b31a3905a46dd70537b1ea9f0c0bcdf6c7
+  Kind: let, Exported: False
+  Lines: 607-607
+  Truncated Text: 'let errCode ='
+  Full Text: 'let errCode = ioLastError()'
+
+  SHA256: 4466f149026688548c0a6aed494495b31a3905a46dd70537b1ea9f0c0bcdf6c7
+  Kind: let, Exported: False
+  Lines: 616-616
+  Truncated Text: 'let errCode ='
+  Full Text: 'let errCode = ioLastError()'
+
+  SHA256: 4466f149026688548c0a6aed494495b31a3905a46dd70537b1ea9f0c0bcdf6c7
+  Kind: let, Exported: False
+  Lines: 863-863
+  Truncated Text: 'let errCode ='
+  Full Text: 'let errCode = ioLastError()'
+
+  SHA256: 4466f149026688548c0a6aed494495b31a3905a46dd70537b1ea9f0c0bcdf6c7
+  Kind: let, Exported: False
+  Lines: 879-879
+  Truncated Text: 'let errCode ='
+  Full Text: 'let errCode = ioLastError()'
+
+  SHA256: 4466f149026688548c0a6aed494495b31a3905a46dd70537b1ea9f0c0bcdf6c7
+  Kind: let, Exported: False
+  Lines: 1042-1042
+  Truncated Text: 'let errCode ='
+  Full Text: 'let errCode = ioLastError()'
+
+  SHA256: 4466f149026688548c0a6aed494495b31a3905a46dd70537b1ea9f0c0bcdf6c7
+  Kind: let, Exported: False
+  Lines: 1053-1053
+  Truncated Text: 'let errCode ='
+  Full Text: 'let errCode = ioLastError()'
+
+  SHA256: 4466f149026688548c0a6aed494495b31a3905a46dd70537b1ea9f0c0bcdf6c7
+  Kind: let, Exported: False
+  Lines: 1148-1148
+  Truncated Text: 'let errCode ='
+  Full Text: 'let errCode = ioLastError()'
+
+  SHA256: 4466f149026688548c0a6aed494495b31a3905a46dd70537b1ea9f0c0bcdf6c7
+  Kind: let, Exported: False
+  Lines: 1187-1187
+  Truncated Text: 'let errCode ='
+  Full Text: 'let errCode = ioLastError()'
+
+  SHA256: 4466f149026688548c0a6aed494495b31a3905a46dd70537b1ea9f0c0bcdf6c7
+  Kind: let, Exported: False
+  Lines: 1294-1294
+  Truncated Text: 'let errCode ='
+  Full Text: 'let errCode = ioLastError()'
+
+  SHA256: 4466f149026688548c0a6aed494495b31a3905a46dd70537b1ea9f0c0bcdf6c7
+  Kind: let, Exported: False
+  Lines: 1453-1453
+  Truncated Text: 'let errCode ='
+  Full Text: 'let errCode = ioLastError()'
+
+  SHA256: 4466f149026688548c0a6aed494495b31a3905a46dd70537b1ea9f0c0bcdf6c7
+  Kind: let, Exported: False
+  Lines: 1574-1574
+  Truncated Text: 'let errCode ='
+  Full Text: 'let errCode = ioLastError()'
+
+  SHA256: 4466f149026688548c0a6aed494495b31a3905a46dd70537b1ea9f0c0bcdf6c7
+  Kind: let, Exported: False
+  Lines: 1640-1640
+  Truncated Text: 'let errCode ='
+  Full Text: 'let errCode = ioLastError()'
+
+--- DUPLICATE GROUP: io2.nim::existFlags (3 defs) ---
+  SHA256: b9fe4f38ae340e991b631717a2fdcd64023361bd0aa88f466828cea14e953cc6
+  Kind: let, Exported: False
+  Lines: 546-546
+  Truncated Text: 'let existFlags ='
+  Full Text: 'let existFlags = [EEXIST, ENOSYS]'
+
+  SHA256: b9fe4f38ae340e991b631717a2fdcd64023361bd0aa88f466828cea14e953cc6
+  Kind: let, Exported: False
+  Lines: 548-548
+  Truncated Text: 'let existFlags ='
+  Full Text: 'let existFlags = [EEXIST, EROFS]'
+
+  SHA256: b9fe4f38ae340e991b631717a2fdcd64023361bd0aa88f466828cea14e953cc6
+  Kind: let, Exported: False
+  Lines: 550-550
+  Truncated Text: 'let existFlags ='
+  Full Text: 'let existFlags = [EEXIST]'
+
+--- DUPLICATE GROUP: io2.nim::flags (2 defs) ---
+  SHA256: 86eb2351b9830bef7c8b981ec37aeb08e768b0321ca450e427e58f6eda320e3b
+  Kind: let, Exported: False
+  Lines: 1228-1228
+  Truncated Text: 'let flags ='
+  Full Text: 'let flags = {OpenFlags.Write, OpenFlags.Truncate, OpenFlags.Create}'
+
+  SHA256: 86eb2351b9830bef7c8b981ec37aeb08e768b0321ca450e427e58f6eda320e3b
+  Kind: let, Exported: False
+  Lines: 1482-1482
+  Truncated Text: 'let flags ='
+  Full Text: 'let flags = {OpenFlags.Read}'
+
+--- DUPLICATE GROUP: io2.nim::flockObj (2 defs) ---
+  SHA256: d149e977a33da12ca7100d51f8414132416dc462d681e54d76f6bf601a7a704b
+  Kind: var, Exported: False
+  Lines: 1554-1554
+  Truncated Text: 'var flockObj ='
+  Full Text: 'var flockObj ='
+
+  SHA256: d149e977a33da12ca7100d51f8414132416dc462d681e54d76f6bf601a7a704b
+  Kind: var, Exported: False
+  Lines: 1620-1620
+  Truncated Text: 'var flockObj ='
+  Full Text: 'var flockObj ='
+
+--- DUPLICATE GROUP: io2.nim::getFileSize (3 defs) ---
+  SHA256: 250822084a019240da4672b54bff6bca20eabbe680045546e7b9b87733aa9eff
+  Kind: proc, Exported: False
+  Lines: 182-182
+  Truncated Text: 'proc getFileSize(hFile: uint, lpFileSizeHigh: var uint32): uint32 {.'
+  Full Text: 'proc getFileSize(hFile: uint, lpFileSizeHigh: var uint32): uint32 {.'
+
+  SHA256: 7e61bd291c1b712ae7c7725949e21e1b49131cb64f2bd3c007090353b4c7e519
+  Kind: proc, Exported: False
+  Lines: 1261-1261
+  Truncated Text: 'proc getFileSize*(pathName: string): IoResult[int64] ='
+  Full Text: 'proc getFileSize*(pathName: string): IoResult[int64] ='
+
+  SHA256: e1afec657b5114faa4e9549458fda9c9c06c3a45e54aa3bb258fd2f22f1f767d
+  Kind: proc, Exported: False
+  Lines: 1281-1281
+  Truncated Text: 'proc getFileSize*(handle: IoHandle): IoResult[int64] ='
+  Full Text: 'proc getFileSize*(handle: IoHandle): IoResult[int64] ='
+
+--- DUPLICATE GROUP: io2.nim::getPermissions (2 defs) ---
+  SHA256: ca0afc0ca28478d30cb8d08af1683380fadd345c201c6756ab744ee92b0ae136
+  Kind: proc, Exported: False
+  Lines: 776-776
+  Truncated Text: 'proc getPermissions*(pathName: string): IoResult[int] ='
+  Full Text: 'proc getPermissions*(pathName: string): IoResult[int] ='
+
+  SHA256: e8ad5889a3376596043560190f9580aa6f21a7592666c938ef032cbbd38c8ca7
+  Kind: proc, Exported: False
+  Lines: 797-797
+  Truncated Text: 'proc getPermissions*(handle: IoHandle): IoResult[int] ='
+  Full Text: 'proc getPermissions*(handle: IoHandle): IoResult[int] ='
+
+--- DUPLICATE GROUP: io2.nim::getPermissionsSet (2 defs) ---
+  SHA256: e84208dcf2942b5fd4953ca053c54cd2c9ec667f07d7f3f7058b0dc0c16924e2
+  Kind: proc, Exported: False
+  Lines: 821-821
+  Truncated Text: 'proc getPermissionsSet*(pathName: string): IoResult[Permissions] ='
+  Full Text: 'proc getPermissionsSet*(pathName: string): IoResult[Permissions] ='
+
+  SHA256: 0f1e7a021978475ad5f8f35a63a91fca8cc04be0fa05bf503bce4dafe9fc51e8
+  Kind: proc, Exported: False
+  Lines: 830-830
+  Truncated Text: 'proc getPermissionsSet*(handle: IoHandle): IoResult[Permissions] ='
+  Full Text: 'proc getPermissionsSet*(handle: IoHandle): IoResult[Permissions] ='
+
+--- DUPLICATE GROUP: io2.nim::gres (2 defs) ---
+  SHA256: a5dfb290c54b534f34114c8e758026c04a418136e23dd221ee1f92148ea61da8
+  Kind: let, Exported: False
+  Lines: 840-840
+  Truncated Text: 'let gres ='
+  Full Text: 'let gres = getFileAttributes(newWideCString(fixPath(pathName)))'
+
+  SHA256: a5dfb290c54b534f34114c8e758026c04a418136e23dd221ee1f92148ea61da8
+  Kind: let, Exported: False
+  Lines: 888-888
+  Truncated Text: 'let gres ='
+  Full Text: 'let gres = getFileInformationByHandleEx(uint(handle),'
+
+--- DUPLICATE GROUP: io2.nim::handle (2 defs) ---
+  SHA256: 41faf3eb935bb6a64cf93dac87c43ad577265af4869de89965110333d2bf128e
+  Kind: let, Exported: False
+  Lines: 1229-1229
+  Truncated Text: 'let handle ='
+  Full Text: 'let handle = ? openFile(pathName, flags, createMode, secDescriptor)'
+
+  SHA256: 41faf3eb935bb6a64cf93dac87c43ad577265af4869de89965110333d2bf128e
+  Kind: let, Exported: False
+  Lines: 1483-1483
+  Truncated Text: 'let handle ='
+  Full Text: 'let handle = ? openFile(pathName, flags)'
+
+--- DUPLICATE GROUP: io2.nim::hres (2 defs) ---
+  SHA256: bd8d66934eb5ea43b1f771b1e46358e2437300219abd36315590b755417c0a1e
+  Kind: let, Exported: False
+  Lines: 1721-1721
+  Truncated Text: 'let hres ='
+  Full Text: 'let hres = c_getenv("HOME")'
+
+  SHA256: bd8d66934eb5ea43b1f771b1e46358e2437300219abd36315590b755417c0a1e
+  Kind: let, Exported: False
+  Lines: 1743-1743
+  Truncated Text: 'let hres ='
+  Full Text: 'let hres = c_getenv("HOME")'
+
+--- DUPLICATE GROUP: io2.nim::i (2 defs) ---
+  SHA256: 9cd01a38229cb9b4ebfc1545afc1b0ee1741a82724b1449bd42294855256671b
+  Kind: var, Exported: False
+  Lines: 365-365
+  Truncated Text: 'var i ='
+  Full Text: 'var i = len(path)'
+
+  SHA256: 9cd01a38229cb9b4ebfc1545afc1b0ee1741a82724b1449bd42294855256671b
+  Kind: var, Exported: False
+  Lines: 450-450
+  Truncated Text: 'var i ='
+  Full Text: 'var i = pathlen'
+
+--- DUPLICATE GROUP: io2.nim::info (2 defs) ---
+  SHA256: a1cf7d469a808bb01b697b9fd8039dc39768e5f6d0ad07f0947a1cb9d66e19dc
+  Kind: var, Exported: False
+  Lines: 808-808
+  Truncated Text: 'var info: BY_HANDLE_FILE_INFORMATION'
+  Full Text: 'var info: BY_HANDLE_FILE_INFORMATION'
+
+  SHA256: 75edd5bd5157975a8b7cf7fcfe4ca5ad72526a4aa839c4d5551e5d9b5f38fad5
+  Kind: var, Exported: False
+  Lines: 885-885
+  Truncated Text: 'var info: FILE_BASIC_INFO'
+  Full Text: 'var info: FILE_BASIC_INFO'
+
+--- DUPLICATE GROUP: io2.nim::lockFile (2 defs) ---
+  SHA256: 8269be4b9321ea835dce3a56825a9f647b15498eaa78c31ed9337394bef484d5
+  Kind: proc, Exported: False
+  Lines: 1529-1530
+  Truncated Text: 'proc lockFile*(handle: IoHandle, kind: LockType, offset,\nsize: int64): IoResult[void] ='
+  Full Text: 'proc lockFile*(handle: IoHandle, kind: LockType, offset,\nsize: int64): IoResult[void] ='
+
+  SHA256: 3d09a01eb3dfe6b47c0f7e12598b519df662fa14172e8823fc4146b640b399a0
+  Kind: proc, Exported: False
+  Lines: 1666-1666
+  Truncated Text: 'proc lockFile*(handle: IoHandle, kind: LockType): IoResult[IoLockHandle] ='
+  Full Text: 'proc lockFile*(handle: IoHandle, kind: LockType): IoResult[IoLockHandle] ='
+
+--- DUPLICATE GROUP: io2.nim::ltype (2 defs) ---
+  SHA256: 60de175b35e7f659158ed66d947f64ab812506aca843db822bf31f1b2e9ad51e
+  Kind: let, Exported: False
+  Lines: 1548-1548
+  Truncated Text: 'let ltype ='
+  Full Text: 'let ltype ='
+
+  SHA256: 60de175b35e7f659158ed66d947f64ab812506aca843db822bf31f1b2e9ad51e
+  Kind: let, Exported: False
+  Lines: 1619-1619
+  Truncated Text: 'let ltype ='
+  Full Text: 'let ltype = cshort(posix.F_UNLCK)'
+
+--- DUPLICATE GROUP: io2.nim::mask (2 defs) ---
+  SHA256: 8967b9a29e94f32fa5a7c48286c094c37a14f8592fbea98c92ae8f1acd31ba21
+  Kind: let, Exported: False
+  Lines: 824-824
+  Truncated Text: 'let mask ='
+  Full Text: 'let mask = ? getPermissions(pathName)'
+
+  SHA256: 8967b9a29e94f32fa5a7c48286c094c37a14f8592fbea98c92ae8f1acd31ba21
+  Kind: let, Exported: False
+  Lines: 831-831
+  Truncated Text: 'let mask ='
+  Full Text: 'let mask = ? getPermissions(handle)'
+
+--- DUPLICATE GROUP: io2.nim::offsetTuple (2 defs) ---
+  SHA256: 3b61450ba28eebd6157e041125a0f07bec054224a8564a4d21b24274f76369ed
+  Kind: let, Exported: False
+  Lines: 1589-1589
+  Truncated Text: 'let offsetTuple ='
+  Full Text: 'let offsetTuple = makeUint32(uint64(offset))'
+
+  SHA256: 3b61450ba28eebd6157e041125a0f07bec054224a8564a4d21b24274f76369ed
+  Kind: let, Exported: False
+  Lines: 1655-1655
+  Truncated Text: 'let offsetTuple ='
+  Full Text: 'let offsetTuple = makeUint32(uint64(offset))'
+
+--- DUPLICATE GROUP: io2.nim::omask (3 defs) ---
+  SHA256: f38fc40a46d6798b814583a4d12ba13417c7ff28facd955db631aea41266356e
+  Kind: let, Exported: False
+  Lines: 552-552
+  Truncated Text: 'let omask ='
+  Full Text: 'let omask = setUmask(0)'
+
+  SHA256: f38fc40a46d6798b814583a4d12ba13417c7ff28facd955db631aea41266356e
+  Kind: let, Exported: False
+  Lines: 857-857
+  Truncated Text: 'let omask ='
+  Full Text: 'let omask = setUmask(0)'
+
+  SHA256: f38fc40a46d6798b814583a4d12ba13417c7ff28facd955db631aea41266356e
+  Kind: let, Exported: False
+  Lines: 873-873
+  Truncated Text: 'let omask ='
+  Full Text: 'let omask = setUmask(0)'
+
+--- DUPLICATE GROUP: io2.nim::ovl (2 defs) ---
+  SHA256: 2ad8566ef2901626a82b725963e68a0cabd096f05c9cffb502a9a436e369a77f
+  Kind: var, Exported: False
+  Lines: 1592-1592
+  Truncated Text: 'var ovl ='
+  Full Text: 'var ovl = OVERLAPPED(offset: lowOffsetPart, offsetHigh: highOffsetPart)'
+
+  SHA256: 2ad8566ef2901626a82b725963e68a0cabd096f05c9cffb502a9a436e369a77f
+  Kind: var, Exported: False
+  Lines: 1658-1658
+  Truncated Text: 'var ovl ='
+  Full Text: 'var ovl = OVERLAPPED(offset: lowOffsetPart, offsetHigh: highOffsetPart)'
+
+--- DUPLICATE GROUP: io2.nim::path (4 defs) ---
+  SHA256: e41051591d5ce21e4db37f2023283d1e8b1f0e934e15ebf51a1c97e8f4c64034
+  Kind: var, Exported: False
+  Lines: 1688-1688
+  Truncated Text: 'var path: array[MAX_PATH, Utf16Char]'
+  Full Text: 'var path: array[MAX_PATH, Utf16Char]'
+
+  SHA256: 344df0f4bf46beea9adc10f6cc034a7a18c8036bd503e3ec2a35411a1d4771e2
+  Kind: var, Exported: False
+  Lines: 1706-1706
+  Truncated Text: 'var path ='
+  Full Text: 'var path = if isNil(res): "" else: $res'
+
+  SHA256: 3272e929f4ce9ae5d6e28ce56f21111bd29479fde5b66c6a26b332074281047c
+  Kind: var, Exported: False
+  Lines: 1753-1753
+  Truncated Text: 'var path: array[MAX_PATH + 1, Utf16Char]'
+  Full Text: 'var path: array[MAX_PATH + 1, Utf16Char]'
+
+  SHA256: 344df0f4bf46beea9adc10f6cc034a7a18c8036bd503e3ec2a35411a1d4771e2
+  Kind: var, Exported: False
+  Lines: 1767-1767
+  Truncated Text: 'var path ='
+  Full Text: 'var path = $res'
+
+--- DUPLICATE GROUP: io2.nim::paths (2 defs) ---
+  SHA256: adc67685565f8bf11873bff8f00737fc3f0c63a44056a96d5f29d7f64b8ec5c7
+  Kind: var, Exported: False
+  Lines: 657-657
+  Truncated Text: 'var paths: seq[string]'
+  Full Text: 'var paths: seq[string]'
+
+  SHA256: d7013a8de20ad2a02f4eb2643a4b477d3d04689a05ca9620b023ee731cfe0a08
+  Kind: let, Exported: False
+  Lines: 697-697
+  Truncated Text: 'let paths ='
+  Full Text: 'let paths = getPathItems(path, true)'
+
+--- DUPLICATE GROUP: io2.nim::pos (5 defs) ---
+  SHA256: c7a1654bb615f1e2b6f5cfdff6f4382dd55b161718755b8bf47bcefccad1a730
+  Kind: var, Exported: False
+  Lines: 1307-1307
+  Truncated Text: 'var pos: int64'
+  Full Text: 'var pos: int64'
+
+  SHA256: 3ef51f01c8c673ca7c4f02ece627de1a65ce0a34da52232faa47453429d6d125
+  Kind: let, Exported: False
+  Lines: 1331-1331
+  Truncated Text: 'let pos ='
+  Full Text: 'let pos ='
+
+  SHA256: 3ef51f01c8c673ca7c4f02ece627de1a65ce0a34da52232faa47453429d6d125
+  Kind: let, Exported: False
+  Lines: 1345-1345
+  Truncated Text: 'let pos ='
+  Full Text: 'let pos ='
+
+  SHA256: 3ef51f01c8c673ca7c4f02ece627de1a65ce0a34da52232faa47453429d6d125
+  Kind: let, Exported: False
+  Lines: 1374-1374
+  Truncated Text: 'let pos ='
+  Full Text: 'let pos ='
+
+  SHA256: 3ef51f01c8c673ca7c4f02ece627de1a65ce0a34da52232faa47453429d6d125
+  Kind: let, Exported: False
+  Lines: 1388-1388
+  Truncated Text: 'let pos ='
+  Full Text: 'let pos ='
+
+--- DUPLICATE GROUP: io2.nim::readFile (5 defs) ---
+  SHA256: b41babdfddfefaa4341f2a84c70966974f944aa598035102219e454e211131d6
+  Kind: proc, Exported: False
+  Lines: 139-142
+  Truncated Text: 'proc readFile(hFile: uint, lpBuffer: pointer,\nnNumberOfBytesToRead: uint32,\nlpNumberOfBytesRead: var uint32,\nlpOverlapped: pointer): int32 {.'
+  Full Text: 'proc readFile(hFile: uint, lpBuffer: pointer,\nnNumberOfBytesToRead: uint32,\nlpNumberOfBytesRead: var uint32,\nlpOverlapped: pointer): int32 {.'
+
+  SHA256: 299d6dd0901f466c6cf185882406f332dc8fc21950b5e39180bcfb43afab3449
+  Kind: proc, Exported: False
+  Lines: 1176-1177
+  Truncated Text: 'proc readFile*(handle: IoHandle,\ndata: var openArray[byte]): IoResult[uint] ='
+  Full Text: 'proc readFile*(handle: IoHandle,\ndata: var openArray[byte]): IoResult[uint] ='
+
+  SHA256: 41da9434a7febe998bb1aacfabe461aeb7e39db47882d9a4aac7c6d4c5afb5df
+  Kind: proc, Exported: False
+  Lines: 1208-1209
+  Truncated Text: 'proc readFile*(handle: IoHandle,\ndata: var openArray[char]): IoResult[uint] {.inline.} ='
+  Full Text: 'proc readFile*(handle: IoHandle,\ndata: var openArray[char]): IoResult[uint] {.inline.} ='
+
+  SHA256: 4120806ff3ddf0d25db0bc2ed491d0bb47083922af455bf1ce08b230ac90d164
+  Kind: proc, Exported: False
+  Lines: 1475-1475
+  Truncated Text: 'proc readFile*[T: byte|char](pathName: string,'
+  Full Text: 'proc readFile*[T: byte|char](pathName: string,'
+
+  SHA256: d350f4971af6aa923dc5b1dd89e1874bf1fade9da2e2059c6bbb7400108acfba
+  Kind: proc, Exported: False
+  Lines: 1494-1494
+  Truncated Text: 'proc readFile*[T: seq[byte]|string](pathName: string,'
+  Full Text: 'proc readFile*[T: seq[byte]|string](pathName: string,'
+
+--- DUPLICATE GROUP: io2.nim::res (53 defs) ---
+  SHA256: b2efb980f82f470731e3a43f1d132446473c57d75c03fbda271679e5861e7b15
+  Kind: var, Exported: False
+  Lines: 353-353
+  Truncated Text: 'var res ='
+  Full Text: 'var res = $msgbuf'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 482-482
+  Truncated Text: 'let res ='
+  Full Text: 'let res = getLongPathNameW(shortPath, cast[WideCString](addr buffer[0]),'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 498-498
+  Truncated Text: 'let res ='
+  Full Text: 'let res = getcwd(nil, 0)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 513-513
+  Truncated Text: 'let res ='
+  Full Text: 'let res = getCurrentDirectoryW(bufsize, buffer)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 553-553
+  Truncated Text: 'let res ='
+  Full Text: 'let res = posix.mkdir(cstring(dir), Mode(mode))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 571-571
+  Truncated Text: 'let res ='
+  Full Text: 'let res = createDirectoryW(newWideCString(fixPath(dir)), sa)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 585-585
+  Truncated Text: 'let res ='
+  Full Text: 'let res = posix.rmdir(cstring(dir))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 595-595
+  Truncated Text: 'let res ='
+  Full Text: 'let res = removeDirectoryW(newWideCString(fixPath(dir)))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 628-628
+  Truncated Text: 'let res ='
+  Full Text: 'let res = posix.stat(path, a)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 634-634
+  Truncated Text: 'let res ='
+  Full Text: 'let res = getFileAttributes(newWideCString(fixPath(path)))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 644-644
+  Truncated Text: 'let res ='
+  Full Text: 'let res = posix.stat(path, a)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 650-650
+  Truncated Text: 'let res ='
+  Full Text: 'let res = getFileAttributes(newWideCString(fixPath(path)))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 699-699
+  Truncated Text: 'let res ='
+  Full Text: 'let res = rawCreateDir(item, createMode, secDescriptor)'
+
+  SHA256: af55bf4c59f5a17a175d0adea92b101f655508f291b7d28b331266f31c61cd70
+  Kind: var, Exported: False
+  Lines: 706-706
+  Truncated Text: 'var res: Permissions'
+  Full Text: 'var res: Permissions'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 780-780
+  Truncated Text: 'let res ='
+  Full Text: 'let res = posix.stat(pathName, a)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 786-786
+  Truncated Text: 'let res ='
+  Full Text: 'let res = getFileAttributes(newWideCString(fixPath(pathName)))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 802-802
+  Truncated Text: 'let res ='
+  Full Text: 'let res = posix.fstat(cint(handle), statbuf)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 809-809
+  Truncated Text: 'let res ='
+  Full Text: 'let res = getFileInformationByHandle(uint(handle), info)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 858-858
+  Truncated Text: 'let res ='
+  Full Text: 'let res = posix.chmod(pathName, Mode(mask))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 874-874
+  Truncated Text: 'let res ='
+  Full Text: 'let res = posix.fchmod(cint(handle), Mode(mask))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 928-928
+  Truncated Text: 'let res ='
+  Full Text: 'let res = posix.access(cstring(pathName), mode)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 934-934
+  Truncated Text: 'let res ='
+  Full Text: 'let res = getFileAttributes(newWideCString(fixPath(pathName)))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 990-990
+  Truncated Text: 'let res ='
+  Full Text: 'let res = posix.stat(pathName, statbuf)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1116-1116
+  Truncated Text: 'let res ='
+  Full Text: 'let res = createFileW(newWideCString(fixPath(pathName)), dwAccess,'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1126-1126
+  Truncated Text: 'let res ='
+  Full Text: 'let res = closeHandle(uint(handle))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1132-1132
+  Truncated Text: 'let res ='
+  Full Text: 'let res = posix.close(cint(handle))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1146-1146
+  Truncated Text: 'let res ='
+  Full Text: 'let res = write(cint(handle), unsafeAddr data[0], csize_t(len(data)))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1160-1160
+  Truncated Text: 'let res ='
+  Full Text: 'let res = writeFile(uint32(handle), unsafeAddr data[0], uint32(len(data)),'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1185-1185
+  Truncated Text: 'let res ='
+  Full Text: 'let res = read(cint(handle), unsafeAddr data[0], csize_t(len(data)))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1199-1199
+  Truncated Text: 'let res ='
+  Full Text: 'let res = readFile(uint32(handle), unsafeAddr data[0], uint32(len(data)),'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1233-1233
+  Truncated Text: 'let res ='
+  Full Text: 'let res = writeFile(handle, data.toOpenArray(offset, len(data) - 1))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1265-1265
+  Truncated Text: 'let res ='
+  Full Text: 'let res = posix.stat(pathName, a)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1272-1272
+  Truncated Text: 'let res ='
+  Full Text: 'let res = findFirstFileW(newWideCString(fixPath(pathName)), wfd)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1285-1285
+  Truncated Text: 'let res ='
+  Full Text: 'let res = posix.fstat(cint(handle), statbuf)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1292-1292
+  Truncated Text: 'let res ='
+  Full Text: 'let res = getFileSize(uint(handle), highPart)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1308-1308
+  Truncated Text: 'let res ='
+  Full Text: "let res = setFilePointerEx(uint(handle), 0'i64, addr pos, whence)"
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1314-1314
+  Truncated Text: 'let res ='
+  Full Text: 'let res = int64(posix.lseek(cint(handle), Off(0), posix.SEEK_CUR))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1339-1339
+  Truncated Text: 'let res ='
+  Full Text: 'let res = setFilePointerEx(uint(handle), offset, nil, pos)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1353-1353
+  Truncated Text: 'let res ='
+  Full Text: 'let res = int64(posix.lseek(cint(handle), Off(offset), pos))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1382-1382
+  Truncated Text: 'let res ='
+  Full Text: 'let res = setFilePointerEx(uint(handle), offset, addr noffset, pos)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1396-1396
+  Truncated Text: 'let res ='
+  Full Text: 'let res = int64(posix.lseek(cint(handle), Off(offset), pos))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1414-1414
+  Truncated Text: 'let res ='
+  Full Text: 'let res = posix.ftruncate(cint(handle), Off(length))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1435-1435
+  Truncated Text: 'let res ='
+  Full Text: 'let res = posix.truncate(pathName, Off(length))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1445-1445
+  Truncated Text: 'let res ='
+  Full Text: 'let res = flushFileBuffers(uint(handle))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1451-1451
+  Truncated Text: 'let res ='
+  Full Text: 'let res = posix.fsync(cint(handle))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1484-1484
+  Truncated Text: 'let res ='
+  Full Text: 'let res = readFile(handle, data)'
+
+  SHA256: 2ba6ab1e6c9039e7f2ae30abb72687d3f9c9dc756f169ddcc626e82a68c96c07
+  Kind: let, Exported: False
+  Lines: 1510-1510
+  Truncated Text: 'let res {.used.} ='
+  Full Text: 'let res {.used.} = ? readFile(pathName, data.toOpenArray(0, len(data) - 1))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1572-1572
+  Truncated Text: 'let res ='
+  Full Text: 'let res = posix.fcntl(cint(handle), posix.F_SETLK, addr flockObj)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1638-1638
+  Truncated Text: 'let res ='
+  Full Text: 'let res = posix.fcntl(cint(handle), F_SETLK, addr flockObj)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1659-1659
+  Truncated Text: 'let res ='
+  Full Text: "let res = unlockFileEx(uint(handle), 0'u32, lowSizePart,"
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1680-1680
+  Truncated Text: 'let res ='
+  Full Text: 'let res = unlockFile(lock.handle, lock.offset, lock.size)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1705-1705
+  Truncated Text: 'let res ='
+  Full Text: 'let res = c_getenv("HOME")'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 1765-1765
+  Truncated Text: 'let res ='
+  Full Text: 'let res = c_getenv(cstring(name))'
+
+--- DUPLICATE GROUP: io2.nim::rnum (2 defs) ---
+  SHA256: e4aebb88b9ebfb452fa103ab069bfbd0200c7423e481922e441a6d7dc964b504
+  Kind: var, Exported: False
+  Lines: 732-732
+  Truncated Text: 'var rnum ='
+  Full Text: 'var rnum = 0'
+
+  SHA256: e4aebb88b9ebfb452fa103ab069bfbd0200c7423e481922e441a6d7dc964b504
+  Kind: var, Exported: False
+  Lines: 947-947
+  Truncated Text: 'var rnum ='
+  Full Text: 'var rnum = 0'
+
+--- DUPLICATE GROUP: io2.nim::sa (2 defs) ---
+  SHA256: a3db9f729ec247e65df95ee4759bfd915feffea4cdae26d15a580334811c66ed
+  Kind: var, Exported: False
+  Lines: 566-566
+  Truncated Text: 'var sa ='
+  Full Text: 'var sa = SECURITY_ATTRIBUTES('
+
+  SHA256: a3db9f729ec247e65df95ee4759bfd915feffea4cdae26d15a580334811c66ed
+  Kind: var, Exported: False
+  Lines: 1071-1071
+  Truncated Text: 'var sa ='
+  Full Text: 'var sa = SECURITY_ATTRIBUTES('
+
+--- DUPLICATE GROUP: io2.nim::setPermissions (4 defs) ---
+  SHA256: d3d653d4efe841297caab78e630ee2f878e7a50df0fe1951e1d6cd7246649511
+  Kind: proc, Exported: False
+  Lines: 837-837
+  Truncated Text: 'proc setPermissions*(pathName: string, mask: int): IoResult[void] ='
+  Full Text: 'proc setPermissions*(pathName: string, mask: int): IoResult[void] ='
+
+  SHA256: 7c7ecc56460351f1ab7d56c8dfd70bd5c5403691feeca1528e7f2ef1ffcd5372
+  Kind: proc, Exported: False
+  Lines: 869-869
+  Truncated Text: 'proc setPermissions*(handle: IoHandle, mask: int): IoResult[void] ='
+  Full Text: 'proc setPermissions*(handle: IoHandle, mask: int): IoResult[void] ='
+
+  SHA256: 1b8de0ec265bdcf1f971172392ea0e698bd6fe695e2ea0a25eac2c5581a73e05
+  Kind: proc, Exported: False
+  Lines: 907-907
+  Truncated Text: 'proc setPermissions*(pathName: string, mask: Permissions): IoResult[void] ='
+  Full Text: 'proc setPermissions*(pathName: string, mask: Permissions): IoResult[void] ='
+
+  SHA256: f5fa2417493127b8241bb872e1a965cf01cdb722d9e29ccb4f874c16834ef392
+  Kind: proc, Exported: False
+  Lines: 911-911
+  Truncated Text: 'proc setPermissions*(handle: IoHandle, mask: Permissions): IoResult[void] ='
+  Full Text: 'proc setPermissions*(handle: IoHandle, mask: Permissions): IoResult[void] ='
+
+--- DUPLICATE GROUP: io2.nim::sizeTuple (2 defs) ---
+  SHA256: bfc8fee997427296abaad29f78423fb8983e0958066d5704df36b9dc97d61c00
+  Kind: let, Exported: False
+  Lines: 1590-1590
+  Truncated Text: 'let sizeTuple ='
+  Full Text: 'let sizeTuple = makeUint32(uint64(size))'
+
+  SHA256: bfc8fee997427296abaad29f78423fb8983e0958066d5704df36b9dc97d61c00
+  Kind: let, Exported: False
+  Lines: 1656-1656
+  Truncated Text: 'let sizeTuple ='
+  Full Text: 'let sizeTuple = makeUint32(uint64(size))'
+
+--- DUPLICATE GROUP: io2.nim::sres (2 defs) ---
+  SHA256: b67a3ec2dbd7498d55d406c0da6d0cecb9aaa85f656989481d8180d66f76d74a
+  Kind: let, Exported: False
+  Lines: 849-849
+  Truncated Text: 'let sres ='
+  Full Text: 'let sres = setFileAttributes(newWideCString(fixPath(pathName)),'
+
+  SHA256: b67a3ec2dbd7498d55d406c0da6d0cecb9aaa85f656989481d8180d66f76d74a
+  Kind: let, Exported: False
+  Lines: 899-899
+  Truncated Text: 'let sres ='
+  Full Text: 'let sres = setFileInformationByHandle(uint(handle),'
+
+--- DUPLICATE GROUP: io2.nim::statbuf (3 defs) ---
+  SHA256: de4121c4f6ae015680b37a8578d58a6c0cf56f8dcd1c0c20403b92ed81223077
+  Kind: var, Exported: False
+  Lines: 801-801
+  Truncated Text: 'var statbuf: posix.Stat'
+  Full Text: 'var statbuf: posix.Stat'
+
+  SHA256: de4121c4f6ae015680b37a8578d58a6c0cf56f8dcd1c0c20403b92ed81223077
+  Kind: var, Exported: False
+  Lines: 989-989
+  Truncated Text: 'var statbuf: posix.Stat'
+  Full Text: 'var statbuf: posix.Stat'
+
+  SHA256: de4121c4f6ae015680b37a8578d58a6c0cf56f8dcd1c0c20403b92ed81223077
+  Kind: var, Exported: False
+  Lines: 1284-1284
+  Truncated Text: 'var statbuf: posix.Stat'
+  Full Text: 'var statbuf: posix.Stat'
+
+--- DUPLICATE GROUP: io2.nim::strpath (2 defs) ---
+  SHA256: 720ecad93940a8cfa44360f6beae40cae013e87cabbcb28518c64783506bf5a7
+  Kind: var, Exported: False
+  Lines: 1696-1696
+  Truncated Text: 'var strpath ='
+  Full Text: 'var strpath = `$`(wpath, len(path))'
+
+  SHA256: 720ecad93940a8cfa44360f6beae40cae013e87cabbcb28518c64783506bf5a7
+  Kind: var, Exported: False
+  Lines: 1760-1760
+  Truncated Text: 'var strpath ='
+  Full Text: 'var strpath = `$`(wpath, len(path))'
+
+--- DUPLICATE GROUP: io2.nim::truncate (2 defs) ---
+  SHA256: 0cd5ffec5a4bfb0f83a0c1212503f6b7a265883ae8ca892c21cf2a90da5a6a3a
+  Kind: proc, Exported: False
+  Lines: 1402-1402
+  Truncated Text: 'proc truncate*(handle: IoHandle, length: int64): IoResult[void] ='
+  Full Text: 'proc truncate*(handle: IoHandle, length: int64): IoResult[void] ='
+
+  SHA256: 82525b7e6710b694dbf480dad94285a19b364b14607d7070c62fc0e5902b5fca
+  Kind: proc, Exported: False
+  Lines: 1420-1420
+  Truncated Text: 'proc truncate*(pathName: string, length: int64): IoResult[void] ='
+  Full Text: 'proc truncate*(pathName: string, length: int64): IoResult[void] ='
+
+--- DUPLICATE GROUP: io2.nim::unlockFile (2 defs) ---
+  SHA256: 9d16e32523d7db39e91e2dffe2f65b74d308c0350e266e0d118857d3e3cc8e10
+  Kind: proc, Exported: False
+  Lines: 1607-1607
+  Truncated Text: 'proc unlockFile*(handle: IoHandle, offset, size: int64): IoResult[void] ='
+  Full Text: 'proc unlockFile*(handle: IoHandle, offset, size: int64): IoResult[void] ='
+
+  SHA256: 8f211284e5159e08f5fdb1fb8018726b7a7c84aad5f66e1f4c081839ee2c641c
+  Kind: proc, Exported: False
+  Lines: 1678-1678
+  Truncated Text: 'proc unlockFile*(lock: IoLockHandle): IoResult[void] ='
+  Full Text: 'proc unlockFile*(lock: IoLockHandle): IoResult[void] ='
+
+--- DUPLICATE GROUP: io2.nim::writeFile (5 defs) ---
+  SHA256: 273fb9451d41646323c709a5c51b82d35c1de209880479f515ee3cf8c612066c
+  Kind: proc, Exported: False
+  Lines: 134-137
+  Truncated Text: 'proc writeFile(hFile: uint, lpBuffer: pointer,\nnNumberOfBytesToWrite: uint32,\nlpNumberOfBytesWritten: var uint32,\nlpOverlapped: pointer): int32 {.'
+  Full Text: 'proc writeFile(hFile: uint, lpBuffer: pointer,\nnNumberOfBytesToWrite: uint32,\nlpNumberOfBytesWritten: var uint32,\nlpOverlapped: pointer): int32 {.'
+
+  SHA256: 2232be15d66b4c6635bd391f8310e11a97207d28c38c2ec8ef612b8ed0d5b21b
+  Kind: proc, Exported: False
+  Lines: 1138-1139
+  Truncated Text: 'proc writeFile*(handle: IoHandle,\ndata: openArray[byte]): IoResult[uint] ='
+  Full Text: 'proc writeFile*(handle: IoHandle,\ndata: openArray[byte]): IoResult[uint] ='
+
+  SHA256: 30d2119139f87c7ca6a7cf7f13bd39a35708f95f22b8a7454bea56fc8e6d5408
+  Kind: proc, Exported: False
+  Lines: 1169-1170
+  Truncated Text: 'proc writeFile*(handle: IoHandle,\ndata: openArray[char]): IoResult[uint] {.inline.} ='
+  Full Text: 'proc writeFile*(handle: IoHandle,\ndata: openArray[char]): IoResult[uint] {.inline.} ='
+
+  SHA256: 6849abb07636bb76da906d8c72fa647c64080ccaa2099f459c4d4907c64671a1
+  Kind: proc, Exported: False
+  Lines: 1216-1218
+  Truncated Text: 'proc writeFile*(pathName: string, data: openArray[byte],\ncreateMode: int = 0o644,\nsecDescriptor: pointer = nil): IoResult[void] ='
+  Full Text: 'proc writeFile*(pathName: string, data: openArray[byte],\ncreateMode: int = 0o644,\nsecDescriptor: pointer = nil): IoResult[void] ='
+
+  SHA256: dbdd2d9f2d15408719bb331f7b8acbd4939243aac8d40a1a34c45a9b9cdddf4e
+  Kind: proc, Exported: False
+  Lines: 1250-1252
+  Truncated Text: 'proc writeFile*(pathName: string, data: openArray[char],\ncreateMode: int = 0o644,\nsecDescriptor: pointer = nil): IoResult[void] {.inline.} ='
+  Full Text: 'proc writeFile*(pathName: string, data: openArray[char],\ncreateMode: int = 0o644,\nsecDescriptor: pointer = nil): IoResult[void] {.inline.} ='
+
+--- DUPLICATE GROUP: keyed_queue.nim::T (3 defs) ---
+  SHA256: b4d4cab51c8ac96cf721ac9f207d6980c5f498a6dbe63fb0bd508d18f745c335
+  Kind: type, Exported: False
+  Lines: 330-330
+  Truncated Text: 'type T ='
+  Full Text: 'type T = KeyedQueuePair[K, V]'
+
+  SHA256: b4d4cab51c8ac96cf721ac9f207d6980c5f498a6dbe63fb0bd508d18f745c335
+  Kind: type, Exported: False
+  Lines: 358-358
+  Truncated Text: 'type T ='
+  Full Text: 'type T = KeyedQueuePair[K, V]'
+
+  SHA256: b4d4cab51c8ac96cf721ac9f207d6980c5f498a6dbe63fb0bd508d18f745c335
+  Kind: type, Exported: False
+  Lines: 382-382
+  Truncated Text: 'type T ='
+  Full Text: 'type T = KeyedQueuePair[K, V]'
+
+--- DUPLICATE GROUP: keyed_queue.nim::append (2 defs) ---
+  SHA256: 61e863627795d5de24253a437318ba8ae8d3f18af77111eaadb46fd1c0e61074
+  Kind: func, Exported: False
+  Lines: 268-268
+  Truncated Text: 'func append*[K, V](rq: var KeyedQueue[K, V], key: K, val: V): bool ='
+  Full Text: 'func append*[K, V](rq: var KeyedQueue[K, V], key: K, val: V): bool ='
+
+  SHA256: d3513f7d145713abcbbd8fdc3594eb07afe49cf616778e13ecd50f04d60d1a66
+  Kind: func, Exported: False
+  Lines: 397-397
+  Truncated Text: 'func append*[K](rq: var KeyedQueueNV[K], key: K): bool ='
+  Full Text: 'func append*[K](rq: var KeyedQueueNV[K], key: K): bool ='
+
+--- DUPLICATE GROUP: keyed_queue.nim::beforeLast (2 defs) ---
+  SHA256: b703215cd327df21a448526d685c4e9fb3003b747a180390d727daf3dc8c9f7d
+  Kind: func, Exported: False
+  Lines: 602-602
+  Truncated Text: 'func beforeLast*[K, V](rq: var KeyedQueue[K, V]): Opt[KeyedQueuePair[K, V]] ='
+  Full Text: 'func beforeLast*[K, V](rq: var KeyedQueue[K, V]): Opt[KeyedQueuePair[K, V]] ='
+
+  SHA256: 0921c07090d67e9f3def06ba25441f574569ff6ccb86d85f86b30cc2b3a10bf4
+  Kind: func, Exported: False
+  Lines: 644-644
+  Truncated Text: 'func beforeLast*[K](rq: var KeyedQueueNV[K]): Opt[K] ='
+  Full Text: 'func beforeLast*[K](rq: var KeyedQueueNV[K]): Opt[K] ='
+
+--- DUPLICATE GROUP: keyed_queue.nim::first (3 defs) ---
+  SHA256: fa2f731403c1066fb31a1dc3ec2e35647b4039352b4635695115165d3d99933a
+  Kind: let, Exported: False
+  Lines: 74-74
+  Truncated Text: 'let first ='
+  Full Text: 'let first = rq.kFirst'
+
+  SHA256: 6caff11a16672f4ea84488a80644bcaf0d074c0dc2f995bb310c563889a8daee
+  Kind: func, Exported: False
+  Lines: 586-586
+  Truncated Text: 'func first*[K, V](rq: var KeyedQueue[K, V]): Opt[KeyedQueuePair[K, V]] ='
+  Full Text: 'func first*[K, V](rq: var KeyedQueue[K, V]): Opt[KeyedQueuePair[K, V]] ='
+
+  SHA256: eac6fdca144eec4762374f7bb5ad8901450f19a35f2dae79fc8b4accdd4dc37d
+  Kind: func, Exported: False
+  Lines: 636-636
+  Truncated Text: 'func first*[K](rq: var KeyedQueueNV[K]): Opt[K] ='
+  Full Text: 'func first*[K](rq: var KeyedQueueNV[K]): Opt[K] ='
+
+--- DUPLICATE GROUP: keyed_queue.nim::init (4 defs) ---
+  SHA256: 508b6595defc5bb57d7a27160844c29cdb62aa99b73c11071e8291576e285081
+  Kind: func, Exported: False
+  Lines: 247-247
+  Truncated Text: 'func init*[K, V](rq: var KeyedQueue[K, V], initSize = defaultInitialSize) ='
+  Full Text: 'func init*[K, V](rq: var KeyedQueue[K, V], initSize = defaultInitialSize) ='
+
+  SHA256: 4580149df4b162c5c9c06c23d7d974d1db4fc4d4173b0e907b4c130341494b4e
+  Kind: func, Exported: False
+  Lines: 252-252
+  Truncated Text: 'func init*[K, V](T: type KeyedQueue[K, V], initSize = defaultInitialSize): T ='
+  Full Text: 'func init*[K, V](T: type KeyedQueue[K, V], initSize = defaultInitialSize): T ='
+
+  SHA256: 9233bd37c3a60c03fc38099bc75d34316bef50ae38d6d7ec8a12dfe25bf6d3ad
+  Kind: func, Exported: False
+  Lines: 256-256
+  Truncated Text: 'func init*[K](rq: var KeyedQueueNV[K], initSize = defaultInitialSize) ='
+  Full Text: 'func init*[K](rq: var KeyedQueueNV[K], initSize = defaultInitialSize) ='
+
+  SHA256: f3a252d0ac2ed83608055763df24f897c10c68c856154ededd7d9f5bd0971808
+  Kind: func, Exported: False
+  Lines: 260-260
+  Truncated Text: 'func init*[K](T: type KeyedQueueNV[K], initSize = defaultInitialSize): T ='
+  Full Text: 'func init*[K](T: type KeyedQueueNV[K], initSize = defaultInitialSize): T ='
+
+--- DUPLICATE GROUP: keyed_queue.nim::item (6 defs) ---
+  SHA256: 3b5f33622142c08ab014a156a2bf89c491e415802d6612226ecc89de543faf1b
+  Kind: var, Exported: False
+  Lines: 142-142
+  Truncated Text: 'var item ='
+  Full Text: 'var item = KeyedQueueItem[K, V](data: val)'
+
+  SHA256: 3b5f33622142c08ab014a156a2bf89c491e415802d6612226ecc89de543faf1b
+  Kind: var, Exported: False
+  Lines: 166-166
+  Truncated Text: 'var item ='
+  Full Text: 'var item = KeyedQueueItem[K, V](data: val)'
+
+  SHA256: 5d1066eb5dbd0c6e1f180b649449b0e6210eaecffadc0701aff0881bab2511c3
+  Kind: var, Exported: False
+  Lines: 778-778
+  Truncated Text: 'var item: KeyedQueueItem[K, V]'
+  Full Text: 'var item: KeyedQueueItem[K, V]'
+
+  SHA256: 5d1066eb5dbd0c6e1f180b649449b0e6210eaecffadc0701aff0881bab2511c3
+  Kind: var, Exported: False
+  Lines: 798-798
+  Truncated Text: 'var item: KeyedQueueItem[K, V]'
+  Full Text: 'var item: KeyedQueueItem[K, V]'
+
+  SHA256: 5d1066eb5dbd0c6e1f180b649449b0e6210eaecffadc0701aff0881bab2511c3
+  Kind: var, Exported: False
+  Lines: 834-834
+  Truncated Text: 'var item: KeyedQueueItem[K, V]'
+  Full Text: 'var item: KeyedQueueItem[K, V]'
+
+  SHA256: 5d1066eb5dbd0c6e1f180b649449b0e6210eaecffadc0701aff0881bab2511c3
+  Kind: var, Exported: False
+  Lines: 854-854
+  Truncated Text: 'var item: KeyedQueueItem[K, V]'
+  Full Text: 'var item: KeyedQueueItem[K, V]'
+
+--- DUPLICATE GROUP: keyed_queue.nim::key (7 defs) ---
+  SHA256: c4a8a5e2c80f8ef424479a78abed66d0a66e028d1dc4751009f9a92c4c8e5fda
+  Kind: let, Exported: False
+  Lines: 191-191
+  Truncated Text: 'let key ='
+  Full Text: 'let key = rq.kFirst'
+
+  SHA256: c4a8a5e2c80f8ef424479a78abed66d0a66e028d1dc4751009f9a92c4c8e5fda
+  Kind: let, Exported: False
+  Lines: 199-199
+  Truncated Text: 'let key ='
+  Full Text: 'let key = rq.kLast'
+
+  SHA256: c4a8a5e2c80f8ef424479a78abed66d0a66e028d1dc4751009f9a92c4c8e5fda
+  Kind: let, Exported: False
+  Lines: 591-591
+  Truncated Text: 'let key ='
+  Full Text: 'let key = rq.kFirst'
+
+  SHA256: c4a8a5e2c80f8ef424479a78abed66d0a66e028d1dc4751009f9a92c4c8e5fda
+  Kind: let, Exported: False
+  Lines: 599-599
+  Truncated Text: 'let key ='
+  Full Text: 'let key = rq.tab[rq.kFirst].kNxt'
+
+  SHA256: c4a8a5e2c80f8ef424479a78abed66d0a66e028d1dc4751009f9a92c4c8e5fda
+  Kind: let, Exported: False
+  Lines: 607-607
+  Truncated Text: 'let key ='
+  Full Text: 'let key = rq.tab[rq.kLast].kPrv'
+
+  SHA256: c4a8a5e2c80f8ef424479a78abed66d0a66e028d1dc4751009f9a92c4c8e5fda
+  Kind: let, Exported: False
+  Lines: 615-615
+  Truncated Text: 'let key ='
+  Full Text: 'let key = rq.kLast'
+
+  SHA256: f4eaf2022c5a055922235fab56e165966706bda1be4d6252bc585351f095d2ee
+  Kind: func, Exported: False
+  Lines: 724-724
+  Truncated Text: 'func key*[K, V](kqp: KeyedQueuePair[K, V]): K ='
+  Full Text: 'func key*[K, V](kqp: KeyedQueuePair[K, V]): K ='
+
+--- DUPLICATE GROUP: keyed_queue.nim::last (3 defs) ---
+  SHA256: 1dd47e5df0ce63b991894ce0fce46cd16934d6da500bca729f61ee80b8e953f1
+  Kind: let, Exported: False
+  Lines: 94-94
+  Truncated Text: 'let last ='
+  Full Text: 'let last = rq.kLast'
+
+  SHA256: 8bb971a3e2ff42ec901108471ca3ea549171f649def382912a7c34120344eff6
+  Kind: func, Exported: False
+  Lines: 610-610
+  Truncated Text: 'func last*[K, V](rq: var KeyedQueue[K, V]): Opt[KeyedQueuePair[K, V]] ='
+  Full Text: 'func last*[K, V](rq: var KeyedQueue[K, V]): Opt[KeyedQueuePair[K, V]] ='
+
+  SHA256: 6cd3b441332494fee35554a856ef2220b87d72cd493edb93e49b5e78c8288ba8
+  Kind: func, Exported: False
+  Lines: 648-648
+  Truncated Text: 'func last*[K](rq: var KeyedQueueNV[K]): Opt[K] ='
+  Full Text: 'func last*[K](rq: var KeyedQueueNV[K]): Opt[K] ='
+
+--- DUPLICATE GROUP: keyed_queue.nim::next (2 defs) ---
+  SHA256: 1ff7eb83e4832fecfbb1fd2ea125488b4a5ed6af3c4bb4fbbb6284f3153c636c
+  Kind: func, Exported: False
+  Lines: 618-618
+  Truncated Text: 'func next*[K, V](rq: var KeyedQueue[K, V], key: K): Opt[KeyedQueuePair[K, V]] ='
+  Full Text: 'func next*[K, V](rq: var KeyedQueue[K, V], key: K): Opt[KeyedQueuePair[K, V]] ='
+
+  SHA256: dd75bdb1c42d26eb3f49f4d2c9080e80a619d717a0dd145cf02179e0c5ea2517
+  Kind: func, Exported: False
+  Lines: 652-652
+  Truncated Text: 'func next*[K](rq: var KeyedQueueNV[K], key: K): Opt[K] ='
+  Full Text: 'func next*[K](rq: var KeyedQueueNV[K], key: K): Opt[K] ='
+
+--- DUPLICATE GROUP: keyed_queue.nim::pop (2 defs) ---
+  SHA256: f95a9af502187cdc95510f69b3754884f95b2411bc85acb59a17f89e40d2456d
+  Kind: func, Exported: False
+  Lines: 351-351
+  Truncated Text: 'func pop*[K, V](rq: var KeyedQueue[K, V]): Opt[KeyedQueuePair[K, V]] ='
+  Full Text: 'func pop*[K, V](rq: var KeyedQueue[K, V]): Opt[KeyedQueuePair[K, V]] ='
+
+  SHA256: 9fb05595df23a45cdcc64eeaa619f78387b0dc52ac5432853b0b5d1122c51f18
+  Kind: func, Exported: False
+  Lines: 417-417
+  Truncated Text: 'func pop*[K](rq: var KeyedQueueNV[K]): Opt[K] ='
+  Full Text: 'func pop*[K](rq: var KeyedQueueNV[K]): Opt[K] ='
+
+--- DUPLICATE GROUP: keyed_queue.nim::prepend (2 defs) ---
+  SHA256: abc9d374291b81439e40786b2ca93fe6835a68737d552175a8bff517cdad58a0
+  Kind: func, Exported: False
+  Lines: 306-306
+  Truncated Text: 'func prepend*[K, V](rq: var KeyedQueue[K, V], key: K, val: V): bool ='
+  Full Text: 'func prepend*[K, V](rq: var KeyedQueue[K, V], key: K, val: V): bool ='
+
+  SHA256: c76494cfa88e8ea6deb4e3c8e86b40ed50887dd02d07a98fa92b615556fe86a7
+  Kind: func, Exported: False
+  Lines: 405-405
+  Truncated Text: 'func prepend*[K](rq: var KeyedQueueNV[K], key: K): bool ='
+  Full Text: 'func prepend*[K](rq: var KeyedQueueNV[K], key: K): bool ='
+
+--- DUPLICATE GROUP: keyed_queue.nim::prev (2 defs) ---
+  SHA256: ae8600f84c01d0983496da21a03e456e97c0a7874b7ae5521b2832694f7aae7e
+  Kind: func, Exported: False
+  Lines: 626-626
+  Truncated Text: 'func prev*[K, V](rq: var KeyedQueue[K, V], key: K): Opt[KeyedQueuePair[K, V]] ='
+  Full Text: 'func prev*[K, V](rq: var KeyedQueue[K, V], key: K): Opt[KeyedQueuePair[K, V]] ='
+
+  SHA256: dcec6f8ea0e526e4bf3bf0afb7dd0c877799ed26e1549239aea6c909bcfe3331
+  Kind: func, Exported: False
+  Lines: 656-656
+  Truncated Text: 'func prev*[K](rq: var KeyedQueueNV[K], key: K): Opt[K] ='
+  Full Text: 'func prev*[K](rq: var KeyedQueueNV[K], key: K): Opt[K] ='
+
+--- DUPLICATE GROUP: keyed_queue.nim::push (2 defs) ---
+  SHA256: 890a2d43a102839676b4050733814e2091b5e22b0dd69da5acc292de10a635dd
+  Kind: template, Exported: False
+  Lines: 281-281
+  Truncated Text: 'template push*[K, V](rq: var KeyedQueue[K, V], key: K, val: V): bool ='
+  Full Text: 'template push*[K, V](rq: var KeyedQueue[K, V], key: K, val: V): bool ='
+
+  SHA256: 8bdf430874e8bda559473ce08b6c22f93f7a4333a070c0758297cdf8a98d65ea
+  Kind: template, Exported: False
+  Lines: 401-401
+  Truncated Text: 'template push*[K](rq: var KeyedQueueNV[K], key: K): bool ='
+  Full Text: 'template push*[K](rq: var KeyedQueueNV[K], key: K): bool ='
+
+--- DUPLICATE GROUP: keyed_queue.nim::res (5 defs) ---
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 333-333
+  Truncated Text: 'let res ='
+  Full Text: 'let res = Opt.some T(key: rq.kFirst, data: move(item[].data))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 346-346
+  Truncated Text: 'let res ='
+  Full Text: 'let res = Opt.some(move(item[].data))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 361-361
+  Truncated Text: 'let res ='
+  Full Text: 'let res = Opt.some T(key: rq.kLast, data: move(item[].data))'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 374-374
+  Truncated Text: 'let res ='
+  Full Text: 'let res = Opt.some move(item[].data)'
+
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 384-384
+  Truncated Text: 'let res ='
+  Full Text: 'let res = Opt.some T(key: key, data: move(item[].data))'
+
+--- DUPLICATE GROUP: keyed_queue.nim::second (2 defs) ---
+  SHA256: 21d9241d80b9c9406b79676c8c1f888aa0df6d00da2cf89be132f6601cf62555
+  Kind: func, Exported: False
+  Lines: 594-594
+  Truncated Text: 'func second*[K, V](rq: var KeyedQueue[K, V]): Opt[KeyedQueuePair[K, V]] ='
+  Full Text: 'func second*[K, V](rq: var KeyedQueue[K, V]): Opt[KeyedQueuePair[K, V]] ='
+
+  SHA256: 5fb026c0211e1ed405856f320d1edfa3b686835eac9d8c7a59f1fd36f685cfc8
+  Kind: func, Exported: False
+  Lines: 640-640
+  Truncated Text: 'func second*[K](rq: var KeyedQueueNV[K]): Opt[K] ='
+  Full Text: 'func second*[K](rq: var KeyedQueueNV[K]): Opt[K] ='
+
+--- DUPLICATE GROUP: keyed_queue.nim::shift (2 defs) ---
+  SHA256: d8d96e94a6933ad96475ebc4988734f00c51a3040039d3b11c1b0d5f6da36f45
+  Kind: func, Exported: False
+  Lines: 323-323
+  Truncated Text: 'func shift*[K, V](rq: var KeyedQueue[K, V]): Opt[KeyedQueuePair[K, V]] ='
+  Full Text: 'func shift*[K, V](rq: var KeyedQueue[K, V]): Opt[KeyedQueuePair[K, V]] ='
+
+  SHA256: b84d86abf9e5117ffe9407a1178d436975ce05aa8dac77d019d5e3038d17a735
+  Kind: func, Exported: False
+  Lines: 413-413
+  Truncated Text: 'func shift*[K](rq: var KeyedQueueNV[K]): Opt[K] ='
+  Full Text: 'func shift*[K](rq: var KeyedQueueNV[K]): Opt[K] ='
+
+--- DUPLICATE GROUP: keyed_queue.nim::unshift (2 defs) ---
+  SHA256: 0f41635d84fe541148249fd3b30349fa226be277c63d6e79af2abff0e8029c29
+  Kind: template, Exported: False
+  Lines: 319-319
+  Truncated Text: 'template unshift*[K, V](rq: var KeyedQueue[K, V], key: K, val: V): bool ='
+  Full Text: 'template unshift*[K, V](rq: var KeyedQueue[K, V], key: K, val: V): bool ='
+
+  SHA256: 5840a99a7e4e8ac90cf24ea57258b81fba711cb9b9a2c585f02470be55bfac4d
+  Kind: template, Exported: False
+  Lines: 409-409
+  Truncated Text: 'template unshift*[K](rq: var KeyedQueueNV[K], key: K): bool ='
+  Full Text: 'template unshift*[K](rq: var KeyedQueueNV[K], key: K): bool ='
+
+--- DUPLICATE GROUP: keyed_queue.nim::yKey (4 defs) ---
+  SHA256: 439e6e5f783423417b21cdc71a63fa3e3eb362c474efb24d0f507ef62196dd5c
+  Kind: let, Exported: False
+  Lines: 760-760
+  Truncated Text: 'let yKey ='
+  Full Text: 'let yKey = key'
+
+  SHA256: 439e6e5f783423417b21cdc71a63fa3e3eb362c474efb24d0f507ef62196dd5c
+  Kind: let, Exported: False
+  Lines: 797-797
+  Truncated Text: 'let yKey ='
+  Full Text: 'let yKey = key'
+
+  SHA256: 439e6e5f783423417b21cdc71a63fa3e3eb362c474efb24d0f507ef62196dd5c
+  Kind: let, Exported: False
+  Lines: 816-816
+  Truncated Text: 'let yKey ='
+  Full Text: 'let yKey = key'
+
+  SHA256: 439e6e5f783423417b21cdc71a63fa3e3eb362c474efb24d0f507ef62196dd5c
+  Kind: let, Exported: False
+  Lines: 853-853
+  Truncated Text: 'let yKey ='
+  Full Text: 'let yKey = key'
+
+--- DUPLICATE GROUP: leb128.nim::fromBytes (2 defs) ---
+  SHA256: 0e51655d6119465fec29d9ae29be6e272ced0954e4d206629db037c6b986465f
+  Kind: func, Exported: False
+  Lines: 132-135
+  Truncated Text: 'func fromBytes*(\nI: type SomeUnsignedInt,\nx: openArray[byte],\nT: type Leb128): tuple[val: I, len: int8] {.noinit.} ='
+  Full Text: 'func fromBytes*(\nI: type SomeUnsignedInt,\nx: openArray[byte],\nT: type Leb128): tuple[val: I, len: int8] {.noinit.} ='
+
+  SHA256: 5040491611e1e3abad17cb674ae3ae6e1941017f898bffba774196bd8e83700c
+  Kind: template, Exported: False
+  Lines: 166-168
+  Truncated Text: 'template fromBytes*(\nI: type SomeUnsignedInt,\nx: Leb128Buf): tuple[val: I, len: int8] ='
+  Full Text: 'template fromBytes*(\nI: type SomeUnsignedInt,\nx: Leb128Buf): tuple[val: I, len: int8] ='
+
+--- DUPLICATE GROUP: leb128.nim::len (2 defs) ---
+  SHA256: a49718f2d24548c2d1fbbd7f4ace25340412078aeacad8223b519040611db5a6
+  Kind: func, Exported: False
+  Lines: 53-53
+  Truncated Text: 'func len*(T: type Leb128, x: SomeUnsignedInt): int8 ='
+  Full Text: 'func len*(T: type Leb128, x: SomeUnsignedInt): int8 ='
+
+  SHA256: 7ea720e50b88797f84dba59c5695395736bec1d8e9dd171919ecccbe726fc03d
+  Kind: template, Exported: False
+  Lines: 161-161
+  Truncated Text: 'template len*(v: Leb128Buf): int8 = v.len'
+  Full Text: 'template len*(v: Leb128Buf): int8 = v.len'
+
+--- DUPLICATE GROUP: lentutils.nim::maybeLent (2 defs) ---
+  SHA256: 8a765710695f4634cc73893033cb13250d95a2a7c8d112705199bfdbed040c92
+  Kind: template, Exported: False
+  Lines: 20-20
+  Truncated Text: 'template maybeLent*(T: untyped): untyped ='
+  Full Text: 'template maybeLent*(T: untyped): untyped ='
+
+  SHA256: 8a765710695f4634cc73893033cb13250d95a2a7c8d112705199bfdbed040c92
+  Kind: template, Exported: False
+  Lines: 24-24
+  Truncated Text: 'template maybeLent*(T: untyped): untyped ='
+  Full Text: 'template maybeLent*(T: untyped): untyped ='
+
+--- DUPLICATE GROUP: objects.nim::baseType (6 defs) ---
+  SHA256: 24f4b33c4a8b0f31f01de81935f8a8366a60d01664a2f2526ac7ee2c2e5d9d6d
+  Kind: proc, Exported: False
+  Lines: 71-71
+  Truncated Text: 'proc baseType*(obj: RootObj): cstring {.error: "baseType requires -d:nimTypeNames".}'
+  Full Text: 'proc baseType*(obj: RootObj): cstring {.error: "baseType requires -d:nimTypeNames".}'
+
+  SHA256: 2111393ac06f466e737642a9a60dc6dcaca5ef6c9bfadac6e4e18dd34545c948
+  Kind: proc, Exported: False
+  Lines: 72-72
+  Truncated Text: 'proc baseType*(obj: ref RootObj): cstring {.error: "baseType requires -d:nimTypeNames".}'
+  Full Text: 'proc baseType*(obj: ref RootObj): cstring {.error: "baseType requires -d:nimTypeNames".}'
+
+  SHA256: ec44d042c24dcefd4b85dfad2adcbeaee0f76103d4444fb9415aa4276512bdae
+  Kind: proc, Exported: False
+  Lines: 74-74
+  Truncated Text: 'proc baseType*(obj: RootObj): cstring {.error: "baseType is not available in ARC/ORC".}'
+  Full Text: 'proc baseType*(obj: RootObj): cstring {.error: "baseType is not available in ARC/ORC".}'
+
+  SHA256: 5d531b6aa2c0443fd4ac314e071d050e44823ff7b300888cd836d414d0920fb3
+  Kind: proc, Exported: False
+  Lines: 75-75
+  Truncated Text: 'proc baseType*(obj: ref RootObj): cstring {.error: "baseType is not available in ARC/ORC".}'
+  Full Text: 'proc baseType*(obj: ref RootObj): cstring {.error: "baseType is not available in ARC/ORC".}'
+
+  SHA256: 600121f691199f8a3b49de25537c65bcaa8ecc745cf992afa92f15bc6883de82
+  Kind: proc, Exported: False
+  Lines: 77-77
+  Truncated Text: 'proc baseType*(obj: RootObj): cstring {.deprecated.} ='
+  Full Text: 'proc baseType*(obj: RootObj): cstring {.deprecated.} ='
+
+  SHA256: a25bb43328e84f954efd28cd7f69e506bcb9030c7341899482410a7405583bff
+  Kind: proc, Exported: False
+  Lines: 80-80
+  Truncated Text: 'proc baseType*(obj: ref RootObj): cstring {.deprecated.} ='
+  Full Text: 'proc baseType*(obj: ref RootObj): cstring {.deprecated.} ='
+
+--- DUPLICATE GROUP: objects.nim::init (4 defs) ---
+  SHA256: 47b59da516146f16728e545184d0a90ce1741c419ef3022a73b84075c601f7f0
+  Kind: template, Exported: False
+  Lines: 16-16
+  Truncated Text: 'template init*(lvalue: var auto) ='
+  Full Text: 'template init*(lvalue: var auto) ='
+
+  SHA256: b86072c044c4ed35db088c4b2666e0021b770a69265b933464705abd582f9525
+  Kind: template, Exported: False
+  Lines: 20-20
+  Truncated Text: 'template init*(lvalue: var auto, a1: auto)='
+  Full Text: 'template init*(lvalue: var auto, a1: auto)='
+
+  SHA256: fa15d39ed7bd74e8b8c68a510773458f68a9941665371080774f594074bc328b
+  Kind: template, Exported: False
+  Lines: 24-24
+  Truncated Text: 'template init*(lvalue: var auto, a1, a2: auto) ='
+  Full Text: 'template init*(lvalue: var auto, a1, a2: auto) ='
+
+  SHA256: 84108caf62d80a49cc5f4ccbc63c737fcdd1efba628a5c6ad6ca151e9465692d
+  Kind: template, Exported: False
+  Lines: 28-28
+  Truncated Text: 'template init*(lvalue: var auto, a1, a2, a3: auto) ='
+  Full Text: 'template init*(lvalue: var auto, a1, a2, a3: auto) ='
+
+--- DUPLICATE GROUP: ptrops.nim::distance (2 defs) ---
+  SHA256: ae8c873cf61490ee2304260164bdbed92e30ec57435f8e5e7d469479ac1ad512
+  Kind: template, Exported: False
+  Lines: 40-40
+  Truncated Text: 'template distance*(a, b: pointer): int ='
+  Full Text: 'template distance*(a, b: pointer): int ='
+
+  SHA256: cda240b73e1f3c9ae36a23bf8b37be1d6fe04758b78546d6f72505c2fafe5773
+  Kind: template, Exported: False
+  Lines: 47-47
+  Truncated Text: 'template distance*[T](a, b: ptr T): int ='
+  Full Text: 'template distance*[T](a, b: ptr T): int ='
+
+--- DUPLICATE GROUP: ptrops.nim::makeOpenArray (2 defs) ---
+  SHA256: 9ce7ef56aa2c3a58ae5b19155b5860a224ad6f317297f4dbcefdecd51363f01a
+  Kind: template, Exported: False
+  Lines: 62-62
+  Truncated Text: 'template makeOpenArray*[T](p: ptr T, len: Natural): openArray[T] ='
+  Full Text: 'template makeOpenArray*[T](p: ptr T, len: Natural): openArray[T] ='
+
+  SHA256: 0db969cc281ddbebf4394700373278296365721739b4f325194c1efb99ff5f6b
+  Kind: template, Exported: False
+  Lines: 67-67
+  Truncated Text: 'template makeOpenArray*(p: pointer, T: type, len: Natural): openArray[T] ='
+  Full Text: 'template makeOpenArray*(p: pointer, T: type, len: Natural): openArray[T] ='
+
+--- DUPLICATE GROUP: ptrops.nim::makeUncheckedArray (2 defs) ---
+  SHA256: 8cdb98ee91ab770ec02771f17ba8af3f96dfb2b5cdde557072715d4bf278826b
+  Kind: func, Exported: False
+  Lines: 56-56
+  Truncated Text: 'func makeUncheckedArray*[T](p: ptr T): ptr UncheckedArray[T] ='
+  Full Text: 'func makeUncheckedArray*[T](p: ptr T): ptr UncheckedArray[T] ='
+
+  SHA256: 5687b7621b8b98021a692ff1c5dc7eeee842a6fcebb3cac3a64b401582d199c0
+  Kind: func, Exported: False
+  Lines: 59-59
+  Truncated Text: 'func makeUncheckedArray*(p: pointer, T: type): ptr UncheckedArray[T] ='
+  Full Text: 'func makeUncheckedArray*(p: pointer, T: type): ptr UncheckedArray[T] ='
+
+--- DUPLICATE GROUP: ptrops.nim::offset (2 defs) ---
+  SHA256: bce98dd7d5ee098748b82ceaee8c1c3596b9a56a9fdc02427638cc3bb6ed6255
+  Kind: template, Exported: False
+  Lines: 22-22
+  Truncated Text: 'template offset*(p: pointer, bytes: int): pointer ='
+  Full Text: 'template offset*(p: pointer, bytes: int): pointer ='
+
+  SHA256: fab002d5dcb7885ea610da1a60ba6d60574fa1ffce4905af773c1ac3f1f8aebc
+  Kind: template, Exported: False
+  Lines: 31-31
+  Truncated Text: 'template offset*[T](p: ptr T, count: int): ptr T ='
+  Full Text: 'template offset*[T](p: ptr T, count: int): ptr T ='
+
+--- DUPLICATE GROUP: ptrops.nim::tmp (2 defs) ---
+  SHA256: 3be0da80bff76e6b80929cb8867829bd8230241c6f3cacb15854a83328c595f4
+  Kind: var, Exported: False
+  Lines: 64-64
+  Truncated Text: 'var tmp ='
+  Full Text: 'var tmp = cast[ptr UncheckedArray[T]](p)'
+
+  SHA256: 3be0da80bff76e6b80929cb8867829bd8230241c6f3cacb15854a83328c595f4
+  Kind: var, Exported: False
+  Lines: 70-70
+  Truncated Text: 'var tmp ='
+  Full Text: 'var tmp = cast[ptr UncheckedArray[T]](p)'
+
+--- DUPLICATE GROUP: ranges/stackarrays.nim::`[]=` (2 defs) ---
+  SHA256: 91215cb44d6a6a6d7e785944571f2e6861f4823bcdf27daea42d85e80c857aa8
+  Kind: func, Exported: False
+  Lines: 71-71
+  Truncated Text: 'func `[]=`*(a: StackArray, i: int, val: a.T) {.inline.} ='
+  Full Text: 'func `[]=`*(a: StackArray, i: int, val: a.T) {.inline.} ='
+
+  SHA256: 9614071f1ffb42cb62c42d1f44e46895b8eea0744909265dfc2c2e844765bf1c
+  Kind: func, Exported: False
+  Lines: 79-79
+  Truncated Text: 'func `[]=`*(a: StackArray, i: BackwardsIndex, val: a.T) ='
+  Full Text: 'func `[]=`*(a: StackArray, i: BackwardsIndex, val: a.T) ='
+
+--- DUPLICATE GROUP: ranges/stackarrays.nim::`[]` (2 defs) ---
+  SHA256: a5c1c042e72d790ee0889c58bdb3bd00323760852a805e2c7f82cae66438a832
+  Kind: template, Exported: False
+  Lines: 67-67
+  Truncated Text: 'template `[]`*(a: StackArray, i: int): auto ='
+  Full Text: 'template `[]`*(a: StackArray, i: int): auto ='
+
+  SHA256: 560697167f5d8ba8b870f2a9027ed8dce4446c001eea1932f27d73d1d9a73af0
+  Kind: template, Exported: False
+  Lines: 75-75
+  Truncated Text: 'template `[]`*(a: StackArray, i: BackwardsIndex): auto ='
+  Full Text: 'template `[]`*(a: StackArray, i: BackwardsIndex): auto ='
+
+--- DUPLICATE GROUP: ranges/stackarrays.nim::alloca (2 defs) ---
+  SHA256: bef017f5053d5cfcea8b4b315385431e45d490f291cee4db90a0c8de4240e461
+  Kind: proc, Exported: False
+  Lines: 48-48
+  Truncated Text: 'proc alloca(n: int): pointer {.importc, header: "<malloc.h>".}'
+  Full Text: 'proc alloca(n: int): pointer {.importc, header: "<malloc.h>".}'
+
+  SHA256: 3a266ec9661c68113f70df81c2c556974fa66ea75c718da9b2a77e333c8242d1
+  Kind: proc, Exported: False
+  Lines: 50-50
+  Truncated Text: 'proc alloca(n: int): pointer {.importc, header: "<alloca.h>".}'
+  Full Text: 'proc alloca(n: int): pointer {.importc, header: "<alloca.h>".}'
+
+--- DUPLICATE GROUP: ranges/stackarrays.nim::toOpenArray (3 defs) ---
+  SHA256: 1718055db375e964539143de8036728ba25a3ae5c0f525135e88559282eb725e
+  Kind: template, Exported: False
+  Lines: 123-123
+  Truncated Text: 'template toOpenArray*(a: StackArray): auto ='
+  Full Text: 'template toOpenArray*(a: StackArray): auto ='
+
+  SHA256: 740844413c9400cc502dc3fbda0623d6f7bba9797523076a1e787e131e200fb4
+  Kind: template, Exported: False
+  Lines: 126-126
+  Truncated Text: 'template toOpenArray*(a: StackArray, first: int): auto ='
+  Full Text: 'template toOpenArray*(a: StackArray, first: int): auto ='
+
+  SHA256: 1c5ac4ba5ab86a24db4d9d874738b7f7b11a2167a2d35112af3990223dee5dc8
+  Kind: template, Exported: False
+  Lines: 130-130
+  Truncated Text: 'template toOpenArray*(a: StackArray, first, last: int): auto ='
+  Full Text: 'template toOpenArray*(a: StackArray, first, last: int): auto ='
+
+--- DUPLICATE GROUP: shims/macros.nim::field (2 defs) ---
+  SHA256: 3dca2cb2e1fa98b1cbfc8008ec51c107ed132b5cbad4cc4170ae3e00dcfc0bd9
+  Kind: var, Exported: False
+  Lines: 137-137
+  Truncated Text: 'var field: FieldDescription'
+  Full Text: 'var field: FieldDescription'
+
+  SHA256: 825873cd4da3a752378c125ec4ac31d340abe181afa2c1c0dac1ef8a61399dbc
+  Kind: macro, Exported: False
+  Lines: 208-208
+  Truncated Text: 'macro field*(obj: typed, fieldName: static string): untyped ='
+  Full Text: 'macro field*(obj: typed, fieldName: static string): untyped ='
+
+--- DUPLICATE GROUP: shims/macros.nim::generator (2 defs) ---
+  SHA256: fc486acf43b824f130b7630aaf8e8b39a1a44ff5f81f3f2e394070b22b5d21ee
+  Kind: iterator, Exported: False
+  Lines: 440-440
+  Truncated Text: 'iterator generator: NimNode ='
+  Full Text: 'iterator generator: NimNode = body'
+
+  SHA256: fc486acf43b824f130b7630aaf8e8b39a1a44ff5f81f3f2e394070b22b5d21ee
+  Kind: iterator, Exported: False
+  Lines: 450-450
+  Truncated Text: 'iterator generator: NimNode ='
+  Full Text: 'iterator generator: NimNode = body'
+
+--- DUPLICATE GROUP: shims/macros.nim::isTuple (2 defs) ---
+  SHA256: 51686734dd5963bd16af2773f31331dfe7b2994dc9b80032f819e105f12cb775
+  Kind: func, Exported: False
+  Lines: 76-76
+  Truncated Text: 'func isTuple*(t: NimNode): bool ='
+  Full Text: 'func isTuple*(t: NimNode): bool ='
+
+  SHA256: 8dd37c23b8a1a4a2c85bf4d500c501d03d9230df61a88167f61271ae615fa6c5
+  Kind: macro, Exported: False
+  Lines: 79-79
+  Truncated Text: 'macro isTuple*(T: type): untyped ='
+  Full Text: 'macro isTuple*(T: type): untyped ='
+
+--- DUPLICATE GROUP: shims/macros.nim::newLitFixed (29 defs) ---
+  SHA256: 5e794d270abd7163ba95625b8d5e04c949bd94b3da8a1f9cbbf2aeae245be7a2
+  Kind: proc, Exported: False
+  Lines: 261-261
+  Truncated Text: 'proc newLitFixed*(c: char): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(c: char): NimNode {.compileTime.} ='
+
+  SHA256: 2478d6fbe248380a001be4bd3ddfe54cbf7eca33a5ea45354ae817537050ff6c
+  Kind: proc, Exported: False
+  Lines: 266-266
+  Truncated Text: 'proc newLitFixed*(i: int): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(i: int): NimNode {.compileTime.} ='
+
+  SHA256: aec8b4f24f6c3a6c16a317a90b61e9c758707ce6acef2c01d4ee00a94c5c45da
+  Kind: proc, Exported: False
+  Lines: 271-271
+  Truncated Text: 'proc newLitFixed*(i: int8): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(i: int8): NimNode {.compileTime.} ='
+
+  SHA256: 33eda7ee3d3e00c33036e5f31c3a44eddd0b2bda8f6fdf8b0b611b205dcf7b50
+  Kind: proc, Exported: False
+  Lines: 276-276
+  Truncated Text: 'proc newLitFixed*(i: int16): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(i: int16): NimNode {.compileTime.} ='
+
+  SHA256: c0c2270e2d6e2e59302137fb652baf4363fb6f666c09f2b2f09daa87bccaf3a2
+  Kind: proc, Exported: False
+  Lines: 281-281
+  Truncated Text: 'proc newLitFixed*(i: int32): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(i: int32): NimNode {.compileTime.} ='
+
+  SHA256: 14bd07b88ac603fc78776fed22ace383c26c095304a63bf5c573860136d0bdfa
+  Kind: proc, Exported: False
+  Lines: 286-286
+  Truncated Text: 'proc newLitFixed*(i: int64): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(i: int64): NimNode {.compileTime.} ='
+
+  SHA256: 3f681bb34c44eb6881d04b1e0c361467284872a20efbfe779a1938b8206a7f50
+  Kind: proc, Exported: False
+  Lines: 291-291
+  Truncated Text: 'proc newLitFixed*(i: uint): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(i: uint): NimNode {.compileTime.} ='
+
+  SHA256: e497d93d1eb988d0092a3af5d98f4d427020accfb02355eade60992c5522202a
+  Kind: proc, Exported: False
+  Lines: 296-296
+  Truncated Text: 'proc newLitFixed*(i: uint8): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(i: uint8): NimNode {.compileTime.} ='
+
+  SHA256: a9cbaa3816d74ebefdbb7b3ffc97e1925d3dda515e24a82af8aa67559f5ac210
+  Kind: proc, Exported: False
+  Lines: 301-301
+  Truncated Text: 'proc newLitFixed*(i: uint16): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(i: uint16): NimNode {.compileTime.} ='
+
+  SHA256: aa2bf5355561debf5f70fe2de401a190d076f8cdac8cb3714614020a908ce76a
+  Kind: proc, Exported: False
+  Lines: 306-306
+  Truncated Text: 'proc newLitFixed*(i: uint32): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(i: uint32): NimNode {.compileTime.} ='
+
+  SHA256: 6948bf568406c9faf8eb25e1cf1a9c33960baf053820b55f5bed127cc24d8b5f
+  Kind: proc, Exported: False
+  Lines: 311-311
+  Truncated Text: 'proc newLitFixed*(i: uint64): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(i: uint64): NimNode {.compileTime.} ='
+
+  SHA256: eefc9908106759c8fceada93aaec5f5bafb6830a87ab9b59c1e84ed236c4e295
+  Kind: proc, Exported: False
+  Lines: 316-316
+  Truncated Text: 'proc newLitFixed*(b: bool): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(b: bool): NimNode {.compileTime.} ='
+
+  SHA256: c366a0a3dcaff72396c5b201f04964e7bd3274309ae7fb10e16d3afa77f016a5
+  Kind: proc, Exported: False
+  Lines: 320-320
+  Truncated Text: 'proc newLitFixed*(s: string): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(s: string): NimNode {.compileTime.} ='
+
+  SHA256: 784fc6d01acce1a5d2b4fe342f79c565822ff21c6581faf190cc778b598df11d
+  Kind: proc, Exported: False
+  Lines: 327-327
+  Truncated Text: 'proc newLitFixed*(f: float): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(f: float): NimNode {.compileTime.} ='
+
+  SHA256: 72ac81a859f9a58fac9b3c5442a29ab81ff8f9451510562c5b8e7e8875f11854
+  Kind: proc, Exported: False
+  Lines: 332-332
+  Truncated Text: 'proc newLitFixed*(f: float32): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(f: float32): NimNode {.compileTime.} ='
+
+  SHA256: 3dfb5079bbb920d18c16e2ab7be871ecf0e2c1c40ea0764ff794907e1630a889
+  Kind: proc, Exported: False
+  Lines: 337-337
+  Truncated Text: 'proc newLitFixed*(f: float64): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(f: float64): NimNode {.compileTime.} ='
+
+  SHA256: ea07984a0228a392d766569f0c5fcf1d9c556f037db8b8924d57632a3754401c
+  Kind: proc, Exported: False
+  Lines: 343-343
+  Truncated Text: 'proc newLitFixed*(f: float128): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(f: float128): NimNode {.compileTime.} ='
+
+  SHA256: aad5932f90f2f981783f8f906342e8f5acd1d8ee9b95097269106510a5e3f397
+  Kind: proc, Exported: False
+  Lines: 348-348
+  Truncated Text: 'proc newLitFixed*(arg: enum): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(arg: enum): NimNode {.compileTime.} ='
+
+  SHA256: 1642e44e8b3104da15b869684da5ff41635ab2e3375cf33cb8c0a47a704e8d4a
+  Kind: proc, Exported: False
+  Lines: 354-354
+  Truncated Text: 'proc newLitFixed*[N,T](arg: array[N,T]): NimNode {.compileTime.}'
+  Full Text: 'proc newLitFixed*[N,T](arg: array[N,T]): NimNode {.compileTime.}'
+
+  SHA256: a3262369aaaffb95631c311406c42285e0907ca99e62353a0d6ae944bcf76342
+  Kind: proc, Exported: False
+  Lines: 355-355
+  Truncated Text: 'proc newLitFixed*[T](arg: seq[T]): NimNode {.compileTime.}'
+  Full Text: 'proc newLitFixed*[T](arg: seq[T]): NimNode {.compileTime.}'
+
+  SHA256: dc8a1ac7f0c50429d494249259d94dd6f41121e1acf9e7ac00be824341d94e1d
+  Kind: proc, Exported: False
+  Lines: 356-356
+  Truncated Text: 'proc newLitFixed*[T](s: set[T]): NimNode {.compileTime.}'
+  Full Text: 'proc newLitFixed*[T](s: set[T]): NimNode {.compileTime.}'
+
+  SHA256: 4ddcf05ebdfa2143fa669e0502aa1d6eb97a0801f7eb5155b2981e28212d2f56
+  Kind: proc, Exported: False
+  Lines: 357-357
+  Truncated Text: 'proc newLitFixed*(arg: tuple): NimNode {.compileTime.}'
+  Full Text: 'proc newLitFixed*(arg: tuple): NimNode {.compileTime.}'
+
+  SHA256: d37b0c8e71ee8e571946877a43184f2b89f2d57e2f09e68403aa51763b9bcaaa
+  Kind: proc, Exported: False
+  Lines: 359-359
+  Truncated Text: 'proc newLitFixed*(arg: object): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(arg: object): NimNode {.compileTime.} ='
+
+  SHA256: cb84522e9c90b6c2956de974bc51d0a378851ad9086d422728519bddb44c5ce9
+  Kind: proc, Exported: False
+  Lines: 364-364
+  Truncated Text: 'proc newLitFixed*(arg: ref object): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(arg: ref object): NimNode {.compileTime.} ='
+
+  SHA256: 2f9f0c52275d77adf8131b094dbcf68166294f2117dbbbfb91f8dccb17745831
+  Kind: proc, Exported: False
+  Lines: 370-370
+  Truncated Text: 'proc newLitFixed*[N,T](arg: array[N,T]): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*[N,T](arg: array[N,T]): NimNode {.compileTime.} ='
+
+  SHA256: a68eb0b57762854317062e7b6a516bec432f6eb791afc2f6ee1693c7c751cacb
+  Kind: proc, Exported: False
+  Lines: 375-375
+  Truncated Text: 'proc newLitFixed*[T](arg: seq[T]): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*[T](arg: seq[T]): NimNode {.compileTime.} ='
+
+  SHA256: 9363f8a398840666011f61a05fffb9cf1cec1766facaece289143b84df16f2f0
+  Kind: proc, Exported: False
+  Lines: 388-388
+  Truncated Text: 'proc newLitFixed*[T](s: set[T]): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*[T](s: set[T]): NimNode {.compileTime.} ='
+
+  SHA256: 84319647ba62e68b1bf5c662d81f19ca564b407a0bb6e4bac8c8a1dea981a584
+  Kind: proc, Exported: False
+  Lines: 393-393
+  Truncated Text: 'proc newLitFixed*(arg: tuple): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(arg: tuple): NimNode {.compileTime.} ='
+
+  SHA256: 40ebc3abb22ec8dbb190ab3a189b37b766116eadda49679c6444d54027854381
+  Kind: proc, Exported: False
+  Lines: 398-398
+  Truncated Text: 'proc newLitFixed*(arg: distinct): NimNode {.compileTime.} ='
+  Full Text: 'proc newLitFixed*(arg: distinct): NimNode {.compileTime.} ='
+
+--- DUPLICATE GROUP: shims/macros.nim::objectType (2 defs) ---
+  SHA256: 7c65930e7ff7516e6913a502222f2cb887a1d9862bad20c49d5f8cc4d82d8c90
+  Kind: var, Exported: False
+  Lines: 170-170
+  Truncated Text: 'var objectType ='
+  Full Text: 'var objectType = objectType'
+
+  SHA256: 0379f4470ea96b5f9123226e6a0c7f676087f428509ecd82ad080884a534f511
+  Kind: let, Exported: False
+  Lines: 199-199
+  Truncated Text: 'let objectType ='
+  Full Text: 'let objectType = case typeImpl.kind'
+
+--- DUPLICATE GROUP: shims/macros.nim::p (2 defs) ---
+  SHA256: 35932f6a5465ec8422d3d3c2af5841959b73060c108bb80aef17bc7ab60e1bb7
+  Kind: let, Exported: False
+  Lines: 93-93
+  Truncated Text: 'let p ='
+  Full Text: 'let p = findPragma(field.pragmas, bindSym(pragmaName))'
+
+  SHA256: 35932f6a5465ec8422d3d3c2af5841959b73060c108bb80aef17bc7ab60e1bb7
+  Kind: let, Exported: False
+  Lines: 231-231
+  Truncated Text: 'let p ='
+  Full Text: 'let p = getPragma(T, field, pragma)'
+
+--- DUPLICATE GROUP: shims/macros.nim::payload (3 defs) ---
+  SHA256: 06e9d1dd2f403519502af81dd22423dc17e52b3e7c4c6fe9b1ec209c63470880
+  Kind: macro, Exported: False
+  Lines: 442-442
+  Truncated Text: 'macro payload: untyped ='
+  Full Text: 'macro payload: untyped ='
+
+  SHA256: 06e9d1dd2f403519502af81dd22423dc17e52b3e7c4c6fe9b1ec209c63470880
+  Kind: macro, Exported: False
+  Lines: 452-452
+  Truncated Text: 'macro payload: untyped ='
+  Full Text: 'macro payload: untyped ='
+
+  SHA256: 06e9d1dd2f403519502af81dd22423dc17e52b3e7c4c6fe9b1ec209c63470880
+  Kind: macro, Exported: False
+  Lines: 460-460
+  Truncated Text: 'macro payload: untyped ='
+  Full Text: 'macro payload: untyped = body'
+
+--- DUPLICATE GROUP: shims/macros.nim::storeMacroResult (2 defs) ---
+  SHA256: a8bc23a2a976f0f061202f7c1ff0f15f22dcd23fc1f73fd132222c7ce69eb3b5
+  Kind: proc, Exported: False
+  Lines: 50-52
+  Truncated Text: 'proc storeMacroResult*(callSite: LineInfo,\nmacroResult: NimNode,\nwriteOutputImmediately = false) {.raises: [IOError].} ='
+  Full Text: 'proc storeMacroResult*(callSite: LineInfo,\nmacroResult: NimNode,\nwriteOutputImmediately = false) {.raises: [IOError].} ='
+
+  SHA256: 37962fec5d76e3a72547089b8ca21be89f7dafd7dbe058355d991bd1adc85629
+  Kind: proc, Exported: False
+  Lines: 59-59
+  Truncated Text: 'proc storeMacroResult*(macroResult: NimNode, writeOutputImmediately = false) {.raises: [IOError].} ='
+  Full Text: 'proc storeMacroResult*(macroResult: NimNode, writeOutputImmediately = false) {.raises: [IOError].} ='
+
+--- DUPLICATE GROUP: shims/macros.nim::typ (3 defs) ---
+  SHA256: fc4ef6a76b6a3e995bee1901fccebdda4a8e177e986b4c030a97c909a7e675d0
+  Kind: var, Exported: False
+  Lines: 385-385
+  Truncated Text: 'var typ ='
+  Full Text: 'var typ = getTypeInst(typeof(arg))[1]'
+
+  SHA256: fc4ef6a76b6a3e995bee1901fccebdda4a8e177e986b4c030a97c909a7e675d0
+  Kind: var, Exported: False
+  Lines: 400-400
+  Truncated Text: 'var typ ='
+  Full Text: 'var typ = getTypeInst(typeof(arg))[1]'
+
+  SHA256: fc4ef6a76b6a3e995bee1901fccebdda4a8e177e986b4c030a97c909a7e675d0
+  Kind: var, Exported: False
+  Lines: 413-413
+  Truncated Text: 'var typ ='
+  Full Text: 'var typ = exceptionType'
+
+--- DUPLICATE GROUP: shims/sets.nim::init (5 defs) ---
+  SHA256: b6738cfbfb74ec5089d05f852eb8cb36b0b6f4a37eeea65a19609ad0fb1a249e
+  Kind: template, Exported: False
+  Lines: 14-14
+  Truncated Text: 'template init*[T](_: type HashSet[T]): auto = initHashSet[T]()'
+  Full Text: 'template init*[T](_: type HashSet[T]): auto = initHashSet[T]()'
+
+  SHA256: cf0c949aa7d4566095e7fa6302253c9e7320c88df45e1c96d1276d1abd868338
+  Kind: template, Exported: False
+  Lines: 15-15
+  Truncated Text: 'template init*[T](_: type HashSet[T], defaultSize: int): auto = initHashSet[T](defaultSize)'
+  Full Text: 'template init*[T](_: type HashSet[T], defaultSize: int): auto = initHashSet[T](defaultSize)'
+
+  SHA256: 02e7978ff4e66e2403b8462f729cfe1af0412f7210e17507c2cc4709ed072e5a
+  Kind: template, Exported: False
+  Lines: 20-20
+  Truncated Text: 'template init*[T](_: type OrderedSet[T]): auto = initOrderedSet[T]()'
+  Full Text: 'template init*[T](_: type OrderedSet[T]): auto = initOrderedSet[T]()'
+
+  SHA256: fb77170d9ff95c205316f421e5b2d3b0f748dca0fca6611c9827556eb89abbd5
+  Kind: template, Exported: False
+  Lines: 21-21
+  Truncated Text: 'template init*[T](_: type OrderedSet[T], initialSize: int): auto = initOrderedSet[T](initialSize)'
+  Full Text: 'template init*[T](_: type OrderedSet[T], initialSize: int): auto = initOrderedSet[T](initialSize)'
+
+  SHA256: 1d6c4bd1e54980f0c73a664d192ee267a687f7d6c9e8960a042157fe1c5ace7d
+  Kind: template, Exported: False
+  Lines: 24-24
+  Truncated Text: 'template init*[T](_: type set[T]): auto ='
+  Full Text: 'template init*[T](_: type set[T]): auto ='
+
+--- DUPLICATE GROUP: shims/strformat.nim::formatValue (4 defs) ---
+  SHA256: 014da4a390f502de256285ec3423ff605b729352ac539ca451b62e509d53d4cb
+  Kind: proc, Exported: False
+  Lines: 94-94
+  Truncated Text: 'proc formatValue*[T: SomeInteger](result: var string; value: T;'
+  Full Text: 'proc formatValue*[T: SomeInteger](result: var string; value: T;'
+
+  SHA256: a047b6041bf68ba12b05f32e4bcdcfc5addb7cabb6a97d8aaffbf2482e940f73
+  Kind: proc, Exported: False
+  Lines: 156-156
+  Truncated Text: 'proc formatValue*(result: var string; value: SomeFloat; specifier: static string) ='
+  Full Text: 'proc formatValue*(result: var string; value: SomeFloat; specifier: static string) ='
+
+  SHA256: 04414c76369307a661c48f3cf827f196cd9a7916d04a397d6e27eb0cb31182e6
+  Kind: proc, Exported: False
+  Lines: 169-169
+  Truncated Text: 'proc formatValue*(result: var string; value: string; specifier: static string) ='
+  Full Text: 'proc formatValue*(result: var string; value: string; specifier: static string) ='
+
+  SHA256: c821d4a367c31f53fc32f730bdc50bc09749071e3fac36217d7da49ad58c1aac
+  Kind: proc, Exported: False
+  Lines: 187-187
+  Truncated Text: 'proc formatValue[T: not SomeInteger](result: var string; value: T; specifier: static string) ='
+  Full Text: 'proc formatValue[T: not SomeInteger](result: var string; value: T; specifier: static string) ='
+
+--- DUPLICATE GROUP: shims/strformat.nim::negative (2 defs) ---
+  SHA256: be8c9756af4660eb91d311495b0752a35076f25648bd98537a0dc856b1ad88f3
+  Kind: let, Exported: False
+  Lines: 28-28
+  Truncated Text: 'let negative ='
+  Full Text: 'let negative = false'
+
+  SHA256: be8c9756af4660eb91d311495b0752a35076f25648bd98537a0dc856b1ad88f3
+  Kind: let, Exported: False
+  Lines: 31-31
+  Truncated Text: 'let negative ='
+  Full Text: 'let negative = n < 0'
+
+--- DUPLICATE GROUP: shims/strformat.nim::sign (2 defs) ---
+  SHA256: 1946c90e025a4083def5bf77c18ac275b73d7ab7e2ef4a81c05118e3c634c865
+  Kind: let, Exported: False
+  Lines: 59-59
+  Truncated Text: 'let sign ='
+  Full Text: "let sign = negative or spec.sign != '-'"
+
+  SHA256: 0fff1e433552ecca0cf20bc6955952c4032d4fefc23fe9035dfb2eae6f6ea75e
+  Kind: var, Exported: False
+  Lines: 112-112
+  Truncated Text: 'var sign ='
+  Full Text: 'var sign = false'
+
+--- DUPLICATE GROUP: shims/strformat.nim::toFill (3 defs) ---
+  SHA256: 537c8d9bfaf576455478f4d4bf909017146830407149d30739c4d6f93fd87ad3
+  Kind: let, Exported: False
+  Lines: 60-60
+  Truncated Text: 'let toFill ='
+  Full Text: 'let toFill = spec.minimumWidth - result.len - xx.len - ord(sign)'
+
+  SHA256: 537c8d9bfaf576455478f4d4bf909017146830407149d30739c4d6f93fd87ad3
+  Kind: let, Exported: False
+  Lines: 75-75
+  Truncated Text: 'let toFill ='
+  Full Text: 'let toFill = spec.minimumWidth - result.len'
+
+  SHA256: 537c8d9bfaf576455478f4d4bf909017146830407149d30739c4d6f93fd87ad3
+  Kind: let, Exported: False
+  Lines: 131-131
+  Truncated Text: 'let toFill ='
+  Full Text: 'let toFill = spec.minimumWidth - f.len - ord(sign)'
+
+--- DUPLICATE GROUP: shims/strformat.nim::v (2 defs) ---
+  SHA256: 7e6d40391b71a41cdd0d1e3010a6f9ec299b51f8771646cd8c5bb0c125878fd9
+  Kind: var, Exported: False
+  Lines: 27-27
+  Truncated Text: 'var v ='
+  Full Text: 'var v = n.uint64'
+
+  SHA256: 7e6d40391b71a41cdd0d1e3010a6f9ec299b51f8771646cd8c5bb0c125878fd9
+  Kind: var, Exported: False
+  Lines: 32-32
+  Truncated Text: 'var v ='
+  Full Text: 'var v ='
+
+--- DUPLICATE GROUP: shims/tables.nim::init (6 defs) ---
+  SHA256: bcd8f75a1ca29ce25cbeb4585f5f75067ae482608932679c2fc0bad255a2656f
+  Kind: template, Exported: False
+  Lines: 3-3
+  Truncated Text: 'template init*[A, B](T: type Table[A, B]): auto = initTable[A, B]()'
+  Full Text: 'template init*[A, B](T: type Table[A, B]): auto = initTable[A, B]()'
+
+  SHA256: 4b050cd0c254cc6603b21fe1c494c502c53bcbb80079a80d3edd9e6993d28743
+  Kind: template, Exported: False
+  Lines: 4-4
+  Truncated Text: 'template init*[A, B](T: type TableRef[A, B]): auto = newTable[A, B]()'
+  Full Text: 'template init*[A, B](T: type TableRef[A, B]): auto = newTable[A, B]()'
+
+  SHA256: c81758c69c39d6a2ffe139538257a482d3fd1dcd342a3630e77e800dc9dd7523
+  Kind: template, Exported: False
+  Lines: 6-6
+  Truncated Text: 'template init*[A, B](T: type OrderedTable[A, B]): auto = initOrderedTable[A, B]()'
+  Full Text: 'template init*[A, B](T: type OrderedTable[A, B]): auto = initOrderedTable[A, B]()'
+
+  SHA256: 4776be4b078921134e09ee4065283845b92742565f2943597c16bc0355ba0019
+  Kind: template, Exported: False
+  Lines: 7-7
+  Truncated Text: 'template init*[A, B](T: type OrderedTableRef[A, B]): auto = newOrderedTable[A, B]()'
+  Full Text: 'template init*[A, B](T: type OrderedTableRef[A, B]): auto = newOrderedTable[A, B]()'
+
+  SHA256: cded1fa784b367628a71a894566176d435b98f66cc5edeeb5fd5d7e11a92cf6c
+  Kind: template, Exported: False
+  Lines: 9-9
+  Truncated Text: 'template init*[A](T: type CountTable[A]): auto = initCountTable[A]()'
+  Full Text: 'template init*[A](T: type CountTable[A]): auto = initCountTable[A]()'
+
+  SHA256: 99afce90f2ac80b56f47eebecf71ef898ac0d62135d81691f868310541c3a87d
+  Kind: template, Exported: False
+  Lines: 10-10
+  Truncated Text: 'template init*[A](T: type CountTableRef[A]): auto = newCountTable[A]()'
+  Full Text: 'template init*[A](T: type CountTableRef[A]): auto = newCountTable[A]()'
+
+--- DUPLICATE GROUP: sorted_set.nim::`$` (2 defs) ---
+  SHA256: 15a5c187cce9c28bfaaed24e09c0170bca0cef6c4b8318f3c1d844da57c44fde
+  Kind: func, Exported: False
+  Lines: 291-291
+  Truncated Text: 'func `$`*[K,V](casket: SortedSetItemRef[K,V]): string ='
+  Full Text: 'func `$`*[K,V](casket: SortedSetItemRef[K,V]): string ='
+
+  SHA256: 3d4d411e1b92b5cb2bd9dce253d4ffd58414973ea84b38860f066dc52989eda7
+  Kind: func, Exported: False
+  Lines: 303-303
+  Truncated Text: 'func `$`*[K,V](rc: SortedSetResult[K,V]): string ='
+  Full Text: 'func `$`*[K,V](rc: SortedSetResult[K,V]): string ='
+
+--- DUPLICATE GROUP: sorted_set.nim::init (5 defs) ---
+  SHA256: f621de743ae883da4892d1d87a620e689b427a8ac3f4ea9c313a40d47f940dc7
+  Kind: func, Exported: False
+  Lines: 125-125
+  Truncated Text: 'func init*[K,V](sl: var SortedSet[K,V]) ='
+  Full Text: 'func init*[K,V](sl: var SortedSet[K,V]) ='
+
+  SHA256: 0916b06421ce01d52df80f8e083d70f02bb8071f64675c1664e19301d435bfc3
+  Kind: func, Exported: False
+  Lines: 131-131
+  Truncated Text: 'func init*[K,V](sl: var SortedSet[K,V]; cmp: SlstCmp[K]) ='
+  Full Text: 'func init*[K,V](sl: var SortedSet[K,V]; cmp: SlstCmp[K]) ='
+
+  SHA256: e33cceb38908e3ca334fa7e46ee590e0feb77d83cad303291807e2f771e853a2
+  Kind: func, Exported: False
+  Lines: 137-137
+  Truncated Text: 'func init*[K,V](T: type SortedSet[K,V]): T ='
+  Full Text: 'func init*[K,V](T: type SortedSet[K,V]): T ='
+
+  SHA256: a89bf1e2fc53fd3922a375c0a51a4e2736175933da4d67b3ce6d50dbf1a8bfbf
+  Kind: func, Exported: False
+  Lines: 141-141
+  Truncated Text: 'func init*[K,V](T: type SortedSet[K,V]; cmp: SlstCmp[K]): T ='
+  Full Text: 'func init*[K,V](T: type SortedSet[K,V]; cmp: SlstCmp[K]): T ='
+
+  SHA256: 192c5f63db6d3e61c81a7c5c9975e210b8e7c085b8b3e6353a30c02bad6fa85d
+  Kind: func, Exported: False
+  Lines: 230-230
+  Truncated Text: 'func init*[K,V](T: type SortedSetWalkRef[K,V]; sl: SortedSet[K,V]): T ='
+  Full Text: 'func init*[K,V](T: type SortedSetWalkRef[K,V]; sl: SortedSet[K,V]): T ='
+
+--- DUPLICATE GROUP: sorted_set.nim::slstCmp (2 defs) ---
+  SHA256: 4a01427cb13f40d88c42bce721efc3261dbec059b8e5452af2fa765d925f97a0
+  Kind: func, Exported: False
+  Lines: 101-101
+  Truncated Text: 'func slstCmp[K,V](casket: SortedSetItemRef[K,V]; key: K): int ='
+  Full Text: 'func slstCmp[K,V](casket: SortedSetItemRef[K,V]; key: K): int ='
+
+  SHA256: 09f17ee2a69cd3551e8012e1c30b94716143afd6ff41d9754a1c6c6d5ca4d37b
+  Kind: func, Exported: False
+  Lines: 104-104
+  Truncated Text: 'func slstCmp[K,V](casket: SortedSetItemRef[K,V]; key: K; cmq: SlstCmp[K]): int ='
+  Full Text: 'func slstCmp[K,V](casket: SortedSetItemRef[K,V]; key: K; cmq: SlstCmp[K]): int ='
+
+--- DUPLICATE GROUP: sorted_set/rbtree_desc.nim::`$` (3 defs) ---
+  SHA256: 27f9ddb1298782dc8f58b6b9284e31b44a0cfe204adc899238ab37b687e69c17
+  Kind: func, Exported: False
+  Lines: 269-269
+  Truncated Text: 'func `$`*[C](node: RbNodeRef[C]): string ='
+  Full Text: 'func `$`*[C](node: RbNodeRef[C]): string ='
+
+  SHA256: f0f766afcb7d42b08564f2c864ba04f1cb72ad6da0c98071fea08fe9d389db10
+  Kind: func, Exported: False
+  Lines: 281-281
+  Truncated Text: 'func `$`*[C,K](rbt: RbTreeRef[C,K]): string ='
+  Full Text: 'func `$`*[C,K](rbt: RbTreeRef[C,K]): string ='
+
+  SHA256: 82813c61f30c842aa23120790b57ed4d58ea8fe4769ac7eb16f75ff9265b6ffe
+  Kind: func, Exported: False
+  Lines: 290-290
+  Truncated Text: 'func `$`*[C,K](w: RbWalkRef[C,K]): string ='
+  Full Text: 'func `$`*[C,K](w: RbWalkRef[C,K]): string ='
+
+--- DUPLICATE GROUP: sorted_set/rbtree_verify.nim::rc (2 defs) ---
+  SHA256: f27009721291f09892ef761a569dfe4ce9dc421af6d7ad133fb4a9420ccf3e05
+  Kind: let, Exported: False
+  Lines: 147-147
+  Truncated Text: 'let rc ='
+  Full Text: 'let rc = d.subTreeVerify'
+
+  SHA256: f27009721291f09892ef761a569dfe4ce9dc421af6d7ad133fb4a9420ccf3e05
+  Kind: let, Exported: False
+  Lines: 153-153
+  Truncated Text: 'let rc ='
+  Full Text: 'let rc = d.subTreeVerify'
+
+--- DUPLICATE GROUP: sorted_set/rbtree_walk.nim::rbWalkDestroyAll (2 defs) ---
+  SHA256: cfe0b69229e3b1584dd5f9bf29fb42c83c19545739883c7390a0b9f279d2de59
+  Kind: func, Exported: False
+  Lines: 145-145
+  Truncated Text: 'func rbWalkDestroyAll*[C,K](rbt: RbTreeRef[C,K]) ='
+  Full Text: 'func rbWalkDestroyAll*[C,K](rbt: RbTreeRef[C,K]) ='
+
+  SHA256: 2cec31b737f5decd1a473868dffba3ace1f7b1bffc54bebfa7ddf142fdf10b8c
+  Kind: func, Exported: False
+  Lines: 154-154
+  Truncated Text: 'func rbWalkDestroyAll*[C,K](w: RbWalkRef[C,K]) ='
+  Full Text: 'func rbWalkDestroyAll*[C,K](w: RbWalkRef[C,K]) ='
+
+--- DUPLICATE GROUP: templateutils.nim::evalTemplateParamOnceImpl (2 defs) ---
+  SHA256: b0f4384806a7c00658db3d70135dd086e66948d5cdb7c76b3711860f7b14bc44
+  Kind: iterator, Exported: False
+  Lines: 14-14
+  Truncated Text: 'iterator evalTemplateParamOnceImpl[T](x: T): maybeLent T ='
+  Full Text: 'iterator evalTemplateParamOnceImpl[T](x: T): maybeLent T ='
+
+  SHA256: fb2051cebc3f102ef8325730ded35d3472793ae29632c32b1f39edf1c00c302e
+  Kind: iterator, Exported: False
+  Lines: 17-17
+  Truncated Text: 'iterator evalTemplateParamOnceImpl[T](x: var T): var T ='
+  Full Text: 'iterator evalTemplateParamOnceImpl[T](x: var T): var T ='
+
+--- DUPLICATE GROUP: windows/acl.nim::errorCode (11 defs) ---
+  SHA256: d8fde0f0fdcfa27bb3444ad96b823db0188c381f543452062f3d527a4abcdecc
+  Kind: let, Exported: False
+  Lines: 168-168
+  Truncated Text: 'let errorCode ='
+  Full Text: 'let errorCode = ioLastError()'
+
+  SHA256: d8fde0f0fdcfa27bb3444ad96b823db0188c381f543452062f3d527a4abcdecc
+  Kind: let, Exported: False
+  Lines: 204-204
+  Truncated Text: 'let errorCode ='
+  Full Text: 'let errorCode = ioLastError()'
+
+  SHA256: d8fde0f0fdcfa27bb3444ad96b823db0188c381f543452062f3d527a4abcdecc
+  Kind: let, Exported: False
+  Lines: 210-210
+  Truncated Text: 'let errorCode ='
+  Full Text: 'let errorCode = ioLastError()'
+
+  SHA256: d8fde0f0fdcfa27bb3444ad96b823db0188c381f543452062f3d527a4abcdecc
+  Kind: let, Exported: False
+  Lines: 214-214
+  Truncated Text: 'let errorCode ='
+  Full Text: 'let errorCode = ioLastError()'
+
+  SHA256: d8fde0f0fdcfa27bb3444ad96b823db0188c381f543452062f3d527a4abcdecc
+  Kind: let, Exported: False
+  Lines: 220-220
+  Truncated Text: 'let errorCode ='
+  Full Text: 'let errorCode = ioLastError()'
+
+  SHA256: d8fde0f0fdcfa27bb3444ad96b823db0188c381f543452062f3d527a4abcdecc
+  Kind: let, Exported: False
+  Lines: 241-241
+  Truncated Text: 'let errorCode ='
+  Full Text: 'let errorCode = ioLastError()'
+
+  SHA256: d8fde0f0fdcfa27bb3444ad96b823db0188c381f543452062f3d527a4abcdecc
+  Kind: let, Exported: False
+  Lines: 247-247
+  Truncated Text: 'let errorCode ='
+  Full Text: 'let errorCode = ioLastError()'
+
+  SHA256: d8fde0f0fdcfa27bb3444ad96b823db0188c381f543452062f3d527a4abcdecc
+  Kind: let, Exported: False
+  Lines: 259-259
+  Truncated Text: 'let errorCode ='
+  Full Text: 'let errorCode = ioLastError()'
+
+  SHA256: d8fde0f0fdcfa27bb3444ad96b823db0188c381f543452062f3d527a4abcdecc
+  Kind: let, Exported: False
+  Lines: 304-304
+  Truncated Text: 'let errorCode ='
+  Full Text: 'let errorCode = ioLastError()'
+
+  SHA256: d8fde0f0fdcfa27bb3444ad96b823db0188c381f543452062f3d527a4abcdecc
+  Kind: let, Exported: False
+  Lines: 312-312
+  Truncated Text: 'let errorCode ='
+  Full Text: 'let errorCode = ioLastError()'
+
+  SHA256: d8fde0f0fdcfa27bb3444ad96b823db0188c381f543452062f3d527a4abcdecc
+  Kind: let, Exported: False
+  Lines: 319-319
+  Truncated Text: 'let errorCode ='
+  Full Text: 'let errorCode = ioLastError()'
+
+--- DUPLICATE GROUP: windows/acl.nim::free (3 defs) ---
+  SHA256: 555c846e9d8d2a63bef651c22116c80757c9546606b646698704839dd03191cc
+  Kind: proc, Exported: False
+  Lines: 139-139
+  Truncated Text: 'proc free(mem: LocalMemPtr): uint ='
+  Full Text: 'proc free(mem: LocalMemPtr): uint ='
+
+  SHA256: 5d84fdb46b3b873268ccd951685681c596786dbc53e9b96cc410efc7c1d74144
+  Kind: proc, Exported: False
+  Lines: 142-142
+  Truncated Text: 'proc free*(sd: var SD) ='
+  Full Text: 'proc free*(sd: var SD) ='
+
+  SHA256: 80ff8d4cc67adb3cbd39beffd0b0584dc7b3e4329d941dd7d44e8ce025868b6a
+  Kind: proc, Exported: False
+  Lines: 149-149
+  Truncated Text: 'proc free*(sid: var SID) ='
+  Full Text: 'proc free*(sid: var SID) ='
+
+--- DUPLICATE GROUP: windows/acl.nim::getAddr (2 defs) ---
+  SHA256: 3cbbfe87820654a908998602fc3bd9fbe35b8e223f2adb56307a5dbf0d541b48
+  Kind: template, Exported: False
+  Lines: 225-225
+  Truncated Text: 'template getAddr*(sid: SID): pointer ='
+  Full Text: 'template getAddr*(sid: SID): pointer ='
+
+  SHA256: 9231d9e3605aa54bdf918466f14be6165ca53632808f14840b37c37d55cd1327
+  Kind: template, Exported: False
+  Lines: 229-229
+  Truncated Text: 'template getAddr*(mem: LocalMemPtr): pointer ='
+  Full Text: 'template getAddr*(mem: LocalMemPtr): pointer ='
+
+--- DUPLICATE GROUP: windows/acl.nim::getTokenInformation (2 defs) ---
+  SHA256: f02a7142fffe0b9a30328eebf034722938ed82be0796015e631fe780f599662e
+  Kind: proc, Exported: False
+  Lines: 85-87
+  Truncated Text: 'proc getTokenInformation(tokenHandle: uint, tokenInformationClass: uint32,\ntokenInfo: pointer, tokenInfoLen: uint32,\nreturnLength: var uint32): int32 {.'
+  Full Text: 'proc getTokenInformation(tokenHandle: uint, tokenInformationClass: uint32,\ntokenInfo: pointer, tokenInfoLen: uint32,\nreturnLength: var uint32): int32 {.'
+
+  SHA256: 5a4d9c314c1597f4d8b82d9d1a7c590b8ad22ff9d0b00c85b36eba32cb106362
+  Kind: proc, Exported: False
+  Lines: 154-155
+  Truncated Text: 'proc getTokenInformation(token: uint,\ninformation: uint32): IoResult[LocalMemPtr] ='
+  Full Text: 'proc getTokenInformation(token: uint,\ninformation: uint32): IoResult[LocalMemPtr] ='
+
+--- DUPLICATE GROUP: windows/acl.nim::localMem (2 defs) ---
+  SHA256: 24406d02c4395d6f47825dfa60f036a4cbfa5bd6626cf771620af35e9bddaecb
+  Kind: let, Exported: False
+  Lines: 191-191
+  Truncated Text: 'let localMem ='
+  Full Text: "let localMem = getTokenInformation(token, 1'u32).valueOr:"
+
+  SHA256: 52fd0f38fa0202e1448c0452fa255008b0eae6a14bb8cdefc92c8265290f1a7f
+  Kind: var, Exported: False
+  Lines: 239-239
+  Truncated Text: 'var localMem ='
+  Full Text: 'var localMem = localAlloc(LPTR, uint(size))'
+
+--- DUPLICATE GROUP: windows/acl.nim::psid (2 defs) ---
+  SHA256: 65dd75ec6e345aab9a4caca338ced51b3def8368e59d56753cf9c93b135c1d92
+  Kind: let, Exported: False
+  Lines: 195-195
+  Truncated Text: 'let psid ='
+  Full Text: 'let psid = utoken[].user.sid'
+
+  SHA256: cd4e762866f0f7608c75811c24cf59d47b7aba280002c45af042ce413e92b721
+  Kind: var, Exported: False
+  Lines: 382-382
+  Truncated Text: 'var psid ='
+  Full Text: 'var psid = cast[pointer](addr ace.sidStart)'
+
+--- DUPLICATE GROUP: windows/acl.nim::res (2 defs) ---
+  SHA256: 7aab1d21f123e92738ef51803231b5aa5882bae2695677534bf521dac1b56d21
+  Kind: let, Exported: False
+  Lines: 160-160
+  Truncated Text: 'let res ='
+  Full Text: 'let res ='
+
+  SHA256: b2efb980f82f470731e3a43f1d132446473c57d75c03fbda271679e5861e7b15
+  Kind: var, Exported: False
+  Lines: 309-309
+  Truncated Text: 'var res ='
+  Full Text: 'var res = SD(sddata: cast[LocalMemPtr](localMem), acldata: dacl)'
+
+--- DUPLICATE GROUP: windows/acl.nim::userSid (2 defs) ---
+  SHA256: e9c872d7fa7df74aa8975ae4accfbe399f5621d067708657af0345546f146507
+  Kind: var, Exported: False
+  Lines: 234-234
+  Truncated Text: 'var userSid ='
+  Full Text: 'var userSid = ? getCurrentUserSid()'
+
+  SHA256: 1e562b75db4348968bebdae409135892830c58b64b8874234ada89988913c899
+  Kind: let, Exported: False
+  Lines: 351-351
+  Truncated Text: 'let userSid ='
+  Full Text: 'let userSid = ? getCurrentUserSid()'
+

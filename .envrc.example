@@ -1,0 +1,8 @@
+# Copy to .envrc and edit
+# CLI Tool (Option A)
+# export AXIOM_LLM_CMD="kimi"
+
+# HTTP REST API (Option B)
+# export AXIOM_LLM_API_URL="https://api.mistral.ai/v1/chat/completions"
+# export AXIOM_LLM_API_KEY="your-api-key-here"
+# export AXIOM_LLM_MODEL="mistral-large-latest"

@@ -1,0 +1,63 @@
+# Axiom Trust Layer Policy
+# Defines deterministic criteria for promoting certificates to
+# certVerifiedAxiom without requiring full compiler replay on every run.
+
+[trust.axiom]
+# When true, certificates with successful Lean compiler replay and
+# non-empty leanArtifactHash are automatically promoted to certVerifiedAxiom.
+auto_promote_lean_replay = true
+
+# Minimum proof quality gates for auto-promotion.
+require_no_sorry = true
+require_negative_test_passed = true
+
+# Trusted primitive proof patterns (normalized SMT-LIB2 assertion patterns).
+# Proofs whose generated Lean source contains only these primitives
+# are axiomatically accepted as ground-truth.
+trusted_patterns = [
+  "Nat.zero_le",
+  "Eq.refl",
+  "constructor.Nat.zero_le",
+  "constructor.simp",
+  "trivial",
+]
+
+[prove]
+# Custom vault directory path. Default: logs/proof_vault
+# vault_dir = "logs/proof_vault"
+
+# Total gas limit for solver budget. 0 = auto-calculate from --limit × MaxGasCostPerNode.
+# budget_gas = 0
+
+[leanstral]
+# Mistral Leanstral LLM backend configuration
+api_key = "${AXIOM_API_KEY}"
+api_url = "https://api.mistral.ai/v1/chat/completions"
+model = "labs-leanstral-1-5"
+
+[gate.cache]
+# Epoch-based cache isolation settings.
+# maxRetainedEpochs: number of past epoch directories to keep before GC.
+# Older epochs beyond this threshold are garbage-collected after each run.
+maxRetainedEpochs = 3
+
+[resilience]
+# Retry policy
+retry_max_attempts = 3
+retry_base_delay_ms = 100
+retry_max_delay_ms = 5000
+retry_jitter_ratio = 0.1
+
+# Circuit breaker
+circuit_failure_threshold = 5
+circuit_reset_after_ms = 30000
+
+# Error dump
+dump_dir = "logs/evidence"
+
+# Log rotation
+dump_max_age_hours = 72
+dump_max_count = 500
+
+# Rate limit backoff multiplier
+rate_limit_backoff_multiplier = 3

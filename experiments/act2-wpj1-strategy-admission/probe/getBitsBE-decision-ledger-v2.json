@@ -1,0 +1,79 @@
+{
+  "experimentId": "ACT2-WP4j1",
+  "phase": "D-final",
+  "supersedes": "getBitsBE-decision-ledger.json (Phase B 초안 — Q4 판정 정정)",
+  "subject": "nim-stew/stew/bitops2.nim::getBitsBE",
+  "subjectRevision": "c75502ceedb5ed2a37b7b5e4744fc71313682859",
+  "axiomRevision": "44fefd470fc6ad9c24ba40350d5721d4d6a9605c",
+  "command": "bin/ax prove --project nim-stew-clean-c75502c --target 'stew/bitops2.nim::getBitsBE' --limit 1",
+  "exitCode": 2,
+  "exitCodeAttribution": "PERSIST FAIL — 무관한 Axiom 자체 커널(safeSpeedupRatioCore, proximityScore)의 cert promotion 실패. getBitsBE와 무관.",
+
+  "decisionLedger": {
+    "obligationCount": 13,
+    "obligationKinds": ["okSafetyDiv(resultBits != 0)가 golden으로 실행 — 나머지 12개는 ledger상 drop(reason=osrDroppedOutsideScope)"],
+    "verificationTier": "vtStructural (capability 분류일 뿐 — 실행을 막지 않았음)",
+    "selectedStrategy": "structural_ast (refactor 트랙 — proof 트랙과 별개)",
+    "strategyApplicability": "not_applicable (srNoTransformApplied — refactor transform 부재)",
+    "strategyFailureReason": "srNoTransformApplied — proof status로 승격되지 않음 (별도 경로 확인)",
+    "preSieveDecision": "carve-out 통과 (isPreSieveTerminalBlock — WP4-j 구현, 정상 동작)",
+    "executionDecision": "IR pipeline 실행됨 — golden obligation lowering 성공, Z3 호출됨",
+    "proofResult": "psFail (toProofCertificate else 분기 :1408-1411; solverMethod=smNone은 C20 fail-closed makeInconclusive의 고정 필드값 — Z3 미호출을 의미하지 않음)"
+  },
+
+  "z3ExecutionEvidence": {
+    "method": "differential telemetry (target=normalizeMaxWorkers 대조 실행) + golden script digest 재구성",
+    "getBitsBESpecificInvocations": 2,
+    "results": ["sat", "sat"],
+    "digestMatch": {
+      "observed": "d9f9af27c1dfa8b3b41d266f54e1850142587bf0e03c7d112dea3eb05d0588b4",
+      "reconstructed": "QF_AUFBV + zmRaw, 스크립트: (set-logic QF_AUFBV) / (set-option :rlimit 30000000) / (declare-fun resultBits () (_ BitVec 64)) / (assert (not (not (= resultBits #x0000000000000000)))) / (check-sat)",
+      "script": "tests/unit/wpj1_golden_script_repro.nim로 재현",
+      "verdict": "EXACT MATCH — golden 스크립트 비트 단위 확정"
+    },
+    "unattributed": "d067de02... (result=sat) — 8가지 framing 후보와 불일치; classic adapter 전체 함수 스크립트 추정 (partial attribution)"
+  },
+
+  "vacuityAnalysis": {
+    "subjectFact": "const resultBits = sizeof(result) * 8 (bitops2.nim:576) — 컴파일 타임 상수, 항상 ≥ 8. 나눗셈 a div resultBits는 안전.",
+    "encodingFact": "golden 스크립트는 resultBits를 무제약 자유변수로 선언 — 상수 전파/가정 바인딩 없음",
+    "conclusion": "Z3의 sat는 자유변수 모델(resultBits := 0)에 기반한 자명한 결과 — subject의 도달 가능한 상태가 아님. 진짜 counterexample이 아님.",
+    "classification": "Vacuous (sat 방향), psFail은 underconstrained 인코딩에 대한 정직한 fail-closed"
+  },
+
+  "questions": {
+    "Q1_obligation_exists": {
+      "answer": "YES",
+      "evidence": ["obligationVerdict=ogrGenerated (obligationCount=13)", "golden lowering → Z3 digest 일치로 실행 실증"]
+    },
+    "Q2_strategy_unavailability_causes_rejection": {
+      "answer": "NO",
+      "evidence": ["structural_ast/srNoTransformApplied는 refactor 트랙 출력", "proof 결과는 파이프라인 자체의 Z3 실행(sat)에서 나옴"]
+    },
+    "Q3_other_strategy_exists": {
+      "answer": "N/A — 질문 소멸",
+      "evidence": ["파이프라인은 이미 obligation을 실행했음; strategy 재선택 문제가 아님"]
+    },
+    "Q4_strategy_failure_promoted_to_proof_failure": {
+      "answer": "NO",
+      "evidence": ["psFail의 원인은 실제 solver 실행 결과 sat (digest 입증)", "smNone은 C20 evidence-gate 고정값 (ir_pipeline_runner.nim:1048) — provenance 라벨링의 오해 소지는 있으나 승격 버그 아님"]
+    },
+    "Q5_srNoTransformApplied_means_not_attempted": {
+      "answer": "YES",
+      "evidence": ["RefactorResult SkippedReason (refactor_task_types.nim:46) — refactor 트랙 전용", "IR 파이프라인에 피드백되지 않음 (refactoring_engine.nim:384, axiom_engine.nim:517)"]
+    },
+    "Q6_obligations_removed_from_execution": {
+      "answer": "PARTIAL — 1/13 실행, 12/13 명시적 drop",
+      "evidence": ["golden 1개 실행 (digest 입증)", "12개는 osrDroppedOutsideScope 사유와 함께 ledger에 기록 (WP4-k O11 계약 준수) — 무음 제거 아님"]
+    }
+  },
+
+  "determinism": {
+    "runA_vs_runB": "timestamp 제거 후 출력 동일, CAS key 동일 (cf4013de...)",
+    "telemetryDigestGroups": "3그룹 모두 digest 시퀀스 fingerprint 동일"
+  },
+
+  "wp4kReportErratum": "WP4-k 보고서의 'getBitsBE는 Z3에 도달하지 못했다' 결론은 telemetry에 함수 귀속 필드가 없는 점을 근거로 한 과잉 추론이었음 — 본 실험의 digest 일치로 Z3 도달이 실증됨. WP4-k 보고서에 erratum 부기함.",
+
+  "nextWpBoundary": "obligation encoding fidelity — proposition lowering에 상수 전파/가정 바인딩(assumption binding) 추가 시 resultBits != 0은 #x40 != 0으로 lower되어 unsat(정당한 성공)이 가능. 이는 status semantics가 아니라 인코딩 충실도의 경계다."
+}

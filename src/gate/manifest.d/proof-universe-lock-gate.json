@@ -1,0 +1,17 @@
+{
+  "id": "proof-universe-lock-gate",
+  "name": "Axiom proof universe lock gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/proof_universe_lock_gate",
+  "stages": [
+    "manual"
+  ],
+  "passFilenames": false,
+  "weight": "medium",
+  "category": "theorem",
+  "after": [
+    "nim-check"
+  ],
+  "severity": "error",
+  "execution_mode": "interpreted"
+}

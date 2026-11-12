@@ -1,0 +1,43 @@
+{
+ "capsule": {
+  "files": 180040,
+  "bytes": 11353320247,
+  "inputs": {
+   "files": 153082,
+   "bytes": 7759453116
+  },
+  "toolchain": {
+   "files": 17925,
+   "bytes": 3137937793
+  },
+  "cache": {
+   "files": 9031,
+   "bytes": 455355304
+  },
+  "provenance": {
+   "files": 2,
+   "bytes": 574034
+  }
+ },
+ "cache_census_total": {
+  "files": 9031,
+  "bytes": 455355304,
+  "modules": 9031
+ },
+ "build_plan_observed": {
+  "jobs": 1801,
+  "root_built": 5,
+  "dep_jobs_before_first_root": 1795,
+  "trailing": 1
+ },
+ "needed_ltar_upper_bound": {
+  "count": 1795,
+  "pct": 19.88,
+  "bytes_uniform_assumption": 90506341
+ },
+ "needed_ltar_lower_bound_guess": {
+  "count": 1546,
+  "pct": 17.12
+ },
+ "aeneas_lib_modules": 249
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "policyHash": "7edb020d4ed34cc4ce9ed05b73457231348e7f899fe0f2fa2d1437894ccf4174",
+  "bundleDigest": "b00c021eb595fad31e937c9778c1a7fcbe8aa6ce7ab3a414999bc4e8538a60e8",
+  "invariantStates": {
+    "R1": "PASS",
+    "R2": "PASS",
+    "R3": "PASS",
+    "R4": "PASS",
+    "R5": "PASS",
+    "R6": "PASS",
+    "R7": "FAIL",
+    "R8": "PASS"
+  },
+  "verdict": "CONDITIONAL GO",
+  "conditions": [
+    "R7=FAIL"
+  ],
+  "decisionDigest": "0bcb25bd79286b356ee382278acf55a60f9eac9f381883a6e61a0ec318f1377b"
+}

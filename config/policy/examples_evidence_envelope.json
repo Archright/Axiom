@@ -1,0 +1,97 @@
+// config/policy/examples_evidence_envelope.json
+// Example instance: Complete evidence envelope for a WARN disposition.
+// Demonstrates the Evidence = minimal input set invariant and integrity digest.
+// SSOT: docs/spec/canonical_contract_policy_layer.md §4.3
+
+{
+  "$schema": "../policy_layer.schema.json",
+  "$comment": "Example: Evidence envelope for a WARN disposition on an architecture invariant violation. Shows complete input set and integrity verification.",
+  "evidenceEnvelope": {
+    "envelopeId": "env_99887766554433221100ffeeddccbbaa99887766554433221100ffeeddccbbaa",
+    "decisionId": "dec_1122334455667788990011223344556677889900112233445566778899001122",
+    "inputs": [
+      {
+        "id": "obs_debt_count_drift",
+        "hash": "sha256:a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+        "type": "observation"
+      },
+      {
+        "id": "POLICY-ARCHINV",
+        "hash": "sha256:b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+        "type": "policy"
+      },
+      {
+        "id": "BIND-ARCHEVT1",
+        "hash": "sha256:c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+        "type": "binding"
+      },
+      {
+        "id": "repo_state_sha256:deadbeef...",
+        "hash": "sha256:d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4",
+        "type": "repository_state"
+      }
+    ],
+    "output": {
+      "disposition": "WARN",
+      "reasoning": "Architecture invariant violated: core module imports infrastructure layer directly. Severity elevated to WARN per POLICY-ARCHINV rule."
+    },
+    "integrity": {
+      "algorithm": "sha256",
+      "digest": "sha256:e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5"
+    }
+  },
+  "policy": {
+    "policyId": "POLICY-ARCHINV",
+    "rule": "ANCHOR_STABLE",
+    "severity": "WARN",
+    "description": "Architecture invariant: core modules must not import infrastructure layer. Violations trigger WARN-level alerts requiring architect review.",
+    "version": "1.0.0"
+  },
+  "policyBinding": {
+    "bindingId": "BIND-ARCHEVT1",
+    "policyRef": "POLICY-ARCHINV",
+    "subject": {
+      "type": "anchor",
+      "anchor": {
+        "path": "src/core/io/io_utils.nim",
+        "symbol": "readFileSafe",
+        "semanticKind": "proc",
+        "derivedEvidence": {
+          "lineRange": "45-78",
+          "canonicalSyntaxHash": "nim-pnode-canonical-v2:f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6"
+        }
+      }
+    },
+    "justification": "AGENTS.md §1 — Layered Gate Architecture: core/ must not depend on infrastructure/. This proc in io_utils.nim imports from infrastructure/ violating the layer boundary.",
+    "owner": "architect",
+    "createdAt": "2026-07-01T00:00:00Z",
+    "expires": null
+  },
+  "observation": {
+    "observationId": "obs_debt_count_drift",
+    "metricId": "LAYER_VIOLATION_COUNT",
+    "value": 3,
+    "result": "DRIFT",
+    "timestamp": "2026-08-16T06:30:00Z",
+    "stateHash": "sha256:deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+    "projectionRef": "layerViolationCount"
+  },
+  "decision": {
+    "decisionId": "dec_1122334455667788990011223344556677889900112233445566778899001122",
+    "observationRef": "obs_debt_count_drift",
+    "policyBindingRef": "BIND-ARCHEVT1",
+    "disposition": "WARN",
+    "evidence": {
+      "inputHashes": {
+        "observation": "sha256:a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+        "policyBinding": "sha256:c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+        "repositoryState": "sha256:d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4"
+      },
+      "reproducibleFrom": [
+        "obs_debt_count_drift",
+        "BIND-ARCHEVT1",
+        "sha256:deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+      ]
+    }
+  }
+}

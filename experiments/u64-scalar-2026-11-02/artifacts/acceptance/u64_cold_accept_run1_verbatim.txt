@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# ③ u64 cold acceptance — 고정 MERGE_SHA에서 독립 재현 (02-impl-identity 패턴 재사용)
+# 사용법: bash /tmp/u64_cold_accept.sh <MERGE_SHA>
+set -u
+SHA="$1"
+COLD=/tmp/cold_u64_main
+LOGDIR=/tmp/cold_u64_logs
+mkdir -p "$LOGDIR"
+git worktree remove --force "$COLD" 2>/dev/null || true
+git worktree add --detach "$COLD" "$SHA" || { echo "WORKTREE FAIL"; exit 1; }
+cd "$COLD" || exit 1
+echo "== engine identity =="
+git rev-parse HEAD | tee "$LOGDIR/engine_head.txt"
+echo "== build =="
+make build > "$LOGDIR/make_build.log" 2>&1
+echo "BUILD_EXIT=$?" | tee -a "$LOGDIR/engine_head.txt"
+tail -2 "$LOGDIR/make_build.log"
+echo "== provenance =="
+bin/ax --check-provenance > "$LOGDIR/check_provenance.log" 2>&1
+echo "PROV_EXIT=$?" | tee -a "$LOGDIR/engine_head.txt"
+tail -1 "$LOGDIR/check_provenance.log"
+echo "== lean .lake provisioning (gitignored; pinned toolchain identical) =="
+rm -rf "$COLD/proofs/.lake"
+cp -r ".4/proofs/.lake" "$COLD/proofs/.lake"
+echo "== subject immutability pre =="
+sha256sum tests/fixtures/rust/axiom_u64_probe/src/lib.rs tests/fixtures/rust/axiom_u64_probe/axiom_u64_probe.llbc tests/fixtures/rust/axiom_u64_probe/axiom.specs.json > "$LOGDIR/subject_sha256_pre.txt"
+cat "$LOGDIR/subject_sha256_pre.txt"
+TOKEN="$(gh auth token)"
+CHARON=<user-home>/.cargo/bin/charon
+run_case () {
+  NAME="$1"; TARGET="$2"
+  rm -rf "/tmp/cold_u64_state_$NAME" "/tmp/cold_u64_vault_$NAME"
+  mkdir -p "/tmp/cold_u64_state_$NAME/data" "/tmp/cold_u64_vault_$NAME"
+  cp data/verification_scope.lock "/tmp/cold_u64_state_$NAME/data/"
+  cd "$COLD/tests/fixtures/rust/axiom_u64_probe"
+  AXIOM_STATE_DIR="/tmp/cold_u64_state_$NAME" AXIOM_VAULT_DIR="/tmp/cold_u64_vault_$NAME" \
+    AXIOM_CHARON_BIN="$CHARON" GITHUB_TOKEN="$TOKEN" \
+    "$COLD/bin/ax" prove --project . --target "$TARGET" \
+    > "$LOGDIR/${NAME}_stdout.txt" 2> "$LOGDIR/${NAME}_stderr.txt"
+  echo "EXIT_$NAME=$?" >> "$LOGDIR/exits.txt"
+  cd "$COLD"
+  cp "/tmp/cold_u64_state_$NAME/logs/ax_prove_trajectory.jsonl" "$LOGDIR/${NAME}_trajectory.jsonl" 2>/dev/null || true
+}
+cd "$COLD"
+run_case A axiom_u64_probe::u64_echo
+run_case B axiom_u64_probe::u64_seven_mutant
+run_case C axiom_u64_probe::u64_add
+run_case D axiom_u64_probe::u64_seven
+echo "== exits =="
+cat "$LOGDIR/exits.txt"
+echo "== verdicts =="
+for N in A B C D; do
+  python3 - "$LOGDIR/${N}_trajectory.jsonl" "$N" <<'EOF'
+import json, sys
+path, tag = sys.argv[1], sys.argv[2]
+try:
+    for line in open(path):
+        d = json.loads(line)
+        if d.get('phase') == 'skReport':
+            for t in d.get('extra', {}).get('targets', []):
+                print(tag, t['name'], '|', t['status'], '|', t['reason'][:220])
+except FileNotFoundError:
+    print(tag, 'NO TRAJECTORY')
+EOF
+done
+echo "== certs =="
+ls /tmp/cold_u64_state_A/build/certificates/ 2>/dev/null || echo "A: no certs dir"
+echo "== subject immutability post =="
+sha256sum tests/fixtures/rust/axiom_u64_probe/src/lib.rs tests/fixtures/rust/axiom_u64_probe/axiom_u64_probe.llbc tests/fixtures/rust/axiom_u64_probe/axiom.specs.json > "$LOGDIR/subject_sha256_post.txt"
+diff "$LOGDIR/subject_sha256_pre.txt" "$LOGDIR/subject_sha256_post.txt" && echo "SUBJECT_IMMUTABLE=yes"
+echo "== C wall reason byte-compare vs pre-merge =="
+python3 - "$LOGDIR/C_trajectory.jsonl" ".4/experiments/u64-scalar-2026-11-02/artifacts/premerge/u64_add_trajectory.jsonl" <<'EOF'
+import json, sys
+def reason(p):
+    for line in open(p):
+        d = json.loads(line)
+        if d.get('phase') == 'skReport':
+            for t in d.get('extra', {}).get('targets', []):
+                return t['reason']
+    return None
+a, b = reason(sys.argv[1]), reason(sys.argv[2])
+print('COLD==PREMERGE:', a == b)
+if a != b:
+    print('cold  :', a); print('pre   :', b)
+EOF
+echo "== done =="

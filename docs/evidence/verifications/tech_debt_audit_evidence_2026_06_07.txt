@@ -1,0 +1,32 @@
+TECH DEBT AUDIT EVIDENCE — 2026-06-07
+=======================================
+
+Methodology: Fowler Technical Debt Quadrant × SonarQube Metrics × Axiom 4D Gate
+Context7 Sources: Martin Fowler, Refactoring Guru, SonarQube
+Scan: 6 parallel agents (code, directory, architecture, test, documentation, gate infrastructure)
+
+EVIDENCE FILES:
+- verifications/code_debt_scan_2026_06_07.txt (12,248 bytes)
+- verifications/directory_debt_scan_2026_06_07.txt (10,598 bytes)
+- verifications/architecture_debt_scan_2026_06_07.txt (12,801 bytes)
+- verifications/test_debt_scan_2026_06_07.txt (12,934 bytes)
+- verifications/doc_debt_scan_2026_06_07.txt (18,556 bytes)
+- verifications/gate_debt_scan_2026_06_07.txt (12,228 bytes)
+
+REPORT:
+- docs/reports/tech_debt_full_survey_2026_06_07.md (12,113 bytes)
+
+REGISTRY UPDATE:
+- docs/DEBT_REGISTRY.md — 18 new entries (DEBT#190~#207)
+
+SUMMARY:
+- Total findings: 48 (Critical: 1, High: 14, Medium: 21, Low: 12)
+- New DEBT entries: 18
+- Immediate fixes: 4 (D-01, D-02, D-05, C-01)
+- Regression alert: when isMainModule 32→51 (+59%)
+
+VERIFICATION:
+✅ 6 evidence files written successfully
+✅ Integrated report generated
+✅ DEBT_REGISTRY updated with DEBT#190~#207
+✅ All findings reproducible via shell commands documented in report

@@ -1,0 +1,3747 @@
+{
+  "schemaVersion": "axiom.global-symbol-graph.v1",
+  "hash": "24b6d0abbbdea642241dee8f56e6c6ff6a0e61294378c20eca0ea649598cdd20",
+  "symbolCount": 623,
+  "edgeCount": 0,
+  "symbols": [
+    {
+      "qualifiedName": "acl.addAccessAllowedAceEx",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.checkCurrentUserOnlyACL",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.closeHandle",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.copySid",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.createCurrentUserOnlyAcl",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.createFilesUserOnlySecurityDescriptor",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.createFoldersUserOnlySecurityDescriptor",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.createUserOnlySecurityDescriptor",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.equalSid",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.free",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.getAce",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.getAddr",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.getCurrentProcess",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.getCurrentUserSid",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.getDescriptor",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.getLengthSid",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.getNamedSecurityInfo",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.getTokenInformation",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.initializeAcl",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.initializeSecurityDescriptor",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.isEmpty",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.isValidSid",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.len",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.localAlloc",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.localFree",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.openProcessToken",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.setCurrentUserOnlyAccess",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.setNamedSecurityInfo",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.setSecurityDescriptorControl",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "acl.setSecurityDescriptorDacl",
+      "kind": "skProc",
+      "modulePath": "stew/windows/acl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "arraybuf.add",
+      "kind": "skProc",
+      "modulePath": "stew/arraybuf.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "arraybuf.data",
+      "kind": "skProc",
+      "modulePath": "stew/arraybuf.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "arraybuf.initCopyFrom",
+      "kind": "skProc",
+      "modulePath": "stew/arraybuf.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "arraybuf.items",
+      "kind": "skProc",
+      "modulePath": "stew/arraybuf.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "arraybuf.len",
+      "kind": "skProc",
+      "modulePath": "stew/arraybuf.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "arraybuf.mitems",
+      "kind": "skProc",
+      "modulePath": "stew/arraybuf.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "arraybuf.pairs",
+      "kind": "skProc",
+      "modulePath": "stew/arraybuf.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "arraybuf.pop",
+      "kind": "skProc",
+      "modulePath": "stew/arraybuf.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "arraybuf.setLen",
+      "kind": "skProc",
+      "modulePath": "stew/arraybuf.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "arrayops.^^",
+      "kind": "skProc",
+      "modulePath": "stew/arrayops.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "arrayops.copyFrom",
+      "kind": "skProc",
+      "modulePath": "stew/arrayops.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "arrayops.eachElement",
+      "kind": "skProc",
+      "modulePath": "stew/arrayops.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "arrayops.initArrayWith",
+      "kind": "skProc",
+      "modulePath": "stew/arrayops.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "arrayops.initCopyFrom",
+      "kind": "skProc",
+      "modulePath": "stew/arrayops.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "arrayops.mand",
+      "kind": "skProc",
+      "modulePath": "stew/arrayops.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "arrayops.mnot",
+      "kind": "skProc",
+      "modulePath": "stew/arrayops.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "arrayops.mor",
+      "kind": "skProc",
+      "modulePath": "stew/arrayops.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "arrayops.mxor",
+      "kind": "skProc",
+      "modulePath": "stew/arrayops.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "assign2.assign",
+      "kind": "skProc",
+      "modulePath": "stew/assign2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "assign2.assignImpl",
+      "kind": "skProc",
+      "modulePath": "stew/assign2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "assign2.hasMoveMem",
+      "kind": "skProc",
+      "modulePath": "stew/assign2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "assign2.unsupported",
+      "kind": "skProc",
+      "modulePath": "stew/assign2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base10.decode",
+      "kind": "skProc",
+      "modulePath": "stew/base10.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base10.encode",
+      "kind": "skProc",
+      "modulePath": "stew/base10.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base10.encodedLength",
+      "kind": "skProc",
+      "modulePath": "stew/base10.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base10.maxLen",
+      "kind": "skProc",
+      "modulePath": "stew/base10.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base10.toBytes",
+      "kind": "skProc",
+      "modulePath": "stew/base10.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base10.toString",
+      "kind": "skProc",
+      "modulePath": "stew/base10.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base32.convert5to8",
+      "kind": "skProc",
+      "modulePath": "stew/base32.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base32.convert8to5",
+      "kind": "skProc",
+      "modulePath": "stew/base32.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base32.decode",
+      "kind": "skProc",
+      "modulePath": "stew/base32.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base32.decodedLength",
+      "kind": "skProc",
+      "modulePath": "stew/base32.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base32.encode",
+      "kind": "skProc",
+      "modulePath": "stew/base32.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base32.encodedLength",
+      "kind": "skProc",
+      "modulePath": "stew/base32.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base32.newAlphabet32",
+      "kind": "skProc",
+      "modulePath": "stew/base32.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base36.decode",
+      "kind": "skProc",
+      "modulePath": "stew/base36.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base36.decodedLength",
+      "kind": "skProc",
+      "modulePath": "stew/base36.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base36.encode",
+      "kind": "skProc",
+      "modulePath": "stew/base36.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base36.encodedLength",
+      "kind": "skProc",
+      "modulePath": "stew/base36.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base36.newAlphabet36",
+      "kind": "skProc",
+      "modulePath": "stew/base36.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base58.decode",
+      "kind": "skProc",
+      "modulePath": "stew/base58.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base58.decodedLength",
+      "kind": "skProc",
+      "modulePath": "stew/base58.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base58.encode",
+      "kind": "skProc",
+      "modulePath": "stew/base58.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base58.encodedLength",
+      "kind": "skProc",
+      "modulePath": "stew/base58.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base58.newAlphabet58",
+      "kind": "skProc",
+      "modulePath": "stew/base58.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base64.decode",
+      "kind": "skProc",
+      "modulePath": "stew/base64.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base64.decodedLength",
+      "kind": "skProc",
+      "modulePath": "stew/base64.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base64.encode",
+      "kind": "skProc",
+      "modulePath": "stew/base64.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base64.encodedLength",
+      "kind": "skProc",
+      "modulePath": "stew/base64.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "base64.newAlphabet64",
+      "kind": "skProc",
+      "modulePath": "stew/base64.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.bitIndex",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.bitScan",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.bitScanForward",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.bitScanForward64",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.bitScanReverse",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.bitScanReverse64",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.bitWidth",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.bitsof",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.builtin_clz",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.builtin_clzll",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.builtin_ffs",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.builtin_ffsll",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.builtin_parity",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.builtin_parityll",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.builtin_popcnt16",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.builtin_popcnt32",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.builtin_popcnt64",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.builtin_popcount",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.builtin_popcountll",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.byteIndex",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.changeBit",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.changeBitBE",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.changeBitLE",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.checkedScan",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.clearBit",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.clearBitBE",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.clearBitLE",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.countOnes",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.countOnesBuiltin",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.countOnesNim",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.countZeros",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.firstOne",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.firstOneBuiltin",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.firstOneNim",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.getBit",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.getBitBE",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.getBitLE",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.getBitsBE",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.leadingZeros",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.log2trunc",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.log2truncBuiltin",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.log2truncNim",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.mostSignificantBit",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.nextPow2",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.nextPow2Nim",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.normalizeIdx",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.parity",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.parityBuiltin",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.parityNim",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.readLimb",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.rotateLeft",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.rotateRight",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.setBit",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.setBitBE",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.setBitLE",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.toggleBit",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.toggleBitBE",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.toggleBitLE",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitops2.trailingZeros",
+      "kind": "skProc",
+      "modulePath": "stew/bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.add",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.bitsLen",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.clearBit",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.cmp",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.combine",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.compareArrays",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.init",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.initLastWords",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.isSubsetOf",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.isZeros",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.lastWordBytes",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.len",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.lhsBits",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.loadLEBytes",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.loopOverWords",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.overlaps",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.rhsBits",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.setBit",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.storeLEBytes",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "bitseqs.words",
+      "kind": "skProc",
+      "modulePath": "stew/bitseqs.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "byteutils.fromBytes",
+      "kind": "skProc",
+      "modulePath": "stew/byteutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "byteutils.fromHex",
+      "kind": "skProc",
+      "modulePath": "stew/byteutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "byteutils.hexToByteArray",
+      "kind": "skProc",
+      "modulePath": "stew/byteutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "byteutils.hexToByteArrayImpl",
+      "kind": "skProc",
+      "modulePath": "stew/byteutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "byteutils.hexToByteArrayStrict",
+      "kind": "skProc",
+      "modulePath": "stew/byteutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "byteutils.hexToPaddedByteArray",
+      "kind": "skProc",
+      "modulePath": "stew/byteutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "byteutils.hexToSeqByte",
+      "kind": "skProc",
+      "modulePath": "stew/byteutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "byteutils.readHexChar",
+      "kind": "skProc",
+      "modulePath": "stew/byteutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "byteutils.skip0xPrefix",
+      "kind": "skProc",
+      "modulePath": "stew/byteutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "byteutils.to0xHex",
+      "kind": "skProc",
+      "modulePath": "stew/byteutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "byteutils.toBytes",
+      "kind": "skProc",
+      "modulePath": "stew/byteutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "byteutils.toHex",
+      "kind": "skProc",
+      "modulePath": "stew/byteutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "closures.init",
+      "kind": "skProc",
+      "modulePath": "stew/closures.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "closures.makeClosure",
+      "kind": "skProc",
+      "modulePath": "stew/closures.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "closures.rawClosureProc",
+      "kind": "skProc",
+      "modulePath": "stew/closures.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "ctops.isEqual",
+      "kind": "skProc",
+      "modulePath": "stew/ctops.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "endians2.fromBE",
+      "kind": "skProc",
+      "modulePath": "stew/endians2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "endians2.fromBytes",
+      "kind": "skProc",
+      "modulePath": "stew/endians2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "endians2.fromBytesBE",
+      "kind": "skProc",
+      "modulePath": "stew/endians2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "endians2.fromBytesLE",
+      "kind": "skProc",
+      "modulePath": "stew/endians2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "endians2.fromLE",
+      "kind": "skProc",
+      "modulePath": "stew/endians2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "endians2.swapBytes",
+      "kind": "skProc",
+      "modulePath": "stew/endians2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "endians2.swapBytesBuiltin",
+      "kind": "skProc",
+      "modulePath": "stew/endians2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "endians2.swapBytesNim",
+      "kind": "skProc",
+      "modulePath": "stew/endians2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "endians2.toBE",
+      "kind": "skProc",
+      "modulePath": "stew/endians2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "endians2.toBytes",
+      "kind": "skProc",
+      "modulePath": "stew/endians2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "endians2.toBytesBE",
+      "kind": "skProc",
+      "modulePath": "stew/endians2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "endians2.toBytesLE",
+      "kind": "skProc",
+      "modulePath": "stew/endians2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "endians2.toLE",
+      "kind": "skProc",
+      "modulePath": "stew/endians2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "enums.checkedEnumAssign",
+      "kind": "skProc",
+      "modulePath": "stew/enums.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "enums.contains",
+      "kind": "skProc",
+      "modulePath": "stew/enums.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "enums.enumRangeInt64",
+      "kind": "skProc",
+      "modulePath": "stew/enums.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "enums.enumStrValuesArray",
+      "kind": "skProc",
+      "modulePath": "stew/enums.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "enums.enumStrValuesArrayImpl",
+      "kind": "skProc",
+      "modulePath": "stew/enums.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "enums.enumStrValuesSeq",
+      "kind": "skProc",
+      "modulePath": "stew/enums.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "enums.enumStyle",
+      "kind": "skProc",
+      "modulePath": "stew/enums.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "enums.hasHoles",
+      "kind": "skProc",
+      "modulePath": "stew/enums.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "enums.setMode",
+      "kind": "skProc",
+      "modulePath": "stew/enums.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "evalonce.evalOnceAs",
+      "kind": "skProc",
+      "modulePath": "stew/evalonce.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "faux_closures.fauxClosure",
+      "kind": "skProc",
+      "modulePath": "stew/faux_closures.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "faux_closures.fauxClosureAux",
+      "kind": "skProc",
+      "modulePath": "stew/faux_closures.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "faux_closures.makeParam",
+      "kind": "skProc",
+      "modulePath": "stew/faux_closures.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "faux_closures.registerParamsInBody",
+      "kind": "skProc",
+      "modulePath": "stew/faux_closures.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "hashes.hashAllFields",
+      "kind": "skProc",
+      "modulePath": "stew/shims/hashes.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "importops.tryImport",
+      "kind": "skProc",
+      "modulePath": "stew/importops.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.blk",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.brew",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.chunks",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.clear",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.clone",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.covered",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.coveredImpl",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.decreasing",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.delete",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.deleteInlet",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.envelope",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.findInlet",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.ge",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.incPt",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.increasing",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.init",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.le",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.left",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.len",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.maxPt",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.maxSegmSize",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.merge",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.minPt",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.new",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.one",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.overlap",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.overlapOrLeftJoin",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.pp",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.reduce",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.right",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.say",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.sayImpl",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.scalarOne",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.scalarZero",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.total",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.transferImpl",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "interval_set.verify",
+      "kind": "skProc",
+      "modulePath": "stew/interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.basename",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.c_free",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.c_getenv",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.c_strerror",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.checkFileSize",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.checkPermissions",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.closeFile",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.closeHandle",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.createDirectoryW",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.createFileW",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.createPath",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.deleteFileW",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.dirname",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.fileAccessible",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.findClose",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.findFirstFileW",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.fixPath",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.flushFileBuffers",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.formatMessageW",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.fsync",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getCachePath",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getConfigPath",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getCurrentDir",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getCurrentDirectoryW",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getFileAttributes",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getFileInformationByHandle",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getFileInformationByHandleEx",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getFilePos",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getFileSize",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getHomePath",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getLastError",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getLongPathNameW",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getPathItems",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getPermissions",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getPermissionsSet",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getSpecialFolderPath",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getTempPath",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getTempPathW",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.getcwd",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.ioErrorMsg",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.ioLastError",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.isDir",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.isFile",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.localFree",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.lockFile",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.lockFileEx",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.makeInt64",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.makeUint32",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.normPathEnd",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.openFile",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.rawCreateDir",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.read",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.readAllBytes",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.readAllChars",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.readAllFile",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.readFile",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.removeDir",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.removeDirectoryW",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.removeFile",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.setEndOfFile",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.setFileAttributes",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.setFileInformationByHandle",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.setFilePointerEx",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.setFilePos",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.setPermissions",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.setUmask",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.shGetSpecialFolderPathW",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.splitDrive",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.splitPath",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.toInt",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.toLongPath",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.toPermissions",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.toString",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.truncate",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.unlockFile",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.unlockFileEx",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.updateFilePos",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.write",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "io2.writeFile",
+      "kind": "skProc",
+      "modulePath": "stew/io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.append",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.appendImpl",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.beforeLast",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.beforeLastKey",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.beforeLastKeyImpl",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.beforeLastValue",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.clear",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.del",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.delete",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.deleteImpl",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.eq",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.first",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.firstKey",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.firstKeyImpl",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.firstValue",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.hasKey",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.init",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.key",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.last",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.lastKey",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.lastKeyImpl",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.lastValue",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.len",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.lruAppend",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.lruFetch",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.lruUpdate",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.next",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.nextKey",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.nextKeyImpl",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.nextKeys",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.nextPairs",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.nextValues",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.noKeyError",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.pop",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.popImpl",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.popKey",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.popKeyImpl",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.popValue",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.prepend",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.prependImpl",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.prev",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.prevKey",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.prevKeyImpl",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.prevKeys",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.prevPairs",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.prevValues",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.push",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.replace",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.second",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.secondKey",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.secondKeyImpl",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.secondValue",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.shift",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.shiftImpl",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.shiftKey",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.shiftKeyImpl",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.shiftValue",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.toKeyedQueueResult",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "keyed_queue.unshift",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "kq_debug.dumpLinkedKeys",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue/kq_debug.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "kq_debug.verify",
+      "kind": "skProc",
+      "modulePath": "stew/keyed_queue/kq_debug.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "leb128.fromBytes",
+      "kind": "skProc",
+      "modulePath": "stew/leb128.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "leb128.items",
+      "kind": "skProc",
+      "modulePath": "stew/leb128.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "leb128.len",
+      "kind": "skProc",
+      "modulePath": "stew/leb128.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "leb128.maxLen",
+      "kind": "skProc",
+      "modulePath": "stew/leb128.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "leb128.read7",
+      "kind": "skProc",
+      "modulePath": "stew/leb128.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "leb128.scan",
+      "kind": "skProc",
+      "modulePath": "stew/leb128.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "leb128.toBytes",
+      "kind": "skProc",
+      "modulePath": "stew/leb128.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "leb128.toOpenArray",
+      "kind": "skProc",
+      "modulePath": "stew/leb128.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "leb128.write7",
+      "kind": "skProc",
+      "modulePath": "stew/leb128.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "lentutils.maybeLent",
+      "kind": "skProc",
+      "modulePath": "stew/lentutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.addToFile",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.baseTypes",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.collectFieldsFromRecList",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.collectFieldsInHierarchy",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.dumpMacroResults",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.field",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.findPragma",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.genExpr",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.genSimpleExpr",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.genStmtList",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.generator",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.getCustomPragmaFixed",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.getPragma",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.hasCustomPragmaFixed",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.hash",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.humaneTypeName",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.inspectType",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.isTuple",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.newLitFixed",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.payload",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.readPragma",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.recordFields",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.skipPragma",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.skipPtr",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.skipRef",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.storeMacroResult",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.typedParams",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.unpackArgs",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "macros.writeMacroResultsNow",
+      "kind": "skProc",
+      "modulePath": "stew/shims/macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "objects.anonConst",
+      "kind": "skProc",
+      "modulePath": "stew/objects.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "objects.baseType",
+      "kind": "skProc",
+      "modulePath": "stew/objects.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "objects.declval",
+      "kind": "skProc",
+      "modulePath": "stew/objects.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "objects.init",
+      "kind": "skProc",
+      "modulePath": "stew/objects.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "objects.isDefaultValue",
+      "kind": "skProc",
+      "modulePath": "stew/objects.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "objects.isZeroMemory",
+      "kind": "skProc",
+      "modulePath": "stew/objects.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "objects.len",
+      "kind": "skProc",
+      "modulePath": "stew/objects.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "objects.toArray",
+      "kind": "skProc",
+      "modulePath": "stew/objects.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "ptrops.baseAddr",
+      "kind": "skProc",
+      "modulePath": "stew/ptrops.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "ptrops.distance",
+      "kind": "skProc",
+      "modulePath": "stew/ptrops.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "ptrops.makeOpenArray",
+      "kind": "skProc",
+      "modulePath": "stew/ptrops.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "ptrops.makeUncheckedArray",
+      "kind": "skProc",
+      "modulePath": "stew/ptrops.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "ptrops.offset",
+      "kind": "skProc",
+      "modulePath": "stew/ptrops.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_delete.rbTreeDelete",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_delete.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_desc.cmp",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_desc.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_desc.colour",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_desc.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_desc.isRed",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_desc.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_desc.linkLeft",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_desc.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_desc.linkRight",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_desc.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_desc.mkc",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_desc.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_desc.newRbTreeRef",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_desc.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_desc.newWalkId",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_desc.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_desc.toDir",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_desc.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_find.rbTreeFindEq",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_find.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_find.rbTreeFindGe",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_find.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_find.rbTreeFindGt",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_find.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_find.rbTreeFindLe",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_find.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_find.rbTreeFindLt",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_find.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_flush.defaultClup",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_flush.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_flush.rbTreeFlush",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_flush.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_insert.insertNode",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_insert.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_insert.insertRoot",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_insert.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_insert.rbTreeInsert",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_insert.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_reset.rbTreeReset",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_reset.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_rotate.rbTreeRotateDouble",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_rotate.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_rotate.rbTreeRotateSingle",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_rotate.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_verify.blackChainLevelError",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_verify.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_verify.doError",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_verify.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_verify.linkBothCompError",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_verify.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_verify.linkLeftCompError",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_verify.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_verify.linkRightCompError",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_verify.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_verify.pp",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_verify.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_verify.rbTreeVerify",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_verify.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_verify.redNodeRedLinkBoth",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_verify.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_verify.redNodeRedLinkLeft",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_verify.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_verify.redNodeRedLinkRight",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_verify.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_verify.rootIsRed",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_verify.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_verify.subTreeVerify",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_verify.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_walk.newRbWalk",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_walk.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_walk.rbWalkCurrent",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_walk.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_walk.rbWalkDestroy",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_walk.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_walk.rbWalkDestroyAll",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_walk.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_walk.rbWalkFirst",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_walk.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_walk.rbWalkLast",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_walk.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_walk.rbWalkNext",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_walk.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_walk.rbWalkPrev",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_walk.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_walk.walkClearDirtyFlags",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_walk.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_walk.walkMove",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_walk.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "rbtree_walk.walkStart",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set/rbtree_walk.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sequninit.newSeqUninit",
+      "kind": "skProc",
+      "modulePath": "stew/shims/sequninit.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sequninit.setLenUninit",
+      "kind": "skProc",
+      "modulePath": "stew/shims/sequninit.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sequtils.findIt",
+      "kind": "skProc",
+      "modulePath": "stew/shims/sequtils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sequtils.unCheckedInc",
+      "kind": "skProc",
+      "modulePath": "stew/shims/sequtils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sequtils2.write",
+      "kind": "skProc",
+      "modulePath": "stew/sequtils2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sets.init",
+      "kind": "skProc",
+      "modulePath": "stew/shims/sets.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sets.keepItIf",
+      "kind": "skProc",
+      "modulePath": "stew/shims/sets.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.clear",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.delete",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.destroy",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.eq",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.findOrInsert",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.first",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.flush",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.ge",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.gt",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.init",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.insert",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.key",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.last",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.le",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.len",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.lt",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.move",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.next",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.prev",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.slstClup",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.slstCmp",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.slstLt",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.slstMkc",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.slstPr",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.this",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.toSortedSetResult",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "sorted_set.verify",
+      "kind": "skProc",
+      "modulePath": "stew/sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "stackarrays.allocStackArray",
+      "kind": "skProc",
+      "modulePath": "stew/ranges/stackarrays.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "stackarrays.allocStackArrayAux",
+      "kind": "skProc",
+      "modulePath": "stew/ranges/stackarrays.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "stackarrays.allocStackArrayNoInit",
+      "kind": "skProc",
+      "modulePath": "stew/ranges/stackarrays.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "stackarrays.alloca",
+      "kind": "skProc",
+      "modulePath": "stew/ranges/stackarrays.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "stackarrays.allocaAux",
+      "kind": "skProc",
+      "modulePath": "stew/ranges/stackarrays.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "stackarrays.getBuffer",
+      "kind": "skProc",
+      "modulePath": "stew/ranges/stackarrays.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "stackarrays.high",
+      "kind": "skProc",
+      "modulePath": "stew/ranges/stackarrays.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "stackarrays.items",
+      "kind": "skProc",
+      "modulePath": "stew/ranges/stackarrays.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "stackarrays.len",
+      "kind": "skProc",
+      "modulePath": "stew/ranges/stackarrays.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "stackarrays.low",
+      "kind": "skProc",
+      "modulePath": "stew/ranges/stackarrays.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "stackarrays.mitems",
+      "kind": "skProc",
+      "modulePath": "stew/ranges/stackarrays.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "stackarrays.mpairs",
+      "kind": "skProc",
+      "modulePath": "stew/ranges/stackarrays.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "stackarrays.pairs",
+      "kind": "skProc",
+      "modulePath": "stew/ranges/stackarrays.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "stackarrays.raiseOutOfRange",
+      "kind": "skProc",
+      "modulePath": "stew/ranges/stackarrays.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "stackarrays.raiseRangeError",
+      "kind": "skProc",
+      "modulePath": "stew/ranges/stackarrays.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "stackarrays.toOpenArray",
+      "kind": "skProc",
+      "modulePath": "stew/ranges/stackarrays.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "staticfor.inspect",
+      "kind": "skProc",
+      "modulePath": "stew/staticfor.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "staticfor.replaceNodes",
+      "kind": "skProc",
+      "modulePath": "stew/staticfor.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "staticfor.staticFor",
+      "kind": "skProc",
+      "modulePath": "stew/staticfor.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "strformat.formatFloat",
+      "kind": "skProc",
+      "modulePath": "stew/shims/strformat.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "strformat.formatInt",
+      "kind": "skProc",
+      "modulePath": "stew/shims/strformat.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "strformat.formatValue",
+      "kind": "skProc",
+      "modulePath": "stew/shims/strformat.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "strformat.mkDigit",
+      "kind": "skProc",
+      "modulePath": "stew/shims/strformat.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "strformat.testCompileTime",
+      "kind": "skProc",
+      "modulePath": "stew/shims/strformat.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "strformat.toFloatFormatMode",
+      "kind": "skProc",
+      "modulePath": "stew/shims/strformat.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "strformat.toRadix",
+      "kind": "skProc",
+      "modulePath": "stew/shims/strformat.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "strings.add",
+      "kind": "skProc",
+      "modulePath": "stew/strings.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "struninit.setLenUninit2",
+      "kind": "skProc",
+      "modulePath": "stew/shims/struninit.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "tables.init",
+      "kind": "skProc",
+      "modulePath": "stew/shims/tables.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "templateutils.evalTemplateParamOnce",
+      "kind": "skProc",
+      "modulePath": "stew/templateutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "templateutils.evalTemplateParamOnceImpl",
+      "kind": "skProc",
+      "modulePath": "stew/templateutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_arraybuf.f",
+      "kind": "skProc",
+      "modulePath": "tests/test_arraybuf.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_assign2.makeCopy",
+      "kind": "skProc",
+      "modulePath": "tests/test_assign2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_base10.testEdge",
+      "kind": "skProc",
+      "modulePath": "tests/test_base10.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_base10.testHigh",
+      "kind": "skProc",
+      "modulePath": "tests/test_base10.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_base10.testValues",
+      "kind": "skProc",
+      "modulePath": "tests/test_base10.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_base10.testVectors",
+      "kind": "skProc",
+      "modulePath": "tests/test_base10.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_base36.fromHex",
+      "kind": "skProc",
+      "modulePath": "tests/test_base36.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_base58.fromHex",
+      "kind": "skProc",
+      "modulePath": "tests/test_base58.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_base58.hexToBytes",
+      "kind": "skProc",
+      "modulePath": "tests/test_base58.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_bitops2.runtimeTest",
+      "kind": "skProc",
+      "modulePath": "tests/test_bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_bitops2.test",
+      "kind": "skProc",
+      "modulePath": "tests/test_bitops2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_byteutils.compilationTest",
+      "kind": "skProc",
+      "modulePath": "tests/test_byteutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_byteutils.copyView",
+      "kind": "skProc",
+      "modulePath": "tests/test_byteutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_byteutils.reject",
+      "kind": "skProc",
+      "modulePath": "tests/test_byteutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_endians2.test",
+      "kind": "skProc",
+      "modulePath": "tests/test_endians2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_faux_closures.main",
+      "kind": "skProc",
+      "modulePath": "tests/test_faux_closures.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_faux_closures.payload",
+      "kind": "skProc",
+      "modulePath": "tests/test_faux_closures.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_faux_closures.sendSignal",
+      "kind": "skProc",
+      "modulePath": "tests/test_faux_closures.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_faux_closures.spawnAndSend",
+      "kind": "skProc",
+      "modulePath": "tests/test_faux_closures.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_helper.lockFileFlags",
+      "kind": "skProc",
+      "modulePath": "tests/test_helper.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_interval_set.$",
+      "kind": "skProc",
+      "modulePath": "tests/test_interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_interval_set.checkBundle1",
+      "kind": "skProc",
+      "modulePath": "tests/test_interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_interval_set.checkBundle2",
+      "kind": "skProc",
+      "modulePath": "tests/test_interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_interval_set.checkBundle3",
+      "kind": "skProc",
+      "modulePath": "tests/test_interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_interval_set.checkBundle4",
+      "kind": "skProc",
+      "modulePath": "tests/test_interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_interval_set.checkBundle5",
+      "kind": "skProc",
+      "modulePath": "tests/test_interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_interval_set.covered",
+      "kind": "skProc",
+      "modulePath": "tests/test_interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_interval_set.delete",
+      "kind": "skProc",
+      "modulePath": "tests/test_interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_interval_set.envelope",
+      "kind": "skProc",
+      "modulePath": "tests/test_interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_interval_set.ge",
+      "kind": "skProc",
+      "modulePath": "tests/test_interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_interval_set.high",
+      "kind": "skProc",
+      "modulePath": "tests/test_interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_interval_set.iv",
+      "kind": "skProc",
+      "modulePath": "tests/test_interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_interval_set.le",
+      "kind": "skProc",
+      "modulePath": "tests/test_interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_interval_set.low",
+      "kind": "skProc",
+      "modulePath": "tests/test_interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_interval_set.merge",
+      "kind": "skProc",
+      "modulePath": "tests/test_interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_interval_set.reduce",
+      "kind": "skProc",
+      "modulePath": "tests/test_interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_interval_set.to",
+      "kind": "skProc",
+      "modulePath": "tests/test_interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_interval_set.truncate",
+      "kind": "skProc",
+      "modulePath": "tests/test_interval_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_io2.createLockFile",
+      "kind": "skProc",
+      "modulePath": "tests/test_io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_io2.lockTest",
+      "kind": "skProc",
+      "modulePath": "tests/test_io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_io2.performTest",
+      "kind": "skProc",
+      "modulePath": "tests/test_io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_io2.removeLockFile",
+      "kind": "skProc",
+      "modulePath": "tests/test_io2.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_keyed_queue.$",
+      "kind": "skProc",
+      "modulePath": "tests/test_keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_keyed_queue.addOrFlushGroupwise",
+      "kind": "skProc",
+      "modulePath": "tests/test_keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_keyed_queue.compileGenericFunctions",
+      "kind": "skProc",
+      "modulePath": "tests/test_keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_keyed_queue.fromKey",
+      "kind": "skProc",
+      "modulePath": "tests/test_keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_keyed_queue.fromValue",
+      "kind": "skProc",
+      "modulePath": "tests/test_keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_keyed_queue.lruValue",
+      "kind": "skProc",
+      "modulePath": "tests/test_keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_keyed_queue.say",
+      "kind": "skProc",
+      "modulePath": "tests/test_keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_keyed_queue.toKey",
+      "kind": "skProc",
+      "modulePath": "tests/test_keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_keyed_queue.toLruCache",
+      "kind": "skProc",
+      "modulePath": "tests/test_keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_keyed_queue.toQueue",
+      "kind": "skProc",
+      "modulePath": "tests/test_keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_keyed_queue.toUnique",
+      "kind": "skProc",
+      "modulePath": "tests/test_keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_keyed_queue.toValue",
+      "kind": "skProc",
+      "modulePath": "tests/test_keyed_queue.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_leb128.roundtripTest",
+      "kind": "skProc",
+      "modulePath": "tests/test_leb128.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_leb128.testSome",
+      "kind": "skProc",
+      "modulePath": "tests/test_leb128.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_lentutils.lenter",
+      "kind": "skProc",
+      "modulePath": "tests/test_lentutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_macros.getFieldsLists",
+      "kind": "skProc",
+      "modulePath": "tests/test_macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_macros.one",
+      "kind": "skProc",
+      "modulePath": "tests/test_macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_macros.two",
+      "kind": "skProc",
+      "modulePath": "tests/test_macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_macros.unknown",
+      "kind": "skProc",
+      "modulePath": "tests/test_macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_macros.zero",
+      "kind": "skProc",
+      "modulePath": "tests/test_macros.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_objects.f",
+      "kind": "skProc",
+      "modulePath": "tests/test_objects.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_objects.foo",
+      "kind": "skProc",
+      "modulePath": "tests/test_objects.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_objects.isZeroAndDefault",
+      "kind": "skProc",
+      "modulePath": "tests/test_objects.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_ptrops.takesVar",
+      "kind": "skProc",
+      "modulePath": "tests/test_ptrops.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_sorted_set.fwdItems",
+      "kind": "skProc",
+      "modulePath": "tests/test_sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_sorted_set.fwdWalk",
+      "kind": "skProc",
+      "modulePath": "tests/test_sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_sorted_set.insertKeyListItems",
+      "kind": "skProc",
+      "modulePath": "tests/test_sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_sorted_set.revItems",
+      "kind": "skProc",
+      "modulePath": "tests/test_sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_sorted_set.revWalk",
+      "kind": "skProc",
+      "modulePath": "tests/test_sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_sorted_set.sortedSetRunner",
+      "kind": "skProc",
+      "modulePath": "tests/test_sorted_set.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_strformat.x",
+      "kind": "skProc",
+      "modulePath": "tests/test_strformat.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_templateutils.accessSeq",
+      "kind": "skProc",
+      "modulePath": "tests/test_templateutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_templateutils.evalManyTimes",
+      "kind": "skProc",
+      "modulePath": "tests/test_templateutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_templateutils.expensiveComputation",
+      "kind": "skProc",
+      "modulePath": "tests/test_templateutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_templateutils.reject",
+      "kind": "skProc",
+      "modulePath": "tests/test_templateutils.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "test_winacl.performTest",
+      "kind": "skProc",
+      "modulePath": "tests/test_winacl.nim",
+      "visibility": "public"
+    },
+    {
+      "qualifiedName": "tstackarrays.fun",
+      "kind": "skProc",
+      "modulePath": "tests/ranges/tstackarrays.nim",
+      "visibility": "public"
+    }
+  ],
+  "edges": []
+}

@@ -1,0 +1,8 @@
+{
+  "nimType": "Natural",
+  "leanType": "Nat",
+  "smtSort": "Int",
+  "mappingProofObligation": "nim_lean_Natural_iso",
+  "verified": false,
+  "sourceHash": ""
+}

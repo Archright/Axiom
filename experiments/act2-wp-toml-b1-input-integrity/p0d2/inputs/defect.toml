@@ -1,0 +1,3 @@
+# P0-D2 case 2: D2-DEFECT INPUT - \xHH escapes (TomlHexEscape active at pin 73529768)
+agent-string = "nimbus\x80"
+allowed-origins = ["http://localhost:8080\x80"]

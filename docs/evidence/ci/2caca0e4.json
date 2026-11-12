@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "commitSha": "2caca0e433824e5f4c07bc5316abbe4232d1d4e9",
+  "branch": "main",
+  "checkedAt": "2026-07-08T01:00:33Z",
+  "overallStatus": "failure",
+  "jobs": [
+    {
+      "name": "setup - d4c640af",
+      "status": "failure",
+      "conclusion": "failure",
+      "durationSec": 13,
+      "detailsUrl": "https://github.com/Archright/Axiom/runs/85763951691"
+    }
+  ],
+  "failureReason": "",
+  "consecutiveFailures": 0
+}

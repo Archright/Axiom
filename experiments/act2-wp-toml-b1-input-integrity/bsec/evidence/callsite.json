@@ -1,0 +1,196 @@
+{
+  "experiment": "act2-wp-toml-b1-input-integrity/bsec call-site evidence",
+  "generated": "2026-10-11",
+  "subject": {
+    "repo": "https://github.com/status-im/nim-toml-serialization",
+    "clone_head": "4aa8e2223649fc0837c490a4acfca7b8b1e756f9",
+    "upstream_head_confirmed": true,
+    "byte_clean_after": true,
+    "version_string_at_head": "0.2.18",
+    "version_string_at_b5b387e6": "0.2.18",
+    "commits_b5b387e6_to_head_all_reporting_0_2_18": 17,
+    "flavor_mechanism_commit": "c838ca01e71d1cb6d0ff182cbc571ab4ea3ee16f",
+    "toml_v110_flags_commit": "73529768ced17720f78fb5b57191e863f8d8a9c1",
+    "upstream_tags": {
+      "v0.2.14": "fea85b27f0badcf617033ca1bc05444b5fd8aa7a",
+      "v0.2.16": "c8dc4527cc7f27b67f41402451a757668819127c",
+      "v0.2.18": "b5b387e6fb2a7cc75d54a269b07cc6218361bd46"
+    },
+    "rule": "dependency identity = commit SHA / blob hashes, never the version string"
+  },
+  "build_environment": {
+    "nim": "2.2.10",
+    "nim_git_hash": "bfeb3146d1638b39f69007a4ae5a23e23ae4e5ef",
+    "nim_path": "<user-home>/.choosenim/toolchains/nim-2.2.10/bin/nim",
+    "nimble": "v0.22.2",
+    "cc": "gcc 13.3.0",
+    "os": "Linux 6.17.0-42-generic x86_64",
+    "mm": "orc",
+    "flags": ["--skipUserCfg", "--skipParentCfg", "--skipProjCfg"],
+    "cwd": "/tmp (neutral; Axiom3 nimble.lock would disable nimble discovery)",
+    "binaries_dir": "/tmp/bsec_callsite/"
+  },
+  "consumers": [
+    {
+      "name": "nph",
+      "repo": "https://github.com/arnetheduck/nph",
+      "commit_observed": "2cacf6cc28116e4046e0b67a13545af5c4e756bd",
+      "commit_date": "2026-02-16",
+      "is_upstream_head": true,
+      "lockfile": null,
+      "requires": "toml_serialization >= 0.2.18 & < 0.3.0",
+      "resolved_dependency": {
+        "package": "toml_serialization",
+        "commit": "b5b387e6fb2a7cc75d54a269b07cc6218361bd46",
+        "evidence": [
+          "nimbledeps/pkgs2/toml_serialization-0.2.18-76ae1c2a.../nimblemeta.json vcsRevision",
+          "11/11 installed files byte-identical to git blobs at b5b387e6",
+          "sandbox nimble install (this run) resolves to tag v0.2.18 = b5b387e6"
+        ],
+        "blob_hashes": {
+          "toml_serialization.nim": "f2643bb5ac9f1bcaa6598f4cecf91f76f217387f",
+          "toml_serialization/lexer.nim": "9c337efc6ac5a052348c7fbe0f5510672f7563af",
+          "toml_serialization/reader.nim": "bf3647796da2504d1f7fb81306e904728c183e3a",
+          "toml_serialization/writer.nim": "ab3465ebfb1a97feb66767404a290098e3bca95b",
+          "toml_serialization/types.nim": "8cfae164b93d94c0f684e3c474b12e001f47d5e9",
+          "toml_serialization/value_ops.nim": "915c19151f9c9b490b9d74be1712ee7d9149596a",
+          "toml_serialization/private/utils.nim": "ab1d4c55bef324dad99741037943da5a6b2e6e47",
+          "toml_serialization/private/array_reader.nim": "4991903555bd2dbb81ac1472a77e599e8302d813",
+          "toml_serialization/std/net.nim": "cc3dfa22a85a6edd0cf25cf8ce30e59a5b67ba00",
+          "toml_serialization/std/uri.nim": "d85d5aeed0822fa6d9e25984a2f4d27b3e00393f",
+          "toml_serialization.nimble": "7ac7a0f8ba30916759c946c2ca280661a466f8c1"
+        },
+        "format_nim_exists": false,
+        "transitive_deps": {
+          "serialization": "0.5.4 @ b5473564e80a4908cf6c5a038e4c4a6ca7de2223",
+          "faststreams": "0.5.2 @ 059bc2f52546ac14b583639c33372c14b1d46fa3",
+          "stew": "0.5.0 @ 4382b18f04b3c43c8409bfcd6b62063773b2bbaa"
+        }
+      },
+      "call_form": {
+        "location": "src/nph.nim:103",
+        "source_file_blob": "cabcd5c830daa0a5a853a8a6b151066720b214b9",
+        "code": "result = Toml.loadFile(configFile, NphConfig)",
+        "target_type": "NphConfig (typed object, serializedFieldName annotations)",
+        "value_tree": false,
+        "keyed": false,
+        "flags_passed": "none (TomlReader.init default flags = {})",
+        "flavor_symbol": "Toml (bare; serializationFormat-generated; predates createTomlFlavor)",
+        "config_file": ".nph.toml (default, src/nph.nim:320)",
+        "error_handling": "catches CatchableError -> stderr warning + continue with defaults (src/nph.nim:104-106)"
+      },
+      "value_ops_import_status": "NOT imported anywhere in nph; NOT re-exported by toml_serialization.nim@b5b387e6; absent from nph's compiled closure",
+      "toml_hex_escape": {
+        "verdict": "NO",
+        "static_evidence": {
+          "reader_init_default_flags": "{} (reader.nim@b5b387e6:42-52)",
+          "lexer_init_default_flags": "{} (lexer.nim:150)",
+          "gate": "lexer.nim:391-392 raises 'invalid hex escape, not supported by standard, please use `TomlHexEscape`' when flag absent",
+          "raw_byte_insert": "lexer.nim:400 res.add char(code), unreachable behind gate",
+          "consumer_flags": "none"
+        },
+        "dynamic_evidence": {
+          "probe": "probes/probe_nph_profile.nim",
+          "stdout": "raw/probe_nph_profile.stdout.log",
+          "results": {
+            "control": "OK",
+            "hex_45": "REJECTED (gate message)",
+            "hex_80": "REJECTED (gate message)"
+          }
+        }
+      },
+      "b_sec_03_reachable": false,
+      "stability_qualifier": "no lockfile: resolution is snapshot-in-time; re-evaluate if a new in-range tag (>=0.2.18 & <0.3.0) appears with different behavior"
+    },
+    {
+      "name": "ImThemes",
+      "repo": "https://github.com/Patitotective/ImThemes",
+      "commit_observed": "d67592d4746031f47e962176736a976dcc040dc9",
+      "commit_date": "2026-06-28",
+      "is_upstream_head": true,
+      "lockfile": {
+        "path": "nimble.lock",
+        "blob": "2bc237a6f1145fbe308e48fc37ca547281dd077a",
+        "format": "v2"
+      },
+      "requires": "toml_serialization ^= 0.2.0",
+      "resolved_dependency": {
+        "package": "toml_serialization",
+        "commit": "b5b387e6fb2a7cc75d54a269b07cc6218361bd46",
+        "version_in_lock": "0.2.18",
+        "content_checksum_sha1": "76ae1c2af5dd092849b41750ff29217980dc9ca3",
+        "blob_hashes": "see consumers[0].resolved_dependency.blob_hashes (same commit)",
+        "format_nim_exists": false,
+        "transitive_deps": {
+          "niprefs": "0.3.5 @ 30f522ac1888ae2930e833ab6c5d954baf3e8702 (sole toml_serialization reverse-dep in lock; sha1 370855d00a8460857d2c67c23d2d6cb90be9423a)",
+          "serialization": "0.4.9 @ b5193007a49639b21b2b80cd8ef8cbe0df6b0e48",
+          "faststreams": "0.5.0 @ ce27581a3e881f782f482cb66dc5b07a02bd615e",
+          "stew": "0.4.1 @ e5740014961438610d336cd81706582dbf2c96f0"
+        }
+      },
+      "call_form": {
+        "location": "src/browseview.nim:193",
+        "source_file_blob": "3d990e0636aff6b42c699660aaa631311e5bb0b9",
+        "code": "app.feed = Toml.loadFile(app.downloader.getPath(\"feed\").get(), TomlValueRef)[\"themes\"].getTables()",
+        "target_type": "TomlValueRef (value tree, no typed object)",
+        "value_tree": true,
+        "keyed": false,
+        "flags_passed": "none (TomlReader.init default flags = {})",
+        "flavor_symbol": "Toml (bare; reached via niprefs re-export, src/niprefs.nim:140)"
+      },
+      "value_ops_import_status": "ImThemes itself: no import. Compiled into closure via niprefs/nodeutils (nodeutils.nim:4); nodeutils re-export strips len/`[]`/contains (nodeutils.nim:6)",
+      "two_arg_accessor_node_name_T": {
+        "defined_in_value_ops_at_b5b387e6": ["line 84: `[]`(node: TomlValueRef, name: string, T: type): T", "line 95: `[]`(node: TomlValueRef, index: int, T: type): T"],
+        "reachable_by_imthemes": false,
+        "reasons": [
+          "value_ops not imported by any toml_serialization library module at b5b387e6",
+          "niprefs/nodeutils strips `[]` from its value_ops re-export (nodeutils.nim:6)",
+          "nodeutils defines only single-arg `[]`: (node, name: string) at :166 and (node, index: int) at :170",
+          "ImThemes sources contain zero two-arg accessor calls (grep 0 hits)"
+        ]
+      },
+      "toml_hex_escape": {
+        "verdict": "NO",
+        "static_evidence": {
+          "same_commit_as_nph": true,
+          "reader_init_default_flags": "{} (reader.nim@b5b387e6:50-52 two-arg overload)",
+          "gate": "lexer.nim:391-392 raises when flag absent",
+          "consumer_flags": "none"
+        },
+        "dynamic_evidence": {
+          "probe": "probes/probe_imthemes_profile.nim",
+          "stdout": "raw/probe_imthemes_profile.stdout.log",
+          "dep_consumption_proof": "raw/strace_imthemes_profile.log (locked revisions only; pkgs2 0.5.x not consumed)",
+          "results": {
+            "control": "OK",
+            "hex_45": "REJECTED (gate message)",
+            "hex_80": "REJECTED (gate message)"
+          }
+        }
+      },
+      "b_sec_03_reachable": false,
+      "stability_qualifier": "lock-pinned; stable by construction"
+    }
+  ],
+  "counterfactual_head_4aa8e22": {
+    "resolved_by_nimble": false,
+    "reason": "untagged; nimble resolves via tags",
+    "format_nim_exists": true,
+    "reader_flag_merge": "reader.nim:62-64 flags + flavorRuntimeFlags(Flavor) = Toml_v110_Flags incl TomlHexEscape, always merged",
+    "toml_hex_escape": {
+      "verdict": "YES",
+      "dynamic_evidence": {
+        "probe": "probes/probe_head_profile.nim",
+        "stdout": "raw/probe_head_profile.stdout.log",
+        "results": {
+          "typed_hex_80": "OK, decoded bytes=[80] (lone continuation byte, invalid UTF-8)",
+          "typed_hex_45": "OK, decoded bytes=[4A6F7345]",
+          "valuetree_hex_E9": "OK, decoded bytes=[4A6F73E9] (invalid UTF-8; correct would be 4A6F73C3A9)",
+          "valuetree_hex_80": "OK, decoded bytes=[80]"
+        }
+      }
+    },
+    "b_sec_03_reachable": true
+  },
+  "scope_note": "reachability only; no severity assessment; no issue filed"
+}

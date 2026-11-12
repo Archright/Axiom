@@ -1,0 +1,50 @@
+{
+  "base_changeSetDigest": "4776728dc8e6b2adfa98dae12382d774c9094443c68ae5365939f5d8112cf0a4",
+  "C06-C10": [
+    {
+      "case": "C06",
+      "status": "VALID",
+      "selectedCount": 0,
+      "digestDiffers": "950062a1",
+      "units": [],
+      "classification": "OBSERVED-ZERO",
+      "classificationReason": "constants.nim \uc2ec\ubcfc\uc740 universe \ubc16 \u2014 constant \ud074\ub798\uc2a4\ub294 \ucee4\ub110\uc5d0\uc11c \uc120\ud0dd \ubc18\uc751 \ud655\uc778 \ud544\uc694(negative)"
+    },
+    {
+      "case": "C07",
+      "status": "VALID",
+      "selectedCount": 0,
+      "digestDiffers": "950062a1",
+      "units": [],
+      "classification": "UNCLASSIFIED-pending-reexecution",
+      "classificationReason": "fileSymbols\uc5d0 \uc788\uace0 universe \uc2ec\ubcfc 2\uac1c\uc778\ub370 selected=0 \u2014 \ubba4\ud14c\uc774\uc158 \uc801\uc6a9 \uc5ec\ubd80 \ubbf8\ud655\uc778"
+    },
+    {
+      "case": "C08",
+      "status": "VALID",
+      "selectedCount": 0,
+      "digestDiffers": "950062a1",
+      "units": [],
+      "classification": "UNOBSERVABLE",
+      "classificationReason": "src/generated \ub0b4 \uc0dd\uc131 \ud30c\uc77c\uc740 \uc2ec\ubcfc \uc2a4\uce94(fileSymbols) \ub300\uc0c1\uc774 \uc544\ub2d8"
+    },
+    {
+      "case": "C09",
+      "status": "VALID",
+      "selectedCount": 0,
+      "digestDiffers": "950062a1",
+      "units": [],
+      "classification": "UNCLASSIFIED-pending-reexecution",
+      "classificationReason": "universe \uc2ec\ubcfc 4\uac1c \uc788\ub294 \ud30c\uc77c\uc778\ub370 selected=0 \u2014 \ubba4\ud14c\uc774\uc158 \uc801\uc6a9 \uc5ec\ubd80 \ubbf8\ud655\uc778"
+    },
+    {
+      "case": "C10",
+      "status": "VALID",
+      "selectedCount": 0,
+      "digestDiffers": "950062a1",
+      "units": [],
+      "classification": "UNCLASSIFIED-pending-reexecution",
+      "classificationReason": "universe \uc2ec\ubcfc 2\uac1c \uc788\ub294 \ud30c\uc77c\uc778\ub370 selected=0 \u2014 \ubba4\ud14c\uc774\uc158 \uc801\uc6a9 \uc5ec\ubd80 \ubbf8\ud655\uc778"
+    }
+  ]
+}

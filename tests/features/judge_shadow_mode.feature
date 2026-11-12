@@ -1,0 +1,21 @@
+Feature: Judge Shadow Mode — shadow mode for judge validation
+  As the Axiom integrity engine,
+  I want shadow mode for the judge persona that produces parallel verdicts without affecting the real pipeline,
+  So that judge logic changes can be validated in production before authoritative deployment.
+
+  Background:
+    Given the judge shadow mode module is initialized
+
+  @spec-density @guard-ring
+  Scenario: Module compiles without errors
+    Given the module source is available
+    When the module is compiled
+    Then it compiles without errors
+    And all exported procs have proper effect annotations
+
+  @spec-density @guard-ring
+  Scenario: Core functionality works correctly
+    Given valid input for the module
+    When the core function is invoked
+    Then it produces the expected output
+    And no unhandled exceptions are raised

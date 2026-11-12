@@ -1,0 +1,120 @@
+# Decision Binding Grandfathering Waivers
+# Files listed here are exempt from axiomDecision pragma requirements.
+# Format: [[grandfather]] with file, reason, expires
+
+[[grandfather]]
+file = "src/core/trusted/architecture_invariants.nim"
+reason = "Pre-existing core invariants predate decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/gate/static_gate_scanner.nim"
+reason = "Pre-existing gate scanner predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/gate/runners/debt_scan_gate.nim"
+reason = "Pre-existing debt gate predates decision-binding policy"
+expires = "2026-12-31"
+
+# Top 20 files by axiomDecision violation count (auto-waived)
+
+[[grandfather]]
+file = "src/verification/solver/z3_pool.nim"
+reason = "Highest violation count (17) — core Z3 solver pool predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/core/vault/vault_factory.nim"
+reason = "High violation count (13) — vault factory predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/core/io/io_utils.nim"
+reason = "High violation count (12) — IO utility helpers predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/core/encoding/smt_to_lean/private/parser.nim"
+reason = "High violation count (12) — SMT-to-Lean parser predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/core/schema/task_schema.nim"
+reason = "High violation count (11) — task schema predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/core/interfaces/git_operations.nim"
+reason = "High violation count (11) — Git operations interface predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/gate/manifest_parser.nim"
+reason = "High violation count (10) — manifest parser predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/core/types/results.nim"
+reason = "Violation count (9) — core Result/Option types predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/core/gateway/gateway_json.nim"
+reason = "Violation count (9) — gateway JSON serialization predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/core/session/session_parser_validators.nim"
+reason = "Violation count (8) — session validators predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/core/proof/proof_universe_lock.nim"
+reason = "Violation count (8) — proof universe lock predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/core/json/json_utils.nim"
+reason = "Violation count (7) — JSON utilities predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/core/json/json_scan_parse.nim"
+reason = "Violation count (7) — JSON scan/parse predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/verification/solver/wp_simplifier.nim"
+reason = "Violation count (6) — weakest precondition simplifier predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/verification/proof_state_projection.nim"
+reason = "Violation count (6) — proof state projection predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/verification/ast_extractor.nim"
+reason = "Violation count (6) — AST extractor predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/sieve/sieve_rules.nim"
+reason = "Violation count (6) — sieve rules predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/personas/legislator.nim"
+reason = "Violation count (6) — legislator persona predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/engine/dag_executor.nim"
+reason = "Violation count (6) — DAG executor predates decision-binding policy"
+expires = "2026-12-31"
+
+[[grandfather]]
+file = "src/core/verifier/legislator.nim"
+reason = "Violation count (6) — verifier legislator predates decision-binding policy"
+expires = "2026-12-31"

@@ -1,0 +1,451 @@
+[
+  {
+    "schemaVersion": 1,
+    "invariantId": "R1",
+    "collection": {
+      "collector": "tests/readiness/fixtures/synthetic_bundle.json",
+      "method": "synthetic",
+      "generatedAt": "2026-08-01T00:00:00Z",
+      "freshUntil": "2027-08-01T00:00:00Z"
+    },
+    "observations": [
+      {
+        "key": "documentedCommand",
+        "value": ["ax prove", "ax report"],
+        "scope": "doc",
+        "subject": "README.md"
+      },
+      {
+        "key": "commandExists",
+        "value": true,
+        "scope": "surface",
+        "subject": "ax prove"
+      },
+      {
+        "key": "commandExists",
+        "value": true,
+        "scope": "surface",
+        "subject": "ax report"
+      }
+    ],
+    "sources": [
+      {
+        "file": "tests/readiness/fixtures/synthetic_bundle.json",
+        "lines": "1",
+        "symbol": "R1",
+        "sha256": "sha256:synthetic",
+        "repoHead": "synthetic"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "invariantId": "R2",
+    "collection": {
+      "collector": "tests/readiness/fixtures/synthetic_bundle.json",
+      "method": "synthetic",
+      "generatedAt": "2026-08-01T00:00:00Z",
+      "freshUntil": "2027-08-01T00:00:00Z"
+    },
+    "observations": [
+      {
+        "key": "z3VsDualDistinguishable",
+        "value": true,
+        "scope": "",
+        "subject": ""
+      },
+      {
+        "key": "verifiedSemanticsDocumented",
+        "value": true,
+        "scope": "",
+        "subject": ""
+      }
+    ],
+    "sources": [
+      {
+        "file": "tests/readiness/fixtures/synthetic_bundle.json",
+        "lines": "1",
+        "symbol": "R2",
+        "sha256": "sha256:synthetic",
+        "repoHead": "synthetic"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "invariantId": "R3",
+    "collection": {
+      "collector": "tests/readiness/fixtures/synthetic_bundle.json",
+      "method": "synthetic",
+      "generatedAt": "2026-08-01T00:00:00Z",
+      "freshUntil": "2027-08-01T00:00:00Z"
+    },
+    "observations": [
+      {
+        "key": "canonicalProjectionHashEqual",
+        "value": true,
+        "scope": "",
+        "subject": ""
+      },
+      {
+        "key": "canonicalInputHash",
+        "value": "sha256:synthetic-input",
+        "scope": "",
+        "subject": ""
+      },
+      {
+        "key": "configHash",
+        "value": "sha256:synthetic-config",
+        "scope": "",
+        "subject": ""
+      },
+      {
+        "key": "solverIdentity",
+        "value": "z3 4.13.3",
+        "scope": "",
+        "subject": ""
+      },
+      {
+        "key": "cachePolicy",
+        "value": "cold-set-scoped",
+        "scope": "",
+        "subject": ""
+      },
+      {
+        "key": "canonicalExecutionFingerprint",
+        "value": "sha256:synthetic-fingerprint",
+        "scope": "",
+        "subject": ""
+      },
+      {
+        "key": "subjectRunProjectionHashEqual",
+        "value": true,
+        "scope": "",
+        "subject": ""
+      },
+      {
+        "key": "pathIndependentProjectionEqual",
+        "value": true,
+        "scope": "",
+        "subject": ""
+      },
+      {
+        "key": "environmentControlled",
+        "value": true,
+        "scope": "",
+        "subject": ""
+      }
+    ],
+    "sources": [
+      {
+        "file": "tests/readiness/fixtures/synthetic_bundle.json",
+        "lines": "1",
+        "symbol": "R3",
+        "sha256": "sha256:synthetic",
+        "repoHead": "synthetic"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "invariantId": "R4",
+    "collection": {
+      "collector": "tests/readiness/fixtures/synthetic_bundle.json",
+      "method": "synthetic",
+      "generatedAt": "2026-08-01T00:00:00Z",
+      "freshUntil": "2027-08-01T00:00:00Z"
+    },
+    "observations": [
+      {
+        "key": "certFieldPresent",
+        "value": true,
+        "scope": "",
+        "subject": "claim"
+      },
+      {
+        "key": "certFieldPresent",
+        "value": true,
+        "scope": "",
+        "subject": "attestation"
+      },
+      {
+        "key": "certFieldPresent",
+        "value": true,
+        "scope": "",
+        "subject": "inputHash"
+      },
+      {
+        "key": "certFieldPresent",
+        "value": true,
+        "scope": "",
+        "subject": "provenance"
+      },
+      {
+        "key": "certFieldPresent",
+        "value": true,
+        "scope": "",
+        "subject": "toolchainIdentity"
+      },
+      {
+        "key": "certFieldPresent",
+        "value": true,
+        "scope": "",
+        "subject": "solverInvocation"
+      },
+      {
+        "key": "certFieldPresent",
+        "value": true,
+        "scope": "",
+        "subject": "solverInputDigest"
+      },
+      {
+        "key": "certFieldPresent",
+        "value": true,
+        "scope": "",
+        "subject": "solverResultDigest"
+      },
+      {
+        "key": "provenanceReconstructible",
+        "value": true,
+        "scope": "",
+        "subject": ""
+      }
+    ],
+    "sources": [
+      {
+        "file": "tests/readiness/fixtures/synthetic_bundle.json",
+        "lines": "1",
+        "symbol": "R4",
+        "sha256": "sha256:synthetic",
+        "repoHead": "synthetic"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "invariantId": "R5",
+    "collection": {
+      "collector": "tests/readiness/fixtures/synthetic_bundle.json",
+      "method": "synthetic",
+      "generatedAt": "2026-08-01T00:00:00Z",
+      "freshUntil": "2027-08-01T00:00:00Z"
+    },
+    "observations": [
+      {
+        "key": "commandExists",
+        "value": true,
+        "scope": "surface",
+        "subject": "ax prove"
+      },
+      {
+        "key": "helpSurface",
+        "value": true,
+        "scope": "",
+        "subject": "ax prove"
+      },
+      {
+        "key": "successExitCode",
+        "value": 0,
+        "scope": "",
+        "subject": "ax prove"
+      },
+      {
+        "key": "verificationFailureExitCode",
+        "value": 1,
+        "scope": "",
+        "subject": "ax prove"
+      },
+      {
+        "key": "invalidInputExitCode",
+        "value": 3,
+        "scope": "",
+        "subject": "ax prove"
+      },
+      {
+        "key": "internalErrorExitCode",
+        "value": 2,
+        "scope": "",
+        "subject": "ax prove"
+      },
+      {
+        "key": "commandExists",
+        "value": true,
+        "scope": "surface",
+        "subject": "ax report"
+      },
+      {
+        "key": "helpSurface",
+        "value": true,
+        "scope": "",
+        "subject": "ax report"
+      },
+      {
+        "key": "successExitCode",
+        "value": 0,
+        "scope": "",
+        "subject": "ax report"
+      },
+      {
+        "key": "verificationFailureExitCode",
+        "value": 1,
+        "scope": "",
+        "subject": "ax report"
+      },
+      {
+        "key": "invalidInputExitCode",
+        "value": 3,
+        "scope": "",
+        "subject": "ax report"
+      },
+      {
+        "key": "internalErrorExitCode",
+        "value": 2,
+        "scope": "",
+        "subject": "ax report"
+      }
+    ],
+    "sources": [
+      {
+        "file": "tests/readiness/fixtures/synthetic_bundle.json",
+        "lines": "1",
+        "symbol": "R5",
+        "sha256": "sha256:synthetic",
+        "repoHead": "synthetic"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "invariantId": "R6",
+    "collection": {
+      "collector": "tests/readiness/fixtures/synthetic_bundle.json",
+      "method": "synthetic",
+      "generatedAt": "2026-08-01T00:00:00Z",
+      "freshUntil": "2027-08-01T00:00:00Z"
+    },
+    "observations": [
+      {
+        "key": "failureConvertsToSuccess",
+        "value": false,
+        "scope": "",
+        "subject": ""
+      },
+      {
+        "key": "exceptionSwallowed",
+        "value": false,
+        "scope": "",
+        "subject": ""
+      }
+    ],
+    "sources": [
+      {
+        "file": "tests/readiness/fixtures/synthetic_bundle.json",
+        "lines": "1",
+        "symbol": "R6",
+        "sha256": "sha256:synthetic",
+        "repoHead": "synthetic"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "invariantId": "R7",
+    "collection": {
+      "collector": "tests/readiness/fixtures/synthetic_bundle.json",
+      "method": "synthetic",
+      "generatedAt": "2026-08-01T00:00:00Z",
+      "freshUntil": "2027-08-01T00:00:00Z"
+    },
+    "observations": [
+      {
+        "key": "claimedScope",
+        "value": ["ax prove"],
+        "scope": "",
+        "subject": ""
+      },
+      {
+        "key": "verifiedEmitterScope",
+        "value": ["ax prove"],
+        "scope": "",
+        "subject": ""
+      },
+      {
+        "key": "measuredCoverage",
+        "value": 0.1,
+        "scope": "",
+        "subject": "vkd"
+      }
+    ],
+    "sources": [
+      {
+        "file": "tests/readiness/fixtures/synthetic_bundle.json",
+        "lines": "1",
+        "symbol": "R7",
+        "sha256": "sha256:synthetic",
+        "repoHead": "synthetic"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "invariantId": "R8",
+    "collection": {
+      "collector": "tests/readiness/fixtures/synthetic_bundle.json",
+      "method": "synthetic",
+      "generatedAt": "2026-08-01T00:00:00Z",
+      "freshUntil": "2027-08-01T00:00:00Z"
+    },
+    "observations": [
+      {
+        "key": "installFollowed",
+        "value": true,
+        "scope": "",
+        "subject": ""
+      },
+      {
+        "key": "manualStepsRequired",
+        "value": false,
+        "scope": "",
+        "subject": ""
+      },
+      {
+        "key": "cleanRunSucceeded",
+        "value": true,
+        "scope": "",
+        "subject": ""
+      },
+      {
+        "key": "documentedRunSteps",
+        "value": true,
+        "scope": "",
+        "subject": ""
+      }
+    ],
+    "commands": [
+      {
+        "cmd": "cargo fetch --locked",
+        "exitCode": 0,
+        "outputDigest": "sha256:synthetic-fetch"
+      },
+      {
+        "cmd": "cargo metadata --format-version=1 --locked",
+        "exitCode": 0,
+        "outputDigest": "sha256:synthetic-metadata"
+      },
+      {
+        "cmd": "cargo build --frozen",
+        "exitCode": 0,
+        "outputDigest": "sha256:synthetic-build"
+      }
+    ],
+    "sources": [
+      {
+        "file": "tests/readiness/fixtures/synthetic_bundle.json",
+        "lines": "1",
+        "symbol": "R8",
+        "sha256": "sha256:synthetic",
+        "repoHead": "synthetic"
+      }
+    ]
+  }
+]

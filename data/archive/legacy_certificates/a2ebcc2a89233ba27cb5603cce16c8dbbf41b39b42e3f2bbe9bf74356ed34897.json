@@ -1,0 +1,24 @@
+{
+  "modulePath": "src/core/crypto/hash_kernel.nim",
+  "functionName": "sha1HexToBytes",
+  "fingerprint": "9c96123777d58b7e3b2246c701f1673315d7389f4479271dad6f965e067864af",
+  "sourceHash": "180ab366b57ede256cd1ff993abef0a034d3c9ee916c4f7322d35f8f55b59d9f",
+  "trusted": true,
+  "status": "certLeanVerified",
+  "reason": "uap-lean-verified",
+  "kernel": false,
+  "solverStatus": "sat",
+  "winningStrategy": "lean-replay",
+  "solverMeta": {
+    "leanCompilerVerified": true,
+    "negativeTestResult": false,
+    "vacuityChecked": true,
+    "vacuityProven": false,
+    "solverVersion": "4.13.3",
+    "solverProvenance": "spHeuristic",
+    "z3Executed": true
+  },
+  "verificationTier": "lean-verified",
+  "leanProposition": "",
+  "irHash": "a2ebcc2a89233ba27cb5603cce16c8dbbf41b39b42e3f2bbe9bf74356ed34897"
+}

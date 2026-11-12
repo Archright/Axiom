@@ -1,0 +1,602 @@
+# Axiom Source-Available License 1.0
+
+**License Identifier:** `LicenseRef-Axiom-SAL-1.0`  
+**Project:** Axiom  
+**Initial Licensor:** Suhyok Yoon
+
+---
+
+# 1. Verification Usage Conditions
+
+## 1.1. Public Source Code — Free Verification
+
+Verification of Public Source Code is permitted without payment of any license fee under this License.
+
+This permission applies to both personal and commercial use, subject to compliance with all other provisions of this License.
+
+A Licensee may use Axiom to verify Public Source Code for commercial development, production, research, education, or any other lawful purpose without purchasing a Commercial Agreement.
+
+However, the permission to perform free Verification of Public Source Code does not include the right to provide a Competing Service, as defined in Section 2.
+
+## 1.2. Private Source Code — Commercial Agreement Required
+
+Verification of Private Source Code requires a valid Commercial Agreement.
+
+Unless the exception in Section 1.3 applies, a Licensee must not use the Covered Work to perform Verification of Private Source Code for commercial, organizational, production, or business purposes without an applicable Commercial Agreement.
+
+This requirement applies regardless of whether Verification is performed locally, on-premises, in a private cloud, or through a hosted environment.
+
+The applicable Commercial Agreement shall separately establish the permitted scope, terms, and fees for such Verification.
+
+For the avoidance of doubt, "commercial, organizational, production, or business purposes" includes Verification performed by or for a company, organization, or other legal entity in connection with its operations, including internal development, testing, and production, regardless of whether the results are shared outside that organization.
+
+## 1.3. Exception — Non-Commercial Personal Use
+
+An individual may use the Covered Work to verify Private Source Code without a Commercial Agreement if the use qualifies as Non-Commercial Personal Use.
+
+This exception is limited to the individual's own personal hobby, learning, research, and experimentation.
+
+This exception does not include:
+
+1. Verification performed for an employer or client.
+2. Verification performed as part of paid work.
+3. Verification performed on behalf of a company or organization.
+4. Provision of Verification as a paid or otherwise commercially compensated service.
+5. Use by or on behalf of a legal entity or organization.
+
+## 1.4. Mixed Verification
+
+If a single Verification execution includes both Public Source Code and Private Source Code within the same Verification Scope, that execution shall be treated as Verification of Private Source Code.
+
+Accordingly, a Commercial Agreement is required unless the execution qualifies for the exception in Section 1.3.
+
+A Licensee may perform separate Verification executions limited exclusively to Public Source Code without payment of a license fee.
+
+## 1.5. Verification Scope and Classification
+
+The classification of a Verification Target shall be determined at the time the relevant Verification execution begins, based on the actual source code included in its Verification Scope.
+
+The Verification Scope includes the source code and related dependencies that Axiom actually reads, loads, analyzes, or includes in its verification or proof obligations.
+
+The fact that some files, dependencies, or related repositories are publicly accessible does not, by itself, qualify the entire Verification Target as Public Source Code.
+
+The classification of source code as Public Source Code or Private Source Code shall be determined in accordance with Section 3.
+
+The following classification rules apply:
+
+1. The Verification Scope is determined by the source code actually included in the analysis, verification, or proof obligations of the execution, not by the entirety of the containing repository or project.
+2. Each item of source code in the Verification Scope is classified as Public Source Code or Private Source Code as of the time the Verification execution begins, in accordance with Section 3.5.
+3. If every item of source code in the Verification Scope is Public Source Code, the execution is Verification of Public Source Code.
+4. If any item of source code in the Verification Scope is Private Source Code, the execution is Verification of Private Source Code.
+5. The public availability of a library, dependency, or other source-code item does not cause any separate source-code item that depends on it, incorporates it, or is analyzed alongside it to qualify as Public Source Code. Each item of source code in the Verification Scope must independently satisfy the definition of Public Source Code in Section 3.5. The execution shall be classified in accordance with Sections 1.5.3 and 1.5.4.
+6. A Verification execution that includes any Private Source Code in its Verification Scope is treated as Verification of Private Source Code in its entirety, and the public portions of that execution may not be split off to characterize the execution as free; separate executions limited exclusively to Public Source Code are permitted without payment of a license fee.
+7. The licensee's choice to keep Verification results, reports, or evidence private does not restrict, condition, or qualify the permission to perform free Verification of Public Source Code under Section 1.1.
+
+## 1.6. Historical Public Verification
+
+If source code qualified as Public Source Code when a Verification execution was performed, the permission granted for that completed execution shall remain valid even if the source code is subsequently made Private Source Code.
+
+A Licensee may continue to retain, reproduce, and use the resulting Verification reports, records, and evidence, subject to this License and applicable third-party rights.
+
+However, this Section does not authorize new Verification executions after the source code becomes Private Source Code without an applicable Commercial Agreement or the exception in Section 1.3.
+
+## 1.7. Verification Results and Evidence
+
+A Licensee may retain Verification results, reports, logs, certificates, and other evidence generated through authorized use of the Covered Work.
+
+A Licensee is not required to publish such results or evidence merely because the Verification Target consists of Public Source Code.
+
+The public availability of a Verification Target does not impose any obligation to disclose the Licensee's Verification results, internal analysis, reports, or derived evidence.
+
+## 1.8. No Obligation to Disclose Verification Targets
+
+Nothing in this License requires a Licensee to disclose the source code, repositories, Verification Targets, Verification results, or evidence associated with its use of Axiom.
+
+The classification of a Verification Target determines the applicable Verification usage conditions only. It does not create an obligation to publicly disclose any source code or Verification materials.
+
+---
+
+# 2. Restriction on Competing Services
+
+## 2.1. Separate Authorization Required
+
+Notwithstanding any other provision of this License, a Licensee must not use the Covered Work, or any modified or derivative version thereof, to develop, operate, distribute, sublicense, or commercially provide a Competing Service without a separate Commercial Agreement expressly authorizing such activity.
+
+## 2.2. Scope of Restriction
+
+This restriction applies regardless of whether the Verification Targets used by the Competing Service consist of Public Source Code or Private Source Code.
+
+Permission to perform free Verification of Public Source Code does not grant permission to commercially offer Axiom's core verification functionality as a competing product or service.
+
+## 2.3. Examples of Competing Services
+
+A Competing Service includes, without limitation:
+
+1. A paid hosted Verification service built upon Axiom.
+2. A commercial Verification platform that embeds Axiom as its underlying Verification engine.
+3. A commercial product or service that exposes Axiom's core Verification functionality to third parties.
+4. A commercial offering that redistributes, sublicenses, or embeds Axiom or a derivative version thereof as a substitute for Axiom's core Verification service.
+
+Whether an offering constitutes a Competing Service shall be determined by its actual functionality, commercial purpose, service structure, and substantive relationship to Axiom's core Verification functionality.
+
+## 2.4. Internal Commercial Use Is Not Prohibited
+
+An organization may use Axiom internally for its own software development, testing, Verification, and production activities.
+
+Such internal use does not, by itself, constitute a Competing Service.
+
+However, Verification of Private Source Code remains subject to Section 1.2.
+
+## 2.5. Ordinary Development and Consulting Services
+
+Ordinary software development, consulting, research, education, or professional services in which Axiom is merely an incidental tool do not, by themselves, constitute a Competing Service.
+
+However, this exception does not apply where Axiom's core Verification functionality is independently offered to third parties as a commercial Verification product or service.
+
+## 2.6. Separate Commercial Agreements
+
+The Licensor may grant separate commercial rights for hosted services, OEM distribution, embedding, resale, enterprise deployment, service-provider distribution, or other commercial arrangements through a Commercial Agreement.
+
+---
+
+# 3. Definitions
+
+For purposes of this License, the following terms shall have the meanings set forth below.
+
+## 3.1. Licensor
+
+"Licensor" means Suhyok Yoon, as the initial licensor and initial rights holder of the rights in the Covered Work that Suhyok Yoon owns or is legally authorized to license.
+
+"Licensor" also includes any lawful successor or assignee that acquires the rights necessary to administer this License and license the relevant portions of the Covered Work.
+
+## 3.2. Licensee
+
+"Licensee" means any individual or legal entity exercising rights granted under this License.
+
+## 3.3. Covered Work
+
+"Covered Work" means the Axiom software project and its associated source code, object code, documentation, configuration files, build scripts, and other materials distributed under this License.
+
+Covered Work includes all Historical Versions falling within the scope of Section 4.
+
+Third-Party Materials that are not owned or controlled by the Licensor are excluded from the Covered Work to the extent of the relevant third-party rights.
+
+## 3.4. Source Code
+
+"Source Code" means the preferred form of the Covered Work for making modifications, including source files, build scripts, interface definitions, and other materials necessary to understand and modify the Covered Work.
+
+## 3.5. Public Source Code
+
+"Public Source Code" means source code made available for inspection by the general public without individual access approval or confidentiality obligations.
+
+Source code available through a publicly accessible repository or equivalent public distribution mechanism qualifies as Public Source Code, even if ordinary registration or account creation is required, provided that any member of the general public may obtain access through generally available procedures.
+
+The following do not qualify as Public Source Code:
+
+1. Source code accessible only to invited or individually approved users.
+2. Private repositories, branches, pull requests, or code review materials.
+3. Source code accessible under a non-disclosure agreement or other confidentiality obligation.
+4. Source code subject to access restrictions that prevent the general public from inspecting it.
+
+## 3.6. Private Source Code
+
+"Private Source Code" means all source code that does not satisfy the definition of Public Source Code.
+
+Public Source Code and Private Source Code are mutually exclusive and collectively exhaustive categories.
+
+## 3.7. Verification
+
+"Verification" means any exercise of the analysis, proof, validation, verification, or certification functionality of the Covered Work to evaluate, analyze, prove, validate, or otherwise establish properties, correctness claims, or other propositions concerning a Verification Target.
+
+Verification includes such exercise regardless of the interface or mechanism through which that functionality is invoked, including command-line tools, MCP or other protocol servers, programming APIs, direct library calls, embedded or hosted deployments, or direct use of the underlying verification engine.
+
+The following do not, by themselves, constitute Verification:
+
+1. File management, output format conversion, report rendering, or other ancillary functions that do not invoke the verification functionality of the Covered Work.
+2. Reuse of general-purpose utilities of the Covered Work (such as hashing, serialization, or command-line plumbing) in works unrelated to the verification functionality of the Covered Work.
+3. Building, packaging, distributing, or hosting the Covered Work without exercising its verification functionality on any Verification Target.
+
+## 3.8. Verification Target
+
+"Verification Target" means the source code, program, repository, project, or expressly designated portion thereof that is subject to a particular Verification execution.
+
+## 3.9. Verification Scope
+
+"Verification Scope" means the complete scope of source code, dependencies, and related materials that Axiom actually reads, loads, analyzes, or includes in a particular Verification execution or its proof obligations.
+
+## 3.10. Mixed Verification
+
+"Mixed Verification" means a Verification execution in which Public Source Code and Private Source Code are jointly included in the same Verification Scope.
+
+## 3.11. Competing Service
+
+"Competing Service" means a product or service whose primary or material commercial function is to provide third parties with automated software Verification capabilities that materially substitute for the core Verification functionality of Axiom, where such capabilities are implemented using the Covered Work or a modified or derivative version thereof.
+
+## 3.12. Non-Commercial Personal Use
+
+"Non-Commercial Personal Use" means use by an individual solely for personal hobby, learning, research, or experimentation, without providing Verification as a paid or otherwise commercially compensated service.
+
+Use by or on behalf of a company, organization, or other legal entity does not qualify as Non-Commercial Personal Use.
+
+## 3.13. Commercial Agreement
+
+"Commercial Agreement" means a separate written agreement or commercial license issued by the Licensor or an authorized successor or assignee, granting additional rights or permissions that are not available under this License without separate authorization or payment.
+
+## 3.14. Third-Party Materials
+
+"Third-Party Materials" means software, libraries, code, documentation, or other materials that are not owned or controlled by the Licensor and are distributed under their own applicable licenses or terms.
+
+## 3.15. Official Axiom Repository
+
+"Official Axiom Repository" means the official Git repository designated by the Licensor as the source repository for the Axiom project.
+
+If the Licensor moves or changes the official source repository, the lawfully designated successor repository shall also qualify as the Official Axiom Repository.
+
+## 3.16. Historical Version
+
+"Historical Version" means any previous version, revision, commit, or snapshot of the Covered Work preserved in the Git history of the Official Axiom Repository.
+
+## 3.17. Initial Publication
+
+"Initial Publication" means the first public distribution of this License by the Licensor together with the Axiom project.
+
+---
+
+# 4. Scope and Historical Coverage
+
+## 4.1. Coverage of the Complete Historical Git History
+
+This License applies to all Covered Work contained in the complete Git history of the Official Axiom Repository.
+
+This includes all commits, revisions, tags, branches, and versions of the Covered Work preserved in the Official Axiom Repository, regardless of whether they were created before or after the Initial Publication of this License.
+
+Historical Versions include, without limitation:
+
+1. Source code and files originally introduced in earlier commits.
+2. Files subsequently modified, renamed, replaced, or deleted.
+3. Earlier implementations and revisions no longer present in the current version of the repository.
+4. All other versions of the Covered Work preserved in the Git history of the Official Axiom Repository, whether or not they are included in the current default branch.
+
+## 4.2. Application to Historical Commits
+
+Upon the Initial Publication of this License, the Licensor grants the rights described herein with respect to all Historical Versions of the Covered Work within the scope of this Section.
+
+A Historical Version remains subject to this License even if the commit containing that version was created before the Initial Publication or did not itself contain a copy of this LICENSE file.
+
+The inclusion of this License in the Official Axiom Repository does not limit its application to commits created after the LICENSE file was added.
+
+## 4.3. No Retroactive Liability
+
+The application of this License to Historical Versions does not mean that this License governed activities occurring before its Initial Publication.
+
+This Section grants rights to use, reproduce, modify, distribute, and otherwise exercise the rights expressly granted under this License with respect to covered Historical Versions from the time they are first made available under this License.
+
+It does not independently impose retroactive obligations or liability for acts completed before the Initial Publication.
+
+## 4.4. Ownership and Third-Party Materials
+
+The Licensor grants rights under this License only to the extent that the Licensor owns or is legally authorized to license the relevant portions of the Covered Work.
+
+The Licensor does not represent that every portion of the Covered Work is protected by copyright, or that the Licensor owns or controls copyright in every portion, including portions generated with the assistance of artificial intelligence tools. Conversely, the fact that a portion was generated with the assistance of artificial intelligence tools does not, by itself, exclude from the granted rights any portion that embodies human creative contribution.
+
+Third-Party Materials remain subject to their respective licenses and are not relicensed under this License unless the Licensor has obtained the necessary rights or authorization.
+
+Nothing in this License overrides or replaces any applicable third-party license, copyright notice, or other legally binding restriction.
+
+## 4.5. Previously Granted Rights
+
+Nothing in this License revokes, restricts, or invalidates rights previously granted under another valid license or written agreement. Any such previously granted rights remain governed by their applicable terms.
+
+Portions of the project's Git history were publicly distributed under the Apache License 2.0 during an earlier public availability window (from 2026-03-15 to 2026-03-23, under repository names including "Archright/Devlog" and "Archright/Axiom", including historical lineages and tags that were subsequently restructured or deleted). Any person who lawfully obtained a copy of those portions during that window retains the rights granted by the Apache License 2.0 with respect to the copies so obtained, and this License neither revokes nor limits those rights.
+
+This License applies to copies and Historical Versions of the Covered Work as distributed under this License, including the complete Git history of the Official Axiom Repository as published at the Initial Publication; it does not re-license, and does not claim to broaden or narrow, the rights attached to copies previously obtained under the Apache License 2.0.
+
+## 4.6. Future Commits
+
+All subsequent commits, revisions, and versions of the Covered Work distributed through the Official Axiom Repository are also subject to this License, unless expressly distributed under a separate license authorized by the Licensor.
+
+---
+
+# 5. Grant of License
+
+## 5.1. License Grant
+
+Subject to the terms and conditions of this License, the Licensor grants the Licensee a worldwide, non-exclusive, royalty-free, non-transferable license to:
+
+1. Access and use the Covered Work.
+2. Run and execute the Covered Work.
+3. Reproduce the Covered Work.
+4. Inspect and study the Source Code.
+5. Modify the Covered Work.
+6. Prepare derivative works based on the Covered Work.
+7. Distribute the Covered Work and modified versions thereof, subject to Section 6.
+8. Use the Covered Work for personal, educational, research, development, and commercial purposes, subject to the restrictions and conditions set forth in this License.
+
+## 5.2. Scope of Rights
+
+This grant applies only to the rights that the Licensor owns or is legally authorized to license.
+
+Nothing in this License transfers ownership of the Covered Work or any copyright therein to the Licensee.
+
+## 5.3. Limitations
+
+All rights granted under this Section remain subject to:
+
+1. The Verification usage conditions in Section 1.
+2. The restriction on Competing Services in Section 2.
+3. The redistribution and modification conditions in Section 6.
+4. All other applicable provisions of this License.
+
+## 5.4. No Sale or Transfer of Ownership
+
+The Covered Work is licensed, not sold.
+
+Except for the rights expressly granted under this License, all rights, title, and interest in the Covered Work remain with the Licensor or the relevant rights holders.
+
+---
+
+# 6. Redistribution and Modification
+
+## 6.1. Redistribution Conditions
+
+The Licensee may redistribute the Covered Work or modified versions thereof, provided that:
+
+1. A complete copy of this License is included with the redistribution.
+2. Existing copyright notices and attribution notices are preserved.
+3. Material modifications are clearly identified as modifications.
+4. The redistribution does not remove, circumvent, or obscure the restrictions imposed by this License.
+5. The redistributed Covered Work and modifications thereof remain subject to this License, unless the Licensor has expressly authorized otherwise in a separate written agreement.
+6. Redistributions that include Third-Party Materials comply with the applicable third-party licenses, including any required license text, notices, or attribution, and do not represent Third-Party Materials as being licensed under this License.
+
+## 6.2. Preservation of License Notices
+
+The Licensee must not remove or alter license notices or introduce misleading licensing statements.
+
+The Licensee must not represent that the Covered Work is distributed under a license that grants broader rights than this License.
+
+## 6.3. Independent Components
+
+The Licensee may distribute independently developed components under separate terms, provided that those components do not incorporate or constitute derivative works of the Covered Work in a manner that would violate this License.
+
+Third-Party Materials remain subject to their respective licenses.
+
+## 6.4. Rights of Recipients
+
+Each recipient of a redistributed copy of the Covered Work receives rights directly from the Licensor under this License.
+
+The Licensee does not acquire any authority to grant rights broader than those provided under this License.
+
+## 6.5. Copyright in Modifications and Trademarks
+
+Copyright in the original portions of the Covered Work remains with the Licensor or the relevant rights holders. A Licensee who modifies the Covered Work holds the copyright in that Licensee's own original modifications, and may grant separate licenses for those modifications, provided that any distribution of the modified Covered Work as a whole complies with this License and does not grant rights in the original portions broader than those provided under this License.
+
+Third-Party Materials distributed together with the Covered Work remain governed by their respective licenses and are not subject to this License.
+
+Nothing in this License grants any right to use the trademarks, service marks, or brand identifiers of the Licensor (see Section 8.5). The right to modify and distribute the Covered Work does not, by itself, authorize any use of the names "Axiom" or "Archright", the Axiom logo, or any other mark of the Licensor.
+
+---
+
+# 7. No Rights to Verification Targets
+
+This License governs the Covered Work only.
+
+It does not grant the Licensee any copyright, patent, trade secret, ownership, or other intellectual property rights in source code that is merely inspected, analyzed, or verified using Axiom.
+
+The Licensee remains responsible for obtaining all permissions necessary to access, reproduce, modify, analyze, or otherwise use the Verification Target.
+
+The Licensor does not claim ownership of source code submitted to or processed by Axiom merely because that source code is verified using the Covered Work.
+
+---
+
+# 8. Intellectual Property Ownership
+
+## 8.1. Ownership Retained
+
+Except for the rights expressly granted under this License, all rights, title, and interest in the Covered Work remain with the Licensor or the relevant rights holders.
+
+No ownership rights are transferred to the Licensee by the submission, distribution, modification, or use of the Covered Work.
+
+## 8.2. Contributor Rights
+
+Contributions made by third parties remain subject to the rights of their respective copyright owners unless those rights have been separately transferred.
+
+A contribution being submitted, accepted, or merged into the Axiom project does not, by itself, constitute an assignment of copyright ownership to the Licensor.
+
+## 8.3. Contributor License Agreements
+
+Contributions submitted to the Axiom project may be subject to a separate Contributor License Agreement (CLA) or other written agreement.
+
+Such agreements may grant the Licensor and its lawful successors and assigns the rights necessary to use, reproduce, modify, prepare derivative works, distribute, sublicense, and commercially relicense the relevant contributions.
+
+The scope of such rights shall not exceed the rights that the contributor actually owns or is legally authorized to grant.
+
+The submission, acceptance, or merging of a contribution alone does not establish that the Licensor has obtained all rights necessary to distribute or relicense that contribution under this License.
+
+## 8.4. Third-Party Materials
+
+Third-Party Materials remain subject to their respective licenses.
+
+Where a Third-Party Material license conflicts with this License, the applicable Third-Party Material license governs that material.
+
+Nothing in this License overrides, replaces, or diminishes rights or obligations arising under an applicable Third-Party Material license.
+
+## 8.5. Trademarks
+
+This License does not grant any right to use the names "Axiom" or "Archright", the Axiom logo, or any other trademark, service mark, or brand identifier owned or controlled by the Licensor.
+
+Any use of such marks must comply with applicable trademark law and any separate trademark policy published by the Licensor.
+
+---
+
+# 9. Patent License
+
+To the extent that the Licensor owns or controls patent claims that are necessarily infringed by the use, reproduction, or modification of the Covered Work as permitted under this License, the Licensor grants the Licensee a worldwide, non-exclusive, royalty-free patent license to make, use, offer to sell, sell, import, and otherwise transfer the Covered Work.
+
+This patent license does not extend to:
+
+1. Patent claims that are not necessarily infringed by the Covered Work.
+2. Patent claims covering modifications or combinations not supplied by the Licensor, except to the extent necessarily infringed by the unmodified Covered Work.
+3. Patents owned or controlled by third parties.
+
+If the Licensee initiates patent litigation alleging that the Covered Work or a contribution incorporated into the Covered Work constitutes direct or contributory patent infringement, the patent licenses granted to that Licensee under this Section terminate as of the date such litigation is filed, to the extent permitted by applicable law.
+
+---
+
+# 10. License Duration and Termination
+
+## 10.1. Duration
+
+This License is perpetual unless terminated in accordance with this Section.
+
+There is no automatic expiration date or automatic conversion to an open-source license.
+
+## 10.2. Termination for Material Breach
+
+If the Licensee materially violates this License, the Licensor may provide written notice identifying the violation and the steps required to remedy it.
+
+Where the violation is capable of remedy, the Licensee shall have thirty (30) days from receipt of such notice to cure the violation.
+
+If the violation is not cured within that period, the rights granted to the Licensee under this License shall terminate automatically.
+
+This cure period does not apply to violations for which immediate termination is permitted by applicable law.
+
+## 10.3. Reinstatement
+
+If the rights granted under this License terminate, the Licensee must cease all use of the Covered Work that is no longer authorized.
+
+Where the violation has been remedied, the Licensee may request reinstatement from the Licensor or an authorized successor or assignee.
+
+Reinstatement requires written confirmation from the Licensor or such authorized successor or assignee.
+
+## 10.4. Effect of Termination and Accrued Rights
+
+Termination does not automatically invalidate permissions or licenses separately granted under a valid Commercial Agreement, except as provided in that agreement.
+
+Termination or a subsequent licensing change does not retroactively revoke rights properly exercised or permissions validly granted before termination.
+
+However, where termination results from the Licensee's own breach, any rights that may lawfully be revoked under applicable law may be revoked.
+
+---
+
+# 11. License Changes and Future Versions
+
+## 11.1. No Automatic License Conversion
+
+The Covered Work is not scheduled to become available under an open-source license after any fixed period.
+
+No automatic conversion, expiration, or change of license occurs merely through the passage of time.
+
+## 11.2. Future License Versions
+
+The Licensor may publish new versions of this License or distribute future versions of the Covered Work under different license terms.
+
+Unless expressly stated otherwise, new license terms apply only to the versions or materials expressly distributed under those terms.
+
+## 11.3. Previously Granted Rights
+
+A change in the licensing of future versions does not retroactively alter rights already granted to a Licensee for an earlier version of the Covered Work under a valid license.
+
+A Licensee may continue to exercise rights under the version of this License applicable to the relevant copy of the Covered Work, subject to continued compliance with that License.
+
+---
+
+# 12. Disclaimer of Warranty
+
+THE COVERED WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSOR DISCLAIMS ALL WARRANTIES, INCLUDING BUT NOT LIMITED TO:
+
+1. MERCHANTABILITY.
+2. FITNESS FOR A PARTICULAR PURPOSE.
+3. NON-INFRINGEMENT.
+4. ACCURACY OR COMPLETENESS.
+5. AVAILABILITY OR UNINTERRUPTED OPERATION.
+6. CORRECTNESS OF VERIFICATION RESULTS.
+7. FITNESS FOR ANY PARTICULAR SAFETY OR SECURITY REQUIREMENT.
+
+THE LICENSOR DOES NOT WARRANT THAT THE COVERED WORK WILL DETECT ALL DEFECTS, PROVE ALL CLAIMS, OR ESTABLISH THE ABSENCE OF ALL ERRORS OR VULNERABILITIES.
+
+THE LICENSEE IS RESPONSIBLE FOR EVALUATING THE SUITABILITY OF THE COVERED WORK FOR ITS INTENDED USE.
+
+---
+
+# 13. Limitation of Liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSOR SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING OUT OF OR RELATING TO THIS LICENSE OR THE USE OR INABILITY TO USE THE COVERED WORK.
+
+SUCH DAMAGES INCLUDE, WITHOUT LIMITATION, LOSS OF PROFITS, LOSS OF DATA, BUSINESS INTERRUPTION, OR LOSS OF GOODWILL.
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSOR'S TOTAL LIABILITY ARISING OUT OF OR RELATING TO THIS LICENSE SHALL NOT EXCEED THE AMOUNT PAID BY THE LICENSEE TO THE LICENSOR FOR THE RELEVANT LICENSE DURING THE TWELVE (12) MONTHS PRECEDING THE EVENT GIVING RISE TO THE CLAIM.
+
+WHERE THE LICENSEE HAS NOT PAID ANY AMOUNT FOR THE RELEVANT LICENSE, THE LICENSOR'S LIABILITY SHALL BE LIMITED TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW.
+
+Nothing in this Section excludes or limits liability that cannot lawfully be excluded or limited under applicable law.
+
+---
+
+# 14. General Provisions
+
+## 14.1. Entire Agreement
+
+This License constitutes the entire agreement between the Licensor and the Licensee concerning the licensing of the Covered Work, except for any separate written agreement that expressly supplements or supersedes this License.
+
+## 14.2. Severability
+
+If any provision of this License is held invalid or unenforceable, that provision shall be modified to the minimum extent necessary to make it enforceable, or severed if modification is not possible.
+
+The remaining provisions shall continue in full force and effect.
+
+## 14.3. No Waiver
+
+Failure by the Licensor to enforce any provision of this License does not constitute a waiver of that provision or any other provision.
+
+Any waiver must be expressly made in writing by the Licensor or an authorized successor or assignee.
+
+## 14.4. Assignment and Succession by Licensor
+
+The Licensor may assign or transfer the rights, title, and interests necessary to administer this License and license the Covered Work to a lawful successor or assignee.
+
+Such assignment or transfer may include the rights and authority necessary to administer and enforce this License, to the extent permitted by applicable law.
+
+Any such assignment or transfer shall not retroactively revoke or diminish rights previously granted to Licensees under this License.
+
+## 14.5. Assignment by Licensee
+
+The Licensee may not assign this License or transfer its rights under this License independently of the Covered Work without the Licensor's prior written consent, except where such restriction is prohibited by applicable law.
+
+## 14.6. No Partnership or Agency
+
+Nothing in this License creates a partnership, joint venture, employment, agency, or fiduciary relationship between the Licensor and the Licensee.
+
+## 14.7. Governing Law and Jurisdiction
+
+This License shall be governed by the laws of the Republic of Korea, excluding its conflict-of-law rules.
+
+Any dispute arising out of or relating to this License shall be submitted to the exclusive jurisdiction of the competent courts in Seoul, Republic of Korea, subject to mandatory jurisdictional rules under applicable law.
+
+## 14.8. Language
+
+This License is originally drafted in English.
+
+The English version shall be the authoritative version of this License.
+
+Any translation is provided for convenience only. In the event of any inconsistency between the English version and a translation, the English version shall prevail to the extent permitted by applicable law.
+
+---
+
+# 15. Acceptance
+
+By downloading, copying, modifying, distributing, or using the Covered Work, the Licensee acknowledges that it has read, understood, and agreed to be bound by this License.
+
+If the Licensee does not agree to the terms of this License, the Licensee must not exercise the rights granted herein.
+
+---
+
+**Copyright © 2026 Suhyok Yoon. All rights reserved, subject to the permissions expressly granted under this License.**
+
+This copyright notice applies to the original portions of the Covered Work owned or controlled by Suhyok Yoon. Copyright in Third-Party Materials remains with their respective rights holders.
+
+Licensing and commercial inquiries: see the contact information published in the Official Axiom Repository (README).
+
+**Axiom Source-Available License 1.0**  
+**License Identifier:** `LicenseRef-Axiom-SAL-1.0`

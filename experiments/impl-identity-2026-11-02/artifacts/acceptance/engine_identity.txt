@@ -1,0 +1,4 @@
+cold worktree: git worktree add /tmp/cold2_main a24b8b82bd16ddb7f62c6804594e16fa847efd8a (detached, clean)
+make build: exit 0 ('Build successful')
+bin/ax --check-provenance: AXIOM_PROVENANCE: OK — embedded BuildSourceHash == live src tree (4584204844708207837)
+cd proofs && lake build: exit 0 — 'Build completed successfully (21 jobs)'

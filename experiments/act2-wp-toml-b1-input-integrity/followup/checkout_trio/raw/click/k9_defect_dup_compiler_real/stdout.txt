@@ -1,0 +1,5 @@
+-Wall /tmp/checkout_trio/run/click/ws/main.c -o /tmp/checkout_trio/run/click/ws/build/clickarm
+[1mFound 1 files!
+Compiling...[0m
+[2m$ echo -Wall /tmp/checkout_trio/run/click/ws/main.c -o /tmp/checkout_trio/run/click/ws/build/clickarm
+[0m

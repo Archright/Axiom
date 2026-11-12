@@ -1,0 +1,10 @@
+{
+  "generatorCommit": "251a42b1d14c3cd05b627f60c91b2309da3db167",
+  "generatedAt": "2026-06-18T00:09:34Z",
+  "gateId": "procedure-gate",
+  "version": "1.0",
+  "expectedHash": "sha256:placeholder_procedure_gate",
+  "status": "pass",
+  "violations": [],
+  "metrics": {}
+}

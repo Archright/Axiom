@@ -1,0 +1,217 @@
+GATE INFRASTRUCTURE DEBT SCAN RESULTS — 2026-06-07
+===================================================
+Scan scope: src/gate/, bin/, gate_list.nim, gate_registry.nim, gates.nim
+Method: grep, ls, cross-reference of entry paths vs actual files
+Prior audit reference: docs/audit/gate_infrastructure_debt_audit.txt (2026-05-27)
+
+===============================================================================
+[G-01] GHOST GATES — Registered in gate_list.nim but entry path MISSING
+===============================================================================
+
+gate_list.nim defines 22 gates. Each has an `entry` field pointing to a binary
+or source path. We checked every entry for file existence.
+
+Findings:
+
+  ID                       Entry Path                 Source in runners/    Status
+  ────────────────────────────────────────────────────────────────────────────────
+  gate-self-check          bin/gate_self_check         YES (runners/)       [BIN-MISSING]
+  sentinel                 src/gate/runners/sentinel    YES                  [OK]
+  unstaged-guard           src/gate/runners/unstaged_guard  YES             [OK]
+  cli-build                src/gate/runners/cli_build   YES                  [OK]
+  external-cli-smoke       bin/external_cli_smoke       YES (runners/)       [BIN-MISSING]
+  external-cli-smoke-hard  bin/external_cli_smoke       YES (runners/)       [BIN-MISSING]
+  proof-universe-lock-gate src/gate/runners/proof_universe_lock_gate  YES   [OK]
+  procedure-gate           src/gate/runners/procedure_gate  YES              [OK]
+  nim-check                bin/nim_check_gate           YES (runners/)       [BIN-MISSING]
+  drnim                    src/gate/runners/drnim_gate  YES                  [OK]
+  gateway-test             bin/gateway_test_gate        YES (runners/)       [BIN-MISSING]
+  integrity-test           src/gate/runners/integrity_test  YES              [OK]
+  context7-evidence-gate   src/gate/runners/context7_evidence_gate  YES     [OK]
+  nimtry                   bin/nimtry                   YES (nimtry_cli.nim) [OK]
+  policy-validator         bin/policy_validator         YES (runners/)       [BIN-MISSING]
+  context-size-guard       bin/context_size_guard       NO*                  [BIN-MISSING]
+  doc-completeness-gate    bin/doc_completeness_gate    YES (runners/)       [BIN-MISSING]
+  intent-gate              bin/intent_gate              YES (runners/)       [BIN-MISSING]
+  spec-presence-gate       bin/spec_presence_gate       YES (runners/)       [BIN-MISSING]
+  test-coverage-gate       bin/test_coverage_gate       YES (runners/)       [BIN-MISSING]
+  spec-binding-gate        bin/spec_binding_gate        YES (runners/)       [BIN-MISSING]
+  quality-gate-marker      src/gate/runners/quality_gate_marker  YES        [OK]
+
+  * context-size-guard: Source exists at src/gate/context_size_guard.nim (NOT in
+    runners/ subdir). Entry points to bin/ which doesn't exist. Source location
+    mismatch — should be in runners/ or entry should be updated.
+
+  Summary: 11 of 22 gates have BIN-MISSING status (source exists, compiled
+  binary absent from bin/). This suggests bin/ binaries are compiled on-demand
+  by gate_hook.nim rather than pre-built. Only 1 gate (context-size-guard) has
+  a true path mismatch.
+
+  SEVERITY: LOW — bin/ entries are likely compiled-at-runtime by the gate
+  orchestrator. Not a functional bug, but a documentation/consistency issue.
+
+===============================================================================
+[G-02] STALE ARCHITECTURE-GATE WRAPPER
+===============================================================================
+
+File: src/gate/runners/architecture_gate.nim
+Size: 1478 bytes, last modified 2026-06-04
+
+This file is PROPERLY deprecated:
+  - Compile-time guard: `const axiomLegacyFallback {.booldefine.} = false`
+  - Default build: {.error: "Legacy module ... not available. Migrate to new API."}
+  - Only compiles with -d:axiomLegacyFallback flag
+  - Body is a thin wrapper that invokes bin/nimtry
+
+Replacement: bin/nimtry (2,284,144 bytes, built 2026-06-04) is the canonical
+architecture gate. Source at src/gate/nimtry/nimtry_cli.nim.
+
+  SEVERITY: INFO — Properly gated deprecation. Wrapper can be removed entirely
+  once all hook scripts are confirmed to use bin/nimtry directly.
+
+===============================================================================
+[G-03] ORPHAN RUNNERS — Source files NOT referenced by gate_list.nim
+===============================================================================
+
+Files in src/gate/runners/ that have NO corresponding entry in gate_list.nim:
+
+  File                        Lines  proc/func  In gate_list.nim?  Purpose
+  ────────────────────────────────────────────────────────────────────────────
+  architecture_gate.nim         —       1        NO (deprecated)    Legacy wrapper → nimtry
+  binary_freshness_gate.nim     —       3        NO                 Stale binary checker
+  gate_hook.nim                 —       4        N/A (orchestrator) L0 gate orchestrator
+  gate_self_check.nim           —       2        YES (via bin/ path) L1 meta gate
+  gateway_test_gate.nim         —       1        YES (via bin/ path) Gateway test runner
+  quality_gate_runner.nim       —       1        NO                 AST-based quality gate (DEBT#011)
+  unified_sentry.nim            —       2        NO                 3-tier consensus gate
+
+  TRUE ORPHANS (not referenced by gate_list.nim at all):
+  - binary_freshness_gate.nim — standalone staleness checker, not in gate chain
+  - quality_gate_runner.nim — AST-based quality gate (DEBT#011), orphaned from registry
+  - unified_sentry.nim — 3-tier consensus gate, delegates to gate_hook.nim
+
+  PATH MISMATCH (registered via bin/ path, source in runners/):
+  - gate_self_check, gateway_test_gate, external_cli_smoke, nim_check_gate,
+    policy_validator, doc_completeness_gate, intent_gate, spec_presence_gate,
+    test_coverage_gate, spec_binding_gate
+
+  These 10 gates are registered in gate_list.nim with `bin/` entry paths, but
+  their source code lives in `src/gate/runners/`. The bin/ binaries are likely
+  compiled on-demand.
+
+  SEVERITY: MEDIUM — 3 true orphans (binary_freshness_gate, quality_gate_runner,
+  unified_sentry) are dead code or unregistered infrastructure. 10 path-mismatch
+  gates work but have inconsistent entry conventions.
+
+===============================================================================
+[G-04] INLINE GATE DUPLICATION / SHARED PATTERNS
+===============================================================================
+
+proc/func count per runner file (higher = more complex):
+  architecture_gate.nim:        1   (thin wrapper)
+  binary_freshness_gate.nim:    3
+  cli_build.nim:                4
+  context7_evidence_gate.nim:  13   ← highest complexity
+  doc_completeness_gate.nim:    6
+  drnim_gate.nim:               2
+  external_cli_smoke.nim:       3
+  gate_hook.nim:                4   (orchestrator)
+  gate_self_check.nim:          2
+  gateway_test_gate.nim:        1
+  integrity_test.nim:           4
+  intent_gate.nim:              5
+  nim_check_gate.nim:           1
+  policy_validator.nim:         6
+  procedure_gate.nim:           3
+  proof_universe_lock_gate.nim: 3
+  quality_gate_marker.nim:      2
+  quality_gate_runner.nim:      1
+  sentinel.nim:                 2
+  spec_binding_gate.nim:       12   ← second highest
+  spec_presence_gate.nim:      10   ← third highest
+  test_coverage_gate.nim:       6
+  unified_sentry.nim:           2
+  unstaged_guard.nim:           2
+
+Top shared imports (potential extraction targets):
+  core/file_utils:     7 runners import this
+  core/io_utils:       4 runners import this
+  std/[os, strutils]:  3 runners
+  std/[os, osproc, times]:  3 runners
+  std/[os, osproc, strutils]:  3 runners
+  checksums/sha2:      2 runners
+
+  SEVERITY: LOW — No egregious duplication detected. Shared imports are
+  appropriate utility modules. context7_evidence_gate (13 procs) and
+  spec_binding_gate (12 procs) are the most complex runners.
+
+===============================================================================
+[BONUS FINDINGS]
+===============================================================================
+
+B-01: test_v3_config.nim STUB
+  Location: src/gate/test_v3_config.nim
+  Content: 4 lines — just `when isMainModule: echo "test"`
+  Verdict: STUB FILE. Violates AGENTS.md §0.8 (No Stub Files).
+  SEVERITY: HIGH — Should be deleted or replaced with real tests.
+
+B-02: deleted_tests.lock
+  Location: src/gate/deleted_tests.lock
+  Size: 144 lines
+  Purpose: Anti-resurrection guard for deleted test stubs (Batches 1-4)
+  Content: Lists deprecated/deleted test file paths with authority references
+  SEVERITY: INFO — Working as designed.
+
+B-03: architecture_policy.lock
+  Location: src/gate/architecture_policy.lock
+  Size: 298 lines
+  Purpose: nimtry ground truth policy, auto-generated
+  SEVERITY: INFO — Working as designed.
+
+B-04: context_size_guard.nim LOCATION MISMATCH
+  Source: src/gate/context_size_guard.nim (NOT in src/gate/runners/)
+  Entry in gate_list.nim: "bin/context_size_guard"
+  Issue: Source is at src/gate/ level instead of src/gate/runners/.
+         All other gate sources are in runners/ subdirectory.
+  SEVERITY: LOW — Inconsistent directory convention.
+
+B-05: Existing audit (2026-05-27) still references old gates.nim registry
+  The prior audit in docs/audit/ references 14 gates from gates.nim.
+  Current gate_list.nim has 22 gates. Registry has been significantly expanded.
+  SEVERITY: INFO — Prior audit is stale; this scan supersedes it.
+
+B-06: Pre-2026-05-27 audit ghost gates "nim-check" and "gateway-test"
+  Prior audit flagged these as GHOST (no source file). Current scan shows:
+  - nim_check_gate.nim EXISTS in src/gate/runners/ ✓ (resolved)
+  - gateway_test_gate.nim EXISTS in src/gate/runners/ ✓ (resolved)
+  SEVERITY: INFO — Previously reported ghosts have been fixed.
+
+===============================================================================
+SUMMARY TABLE
+===============================================================================
+
+  ID      Finding                                      Severity   Count
+  ─────────────────────────────────────────────────────────────────────────
+  G-01    BIN-MISSING (source exists, bin/ absent)       LOW        11
+  G-02    Stale architecture-gate wrapper                INFO        1
+  G-03a   True orphan runners (not in gate_list.nim)     MEDIUM      3
+  G-03b   Path mismatch (bin/ entry, runners/ source)    LOW        10
+  G-04    Inline duplication                             LOW        0
+  B-01    test_v3_config.nim stub (§0.8 violation)       HIGH        1
+  B-02    deleted_tests.lock                             INFO        1
+  B-03    architecture_policy.lock                       INFO        1
+  B-04    context_size_guard location mismatch            LOW        1
+  B-05    Prior audit (2026-05-27) now stale             INFO        1
+  B-06    Prior ghost gates resolved                     INFO        2
+
+  ACTIONABLE ITEMS (by priority):
+  1. [HIGH] Delete or implement src/gate/test_v3_config.nim (stub, §0.8)
+  2. [MEDIUM] Register or delete 3 orphan runners:
+     - binary_freshness_gate.nim → register in gate_list.nim or delete
+     - quality_gate_runner.nim → register in gate_list.nim or delete
+     - unified_sentry.nim → register in gate_list.nim or delete
+  3. [LOW] Standardize entry path convention:
+     Either compile bin/ binaries for all 10 path-mismatch gates,
+     OR update gate_list.nim entries to point to src/gate/runners/ paths.
+  4. [LOW] Move context_size_guard.nim to src/gate/runners/ for consistency.
+  5. [INFO] Remove architecture_gate.nim wrapper once all hooks use nimtry.

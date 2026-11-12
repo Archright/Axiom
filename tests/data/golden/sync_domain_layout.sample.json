@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/sync_domain_layout.py",
+  "description": "Sync domain_layout.json (SSOT) to architecture_policy.lock (runtime enforcement) — validates topological ordering and auto-generates [layer_edges]",
+  "inputSample": {
+    "args": ["--dry-run"]
+  },
+  "outputSample": {
+    "stdout": "sync_domain_layout: domain_layout.json is in sync, 0 drift detected (dry-run)",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

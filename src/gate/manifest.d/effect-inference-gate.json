@@ -1,0 +1,19 @@
+{
+  "id": "effect-inference-gate",
+  "name": "Axiom effect inference gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/effect_inference_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/core/",
+  "passFilenames": true,
+  "weight": "medium",
+  "category": "rule",
+  "argsTemplate": [
+    "$repoRoot",
+    "$mode",
+    "$maxJobs"
+  ],
+  "severity": "warn"
+}

@@ -1,0 +1,24 @@
+{
+  "modulePath": "src/core/api/axiom_api_session_ops.nim",
+  "functionName": "inspectTrace",
+  "fingerprint": "97fad849548230c5375d7a68e0c33893ddee1d4080ad2fa3e4b836b89100e128",
+  "sourceHash": "5fcb2839ce478d6676377ab204cbd6a0d7171cbfa11c0f5a31c57efd1c029a57",
+  "trusted": true,
+  "status": "certLeanVerified",
+  "reason": "uap-lean-verified",
+  "kernel": false,
+  "solverStatus": "sat",
+  "winningStrategy": "lean-replay",
+  "solverMeta": {
+    "leanCompilerVerified": true,
+    "negativeTestResult": false,
+    "vacuityChecked": true,
+    "vacuityProven": false,
+    "solverVersion": "4.13.3",
+    "solverProvenance": "spHeuristic",
+    "z3Executed": true
+  },
+  "verificationTier": "lean-verified",
+  "leanProposition": "",
+  "irHash": "0531c28df5a1ccdc22aaa30a078db5caefce470cbc6501c4ac11a861676eaa46"
+}

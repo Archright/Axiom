@@ -1,0 +1,709 @@
+{
+  "$comment": "G1 completion record — machine-readable inventory of every actions/upload-artifact site in .github/workflows/. Companion narrative: artifact_upload_inventory_2026-10-10.md. All path:line citations resolve to the post-PR-#710 workflow YAML (measured_base.post_pr710_tree) unless a citation says otherwise. produced by the storage-retention bookkeeping slice.",
+  "record": "artifact upload-site inventory",
+  "authored": "2026-10-11",
+  "filename_date_note": "filename carries 2026-10-10 per the task contract (storage-retention workstream date); measurements taken 2026-10-11",
+  "measured_base": {
+    "post_pr710_tree": "feat/storage-retention-policy @ cbaed951f (workflow YAML content = commit 4554c48f3)",
+    "pr710_state_at_authoring": "OPEN, unmerged (gh pr view 710 --json state -> OPEN, 2026-10-11)",
+    "origin_main_at_authoring": "0f57b44a9",
+    "tree_deltas": "admission-check.yml and runner-pool-acceptance.yml are the only workflow files that differ between the two trees; on origin/main, admission-check.yml additionally has a 7th upload site (J3 test-mode nimcache re-upload into the base B-carrier, commits e0553280b/af3cfa2e7) and lacks the 4 retention-days:3 values and the AXIOM_ARTIFACT_RECORD steps"
+  },
+  "method": {
+    "requested_retention_days": "read from each upload step's `retention-days:` on the post-PR-#710 YAML; origin/main value recorded separately (null + note = implicit 90-day default)",
+    "expected_retention_days": "the repo/org global default that github.retention_days resolves to — days: 90 (docs/evidence/epoch_record_storage_retention_2026-10-10.md §4, AXIOM_ARTIFACT_RECORD v1 expected_retention_days at §3.2)",
+    "observed_retention_days": "live REST census: (expires_at - created_at) per artifact, grouped by name pattern; expired artifacts are hidden by the API post-expiry, so an empty histogram means 'no live sample' -> unknown (not zero)",
+    "expiry_failure_mode": "aggregate over consumers: the strictest binding consumer's behavior when the artifact is absent/expired at consumption time; per-consumer detail under consumers[]",
+    "classification": "evidence-chain | acceleration | measure | probe"
+  },
+  "counts": {
+    "sites_total": 22,
+    "by_file": {
+      "admission-check.yml": 6,
+      "certificate-mint.yml": 1,
+      "gateway-jobs-measure.yml": 1,
+      "probe-merge-queue.yml": 1,
+      "h4-routing-measure.yml": 3,
+      "runner-pool-acceptance.yml": 9,
+      "observation.yml": 1
+    }
+  },
+  "divergence_from_task_census": {
+    "task_brief_counts": {
+      "admission-check.yml": 5,
+      "certificate-mint.yml": 1,
+      "gateway-jobs-measure.yml": 1,
+      "probe-merge-queue.yml": 1,
+      "h4-routing-measure.yml": 3,
+      "runner-pool-acceptance.yml": 9,
+      "total": 20
+    },
+    "measured_counts": "22 sites (this record)",
+    "explanation": "the task census predates the venue-split evidence surface: admission-check.yml has 6 upload sites on both measured trees (sites 3-6 here: evidence-record, judgment-record, admission-verdict, witness), and observation.yml (site 22) carries a 22nd upload. The instruction to read the actual YAML governs; nothing was dropped to match the pre-measured count."
+  },
+  "sites": [
+    {
+      "n": 1,
+      "site": "admission-check.yml:509-545",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "[build] Upload base-built artifacts",
+      "artifact_name": "admission-check-base-artifacts",
+      "consumers": [
+        {
+          "location": "admission-check.yml:786-790",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "same-run",
+          "expiry_failure_mode": "fail-closed",
+          "note": "job2 re-obtains B bin/ax+ircheck; no continue-on-error; staged to _base-artifacts"
+        },
+        {
+          "location": "certificate-mint.yml:581-590",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "cross-run",
+          "expiry_failure_mode": "fail-closed",
+          "note": "want_name exactly-one (:586-587) + expired=false (:590)"
+        },
+        {
+          "location": "ci-cache-publisher.yml:491-500",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "cross-run",
+          "expiry_failure_mode": "fail-open",
+          "note": "base-seed input for default-branch cache; verify step is 'fail-closed skip' — on absence/failure the save is skipped, the publisher job does not red"
+        }
+      ],
+      "expiry_failure_mode": "fail-closed",
+      "requested_retention_days": 3,
+      "requested_retention_days_on_origin_main_at_authoring": "no explicit retention-days on origin/main @ 0f57b44a9 — inherits the repo/org default (90 days, implicit)",
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {
+          "90": 273
+        },
+        "samples": 273,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)",
+        "note": "all samples pre-cutover (PR #710 unmerged at observation time) — no live sample observed at the requested 3 days",
+        "post_cutover_samples_4554c48f3": 4
+      },
+      "classification": "evidence-chain",
+      "note": "one of the 4 hot-path sites changed by PR #710 (4554c48f3); if-no-files-found: error (:531); overwrite: true (:543)"
+    },
+    {
+      "n": 2,
+      "site": "admission-check.yml:582-589",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "[build] Upload base-tree nimcache (B-cache carrier — J3 acceleration)",
+      "artifact_name": "admission-check-base-nimcache",
+      "consumers": [
+        {
+          "location": "ci-cache-publisher.yml:597-605",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "cross-run",
+          "expiry_failure_mode": "fail-open",
+          "note": "continue-on-error: true (:600); optional J3 base-nimcache seed — partial-payload save on miss"
+        }
+      ],
+      "expiry_failure_mode": "fail-open",
+      "requested_retention_days": 3,
+      "requested_retention_days_on_origin_main_at_authoring": "no explicit retention-days on origin/main @ 0f57b44a9 — inherits the repo/org default (90 days, implicit)",
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {
+          "90": 273
+        },
+        "samples": 273,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)",
+        "note": "all samples pre-cutover (PR #710 unmerged at observation time)",
+        "post_cutover_samples_4554c48f3": 4
+      },
+      "classification": "acceleration",
+      "note": "one of the 4 hot-path sites changed by PR #710; if-no-files-found: warn (:588); overwrite: true (:589)"
+    },
+    {
+      "n": 3,
+      "site": "admission-check.yml:1526-1531",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "[check] Upload evidence record",
+      "artifact_name": "evidence-record-<H>-<attempt>",
+      "consumers": [
+        {
+          "location": "certificate-mint.yml:1714-1730",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "cross-run",
+          "expiry_failure_mode": "fail-closed",
+          "note": "want_rec exactly-one + unexpired; fail() prints '(fail-closed)' (:1708)"
+        }
+      ],
+      "expiry_failure_mode": "fail-closed",
+      "requested_retention_days": 30,
+      "requested_retention_days_on_origin_main_at_authoring": 30,
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {
+          "30": 394
+        },
+        "samples": 394,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)"
+      },
+      "classification": "evidence-chain",
+      "note": "name carries github.run_attempt (attempt-scoped); if-no-files-found: warn (:1530)"
+    },
+    {
+      "n": 4,
+      "site": "admission-check.yml:1542-1559",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "[check] Upload judgment record (s1a judgment CAS reuse)",
+      "artifact_name": "judgment-record-<H>-<attempt>",
+      "consumers": [
+        {
+          "location": "certificate-mint.yml:1829-1846",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "cross-run",
+          "expiry_failure_mode": "fail-closed",
+          "note": "exactly-one retrieval (want_rec)"
+        },
+        {
+          "location": "certificate-mint.yml:1938-1955",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "cross-run",
+          "expiry_failure_mode": "fail-closed",
+          "note": "second retrieval site for the same artifact"
+        }
+      ],
+      "expiry_failure_mode": "fail-closed",
+      "requested_retention_days": 30,
+      "requested_retention_days_on_origin_main_at_authoring": 30,
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {
+          "30": 185
+        },
+        "samples": 185,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)"
+      },
+      "classification": "evidence-chain",
+      "note": "if-no-files-found: warn (:1558)"
+    },
+    {
+      "n": 5,
+      "site": "admission-check.yml:2024-2029",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "[check] Upload verdict log (judge.source evidence, run-bound)",
+      "artifact_name": "admission-verdict-<H>-<attempt>",
+      "consumers": [],
+      "expiry_failure_mode": "none",
+      "requested_retention_days": 30,
+      "requested_retention_days_on_origin_main_at_authoring": 30,
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {
+          "30": 10
+        },
+        "samples": 10,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)"
+      },
+      "classification": "evidence-chain",
+      "note": "no in-repo consumer (the witness artifact bundles admission-verdict.log, but 'no consumer reads them' — admission-check.yml:2035 comment); org gate reads the witness, not this artifact"
+    },
+    {
+      "n": 6,
+      "site": "admission-check.yml:2042-2064",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "[check] Upload admission records (witness + verdict)",
+      "artifact_name": "admission-check-<H>-<attempt>",
+      "consumers": [
+        {
+          "location": "certificate-mint.yml:772-784",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "cross-run",
+          "expiry_failure_mode": "fail-closed",
+          "note": "want_name exactly-one (:779-780) + expired=false (:783); attempt-suffix is what makes exactly-one re-run-safe (admission-check.yml:2046-2056 comment; docs/spec/github_artifact_attempt_quirks.md:33-36)"
+        }
+      ],
+      "expiry_failure_mode": "fail-closed",
+      "requested_retention_days": 30,
+      "requested_retention_days_on_origin_main_at_authoring": 30,
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {
+          "30": 487
+        },
+        "samples": 487,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)"
+      },
+      "classification": "evidence-chain",
+      "note": "witness.json+witness.sha256 handoff to mint (ADR-0027 P2 identity); if-no-files-found: warn (:2063)"
+    },
+    {
+      "n": 7,
+      "site": "certificate-mint.yml:966-974",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "(5b) Upload subject-certificate artifact (trusted-name)",
+      "artifact_name": "subject-certificate-<runAttempt>",
+      "consumers": [
+        {
+          "location": "certificate-mint.yml:1365-1370",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "same-run",
+          "expiry_failure_mode": "fail-closed",
+          "note": "publish job re-validates exactly-one by name before the ledger append"
+        },
+        {
+          "location": "admission-check.yml:1618-1629",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "cross-run",
+          "expiry_failure_mode": "fail-open",
+          "note": "mint handoff D5-3, 'soft' — continue-on-error: true (:1627)"
+        }
+      ],
+      "expiry_failure_mode": "fail-closed",
+      "requested_retention_days": 30,
+      "requested_retention_days_on_origin_main_at_authoring": 30,
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {
+          "30": 820,
+          "90": 6
+        },
+        "samples": 826,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)",
+        "note": "6 outlier samples at 90 days (pre-policy samples)"
+      },
+      "classification": "evidence-chain",
+      "note": "if-no-files-found: error (:973)"
+    },
+    {
+      "n": 8,
+      "site": "runner-pool-acceptance.yml:227-231",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "Upload tested-tree-digest",
+      "artifact_name": "tested-tree-digest",
+      "consumers": [
+        {
+          "location": "certificate-mint.yml:1481-1485",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "cross-run",
+          "expiry_failure_mode": "fail-closed",
+          "note": "exactly-one 'tested-tree-digest' (:1481-1482, fail message names [B2](b) fail-closed) + expired=false (:1485)"
+        }
+      ],
+      "expiry_failure_mode": "fail-closed",
+      "requested_retention_days": 30,
+      "requested_retention_days_on_origin_main_at_authoring": 30,
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {
+          "30": 1006
+        },
+        "samples": 1006,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)"
+      },
+      "classification": "evidence-chain"
+    },
+    {
+      "n": 9,
+      "site": "runner-pool-acceptance.yml:445-453",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "Upload decision record (decision + rationale report)",
+      "artifact_name": "ci-select-decision",
+      "consumers": [
+        {
+          "location": "runner-pool-acceptance.yml:1011-1015",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "same-run",
+          "expiry_failure_mode": "fail-open",
+          "note": "identity-gate load is soft — continue-on-error: true (:1013); gate judges presence"
+        },
+        {
+          "location": "runner-pool-acceptance.yml:1062-1065",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "same-run",
+          "expiry_failure_mode": "fail-closed",
+          "note": "proof-reconcile oracle input; no tolerance"
+        }
+      ],
+      "expiry_failure_mode": "fail-closed",
+      "requested_retention_days": 7,
+      "requested_retention_days_on_origin_main_at_authoring": 7,
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {
+          "7": 666
+        },
+        "samples": 666,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)"
+      },
+      "classification": "evidence-chain",
+      "note": "if-no-files-found: error (:452); the selector oracle evidence rides inside this artifact and is passed to the gate by path (runner-pool-acceptance.yml:1099-1100 comment)"
+    },
+    {
+      "n": 10,
+      "site": "runner-pool-acceptance.yml:459-464",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "Upload reconcile verifier binary",
+      "artifact_name": "ci-select-verifier",
+      "consumers": [
+        {
+          "location": "runner-pool-acceptance.yml:1068-1071",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "same-run",
+          "expiry_failure_mode": "fail-closed",
+          "note": "proof-reconcile re-executes the verifier; no tolerance"
+        }
+      ],
+      "expiry_failure_mode": "fail-closed",
+      "requested_retention_days": 7,
+      "requested_retention_days_on_origin_main_at_authoring": 7,
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {
+          "7": 666
+        },
+        "samples": 666,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)"
+      },
+      "classification": "evidence-chain",
+      "note": "if-no-files-found: error (:463)"
+    },
+    {
+      "n": 11,
+      "site": "runner-pool-acceptance.yml:655-660",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "Upload executed record",
+      "artifact_name": "executed-ci-bootstrap",
+      "consumers": [
+        {
+          "location": "runner-pool-acceptance.yml:1090-1097",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "same-run",
+          "expiry_failure_mode": "fail-closed",
+          "note": "pattern 'executed-*' + merge-multiple; fired when any are expected (if :1092); proof-reconcile executed==selected identity"
+        }
+      ],
+      "expiry_failure_mode": "fail-closed",
+      "requested_retention_days": 7,
+      "requested_retention_days_on_origin_main_at_authoring": 7,
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {},
+        "samples": 0,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)",
+        "note": "no live sample in the observation window (7-day retention; no run of this lane inside the window) — unknown"
+      },
+      "classification": "evidence-chain",
+      "note": "if-no-files-found: error (:659)"
+    },
+    {
+      "n": 12,
+      "site": "runner-pool-acceptance.yml:665-681",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "Upload bootstrap artifacts",
+      "artifact_name": "ci-bootstrap-artifacts",
+      "consumers": [
+        {
+          "location": "ci-cache-publisher.yml:199-207",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "cross-run",
+          "expiry_failure_mode": "fail-open",
+          "note": "existence guard: absent -> '[publish-skip] ci-bootstrap-artifacts absent (mode=none gate...)' (:202-203), publisher stays green"
+        },
+        {
+          "location": "ci-cache-publisher.yml:264-274",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "cross-run",
+          "expiry_failure_mode": "fail-open",
+          "note": "download with run-id github.event.workflow_run.id (:273); guarded by the same proceed gate"
+        }
+      ],
+      "expiry_failure_mode": "fail-open",
+      "requested_retention_days": 3,
+      "requested_retention_days_on_origin_main_at_authoring": "no explicit retention-days on origin/main @ 0f57b44a9 — inherits the repo/org default (90 days, implicit)",
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {
+          "90": 235
+        },
+        "samples": 235,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)",
+        "note": "all samples pre-cutover (PR #710 unmerged at observation time) — no live sample observed at the requested 3 days",
+        "post_cutover_samples_4554c48f3": 6
+      },
+      "classification": "acceleration",
+      "note": "one of the 4 hot-path sites changed by PR #710; LACKS overwrite (DEBT-CI#003); publisher input per ADR-0025 Amendment B (runner-pool-acceptance.yml:662-664 comment); if-no-files-found: error (:681); pre-#710 location :642"
+    },
+    {
+      "n": 13,
+      "site": "runner-pool-acceptance.yml:769-773",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "Upload candidate-arm64 (shard 소비용 — 단일 authority 산출물)",
+      "artifact_name": "candidate-arm64",
+      "consumers": [
+        {
+          "location": "runner-pool-acceptance.yml:875-882",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "same-run",
+          "expiry_failure_mode": "fail-closed",
+          "note": "'Download candidate-arm64 (단일 authority 산출물 — compile=0)'; consumption-side fail-closed verify (존재+실행비트+producer manifest per-file sha256, :882 comment)"
+        }
+      ],
+      "expiry_failure_mode": "fail-closed",
+      "requested_retention_days": 3,
+      "requested_retention_days_on_origin_main_at_authoring": "no explicit retention-days on origin/main @ 0f57b44a9 — inherits the repo/org default (90 days, implicit)",
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {
+          "90": 113
+        },
+        "samples": 113,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)",
+        "note": "all samples pre-cutover (PR #710 unmerged at observation time)",
+        "post_cutover_samples_4554c48f3": 0
+      },
+      "classification": "evidence-chain",
+      "note": "one of the 4 hot-path sites changed by PR #710; LACKS overwrite (DEBT-CI#003) — re-run collision would turn a legitimate re-run red at the fail-closed consumer; if-no-files-found: error (:790); pre-#710 location :723"
+    },
+    {
+      "n": 14,
+      "site": "runner-pool-acceptance.yml:933-938",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "Upload executed record",
+      "artifact_name": "executed-shard-<N>",
+      "consumers": [
+        {
+          "location": "runner-pool-acceptance.yml:1090-1097",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "same-run",
+          "expiry_failure_mode": "fail-closed",
+          "note": "same pattern 'executed-*' download as site 11"
+        }
+      ],
+      "expiry_failure_mode": "fail-closed",
+      "requested_retention_days": 7,
+      "requested_retention_days_on_origin_main_at_authoring": 7,
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {},
+        "samples": 0,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)",
+        "note": "no live sample in the observation window — unknown"
+      },
+      "classification": "evidence-chain",
+      "note": "if-no-files-found: error (:937)"
+    },
+    {
+      "n": 15,
+      "site": "runner-pool-acceptance.yml:947-952",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "Upload gateway junit results",
+      "artifact_name": "gateway-junit-shard-<N>",
+      "consumers": [
+        {
+          "location": "runner-pool-acceptance.yml:1001-1006",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "same-run",
+          "expiry_failure_mode": "fail-closed",
+          "note": "identity-gate downloads all shard junit; 'Verify identity set (fail-closed — ExpectedNodes == AccountedNodes)' (:1017); union==86 partition completeness (docs/audit/ci_semantic_reduction_audit_2026-09-27.md:566-568)"
+        }
+      ],
+      "expiry_failure_mode": "fail-closed",
+      "requested_retention_days": 14,
+      "requested_retention_days_on_origin_main_at_authoring": 14,
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {
+          "14": 388
+        },
+        "samples": 388,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)"
+      },
+      "classification": "evidence-chain",
+      "note": "if-no-files-found: warn (:951)"
+    },
+    {
+      "n": 16,
+      "site": "runner-pool-acceptance.yml:1027-1032",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "Upload empty-scope N/A record",
+      "artifact_name": "gateway-empty-scope-na",
+      "consumers": [],
+      "expiry_failure_mode": "none",
+      "requested_retention_days": 14,
+      "requested_retention_days_on_origin_main_at_authoring": 14,
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {},
+        "samples": 0,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)",
+        "note": "no live sample in the observation window — unknown"
+      },
+      "classification": "measure",
+      "note": "conditional diagnostic record (fires only when gateway-na-record.xml exists, :1026); no in-repo consumer; if-no-files-found: error (:1031)"
+    },
+    {
+      "n": 17,
+      "site": "gateway-jobs-measure.yml:248-253",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "Upload gateway junit results",
+      "artifact_name": "gateway-jobs-junit-j<jobs>-i<iter>",
+      "consumers": [],
+      "expiry_failure_mode": "none",
+      "requested_retention_days": 14,
+      "requested_retention_days_on_origin_main_at_authoring": 14,
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {},
+        "samples": 0,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)",
+        "note": "no live sample in the observation window — unknown"
+      },
+      "classification": "measure",
+      "note": "measure-plane record; no in-repo consumer; if-no-files-found: warn (:252)"
+    },
+    {
+      "n": 18,
+      "site": "probe-merge-queue.yml:187-192",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "Upload merge-group payload artifact (identity = candidate head, P2 naming)",
+      "artifact_name": "merge-group-payload-<G>",
+      "consumers": [
+        {
+          "location": "probe-merge-queue.yml:222-223",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "cross-run",
+          "expiry_failure_mode": "fail-open",
+          "note": "same workflow, later runs paginate the run list and download every non-expired merge-group-payload-* (.expired == false filter :223); expired entries silently drop out of the set"
+        }
+      ],
+      "expiry_failure_mode": "fail-open",
+      "requested_retention_days": 90,
+      "requested_retention_days_on_origin_main_at_authoring": 90,
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {
+          "90": 399
+        },
+        "samples": 399,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)"
+      },
+      "classification": "probe",
+      "note": "if-no-files-found: error (:191)"
+    },
+    {
+      "n": 19,
+      "site": "h4-routing-measure.yml:186-199",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "Upload experiment payload (exp- 네임스페이스 artifact)",
+      "artifact_name": "exp-h4-<experiment>-<runner|h1-x64>-payload",
+      "consumers": [
+        {
+          "location": "h4-routing-measure.yml:271-280",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "same-run|cross-run",
+          "expiry_failure_mode": "fail-closed",
+          "note": "run-id = inputs.payload-run || github.run_id (:280) — cross-run when payload-run given; no continue-on-error"
+        },
+        {
+          "location": "h4-routing-measure.yml:516-520",
+          "download_action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4",
+          "run_scope": "cross-run",
+          "expiry_failure_mode": "fail-closed",
+          "note": "r5 leg; run-id = inputs.payload-run REQUIRED (:520 — 'payload-run 지정 필수')"
+        }
+      ],
+      "expiry_failure_mode": "fail-closed",
+      "requested_retention_days": 14,
+      "requested_retention_days_on_origin_main_at_authoring": 14,
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {},
+        "samples": 0,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)",
+        "note": "no live sample in the observation window — unknown"
+      },
+      "classification": "measure",
+      "note": "measure-plane kit (bin/ax + ircheck + manifest); if-no-files-found: error (:198)"
+    },
+    {
+      "n": 20,
+      "site": "h4-routing-measure.yml:442-451",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "Upload measured junit/records",
+      "artifact_name": "exp-h4-<experiment>-<runner>-i<iter>",
+      "consumers": [],
+      "expiry_failure_mode": "none",
+      "requested_retention_days": 14,
+      "requested_retention_days_on_origin_main_at_authoring": 14,
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {},
+        "samples": 0,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)",
+        "note": "no live sample in the observation window — unknown"
+      },
+      "classification": "measure",
+      "note": "if-no-files-found: warn (:450)"
+    },
+    {
+      "n": 21,
+      "site": "h4-routing-measure.yml:556-561",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "Upload r5 junit",
+      "artifact_name": "exp-h4-r5-<candidate>-i<iter>",
+      "consumers": [],
+      "expiry_failure_mode": "none",
+      "requested_retention_days": 14,
+      "requested_retention_days_on_origin_main_at_authoring": 14,
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {},
+        "samples": 0,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)",
+        "note": "no live sample in the observation window — unknown"
+      },
+      "classification": "measure",
+      "note": "if-no-files-found: warn (:560)"
+    },
+    {
+      "n": 22,
+      "site": "observation.yml:149-154",
+      "upload_action": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4",
+      "step_name": "[observe] Upload observer payload",
+      "artifact_name": "observer-payload-<G|sha>-<attempt>",
+      "consumers": [],
+      "expiry_failure_mode": "none",
+      "requested_retention_days": 30,
+      "requested_retention_days_on_origin_main_at_authoring": 30,
+      "expected_retention_days": 90,
+      "observed_retention_days": {
+        "observed_retention_days": {
+          "30": 80
+        },
+        "samples": 80,
+        "as_of": "2026-10-11",
+        "source": "gh api repos/Archright/Axiom/actions/artifacts (all live, non-expired+expired-visible artifacts, 7,135 total)"
+      },
+      "classification": "measure",
+      "note": "observation-plane record; consumer is the out-of-repo org gate surface; no in-repo consumer; if-no-files-found: error (:153)"
+    }
+  ]
+}

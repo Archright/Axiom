@@ -1,0 +1,14 @@
+{
+  "capturedAt": "<TIMESTAMP>",
+  "funcCount": 0,
+  "funcs": [],
+  "linesOfCode": 43,
+  "module": "analyzer",
+  "path": "src/verification/analyzer.nim",
+  "procCount": 3,
+  "procs": [
+    "auditAdapter",
+    "buildPipeline",
+    "verifyCertificates*"
+  ]
+}

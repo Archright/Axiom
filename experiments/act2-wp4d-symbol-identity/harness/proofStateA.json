@@ -1,0 +1,4 @@
+{
+  "state": {"proofState": "proved", "n": {"value": 5}},
+  "volatile": {"timestamp": 1700000000, "runtimeNs": 123456}
+}

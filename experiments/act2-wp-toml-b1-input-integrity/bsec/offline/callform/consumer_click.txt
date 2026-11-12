@@ -1,0 +1,47 @@
+# callform/consumer_click.txt — call-site evidence for consumer click (ab9st8/click)
+# Sources: followup/checkout_trio/report.md (C-series k0-k13, byte-recorded),
+# followup/checkout_trio/raw/click/ (raw bytes), pinned fresh clone 2026-10-12.
+
+consumer            = click (https://github.com/ab9st8/click)
+consumer_commit     = 305847074f4b377ccb3ca74eecab1e1c15c34a37
+                      (master HEAD at fresh GitHub clone 2026-10-12; last commit 2021-07-19;
+                      local clone /tmp/checkout_trio/click)
+resolved_dep_commit = UNPINNED — NO LOCKFILE. Declares `requires "tomlserialization >= 0.2.0"`
+                      (click.nimble; legacy package-name spelling of toml_serialization);
+                      resolution is floating. Experiment pinned the subject working tree
+                      4aa8e2223649fc0837c490a4acfca7b8b1e756f9. The B-1 defect pair is present
+                      at 4aa8e22 and at b5b387e6 (tag "0.2.18", also inside the range).
+call_form           = src/compile.nim:40: `config = Toml.decode(file, ClickConfig)` with
+                      `file = readFile(workspace / "click.toml")` (:39); workspace = nearest
+                      ancestor directory containing click.toml (src/click.nim:7-13) —
+                      UN-KEYED typed decode of ClickConfig{name, compiler, outputDir: string;
+                      auxOutput: bool; extensions, ignoreDirs, ignoreFiles, flags, libs,
+                      includes, linkDirs: seq[string]} (src/compile.nim:5-8).
+                      Config pickup: managed workspace / repo checkout -> untrusted-repo-
+                      checkout class confirmed.
+flags               = none (no flags argument at the call site)
+flavor              = bare `Toml` default flavor; B-1 facets are flavor-independent at the
+                      consumed revision (link_a_flavor).
+
+# Data model (verified 2026-10-12, followup/checkout_trio/report.md §2):
+#  - ALL 11 fields are plain overwrites with zero defaults; no accumulation, no ordering
+#    sensitivity, no denylist, no cross-field coupling, no post-decode validation.
+#  - BY-DESIGN capability surface (recorded, not adjudicated): `compiler` is the FIRST
+#    token of a shell command executed verbatim via execShellCmd (compile.nim:59-77);
+#    flags/libs/includes/linkDirs are appended tokens. A valid click.toml already grants
+#    arbitrary command execution to whoever can write it — the defect adds no channel.
+#  - BUILD: compiles with Nim 2.0.8 and 2.2.10 (experiment binary: 2.0.8 for uniformity).
+#
+# C-series (k0-k13, raw/click/, fixed workspace path -> raw byte comparisons):
+#  - k1 (dup compiler) == k2 (valid last-value) byte-identical; k3 == k4 (reversed).
+#  - k9/k10 real `echo`: byte-identical, exit 0, command executed.
+#  - k5 (11 fields + `!!!` + [[attacker_table]]) == k6 == k8 (valid-TOML unknown trailing)
+#    byte-identical — trailing skipped the same way.
+#  - k11 (dup compiler + linkDirs last) == k12 (valid minus the linkDirs line)
+#    byte-identical; k13 (valid WITH linkDirs) DIFFERS -> the duplicate consumes a
+#    fieldsDone slot and the final document key is dropped (T2 rule), and that state is
+#    exactly a valid config's state.
+#  - k7 control (10 fields + `!!!`): (11,1) illegal character "!" TomlError, exit 1 —
+#    rejection channel fires when a field is unfilled.
+#  - Baseline k0 (no config): interactive create-prompt; "Discarding." on 'n'.
+#  Verdict basis: NO-GO under R2 — no state outside the valid-config reachable set.

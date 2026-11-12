@@ -1,0 +1,22 @@
+{
+  "capturedAt": "<TIMESTAMP>",
+  "funcCount": 7,
+  "funcs": [
+    "axStateEntryEngine*",
+    "findAxNodeStatus*",
+    "hasForceHealQuarantineReason",
+    "jsonFromAxProofEntries*",
+    "normalizedQuarantineReason",
+    "sortAxProofEntries*",
+    "verifyWorkflowReason*"
+  ],
+  "linesOfCode": 445,
+  "module": "wf_state",
+  "path": "src/cli/wf_state.nim",
+  "procCount": 3,
+  "procs": [
+    "applyCertifiedExemptionsFromSource*",
+    "resetForceHealQuarantine*",
+    "trimProofStatePathPrefix*"
+  ]
+}

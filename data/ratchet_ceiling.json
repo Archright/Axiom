@@ -1,0 +1,8 @@
+{
+  "version": "1.0.0",
+  "legacy_violations_ceiling": 1232,
+  "impure_proc_ceiling": 311,
+  "shrink_rate_percent": 5,
+  "last_shrink_date": "2026-06-15",
+  "next_shrink_date": "2026-06-20"
+}

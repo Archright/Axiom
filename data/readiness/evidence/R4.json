@@ -1,0 +1,156 @@
+{
+ "schemaVersion": 1,
+ "invariantId": "R4",
+ "repoIdentity": {
+  "head": "ba773d0631b5757525b16d8fd62e220492e98e76",
+  "branch": "chore/r2-r8-snapshot-regen",
+  "workingTreeClean": true,
+  "treeDigest": "5a6f99db4cd26f6a5d365e29c60b378f52bc11b04126efe05757c76ee0f80bae"
+ },
+ "toolchain": {
+  "nim": "2.2.10",
+  "z3": "4.13.3",
+  "lean": "leanprover/lean4:v4.33.0"
+ },
+ "collection": {
+  "collector": "readiness-regen-2026-10-13-r2-r8",
+  "method": "manual",
+  "generatedAt": "2026-10-13T09:08:36Z",
+  "freshUntil": "2026-11-12T09:08:36Z"
+ },
+ "observations": [
+  {
+   "key": "certFieldPresent",
+   "value": true,
+   "scope": "v3-provenance",
+   "subject": "claim"
+  },
+  {
+   "key": "certFieldPresent",
+   "value": true,
+   "scope": "v3-provenance",
+   "subject": "attestation"
+  },
+  {
+   "key": "certFieldPresent",
+   "value": true,
+   "scope": "v3-provenance",
+   "subject": "inputHash"
+  },
+  {
+   "key": "certFieldPresent",
+   "value": true,
+   "scope": "v3-provenance",
+   "subject": "provenance"
+  },
+  {
+   "key": "certFieldPresent",
+   "value": true,
+   "scope": "v3-provenance",
+   "subject": "toolchainIdentity"
+  },
+  {
+   "key": "certFieldPresent",
+   "value": true,
+   "scope": "v3-provenance",
+   "subject": "solverInvocation"
+  },
+  {
+   "key": "certFieldPresent",
+   "value": true,
+   "scope": "v3-provenance",
+   "subject": "solverInputDigest"
+  },
+  {
+   "key": "certFieldPresent",
+   "value": true,
+   "scope": "v3-provenance",
+   "subject": "solverResultDigest"
+  },
+  {
+   "key": "field_nonempty_all",
+   "value": true,
+   "scope": "v3-provenance",
+   "subject": "claim{type:verification, status:certZ3Candidate, functionName:normalizeMaxWorkers}; attestation{authority:axiom, algorithm:Ed25519, policyVersion:axiom.certificate.v3, claimDigest:sha256:b9992d18…, journalRef:3890267e…}; inputHash=sha256:b67a3b09…; toolchainIdentity{axiomVersion:v0.3.7, nim:2.2.10, z3:4.13.3, lean:4.33.0}; solverInvocation{engine:z3, version:4.13.3, strategy:none, mode:none}; solverInputDigest=sha256:88c3a144…; solverResultDigest=sha256:f7316d4e…; provenance{journalCommitId:3890267e…, certificateDigest:191f2882…}"
+  },
+  {
+   "key": "certDigestMatchesIdentity",
+   "value": true,
+   "scope": "integrity identityDigest == provenance.certificateDigest",
+   "subject": "identityDigest(191f2882…) == provenance.certificateDigest(191f2882…); internal consistency confirmed"
+  },
+  {
+   "key": "fileSha256DiffersFromIdentityDigest",
+   "value": true,
+   "scope": "integrity raw-file sha256 vs identityDigest",
+   "subject": "raw file sha256(8c1e92ea…) != identityDigest(191f2882…); expected — identityDigest computed on normalized content, not raw bytes"
+  },
+  {
+   "key": "certFileStableHash",
+   "value": "8c1e92ea515eefbdf2901eae8098d45ef882c09de3092e9578b34c2a7e58eedd",
+   "scope": "temporal",
+   "subject": "cert file sha256 hashed twice — identical"
+  },
+  {
+   "key": "certWrittenThisRun",
+   "value": true,
+   "scope": "temporal",
+   "subject": "cert written by the R2 positive prove run at 2026-10-13 (this collection), not pre-existing (worktree build/ started empty; build/ is gitignored)"
+  },
+  {
+   "key": "journalBinding",
+   "value": true,
+   "scope": "data/trusted/journal lookup for journalCommitId",
+   "subject": "data/trusted/journal/3890267e3317fdf79a62fb34d9882584a80d03f88640eaba5ab94119ee23839f.json exists (8826 bytes); attestation.journalRef == provenance.journalCommitId"
+  },
+  {
+   "key": "subjectTreeImmutableAcrossRun",
+   "value": true,
+   "scope": "R6 cross-check",
+   "subject": "git status --porcelain before/after the R6 prove run byte-identical (sha256 89f44265… both, DIFFRC=0) — subject tree not mutated by verification"
+  },
+  {
+   "key": "artifactPersistsAsReproducible",
+   "value": true,
+   "scope": "R4 core question: result more than stdout?",
+   "subject": "cert is a .json file on disk carrying inputHash, toolchainIdentity, provenance{journalCommitId, certificateDigest}, identityDigest, solver digests — all 8 required v3 fields present and non-empty"
+  },
+  {
+   "key": "provenanceReconstructible",
+   "value": true,
+   "scope": "artifact",
+   "subject": "v3 cert carries all 8 required fields non-empty; journalCommitId 3890267e… exists in data/trusted/journal; identityDigest==provenance.certificateDigest (191f2882…)"
+  }
+ ],
+ "incidents": [
+  {
+   "id": "R4-INC-001",
+   "severity": "warning",
+   "title": "Persisted cert is not promotion-grade (certZ3Candidate)",
+   "detail": "The reconstructed artifact chain is complete, but the certificate status is certZ3Candidate — NOT in the promotion-eligible set. The artifact proves the provenance chain, not a verified claim."
+  }
+ ],
+ "sources": [
+  {
+   "file": "build/certificates/657f1afdb25f09ee3f7e0ed8a900cb423cf31ac70a4e79700f02e8085cc21551.json",
+   "symbol": "normalizeMaxWorkers certificate (this run)",
+   "sha256": "8c1e92ea515eefbdf2901eae8098d45ef882c09de3092e9578b34c2a7e58eedd",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76"
+  },
+  {
+   "file": "data/trusted/journal/3890267e3317fdf79a62fb34d9882584a80d03f88640eaba5ab94119ee23839f.json",
+   "symbol": "TrustCommit journal record",
+   "sha256": "live",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76"
+  },
+  {
+   "file": "docs/spec/provenance_contract_v3.md",
+   "symbol": "Certificate v3 identity digest contract",
+   "sha256": "live",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76",
+   "lines": "1-30"
+  }
+ ],
+ "commands": [],
+ "invariantName": "Artifact/Provenance Integrity"
+}

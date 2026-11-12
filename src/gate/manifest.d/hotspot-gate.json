@@ -1,0 +1,21 @@
+{
+  "id": "hotspot-gate",
+  "name": "Axiom hotspot gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/hotspot_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/",
+  "passFilenames": true,
+  "weight": "medium",
+  "category": "rule",
+  "argsTemplate": [
+    "$repoRoot",
+    "$mode",
+    "$maxJobs",
+    "data/code_health_baseline.json"
+  ],
+  "severity": "error",
+  "execution_mode": "interpreted"
+}

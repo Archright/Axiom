@@ -1,0 +1,789 @@
+FUNCTION-TYPE ONLY — nim-stew
+groups=119 residual=5
+GROUP arraybuf::data kinds=['template', 'template']
+   [58-58] kind=template export=True sha=eae6c0a5ed4a
+      'template data*(bParam: ArrayBuf): openArray ='
+   [64-64] kind=template export=True sha=d2f1a4c8ae36
+      'template data*(bParam: var ArrayBuf): var openArray ='
+GROUP arraybuf::[] kinds=['template', 'template', 'template']
+   [82-82] kind=template export=False sha=9270718f9b0c
+      'template `[]`*[N, T](b: ArrayBuf[N, T], i: int): lent T ='
+   [85-85] kind=template export=False sha=2544561582d3
+      'template `[]`*[N, T](b: var ArrayBuf[N, T], i: int): var T ='
+   [91-91] kind=template export=False sha=e90171208e52
+      'template `[]`*[N, T](b: ArrayBuf[N, T], i: BackwardsIndex): lent T ='
+GROUP arraybuf::initCopyFrom*[N, kinds=['template', 'template']
+   [100-102] kind=template export=False sha=5cf79cfaf965
+      'template initCopyFrom*[N, T](\n_: type ArrayBuf[N, T], data: openArray[T]\n): ArrayBuf[N, T] ='
+   [107-109] kind=template export=False sha=9a57f253320c
+      'template initCopyFrom*[N, T](\n_: type ArrayBuf[N, T], data: array[N, T]\n): ArrayBuf[N, T] ='
+GROUP arraybuf::add*[N, kinds=['template', 'template']
+   [116-116] kind=template export=False sha=79a5b019a924
+      'template add*[N, T](b: var ArrayBuf[N, T], v: T) ='
+   [124-124] kind=template export=False sha=d71a543b666d
+      'template add*[N, T](b: var ArrayBuf[N, T], v: openArray[T]) ='
+GROUP arrayops::eachElement kinds=['template', 'template']
+   [16-16] kind=template export=False sha=b383a8bfc37f
+      'template eachElement(x, res, op: untyped) ='
+   [20-20] kind=template export=False sha=a1d21853291b
+      'template eachElement(x, y, res, op: untyped) ='
+GROUP assign2::assign*[T] kinds=['func', 'func', 'func', 'func', 'func', 'func']
+   [5-5] kind=func export=False sha=4caf343e7b16
+      'func assign*[T](tgt: var seq[T], src: openArray[T])'
+   [6-6] kind=func export=False sha=2488e47a62f7
+      'func assign*[T](tgt: var openArray[T], src: openArray[T])'
+   [7-7] kind=func export=False sha=e8ef7f2cbb26
+      'func assign*[T](tgt: var T, src: T)'
+   [26-26] kind=func export=False sha=07cb71e8be43
+      'func assign*[T](tgt: var openArray[T], src: openArray[T]) ='
+   [34-34] kind=func export=False sha=7a0b01227c7e
+      'func assign*[T](tgt: var seq[T], src: openArray[T]) ='
+   [53-53] kind=func export=False sha=3e0fba375766
+      'func assign*[T](tgt: var T, src: T) ='
+GROUP base10::toBytes*[I: kinds=['func', 'func']
+   [190-190] kind=func export=False sha=408f9b9b81be
+      'func toBytes*[I: SomeUnsignedInt](B: typedesc[Base10], v: I): Base10Buf[I] {.'
+   [196-196] kind=func export=False sha=204964c9dca9
+      'func toBytes*[I: SomeUnsignedInt](v: I, B: typedesc[Base10]): Base10Buf[I] {.'
+GROUP base32::encode kinds=['func', 'func']
+   [135-136] kind=func export=True sha=75b6a92cdfea
+      'func encode*(btype: typedesc[Base32Types], inbytes: openArray[byte],\noutstr: var openArray[char], outlen: var int): Base32Status ='
+   [186-187] kind=func export=True sha=d2ad4001c5a9
+      'func encode*(btype: typedesc[Base32Types],\ninbytes: openArray[byte]): string {.inline.} ='
+GROUP base32::decode*[T: kinds=['func', 'func']
+   [200-201] kind=func export=False sha=8fdb97ad1098
+      'func decode*[T: byte|char](btype: typedesc[Base32Types], instr: openArray[T],\noutbytes: var openArray[byte], outlen: var int): Base32Status ='
+   [273-274] kind=func export=False sha=4843ccbd31b0
+      'func decode*[T: byte|char](btype: typedesc[Base32Types],\ninstr: openArray[T]): seq[byte] ='
+GROUP base36::encode kinds=['func', 'func']
+   [62-63] kind=func export=True sha=4188f92bc44d
+      'func encode*(btype: typedesc[Base36Types], inbytes: openArray[byte],\noutstr: var openArray[char], outlen: var int): Base36Status ='
+   [110-111] kind=func export=True sha=83955fff95db
+      'func encode*(btype: typedesc[Base36Types],\ninbytes: openArray[byte]): string {.inline.} ='
+GROUP base58::encode kinds=['func', 'func']
+   [60-61] kind=func export=True sha=e02ccc70287b
+      'func encode*(btype: typedesc[Base58C], inbytes: openArray[byte],\noutstr: var openArray[char], outlen: var int): Base58Status ='
+   [114-115] kind=func export=True sha=7b1412446320
+      'func encode*(btype: typedesc[Base58C],\ninbytes: openArray[byte]): string {.inline.} ='
+GROUP base64::encode kinds=['func', 'func']
+   [71-72] kind=func export=True sha=561327623c2f
+      'func encode*(btype: typedesc[Base64Types], inbytes: openArray[byte],\noutstr: var openArray[char], outlen: var int): Base64Status ='
+   [129-130] kind=func export=True sha=b7b77acfee89
+      'func encode*(btype: typedesc[Base64Types],\ninbytes: openArray[byte]): string {.inline.} ='
+GROUP base64::decode*[T: kinds=['func', 'func']
+   [141-142] kind=func export=False sha=00dcc896d668
+      'func decode*[T: byte|char](btype: typedesc[Base64Types], instr: openArray[T],\noutbytes: var openArray[byte], outlen: var int): Base64Status ='
+   [226-227] kind=func export=False sha=94a059d27073
+      'func decode*[T: byte|char](btype: typedesc[Base64Types],\ninstr: openArray[T]): seq[byte] ='
+GROUP bitops2::bitsof kinds=['template', 'template']
+   [29-29] kind=template export=True sha=670e68fbccd5
+      'template bitsof*(T: typedesc[SomeInteger]): int = 8 * sizeof(T)'
+   [30-30] kind=template export=True sha=eb99baa94820
+      'template bitsof*(x: SomeInteger): int = 8 * sizeof(x)'
+GROUP bitops2::firstOneNim kinds=['func', 'func', 'func']
+   [52-52] kind=func export=False sha=cdf7cce4ea28
+      'func firstOneNim(x: uint32): int ='
+   [63-63] kind=func export=False sha=4e723e5ea8bb
+      'func firstOneNim(x: uint8|uint16): int = firstOneNim(x.uint32)'
+   [64-64] kind=func export=False sha=a34ed7b634a8
+      'func firstOneNim(x: uint64): int ='
+GROUP bitops2::log2truncNim kinds=['func', 'func']
+   [73-73] kind=func export=False sha=662abf02a331
+      'func log2truncNim(x: uint8|uint16|uint32): int ='
+   [87-87] kind=func export=False sha=53264228323c
+      'func log2truncNim(x: uint64): int ='
+GROUP bitops2::countOnesNim kinds=['func', 'func']
+   [104-104] kind=func export=False sha=6ae2e3b9eea0
+      'func countOnesNim(x: uint8|uint16|uint32): int ='
+   [113-113] kind=func export=False sha=cf2c3564befe
+      'func countOnesNim(x: uint64): int ='
+GROUP bitops2::countOnesBuiltin kinds=['func', 'func', 'func', 'func', 'func', 'func']
+   [153-153] kind=func export=False sha=13cf1190d377
+      'func countOnesBuiltin(x: SomeUnsignedInt): int ='
+   [194-194] kind=func export=False sha=975b70ebc1a0
+      'func countOnesBuiltin(v: uint8|uint16): int ='
+   [196-196] kind=func export=False sha=eccc92638195
+      'func countOnesBuiltin(v: uint32): int ='
+   [198-198] kind=func export=False sha=2a8d305a0c63
+      'func countOnesBuiltin(v: uint64): int ='
+   [263-263] kind=func export=False sha=0c851e88cdfe
+      'func countOnesBuiltin(v: uint8|uint16|uint32): int ='
+   [265-265] kind=func export=False sha=2a8d305a0c63
+      'func countOnesBuiltin(v: uint64): int ='
+GROUP bitops2::firstOneBuiltin kinds=['func', 'func', 'func', 'func', 'func']
+   [165-165] kind=func export=False sha=4d6492d4039b
+      'func firstOneBuiltin(x: SomeUnsignedInt): int ='
+   [211-211] kind=func export=False sha=14d1af358f57
+      'func firstOneBuiltin(v: uint8|uint16|uint32): int ='
+   [214-214] kind=func export=False sha=f8cf4e289c22
+      'func firstOneBuiltin(v: uint64): int ='
+   [273-273] kind=func export=False sha=14d1af358f57
+      'func firstOneBuiltin(v: uint8|uint16|uint32): int ='
+   [276-276] kind=func export=False sha=f8cf4e289c22
+      'func firstOneBuiltin(v: uint64): int ='
+GROUP bitops2::log2truncBuiltin kinds=['func', 'func', 'func', 'func', 'func', 'func']
+   [171-171] kind=func export=False sha=faf0c8c9aa27
+      'func log2truncBuiltin(v: uint8|uint16|uint32): int ='
+   [173-173] kind=func export=False sha=3fca64894ab7
+      'func log2truncBuiltin(v: uint64): int ='
+   [225-225] kind=func export=False sha=faf0c8c9aa27
+      'func log2truncBuiltin(v: uint8|uint16|uint32): int ='
+   [228-228] kind=func export=False sha=3fca64894ab7
+      'func log2truncBuiltin(v: uint64): int ='
+   [282-282] kind=func export=False sha=faf0c8c9aa27
+      'func log2truncBuiltin(v: uint8|uint16|uint32): int ='
+   [285-285] kind=func export=False sha=3fca64894ab7
+      'func log2truncBuiltin(v: uint64): int ='
+GROUP bitops2::builtin_popcnt32 kinds=['func', 'func']
+   [181-181] kind=func export=False sha=9ba46c71b953
+      'func builtin_popcnt32(a2: uint32): uint32 {.importc: "__popcnt" header: "<intrin.h>".}'
+   [240-240] kind=func export=False sha=708b7cfb000a
+      'func builtin_popcnt32(x: cint): cint {.importc: "_popcnt32" header: "<immintrin.h>".}'
+GROUP bitops2::bitScanReverse kinds=['func', 'func']
+   [184-184] kind=func export=False sha=85c0f08d8a1c
+      'func bitScanReverse(index: ptr culong, mask: culong): cuchar {.importc: "_BitScanReverse", header: "<intrin.h>".}'
+   [246-246] kind=func export=False sha=d145e9190d27
+      'func bitScanReverse(p: ptr uint32, b: uint32): cuchar {.importc: "_BitScanReverse", header: "<immintrin.h>".}'
+GROUP bitops2::bitScanForward kinds=['func', 'func']
+   [187-187] kind=func export=False sha=693a1caa56c6
+      'func bitScanForward(index: ptr culong, mask: culong): cuchar {.importc: "_BitScanForward", header: "<intrin.h>".}'
+   [243-243] kind=func export=False sha=0f2e708da102
+      'func bitScanForward(p: ptr uint32, b: uint32): cuchar {.importc: "_BitScanForward", header: "<immintrin.h>".}'
+GROUP bitops2::builtin_popcnt64 kinds=['func', 'func']
+   [190-190] kind=func export=False sha=48e7ed2ad2fa
+      'func builtin_popcnt64(a2: uint64): uint64 {.importc: "__popcnt64" header: "<intrin.h>".}'
+   [249-249] kind=func export=False sha=44b74c329df5
+      'func builtin_popcnt64(x: uint64): cint {.importc: "_popcnt64" header: "<immintrin.h>".}'
+GROUP bitops2::bitScanReverse64 kinds=['func', 'func']
+   [191-191] kind=func export=False sha=8eedca5c5249
+      'func bitScanReverse64(index: ptr culong, mask: uint64): cuchar {.importc: "_BitScanReverse64", header: "<intrin.h>".}'
+   [251-251] kind=func export=False sha=d2b7bbcc0da7
+      'func bitScanReverse64(p: ptr uint32, b: uint64): cuchar {.importc: "_BitScanReverse64", header: "<immintrin.h>".}'
+GROUP bitops2::bitScanForward64 kinds=['func', 'func']
+   [192-192] kind=func export=False sha=ad7862633d3b
+      'func bitScanForward64(index: ptr culong, mask: uint64): cuchar {.importc: "_BitScanForward64", header: "<intrin.h>".}'
+   [250-250] kind=func export=False sha=2644c3044332
+      'func bitScanForward64(p: ptr uint32, b: uint64): cuchar {.importc: "_BitScanForward64", header: "<immintrin.h>".}'
+GROUP bitops2::checkedScan kinds=['template', 'template']
+   [206-206] kind=template export=False sha=0714f57ac8ed
+      'template checkedScan(fnc: untyped, x: typed, def: typed): int ='
+   [253-253] kind=template export=False sha=0714f57ac8ed
+      'template checkedScan(fnc: untyped, x: typed, def: typed): int ='
+GROUP bitops2::bitScan kinds=['template', 'template']
+   [220-220] kind=template export=False sha=0d4eea8d23ba
+      'template bitScan(fnc: untyped, x: typed): int ='
+   [258-258] kind=template export=False sha=0d4eea8d23ba
+      'template bitScan(fnc: untyped, x: typed): int ='
+GROUP bitops2::getBit kinds=['template', 'func']
+   [420-420] kind=template export=True sha=3e9d5637b064
+      'template getBit*(x: BitIndexable, bit: Natural): bool ='
+   [514-514] kind=func export=True sha=014fa1f061c0
+      'func getBit*(bytes: openArray[byte], pos: Natural): bool {.inline.} ='
+GROUP bitops2::getBitLE kinds=['template', 'template']
+   [426-426] kind=template export=True sha=ac963427b9e4
+      'template getBitLE*(x: BitIndexable, bit: Natural): bool ='
+   [517-517] kind=template export=True sha=2b63f020f65d
+      'template getBitLE*(bytes: openArray[byte], pos: Natural): bool ='
+GROUP bitops2::getBitBE kinds=['template', 'func']
+   [429-429] kind=template export=True sha=5d4c979e0b37
+      'template getBitBE*(x: BitIndexable, bit: Natural): bool ='
+   [520-520] kind=func export=True sha=735255580b54
+      'func getBitBE*(bytes: openArray[byte], pos: Natural): bool {.inline.} ='
+GROUP bitops2::setBit kinds=['func', 'func']
+   [446-446] kind=func export=True sha=2418c1b07895
+      'func setBit*(x: var BitIndexable, bit: Natural) {.inline.} ='
+   [532-532] kind=func export=True sha=366542f4e435
+      'func setBit*(bytes: var openArray[byte], pos: Natural) {.inline.} ='
+GROUP bitops2::setBitLE kinds=['template', 'template']
+   [453-453] kind=template export=True sha=ab8cfc0f2c11
+      'template setBitLE*(x: var BitIndexable, bit: Natural) ='
+   [535-535] kind=template export=True sha=a4cd9a690d93
+      'template setBitLE*(bytes: var openArray[byte], pos: Natural) ='
+GROUP bitops2::setBitBE kinds=['func', 'func']
+   [456-456] kind=func export=True sha=183dedecf7b1
+      'func setBitBE*(x: var BitIndexable, bit: Natural) {.inline.} ='
+   [538-538] kind=func export=True sha=5007476cfc12
+      'func setBitBE*(bytes: var openArray[byte], pos: Natural) {.inline.} ='
+GROUP bitops2::changeBit kinds=['func', 'func']
+   [462-462] kind=func export=True sha=b52296c7197e
+      'func changeBit*(x: var BitIndexable, bit: Natural, val: bool) {.inline.} ='
+   [523-523] kind=func export=True sha=3841e9b940e9
+      'func changeBit*(bytes: var openArray[byte], pos: Natural, value: bool) {.inline.} ='
+GROUP bitops2::changeBitLE kinds=['template', 'template']
+   [468-468] kind=template export=True sha=6198570285fe
+      'template changeBitLE*(x: var BitIndexable, bit: Natural, val: bool) ='
+   [526-526] kind=template export=True sha=567e7673385d
+      'template changeBitLE*(bytes: var openArray[byte], pos: Natural, value: bool) ='
+GROUP bitops2::changeBitBE kinds=['func', 'func']
+   [471-471] kind=func export=True sha=3858d9c810d5
+      'func changeBitBE*(x: var BitIndexable, bit: Natural, val: bool) {.inline.} ='
+   [529-529] kind=func export=True sha=3b210cc709ec
+      'func changeBitBE*(bytes: var openArray[byte], pos: Natural, value: bool) {.inline.} ='
+GROUP bitops2::clearBit kinds=['func', 'func']
+   [476-476] kind=func export=True sha=b972f78a6ea4
+      'func clearBit*(x: var BitIndexable, bit: Natural) {.inline.} ='
+   [541-541] kind=func export=True sha=4e312c6b7bf2
+      'func clearBit*(bytes: var openArray[byte], pos: Natural) {.inline.} ='
+GROUP bitops2::clearBitLE kinds=['template', 'template']
+   [483-483] kind=template export=True sha=a42517858f08
+      'template clearBitLE*(x: var BitIndexable, bit: Natural) ='
+   [544-544] kind=template export=True sha=b3d199e009c2
+      'template clearBitLE*(bytes: var openArray[byte], pos: Natural) ='
+GROUP bitops2::clearBitBE kinds=['func', 'func']
+   [486-486] kind=func export=True sha=2b67006eae1a
+      'func clearBitBE*(x: var BitIndexable, bit: Natural) {.inline.} ='
+   [547-547] kind=func export=True sha=68812771ae56
+      'func clearBitBE*(bytes: var openArray[byte], pos: Natural) {.inline.} ='
+GROUP bitops2::toggleBit kinds=['func', 'func']
+   [492-492] kind=func export=True sha=5679ae8182e0
+      'func toggleBit*(x: var BitIndexable, bit: Natural) {.inline.} ='
+   [550-550] kind=func export=True sha=cdd3e4c2037f
+      'func toggleBit*(bytes: var openArray[byte], pos: Natural) {.inline.} ='
+GROUP bitops2::toggleBitLE kinds=['template', 'template']
+   [499-499] kind=template export=True sha=76e7efa4fba7
+      'template toggleBitLE*(x: var BitIndexable, bit: Natural) ='
+   [553-553] kind=template export=True sha=39228cd2c2c3
+      'template toggleBitLE*(bytes: var openArray[byte], pos: Natural) ='
+GROUP bitops2::toggleBitBE kinds=['func', 'func']
+   [502-502] kind=func export=True sha=718eecebfe57
+      'func toggleBitBE*(x: var BitIndexable, bit: Natural) {.inline.} ='
+   [556-556] kind=func export=True sha=2350509f699b
+      'func toggleBitBE*(bytes: var openArray[byte], pos: Natural) {.inline.} ='
+GROUP bitops2::getBitsBE kinds=['func', 'template']
+   [559-559] kind=func export=True sha=f1113b995459
+      'func getBitsBE*(data: openArray[byte], slice: HSlice, T: type[SomeUnsignedInt]): T ='
+   [599-599] kind=template export=True sha=95c115601400
+      'template getBitsBE*(data: openArray[byte], slice: HSlice): BiggestUInt ='
+GROUP bitseqs::len kinds=['template', 'template']
+   [40-40] kind=template export=True sha=0aac3147a833
+      'template len*(s: BitSeq): int ='
+   [43-43] kind=template export=True sha=bdd4f3052e9c
+      'template len*(a: BitArray): int ='
+GROUP bitseqs::lhsBits: kinds=['template', 'template']
+   [99-99] kind=template export=False sha=28bcd5e58014
+      'template lhsBits: auto = (addr(lhsWord))[]'
+   [147-147] kind=template export=False sha=220a1ce88479
+      'template lhsBits: auto = lhsCurrAddr[]'
+GROUP bitseqs::rhsBits: kinds=['template', 'template']
+   [102-102] kind=template export=False sha=f30d37030da4
+      'template rhsBits: auto = (addr(rhsWord))[]'
+   [149-149] kind=template export=False sha=4e17733deb0f
+      'template rhsBits: auto = rhsCurrAddr[]'
+GROUP bitseqs::words kinds=['iterator', 'iterator', 'iterator', 'iterator', 'iterator']
+   [156-156] kind=iterator export=True sha=bda41358e9fe
+      'iterator words*(x: var BitSeq): var uint ='
+   [160-160] kind=iterator export=True sha=41363a67dc66
+      'iterator words*(x: BitSeq): uint ='
+   [164-164] kind=iterator export=True sha=742922ad5b45
+      'iterator words*(a, b: BitSeq): (uint, uint) ='
+   [168-168] kind=iterator export=True sha=f811ac981228
+      'iterator words*(a: var BitSeq, b: BitSeq): (var uint, uint) ='
+   [172-172] kind=iterator export=True sha=625af9707190
+      'iterator words*(a, b: var BitSeq): (var uint, var uint) ='
+GROUP bitseqs::[] kinds=['func', 'template']
+   [176-176] kind=func export=False sha=57a37171db9f
+      'func `[]`*(s: BitSeq, pos: Natural): bool {.inline.} ='
+   [200-200] kind=template export=False sha=970cde11efed
+      'template `[]`*(a: BitArray, pos: Natural): bool ='
+GROUP bitseqs::[]= kinds=['func', 'template']
+   [180-180] kind=func export=False sha=72acf43658a0
+      'func `[]=`*(s: var BitSeq, pos: Natural, value: bool) {.inline.} ='
+   [203-203] kind=template export=False sha=6aed9b5a4e4b
+      'template `[]=`*(a: var BitArray, pos: Natural, value: bool) ='
+GROUP bitseqs::setBit kinds=['func', 'template']
+   [184-184] kind=func export=True sha=c0b90ebfe555
+      'func setBit*(s: var BitSeq, pos: Natural) {.inline.} ='
+   [206-206] kind=template export=True sha=44161c2aa2b1
+      'template setBit*(a: var BitArray, pos: Natural) ='
+GROUP bitseqs::clearBit kinds=['func', 'template']
+   [188-188] kind=func export=True sha=1b3a15fbdd03
+      'func clearBit*(s: var BitSeq, pos: Natural) {.inline.} ='
+   [209-209] kind=template export=True sha=84b4a23f2712
+      'template clearBit*(a: var BitArray, pos: Natural) ='
+GROUP bitseqs::init kinds=['func', 'func']
+   [192-192] kind=func export=True sha=12cfb76c382a
+      'func init*(T: type BitSeq, len: int): T ='
+   [196-196] kind=func export=True sha=a7b4209ba6b5
+      'func init*(T: type BitArray): T ='
+GROUP byteutils::hexToByteArray kinds=['func', 'func', 'func']
+   [64-65] kind=func export=True sha=82cb8c952f48
+      'func hexToByteArray*(\nhexStr: openArray[char], output: var openArray[byte], fromIdx, toIdx: int)'
+   [80-80] kind=func export=True sha=1ae872bc2035
+      'func hexToByteArray*(hexStr: openArray[char], output: var openArray[byte])'
+   [103-103] kind=func export=True sha=c44b1decf464
+      'func hexToByteArray*(hexStr: openArray[char], N: static int): array[N, byte]'
+GROUP byteutils::hexToByteArrayStrict kinds=['func', 'func']
+   [114-114] kind=func export=True sha=a80b827333c3
+      'func hexToByteArrayStrict*(hexStr: openArray[char], output: var openArray[byte])'
+   [137-137] kind=func export=True sha=920756394d93
+      'func hexToByteArrayStrict*(hexStr: openArray[char], N: static int): array[N, byte]'
+GROUP byteutils::toHex kinds=['iterator', 'func']
+   [201-201] kind=iterator export=True sha=ec63518030ab
+      'iterator toHex*(ba: openArray[byte]): char ='
+   [215-215] kind=func export=True sha=8abace5ecd13
+      'func toHex*(ba: openArray[byte]): string {.inline.} ='
+GROUP byteutils::to0xHex kinds=['iterator', 'func']
+   [208-208] kind=iterator export=True sha=877d70475a46
+      'iterator to0xHex*(ba: openArray[byte]): char ='
+   [223-223] kind=func export=True sha=cfe47d8d6a7e
+      'func to0xHex*(ba: openArray[byte]): string {.inline.} ='
+GROUP byteutils::toBytes kinds=['func', 'func']
+   [231-231] kind=func export=True sha=acefc2983bf2
+      'func toBytes*(s: openArray[char]): seq[byte] ='
+   [237-237] kind=func export=True sha=9c68ceba3473
+      'func toBytes*(s: string): seq[byte] ='
+GROUP endians2::swapBytesBuiltin kinds=['func', 'func', 'func', 'func', 'func', 'func', 'func', 'func', 'func', 'func', 'func', 'func']
+   [35-35] kind=func export=False sha=a7fb68595c01
+      'func swapBytesBuiltin(x: uint8): uint8 = x'
+   [36-36] kind=func export=False sha=188e04d7b236
+      'func swapBytesBuiltin(x: uint16): uint16 {.'
+   [39-39] kind=func export=False sha=c74825fc2fdd
+      'func swapBytesBuiltin(x: uint32): uint32 {.'
+   [42-42] kind=func export=False sha=9a7e79559e90
+      'func swapBytesBuiltin(x: uint64): uint64 {.'
+   [46-46] kind=func export=False sha=a7fb68595c01
+      'func swapBytesBuiltin(x: uint8): uint8 = x'
+   [47-47] kind=func export=False sha=23bbe004d584
+      'func swapBytesBuiltin(a: uint16): uint16 {.importc: "_bswap16", nodecl.}'
+   [48-48] kind=func export=False sha=2c9958a6cbb1
+      'func swapBytesBuiltin(a: uint32): uint32 {.importc: "_bswap", nodec.}'
+   [49-49] kind=func export=False sha=1956c1ae44e9
+      'func swapBytesBuiltin(a: uint64): uint64 {.importc: "_bswap64", nodecl.}'
+   [52-52] kind=func export=False sha=a7fb68595c01
+      'func swapBytesBuiltin(x: uint8): uint8 = x'
+   [53-53] kind=func export=False sha=042538a8b8cf
+      'func swapBytesBuiltin(a: uint16): uint16 {.'
+   [56-56] kind=func export=False sha=9192b58e1f86
+      'func swapBytesBuiltin(a: uint32): uint32 {.'
+   [59-59] kind=func export=False sha=8a09f6fad2cb
+      'func swapBytesBuiltin(a: uint64): uint64 {.'
+GROUP endians2::swapBytesNim kinds=['func', 'func', 'func', 'func']
+   [62-62] kind=func export=False sha=cbca93cb0f70
+      'func swapBytesNim(x: uint8): uint8 = x'
+   [63-63] kind=func export=False sha=30ae0f017462
+      'func swapBytesNim(x: uint16): uint16 = (x shl 8) or (x shr 8)'
+   [65-65] kind=func export=False sha=bf4f007530ec
+      'func swapBytesNim(x: uint32): uint32 ='
+   [70-70] kind=func export=False sha=141b827a3001
+      'func swapBytesNim(x: uint64): uint64 ='
+GROUP interval_set::verify*[P,S] kinds=['proc', 'proc']
+   [187-188] kind=proc export=False sha=1227b4f4af94
+      'proc verify*[P,S](\nds: IntervalSetRef[P,S]): Result[void,(RbInfo,IntervalSetError)]'
+   [1146-1148] kind=proc export=False sha=5fea2d16ca15
+      'proc verify*[P,S](\nds: IntervalSetRef[P,S]\n): Result[void,(RbInfo,IntervalSetError)] ='
+GROUP interval_set::pp[P,S] kinds=['proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc']
+   [199-199] kind=proc export=False sha=16be084f322c
+      'proc pp[P,S](n: S): string ='
+   [217-217] kind=proc export=False sha=2a0abb5f83a6
+      'proc pp[P,S](pt: P): string ='
+   [233-233] kind=proc export=False sha=18208167841d
+      'proc pp[P,S](ds: Desc[P,S]): string ='
+   [239-239] kind=proc export=False sha=0bd91acdd2e7
+      'proc pp[P,S](seg: Segm[P,S]): string ='
+   [243-243] kind=proc export=False sha=2495db0b04fe
+      'proc pp[P,S](iv: Interval[P,S]): string ='
+   [247-247] kind=proc export=False sha=0f30d4a3eae1
+      'proc pp[P,S](kvp: DataRef[P,S]): string ='
+   [250-250] kind=proc export=False sha=2c10f835676d
+      'proc pp[P,S](p: var SortedSet[P,BlockRef[S]]): string ='
+GROUP interval_set::one: kinds=['template', 'template', 'template', 'template']
+   [218-218] kind=template export=False sha=167f2343a25f
+      'template one: untyped = (S.default + 1)'
+   [240-240] kind=template export=False sha=167f2343a25f
+      'template one: untyped = (S.default + 1)'
+   [244-244] kind=template export=False sha=167f2343a25f
+      'template one: untyped = (S.default + 1)'
+   [251-251] kind=template export=False sha=167f2343a25f
+      'template one: untyped = (S.default + 1)'
+GROUP interval_set::left[P,S] kinds=['func', 'func']
+   [289-289] kind=func export=False sha=78921806d582
+      'func left[P,S](kvp: DataRef[P,S]): P ='
+   [317-317] kind=func export=False sha=75eefbbf5354
+      'func left[P,S](iv: Segm[P,S]): P ='
+GROUP interval_set::right[P,S] kinds=['func', 'func']
+   [292-292] kind=func export=False sha=6fe721ec786b
+      'func right[P,S](kvp: DataRef[P,S]): P ='
+   [320-320] kind=func export=False sha=afa14ccae8a2
+      'func right[P,S](iv: Segm[P,S]): P ='
+GROUP interval_set::len[P,S] kinds=['func', 'func']
+   [295-295] kind=func export=False sha=c06231328685
+      'func len[P,S](kvp: DataRef[P,S]): S ='
+   [323-323] kind=func export=False sha=3d8e35952c4d
+      'func len[P,S](iv: Segm[P,S]): S ='
+GROUP interval_set::new[P,S] kinds=['func', 'func']
+   [300-300] kind=func export=False sha=847bc14f530f
+      'func new[P,S](T: type Segm[P,S]; left, right: P): T ='
+   [342-342] kind=func export=False sha=a4fad2dcbe3c
+      'func new[P,S](T: type Interval[P,S]; kvp: DataRef[P,S]): T ='
+GROUP interval_set::overlapOrLeftJoin[P,S] kinds=['func', 'func']
+   [349-349] kind=func export=False sha=276fa2df6322
+      'func overlapOrLeftJoin[P,S](ds: Desc[P,S]; l, r: P): Rc[P,S] ='
+   [362-362] kind=func export=False sha=1194b82fd466
+      'func overlapOrLeftJoin[P,S](ds: Desc[P,S]; iv: Segm[P,S]): Rc[P,S] ='
+GROUP interval_set::overlap[P,S] kinds=['func', 'func']
+   [366-366] kind=func export=False sha=163d828c078a
+      'func overlap[P,S](ds: Desc[P,S]; l, r: P): Rc[P,S] ='
+   [377-377] kind=func export=False sha=f893f8bb8644
+      'func overlap[P,S](ds: Desc[P,S]; iv: Segm[P,S]): Rc[P,S] ='
+GROUP interval_set::== kinds=['func', 'func', 'func', 'func', 'func']
+   [670-670] kind=func export=False sha=ebd4f0f8c9fc
+      'func `==`*[P,S](a, b: IntervalSetRef[P,S]): bool ='
+   [919-919] kind=func export=False sha=d36e93fac90d
+      'func `==`*[P,S](iv, jv: Interval[P,S]): bool ='
+   [923-923] kind=func export=False sha=23bd52feb893
+      'func `==`*[P,S](iv: IntervalRc[P,S]; jv: Interval[P,S]): bool ='
+   [928-928] kind=func export=False sha=3483d1221694
+      'func `==`*[P,S](iv: Interval[P,S]; jv: IntervalRc[P,S]): bool ='
+   [933-933] kind=func export=False sha=fdc187ce9ce1
+      'func `==`*[P,S](iv, jv: IntervalRc[P,S]): bool ='
+GROUP interval_set::merge*[P,S] kinds=['func', 'func']
+   [704-704] kind=func export=False sha=8fc2626a38a9
+      'func merge*[P,S](ds: IntervalSetRef[P,S]; minPt, maxPt: P): S ='
+   [724-724] kind=func export=False sha=5c9048917adf
+      'func merge*[P,S](ds: IntervalSetRef[P,S]; iv: Interval[P,S]): S ='
+GROUP interval_set::reduce*[P,S] kinds=['func', 'func']
+   [729-729] kind=func export=False sha=28b5d851fc45
+      'func reduce*[P,S](ds: IntervalSetRef[P,S]; minPt, maxPt: P): S ='
+   [749-749] kind=func export=False sha=2106f1f9ad66
+      'func reduce*[P,S](ds: IntervalSetRef[P,S]; iv: Interval[P,S]): S ='
+GROUP interval_set::covered*[P,S] kinds=['func', 'func']
+   [754-754] kind=func export=False sha=f4826fe00d42
+      'func covered*[P,S](ds: IntervalSetRef[P,S]; minPt, maxPt: P): S ='
+   [769-769] kind=func export=False sha=6668cff3ebbe
+      'func covered*[P,S](ds: IntervalSetRef[P,S]; iv: Interval[P,S]): S ='
+GROUP interval_set::ge*[P,S] kinds=['func', 'func']
+   [774-774] kind=func export=False sha=fbad1b453c4d
+      'func ge*[P,S](ds: IntervalSetRef[P,S]; minPt: P): IntervalRc[P,S] ='
+   [789-789] kind=func export=False sha=aa3fdfe2e27f
+      'func ge*[P,S](ds: IntervalSetRef[P,S]): IntervalRc[P,S] ='
+GROUP interval_set::le*[P,S] kinds=['func', 'func']
+   [793-793] kind=func export=False sha=31a7608857fa
+      'func le*[P,S](ds: IntervalSetRef[P,S]; maxPt: P): IntervalRc[P,S] ='
+   [822-822] kind=func export=False sha=2cedd76eeec1
+      'func le*[P,S](ds: IntervalSetRef[P,S]): IntervalRc[P,S] ='
+GROUP interval_set::+ kinds=['func', 'func', 'func', 'func']
+   [977-977] kind=func export=False sha=eae28d17164e
+      'func `+`*[P,S](iv, jv: Interval[P,S]): IntervalRc[P,S] ='
+   [1001-1001] kind=func export=False sha=8a3909ffcb57
+      'func `+`*[P,S](iv: IntervalRc[P,S]; jv: Interval[P,S]): IntervalRc[P,S] ='
+   [1007-1007] kind=func export=False sha=ae78c3905321
+      'func `+`*[P,S](iv: Interval[P,S]; jv: IntervalRc[P,S]): IntervalRc[P,S] ='
+   [1013-1013] kind=func export=False sha=032594af3d5e
+      'func `+`*[P,S](iv, jv: IntervalRc[P,S]): IntervalRc[P,S] ='
+GROUP interval_set::- kinds=['func', 'func', 'func', 'func']
+   [1021-1021] kind=func export=False sha=dd88a730232f
+      'func `-`*[P,S](iv, jv: Interval[P,S]): IntervalRc[P,S] ='
+   [1078-1078] kind=func export=False sha=02b445c0e595
+      'func `-`*[P,S](iv: IntervalRc[P,S]; jv: Interval[P,S]): IntervalRc[P,S] ='
+   [1084-1084] kind=func export=False sha=372bc5ba493c
+      'func `-`*[P,S](iv: Interval[P,S]; jv: IntervalRc[P,S]): IntervalRc[P,S] ='
+   [1090-1090] kind=func export=False sha=2b262f0947cd
+      'func `-`*[P,S](iv, jv: IntervalRc[P,S]): IntervalRc[P,S] ='
+GROUP io2::writeFile kinds=['proc', 'proc', 'proc', 'proc', 'proc']
+   [134-137] kind=proc export=False sha=273fb9451d41
+      'proc writeFile(hFile: uint, lpBuffer: pointer,\nnNumberOfBytesToWrite: uint32,\nlpNumberOfBytesWritten: var uint32,\nlpOverlapped: pointer): int32 {.'
+   [1138-1139] kind=proc export=True sha=2232be15d66b
+      'proc writeFile*(handle: IoHandle,\ndata: openArray[byte]): IoResult[uint] ='
+   [1169-1170] kind=proc export=True sha=30d2119139f8
+      'proc writeFile*(handle: IoHandle,\ndata: openArray[char]): IoResult[uint] {.inline.} ='
+   [1216-1218] kind=proc export=True sha=6849abb07636
+      'proc writeFile*(pathName: string, data: openArray[byte],\ncreateMode: int = 0o644,\nsecDescriptor: pointer = nil): IoResult[void] ='
+   [1250-1252] kind=proc export=True sha=dbdd2d9f2d15
+      'proc writeFile*(pathName: string, data: openArray[char],\ncreateMode: int = 0o644,\nsecDescriptor: pointer = nil): IoResult[void] {.inline.} ='
+GROUP io2::readFile kinds=['proc', 'proc', 'proc']
+   [139-142] kind=proc export=False sha=b41babdfddfe
+      'proc readFile(hFile: uint, lpBuffer: pointer,\nnNumberOfBytesToRead: uint32,\nlpNumberOfBytesRead: var uint32,\nlpOverlapped: pointer): int32 {.'
+   [1176-1177] kind=proc export=True sha=299d6dd0901f
+      'proc readFile*(handle: IoHandle,\ndata: var openArray[byte]): IoResult[uint] ='
+   [1208-1209] kind=proc export=True sha=41da9434a7fe
+      'proc readFile*(handle: IoHandle,\ndata: var openArray[char]): IoResult[uint] {.inline.} ='
+GROUP io2::getFileSize kinds=['proc', 'proc', 'proc']
+   [182-182] kind=proc export=False sha=250822084a01
+      'proc getFileSize(hFile: uint, lpFileSizeHigh: var uint32): uint32 {.'
+   [1261-1261] kind=proc export=True sha=7e61bd291c1b
+      'proc getFileSize*(pathName: string): IoResult[int64] ='
+   [1281-1281] kind=proc export=True sha=e1afec657b51
+      'proc getFileSize*(handle: IoHandle): IoResult[int64] ='
+GROUP io2::== kinds=['proc', 'proc', 'proc']
+   [212-212] kind=proc export=False sha=03a68bf7cb3e
+      'proc `==`*(a: IoErrorCode, b: uint32): bool {.inline.} ='
+   [280-280] kind=proc export=False sha=60ac5ec79aa9
+      'proc `==`*(a: IoErrorCode, b: cint): bool {.inline.} ='
+   [316-316] kind=proc export=False sha=ddf25190eca2
+      'proc `==`*(a, b: IoErrorCode): bool {.borrow.}'
+GROUP io2::getPermissions kinds=['proc', 'proc']
+   [776-776] kind=proc export=True sha=ca0afc0ca284
+      'proc getPermissions*(pathName: string): IoResult[int] ='
+   [797-797] kind=proc export=True sha=e8ad5889a337
+      'proc getPermissions*(handle: IoHandle): IoResult[int] ='
+GROUP io2::getPermissionsSet kinds=['proc', 'proc']
+   [821-821] kind=proc export=True sha=e84208dcf294
+      'proc getPermissionsSet*(pathName: string): IoResult[Permissions] ='
+   [830-830] kind=proc export=True sha=0f1e7a021978
+      'proc getPermissionsSet*(handle: IoHandle): IoResult[Permissions] ='
+GROUP io2::setPermissions kinds=['proc', 'proc', 'proc', 'proc']
+   [837-837] kind=proc export=True sha=d3d653d4efe8
+      'proc setPermissions*(pathName: string, mask: int): IoResult[void] ='
+   [869-869] kind=proc export=True sha=7c7ecc564603
+      'proc setPermissions*(handle: IoHandle, mask: int): IoResult[void] ='
+   [907-907] kind=proc export=True sha=1b8de0ec265b
+      'proc setPermissions*(pathName: string, mask: Permissions): IoResult[void] ='
+   [911-911] kind=proc export=True sha=f5fa24174931
+      'proc setPermissions*(handle: IoHandle, mask: Permissions): IoResult[void] ='
+GROUP io2::truncate kinds=['proc', 'proc']
+   [1402-1402] kind=proc export=True sha=0cd5ffec5a4b
+      'proc truncate*(handle: IoHandle, length: int64): IoResult[void] ='
+   [1420-1420] kind=proc export=True sha=82525b7e6710
+      'proc truncate*(pathName: string, length: int64): IoResult[void] ='
+GROUP io2::readFile*[T: kinds=['proc', 'proc']
+   [1475-1476] kind=proc export=False sha=28deddaf4757
+      'proc readFile*[T: byte|char](pathName: string,\ndata: var openArray[T]): IoResult[uint] ='
+   [1494-1495] kind=proc export=False sha=f5f5495bfd24
+      'proc readFile*[T: seq[byte]|string](pathName: string,\ndata: var T): IoResult[void] ='
+GROUP io2::lockFile kinds=['proc', 'proc']
+   [1529-1530] kind=proc export=True sha=8269be4b9321
+      'proc lockFile*(handle: IoHandle, kind: LockType, offset,\nsize: int64): IoResult[void] ='
+   [1666-1666] kind=proc export=True sha=3d09a01eb3df
+      'proc lockFile*(handle: IoHandle, kind: LockType): IoResult[IoLockHandle] ='
+GROUP io2::unlockFile kinds=['proc', 'proc']
+   [1607-1607] kind=proc export=True sha=9d16e32523d7
+      'proc unlockFile*(handle: IoHandle, offset, size: int64): IoResult[void] ='
+   [1678-1678] kind=proc export=True sha=8f211284e515
+      'proc unlockFile*(lock: IoLockHandle): IoResult[void] ='
+GROUP keyed_queue::init*[K, kinds=['func', 'func']
+   [247-247] kind=func export=False sha=508b6595defc
+      'func init*[K, V](rq: var KeyedQueue[K, V], initSize = defaultInitialSize) ='
+   [252-252] kind=func export=False sha=4580149df4b1
+      'func init*[K, V](T: type KeyedQueue[K, V], initSize = defaultInitialSize): T ='
+GROUP keyed_queue::init*[K] kinds=['func', 'func']
+   [256-256] kind=func export=False sha=9233bd37c3a6
+      'func init*[K](rq: var KeyedQueueNV[K], initSize = defaultInitialSize) ='
+   [260-260] kind=func export=False sha=f3a252d0ac2e
+      'func init*[K](T: type KeyedQueueNV[K], initSize = defaultInitialSize): T ='
+GROUP leb128::len kinds=['func', 'template']
+   [53-53] kind=func export=True sha=a49718f2d245
+      'func len*(T: type Leb128, x: SomeUnsignedInt): int8 ='
+   [161-161] kind=template export=True sha=7ea720e50b88
+      'template len*(v: Leb128Buf): int8 = v.len'
+GROUP leb128::fromBytes kinds=['func', 'template']
+   [132-135] kind=func export=True sha=0e51655d6119
+      'func fromBytes*(\nI: type SomeUnsignedInt,\nx: openArray[byte],\nT: type Leb128): tuple[val: I, len: int8] {.noinit.} ='
+   [166-168] kind=template export=True sha=5040491611e1
+      'template fromBytes*(\nI: type SomeUnsignedInt,\nx: Leb128Buf): tuple[val: I, len: int8] ='
+GROUP lentutils::maybeLent kinds=['template', 'template']
+   [20-20] kind=template export=True sha=8a765710695f
+      'template maybeLent*(T: untyped): untyped ='
+   [24-24] kind=template export=True sha=8a765710695f
+      'template maybeLent*(T: untyped): untyped ='
+GROUP objects::init kinds=['template', 'template', 'template', 'template']
+   [16-16] kind=template export=True sha=47b59da51614
+      'template init*(lvalue: var auto) ='
+   [20-20] kind=template export=True sha=b86072c044c4
+      'template init*(lvalue: var auto, a1: auto)='
+   [24-24] kind=template export=True sha=fa15d39ed7bd
+      'template init*(lvalue: var auto, a1, a2: auto) ='
+   [28-28] kind=template export=True sha=84108caf62d8
+      'template init*(lvalue: var auto, a1, a2, a3: auto) ='
+GROUP objects::baseType kinds=['proc', 'proc', 'proc', 'proc', 'proc', 'proc']
+   [71-71] kind=proc export=True sha=24f4b33c4a8b
+      'proc baseType*(obj: RootObj): cstring {.error: "baseType requires -d:nimTypeNames".}'
+   [72-72] kind=proc export=True sha=2111393ac06f
+      'proc baseType*(obj: ref RootObj): cstring {.error: "baseType requires -d:nimTypeNames".}'
+   [74-74] kind=proc export=True sha=ec44d042c24d
+      'proc baseType*(obj: RootObj): cstring {.error: "baseType is not available in ARC/ORC".}'
+   [75-75] kind=proc export=True sha=5d531b6aa2c0
+      'proc baseType*(obj: ref RootObj): cstring {.error: "baseType is not available in ARC/ORC".}'
+   [77-77] kind=proc export=True sha=600121f69119
+      'proc baseType*(obj: RootObj): cstring {.deprecated.} ='
+   [80-80] kind=proc export=True sha=a25bb43328e8
+      'proc baseType*(obj: ref RootObj): cstring {.deprecated.} ='
+GROUP sorted_set::slstCmp[K,V] kinds=['func', 'func']
+   [101-101] kind=func export=False sha=4a01427cb13f
+      'func slstCmp[K,V](casket: SortedSetItemRef[K,V]; key: K): int ='
+   [104-104] kind=func export=False sha=09f17ee2a69c
+      'func slstCmp[K,V](casket: SortedSetItemRef[K,V]; key: K; cmq: SlstCmp[K]): int ='
+GROUP sorted_set::init*[K,V] kinds=['func', 'func', 'func', 'func', 'func']
+   [125-125] kind=func export=False sha=f621de743ae8
+      'func init*[K,V](sl: var SortedSet[K,V]) ='
+   [131-131] kind=func export=False sha=0916b06421ce
+      'func init*[K,V](sl: var SortedSet[K,V]; cmp: SlstCmp[K]) ='
+   [137-137] kind=func export=False sha=e33cceb38908
+      'func init*[K,V](T: type SortedSet[K,V]): T ='
+   [141-141] kind=func export=False sha=a89bf1e2fc53
+      'func init*[K,V](T: type SortedSet[K,V]; cmp: SlstCmp[K]): T ='
+   [230-230] kind=func export=False sha=192c5f63db6d
+      'func init*[K,V](T: type SortedSetWalkRef[K,V]; sl: SortedSet[K,V]): T ='
+GROUP sorted_set::$ kinds=['func', 'func']
+   [291-291] kind=func export=False sha=15a5c187cce9
+      'func `$`*[K,V](casket: SortedSetItemRef[K,V]): string ='
+   [303-303] kind=func export=False sha=3d4d411e1b92
+      'func `$`*[K,V](rc: SortedSetResult[K,V]): string ='
+GROUP templateutils::evalTemplateParamOnceImpl[T] kinds=['iterator', 'iterator']
+   [14-14] kind=iterator export=False sha=b0f4384806a7
+      'iterator evalTemplateParamOnceImpl[T](x: T): maybeLent T ='
+   [17-17] kind=iterator export=False sha=fb2051cebc3f
+      'iterator evalTemplateParamOnceImpl[T](x: var T): var T ='
+GROUP windows.acl::getTokenInformation kinds=['proc', 'proc']
+   [85-87] kind=proc export=False sha=f02a7142fffe
+      'proc getTokenInformation(tokenHandle: uint, tokenInformationClass: uint32,\ntokenInfo: pointer, tokenInfoLen: uint32,\nreturnLength: var uint32): int32 {.'
+   [154-155] kind=proc export=False sha=5a4d9c314c15
+      'proc getTokenInformation(token: uint,\ninformation: uint32): IoResult[LocalMemPtr] ='
+GROUP windows.acl::free kinds=['proc', 'proc', 'proc']
+   [139-139] kind=proc export=False sha=555c846e9d8d
+      'proc free(mem: LocalMemPtr): uint ='
+   [142-142] kind=proc export=True sha=5d84fdb46b3b
+      'proc free*(sd: var SD) ='
+   [149-149] kind=proc export=True sha=80ff8d4cc67a
+      'proc free*(sid: var SID) ='
+GROUP windows.acl::getAddr kinds=['template', 'template']
+   [225-225] kind=template export=True sha=3cbbfe878206
+      'template getAddr*(sid: SID): pointer ='
+   [229-229] kind=template export=True sha=9231d9e3605a
+      'template getAddr*(mem: LocalMemPtr): pointer ='
+GROUP ranges.stackarrays::alloca kinds=['proc', 'proc']
+   [48-48] kind=proc export=False sha=bef017f5053d
+      'proc alloca(n: int): pointer {.importc, header: "<malloc.h>".}'
+   [50-50] kind=proc export=False sha=3a266ec9661c
+      'proc alloca(n: int): pointer {.importc, header: "<alloca.h>".}'
+GROUP ranges.stackarrays::[] kinds=['template', 'template']
+   [67-67] kind=template export=False sha=a5c1c042e72d
+      'template `[]`*(a: StackArray, i: int): auto ='
+   [75-75] kind=template export=False sha=560697167f5d
+      'template `[]`*(a: StackArray, i: BackwardsIndex): auto ='
+GROUP ranges.stackarrays::[]= kinds=['func', 'func']
+   [71-71] kind=func export=False sha=91215cb44d6a
+      'func `[]=`*(a: StackArray, i: int, val: a.T) {.inline.} ='
+   [79-79] kind=func export=False sha=9614071f1ffb
+      'func `[]=`*(a: StackArray, i: BackwardsIndex, val: a.T) ='
+GROUP ranges.stackarrays::toOpenArray kinds=['template', 'template', 'template']
+   [123-123] kind=template export=True sha=1718055db375
+      'template toOpenArray*(a: StackArray): auto ='
+   [126-126] kind=template export=True sha=740844413c94
+      'template toOpenArray*(a: StackArray, first: int): auto ='
+   [130-130] kind=template export=True sha=1c5ac4ba5ab8
+      'template toOpenArray*(a: StackArray, first, last: int): auto ='
+GROUP sorted_set.rbtree_desc::$ kinds=['func', 'func', 'func']
+   [269-269] kind=func export=False sha=27f9ddb12987
+      'func `$`*[C](node: RbNodeRef[C]): string ='
+   [281-281] kind=func export=False sha=f0f766afcb7d
+      'func `$`*[C,K](rbt: RbTreeRef[C,K]): string ='
+   [290-290] kind=func export=False sha=82813c61f30c
+      'func `$`*[C,K](w: RbWalkRef[C,K]): string ='
+GROUP sorted_set.rbtree_walk::rbWalkDestroyAll*[C,K] kinds=['func', 'func']
+   [145-145] kind=func export=False sha=cfe0b69229e3
+      'func rbWalkDestroyAll*[C,K](rbt: RbTreeRef[C,K]) ='
+   [154-154] kind=func export=False sha=2cec31b737f5
+      'func rbWalkDestroyAll*[C,K](w: RbWalkRef[C,K]) ='
+GROUP shims.macros::storeMacroResult kinds=['proc', 'proc']
+   [50-52] kind=proc export=True sha=a8bc23a2a976
+      'proc storeMacroResult*(callSite: LineInfo,\nmacroResult: NimNode,\nwriteOutputImmediately = false) {.raises: [IOError].} ='
+   [59-59] kind=proc export=True sha=37962fec5d76
+      'proc storeMacroResult*(macroResult: NimNode, writeOutputImmediately = false) {.raises: [IOError].} ='
+GROUP shims.macros::isTuple kinds=['func', 'macro']
+   [76-76] kind=func export=True sha=51686734dd59
+      'func isTuple*(t: NimNode): bool ='
+   [79-79] kind=macro export=True sha=8dd37c23b8a1
+      'macro isTuple*(T: type): untyped ='
+GROUP shims.macros::newLitFixed kinds=['proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc']
+   [261-261] kind=proc export=True sha=5e794d270abd
+      'proc newLitFixed*(c: char): NimNode {.compileTime.} ='
+   [266-266] kind=proc export=True sha=2478d6fbe248
+      'proc newLitFixed*(i: int): NimNode {.compileTime.} ='
+   [271-271] kind=proc export=True sha=aec8b4f24f6c
+      'proc newLitFixed*(i: int8): NimNode {.compileTime.} ='
+   [276-276] kind=proc export=True sha=33eda7ee3d3e
+      'proc newLitFixed*(i: int16): NimNode {.compileTime.} ='
+   [281-281] kind=proc export=True sha=c0c2270e2d6e
+      'proc newLitFixed*(i: int32): NimNode {.compileTime.} ='
+   [286-286] kind=proc export=True sha=14bd07b88ac6
+      'proc newLitFixed*(i: int64): NimNode {.compileTime.} ='
+   [291-291] kind=proc export=True sha=3f681bb34c44
+      'proc newLitFixed*(i: uint): NimNode {.compileTime.} ='
+   [296-296] kind=proc export=True sha=e497d93d1eb9
+      'proc newLitFixed*(i: uint8): NimNode {.compileTime.} ='
+   [301-301] kind=proc export=True sha=a9cbaa3816d7
+      'proc newLitFixed*(i: uint16): NimNode {.compileTime.} ='
+   [306-306] kind=proc export=True sha=aa2bf5355561
+      'proc newLitFixed*(i: uint32): NimNode {.compileTime.} ='
+   [311-311] kind=proc export=True sha=6948bf568406
+      'proc newLitFixed*(i: uint64): NimNode {.compileTime.} ='
+   [316-316] kind=proc export=True sha=eefc99081067
+      'proc newLitFixed*(b: bool): NimNode {.compileTime.} ='
+   [320-320] kind=proc export=True sha=c366a0a3dcaf
+      'proc newLitFixed*(s: string): NimNode {.compileTime.} ='
+   [327-327] kind=proc export=True sha=784fc6d01acc
+      'proc newLitFixed*(f: float): NimNode {.compileTime.} ='
+   [332-332] kind=proc export=True sha=72ac81a859f9
+      'proc newLitFixed*(f: float32): NimNode {.compileTime.} ='
+   [337-337] kind=proc export=True sha=3dfb5079bbb9
+      'proc newLitFixed*(f: float64): NimNode {.compileTime.} ='
+   [343-343] kind=proc export=True sha=ea07984a0228
+      'proc newLitFixed*(f: float128): NimNode {.compileTime.} ='
+   [348-348] kind=proc export=True sha=aad5932f90f2
+      'proc newLitFixed*(arg: enum): NimNode {.compileTime.} ='
+   [357-357] kind=proc export=True sha=4ddcf05ebdfa
+      'proc newLitFixed*(arg: tuple): NimNode {.compileTime.}'
+   [359-359] kind=proc export=True sha=d37b0c8e71ee
+      'proc newLitFixed*(arg: object): NimNode {.compileTime.} ='
+   [364-364] kind=proc export=True sha=cb84522e9c90
+      'proc newLitFixed*(arg: ref object): NimNode {.compileTime.} ='
+   [393-393] kind=proc export=True sha=84319647ba62
+      'proc newLitFixed*(arg: tuple): NimNode {.compileTime.} ='
+   [398-398] kind=proc export=True sha=40ebc3abb22e
+      'proc newLitFixed*(arg: distinct): NimNode {.compileTime.} ='
+GROUP shims.macros::newLitFixed*[N,T] kinds=['proc', 'proc']
+   [354-354] kind=proc export=False sha=1642e44e8b31
+      'proc newLitFixed*[N,T](arg: array[N,T]): NimNode {.compileTime.}'
+   [370-370] kind=proc export=False sha=2f9f0c52275d
+      'proc newLitFixed*[N,T](arg: array[N,T]): NimNode {.compileTime.} ='
+GROUP shims.macros::newLitFixed*[T] kinds=['proc', 'proc', 'proc', 'proc']
+   [355-355] kind=proc export=False sha=a3262369aaaf
+      'proc newLitFixed*[T](arg: seq[T]): NimNode {.compileTime.}'
+   [356-356] kind=proc export=False sha=dc8a1ac7f0c5
+      'proc newLitFixed*[T](s: set[T]): NimNode {.compileTime.}'
+   [375-375] kind=proc export=False sha=a68eb0b57762
+      'proc newLitFixed*[T](arg: seq[T]): NimNode {.compileTime.} ='
+   [388-388] kind=proc export=False sha=9363f8a39884
+      'proc newLitFixed*[T](s: set[T]): NimNode {.compileTime.} ='
+GROUP shims.macros::generator: kinds=['iterator', 'iterator']
+   [440-440] kind=iterator export=False sha=961d0cdb2212
+      'iterator generator: NimNode = body'
+   [450-450] kind=iterator export=False sha=961d0cdb2212
+      'iterator generator: NimNode = body'
+GROUP shims.macros::payload: kinds=['macro', 'macro', 'macro']
+   [442-442] kind=macro export=False sha=06e9d1dd2f40
+      'macro payload: untyped ='
+   [452-452] kind=macro export=False sha=06e9d1dd2f40
+      'macro payload: untyped ='
+   [460-460] kind=macro export=False sha=9c3dd85308a6
+      'macro payload: untyped = body'
+GROUP shims.sets::init*[T] kinds=['template', 'template', 'template', 'template', 'template']
+   [14-14] kind=template export=False sha=b6738cfbfb74
+      'template init*[T](_: type HashSet[T]): auto = initHashSet[T]()'
+   [15-15] kind=template export=False sha=cf0c949aa7d4
+      'template init*[T](_: type HashSet[T], defaultSize: int): auto = initHashSet[T](defaultSize)'
+   [20-20] kind=template export=False sha=02e7978ff4e6
+      'template init*[T](_: type OrderedSet[T]): auto = initOrderedSet[T]()'
+   [21-21] kind=template export=False sha=fb77170d9ff9
+      'template init*[T](_: type OrderedSet[T], initialSize: int): auto = initOrderedSet[T](initialSize)'
+   [24-24] kind=template export=False sha=1d6c4bd1e549
+      'template init*[T](_: type set[T]): auto ='
+GROUP shims.strformat::formatValue kinds=['proc', 'proc']
+   [156-156] kind=proc export=True sha=a047b6041bf6
+      'proc formatValue*(result: var string; value: SomeFloat; specifier: static string) ='
+   [169-169] kind=proc export=True sha=04414c763693
+      'proc formatValue*(result: var string; value: string; specifier: static string) ='
+GROUP shims.tables::init*[A, kinds=['template', 'template', 'template', 'template']
+   [3-3] kind=template export=False sha=bcd8f75a1ca2
+      'template init*[A, B](T: type Table[A, B]): auto = initTable[A, B]()'
+   [4-4] kind=template export=False sha=4b050cd0c254
+      'template init*[A, B](T: type TableRef[A, B]): auto = newTable[A, B]()'
+   [6-6] kind=template export=False sha=c81758c69c39
+      'template init*[A, B](T: type OrderedTable[A, B]): auto = initOrderedTable[A, B]()'
+   [7-7] kind=template export=False sha=4776be4b0789
+      'template init*[A, B](T: type OrderedTableRef[A, B]): auto = newOrderedTable[A, B]()'
+GROUP shims.tables::init*[A] kinds=['template', 'template']
+   [9-9] kind=template export=False sha=cded1fa784b3
+      'template init*[A](T: type CountTable[A]): auto = initCountTable[A]()'
+   [10-10] kind=template export=False sha=99afce90f2ac
+      'template init*[A](T: type CountTableRef[A]): auto = newCountTable[A]()'

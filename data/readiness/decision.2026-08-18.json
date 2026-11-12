@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "policyHash": "7edb020d4ed34cc4ce9ed05b73457231348e7f899fe0f2fa2d1437894ccf4174",
+  "bundleDigest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+  "invariantStates": {
+    "R1": "UNKNOWN",
+    "R2": "UNKNOWN",
+    "R3": "UNKNOWN",
+    "R4": "UNKNOWN",
+    "R5": "UNKNOWN",
+    "R6": "UNKNOWN",
+    "R7": "UNKNOWN",
+    "R8": "UNKNOWN"
+  },
+  "verdict": "NO-GO",
+  "conditions": [],
+  "decisionDigest": "a49d6319ebc71d3eb0f7abf7ab764f16fed77e6bb97a06d44b32723b1f6c4324"
+}

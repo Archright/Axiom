@@ -1,0 +1,13 @@
+{
+  "script": "tools/ci/ratchet_check.sh",
+  "description": "Ratchet Effect: Touched-File Legacy Violation Checker — pre-commit hook that blocks changes to files listed in legacy_violations.txt",
+  "inputSample": {
+    "args": [],
+    "gitDiff": "M src/core/legacy_module.nim"
+  },
+  "outputSample": {
+    "stdout": "ratchet_check: PASS (0 legacy violations in staged files)",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

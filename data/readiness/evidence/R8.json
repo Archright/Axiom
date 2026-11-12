@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "invariantId": "R8",
+  "repoIdentity": {
+    "head": "ba773d0631b5757525b16d8fd62e220492e98e76",
+    "branch": "chore/r2-r8-snapshot-regen",
+    "workingTreeClean": true,
+    "treeDigest": "5a6f99db4cd26f6a5d365e29c60b378f52bc11b04126efe05757c76ee0f80bae"
+  },
+  "toolchain": {
+    "nim": "2.2.10",
+    "z3": "4.13.3",
+    "lean": "leanprover/lean4:v4.33.0"
+  },
+  "collection": {
+    "collector": "tools/collect_evidence_probe.nim",
+    "method": "automated",
+    "generatedAt": "2026-10-13T09:08:36Z",
+    "freshUntil": "2026-11-12T09:08:36Z"
+  },
+  "observations": [
+    {
+      "key": "installFollowed",
+      "value": true,
+      "scope": "operability",
+      "subject": "toolchains nim/z3/lean observed + bin/ax --version exit 0"
+    },
+    {
+      "key": "documentedRunSteps",
+      "value": true,
+      "scope": "operability",
+      "subject": "README run flow + contract §10.6 prepare sequence verbatim"
+    }
+  ],
+  "incidents": [],
+  "sources": [
+    {
+      "file": "README.md",
+      "sha256": "37b80219e61632f1554052f85049d7ddd8ba68d7672248e0cff4f49ebe9c06ba",
+      "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76",
+      "symbol": "documented run steps"
+    },
+    {
+      "file": "docs/spec/productization_contract.md",
+      "sha256": "d1df0fc077a2822e48dce01c88ae82831d8d69863674143aa92cf28dd8bc5247",
+      "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76",
+      "symbol": "R8 contract §10.6 prepare sequence"
+    },
+    {
+      "file": "/tmp/axiom-rust-probe/Cargo.toml",
+      "sha256": "04761a3ead87944c60a561b8198c588fb56562fd2b1ff77635c3744719a811e1",
+      "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76",
+      "symbol": "Rust probe crate manifest"
+    },
+    {
+      "file": "/tmp/axiom-rust-probe/Cargo.lock",
+      "sha256": "b1613b75e1268d6f1546728b06f58d9e24e07122503dd6c618f8a8a763a6bb87",
+      "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76",
+      "symbol": "Rust probe crate lockfile"
+    }
+  ],
+  "commands": [
+    {
+      "cmd": "bin/ax --version",
+      "exitCode": 0,
+      "stdoutDigest": "3265de1af71871dffe53bc98d1315c346f6799e915b40025e97849911aed1338",
+      "stderrDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputDigest": "3265de1af71871dffe53bc98d1315c346f6799e915b40025e97849911aed1338"
+    },
+    {
+      "cmd": "cargo fetch --locked",
+      "exitCode": 0,
+      "stdoutDigest": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "stderrDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputDigest": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "cmd": "cargo metadata --format-version=1 --locked",
+      "exitCode": 0,
+      "stdoutDigest": "36f9a65a1a9cc3b0a091e4e43cca36110d6135e49fcc2573e0ffce64bfa89443",
+      "stderrDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputDigest": "36f9a65a1a9cc3b0a091e4e43cca36110d6135e49fcc2573e0ffce64bfa89443"
+    },
+    {
+      "cmd": "cargo build --frozen",
+      "exitCode": 0,
+      "stdoutDigest": "d314c7902f4f949a8c61624b92e3d6aba678ef5e8ee53464290dc3cce9fb8ca4",
+      "stderrDigest": "6d77f64dfc8c5325b90fdbe05d8be367bdd578bcccec24f275c5ffee7d03dd6e",
+      "outputDigest": "ac01553b0d7569e9bc1dea4c149c32c32b8c9dcb5e7d0c2b91542091269b18ef"
+    }
+  ]
+}

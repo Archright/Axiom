@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/bottom_up_func_promoter.sh",
+  "description": "Bottom-Up func Promoter — converts eligible procs to funcs starting from leaf nodes in the dependency graph",
+  "inputSample": {
+    "args": ["--dry-run"]
+  },
+  "outputSample": {
+    "stdout": "func_promoter: 7 leaf procs eligible for conversion (dry-run)",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

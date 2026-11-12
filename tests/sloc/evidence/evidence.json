@@ -1,0 +1,262 @@
+[
+  {
+    "id": "ev-001",
+    "fixture_source": "proc f() =\n  result = 1\n  discard\n  discard",
+    "fixture_raw_sha256": "75795c0c1c07d74f6058ca0e73bcee7ec0e203aad7a875576f2dddced7708639",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected_result": 4,
+    "observed_facts": [],
+    "observed_result": "4",
+    "policy_refs": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "ev-002",
+    "fixture_source": "proc f() =\n  # comment\n  result = 1",
+    "fixture_raw_sha256": "111fbdeff64384d4f013bf18121b29c3fcc7bb12b6c721fd2574f9e71fe6284b",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected_result": 2,
+    "observed_facts": [],
+    "observed_result": "2",
+    "policy_refs": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "ev-003",
+    "fixture_source": "proc f() =\n  ## doc comment\n  result = 1",
+    "fixture_raw_sha256": "5fb237a7a38a750130b16c68c79cfdf3732a24fdddbae1b59710796a63ee5a3d",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected_result": 2,
+    "observed_facts": [],
+    "observed_result": "2",
+    "policy_refs": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "ev-004",
+    "fixture_source": "proc f() =\n\n  result = 1",
+    "fixture_raw_sha256": "3f76e82c415124419589310014e109246d1bcdf27bed26333bd7e8dee0f9666c",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected_result": 2,
+    "observed_facts": [],
+    "observed_result": "2",
+    "policy_refs": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "ev-005",
+    "fixture_source": "let x = \"\"\"\n  hello\n  world\n\"\"\"",
+    "fixture_raw_sha256": "708110881f23cb203d04ef83f0abfac5bab4f5297cdf289a43f813815881ea15",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected_result": 4,
+    "observed_facts": [],
+    "observed_result": "4",
+    "policy_refs": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "ev-006",
+    "fixture_source": "{.warning: \"test\".}\ndiscard",
+    "fixture_raw_sha256": "608a440428e9cd4a46a178d0d564f9e6dd335571cf1f6b488f35f9628097420e",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected_result": 2,
+    "observed_facts": [],
+    "observed_result": "2",
+    "policy_refs": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "ev-007",
+    "fixture_source": "proc f() =\n  #[ nested #[ comment ]# ]#\n  result = 1",
+    "fixture_raw_sha256": "0e921907f5b894ff289241d6b7a6d361411e94f6b46777c04b7191ea3f8261c4",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected_result": 2,
+    "observed_facts": [],
+    "observed_result": "2",
+    "policy_refs": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "ev-008",
+    "fixture_source": "proc f() =\n  discard",
+    "fixture_raw_sha256": "212153f2038ea5b4cea05adcd7d29acb6a0e622b744cc104b0890c142c3c247f",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected_result": 2,
+    "observed_facts": [],
+    "observed_result": "2",
+    "policy_refs": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "ev-009",
+    "fixture_source": "proc f() =  # inline comment\n  result = 1",
+    "fixture_raw_sha256": "c887a762fe1e48f05b1574dcfc166c26cb03f684ae906400ce50cb106ef724d4",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected_result": 2,
+    "observed_facts": [],
+    "observed_result": "2",
+    "policy_refs": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "ev-010",
+    "fixture_source": "let x = 1; let y = 2",
+    "fixture_raw_sha256": "b3754b4cdb042722c6a23ca7697d59b5a71ae46b13a225f8d4600fe73bf39166",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected_result": 1,
+    "observed_facts": [],
+    "observed_result": "1",
+    "policy_refs": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "ev-011",
+    "fixture_source": "when true:\n  discard\nwhen false:\n  discard",
+    "fixture_raw_sha256": "65838471b644a7b71f303b1c2ee02077dad788e06819c65ac26874b00e76b61a",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected_result": 4,
+    "observed_facts": [],
+    "observed_result": "4",
+    "policy_refs": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "ev-012",
+    "fixture_source": "when true:\n  discard\nwhen false:\n  discard",
+    "fixture_raw_sha256": "65838471b644a7b71f303b1c2ee02077dad788e06819c65ac26874b00e76b61a",
+    "metric": "effectiveSloc",
+    "context": null,
+    "expected_result": 2,
+    "observed_facts": [],
+    "observed_result": "2",
+    "policy_refs": [
+      "SLOC-WHEN-TIER1"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "ev-013",
+    "fixture_source": "when true:\n  discard\nelse:\n  discard",
+    "fixture_raw_sha256": "9ad935be2edd63982d24889db3c04ceb21ddbb287d6150112d58c2dfc2a387d6",
+    "metric": "effectiveSloc",
+    "context": null,
+    "expected_result": 2,
+    "observed_facts": [],
+    "observed_result": "2",
+    "policy_refs": [
+      "SLOC-WHEN-TIER1"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "ev-014",
+    "fixture_source": "when false:\n  discard\nelse:\n  discard",
+    "fixture_raw_sha256": "47a7c33c84281e22b5cb9ff6dd9885595030bad0fd97fe12623c6f03c49911b3",
+    "metric": "effectiveSloc",
+    "context": null,
+    "expected_result": 1,
+    "observed_facts": [],
+    "observed_result": "1",
+    "policy_refs": [
+      "SLOC-WHEN-TIER1"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "ev-015",
+    "fixture_source": "when defined(posix):\n  discard\nelse:\n  discard",
+    "fixture_raw_sha256": "7fdcf2f8ff7c89b4a9f5d9d34dd7b907c0a829141a2583f07aa65ea70d88118e",
+    "metric": "effectiveSloc",
+    "context": {
+      "defines": {
+        "knownDefined": [
+          "posix"
+        ],
+        "knownUndefined": []
+      },
+      "targetOS": null,
+      "targetCPU": null,
+      "compileOptions": []
+    },
+    "expected_result": 2,
+    "observed_facts": [],
+    "observed_result": "2",
+    "policy_refs": [
+      "SLOC-WHEN-CONTEXT"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "ev-016",
+    "fixture_source": "when windows:\n  discard\nelse:\n  discard",
+    "fixture_raw_sha256": "3251809548b4e661a55d7e26aa8ec5077c1ec2a4f447ce8531032ef9b2bb4d92",
+    "metric": "effectiveSloc",
+    "context": {
+      "defines": {
+        "knownDefined": [],
+        "knownUndefined": []
+      },
+      "targetOS": null,
+      "targetCPU": null,
+      "compileOptions": []
+    },
+    "expected_result": {
+      "error": "urMissingSemanticContext"
+    },
+    "observed_facts": [],
+    "observed_result": "err:urMissingSemanticContext",
+    "policy_refs": [
+      "SLOC-WHEN-UNKNOWN"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  }
+]

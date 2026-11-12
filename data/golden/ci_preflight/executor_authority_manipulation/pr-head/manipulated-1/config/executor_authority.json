@@ -1,0 +1,17 @@
+// pr-head/manipulated-1.executor_authority.json — MANIPULATED UNTRUSTED PR
+// HEAD fixture (V-A'4 scenario 1): an arbitrary attacker blob
+// (e7414d7b9835fa8c163579efb6867ee11c41c182) has been injected into the
+// `trusted` array of a PR-head copy of config/executor_authority.json.
+// This file exists at the PR head; a vulnerable bind step that consulted the
+// PR head would mint for the attacker blob. The trusted bind MUST ignore it:
+// membership is decided ONLY by the MAIN-checkout file (see
+// main/phase0/executor_authority.json).
+{
+  "schemaVersion": 1,
+  "policyId": "axiom-executor-authority-v1",
+  "phase": "phase0",
+  "trusted": [
+    "65a3c58f305baf46dd9e044316b46a19ccd01ba7",
+    "e7414d7b9835fa8c163579efb6867ee11c41c182"
+  ]
+}

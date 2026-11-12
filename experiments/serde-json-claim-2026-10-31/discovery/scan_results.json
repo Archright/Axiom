@@ -1,0 +1,292 @@
+{
+ "stats": {
+  "fun_decls_total": 2134,
+  "null_entries": 296,
+  "structured": 1162,
+  "opaque": 675,
+  "intrinsic": 1,
+  "type_decls": 240,
+  "trait_decls": 96,
+  "trait_impls": 606,
+  "global_decls": 382,
+  "ordered_decls": 2491,
+  "files_by_crate": {
+   "serde_json": 15,
+   "core": 100,
+   "alloc": 20,
+   "serde_core": 11,
+   "zmij": 2,
+   "itoa": 1,
+   "memchr": 2
+  },
+  "is_local_structured": {
+   "True": 1157,
+   "False": 5
+  }
+ },
+ "stmt_hist_global": {
+  "StorageLive": 5637,
+  "Assign": 3599,
+  "StorageDead": 3433,
+  "Call": 1320,
+  "Return": 1161,
+  "Drop": 951,
+  "Switch": 353,
+  "Borrowck": 209,
+  "PlaceMention": 39,
+  "Loop": 22,
+  "Assert": 19
+ },
+ "rvalue_hist_global": {
+  "Ref": 1392,
+  "Use": 1235,
+  "Aggregate": 516,
+  "Discriminant": 301,
+  "UnaryOp": 100,
+  "BinaryOp": 52,
+  "Repeat": 3
+ },
+ "binop_hist_global": {
+  "Lt": 16,
+  "Eq": 12,
+  "AddChecked": 7,
+  "Le": 5,
+  "BitOr": 3,
+  "SubChecked": 3,
+  "Ge": 2,
+  "{\"Shl\": \"Wrap\"}": 1,
+  "{\"Shr\": \"Wrap\"}": 1,
+  "BitAnd": 1,
+  "{\"Div\": \"UB\"}": 1
+ },
+ "operand_hist_global": {
+  "Move": 669,
+  "Copy": 537,
+  "Const": 133
+ },
+ "rejections": {
+  "signature_types": 1148,
+  "Switch": 1
+ },
+ "type_rej_first_offender": {
+  "Ref": 669,
+  "Adt": 423,
+  "Scalar": 26,
+  "TypeVar": 21,
+  "Array": 6,
+  "other": 3
+ },
+ "params_all_scalar_count": 78,
+ "fails_only_unit_return": 0,
+ "unresolved_dedup_type_ids": 475,
+ "types_pool_size": 5915,
+ "candidates": [
+  {
+   "name": "serde_json::ser::BB",
+   "params": [],
+   "ret": "u8",
+   "stmt_kinds": [
+    "StorageLive",
+    "Assign",
+    "Return"
+   ],
+   "sig_line": "const BB: u8 = b'b'; // \\x08",
+   "src": "serde_json:src/ser.rs:2135",
+   "is_local": true,
+   "public": false
+  },
+  {
+   "name": "serde_json::ser::TT",
+   "params": [],
+   "ret": "u8",
+   "stmt_kinds": [
+    "StorageLive",
+    "Assign",
+    "Return"
+   ],
+   "sig_line": "const TT: u8 = b't'; // \\x09",
+   "src": "serde_json:src/ser.rs:2136",
+   "is_local": true,
+   "public": false
+  },
+  {
+   "name": "serde_json::ser::NN",
+   "params": [],
+   "ret": "u8",
+   "stmt_kinds": [
+    "StorageLive",
+    "Assign",
+    "Return"
+   ],
+   "sig_line": "const NN: u8 = b'n'; // \\x0A",
+   "src": "serde_json:src/ser.rs:2137",
+   "is_local": true,
+   "public": false
+  },
+  {
+   "name": "serde_json::ser::FF",
+   "params": [],
+   "ret": "u8",
+   "stmt_kinds": [
+    "StorageLive",
+    "Assign",
+    "Return"
+   ],
+   "sig_line": "const FF: u8 = b'f'; // \\x0C",
+   "src": "serde_json:src/ser.rs:2138",
+   "is_local": true,
+   "public": false
+  },
+  {
+   "name": "serde_json::ser::RR",
+   "params": [],
+   "ret": "u8",
+   "stmt_kinds": [
+    "StorageLive",
+    "Assign",
+    "Return"
+   ],
+   "sig_line": "const RR: u8 = b'r'; // \\x0D",
+   "src": "serde_json:src/ser.rs:2139",
+   "is_local": true,
+   "public": false
+  },
+  {
+   "name": "serde_json::ser::QU",
+   "params": [],
+   "ret": "u8",
+   "stmt_kinds": [
+    "StorageLive",
+    "Assign",
+    "Return"
+   ],
+   "sig_line": "const QU: u8 = b'\"'; // \\x22",
+   "src": "serde_json:src/ser.rs:2140",
+   "is_local": true,
+   "public": false
+  },
+  {
+   "name": "serde_json::ser::BS",
+   "params": [],
+   "ret": "u8",
+   "stmt_kinds": [
+    "StorageLive",
+    "Assign",
+    "Return"
+   ],
+   "sig_line": "const BS: u8 = b'\\\\'; // \\x5C",
+   "src": "serde_json:src/ser.rs:2141",
+   "is_local": true,
+   "public": false
+  },
+  {
+   "name": "serde_json::ser::UU",
+   "params": [],
+   "ret": "u8",
+   "stmt_kinds": [
+    "StorageLive",
+    "Assign",
+    "Return"
+   ],
+   "sig_line": "const UU: u8 = b'u'; // \\x00...\\x1F except the ones above",
+   "src": "serde_json:src/ser.rs:2142",
+   "is_local": true,
+   "public": false
+  },
+  {
+   "name": "serde_json::ser::__",
+   "params": [],
+   "ret": "u8",
+   "stmt_kinds": [
+    "StorageLive",
+    "Assign",
+    "Return"
+   ],
+   "sig_line": "const __: u8 = 0;",
+   "src": "serde_json:src/ser.rs:2143",
+   "is_local": true,
+   "public": false
+  },
+  {
+   "name": "serde_json::read::<impl serde_json::read>::should_early_return_if_failed",
+   "params": [],
+   "ret": "bool",
+   "stmt_kinds": [
+    "StorageLive",
+    "Assign",
+    "Return"
+   ],
+   "sig_line": "const should_early_return_if_failed: bool = true;",
+   "src": "serde_json:src/read.rs:426",
+   "is_local": true,
+   "public": true
+  },
+  {
+   "name": "serde_json::read::<impl serde_json::read>::should_early_return_if_failed",
+   "params": [],
+   "ret": "bool",
+   "stmt_kinds": [
+    "StorageLive",
+    "Assign",
+    "Return"
+   ],
+   "sig_line": "const should_early_return_if_failed: bool = false;",
+   "src": "serde_json:src/read.rs:692",
+   "is_local": true,
+   "public": true
+  },
+  {
+   "name": "serde_json::read::<impl serde_json::read>::should_early_return_if_failed",
+   "params": [],
+   "ret": "bool",
+   "stmt_kinds": [
+    "StorageLive",
+    "Assign",
+    "Return"
+   ],
+   "sig_line": "const should_early_return_if_failed: bool = false;",
+   "src": "serde_json:src/read.rs:784",
+   "is_local": true,
+   "public": true
+  },
+  {
+   "name": "serde_json::read::<impl serde_json::read>::should_early_return_if_failed",
+   "params": [],
+   "ret": "bool",
+   "stmt_kinds": [
+    "StorageLive",
+    "Assign",
+    "Return"
+   ],
+   "sig_line": "const should_early_return_if_failed: bool = R::should_early_return_if_failed;",
+   "src": "serde_json:src/read.rs:857",
+   "is_local": true,
+   "public": true
+  }
+ ],
+ "example_names_local": [
+  "serde_json::de::from_trait",
+  "serde_json::de::from_reader",
+  "serde_json::de::from_slice",
+  "serde_json::de::from_str",
+  "serde_json::error::make_error",
+  "serde_json::error::parse_line_col",
+  "serde_json::error::starts_with_digit",
+  "serde_json::ser::key_must_be_a_string",
+  "serde_json::ser::float_key_must_be_finite",
+  "serde_json::ser::format_escaped_str",
+  "serde_json::ser::format_escaped_str_contents",
+  "serde_json::ser::to_writer",
+  "serde_json::ser::to_writer_pretty",
+  "serde_json::ser::to_vec",
+  "serde_json::ser::to_vec_pretty",
+  "serde_json::ser::to_string",
+  "serde_json::ser::to_string_pretty",
+  "serde_json::ser::indent",
+  "serde_json::value::parse_index",
+  "serde_json::value::to_value"
+ ],
+ "example_names_external": [
+  "core::ptr::drop_glue"
+ ]
+}

@@ -1,0 +1,14 @@
+{
+  "script": "tools/analyze_goal_shapes.sh",
+  "description": "GoalShape Evolution Analysis CI script — reads logs/unknown_goal_shapes.jsonl, computes frequency distribution, and reports shape evolution trends",
+  "inputSample": {
+    "goalShapesFile": "logs/unknown_goal_shapes.jsonl",
+    "line": {"goal": "RaceConditionCheck", "shape": "binary_mutex", "file": "src/core/checker.nim", "line": 42}
+  },
+  "outputSample": {
+    "totalCount": 12,
+    "shapes": {"binary_mutex": 5, "linear_sequence": 4, "star_topology": 3},
+    "report": "tools/analyze_goal_shapes.sh: COMPILE_OK"
+  },
+  "exitCode": 0
+}

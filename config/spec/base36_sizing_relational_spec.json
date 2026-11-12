@@ -1,0 +1,56 @@
+{
+  "specId": "SPEC-B36-RELATIONAL",
+  "specOrigin": "soExplicit",
+  "ruleId": "external:stew/base36/sizing-relational",
+  "ruleVersion": "1.0.0",
+  "contract": "docs/spec/base36_sizing_binding_contract.md",
+  "claimOwnership": {
+    "owner": "axiom-defined-rule",
+    "contract": "docs/spec/base36_sizing_binding_contract.md",
+    "adoptionRef": "docs/evidence/bug_verdict_contract_slice_2026-10-08.md"
+  },
+  "description": "Out-of-tree explicit spec (Axiom-owned) for the relational sizing theorem over stew/base36.nim encodedLength/decodedLength. The subject tree (nim-stew v0.5.2 clone) is READ-ONLY; this file is the only legitimate place the claim may live. Loaded via explicitSpecFromOverlay, which pins origin to soExplicit and fails closed otherwise.",
+  "subject": {
+    "repository": "nim-stew (status-im/nim-stew v0.5.2, unmodified READ-ONLY clone)",
+    "module": "stew/base36.nim",
+    "symbols": ["encodedLength", "decodedLength"],
+    "sourceLines": "52-60"
+  },
+  "canonicalSpecIR": [
+    "0 <= n",
+    "n <= 33297371974204966",
+    "decodedLength(encodedLength(n)) == n",
+    "encodedLength(n) >= 1",
+    "!overflowAt(encodedLength(n))",
+    "!overflowAt(decodedLength(encodedLength(n)))"
+  ],
+  "theorem": {
+    "statement": "forall n : Int, 0 <= n and n <= 33297371974204966 -> decodedLength (encodedLength n) = n (equality, exact) and encodedLength n >= 1 and not overflowAt (encodedLength n) and not overflowAt (decodedLength (encodedLength n))",
+    "bound": 33297371974204966,
+    "boundDerivation": "high(int) div 277 on a 64-bit int; exactly tight: 277*n = 9223372036854775582 <= high(int) at the bound (headroom 225), 277*(n+1) = 9223372036854775859 > high(int) overflows",
+    "character": "relational theorem about the two sizing functions' relationship under the stated domain precondition"
+  },
+  "semanticCaveats": [
+    "Nim int is pointer-width signed; the bound is width-derived: 64-bit = 33297371974204966, 32-bit = 7752648, 16-bit = 118. It must be re-derived per target width.",
+    "Nim div truncates toward zero; Lean Int.div floors. They coincide only for n >= 0, so 0 <= n is a discharged hypothesis, not decoration.",
+    "{.push raises: [].} does NOT track or prevent OverflowDefect (Nim's Defect family is outside the effect system): encodedLength/decodedLength can defect at runtime with no visible effect-contract trace. The certificate must say so."
+  ],
+  "certificateIdentity": [
+    "target int width and (cpu, os, triple)",
+    "build/checks profile: checked Defect vs unchecked wrap are different program meanings",
+    "division semantic profile: truncation vs floor vs Nat",
+    "domain precondition as an IRFuncDef.preConditions entry (0 <= n and n <= 33297371974204966)",
+    "pinned Nim 2.2.10 (overflow-check defaults are version behavior)",
+    "note that raises: [] does not cover OverflowDefect",
+    "subject hash and IR digest of the derived IRFuncDef"
+  ],
+  "nonClaims": [
+    "NOT a postcondition of decodedLength alone",
+    "NOT a postcondition of encodedLength alone",
+    "NOT a buffer-safety claim about encode or decode (encode's write bound is the next slice)",
+    "NOT valid for any int width other than the one pinned in the certificate",
+    "NOT a claim that encodedLength/decodedLength cannot raise at runtime (OverflowDefect is outside the effect system)",
+    "NOT valid for n < 0 (division-semantics divergence)",
+    "NOT a claim that nim-stew was modified or annotated in-tree (Zero-Footprint)"
+  ]
+}

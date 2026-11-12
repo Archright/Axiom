@@ -1,0 +1,18 @@
+{
+  "capturedAt": "<TIMESTAMP>",
+  "funcCount": 7,
+  "funcs": [
+    "appendInvariantConjunct",
+    "buildLeanHintAssertions*",
+    "extractGoalLinesFromCompilerOutput*",
+    "injectNimAssertions*",
+    "mergeInvariantClauses*",
+    "strengthenInvariantFromLeanHints*",
+    "synthesizeLeanFallbackHints*"
+  ],
+  "linesOfCode": 167,
+  "module": "pipeline_healing_logic",
+  "path": "src/core/logic/pipeline_healing_logic.nim",
+  "procCount": 0,
+  "procs": []
+}

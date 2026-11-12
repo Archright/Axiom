@@ -1,0 +1,35 @@
+feature: State Ledger Integrity
+  # Validates the v27 cross-process state ledger architecture.
+  # Covers: creation, mmap read, CRC32 integrity, atomic write.
+
+scenario: Parent creates ledger with correct metadata
+  Given a clean workspace with no existing ledger
+  When the parent process calls createLedger
+  Then the ledger file exists at the expected path
+  And the file size is exactly 7400 bytes
+  And the CRC32 footer matches the computed payload
+
+scenario: Child reads ledger via mmap
+  Given a ledger created by the parent process
+  When the child process calls openLedger
+  Then dirtyHash matches the parent's dirtyHash
+  And ruleHash matches the parent's ruleHash
+  And buildEnvHash matches the parent's buildEnvHash
+
+scenario: Atomic write prevents partial reads
+  Given a ledger write in progress
+  When the write is interrupted at the temp stage
+  Then the original ledger remains unchanged
+  And no temp file is left behind after cleanup
+
+scenario: CRC32 corruption detected on read
+  Given a ledger with corrupted CRC32 footer
+  When the child process calls openLedger
+  Then the read fails with a CRC mismatch error
+  And the caller falls back to recomputation
+
+scenario: Ledger cache key isolation
+  Given two gates with different passFilenames settings
+  When cache keys are computed from ledger entries
+  Then passFilenames=false gates produce distinct cache keys
+  And passFilenames=true gates include filename in the key

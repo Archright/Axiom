@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "commitSha": "daba14c8fbc642fb05e52b3b3cb260158944f9cf",
+  "branch": "",
+  "checkedAt": "2026-08-01T01:35:34Z",
+  "overallStatus": "failure",
+  "jobs": [
+    {
+      "name": "verify-static",
+      "status": "success",
+      "conclusion": "success",
+      "durationSec": 76,
+      "detailsUrl": ""
+    },
+    {
+      "name": "test-unit-release",
+      "status": "success",
+      "conclusion": "success",
+      "durationSec": 15,
+      "detailsUrl": ""
+    },
+    {
+      "name": "test-unit-perf",
+      "status": "success",
+      "conclusion": "success",
+      "durationSec": 49,
+      "detailsUrl": ""
+    },
+    {
+      "name": "test-unit-pbt",
+      "status": "success",
+      "conclusion": "success",
+      "durationSec": 41,
+      "detailsUrl": ""
+    },
+    {
+      "name": "test-unit-debug",
+      "status": "success",
+      "conclusion": "success",
+      "durationSec": 41,
+      "detailsUrl": ""
+    },
+    {
+      "name": "verify-integration",
+      "status": "failure",
+      "conclusion": "failed",
+      "durationSec": 14,
+      "detailsUrl": ""
+    },
+    {
+      "name": "verify-coverage-guard",
+      "status": "pending",
+      "conclusion": "not_run",
+      "durationSec": 0,
+      "detailsUrl": ""
+    },
+    {
+      "name": "generate-docs",
+      "status": "pending",
+      "conclusion": "not_run",
+      "durationSec": 0,
+      "detailsUrl": ""
+    }
+  ],
+  "failureReason": "",
+  "consecutiveFailures": 0
+}

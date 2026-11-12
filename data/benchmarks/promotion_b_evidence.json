@@ -1,0 +1,63 @@
+{
+ "experiment": "promotion_b_evidence",
+ "status": "PASS",
+ "headCommit": "e3e284b76567dda9a063e72e42eb34453ccc9034",
+ "generatedAt": "2026-09-05",
+ "gates": {
+  "false_cache_hit": {
+   "verdict": "PASS",
+   "evidence": [
+    "tests/unit/s5_exact_reuse_test.nim (tampered payload under valid key refuses load)",
+    "result_cache.load witness verification (contentDigest recompute, fail-closed refusal)"
+   ]
+  },
+  "cross_selection_exact_reuse_A_B_C": {
+   "verdict": "PASS",
+   "evidence": [
+    "s5: same unit under Selection A/B/C → identical ExecutionIdentity",
+    "s5: store under A, HIT under B and C (3/3) with identical resultDigest",
+    "result_cache_test: cache key purity — SelectionDigest/PlanDigest do not touch per-unit key (Run E structural)"
+   ]
+  },
+  "selection_independent_UnitResult": {
+   "verdict": "PASS",
+   "evidence": [
+    "s5: UnitResult serialization contains no selection/plan/derivation digest fields",
+    "s5: same unit under different selection contexts → identical resultDigest",
+    "CLM-IDENT audit: UnitResult fields (unitId/proofStatus/failureClassification/vacuityClassification/certificateIdentityDigest/resultDigest) selection-free"
+   ]
+  },
+  "no_new_identity_schema": {
+   "verdict": "PASS",
+   "evidence": [
+    "reused executionIdentity() (identity.nim:252-257) + ExactResultCache (result_cache.nim) — zero new identity types"
+   ]
+  },
+  "run_level_budget_resource_leakage": {
+   "verdict": "PASS (audit)",
+   "evidence": [
+    "per-unit key = f(inputIdentity, executionContractDigest, bundleFingerprint) only; no run-level budget/resource state in key",
+    "execution_identity_propagation_test: same source run twice → identical bundle fingerprints and execution identities"
+   ]
+  }
+ },
+ "testSuites": {
+  "s5_exact_reuse_test": {
+   "ok": 7,
+   "failed": 0
+  },
+  "execution_identity_propagation_test": {
+   "ok": 3,
+   "failed": 0
+  },
+  "selection_independence_test": {
+   "ok": 19,
+   "failed": 0
+  },
+  "result_cache_test": {
+   "ok": 11,
+   "failed": 0
+  }
+ },
+ "note": "Promotion-B requires whole-selection semantics (S5) — exact reuse infrastructure verified with canonical infrastructure only."
+}

@@ -1,0 +1,37 @@
+# rules/rule_table.tsv — TOTAL verdict function: (observation tuple, assumptions) -> verdict
+# Consumed by bsec/replay.sh judge. First matching rule wins; if NO rule matches, or any
+# referenced field is not one of the enumerated values, the verdict is UNKNOWN (fail-closed).
+#
+# Verdict semantics (corrected 2026-10-11; encoded here and in ../JUDGMENT.md / ../verdicts.md):
+#   GO      security impact reproduced under the stated attacker model and real consumer path
+#   NO-GO   the stated scope of paths and impact hypotheses was TESTED and the observed
+#           result does not support a security-impact claim  (NOT "no impact exists")
+#   N/A     evidence confirms the path is unreachable in this exact consumer AND version
+#   UNKNOWN reachability, attacker control, or impact is insufficiently established
+#
+# Scoping rules (binding, not advisory):
+#   * NO-GO is a SCOPED verdict. It never transfers to other consumers, attacker models, or
+#     revisions, and it is NOT a proof the ecosystem is safe.
+#   * Observing one valid contrast input + fail-closed behavior does NOT exclude all possible
+#     security impact — anything beyond the tested scope stays UNKNOWN.
+#
+# Fields (observation tuple; values in <> are literals, * = any, incl. missing/undefined):
+#   defect_live        present|absent|unparseable   — LIVE run: B-1 defect pair reproduced? (replay.sh judge derives)
+#   consumer_path      executes|not_used|unknown
+#   valid_contrast     equivalent|differs|unknown   — defect input ≡ some valid config? (capability delta)
+#   boundary           neutralizes|does_not|unknown — protection boundary erases the gain?
+#   artifact           present|absent               — call-site investigation artifact on record?
+#
+# rule	defect_live	consumer_path	valid_contrast	boundary	artifact	verdict	condition_summary
+R1	present	not_used	*	*	present	N/A	consumer does not execute the defective path; artifact mandatory
+R2	present	executes	equivalent	*	*	NO-GO	path executes but zero capability delta vs valid config (structural equivalence)
+R3	present	executes	differs	does_not	present	GO	end-to-end path + capability increase proven
+R4	present	executes	*	*	absent	UNKNOWN	artifact-less triple never leaves UNKNOWN (anti-theater)
+R5	absent	*	*	*	*	UNKNOWN	defect absent at the pin/HEAD under test: exposure beyond tested pins undetermined
+R6	unparseable	*	*	*	*	UNKNOWN	observation tuple could not be extracted -> fail-closed
+R7	unknown	*	*	*	*	UNKNOWN	defect presence unproven -> fail-closed
+R8	present	unknown	*	*	*	UNKNOWN	consumer linkage unproven -> fail-closed
+R9	present	not_used	*	*	absent	UNKNOWN	N/A without artifact is FORBIDDEN (plan: N/A에 아티팩트 없으면 금지)
+R10	present	executes	differs	neutralizes	*	NO-GO	path + delta exist but a proven protection boundary erases the attacker's gain
+R11	present	executes	differs	unknown	*	UNKNOWN	capability delta observed but boundary undetermined -> fail-closed
+DEFAULT	*	*	*	*	*	UNKNOWN	no rule matched -> fail-closed

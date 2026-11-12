@@ -1,0 +1,20 @@
+# re-measured anchors (left): {
+#   "subject": {
+#     "commit": "8c535a260ce561eaab4111aafc29038eb9f77ff3",
+#     "moduleSha256": "a13add05a63adf53d89e37effa03221d897a60486cfe360a5a958c0dd2a7e90d",
+#     "sourceFingerprint": "f03e32dc7effa2b39cc692bfbc8639aa0eb7a26207d0aafd4777f9f44c0378a0"
+#   },
+#   "scope": {
+#     "rustTargetsSha256": "0c1f4abca316f8c26a247731cadc1eacc93ace2b49c2f3b55f4eb43909b6004e"
+#   }
+# }
+# re-measured anchors (right): {
+#   "subject": {
+#     "commit": "8c535a260ce561eaab4111aafc29038eb9f77ff3",
+#     "moduleSha256": "a13add05a63adf53d89e37effa03221d897a60486cfe360a5a958c0dd2a7e90d",
+#     "sourceFingerprint": "f03e32dc7effa2b39cc692bfbc8639aa0eb7a26207d0aafd4777f9f44c0378a0"
+#   },
+#   "scope": {
+#     "rustTargetsSha256": "0c1f4abca316f8c26a247731cadc1eacc93ace2b49c2f3b55f4eb43909b6004e"
+#   }
+# }

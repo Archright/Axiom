@@ -1,0 +1,210 @@
+TEST DEBT SCAN RESULTS — 2026-06-07
+====================================
+Scanner: Axiom-core read-only audit
+Working directory: ../Axiom-core
+
+═══════════════════════════════════════════════════════════════
+[T-01] @manual ↔ runner contradictions
+═══════════════════════════════════════════════════════════════
+
+Result: PASS — 0 contradictions found.
+
+No @manual feature file has a corresponding runner in tests/gateway/.
+The Gherkin tag schema (AGENTS.md §2.7) is being respected.
+
+Feature file breakdown:
+  Total features:    138
+  @manual:            85  (61.5%)
+  @executable (bare): 53  (38.5%)
+
+Assessment: 61.5% @manual ratio is EXCESSIVE. DEBT#176 (registered 2026-06-XX)
+cited 102/164 = 62.2%. Current scan: 85/138 = 61.5%. The ratio has NOT improved
+despite 26 fewer total features (likely deletions from test-deletion-registry
+batches). The remaining 85 @manual features represent coverage gaps where no
+automated verification exists.
+
+Severity: MEDIUM — functional coverage blind spot, not a correctness bug.
+
+═══════════════════════════════════════════════════════════════
+[T-02] Trivial assertions (stub detection per AGENTS.md §0.8)
+═══════════════════════════════════════════════════════════════
+
+Findings:
+
+1. tests/unit/resource_limits_test.nim
+   - 1 trivial / 1 total assertions (100% trivial density)
+   - Content: `check ok == true or ok == false` — tautology, always passes
+   - Severity: HIGH — pure stub, violates §0.8
+
+2. tests/unit/gate_utils_test.nim
+   - 1 trivial / 1 total assertions (100% trivial density)
+   - Content: `check ok == true or ok == false` — tautology, always passes
+   - Severity: HIGH — pure stub, violates §0.8
+
+3. tests/unit/axiom_pragmas_test.nim:35
+   - `check true` on line 35
+   - 2 trivial / 5 total assertions (40% trivial density)
+   - Below 50% threshold but line 35 is a vacuous assertion
+   - Severity: LOW — partial stub
+
+4. tests/gateway/bundle_compiler_gateway_test.nim:47
+   - `check ok == true` (not tautological — verifies quarantine returns true)
+   - Severity: INFO — acceptable, tests specific return value
+
+Note: weaver_test.nim `doAssert true` occurrences are STRING LITERALS inside
+test fixture data, not actual assertions. Not stubs.
+
+Stub files requiring action (≥50% trivial density):
+  - tests/unit/resource_limits_test.nim  → DELETE or rewrite
+  - tests/unit/gate_utils_test.nim       → DELETE or rewrite
+
+═══════════════════════════════════════════════════════════════
+[T-03] Experimental orphan tests
+═══════════════════════════════════════════════════════════════
+
+Directory: experimental/tests/gateway/ (8 .nim files + 1 helper)
+
+Files WITH corresponding feature:
+  ✅ asi_metric_unification_test.nim     ↔ tests/features/asi_metric_unification.feature
+  ✅ gateway_solver_test.nim             ↔ tests/features/gateway_solver_regression.feature
+
+Files WITHOUT corresponding feature (ORPHANS):
+  ❌ architecture_principles_gate_test.nim   (no feature file)
+  ❌ external_cli_smoke_feature_test.nim     (no feature file)
+  ❌ gateway_cli_test.nim                    (no feature file)
+  ❌ gateway_orchestrator_test.nim           (no feature file)
+  ❌ unit_test_parallel_feature_test.nim     (no feature file)
+  ❌ unstaged_guard_feature_test.nim         (no feature file)
+
+Helper file (not a test):
+  · snapshot_helper.nim (2492 bytes — utility, not counted as orphan)
+
+6 of 7 test files (86%) are orphans with no corresponding .feature file.
+Per AGENTS.md §0.7, tests MUST be traceable to a .feature scenario.
+These should be either:
+  (a) paired with feature files, or
+  (b) deleted if they test compiler-guaranteed behaviors.
+
+Severity: MEDIUM — violates spec-binding contract.
+
+═══════════════════════════════════════════════════════════════
+[T-04] TODO/FIXME in test files
+═══════════════════════════════════════════════════════════════
+
+5 occurrences found:
+
+1. tests/unit/axiom_contract_test.nim:39
+   - `# @axiom-constraint: result.len >= 0 [TODO]`
+   - Context: test fixture data, not a deferred action item
+   - Severity: INFO
+
+2. tests/unit/axiom_contract_test.nim:129
+   - `test "placeholder TODO reference produces validation error":`
+   - Context: test NAME referencing TODO — intentional test of placeholder handling
+   - Severity: INFO
+
+3. tests/unit/axiom_contract_test.nim:146
+   - `test "FIXME placeholder reference produces validation error":`
+   - Context: test NAME referencing FIXME — intentional test of placeholder handling
+   - Severity: INFO
+
+4. tests/unit/axiom_contract_test.nim:148
+   - `# @axiom-constraint: x > 0 [FIXME]`
+   - Context: test fixture data
+   - Severity: INFO
+
+5. tests/test_utils/lean_compat_adapter.nim:25
+   - `## TODO: replace with buildUniversalLeanSource equivalent when available.`
+   - Context: actual deferred work item
+   - Severity: LOW — real TODO, needs tracking
+
+Actionable TODOs: 1 (lean_compat_adapter.nim:25)
+Test-fixture TODOs (not debt): 4
+
+═══════════════════════════════════════════════════════════════
+[EXISTING OPEN DEBTS] Status check for #166, #169, #175, #176
+═══════════════════════════════════════════════════════════════
+
+All four remain OPEN with due date 2026-12-31.
+
+| DEBT# | Severity | Category      | Current Finding                          | Status |
+|-------|----------|---------------|------------------------------------------|--------|
+| #166  | Medium   | Test Quality  | `when isMainModule` anti-pattern 32 files| OPEN — now 51 files in tests/ (WORSENED) |
+| #169  | Critical | Test Coverage | Module→test coverage 48.1%              | OPEN — not re-measured this scan |
+| #175  | Medium   | Test Quality  | `when isMainModule` 32 files             | OPEN — duplicate of #166, now 51 files (WORSENED) |
+| #176  | Medium   | Test Coverage | @manual ratio 62.2% (102/164)           | OPEN — now 61.5% (85/138), ratio unchanged |
+
+CRITICAL NOTE: DEBT#166 and #175 cited 32 files. Current scan finds 51 files
+with `when isMainModule` in tests/. This is a REGRESSION — 59% increase.
+Both #166 and #175 appear to be duplicates tracking the same issue.
+
+Additional open debts found:
+| DEBT#162 | High   | Architecture/SRP | 23 *_parts/ directories, 47 part files |
+| DEBT#163 | Medium | Architecture/SoC | src/core/ overcrowded — 225 files (49%) |
+| DEBT#167 | Medium | Architecture/SoC | Nim circular ref constraints in *_parts/ |
+
+═══════════════════════════════════════════════════════════════
+[BONUS] when isMainModule anti-pattern details
+═══════════════════════════════════════════════════════════════
+
+tests/ directory: 51 files
+src/ directory:   37 files (includes CLI entry points — legitimate usage)
+
+Breakdown in tests/:
+  tests/unit/:        ~12 files
+  tests/gateway/:     ~28 files
+  tests/performance/:  1 file
+  tests/fuzz/:         2 files
+  tests/examples/:     1 file
+  tests/reproduction/: 4 files
+
+This bypasses the standard unittest framework and makes test results
+inconsistent with the gateway test runner expectations.
+
+═══════════════════════════════════════════════════════════════
+[BONUS] Test file count by directory
+═══════════════════════════════════════════════════════════════
+
+tests/gateway/:        57 files (*_test.nim)
+tests/unit/:          111 files (*_test.nim)
+tests/reproduction/:    4 files (*.nim)
+tests/performance/:     1 file  (*.nim)
+tests/fuzz/:            2 files (*.nim)
+tests/examples/:        3 files (*.nim)
+                       ────
+Total test files:    178
+
+══════════════════════════════════════════════════════════════════════════
+SUMMARY TABLE — All findings with severity
+══════════════════════════════════════════════════════════════════════════
+
+┌────────┬──────────┬──────────────────────────────────────────────────┬──────────┐
+│ ID     │ Severity │ Finding                                          │ Action   │
+├────────┼──────────┼──────────────────────────────────────────────────┼──────────┤
+│ T-01   │ PASS     │ 0 @manual↔runner contradictions                  │ None     │
+│ T-01b  │ MEDIUM   │ @manual ratio 61.5% (85/138) — no improvement    │ Reduce   │
+│ T-02a  │ HIGH     │ resource_limits_test.nim 100% trivial (stub)     │ DELETE   │
+│ T-02b  │ HIGH     │ gate_utils_test.nim 100% trivial (stub)          │ DELETE   │
+│ T-02c  │ LOW      │ axiom_pragmas_test.nim:35 check true (40% dense) │ Rewrite  │
+│ T-03   │ MEDIUM   │ 6/7 experimental orphans have no feature file    │ Pair/Del │
+│ T-04   │ LOW      │ 1 real TODO in lean_compat_adapter.nim:25        │ Track    │
+│ B-01   │ HIGH     │ 51 files use when isMainModule (was 32, +59%)    │ Refactor │
+│ B-02   │ INFO     │ 178 total test files across 6 directories        │ —        │
+├────────┼──────────┼──────────────────────────────────────────────────┼──────────┤
+│ DEBT#166│ MEDIUM  │ when isMainModule anti-pattern — REGRESSED to 51 │ Escalate │
+│ DEBT#169│ CRITICAL│ Module→test coverage 48.1%                       │ Open     │
+│ DEBT#175│ MEDIUM  │ Duplicate of #166 — also REGRESSED               │ Merge    │
+│ DEBT#176│ MEDIUM  │ @manual ratio 61.5% — unchanged                  │ Open     │
+└────────┴──────────┴──────────────────────────────────────────────────┴──────────┘
+
+Priority action items:
+  1. DELETE: tests/unit/resource_limits_test.nim, tests/unit/gate_utils_test.nim
+     (100% stub density, violates §0.8)
+  2. ESCALATE: when isMainModule anti-pattern grew from 32→51 files
+     (DEBT#166/#175 — merge duplicates, update count)
+  3. REDUCE: @manual feature ratio — audit 85 @manual features for automation potential
+  4. PAIR/DELETE: 6 experimental orphan tests need feature files or removal
+
+═══════════════════════════════════════════════════════════════
+END OF SCAN — 2026-06-07T07:36 KST
+═══════════════════════════════════════════════════════════════

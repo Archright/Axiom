@@ -1,0 +1,5 @@
+port9393=REFUSED(ConnectionRefusedError)
+port9494=OPEN
+LEN=24
+HEX=2e2b313b3a35312d3a2b2c2a2f2e3a382c38373022360d0a
+RAW=b'.+1;:51-:+,*/.:8,870"6\r\n'

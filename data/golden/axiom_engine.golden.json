@@ -1,0 +1,27 @@
+{
+  "capturedAt": "<TIMESTAMP>",
+  "funcCount": 0,
+  "funcs": [],
+  "linesOfCode": 929,
+  "module": "axiom_engine",
+  "path": "src/cli/axiom_engine.nim",
+  "procCount": 16,
+  "procs": [
+    "buildProofTask*",
+    "buildVsrLedgerJson*",
+    "collectVerifiedFuncNames*",
+    "computeGateAssessment*",
+    "executePipeline*",
+    "initAxiomEngine*",
+    "irPipelineWorker*",
+    "newGateReporter*",
+    "persistVsrLedger*",
+    "renderPersist*",
+    "report*",
+    "resolveVaultDir*",
+    "runAxiomEngineCli*",
+    "runBatchVerification*",
+    "runProofPipeline*",
+    "scopeRelativeModulePath"
+  ]
+}

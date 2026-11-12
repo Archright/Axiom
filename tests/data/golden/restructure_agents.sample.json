@@ -1,0 +1,12 @@
+{
+  "script": "tools/restructure_agents.py",
+  "description": "AGENTS.md restructure utility — parses and restructures AGENTS.md sections using regex-based transformation",
+  "inputSample": {
+    "args": ["--dry-run"]
+  },
+  "outputSample": {
+    "stdout": "restructure_agents: would move 3 sections, 0 conflicts (dry-run)",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

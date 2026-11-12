@@ -1,0 +1,7 @@
+{
+  "SPEC-T1-VKDRATIO": "Verification Kernel Density Ratio Specification",
+  "SPEC-T1-ASIRATIO": "Abstract Syntax Inspection Ratio Specification",
+  "SPEC-T1-DURATION": "Maximum Execution Duration Budget",
+  "SPEC-B36-RELATIONAL": "Base36 Sizing Relational Binding Product Contract (S0)",
+  "SPEC-B36-COUT": "Base36 C_out Output-Sizing Binding Product Contract (S0)"
+}

@@ -1,0 +1,26 @@
+# Axiom Evidence Receipt
+# Generated: 2026-05-26T06:41:32.001773+00:00
+# HEAD: a67ee21240c14009706f702ddea589f4f7e14dc7
+# Result: ALL_VERIFIED
+# Signature: sha256:dd04c35039b38a88
+---
+VERIFY[0]: systemctl --user is-active hybrid-gpu-cursor-watch.service → PASS
+VERIFY[1]: test -f ~/.local/state/hybrid-gpu-debug/latest.log → PASS
+
+---
+## [2026-05-27] ThreadPoolSize=16 compile-time flag added
+**Task**: Set malebolgia's ThreadPoolSize to match system CPU count (16)
+
+**Changes applied**:
+
+| File | Change |
+|------|--------|
+| `scripts/refresh_cli_binaries.nim:161` | Added `-d:ThreadPoolSize=16` to `compileCommand()` — covers all gate binaries built via refresh_cli |
+| `scripts/gate_hook.nim:63` | Added `-d:ThreadPoolSize=16` to on-demand gate binary compilation |
+| `scripts/gate_hook.nim:128` | Added `-d:ThreadPoolSize=16` to gateway test compilation |
+| `scripts/gate_replay.nim:88` | Added `-d:ThreadPoolSize=16` to nimtry compilation |
+| `axiom.nimble:22-23` | Added `-d:ThreadPoolSize=16` to pre-commit and pre-push hook builds |
+
+**Verification**: All 6 `-d:ThreadPoolSize=16` references confirmed present.
+
+**AXIOM_JOBS note**: `gate_hook.nim` uses `countProcessors() - 2 = 14` which is optimal relative to ThreadPoolSize=16.

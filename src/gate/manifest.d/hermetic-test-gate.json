@@ -1,0 +1,15 @@
+{
+  "id": "hermetic-test-gate",
+  "name": "Axiom hermetic test gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/hermetic_test_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "tests/|data/hermetic_test_baseline.json",
+  "passFilenames": false,
+  "weight": "medium",
+  "category": "rule",
+  "severity": "error",
+  "execution_mode": "interpreted"
+}

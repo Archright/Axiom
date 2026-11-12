@@ -1,0 +1,3646 @@
+{
+  "_schema": "axiom-topology-lock/v1",
+  "lock_revision": 32,
+  "generated_from_policy": "topology_policy.json",
+  "generated_from_revision": 14,
+  "generated_at": "2026-06-17T23:05:28+09:00",
+  "modules": {
+    "588062b0-08ec-50a9-b50b-ba58035a9332": {
+      "current_path": "src/gate/nimtry/nimtry_cache.nim",
+      "initial_path": "src/gate/nimtry/nimtry_cache.nim",
+      "history": []
+    },
+    "bf3158c2-9a61-55f4-85ce-509ab69327ad": {
+      "current_path": "src/core/solver/encoding_transition.nim",
+      "initial_path": "src/core/solver/encoding_transition.nim",
+      "history": []
+    },
+    "eb9b1c08-1431-5370-8ec1-27c0ddb0f0ef": {
+      "current_path": "src/core/sorter/sorter_core.nim",
+      "initial_path": "src/core/sorter/sorter_core.nim",
+      "history": []
+    },
+    "8cc1d8a2-97b6-5814-b2ae-b47a7362dd0c": {
+      "current_path": "src/core/trusted/smt.nim",
+      "initial_path": "src/core/trusted/smt.nim",
+      "history": []
+    },
+    "1658a435-469a-5b79-8535-6379c71d3806": {
+      "current_path": "src/verification/llm_backend.nim",
+      "initial_path": "src/verification/llm_backend.nim",
+      "history": []
+    },
+    "6f2352c0-9f62-547d-92af-6a8aa1959210": {
+      "current_path": "src/core/proof/axiom_lemmas.nim",
+      "initial_path": "src/core/proof/axiom_lemmas.nim",
+      "history": []
+    },
+    "36543d72-6ef9-55c7-b4dc-343987b0b989": {
+      "current_path": "src/verification/hint_processor.nim",
+      "initial_path": "src/verification/hint_processor.nim",
+      "history": []
+    },
+    "01dde56d-f9cd-5588-ac35-c12f036d7f67": {
+      "current_path": "src/gate/orchestrator_hook_part2.nim",
+      "initial_path": "src/gate/orchestrator_hook_part2.nim",
+      "history": []
+    },
+    "F83B64F5-250D-5E52-8584-62E397EA4A1F": {
+      "current_path": "src/core/boundary/persona_boundary.nim",
+      "initial_path": "src/core/boundary/persona_boundary.nim",
+      "history": []
+    },
+    "e6ef182a-2c57-5b19-97a1-44d94405809e": {
+      "current_path": "src/gate/cohesion_enforce.nim",
+      "initial_path": "src/gate/cohesion_enforce.nim",
+      "history": []
+    },
+    "390925d9-1a39-549c-9a11-09e6446c6980": {
+      "current_path": "src/verification/leanstral_gateway.nim",
+      "initial_path": "src/verification/leanstral_gateway.nim",
+      "history": []
+    },
+    "eef2d4de-4308-53e7-ba44-e0cf36a26d90": {
+      "current_path": "src/core/orchestration/pipeline_types.nim",
+      "initial_path": "src/core/orchestration/pipeline_types.nim",
+      "history": []
+    },
+    "903D15C5-1243-58DC-860E-AD21F214C04A": {
+      "current_path": "src/core/policy/parsers/parse_cohesion.nim",
+      "initial_path": "src/core/policy/parsers/parse_cohesion.nim",
+      "history": []
+    },
+    "515155D3-8A65-52FC-8ADC-AB4A7E55F2D2": {
+      "current_path": "src/core/policy/parsers/parse_impure_procedures_whitelist.nim",
+      "initial_path": "src/core/policy/parsers/parse_impure_procedures_whitelist.nim",
+      "history": []
+    },
+    "CC022A70-4E44-5FF6-8980-86A4208DB62B": {
+      "current_path": "src/verification/spacer_integration_gate.nim",
+      "initial_path": "src/verification/spacer_integration_gate.nim",
+      "history": []
+    },
+    "8d2b63be-7ce1-5a75-81c9-5dd0b550ecd2": {
+      "current_path": "src/cli/action_plan_cli.nim",
+      "initial_path": "src/cli/action_plan_cli.nim",
+      "history": []
+    },
+    "bb8e13bb-392c-556c-b192-5e17ed3cde93": {
+      "current_path": "src/verification/proof_state_builder.nim",
+      "initial_path": "src/verification/proof_state_builder.nim",
+      "history": []
+    },
+    "0efbe559-0e4d-527f-b019-1c3ae5b763a5": {
+      "current_path": "src/verification/pipeline_core_runner_part1.nim",
+      "initial_path": "src/verification/pipeline_core_runner_part1.nim",
+      "history": []
+    },
+    "9e0efec2-b061-5b72-a3dd-cb8f2e5c52e4": {
+      "current_path": "src/core/bmc/bmc_generic.nim",
+      "initial_path": "src/core/bmc/bmc_generic.nim",
+      "history": []
+    },
+    "6d1bb729-f4a0-5ac6-beee-531e2863611a": {
+      "current_path": "src/gate/nimtry/forbidden_patterns.nim",
+      "initial_path": "src/gate/nimtry/forbidden_patterns.nim",
+      "history": []
+    },
+    "5436a761-f5c0-5ca7-8778-26fd4c6d9ef3": {
+      "current_path": "src/gate/debug_mode_state.nim",
+      "initial_path": "src/gate/debug_mode_state.nim",
+      "history": []
+    },
+    "606ee043-050b-5c3b-a61d-6914d8cd4cbb": {
+      "current_path": "src/core/utils/ident_utils.nim",
+      "initial_path": "src/core/utils/ident_utils.nim",
+      "history": []
+    },
+    "eb998b8e-aebc-585c-bf2b-f17459fa8349": {
+      "current_path": "src/core/topology/topology_engine.nim",
+      "initial_path": "src/core/topology/topology_engine.nim",
+      "history": []
+    },
+    "cf97f31f-dbf2-55b7-8740-0dbfad6babda": {
+      "current_path": "src/gate/nimtry/solid_queries.nim",
+      "initial_path": "src/gate/nimtry/solid_queries.nim",
+      "history": []
+    },
+    "b899c281-5d9f-5917-9974-25ae50b99bd8": {
+      "current_path": "src/core/trusted/effect_shim.nim",
+      "initial_path": "src/core/trusted/effect_shim.nim",
+      "history": []
+    },
+    "964f3483-1f86-5e8e-bff4-5cf4a435de64": {
+      "current_path": "src/gate/quality_gate.nim",
+      "initial_path": "src/gate/quality_gate.nim",
+      "history": []
+    },
+    "C8D252EC-1F2C-5187-8AE0-C35F0B6A2A80": {
+      "current_path": "src/core/types/hubs/param_type_info_hub.nim",
+      "initial_path": "src/core/types/hubs/param_type_info_hub.nim",
+      "history": []
+    },
+    "33F1ADED-5106-5361-83EF-3827C92B8671": {
+      "current_path": "src/core/policy/parsers/parse_forbidden.nim",
+      "initial_path": "src/core/policy/parsers/parse_forbidden.nim",
+      "history": []
+    },
+    "DB59E865-819F-5494-8479-860A347187C0": {
+      "current_path": "src/core/proof/function_source_extractor.nim",
+      "initial_path": "src/core/proof/function_source_extractor.nim",
+      "history": []
+    },
+    "627ad684-0907-5673-80e6-7d133b2620cf": {
+      "current_path": "src/verification/lean_lsp_compiler.nim",
+      "initial_path": "src/verification/lean_lsp_compiler.nim",
+      "history": []
+    },
+    "77295603-cec1-5f87-8a9f-b09c62644540": {
+      "current_path": "src/core/logic/lean_diagnostic.nim",
+      "initial_path": "src/core/logic/lean_diagnostic.nim",
+      "history": []
+    },
+    "c75bd21b-b6a6-57ed-bff3-20b91f60609c": {
+      "current_path": "src/verification/lean_lsp_feedback.nim",
+      "initial_path": "src/verification/lean_lsp_feedback.nim",
+      "history": []
+    },
+    "e727db17-e2e2-53a1-a9d8-b736a46eef6c": {
+      "current_path": "src/core/api/axiom_api_session_proof.nim",
+      "initial_path": "src/core/api/axiom_api_session_proof.nim",
+      "history": []
+    },
+    "95119799-99ef-5377-96e6-b2599da73d81": {
+      "current_path": "src/core/solver/solver_bridge.nim",
+      "initial_path": "src/core/solver/solver_bridge.nim",
+      "history": []
+    },
+    "3503891f-98c5-578d-812c-db820e376e70": {
+      "current_path": "src/gate/runners/quality_audit_gate.nim",
+      "initial_path": "src/gate/runners/quality_audit_gate.nim",
+      "history": []
+    },
+    "92207a22-a76e-53ec-a331-14149147716f": {
+      "current_path": "src/core/utils/io_utils_isolation.nim",
+      "initial_path": "src/core/utils/io_utils_isolation.nim",
+      "history": []
+    },
+    "4b0e596b-51b9-5b56-8293-185041a0d13e": {
+      "current_path": "src/core/boundary/abstract_spec_lowering.nim",
+      "initial_path": "src/core/boundary/abstract_spec_lowering.nim",
+      "history": []
+    },
+    "c470f9bc-ec35-5df1-9108-fcc090305bdc": {
+      "current_path": "src/verification/pipeline_lean_spec_inference_part1.nim",
+      "initial_path": "src/verification/pipeline_lean_spec_inference_part1.nim",
+      "history": []
+    },
+    "49882012-7cd1-5245-bea2-91e340ccec2c": {
+      "current_path": "src/verification/proof_synthesis_engine_part1.nim",
+      "initial_path": "src/verification/proof_synthesis_engine_part1.nim",
+      "history": []
+    },
+    "73ac2c01-9ea2-5fb5-a607-717e29a02bbe": {
+      "current_path": "src/verification/reporter.nim",
+      "initial_path": "src/verification/reporter.nim",
+      "history": []
+    },
+    "d8ee3bed-46c3-59bd-871c-a5321f365d95": {
+      "current_path": "src/core/topology/explain.nim",
+      "initial_path": "src/core/topology_explain.nim",
+      "history": [
+        {
+          "path": "src/core/topology/explain.nim",
+          "changed_at": "2026-06-10T23:36:29+0000",
+          "change_type": "moved_to_subdomain",
+          "approved_in_lock": 2
+        }
+      ]
+    },
+    "D06E04C0-9081-5F7B-806C-6C1B6EC00B4E": {
+      "current_path": "src/gate/runners/hotspot_enforcement_gate.nim",
+      "initial_path": "src/gate/runners/hotspot_enforcement_gate.nim",
+      "history": []
+    },
+    "668C4660-081E-51D8-8427-0BB2AF55B22F": {
+      "current_path": "src/verification/batch_uap/private/types.nim",
+      "initial_path": "src/verification/batch_uap/private/types.nim",
+      "history": []
+    },
+    "7732ee21-e1dc-5937-8faf-1f85caf06796": {
+      "current_path": "src/core/boundary/axiom_registry_loader.nim",
+      "initial_path": "src/core/boundary/axiom_registry_loader.nim",
+      "history": []
+    },
+    "3D89A656-BE6C-5355-808F-E2664E47C308": {
+      "current_path": "src/core/bmc/bmc_artifacts.nim",
+      "initial_path": "src/core/bmc/bmc_artifacts.nim",
+      "history": []
+    },
+    "5e8ddb8c-5c5c-5a44-a399-e8accfc84c97": {
+      "current_path": "src/verification/thought_dashboard.nim",
+      "initial_path": "src/verification/thought_dashboard.nim",
+      "history": []
+    },
+    "73d5efdd-9a0b-59c3-a6a5-ff82e3a5bc69": {
+      "current_path": "src/gate/runners/validate_architecture.nim",
+      "initial_path": "src/gate/runners/validate_architecture.nim",
+      "history": []
+    },
+    "eeb352fa-527b-57cb-8761-ae35f422add1": {
+      "current_path": "src/cli/gate_admin.nim",
+      "initial_path": "src/cli/gate_admin.nim",
+      "history": []
+    },
+    "4d937c95-7b53-5212-ad9f-145b0d88710c": {
+      "current_path": "src/core/diagnostics/pattern_guard.nim",
+      "initial_path": "src/core/diagnostics/pattern_guard.nim",
+      "history": []
+    },
+    "657dfacc-34dc-5444-ac44-8094765ee64b": {
+      "current_path": "src/core/boundary/boundary_extraction_main.nim",
+      "initial_path": "src/core/boundary/boundary_extraction_main.nim",
+      "history": []
+    },
+    "3f7872f3-a1a0-5e07-9868-ff2da7b6b015": {
+      "current_path": "src/core/translator/universal_assembler.nim",
+      "initial_path": "src/core/translator/universal_assembler.nim",
+      "history": []
+    },
+    "d86a5d69-1182-5d0c-87cb-b8f76f69e612": {
+      "current_path": "src/verification/contract_source_extractor.nim",
+      "initial_path": "src/verification/contract_source_extractor.nim",
+      "history": []
+    },
+    "de451215-2e84-5a5a-868d-da97fc59837b": {
+      "current_path": "src/verification/pipeline_lean_spec_inference_part3.nim",
+      "initial_path": "src/verification/pipeline_lean_spec_inference_part3.nim",
+      "history": []
+    },
+    "1A16390C-EAFE-57A7-86C0-0940C798D9A0": {
+      "current_path": "src/verification/pipeline_transition.nim",
+      "initial_path": "src/verification/pipeline_transition.nim",
+      "history": []
+    },
+    "78cdf393-1570-52c1-bfaf-a493f4c14bb9": {
+      "current_path": "src/core/api/axiom_api_verify.nim",
+      "initial_path": "src/core/api/axiom_api_verify.nim",
+      "history": []
+    },
+    "e18708f1-4c58-5941-8a73-1bc121dde9ea": {
+      "current_path": "src/core/types/verification_unit.nim",
+      "initial_path": "src/core/types/verification_unit.nim",
+      "history": []
+    },
+    "82110E4D-5268-50D2-8C5F-03B4370CF610": {
+      "current_path": "src/core/audit/burn_down_queue.nim",
+      "initial_path": "src/core/audit/burn_down_queue.nim",
+      "history": []
+    },
+    "a09d549c-0863-525a-84e2-31cc487b2482": {
+      "current_path": "src/cli/commands/observability.nim",
+      "initial_path": "src/cli/commands/observability.nim",
+      "history": []
+    },
+    "9a2e4460-53b3-57df-ad33-781d0f6a1f04": {
+      "current_path": "src/core/trusted/axiom_pragmas.nim",
+      "initial_path": "src/core/trusted/axiom_pragmas.nim",
+      "history": []
+    },
+    "8d47362c-48a9-5dc6-9fab-3e8ad9518f45": {
+      "current_path": "src/verification/cegar_bmc_bridge.nim",
+      "initial_path": "src/verification/cegar_bmc_bridge.nim",
+      "history": []
+    },
+    "14ed3d64-9bf6-504e-be13-1648dab94c9b": {
+      "current_path": "src/core/proof/proof_tactics_catalog.nim",
+      "initial_path": "src/core/proof/proof_tactics_catalog.nim",
+      "history": []
+    },
+    "5d6e3678-b10f-549a-84ee-af87a1c1e99f": {
+      "current_path": "src/core/spec/spec_generator_main.nim",
+      "initial_path": "src/core/spec/spec_generator_main.nim",
+      "history": []
+    },
+    "1a126307-2d53-5081-b683-c08e8d9af2f4": {
+      "current_path": "src/core/identity/tree_sitter_path.nim",
+      "initial_path": "src/core/identity/tree_sitter_path.nim",
+      "history": []
+    },
+    "5856D87B-1FB6-5ED4-8CCF-DA1AC2F6685C": {
+      "current_path": "src/gate/runners/runner_process_pool.nim",
+      "initial_path": "src/gate/runners/runner_process_pool.nim",
+      "history": []
+    },
+    "0F233C0D-AF91-571D-88F0-E767CE5BFF4A": {
+      "current_path": "src/core/boundary/verification_interface.nim",
+      "initial_path": "src/core/boundary/verification_interface.nim",
+      "history": []
+    },
+    "99005756-4336-59EB-8FE0-1DAB239DADCA": {
+      "current_path": "src/core/encoding/smt_to_lean/private/parser.nim",
+      "initial_path": "src/core/encoding/smt_to_lean/private/parser.nim",
+      "history": []
+    },
+    "e3ed6b6a-dd64-5291-9827-7a341416af61": {
+      "current_path": "src/verification/analyzer/stage_07_certificate.nim",
+      "initial_path": "src/verification/analyzer/stages/stage_07_certificate.nim",
+      "history": [
+        {
+          "path": "src/verification/analyzer/stage_07_certificate.nim",
+          "changed_at": "2026-06-11T10:10:01+09:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 11
+        }
+      ]
+    },
+    "d9fe59ca-48b8-571b-9343-5c9e7057c44a": {
+      "current_path": "src/core/boundary/type_registry.nim",
+      "initial_path": "src/core/boundary/type_registry.nim",
+      "history": []
+    },
+    "72d38e82-c85d-5d9d-a748-5ffae9506803": {
+      "current_path": "src/verification/report_engine.nim",
+      "initial_path": "src/verification/report_engine.nim",
+      "history": []
+    },
+    "ddeb2f9a-f19d-5115-9a05-bc8348f2734a": {
+      "current_path": "src/core/translator/ast_to_lean_bridge.nim",
+      "initial_path": "src/core/translator/ast_to_lean_bridge.nim",
+      "history": []
+    },
+    "7fe9adc9-0be2-5222-be97-0a95f4c9f5a7": {
+      "current_path": "src/gate/runners.nim",
+      "initial_path": "src/gate/runners.nim",
+      "history": []
+    },
+    "7f87920d-863f-5e37-ac39-86751c2736da": {
+      "current_path": "src/core/identity/axiom_identity.nim",
+      "initial_path": "src/core/identity/axiom_identity.nim",
+      "history": []
+    },
+    "C3D5D1A4-CD87-5BC4-80D2-B66FB33BF96C": {
+      "current_path": "src/core/audit/governance_engine.nim",
+      "initial_path": "src/core/audit/governance_engine.nim",
+      "history": []
+    },
+    "29aae739-06a6-5c06-b4f6-dbce5fdab31f": {
+      "current_path": "src/gate/runners/policy_validator.nim",
+      "initial_path": "src/gate/runners/policy_validator.nim",
+      "history": []
+    },
+    "b8b44075-b08f-551f-a91a-1bb2c478b64b": {
+      "current_path": "src/core/solver/smtlib_emitter.nim",
+      "initial_path": "src/core/solver/smtlib_emitter.nim",
+      "history": []
+    },
+    "251a955a-7fcf-5778-963d-345a3f460e6a": {
+      "current_path": "src/cli/convergence_sidecar.nim",
+      "initial_path": "src/cli/convergence_sidecar.nim",
+      "history": []
+    },
+    "4b6188a2-0e5f-5a46-8f52-3c162e9ec27d": {
+      "current_path": "src/core/vault/ledger_logic.nim",
+      "initial_path": "src/core/vault/ledger_logic.nim",
+      "history": []
+    },
+    "09e5a491-c650-5ed0-afea-50f0d8ef855c": {
+      "current_path": "src/core/encoding/vfs.nim",
+      "initial_path": "src/core/encoding/vfs.nim",
+      "history": []
+    },
+    "51ebbc07-4e17-5946-8872-20b4bb500613": {
+      "current_path": "src/gate/nimtry/test_hygiene.nim",
+      "initial_path": "src/gate/nimtry/test_hygiene.nim",
+      "history": []
+    },
+    "9b81202b-a200-5819-9e6e-d0e7947687f9": {
+      "current_path": "src/verification/pipeline_lean_spec_inference_part2.nim",
+      "initial_path": "src/verification/pipeline_lean_spec_inference_part2.nim",
+      "history": []
+    },
+    "2bf3adf3-d7b5-5fe9-91a8-89687e4cbdfb": {
+      "current_path": "src/core/gate/resource_limits.nim",
+      "initial_path": "src/core/gate/resource_limits.nim",
+      "history": []
+    },
+    "6cfcac49-6aa8-5546-8ad9-84c6ffd8b685": {
+      "current_path": "src/core/types/lean_lsp_types.nim",
+      "initial_path": "src/core/types/lean_lsp_types.nim",
+      "history": []
+    },
+    "b5843904-e053-5364-8faf-8b3f17064a83": {
+      "current_path": "src/core/telemetry/trace_normalizer.nim",
+      "initial_path": "src/core/trace_normalizer.nim",
+      "history": [
+        {
+          "path": "src/core/telemetry/trace_normalizer.nim",
+          "changed_at": "2026-06-11T01:57:22.038281+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 14
+        }
+      ]
+    },
+    "db976700-9679-5f92-86e9-ea0300d9dd95": {
+      "current_path": "src/core/type_system/liquid_inference.nim",
+      "initial_path": "src/core/type_system/liquid_inference.nim",
+      "history": []
+    },
+    "0542899c-6795-5b7b-85b3-21f525d1fa04": {
+      "current_path": "src/verification/solver/z3_pool.nim",
+      "initial_path": "src/verification/solver/z3_pool.nim",
+      "history": []
+    },
+    "97662a54-c847-5ce7-93ca-2f639fbb06a3": {
+      "current_path": "src/core/gateway/gateway_main.nim",
+      "initial_path": "src/core/gateway/gateway_main.nim",
+      "history": []
+    },
+    "03af71f5-c438-5587-b7a1-09913cf8f592": {
+      "current_path": "src/gate/orchestrator.nim",
+      "initial_path": "src/gate/orchestrator.nim",
+      "history": []
+    },
+    "492C36D2-FD92-55AE-8E4C-AB251FCD2D13": {
+      "current_path": "src/core/pure_deps/json_parse.nim",
+      "initial_path": "src/core/pure_deps/json_parse.nim",
+      "history": []
+    },
+    "cd07c188-b30f-5d56-98d8-0db78ea6443d": {
+      "current_path": "src/verification/certificate_manager.nim",
+      "initial_path": "src/verification/certificate_manager.nim",
+      "history": []
+    },
+    "837ada2a-c71a-5aca-b950-324fac0ab88d": {
+      "current_path": "src/verification/smt_hint_validation.nim",
+      "initial_path": "src/verification/smt_hint_validation.nim",
+      "history": []
+    },
+    "19CCFCD9-6731-5930-8E2A-A78D13B4FF2C": {
+      "current_path": "src/core/types/hubs/verification_pipeline_context.nim",
+      "initial_path": "src/core/types/hubs/verification_pipeline_context.nim",
+      "history": []
+    },
+    "1fdd7e4a-903e-545b-a7c8-bdf4e2202598": {
+      "current_path": "src/core/utils/io_utils.nim",
+      "initial_path": "src/core/io_utils.nim",
+      "history": [
+        {
+          "path": "src/core/utils/io_utils.nim",
+          "changed_at": "2026-06-11T01:57:22.038281+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 14
+        }
+      ]
+    },
+    "ce23bda0-201d-5873-b869-bb24ae2575db": {
+      "current_path": "src/core/trusted/monad.nim",
+      "initial_path": "src/core/trusted/monad.nim",
+      "history": []
+    },
+    "29ab82e9-2120-5ad0-a6af-de8726a747d8": {
+      "current_path": "src/core/session/session_parser.nim",
+      "initial_path": "src/core/session/session_parser.nim",
+      "history": []
+    },
+    "97e60bf7-a9d2-5c24-89f4-54b894d961a1": {
+      "current_path": "src/personas/strategy_handlers/rfl.nim",
+      "initial_path": "src/personas/strategy_handlers/rfl.nim",
+      "history": []
+    },
+    "9f125fef-1caa-5984-a3ab-7485a22722b8": {
+      "current_path": "src/core/topology/lock.nim",
+      "initial_path": "src/core/topology_lock.nim",
+      "history": [
+        {
+          "path": "src/core/topology/lock.nim",
+          "changed_at": "2026-06-10T23:36:29+0000",
+          "change_type": "moved_to_subdomain",
+          "approved_in_lock": 2
+        }
+      ]
+    },
+    "81D5B863-37C7-57EE-8C77-9A59EA3708F9": {
+      "current_path": "src/gate/nimtry/nimtry_policy_lock.nim",
+      "initial_path": "src/gate/nimtry/nimtry_policy_lock.nim",
+      "history": []
+    },
+    "f9ebacd6-8122-59ee-875a-9c73bdf12671": {
+      "current_path": "src/core/topology/apply.nim",
+      "initial_path": "src/core/topology/apply.nim",
+      "history": []
+    },
+    "7FEF8EAA-DEC7-56A8-8DAC-F9CE913540A2": {
+      "current_path": "src/gate/runners/debt_blocker_gate.nim",
+      "initial_path": "src/gate/runners/debt_blocker_gate.nim",
+      "history": []
+    },
+    "0e79b81f-2302-59be-bf80-1511b9ebea36": {
+      "current_path": "src/verification/pipeline_negative_scan_part1.nim",
+      "initial_path": "src/verification/pipeline_negative_scan_part1.nim",
+      "history": []
+    },
+    "1E1E40D7-B0BE-50A0-883B-201514D88BC6": {
+      "current_path": "src/gate/runners/memory_policy_gate.nim",
+      "initial_path": "src/gate/runners/memory_policy_gate.nim",
+      "history": []
+    },
+    "e6fee437-c2ca-56ed-8d37-2ba93cf1dfd2": {
+      "current_path": "src/core/boundary/private/semantic_hint_factory.nim",
+      "initial_path": "src/core/boundary/private/semantic_hint_factory.nim",
+      "history": []
+    },
+    "d1c68e64-6793-59d5-a92c-c8bfb7aff74d": {
+      "current_path": "src/core/types/ledger_types.nim",
+      "initial_path": "src/core/types/ledger_types.nim",
+      "history": []
+    },
+    "7a7f5322-dbe9-5c73-8e44-20bbe4a7428c": {
+      "current_path": "src/personas/strategy_handlers/decide.nim",
+      "initial_path": "src/personas/strategy_handlers/decide.nim",
+      "history": []
+    },
+    "7cf94c18-dedb-5ff6-a4f0-4dabbef78741": {
+      "current_path": "src/core/topology/lock_update.nim",
+      "initial_path": "src/core/topology/lock_update.nim",
+      "history": []
+    },
+    "F18F9B6B-76DD-5160-8141-75D486C6610C": {
+      "current_path": "src/core/audit/hotspot_render.nim",
+      "initial_path": "src/core/audit/hotspot_render.nim",
+      "history": []
+    },
+    "a5ceaf0a-a09d-5e50-b549-f1d600c7ec53": {
+      "current_path": "src/verification/cli_bridge.nim",
+      "initial_path": "src/verification/cli_bridge.nim",
+      "history": []
+    },
+    "6d9b013c-25bc-5c68-a0c0-58e03acce85b": {
+      "current_path": "src/core/symbol_graph/global_symbol_graph_query.nim",
+      "initial_path": "src/core/symbol_graph/global_symbol_graph_query.nim",
+      "history": []
+    },
+    "f66f8a3e-0844-5118-8fd5-44fd2d007d13": {
+      "current_path": "src/core/types/axiom_ir.nim",
+      "initial_path": "src/core/types/axiom_ir.nim",
+      "history": []
+    },
+    "3ca7973d-87f8-5260-a629-08c24d7850d7": {
+      "current_path": "src/core/diagnostics/diagnostics_engine_main.nim",
+      "initial_path": "src/core/diagnostics/diagnostics_engine_main.nim",
+      "history": []
+    },
+    "d782f454-16ae-568b-8679-326eaf27dcc9": {
+      "current_path": "src/verification/pipeline_core_runner_part2.nim",
+      "initial_path": "src/verification/pipeline_core_runner_part2.nim",
+      "history": []
+    },
+    "72ebf358-abf2-547f-80e0-84d82d7717c1": {
+      "current_path": "src/verification/proof_synthesis_engine_part2.nim",
+      "initial_path": "src/verification/proof_synthesis_engine_part2.nim",
+      "history": []
+    },
+    "2c071f29-6e75-5d5b-8a02-2b4f4c02611a": {
+      "current_path": "src/verification/gate_rule_adapter.nim",
+      "initial_path": "src/verification/gate_rule_adapter.nim",
+      "history": []
+    },
+    "d7b6293a-061d-5f25-a690-f8a3254c7361": {
+      "current_path": "src/core/bmc/bmc_engine.nim",
+      "initial_path": "src/core/bmc/bmc_engine.nim",
+      "history": []
+    },
+    "c2a298d1-4abe-5d26-aba0-ef83b7126ee0": {
+      "current_path": "src/cli/action_interpreter_cli.nim",
+      "initial_path": "src/cli/action_interpreter_cli.nim",
+      "history": []
+    },
+    "0a61a32b-fdef-5d05-b3ff-67fcfc72bba7": {
+      "current_path": "src/core/parsers/nav.nim",
+      "initial_path": "src/core/parsers/tree_sitter/query/nav.nim",
+      "history": [
+        {
+          "path": "src/core/parsers/nav.nim",
+          "changed_at": "2026-06-11T01:29:51.705942+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 13
+        }
+      ]
+    },
+    "525582a7-91cf-5ac6-8c92-4843de1149a3": {
+      "current_path": "src/gate/runners/debt_scan_gate.nim",
+      "initial_path": "src/gate/runners/debt_scan_gate.nim",
+      "history": []
+    },
+    "f4296308-94d5-5b66-a889-57b86799d1b6": {
+      "current_path": "src/gate/nimtry/nimtry_extract.nim",
+      "initial_path": "src/gate/nimtry/extract/nimtry_extract.nim",
+      "history": [
+        {
+          "path": "src/gate/nimtry/nimtry_extract.nim",
+          "changed_at": "2026-06-11T01:05:39.038156+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 10
+        }
+      ]
+    },
+    "e5a45e94-c780-5ddf-9300-daec47b08152": {
+      "current_path": "src/api/api.nim",
+      "initial_path": "src/api/api.nim",
+      "history": []
+    },
+    "712eeeec-06dc-5e0a-8542-7f542d925e57": {
+      "current_path": "src/core/logic/refinement_invariant.nim",
+      "initial_path": "src/core/logic/refinement_invariant.nim",
+      "history": []
+    },
+    "1597d387-ed6e-5695-bca7-5f209fdfe8b1": {
+      "current_path": "src/core/api/axiom_api.nim",
+      "initial_path": "src/core/api/axiom_api.nim",
+      "history": []
+    },
+    "e1457ee5-6d32-5319-b61d-87c88ca64906": {
+      "current_path": "src/core/trusted/stdlib_shield.nim",
+      "initial_path": "src/core/trusted/stdlib_shield.nim",
+      "history": []
+    },
+    "eb82022e-dc0e-5788-8441-cd9e519b06d7": {
+      "current_path": "src/verification/analyzer/stage_05_lean_bridge.nim",
+      "initial_path": "src/verification/analyzer/stages/stage_05_lean_bridge.nim",
+      "history": [
+        {
+          "path": "src/verification/analyzer/stage_05_lean_bridge.nim",
+          "changed_at": "2026-06-11T10:10:01+09:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 11
+        }
+      ]
+    },
+    "83ac43d0-acb5-50cf-9044-6b241ac30099": {
+      "current_path": "src/core/encoding/smt_hints.nim",
+      "initial_path": "src/core/encoding/smt_hints.nim",
+      "history": []
+    },
+    "a85128a8-c0f1-503a-94a5-42962a0aa7bd": {
+      "current_path": "src/verification/pipeline_state_types.nim",
+      "initial_path": "src/verification/pipeline_state_types.nim",
+      "history": []
+    },
+    "929adc1e-1410-5bdf-bb3f-d79643b0773d": {
+      "current_path": "src/gate/gate_rules_architecture.nim",
+      "initial_path": "src/gate/gate_rules_architecture.nim",
+      "history": []
+    },
+    "56BD5A02-5BED-5880-8064-2763AEEB85C4": {
+      "current_path": "src/gate/runners/debt_blocker/private/types.nim",
+      "initial_path": "src/gate/runners/debt_blocker/private/types.nim",
+      "history": []
+    },
+    "ddce75ad-d867-5783-8374-f4b49ae1264c": {
+      "current_path": "src/core/symbolic/global_symbol_graph_types.nim",
+      "initial_path": "src/core/symbolic/global_symbol_graph_types.nim",
+      "history": []
+    },
+    "e08d87dd-d94c-536b-87e2-7292be3a4782": {
+      "current_path": "src/core/parsers/tree_sitter_extractor.nim",
+      "initial_path": "src/core/parsers/tree_sitter/tree_sitter_extractor.nim",
+      "history": [
+        {
+          "path": "src/core/parsers/tree_sitter_extractor.nim",
+          "changed_at": "2026-06-11T01:29:51.705942+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 13
+        }
+      ]
+    },
+    "da0bf75f-687d-409a-b1b5-b58b3b480fa6": {
+      "current_path": "src/verification/composition/leanstral_registry.nim",
+      "initial_path": "src/verification/composition/leanstral_registry.nim",
+      "history": []
+    },
+    "0277575b-2de0-5e53-ae30-0e3f63f0a299": {
+      "current_path": "src/cli/wf_state_parsing.nim",
+      "initial_path": "src/cli/wf_state_parsing.nim",
+      "history": []
+    },
+    "0bfcd8b5-935a-59b4-8da1-2f61bf3ee794": {
+      "current_path": "src/core/logic/pipeline_trace_artifacts.nim",
+      "initial_path": "src/core/logic/pipeline_trace_artifacts.nim",
+      "history": []
+    },
+    "FFA7A7EB-AB5B-52FE-89CF-61FB9801DE4E": {
+      "current_path": "src/core/types/hubs/semantic_hint_hub.nim",
+      "initial_path": "src/core/types/hubs/semantic_hint_hub.nim",
+      "history": []
+    },
+    "77fcd7e7-04b0-5e91-9bf6-46d33d03f8d5": {
+      "current_path": "src/core/solver/construct_logical.nim",
+      "initial_path": "src/core/solver/expr/construct_logical.nim",
+      "history": [
+        {
+          "path": "src/core/solver/construct_logical.nim",
+          "changed_at": "2026-06-11T09:53:23+09:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 8
+        }
+      ]
+    },
+    "53d84446-2238-5e66-ba7d-2237dad51458": {
+      "current_path": "src/core/types/workflow_state.nim",
+      "initial_path": "src/core/types/workflow_state.nim",
+      "history": []
+    },
+    "c4eca379-1b5c-5c82-86b2-0af04729e106": {
+      "current_path": "src/verification/orchestrator/healing_orchestrator.nim",
+      "initial_path": "src/verification/orchestrator/healing_orchestrator.nim",
+      "history": []
+    },
+    "83A0447F-12E8-5985-8CB8-CE7BCE516BB9": {
+      "current_path": "src/gate/runners/hotspot_gate.nim",
+      "initial_path": "src/gate/runners/hotspot_gate.nim",
+      "history": []
+    },
+    "257c4a22-0bde-50d4-b4d1-4ef16a48a971": {
+      "current_path": "src/verification/verification_facade.nim",
+      "initial_path": "src/verification/verification_facade.nim",
+      "history": []
+    },
+    "220ee0c6-d801-530f-bce7-8a118ba1c1c4": {
+      "current_path": "src/core/translator/nim_ast_to_json_nodes.nim",
+      "initial_path": "src/core/translator/nim_ast_to_json_nodes.nim",
+      "history": []
+    },
+    "a5a8a6c8-014f-52e0-8323-35b788533c7d": {
+      "current_path": "src/gate/runners/language_ban_gate.nim",
+      "initial_path": "src/gate/runners/language_ban_gate.nim",
+      "history": []
+    },
+    "c5b9443b-d8f6-58b7-b027-182b2a76c5b5": {
+      "current_path": "src/core/contract/contract_types.nim",
+      "initial_path": "src/core/contract/contract_types.nim",
+      "history": []
+    },
+    "24E77209-C9B4-5F3A-8AB3-71EDCA03D955": {
+      "current_path": "src/verification/analyzer/types.nim",
+      "initial_path": "src/verification/analyzer/types.nim",
+      "history": []
+    },
+    "C7136971-06EF-531F-8B6A-E5796E05B259": {
+      "current_path": "src/core/config/constants.nim",
+      "initial_path": "src/core/config/constants.nim",
+      "history": []
+    },
+    "3af248ae-821a-52e2-842b-b8923205b8ea": {
+      "current_path": "src/core/types/ast_types.nim",
+      "initial_path": "src/core/types/ast_types.nim",
+      "history": []
+    },
+    "67f33dd0-ad55-5f3a-811c-4595b25e4880": {
+      "current_path": "src/core/identity/axiom_env.nim",
+      "initial_path": "src/core/identity/axiom_env.nim",
+      "history": []
+    },
+    "a4393351-d226-515d-aa75-a8e4850f65d8": {
+      "current_path": "src/core/topology/plan.nim",
+      "initial_path": "src/core/topology/plan.nim",
+      "history": []
+    },
+    "0fb1a33d-9c54-5b36-bf3a-3fda01797375": {
+      "current_path": "src/core/diagnostics/refactoring_engine.nim",
+      "initial_path": "src/core/diagnostics/refactoring_engine.nim",
+      "history": []
+    },
+    "bae9e8e4-3e99-54d4-9442-84d4cebc33ed": {
+      "current_path": "src/core/verified_axioms/verified_axioms_core.nim",
+      "initial_path": "src/core/verified_axioms/verified_axioms_core.nim",
+      "history": []
+    },
+    "79F969D2-29B7-56E6-8B89-A4CE4F4C5654": {
+      "current_path": "src/core/codec/axiom_codec.nim",
+      "initial_path": "src/core/codec/axiom_codec.nim",
+      "history": []
+    },
+    "7ec56d1b-ec89-53ad-9a09-e384ca07cc71": {
+      "current_path": "src/core/spec/spec_generator_types.nim",
+      "initial_path": "src/core/spec/spec_generator_types.nim",
+      "history": []
+    },
+    "a8c89ac8-1740-5538-8eca-74240d0fecd3": {
+      "current_path": "src/personas/strategy_handlers/simp_omega.nim",
+      "initial_path": "src/personas/strategy_handlers/simp_omega.nim",
+      "history": []
+    },
+    "43D20F1F-2491-54F3-83AE-410897BD8D6B": {
+      "current_path": "src/gate/runners/spec_binding/private/utils.nim",
+      "initial_path": "src/gate/runners/spec_binding/private/utils.nim",
+      "history": []
+    },
+    "a46a5615-286d-5897-8ce7-9cc6bbf9ea20": {
+      "current_path": "src/verification/cegar_engine.nim",
+      "initial_path": "src/verification/cegar_engine.nim",
+      "history": []
+    },
+    "d3d8b1e4-e6a2-55df-86f3-0f1af0350757": {
+      "current_path": "src/core/judge/the_judge_constants.nim",
+      "initial_path": "src/core/judge/the_judge_constants.nim",
+      "history": []
+    },
+    "f459acea-4b65-5b01-81e8-031e6bded808": {
+      "current_path": "src/verification/lean_vacuity_test_runner.nim",
+      "initial_path": "src/verification/lean_vacuity_test_runner.nim",
+      "history": []
+    },
+    "77ae6db2-f0ab-5a0b-97b6-2c3e434ec6af": {
+      "current_path": "src/core/profiles/target_profile.nim",
+      "initial_path": "src/core/profiles/target_profile.nim",
+      "history": []
+    },
+    "eb9c4c9f-14cc-54ac-869e-2f49449f1bb6": {
+      "current_path": "src/verification/solver/provider_impl.nim",
+      "initial_path": "src/verification/solver/provider_impl.nim",
+      "history": []
+    },
+    "2183ced2-c228-5b93-8401-b78d8605edd3": {
+      "current_path": "src/core/translator/universal_mapper_part2.nim",
+      "initial_path": "src/core/translator/universal_mapper_part2.nim",
+      "history": []
+    },
+    "b55fdf3c-62bd-5034-b631-4607ff9646f2": {
+      "current_path": "src/core/utils/text_utils.nim",
+      "initial_path": "src/core/text_utils.nim",
+      "history": [
+        {
+          "path": "src/core/utils/text_utils.nim",
+          "changed_at": "2026-06-11T01:57:22.038281+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 14
+        }
+      ]
+    },
+    "2e5aa3e3-885a-555c-ab75-9442021e44c5": {
+      "current_path": "src/cli/main.nim",
+      "initial_path": "src/cli/main.nim",
+      "history": []
+    },
+    "DC4376C0-E253-53B0-85BC-50AC55374185": {
+      "current_path": "src/core/policy/parsers/parse_dry.nim",
+      "initial_path": "src/core/policy/parsers/parse_dry.nim",
+      "history": []
+    },
+    "E8DEA187-6392-5479-8761-DA2D7FCF3BFF": {
+      "current_path": "src/core/policy/parsers/parse_surface_area.nim",
+      "initial_path": "src/core/policy/parsers/parse_surface_area.nim",
+      "history": []
+    },
+    "8006b791-2b78-510c-aec5-37fb902a5944": {
+      "current_path": "src/sieve/sieve_types.nim",
+      "initial_path": "src/sieve/sieve_types.nim",
+      "history": []
+    },
+    "79636FD5-B82C-50AD-8D85-A50B982521E6": {
+      "current_path": "src/core/domains/gateway/gateway_generator.nim",
+      "initial_path": "src/core/domains/gateway/gateway_generator.nim",
+      "history": []
+    },
+    "AF8FDDB0-78BB-54A4-8780-E314935EEFA0": {
+      "current_path": "src/core/orchestrator/cegar_bmc_types.nim",
+      "initial_path": "src/core/orchestrator/cegar_bmc_types.nim",
+      "history": []
+    },
+    "69655e40-9c7c-5343-82b5-611227f791e4": {
+      "current_path": "src/gate/gate_list.nim",
+      "initial_path": "src/gate/gate_list.nim",
+      "history": []
+    },
+    "de8fad5b-1527-5a1f-a362-21f190683442": {
+      "current_path": "src/core/verified_axioms/verified_axioms.nim",
+      "initial_path": "src/core/verified_axioms/verified_axioms.nim",
+      "history": []
+    },
+    "7F52A45B-0E4F-594E-8DBD-EA572A550BD7": {
+      "current_path": "src/core/parsers/tree_sitter/cache.nim",
+      "initial_path": "src/core/parsers/tree_sitter/cache.nim",
+      "history": []
+    },
+    "bafb0497-3901-58df-876e-ba91a45b74e4": {
+      "current_path": "src/core/logic/pipeline_builder.nim",
+      "initial_path": "src/core/logic/pipeline_builder.nim",
+      "history": []
+    },
+    "d2abdfec-a59b-58ed-bb81-daa0d1a4bbd9": {
+      "current_path": "src/cli/cli_types.nim",
+      "initial_path": "src/cli/cli_types.nim",
+      "history": []
+    },
+    "a3ccfa7b-64e0-5834-b9b6-662df2a4234a": {
+      "current_path": "src/core/boundary/boundary_extraction_helpers.nim",
+      "initial_path": "src/core/boundary/boundary_extraction_helpers.nim",
+      "history": []
+    },
+    "086d033b-eda6-525f-9467-41b41c0fb991": {
+      "current_path": "src/core/orchestrator/orchestrator_vault.nim",
+      "initial_path": "src/core/orchestrator/orchestrator_vault.nim",
+      "history": []
+    },
+    "f1058941-47a4-52aa-ae98-28f36d78bfcf": {
+      "current_path": "src/core/api/axiom_api_helpers.nim",
+      "initial_path": "src/core/api/axiom_api_helpers.nim",
+      "history": []
+    },
+    "71466983-16b0-5ae5-9db7-e2fbe2c11b51": {
+      "current_path": "src/sieve/sieve_bridge.nim",
+      "initial_path": "src/sieve/sieve_bridge.nim",
+      "history": []
+    },
+    "91252A22-AD82-52F4-859D-EE62035006C6": {
+      "current_path": "src/gate/nimtry/nimtry_registry.nim",
+      "initial_path": "src/gate/nimtry/nimtry_registry.nim",
+      "history": []
+    },
+    "082F5810-472E-5FCF-8B1B-1166E2CB491F": {
+      "current_path": "src/core/types/hubs/sync_resource_hub.nim",
+      "initial_path": "src/core/types/hubs/sync_resource_hub.nim",
+      "history": []
+    },
+    "d1a25c51-78da-512e-9d11-bc7d0d01b170": {
+      "current_path": "src/verification/analyzer/stage_04_gate_check.nim",
+      "initial_path": "src/verification/analyzer/stages/stage_04_gate_check.nim",
+      "history": [
+        {
+          "path": "src/verification/analyzer/stage_04_gate_check.nim",
+          "changed_at": "2026-06-11T10:10:01+09:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 11
+        }
+      ]
+    },
+    "76C12B0C-A01F-5CB2-8849-0B69AE6711B7": {
+      "current_path": "src/core/ast/tree_sitter_ast_bridge.nim",
+      "initial_path": "src/core/ast/tree_sitter_ast_bridge.nim",
+      "history": []
+    },
+    "e1bc7a3a-7315-5742-aac4-6c7580338fa9": {
+      "current_path": "src/cli/cli_io.nim",
+      "initial_path": "src/cli/cli_io.nim",
+      "history": []
+    },
+    "7fb80b03-499c-54b0-9396-ceaff11fdabb": {
+      "current_path": "src/verification/proof_state_projection.nim",
+      "initial_path": "src/verification/proof_state_projection.nim",
+      "history": []
+    },
+    "2a9ede1f-d9d8-5873-aa3c-5efdfd779098": {
+      "current_path": "src/verification/pipeline_negative_scan_part3.nim",
+      "initial_path": "src/verification/pipeline_negative_scan_part3.nim",
+      "history": []
+    },
+    "1ec43a96-239b-534b-aa06-5cec8582b676": {
+      "current_path": "src/cli/action_output_cli.nim",
+      "initial_path": "src/cli/action_output_cli.nim",
+      "history": []
+    },
+    "696df0e5-1ecd-54d4-8e2e-7148ae727a1d": {
+      "current_path": "src/verification/solver/provers.nim",
+      "initial_path": "src/verification/solver/provers.nim",
+      "history": []
+    },
+    "ddd10854-b067-5734-a0fd-c5b69f5ad4b6": {
+      "current_path": "src/gate/gate_types.nim",
+      "initial_path": "src/gate/gate_types.nim",
+      "history": []
+    },
+    "3280ccbe-c03d-5cfa-a036-4fab3e4cb150": {
+      "current_path": "src/core/integrity/integrity_refinement_types.nim",
+      "initial_path": "src/core/integrity/integrity_refinement_types.nim",
+      "history": []
+    },
+    "0e1311fa-4355-5b3f-8f2f-46d2d6805c8d": {
+      "current_path": "src/gate/runners/unstaged_guard.nim",
+      "initial_path": "src/gate/runners/unstaged_guard.nim",
+      "history": []
+    },
+    "6FFAC17D-FC34-5C0E-8A25-9FC5B1EB47AA": {
+      "current_path": "src/verification/batch_uap/private/request_builder.nim",
+      "initial_path": "src/verification/batch_uap/private/request_builder.nim",
+      "history": []
+    },
+    "987D4101-B450-5849-8987-06A3278D1E5E": {
+      "current_path": "src/core/solver/z3_telemetry.nim",
+      "initial_path": "src/core/solver/z3_telemetry.nim",
+      "history": []
+    },
+    "dfd93ccd-96dd-5347-93a9-5fc64990b31f": {
+      "current_path": "src/gate/runners/drnim_gate.nim",
+      "initial_path": "src/gate/runners/drnim_gate.nim",
+      "history": []
+    },
+    "a3919c54-3354-5d46-858e-ad39945912e8": {
+      "current_path": "src/personas/shape_handlers/inductive_structure.nim",
+      "initial_path": "src/personas/shape_handlers/inductive_structure.nim",
+      "history": []
+    },
+    "663abee0-7404-5d98-afc1-15b4aea5d8b5": {
+      "current_path": "src/verification/pipeline_core_runner.nim",
+      "initial_path": "src/verification/pipeline_core_runner.nim",
+      "history": []
+    },
+    "a24d731d-e72b-58d4-90f0-c4b8d2c12b22": {
+      "current_path": "src/verification/analyzer/analyzer_pipeline.nim",
+      "initial_path": "src/verification/analyzer/analyzer_pipeline.nim",
+      "history": []
+    },
+    "95e598af-46cb-5a09-8600-8266e46f6bdf": {
+      "current_path": "src/core/encoding/smt_to_lean_bridge.nim",
+      "initial_path": "src/core/encoding/smt_to_lean_bridge.nim",
+      "history": []
+    },
+    "22f57e6c-188c-5874-970e-d0343c6d5951": {
+      "current_path": "src/gate/semaphore.nim",
+      "initial_path": "src/gate/semaphore.nim",
+      "history": []
+    },
+    "e80d8ccc-a13f-50e6-b4a1-5cd1756a7785": {
+      "current_path": "src/verification/cert_writer.nim",
+      "initial_path": "src/verification/cert_writer.nim",
+      "history": []
+    },
+    "42255AD2-815E-5C1B-8DD4-5F0583A9214B": {
+      "current_path": "src/gate/runners/nim_check_runner.nim",
+      "initial_path": "src/gate/runners/nim_check_runner.nim",
+      "history": []
+    },
+    "a9955966-2299-5ad3-8e96-bc605a84ca30": {
+      "current_path": "src/core/encoding/smtlib2_util.nim",
+      "initial_path": "src/core/encoding/smtlib2_util.nim",
+      "history": []
+    },
+    "d9960cb0-40f4-5243-9f7e-c0590a4d9666": {
+      "current_path": "src/core/integrity/integrity_refinement_loop.nim",
+      "initial_path": "src/core/integrity/integrity_refinement_loop.nim",
+      "history": []
+    },
+    "5c8ca357-2868-59af-97e8-ab60842e3ad1": {
+      "current_path": "src/core/api/axiom_api_types_2.nim",
+      "initial_path": "src/core/api/axiom_api_types_2.nim",
+      "history": []
+    },
+    "3C4E2AFA-A206-5624-850D-2A3B388BF281": {
+      "current_path": "src/core/types/hubs/refactoring_hub.nim",
+      "initial_path": "src/core/types/hubs/refactoring_hub.nim",
+      "history": []
+    },
+    "18de730d-a913-5c35-9683-7738e099ea26": {
+      "current_path": "src/gate/runners/gate_hook.nim",
+      "initial_path": "src/gate/runners/gate_hook.nim",
+      "history": []
+    },
+    "E665C04D-EF26-5C18-8A8C-AE6E10318B12": {
+      "current_path": "src/cli/scaffold_cli.nim",
+      "initial_path": "src/cli/scaffold_cli.nim",
+      "history": []
+    },
+    "8563fc08-d1cc-5ddc-8bf8-0da1bf244ac7": {
+      "current_path": "src/core/utils/repo_root.nim",
+      "initial_path": "src/core/utils/repo_root.nim",
+      "history": []
+    },
+    "cb427676-b944-5e6c-b079-8da5801d9c99": {
+      "current_path": "src/core/orchestrator/orchestrator_topology_depth.nim",
+      "initial_path": "src/core/orchestrator/orchestrator_topology_depth.nim",
+      "history": []
+    },
+    "4de745c3-52af-53af-8d91-b4af746bcb37": {
+      "current_path": "src/core/logic/universal_translation_types.nim",
+      "initial_path": "src/core/logic/universal_translation_types.nim",
+      "history": []
+    },
+    "40522218-C2CC-5CB2-86B3-138FE3292112": {
+      "current_path": "src/core/audit/sad_gate.nim",
+      "initial_path": "src/core/audit/sad_gate.nim",
+      "history": []
+    },
+    "b29ea241-aa96-5e6c-af47-30b16dc36002": {
+      "current_path": "src/core/profiles/bitcoin_script_profile.nim",
+      "initial_path": "src/core/profiles/bitcoin_script_profile.nim",
+      "history": []
+    },
+    "7567BA59-43F4-569D-8729-AEF22DF97B64": {
+      "current_path": "src/core/codec/codec_typesense.nim",
+      "initial_path": "src/core/codec/codec_typesense.nim",
+      "history": []
+    },
+    "6f5b1c90-abe7-51a6-97cb-a729a9471d79": {
+      "current_path": "src/verification/analyzer/stage_02_fingerprint.nim",
+      "initial_path": "src/verification/analyzer/stages/stage_02_fingerprint.nim",
+      "history": [
+        {
+          "path": "src/verification/analyzer/stage_02_fingerprint.nim",
+          "changed_at": "2026-06-11T10:10:01+09:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 11
+        }
+      ]
+    },
+    "ec143085-bed6-5004-acf3-68553b50db3c": {
+      "current_path": "src/verification/proof_synthesis_engine.nim",
+      "initial_path": "src/verification/proof_synthesis_engine.nim",
+      "history": []
+    },
+    "B8F2CA31-FC14-56CE-84F3-366ADBDD1B86": {
+      "current_path": "src/gate/runners/axiom_codemod.nim",
+      "initial_path": "src/gate/runners/axiom_codemod.nim",
+      "history": []
+    },
+    "21030fdc-cced-57b5-a9a9-4f2ebe3ef2de": {
+      "current_path": "src/verification/io_axiom_builder.nim",
+      "initial_path": "src/verification/io_axiom_builder.nim",
+      "history": []
+    },
+    "216FE79D-318C-5B8F-8549-89C6446E08B4": {
+      "current_path": "src/gate/runners/hotspot_ratchet_gate.nim",
+      "initial_path": "src/gate/runners/hotspot_ratchet_gate.nim",
+      "history": []
+    },
+    "e6ff85f0-59d7-59e7-839d-618e2fbbb5ba": {
+      "current_path": "src/personas/llm_response_guard.nim",
+      "initial_path": "src/personas/llm_response_guard.nim",
+      "history": []
+    },
+    "6687DF91-ABF9-5970-826E-49E5B5A18F8E": {
+      "current_path": "src/core/policy/macro_helpers.nim",
+      "initial_path": "src/core/policy/macro_helpers.nim",
+      "history": []
+    },
+    "E89C5EEF-9C24-59A3-8720-0AE914600BF5": {
+      "current_path": "src/core/policy/parsers/parse_canonical.nim",
+      "initial_path": "src/core/policy/parsers/parse_canonical.nim",
+      "history": []
+    },
+    "592d4533-c6ee-5a5a-8829-b1f9dca6aa46": {
+      "current_path": "src/gate/runners/logging_policy_gate.nim",
+      "initial_path": "src/gate/runners/logging_policy_gate.nim",
+      "history": []
+    },
+    "a19988e7-d5f6-5014-b453-cf791ee3371a": {
+      "current_path": "src/core/trusted/asset_collector.nim",
+      "initial_path": "src/core/trusted/asset_collector.nim",
+      "history": []
+    },
+    "364cafd8-e248-5dd9-8cb7-d225a65c279a": {
+      "current_path": "src/gate/nimtry/nimtry_query.nim",
+      "initial_path": "src/gate/nimtry/nimtry_query.nim",
+      "history": []
+    },
+    "cecc79fb-0f74-5742-a521-9700d46c08cf": {
+      "current_path": "src/verification/unified_trajectory.nim",
+      "initial_path": "src/verification/unified_trajectory.nim",
+      "history": []
+    },
+    "ddfc185a-99bb-5f48-9144-8bc8a2ea08a1": {
+      "current_path": "src/core/logic/pipeline_core_types.nim",
+      "initial_path": "src/core/logic/pipeline_core_types.nim",
+      "history": []
+    },
+    "b1beec47-35c3-5d05-9172-f1bf6056f3dd": {
+      "current_path": "src/verification/ecosystem_linkage.nim",
+      "initial_path": "src/verification/ecosystem_linkage.nim",
+      "history": []
+    },
+    "0f63999e-feed-5f23-86b8-7068f418d4ef": {
+      "current_path": "src/core/testing/pbt_engine.nim",
+      "initial_path": "src/core/testing/pbt_engine.nim",
+      "history": []
+    },
+    "9514d06f-510c-5f14-afb5-548177fed07d": {
+      "current_path": "src/personas/swat.nim",
+      "initial_path": "src/personas/swat.nim",
+      "history": []
+    },
+    "edde1ced-76d3-5ae9-863e-1efdf2465764": {
+      "current_path": "src/core/utils/test_helper.nim",
+      "initial_path": "src/core/utils/test_helper.nim",
+      "history": []
+    },
+    "24c531a4-7a46-5982-98d8-19a31f27a675": {
+      "current_path": "src/cli/report_layout.nim",
+      "initial_path": "src/cli/report_layout.nim",
+      "history": []
+    },
+    "860d24a0-3052-52f1-a373-7eef136317c8": {
+      "current_path": "src/core/diagnostics/diagnostics_engine.nim",
+      "initial_path": "src/core/diagnostics/diagnostics_engine.nim",
+      "history": []
+    },
+    "53e52238-b5a7-5ca5-8daf-a4b5c08a7c7e": {
+      "current_path": "src/ui/ax_tui_reporter_part1.nim",
+      "initial_path": "src/ui/ax_tui_reporter_part1.nim",
+      "history": []
+    },
+    "99559eb4-ce32-5196-af9a-91d70712ffb1": {
+      "current_path": "src/core/judge/tautology_prover.nim",
+      "initial_path": "src/core/judge/tautology_prover.nim",
+      "history": []
+    },
+    "015b944e-d03e-541c-b3f2-66bdb7e5e89d": {
+      "current_path": "src/gate/runners/sentinel.nim",
+      "initial_path": "src/gate/runners/sentinel.nim",
+      "history": []
+    },
+    "99fd13fd-1cb4-5f30-8e6d-0ca61b05deec": {
+      "current_path": "src/core/boundary/boundary_extractor_part1_part1.nim",
+      "initial_path": "src/core/boundary/boundary_extractor_part1_part1.nim",
+      "history": []
+    },
+    "e0e50236-545e-5c4b-b3fd-ad4c652e6b1d": {
+      "current_path": "src/gate/rule_patterns.nim",
+      "initial_path": "src/gate/rule_patterns.nim",
+      "history": []
+    },
+    "cf02090f-08d7-5de4-9c10-f34b02144ed7": {
+      "current_path": "src/engine/engine.nim",
+      "initial_path": "src/engine/engine.nim",
+      "history": []
+    },
+    "6396a28c-9ed9-5853-8e51-b3d2517bad7a": {
+      "current_path": "src/cli/execution_policy.nim",
+      "initial_path": "src/cli/execution_policy.nim",
+      "history": []
+    },
+    "19601bc4-795c-5f11-80bd-96a1f15d427f": {
+      "current_path": "src/core/solver/z3_result_parser.nim",
+      "initial_path": "src/core/solver/z3_result_parser.nim",
+      "history": []
+    },
+    "20eaa297-f364-5b6d-9760-fbbe146329b9": {
+      "current_path": "src/core/api/axiom_api_session_helpers.nim",
+      "initial_path": "src/core/api/axiom_api_session_helpers.nim",
+      "history": []
+    },
+    "fb46d38e-9906-530a-a875-ff325348e476": {
+      "current_path": "src/core/json/json_scan_skip.nim",
+      "initial_path": "src/core/json/json_scan_skip.nim",
+      "history": []
+    },
+    "69c59022-6f76-487b-9dbb-1979cc73e2d6": {
+      "current_path": "src/verification/composition/scan_registry.nim",
+      "initial_path": "src/verification/composition/scan_registry.nim",
+      "history": []
+    },
+    "62452982-0b91-514f-b365-d51846591c92": {
+      "current_path": "src/verification/pipeline_negative_scan.nim",
+      "initial_path": "src/verification/pipeline_negative_scan.nim",
+      "history": []
+    },
+    "6f8e11e3-a24d-52bb-acb3-ea70af9e2a6e": {
+      "current_path": "src/core/translator/universal_mapper_part1.nim",
+      "initial_path": "src/core/translator/universal_mapper_part1.nim",
+      "history": []
+    },
+    "facbee0d-2398-51df-8276-eeb060132a18": {
+      "current_path": "src/core/gate/scheduler.nim",
+      "initial_path": "src/core/gate/scheduler.nim",
+      "history": []
+    },
+    "52D9B52F-2DCA-53C0-86CF-301250E0A699": {
+      "current_path": "src/core/parsers/tree_sitter/types.nim",
+      "initial_path": "src/core/parsers/tree_sitter/types.nim",
+      "history": []
+    },
+    "0508A127-DFE3-5B19-8FAF-938751771A7B": {
+      "current_path": "src/core/types/hubs/pragma_pattern_hub.nim",
+      "initial_path": "src/core/types/hubs/pragma_pattern_hub.nim",
+      "history": []
+    },
+    "AF6AC674-7276-56A3-8EB5-19B3099B688A": {
+      "current_path": "src/core/contract/verification_interface.nim",
+      "initial_path": "src/core/contract/verification_interface.nim",
+      "history": []
+    },
+    "37e02bd2-5c79-58fc-81b8-1500f1881c65": {
+      "current_path": "src/core/boundary/private/trivial_filter.nim",
+      "initial_path": "src/core/boundary/private/trivial_filter.nim",
+      "history": []
+    },
+    "e83e3723-e438-5d14-afba-8bbd3f781c34": {
+      "current_path": "src/core/topology/topology_parser.nim",
+      "initial_path": "src/core/topology/topology_parser.nim",
+      "history": []
+    },
+    "7f2523a4-7869-5bea-a656-9a2fbbdc9ef0": {
+      "current_path": "src/core/types/symbolic_types_parse.nim",
+      "initial_path": "src/core/types/symbolic_types_parse.nim",
+      "history": []
+    },
+    "f9fc9b8b-a660-5161-8354-5f63bfe24b6d": {
+      "current_path": "src/core/gate/gate_cas_gc.nim",
+      "initial_path": "src/core/gate/gate_cas_gc.nim",
+      "history": []
+    },
+    "509a2d36-bed0-5046-8a00-c6a06741dd4c": {
+      "current_path": "src/gate/runners/integrity_workflow.nim",
+      "initial_path": "src/gate/runners/integrity_workflow.nim",
+      "history": []
+    },
+    "d6d48995-6f68-5bf7-9981-4f1e8f400e4e": {
+      "current_path": "src/gate/orchestrator_hook.nim",
+      "initial_path": "src/gate/orchestrator_hook.nim",
+      "history": []
+    },
+    "934A29A2-D602-5F80-8D64-8A9FD96EB8FB": {
+      "current_path": "src/core/test_support/cli_fuzzer_harness.nim",
+      "initial_path": "src/core/test_support/cli_fuzzer_harness.nim",
+      "history": []
+    },
+    "fbe85182-903d-57b1-9c1b-0ce97da20a8b": {
+      "current_path": "src/verification/pipeline_core_types.nim",
+      "initial_path": "src/verification/pipeline_core_types.nim",
+      "history": []
+    },
+    "c64e9666-70cb-5a3c-989f-1d89ca4f1a52": {
+      "current_path": "src/gate/runners/dependency_rules_gate.nim",
+      "initial_path": "src/gate/runners/dependency_rules_gate.nim",
+      "history": []
+    },
+    "6eaf1266-ff14-54c0-bffd-4351e3ea57f2": {
+      "current_path": "src/core/session/session_parser_types.nim",
+      "initial_path": "src/core/session/session_parser_types.nim",
+      "history": []
+    },
+    "FBB40F33-43A3-51F2-877B-271A3584A953": {
+      "current_path": "src/verification/unified_trajectory_types.nim",
+      "initial_path": "src/verification/unified_trajectory_types.nim",
+      "history": []
+    },
+    "0d2978f6-ea5d-5753-86f3-f934faf9ebd8": {
+      "current_path": "src/core/gateway/gateway_json.nim",
+      "initial_path": "src/core/gateway/gateway_json.nim",
+      "history": []
+    },
+    "49646c29-fed8-5d68-8c03-dc4a8a97b7de": {
+      "current_path": "src/core/boundary/private/boundary_phases.nim",
+      "initial_path": "src/core/boundary/private/boundary_phases.nim",
+      "history": []
+    },
+    "733df6c9-3113-5d51-af4d-bc5557a4ff68": {
+      "current_path": "src/core/parsers/tree_sitter_tokenizer.nim",
+      "initial_path": "src/core/parsers/tree_sitter/tree_sitter_tokenizer.nim",
+      "history": [
+        {
+          "path": "src/core/parsers/tree_sitter_tokenizer.nim",
+          "changed_at": "2026-06-11T01:29:51.705942+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 13
+        }
+      ]
+    },
+    "152516f5-ea8c-5778-b4b8-ed0e7d1ab6ee": {
+      "current_path": "src/gate/semantic_alias_mapper.nim",
+      "initial_path": "src/gate/semantic_alias_mapper.nim",
+      "history": []
+    },
+    "f13d5c88-c413-5a3b-b4e0-c257f8e8eeb0": {
+      "current_path": "src/core/gate/architecture_policy.nim",
+      "initial_path": "src/core/gate/architecture_policy.nim",
+      "history": []
+    },
+    "f4d5bc8f-13c1-5d9a-8510-4ab2af69e700": {
+      "current_path": "src/cli/version.nim",
+      "initial_path": "src/cli/version.nim",
+      "history": []
+    },
+    "a50a66b5-00f2-5cac-a2ca-dd0cba2d182a": {
+      "current_path": "src/core/proof/proof_vacuity_gate.nim",
+      "initial_path": "src/core/proof/proof_vacuity_gate.nim",
+      "history": []
+    },
+    "0715573F-48E0-5FB1-8F51-93B402F0CDBB": {
+      "current_path": "src/core/orchestrator/orchestrator_parallel_types.nim",
+      "initial_path": "src/core/orchestrator/orchestrator_parallel_types.nim",
+      "history": []
+    },
+    "8f9dec8c-d768-5e61-8cd5-0b969edc9d2a": {
+      "current_path": "src/core/solver/construct_arithmetic.nim",
+      "initial_path": "src/core/solver/expr/construct_arithmetic.nim",
+      "history": [
+        {
+          "path": "src/core/solver/construct_arithmetic.nim",
+          "changed_at": "2026-06-11T09:53:23+09:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 8
+        }
+      ]
+    },
+    "5f5909fc-5d13-5edd-b3b8-b9385b08b0ea": {
+      "current_path": "src/core/sync/sync_utils_process.nim",
+      "initial_path": "src/core/sync/sync_utils_process.nim",
+      "history": []
+    },
+    "7b04852c-5356-50ce-bbbd-39403668e545": {
+      "current_path": "src/core/logic/refinement_string.nim",
+      "initial_path": "src/core/logic/refinement_string.nim",
+      "history": []
+    },
+    "B37C424D-322C-53BF-8EAD-0493B14E127C": {
+      "current_path": "src/core/json/json_scan_types.nim",
+      "initial_path": "src/core/json/json_scan_types.nim",
+      "history": []
+    },
+    "97746f39-cbc9-5595-8139-62f43770d5c9": {
+      "current_path": "src/verification/batch_uap/loop_driver.nim",
+      "initial_path": "src/verification/batch_uap/loop_driver.nim",
+      "history": []
+    },
+    "4d11663c-7cb3-5abf-b972-7d6644403b4e": {
+      "current_path": "src/core/session/session_parser_validators.nim",
+      "initial_path": "src/core/session/session_parser_validators.nim",
+      "history": []
+    },
+    "3e20e2e8-bdfa-5d03-849f-a9bfc60426f5": {
+      "current_path": "src/core/topology/suggest.nim",
+      "initial_path": "src/core/topology_suggest.nim",
+      "history": [
+        {
+          "path": "src/core/topology/suggest.nim",
+          "changed_at": "2026-06-10T23:36:29+0000",
+          "change_type": "moved_to_subdomain",
+          "approved_in_lock": 2
+        }
+      ]
+    },
+    "5d039e8d-1761-5971-b172-deb0c88b3ba2": {
+      "current_path": "src/core/sorter/sorter_core_index_base.nim",
+      "initial_path": "src/core/sorter/sorter_core_index_base.nim",
+      "history": []
+    },
+    "3EF8A5B9-4958-5FEC-8BD5-C0A232DCE984": {
+      "current_path": "src/verification/spacer_chc_router.nim",
+      "initial_path": "src/verification/spacer_chc_router.nim",
+      "history": []
+    },
+    "86195d6c-6eac-5674-86e4-68583fcf1cf9": {
+      "current_path": "src/core/orchestrator/protocols.nim",
+      "initial_path": "src/core/orchestrator/protocols.nim",
+      "history": []
+    },
+    "D168B9B1-A07C-56B1-8411-80BA5AB4FCFE": {
+      "current_path": "src/core/audit/hotspot_analyzer.nim",
+      "initial_path": "src/core/audit/hotspot_analyzer.nim",
+      "history": []
+    },
+    "bebc9c05-a6f9-5ca3-966b-00312ea44818": {
+      "current_path": "src/core/solver/equivalence_checker.nim",
+      "initial_path": "src/core/solver/equivalence_checker.nim",
+      "history": []
+    },
+    "1b8170d3-75cb-50d8-b31b-0b11b7cfb4a2": {
+      "current_path": "src/core/diagnostics/diagnostics_engine_helpers.nim",
+      "initial_path": "src/core/diagnostics/diagnostics_engine_helpers.nim",
+      "history": []
+    },
+    "6BA8592F-C556-5554-84CE-47C753174FBF": {
+      "current_path": "src/core/bmc/bmc_variable_map.nim",
+      "initial_path": "src/core/bmc/bmc_variable_map.nim",
+      "history": []
+    },
+    "b35be67f-42a4-53b4-9803-16e274952e80": {
+      "current_path": "src/core/topology/topology_dependency.nim",
+      "initial_path": "src/core/topology/topology_dependency.nim",
+      "history": []
+    },
+    "ee952018-18c2-538c-81be-4d264b11c0e7": {
+      "current_path": "src/cli/axiom_engine.nim",
+      "initial_path": "src/cli/axiom_engine.nim",
+      "history": []
+    },
+    "6cebabd1-379e-5218-92da-042b3019f0f0": {
+      "current_path": "src/gate/gate_registry.nim",
+      "initial_path": "src/gate/gate_registry.nim",
+      "history": []
+    },
+    "11c690e4-0fb2-5640-948c-4b96b48ed0ab": {
+      "current_path": "src/gate/nimtry/ssot_queries.nim",
+      "initial_path": "src/gate/nimtry/ssot_queries.nim",
+      "history": []
+    },
+    "86131695-2482-5ace-bb82-1f6acce5ab13": {
+      "current_path": "src/gate/runners/intent_gate.nim",
+      "initial_path": "src/gate/runners/intent_gate.nim",
+      "history": []
+    },
+    "29416932-04CA-5D18-8732-45FF524640BD": {
+      "current_path": "src/core/ast/tree_sitter_node_mapper.nim",
+      "initial_path": "src/core/ast/tree_sitter_node_mapper.nim",
+      "history": []
+    },
+    "73C5A548-5AA8-5D55-825A-3CB345D245C1": {
+      "current_path": "src/verification/pipeline_stage_scribe.nim",
+      "initial_path": "src/verification/pipeline_stage_scribe.nim",
+      "history": []
+    },
+    "a744c0a9-e1ac-553b-b1c0-ece1273677fd": {
+      "current_path": "src/core/types/function_verification_summary.nim",
+      "initial_path": "src/core/types/function_verification_summary.nim",
+      "history": []
+    },
+    "a4675ab0-2293-5865-89fd-26e61c099751": {
+      "current_path": "src/core/judge/the_judge_lean.nim",
+      "initial_path": "src/core/judge/the_judge_lean.nim",
+      "history": []
+    },
+    "82c14ca3-a925-55e4-833e-fb5719555125": {
+      "current_path": "src/verification/pipeline_negative_scan_part2.nim",
+      "initial_path": "src/verification/pipeline_negative_scan_part2.nim",
+      "history": []
+    },
+    "8242f391-2834-5346-8a0e-8265a1eaa898": {
+      "current_path": "src/gate/runners/quality_gate_runner.nim",
+      "initial_path": "src/gate/runners/quality_gate_runner.nim",
+      "history": []
+    },
+    "c38aa4ad-c350-54b2-981c-dd35afee0a60": {
+      "current_path": "src/core/boundary/boundary_extractor_part1.nim",
+      "initial_path": "src/core/boundary/boundary_extractor_part1.nim",
+      "history": []
+    },
+    "38870a94-6594-53a6-b9a4-3edc9ef9b60c": {
+      "current_path": "src/core/types/heal_types.nim",
+      "initial_path": "src/core/types/heal_types.nim",
+      "history": []
+    },
+    "55e6d36e-a1c3-5a8a-bf59-fc090f2607da": {
+      "current_path": "src/core/orchestrator/orchestrator_types.nim",
+      "initial_path": "src/core/orchestrator/orchestrator_types.nim",
+      "history": []
+    },
+    "00a674c5-1859-5ac1-83a2-4dbfa8f843d0": {
+      "current_path": "src/core/symbolic/symbolic_types_exec.nim",
+      "initial_path": "src/core/symbolic/symbolic_types_exec.nim",
+      "history": []
+    },
+    "a95f66a8-c779-5a5b-a4b2-6e64a2d8c732": {
+      "current_path": "src/core/symbol_graph/error_bridge.nim",
+      "initial_path": "src/core/symbol_graph/error_bridge.nim",
+      "history": []
+    },
+    "fa62f4e2-aeb6-5450-9120-d0d574a6a9db": {
+      "current_path": "src/gate/runners/nim_check_gate.nim",
+      "initial_path": "src/gate/runners/nim_check_gate.nim",
+      "history": []
+    },
+    "6b057eda-14b9-56cc-b4e8-831885053642": {
+      "current_path": "src/core/policy/architecture_policy_types.nim",
+      "initial_path": "src/core/policy/architecture_policy_types.nim",
+      "history": []
+    },
+    "ea0daf24-2132-5f20-acd5-ebf678d956b9": {
+      "current_path": "src/verification/tactic_backtrack.nim",
+      "initial_path": "src/verification/tactic_backtrack.nim",
+      "history": []
+    },
+    "7956bea2-f950-5e20-b2fd-4c1eb99da3e8": {
+      "current_path": "src/gate/nimtry/interface_auditor.nim",
+      "initial_path": "src/gate/nimtry/interface_auditor.nim",
+      "history": []
+    },
+    "178e28dc-64ef-5263-b02c-ffb4501b58f9": {
+      "current_path": "src/core/logic/semantic_theorem_builder.nim",
+      "initial_path": "src/core/logic/semantic_theorem_builder.nim",
+      "history": []
+    },
+    "e7e54df8-5c81-5940-a1ab-9a60e3688347": {
+      "current_path": "src/verification/pipeline_lean_spec_inference.nim",
+      "initial_path": "src/verification/pipeline_lean_spec_inference.nim",
+      "history": []
+    },
+    "81f82e49-bfef-5335-90a3-27c27040df71": {
+      "current_path": "src/frontend/nim/nim_frontend.nim",
+      "initial_path": "src/frontend/nim/nim_frontend.nim",
+      "history": []
+    },
+    "A5B979BA-901F-54E7-89EE-170F76122039": {
+      "current_path": "src/core/solver/prover_types.nim",
+      "initial_path": "src/core/solver/prover_types.nim",
+      "history": []
+    },
+    "3e6abcc3-ac55-5edf-8b85-7bcc917a8f7f": {
+      "current_path": "src/cli/debug_mode.nim",
+      "initial_path": "src/cli/debug_mode.nim",
+      "history": []
+    },
+    "5fe57a43-2fda-50cc-a571-2414343375c2": {
+      "current_path": "src/core/contract/contract_smtlib2.nim",
+      "initial_path": "src/core/contract/contract_smtlib2.nim",
+      "history": []
+    },
+    "b4660dc5-b3ec-5521-aaed-b3582fd1e557": {
+      "current_path": "src/cli/report_cli.nim",
+      "initial_path": "src/cli/report_cli.nim",
+      "history": []
+    },
+    "2248c3a2-6876-588c-8bbb-13f8624ea6e2": {
+      "current_path": "src/personas/legislator.nim",
+      "initial_path": "src/personas/legislator.nim",
+      "history": []
+    },
+    "afd03703-ccb9-5f5e-80b6-643c22b4d1b7": {
+      "current_path": "src/core/contract/heal_hint_manager.nim",
+      "initial_path": "src/core/contract/heal_hint_manager.nim",
+      "history": []
+    },
+    "1d167c5d-7613-5273-8fb4-5588bb1f023e": {
+      "current_path": "src/core/orchestration/pipeline_dispatch.nim",
+      "initial_path": "src/core/orchestration/pipeline_dispatch.nim",
+      "history": []
+    },
+    "22f5a13f-ba73-5325-8d48-a6f3953adca8": {
+      "current_path": "src/core/types/domain_types.nim",
+      "initial_path": "src/core/types/domain_types.nim",
+      "history": []
+    },
+    "c6a75019-a812-50ff-a078-3670c565f032": {
+      "current_path": "src/core/trusted/provenance_guard.nim",
+      "initial_path": "src/core/trusted/provenance_guard.nim",
+      "history": []
+    },
+    "260d204f-abd5-5faa-995d-6562399eaa51": {
+      "current_path": "src/core/trusted/runtime_context.nim",
+      "initial_path": "src/core/trusted/runtime_context.nim",
+      "history": []
+    },
+    "11828f42-6031-5646-823c-1b2ba69f1b81": {
+      "current_path": "src/core/translator/universal_mapper.nim",
+      "initial_path": "src/core/translator/universal_mapper.nim",
+      "history": []
+    },
+    "0ddd70e2-9a97-5459-a06c-fd160c5c1d14": {
+      "current_path": "src/verification/translation_validator.nim",
+      "initial_path": "src/verification/translation_validator.nim",
+      "history": []
+    },
+    "e67022c9-ba11-5f74-8fcb-7d333e3aea34": {
+      "current_path": "src/gate/runners/topology_policy_gate.nim",
+      "initial_path": "src/gate/runners/topology_policy_gate.nim",
+      "history": []
+    },
+    "4fac5934-4be7-5120-9814-041d17441886": {
+      "current_path": "src/mcp/server.nim",
+      "initial_path": "src/mcp/server.nim",
+      "history": []
+    },
+    "20B0DD6B-C41A-527C-88A2-4EF4C201C369": {
+      "current_path": "src/verification/pipeline_stage_judge.nim",
+      "initial_path": "src/verification/pipeline_stage_judge.nim",
+      "history": []
+    },
+    "30AC3894-4516-50CB-8DE3-A8AFAFAC3EF0": {
+      "current_path": "src/verification/abstract_provider_types.nim",
+      "initial_path": "src/verification/abstract_provider_types.nim",
+      "history": []
+    },
+    "4B2674B7-FD22-527A-84E0-91CE1CF71EEE": {
+      "current_path": "src/core/metrics.nim",
+      "initial_path": "src/core/metrics.nim",
+      "history": []
+    },
+    "75f15a1e-df73-424e-b0c3-8aa9bdf2570a": {
+      "current_path": "src/verification/composition/cegar_registry.nim",
+      "initial_path": "src/verification/composition/cegar_registry.nim",
+      "history": []
+    },
+    "1fe537f0-5411-5ad0-a629-2b05656899de": {
+      "current_path": "src/gate/nimtry/nimtry_extract_part3_part2.nim",
+      "initial_path": "src/gate/nimtry/extract/nimtry_extract_part3_part2.nim",
+      "history": [
+        {
+          "path": "src/gate/nimtry/nimtry_extract_part3_part2.nim",
+          "changed_at": "2026-06-11T01:05:39.038156+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 10
+        }
+      ]
+    },
+    "BF38D4C3-BAE4-507F-8A1B-499BC5A2A243": {
+      "current_path": "src/core/text/text_utils.nim",
+      "initial_path": "src/core/text/text_utils.nim",
+      "history": []
+    },
+    "0F9723E0-93A9-5D82-82A9-EA2967B9F9F5": {
+      "current_path": "src/core/domains/gateway/gateway_spec.nim",
+      "initial_path": "src/core/domains/gateway/gateway_spec.nim",
+      "history": []
+    },
+    "8023e7e0-ab5d-569b-812c-c5890c64b17e": {
+      "current_path": "src/personas/shape_handlers/equality.nim",
+      "initial_path": "src/personas/shape_handlers/equality.nim",
+      "history": []
+    },
+    "a37f3d87-9b02-51e2-b560-b92fef47c9cb": {
+      "current_path": "src/cli/topology_cli.nim",
+      "initial_path": "src/cli/topology_cli.nim",
+      "history": []
+    },
+    "5a74409b-0cf9-5111-9f97-f82bf1313a18": {
+      "current_path": "src/core/solver/construct_base.nim",
+      "initial_path": "src/core/solver/expr/construct_base.nim",
+      "history": [
+        {
+          "path": "src/core/solver/construct_base.nim",
+          "changed_at": "2026-06-11T09:53:23+09:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 8
+        }
+      ]
+    },
+    "05ba4089-a372-50cd-8f10-3dd1dacb51ae": {
+      "current_path": "src/core/parsers/tree_sitter_parser.nim",
+      "initial_path": "src/core/parsers/tree_sitter/tree_sitter_parser.nim",
+      "history": [
+        {
+          "path": "src/core/parsers/tree_sitter_parser.nim",
+          "changed_at": "2026-06-11T01:29:51.705942+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 13
+        }
+      ]
+    },
+    "33309b06-b73c-55b3-b14d-58c5bcf454c4": {
+      "current_path": "src/core/gateway/gateway_helpers.nim",
+      "initial_path": "src/core/gateway/gateway_helpers.nim",
+      "history": []
+    },
+    "bd3eadb4-5e9c-5957-854f-695024aea409": {
+      "current_path": "src/core/policy/architecture_policy_part2.nim",
+      "initial_path": "src/core/policy/architecture_policy_part2.nim",
+      "history": []
+    },
+    "f95109d1-68a4-54cb-8ec0-9b0a91df3b26": {
+      "current_path": "src/core/trusted/path.nim",
+      "initial_path": "src/core/trusted/path.nim",
+      "history": []
+    },
+    "98fabddd-192e-5ba9-8d94-a295caf4ff7f": {
+      "current_path": "src/verification/lean_skeleton.nim",
+      "initial_path": "src/verification/lean_skeleton.nim",
+      "history": []
+    },
+    "c38f6f37-c025-5a4c-b5ce-cea91c12cb42": {
+      "current_path": "src/gate/nimtry/io_module_registry.nim",
+      "initial_path": "src/gate/nimtry/io_module_registry.nim",
+      "history": []
+    },
+    "93c856df-6638-4b7e-9445-a184ea03fd79": {
+      "current_path": "src/core/application/persona_context.nim",
+      "initial_path": "src/core/application/persona_context.nim",
+      "history": []
+    },
+    "663B2AB5-D68B-5636-801C-413E148171D6": {
+      "current_path": "src/verification/pipeline_stage_legislator.nim",
+      "initial_path": "src/verification/pipeline_stage_legislator.nim",
+      "history": []
+    },
+    "4034bcc4-60a1-58f1-b9d0-74c88635e536": {
+      "current_path": "src/gate/runners/proof_universe_lock_gate.nim",
+      "initial_path": "src/gate/runners/proof_universe_lock_gate.nim",
+      "history": []
+    },
+    "93A63A1B-5463-5284-8549-D4881A2C7CC4": {
+      "current_path": "src/core/json/std_redirect.nim",
+      "initial_path": "src/core/json/std_redirect.nim",
+      "history": []
+    },
+    "878f1b83-6aec-57bf-b95b-8f92a2403548": {
+      "current_path": "src/gate/runners/cli_build.nim",
+      "initial_path": "src/gate/runners/cli_build.nim",
+      "history": []
+    },
+    "2221CC64-E6A4-53F5-81C4-FCF235902F9D": {
+      "current_path": "src/gate/nimtry/safety_queries.nim",
+      "initial_path": "src/gate/nimtry/safety_queries.nim",
+      "history": []
+    },
+    "30E3987C-8EB3-555D-8087-68C2BA932D7C": {
+      "current_path": "src/gate/nimtry/solid_queries_dip_ocp.nim",
+      "initial_path": "src/gate/nimtry/solid_queries_dip_ocp.nim",
+      "history": []
+    },
+    "fddcce50-1f9c-56b6-849c-4746f83e2c2b": {
+      "current_path": "src/core/topology/topology_symbol_scanner.nim",
+      "initial_path": "src/core/topology/topology_symbol_scanner.nim",
+      "history": []
+    },
+    "ec8d03c9-4c36-5c21-9ac1-684b7c329e26": {
+      "current_path": "src/personas/legislator_feedback.nim",
+      "initial_path": "src/personas/legislator_feedback.nim",
+      "history": []
+    },
+    "ABC7167B-70B6-5DC7-8196-8BC6B21BAC5E": {
+      "current_path": "src/infrastructure/topology_executor.nim",
+      "initial_path": "src/infrastructure/topology_executor.nim",
+      "history": []
+    },
+    "a28c280a-a00b-57b4-b29d-934545b28cf7": {
+      "current_path": "src/core/topology/declaration.nim",
+      "initial_path": "src/core/topology/declaration.nim",
+      "history": []
+    },
+    "577B66A7-7635-5013-8513-F115E7E276BB": {
+      "current_path": "src/core/orchestrator/orchestrator_context_types.nim",
+      "initial_path": "src/core/orchestrator/orchestrator_context_types.nim",
+      "history": []
+    },
+    "72d2a8c1-337b-5ce4-b361-6c7ebe1e00f2": {
+      "current_path": "src/core/types/symbolic_types_exec.nim",
+      "initial_path": "src/core/types/symbolic_types_exec.nim",
+      "history": []
+    },
+    "26ab144d-b0d5-50b7-9fc3-2f88f05f05d6": {
+      "current_path": "src/verification/analyzer/analyzer_shared_cert.nim",
+      "initial_path": "src/verification/analyzer/analyzer_shared_cert.nim",
+      "history": []
+    },
+    "7a5b1436-72e5-52b6-8ab5-bb3eeb898c57": {
+      "current_path": "src/verification/solver/fixedpoint_engine.nim",
+      "initial_path": "src/verification/solver/fixedpoint_engine.nim",
+      "history": []
+    },
+    "0dd6ed2e-c4d3-5702-b330-ef216e70bbc3": {
+      "current_path": "src/core/types/global_symbol_graph_types.nim",
+      "initial_path": "src/core/types/global_symbol_graph_types.nim",
+      "history": []
+    },
+    "2d2e0abf-7a3f-5b77-a9c0-b9cbf9bf8de3": {
+      "current_path": "src/core/topology/staging.nim",
+      "initial_path": "src/core/topology/staging.nim",
+      "history": []
+    },
+    "4EE9B814-CDD4-52EA-85D5-939E1F24268A": {
+      "current_path": "src/gate/runners/spec_binding/private/checks.nim",
+      "initial_path": "src/gate/runners/spec_binding/private/checks.nim",
+      "history": []
+    },
+    "5B8FEB73-FC95-52FA-87CB-16DEC6C5FF48": {
+      "current_path": "src/verification/pipeline_stage_k_induction.nim",
+      "initial_path": "src/verification/pipeline_stage_k_induction.nim",
+      "history": []
+    },
+    "09c9bfb8-9923-57c1-8857-61bb6ed26d3c": {
+      "current_path": "src/core/application/verification_orchestration.nim",
+      "initial_path": "src/core/application/verification_orchestration.nim",
+      "history": []
+    },
+    "b35e1d6a-6c8b-52a7-805d-b54ce9191207": {
+      "current_path": "src/gate/runners/binary_artifact_gate.nim",
+      "initial_path": "src/gate/runners/binary_artifact_gate.nim",
+      "history": []
+    },
+    "00BFD825-69C5-55D5-8F46-040C6BE89908": {
+      "current_path": "src/core/policy/parse_helpers.nim",
+      "initial_path": "src/core/policy/parse_helpers.nim",
+      "history": []
+    },
+    "EA03FD67-56C2-5615-89A7-1EDF818ECA70": {
+      "current_path": "src/core/policy/parser_gen.nim",
+      "initial_path": "src/core/policy/parser_gen.nim",
+      "history": []
+    },
+    "c53866ce-f8d8-5a65-879d-706a1b2805c4": {
+      "current_path": "src/personas/strategy_handlers/grind.nim",
+      "initial_path": "src/personas/strategy_handlers/grind.nim",
+      "history": []
+    },
+    "cba2b930-a870-5127-a469-2bd664921137": {
+      "current_path": "src/cli/wf_planning.nim",
+      "initial_path": "src/cli/wf_planning.nim",
+      "history": []
+    },
+    "8da33b58-27a9-541d-8635-90b874b96788": {
+      "current_path": "src/gate/runners/documentation_first_gate.nim",
+      "initial_path": "src/gate/runners/documentation_first_gate.nim",
+      "history": []
+    },
+    "2ad1fefd-3c6a-5d84-8814-14eb42f5d88d": {
+      "current_path": "src/gate/runners/context7_evidence_gate.nim",
+      "initial_path": "src/gate/runners/context7_evidence_gate.nim",
+      "history": []
+    },
+    "891a77c1-bea2-5721-9675-7d08bb4f173d": {
+      "current_path": "src/core/logic/refinement_query.nim",
+      "initial_path": "src/core/logic/refinement_query.nim",
+      "history": []
+    },
+    "e5d6bcd9-95a2-51d1-ba61-3eb15313018f": {
+      "current_path": "src/verification/dependency_analyzer.nim",
+      "initial_path": "src/verification/dependency_analyzer.nim",
+      "history": []
+    },
+    "04684649-3dc7-5f7a-a484-b41a33ded901": {
+      "current_path": "src/gate/nimtry.nim",
+      "initial_path": "src/gate/nimtry.nim",
+      "history": []
+    },
+    "c83772ed-c551-59ab-bfce-35d8db26f84c": {
+      "current_path": "src/gate/runners/spec_presence_gate.nim",
+      "initial_path": "src/gate/runners/spec_presence_gate.nim",
+      "history": []
+    },
+    "313e8a03-851d-543a-870b-a22a83e8d36a": {
+      "current_path": "src/gate/runners/cast_nosideeffect_doc_gate.nim",
+      "initial_path": "src/gate/runners/cast_nosideeffect_doc_gate.nim",
+      "history": []
+    },
+    "d5904fe0-3404-5f0e-93c3-8fb63f984294": {
+      "current_path": "src/core/json/json_utils.nim",
+      "initial_path": "src/core/json/json_utils.nim",
+      "history": []
+    },
+    "e7c798fd-3d98-5550-8f31-11d2f5d68aa8": {
+      "current_path": "src/core/api/axiom_api_session.nim",
+      "initial_path": "src/core/api/axiom_api_session.nim",
+      "history": []
+    },
+    "61b51a28-cf3f-57a3-b7ca-baf43ac9ba29": {
+      "current_path": "src/core/json/json_safe.nim",
+      "initial_path": "src/core/json/json_safe.nim",
+      "history": []
+    },
+    "19b102c1-bf26-5b5a-98f3-e8754fd4deab": {
+      "current_path": "src/gate/runners/doc_completeness_gate.nim",
+      "initial_path": "src/gate/runners/doc_completeness_gate.nim",
+      "history": []
+    },
+    "7AFF8C03-0DC1-585F-84F6-BC33FC3D35F3": {
+      "current_path": "src/core/policy/parsers/parse_ocp.nim",
+      "initial_path": "src/core/policy/parsers/parse_ocp.nim",
+      "history": []
+    },
+    "882e3542-22a0-5b69-8b17-0db18708486c": {
+      "current_path": "src/verification/certificate_applier.nim",
+      "initial_path": "src/verification/certificate_applier.nim",
+      "history": []
+    },
+    "2d4d009f-e8d2-575e-b7e5-910cff4daf5d": {
+      "current_path": "src/gate/nimtry/nimtry_extract_types.nim",
+      "initial_path": "src/gate/nimtry/extract/nimtry_extract_types.nim",
+      "history": [
+        {
+          "path": "src/gate/nimtry/nimtry_extract_types.nim",
+          "changed_at": "2026-06-11T01:05:39.038156+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 10
+        }
+      ]
+    },
+    "06DB8058-C0A6-55F4-8701-3863541100FF": {
+      "current_path": "src/core/application/healing_context.nim",
+      "initial_path": "src/core/application/healing_context.nim",
+      "history": []
+    },
+    "2f117df4-5594-5bb1-ad6e-e83f9a5cd4aa": {
+      "current_path": "src/core/types/symbolic_types_lean.nim",
+      "initial_path": "src/core/types/symbolic_types_lean.nim",
+      "history": []
+    },
+    "81B818CB-BDA5-5EF4-8590-0547B24EC707": {
+      "current_path": "src/core/policy/parsers/parse_interfaces.nim",
+      "initial_path": "src/core/policy/parsers/parse_interfaces.nim",
+      "history": []
+    },
+    "0df4695b-4b5a-5928-9f8f-f0a5c36d87e1": {
+      "current_path": "src/core/vault/vault_manager_spec.nim",
+      "initial_path": "src/core/vault/vault_manager_spec.nim",
+      "history": []
+    },
+    "2776eb4d-b2ba-5026-9405-de5391b94e36": {
+      "current_path": "src/verification/vault_index.nim",
+      "initial_path": "src/verification/vault_index.nim",
+      "history": []
+    },
+    "1a836308-92c1-5aee-a87f-3c61c3d6daa7": {
+      "current_path": "src/cli/ax_workflow_shortcuts.nim",
+      "initial_path": "src/cli/ax_workflow_shortcuts.nim",
+      "history": []
+    },
+    "d19b75c8-8f83-58ab-8850-a48cd608e8fd": {
+      "current_path": "src/personas/strategy_handlers/simp.nim",
+      "initial_path": "src/personas/strategy_handlers/simp.nim",
+      "history": []
+    },
+    "f6ef5309-b511-57eb-819b-d466e79477ee": {
+      "current_path": "src/cli/config_loader.nim",
+      "initial_path": "src/cli/config_loader.nim",
+      "history": []
+    },
+    "314828b2-4b99-545e-8a92-0586dd0c912a": {
+      "current_path": "src/gate/nimtry/soc_queries.nim",
+      "initial_path": "src/gate/nimtry/soc_queries.nim",
+      "history": []
+    },
+    "d2bad019-faad-5d26-8db2-a63d21e1cf76": {
+      "current_path": "src/verification/pipeline_types.nim",
+      "initial_path": "src/verification/pipeline_types.nim",
+      "history": []
+    },
+    "a788d47b-13d0-5c16-9cee-39f2648205e4": {
+      "current_path": "src/verification/healing_orchestrator.nim",
+      "initial_path": "src/verification/healing_orchestrator.nim",
+      "history": []
+    },
+    "1F0087B6-AA37-5F12-8713-D5E192C8DB67": {
+      "current_path": "src/gate/runners/spec_binding/private/types.nim",
+      "initial_path": "src/gate/runners/spec_binding/private/types.nim",
+      "history": []
+    },
+    "e94078f0-8ddc-5383-8210-f710b699e07a": {
+      "current_path": "src/sieve/ast_inspector.nim",
+      "initial_path": "src/sieve/ast_inspector.nim",
+      "history": []
+    },
+    "9AB4FC15-1A44-51D4-8D54-D227186A3875": {
+      "current_path": "src/verification/solver/proof_cache.nim",
+      "initial_path": "src/verification/solver/proof_cache.nim",
+      "history": []
+    },
+    "5124ecd8-de27-58c3-aa22-91eaea4c4615": {
+      "current_path": "src/core/trusted/reasoning_recorder.nim",
+      "initial_path": "src/core/trusted/reasoning_recorder.nim",
+      "history": []
+    },
+    "3447db1c-0adf-5434-8088-b9b0ab98cc9e": {
+      "current_path": "src/core/testing/generators.nim",
+      "initial_path": "src/core/testing/generators.nim",
+      "history": []
+    },
+    "ef22c02b-e241-588e-86cd-39f413b9a787": {
+      "current_path": "src/core/boundary/abstract_spec_registry.nim",
+      "initial_path": "src/core/boundary/abstract_spec_registry.nim",
+      "history": []
+    },
+    "d9a38770-8e79-5d56-90a5-49783568f96a": {
+      "current_path": "src/engine.nim",
+      "initial_path": "src/engine.nim",
+      "history": []
+    },
+    "f92e170e-bec1-5c4a-ac47-9261a54417dc": {
+      "current_path": "src/core/contract/contract_param_util.nim",
+      "initial_path": "src/core/contract/contract_param_util.nim",
+      "history": []
+    },
+    "600af1f7-bd0b-578d-9ce4-bee7c9728cad": {
+      "current_path": "src/gate/runners/integrity_test.nim",
+      "initial_path": "src/gate/runners/integrity_test.nim",
+      "history": []
+    },
+    "49a4c225-5e60-50b2-8389-5f2bb48c038d": {
+      "current_path": "src/ui/notion_semantic_mapper.nim",
+      "initial_path": "src/ui/notion_semantic_mapper.nim",
+      "history": []
+    },
+    "F563F2B6-5FE7-56A1-8722-205BEC8E1D5A": {
+      "current_path": "src/core/policy/parsers/parse_informational.nim",
+      "initial_path": "src/core/policy/parsers/parse_informational.nim",
+      "history": []
+    },
+    "E9CAFEC3-A909-5A3A-8C1A-3E7F74EA23C6": {
+      "current_path": "src/core/encoding/smt_types.nim",
+      "initial_path": "src/core/encoding/smt_types.nim",
+      "history": []
+    },
+    "a682169f-e5d8-5dc8-8f77-593a3661889d": {
+      "current_path": "src/personas/strategy_handlers/aesop.nim",
+      "initial_path": "src/personas/strategy_handlers/aesop.nim",
+      "history": []
+    },
+    "20f26eb2-8792-5aa7-85b0-096e938f39e3": {
+      "current_path": "src/verification/lean_lsp_protocol.nim",
+      "initial_path": "src/verification/lean_lsp_protocol.nim",
+      "history": []
+    },
+    "abb6bbe7-d294-57a3-88f7-d226ea3fee07": {
+      "current_path": "src/core/api/axiom_api_types.nim",
+      "initial_path": "src/core/api/axiom_api_types.nim",
+      "history": []
+    },
+    "b52c6929-0073-56d7-8d53-58d602b472d7": {
+      "current_path": "src/verification/integrity_sentinel.nim",
+      "initial_path": "src/verification/integrity_sentinel.nim",
+      "history": []
+    },
+    "8A78A7D6-1B08-5B65-8F7F-30F268B3F8B4": {
+      "current_path": "src/core/types/hubs/topology_hub.nim",
+      "initial_path": "src/core/types/hubs/topology_hub.nim",
+      "history": []
+    },
+    "1e44950f-3a95-5bb8-9645-ecba06d9f1ed": {
+      "current_path": "src/core/solver/induction.nim",
+      "initial_path": "src/core/solver/induction.nim",
+      "history": []
+    },
+    "4cb4213c-61a4-57eb-b298-765e02ad91d4": {
+      "current_path": "src/cli/ax_workflow_cli.nim",
+      "initial_path": "src/cli/ax_workflow_cli.nim",
+      "history": []
+    },
+    "6a43612d-5d81-580d-96a1-fcf226a57eaf": {
+      "current_path": "src/gate/types.nim",
+      "initial_path": "src/gate/types.nim",
+      "history": []
+    },
+    "2874921B-67CB-598C-8EB5-C173A3E62CD7": {
+      "current_path": "src/verification/pipeline_stage_detective.nim",
+      "initial_path": "src/verification/pipeline_stage_detective.nim",
+      "history": []
+    },
+    "a42f5eaa-f0c7-5249-ae86-70cc182d6330": {
+      "current_path": "src/core/utils/file_utils.nim",
+      "initial_path": "src/core/file_utils.nim",
+      "history": [
+        {
+          "path": "src/core/utils/file_utils.nim",
+          "changed_at": "2026-06-11T01:57:22.038281+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 14
+        }
+      ]
+    },
+    "c5224623-4750-57f9-bb3d-dc8990b63b1b": {
+      "current_path": "src/core/judge/lean_replay.nim",
+      "initial_path": "src/core/judge/lean_replay.nim",
+      "history": []
+    },
+    "c2875fd4-3c64-5ac7-98a4-0f05a1c822fe": {
+      "current_path": "src/gate/runners/external_cli_smoke.nim",
+      "initial_path": "src/gate/runners/external_cli_smoke.nim",
+      "history": []
+    },
+    "8A9F951C-63F2-5253-86A3-4D05A19FD447": {
+      "current_path": "src/verification/solver/cached_fixedpoint.nim",
+      "initial_path": "src/verification/solver/cached_fixedpoint.nim",
+      "history": []
+    },
+    "80fdd4a0-42e3-5b8c-bb71-90a50167d7bc": {
+      "current_path": "src/core/types/universe_types.nim",
+      "initial_path": "src/core/types/universe_types.nim",
+      "history": []
+    },
+    "d0a8da87-4330-53cd-8e4f-8ec32d50cee9": {
+      "current_path": "src/gate/gate_utils.nim",
+      "initial_path": "src/gate/gate_utils.nim",
+      "history": []
+    },
+    "ed2306f5-9f86-5b13-a210-c4a3a560b028": {
+      "current_path": "src/core/spec/spec_generator_helpers.nim",
+      "initial_path": "src/core/spec/spec_generator_helpers.nim",
+      "history": []
+    },
+    "8a4ea334-f7b9-5e40-b358-8be1a9d53042": {
+      "current_path": "src/core/io/file_utils.nim",
+      "initial_path": "src/core/io/file_utils.nim",
+      "history": []
+    },
+    "9167cf3e-e8bb-5887-9cca-9a38a132e712": {
+      "current_path": "src/verification/lean_spec_generator.nim",
+      "initial_path": "src/verification/lean_spec_generator.nim",
+      "history": []
+    },
+    "9b61a15a-30bc-5644-b562-b77768d8f623": {
+      "current_path": "src/core/trusted/json.nim",
+      "initial_path": "src/core/trusted/json.nim",
+      "history": []
+    },
+    "be7169ba-6567-5d1f-9388-c7f48f4dee9d": {
+      "current_path": "src/verification/abstract_provider.nim",
+      "initial_path": "src/verification/abstract_provider.nim",
+      "history": []
+    },
+    "20e9f0e6-ce8a-55c2-b291-c70963cc3133": {
+      "current_path": "src/cli/wf_runners.nim",
+      "initial_path": "src/cli/wf_runners.nim",
+      "history": []
+    },
+    "b0a2b3f6-3cb2-5a81-9786-918db42044c1": {
+      "current_path": "src/core/vault/vault_index.nim",
+      "initial_path": "src/core/vault/vault_index.nim",
+      "history": []
+    },
+    "eec5e0ef-5551-583d-bfd9-06966126d22a": {
+      "current_path": "src/verification/proof_universe_commit.nim",
+      "initial_path": "src/verification/proof_universe_commit.nim",
+      "history": []
+    },
+    "52b59eda-5567-52cc-88d2-3fcd90b2de9b": {
+      "current_path": "src/core/encoding/smt_to_lean_codegen.nim",
+      "initial_path": "src/core/encoding/smt_to_lean_codegen.nim",
+      "history": []
+    },
+    "1dfa68b8-ec39-54fe-8e94-5bb33d9268d3": {
+      "current_path": "src/cli/report_render.nim",
+      "initial_path": "src/cli/report_render.nim",
+      "history": []
+    },
+    "318E9D9D-E078-5BC8-8823-AB0DB61BA24D": {
+      "current_path": "src/core/audit/hotspot_gate.nim",
+      "initial_path": "src/core/audit/hotspot_gate.nim",
+      "history": []
+    },
+    "e0b88ad9-a634-5e16-8010-b3a8528cdb1c": {
+      "current_path": "src/personas/judge_automation.nim",
+      "initial_path": "src/personas/judge_automation.nim",
+      "history": []
+    },
+    "8721fd43-0659-5e8a-b9b8-e556a8d1fbf8": {
+      "current_path": "src/core/vault/vault_manager_storage.nim",
+      "initial_path": "src/core/vault/vault_manager_storage.nim",
+      "history": []
+    },
+    "31179548-f6bd-5b19-a3f8-fc35a661edb6": {
+      "current_path": "src/gate/runners/quality_gate_marker.nim",
+      "initial_path": "src/gate/runners/quality_gate_marker.nim",
+      "history": []
+    },
+    "2421a2b0-aa41-54bc-8831-36a2cd3df1da": {
+      "current_path": "src/verification/inductive_proof_emitter.nim",
+      "initial_path": "src/verification/inductive_proof_emitter.nim",
+      "history": []
+    },
+    "6143b14d-df73-56c9-8e71-dcf9675216ef": {
+      "current_path": "src/core/gate/gate_cas.nim",
+      "initial_path": "src/core/gate/gate_cas.nim",
+      "history": []
+    },
+    "ed7884e7-19f9-5994-aeea-4267f5499fcd": {
+      "current_path": "src/cli/payload_bridge.nim",
+      "initial_path": "src/cli/payload_bridge.nim",
+      "history": []
+    },
+    "ae0b2f18-dc7d-5938-96f9-af3bf1171761": {
+      "current_path": "src/core/orchestrator/orchestrator_api.nim",
+      "initial_path": "src/core/orchestrator/orchestrator_api.nim",
+      "history": []
+    },
+    "0416D217-6716-5D20-8E2F-103A04882CAD": {
+      "current_path": "src/verification/solver/fixedpoint_types.nim",
+      "initial_path": "src/verification/solver/fixedpoint_types.nim",
+      "history": []
+    },
+    "8de9aadc-86fd-4dd8-abe2-3365b9a6eb50": {
+      "current_path": "src/core/application/persona_context_init.nim",
+      "initial_path": "src/core/application/persona_context_init.nim",
+      "history": []
+    },
+    "07f8766b-c5ff-57b2-badf-6f692bd98449": {
+      "current_path": "src/verification/ast_extractor.nim",
+      "initial_path": "src/verification/ast_extractor.nim",
+      "history": []
+    },
+    "B52F4CA5-E3C2-55FF-8A51-1C5293BB1367": {
+      "current_path": "src/core/parsers/tree_sitter/node.nim",
+      "initial_path": "src/core/parsers/tree_sitter/node.nim",
+      "history": []
+    },
+    "9d03673b-b080-5f2e-8031-0ebe1b01d8ef": {
+      "current_path": "src/gate/policy_loader.nim",
+      "initial_path": "src/gate/policy_loader.nim",
+      "history": []
+    },
+    "5c1d135a-fec3-53a4-a3b0-217e86a37235": {
+      "current_path": "src/core/topology/import_graph.nim",
+      "initial_path": "src/core/import_graph.nim",
+      "history": [
+        {
+          "path": "src/core/topology/import_graph.nim",
+          "changed_at": "2026-06-11T01:57:22.038281+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 14
+        }
+      ]
+    },
+    "e8a4bc2b-2c42-4d47-93f7-5ed92be51613": {
+      "current_path": "src/verification/composition/healing_registry.nim",
+      "initial_path": "src/verification/composition/healing_registry.nim",
+      "history": []
+    },
+    "38d75f6f-8dd5-53a0-ae0b-8df09f1b69a0": {
+      "current_path": "src/core/boundary/boundary_extractor.nim",
+      "initial_path": "src/core/boundary/boundary_extractor.nim",
+      "history": []
+    },
+    "23bdadd8-7ce1-5a5c-8b5f-043e30fa4968": {
+      "current_path": "src/verification/lean_hint_db.nim",
+      "initial_path": "src/verification/lean_hint_db.nim",
+      "history": []
+    },
+    "EE2CE5D5-E766-5B8A-80C8-7742ED927919": {
+      "current_path": "src/core/orchestration/pipeline_config.nim",
+      "initial_path": "src/core/orchestration/pipeline_config.nim",
+      "history": []
+    },
+    "562a2ce8-20c6-5e80-b139-8fa0f197b6ce": {
+      "current_path": "src/gate/architecture_ast_facts.nim",
+      "initial_path": "src/gate/architecture_ast_facts.nim",
+      "history": []
+    },
+    "620bb2d9-a41e-5b3e-9ce0-109eabfb150d": {
+      "current_path": "src/verification/orchestrator.nim",
+      "initial_path": "src/verification/orchestrator.nim",
+      "history": []
+    },
+    "02c962f4-e2b2-5f85-ba5d-f86dcb011924": {
+      "current_path": "src/core/encoding/smt_atom_generator.nim",
+      "initial_path": "src/core/encoding/smt_atom_generator.nim",
+      "history": []
+    },
+    "3a81a19c-7cc7-579b-aba6-29673485c3c0": {
+      "current_path": "src/core/logic/smt_logic.nim",
+      "initial_path": "src/core/logic/smt_logic.nim",
+      "history": []
+    },
+    "c255141a-11ec-54ba-a2a1-0d8f4e14f844": {
+      "current_path": "src/core/sorter/sorter_core_index_table.nim",
+      "initial_path": "src/core/sorter/sorter_core_index_table.nim",
+      "history": []
+    },
+    "e3de4c5a-c976-5499-ba0e-cc22629d9644": {
+      "current_path": "src/core/sorter/sorter_core_algo.nim",
+      "initial_path": "src/core/sorter/sorter_core_algo.nim",
+      "history": []
+    },
+    "c29b707d-5fed-531e-a2dc-d972b613d2d7": {
+      "current_path": "src/core/api/axiom_api_session_ops.nim",
+      "initial_path": "src/core/api/axiom_api_session_ops.nim",
+      "history": []
+    },
+    "15963953-eda5-5a84-baff-3d35efdf6364": {
+      "current_path": "src/verification/state_manager.nim",
+      "initial_path": "src/verification/state_manager.nim",
+      "history": []
+    },
+    "c6203ea2-6e89-5cc8-9aa5-005f21efe161": {
+      "current_path": "src/verification/layer1_bmc.nim",
+      "initial_path": "src/verification/layer1_bmc.nim",
+      "history": []
+    },
+    "794c538c-6971-5a55-a4bd-8155db193a32": {
+      "current_path": "src/core/contract/contract_ast_extractor.nim",
+      "initial_path": "src/core/contract/contract_ast_extractor.nim",
+      "history": []
+    },
+    "fc7fa6ed-4aa3-528d-8097-38a04e3132d8": {
+      "current_path": "src/gate/nimtry/feature_universe.nim",
+      "initial_path": "src/gate/nimtry/feature_universe.nim",
+      "history": []
+    },
+    "21ba4275-c9d3-5199-832b-548683a9ac3c": {
+      "current_path": "src/core/orchestrator/cfg_builder.nim",
+      "initial_path": "src/core/orchestrator/cfg_builder.nim",
+      "history": []
+    },
+    "6434ba05-8e1d-59c7-9abb-44dde1f57ade": {
+      "current_path": "src/core/parsers/pred.nim",
+      "initial_path": "src/core/parsers/tree_sitter/query/pred.nim",
+      "history": [
+        {
+          "path": "src/core/parsers/pred.nim",
+          "changed_at": "2026-06-11T01:29:51.705942+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 13
+        }
+      ]
+    },
+    "d9ad02f8-f2f9-5dd9-bd2d-4707517ff277": {
+      "current_path": "src/verification/loop_invariant_synthesis.nim",
+      "initial_path": "src/verification/loop_invariant_synthesis.nim",
+      "history": []
+    },
+    "061db3eb-9ffa-5564-a954-fa030325b0d9": {
+      "current_path": "src/verification/lean_lsp_tactic.nim",
+      "initial_path": "src/verification/lean_lsp_tactic.nim",
+      "history": []
+    },
+    "161cbde8-9b43-5d51-8a4f-f7df0eb1ad1d": {
+      "current_path": "src/gate/runners/dag_enforcement_gate.nim",
+      "initial_path": "src/gate/runners/dag_enforcement_gate.nim",
+      "history": []
+    },
+    "81BF81CC-6D1C-5FE3-82F9-9B83528EA1D6": {
+      "current_path": "src/verification/cegar_adapter.nim",
+      "initial_path": "src/verification/cegar_adapter.nim",
+      "history": []
+    },
+    "c64f546a-6180-54ed-9596-df4aeb684a53": {
+      "current_path": "src/core/logic/pipeline_verdict_engine.nim",
+      "initial_path": "src/core/logic/pipeline_verdict_engine.nim",
+      "history": []
+    },
+    "ef11ea59-9524-5c4b-991c-6f62ccb2a6b2": {
+      "current_path": "src/core/logic/pipeline_healing_logic.nim",
+      "initial_path": "src/core/logic/pipeline_healing_logic.nim",
+      "history": []
+    },
+    "AED9CE49-A05C-553D-8B4A-55F517BCFECC": {
+      "current_path": "src/core/test_support/sandbox_guard.nim",
+      "initial_path": "src/core/test_support/sandbox_guard.nim",
+      "history": []
+    },
+    "a7b7e9d0-e697-5d32-9c53-8b559c3d1abc": {
+      "current_path": "src/gate/nimtry/nimtry_extract_part3.nim",
+      "initial_path": "src/gate/nimtry/extract/nimtry_extract_part3.nim",
+      "history": [
+        {
+          "path": "src/gate/nimtry/nimtry_extract_part3.nim",
+          "changed_at": "2026-06-11T01:05:39.038156+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 10
+        }
+      ]
+    },
+    "2007D463-F14C-5B07-889A-E0D978EEE6AD": {
+      "current_path": "src/core/types/hubs/judge_hub.nim",
+      "initial_path": "src/core/types/hubs/judge_hub.nim",
+      "history": []
+    },
+    "44e2ff01-b1be-55fe-8252-5232243dd74e": {
+      "current_path": "src/personas/judge_shadow_mode.nim",
+      "initial_path": "src/personas/judge_shadow_mode.nim",
+      "history": []
+    },
+    "6d29f0db-4026-5a09-892c-245cf9676223": {
+      "current_path": "src/verification/leanstral/leanstral_cli.nim",
+      "initial_path": "src/verification/leanstral/leanstral_cli.nim",
+      "history": []
+    },
+    "797f859d-39b5-59c9-895d-0498bf06e971": {
+      "current_path": "src/cli/subagent_orchestrator.nim",
+      "initial_path": "src/cli/subagent_orchestrator.nim",
+      "history": []
+    },
+    "f94aae94-0082-5451-b6fb-b5e945121029": {
+      "current_path": "src/core/policy/architecture_policy_part1.nim",
+      "initial_path": "src/core/policy/architecture_policy_part1.nim",
+      "history": []
+    },
+    "32c642d6-f208-50ab-99b4-5cdf84acef30": {
+      "current_path": "src/core/gate/gate_evaluators.nim",
+      "initial_path": "src/core/gate/gate_evaluators.nim",
+      "history": []
+    },
+    "abc04d20-38bb-5b6f-9149-14cbb92cbe85": {
+      "current_path": "src/core/gateway/gateway.nim",
+      "initial_path": "src/core/gateway/gateway.nim",
+      "history": []
+    },
+    "0b52e375-2391-5131-9afe-a2ae8edec9bd": {
+      "current_path": "src/core/orchestrator/orchestrator_topology_emit.nim",
+      "initial_path": "src/core/orchestrator/orchestrator_topology_emit.nim",
+      "history": []
+    },
+    "3d386048-11f3-53a9-b59c-41fbaec98223": {
+      "current_path": "src/gate/gate_rules.nim",
+      "initial_path": "src/gate/gate_rules.nim",
+      "history": []
+    },
+    "5e8a30ed-d915-556d-8e8b-c368a0cdcdf2": {
+      "current_path": "src/gate/nimtry/nimtry_cli.nim",
+      "initial_path": "src/gate/nimtry/nimtry_cli.nim",
+      "history": []
+    },
+    "5D725514-B4D5-5C70-8A98-2F1C0179B1CC": {
+      "current_path": "src/core/orchestrator/orchestrator_report_types.nim",
+      "initial_path": "src/core/orchestrator/orchestrator_report_types.nim",
+      "history": []
+    },
+    "eb215f76-9cb4-5101-8133-ab9680bc2721": {
+      "current_path": "src/mcp/tools.nim",
+      "initial_path": "src/mcp/tools.nim",
+      "history": []
+    },
+    "a6fa315b-7428-52ce-a7c4-aa49cdd10526": {
+      "current_path": "src/core/io/io_utils.nim",
+      "initial_path": "src/core/io/io_utils.nim",
+      "history": []
+    },
+    "60d8cb4c-ecba-5f25-b1f0-48f212e370ef": {
+      "current_path": "src/sieve/sieve_engine.nim",
+      "initial_path": "src/sieve/sieve_engine.nim",
+      "history": []
+    },
+    "c2fc538f-ae58-5549-9a68-1c078146a3d9": {
+      "current_path": "src/core/types/type_mapping.nim",
+      "initial_path": "src/core/types/type_mapping.nim",
+      "history": []
+    },
+    "225D4345-4A03-59D1-8EE6-78E91AB4AD25": {
+      "current_path": "src/core/encoding/smt_to_lean/private/arithmetic_expr.nim",
+      "initial_path": "src/core/encoding/smt_to_lean/private/arithmetic_expr.nim",
+      "history": []
+    },
+    "f3eb690d-68f5-5a6d-835a-38ee5b4abe2d": {
+      "current_path": "src/core/symbolic/symbolic_types_parse.nim",
+      "initial_path": "src/core/symbolic/symbolic_types_parse.nim",
+      "history": []
+    },
+    "c8478b89-a87a-59a4-a5bb-f2aaa6f16c3a": {
+      "current_path": "src/gate/gate_rules_module_classifier.nim",
+      "initial_path": "src/gate/gate_rules_module_classifier.nim",
+      "history": []
+    },
+    "e5ec12ff-e9d0-57fc-87f4-03fb4e7bfcfc": {
+      "current_path": "src/gate/runners/validate_runners.nim",
+      "initial_path": "src/gate/runners/validate_runners.nim",
+      "history": []
+    },
+    "3cbc7e7c-a3dd-597e-b1ad-3d8a824c01f4": {
+      "current_path": "src/personas/detective.nim",
+      "initial_path": "src/personas/detective.nim",
+      "history": []
+    },
+    "d62e6428-0823-5ac7-9144-87534022ce0f": {
+      "current_path": "src/personas/judge.nim",
+      "initial_path": "src/personas/judge.nim",
+      "history": []
+    },
+    "2fc584a8-67ea-50c4-a938-1831973c5ad8": {
+      "current_path": "src/gate/runners/isolated_check.nim",
+      "initial_path": "src/gate/runners/isolated_check.nim",
+      "history": []
+    },
+    "d2ffa7f2-c1f4-530c-9de3-983f05e7f016": {
+      "current_path": "src/gate/runners/test_coverage_gate.nim",
+      "initial_path": "src/gate/runners/test_coverage_gate.nim",
+      "history": []
+    },
+    "9d945cac-c289-52ff-888c-b4fcd0138f55": {
+      "current_path": "src/gate/runners/delegation_enforcer.nim",
+      "initial_path": "src/gate/runners/delegation_enforcer.nim",
+      "history": []
+    },
+    "4cd2df98-c53c-575c-9ddc-9e792f992401": {
+      "current_path": "src/core/solver/shell_bridge.nim",
+      "initial_path": "src/core/solver/shell_bridge.nim",
+      "history": []
+    },
+    "428a8349-b741-42d6-ba26-2bc1d735166a": {
+      "current_path": "src/verification/composition/bmc_registry.nim",
+      "initial_path": "src/verification/composition/bmc_registry.nim",
+      "history": []
+    },
+    "a0c1bd86-5e0b-52b3-994d-3c152042058b": {
+      "current_path": "src/personas/scribe.nim",
+      "initial_path": "src/personas/scribe.nim",
+      "history": []
+    },
+    "4802ea3c-bf4f-5799-8637-35ec1d3d12fe": {
+      "current_path": "src/core/gateway/gateway_types.nim",
+      "initial_path": "src/core/gateway/gateway_types.nim",
+      "history": []
+    },
+    "5d525f40-e270-5c02-9c5b-920d28b6312b": {
+      "current_path": "src/verification/integrity_guard.nim",
+      "initial_path": "src/verification/integrity_guard.nim",
+      "history": []
+    },
+    "841df216-7129-5633-b1ba-471d2215ced5": {
+      "current_path": "src/gate/runners/architecture_guard.nim",
+      "initial_path": "src/gate/runners/architecture_guard.nim",
+      "history": []
+    },
+    "9ecc9c56-30e5-5325-acde-e5eea28ff41c": {
+      "current_path": "src/cli/wf_runners_common.nim",
+      "initial_path": "src/cli/wf_runners_common.nim",
+      "history": []
+    },
+    "F863A9DF-225D-53B5-8E77-EE665CD62F74": {
+      "current_path": "src/core/solver/bare_types.nim",
+      "initial_path": "src/core/solver/bare_types.nim",
+      "history": []
+    },
+    "608426f1-d7a7-5920-8a58-77e2e4e44869": {
+      "current_path": "src/core/types/semantic_types.nim",
+      "initial_path": "src/core/types/semantic_types.nim",
+      "history": []
+    },
+    "8e92d28e-eefa-5f01-8609-d4632ce5d12e": {
+      "current_path": "src/personas/shape_handlers/linear_arithmetic.nim",
+      "initial_path": "src/personas/shape_handlers/linear_arithmetic.nim",
+      "history": []
+    },
+    "6b90daa5-320c-5d70-80d3-5c3529cab279": {
+      "current_path": "src/verification/proof_state_convergence.nim",
+      "initial_path": "src/verification/proof_state_convergence.nim",
+      "history": []
+    },
+    "ad77309c-6e54-5a89-b295-144f2d8ad97a": {
+      "current_path": "src/core/api/axiom_api_session_types.nim",
+      "initial_path": "src/core/api/axiom_api_session_types.nim",
+      "history": []
+    },
+    "3fc40e1c-035b-5d5a-904b-b2e3a2ac2fcc": {
+      "current_path": "src/core/parsers/tree_sitter_parse.nim",
+      "initial_path": "src/core/parsers/tree_sitter_parse.nim",
+      "history": []
+    },
+    "706D11F6-C78B-551A-817A-DC53CD283F78": {
+      "current_path": "src/verification/leanstral_repl.nim",
+      "initial_path": "src/verification/leanstral_repl.nim",
+      "history": []
+    },
+    "b1e479e2-2ffd-506a-9dc6-bf365e2e55ae": {
+      "current_path": "src/core/json/json_scan_parse.nim",
+      "initial_path": "src/core/json/json_scan_parse.nim",
+      "history": []
+    },
+    "6de04c2a-e427-503f-8f09-4a435a1f102a": {
+      "current_path": "src/verification/analyzer/stage_06_proof_synth.nim",
+      "initial_path": "src/verification/analyzer/stages/stage_06_proof_synth.nim",
+      "history": [
+        {
+          "path": "src/verification/analyzer/stage_06_proof_synth.nim",
+          "changed_at": "2026-06-11T10:10:01+09:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 11
+        }
+      ]
+    },
+    "af38c8d1-1cb2-55cb-8fe3-a711117091d0": {
+      "current_path": "src/verification/fingerprint_engine.nim",
+      "initial_path": "src/verification/fingerprint_engine.nim",
+      "history": []
+    },
+    "44771cbc-9861-5aea-843c-9eec59961d40": {
+      "current_path": "src/ui/ax_tui_reporter_part2.nim",
+      "initial_path": "src/ui/ax_tui_reporter_part2.nim",
+      "history": []
+    },
+    "22501D9F-5971-5F54-8736-C0D30E89AA34": {
+      "current_path": "src/core/policy/parsers/parse_layers.nim",
+      "initial_path": "src/core/policy/parsers/parse_layers.nim",
+      "history": []
+    },
+    "243D95A4-1B16-530B-8849-F724E487925C": {
+      "current_path": "src/core/types/hubs/audit_hub.nim",
+      "initial_path": "src/core/types/hubs/audit_hub.nim",
+      "history": []
+    },
+    "486e078f-da98-52bd-8a55-bc6ab907a890": {
+      "current_path": "src/gate/runners/forwarding_stub_cycle_gate.nim",
+      "initial_path": "src/gate/runners/forwarding_stub_cycle_gate.nim",
+      "history": []
+    },
+    "71DF36A4-A5BF-5142-8109-73ACD53A32EC": {
+      "current_path": "src/core/trusted/architecture_invariants.nim",
+      "initial_path": "src/core/trusted/architecture_invariants.nim",
+      "history": []
+    },
+    "da159786-6f64-541e-8e9d-670fde19ae60": {
+      "current_path": "src/gate/runners/architecture_config_gate.nim",
+      "initial_path": "src/gate/runners/architecture_config_gate.nim",
+      "history": []
+    },
+    "55abf512-6534-5361-af71-fcf9852b20b2": {
+      "current_path": "src/core/parsers/safe_parsers.nim",
+      "initial_path": "src/core/parsers/safe_parsers.nim",
+      "history": []
+    },
+    "b4ec3c5b-5f5d-59f3-aa8b-bd759b3af7ec": {
+      "current_path": "src/gate/runners/agent_preflight.nim",
+      "initial_path": "src/gate/runners/agent_preflight.nim",
+      "history": []
+    },
+    "26A0FCE5-4334-5C02-8602-A0EA8FA17521": {
+      "current_path": "src/cli/proof_gate.nim",
+      "initial_path": "src/cli/proof_gate.nim",
+      "history": []
+    },
+    "72ce4aa4-0469-5ace-acfa-1144aa52ccee": {
+      "current_path": "src/core/vault/vault_factory.nim",
+      "initial_path": "src/core/vault/vault_factory.nim",
+      "history": []
+    },
+    "3ee1a669-e991-5558-bf36-f432294c33cc": {
+      "current_path": "src/core/telemetry/metrics.nim",
+      "initial_path": "src/core/metrics.nim",
+      "history": [
+        {
+          "path": "src/core/telemetry/metrics.nim",
+          "changed_at": "2026-06-11T01:57:22.038281+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 14
+        }
+      ]
+    },
+    "fa047d30-f58a-5e9c-a65e-c401aee158e9": {
+      "current_path": "src/cli/wf_render.nim",
+      "initial_path": "src/cli/wf_render.nim",
+      "history": []
+    },
+    "5b50382c-90eb-5797-bed4-1094a88c559b": {
+      "current_path": "src/core/verified_axioms/verified_axioms_catalog_part1.nim",
+      "initial_path": "src/core/verified_axioms/verified_axioms_catalog_part1.nim",
+      "history": []
+    },
+    "28ba08fe-b2a9-5db2-b485-4030bf851234": {
+      "current_path": "src/gate/runners/context_size_guard.nim",
+      "initial_path": "src/gate/runners/context_size_guard.nim",
+      "history": []
+    },
+    "93ae60c1-b791-5b4d-8a1f-7d868c9ae6ab": {
+      "current_path": "src/core/types/symbolic_types_expr.nim",
+      "initial_path": "src/core/types/symbolic_types_expr.nim",
+      "history": []
+    },
+    "3ba8513e-efe5-5fd3-b7cf-9d5656f75477": {
+      "current_path": "src/gate/nimtry/nimtry_extract_part1.nim",
+      "initial_path": "src/gate/nimtry/extract/nimtry_extract_part1.nim",
+      "history": [
+        {
+          "path": "src/gate/nimtry/nimtry_extract_part1.nim",
+          "changed_at": "2026-06-11T01:05:39.038156+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 10
+        }
+      ]
+    },
+    "b5404dc0-e57d-5d0a-99e0-f674a3712d03": {
+      "current_path": "tools/ci/convert_stubs.nim",
+      "initial_path": "tools/ci/convert_stubs.nim",
+      "history": []
+    },
+    "B0E6F23E-6A2D-55A1-8CA3-CF7C906C262A": {
+      "current_path": "src/gate/runners/debt_blocker/private/runner.nim",
+      "initial_path": "src/gate/runners/debt_blocker/private/runner.nim",
+      "history": []
+    },
+    "e2bcfb0e-335d-5a43-ba15-84a6881b4ffc": {
+      "current_path": "src/core/judge/tautology_checker.nim",
+      "initial_path": "src/core/judge/tautology_checker.nim",
+      "history": []
+    },
+    "73099139-8064-5534-86A2-9AD5330183C4": {
+      "current_path": "src/core/contracts/universal_pipeline_contract.nim",
+      "initial_path": "src/core/contracts/universal_pipeline_contract.nim",
+      "history": []
+    },
+    "40b36995-4a8f-52d9-82a4-5997212bc7bc": {
+      "current_path": "src/personas/strategy_registry.nim",
+      "initial_path": "src/personas/strategy_registry.nim",
+      "history": []
+    },
+    "CD9D7846-49CF-5604-8026-1149F89657D9": {
+      "current_path": "src/core/test_support/pbt_gate.nim",
+      "initial_path": "src/core/test_support/pbt_gate.nim",
+      "history": []
+    },
+    "64318df9-d0e8-5dd3-ae1d-486695bd9f9d": {
+      "current_path": "src/core/verified_axioms/axiom_catalog_validator.nim",
+      "initial_path": "src/core/verified_axioms/axiom_catalog_validator.nim",
+      "history": []
+    },
+    "bf77cdd3-d33a-5331-880a-29949eedb78a": {
+      "current_path": "src/core/sync/sync_utils_resource.nim",
+      "initial_path": "src/core/sync/sync_utils_resource.nim",
+      "history": []
+    },
+    "20C82F9C-6CDA-5EB1-87B7-B179488E1D7B": {
+      "current_path": "src/core/application/verification_context.nim",
+      "initial_path": "src/core/application/verification_context.nim",
+      "history": []
+    },
+    "339964c2-26d4-57c8-923a-fdfe648e15f9": {
+      "current_path": "src/cli/commands/topology_cli.nim",
+      "initial_path": "src/cli/commands/topology_cli.nim",
+      "history": []
+    },
+    "320cfd42-3f72-592f-8eb9-8a09b83e27bb": {
+      "current_path": "src/cli/queue_limit.nim",
+      "initial_path": "src/cli/queue_limit.nim",
+      "history": []
+    },
+    "6f1f45c6-b6da-5ae6-a158-b41895cbf7ae": {
+      "current_path": "src/api.nim",
+      "initial_path": "src/api.nim",
+      "history": []
+    },
+    "8245ee6a-0ddd-540b-99b5-14758054e325": {
+      "current_path": "src/cli/wf_state.nim",
+      "initial_path": "src/cli/wf_state.nim",
+      "history": []
+    },
+    "159948ef-b2c0-5426-9284-7551e1f74af2": {
+      "current_path": "src/core/type_system/context_aware_type_inferencer.nim",
+      "initial_path": "src/core/type_system/context_aware_type_inferencer.nim",
+      "history": []
+    },
+    "10b108a8-2827-5b3b-8852-e29214aba516": {
+      "current_path": "src/gate/runners/manifest_consistency_gate.nim",
+      "initial_path": "src/gate/runners/manifest_consistency_gate.nim",
+      "history": []
+    },
+    "58adadb1-720e-5ee2-b48a-a22899929af3": {
+      "current_path": "src/sieve/sieve_rules.nim",
+      "initial_path": "src/sieve/sieve_rules.nim",
+      "history": []
+    },
+    "56c2218d-802c-577c-aeab-dfaf5516defd": {
+      "current_path": "src/gate/runners/procedure_gate.nim",
+      "initial_path": "src/gate/runners/procedure_gate.nim",
+      "history": []
+    },
+    "00AADF9B-0770-5DB4-8F67-0A541B072293": {
+      "current_path": "src/verification/pipeline_stage_swat.nim",
+      "initial_path": "src/verification/pipeline_stage_swat.nim",
+      "history": []
+    },
+    "8fe7e0b2-f90f-5a8b-b2eb-2c3af8e73f5d": {
+      "current_path": "src/core/parsers/lean.nim",
+      "initial_path": "src/core/parsers/tree_sitter/query/lean.nim",
+      "history": [
+        {
+          "path": "src/core/parsers/lean.nim",
+          "changed_at": "2026-06-11T01:29:51.705942+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 13
+        }
+      ]
+    },
+    "5f00d4cb-0061-545d-92e2-1474afe86042": {
+      "current_path": "src/core/judge/the_judge_query_part2.nim",
+      "initial_path": "src/core/judge/the_judge_query_part2.nim",
+      "history": []
+    },
+    "c988a3bb-b7cd-5975-b5fe-53e0ed4e43ec": {
+      "current_path": "src/core/trusted/lean_util.nim",
+      "initial_path": "src/core/trusted/lean_util.nim",
+      "history": []
+    },
+    "f2cb5028-d6a1-5f04-a965-a6bfc2cf03a5": {
+      "current_path": "src/core/topology/rewrite.nim",
+      "initial_path": "src/core/topology/rewrite.nim",
+      "history": []
+    },
+    "c6f5dc1b-80d1-5f6e-8852-f7544757400b": {
+      "current_path": "src/gate/tag_parser.nim",
+      "initial_path": "src/gate/tag_parser.nim",
+      "history": []
+    },
+    "4c16a45a-872d-57a3-b12e-d0fc6a63fca6": {
+      "current_path": "src/core/gateway/gateway_constraint.nim",
+      "initial_path": "src/core/gateway/gateway_constraint.nim",
+      "history": []
+    },
+    "e3857971-d8b2-5c17-b083-0179e9c8e802": {
+      "current_path": "src/gate/runners/gateway_test_gate.nim",
+      "initial_path": "src/gate/runners/gateway_test_gate.nim",
+      "history": []
+    },
+    "6CFED5FD-DDC6-5B60-8486-51EF7CA35F68": {
+      "current_path": "src/verification/pipeline_phase.nim",
+      "initial_path": "src/verification/pipeline_phase.nim",
+      "history": []
+    },
+    "804b8969-7f3f-593a-8093-6569c3b03640": {
+      "current_path": "src/personas/shape_handlers/unknown.nim",
+      "initial_path": "src/personas/shape_handlers/unknown.nim",
+      "history": []
+    },
+    "023aba74-7982-5dfc-9f25-30ad2c798f4e": {
+      "current_path": "src/core/types/results.nim",
+      "initial_path": "src/core/results.nim",
+      "history": [
+        {
+          "path": "src/core/types/results.nim",
+          "changed_at": "2026-06-11T01:57:22.038281+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 14
+        }
+      ]
+    },
+    "b2d1ef0d-423e-50f4-94d4-36c06d95edc7": {
+      "current_path": "src/gate/orchestrator_hook_part1.nim",
+      "initial_path": "src/gate/orchestrator_hook_part1.nim",
+      "history": []
+    },
+    "e8e29e82-74d9-5cac-808e-170d4f11327e": {
+      "current_path": "src/core/types/domain_utils.nim",
+      "initial_path": "src/core/types/domain_utils.nim",
+      "history": []
+    },
+    "fab7bb87-3bae-55e0-af09-ef84149ccb89": {
+      "current_path": "src/mcp/mcp_params.nim",
+      "initial_path": "src/mcp/mcp_params.nim",
+      "history": []
+    },
+    "8bcf1fcd-dd02-5e9a-b567-78e6ef5d3cd8": {
+      "current_path": "src/core/topology/policy.nim",
+      "initial_path": "src/core/topology_policy.nim",
+      "history": [
+        {
+          "path": "src/core/topology/policy.nim",
+          "changed_at": "2026-06-10T23:36:29+0000",
+          "change_type": "moved_to_subdomain",
+          "approved_in_lock": 2
+        }
+      ]
+    },
+    "f8b9980f-031f-558e-83ce-a48b4e60b849": {
+      "current_path": "src/cli/gate_admin_validate.nim",
+      "initial_path": "src/cli/gate_admin_validate.nim",
+      "history": []
+    },
+    "d50fcfb0-72f8-59e1-bf31-ba86c5396641": {
+      "current_path": "src/core/boundary/complexity_index.nim",
+      "initial_path": "src/core/boundary/complexity_index.nim",
+      "history": []
+    },
+    "9FF127E8-102A-505F-8FE0-A45EEB3AE4FE": {
+      "current_path": "src/core/orchestrator/orchestrator_request_types.nim",
+      "initial_path": "src/core/orchestrator/orchestrator_request_types.nim",
+      "history": []
+    },
+    "17F918DC-3790-5B26-898E-8AD81C81527B": {
+      "current_path": "src/verification/pipeline_effect.nim",
+      "initial_path": "src/verification/pipeline_effect.nim",
+      "history": []
+    },
+    "03B17141-A083-5638-89E7-05B643812CB5": {
+      "current_path": "src/verification/proof/arithmetic_type_directed_pipeline.nim",
+      "initial_path": "src/verification/proof/arithmetic_type_directed_pipeline.nim",
+      "history": []
+    },
+    "26b0b9a9-4322-5c65-84a2-b9bd0bb0e96a": {
+      "current_path": "src/core/gate/layer_guard.nim",
+      "initial_path": "src/core/gate/layer_guard.nim",
+      "history": []
+    },
+    "CD965677-F477-5427-8E30-2EA2BD0EE595": {
+      "current_path": "src/core/parsers/tree_sitter/nodes.nim",
+      "initial_path": "src/core/parsers/tree_sitter/nodes.nim",
+      "history": []
+    },
+    "73161f6e-2b6b-59df-8a62-f8179bf3c1de": {
+      "current_path": "src/core/boundary/private/boundary_context.nim",
+      "initial_path": "src/core/boundary/private/boundary_context.nim",
+      "history": []
+    },
+    "4f099e89-7eb6-5e99-80fb-3306fceda771": {
+      "current_path": "src/personas/shape_handlers/finite_equality.nim",
+      "initial_path": "src/personas/shape_handlers/finite_equality.nim",
+      "history": []
+    },
+    "75ee8d95-9ffc-53d5-8e10-39e0ecba45f3": {
+      "current_path": "src/verification/analyzer/stage_adapters.nim",
+      "initial_path": "src/verification/analyzer/stages/stage_adapters.nim",
+      "history": [
+        {
+          "path": "src/verification/analyzer/stage_adapters.nim",
+          "changed_at": "2026-06-11T10:10:01+09:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 11
+        }
+      ]
+    },
+    "9D37F000-F4E6-53B6-84C2-680D42571D1A": {
+      "current_path": "src/verification/pipeline_transition_engine.nim",
+      "initial_path": "src/verification/pipeline_transition_engine.nim",
+      "history": []
+    },
+    "52f33862-ac08-5302-b9d9-e6b202631fba": {
+      "current_path": "src/core/contract/contract_text_extractor.nim",
+      "initial_path": "src/core/contract/contract_text_extractor.nim",
+      "history": []
+    },
+    "A72CDCC5-CCFD-5392-8A20-464BF3A68A19": {
+      "current_path": "src/core/codec/codec_codegen.nim",
+      "initial_path": "src/core/codec/codec_codegen.nim",
+      "history": []
+    },
+    "8576f673-0356-5804-87c8-986145aaa426": {
+      "current_path": "src/verification/cert_builder.nim",
+      "initial_path": "src/verification/cert_builder.nim",
+      "history": []
+    },
+    "47a813f0-a1ea-56ea-b475-7e6e27169fe3": {
+      "current_path": "src/core/api/axiom_api_types_1.nim",
+      "initial_path": "src/core/api/axiom_api_types_1.nim",
+      "history": []
+    },
+    "dd9b5186-ff56-510b-8d35-7b413833c480": {
+      "current_path": "src/core/parsers/expression_parser.nim",
+      "initial_path": "src/core/parsers/expression_parser.nim",
+      "history": []
+    },
+    "1F91335E-77C4-5E8E-862F-9C47675C2140": {
+      "current_path": "src/core/coverage/coverage_bridge.nim",
+      "initial_path": "src/core/coverage/coverage_bridge.nim",
+      "history": []
+    },
+    "D97608DF-9474-57CE-873F-0755EB601993": {
+      "current_path": "src/core/policy/parsers/parse_meta.nim",
+      "initial_path": "src/core/policy/parsers/parse_meta.nim",
+      "history": []
+    },
+    "422C80C0-13E3-5CEE-8EC5-3BCBD2EC0638": {
+      "current_path": "src/core/application/lean_context.nim",
+      "initial_path": "src/core/application/lean_context.nim",
+      "history": []
+    },
+    "52a57500-7afe-5c05-8219-0b3b021ee1a5": {
+      "current_path": "src/personas/strategy_handlers/llm_fallback.nim",
+      "initial_path": "src/personas/strategy_handlers/llm_fallback.nim",
+      "history": []
+    },
+    "52141015-dbcd-5e36-a310-b19d7505cc56": {
+      "current_path": "src/verification/universal_pipeline.nim",
+      "initial_path": "src/verification/universal_pipeline.nim",
+      "history": []
+    },
+    "e9b9191b-8da2-5e27-a660-d7f40d86538b": {
+      "current_path": "src/core/solver/interfaces.nim",
+      "initial_path": "src/core/solver/interfaces.nim",
+      "history": []
+    },
+    "a5c98ce7-9449-5b88-8285-22fba49bdaba": {
+      "current_path": "src/core/judge/the_judge_query_part1.nim",
+      "initial_path": "src/core/judge/the_judge_query_part1.nim",
+      "history": []
+    },
+    "150741ae-b808-50d3-869c-b50b71813d43": {
+      "current_path": "src/ui/ax_tui_reporter.nim",
+      "initial_path": "src/ui/ax_tui_reporter.nim",
+      "history": []
+    },
+    "dbd99517-ebeb-58d5-9d09-e7fbb9aac8a7": {
+      "current_path": "src/core/trusted/provider_interface.nim",
+      "initial_path": "src/core/trusted/provider_interface.nim",
+      "history": []
+    },
+    "6F51C24A-BE1C-5E69-8E93-EB63DFF88C60": {
+      "current_path": "src/core/types/hubs/effect_hub.nim",
+      "initial_path": "src/core/types/hubs/effect_hub.nim",
+      "history": []
+    },
+    "6c27e09d-fcb4-5147-a73c-f6f8a44bba32": {
+      "current_path": "src/core/boundary/meta_extractor.nim",
+      "initial_path": "src/core/boundary/meta_extractor.nim",
+      "history": []
+    },
+    "8E98142C-A7CC-5515-815E-A60BB690867C": {
+      "current_path": "src/core/session/session_parser_gateway.nim",
+      "initial_path": "src/core/session/session_parser_gateway.nim",
+      "history": []
+    },
+    "89FFCC96-583F-513A-8095-789F14E6B41A": {
+      "current_path": "src/verification/hub.nim",
+      "initial_path": "src/verification/hub.nim",
+      "history": []
+    },
+    "6d6d8406-d935-5d2d-8623-785d98d3f8ff": {
+      "current_path": "src/core/parsers/collect.nim",
+      "initial_path": "src/core/parsers/tree_sitter/query/collect.nim",
+      "history": [
+        {
+          "path": "src/core/parsers/collect.nim",
+          "changed_at": "2026-06-11T01:29:51.705942+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 13
+        }
+      ]
+    },
+    "6EBB279F-DDE2-507B-8681-1BAC06FE2931": {
+      "current_path": "src/core/domains/persona_interface.nim",
+      "initial_path": "src/core/domains/persona_interface.nim",
+      "history": []
+    },
+    "e7f78e7e-2cab-5228-865a-83a73b3d7b7f": {
+      "current_path": "src/verification/global_symbol_graph.nim",
+      "initial_path": "src/verification/global_symbol_graph.nim",
+      "history": []
+    },
+    "bfc65642-afd7-5b1b-b374-fea2797b4e82": {
+      "current_path": "src/core/integrity/refinement_types.nim",
+      "initial_path": "src/core/integrity/refinement_types.nim",
+      "history": []
+    },
+    "89e62ecb-e168-51cd-b96a-51ae9875efc7": {
+      "current_path": "src/verification/analyzer/analyzer_shared_json.nim",
+      "initial_path": "src/verification/analyzer/analyzer_shared_json.nim",
+      "history": []
+    },
+    "CD085DF0-0F55-5553-8C55-7A00F739FE9D": {
+      "current_path": "src/core/utils/parallel_utils.nim",
+      "initial_path": "src/core/utils/parallel_utils.nim",
+      "history": []
+    },
+    "def8fd13-cebb-55dd-84b7-016635d8bf20": {
+      "current_path": "src/verification/integrity_ledger.nim",
+      "initial_path": "src/verification/integrity_ledger.nim",
+      "history": []
+    },
+    "6441590c-9e8a-55d9-aaea-97384548c05f": {
+      "current_path": "src/verification/proof_universe_lock.nim",
+      "initial_path": "src/verification/proof_universe_lock.nim",
+      "history": []
+    },
+    "00451e71-7610-55e6-9575-7288c68278d2": {
+      "current_path": "src/verification/analyzer.nim",
+      "initial_path": "src/verification/analyzer.nim",
+      "history": []
+    },
+    "2f488a57-b345-58e3-990d-fc42936b50f9": {
+      "current_path": "src/cli/commands/command_registry.nim",
+      "initial_path": "src/cli/commands/command_registry.nim",
+      "history": []
+    },
+    "5c7feddd-dd9f-5e71-b0a8-f795f1671644": {
+      "current_path": "src/core/orchestrator/orchestrator_topology_worker.nim",
+      "initial_path": "src/core/orchestrator/orchestrator_topology_worker.nim",
+      "history": []
+    },
+    "4c53db60-8941-5e6f-8912-1ccd1b1ff0fd": {
+      "current_path": "src/core/encoding/smt_to_lean_translate.nim",
+      "initial_path": "src/core/encoding/smt_to_lean_translate.nim",
+      "history": []
+    },
+    "5BF18F43-C33F-5E5D-8344-038C4BF3211A": {
+      "current_path": "src/core/parsers/tree_sitter/bindings.nim",
+      "initial_path": "src/core/parsers/tree_sitter/bindings.nim",
+      "history": []
+    },
+    "e128d8c5-1f9e-5fc7-9530-6693bb98cc1d": {
+      "current_path": "src/core/symbol_graph/global_symbol_graph_builder_part1.nim",
+      "initial_path": "src/core/symbol_graph/global_symbol_graph_builder_part1.nim",
+      "history": []
+    },
+    "f3d5b202-1bc7-50c3-8c01-bc7be00a5be2": {
+      "current_path": "src/core/solver/types.nim",
+      "initial_path": "src/core/solver/types.nim",
+      "history": []
+    },
+    "b16455f7-fe40-5043-a4e9-2793ec2c9647": {
+      "current_path": "src/cli/cli_surface_generated.nim",
+      "initial_path": "src/cli/cli_surface_generated.nim",
+      "history": []
+    },
+    "1750379e-cdf3-552f-97b9-edf6a53c0041": {
+      "current_path": "src/frontend/nim/weaver.nim",
+      "initial_path": "src/frontend/nim/weaver.nim",
+      "history": []
+    },
+    "754b2670-1834-568f-8c6c-b832c351258e": {
+      "current_path": "src/core/proof/proof_budget.nim",
+      "initial_path": "src/core/proof/proof_budget.nim",
+      "history": []
+    },
+    "a4e3ef72-5f38-5724-bf3b-b4be9f84511b": {
+      "current_path": "src/cli/cli_io_input.nim",
+      "initial_path": "src/cli/cli_io_input.nim",
+      "history": []
+    },
+    "C0B433E4-7A34-52EA-8D3C-AA582F67CBAE": {
+      "current_path": "src/core/policy/section_parsers.nim",
+      "initial_path": "src/core/policy/section_parsers.nim",
+      "history": []
+    },
+    "4e100eb0-020f-5e74-848b-f09ee7139926": {
+      "current_path": "src/core/boundary/boundary_extraction_types.nim",
+      "initial_path": "src/core/boundary/boundary_extraction_types.nim",
+      "history": []
+    },
+    "99f93149-2f70-5ea4-bdbc-48985d2b934e": {
+      "current_path": "src/mcp/protocol.nim",
+      "initial_path": "src/mcp/protocol.nim",
+      "history": []
+    },
+    "77A91E25-DC72-57EF-8BEC-7120BD37225A": {
+      "current_path": "src/gate/nimtry/purity_queries.nim",
+      "initial_path": "src/gate/nimtry/purity_queries.nim",
+      "history": []
+    },
+    "215ccd10-69f3-5bb9-b40a-e35bbcfe7ebd": {
+      "current_path": "src/verification/leanstral_prompt.nim",
+      "initial_path": "src/verification/leanstral_prompt.nim",
+      "history": []
+    },
+    "f369e76a-6795-51e1-bfc7-19c84c64ad7b": {
+      "current_path": "src/core/solver/type_serialize.nim",
+      "initial_path": "src/core/solver/type_serialize.nim",
+      "history": []
+    },
+    "4e4e7a34-f510-5f9a-9f88-271d21079aea": {
+      "current_path": "src/gate/nimtry/call_graph.nim",
+      "initial_path": "src/gate/nimtry/call_graph.nim",
+      "history": []
+    },
+    "6702f980-4f8b-50a3-9e8f-65ade9d8fb51": {
+      "current_path": "src/sieve/subjective_logic.nim",
+      "initial_path": "src/sieve/subjective_logic.nim",
+      "history": []
+    },
+    "A1BD056A-8318-55CB-82F8-38972C113D42": {
+      "current_path": "src/gate/nimtry/facade_queries.nim",
+      "initial_path": "src/gate/nimtry/facade_queries.nim",
+      "history": []
+    },
+    "1D534153-E295-5049-8FE8-E3BCEC568557": {
+      "current_path": "src/gate/runners/verification_auditor_gate.nim",
+      "initial_path": "src/gate/runners/verification_auditor_gate.nim",
+      "history": []
+    },
+    "AE471D96-8398-5361-8766-7E964525EE0C": {
+      "current_path": "src/core/types/hubs/sorter_node_id.nim",
+      "initial_path": "src/core/types/hubs/sorter_node_id.nim",
+      "history": []
+    },
+    "38b14ac2-1aeb-507e-b1f6-34068e7625f4": {
+      "current_path": "src/core/logic/refinement_controller.nim",
+      "initial_path": "src/core/logic/refinement_controller.nim",
+      "history": []
+    },
+    "4e9939eb-5df2-5c1c-bde6-f3afcb8cba9a": {
+      "current_path": "src/gate/nimtry/nimtry_extract_part2.nim",
+      "initial_path": "src/gate/nimtry/extract/nimtry_extract_part2.nim",
+      "history": [
+        {
+          "path": "src/gate/nimtry/nimtry_extract_part2.nim",
+          "changed_at": "2026-06-11T01:05:39.038156+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 10
+        }
+      ]
+    },
+    "81dc9cd0-46eb-5566-81ca-bd3ce2690e79": {
+      "current_path": "src/personas/strategy_handlers/omega.nim",
+      "initial_path": "src/personas/strategy_handlers/omega.nim",
+      "history": []
+    },
+    "520eb8ea-74b1-5ceb-8fac-b226bed058d3": {
+      "current_path": "src/personas/strategy_handlers/native_decide.nim",
+      "initial_path": "src/personas/strategy_handlers/native_decide.nim",
+      "history": []
+    },
+    "2D54EAAA-1E4B-5F7F-8BDA-01EAFE55C70F": {
+      "current_path": "src/gate/nimtry/effect_queries.nim",
+      "initial_path": "src/gate/nimtry/effect_queries.nim",
+      "history": []
+    },
+    "550e4c33-65da-5a86-808f-a64cf0a15a57": {
+      "current_path": "src/verification/proof_linkage.nim",
+      "initial_path": "src/verification/proof_linkage.nim",
+      "history": []
+    },
+    "4BEB87BD-2F32-54D5-84DF-45A5D950793B": {
+      "current_path": "src/gate/runners/spec_binding/private/source_extract.nim",
+      "initial_path": "src/gate/runners/spec_binding/private/source_extract.nim",
+      "history": []
+    },
+    "f1534fdb-925a-51ac-ba33-24b93db560b1": {
+      "current_path": "src/cli/wf_semantic.nim",
+      "initial_path": "src/cli/wf_semantic.nim",
+      "history": []
+    },
+    "f97ee2e8-43c3-5093-933b-a00af8bbc611": {
+      "current_path": "src/gate/git.nim",
+      "initial_path": "src/gate/git.nim",
+      "history": []
+    },
+    "d20685a2-30bc-5795-8666-e44b3458e744": {
+      "current_path": "src/verification/cert_fingerprinter.nim",
+      "initial_path": "src/verification/cert_fingerprinter.nim",
+      "history": []
+    },
+    "d6a37bee-58dd-5693-a97f-d3236f78839d": {
+      "current_path": "src/gate/logic_binding_gate.nim",
+      "initial_path": "src/gate/logic_binding_gate.nim",
+      "history": []
+    },
+    "4388fbc9-64d6-53ed-90e2-edc50fb22070": {
+      "current_path": "src/gate/runners/spec_binding_gate.nim",
+      "initial_path": "src/gate/runners/spec_binding_gate.nim",
+      "history": []
+    },
+    "afbc698c-3707-554a-88b7-f74a7f99f08b": {
+      "current_path": "src/personas/shape_handlers/general.nim",
+      "initial_path": "src/personas/shape_handlers/general.nim",
+      "history": []
+    },
+    "27145a04-8cc6-51f4-9c48-4614e5b066bf": {
+      "current_path": "src/cli/cli_io_error.nim",
+      "initial_path": "src/cli/cli_io_error.nim",
+      "history": []
+    },
+    "f528cc79-9664-5fe6-9407-1fe05cc02190": {
+      "current_path": "src/core/proof/proof_artifact.nim",
+      "initial_path": "src/core/proof/proof_artifact.nim",
+      "history": []
+    },
+    "dfd84725-d386-5f7f-86a8-4fed87dd7b79": {
+      "current_path": "src/core/solver/expr_serialize.nim",
+      "initial_path": "src/core/solver/expr_serialize.nim",
+      "history": []
+    },
+    "C79AEFCC-498C-5A3C-80BA-82BCC79F91F5": {
+      "current_path": "src/gate/runners/debt_blocker/private/checks.nim",
+      "initial_path": "src/gate/runners/debt_blocker/private/checks.nim",
+      "history": []
+    },
+    "bef2b872-bba8-5f2a-87a4-fdb33870e08e": {
+      "current_path": "src/gate/runners/core_invariant_gate.nim",
+      "initial_path": "src/gate/runners/core_invariant_gate.nim",
+      "history": []
+    },
+    "408eca48-0475-5806-b721-2181bd692250": {
+      "current_path": "src/core/types/pipeline_core_types.nim",
+      "initial_path": "src/core/types/pipeline_core_types.nim",
+      "history": []
+    },
+    "d5f73470-f406-5a8f-ad6a-2fb4d4d8a335": {
+      "current_path": "src/core/judge/the_judge_eval.nim",
+      "initial_path": "src/core/judge/the_judge_eval.nim",
+      "history": []
+    },
+    "fedbd1a0-d4b1-5c52-b0e5-4bbc9d9efef5": {
+      "current_path": "src/verification/semantic_graph.nim",
+      "initial_path": "src/verification/semantic_graph.nim",
+      "history": []
+    },
+    "3CBCF62D-39C0-5164-8F1F-A5B537126BD9": {
+      "current_path": "src/core/test_support/export_injector.nim",
+      "initial_path": "src/core/test_support/export_injector.nim",
+      "history": []
+    },
+    "f1d3010b-a740-51fe-985a-7da346ae494b": {
+      "current_path": "src/core/encoding/smtlib2_sanitizer.nim",
+      "initial_path": "src/core/encoding/smtlib2_sanitizer.nim",
+      "history": []
+    },
+    "d32600da-1e16-52fe-9912-1cd99eb9e574": {
+      "current_path": "src/core/solver/encoding_properties.nim",
+      "initial_path": "src/core/solver/encoding_properties.nim",
+      "history": []
+    },
+    "c2175596-8257-57db-8147-76011d238535": {
+      "current_path": "src/verification/static_rules.nim",
+      "initial_path": "src/verification/static_rules.nim",
+      "history": []
+    },
+    "F0B6D6AE-196A-5539-8CBB-34E27D9F7121": {
+      "current_path": "src/gate/runners/nimtry_gate.nim",
+      "initial_path": "src/gate/runners/nimtry_gate.nim",
+      "history": []
+    },
+    "81bb209d-68af-58f8-ac2f-d430bafdd706": {
+      "current_path": "src/core/gate/gate_memo.nim",
+      "initial_path": "src/core/gate/gate_memo.nim",
+      "history": []
+    },
+    "f1fe76d0-1103-5de4-9c8e-4cc0ef1a22c3": {
+      "current_path": "src/core/judge/smart_search.nim",
+      "initial_path": "src/core/judge/smart_search.nim",
+      "history": []
+    },
+    "90897079-859b-5c45-83fe-391eb187111b": {
+      "current_path": "src/cli/report_format.nim",
+      "initial_path": "src/cli/report_format.nim",
+      "history": []
+    },
+    "bad5cecc-38ea-566a-9cc1-a5cd4fca55b1": {
+      "current_path": "src/verification/analyzer/stage_01_ast_extract.nim",
+      "initial_path": "src/verification/analyzer/stages/stage_01_ast_extract.nim",
+      "history": [
+        {
+          "path": "src/verification/analyzer/stage_01_ast_extract.nim",
+          "changed_at": "2026-06-11T10:10:01+09:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 11
+        }
+      ]
+    },
+    "0646524c-e52a-50b6-b7c5-e705e052090d": {
+      "current_path": "src/core/logic/refinement_predicate.nim",
+      "initial_path": "src/core/logic/refinement_predicate.nim",
+      "history": []
+    },
+    "d4682b72-3b92-5de8-8ba7-4d0535a6473b": {
+      "current_path": "src/verification/analyzer/stage_03_dependency.nim",
+      "initial_path": "src/verification/analyzer/stages/stage_03_dependency.nim",
+      "history": [
+        {
+          "path": "src/verification/analyzer/stage_03_dependency.nim",
+          "changed_at": "2026-06-11T10:10:01+09:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 11
+        }
+      ]
+    },
+    "E02F2AD9-8A80-5EB7-8B93-EA9884BD37AA": {
+      "current_path": "src/verification/analyzer/string_pool.nim",
+      "initial_path": "src/verification/analyzer/string_pool.nim",
+      "history": []
+    },
+    "93B19ABE-5281-5E5A-8596-1E5A79DBD87F": {
+      "current_path": "src/verification/pipeline_stage_cegar_bridge.nim",
+      "initial_path": "src/verification/pipeline_stage_cegar_bridge.nim",
+      "history": []
+    },
+    "a728248e-6ce6-5e99-add1-6a7436b82314": {
+      "current_path": "src/verification/lean_lsp_client.nim",
+      "initial_path": "src/verification/lean_lsp_client.nim",
+      "history": []
+    },
+    "f31640ab-9cc8-53e9-9a41-e41c692e34f1": {
+      "current_path": "src/verification/discovery_error.nim",
+      "initial_path": "src/verification/discovery_error.nim",
+      "history": []
+    },
+    "56FE8430-07C9-521B-8563-11FB5A8C68D0": {
+      "current_path": "src/core/application/bounded_concepts.nim",
+      "initial_path": "src/core/application/bounded_concepts.nim",
+      "history": []
+    },
+    "77a0f8e2-b0fe-5f0f-9bb1-69549482a639": {
+      "current_path": "src/core/orchestrator/cegar_types.nim",
+      "initial_path": "src/core/orchestrator/cegar_types.nim",
+      "history": []
+    },
+    "bacdfe54-c30f-50d7-b9b3-7f755800be95": {
+      "current_path": "src/core/trusted/cbor.nim",
+      "initial_path": "src/core/trusted/cbor.nim",
+      "history": []
+    },
+    "f83fa7ed-050f-54dc-978c-42255e679052": {
+      "current_path": "src/core/json/json_utils_scan.nim",
+      "initial_path": "src/core/json/json_utils_scan.nim",
+      "history": []
+    },
+    "174faa28-a35a-582a-b765-cf63a2359ebe": {
+      "current_path": "src/gate/nimtry/nimtry_extract_part3_part1.nim",
+      "initial_path": "src/gate/nimtry/extract/nimtry_extract_part3_part1.nim",
+      "history": [
+        {
+          "path": "src/gate/nimtry/nimtry_extract_part3_part1.nim",
+          "changed_at": "2026-06-11T01:05:39.038156+00:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 10
+        }
+      ]
+    },
+    "BD5BC8D5-7326-5EF4-8D67-2A9EAFABB217": {
+      "current_path": "src/core/types/hubs/cfg_types.nim",
+      "initial_path": "src/core/types/hubs/cfg_types.nim",
+      "history": []
+    },
+    "C8BE5A82-C2C3-5C77-8B66-198995340050": {
+      "current_path": "src/verification/solver/triviality_filter.nim",
+      "initial_path": "src/verification/solver/triviality_filter.nim",
+      "history": []
+    },
+    "e90ac661-b946-5e24-828d-9ad020178229": {
+      "current_path": "src/core/logic/pipeline_fingerprint_engine.nim",
+      "initial_path": "src/core/logic/pipeline_fingerprint_engine.nim",
+      "history": []
+    },
+    "ca89c0d4-cdc7-5a05-b8fb-841b7befcb4a": {
+      "current_path": "src/gate/runners/gate_self_check.nim",
+      "initial_path": "src/gate/runners/gate_self_check.nim",
+      "history": []
+    },
+    "4da69309-418f-52b3-a16e-4805bdbb16d7": {
+      "current_path": "src/verification/lean_lsp_proof_search.nim",
+      "initial_path": "src/verification/lean_lsp_proof_search.nim",
+      "history": []
+    },
+    "35e7e5e6-5b42-5371-9552-6016ca64f1d1": {
+      "current_path": "src/frontend/frontend_interface.nim",
+      "initial_path": "src/frontend/frontend_interface.nim",
+      "history": []
+    },
+    "1312573c-e8c8-5e0a-a6a8-19b317c9c5ef": {
+      "current_path": "src/gate/runners/binary_freshness_gate.nim",
+      "initial_path": "src/gate/runners/binary_freshness_gate.nim",
+      "history": []
+    },
+    "71d57532-aec0-5c86-9e41-08305c84507c": {
+      "current_path": "src/core/logic/axiom_verification_context.nim",
+      "initial_path": "src/core/logic/axiom_verification_context.nim",
+      "history": []
+    },
+    "c5030dff-e91d-5683-abbb-564400be85f6": {
+      "current_path": "src/gate/nimtry/dry_queries.nim",
+      "initial_path": "src/gate/nimtry/dry_queries.nim",
+      "history": []
+    },
+    "324617c9-3ab7-548b-9898-de4ed04d978a": {
+      "current_path": "src/core/proof/proof_universe_lock.nim",
+      "initial_path": "src/core/proof/proof_universe_lock.nim",
+      "history": []
+    },
+    "fca48771-408f-595c-bb5c-9f5bf0beb4a8": {
+      "current_path": "src/core/bmc/bmc_types.nim",
+      "initial_path": "src/core/bmc/bmc_types.nim",
+      "history": []
+    },
+    "30a4c10b-7295-5c70-a896-6281d26fdeeb": {
+      "current_path": "src/verification/proof_summarizer.nim",
+      "initial_path": "src/verification/proof_summarizer.nim",
+      "history": []
+    },
+    "809a1629-0e3d-5ffa-ad58-e1d76c4e32e5": {
+      "current_path": "src/verification/analyzer/stage_08_reporter.nim",
+      "initial_path": "src/verification/analyzer/stages/stage_08_reporter.nim",
+      "history": [
+        {
+          "path": "src/verification/analyzer/stage_08_reporter.nim",
+          "changed_at": "2026-06-11T10:10:01+09:00",
+          "change_type": "topology_apply",
+          "approved_in_lock": 11
+        }
+      ]
+    },
+    "ed41fe31-74c3-51cb-a863-14113567ecaf": {
+      "current_path": "src/core/trusted/proof.nim",
+      "initial_path": "src/core/trusted/proof.nim",
+      "history": []
+    },
+    "7c463908-ab75-5139-bf74-b6d0968f4054": {
+      "current_path": "src/cli/wf_state_vacuity.nim",
+      "initial_path": "src/cli/wf_state_vacuity.nim",
+      "history": []
+    },
+    "03e6edba-c57c-5cb0-95da-6b73c875ec39": {
+      "current_path": "src/core/types/remediation_types.nim",
+      "initial_path": "src/core/types/remediation_types.nim",
+      "history": []
+    },
+    "afe32e06-ca14-59ce-9142-8a5e566fe4be": {
+      "current_path": "src/core/identity/axiom_prelude.nim",
+      "initial_path": "src/core/identity/axiom_prelude.nim",
+      "history": []
+    },
+    "C6434D50-9310-5F86-8C05-1404096DD5DD": {
+      "current_path": "src/core/types/hubs/proof_hub.nim",
+      "initial_path": "src/core/types/hubs/proof_hub.nim",
+      "history": []
+    },
+    "705aedbf-75f5-5d17-b09c-1a0b5626bc72": {
+      "current_path": "src/core/topology/topology_types.nim",
+      "initial_path": "src/core/topology/topology_types.nim",
+      "history": []
+    },
+    "271ba100-bed0-5e8d-ba1b-f7815dd91d9b": {
+      "current_path": "src/core/bmc/bmc_race.nim",
+      "initial_path": "src/core/bmc/bmc_race.nim",
+      "history": []
+    },
+    "ce887cdc-a051-590e-8bff-866f667bd209": {
+      "current_path": "src/core/boundary/axiom_consistency_checker.nim",
+      "initial_path": "src/core/boundary/axiom_consistency_checker.nim",
+      "history": []
+    },
+    "6c349bf4-f2fd-5b35-b04c-87bbba576ef7": {
+      "current_path": "src/core/symbol_graph/global_symbol_graph_builder_part2.nim",
+      "initial_path": "src/core/symbol_graph/global_symbol_graph_builder_part2.nim",
+      "history": []
+    },
+    "56617876-6570-5570-8f89-f73e0fc0f4fb": {
+      "current_path": "src/gate/gate_rules_normalization.nim",
+      "initial_path": "src/gate/gate_rules_normalization.nim",
+      "history": []
+    },
+    "23697D5E-3847-5E1C-8897-FA581F488B55": {
+      "current_path": "src/gate/runners/gateway_test_runner.nim",
+      "initial_path": "src/gate/runners/gateway_test_runner.nim",
+      "history": []
+    },
+    "82a38d06-8dd5-5cc0-a990-77a221f34593": {
+      "current_path": "src/verification/lean_lsp.nim",
+      "initial_path": "src/verification/lean_lsp.nim",
+      "history": []
+    },
+    "2cd3005d-0ec4-5b0f-9dd8-ea91a30de082": {
+      "current_path": "src/core/topology/manifest.nim",
+      "initial_path": "src/core/topology/manifest.nim",
+      "history": []
+    },
+    "fbd0239a-02ed-5a91-8d87-2a260e17f11e": {
+      "current_path": "src/verification/pipeline_stage_postprocess.nim",
+      "initial_path": "src/verification/pipeline_stage_postprocess.nim",
+      "history": []
+    },
+    "233101ba-dfa5-5afe-a845-b15ec3e1c12e": {
+      "current_path": "src/gate/runners/import_encapsulation_gate.nim",
+      "initial_path": "src/gate/runners/import_encapsulation_gate.nim",
+      "history": []
+    }
+  },
+  "shards": {
+    "src/verification/proof_vault": {
+      "members": [],
+      "type": "",
+      "note": "251 JSON proof artifacts, not source code"
+    },
+    "data/proof_vault": {
+      "members": [],
+      "type": "",
+      "note": "JSON proof artifacts moved from src/verification/proof_vault/"
+    }
+  },
+  "transitional_modules": {}
+}

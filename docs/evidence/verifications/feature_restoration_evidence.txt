@@ -1,0 +1,30 @@
+Feature Restoration Evidence
+===========================
+Task: Restore 9 deleted feature files from commit bcd2b521
+Date: 2026-05-27
+
+Source: git show bcd2b521^:tests/features/<name>.feature
+Restore method: git checkout from parent of bcd2b521
+
+VERIFICATION: All 9 files exist in tests/features/
+STATUS: PASS
+
+Restored files:
+  1. tests/features/api_boundary.feature (21 lines)  → src/api.nim ✓
+  2. tests/features/asi_hard_gate.feature (33 lines) → src/gate/runners/asi_hard_gate.nim ✓
+  3. tests/features/ax_workflow_shortcuts.feature (29 lines) → src/cli/ax_workflow_shortcuts.nim ✓
+  4. tests/features/axiom_mcp.feature (6 lines)      → src/mcp/axiom_mcp.nim ✓
+  5. tests/features/certificate_refinement.feature (18 lines) → src/cli/certificate_refinement.nim ✓
+  6. tests/features/integrity_guard.feature (104 lines) → src/verification/integrity_guard.nim ✓
+  7. tests/features/orchestrator.feature (148 lines) → src/core/orchestrator*.nim ✓
+  8. tests/features/refinement_types.feature (60 lines) → src/core/refinement_types.nim ✓
+  9. tests/features/tree_sitter_bridge.feature (22 lines) → src/core/tree_sitter_bridge.nim ✓
+
+Modifications applied:
+  - refinement_types.feature: Updated line 39 path from
+    "src/core/liquid_inference.nim" to "src/core/type_system/liquid_inference.nim"
+    (module was moved after the original feature file was deleted)
+
+All source module references verified against current codebase HEAD.
+All referenced functions (parseNim, parseLean, applyRefinementSuggestionsToSource,
+applyGuardToSource, isSourceGuarded, collectFunctions, etc.) confirmed present.

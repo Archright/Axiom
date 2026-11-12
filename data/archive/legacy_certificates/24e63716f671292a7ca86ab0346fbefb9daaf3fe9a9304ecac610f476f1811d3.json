@@ -1,0 +1,24 @@
+{
+  "modulePath": "src/ui/ax_tui_reporter_part1.nim",
+  "functionName": "displayWidth",
+  "fingerprint": "2c4c8116e1bb4b5e135975756fcc7f40eb7b77c33842587dc3d3773a57934a88",
+  "sourceHash": "38db449ce26ae3fd0e1cfcd244e789b82d796ccc1b0e620000d898a32d048e47",
+  "trusted": true,
+  "status": "certLeanVerified",
+  "reason": "uap-lean-verified",
+  "kernel": false,
+  "solverStatus": "sat",
+  "winningStrategy": "lean-replay",
+  "solverMeta": {
+    "leanCompilerVerified": true,
+    "negativeTestResult": false,
+    "vacuityChecked": true,
+    "vacuityProven": false,
+    "solverVersion": "4.13.3",
+    "solverProvenance": "spHeuristic",
+    "z3Executed": true
+  },
+  "verificationTier": "lean-verified",
+  "leanProposition": "",
+  "irHash": "24e63716f671292a7ca86ab0346fbefb9daaf3fe9a9304ecac610f476f1811d3"
+}

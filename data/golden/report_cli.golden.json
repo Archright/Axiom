@@ -1,0 +1,20 @@
+{
+  "capturedAt": "<TIMESTAMP>",
+  "funcCount": 6,
+  "funcs": [
+    "renderAxShortcutStderrLines*",
+    "renderAxShortcutStdoutLines*",
+    "renderOutputBlock*",
+    "renderReportStderrLines*",
+    "renderReportStdoutLines*",
+    "usesAxShortcutJsonFlag*"
+  ],
+  "linesOfCode": 136,
+  "module": "report_cli",
+  "path": "src/cli/report_cli.nim",
+  "procCount": 2,
+  "procs": [
+    "archiveStaleProofState*",
+    "runReportCli*"
+  ]
+}

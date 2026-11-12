@@ -1,0 +1,24 @@
+{
+  "modulePath": "src/core/fsm/proof_typestate.nim",
+  "functionName": "isTerminal",
+  "fingerprint": "6a5680e35e7ee47b5821b2e2017c73ad35f32e24ffa013babc6eb03f1493fcca",
+  "sourceHash": "175d9c2d579f390b3c62f86bf28f784fa3488afd262925de82856c873c13a843",
+  "trusted": true,
+  "status": "certLeanVerified",
+  "reason": "uap-lean-verified",
+  "kernel": false,
+  "solverStatus": "sat",
+  "winningStrategy": "lean-replay",
+  "solverMeta": {
+    "leanCompilerVerified": true,
+    "negativeTestResult": false,
+    "vacuityChecked": true,
+    "vacuityProven": false,
+    "solverVersion": "4.13.3",
+    "solverProvenance": "spHeuristic",
+    "z3Executed": true
+  },
+  "verificationTier": "lean-verified",
+  "leanProposition": "",
+  "irHash": "8379ca4c59c024c477164962b2ea70fb72afda8da4ace1df82c6cf35a317d874"
+}

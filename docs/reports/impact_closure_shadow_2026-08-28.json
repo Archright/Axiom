@@ -1,0 +1,60 @@
+{
+  "base": "8df8b450d~1",
+  "head": "8df8b450d",
+  "changeFingerprint": "sha256:1fb95072ddf76abd063e7fdce1d7a0ea0e88a5d970cf5cfa3938ac24888d1b9b",
+  "changedFiles": [
+    {
+      "path": "tests/gateway/make_fail_closed_feature_test.nim",
+      "status": "M",
+      "blobHash": "1dc7ea8d9d497dbbfb54a42c5e13f26db634bd6e"
+    }
+  ],
+  "selectedWorkUnits": [
+    {
+      "id": "W1",
+      "name": "verify-static",
+      "reason": "direct path match: tests/gateway/make_fail_closed_feature_test.nim",
+      "duration_minutes": "16.0",
+      "provenance": "[gh-run]",
+      "isContainer": true
+    },
+    {
+      "id": "W4",
+      "name": "verify-contract",
+      "reason": "direct path match: tests/gateway/make_fail_closed_feature_test.nim",
+      "duration_minutes": "16.83",
+      "provenance": "[migration-doc]",
+      "isContainer": true
+    },
+    {
+      "id": "W7",
+      "name": "ci-gates",
+      "reason": "direct path match: tests/gateway/make_fail_closed_feature_test.nim",
+      "duration_minutes": "3.15",
+      "provenance": "[migration-doc]",
+      "isContainer": true
+    },
+    {
+      "id": "W8",
+      "name": "test-gateway",
+      "reason": "direct path match: tests/gateway/make_fail_closed_feature_test.nim",
+      "duration_minutes": "11.88",
+      "provenance": "[migration-doc]",
+      "isContainer": true
+    }
+  ],
+  "costComparison": {
+    "estimatedAffectedClosure_minutes": 47.86,
+    "fullPipeline_baseline_minutes": 73.7,
+    "savings_minutes": 25.840000000000003,
+    "savings_percent": 35.061058344640436
+  },
+  "limitations": [
+    "import_graph.nim cannot be imported (checksums/sha2 dependency gap in Nim 2.2.10); core transitive-dependency resolution is reimplemented inline (same BFS algorithm)",
+    "ci-lake-build (W9) duration is UNKNOWN; excluded from cost sums",
+    "Normative doc → cache-key invalidation (G4) is not yet wired; conservative over-approximation applied",
+    "Makefile pervasive-invocation over-approximation may over-claim W1–W9 for recipe-level changes",
+    "Gate-target closure beyond src/core/ is a known gap (import_graph.nim is core-only per handoff note)"
+  ],
+  "determinism": "identical (base, head, repo state) inputs produce byte-identical output; all sets sorted, no timestamps in body"
+}

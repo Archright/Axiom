@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "description": "Safe-Harbor Token Ban — forbidden AST patterns for Core/Domain layers",
+  "infrastructureExempt": true,
+  "exemptModules": ["src/core/trusted/stdlib_shield.nim"],
+  "tokens": [
+    {
+      "id": "FT-001",
+      "name": "raises-catchable-error",
+      "astPath": ["nnkPragma", "nnkIdent:raises"],
+      "severity": "critical",
+      "layers": ["core", "domain"],
+      "reason": "Effect 시스템 우회",
+      "replacement": "Use Result[T, E] with enum error type"
+    },
+    {
+      "id": "FT-002",
+      "name": "emit-pragma",
+      "astPath": ["nnkPragma", "nnkIdent:emit"],
+      "severity": "critical",
+      "layers": ["core", "domain"],
+      "reason": "C 코드 직접 삽입",
+      "replacement": "Use Nim FFI or {.importc.} declarations"
+    },
+    {
+      "id": "FT-003",
+      "name": "cast-type-bypass",
+      "astPath": ["nnkCast"],
+      "severity": "critical",
+      "layers": ["core", "domain"],
+      "reason": "타입 시스템 우회, UB",
+      "replacement": "Use typed conversion procs or distinct types"
+    },
+    {
+      "id": "FT-004",
+      "name": "raw-ptr-type",
+      "astPath": ["nnkPtrTy"],
+      "severity": "critical",
+      "layers": ["core", "domain"],
+      "reason": "ARC/ORC 추적 무력화",
+      "replacement": "Use ref T or ptr T inside {.acyclic.} ref objects"
+    },
+    {
+      "id": "FT-005",
+      "name": "addr-call",
+      "astPath": ["nnkCall", "nnkIdent:addr"],
+      "severity": "critical",
+      "layers": ["core", "domain"],
+      "reason": "raw pointer 생성",
+      "replacement": "Pass by var parameter or use unsafeAddr only in {.acyclic.} context"
+    },
+    {
+      "id": "FT-006",
+      "name": "memory-direct-manipulation",
+      "astPath": ["nnkCall", "nnkIdent:copyMem", "nnkIdent:moveMem", "nnkIdent:zeroMem"],
+      "severity": "critical",
+      "layers": ["core", "domain"],
+      "reason": "메모리 직접 조작",
+      "replacement": "Use Nim assignment semantics or system.move"
+    },
+    {
+      "id": "FT-007",
+      "name": "heap-direct-management",
+      "astPath": ["nnkCall", "nnkIdent:alloc", "nnkIdent:dealloc", "nnkIdent:realloc"],
+      "severity": "high",
+      "layers": ["core", "domain"],
+      "reason": "힙 직접 관리",
+      "replacement": "Use seq, string, or managed ref objects"
+    },
+    {
+      "id": "FT-008",
+      "name": "pointer-type",
+      "astPath": ["nnkIdent:pointer"],
+      "severity": "high",
+      "layers": ["core", "domain"],
+      "reason": "type-erased raw pointer",
+      "replacement": "Use typed pointers or ref T"
+    },
+    {
+      "id": "FT-009",
+      "name": "global-pragma",
+      "astPath": ["nnkPragma", "nnkIdent:global"],
+      "severity": "high",
+      "layers": ["core", "domain"],
+      "reason": "TLS/가변 전역 상태",
+      "replacement": "Inject state via proc parameters or dependency injection"
+    },
+    {
+      "id": "FT-010",
+      "name": "top-level-var-declaration",
+      "astPath": ["nnkVarSection"],
+      "severity": "medium",
+      "layers": ["core", "domain"],
+      "reason": "부수 효과 유발",
+      "replacement": "Use proc-local var or pass mutable state via var parameters"
+    }
+  ]
+}

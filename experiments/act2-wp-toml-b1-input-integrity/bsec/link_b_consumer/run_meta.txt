@@ -1,0 +1,8 @@
+date=2026-10-11T19:27:58+09:00
+NPH_REPO=/tmp/bsec_consumer/nph (clone of https://github.com/arnetheduck/nph)
+NPH_REV=2cacf6cc28116e4046e0b67a13545af5c4e756bd
+NPH_DESCRIBE=prerelease-0-g2cacf6c
+NPH_BINARY=/tmp/bsec_consumer/bin/nph (built /tmp/bsec_consumer/bin/nph)
+TOML_SERIALIZATION_CONSUMED=/tmp/bsec_consumer/nph/nimbledeps/pkgs2/toml_serialization-0.2.18-76ae1c2af5dd092849b41750ff29217980dc9ca3
+NO_COLOR_ENV=1
+STDOUT_IS_TTY=no (all runs pipe stdout through redirection)

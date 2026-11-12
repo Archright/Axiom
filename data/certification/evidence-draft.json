@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "axiom.attestation.evidence-draft.v1",
+  "leanSource": "theorem axiom_continuity_probe_sanity (x : Int) (r : Int)\n    (h1 : r = if x * 2 > 100 then 0 else x * 2)\n    (h2 : x * 2 > 100) :\n    r = 0 := by\n  simp [h1, h2]\n",
+  "smtlib2": "(declare-const x Int)\n(declare-const r Int)\n(define-fun doubled () Int (* x 2))\n(assert (=> (> doubled 100) (= r 0)))\n(assert (=> (<= doubled 100) (= r doubled)))\n(assert (> doubled 100))\n(assert (= r doubled))\n(check-sat)\n",
+  "funcSource": "import core/trusted/layer_declaration\naxiomLayer \"infrastructure\"\n{.push raises: [].}\n\nfunc continuityProductionProbe*(x: int): int =\n  let doubled = x * 2\n  if doubled > 100:\n    return 0\n  doubled\n\nfunc continuityProbeSaturation*(x: int): int =\n  if x < 0:\n    return 0\n  x\n",
+  "funcPath": "src/verification/continuity_probe.nim",
+  "funcName": "continuityProductionProbe",
+  "toolchainIdentity": "nim-2.2.10|lean-4.33.0|z3-4.13.3|modelprofile=d2c44f569ef61e349a915582c4237b1b747df4d30a4701712178655bdd5bc44e/no-overflow-obligations/coincident-checked-wrap-domain|charon-pin-798016509139eb51f0d764645f76d068d34ba5f6|charon-0.1.281"
+}

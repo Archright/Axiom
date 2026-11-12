@@ -1,0 +1,347 @@
+# drift-signal — admission-ssot-drift RED를 운영자 수신 신호(issue)로 전환(DETECT).
+#
+# [왜 별도 workflow인가 — monitor purity와의 분리]
+# .github/workflows/admission-ssot-drift.yml은 **GET 전용 순수 관측**이다
+# (ADR-0035 §4(e)) — 그 워크플로는 정책/룰셋/check-run을 읽기만 하고 어떤
+# GitHub 상태도 변경하지 않는다. 그 순수성은 강제된다 —
+# tools/ci/monitor_purity_scan.sh의 scan surface는
+# (docs/agents/merge_admission_observation.md, tools/merge_ruleset_drift_monitor.nim,
+# .opencode/skills/ci-watch/SKILL.md) 세 파일로 **정확히 고정**되어 있고, 그 안의
+# GitHub mutation 동사는 FAIL이다. 그런데 drift RED는 운영자가 반드시 수신해야
+# 하는 신호다 — 순수 관측과 상태 변경(issue 발행)을 한 파일에 합치면 순수성을
+# 포기해야 한다. 그래서 **관측과 신호 발행을 책임 분리**한다:
+#   - admission-ssot-drift.yml : GET 전용. drift가 있으면 자기 job이 RED가 된다.
+#     이것은 *관측*이다 — 신호 발행을 하지 않는다.
+#   - drift-signal.yml (본 파일) : workflow_run 이벤트로 그 RED를 받아 **issue를
+#     발행**한다. 상태 변경(issue 생성/댓글)이 본 워크플로의 **목적 자체**이므로
+#     monitor purity 게이트의 대상이 아니다 — 그 게이트는 "관측 표면"을 대상으로
+#     하며, 본 파일은 관측 표면이 아니다(순수 관측자도 아니다).
+# 본 파일은 required check가 아니다 — 어떤 머지도 차단하지 않는다(ADR-0035 §4(d)).
+#
+# [트리거 계약]
+# workflow_run.workflows: [admission-ssot-drift] — 이 값은 대상 워크플로의
+# `name:` 필드 값과 **정확히 일치**해야 한다(경로가 아니다). 현재
+# .github/workflows/admission-ssot-drift.yml의 name 값이 `admission-ssot-drift`
+# 이다. types: [completed] 이후 guard step이 conclusion == failure인 경우에만
+# 발행한다. cancelled는 drift 증거가 아니다 — 스케줄 대기열에서 새 pending이
+# 이전 pending을 대체한 기록이다(closure-watcher의 선례와 동일).
+# workflow_run 트리거는 **default branch(main)에 존재하는 워크플로만** 발화한다 —
+# 본 파일이 main에 착지하기 전까지는 어떤 신호도 만들지 못한다(착지 전 drift RED
+# 는 신호 없이 지나간다). 이 사실은 착지 계획의 전제다.
+#
+# [발행 계약 — 감지 신호는 대상·기대·실제·run URL·다음 조치를 포함한다]
+# 본문은 아래 5개 섹션을 항상 포함한다. 파싱할 수 없는 값은 지어내지 않고
+# "see run log"로 정직하게 남긴다(관측 불가값을 검증됨으로 기록하지 않는다).
+# 조회 실패는 조용히 넘기지 않는다 — 필요한 데이터를 못 읽으면 발행하지 않고
+# 적색으로 남긴다(fail-closed: 중복 발행·무근거 발행 둘 다 막는다).
+#
+# [멱등성]
+# dedup 키 = 제목 토큰(`drift-red in:title`). 동일 계열의 열린 이슈가 있으면
+# 새 이슈를 만들지 않고 관측을 코멘트로 덧붙인다(closure-watcher의 upsert
+# 상태기계와 동일 패턴). 같은 run에 대한 재발행 시도(run URL이 이미 기록됨)는
+# no-op이다 — 재시도·중복에 안전하다. 수동 시험은 별도 토큰(`drift-signal-test`)
+# 을 사용해 실 신호 계열을 오염시키지 않는다(closure-watcher의 test 마커와 같은
+# 분리 원칙).
+#
+# [라벨]
+# 라벨 `drift-signal`은 drift 계열 신호의 공통 표식이다. 라벨 생성은 repo admin
+# 권한을 요구하므로 workflow의 GITHUB_TOKEN(issues: write)은 라벨을 만들 수
+# 없다 → 라벨이 없으면 라벨 없이 발행하고 그 사실을 본문에 명시한다(조용한
+# 생략 금지). dedup 키는 라벨이 아니라 제목 토큰이므로 라벨 부재 여부는 dedup
+# 정확도에 영향을 주지 않는다.
+#
+# [권한]
+# issues: write — 이슈 생성·댓글(본 워크플로의 목적).
+# actions: read — 대상 run의 job/step 결론 조회(actions API). 로그 전체를 읽지
+#   않는다(run URL 링크만 제공한다) — 읽기 용도를 최소화한다.
+# contents: read는 부여하지 않는다 — 저장소 파일을 읽지 않는다(체크아웃 없음).
+#
+# [Q4 — run: 블록 내 GitHub 표현식 토큰 금지]
+# docs/spec/gh_run_observation_quirks.md Q4: run: 블록(주석 포함)에 표현식
+# 토큰을 기술하면 파싱 단계에서 0-job dispatch failure가 난다. 동적 값은 전부
+# env: 블록으로만 주입한다. 본 파일의 모든 보간 토큰은 식 컨텍스트
+# (env/with/if)에만 존재한다.
+#
+# [action 핀] 저장소 정책 sha_pinning_required — 외부 action은 커밋 SHA 고정.
+
+name: drift-signal
+
+on:
+  workflow_run:
+    workflows: [admission-ssot-drift]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: '관찰할 admission-ssot-drift run id (비우면 발행 경로만 시험한다).'
+        required: false
+        default: ''
+
+permissions:
+  actions: read
+  issues: write
+
+concurrency:
+  group: drift-signal
+  cancel-in-progress: false
+
+jobs:
+  # job 이름 = check context의 두 번째 성분. workflow 이름이 drift-signal이므로
+  # job 이름도 drift-signal로 둔다 — 기존 required check context
+  # (admission-check / bsec-integrity / debt-registry-gate)와 이름이 겹치지
+  # 않으므로 required check와 충돌하지 않는다.
+  drift-signal:
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 10
+    steps:
+      # ── guard: failure conclusion에서만 실제 신호를 만든다 ──
+      - name: "[guard] Resolve the observed drift run (real signal only on failure)"
+        id: guard
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          TRIGGER_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          TRIGGER_RUN_ID: ${{ github.event.workflow_run.id }}
+          TRIGGER_RUN_NUMBER: ${{ github.event.workflow_run.run_number }}
+          TRIGGER_RUN_URL: ${{ github.event.workflow_run.html_url }}
+          TRIGGER_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          TRIGGER_CREATED_AT: ${{ github.event.workflow_run.created_at }}
+          MANUAL_RUN_ID: ${{ inputs.run_id }}
+          SELF_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          MODE="none"
+          RUN_ID=""
+          RUN_NUMBER=""
+          RUN_URL=""
+          HEAD_SHA=""
+          CREATED_AT=""
+          CONCLUSION=""
+
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+            if [ -n "${MANUAL_RUN_ID}" ]; then
+              # 수동 지정: 대상 run을 한 번에 읽는다. 조회가 실패하면 확정하지
+              # 않고 적색으로 남긴다(실패한 조회를 "결론 없음"으로 위장하지 않는다).
+              RUN_FIELDS="$(gh api "repos/${GH_REPO}/actions/runs/${MANUAL_RUN_ID}" --jq '[.conclusion // "", .html_url // "", (.run_number | tostring), .head_sha // "", .created_at // ""] | join("\t")')"
+              IFS=$'\t' read -r CONCLUSION RUN_URL RUN_NUMBER HEAD_SHA CREATED_AT <<< "${RUN_FIELDS}"
+              RUN_ID="${MANUAL_RUN_ID}"
+              if [ "${CONCLUSION}" = "failure" ]; then
+                MODE="real"
+                echo "manual dispatch: run ${RUN_ID} conclusion=failure → mode=real"
+              else
+                MODE="probe"
+                echo "manual dispatch: run ${RUN_ID} conclusion='${CONCLUSION}' (not a failure) → publish-path probe only"
+              fi
+            else
+              MODE="probe"
+              RUN_URL="${SELF_RUN_URL}"
+              echo "manual dispatch without run_id → publish-path probe only (no drift observation)"
+            fi
+          elif [ "${TRIGGER_CONCLUSION}" = "failure" ]; then
+            MODE="real"
+            RUN_ID="${TRIGGER_RUN_ID}"
+            RUN_NUMBER="${TRIGGER_RUN_NUMBER}"
+            RUN_URL="${TRIGGER_RUN_URL}"
+            HEAD_SHA="${TRIGGER_HEAD_SHA}"
+            CREATED_AT="${TRIGGER_CREATED_AT}"
+            CONCLUSION="failure"
+            echo "workflow_run: run ${RUN_ID} conclusion=failure → mode=real"
+          else
+            MODE="none"
+            CONCLUSION="${TRIGGER_CONCLUSION:-unknown}"
+            echo "workflow_run: conclusion='${CONCLUSION}' is not a failure → no signal published (idempotent no-op)"
+          fi
+
+          {
+            echo "mode=${MODE}"
+            echo "run_id=${RUN_ID}"
+            echo "run_number=${RUN_NUMBER}"
+            echo "run_url=${RUN_URL}"
+            echo "head_sha=${HEAD_SHA}"
+            echo "created_at=${CREATED_AT}"
+            echo "conclusion=${CONCLUSION}"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## drift-signal guard"
+            echo "- mode: ${MODE} (real = drift RED 신호, probe = 발행 경로 시험, none = 신호 없음)"
+            echo "- 대상 run: ${RUN_ID:-n/a} (conclusion=${CONCLUSION:-n/a})"
+            echo "- run URL: ${RUN_URL:-n/a}"
+            echo "- 관측 시각: $(date -u +%Y-%m-%dT%H:%M:%SZ) (UTC)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # ── 발행: dedup → 갱신(댓글) 또는 생성 ──
+      - name: "[signal] Publish the drift signal issue (upsert by title token — idempotent)"
+        if: steps.guard.outputs.mode == 'real' || steps.guard.outputs.mode == 'probe'
+        env:
+          MODE: ${{ steps.guard.outputs.mode }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ steps.guard.outputs.run_id }}
+          RUN_NUMBER: ${{ steps.guard.outputs.run_number }}
+          RUN_URL: ${{ steps.guard.outputs.run_url }}
+          HEAD_SHA: ${{ steps.guard.outputs.head_sha }}
+          CREATED_AT: ${{ steps.guard.outputs.created_at }}
+          CONCLUSION: ${{ steps.guard.outputs.conclusion }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          if [ "${MODE}" = "real" ]; then
+            TITLE="drift-red: admission-ssot-drift run #${RUN_NUMBER} 실패 (run ${RUN_ID})"
+            TOKEN="drift-red"
+          else
+            TITLE="[drift-signal-test] publish-path probe (run ${GITHUB_RUN_ID})"
+            TOKEN="drift-signal-test"
+          fi
+          SEARCH="${TOKEN} in:title"
+
+          # ── 실제값: 대상 run의 실패 job/step (actions API, 로그 미수신) ──
+          if [ "${MODE}" = "real" ] && [ -n "${RUN_ID}" ]; then
+            if ! gh api "repos/${REPO}/actions/runs/${RUN_ID}/jobs?per_page=100" > /tmp/drift_jobs.json 2>/tmp/drift_jobs.err; then
+              echo "::error::drift-signal: 대상 run의 job 목록을 읽지 못했다 (run ${RUN_ID}) — '실제값' 섹션을 검증할 수 없으므로 신호를 발행하지 않는다(fail-closed)."
+              cat /tmp/drift_jobs.err >&2
+              exit 1
+            fi
+          else
+            printf '{}' > /tmp/drift_jobs.json
+          fi
+          ACTUAL_FILE="/tmp/drift_actual.md"
+          python3 - "${ACTUAL_FILE}" <<'PYEOF'
+          import json
+          import sys
+
+          out_path = sys.argv[1]
+          try:
+              with open('/tmp/drift_jobs.json', encoding='utf-8') as fh:
+                  data = json.load(fh)
+          except Exception:
+              data = {}
+
+          lines = []
+          for job in (data.get('jobs') or []):
+              failed = [s.get('name', '') for s in (job.get('steps') or [])
+                        if s.get('conclusion') == 'failure']
+              if job.get('conclusion') == 'failure' or failed:
+                  lines.append(f"- job `{job.get('name', '')}` (conclusion={job.get('conclusion', 'unknown')})")
+                  for name in failed:
+                      lines.append(f"  - 실패 step: `{name}`")
+          if not lines:
+              lines.append('- 실패 job/step 목록이 비어 있다 — see run log (아래 run URL)')
+          with open(out_path, 'w', encoding='utf-8') as fh:
+              fh.write('\n'.join(lines) + '\n')
+          PYEOF
+
+          # ── 라벨: 존재할 때만 적용 (생성은 repo admin 권한 필요) ──
+          LABEL_REASON=""
+          if LABEL_LIST="$(gh label list --limit 200 --json name --jq '.[].name' 2>/tmp/drift_label.err)"; then
+            if printf '%s\n' "${LABEL_LIST}" | grep -qx "drift-signal"; then
+              LABEL_STATE="applied"
+            else
+              LABEL_STATE="absent"
+              LABEL_REASON="저장소에 drift-signal 라벨이 없다 (생성은 repo admin 권한 필요)"
+            fi
+          else
+            LABEL_STATE="absent"
+            LABEL_REASON="라벨 목록 조회 실패 — $(tr '\n' ' ' < /tmp/drift_label.err | head -c 200)"
+          fi
+
+          # ── dedup 검색: 조회 실패 시 생성하지 않는다(중복 발행 방지 우선) ──
+          if EXISTING_NUM="$(gh issue list --state open --search "${SEARCH}" --json number --limit 1 --jq '.[0].number // empty' 2>/tmp/drift_search.err)"; then
+            :
+          else
+            echo "::error::drift-signal: 기존 이슈 검색에 실패했다 — 중복 발행 방지를 위해 생성하지 않는다(fail-closed)."
+            cat /tmp/drift_search.err >&2
+            exit 1
+          fi
+
+          BODY="$(mktemp)"
+          {
+            if [ "${MODE}" = "real" ]; then
+              echo "## drift RED — required-check SSOT 드리프트 관측 실패"
+              echo
+              echo "admission-ssot-drift가 RED(failure)로 종료되었다. 이 이슈는 그 관측을 운영자에게 전달하는 신호다."
+            else
+              echo "## [drift-signal-test] 발행 경로 시험"
+              echo
+              echo "drift RED가 아니라 **발행 경로만 시험**한 실행이다(폐쇄 경로 없는 통과가 되지 않도록 제목 토큰을 분리했다)."
+            fi
+            echo
+            echo "### 1. 발생 대상"
+            echo
+            echo "- 대상 워크플로: \`admission-ssot-drift\` (name 필드 값 — workflow_run 트리거 식별자)"
+            echo "- 대상 run: \`#${RUN_NUMBER:-n/a}\` (run id \`${RUN_ID:-n/a}\`)"
+            echo "- run URL: ${RUN_URL:-n/a}"
+            echo "- 관측 SHA: \`${HEAD_SHA:-n/a}\`"
+            echo "- 대상 run 생성 시각: ${CREATED_AT:-n/a}"
+            echo "- conclusion: \`${CONCLUSION:-n/a}\`"
+            echo "- 관측 시각: ${NOW} (UTC)"
+            echo
+            echo "### 2. 기대값 vs 실제값"
+            echo
+            echo "**기대값**"
+            echo
+            echo "- drift monitor의 3-leg 대조가 모두 성립: 정책 SSOT(\`config/policy/merge_admission.json\`) ↔ 컴파일 상수(\`src/cli/merge_cli.nim\`) ↔ live ruleset ↔ live producer"
+            echo "- 기대 monitor exit code: \`0\` (수행된 모든 leg이 성립)"
+            echo "- 기대 정규 required-check 집합: \`config/policy/merge_admission.json\`의 \`requiredValidations\` ∪ \`requiredWorkflowDetection.verdictJob\` (정본 = 정책 파일)"
+            echo
+            echo "**실제값**"
+            echo
+            echo "- monitor exit: \`non-zero\` — drift 검출(failure conclusion)"
+            echo "- 실패 job/step:"
+            cat "${ACTUAL_FILE}"
+            echo "- leg별 개별 expected/actual 값은 monitor가 run summary와 run log에 출력한다. 이 신호는 run log 전체를 읽지 않는다 — 상세는 아래 run URL에서 직접 확인한다: ${RUN_URL:-n/a}"
+            echo
+            echo "### 3. 다음 조치"
+            echo
+            echo "- 정본 계약: \`docs/adr/0035-admission-ssot.md\` §4(e) (상시 드리프트 감지)"
+            echo "- 진단 대상: 위 run의 summary/log에서 어느 leg가 어긋났는지 확인 → 정책 SSOT·룰셋·producer 중 어느 쪽이 밀었는지에 따라 정정"
+            echo "- 수동 진단 runbook: **아직 없음** — \`docs/spec/rearm_recovery_status.md\`는 현재 저장소에 존재하지 않는다. 따라서 다음 조치는 \`operator triage\`다(임의의 링크를 만들지 않는다)."
+            echo
+            echo "### 4. 신호 성격"
+            echo
+            echo "- 본 이슈는 **감지 신호**다 — merge를 차단하지 않으며(required check 아님), 어떤 GitHub 상태도 자동 복구하지 않는다."
+            echo "- 드리프트 monitor 본체(\`.github/workflows/admission-ssot-drift.yml\`)는 GET 전용이다. 상태 변경은 이 신호 workflow의 목적이며, 그 순수성은 monitor purity 게이트의 대상(관측 표면)이 아니다."
+            echo "- 라벨: \`drift-signal\` — ${LABEL_STATE}${LABEL_REASON:+ — ${LABEL_REASON}}"
+            echo
+            echo "### 5. 멱등성"
+            echo
+            echo "- dedup 키: \`${TOKEN} in:title\` — 동일 계열의 열린 이슈가 있으면 새 이슈를 만들지 않고 관측을 코멘트로 덧붙인다."
+            echo "- 동일 run 재발행 시도(run URL이 이미 기록됨)는 no-op이다."
+          } > "${BODY}"
+
+          if [ -n "${EXISTING_NUM}" ]; then
+            COMMENTS="$(gh issue view "${EXISTING_NUM}" --json comments --jq '.comments[].body')"
+            if [ "${MODE}" = "real" ] && printf '%s\n' "${COMMENTS}" | grep -qF "${RUN_URL}"; then
+              echo "upsert: issue #${EXISTING_NUM} already records run ${RUN_ID} — idempotent no-op"
+              exit 0
+            fi
+            OBS="$(mktemp)"
+            {
+              echo "동일 drift 계열의 후속 관측을 기록한다 (upsert — 이슈 중복 생성 억제)."
+              echo
+              echo "- 대상 run: \`#${RUN_NUMBER:-n/a}\` (run id \`${RUN_ID:-n/a}\`)"
+              echo "- run URL: ${RUN_URL:-n/a}"
+              echo "- 관측 SHA: \`${HEAD_SHA:-n/a}\`"
+              echo "- conclusion: \`${CONCLUSION:-n/a}\`"
+              echo "- 관측 시각: ${NOW} (UTC)"
+              echo
+              if [ "${MODE}" = "real" ]; then
+                cat "${ACTUAL_FILE}"
+              else
+                echo "발행 경로 시험 관측 — drift RED 아님."
+              fi
+            } > "${OBS}"
+            gh issue comment "${EXISTING_NUM}" --body-file "${OBS}"
+            echo "upsert: observation appended to #${EXISTING_NUM}"
+            exit 0
+          fi
+
+          if [ "${LABEL_STATE}" = "applied" ]; then
+            gh issue create --title "${TITLE}" --body-file "${BODY}" --label "drift-signal"
+          else
+            gh issue create --title "${TITLE}" --body-file "${BODY}"
+          fi
+          echo "tracking issue created (token=${TOKEN})"

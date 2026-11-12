@@ -1,0 +1,27 @@
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates
+# v86 (2026-10-22, PR #1045 + this slice): exclude-paths keeps Dependabot from
+# proposing updates to trustSurface workflow files — the org
+# trusted-writer-set-pairing gate structurally blocks that class (measured
+# PR #707/#708), so the proposals were pure triage noise (6/8 of all Dependabot
+# PRs). Non-trustSurface workflows keep receiving pin updates: per-dependency
+# `ignore` would freeze checkout/artifact bumps repo-wide (they are shared
+# across protected and unprotected files); exclude-paths scopes by FILE.
+# dependabot-auto-merge.yml excludes itself (self-protection: the armer's own
+# pins rotate through the manual path). file-scoped exclusion GA:
+# docs.github.com — Dependabot options reference, exclude-paths.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    exclude-paths:
+      - ".github/actions/setup-axiom-toolchain/**"
+      - ".github/workflows/admission-check.yml"
+      - ".github/workflows/certificate-mint.yml"
+      - ".github/workflows/runner-pool-acceptance.yml"
+      - ".github/workflows/repository_surface.yml"
+      - ".github/workflows/bsec-integrity.yml"
+      - ".github/workflows/debt-registry-gate.yml"
+      - ".github/workflows/generation-acceptance.yml"
+      - ".github/workflows/dependabot-auto-merge.yml"

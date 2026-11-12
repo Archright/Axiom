@@ -1,0 +1,74 @@
+{
+  "records": [
+    {
+      "timestamp": "2026-07-27T16:48:47+09:00Z",
+      "file": "src/gate/runners/architecture_config_debt.nim",
+      "action": "pruned"
+    },
+    {
+      "timestamp": "2026-07-27T16:48:47+09:00Z",
+      "file": "src/gate/runners/nimtry_gate.nim",
+      "action": "pruned"
+    },
+    {
+      "timestamp": "2026-07-27T16:48:47+09:00Z",
+      "file": "src/gate/runners/architecture_config_gate.nim",
+      "action": "pruned"
+    },
+    {
+      "timestamp": "2026-07-27T16:48:47+09:00Z",
+      "file": "src/gate/runners/debt_blocker/private/checks.nim",
+      "action": "pruned"
+    },
+    {
+      "timestamp": "2026-07-27T16:48:48+09:00Z",
+      "file": "src/gate/runners/debt_blocker/private/runner.nim",
+      "action": "pruned"
+    },
+    {
+      "timestamp": "2026-07-27T16:48:48+09:00Z",
+      "file": "src/gate/runners/debt_reduction_gate.nim",
+      "action": "pruned"
+    },
+    {
+      "timestamp": "2026-07-27T16:48:48+09:00Z",
+      "file": "src/gate/runners/forwarding_stub_cycle_gate.nim",
+      "action": "pruned"
+    },
+    {
+      "timestamp": "2026-07-27T16:48:48+09:00Z",
+      "file": "src/gate/runners/magic_number_sniffer.nim",
+      "action": "pruned"
+    },
+    {
+      "timestamp": "2026-07-27T16:48:48+09:00Z",
+      "file": "src/gate/runners/memory_policy_gate.nim",
+      "action": "pruned"
+    },
+    {
+      "timestamp": "2026-08-01T05:43:48Z",
+      "file": "src/core/type_system/context_aware_type_inferencer.nim",
+      "action": "pruned"
+    },
+    {
+      "timestamp": "2026-08-08T04:05:10Z",
+      "file": "src/gate/runners/context7_evidence_gate.nim",
+      "action": "pruned"
+    },
+    {
+      "timestamp": "2026-10-31T13:51:09Z",
+      "file": "src/cli/infra_cli.nim",
+      "action": "pruned"
+    },
+    {
+      "timestamp": "2026-10-31T13:51:10Z",
+      "file": "src/core/utils/parallel_utils.nim",
+      "action": "pruned"
+    },
+    {
+      "timestamp": "2026-10-31T13:51:10Z",
+      "file": "src/gate/orchestrator.nim",
+      "action": "pruned"
+    }
+  ]
+}

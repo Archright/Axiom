@@ -1,0 +1,80 @@
+# provenance-policy — the origin-class policy for publication integrity.
+#
+# SSOT relationship: consumed by tools/ci/publication_provenance_validator.nim
+# together with compliance/provenance/source-origin.yml (the per-path
+# declarations). The audited inventory
+# docs/evidence/sal10_publication/B1_third_party_inventory.md is the
+# authority for the initial declaration content.
+#
+# Format contract: restricted YAML subset consumed by
+# tools/ci/publication_yaml.nim (flat mappings, quoted strings, `- ` lists,
+# 2-space indent).
+
+schemaVersion: "1"
+policyId: "axiom-publication-provenance-policy-v1"
+
+# Closed origin vocabulary. Each class maps to exactly one adjudication.
+originClasses:
+  - id: "ORIGINAL"
+    verdict: "ALLOW"
+    requires:
+      - "license: LicenseRef-Axiom-SAL-1.0"
+  - id: "AI_GENERATED"
+    verdict: "ALLOW_IF_DECLARED"
+    requires:
+      - "explicit declaration in source-origin.yml"
+      - "license: LicenseRef-Axiom-SAL-1.0"
+  - id: "THIRD_PARTY"
+    verdict: "ALLOW"
+    requires:
+      - "upstream source URL"
+      - "license in the license-policy allowlist"
+      - "entry in THIRD-PARTY-NOTICES.md"
+  - id: "UNDECLARED_COPYRIGHT"
+    verdict: "DENY"
+    note: "a detected copyright holder that no declaration accounts for"
+  - id: "UNKNOWN"
+    verdict: "DENY"
+    note: "any file not covered by a declaration, or a declaration whose class is not in this vocabulary"
+
+# A file matching NO declaration is UNDECLARED → DENY. The declarations file
+# deliberately has NO catch-all glob: a new top-level file or a new path
+# outside the declared scopes fails provenance-validation until it is
+# explicitly declared (fail-closed by construction).
+undeclaredFileVerdict: "DENY"
+
+forbiddenContentPatterns:
+  - "/home/wintrover"
+  - "wintrover-PC"
+
+forbiddenPathSuffixes:
+  - ".log"
+  - ".pem"
+  - ".key"
+
+allowedArchivePrefixes:
+  - "experiments/act2-wp-toml-b1-input-integrity/"
+
+requiredDepsArchiveLicenses:
+  - "faststreams-0.5.2/LICENSE-APACHE"
+  - "faststreams-0.5.2/LICENSE-MIT"
+  - "serialization-0.5.4/LICENSE-APACHE"
+  - "serialization-0.5.4/LICENSE-MIT"
+  - "stew-0.5.0/LICENSE-APACHE"
+  - "stew-0.5.0/LICENSE-MIT"
+
+# Right-of-redistribution honesty clause: a format validator can prove
+# license-presence and declaration-consistency, but it CANNOT prove the
+# ABSENCE of infringement. Where a license's text is present and allowed but
+# the validator cannot establish the redistribution right (e.g. detected
+# copyright with no recorded attribution basis), the dimension reports
+# UNKNOWN and BLOCKS — passing analysis is not the absence of a rights
+# problem (AGENTS.md §0.9: no empty guarantees).
+rightsVerificationLimit:
+  semantics: "UNKNOWN-blocks"
+  note: "automated analysis passing does not equal non-infringement; unresolved rights questions stay UNKNOWN"
+
+verdictSemantics:
+  pass: "every tracked file is covered by exactly one consistent declaration, and every THIRD_PARTY declaration carries source + allowed license + notices entry"
+  fail: "any DENY adjudication or inconsistent declarations"
+  unknown: "validator unavailable or declaration file unparsable — blocking, never a pass (fail-closed)"

@@ -1,0 +1,131 @@
+{
+  "gates": {
+    "sieve": { "name": "판별", "description": "Proven vs Unverifiable 분류" },
+    "diagnosis": { "name": "진단", "description": "비결정적 위협의 수학적 불연속 지점 정밀 명세" },
+    "guidance": { "name": "교정", "description": "비결정성 제거, 불변량 명시, f×g×h 구조의 무결성 패턴 전수" }
+  },
+  "commands": {
+    "prove": {
+      "name": "ax prove",
+      "usage": "[--limit N]",
+      "description": "소스를 스캔하고, 최상위 대상을 증명하며, ASI가 1.0000에 도달할 때까지 자동 복구합니다."
+    },
+    "report": {
+      "name": "ax report",
+      "usage": "[--json]",
+      "description": "검증 보고서, ASI 메트릭, 인증서 상태를 생성합니다."
+    },
+    "help": {
+      "name": "ax help",
+      "usage": "",
+      "description": "이 도움말 메시지를 표시하고 종료합니다."
+    }
+  },
+  "status": {
+    "verified": "검증됨",
+    "counter_example": "반례_발견",
+    "blocked_branch": "차단된_분기",
+    "timeout": "시간초과",
+    "vacuous_contradiction": "공허한_모순",
+    "unverifiable": "검증불가",
+    "unattempted": "미시도",
+    "unknown": "알수없음",
+    "passed": "통과",
+    "degraded": "저하됨",
+    "failed": "실패",
+    "pending": "대기중",
+    "in_progress": "진행중"
+  },
+  "errors": {
+    "missing_value": "값 누락: {flag}",
+    "invalid_integer": "{flag}에 대한 잘못된 정수: {value}",
+    "unknown_subcommand": "알 수 없는 ax 하위 명령어: {command}",
+    "command_not_supported": "더 이상 지원되지 않는 명령어: {command}",
+    "removed_command": "'ax {old}'는 제거되었습니다. 대신 'ax {replacement}'를 사용하세요.",
+    "failed_to_read_state": "증명 상태 읽기 실패: {path}",
+    "invalid_state_shape": "잘못된 증명 상태 형식: {path}",
+    "failed_to_persist_state": "ax 증명 상태 저장 실패: {path}",
+    "failed_to_persist_shortcut": "ax 단축 상태 저장 실패: {path}",
+    "failed_to_read_shortcut": "ax 단축 상태 읽기 실패: {path}",
+    "invalid_shortcut_shape": "잘못된 ax 단축 상태 형식: {path}",
+    "failed_to_prepare_artifact": "의미론적 증명 아티팩트 디렉토리 준비 실패: {path}",
+    "failed_to_persist_artifacts": "의미론적 증명 아티팩트 저장 실패: {path}",
+    "certificate_fingerprint_mismatch": "인증서 전역 그래프 지문이 현재 그래프와 일치하지 않습니다",
+    "certificate_depends_on_red_node": "인증서가 빨간 노드에 의존합니다: {node}"
+  },
+  "report": {
+    "header": "Axiom 검증 보고서",
+    "target": "대상",
+    "timestamp": "타임스탬프",
+    "state_file": "상태파일",
+    "summary": {
+      "title": "요약",
+      "total": "전체",
+      "verified": "검증됨",
+      "failed": "실패",
+      "time": "시간",
+      "attempted": "시도됨",
+      "unattempted": "미시도",
+      "timed_out": "시간초과",
+      "cache_hits": "캐시적중"
+    },
+    "certificate": {
+      "title": "무결성 인증서",
+      "label": "인증서",
+      "status": "상태",
+      "asi": "ASI"
+    },
+    "sections": {
+      "critical": "치명적",
+      "warning": "경고",
+      "success": "성공",
+      "reproof_required": "재증명 필요",
+      "requires_reproof": "재증명 필요",
+      "timeout_diagnosis": "시간초과 진단",
+      "performance_summary": "성능 요약",
+      "reproof_required_none": "재증명 필요: 없음",
+      "and_n_more": "... {count}개 더",
+      "proof_status_matrix": "증명 상태 매트릭스"
+    },
+    "performance": {
+      "total_wall_time": "총 벽시계 시간",
+      "cpu_efficiency": "CPU 효율",
+      "parallel_speedup": "병렬 가속",
+      "cache_hits": "캐시 적중",
+      "timeout_count": "시간초과 횟수",
+      "timeout_impact": "시간초과 영향",
+      "hotspot": "핫스팟",
+      "nodes": "노드"
+    },
+    "workflow": {
+      "target": "대상",
+      "source_root": "소스루트",
+      "symbol_count": "심볼수",
+      "planned_node_count": "계획노드수",
+      "queue_limit": "큐제한",
+      "diagnosis_depth": "진단깊이",
+      "structural_bottleneck_count": "구조적병목수",
+      "axiomatic_frontier_count": "공리적프론티어수"
+    }
+  },
+  "usage": {
+    "header": "사용법:"
+  },
+  "gate_hook": {
+    "usage": "사용법: gate_hook <pre-commit|pre-push> 또는 심볼릭 링크로 훅 이름 지정"
+  },
+  "mcp": {
+    "success_write": "성공: {path}에 기록했습니다",
+    "success_verify": "성공: 검증 도구 통과. [증거-의도-사양]의 삼각 일관성이 기록되었습니다.",
+    "failed_verify": "실패:"
+  },
+  "terms": {
+    "topology": "토폴로지",
+    "pbt": "PBT",
+    "nimtry": "nimtry",
+    "leanstral": "leanstral",
+    "gate": "게이트",
+    "proof": "증명",
+    "certificate": "인증서"
+  }
+}

@@ -1,0 +1,18 @@
+# change-B: Golden case — merge-gate-controller.
+# Represents the merge-boundary protocol change (f217b225c) that defines
+# PR checks as authoritative merge-boundary evidence.
+# DEPENDS ON change-A (ci-v6-validation) by stable change ID only.
+# This models the stacked-ancestry scenario: B is declared after A, but A's
+# commit OID (cd09f04af) is already on main. The validator MUST resolve
+# B's dependency via the stable `id` "ci-v6-validation", NOT via commit OID.
+# Resolving by commit OID would cause "already-main-merged commit OID 혼선"
+# (OID confusion — the commit exists on main but the semantic dependency is
+# on the change identity, not the transport).
+# No conflicts declared.
+
+id = "merge-gate-controller"
+base_ref = "main"
+base_commit = "f217b225c"
+semantic_surface = ["merge-controller", "merge-boundary"]
+depends_on = ["ci-v6-validation"]
+conflicts_with = []

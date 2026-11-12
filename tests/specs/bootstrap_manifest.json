@@ -1,0 +1,1171 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-06-24T09:54:17.254Z",
+  "modules": [
+    {
+      "path": "src/core/gate/gate_memo.nim",
+      "functions": [
+        {
+          "name": "casSubdir",
+          "properties": ["idempotent"],
+          "inputTypes": ["CasAddress"],
+          "outputType": "string",
+          "comment": "Extracts CAS subdirectory from address; pure projection"
+        },
+        {
+          "name": "casFilename",
+          "properties": ["idempotent"],
+          "inputTypes": ["CasAddress"],
+          "outputType": "string",
+          "comment": "Extracts CAS filename from address; pure projection"
+        },
+        {
+          "name": "casPath",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "CasAddress"],
+          "outputType": "string",
+          "comment": "Computes full CAS path from epoch dir and address"
+        },
+        {
+          "name": "computeCasAddress",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "CasAddress",
+          "comment": "Deterministic CAS address from content; same input yields same address"
+        },
+        {
+          "name": "isValid",
+          "properties": ["idempotent"],
+          "inputTypes": ["CasAddress"],
+          "outputType": "bool",
+          "comment": "Pure predicate checking CAS address validity"
+        },
+        {
+          "name": "computeMerkleRoot",
+          "properties": ["idempotent"],
+          "inputTypes": ["seq[string]"],
+          "outputType": "string",
+          "comment": "Deterministic Merkle root from sorted file list"
+        },
+        {
+          "name": "computeCodeHash",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "string",
+          "comment": "Hash of all source files under repo root; idempotent"
+        },
+        {
+          "name": "computeEnvVarHash",
+          "properties": ["idempotent"],
+          "inputTypes": [],
+          "outputType": "string",
+          "comment": "Deterministic hash of environment variables"
+        },
+        {
+          "name": "computeBuildEnvHash",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "string",
+          "comment": "Composite build environment hash; same inputs yield same hash"
+        },
+        {
+          "name": "computeMerkleRootFromPaths",
+          "properties": ["idempotent"],
+          "inputTypes": ["seq[string]"],
+          "outputType": "string",
+          "comment": "Merkle root from explicit path list; deterministic"
+        },
+        {
+          "name": "memoPath",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "int"],
+          "outputType": "string",
+          "comment": "Deterministic memo cache path from gate ID and epoch"
+        },
+        {
+          "name": "isLockStale",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "bool",
+          "comment": "Pure staleness check against filesystem mtime"
+        }
+      ]
+    },
+    {
+      "path": "src/core/topology/lock.nim",
+      "functions": [
+        {
+          "name": "parseTopologyLockJson",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "TopologyLock",
+          "comment": "Deterministic JSON parse of topology lock"
+        },
+        {
+          "name": "checkTransitionalTTLWithTime",
+          "properties": ["idempotent"],
+          "inputTypes": ["TopologyLock", "int", "int64"],
+          "outputType": "seq[Violation]",
+          "comment": "Deterministic TTL check given fixed clock"
+        },
+        {
+          "name": "checkMissingModules",
+          "properties": ["idempotent"],
+          "inputTypes": ["TopologyLock", "seq[string]"],
+          "outputType": "seq[Violation]",
+          "comment": "Pure set-difference check for missing modules"
+        },
+        {
+          "name": "checkOrphanFiles",
+          "properties": ["idempotent"],
+          "inputTypes": ["TopologyLock", "seq[string]"],
+          "outputType": "seq[Violation]",
+          "comment": "Pure set-difference check for orphan files"
+        },
+        {
+          "name": "generateDeterministicUuid",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "string"],
+          "outputType": "string",
+          "comment": "UUID v5 deterministic from namespace and name"
+        },
+        {
+          "name": "addOrphanEntry",
+          "properties": ["idempotent"],
+          "inputTypes": ["TopologyLock", "string", "string"],
+          "outputType": "TopologyLock",
+          "comment": "Add orphan entry to lock model; functional update"
+        },
+        {
+          "name": "identifyStaleEntries",
+          "properties": ["idempotent"],
+          "inputTypes": ["TopologyLock", "int64"],
+          "outputType": "seq[string]",
+          "comment": "Pure identification of stale entries by timestamp"
+        },
+        {
+          "name": "applyStaleRemoval",
+          "properties": ["idempotent"],
+          "inputTypes": ["TopologyLock", "seq[string]"],
+          "outputType": "TopologyLock",
+          "comment": "Remove stale entries by ID; functional update"
+        },
+        {
+          "name": "removeStaleEntries",
+          "properties": ["idempotent"],
+          "inputTypes": ["TopologyLock"],
+          "outputType": "seq[string]",
+          "comment": "Identify and remove stale entries in one pass"
+        },
+        {
+          "name": "findOrphanPaths",
+          "properties": ["idempotent"],
+          "inputTypes": ["TopologyLock", "seq[string]"],
+          "outputType": "seq[string]",
+          "comment": "Pure identification of orphan filesystem paths"
+        }
+      ]
+    },
+    {
+      "path": "src/core/trusted/architecture_invariants.nim",
+      "functions": [
+        {
+          "name": "extractRootPrimitives",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "seq[string]",
+          "comment": "Compile-time extraction of primitive names from JSON"
+        }
+      ]
+    },
+    {
+      "path": "src/core/orchestration/pipeline_dispatch.nim",
+      "functions": [
+        {
+          "name": "extractRuleBundle",
+          "properties": ["idempotent"],
+          "inputTypes": ["PipelineContext"],
+          "outputType": "RuleBundle",
+          "comment": "Pure extraction of rule bundle from pipeline context"
+        },
+        {
+          "name": "handleCompleteStage",
+          "properties": ["idempotent"],
+          "inputTypes": ["PipelineContext", "DispatchContext"],
+          "outputType": "DispatchResult",
+          "comment": "Terminal stage handler; pure completion logic"
+        },
+        {
+          "name": "createDefaultPipelineDispatch",
+          "properties": ["idempotent"],
+          "inputTypes": [],
+          "outputType": "PersonaDispatchFn",
+          "comment": "Factory creating deterministic dispatch table"
+        }
+      ]
+    },
+    {
+      "path": "src/core/audit/sad_gate.nim",
+      "functions": [
+        {
+          "name": "calculateEnforcementRadius",
+          "properties": ["idempotent"],
+          "inputTypes": [],
+          "outputType": "int",
+          "comment": "Deterministic enforcement radius from config"
+        },
+        {
+          "name": "formatHardeningNotice",
+          "properties": ["idempotent"],
+          "inputTypes": ["int", "string"],
+          "outputType": "string",
+          "comment": "Pure string formatting of hardening notice"
+        },
+        {
+          "name": "daysUntilEnforcement",
+          "properties": ["idempotent"],
+          "inputTypes": [],
+          "outputType": "int",
+          "comment": "Deterministic countdown to enforcement date"
+        },
+        {
+          "name": "sadScore",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "float",
+          "comment": "Deterministic SAD score for a file path"
+        },
+        {
+          "name": "isExempt",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "bool",
+          "comment": "Pure exemption predicate for file path"
+        },
+        {
+          "name": "auditFile",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "AuditResult",
+          "comment": "Deterministic audit of a single file"
+        }
+      ]
+    },
+    {
+      "path": "src/core/api/axiom_api_session_helpers.nim",
+      "functions": [
+        {
+          "name": "proofArtifactToJsonNode",
+          "properties": ["roundtrip"],
+          "inputTypes": ["SessionProofArtifact"],
+          "outputType": "JsonNode",
+          "comment": "Serialize proof artifact to JSON; inverse of parseProofArtifactNode"
+        },
+        {
+          "name": "proofEnvelopeJson",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "SessionProofArtifact"],
+          "outputType": "string",
+          "comment": "Deterministic JSON envelope for proof session"
+        },
+        {
+          "name": "parseProofArtifactNode",
+          "properties": ["roundtrip"],
+          "inputTypes": ["JsonNode"],
+          "outputType": "Result[SessionProofArtifact, AxiomError]",
+          "comment": "Deserialize JSON to proof artifact; inverse of proofArtifactToJsonNode"
+        },
+        {
+          "name": "parseStoredProofResponse",
+          "properties": ["roundtrip"],
+          "inputTypes": ["string"],
+          "outputType": "Result[GenerateProofResponse, AxiomError]",
+          "comment": "Parse stored proof response; roundtrip with serialization"
+        },
+        {
+          "name": "jsonFromNimLeanBridge",
+          "properties": ["idempotent"],
+          "inputTypes": ["NimLeanBridgeResponse"],
+          "outputType": "JsonNode",
+          "comment": "Deterministic JSON from bridge response"
+        },
+        {
+          "name": "buildNimLeanBridgeMetadata",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "string", "string"],
+          "outputType": "JsonNode",
+          "comment": "Deterministic metadata construction for bridge"
+        },
+        {
+          "name": "buildKInductionFinalStateNode",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "string"],
+          "outputType": "JsonNode",
+          "comment": "Deterministic final-state node for k-induction"
+        }
+      ]
+    },
+    {
+      "path": "src/core/gate/merkle_vfs.nim",
+      "functions": [
+        {
+          "name": "vfsRootHash",
+          "properties": ["idempotent"],
+          "inputTypes": ["MerkleVfs"],
+          "outputType": "string",
+          "comment": "Pure projection of root hash from VFS"
+        },
+        {
+          "name": "getFileHash",
+          "properties": ["idempotent"],
+          "inputTypes": ["MerkleVfs", "string"],
+          "outputType": "Option[string]",
+          "comment": "Pure lookup of file hash by path"
+        },
+        {
+          "name": "getFilesMatching",
+          "properties": ["idempotent"],
+          "inputTypes": ["MerkleVfs", "string"],
+          "outputType": "seq[string]",
+          "comment": "Pure glob match against VFS file list"
+        },
+        {
+          "name": "fileCount",
+          "properties": ["idempotent"],
+          "inputTypes": ["MerkleVfs"],
+          "outputType": "int",
+          "comment": "Pure count of files in VFS"
+        },
+        {
+          "name": "rebuildRootHash",
+          "properties": ["idempotent"],
+          "inputTypes": ["MerkleVfs"],
+          "outputType": "MerkleVfs",
+          "comment": "Deterministic recomputation of Merkle root"
+        },
+        {
+          "name": "toDelta",
+          "properties": ["roundtrip"],
+          "inputTypes": ["VfsSnapshot"],
+          "outputType": "VfsDelta",
+          "comment": "Compute diff delta from snapshot; roundtrip with vfsCommit"
+        },
+        {
+          "name": "computeSubtreeRoot",
+          "properties": ["idempotent"],
+          "inputTypes": ["MerkleVfs", "string"],
+          "outputType": "string",
+          "comment": "Deterministic subtree Merkle root for pattern"
+        }
+      ]
+    },
+    {
+      "path": "src/core/audit/hotspot_analyzer.nim",
+      "functions": [
+        {
+          "name": "periodDays",
+          "properties": ["idempotent"],
+          "inputTypes": ["ChurnPeriod"],
+          "outputType": "int",
+          "comment": "Pure enum-to-integer mapping"
+        },
+        {
+          "name": "parseChurnScores",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "Table[string, int]",
+          "comment": "Deterministic parse of git log output to churn scores"
+        },
+        {
+          "name": "moduleNameFromPath",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "string",
+          "comment": "Deterministic module name extraction from file path"
+        },
+        {
+          "name": "sortedChurnByScore",
+          "properties": ["idempotent"],
+          "inputTypes": ["Table[string, int]"],
+          "outputType": "seq[(string, int)]",
+          "comment": "Deterministic sort of churn table by score descending"
+        }
+      ]
+    },
+    {
+      "path": "src/core/testing/pbt_engine.nim",
+      "functions": [
+        {
+          "name": "initBitStream",
+          "properties": ["idempotent"],
+          "inputTypes": ["int64"],
+          "outputType": "BitStream",
+          "comment": "Deterministic bit stream initialization from seed"
+        },
+        {
+          "name": "randInt",
+          "properties": ["idempotent"],
+          "inputTypes": ["BitStream", "int", "int"],
+          "outputType": "int",
+          "comment": "Deterministic pseudo-random int from bit stream state"
+        },
+        {
+          "name": "randFloat",
+          "properties": ["idempotent"],
+          "inputTypes": ["BitStream"],
+          "outputType": "float",
+          "comment": "Deterministic pseudo-random float from bit stream"
+        },
+        {
+          "name": "randBool",
+          "properties": ["idempotent"],
+          "inputTypes": ["BitStream", "float"],
+          "outputType": "bool",
+          "comment": "Deterministic pseudo-random bool from bit stream"
+        },
+        {
+          "name": "randAlphanumeric",
+          "properties": ["idempotent"],
+          "inputTypes": ["BitStream", "int"],
+          "outputType": "string",
+          "comment": "Deterministic pseudo-random alphanumeric string"
+        },
+        {
+          "name": "genInt",
+          "properties": ["idempotent", "totality"],
+          "inputTypes": ["int", "int"],
+          "outputType": "Gen[int]",
+          "comment": "Total generator for bounded integers"
+        },
+        {
+          "name": "genBool",
+          "properties": ["idempotent", "totality"],
+          "inputTypes": [],
+          "outputType": "Gen[bool]",
+          "comment": "Total generator for booleans"
+        },
+        {
+          "name": "genFloat",
+          "properties": ["idempotent", "totality"],
+          "inputTypes": [],
+          "outputType": "Gen[float]",
+          "comment": "Total generator for floats"
+        },
+        {
+          "name": "genString",
+          "properties": ["idempotent", "totality"],
+          "inputTypes": ["int", "int"],
+          "outputType": "Gen[string]",
+          "comment": "Total generator for bounded strings"
+        },
+        {
+          "name": "generateBitReduction",
+          "properties": ["idempotent"],
+          "inputTypes": ["BitStream"],
+          "outputType": "BitStream",
+          "comment": "Deterministic shrink strategy via bit reduction"
+        },
+        {
+          "name": "generateValueSimplification",
+          "properties": ["idempotent"],
+          "inputTypes": ["BitStream"],
+          "outputType": "BitStream",
+          "comment": "Deterministic shrink strategy via value simplification"
+        },
+        {
+          "name": "generateStructurePruning",
+          "properties": ["idempotent"],
+          "inputTypes": ["BitStream"],
+          "outputType": "BitStream",
+          "comment": "Deterministic shrink strategy via structure pruning"
+        }
+      ]
+    },
+    {
+      "path": "src/core/runtime/golden_version.nim",
+      "functions": [
+        {
+          "name": "computeNimCompilerHash",
+          "properties": ["idempotent"],
+          "inputTypes": [],
+          "outputType": "string",
+          "comment": "Deterministic hash of Nim compiler binary"
+        },
+        {
+          "name": "computePolicyHash",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "string",
+          "comment": "Deterministic hash of policy file contents"
+        },
+        {
+          "name": "computeGateRunnerHash",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "string"],
+          "outputType": "string",
+          "comment": "Deterministic hash of gate runner source"
+        },
+        {
+          "name": "currentCommit",
+          "properties": ["idempotent"],
+          "inputTypes": [],
+          "outputType": "string",
+          "comment": "Current git commit hash; deterministic per HEAD"
+        },
+        {
+          "name": "loadGoldenManifest",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "GoldenManifest",
+          "comment": "Deterministic parse of golden manifest file"
+        },
+        {
+          "name": "validateGoldenFreshness",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "string"],
+          "outputType": "GoldenFreshness",
+          "comment": "Deterministic freshness validation against repo state"
+        }
+      ]
+    },
+    {
+      "path": "src/core/proof/proof_universe_lock.nim",
+      "functions": [
+        {
+          "name": "parseJsonResult",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "Result[JsonNode, string]",
+          "comment": "Deterministic JSON parse wrapped in Result"
+        },
+        {
+          "name": "sha256Result",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "Result[string, string]",
+          "comment": "Deterministic SHA-256 wrapped in Result"
+        },
+        {
+          "name": "sortJsonKeysRecursively",
+          "properties": ["idempotent"],
+          "inputTypes": ["JsonNode"],
+          "outputType": "JsonNode",
+          "comment": "Deterministic recursive key sort for canonical JSON"
+        },
+        {
+          "name": "computeGraphMerkleHash",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "Result[string, string]",
+          "comment": "Deterministic Merkle hash of symbol graph"
+        },
+        {
+          "name": "graphSnapshotJson",
+          "properties": ["idempotent"],
+          "inputTypes": ["GlobalSymbolGraph"],
+          "outputType": "JsonNode",
+          "comment": "Deterministic JSON snapshot of symbol graph"
+        },
+        {
+          "name": "parseAsiFromLockSummary",
+          "properties": ["idempotent"],
+          "inputTypes": ["JsonNode"],
+          "outputType": "Result[string, string]",
+          "comment": "Deterministic extraction of ASI from lock summary"
+        },
+        {
+          "name": "verifyProofUniverseLock",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "string", "string"],
+          "outputType": "bool",
+          "comment": "Deterministic verification of proof universe lock integrity"
+        }
+      ]
+    },
+    {
+      "path": "src/core/gate/file_hash_cache.nim",
+      "functions": [
+        {
+          "name": "computeFileHash",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "string",
+          "comment": "Deterministic SHA-256 of file contents"
+        },
+        {
+          "name": "getFileMtime",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "int64",
+          "comment": "Read file modification time; deterministic per file state"
+        },
+        {
+          "name": "pairwiseHash",
+          "properties": ["commutative", "idempotent"],
+          "inputTypes": ["string", "string"],
+          "outputType": "string",
+          "comment": "Commutative pairwise hash for Merkle tree reduction"
+        },
+        {
+          "name": "pairwiseReduceLayer",
+          "properties": ["idempotent"],
+          "inputTypes": ["seq[string]"],
+          "outputType": "seq[string]",
+          "comment": "Deterministic layer reduction in Merkle tree"
+        },
+        {
+          "name": "reduceHashes",
+          "properties": ["idempotent", "associative"],
+          "inputTypes": ["seq[string]"],
+          "outputType": "string",
+          "comment": "Associative reduction of hash sequence to single root"
+        },
+        {
+          "name": "vfsCachePath",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "string",
+          "comment": "Deterministic VFS cache path from repo root"
+        }
+      ]
+    },
+    {
+      "path": "src/core/audit/governance_engine.nim",
+      "functions": [
+        {
+          "name": "evaluateSystemState",
+          "properties": ["idempotent"],
+          "inputTypes": [],
+          "outputType": "SystemState",
+          "comment": "Deterministic evaluation of current system state"
+        },
+        {
+          "name": "formatStateReport",
+          "properties": ["idempotent"],
+          "inputTypes": ["SystemState", "int"],
+          "outputType": "string",
+          "comment": "Deterministic formatting of state report"
+        },
+        {
+          "name": "checkFacadeExpirations",
+          "properties": ["idempotent"],
+          "inputTypes": [],
+          "outputType": "seq[string]",
+          "comment": "Deterministic check for expired facade entries"
+        },
+        {
+          "name": "shouldTriggerAutotuning",
+          "properties": ["idempotent"],
+          "inputTypes": [],
+          "outputType": "bool",
+          "comment": "Deterministic predicate for autotuning trigger"
+        }
+      ]
+    },
+    {
+      "path": "src/core/trusted/stdlib_shield.nim",
+      "functions": [
+        {
+          "name": "safeParseXml",
+          "properties": ["idempotent"],
+          "inputTypes": ["Stream"],
+          "outputType": "XmlNode",
+          "comment": "Idempotent XML parse with error shielding"
+        },
+        {
+          "name": "safeParseXmlFromString",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "XmlNode",
+          "comment": "Idempotent XML parse from string with error shielding"
+        },
+        {
+          "name": "safeMoveFile",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "string"],
+          "outputType": "void",
+          "comment": "Atomic file move with error shielding"
+        },
+        {
+          "name": "safeRunCallback",
+          "properties": ["idempotent"],
+          "inputTypes": ["proc"],
+          "outputType": "T",
+          "comment": "Safe callback execution with error shielding"
+        },
+        {
+          "name": "safeReadFile",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "string",
+          "comment": "Idempotent file read with error shielding"
+        },
+        {
+          "name": "safeWalkDirRec",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "seq[string]",
+          "comment": "Deterministic recursive directory walk with error shielding"
+        },
+        {
+          "name": "safeDirExists",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "bool",
+          "comment": "Deterministic directory existence check with error shielding"
+        },
+        {
+          "name": "safeParseJson",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "JsonNode",
+          "comment": "Idempotent JSON parse with error shielding"
+        },
+        {
+          "name": "safeParseFile",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "JsonNode",
+          "comment": "Idempotent file parse with error shielding"
+        }
+      ]
+    },
+    {
+      "path": "src/core/topology/import_graph.nim",
+      "functions": [
+        {
+          "name": "extractCoreImports",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "seq[string]",
+          "comment": "Deterministic extraction of core imports from file"
+        },
+        {
+          "name": "buildImportGraph",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "Table[string, seq[string]]",
+          "comment": "Deterministic import graph construction from source tree"
+        },
+        {
+          "name": "countCoreModules",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "int",
+          "comment": "Deterministic count of core modules"
+        },
+        {
+          "name": "countCoreModulesFromGraph",
+          "properties": ["idempotent"],
+          "inputTypes": ["Table[string, seq[string]]"],
+          "outputType": "int",
+          "comment": "Deterministic module count from graph structure"
+        },
+        {
+          "name": "findCycles",
+          "properties": ["idempotent"],
+          "inputTypes": ["Table[string, seq[string]]"],
+          "outputType": "seq[seq[string]]",
+          "comment": "Deterministic cycle detection in import graph"
+        },
+        {
+          "name": "computeTopologicalLayers",
+          "properties": ["idempotent"],
+          "inputTypes": ["Table[string, seq[string]]"],
+          "outputType": "seq[seq[string]]",
+          "comment": "Deterministic topological sort into layers"
+        },
+        {
+          "name": "buildReverseGraph",
+          "properties": ["idempotent"],
+          "inputTypes": ["Table[string, seq[string]]"],
+          "outputType": "Table[string, seq[string]]",
+          "comment": "Deterministic reverse graph construction"
+        },
+        {
+          "name": "transitiveDependents",
+          "properties": ["idempotent"],
+          "inputTypes": ["Table[string, seq[string]]", "string"],
+          "outputType": "seq[string]",
+          "comment": "Deterministic transitive closure of dependents"
+        }
+      ]
+    },
+    {
+      "path": "src/core/topology/declaration.nim",
+      "functions": [
+        {
+          "name": "globToRegex",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "string",
+          "comment": "Deterministic glob-to-regex conversion"
+        },
+        {
+          "name": "globMatch",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "string"],
+          "outputType": "bool",
+          "comment": "Deterministic glob pattern match"
+        },
+        {
+          "name": "parseSubdomains",
+          "properties": ["idempotent"],
+          "inputTypes": ["JsonNode"],
+          "outputType": "Table[string, Subdomain]",
+          "comment": "Deterministic JSON parse of subdomain definitions"
+        },
+        {
+          "name": "parseStringSeq",
+          "properties": ["idempotent"],
+          "inputTypes": ["JsonNode"],
+          "outputType": "seq[string]",
+          "comment": "Deterministic JSON parse of string array"
+        },
+        {
+          "name": "parseDomains",
+          "properties": ["idempotent"],
+          "inputTypes": ["JsonNode"],
+          "outputType": "Table[string, Domain]",
+          "comment": "Deterministic JSON parse of domain definitions"
+        },
+        {
+          "name": "parseTopologyDeclarationJson",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "TopologyDeclaration",
+          "comment": "Deterministic JSON parse of topology declaration"
+        },
+        {
+          "name": "classifyFile",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "TopologyDeclaration"],
+          "outputType": "tuple[domain, subdomain, matchedBy: string]",
+          "comment": "Deterministic file classification against declaration"
+        },
+        {
+          "name": "expectedPath",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "string", "string", "TopologyDeclaration"],
+          "outputType": "string",
+          "comment": "Deterministic expected path computation"
+        },
+        {
+          "name": "effectiveLevel",
+          "properties": ["idempotent"],
+          "inputTypes": ["TopologyDeclaration", "string"],
+          "outputType": "int",
+          "comment": "Deterministic level computation for domain"
+        },
+        {
+          "name": "isStdlibImport",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "bool",
+          "comment": "Deterministic check if import is stdlib"
+        },
+        {
+          "name": "classifyImportDomain",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "TopologyDeclaration"],
+          "outputType": "string",
+          "comment": "Deterministic classification of import domain"
+        }
+      ]
+    },
+    {
+      "path": "src/core/observer/state_hash.nim",
+      "functions": [
+        {
+          "name": "sha256hex",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "string",
+          "comment": "Deterministic SHA-256 hex digest of content"
+        },
+        {
+          "name": "computeConfigHash",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "string",
+          "comment": "Deterministic hash of project configuration"
+        },
+        {
+          "name": "computeGateHash",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "string",
+          "comment": "Deterministic hash of gate runner sources"
+        },
+        {
+          "name": "computeStateHash",
+          "properties": ["idempotent"],
+          "inputTypes": ["ProjectMap", "string"],
+          "outputType": "StateHash",
+          "comment": "Deterministic composite state hash from project map"
+        },
+        {
+          "name": "isStateValid",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "StateHash"],
+          "outputType": "bool",
+          "comment": "Deterministic validation of cached state against current hash"
+        },
+        {
+          "name": "isSourceOnlyChange",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "string", "string"],
+          "outputType": "bool",
+          "comment": "Deterministic check for source-only modifications"
+        },
+        {
+          "name": "gatherGitMetadata",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "GitMetadata",
+          "comment": "Deterministic git metadata collection"
+        },
+        {
+          "name": "assertSyncProtocol",
+          "properties": ["idempotent"],
+          "inputTypes": ["GitMetadata"],
+          "outputType": "bool",
+          "comment": "Deterministic assertion of sync protocol compliance"
+        }
+      ]
+    },
+    {
+      "path": "src/core/logging/log_compaction.nim",
+      "functions": [
+        {
+          "name": "defaultCompactionConfig",
+          "properties": ["idempotent", "totality"],
+          "inputTypes": [],
+          "outputType": "CompactionConfig",
+          "comment": "Total function returning deterministic default config"
+        },
+        {
+          "name": "compactGate",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "string", "CompactionConfig"],
+          "outputType": "void",
+          "comment": "Deterministic log compaction for a single gate"
+        },
+        {
+          "name": "enforceShardLimit",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "string", "CompactionConfig"],
+          "outputType": "void",
+          "comment": "Deterministic shard count enforcement"
+        },
+        {
+          "name": "archiveOldCompacted",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "string", "CompactionConfig"],
+          "outputType": "void",
+          "comment": "Deterministic archival of old compacted logs"
+        },
+        {
+          "name": "compactAndArchive",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "CompactionConfig"],
+          "outputType": "void",
+          "comment": "Deterministic combined compaction and archival"
+        },
+        {
+          "name": "compactAll",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "CompactionConfig"],
+          "outputType": "void",
+          "comment": "Deterministic compaction across all gates"
+        }
+      ]
+    },
+    {
+      "path": "src/core/json/json_utils.nim",
+      "functions": [
+        {
+          "name": "renderJsonMultiline",
+          "properties": ["idempotent"],
+          "inputTypes": ["JsonNode"],
+          "outputType": "string",
+          "comment": "Deterministic multiline JSON rendering"
+        },
+        {
+          "name": "jsonNodeStringArray",
+          "properties": ["idempotent"],
+          "inputTypes": ["seq[string]"],
+          "outputType": "JsonNode",
+          "comment": "Deterministic conversion of string seq to JSON array"
+        },
+        {
+          "name": "normalizedStringSeq",
+          "properties": ["idempotent"],
+          "inputTypes": ["seq[string]"],
+          "outputType": "seq[string]",
+          "comment": "Deterministic normalization and sort of string sequence"
+        },
+        {
+          "name": "jsonArrayToStringSeq",
+          "properties": ["roundtrip"],
+          "inputTypes": ["JsonNode"],
+          "outputType": "seq[string]",
+          "comment": "Parse JSON array to string seq; roundtrip with jsonNodeStringArray"
+        },
+        {
+          "name": "syncStringArrayField",
+          "properties": ["idempotent"],
+          "inputTypes": ["JsonNode", "string", "seq[string]"],
+          "outputType": "bool",
+          "comment": "Deterministic synchronization of JSON string array field"
+        },
+        {
+          "name": "parseJsonOpt",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "Option[JsonNode]",
+          "comment": "Idempotent optional JSON parse"
+        },
+        {
+          "name": "readRequiredJsonString",
+          "properties": ["idempotent"],
+          "inputTypes": ["JsonNode", "string"],
+          "outputType": "Result[string, string]",
+          "comment": "Deterministic required string field extraction"
+        },
+        {
+          "name": "readOptionalJsonString",
+          "properties": ["idempotent"],
+          "inputTypes": ["JsonNode", "string"],
+          "outputType": "string",
+          "comment": "Deterministic optional string field extraction"
+        },
+        {
+          "name": "readRequiredJsonInt",
+          "properties": ["idempotent"],
+          "inputTypes": ["JsonNode", "string"],
+          "outputType": "Result[int, string]",
+          "comment": "Deterministic required int field extraction"
+        },
+        {
+          "name": "readOptionalJsonBool",
+          "properties": ["idempotent"],
+          "inputTypes": ["JsonNode", "string", "bool"],
+          "outputType": "Result[bool, string]",
+          "comment": "Deterministic optional bool field extraction with default"
+        },
+        {
+          "name": "readOptionalJsonInt",
+          "properties": ["idempotent"],
+          "inputTypes": ["JsonNode", "string", "int"],
+          "outputType": "Result[int, string]",
+          "comment": "Deterministic optional int field extraction with default"
+        },
+        {
+          "name": "readJsonStringSeq",
+          "properties": ["idempotent"],
+          "inputTypes": ["JsonNode", "string"],
+          "outputType": "Result[seq[string], string]",
+          "comment": "Deterministic string array field extraction"
+        }
+      ]
+    },
+    {
+      "path": "src/core/json/json_safe.nim",
+      "functions": [
+        {
+          "name": "safeParseJson",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "Result[JsonNode, string]",
+          "comment": "Idempotent JSON parse with Result error handling"
+        },
+        {
+          "name": "safeParseJsonFile",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "Result[JsonNode, string]",
+          "comment": "Idempotent file-based JSON parse with Result error handling"
+        }
+      ]
+    },
+    {
+      "path": "src/core/solver/solver_bridge.nim",
+      "functions": [
+        {
+          "name": "buildTransitionPayload",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "string", "string"],
+          "outputType": "string",
+          "comment": "Deterministic SMT2 transition payload construction"
+        },
+        {
+          "name": "buildRuntimeErrorZeroPayload",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "string"],
+          "outputType": "string",
+          "comment": "Deterministic runtime error zero payload construction"
+        },
+        {
+          "name": "buildKInductionPayload",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "string", "string", "int"],
+          "outputType": "string",
+          "comment": "Deterministic k-induction SMT2 payload construction"
+        },
+        {
+          "name": "parseZ3StdoutAsResult",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "SolverResult",
+          "comment": "Deterministic parse of Z3 solver output"
+        },
+        {
+          "name": "proofEvidenceRefsFromSolver",
+          "properties": ["idempotent"],
+          "inputTypes": ["SolverEvidence"],
+          "outputType": "seq[string]",
+          "comment": "Deterministic extraction of evidence references from solver"
+        }
+      ]
+    },
+    {
+      "path": "src/core/symbol_graph/global_symbol_graph_builder_part2.nim",
+      "functions": [
+        {
+          "name": "resolveModuleName",
+          "properties": ["idempotent"],
+          "inputTypes": ["string", "string"],
+          "outputType": "string",
+          "comment": "Deterministic module name resolution from import expression"
+        }
+      ]
+    },
+    {
+      "path": "src/core/trusted/axiom_pragmas.nim",
+      "functions": [
+        {
+          "name": "tokenizeImports",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "HashSet[string]",
+          "comment": "Deterministic tokenization of import statements"
+        },
+        {
+          "name": "getDomainPrefix",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "string",
+          "comment": "Deterministic extraction of domain prefix from import path"
+        },
+        {
+          "name": "findContractSuggestion",
+          "properties": ["idempotent"],
+          "inputTypes": ["string"],
+          "outputType": "string",
+          "comment": "Deterministic contract suggestion lookup for domain prefix"
+        }
+      ]
+    }
+  ]
+}

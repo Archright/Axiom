@@ -1,0 +1,24 @@
+{
+  "modulePath": "src/core/gate/layer_guard.nim",
+  "functionName": "dispatchGate",
+  "fingerprint": "c3047c58275174f7b321b9425f3189c54612d24ce24a50850912fe6b33a90b71",
+  "sourceHash": "3f04b7fa7a88bf6c534cd849ffaf631430233026623e688badc9a2d39097e428",
+  "trusted": true,
+  "status": "certLeanVerified",
+  "reason": "uap-lean-verified",
+  "kernel": false,
+  "solverStatus": "sat",
+  "winningStrategy": "lean-replay",
+  "solverMeta": {
+    "leanCompilerVerified": true,
+    "negativeTestResult": false,
+    "vacuityChecked": true,
+    "vacuityProven": false,
+    "solverVersion": "4.13.3",
+    "solverProvenance": "spHeuristic",
+    "z3Executed": true
+  },
+  "verificationTier": "lean-verified",
+  "leanProposition": "",
+  "irHash": "c26903f16c6f9043a883ab7892ca7903ad020ff47878869516c92432ccce80d4"
+}

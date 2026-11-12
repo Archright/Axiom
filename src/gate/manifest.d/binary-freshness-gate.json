@@ -1,0 +1,21 @@
+{
+  "id": "binary-freshness-gate",
+  "name": "Axiom binary freshness gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/binary_freshness_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/|axiom.nimble|config.nims",
+  "passFilenames": false,
+  "weight": "medium",
+  "category": "rule",
+  "argsTemplate": [
+    "$repoRoot"
+  ],
+  "after": [
+    "cli-build"
+  ],
+  "severity": "error",
+  "execution_mode": "interpreted"
+}

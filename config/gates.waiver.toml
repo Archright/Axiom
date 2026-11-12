@@ -1,0 +1,8 @@
+# Gates Waiver List - Temporary exemptions for known stubs
+# Format: [[exemptions]] sections with name, reason, expires
+
+# Example (uncomment when needed):
+# [[exemptions]]
+# name = "exampleGateRunner"
+# reason = "Under refactoring (DEBT#xxx)"
+# expires = "2026-08-30"

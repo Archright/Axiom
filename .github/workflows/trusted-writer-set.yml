@@ -1,0 +1,45 @@
+# trusted-writer-set — TrustedWriterSet 등식 게이트의 CI 배선 (ADR-0022 §4).
+#
+# tools/ci/verify_trusted_writer_set.sh를 GitHub Actions에서 실행한다. 이 스크립트는
+# 네트워크·쓰기 없는 순수 로컬 판정(git blob + jq)이므로, 러너 기본 토큰 외
+# 어떤 credential도 필요로 하지 않는다(최소 권한: contents: read 단일).
+#
+# 권위(ADR-0022 §4): contents:write 보유 workflow 집합 == config/trusted_writer_set.json
+# 선언 집합(⊆ ∧ ⊇ — 단일 writer certificate-mint.yml + admission blob sha 결속).
+# 양방향 어긋남 모두 FAIL(fail-closed). 조직 측 부분 복제본만 존재하던 이 검증의
+# 저장소 내 집행점이다 — required check 승격(ruleset required checks 편입)은
+# 인간 액션이며, 승격 전에는 어드바이저리 관측이다
+# (docs/spec/diagnostic_execution_delegation.md §7 미해결 인간 항목).
+#
+# 판정 대상: pull_request = PR 머지 커밋의 워크플로 집합(착지 예정 상태),
+# push(main) = 착지된 상태. 스크립트의 blob sha는 `git rev-parse HEAD:<path>`로
+# HEAD에서 재유도한다(워크트리 파일 아님 — 스크립트 자체 계약).
+
+name: trusted-writer-set
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trusted-writer-set-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  verify-trusted-writer-set:
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # jq는 러너 프리인스톨이다 — 스크립트의 유일 비-git 의존.
+      - name: "Verify TrustedWriterSet equality (tools/ci/verify_trusted_writer_set.sh)"
+        run: |
+          set -euo pipefail
+          command -v jq >/dev/null 2>&1 || { echo "jq missing on runner (fail-closed)" >&2; exit 2; }
+          bash tools/ci/verify_trusted_writer_set.sh

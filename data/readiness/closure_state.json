@@ -1,0 +1,262 @@
+{
+  "schemaVersion": 1,
+  "protocol": "readiness-closure",
+  "records": [
+    {
+      "invariant": "R4",
+      "currentState": "BLOCKED_BY_DECISION",
+      "blockerClass": "SEMANTIC_DECISION",
+      "status": "active",
+      "observedEvidenceDigest": "b1c21216e7554681811953e6783a3e6f99639b3777fffdaedda7d96b0812be05",
+      "ratification": [
+        {
+          "ref": "docs/adr/0016-r4-promotion-eligibility.md",
+          "title": "ADR-0016: R4 promotion eligibility - proof-less Q1=YES under frozen ProofStatus (Q2) model"
+        },
+        {
+          "ref": "docs/adr/0015-phase0-decision-gate-evidence-boundary.md",
+          "title": "ADR-0015: phase-0 decision gate; F2 no real proof object; locked decision 3 = evaluator reruns unchanged"
+        },
+        {
+          "ref": "docs/design/phasec_boundaries.md:55-96",
+          "title": "Frozen three-axis model: PromotionState PROMOTED/PROMOTABLE/INELIGIBLE; ProofStatus REQUIRED_AND_PRESENT/REQUIRED_BUT_ABSENT/NOT_REQUIRED_BY_CERTIFICATE_TYPE/NOT_EVALUATED; CertificateClaim Evidence-only/Proof-backed; INVARIANT-B1-1/2/3"
+        }
+      ],
+      "contractRevision": null,
+      "implementationRevision": null,
+      "evaluationIdentity": {
+        "computed": false,
+        "inputTerms": {
+          "EvidenceDigest": "b1c21216e7554681811953e6783a3e6f99639b3777fffdaedda7d96b0812be05",
+          "PolicyDigest": "617f6e7e04a3d405cfe293dc456a995e30f7701295b9e4337134e06aefa70769",
+          "EvaluatorArtifactDigest": "a8ad5b82ece8ec5670f53f80e8ef0702d2b37e2d70e54d515ed0545934da53fd",
+          "SchemaDigest": {
+            "toBeComputedAt": "SchemaArtifact is not defined as a separately versioned artifact (phasec_boundaries.md:261 SchemaArtifact row; open C0 B4 item) - no SchemaDigest exists for the decision/closure schemas yet."
+          },
+          "ExecutionContractDigest": {
+            "toBeComputedAt": "ExecutionContractDigest is a first-class frozen input (phasec_boundaries.md:173-180 INVARIANT-B2-4) but is not yet computed for either evaluator - interpreter/runtime version + invocation + fs contract are not frozen as a digest."
+          }
+        },
+        "evaluationInputIdentity": {
+          "toBeComputedAt": "H(EvidenceDigest||PolicyDigest||EvaluatorArtifactDigest||SchemaDigest||ExecutionContractDigest) per phasec_boundaries.md:139-141; requires all five input terms above."
+        },
+        "verdict": "FAIL",
+        "outcome": "NO-GO",
+        "decisionIdentity": {
+          "toBeComputedAt": "H(EvaluationInputIdentity||Verdict||Outcome) per phasec_boundaries.md:143-144; requires a computed evaluationInputIdentity. Never fabricated (ADR-0015 F2)."
+        }
+      },
+      "priorEvaluations": [
+        {
+          "decisionId": "axiom-independent-readiness-20260819T093022Z",
+          "evidenceManifestDigest": "d6a8abc5990739e1de7dd929ad0abcf06a2b0aae3db23a25449242f9c6958854",
+          "verdict": "FAIL",
+          "note": "First independent readiness evaluation. R4 in blockingInvariants; finalVerdict NO-GO."
+        },
+        {
+          "decisionId": "axiom-independent-readiness-20260819T122137Z",
+          "evidenceManifestDigest": "b1c21216e7554681811953e6783a3e6f99639b3777fffdaedda7d96b0812be05",
+          "verdict": "FAIL",
+          "note": "Latest independent readiness evaluation. R4 in blockingInvariants; finalVerdict NO-GO."
+        }
+      ],
+      "pendingDecision": "A RATIFIED EVALUATOR-SEMANTIC-REVISION step — Policy revision + re-scope of evaluate.py:81-82 (proofDigest absent → NOT_REQUIRED per the frozen ProofStatus model) together as ONE ratified revision per ADR-0016:107,112-114. Policy-v2 alone cannot change the verdict because r4() never reads the policy's preRatifiedNotApplicable (evaluate.py:161 sets it dead). Collides with ADR-0015's 'evaluator reruns unchanged' (ADR-0015:132-135) — the collision is resolved by ratifying the evaluator change as a policy change.",
+      "predecessor": null,
+      "createdAt": "2026-08-19T14:12:09Z",
+      "updatedAt": "2026-08-19T14:12:09Z",
+      "note": "Even if R4 were fully closed (Q1=YES + ratified Policy v2), R7+R8 remain blocking - the overall verdict stays NO-GO (ADR-0016 section 2.5 keeps NO-GO unchanged; blockingInvariants=[R4,R7,R8] in the latest decision artifact)."
+    },
+    {
+      "invariant": "R7",
+      "currentState": "BLOCKED_BY_DECISION",
+      "blockerClass": "CONTRACT_ARCHITECTURE_DECISION",
+      "status": "active",
+      "observedEvidenceDigest": "b1c21216e7554681811953e6783a3e6f99639b3777fffdaedda7d96b0812be05",
+      "ratification": [
+        {
+          "ref": "docs/design/phasec_r7_termination_architecture.md",
+          "title": "Target layered architecture DomainOutcome->Termination->ProcessExit (D1/D2/L1-L3)"
+        },
+        {
+          "ref": "docs/design/r7_exit_authority_gap.md",
+          "title": "Exit authority gap: implementation routing labels are NOT product classification"
+        },
+        {
+          "ref": "docs/design/r7_cli_outcome_contract.md",
+          "title": "INV-5: SIGSEGV out-of-contract, no signal->exit-2 conversion shim"
+        },
+        {
+          "ref": "docs/spec/productization_contract.md:259,261,280",
+          "title": "v1 exit contract: 4-state table (259-261), invalid-input rule (280), signal out-of-contract (261)"
+        }
+      ],
+      "contractRevision": null,
+      "implementationRevision": null,
+      "evaluationIdentity": {
+        "computed": false,
+        "inputTerms": {
+          "EvidenceDigest": "b1c21216e7554681811953e6783a3e6f99639b3777fffdaedda7d96b0812be05",
+          "PolicyDigest": "617f6e7e04a3d405cfe293dc456a995e30f7701295b9e4337134e06aefa70769",
+          "EvaluatorArtifactDigest": "a8ad5b82ece8ec5670f53f80e8ef0702d2b37e2d70e54d515ed0545934da53fd",
+          "SchemaDigest": {
+            "toBeComputedAt": "SchemaArtifact is not defined as a separately versioned artifact (phasec_boundaries.md:261 SchemaArtifact row; open C0 B4 item) - no SchemaDigest exists for the decision/closure schemas yet."
+          },
+          "ExecutionContractDigest": {
+            "toBeComputedAt": "ExecutionContractDigest is a first-class frozen input (phasec_boundaries.md:173-180 INVARIANT-B2-4) but is not yet computed for either evaluator - interpreter/runtime version + invocation + fs contract are not frozen as a digest."
+          }
+        },
+        "evaluationInputIdentity": {
+          "toBeComputedAt": "H(EvidenceDigest||PolicyDigest||EvaluatorArtifactDigest||SchemaDigest||ExecutionContractDigest) per phasec_boundaries.md:139-141; requires all five input terms above."
+        },
+        "verdict": "FAIL",
+        "outcome": "NO-GO",
+        "decisionIdentity": {
+          "toBeComputedAt": "H(EvaluationInputIdentity||Verdict||Outcome) per phasec_boundaries.md:143-144; requires a computed evaluationInputIdentity. Never fabricated (ADR-0015 F2)."
+        }
+      },
+      "priorEvaluations": [
+        {
+          "decisionId": "axiom-independent-readiness-20260819T093022Z",
+          "evidenceManifestDigest": "d6a8abc5990739e1de7dd929ad0abcf06a2b0aae3db23a25449242f9c6958854",
+          "verdict": "FAIL",
+          "note": "First independent readiness evaluation. R7 in blockingInvariants; finalVerdict NO-GO."
+        },
+        {
+          "decisionId": "axiom-independent-readiness-20260819T122137Z",
+          "evidenceManifestDigest": "b1c21216e7554681811953e6783a3e6f99639b3777fffdaedda7d96b0812be05",
+          "verdict": "FAIL",
+          "note": "Latest independent readiness evaluation. R7 in blockingInvariants; finalVerdict NO-GO."
+        }
+      ],
+      "pendingDecision": "Semantic-partition ratification (InvalidInput / VerificationFailure / InternalError / EnvironmentError → exit-code mapping) as the pending Phase-C ADR. `ax prove --no-such-flag` → 2 is an UNRATIFIED implementation routing label, NOT product classification (docs/design/r7_exit_authority_gap.md:172-174); do not change to 3 before the partition is ratified. The layered model DomainOutcome → Termination → ProcessExit is already the target (docs/design/phasec_r7_termination_architecture.md D1/D2/L1-L3); 83 total direct quit() sites, 38 P1 mappable.",
+      "predecessor": null,
+      "createdAt": "2026-08-19T14:12:09Z",
+      "updatedAt": "2026-08-19T14:12:09Z",
+      "note": "SIGSEGV(139) is a BOUNDARY_NON_GOAL (out-of-contract failure), not an implementable blocker; it is never shimmed to exit 2 (productization_contract.md:261)."
+    },
+    {
+      "invariant": "R8-R",
+      "currentState": "BLOCKED_BY_RESEARCH",
+      "blockerClass": "RESEARCH",
+      "status": "active",
+      "observedEvidenceDigest": "b1c21216e7554681811953e6783a3e6f99639b3777fffdaedda7d96b0812be05",
+      "ratification": [
+        {
+          "ref": "docs/design/r8_research_charter.md",
+          "title": "R8 research charter - obligation/CHC (DEBT#416) research blocker with isolation seal"
+        },
+        {
+          "ref": "docs/adr/0015-phase0-decision-gate-evidence-boundary.md",
+          "title": "ADR-0015 F4=B: no admissible golden target without new verification semantics - R8 deferred to research"
+        }
+      ],
+      "contractRevision": null,
+      "implementationRevision": null,
+      "evaluationIdentity": {
+        "computed": false,
+        "inputTerms": {
+          "EvidenceDigest": "b1c21216e7554681811953e6783a3e6f99639b3777fffdaedda7d96b0812be05",
+          "PolicyDigest": "617f6e7e04a3d405cfe293dc456a995e30f7701295b9e4337134e06aefa70769",
+          "EvaluatorArtifactDigest": "a8ad5b82ece8ec5670f53f80e8ef0702d2b37e2d70e54d515ed0545934da53fd",
+          "SchemaDigest": {
+            "toBeComputedAt": "SchemaArtifact is not defined as a separately versioned artifact (phasec_boundaries.md:261 SchemaArtifact row; open C0 B4 item) - no SchemaDigest exists for the decision/closure schemas yet."
+          },
+          "ExecutionContractDigest": {
+            "toBeComputedAt": "ExecutionContractDigest is a first-class frozen input (phasec_boundaries.md:173-180 INVARIANT-B2-4) but is not yet computed for either evaluator - interpreter/runtime version + invocation + fs contract are not frozen as a digest."
+          }
+        },
+        "evaluationInputIdentity": {
+          "toBeComputedAt": "H(EvidenceDigest||PolicyDigest||EvaluatorArtifactDigest||SchemaDigest||ExecutionContractDigest) per phasec_boundaries.md:139-141; requires all five input terms above."
+        },
+        "verdict": "FAIL",
+        "outcome": "NO-GO",
+        "decisionIdentity": {
+          "toBeComputedAt": "H(EvaluationInputIdentity||Verdict||Outcome) per phasec_boundaries.md:143-144; requires a computed evaluationInputIdentity. Never fabricated (ADR-0015 F2)."
+        }
+      },
+      "priorEvaluations": [
+        {
+          "decisionId": "axiom-independent-readiness-20260819T093022Z",
+          "evidenceManifestDigest": "d6a8abc5990739e1de7dd929ad0abcf06a2b0aae3db23a25449242f9c6958854",
+          "verdict": "FAIL",
+          "note": "First independent readiness evaluation. R8 in blockingInvariants; finalVerdict NO-GO."
+        },
+        {
+          "decisionId": "axiom-independent-readiness-20260819T122137Z",
+          "evidenceManifestDigest": "b1c21216e7554681811953e6783a3e6f99639b3777fffdaedda7d96b0812be05",
+          "verdict": "FAIL",
+          "note": "Latest independent readiness evaluation. R8 in blockingInvariants; finalVerdict NO-GO."
+        }
+      ],
+      "researchReference": "docs/design/r8_research_charter.md + ADR-0015 F4=B: root cause DEBT#416 (CHC/obligation generation), VKD 0/23 (data/baseline.json). R8-R is the RESEARCH slice of the decomposed R8 record - an isolated research workstream sealed from R4/R7 evidence; a research result re-enters the product path only after deliberate adoption → NEW evidence snapshot → NEW evaluator run (docs/design/r8_research_charter.md:27-49,118-131).",
+      "predecessor": null,
+      "createdAt": "2026-08-20T00:04:30Z",
+      "updatedAt": "2026-08-20T00:04:30Z",
+      "note": "R8-R is NOT in the v1 launch requirement set (derived away from the Entry Contract). Isolated research workstream sealed from R4/R7 evidence (r8_research_charter.md:27-49); a result re-enters the product path only via deliberate adoption, a NEW evidence snapshot, and a NEW evaluator run."
+    },
+    {
+      "invariant": "R8-P",
+      "currentState": "BLOCKED_BY_DECISION",
+      "blockerClass": "CONTRACT_ARCHITECTURE_DECISION",
+      "status": "active",
+      "observedEvidenceDigest": "b1c21216e7554681811953e6783a3e6f99639b3777fffdaedda7d96b0812be05",
+      "ratification": [
+        {
+          "ref": "docs/spec/productization_entry_contract_v1.md",
+          "title": "Productization Entry Contract v1 - launch requirement capability/evidence mapping"
+        },
+        {
+          "ref": "docs/design/readiness_closure_protocol.md",
+          "title": "Readiness closure protocol - R8 record decomposition into R8-R/R8-P and ratification flow"
+        },
+        {
+          "ref": "docs/adr/0015-phase0-decision-gate-evidence-boundary.md",
+          "title": "ADR-0015: phase-0 decision gate; F2/F4 evidence-boundary semantics"
+        }
+      ],
+      "contractRevision": null,
+      "implementationRevision": null,
+      "evaluationIdentity": {
+        "computed": false,
+        "inputTerms": {
+          "EvidenceDigest": "b1c21216e7554681811953e6783a3e6f99639b3777fffdaedda7d96b0812be05",
+          "PolicyDigest": "617f6e7e04a3d405cfe293dc456a995e30f7701295b9e4337134e06aefa70769",
+          "EvaluatorArtifactDigest": "a8ad5b82ece8ec5670f53f80e8ef0702d2b37e2d70e54d515ed0545934da53fd",
+          "SchemaDigest": {
+            "toBeComputedAt": "SchemaArtifact is not defined as a separately versioned artifact (phasec_boundaries.md:261 SchemaArtifact row; open C0 B4 item) - no SchemaDigest exists for the decision/closure schemas yet."
+          },
+          "ExecutionContractDigest": {
+            "toBeComputedAt": "ExecutionContractDigest is a first-class frozen input (phasec_boundaries.md:173-180 INVARIANT-B2-4) but is not yet computed for either evaluator - interpreter/runtime version + invocation + fs contract are not frozen as a digest."
+          }
+        },
+        "evaluationInputIdentity": {
+          "toBeComputedAt": "H(EvidenceDigest||PolicyDigest||EvaluatorArtifactDigest||SchemaDigest||ExecutionContractDigest) per phasec_boundaries.md:139-141; requires all five input terms above."
+        },
+        "verdict": "FAIL",
+        "outcome": "NO-GO",
+        "decisionIdentity": {
+          "toBeComputedAt": "H(EvaluationInputIdentity||Verdict||Outcome) per phasec_boundaries.md:143-144; requires a computed evaluationInputIdentity. Never fabricated (ADR-0015 F2)."
+        }
+      },
+      "priorEvaluations": [
+        {
+          "decisionId": "axiom-independent-readiness-20260819T093022Z",
+          "evidenceManifestDigest": "d6a8abc5990739e1de7dd929ad0abcf06a2b0aae3db23a25449242f9c6958854",
+          "verdict": "FAIL",
+          "note": "First independent readiness evaluation. R8 in blockingInvariants; finalVerdict NO-GO."
+        },
+        {
+          "decisionId": "axiom-independent-readiness-20260819T122137Z",
+          "evidenceManifestDigest": "b1c21216e7554681811953e6783a3e6f99639b3777fffdaedda7d96b0812be05",
+          "verdict": "FAIL",
+          "note": "Latest independent readiness evaluation. R8 in blockingInvariants; finalVerdict NO-GO."
+        }
+      ],
+      "pendingDecision": "whether the v1 Entry Contract requires >=1 promoted canonical certificate (canonical-vault persist); if yes, this becomes a re-collection + small R4-layer gate-seam step (promoteToCanonical is complete+unwired; 1 of 44 transient certs passes the full gate today)",
+      "predecessor": null,
+      "createdAt": "2026-08-20T00:04:30Z",
+      "updatedAt": "2026-08-20T00:04:30Z",
+      "note": "R8-P is the persist/artifact slice of the decomposed R8 record and IS in the v1 launch requirement set (EVIDENCE_BACKED_CERTIFICATE). Pending the ratified Entry Contract decision on >=1 promoted canonical certificate; if required, promoteToCanonical (complete, unwired) becomes a re-collection + small R4-layer gate-seam step."
+    }
+  ]
+}

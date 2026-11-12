@@ -1,0 +1,1709 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-06-17",
+  "metrics": {
+    "hotspot": {
+      "total": 12311,
+      "byFile": {
+        "src/api/api.nim": {
+          "deepNesting": 1
+        },
+        "src/cli/action_interpreter_cli.nim": {
+          "deepNesting": 69
+        },
+        "src/cli/action_plan_cli.nim": {
+          "denseBranching": 2
+        },
+        "src/cli/ax_workflow_shortcuts.nim": {
+          "deepNesting": 4
+        },
+        "src/cli/axiom_engine.nim": {
+          "deepNesting": 8
+        },
+        "src/cli/axiom_gate.nim": {
+          "deepNesting": 59
+        },
+        "src/cli/axiom_local_docs_lookup.nim": {
+          "deepNesting": 9
+        },
+        "src/cli/axiom_status.nim": {
+          "deepNesting": 42,
+          "longProc": 1
+        },
+        "src/cli/cli_surface_generated.nim": {
+          "deepNesting": 1
+        },
+        "src/cli/commands/command_registry.nim": {
+          "deepNesting": 2
+        },
+        "src/cli/commands/topology_cli.nim": {
+          "deepNesting": 28
+        },
+        "src/cli/config_loader.nim": {
+          "deepNesting": 1
+        },
+        "src/cli/dag_cli.nim": {
+          "deepNesting": 4
+        },
+        "src/cli/debug_mode.nim": {
+          "deepNesting": 7
+        },
+        "src/cli/gate_admin.nim": {
+          "deepNesting": 8
+        },
+        "src/cli/gate_admin_validate.nim": {
+          "deepNesting": 11
+        },
+        "src/cli/gate_cli.nim": {
+          "deepNesting": 6
+        },
+        "src/cli/gate_effect_classifier.nim": {
+          "deepNesting": 2
+        },
+        "src/cli/gate_ring_buffer.nim": {
+          "deepNesting": 30
+        },
+        "src/cli/io_cli.nim": {
+          "deepNesting": 7
+        },
+        "src/cli/lint_cli.nim": {
+          "deepNesting": 1
+        },
+        "src/cli/payload_bridge.nim": {
+          "deepNesting": 18
+        },
+        "src/cli/precompile_gates.nim": {
+          "deepNesting": 16
+        },
+        "src/cli/report_cli.nim": {
+          "deepNesting": 41
+        },
+        "src/cli/scaffold_cli.nim": {
+          "deepNesting": 1
+        },
+        "src/cli/selection_state.nim": {
+          "deepNesting": 4
+        },
+        "src/cli/subagent_orchestrator.nim": {
+          "deepNesting": 5
+        },
+        "src/cli/topology_cli.nim": {
+          "deepNesting": 4
+        },
+        "src/cli/version.nim": {
+          "deepNesting": 4
+        },
+        "src/cli/version_cli.nim": {
+          "deepNesting": 6
+        },
+        "src/cli/wf_planning.nim": {
+          "deepNesting": 8
+        },
+        "src/cli/wf_render.nim": {
+          "deepNesting": 18
+        },
+        "src/cli/wf_runners.nim": {
+          "deepNesting": 1
+        },
+        "src/cli/wf_semantic.nim": {
+          "deepNesting": 47,
+          "longProc": 1
+        },
+        "src/cli/wf_state.nim": {
+          "deepNesting": 51
+        },
+        "src/cli/wf_state_parsing.nim": {
+          "deepNesting": 5
+        },
+        "src/cli/wf_state_vacuity.nim": {
+          "deepNesting": 4
+        },
+        "src/core/analysis/cfg_builder.nim": {
+          "deepNesting": 33
+        },
+        "src/core/api/axiom_api_helpers.nim": {
+          "deepNesting": 2
+        },
+        "src/core/api/axiom_api_session_helpers.nim": {
+          "deepNesting": 6
+        },
+        "src/core/api/axiom_api_session_ops.nim": {
+          "deepNesting": 16
+        },
+        "src/core/api/axiom_api_session_proof.nim": {
+          "deepNesting": 2
+        },
+        "src/core/api/axiom_api_verify.nim": {
+          "deepNesting": 8
+        },
+        "src/core/ast/tree_sitter_ast_bridge.nim": {
+          "deepNesting": 20
+        },
+        "src/core/ast/tree_sitter_node_mapper.nim": {
+          "deepNesting": 1
+        },
+        "src/core/audit/governance_engine.nim": {
+          "deepNesting": 13
+        },
+        "src/core/audit/hotspot_gate.nim": {
+          "deepNesting": 7
+        },
+        "src/core/audit/hotspot_render.nim": {
+          "deepNesting": 11
+        },
+        "src/core/audit/sad_gate.nim": {
+          "deepNesting": 16
+        },
+        "src/core/bmc/bmc_engine.nim": {
+          "deepNesting": 5
+        },
+        "src/core/bmc/bmc_generic.nim": {
+          "deepNesting": 7
+        },
+        "src/core/bmc/bmc_variable_map.nim": {
+          "deepNesting": 7
+        },
+        "src/core/bmc/fsm_invariant_prover.nim": {
+          "deepNesting": 12
+        },
+        "src/core/boundary/abstract_spec_lowering.nim": {
+          "deepNesting": 5
+        },
+        "src/core/boundary/abstract_spec_registry.nim": {
+          "deepNesting": 5
+        },
+        "src/core/boundary/axiom_consistency_checker.nim": {
+          "deepNesting": 21
+        },
+        "src/core/boundary/axiom_registry_loader.nim": {
+          "deepNesting": 29
+        },
+        "src/core/boundary/boundary_extraction_helpers.nim": {
+          "deepNesting": 66,
+          "denseBranching": 2
+        },
+        "src/core/boundary/boundary_extraction_main.nim": {
+          "deepNesting": 52
+        },
+        "src/core/boundary/boundary_extractor_part1.nim": {
+          "deepNesting": 4
+        },
+        "src/core/boundary/boundary_extractor_part1_part1.nim": {
+          "deepNesting": 4
+        },
+        "src/core/boundary/complexity_index.nim": {
+          "deepNesting": 44
+        },
+        "src/core/boundary/meta_extractor.nim": {
+          "deepNesting": 4
+        },
+        "src/core/boundary/private/boundary_phases.nim": {
+          "deepNesting": 40
+        },
+        "src/core/cache/proof_cache.nim": {
+          "deepNesting": 1
+        },
+        "src/core/cache/ttl_cache.nim": {
+          "deepNesting": 3
+        },
+        "src/core/codec/axiom_codec.nim": {
+          "deepNesting": 3
+        },
+        "src/core/codec/codec_codegen.nim": {
+          "deepNesting": 62,
+          "denseBranching": 1
+        },
+        "src/core/codec/codec_typesense.nim": {
+          "deepNesting": 42
+        },
+        "src/core/contract/contract_ast_extractor.nim": {
+          "deepNesting": 134
+        },
+        "src/core/contract/contract_param_util.nim": {
+          "deepNesting": 2
+        },
+        "src/core/contract/contract_smtlib2.nim": {
+          "deepNesting": 12
+        },
+        "src/core/contract/contract_text_extractor.nim": {
+          "deepNesting": 31
+        },
+        "src/core/contract/contract_types.nim": {
+          "deepNesting": 1
+        },
+        "src/core/contracts/universal_pipeline_contract.nim": {
+          "deepNesting": 9
+        },
+        "src/core/coverage/coverage_bridge.nim": {
+          "deepNesting": 3
+        },
+        "src/core/diagnostics/diagnostics_engine_main.nim": {
+          "deepNesting": 9
+        },
+        "src/core/diagnostics/pattern_guard.nim": {
+          "deepNesting": 64
+        },
+        "src/core/diagnostics/refactoring_engine.nim": {
+          "deepNesting": 30,
+          "longProc": 1
+        },
+        "src/core/domains/gateway/gateway_generator.nim": {
+          "deepNesting": 5
+        },
+        "src/core/domains/persona_interface.nim": {
+          "deepNesting": 4
+        },
+        "src/core/encoding/smt_to_lean/private/arithmetic_expr.nim": {
+          "deepNesting": 13
+        },
+        "src/core/encoding/smt_to_lean/private/parser.nim": {
+          "deepNesting": 12
+        },
+        "src/core/encoding/smt_to_lean_codegen.nim": {
+          "denseBranching": 2
+        },
+        "src/core/encoding/smt_to_lean_translate.nim": {
+          "deepNesting": 19
+        },
+        "src/core/encoding/smt_types.nim": {
+          "deepNesting": 13
+        },
+        "src/core/encoding/smtlib2_sanitizer.nim": {
+          "deepNesting": 12
+        },
+        "src/core/encoding/smtlib2_util.nim": {
+          "deepNesting": 30
+        },
+        "src/core/encoding/type_logic_registry.nim": {
+          "deepNesting": 28
+        },
+        "src/core/fsm/proof_typestate.nim": {
+          "deepNesting": 2
+        },
+        "src/core/fsm/proof_typestate_convert.nim": {
+          "deepNesting": 1
+        },
+        "src/core/gate/artifact_manifest.nim": {
+          "deepNesting": 6
+        },
+        "src/core/gate/atomic_deploy.nim": {
+          "deepNesting": 14
+        },
+        "src/core/gate/cache_manifest.nim": {
+          "deepNesting": 1
+        },
+        "src/core/gate/content_store.nim": {
+          "deepNesting": 10
+        },
+        "src/core/gate/deterministic_env.nim": {
+          "deepNesting": 5
+        },
+        "src/core/gate/flat_vfs.nim": {
+          "deepNesting": 12
+        },
+        "src/core/gate/gate_cas.nim": {
+          "deepNesting": 19
+        },
+        "src/core/gate/gate_cas_gc.nim": {
+          "deepNesting": 21
+        },
+        "src/core/gate/gate_dsl.nim": {
+          "deepNesting": 1
+        },
+        "src/core/gate/gate_evaluators.nim": {
+          "deepNesting": 7
+        },
+        "src/core/gate/gate_memo.nim": {
+          "deepNesting": 47
+        },
+        "src/core/gate/gate_memo_migration.nim": {
+          "deepNesting": 59
+        },
+        "src/core/gate/gate_runtime.nim": {
+          "deepNesting": 1
+        },
+        "src/core/gate/gate_vfs.nim": {
+          "deepNesting": 1
+        },
+        "src/core/gate/gc_roots.nim": {
+          "deepNesting": 2
+        },
+        "src/core/gate/hash_types.nim": {
+          "deepNesting": 5
+        },
+        "src/core/gate/hermetic_sandbox.nim": {
+          "deepNesting": 13
+        },
+        "src/core/gate/merkle_vfs.nim": {
+          "deepNesting": 93
+        },
+        "src/core/gate/namespace_sandbox.nim": {
+          "deepNesting": 6
+        },
+        "src/core/gate/overlay_mount.nim": {
+          "deepNesting": 3
+        },
+        "src/core/gate/path_manifest.nim": {
+          "deepNesting": 18
+        },
+        "src/core/gate/post_mortem.nim": {
+          "deepNesting": 7
+        },
+        "src/core/gate/resource_limits.nim": {
+          "deepNesting": 3
+        },
+        "src/core/gate/state_ledger.nim": {
+          "deepNesting": 12
+        },
+        "src/core/gate/state_ledger_types.nim": {
+          "deepNesting": 1
+        },
+        "src/core/gate/symbol_hasher.nim": {
+          "deepNesting": 14,
+          "denseBranching": 1
+        },
+        "src/core/gate/unified_scanner.nim": {
+          "deepNesting": 3
+        },
+        "src/core/gate/vfs_hasher.nim": {
+          "deepNesting": 2
+        },
+        "src/core/gateway/gateway.nim": {
+          "deepNesting": 2
+        },
+        "src/core/gateway/gateway_helpers.nim": {
+          "deepNesting": 1
+        },
+        "src/core/gateway/gateway_main.nim": {
+          "deepNesting": 14
+        },
+        "src/core/integrity/integrity_refinement_loop.nim": {
+          "deepNesting": 35
+        },
+        "src/core/integrity/refinement_types.nim": {
+          "deepNesting": 1,
+          "denseBranching": 1
+        },
+        "src/core/interfaces/git_operations.nim": {
+          "deepNesting": 26
+        },
+        "src/core/interfaces/io_executor.nim": {
+          "deepNesting": 4
+        },
+        "src/core/io/file_utils.nim": {
+          "deepNesting": 3
+        },
+        "src/core/json/json_scan_parse.nim": {
+          "deepNesting": 1
+        },
+        "src/core/json/json_scan_skip.nim": {
+          "deepNesting": 25
+        },
+        "src/core/json/json_utils.nim": {
+          "deepNesting": 3
+        },
+        "src/core/json/json_utils_scan.nim": {
+          "deepNesting": 38
+        },
+        "src/core/judge/lean_replay.nim": {
+          "deepNesting": 10
+        },
+        "src/core/judge/smart_search.nim": {
+          "deepNesting": 112,
+          "denseBranching": 1
+        },
+        "src/core/judge/tautology_prover.nim": {
+          "deepNesting": 2
+        },
+        "src/core/judge/the_judge_lean.nim": {
+          "deepNesting": 40
+        },
+        "src/core/judge/the_judge_query_part1.nim": {
+          "deepNesting": 38
+        },
+        "src/core/judge/the_judge_query_part2.nim": {
+          "deepNesting": 8
+        },
+        "src/core/logging/log_compaction.nim": {
+          "deepNesting": 18
+        },
+        "src/core/logic/axiom_verification_context.nim": {
+          "deepNesting": 8
+        },
+        "src/core/logic/lean_diagnostic.nim": {
+          "deepNesting": 4
+        },
+        "src/core/logic/pipeline_fingerprint_engine.nim": {
+          "deepNesting": 5
+        },
+        "src/core/logic/pipeline_healing_logic.nim": {
+          "deepNesting": 14
+        },
+        "src/core/logic/pipeline_trace_artifacts.nim": {
+          "deepNesting": 15
+        },
+        "src/core/logic/pipeline_verdict_engine.nim": {
+          "deepNesting": 5
+        },
+        "src/core/logic/refinement_controller.nim": {
+          "deepNesting": 9
+        },
+        "src/core/logic/semantic_theorem_builder.nim": {
+          "deepNesting": 5
+        },
+        "src/core/logic/smt_logic.nim": {
+          "deepNesting": 1,
+          "denseBranching": 2
+        },
+        "src/core/merge/merge_integrity_pipeline.nim": {
+          "deepNesting": 3
+        },
+        "src/core/observer/ast_builder.nim": {
+          "deepNesting": 4
+        },
+        "src/core/observer/scanner.nim": {
+          "deepNesting": 12
+        },
+        "src/core/observer/state_hash.nim": {
+          "deepNesting": 7
+        },
+        "src/core/observer/types.nim": {
+          "deepNesting": 2
+        },
+        "src/core/orchestration/pipeline_dispatch.nim": {
+          "deepNesting": 1
+        },
+        "src/core/orchestrator/cfg_builder.nim": {
+          "deepNesting": 33,
+          "longProc": 1
+        },
+        "src/core/orchestrator/orchestrator_topology_depth.nim": {
+          "deepNesting": 15
+        },
+        "src/core/orchestrator/orchestrator_vault.nim": {
+          "deepNesting": 36
+        },
+        "src/core/parsers/collect.nim": {
+          "deepNesting": 13
+        },
+        "src/core/parsers/cst_adapter.nim": {
+          "deepNesting": 1
+        },
+        "src/core/parsers/cst_offset_extractor.nim": {
+          "deepNesting": 15
+        },
+        "src/core/parsers/cst_surgical_editor.nim": {
+          "deepNesting": 2
+        },
+        "src/core/parsers/lean.nim": {
+          "deepNesting": 6
+        },
+        "src/core/parsers/nav.nim": {
+          "deepNesting": 12
+        },
+        "src/core/parsers/pred.nim": {
+          "deepNesting": 6
+        },
+        "src/core/parsers/tree_sitter/bindings.nim": {
+          "deepNesting": 2
+        },
+        "src/core/parsers/tree_sitter/cache.nim": {
+          "deepNesting": 8
+        },
+        "src/core/parsers/tree_sitter/node.nim": {
+          "deepNesting": 1
+        },
+        "src/core/parsers/tree_sitter/parser.nim": {
+          "deepNesting": 2
+        },
+        "src/core/parsers/tree_sitter_extractor.nim": {
+          "deepNesting": 29
+        },
+        "src/core/parsers/tree_sitter_tokenizer.nim": {
+          "deepNesting": 9
+        },
+        "src/core/policy/architecture_policy_part1.nim": {
+          "deepNesting": 2
+        },
+        "src/core/policy/architecture_policy_part2.nim": {
+          "deepNesting": 6
+        },
+        "src/core/policy/parse_helpers.nim": {
+          "deepNesting": 4
+        },
+        "src/core/policy/parsers/parse_canonical.nim": {
+          "deepNesting": 3
+        },
+        "src/core/policy/parsers/parse_forbidden.nim": {
+          "deepNesting": 9
+        },
+        "src/core/policy/parsers/parse_interfaces.nim": {
+          "deepNesting": 8
+        },
+        "src/core/policy/parsers/parse_layers.nim": {
+          "deepNesting": 1
+        },
+        "src/core/policy/parsers/parse_surface_area.nim": {
+          "deepNesting": 6
+        },
+        "src/core/profiles/bitcoin_script_profile.nim": {
+          "deepNesting": 1
+        },
+        "src/core/proof/function_source_extractor.nim": {
+          "deepNesting": 1
+        },
+        "src/core/proof/proof_universe_lock.nim": {
+          "deepNesting": 2
+        },
+        "src/core/proof/proof_vacuity_gate.nim": {
+          "deepNesting": 16
+        },
+        "src/core/protocol/axiom_protocol.nim": {
+          "deepNesting": 5
+        },
+        "src/core/protocol/protocol_compat.nim": {
+          "deepNesting": 11
+        },
+        "src/core/protocol/protocol_validator.nim": {
+          "deepNesting": 4
+        },
+        "src/core/resilience/resilience_config.nim": {
+          "deepNesting": 4
+        },
+        "src/core/resilience/retry_policy.nim": {
+          "deepNesting": 16
+        },
+        "src/core/runtime/axiom_runner.nim": {
+          "deepNesting": 8
+        },
+        "src/core/runtime/axiom_task.nim": {
+          "deepNesting": 2
+        },
+        "src/core/runtime/golden_version.nim": {
+          "deepNesting": 18
+        },
+        "src/core/runtime/script_wrapper.nim": {
+          "deepNesting": 4
+        },
+        "src/core/schema/cst_schema.nim": {
+          "deepNesting": 6
+        },
+        "src/core/schema/git_schema.nim": {
+          "deepNesting": 6,
+          "denseBranching": 1
+        },
+        "src/core/schema/io_schema.nim": {
+          "deepNesting": 6,
+          "denseBranching": 1
+        },
+        "src/core/schema/policy_schema.nim": {
+          "deepNesting": 4
+        },
+        "src/core/schema/schema_utils_macro.nim": {
+          "deepNesting": 146
+        },
+        "src/core/schema/schema_utils_runtime.nim": {
+          "deepNesting": 19
+        },
+        "src/core/schema/schema_utils_types.nim": {
+          "deepNesting": 1
+        },
+        "src/core/schema/task_schema.nim": {
+          "deepNesting": 4
+        },
+        "src/core/session/session_parser_validators.nim": {
+          "deepNesting": 4
+        },
+        "src/core/solver/encoding_properties.nim": {
+          "deepNesting": 8
+        },
+        "src/core/solver/equivalence_checker.nim": {
+          "deepNesting": 3,
+          "denseBranching": 1
+        },
+        "src/core/solver/expr_serialize.nim": {
+          "denseBranching": 1
+        },
+        "src/core/solver/induction.nim": {
+          "deepNesting": 14
+        },
+        "src/core/solver/shell_bridge.nim": {
+          "deepNesting": 1
+        },
+        "src/core/solver/smt2_lexer.nim": {
+          "deepNesting": 67
+        },
+        "src/core/solver/solver_bridge.nim": {
+          "deepNesting": 7
+        },
+        "src/core/solver/z3_interactive.nim": {
+          "deepNesting": 6
+        },
+        "src/core/solver/z3_result_parser.nim": {
+          "deepNesting": 11
+        },
+        "src/core/sorter/sorter_core_algo.nim": {
+          "deepNesting": 24
+        },
+        "src/core/sorter/sorter_core_index_base.nim": {
+          "deepNesting": 2
+        },
+        "src/core/spec/spec_generator_helpers.nim": {
+          "deepNesting": 21
+        },
+        "src/core/spec/spec_generator_main.nim": {
+          "deepNesting": 20
+        },
+        "src/core/symbol_graph/global_symbol_graph_builder_part1.nim": {
+          "deepNesting": 102
+        },
+        "src/core/symbol_graph/global_symbol_graph_builder_part2.nim": {
+          "deepNesting": 71
+        },
+        "src/core/symbolic/global_symbol_graph_types.nim": {
+          "deepNesting": 99
+        },
+        "src/core/symbolic/symbolic_types_exec.nim": {
+          "deepNesting": 13
+        },
+        "src/core/symbolic/symbolic_types_parse.nim": {
+          "deepNesting": 81
+        },
+        "src/core/sync/sync_utils_process.nim": {
+          "deepNesting": 36
+        },
+        "src/core/sync/sync_utils_resource.nim": {
+          "deepNesting": 41
+        },
+        "src/core/telemetry/gate_telemetry.nim": {
+          "deepNesting": 14
+        },
+        "src/core/telemetry/metrics.nim": {
+          "deepNesting": 2
+        },
+        "src/core/telemetry/trace_normalizer.nim": {
+          "deepNesting": 9
+        },
+        "src/core/test_support/cli_fuzzer_harness.nim": {
+          "deepNesting": 2
+        },
+        "src/core/test_support/export_injector.nim": {
+          "deepNesting": 23
+        },
+        "src/core/test_support/feature_macro.nim": {
+          "deepNesting": 23
+        },
+        "src/core/test_support/pbt_gate.nim": {
+          "deepNesting": 35
+        },
+        "src/core/test_support/sandbox_guard.nim": {
+          "deepNesting": 3
+        },
+        "src/core/test_support/static_contract.nim": {
+          "deepNesting": 18,
+          "denseBranching": 1
+        },
+        "src/core/test_support/step_registry.nim": {
+          "deepNesting": 1
+        },
+        "src/core/testing/axiom_dsl.nim": {
+          "deepNesting": 25,
+          "denseBranching": 2
+        },
+        "src/core/testing/generators.nim": {
+          "deepNesting": 41
+        },
+        "src/core/testing/pbt_engine.nim": {
+          "deepNesting": 17
+        },
+        "src/core/text/text_utils.nim": {
+          "deepNesting": 6
+        },
+        "src/core/topology/apply.nim": {
+          "deepNesting": 8
+        },
+        "src/core/topology/declaration.nim": {
+          "deepNesting": 26
+        },
+        "src/core/topology/explain.nim": {
+          "deepNesting": 2
+        },
+        "src/core/topology/import_graph.nim": {
+          "deepNesting": 33
+        },
+        "src/core/topology/lock.nim": {
+          "deepNesting": 67
+        },
+        "src/core/topology/lock_update.nim": {
+          "deepNesting": 9
+        },
+        "src/core/topology/manifest.nim": {
+          "deepNesting": 14
+        },
+        "src/core/topology/plan.nim": {
+          "deepNesting": 14
+        },
+        "src/core/topology/policy.nim": {
+          "deepNesting": 1
+        },
+        "src/core/topology/rewrite.nim": {
+          "deepNesting": 1
+        },
+        "src/core/topology/suggest.nim": {
+          "deepNesting": 62
+        },
+        "src/core/topology/topology_dependency.nim": {
+          "deepNesting": 4
+        },
+        "src/core/topology/topology_engine.nim": {
+          "deepNesting": 11
+        },
+        "src/core/topology/topology_parser.nim": {
+          "deepNesting": 15
+        },
+        "src/core/topology/topology_symbol_scanner.nim": {
+          "deepNesting": 13
+        },
+        "src/core/translator/ast_to_lean_bridge.nim": {
+          "deepNesting": 64,
+          "longProc": 1
+        },
+        "src/core/translator/nim_ast_to_json_nodes.nim": {
+          "deepNesting": 24
+        },
+        "src/core/translator/universal_assembler.nim": {
+          "deepNesting": 46
+        },
+        "src/core/translator/universal_mapper_part1.nim": {
+          "deepNesting": 3
+        },
+        "src/core/translator/universal_mapper_part2.nim": {
+          "deepNesting": 6
+        },
+        "src/core/trusted/architecture_invariants.nim": {
+          "deepNesting": 47
+        },
+        "src/core/trusted/asset_collector.nim": {
+          "deepNesting": 12
+        },
+        "src/core/trusted/axiom_pragmas.nim": {
+          "deepNesting": 129
+        },
+        "src/core/trusted/compile_time_manifest.nim": {
+          "deepNesting": 11
+        },
+        "src/core/trusted/compile_time_source_scanner.nim": {
+          "deepNesting": 15
+        },
+        "src/core/trusted/debt_collector.nim": {
+          "deepNesting": 5
+        },
+        "src/core/trusted/dto_mapper.nim": {
+          "deepNesting": 2
+        },
+        "src/core/trusted/effect_bridge.nim": {
+          "deepNesting": 19
+        },
+        "src/core/trusted/enforce_structural_safety.nim": {
+          "deepNesting": 56
+        },
+        "src/core/trusted/exception_guard.nim": {
+          "deepNesting": 9
+        },
+        "src/core/trusted/import_parser.nim": {
+          "deepNesting": 110
+        },
+        "src/core/trusted/import_scanner.nim": {
+          "deepNesting": 11
+        },
+        "src/core/trusted/json_parse_guard.nim": {
+          "deepNesting": 2
+        },
+        "src/core/trusted/provenance_guard.nim": {
+          "deepNesting": 16
+        },
+        "src/core/trusted/reasoning_recorder.nim": {
+          "deepNesting": 4
+        },
+        "src/core/trusted/test_quality_guard.nim": {
+          "deepNesting": 20
+        },
+        "src/core/type_system/liquid_inference.nim": {
+          "deepNesting": 95
+        },
+        "src/core/types/axiom_ir.nim": {
+          "deepNesting": 35
+        },
+        "src/core/types/domain_utils.nim": {
+          "denseBranching": 1
+        },
+        "src/core/types/function_verification_summary.nim": {
+          "deepNesting": 1
+        },
+        "src/core/types/glossary_walker.nim": {
+          "deepNesting": 20
+        },
+        "src/core/types/orchestrator_token.nim": {
+          "deepNesting": 1
+        },
+        "src/core/types/results.nim": {
+          "deepNesting": 2
+        },
+        "src/core/types/symbolic_types_expr.nim": {
+          "denseBranching": 1
+        },
+        "src/core/types/symbolic_types_lean.nim": {
+          "denseBranching": 1
+        },
+        "src/core/types/type_mapping.nim": {
+          "deepNesting": 8
+        },
+        "src/core/utils/formal_text_diff.nim": {
+          "deepNesting": 2,
+          "longProc": 1
+        },
+        "src/core/utils/repo_root.nim": {
+          "deepNesting": 3
+        },
+        "src/core/vault/ledger_logic.nim": {
+          "deepNesting": 4
+        },
+        "src/core/vault/vault_factory.nim": {
+          "deepNesting": 4
+        },
+        "src/core/vault/vault_manager_spec.nim": {
+          "deepNesting": 1
+        },
+        "src/core/verification/proof_witness_checker.nim": {
+          "deepNesting": 3
+        },
+        "src/core/verified_axioms/axiom_catalog_validator.nim": {
+          "deepNesting": 11
+        },
+        "src/core/verified_axioms/verified_axioms_catalog_part1.nim": {
+          "deepNesting": 2
+        },
+        "src/core/verified_axioms/verified_axioms_core.nim": {
+          "deepNesting": 3
+        },
+        "src/engine/atomic_ops.nim": {
+          "deepNesting": 4
+        },
+        "src/engine/dag_executor.nim": {
+          "deepNesting": 42
+        },
+        "src/engine/engine.nim": {
+          "deepNesting": 6
+        },
+        "src/engine/task_dag.nim": {
+          "deepNesting": 27
+        },
+        "src/frontend/nim/weaver.nim": {
+          "deepNesting": 30
+        },
+        "src/gate/action_cache.nim": {
+          "deepNesting": 3
+        },
+        "src/gate/attestation.nim": {
+          "deepNesting": 1
+        },
+        "src/gate/cohesion_enforce.nim": {
+          "deepNesting": 15
+        },
+        "src/gate/compile_time_checks.nim": {
+          "deepNesting": 81
+        },
+        "src/gate/daemon/fallback_chain.nim": {
+          "deepNesting": 47
+        },
+        "src/gate/daemon/gate_daemon_client.nim": {
+          "deepNesting": 5
+        },
+        "src/gate/daemon/gate_daemon_server.nim": {
+          "deepNesting": 18
+        },
+        "src/gate/daemon/gate_daemon_types.nim": {
+          "deepNesting": 1
+        },
+        "src/gate/daemon/invalidation_trigger.nim": {
+          "deepNesting": 19
+        },
+        "src/gate/daemon/salsa_memo.nim": {
+          "deepNesting": 22
+        },
+        "src/gate/daemon/symbol_cas.nim": {
+          "deepNesting": 9
+        },
+        "src/gate/feature_universe.nim": {
+          "deepNesting": 9
+        },
+        "src/gate/gate_codegen.nim": {
+          "deepNesting": 9
+        },
+        "src/gate/gate_dag.nim": {
+          "deepNesting": 25
+        },
+        "src/gate/gate_dsl_v2.nim": {
+          "deepNesting": 42
+        },
+        "src/gate/gate_manifest_v2.nim": {
+          "deepNesting": 20
+        },
+        "src/gate/gate_registry.nim": {
+          "deepNesting": 59
+        },
+        "src/gate/gate_rules.nim": {
+          "deepNesting": 117
+        },
+        "src/gate/gate_rules_architecture.nim": {
+          "deepNesting": 53
+        },
+        "src/gate/gate_rules_module_classifier.nim": {
+          "deepNesting": 8
+        },
+        "src/gate/gate_utils.nim": {
+          "deepNesting": 1
+        },
+        "src/gate/in_process_gates.nim": {
+          "deepNesting": 111
+        },
+        "src/gate/lib/runner_common.nim": {
+          "deepNesting": 12
+        },
+        "src/gate/logic_binding_gate.nim": {
+          "deepNesting": 1
+        },
+        "src/gate/manifest_parser.nim": {
+          "deepNesting": 28
+        },
+        "src/gate/nimtry/call_graph.nim": {
+          "deepNesting": 28
+        },
+        "src/gate/nimtry/dry_queries.nim": {
+          "deepNesting": 5
+        },
+        "src/gate/nimtry/effect_queries.nim": {
+          "deepNesting": 41
+        },
+        "src/gate/nimtry/facade_queries.nim": {
+          "deepNesting": 3
+        },
+        "src/gate/nimtry/feature_universe.nim": {
+          "deepNesting": 41
+        },
+        "src/gate/nimtry/interface_auditor.nim": {
+          "deepNesting": 42
+        },
+        "src/gate/nimtry/nimtry_cli.nim": {
+          "deepNesting": 105,
+          "longProc": 1
+        },
+        "src/gate/nimtry/nimtry_extract_part1.nim": {
+          "deepNesting": 75
+        },
+        "src/gate/nimtry/nimtry_extract_part3_part1.nim": {
+          "deepNesting": 109
+        },
+        "src/gate/nimtry/nimtry_extract_part3_part2.nim": {
+          "deepNesting": 91
+        },
+        "src/gate/nimtry/nimtry_policy_lock.nim": {
+          "deepNesting": 25
+        },
+        "src/gate/nimtry/nimtry_query.nim": {
+          "deepNesting": 4
+        },
+        "src/gate/nimtry/purity_queries.nim": {
+          "deepNesting": 43
+        },
+        "src/gate/nimtry/safety_queries.nim": {
+          "deepNesting": 62
+        },
+        "src/gate/nimtry/soc_queries.nim": {
+          "deepNesting": 32
+        },
+        "src/gate/nimtry/solid_queries.nim": {
+          "deepNesting": 47
+        },
+        "src/gate/nimtry/solid_queries_dip_ocp.nim": {
+          "deepNesting": 118
+        },
+        "src/gate/nimtry/ssot_queries.nim": {
+          "deepNesting": 13
+        },
+        "src/gate/nimtry/test_hygiene.nim": {
+          "deepNesting": 31
+        },
+        "src/gate/orchestrator.nim": {
+          "deepNesting": 12
+        },
+        "src/gate/orchestrator_hook.nim": {
+          "deepNesting": 20,
+          "longProc": 1
+        },
+        "src/gate/orchestrator_hook_part1.nim": {
+          "deepNesting": 153,
+          "denseBranching": 1
+        },
+        "src/gate/orchestrator_hook_part2.nim": {
+          "deepNesting": 175
+        },
+        "src/gate/orchestrator_pure.nim": {
+          "deepNesting": 24
+        },
+        "src/gate/pipeline.nim": {
+          "deepNesting": 14
+        },
+        "src/gate/pipeline_orchestrator.nim": {
+          "deepNesting": 64
+        },
+        "src/gate/process_selector.nim": {
+          "deepNesting": 2
+        },
+        "src/gate/quality_gate.nim": {
+          "deepNesting": 11
+        },
+        "src/gate/rule_patterns.nim": {
+          "deepNesting": 31
+        },
+        "src/gate/runners/agent_preflight.nim": {
+          "deepNesting": 5
+        },
+        "src/gate/runners/architecture_config_debt.nim": {
+          "deepNesting": 16
+        },
+        "src/gate/runners/architecture_config_gate.nim": {
+          "deepNesting": 117
+        },
+        "src/gate/runners/architecture_config_selftest.nim": {
+          "deepNesting": 13
+        },
+        "src/gate/runners/architecture_guard.nim": {
+          "deepNesting": 18
+        },
+        "src/gate/runners/asset_hygiene_gate.nim": {
+          "deepNesting": 12
+        },
+        "src/gate/runners/ast_integrity_gate.nim": {
+          "deepNesting": 14
+        },
+        "src/gate/runners/axiom_codemod.nim": {
+          "deepNesting": 1
+        },
+        "src/gate/runners/axiom_sync_runner.nim": {
+          "deepNesting": 1
+        },
+        "src/gate/runners/binary_artifact_gate.nim": {
+          "deepNesting": 18
+        },
+        "src/gate/runners/binary_freshness_gate.nim": {
+          "deepNesting": 4
+        },
+        "src/gate/runners/canonical_hub_lint_runner.nim": {
+          "deepNesting": 15
+        },
+        "src/gate/runners/cast_nosideeffect_doc_gate.nim": {
+          "deepNesting": 6
+        },
+        "src/gate/runners/conflict_marker_gate.nim": {
+          "deepNesting": 28
+        },
+        "src/gate/runners/context7_evidence_gate.nim": {
+          "deepNesting": 41
+        },
+        "src/gate/runners/core_invariant_gate.nim": {
+          "deepNesting": 32
+        },
+        "src/gate/runners/coverage_ratchet_gate.nim": {
+          "deepNesting": 15
+        },
+        "src/gate/runners/dead_code_gate.nim": {
+          "deepNesting": 26
+        },
+        "src/gate/runners/debt_blocker/private/checks.nim": {
+          "deepNesting": 93
+        },
+        "src/gate/runners/debt_blocker/private/runner.nim": {
+          "deepNesting": 9
+        },
+        "src/gate/runners/debt_blocker/private/types.nim": {
+          "deepNesting": 22
+        },
+        "src/gate/runners/debt_ct_gate.nim": {
+          "deepNesting": 39
+        },
+        "src/gate/runners/debt_reduction_gate.nim": {
+          "deepNesting": 10
+        },
+        "src/gate/runners/debt_scan_gate.nim": {
+          "deepNesting": 104
+        },
+        "src/gate/runners/delegation_enforcer.nim": {
+          "deepNesting": 61
+        },
+        "src/gate/runners/dependency_rules_gate.nim": {
+          "deepNesting": 39
+        },
+        "src/gate/runners/doc_completeness_gate.nim": {
+          "deepNesting": 8
+        },
+        "src/gate/runners/documentation_first_gate.nim": {
+          "deepNesting": 35
+        },
+        "src/gate/runners/documentation_first_gate_selftest.nim": {
+          "deepNesting": 2
+        },
+        "src/gate/runners/documentation_first_gate_vfs.nim": {
+          "deepNesting": 35
+        },
+        "src/gate/runners/drnim_gate.nim": {
+          "deepNesting": 1
+        },
+        "src/gate/runners/emergency_bypass_commit.nim": {
+          "deepNesting": 4
+        },
+        "src/gate/runners/external_cli_smoke.nim": {
+          "deepNesting": 1
+        },
+        "src/gate/runners/fail_secure_state.nim": {
+          "deepNesting": 8
+        },
+        "src/gate/runners/forwarding_stub_cycle_gate.nim": {
+          "deepNesting": 31
+        },
+        "src/gate/runners/gate_hook.nim": {
+          "deepNesting": 16
+        },
+        "src/gate/runners/gate_self_check.nim": {
+          "deepNesting": 5
+        },
+        "src/gate/runners/gateway_test_gate.nim": {
+          "deepNesting": 1
+        },
+        "src/gate/runners/gateway_test_runner.nim": {
+          "deepNesting": 3
+        },
+        "src/gate/runners/golden_master_gate.nim": {
+          "deepNesting": 28
+        },
+        "src/gate/runners/hermetic_test_gate.nim": {
+          "deepNesting": 2
+        },
+        "src/gate/runners/hotspot_coverage_gate.nim": {
+          "deepNesting": 25
+        },
+        "src/gate/runners/hotspot_enforcement_gate.nim": {
+          "deepNesting": 14
+        },
+        "src/gate/runners/hotspot_gate.nim": {
+          "deepNesting": 44
+        },
+        "src/gate/runners/hotspot_ratchet_gate.nim": {
+          "deepNesting": 2
+        },
+        "src/gate/runners/immunity_gate.nim": {
+          "deepNesting": 41
+        },
+        "src/gate/runners/import_encapsulation_gate.nim": {
+          "deepNesting": 51
+        },
+        "src/gate/runners/integrity_test.nim": {
+          "deepNesting": 1
+        },
+        "src/gate/runners/integrity_workflow.nim": {
+          "deepNesting": 24
+        },
+        "src/gate/runners/intent_gate.nim": {
+          "deepNesting": 1
+        },
+        "src/gate/runners/isolated_check.nim": {
+          "deepNesting": 2
+        },
+        "src/gate/runners/language_ban_gate.nim": {
+          "deepNesting": 2
+        },
+        "src/gate/runners/lean_z3_consensus_gate.nim": {
+          "deepNesting": 4
+        },
+        "src/gate/runners/logging_policy_gate.nim": {
+          "deepNesting": 119
+        },
+        "src/gate/runners/magic_number_sniffer.nim": {
+          "deepNesting": 1
+        },
+        "src/gate/runners/manifest_consistency_gate.nim": {
+          "deepNesting": 19
+        },
+        "src/gate/runners/manifest_integrity_gate.nim": {
+          "deepNesting": 1
+        },
+        "src/gate/runners/monotonic_whitelist_gate.nim": {
+          "deepNesting": 14
+        },
+        "src/gate/runners/nim_check_gate.nim": {
+          "deepNesting": 2
+        },
+        "src/gate/runners/nim_check_runner.nim": {
+          "deepNesting": 132
+        },
+        "src/gate/runners/nimtry_gate.nim": {
+          "deepNesting": 1
+        },
+        "src/gate/runners/policy_validator.nim": {
+          "deepNesting": 19
+        },
+        "src/gate/runners/procedure_gate.nim": {
+          "deepNesting": 10
+        },
+        "src/gate/runners/proof_universe_lock_gate.nim": {
+          "deepNesting": 5
+        },
+        "src/gate/runners/quality_audit_gate.nim": {
+          "deepNesting": 67
+        },
+        "src/gate/runners/quality_gate_runner.nim": {
+          "deepNesting": 5
+        },
+        "src/gate/runners/reliability_gate.nim": {
+          "deepNesting": 7
+        },
+        "src/gate/runners/runner_process_pool.nim": {
+          "deepNesting": 17
+        },
+        "src/gate/runners/sad_gate.nim": {
+          "deepNesting": 5
+        },
+        "src/gate/runners/sign_integrity_gate.nim": {
+          "deepNesting": 10
+        },
+        "src/gate/runners/spec_binding/private/checks.nim": {
+          "deepNesting": 79
+        },
+        "src/gate/runners/spec_binding/private/source_extract.nim": {
+          "deepNesting": 57
+        },
+        "src/gate/runners/spec_binding/private/types.nim": {
+          "deepNesting": 56
+        },
+        "src/gate/runners/spec_binding/private/utils.nim": {
+          "deepNesting": 15
+        },
+        "src/gate/runners/spec_presence_gate.nim": {
+          "deepNesting": 37
+        },
+        "src/gate/runners/stdlib_whitelist_audit_runner.nim": {
+          "deepNesting": 5
+        },
+        "src/gate/runners/structural_safety_gate.nim": {
+          "deepNesting": 4
+        },
+        "src/gate/runners/sync_protocol_gate.nim": {
+          "deepNesting": 5
+        },
+        "src/gate/runners/test_coverage_gate.nim": {
+          "deepNesting": 2
+        },
+        "src/gate/runners/validate_architecture.nim": {
+          "deepNesting": 114
+        },
+        "src/gate/runners/validate_effect_hints_gate.nim": {
+          "deepNesting": 6
+        },
+        "src/gate/runners/validate_runners.nim": {
+          "deepNesting": 21
+        },
+        "src/gate/runners/verification_auditor_gate.nim": {
+          "deepNesting": 32
+        },
+        "src/gate/slice_hash.nim": {
+          "deepNesting": 9
+        },
+        "src/gate/tag_parser.nim": {
+          "deepNesting": 10
+        },
+        "src/gate/types.nim": {
+          "deepNesting": 5
+        },
+        "src/gate/utils/command_policy_gate.nim": {
+          "deepNesting": 34
+        },
+        "src/gate/utils/gate_macros.nim": {
+          "deepNesting": 4
+        },
+        "src/gate/utils/gate_run_logger.nim": {
+          "deepNesting": 10
+        },
+        "src/gate/utils/gate_safety_macro.nim": {
+          "deepNesting": 11
+        },
+        "src/gate/utils/git_state.nim": {
+          "deepNesting": 14
+        },
+        "src/gate/utils/git_wrapper.nim": {
+          "deepNesting": 6
+        },
+        "src/gate/utils/plumbing.nim": {
+          "deepNesting": 5
+        },
+        "src/gate/utils/process_sandbox.nim": {
+          "deepNesting": 6
+        },
+        "src/gate/utils/real_git.nim": {
+          "deepNesting": 3
+        },
+        "src/gate/utils/shell_ast_analyzer.nim": {
+          "deepNesting": 84,
+          "longProc": 1
+        },
+        "src/infrastructure/bypass_audit.nim": {
+          "deepNesting": 5
+        },
+        "src/infrastructure/gate_signing/axiom_prove.nim": {
+          "deepNesting": 11
+        },
+        "src/infrastructure/gate_signing/gate_daemon.nim": {
+          "deepNesting": 29
+        },
+        "src/infrastructure/gate_signing/ipc_protocol.nim": {
+          "deepNesting": 31
+        },
+        "src/infrastructure/gate_signing/proof_artifact_types.nim": {
+          "deepNesting": 5
+        },
+        "src/infrastructure/gate_signing/safe_merge.nim": {
+          "deepNesting": 8
+        },
+        "src/infrastructure/gate_signing/sandbox_launcher.nim": {
+          "deepNesting": 14
+        },
+        "src/infrastructure/gate_signing/smtlib2_parser.nim": {
+          "deepNesting": 96
+        },
+        "src/infrastructure/gate_signing/z3_proof_to_lean.nim": {
+          "deepNesting": 29
+        },
+        "src/infrastructure/git_ops.nim": {
+          "deepNesting": 3
+        },
+        "src/infrastructure/shadow_environment.nim": {
+          "deepNesting": 3
+        },
+        "src/infrastructure/topology_executor.nim": {
+          "deepNesting": 35
+        },
+        "src/mcp/server.nim": {
+          "deepNesting": 15
+        },
+        "src/mcp/tools.nim": {
+          "deepNesting": 50,
+          "longProc": 1
+        },
+        "src/personas/detective.nim": {
+          "deepNesting": 28
+        },
+        "src/personas/judge.nim": {
+          "deepNesting": 25
+        },
+        "src/personas/judge_automation.nim": {
+          "deepNesting": 30
+        },
+        "src/personas/judge_shadow_mode.nim": {
+          "deepNesting": 12
+        },
+        "src/personas/legislator.nim": {
+          "deepNesting": 23
+        },
+        "src/personas/legislator_feedback.nim": {
+          "deepNesting": 18
+        },
+        "src/personas/scribe.nim": {
+          "deepNesting": 4
+        },
+        "src/personas/swat.nim": {
+          "deepNesting": 33
+        },
+        "src/policy/macros/policy_schema_macros.nim": {
+          "deepNesting": 4
+        },
+        "src/sieve/ast_inspector.nim": {
+          "deepNesting": 11
+        },
+        "src/sieve/sieve_bridge.nim": {
+          "deepNesting": 14
+        },
+        "src/sieve/sieve_engine.nim": {
+          "deepNesting": 19
+        },
+        "src/sieve/sieve_rules.nim": {
+          "deepNesting": 21
+        },
+        "src/ui/ax_tui_reporter_part1.nim": {
+          "deepNesting": 17
+        },
+        "src/ui/ax_tui_reporter_part2.nim": {
+          "deepNesting": 15
+        },
+        "src/verification/abstract_provider.nim": {
+          "deepNesting": 98
+        },
+        "src/verification/analyzer/analyzer_shared_json.nim": {
+          "deepNesting": 3
+        },
+        "src/verification/analyzer/stage_01_ast_extract.nim": {
+          "deepNesting": 31
+        },
+        "src/verification/analyzer/stage_02_fingerprint.nim": {
+          "deepNesting": 31
+        },
+        "src/verification/analyzer/stage_04_gate_check.nim": {
+          "deepNesting": 17
+        },
+        "src/verification/analyzer/stage_05_lean_bridge.nim": {
+          "deepNesting": 126
+        },
+        "src/verification/analyzer/stage_06_proof_synth.nim": {
+          "deepNesting": 21
+        },
+        "src/verification/analyzer/stage_07_certificate.nim": {
+          "deepNesting": 18
+        },
+        "src/verification/analyzer/stage_08_reporter.nim": {
+          "deepNesting": 11
+        },
+        "src/verification/analyzer/stage_adapters.nim": {
+          "deepNesting": 5
+        },
+        "src/verification/analyzer.nim": {
+          "deepNesting": 3
+        },
+        "src/verification/ast_extractor.nim": {
+          "deepNesting": 14
+        },
+        "src/verification/audit_impl/jsonl_audit_store.nim": {
+          "deepNesting": 6
+        },
+        "src/verification/batch_uap/ast_hash.nim": {
+          "deepNesting": 5
+        },
+        "src/verification/batch_uap/cache_middleware.nim": {
+          "deepNesting": 2
+        },
+        "src/verification/batch_uap/certificate_hydration_runner.nim": {
+          "deepNesting": 9
+        },
+        "src/verification/batch_uap/loop_driver.nim": {
+          "deepNesting": 223
+        },
+        "src/verification/batch_uap/private/request_builder.nim": {
+          "deepNesting": 21
+        },
+        "src/verification/batch_uap/stages.nim": {
+          "deepNesting": 2
+        },
+        "src/verification/batch_uap/unsat_core_cache.nim": {
+          "deepNesting": 2
+        },
+        "src/verification/cegar_engine.nim": {
+          "deepNesting": 33
+        },
+        "src/verification/cert_builder.nim": {
+          "deepNesting": 3
+        },
+        "src/verification/cert_fingerprinter.nim": {
+          "deepNesting": 1
+        },
+        "src/verification/cert_writer.nim": {
+          "deepNesting": 27
+        },
+        "src/verification/certificate_hydration.nim": {
+          "deepNesting": 12
+        },
+        "src/verification/certificate_manager.nim": {
+          "deepNesting": 4
+        },
+        "src/verification/contract_source_extractor.nim": {
+          "deepNesting": 28
+        },
+        "src/verification/dependency_analyzer.nim": {
+          "deepNesting": 68
+        },
+        "src/verification/ecosystem_linkage.nim": {
+          "deepNesting": 52
+        },
+        "src/verification/fingerprint_engine.nim": {
+          "deepNesting": 8
+        },
+        "src/verification/healing_orchestrator.nim": {
+          "deepNesting": 30
+        },
+        "src/verification/integrity_guard.nim": {
+          "deepNesting": 1
+        },
+        "src/verification/integrity_ledger.nim": {
+          "deepNesting": 7
+        },
+        "src/verification/io_axiom_builder.nim": {
+          "deepNesting": 4
+        },
+        "src/verification/layer1_bmc.nim": {
+          "deepNesting": 23
+        },
+        "src/verification/lean_hint_db.nim": {
+          "deepNesting": 14
+        },
+        "src/verification/lean_lsp_client.nim": {
+          "deepNesting": 5
+        },
+        "src/verification/lean_lsp_compiler.nim": {
+          "deepNesting": 49
+        },
+        "src/verification/lean_lsp_feedback.nim": {
+          "deepNesting": 49
+        },
+        "src/verification/lean_lsp_proof_search.nim": {
+          "deepNesting": 73
+        },
+        "src/verification/lean_lsp_protocol.nim": {
+          "deepNesting": 23
+        },
+        "src/verification/lean_lsp_tactic.nim": {
+          "deepNesting": 10
+        },
+        "src/verification/lean_skeleton.nim": {
+          "deepNesting": 5
+        },
+        "src/verification/leanstral/leanstral_cli.nim": {
+          "deepNesting": 17,
+          "longProc": 1
+        },
+        "src/verification/leanstral_gateway.nim": {
+          "deepNesting": 11
+        },
+        "src/verification/leanstral_prompt.nim": {
+          "deepNesting": 31
+        },
+        "src/verification/leanstral_repl.nim": {
+          "deepNesting": 16
+        },
+        "src/verification/llm_backend.nim": {
+          "deepNesting": 59
+        },
+        "src/verification/loop_invariant_synthesis.nim": {
+          "deepNesting": 26
+        },
+        "src/verification/orchestrator/healing_orchestrator.nim": {
+          "deepNesting": 29
+        },
+        "src/verification/orchestrator.nim": {
+          "deepNesting": 72
+        },
+        "src/verification/pipeline_core_runner_part1.nim": {
+          "deepNesting": 19
+        },
+        "src/verification/pipeline_core_types.nim": {
+          "deepNesting": 10
+        },
+        "src/verification/pipeline_lean_spec_inference_part1.nim": {
+          "deepNesting": 13
+        },
+        "src/verification/pipeline_lean_spec_inference_part2.nim": {
+          "deepNesting": 22
+        },
+        "src/verification/pipeline_negative_scan_part1.nim": {
+          "deepNesting": 11
+        },
+        "src/verification/pipeline_negative_scan_part2.nim": {
+          "deepNesting": 68
+        },
+        "src/verification/pipeline_negative_scan_part3.nim": {
+          "deepNesting": 86
+        },
+        "src/verification/pipeline_stage_cegar_bridge.nim": {
+          "deepNesting": 8
+        },
+        "src/verification/pipeline_stage_k_induction.nim": {
+          "deepNesting": 45
+        },
+        "src/verification/pipeline_stage_swat.nim": {
+          "deepNesting": 13
+        },
+        "src/verification/pipeline_transition_engine.nim": {
+          "deepNesting": 9
+        },
+        "src/verification/proof_linkage.nim": {
+          "deepNesting": 23,
+          "longProc": 1
+        },
+        "src/verification/proof_state_builder.nim": {
+          "deepNesting": 105
+        },
+        "src/verification/proof_state_convergence.nim": {
+          "deepNesting": 10
+        },
+        "src/verification/proof_state_projection.nim": {
+          "deepNesting": 6
+        },
+        "src/verification/proof_synthesis_engine_part1.nim": {
+          "deepNesting": 66
+        },
+        "src/verification/proof_synthesis_engine_part2.nim": {
+          "deepNesting": 44
+        },
+        "src/verification/proof_universe_commit.nim": {
+          "deepNesting": 11
+        },
+        "src/verification/semantic_graph.nim": {
+          "deepNesting": 21
+        },
+        "src/verification/semantics/translator.nim": {
+          "deepNesting": 14
+        },
+        "src/verification/smt_hint_validation.nim": {
+          "deepNesting": 3
+        },
+        "src/verification/solver/fixedpoint_engine.nim": {
+          "deepNesting": 8
+        },
+        "src/verification/solver/proof_cache.nim": {
+          "deepNesting": 17
+        },
+        "src/verification/solver/triviality_filter.nim": {
+          "deepNesting": 7
+        },
+        "src/verification/solver/z3_pool.nim": {
+          "deepNesting": 65
+        },
+        "src/verification/spacer_chc_router.nim": {
+          "deepNesting": 25
+        },
+        "src/verification/spacer_integration_gate.nim": {
+          "deepNesting": 17
+        },
+        "src/verification/state_manager.nim": {
+          "deepNesting": 5
+        },
+        "src/verification/state_persistence.nim": {
+          "deepNesting": 7
+        },
+        "src/verification/static_rules.nim": {
+          "deepNesting": 4
+        },
+        "src/verification/tactic_backtrack.nim": {
+          "deepNesting": 1
+        },
+        "src/verification/thought_dashboard.nim": {
+          "deepNesting": 7
+        },
+        "src/verification/translation_validator.nim": {
+          "deepNesting": 22
+        },
+        "src/verification/universal_pipeline.nim": {
+          "deepNesting": 31
+        },
+        "src/verification/vault_index.nim": {
+          "deepNesting": 44
+        }
+      }
+    }
+  }
+}

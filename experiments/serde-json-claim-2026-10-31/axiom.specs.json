@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "specs": {
+    "serde_json::number::<impl>::is_f64": {
+      "post": "is_f64(self) == true iff (is_i64(self) == false and is_u64(self) == false) — the documented invariant (number.rs doc comment); the v1 closed spec grammar (result == additive over u8/u32/bool) cannot express this relational claim over a &self receiver; registered as the claim's formalization-intent, predicted unreachable behind the out-of-subset signature gate",
+      "conditions": [
+        "self: serde_json::Number parsed from a JSON number literal",
+        "witness literal: 18446744073709551616 (2^64, exceeds u64::MAX)",
+        "feature configurations compared: default vs arbitrary_precision",
+        "domain: numbers produced by serde_json::de from JSON text"
+      ]
+    },
+    "serde_json::error::parse_line_col": {
+      "post": "parse_line_col(msg) == Some((line, column)) implies line >= 1 and column >= 1 — the error-position lower-bound pair invariant; the v1 closed spec grammar (result == additive over u8/u32/bool) cannot express this quantified relational claim over an Option<(usize, usize)> return; registered as the claim's formalization-intent, predicted to be refused at the out-of-subset signature gate (Ref input, Adt output)",
+      "conditions": [
+        "msg: &mut String — arbitrary error message text re-parsed by this function",
+        "self-generated serde_json messages use 1-based line and column positions",
+        "domain: messages matching the ' at line X column Y' suffix grammar",
+        "witness class for the suspected divergence: crafted ' at line 0 column 0' style inputs"
+      ]
+    }
+  }
+}

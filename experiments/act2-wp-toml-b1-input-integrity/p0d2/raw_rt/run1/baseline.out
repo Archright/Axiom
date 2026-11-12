@@ -1,0 +1,17 @@
+=== case: baseline ===
+input_bytes_hex: 23 20 50 30 2D 44 32 2D 52 54 20 63 61 73 65 20 31 3A 20 42 41 53 45 4C 49 4E 45 20 2D 20 70 6C 61 69 6E 20 41 53 43 49 49 20 73 74 72 69 6E 67 2C 20 6E 6F 20 68 65 78 20 65 73 63 61 70 65 0A 76 61 6C 75 65 20 3D 20 22 68 65 6C 6C 6F 20 77 6F 72 6C 64 22 0A 63 74 72 6C 20 3D 20 22 70 6C 61 69 6E 22 0A
+decode_outcome: SUCCESS
+decoded_value_bytes_hex: 68 65 6C 6C 6F 20 77 6F 72 6C 64
+decoded_value_utf8: well-formed-UTF8
+decoded_ctrl_bytes_hex: 70 6C 61 69 6E
+decoded_ctrl_utf8: well-formed-UTF8
+authored_decode_matches_intent_value: true
+authored_decode_matches_intent_ctrl: true
+encoder_output_bytes_hex: 76 61 6C 75 65 20 3D 20 22 68 65 6C 6C 6F 20 77 6F 72 6C 64 22 0A 63 74 72 6C 20 3D 20 22 70 6C 61 69 6E 22 0A
+encoder_output_text: value = "hello world"\x0Actrl = "plain"\x0A
+roundtrip_value_bytes_hex: 68 65 6C 6C 6F 20 77 6F 72 6C 64
+roundtrip_ctrl_bytes_hex: 70 6C 61 69 6E
+roundtrip_value_utf8: well-formed-UTF8
+roundtrip_identity_holds: true
+ref_utf8_U00E9_hex: C3 A9
+ref_utf8_U0080_hex: C2 80

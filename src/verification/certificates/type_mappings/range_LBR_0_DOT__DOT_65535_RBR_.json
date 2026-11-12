@@ -1,0 +1,8 @@
+{
+  "nimType": "range[0..65535]",
+  "leanType": "Subtype (fun x : Nat => 0 <= x ∧ x <= 65535)",
+  "smtSort": "Int",
+  "mappingProofObligation": "nim_lean_range065535_iso",
+  "verified": false,
+  "sourceHash": ""
+}

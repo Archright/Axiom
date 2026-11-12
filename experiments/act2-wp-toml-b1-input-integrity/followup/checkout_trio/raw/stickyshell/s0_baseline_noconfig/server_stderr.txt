@@ -1,0 +1,3 @@
+stickyshell.nim(263)     newStickyshell
+Error: unhandled exception: Permission denied
+Additional info: address: "" port: 22 [BindFailed]

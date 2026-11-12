@@ -1,0 +1,45 @@
+# **Deprecated.** This file is NOT a normative SSOT and has no live consumer.
+# The canonical layer-direction policy is `src/core/trusted/layer_rules.nim`
+# (enforced by `bin/layer_enforcement_gate`); module roles and whitelist
+# policy live in `src/gate/architecture_policy.lock`.
+# Authority settlement: docs/spec/allowed_imports_lock_status.md
+# The content below is a stale artifact (recreated 2026-07-25 by auto-remediation
+# with no consumer ever wired) and contradicts RL-14.4 — do not consume.
+# Retained only so existing references resolve.
+# Format: layer -> allowed_targets
+
+[core]
+allow = ["core", "engine", "gate", "infra", "verification"]
+# Core domain is the foundation — may access all internal modules.
+
+[infrastructure]
+allow = ["infra", "core"]
+# Infrastructure builds on core primitives.
+
+[presentation]
+allow = ["presentation", "core", "infrastructure"]
+# Presentation layer (CLI, MCP, UI) may access domain and infra.
+
+[gate]
+allow = ["gate", "core", "infrastructure", "presentation"]
+# Gate layer enforces policy; needs access to all layers for validation.
+
+[verification]
+allow = ["verification", "core"]
+# Verification pipeline uses core types and solver interfaces.
+
+[engine]
+allow = ["engine", "core"]
+# Execution engine uses core primitives.
+
+[personas]
+allow = ["personas", "core", "infrastructure", "verification"]
+# Personas (Judge, Detective, Scribe, Legislator) need cross-layer access.
+
+[sieve]
+allow = ["sieve", "core"]
+# AST sieve operates on core AST types.
+
+[semantic_proofs]
+allow = ["semantic_proofs", "core", "verification"]
+# Semantic proof producers bridge core and verification logic.

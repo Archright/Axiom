@@ -1,0 +1,9 @@
+// attacks/attacker-blob.json — the arbitrary blob SHA the manipulated PR-
+// head fixtures inject into `trusted` (V-A'4 scenario 1). Deterministically
+// fixed in this fixture so the evidence of "no issuance change" is
+// reproducible: it is a pseudo-random 40-hex string (openssl rand -hex 20)
+// that exists in NO repository object.
+{
+  "attackerBlobSha": "e7414d7b9835fa8c163579efb6867ee11c41c182",
+  "note": "pseudo-random; not a real commit/blob in this repository"
+}

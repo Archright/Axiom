@@ -1,0 +1,89 @@
+// config/policy/examples_budget_drift_info.json
+// Example instance: BUDGET#005 metric result DRIFT + disposition INFO.
+// Demonstrates the separation: evaluator decides PASS|DRIFT; policy decides INFO|WARN|ERROR.
+// SSOT: docs/spec/canonical_contract_policy_layer.md §4.1
+
+{
+  "$schema": "../contract_layer.schema.json",
+  "$comment": "Example: BUDGET#005 budget check shows DRIFT but policy assigns INFO severity (non-blocking advisory).",
+  "metricSpec": {
+    "metricId": "DEBT_REGISTRY_OPEN",
+    "source": {
+      "path": "data/debt_registry.json",
+      "format": "json",
+      "selector": ".entries | map(select(.status == \"open\")) | length"
+    },
+    "projection": "debtRegistryOpenCount",
+    "comparison": {
+      "operator": "lte",
+      "threshold": 5
+    },
+    "normalization": {
+      "method": "none"
+    },
+    "version": "1.0.0"
+  },
+  "projectionSpec": {
+    "projectionId": "debtRegistryOpenCount",
+    "canonicalState": {
+      "hashAlgorithm": "sha256",
+      "scope": ["data/debt_registry.json"]
+    },
+    "observations": [
+      {
+        "name": "openDebtCount",
+        "extraction": {
+          "method": "count",
+          "predicate": ".entries[] | select(.status == \"open\")"
+        }
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "observation": {
+    "observationId": "obs_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
+    "metricId": "DEBT_REGISTRY_OPEN",
+    "value": 7,
+    "result": "DRIFT",
+    "timestamp": "2026-08-16T06:00:00Z",
+    "stateHash": "sha256:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+    "projectionRef": "debtRegistryOpenCount"
+  },
+  "policy": {
+    "policyId": "BUDGET_POLICY",
+    "rule": "BUDGET_LIMIT",
+    "severity": "INFO",
+    "description": "Budget limit policy: open debt count exceeding threshold triggers INFO-level advisory. Non-blocking; tracks trend over time.",
+    "version": "1.0.0"
+  },
+  "policyBinding": {
+    "bindingId": "BIND-BUDG005",
+    "policyRef": "BUDGET_POLICY",
+    "subject": {
+      "type": "metric",
+      "metricRef": "DEBT_REGISTRY_OPEN"
+    },
+    "justification": "AGENTS.md §0.5c — Structured Quirk Rules: open debt count tracked as BUDGET#005 metric. Advisory severity allows trend monitoring without blocking commits.",
+    "owner": "architect",
+    "createdAt": "2026-07-15T10:00:00Z",
+    "expires": null
+  },
+  "decision": {
+    "decisionId": "dec_f1e2d3c4b5a6f7e8d9c0b1a2f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0f1e2",
+    "observationRef": "obs_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
+    "policyBindingRef": "BIND-BUDG005",
+    "disposition": "INFO",
+    "evidence": {
+      "inputHashes": {
+        "observation": "sha256:a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
+        "policyBinding": "sha256:b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3",
+        "repositoryState": "sha256:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+      },
+      "reproducibleFrom": [
+        "obs_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
+        "BIND-BUDG005",
+        "sha256:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+      ]
+    }
+  }
+}

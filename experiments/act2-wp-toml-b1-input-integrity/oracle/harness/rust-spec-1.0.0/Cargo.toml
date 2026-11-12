@@ -1,0 +1,13 @@
+[package]
+name = "rust_toml_oracle_100"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+toml = "0.8"
+toml_edit = "0.22"
+serde = { version = "1", features = ["derive"] }
+
+[[bin]]
+name = "rust_toml_oracle_100"
+path = "src/main.rs"

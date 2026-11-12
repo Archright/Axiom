@@ -1,0 +1,4 @@
+[change-a]
+base_ref = "main"
+depends_on = []
+conflicts_with = ["change-b"]

@@ -1,0 +1,11 @@
+harness_mode=record
+input_file=./experiments/act2-wp-toml-b1-input-integrity/bsec/offline/inputs/t1_baseline_valid.toml
+input_len=37
+decode_call=Toml_v100.decode(input, Obj)
+DECODE_RESULT=OK
+a=[first]
+b=[second]
+c=[third]
+a_is_second=false
+b_is_third=false
+c_is_empty=false

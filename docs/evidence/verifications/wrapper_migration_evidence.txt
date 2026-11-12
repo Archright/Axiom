@@ -1,0 +1,44 @@
+# Wrapper Migration Evidence — 2026-06-01 19:38:49
+
+## Step 1: parseJson→parseJsonOpt
+- Target files: 27
+- Success: 0
+- Failed: 27
+  - src/cli/asi_cli.nim: ../Axiom_Enterprise-core/src/cli/asi_cli.nim(301, 30) Error: expression 
+  - src/cli/asi_cli_parts/asi_cli_part2.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AS
+  - src/cli/commands/observability.nim: ../Axiom_Enterprise-core/src/cli/commands/observability.nim(376, 8) Erro
+  - src/cli/commands/observability_parts/observability_part2.nim: ../Axiom_Enterprise-core/src/cli/commands/observability_parts/observabil
+  - src/cli/commands/submit_proof.nim: ../Axiom_Enterprise-core/src/cli/commands/submit_proof.nim(183, 30) Erro
+  - src/cli/evidence_cli.nim: ../Axiom_Enterprise-core/src/cli/evidence_cli.nim(334, 9) Error: 'let' s
+  - src/cli/report_cli_parts/report_cli_part2.nim: ../Axiom_Enterprise-core/src/cli/report_cli_parts/report_cli_part2.nim(1
+  - src/cli/report_cli_parts/report_cli_part4.nim: ../Axiom_Enterprise-core/src/cli/report_cli_parts/report_cli_part4.nim(3
+  - src/cli/report_cli_parts/report_cli_part5.nim: ../Axiom_Enterprise-core/src/cli/report_cli_parts/report_cli_part5.nim(3
+  - src/cli/verify_workflow_cli_parts/verify_workflow_cli_part1_parts/verify_workflow_cli_part1_part2.nim: ../Axiom_Enterprise-core/src/cli/verify_workflow_cli_parts/verify_workfl
+  - src/cli/wf_render.nim: ../Axiom_Enterprise-core/src/cli/wf_render.nim(203, 16) Error: expressio
+  - src/cli/wf_state_parsing.nim: not' but expected 'bool'
+  - src/core/global_symbol_graph_builder_parts/global_symbol_graph_builder_part1.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AS
+  - src/core/global_symbol_graph_builder_parts/global_symbol_graph_builder_part2.nim: ../Axiom_Enterprise-core/src/core/global_symbol_graph_builder_parts/glob
+  - src/core/json_utils.nim: ../Axiom_Enterprise-core/src/core/json_utils.nim(7, 13) Error: imported 
+  - src/core/proof_universe_lock.nim: ../Axiom_Enterprise-core/src/core/proof_universe_lock.nim(9, 13) Error: 
+  - src/core/trusted/json.nim: seal(node)' but expected 'AxiomSafe[json.JsonNode]'
+  - src/gate/runners/context7_evidence_gate.nim: ../Axiom_Enterprise-core/src/gate/runners/context7_evidence_gate.nim(106
+  - src/mcp/axiom_mcp_parts/axiom_mcp_part1.nim: ../Axiom_Enterprise-core/src/mcp/axiom_mcp_parts/axiom_mcp_part1.nim(2, 
+  - src/mcp/axiom_mcp_parts/axiom_mcp_part2.nim: ../Axiom_Enterprise-core/src/mcp/axiom_mcp_parts/axiom_mcp_part2.nim(2, 
+  - src/mcp/server.nim: ../Axiom_Enterprise-core/src/mcp/server.nim(118, 37) Error: expression '
+  - src/metrics/asi_replayer.nim: ../Axiom_Enterprise-core/src/metrics/asi_replayer.nim(102, 13) Error: im
+  - src/verification/hint_processor.nim: ../Axiom_Enterprise-core/src/verification/hint_processor.nim(145, 51) Er
+  - src/verification/pipeline_negative_scan_parts/pipeline_negative_scan_part1.nim: ../Axiom_Enterprise-core/src/verification/pipeline_negative_scan_parts/p
+  - src/verification/pipeline_negative_scan_parts/pipeline_negative_scan_part2.nim: ../Axiom_Enterprise-core/src/verification/pipeline_negative_scan_parts/p
+  - src/verification/pipeline_negative_scan_parts/pipeline_negative_scan_part3.nim: ../Axiom_Enterprise-core/src/verification/pipeline_negative_scan_parts/p
+  - src/verification/vault_index.nim: ../Axiom_Enterprise-core/src/verification/vault_index.nim(56, 24) Error:
+
+## Step 2: import std_redirect
+- Target files: 0
+- Success: 0
+- Failed: 0
+
+## Step 3: readFile/writeFile/createDir→Opt
+- Target files: 0
+- Success: 0
+- Failed: 0
+

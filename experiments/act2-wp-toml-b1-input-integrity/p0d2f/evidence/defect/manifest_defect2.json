@@ -1,0 +1,45 @@
+{
+  "version": 2,
+  "entries": [
+    {
+      "modulePath": "",
+      "functionName": "normalizeMaxWorkers",
+      "status": "certZ3Candidate",
+      "solverMethod": "smCLI",
+      "lastVerifiedAt": "2026-10-17T02:26:45Z",
+      "irHash": "092c603556d3ad08fd42e3e198cc9701f5e612479bc498c09379adaf5a8400e7"
+    },
+    {
+      "modulePath": "",
+      "functionName": "calcDynamicTimeoutCore",
+      "status": "certRed",
+      "solverMethod": "smCLI",
+      "lastVerifiedAt": "2026-10-17T02:26:45Z",
+      "irHash": "d015d562abb96f42898eebe843cd1e4fb5985d3c76a28cfdbc2e46c43603d549"
+    },
+    {
+      "modulePath": "",
+      "functionName": "safeSpeedupRatioCore",
+      "status": "certRed",
+      "solverMethod": "smCLI",
+      "lastVerifiedAt": "2026-10-17T02:26:45Z",
+      "irHash": "af93a04a98f3bad92a968f9a3de441a04f9f815ac15f3e609cf6a8d6591671cc"
+    },
+    {
+      "modulePath": "",
+      "functionName": "proximityScore",
+      "status": "certRed",
+      "solverMethod": "smCLI",
+      "lastVerifiedAt": "2026-10-17T02:26:45Z",
+      "irHash": "f1b6dbd742ba4af29d88b011ea5973220034a2da1fe98eb8865543db429c6d6e"
+    },
+    {
+      "modulePath": "",
+      "functionName": "d2HexEscapeAppendLen",
+      "status": "certRed",
+      "solverMethod": "smCLI",
+      "lastVerifiedAt": "2026-10-17T02:26:46Z",
+      "irHash": "4cbb02ff96c9458b9074d295b190a915d3467adfda464052e5d746b514909997"
+    }
+  ]
+}

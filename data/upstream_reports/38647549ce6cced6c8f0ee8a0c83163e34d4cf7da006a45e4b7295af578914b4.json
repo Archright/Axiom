@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "upstream-report-receipt-v1",
+  "reportFingerprint": "38647549ce6cced6c8f0ee8a0c83163e34d4cf7da006a45e4b7295af578914b4",
+  "status": "DUPLICATE",
+  "verdict": {
+    "propositionVerdict": "DISPROVED",
+    "requirementSourceStatus": "unrecorded",
+    "bugAttribution": "BUG_SUSPECTED"
+  },
+  "subject": {
+    "requestedRepository": "status-im/nim-libp2p",
+    "resolvedRepository": "iftech/nim-libp2p",
+    "commit": "a130a7f32219909bdcda14b7f1e64d0804fc832c",
+    "module": "libp2p/utils/bytesview.nim",
+    "symbol": "toOpenArray",
+    "blobSha256": "b205c969ba04f4199d8fd4a121d4b6fccdc82c426e336add0e1e9fd0e961e5ee"
+  },
+  "proposition": {
+    "specId": "SPEC-LIBP2P-BV-SLICE",
+    "ruleId": "external:libp2p/bytesview/slice-length-law",
+    "ruleVersion": "1.0.0",
+    "specRelPath": "nim_libp2p_bytesview_slice.json",
+    "canonicalSpecIRDigest": "267e5a9758046416d92421d19594f59b509e4c1ed1b677c915a098115d351014"
+  },
+  "counterexample": {
+    "normalized": [],
+    "rawQuartet": []
+  },
+  "issue": {
+    "number": 3364,
+    "url": "https://github.com/iftech/nim-libp2p/issues/3364"
+  },
+  "blockedReason": null,
+  "attempts": [
+    {
+      "ts": "2026-10-31T16:30:15Z",
+      "phase": "resolve-repository",
+      "outcome": "exit=0 {\"id\":158147798,\"node_id\":\"MDEwOlJlcG9zaXRvcnkxNTgxNDc3OTg=\",\"name\":\"nim-libp2p\",\"full_name\":\"iftech/nim-libp2p\",\"private\":false,\"owner\":{\"login\":\"iftech\",\"id\":274485448,\"node_id\":\"O_kgDOEFxQyA...",
+      "candidateUrl": ""
+    },
+    {
+      "ts": "2026-10-31T16:30:15Z",
+      "phase": "verify-ledger-submission",
+      "outcome": "exit=0 {\"number\":3364,\"state\":\"OPEN\",\"url\":\"https://github.com/iftech/nim-libp2p/issues/3364\"}",
+      "candidateUrl": ""
+    }
+  ],
+  "submittedAt": null
+}

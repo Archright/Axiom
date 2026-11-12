@@ -1,0 +1,204 @@
+{
+ "experiment": "r8b5_projection",
+ "status": "PARTIAL-PASS (coverage-limited, fail-closed)",
+ "headCommit": "650464f850fc8370f49ed01d217b96139213e660",
+ "worktreeHead": "650464f850fc8370f49ed01d217b96139213e660",
+ "planDigestVerified": true,
+ "explicitRequests": true,
+ "requestCount": 9,
+ "equalCount": 5,
+ "notClaimedCount": 4,
+ "mismatchCount": 0,
+ "perRequestComparison": [
+  {
+   "requestId": "src/core/orchestrator/orchestrator_topology_worker.nim::blockBranch",
+   "fullVerdict": "UNOBSERVABLE",
+   "prunedVerdict": "rvPass",
+   "fullStatus": "",
+   "prunedStatus": "psNoObligation",
+   "claimable": false,
+   "equal": false,
+   "fullSourceLines": [],
+   "prunedSourceLines": [
+    "[INFO] loop_driver: node src/core/orchestrator/orchestrator_topology_worker.nim::blockBranch — certNoObligation; no obligation, not a persist failure"
+   ]
+  },
+  {
+   "requestId": "src/core/orchestrator/orchestrator_topology_worker.nim::calcDynamicTimeoutCore",
+   "fullVerdict": "UNOBSERVABLE",
+   "prunedVerdict": "UNOBSERVABLE",
+   "fullStatus": "",
+   "prunedStatus": "",
+   "claimable": false,
+   "equal": false,
+   "fullSourceLines": [],
+   "prunedSourceLines": []
+  },
+  {
+   "requestId": "src/core/orchestrator/orchestrator_topology_worker.nim::clampTimeoutMs",
+   "fullVerdict": "rvPass",
+   "prunedVerdict": "rvPass",
+   "fullStatus": "psNoObligation",
+   "prunedStatus": "psNoObligation",
+   "claimable": true,
+   "equal": true,
+   "fullSourceLines": [
+    "[INFO] loop_driver: node src/core/orchestrator/orchestrator_topology_worker.nim::clampTimeoutMs — certNoObligation; no obligation, not a persist failure"
+   ],
+   "prunedSourceLines": [
+    "[INFO] loop_driver: node src/core/orchestrator/orchestrator_topology_worker.nim::clampTimeoutMs — certNoObligation; no obligation, not a persist failure"
+   ]
+  },
+  {
+   "requestId": "src/core/orchestrator/orchestrator_topology_worker.nim::registerTimeoutImpact",
+   "fullVerdict": "UNOBSERVABLE",
+   "prunedVerdict": "rvPass",
+   "fullStatus": "",
+   "prunedStatus": "psNoObligation",
+   "claimable": false,
+   "equal": false,
+   "fullSourceLines": [],
+   "prunedSourceLines": [
+    "[INFO] loop_driver: node src/core/orchestrator/orchestrator_topology_worker.nim::registerTimeoutImpact — certNoObligation; no obligation, not a persist failure"
+   ]
+  },
+  {
+   "requestId": "src/core/orchestrator/orchestrator_topology_worker.nim::timeoutDiagnosisForNode",
+   "fullVerdict": "rvPass",
+   "prunedVerdict": "rvPass",
+   "fullStatus": "psNoObligation",
+   "prunedStatus": "psNoObligation",
+   "claimable": true,
+   "equal": true,
+   "fullSourceLines": [
+    "[INFO] loop_driver: node src/core/orchestrator/orchestrator_topology_worker.nim::timeoutDiagnosisForNode — certNoObligation; no obligation, not a persist failure"
+   ],
+   "prunedSourceLines": [
+    "[INFO] loop_driver: node src/core/orchestrator/orchestrator_topology_worker.nim::timeoutDiagnosisForNode — certNoObligation; no obligation, not a persist failure"
+   ]
+  },
+  {
+   "requestId": "src/core/topology/topology_dependency.nim::proximityScore",
+   "fullVerdict": "rvFail",
+   "prunedVerdict": "rvFail",
+   "fullStatus": "psFail",
+   "prunedStatus": "psFail",
+   "claimable": true,
+   "equal": true,
+   "fullSourceLines": [
+    "[ERROR] loop_driver: IR pipeline FAIL: proximityScore status=psFail provenance=solverMethod=smBMC,provenance=pkNone"
+   ],
+   "prunedSourceLines": [
+    "[ERROR] loop_driver: IR pipeline FAIL: proximityScore status=psFail provenance=solverMethod=smBMC,provenance=pkNone"
+   ]
+  },
+  {
+   "requestId": "src/core/topology/topology_engine.nim::findTopologyMetricIndex",
+   "fullVerdict": "rvPass",
+   "prunedVerdict": "rvPass",
+   "fullStatus": "psNoObligation",
+   "prunedStatus": "psNoObligation",
+   "claimable": true,
+   "equal": true,
+   "fullSourceLines": [
+    "[INFO] loop_driver: node src/core/topology/topology_engine.nim::findTopologyMetricIndex — certNoObligation; no obligation, not a persist failure"
+   ],
+   "prunedSourceLines": [
+    "[INFO] loop_driver: node src/core/topology/topology_engine.nim::findTopologyMetricIndex — certNoObligation; no obligation, not a persist failure"
+   ]
+  },
+  {
+   "requestId": "src/core/topology/topology_engine.nim::findTopologyNodeContext",
+   "fullVerdict": "UNOBSERVABLE",
+   "prunedVerdict": "rvPass",
+   "fullStatus": "",
+   "prunedStatus": "psNoObligation",
+   "claimable": false,
+   "equal": false,
+   "fullSourceLines": [],
+   "prunedSourceLines": [
+    "[INFO] loop_driver: node src/core/topology/topology_engine.nim::findTopologyNodeContext — certNoObligation; no obligation, not a persist failure"
+   ]
+  },
+  {
+   "requestId": "src/core/topology/topology_engine.nim::findTopologySymbolIndex",
+   "fullVerdict": "rvPass",
+   "prunedVerdict": "rvPass",
+   "fullStatus": "psNoObligation",
+   "prunedStatus": "psNoObligation",
+   "claimable": true,
+   "equal": true,
+   "fullSourceLines": [
+    "[INFO] loop_driver: node src/core/topology/topology_engine.nim::findTopologySymbolIndex — certNoObligation; no obligation, not a persist failure"
+   ],
+   "prunedSourceLines": [
+    "[INFO] loop_driver: node src/core/topology/topology_engine.nim::findTopologySymbolIndex — certNoObligation; no obligation, not a persist failure"
+   ]
+  }
+ ],
+ "reducerSource": "canonical import core/types/request_result (toRequestVerdict + aggregateRequestResult)",
+ "verdictSource": "run log IR certificate-status lines (IR pipeline FAIL/skip status=..; node certNoObligation)",
+ "provenance": {
+  "fullLog": "/tmp/r8b5-full.log",
+  "prunedLog": "/tmp/r8b5-pruned.log",
+  "plan": "/tmp/r8b5-plan.json",
+  "commands": [
+   "AXIOM_STATE_DIR=/tmp/r8b5-full-state bin/ax prove --smt-timeout 4000 > /tmp/r8b5-full.log",
+   "AXIOM_STATE_DIR=/tmp/r8b5-pruned-state bin/ax prove --plan /tmp/r8b5-plan.json --smt-timeout 4000 > /tmp/r8b5-pruned.log",
+   "bin/projection_evidence_runner --full-log /tmp/r8b5-full.log --pruned-log /tmp/r8b5-pruned.log --plan /tmp/r8b5-plan.json --out /tmp/r8b5-projection.json"
+  ],
+  "baseForSelection": "41d54f0d6d45a40b6a96a6f77f2b5a92c8ee2f37 (mutation parent)",
+  "worktreeHead": "650464f850fc8370f49ed01d217b96139213e660",
+  "mutHead": "650464f850fc8370f49ed01d217b96139213e660",
+  "c03Mutation": "inserted 'let c3bNoop = 0' after proximityScore signature terminator (line 132)",
+  "c03MutationNote": "Deviation from spec: used 'c3bNoop' instead of '_c3bNoop' because Nim 2.2.10 rejects identifiers starting with underscore in this position (invalid token error at column 7). The mutation intent (no-op variable declaration in proximityScore body) is preserved.",
+  "symbolsFile": "/tmp/symbols_file_v2.json (regenerated from verification_scope.lock kernel_symbols + derived symbolDeps/symbolDependents)",
+  "planDigest": "63d6a5b95e50d2efa47ae8f994d0d1afad584a427264b85dc4a34315f3a634df",
+  "planMode": "umSelected",
+  "planRequests": 9,
+  "planSelectedUnitIds": [
+   "src/core/orchestrator/orchestrator_topology_worker.nim::blockBranch",
+   "src/core/orchestrator/orchestrator_topology_worker.nim::calcDynamicTimeoutCore",
+   "src/core/orchestrator/orchestrator_topology_worker.nim::clampTimeoutMs",
+   "src/core/orchestrator/orchestrator_topology_worker.nim::registerTimeoutImpact",
+   "src/core/orchestrator/orchestrator_topology_worker.nim::timeoutDiagnosisForNode",
+   "src/core/topology/topology_dependency.nim::proximityScore",
+   "src/core/topology/topology_engine.nim::findTopologyMetricIndex",
+   "src/core/topology/topology_engine.nim::findTopologyNodeContext",
+   "src/core/topology/topology_engine.nim::findTopologySymbolIndex"
+  ],
+  "prunedExitCode": 0,
+  "prunedNodeCount": 9,
+  "fullExitCode": 0,
+  "fullClosure": {
+   "wavesExecuted": 2,
+   "closureComplete": false,
+   "requiredCount": 23,
+   "completedCount": 12,
+   "uncompletedRequiredCount": 11,
+   "uncompletedRequired": [
+    "src/core/json/json_scan_skip.nim::skipJsonValue",
+    "src/core/orchestrator/orchestrator_api.nim::enqueueParallelWorkItem",
+    "src/core/orchestrator/orchestrator_api.nim::normalizeMaxWorkers",
+    "src/core/orchestrator/orchestrator_topology_worker.nim::calcDynamicTimeoutCore",
+    "src/core/orchestrator/orchestrator_topology_worker.nim::clampTimeoutMs",
+    "src/core/orchestrator/orchestrator_vault.nim::addDepthExecutionStat",
+    "src/core/orchestrator/orchestrator_vault.nim::safeSpeedupRatioCore",
+    "src/core/sorter/sorter_core_index_table.nim::hasVaultEntry",
+    "src/core/topology/topology_dependency.nim::proximityScore",
+    "src/core/topology/topology_engine.nim::findTopologyNodeContext",
+    "src/gate/gate_rules_architecture.nim::applyCallDepthCheck"
+   ]
+  },
+  "prunedClosure": {
+   "wavesExecuted": 2,
+   "closureComplete": false,
+   "requiredCount": 23,
+   "completedCount": 0,
+   "uncompletedRequiredCount": 23
+  },
+  "note": "F-1/F-2 findings from r8b3 still apply: full-run single-wave scope excludes requests blocked by failed dependency (proximityScore psFail, safeSpeedupRatioCore psFail), so full-side status is unobservable for those requests. The pruned run processes 9 plan nodes and shows proximityScore as certNoObligation in the verification phase (orchestration-level), while the IR pipeline phase still reports psFail. The C03 mutation (c3bNoop in proximityScore body) does not change the solver outcome — proximityScore still fails both full and pruned. The 5 equal verdicts (clampTimeoutMs, timeoutDiagnosisForNode, proximityScore, findTopologyMetricIndex, findTopologySymbolIndex) confirm I4 projection consistency for claimable units. The 4 notClaimed units are UNOBSERVABLE in full due to dependency-chain blocking by failed prerequisites (safeSpeedupRatioCore, proximityScore)."
+ },
+ "generatedAt": "2026-09-06",
+ "supersedesNote": "Supersedes r8b3_projection_evidence.json (PARTIAL-PASS with 3 requests, 1 equal, 2 notClaimed). r8b5 re-execution with closure-complete Full (I-C wave loop) and canonical projection machinery yields 9 requests, 5 equal, 4 notClaimed, 0 mismatch. proximityScore is now observable in both full and pruned runs (rvFail in both), confirming the C03 mutation is captured by the projection machinery."
+}

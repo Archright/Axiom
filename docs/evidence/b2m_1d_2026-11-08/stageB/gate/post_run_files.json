@@ -1,0 +1,133 @@
+{
+ "measured_at": "2026-11-08 (run2' 완료 직후)",
+ "toolchain_bins_4": [
+  {
+   "item": "lean",
+   "post_sha256": "bf8d54e4714cc4b03d3f6bb34c83b7202b87e49c8bfcbff6895c085bb90ceb38",
+   "pre_sha256": "bf8d54e4714cc4b03d3f6bb34c83b7202b87e49c8bfcbff6895c085bb90ceb38",
+   "verdict": "MATCH"
+  },
+  {
+   "item": "lake",
+   "post_sha256": "8ba83c98f76562d03b8dbc33f1057151ba6cbb121679dde76b2260ccc90495e1",
+   "pre_sha256": "8ba83c98f76562d03b8dbc33f1057151ba6cbb121679dde76b2260ccc90495e1",
+   "verdict": "MATCH"
+  },
+  {
+   "item": "leantar",
+   "post_sha256": "06d613dffd2a6fd996b095bfd835c2bb720886f9eb7e13ed2adddd7df4507bf3",
+   "pre_sha256": "06d613dffd2a6fd996b095bfd835c2bb720886f9eb7e13ed2adddd7df4507bf3",
+   "verdict": "MATCH"
+  },
+  {
+   "item": "clang",
+   "post_sha256": "df2e7d9b9e23822587cf04ac28f206a1ddaac5053312a4c875acf5608701b9d2",
+   "pre_sha256": "df2e7d9b9e23822587cf04ac28f206a1ddaac5053312a4c875acf5608701b9d2",
+   "verdict": "MATCH"
+  }
+ ],
+ "toolchain_libs_5": [
+  {
+   "item": "libInit_shared.so",
+   "post_sha256": "7831b707e868cee76c353d26649fbd8981b2f4d7e0329af55bbf4fa9e0c69350",
+   "pre_sha256": "7831b707e868cee76c353d26649fbd8981b2f4d7e0329af55bbf4fa9e0c69350",
+   "verdict": "MATCH"
+  },
+  {
+   "item": "libLake_shared.so",
+   "post_sha256": "d68867df340056b40726fde3939a9d2021901cc6944f971dd6a6a778bd9ea25b",
+   "pre_sha256": "d68867df340056b40726fde3939a9d2021901cc6944f971dd6a6a778bd9ea25b",
+   "verdict": "MATCH"
+  },
+  {
+   "item": "libleanshared.so",
+   "post_sha256": "efef27df56f2197139afe12f1a2b63913a05f1aba81ce88824c44100431ed8c4",
+   "pre_sha256": "efef27df56f2197139afe12f1a2b63913a05f1aba81ce88824c44100431ed8c4",
+   "verdict": "MATCH"
+  },
+  {
+   "item": "libleanshared_1.so",
+   "post_sha256": "691bf49d9e542a15808fad9d1f8c5df45860166f77efa57961b5335e65a3a0ed",
+   "pre_sha256": "691bf49d9e542a15808fad9d1f8c5df45860166f77efa57961b5335e65a3a0ed",
+   "verdict": "MATCH"
+  },
+  {
+   "item": "libleanshared_2.so",
+   "post_sha256": "141cbfdb3bc2016cd68e0bebc2e5494818213b462ed985afa6d975d4872fb8ec",
+   "pre_sha256": "141cbfdb3bc2016cd68e0bebc2e5494818213b462ed985afa6d975d4872fb8ec",
+   "verdict": "MATCH"
+  }
+ ],
+ "core_files_9": [
+  {
+   "item": "lakefile.lean",
+   "post_sha256": "8a435a42eda30704adec48469951ad86fa7d7f6b5569e9cdd24fe6924a80dcb9",
+   "pre_sha256": "8a435a42eda30704adec48469951ad86fa7d7f6b5569e9cdd24fe6924a80dcb9",
+   "verdict": "MATCH"
+  },
+  {
+   "item": "lean-toolchain",
+   "post_sha256": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+   "pre_sha256": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+   "verdict": "MATCH"
+  },
+  {
+   "item": "lake-manifest.json",
+   "post_sha256": "fd3d5b0ebd1063cceb318f9efc1e7346a7f53a742cb8602d62cb99b57fa44bd7",
+   "pre_sha256": "fd3d5b0ebd1063cceb318f9efc1e7346a7f53a742cb8602d62cb99b57fa44bd7",
+   "verdict": "MATCH"
+  },
+  {
+   "item": "PrintAxioms.lean",
+   "post_sha256": "73bb45f72693448aeff6f1b96dbe1c8f18d4bd5252288629b04d1ff616746b50",
+   "pre_sha256": "73bb45f72693448aeff6f1b96dbe1c8f18d4bd5252288629b04d1ff616746b50",
+   "verdict": "MATCH"
+  },
+  {
+   "item": "AsBool.lean",
+   "post_sha256": "a57ea4165520f3af03e05aed2d97f0b6c768820b8d9bebba0dbd771365d84934",
+   "pre_sha256": "a57ea4165520f3af03e05aed2d97f0b6c768820b8d9bebba0dbd771365d84934",
+   "verdict": "MATCH"
+  },
+  {
+   "item": "AsBool/Funs.lean",
+   "post_sha256": "abaca6f68ab304c935f2d87564c5f19be6e80ba8aac4ddd0a2db724807e1e0e8",
+   "pre_sha256": "abaca6f68ab304c935f2d87564c5f19be6e80ba8aac4ddd0a2db724807e1e0e8",
+   "verdict": "MATCH"
+  },
+  {
+   "item": "AsBool/Spec.lean",
+   "post_sha256": "c072867f5db02c7ff7b06a6e7da2045266611ea081b3182a2360f4fe455e7e17",
+   "pre_sha256": "c072867f5db02c7ff7b06a6e7da2045266611ea081b3182a2360f4fe455e7e17",
+   "verdict": "MATCH"
+  },
+  {
+   "item": "AsBool/Types.lean",
+   "post_sha256": "229ec1768d814171269674227bfebc75c96950516ffbf4a7c96cb63002914f60",
+   "pre_sha256": "229ec1768d814171269674227bfebc75c96950516ffbf4a7c96cb63002914f60",
+   "verdict": "MATCH"
+  },
+  {
+   "item": "AsBool/TypesExternal.lean",
+   "post_sha256": "646ebd427928385ab89ce1b96dff0fb80cb5ae978eec0856168edfdce8196bf4",
+   "pre_sha256": "646ebd427928385ab89ce1b96dff0fb80cb5ae978eec0856168edfdce8196bf4",
+   "verdict": "MATCH"
+  }
+ ],
+ "stage_b_sh": {
+  "post_sha256": "9197a0f02f829455b62660f9f8894bfa04430a1060b4ee731c0ee52d3fd54e39",
+  "pre_sha256": "9197a0f02f829455b62660f9f8894bfa04430a1060b4ee731c0ee52d3fd54e39",
+  "verdict": "MATCH"
+ },
+ "inventory_json": {
+  "post_sha256": "7d96a4adef97267ee60a8b63fabdd4d847e52e89a263b8054520704a4697a6dd",
+  "bound_value": "7d96a4adef97267ee60a8b63fabdd4d847e52e89a263b8054520704a4697a6dd",
+  "verdict": "MATCH"
+ },
+ "subject_json": {
+  "manifest_sha256": "8045f3b1ce56398fe506aeec9f9344405e32cd7dffda64ddaff4dbd0db6c7cd4",
+  "head": "8c535a260ce561eaab4111aafc29038eb9f77ff3",
+  "porcelain_lines": 0,
+  "verdict": "MATCH (사후 재실측)"
+ }
+}

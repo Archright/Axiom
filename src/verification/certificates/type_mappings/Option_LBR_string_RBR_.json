@@ -1,0 +1,8 @@
+{
+  "nimType": "Option[string]",
+  "leanType": "Option String",
+  "smtSort": "(Option String)",
+  "mappingProofObligation": "nim_lean_Optionstring_iso",
+  "verified": false,
+  "sourceHash": ""
+}

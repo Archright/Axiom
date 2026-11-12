@@ -1,0 +1,27 @@
+{
+  "ciEpochId": "N+8",
+  "implementedSlices": [
+    "SL-08",
+    "SL-01",
+    "SL-02",
+    "SL-03",
+    "SL-04",
+    "SL-12",
+    "SL-10",
+    "SL-0713",
+    "SL-05",
+    "SL-15",
+    "SL-18",
+    "SL-19"
+  ],
+  "notYetImplementedSlices": [
+    "SL-06",
+    "SL-09",
+    "SL-11",
+    "SL-14",
+    "SL-16",
+    "SL-17"
+  ],
+  "productionExecutionPin": "8db2ad30b6f5d87621e44b0c480b2f0869841198",
+  "mode": "ci-migration"
+}

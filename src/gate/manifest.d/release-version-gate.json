@@ -1,0 +1,18 @@
+{
+  "id": "release-version-gate",
+  "name": "Release Version Gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/release_version_gate",
+  "stages": [
+    "manual"
+  ],
+  "passFilenames": false,
+  "weight": "medium",
+  "category": "policy",
+  "argsTemplate": [
+    "$repoRoot"
+  ],
+  "severity": "error",
+  "execution_mode": "interpreted",
+  "always_run": true
+}

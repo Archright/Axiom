@@ -1,0 +1,53 @@
+{
+  "version": 2,
+  "entries": [
+    {
+      "modulePath": "src/core/orchestrator/orchestrator_api.nim",
+      "functionName": "normalizeMaxWorkers",
+      "status": "certZ3Candidate",
+      "solverMethod": "smNone",
+      "lastVerifiedAt": "2026-08-30T01:34:38Z",
+      "irHash": "092c603556d3ad08fd42e3e198cc9701f5e612479bc498c09379adaf5a8400e7"
+    },
+    {
+      "modulePath": "src/core/orchestrator/orchestrator_topology_worker.nim",
+      "functionName": "calcDynamicTimeoutCore",
+      "status": "certZ3Candidate",
+      "solverMethod": "smNone",
+      "lastVerifiedAt": "2026-08-30T01:34:38Z",
+      "irHash": "6341de400b1726ed32205d2533ca7a1b91c4807cf5109486c4e255f64ef87c92"
+    },
+    {
+      "modulePath": "src/core/orchestrator/orchestrator_topology_worker.nim",
+      "functionName": "clampTimeoutMs",
+      "status": "certZ3Candidate",
+      "solverMethod": "smNone",
+      "lastVerifiedAt": "2026-08-30T01:34:38Z",
+      "irHash": "5890af13104e3c071be3942d3e193da48cd97d2a9eabf6dddfcb1cb4477c5099"
+    },
+    {
+      "modulePath": "src/core/orchestrator/orchestrator_vault.nim",
+      "functionName": "safeSpeedupRatioCore",
+      "status": "certZ3Candidate",
+      "solverMethod": "smNone",
+      "lastVerifiedAt": "2026-08-30T01:34:38Z",
+      "irHash": "af93a04a98f3bad92a968f9a3de441a04f9f815ac15f3e609cf6a8d6591671cc"
+    },
+    {
+      "modulePath": "src/core/topology/topology_dependency.nim",
+      "functionName": "proximityScore",
+      "status": "certZ3Candidate",
+      "solverMethod": "smNone",
+      "lastVerifiedAt": "2026-08-30T01:34:38Z",
+      "irHash": "f1b6dbd742ba4af29d88b011ea5973220034a2da1fe98eb8865543db429c6d6e"
+    },
+    {
+      "modulePath": "stew/bitops2.nim",
+      "functionName": "getBitsBE",
+      "status": "certYellow",
+      "solverMethod": "smNone",
+      "lastVerifiedAt": "2026-08-30T01:34:38Z",
+      "irHash": "4936704f0d414a9b5388b7dc830ba190aa8f110af777ae1f3ef1ff9f696a3399"
+    }
+  ]
+}

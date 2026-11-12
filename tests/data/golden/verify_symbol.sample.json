@@ -1,0 +1,12 @@
+{
+  "script": "tools/verify_symbol.sh",
+  "description": "Compiler-in-the-Loop Atomic Mutation — runs nim check on a single file and reports pass/fail after symbol mutation",
+  "inputSample": {
+    "args": ["src/core/checker.nim"]
+  },
+  "outputSample": {
+    "stdout": "COMPILE_OK: src/core/checker.nim",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

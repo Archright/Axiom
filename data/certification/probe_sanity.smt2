@@ -1,0 +1,8 @@
+(declare-const x Int)
+(declare-const r Int)
+(define-fun doubled () Int (* x 2))
+(assert (=> (> doubled 100) (= r 0)))
+(assert (=> (<= doubled 100) (= r doubled)))
+(assert (> doubled 100))
+(assert (= r doubled))
+(check-sat)

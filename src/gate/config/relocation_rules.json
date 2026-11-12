@@ -1,0 +1,53 @@
+{
+  "description": "Architecture relocation rules for dependency graph gate. Defines file moves needed to fix layer boundary violations.",
+  "relocations": [
+    {
+      "from": "gate/utils/real_git.nim",
+      "to": "infrastructure/real_git.nim",
+      "reason": "core/ modules import gate/utils/real_git — violates layer boundary. real_git is a utility, not gate-specific.",
+      "affected_importers": [
+        "core/symbol_graph/global_symbol_graph_builder_part2.nim",
+        "core/observer/scanner.nim",
+        "core/audit/hotspot_analyzer.nim",
+        "core/runtime/golden_version.nim"
+      ],
+      "import_update": {
+        "old": "import ../../gate/utils/real_git",
+        "new": "import ../../infrastructure/real_git"
+      }
+    },
+    {
+      "from": "cli/selection_state.nim",
+      "to": "core/session/selection_state.nim",
+      "reason": "verification/ modules import cli/selection_state — violates layer boundary. Selection state is domain logic, not presentation.",
+      "affected_importers": [
+        "verification/batch_uap/loop_driver.nim",
+        "verification/batch_uap/private/loop_driver_part1.nim"
+      ],
+      "import_update": {
+        "old": "import cli/selection_state",
+        "new": "import core/session/selection_state"
+      }
+    },
+    {
+      "from": "gate/gate_consts.nim",
+      "to": "core/constants/gate_consts.nim",
+      "reason": "core/trusted/ imports gate/gate_consts — violates layer boundary. Constants should be in core.",
+      "affected_importers": [
+        "core/trusted/layer_enforcement.nim"
+      ],
+      "import_update": {
+        "old": "import gate/gate_consts",
+        "new": "import core/constants/gate_consts"
+      }
+    }
+  ],
+  "layer_matrix": {
+    "description": "Allowed import directions: ← means 'can import from'",
+    "presentation": [],
+    "infrastructure": ["core"],
+    "core": [],
+    "verification": ["core", "infrastructure"],
+    "gate": ["core", "infrastructure", "verification"]
+  }
+}

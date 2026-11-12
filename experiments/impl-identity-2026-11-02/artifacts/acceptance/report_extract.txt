@@ -1,0 +1,54 @@
+== cold acceptance (MERGE_SHA a24b8b82, worktree /tmp/cold2_main) trajectory extracts ==
+
+-- cold2 B:
+name: axiom_impl_probe::m1::Dog::speak
+status: unknown
+reason: out-of-subset grammar (fail-closed): out-of-scope subject grammar — fail-closed UNKNOWN (not verified, not an internal error): generic parameter 'regions' outside the closed v1 grammar (monomorphic only)
+
+-- cold2 C:
+name: axiom_impl_probe::m2::Cat::speak
+status: unknown
+reason: out-of-subset grammar (fail-closed): out-of-scope subject grammar — fail-closed UNKNOWN (not verified, not an internal error): generic parameter 'regions' outside the closed v1 grammar (monomorphic only)
+
+-- cold2 E:
+name: axiom_impl_probe::m1::add_u8
+status: unknown
+reason: extraction: reference extractor rejected the wire (unsupported construct or malformed bytes): IR/RustReferenceExtractor.lean:70:0: error: unknown module prefix 'IR'
+
+No directory 'IR' or file 'IR.olean' in the search path entries:
+/tmp/cold2_main/proofs/.lake/build/lib/lean
+<user-home>/.elan/toolchains/leanprover--lean4---v4.33.0/lib/lean
+<user-home>/.elan/toolchains/leanprover--lean4---v4.33.0/lib/lean
+
+
+-- cold2 E2:
+name: axiom_impl_probe::m1::add_u8
+status: unknown
+reason: guard attempt: 1 goal(s); guard goal '4:boLt(5:boAdd(var(1:a,BV64),var(1:b,BV64)),lit(3:256))' declined by kernel; Z3 confirms a refuting candidate exists (script digest f32b31343521fd973ac5479e123a16a6d80a59d68845b60b645656d7f18519f1); counterexample confirmation unavailable (overflow-discretion class, out-of-subset per §3)
+
+-- cold2 EM:
+name: axiom_impl_probe::m1::add_u8
+status: unknown
+reason: extraction: reference extractor rejected the wire (unsupported construct or malformed bytes): IR/RustReferenceExtractor.lean:70:0: error: unknown module prefix 'IR'
+
+No directory 'IR' or file 'IR.olean' in the search path entries:
+/tmp/cold2_main/proofs/.lake/build/lib/lean
+<user-home>/.elan/toolchains/leanprover--lean4---v4.33.0/lib/lean
+<user-home>/.elan/toolchains/leanprover--lean4---v4.33.0/lib/lean
+
+
+== pre-merge baseline (working tree @ d8afabf03 == tree(a24b8b82), /tmp/ax_impl_state_*) ==
+
+-- pre B: name=axiom_impl_probe::m1::Dog::speak status=unknown
+reason: out-of-subset grammar (fail-closed): out-of-scope subject grammar — fail-closed UNKNOWN (not verified, not an internal error): generic parameter 'regions' outside the closed v1 grammar (monomorphic only)
+
+-- pre C: name=axiom_impl_probe::m2::Cat::speak status=unknown
+reason: out-of-subset grammar (fail-closed): out-of-scope subject grammar — fail-closed UNKNOWN (not verified, not an internal error): generic parameter 'regions' outside the closed v1 grammar (monomorphic only)
+
+-- pre E: name=axiom_impl_probe::m1::add_u8 status=unknown
+reason: guard attempt: 1 goal(s); guard goal '4:boLt(5:boAdd(var(1:a,BV64),var(1:b,BV64)),lit(3:256))' declined by kernel; Z3 confirms a refuting candidate exists (script digest f32b31343521fd973ac5479e123a16a6d80a59d68845b60b645656d7f18519f1); counterexample confirmation unavailable (overflow-discretion class, out-of-subset per §3)
+
+== byte comparisons: pre-merge <-> cold @ merge SHA ==
+B: name equal=True | status equal=True | reason byte-identical=True
+C: name equal=True | status equal=True | reason byte-identical=True
+E (cold run E2, post lake-build): name equal=True | status equal=True | reason byte-identical=True

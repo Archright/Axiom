@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "kind": "operational-closure-phase0",
+  "recordedAt": "2026-10-19T04:29:59Z",
+  "head": "ba5706b54f41ffd7783847e517b6951d56d07388",
+  "toolchain": {
+    "nim": "2.2.10",
+    "lean": "4.33.0",
+    "z3": "4.13.3",
+    "charon": "0.1.281 (798016509139eb51f0d764645f76d068d34ba5f6)"
+  },
+  "build": {
+    "command": "bin/hermetic_build && make build",
+    "binAx": "v0.3.7",
+    "sourceCoherence": "PASS tree=4538662700892964645 embedded=4538662700892964645",
+    "ircheck": "present",
+    "staleBuildFailure": "make ci-compile alone left a stale BuildSourceHash; bin/ax failed SourceCoherence until bin/hermetic_build regenerated build_env.nim"
+  },
+  "journal": {
+    "records": 306,
+    "v2Entries": 1126,
+    "v1FullCertClaims": 27,
+    "quarantineRecords": 0,
+    "productionParentCommit": "none",
+    "claimShapes": {
+      "v1": "full certificate fields (modulePath/functionName/status/sourceHash/irHash/solverMeta/toolchainIdentity/semanticProfileId)",
+      "v2": "compact entries[] (modulePath/functionName/status/irHash/lastVerifiedAt only; no sourceHash/toolchain/profile)"
+    },
+    "normalizeMaxWorkersVariants": 225,
+    "proximityScoreVariants": 157,
+    "finding": "VKD admission must use full-cert claims only, filter by current context, dedup by identity, and fail closed on multiple distinct eligible claims. The journal has no fold/latest-valid model, no quarantine consumer, and no time order in production records."
+  },
+  "currentEligibleEvidence": {
+    "normalizeMaxWorkers": {
+      "z3Cert": "build/certificates/be85c69d0e0328fb3c607bfbece7bbbf2d76c9c3fb8e7910673a076b0bc21a45.json",
+      "status": "certZ3Candidate",
+      "z3Executed": true,
+      "semanticProfileId": "d2c44f569ef61e349a915582c4237b1b747df4d30a4701712178655bdd5bc44e",
+      "certVerify": "rc=0 replayMatched=true",
+      "legacyLeanCert": "src/verification/certificates/c14243cdc6d5628d64cb11ff38a9b7cf5cd04a817c5ed28979cc1b0f28c24e39.json",
+      "legacyLeanCertVerify": "rc=4 NOT_CURRENT",
+      "legacyLeanCertReusable": false
+    },
+    "proximityScore": {
+      "z3Cert": "build/certificates/89b0a232bd4bc34aa6bb4af955e286a5bc9f0704cdcabe665db28cd25c471a10.json",
+      "status": "certZ3Candidate",
+      "z3Executed": true,
+      "certVerify": "rc=0 replayMatched=true",
+      "observedCertRed": {
+        "irHash": "f1b6dbd742ba4af29d88b011ea5973220034a2da1fe98eb8865543db429c6d6e",
+        "firstObserved": "journal v2 entries with status certRed",
+        "attribution": "UNKNOWN — Phase 0 follow-up"
+      }
+    }
+  },
+  "canonicalDecline": {
+    "normalizeMaxWorkers": "subject binding: parse-bound components unmeasured at the selection boundary (pnodeV2/extraction agreement: EA_UNSUPPORTED: unsupported AST node (ckIfStmt) outside the certified-subset wire set)",
+    "safeSpeedupRatioCore": "EA_UNSUPPORTED: unsupported AST node (ckIfStmt) outside the certified-subset wire set",
+    "proximityScore": "subject binding: completenessRecordDigest unmeasurable — no CompletenessEvidence artifact for this funcDef (the external materializer must run before canonical verification)",
+    "calcDynamicTimeoutCore": "canonical-declined (evidence=inconclusive; exact sealError not captured in this log)",
+    "bmcFallback": "calcDynamicTimeoutCore / safeSpeedupRatioCore / proximityScore = psFail, provenance=smBMC/pkNone (Z3 SAT); separate from canonical path"
+  },
+  "phase0Runs": {
+    "normalizeMaxWorkers": {
+      "exit": 0,
+      "journalChanged": true,
+      "certVaultFiles": 2,
+      "result": "NOT_VERIFIABLE; canonical declined at EA_UNSUPPORTED ckIfStmt"
+    },
+    "proximityScore": {
+      "exit": 1,
+      "journalChanged": false,
+      "certVaultFiles": 2,
+      "result": "verification failure; canonical declined at completenessRecordDigest unmeasurable"
+    },
+    "report": {
+      "exit": 1,
+      "vkd": {
+        "verified": 0,
+        "total": 23,
+        "ratio": 0.0
+      }
+    }
+  },
+  "candidateDecision": {
+    "selected": "proximityScore",
+    "reason": "Only candidate whose canonical decline is the common completeness gate; its early-return returns 0 so the known non-zero-return EA degradation does not apply. normalizeMaxWorkers requires ckIfStmt wire + ReferenceExtractor + Triple-Closure recertification and its legacy Lean cert is NOT_CURRENT.",
+    "deferred": "normalizeMaxWorkers + ckIfStmt wire extension (separate slice)"
+  },
+  "trustGaps": [
+    "readCommit parses without validateCommit; verifyCertificateClosure does not recompute commitId == computeCommitId(content); consistent cert+journal tamper with public Ed25519 seed can pass closure",
+    "tcQuarantine has no consumer; hydration is additive; quarantine does not decrement verified count",
+    "TrustCommit header scopeDigest is hardcoded (profileIdentity wave5-cert-writer, kernelTotal 1, vksTotal 0); configDigest lacks toolchain/policy identity",
+    "writer journal base (AXIOM_STATE_DIR) and reader journal base (product root) can diverge"
+  ],
+  "completenessGaps": [
+    "CompletenessEvidence has only 5 fields; load has no re-hash or key equality; jsonToEvidence silently defaults missing fields",
+    "Only producer is experiment-only external_ir_materializer; kernel entries have no producer",
+    "IR digest has 4 flavors; inline freshName global counter makes v1/v3 order-dependent",
+    "semanticProfileId is the single config authority; no separate configDigest"
+  ],
+  "coldIsolationGaps": [
+    "AXIOM_STATE_DIR / CWD / repoRoot split; runtime cert read is CWD-relative, manifest journal bypasses state dir, scope lock reads split",
+    "clean worktree has no runtime journal/certs; tracked reference vault/scope lock are contract inputs",
+    "main worktree hash unchanged proves no writes, not no reads",
+    "strace openat is required to prove no main runtime state reads",
+    "R3 INC-R3-001: wp5 negative control failed 4x (exit 4); cold relocation remains UNKNOWN until resolved"
+  ],
+  "minimalChangeSet": [
+    "trust_commit.nim: enforce validateCommit + commitId recompute on read; align writer/reader journal roots",
+    "cert_reconcile.nim: add currentState(journal) = full-cert claims + current-context filter + quarantine + identity dedup + ambiguity fail-closed",
+    "proof_hydration.nim/report_cli.nim: journal-driven approvedEvidence, no L1 cache/reference-vault authority",
+    "evidence_artifact_io.nim/semantic_fact_types.nim: strict completeness wrapper (schemaVersion, evidenceKey, irDigest flavors, sourceIdentity/moduleSha256, semanticProfileId, toolchainFingerprint, payload, evidenceDigest) with load-time checks",
+    "canonical_verification.nim/ir_pipeline_runner.nim: kernel-entry measured completeness producer; proximityScore canonical KAA + dual",
+    "tests: read-path tamper, projection-vs-evidence, stale/foreign completeness, journal fold/quarantine/ambiguity, cold strace"
+  ],
+  "terminalOutcome": "pending implementation: proximityScore dual certGreen + VKD 1/23 + Rust 1/1/1 + cold replay + merge queue + canonical main"
+}

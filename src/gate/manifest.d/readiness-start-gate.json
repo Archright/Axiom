@@ -1,0 +1,15 @@
+{
+  "id": "readiness-start-gate",
+  "name": "Axiom readiness start gate (productization E2E + readiness evaluator)",
+  "layer": "functional",
+  "entry": "src/gate/runners/readiness_start_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "tests/gateway/|tools/readiness_evaluator.nim|src/core/utils/decision_algebra.nim|config/readiness_policy.json|data/readiness/|src/gate/runners/readiness_start_gate.nim",
+  "passFilenames": false,
+  "weight": "heavy",
+  "category": "validation",
+  "severity": "error",
+  "always_run": true
+}

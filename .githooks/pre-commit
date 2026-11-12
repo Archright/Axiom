@@ -1,0 +1,411 @@
+#!/bin/bash
+# Axiom pre-commit hook — Compile-time spec verification + Gate enforcement
+set -e
+
+cd "$(git rev-parse --show-toplevel)"
+
+# ── Part 0: worktree placement + topology assertion (fail-closed) ──
+# Placement invariant (docs/spec/nested_worktree_config_quirks.md): a workspace whose
+# STRICTLY-above ancestor holds a config.nims double-loads the enclosing config, and
+# every Nim target in the family becomes build-incapable. Topology invariant: the
+# toplevel must not lie under another registered worktree root. Both are tree
+# properties — no caller identity is involved, the same stateless shape the PreToolUse
+# predicate uses. This hook is their sole mechanical enforcement point: worktree
+# placement is decided here at commit time, fail-closed.
+TOPLEVEL="$(git rev-parse --show-toplevel)"
+CFG_ANCESTOR="$TOPLEVEL"
+while [ "$CFG_ANCESTOR" != "/" ]; do
+    CFG_ANCESTOR="$(dirname "$CFG_ANCESTOR")"
+    if [ -f "$CFG_ANCESTOR/config.nims" ]; then
+        echo "[Pre-commit FAIL] Worktree placement invariant violated."
+        echo "   $CFG_ANCESTOR/config.nims is a strictly-above ancestor of $TOPLEVEL."
+        echo "   Nim double-loads the enclosing config.nims (build-incapable)."
+        echo "   Use a sibling worktree outside every config.nims ancestor. DO NOT use --no-verify."
+        exit 1
+    fi
+done
+while IFS= read -r WT_ROOT; do
+    if [ -z "$WT_ROOT" ]; then
+        continue
+    fi
+    if [ "$WT_ROOT" = "$TOPLEVEL" ]; then
+        continue
+    fi
+    case "$TOPLEVEL" in
+        "$WT_ROOT"/*)
+            echo "[Pre-commit FAIL] Nested worktree topology detected."
+            echo "   Committing toplevel $TOPLEVEL is nested under registered worktree $WT_ROOT."
+            echo "   Nested worktrees double-load the enclosing config.nims (build-incapable)."
+            echo "   Use a sibling worktree instead. DO NOT use --no-verify."
+            exit 1
+            ;;
+    esac
+done < <(git worktree list --porcelain | sed -n 's/^worktree //p')
+
+# ── Part 1: nim check on staged .nim files (canonical parallel gate) ──
+STAGED_NIM=$(git diff --cached --name-only --diff-filter=ACM | grep '\.nim$' || true)
+
+if [ -n "$STAGED_NIM" ]; then
+    # Filter include-fragment / skip-marked files. These are not independent
+    # translation units (e.g. `include`d fragments such as
+    # src/core/trusted/axiom_pragmas.nim); their integrity is verified when the
+    # parent module builds. (Absorbing this policy into the runner is a follow-up.)
+    CHECK_LIST=""
+    for f in $STAGED_NIM; do
+        [ -f "$f" ] || continue
+        if grep -q "nim-check: skip" "$f"; then
+            echo "[Hook] Skipping fragment file (include fragment): $f"
+            continue
+        fi
+        CHECK_LIST="$CHECK_LIST $f"
+    done
+
+    if [ -n "$CHECK_LIST" ]; then
+        # ── nim_check_gate freshness — content identity (VS-1 precedent) ──
+        # Freshness guard: a stale or missing gate binary is an explicit FAIL
+        # (no JIT rebuild inside the hook — two-phase compiler dependency).
+        # The former mtime guard (`find src/gate/runners -newer bin/…`) blocked
+        # content-identical commits whose sources merely carried future mtimes
+        # (observed twice) and could miss real changes rolled back below the
+        # binary mtime (P0-1). Adjudication contract:
+        #   - the input identity is ALWAYS computed from content — mtime never
+        #     skips it. Inputs = nim genDepend transitive closure of the gate
+        #     source ∪ every src/gate/runners/*.nim (the conservative scope of
+        #     the replaced mtime check) ∪ the builder tools/build_all_gates.nim
+        #     (the canonical rebuild — no Makefile target exists for this gate;
+        #     the builder's source sha256 and its -d:release flag string are
+        #     bound into the identity);
+        #   - a stamp (vs1-gate-stamp/1, checkout-local .cache/) binds
+        #     INPUT_IDENTITY and BINARY_SHA256: both must match → fresh. A
+        #     binary sha mismatch with unchanged inputs is a tampered or
+        #     non-canonically rebuilt binary — a deterministic rebuild
+        #     reproduces the recorded sha — and FAILs with no re-stamp path;
+        #   - mtime survives ONLY as the bootstrap signal: with no stamp, or
+        #     when an observable rebuild rewrote the binary after the stamp
+        #     (binary newer than the stamp AND postdating every input), the
+        #     stamp is (re)recorded atomically. The normal flow
+        #     (bin/build_all_gates --release → commit) passes through exactly
+        #     this path and is then permanently bound to identity+sha.
+        # pp_* machinery (hashing memo, manifest hashing, genDepend capture,
+        # stamp schema + directory) is sourced from .githooks/pre-push Part 4a;
+        # the PREPUSH_SOURCE_ONLY guard there returns before any pre-push
+        # check executes. genDepend quirks: docs/spec/nim_gendepend_quirks.md.
+        PREPUSH_SOURCE_ONLY=1
+        source "$TOPLEVEL/.githooks/pre-push"
+        unset PREPUSH_SOURCE_ONLY
+        NCG_BIN="bin/nim_check_gate"
+        NCG_SRC="$TOPLEVEL/src/gate/runners/nim_check_gate.nim"
+        NCG_STAMP="$GATE_STAMP_DIR/nim_check_gate.stamp"
+        NCG_BUILDER="$TOPLEVEL/tools/build_all_gates.nim"
+        # genDepend capture flags: build_all_gates resolves imports through the
+        # repo config.nims (no skip flags, repo-root CWD); from the throwaway
+        # capture CWD the config machinery quits instead, so the same import
+        # resolution is expressed explicitly with repo-root-anchored absolute
+        # paths (CWD-independent, bound into the identity below). -d:release
+        # mirrors the builder's release flag so closure conditionals take the
+        # same branches as the real build. One hook-owned flag is appended:
+        # --skipUserCfg — the user cfg (~/.config/nim/nim.cfg) is an untracked,
+        # machine-local input that genDepend honors (nimc.md cfg order: global
+        # → user → parent → project), and on this capture profile it breaks the
+        # closure outright (measured 2026-11-09: --threads:off → malebolgia
+        # 'Thread' undeclared; --define:windows → typedthreads 'pthread_join'
+        # undeclared — .deps not created → capture UNKNOWN → commit blocked),
+        # so machine-local config must not gate commits. Skipping it makes the
+        # closure a function of repo + toolchain + this flag string only
+        # (DEBT#521 pre-commit Part 1; pre-push Part 4a skips it via
+        # pp_canonical_flags since 2026-11-09 — same rationale). The global
+        # toolchain cfg is NOT skipped: the real build loads it and its sha256
+        # is bound into the identity (TOOLCHAIN_CFG in pc_identity). Details:
+        # docs/spec/nim_gendepend_quirks.md.
+        NCG_GENFLAGS="--hints:off --skipParentCfg --skipProjCfg --skipUserCfg --path:$TOPLEVEL --path:$TOPLEVEL/src --path:$TOPLEVEL/tools -d:release"
+
+        pc_manifest() {
+            # $1 output file. Sorted CLOSUE:/PROBE: manifest: the genDepend
+            # closure of the gate source ∪ every runner ∪ the builder source.
+            # rc 1 = closure capture failed (UNKNOWN — fail-closed, §0.9).
+            local out tmp f
+            out="$1"
+            tmp="$(mktemp)" || return 1
+            if ! pp_capture_manifest "$NCG_SRC" "$NCG_GENFLAGS" "$tmp"; then
+                rm -f "$tmp"
+                return 1
+            fi
+            {
+                cat "$tmp"
+                printf 'CLOSURE:%s\n' "$NCG_SRC"
+                for f in "$TOPLEVEL"/src/gate/runners/*.nim; do
+                    printf 'CLOSURE:%s\n' "$f"
+                done
+                printf 'CLOSURE:%s\n' "$NCG_BUILDER"
+            } | LC_ALL=C sort -u > "$out" || { rm -f "$tmp"; return 1; }
+            rm -f "$tmp"
+            return 0
+        }
+
+        pc_identity() {
+            # $1 manifest file → composite input identity (sha256 hex).
+            # Deterministic for identical inputs — no timestamps, no mtimes.
+            # Components: toolchain (nim/gcc/nim.cfg) + host + the builder
+            # identity (build_all_gates.nim sha256 + "-d:release" — replaces
+            # VS-1's NIM_TOOL_FLAGS slot, which presumes a Makefile target) +
+            # the capture flags + the manifest closure/probe hashes.
+            local manifest stream id nimbin cfg
+            manifest="$1"
+            nimbin="$(command -v nim 2>/dev/null)"
+            if [ -z "$nimbin" ]; then
+                nimbin="nim"
+            fi
+            cfg="$(dirname "$(dirname "$nimbin")")/config/nim.cfg"
+            stream="$(mktemp)" || return 1
+            {
+                printf 'NIM_VERSION:%s\n' "$(nim --version 2>/dev/null | head -1)"
+                pp_file_sha "$nimbin"
+                printf 'NIM_SHA:%s  %s\n' "$PP_SHA" "$nimbin"
+                printf 'GCC_VERSION:%s\n' "$(gcc --version 2>/dev/null | head -1)"
+                pp_file_sha "$NCG_BUILDER"
+                printf 'BUILDER_SHA:%s  %s\n' "$PP_SHA" "$NCG_BUILDER"
+                printf 'BUILDER_FLAGS:-d:release\n'
+                if [ -f "$cfg" ]; then
+                    pp_file_sha "$cfg"
+                    printf 'TOOLCHAIN_CFG:%s  %s\n' "$PP_SHA" "$cfg"
+                else
+                    printf 'TOOLCHAIN_CFG:ABSENT\n'
+                fi
+                printf 'HOST:%s\n' "$(uname -sr 2>/dev/null)"
+                printf 'FLAGS:%s\n' "$NCG_GENFLAGS"
+                pp_manifest_hash_stream "$manifest"
+            } > "$stream" || { rm -f "$stream"; return 1; }
+            id="$(sha256sum "$stream" 2>/dev/null | cut -d' ' -f1)"
+            rm -f "$stream"
+            if [ -z "$id" ]; then
+                return 1
+            fi
+            printf '%s\n' "$id"
+        }
+
+        pc_mtime_fresh() {
+            # $1 manifest. rc 0 = no input file is newer than the binary — the
+            # bootstrap signal ONLY, never an adjudication input once a stamp
+            # covers the binary. Missing files are skipped: existence
+            # transitions are bound by the identity (CLOSUE_SHA ↔
+            # CLOSUE_MISSING), not by mtime.
+            local line path
+            while IFS= read -r line || [ -n "$line" ]; do
+                case "$line" in
+                    CLOSURE:*)
+                        path="${line#CLOSURE:}"
+                        [ -e "$path" ] || continue
+                        if [ "$path" -nt "$NCG_BIN" ]; then
+                            return 1
+                        fi
+                        ;;
+                esac
+            done < "$1"
+            return 0
+        }
+
+        pc_write_stamp() {
+            # $1 manifest, $2 identity, $3 binary sha256. Atomic write
+            # (PID-unique tmp + mv — atomicWriteFile precedent). META lines
+            # are diagnostics only: the identity is recomputed from live
+            # inputs at every commit, never compared against these lines.
+            local tmpstamp
+            mkdir -p "$GATE_STAMP_DIR" || return 1
+            tmpstamp="$NCG_STAMP.tmp.$$.$RANDOM"
+            {
+                printf 'SCHEMA=vs1-gate-stamp/1\n'
+                printf 'INPUT_IDENTITY=%s\n' "$2"
+                printf 'BINARY_SHA256=%s\n' "$3"
+                cat "$1"
+                printf 'META_NIM_VERSION=%s\n' "$(nim --version 2>/dev/null | head -1)"
+                printf 'META_BUILDER=%s\n' "$NCG_BUILDER --release"
+                printf 'META_GENDEPEND_FLAGS=%s\n' "$NCG_GENFLAGS"
+                printf 'META_REBUILD_CMD=bin/build_all_gates --release\n'
+                printf 'META_HOOK=pre-commit Part 1 freshness guard\n'
+                printf 'BUILT_AT=%s\n' "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+            } > "$tmpstamp" || { rm -f "$tmpstamp"; return 1; }
+            mv -f "$tmpstamp" "$NCG_STAMP" || { rm -f "$tmpstamp"; return 1; }
+            return 0
+        }
+
+        pc_nim_check_fresh() {
+            # rc 0 = fresh (identity-verified, or bootstrap/rebuild
+            # re-stamped); rc 1 = stale, missing or UNKNOWN. Sets PC_REASON
+            # for the diagnostic line. Invoked from an `if !` context so
+            # set -e is suspended inside, like pp_adjudicate_pair.
+            local manifest id bsha schema want_id want_bsha stamp_ok
+            PC_REASON=""
+            if [ ! -f "$NCG_BIN" ]; then
+                PC_REASON="binary missing"
+                return 1
+            fi
+            manifest="$(mktemp)" || { PC_REASON="UNKNOWN (mktemp failed)"; return 1; }
+            if ! pc_manifest "$manifest"; then
+                rm -f "$manifest"
+                PC_REASON="genDepend closure could not be captured or validated (UNKNOWN)"
+                return 1
+            fi
+            if ! id="$(pc_identity "$manifest")"; then
+                rm -f "$manifest"
+                PC_REASON="input identity could not be computed (UNKNOWN)"
+                return 1
+            fi
+            bsha="$(sha256sum "$NCG_BIN" 2>/dev/null | cut -d' ' -f1)"
+            if [ -z "$bsha" ]; then
+                rm -f "$manifest"
+                PC_REASON="binary sha256 could not be computed (UNKNOWN)"
+                return 1
+            fi
+            if [ -f "$NCG_STAMP" ]; then
+                schema="$(sed -n 's/^SCHEMA=//p' "$NCG_STAMP" | head -1)"
+                want_id="$(sed -n 's/^INPUT_IDENTITY=//p' "$NCG_STAMP" | head -1)"
+                want_bsha="$(sed -n 's/^BINARY_SHA256=//p' "$NCG_STAMP" | head -1)"
+                # A present-but-corrupt stamp is a mismatch, never an absent
+                # stamp — the file's existence must not weaken the check. Only
+                # an observable rebuild may re-record it (below).
+                stamp_ok=0
+                if [ "$schema" = "vs1-gate-stamp/1" ] \
+                   && [ "${#want_id}" -eq 64 ] && [ "${#want_bsha}" -eq 64 ] \
+                   && [[ "$want_id" != *[!0-9a-f]* ]] && [[ "$want_bsha" != *[!0-9a-f]* ]] \
+                   && grep -qxF "CLOSURE:$NCG_SRC" "$NCG_STAMP"; then
+                    stamp_ok=1
+                fi
+                if [ "$stamp_ok" -eq 1 ] && [ "$id" = "$want_id" ]; then
+                    if [ "$bsha" = "$want_bsha" ]; then
+                        rm -f "$manifest"
+                        return 0
+                    fi
+                    # Inputs unchanged: a deterministic rebuild reproduces the
+                    # recorded sha, so a different sha is a tampered or
+                    # non-canonically rebuilt binary. No re-stamp path may
+                    # accept it (§0.9 — no swallowed failures).
+                    rm -f "$manifest"
+                    PC_REASON="binary sha256 mismatch with unchanged inputs (tampered or non-canonical rebuild)"
+                    return 1
+                fi
+                # Inputs changed (or the stamp is corrupt): the stamp may be
+                # re-recorded ONLY when a rebuild is observable — the binary
+                # was rewritten after the stamp was written AND postdates
+                # every current input.
+                if [ "$NCG_BIN" -nt "$NCG_STAMP" ] && pc_mtime_fresh "$manifest"; then
+                    if pc_write_stamp "$manifest" "$id" "$bsha"; then
+                        rm -f "$manifest"
+                        echo "[Hook] nim_check_gate stamp re-recorded (rebuild detected — identity+sha re-bound)."
+                        return 0
+                    fi
+                fi
+                rm -f "$manifest"
+                if [ "$stamp_ok" -eq 1 ]; then
+                    PC_REASON="input identity mismatch (stale binary — rebuild required)"
+                else
+                    PC_REASON="stamp corrupt or incomplete (UNKNOWN)"
+                fi
+                return 1
+            fi
+            # Bootstrap (no stamp): mtime is the only available signal — the
+            # binary must postdate every input; the identity+sha binding is
+            # then recorded and owns every subsequent commit.
+            if pc_mtime_fresh "$manifest"; then
+                if pc_write_stamp "$manifest" "$id" "$bsha"; then
+                    rm -f "$manifest"
+                    echo "[Hook] nim_check_gate stamp recorded (bootstrap — identity+sha bound)."
+                    return 0
+                fi
+            fi
+            rm -f "$manifest"
+            PC_REASON="bootstrap: at least one input is newer than the binary (mtime)"
+            return 1
+        }
+
+        if ! pc_nim_check_fresh; then
+            echo "[Hook] nim_check_gate freshness: $PC_REASON"
+            echo "[Pre-commit FAIL] bin/nim_check_gate is missing or stale."
+            echo "   Run: bin/build_all_gates --release"
+            echo "   DO NOT use --no-verify."
+            exit 1
+        fi
+
+        NPROC=$(nproc)
+        AXIOM_HERMETIC_BUILDING=1 bin/nim_check_gate "$PWD" incremental "$NPROC" $CHECK_LIST || {
+            echo "[Pre-commit FAIL] Compiler spec verification failed for staged files."
+            echo "   Check IDE/LSP for red underlined spec drift errors."
+            echo "   DO NOT use --no-verify."
+            exit 1
+        }
+    fi
+fi
+
+# ── Part 2: anti_theater_gate (build if missing) ──
+if [ ! -f bin/anti_theater_gate ]; then
+    echo "[Hook] Building anti_theater_gate..."
+    nim c -d:danger --hints:off -o:bin/anti_theater_gate src/gate/runners/anti_theater_gate.nim > /dev/null 2>&1
+fi
+bin/anti_theater_gate || {
+    echo "[Pre-commit FAIL] Anti-theater gate detected violations."
+    echo "   Fix theater signatures above. DO NOT use --no-verify."
+    exit 1
+}
+
+# ── Part 3: layer_enforcement_gate (build if missing) ──
+if [ ! -f bin/layer_enforcement_gate ]; then
+    echo "[Hook] Building layer_enforcement_gate..."
+    nim c -d:danger --hints:off -o:bin/layer_enforcement_gate src/gate/runners/layer_enforcement_gate.nim > /dev/null 2>&1
+fi
+bin/layer_enforcement_gate --strict || {
+    echo "[Pre-commit FAIL] Layer enforcement gate detected violations."
+    echo "   Fix layer boundary violations above. DO NOT use --no-verify."
+    exit 1
+}
+
+# ── Part 4: stale_cert_gate (build if missing) ──
+# Blocks commits whose staged source no longer matches committed certificates
+# (fail-closed stale-cert gate). Run 'ax vkd sync' to regenerate.
+if [ ! -f bin/stale_cert_gate ]; then
+    echo "[Hook] Building stale_cert_gate..."
+    nim c --hints:off -o:bin/stale_cert_gate tools/stale_cert_gate.nim > /dev/null 2>&1
+fi
+bin/stale_cert_gate || {
+    echo "[Pre-commit FAIL] Stale certificate gate detected violations."
+    echo "   Run 'ax vkd sync' to regenerate certificates. DO NOT use --no-verify."
+    exit 1
+}
+
+# ── Part 5: canonical_build_gate (stale-binary-independent source endpoint check) ──
+# Compile-time invariants (e.g. procCount <= 950 in architecture_invariants.nim)
+# fire only when the canonical CLI source endpoint is compiled. No stale binary
+# is involved: this checks the current source directly. Runs only when staged
+# changes touch src/ or config/ (docs-only commits stay fast).
+if git diff --cached --name-only | grep -qE '^(src|config)/'; then
+    if ! nim check --hints:off --warnings:off src/cli/main.nim; then
+        echo "[Pre-commit FAIL] canonical build gate — src/cli/main.nim does not pass nim check."
+        echo "   Fix the compile/invariant error in the staged change. DO NOT use --no-verify."
+        exit 1
+    fi
+fi
+
+# ── Part 6: publication_provenance_validator (Single Publication Admission Validator) ──
+# Enforces provenance coverage, PII hygiene, forbidden .log/archive exclusion,
+# and THIRD-PARTY-NOTICES.md consistency at commit time (fail-closed).
+if [ ! -f build/vsi_provenance ] || \
+   [ tools/ci/publication_provenance_validator.nim -nt build/vsi_provenance ] || \
+   [ tools/ci/publication_origin.nim -nt build/vsi_provenance ] || \
+   [ tools/ci/publication_yaml.nim -nt build/vsi_provenance ]; then
+    echo "[Hook] Building publication_provenance_validator..."
+    nim c --hints:off --warnings:off --skipParentCfg --skipProjCfg --path:. --path:src \
+        --nimcache:build/nimcache/vsi_provenance \
+        -o:build/vsi_provenance tools/ci/publication_provenance_validator.nim > /dev/null 2>&1 || {
+        echo "[Pre-commit FAIL] publication_provenance_validator build failed."
+        echo "   DO NOT use --no-verify."
+        exit 1
+    }
+fi
+PROV_REPORT="$(mktemp)"
+if ! build/vsi_provenance --out "$PROV_REPORT"; then
+    rm -f "$PROV_REPORT"
+    echo "[Pre-commit FAIL] Publication provenance / hygiene validation failed."
+    echo "   Fix provenance, PII, forbidden artifact, or THIRD-PARTY-NOTICES.md violations above. DO NOT use --no-verify."
+    exit 1
+fi
+rm -f "$PROV_REPORT"
+
+echo "[PASS] Pre-commit checks passed"

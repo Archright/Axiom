@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/validate_effect_hints.py",
+  "description": "CI gate: validate [effect_hints] in architecture_policy.lock — ensures effect hint annotations match actual compiler effect analysis",
+  "inputSample": {
+    "args": []
+  },
+  "outputSample": {
+    "stdout": "validate_effect_hints: PASS (all 24 effect hints match compiler output)",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

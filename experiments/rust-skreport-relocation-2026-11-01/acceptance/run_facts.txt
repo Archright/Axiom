@@ -1,0 +1,32 @@
+=== cold acceptance @ mergeCommit.oid 9461231936383e87b84fe69b6a79b5df6c7b3b30 (PR #1162) ===
+date: 2026-11-01 (KST) / engine: repro/skreport-4 branch, make build, AXIOM_PROVENANCE OK (BuildSourceHash 1581309748423241377)
+subject: 8c535a260ce561eaab4111aafc29038eb9f77ff3 / target: serde_json::error::parse_line_col / Cargo.lock 1bc62b1a4645e18c7856073376f0601348f874d47a854e55261955381061b2e4
+--- runs ---
+A rc=0 wall=14.224 lockdir=0c1f4abca316f8c2
+B rc=0 wall=13.640 lockdir=0c1f4abca316f8c2
+C rc=0 wall=13.771 lockdir=0c1f4abca316f8c2
+D rc=0 wall=13.834 lockdir=ea0d86dd00f5b9d4
+--- verdict record digests ---
+9daad4e9dacfb5e6451888b972aa24ec168561f404a3b2e13f6b5e0850df6d46  /tmp/axiom-accept4/compare_neg_nosidecar.json
+47f953b78cd85002a2a336e7d4e9286580cb65cdc54546725d0ff24a93e57771  /tmp/axiom-accept4/compare_neg_scope.json
+2ab8a35be08ffa56fbea5acefebe4cdb2344cb6720702983e19446b48117f02f  /tmp/axiom-accept4/compare_neg_source.json
+3ca944c6dcb6f4b839b1c44f60e2188c2d9e5f854f36bd0f6923b6d038d96b4a  /tmp/axiom-accept4/compare_positive.json
+--- payload digests (position-dependent halves differ by design; A/B bundle digest identical) ---
+644632eef467f5c3e327b03635f2f0c0665cda0f18f554a429cad19001056baa  /tmp/axiom-accept4/payload_a.json
+c15a2a5c5c837d36ea6a9e69566ebd3f4004bf5b813c3a48c2bec4895ba73b0f  /tmp/axiom-accept4/payload_b.json
+2d52afea740bb1ab5ac894a703787c00c37272ea518a351645b645950156d99c  /tmp/axiom-accept4/payload_c.json
+2a6598fdf7dff5124ddd7f6a17b7562c5316279527fe3a119fe104ce932c7610  /tmp/axiom-accept4/payload_d.json
+--- sidecar digests ---
+e853f115f553142a816b8739dfe5bef7b04e46a47586e5875e55315f6861ccbf  /tmp/axiom-accept4/skreport-identity.a.json
+ab3a0737e4956c0c7e71e92cd5dd8227787870a9ae0d02140626a2fe5b832480  /tmp/axiom-accept4/skreport-identity.b.json
+10765f80997e92d23a477c89a6715e4996c99a94b1a845534e9f338ba3d94aa0  /tmp/axiom-accept4/skreport-identity.c.json
+85f0cd0eeaba65dc0f76c9671915043ee323cb0e001e1cf6e80e9a00487ddbba  /tmp/axiom-accept4/skreport-identity.d.json
+--- subject manifests (pre==post per subject) ---
+b49abcb61cb93ebe496229360e648737f6e090c5ff094aa0558fe417715aaac4  /tmp/axiom-accept4/runs/manifest_preA.sha256
+4c14d357fb3ade36195cf71857d6c3955d300f16b4c698053bf5c4ceee3bdae0  /tmp/axiom-accept4/runs/manifest_preB.sha256
+646aa38db5d3f91e41a6e0425f4f70cf8ddc9df16aa580e102690d8ab8fb3109  /tmp/axiom-accept4/runs/manifest_preC.sha256
+--- identityBundleDigest ---
+a: 9e0d3448946cf7710af466d317a1f360dc8b49e651ba2378e083decd0652ff90
+b: 9e0d3448946cf7710af466d317a1f360dc8b49e651ba2378e083decd0652ff90
+c: bbd81514ead961bd3b72e5ef27c824792f5536d61ceec8e6d94dfaa5c6b50b73
+d: afabe11b10fd0ac3fdf4824fac6a060672cc32a15de5c1a3112e68c5e3a85385

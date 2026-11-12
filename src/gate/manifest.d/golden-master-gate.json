@@ -1,0 +1,14 @@
+{
+  "id": "golden-master-gate",
+  "name": "Golden master snapshot gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/golden_master_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/",
+  "passFilenames": false,
+  "weight": "medium",
+  "category": "rule",
+  "severity": "error"
+}

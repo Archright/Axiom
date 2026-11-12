@@ -1,0 +1,69 @@
+# license-policy — the allowed-license allowlist for publication integrity.
+#
+# SSOT relationship: this file is the MACHINE-READABLE policy consumed by the
+# publication-integrity license-scan (tools/ci/publication_license_eval.nim).
+# The human-readable notices are THIRD-PARTY-NOTICES.md (distribution
+# obligations) and the audited inventory
+# docs/evidence/sal10_publication/B1_third_party_inventory.md (the authority
+# for WHAT is third-party). This policy encodes the ALLOW set derived from
+# that inventory: every license detected in the tree must be in
+# `allowedLicenses` or belong to a THIRD_PARTY declaration in
+# compliance/provenance/source-origin.yml that lists it — anything else is a
+# publication blocker (DENY). Adding a license here is a policy change that
+# itself lands through a review; it is never done to make a scan pass
+# (AGENTS.md §0.9 — theater prohibition).
+#
+# Format contract: restricted YAML subset consumed by
+# tools/ci/publication_yaml.nim (flat mappings, quoted strings, `- ` lists,
+# 2-space indent). Do not use anchors, multi-line scalars, or flow style.
+
+schemaVersion: "1"
+policyId: "axiom-publication-license-policy-v1"
+
+selfLicense:
+  id: "LicenseRef-Axiom-SAL-1.0"
+  name: "Axiom Source-Available License 1.0"
+  noticeFile: "LICENSE"
+
+allowedLicenses:
+  - id: "LicenseRef-Axiom-SAL-1.0"
+    name: "Axiom Source-Available License 1.0 (self)"
+    noticeFile: "LICENSE"
+    source: "self"
+  - id: "MIT"
+    name: "MIT License"
+    noticeFile: "LICENSES/MIT.txt"
+    source: "THIRD-PARTY-NOTICES.md §2,§6,§7,§9"
+  - id: "Apache-2.0"
+    name: "Apache License 2.0"
+    noticeFile: "LICENSES/Apache-2.0.txt"
+    source: "THIRD-PARTY-NOTICES.md §3,§4,§5"
+  - id: "Zlib"
+    name: "zlib License"
+    noticeFile: "LICENSES/Zlib.txt"
+    source: "THIRD-PARTY-NOTICES.md §1"
+  - id: "CC-BY-4.0"
+    name: "Creative Commons Attribution 4.0 International"
+    noticeFile: "LICENSES/CC-BY-4.0.txt"
+    source: "THIRD-PARTY-NOTICES.md §7"
+
+# Dual-license "Apache-2.0 OR MIT" (the Status ecosystem choice model) is
+# represented by its two SPDX disjuncts; a detected `Apache-2.0 OR MIT`
+# expression is normalized to BOTH ids and each must be allowed.
+dualLicenseExpressions:
+  - "Apache-2.0 OR MIT"
+
+deniedLicenseFamilies:
+  - "GPL"
+  - "AGPL"
+  - "LGPL"
+  - "CC-BY-NC"
+  - "CC-BY-ND"
+  - "SSPL"
+  - "BUSL"
+  - "Proprietary"
+
+verdictSemantics:
+  pass: "every detected license is allowed (or normalized to allowed disjuncts)"
+  fail: "any detected license is outside the allowlist"
+  unknown: "the scanner did not run, did not complete, or its report could not be parsed — a BLOCKING verdict, never a pass (fail-closed)"

@@ -1,0 +1,296 @@
+when isMainModule Regression Classification
+=============================================
+Date: 2026-06-07
+Scope: src/**/*.nim
+Method: grep + manual inspection of each when isMainModule block
+
+===============================================================================
+SUMMARY
+===============================================================================
+
+Total grep hits:    36 .nim files
+False positives:     2 (string-literal pattern matching, not actual blocks)
+Actual blocks:      34 .nim files
+
+Breakdown:
+  I/O boundary (ALLOWED per AGENTS.md §0.6):  26 files
+    src/cli/            2
+    src/mcp/            1
+    src/gate/runners/  23
+  Non-I/O boundary (VIOLATIONS):               8 files
+
+Classification of non-I/O boundary files:
+  (a) Scratch pad (inline self-test/assert):   2 files
+  (b) CLI stub (arg parsing + pipeline):       5 files
+  (c) Include side-effect:                     1 file
+
+===============================================================================
+FALSE POSITIVES (grep matches in string literals, NOT actual blocks)
+===============================================================================
+
+1. src/gate/nimtry/forbidden_patterns.nim
+   - Contains: if "when isMainModule" in stripped: (string comparison)
+   - This is a PATTERN SCANNER that detects when isMainModule in other files
+   - NOT an actual when isMainModule block
+
+2. src/gate/nimtry/nimtry_query.nim
+   - Contains: Comment "AST-based when isMainModule detection"
+   - Also: wb == "isMainModule" (string comparison in AST checker)
+   - This is a QUERY that detects when isMainModule in AST analysis
+   - NOT an actual when isMainModule block
+
+===============================================================================
+I/O BOUNDARY FILES (ALLOWED — 26 files)
+===============================================================================
+
+These files are in AGENTS.md §0.6 I/O boundary paths (src/cli/, src/mcp/,
+src/gate/runners/) and are legitimate entry points.
+
+--- src/cli/ (2 files) ---
+
+[ALLOWED] src/cli/main.nim
+  Block: runMain(commandLineParams())
+  Purpose: Primary CLI entry point for `ax` binary
+  Classification: LEGITIMATE CLI ENTRY POINT
+
+[ALLOWED] src/cli/convergence_sidecar.nim
+  Block: main() → validates proof state certificate convergence, outputs JSON
+  Purpose: Sidecar CLI tool for convergence validation
+  Classification: LEGITIMATE CLI ENTRY POINT
+
+--- src/mcp/ (1 file) ---
+
+[ALLOWED] src/mcp/server.nim
+  Block: startMcpServer()
+  Purpose: MCP server entry point
+  Classification: LEGITIMATE SERVER ENTRY POINT
+
+--- src/gate/runners/ (23 files) ---
+
+All gate runners follow the standard pattern: when isMainModule → main().
+Each main() is a gate runner invoked by gate_hook.nim (orchestrator_hook.nim).
+
+[ALLOWED] src/gate/runners/architecture_gate.nim
+  NOTE: when isMainModule is inside `when axiomLegacyFallback:` compile guard.
+  Legacy wrapper that delegates to bin/nimtry. Dead code unless -d:axiomLegacyFallback.
+  Classification: LEGACY GATE RUNNER (compile-time guarded)
+
+[ALLOWED] src/gate/runners/binary_freshness_gate.nim
+  Block: main() → checks if binary is stale, parses --binary flag
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/cli_build.nim
+  Block: main() → checks binary freshness, rebuilds if stale
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/context7_evidence_gate.nim
+  Block: main() → checks Context7 evidence for new allowlist imports
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/doc_completeness_gate.nim
+  Block: main() → checks AGENTS.md structure, rebase-only, evidence freshness
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/drnim_gate.nim
+  Block: main() → runs nim check on core targets (drnim fallback)
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/external_cli_smoke.nim
+  Block: main() → compiles and runs smoke test binary
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/gate_self_check.nim
+  Block: main() → verifies hook binaries and git config
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/gateway_test_gate.nim
+  Block: main() → runs gateway tests with mode/maxJobs args
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/integrity_test.nim
+  Block: main() → compiles and runs integrity test binary
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/intent_gate.nim
+  Block: main() → validates commit message conventions
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/nim_check_gate.nim
+  Block: main() → runs nim check on staged files
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/policy_validator.nim
+  Block: main() → validates .physically_impure_modules, --fix mode
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/procedure_gate.nim
+  Block: main() → checks feature/test binding via git diff
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/proof_universe_lock_gate.nim
+  Block: main() → checks proof_universe.lock freshness vs certificates
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/quality_gate_marker.nim
+  Block: main() → sets git config markers for quality gate pass
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/quality_gate_runner.nim
+  Block: main() → orchestrates quality gate chain, --full-tree, --files
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/sentinel.nim
+  Block: main() → sets git config markers for prek-ran
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/spec_binding_gate.nim
+  Block: main() → checks CLI identifiers bind to feature files
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/spec_presence_gate.nim
+  Block: main() → checks staged modules have spec evidence
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/test_coverage_gate.nim
+  Block: main() → checks test coverage for active features
+  Classification: GATE RUNNER
+
+[ALLOWED] src/gate/runners/unified_sentry.nim
+  Block: runUnifiedSentry() → dispatches pre-commit/pre-push/prepare-commit-msg
+  Classification: GATE RUNNER (unified binary entry)
+
+[ALLOWED] src/gate/runners/unstaged_guard.nim
+  Block: main() → checks for unstaged working-tree changes
+  Classification: GATE RUNNER
+
+===============================================================================
+NON-I/O BOUNDARY FILES (VIOLATIONS — 8 files)
+===============================================================================
+
+--- (a) SCRATCH PAD (2 files) ---
+Inline self-test with assert/echo for local development verification.
+
+(a-1) src/core/global_symbol_graph_builder_part2.nim
+  Block: Inline test with hardcoded testSource string, asserts symbols found,
+         stderr.writeLine("[PASS] extractSymbolsFromSourceFallback found ...")
+  Evidence: Lines 303-331
+  Why scratch: Hardcoded test input + assert + stderr PASS message = developer self-test
+  Recommended fix: Convert to unittest in tests/ or remove (covered by integration tests)
+  Import status: Imported (NOT included) by global_symbol_graph_builder.nim
+
+(a-2) src/gate/logic_binding_gate.nim
+  Block: Hardcoded certDir = "src/verification/certificates", runs gate,
+         echoes "Logic-Binding Gate PASSED/FAILED"
+  Evidence: Lines 44-51
+  Why scratch: Hardcoded path, no arg parsing, echo-based pass/fail
+  Recommended fix: Extract to tools/scratch/ or convert to gate runner in src/gate/runners/
+  Note: The module itself (hasLogicBinding, runLogicBindingGate) is domain logic.
+        Only the when isMainModule block is a scratch pad.
+
+--- (b) CLI STUB (5 files) ---
+Parses args and runs a pipeline, but located outside the I/O boundary.
+
+(b-1) src/gate/context_size_guard.nim
+  Block: main() → checks AGENTS.md character count against thresholds
+  Evidence: Lines 79 → proc main at line 55
+  Why CLI stub: Proper main() with status codes (agmdOk/agmdWarn/agmdBlock),
+               stderr reporting, sensible behavior. Just in wrong directory.
+  Recommended fix: Move to src/gate/runners/context_size_guard.nim
+  Severity: LOW — well-structured, just wrong location
+
+(b-2) src/gate/generators/certified_exempt_generator.nim
+  Block: Generates exempt certificates for cli_surface_generated.nim functions
+  Evidence: Lines 31-53
+  Why CLI stub: Runs a generation pipeline with hardcoded module list
+  Recommended fix: Move to tools/ or bin/ (build tool, not gate runner)
+  Severity: MEDIUM — code-generation tool doesn't belong in src/gate/
+
+(b-3) src/gate/generators/cli_surface_generator.nim
+  Block: generateCliSurface() from cli_types.nim → cli_surface_generated.nim
+  Evidence: Lines 183-188
+  Why CLI stub: Code generation pipeline, uses getCurrentDir()
+  Recommended fix: Move to tools/ or bin/ (build tool, not gate runner)
+  Severity: MEDIUM — same as certified_exempt_generator
+
+(b-4) src/gate/nimtry/nimtry_cli.nim
+  Block: main() → full CLI with --full-tree, --update-lock, --base-ref flags
+  Evidence: Lines 206 → proc main at line 110
+  Why CLI stub: This IS the bin/nimtry entry point. Has proper arg parsing.
+  Recommended fix: BY DESIGN — this is the nimtry binary's source. Allowed exception
+  since forbidden_patterns.nim already exempts src/gate/nimtry/ from the rule.
+  Severity: EXCEPTION — legitimate binary entry point despite non-I/O path
+  NOTE: forbidden_patterns.nim checks `src/cli/`, `src/mcp/`, `src/gate/runners/`
+  but NOT `src/gate/nimtry/`. The nimtry_cli.nim is the nimtry binary itself.
+
+(b-5) src/verification/rebuild_assets.nim
+  Block: Full pipeline — collectFunctions, buildGlobalSymbolGraph,
+         writeCertificates, --destructive-clean flag parsing
+  Evidence: Lines 19-71 (entire file body is when isMainModule)
+  Why CLI stub: Parses --destructive-clean arg, runs full pipeline,
+               outputs to stdout. This is a standalone build tool.
+  Recommended fix: Move to tools/ or bin/ (or src/cli/ if promoted to `ax` subcommand)
+  Severity: HIGH — entire file body is when isMainModule, no reusable domain logic
+
+--- (c) INCLUDE SIDE-EFFECT (1 file) ---
+
+(c-1) src/gate/orchestrator_hook_parts/orchestrator_hook_part2.nim
+  Block: Full gate_hook entry point — argv[0] auto-detection, stage dispatch,
+         cgroups setup, prepare-commit-msg handling
+  Evidence: Lines 170-200+
+  Why include side-effect: This file is INCLUDED (not imported) by
+         src/gate/orchestrator_hook.nim (line 38: include orchestrator_hook_parts/orchestrator_hook_part2)
+  The when isMainModule block is inherited into the including module's scope.
+  In this case, orchestrator_hook.nim is compiled as the gate_hook binary,
+  so the when isMainModule block IS the binary entry point.
+  Recommended fix: WAIT for Phase 2/3 — require refactoring orchestrator_hook.nim
+  to not use include (move to import + proc export pattern)
+  Severity: ARCHITECTURAL — include-based decomposition is a known tech debt
+
+===============================================================================
+STATISTICAL SUMMARY
+===============================================================================
+
+Total actual when isMainModule blocks: 34
+  I/O boundary (allowed):             26  (76%)
+    src/cli/:                          2
+    src/mcp/:                          1
+    src/gate/runners/:                23
+  Non-I/O boundary (violations):       8  (24%)
+    (a) Scratch pad:                   2
+    (b) CLI stub:                      5
+    (c) Include side-effect:           1
+
+False positives from grep:             2
+  forbidden_patterns.nim (string match)
+  nimtry_query.nim (AST query)
+
+Note on "19 NEW files": The investigation found 34 total actual files with
+when isMainModule, not 32+19=51. The "original 32" count may have included
+the 2 false positives + 1 JSON file (commitRecord_universal_pipeline*.json),
+giving 36 grep hits. The true count of actual when isMainModule blocks is 34.
+Of these, 26 are in I/O boundary (legitimate) and 8 are violations.
+
+===============================================================================
+RECOMMENDED ACTIONS (Priority Order)
+===============================================================================
+
+1. HIGH: Extract src/verification/rebuild_assets.nim → tools/rebuild_assets.nim
+   (entire file body is when isMainModule, no reusable domain logic)
+
+2. MEDIUM: Move src/gate/generators/*.nim → tools/ or bin/
+   (code generators don't belong in src/gate/)
+
+3. MEDIUM: Move src/gate/context_size_guard.nim → src/gate/runners/
+   (well-structured gate runner, just wrong subdirectory)
+
+4. LOW: Convert src/core/global_symbol_graph_builder_part2.nim scratch → unittest
+   (inline assert test → proper test file)
+
+5. LOW: Convert src/gate/logic_binding_gate.nim scratch → gate runner or unittest
+   (hardcoded self-test → proper gate in src/gate/runners/ or test in tests/)
+
+6. DEFERRED: src/gate/orchestrator_hook_parts/orchestrator_hook_part2.nim
+   (include side-effect → wait for Phase 2/3 include→import refactor)
+
+7. EXCEPTION: src/gate/nimtry/nimtry_cli.nim
+   (legitimate binary entry point — nimtry itself)

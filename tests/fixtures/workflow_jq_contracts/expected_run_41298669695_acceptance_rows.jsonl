@@ -1,0 +1,12 @@
+{"name":"closure-deriver","conclusion":"success","runner_id":1000035627,"runner_group_id":0,"runner_group_name":"GitHub Actions","runner_name":"GitHub Actions 1000035627","steps":10}
+{"name":"attest / build-base-artifacts","conclusion":"success","runner_id":1000035628,"runner_group_id":0,"runner_group_name":"GitHub Actions","runner_name":"GitHub Actions 1000035628","steps":18}
+{"name":"attest / go-critical-lane (0)","conclusion":"success","runner_id":1000035631,"runner_group_id":0,"runner_group_name":"GitHub Actions","runner_name":"GitHub Actions 1000035631","steps":19}
+{"name":"attest / go-critical-lane (1)","conclusion":"success","runner_id":1000035632,"runner_group_id":0,"runner_group_name":"GitHub Actions","runner_name":"GitHub Actions 1000035632","steps":19}
+{"name":"gateway / select","conclusion":"success","runner_id":1000035633,"runner_group_id":0,"runner_group_name":"GitHub Actions","runner_name":"GitHub Actions 1000035633","steps":15}
+{"name":"gateway / ci-bootstrap","conclusion":"success","runner_id":1000035636,"runner_group_id":0,"runner_group_name":"GitHub Actions","runner_name":"GitHub Actions 1000035636","steps":14}
+{"name":"attest / admission-check","conclusion":"success","runner_id":1000035641,"runner_group_id":0,"runner_group_name":"GitHub Actions","runner_name":"GitHub Actions 1000035641","steps":35}
+{"name":"attest / go-critical-rollup","conclusion":"success","runner_id":1000035642,"runner_group_id":0,"runner_group_name":"GitHub Actions","runner_name":"GitHub Actions 1000035642","steps":3}
+{"name":"mint-prepare / prepare","conclusion":"success","runner_id":1000035648,"runner_group_id":0,"runner_group_name":"GitHub Actions","runner_name":"GitHub Actions 1000035648","steps":17}
+{"name":"mint-publish / publish","conclusion":"success","runner_id":1000035652,"runner_group_id":0,"runner_group_name":"GitHub Actions","runner_name":"GitHub Actions 1000035652","steps":19}
+{"name":"verdict / admission-check","conclusion":"success","runner_id":1000035653,"runner_group_id":0,"runner_group_name":"GitHub Actions","runner_name":"GitHub Actions 1000035653","steps":34}
+{"name":"admission-check","conclusion":"success","runner_id":1000035654,"runner_group_id":0,"runner_group_name":"GitHub Actions","runner_name":"GitHub Actions 1000035654","steps":3}

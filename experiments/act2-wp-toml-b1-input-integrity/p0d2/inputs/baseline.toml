@@ -1,0 +1,3 @@
+# P0-D2 case 1: BASELINE - normal, valid operator config (nimbus-eth1 --config-file form)
+agent-string = "nimbus"
+allowed-origins = ["http://localhost:8080"]

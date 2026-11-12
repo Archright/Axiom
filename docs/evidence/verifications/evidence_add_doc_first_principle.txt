@@ -1,0 +1,8 @@
+# Axiom Evidence Receipt
+# Generated: 2026-05-26T07:06:08.048713+00:00
+# HEAD: UNKNOWN
+# Result: ALL_VERIFIED
+# Signature: sha256:24a1291991fde4cf
+---
+VERIFY[0]: grep -q 'Documentation-First Principle' ./AGENTS.md → PASS
+VERIFY[1]: grep -q 'Official docs check BEFORE system change' ./AGENTS.md → PASS

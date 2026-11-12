@@ -1,0 +1,152 @@
+{
+  "schema_version": 3,
+  "kernel_total": 40,
+  "kernel_symbols": [
+    "src/core/vault/vault_manager_spec.nim::axiomSpecToJsonNode",
+    "src/core/sorter/sorter_core_index_table.nim::hasVaultEntry",
+    "src/core/topology/topology_dependency.nim::proximityScore",
+    "src/core/topology/topology_engine.nim::findTopologyMetricIndex",
+    "src/core/topology/topology_engine.nim::findTopologySymbolIndex",
+    "src/core/topology/topology_engine.nim::findTopologyNodeContext",
+    "src/verification/analyzer/analyzer_shared_cert.nim::cumulativeDefectSum",
+    "src/verification/analyzer/analyzer_shared_cert.nim::collectKnownFunctions",
+    "src/gate/gate_rules_normalization.nim::normalizedEntries",
+    "src/gate/gate_rules_module_classifier.nim::initModuleClassificationCache",
+    "src/gate/gate_rules_module_classifier.nim::buildModulePathMap",
+    "src/gate/gate_rules_module_classifier.nim::buildQualifiedCallGraph",
+    "src/gate/gate_rules_module_classifier.nim::computeMaxCallDepth",
+    "src/gate/gate_rules_architecture.nim::applyCallDepthCheck",
+    "src/gate/gate_rules_architecture.nim::applyWriteOwnershipCheck",
+    "src/verification/analyzer/analyzer_shared_json.nim::mergeStringEvidence",
+    "src/verification/analyzer/analyzer_shared_json.nim::firstBoolCore",
+    "src/verification/analyzer/analyzer_shared_json.nim::firstIntCore",
+    "src/core/orchestrator/orchestrator_topology_worker.nim::clampTimeoutMs",
+    "src/core/orchestrator/orchestrator_topology_worker.nim::calcDynamicTimeoutCore",
+    "src/core/orchestrator/orchestrator_topology_worker.nim::timeoutDiagnosisForNode",
+    "src/core/orchestrator/orchestrator_topology_worker.nim::blockBranch",
+    "src/core/orchestrator/orchestrator_topology_worker.nim::registerTimeoutImpact",
+    "src/core/orchestrator/orchestrator_vault.nim::safeSpeedupRatioCore",
+    "src/core/orchestrator/orchestrator_vault.nim::addNodeExecutionStat",
+    "src/core/orchestrator/orchestrator_vault.nim::stateHasVaultEntry",
+    "src/core/orchestrator/orchestrator_vault.nim::stateLookupVaultAxiom",
+    "src/core/orchestrator/orchestrator_vault.nim::stateCollectDependencyAxioms",
+    "src/core/orchestrator/orchestrator_vault.nim::addDepthExecutionStat",
+    "src/core/orchestrator/orchestrator_vault.nim::finalizeExecutionStats",
+    "src/core/orchestrator/orchestrator_vault.nim::addNodeReport",
+    "src/core/orchestrator/orchestrator_api.nim::normalizeMaxWorkers",
+    "src/core/orchestrator/orchestrator_api.nim::addPlanReproofNodes",
+    "src/core/orchestrator/orchestrator_api.nim::enqueueParallelWorkItem",
+    "src/core/orchestrator/orchestrator_api.nim::prepareParallelInputs",
+    "src/verification/pipeline_lean_spec_inference_part1.nim::inferLoopDepth",
+    "src/verification/pipeline_lean_spec_inference_part1.nim::inferBranchDepth",
+    "src/core/json/json_scan_skip.nim::skipJsonValue",
+    "src/core/trusted/private/ir_to_smt_chunk3.nim::generateOverflowDefines",
+    "src/core/trusted/private/ir_to_smt_chunk3.nim::generateOverflowAssertions"
+  ],
+  "vksTotal": 23,
+  "kernel_exempt_symbols": [
+    "src/verification/analyzer/analyzer_shared_cert.nim::cumulativeDefectSum",
+    "src/verification/analyzer/analyzer_shared_cert.nim::collectKnownFunctions",
+    "src/gate/gate_rules_module_classifier.nim::buildModulePathMap",
+    "src/gate/gate_rules_module_classifier.nim::buildQualifiedCallGraph",
+    "src/gate/gate_rules_module_classifier.nim::computeMaxCallDepth",
+    "src/gate/gate_rules_architecture.nim::applyWriteOwnershipCheck",
+    "src/verification/analyzer/analyzer_shared_json.nim::mergeStringEvidence",
+    "src/core/orchestrator/orchestrator_topology_worker.nim::blockBranch",
+    "src/core/orchestrator/orchestrator_topology_worker.nim::registerTimeoutImpact",
+    "src/core/orchestrator/orchestrator_vault.nim::stateHasVaultEntry",
+    "src/core/orchestrator/orchestrator_vault.nim::stateLookupVaultAxiom",
+    "src/core/orchestrator/orchestrator_vault.nim::stateCollectDependencyAxioms",
+    "src/core/orchestrator/orchestrator_vault.nim::finalizeExecutionStats",
+    "src/core/orchestrator/orchestrator_api.nim::addPlanReproofNodes",
+    "src/core/orchestrator/orchestrator_api.nim::prepareParallelInputs",
+    "src/verification/pipeline_lean_spec_inference_part1.nim::inferLoopDepth",
+    "src/verification/pipeline_lean_spec_inference_part1.nim::inferBranchDepth"
+  ],
+  "rust_targets": [
+    {
+      "commit": "5444b3b3c04f31d94458a9a05538903deb6fc4d2",
+      "module": "tests/fixtures/rust/axiom_rust_probe/src/lib.rs",
+      "symbol": "axiom_rust_probe::add_u8",
+      "signatureHash": "fb6713097920adfe83660250aa8afc51ed6733b23ae6e4bb966b568e814f6c2d",
+      "specRef": "tests/fixtures/rust/axiom_rust_probe/axiom.specs.json#axiom_rust_probe::add_u8",
+      "conditions": [
+        "0 <= a",
+        "a < 256",
+        "0 <= b",
+        "b < 256",
+        "a + b < 256"
+      ]
+    },
+    {
+      "commit": "5444b3b3c04f31d94458a9a05538903deb6fc4d2",
+      "module": "tests/fixtures/rust/axiom_rust_probe/src/lib.rs",
+      "symbol": "axiom_rust_probe::add_u8_mutant",
+      "signatureHash": "4791bc600ce8e0aeb241bbe7546e0d34e4a2af9e34380b9f0c9b0a248b899d0b",
+      "specRef": "tests/fixtures/rust/axiom_rust_probe/axiom.specs.json#axiom_rust_probe::add_u8_mutant",
+      "conditions": [
+        "0 <= a",
+        "a < 256",
+        "0 <= b",
+        "b < 256",
+        "a + b < 256",
+        "negative-control: spec f(a,b)=a+b is declared VIOLATED by design (in-domain counterexample (0,0)->1!=0, docs/spec/rust_negative_control_norm.md)"
+      ]
+    },
+    {
+      "commit": "a2977542569a003d5490e489175c05638cd4e998",
+      "module": "tests/fixtures/rust/axiom_u64_probe/src/lib.rs",
+      "symbol": "axiom_u64_probe::u64_echo",
+      "signatureHash": "7274af86685a396dd1d264224aa8f8a7d117f6c0721a9762d9883ca518594179",
+      "specRef": "tests/fixtures/rust/axiom_u64_probe/axiom.specs.json#axiom_u64_probe::u64_echo",
+      "conditions": [
+        "0 <= x",
+        "x <= 18446744073709551615"
+      ]
+    },
+    {
+      "commit": "a2977542569a003d5490e489175c05638cd4e998",
+      "module": "tests/fixtures/rust/axiom_u64_probe/src/lib.rs",
+      "symbol": "axiom_u64_probe::u64_seven_mutant",
+      "signatureHash": "3845d9523c59b2bf38d3d130e253756a7c362118fb1130ea7b2b6aed167a3dc5",
+      "specRef": "tests/fixtures/rust/axiom_u64_probe/axiom.specs.json#axiom_u64_probe::u64_seven_mutant",
+      "conditions": [
+        "0 <= x",
+        "x <= 18446744073709551615",
+        "negative-control: spec result == 7 is declared VIOLATED by design (in-domain counterexample (0)->8!=7, docs/spec/rust_negative_control_norm.md)"
+      ]
+    },
+    {
+      "commit": "27c396a6d0b3c7da134b2df4af741b3412ba36f3",
+      "module": "tests/fixtures/rust/axiom_u64_probe/src/lib.rs",
+      "symbol": "axiom_u64_probe::u64_add",
+      "signatureHash": "717a7d0fa33e1537a5dc5dc59ab439ce85b711e894f03658f34255b16bceec66",
+      "specRef": "tests/fixtures/rust/axiom_u64_probe/axiom.specs.json#axiom_u64_probe::u64_add",
+      "conditions": [
+        "0 <= a",
+        "a <= 18446744073709551615",
+        "0 <= b",
+        "b <= 18446744073709551615",
+        "a + b <= 18446744073709551615"
+      ]
+    },
+    {
+      "commit": "27c396a6d0b3c7da134b2df4af741b3412ba36f3",
+      "module": "tests/fixtures/rust/axiom_u64_probe/src/lib.rs",
+      "symbol": "axiom_u64_probe::u64_add_mutant",
+      "signatureHash": "69382d69ecf3b01a42eb3e862b3e146751e3c8464aede90b7c57dc3e58a57eb6",
+      "specRef": "tests/fixtures/rust/axiom_u64_probe/axiom.specs.json#axiom_u64_probe::u64_add_mutant",
+      "conditions": [
+        "0 <= a",
+        "a <= 18446744073709551615",
+        "0 <= b",
+        "b <= 18446744073709551615",
+        "a + b <= 18446744073709551615",
+        "negative-control: spec result == a + b is declared VIOLATED by design (in-domain counterexample (0,0)->1!=0, docs/spec/rust_negative_control_norm.md)"
+      ]
+    }
+  ],
+  "vksRust": 6,
+  "last_updated": "runtime-auto",
+  "updated_by": "ax scope lock"
+}

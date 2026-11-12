@@ -1,0 +1,15 @@
+{
+  "id": "reliability-gate",
+  "name": "Reliability gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/reliability_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/",
+  "passFilenames": false,
+  "weight": "medium",
+  "category": "rule",
+  "severity": "error",
+  "execution_mode": "interpreted"
+}

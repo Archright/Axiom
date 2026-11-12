@@ -1,0 +1,29 @@
+{
+ "asOf": "2026-09-05 (재배치 완료: main f49ca3650 위 18 commits)",
+ "objective": "main 대상 PR mergeable — 자율 실행 (중단조건: semantics/acceptance 변경 필요, §-1·raw commit 충돌, oracle 독립 유지 불가 시에만)",
+ "commits": [
+  "eaed53d8a",
+  "322005a76",
+  "374a0323e",
+  "3c7c8a76c",
+  "8b04cdf20"
+ ],
+ "phases": {
+  "R1-R7": "DONE",
+  "R8a": "DONE (C06=OBSERVED-ZERO, C08=UNOBSERVABLE, C07/C09/C10=OBSERVED 1/4/2)",
+  "R8c": "DONE (adversarial 8종 gate outcome, 9/9, FULL→exit2·REJECT→exit1)",
+  "R8b-5set": "DONE (Selection=1·Requested=1·Started=5·Completed=5, SchedulerExpansion=4 전부 no-edge→scheduler)",
+  "R8b-2-projection": "R8b-3 PARTIAL-PASS (coverage-limited, fail-closed; proximityScore real psFail==psFail; hasVaultEntry+axiomSpecToJsonNode full-side UNOBSERVABLE — not-claimed; F-1 single-wave/failed-dependency blocks full coverage, F-2 nodeReports vs cert status dualism; evidence r8b3_projection_evidence.json@f0d9637fe; r8b2 INVALID superseded)",
+  "R8d-shadow-determinism": "DONE (2 AXIOM_STATE_DIR, 5 digest IDENTICAL — r8d_shadow_determinism.json)",
+  "R9-c3b-n20": "DONE (N=20 paired counterbalanced, median speedup 1.1858x, 20/20 pairs>1, delta~9.6s; expectedRatio 1.667/selected 0.075/exec 0.6; N2 1.30x 일반화 거부 — r9_c3b_n20.json)",
+  "R10-prom-A": "NOT-PASS (정직) — Projection gate PARTIAL (F-1/F-2), 나머지 gate PASS; 아키텍트 결정 경계",
+  "S5-Prom-B": "DONE PASS (s5_exact_reuse 7+3+19+11 green, false-hit=0, A/B/C 3/3 reuse)",
+  "ci-enforce": "제안서 제출 (ci.yml UNCHANGED, confirmation PENDING)",
+  "PR": "PR #40 open; mergeable; verify-integration RED (g7 cache-order finding, docs/reports/ci_g7_cache_order_finding.md); verdict: not-branch-regression"
+ },
+ "fixedSemantics": "RequestId=planning identity ≠ ExecutionIdentity(검증/cache); Requests=Derive(SelectionSet,RequestPolicy) canonical; Requests⊆Selection 비계약; EligibilityOracle/RequiredRequests 독립; Completeness 양방향+evidence-backed disposition; RequestResult V={PASS,FAIL,TIMEOUT,ERROR} lattice join(4공리); Full/Pruned 동일 reducer; Projection=Normalize(Project(Full,RequestResults(plan.requests)))==Normalize(Pruned@requests); uncertainty→FULL, integrity→REJECT; fail-closed 완화 금지",
+ "stopConditions": "1.semantics/acceptance 변경 요구 2.§-1/gov/raw-commit 충돌 3.oracle 독립 유지 불가 — 이외 failure는 REPAIR→REBUILD→RE-RUN→VERIFY→RECORD→CONTINUE",
+ "nextActions": [
+  "R8d shadow determinism(가벼움, bin/ax·/tmp/sr 재빌드 완료 상태) → R9 representative N=20 → R10 report → S5 → Prom-B → enforce → PR→CI→merge"
+ ]
+}

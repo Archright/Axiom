@@ -1,0 +1,13 @@
+# change-A: Golden case — ci-v6-validation.
+# Represents the ci(v6) commit (cd09f04af) that shifted validation left with
+# static admissibility + runner-pool identity (Tier 1a/1b/1c/2/3a/3b/4/5).
+# This commit is already on main (stacked ancestry root).
+# No dependencies — root of the golden DAG.
+# No conflicts.
+
+id = "ci-v6-validation"
+base_ref = "main"
+base_commit = "cd09f04af"
+semantic_surface = ["ci-trigger", "runner-infrastructure", "admissibility-check"]
+depends_on = []
+conflicts_with = []

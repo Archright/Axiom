@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "kind": "negative-golden-fixture-set",
+  "purpose": "Anti-golden fixtures: certificates that MUST NOT promote to a verified tier. Regression barrier proving the VERIFIED promotion boundary rejects fabricated/incomplete solver or lean evidence.",
+  "source": "ax_forged_backup (canonical vault artifacts forged at commit 69aaef469 fix(verification): canonical serialization + identity-based idempotent promotion (R5/R8)) — empty solver-input digest (sha256 of empty), no smtlib2, Z3-executed=true with no real solver run; the exact false-evidence artifacts Axiom actually committed in its history. Reclassified as immutable anti-golden regression fixtures under Protocol (rev.5): past false VERIFIED artifacts must stay rejected forever. D2 addition: 93af...json — a contaminated certLeanVerified artifact with kernel:false produced by test_d2_persist.nim Stage 4 hardcoding leanKernelVerified=true/vacuityProven=true disconnected from the genuine KAA/receipt; its solverInvocation.version=4.13.3 (Z3 version, not Lean 4.33.0) confirms it is a false-evidence artifact.",
+
+  "collectedAt": "2026-08-20T22:15:00Z",
+  "updatedAt": "2026-08-22T00:32:00Z",
+  "expectedRejection": {
+    "solverInputDigest == sha256(\"\")": "MUST NOT promote to certZ3Verified/certGreen",
+    "smtlib2 absent or empty": "MUST NOT set z3Executed=true (solverHasExecuted false)",
+    "leanProposition empty with certLeanVerified": "MUST NOT promote to certLeanVerified",
+    "exitCode != 0": "MUST NOT promote to verified",
+    "solverStatus non-unsat / no real solver run": "MUST NOT promote to verified"
+  },
+  "fixtures": [
+    {
+      "file": "7e5a975faec166f9bb49678a84dcd1d3c59dc30a3ab9cdb7883abfc778083f01.json",
+      "symbol": "clampTimeoutMs",
+      "declaredStatus": "certZ3Verified",
+      "attackPattern": "empty solver input digest (sha256 of empty), no smtlib2, no vacuosity proof",
+      "mustRejectPromotionTo": "certZ3Verified"
+    },
+    {
+      "file": "93079fe23d613d467a95b3950f3100b89c4bf3806f3bc8ce56bad978d50acf0e.json",
+      "symbol": "calcDynamicTimeoutCore",
+      "declaredStatus": "certZ3Verified",
+      "attackPattern": "empty solver input digest, no smtlib2",
+      "mustRejectPromotionTo": "certZ3Verified"
+    },
+    {
+      "file": "4ec55e9c8e848346f5d876e9e54540a8944f499b9067af73769c526455c2aac4.json",
+      "symbol": "safeSpeedupRatioCore",
+      "declaredStatus": "certZ3Verified",
+      "attackPattern": "empty solver input digest, no smtlib2",
+      "mustRejectPromotionTo": "certZ3Verified"
+    },
+    {
+      "file": "f3d17f0e592362e8183b876069904f5f504bd09c2530d21b9c878e31f854e6ac.json",
+      "symbol": "proximityScore",
+      "declaredStatus": "certZ3Verified",
+      "attackPattern": "empty solver input digest, no smtlib2",
+      "mustRejectPromotionTo": "certZ3Verified"
+    },
+    {
+      "file": "7fe53565b0e774a2ea20bf2980c20bfa98f21093b68d578ddd8220d226211114.json",
+      "symbol": "firstBoolCore",
+      "declaredStatus": "certLeanVerified",
+      "attackPattern": "empty solver/lean input digest, no smtlib2, no lean proposition — false certLeanVerified claim",
+      "mustRejectPromotionTo": "certLeanVerified"
+    },
+    {
+      "file": "93af44448051dd6077a1ffb5c718257166e71e5e113789fa93a5e486db5d8470.json",
+      "symbol": "d2Golden",
+      "declaredStatus": "certLeanVerified",
+      "attackPattern": "kernel:false with leanCompilerVerified:true and vacuityProven:true — false certLeanVerified from test_d2_persist.nim Stage 4 hardcoding; solverInvocation.version=4.13.3 (Z3 version, not Lean 4.33.0)",
+      "mustRejectPromotionTo": "certLeanVerified"
+    }
+  ]
+}

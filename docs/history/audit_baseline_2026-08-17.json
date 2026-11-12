@@ -1,0 +1,47 @@
+{
+  "schema": "audit-baseline/v1",
+  "run_id": "2026-08-17T12:27:28Z",
+  "audit_input": {
+    "snapshot_id": "snap:3ec3d62ebd3a3d00aaff9710c5b54f9219bbad58ae16269c063aded38f469536",
+    "input_digest": "f7b88294119a564d2ecb856efa15c2b434c8473838d1f767908d909671d87e55",
+    "git_head": "726dd2fe889a731551f7d0fc0cf0a280f82db6db",
+    "tree_digest": "25754170a288d8470d812c490bd92a0b0c898e0956ca39f9ec7204daf0af8965",
+    "untracked_digest": "6ac2de5b3e0aefc16752e30c953f0f961a3cb480a4a442ceb7aa14c46a402b71",
+    "freeze_time": "2026-08-17T12:27:28Z",
+    "rules_digest": "3437546a816df32c03a193f6dc96992d77fba8be5783f376c663437f59d36fe2",
+    "engine_semantics_digest": "2f177b555421520e8148043dea192760797048cf8b0320b26f09d63267cb2194",
+    "normative_digest": "fdc394efe5ad299fc4e325460337957a7f37385a8bd84edfb6f548a03971cf0d",
+    "toolchain_digest": "9402e14c26a23d72e0a070b8ea315f0665f0cb8d2390df10233ab33c679efc7d"
+  },
+  "outputs": {
+    "observations_digest": "072e92e98e71bfaaac46fa4b260b767dfb4f2c73e3c343363ca92c77f9b6d329",
+    "findings_digest": "954d9d74550841f09f9ac9e72db1fc982b9310045994527f39f85ed5496668dd",
+    "correlation_digest": "843edc9d93702ed577e5d6f83828a0aaae26c7c68a35d6f2ae385b865a4a4e2a",
+    "candidates_digest": "767a635b0d542c4c0652b3e482ca618a74e3771a6409ed4893dab1f805f67f24",
+    "directory_report_digest": "abe24d2a7fe762c4a6cca0145165f8af0885e4b85853ddb0d9bb3c014ac42c2a",
+    "documentation_report_digest": "cf204cc1a1c02721e6099bca7a1ae9a7c9e80d707b156dc4211343a00925a46d"
+  },
+  "counts": {
+    "observations": 3149,
+    "findings": 4038,
+    "review_queue": 1339,
+    "new_debts": [
+      418,
+      419,
+      420
+    ]
+  },
+  "verification": {
+    "annotation_non_authoritative": true,
+    "lineage_valid": true,
+    "report_omission_count": 0,
+    "rerun_identical": true,
+    "check_debt": {
+      "passed": 66,
+      "total": 66
+    },
+    "unexpected_mutations": []
+  },
+  "status": "RATIFIED",
+  "input_digest": "f7b88294119a564d2ecb856efa15c2b434c8473838d1f767908d909671d87e55"
+}

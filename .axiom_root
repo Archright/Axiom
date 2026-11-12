@@ -1,0 +1,5 @@
+# Axiom Project Root Anchor
+# This file is the declarative anchor for root resolution.
+# All tools MUST use this file to find the project root.
+version: 1.0
+created: 2026-06-16

@@ -1,0 +1,5 @@
+[INFO] axiom_engine: analyzing topology...
+[INFO] topology_cli: topology: 32 files, 32 changed, sourceRoot=./experiments/act2-wp-toml-b1-input-integrity/p0d2f/env/subject_variant
+[INFO] axiom_engine: topology: 32 files, 347 candidates
+[INFO] axiom_engine: external candidate unsupported decl kind: d2Utf8AppendLen in d2kernels.nim reason=axiom spec expression has no IR translation (translator marked loss); the explicit spec cannot be ingested for this symbol
+[ERROR] action_interpreter_cli: [ERROR] --target d2kernels.nim::d2Utf8AppendLen resolved to no frontier nodes (NotFound or Ambiguous). Canonical targets require exactly one match; 0 matches = NotFound, >1 = Ambiguous. Refuse to run an implicit full-frontier verification on a canonical target.

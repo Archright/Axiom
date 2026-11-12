@@ -1,0 +1,15 @@
+{
+  "id": "coverage-ratchet-gate",
+  "name": "Axiom coverage ratchet gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/coverage_ratchet_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/",
+  "passFilenames": false,
+  "weight": "medium",
+  "category": "rule",
+  "severity": "error",
+  "execution_mode": "interpreted"
+}

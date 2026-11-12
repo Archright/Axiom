@@ -1,0 +1,2673 @@
+# Certificate mint authority — GHEC migration Phase B (recreated from the
+# CI=0-deleted original, commit ce92fc2d1, and adapted to the GHEC flow).
+#
+# The PRIVILEGED publication tier: consumes the UNSIGNED witness bundle
+# produced by the UNPRIVILEGED admission job (the B-pinned admission check,
+# .github/workflows/admission-check.yml — the revived producer, Gate A) and
+# publishes the canonical subject-continuity certificate to the
+# axiom/certificates side-ref ledger. This is the certRequired mint path
+# (config/policy/merge_admission.json v1.6.0, certRequired: true) — the
+# plan's prerequisite: a signed certificate(B,H) is the admission evidence
+# the Landing App consumes.
+#
+# 2-STAGE STRUCTURE (approved plan rev.7, Phase 2 item 7 — 산출물별 생성
+# authority 단일화):
+#   * `prepare` (contents: READ at job level): admission lane
+#     build-base-artifacts(B-결속 바이트 — manifest build_sha == B + per-file
+#     sha256, SL-08) 소비 + witness 검증 + 서명 + cert artifact 업로드
+#     (trusted-name `subject-certificate-<run_attempt>`, cert_sha256을
+#     manifest에 기록). 생성 authority = single build site 1개 ([B1] —
+#     C5/C1 계약 개정 2026-09-29: write-tier 자체빌드(계약 예외 C1) 제거,
+#     소비자 재생성 0 전체 성립 — ADR-0026 C1 개정문 참조).
+#   * `publish` (contents: WRITE — 유일한 write 보유 job): prepare artifact
+#     다운로드(artifact-id, TOCTOU 회피) → [X] 결속 계약 5종(artifact
+#     identity · file digest · field binding · Ed25519+closure · CAS 원자성)
+#     → [B2] 데이터 인과 ((a) gateway run.headSha == cert.headSha · (b)
+#     canonical merge-tree SHA 등가 · (c) gateway lane conclusion==success)
+#     → D6 멱등 + FF-CAS 3분기 reconciliation(exactly-once: 첫1/재실행0) →
+#     ledger-append(provenance: cert_sha256 · gateway run_id · headSha ·
+#     tree identity · conclusion=success · field-binding 통과).
+#     N+5 slice split: (P1)/(P2)/(P4) = SL-04 (scope_sl04 게이트 — 발화),
+#     (P0)/(P5)/(P6)/(P7) = SL-0713 (scope_sl0713 게이트 — 미정착 NO-FIRE),
+#     (P3) = [X]4 bin/ax 원천 (무게이트).
+#   Caller contract: org admission-gate calls this workflow ONCE per stage
+#   (`stage: prepare` / `stage: publish`; publish call gated on
+#   prepare+gateway completion — plan DAG). Any other stage value skips BOTH
+#   jobs (no run) — the caller verdict converts skipped → FAILURE
+#   (fail-closed, [F]). The stage job guards below are that sole validation
+#   (GitHub enforces the required input at call time).
+#   Caller-edge note (2026-10-07): the publish call's gateway-completion
+#   precondition is carried by the CALLER's needs graph — org admission-gate
+#   `mint-publish: needs: [mint-prepare, gateway]` (restored in
+#   Archright/.github PR #62, merge 3a0ae4cc). The N+5 re-registration had
+#   dropped the edge — harmless while (P5)/(P6) were NO-FIRE, but after the
+#   N+6 gateway revival + SL-0713 promotion this callee evaluates the lane
+#   ((P5) tested-tree-digest, (P6) jobs-API conclusions), so a caller
+#   without the edge races the lane: measured run 37569755722 att.1 —
+#   publish evaluated 04:10:10Z, gateway/ci-bootstrap completed 04:11:18Z,
+#   in-progress counted as "abnormal conclusion" (MINT_PUB_JOBS FAIL).
+#   Editing the caller graph is an org-repo change; this file's own contract
+#   surface stays fail-closed either way.
+#
+# GHEC adaptations (deviations from the original, all intentional):
+#  * runner: ubuntu-24.04 GitHub-hosted, image-pinned for determinism (the
+#    original ran on the dedicated axiom-publisher pool; 22.04 was tried but
+#    broke against the ubuntu-latest-built nimcache — LTO version mismatch,
+#    run 35963379690; ubuntu-latest itself migrates, so this workflow pins
+#    24.04 — Phase 3 L2 image determinism). C5/C1 계약 개정 (2026-09-29)
+#    이후 prepare는 빌드를 수행하지 않아 toolchain 복원 불필요 — B-결속
+#    bin/ax를 admission lane build-base-artifacts에서 소비 (cache는
+#    acceleration, never evidence; mint는 B-layer cache writer가 아니다).
+#    A-layer save is allowed from any run (A rarely changes -> first save
+#    wins).
+#  * trigger: Cutover 이후 workflow_call 단일 (org orchestrator
+#    admission-gate @SHA — org ruleset이 SHA 고정). 레거시 workflow_run
+#    트리거는 전환 PR에서 제거 — mint 발화 권한 = 게이트 DAG만.
+#  * M (the PR merge commit) NO LONGER PRE-EXISTS at mint time: the approved
+#    flow lands ONLY AFTER minting (signed certificate(B,H) -> Landing App
+#    CAS landing). The original step (1) derived M via pulls/{N}
+#    merge_commit_sha and validated the merge shape — that derivation is
+#    REMOVED; M is created post-mint by the Landing App
+#    (src/cli/landing_cli.nim, CreateCommit + updateRefs). The certificate
+#    binds (B, H) only — it never binds M, so minting works pre-landing by
+#    design (INV-1 certTree conjunct 추가 — C1 기계 검증 4-conjunct 불변).
+#  * the witness's provenance `mergeSha` field is the check run's event
+#    github.sha (M_observed). PR-3 identity chain (ADR-0025 §11): mergeSha's
+#    TREE is now a mint gate — step (3b) re-derives tree(mergeSha) via the
+#    Git Data API and fail-closes unless witness.mergeTreeDigest equals it;
+#    the signed certificate then carries that value as `certTree`
+#    (testedTree == mergeTree == certTree pre-landing chain). The mergeSha
+#    OID itself still never enters the certificate representation.
+#  * TrustedWriterSet: config/trusted_writer_set.json and
+#    tools/ci/verify_trusted_writer_set.sh are RE-LANDED (2026-09-24,
+#    surface policy v6 registered them in CONTROLLED first — 2-stage).
+#    Step (2a) below reads them @B and fail-closes on any mismatch. The
+#    top-level `permissions: contents: write` stays on THIS file (the
+#    TrustedWriterSet top-level scan target — verify_trusted_writer_set.sh
+#    scans the top-level permissions block only; job-level scopes are
+#    excluded by construction, tools/ci/verify_trusted_writer_set.sh:111-116).
+#    The single contents: write holder at RUNTIME is the `publish` job.
+#  * break-glass: see the (0b) TODO — trust-surface PRs require architect
+#    Ed25519 break-glass evidence as additional mint evidence (plan item);
+#    the real plumbing is deferred (see TODO).
+#
+# Core principle (plan v12, preserved): the privileged tier performs ZERO
+# untrusted computation — no kernel/proof/build/test/gate execution, no H
+# (PR head) checkout, no use of a raw SHA from the workflow_run payload.
+# Every trust decision is a DATA COMPARISON performed against values derived
+# from (a) the triggering run object (actions/runs API, actions: read), (b)
+# the GitHub PR API (trusted source; B/H derived from the run-linked PR),
+# (c) the B checkout (toolchain + policy/scope + trusted_writer_set@B), and
+# (d) the witness manifest. All verification of the witness is executed by
+# the B-built trusted bin/ax (`cert attest --sign`).
+#
+# Trigger: workflow_call 단일 (Cutover) — org orchestrator admission-gate가
+# runId/runAttempt/headSha/baseSha/prNumber/stage를 공급하며 활성화 가드가 모든
+# 공급 사실을 GitHub API로 재검증한다: run object(자기 run 결속
+# runId==GITHUB_RUN_ID · gate path · attempt) + PR API(head/base identity,
+# base.ref == main), fail-closed (step (0)의 self-reference 논증 참조).
+# ADR-0027: merge_group 이벤트(=merge-queue 후보)도 동일 workflow_call 경로로
+# 수용 — prNumber=0 (P1: PR 객체 없음 — 정직 값), head/base identity는
+# runObj.head_sha + merge_group 페이로드로 재검증 (PR-API leg는 N=0 무효).
+#
+# Permissions: top-level contents: write (TrustedWriterSet scan target — the
+# ledger FF-CAS append executes in the `publish` job ONLY, which carries the
+# 3-scope set: contents: write + actions: read + pull-requests: read;
+# `prepare` downgrades to contents: read). checks: read is deliberately
+# DROPPED (3-scope minimization). Everything else is denied; the
+# single-writer TrustedWriterSet stays intact.
+#
+# Fail-closed: every step exits non-zero with a reasonCode on ANY deviation;
+# there is no pass-through and no silent skip.
+
+name: certificate-mint
+
+on:
+  workflow_call:
+    inputs:
+      stage:
+        description: 'mint stage — prepare (read tier: B self-build + witness verify + sign + cert artifact upload) | publish (write tier: [X] 5종 binding + B2 data causality + D6/CAS append). Any other value skips both jobs → caller verdict converts skipped to FAILURE (fail-closed, plan Phase 2 item 7).'
+        required: true
+        type: string
+      runId:
+        description: 'orchestrator(게이트) 자기 run id — step (0) self-binding(GITHUB_RUN_ID == 입력)으로 검증'
+        required: true
+        type: string
+      runAttempt:
+        description: 'orchestrator 자기 run attempt — run object와 대조 검증'
+        required: true
+        type: string
+      headSha:
+        description: 'PR head SHA (H) — orchestrator 공급; PR API로 재검증 (head identity)'
+        required: true
+        type: string
+      baseSha:
+        description: 'PR base SHA (B) — orchestrator 공급; PR API로 재검증 (base identity)'
+        required: true
+        type: string
+      prNumber:
+        description: 'PR number — orchestrator 공급; PR API로 재검증 (base.ref == main)'
+        required: true
+        type: string
+  # Cutover: 레거시 workflow_run 트리거 제거 — 유일 실행 경로 = admission-gate의
+  # workflow_call (stage 스플릿 — 아래 job guard가 분기).
+
+# Top-level permissions: contents:write — this workflow IS the single
+# TrustedWriterSet member (top-level scan target, verify_trusted_writer_set.sh
+# :111-116 scans the TOP-LEVEL permissions block only). The write-capable
+# execution is confined to the `publish` job via job-level permissions; the
+# `prepare` job runs contents: read.
+permissions:
+  contents: write
+  actions: read
+  pull-requests: read
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────
+  # STAGE 1 — prepare (read tier). 생성 authority: single build site 1개
+  # (admission lane build-base-artifacts 소비 — C5/C1 계약 개정 2026-09-29,
+  # ADR-0026 C1 개정문; 계약 예외 자체빌드는 폐기). Produces the signed
+  # subject-continuity certificate +
+  # the cert-artifact manifest (cert_sha256 등 — [X] 2 provenance 기록) and
+  # uploads `subject-certificate-<run_attempt>` for the publish stage.
+  # Image-pinned ubuntu-24.04 (NOT 22.04, NOT ubuntu-latest): the restored
+  # build/nimcache in actions/cache is produced by same-pinned writers
+  # (gcc 13 / LTO 13.1). On 22.04 (gcc 11.3) the link died: "bytecode
+  # stream ... generated with LTO version 13.1 instead of the expected
+  # 11.3" (run 35963379690). The two-layer cache key binds the
+  # toolchain identity (gcc/glibc fingerprints + provisioning script hash);
+  # runner image labels (ImageOS/ImageVersion) were removed 2026-10-01 as
+  # LABEL_NOISE — label-only rolls flipped a_fp and caused false MISSes
+  # while the toolchain bytes stayed identical (114/114 census).
+  # ─────────────────────────────────────────────────────────────────────
+  prepare:
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 45
+    # Stage guard — fail-closed 분기: prepare는 stage == 'prepare'인 호출에서만
+    # 실행. 다른 stage 값 → 두 job 모두 skipped → caller verdict가 skipped를
+    # FAILURE로 전환 ([F] failure-path — skipped가 green이 되는 경로 0).
+    if: ${{ inputs.stage == 'prepare' }}
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    env:
+      # 경로 공통 실행 사실 — orchestrator inputs (workflow_run 트리거 제거로
+      # event payload 경로는 도달 불가능; 빈 값이면 하류 스텝 형식 검증에서
+      # fail-closed).
+      RUN_ID: ${{ inputs.runId }}
+      RUN_ATTEMPT: ${{ inputs.runAttempt }}
+    steps:
+      # ────────────────────────────────────────────────────────────────
+      # [venue] Execution-venue split (ADR-0032) — FIRST step of every job.
+      # pull_request = preflight (static/structural contrast only),
+      # merge_group|workflow_call = landing (the full mint chain, unchanged).
+      # Any other event = fail-closed exit 1. Heavy steps below carry the
+      # `steps.venue.outputs.venue == 'landing'` conjunct; this file is NOT a
+      # TWS pin target (only admission-check.yml is), but the venue contract
+      # is identical (ADR-0032 (b),(d)).
+      # ────────────────────────────────────────────────────────────────
+      - name: "[venue] Resolve execution venue (PR=preflight / MG+call=landing)"
+        id: venue
+        run: |
+          set -euo pipefail
+          fail() { echo "[venue] FAIL — $1 (fail-closed, ADR-0032)" >&2; exit 1; }
+          case "${{ github.event_name }}" in
+            pull_request)
+              echo "venue=preflight" >> "$GITHUB_OUTPUT"
+              echo "[venue] venue=preflight — fast static preflight only; landing verification is the merge_group venue (ADR-0032 (a),(b))"
+              ;;
+            merge_group|workflow_call)
+              echo "venue=landing" >> "$GITHUB_OUTPUT"
+              echo "[venue] venue=landing — full canonical verification (ADR-0032 (a))"
+              ;;
+            *)
+              fail "unrecognized event_name '${{ github.event_name }}' — venue undeterminable (no venue, no run)"
+              ;;
+          esac
+
+      # ────────────────────────────────────────────────────────────────
+      # (0) Activation guard — workflow_call path, fail-closed:
+      #     공급 사실 (runId/runAttempt/headSha/baseSha/prNumber)을 GitHub
+      #     API로 재검증 — (a) runId == GITHUB_RUN_ID (orchestrator는 자기
+      #     run을 공급 — self-binding), (b) run object event ∈
+      #     {pull_request, workflow_call} ∧ path == .github/workflows/
+      #     admission-gate-v2.yml (orchestrator run identity), (c) run_attempt
+      #     일치, (d) PR API head/base identity + base.ref == main. 자기
+      #     run의 conclusion은 mint 실행 시점에 정의 불가(진행 중)하므로
+      #     "admission 성공" 요건은 게이트 `needs: [admission]` + verdict
+      #     fail-closed DAG가 platform 측에서 대신 강제한다 — mint의
+      #     재검증과 중복되지 않는 대체다. 한 건이라도 어긋나면 → fail-closed.
+      # ────────────────────────────────────────────────────────────────
+      - name: "(0) Activation guard — API re-verify (workflow_call)"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ inputs.headSha }}
+          BASE_SHA: ${{ inputs.baseSha }}
+          PR_NUMBER: ${{ inputs.prNumber }}
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_A0_ACTIVATION: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          printf '%s' "$RUN_ID" | grep -qE '^[0-9]+$' || fail "runId input '$RUN_ID' malformed"
+          [ "$RUN_ID" = "$GITHUB_RUN_ID" ] || fail "runId input '$RUN_ID' != this run '$GITHUB_RUN_ID' (orchestrator must supply its own run id)"
+          printf '%s' "$RUN_ATTEMPT" | grep -qE '^[0-9]+$' || fail "runAttempt input '$RUN_ATTEMPT' malformed"
+          : "${HEAD_SHA:?headSha input not set}"; : "${BASE_SHA:?baseSha input not set}"; : "${PR_NUMBER:?prNumber input not set}"
+          printf '%s' "$HEAD_SHA" | grep -qE '^[0-9a-f]{40}$' || fail "headSha input '$HEAD_SHA' not 40-hex"
+          printf '%s' "$BASE_SHA" | grep -qE '^[0-9a-f]{40}$' || fail "baseSha input '$BASE_SHA' not 40-hex"
+          printf '%s' "$PR_NUMBER" | grep -qE '^[0-9]+$' || fail "prNumber input '$PR_NUMBER' malformed"
+          # DEBT#474 — bounded transport retry (P3 FINAL site-group): 4
+          # attempts, fixed backoff 5/10/20s; transient = curl transport
+          # failure (rc != 0: timeout/connection/DNS/TLS) or final HTTP 5xx;
+          # permanent = final HTTP 4xx incl. 429 (2026-10-15 contract
+          # alignment — NO 429 retry); exhaustion = explicit fail-closed with
+          # the code printed (no success evidence). Optional 4th arg = Accept
+          # header (default JSON API; raw contents legs pass
+          # application/vnd.github.raw+json — wire-identical to the bare curl
+          # this wraps). Idempotent read-path GETs ONLY — fetch-scoped;
+          # ledger appends / attest --sign / POSTs are never wrapped.
+          fetch_bounded() {
+            local url="$1" out="$2" tag="$3" a rc code
+            local accept="${4:-application/vnd.github+json}"
+            for a in 1 2 3 4; do
+              code="$(curl -sSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "Accept: $accept" \
+                -o "$out" -w '%{http_code}' "$url")" \
+                && rc=0 || rc=$?
+              code="${code:-000}"
+              if [ "$rc" -eq 0 ] && [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+                return 0
+              elif [ "$rc" -eq 0 ]; then
+                case "$code" in
+                  5*)
+                    echo "MINT_FETCH_RETRY: $tag attempt $a/4 — HTTP $code (transient)" >&2 ;;
+                  *)
+                    echo "MINT_FETCH_RETRY: $tag — HTTP $code (permanent — not retried)" >&2
+                    return 2 ;;
+                esac
+              else
+                echo "MINT_FETCH_RETRY: $tag attempt $a/4 — transport error (curl rc=$rc, http_code=$code) (transient)" >&2
+              fi
+              [ "$a" -lt 4 ] || break
+              case "$a" in 1) sleep 5 ;; 2) sleep 10 ;; 3) sleep 20 ;; esac
+            done
+            return 1
+          }
+          run_obj_f="$RUNNER_TEMP/mint_a0_run_obj.json"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" \
+            "$run_obj_f" "A0 run-object GET (JSON GET)" \
+            || fail "GET actions/runs/$RUN_ID failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          run_obj="$(cat "$run_obj_f")"
+          r_event="$(printf '%s' "$run_obj" | jq -r '.event')"
+          r_path="$(printf '%s' "$run_obj" | jq -r '.path')"
+          r_attempt="$(printf '%s' "$run_obj" | jq -r '.run_attempt // empty')"
+          case "$r_event" in pull_request|workflow_call|merge_group) ;; *) fail "runObj.event='$r_event' not in {pull_request, workflow_call, merge_group} (supplied runId $RUN_ID)" ;; esac
+          [ "$r_path" = ".github/workflows/admission-gate-v2.yml" ] || fail "runObj.path='$r_path' != .github/workflows/admission-gate-v2.yml (orchestrator run identity; supplied runId $RUN_ID)"
+          if [ -n "$r_attempt" ] && [ "$r_attempt" != "$RUN_ATTEMPT" ]; then
+            fail "runObj.run_attempt '$r_attempt' != runAttempt input '$RUN_ATTEMPT'"
+          fi
+          if [ "$PR_NUMBER" = "0" ]; then
+            # ADR-0027 (P1): merge_group path — no PR object (N=0 honest
+            # value); the PR-API leg is N=0-invalid by construction. Identity
+            # via run object (runObj.head_sha == headSha input) + event payload
+            # consistency (merge_group.base_sha / base_ref — server-derived).
+            r_head="$(printf '%s' "$run_obj" | jq -r '.head_sha // empty')"
+            printf '%s' "$r_head" | grep -qE '^[0-9a-f]{40}$' || fail "runObj.head_sha '$r_head' not 40-hex (merge_group identity)"
+            [ "$r_head" = "$HEAD_SHA" ] || fail "runObj.head_sha '${r_head:0:12}' != headSha input '${HEAD_SHA:0:12}' (merge_group identity — fail-closed)"
+            [ "$HEAD_SHA" = "${{ github.event.merge_group.head_sha }}" ] || fail "event merge_group.head_sha != headSha input (inputs/event consistency — fail-closed)"
+            [ "$BASE_SHA" = "${{ github.event.merge_group.base_sha }}" ] || fail "event merge_group.base_sha != baseSha input (inputs/event consistency — fail-closed)"
+            _mg_br="${{ github.event.merge_group.base_ref }}"; _mg_br="${_mg_br#refs/heads/}"
+            [ "$_mg_br" = "main" ] || fail "merge_group.base_ref '$_mg_br' != main (base moved — new admission needed)"
+          else
+            # head/base identity — PR API (trusted source) vs supplied inputs.
+            pr_obj_f="$RUNNER_TEMP/mint_a0_pr_obj.json"
+            fetch_bounded \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" \
+              "$pr_obj_f" "A0 PR-object GET (JSON GET)" \
+              || fail "GET pulls/$PR_NUMBER failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+            pr_obj="$(cat "$pr_obj_f")"
+            p_head="$(printf '%s' "$pr_obj" | jq -r '.head.sha')"
+            p_base="$(printf '%s' "$pr_obj" | jq -r '.base.sha')"
+            p_ref="$(printf '%s' "$pr_obj" | jq -r '.base.ref')"
+            [ "$p_head" = "$HEAD_SHA" ] || fail "PR #$PR_NUMBER head.sha '${p_head:0:12}' != headSha input '${HEAD_SHA:0:12}'"
+            [ "$p_base" = "$BASE_SHA" ] || fail "PR #$PR_NUMBER base.sha '${p_base:0:12}' != baseSha input '${BASE_SHA:0:12}'"
+            [ "$p_ref" = "main" ] || fail "PR #$PR_NUMBER base.ref '$p_ref' != main (base moved — new admission needed)"
+          fi
+          echo "MINT_A0_ACTIVATION: OK — workflow_call supplied facts re-verified via API (runId=$RUN_ID pr=#$PR_NUMBER event=$r_event path=$r_path)"
+
+      # ────────────────────────────────────────────────────────────────
+      # (0b) TODO — trust-surface break-glass hook (PLAN ITEM, NOT
+      #      IMPLEMENTED — reported honestly, no placeholder step):
+      #      When the PR changes any trust-surface path (the source of truth
+      #      for the list is src/cli/merge_cli.nim TrustSurface / the policy
+      #      trustSurface — deliberately NOT duplicated here), the mint MUST
+      #      additionally require an architect Ed25519 break-glass signature
+      #      (signing ceremony + pinned public key + verification via the
+      #      B-built bin/ax infrastructure/certificate_attestation chain)
+      #      before publishing. Deferred because: (i) the signature ceremony
+      #      and key distribution need an architect approval flow; (ii) the
+      #      trust-surface path list must be consumed without duplication.
+      #      A no-op placeholder step would be theater (§0.9) — none is added.
+      #      Do not remove this comment without implementing the hook.
+      # ────────────────────────────────────────────────────────────────
+
+      # ────────────────────────────────────────────────────────────────
+      # (1) Derive B/H — run API + PR API chain (v2 fix preserved).
+      #   Empirical finding (runs 35414954344, 35369567925 in this repo):
+      #   workflow_run.head_sha == PR head commit H, NOT the merge commit —
+      #   so a raw head_sha is never used as H; H comes from the PR API.
+      #   GHEC change: NO M derivation (merge no longer pre-exists —
+      #   pre-landing mint; see header). Chain:
+      #     RUN_ID = inputs.runId (call)
+      #     runObj = GET /actions/runs/$RUN_ID   (needs actions: read)
+      #       call: path==admission-gate-v2.yml (orchestrator 자기 run — step (0)
+      #         의 self-binding과 짝) ∧ pull_requests는 입력 PR과 교차검증
+      #         (0건 허용) ∧ conclusion 미검증(게이트 needs+verdict가 대체 —
+      #         step (0) 주석의 self-reference 논증)
+      #     N = inputs.prNumber (call)
+      #     pr = GET /pulls/$N → H = pr.head.sha, B = pr.base.sha, and
+      #       pr.base.ref == "main" (base moved → fail-closed)
+      #     ADR-0027 (P1 + α; probe: docs/evidence/merge_queue_probe_2026-09-29.md):
+      #       merge_group 경로(N=0) — PR 객체 없음; RUN_HEAD = runObj.head_sha
+      #       (== merge-group commit G), B/base.ref = merge_group 페이로드, 입력
+      #       교차검증 (PR-API leg 없음). SUBJECT_HEAD := G^2 (parents(G)[1] —
+      #       PR head; parents(G)[0] == B 교차검증, 2-parent fail-closed γ
+      #       검출기, Git Data API by-object). H export = SUBJECT_HEAD (인증
+      #       주제); RUN_HEAD export = 실행/후보 정체성 (G).
+      #   Exports B, H, PR_NUMBER, RUN_HEAD for downstream (checkout of B,
+      #   identity checks, artifact provenance).
+      # ────────────────────────────────────────────────────────────────
+      - name: "(1) Derive B/H via run API + PR API (no M — pre-landing mint)"
+        id: mbh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ inputs.prNumber }}
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_MBH: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          [ -n "$RUN_ID" ] || fail "workflow_call runId is empty"
+          # DEBT#474 — bounded transport retry (P3 FINAL site-group): 4
+          # attempts, fixed backoff 5/10/20s; transient = curl transport
+          # failure (rc != 0: timeout/connection/DNS/TLS) or final HTTP 5xx;
+          # permanent = final HTTP 4xx incl. 429 (2026-10-15 contract
+          # alignment — NO 429 retry); exhaustion = explicit fail-closed with
+          # the code printed (no success evidence). Optional 4th arg = Accept
+          # header (default JSON API; raw contents legs pass
+          # application/vnd.github.raw+json — wire-identical to the bare curl
+          # this wraps). Idempotent read-path GETs ONLY — fetch-scoped;
+          # ledger appends / attest --sign / POSTs are never wrapped.
+          fetch_bounded() {
+            local url="$1" out="$2" tag="$3" a rc code
+            local accept="${4:-application/vnd.github+json}"
+            for a in 1 2 3 4; do
+              code="$(curl -sSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "Accept: $accept" \
+                -o "$out" -w '%{http_code}' "$url")" \
+                && rc=0 || rc=$?
+              code="${code:-000}"
+              if [ "$rc" -eq 0 ] && [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+                return 0
+              elif [ "$rc" -eq 0 ]; then
+                case "$code" in
+                  5*)
+                    echo "MINT_FETCH_RETRY: $tag attempt $a/4 — HTTP $code (transient)" >&2 ;;
+                  *)
+                    echo "MINT_FETCH_RETRY: $tag — HTTP $code (permanent — not retried)" >&2
+                    return 2 ;;
+                esac
+              else
+                echo "MINT_FETCH_RETRY: $tag attempt $a/4 — transport error (curl rc=$rc, http_code=$code) (transient)" >&2
+              fi
+              [ "$a" -lt 4 ] || break
+              case "$a" in 1) sleep 5 ;; 2) sleep 10 ;; 3) sleep 20 ;; esac
+            done
+            return 1
+          }
+          run_obj_f="$RUNNER_TEMP/mint_mbh_run_obj.json"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" \
+            "$run_obj_f" "MBH run-object GET (JSON GET)" \
+            || fail "GET actions/runs/$RUN_ID failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          run_obj="$(cat "$run_obj_f")"
+          # Re-confirm activation from the run object (run API trusted source).
+          r_event="$(printf '%s' "$run_obj" | jq -r '.event')"
+          r_path="$(printf '%s' "$run_obj" | jq -r '.path')"
+          case "$r_event" in pull_request|workflow_call|merge_group) ;; *) fail "runObj.event='$r_event' not in {pull_request, workflow_call, merge_group}" ;; esac
+          # workflow_call 경로 — orchestrator(자기) run identity. conclusion
+          # 미검증 근거는 step (0)의 self-reference 논증 (게이트 needs +
+          # verdict가 admission 성공을 platform측으로 강제).
+          [ "$r_path" = ".github/workflows/admission-gate-v2.yml" ] || fail "runObj.path='$r_path' != .github/workflows/admission-gate-v2.yml (orchestrator run)"
+          # PR 번호는 orchestrator 입력. run object의
+          # pull_requests는 workflow_call 실행에서 비어 있을 수 있으므로 누락은
+          # 허용하되, 존재하면 반드시 입력과 일치해야 한다 (fail-closed).
+          n_pulls="$(printf '%s' "$run_obj" | jq '.pull_requests | length')"
+          if [ "$n_pulls" -gt 0 ]; then
+            found="$(printf '%s' "$run_obj" | jq --arg n "$PR_NUMBER" '[.pull_requests[] | select(.number == ($n|tonumber))] | length')"
+            [ "$found" = "1" ] || fail "run $RUN_ID pull_requests do not contain PR #$PR_NUMBER (input cross-check)"
+          fi
+          N="$PR_NUMBER"
+          printf '%s' "$N" | grep -qE '^[0-9]+$' || fail "PR number '$N' malformed"
+          # (2a)가 event 없이 검증하도록 run-object 사실 export.
+          echo "MINT_RUN_PATH=$r_path" >> "$GITHUB_ENV"
+          if [ "$N" = "0" ]; then
+            # ADR-0027 (P1 + α; probe: docs/evidence/merge_queue_probe_2026-09-29.md):
+            # merge_group path — no PR object (N=0 honest value). RUN identity:
+            # runObj.head_sha (server truth) == the merge-group commit G; B /
+            # base.ref from the event payload, all cross-checked against the
+            # orchestrator inputs. SUBJECT identity (α): GitHub's merge queue
+            # LANDS G itself with parents(G) = [base_sha, PR head] — the cert
+            # subject binds (B, H_PR), so SUBJECT_HEAD := G^2, derived BY
+            # OBJECT via the Git Data API (parents are object identities —
+            # never the mutable refs; same trust argument as steps (3b)/(P5)).
+            # G^1 == B cross-check; fewer than 2 parents = the α-shape
+            # assumption broke → fail-closed (mechanized γ detector).
+            r_head="$(printf '%s' "$run_obj" | jq -r '.head_sha // empty')"
+            printf '%s' "$r_head" | grep -qE '^[0-9a-f]{40}$' || fail "runObj.head_sha '$r_head' not a 40-hex OID (merge_group path)"
+            RUN_HEAD="$r_head"
+            B="${{ github.event.merge_group.base_sha }}"
+            BR="${{ github.event.merge_group.base_ref }}"
+            BR="${BR#refs/heads/}"  # full ref → bare ('main') — merge_group.base_ref is a FULL ref
+            [ "$RUN_HEAD" = "${{ inputs.headSha }}" ] || fail "runObj.head_sha != headSha input (inputs consistency — merge_group, fail-closed)"
+            [ "$B" = "${{ inputs.baseSha }}" ] || fail "event merge_group.base_sha != baseSha input (inputs consistency — merge_group, fail-closed)"
+            [ "$RUN_HEAD" = "${{ github.event.merge_group.head_sha }}" ] || fail "event merge_group.head_sha != runObj.head_sha (payload consistency — fail-closed)"
+            commit_f="$RUNNER_TEMP/mint_mbh_merge_commit.json"
+            fetch_bounded \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/git/commits/$RUN_HEAD" \
+              "$commit_f" "MBH git-commit GET merge-group commit (JSON GET)" \
+              || fail "GET git/commits/$RUN_HEAD failed — merge-group commit object unresolvable (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+            commit_obj="$(cat "$commit_f")"
+            n_par="$(printf '%s' "$commit_obj" | jq '.parents | length')" \
+              || fail "cannot parse parents of $RUN_HEAD (fail-closed)"
+            [ "$n_par" = "2" ] || fail "SUBJECT_HEAD: merge-group commit $RUN_HEAD has $n_par parent(s), expected exactly 2 ([base, PR head]) — α-shape broken (ADR-0027; probe docs/evidence/merge_queue_probe_2026-09-29.md) (fail-closed)"
+            SUBJECT_HEAD="$(printf '%s' "$commit_obj" | jq -r '.parents[1].sha // empty')" \
+              || fail "cannot parse G^2 of $RUN_HEAD (fail-closed)"
+            printf '%s' "$SUBJECT_HEAD" | grep -qE '^[0-9a-f]{40}$' \
+              || fail "SUBJECT_HEAD '$SUBJECT_HEAD' not a 40-hex OID (G^2)"
+            g_base="$(printf '%s' "$commit_obj" | jq -r '.parents[0].sha // empty')" \
+              || fail "cannot parse G^1 of $RUN_HEAD (fail-closed)"
+            [ "$g_base" = "$B" ] || fail "SUBJECT_HEAD: G^1 '$g_base' != B '$B' (merge-group base mismatch — fail-closed)"
+            H="$SUBJECT_HEAD"
+          else
+            # PR 번호는 orchestrator 입력. run object의
+            # pull_requests는 workflow_call 실행에서 비어 있을 수 있으므로 누락은
+            # 허용하되, 존재하면 반드시 입력과 일치해야 한다 (fail-closed).
+            n_pulls="$(printf '%s' "$run_obj" | jq '.pull_requests | length')"
+            if [ "$n_pulls" -gt 0 ]; then
+              found="$(printf '%s' "$run_obj" | jq --arg n "$PR_NUMBER" '[.pull_requests[] | select(.number == ($n|tonumber))] | length')"
+              [ "$found" = "1" ] || fail "run $RUN_ID pull_requests do not contain PR #$PR_NUMBER (input cross-check)"
+            fi
+            # PR object — trusted source for B (base) / H (head).
+            pr_f="$RUNNER_TEMP/mint_mbh_pr_obj.json"
+            fetch_bounded \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$N" \
+              "$pr_f" "MBH PR-object GET (JSON GET)" \
+              || fail "GET pulls/$N failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+            pr="$(cat "$pr_f")"
+            H="$(printf '%s' "$pr" | jq -r '.head.sha')"
+            B="$(printf '%s' "$pr" | jq -r '.base.sha')"
+            BR="$(printf '%s' "$pr" | jq -r '.base.ref')"
+          fi
+          printf '%s' "$H" | grep -qE '^[0-9a-f]{40}$' || fail "H='$H' is not a 40-hex OID"
+          printf '%s' "$B" | grep -qE '^[0-9a-f]{40}$' || fail "B='$B' is not a 40-hex OID"
+          [ "$BR" = "main" ] || fail "PR #$N base.ref='$BR' != main (base moved — new admission needed)"
+          # RUN_HEAD = run/candidate identity (G on merge_group, PR head on
+          # pull_request) — used by artifact want_name (P2 — the admission lane
+          # uploads admission-check-<candidate head>-<run_attempt>). H = SUBJECT
+          # head.
+          RUN_HEAD="${RUN_HEAD:-$H}"
+          echo "B=$B" >> "$GITHUB_ENV"
+          echo "H=$H" >> "$GITHUB_ENV"
+          echo "RUN_HEAD=$RUN_HEAD" >> "$GITHUB_ENV"
+          echo "PR_NUMBER=$N" >> "$GITHUB_ENV"
+          echo "mbh_B=$B" >> "$GITHUB_OUTPUT"
+          echo "MINT_MBH: OK — B=${B:0:12} H=${H:0:12} PR=#$N (no M — pre-landing mint)"
+
+      # ────────────────────────────────────────────────────────────────
+      # B checkout — the ONLY checkout in prepare. bin/ax (verify/sign),
+      # the policy/scope digests and trusted_writer_set.json are all read
+      # from B; the trusted bin/ax 바이트 자체는 admission lane
+      # build-base-artifacts 소비분 (C5/C1 계약 개정 — 이하 consume step).
+      # NO M/H checkout; the pull_request-run's own SHA is never used as a
+      # ref. 빌드 없음 — toolchain 복원 스텝 불필요.
+      # ────────────────────────────────────────────────────────────────
+      - name: "Checkout B only (trusted config/tree; no M/H checkout)"
+        # Root checkout (NO path:) is MANDATORY: local action resolution
+        # (./.github/actions/...), hashFiles/sha256sum of nimble.lock, and
+        # every step's CWD are workspace-root-relative. fetch-depth 1: the
+        # only git access on this path is `git hash-object` on a downloaded
+        # blob (no repo history needed — depth-1 invariant,
+        # git_access_scan.sh gate).
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.mbh.outputs.mbh_B }}
+          fetch-depth: 1
+
+      # ────────────────────────────────────────────────────────────────
+      # [slice-engine] Slice Engine execution scope gate (S0-d) — epoch
+      # manifest implementedSlices로 prepare의 semantic stage 발화를
+      # 제한한다. manifest는 `git show $B:<path>` — B 트리의 git object
+      # (워크스페이스 파일이 아니라 B 트리 — Gate A: B가 실행 권위).
+      # SL-12가 implementedSlices에 있으면 scope_sl12=true → (4)/(5)/(5b)
+      # 발화; 없으면 NO-FIRE (skip이 아니라 미발화 — 실행 기록 없음,
+      # I-3/I-5 fail-closed). 미해독/파손 manifest = fail-closed. (5b)
+      # upload는 if-no-files-found: error이므로 (5)와 동일 게이트를 공유 —
+      # (5) 미발화 시 (5b)도 꺼야 NO-FIRE 의미가 보존된다.
+      # ────────────────────────────────────────────────────────────────
+      - name: "[slice-engine] Load epoch manifest implementedSlices (B tree — scope authority)"
+        id: slice-engine
+        run: |
+          set -euo pipefail
+          fail() { echo "[slice-engine] FAIL — $1 (fail-closed)" >&2; exit 1; }
+          B="${{ inputs.baseSha }}"
+          printf '%s' "$B" | grep -qE '^[0-9a-f]{40}$' || fail "B='$B' not a 40-hex OID"
+          MANIFEST="$(git -C "$GITHUB_WORKSPACE" show "$B:config/policy/epoch_manifest.json")" \
+            || fail "config/policy/epoch_manifest.json unreadable at B=$B — engine execution scope undeterminable (manifest must land on main with the promotion PR)"
+          parsed="$(printf '%s' "$MANIFEST" | jq -e . 2>/dev/null)" \
+            || fail "epoch manifest unparsable at B=$B"
+          printf '%s' "$parsed" | jq -e '(.ciEpochId? // "") | (type == "string") and (length > 0) and (test("^[A-Za-z0-9][A-Za-z0-9._+-]*$"))' >/dev/null \
+            || fail "ciEpochId missing/malformed at B=$B"
+          printf '%s' "$parsed" | jq -e '(.implementedSlices? // null) | (type == "array") and (all(.[]; type == "string"))' >/dev/null \
+            || fail "implementedSlices missing or not a string array at B=$B"
+          printf '%s' "$parsed" | jq -e 'all(.implementedSlices[]; test("^SL-[0-9]{2,4}$"))' >/dev/null \
+            || fail "implementedSlices contains malformed slice id (expected SL-NN)"
+          printf '%s' "$parsed" | jq -e '(.productionExecutionPin? // "") | (type == "string") and (length > 0)' >/dev/null \
+            || fail "productionExecutionPin missing/empty at B=$B"
+          EPOCH="$(printf '%s' "$parsed" | jq -r '.ciEpochId')"
+          IMPL="$(printf '%s' "$parsed" | jq -c '.implementedSlices')"
+          echo "epoch_id=$EPOCH" >> "$GITHUB_OUTPUT"
+          echo "implemented_slices=$IMPL" >> "$GITHUB_OUTPUT"
+          # scope_sl12 — derived from implementedSlices ONLY (admission-check
+          # slice-engine 게이트와 동일 규약: slice가 manifest에 없으면
+          # NO-FIRE).
+          RPT="[slice-engine] epoch=$EPOCH implemented=$IMPL"
+          if printf '%s' "$parsed" | jq -e '.implementedSlices | index("SL-12") != null' >/dev/null 2>&1; then
+            echo "scope_sl12=true" >> "$GITHUB_OUTPUT"
+            RPT="$RPT sl12=fire"
+          else
+            echo "scope_sl12=false" >> "$GITHUB_OUTPUT"
+            RPT="$RPT sl12=NO-FIRE"
+          fi
+          echo "$RPT"
+
+      # ────────────────────────────────────────────────────────────────
+      # system-deps parity (C5/C1 개정 보완 2차, acceptance 3차 런 근인):
+      # 695108a27 선례 — B-built ax가 런타임에 libpcre3 dlopen을 요구
+      # (Nim re 모듈; "could not load: libpcre.so(.3|.1|)" — old-era publish
+      # P3 실측). 빌드 제거로 setup-axiom-toolchain의 system-deps 제공이
+      # 빠졌으므로 restore-only reader로 재배치 (cache = acceleration,
+      # never evidence; 빌드 없음 — 캐시 복원은 실행 환경 정합용).
+      # ────────────────────────────────────────────────────────────────
+      # provision-scope runtime: mint는 prebuilt bin/ax sign/ledger만 실행
+      # (kernel/빌드 없음) — Nim/Lean/nimble 복원 생략.
+      - uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          cache-save-enabled: 'false'
+          cache-build-source: ${{ steps.mbh.outputs.mbh_B }}
+          provision-scope: 'runtime'
+
+      # ────────────────────────────────────────────────────────────────
+      # [preflight] PREPARE leg, PR venue (ADR-0032 (b),(f)): fast static
+      # contrast instead of the witness-verify/sign chain. Real checks,
+      # fail-closed (§0.9):
+      #   1. Policy SSOT — merge_admission.json parses, certRequired == true.
+      #   2. Mint structure — the REQUIRED workflow_call `stage` input and
+      #      the trusted cert-artifact name `subject-certificate-` convention
+      #      are intact (the publish-side exactly-one contract's anchor).
+      # Identity content for the PR preflight is the (0)/(1)/(2a) chain above
+      # (run object + PR API re-verification + TWS@B/blob@B pairing), which
+      # is venue-independent and runs in full.
+      # ────────────────────────────────────────────────────────────────
+      - name: "[preflight] Prepare-leg static contrast (policy SSOT + mint structure)"
+        if: steps.venue.outputs.venue == 'preflight'
+        run: |
+          set -euo pipefail
+          fail() { echo "[preflight][prepare] FAIL — $1 (fail-closed, ADR-0032)" >&2; exit 1; }
+          POLICY="config/policy/merge_admission.json"
+          [ -f "$POLICY" ] || fail "merge_admission.json missing at B workspace"
+          jq -e '.certRequired == true' "$POLICY" >/dev/null 2>&1 \
+            || fail "merge_admission.json certRequired is not true (SSOT posture drift — fail-closed)"
+          WF=".github/workflows/certificate-mint.yml"
+          [ -f "$WF" ] || fail "workflow source missing at B workspace"
+          grep -q "required: true" "$WF" || fail "workflow_call stage input no longer required (mint structure drift)"
+          # QUIRK(gh_run_observation_quirks Q4): run: 블록(주석 포함)의 표현식
+          # 토큰은 셸 이전에 GitHub 보간되어 패턴이 \1로 붕괴하고, 보간 불가
+          # 문자열이면 워크플로 파싱 자체가 실패한다 — 문자열로 담으려면 \{ 이스케이프로
+          # 토큰을 끊는다(아래 \$\{\{ 패턴. 주석에도 토큰을 쓰지 말 것).
+          grep -qE 'subject-certificate-\$\{\{[[:space:]]*inputs\.runAttempt' "$WF" \
+            || fail "trusted cert-artifact naming convention missing (publish exactly-one anchor drift)"
+          echo "[preflight][prepare] checks: policy SSOT certRequired=true + stage input + trusted cert-artifact naming"
+          echo "PREFLIGHT PASS — prepare leg: policy SSOT + mint structure contrast (venue=pull_request; preflight success ≠ landing evidence — ADR-0032 (f))"
+
+      # ────────────────────────────────────────────────────────────────
+      # [mint] C5/C1 계약 개정 (2026-09-29): B self-build(계약 예외 C1,
+      # ADR-0026 §3) 제거 → admission lane build-base-artifacts(B-결속
+      # 바이트) 소비. 검증 경로 (4)/(5) 불변 — 소비 source만 변경:
+      #   (i)   run-scoped API: GET /actions/runs/{run_id}/artifacts — the
+      #         artifact must belong to THIS run instance (workflow_call
+      #         callee job 산출물은 caller run 목록에 노출 — witness (3)
+      #         스텝과 동일 패턴)
+      #   (ii)  trusted-name: name == "admission-check-base-artifacts"
+      #         exactly one, expired=false
+      #   (iii) B-binding: manifest.txt build_sha == B ∧ per-file sha256 ==
+      #         manifest 기록 (bin/ax + install_ax_cas + ircheck 전량 — SL-08
+      #         '[check] Verify artifact manifest'와 동일 계약)
+      #   (iv)  install: bin/ax → $B_CHECKOUT_DIR/bin/ax — (4) verify +
+      #         (5) sign/stage의 B-built trusted bin/ax 입력
+      # ────────────────────────────────────────────────────────────────
+      - name: "[mint] Consume admission B-built bin/ax (build-base-artifacts — run-scoped + build_sha==B + sha256 pin)"
+        if: steps.venue.outputs.venue == 'landing'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_BASEART: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          : "${B:?B not set}"
+          want_name="admission-check-base-artifacts"
+          # DEBT#474 — bounded transport retry (P3 FINAL site-group): 4
+          # attempts, fixed backoff 5/10/20s; transient = curl transport
+          # failure (rc != 0: timeout/connection/DNS/TLS) or final HTTP 5xx;
+          # permanent = final HTTP 4xx incl. 429 (2026-10-15 contract
+          # alignment — NO 429 retry); exhaustion = explicit fail-closed with
+          # the code printed (no success evidence). Optional 4th arg = Accept
+          # header (default JSON API; raw contents legs pass
+          # application/vnd.github.raw+json — wire-identical to the bare curl
+          # this wraps). Idempotent read-path GETs ONLY — fetch-scoped;
+          # ledger appends / attest --sign / POSTs are never wrapped.
+          fetch_bounded() {
+            local url="$1" out="$2" tag="$3" a rc code
+            local accept="${4:-application/vnd.github+json}"
+            for a in 1 2 3 4; do
+              code="$(curl -sSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "Accept: $accept" \
+                -o "$out" -w '%{http_code}' "$url")" \
+                && rc=0 || rc=$?
+              code="${code:-000}"
+              if [ "$rc" -eq 0 ] && [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+                return 0
+              elif [ "$rc" -eq 0 ]; then
+                case "$code" in
+                  5*)
+                    echo "MINT_FETCH_RETRY: $tag attempt $a/4 — HTTP $code (transient)" >&2 ;;
+                  *)
+                    echo "MINT_FETCH_RETRY: $tag — HTTP $code (permanent — not retried)" >&2
+                    return 2 ;;
+                esac
+              else
+                echo "MINT_FETCH_RETRY: $tag attempt $a/4 — transport error (curl rc=$rc, http_code=$code) (transient)" >&2
+              fi
+              [ "$a" -lt 4 ] || break
+              case "$a" in 1) sleep 5 ;; 2) sleep 10 ;; 3) sleep 20 ;; esac
+            done
+            return 1
+          }
+          arts_f="$RUNNER_TEMP/mint_baseart_artifacts.json"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" \
+            "$arts_f" "BASEART artifacts-list artifact download (JSON GET)" \
+            || fail "GET runs/$RUN_ID/artifacts failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          arts="$(cat "$arts_f")"
+          count="$(printf '%s' "$arts" | jq --arg n "$want_name" '[.artifacts[] | select(.name == $n)] | length')"
+          [ "$count" = "1" ] || fail "expected exactly one artifact named '$want_name', found $count"
+          art_id="$(printf '%s' "$arts" | jq --arg n "$want_name" -r '.artifacts[] | select(.name == $n) | .id')"
+          art_expired="$(printf '%s' "$arts" | jq --arg n "$want_name" -r '.artifacts[] | select(.name == $n) | .expired')"
+          [ "$art_expired" = "false" ] || fail "artifact $art_id ('$want_name') expired=true (fail-closed)"
+          echo "MINT_BASEART: artifact id=$art_id name=$want_name expired=$art_expired"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$art_id/zip" \
+            "$RUNNER_TEMP/base.zip" "BASEART base-artifacts zip download (artifact)" \
+            || fail "artifact zip download failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          mkdir -p "$RUNNER_TEMP/base-artifacts"
+          (cd "$RUNNER_TEMP/base-artifacts" && unzip -o -q "$RUNNER_TEMP/base.zip") \
+            || fail "artifact zip extraction failed"
+          manifest="$RUNNER_TEMP/base-artifacts/manifest.txt"
+          [ -f "$manifest" ] || fail "manifest.txt missing inside artifact '$want_name' (SL-08 B-binding absent — fail-closed)"
+          m_build="$(awk -F' = ' '/^build_sha =/{print $2; exit}' "$manifest")"
+          [ "$m_build" = "$B" ] || fail "manifest build_sha '${m_build:0:12}' != B '${B:0:12}' (admission lane B-binding mismatch — fail-closed)"
+          while read -r want file_rel; do
+            [ -n "$want" ] || continue
+            f="$RUNNER_TEMP/base-artifacts/$file_rel"
+            [ -f "$f" ] || fail "manifest-listed file '$file_rel' missing in artifact"
+            got="$(sha256sum "$f" | awk '{print $1}')"
+            [ "$want" = "$got" ] || fail "sha256 mismatch for '$file_rel' (manifest '$want' != actual '$got')"
+          done < <(awk '/^[0-9a-f]{64}[[:space:]]{2}/{print $1 "\t" $2}' "$manifest")
+          [ -f "$RUNNER_TEMP/base-artifacts/bin/ax" ] || fail "bin/ax missing inside artifact '$want_name'"
+          install -m 755 "$RUNNER_TEMP/base-artifacts/bin/ax" "$GITHUB_WORKSPACE/bin/ax"
+          # (4) attest --sign의 stage-(b) 추출 합의가 ircheck를 실행한다
+          # (extraction_agreement.nim runReferenceExtractorOnWire — worker =
+          # <root>/proofs/.lake/build/bin/ircheck). 빌드 대체 시 함께 소비해야
+          # 검증 경로가 유지된다 (C5/C1 개정 보완 — acceptance 2차 런 근인).
+          install -m 755 -D "$RUNNER_TEMP/base-artifacts/proofs/.lake/build/bin/ircheck"             "$GITHUB_WORKSPACE/proofs/.lake/build/bin/ircheck"
+          echo "MINT_BASEART: OK — admission B-built bin/ax + ircheck consumed (id=$art_id, build_sha==B, per-file sha256 pinned)"
+
+      # ────────────────────────────────────────────────────────────────
+      # (2a) Admission identity tuple (plan v12 §Admission identity):
+      #   expected = (trusted_path, trustedAdmissionWorkflowSha) @B — read at
+      #              checkout step from config/trusted_writer_set.json
+      #              (NOT the current main — the anchor is B)
+      #   actual   = (workflow_id, path) — call: orchestrator gate run의 path
+      #              vs admission-gate-v2.yml (workflow_id는 org 등록 네임스페이스
+      #              가 달라 실측 교차검증 불가 — 호출본 주석의 id 실측값 참조).
+      #              불일치 → fail-closed (admission-workflow tamper or
+      #              same-named impostor workflow).
+      #   NOTE (GHEC): the blob sha of the admission workflow file at M no
+      #   longer exists (no M before landing) — the workflow-blob comparison
+      #   is now done at B (same trust argument: B is the anchor the mint
+      #   already pins everything to). config/trusted_writer_set.json
+      #   re-landed (surface v6) — fail-closes on missing/mismatched set.
+      # ────────────────────────────────────────────────────────────────
+      # (2b) PR identity — the PR number derived in (1) is re-verified
+      #   against the trusted PR API: GET /pulls/{N} → head.sha==H ∧
+      #   base.sha==B ∧ base.ref=="main". Single PR-identity implementation.
+      # ────────────────────────────────────────────────────────────────
+      # (2c) Provenance comparison: PR + H + run_id + run_attempt derived
+      #   here MUST equal the values recorded in the witness manifest
+      #   (checked in step (3) below).
+      # ────────────────────────────────────────────────────────────────
+      - name: "(2a)+ (2b)+ (2c) TrustedWriterSet@B + PR API identity + provenance comparison"
+        id: identity
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          B_CHECKOUT_DIR: ${{ github.workspace }}
+          RUN_PATH: ${{ env.MINT_RUN_PATH }}
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_ID: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          : "${B:?B not set}"; : "${H:?H not set}"
+          B_DIR="$B_CHECKOUT_DIR"
+          [ -d "$B_DIR" ] || fail "B checkout missing at $B_DIR"
+
+          set_file="$B_DIR/config/trusted_writer_set.json"
+          if [ ! -f "$set_file" ]; then
+            fail "trusted_writer_set.json@B missing (expected_path=$set_file) — config/trusted_writer_set.json must exist at the mint base B (re-landed via surface v6; fail-closed if absent)"
+          fi
+          # Full-line `//` documentation comments are stripped like
+          # tools/ci/verify_trusted_writer_set.sh does.
+          stripped="$(sed -E 's|^[[:space:]]*//.*$||' "$set_file")"
+          TRUSTED_WRITER="$(printf '%s' "$stripped" | jq -r '.trustedWriterWorkflow')"
+          ADMISSION_PATH=".github/workflows/admission-check.yml"
+          TRUSTED_ADM_SHA="$(printf '%s' "$stripped" | jq -r '.trustedAdmissionWorkflowSha')"
+          printf '%s' "$TRUSTED_ADM_SHA" | grep -qE '^[0-9a-f]{40}$' || fail "trustedAdmissionWorkflowSha='$TRUSTED_ADM_SHA'@B malformed"
+          # The set's writer is this workflow (certificate-mint) — the
+          # TrustedWriterSet equality gate enforces that at the top level.
+          [ "$TRUSTED_WRITER" = ".github/workflows/certificate-mint.yml" ] || fail "trustedWriterWorkflow='$TRUSTED_WRITER'@B != certificate-mint.yml"
+
+          # ── (2a) blob@B — 공통 검증 (admission 정의 고정) ──
+          # workflow blob at B via contents API (ref=B — the anchor).
+          # DEBT#474 — bounded transport retry (P3 FINAL site-group): 4
+          # attempts, fixed backoff 5/10/20s; transient = curl transport
+          # failure (rc != 0: timeout/connection/DNS/TLS) or final HTTP 5xx;
+          # permanent = final HTTP 4xx incl. 429 (2026-10-15 contract
+          # alignment — NO 429 retry); exhaustion = explicit fail-closed with
+          # the code printed (no success evidence). Optional 4th arg = Accept
+          # header (default JSON API; raw contents legs pass
+          # application/vnd.github.raw+json — wire-identical to the bare curl
+          # this wraps). Idempotent read-path GETs ONLY — fetch-scoped;
+          # ledger appends / attest --sign / POSTs are never wrapped.
+          fetch_bounded() {
+            local url="$1" out="$2" tag="$3" a rc code
+            local accept="${4:-application/vnd.github+json}"
+            for a in 1 2 3 4; do
+              code="$(curl -sSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "Accept: $accept" \
+                -o "$out" -w '%{http_code}' "$url")" \
+                && rc=0 || rc=$?
+              code="${code:-000}"
+              if [ "$rc" -eq 0 ] && [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+                return 0
+              elif [ "$rc" -eq 0 ]; then
+                case "$code" in
+                  5*)
+                    echo "MINT_FETCH_RETRY: $tag attempt $a/4 — HTTP $code (transient)" >&2 ;;
+                  *)
+                    echo "MINT_FETCH_RETRY: $tag — HTTP $code (permanent — not retried)" >&2
+                    return 2 ;;
+                esac
+              else
+                echo "MINT_FETCH_RETRY: $tag attempt $a/4 — transport error (curl rc=$rc, http_code=$code) (transient)" >&2
+              fi
+              [ "$a" -lt 4 ] || break
+              case "$a" in 1) sleep 5 ;; 2) sleep 10 ;; 3) sleep 20 ;; esac
+            done
+            return 1
+          }
+          blob_tmp="$(mktemp)"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/contents/$ADMISSION_PATH?ref=$B" \
+            "$blob_tmp" "ID admission-blob contents GET@B (raw contents GET)" \
+            "application/vnd.github.raw+json" \
+            || fail "GET contents/$ADMISSION_PATH@B failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          blob_sha="$(git hash-object "$blob_tmp")"
+          rm -f "$blob_tmp"
+          [ "$blob_sha" = "$TRUSTED_ADM_SHA" ] || fail "admission workflow blob@B $blob_sha != trustedAdmissionWorkflowSha $TRUSTED_ADM_SHA@B (admission workflow tamper?)"
+          # call — orchestrator run identity (path). workflow_id는 org 등록
+          # 네임스페이스가 달라 교차검증 불가(.github 정의 id 367694978 ≠
+          # ruleset 실행 id 367727531 — 2026-09-26 실측): identity 담보 =
+          # path(server 할당, 위조 불가) + step (0)의 self-binding +
+          # ruleset SHA pin(platform).
+          # G1 Lever-B (2026-10-16): controller workflow path renamed
+          # admission-gate.yml → admission-gate-v2.yml (registration-surface
+          # lever — ruleset binding key = repository_id + path); the
+          # orchestrator-run identity check tracks the new registration path.
+          GATE_PATH=".github/workflows/admission-gate-v2.yml"
+          [ "$RUN_PATH" = "$GATE_PATH" ] || fail "runObj.path='$RUN_PATH' != $GATE_PATH (orchestrator run identity)"
+
+          # ── (2b) PR identity — re-verify the run-linked PR (derived in (1)).
+          : "${PR_NUMBER:?PR_NUMBER not set}"
+          printf '%s' "$PR_NUMBER" | grep -qE '^[0-9]+$' || fail "PR number '$PR_NUMBER' malformed"
+          if [ "$PR_NUMBER" = "0" ]; then
+            # ADR-0027 (P1 + α): merge_group path — no PR object (N=0); RUN
+            # identity re-verified from the run object (runObj.head_sha ==
+            # RUN_HEAD == G) + event payload base identity; SUBJECT identity
+            # re-derived by object (G^2 == H, G^1 == B) matching step (1).
+            r_obj_f="$RUNNER_TEMP/mint_id_run_obj.json"
+            fetch_bounded \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" \
+              "$r_obj_f" "ID run-object GET (JSON GET)" \
+              || fail "GET actions/runs/$RUN_ID failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+            r_obj="$(cat "$r_obj_f")"
+            r_head="$(printf '%s' "$r_obj" | jq -r '.head_sha // empty')"
+            [ "$r_head" = "$RUN_HEAD" ] || fail "runObj.head_sha $r_head != RUN_HEAD $RUN_HEAD (merge_group run identity — fail-closed)"
+            [ "${{ github.event.merge_group.base_sha }}" = "$B" ] || fail "event merge_group.base_sha != B $B (merge_group identity — fail-closed)"
+            _mg_br="${{ github.event.merge_group.base_ref }}"; _mg_br="${_mg_br#refs/heads/}"
+            [ "$_mg_br" = "main" ] || fail "merge_group.base_ref '$_mg_br' != main (base moved — new admission needed)"
+            commit_f="$RUNNER_TEMP/mint_id_subject_commit.json"
+            fetch_bounded \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/git/commits/$r_head" \
+              "$commit_f" "ID git-commit GET subject re-derive (JSON GET)" \
+              || fail "GET git/commits/$r_head failed — merge_group subject re-derive (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+            commit_obj="$(cat "$commit_f")"
+            n_par="$(printf '%s' "$commit_obj" | jq '.parents | length')" \
+              || fail "cannot parse parents of $r_head (fail-closed)"
+            [ "$n_par" = "2" ] || fail "SUBJECT_HEAD: merge-group commit $r_head has $n_par parent(s), expected exactly 2 ([base, PR head]) — α-shape broken (ADR-0027; probe docs/evidence/merge_queue_probe_2026-09-29.md) (fail-closed)"
+            [ "$(printf '%s' "$commit_obj" | jq -r '.parents[1].sha // empty')" = "$H" ] \
+              || fail "re-derived G^2 != H $H (subject identity — fail-closed)"
+            [ "$(printf '%s' "$commit_obj" | jq -r '.parents[0].sha // empty')" = "$B" ] \
+              || fail "re-derived G^1 != B $B (subject identity — fail-closed)"
+          else
+            pr_obj_f="$RUNNER_TEMP/mint_id_pr_obj.json"
+            fetch_bounded \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" \
+              "$pr_obj_f" "ID PR-object GET (JSON GET)" \
+              || fail "GET pulls/$PR_NUMBER failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+            pr_obj="$(cat "$pr_obj_f")"
+            head_sha="$(printf '%s' "$pr_obj" | jq -r '.head.sha')"
+            base_sha="$(printf '%s' "$pr_obj" | jq -r '.base.sha')"
+            base_ref="$(printf '%s' "$pr_obj" | jq -r '.base.ref')"
+            [ "$head_sha" = "$H" ] || fail "PR head.sha $head_sha != H $H (PR API trusted source)"
+            [ "$base_sha" = "$B" ] || fail "PR base.sha $base_sha != B $B (base moved during admission? fail-closed)"
+            [ "$base_ref" = "main" ] || fail "PR base.ref '$base_ref' != main (base moved — new admission needed)"
+          fi
+
+          echo "MINT_ID: OK — PR #$PR_NUMBER head==H base==B ref==main; admission identity ($ADMISSION_PATH@$TRUSTED_ADM_SHA)"
+
+      # ────────────────────────────────────────────────────────────────
+      # (3) Artifact retrieval — run-scoped API + trusted-name + manifest
+      #     check, ALL required:
+      #   (i)   run-scoped API: GET /actions/runs/{run_id}/artifacts — the
+      #         artifact must belong to THIS run instance
+      #   (ii)  trusted-name: name ==
+      #         "admission-check-{candidate head}-{run_attempt}" (P2 —
+      #         candidate head = pull_request.head.sha | merge_group.head_sha |
+      #         github.sha; == the headSha input verified in (0)/(1);
+      #         run_attempt = the runAttempt input, verified against the run
+      #         object in (0)) exactly
+      #   (iii) sha pin: witness.sha256 inside the artifact must equal
+      #         sha256(witness.json) (CI=0 flow uploads both)
+      #   (iv)  provenance: the witness's OWN provenance block must match
+      #         the compared values (H, B-as-toolCommit, run_id,
+      #         run_attempt, PR). The witness `mergeSha` field is
+      #         M_observed (the check run's github.sha) — its TREE becomes a
+      #         gate in step (3b) (identity chain; no M before landing).
+      # ────────────────────────────────────────────────────────────────
+      - name: "(3) Artifact retrieval — run-scoped API + trusted-name + witness sha + provenance check"
+        # ADR-0032: landing venue only — no witness artifact exists on the PR
+        # preflight (the attest leg produces none there).
+        if: steps.venue.outputs.venue == 'landing'
+        id: artifact
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_ART: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          : "${PR_NUMBER:?PR_NUMBER not set}"; : "${B:?B not set}"; : "${H:?H not set}"
+          # ADR-0027 (P2): want_name mirrors the candidate head (verified
+          # inputs.headSha == RUN_HEAD in (0)/(1)) — the upload side names the
+          # artifact admission-check-<candidate head>-<run_attempt>, identical
+          # on both pull_request and merge_group events. RUN identity (G on
+          # merge_group), NOT the cert subject head. The attempt suffix is the
+          # same convention this workflow's own cert artifact uses
+          # (`subject-certificate-<run_attempt>`): attempts of one run_id share
+          # the artifact namespace, so an unsuffixed want_name sees every
+          # earlier attempt's upload and the exactly-one check fails closed.
+          want_name="admission-check-$RUN_HEAD-$RUN_ATTEMPT"
+          # (i) run-scoped artifact list
+          # DEBT#474 — bounded transport retry (P3 FINAL site-group): 4
+          # attempts, fixed backoff 5/10/20s; transient = curl transport
+          # failure (rc != 0: timeout/connection/DNS/TLS) or final HTTP 5xx;
+          # permanent = final HTTP 4xx incl. 429 (2026-10-15 contract
+          # alignment — NO 429 retry); exhaustion = explicit fail-closed with
+          # the code printed (no success evidence). Optional 4th arg = Accept
+          # header (default JSON API; raw contents legs pass
+          # application/vnd.github.raw+json — wire-identical to the bare curl
+          # this wraps). Idempotent read-path GETs ONLY — fetch-scoped;
+          # ledger appends / attest --sign / POSTs are never wrapped.
+          fetch_bounded() {
+            local url="$1" out="$2" tag="$3" a rc code
+            local accept="${4:-application/vnd.github+json}"
+            for a in 1 2 3 4; do
+              code="$(curl -sSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "Accept: $accept" \
+                -o "$out" -w '%{http_code}' "$url")" \
+                && rc=0 || rc=$?
+              code="${code:-000}"
+              if [ "$rc" -eq 0 ] && [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+                return 0
+              elif [ "$rc" -eq 0 ]; then
+                case "$code" in
+                  5*)
+                    echo "MINT_FETCH_RETRY: $tag attempt $a/4 — HTTP $code (transient)" >&2 ;;
+                  *)
+                    echo "MINT_FETCH_RETRY: $tag — HTTP $code (permanent — not retried)" >&2
+                    return 2 ;;
+                esac
+              else
+                echo "MINT_FETCH_RETRY: $tag attempt $a/4 — transport error (curl rc=$rc, http_code=$code) (transient)" >&2
+              fi
+              [ "$a" -lt 4 ] || break
+              case "$a" in 1) sleep 5 ;; 2) sleep 10 ;; 3) sleep 20 ;; esac
+            done
+            return 1
+          }
+          arts_f="$RUNNER_TEMP/mint_art_artifacts.json"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" \
+            "$arts_f" "ART artifacts-list artifact download (JSON GET)" \
+            || fail "GET runs/$RUN_ID/artifacts failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          arts="$(cat "$arts_f")"
+          # (ii) trusted-name — exactly one artifact with the deterministic name.
+          count="$(printf '%s' "$arts" | jq --arg n "$want_name" '[.artifacts[] | select(.name == $n)] | length')"
+          [ "$count" = "1" ] || fail "expected exactly one artifact named '$want_name', found $count"
+          art_id="$(printf '%s' "$arts" | jq --arg n "$want_name" -r '.artifacts[] | select(.name == $n) | .id')"
+          art_expired="$(printf '%s' "$arts" | jq --arg n "$want_name" -r '.artifacts[] | select(.name == $n) | .expired')"
+          [ "$art_expired" = "false" ] || fail "artifact $art_id ('$want_name') expired=true (fail-closed)"
+          echo "MINT_ART: artifact id=$art_id name=$want_name expired=$art_expired"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$art_id/zip" \
+            "$RUNNER_TEMP/admission.zip" "ART admission zip download (artifact)" \
+            || fail "artifact zip download failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          mkdir -p "$RUNNER_TEMP/admission"
+          (cd "$RUNNER_TEMP/admission" && unzip -o -q "$RUNNER_TEMP/admission.zip") \
+            || fail "artifact zip extraction failed"
+          bundle="$RUNNER_TEMP/admission/witness.json"
+          [ -f "$bundle" ] || fail "no witness.json inside artifact '$want_name'"
+          # (iii) sha pin — witness.sha256 inside the same artifact.
+          if [ -f "$RUNNER_TEMP/admission/witness.sha256" ]; then
+            want="$(awk '{print $1}' "$RUNNER_TEMP/admission/witness.sha256")"
+            actual="$(sha256sum "$bundle" | awk '{print $1}')"
+            [ "$want" = "$actual" ] || fail "witness.sha256 '$want' != sha256(witness.json) '$actual' (tamper?)"
+          fi
+          cp "$bundle" "$GITHUB_WORKSPACE/witness.json"
+          # (iv) provenance — H, B(toolCommit), run_id, run_attempt, PR.
+          w_tool="$(jq -r '.provenance.toolCommit' "$GITHUB_WORKSPACE/witness.json")"
+          w_head="$(jq -r '.provenance.prHeadSha' "$GITHUB_WORKSPACE/witness.json")"
+          w_pr="$(jq -r '.provenance.prNumber' "$GITHUB_WORKSPACE/witness.json")"
+          w_rid="$(jq -r '.provenance.runId' "$GITHUB_WORKSPACE/witness.json")"
+          w_att="$(jq -r '.provenance.runAttempt' "$GITHUB_WORKSPACE/witness.json")"
+          [ "$w_tool" = "$B" ] || fail "witness provenance toolCommit '${w_tool:0:12}' != B '${B:0:12}'"
+          [ "$w_head" = "$H" ] || fail "witness provenance prHeadSha '${w_head:0:12}' != H '${H:0:12}'"
+          [ "$w_pr" = "$PR_NUMBER" ] || fail "witness provenance prNumber '$w_pr' != PR #$PR_NUMBER"
+          [ "$w_rid" = "$RUN_ID" ] || fail "witness provenance runId '$w_rid' != $RUN_ID"
+          [ "$w_att" = "$RUN_ATTEMPT" ] || fail "witness provenance runAttempt '$w_att' != $RUN_ATTEMPT"
+          echo "MINT_ART: OK — witness sha-pinned + provenance (H/B/run/pr) fully matched; mergeSha field = M_observed (gate input via its tree — step (3b))"
+
+      # ────────────────────────────────────────────────────────────────
+      # (3b) Merge-candidate tree identity (identity chain, ADR-0025 §11 ③):
+      #   certTree == witness.mergeTreeDigest == testedTreeDigest == mergeTree.
+      #   The mint RE-DERIVES the merge-candidate tree from the witness's OWN
+      #   provenance mergeSha via the Git Data API (`/git/commits/{sha}` →
+      #   commit.tree.sha — object identity resolution; the exact tree the org
+      #   gate's tree-identity job computes as tree(github.sha)). This makes
+      #   the witness's mergeSha a GATE input (was provenance-only): any
+      #   missing/malformed/mismatched digest → fail-closed red, and no cert
+      #   may be signed before witness.mergeTreeDigest == tree(mergeSha)
+      #   holds. No git history access here — the B-checkout depth-1 posture
+      #   stays untouched (git hash-object only).
+      # ────────────────────────────────────────────────────────────────
+      - name: "(3b) Merge-candidate tree identity — witness.mergeTreeDigest == tree(mergeSha) (fail-closed)"
+        # ADR-0032: landing venue only (consumes the witness from (3)).
+        if: steps.venue.outputs.venue == 'landing'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_TREEID: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          w_merge="$(jq -r '.provenance.mergeSha // empty' "$GITHUB_WORKSPACE/witness.json")"
+          [ -n "$w_merge" ] || fail "witness provenance mergeSha missing — cannot re-derive the merge-candidate tree (identity chain)"
+          printf '%s' "$w_merge" | grep -qE '^[0-9a-f]{40}$' || fail "witness provenance mergeSha '$w_merge' not a 40-hex OID"
+          w_tree="$(jq -r '.provenance.mergeTreeDigest // empty' "$GITHUB_WORKSPACE/witness.json")"
+          [ -n "$w_tree" ] || fail "witness provenance mergeTreeDigest missing — the merge-candidate tree was not recorded (identity chain)"
+          printf '%s' "$w_tree" | grep -qE '^[0-9a-f]{40}$' || fail "witness provenance mergeTreeDigest '$w_tree' not a 40-hex tree OID"
+          # Re-derive the merge commit's tree BY OBJECT (equivalent to
+          # `git rev-parse ${mergeSha}^{tree}` — the org gate's tree-identity
+          # resolution; the object is read, never the mutable refs/pull/N/merge).
+          # DEBT#474 — bounded transport retry (P3 FINAL site-group): 4
+          # attempts, fixed backoff 5/10/20s; transient = curl transport
+          # failure (rc != 0: timeout/connection/DNS/TLS) or final HTTP 5xx;
+          # permanent = final HTTP 4xx incl. 429 (2026-10-15 contract
+          # alignment — NO 429 retry); exhaustion = explicit fail-closed with
+          # the code printed (no success evidence). Optional 4th arg = Accept
+          # header (default JSON API; raw contents legs pass
+          # application/vnd.github.raw+json — wire-identical to the bare curl
+          # this wraps). Idempotent read-path GETs ONLY — fetch-scoped;
+          # ledger appends / attest --sign / POSTs are never wrapped.
+          fetch_bounded() {
+            local url="$1" out="$2" tag="$3" a rc code
+            local accept="${4:-application/vnd.github+json}"
+            for a in 1 2 3 4; do
+              code="$(curl -sSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "Accept: $accept" \
+                -o "$out" -w '%{http_code}' "$url")" \
+                && rc=0 || rc=$?
+              code="${code:-000}"
+              if [ "$rc" -eq 0 ] && [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+                return 0
+              elif [ "$rc" -eq 0 ]; then
+                case "$code" in
+                  5*)
+                    echo "MINT_FETCH_RETRY: $tag attempt $a/4 — HTTP $code (transient)" >&2 ;;
+                  *)
+                    echo "MINT_FETCH_RETRY: $tag — HTTP $code (permanent — not retried)" >&2
+                    return 2 ;;
+                esac
+              else
+                echo "MINT_FETCH_RETRY: $tag attempt $a/4 — transport error (curl rc=$rc, http_code=$code) (transient)" >&2
+              fi
+              [ "$a" -lt 4 ] || break
+              case "$a" in 1) sleep 5 ;; 2) sleep 10 ;; 3) sleep 20 ;; esac
+            done
+            return 1
+          }
+          commit_f="$RUNNER_TEMP/mint_treeid_merge_commit.json"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/git/commits/$w_merge" \
+            "$commit_f" "3b git-commit GET merge-commit tree (JSON GET)" \
+            || fail "GET git/commits/$w_merge failed — merge-candidate commit object unresolvable (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          commit_obj="$(cat "$commit_f")"
+          mint_tree="$(printf '%s' "$commit_obj" | jq -r '.tree.sha // empty')"
+          printf '%s' "$mint_tree" | grep -qE '^[0-9a-f]{40}$' || fail "re-derived merge-candidate tree '$mint_tree' not a 40-hex tree OID"
+          [ "$w_tree" = "$mint_tree" ] || fail "witness.mergeTreeDigest '$w_tree' != tree(mergeSha) '$mint_tree' — the recorded merge-candidate tree does not match the merge commit object (identity chain)"
+          echo "MINT_MERGE_TREE=$mint_tree" >> "$GITHUB_ENV"
+          echo "MINT_TREEID: OK — witness.mergeTreeDigest == tree(mergeSha) == $mint_tree (merge-candidate tree identity re-derived)"
+
+      # ────────────────────────────────────────────────────────────────
+      # (4) Witness verification by the B-BUILT trusted bin/ax. The ax
+      #     binary (admission lane 소비분 — build-base-artifacts, build_sha==B
+      #     + per-file sha256 pin, C5/C1 계약 개정 2026-09-29) parses
+      #     publisher input strictly: the witness JSON is sent to
+      #     `attest --sign` — which re-derives every digest itself and
+      #     normalizes the canonical certificate representation from the
+      #     semantic block; the witness bytes are never signed as-is.
+      #     Verifies toolCommit == B and that the certificate's baseSha == B
+      #     / headSha == H (semantic identity = (B, H) — no M, plan v12).
+      # ────────────────────────────────────────────────────────────────
+      - name: "(4) Verify + normalize witness (B-built trusted ax)"
+        if: steps.slice-engine.outputs.scope_sl12 == 'true' && steps.venue.outputs.venue == 'landing'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          B_CHECKOUT_DIR: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_VERIFY: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          : "${B:?B not set}"; : "${H:?H not set}"
+          ax="$B_CHECKOUT_DIR/bin/ax"
+          [ -x "$ax" ] || fail "B-built bin/ax missing at $ax"
+          tool="$(jq -r '.provenance.toolCommit' "$GITHUB_WORKSPACE/witness.json")"
+          [ "$tool" = "$B" ] || fail "witness toolCommit ${tool:0:12} != B ${B:0:12}"
+          ( cd "$B_CHECKOUT_DIR" && \
+            GITHUB_TOKEN="$GITHUB_TOKEN" bin/ax cert attest --sign "$GITHUB_WORKSPACE/witness.json" >/dev/null ) \
+            || fail "B-built ax rejected the witness"
+          cert="$(find "$B_CHECKOUT_DIR/data/trusted/certificates" -name '*.json' -newer "$GITHUB_WORKSPACE/witness.json" 2>/dev/null | head -n 1 || true)"
+          [ -n "$cert" ] || fail "no certificate written by attest --sign"
+          cp "$cert" "$GITHUB_WORKSPACE/certificate.json"
+          cb="$(jq -r '.baseSha' "$GITHUB_WORKSPACE/certificate.json")"
+          ch="$(jq -r '.headSha' "$GITHUB_WORKSPACE/certificate.json")"
+          [ "$cb" = "$B" ] || fail "certificate baseSha '${cb:0:12}' != B '${B:0:12}'"
+          [ "$ch" = "$H" ] || fail "certificate headSha '${ch:0:12}' != H '${H:0:12}'"
+          # certTree (identity chain): the minted certificate must carry the
+          # re-derived merge-candidate tree from (3b) — witness.mergeTreeDigest
+          # == tree(mergeSha); absence or mismatch = fail-closed (a cert without
+          # the identity link cannot close testedTree==mergeTree==certTree).
+          : "${MINT_MERGE_TREE:?MINT_MERGE_TREE not set (step 3b must run first — fail-closed)}"
+          cert_tree="$(jq -r '.certTree // empty' "$GITHUB_WORKSPACE/certificate.json")"
+          [ -n "$cert_tree" ] || fail "certificate certTree missing — the signed certificate does not carry the merge-candidate tree (identity chain)"
+          printf '%s' "$cert_tree" | grep -qE '^[0-9a-f]{40}$' || fail "certificate certTree '$cert_tree' not a 40-hex tree OID"
+          [ "$cert_tree" = "$MINT_MERGE_TREE" ] || fail "certificate certTree '$cert_tree' != merge-candidate tree '$MINT_MERGE_TREE' (identity chain)"
+          if jq -e 'has("runId") or has("runAttempt") or has("mergeSha")' "$GITHUB_WORKSPACE/certificate.json" >/dev/null 2>&1; then
+            fail "certificate representation leaked run identity (identity separation violated)"
+          fi
+          echo "MINT_VERIFY: OK — witness verified + normalized; certificate $(basename "$cert") binds (B, H) + certTree=$cert_tree"
+
+      # ────────────────────────────────────────────────────────────────
+      # (5) [X] 2 (prepare 원천) — cert digest + artifact manifest + 업로드.
+      #     cert_sha256은 서명 직후 산출되어 manifest에 기록된다 (provenance
+      #     기록 — 전송 무결성은 플랫폼 artifact 다이제스트가 담당; sidecar
+      #     비교 메커니즘은 폐기, plan [X] §2). trusted-name
+      #     `subject-certificate-<run_attempt>` — run-scoped + exactly-one은
+      #     publish step (P1)에서 API로 재검증. manifest는 B/run/cert
+      #     provenance를 publish에 전달한다 (build_sha == B 바인딩 — prepare의
+      #     B-built bin/ax(admission lane 소비분)를 publish가 소비하므로 publish는
+      #     자체 빌드하지 않는다: authority 정규성 [B1] — single build site 1개,
+      #     C5/C1 계약 개정 2026-09-29).
+      # ────────────────────────────────────────────────────────────────
+      - name: "(5) Cert artifact digest + manifest + upload (subject-certificate-<run_attempt>)"
+        if: steps.slice-engine.outputs.scope_sl12 == 'true' && steps.venue.outputs.venue == 'landing'
+        env:
+          B_CHECKOUT_DIR: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_CERTART: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          : "${B:?B not set}"; : "${H:?H not set}"; : "${PR_NUMBER:?PR_NUMBER not set}"
+          : "${MINT_MERGE_TREE:?MINT_MERGE_TREE not set}"
+          cert="$GITHUB_WORKSPACE/certificate.json"
+          [ -f "$cert" ] || fail "certificate.json missing at $cert"
+          ax="$B_CHECKOUT_DIR/bin/ax"
+          [ -x "$ax" ] || fail "B-built bin/ax missing at $ax"
+          SUBJECT_ID="$(jq -r '.subjectId' "$cert")"
+          EVIDENCE_DIGEST="$(jq -r '.evidenceDigest // empty' "$cert")"
+          CERT_TREE="$(jq -r '.certTree // empty' "$cert")"
+          [ "${#SUBJECT_ID}" = "64" ] || fail "certificate subjectId malformed"
+          [ "${#EVIDENCE_DIGEST}" = "64" ] || fail "certificate evidenceDigest malformed"
+          printf '%s' "$CERT_TREE" | grep -qE '^[0-9a-f]{40}$' || fail "certificate certTree malformed"
+          CERT_SHA256="$(sha256sum "$cert" | awk '{print $1}')"
+          BIN_AX_SHA256="$(sha256sum "$ax" | awk '{print $1}')"
+          PREPARED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          mkdir -p "$RUNNER_TEMP/cert-artifact/bin"
+          cp "$cert" "$RUNNER_TEMP/cert-artifact/certificate.json"
+          cp "$ax" "$RUNNER_TEMP/cert-artifact/bin/ax"
+          cat > "$RUNNER_TEMP/cert-artifact/cert-manifest.txt" <<EOF
+          # Axiom subject-certificate artifact manifest (prepare tier — plan Phase 2 item 7)
+          stage = prepare
+          build_sha = $B
+          run_id = $RUN_ID
+          run_attempt = $RUN_ATTEMPT
+          pr_number = $PR_NUMBER
+          prepared_at = $PREPARED_AT
+          subject_id = $SUBJECT_ID
+          base_sha = $B
+          head_sha = $H
+          cert_tree = $CERT_TREE
+          evidence_digest = $EVIDENCE_DIGEST
+          cert_sha256 = $CERT_SHA256
+          bin_ax_sha256 = $BIN_AX_SHA256
+          EOF
+          grep -q "^cert_sha256 = $CERT_SHA256$" "$RUNNER_TEMP/cert-artifact/cert-manifest.txt" \
+            || fail "manifest cert_sha256 record failed to write"
+          echo "MINT_CERTART: OK — cert_sha256=$CERT_SHA256 subject=${SUBJECT_ID:0:12} certTree=$CERT_TREE manifest + bin/ax staged"
+
+      - name: "(5b) Upload subject-certificate artifact (trusted-name)"
+        # (5)와 동일 게이트: if-no-files-found: error이므로 (5) 미발화 시
+        # (5b)도 꺼야 한다 — (5) NO-FIRE (SL-12 미정착) 상태에서 upload가
+        # 파일 부재 error로 실패하면 NO-FIRE 의미가 파괴된다 (I-3: skip
+        # 아닌 미발화 보존).
+        if: steps.slice-engine.outputs.scope_sl12 == 'true' && steps.venue.outputs.venue == 'landing'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: subject-certificate-${{ inputs.runAttempt }}
+          path: |
+            ${{ runner.temp }}/cert-artifact/certificate.json
+            ${{ runner.temp }}/cert-artifact/cert-manifest.txt
+            ${{ runner.temp }}/cert-artifact/bin/ax
+          if-no-files-found: error
+          # 전송용 아티팩트 — 소비자는 전부 동일 run 내부(mint publish P1/P3,
+          # verdict --cert). durable 증거는 side-ref ledger(axiom/certificates).
+          # 3일 = 실행 상한 120분의 36배.
+          retention-days: 3
+
+  # ─────────────────────────────────────────────────────────────────────
+  # STAGE 2 — publish (write tier — the SINGLE contents:write job).
+  #   Caller contract: invoked with stage == 'publish' AFTER the prepare
+  #   call and the gateway lane completed (plan DAG: publish needs
+  #   [prepare, gateway] on the caller side). Publish re-verifies every
+  #   upstream fact itself (run-scoped API + jobs API — nothing is trusted
+  #   from the caller graph beyond the artifact substrate).
+  #   Steps: [X] 1-5 binding → [B2] (a)(b)(c) → D6 + CAS 3분기 → append.
+  #   Slice split (N+5): (P1)/(P2)/(P4) = SL-04 certificate validity
+  #   (scope_sl04 게이트 — 이 epoch 발화) · (P0)/(P5)/(P6)/(P7) =
+  #   SL-0713 publish choreography + [B2] + D6 (scope_sl0713 게이트 —
+  #   SL-0713 미정착 = NO-FIRE) · (P3) = [X]4 bin/ax 원천 (미배정,
+  #   무게이트 — SL-04 발화 하에서만 의미).
+  # ─────────────────────────────────────────────────────────────────────
+  publish:
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 30
+    # Stage guard — fail-closed 분기: publish는 stage == 'publish'인 호출에서만
+    # 실행. 다른 stage 값 → 두 job 모두 skipped → caller verdict가 skipped를
+    # FAILURE로 전환 (fail-closed, [F]).
+    if: ${{ inputs.stage == 'publish' }}
+    permissions:
+      contents: write
+      actions: read
+      pull-requests: read
+    env:
+      RUN_ID: ${{ inputs.runId }}
+      RUN_ATTEMPT: ${{ inputs.runAttempt }}
+      B: ${{ inputs.baseSha }}
+      H: ${{ inputs.headSha }}
+      PR_NUMBER: ${{ inputs.prNumber }}
+    steps:
+      # ────────────────────────────────────────────────────────────────
+      # [venue] Execution-venue split (ADR-0032) — FIRST step of the job.
+      # Same contract as the prepare job above.
+      # ────────────────────────────────────────────────────────────────
+      - name: "[venue] Resolve execution venue (PR=preflight / MG+call=landing)"
+        id: venue
+        run: |
+          set -euo pipefail
+          fail() { echo "[venue] FAIL — $1 (fail-closed, ADR-0032)" >&2; exit 1; }
+          case "${{ github.event_name }}" in
+            pull_request)
+              echo "venue=preflight" >> "$GITHUB_OUTPUT"
+              echo "[venue] venue=preflight — fast static preflight only; landing verification is the merge_group venue (ADR-0032 (a),(b))"
+              ;;
+            merge_group|workflow_call)
+              echo "venue=landing" >> "$GITHUB_OUTPUT"
+              echo "[venue] venue=landing — full canonical verification (ADR-0032 (a))"
+              ;;
+            *)
+              fail "unrecognized event_name '${{ github.event_name }}' — venue undeterminable (no venue, no run)"
+              ;;
+          esac
+      # ────────────────────────────────────────────────────────────────
+      # B checkout — publish의 유일한 checkout (원형 복원: freeze era
+      # mint-publish도 B checkout + setup-axiom-toolchain 조합 — org PR
+      # #11 "mint-publish tier B checkout"). 용도: 로컬 액션 해석
+      # (./.github/actions/...) + B-pinned system-deps/cache 정합.
+      # NO H checkout, NO build — publish는 prepare가 업로드한 B-built
+      # bin/ax만 소비한다 (소비자 재생성 0, [B1]).
+      # ────────────────────────────────────────────────────────────────
+      - name: "Checkout B only (trusted config/tree; no M/H checkout)"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.baseSha }}
+          fetch-depth: 1
+
+      # ────────────────────────────────────────────────────────────────
+      # system-deps parity (C5/C1 개정 보완 3차, acceptance 4차 런 근인):
+      # publish가 소비하는 B-built bin/ax의 런타임 libpcre3 dlopen 요구
+      # (P3 version probe — 695108a27 선례와 동일). restore-only reader
+      # (cache = acceleration, never evidence).
+      # ────────────────────────────────────────────────────────────────
+      - uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          cache-save-enabled: 'false'
+          cache-build-source: ${{ inputs.baseSha }}
+          provision-scope: 'runtime'
+
+      # ────────────────────────────────────────────────────────────────
+      # [slice-engine] Slice Engine execution scope gate (publish, N+5) —
+      # epoch manifest implementedSlices로 publish의 semantic stage 발화를
+      # 제한한다 (SL-04: (P1)/(P2)/(P4) [X]1~3 — certificate validity ·
+      # SL-0713: (P0)/(P5)/(P6)/(P7) [B2]/D6 — publish choreography &
+      # ledger, 미정착 = NO-FIRE: 단계 실행 기록 없음, I-3/I-5
+      # fail-closed). manifest는 contents API @ref=B로 판독 (publish는
+      # checkout 없음 — workflow_call caller run의 actions: read 권한으로
+      # B 앵커 객체 identity를 얻는다; prepare의 동명 스텝과 동일 규약:
+      # implementedSlices에 없는 slice = NO-FIRE, 미해독/파손 manifest =
+      # fail-closed).
+      # ────────────────────────────────────────────────────────────────
+      - name: "[slice-engine] Load epoch manifest implementedSlices (contents API @B — scope authority)"
+        id: slice-engine
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          fail() { echo "[slice-engine] FAIL — $1 (fail-closed)" >&2; exit 1; }
+          printf '%s' "$B" | grep -qE '^[0-9a-f]{40}$' || fail "B='$B' not a 40-hex OID"
+          # DEBT#474 — bounded transport retry (P3 FINAL site-group): 4
+          # attempts, fixed backoff 5/10/20s; transient = curl transport
+          # failure (rc != 0: timeout/connection/DNS/TLS) or final HTTP 5xx;
+          # permanent = final HTTP 4xx incl. 429 (2026-10-15 contract
+          # alignment — NO 429 retry); exhaustion = explicit fail-closed with
+          # the code printed (no success evidence). Optional 4th arg = Accept
+          # header (default JSON API; raw contents legs pass
+          # application/vnd.github.raw+json — wire-identical to the bare curl
+          # this wraps). Idempotent read-path GETs ONLY — fetch-scoped;
+          # ledger appends / attest --sign / POSTs are never wrapped.
+          fetch_bounded() {
+            local url="$1" out="$2" tag="$3" a rc code
+            local accept="${4:-application/vnd.github+json}"
+            for a in 1 2 3 4; do
+              code="$(curl -sSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "Accept: $accept" \
+                -o "$out" -w '%{http_code}' "$url")" \
+                && rc=0 || rc=$?
+              code="${code:-000}"
+              if [ "$rc" -eq 0 ] && [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+                return 0
+              elif [ "$rc" -eq 0 ]; then
+                case "$code" in
+                  5*)
+                    echo "MINT_FETCH_RETRY: $tag attempt $a/4 — HTTP $code (transient)" >&2 ;;
+                  *)
+                    echo "MINT_FETCH_RETRY: $tag — HTTP $code (permanent — not retried)" >&2
+                    return 2 ;;
+                esac
+              else
+                echo "MINT_FETCH_RETRY: $tag attempt $a/4 — transport error (curl rc=$rc, http_code=$code) (transient)" >&2
+              fi
+              [ "$a" -lt 4 ] || break
+              case "$a" in 1) sleep 5 ;; 2) sleep 10 ;; 3) sleep 20 ;; esac
+            done
+            return 1
+          }
+          manifest_f="$RUNNER_TEMP/mint_slice_epoch_manifest.json"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/contents/config/policy/epoch_manifest.json?ref=$B" \
+            "$manifest_f" "slice-engine epoch-manifest contents GET@B (raw contents GET)" \
+            "application/vnd.github.raw+json" \
+            || fail "config/policy/epoch_manifest.json unreadable at B=$B — engine execution scope undeterminable (manifest must land on main with the promotion PR) (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          MANIFEST="$(cat "$manifest_f")"
+          parsed="$(printf '%s' "$MANIFEST" | jq -e . 2>/dev/null)" \
+            || fail "epoch manifest unparsable at B=$B"
+          printf '%s' "$parsed" | jq -e '(.ciEpochId? // "") | (type == "string") and (length > 0) and (test("^[A-Za-z0-9][A-Za-z0-9._+-]*$"))' >/dev/null \
+            || fail "ciEpochId missing/malformed at B=$B"
+          printf '%s' "$parsed" | jq -e '(.implementedSlices? // null) | (type == "array") and (all(.[]; type == "string"))' >/dev/null \
+            || fail "implementedSlices missing or not a string array at B=$B"
+          printf '%s' "$parsed" | jq -e 'all(.implementedSlices[]; test("^SL-[0-9]{2,4}$"))' >/dev/null \
+            || fail "implementedSlices contains malformed slice id (expected SL-NN)"
+          printf '%s' "$parsed" | jq -e '(.productionExecutionPin? // "") | (type == "string") and (length > 0)' >/dev/null \
+            || fail "productionExecutionPin missing/empty at B=$B"
+          EPOCH="$(printf '%s' "$parsed" | jq -r '.ciEpochId')"
+          IMPL="$(printf '%s' "$parsed" | jq -c '.implementedSlices')"
+          echo "epoch_id=$EPOCH" >> "$GITHUB_OUTPUT"
+          echo "implemented_slices=$IMPL" >> "$GITHUB_OUTPUT"
+          # scope_sl04 / scope_sl0713 / scope_sl15 — derived from
+          # implementedSlices ONLY (admission-check·prepare slice-engine
+          # 게이트와 동일 규약).
+          RPT="[slice-engine] epoch=$EPOCH implemented=$IMPL"
+          for spec in "sl04=SL-04" "sl0713=SL-0713" "sl15=SL-15"; do
+            key="${spec%%=*}"
+            slice="${spec##*=}"
+            if printf '%s' "$parsed" | jq -e --arg s "$slice" '.implementedSlices | index($s) != null' >/dev/null 2>&1; then
+              echo "scope_$key=true" >> "$GITHUB_OUTPUT"
+              RPT="$RPT $key=fire"
+            else
+              echo "scope_$key=false" >> "$GITHUB_OUTPUT"
+              RPT="$RPT $key=NO-FIRE"
+            fi
+          done
+          echo "$RPT"
+
+      # ────────────────────────────────────────────────────────────────
+      # (P0) Publish activation guard — self-binding + gate-run identity +
+      #      PR identity + (a) run head identity. publish는 유일한 write
+      #      authority step이므로 공급 사실 전량을 API로 재검증한다:
+      #      runId == GITHUB_RUN_ID (orchestrator 자기 run),
+      #      runObj.path == admission-gate-v2.yml (gate run identity),
+      #      event == pull_request ∧ runObj.head_sha == H — [B2] (a):
+      #      gateway run.headSha == cert.headSha (gate run IS this run —
+      #      reusable-workflow jobs share the caller run id; the cert's
+      #      headSha is re-read from the artifact in step (P4) and compared
+      #      with this fact there).
+      #      SL-0713 scope — [B2]/D6 소속 (slice_catalog SL-0713
+      #      verificationSteps (P0)); SL-0713 미정착 = NO-FIRE.
+      # ────────────────────────────────────────────────────────────────
+      - name: "(P0) Publish activation guard — self-binding + gate-run identity + PR identity + (a)"
+        # ADR-0032: kept venue-UNGATED deliberately — this is light API
+        # re-verification (self-binding + run/gate/PR identity) and IS the
+        # publish leg's real preflight content on the PR venue; the heavy
+        # [X]/[B2]/D6/CAS chain below is landing-gated.
+        if: steps.slice-engine.outputs.scope_sl0713 == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_PUB_A0: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          printf '%s' "$RUN_ID" | grep -qE '^[0-9]+$' || fail "runId input '$RUN_ID' malformed"
+          [ "$RUN_ID" = "$GITHUB_RUN_ID" ] || fail "runId input '$RUN_ID' != this run '$GITHUB_RUN_ID' (orchestrator must supply its own run id)"
+          printf '%s' "$RUN_ATTEMPT" | grep -qE '^[0-9]+$' || fail "runAttempt input '$RUN_ATTEMPT' malformed"
+          : "${H:?headSha input not set}"; : "${B:?baseSha input not set}"; : "${PR_NUMBER:?prNumber input not set}"
+          printf '%s' "$H" | grep -qE '^[0-9a-f]{40}$' || fail "headSha input '$H' not 40-hex"
+          printf '%s' "$B" | grep -qE '^[0-9a-f]{40}$' || fail "baseSha input '$B' not 40-hex"
+          printf '%s' "$PR_NUMBER" | grep -qE '^[0-9]+$' || fail "prNumber input '$PR_NUMBER' malformed"
+          # DEBT#474 — bounded transport retry (P3 FINAL site-group): 4
+          # attempts, fixed backoff 5/10/20s; transient = curl transport
+          # failure (rc != 0: timeout/connection/DNS/TLS) or final HTTP 5xx;
+          # permanent = final HTTP 4xx incl. 429 (2026-10-15 contract
+          # alignment — NO 429 retry); exhaustion = explicit fail-closed with
+          # the code printed (no success evidence). Optional 4th arg = Accept
+          # header (default JSON API; raw contents legs pass
+          # application/vnd.github.raw+json — wire-identical to the bare curl
+          # this wraps). Idempotent read-path GETs ONLY — fetch-scoped;
+          # ledger appends / attest --sign / POSTs are never wrapped.
+          fetch_bounded() {
+            local url="$1" out="$2" tag="$3" a rc code
+            local accept="${4:-application/vnd.github+json}"
+            for a in 1 2 3 4; do
+              code="$(curl -sSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "Accept: $accept" \
+                -o "$out" -w '%{http_code}' "$url")" \
+                && rc=0 || rc=$?
+              code="${code:-000}"
+              if [ "$rc" -eq 0 ] && [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+                return 0
+              elif [ "$rc" -eq 0 ]; then
+                case "$code" in
+                  5*)
+                    echo "MINT_FETCH_RETRY: $tag attempt $a/4 — HTTP $code (transient)" >&2 ;;
+                  *)
+                    echo "MINT_FETCH_RETRY: $tag — HTTP $code (permanent — not retried)" >&2
+                    return 2 ;;
+                esac
+              else
+                echo "MINT_FETCH_RETRY: $tag attempt $a/4 — transport error (curl rc=$rc, http_code=$code) (transient)" >&2
+              fi
+              [ "$a" -lt 4 ] || break
+              case "$a" in 1) sleep 5 ;; 2) sleep 10 ;; 3) sleep 20 ;; esac
+            done
+            return 1
+          }
+          run_obj_f="$RUNNER_TEMP/mint_pub_a0_run_obj.json"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" \
+            "$run_obj_f" "P0 run-object GET (JSON GET)" \
+            || fail "GET actions/runs/$RUN_ID failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          run_obj="$(cat "$run_obj_f")"
+          r_event="$(printf '%s' "$run_obj" | jq -r '.event')"
+          r_path="$(printf '%s' "$run_obj" | jq -r '.path')"
+          r_attempt="$(printf '%s' "$run_obj" | jq -r '.run_attempt // empty')"
+          # (a) — the gate run IS this run: for a pull_request gate run the
+          # run object's head_sha is the PR head H; for a merge_group gate run
+          # it is the merge-group commit G (== the headSha input, ADR-0027 —
+          # H := G on merge_group); fail-closed on any other event.
+          case "$r_event" in pull_request|merge_group) ;; *) fail "runObj.event='$r_event' not in {pull_request, merge_group} — the gate run must be a pull_request or merge_group run for head identity (a) (fail-closed)" ;; esac
+          [ "$r_path" = ".github/workflows/admission-gate-v2.yml" ] || fail "runObj.path='$r_path' != .github/workflows/admission-gate-v2.yml (orchestrator run identity; supplied runId $RUN_ID)"
+          if [ -n "$r_attempt" ] && [ "$r_attempt" != "$RUN_ATTEMPT" ]; then
+            fail "runObj.run_attempt '$r_attempt' != runAttempt input '$RUN_ATTEMPT'"
+          fi
+          r_head="$(printf '%s' "$run_obj" | jq -r '.head_sha // empty')"
+          [ "$r_head" = "$H" ] || fail "runObj.head_sha '${r_head:0:12}' != headSha input '${H:0:12}' — [B2] (a) run↔candidate head identity (fail-closed)"
+          if [ "$PR_NUMBER" = "0" ]; then
+            # ADR-0027 (P1): merge_group path — no PR object (N=0); identity
+            # via runObj.head_sha == H (above) + event payload base identity
+            # (server-derived; the PR-API leg is N=0-invalid by construction).
+            [ "${{ github.event.merge_group.base_sha }}" = "$B" ] || fail "event merge_group.base_sha != baseSha input '${B:0:12}' (merge_group identity — fail-closed)"
+            _mg_br="${{ github.event.merge_group.base_ref }}"; _mg_br="${_mg_br#refs/heads/}"
+            [ "$_mg_br" = "main" ] || fail "merge_group.base_ref '$_mg_br' != main (base moved — new admission needed)"
+          else
+            # PR identity — PR API (trusted source) vs supplied inputs.
+            pr_obj_f="$RUNNER_TEMP/mint_pub_a0_pr_obj.json"
+            fetch_bounded \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" \
+              "$pr_obj_f" "P0 PR-object GET (JSON GET)" \
+              || fail "GET pulls/$PR_NUMBER failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+            pr_obj="$(cat "$pr_obj_f")"
+            p_head="$(printf '%s' "$pr_obj" | jq -r '.head.sha')"
+            p_base="$(printf '%s' "$pr_obj" | jq -r '.base.sha')"
+            p_ref="$(printf '%s' "$pr_obj" | jq -r '.base.ref')"
+            [ "$p_head" = "$H" ] || fail "PR #$PR_NUMBER head.sha '${p_head:0:12}' != headSha input '${H:0:12}'"
+            [ "$p_base" = "$B" ] || fail "PR #$PR_NUMBER base.sha '${p_base:0:12}' != baseSha input '${B:0:12}'"
+            [ "$p_ref" = "main" ] || fail "PR #$PR_NUMBER base.ref '$p_ref' != main (base moved — new admission needed)"
+          fi
+          echo "MINT_PUB_A0: OK — self-bound run $RUN_ID/$RUN_ATTEMPT, gate identity, PR identity, head_sha==H (a)"
+
+      # ────────────────────────────────────────────────────────────────
+      # [preflight] PUBLISH leg, PR venue (ADR-0032 (b),(f)): fast structural
+      # contrast instead of the [X]/[B2]/D6/CAS chain. Real checks,
+      # fail-closed (§0.9). The identity content for the PR preflight is the
+      # (P0) activation guard above (self-binding + gate-run identity + PR
+      # identity + (a) head identity), which is venue-independent.
+      #   1. Single-writer posture intact — top-level permissions still carry
+      #      contents: write (the TrustedWriterSet scan target) and the
+      #      publish job still confines the write set (contents: write +
+      #      actions: read + pull-requests: read).
+      #   2. Stage structure — the REQUIRED workflow_call `stage` input that
+      #      selects prepare/publish is intact.
+      # ────────────────────────────────────────────────────────────────
+      - name: "[preflight] Publish-leg structural contrast (single-writer posture + stage structure)"
+        if: steps.venue.outputs.venue == 'preflight'
+        run: |
+          set -euo pipefail
+          fail() { echo "[preflight][publish] FAIL — $1 (fail-closed, ADR-0032)" >&2; exit 1; }
+          WF=".github/workflows/certificate-mint.yml"
+          [ -f "$WF" ] || fail "workflow source missing at B workspace"
+          grep -q "required: true" "$WF" || fail "workflow_call stage input no longer required (stage structure drift)"
+          n_write="$(grep -c "contents: write" "$WF")"
+          [ "$n_write" -ge 2 ] || fail "contents: write occurrences dropped below the top-level+publish pair (single-writer posture drift — fail-closed)"
+          echo "[preflight][publish] checks: stage input structure + single-writer permissions posture (top-level + publish job)"
+          echo "PREFLIGHT PASS — publish leg: single-writer posture + stage structure contrast (venue=pull_request; preflight success ≠ landing evidence — ADR-0032 (f))"
+
+      # ────────────────────────────────────────────────────────────────
+      # (P1) [X] 1 — artifact identity: run-scoped API + trusted-name
+      #      (subject-certificate-<run_attempt>, exactly one) + artifact-id
+      #      download (TOCTOU 회피 — listing으로 얻은 고유 artifact id로
+      #      zip을 직접 다운로드; artifact는 업로드 후 불변).
+      #      NOTE: prepare의 artifact = certificate.json + cert-manifest.txt
+      #      + B-built bin/ax (build_sha == B 바인딩) — publish는 자체
+      #      빌드를 하지 않는다 (소비자 재생성 0, [B1]).
+      #      SL-04 scope — [X]1 certificate validity (slice_catalog SL-04
+      #      verificationSteps (P1)); N+5 epoch에서 발화.
+      # ────────────────────────────────────────────────────────────────
+      - name: "(P1) [X]1 artifact identity — run-scoped + trusted-name + artifact-id download"
+        if: steps.slice-engine.outputs.scope_sl04 == 'true' && steps.venue.outputs.venue == 'landing'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_PUB_ART: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          want_name="subject-certificate-$RUN_ATTEMPT"
+          # DEBT#474 — bounded transport retry (P3 FINAL site-group): 4
+          # attempts, fixed backoff 5/10/20s; transient = curl transport
+          # failure (rc != 0: timeout/connection/DNS/TLS) or final HTTP 5xx;
+          # permanent = final HTTP 4xx incl. 429 (2026-10-15 contract
+          # alignment — NO 429 retry); exhaustion = explicit fail-closed with
+          # the code printed (no success evidence). Optional 4th arg = Accept
+          # header (default JSON API; raw contents legs pass
+          # application/vnd.github.raw+json — wire-identical to the bare curl
+          # this wraps). Idempotent read-path GETs ONLY — fetch-scoped;
+          # ledger appends / attest --sign / POSTs are never wrapped.
+          fetch_bounded() {
+            local url="$1" out="$2" tag="$3" a rc code
+            local accept="${4:-application/vnd.github+json}"
+            for a in 1 2 3 4; do
+              code="$(curl -sSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "Accept: $accept" \
+                -o "$out" -w '%{http_code}' "$url")" \
+                && rc=0 || rc=$?
+              code="${code:-000}"
+              if [ "$rc" -eq 0 ] && [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+                return 0
+              elif [ "$rc" -eq 0 ]; then
+                case "$code" in
+                  5*)
+                    echo "MINT_FETCH_RETRY: $tag attempt $a/4 — HTTP $code (transient)" >&2 ;;
+                  *)
+                    echo "MINT_FETCH_RETRY: $tag — HTTP $code (permanent — not retried)" >&2
+                    return 2 ;;
+                esac
+              else
+                echo "MINT_FETCH_RETRY: $tag attempt $a/4 — transport error (curl rc=$rc, http_code=$code) (transient)" >&2
+              fi
+              [ "$a" -lt 4 ] || break
+              case "$a" in 1) sleep 5 ;; 2) sleep 10 ;; 3) sleep 20 ;; esac
+            done
+            return 1
+          }
+          arts_f="$RUNNER_TEMP/mint_p1_artifacts.json"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" \
+            "$arts_f" "P1 artifacts-list artifact download (JSON GET)" \
+            || fail "GET runs/$RUN_ID/artifacts failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          arts="$(cat "$arts_f")"
+          count="$(printf '%s' "$arts" | jq --arg n "$want_name" '[.artifacts[] | select(.name == $n)] | length')"
+          [ "$count" = "1" ] || fail "expected exactly one artifact named '$want_name', found $count (trusted-name violation)"
+          art_id="$(printf '%s' "$arts" | jq --arg n "$want_name" -r '.artifacts[] | select(.name == $n) | .id')"
+          art_expired="$(printf '%s' "$arts" | jq --arg n "$want_name" -r '.artifacts[] | select(.name == $n) | .expired')"
+          [ "$art_expired" = "false" ] || fail "artifact $art_id ('$want_name') expired=true (fail-closed)"
+          art_created="$(printf '%s' "$arts" | jq --arg n "$want_name" -r '.artifacts[] | select(.name == $n) | .created_at // empty')"
+          echo "MINT_PUB_ART: artifact id=$art_id name=$want_name created_at=$art_created"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$art_id/zip" \
+            "$RUNNER_TEMP/cert.zip" "P1 subject-certificate zip download (artifact)" \
+            || fail "artifact zip download failed (artifact-id $art_id) (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          mkdir -p "$RUNNER_TEMP/cert-artifact"
+          (cd "$RUNNER_TEMP/cert-artifact" && unzip -o -q "$RUNNER_TEMP/cert.zip") \
+            || fail "artifact zip extraction failed"
+          [ -f "$RUNNER_TEMP/cert-artifact/certificate.json" ] || fail "certificate.json missing inside artifact '$want_name'"
+          [ -f "$RUNNER_TEMP/cert-artifact/cert-manifest.txt" ] || fail "cert-manifest.txt missing inside artifact '$want_name'"
+          [ -f "$RUNNER_TEMP/cert-artifact/bin/ax" ] || fail "bin/ax missing inside artifact '$want_name'"
+          cp "$RUNNER_TEMP/cert-artifact/certificate.json" "$GITHUB_WORKSPACE/certificate.json"
+          cp "$RUNNER_TEMP/cert-artifact/cert-manifest.txt" "$GITHUB_WORKSPACE/cert-manifest.txt"
+          echo "MINT_PUB_ART: OK — artifact identity [X]1 satisfied (run-scoped, trusted-name, artifact-id download)"
+
+      # ────────────────────────────────────────────────────────────────
+      # (P2) [X] 2 — file digest: prepare가 서명 직후 기록한 cert_sha256
+      #      (manifest provenance)을 다운로드한 certificate.json의 재계산
+      #      값과 대조. (전송 무결성은 플랫폼 artifact 다이제스트 — 여기서는
+      #      provenance 기록 대조; sidecar 비교 메커니즘 아님, plan [X] §2.)
+      #      동시에 manifest의 run 참조(build_sha==B · run_id/run_attempt/
+      #      pr_number)를 실행 사실과 대조.
+      #      SL-04 scope — [X]2 certificate validity.
+      # ────────────────────────────────────────────────────────────────
+      - name: "(P2) [X]2 file digest — cert_sha256 manifest 대조 + build_sha == B (provenance)"
+        if: steps.slice-engine.outputs.scope_sl04 == 'true' && steps.venue.outputs.venue == 'landing'
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_PUB_DIGEST: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          manifest="$GITHUB_WORKSPACE/cert-manifest.txt"
+          [ -f "$manifest" ] || fail "cert-manifest.txt missing"
+          read_manifest() { sed -n "s/^$1 = //p" "$manifest" | head -n 1; }
+          m_build="$(read_manifest build_sha)"
+          m_rid="$(read_manifest run_id)"
+          m_att="$(read_manifest run_attempt)"
+          m_pr="$(read_manifest pr_number)"
+          m_cert_sha="$(read_manifest cert_sha256)"
+          [ "$m_build" = "$B" ] || fail "manifest build_sha '${m_build:0:12}' != B '${B:0:12}' (provenance anchor)"
+          [ "$m_rid" = "$RUN_ID" ] || fail "manifest run_id '$m_rid' != $RUN_ID"
+          [ "$m_att" = "$RUN_ATTEMPT" ] || fail "manifest run_attempt '$m_att' != $RUN_ATTEMPT"
+          [ "$m_pr" = "$PR_NUMBER" ] || fail "manifest pr_number '$m_pr' != PR #$PR_NUMBER"
+          [ "${#m_cert_sha}" = "64" ] || fail "manifest cert_sha256 malformed"
+          actual="$(sha256sum "$GITHUB_WORKSPACE/certificate.json" | awk '{print $1}')"
+          [ "$m_cert_sha" = "$actual" ] || fail "cert_sha256 '$m_cert_sha' (prepare 기록) != sha256(certificate.json) '$actual' (tamper/replacement — [X]2)"
+          echo "MINT_PUB_DIGEST: OK — file digest [X]2 satisfied (cert_sha256 provenance 재계산 대조); build_sha==B"
+
+      # ────────────────────────────────────────────────────────────────
+      # (P3) [X] 4 (bin/ax 원천) — prepare가 업로드한 B-built bin/ax를
+      #      manifest의 bin_ax_sha256으로 고정하고 사용 준비한다. publish는
+      #      자체 빌드하지 않는다 (authority 정규성 [B1]: single build site =
+      #      admission lane 1개; 소비자 재생성 0 — C5/C1 계약 개정
+      #      2026-09-29). 실행 비트 복원
+      #      (upload/download-artifact@v4는 unix 실행 비트 제거).
+      # ────────────────────────────────────────────────────────────────
+      - name: "(P3) Bin/ax 준비 — artifact의 B-built bin/ax (build_sha==B, sha256 pin)"
+        # ADR-0032: landing venue only — the pinned bin/ax comes from the (P1)
+        # artifact download, which does not run on the PR preflight.
+        if: steps.venue.outputs.venue == 'landing'
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_PUB_AX: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          manifest="$GITHUB_WORKSPACE/cert-manifest.txt"
+          read_manifest() { sed -n "s/^$1 = //p" "$manifest" | head -n 1; }
+          m_bin_ax="$(read_manifest bin_ax_sha256)"
+          [ "${#m_bin_ax}" = "64" ] || fail "manifest bin_ax_sha256 malformed"
+          mkdir -p "$GITHUB_WORKSPACE/bin"
+          cp "$RUNNER_TEMP/cert-artifact/bin/ax" "$GITHUB_WORKSPACE/bin/ax"
+          chmod +x "$GITHUB_WORKSPACE/bin/ax"
+          actual="$(sha256sum "$GITHUB_WORKSPACE/bin/ax" | awk '{print $1}')"
+          [ "$m_bin_ax" = "$actual" ] || fail "bin/ax sha256 '$actual' != manifest bin_ax_sha256 '$m_bin_ax' (tampered binary — fail-closed)"
+          "$GITHUB_WORKSPACE/bin/ax" --version >/dev/null 2>&1 || fail "B-built bin/ax not executable (version probe failed)"
+          echo "MINT_PUB_AX: OK — B-built bin/ax pinned (build_sha==B, sha256==manifest) — no self-build (authority 정규성 [B1])"
+
+      # ────────────────────────────────────────────────────────────────
+      # (P4) [X] 3 — field binding: subjectId/baseSha/headSha/certTree/
+      #      evidenceDigest == 재유도값. 재유도 소스 = (i) 동일 run의
+      #      admission artifact witness (run-scoped 재다운로드 + sha pin),
+      #      (ii) Git Data API (tree(mergeSha) + subject head — merge_group
+      #      α: cert.headSha == G^2), (iii) 실행 사실 대조 — 전부 publish
+      #      스스로 산출하며 cert 필드와 일치해야 한다. cert.headSha ==
+      #      SUBJECT head (pull_request = PR head H; merge_group = parents
+      #      (G)[1] — α); run↔candidate 연결은 (P0)의 (a) runObj.head_sha ==
+      #      inputs.headSha == G가 담당. [B2] (a) 게이트웨이 run head ==
+      #      cert 발행 run — 동일 run 인과는 여기서 완결된다.
+      #      SL-04 scope — [X]3 certificate validity.
+      # ────────────────────────────────────────────────────────────────
+      - name: "(P4) [X]3 field binding — subjectId/baseSha/headSha/certTree/evidenceDigest == 재유도값 + (a) headSha"
+        if: steps.slice-engine.outputs.scope_sl04 == 'true' && steps.venue.outputs.venue == 'landing'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_PUB_BIND: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          : "${B:?B not set}"; : "${H:?H not set}"
+          # ADR-0027 α (probe: docs/evidence/merge_queue_probe_2026-09-29.md):
+          # cert.headSha binds the SUBJECT head — on merge_group (N=0) that is
+          # G^2 (H_PR), not the run head G (= publish env H = inputs.headSha).
+          # Derive it BY OBJECT and cross-check G^1 == B; the run↔candidate
+          # linkage stays (P0)'s runObj.head_sha == inputs.headSha (== G).
+          # Fewer than 2 parents = the α-shape assumption broke →
+          # DEBT#474 — bounded transport retry, generalized (P3 Slice C S2):
+          # fetch_bounded <url> <outfile> <tag> applies the SAME transport
+          # policy as the fetch_admission_zip wrapper below (measured: run
+          # 36865812852, curl (22) 503 on the P4 zip fetch → fail-closed,
+          # 7m21s lost) to the read-path JSON GET that runs IMMEDIATELY
+          # BEFORE it — a 503 here never reached the wrapper. Transport
+          # policy ONLY — NOT a new authority: each attempt re-fetches the
+          # SAME run-scoped URL (no state, no POST, no ledger mutation) and
+          # the body is still fully re-parsed/verified below.
+          # Classification (identical to fetch_admission_zip):
+          #   transient  = curl transport failure (rc != 0: timeout /
+          #                connection / DNS / TLS) or final HTTP 5xx →
+          #                bounded retry, 4 attempts total (FF-CAS precedent,
+          #                src/verification/ledger_side_ref.nim
+          #                LedgerAppendMaxAttempts = 4), fixed backoff
+          #                5s/10s/20s, then fail-closed on exhaustion;
+          #   permanent  = final HTTP 4xx (404 expired/missing, 403, and
+          #                429 — contract alignment 2026-10-15: 429 is NOT
+          #                transient) or any other non-retryable final code
+          #                → immediate fail-closed, NO retry.
+          # The final failure line prints the HTTP code / curl rc (rearm
+          # TRANSIENT (b) anchor format — merge-queue-rearm.yml). This
+          # function is fetch-scoped; the ledger appends / attest --sign
+          # below are NOT wrapped — a retry can never re-drive an append.
+          fetch_bounded() {
+            local url="$1" out="$2" tag="$3" a rc code
+            local accept="${4:-application/vnd.github+json}"
+            for a in 1 2 3 4; do
+              code="$(curl -sSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "Accept: $accept" \
+                -o "$out" -w '%{http_code}' "$url")" \
+                && rc=0 || rc=$?
+              code="${code:-000}"
+              if [ "$rc" -eq 0 ] && [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+                return 0
+              elif [ "$rc" -eq 0 ]; then
+                case "$code" in
+                  5*)
+                    echo "MINT_FETCH_RETRY: $tag attempt $a/4 — HTTP $code (transient)" >&2 ;;
+                  *)
+                    echo "MINT_FETCH_RETRY: $tag — HTTP $code (permanent — not retried)" >&2
+                    return 2 ;;
+                esac
+              else
+                echo "MINT_FETCH_RETRY: $tag attempt $a/4 — transport error (curl rc=$rc, http_code=$code) (transient)" >&2
+              fi
+              [ "$a" -lt 4 ] || break
+              case "$a" in 1) sleep 5 ;; 2) sleep 10 ;; 3) sleep 20 ;; esac
+            done
+            return 1
+          }
+          # P3 FINAL: the two git-commit identity GETs in this step (subject
+          # re-derive + tree(mergeSha)) are wrapped with the same function
+          # (JSON API default — 4th Accept arg unused here).
+          # fail-closed (mechanized γ detector).
+          if [ "$PR_NUMBER" = "0" ]; then
+            commit_f="$RUNNER_TEMP/mint_p4_subject_commit.json"
+            fetch_bounded \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/git/commits/$H" \
+              "$commit_f" "P4 git-commit GET subject head (JSON GET)" \
+              || fail "GET git/commits/$H failed — merge-group commit object unresolvable (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+            commit_obj="$(cat "$commit_f")"
+            n_par="$(printf '%s' "$commit_obj" | jq '.parents | length')" \
+              || fail "cannot parse parents of $H (fail-closed)"
+            [ "$n_par" = "2" ] || fail "SUBJECT_HEAD: merge-group commit $H has $n_par parent(s), expected exactly 2 ([base, PR head]) — α-shape broken (ADR-0027; probe docs/evidence/merge_queue_probe_2026-09-29.md) (fail-closed)"
+            SUBJECT_HEAD="$(printf '%s' "$commit_obj" | jq -r '.parents[1].sha // empty')" \
+              || fail "cannot parse G^2 of $H (fail-closed)"
+            printf '%s' "$SUBJECT_HEAD" | grep -qE '^[0-9a-f]{40}$' \
+              || fail "SUBJECT_HEAD '$SUBJECT_HEAD' not a 40-hex OID (G^2)"
+            g_base="$(printf '%s' "$commit_obj" | jq -r '.parents[0].sha // empty')" \
+              || fail "cannot parse G^1 of $H (fail-closed)"
+            [ "$g_base" = "$B" ] || fail "SUBJECT_HEAD: G^1 '$g_base' != B '$B' (merge-group base mismatch — fail-closed)"
+            echo "SUBJECT_HEAD=$SUBJECT_HEAD" >> "$GITHUB_ENV"
+          else
+            SUBJECT_HEAD="$H"
+          fi
+          # (i) witness 재다운로드 — 동일 run-scoped API + trusted-name.
+          # ADR-0027 (P2): want_name mirrors the candidate head (= publish env
+          # H = inputs.headSha; G on merge_group — RUN identity, NOT the
+          # subject head) plus the attempt (= publish env RUN_ATTEMPT =
+          # inputs.runAttempt, re-verified against the run object in (0));
+          # identical on both events.
+          want_name="admission-check-$H-$RUN_ATTEMPT"
+
+          arts_f="$RUNNER_TEMP/mint_p4_artifacts.json"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" \
+            "$arts_f" "P4 artifacts-list artifact download (JSON GET)" \
+            || fail "GET runs/$RUN_ID/artifacts failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          arts="$(cat "$arts_f")"
+          count="$(printf '%s' "$arts" | jq --arg n "$want_name" '[.artifacts[] | select(.name == $n)] | length')"
+          [ "$count" = "1" ] || fail "expected exactly one admission artifact named '$want_name', found $count"
+          art_id="$(printf '%s' "$arts" | jq --arg n "$want_name" -r '.artifacts[] | select(.name == $n) | .id')"
+          # DEBT#474 — bounded transport retry for THIS read-path fetch only
+          # (measured: run 36865812852, curl (22) 503 on this exact fetch →
+          # fail-closed, 7m21s lost). Transport policy ONLY — NOT a new
+          # authority: each attempt re-fetches the SAME run-scoped artifact
+          # id and the bytes are still fully re-verified below
+          # (witness.sha256 + [X]3 field re-derivation); the write path
+          # (ledger append / FF-CAS) is untouched and stays append-once.
+          # Classification:
+          #   transient  = transport failure (curl rc != 0: timeout /
+          #                connection / DNS / TLS) or final HTTP 5xx →
+          #                bounded retry, 4 attempts total (FF-CAS precedent,
+          #                src/verification/ledger_side_ref.nim
+          #                LedgerAppendMaxAttempts = 4), fixed backoff
+          #                5s/10s/20s, then fail-closed on exhaustion;
+          #   permanent  = final HTTP 4xx (404 expired/missing artifact,
+          #                403 forbidden) or any other non-retryable final
+          #                code → immediate fail-closed, NO retry.
+          fetch_admission_zip() {
+            local a rc code
+            for a in 1 2 3 4; do
+              code="$(curl -sSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                -o "$RUNNER_TEMP/admission.zip" -w '%{http_code}' \
+                "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$art_id/zip")" \
+                && rc=0 || rc=$?
+              code="${code:-000}"
+              if [ "$rc" -eq 0 ] && [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+                return 0
+              elif [ "$rc" -eq 0 ]; then
+                case "$code" in
+                  5*)
+                    echo "MINT_PUB_BIND: artifact zip fetch attempt $a/4 — HTTP $code (transient)" >&2 ;;
+                  *)
+                    echo "MINT_PUB_BIND: artifact zip fetch — HTTP $code (permanent — not retried)" >&2
+                    return 2 ;;
+                esac
+              else
+                echo "MINT_PUB_BIND: artifact zip fetch attempt $a/4 — transport error (curl rc=$rc, http_code=$code) (transient)" >&2
+              fi
+              [ "$a" -lt 4 ] || break
+              case "$a" in 1) sleep 5 ;; 2) sleep 10 ;; 3) sleep 20 ;; esac
+            done
+            return 1
+          }
+          fetch_admission_zip || fail "admission artifact zip download failed (bounded retry exhausted or permanent failure — DEBT#474)"
+          mkdir -p "$RUNNER_TEMP/admission"
+          (cd "$RUNNER_TEMP/admission" && unzip -o -q "$RUNNER_TEMP/admission.zip") \
+            || fail "admission artifact zip extraction failed"
+          [ -f "$RUNNER_TEMP/admission/witness.json" ] || fail "no witness.json inside admission artifact"
+          if [ -f "$RUNNER_TEMP/admission/witness.sha256" ]; then
+            want="$(awk '{print $1}' "$RUNNER_TEMP/admission/witness.sha256")"
+            actual="$(sha256sum "$RUNNER_TEMP/admission/witness.json" | awk '{print $1}')"
+            [ "$want" = "$actual" ] || fail "witness.sha256 '$want' != sha256(witness.json) '$actual' (tamper?)"
+          fi
+          # 재유도값 — cert 필드와 일치해야 한다 ([X] 3 field binding).
+          w_subject="$(jq -r '.semantic.subject.subjectId' "$RUNNER_TEMP/admission/witness.json")"
+          w_evidence="$(jq -r '.semantic.evidenceDigest // empty' "$RUNNER_TEMP/admission/witness.json")"
+          w_merge="$(jq -r '.provenance.mergeSha // empty' "$RUNNER_TEMP/admission/witness.json")"
+          w_tool="$(jq -r '.provenance.toolCommit // empty' "$RUNNER_TEMP/admission/witness.json")"
+          [ "${#w_subject}" = "64" ] || fail "witness semantic subjectId malformed"
+          [ "${#w_evidence}" = "64" ] || fail "witness semantic evidenceDigest malformed"
+          printf '%s' "$w_merge" | grep -qE '^[0-9a-f]{40}$' || fail "witness provenance mergeSha malformed"
+          [ "$w_tool" = "$B" ] || fail "witness provenance toolCommit '${w_tool:0:12}' != B '${B:0:12}'"
+          # tree(mergeSha) 재유도 — Git Data API by-object (org gate의
+          # tree-identity job과 동일한 해석; mutable ref 미사용).
+          commit_f="$RUNNER_TEMP/mint_p4_merge_commit.json"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/git/commits/$w_merge" \
+            "$commit_f" "P4 git-commit GET tree(mergeSha) (JSON GET)" \
+            || fail "GET git/commits/$w_merge failed — merge-candidate commit object unresolvable (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          commit_obj="$(cat "$commit_f")"
+          re_tree="$(printf '%s' "$commit_obj" | jq -r '.tree.sha // empty')"
+          printf '%s' "$re_tree" | grep -qE '^[0-9a-f]{40}$' || fail "re-derived merge-candidate tree '$re_tree' malformed"
+          # cert 필드 추출.
+          c_subject="$(jq -r '.subjectId' "$GITHUB_WORKSPACE/certificate.json")"
+          c_base="$(jq -r '.baseSha' "$GITHUB_WORKSPACE/certificate.json")"
+          c_head="$(jq -r '.headSha' "$GITHUB_WORKSPACE/certificate.json")"
+          c_tree="$(jq -r '.certTree // empty' "$GITHUB_WORKSPACE/certificate.json")"
+          c_evidence="$(jq -r '.evidenceDigest // empty' "$GITHUB_WORKSPACE/certificate.json")"
+          [ "$c_subject" = "$w_subject" ] || fail "cert subjectId ${c_subject:0:12} != 재유도 ${w_subject:0:12} ([X]3)"
+          [ "$c_base" = "$B" ] || fail "cert baseSha ${c_base:0:12} != B ${B:0:12} ([X]3)"
+          [ "$c_head" = "$SUBJECT_HEAD" ] || fail "cert headSha ${c_head:0:12} != subject head ${SUBJECT_HEAD:0:12} ([X]3 — α subject identity)"
+          [ "$c_tree" = "$re_tree" ] || fail "cert certTree ${c_tree:0:12} != tree(mergeSha) ${re_tree:0:12} ([X]3)"
+          [ "$c_evidence" = "$w_evidence" ] || fail "cert evidenceDigest ${c_evidence:0:12} != 재유도 ${w_evidence:0:12} ([X]3)"
+          echo "MINT_PUB_BIND: OK — field binding [X]3 (subjectId/baseSha/headSha/certTree/evidenceDigest); (a) run head ${H:0:12} == inputs.headSha; subject head == cert.headSha"
+
+      # ────────────────────────────────────────────────────────────────
+      # (P5) [B2] (b) — canonical tree identity 등가. semantic domain 확정
+      #      (plan rev.7 위험 ⑤ gate — 실물 확인 완료): gateway lane의
+      #      canonical tree identity = runner-pool-acceptance select job이
+      #      발행하는 `tested-tree-digest` artifact (git rev-parse
+      #      HEAD^{tree}, 40-hex tree OID) — org gate의 tree-identity job이
+      #      mergeTree = tree(github.sha)와 대조하는 그 값과 동일 도메인
+      #      (canonical merge-tree SHA). publish는 3중 등가를 검증한다:
+      #      testedTreeDigest == tree(github.sha) == cert.certTree.
+      #      (gateway artifact의 부재/중복/만료 = fail-closed — publish는
+      #      gateway lane의 성공 증거 없이 발행하지 않는다.)
+      #      SL-0713 scope — [B2] (b) (slice_catalog SL-0713).
+      # ────────────────────────────────────────────────────────────────
+      - name: "(P5) [B2] (b) canonical tree identity — testedTreeDigest == tree(github.sha) == cert.certTree"
+        if: steps.slice-engine.outputs.scope_sl0713 == 'true' && steps.venue.outputs.venue == 'landing'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_PUB_TREE: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          # DEBT#474 — bounded transport retry, generalized (P3 Slice C S2):
+          # fetch_bounded = the fetch_admission_zip transport policy (4
+          # attempts, 5s/10s/20s backoff; transient = curl transport rc != 0
+          # or final HTTP 5xx; permanent = final HTTP 4xx incl. 429 —
+          # contract alignment 2026-10-15: NO 429 retry). Both [B2](b) legs
+          # are read-path fetches: a transport failure here converted
+          # fully-green runs to red (fail-closed with zero retry budget).
+          # Transport policy ONLY — each attempt re-fetches the SAME
+          # run-scoped URL; body re-parsed/verified below. Final failure
+          # prints HTTP code / curl rc (rearm TRANSIENT (b) anchor format).
+          # Fetch-scoped: nothing here re-drives a ledger append.
+          fetch_bounded() {
+            local url="$1" out="$2" tag="$3" a rc code
+            local accept="${4:-application/vnd.github+json}"
+            for a in 1 2 3 4; do
+              code="$(curl -sSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "Accept: $accept" \
+                -o "$out" -w '%{http_code}' "$url")" \
+                && rc=0 || rc=$?
+              code="${code:-000}"
+              if [ "$rc" -eq 0 ] && [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+                return 0
+              elif [ "$rc" -eq 0 ]; then
+                case "$code" in
+                  5*)
+                    echo "MINT_FETCH_RETRY: $tag attempt $a/4 — HTTP $code (transient)" >&2 ;;
+                  *)
+                    echo "MINT_FETCH_RETRY: $tag — HTTP $code (permanent — not retried)" >&2
+                    return 2 ;;
+                esac
+              else
+                echo "MINT_FETCH_RETRY: $tag attempt $a/4 — transport error (curl rc=$rc, http_code=$code) (transient)" >&2
+              fi
+              [ "$a" -lt 4 ] || break
+              case "$a" in 1) sleep 5 ;; 2) sleep 10 ;; 3) sleep 20 ;; esac
+            done
+            return 1
+          }
+          arts_f="$RUNNER_TEMP/mint_p5_artifacts.json"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" \
+            "$arts_f" "P5 artifacts-list artifact download (JSON GET)" \
+            || fail "GET runs/$RUN_ID/artifacts failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          arts="$(cat "$arts_f")"
+          count="$(printf '%s' "$arts" | jq '[.artifacts[] | select(.name == "tested-tree-digest")] | length')"
+          [ "$count" = "1" ] || fail "expected exactly one 'tested-tree-digest' artifact (gateway lane canonical tree identity), found $count — [B2] (b) (fail-closed)"
+          art_id="$(printf '%s' "$arts" | jq -r '[.artifacts[] | select(.name == "tested-tree-digest")][0].id')"
+          art_expired="$(printf '%s' "$arts" | jq -r '[.artifacts[] | select(.name == "tested-tree-digest")][0].expired')"
+          [ "$art_expired" = "false" ] || fail "tested-tree-digest expired=true (fail-closed)"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$art_id/zip" \
+            "$RUNNER_TEMP/tree.zip" "P5 tested-tree-digest zip download (artifact)" \
+            || fail "tested-tree-digest zip download failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          mkdir -p "$RUNNER_TEMP/treedigest"
+          (cd "$RUNNER_TEMP/treedigest" && unzip -o -q "$RUNNER_TEMP/tree.zip") \
+            || fail "tested-tree-digest zip extraction failed"
+          [ -f "$RUNNER_TEMP/treedigest/testedTreeDigest" ] || fail "testedTreeDigest file missing inside artifact"
+          TESTED_TREE="$(cat "$RUNNER_TEMP/treedigest/testedTreeDigest")"
+          printf '%s' "$TESTED_TREE" | grep -qE '^[0-9a-f]{40}$' || fail "testedTreeDigest '$TESTED_TREE' not a 40-hex tree OID (fail-closed)"
+          # tree(github.sha) — pull_request gate run의 github.sha = merge ref
+          # (callee context는 caller 상속); by-object 해석은 org gate의
+          # tree-identity job과 동일한 canonical identity다.
+          git_sha="${GITHUB_SHA:?GITHUB_SHA not set}"
+          printf '%s' "$git_sha" | grep -qE '^[0-9a-f]{40}$' || fail "GITHUB_SHA '$git_sha' not a 40-hex OID"
+          commit_f="$RUNNER_TEMP/mint_p5_github_sha_commit.json"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/git/commits/$git_sha" \
+            "$commit_f" "P5 git-commit GET tree(github.sha) (JSON GET)" \
+            || fail "GET git/commits/$git_sha failed — merge ref object unresolvable (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          commit_obj="$(cat "$commit_f")"
+          merge_tree="$(printf '%s' "$commit_obj" | jq -r '.tree.sha // empty')"
+          printf '%s' "$merge_tree" | grep -qE '^[0-9a-f]{40}$' || fail "tree(github.sha) '$merge_tree' not a 40-hex tree OID"
+          [ "$TESTED_TREE" = "$merge_tree" ] || fail "testedTreeDigest '$TESTED_TREE' != tree(github.sha) '$merge_tree' — the gateway did not test the landing candidate tree ([B2] (b))"
+          cert_tree="$(jq -r '.certTree // empty' "$GITHUB_WORKSPACE/certificate.json")"
+          [ "$TESTED_TREE" = "$cert_tree" ] || fail "testedTreeDigest '$TESTED_TREE' != cert.certTree '$cert_tree' — re-derived certTree diverges from the gateway lane canonical tree ([B2] (b))"
+          echo "MINT_PUB_TREE: OK — canonical tree identity (b): testedTreeDigest == tree(github.sha) == certTree == $TESTED_TREE"
+
+      # ────────────────────────────────────────────────────────────────
+      # (P6) [B2] (c) + 시간 인과 — gateway lane의 결론 job이 전부
+      #      conclusion=success (jobs API, run 고정). job명 규약:
+      #      reusable-call 게이트 job "gateway"의 callee job들은
+      #      "gateway / <callee-job>" 형태로 나타난다 (실측: run 36284170489
+      #      — gateway / select, gateway / gateway-shard (0..7) 등; wrapper
+      #      job "gateway" 단독 항목은 없음 — lane = prefix 매칭, 최소 1개
+      #      필수). 시간 인과(보조): gateway lane 완료 시각 ≤ now.
+      #      mode=none/skipped 대응 (ADR-0025 Amendment C §C.5 — 2026-10-01
+      #      확정): 실측 run 36770241367 (S #409 mode=none) — select가
+      #      mode=none을 판정하면 착지-잡(ci-bootstrap/candidate-build-arm/
+      #      gateway-shard/gateway-identity-gate/proof-reconcile)은 job-level
+      #      if:false로 jobs API에 conclusion=skipped로 materialize한다.
+      #      lane 판정 job = "gateway / select" (candidate마다 실행 — mode=none
+      #      도 exit 0 정상 판정; 결코 실패 아님). skipped lane job은
+      #      (i) select가 mode=none 판정(derivedEmpty-oracle) 또는
+      #      (ii) 미승격 slice 잡 (SL-09 notYet — scope_sl09 if:false)의
+      #      기대 결과 — 둘 중 하나가 기계 검증되어야만 허용되며,
+      #      부재/불일치 = fail-closed (비-mode=none candidate의 skipped·
+      #      실패·부재 전부 차단 — 검사 약화 아님).
+      #      평가 시점 전제 (caller-edge): 이 평가는 lane이 terminal 상태일
+      #      때만 수행된다 — caller 그래프 `mint-publish: needs:
+      #      [mint-prepare, gateway]` (Archright/.github PR #62, merge
+      #      3a0ae4cc, 2026-10-07 복원)가 그 전제를 그래프로 보장한다.
+      #      간선 부재 상태에서의 실측 레이스: run 37569755722 att.1 —
+      #      평가 04:10:10Z < ci-bootstrap 완료 04:11:18Z, in-progress를
+      #      "abnormal conclusion"으로 fail-closed (MINT_PUB_JOBS FAIL).
+      #      SL-0713 scope — [B2] (c).
+      # ────────────────────────────────────────────────────────────────
+      - name: "(P6) [B2] (c) gateway lane conclusion == success + 시간 인과 (jobs API)"
+        if: steps.slice-engine.outputs.scope_sl0713 == 'true' && steps.venue.outputs.venue == 'landing'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          B_CHECKOUT_DIR: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_PUB_JOBS: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          # DEBT#474 — bounded transport retry, generalized (P3 Slice C S2):
+          # fetch_bounded = the fetch_admission_zip transport policy (4
+          # attempts, 5s/10s/20s backoff; transient = curl transport rc != 0
+          # or final HTTP 5xx; permanent = final HTTP 4xx incl. 429 —
+          # contract alignment 2026-10-15: NO 429 retry). [B2](c) leg: the
+          # SINGLE-PAGE jobs GET is wrapped — NEVER the pagination while-
+          # loop itself (loop-level retry would re-append pages into the
+          # jq_tmp aggregation — corruption). Each attempt re-fetches the
+          # SAME page URL; the body is appended exactly once per successful
+          # iteration, unchanged. Final failure prints HTTP code / curl rc
+          # (rearm TRANSIENT (b) anchor format). Fetch-scoped: nothing here
+          # re-drives a ledger append.
+          fetch_bounded() {
+            local url="$1" out="$2" tag="$3" a rc code
+            local accept="${4:-application/vnd.github+json}"
+            for a in 1 2 3 4; do
+              code="$(curl -sSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "Accept: $accept" \
+                -o "$out" -w '%{http_code}' "$url")" \
+                && rc=0 || rc=$?
+              code="${code:-000}"
+              if [ "$rc" -eq 0 ] && [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+                return 0
+              elif [ "$rc" -eq 0 ]; then
+                case "$code" in
+                  5*)
+                    echo "MINT_FETCH_RETRY: $tag attempt $a/4 — HTTP $code (transient)" >&2 ;;
+                  *)
+                    echo "MINT_FETCH_RETRY: $tag — HTTP $code (permanent — not retried)" >&2
+                    return 2 ;;
+                esac
+              else
+                echo "MINT_FETCH_RETRY: $tag attempt $a/4 — transport error (curl rc=$rc, http_code=$code) (transient)" >&2
+              fi
+              [ "$a" -lt 4 ] || break
+              case "$a" in 1) sleep 5 ;; 2) sleep 10 ;; 3) sleep 20 ;; esac
+            done
+            return 1
+          }
+          jq_tmp="$(mktemp)"
+          : > "$jq_tmp"
+          page_f="$RUNNER_TEMP/mint_p6_jobs_page.json"
+          page=1
+          while :; do
+            fetch_bounded \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/jobs?per_page=100&page=$page" \
+              "$page_f" "P6 jobs-page download page $page (actions API JSON GET)" \
+              || fail "GET runs/$RUN_ID/jobs page $page failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+            jpage="$(cat "$page_f")"
+            n="$(printf '%s' "$jpage" | jq '.jobs | length')"
+            [ "$n" -gt 0 ] || break
+            printf '%s' "$jpage" | jq -r '.jobs[] | @json' >> "$jq_tmp"
+            [ "$n" -lt 100 ] && break
+            page=$((page + 1))
+          done
+          all_jobs="$(cat "$jq_tmp")"
+          rm -f "$jq_tmp"
+          n_gw="$(printf '%s' "$all_jobs" | jq -s '[.[] | select(.name | startswith("gateway / "))] | length')"
+          [ "$n_gw" -ge 1 ] || fail "no gateway-lane job found in run $RUN_ID jobs (gateway lane absent — [B2] (c), fail-closed)"
+          sel_conc="$(printf '%s' "$all_jobs" | jq -s -r '[.[] | select(.name == "gateway / select")][0].conclusion // ""')"
+          [ "$sel_conc" = "success" ] || fail "gateway lane deciding job (gateway / select) conclusion is '$sel_conc' — [B2] (c) (fail-closed)"
+          n_bad="$(printf '%s' "$all_jobs" | jq -s '[.[] | select(.name | startswith("gateway / ")) | select(.conclusion != "success" and .conclusion != "skipped")] | length')"
+          [ "$n_bad" = "0" ] || fail "$n_bad gateway-lane job(s) with abnormal conclusion (≠ success/skipped) — [B2] (c) (fail-closed)"
+          n_skip="$(printf '%s' "$all_jobs" | jq -s '[.[] | select(.name | startswith("gateway / ")) | select(.conclusion == "skipped")] | length')"
+          skip_reason="none"
+          if [ "$n_skip" -gt 0 ]; then
+            # ADR-0025 §C.5 — skipped lane job 허용 조건: (i) SL-09 notYet
+            # (B-tree epoch manifest — 결정적, candidate의 epoch 반영) 또는
+            # (ii) ci-select-decision envelope mode == "none". 둘 다 없으면
+            # fail-closed (candidate가 mode=none이 아닌데 착지-잡이 스킵됨 =
+            # lane 실패).
+            skip_ok=0
+            if [ -f "$B_CHECKOUT_DIR/config/policy/epoch_manifest.json" ] \
+                && jq -e '.notYetImplementedSlices | index("SL-09")' "$B_CHECKOUT_DIR/config/policy/epoch_manifest.json" >/dev/null 2>&1; then
+              skip_ok=1
+              skip_reason="SL-09 notYet-implemented lane jobs (scope_sl09 if:false)"
+            else
+              arts_f="$RUNNER_TEMP/mint_p6_skipped_arts.json"
+              fetch_bounded \
+                "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" \
+                "$arts_f" "P6 artifacts-list GET — skipped-lane justification (JSON GET)" \
+                || fail "GET runs/$RUN_ID/artifacts failed — skipped-lane justification (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+              arts="$(cat "$arts_f")"
+              count="$(printf '%s' "$arts" | jq '[.artifacts[] | select(.name == "ci-select-decision")] | length')"
+              [ "$count" = "1" ] || fail "$n_skip skipped gateway-lane job(s) present and ci-select-decision artifact absent (count=$count) — mode=none envelope unverifiable ([B2] (c), fail-closed)"
+              art_id="$(printf '%s' "$arts" | jq -r '[.artifacts[] | select(.name == "ci-select-decision")][0].id')"
+              fetch_bounded \
+                "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$art_id/zip" \
+                "$RUNNER_TEMP/decision.zip" "P6 ci-select-decision zip download (artifact)" \
+                || fail "ci-select-decision zip download failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+              mkdir -p "$RUNNER_TEMP/gwdecision"
+              (cd "$RUNNER_TEMP/gwdecision" && unzip -o -q "$RUNNER_TEMP/decision.zip") \
+                || fail "ci-select-decision zip extraction failed"
+              [ -f "$RUNNER_TEMP/gwdecision/decision.json" ] || fail "decision.json missing inside ci-select-decision artifact"
+              if jq -e '.mode == "none"' "$RUNNER_TEMP/gwdecision/decision.json" >/dev/null 2>&1; then
+                skip_ok=1
+                skip_reason="mode=none select decision (oracle-derivedEmpty — landing jobs not selected)"
+              fi
+            fi
+            [ "$skip_ok" = "1" ] || fail "$n_skip skipped gateway-lane job(s) without mode=none envelope or SL-09 notYet justification — [B2] (c) (fail-closed)"
+          fi
+          gw_done="$(printf '%s' "$all_jobs" | jq -s '[.[] | select(.name | startswith("gateway / ")) | .completed_at // empty] | max // empty')"
+          now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "MINT_PUB_JOBS: OK — gateway lane ($n_gw jobs, skipped $n_skip [$skip_reason]) select success; completed_at(max) $gw_done ≤ now $now (시간 인과 보조 기록)"
+          echo "MINT_GATEWAY_DONE=$gw_done" >> "$GITHUB_ENV"
+
+      # ────────────────────────────────────────────────────────────────
+      # (P7) D6 멱등 + FF-CAS 3분기 reconciliation + exactly-once
+      #      (plan D6 / Phase 1 item 5):
+      #      A. 멱등 — ledger record로부터의 정당성 검증: record subjectId/
+      #         baseSha/headSha/certTree 일치 + Ed25519 (양방) —
+      #         `ax cert ledger-verify` (mere key membership 아님; witness
+      #         digest는 run-scoped — 교차 런 정체성 금지). 손상 record =
+      #         fail-closed.
+      #      B. CAS 3분기 — 성공 → append 1 / 실패 → 재조회 → (A) 성립 →
+      #         PASS(0) / 불성립 → FAIL-CLOSED (재시도 loop의 재검사 —
+      #         ledger-append의 내부 FF-CAS retry(≤4)는 유지, 그 이후의
+      #         최종 실패를 여기서 reconciliation으로 판정).
+      #      C. exactly-once assertion — 첫 발행 1 / 재실행 0, 그 외 값은
+      #         fail-closed.
+      #      Provenance: cert_sha256 · gateway run_id · gateway headSha ·
+      #      gateway tree identity · conclusion=success · field-binding 통과.
+      #      SL-0713 scope — D6 + CAS (slice_catalog SL-0713).
+      # ────────────────────────────────────────────────────────────────
+      - name: "(P7) D6 + FF-CAS 3분기 reconciliation + exactly-once (ledger append)"
+        if: steps.slice-engine.outputs.scope_sl0713 == 'true' && steps.venue.outputs.venue == 'landing'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          B_CHECKOUT_DIR: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_PUB: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          : "${B:?B not set}"; : "${H:?H not set}"; : "${PR_NUMBER:?PR_NUMBER not set}"
+          ax="$B_CHECKOUT_DIR/bin/ax"
+          [ -x "$ax" ] || fail "B-built bin/ax missing at $ax"
+          cert="$B_CHECKOUT_DIR/certificate.json"
+          [ -f "$cert" ] || fail "certificate.json missing at $cert"
+          SUBJECT_ID="$(jq -r '.subjectId' "$cert")"
+          [ "${#SUBJECT_ID}" = "64" ] || fail "certificate subjectId malformed"
+          CERT_SHA256="$(sha256sum "$cert" | awk '{print $1}')"
+          GW_TREE="$(jq -r '.certTree' "$cert")"
+          commit_meta="B=$B H=${SUBJECT_HEAD:-$H} run_id=$RUN_ID run_attempt=$RUN_ATTEMPT pr=$PR_NUMBER artifact=subject-certificate-$RUN_ATTEMPT cert_sha256=$CERT_SHA256 gateway_run=$RUN_ID gateway_headSha=$H gateway_tree=$GW_TREE gateway_conclusion=success field_binding=ok"
+          APPEND_COUNT=0
+          if ( cd "$B_CHECKOUT_DIR" && bin/ax cert ledger-list 2>/dev/null | grep -qx "$SUBJECT_ID" ); then
+            # (A) 멱등 — record 검증 (손상 = fail-closed). append 없음 (exactly-once: 0).
+            if ( cd "$B_CHECKOUT_DIR" && bin/ax cert ledger-verify "$cert" >/dev/null ); then
+              echo "MINT_D6: OK — idempotent re-run: ledger record consistent (append exactly-once: 0)"
+            else
+              fail "ledger record for subjectId ${SUBJECT_ID:0:12} present but INCONSISTENT (corrupt/tampered record — fail-closed)"
+            fi
+          else
+            if ( cd "$B_CHECKOUT_DIR" && GITHUB_TOKEN="$GITHUB_TOKEN" bin/ax cert ledger-append \
+                --provenance "$commit_meta" "$cert" >/dev/null ); then
+              APPEND_COUNT=1
+              echo "MINT_PUB: OK — ledger append (first issuance, append 1) with provenance: $commit_meta"
+            else
+              # CAS 3분기 prong-2 — 실패 → 재조회 → (A) 성립 → PASS(0) / 불성립 → FAIL-CLOSED.
+              if ( cd "$B_CHECKOUT_DIR" && GITHUB_TOKEN="$GITHUB_TOKEN" bin/ax cert ledger-list 2>/dev/null | grep -qx "$SUBJECT_ID" \
+                  && bin/ax cert ledger-verify "$cert" >/dev/null ); then
+                echo "MINT_PUB: OK — append raced/failed but reconciliation (A) holds: record consistent (append exactly-once: 0)"
+              else
+                fail "FF-CAS append failed and reconciliation does NOT hold (record absent or inconsistent) — FAIL-CLOSED"
+              fi
+            fi
+          fi
+          CMT="$APPEND_COUNT"
+          [ "$CMT" = "0" ] || [ "$CMT" = "1" ] || fail "exactly-once assertion: append count '$CMT' not in {0,1}"
+          echo "MINT_APPEND_COUNT=$CMT"
+          echo "MINT_APPEND_COUNT=$CMT" >> "$GITHUB_ENV"
+
+      # ────────────────────────────────────────────────────────────────
+      # (P7b) [SL-15] admission evidence identity reuse — durable evidence
+      #      CAS ledger append (exactly-once per evidenceKey):
+      #      A. retrieval — the attest stage's `evidence-record-<H>-<attempt>`
+      #         artifact (MISS = fresh evidence / HIT = rebound record, same
+      #         key + same payload bytes) + the witness source artifact —
+      #         exactly-one + expired=false lookups (P4 pattern).
+      #      B. binding — record.evidenceKey 64-hex; sha256(payload bytes) ==
+      #         record.payloadSha256; the payload's canonical 4-field
+      #         projection {funcSource, funcName, leanSource, smtlib2} ==
+      #         the witness `.semantic.evidence` projection — the payload
+      #         wire (the 8-member normalizedEvidenceWire) stays bound by
+      #         payloadSha256 + this proj==w_proj check. The BUNDLE digest is
+      #         SINGLE-DEFINITION: record.evidenceDigest is computed by the
+      #         B-built ax (attestation_orchestrator.evidenceBundleDigest)
+      #         from the canonical 7-member evidenceBundleWire — the SAME
+      #         authority as the witness `.semantic.evidenceDigest` — so this
+      #         step COMPARES the two and NEVER re-derives any bundle digest
+      #         (ADR-0034; the 2026-10-13 MINT_EVAPPEND all-landing blockage
+      #         root cause was a duplicated 4-member digest definition here).
+      #         Missing / malformed / mismatched evidenceDigest → fail-closed
+      #         (an old-format record without the field is rejected). The
+      #         B-built ax re-validates the full record at append — this
+      #         comparison is an ADDITIONAL binding, not the authority.
+      #      C. append — `ax evidence ledger-append <record.json>` (default
+      #         ref = refs/heads/axiom/evidence-cas; GITHUB_TOKEN fail-closed;
+      #         record fully validated BEFORE any transport; an
+      #         already-present key is an idempotent no-op success).
+      #      Exactly-once: no-op → 0 / append → 1, else fail-closed.
+      #      SL-15 scope — slice_catalog SL-15.
+      # ────────────────────────────────────────────────────────────────
+      - name: "(P7b) [SL-15] evidence record → evidence CAS ledger append (exactly-once)"
+        if: steps.slice-engine.outputs.scope_sl15 == 'true' && steps.venue.outputs.venue == 'landing'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          B_CHECKOUT_DIR: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_EVAPPEND: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          : "${B:?B not set}"; : "${H:?H not set}"; : "${RUN_ID:?RUN_ID not set}"; : "${RUN_ATTEMPT:?RUN_ATTEMPT not set}"
+          ax="$B_CHECKOUT_DIR/bin/ax"
+          [ -x "$ax" ] || fail "B-built bin/ax missing at $ax"
+          # (A) retrieval — exactly-one + unexpired for BOTH artifacts
+          #     (P4's run-scoped API + trusted-name pattern).
+          want_rec="evidence-record-$H-$RUN_ATTEMPT"
+          want_adm="admission-check-$H-$RUN_ATTEMPT"
+          # DEBT#474 — bounded transport retry (P3 Tier-2 site-group): the
+          # LANDED generalized fetch_bounded (P3 first-site-group, PR #850)
+          # REUSED verbatim — 4 attempts, 5s/10s/20s backoff; transient =
+          # curl transport rc != 0 or final HTTP 5xx; permanent = final
+          # HTTP 4xx incl. 429 — contract alignment 2026-10-15: NO 429
+          # retry. These [SL-15] retrieval legs are read-path fetches: a
+          # transport failure here converted fully-green runs to red
+          # (fail-closed with zero retry budget). Each attempt re-fetches
+          # the SAME run-scoped URL; the bodies are still fully re-parsed
+          # and bound below (record identity + payloadSha256 + witness
+          # byte binding). Final failure prints HTTP code / curl rc (rearm
+          # TRANSIENT (b) anchor format). Fetch-scoped ONLY: the (C)
+          # evidence ledger-append is NOT wrapped — a retry can never
+          # re-drive an append.
+          fetch_bounded() {
+            local url="$1" out="$2" tag="$3" a rc code
+            local accept="${4:-application/vnd.github+json}"
+            for a in 1 2 3 4; do
+              code="$(curl -sSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "Accept: $accept" \
+                -o "$out" -w '%{http_code}' "$url")" \
+                && rc=0 || rc=$?
+              code="${code:-000}"
+              if [ "$rc" -eq 0 ] && [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+                return 0
+              elif [ "$rc" -eq 0 ]; then
+                case "$code" in
+                  5*)
+                    echo "MINT_FETCH_RETRY: $tag attempt $a/4 — HTTP $code (transient)" >&2 ;;
+                  *)
+                    echo "MINT_FETCH_RETRY: $tag — HTTP $code (permanent — not retried)" >&2
+                    return 2 ;;
+                esac
+              else
+                echo "MINT_FETCH_RETRY: $tag attempt $a/4 — transport error (curl rc=$rc, http_code=$code) (transient)" >&2
+              fi
+              [ "$a" -lt 4 ] || break
+              case "$a" in 1) sleep 5 ;; 2) sleep 10 ;; 3) sleep 20 ;; esac
+            done
+            return 1
+          }
+          arts_f="$RUNNER_TEMP/mint_p7b_artifacts.json"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" \
+            "$arts_f" "P7b artifacts-list artifact download (JSON GET)" \
+            || fail "GET runs/$RUN_ID/artifacts failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          arts="$(cat "$arts_f")"
+          lookup_one() {
+            local want="$1"
+            local count id expired
+            count="$(printf '%s' "$arts" | jq --arg n "$want" '[.artifacts[] | select(.name == $n)] | length')" \
+              || fail "cannot count artifacts named '$want'"
+            [ "$count" = "1" ] || fail "expected exactly one artifact named '$want', found $count"
+            id="$(printf '%s' "$arts" | jq --arg n "$want" -r '.artifacts[] | select(.name == $n) | .id')"
+            expired="$(printf '%s' "$arts" | jq --arg n "$want" -r '.artifacts[] | select(.name == $n) | .expired')"
+            [ "$expired" = "false" ] || fail "artifact '$want' is expired (fail-closed)"
+            printf '%s' "$id"
+          }
+          rec_id="$(lookup_one "$want_rec")"
+          adm_id="$(lookup_one "$want_adm")"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$rec_id/zip" \
+            "$RUNNER_TEMP/cas-evidence.zip" "P7b evidence-record zip download (artifact)" \
+            || fail "evidence-record artifact zip download failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$adm_id/zip" \
+            "$RUNNER_TEMP/cas-admission.zip" "P7b admission zip download (artifact)" \
+            || fail "admission artifact zip download failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          mkdir -p "$RUNNER_TEMP/cas-evidence" "$RUNNER_TEMP/cas-admission"
+          (cd "$RUNNER_TEMP/cas-evidence" && unzip -o -q "$RUNNER_TEMP/cas-evidence.zip") \
+            || fail "evidence-record artifact zip extraction failed"
+          (cd "$RUNNER_TEMP/cas-admission" && unzip -o -q "$RUNNER_TEMP/cas-admission.zip") \
+            || fail "admission artifact zip extraction failed"
+          rec_file="$RUNNER_TEMP/cas-evidence/evidence-record.json"
+          wit_file="$RUNNER_TEMP/cas-admission/witness.json"
+          [ -f "$rec_file" ] || fail "no evidence-record.json inside '$want_rec'"
+          [ -f "$wit_file" ] || fail "no witness.json inside '$want_adm'"
+          # (B) binding — record identity + payload bytes + witness semantic
+          #     block. The record file itself is re-validated by ax at append;
+          #     these checks bind THE RUN's witness to THE RECORD's payload.
+          ev_key="$(jq -r '.evidenceKey' "$rec_file")"
+          printf '%s' "$ev_key" | grep -qE '^[0-9a-f]{64}$' \
+            || fail "record evidenceKey '$ev_key' not 64-hex"
+          payload="$(jq -j '.payload' "$rec_file")"
+          [ -n "$payload" ] || fail "record payload empty"
+          p_sha="$(printf '%s' "$payload" | sha256sum | awk '{print $1}')"
+          [ "$p_sha" = "$(jq -r '.payloadSha256' "$rec_file")" ] \
+            || fail "sha256(payload) '$p_sha' != record payloadSha256 (tampered record?)"
+          proj="$(printf '%s' "$payload" | jq -S -c '{funcSource, funcName, leanSource, smtlib2}')" \
+            || fail "cannot project payload 4-field bundle wire"
+          w_proj="$(jq -S -c '.semantic.evidence | {funcSource, funcName, leanSource, smtlib2}' "$wit_file" 2>/dev/null)" \
+            || fail "witness .semantic.evidence missing/malformed"
+          [ "$proj" = "$w_proj" ] \
+            || fail "payload bundle wire != witness semantic evidence projection (identity divergence — fail-closed)"
+          w_digest="$(jq -r '.semantic.evidenceDigest // empty' "$wit_file")"
+          printf '%s' "$w_digest" | grep -qE '^[0-9a-f]{64}$' \
+            || fail "witness semantic evidenceDigest malformed"
+          r_digest="$(jq -r '.evidenceDigest // empty' "$rec_file")"
+          [ -n "$r_digest" ] \
+            || fail "evidence record evidenceDigest missing (old-format record — fail-closed)"
+          printf '%s' "$r_digest" | grep -qE '^[0-9a-f]{64}$' \
+            || fail "record evidenceDigest '$r_digest' not 64-hex"
+          [ "$r_digest" = "$w_digest" ] \
+            || fail "evidence record evidenceDigest '${r_digest:0:12}' != witness evidenceDigest '${w_digest:0:12}' (binding broken — single-definition, fail-closed)"
+          # (C) append — idempotent exactly-once (default ref =
+          #     refs/heads/axiom/evidence-cas; ax validates before transport).
+          app_out="$(cd "$B_CHECKOUT_DIR" && GITHUB_TOKEN="$GITHUB_TOKEN" \
+            "$ax" evidence ledger-append "$rec_file")" \
+            || fail "evidence ledger-append failed (transport/validation)"
+          if printf '%s' "$app_out" | grep -q "no-op"; then
+            CMT=0
+            echo "MINT_EVAPPEND: OK — idempotent no-op (evidence key ${ev_key:0:12} already stored, append exactly-once: 0)"
+          else
+            CMT=1
+            echo "MINT_EVAPPEND: OK — evidence record appended (key ${ev_key:0:12}, append exactly-once: 1)"
+          fi
+          [ "$CMT" = "0" ] || [ "$CMT" = "1" ] || fail "exactly-once assertion: evidence append count '$CMT' not in {0,1}"
+          echo "MINT_EVAPPEND_COUNT=$CMT"
+          echo "MINT_EVAPPEND_COUNT=$CMT" >> "$GITHUB_ENV"
+
+      # ────────────────────────────────────────────────────────────────
+      # (P7c) [SL-15] s1a judgment record → judgment CAS ledger append
+      #      (exactly-once per evidenceKey — test-judgment reuse, contract
+      #      docs/spec/test_judgment_cas_contract.md §7):
+      #      A. retrieval — the attest stage's
+      #         `judgment-record-<H>-<attempt>` artifact (EXECUTED = fresh
+      #         measured judgment / REUSED = rebound record, same key + same
+      #         payload bytes) + the witness source artifact — exactly-one +
+      #         expired=false lookups (P4/P7b pattern).
+      #      B. binding (the §5-(d) witness binding, byte-level) — record
+      #         identity (evidenceKey 64-hex, sha256(payload) ==
+      #         payloadSha256) AND the witness `.semantic.judgment` node:
+      #         present (an armed attest binds the judgment — its absence is
+      #         fail-closed), basis ∈ {EXECUTED,REUSED}, judgment evidenceKey
+      #         == the record's evidenceKey, witness `.projection` == the
+      #         record's payload BYTES (byte equality — jq -S -c
+      #         canonicalizer), sha256(projection) == projectionSha256.
+      #         jq is the CI-side checker; the B-built ax re-validates the
+      #         full record at append — these are ADDITIONAL bindings, not
+      #         the authority.
+      #      C. append — `ax evidence ledger-append <judgment-record.json>`
+      #         (default ref = refs/heads/axiom/evidence-cas — the SAME
+      #         ledger the landing evidence uses, keys are scheme-separated
+      #         by the payload schemaVersion; GITHUB_TOKEN fail-closed;
+      #         exactly-once: no-op → 0 / append → 1, else fail-closed).
+      # ────────────────────────────────────────────────────────────────
+      - name: "(P7c) [SL-15] judgment record → judgment CAS ledger append (exactly-once)"
+        if: steps.slice-engine.outputs.scope_sl15 == 'true' && steps.venue.outputs.venue == 'landing'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          B_CHECKOUT_DIR: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_JUDGAPPEND: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          : "${B:?B not set}"; : "${H:?H not set}"; : "${RUN_ID:?RUN_ID not set}"; : "${RUN_ATTEMPT:?RUN_ATTEMPT not set}"
+          ax="$B_CHECKOUT_DIR/bin/ax"
+          [ -x "$ax" ] || fail "B-built bin/ax missing at $ax"
+          # (A) retrieval — exactly-one + unexpired for BOTH artifacts.
+          want_rec="judgment-record-$H-$RUN_ATTEMPT"
+          want_adm="admission-check-$H-$RUN_ATTEMPT"
+          # DEBT#474 — bounded transport retry (P3 Tier-2 site-group): the
+          # LANDED generalized fetch_bounded (P3 first-site-group, PR #850)
+          # REUSED verbatim — 4 attempts, 5s/10s/20s backoff; transient =
+          # curl transport rc != 0 or final HTTP 5xx; permanent = final
+          # HTTP 4xx incl. 429 — contract alignment 2026-10-15: NO 429
+          # retry. These [SL-15] retrieval legs are read-path fetches: a
+          # transport failure here converted fully-green runs to red
+          # (fail-closed with zero retry budget). Each attempt re-fetches
+          # the SAME run-scoped URL; the bodies are still fully re-parsed
+          # and bound below (record identity + payloadSha256 + witness
+          # byte binding). Final failure prints HTTP code / curl rc (rearm
+          # TRANSIENT (b) anchor format). Fetch-scoped ONLY: the (C)
+          # judgment ledger-append is NOT wrapped — a retry can never
+          # re-drive an append.
+          fetch_bounded() {
+            local url="$1" out="$2" tag="$3" a rc code
+            local accept="${4:-application/vnd.github+json}"
+            for a in 1 2 3 4; do
+              code="$(curl -sSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "Accept: $accept" \
+                -o "$out" -w '%{http_code}' "$url")" \
+                && rc=0 || rc=$?
+              code="${code:-000}"
+              if [ "$rc" -eq 0 ] && [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+                return 0
+              elif [ "$rc" -eq 0 ]; then
+                case "$code" in
+                  5*)
+                    echo "MINT_FETCH_RETRY: $tag attempt $a/4 — HTTP $code (transient)" >&2 ;;
+                  *)
+                    echo "MINT_FETCH_RETRY: $tag — HTTP $code (permanent — not retried)" >&2
+                    return 2 ;;
+                esac
+              else
+                echo "MINT_FETCH_RETRY: $tag attempt $a/4 — transport error (curl rc=$rc, http_code=$code) (transient)" >&2
+              fi
+              [ "$a" -lt 4 ] || break
+              case "$a" in 1) sleep 5 ;; 2) sleep 10 ;; 3) sleep 20 ;; esac
+            done
+            return 1
+          }
+          arts_f="$RUNNER_TEMP/mint_p7c_artifacts.json"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" \
+            "$arts_f" "P7c artifacts-list artifact download (JSON GET)" \
+            || fail "GET runs/$RUN_ID/artifacts failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          arts="$(cat "$arts_f")"
+          lookup_one() {
+            local want="$1"
+            local count id expired
+            count="$(printf '%s' "$arts" | jq --arg n "$want" '[.artifacts[] | select(.name == $n)] | length')" \
+              || fail "cannot count artifacts named '$want'"
+            [ "$count" = "1" ] || fail "expected exactly one artifact named '$want', found $count"
+            id="$(printf '%s' "$arts" | jq --arg n "$want" -r '.artifacts[] | select(.name == $n) | .id')"
+            expired="$(printf '%s' "$arts" | jq --arg n "$want" -r '.artifacts[] | select(.name == $n) | .expired')"
+            [ "$expired" = "false" ] || fail "artifact '$want' is expired (fail-closed)"
+            printf '%s' "$id"
+          }
+          rec_id="$(lookup_one "$want_rec")"
+          adm_id="$(lookup_one "$want_adm")"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$rec_id/zip" \
+            "$RUNNER_TEMP/judgment-record.zip" "P7c judgment-record zip download (artifact)" \
+            || fail "judgment-record artifact zip download failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$adm_id/zip" \
+            "$RUNNER_TEMP/judgment-admission.zip" "P7c admission zip download (artifact)" \
+            || fail "admission artifact zip download failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          mkdir -p "$RUNNER_TEMP/judgment-record" "$RUNNER_TEMP/judgment-admission"
+          (cd "$RUNNER_TEMP/judgment-record" && unzip -o -q "$RUNNER_TEMP/judgment-record.zip") \
+            || fail "judgment-record artifact zip extraction failed"
+          (cd "$RUNNER_TEMP/judgment-admission" && unzip -o -q "$RUNNER_TEMP/judgment-admission.zip") \
+            || fail "admission artifact zip extraction failed"
+          rec_file="$RUNNER_TEMP/judgment-record/judgment-record.json"
+          wit_file="$RUNNER_TEMP/judgment-admission/witness.json"
+          [ -f "$rec_file" ] || fail "no judgment-record.json inside '$want_rec'"
+          [ -f "$wit_file" ] || fail "no witness.json inside '$want_adm'"
+          # (B) binding — record identity + the §5-(d) witness byte binding.
+          ev_key="$(jq -r '.evidenceKey' "$rec_file")"
+          printf '%s' "$ev_key" | grep -qE '^[0-9a-f]{64}$' \
+            || fail "record evidenceKey '$ev_key' not 64-hex"
+          payload="$(jq -j '.payload' "$rec_file")"
+          [ -n "$payload" ] || fail "record payload empty"
+          p_sha="$(printf '%s' "$payload" | sha256sum | awk '{print $1}')"
+          [ "$p_sha" = "$(jq -r '.payloadSha256' "$rec_file")" ] \
+            || fail "sha256(payload) '$p_sha' != record payloadSha256 (tampered record?)"
+          w_basis="$(jq -r '.semantic.judgment.basis // empty' "$wit_file" 2>/dev/null)"
+          [ "$w_basis" = "EXECUTED" ] || [ "$w_basis" = "REUSED" ] \
+            || fail "witness .semantic.judgment basis '$w_basis' not EXECUTED/REUSED (an armed attest must bind the judgment — fail-closed)"
+          w_key="$(jq -r '.semantic.judgment.evidenceKey // empty' "$wit_file" 2>/dev/null)"
+          [ "$w_key" = "$ev_key" ] \
+            || fail "witness judgment evidenceKey != record evidenceKey (identity divergence — fail-closed)"
+          w_proj="$(jq -j '.semantic.judgment.projection // empty' "$wit_file" 2>/dev/null)"
+          [ -n "$w_proj" ] || fail "witness judgment projection missing"
+          [ "$w_proj" = "$payload" ] \
+            || fail "witness judgment projection != record payload bytes (byte binding broken — fail-closed)"
+          w_psha="$(printf '%s' "$w_proj" | sha256sum | awk '{print $1}')"
+          [ "$w_psha" = "$(jq -r '.semantic.judgment.projectionSha256 // empty' "$wit_file" 2>/dev/null)" ] \
+            || fail "sha256(projection) != witness projectionSha256 (binding broken — fail-closed)"
+          # (C) append — idempotent exactly-once (default ref =
+          #     refs/heads/axiom/evidence-cas; ax validates before transport).
+          app_out="$(cd "$B_CHECKOUT_DIR" && GITHUB_TOKEN="$GITHUB_TOKEN" \
+            "$ax" evidence ledger-append "$rec_file")" \
+            || fail "judgment ledger-append failed (transport/validation)"
+          if printf '%s' "$app_out" | grep -q "no-op"; then
+            CJT=0
+            echo "MINT_JUDGAPPEND: OK — idempotent no-op (judgment key ${ev_key:0:12} already stored, append exactly-once: 0)"
+          else
+            CJT=1
+            echo "MINT_JUDGAPPEND: OK — judgment record appended (key ${ev_key:0:12}, append exactly-once: 1)"
+          fi
+          [ "$CJT" = "0" ] || [ "$CJT" = "1" ] || fail "exactly-once assertion: judgment append count '$CJT' not in {0,1}"
+          echo "MINT_JUDGAPPEND_COUNT=$CJT"
+          echo "MINT_JUDGAPPEND_COUNT=$CJT" >> "$GITHUB_ENV"
+
+      # ────────────────────────────────────────────────────────────────
+      # (P7c-x) [SL-15] extension judgment records (proof_integrity /
+      #      d2_golden / d2_persist) → judgment CAS ledger append
+      #      (exactly-once per evidenceKey — the s1a P7c pattern applied to
+      #      the other three GO-critical subjects; contract §5 per-unit
+      #      independence — each subject's record is bound and appended on
+      #      its own key):
+      #      A. retrieval — the SAME `judgment-record-<H>-<attempt>` artifact
+      #         (per-subject record files) + the witness source artifact.
+      #      B. binding — per subject: the witness `.semantic.judgments[]`
+      #         element naming THAT subject (exactly one; absence of a
+      #         binding for an armed subject is fail-closed), basis ∈
+      #         {EXECUTED,REUSED}, evidenceKey == record evidenceKey,
+      #         witness projection == record payload BYTES, sha256 ==
+      #         projectionSha256 (the same §5-(d) byte-level binding).
+      #      C. append — `ax evidence ledger-append <record>`; per-subject
+      #         exactly-once 0/1 (no-op → 0, append → 1), else fail-closed.
+      # ────────────────────────────────────────────────────────────────
+      - name: "(P7c-x) [SL-15] extension judgment records → judgment CAS ledger append (exactly-once ×3)"
+        # ADR-0032 (b),(f): 원장 append는 landing 전용 — preflight는 정본 증거를
+        # 발행하지 않으며 B-built bin/ax가 없다(venue-gate 누락 결함 수선).
+        if: steps.slice-engine.outputs.scope_sl15 == 'true' && steps.venue.outputs.venue == 'landing'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          B_CHECKOUT_DIR: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          fail() { echo "MINT_JUDGAPPENDX: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          : "${B:?B not set}"; : "${H:?H not set}"; : "${RUN_ID:?RUN_ID not set}"; : "${RUN_ATTEMPT:?RUN_ATTEMPT not set}"
+          ax="$B_CHECKOUT_DIR/bin/ax"
+          [ -x "$ax" ] || fail "B-built bin/ax missing at $ax"
+          # (A) retrieval — exactly-one + unexpired for BOTH artifacts (the
+          # s1a P7c pattern, RUN-scoped).
+          want_rec="judgment-record-$H-$RUN_ATTEMPT"
+          want_adm="admission-check-$H-$RUN_ATTEMPT"
+          # DEBT#474 — bounded transport retry (P3 Tier-2 site-group): the
+          # LANDED generalized fetch_bounded (P3 first-site-group, PR #850)
+          # REUSED verbatim — 4 attempts, 5s/10s/20s backoff; transient =
+          # curl transport rc != 0 or final HTTP 5xx; permanent = final
+          # HTTP 4xx incl. 429 — contract alignment 2026-10-15: NO 429
+          # retry. These [SL-15] retrieval legs are read-path fetches: a
+          # transport failure here converted fully-green runs to red
+          # (fail-closed with zero retry budget). Each attempt re-fetches
+          # the SAME run-scoped URL; the bodies are still fully re-parsed
+          # and bound below (record identity + payloadSha256 + per-subject
+          # witness byte binding). Final failure prints HTTP code / curl rc
+          # (rearm TRANSIENT (b) anchor format). Fetch-scoped ONLY: the
+          # per-subject judgment ledger-appends in the loop below are NOT
+          # wrapped — a retry can never re-drive an append.
+          fetch_bounded() {
+            local url="$1" out="$2" tag="$3" a rc code
+            local accept="${4:-application/vnd.github+json}"
+            for a in 1 2 3 4; do
+              code="$(curl -sSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "Accept: $accept" \
+                -o "$out" -w '%{http_code}' "$url")" \
+                && rc=0 || rc=$?
+              code="${code:-000}"
+              if [ "$rc" -eq 0 ] && [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+                return 0
+              elif [ "$rc" -eq 0 ]; then
+                case "$code" in
+                  5*)
+                    echo "MINT_FETCH_RETRY: $tag attempt $a/4 — HTTP $code (transient)" >&2 ;;
+                  *)
+                    echo "MINT_FETCH_RETRY: $tag — HTTP $code (permanent — not retried)" >&2
+                    return 2 ;;
+                esac
+              else
+                echo "MINT_FETCH_RETRY: $tag attempt $a/4 — transport error (curl rc=$rc, http_code=$code) (transient)" >&2
+              fi
+              [ "$a" -lt 4 ] || break
+              case "$a" in 1) sleep 5 ;; 2) sleep 10 ;; 3) sleep 20 ;; esac
+            done
+            return 1
+          }
+          arts_f="$RUNNER_TEMP/mint_p7cx_artifacts.json"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" \
+            "$arts_f" "P7c-x artifacts-list artifact download (JSON GET)" \
+            || fail "GET runs/$RUN_ID/artifacts failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          arts="$(cat "$arts_f")"
+          lookup_one() {
+            local want="$1"
+            local count id expired
+            count="$(printf '%s' "$arts" | jq --arg n "$want" '[.artifacts[] | select(.name == $n)] | length')" \
+              || fail "cannot count artifacts named '$want'"
+            [ "$count" = "1" ] || fail "expected exactly one artifact named '$want', found $count"
+            id="$(printf '%s' "$arts" | jq --arg n "$want" -r '.artifacts[] | select(.name == $n) | .id')"
+            expired="$(printf '%s' "$arts" | jq --arg n "$want" -r '.artifacts[] | select(.name == $n) | .expired')"
+            [ "$expired" = "false" ] || fail "artifact '$want' is expired (fail-closed)"
+            printf '%s' "$id"
+          }
+          rec_id="$(lookup_one "$want_rec")"
+          adm_id="$(lookup_one "$want_adm")"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$rec_id/zip" \
+            "$RUNNER_TEMP/judgmentx-record.zip" "P7c-x judgment-record zip download (artifact)" \
+            || fail "judgment-record artifact zip download failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          fetch_bounded \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$adm_id/zip" \
+            "$RUNNER_TEMP/judgmentx-admission.zip" "P7c-x admission zip download (artifact)" \
+            || fail "admission artifact zip download failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
+          mkdir -p "$RUNNER_TEMP/judgmentx-record" "$RUNNER_TEMP/judgmentx-admission"
+          (cd "$RUNNER_TEMP/judgmentx-record" && unzip -o -q "$RUNNER_TEMP/judgmentx-record.zip") \
+            || fail "judgment-record artifact zip extraction failed"
+          (cd "$RUNNER_TEMP/judgmentx-admission" && unzip -o -q "$RUNNER_TEMP/judgmentx-admission.zip") \
+            || fail "admission artifact zip extraction failed"
+          wit_file="$RUNNER_TEMP/judgmentx-admission/witness.json"
+          [ -f "$wit_file" ] || fail "no witness.json inside '$want_adm'"
+          CJTX=0
+          for s in proof_integrity d2_golden d2_persist; do
+            # Record files are staged with HYPHENATED subject suffixes
+            # (judgment-record-proof-integrity.json — admission-check upload
+            # convention), while witness .subject tags are UNDERSCORED
+            # (proof_integrity — judgment_cas.subjectName). Map, don't rename.
+            rec_file="$RUNNER_TEMP/judgmentx-record/judgment-record-$(printf '%s' "$s" | tr '_' '-').json"
+            [ -f "$rec_file" ] || fail "no judgment-record-$(printf '%s' "$s" | tr '_' '-').json inside '$want_rec'"
+            ev_key="$(jq -r '.evidenceKey' "$rec_file")"
+            printf '%s' "$ev_key" | grep -qE '^[0-9a-f]{64}$' \
+              || fail "[$s] record evidenceKey '$ev_key' not 64-hex"
+            payload="$(jq -j '.payload' "$rec_file")"
+            [ -n "$payload" ] || fail "[$s] record payload empty"
+            p_sha="$(printf '%s' "$payload" | sha256sum | awk '{print $1}')"
+            [ "$p_sha" = "$(jq -r '.payloadSha256' "$rec_file")" ] \
+              || fail "[$s] sha256(payload) '$p_sha' != record payloadSha256 (tampered record?)"
+            # The witness `.semantic.judgments[]` element naming THIS subject
+            # — exactly one (an armed attest binds every subject; absence or
+            # duplication is fail-closed).
+            w_node="$(jq -c --arg s "$s" '[.semantic.judgments[]? | select(.subject == $s)]' "$wit_file")"
+            [ "$(printf '%s' "$w_node" | jq 'length')" = "1" ] \
+              || fail "[$s] witness .semantic.judgments[] binding for subject '$s' is not exactly-one (an armed attest must bind every subject — fail-closed)"
+            w_basis="$(printf '%s' "$w_node" | jq -r '.[0].basis // empty')"
+            [ "$w_basis" = "EXECUTED" ] || [ "$w_basis" = "REUSED" ] \
+              || fail "[$s] witness judgment basis '$w_basis' not EXECUTED/REUSED (fail-closed)"
+            w_key="$(printf '%s' "$w_node" | jq -r '.[0].evidenceKey // empty')"
+            [ "$w_key" = "$ev_key" ] \
+              || fail "[$s] witness judgment evidenceKey != record evidenceKey (identity divergence — fail-closed)"
+            w_proj="$(printf '%s' "$w_node" | jq -j '.[0].projection // empty')"
+            [ -n "$w_proj" ] || fail "[$s] witness judgment projection missing"
+            [ "$w_proj" = "$payload" ] \
+              || fail "[$s] witness judgment projection != record payload bytes (byte binding broken — fail-closed)"
+            w_psha="$(printf '%s' "$w_proj" | sha256sum | awk '{print $1}')"
+            [ "$w_psha" = "$(printf '%s' "$w_node" | jq -r '.[0].projectionSha256 // empty')" ] \
+              || fail "[$s] sha256(projection) != witness projectionSha256 (binding broken — fail-closed)"
+            # (C) append — idempotent exactly-once per subject key.
+            app_out="$(cd "$B_CHECKOUT_DIR" && GITHUB_TOKEN="$GITHUB_TOKEN" \
+              "$ax" evidence ledger-append "$rec_file")" \
+              || fail "[$s] judgment ledger-append failed (transport/validation)"
+            if printf '%s' "$app_out" | grep -q "no-op"; then
+              APP=0
+              echo "MINT_JUDGAPPENDX: OK — idempotent no-op (judgment[$s] key ${ev_key:0:12} already stored, append exactly-once: 0)"
+            else
+              APP=1
+              echo "MINT_JUDGAPPENDX: OK — judgment record appended [$s] (key ${ev_key:0:12}, append exactly-once: 1)"
+            fi
+            [ "$APP" = "0" ] || [ "$APP" = "1" ] || fail "exactly-once assertion [$s]: append count '$APP' not in {0,1}"
+            CJTX=$((CJTX + APP))
+          done
+          [ "$CJTX" -ge 0 ] && [ "$CJTX" -le 3 ] || fail "exactly-once assertion: extension append total '$CJTX' not in {0..3}"
+          echo "MINT_JUDGAPPENDX_COUNT=$CJTX"
+          echo "MINT_JUDGAPPENDX_COUNT=$CJTX" >> "$GITHUB_ENV"

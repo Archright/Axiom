@@ -1,0 +1,25 @@
+{
+  "version": "1.0",
+  "revisions": [
+    {
+      "revisionId": "CONTRACT-0001",
+      "parentRevisionId": null,
+      "version": "v1.0.0",
+      "title": "8-line line-heuristic raises scan",
+      "rationale": "Legacy immunity gate used a fixed 8-line-ahead heuristic to detect {.raises: ...} annotations near proc/func declarations. This approach produced false positives (attributing a nearby pragma from an unrelated declaration) and false negatives (missing pragmas beyond 8 lines or in multi-line headers). The measurement was configuration-dependent and non-deterministic across platforms.",
+      "evidenceRef": "git rev-parse HEAD",
+      "effectiveSequence": null,
+      "status": "superseded"
+    },
+    {
+      "revisionId": "CONTRACT-0002",
+      "parentRevisionId": "CONTRACT-0001",
+      "version": "v1.1.0",
+      "title": "AST-semantic source-visible projection",
+      "rationale": "Replaced the 8-line distance heuristic with AST-semantic source-text parsing. Compliance is determined by whether the effective effect environment at the declaration point carries an explicit raises contract — either via declaration-local inline pragma (parsed by header token sequence) or file-scope push/pop raises nesting. No branch selection for when/when defined() blocks; all source-visible eligible declarations are counted. Include'd file declarations are attributed to the including file. Deterministic output: same input produces byte-identical JSON.",
+      "evidenceRef": "sha256:effect_contract_projection_plan_doc",
+      "effectiveSequence": null,
+      "status": "active"
+    }
+  ]
+}

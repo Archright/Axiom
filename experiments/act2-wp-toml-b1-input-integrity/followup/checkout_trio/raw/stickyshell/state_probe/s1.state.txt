@@ -1,0 +1,6 @@
+port=9494
+delay=1
+maxLineLength=250
+maxConcurrentClients=16
+customMessages.len=0
+DECODE_RESULT=OK

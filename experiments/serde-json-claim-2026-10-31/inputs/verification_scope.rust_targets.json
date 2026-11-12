@@ -1,0 +1,13 @@
+{
+  "commit": "8c535a260ce561eaab4111aafc29038eb9f77ff3",
+  "module": "src/error.rs",
+  "symbol": "serde_json::error::parse_line_col",
+  "signatureHash": "48c4dc5b55757f7c444e8a6d0bf5fdaadd10f48791a6dea9df39484db7367851",
+  "specRef": "experiments/serde-json-claim-2026-10-31/axiom.specs.json#serde_json::error::parse_line_col",
+  "conditions": [
+    "msg: &mut String — arbitrary error message text re-parsed by this function",
+    "self-generated serde_json messages use 1-based line and column positions",
+    "domain: messages matching the ' at line X column Y' suffix grammar",
+    "witness class for the suspected divergence: crafted ' at line 0 column 0' style inputs"
+  ]
+}

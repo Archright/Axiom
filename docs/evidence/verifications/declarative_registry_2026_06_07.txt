@@ -1,0 +1,77 @@
+Evidence: Declarative Registry Architecture — 2026-06-07
+=========================================================
+
+Philosophy: "Truth by Metadata" — registry defines state, logic follows.
+Context7 Validation: Nim std/paths.relativePath, gorge() compile-time, Refactoring Guru incremental steps.
+
+## Step 1: Purge — ALREADY CLEAN (previous session)
+- Orchestrator 7 duplicates: flat files already removed
+- cert_writer.nim facade: already removed, cert_builder uses certificate/cert_writer
+
+## Step 2: Constrain — Declarative Domain Sharding
+
+### bin/refactor-domain (rewritten)
+- 3-pass architecture: Simulate → Report → Execute
+- relativePath-based import resolver (handles ./, ../, absolute)
+- Line-addressed sed (import/from only, skips export/include)
+- Temp directory simulation with nim check
+- Patch file generation for review
+
+### domain_layout.json v2.0
+- Added `import_path` field to all 27 domains
+- Added `import_base: "core"` root field
+- Version bumped to 2.0.0
+
+### Simulation Results
+- 70 files mapped to 17 domains
+- 17/70 pass nim check (24%)
+- 53/70 fail due to Nim effect system context differences (not import resolution)
+- Import resolution: WORKING (errors changed from "illformed AST" to "unlisted exception")
+
+## Step 3: Enforce — Test Infrastructure
+
+### nimtry TEST-hygiene query (ALREADY EXISTS)
+- File: src/gate/nimtry/test_hygiene.nim
+- Registered: nimtry_query.nim line 405
+- Scans tests/ for when isMainModule with whitelist
+
+### bin/fix-ismainmodule.py (NEW)
+- 47 test files detected (2 hybrid + 45 pure assert)
+- Pattern A: remove when isMainModule wrapper
+- Pattern B: assert→check conversion + unittest import
+- --dry-run / --execute modes
+
+### verifyTestExists macro (NEW)
+- Added to src/core/axiom_pragmas.nim
+- Compile-time test file existence check via gorge()
+- Warning-level (not error) for gradual adoption
+
+### bin/generate-pbt-tests (MODIFIED)
+- Replaced discard stubs with default(T) + minimal assertion
+- 364 PBT dump files regenerated with default(T) pattern
+- Forces developers to write meaningful tests
+
+## Compilation Verification
+```
+$ nim c --hints:off src/core/axiom_pragmas.nim        → PASS (0 errors)
+$ nim c --hints:off src/core/constants.nim            → PASS
+$ nim c --hints:off src/core/the_judge_lean.nim       → PASS
+```
+
+## Git Diff Summary
+```
+ 370 files changed, 8314 insertions(+), 10004 deletions(-)
+ bin/refactor-domain              | rewritten (declarative registry)
+ bin/fix-ismainmodule.py          | NEW (47 files auto-convertible)
+ bin/generate-pbt-tests           | modified (discard → default(T))
+ src/core/axiom_pragmas.nim       | +25 (verifyTestExists macro)
+ src/core/domain_layout.json      | +200 (v2.0 with import_path)
+ src/core/constants.nim           | +1 (leanFieldParseWindow)
+ src/core/the_judge_lean.nim      | +3 (use constant)
+ docs/spec/pbt_policy.md          | -21 (dead refs removed)
+ docs/spec/solver_infrastructure_spec.md | +46 (fixedpoint section)
+ 360 PBT dump files               | regenerated (default(T) pattern)
+```
+
+═══════════════════════════════════════════════════
+[HISTORICAL NOTE] `bin/refactor-domain` was deleted 2026-07-07 per Language Ban (§0.2). This log is preserved as historical audit evidence; the tool no longer exists.

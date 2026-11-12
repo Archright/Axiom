@@ -1,0 +1,29 @@
+{
+  "charon": {
+    "measured": "0.1.281 (798016509139eb51f0d764645f76d068d34ba5f6)",
+    "ok": true,
+    "pinned": "0.1.281 (798016509139eb51f0d764645f76d068d34ba5f6)",
+    "reason": ""
+  },
+  "schemaVersion": "axiom.report.v1",
+  "subjectLane": "rust",
+  "summary": {
+    "failedCount": 0,
+    "statusCounts": {
+      "error": 0,
+      "failed": 0,
+      "unknown": 1,
+      "verified": 0
+    },
+    "timeoutCount": 0,
+    "verified": 0,
+    "verifiedRatio": 0.0
+  },
+  "targets": [
+    {
+      "name": "serde_json::error::parse_line_col",
+      "reason": "producer: LLBC files table pre-validation failed: files[1]: absolute path '.4/experiments/serde-json-claim-2026-10-31/state_d2/.axiom/rust-lane/1398235db249fc8b/charon-target/x86_64-unknown-linux-gnu/debug/build/serde_json/8b65d3d27583c0f0/out/private.rs' (subject-relative POSIX path required)",
+      "status": "unknown"
+    }
+  ]
+}

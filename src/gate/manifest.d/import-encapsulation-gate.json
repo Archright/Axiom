@@ -1,0 +1,20 @@
+{
+  "id": "import-encapsulation-gate",
+  "name": "Axiom import encapsulation gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/import_encapsulation_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/",
+  "passFilenames": true,
+  "weight": "medium",
+  "category": "policy",
+  "argsTemplate": [
+    "$repoRoot",
+    "$mode",
+    "$maxJobs"
+  ],
+  "severity": "error",
+  "execution_mode": "interpreted"
+}

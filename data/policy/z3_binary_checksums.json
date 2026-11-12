@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "description": "Pinned Z3 binary sha256 checksums (certification-continuity INV-10). Kernel re-execution (src/verification/kernel_reexecution.nim) requires the ACTUAL z3 binary to match an entry here; mismatch or missing binary → krZ3Error, fail-closed. Versions are engineering pins (determinism by content), not guarantees.",
+  "versions": {
+    "4.13.3": "4c13bd5b2526453ba7f88ffd852bbaec80a8132638cbe60ed3463dbc98952711"
+  }
+}

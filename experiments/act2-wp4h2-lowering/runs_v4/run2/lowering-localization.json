@@ -1,0 +1,100 @@
+{
+  "experimentId": "act2-wp4h2-lowering-localization",
+  "phase": "ACT-2.3/WP4-h-2",
+  "subjectRoot": "<workspace>/nim-stew-clean-c75502c",
+  "subjectRevision": "c75502ceedb5ed2a37b7b5e4744fc71313682859",
+  "toolchainIdentity": "Nim 2.2.10",
+  "fileParseFailures": [],
+  "targets": [
+    {
+      "target": "stew/base36.nim::decodedLength",
+      "irAvailable": true,
+      "irError": "",
+      "ogrKind": "ogrGenerated",
+      "canonicalObligations": [
+        {
+          "kind": "okSafetyDiv",
+          "subject": "unknown ≠ 0",
+          "predicate": "uoNot(boEq(lit(0),var(unknown)))",
+          "predicateNonEmpty": true,
+          "derivationRule": "obs:division",
+          "provenance": "generated:decodedLength:obs:division"
+        }
+      ],
+      "canonicalObligationCount": 1,
+      "preConditionsBeforeSynth": 0,
+      "postConditionsBeforeSynth": 0,
+      "preConditionsAfterSynth": 1,
+      "postConditionsAfterSynth": 0,
+      "productionSmtLen": 0,
+      "productionSmtEmpty": true,
+      "loweringSmtLen": 101,
+      "loweringSmtEmpty": false,
+      "loweringSmt": "(set-logic QF_BV)\n(set-option :rlimit 30000000)\n(assert uoNot(boEq(lit(0),var(unknown))))\n(check-sat)",
+      "loweringSmtIsZ3Valid": false,
+      "nonSmtLib2OperatorsInSmt": [
+        "uoNot",
+        "boEq",
+        "lit(",
+        "var("
+      ],
+      "canonicalPredicateReverseParse": [
+        {
+          "predicate": "uoNot(boEq(lit(0),var(unknown)))",
+          "reverseParsed": false,
+          "fullyConsumed": false,
+          "consumedPrefix": ""
+        }
+      ],
+      "classification": "A2-script-pocketed-but-not-z3-executable-no-term-lowering",
+      "probeType": "wp4h2-lowering-localization",
+      "notCanonicalExecutionPath": true,
+      "notProductionAPI": true
+    },
+    {
+      "target": "stew/bitops2.nim::getBitsBE",
+      "irAvailable": true,
+      "irError": "",
+      "ogrKind": "ogrGenerated",
+      "canonicalObligations": [
+        {
+          "kind": "okSafetyDiv",
+          "subject": "resultBits ≠ 0",
+          "predicate": "uoNot(boEq(lit(0),var(resultBits)))",
+          "predicateNonEmpty": true,
+          "derivationRule": "obs:division",
+          "provenance": "generated:getBitsBE:obs:division"
+        }
+      ],
+      "canonicalObligationCount": 1,
+      "preConditionsBeforeSynth": 0,
+      "postConditionsBeforeSynth": 0,
+      "preConditionsAfterSynth": 1,
+      "postConditionsAfterSynth": 0,
+      "productionSmtLen": 0,
+      "productionSmtEmpty": true,
+      "loweringSmtLen": 104,
+      "loweringSmtEmpty": false,
+      "loweringSmt": "(set-logic QF_BV)\n(set-option :rlimit 30000000)\n(assert uoNot(boEq(lit(0),var(resultBits))))\n(check-sat)",
+      "loweringSmtIsZ3Valid": false,
+      "nonSmtLib2OperatorsInSmt": [
+        "uoNot",
+        "boEq",
+        "lit(",
+        "var("
+      ],
+      "canonicalPredicateReverseParse": [
+        {
+          "predicate": "uoNot(boEq(lit(0),var(resultBits)))",
+          "reverseParsed": false,
+          "fullyConsumed": false,
+          "consumedPrefix": ""
+        }
+      ],
+      "classification": "A2-script-pocketed-but-not-z3-executable-no-term-lowering",
+      "probeType": "wp4h2-lowering-localization",
+      "notCanonicalExecutionPath": true,
+      "notProductionAPI": true
+    }
+  ]
+}

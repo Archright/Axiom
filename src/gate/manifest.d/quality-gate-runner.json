@@ -1,0 +1,15 @@
+{
+  "id": "quality-gate-runner",
+  "name": "Axiom quality gate runner",
+  "layer": "functional",
+  "entry": "src/gate/runners/quality_gate_runner",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/",
+  "passFilenames": true,
+  "weight": "medium",
+  "category": "rule",
+  "severity": "error",
+  "execution_mode": "interpreted"
+}

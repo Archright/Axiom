@@ -1,0 +1,214 @@
+[
+  {
+    "id": "sloc-001",
+    "fixture": "proc f() =\n  result = 1\n  discard\n  discard",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected": 4,
+    "policy": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "sloc-002",
+    "fixture": "proc f() =\n  # comment\n  result = 1",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected": 2,
+    "policy": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "sloc-003",
+    "fixture": "proc f() =\n  ## doc comment\n  result = 1",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected": 2,
+    "policy": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "sloc-004",
+    "fixture": "proc f() =\n\n  result = 1",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected": 2,
+    "policy": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "sloc-005",
+    "fixture": "let x = \"\"\"\n  hello\n  world\n\"\"\"",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected": 4,
+    "policy": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "sloc-006",
+    "fixture": "{.warning: \"test\".}\ndiscard",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected": 2,
+    "policy": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "sloc-007",
+    "fixture": "proc f() =\n  #[ nested #[ comment ]# ]#\n  result = 1",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected": 2,
+    "policy": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "sloc-008",
+    "fixture": "proc f() =\n  discard",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected": 2,
+    "policy": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "sloc-009",
+    "fixture": "proc f() =  # inline comment\n  result = 1",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected": 2,
+    "policy": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "sloc-010",
+    "fixture": "let x = 1; let y = 2",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected": 1,
+    "policy": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "sloc-011",
+    "fixture": "when true:\n  discard\nwhen false:\n  discard",
+    "metric": "sourceSloc",
+    "context": null,
+    "expected": 4,
+    "policy": [
+      "SLOC-PROC-DECL"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "sloc-012",
+    "fixture": "when true:\n  discard\nwhen false:\n  discard",
+    "metric": "effectiveSloc",
+    "context": null,
+    "expected": 2,
+    "policy": [
+      "SLOC-WHEN-TIER1"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "sloc-013",
+    "fixture": "when true:\n  discard\nelse:\n  discard",
+    "metric": "effectiveSloc",
+    "context": null,
+    "expected": 2,
+    "policy": [
+      "SLOC-WHEN-TIER1"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "sloc-014",
+    "fixture": "when false:\n  discard\nelse:\n  discard",
+    "metric": "effectiveSloc",
+    "context": null,
+    "expected": 1,
+    "policy": [
+      "SLOC-WHEN-TIER1"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "sloc-016",
+    "fixture": "when defined(posix):\n  discard\nelse:\n  discard",
+    "metric": "effectiveSloc",
+    "context": {
+      "defines": {
+        "knownDefined": [
+          "posix"
+        ],
+        "knownUndefined": []
+      },
+      "targetOS": null,
+      "targetCPU": null,
+      "compileOptions": []
+    },
+    "expected": 2,
+    "policy": [
+      "SLOC-WHEN-CONTEXT"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  },
+  {
+    "id": "sloc-017",
+    "fixture": "when windows:\n  discard\nelse:\n  discard",
+    "metric": "effectiveSloc",
+    "context": {
+      "defines": {
+        "knownDefined": [],
+        "knownUndefined": []
+      },
+      "targetOS": null,
+      "targetCPU": null,
+      "compileOptions": []
+    },
+    "expected": {
+      "error": "urMissingSemanticContext"
+    },
+    "policy": [
+      "SLOC-WHEN-UNKNOWN"
+    ],
+    "ratified_policy_version": "effective-sloc-policy-v1",
+    "ratified_at": "2026-08-12"
+  }
+]

@@ -1,0 +1,11 @@
+# Legacy files that use 'when isMainModule' outside the I/O boundary.
+# These are tracked for migration. New files MUST NOT be added here.
+# Enforced by: src/gate/nimtry/forbidden_patterns.nim (SAFETY-no-main-module-in-src)
+src/core/telemetry/trace_normalizer.nim
+src/core/parsers/tree_sitter_ffi.nim
+src/core/audit/governance_engine.nim
+src/core/audit/hotspot_gate.nim
+src/core/test_support/export_injector.nim
+src/core/test_support/sandbox_guard.nim
+src/core/utils/parallel_utils.nim
+src/verification/spacer_chc_router.nim

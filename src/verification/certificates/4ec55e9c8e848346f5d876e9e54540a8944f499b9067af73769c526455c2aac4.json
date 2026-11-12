@@ -1,0 +1,63 @@
+{
+"attestation": {
+"algorithm": "Ed25519",
+"authority": "axiom",
+"claimDigest": "sha256:06f5d046f07187baa2c4dc69ff3ad7b76e95f66dfd2babee89b4476cc23f0930",
+"journalRef": "25fcd7a16875c59fea8cc97dbbd10c3bd22bea4166bdb52e8dab61eee01a7a40",
+"policyVersion": "axiom.certificate.v3",
+"publicKeyId": "sha256:9a17da4859fa2ee34a5b349c1ee8dabb8e116e8f612c9cfa4f836da8a9337f37",
+"signature": "0be87752a54339b04802c6d66bfb40aa0eca5ad520f3978b691b323a92667e6bc1a5dd42df38b76961413c531e4a5116337955e59711d91f42964269ea07de01"
+},
+"claim": {
+"functionName": "safeSpeedupRatioCore",
+"modulePath": "src/core/orchestrator/orchestrator_vault.nim",
+"status": "certZ3Candidate",
+"type": "verification"
+},
+"fingerprint": "4f4247e069162341d944d6bad408241b6328ec33c2360bce4762a00a66c55a9c",
+"functionName": "safeSpeedupRatioCore",
+"identityDigest": "0f96d1d4489a073a219c44657464c4122b9d1ef7f1f7a4a2aa72f4b4287cb082",
+"inputHash": "sha256:97ce588c6ec6172b28f70466b2a9c7aed7d56ad68fafff2d4c3e3d84cc2d7395",
+"irHash": "4ec55e9c8e848346f5d876e9e54540a8944f499b9067af73769c526455c2aac4",
+"kernel": true,
+"leanProposition": "",
+"modulePath": "src/core/orchestrator/orchestrator_vault.nim",
+"provenance": {
+"certificateDigest": "0f96d1d4489a073a219c44657464c4122b9d1ef7f1f7a4a2aa72f4b4287cb082",
+"journalCommitId": "25fcd7a16875c59fea8cc97dbbd10c3bd22bea4166bdb52e8dab61eee01a7a40"
+},
+"reason": "reclassified:migration certZ3Verified→certZ3Candidate (C0.4)",
+"schemaVersion": "axiom.certificate.v3",
+"smtlib2": "(set-logic QF_BV)\n(set-option :rlimit 30000000)\n(define-fun no_overflow_add ((a (_ BitVec 64)) (b (_ BitVec 64))) Bool\n  (let ((sum (bvadd a b)))\n    (not (or\n      (and (bvsgt a #x0000000000000000) (bvsgt b #x0000000000000000) (bvslt sum #x0000000000000000))\n      (and (bvslt a #x0000000000000000) (bvslt b #x0000000000000000) (bvsgt sum #x0000000000000000))))))\n(define-fun no_underflow_add ((a (_ BitVec 64)) (b (_ BitVec 64))) Bool\n  (let ((sum (bvadd a b)))\n    (not (and (bvslt a #x0000000000000000) (bvslt b #x0000000000000000) (bvsgt sum #x0000000000000000)))))\n(define-fun no_overflow_mul ((_a (_ BitVec 64)) (_b (_ BitVec 64))) Bool\n  (let ((p (bvmul _a _b)))\n    (and (or (= _a #x0000000000000000) (= _b #x0000000000000000) (= (bvsdiv p _a) _b))\n         (not (and (= _a #x8000000000000000) (= _b #xFFFFFFFFFFFFFFFF)))\n         (not (and (= _a #xFFFFFFFFFFFFFFFF) (= _b #x8000000000000000))))))\n(define-fun no_underflow_mul ((_a (_ BitVec 64)) (_b (_ BitVec 64))) Bool\n  (let ((p (bvmul _a _b)))\n    (and (or (= _a #x0000000000000000) (= _b #x0000000000000000) (= (bvsdiv p _a) _b))\n         (not (and (= _a #x8000000000000000) (= _b #xFFFFFFFFFFFFFFFF)))\n         (not (and (= _a #xFFFFFFFFFFFFFFFF) (= _b #x8000000000000000))))))\n(define-fun no_overflow_sub ((a (_ BitVec 64)) (b (_ BitVec 64))) Bool\n  (let ((diff (bvsub a b)))\n    (not (and (bvsgt a #x0000000000000000) (bvslt b #x0000000000000000) (bvslt diff #x0000000000000000)))))\n(define-fun no_underflow_sub ((a (_ BitVec 64)) (b (_ BitVec 64))) Bool\n  (let ((diff (bvsub a b)))\n    (not (and (bvslt a #x0000000000000000) (bvsgt b #x0000000000000000) (bvsgt diff #x0000000000000000)))))\n(declare-fun serialBaselineMs () (_ BitVec 64))\n(declare-fun wallMs () (_ BitVec 64))\n(define-fun safeSpeedupRatioCore_impl ((serialBaselineMs (_ BitVec 64)) (wallMs (_ BitVec 64))) (_ BitVec 64)\n  (ite (or (bvsle wallMs #x0000000000000000) (bvsle serialBaselineMs #x0000000000000000)) #x0000000000000064 (ite (bvslt (bvsdiv (bvmul serialBaselineMs #x0000000000000064) wallMs) #x0000000000000064) #x0000000000000064 (bvsdiv (bvmul serialBaselineMs #x0000000000000064) wallMs))))\n(assert (not (= wallMs #x0000000000000000)))\n(assert (not (= wallMs #x0000000000000000)))\n(assert (let ((result (safeSpeedupRatioCore_impl serialBaselineMs wallMs))) (not (bvsge result #x0000000000000064))))\n(check-sat)",
+"solverInputDigest": "sha256:27519214f2302a4051d677390f53060b7e87adbb8a5c0e2a8508cf78cb7578e8",
+"solverInvocation": {
+"engine": "z3",
+"mode": "none",
+"strategy": "none",
+"version": "4.13.3"
+},
+"solverMeta": {
+"leanCompilerVerified": false,
+"negativeTestResult": false,
+"solverProvenance": "spZ3SAT",
+"solverVersion": "4.13.3",
+"vacuityChecked": true,
+"vacuityProven": false,
+"z3Executed": true
+},
+"solverResultDigest": "sha256:09c537c49d87bbafcaad8f16060f009227ac912881bb5fc7d8e7eee374cfda06",
+"solverStatus": "unsat",
+"sourceHash": "33c6637a960e58c420d593c5fc302bae685ae7028ac070180befa773f3dc6d7c",
+"status": "certZ3Candidate",
+"toolchainIdentity": {
+"axiomVersion": "v0.3.7",
+"lean": "4.29.0",
+"nim": "2.2.10",
+"z3": "4.13.3"
+},
+"translationVersion": "axiom-ir-smt-v1",
+"trustCommitId": "25fcd7a16875c59fea8cc97dbbd10c3bd22bea4166bdb52e8dab61eee01a7a40",
+"trusted": true,
+"verificationTier": "z3-verified",
+"winningStrategy": "none"
+}

@@ -1,0 +1,51 @@
+{
+ "report": "promotion_a_v2",
+ "status": "PARTIAL — Projection equality PARTIAL (5/9 claimable EQUAL, 4 fail-closed not-claimed), other gates PASS; ci.yml enforce pending human architect approval",
+ "generatedAt": "2026-09-06",
+ "headCommit": "$(git rev-parse HEAD)",
+ "invariants": {
+  "I-A_RunInputSnapshotDigest": {
+   "implementation": "runInputSnapshotDigest (selection_digests.nim) — inputs only",
+   "verified": "r8d_shadow_determinism_v2: identical across state dirs"
+  },
+  "I-B_RunResultDigest": {
+   "implementation": "runResultDigest — post-execution only",
+   "verified": "r8d v2 identical"
+  },
+  "I-C_ClosureComplete": {
+   "implementation": "closure loop in runProofPipeline (wave loop + attempted-set) + computeRequiredRequestsFull (independent oracle) + evaluateClosureCompleteness + blocked_by evidence dispositions + universe-freshness guard",
+   "verified": "smoke: 2 waves, exit 0, closure fields honest (uncompletedRequired=11 kernel-scoped); closure_evaluation_test 4/4 green"
+  },
+  "I-D_CacheHit": {
+   "implementation": "certificateAccepted v2+ path + loadVerifiedAxioms validate current source fingerprint",
+   "verified": "verified_set_hydration_test 5/5 green incl I-D stale rejection"
+  },
+  "I-E_IdentityDomains": {
+   "implementation": "executionIdentity unchanged; run-level digests separate",
+   "verified": "selection_digests_test 8/8 green (independence)"
+  }
+ },
+ "normalSafety": {
+  "independent_completeness": "PASS — computeRequiredRequestsFull selector-independent + bidirectional checkCompleteness + basis validation (request_oracle_full_test 15/15)",
+  "five_set_consistency": "PASS — Selection=9 Requested=9 (r8b5), Pruned started=9, Full closure waves=2",
+  "request_derivation_determinism": "PASS — deriveRequests_determinism + oracle determinism",
+  "projection_equality": "PARTIAL — r8b3_projection_evidence: equal=5/9 (incl proximityScore rvFail==rvFail), notClaimed=4 (dependency-blocked, fail-closed, honest)",
+  "shadow_determinism": "PASS — r8d v2: 7 digests IDENTICAL (incl runInputSnapshot/runResult, closureComplete)"
+ },
+ "adversarialFailClosed": {
+  "r8c_eight_cases": "PASS — r8c_adversarial_evidence.json (committed, real observed)",
+  "uncertainty_to_full": "PASS — selection_engine umFull on fallback",
+  "integrity_to_reject": "PASS — verifyPlanDigest fail → reject before execution; partial=0 (rollback test)",
+  "exit_codes": "g7 aligned — computeReportExitCode now follows product contract (no_obligation+no-fail → exit 0) per 811a3dbfa"
+ },
+ "c3b_economics": "r9_c3b_n20.json — N=20 paired counterbalanced median speedup 1.186x (20/20>1); re-measure under closure-complete Full deferred until projection gate closes (architect-consistent)",
+ "blocker": {
+  "gate": "Projection equality",
+  "status": "PARTIAL — 4/9 full-side UNOBSERVABLE (dependency-chain blocked by failed prereqs); blocked_by dispositions exist in closure evaluation but harness equality treats them fail-closed",
+  "boundary": "Full-side coverage of dependency-blocked units remains limited; resolution = architect decision on blocked_by-justified projection counting OR full-scope failure semantics"
+ },
+ "governance": {
+  "phase_b_approval": "PENDING",
+  "ci_yml": "UNCHANGED (§-1 — never touched)"
+ }
+}

@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/auto_convert_proc_to_func.py",
+  "description": "Compiler-Driven proc-to-func Auto-Conversion Pipeline — deterministic, fault-tolerant pipeline that converts proc to func based on compiler effect analysis",
+  "inputSample": {
+    "args": ["--dry-run"]
+  },
+  "outputSample": {
+    "stdout": "auto_convert: 5 procs eligible, 0 would be converted (dry-run, all pass compiler check)",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

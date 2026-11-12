@@ -1,0 +1,226 @@
+{
+ "schemaVersion": 1,
+ "invariantId": "R5",
+ "repoIdentity": {
+  "head": "ba773d0631b5757525b16d8fd62e220492e98e76",
+  "branch": "chore/r2-r8-snapshot-regen",
+  "workingTreeClean": true,
+  "treeDigest": "5a6f99db4cd26f6a5d365e29c60b378f52bc11b04126efe05757c76ee0f80bae"
+ },
+ "toolchain": {
+  "nim": "2.2.10",
+  "z3": "4.13.3",
+  "lean": "leanprover/lean4:v4.33.0"
+ },
+ "collection": {
+  "collector": "readiness-regen-2026-10-13-r2-r8",
+  "method": "manual",
+  "generatedAt": "2026-10-13T09:08:36Z",
+  "freshUntil": "2026-11-12T09:08:36Z"
+ },
+ "observations": [
+  {
+   "key": "commandExists",
+   "value": true,
+   "scope": "surface",
+   "subject": "ax prove"
+  },
+  {
+   "key": "commandExists",
+   "value": true,
+   "scope": "surface",
+   "subject": "ax report"
+  },
+  {
+   "key": "helpSurface",
+   "value": true,
+   "scope": "surface",
+   "subject": "ax prove"
+  },
+  {
+   "key": "helpSurface",
+   "value": true,
+   "scope": "surface",
+   "subject": "ax report"
+  },
+  {
+   "key": "successExitCode",
+   "value": 0,
+   "scope": "observed",
+   "subject": "ax prove"
+  },
+  {
+   "key": "successExitCode",
+   "value": 0,
+   "scope": "observed",
+   "subject": "ax report"
+  },
+  {
+   "key": "verificationFailureExitCode",
+   "value": 1,
+   "scope": "contract",
+   "subject": "ax prove"
+  },
+  {
+   "key": "verificationFailureExitCode",
+   "value": 1,
+   "scope": "contract",
+   "subject": "ax report"
+  },
+  {
+   "key": "invalidInputExitCode",
+   "value": 3,
+   "scope": "observed",
+   "subject": "ax prove"
+  },
+  {
+   "key": "invalidInputExitCode",
+   "value": 3,
+   "scope": "contract",
+   "subject": "ax report"
+  },
+  {
+   "key": "internalErrorExitCode",
+   "value": 2,
+   "scope": "contract",
+   "subject": "ax prove"
+  },
+  {
+   "key": "internalErrorExitCode",
+   "value": 2,
+   "scope": "contract",
+   "subject": "ax report"
+  },
+  {
+   "key": "jsonSchemaVersion",
+   "value": "axiom.report.v1",
+   "scope": "surface",
+   "subject": "ax report --json stdout top-level schemaVersion"
+  },
+  {
+   "key": "stdoutStderrSplit",
+   "value": true,
+   "scope": "surface",
+   "subject": "usage/[INFO]/[ERROR] logger lines on stderr; JSON report and verdict on stdout; collector records separate stdoutDigest/stderrDigest per command"
+  },
+  {
+   "key": "probe_unknownOptionExit",
+   "value": 3,
+   "scope": "observed",
+   "subject": "ax prove --definitely-unknown-option-xyz -> '[ERROR] unknown option' on stderr, RC=3 (= policy INVALID_INPUT)"
+  },
+  {
+   "key": "probe_unknownSubcommandExit",
+   "value": 3,
+   "scope": "observed",
+   "subject": "ax garbage-subcommand-xyz -> RC=3 (= policy INVALID_INPUT)"
+  },
+  {
+   "key": "probe_reportUnknownFlagIgnored",
+   "value": 0,
+   "scope": "observed",
+   "subject": "ax report --definitely-unknown-flag -> report runs anyway, RC=0 (flag not validated; see R5-INC-002)"
+  },
+  {
+   "key": "probe_helpFlagExit",
+   "value": 0,
+   "scope": "observed",
+   "subject": "ax prove --help and ax report --help print usage (stderr) and exit 0 at this head"
+  },
+  {
+   "key": "probe_nonexistentTargetFallback",
+   "value": 0,
+   "scope": "observed",
+   "subject": "ax prove --target DefinitelyNonexistentSymbolXYZ -> logs 'not found in frontier', full frontier runs, RC=0 (documented fallback, R2 obs)"
+  }
+ ],
+ "incidents": [
+  {
+   "id": "R5-INC-001",
+   "severity": "info",
+   "summary": "exit-code contract aligned: invalid input exits 3 (= policy), H1 drift resolved",
+   "detail": "H1 audit observed RC=1 for unknown option/subcommand (drift vs policy 3=INVALID_INPUT). At ba773d0631 both probes exit 3, matching config/readiness_policy.json r5.exitCodeContract. Observed codes remain distinct from success (0)."
+  },
+  {
+   "id": "R5-INC-002",
+   "severity": "warning",
+   "summary": "ax report ignores unknown flags (exits 0)",
+   "detail": "ax report --definitely-unknown-flag runs the report and exits 0 — the report subject does not validate flags. Contract value 3 recorded at scope=contract from policy; no observed invalid-input actuation for this subject. First-slice work item."
+  },
+  {
+   "id": "R5-INC-003",
+   "severity": "info",
+   "summary": "verification-failure exit 1 not actuated in this collection",
+   "detail": "No observed command exited 1 at this head: prove exits 0 with Fail:3 in summary (failure means not-verified, not process failure); report exits 0 with verifiedRatio=0.0. Contract value 1 recorded from policy r5.exitCodeContract with policy provenance; not observed at runtime in this pass."
+  },
+  {
+   "id": "R5-INC-004",
+   "severity": "info",
+   "summary": "ax status not implemented (unchanged from H1)",
+   "detail": "CLI help surface has no ax status. Recorded as first-slice work item; not part of current contractCommands."
+  }
+ ],
+ "sources": [
+  {
+   "file": "config/readiness_policy.json",
+   "lines": "252-270",
+   "symbol": "r5 contractCommands/exitCodeContract",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76"
+  },
+  {
+   "file": "src/cli/action_interpreter_cli.nim",
+   "symbol": "usage/help surface",
+   "sha256": "live",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76",
+   "lines": "entry"
+  },
+  {
+   "file": "docs/spec/productization_contract.md",
+   "symbol": "primary commands",
+   "sha256": "live",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76",
+   "lines": "primary commands"
+  },
+  {
+   "file": "tmp/r3_report1.out",
+   "symbol": "ax report --json stdout (schemaVersion axiom.report.v1)",
+   "sha256": "436ade3522dd6329aaa1ada3a2069d4c38b3b63d3edac981c02ff0d04d1b7a56",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76"
+  }
+ ],
+ "commands": [
+  {
+   "cmd": "./bin/ax help (usage listing; usage text on stderr)",
+   "exitCode": 0
+  },
+  {
+   "cmd": "./bin/ax prove --help (usage listing)",
+   "exitCode": 0
+  },
+  {
+   "cmd": "./bin/ax report --help (usage listing)",
+   "exitCode": 0
+  },
+  {
+   "cmd": "./bin/ax prove --definitely-unknown-option-xyz",
+   "exitCode": 3
+  },
+  {
+   "cmd": "./bin/ax garbage-subcommand-xyz",
+   "exitCode": 3
+  },
+  {
+   "cmd": "./bin/ax report --definitely-unknown-flag",
+   "exitCode": 0
+  },
+  {
+   "cmd": "./bin/ax prove --target normalizeMaxWorkers (R2 positive; success actuation)",
+   "exitCode": 0
+  },
+  {
+   "cmd": "./bin/ax report --json (R3 run1; success actuation)",
+   "exitCode": 0
+  }
+ ],
+ "invariantName": "CLI Contract"
+}

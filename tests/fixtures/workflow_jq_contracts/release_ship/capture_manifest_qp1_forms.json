@@ -1,0 +1,39 @@
+{
+  "kind": "q-p1-paginate-form-contract-fixture-set",
+  "description": "Fixture subset for the Q-P1 form-agnostic `gh api --paginate` contract (test_workflow_jq_contracts.sh section 8, 2026-11-02 — strict-append group; the release-ship freeze contract group above keeps its own capture_manifest_release_ship.json). Q-P1 closure contract: the consumer must accept BOTH observed valid output shapes with byte-identical verdicts and fail closed on every other shape; a gh version pin is rejected as avoidance (see docs/spec/gh_api_paginate_output_quirks.md Q-P1 closure, 2026-11-02).",
+  "shapes": {
+    "merged_single_array": {
+      "file": "rel_releases_merged_multipage_form.json",
+      "derivation": "jq -s 'add' rel_releases_two_page_p1.json rel_releases_two_page_p2.json (deterministic over the committed two-page fixtures — one array document containing all 3 rows v0.5.4/v0.5.5/v0.5.6)",
+      "basis": "[measured 2026-11-02, gh 2.102.0] page-merged single-array output on top-level-array endpoints (docs/spec/ci_provider_failover_quirks.md Q19: repos/cli/cli/tags 210 tags / 3 pages -> jq saw exactly 1 document; repos/Archright/Axiom/releases single page -> verbatim one array doc). UNDOCUMENTED behavior: the official manual wording says pages arrive separate — this fixture pins the observed merged form as a first-class consumer input."
+    },
+    "concatenated_documents": {
+      "files": ["rel_releases_two_page_p1.json", "rel_releases_two_page_p2.json"],
+      "basis": "[documented] gh CLI manual / source (cli/cli pkg/cmd/api/api.go `gh api` Long help, retrieved via Context7 /cli/cli 2026-11-02): \"In --paginate mode, all pages of results will sequentially be requested until there are no more pages of results. Each page is a separate JSON array or object. Pass --slurp to wrap all pages of JSON arrays or objects into an outer JSON array.\" — the two-document stream is the documented shape the consumer must also accept."
+    },
+    "measured_single_empty_array": {
+      "file": "rel_releases_p1_2026-11-02.json",
+      "basis": "[measured 2026-11-02] verbatim live capture, 0 releases -> one empty array document (reused from the release-ship group; not modified)"
+    },
+    "negative_controls": [
+      {
+        "file": "rel_releases_nonarray_doc.json",
+        "why": "non-array document (error-envelope field set) in the stream -> consumer ⑥ program must exit non-zero (fail-closed), never emit a count"
+      },
+      {
+        "file": "rel_releases_garbage_stream.txt",
+        "why": "truncated JSON document (transport-truncation class, test-owned input: '{\"total_count\":') -> jq parse error -> non-zero exit (fail-closed)"
+      }
+    ]
+  },
+  "context7_retrieval": {
+    "library_id": "/cli/cli",
+    "source": "pkg/cmd/api/api.go, gh api Long help (trunk, retrieved 2026-11-02)",
+    "quote": "In --paginate mode, all pages of results will sequentially be requested until there are no more pages of results. Each page is a separate JSON array or object. Pass --slurp to wrap all pages of JSON arrays or objects into an outer JSON array.",
+    "implementation_facts": [
+      "the --jq filter is applied to EACH page's responseBody inside the pagination loop (processResponse; source TODO 'reuse parsed query across pagination invocations' confirms per-page evaluation) — --jq consumption is therefore shape-immune for per-page document enumeration",
+      "--jq is mutually exclusive with --slurp (api.go); the consumer-side `jq -s` over the raw --paginate stream is the client-side equivalent of the official --slurp normalization"
+    ]
+  },
+  "determinism": "All fixtures are committed static files; the harness performs zero network calls. The ⑥/⑦ jq programs under test are extracted from the LIVE release-ship.yml at run time by the release-ship group's fail-closed extraction (section 6a) and reused by section 8 — a workflow revert or relocation fails closed before section 8 executes."
+}

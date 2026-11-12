@@ -1,0 +1,186 @@
+[
+  {
+    "name": "ar_archive_writer",
+    "version": "0.5.3"
+  },
+  {
+    "name": "automod",
+    "version": "1.0.17"
+  },
+  {
+    "name": "cc",
+    "version": "1.10.0"
+  },
+  {
+    "name": "cfg-if",
+    "version": "1.0.5"
+  },
+  {
+    "name": "dissimilar",
+    "version": "1.0.11"
+  },
+  {
+    "name": "equivalent",
+    "version": "1.0.3"
+  },
+  {
+    "name": "find-msvc-tools",
+    "version": "0.1.15"
+  },
+  {
+    "name": "glob",
+    "version": "0.3.4"
+  },
+  {
+    "name": "hashbrown",
+    "version": "0.17.1"
+  },
+  {
+    "name": "indexmap",
+    "version": "2.14.2"
+  },
+  {
+    "name": "indoc",
+    "version": "2.0.8"
+  },
+  {
+    "name": "itoa",
+    "version": "1.0.18"
+  },
+  {
+    "name": "libc",
+    "version": "0.2.191"
+  },
+  {
+    "name": "memchr",
+    "version": "2.8.3"
+  },
+  {
+    "name": "object",
+    "version": "0.39.1"
+  },
+  {
+    "name": "proc-macro2",
+    "version": "1.0.107"
+  },
+  {
+    "name": "psm",
+    "version": "0.1.32"
+  },
+  {
+    "name": "quote",
+    "version": "1.0.47"
+  },
+  {
+    "name": "ref-cast",
+    "version": "1.0.27"
+  },
+  {
+    "name": "ref-cast-impl",
+    "version": "1.0.27"
+  },
+  {
+    "name": "rustversion",
+    "version": "1.0.23"
+  },
+  {
+    "name": "serde",
+    "version": "1.0.229"
+  },
+  {
+    "name": "serde_bytes",
+    "version": "0.11.19"
+  },
+  {
+    "name": "serde_core",
+    "version": "1.0.229"
+  },
+  {
+    "name": "serde_derive",
+    "version": "1.0.229"
+  },
+  {
+    "name": "serde_json",
+    "version": "1.0.154"
+  },
+  {
+    "name": "serde_json",
+    "version": "1.0.154"
+  },
+  {
+    "name": "serde_spanned",
+    "version": "1.1.2"
+  },
+  {
+    "name": "serde_stacker",
+    "version": "0.1.14"
+  },
+  {
+    "name": "shlex",
+    "version": "2.0.1"
+  },
+  {
+    "name": "stacker",
+    "version": "0.1.25"
+  },
+  {
+    "name": "syn",
+    "version": "2.0.119"
+  },
+  {
+    "name": "syn",
+    "version": "3.0.9"
+  },
+  {
+    "name": "target-tuple",
+    "version": "1.0.2"
+  },
+  {
+    "name": "termcolor",
+    "version": "1.4.1"
+  },
+  {
+    "name": "toml",
+    "version": "1.1.8+spec-1.1.0"
+  },
+  {
+    "name": "toml_datetime",
+    "version": "1.1.2+spec-1.1.0"
+  },
+  {
+    "name": "toml_parser",
+    "version": "1.1.5+spec-1.1.0"
+  },
+  {
+    "name": "toml_writer",
+    "version": "1.1.3+spec-1.1.0"
+  },
+  {
+    "name": "trybuild",
+    "version": "1.0.122"
+  },
+  {
+    "name": "unicode-ident",
+    "version": "1.0.27"
+  },
+  {
+    "name": "winapi-util",
+    "version": "0.1.11"
+  },
+  {
+    "name": "windows-link",
+    "version": "0.2.1"
+  },
+  {
+    "name": "windows-sys",
+    "version": "0.61.2"
+  },
+  {
+    "name": "winnow",
+    "version": "1.0.4"
+  },
+  {
+    "name": "zmij",
+    "version": "1.0.23"
+  }
+]

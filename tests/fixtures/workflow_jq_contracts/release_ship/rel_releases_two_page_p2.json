@@ -1,0 +1,27 @@
+[
+  {
+    "url": "https://api.github.com/repos/Archright/Axiom/releases/200003",
+    "html_url": "https://github.com/Archright/Axiom/releases/tag/v0.5.6",
+    "assets_url": "https://api.github.com/repos/Archright/Axiom/releases/200003/assets",
+    "upload_url": "https://uploads.github.com/repos/Archright/Axiom/releases/200003/assets{?name,label}",
+    "tarball_url": "https://api.github.com/repos/Archright/Axiom/tarball/v0.5.6",
+    "zipball_url": "https://api.github.com/repos/Archright/Axiom/zipball/v0.5.6",
+    "id": 200003,
+    "node_id": "RE_relship_fixture_p2_row1",
+    "tag_name": "v0.5.6",
+    "target_commitish": "main",
+    "name": "v0.5.6",
+    "body": "Axiom v0.5.6 (fixture row — page-2 row the freeze ⑥ contract must still see)",
+    "draft": false,
+    "prerelease": false,
+    "created_at": "2026-11-02T00:00:00Z",
+    "published_at": "2026-11-02T00:00:00Z",
+    "author": {
+      "login": "wintrover",
+      "id": 53123826,
+      "node_id": "MDQ6VXNlcnk1MzEyMzgyNg==",
+      "type": "User",
+      "site_admin": false
+    }
+  }
+]

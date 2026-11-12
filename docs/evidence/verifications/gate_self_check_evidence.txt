@@ -1,0 +1,8 @@
+# Axiom Evidence Receipt
+# Generated: 2026-05-26T04:55:59.398793+00:00
+# HEAD: 1d767f9e164ecd6a45c3b387b50c44a81a7ddd0a
+# Result: ALL_VERIFIED
+# Signature: sha256:519028caf1f7c958
+---
+VERIFY[0]: nim check ./src/gate/runners/gate_self_check.nim → PASS
+VERIFY[1]: nim c -o:./bin/gate_self_check ./src/gate/runners/gate_self_check.nim → PASS

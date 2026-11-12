@@ -1,0 +1,13 @@
+{
+  "id": "unstaged-guard",
+  "name": "Axiom unstaged guard",
+  "layer": "meta",
+  "entry": "src/gate/runners/unstaged_guard",
+  "stages": [
+    "manual"
+  ],
+  "passFilenames": false,
+  "weight": "light",
+  "category": "rule",
+  "severity": "error"
+}

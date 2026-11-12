@@ -1,0 +1,47 @@
+# callform/consumer_stickyshell.txt — call-site evidence for consumer stickyshell (xTrayambak/stickyshell)
+# Sources: followup/checkout_trio/report.md (C-series s0-s8 + decode-state probe),
+# followup/checkout_trio/raw/stickyshell/ (byte-recorded), pinned fresh clones 2026-10-12.
+
+consumer            = stickyshell (https://github.com/xTrayambak/stickyshell)
+consumer_commit     = df552203e55a287264d513d82e964199810a9b6d
+                      (master HEAD at fresh GitHub clone 2026-10-12; single-commit repo,
+                      "initial commit" 2024-09-15; local clone /tmp/checkout_trio/stickyshell)
+resolved_dep_commit = UNPINNED — NO LOCKFILE. Declares `requires "toml_serialization >= 0.2.12"`
+                      (stickyshell.nimble); resolution is floating. Experiment pinned the subject
+                      working tree 4aa8e2223649fc0837c490a4acfca7b8b1e756f9. Version-string
+                      instability applies verbatim: tag "0.2.18" = b5b387e6 also satisfies the
+                      range (see bsec/JUDGMENT.md §b5b387e6/4aa8e22 gap). The B-1 defect pair is
+                      present at both revisions.
+call_form           = src/sth.nim:8 (/etc branch when isAdmin()) and :12 (CWD branch):
+                      `Toml.decode(readFile(getCurrentDir() / "stickyshell.conf"), StickyshellOpts)`
+                      — UN-KEYED typed decode of
+                      StickyshellOpts{port, delay, maxLineLength, maxConcurrentClients: uint;
+                      customMessages: seq[string]} (src/stickyshell.nim:29-34).
+                      Config pickup: /etc/stickyshell.conf as root, else CWD stickyshell.conf
+                      -> untrusted-repo-checkout class confirmed.
+flags               = none (no flags argument at the call site)
+flavor              = bare `Toml` default flavor; B-1 facets are flavor-independent at the
+                      consumed revision (link_a_flavor: default flavor == Toml_v100
+                      byte-identical on these inputs).
+
+# Data model (verified 2026-10-12, followup/checkout_trio/report.md §2):
+#  - ALL 5 fields are plain overwrites with type defaults; no accumulation, no ordering
+#    sensitivity, no denylist, no cross-field coupling, no post-decode validation of
+#    unbound content. Downstream behavior is a pure function of the decoded value.
+#  - port -> bindAddr/listen (stickyshell.nim:258-265); delay -> banner schedule (:121,:191);
+#    maxLineLength -> random banner length (:63); maxConcurrentClients -> backlog+poll gate;
+#    customMessages -> banner source (empty -> random line, else sample()) (:62-83).
+#  - BUILD SCOPE: does not compile with Nim 2.2.10 (stickyshell.nim:203 passes an int var
+#    to posix poll's cint param; overload-resolution regression). Builds with Nim 2.0.8
+#    + the repo's own nim.cfg flag --deepCopy:on (-d:release so config values stay live).
+#    Declares nim >= 2.0.0.
+#
+# C-series (s0-s8, raw/stickyshell/): defect (i) dup port -> final document key dropped
+#  (customMessages=@[]), state BYTE-IDENTICAL to valid config without that line (s1==s1b
+#  decode-state; naive last-value contrast s2 DIFFERS). Dup on the FINAL field -> 2nd
+#  duplicate never read, first value wins, byte-identical to its valid witness (s3==s3b;
+#  naive s4 DIFFERS). Defect (ii) trailing skip: s5==s6==s8 byte-identical (invalid and
+#  valid-TOML trailing alike). Baseline s0: defaults -> non-root bind port 22 -> BindFailed
+#  (differs only via valid-config-controlled fields). Mechanism control s7: 4 fields +
+#  `!!!` -> (5,1) illegal character "!" TomlError, exit 1 (rejection channel fires).
+#  Verdict basis: NO-GO under R2 — no state outside the valid-config reachable set.

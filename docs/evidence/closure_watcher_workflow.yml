@@ -1,0 +1,201 @@
+# ─── 착지 대기 상태 (PARKED — S4' 감시자 본문) ─────────────────────────────
+# 이 파일은 .github/workflows/closure-watcher.yml 의 정확한 본문이다. 표면 정책
+# (config/repository_surface.json v72, FROZEN .github/**)이 신설을 차단하므로
+# 정책 2단계 선등록 절차(repository_surface_contract.md — v52~v72 선례)를 거쳐
+# 착지한다: (1) Owner의 v73 정책 PR이 .github/workflows/closure-watcher.yml 을
+# FROZEN→CONTROLLED 선등록 (정책 PR 자체는 문서화된 수용-risk push 경로 —
+# docs/spec/repository_surface_contract.md), (2) 본 슬라이스 후속 PR이 이 본문을
+# 동일 내용으로 .github/workflows/closure-watcher.yml 로 옮긴다.
+# 검증 완료: YAML 파싱·보간 토큰 0건(Q4)·내장 python 실측(정합 OK/변조 exit 1)·
+# 브랜치 HEAD Δ=∅. 착지 절차: docs/evidence/trust_root_reaudit_2026-10-10.md §7.3.
+# ───────────────────────────────────────────────────────────────────────────
+# closure-watcher — S4' 신뢰 루트 상시 감시자
+# 근거: docs/evidence/trust_root_reaudit_2026-10-10.md §7.3 + 승인 계획(2026-10-10) S4'
+#
+# 목적: main HEAD의 실측 검증기 closure(derive_checker_closure --ref HEAD)을
+# 핀(config/trusted_writer_set.json의 trustedCheckerTreeClosure)과 6시간마다
+# 재대조한다. 불일치 = (a) 핀 진부, (b) 트리 드리프트, (c) 정규 구멍 S1-C/D
+# (재감사 문서 §6 — pin 내용만 변조한 PR이 NORMAL로 착지하는 벡터)에 의한 핀
+# 변조. 세 경우 모두 동일 시그널이며, 본 워크플로는 fail-closed(exit 1)로
+# 적색이 되고 추적 이슈를 생성한다. 수선 회전 PR(§5-1)이 착지하기 전까지 이
+# 감시자가 탐지 간격을 시간 수준으로 축소하는 유일한 완화 장치다.
+#
+# 값 생성 authority: tools/ci/derive_checker_closure.nim 단일 (재구현·손편집
+# 없음 — ADR-0025 파생 authority; #666의 in-place 컴파일 레시피를 그대로
+# 재사용). 핀 파싱은 src/cli/merge_cli.nim stripJsoncComments/pinClosureLineSet
+# 의 1:1 이식(§1 측정과 동일) — 정준 함수가 바뀌면 본 스크립트도 같은 커밋
+# 범위에서 갱신한다.
+#
+# 알림 공식: schedule 워크플로의 실패 알림 수신자 = 이 파일의 cron을 마지막으로
+# 수정한 계정(현재 wintrover) — 1인 고정. 절차적 보강으로 불일치 시 추적 이슈를
+# 자동 생성한다(issues: write). TWS(ADR-0022 §4)는 contents:write 보유
+# 워크플로만 규율하므로 본 워크플로(contents: read)는 TWS 대상 외 신규
+# authority가 아니며, actions: write는 부여하지 않는다.
+#
+# 파생 안전: 본 파일은 클로저 멤버가 아니다(재감사 문서 §7.3 실측 — deriver는
+# runner-pool-acceptance.yml과 ci/checker.mk만 걷는다). 신설만으로 Δ 변동 없음.
+#
+# quirk Q4(docs/spec/gh_run_observation_quirks.md): run: 블록 전체(주석 포함)에
+# GitHub 표현식 보간 토큰을 기술하지 않는다 — 보간은 셸보다 먼저 일어나고 주석
+# 만으로도 워크플로 파싱 실패(0-job dispatch failure)가 난다(2026-10-09 실측).
+# 동적 값은 env: 블록으로만 주입한다.
+
+name: closure-watcher
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'   # 6시간 주기, 정각 회피
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: closure-watcher
+  cancel-in-progress: false
+
+jobs:
+  watch-closure-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main HEAD
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+
+      # 핀 통일 — 인라인 choosenim 금지. provision-scope: full = deriver의
+      # in-place nim c에 nim 컴파일러 필수(#666에서 실측된 결속 — z3+jq만으로는
+      # "nim: command not found" fail-closed). cache-build-source는 필수 입력 —
+      # 이 잡이 빌드하는 트리는 main HEAD 그 자체다.
+      - name: Provision pinned toolchain
+        uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          cache-save-enabled: 'false'
+          cache-build-source: ${{ github.sha }}
+          provision-scope: 'full'
+
+      - name: Derive closure at HEAD and compare against the pin (fail-closed)
+        run: |
+          set -euo pipefail
+          HEAD_SHA="$(git rev-parse HEAD)"
+          echo "watching HEAD=${HEAD_SHA}"
+          # deriver in-place 컴파일 — #666 레시피 그대로 (값 생성 authority 단일)
+          nim c --hints:off --skipParentCfg --skipProjCfg --skipUserCfg \
+            --noNimblePath --path:src \
+            -o:bin/derive_checker_closure tools/ci/derive_checker_closure.nim
+          # H는 ref(git 객체)로만 분석 — 워킹 트리 무관 (ADR C2 파생 원칙)
+          bin/derive_checker_closure --ref "${HEAD_SHA}" > /tmp/derived.txt
+          test -s /tmp/derived.txt || {
+            echo "FAIL: derived closure is empty — deriver fail-closed" >&2
+            exit 1
+          }
+          # 핀도 HEAD 객체에서 읽는다 (clean checkout이지만 동일 근거 유지)
+          git show "${HEAD_SHA}:config/trusted_writer_set.json" > /tmp/pin.json
+          python3 - <<'PYEOF'
+          import json
+          import sys
+
+
+          def strip_jsonc(text):
+              # 1:1 port of src/cli/merge_cli.nim stripJsoncComments —
+              # string-aware state machine; keep in lockstep with that func.
+              out = []
+              i = 0
+              n = len(text)
+              in_str = False
+              while i < n:
+                  c = text[i]
+                  if in_str:
+                      out.append(c)
+                      if c == '\\' and i + 1 < n:
+                          out.append(text[i + 1])
+                          i += 1
+                      elif c == '"':
+                          in_str = False
+                  else:
+                      if c == '"':
+                          in_str = True
+                          out.append(c)
+                      elif c == '/' and i + 1 < n and text[i + 1] == '/':
+                          while i < n and text[i] not in '\r\n':
+                              i += 1
+                          i -= 1
+                      else:
+                          out.append(c)
+                  i += 1
+              return ''.join(out)
+
+
+          pin = json.loads(strip_jsonc(open('/tmp/pin.json', encoding='utf-8').read()))
+          key = pin.get('trustedCheckerTreeClosure')
+          if not isinstance(key, dict):
+              print('FAIL: trustedCheckerTreeClosure absent or malformed — fail-closed',
+                    file=sys.stderr)
+              sys.exit(1)
+          # merge_cli.nim pinClosureLineSet 투영과 동일: "<mode> <type> <sha>\t<path>"
+          pin_lines = set()
+          for path, entry in key.items():
+              if not isinstance(entry, dict):
+                  print(f'FAIL: malformed pin entry: {path}', file=sys.stderr)
+                  sys.exit(1)
+              mode = entry.get('mode')
+              typ = entry.get('type')
+              sha = entry.get('sha')
+              if not (isinstance(mode, str) and mode and
+                      isinstance(typ, str) and typ and
+                      isinstance(sha, str) and sha):
+                  print(f'FAIL: pin entry missing mode/type/sha: {path}', file=sys.stderr)
+                  sys.exit(1)
+              pin_lines.add(f'{mode} {typ} {sha}\t{path}')
+
+          derived_lines = {
+              ln for ln in open('/tmp/derived.txt', encoding='utf-8').read().splitlines() if ln
+          }
+
+          only_pin = sorted(pin_lines - derived_lines)
+          only_der = sorted(derived_lines - pin_lines)
+          if only_pin or only_der:
+              print(f'FAIL: closure drift — only-in-pin={len(only_pin)} '
+                    f'only-in-derived={len(only_der)}', file=sys.stderr)
+              for ln in only_pin[:20]:
+                  print(f'  pin-only: {ln}', file=sys.stderr)
+              for ln in only_der[:20]:
+                  print(f'  derived-only: {ln}', file=sys.stderr)
+              sys.exit(1)
+          print(f'OK: line-set(pin@HEAD) == set(derived(HEAD)) — {len(derived_lines)} members')
+          PYEOF
+          echo "closure watcher: green"
+
+      # 절차적 알림 보강 — cron 실패 메일 수신자(마지막 cron 수정자) 1인 고정의
+      # 완화책. 중복 억제: 열린 추적 이슈가 있으면 생성을 생략한다.
+      - name: Create tracking issue on drift
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          HEAD_SHA="$(git rev-parse HEAD)"
+          TITLE="closure-watcher: pin/derived closure mismatch at ${HEAD_SHA}"
+          EXISTING="$(gh issue list --state open --search 'closure-watcher drift in:title' --limit 1 || true)"
+          if [ -n "${EXISTING}" ]; then
+            echo "open tracking issue already exists — skip creation:"
+            echo "${EXISTING}"
+            exit 0
+          fi
+          gh issue create --title "${TITLE}" --body "$(cat <<BODY
+          신뢰 루트 감시자가 pin/derived closure 불일치를 실측했다 (fail-closed).
+
+          - HEAD: ${HEAD_SHA}
+          - 유도 authority: tools/ci/derive_checker_closure (in-place 컴파일, --ref HEAD)
+          - 대조 대상: config/trusted_writer_set.json 의 trustedCheckerTreeClosure
+
+          수복 절차(docs/evidence/trust_root_reaudit_2026-10-10.md §6.4):
+          1. 본 워크플로 로그의 pin-only/derived-only 차집합을 정안/침해 판별 근거로 사용
+          2. 긴급 수복 = 정안값으로 main 직접 푸시 재앵커 (S1-C/D 동결 시 유일 경로)
+          3. 구조 수복 = 후속 회전 PR(NORMAL에서도 ④ 평가) — §5-1 등록 항목
+
+          참고: 알림 수신자 = 이 워크플로 cron의 마지막 수정 계정(현재 wintrover).
+          BODY
+          )"
+          echo "tracking issue created"

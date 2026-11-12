@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 2,
+  "environment": {
+    "nim": "2.2.10",
+    "lean": "leanprover/lean4:v4.33.0",
+    "profileMode": "axiomProfile",
+    "cacheState": "warm"
+  },
+  "provenance": {
+    "commit": "83eb439a217deb962bf5f57c8049a6d4e3975fca",
+    "generatedAt": "2026-10-15T01:03:19Z",
+    "repetitions": 5,
+    "aggregation": "min"
+  },
+  "measurements": {
+    "LeanKernelVerification": {
+      "duration_us": 302646
+    }
+  }
+}

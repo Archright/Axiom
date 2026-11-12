@@ -1,0 +1,2 @@
+[1mIn order to Click this project, a `click.toml` file needs to be created. Proceed? [Y/n][0m
+Discarding.

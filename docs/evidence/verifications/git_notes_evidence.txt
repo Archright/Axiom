@@ -1,0 +1,46 @@
+# Git Notes Evidence - Commit Purification Audit Trail
+Generated: 2026-05-27T12:01:36+09:00
+Task: Mark key unverified commits with git notes (non-destructive audit trail)
+
+## Post-condition Verification
+Status: PASS
+Total git notes: 7 (threshold >= 3)
+
+## Commits Marked
+
+### 1. bcd2b521 - Feature file deletion
+Reason: 60+ rotting feature files deleted without BDD evidence preservation
+Note: UNVERIFIED: 60+ rotting feature files deleted without BDD evidence preservation
+
+### 2. 24a4b6c6 - Architecture gate deletion
+Reason: architecture_principle_gate.nim deleted creating architecture gap
+Note: UNVERIFIED: architecture_principle_gate.nim deleted creating architecture gap
+
+### 3. 77bf217b - Pre-push gate failure fix (representative ghost gate)
+Reason: src/ changes but no feature/test files
+Note: UNVERIFIED: pre-push gate failure fix with src/ changes but no feature/test files
+
+### 4. 86a7c5e8 - Meta-gate self-check engine (representative ghost gate)
+Reason: src/ changes but no feature/test files
+Note: UNVERIFIED: meta-gate self-check engine with src/ changes but no feature/test files
+
+### 5. ca36c1c5 - Pre-existing gate debt resolution (representative ghost gate)
+Reason: src/ changes but no feature/test files
+Note: UNVERIFIED: pre-existing gate debt resolution with src/ changes but no feature/test files
+
+### 6. f107dc20 - gates.nim function ordering fix (representative ghost gate)
+Reason: src/ changes but no feature/test files
+Note: UNVERIFIED: gates.nim function ordering fix with src/ changes but no feature/test files
+
+### 7. c0eb967b - Dynamic AXIOM_JOBS (representative ghost gate)
+Reason: src/ changes but no feature/test files
+Note: UNVERIFIED: dynamic AXIOM_JOBS based on CPU count with src/ changes but no feature/test files
+
+## Verification Details
+- Source: docs/history/unverified_commits_audit.md (MISSING_FEATURE + MISSING_TESTS categories)
+- Git HEAD: 77bf217bef3c02d647c0db8559da5a1da7905f06
+- Git notes refs: 7 unique note objects created
+- All notes reference docs/history/commit_purification_report.md for purification tracking
+
+## Evidence Hash
+29a496d8faba74c289084ac1d44dd8d4c32117ffa8f3c1abeee80137a9f75657

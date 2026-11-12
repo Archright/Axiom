@@ -1,0 +1,273 @@
+{
+  "window": "2026-10-16..2026-10-31",
+  "base_sha_H_new": "29094836bc4488280d98c22665470dcb2e54da1a",
+  "head_sha": "d76caf956000175bbc78f9b25bced842c02992a5",
+  "source": "compare API repos/Archright/.github/compare",
+  "landing_count": 21,
+  "window_base": {
+    "pr": 227,
+    "window_base": true,
+    "sha": "29094836bc4488280d98c22665470dcb2e54da1a",
+    "title": "Merge pull request #227 from Archright/opt/verdict-needs-parallel-publish",
+    "committer_date": "2026-10-16T23:52:42Z",
+    "author_date": "2026-10-16T23:52:42Z",
+    "parents": [
+      "5bfc911448a56d3e600aa06552291fb405898a46",
+      "30bb5ee750202d2c2a718c005b9efdee92e1ae88"
+    ]
+  },
+  "landings": [
+    {
+      "sha": "2c81072d4a68d701bde15a212db91aab1ae4cc5d",
+      "pr": "228",
+      "title": "Merge pull request #228 from Archright/rotate/mg-evidence-gate-20261017",
+      "author_date": "2026-10-17T04:18:10Z",
+      "committer_date": "2026-10-17T04:18:10Z",
+      "author_login": "wintrover",
+      "parents": [
+        "29094836bc4488280d98c22665470dcb2e54da1a",
+        "7a9429cb909c69b489cabf5c78d13d920db0f2e1"
+      ]
+    },
+    {
+      "sha": "484f00894995e49b7cd58b366feba66eb438427e",
+      "pr": "229",
+      "title": "Merge pull request #229 from Archright/rotate/lane-artifact-fix-20261017",
+      "author_date": "2026-10-17T10:55:56Z",
+      "committer_date": "2026-10-17T10:55:56Z",
+      "author_login": "wintrover",
+      "parents": [
+        "2c81072d4a68d701bde15a212db91aab1ae4cc5d",
+        "875a0c3689548900b7713f6ea5e018a3fb17323e"
+      ]
+    },
+    {
+      "sha": "758a8769cb8d466100672717e0f9f638339ee693",
+      "pr": "230",
+      "title": "Merge pull request #230 from Archright/rotate/mg-reuse-pin-20261018",
+      "author_date": "2026-10-18T09:02:56Z",
+      "committer_date": "2026-10-18T09:02:56Z",
+      "author_login": "wintrover",
+      "parents": [
+        "484f00894995e49b7cd58b366feba66eb438427e",
+        "ab90726bf9b06c51b9f23c8acc9d3e4393653a2f"
+      ]
+    },
+    {
+      "sha": "67e1aa9de71222faa6722c243ca233bfd9820193",
+      "pr": "231",
+      "title": "Merge pull request #231 from Archright/rotate/judgment-key-v4-pin-20261018",
+      "author_date": "2026-10-18T13:29:41Z",
+      "committer_date": "2026-10-18T13:29:41Z",
+      "author_login": "wintrover",
+      "parents": [
+        "758a8769cb8d466100672717e0f9f638339ee693",
+        "c4f19f61747176d95bc27d8c61c3fe38d2ab85f2"
+      ]
+    },
+    {
+      "sha": "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+      "pr": "232",
+      "title": "Merge pull request #232 from Archright/ci/admission-pin-vs1-20261020",
+      "author_date": "2026-10-20T09:42:12Z",
+      "committer_date": "2026-10-20T09:42:12Z",
+      "author_login": "wintrover",
+      "parents": [
+        "67e1aa9de71222faa6722c243ca233bfd9820193",
+        "052670c038087ccdabf0930887544e644c7016ba"
+      ]
+    },
+    {
+      "sha": "527bf0e9a95d9eb4db1c89d594d80bf1fdff48c0",
+      "pr": "233",
+      "title": "Merge pull request #233 from Archright/chore/pin-admission-793c5af",
+      "author_date": "2026-10-20T11:11:48Z",
+      "committer_date": "2026-10-20T11:11:48Z",
+      "author_login": "wintrover",
+      "parents": [
+        "22a9a0ed2605a07ef4da991ff5af5cab2b425960",
+        "b7892e1600a94118d2e3efdb215f0f624d917d40"
+      ]
+    },
+    {
+      "sha": "3eb1a7f8b5136bf1431097581538d05e509f222a",
+      "pr": "235",
+      "title": "Merge pull request #235 from Archright/ci/admission-pin-vs2-fix-20261021",
+      "author_date": "2026-10-20T16:51:15Z",
+      "committer_date": "2026-10-20T16:51:15Z",
+      "author_login": "wintrover",
+      "parents": [
+        "527bf0e9a95d9eb4db1c89d594d80bf1fdff48c0",
+        "eb724425951c515051926015246e1c12fe5ee9eb"
+      ]
+    },
+    {
+      "sha": "30a32d959f1314800c7e1de3b968f5a59a30740d",
+      "pr": "236",
+      "title": "Merge pull request #236 from Archright/chore/pin-lfs-bootstrap",
+      "author_date": "2026-10-20T17:52:31Z",
+      "committer_date": "2026-10-20T17:52:31Z",
+      "author_login": "wintrover",
+      "parents": [
+        "3eb1a7f8b5136bf1431097581538d05e509f222a",
+        "e5df8b5a80cdd14df65948d642c9a182f611b775"
+      ]
+    },
+    {
+      "sha": "b1925f501cfb0c6fc508c18c9284b9722f5f84fe",
+      "pr": "238",
+      "title": "Merge pull request #238 from Archright/ci/admission-pin-vs2-lfs2",
+      "author_date": "2026-10-20T17:56:03Z",
+      "committer_date": "2026-10-20T17:56:03Z",
+      "author_login": "wintrover",
+      "parents": [
+        "30a32d959f1314800c7e1de3b968f5a59a30740d",
+        "31c7136da7009c6c0ae6245d22fe8daff45021cf"
+      ]
+    },
+    {
+      "sha": "bc568cf4982c1dee9da28e614057c47ba93d7efa",
+      "pr": "239",
+      "title": "Merge pull request #239 from Archright/ci/admission-pin-vs2-key",
+      "author_date": "2026-10-20T18:53:12Z",
+      "committer_date": "2026-10-20T18:53:12Z",
+      "author_login": "wintrover",
+      "parents": [
+        "b1925f501cfb0c6fc508c18c9284b9722f5f84fe",
+        "681b6dcbb3eb4b458feb7660f50e33892949a3ff"
+      ]
+    },
+    {
+      "sha": "1504a10c83bb667cb869ab91167719299ff888b1",
+      "pr": "240",
+      "title": "Merge pull request #240 from Archright/ci/admission-pin-vs2-verdict",
+      "author_date": "2026-10-20T19:51:39Z",
+      "committer_date": "2026-10-20T19:51:39Z",
+      "author_login": "wintrover",
+      "parents": [
+        "bc568cf4982c1dee9da28e614057c47ba93d7efa",
+        "d1c969dd41d7b81d6d87cd7f49d9622a84a81895"
+      ]
+    },
+    {
+      "sha": "73d7022452dceb080d5568997e2b3992b553de15",
+      "pr": "241",
+      "title": "Merge pull request #241 from Archright/ci/pin-overlay-digest",
+      "author_date": "2026-10-20T21:02:36Z",
+      "committer_date": "2026-10-20T21:02:36Z",
+      "author_login": "wintrover",
+      "parents": [
+        "1504a10c83bb667cb869ab91167719299ff888b1",
+        "483f23551f3edca7f0275e8c763afc57e199451e"
+      ]
+    },
+    {
+      "sha": "1bfb5ed7e5b82dc89a5e9c2694ec122e3ba73ff5",
+      "pr": "242",
+      "title": "Merge pull request #242 from Archright/ci/admission-pin-vs2-lane",
+      "author_date": "2026-10-20T21:42:27Z",
+      "committer_date": "2026-10-20T21:42:27Z",
+      "author_login": "wintrover",
+      "parents": [
+        "73d7022452dceb080d5568997e2b3992b553de15",
+        "e7d3a0e236418c111592b0c702107d0d10b2807a"
+      ]
+    },
+    {
+      "sha": "fb73fbb56a52f776378140d72924fbb6837f5404",
+      "pr": "243",
+      "title": "Merge pull request #243 from Archright/ci/remove-pin-waiver-20261021",
+      "author_date": "2026-10-20T23:54:44Z",
+      "committer_date": "2026-10-20T23:54:44Z",
+      "author_login": "wintrover",
+      "parents": [
+        "1bfb5ed7e5b82dc89a5e9c2694ec122e3ba73ff5",
+        "137e3b1f13fd34ebaf4c4d49f923e4b77dae05bb"
+      ]
+    },
+    {
+      "sha": "c1752d7ebbcff1d01d82c922a5f97d5b86622880",
+      "pr": "245",
+      "title": "Merge pull request #245 from Archright/ci/pin-admission-check-repair",
+      "author_date": "2026-10-21T05:47:24Z",
+      "committer_date": "2026-10-21T05:47:24Z",
+      "author_login": "wintrover",
+      "parents": [
+        "fb73fbb56a52f776378140d72924fbb6837f5404",
+        "9ec01d9071ce4ca7a3527f5b795e87725607aca9"
+      ]
+    },
+    {
+      "sha": "2bcbcb8c58a9f36453dc3f2e09751e1eefd60b2b",
+      "pr": "246",
+      "title": "Merge pull request #246 from Archright/ci/pin-admission-check-v5",
+      "author_date": "2026-10-21T12:16:10Z",
+      "committer_date": "2026-10-21T12:16:10Z",
+      "author_login": "wintrover",
+      "parents": [
+        "c1752d7ebbcff1d01d82c922a5f97d5b86622880",
+        "b85bf3a91f26fe08a81f8bd99bb72974a82829d6"
+      ]
+    },
+    {
+      "sha": "7fffee318b9fada32d13dd9c88d74869e343f9cc",
+      "pr": "247",
+      "title": "Merge pull request #247 from Archright/ci/pin-admission-check-v51",
+      "author_date": "2026-10-21T16:21:43Z",
+      "committer_date": "2026-10-21T16:21:43Z",
+      "author_login": "wintrover",
+      "parents": [
+        "2bcbcb8c58a9f36453dc3f2e09751e1eefd60b2b",
+        "a2ff6998659191ac9df0c3b15ca820adc64ef423"
+      ]
+    },
+    {
+      "sha": "bcfc1bbdea3bf143080c5d314966faf28b74ffd1",
+      "pr": "248",
+      "title": "Merge pull request #248 from Archright/fix/landing-integrity-ubicloud-map",
+      "author_date": "2026-10-23T06:12:49Z",
+      "committer_date": "2026-10-23T06:12:49Z",
+      "author_login": "wintrover",
+      "parents": [
+        "7fffee318b9fada32d13dd9c88d74869e343f9cc",
+        "c4e61ff15f039dddfaf794487755a61b30112548"
+      ]
+    },
+    {
+      "sha": "58a2c54666f25c8f9ebb96a8229eacaad01ad978",
+      "pr": "249",
+      "title": "Merge pull request #249 from Archright/ci/pin-mint-retention-2026-10-29",
+      "author_date": "2026-10-29T09:03:13Z",
+      "committer_date": "2026-10-29T09:03:13Z",
+      "author_login": "wintrover",
+      "parents": [
+        "bcfc1bbdea3bf143080c5d314966faf28b74ffd1",
+        "a5f2c378eadd90e33cbda9cf7e866b2bcdec6c86"
+      ]
+    },
+    {
+      "sha": "3fcc2b5c802d62c89dcb30997e79049d9c83bd84",
+      "pr": "250",
+      "title": "Merge pull request #250 from Archright/feat/pin-promotion-app-token",
+      "author_date": "2026-10-31T02:27:42Z",
+      "committer_date": "2026-10-31T02:27:42Z",
+      "author_login": "wintrover",
+      "parents": [
+        "58a2c54666f25c8f9ebb96a8229eacaad01ad978",
+        "4fd8098e660751bb9592574de038933fca1defbe"
+      ]
+    },
+    {
+      "sha": "d76caf956000175bbc78f9b25bced842c02992a5",
+      "pr": "251",
+      "title": "Merge pull request #251 from Archright/ci/pin-admission-check-v52",
+      "author_date": "2026-10-31T07:14:27Z",
+      "committer_date": "2026-10-31T07:14:27Z",
+      "author_login": "wintrover",
+      "parents": [
+        "3fcc2b5c802d62c89dcb30997e79049d9c83bd84",
+        "fce9407f387a1ec646ade41317aec38ea3baa450"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "doc-completeness-gate",
+  "name": "Axiom documentation completeness gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/doc_completeness_gate.nim",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/|docs/|AGENTS.md",
+  "passFilenames": false,
+  "weight": "light",
+  "category": "rule",
+  "severity": "error"
+}

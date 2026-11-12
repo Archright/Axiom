@@ -1,0 +1,11 @@
+harness_mode=record
+input_file=./experiments/act2-wp-toml-b1-input-integrity/inputs/aux_i_dup_key_isolated.toml
+input_len=25
+decode_call=Toml_v100.decode(input, Obj)
+DECODE_RESULT=OK
+a=[second]
+b=[]
+c=[]
+a_is_second=true
+b_is_third=false
+c_is_empty=true

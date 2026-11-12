@@ -1,0 +1,72 @@
+# tests-ci-unit-diagnostic — non-blocking diagnostic: runs one selected tests/ci unit test.
+#
+# [Blocking semantics — READ BEFORE PROMOTING]
+# This workflow is deliberately NOT a required check and MUST NOT be promoted
+# to the ruleset required_status_checks without an explicit policy decision:
+#   * required checks are the merge contract (ruleset 20303214, main, active:
+#     admission-check, bsec-integrity, debt-registry-gate,
+#     generation-acceptance, axiom-operational-slice as of 2026-10-30;
+#     [2026-11-07 매핑 — v1.19.0] 20303214은 구 저장소 id — 현행은 26702792,
+#     이름 해석("main")으로 식별) —
+#     adding a test step to any of those jobs propagates its failures into
+#     merge admission;
+#   * required-check promotion is a human/policy action
+#     (docs/spec/diagnostic_execution_delegation.md §7; trusted-writer-set.yml
+#     header precedent — before promotion this is advisory observation);
+#   * a check produced by workflow_dispatch does not satisfy PR required
+#     status checks (GitHub platform behavior) — the PR pull_request event
+#     run is the evidence-grade execution, which is exactly the trigger this
+#     file declares.
+# Classification SSOT: docs/evidence/tests_ci_assurance_classification_2026-10-30.md
+# (per-file wiring/environment/failure-semantics table, zero unclassified).
+#
+# [Why this test] tests/ci/test_admission_check_stages.nim — std-only imports
+# (unittest/os/strutils), zero external child processes, zero network, reads
+# .github/workflows/admission-check.yml and pins the attest/verdict stage
+# dispatch conjuncts. It is the only tests/ci source that runs hermetically
+# with no python3/yaml/git/sha256sum dependencies, so this diagnostic job
+# needs no extra provisioning beyond the pinned toolchain.
+#
+# [AGENTS.md §2.5 — coherent generation] Additive epoch: no existing workflow,
+# check identity, or trusted binding is touched. Freeze record:
+# docs/evidence/tests_ci_assurance_classification_2026-10-30.md §4 (freeze tag
+# ci-epoch-pre-vs-b-2026-10-30 == 474392b11; tombstone: none — additive;
+# atomic binding: contents: read → not a TrustedWriterSet contents:write
+# writer, admission-check.yml blob/A2 pin untouched).
+#
+# [Q4 quirk] No GitHub expression tokens inside run: blocks
+# (docs/spec/gh_run_observation_quirks.md Q4) — event-sourced values stay in
+# with:/env:, never interpolated into run bodies.
+
+name: tests-ci-unit-diagnostic
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-ci-unit-diagnostic-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  # The job id IS the check-run context — no job-level `name:` key
+  # (same discipline as axiom-operational-slice.yml).
+  tests-ci-unit-diagnostic:
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          cache-build-source: ${{ github.sha }}
+      - name: "Diagnostic: admission-check stage-dispatch contract (test_admission_check_stages)"
+        # --skipParentCfg --skipProjCfg: standalone compile outside the Test
+        # Domain guard (tests/config.nims requires bin/ax; this std-only test
+        # consumes no core artifact — same standalone-compile recipe the repo
+        # already uses for out-of-domain tool compiles). Failure here is a
+        # RED diagnostic signal in this job's log; it does not gate merges.
+        run: |
+          set -euo pipefail
+          nim c -r --hints:off --skipParentCfg --skipProjCfg --nimcache:build/nimcache/tests_ci_unit_diag -o:build/tests_ci_unit_diag/test_admission_check_stages tests/ci/test_admission_check_stages.nim

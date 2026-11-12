@@ -1,0 +1,13 @@
+{
+  "id": "trust-commit-scope",
+  "name": "Trust Commit direct-write scope gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/trust_commit_scope_gate",
+  "stages": [
+    "manual"
+  ],
+  "passFilenames": false,
+  "weight": "light",
+  "category": "rule",
+  "severity": "error"
+}

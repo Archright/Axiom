@@ -1,0 +1,1342 @@
+# runner-pool-acceptance — 셀프호스트 러너 풀 프로덕션 가동 검증 스모크.
+# 실제 비즈니스 시나리오(tests/gateway, 86개)를 결정론 8-way 분할(SHARD_COUNT=8,
+# NR%n 파티션, Makefile:gateway_shard_files 단일 SSOT)로 동시 실행한다.
+# 레시피는 tag ci-frozen-2026-09 admission_producer.yml r1-gateway-shards 잡을
+# 16-way로 스케일한 것을 Path A(2026-09-22)가 8-way로 통합한 형태다.
+# 3→16은 shard 수 확대, 16→8(K=8)은 billed-server-hours 감축 — 둘 다
+# fail-fast:false(전체 레그 관측성 확보 — 성공 판정 조건은 동일).
+#
+# Path A (2026-09-22, ADR-0023 Amendment A1.8): 통합 K=8 — 동일 workload trace에서
+# 1VM=1job 불변을 유지하면서 gateway partition을 16-way → 8-way로 통합 (역사적 결정).
+# Phase 2 item 9 (2026-09-27, 단일 생성 authority): 잡 구조 = ci-bootstrap 1 +
+# candidate-build-arm 1 + gateway-shard 8 = 10 jobs. arm shard는 인-잡 컴파일 제거,
+# candidate-arm64 아티팩트 download 소비 (compile=0 — 동일-아키 h4 §4-b 유지).
+# ⚠️ 10 jobs는 *구조 상한*이지 실행 횟수가 아니다 — SL-09 미승격 epoch
+# (config/policy/epoch_manifest.json notYetImplementedSlices — 현재 epoch N+7)
+# 에서는 SL-09 귀속 잡(candidate-build-arm · gateway-shard 8-leg ·
+# gateway-identity-gate · proof-reconcile)이 게이트 false로 미실행이며,
+# release-ship L2 경로(force_full=true)의 실제 실행은 ci-bootstrap 1잡뿐이다
+# (build + provenance). 실행된 잡 집합의 권위는 executed-jobs 잡이 발행하는
+# `executed_jobs` 출력이며, 호출자가 이를 기대 계약과 대조한다.
+# 사용자 지연 예산 ≤15분 하에서 채택된 K=8 결정 규칙을 따른다.
+# 신뢰 경계 불변: --ephemeral 러너 + 1VM=1job + decide.nim/userdata.nim 무변경.
+# partition identity-set(union=86 / intersection=0)은
+# Makefile:test-gateway-shard-audit이 fail-closed로 보장하며, 실행 후
+# identity-set 게이트(test-gateway-identity-gate)가 중복/누락을 추가 차단한다.
+name: runner-pool-acceptance
+
+# 자동 실행: workflow_dispatch (2026-09-22 L3 결정) +
+# workflow_call (release-ship L2 위임 — force_full+target_sha, ADR-0024).
+# push@main 트리거 및 잡내 B-캐시 save/manifest 경로는 제거
+# (ADR-0025 Amendment B): 머지 이벤트에는 이 워크플로를 포함 아무것도
+# 발화하지 않으며(착지 = 순수 GitHub 네이티브 ref 이동), B-캐시의 단일
+# writer는 외부 퍼블리셔 ci-cache-publisher.yml (workflow_run — 게이트
+# 아티팩트를 tree-OID 검증해 default-branch 스코프로 재발행,
+# cache-mode: write, J3 "캐시는 증거 아님" 유지).
+# PR 실행은 org required workflow (admission-gate)의 workflow_call 경유 —
+# 직접 pull_request 트리거 없음 (L4 결정 존치): caller context가
+# workflow_call로 전파되므로 select의 Δ 판정은 PR base/head SHA를 사용한다.
+# workflow_call(force_full=true) 시 select는 스킵 → L2 진행 (ADR-0017
+# A1.3 유지, ADR-0024). 단 force_full은 SL-09 게이트를 열지 *않는다* —
+# SL-09 승격 여부는 sl09-scope 잡이 manifest에서 판정한다 (미승격 epoch에서
+# gateway 스위트는 미실행 — 실행 집합은 executed_jobs 출력으로 발행).
+on:
+  workflow_call:
+    inputs:
+      target_sha:
+        required: true
+        type: string
+      force_full:
+        default: false
+        required: false
+        type: boolean
+    # ── 호출자 소비 출력 (reusable workflow) ─────────────────────────────────
+    # GitHub은 재사용 워크플로의 *내부 잡*을 호출자에게 노출하지 않는다 —
+    # 호출자가 읽을 수 있는 것은 이 워크플로의 출력뿐이다. 따라서 "어떤 잡이
+    # 실제로 실행되었고 어떤 결론이었는가"를 callee가 직접 발행한다.
+    #   executed_jobs      — 검증 레인 잡 6종의 결론 집합(name=conclusion, 정렬,
+    #                        쉼표 결합). SKIPPED와 SUCCESS를 collapse하지 않으며
+    #                        SL-09 미승격 스킵은 사유 토큰을 명시한다.
+    #   scope_sl09         — SL-09 실행 범위 권위('true'|'false') + 그 사실.
+    #   scope_sl09_reason  — 사유 토큰 (sl09_promoted | sl09_not_promoted).
+    #   epoch_id           — 판정된 epoch (config/policy/epoch_manifest.json).
+    outputs:
+      # Each reusable-workflow output is an OBJECT with `description` and
+      # `value` (GitHub "Reusing workflows"); a bare `name: ${{ ... }}`
+      # mapping fails to parse the whole workflow at dispatch time.
+      executed_jobs:
+        description: "Executed callee job set — sorted name=conclusion, SKIPPED never collapsed into SUCCESS"
+        value: ${{ jobs['executed-jobs'].outputs.executed_jobs }}
+      scope_sl09:
+        description: "SL-09 execution scope authority ('true'|'false') measured from the epoch manifest at the executed tree"
+        value: ${{ jobs['sl09-scope'].outputs.scope_sl09 }}
+      scope_sl09_reason:
+        description: "Reason token for the SL-09 scope fact (sl09_promoted | sl09_not_promoted)"
+        value: ${{ jobs['sl09-scope'].outputs.scope_sl09_reason }}
+      epoch_id:
+        description: "Epoch id judged from config/policy/epoch_manifest.json"
+        value: ${{ jobs['sl09-scope'].outputs.epoch_id }}
+  # workflow_dispatch 입력 (Phase 2 item 9 실증 경로 — 2026-09-27): 수동 디스패치도
+  # workflow_call과 동일한 입력 계약(target_sha + force_full)을 받는다. 기본값은
+  # 기존 계약과 동일 — 인자 없이 디스패치하면 select가 mode=none 등 정상 판정하고
+  # (force_full=false), 40-hex target_sha를 주면 그 SHA를 체크아웃한다. force_full=true는
+  # select를 건너뛰고 ADR-0017 A1.3의 임의-트리거 L2와 동일하게 진행한다
+  # (SL-09 게이트는 별도 — sl09-scope 잡이 manifest에서 판정: 미승격 epoch에서
+  #  gateway 스위트는 미실행).
+  workflow_dispatch:
+    inputs:
+      target_sha:
+        description: >-
+          실증/운영 체크아웃 ref — 생략 시 디스패치 ref의 HEAD(github.sha)로 폴백
+          (기존 동작과 동일).
+        required: false
+        type: string
+      force_full:
+        description: >-
+          true = select 건너뛰고 L2 진행 (ADR-0017 A1.3 임의 트리거 —
+          workflow_call(force_full)과 동일 의미. 단 SL-09 게이트는 sl09-scope가
+          manifest에서 판정 — 미승격 epoch에서는 gateway 스위트 미실행).
+          기본 false = 기존 select 판정 유지.
+        required: false
+        default: false
+        type: boolean
+#  pull_request:
+#    branches: [main]
+
+# Same-PR obsolete run cancellation (latency-only platform guard).
+# B3 (2026-09-27, 4/4 결정론 + epoch N+6 acceptance 1차/2차 런 실측):
+# 게이트(workflow_call) 컨텍스트에서 ${{ github.workflow }} = CALLER 이름
+# (공식 문서 — Reusing workflow configurations)으로 평가되어, 이 그룹이
+# admission-check.yml의 (제거된) 레거시 블록과 `admission-gate-<PR>`로
+# 충돌했고 cancel-in-progress: true가 먼저 생성된 callee invocation의
+# job들을 0-step 취소했다 (36487512164 gateway/select·proof-reconcile
+# cancelled / 36489225998 admission callee 0-step FAIL — 비결정적 레이스).
+# admission-check 레거시 블록은 PR #340에서 제거 완료. 그룹 키에
+# event_name을 삽입해 게이트 컨텍스트 (`admission-gate-pull_request-<PR>`)
+# 와 네이티브 실행(workflow_dispatch — `runner-pool-acceptance-workflow_dispatch-<sha>`)
+# 를 분리한다 — 교차 event 충돌은 구조적으로 불가. push@main 트리거는
+# 제거되어(ADR-0025 Amendment B) 착지 후 취소 대상 run 자체가 없으며,
+# 남는 취소 대상은 dispatch 동일-SHA 재실행뿐이다 (계약 — ADR-0023).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # src/gate/config.nims bootstrap-sandbox marker — its absence fail-closes
+  # every gate compile on a fresh checkout (transplanted verbatim from the
+  # archived ci.yml via tag ci-frozen-2026-09 admission_producer.yml).
+  AXIOM_CI_PRESERVE_CACHE: "1"
+
+jobs:
+  # ── sl09-scope — SL-09 실행 범위 권위 (항상 실행) ─────────────────────────
+  # 왜 별도 잡인가 — 이전 배선의 두 결함이 합쳐져 "SL-09 승격 후 복원"이
+  # 구조적으로 불가능했다:
+  #   (a) `scope_sl09`가 select.outputs에 미선언 → `needs.select.outputs.
+  #       scope_sl09` 참조가 *모든* 모드에서 항상 '' (무조건 false 게이트).
+  #   (b) force_full=true (release-ship L2 경로)에서는 select 잡 자체가
+  #       스킵 → 그 경로에서 해당 값은 존재 자체가 하지 않았다.
+  # 게이트의 원래 출처는 select 잡의 스텝 출력이었다. 이 잡은 그 사실을
+  # **항상 실행되는 독립 잡**으로 옮겨 두 모드 모두에서 사용 가능하게 한다.
+  #
+  # 권위 — 실행 트리의 config/policy/epoch_manifest.json (하드코딩 금지:
+  # manifest가 유일 권위). "실행 트리" = 이 워크플로의 모든 잡이 실제로
+  # 체크아웃·실행하는 트리(inputs.target_sha || github.sha) — 즉 "이번
+  # 실행이 SL-09 레인을 돌릴 수 있는가"의 단일 권위. release 경로에서
+  # select가 없기 때문에 B-tree 값은 그 경로에서 존재하지 않는다.
+  # manifest 판독 불가/파손 = fail-closed(exit 1) — 조용한 false가 아니라
+  # 워크플로 실패로 표면화 (§0.9 fail-open 금지).
+  #
+  # 트리 차이 (select 스텝 출력 vs 이 잡) — select의 스텝 출력은 B-tree
+  # ("main에 착지한 epoch") 기준이라 승격 PR이 진행 중이면 헤드보다 뒤처진다
+  # (의도된 지연). 잡 게이트는 실행 트리 기준이다 — publish되는 트리의
+  # epoch가 그 트리의 검증 스코프를 결정해야 하기 때문.
+  sl09-scope:
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).slim }}" ]
+    timeout-minutes: 10
+    outputs:
+      scope_sl09: ${{ steps.scope.outputs.scope_sl09 }}
+      scope_sl09_reason: ${{ steps.scope.outputs.scope_sl09_reason }}
+      epoch_id: ${{ steps.scope.outputs.epoch_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.target_sha || github.sha }}
+
+      - name: "[slice-engine] SL-09 scope authority (epoch manifest @ execution tree)"
+        id: scope
+        run: |
+          set -euo pipefail
+          MANIFEST="config/policy/epoch_manifest.json"
+          [ -f "$MANIFEST" ] || {
+            echo "[sl09-scope] FAIL — $MANIFEST missing in the checked-out tree (SL-09 execution scope undeterminable — fail-closed)" >&2
+            exit 1
+          }
+          parsed="$(jq -e . "$MANIFEST" 2>/dev/null)" || {
+            echo "[sl09-scope] FAIL — $MANIFEST unparsable (SL-09 execution scope undeterminable — fail-closed)" >&2
+            exit 1
+          }
+          printf '%s' "$parsed" | jq -e '(.ciEpochId? // "") | (type == "string") and (length > 0)' >/dev/null || {
+            echo "[sl09-scope] FAIL — ciEpochId missing/malformed (fail-closed)" >&2
+            exit 1
+          }
+          printf '%s' "$parsed" | jq -e '(.implementedSlices? // null) | (type == "array") and (all(.[]; type == "string"))' >/dev/null || {
+            echo "[sl09-scope] FAIL — implementedSlices missing or not a string array (fail-closed)" >&2
+            exit 1
+          }
+          EPOCH="$(printf '%s' "$parsed" | jq -r '.ciEpochId')"
+          IMPL="$(printf '%s' "$parsed" | jq -c '.implementedSlices')"
+          echo "epoch_id=$EPOCH" >> "$GITHUB_OUTPUT"
+          if printf '%s' "$parsed" | jq -e '.implementedSlices | index("SL-09") != null' >/dev/null 2>&1; then
+            echo "scope_sl09=true" >> "$GITHUB_OUTPUT"
+            echo "scope_sl09_reason=sl09_promoted" >> "$GITHUB_OUTPUT"
+            echo "[sl09-scope] epoch=$EPOCH sl09=fire (SL-09 in implementedSlices) implemented=$IMPL"
+          else
+            echo "scope_sl09=false" >> "$GITHUB_OUTPUT"
+            echo "scope_sl09_reason=sl09_not_promoted" >> "$GITHUB_OUTPUT"
+            echo "[sl09-scope] epoch=$EPOCH sl09=NO-FIRE (SL-09 not in implementedSlices) implemented=$IMPL"
+          fi
+
+  # ── A2: select — GitHub-hosted cheap control plane ─────────────────────
+  # caller context(workflow_dispatch / orchestrator workflow_call: PR)에서
+  # provenRequired(Δ) 판정을 내려 downstream job 수요를 직결한다.
+  # runs-on: ubuntu-24.04 (GitHub-hosted standard runner; image-pinned —
+  # determinism; ubuntu-latest migrates; repo는 PRIVATE + Enterprise included
+  # minutes 체계 — 체험판 3,000분/월, 유료 전환 50,000분/월,
+  # select 포함 분 소모). 전용/외부 러너 라벨 절대 금지.
+  # workflow_call(force_full=true)는 select를 건너뛴다 (L2 — release-ship 위임, ADR-0024).
+  # M7: 판정 알고리즘은 selector(순수 함수) — 여기서는 호출과 verdict 중계만.
+  # YAML은 스케줄링/전달만 한다. M6: UNCERTAIN → full (fail-closed).
+  # select 실패(exit 0/2 외, toolchain/스크립트 오류)는 판정 부재 → downstream
+  # full 폴백(결과적으로 이 잡 failure → 런도 red — 조용한 강등 없음, §0.9
+  # 문서화된 fail-open: full 실행이 검증 coverage를 보존).
+  select:
+    if: ${{ !(inputs.force_full || false) }}
+    # P5/holdout 채택 (c*=C3, t_train_protocol §5.1/§7.1): select는 LIGHT class —
+    # ubuntu-slim 라우팅. B9/B10: slim 하드 15분 cap → timeout 20→15 (측정 50–94s,
+    # 안전 마진 8×). choosenim 인라인 레시피는 slim(x64)에서 실증 통과(P5 §5.1).
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).slim }}" ]
+    timeout-minutes: 15
+    outputs:
+      mode: ${{ steps.decide.outputs.mode }}
+      decision: ${{ steps.decide.outputs.decision }}
+      decisionHash: ${{ steps.decide.outputs.decisionHash }}
+      shards: ${{ steps.decide.outputs.shards }}
+      ciBootstrap: ${{ steps.decide.outputs.ciBootstrap }}
+      gatewayTestScope: ${{ steps.decide.outputs.gatewayTestScope }}
+      # SL-09 스코프 사실 (select 경로 — B-tree 기준). 이전에는 이 스텝 출력은
+      # 존재했으나 job 출력으로 *선언*되지 않아 `needs.select.outputs.scope_sl09`
+      # 참조가 항상 ''(영속적 무조건-false)이었다. 선언으로 참조를 정합화한다.
+      # 단 — 잡 게이트(발화 여부)의 권위는 sl09-scope 잡(실행 트리 기준)이다:
+      # force_full 경로에서 select 자체가 스킵되어 이 값은 존재하지 않는다.
+      # (두 사실의 트리 차이는 sl09-scope 잡 주석 참조)
+      scope_sl09: ${{ steps.slice-engine.outputs.scope_sl09 }}
+    steps:
+      # fetch-depth 0: base/head 측정에 전체 history 필요 (결정론)
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.target_sha || github.sha }}
+          fetch-depth: 0
+
+      # ────────────────────────────────────────────────────────────────
+      # [slice-engine] Slice Engine execution scope gate (S0-d) — epoch
+      # manifest implementedSlices로 select의 SL-10 semantic step 발화를
+      # 제한한다. manifest는 `git show $B:<path>` — B 트리의 git object
+      # (워크스페이스 파일이 아니라 B 트리 — Gate A: B가 실행 권위; B =
+      # 이 job의 diff base와 동일 유도: PR base.sha / dispatch HEAD~1 —
+      # 'Resolve deterministic diff base' 스텝과 일치).
+      # SL-10이 implementedSlices에 있으면 scope_sl10=true → decision
+      # envelope 스텝 발화; 없으면 NO-FIRE (skip이 아니라 미발화 — 실행
+      # 기록 없음, I-3/I-5 fail-closed). 미해독/파손 manifest = fail-closed.
+      # 하류 SL-09 귀속 잡(gateway-shard/gateway-identity-gate/
+      # proof-reconcile + ci-bootstrap A3 emit)은 scope_sl09 job-level
+      # 게이트로 NO-FIRE 전환 (epoch N+6 acceptance I-3 보완 — SL-09
+      # 미정착 발화 실측 36492606699 후속; SL-09 승격 시 이 게이트가
+      # 발화를 복원한다).
+      # ⚠️ 게이트 권위의 이전 결함(2026-10-20 수정): 이 스텝 출력은 select의
+      # 잡 출력으로 미선언 → `needs.select.outputs.scope_sl09` 참조가 항상
+      # ''(무조건 false)였고, force_full 경로에서는 select 자체가 스킵되어
+      # 값이 존재하지도 않았다. 그래서 "승격 후 복원"이 구조적으로 불가능했다.
+      # 이제 잡 게이트의 권위는 항상 실행되는 sl09-scope 잡(실행 트리
+      # 기준)이며, 이 스텝 출력은 select 경로의 B-tree 사실로 선언만 된다
+      # (select.outputs.scope_sl09 — force_full 경로에서는 select가 없어
+      #  존재하지 않으므로 게이트로 사용될 수 없다).
+      # ────────────────────────────────────────────────────────────────
+      - name: "[slice-engine] Load epoch manifest implementedSlices (B tree — scope authority)"
+        id: slice-engine
+        run: |
+          set -euo pipefail
+          # NOTE: fail() 함수 정의는 derive_checker_closure 워커가 'PATH 미지 실행
+          # 이름'으로 거부한다(정적 해석 불가 — worktree 선행 결함). 의미를 그대로
+          # 유지한 inline `|| { echo ...; exit 1; }` 형태로 대체한다 (출력 바이트 동일).
+          EMPTY_TREE=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            B="${{ github.event.pull_request.base.sha }}"
+          else
+            if git rev-parse --verify -q "HEAD~1" >/dev/null 2>&1; then
+              # resolve symbolic rev → 40-hex OID (α: merge_group G^1 == B;
+              # symbolic 'HEAD~1' string previously failed the OID check below)
+              B="$(git rev-parse HEAD~1)"
+            else
+              B="$(git rev-parse HEAD)"
+            fi
+          fi
+          printf '%s' "$B" | grep -qE '^[0-9a-f]{40}$' || { echo "[slice-engine] FAIL — B='$B' not a 40-hex OID (scope authority undeterminable) (fail-closed)" >&2; exit 1; }
+          MANIFEST="$(git show "$B:config/policy/epoch_manifest.json")" \
+            || { echo "[slice-engine] FAIL — config/policy/epoch_manifest.json unreadable at B=$B — engine execution scope undeterminable (manifest must land on main with the promotion PR) (fail-closed)" >&2; exit 1; }
+          parsed="$(printf '%s' "$MANIFEST" | jq -e . 2>/dev/null)" \
+            || { echo "[slice-engine] FAIL — epoch manifest unparsable at B=$B (fail-closed)" >&2; exit 1; }
+          printf '%s' "$parsed" | jq -e '(.ciEpochId? // "") | (type == "string") and (length > 0) and (test("^[A-Za-z0-9][A-Za-z0-9._+-]*$"))' >/dev/null \
+            || { echo "[slice-engine] FAIL — ciEpochId missing/malformed at B=$B (fail-closed)" >&2; exit 1; }
+          printf '%s' "$parsed" | jq -e '(.implementedSlices? // null) | (type == "array") and (all(.[]; type == "string"))' >/dev/null \
+            || { echo "[slice-engine] FAIL — implementedSlices missing or not a string array at B=$B (fail-closed)" >&2; exit 1; }
+          printf '%s' "$parsed" | jq -e 'all(.implementedSlices[]; test("^SL-[0-9]{2,4}$"))' >/dev/null \
+            || { echo "[slice-engine] FAIL — implementedSlices contains malformed slice id (expected SL-NN) (fail-closed)" >&2; exit 1; }
+          printf '%s' "$parsed" | jq -e '(.productionExecutionPin? // "") | (type == "string") and (length > 0)' >/dev/null \
+            || { echo "[slice-engine] FAIL — productionExecutionPin missing/empty at B=$B (fail-closed)" >&2; exit 1; }
+          EPOCH="$(printf '%s' "$parsed" | jq -r '.ciEpochId')"
+          IMPL="$(printf '%s' "$parsed" | jq -c '.implementedSlices')"
+          echo "epoch_id=$EPOCH" >> "$GITHUB_OUTPUT"
+          echo "implemented_slices=$IMPL" >> "$GITHUB_OUTPUT"
+          # scope_sl10 — derived from implementedSlices ONLY (admission-check
+          # slice-engine 게이트와 동일 규약: slice가 manifest에 없으면
+          # NO-FIRE). scope_sl09는 하류 SL-09 귀속 잡(gateway-shard/
+          # identity-gate/proof-reconcile + ci-bootstrap A3 emit)의 job-level
+          # NO-FIRE 게이트 — SL-09 미정착 epoch에서 SL-09 스텝 실행 자체를
+          # 미발화로 전환한다 (I-3: 실행 기록 없음 — epoch N+6 acceptance
+          # 실측 36492606699: docs-only PR에서 W8 셀렉트로 shard 8-leg 실주행
+          # + executed/junit 발행 — SL-09 notYet 발화 확인 → 소관 게이트 신설).
+          RPT="[slice-engine] epoch=$EPOCH implemented=$IMPL"
+          if printf '%s' "$parsed" | jq -e '.implementedSlices | index("SL-10") != null' >/dev/null 2>&1; then
+            echo "scope_sl10=true" >> "$GITHUB_OUTPUT"
+            RPT="$RPT sl10=fire"
+          else
+            echo "scope_sl10=false" >> "$GITHUB_OUTPUT"
+            RPT="$RPT sl10=NO-FIRE"
+          fi
+          if printf '%s' "$parsed" | jq -e '.implementedSlices | index("SL-09") != null' >/dev/null 2>&1; then
+            echo "scope_sl09=true" >> "$GITHUB_OUTPUT"
+            RPT="$RPT sl09=fire"
+          else
+            echo "scope_sl09=false" >> "$GITHUB_OUTPUT"
+            RPT="$RPT sl09=NO-FIRE"
+          fi
+          echo "$RPT"
+
+      # testedTreeDigest = landing candidate tree identity — orchestrator의
+      # tree-identity job이 이 아티팩트를 내려받아 mergeTree와 대조한다
+      # (착지 전 등식의 첫 고리: testedTree == mergeTree). 이 checkout의
+      # HEAD^{tree}이 gateway가 실행 대상으로 삼은 트리 — mode(both/none)와
+      # 무관한 invocation identity. SL-10 produce — scope_sl10 게이트 공유
+      # (SL-10 미정착 시 미발화 — produce 없는 NO-FIRE 보존).
+      - name: Publish testedTreeDigest (landing candidate tree)
+        if: steps.slice-engine.outputs.scope_sl10 == 'true'
+        run: |
+          set -euo pipefail
+          DIGEST="$(git rev-parse HEAD^{tree})"
+          printf '%s' "$DIGEST" | grep -qE '^[0-9a-f]{40}$' || {
+            echo "TESTED-TREE: FAIL — '$DIGEST' is not a 40-hex tree OID" >&2
+            exit 1
+          }
+          mkdir -p build/tested-tree-digest
+          printf '%s' "$DIGEST" > build/tested-tree-digest/testedTreeDigest
+          echo "TESTED-TREE: testedTreeDigest=$DIGEST (HEAD=$(git rev-parse HEAD))"
+
+      - name: Upload tested-tree-digest
+        if: steps.slice-engine.outputs.scope_sl10 == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tested-tree-digest
+          path: build/tested-tree-digest/testedTreeDigest
+          retention-days: 30
+
+      # Nim 2.2.10 핀 필수 (결정론) — choosenim 공식 경로. selector/gate는
+      # compiler internals를 import하지 않으므로 setup-axiom-toolchain의
+      # compiler-source self-heal은 불필요(축소).
+      - name: Install Nim 2.2.10 (choosenim, pinned)
+        run: |
+          set -euo pipefail
+          export CHOOSENIM_NO_COLOR=1 CHOOSE_NIM_QUIET=1
+          # 부트스트랩 스크립트는 이동 표적이다 — 내용 해시를 고정하고, 불일치하면
+          # 실행하지 않고 실패한다(부분 파일·파이프 실행 없음). 재핀 방법:
+          #   curl -sSfL https://nim-lang.org/choosenim/init.sh | sha256sum
+          # 실패 클래스 exit 35(SSL connect)는 --retry 단독으로는 재시도되지 않으므로
+          # --retry-all-errors가 필수다. 상한은 --retry-max-time에 둔다(curl 문서:
+          # "before retrying it removes output data from a failed partial transfer
+          # that was written to an output file" — `-o`는 지워지고 `|`는 지워지지 않는다).
+          init_sha256=6c38d83e5f33feb0317647f4fbd757fd2128fef5cdf61b6a6e1709c63b0d8d5c
+          curl -sSfL --retry 4 --retry-all-errors --retry-delay 2 \
+            --retry-max-time 5 --connect-timeout 3 --max-time 20 \
+            -o "$RUNNER_TEMP/choosenim-init.sh" https://nim-lang.org/choosenim/init.sh
+          if ! printf '%s  %s\n' "$init_sha256" "$RUNNER_TEMP/choosenim-init.sh" | sha256sum -c -; then
+            echo "::error::choosenim init.sh content changed upstream — review the diff, re-pin init_sha256, then re-run. Not executing the downloaded script." >&2
+            exit 1
+          fi
+          sh "$RUNNER_TEMP/choosenim-init.sh" -y
+          "$HOME/.nimble/bin/choosenim" 2.2.10
+          echo "$HOME/.nimble/bin" >> "$GITHUB_PATH"
+
+      # selector(impact-closure)는 후보 트리 빌드 유지 (계획 out-of-scope — DEBT):
+      # 게이트·오라클은 아래 B-compile 스텝이 B 전체 트리에서 컴파일한다 (§1).
+      - name: Build selector (impact-closure — candidate tree)
+        run: |
+          set -euo pipefail
+          nim c --hints:off --skipParentCfg --skipProjCfg --path:src -o:bin/impact-closure tools/ci/impact_closure_selector.nim
+
+      # Δ = base..head. workflow_dispatch(이벤트에 before 없음): HEAD~1;
+      # root commit → HEAD (1-commit root G4_ROOT compatibility: B must be a
+      # valid commit OID so B-tree worktree compile and git show B:nimble.lock
+      # succeed). push@main 경로는 제거됨 (ADR-0025 Amendment B —
+      # 착지 이벤트에 발화하는 워크플로가 없음).
+      # pull_request(caller context가 workflow_call로 전파 — orchestrator 경유):
+      # base/head = PR API 등가 필드 직접 사용.
+      # 40-hex가 아니면 fail-closed (빈 콘텍스트 = 판정 불가 → 잡 실패 →
+      # 하류 full 폴백이 검증 coverage 보존).
+      - name: Resolve deterministic diff base
+        id: base
+        run: |
+          set -euo pipefail
+          EMPTY_TREE=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD="${{ github.event.pull_request.head.sha }}"
+            printf '%s' "$BASE" | grep -qE '^[0-9a-f]{40}$' \
+              || { echo "FAIL: PR base.sha '$BASE' not 40-hex (caller context missing?)" >&2; exit 1; }
+            printf '%s' "$HEAD" | grep -qE '^[0-9a-f]{40}$' \
+              || { echo "FAIL: PR head.sha '$HEAD' not 40-hex (caller context missing?)" >&2; exit 1; }
+          else
+            if git rev-parse --verify -q "HEAD~1" >/dev/null 2>&1; then
+              BASE="$(git rev-parse HEAD~1)"  # resolve → 40-hex OID (symbolic failed downstream consumers)
+            else
+              BASE="$(git rev-parse HEAD)"
+            fi
+          fi
+          HEAD="${HEAD:-HEAD}"
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "head=$HEAD" >> "$GITHUB_OUTPUT"
+
+      # ────────────────────────────────────────────────────────────────
+      # B-전체트리 오라클/게이트 컴파일 (ADR C2 Gate A — verifier는 B에서만
+      # 컴파일, H는 데이터). B = 위 'Resolve deterministic diff base'와 동일
+      # 유도(pr.base.sha / HEAD~1)를 step output으로 재사용 — 의미 변화 없음.
+      # 오라클(derive_checker_closure)과 게이트(proof_reconcile_gate) 모두
+      # B 트리 바이너리: H가 실행 코드를 공급하는 신뢰 순환을 끊는다.
+      # selector(impact-closure)만 후보 트리 빌드 유지 (계획 out-of-scope + DEBT).
+      # -o:bin/<name>은 B worktree 상대 경로 + cp로 워크스페이스 bin에 복사 —
+      # deriver의 제품 매핑(product key = -o: 문자열 그대로)을 유지하기 위한
+      # 형태다: $GITHUB_WORKSPACE 절대 경로 -o:는 오라클이 UNRESOLVED로
+      # 거부한다 (정적 소거 불가). B가 커밋이 아니면(EMPTY_TREE 폴백) fail-closed.
+      # 실패 = evidence 미발행 (0 미선언 금지) — 잡 실패 → 하류 full 폴백(기존
+      # fail-open 의미 보존)이 검증 coverage를 지킨다.
+      - name: Compile oracle + reconcile gate from B (full trusted tree)
+        run: |
+          set -euo pipefail
+          B="${{ steps.base.outputs.base }}"
+          printf '%s' "$B" | grep -qE '^[0-9a-f]{40}$' || {
+            echo "FAIL: B='$B' not a 40-hex OID — B full-tree compile 불가 (fail-closed)" >&2
+            exit 1
+          }
+          git rev-parse --verify --quiet "$B^{commit}" >/dev/null || {
+            echo "FAIL: B='$B' is not a commit — git worktree add 불가 (fail-closed)" >&2
+            exit 1
+          }
+          git worktree add --detach /tmp/btree "$B"
+          trap 'cd "$GITHUB_WORKSPACE" && git worktree remove --force /tmp/btree 2>/dev/null || true' EXIT
+          cd /tmp/btree
+          mkdir -p bin
+          nim c --hints:off --skipParentCfg --skipProjCfg --path:src -o:bin/derive_checker_closure tools/ci/derive_checker_closure.nim
+          nim c --hints:off --skipParentCfg --skipProjCfg --path:src -o:bin/proof_reconcile_gate tools/ci/proof_reconcile_gate.nim
+          mkdir -p "$GITHUB_WORKSPACE/bin"
+          cp bin/derive_checker_closure bin/proof_reconcile_gate "$GITHUB_WORKSPACE/bin/"
+          cd "$GITHUB_WORKSPACE"
+          git worktree remove --force /tmp/btree
+          trap - EXIT
+          ls -l bin/derive_checker_closure bin/proof_reconcile_gate
+
+      # ────────────────────────────────────────────────────────────────
+      # 오라클 증거 생산 (SL-10 — decide와 동일 scope 게이트, 그 이전에 준비):
+      # 5축 oracle-evidence.json — select가 mode=none 등으로 판정할 때 근거가
+      # 되는 독립 증거. executionClosure 축만 B-빌드 deriver가 H를 --ref git
+      # 객체로 분석(워킹 트리 금지, ADR C2)하고, 나머지 4축은 Δ(B..H 파일
+      # 목록 — git 객체) 대 정적 멤버 집합의 교집합 부재다. 소비자 계약:
+      # proof_reconcile_gate(Phase 2c)의 재유도와 동일하게 생산한다 —
+      #   · derivationDigest = sha256(정규화 문서 minus derivationDigest;
+      #     키 정렬+compact, jq -cS — 게이트 canonicalJson과 동일 바이트)
+      #   · gateScanRoots/embedSet 멤버는 게이트 핀 상수와 정확히 일치(정렬)
+      #   · 정적 3축의 changed 맵(멤버→Δ bool)은 게이트 deltaIn(=isUnderRoot:
+      #     path == m 또는 m+"/" 접두) 재유도와 동일
+      #   · executionClosure.digest = sha256(바이트-정렬 closure 라인 join("\n"),
+      #     후행 newline 제거 — 게이트 d 재유도와 동일 정규화)
+      #   · identity.lockfileDigest = sha256(H 트리 nimble.lock) — 게이트는
+      #     워킹 디렉터리 파일과 대조(CI clean checkout == HEAD)
+      # envHashInputs 멤버는 config.nims:404-421의 실제 envHash 정적 입력
+      # (8파일 + src/gate/manifest.d/*.json glob)을 직접 읽어 확정했다.
+      # deriver exit≠0 = 이 스텝 실패 = evidence 미발행(fail-closed, 0 미선언
+      # 금지). 검증: jq -cS 'del(.derivationDigest)' | sha256sum == derivationDigest.
+      - name: Produce oracle evidence (5-axis, B-built deriver on H-as-data)
+        if: steps.slice-engine.outputs.scope_sl10 == 'true'
+        run: |
+          set -euo pipefail
+          B="${{ steps.base.outputs.base }}"
+          HEAD="${{ steps.base.outputs.head }}"
+          # Δ = B..H 변경 파일 목록 (git 객체 — 워킹 트리 무관; 게이트
+          # gitChangedPaths와 동일한 git diff --name-only two-dot 유도)
+          DELTA="$(git diff --name-only "$B" "$HEAD" 2>/dev/null || git ls-tree -r --name-only HEAD)"
+          DELTA_J="$(printf '%s' "$DELTA" | jq -Rs 'split("\n") | map(select(length > 0))')"
+          # (1) executionClosure — B-빌드 deriver: H를 --ref git 객체로만 분석
+          CLOSURE="$(bin/derive_checker_closure --ref "$HEAD" || { echo FAIL >&2; exit 1; })"
+          test -n "$CLOSURE" || { echo "FAIL: derive_checker_closure exit non-zero — closure 불완전 (evidence 미발행, fail-closed)" >&2; exit 1; }
+          CLOSURE_DIGEST="$(printf '%s' "$(printf '%s' "$CLOSURE" | LC_ALL=C sort)" | sha256sum | cut -d' ' -f1)"
+          CLOSURE_PATHS_J="$(printf '%s' "$CLOSURE" | jq -Rs 'split("\n") | map(select(length > 0)) | map(split("\t")[1])')"
+          if [ "$(jq -nc --argjson d "$DELTA_J" --argjson c "$CLOSURE_PATHS_J" '[ $d[] | . as $p | select(($c | index($p)) != null) ] | length > 0')" = true ]; then
+            CLOSURE_ABSENT=false
+          else
+            CLOSURE_ABSENT=true
+          fi
+          # (2)(3)(5) changed 맵 — 게이트 deltaIn(=isUnderRoot)과 동일 재유도.
+          # roots/embedSet 멤버 = 게이트 핀 상수 · 정렬 순서 (일치 필수).
+          GATE_CHANGED="$(jq -nc --argjson delta "$DELTA_J" --argjson m '["config/policy","docs/agents","docs/spec"]' 'reduce $m[] as $k ({}; .[$k] = ([$delta[] | select(. == $k or startswith($k + "/"))] | length > 0))')"
+          ENV_CHANGED="$(jq -nc --argjson delta "$DELTA_J" --argjson m '["axiom.nimble","config.nims","config/gates.manifest.toml","config/lint.nims","config/strict.nims","src/gate/manifest.d/*.json","src/gate/topology_spec.nim","src/generated/build_env.nim.default","tools/hermetic_build.nim"]' 'reduce $m[] as $k ({}; .[$k] = ([$delta[] | select(. == $k or startswith($k + "/"))] | length > 0))')"
+          EMBED_CHANGED="$(jq -nc --argjson delta "$DELTA_J" --argjson m '["AGENTS.md","docs/agents/architecture.md","docs/agents/rules_workflow.md"]' 'reduce $m[] as $k ({}; .[$k] = ([$delta[] | select(. == $k or startswith($k + "/"))] | length > 0))')"
+          if [ "$(printf '%s' "$GATE_CHANGED" | jq 'all(.[]; . == false)')" = true ]; then
+            GATE_ABSENT=true
+          else
+            GATE_ABSENT=false
+          fi
+          if [ "$(printf '%s' "$ENV_CHANGED" | jq 'all(.[]; . == false)')" = true ]; then
+            ENV_ABSENT=true
+          else
+            ENV_ABSENT=false
+          fi
+          if [ "$(printf '%s' "$EMBED_CHANGED" | jq 'all(.[]; . == false)')" = true ]; then
+            EMBED_ABSENT=true
+          else
+            EMBED_ABSENT=false
+          fi
+          # (4) identity — nimble.lock: B/H git 객체 digest 비교 (unchanged)
+          LOCK_B="$(git show "$B:nimble.lock" | sha256sum | cut -d' ' -f1)"
+          LOCK_H="$(git show "$HEAD:nimble.lock" | sha256sum | cut -d' ' -f1)"
+          if [ "$LOCK_B" = "$LOCK_H" ]; then
+            LOCK_UNCHANGED=true
+          else
+            LOCK_UNCHANGED=false
+          fi
+          LOCK_DIGEST="$LOCK_H"
+          # derivedEmpty = 5축 전부 deltaAbsent/unchanged
+          if [ "$CLOSURE_ABSENT" = true ] && [ "$GATE_ABSENT" = true ] && [ "$ENV_ABSENT" = true ] && [ "$LOCK_UNCHANGED" = true ] && [ "$EMBED_ABSENT" = true ]; then
+            DERIVED_EMPTY=true
+          else
+            DERIVED_EMPTY=false
+          fi
+          AXES="$(jq -nc --argjson ca "$CLOSURE_ABSENT" --arg cd "$CLOSURE_DIGEST" --argjson ga "$GATE_ABSENT" --argjson gch "$GATE_CHANGED" --argjson gr '["config/policy","docs/agents","docs/spec"]' --argjson ea "$ENV_ABSENT" --argjson ech "$ENV_CHANGED" --argjson eh '["axiom.nimble","config.nims","config/gates.manifest.toml","config/lint.nims","config/strict.nims","src/gate/manifest.d/*.json","src/gate/topology_spec.nim","src/generated/build_env.nim.default","tools/hermetic_build.nim"]' --argjson iu "$LOCK_UNCHANGED" --arg ld "$LOCK_DIGEST" --argjson sa "$EMBED_ABSENT" --argjson sch "$EMBED_CHANGED" --argjson es '["AGENTS.md","docs/agents/architecture.md","docs/agents/rules_workflow.md"]' '{executionClosure:{method:"derive_checker_closure(B-전체트리)",digest:$cd,deltaAbsent:$ca},gateScanRoots:{method:"static",roots:$gr,changed:$gch,deltaAbsent:$ga},envHashInputs:{method:"static",members:$eh,changed:$ech,deltaAbsent:$ea},identity:{method:"static",lockfileDigest:$ld,unchanged:$iu},embedSet:{method:"static",members:$es,changed:$sch,deltaAbsent:$sa}}')"
+          BODY="$(jq -ncS --argjson delta "$DELTA_J" --argjson de "$DERIVED_EMPTY" --argjson axes "$AXES" '{schema:"axiom/oracle-evidence/v1",derivedEmpty:$de,delta:$delta,axes:$axes}')"
+          DERIV="$(printf '%s' "$BODY" | sha256sum | cut -d' ' -f1)"
+          printf '%s' "$BODY" | jq -cS --arg d "$DERIV" '. + {derivationDigest: $d}' > oracle-evidence.json
+          # fail-closed: 빈 evidence는 0 미선언 위반 — 비어 있으면 즉시 실패
+          # (self-check는 빈 입력의 sha256이 서로 같아 공허하게 통과할 수 있음)
+          test -s oracle-evidence.json || { echo "FAIL: oracle-evidence.json empty — evidence 미발행 (fail-closed)" >&2; exit 1; }
+          DERIV_CHECK="$(jq -cS 'del(.derivationDigest)' oracle-evidence.json | head -c -1 | sha256sum | cut -d' ' -f1)"
+          test "$DERIV_CHECK" = "$DERIV" || { echo "FAIL: derivationDigest self-check mismatch — evidence 훼손 (fail-closed)" >&2; exit 1; }
+          echo "ORACLE-EVIDENCE: written derivedEmpty=$DERIVED_EMPTY deltaCount=$(printf '%s' "$DELTA_J" | jq 'length') closureDigest=${CLOSURE_DIGEST:0:12}"
+
+      # selector exit 계약 (선택기 §12): 0 = CERTAIN(→ none|selected), 2 = UNCERTAIN
+      # (→ full, M6), 그 외 = ERROR → job 실패 전파 (fail-closed). mode는 decision
+      # envelope(선택기가 산출)에서 읽고 exit code와 상호 검증한다 — 판정 주체는
+      # selector, shell은 중계. SL-10 verification step — scope_sl10 게이트
+      # (SL-10 미정착 시 미발화, I-3).
+      - name: Run selector (--require-certain, exit 0/2 contract)
+        if: steps.slice-engine.outputs.scope_sl10 == 'true'
+        id: decide
+        run: |
+          set -u
+          set +e
+          bin/impact-closure --base "${{ steps.base.outputs.base }}" --head "${{ steps.base.outputs.head }}" \
+            --oracle-evidence oracle-evidence.json \
+            --output decision-report.json --decision-out decision.json --require-certain
+          rc=$?
+          set -e
+          case "$rc" in
+            0) MODE=$(jq -r .mode decision.json); test "$MODE" != "full";;
+            2) MODE=$(jq -r .mode decision.json); test "$MODE" = "full";;
+            *) echo "FAIL: selector exit $rc (expected 0=CERTAIN / 2=UNCERTAIN)"; exit 1;;
+          esac
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "decision=$(jq -c . decision.json)" >> "$GITHUB_OUTPUT"
+          echo "shards=$(jq -c .shards decision.json)" >> "$GITHUB_OUTPUT"
+          echo "ciBootstrap=$(jq -c .ciBootstrap decision.json)" >> "$GITHUB_OUTPUT"
+          echo "gatewayTestScope=$(jq -r .gatewayTestScope decision.json)" >> "$GITHUB_OUTPUT"
+          # decisionHash = sha256(decision.json 바이트). 각 실행 job의 executed 기록을
+          # 이 정확한 decision에 묶는 바인딩 (A3 재확인).
+          echo "decisionHash=$(sha256sum decision.json | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "--- decision envelope ---"
+          cat decision.json
+
+      # Decision Record 보존 (하루/7일 보존 — repo 관례: junit retention-days 14를
+      # 참고해 7일. decision + closure 근거(shadow report) 동봉. SL-10 produce
+      # upload — "Run selector"와 동일 게이트: if-no-files-found: error이므로
+      # selector 미발화 시 이 업로드도 꺼야 NO-FIRE 의미가 보존된다 (I-3: skip
+      # 아닌 미발화 보존).
+      - name: Upload decision record (decision + rationale report)
+        if: steps.slice-engine.outputs.scope_sl10 == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ci-select-decision
+          path: |
+            decision.json
+            decision-report.json
+            oracle-evidence.json
+          if-no-files-found: error
+          retention-days: 7
+
+      # reconcile verifier도 여기서 B-compile 스텝이 B 전체 트리에서 컴파일한
+      # 것을 artifact로 전달 — proof-reconcile job이 GitHub-hosted에서 nim
+      # 재설치 없이 같은 결정론 binary를 실행한다 (ADR C2).
+      - name: Upload reconcile verifier binary
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ci-select-verifier
+          path: bin/proof_reconcile_gate
+          if-no-files-found: error
+          retention-days: 7
+
+  # 단일 실행 heavy bootstrap: 컴파일 4종을 1개 VM에서 수행하고 artifact로
+  # 전달한다 (8레그 반복 중복 제거). manifest.txt는 레그의 fail-closed 검증
+  # 기준 — per-file sha256, 빌드 SHA(github.sha), toolchain 버전, 레시피 identity.
+  # A3 조건부 실행: workflow_call(force_full, select skipped) / select 실패 →
+  # full 폴백(전량), mode=full → 전량, mode=selected → ciBootstrap flag로만,
+  # mode=none → 스킵.
+  # (GitHub은 SKIPPED를 Success로 취급 — skip 여부 자체가 아니라 decision
+  # record가 성공의 근거이며, 재확인은 proof-reconcile이 담당한다.)
+  ci-bootstrap:
+    needs: [select, sl09-scope]
+    if: ${{ always() && (needs.select.result != 'success' || needs.select.outputs.mode == 'full' || (needs.select.outputs.mode == 'selected' && needs.select.outputs.ciBootstrap == 'true')) }}
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.target_sha || github.sha }}
+          clean: false
+
+      # B-layer restore-only reader (ADR-0025 Amendment B): 이 워크플로의
+      # 어느 잡도 B를 쓴다 — B의 단일 writer는 외부 퍼블리셔
+      # ci-cache-publisher.yml (workflow_run, 게이트 아티팩트를 tree-OID
+      # 검증해 재발행, cache-mode: write). 이 잡이 발행하는
+      # ci-bootstrap-artifacts가 퍼블리셔의 입력이다. A-layer save는
+      # action 내부 계약 (any run, lock-complete + first-save-wins).
+      - uses: ./.github/actions/setup-axiom-toolchain
+        id: setup-tc
+        with:
+          cache-save-enabled: 'false'
+          cache-build-source: ${{ inputs.target_sha || github.sha }}
+
+      # Toolchain-completeness smoke, before any artifact/cache broadcast. A
+      # runner toolchain missing lib/lean/Lake.olean passes both `lean
+      # --version` and `lake --version` (shard-5, run 35678120915), yet the
+      # sandbox `lake build` inside ax prove Phase-3B then fails with
+      # `unknown namespace 'Lake'` -> INTERNAL_ERROR(2) on all gateway legs. A real
+      # `import Lake` build is the only honest check; a broken toolchain must
+      # never leave this job.
+      - name: Lake build smoke (fail-closed)
+        run: |
+          set -euo pipefail
+          SMOKE_DIR=$(mktemp -d)
+          trap 'rm -rf "$SMOKE_DIR"' EXIT
+          printf 'leanprover/lean4:v4.33.0\n' > "$SMOKE_DIR/lean-toolchain"
+          cat > "$SMOKE_DIR/lakefile.lean" <<'EOF'
+          import Lake
+          open Lake DSL
+          package leanSmoke
+
+          @[default_target]
+          lean_lib LeanSmoke where
+            srcDir := "."
+          EOF
+          printf 'import Lake\n' > "$SMOKE_DIR/LeanSmoke.lean"
+          cd "$SMOKE_DIR"
+          lake build
+        timeout-minutes: 5
+
+      # ── S5 build-skip eligibility gate (data/ci_pareto/selection_table.json S5) ──
+      # B-layer exact-key HIT 레인에서만 발화하고, #577의 4종 SourceCoherence
+      # probe를 이 스텝에서 다시 실행한다 (판정은 항상 재계산 — J3: 스킵은 검증된
+      # 공급 재사용일 뿐). 신뢰 트리는 keygen b-probe-tree(cache-build-source
+      # 트리 OID)의 git archive —
+      # action B-probe와 동일한 비순환 앵커(payload가 기대치를 운반하지 않는다).
+      # 불확실성 전부(페이로드 바이너리 결핍·probe 불일치·비트리 identity)에서
+      # eligibility를 보류한다 (fail-closed → 전량 재컴파일). 출력 s5-skip=true는
+      # 아래 컴파일 스텝의 AXIOM_S5_BUILD_SKIP=1로만 소비되며, make 레벨에서
+      # ci-skip-* 타깃이 provenance를 재단언한다 (ci/checker.mk S5 스위치).
+      - name: "S5 gate: B-verified supply-reuse eligibility (4× SourceCoherence re-probe)"
+        id: s5-gate
+        if: steps.setup-tc.outputs.b-cache-hit == 'true'
+        # 판정은 항상 재계산 (J3): action 내부 B-probe(#577)의 결정을 신뢰하지 않고
+        # 이 스텝이 4종 SourceCoherence를 다시 실행한다. 신뢰 트리 = 호출자
+        # checkout 자체 — target_sha의 git object store에서 materialize된 트리이며,
+        # B 페이로드(build/nimcache·.axiom/cache·proofs/.lake·proofs/build·bin/*)에
+        # src/는 없으므로 복원 페이로드가 재계산 입력을 오염시킬 수 없다 (비순환
+        # 앵커 — action B-probe의 git-archive 사본과 동일 트리 내용). 생략된 각
+        # 바이너리의 존재·실행 가능·provenance 일치가 여기서 재단언되고, 하나라도
+        # 실패하면 eligibility가 보류된다 (fail-closed → 전량 재컴파일). bin/*는
+        # 컴파일 레시피의 제품 매핑 경로 — 정적 속가능 (deriver 문법: 루프/continue/
+        # 변수 명령 경로/런타임 절대 경로 명령 금지).
+        run: |
+          set -uo pipefail
+          probe_fail=0
+          # AXIOM_ROOT= (빈 값) ≡ unset — findRepoRoot는 len>0만 환경 주입으로
+          # 취급한다 (src/core/utils/repo_root.nim). `env -u`는 deriver 정적
+          # 문법 밖이라 이 형태가 요구된다.
+          if AXIOM_ROOT= bin/ax --check-provenance >/dev/null 2>&1; then
+            echo "[S5] gate: OK — restored bin/ax embedded BuildSourceHash == live trusted tree (caller checkout)"
+          else
+            echo "[S5] gate: FAIL — restored bin/ax provenance mismatch (SourceCoherence FATAL); eligibility withheld (fail-closed)"
+            probe_fail=1
+          fi
+          if AXIOM_ROOT= bin/gate_hook --check-provenance >/dev/null 2>&1; then
+            echo "[S5] gate: OK — restored bin/gate_hook embedded BuildSourceHash == live trusted tree (caller checkout)"
+          else
+            echo "[S5] gate: FAIL — restored bin/gate_hook provenance mismatch (SourceCoherence FATAL); eligibility withheld (fail-closed)"
+            probe_fail=1
+          fi
+          if AXIOM_ROOT= bin/precompile_gates --check-provenance >/dev/null 2>&1; then
+            echo "[S5] gate: OK — restored bin/precompile_gates embedded BuildSourceHash == live trusted tree (caller checkout)"
+          else
+            echo "[S5] gate: FAIL — restored bin/precompile_gates provenance mismatch (SourceCoherence FATAL); eligibility withheld (fail-closed)"
+            probe_fail=1
+          fi
+          if AXIOM_ROOT= bin/install_ax_cas --check-provenance >/dev/null 2>&1; then
+            echo "[S5] gate: OK — restored bin/install_ax_cas embedded BuildSourceHash == live trusted tree (caller checkout)"
+          else
+            echo "[S5] gate: FAIL — restored bin/install_ax_cas provenance mismatch (SourceCoherence FATAL); eligibility withheld (fail-closed)"
+            probe_fail=1
+          fi
+          if [ "$probe_fail" -eq 0 ]; then
+            echo "s5-skip=true" >> "$GITHUB_OUTPUT"
+            echo "[S5] gate: ELIGIBLE — 4/4 SourceCoherence probes passed; 4-binary recompile skipped (verified supply reuse, never evidence)"
+          fi
+
+      - name: Compile bootstrap artifacts (gate_hook, precompile_gates, ax, install_ax_cas)
+        # AXIOM_S5_BUILD_SKIP=1은 s5-gate가 4종 probe를 모두 통과시킨 경우에만
+        # 설정된다 (위 게이트 fail-closed). make는 이 플래그로 ci-compile의
+        # 컴파일/스킵 분기를 선택하고, 스킵 분기는 provenance를 재단언한다.
+        env:
+          AXIOM_S5_BUILD_SKIP: ${{ steps.s5-gate.outputs.s5-skip == 'true' && '1' || '0' }}
+        run: |
+          if [ "$AXIOM_S5_BUILD_SKIP" = "1" ]; then
+            echo "[S5] B-verified supply reuse — 4-binary recompile skipped (verdicts recomputed downstream; cache is acceleration, never evidence)"
+          fi
+          make ci-compile -j4
+        timeout-minutes: 15
+
+      # DEBT#502 수정 (생산 부재 — 3단계 누출 중 1): ci-bootstrap이 ircheck를
+      # 생산하지 않아 lane 엔트리가 구조적으로 ircheck-less 부분 페이로드가
+      # 됐고, base 경로의 검증-완전 엔트리는 같은 키에 대해 single-flight에
+      # 영구 선점되어 매 소비자가 `[s5] verified supply absent:
+      # proofs/.lake/build/bin/ircheck` → S5 COLD(~2분)를 반복했다.
+      # ircheck는 attest 사슬의 기준 추출기 — admission-check.yml [build]의
+      # 정준 호출(`cd proofs && lake build ircheck`, lean_exe 명시 타깃 —
+      # 기본 lake build는 lean_lib만 빌드)을 그대로 미러한다. S5 skip 경로에서는
+      # 복원된 proofs/.lake의 lake trace가 재빌드를 생략하므로 수 초의 무결성
+      # 확인 비용만 낸다. 존재 단언 fail-closed — 미생산 lane 페이로드는 아래
+      # manifest 루프와 lane publisher verify(5파일)에서 전부 거절된다.
+      - name: Build ircheck (Lean reference extractor — lane supply completion, DEBT#502)
+        run: |
+          set -euo pipefail
+          cd proofs && lake build ircheck && cd ..
+          [ -x proofs/.lake/build/bin/ircheck ] \
+            || { echo "FAIL-CLOSED: ircheck missing after build (proofs/.lake/build/bin/ircheck)" >&2; exit 1; }
+          echo "[S5] lane supply: proofs/.lake/build/bin/ircheck present (DEBT#502 — lane entries are complete payloads)"
+        timeout-minutes: 15
+
+      - name: Emit fail-closed artifact manifest
+        run: |
+          set -euo pipefail
+          : > manifest.txt
+          {
+            echo "# Axiom ci-bootstrap artifact manifest — fail-closed verification"
+            echo "# generated by .github/workflows/runner-pool-acceptance.yml ci-bootstrap job"
+            echo "build_sha = ${{ inputs.target_sha || github.sha }}"
+            echo "recipe_id = ci-compile@$(sha256sum Makefile | cut -d' ' -f1)"
+            echo "nim_version:"
+            nim --version
+          } >> manifest.txt
+          # DEBT#502: ircheck 포함 — lane manifest가 완전 페이로드(5파일)를
+          # 결속한다. lane publisher verify 스텝과 lane fingerprint manifest가
+          # 이 루프의 5파일 집합을 1:1로 대조한다 (부분 페이로드는 저장 불가).
+          for f in bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas \
+                   proofs/.lake/build/bin/ircheck; do
+            test -x "$f" || { echo "FAIL: $f missing or not executable"; exit 1; }
+            sha256sum "$f" >> manifest.txt
+          done
+          cat manifest.txt
+
+      # A3 실행 사실: 이 job이 실행됐다는 fact를 decision에 묶은 executed 기록.
+      # decision이 존재할 때(select success)만 발행 — workflow_call(force_full)/
+      # select-실패(full 폴백)는 decision이 없으므로 발행하지 않는다(그 경로는
+      # proof-reconcile이 skipped,
+      # identity-gate가 union==86으로 gateway 실행을 담당).
+      # SL-09 게이트(sl09-scope — 실행 트리 기준 manifest 판정)를 함께 요구한다:
+      # SL-09 미승격 epoch에서는 A3 레코드도 미발화(NO-FIRE) — SL-09 귀속
+      # 산출물이 생성되지 않으므로 proof-reconcile이 대조할 executed set도
+      # 생성되지 않는다 (양쪽이 같은 권위로 움직여야 대조가 성립).
+      - name: Emit executed record (A3 — binds this run to the decision)
+        if: needs.select.result == 'success' && needs.sl09-scope.outputs.scope_sl09 == 'true'
+        env:
+          MODE: ${{ needs.select.outputs.mode }}
+          DECISION_HASH: ${{ needs.select.outputs.decisionHash }}
+        run: |
+          set -euo pipefail
+          cat > executed-ci-bootstrap.json <<EOF
+          {"schema":"axiom/ci-executed/v1","job":"ci-bootstrap","workUnits":["W2"],"mode":"$MODE","decisionHash":"$DECISION_HASH"}
+          EOF
+
+      - name: Upload executed record
+        if: needs.select.result == 'success' && needs.sl09-scope.outputs.scope_sl09 == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: executed-ci-bootstrap
+          path: executed-ci-bootstrap.json
+          if-no-files-found: error
+          retention-days: 7
+
+      # ci-bootstrap-artifacts = 퍼블리셔(ci-cache-publisher)의 입력 —
+      # B-페이로드 전체(nimcache 등)를 동봉해 소비자 PR 게이트가 재빌드
+      # 없이 warm restore를 얻는다 (ADR-0025 Amendment B — 계산 1회/트리).
+      - name: Upload bootstrap artifacts
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        id: upload-bootstrap-artifacts
+        with:
+          name: ci-bootstrap-artifacts
+          retention-days: 3
+          path: |
+            bin/ax
+            bin/gate_hook
+            bin/precompile_gates
+            bin/install_ax_cas
+            manifest.txt
+            build/nimcache
+            .axiom/cache
+            proofs/.lake
+            proofs/build
+          # include-hidden-files: v4 default는 도트 디렉터리(여기서 .axiom/cache,
+          # proofs/.lake — ircheck의 거처)를 통째로 탐색 생략한다. 생략되면
+          # 아티팩트가 ircheck를 잃고 퍼블리셔 lane verify가 fail-closed skip
+          # 한다 (DEBT#502 lane 계약 사실상 불발 — publisher verify 5파일 필수
+          # 집합). 경로 목록·키 파생은 무변경 — 이 플래그만 추가.
+          if-no-files-found: error
+          include-hidden-files: true
+
+      - name: Record bootstrap artifact history (AXIOM_ARTIFACT_RECORD)
+        # Post-expiry history record — GitHub hides expired artifacts from the
+        # API, so retention history must survive in run logs + step summary.
+        # Gated on the upload's own artifact-id output (fires iff an artifact
+        # exists to record — skipped upload ⇒ no record). The REST enrichment
+        # is best-effort: failure degrades loudly and NEVER fails the job.
+        if: steps.upload-bootstrap-artifacts.outputs.artifact-id != ''
+        env:
+          ARTIFACT_ID: ${{ steps.upload-bootstrap-artifacts.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload-bootstrap-artifacts.outputs.artifact-digest }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          expected_retention_days="${{ github.retention_days }}"
+          if [ -z "$expected_retention_days" ]; then expected_retention_days=unknown; fi
+          record="AXIOM_ARTIFACT_RECORD v1 name=ci-bootstrap-artifacts run_id=${{ github.run_id }} run_attempt=${{ github.run_attempt }} artifact_id=${ARTIFACT_ID} digest=${ARTIFACT_DIGEST} requested_retention_days=3 expected_retention_days=${expected_retention_days} metadata_status=partial"
+          echo "$record" | tee -a "$GITHUB_STEP_SUMMARY"
+          gh api "/repos/$GITHUB_REPOSITORY/actions/artifacts/${ARTIFACT_ID}" --jq '"observed_expires_at=\(.expires_at) size_in_bytes=\(.size_in_bytes) created_at=\(.created_at)"' \
+            || echo "size_in_bytes=unknown observed_expires_at=unknown metadata_status=degraded" # {.bestEffort("""REST artifact metadata is best-effort by contract: a REST failure degrades loudly (this logged line) and NEVER fails the job — the retention record above is context-derived and already emitted.""").}
+
+  # ── Phase 2 item 9: candidate-build-arm — arm 후보 산출물 단일 생성 authority ──
+  # 동일-아키 제약(h4 §4-b) 보존: x64 ci-bootstrap 산출물은 arm에서 실행 불가하므로
+  # arm 후보(4 bootstrap binaries + manifest)를 arm 러너에서 1회만 생성한다.
+  # B1 생성 authority 정규성: candidate-산출물/arch → authority = 이 잡 1개/arch,
+  # shard 재생성 0 (compile=0 — shard는 download-artifact 소비만).
+  # A3 조건부 실행: gateway-shard와 동일 판정을 공유한다 (select 실패/force_full →
+  # full 폴백 전량, mode=full → 전량, selected-W8 → 전량). 소비자와 authority가 같은
+  # 발화 판정을 받아야 full 폴백에서도 소비자가 산출물을 얻는다.
+  # proof-reconcile의 executed==selected(정확 일치, 초과=FAIL) 계약을 건드리지 않기
+  # 위해 이 잡은 executed record를 발행하지 않는다 (기존 executed 2종 계약 불변).
+  # 캐시: restore-only reader (cache-save-enabled 'false') — B의 단일 writer는
+  # 외부 ci-cache-publisher; A-layer save는 action 내부 계약
+  # (lock-complete + first-save-wins). 캐시 키 공식은 shard와 동일 (의미 무변경).
+  candidate-build-arm:
+    needs: [select, sl09-scope]
+    if: ${{ always() && needs.sl09-scope.outputs.scope_sl09 == 'true' && (needs.select.result != 'success' || needs.select.outputs.mode == 'full' || needs.select.outputs.gatewayTestScope == 'ALL') }}
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).arm64 }}" ]
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.target_sha || github.sha }}
+          clean: false
+
+      # Restore-only cache reader — shard와 동일한 A/B 키 공식 (캐시 키 의미 무변경).
+      - uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          cache-save-enabled: 'false'
+          cache-build-source: ${{ inputs.target_sha || github.sha }}
+          skip-nimble-install: 'true'
+
+      - name: 'Project deps (warm-equivalent in-tree — arm A-miss 전제)'
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.choosenim/toolchains/nim-2.2.10/bin:$PATH"
+          nimble install -y
+          echo "deps installed (warm-equivalent)"
+
+      # 단일 authority 컴파일 — 8개 shard가 이 산출물을 소비한다 (재생성 0).
+      # B1 hoist: ci-compile(4) + gateway-binaries(9) + gateway-hook-binary(1)
+      # = the complete set of products the shard legs used to rebuild 8× over
+      # (80 duplicate compiles per PR → 10 here, once per arch). Source and
+      # flags are the historical per-shard commands verbatim (ci/checker.mk
+      # owns the single definition), so the compiled verdict is unchanged.
+      - name: 'Compile candidate (arm, 1회) + manifest'
+        run: |
+          set -euo pipefail
+          make ci-compile -j4
+          make gateway-binaries
+          make gateway-hook-binary
+          : > manifest.txt
+          { echo "build_sha = ${{ inputs.target_sha || github.sha }}"
+            echo "recipe_id = ci-compile@$(sha256sum Makefile | cut -d' ' -f1)"
+            echo "gateway_recipe_id = ci/checker.mk@gateway-binaries,gateway-hook-binary@$(sha256sum ci/checker.mk | cut -d' ' -f1)"
+          } >> manifest.txt
+          for f in bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas \
+                   bin/run_gate bin/nimtry build/git_wrapper build/command_policy_gate \
+                   bin/hotspot_coverage_gate bin/conflict_marker_gate bin/golden_master_gate \
+                   bin/all_gateway_runner bin/impact_closure_selector bin/setup-hooks; do
+            test -x "$f" || { echo "FAIL: $f missing after compile"; exit 1; }
+            sha256sum "$f" >> manifest.txt
+          done
+          echo "CANDIDATE BUILD OK (aarch64) build_sha=${{ inputs.target_sha || github.sha }} products=$(wc -l < manifest.txt)"
+        timeout-minutes: 35
+
+      - name: Upload candidate-arm64 (shard 소비용 — 단일 authority 산출물)
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        id: upload-candidate-arm64
+        with:
+          name: candidate-arm64
+          retention-days: 3
+          path: |
+            bin/ax
+            bin/gate_hook
+            bin/precompile_gates
+            bin/install_ax_cas
+            bin/run_gate
+            bin/nimtry
+            build/git_wrapper
+            build/command_policy_gate
+            bin/hotspot_coverage_gate
+            bin/conflict_marker_gate
+            bin/golden_master_gate
+            bin/all_gateway_runner
+            bin/impact_closure_selector
+            bin/setup-hooks
+            manifest.txt
+          if-no-files-found: error
+
+      - name: Record candidate-arm64 artifact history (AXIOM_ARTIFACT_RECORD)
+        # Post-expiry history record — see the bootstrap artifact record above.
+        if: steps.upload-candidate-arm64.outputs.artifact-id != ''
+        env:
+          ARTIFACT_ID: ${{ steps.upload-candidate-arm64.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload-candidate-arm64.outputs.artifact-digest }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          expected_retention_days="${{ github.retention_days }}"
+          if [ -z "$expected_retention_days" ]; then expected_retention_days=unknown; fi
+          record="AXIOM_ARTIFACT_RECORD v1 name=candidate-arm64 run_id=${{ github.run_id }} run_attempt=${{ github.run_attempt }} artifact_id=${ARTIFACT_ID} digest=${ARTIFACT_DIGEST} requested_retention_days=3 expected_retention_days=${expected_retention_days} metadata_status=partial"
+          echo "$record" | tee -a "$GITHUB_STEP_SUMMARY"
+          gh api "/repos/$GITHUB_REPOSITORY/actions/artifacts/${ARTIFACT_ID}" --jq '"observed_expires_at=\(.expires_at) size_in_bytes=\(.size_in_bytes) created_at=\(.created_at)"' \
+            || echo "size_in_bytes=unknown observed_expires_at=unknown metadata_status=degraded" # {.bestEffort("""REST artifact metadata is best-effort by contract: a REST failure degrades loudly (this logged line) and NEVER fails the job — the retention record above is context-derived and already emitted.""").}
+
+  gateway-shard:
+    # B3: ci-bootstrap was removed from this edge. gateway-shard consumes ONLY
+    # candidate-arm64 (download step below) — it never downloads
+    # ci-bootstrap-artifacts, it re-provisions its own cheap tail via
+    # `make ci-bootstrap-cheap`, and x64 ci-bootstrap products cannot execute on
+    # arm in any case. The edge survived commit d080d256d, which removed the
+    # artifact download but left the barrier, so every shard leg idled behind an
+    # unrelated x64 job. select + candidate-build-arm are real consumption edges
+    # and stay.
+    needs: [select, candidate-build-arm, sl09-scope]
+    # A3 조건부 실행: workflow_call(force_full, select skipped)/select 실패 → full 폴백(전량),
+    # mode=full → 전량, mode=selected → gatewayTestScope=='ALL'(W8 선택, shards 0..7 전량),
+    # none/selected-W8-미포함 → 전량 스킵(러너 미배정).
+    # 참고: matrix.shard는 job-level if 문맥에서 사용 불가(공식 Contexts 표 —
+    # jobs.<job_id>.if 허용 문맥 = github/needs/vars/inputs + status 함수).
+    # 선택 판정은 W8 단위(unit granularity) → shards는 전량 또는 공집합이며,
+    # 정확한 shard 집합 일치는 proof-reconcile이 executed set으로 fail-closed
+    # 검증한다. matrix는 static [0..7]/K=8 유지 (ADR-0023 A1.8, POLICY 다이얼 금지).
+    # SL-09 scope 게이트 (epoch N+6 acceptance I-3 보완): gateway-shard = SL-09
+    # 귀속 실행 잡 — SL-09 미정착(notYet) 시 미발화 (NO-FIRE — 실행 기록 없음).
+    # select.success 여부와 무관하게 게이트 우선 (select 실패 full 폴백도 SL-09
+    # 발화 — SL-09 승격 후 복원).
+    if: ${{ always() && needs.sl09-scope.outputs.scope_sl09 == 'true' && (needs.select.result != 'success' || needs.select.outputs.mode == 'full' || needs.select.outputs.gatewayTestScope == 'ALL') }}
+    # P5/holdout 채택 (c*=C3, t_train_protocol §5.1/§7.1): shard는 HEAVY class —
+    # ubuntu-24.04-arm. 동일-아키 제약(h4 §4-b, 유지): x64 ci-bootstrap 아티팩트를
+    # arm이 실행할 수 없다. Phase 2 item 9: arm 후보 산출물의 생성 authority는
+    # candidate-build-arm(동일-아키, 1회) 단독 — shard는 candidate-arm64를
+    # download로 소비하고 재생성 0 (compile=0). 하류 fail-closed 게이트
+    # (identity-gate union==86 + proof-reconcile executed==decision) 동일 의미.
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).arm64 }}" ]
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    env:
+      AXIOM_PROVE_WORKERS: "1"
+      # B1: this leg is a pure CONSUMER of candidate-arm64. It compiles none of
+      # the landing-lane products — it asserts them (ci/checker.mk
+      # gateway-binaries-consume / gateway-hook-binary-consume) and fails closed
+      # if one is missing. Compile count per leg: 10 → 0.
+      AXIOM_GATEWAY_BINARIES: consume
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.target_sha || github.sha }}
+          clean: false
+
+      # Restore-only cache reader for B (no B save post-step — 8 concurrent
+      # legs therefore create no cache-write races; cache is acceleration,
+      # never evidence. A-layer still saves, guarded + first-save-wins).
+      # arm A/B-key는 image 포함 구성 → x64 엔트리 미히트 = composite의 arm 경로
+      # (tarball/jq-arm/z3-arm, fix #250/#253/#254) + skip-nimble + 인-트리 deps로
+      # self-provision (h4-r3 실증 경로와 동일).
+      - uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          cache-save-enabled: 'false'
+          cache-build-source: ${{ inputs.target_sha || github.sha }}
+          skip-nimble-install: 'true'
+
+      - name: 'Project deps (warm-equivalent in-tree — arm A-miss 전제)'
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.choosenim/toolchains/nim-2.2.10/bin:$PATH"
+          nimble install -y
+          echo "deps installed (warm-equivalent)"
+
+      - name: Download candidate-arm64 (단일 authority 산출물 — compile=0)
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: candidate-arm64
+          path: .
+
+      # 소비 측 fail-closed 검증: 산출물 존재 + 실행 비트 + producer manifest의
+      # per-file sha256 결속 (전송 무결성 — ci-bootstrap manifest 동일 스키마).
+      # chmod +x: download-artifact v4는 exec 비트를 보존하지 않는다 (proof-reconcile의
+      # `chmod +x verifier/proof_reconcile_gate`와 동일 보상 — run 36301276228 실측).
+      - name: 'Verify candidate consumption (fail-closed — manifest digest binding)'
+        run: |
+          set -euo pipefail
+          chmod +x bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas \
+                    bin/run_gate bin/nimtry build/git_wrapper build/command_policy_gate \
+                    bin/hotspot_coverage_gate bin/conflict_marker_gate bin/golden_master_gate \
+                    bin/all_gateway_runner bin/impact_closure_selector bin/setup-hooks
+          for f in bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas \
+                   bin/run_gate bin/nimtry build/git_wrapper build/command_policy_gate \
+                   bin/hotspot_coverage_gate bin/conflict_marker_gate bin/golden_master_gate \
+                   bin/all_gateway_runner bin/impact_closure_selector bin/setup-hooks; do
+            test -x "$f" || { echo "FAIL: $f missing or not executable after download"; exit 1; }
+            expect=$(awk -v f="$f" '$2 == f {print $1}' manifest.txt)
+            test -n "$expect" || { echo "FAIL: $f missing from candidate manifest"; exit 1; }
+            actual=$(sha256sum "$f" | cut -d' ' -f1)
+            test "$actual" = "$expect" || { echo "FAIL: $f digest mismatch (manifest=$expect actual=$actual)"; exit 1; }
+          done
+          echo "CANDIDATE-CONSUME OK (aarch64) — compile=0, $(grep -c '^[0-9a-f]\{64\} ' manifest.txt) products sha256-bound to producer manifest (build_sha=$(sed -n 's/^build_sha = //p' manifest.txt))"
+
+      - name: Provision cheap bootstrap tail (CAS install, hooks, scope, baseline)
+        run: |
+          make ci-bootstrap-cheap
+        timeout-minutes: 10
+
+      - name: Partition audit (union == 86, pairwise disjoint — fail-closed)
+        run: make test-gateway-shard-audit SHARD_COUNT=8
+
+      - name: Run gateway shard (deterministic 8-way split)
+        run: make test-gateway SHARD_COUNT=8 SHARD_INDEX=${{ matrix.shard }}
+        timeout-minutes: 25
+
+      # A3 실행 사실: 이 shard leg가 실제로 실행됐다는 fact를 decision에 묶는다.
+      # decision이 존재할 때만 발행 (workflow_call(force_full)/select-실패 → proof-reconcile skipped).
+      # decisionHash = select의 decision.json sha256 (proof_reconcile_gate가
+      # 다운로드한 decision.json의 재계산값과 대조).
+      - name: Emit executed record (A3 — binds this run to the decision)
+        if: needs.select.result == 'success'
+        env:
+          MODE: ${{ needs.select.outputs.mode }}
+          DECISION_HASH: ${{ needs.select.outputs.decisionHash }}
+        run: |
+          set -euo pipefail
+          cat > executed-shard-${{ matrix.shard }}.json <<EOF
+          {"schema":"axiom/ci-executed/v1","job":"gateway-shard","shard":${{ matrix.shard }},"workUnits":["W8"],"mode":"$MODE","decisionHash":"$DECISION_HASH"}
+          EOF
+
+      - name: Upload executed record
+        if: needs.select.result == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: executed-shard-${{ matrix.shard }}
+          path: executed-shard-${{ matrix.shard }}.json
+          if-no-files-found: error
+          retention-days: 7
+
+      # Identity set 항등 증명원: 각 shard의 run-suite testcase name(JUnit —
+      # build/gateway-junit.xml, Makefile:test-gateway가 --junit-output으로 생성)을
+      # 보존해 8-way 분할이 전체 비즈니스 시나리오(86개)를 빠짐없이 덮는지
+      # 재현 가능하게 감사한다. 파일 부재 시 warn(fail-closed 감사 기준은
+      # Partition audit 스텝이 이미 담당).
+      - name: Upload gateway junit results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: gateway-junit-shard-${{ matrix.shard }}
+          path: build/gateway-junit.xml
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Dump gateway test run logs on failure
+        if: failure()
+        run: |
+          for f in build/gateway-tests/logs/*.run.log; do
+            echo "=== $f"
+            tail -n 150 "$f"
+          done
+
+  # Post-execution identity-set gate. A3 일반화:
+  #   - mode=full / workflow_call(force_full) / select-실패(full 폴백): 기존 union==착지집합 / 중복 0 무변경
+  #     (EXPECTED_GATEWAY_TESTS 기본 'ALL' — M10에서 L2는 이 불변식으로 환원)
+  #   - mode=none (EXPECTED_GATEWAY_TESTS='EMPTY'): shard 0개 실행. B4 정정 —
+  #     예전 주석은 여기서 "identity-gate는 통과 처리"라고 적었고 ci/checker.mk
+  #     의 policy-gate는 같은 조건에서 FAIL이라 두 표면이 모순이었다(DEBT#470).
+  #     이제 한 규칙으로 수렴한다: 착지 집합은 스코프 선택기와 무관하게 실행되어야
+  #     하며, 공집합이 관철되려면 selector가 VERIFIED oracle evidence로 파생한
+  #     기록이 있어야 한다(ci-select-decision: mode=none ∧ gatewayTestScope=EMPTY
+  #     ∧ derivedEmpty=true, 이 run의 decisionHash에 결속). 기록이 있으면 전 항목을
+  #     RECORDED N/A로 계정하고 감사 가능한 N/A 레코드 아티팩트를 발행하며,
+  #     기록이 없으면 FAIL이다 — "근거 없는 부재는 유효한 공집합이 아니다"
+  #     (docs/spec/merge_admission_controller.md §2 missing ≠ valid empty).
+  #     기존 if: always() 의미 유지 (gateway-shard가 skipped여도 이 잡은 실행).
+  #   - mode=selected: W8 단위 → scope 'ALL' — legacy 경로와 동일.
+  # Shard가 0개여도 이 잡이 전용 VM을 소비하지 않도록 GitHub-hosted로
+  # 이동: 이 gate는 순수 shell 레시피(ls/grep/comm — nim toolchain 불요)이며
+  # full L2 검증 의미(union==86)는 다운로드한 junit artifact로 그대로 유지된다.
+  # 잡 구조(상한 10 jobs: ci-bootstrap 1 + candidate-build-arm 1 +
+  # gateway-shard 8)는 그대로 — 단 이 잡이 소비하는 gateway 산출물은
+  # SL-09 게이트가 true일 때만 존재한다. SL-09 미승격 epoch(현재 N+7)에서
+  # release-ship L2 경로의 실제 실행은 ci-bootstrap 1잡뿐이며 gateway
+  # 스위트는 실행되지 않는다 (실행 집합의 권위 = executed-jobs 잡의
+  # `executed_jobs` 출력 — 호출자가 계약 대조로 fail-closed 검증).
+  # identity verifier 1잡이 전용 러너 수요에서 제외되는 것이 K=8/matrix와
+  # 무관한 러너 배치 변경이다 (ADR-0024).
+  gateway-identity-gate:
+    needs: [gateway-shard, select, sl09-scope]
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 10
+    if: ${{ always() && needs.sl09-scope.outputs.scope_sl09 == 'true' }}
+    env:
+      EXPECTED_GATEWAY_TESTS: ${{ needs.select.outputs.gatewayTestScope || 'ALL' }}
+      # B4: binds the recorded derivation to THIS run's decision (same sha256
+      # proof-reconcile uses), so an empty scope can only be admitted by this
+      # run's own selector verdict, never by a stale/foreign decision.json.
+      EXPECTED_GATEWAY_DECISION_HASH: ${{ needs.select.outputs.decisionHash }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.target_sha || github.sha }}
+          clean: false
+
+      - name: Download all shard junit artifacts
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: build/gateway-junit-dir
+
+      # B4: the ONLY record that may admit an empty landing-lane scope.
+      # SOFT download, FAIL-CLOSED judgment — same contract as the
+      # derived-closure load below: an absent artifact must not kill this job,
+      # but its absence is judged by the gate, never reinterpreted as "nothing
+      # to verify" (missing ≠ valid empty). In ALL mode this record is unused.
+      - name: Load selector decision record (soft — gate judges presence)
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        continue-on-error: true
+        with:
+          name: ci-select-decision
+          path: build/gateway-decision-dir
+
+      - name: Verify identity set (fail-closed — ExpectedNodes == AccountedNodes)
+        run: make test-gateway-identity-gate SHARD_COUNT=8
+
+      # The recorded N/A is an artifact, not an absence (§0.9 silent skip 금지).
+      # Uploaded with if-no-files-found: error so an EMPTY verdict can never be
+      # published without its record; in ALL mode no N/A record is produced and
+      # this step simply does not fire.
+      - name: Upload empty-scope N/A record
+        if: always() && hashFiles('build/gateway-decision-dir/gateway-na-record.xml') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: gateway-empty-scope-na
+          path: build/gateway-decision-dir/gateway-na-record.xml
+          if-no-files-found: error
+          retention-days: 14
+
+  # ── A3: proof-reconcile — Decision Record ↔ executed 재확인 (GitHub-hosted) ─
+  # GitHub은 SKIPPED를 Success로 취급하므로 "skip 됐다" 자체는 성공이 아니다.
+  # "왜 skip/선택됐는지가 Decision Record에 있고(선택 = selector의 provably
+  # 판정, M5), 실제 실행 set이 decision과 정확 일치하는지"가 성공이다 — 이
+  # 잡이 그 재확인을 fail-closed로 수행한다 (proof_reconcile_gate).
+  #   - select success + decision 존재: executed(set exact) == decision의
+  #     executableWorkUnits × shards, decisionHash 바인딩, mode 일치.
+  #   - mode=none: executed 0개가 정답 (실행多了도 FAIL).
+  #   - workflow_call(force_full, select skipped)/select 실패: decision 없음 →
+  #     이 잡도 skipped. 그 경로의 gateway 검증은 identity-gate(always,
+  #     union==86)가 담당 — 최소 변경으로 full 경로는 회귀하지 않는다 (ADR-0024).
+  #     (단 SL-09 미승격 epoch에서는 identity-gate도 SL-09 게이트로 미실행 —
+  #      release-ship L2는 build+provenance만 검증하며, 실행 집합은
+  #      executed_jobs 출력으로 발행되어 호출자가 계약 대조로 검증한다.)
+  # verifier는 select job의 B-compile 스텝이 B(전체 trusted tree)에서 컴파일해
+  # artifact로 넘긴다 (ADR C2 Gate A — 결정론; H는 실행 코드가 아니다).
+  proof-reconcile:
+    needs: [select, ci-bootstrap, gateway-shard, sl09-scope]
+    # implicit success() 기본값을 always()로 덮어써서 select 성공(decision 존재)만이
+    # 실행 조건 — bootstrap/shard skip(legs=0/partial)에서도 reconcile이
+    # executed==selected를 fail-closed 검증한다(A3 skip-자체 검증).
+    # workflow_call(force_full)/select 실패 시에는 select.result != success → self-skip 유지(기존 계약 불변).
+    if: ${{ always() && needs.select.result == 'success' && needs.sl09-scope.outputs.scope_sl09 == 'true' }}
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.target_sha || github.sha }}
+          clean: false
+
+      - name: Download decision record
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ci-select-decision
+          path: decision-dir
+
+      - name: Download reconcile verifier
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ci-select-verifier
+          path: verifier
+
+      # derived-closure(derived-H.txt)는 org gate closure job의 same-run artifact —
+      # admission-check.yml:797-803과 동일 소비 선례 (pre-gate/부재 epoch 대비
+      # continue-on-error soft 다운로드: artifact가 없어도 이 잡은 죽지 않는다.
+      # 부재 판정은 게이트가 fail-closed로 담당 — 워크플로가 0 미선언하지 않음).
+      - name: Load derived-closure sets (org gate artifact, soft)
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        continue-on-error: true
+        with:
+          name: derived-closure
+          path: .derived-closure
+
+      # executed-* artifact는 decision이 존재하는 실행 job만 업로드한다.
+      # decision이 0개 실행을 기대하면(mode=none / selected-실행가능-0) 다운로드를
+      # 건너뛴다 — download-artifact는 0개 매치 시 실패하므로. "어떤 파일이
+      # 기대되는가"는 decision envelope의 자체 사영(ciBootstrap/shards)에서 온다
+      # (YAML에서 재판정 아님 — M7).
+      # merge-multiple: executed-*.json 고유 파일명이라 플랫 병합이 안전하다.
+      - name: Download executed records (when any are expected)
+        if: ${{ needs.select.outputs.ciBootstrap == 'true' || needs.select.outputs.shards != '[]' }}
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: 'executed-*'
+          path: executed-dir
+          merge-multiple: true
+
+      # 오라클 증거(ci-select-decision artifact에 동봉)와 derived-H(org gate
+      # closure artifact)는 게이트에 경로로 전달 — 해석·부재 판정은 게이트의
+      # fail-closed 도메인 (있으면 결속 검증, 없으면 게이트가 판정).
+      - name: Run reconcile gate (executed == selected, fail-closed)
+        run: |
+          set -euo pipefail
+          mkdir -p executed-dir
+          chmod +x verifier/proof_reconcile_gate
+          ./verifier/proof_reconcile_gate --decision-dir decision-dir --executed-dir executed-dir \
+            --oracle-evidence decision-dir/oracle-evidence.json --derived-h .derived-closure/derived-H.txt
+
+  # ── executed-jobs — 실행된 잡 집합 발행 (호출자 소비 단일 정규 문자열) ─────
+  # GitHub은 재사용 워크플로의 내부 잡을 호출자에게 노출하지 않는다 — 호출자가
+  # 읽을 수 있는 것은 이 워크플로의 출력뿐이다. 따라서 "어떤 잡이 실제로
+  # 돌았고 어떤 결론이었는가"를 callee가 직접 집약·발행한다. 호출자
+  # (release-ship)는 이 문자열을 기대 계약과 대조한다 — 미선언/추가/결론
+  # 불일치 = fail-closed.
+  #
+  # 집합의 범위 = 검증 레인 잡 6종 (select · ci-bootstrap · candidate-build-arm ·
+  # gateway-shard · gateway-identity-gate · proof-reconcile). 워크플로 인프라
+  # 잡(sl09-scope · executed-jobs)은 검증 레인이 아니므로 집합에 포함하지
+  # 않는다 — 그 둘의 실패는 워크플로 자체 실패로 표면화되어 호출자가
+  # fail-closed로 막는다 (재사용 워크플로 호출은 내부 잡 실패 시 실패한다).
+  #
+  # 결론 판독 = needs.<job>.result (success|failure|skipped|cancelled).
+  # matrix 잡(gateway-shard 8-leg)의 result는 매트릭스 전체 결과다 — 8-leg
+  # 전부 성공일 때만 'success'. leg 단위 목록은 GitHub이 노출하지 않으므로
+  # leg粒도는 미검증 잔여항목으로 남는다 (FUTURE).
+  #
+  # SL-09 no-fire 사유: SL-09 게이트로 묶인 잡이 skipped이면 괄호에
+  # sl09_not_promoted를 명시한다 — SKIPPED와 SUCCESS를 절대 collapse하지
+  # 않기 위함. (이 토큰은 "그 잡의 스킵 사유 전수"가 아니라 "SL-09 스코프
+  #  사실"이다 — 예: proof-reconcile은 select 미실행 사유로도 스킵될 수 있다.)
+  executed-jobs:
+    if: ${{ always() }}
+    needs: [select, sl09-scope, ci-bootstrap, candidate-build-arm, gateway-shard, gateway-identity-gate, proof-reconcile]
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).slim }}" ]
+    timeout-minutes: 5
+    outputs:
+      executed_jobs: ${{ steps.aggregate.outputs.executed_jobs }}
+    steps:
+      - name: Publish executed job set (name=conclusion — sorted, comma-joined)
+        id: aggregate
+        env:
+          R_SELECT: ${{ needs.select.result }}
+          R_CI_BOOTSTRAP: ${{ needs.ci-bootstrap.result }}
+          R_CANDIDATE_BUILD_ARM: ${{ needs.candidate-build-arm.result }}
+          R_GATEWAY_SHARD: ${{ needs.gateway-shard.result }}
+          R_GATEWAY_IDENTITY_GATE: ${{ needs.gateway-identity-gate.result }}
+          R_PROOF_RECONCILE: ${{ needs.proof-reconcile.result }}
+          SCOPE_SL09: ${{ needs.sl09-scope.outputs.scope_sl09 }}
+        run: |
+          set -euo pipefail
+          # The closure deriver resolves every command name statically, so this
+          # step is written without shell function definitions: a plain loop
+          # over "name:result" pairs, explicit equality tests, no `local`.
+          entries=""
+          for pair in \
+            "select:$R_SELECT" \
+            "ci-bootstrap:$R_CI_BOOTSTRAP" \
+            "candidate-build-arm:$R_CANDIDATE_BUILD_ARM" \
+            "gateway-shard:$R_GATEWAY_SHARD" \
+            "gateway-identity-gate:$R_GATEWAY_IDENTITY_GATE" \
+            "proof-reconcile:$R_PROOF_RECONCILE"; do
+            entry_name="${pair%%:*}"
+            entry_res="${pair##*:}"
+            if [ "$entry_res" != "success" ] && [ "$entry_res" != "failure" ] \
+               && [ "$entry_res" != "skipped" ] && [ "$entry_res" != "cancelled" ]; then
+              echo "::error::executed-jobs: job '$entry_name' has an unexpected conclusion '$entry_res' (fail-closed)" >&2
+              exit 1
+            fi
+            entry="$entry_name=$entry_res"
+            if [ "$entry_res" = "skipped" ] && [ "$SCOPE_SL09" = "false" ]; then
+              if [ "$entry_name" = "candidate-build-arm" ] || [ "$entry_name" = "gateway-shard" ] \
+                 || [ "$entry_name" = "gateway-identity-gate" ] || [ "$entry_name" = "proof-reconcile" ]; then
+                entry="$entry_name=skipped(sl09_not_promoted)"
+              fi
+            fi
+            if [ -z "$entries" ]; then
+              entries="$entry"
+            else
+              entries="$entries,$entry"
+            fi
+          done
+          out="$(printf '%s' "$entries" | tr ',' '\n' | LC_ALL=C sort | tr '\n' ',')"
+          out="${out%,}"
+          echo "executed_jobs=$out" >> "$GITHUB_OUTPUT"
+          echo "EXECUTED_JOBS: $out"
+          echo "$out" >> "$GITHUB_STEP_SUMMARY"

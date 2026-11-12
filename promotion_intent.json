@@ -1,0 +1,28 @@
+{
+  "expectedNimTypes": [
+    "(int,string)",
+    "Natural",
+    "Option[int]",
+    "Option[string]",
+    "Positive",
+    "Table[string,int]",
+    "array[10,int]",
+    "bool",
+    "char",
+    "float",
+    "int",
+    "range[0..255]",
+    "range[0..65535]",
+    "seq[bool]",
+    "seq[int]",
+    "seq[string]",
+    "string",
+    "uint",
+    "uint16",
+    "uint32",
+    "uint64",
+    "uint8",
+    "void"
+  ],
+  "reason": "canonical type_mapping asset set (rebuild_assets promotion intent)"
+}

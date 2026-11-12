@@ -1,0 +1,5 @@
+{
+  "schema_version": "1.0.0",
+  "description": "SSOT for Git LFS pointer validation exceptions. Per AGENTS.md §0.6b, files under 10KB may be tracked directly without LFS.",
+  "exceptions": []
+}

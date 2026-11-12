@@ -1,0 +1,13 @@
+// main/phase0.executor_authority.json — MAIN-checkout trusted-executor-set
+// fixture (Phase 0, V-A'4). Mirrors config/executor_authority.json exactly:
+// full-line `//` comments + phase0 = {E1} only. E2 (b1561094...) and the
+// attacker blob (e7414d7b...) are NOT members — an E2-head attest attempt
+// must be denied while main sits in Phase 0.
+{
+  "schemaVersion": 1,
+  "policyId": "axiom-executor-authority-v1",
+  "phase": "phase0",
+  "trusted": [
+    "65a3c58f305baf46dd9e044316b46a19ccd01ba7"
+  ]
+}

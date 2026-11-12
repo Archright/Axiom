@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "policyHash": "5beafce25696f68ba34be2ee4f62fbba9b5ec51d3df81f5ab191f78702ad9d1e",
+  "bundleDigest": "6a58a213a8a59935bb27e88f089cd2b779d439252b637da30464c878f7d043d9",
+  "invariantStates": {
+    "R1": "FAIL",
+    "R2": "FAIL",
+    "R3": "PASS",
+    "R4": "FAIL",
+    "R5": "FAIL",
+    "R6": "PASS",
+    "R7": "FAIL",
+    "R8": "FAIL"
+  },
+  "verdict": "NO-GO",
+  "conditions": [],
+  "decisionDigest": "b257311040a60a47412bda2f60a51b76658666e9677ac1b9032cb9a1746c5a4e"
+}

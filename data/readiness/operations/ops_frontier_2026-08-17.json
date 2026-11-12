@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "collection": {
+    "collector": "main-agent-e3-frontier-measurement",
+    "method": "manual",
+    "generatedAt": "2026-08-17T17:00:00Z",
+    "freshUntil": "2026-09-16T17:00:00Z"
+  },
+  "snapshot": {
+    "path": "/tmp/ax_golden_snap_A",
+    "basis": "pre-built snapshot A (not fresh clone)",
+    "binary": "bin/ax (v0.3.7, built 2026-08-17T13:34Z)"
+  },
+  "command": {
+    "cmd": "cd /tmp/ax_golden_snap_A && time ./bin/ax prove",
+    "args": "default frontier, no --limit",
+    "exitCode": 1,
+    "signal": "none (no SIGSEGV)",
+    "wallTimeSeconds": 14.968,
+    "userTimeSeconds": 13.331,
+    "sysTimeSeconds": 1.245
+  },
+  "vkd": {
+    "verified": 0,
+    "total": 23,
+    "ratio": 0.0,
+    "source": "ax report --json → metrics.vkd (canonical projection)"
+  },
+  "notes": [
+    "Exit code 1 = verification-failure state (per R5 contract), NOT a crash. IR pipeline FAIL for kernel: firstBoolCore triggered integrity breach.",
+    "No SIGSEGV observed — process exited cleanly with exit code 1.",
+    "VKD = 0/23 = 0.0% at snapshot state — consistent with prior audit measurements.",
+    "This is an operational measurement for readiness gate/evaluation input, not a product readiness verdict."
+  ]
+}

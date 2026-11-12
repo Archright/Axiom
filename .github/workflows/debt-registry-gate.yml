@@ -1,0 +1,36 @@
+name: debt-registry-gate
+
+on:
+  pull_request:
+  merge_group:
+    types:
+      - checks_requested
+
+permissions:
+  contents: read
+
+concurrency:
+  group: debt-registry-gate-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  debt-registry-gate:
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          cache-build-source: ${{ github.sha }}
+      - name: Ensure Draft 2020-12 validator
+        # PEP 668: Ubuntu 24.04 marks the system interpreter EXTERNALLY-MANAGED,
+        # which refuses --user installs. On an ephemeral runner the guard protects
+        # nothing we keep, so it is disabled via env (ignored by pip < 23, unlike
+        # the CLI flag) and the --user target stays as-is.
+        run: PIP_BREAK_SYSTEM_PACKAGES=1 python3 -m pip install --user 'jsonschema==4.26.0'
+      - name: Build canonical debt validator
+        run: make bin/debt_engine
+      - name: Enforce Theater registry contract (unconditional)
+        run: bin/debt_engine --validate
+      - name: Theater five-field negative fixture
+        run: python3 tests/ci/test_debt_schema_theater_rule.py

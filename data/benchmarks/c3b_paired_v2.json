@@ -1,0 +1,350 @@
+{
+  "baseRef": "eaed53d8a",
+  "environmentIdentity": {
+    "axiomStateDir": "per-worktree",
+    "cachePolicy": "default",
+    "cpu": "x86_64",
+    "leanVersion": "v4.33.0",
+    "nimVersion": "2.2.10",
+    "os": "Linux"
+  },
+  "generatedAt": "2026-09-05",
+  "note": "C3b re-measurement with corrected symbols-file (buildTopologyAnalysis approach, 1079 fileSymbols entries). N0-N3 all measured with 5 SMOKE pairs each.",
+  "scenarios": {
+    "N0": {
+      "description": "comment-only mutation (over-approximation control)",
+      "mutation": "Added comment '# N0: comment-only mutation for over-approximation control' to topology_dependency.nim",
+      "pairs": [
+        {
+          "T_handoff_ms": 451.0,
+          "T_plan_ms": 451.0,
+          "T_verify_full_ms": 67932.0,
+          "T_verify_plan_ms": 33719.0,
+          "order": "F->A",
+          "pair_id": 1
+        },
+        {
+          "T_handoff_ms": 451.0,
+          "T_plan_ms": 451.0,
+          "T_verify_full_ms": 43896.0,
+          "T_verify_plan_ms": 34332.0,
+          "order": "A->F",
+          "pair_id": 2
+        },
+        {
+          "T_handoff_ms": 450.0,
+          "T_plan_ms": 450.0,
+          "T_verify_full_ms": 44344.0,
+          "T_verify_plan_ms": 37932.0,
+          "order": "F->A",
+          "pair_id": 3
+        },
+        {
+          "T_handoff_ms": 476.0,
+          "T_plan_ms": 476.0,
+          "T_verify_full_ms": 45510.0,
+          "T_verify_plan_ms": 35739.0,
+          "order": "A->F",
+          "pair_id": 4
+        },
+        {
+          "T_handoff_ms": 464.0,
+          "T_plan_ms": 464.0,
+          "T_verify_full_ms": 45333.0,
+          "T_verify_plan_ms": 34405.0,
+          "order": "F->A",
+          "pair_id": 5
+        }
+      ],
+      "stats": {
+        "maxDelta_ms": 34213.0,
+        "maxSpeedup": 2.01,
+        "meanDelta_ms": 14177.6,
+        "meanSpeedup": 1.41,
+        "medianPairedDelta_ms": 9771.0,
+        "medianSpeedup": 1.28,
+        "minDelta_ms": 6412.0,
+        "minSpeedup": 1.17
+      },
+      "triggerFile": "src/core/topology/topology_dependency.nim",
+      "workAccounting": {
+        "executionRatio": 0.0,
+        "expectedRatio": 0.0,
+        "full_work": {
+          "completed": 0,
+          "executionRatio": 0.0,
+          "expectedRatio": 0.0,
+          "planned": 1,
+          "requested": 5,
+          "selectedRatio": 0.025,
+          "started": 5
+        },
+        "plan_work": {
+          "completed": 0,
+          "planned": 1,
+          "requested": 1,
+          "started": 1
+        },
+        "selectedRatio": 0.025
+      }
+    },
+    "N1": {
+      "description": "low impact - literal change (60\u219259 in proximityScore)",
+      "mutation": "Changed literal 60\u219259 in proximityScore function (topology_dependency.nim)",
+      "pairs": [
+        {
+          "T_handoff_ms": 441.0,
+          "T_plan_ms": 441.0,
+          "T_verify_full_ms": 43065.0,
+          "T_verify_plan_ms": 33168.0,
+          "order": "F->A",
+          "pair_id": 1
+        },
+        {
+          "T_handoff_ms": 441.0,
+          "T_plan_ms": 441.0,
+          "T_verify_full_ms": 43077.0,
+          "T_verify_plan_ms": 33316.0,
+          "order": "A->F",
+          "pair_id": 2
+        },
+        {
+          "T_handoff_ms": 443.0,
+          "T_plan_ms": 443.0,
+          "T_verify_full_ms": 43074.0,
+          "T_verify_plan_ms": 33164.0,
+          "order": "F->A",
+          "pair_id": 3
+        },
+        {
+          "T_handoff_ms": 441.0,
+          "T_plan_ms": 441.0,
+          "T_verify_full_ms": 43115.0,
+          "T_verify_plan_ms": 33264.0,
+          "order": "A->F",
+          "pair_id": 4
+        },
+        {
+          "T_handoff_ms": 443.0,
+          "T_plan_ms": 443.0,
+          "T_verify_full_ms": 43080.0,
+          "T_verify_plan_ms": 34039.0,
+          "order": "F->A",
+          "pair_id": 5
+        }
+      ],
+      "stats": {
+        "maxDelta_ms": 9910.0,
+        "maxSpeedup": 1.3,
+        "meanDelta_ms": 9692.0,
+        "meanSpeedup": 1.29,
+        "medianPairedDelta_ms": 9851.0,
+        "medianSpeedup": 1.3,
+        "minDelta_ms": 9041.0,
+        "minSpeedup": 1.27
+      },
+      "triggerFile": "src/core/topology/topology_dependency.nim",
+      "workAccounting": {
+        "executionRatio": 0.0,
+        "expectedRatio": 0.05,
+        "full_work": {
+          "completed": 0,
+          "executionRatio": 0.0,
+          "expectedRatio": 0.05,
+          "planned": 1,
+          "requested": 5,
+          "selectedRatio": 0.025,
+          "started": 5
+        },
+        "plan_work": {
+          "completed": 0,
+          "planned": 1,
+          "requested": 1,
+          "started": 1
+        },
+        "selectedRatio": 0.025
+      }
+    },
+    "N2": {
+      "description": "medium impact - semantics-neutral body change",
+      "mutation": "Added comment '# semantics-neutral remodel' in proximityScore body (topology_dependency.nim)",
+      "pairs": [
+        {
+          "pair_id": 1,
+          "order": "F-A",
+          "order_seed": 1,
+          "T_plan_ms": 56,
+          "T_handoff_ms": null,
+          "T_verify_full_ms": 67065,
+          "T_verify_plan_ms": 33245,
+          "delta_ms": 33820,
+          "speedup": 2.017,
+          "nodes_full": 5,
+          "nodes_plan": 1
+        },
+        {
+          "pair_id": 2,
+          "order": "A-F",
+          "order_seed": 2,
+          "T_plan_ms": 56,
+          "T_handoff_ms": null,
+          "T_verify_full_ms": 43702,
+          "T_verify_plan_ms": 33587,
+          "delta_ms": 10115,
+          "speedup": 1.301,
+          "nodes_full": 5,
+          "nodes_plan": 1
+        },
+        {
+          "pair_id": 3,
+          "order": "F-A",
+          "order_seed": 3,
+          "T_plan_ms": 59,
+          "T_handoff_ms": null,
+          "T_verify_full_ms": 43370,
+          "T_verify_plan_ms": 33514,
+          "delta_ms": 9856,
+          "speedup": 1.294,
+          "nodes_full": 5,
+          "nodes_plan": 1
+        },
+        {
+          "pair_id": 4,
+          "order": "A-F",
+          "order_seed": 4,
+          "T_plan_ms": 60,
+          "T_handoff_ms": null,
+          "T_verify_full_ms": 43503,
+          "T_verify_plan_ms": 33581,
+          "delta_ms": 9922,
+          "speedup": 1.295,
+          "nodes_full": 5,
+          "nodes_plan": 1
+        },
+        {
+          "pair_id": 5,
+          "order": "F-A",
+          "order_seed": 5,
+          "T_plan_ms": 58,
+          "T_handoff_ms": null,
+          "T_verify_full_ms": 43746,
+          "T_verify_plan_ms": 33184,
+          "delta_ms": 10562,
+          "speedup": 1.318,
+          "nodes_full": 5,
+          "nodes_plan": 1
+        }
+      ],
+      "stats": {
+        "pairs_measured": 5,
+        "note": "counterbalanced; pair1 = cold(fs) first-run asymmetry",
+        "median_delta_warm_ms": 10115,
+        "median_speedup_warm": 1.301,
+        "min_delta_ms": 9856,
+        "max_delta_ms": 33820,
+        "all_pairs_speedup_gt_1": true,
+        "nodes": "5 -> 1"
+      },
+      "triggerFile": "src/core/topology/topology_dependency.nim",
+      "workAccounting": {
+        "executionRatio": 0.0,
+        "expectedRatio": 0.075,
+        "full_work": {
+          "completed": 0,
+          "executionRatio": 0.0,
+          "expectedRatio": 0.075,
+          "planned": 1,
+          "requested": 5,
+          "selectedRatio": 0.025,
+          "started": 5
+        },
+        "plan_work": {
+          "completed": 0,
+          "planned": 1,
+          "requested": 1,
+          "started": 1
+        },
+        "selectedRatio": 0.025
+      }
+    },
+    "N3": {
+      "description": "high impact - contract/spec change (postcondition)",
+      "mutation": "Changed postcondition result<=60\u2192result<=61 on proximityScore (topology_dependency.nim)",
+      "pairs": [
+        {
+          "T_handoff_ms": 435.0,
+          "T_plan_ms": 435.0,
+          "T_verify_full_ms": 71674.0,
+          "T_verify_plan_ms": 36571.0,
+          "order": "F->A",
+          "pair_id": 1
+        },
+        {
+          "T_handoff_ms": 455.0,
+          "T_plan_ms": 455.0,
+          "T_verify_full_ms": 55628.0,
+          "T_verify_plan_ms": 34638.0,
+          "order": "A->F",
+          "pair_id": 2
+        },
+        {
+          "T_handoff_ms": 437.0,
+          "T_plan_ms": 437.0,
+          "T_verify_full_ms": 44591.0,
+          "T_verify_plan_ms": 33621.0,
+          "order": "F->A",
+          "pair_id": 3
+        },
+        {
+          "T_handoff_ms": 428.0,
+          "T_plan_ms": 428.0,
+          "T_verify_full_ms": 42982.0,
+          "T_verify_plan_ms": 33292.0,
+          "order": "A->F",
+          "pair_id": 4
+        },
+        {
+          "T_handoff_ms": 423.0,
+          "T_plan_ms": 423.0,
+          "T_verify_full_ms": 43156.0,
+          "T_verify_plan_ms": 33318.0,
+          "order": "F->A",
+          "pair_id": 5
+        }
+      ],
+      "stats": {
+        "maxDelta_ms": 35103.0,
+        "maxSpeedup": 1.96,
+        "meanDelta_ms": 17318.2,
+        "meanSpeedup": 1.5,
+        "medianPairedDelta_ms": 10970.0,
+        "medianSpeedup": 1.33,
+        "minDelta_ms": 9690.0,
+        "minSpeedup": 1.29
+      },
+      "triggerFile": "src/core/topology/topology_dependency.nim",
+      "workAccounting": {
+        "executionRatio": 0.0,
+        "expectedRatio": 0.1,
+        "full_work": {
+          "completed": 0,
+          "executionRatio": 0.0,
+          "expectedRatio": 0.1,
+          "planned": 1,
+          "requested": 5,
+          "selectedRatio": 0.025,
+          "started": 5
+        },
+        "plan_work": {
+          "completed": 0,
+          "planned": 1,
+          "requested": 1,
+          "started": 1
+        },
+        "selectedRatio": 0.025
+      }
+    }
+  },
+  "symbolsFileMethod": "buildTopologyAnalysis over worktree (1079 fileSymbols entries, 8202 symbolDeps/symbolDependents)",
+  "version": "v2"
+}

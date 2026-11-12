@@ -1,0 +1,33 @@
+# cold acceptance runner (verbatim, executed in /tmp/cold2_main @ a24b8b82)
+cd /tmp/cold2_main
+export AXIOM_CHARON_BIN=<user-home>/.cargo/bin/charon
+export GITHUB_TOKEN=$(gh auth token)
+run_case() {
+  local tag=$1; shift
+  export AXIOM_STATE_DIR=/tmp/cold2_state_$tag
+  export AXIOM_PROVE_VAULT_DIR=/tmp/cold2_vault_$tag
+  rm -rf $AXIOM_STATE_DIR $AXIOM_PROVE_VAULT_DIR
+  mkdir -p $AXIOM_STATE_DIR/data $AXIOM_PROVE_VAULT_DIR
+  cp data/verification_scope.lock $AXIOM_STATE_DIR/data/
+  timeout 240 bin/ax prove --project tests/fixtures/rust/axiom_impl_probe "$@" > /tmp/cold2_$tag.out 2> /tmp/cold2_$tag.err
+  echo "$tag exit=$?"
+}
+run_case A --target speak
+run_case B --target axiom_impl_probe::m1::Dog::speak
+run_case C --target axiom_impl_probe::m2::Cat::speak
+run_case NEG --target axiom_impl_probe::m1::Cat::speak
+run_case D --target add_u8
+run_case E --target axiom_impl_probe::m1::add_u8
+# results: A exit=3 / B exit=0 / C exit=0 / NEG exit=3 / D exit=3 / E exit=0
+#
+# EM (external subject, pre-lake-build — same 'IR' failure as E → path-dependence ruled out):
+#   subject copied to /tmp/cold2_impl_subject (own git init) then
+#   timeout 240 bin/ax prove --project /tmp/cold2_impl_subject --target axiom_impl_probe::m1::add_u8
+#   EM exit=0 (lane completed; reason = extractor 'IR' prefix error — see report_extract.txt)
+#
+# Lean leg provisioning (environment precondition of the cold worktree):
+#   cd /tmp/cold2_main/proofs && timeout 900 lake build   # exit 0, 'Build completed successfully (21 jobs)'
+#
+# E2 (E rerun after lake build):
+#   timeout 240 bin/ax prove --project tests/fixtures/rust/axiom_impl_probe --target axiom_impl_probe::m1::add_u8
+#   E2 exit=0 — guard-attempt reason byte-identical to the pre-merge measured reason

@@ -1,0 +1,19 @@
+{
+  "id": "hotspot-coverage-gate",
+  "name": "Axiom hotspot coverage gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/hotspot_coverage_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/",
+  "passFilenames": true,
+  "weight": "medium",
+  "category": "rule",
+  "argsTemplate": [
+    "$repoRoot",
+    "$mode",
+    "$maxJobs"
+  ],
+  "severity": "error"
+}

@@ -1,0 +1,81 @@
+{
+  "$schema": "artifact_spec/v1.0",
+  "description": "Axiom generated artifact classification and governance contract.",
+  "classification": {
+    "A": "canonical committed — decisionologically regenerated, freshness-verified, always tracked in git",
+    "B": "materialized derived — regenerated from canonical inputs, stale-checked on demand, tracked in git",
+    "C": "ephemeral — runtime-only or transient, never committed, never tracked"
+  },
+  "artifacts": [
+    {
+      "id": "algebraic_registry",
+      "path": "tests/specs/algebraic_registry.json",
+      "class": "A",
+      "generator": {
+        "file": "tools/discover_test_debt.nim",
+        "function": "emitAlgebraicRegistry"
+      },
+      "inputSelector": {
+        "include": ["src/**/*.nim"],
+        "exclude": ["build/**", "tests/generated/**", "nimcache/**"]
+      },
+      "sourceOfTruth": "repository",
+      "freshnessRequired": true,
+      "tracked": true,
+      "materializationCommand": "nim r tools/discover_test_debt.nim",
+      "validationCommand": "sha256sum tests/specs/algebraic_registry.json"
+    },
+    {
+      "id": "batch_manifest",
+      "path": "tests/auto_generated/batch_manifest.json",
+      "class": "B",
+      "generator": {
+        "file": "tools/discover_test_debt.nim",
+        "function": "emitBatchManifest"
+      },
+      "inputSelector": {
+        "include": ["src/**/*.nim"],
+        "exclude": ["build/**", "tests/generated/**", "nimcache/**"]
+      },
+      "sourceOfTruth": "repository",
+      "freshnessRequired": true,
+      "tracked": true,
+      "materializationCommand": "nim r tools/discover_test_debt.nim",
+      "validationCommand": "sha256sum tests/auto_generated/batch_manifest.json"
+    },
+    {
+      "id": "branch_coverage",
+      "path": "tests/specs/branch_coverage.json",
+      "class": "C",
+      "generator": {
+        "file": "tools/discover_test_debt.nim",
+        "function": "emitModuleBranchCoverageReport"
+      },
+      "inputSelector": {
+        "include": ["src/**/*.nim"],
+        "exclude": ["build/**", "tests/generated/**", "nimcache/**"]
+      },
+      "sourceOfTruth": "repository",
+      "freshnessRequired": false,
+      "tracked": false,
+      "materializationCommand": "nim r tools/discover_test_debt.nim",
+      "validationCommand": "sha256sum tests/specs/branch_coverage.json"
+    }
+  ],
+  "invariants": [
+    {
+      "id": "INV-001",
+      "description": "ephemeral artifacts must never be tracked in git",
+      "condition": "class == 'C' && tracked == true",
+      "severity": "hard-fail",
+      "enforcedBy": "debt_engine --validate"
+    },
+    {
+      "id": "INV-002",
+      "description": "canonical artifacts must always be tracked in git",
+      "condition": "class == 'A' && tracked == false",
+      "severity": "hard-fail",
+      "enforcedBy": "debt_engine --validate"
+    }
+  ]
+}

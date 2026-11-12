@@ -1,0 +1,15 @@
+{
+  "id": "procedure-gate",
+  "name": "Axiom procedure gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/procedure_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/|src/semantic_proofs|tests/|lakefile|lean-toolchain|axiom.nimble|config.nims",
+  "passFilenames": false,
+  "weight": "light",
+  "category": "policy",
+  "severity": "warn",
+  "execution_mode": "interpreted"
+}

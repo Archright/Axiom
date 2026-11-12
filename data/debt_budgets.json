@@ -1,0 +1,38 @@
+{
+  "version": "v2",
+  "baseline_date": "2026-07-27",
+  "weekly_reduction_pct": 5.0,
+  "description": "Debt budget SSOT \u2014 compiled at build time via staticRead. See docs/spec/structural_enforcement_architecture.md",
+  "metrics": {
+    "import_lint_violations": {
+      "baseline": 36,
+      "target": 0,
+      "description": "tools/ files importing src/core/ or src/gate/ directly (static regex count)"
+    },
+    "layer_violations": {
+      "baseline": 8,
+      "target": 0,
+      "description": "src/core/ files importing gate/ directly (static regex count)"
+    },
+    "effect_violations": {
+      "baseline": 80,
+      "target": 0,
+      "description": "measured count of procs in src/core/ lacking an inline {.raises: [...]} pragma in the declaration header or file-scope push raises scope (AST-semantic projection)"
+    },
+    "nimtry_violations": {
+      "baseline": 704,
+      "target": 0,
+      "description": "soc-domain-imports violations reported by bin/nimtry src/ (check-arch gate); 0 after registry re-baseline + nimtry build restored"
+    },
+    "debt_registry_open": {
+      "baseline": 107,
+      "target": 0,
+      "description": "open entries in data/debt_registry.json"
+    },
+    "debt_registry_closed": {
+      "baseline": 0,
+      "target": 92,
+      "description": "closed entries in data/debt_registry.json"
+    }
+  }
+}

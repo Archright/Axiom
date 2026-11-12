@@ -1,0 +1,7 @@
+{
+  "version": "1.0.0",
+  "current_count": 6,
+  "max_allowed": 6,
+  "decrease_only": true,
+  "note": "Auto-managed by forwarding-stub-cycle-gate. Only decreases allowed."
+}

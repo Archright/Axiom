@@ -1,0 +1,12 @@
+{
+  "keys": [
+    {
+      "kty": "RSA",
+      "use": "sig",
+      "alg": "RS256",
+      "kid": "axiom-admission-test-01",
+      "n": "r9CLSAakaitox4WXd_H9kLeAUN_posahL3D3d9twyZ65TblF0kBTwwcAkzRZxqVvEkLgS3Kn3C5NCc8MnT98AKfvMz88j9x46dHylRP-nMpjyn1ik5OPCNiVz4SFhSQ2Eqp6U-DtRX1qnkBEUH1tF5yFr8A1nuM1E1xuMB2ytkq28Cvd0zLG0xMbLKAl7QEX2I0vs_23CIWXVHAtKyUUYh_fvPwUc6mhp2ZuDmbcmottS7EppWSOQKUBHYD0QSrlLFsRJDAF2sXW8t4-xDrSbjHr1M3LpeOyvJMBg2Ve5zi_X11-77aEJirel2vlFQWSugHWQuol3gIz4HFQ7Z8hhQ",
+      "e": "AQAB"
+    }
+  ]
+}

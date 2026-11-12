@@ -1,0 +1,3 @@
+5352659d8016e7414416e413c45b89f434f22ea3d556231a0d8f7370669dfc06  tests/fixtures/rust/axiom_u64_probe/src/lib.rs
+0d5bb37e32339bb4d2346930033522091fa11d5a44883cf05cc5c546a693ce88  tests/fixtures/rust/axiom_u64_probe/axiom_u64_probe.llbc
+0e5c5fae72d5335a29c8dac47ad9416ca62cbd1991d5fe7ee4090e01afd738ed  tests/fixtures/rust/axiom_u64_probe/axiom.specs.json

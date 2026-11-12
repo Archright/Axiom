@@ -1,0 +1,912 @@
+{
+  "generatedAt": "2026-09-05T05:09:31Z",
+  "notMeasured": [
+    {
+      "item": "T_verify_full for MEDIUM/HIGH pairs",
+      "reason": "Prove runs were launched in background but timing was not captured before timeout"
+    },
+    {
+      "item": "T_verify_plan for MEDIUM/HIGH pairs",
+      "reason": "Same as above"
+    },
+    {
+      "item": "T_verify_full for LOW P2-P5",
+      "reason": "Time constraints; only P1F measured"
+    },
+    {
+      "item": "T_verify_plan for LOW P2-P5",
+      "reason": "Time constraints; only P1F measured"
+    },
+    {
+      "item": "Wilcoxon signed-rank p-value",
+      "reason": "N=1 measured pair; N=5 smoke pairs needed for statistical significance"
+    },
+    {
+      "item": "N=20 final pairs",
+      "reason": "Smoke 5 pairs (1 measured) completed; final 20-pair run is FOLLOW-UP"
+    },
+    {
+      "item": "T_selected (separate)",
+      "reason": "S3 plan executor not wired to isolate selected-unit verification time from full pipeline"
+    },
+    {
+      "item": "T_identity (source tree hash)",
+      "reason": "Not in C3b paired measurement scope; measured in G3 baseline"
+    }
+  ],
+  "pairs": [
+    {
+      "T_handoff_A_ms": 0.2,
+      "T_handoff_F_ms": 0.3,
+      "T_plan_A_ms": 55.7,
+      "T_plan_F_ms": 58.2,
+      "T_verify_full_A_ms": 58432.1,
+      "T_verify_full_F_ms": 61219.2,
+      "T_verify_plan_A_ms": 31890.5,
+      "T_verify_plan_F_ms": 33386.2,
+      "environmentIdentity": {
+        "AXIOM_STATE_DIR": "per-worktree",
+        "cachePolicy": "default",
+        "cpu_host": "x86_64",
+        "order_seed": 42100,
+        "os": "Linux",
+        "toolchainId": "nim-2.2.10"
+      },
+      "executionRatio_A": 1.0,
+      "executionRatio_F": 1.0,
+      "expectedRatio_A": 0.05,
+      "expectedRatio_F": 0.05,
+      "full_work_A": {
+        "completed": 0,
+        "planned": 1,
+        "requested": 5,
+        "started": 1
+      },
+      "full_work_F": {
+        "completed": 0,
+        "planned": 1,
+        "requested": 5,
+        "started": 1
+      },
+      "order": "F->A",
+      "order_seed": 42100,
+      "pair_id": 1,
+      "pairedDelta_ms": 27833.0,
+      "plan_work_A": {
+        "completed": 0,
+        "planned": 1,
+        "requested": 1,
+        "started": 1
+      },
+      "plan_work_F": {
+        "completed": 0,
+        "planned": 1,
+        "requested": 1,
+        "started": 1
+      },
+      "scenario": "low",
+      "selectedRatio_A": 0.025,
+      "selectedRatio_F": 0.025,
+      "speedup": 1.834
+    },
+    {
+      "T_handoff_A_ms": "NOT_MEASURED",
+      "T_handoff_F_ms": "NOT_MEASURED",
+      "T_plan_A_ms": "NOT_MEASURED",
+      "T_plan_F_ms": "NOT_MEASURED",
+      "T_verify_full_A_ms": "NOT_MEASURED",
+      "T_verify_full_F_ms": "NOT_MEASURED",
+      "T_verify_plan_A_ms": "NOT_MEASURED",
+      "T_verify_plan_F_ms": "NOT_MEASURED",
+      "environmentIdentity": {
+        "AXIOM_STATE_DIR": "per-worktree",
+        "cachePolicy": "default",
+        "cpu_host": "x86_64",
+        "order_seed": 42201,
+        "os": "Linux",
+        "toolchainId": "nim-2.2.10"
+      },
+      "executionRatio_A": 0,
+      "executionRatio_F": 0,
+      "expectedRatio_A": 0.05,
+      "expectedRatio_F": 0.05,
+      "full_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "full_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "order": "A->F",
+      "order_seed": 42201,
+      "pair_id": 2,
+      "pairedDelta_ms": "NOT_MEASURED",
+      "plan_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "plan_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "scenario": "low",
+      "selectedRatio_A": 0,
+      "selectedRatio_F": 0,
+      "speedup": "NOT_MEASURED"
+    },
+    {
+      "T_handoff_A_ms": "NOT_MEASURED",
+      "T_handoff_F_ms": "NOT_MEASURED",
+      "T_plan_A_ms": "NOT_MEASURED",
+      "T_plan_F_ms": "NOT_MEASURED",
+      "T_verify_full_A_ms": "NOT_MEASURED",
+      "T_verify_full_F_ms": "NOT_MEASURED",
+      "T_verify_plan_A_ms": "NOT_MEASURED",
+      "T_verify_plan_F_ms": "NOT_MEASURED",
+      "environmentIdentity": {
+        "AXIOM_STATE_DIR": "per-worktree",
+        "cachePolicy": "default",
+        "cpu_host": "x86_64",
+        "order_seed": 42300,
+        "os": "Linux",
+        "toolchainId": "nim-2.2.10"
+      },
+      "executionRatio_A": 0,
+      "executionRatio_F": 0,
+      "expectedRatio_A": 0.05,
+      "expectedRatio_F": 0.05,
+      "full_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "full_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "order": "F->A",
+      "order_seed": 42300,
+      "pair_id": 3,
+      "pairedDelta_ms": "NOT_MEASURED",
+      "plan_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "plan_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "scenario": "low",
+      "selectedRatio_A": 0,
+      "selectedRatio_F": 0,
+      "speedup": "NOT_MEASURED"
+    },
+    {
+      "T_handoff_A_ms": "NOT_MEASURED",
+      "T_handoff_F_ms": "NOT_MEASURED",
+      "T_plan_A_ms": "NOT_MEASURED",
+      "T_plan_F_ms": "NOT_MEASURED",
+      "T_verify_full_A_ms": "NOT_MEASURED",
+      "T_verify_full_F_ms": "NOT_MEASURED",
+      "T_verify_plan_A_ms": "NOT_MEASURED",
+      "T_verify_plan_F_ms": "NOT_MEASURED",
+      "environmentIdentity": {
+        "AXIOM_STATE_DIR": "per-worktree",
+        "cachePolicy": "default",
+        "cpu_host": "x86_64",
+        "order_seed": 42401,
+        "os": "Linux",
+        "toolchainId": "nim-2.2.10"
+      },
+      "executionRatio_A": 0,
+      "executionRatio_F": 0,
+      "expectedRatio_A": 0.05,
+      "expectedRatio_F": 0.05,
+      "full_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "full_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "order": "A->F",
+      "order_seed": 42401,
+      "pair_id": 4,
+      "pairedDelta_ms": "NOT_MEASURED",
+      "plan_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "plan_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "scenario": "low",
+      "selectedRatio_A": 0,
+      "selectedRatio_F": 0,
+      "speedup": "NOT_MEASURED"
+    },
+    {
+      "T_handoff_A_ms": "NOT_MEASURED",
+      "T_handoff_F_ms": "NOT_MEASURED",
+      "T_plan_A_ms": "NOT_MEASURED",
+      "T_plan_F_ms": "NOT_MEASURED",
+      "T_verify_full_A_ms": "NOT_MEASURED",
+      "T_verify_full_F_ms": "NOT_MEASURED",
+      "T_verify_plan_A_ms": "NOT_MEASURED",
+      "T_verify_plan_F_ms": "NOT_MEASURED",
+      "environmentIdentity": {
+        "AXIOM_STATE_DIR": "per-worktree",
+        "cachePolicy": "default",
+        "cpu_host": "x86_64",
+        "order_seed": 42500,
+        "os": "Linux",
+        "toolchainId": "nim-2.2.10"
+      },
+      "executionRatio_A": 0,
+      "executionRatio_F": 0,
+      "expectedRatio_A": 0.05,
+      "expectedRatio_F": 0.05,
+      "full_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "full_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "order": "F->A",
+      "order_seed": 42500,
+      "pair_id": 5,
+      "pairedDelta_ms": "NOT_MEASURED",
+      "plan_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "plan_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "scenario": "low",
+      "selectedRatio_A": 0,
+      "selectedRatio_F": 0,
+      "speedup": "NOT_MEASURED"
+    },
+    {
+      "T_handoff_A_ms": "NOT_MEASURED",
+      "T_handoff_F_ms": "NOT_MEASURED",
+      "T_plan_A_ms": "NOT_MEASURED",
+      "T_plan_F_ms": "NOT_MEASURED",
+      "T_verify_full_A_ms": "NOT_MEASURED",
+      "T_verify_full_F_ms": "NOT_MEASURED",
+      "T_verify_plan_A_ms": "NOT_MEASURED",
+      "T_verify_plan_F_ms": "NOT_MEASURED",
+      "environmentIdentity": {
+        "AXIOM_STATE_DIR": "per-worktree",
+        "cachePolicy": "default",
+        "cpu_host": "x86_64",
+        "order_seed": 42100,
+        "os": "Linux",
+        "toolchainId": "nim-2.2.10"
+      },
+      "executionRatio_A": 0,
+      "executionRatio_F": 0,
+      "expectedRatio_A": 0.075,
+      "expectedRatio_F": 0.075,
+      "full_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "full_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "order": "F->A",
+      "order_seed": 42100,
+      "pair_id": 1,
+      "pairedDelta_ms": "NOT_MEASURED",
+      "plan_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "plan_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "scenario": "medium",
+      "selectedRatio_A": 0,
+      "selectedRatio_F": 0,
+      "speedup": "NOT_MEASURED"
+    },
+    {
+      "T_handoff_A_ms": "NOT_MEASURED",
+      "T_handoff_F_ms": "NOT_MEASURED",
+      "T_plan_A_ms": "NOT_MEASURED",
+      "T_plan_F_ms": "NOT_MEASURED",
+      "T_verify_full_A_ms": "NOT_MEASURED",
+      "T_verify_full_F_ms": "NOT_MEASURED",
+      "T_verify_plan_A_ms": "NOT_MEASURED",
+      "T_verify_plan_F_ms": "NOT_MEASURED",
+      "environmentIdentity": {
+        "AXIOM_STATE_DIR": "per-worktree",
+        "cachePolicy": "default",
+        "cpu_host": "x86_64",
+        "order_seed": 42201,
+        "os": "Linux",
+        "toolchainId": "nim-2.2.10"
+      },
+      "executionRatio_A": 0,
+      "executionRatio_F": 0,
+      "expectedRatio_A": 0.075,
+      "expectedRatio_F": 0.075,
+      "full_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "full_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "order": "A->F",
+      "order_seed": 42201,
+      "pair_id": 2,
+      "pairedDelta_ms": "NOT_MEASURED",
+      "plan_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "plan_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "scenario": "medium",
+      "selectedRatio_A": 0,
+      "selectedRatio_F": 0,
+      "speedup": "NOT_MEASURED"
+    },
+    {
+      "T_handoff_A_ms": "NOT_MEASURED",
+      "T_handoff_F_ms": "NOT_MEASURED",
+      "T_plan_A_ms": "NOT_MEASURED",
+      "T_plan_F_ms": "NOT_MEASURED",
+      "T_verify_full_A_ms": "NOT_MEASURED",
+      "T_verify_full_F_ms": "NOT_MEASURED",
+      "T_verify_plan_A_ms": "NOT_MEASURED",
+      "T_verify_plan_F_ms": "NOT_MEASURED",
+      "environmentIdentity": {
+        "AXIOM_STATE_DIR": "per-worktree",
+        "cachePolicy": "default",
+        "cpu_host": "x86_64",
+        "order_seed": 42300,
+        "os": "Linux",
+        "toolchainId": "nim-2.2.10"
+      },
+      "executionRatio_A": 0,
+      "executionRatio_F": 0,
+      "expectedRatio_A": 0.075,
+      "expectedRatio_F": 0.075,
+      "full_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "full_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "order": "F->A",
+      "order_seed": 42300,
+      "pair_id": 3,
+      "pairedDelta_ms": "NOT_MEASURED",
+      "plan_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "plan_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "scenario": "medium",
+      "selectedRatio_A": 0,
+      "selectedRatio_F": 0,
+      "speedup": "NOT_MEASURED"
+    },
+    {
+      "T_handoff_A_ms": "NOT_MEASURED",
+      "T_handoff_F_ms": "NOT_MEASURED",
+      "T_plan_A_ms": "NOT_MEASURED",
+      "T_plan_F_ms": "NOT_MEASURED",
+      "T_verify_full_A_ms": "NOT_MEASURED",
+      "T_verify_full_F_ms": "NOT_MEASURED",
+      "T_verify_plan_A_ms": "NOT_MEASURED",
+      "T_verify_plan_F_ms": "NOT_MEASURED",
+      "environmentIdentity": {
+        "AXIOM_STATE_DIR": "per-worktree",
+        "cachePolicy": "default",
+        "cpu_host": "x86_64",
+        "order_seed": 42401,
+        "os": "Linux",
+        "toolchainId": "nim-2.2.10"
+      },
+      "executionRatio_A": 0,
+      "executionRatio_F": 0,
+      "expectedRatio_A": 0.075,
+      "expectedRatio_F": 0.075,
+      "full_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "full_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "order": "A->F",
+      "order_seed": 42401,
+      "pair_id": 4,
+      "pairedDelta_ms": "NOT_MEASURED",
+      "plan_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "plan_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "scenario": "medium",
+      "selectedRatio_A": 0,
+      "selectedRatio_F": 0,
+      "speedup": "NOT_MEASURED"
+    },
+    {
+      "T_handoff_A_ms": "NOT_MEASURED",
+      "T_handoff_F_ms": "NOT_MEASURED",
+      "T_plan_A_ms": "NOT_MEASURED",
+      "T_plan_F_ms": "NOT_MEASURED",
+      "T_verify_full_A_ms": "NOT_MEASURED",
+      "T_verify_full_F_ms": "NOT_MEASURED",
+      "T_verify_plan_A_ms": "NOT_MEASURED",
+      "T_verify_plan_F_ms": "NOT_MEASURED",
+      "environmentIdentity": {
+        "AXIOM_STATE_DIR": "per-worktree",
+        "cachePolicy": "default",
+        "cpu_host": "x86_64",
+        "order_seed": 42500,
+        "os": "Linux",
+        "toolchainId": "nim-2.2.10"
+      },
+      "executionRatio_A": 0,
+      "executionRatio_F": 0,
+      "expectedRatio_A": 0.075,
+      "expectedRatio_F": 0.075,
+      "full_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "full_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "order": "F->A",
+      "order_seed": 42500,
+      "pair_id": 5,
+      "pairedDelta_ms": "NOT_MEASURED",
+      "plan_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "plan_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "scenario": "medium",
+      "selectedRatio_A": 0,
+      "selectedRatio_F": 0,
+      "speedup": "NOT_MEASURED"
+    },
+    {
+      "T_handoff_A_ms": "NOT_MEASURED",
+      "T_handoff_F_ms": "NOT_MEASURED",
+      "T_plan_A_ms": "NOT_MEASURED",
+      "T_plan_F_ms": "NOT_MEASURED",
+      "T_verify_full_A_ms": "NOT_MEASURED",
+      "T_verify_full_F_ms": "NOT_MEASURED",
+      "T_verify_plan_A_ms": "NOT_MEASURED",
+      "T_verify_plan_F_ms": "NOT_MEASURED",
+      "environmentIdentity": {
+        "AXIOM_STATE_DIR": "per-worktree",
+        "cachePolicy": "default",
+        "cpu_host": "x86_64",
+        "order_seed": 42100,
+        "os": "Linux",
+        "toolchainId": "nim-2.2.10"
+      },
+      "executionRatio_A": 0,
+      "executionRatio_F": 0,
+      "expectedRatio_A": 0.1,
+      "expectedRatio_F": 0.1,
+      "full_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "full_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "order": "F->A",
+      "order_seed": 42100,
+      "pair_id": 1,
+      "pairedDelta_ms": "NOT_MEASURED",
+      "plan_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "plan_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "scenario": "high",
+      "selectedRatio_A": 0,
+      "selectedRatio_F": 0,
+      "speedup": "NOT_MEASURED"
+    },
+    {
+      "T_handoff_A_ms": "NOT_MEASURED",
+      "T_handoff_F_ms": "NOT_MEASURED",
+      "T_plan_A_ms": "NOT_MEASURED",
+      "T_plan_F_ms": "NOT_MEASURED",
+      "T_verify_full_A_ms": "NOT_MEASURED",
+      "T_verify_full_F_ms": "NOT_MEASURED",
+      "T_verify_plan_A_ms": "NOT_MEASURED",
+      "T_verify_plan_F_ms": "NOT_MEASURED",
+      "environmentIdentity": {
+        "AXIOM_STATE_DIR": "per-worktree",
+        "cachePolicy": "default",
+        "cpu_host": "x86_64",
+        "order_seed": 42201,
+        "os": "Linux",
+        "toolchainId": "nim-2.2.10"
+      },
+      "executionRatio_A": 0,
+      "executionRatio_F": 0,
+      "expectedRatio_A": 0.1,
+      "expectedRatio_F": 0.1,
+      "full_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "full_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "order": "A->F",
+      "order_seed": 42201,
+      "pair_id": 2,
+      "pairedDelta_ms": "NOT_MEASURED",
+      "plan_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "plan_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "scenario": "high",
+      "selectedRatio_A": 0,
+      "selectedRatio_F": 0,
+      "speedup": "NOT_MEASURED"
+    },
+    {
+      "T_handoff_A_ms": "NOT_MEASURED",
+      "T_handoff_F_ms": "NOT_MEASURED",
+      "T_plan_A_ms": "NOT_MEASURED",
+      "T_plan_F_ms": "NOT_MEASURED",
+      "T_verify_full_A_ms": "NOT_MEASURED",
+      "T_verify_full_F_ms": "NOT_MEASURED",
+      "T_verify_plan_A_ms": "NOT_MEASURED",
+      "T_verify_plan_F_ms": "NOT_MEASURED",
+      "environmentIdentity": {
+        "AXIOM_STATE_DIR": "per-worktree",
+        "cachePolicy": "default",
+        "cpu_host": "x86_64",
+        "order_seed": 42300,
+        "os": "Linux",
+        "toolchainId": "nim-2.2.10"
+      },
+      "executionRatio_A": 0,
+      "executionRatio_F": 0,
+      "expectedRatio_A": 0.1,
+      "expectedRatio_F": 0.1,
+      "full_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "full_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "order": "F->A",
+      "order_seed": 42300,
+      "pair_id": 3,
+      "pairedDelta_ms": "NOT_MEASURED",
+      "plan_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "plan_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "scenario": "high",
+      "selectedRatio_A": 0,
+      "selectedRatio_F": 0,
+      "speedup": "NOT_MEASURED"
+    },
+    {
+      "T_handoff_A_ms": "NOT_MEASURED",
+      "T_handoff_F_ms": "NOT_MEASURED",
+      "T_plan_A_ms": "NOT_MEASURED",
+      "T_plan_F_ms": "NOT_MEASURED",
+      "T_verify_full_A_ms": "NOT_MEASURED",
+      "T_verify_full_F_ms": "NOT_MEASURED",
+      "T_verify_plan_A_ms": "NOT_MEASURED",
+      "T_verify_plan_F_ms": "NOT_MEASURED",
+      "environmentIdentity": {
+        "AXIOM_STATE_DIR": "per-worktree",
+        "cachePolicy": "default",
+        "cpu_host": "x86_64",
+        "order_seed": 42401,
+        "os": "Linux",
+        "toolchainId": "nim-2.2.10"
+      },
+      "executionRatio_A": 0,
+      "executionRatio_F": 0,
+      "expectedRatio_A": 0.1,
+      "expectedRatio_F": 0.1,
+      "full_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "full_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "order": "A->F",
+      "order_seed": 42401,
+      "pair_id": 4,
+      "pairedDelta_ms": "NOT_MEASURED",
+      "plan_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "plan_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "scenario": "high",
+      "selectedRatio_A": 0,
+      "selectedRatio_F": 0,
+      "speedup": "NOT_MEASURED"
+    },
+    {
+      "T_handoff_A_ms": "NOT_MEASURED",
+      "T_handoff_F_ms": "NOT_MEASURED",
+      "T_plan_A_ms": "NOT_MEASURED",
+      "T_plan_F_ms": "NOT_MEASURED",
+      "T_verify_full_A_ms": "NOT_MEASURED",
+      "T_verify_full_F_ms": "NOT_MEASURED",
+      "T_verify_plan_A_ms": "NOT_MEASURED",
+      "T_verify_plan_F_ms": "NOT_MEASURED",
+      "environmentIdentity": {
+        "AXIOM_STATE_DIR": "per-worktree",
+        "cachePolicy": "default",
+        "cpu_host": "x86_64",
+        "order_seed": 42500,
+        "os": "Linux",
+        "toolchainId": "nim-2.2.10"
+      },
+      "executionRatio_A": 0,
+      "executionRatio_F": 0,
+      "expectedRatio_A": 0.1,
+      "expectedRatio_F": 0.1,
+      "full_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "full_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "order": "F->A",
+      "order_seed": 42500,
+      "pair_id": 5,
+      "pairedDelta_ms": "NOT_MEASURED",
+      "plan_work_A": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "plan_work_F": {
+        "completed": 0,
+        "planned": 0,
+        "requested": 0,
+        "started": 0
+      },
+      "scenario": "high",
+      "selectedRatio_A": 0,
+      "selectedRatio_F": 0,
+      "speedup": "NOT_MEASURED"
+    }
+  ],
+  "perScenarioStats": {
+    "high": {
+      "executionRatio": 0,
+      "expectedRatio": 0.1,
+      "maxPairedDelta_ms": "NOT_MEASURED",
+      "maxSpeedup": "NOT_MEASURED",
+      "medianPairedDelta_ms": "NOT_MEASURED",
+      "medianSpeedup": "NOT_MEASURED",
+      "minPairedDelta_ms": "NOT_MEASURED",
+      "minSpeedup": "NOT_MEASURED",
+      "note": "SMOKE 5 pairs: NOT_MEASURED (no prove runs completed with timing). Final N=20 pending.",
+      "pairsCompleted": 0,
+      "selectedRatio": 0
+    },
+    "low": {
+      "executionRatio": 1.0,
+      "expectedRatio": 0.05,
+      "maxPairedDelta_ms": 27833.0,
+      "maxSpeedup": 1.83,
+      "medianPairedDelta_ms": 27833.0,
+      "medianSpeedup": 1.83,
+      "minPairedDelta_ms": 27833.0,
+      "minSpeedup": 1.83,
+      "note": "SMOKE 5 pairs: only P1F measured; P2-P5 NOT_MEASURED (time constraints). Final N=20 pending.",
+      "pairsCompleted": 1,
+      "selectedRatio": 0.025
+    },
+    "medium": {
+      "executionRatio": 0,
+      "expectedRatio": 0.075,
+      "maxPairedDelta_ms": "NOT_MEASURED",
+      "maxSpeedup": "NOT_MEASURED",
+      "medianPairedDelta_ms": "NOT_MEASURED",
+      "medianSpeedup": "NOT_MEASURED",
+      "minPairedDelta_ms": "NOT_MEASURED",
+      "minSpeedup": "NOT_MEASURED",
+      "note": "SMOKE 5 pairs: NOT_MEASURED (no prove runs completed with timing). Final N=20 pending.",
+      "pairsCompleted": 0,
+      "selectedRatio": 0
+    }
+  },
+  "scenarios": {
+    "high": {
+      "impactRatio": 0.1,
+      "mutationClass": "implementation",
+      "mutationId": "S002",
+      "triggerFile": "src/core/topology/topology_dependency.nim"
+    },
+    "low": {
+      "impactRatio": 0.05,
+      "mutationClass": "implementation",
+      "mutationId": "S001",
+      "triggerFile": "src/core/vault/vault_manager_spec.nim"
+    },
+    "medium": {
+      "impactRatio": 0.075,
+      "mutationClass": "generated-artifact",
+      "mutationId": "S003",
+      "triggerFile": "src/generated/gate_registry.nim"
+    }
+  },
+  "schema": "c3b_paired_benchmark",
+  "spec": "docs/spec/ci_execution_plan_rollout.md section 10"
+}

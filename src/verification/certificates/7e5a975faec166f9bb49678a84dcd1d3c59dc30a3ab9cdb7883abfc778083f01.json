@@ -1,0 +1,63 @@
+{
+"attestation": {
+"algorithm": "Ed25519",
+"authority": "axiom",
+"claimDigest": "sha256:4565eb5afcc1bb828b3a1912f237326667c2a2031afd7c0a38f97b0a1861305f",
+"journalRef": "11c8b58b6402a578fdc208d3357f7eaab6d6c3c92cb58492d1315aea2aab571b",
+"policyVersion": "axiom.certificate.v3",
+"publicKeyId": "sha256:9a17da4859fa2ee34a5b349c1ee8dabb8e116e8f612c9cfa4f836da8a9337f37",
+"signature": "67600415e844c5f0e2a892364a65f20cffb4a62abb29652c1aa827769de55bb2c3a2ef72c610584098ecc2cbeb5127e5dab70ec43541df8d2e8ef118cf896e08"
+},
+"claim": {
+"functionName": "clampTimeoutMs",
+"modulePath": "src/core/orchestrator/orchestrator_topology_worker.nim",
+"status": "certZ3Candidate",
+"type": "verification"
+},
+"fingerprint": "0c4abd5709ac008dc7594731cdcca36657101a499e3c97db943f4d82bcbe3017",
+"functionName": "clampTimeoutMs",
+"identityDigest": "bf33b7440450d049cd4ccc1ae9901c167da9e9555cd8ac9bbc4f94128085e150",
+"inputHash": "sha256:fbe7ef540d3cf2661e0aba39e6e1daeb740792458bf0275d80166fc45abd2b25",
+"irHash": "7e5a975faec166f9bb49678a84dcd1d3c59dc30a3ab9cdb7883abfc778083f01",
+"kernel": true,
+"leanProposition": "",
+"modulePath": "src/core/orchestrator/orchestrator_topology_worker.nim",
+"provenance": {
+"certificateDigest": "bf33b7440450d049cd4ccc1ae9901c167da9e9555cd8ac9bbc4f94128085e150",
+"journalCommitId": "11c8b58b6402a578fdc208d3357f7eaab6d6c3c92cb58492d1315aea2aab571b"
+},
+"reason": "reclassified:migration certZ3Verified→certZ3Candidate (C0.4)",
+"schemaVersion": "axiom.certificate.v3",
+"smtlib2": "(set-logic QF_BV)\n(set-option :rlimit 30000000)\n(define-fun no_overflow_add ((a (_ BitVec 64)) (b (_ BitVec 64))) Bool\n  (let ((sum (bvadd a b)))\n    (not (or\n      (and (bvsgt a #x0000000000000000) (bvsgt b #x0000000000000000) (bvslt sum #x0000000000000000))\n      (and (bvslt a #x0000000000000000) (bvslt b #x0000000000000000) (bvsgt sum #x0000000000000000))))))\n(define-fun no_underflow_add ((a (_ BitVec 64)) (b (_ BitVec 64))) Bool\n  (let ((sum (bvadd a b)))\n    (not (and (bvslt a #x0000000000000000) (bvslt b #x0000000000000000) (bvsgt sum #x0000000000000000)))))\n(define-fun no_overflow_mul ((_a (_ BitVec 64)) (_b (_ BitVec 64))) Bool\n  (let ((p (bvmul _a _b)))\n    (and (or (= _a #x0000000000000000) (= _b #x0000000000000000) (= (bvsdiv p _a) _b))\n         (not (and (= _a #x8000000000000000) (= _b #xFFFFFFFFFFFFFFFF)))\n         (not (and (= _a #xFFFFFFFFFFFFFFFF) (= _b #x8000000000000000))))))\n(define-fun no_underflow_mul ((_a (_ BitVec 64)) (_b (_ BitVec 64))) Bool\n  (let ((p (bvmul _a _b)))\n    (and (or (= _a #x0000000000000000) (= _b #x0000000000000000) (= (bvsdiv p _a) _b))\n         (not (and (= _a #x8000000000000000) (= _b #xFFFFFFFFFFFFFFFF)))\n         (not (and (= _a #xFFFFFFFFFFFFFFFF) (= _b #x8000000000000000))))))\n(define-fun no_overflow_sub ((a (_ BitVec 64)) (b (_ BitVec 64))) Bool\n  (let ((diff (bvsub a b)))\n    (not (and (bvsgt a #x0000000000000000) (bvslt b #x0000000000000000) (bvslt diff #x0000000000000000)))))\n(define-fun no_underflow_sub ((a (_ BitVec 64)) (b (_ BitVec 64))) Bool\n  (let ((diff (bvsub a b)))\n    (not (and (bvslt a #x0000000000000000) (bvsgt b #x0000000000000000) (bvsgt diff #x0000000000000000)))))\n(declare-fun timeoutMs () (_ BitVec 64))\n(define-fun clampTimeoutMs_impl ((timeoutMs (_ BitVec 64))) (_ BitVec 64)\n  (ite (bvslt timeoutMs #x0000000000001388) #x0000000000001388 (ite (bvsgt timeoutMs #x000000000001D4C0) #x000000000001D4C0 timeoutMs)))\n(assert (let ((result (clampTimeoutMs_impl timeoutMs))) (not (and (bvsge result #x0000000000001388) (bvsle result #x000000000001D4C0)))))\n(check-sat)",
+"solverInputDigest": "sha256:65dd249d0bf39dbb71010e0266274e15d6bbe0c50d0fdd7c75ba0138f252ad90",
+"solverInvocation": {
+"engine": "z3",
+"mode": "none",
+"strategy": "none",
+"version": "4.13.3"
+},
+"solverMeta": {
+"leanCompilerVerified": false,
+"negativeTestResult": false,
+"solverProvenance": "spZ3SAT",
+"solverVersion": "4.13.3",
+"vacuityChecked": true,
+"vacuityProven": false,
+"z3Executed": true
+},
+"solverResultDigest": "sha256:a318a64f259ea44e4ee9f42d594ead79a092ed9ed083677c20585c0b04bd4282",
+"solverStatus": "unsat",
+"sourceHash": "bfd304fc19e6e88509dab02dc049860d153c7e8764beadb40af571fb13a7a4dd",
+"status": "certZ3Candidate",
+"toolchainIdentity": {
+"axiomVersion": "v0.3.7",
+"lean": "4.29.0",
+"nim": "2.2.10",
+"z3": "4.13.3"
+},
+"translationVersion": "axiom-ir-smt-v1",
+"trustCommitId": "11c8b58b6402a578fdc208d3357f7eaab6d6c3c92cb58492d1315aea2aab571b",
+"trusted": true,
+"verificationTier": "z3-verified",
+"winningStrategy": "none"
+}

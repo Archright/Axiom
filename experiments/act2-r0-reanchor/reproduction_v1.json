@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "targetNotation": "stew/bitops2.nim::getBitsBE",
+  "notationLadder": {
+    "attempted": ["stew/bitops2.nim::getBitsBE"],
+    "succeeded": "stew/bitops2.nim::getBitsBE (1순위)",
+    "note": "역사 실행 prove_getbitsBE_run1.log과 동일 표기가 frontier에서 1 node 정확 매치('--target filter: 1 node(s) match'). 사다리 2/3순위 불필요."
+  },
+  "command": "cd .-worktree && strace -f -e trace=openat,openat2,execve,socket,connect -o $STATE/execution_observe.log unshare -rni -- env -i PATH=<host PATH> HOME=<user-home> TMPDIR=$STATE/tmp AXIOM_STATE_DIR=$STATE LANG=C LC_ALL=C bin/ax prove --project <workspace>/nim-stew --target stew/bitops2.nim::getBitsBE --limit 1",
+  "allowlistValues": {
+    "PATH": "<user-home>/.elan/bin:<user-home>/.local/bin:<user-home>/.kimi-code/bin:<user-home>/.opencode/bin:<user-home>/.bun/bin:<user-home>/.nvm/versions/node/v24.16.0/bin:<user-home>/.choosenim/toolchains/nim-2.2.10/bin:<user-home>/.nimble/bin:<user-home>/.local/bin:<user-home>/.local/bin:<user-home>/.elan/bin:<user-home>/.cargo/bin:<user-home>/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+    "HOME": "<user-home>",
+    "TMPDIR": "$STATE/tmp = /tmp/act2r0_witness_1790821709/tmp",
+    "AXIOM_STATE_DIR": "$STATE = /tmp/act2r0_witness_1790821709",
+    "LANG": "C",
+    "LC_ALL": "C"
+  },
+  "exitCode": 2,
+  "stateSeedManifestRaw": "/tmp/state_seed_manifest.txt",
+  "stateSeedDigest": "6f57179900b343f949a72eee7fa723a126cb65ce6e0641cd9aae1cc0803633d8",
+  "stateSeedEntries": {
+    "state:data/verification_scope.lock": "7a4cd3eb0e85bcee3a8e454760421bc77c83199abe943944010ad9941ed3d630",
+    "state:data/baseline.json": "085caf2cc17f2b6cbadc9c567bc25477529898d0089cd5491011bbe44362933a",
+    "state:data/universe_merkle.lock": "absent-fresh"
+  },
+  "observeLog": "/tmp/act2r0_witness_1790821709/execution_observe.log",
+  "observeLogSha256": "a076ddcece5499c9a99d850ae4242760b56c1ce338487d10beb44afe84d5d4fe",
+  "observeLogSummary": "22,191 lines; socket(AF_UNIX) 20건, connect 20건 — 전부 /var/run/nscd/socket(pathname system 서비스), 전부 -1 ENOENT(연결 성립 0, 데이터 교환 0); AF_INET/AF_INET6 connect 0건. system 서비스(nscd) 소켓 프로브로 목록화 — 분리 판단 요청(즉시 결론 보류).",
+  "networkConnectAttempts": 0,
+  "unixSocketConnectAttempts": 20,
+  "unixSocketConnectNote": "20건 전부 glibc NSS nscd 프로브(/var/run/nscd/socket), 전부 ENOENT 실패 — 연결 성립 0. system 서비스 소켓이므로 지침(§B4 판정1)에 따라 목록화해 분리 판단 요청. 프로세스당 1회 패턴(fork마다 1개, 총 10개 프로세스 x 2회).",
+  "undeclaredIngressPaths": [
+    "repo:src/* 자기 소스 트리 워크 (ax 기동 시 self-coherence 스캔, 1432 경로, 최초 읽기=observe log line 53 직후 openat src O_DIRECTORY)",
+    "repo:.lake/build/* (lean 번들 라이브러리 — .lake/build/bin/lean 경유)",
+    "subject:.git/* (git ls-files/status 내부 — fingerprint·subjectPostCheck)",
+    "subject: 디렉터리 열람 (stew/, tests/, data/, .github/, .axiom/)",
+    "toolchain:.elan/toolchains/leanprover--lean4---v4.33.0/lib/* (lean 런타임 라이브러리/라이브러리)",
+    "home:~/.gitconfig, ~/.config/git/ignore (git 전역 설정)",
+    "state:.axiom/cache/evidence|topology_merkle, build/certificates/journal/*.tmp, logs/global_symbol_graph.json, tmp/axexec-*.out, tmp/axiom_*.lean, tmp/axiom_z3_probe.smt2, data/universe_merkle.lock(ENOENT 2)", 
+    "relative: .git/config, .git/index, .git/info/exclude, lakefile.toml, lean-toolchain, proofs/* (cwd-relative open — repo/subject 루트 내)"
+  ],
+  "undeclaredIngressDetail": {
+    "totalDistinctReadPaths": 4876,
+    "readPathClasses": {"subject": 124, "repo": 1435, "state": 31, "toolchain-home": 3211, "system": 38, "home-other": 1, "relative": 36, "OTHER": 0, "main-checkout": 0},
+    "writePathClasses": {"state": 36, "system": 5, "기타": 0},
+    "declaredRepoManifestFiles": 9,
+    "repoUndeclaredReads": 1432,
+    "subjectUndeclaredReads": 36,
+    "note": "미선언 경로가 존재하나 전부 repo/subject/state/toolchain/system 6개 논리 접두사 내 — 외부 타깃 0건(OTHER=0, main-checkout=0). repo src 워크와 .lake 빌드 산출물, subject .git 내부, toolchain 런타임 라이브러리, home git 전역 설정은 바이너리 기동·git 연동·런타임 로더의 고유 행동 — 선언 매니페스트(파일 9건)보다 실제 읽기 집합이 넓음(manifest 커버리지 갭). 신뢰 위반 소지 없음으로 추정하나 인간 판단 요청."
+  },
+  "canonicalArtifacts": {
+    "logs/ax_proof_state.json": "c22749dd82522124b015aa4c2b0982a05336cab0ae56545c83070aa76b144b40",
+    "logs/ax_prove_trajectory.jsonl": "d16c739e31daa26aa54c8f6dbe8badbdb377c26e21e506a283d02c59563ec786",
+    "logs/global_symbol_graph.json": "40c887ba4c4cfcd81cf0f8c8f494d6ea9ce346eb5a6b6cac0bbf97ce9d89d9b7",
+    "logs/global_symbol_graph.a60f700c4f0d222376d8f0ecf33b2548467dcb3e9375d86017e142ad8768cb41.cache.json": "3f2d7f27c5cf3d718efd61bdd989519292030fcf1abd875f6e3039c2f4789310",
+    "logs/z3_telemetry.jsonl": "64478275fef94fff7f005d00297f823e394685ba54b52260f553e762a28ddffc",
+    "logs/audit/vsr_ledger.jsonl": "fc90324aa67636fb9e263734700acbdfc3ef72b8d1a781be147f959e9606abd6",
+    "build/certificates/manifest.json": "d75ea76196b76c3c17ee08a2350efc1fc12f9245265c9afeac31467cdee259db",
+    "build/certificates/data/trusted/journal/69c722e5f502ac2b2a22980b096afcba51c049eebb600665e76771c101692266.json": "7a75fb506a353f4348d76f9c0680247c2d78024d016cea7c01f662ae8ac60d2e",
+    "build/certificates/data/trusted/journal/6e88041ac4116fe190a3b8c868a05f0eaec52e3d7a575325a873d1b4fc9016d3.json": "bc536aea0a93b6edcb82195cce26905e715cef366f2ac060dace8bd92bcb4b18",
+    "build/certificates/data/trusted/journal/7a3df4d16fdc3d73f7ba99e52cb527c7605c53c6eaf8b3919ce73bdbd5faec40.json": "54ef59a585bfa78f816037c8d404cd7174b64e7f47db86e219fb7079d5f15dc9",
+    "build/certificates/data/trusted/journal/a1a3a30825d894e5e2830b514b880ddf87f38bce3c4377dd9741a688166005ee.json": "f3d7a662ecafe55b63ccb599acbd755389ccb2177b5c3ab14e0bdae9d8160c23",
+    "build/certificates/data/trusted/journal/b5ec018433c23803031ac179d3654bb48fcc317885c58f604e73b3522b0dd516.json": "9243f7c7eb796ae6be816c46c2b32af8a8573a57f4b720bd1749fbcb6b584332",
+    "build/certificates/data/trusted/journal/b6524b3b537d8184e2a5058f6de4df24f71cec1e4809c45efaa044f47c57a408.json": "61fe4bacc8594a01b09eddd763f36ea8341db8666155a15d094ef364c40056a2",
+    ".axiom/cache/evidence/df2ff30d5f73102dd89274c1df96ea9a922e935954714e81808e60fc8a60691c.json": "c80cce759cfa5fbc8e2a39bd7463bfdfd02615b99211ba2d4842933ec2148990",
+    ".axiom/cache/evidence/df2ff30d5f73102dd89274c1df96ea9a922e935954714e81808e60fc8a60691c.witness.json": "fdb0d821430763d9e78cff5e7476cac64fb46a2a234253cc304e4156f273dd1f",
+    ".axiom/cache/node_selection_state.json": "d747e19f78bea6ae224c787dc0152fa01f9b0d2fa255ca1a43a79b72a9c44b28",
+    ".axiom/cache/topology_analysis_cache.json": "f5ca64ddcff0a6d5b477d042f0f91a73b798fde867d9c4311eb6394414554ebd",
+    ".axiom/cache/topology_merkle.json": "f439cb3e50b65b1b0ebd58f14f8dda842446003d2ebc4a8e128f4a054c4125d1",
+    "data/baseline.json": "085caf2cc17f2b6cbadc9c567bc25477529898d0089cd5491011bbe44362933a",
+    "data/verification_scope.lock": "7a4cd3eb0e85bcee3a8e454760421bc77c83199abe943944010ad9941ed3d630",
+    "execution_observe.log": "a076ddcece5499c9a99d850ae4242760b56c1ce338487d10beb44afe84d5d4fe",
+    "tmp/axiom_global_symbol_graph_inc.a60f700c4f0d222376d8f0ecf33b2548467dcb3e9375d86017e142ad8768cb41.json": "594257d36ba9ee705bf51d1dcda35a9bd60520ad1fef00d4fdca951484af90b6"
+  },
+  "nodeId": "stew/bitops2.nim::getBitsBE",
+  "statusCounts": {"verified": 0, "inductive_valid": 0, "failed": 0, "skipped": 0, "timeout": 0, "blocked": 0, "vacuous": 0, "pre_sieved": 1, "reused": 0},
+  "runOutcome": {"planComplete": true, "executionComplete": true, "verificationComplete": false, "gateVerdict": "FAIL"},
+  "verifiedRatio": 0.0,
+  "proofSummary": "IR pipeline: Total 6, Pass 3, Fail 3 (getBitsBE psFail solverMethod=smBMC provenance=pkZ3Bmc); Sieve-Gate getBitsBE StructuralAST succeeded → srNoTransformApplied skip; UAP 0 results (requests=1); verified=0/40",
+  "semanticComparison": {
+    "historical": "Incomplete/fact-blocked (WP4j34): exit 2, translationLossFree=false 15 vs 13 (opaque-boundary), getBitsBE psFail pkZ3Bmc, z3 digest d067de02…(sat), fact 미주입",
+    "current": "Incomplete/fact-blocked: exit 2, completeness false 15 vs 13 (opaque-boundary-present), getBitsBE psFail smBMC/pkZ3Bmc, z3 digest d067de0283743d9117ac7a7e900452bd6d7a0fab013e734e2a519ac087e30742, UAP 0 results, verificationComplete=false, gateVerdict FAIL, fact 미주입(증명서 미발행 — stew_bitops2_nim__getBitsBE.json open 4회 ENOENT)",
+    "verdict": "same-class",
+    "attributionEvidence": "4중 기계 일치: ① completeness evidence 동일(df2ff30d….json: translationLossFree=false, bindingUniverseComplete=false, opaque-boundary-present, source 15 vs IR 13 — 역사 15 vs 13과 정확 일치) ② Z3 스크립트 digest 동일(d067de0283… = 역사 d067de02…) ③ provenance 쌍 동일(smBMC/pkZ3Bmc) ④ exit 코드 동일(2). 축1(X1 스키마 필드 차이): 현재 ax_proof_state.json schemaVersion='axiom.report.v1', runOutcome에 gateVerdict FAIL 추가 — 역사 보고서는 해당 필드 미기재(스키마 필드 추가만, 의미 페이로드 차이 없음). 축2(toolchainIdentity): nim-2.2.10|lean-4.33.0|z3-4.13.3 실측 일치. subject 커밋 c75502c 동일. Axiom 바이너리 rev 상이(역사 44fefd470 vs 현재 827329cbd) — 의미론 페이로드 발산 없음."
+  },
+  "subjectPostCheck": "?? data/ only (git status --porcelain 1줄, exit 0)",
+  "equalityLayer1_gitFileList": {
+    "result": "absent",
+    "detail": "$STATE/.axiom/cache/git_file_list.json 미생성 — 유일한 접근은 observe log line 1855 openat(O_WRONLY|O_CREAT|O_TRUNC) = -1 ENOENT(.axiom/cache 디렉터리가 그 시점에 미존재), 이후 재시도 없음. 최종 STATE 트리에도 부재. → subject_authority ingressManifest의 subject:.nim(86건, config.nims 제외)과의 path-level 비교 실행 불가. git_file_list가 생성되는 조건(git cached+others 수집 경로)에서만 layer1 검증 가능."
+  },
+  "equalityLayer2_sourceFingerprint": {
+    "result": "unable",
+    "detail": "런타임 sourceFingerprint 미기록: ax_proof_state.json runtimeMeta.subject = {} (빈 객체), $STATE 전 산출물(git journal 6건·trajectory·vsr_ledger·global_symbol_graph)에서 'fingerprint' 문자열 0건. 독립 재계산 시도(성공): run_context.nim 45-67(encode: u32LE len + relPath + sha256-32B, byte-lex sort 후 sha256Hex)·107-158(collectSubjectFileSet: git ls-files --cached --others --exclude-standard '*.nim'+'*.nims' union)·node_filter.nim 24-57(isValidSourceNode: include .nim/.nims, exclude nimcache/.lake/vendor/.git/build/logs/bin/node_modules 등 14개) 정확 복제 → 경로 87개(git .nim 86 + config.nims 1, subject_authority ingressManifest key 집합과 87=87 정확 일치) → sourceFingerprint = e9d0250442574eba9496465567ed61f60186498228ed691d7bbea8ec3e55565f. 비교 대상(런타임 값)이 없어 match/mismatch 판정 불가 — 추후 런타임 기록 시점에 결속용 값으로 사용 가능."
+  }
+}

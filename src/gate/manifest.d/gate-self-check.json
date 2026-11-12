@@ -1,0 +1,14 @@
+{
+  "id": "gate-self-check",
+  "name": "Axiom gate self check",
+  "layer": "meta",
+  "entry": "bin/gate_self_check",
+  "stages": [
+    "manual"
+  ],
+  "passFilenames": false,
+  "weight": "medium",
+  "category": "rule",
+  "severity": "error",
+  "always_run": true
+}

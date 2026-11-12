@@ -1,0 +1,256 @@
+{
+ "schemaVersion": 1,
+ "invariantId": "R2",
+ "repoIdentity": {
+  "head": "ba773d0631b5757525b16d8fd62e220492e98e76",
+  "branch": "chore/r2-r8-snapshot-regen",
+  "workingTreeClean": true,
+  "treeDigest": "5a6f99db4cd26f6a5d365e29c60b378f52bc11b04126efe05757c76ee0f80bae"
+ },
+ "toolchain": {
+  "nim": "2.2.10",
+  "z3": "4.13.3",
+  "lean": "leanprover/lean4:v4.33.0"
+ },
+ "collection": {
+  "collector": "readiness-regen-2026-10-13-r2-r8",
+  "method": "manual",
+  "generatedAt": "2026-10-13T09:08:36Z",
+  "freshUntil": "2026-11-12T09:08:36Z"
+ },
+ "observations": [
+  {
+   "key": "positive_control_exit_code",
+   "value": 0,
+   "scope": "engine capability — prove run on --target normalizeMaxWorkers",
+   "subject": "./bin/ax prove --target normalizeMaxWorkers exited 0 in 80.9s; engine ran end-to-end (topology, IR pipeline, UAP, vault sync, lean-verify)"
+  },
+  {
+   "key": "positive_proof_summary_total",
+   "value": 4,
+   "scope": "IR pipeline proof summary — Total",
+   "subject": "Total: 4 (identical block printed twice: batch-uap and phase-10)"
+  },
+  {
+   "key": "positive_proof_summary_pass",
+   "value": 1,
+   "scope": "IR pipeline proof summary — Pass",
+   "subject": "Pass: 1 (positive run)"
+  },
+  {
+   "key": "positive_proof_summary_fail",
+   "value": 3,
+   "scope": "IR pipeline proof summary — Fail",
+   "subject": "Fail: 3 (calcDynamicTimeoutCore, safeSpeedupRatioCore, proximityScore — all psFail, surfaced as [ERROR] lines, not swallowed)"
+  },
+  {
+   "key": "positive_proof_summary_skip",
+   "value": 0,
+   "scope": "IR pipeline proof summary — Skip",
+   "subject": "Skip: 0"
+  },
+  {
+   "key": "positive_proof_summary_to",
+   "value": 0,
+   "scope": "IR pipeline proof summary — TO",
+   "subject": "TO: 0"
+  },
+  {
+   "key": "positive_proof_summary_error",
+   "value": 0,
+   "scope": "IR pipeline proof summary — Error",
+   "subject": "Error: 0"
+  },
+  {
+   "key": "positive_verdict_line",
+   "value": "[NOT_VERIFIABLE]",
+   "scope": "CLI output verdict for normalizeMaxWorkers",
+   "subject": "[Depth 1/1] Checking: orchestrator_api.nim::normalizeMaxWorkers... [NOT_VERIFIABLE] — orchestrationNotVerifiable; cert status certZ3Candidate not promotion-eligible (H1 audit observed [VERIFIED] — honest surface drift, see R2-INC-001)"
+  },
+  {
+   "key": "canonical_declined_reason",
+   "value": true,
+   "scope": "positive target IR extraction",
+   "subject": "[canonical-declined] normalizeMaxWorkers — evidence=inconclusive sealError=subject binding: parse-bound components unmeasured (EA_UNSUPPORTED: unsupported AST node (ckIfStmt) outside the certified-subset wire set)"
+  },
+  {
+   "key": "negative_control_exit_code",
+   "value": 0,
+   "scope": "engine behavior on nonexistent target",
+   "subject": "./bin/ax prove --target DefinitelyNonexistentSymbolXYZ exited 0 in 50.8s"
+  },
+  {
+   "key": "negative_target_not_found_fallback",
+   "value": true,
+   "scope": "nonexistent target handling",
+   "subject": "--target=DefinitelyNonexistentSymbolXYZ not found in frontier — full-frontier fallback (frontier eligibility gate: eligible=4, ranked selection ran 4 nodes)"
+  },
+  {
+   "key": "negative_proof_summary",
+   "value": "Total 4 / Pass 1 / Fail 3 / TO 0 / Skip 0 / Error 0",
+   "scope": "IR pipeline proof summary (negative run)",
+   "subject": "same summary shape as positive run — full frontier ran after fallback"
+  },
+  {
+   "key": "cli_flag_wired",
+   "value": true,
+   "scope": "CLI --target flag wiring in source",
+   "subject": "src/cli/cli_types.nim:167 apTarget=\"--target\"; src/cli/cli_types.nim:183 target*: string = \"\"; target filter log: '--target filter: 1 node(s) match 'normalizeMaxWorkers''"
+  },
+  {
+   "key": "certificate_emitted_for_target",
+   "value": true,
+   "scope": "disk artifact for normalizeMaxWorkers",
+   "subject": "build/certificates/657f1afdb25f09ee3f7e0ed8a900cb423cf31ac70a4e79700f02e8085cc21551.json written by the run (transient cert retained; v3 schema)"
+  },
+  {
+   "key": "certificate_functionName",
+   "value": "normalizeMaxWorkers",
+   "scope": "certificate content — function name",
+   "subject": "functionName matches requested target; modulePath=src/core/orchestrator/orchestrator_api.nim"
+  },
+  {
+   "key": "certificate_status",
+   "value": "certZ3Candidate",
+   "scope": "certificate content — status field",
+   "subject": "status: certZ3Candidate — z3-only candidate, NOT promotion-eligible (src/core/types/certificate_types.nim:20 'NOT verified, NOT deep-verified, NOT certGreen')"
+  },
+  {
+   "key": "certificate_schemaVersion",
+   "value": "axiom.certificate.v3",
+   "scope": "certificate content — schema version",
+   "subject": "schemaVersion: axiom.certificate.v3 (v3 provenance schema)"
+  },
+  {
+   "key": "result_machine_readable",
+   "value": true,
+   "scope": "product-level meaning — JSON artifact",
+   "subject": "certificate is valid JSON with all v3 fields: claim, attestation, toolchainIdentity, solverInvocation, provenance, identityDigest, inputHash, solverInputDigest, solverResultDigest"
+  },
+  {
+   "key": "summary_and_verdict_captured",
+   "value": true,
+   "scope": "CLI stdout contains structured proof summary + verdict",
+   "subject": "Proof Summary block (Total/Pass/Fail/TO/Skip/Error) present; final verdict line present; vault manifest synced (4 entries)"
+  },
+  {
+   "key": "lean_verify_passes",
+   "value": true,
+   "scope": "Lean sandbox verification",
+   "subject": "[lean-verify] PASS — proofs/ directory builds cleanly"
+  },
+  {
+   "key": "verified_ratio",
+   "value": 0.0,
+   "scope": "overall verification ratio from engine",
+   "subject": "verifiedRatio=0.0000, verified=0/40"
+  },
+  {
+   "key": "certGreenDualEvidenceRequired",
+   "value": true,
+   "scope": "contract",
+   "subject": "src/core/types/certificate_types.nim:101 'of vtDual: certGreen' — certGreen is the dual verification tier; :113 promotion-eligible set {certGreen, certLeanVerified, certDualVerified, certTypeLevelVerified, certSafetyVerified} excludes z3-only statuses"
+  },
+  {
+   "key": "z3OnlyCanProduceCertGreen",
+   "value": false,
+   "scope": "canonical",
+   "subject": "observed: z3-only prove run produced status=certZ3Candidate, log line 'cert status certZ3Candidate not promotion-eligible' — z3-only cannot produce certGreen"
+  },
+  {
+   "key": "z3VsDualDistinguishable",
+   "value": true,
+   "scope": "canonical",
+   "subject": "certificate status enum distinguishes z3-only (certZ3Verified/certZ3Candidate) from dual-verification (certGreen); observed values differ"
+  },
+  {
+   "key": "verifiedSemanticsDocumented",
+   "value": true,
+   "scope": "contract",
+   "subject": "docs/spec/verification_density.md (VKD formula |VKS ∩ certGreen|/|VKS|) + docs/spec/productization_contract.md document verified semantics"
+  }
+ ],
+ "incidents": [
+  {
+   "id": "R2-INC-001",
+   "severity": "warning",
+   "title": "Positive control no longer verifies: [NOT_VERIFIABLE] (H1 audit observed [VERIFIED])",
+   "description": "At ba773d0631 normalizeMaxWorkers is canonical-declined (EA_UNSUPPORTED ckIfStmt outside certified-subset wire set), classified orchestrationNotVerifiable, cert status certZ3Candidate not promotion-eligible; verifiedRatio=0.0000. The engine still runs end-to-end and exits 0.",
+   "evidence": "tmp/r2_pos.log lines 7,43,44,45,59,64"
+  },
+  {
+   "id": "R2-INC-002",
+   "severity": "info",
+   "title": "Negative target falls back to full frontier",
+   "description": "When --target names a symbol not in the frontier the engine logs 'not found in frontier' and runs the eligible frontier (4 nodes) instead of erroring. Documented fallback behavior, unchanged from H1 audit.",
+   "evidence": "tmp/r2_neg.log line 17"
+  },
+  {
+   "id": "R2-INC-003",
+   "severity": "info",
+   "title": "Certificate write mechanism changed: transient cert retained, no hard-gate rejection",
+   "description": "H1 audit recorded '[hard-gate] certificate write rejected' for certZ3Verified. At ba773d0631 no hard-gate rejection lines appear; a v3 cert with status certZ3Candidate is persisted to gitignored build/certificates/ as 'transient cert retained'. z3-only output remains non-promotable, so the canonical semantics (z3-only ≠ certGreen) are preserved.",
+   "evidence": "tmp/r2_pos.log line 44; build/certificates/657f1afd….json status field"
+  }
+ ],
+ "sources": [
+  {
+   "file": "src/core/types/certificate_types.nim",
+   "symbol": "certGreen dual-tier mapping + promotion set",
+   "sha256": "live",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76",
+   "lines": "20,101,113"
+  },
+  {
+   "file": "src/cli/cli_types.nim",
+   "symbol": "apTarget / target field",
+   "sha256": "live",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76",
+   "lines": "167,183"
+  },
+  {
+   "file": "docs/spec/verification_density.md",
+   "symbol": "VKD formula / verified semantics",
+   "sha256": "live",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76"
+  },
+  {
+   "file": "docs/spec/productization_contract.md",
+   "symbol": "R2 contract",
+   "sha256": "live",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76"
+  },
+  {
+   "file": "build/certificates/657f1afdb25f09ee3f7e0ed8a900cb423cf31ac70a4e79700f02e8085cc21551.json",
+   "symbol": "normalizeMaxWorkers v3 certificate",
+   "sha256": "8c1e92ea515eefbdf2901eae8098d45ef882c09de3092e9578b34c2a7e58eedd",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76"
+  },
+  {
+   "file": "tmp/r2_pos.log",
+   "symbol": "positive control run log",
+   "sha256": "009616bd103c72536c6f5f24b360b34aec9f28fddf894f6da271c11722e375ea",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76"
+  },
+  {
+   "file": "tmp/r2_neg.log",
+   "symbol": "negative control run log",
+   "sha256": "b7e6b072ed6bcabfa7fbffaee6f64507c660f341115b4132c9a6932a816810c9",
+   "repoHead": "ba773d0631b5757525b16d8fd62e220492e98e76"
+  }
+ ],
+ "commands": [
+  {
+   "cmd": "timeout 2400 ./bin/ax prove --target normalizeMaxWorkers > tmp/r2_pos.log 2>&1; echo EXIT=$?",
+   "exitCode": 0,
+   "outputDigest": "sha256:009616bd103c72536c6f5f24b360b34aec9f28fddf894f6da271c11722e375ea",
+   "durationSec": 80.9
+  },
+  {
+   "cmd": "timeout 600 ./bin/ax prove --target DefinitelyNonexistentSymbolXYZ > tmp/r2_neg.log 2>&1; echo EXIT=$?",
+   "exitCode": 0,
+   "outputDigest": "sha256:b7e6b072ed6bcabfa7fbffaee6f64507c660f341115b4132c9a6932a816810c9",
+   "durationSec": 50.8
+  }
+ ]
+}

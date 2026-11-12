@@ -1,0 +1,18 @@
+{
+  "verdict": "CONDITIONAL GO",
+  "conditions": [
+    "R7=FAIL"
+  ],
+  "invariantStates": {
+    "R1": "PASS",
+    "R2": "PASS",
+    "R3": "PASS",
+    "R4": "PASS",
+    "R5": "PASS",
+    "R6": "PASS",
+    "R7": "FAIL",
+    "R8": "PASS"
+  },
+  "decisionDigest": "0bcb25bd79286b356ee382278acf55a60f9eac9f381883a6e61a0ec318f1377b",
+  "regeneratedBy": "tools/readiness_evaluator.nim (evaluator smoke run, 2026-08-17)"
+}

@@ -1,0 +1,12 @@
+{
+  "script": "tools/generate_agents_docs.py",
+  "description": "Generate docs/agents/*.md from src/gate/architecture_policy.lock — lock is the SSOT, generated docs are read-only downstream artifacts",
+  "inputSample": {
+    "args": ["--dry-run"]
+  },
+  "outputSample": {
+    "stdout": "generate_agents_docs: would regenerate 4 docs files from architecture_policy.lock (dry-run)",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

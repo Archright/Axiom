@@ -1,0 +1,14 @@
+{
+  "id": "stale-cert-gate",
+  "name": "Stale certificate pre-commit gate",
+  "layer": "functional",
+  "entry": "tools/stale_cert_gate",
+  "stages": [
+    "pre-commit"
+  ],
+  "filesPattern": "src/verification/certificates/|src/",
+  "passFilenames": false,
+  "weight": "light",
+  "category": "rule",
+  "severity": "error"
+}

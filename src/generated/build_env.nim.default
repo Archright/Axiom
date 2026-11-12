@@ -1,0 +1,10 @@
+const
+  BuildEnvZ3Version* = "4.13.3"
+  BuildEnvCommitCount* = 0
+  BuildEnvGitHash* = "0000000"   # 7 chars — [0..6] slice in constants.nim:53 requires non-empty string (§0.2 determinism)
+  BuildEnvBuildDate* = "1970-01-01"
+  BuildEnvLeanSourceHash* = ""
+  BuildSourceHash* = ""
+  VerifierBuildId* = "unmeasured"
+  VerifierBuildSourceHash* = ""
+  BuildEnvProjectRoot* = ""

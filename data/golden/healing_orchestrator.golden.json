@@ -1,0 +1,13 @@
+{
+  "capturedAt": "<TIMESTAMP>",
+  "funcCount": 0,
+  "funcs": [],
+  "linesOfCode": 192,
+  "module": "healing_orchestrator",
+  "path": "src/verification/healing_orchestrator.nim",
+  "procCount": 2,
+  "procs": [
+    "runLeanProofRefinementLoop*",
+    "runSelfHealingLoop*"
+  ]
+}

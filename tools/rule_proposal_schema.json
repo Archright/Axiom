@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Axiom RuleProposal",
+  "description": "Schema for structured rule proposals that modify AGENTS.md via human-approved changes.",
+  "type": "object",
+  "required": ["proposalId", "version", "timestamp", "title", "section", "content", "rationale", "proposedBy"],
+  "properties": {
+    "proposalId": {
+      "type": "string",
+      "description": "Unique proposal identifier (first 16 hex chars of SHA-256).",
+      "minLength": 16,
+      "maxLength": 16
+    },
+    "version": {
+      "type": "string",
+      "description": "Schema version.",
+      "const": "1.0.0"
+    },
+    "timestamp": {
+      "type": "string",
+      "description": "ISO 8601 creation timestamp.",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "approved", "applied", "rejected", "expired"],
+      "description": "Proposal lifecycle status."
+    },
+    "title": {
+      "type": "string",
+      "description": "Human-readable rule title.",
+      "minLength": 1
+    },
+    "section": {
+      "type": "string",
+      "enum": ["constitution", "architecture", "rules_workflow", "environment", "guardian", "new_section"],
+      "description": "Target AGENTS.md section."
+    },
+    "subsection": {
+      "type": "string",
+      "description": "Insertion directive: 'after:2.XX', 'new:2.XZ', 'replace:2.XY', or empty for section append."
+    },
+    "content": {
+      "type": "string",
+      "description": "Markdown content to insert/replace in AGENTS.md.",
+      "minLength": 1,
+      "maxLength": 18000
+    },
+    "rationale": {
+      "type": "string",
+      "description": "Why this rule change is needed.",
+      "minLength": 1
+    },
+    "impact": {
+      "type": "string",
+      "description": "Impact analysis of the proposed change."
+    },
+    "proposedBy": {
+      "type": "string",
+      "description": "Proposer identity (agent id or 'human:<name>').",
+      "minLength": 1
+    },
+    "evidence": {
+      "type": "array",
+      "description": "Supporting evidence (file paths, URLs, commit SHAs).",
+      "items": { "type": "string" }
+    },
+    "checksum": {
+      "type": "string",
+      "description": "SHA-256 hex digest of the 'content' field.",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "approval": {
+      "type": "object",
+      "description": "Cryptographic approval information (required for psApproved status).",
+      "required": ["approvedBy", "approvedAt", "signature"],
+      "properties": {
+        "approvedBy": {
+          "type": "string",
+          "description": "Human architect identity who approved."
+        },
+        "approvedAt": {
+          "type": "string",
+          "description": "ISO 8601 approval timestamp.",
+          "format": "date-time"
+        },
+        "signature": {
+          "type": "string",
+          "description": "HMAC-SHA256 hex signature over (proposalId + checksum + approvedAt).",
+          "minLength": 64,
+          "maxLength": 64
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "axiom-independent-readiness-20260820T050345Z",
+  "repoHead": "2e31b258799d8ae25e173ba16c2eb3188f663977",
+  "branch": "main",
+  "treeDigest": "sha256:10e0e6b72c59ed66aab82751276eebf8da3f0956",
+  "policyDigest": "617f6e7e04a3d405cfe293dc456a995e30f7701295b9e4337134e06aefa70769",
+  "evidenceManifestDigest": "3f9b71ae33fe24f1cffe81ca488ceb63c84589bb2a142547b418e220dd92be7e",
+  "evaluatorBinaryDigest": "a8ad5b82ece8ec5670f53f80e8ef0702d2b37e2d70e54d515ed0545934da53fd",
+  "toolchainIdentity": {
+    "nim": "2.2.10",
+    "z3": "4.13.3",
+    "lean": "4.29.0"
+  },
+  "collectionRunIds": [
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "C5",
+    "C6",
+    "S2-recollect"
+  ],
+  "invariantResults": {
+    "R1": {
+      "result": "PASS",
+      "reasons": [
+        "no signal; real verification execution; tree clean",
+        "note: no top-level signal handler at CLI boundary (risk, not observed failure)"
+      ]
+    },
+    "R2": {
+      "result": "PASS",
+      "reasons": [
+        "input normalized to sourceHash+irHash; JSON schema axiom.report.v1; byte-identical A/B; JSON is product result"
+      ]
+    },
+    "R3": {
+      "result": "PASS",
+      "reasons": [
+        "certGreen dual-gated; Z3-only->certZ3Verified; vacuous excluded; theater guard active; note: legacy summary.verified counter aggregates tiers"
+      ]
+    },
+    "R4": {
+      "result": "PASS",
+      "reasons": [
+        "required fields present on v3 cert; provenance resolvable via journal",
+        "no acceptance-free promotion; provenance reconstructible"
+      ]
+    },
+    "R5": {
+      "result": "PASS",
+      "reasons": [
+        "observed: report JSON byte-identical A/B; deterministic salted cache + pinned z3 seeds; note: prove-leg cert sha not re-measured this audit"
+      ]
+    },
+    "R6": {
+      "result": "PASS",
+      "reasons": [
+        "no tracked source/config/data mutation; writes to gitignored ephemeral paths; note hygiene gaps: tmp/ not gitignored, logs/audit/tier_classification.json tracked"
+      ]
+    },
+    "R7": {
+      "result": "PASS",
+      "reasons": [
+        "commands exist; help present; verification-failure exit=1; JSON schema; stdout/stderr split"
+      ]
+    },
+    "R8": {
+      "result": "FAIL",
+      "reasons": [
+        "persist step not closed: 0 v3 certs in canonical vault; v3 cert only in transient build/",
+        "golden slice not fully closed (execute\u2192verify\u2192canonicalize\u2192attest\u2192persist\u2192reproduce)",
+        "verification coverage gap: VKD 0/23, obligation pipelines emit IR FAIL (ObliSemanticNoApplicable)"
+      ]
+    }
+  },
+  "blockingReasons": {
+    "R8": [
+      "persist step not closed: 0 v3 certs in canonical vault; v3 cert only in transient build/",
+      "golden slice not fully closed (execute\u2192verify\u2192canonicalize\u2192attest\u2192persist\u2192reproduce)",
+      "verification coverage gap: VKD 0/23, obligation pipelines emit IR FAIL (ObliSemanticNoApplicable)"
+    ]
+  },
+  "blockingInvariants": [
+    "R8"
+  ],
+  "nonCriticalIssues": [],
+  "finalVerdict": "NO-GO",
+  "provenance": "Decision = F(HEAD, Evidence, Policy, Evaluator, Toolchain); rerunnable via data/readiness/evaluate.py"
+}

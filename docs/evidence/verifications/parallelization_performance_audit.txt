@@ -1,0 +1,238 @@
+================================================================================
+PARALLELIZATION & PERFORMANCE OPTIMIZATION AUDIT
+Date: 2026-05-27 13:50 KST
+System: 16 CPU cores, ulimit -n = 1024 (default)
+================================================================================
+
+1. RLIMIT_NOFILE COVERAGE
+================================================================================
+
+1.1 gate_hook.nim — VERIFIED
+   - raiseRlimitNoFile() proc defined at line 17-25
+   - Called at line 280: raiseRlimitNoFile()
+   - Sets rlim_cur = 65536, rlim_max = 65536, uses setrlimit(RLIMIT_NOFILE, ...)
+   - Called BEFORE any malebolgia spawn (correct order)
+
+1.2 gate_replay.nim — VERIFIED
+   - Inline setrlimit at lines 186-189
+   - Sets rlim_cur = 65536, rlim_max = 65536
+   - Called BEFORE malebolgia createMaster() (correct order)
+
+1.3 Other scripts — COVERAGE GAPS IDENTIFIED
+
+   Scripts WITHOUT RLIMIT_NOFILE:
+   - scripts/refresh_cli_binaries.nim — uses startProcess (process spawning),
+     cpuinfo.countProcessors(), NO rlimit. Likely needs it when building many binaries.
+   - scripts/refresh_fingerprints.nim — no process spawning, OK
+   - scripts/analyze_param_types.nim — no process spawning, OK
+   - scripts/cert_refactor_equivalence.nim — no process spawning, OK
+   - scripts/prepare_commit_msg.nim — no process spawning, OK
+   - scripts/seed_doc_comments.nim — no process spawning, OK
+   - scripts/smoke_test.nim — no process spawning, OK
+
+   Source files WITH malebolgia but WITHOUT RLIMIT_NOFILE:
+   - src/core/orchestrator.nim (line 190-193: createMaster/awaitAll) — NO RLIMIT_NOFILE!
+     This runs parallel SMT solver tasks which could spawn many subprocesses.
+   - src/cli/commands/heal_scheduler.nim (lines 328-329: createMaster/awaitAll) — NO RLIMIT_NOFILE!
+     Runs parallel healing tasks.
+
+   FINDING: 2 additional malebolgia-using source files lack RLIMIT_NOFILE.
+   Risk: Medium — malebolgia pool can exhaust file descriptors under load.
+
+1.4 Conclusion: gate_hook and gate_replay are properly covered. Orchestrator and
+   heal_scheduler are NOT covered. refresh_cli_binaries also lacks coverage
+   but uses startProcess (less process spawning than malebolgia).
+
+================================================================================
+2. MALEBOLGIA CONFIGURATION
+================================================================================
+
+2.1 ThreadPoolSize
+   - malebolgia's createMaster() does NOT accept a ThreadPoolSize parameter.
+   - Thread pool is managed by Nim's std/tasks module, which uses
+     countProcessors() to determine pool size.
+   - On this system (16 CPUs), the pool will have 16 threads.
+
+2.2 AXIOM_JOBS Usage
+
+   gate_hook.nim (lines 274-275):
+     let defaultJobs = max(1, countProcessors() - 2)   → 14 on this system
+     let maxJobs = getEnv("AXIOM_JOBS", $defaultJobs).parseInt()
+   - Sets AXIOM_JOBS as env var for child gate binaries (line 182)
+   - Used for logging only in malebolgia context; actual thread pool = countProcessors()
+
+   gate_replay.nim:
+     Does NOT reference AXIOM_JOBS or countProcessors() at all.
+     Uses createMaster() with default pool size (16 threads).
+
+   src/gate/orchestrator.nim (line 68):
+     envTable["AXIOM_JOBS"] = getEnv("AXIOM_JOBS", $(max(1, countProcessors() - 2)))
+     - Same formula as gate_hook
+
+   scripts/refresh_cli_binaries.nim (lines 147-151):
+     let cpuCount = max(1, cpuinfo.countProcessors())  → 16
+     let defaultJobs = max(1, min(cpuCount - 2, 4))    → 4 (capped at 4)
+     Reads AXIOM_BUILD_JOBS or AXIOM_JOBS env var
+
+   heal_scheduler.nim (lines 66-67, 324-325):
+     let processorCount = countProcessors()
+     let maxWorkers = min(4, processorCount)  → 4 (capped at 4)
+
+2.3 Anti-patterns Check
+   - {.gcsafe.} annotations: Present on all spawned procs ✓
+   - StringTableRef in spawn: AVOIDED — env vars set in parent thread before spawn ✓
+   - Sequential fallback on malebolgia failure: Present in both scripts ✓
+   - Only function calls (not blocks) used in spawn ✓
+
+2.4 Conclusion: Malebolgia configuration is sound. Pool size is handled
+   by Nim runtime (countProcessors = 16). AXIOM_JOBS formula
+   (countProcessors - 2) is reasonable. Note that heal_scheduler and
+   refresh_cli_binaries cap at 4 workers, which is conservative.
+
+================================================================================
+3. CACHING AND INCREMENTAL EXECUTION
+================================================================================
+
+3.1 Nim Check Caching
+
+   gate_hook.nim:
+   - Sets NIM_CACHE_DIR (~/.cache/nim) at line 271 — shared across all invocations
+   - Per-file nim check: "nim check <file>" — no incremental, full check per file
+   - Binary gate reuse: checks fileExists(entry) before compiling (line 69-70)
+   - nimcache size: 893M (~/.cache/nim) + 137M (./nimcache) = ~1GB total
+
+   gate_replay.nim:
+   - Does NOT set NIM_CACHE_DIR — uses default (project-local nimcache)
+   - Per-file nim check on changed files only (incremental by design)
+   - nimtry gate: compiled once, reused via modification time check (lines 83-85)
+   - Binary reuse: nimtry compiled only if source newer than binary
+
+3.2 Binary Reuse
+
+   bin/gate_hook (153KB): last modified 2026-05-27 13:05
+   scripts/gate_hook.nim: last modified 2026-05-27 13:46
+   → BINARY IS STALE! Source was modified after binary was compiled.
+   → RLIMIT_NOFILE fix is in source but NOT in the running binary!
+
+   .git/hooks/pre-commit (714KB, ELF):
+   - Same BuildID as .git/hooks/prepare-commit-msg
+   - Last modified 2026-05-27 01:07
+   - This is a compiled Nim binary, NOT gate_hook binary (different sizes)
+
+   Finding: The pre-commit hook is compiled from a different source than
+   scripts/gate_hook.nim. The gate_hook binary in bin/ is stale relative to
+   its source.
+
+3.3 nimcache Sharing
+   - ~/.cache/nim/ (893M) — used by gate_hook via NIM_CACHE_DIR
+   - ./nimcache/ (137M) — project-local, used by other scripts
+   - These are NOT shared, leading to duplicate compilation artifacts
+   - gate_replay does NOT set NIM_CACHE_DIR, so it uses project-local nimcache
+
+3.4 Conclusion: Cache sharing is good for gate_hook (explicit NIM_CACHE_DIR).
+   gate_replay could benefit from setting NIM_CACHE_DIR to the shared location.
+   Binary staleness is a concern — gate_hook binary needs recompilation.
+
+================================================================================
+4. WORKTREE EFFICIENCY (gate_replay)
+================================================================================
+
+4.1 Current Approach
+   - Creates a git worktree in /tmp/gate-replay-{pid}-{hash} per commit (line 107)
+   - Pre-cleanup of leftovers before creation (lines 110-111)
+   - Post-cleanup after each commit (line 151)
+   - Uses git diff --name-only HEAD~1 to find changed .nim files
+
+4.2 Efficiency Assessment
+   - git worktree add --force: Fast operation (creates symlink/copy of files)
+   - git diff --name-only: Very fast (index comparison)
+   - nim check on changed files only: Fast incremental check
+   - Worktree is created and removed per commit: Necessary for isolated check
+   - Malebolgia runs all commits in parallel: Each gets its own worktree
+
+4.3 Optimization Opportunities
+   - For sequential mode (malebolgia fallback), could reuse a single worktree
+     by doing git checkout instead of create/remove per commit
+   - Alternative: Use git show <commit>:<path> to extract specific files
+     without creating a full worktree
+   - For massive ranges (100+ commits), /tmp disk space could be a concern
+   - Current approach is acceptable for small replay ranges (<50 commits)
+
+4.4 Conclusion: Worktree approach is sound for parallel execution. Pre/post
+   cleanup is correct. Alternative approaches (git show) would be more efficient
+   but add complexity. No bugs found.
+
+================================================================================
+5. ACTUAL PERFORMANCE MEASUREMENT
+================================================================================
+
+5.1 gate_replay HEAD~3..HEAD (3 commits, parallel via malebolgia)
+
+   Results:
+   ---------------
+   | Commit       | Result  | Duration |
+   |--------------|---------|----------|
+   | 77bf217b     | PASSED  | 4.48s    |
+   | aec0b622     | FAILED  | 2.24s    |
+   | 5b2f88f1     | FAILED  | 2.24s    |
+   ---------------
+   Wall clock time: ~4.48s (determined by longest task)
+   Total sequential time (estimated): ~8.96s
+   Parallel speedup: ~2x
+
+   Note: Failures on aec0b622 and 5b2f88f1 are caused by pre-existing
+   nim check errors in src/core/logic/pipeline_healing_logic.nim (Hermes
+   legacy refactoring). These are not gate_replay issues.
+
+5.2 Performance Analysis
+
+   - Per-commit nim check: ~1-2s (incremental, only changed files)
+   - Per-commit worktree create/remove: ~0.5s
+   - Per-commit nimtry gate: ~1-2s
+   - Malebolgia overhead: negligible (<100ms)
+
+5.3 Scaling Estimate
+   - 1 commit:  ~2.5s (sequential overhead dominates)
+   - 10 commits: ~5s (parallel, 16 thread pool)
+   - 50 commits: ~6s (limited by longest single task)
+   - 100 commits: ~6-8s (pool saturation)
+
+5.4 Malebolgia Parallel vs Sequential
+   - Tested: 3 commits → 4.48s parallel vs ~9s estimated sequential
+   - Speedup increases with more commits up to thread pool size
+   - At 16+ commits, all 16 pool threads utilized → maximum efficiency
+
+================================================================================
+6. SUMMARY OF FINDINGS
+================================================================================
+
+| # | Finding | Severity | Recommendation |
+|---|---------|----------|----------------|
+| 1 | src/core/orchestrator.nim and heal_scheduler.nim use malebolgia but lack RLIMIT_NOFILE | Medium | Add raiseRlimitNoFile() before createMaster() in both files |
+| 2 | gate_hook binary is stale (source newer than binary) | Medium | Recompile bin/gate_hook from updated source |
+| 3 | gate_replay doesn't set NIM_CACHE_DIR to shared location | Low | Set NIM_CACHE_DIR to ~/.cache/nim for cache sharing |
+| 4 | refresh_cli_binaries.nim lacks RLIMIT_NOFILE but uses process spawning | Low | Add raiseRlimitNoFile() if parallel build issues arise |
+| 5 | malebolgia ThreadPoolSize is system-dependent (16 on this system) | Info | Acceptable; AXIOM_JOBS env var available for tuning |
+| 6 | Worktree approach creates/removes per commit | Info | Acceptable for <50 commits; alternative (git show) for larger ranges |
+| 7 | Parallel speedup: ~2x for 3 commits, scales with pool size | Good | Malebolgia is working correctly |
+| 8 | {.gcsafe.}, StringTableRef avoidance, fallback all correct | Good | No anti-patterns found |
+
+================================================================================
+7. VERIFICATION COMMANDS
+================================================================================
+
+# Verify RLIMIT_NOFILE is in both scripts
+grep -n 'RLIMIT_NOFILE\|setrlimit\|raiseRlimit' scripts/gate_hook.nim scripts/gate_replay.nim
+
+# Verify countProcessors usage
+grep -n 'countProcessors\|AXIOM_JOBS' scripts/gate_hook.nim scripts/gate_replay.nim src/core/orchestrator.nim
+
+# Check binary staleness
+stat -c '%y' bin/gate_hook scripts/gate_hook.nim
+
+# Test malebolgia fallback (run with very few commits)
+nim c -r scripts/gate_replay.nim HEAD~1..HEAD
+
+================================================================================
+END OF AUDIT
+================================================================================

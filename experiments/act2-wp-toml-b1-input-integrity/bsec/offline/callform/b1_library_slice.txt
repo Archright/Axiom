@@ -1,0 +1,23 @@
+# callform/b1_library_slice.txt — call-form binding for the B-1 library-level slice
+# (defect mechanism observations at the library level, no consumer in the loop)
+
+subject_repo        = https://github.com/status-im/nim-toml-serialization
+subject_commit      = 4aa8e2223649fc0837c490a4acfca7b8b1e756f9
+resolved_dep_serialization = b5473564e80a4908cf6c5a038e4c4a6ca7de2223  (serialization 0.5.4)
+resolved_dep_faststreams   = 059bc2f52546ac14b583639c33372c14b1d46fa3  (faststreams 0.5.2)
+resolved_dep_stew          = 4382b18f04b3c43c8409bfcd6b62063773b2bbaa  (stew 0.5.0)
+
+decode_target_type  = object of RootObj { a, b, c: string }   # field count/order pinned at compile time
+                     (contrast: TomlValueRef — untyped value path)
+keyed_unkeyed       = unkeyed   (Toml.<flavor>.decode(input, T) — no key argument)
+flags               = none passed (Toml_v100 runtime flavor: runtimeFlags = {})
+flavor              = Toml_v100 (TOML v1.0.0)   [contrast cases: TomlValueRef under Toml_v100 and under default Toml = v1.1.0 flag set]
+call_forms          =
+  record        : Toml_v100.decode(input, Obj)                  — defect observation form
+  value_v100    : Toml_v100.decode(input, TomlValueRef)         — spec-conforming contrast (rejects dup key)
+  value_default : Toml.decode(input, TomlValueRef)              — default v1.1.0 flavor contrast
+build_command       = see ../build/command_template.txt
+toolchain_id        = see ../build/toolchain_id.txt
+
+# Identity discipline: dependency identity above is COMMIT SHA + per-file sha256
+# (../deps/identities.tsv, ../manifest.tsv) — version strings are not identities.

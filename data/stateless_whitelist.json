@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "description": "Whitelist of stateless interpreter modules for ephemeral agent use",
+  "dangerousEnvVars": [
+    "PYTHONPATH", "PYTHONHOME", "PYTHONDONTWRITEBYTECODE",
+    "PYTHONUSERBASE", "PYTHONSTARTUP", "PYTHONPLATLIBDIR",
+    "LD_PRELOAD", "LD_LIBRARY_PATH", "DYLD_INSERT_LIBRARIES",
+    "DYLD_LIBRARY_PATH", "NODE_PATH", "RUBYLIB", "RUBYOPT",
+    "PERL5LIB", "PERL5OPT", "PHP_INI_SCAN_DIR", "LUA_PATH",
+    "LUA_CPATH"
+  ],
+  "requiredIsolation": {
+    "python": ["-I"],
+    "python3": ["-I"]
+  },
+  "modules": {
+    "python3": {
+      "json.tool": {"rationale": "Pure Python JSON pretty-printer. stdin→stdout only. No I/O, no network, no filesystem access."},
+      "timeit": {"rationale": "Pure Python code timer. Executes inline code in sandboxed scope. Read-only."},
+      "calendar": {"rationale": "Pure Python calendar printer. stdout only. No I/O."},
+      "this": {"rationale": "Zen of Python. Prints fixed string to stdout. No I/O."},
+      "site": {"rationale": "Shows site-packages paths. Informational only. Read-only."},
+      "compileall": {"rationale": "Compiles .py to .pyc. Filesystem write, but deterministic and idempotent."},
+      "tokenize": {"rationale": "Python tokenizer. stdin/file → stdout. Read-only analysis."},
+      "ast": {"rationale": "AST dump tool. stdin/file → stdout. Read-only analysis."},
+      "dis": {"rationale": "Bytecode disassembler. stdout only. Read-only analysis."},
+      "py_compile": {"rationale": "Single file compile check. Read-only verification."},
+      "encodings": {"rationale": "Encoding aliases. stdout only. No I/O."},
+      "tabnanny": {"rationale": "Whitespace consistency checker. Read-only analysis."}
+    },
+    "python": {"_inherits": "python3"},
+    "node": {},
+    "ruby": {},
+    "perl": {},
+    "php": {},
+    "lua": {},
+    "awk": {},
+    "sed": {}
+  },
+  "blockedActions": ["-c", "-e", "-r"]
+}

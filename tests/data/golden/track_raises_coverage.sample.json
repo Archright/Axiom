@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/track_raises_coverage.sh",
+  "description": "Raises Coverage Tracker — measures {.raises: [].} annotation coverage across all proc declarations in the project",
+  "inputSample": {
+    "args": []
+  },
+  "outputSample": {
+    "stdout": "raises_coverage: 94.2% (312/331 procs annotated)",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

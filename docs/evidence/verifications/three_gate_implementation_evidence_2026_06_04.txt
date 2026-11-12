@@ -1,0 +1,143 @@
+# 3대 관문 완전 구현 — 실행 증거
+# Date: 2026-06-04
+# Scope: Phase 1 (Fundamental) + Phase 2 (Elegant) + Phase 3 (Deterministic)
+# Phase 4a (Pre-Sieve 경고 모드) — deferred
+
+========================================================================
+## Changed Files Summary
+========================================================================
+
+NEW: src/core/proof_artifact.nim (136 lines)
+  - ProofArtifact SSOT type (Nim case object)
+  - Discontinuity, RemediationPattern, SynergyMetrics types
+  - 4 JSON serializers (all func with {.raises: [].})
+  - emptySynergyMetrics() sentinel (-1.0 = "never analyzed")
+  - emptyProofArtifact() constructor
+
+MODIFIED: src/verification/universal_pipeline.nim (+20 lines)
+  - Line 64: stagnation moved OUTSIDE while loop (was line 65 inside)
+  - Line 169: recordFailure(stagnation, ...) added on Lean rejection
+  - Line 177: if stagnation.escalated: break added
+  - Line 165-166: judge.certify() now passes smtUnsatCoreVars, elapsedMs, iterations, stagnationEscalated
+  - Line 252-255: classifySignals + generateTemplates activated
+  - Line 328: proofArtifact: judgeArt.proofArtifact added to result
+  - Line 329: remediationJson now uses jsonFromProofArtifact (was hardcoded empty)
+
+MODIFIED: src/core/refactoring_engine.nim (+8 lines)
+  - Line 60-61: Empty-signals sentinel (return SynergyMetrics(-1.0, ...))
+  - Line 76-80: NaN/zero-product guard (product <= 0.0 → 0.0, else pow)
+
+MODIFIED: src/personas/judge.nim (+114 lines)
+  - Line 46-59: parseLeanLineLocation enhanced (warning/info severity support)
+  - Line 75-80: parseDiagnosticToDiscontinuities signature extended (unsatCoreVars, sourceCode)
+  - Line 107-112: Unsat core correlation enrichment added
+  - Line 103-141: buildProofArtifact() new function (MathematicalDiscontinuity → Discontinuity conversion)
+  - Line 145-158: certify() signature extended (4 new optional params)
+  - Line 185-197, 244-257, 275-287: All 3 return paths wired with proofArtifact
+
+MODIFIED: src/personas/persona_interface.nim (+2 lines)
+  - Line 11: from ../core/proof_artifact import ProofArtifact
+  - Line 82: proofArtifact*: ProofArtifact field added to JudgeArtifact
+
+MODIFIED: src/core/logic/pipeline_core_types.nim (+2 lines)
+  - Line 9: from core/proof_artifact import ProofArtifact
+  - Line 211: proofArtifact*: ProofArtifact field added to UniversalPipelineResult
+
+MODIFIED: src/core/diagnostics_engine_parts/diagnostics_engine_part3.nim (+32 lines)
+  - Line 328-358: UnsatCoreCorrelation type + correlateUnsatCoreToAst() func
+
+MODIFIED: src/verification/batch_uap_orchestrator.nim (+4 lines)
+  - Line 21: import proof_artifact
+  - Line 220-221: emptyProofArtifact() for cache-hit path
+
+MODIFIED: src/cli/wf_render.nim (+6 lines)
+  - Line 192-197: Refactoring template rendering in Guidance section
+
+========================================================================
+## Compilation Evidence
+========================================================================
+
+nim c --hints:off -o:bin/axprove_test src/cli/main.nim
+Result: EXIT CODE 0 (zero errors, warnings only from pre-existing upstream deps)
+
+========================================================================
+## Execution Evidence
+========================================================================
+
+ax prove --limit 50
+Result: EXIT CODE 0
+  topology: 702 files scanned, 55ms
+  effectiveQueueLimit: 50, queuePreviewCount: 50
+  UAP: 2 nodes processed (results.nim::err FAILED, axiom_prelude.nim::contains TIMEOUT)
+  logs/ax_proof_state.json: 26072 bytes generated
+
+========================================================================
+## What Was Fixed (Phase 1 — Fundamental)
+========================================================================
+
+1. stagnation variable moved outside while loop
+   - Before: reset every iteration → consecutiveFailures never accumulates
+   - After: persists across iterations → 3 consecutive failures triggers escalation
+
+2. recordFailure() pipeline restored
+   - Before: 0 callers in entire codebase
+   - After: called on every Lean kernel rejection path
+
+3. Geometric Mean NaN/zero guard
+   - Before: pow(0.0, 1/3) could produce edge cases
+   - After: product <= 0.0 → explicit 0.0 sentinel
+   - Empty signals → -1.0 sentinel (distinct from "no issues" = 1.0)
+
+========================================================================
+## What Was Fixed (Phase 2 — Elegant)
+========================================================================
+
+1. ProofArtifact SSOT introduced
+   - Replaces: MathematicalDiscontinuity + StructuredRemediationPayload + SynergyMetrics fragments
+   - Single object carries all verification evidence for one node
+
+2. Unsaturated data flows restored:
+   [Before] detective unsatCoreVars → judge: ALWAYS @[]
+   [After]  detective unsatCoreVars → judge.certify(smtUnsatCoreVars=caseArt.unsatCoreVars)
+
+   [Before] refactoring_engine.generateTemplates → judge: DEAD CODE
+   [After]  classifySignals + generateTemplates → ProofArtifact.refactoringTemplates
+
+   [Before] judgeArt.structuredRemediation → remediationJson: HARDCODED EMPTY
+   [After]  jsonFromProofArtifact(judgeArt.proofArtifact) → real structured JSON
+
+   [Before] SynergyMetrics: HARDCODED (1.0, 1.0, 1.0, 1.0)
+   [After]  computeSynergyMetrics(signals) → actual f×g×h values
+
+3. wf_render.nim Guidance section now shows refactoring templates
+   - Before: "Blocked: N | Unattempted: N" (counters only)
+   - After: + "Refactoring guidance:" with template descriptions and hints
+
+========================================================================
+## What Was Fixed (Phase 3 — Deterministic)
+========================================================================
+
+1. Lean diagnostic lexer enhanced
+   - Before: only " error:" lines parsed
+   - After: " warning:" and " info:" also parsed
+
+2. Unsat core correlation added
+   - New correlateUnsatCoreToAst() function
+   - String-based heuristics for non-linear expression detection
+   - Loop-context invariant detection
+   - TODO: upgrade to tree-sitter AST queries in Phase 4
+
+3. parseDiagnosticToDiscontinuities enhanced
+   - New parameters: unsatCoreVars, sourceCode
+   - Enriches each MathematicalDiscontinuity with Z3 unsat core variables
+   - Keyword matching preserved as fallback
+
+========================================================================
+## Remaining Work (Phase 4a — Pre-Sieve)
+========================================================================
+
+Deferred to next iteration:
+- src/sieve/pre_sieve_analyzer.nim (new file, AST-based pre-filtering)
+- orchestrationPreSievedWarn/Blocked enum values
+- --no-pre-sieve bypass flag
+- axiom.toml pre_sieve_mode setting

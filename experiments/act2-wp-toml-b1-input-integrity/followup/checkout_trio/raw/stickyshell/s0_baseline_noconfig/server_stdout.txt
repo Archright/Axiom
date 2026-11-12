@@ -1,0 +1,3 @@
+[38;2;255;0;0mERROR[39m  sth: failed to bind to port 22: Permission denied
+Additional info: address: "" port: 22
+[38;2;255;255;255mDEBUG[39m  sth: destroying server socket

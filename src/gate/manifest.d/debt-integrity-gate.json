@@ -1,0 +1,19 @@
+{
+  "id": "debt-integrity-gate",
+  "name": "Axiom debt integrity gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/debt_integrity_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/",
+  "passFilenames": true,
+  "weight": "medium",
+  "category": "rule",
+  "argsTemplate": [
+    "$repoRoot",
+    "$mode",
+    "$maxJobs"
+  ],
+  "severity": "error"
+}

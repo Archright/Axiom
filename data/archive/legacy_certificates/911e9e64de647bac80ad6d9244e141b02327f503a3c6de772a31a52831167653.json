@@ -1,0 +1,24 @@
+{
+  "modulePath": "src/core/gate/layer_guard.nim",
+  "functionName": "allGates",
+  "fingerprint": "c38dbc6a62e26adeacebd4783ff8aa057112a8fefd1030466bb9d65a4313ee61",
+  "sourceHash": "3f04b7fa7a88bf6c534cd849ffaf631430233026623e688badc9a2d39097e428",
+  "trusted": true,
+  "status": "certLeanVerified",
+  "reason": "uap-lean-verified",
+  "kernel": false,
+  "solverStatus": "sat",
+  "winningStrategy": "lean-replay",
+  "solverMeta": {
+    "leanCompilerVerified": true,
+    "negativeTestResult": false,
+    "vacuityChecked": true,
+    "vacuityProven": false,
+    "solverVersion": "4.13.3",
+    "solverProvenance": "spHeuristic",
+    "z3Executed": true
+  },
+  "verificationTier": "lean-verified",
+  "leanProposition": "",
+  "irHash": "911e9e64de647bac80ad6d9244e141b02327f503a3c6de772a31a52831167653"
+}

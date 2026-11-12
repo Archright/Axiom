@@ -1,0 +1,14 @@
+{
+  "id": "core-invariant-gate",
+  "name": "Axiom core invariant gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/core_invariant_gate.nim",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/core/[^/]+\\.nim$",
+  "passFilenames": true,
+  "weight": "light",
+  "category": "theorem",
+  "severity": "error"
+}

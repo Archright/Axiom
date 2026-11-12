@@ -1,0 +1,44 @@
+{
+  "specId": "SPEC-LIBP2P-VARINT-RT",
+  "specOrigin": "soExplicit",
+  "ruleId": "external:libp2p/varint/lp-encode-decode-roundtrip",
+  "ruleVersion": "1.0.0",
+  "contract": "experiments/nim-libp2p-bytesview-slice-e2e/PROPOSAL_C5_VARINT.md",
+  "description": "Out-of-tree explicit spec (Axiom-owned) for the LP-varint value roundtrip of nim-libp2p: getUVarint(putUVarint(v)) == v over the domain 0 <= v <= 9223372036854775807 (the int64.max literal; the LP dialect's 63-bit encode/decode ceiling — libp2p/varint.nim:9-11 module docstring, decode Overflow guard :138-140, encode Overflow guard :171-173). Adopted with a HASH-BOUND adoption record: the loader-side spec identity (SpecID = H(sorted canonicalSpecIR | origin | ruleVersion)) of the exact proposition content is pinned in adoption.adoptedSpecHash, and the subject module bytes are pinned by adoption-time sha256 in subject.blobSha256. The subject tree is READ-ONLY (Zero-Footprint); this file is the only legitimate place the proposition lives.",
+  "subject": {
+    "repository": "status-im/nim-libp2p (local READ-ONLY clone <workspace>/nim-libp2p; origin iftech/nim-libp2p fork of status-im/nim-libp2p)",
+    "commit": "a130a7f32219909bdcda14b7f1e64d0804fc832c",
+    "module": "libp2p/varint.nim",
+    "symbols": ["putUVarint", "getUVarint"],
+    "sourceLines": "101-181",
+    "blobSha256": "cb534bcd3af603f46b319e8f60df6539a9714dad80ed4512d24a87260ee22845"
+  },
+  "canonicalSpecIR": [
+    "0 <= v",
+    "v <= 9223372036854775807",
+    "getUVarint(putUVarint(v)) == v"
+  ],
+  "adoption": {
+    "adoptedSpecHash": "ddf7eca1151d672f963b04716c4772940e5e59b69045428b5385151d764f0607",
+    "adopter": "axiom (work/c5b-adoption, user-approved mission 2026-10-31)",
+    "adoptedAt": "2026-10-31",
+    "basis": "Explicit user approval 2026-10-31: '권한이 필요한 부분은 전면 허가한다' (full permission for the C5-B proposition adoption workstream), together with approval of this mission's execution plan. Proposition CONTENT adopted verbatim from the committed C5 varint proposal PR #1129 (merge commit 9b87ce7ca6a33aacd9fc40209d358947d2dc1965), experiments/nim-libp2p-bytesview-slice-e2e/PROPOSAL_C5_VARINT.md §4 (canonicalSpecIR 3-clause form, load-observed RUN1) and §7 (adoption path, subject pin, candidate SpecID).",
+    "grammarVersion": "nim-roundtrip-clause-v1",
+    "provenance": "The proposition CONTENT is proposal-authored: stated and load-verified in the committed C5 varint proposal PR #1129 (merge 9b87ce7ca6a33aacd9fc40209d358947d2dc1965; probe log runs/c5_grammar_probe.log sha256 13748d2677e7ca8e693d668bbc53fa102557d06b3f60da32b2129e064ca0edbc, RUN1 rows :206-210, SpecID row :214) — no human authored the content. The AUTHORITY for holding and verifying against it is the explicit adoption act: this committed, hash-bound Axiom-owned overlay approved by the user on 2026-10-31. Authorship confers NO authority (external_subject_registry.nim:17-22). The adoptedSpecHash was recomputed at adoption time from the loaded clause content — sha256 over the sorted canonicalSpecIR joined by '|' plus the soExplicit origin ordinal (0) and the ruleVersion 1.0.0, i.e. sha256('0 <= v|getUVarint(putUVarint(v)) == v|v <= 9223372036854775807|0|1.0.0') — and byte-matches the proposal's candidate SpecID. Any post-adoption mutation of a clause, the ruleVersion, or the subject bytes mechanically invalidates this adoption (fail-closed)."
+  },
+  "semanticCaveats": [
+    "The domain bound literal 9223372036854775807 is int64.max and IS expressible in the closed clause grammar: safeParseInt('9223372036854775807') => ok, and the real loader accepted the exact 3-clause form (proposal RUN1: loadBase36OverlayDomain => ok; domainVar=v; domainLower=0; domainBound=9223372036854775807; outer=getUVarint; inner=putUVarint).",
+    "LP dialect varints encode only 63 bits (module docstring libp2p/varint.nim:9-11): decode rejects >= 0x8000_0000_0000_0000 (:138-140), encode rejects the same mask (:171-173). The proposition is scoped to that 63-bit domain; the defect domain [2^63, 2^64) is OUT of scope and remains NOT adopted (C5-HIGH-UINT64).",
+    "The roundtrip clause names unqualified symbols; the proposition is the LP instance (vtype = LP) per proposal §4 — the PB (ProtoBuf) instance is NOT part of this adoption.",
+    "The subject procs carry multi-parameter signatures (typedesc carrier + byte buffer + var outlen/outval) and let-bindings/type dispatches in their bodies: the base36 β-composite synthesis scope (synthesizeBase36RelationalCandidate — exactly one referenced value parameter, no recorded bindings) does not accept them, and no engine lane currently dispatches this document (no installed capability adapter for its specRelPath). This adoption registers the hash-bound proposition and its SpecID as verification input; varint-lane validate+load wiring (proposal §4 capability list, §7 item 3) is a separate implementation slice deliberately NOT part of this adoption.",
+    "subject pins use the module file's content sha256; git object IDs (a SHA-1 repo) are a different hash kind and are recorded separately (bytesview overlay convention, nim_libp2p_bytesview_slice.json:53)."
+  ],
+  "nonClaims": [
+    "NOT a resolution of C5 as a whole: C5-HIGH-UINT64 (the [2^63, 2^64) defect domain — inexpressible today: int64-exceeding literals are fail-closed by the grammar, proposal RUN2/RUN3/RUN4) and C5-CANONICALITY (byte-range canonicality — the roundtrip clause shape would coerce b to an integer domain, proposal RUN7) remain NOT_ADOPTED, as does defect proposition (c).",
+    "NOT a proof — adoption records the proposition as verification INPUT; this record itself proves no universal claim, and the code-observation evidence grade of the proposal (§4) is unchanged by adoption.",
+    "NOT a claim that the roundtrip holds or fails for any (T, buffer) state outside the stated value domain; the typedesc carriers (PB|LP) are static discriminators and the propositions bind only the value parameter v.",
+    "NOT a nim-libp2p modification or in-tree annotation (Zero-Footprint) — the fix decision belongs to the subject's maintainers.",
+    "NOT a claim about nim-libp2p's overall correctness, safety, or memory safety.",
+    "NOT a fully-autonomous proposition discovery — the content comes from the committed proposal (PR #1129); the authority is the explicit user-approved adoption act recorded above."
+  ]
+}

@@ -1,0 +1,52 @@
+diff --git a/src/generated/build_metadata.json b/src/generated/build_metadata.json
+index c5a551524..346e7a1bb 100644
+--- a/src/generated/build_metadata.json
++++ b/src/generated/build_metadata.json
+@@ -1,8 +1,8 @@
+ {
+   "generatorVersion": 2,
+-  "generatedAt": "2026-10-30T11:48:37Z",
+-  "commitCount": 3571,
+-  "gitHash": "8ac1cd1",
++  "generatedAt": "2026-11-01T21:30:27Z",
++  "commitCount": 3720,
++  "gitHash": "d1e59a9",
+   "hooksPath": ".githooks",
+   "z3Version": "4.13.3",
+   "glibcVersion": "ldd (Ubuntu GLIBC 2.39-0ubuntu8.9) 2.39",
+@@ -78,6 +78,7 @@
+     "cli/shared/proof_hydration.nim",
+     "cli/subagent_orchestrator.nim",
+     "cli/topology_cli.nim",
++    "cli/upstream_report_cli.nim",
+     "cli/vacuity_classifier.nim",
+     "cli/verdict_display.nim",
+     "cli/verify_cli.nim",
+@@ -747,6 +748,7 @@
+     "core/utils/path_identity.nim",
+     "core/utils/repo_root.nim",
+     "core/utils/shadow_digests.nim",
++    "core/utils/skreport_comparison.nim",
+     "core/utils/test_helper.nim",
+     "core/utils/text_utils.nim",
+     "core/vault/ledger_logic.nim",
+@@ -1196,6 +1198,7 @@
+     "verification/obligation/kernel_acceptance_authority.nim",
+     "verification/obligation/lean_evidence.nim",
+     "verification/obligation/lean_kernel_boundary.nim",
++    "verification/obligation/measured_digests.nim",
+     "verification/obligation/metrics.nim",
+     "verification/obligation/metrics_io.nim",
+     "verification/obligation/metrics_materializer.nim",
+@@ -1458,8 +1461,8 @@
+     "validate_runners.nim",
+     "verification_auditor_gate.nim"
+   ],
+-  "featureManifestMtime": 1793360687,
+-  "newestFeatureMtime": 1793360687,
++  "featureManifestMtime": 1793568625,
++  "newestFeatureMtime": 1793568626,
+   "nimblePackage": "axiom",
+   "nimVersion": "Nim Compiler Version 2.2.10 [Linux: amd64]"
+ }
+\ No newline at end of file

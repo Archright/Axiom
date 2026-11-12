@@ -1,0 +1,8 @@
+{
+  "nimType": "seq[string]",
+  "leanType": "List String",
+  "smtSort": "(List String)",
+  "mappingProofObligation": "nim_lean_seqstring_iso",
+  "verified": false,
+  "sourceHash": ""
+}

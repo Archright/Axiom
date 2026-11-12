@@ -1,0 +1,56 @@
+{
+  "version": "1.0.0",
+  "migrations": {
+    "1.0.0": "Initial step definitions — core CLI and gate operations"
+  },
+  "steps": {
+    "the user runs {command}": {
+      "func": "runCommand",
+      "params": ["string"],
+      "module": "test_helpers",
+      "description": "Execute a shell command and capture output"
+    },
+    "the output should contain {text}": {
+      "func": "checkOutputContains",
+      "params": ["string"],
+      "module": "test_helpers",
+      "description": "Assert command output contains text"
+    },
+    "the exit code should be {code}": {
+      "func": "checkExitCode",
+      "params": ["int"],
+      "module": "test_helpers",
+      "description": "Assert command exit code"
+    },
+    "a file {path} exists": {
+      "func": "checkFileExists",
+      "params": ["string"],
+      "module": "test_helpers",
+      "description": "Assert file exists at path"
+    },
+    "the file {path} contains {text}": {
+      "func": "checkFileContains",
+      "params": ["string", "string"],
+      "module": "test_helpers",
+      "description": "Assert file contains text"
+    },
+    "the module {name} compiles": {
+      "func": "checkModuleCompiles",
+      "params": ["string"],
+      "module": "test_helpers",
+      "description": "Assert module compiles without errors"
+    },
+    "the gate {name} passes": {
+      "func": "checkGatePasses",
+      "params": ["string"],
+      "module": "test_helpers",
+      "description": "Assert gate check passes"
+    },
+    "the proof status should be {status}": {
+      "func": "checkProofStatus",
+      "params": ["string"],
+      "module": "test_helpers",
+      "description": "Assert proof verification status"
+    }
+  }
+}

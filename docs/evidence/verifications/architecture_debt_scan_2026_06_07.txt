@@ -1,0 +1,251 @@
+ARCHITECTURE DEBT SCAN RESULTS — 2026-06-07
+============================================
+Scanner: read-only audit (no source files modified)
+Working directory: ../Axiom-core
+
+================================================================================
+[A-01] domain_types.nim SSOT Violation
+================================================================================
+SEVERITY: HIGH
+
+Two files with identical name exist at different layers:
+  src/core/domain_types.nim           132 lines  (5,839 bytes)  2026-06-06
+  src/core/types/domain_types.nim     275 lines  (8,859 bytes)  2026-06-06
+
+The `src/core/types/` variant is 2× larger, suggesting it is the superset.
+The top-level `src/core/domain_types.nim` may be a legacy stub or a SoC
+boundary extraction (types vs logic). Either way, having two files with
+the same name in the same logical layer (core/) violates SSOT.
+
+STATUS: Previously registered as DEBT#005 (gate/domain_types.nim shadow — Closed).
+This is a NEW instance: core-level duplicate remains unresolved.
+
+================================================================================
+[A-02] Stub/Real Duplicate Pairs
+================================================================================
+SEVERITY: HIGH
+
+3 pairs detected:
+
+1. vault_index.nim
+   src/core/vault_index.nim           684 bytes   — TYPE-ONLY stub (type defs)
+   src/verification/vault_index.nim   9,219 bytes — Full implementation
+   Verdict: Intentional SoC split (core types, verification logic). Acceptable.
+
+2. proof_universe_lock.nim
+   src/core/proof_universe_lock.nim           9,454 bytes — Pure math kernel (REAL)
+   src/verification/proof_universe_lock.nim   632 bytes   — Re-export facade (STUB)
+   Verdict: DEBT — backward-compat facade re-exports core + I/O wrappers.
+   The 632-byte verification/ version is a thin re-export wrapper that
+   imports core/proof_universe_lock, proof_universe_lock_io, and
+   proof_universe_commit. Pure facade with no logic.
+
+3. cert_writer.nim
+   src/verification/cert_writer.nim              2,482 bytes — Legacy standalone
+   src/verification/certificate/cert_writer.nim  10,389 bytes — Full implementation
+   Verdict: DEBT — legacy file (4x smaller) coexists with the real module
+   in a subdirectory. Same layer (verification/), different paths.
+
+================================================================================
+[A-03] session_parser_types Fragmentation (7 files × ~12 lines)
+================================================================================
+SEVERITY: MEDIUM
+
+7 fragment files, all 11-12 lines each, totaling 83 lines:
+  session_parser_types_1.nim  12 lines  458 bytes
+  session_parser_types_2.nim  12 lines  436 bytes
+  session_parser_types_3.nim  12 lines  413 bytes
+  session_parser_types_4.nim  12 lines  412 bytes
+  session_parser_types_5.nim  12 lines  431 bytes
+  session_parser_types_6.nim  12 lines  419 bytes
+  session_parser_types_7.nim  11 lines  350 bytes
+
+83 lines split into 7 files is a classic over-fragmentation pattern.
+A single file would be trivially maintainable. This was likely created
+by an automated splitting tool without line-count heuristics.
+
+================================================================================
+[A-04] 3-Level Nested _parts/ Include Directories
+================================================================================
+SEVERITY: HIGH (directly relates to DEBT#162)
+
+Statistics:
+  *_parts/ directories:        16
+  *_part*.nim files:           38
+  3-level nested directories:   2
+
+Deeply nested (3-level) _parts/ directories:
+  src/core/boundary_extractor_parts/boundary_extractor_part1_parts/
+  src/gate/nimtry/extract/nimtry_extract_parts/nimtry_extract_part3_parts/
+
+All 16 _parts/ directories:
+  src/core/axiom_api_session_parts
+  src/core/boundary_extraction_core_parts
+  src/core/boundary_extractor_parts
+    └─ boundary_extractor_part1_parts          ← NESTED LEVEL 3
+  src/core/the_judge_query_parts
+  src/core/verified_axioms_catalog_parts
+  src/gate/nimtry/extract/nimtry_extract_parts
+    └─ nimtry_extract_part3_parts              ← NESTED LEVEL 3
+  src/gate/orchestrator_hook_parts
+  src/mcp/axiom_mcp_parts
+  src/translator/universal_mapper_parts
+  src/ui/ax_tui_reporter_parts
+  src/verification/pipeline_core_runner_parts
+  src/verification/pipeline_lean_spec_inference_parts
+  src/verification/pipeline_negative_scan_parts
+  src/verification/proof_synthesis_engine_parts
+
+The 3-level nesting means: a file was split, then one of its parts was
+split again — a recursive fragmentation anti-pattern that makes the
+include chain untraceable without tooling.
+
+================================================================================
+[A-05] pipeline_core_types Split Across Layers
+================================================================================
+SEVERITY: HIGH
+
+  src/core/logic/pipeline_core_types.nim      7,863 bytes   (core layer)
+  src/verification/pipeline_core_types.nim   22,593 bytes   (verification layer)
+
+The verification/ version is ~3× larger. These share the same filename
+but reside in different architectural layers. This creates import
+ambiguity and violates the principle that types should be SSOT in one
+location. Related to the core↔verification SoC boundary tension.
+
+================================================================================
+[A-06] Backward-Compat Facade Modules
+================================================================================
+SEVERITY: MEDIUM
+
+23 files contain backward-compat / re-export compatibility patterns:
+  src/personas/legislator_feedback.nim
+  src/cli/sorter.nim
+  src/cli/ax_workflow_cli.nim
+  src/cli/cli_io.nim
+  src/cli/action_plan_cli.nim
+  src/core/verified_axioms_core.nim
+  src/core/solver/types.nim
+  src/core/tautology_prover.nim
+  src/core/metrics.nim
+  src/core/smt_to_lean_translate.nim
+  src/core/contract_param_util.nim
+  src/core/logic/semantic_theorem_builder.nim
+  src/core/sorter_core.nim
+  src/core/bmc_race.nim
+  src/core/bmc_generic.nim
+  src/core/verified_axioms_catalog_parts/verified_axioms_catalog_part1.nim
+  src/verification/global_symbol_graph.nim
+  src/verification/fingerprint_engine.nim
+  src/verification/lean_skeleton.nim
+  src/verification/proof_universe_lock.nim
+  src/verification/pipeline_lean_spec_inference_parts/...part2.nim
+  src/verification/orchestrator.nim
+  src/gate/runners/architecture_gate.nim
+
+These modules exist primarily to re-export or maintain backward compatibility
+after refactoring. They add import indirection and increase cognitive load.
+
+================================================================================
+[EXISTING OPEN DEBTS] — From DEBT_REGISTRY.md
+================================================================================
+
+| ID     | Sev      | Category         | Title                                                    | Status           |
+|--------|----------|------------------|----------------------------------------------------------|------------------|
+| DEBT#143 | Medium  | Perf/Arch        | Deterministic unsat-core overhead vs probabilistic       | Open (Accepted)  |
+| DEBT#162 | High    | Arch/SRP         | *_parts/ include 분할 23 dirs, 47 files — SRP 은폐      | Open             |
+| DEBT#163 | Medium  | Arch/SoC         | src/core/ 과밀 — 225 files (49%), 21 subdirs             | Open             |
+| DEBT#166 | Medium  | Test Quality     | when isMainModule 안티패턴 32 files                       | Open             |
+| DEBT#167 | Medium  | Arch/SoC         | Nim 순환 참조 — include 분리 시 타입 선격리 필수           | Open             |
+| DEBT#169 | Critical | Test Coverage   | 모듈→테스트 48.1% (399 모듈 중 189개 무테스트)            | Open             |
+| DEBT#175 | Medium  | Test Quality     | when isMainModule 안티패턴 32 files                       | Open             |
+| DEBT#176 | Medium  | Test Coverage    | @manual 비율 과다 — 164개 중 102개 (62.2%)               | Open             |
+
+================================================================================
+[BONUS-1] src/core/ Overcrowding
+================================================================================
+  Top-level .nim files in src/core/:   167
+  Subdirectories in src/core/:         15
+  Total .nim files (recursive):        237
+
+167 files at the top level of a single directory is a maintenance burden.
+With 15 subdirectories already extracted, the flat surface area remains
+extremely high. This overlaps with DEBT#163 (225 files count includes
+subdirs).
+
+================================================================================
+[BONUS-2] Duplicate Filenames Across src/
+================================================================================
+7 filenames appear in multiple locations:
+
+  cert_writer.nim
+    src/verification/cert_writer.nim              (2,482 bytes — legacy)
+    src/verification/certificate/cert_writer.nim  (10,389 bytes — real)
+
+  domain_types.nim
+    src/core/domain_types.nim                     (5,839 bytes)
+    src/core/types/domain_types.nim               (8,859 bytes)
+
+  orchestrator.nim
+    src/verification/orchestrator.nim             (16,097 bytes)
+    src/gate/orchestrator.nim                     (6,508 bytes)
+
+  pipeline_core_types.nim
+    src/core/logic/pipeline_core_types.nim        (7,863 bytes)
+    src/verification/pipeline_core_types.nim      (22,593 bytes)
+
+  proof_universe_lock.nim
+    src/core/proof_universe_lock.nim              (9,454 bytes — math kernel)
+    src/verification/proof_universe_lock.nim      (632 bytes — re-export facade)
+
+  types.nim
+    src/core/solver/types.nim                     (1,791 bytes)
+    src/gate/types.nim                            (4,844 bytes)
+
+  vault_index.nim
+    src/core/vault_index.nim                      (684 bytes — type stub)
+    src/verification/vault_index.nim              (9,219 bytes — full impl)
+
+================================================================================
+[BONUS-3] Include Chain Detection
+================================================================================
+Total `include` statements in src/:  18
+
+All include chains:
+  ax_tui_reporter.nim         → 2 includes (part1, part2)
+  verified_axioms_catalog.nim → 1 include (part1)
+  boundary_extractor.nim      → 2 includes (extraction_core, part1)
+  boundary_extractor_part1.nim→ 1 include (part1_part1) ← 3-LEVEL NESTED
+  pipeline_lean_spec_inference → 3 includes (part1, part2, part3)
+  proof_synthesis_engine.nim  → 1 include (part2, which includes part1)
+  orchestrator_hook.nim       → 2 includes (part1, part2)
+  nimtry_extract_part3.nim    → 2 includes (part3_part1, part3_part2) ← 3-LEVEL
+  nimtry_extract.nim          → 3 includes (part1, part2, part3)
+
+Nim `include` is textual inclusion (not module import). These 18 include
+statements create invisible code paths that bypass the module system,
+making dependency analysis impossible without tooling. This is the
+mechanism underlying DEBT#162 and DEBT#167.
+
+================================================================================
+SUMMARY TABLE
+================================================================================
+
+| ID     | Finding                              | Severity | Lines/Evidence          | Existing DEBT |
+|--------|--------------------------------------|----------|-------------------------|---------------|
+| A-01   | domain_types.nim SSOT duplicate      | HIGH     | 132 vs 275 lines        | DEBT#005 (Closed, new instance) |
+| A-02   | Stub/real duplicate pairs (3)        | HIGH     | 3 pairs, 1 facade       | —             |
+| A-03   | session_parser_types fragmentation   | MEDIUM   | 7 files × 12 lines      | —             |
+| A-04   | 3-level nested _parts/ dirs (2)      | HIGH     | 16 dirs, 38 files       | DEBT#162 (Open) |
+| A-05   | pipeline_core_types cross-layer      | HIGH     | 7.8KB + 22.6KB          | —             |
+| A-06   | Backward-compat facades (23)         | MEDIUM   | 23 files                | —             |
+| BONUS1 | src/core/ overcrowding               | MEDIUM   | 167 top-level files     | DEBT#163 (Open) |
+| BONUS2 | Duplicate filenames (7)              | MEDIUM   | 14 files in 7 pairs     | —             |
+| BONUS3 | include chains (18)                  | HIGH     | 18 include statements   | DEBT#162, #167 (Open) |
+
+Open debts from registry: 7 Open + 1 Accepted Trade-off
+Total architecture debt findings: 9 scan categories
+
+================================================================================
+END OF SCAN — 2026-06-07
+================================================================================

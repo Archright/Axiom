@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/auto_convert_proc_to_func.sh",
+  "description": "Thin shell wrapper for auto_convert_proc_to_func.py — Compiler-Driven proc-to-func Auto-Conversion Pipeline",
+  "inputSample": {
+    "args": ["--dry-run"]
+  },
+  "outputSample": {
+    "stdout": "auto_convert_proc_to_func: dry-run mode, 0 files would be converted",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

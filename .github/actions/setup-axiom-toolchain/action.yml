@@ -1,0 +1,1172 @@
+name: 'Axiom pinned toolchain setup (two-layer memo)'
+description: >
+  Two-layer memoization for the CI toolchain/build-state cache (Phase 3 L2).
+  Correctness contract — NOT hit-rate: cache key exact match -> restore ->
+  content verify -> use. A-layer verify checks pinned version strings + OS
+  package fingerprints ONLY (NOT payload content digests; jq is not covered
+  by A-verify — the Verify toolchain pins step covers it). B-layer verify
+  re-derives the manifest identity from TRUSTED inputs (the compile-
+  participating input-closure digest of cache-build-source + build recipe
+  files + A-fingerprint — none of which
+  travel in the payload) and accepts the restored payload only when its
+  manifest identity claims match that re-derived expectation; a semantic
+  provenance probe then re-executes EVERY restored ci-compile binary's own
+  SourceCoherence check (bin/ax, gate_hook, precompile_gates,
+  install_ax_cas — --check-provenance, runtime SSOT
+  src/infrastructure/provenance_probe.nim, pure digest kernel
+  src/core/utils/build_provenance.nim) against the trusted tree
+  (b-probe-tree) materialized from the caller's git object
+  store, so a payload+manifest pair contaminated TOGETHER (self-consistent
+  stale content) — including an aux-binary-only swap with bin/ax left
+  genuine — is detected -> discarded -> cold fallback (J3 §3.3
+  non-circular anchor). HIT = verified computation (program warmth) SUPPLY
+  REUSE — verdicts are always recomputed (the 4 ci-compile binaries are
+  recompiled even on a HIT today; census 2026-09-30) — cache is acceleration,
+  never evidence. Functional probes
+  (compiler/ast.nim presence, Lake import probe) catch version-matching-but-
+  broken toolchains (Lake.olean incidents 35678120915, 35681814055). On ANY
+  verify/probe FAIL: discard the cache and install/build natively, then
+  re-probe — installs are skipped ONLY on verified hit + probe pass
+  (fail-closed; cache is acceleration, never evidence). Install-step gate
+  measured on run 36572463965: 248s of the 5-job critical path was
+  unconditional installs every run, cache HIT or not.
+
+  A-layer (environment/toolchain memo): key = toolchain pin identity (the
+  action itself pins nim 2.2.10 / lean 4.33.0 / z3 4.13.3) + OS package
+  fingerprint (gcc --version, glibc via ldd --version — the toolchain-bytes
+  measurement; this is the guard for the once-real image-drift class: gcc
+  11.3 vs 13.1 LTO mismatch, run 35963379690, docs/evidence/
+  ghec_ruleset_p1c_bypass_2026-09-24.md:100) + build-script identity (hash of
+  this action + nimble.lock). Runner image LABELS (ImageOS/ImageVersion)
+  were part of the key from the first keygen (257a9319a — same commit that
+  introduced the gcc/glibc fingerprints) and were REMOVED 2026-10-01:
+  LABEL_NOISE 실측(114/114 런, 2026-09-30 창) — gcc_fp/glibc_fp/script_hash
+  were identical across the image roll, only a_fp flipped with the label, so
+  the label caused false-MISSes and made image-roll-period seeds structurally
+  unconsumeable (census §2-§3, docs/evidence/
+  ci_structural_duplicate_census_2026-09-30.md: 구·신 이미지에서 동일 트리·
+  레시피 내용이 a_fp만 달리 2개 키로 시딩됨). gcc_fp covers the LTO-class
+  drift directly (gcc --version embeds the package revision); the residual
+  (label-only-detectable non-gcc/glibc image drift) is documented as R9 in
+  docs/spec/github_delegation_residuals.md. This action.yml change alters
+  script_hash, so EVERY A-layer and B-layer key is invalidated exactly once
+  on landing (expected one-shot cold). Contents:
+  ~/.nimble, ~/.choosenim, ~/.elan, ~/.local/bin (z3/jq) ONLY — build/nimcache is
+  B-dependent and must not live in A. A-layer save is allowed from ANY run whose ~/.nimble is
+  lock-complete (lock materialization witness stamp; a partial ~/.nimble —
+  e.g. a skip-nimble-install caller — must never win the first-save race).
+  NON-EXACT RESTORE IS NEVER CONSUMED: the platform can restore a PREFIX match
+  of the requested key even when no restore-keys input is given, and reports
+  cache-hit=false for that restore. The A-layer therefore (a) logs the
+  requested / primary / matched keys, and (b) DELETES the scope's restored
+  paths whenever cache-hit != 'true', before any install step can treat a
+  version-matching leftover as present. provision-scope=nim (the
+  publication-integrity evaluators) restores ~/.nimble + ~/.choosenim +
+  ~/.local/bin under its own key namespace (axiom-a-nim-*, RUNNER_ARCH +
+  nim-version bound) and saves ONLY when a run-local verified stamp exists
+  (save authority != use authority). ~/.nimble is REQUIRED even though the
+  evaluators import only stdlib + in-repo modules: config/integrity.nims
+  compiles tools/feature_manifest_generator.nim (import checksums/sha2) on
+  EVERY `nim c`, so the nimble package closure is a build-time dependency.
+  ~/.elan is the only path this scope drops — it is the dominant share of
+  the 1,160MB full payload and nothing in these jobs runs lean.
+  provision-scope=runtime (mint jobs: prebuilt bin/ax `cert attest --sign` /
+  `cert ledger-*` only, no kernel execution — verified src/cli/cert_cli.nim
+  runSignWitnessCli ~888 / ledger ops ~1153; measured run 36572463965)
+  restores ~/.local/bin only and skips the choosenim/elan/nimble toolchain
+  entirely. Runtime SAVES under its own key namespace (axiom-a-rt-*, see the
+  save-step note; measured run 36614815220) so later runtime jobs / same-ref
+  re-runs restore z3+jq instead of re-downloading — the lock-completeness guard
+  is a ~/.nimble guard and does not apply to the ~/.local/bin-only payload.
+  The cache version is derived from these paths by actions/cache, so
+  runtime and full scope entries never collide and never cross-match.
+
+  B-layer (per-base build artifact memo): key = compile-participating
+  INPUT-CLOSURE identity of the build source (input cache-build-source, a
+  commit SHA whose tree's build inputs — src/ minus generated/, every
+  staticRead compile input, and the compile-success predicate bits: policy
+  docs non-emptiness, SPEC-cell presence — are digested from the git object
+  store, one entry whether the source is the synthetic merge commit or the
+  landed merge commit, and NO entry advance on docs-only commits whose
+  bytes compilation never consumes; experiment-namespace values pass
+  through unmapped)
+  + build recipe identity (Makefile, config.nims, config/effects.nims,
+  src/gate/config.nims) + A-fingerprint (any A change invalidates B).
+  Contents: build/nimcache, .axiom/cache, proofs/.lake, proofs/build + the 4
+  ci-compile binaries. B-layer save is ONE-WRITER only — the sole writer is
+  the external ci-cache-publisher workflow (workflow_run; verified
+  re-publication of the gate run's artifact, ADR-0025 Amendment B). No
+  in-workflow caller writes B: cache-save-enabled stays 'false' everywhere.
+
+  restore-keys are FORBIDDEN on both layers: GitHub reports cache-hit=true
+  only on an exact key match; prefix fallback is a "may be stale" heuristic
+  and cannot satisfy the memo contract (restored digest == expected).
+inputs:
+  skip-nimble-install:
+    description: >-
+      Skip this action's internal `nimble install -y`. Set true when the
+      caller performs dependency installation AFTER materializing derived
+      artifacts (canonical-bootstrap contract: build_env.nim must exist
+      before nimble compiles anything). Default false preserves ci.yml's
+      historical behavior.
+    required: false
+    default: 'false'
+  cache-save-enabled:
+    description: >-
+      B-layer WRITE authority selector (contract flag; the actual save steps
+      live in the caller/publisher workflow). A-layer save is unconditional
+      (any run, guarded by lock-completeness). 'false' (default, ALL current
+      callers) = restore-only READER for B: actions/cache/restore@v4 has no
+      save post-step (platform guarantee = TCB), so no B entry is created by
+      this caller. The sole B writer is ci-cache-publisher.yml (workflow_run,
+      cache-mode: write, verified artifact re-publication). Cache is
+      acceleration, never evidence; hit-rate is a PERFORMANCE metric to be
+      measured later, NOT part of the correctness contract (correctness =
+      exact key -> verify -> use).
+    required: false
+    default: 'false'
+  cache-build-source:
+    description: >-
+      The exact commit SHA whose tree this job builds/warms (the B side of
+      the memo key): github.event.pull_request.base.sha for the admission /
+      mint B checkouts, the gate target_sha (synthetic merge commit) for the
+      runner-pool legs. The key binds its compile-participating input-closure
+      digest (see header); the b-probe-tree output carries the tree OID the
+      provenance probe materializes. The commit object must exist in the
+      caller's checkout (fail-closed keygen).
+      Experiment-namespace values (`exp-*` in measurement workflows) are a
+      different identity domain and are used verbatim.
+    required: true
+  keygen-only:
+    description: >-
+      Emit A/B key outputs and stop — no cache restore, no toolchain
+      provisioning, no cache save. Used by ci-cache-publisher to derive a
+      byte-identical b-key from the gate tree (same formula, same inputs)
+      without installing anything. Outputs b-key/b-identity/a-key are
+      populated either way; a-cache-hit/b-cache-hit stay empty in this mode.
+    required: false
+    default: 'false'
+  provision-scope:
+    description: >-
+      Toolchain provisioning scope. 'full' (default): restore + verify all
+      four A-layer paths (~/.nimble, ~/.choosenim, ~/.elan, ~/.local/bin) and
+      install nim/lean/z3/jq as today (install steps run only on cache miss or
+      verify/probe failure). 'runtime': restore only ~/.local/bin (z3+jq),
+      install only libpcre3 + z3/jq, and skip choosenim/elan/nimble entirely —
+      for mint jobs that run prebuilt bin/ax only (`ax cert attest --sign`,
+      `ax cert ledger-*`; no kernel execution, verified src/cli/cert_cli.nim
+      runSignWitnessCli ~888 / ledger ops ~1153). Wall-clock win measured on
+      run 36572463965: admission-gate spent 248s of its 5-job critical path on
+      unconditional toolchain installs. 'nim': restore ~/.nimble +
+      ~/.choosenim + ~/.local/bin (nim toolchain + nimble package closure +
+      z3/jq), install them on miss, and skip elan/lake entirely — for callers
+      whose only toolchain use is `nim c` over stdlib + in-repo modules
+      (publication-integrity's six evaluators). ~/.nimble is required because
+      config/integrity.nims' manifest bootstrap imports checksums/sha2 on every
+      compile. Key namespace axiom-a-nim-* binds RUNNER_ARCH and nim-version,
+      so an arch or version change starts a new cache generation.
+    required: false
+    default: 'full'
+  nim-version:
+    description: >-
+      Nim toolchain version provisioned and verified by this action. Bound into
+      the nim-scope A key (axiom-a-nim-*), so bumping it creates a new cache
+      generation instead of reusing a toolchain of another version. The arm64
+      tarball sha256 pin is version-specific: re-pin it when changing this.
+    required: false
+    default: '2.2.10'
+outputs:
+  a-cache-hit:
+    description: 'true iff the A-layer restore was an exact-key hit'
+    value: ${{ steps.a-restore.outputs.cache-hit }}
+  b-cache-hit:
+    description: 'true iff the B-layer restore was an exact-key hit'
+    value: ${{ steps.b-restore.outputs.cache-hit }}
+  b-key:
+    description: 'B-layer cache key (for the caller-side B save step)'
+    value: ${{ steps.keygen.outputs.b-key }}
+  b-identity:
+    description: >-
+      The identity unit embedded in b-key: the compile-participating
+      input-closure digest (40-hex) of the cache-build-source tree, or the
+      raw value (experiment namespace). This is the unit the fingerprint
+      manifest's buildSha must use.
+    value: ${{ steps.keygen.outputs.b-identity }}
+  b-probe-tree:
+    description: >-
+      The tree OID of cache-build-source (40-hex) — the OUT-OF-PAYLOAD
+      anchor B_PROBE materializes via git archive to re-derive restored
+      binary provenance. Empty for experiment-namespace sources (probe
+      skips). Deliberately NOT part of the key: the key identity is the
+      input-closure digest.
+    value: ${{ steps.keygen.outputs.b-probe-tree }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Compute A/B cache identities (key inputs)
+      id: keygen
+      shell: bash
+      run: |
+        set -euo pipefail
+        # Fail closed on an unknown scope. Without this guard every downstream
+        # branch falls through to the 'full' shape, so a typo (`nimm`) would
+        # silently restore and SAVE the 1.16GB full payload under the full key
+        # namespace — a fail-open authority leak. Allowed set is explicit.
+        case "${{ inputs.provision-scope }}" in
+          full|runtime|nim) ;;
+          *) echo "::error::unknown provision-scope '${{ inputs.provision-scope }}' — fail closed (allowed: full|runtime|nim)"; exit 1 ;;
+        esac
+        # OS compat measurement — package fingerprints (gcc --version + glibc
+        # via ldd --version). Runner image LABELS (ImageOS/ImageVersion) were
+        # removed 2026-10-01 (LABEL_NOISE, header 계약 주석 + R9): labels make
+        # a_fp flip on image rolls while the toolchain bytes (gcc/glibc/script
+        # identity) stay identical — false-MISS만 유발. The real drift class
+        # (gcc 11.3 vs 13.1 LTO, run 35963379690) is captured by gcc_fp
+        # directly.
+        gcc_fp="nogcc"
+        if command -v gcc >/dev/null 2>&1; then gcc_fp="$(gcc --version 2>/dev/null | sha256sum | cut -c1-16 || true)"; fi
+        glibc_fp="$(ldd --version 2>/dev/null | head -1 | sha256sum | cut -c1-16 || true)"
+        # Build-script identity — the provisioning script itself + the
+        # dependency lock (nimble.lock). Any change invalidates every A entry:
+        # never reuse a toolchain provisioned under a different script/lock.
+        script_hash="$(sha256sum .github/actions/setup-axiom-toolchain/action.yml nimble.lock | sha256sum | cut -c1-40)"
+        # Runtime-scope entries use a dedicated key namespace (axiom-a-rt-*):
+        # runtime now saves ~/.local/bin too, and the distinct prefix prevents
+        # first-save-wins cross-scope contamination (same key + different
+        # paths/version would poison full-scope hits; measured run 36614815220).
+        if [ "${{ inputs.provision-scope }}" = "runtime" ]; then
+          a_prefix="axiom-a-rt-"
+        elif [ "${{ inputs.provision-scope }}" = "nim" ]; then
+          a_prefix="axiom-a-nim-"
+        else
+          a_prefix="axiom-a-"
+        fi
+        # nim scope binds the architecture and the nim version into the key:
+        # a toolchain provisioned for another arch/version must never be
+        # restored (the payload is a compiler, not a portable artifact).
+        # full/runtime keep the legacy key shape — adding arch there would
+        # invalidate the 1.16GB full payload fleet-wide for no correctness gain
+        # (every runner in this repo is x64; the arm64 branch is a fallback).
+        if [ "${{ inputs.provision-scope }}" = "nim" ]; then
+          a_key="${a_prefix}${RUNNER_OS}-${RUNNER_ARCH}-nim${{ inputs.nim-version }}-${gcc_fp}-${glibc_fp}-${script_hash}"
+        else
+          a_key="${a_prefix}${RUNNER_OS}-${gcc_fp}-${glibc_fp}-${script_hash}"
+        fi
+        # B-layer identity — the key binds the compile-participating INPUT
+        # CLOSURE of the ci-compile binaries, not the whole tree. The former
+        # whole-tree-OID unit advanced the B generation on every docs-only
+        # commit (structural false-MISS recompile) even though docs reach
+        # compilation only through a bounded surface (registration R3,
+        # docs/evidence/jcas_phase23_registrations_2026-10-09.md §R3). The
+        # closure digested here (exactly what compilation consumes):
+        #   - src/ file bytes — the BuildSourceHash universe; src/generated/
+        #     is excluded for the same circularity reason as BuildSourceHash
+        #     (it is generated FROM these inputs at build time),
+        #   - every staticRead compile input as BYTES (spec_registry.json,
+        #     axiom_catalog.json, command_policy/stateless_whitelist/
+        #     policy_manifest/feature_manifest JSON, i18n, lean-toolchain
+        #     pins, proof witness, gate manifests/waivers, plan templates,
+        #     smoke_test.nim, axiom.nimble),
+        #   - the compile-success PREDICATE inputs as predicate bits, not
+        #     bytes: policy docs gate on non-emptiness only (config/
+        #     integrity.nims static block quit(1)) and spec_binding_macro
+        #     requires only the "| SPEC-ID |" cells to exist — prose edits
+        #     stay key-neutral, an emptied file or removed cell flips the key.
+        # recipe_hash + a_fp remain separate key components below (an A
+        # change invalidates B by construction). Identity is derived from
+        # the GIT OBJECT STORE — git archive of cache-build-source — never
+        # from the working checkout: the caller workspace may hold the merge
+        # tree while cache-build-source is base.sha (admission lanes), and
+        # uncommitted bytes must never move a key. Fail-closed: a 40-hex
+        # source whose commit object is absent from the caller checkout, or
+        # a closure input absent from the tree, fails the keygen instead of
+        # silently producing a divergent key. The tree OID itself is still
+        # resolved — as b-probe-tree, the OUT-OF-PAYLOAD anchor B_PROBE
+        # materializes to re-derive restored-binary provenance. §2.5
+        # identity cohort: keygen, save-side manifest buildSha, b-verify
+        # EXPECT_BUILD_SHA and the probe trust anchor all consume THIS
+        # keygen's outputs — one coherent generation, no in-place mixing.
+        # Non-SHA inputs (experiment namespace `exp-*`) are a different
+        # identity domain — used verbatim, never mapped through git.
+        src="${{ inputs.cache-build-source }}"
+        b_probe_tree=""
+        if printf '%s' "$src" | grep -Eq '^[0-9a-f]{40}$'; then
+          b_probe_tree="$(git rev-parse "${src}^{tree}")"
+          printf '%s' "$b_probe_tree" | grep -qE '^[0-9a-f]{40}$' \
+            || { echo "AXIOM_CACHE_KEYGEN: FAIL — cannot derive tree OID for $src" >&2; exit 1; }
+          closure_root="$(mktemp -d /tmp/axiom-b-closure.XXXXXX)"
+          # LFS-safe materialization: the archive MUST NOT run the LFS smudge
+          # filter. The caller checkouts are deliberately credential-free
+          # (`persist-credentials: false`, PR #972), and an LFS-tracked path in
+          # the tree (docs/spec/*.pdf, *.bin/.so/.png) makes plain `git archive`
+          # try to download the object — `could not read Username` → tar EOF →
+          # keygen fail (measured: run 39463081984, the first landing run of the
+          # B/M generation). The closure input is the tree's recorded bytes, not
+          # the credential-gated payload, so the filters are disabled for THIS
+          # invocation only (deterministic; cache key moves once).
+          if ! git -c filter.lfs.process= -c filter.lfs.smudge=cat -c filter.lfs.required=false \
+                 archive "$src" | tar -x -C "$closure_root"; then
+            rm -rf "$closure_root"
+            echo "AXIOM_CACHE_KEYGEN: FAIL — cannot materialize closure inputs from $src" >&2
+            exit 1
+          fi
+          closure_lines="$(
+            cd "$closure_root" || exit 1
+            printf 'src-universe %s\n' "$(find src -type f ! -path 'src/generated/*' -print0 | LC_ALL=C sort -z | xargs -0 -r sha256sum | sha256sum | cut -d' ' -f1)"
+            for f in axiom.nimble lean-toolchain \
+                     proofs/proof_witness.json proofs/lean-toolchain \
+                     config/gates.manifest.toml config/gates.waiver.toml \
+                     config/templates/good_plan.md \
+                     config/templates/bad_plan_missing_stage.md \
+                     config/templates/bad_plan_no_tasks.md \
+                     data/axiom_catalog.json data/command_policy.json \
+                     data/stateless_whitelist.json data/policy_manifest.json \
+                     data/feature_manifest.json data/i18n/ko.json \
+                     docs/spec/spec_registry.json \
+                     tools/ci/smoke_test.nim; do
+              [ -f "$f" ] || { echo "AXIOM_CACHE_KEYGEN: FAIL — closure input $f absent from tree $src (fail-closed)" >&2; exit 1; }
+              printf '%s  %s\n' "$(sha256sum "$f" | cut -d' ' -f1)" "$f"
+            done
+            for f in AGENTS.md docs/agents/architecture.md docs/agents/rules_workflow.md; do
+              if [ -s "$f" ]; then printf 'nonempty  %s\n' "$f"; else printf 'empty  %s\n' "$f"; fi
+            done
+            for id in SPEC-T1-ASIRATIO SPEC-T1-DURATION SPEC-T1-VKDRATIO; do
+              if grep -qF "| $id |" docs/spec/three_tier_contract_architecture.md; then
+                printf 'spec-cell-present  %s\n' "$id"
+              else
+                printf 'spec-cell-absent  %s\n' "$id"
+              fi
+            done
+          )" || { rm -rf "$closure_root"; exit 1; }
+          rm -rf "$closure_root"
+          b_identity="$(printf '%s\n' "$closure_lines" | LC_ALL=C sort | sha256sum | cut -c1-40)"
+          printf '%s' "$b_identity" | grep -qE '^[0-9a-f]{40}$' \
+            || { echo "AXIOM_CACHE_KEYGEN: FAIL — closure digest malformed for $src" >&2; exit 1; }
+        else
+          b_identity="$src"
+        fi
+        # B-layer: input-closure identity + build recipe identity +
+        # A-fingerprint (A change invalidates B by construction).
+        recipe_hash="$(sha256sum Makefile config.nims config/effects.nims src/gate/config.nims | sha256sum | cut -c1-32)"
+        a_fp="$(printf '%s' "$a_key" | sha256sum | cut -c1-32)"
+        b_key="axiom-b-${b_identity}-${recipe_hash}${a_fp}"
+        echo "a-key=$a_key" >> "$GITHUB_OUTPUT"
+        echo "b-key=$b_key" >> "$GITHUB_OUTPUT"
+        echo "b-identity=$b_identity" >> "$GITHUB_OUTPUT"
+        echo "b-probe-tree=$b_probe_tree" >> "$GITHUB_OUTPUT"
+        echo "gcc-fp=$gcc_fp" >> "$GITHUB_OUTPUT"
+        echo "glibc-fp=$glibc_fp" >> "$GITHUB_OUTPUT"
+        echo "AXIOM_CACHE_KEYGEN: a-key=$a_key"
+        echo "AXIOM_CACHE_KEYGEN: b-identity=$b_identity b-key=$b_key probe-tree=${b_probe_tree:0:12}"
+        # A-layer restore/save path set — resolved ONCE here so the restore and
+        # save steps always feed actions/cache one consistent set (the cache
+        # entry version is derived from these paths, so scope variants can
+        # never cross-match each other). runtime: ~/.local/bin only; full: the
+        # four pre-scope paths byte-for-byte, so full-scope entries stay
+        # path-compatible with the pre-change action.
+        if [ "${{ inputs.provision-scope }}" = "runtime" ]; then
+          a_paths='~/.local/bin'
+        elif [ "${{ inputs.provision-scope }}" = "nim" ]; then
+          # ~/.nimble is REQUIRED: config/integrity.nims (manifest bootstrap)
+          # compiles tools/feature_manifest_generator.nim, whose `checksums/sha2`
+          # import resolves from ~/.nimble/pkgs2. Dropping it fails every
+          # `nim c` in these jobs (measured: isolated-HOME compile rc=1).
+          a_paths="$(printf '%s\n' '~/.nimble' '~/.choosenim' '~/.local/bin')"
+        else
+          a_paths="$(printf '%s\n' '~/.nimble' '~/.choosenim' '~/.elan' '~/.local/bin')"
+        fi
+        {
+          echo "a-paths<<AXIOM_A_PATHS_EOF"
+          printf '%s\n' "$a_paths"
+          echo "AXIOM_A_PATHS_EOF"
+        } >> "$GITHUB_OUTPUT"
+        echo "AXIOM_CACHE_KEYGEN: a-paths scope=${{ inputs.provision-scope }}: $(printf '%s' "$a_paths" | tr '\n' ' ')"
+
+    - name: A-layer restore (toolchain — exact key only, no restore-keys)
+      if: inputs.keygen-only != 'true'
+      id: a-restore
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ steps.keygen.outputs.a-paths }}
+        key: ${{ steps.keygen.outputs.a-key }}
+
+    - name: A-layer restore observation (requested / primary / matched key)
+      # The platform can restore a PREFIX match of the requested key even when
+      # no restore-keys input is given, and reports cache-hit=false for that
+      # restore. cache-hit alone therefore does not prove exactness: log the
+      # requested key, the primary key and the key the platform actually
+      # restored (empty on a plain miss) so a non-exact restore is attributable
+      # from the run log. Logging only — no key formula or restore semantics.
+      if: inputs.keygen-only != 'true'
+      shell: bash
+      env:
+        A_KEY: ${{ steps.keygen.outputs.a-key }}
+        RESTORE_HIT: ${{ steps.a-restore.outputs.cache-hit }}
+        RESTORE_PRIMARY_KEY: ${{ steps.a-restore.outputs.cache-primary-key }}
+        RESTORE_MATCHED_KEY: ${{ steps.a-restore.outputs.cache-matched-key }}
+      run: |
+        echo "AXIOM_CACHE_A_RESTORE: exact-hit=$RESTORE_HIT requested-key=$A_KEY primary-key=$RESTORE_PRIMARY_KEY matched-key=$RESTORE_MATCHED_KEY"
+
+    - name: A-layer non-exact discard (partial/miss payload is never consumed)
+      # Fail-closed: a non-exact restore (prefix match) or a plain miss leaves
+      # whatever the platform extracted on disk. Install steps are gated on
+      # cache-hit != 'true', but an installer that finds a version-matching
+      # toolchain already present (choosenim "already selected") would no-op
+      # and the UNVERIFIED bytes would be used. Delete the scope's paths first
+      # so the install path always starts from a clean state.
+      if: inputs.keygen-only != 'true' && steps.a-restore.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        # ~/.local/bin is on PATH AHEAD of the system dirs (Export toolchain
+        # PATH), so ANY name the partial payload planted there shadows a system
+        # binary for every later step in the job (git, python3, sha256sum, …).
+        # Removing only z3/jq left exactly that hole — measured: run 43067710160
+        # restored a prefix-matched entry and the ~/.local/bin canary SURVIVED
+        # while ~/.nimble and ~/.choosenim canaries were gone.
+        # Quarantine the whole directory instead of deleting it: nothing from an
+        # unverified payload can stay on PATH, and pre-existing host state
+        # (pipx/uv tools on a self-hosted runner) is preserved for inspection
+        # rather than destroyed. The install steps recreate z3/jq afterwards.
+        if [ -e "$HOME/.local/bin" ]; then
+          QUARANTINE="$RUNNER_TEMP/a-partial-discarded-local-bin-$(date +%s%N)"
+          mv "$HOME/.local/bin" "$QUARANTINE"
+          echo "AXIOM_CACHE_A_RESTORE: QUARANTINED partial ~/.local/bin -> $QUARANTINE"
+        fi
+        mkdir -p "$HOME/.local/bin"
+        # emptied-or-recreated directory is an invariant, not an intention
+        test -z "$(ls -A "$HOME/.local/bin")"
+        case "${{ inputs.provision-scope }}" in
+          runtime) : ;;
+          nim)     rm -rf "$HOME/.nimble" "$HOME/.choosenim" ;;
+          *)       rm -rf "$HOME/.choosenim" "$HOME/.elan" "$HOME/.nimble" ;;
+        esac
+        echo "AXIOM_CACHE_A_RESTORE: DISCARDED — non-exact restore (exact-hit=${{ steps.a-restore.outputs.cache-hit }}); native install runs (fail-closed: cache is acceleration, never evidence)"
+
+    - name: A-layer fingerprint verify (restored version strings + OS fingerprints vs key-derived expectations)
+      if: steps.a-restore.outputs.cache-hit == 'true'
+      id: a-verify
+      shell: bash
+      run: |
+        set -uo pipefail
+        ok=1
+        # Key-derived expectations: the action-pinned versions + the OS
+        # fingerprints that compose the A key. Version check uses the
+        # restored binaries directly (PATH is not yet updated here).
+        # Checks ONLY what is in scope: full = nim+lean+z3, runtime = z3.
+        # jq is deliberately NOT checked here — the Verify toolchain pins
+        # step covers it (see the correctness contract in the header).
+        Z3="$HOME/.local/bin/z3"
+        if [ ! -x "$Z3" ] || ! "$Z3" --version 2>&1 | grep -q '4\.13\.3'; then
+          echo "AXIOM_CACHE_A_VERIFY: FAIL — restored z3 != 4.13.3 (or missing)"
+          ok=0
+        fi
+        NIM_VER="${{ inputs.nim-version }}"
+        if [ "${{ inputs.provision-scope }}" != "runtime" ]; then
+          NIM="$HOME/.choosenim/toolchains/nim-${NIM_VER}/bin/nim"
+          if [ ! -x "$NIM" ] || ! "$NIM" --version 2>&1 | grep -q "$NIM_VER"; then
+            echo "AXIOM_CACHE_A_VERIFY: FAIL — restored nim != ${NIM_VER} (or missing)"
+            ok=0
+          fi
+        fi
+        if [ "${{ inputs.provision-scope }}" = "full" ]; then
+          LEAN="$HOME/.elan/bin/lean"
+          if [ ! -x "$LEAN" ] || ! "$LEAN" --version 2>&1 | grep -q '4\.33\.0'; then
+            echo "AXIOM_CACHE_A_VERIFY: FAIL — restored lean != 4.33.0 (or missing)"
+            ok=0
+          fi
+        fi
+        gcc_now="nogcc"
+        if command -v gcc >/dev/null 2>&1; then gcc_now="$(gcc --version 2>/dev/null | sha256sum | cut -c1-16 || true)"; fi
+        glibc_now="$(ldd --version 2>/dev/null | head -1 | sha256sum | cut -c1-16 || true)"
+        if [ "$gcc_now" != "${{ steps.keygen.outputs.gcc-fp }}" ]; then
+          echo "AXIOM_CACHE_A_VERIFY: FAIL — gcc fingerprint drift ($gcc_now)"
+          ok=0
+        fi
+        if [ "$glibc_now" != "${{ steps.keygen.outputs.glibc-fp }}" ]; then
+          echo "AXIOM_CACHE_A_VERIFY: FAIL — glibc fingerprint drift ($glibc_now)"
+          ok=0
+        fi
+        if [ "$ok" -eq 0 ]; then
+          echo "AXIOM_CACHE_A_VERIFY: FAIL — restored toolchain does not match key-derived expectations; discarding A paths"
+          case "${{ inputs.provision-scope }}" in
+            runtime) : ;;
+            nim)     rm -rf "$HOME/.nimble" "$HOME/.choosenim" ;;
+            *)       rm -rf "$HOME/.choosenim" "$HOME/.elan" "$HOME/.nimble" ;;
+          esac
+          rm -f "$HOME/.local/bin/z3" "$HOME/.local/bin/jq"
+          echo "AXIOM_CACHE_A_VERIFY: DISCARDED — native install runs (fail-closed: cache is acceleration, never evidence)"
+          echo "a-verify-ok=false" >> "$GITHUB_OUTPUT"
+        else
+          if [ "${{ inputs.provision-scope }}" = "runtime" ]; then
+            echo "AXIOM_CACHE_A_VERIFY: OK — z3=4.13.3 gccFp=$gcc_now glibcFp=$glibc_now key=${{ steps.keygen.outputs.a-key }}"
+          elif [ "${{ inputs.provision-scope }}" = "nim" ]; then
+            echo "AXIOM_CACHE_A_VERIFY: OK — nim=${NIM_VER} z3=4.13.3 gccFp=$gcc_now glibcFp=$glibc_now key=${{ steps.keygen.outputs.a-key }}"
+          else
+            echo "AXIOM_CACHE_A_VERIFY: OK — nim=${NIM_VER} lean=4.33.0 z3=4.13.3 gccFp=$gcc_now glibcFp=$glibc_now key=${{ steps.keygen.outputs.a-key }}"
+          fi
+          echo "a-verify-ok=true" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: B-layer restore (per-base build artifact — exact key only, no restore-keys)
+      if: inputs.keygen-only != 'true'
+      id: b-restore
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          build/nimcache
+          .axiom/cache
+          proofs/.lake
+          proofs/build
+          build/.axiom-b-fingerprint.json
+          bin/ax
+          bin/gate_hook
+          bin/precompile_gates
+          bin/install_ax_cas
+        key: ${{ steps.keygen.outputs.b-key }}
+
+    - name: B-layer restore observation (restored key + exact-hit flag)
+      # Survey gap 3 (docs/evidence/duplicate_computation_survey_2026-10-09.md
+      # §7): actions/cache does NOT log which key it resolved, so a consumer
+      # MISS could not be attributed to an exact key. Log what IS available
+      # from actions/cache/restore@v4 outputs (cache-hit / cache-primary-key /
+      # cache-matched-key): the exact-hit flag, the requested key, and the key
+      # the platform actually restored (empty on a miss). The derived cache
+      # VERSION (the hash GitHub computes from the cache inputs — compression +
+      # the path list) is exposed NOWHERE — not in step outputs, not in the
+      # action's own log output, not via the REST caches API — so it is NOT
+      # logged here and MUST NOT be invented; the hit=false + requested-key
+      # pair below is the observable half of the version/path-mismatch class.
+      # Logging only — no key formula, path list, or restore semantics input.
+      if: inputs.keygen-only != 'true'
+      shell: bash
+      env:
+        B_KEY: ${{ steps.keygen.outputs.b-key }}
+        RESTORE_HIT: ${{ steps.b-restore.outputs.cache-hit }}
+        RESTORE_PRIMARY_KEY: ${{ steps.b-restore.outputs.cache-primary-key }}
+        RESTORE_MATCHED_KEY: ${{ steps.b-restore.outputs.cache-matched-key }}
+      run: |
+        echo "AXIOM_CACHE_B_RESTORE: exact-hit=$RESTORE_HIT requested-key=$B_KEY primary-key=$RESTORE_PRIMARY_KEY matched-key=$RESTORE_MATCHED_KEY"
+
+    - name: B-layer fingerprint verify (restored digest vs save-time manifest — identity re-derived from trusted inputs)
+      # J3 §3.3 REQUIRED criterion (non-circular anchor): the manifest's own
+      # claims are NOT the expectation. The expected identity is RE-DERIVED
+      # from inputs that do not travel in the payload — the compile-
+      # participating input-closure digest of cache-build-source
+      # (EXPECT_BUILD_SHA, resolved by keygen from the caller's git object
+      # store), the recipe files (recomputed below, byte-identical to the
+      # keygen `sha256sum <files> | sha256sum` chain) and the A-fingerprint
+      # (sha256 of the keygen a-key output). The save-side manifest records
+      # its derivation source explicitly (buildSha = input-closure digest,
+      # bKey = axiom-b-<closure>-<recipe><a_fp>) — that source is what the
+      # re-derivation consumes; a manifest whose claims match only themselves
+      # (simultaneous payload+manifest contamination) fails here, and the
+      # B-layer semantic provenance probe step re-derives the restored
+      # binaries' build provenance from the trusted tree (b-probe-tree).
+      if: steps.b-restore.outputs.cache-hit == 'true'
+      id: b-verify
+      shell: bash
+      env:
+        # Identity unit (NOT the raw commit SHA): the manifest's buildSha is
+        # the input-closure-digest identity the key was derived from
+        # (b-identity).
+        EXPECT_BUILD_SHA: ${{ steps.keygen.outputs.b-identity }}
+        EXPECT_B_KEY: ${{ steps.keygen.outputs.b-key }}
+        # Trusted-input re-derivation input: a_fp = sha256(a-key)[:32], the
+        # same chain the keygen used to compose b-key. Keygen output, not a
+        # payload value.
+        A_KEY: ${{ steps.keygen.outputs.a-key }}
+      run: |
+        set -uo pipefail
+        MANIFEST="build/.axiom-b-fingerprint.json"
+        discard_b() {
+          rm -rf build/nimcache .axiom/cache proofs/.lake proofs/build
+          rm -f bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas
+          echo "AXIOM_CACHE_B_VERIFY: DISCARDED — native build runs (fail-closed: cache is acceleration, never evidence)"
+          echo "b-verify-ok=false" >> "$GITHUB_OUTPUT"
+        }
+        if [ ! -f "$MANIFEST" ]; then
+          echo "AXIOM_CACHE_B_VERIFY: FAIL — fingerprint manifest missing from restored payload (unverifiable payload is not used)"
+          discard_b
+          exit 0
+        fi
+        if python3 - "$MANIFEST" <<'PY'
+        import hashlib, json, os, sys
+
+        with open(sys.argv[1]) as f:
+            m = json.load(f)
+        if m.get("schema") != "axiom-b-fingerprint-v1":
+            print("AXIOM_CACHE_B_VERIFY: FAIL — unknown manifest schema: %r" % m.get("schema"))
+            sys.exit(1)
+
+        # --- J3 §3.3: trusted-input-derived identity expectation ---------
+        # expect = os.environ["EXPECT_B_KEY"] is the keygen-derived compare
+        # target; the recipe components are recomputed from the repo checkout
+        # (source-derived) so the accepted identity is never read from the
+        # payload. Experiment-namespace identities (exp-*) pass through the
+        # same formula — keygen composes b-key identically.
+        expect = os.environ["EXPECT_B_KEY"]
+        build_sha = os.environ["EXPECT_BUILD_SHA"]
+        inner = "".join(
+            hashlib.sha256(open(rf, "rb").read()).hexdigest() + "  " + rf + "\n"
+            for rf in ("Makefile", "config.nims", "config/effects.nims", "src/gate/config.nims"))
+        recipe_hash = hashlib.sha256(inner.encode()).hexdigest()[:32]
+        a_fp = hashlib.sha256(os.environ["A_KEY"].encode()).hexdigest()[:32]
+        derived = "axiom-b-%s-%s%s" % (build_sha, recipe_hash, a_fp)
+        print("AXIOM_CACHE_B_VERIFY: anchor — derivation source identity=%s recipe=%s a_fp=%s (recomputed from trusted inputs, not read from the payload)" % (build_sha[:12], recipe_hash, a_fp))
+        if derived != expect:
+            print("AXIOM_CACHE_B_VERIFY: FAIL — re-derived identity %r != keygen expectation %r (keygen/env wiring drift)" % (derived, expect))
+            sys.exit(1)
+        if m.get("bKey") != derived:
+            print("AXIOM_CACHE_B_VERIFY: FAIL — manifest bKey %r != re-derived trusted identity %r (payload-internal identity self-claims are not an anchor)" % (m.get("bKey"), derived))
+            sys.exit(1)
+        if m.get("buildSha") != build_sha:
+            print("AXIOM_CACHE_B_VERIFY: FAIL — manifest buildSha %r != expected %r" % (m.get("buildSha"), build_sha))
+            sys.exit(1)
+        files = m.get("files", {})
+        if not files:
+            print("AXIOM_CACHE_B_VERIFY: FAIL — manifest files map is empty")
+            sys.exit(1)
+        # DEBT#502 — complete-payload gate: the verified supply is exactly the
+        # 5-member set (4 ci-compile binaries + the Lean reference extractor).
+        # A manifest listing fewer members describes a PARTIAL payload; a
+        # partial payload is never a verified supply (S5 SUPPLY REUSE must not
+        # fire on it) and is discarded here, not reused. "RESULT OK — 5/5" is
+        # therefore the structural complete-payload marker.
+        required = ("bin/ax", "bin/gate_hook", "bin/precompile_gates",
+                    "bin/install_ax_cas", "proofs/.lake/build/bin/ircheck")
+        missing = [r for r in required if r not in files]
+        if missing:
+            print("AXIOM_CACHE_B_VERIFY: FAIL — manifest files map incomplete, missing %s (DEBT#502: a partial payload is never a verified supply)" % missing)
+            sys.exit(1)
+        for rel, expect in sorted(files.items()):
+            try:
+                actual = hashlib.sha256(open(rel, "rb").read()).hexdigest()
+            except OSError as e:
+                print("AXIOM_CACHE_B_VERIFY: FAIL — cannot read %s: %s" % (rel, e))
+                sys.exit(1)
+            if actual != expect:
+                print("AXIOM_CACHE_B_VERIFY: FAIL — %s sha256 mismatch (expect %s, got %s)" % (rel, expect[:16], actual[:16]))
+                sys.exit(1)
+            print("AXIOM_CACHE_B_VERIFY: entry OK — %s sha256=%s" % (rel, actual[:16]))
+        print("AXIOM_CACHE_B_VERIFY: RESULT OK — %d/%d entries digest-verified, identity=%s re-derived from trusted inputs (closure+recipe+a_fp), key exact-hit" % (len(files), len(files), build_sha[:12]))
+        PY
+        then
+          echo "b-verify-ok=true" >> "$GITHUB_OUTPUT"
+        else
+          discard_b
+        fi
+
+    - name: Install system deps (canonical system_deps parity — libpcre3)
+      # RunnerPoolSpecDigest system_deps (bootstrap_runner.sh DEPS) already
+      # includes libpcre3 on former dedicated hosts; GitHub-hosted images omit it
+      # (observed 2026-09-24, admission-check run 35949574909: `bin/ax scope
+      # hash` → "could not load: libpcre.so(.3|.1|)" → ci-bootstrap exit 2).
+      # Install only when missing so dedicated hosts stay a no-op (no sudo
+      # dependency there). Fail-closed: Nim's re module needs libpcre.so.3.
+      # Measured 2026-09-29 (run 36614815220): apt install path ~21s (update
+      # 14s + install 7s) on every fresh runner. Fast-path below installs
+      # first against the fresh GH-hosted image index; the update+install
+      # fallback runs only when the direct install fails (fail-closed either
+      # way — a failed fallback aborts before the ldconfig assertion).
+      if: inputs.keygen-only != 'true'
+      run: |
+        set -e
+        if ldconfig -p 2>/dev/null | grep -q 'libpcre\.so'; then
+          echo "libpcre present — skip install"
+        else
+          # apt fast-path: GH-hosted image indexes are fresh enough for a direct
+          # install; `apt-get update` (~14s, measured run 36614815220) only when
+          # install fails. The || chain keeps the step fail-closed: an update or
+          # reinstall failure propagates and aborts before the ldconfig line.
+          # DPkg::Lock::Timeout — unattended-upgrades가 lock-frontend를 잡고 있는
+          # 동안 즉시 exit 100으로 죽지 않고 최대 300초 대기한다(관측: run 2026-10-27
+          # `E: Could not get lock /var/lib/dpkg/lock-frontend. It is held by process 3606`).
+          sudo apt-get -o DPkg::Lock::Timeout=300 install -y -qq libpcre3 \
+            || { sudo apt-get -o DPkg::Lock::Timeout=300 update -qq \
+                 && sudo apt-get -o DPkg::Lock::Timeout=300 install -y -qq libpcre3; }
+        fi
+        ldconfig -p | grep 'libpcre\.so\.3'
+      shell: bash
+
+    - name: B-layer semantic provenance probe (restored ci-compile binaries vs trusted tree — J3 §3.3 non-circular anchor)
+      # The digest loop above proves payload<->manifest self-consistency; a
+      # pair contaminated TOGETHER (stale binaries + a manifest rewritten
+      # from them) passes ANY self-referential check. This probe breaks that
+      # circularity: the expected provenance is derived OUTSIDE the payload —
+      # the trusted tree (b-probe-tree: the cache-build-source tree OID,
+      # deliberately independent of the closure-digest key identity) is
+      # materialized from the caller's git object store via `git archive`,
+      # and EVERY restored ci-compile binary
+      # (bin/ax + bin/gate_hook + bin/precompile_gates + bin/install_ax_cas)
+      # is executed against it with --check-provenance, so its own
+      # SourceCoherence check (embedded BuildSourceHash vs a recompute over
+      # the live src/; runtime SSOT src/infrastructure/provenance_probe.nim,
+      # pure digest kernel src/core/utils/build_provenance.nim)
+      # fails closed for any binary that was not built from the probe-trusted
+      # tree (cache-build-source). The fifth supply member (ircheck —
+      # DEBT#502) is checked below the loop by presence+exec: a Lean binary
+      # carries no BuildSourceHash, so its anchor is the b-verify files-map
+      # digest, and its absence means the payload is partial (never reused).
+      # Coverage is ALL FIVE supply members: an aux-binary-only swap (bin/ax left
+      # genuine + manifest rewritten around it) is detected exactly like a
+      # bin/ax swap, and a missing ircheck (DEBT#502 partial-payload shape) is
+      # a FAIL, not a silent pass. Detection -> discard -> cold fallback (same
+      # contract as the digest loop). Runs AFTER the Install system deps step:
+      # the binaries link libpcre.so.3 and cannot exec without it. Expectations
+      # are per-TREE, never per-byte: same-tree rebuilds differ byte-wise
+      # (build_env embedding, tools/hermetic_build.nim) and stay accepted —
+      # semantic identity only (J1 §1.2; evidence_cas.nim
+      # VerifierIdentityInputs precedent excludes artifact bytes from
+      # identity by construction).
+      if: steps.b-restore.outputs.cache-hit == 'true' && steps.b-verify.outputs.b-verify-ok == 'true'
+      shell: bash
+      run: |
+        set -uo pipefail
+        identity="${{ steps.keygen.outputs.b-probe-tree }}"
+        discard_b() {
+          rm -rf build/nimcache .axiom/cache proofs/.lake proofs/build
+          rm -f bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas
+          echo "AXIOM_CACHE_B_PROBE: DISCARDED — native build runs (fail-closed: cache is acceleration, never evidence)"
+        }
+        if ! printf '%s' "$identity" | grep -qE '^[0-9a-f]{40}$'; then
+          echo "AXIOM_CACHE_B_PROBE: SKIP — probe tree '${identity:0:12}' is not a 40-hex tree OID (experiment namespace): no trusted tree to re-derive from; the B-verify digest + re-derived identity bindings remain the anchor"
+          exit 0
+        fi
+        probe_root="$(mktemp -d /tmp/axiom-b-probe.XXXXXX)"
+        trap 'rm -rf "$probe_root"' EXIT
+        # Materialize the TRUSTED build source (.axiom_root marker + src/)
+        # from the git object store — the cache payload cannot influence this
+        # input (keygen already fail-closed on the commit object's presence).
+        # LFS-safe for the same reason as the keygen archive above: src/ can
+        # carry LFS-tracked fixtures and the caller checkout has no credentials.
+        if ! git -c filter.lfs.process= -c filter.lfs.smudge=cat -c filter.lfs.required=false \
+               archive "$identity" -- .axiom_root src | tar -x -C "$probe_root"; then
+          echo "AXIOM_CACHE_B_PROBE: FAIL — trusted tree $identity not materializable from the caller checkout (unverifiable provenance is not used)"
+          discard_b
+          exit 0
+        fi
+        # AXIOM_ROOT is unset so root resolution walks up from the probe
+        # binary itself; on provenance mismatch the binary SourceCoherence-
+        # FATALs (exit 1) and the whole B payload is discarded. A missing
+        # payload binary is a FAIL (unverifiable provenance is not used).
+        mkdir -p "$probe_root/bin"
+        probe_fail=0
+        for b in ax gate_hook precompile_gates install_ax_cas; do
+          if ! cp "bin/$b" "$probe_root/bin/$b" 2>/dev/null; then
+            echo "AXIOM_CACHE_B_PROBE: FAIL — bin/$b missing from restored payload (unverifiable provenance is not used)"
+            probe_fail=1
+            continue
+          fi
+          if env -u AXIOM_ROOT "$probe_root/bin/$b" --check-provenance >/dev/null 2>&1; then
+            echo "AXIOM_CACHE_B_PROBE: OK — restored bin/$b embedded BuildSourceHash == trusted tree ${identity:0:12} (provenance re-derived outside the payload)"
+          else
+            echo "AXIOM_CACHE_B_PROBE: FAIL — restored bin/$b provenance != trusted tree ${identity:0:12} (SourceCoherence FATAL: binary was not built from the key's tree — simultaneous payload+manifest contamination detected)"
+            probe_fail=1
+          fi
+        done
+        # DEBT#502 — ircheck is the fifth verified-supply member. It is a Lean
+        # binary (no Nim BuildSourceHash, so --check-provenance is undefined
+        # for it and running it here would fail-closed every genuine restore).
+        # Its non-circular anchors are the save-side manifest files-map digest
+        # (b-verify above — identity re-derived from trusted inputs) plus this
+        # presence/exec re-assertion: a restored payload without an executable
+        # ircheck is the partial-payload shape and is never a verified supply.
+        if [ -x proofs/.lake/build/bin/ircheck ]; then
+          echo "AXIOM_CACHE_B_PROBE: OK — restored proofs/.lake/build/bin/ircheck present+executable (Lean reference extractor; digest-bound via b-verify files map — SourceCoherence probe N/A outside the Nim BuildSourceHash domain)"
+        else
+          echo "AXIOM_CACHE_B_PROBE: FAIL — proofs/.lake/build/bin/ircheck missing or not executable from restored payload (DEBT#502: partial payload is not a verified supply)"
+          probe_fail=1
+        fi
+        if [ "$probe_fail" -ne 0 ]; then
+          discard_b
+        fi
+
+    - name: Toolchain functional probes (fail-closed — catch version-matching-but-broken)
+      # Red-team mitigation for install-skip: A-verify proves ONLY versions +
+      # OS fingerprints. These probes prove the toolchain is FUNCTIONAL.
+      # Unconditional (any restore outcome, any scope): on a verified cache hit
+      # a probe FAIL purges the broken toolchain so the gated install steps
+      # definitely run (nothing is ever skip-and-trusted); after a native
+      # install the install steps re-probe (fail-closed chain: verify/probe
+      # failure -> discard -> native install -> re-probe). scope=runtime has no
+      # nim/lean toolchain at all — probes are skipped there.
+      if: inputs.keygen-only != 'true'
+      id: a-probe
+      shell: bash
+      run: |
+        set -uo pipefail
+        probe_ok=1
+        if [ "${{ inputs.provision-scope }}" != "runtime" ]; then
+          # compiler/ast.nim presence — the kernel imports Nim compiler
+          # internals (`import compiler/[ast, idents]`, e.g.
+          # src/core/ast_kernel.nim) which exist only in source-built
+          # toolchains. A restored toolchain whose compiler sources are
+          # missing passes --version but breaks every kernel build
+          # ("already selected" makes choosenim skip a reinstall).
+          if [ ! -f "$HOME/.choosenim/toolchains/nim-${{ inputs.nim-version }}/compiler/ast.nim" ]; then
+            echo "AXIOM_CACHE_A_PROBE: FAIL — compiler/ast.nim missing (stale/broken ~/.choosenim); purging so install runs"
+            rm -rf "$HOME/.choosenim"
+            probe_ok=0
+          fi
+          # Lake functional probe — `lean --version` / `lake --version` both
+          # pass on a toolchain whose Lake module is unusable — shard-5
+          # incident (run 35678120915): ~/.elan/toolchains/
+          # leanprover--lean4---v4.33.0/lib/lean/Lake.olean missing/incomplete
+          # -> sandbox `lake build` in ax prove Phase-3B failed with
+          # `unknown namespace 'Lake'` -> INTERNAL_ERROR(2) across all 16 legs
+          # while the local build was 20/20 green. A FUNCTIONAL check (lean
+          # loads `import Lake` from an isolated probe dir), not mere file
+          # existence: a file-present-but-corrupt/incomplete Lake.olean
+          # (observed on the fleet 2026-09-22, run 35681814055) still breaks
+          # every lean build but passes `[ -f ... ]`.
+          # Toolchain layout "leanprover/lean4:<ver>" ->
+          # ~/.elan/toolchains/leanprover--lean4---v4.33.0 (via `elan show`).
+          # Lake probe is full-scope only: the nim scope has no ~/.elan at all,
+          # so probing it would purge nothing and force a reinstall every run.
+          if [ "${{ inputs.provision-scope }}" = "full" ]; then
+            check_lake_probe() {
+              local d
+              d=$(mktemp -d)
+              printf 'leanprover/lean4:v4.33.0\n' > "$d/lean-toolchain"
+              printf 'import Lake\n' > "$d/Probe.lean"
+              ( cd "$d" && "$HOME/.elan/bin/lean" Probe.lean >/dev/null 2>&1 )
+            }
+            if ! check_lake_probe; then
+              echo "AXIOM_CACHE_A_PROBE: FAIL — Lake module unusable (lib/lean/Lake.olean missing/incomplete); purging ~/.elan so install runs"
+              rm -rf "$HOME/.elan"
+              probe_ok=0
+            fi
+          fi
+        fi
+        if [ "$probe_ok" -eq 1 ]; then
+          echo "a-probe-ok=true" >> "$GITHUB_OUTPUT"
+          echo "AXIOM_CACHE_A_PROBE: OK — functional probes passed"
+        else
+          echo "a-probe-ok=false" >> "$GITHUB_OUTPUT"
+          echo "AXIOM_CACHE_A_PROBE: FAIL — broken toolchain purged; native install runs (fail-closed: cache is acceleration, never evidence)"
+        fi
+
+    - name: Export toolchain PATH (scope-aware; runs even when installs are skipped)
+      # The install steps no longer write $GITHUB_PATH (they are skipped on a
+      # verified hit) — this single step exports the dirs so PATH is correct
+      # whether installs ran or were skipped. Export order mirrors the former
+      # install-step order (~/.local/bin last = highest priority, as before).
+      if: inputs.keygen-only != 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [ "${{ inputs.provision-scope }}" = "runtime" ]; then
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+        elif [ "${{ inputs.provision-scope }}" = "nim" ]; then
+          # nim scope: the toolchain bin dir is the only nim entry point
+          # (~/.nimble/bin is NOT part of the payload).
+          echo "$HOME/.choosenim/toolchains/nim-${{ inputs.nim-version }}/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+        else
+          if [ "$(uname -m)" = "aarch64" ]; then
+            # arm64: choosenim has no linux_arm64 support (실증: run
+            # 36159180130) — bin comes from the official tarball path.
+            echo "$HOME/.choosenim/toolchains/nim-${{ inputs.nim-version }}/bin" >> "$GITHUB_PATH"
+          else
+            echo "$HOME/.nimble/bin" >> "$GITHUB_PATH"
+          fi
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+        fi
+
+    - name: Install Nim (choosenim, version = inputs.nim-version)
+      # choosenim (source build), NOT the jiro4989 binary dist: the kernel
+      # imports Nim compiler internals (`import compiler/[ast, idents]`, e.g.
+      # src/core/ast_kernel.nim) which exist only in source-built toolchains.
+      # This mirrors the previous ephemeral-runner provisioning path and the
+      # dev machine — toolchain parity by construction.
+      # Runs only for scope=full AND when the A-layer restore was a miss or
+      # its verify/probe failed — a verified hit + probe pass skips the
+      # choosenim download (run 36572463965: installs ran unconditionally on
+      # every run even on cache HIT). The stale-~/.choosenim purge that used
+      # to live here moved to the Toolchain functional probes step; the
+      # fail-closed re-probe below still guards a native install.
+      if: inputs.keygen-only != 'true' && inputs.provision-scope != 'runtime' && (steps.a-restore.outputs.cache-hit != 'true' || steps.a-verify.outputs.a-verify-ok != 'true' || steps.a-probe.outputs.a-probe-ok != 'true')
+      run: |
+        set -e
+        NIM_VERSION="${{ inputs.nim-version }}"
+        export CHOOSENIM_NO_COLOR=1 CHOOSE_NIM_QUIET=1
+        if [ "$(uname -m)" = "aarch64" ]; then
+          # choosenim은 linux_arm64 미지원 (실증: R3 h2 measure 36159180130 —
+          # "choosenim: linux_arm64 not supported") — warm 인라인 레시피와 동일한
+          # 공식 tarball 경로. compiler/ 소스 포함(arm smoke 실증) → ast.nim 검사 통과.
+          # Pinned for the default nim-version (2.2.10). Changing nim-version
+          # requires re-pinning this digest — a mismatch fails closed.
+          arm64_sha256=cd86a6e2bcbf029c4870aa51df5c0169345dbf9959889112fd15d403c13ae33a
+          curl -sSfL --retry 4 --retry-all-errors --retry-delay 2 \
+            --retry-max-time 5 --connect-timeout 3 --max-time 120 \
+            "https://nim-lang.org/download/nim-${NIM_VERSION}-linux_arm64.tar.xz" -o /tmp/nim-arm64.tar.xz
+          printf '%s  %s\n' "$arm64_sha256" /tmp/nim-arm64.tar.xz | sha256sum -c -
+          mkdir -p "$HOME/.choosenim/toolchains/nim-${NIM_VERSION}"
+          tar -xJf /tmp/nim-arm64.tar.xz -C "$HOME/.choosenim/toolchains/nim-${NIM_VERSION}" --strip-components=1
+        else
+          # 부트스트랩 스크립트는 이동 표적이다 — 내용 해시를 고정하고, 불일치하면
+          # 실행하지 않고 실패한다(부분 파일·파이프 실행 없음). 재핀 방법:
+          #   curl -sSfL https://nim-lang.org/choosenim/init.sh | sha256sum
+          # exit 35(SSL connect)/52/56은 `--retry` 단독으로는 재시도되지 않으므로
+          # `--retry-all-errors`가 필수다(실측: 없으면 1회/16ms, 있으면 4회/6.0s).
+          # 상한은 `--retry-max-time`이며, curl은 재시도 직전 `-o` 파일의 부분
+          # 데이터를 제거하지만 `|` 파이프로 흘린 데이터는 제거하지 않는다.
+          init_sha256=6c38d83e5f33feb0317647f4fbd757fd2128fef5cdf61b6a6e1709c63b0d8d5c
+          curl -sSfL --retry 4 --retry-all-errors --retry-delay 2 \
+            --retry-max-time 5 --connect-timeout 3 --max-time 20 \
+            -o "$RUNNER_TEMP/choosenim-init.sh" https://nim-lang.org/choosenim/init.sh
+          printf '%s  %s\n' "$init_sha256" "$RUNNER_TEMP/choosenim-init.sh" | sha256sum -c - \
+            || { echo "::error::choosenim init.sh content changed upstream — review the diff, re-pin init_sha256, then re-run. Not executing the downloaded script." >&2; exit 1; }
+          sh "$RUNNER_TEMP/choosenim-init.sh" -y
+          "$HOME/.nimble/bin/choosenim" "$NIM_VERSION"
+        fi
+        # Fail closed (re-probe): kernel builds require compiler internals.
+        [ -f "$HOME/.choosenim/toolchains/nim-${NIM_VERSION}/compiler/ast.nim" ] || {
+          echo "ERROR: compiler sources unavailable after install" >&2
+          exit 1
+        }
+      shell: bash
+
+    - name: Install project Nim dependencies
+      # Caller-owned alternative: canonical-bootstrap installs AFTER seeding
+      # build_env.nim (its contract). Skipping here keeps that ordering.
+      # Additional gates: scope=full only, and skipped on a verified hit +
+      # probe pass (deps were materialized when the entry was saved — the
+      # stamp self-guard below is then moot, run 36572463965).
+      if: inputs.keygen-only != 'true' && inputs.provision-scope != 'runtime' && inputs.skip-nimble-install != 'true' && (steps.a-restore.outputs.cache-hit != 'true' || steps.a-verify.outputs.a-verify-ok != 'true' || steps.a-probe.outputs.a-probe-ok != 'true')
+      run: |
+        set -e
+        # co-restored unit (C4): stamp+pkgs2 coupling — witness that pkgs2
+        # was materialized from this exact lock at some point (C2), NOT
+        # proof of current-state satisfaction. Stamp writes via temp+mv.
+        # The stamp doubles as the A-layer save guard (lock-complete gate).
+        LOCK_SHA=$(sha256sum nimble.lock | cut -d' ' -f1)
+        STAMP=$HOME/.nimble/pkgs2/.axiom-lock-stamp
+        if [ -f "$STAMP" ] && [ "$(cat $STAMP)" = "$LOCK_SHA" ]; then
+          echo "materialization witness matches current lock — skip install"
+        else nimble install -y && printf '%s' "$LOCK_SHA" > $STAMP.tmp && mv $STAMP.tmp $STAMP; fi
+      shell: bash
+
+    - name: Install Lean 4.33.0 (elan)
+      # Runs only for scope=full AND when the A-layer restore was a miss or
+      # its verify/probe failed — a verified hit + probe pass skips the elan
+      # download (run 36572463965). The stale-~/.elan purge used to live here;
+      # it moved to the Toolchain functional probes step. The functional
+      # re-probe below still guards a native install (fail-closed chain:
+      # verify/probe failure -> discard -> native install -> re-probe; never
+      # skip-and-trust).
+      if: inputs.keygen-only != 'true' && inputs.provision-scope == 'full' && (steps.a-restore.outputs.cache-hit != 'true' || steps.a-verify.outputs.a-verify-ok != 'true' || steps.a-probe.outputs.a-probe-ok != 'true')
+      run: |
+        set -e
+        # The invariant is a FUNCTIONAL check (lean loads `import Lake` from an
+        # isolated probe dir), not mere file existence: a file-present-but-
+        # corrupt/incomplete Lake.olean (shard-5 incident run 35678120915;
+        # corrupt-but-present observed on the fleet 2026-09-22, run
+        # 35681814055) still breaks every lean build but passes `[ -f ... ]`.
+        # Toolchain layout "leanprover/lean4:<ver>" -> ~/.elan/toolchains/
+        # leanprover--lean4---v4.33.0 (confirmed via `elan show`).
+        check_lake_probe() {
+          local d
+          d=$(mktemp -d)
+          printf 'leanprover/lean4:v4.33.0\n' > "$d/lean-toolchain"
+          printf 'import Lake\n' > "$d/Probe.lean"
+          ( cd "$d" && "$HOME/.elan/bin/lean" Probe.lean >/dev/null 2>&1 )
+        }
+        # Same bounded-retry recipe as the choosenim init.sh fetch above:
+        # --retry alone never retries exit 35/52/56 transport errors (curl
+        # docs — --retry-all-errors, >= 7.71.0); small script, so the full
+        # recipe incl. time caps applies.
+        elan_init_sha256=a620ff1641616222c8d37c54845492004bb84d6877cdbc944dd65c1aa685bf53
+        curl -sSfL --retry 4 --retry-all-errors --retry-delay 2 \
+          --retry-max-time 5 --connect-timeout 3 --max-time 20 \
+          https://elan.lean-lang.org/elan-init.sh -o elan-init.sh
+        if ! printf '%s  %s\n' "$elan_init_sha256" elan-init.sh | sha256sum -c -; then
+          echo "::error::elan-init.sh sha256 mismatch — refusing to execute unverified installer." >&2
+          exit 1
+        fi
+        chmod +x elan-init.sh
+        ./elan-init.sh -y --default-toolchain leanprover/lean4:v4.33.0
+        # Fail closed: ax prove Phase-3B lean-verify runs `lake build` on an
+        # `import Lake` module; without a working Lake module every shard fails.
+        if ! check_lake_probe; then
+          echo "ERROR: Lake module unusable after reinstall" >&2
+          exit 1
+        fi
+      shell: bash
+
+    - name: Install Z3 4.13.3 (pinned release binary)
+      # Skipped on a verified A-layer hit (z3 is version-checked by A-verify in
+      # both scopes); installs only on miss / verify FAIL (± probe purge of the
+      # nim/lean toolchains — z3 itself is not probed, run 36572463965).
+      if: inputs.keygen-only != 'true' && (steps.a-restore.outputs.cache-hit != 'true' || steps.a-verify.outputs.a-verify-ok != 'true')
+      run: |
+        set -e
+        Z3_VERSION="4.13.3"
+        # 아치 조건부 (H4 arm 실증): x64 zip은 arm에서 exec format error —
+        # arm64-glibc-2.34 자산 실존(정적 검증 + hw-smoke arm 실행 실증).
+        if [ "$(uname -m)" = "aarch64" ]; then
+          Z3_ASSET="z3-${Z3_VERSION}-arm64-glibc-2.34.zip"
+          Z3_SHA256="5bc5fd2c501445970de3b13d5699ff601ff51d3e496cb15ce67d7ee2a4a93b03"
+        else
+          Z3_ASSET="z3-${Z3_VERSION}-x64-glibc-2.35.zip"
+          Z3_SHA256="32c7377026733c9d7b33c21cd77a68f50ba682367207b031a6bfd80140a8722f"
+        fi
+        # GitHub release-asset layer — the class that 504'd on 2026-11-08 and
+        # stranded the merge queue (docs/evidence/
+        # vst_dependency_authority_handoff_2026-11-08.md §13.1); previously a
+        # single-shot curl with no retries. Retry flags follow the init.sh
+        # recipe, but its --max-time 20 / --retry-max-time 5 caps are
+        # deliberately NOT copied — z3 is a ~35MB asset where a 20s cap fails
+        # on ordinary bandwidth, so this step keeps its existing
+        # no-time-bound behavior.
+        curl -sSfL --retry 4 --retry-all-errors --retry-delay 2 \
+          "https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/${Z3_ASSET}" -o /tmp/z3.zip
+        if ! printf '%s  %s\n' "$Z3_SHA256" /tmp/z3.zip | sha256sum -c -; then
+          echo "::error::${Z3_ASSET} sha256 mismatch — refusing to unpack unverified release binary." >&2
+          exit 1
+        fi
+        unzip -q -o /tmp/z3.zip -d /tmp/z3
+        mkdir -p "$HOME/.local/bin"
+        # Archive root은 아치별로 다르다 (z3-*/glob이 양쪽 모두 처리)
+        install -m 0755 /tmp/z3/z3-*/bin/z3 "$HOME/.local/bin/z3"
+        rm -rf /tmp/z3 /tmp/z3.zip
+      shell: bash
+
+    - name: Install jq 1.7.1 (pinned static binary)
+      # Job-level runtime dep for the release E2E make targets
+      # (verify-contract-release-e2e-full/-consume, ci.yml:261). The runner pool
+      # system_deps contract (bootstrap_runner.sh) deliberately excludes jq, and
+      # host images drift (observed 2026-09-08: axiom-ci runner-3 lacked jq while
+      # runner-2 had it) — provision it explicitly, same layer as z3.
+      # Skipped on a verified A-layer hit (jq is not A-verified itself — the
+      # Verify toolchain pins step covers it, same as before; run 36572463965).
+      if: inputs.keygen-only != 'true' && (steps.a-restore.outputs.cache-hit != 'true' || steps.a-verify.outputs.a-verify-ok != 'true')
+      run: |
+        set -e
+        JQ_VERSION="1.7.1"
+        # 아치 조건부 (H4 arm 실증 36169781916: jq-linux64 → exec format error 126)
+        # jq-linux-arm64 자산 실존(정적 검증, jqlang/jq tag jq-1.7.1)
+        if [ "$(uname -m)" = "aarch64" ]; then
+          JQ_ASSET="jq-linux-arm64"
+          JQ_SHA256="4dd2d8a0661df0b22f1bb9a1f9830f06b6f3b8f7d91211a1ef5d7c4f06a8b4a5"
+        else
+          JQ_ASSET="jq-linux64"
+          JQ_SHA256="5942c9b0934e510ee61eb3e30273f1b3fe2590df93933a93d7c58b81d19c8ff5"
+        fi
+        curl -sSfL --retry 4 --retry-all-errors --retry-delay 2 \
+          "https://github.com/jqlang/jq/releases/download/jq-${JQ_VERSION}/${JQ_ASSET}" -o /tmp/jq
+        if ! printf '%s  %s\n' "$JQ_SHA256" /tmp/jq | sha256sum -c -; then
+          echo "::error::${JQ_ASSET} sha256 mismatch — refusing to install unverified binary." >&2
+          exit 1
+        fi
+        install -m 0755 /tmp/jq "$HOME/.local/bin/jq"
+        rm -f /tmp/jq
+        jq --version
+      shell: bash
+
+    - name: Verify toolchain pins
+      # Final pin check for everything in scope (runtime: z3+jq; full: the
+      # above plus nim/lean/lake). Also covers jq, which A-verify does NOT
+      # check (jq lives in ~/.local/bin with z3 but is outside A-verify's
+      # scope — see the correctness contract in the header). Unconditional:
+      # this step must never be skipped by a cache hit.
+      if: inputs.keygen-only != 'true'
+      run: |
+        set -e
+        if [ "${{ inputs.provision-scope }}" = "full" ]; then
+          nim --version | grep "${{ inputs.nim-version }}"
+          lean --version | grep 4.33.0
+          lake --version | head -1
+        elif [ "${{ inputs.provision-scope }}" = "nim" ]; then
+          nim --version | grep "${{ inputs.nim-version }}"
+        fi
+        z3 --version | grep 4.13.3
+        jq --version | grep 1.7.1
+      shell: bash
+
+    - name: Nim-scope verification stamp (save authority — verified toolchain only)
+      # Save authority is SEPARATE from use authority: a run may use a toolchain
+      # it verified, but only a run that ended with a verified nim toolchain may
+      # WRITE the cache. The stamp is run-local ($RUNNER_TEMP, outside every
+      # cached path) so it can never travel inside a payload.
+      if: inputs.keygen-only != 'true' && inputs.provision-scope == 'nim'
+      id: nim-stamp
+      shell: bash
+      run: |
+        set -euo pipefail
+        NIM_VERSION="${{ inputs.nim-version }}"
+        NIM="$HOME/.choosenim/toolchains/nim-${NIM_VERSION}/bin/nim"
+        test -x "$NIM"
+        "$NIM" --version | grep -q "$NIM_VERSION"
+        test -f "$HOME/.choosenim/toolchains/nim-${NIM_VERSION}/compiler/ast.nim"
+        # The nimble package closure is a build-time dependency
+        # (config/integrity.nims compiles feature_manifest_generator, which
+        # imports checksums/sha2), so a payload without it is not a usable
+        # toolchain. Structural check only — the evaluator compile is the
+        # functional probe, and a broken payload can only redden a job
+        # (cache is acceleration, never evidence).
+        test -d "$HOME/.nimble/pkgs2"
+        ls "$HOME/.nimble/pkgs2" | grep -q '^checksums-'
+        : > "$RUNNER_TEMP/.axiom-nim-toolchain-verified"
+        echo "nim-verified=true" >> "$GITHUB_OUTPUT"
+        echo "AXIOM_CACHE_A_SAVE: nim toolchain verified (nim=${NIM_VERSION} nimble=checksums) — save authority granted"
+
+    - name: A-layer lock-completeness check (save guard)
+      if: inputs.keygen-only != 'true'
+      id: a-complete
+      shell: bash
+      run: |
+        set -euo pipefail
+        LOCK_SHA=$(sha256sum nimble.lock | cut -d' ' -f1)
+        STAMP=$HOME/.nimble/pkgs2/.axiom-lock-stamp
+        if [ -f "$STAMP" ] && [ "$(cat $STAMP)" = "$LOCK_SHA" ]; then
+          echo "lock-complete=true" >> "$GITHUB_OUTPUT"
+          echo "AXIOM_CACHE_A_SAVE: lock-complete — ~/.nimble materialized from current lock (save allowed)"
+        else
+          echo "lock-complete=false" >> "$GITHUB_OUTPUT"
+          echo "AXIOM_CACHE_A_SAVE: lock-incomplete — partial ~/.nimble must never win the first-save race (save withheld)"
+        fi
+
+    - name: A-layer save authority (verified payload only)
+      # Single decision point for WRITE authority. full: lock-complete ~/.nimble
+      # witness; runtime: ~/.local/bin only (no ~/.nimble to witness); nim: the
+      # run-local verified stamp. A non-exact restore never reaches this step
+      # with a payload (the discard step removed it) and cache-hit != 'true' is
+      # required, so a save can only ever publish a freshly installed payload.
+      if: inputs.keygen-only != 'true' && steps.a-restore.outputs.cache-hit != 'true'
+      id: a-save-auth
+      shell: bash
+      run: |
+        set -uo pipefail
+        allowed=false
+        case "${{ inputs.provision-scope }}" in
+          runtime) allowed=true ;;
+          nim)     if [ -f "$RUNNER_TEMP/.axiom-nim-toolchain-verified" ]; then allowed=true; fi ;;
+          *)       if [ "${{ steps.a-complete.outputs.lock-complete }}" = "true" ]; then allowed=true; fi ;;
+        esac
+        echo "save-allowed=$allowed" >> "$GITHUB_OUTPUT"
+        echo "AXIOM_CACHE_A_SAVE: authority=$allowed scope=${{ inputs.provision-scope }} exact-hit=${{ steps.a-restore.outputs.cache-hit }}"
+
+    - name: A-layer save (any run; first save wins; verified payload only)
+      # A rarely changes -> first save wins; concurrent saves of an identical
+      # key fail on the platform side ("cache entry already exists") — that
+      # failure is expected and non-fatal (continue-on-error), because cache
+      # writing is acceleration, never evidence.
+      # Save ONLY on restore miss. The lock-completeness guard exists to stop a
+      # partial ~/.nimble winning the first-save race — inapplicable to the
+      # runtime payload (~/.local/bin only, no ~/.nimble). The runtime key
+      # namespace (axiom-a-rt-*) cannot collide with the full-scope entry
+      # (path-set-derived cache version + distinct prefix), so runtime saves
+      # under the same "cache is acceleration, never evidence" contract: the
+      # runtime A-verify + pins verify remain the fail-closed gates.
+      # Measured 2026-09-29 (run 36614815220): runtime scope re-downloaded
+      # z3/jq on every run (design: no save) — saving under axiom-a-rt-* lets
+      # later runtime jobs and same-ref re-runs restore instead.
+      if: inputs.keygen-only != 'true' && steps.a-restore.outputs.cache-hit != 'true' && steps.a-save-auth.outputs.save-allowed == 'true'
+      continue-on-error: true
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ steps.keygen.outputs.a-paths }}
+        key: ${{ steps.keygen.outputs.a-key }}

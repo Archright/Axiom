@@ -1,0 +1,155 @@
+# Effect System Fix Evidence — 2026-06-01 21:27:10
+
+## Phase 2: except Exception → except CatchableError
+- Files modified: 0/0
+- Total replacements: 0
+- Failures: 0
+
+## Phase 1: Push Narrowing
+- Files modified: 4/142
+- Strict (core/): 27
+- Narrow (I/O layers): 115
+- Failures: 138
+  - src/cli/action_command_registry.nim: ../Axiom_Enterprise-core/src/cli/action_command_registry.nim(52, 21) Error: Exception can ra
+  - src/cli/action_dispatch_cli.nim: ../Axiom_Enterprise-core/src/cli/action_dispatch_cli.nim(27, 30) Error: runRegisteredCommand
+  - src/cli/action_interpreter_cli.nim: ../Axiom_Enterprise-core/src/cli/action_interpreter_cli.nim(44, 20) Error: runCliCommand(act
+  - src/cli/action_output_cli.nim: ../Axiom_Enterprise-core/src/cli/action_output_cli.nim(40, 55) Error: renderAxShortcutStderr
+  - src/cli/asi_cli_parts/asi_cli_part1.nim: ../Axiom_Enterprise-core/src/cli/asi_cli_parts/asi_cli_part1.nim(95, 3) Error: illformed AST
+  - src/cli/asi_cli_parts/asi_cli_part2.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/cli/asi_cli_parts/asi_cli_part3.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/cli/asi_cli_parts/asi_cli_part4.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/cli/axiom_unified.nim: ../Axiom_Enterprise-core/src/cli/axiom_unified.nim(23, 12) Error: runMain(commandLineParams(
+  - src/cli/basic_commands_cli.nim:     raises: [CatchableError].} = cmdCaptureSession()) can raise an unlisted exception: Exception
+  - src/cli/certificate_cli.nim:     raises: [CatchableError], raises: [Exception].} = cmdDynamicProofSearch(args)) can raise an unlisted exception: Exce
+  - src/cli/certificate_cli_parts/certificate_cli_part1.nim: ../Axiom_Enterprise-core/src/cli/certificate_cli_parts/certificate_cli_part1.nim(3, 1) Error
+  - src/cli/certificate_cli_parts/certificate_cli_part2.nim: ../Axiom_Enterprise-core/src/cli/certificate_cli_parts/certificate_cli_part2.nim(20, 13) Err
+  - src/cli/certificate_cli_parts/certificate_cli_part3.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/cli/certificate_cli_parts/certificate_cli_part4.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/cli/certificate_cli_parts/certificate_cli_part5.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/cli/commands/gate.nim: ../Axiom_Enterprise-core/src/cli/commands/gate.nim(52, 31) Error: groupByPriority(gates) can
+  - src/cli/commands/heal.nim: ../Axiom_Enterprise-core/src/cli/commands/heal.nim(26, 41) Error: runHealScheduler(healArgs,
+  - src/cli/commands/heal_analysis.nim: ../Axiom_Enterprise-core/src/cli/commands/heal_analysis.nim(24, 23) Error: parseNim(input.fi
+  - src/cli/commands/heal_node_executor.nim: ../Axiom_Enterprise-core/src/cli/commands/heal_node_executor.nim(228, 28) Error: runSourceHi
+  - src/cli/commands/heal_scheduler.nim: ../Axiom_Enterprise-core/src/cli/commands/heal_scheduler.nim(92, 54) Error: resetForceHealQu
+  - src/cli/commands/heal_state_applier.nim: ../Axiom_Enterprise-core/src/cli/commands/heal_state_applier.nim(74, 21) Error: Exception ca
+  - src/cli/commands/observability_parts/observability_part1.nim: ../Axiom_Enterprise-core/src/cli/commands/observability_parts/observability_part1.nim(4, 20)
+  - src/cli/commands/observability_parts/observability_part2.nim: ../Axiom_Enterprise-core/src/cli/commands/observability_parts/observability_part2.nim(4, 21)
+  - src/cli/commands/observability_parts/observability_part3.nim: ../Axiom_Enterprise-core/src/cli/commands/observability_parts/observability_part3.nim(311, 8
+  - src/cli/commands/observability_parts/observability_part4.nim: ../Axiom_Enterprise-core/src/cli/commands/observability_parts/observability_part4.nim(333, 8
+  - src/cli/commands/observability_parts/observability_part5.nim: ../Axiom_Enterprise-core/src/cli/commands/observability_parts/observability_part5.nim(333, 8
+  - src/cli/commands/recertify_lean_parts/recertify_lean_part1.nim: ../Axiom_Enterprise-core/src/cli/commands/recertify_lean_parts/recertify_lean_part1.nim(4, 1
+  - src/cli/commands/recertify_lean_parts/recertify_lean_part2.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/cli/commands/recertify_lean_parts/recertify_lean_part3.nim: ../Axiom_Enterprise-core/src/cli/commands/recertify_lean_parts/recertify_lean_part3.nim(82, 
+  - src/cli/commands/recertify_lean_parts/recertify_lean_part4.nim: ../Axiom_Enterprise-core/src/cli/commands/recertify_lean_parts/recertify_lean_part4.nim(82, 
+  - src/cli/integrity_cli.nim:     args)) can raise an unlisted exception: Exception
+  - src/cli/main.nim: ../Axiom_Enterprise-core/src/cli/main.nim(47, 24) Error: interpretCliActions(mainLoop(proces
+  - src/cli/mcp_command_cli.nim:     raises: [CatchableError].} = runStdioServer()) can raise an unlisted exception: Exception
+  - src/cli/report_cli.nim: ../Axiom_Enterprise-core/src/cli/report_cli_parts/report_cli_part5.nim(175, 34) Error: build
+  - src/cli/report_cli_parts/report_cli_part1.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/cli/report_cli_parts/report_cli_part2.nim: ../Axiom_Enterprise-core/src/cli/report_cli_parts/report_cli_part2.nim(146, 23) Error: illfo
+  - src/cli/report_cli_parts/report_cli_part3.nim: ../Axiom_Enterprise-core/src/cli/report_cli_parts/report_cli_part3.nim(4, 7) Error: illforme
+  - src/cli/report_cli_parts/report_cli_part4.nim: ../Axiom_Enterprise-core/src/cli/report_cli_parts/report_cli_part4.nim(34, 10) Error: cannot
+  - src/cli/report_cli_parts/report_cli_part5.nim: ../Axiom_Enterprise-core/src/cli/report_cli_parts/report_cli_part5.nim(34, 10) Error: cannot
+  - src/cli/symbolic_cli.nim:     raises: [CatchableError].} = cmdVerifyWorkflow(args)) can raise an unlisted exception: Exception
+  - src/cli/topology_cli.nim: ../Axiom_Enterprise-core/src/cli/topology_cli_parts/topology_cli_part5.nim(233, 14) Error: E
+  - src/cli/topology_cli_parts/topology_cli_part1.nim: ../Axiom_Enterprise-core/src/cli/topology_cli_parts/topology_cli_part1.nim(27, 6) Error: can
+  - src/cli/topology_cli_parts/topology_cli_part2.nim: ../Axiom_Enterprise-core/src/cli/topology_cli_parts/topology_cli_part2.nim(23, 16) Error: il
+  - src/cli/topology_cli_parts/topology_cli_part3.nim: ../Axiom_Enterprise-core/src/cli/topology_cli_parts/topology_cli_part3.nim(3, 6) Error: impl
+  - src/cli/topology_cli_parts/topology_cli_part4.nim: ../Axiom_Enterprise-core/src/cli/topology_cli_parts/topology_cli_part4.nim(76, 40) Error: il
+  - src/cli/topology_cli_parts/topology_cli_part5.nim: ../Axiom_Enterprise-core/src/cli/topology_cli_parts/topology_cli_part5.nim(76, 40) Error: il
+  - src/cli/verify_workflow_cli_parts/verify_workflow_cli_part1.nim: ../Axiom_Enterprise-core/src/cli/verify_workflow_cli_parts/verify_workflow_cli_part1_parts/v
+  - src/cli/verify_workflow_cli_parts/verify_workflow_cli_part1_parts/verify_workflow_cli_part1_part1.nim: ../Axiom_Enterprise-core/src/cli/verify_workflow_cli_parts/verify_workflow_cli_part1_parts/v
+  - src/cli/verify_workflow_cli_parts/verify_workflow_cli_part1_parts/verify_workflow_cli_part1_part2.nim: ../Axiom_Enterprise-core/src/cli/verify_workflow_cli_parts/verify_workflow_cli_part1_parts/v
+  - src/cli/verify_workflow_cli_parts/verify_workflow_cli_part2.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/cli/verify_workflow_cli_parts/verify_workflow_cli_part3.nim: ../Axiom_Enterprise-core/src/cli/verify_workflow_cli_parts/verify_workflow_cli_part3.nim(51,
+  - src/cli/verify_workflow_cli_parts/verify_workflow_cli_part4.nim: ../Axiom_Enterprise-core/src/cli/verify_workflow_cli_parts/verify_workflow_cli_part4.nim(51,
+  - src/cli/wf_planning.nim: ../Axiom_Enterprise-core/src/cli/wf_planning.nim(127, 19) Error: Exception can raise an unli
+  - src/cli/wf_render.nim: ../Axiom_Enterprise-core/src/cli/wf_render.nim(131, 56) Error: axStateEntryEngine(entry) can
+  - src/cli/wf_runners.nim: ../Axiom_Enterprise-core/src/cli/wf_runners.nim(233, 34) Error: renderAxReportLines(get(repo
+  - src/cli/wf_semantic.nim: ../Axiom_Enterprise-core/src/cli/wf_semantic.nim(295, 55) Error: semanticEntryDependencyMism
+  - src/cli/wf_state.nim: ../Axiom_Enterprise-core/src/cli/wf_state.nim(151, 51) Error: computeTopologyNodeDepths(bund
+  - src/cli/wf_state_parts/wf_state_part1.nim: ../Axiom_Enterprise-core/src/cli/wf_state_parts/wf_state_part1.nim(15, 21) Error: illformed 
+  - src/cli/wf_state_parts/wf_state_part2.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/std/widestrs.nim(58, 69) Error: illformed AST:
+  - src/cli/wf_state_parts/wf_state_part2_parts/wf_state_part2_part1.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/std/widestrs.nim(58, 69) Error: illformed AST:
+  - src/cli/wf_state_parts/wf_state_part2_parts/wf_state_part2_part2.nim: ../Axiom_Enterprise-core/src/cli/wf_state_parts/wf_state_part2_parts/wf_state_part2_part2.ni
+  - src/cli/wf_state_parts/wf_state_part3.nim: ../Axiom_Enterprise-core/src/cli/wf_state_parts/wf_state_part3.nim(42, 25) Error: illformed 
+  - src/cli/wf_state_parts/wf_state_part4.nim: ../Axiom_Enterprise-core/src/cli/wf_state_parts/wf_state_part4.nim(42, 25) Error: illformed 
+  - src/core/architecture_policy_parts/architecture_policy_part1.nim: ../Axiom_Enterprise-core/src/core/architecture_policy_parts/architecture_policy_part1.nim(97
+  - src/core/architecture_policy_parts/architecture_policy_part2.nim: ../Axiom_Enterprise-core/src/core/architecture_policy_parts/architecture_policy_part2.nim(93
+  - src/core/asset_collector.nim: ../Axiom_Enterprise-core/src/core/asset_collector.nim(59, 25) Error: parseNim(source) can ra
+  - src/core/axiom_api_parts/axiom_api_part1.nim: ../Axiom_Enterprise-core/src/core/axiom_api_parts/axiom_api_part1.nim(57, 6) Error: cannot g
+  - src/core/axiom_api_parts/axiom_api_part2.nim: ../Axiom_Enterprise-core/src/core/axiom_api_parts/axiom_api_part2.nim(97, 55) Error: illform
+  - src/core/axiom_api_session_parts/axiom_api_session_part1.nim: ../Axiom_Enterprise-core/src/core/axiom_api_session_parts/axiom_api_session_part1.nim(9, 20)
+  - src/core/axiom_api_session_parts/axiom_api_session_part2.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/core/axiom_api_session_parts/axiom_api_session_part3.nim: ../Axiom_Enterprise-core/src/core/axiom_api_session_parts/axiom_api_session_part3.nim(131, 5
+  - src/core/boundary_extraction_core.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/core/boundary_extractor_parts/boundary_extractor_part1.nim: ../Axiom_Enterprise-core/src/core/boundary_extractor_parts/boundary_extractor_part1.nim(154,
+  - src/core/boundary_extractor_parts/boundary_extractor_part1_parts/boundary_extractor_part1_part1.nim: ../Axiom_Enterprise-core/src/core/boundary_extractor_parts/boundary_extractor_part1_parts/bo
+  - src/core/gate_memo.nim: ../Axiom_Enterprise-core/src/core/gate_memo.nim(69, 27) Error: secureHashFile(gateHash) can 
+  - src/core/gateway_parts/gateway_part1.nim: ../Axiom_Enterprise-core/src/core/gateway_parts/gateway_part1.nim(91, 26) Error: illformed A
+  - src/core/gateway_parts/gateway_part2.nim: ../Axiom_Enterprise-core/src/core/gateway_parts/gateway_part2.nim(219, 6) Error: cannot gene
+  - src/core/global_symbol_graph_builder_parts/global_symbol_graph_builder_part1.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/core/global_symbol_graph_builder_parts/global_symbol_graph_builder_part2.nim: ../Axiom_Enterprise-core/src/core/global_symbol_graph_builder_parts/global_symbol_graph_buil
+  - src/core/orchestrator_parts/orchestrator_part1.nim: ../Axiom_Enterprise-core/src/core/orchestrator_parts/orchestrator_part1.nim(82, 16) Error: i
+  - src/core/orchestrator_parts/orchestrator_part2.nim: ../Axiom_Enterprise-core/src/core/orchestrator_parts/orchestrator_part2.nim(121, 15) Error: 
+  - src/core/smt_to_lean_codegen_parts/smt_to_lean_codegen_part1.nim: ../Axiom_Enterprise-core/src/core/smt_to_lean_codegen_parts/smt_to_lean_codegen_part1.nim(18
+  - src/core/spec_generator_parts/spec_generator_part1.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/core/spec_generator_parts/spec_generator_part2.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/core/the_judge_query_parts/the_judge_query_part1.nim: ../Axiom_Enterprise-core/src/core/the_judge_query_parts/the_judge_query_part1.nim(250, 9) Er
+  - src/core/the_judge_query_parts/the_judge_query_part2.nim: ../Axiom_Enterprise-core/src/core/the_judge_query_parts/the_judge_query_part2.nim(128, 8) Er
+  - src/core/topology_dependency.nim: ../Axiom_Enterprise-core/src/core/topology_dependency.nim(14, 15) Error: illformed AST:
+  - src/core/topology_parser.nim: ../Axiom_Enterprise-core/src/core/topology_parser.nim(306, 13) Error: 'let' symbol requires 
+  - src/core/topology_symbol_scanner.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/core/verified_axioms_catalog_parts/verified_axioms_catalog_part1.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/gate/architecture_ast_extractor_v3.nim: ../Axiom_Enterprise-core/src/gate/architecture_ast_extractor_v3.nim(57, 15) Error: openParse
+  - src/gate/nimtry/extract/nimtry_extract_parts/nimtry_extract_part1.nim: ../Axiom_Enterprise-core/src/gate/nimtry/extract/nimtry_extract_parts/nimtry_extract_part1.n
+  - src/gate/nimtry/extract/nimtry_extract_parts/nimtry_extract_part2.nim: ../Axiom_Enterprise-core/src/gate/nimtry/extract/nimtry_extract_parts/nimtry_extract_part2.n
+  - src/gate/nimtry/extract/nimtry_extract_parts/nimtry_extract_part3.nim: ../Axiom_Enterprise-core/src/gate/nimtry/extract/nimtry_extract_parts/nimtry_extract_part3_p
+  - src/gate/nimtry/extract/nimtry_extract_parts/nimtry_extract_part3_parts/nimtry_extract_part3_part1.nim: ../Axiom_Enterprise-core/src/gate/nimtry/extract/nimtry_extract_parts/nimtry_extract_part3_p
+  - src/gate/nimtry/extract/nimtry_extract_parts/nimtry_extract_part3_parts/nimtry_extract_part3_part2.nim: ../Axiom_Enterprise-core/src/gate/nimtry/extract/nimtry_extract_parts/nimtry_extract_part3_p
+  - src/gate/orchestrator_hook.nim: ../Axiom_Enterprise-core/src/gate/orchestrator_hook_parts/orchestrator_hook_part1.nim(125, 1
+  - src/gate/orchestrator_hook_parts/orchestrator_hook_part1.nim: ../Axiom_Enterprise-core/src/gate/orchestrator_hook_parts/orchestrator_hook_part1.nim(118, 2
+  - src/gate/orchestrator_hook_parts/orchestrator_hook_part2.nim: ../Axiom_Enterprise-core/src/gate/orchestrator_hook_parts/orchestrator_hook_part2.nim(68, 22
+  - src/gate/runners/external_cli_smoke.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/fatal.nim(62, 5) Error: unhandled exception: <user-home>
+  - src/gate/runners/gate_hook.nim: ../Axiom_Enterprise-core/src/gate/runners/gate_hook.nim(44, 27) Error: runPrepareCommitMsg()
+  - src/gate/runners/quality_gate_runner.nim: ../Axiom_Enterprise-core/src/gate/runners/quality_gate_runner.nim(16, 27) Error: imported an
+  - src/gate/runners/unified_sentry.nim: ../Axiom_Enterprise-core/src/gate/runners/unified_sentry.nim(21, 17) Error: runPreCommit() c
+  - src/gate/test_v3_import.nim: ../Axiom_Enterprise-core/src/gate/test_v3_import.nim(11, 13) Error: openParser(p, FileIndex(
+  - src/mcp/axiom_mcp_parts/axiom_mcp_part1.nim: ../Axiom_Enterprise-core/src/mcp/axiom_mcp_parts/axiom_mcp_part1.nim(6, 28) Error: cannot ge
+  - src/mcp/axiom_mcp_parts/axiom_mcp_part2.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/std/widestrs.nim(58, 69) Error: illformed AST:
+  - src/mcp/server.nim: ../Axiom_Enterprise-core/src/mcp/server.nim(66, 30) Error: axiomReadSource(args) can raise a
+  - src/mcp/tools.nim:                            get(legislativeRes).activeInvariant) can raise an unlisted exception: Exception
+  - src/translator/universal_mapper_parts/universal_mapper_part1.nim: let condition = sanitizeSymbol(jsonString(node, "condition", "cond"))' has no type (or is ambiguous)
+  - src/translator/universal_mapper_parts/universal_mapper_part2.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/ui/ax_tui_reporter_parts/ax_tui_reporter_part1.nim: ../Axiom_Enterprise-core/src/ui/ax_tui_reporter_parts/ax_tui_reporter_part1.nim(5, 6) Error:
+  - src/ui/ax_tui_reporter_parts/ax_tui_reporter_part2.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/verification/analyzer.nim:                         freezeGraphCache) can raise an unlisted exception: Exception
+  - src/verification/analyzer/analyzer_pipeline.nim: ../Axiom_Enterprise-core/src/verification/analyzer/analyzer_pipeline.nim(99, 14) Error: Exce
+  - src/verification/analyzer/stages/stage_05_lean_bridge.nim: ../Axiom_Enterprise-core/src/verification/analyzer/stages/stage_05_lean_bridge.nim(72, 25) E
+  - src/verification/analyzer/stages/stage_adapters.nim:                     ctx.enableSymbolic) can raise an unlisted exception: Exception
+  - src/verification/healing_orchestrator.nim:                                       leanExe) can raise an unlisted exception: Exception
+  - src/verification/hint_processor.nim:                                       manager.negativeArtifactPath, "") can raise an unlisted exception: Exception
+  - src/verification/lean_lsp.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/pure/asyncmacro.nim(54, 9) Error: Exception can raise an unlisted e
+  - src/verification/lean_lsp_compiler.nim:   expression '' is immutable, not 'var'
+  - src/verification/lean_lsp_protocol.nim: ../Axiom_Enterprise-core/src/verification/lean_lsp_protocol.nim(11, 6) Error: implementation
+  - src/verification/lean_lsp_tactic.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/verification/lean_spec_generator.nim: ../Axiom_Enterprise-core/src/verification/lean_spec_generator.nim(30, 35) Error: buildTheore
+  - src/verification/pipeline_core_runner.nim: ../Axiom_Enterprise-core/src/verification/pipeline_core_runner_parts/pipeline_core_runner_pa
+  - src/verification/pipeline_core_runner_parts/pipeline_core_runner_part1.nim: ../Axiom_Enterprise-core/src/verification/pipeline_core_runner_parts/pipeline_core_runner_pa
+  - src/verification/pipeline_core_runner_parts/pipeline_core_runner_part2.nim:   writeLine(stderr, ["Failed to write proof summary to " & ])' has no type (or is ambiguous)
+  - src/verification/pipeline_lean_spec_inference_parts/pipeline_lean_spec_inference_part1.nim: ../Axiom_Enterprise-core/src/verification/pipeline_lean_spec_inference_parts/pipeline_lean_s
+  - src/verification/pipeline_lean_spec_inference_parts/pipeline_lean_spec_inference_part2.nim: ../Axiom_Enterprise-core/src/verification/pipeline_lean_spec_inference_parts/pipeline_lean_s
+  - src/verification/pipeline_lean_spec_inference_parts/pipeline_lean_spec_inference_part3.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/verification/pipeline_negative_scan.nim: ../Axiom_Enterprise-core/src/verification/pipeline_negative_scan_parts/pipeline_negative_sca
+  - src/verification/pipeline_negative_scan_parts/pipeline_negative_scan_part1.nim: <user-home>/.choosenim/toolchains/nim-2.2.10/lib/system/seqs_v2.nim(180, 31) Error: illformed AST:
+  - src/verification/pipeline_negative_scan_parts/pipeline_negative_scan_part2.nim: ../Axiom_Enterprise-core/src/verification/pipeline_negative_scan_parts/pipeline_negative_sca
+  - src/verification/pipeline_negative_scan_parts/pipeline_negative_scan_part3.nim: ../Axiom_Enterprise-core/src/verification/pipeline_negative_scan_parts/pipeline_negative_sca
+  - src/verification/proof_synthesis_engine_parts/proof_synthesis_engine_part1.nim: ../Axiom_Enterprise-core/src/verification/proof_synthesis_engine_parts/proof_synthesis_engin
+  - src/verification/proof_synthesis_engine_parts/proof_synthesis_engine_part2.nim: ../Axiom_Enterprise-core/src/verification/proof_synthesis_engine_parts/proof_synthesis_engin
+  - src/verification/rebuild_assets.nim: >>>> <user-home>/.choosenim/toolchains/nim-2.2.10/lib/pure/json.nim(1043, 8) Hint: 'parseJson' called by 'parseJsonR
+  - src/verification/thought_dashboard.nim: ../Axiom_Enterprise-core/src/verification/thought_dashboard.nim(28, 38) Error: verifyCertifi
+
+## Phase 3: proc → func
+- Candidates: 0
+- Converted: 0
+- Failed (reverted): 0

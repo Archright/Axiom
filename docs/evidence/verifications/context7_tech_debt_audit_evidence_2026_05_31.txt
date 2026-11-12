@@ -1,0 +1,19 @@
+# Context7 Evidence — Technical Debt Audit 2026-05-31
+
+## Query Log
+
+| # | Library ID | Query | Snippets Retrieved | Key Finding |
+|---|-----------|-------|-------------------|-------------|
+| 1 | `/nim-lang/nim` | "effect system func proc noSideEffect raises pragma purity enforcement" | 4 | `func` = shortcut for `noSideEffect` proc; `{.cast(noSideEffect).}:` is new preferred syntax |
+| 2 | `/nim-lang/nim` | "ORC memory management ref object deterministic destruction value types" | 5 | ORC = default MM; cycle collection via trial deletion; custom destructors via `=destroy` |
+| 3 | `/nim-lang/nim` | "Result type error handling Option distinct types type safety" | 4 | distinct types prevent type confusion; `requiresInit` for compile-time init checking |
+| 4 | `/nim-lang/nim` | "nim check static analysis compilation warnings hints error promotion" | 5 | DrNim for static bound checks; `{.hint[XDeclaredButNotUsed]: off.}` for suppressing hints |
+
+## Evidence Links
+
+- Effect System: https://github.com/nim-lang/nim/blob/devel/doc/manual.md
+- ORC Memory: https://github.com/nim-lang/nim/blob/devel/doc/mm.md
+- Distinct Types: https://github.com/nim-lang/nim/blob/devel/doc/manual.md
+- DrNim: https://github.com/nim-lang/nim/blob/devel/doc/drnim.md
+- Changelog 1.4.0: https://github.com/nim-lang/nim/blob/devel/changelogs/changelog_1_4_0.md
+- Changelog 2.0.0: https://github.com/nim-lang/nim/blob/devel/changelogs/changelog_2_0_0_details.md

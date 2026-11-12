@@ -1,0 +1,15 @@
+{
+  "id": "cli-build",
+  "name": "Axiom CLI build gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/cli_build",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/|src/semantic_proofs|tests|lakefile|lean-toolchain|axiom.nimble|config.nims|AGENTS.md",
+  "passFilenames": false,
+  "weight": "heavy",
+  "category": "rule",
+  "severity": "error",
+  "execution_mode": "interpreted"
+}

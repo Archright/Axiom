@@ -1,0 +1,72 @@
+// executor_authority.json — TrustedExecutorSet (mint-domain gate, ADR-0021 D7)
+// Issuance-time gate: a run head blob must be a member of this set for a new
+// certificate mint. Certificate CONSUMPTION (merge admission Pass 2.96 /
+// continuity) does NOT evaluate executor identity — base freshness/epoch
+// coupling is enforced by the GitHub ruleset strict check at merge time
+// (ADR-0025 Amendment B; the in-CLI freshness pass was removed as a
+// platform-duplicate reimplementation).
+//
+// Phase evolution (each transition is an explicit trust-surface change =
+// manual authoritative merge):
+//   Phase 0        (current main, pre-bootstrap): {E1(65a3c58f...)} only —
+//                  E2(4ddad89b...) is NOT registered. No circular trust:
+//                  a new executor cannot mint before it enters the set.
+//   PR #69         (transition declaration):      {E1, E2} declared in the
+//                  PR head; no effect until the PR lands on main (untrusted
+//                  PR head config is never consulted — trusted state is
+//                  always read from the default-branch checkout).
+//   post-merge     (main, immediately after landing): {E1, E2} — E2 enters
+//                  the production trusted set; both may mint until retirement.
+//   PR #70         (retirement, separate task):   {E2} — E1 retired: old E1
+//                  certificates remain consumable, new E1 mints are rejected
+//                  (EXECUTOR_MISMATCH retired).
+//   PRs #83/#84     (verify-candidate emission fixes: fetch-depth 0 + admit
+//                  job outputs declaration) changed the main blob of
+//                  verify-candidate.yml to fdf64839988461a4d7c1bf211bb77e0a60c0d75e
+//                  without a same-commit set refresh — observed run
+//                  34798005362: bind FAIL EXECUTOR_MISMATCH run=34797927561.
+//                  PR #86 (this transition): E3(current main blob) enters the
+//                  set; E1/E2 stay for grandfathering (old certificates remain
+//                  consumable; new mints from retired blobs are rejected once
+//                  E1/E2 are retired in a separate transition).
+//   PR #87         (E4 — executor action blob): attest bind checks the
+//                  setup-axiom-toolchain/action.yml blob against the SAME set
+//                  (ADR-0021 D7 last sentence: "setup-axiom-toolchain action
+//                  blob도 동일 바인딩 포함(trustSurface 등록)"; enforcement at
+//                  attest.yml:210-215 since cab72d9d9/b2be2738a). The action
+//                  blob 5ed8e1080e8092ad28129e1ef2aa657771fe036b (introduced
+//                  b934dcb91, unchanged since) was NEVER a set member — the
+//                  check was an unreachable fail-closed dead-end until the
+//                  upstream blockers cleared. Observed run 34804079897:
+//                  "binding FAIL: EXECUTOR_MISMATCH (setup-axiom-toolchain/
+//                  action.yml)". E4 = the action blob enters the set.
+//   PR (E5 — action blob transition, 2026-09-15): PR #100 changed the main
+//                  action.yml blob to 5a1ba37a13226044e2ca3c8e858522442e147885
+//                  (cache-save-enabled selector). E5 enters the set (PR #87
+//                  precedent); 5ed8e108 stays for grandfathering.
+//   PR (E5 re-registration — S0-a A-cache repair, 2026-09-28): A-layer cache
+//                  paths += ~/.local/bin (z3/jq restore) changed the main
+//                  action.yml blob to 31cd390def1a9fbbfabd425728851ace05c67bd8.
+//                  E5 entry re-registered in the same commit (34c901594df2
+//                  precedent); the interim unregistered main blob a374b5eff76e
+//                  is retired without entering the set.
+//   PR (E5 re-registration — CI 정본화, 2026-09-29): tree-OID key identity +
+//                  keygen-only mode + save-authority documentation
+//                  (ADR-0025 Amendment B) changed the main action.yml blob to
+//                  eb48f902745f53e96285d33876ccf2075519add6. E5 enters the set
+//                  (same-diff registration, PR #87/#100 precedent); 31cd390d
+//                  stays for grandfathering.
+{
+  "schemaVersion": 1,
+  "policyId": "axiom-executor-authority-v1",
+  "phase": "phase0",
+  "description": "TrustedExecutorSet for certificate issuance (mint domain). Read from the main (default-branch) checkout only — never from an untrusted PR head. Mirrors ADR-0021 D7; changes to this file are trust-surface changes (manual merge required).",
+  "trusted": [
+    "65a3c58f305baf46dd9e044316b46a19ccd01ba7",
+    "4ddad89b127d7347caa728e90f0f0e6e536208b6",
+    "fdf64839988461a4d7c1bf211bb77e0a60c0d75e",
+    "5ed8e1080e8092ad28129e1ef2aa657771fe036b",
+    "31cd390def1a9fbbfabd425728851ace05c67bd8",
+    "eb48f902745f53e96285d33876ccf2075519add6"
+  ]
+}

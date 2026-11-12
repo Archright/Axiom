@@ -1,0 +1,14 @@
+{
+  "id": "evidence-truth-boundary-gate",
+  "name": "Evidence Truth Boundary Gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/evidence_truth_boundary_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "*.nim",
+  "passFilenames": false,
+  "weight": "light",
+  "category": "rule",
+  "severity": "error"
+}

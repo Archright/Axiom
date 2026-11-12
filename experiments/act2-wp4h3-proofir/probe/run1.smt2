@@ -1,0 +1,5 @@
+(set-logic QF_BV)
+(set-option :rlimit 30000000)
+(declare-fun resultBits () (_ BitVec 64))
+(assert (not (not (= resultBits #x0000000000000000))))
+(check-sat)

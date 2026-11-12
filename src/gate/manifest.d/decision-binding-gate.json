@@ -1,0 +1,14 @@
+{
+  "id": "decision-binding-gate",
+  "name": "Decision Binding Gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/decision_binding_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "*.nim",
+  "passFilenames": false,
+  "weight": "light",
+  "category": "rule",
+  "severity": "error"
+}

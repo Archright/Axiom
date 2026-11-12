@@ -1,0 +1,8 @@
+{
+  "nimType": "string",
+  "leanType": "String",
+  "smtSort": "String",
+  "mappingProofObligation": "nim_lean_string_iso",
+  "verified": false,
+  "sourceHash": ""
+}

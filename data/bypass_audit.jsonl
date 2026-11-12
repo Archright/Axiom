@@ -1,0 +1,8 @@
+{"timestamp":"2026-07-10T08:00:07Z","gate":"pre-commit-hook","reason":"hooksPath=/dev/null integrity violation — all gates skipped","commitHash":"20fa16040","callerPid":0,"remediation":"Phase 1b native cgroup v2 (45d4104d8)","severity":"HIGH"}
+{"ts":1783672846,"reason":"Phase 1b patch: audit log dedup + agent-bypass-commit audit logging","pubkey":"FEF380B0E7921813","type":"agent-bypass-commit","commit_msg":"fix: add audit log deduplication to gate_hook.nim, add audit logging to agent-bypass-commit\n\n- gate_hook.nim: isDuplicateAuditEntry() checks last 5 entries by timestamp before writing\n- Applied dedup guard to all 3 audit write locations (hooksPath, legacy bypass, signed bypass)\n- agent_bypass_commit.nim: now writes to .axiom/bypass_audit.jsonl and data/bypass_audit.jsonl\n- Both compile with zero errors"}
+{"ts":1783673154,"reason":"audit: record hooksPath=/dev/null bypass event","pubkey":"F5D63BF9D7259E56","type":"agent-bypass-commit","commit_msg":"audit: record hooksPath=/dev/null bypass of commit 20fa16040 in bypass_audit.jsonl"}
+{"ts":1783673471,"reason":"fix: JSON injection in audit log entries with newlines","pubkey":"25FBC1402504A303","type":"agent-bypass-commit","commit_msg":"fix: escape newlines in bypass_audit.jsonl entries
+
+- Add jsonEscape() proc for proper JSON string escaping in agent_bypass_commit.nim
+- Fix broken JSON in data/bypass_audit.jsonl line 2 (literal newlines → \n)
+- Prevents shell injection via multiline commit messages"}

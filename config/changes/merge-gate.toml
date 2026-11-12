@@ -1,0 +1,14 @@
+# merge-gate: Declares the merge gate controller change.
+# Surface: merge-controller (the merge admission controller, ax merge).
+# Depends on ci-v6-validation (the admissibility/validation foundation,
+# cd09f04af) and merge-gate-controller (the merge-boundary protocol change,
+# f217b225c — PR checks as authoritative merge-boundary evidence). Both are
+# defined manifests in this directory (change-A.toml / change-B.toml).
+# No conflicts declared.
+
+id = "merge-gate"
+base_ref = "main"
+base_commit = "72e896d06"
+semantic_surface = ["merge-controller"]
+depends_on = ["ci-v6-validation", "merge-gate-controller"]
+conflicts_with = []

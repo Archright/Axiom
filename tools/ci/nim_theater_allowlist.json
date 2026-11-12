@@ -1,0 +1,1330 @@
+[
+  {
+    "file": "src/cli/wf_semantic.nim",
+    "symbol": "buildSemanticHybridUniversalPipelineResult",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 329
+  },
+  {
+    "file": "src/cli/wf_state_parsing.nim",
+    "symbol": "jsonFromAxFrontierEntries",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 96
+  },
+  {
+    "file": "src/core/boundary/boundary_extraction_helpers.nim",
+    "symbol": "loadSourceFromNodeId",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 450
+  },
+  {
+    "file": "src/core/boundary/boundary_extractor_part1_part1.nim",
+    "symbol": "rewriteVirtualHintComment",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 62
+  },
+  {
+    "file": "src/core/boundary/boundary_extractor_part1_part1.nim",
+    "symbol": "injectVirtualHintToSource",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 114
+  },
+  {
+    "file": "src/core/contracts/z3_extraction.nim",
+    "symbol": "extractContractProcs",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 395
+  },
+  {
+    "file": "src/core/gate/content_store.nim",
+    "symbol": "putChecked",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 142
+  },
+  {
+    "file": "src/core/gate/gate_cas_gc.nim",
+    "symbol": "shouldRunCasGc",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 50
+  },
+  {
+    "file": "src/core/gate/gate_memo.nim",
+    "symbol": "advanceCacheEpoch",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 396
+  },
+  {
+    "file": "src/core/gate/gate_memo.nim",
+    "symbol": "acquireMigrationLock",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 433
+  },
+  {
+    "file": "src/core/gate/gate_memo.nim",
+    "symbol": "migrateFromFlat",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 465
+  },
+  {
+    "file": "src/core/gate/gate_memo.nim",
+    "symbol": "saveGateMemo",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 673
+  },
+  {
+    "file": "src/core/observer/scanner.nim",
+    "symbol": "scanProject",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 129
+  },
+  {
+    "file": "src/core/observer/scanner.nim",
+    "symbol": "scanProject",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 156
+  },
+  {
+    "file": "src/core/observer/scanner.nim",
+    "symbol": "scanProject",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 164
+  },
+  {
+    "file": "src/core/parser_utils.nim",
+    "symbol": "captureParseFailure",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 57
+  },
+  {
+    "file": "src/core/parser_utils.nim",
+    "symbol": "parseStringAST",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 70
+  },
+  {
+    "file": "src/core/solver/solver_bridge.nim",
+    "symbol": "dumpEvidence",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 220
+  },
+  {
+    "file": "src/core/solver/solver_bridge.nim",
+    "symbol": "dumpEvidence",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 228
+  },
+  {
+    "file": "src/core/solver/solver_bridge.nim",
+    "symbol": "dumpEvidence",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 233
+  },
+  {
+    "file": "src/core/solver/solver_bridge.nim",
+    "symbol": "dumpEvidence",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 238
+  },
+  {
+    "file": "src/core/symbol_graph/error_bridge.nim",
+    "symbol": "gripVoid",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 32
+  },
+  {
+    "file": "src/core/symbol_graph/global_symbol_graph_builder_part2.nim",
+    "symbol": "saveIncrementalGraphCache",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 67
+  },
+  {
+    "file": "src/core/symbol_graph/global_symbol_graph_builder_part2.nim",
+    "symbol": "saveGlobalSymbolGraphCache",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 378
+  },
+  {
+    "file": "src/core/verifier/legislator.nim",
+    "symbol": "getCachedTactic",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 52
+  },
+  {
+    "file": "src/core/verifier/legislator.nim",
+    "symbol": "saveTacticCache",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 69
+  },
+  {
+    "file": "src/core/verifier/legislator.nim",
+    "symbol": "extractTacticFromRaw",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 141
+  },
+  {
+    "file": "src/engine/engine.nim",
+    "symbol": "validateZeroVacuity",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 100
+  },
+  {
+    "file": "src/gate/cache/soundness_cache_io.nim",
+    "symbol": "computeProjectSourceHash",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 66
+  },
+  {
+    "file": "src/gate/cache/soundness_cache_io.nim",
+    "symbol": "computeProjectSourceHash",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 81
+  },
+  {
+    "file": "src/gate/cache/soundness_cache_io.nim",
+    "symbol": "computeProjectSourceHash",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 83
+  },
+  {
+    "file": "src/gate/cache/soundness_cache_io.nim",
+    "symbol": "atomicReplaceFile",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 108
+  },
+  {
+    "file": "src/gate/cache/soundness_cache_io.nim",
+    "symbol": "saveSoundnessCache",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 168
+  },
+  {
+    "file": "src/gate/framework/hermetic_runner.nim",
+    "symbol": "compileGate",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 64
+  },
+  {
+    "file": "src/gate/framework/hermetic_runner.nim",
+    "symbol": "runGateIsolated",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 109
+  },
+  {
+    "file": "src/gate/framework/hermetic_runner.nim",
+    "symbol": "runGateIsolated",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 116
+  },
+  {
+    "file": "src/gate/gate_cache.nim",
+    "symbol": "sweepCacheIfNeeded",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 168
+  },
+  {
+    "file": "src/gate/gate_cache.nim",
+    "symbol": "saveCacheResult",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 182
+  },
+  {
+    "file": "src/gate/gateway.nim",
+    "symbol": "isRecentEpoch",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 770
+  },
+  {
+    "file": "src/gate/nimtry/nimtry_cache.nim",
+    "symbol": "saveCachedFacts",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 119
+  },
+  {
+    "file": "src/gate/predicates/types.nim",
+    "symbol": "checkImportEncapsulation",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 66
+  },
+  {
+    "file": "src/gate/predicates/types.nim",
+    "symbol": "hasDependencyCycle",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 87
+  },
+  {
+    "file": "src/gate/predicates/types.nim",
+    "symbol": "hasContractViolation",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 105
+  },
+  {
+    "file": "src/gate/predicates/types.nim",
+    "symbol": "hasLayerViolation",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 130
+  },
+  {
+    "file": "src/gate/predicates/types.nim",
+    "symbol": "hasCircularDependency",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 150
+  },
+  {
+    "file": "src/gate/predicates/types.nim",
+    "symbol": "hasDeadCode",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 181
+  },
+  {
+    "file": "src/gate/predicates/types.nim",
+    "symbol": "hasUnusedImport",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 215
+  },
+  {
+    "file": "src/gate/predicates/types.nim",
+    "symbol": "hasValidModuleStructure",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 242
+  },
+  {
+    "file": "src/gate/predicates/types.nim",
+    "symbol": "hasApiStabilityIssue",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 267
+  },
+  {
+    "file": "src/gate/predicates/types.nim",
+    "symbol": "hasRefactoringRisk",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 289
+  },
+  {
+    "file": "src/gate/predicates/types.nim",
+    "symbol": "verifyStateConsistency",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 310
+  },
+  {
+    "file": "src/gate/runners/decision_binding_gate.nim",
+    "symbol": "scanFileForDecisionBinding",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 209
+  },
+  {
+    "file": "src/gate/runners/discarded_write_audit_gate.nim",
+    "symbol": "discarded_write_audit_gate",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 7
+  },
+  {
+    "file": "src/gate/runners/discarded_write_audit_gate.nim",
+    "symbol": "discarded_write_audit_gate",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 12
+  },
+  {
+    "file": "src/gate/runners/discarded_write_audit_gate.nim",
+    "symbol": "discarded_write_audit_gate",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 40
+  },
+  {
+    "file": "src/gate/runners/discarded_write_audit_gate.nim",
+    "symbol": "scanFileContent",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 74
+  },
+  {
+    "file": "src/gate/runners/discarded_write_audit_gate.nim",
+    "symbol": "main",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 184
+  },
+  {
+    "file": "src/gate/runners/discarded_write_audit_gate.nim",
+    "symbol": "mainWithVfs",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 202
+  },
+  {
+    "file": "src/gate/runners/gate_hook.nim",
+    "symbol": "isDuplicateAuditEntry",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 457
+  },
+  {
+    "file": "src/gate/runners/hotspot_gate.nim",
+    "symbol": "main",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 312
+  },
+  {
+    "file": "src/gate/runners/hotspot_gate.nim",
+    "symbol": "mainWithVfs",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 404
+  },
+  {
+    "file": "src/gate/runners/integrity_test.nim",
+    "symbol": "main",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 50
+  },
+  {
+    "file": "src/gate/runners/policy_validator.nim",
+    "symbol": "normalizeImpureModules",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 88
+  },
+  {
+    "file": "src/infrastructure/topology_executor.nim",
+    "symbol": "writeFileContent",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 37
+  },
+  {
+    "file": "src/infrastructure/topology_executor.nim",
+    "symbol": "copyFileSafe",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 65
+  },
+  {
+    "file": "src/mcp/tools.nim",
+    "symbol": "axiomReadSource",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 85
+  },
+  {
+    "file": "src/verification/batch_uap/stages.nim",
+    "symbol": "buildCachedResult",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 205
+  },
+  {
+    "file": "src/verification/batch_uap/stages.nim",
+    "symbol": "tryTypeDirectedProof",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 224
+  },
+  {
+    "file": "src/verification/batch_uap/stages.nim",
+    "symbol": "buildEvidenceLogJson",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 408
+  },
+  {
+    "file": "src/verification/discovery_error.nim",
+    "symbol": "archiveDiscoveryError",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 170
+  },
+  {
+    "file": "src/verification/discovery_error.nim",
+    "symbol": "archiveDiscoveryError",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 173
+  },
+  {
+    "file": "src/verification/integrity_guard.nim",
+    "symbol": "applyGuardToSource",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 55
+  },
+  {
+    "file": "src/verification/lean_lsp_client.nim",
+    "symbol": "cleanupIdleClients",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 202
+  },
+  {
+    "file": "src/verification/lean_lsp_compiler.nim",
+    "symbol": "verifyGeneratedLeanSourceWithCompiler",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 226
+  },
+  {
+    "file": "src/verification/lean_lsp_compiler.nim",
+    "symbol": "verifyGeneratedLeanSourceWithCompiler",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 303
+  },
+  {
+    "file": "src/verification/lean_lsp_proof_search.nim",
+    "symbol": "runDynamicProofSearch",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 103
+  },
+  {
+    "file": "src/verification/lean_lsp_tactic.nim",
+    "symbol": "writeGeneratedSpecArtifact",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 112
+  },
+  {
+    "file": "src/verification/lean_spec_generator.nim",
+    "symbol": "writeLeanSpec",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 39
+  },
+  {
+    "file": "src/verification/leanstral_gateway.nim",
+    "symbol": "writeLeanstralCache",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 67
+  },
+  {
+    "file": "src/verification/pipeline_core_runner_part1.nim",
+    "symbol": "writeReproductionArtifact",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 69
+  },
+  {
+    "file": "src/verification/pipeline_core_runner_part1.nim",
+    "symbol": "pipeline_core_runner_part1",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 225
+  },
+  {
+    "file": "src/verification/pipeline_core_runner_part2.nim",
+    "symbol": "writeBddFeature",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 36
+  },
+  {
+    "file": "src/verification/pipeline_negative_scan_part2.nim",
+    "symbol": "buildCounterExampleInput",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 308
+  },
+  {
+    "file": "src/verification/state_manager.nim",
+    "symbol": "atomicWriteText",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 37
+  },
+  {
+    "file": "src/verification/static_rules.nim",
+    "symbol": "saveStaticRule",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 100
+  },
+  {
+    "file": "src/verification/vault_index.nim",
+    "symbol": "saveVirtualVaultIndex",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 127
+  },
+  {
+    "file": "tests/gateway/all_gateway_runner.nim",
+    "symbol": "parseArgs",
+    "rule": "S1",
+    "reason": "test isolation: best-effort skip-names collection in gateway runner — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 38
+  },
+  {
+    "file": "tests/gateway/all_gateway_runner.nim",
+    "symbol": "parseArgs",
+    "rule": "S3",
+    "reason": "test isolation: empty except body in test collection helper — grandfathered; new S3 theater still gated",
+    "rationale": "",
+    "line": 38
+  },
+  {
+    "file": "tests/gateway/all_gateway_runner.nim",
+    "symbol": "collectSourceFingerprintFiles",
+    "rule": "S1",
+    "reason": "test isolation: best-effort .nim path collection helper — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 192
+  },
+  {
+    "file": "tests/gateway/all_gateway_runner.nim",
+    "symbol": "loadCache",
+    "rule": "S1",
+    "reason": "test isolation: best-effort status parse in gateway runner — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 224
+  },
+  {
+    "file": "tests/gateway/all_gateway_runner.nim",
+    "symbol": "saveCache",
+    "rule": "S1",
+    "reason": "test isolation: best-effort cache write (cacheFile) — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 242
+  },
+  {
+    "file": "tests/gateway/all_gateway_runner.nim",
+    "symbol": "binaryMtime",
+    "rule": "S1",
+    "reason": "test isolation: best-effort mtime probe — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 249
+  },
+  {
+    "file": "tests/gateway/all_gateway_runner.nim",
+    "symbol": "closeRunning",
+    "rule": "S1",
+    "reason": "test isolation: best-effort job handle close — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 294
+  },
+  {
+    "file": "tests/gateway/architecture_config_gate_test.nim",
+    "symbol": "cleanupTmpRepo",
+    "rule": "S1",
+    "reason": "test isolation: teardown removeDir best-effort — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 60
+  },
+  {
+    "file": "tests/gateway/golden_master_feature_test.nim",
+    "symbol": "loadTier1Modules",
+    "rule": "S1",
+    "reason": "test isolation: best-effort JSON walk in feature helper — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 39
+  },
+  {
+    "file": "tests/gateway/golden_master_test.nim",
+    "symbol": "loadTier1Modules",
+    "rule": "S1",
+    "reason": "test isolation: best-effort JSON walk in golden master helper — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 49
+  },
+  {
+    "file": "tests/gateway/healing_orchestrator_test.nim",
+    "symbol": "scenarioFullPipeline",
+    "rule": "S1",
+    "reason": "test isolation: best-effort fixture status probe — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 133
+  },
+  {
+    "file": "tests/gateway/hermetic_policy_feature_test.nim",
+    "symbol": "dockerAvailable",
+    "rule": "S1",
+    "reason": "test isolation: teardown removeFile best-effort — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 67
+  },
+  {
+    "file": "tests/integration/test_lean_lsp_document_symbol_integration.nim",
+    "symbol": "fileUri",
+    "rule": "S1",
+    "reason": "test isolation: best-effort client.shutdown — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 33
+  },
+  {
+    "file": "tests/integration/test_lean_lsp_document_symbol_integration.nim",
+    "symbol": "fileUri",
+    "rule": "S1",
+    "reason": "test isolation: teardown removeFile best-effort — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 61
+  },
+  {
+    "file": "tests/integration/test_lean_lsp_document_symbol_integration.nim",
+    "symbol": "fileUri",
+    "rule": "S3",
+    "reason": "test isolation: empty except body in teardown — grandfathered; new S3 theater still gated",
+    "rationale": "",
+    "line": 61
+  },
+  {
+    "file": "tests/unit/content_store_test.nim",
+    "symbol": "content_store_test",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 63
+  },
+  {
+    "file": "tests/unit/content_store_test.nim",
+    "symbol": "content_store_test",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 64
+  },
+  {
+    "file": "tests/unit/content_store_test.nim",
+    "symbol": "content_store_test",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 65
+  },
+  {
+    "file": "tests/unit/content_store_test.nim",
+    "symbol": "content_store_test",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 83
+  },
+  {
+    "file": "tests/unit/proof_universe_lock_test.nim",
+    "symbol": "testCommitUniverseIntegrityAndLockWritesGraphAndLock",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 131
+  },
+  {
+    "file": "tests/unit/shadow_environment_test.nim",
+    "symbol": "check",
+    "rule": "S1",
+    "reason": "test isolation: best-effort env teardown — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 207
+  },
+  {
+    "file": "tests/unit/test_vkd_ssot_invariant.nim",
+    "symbol": "repoRoot",
+    "rule": "S1",
+    "reason": "test isolation: teardown removeFile best-effort — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 43
+  },
+  {
+    "file": "tests/unit/theater_linter_test.nim",
+    "symbol": "swallowedFailure",
+    "rule": "S1",
+    "reason": "intentional theater-pattern fixture for the linter's self-test — the scanner must flag it in general, this file deliberately contains swallowed-failure samples",
+    "rationale": "",
+    "line": 9
+  },
+  {
+    "file": "tests/unit/unit_test_orchestrator.nim",
+    "symbol": "loadIncrementalCache",
+    "rule": "S1",
+    "reason": "test isolation: best-effort read in orchestrator — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 122
+  },
+  {
+    "file": "tests/unit/unit_test_orchestrator.nim",
+    "symbol": "saveIncrementalCache",
+    "rule": "S1",
+    "reason": "test isolation: best-effort cache write in orchestrator — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 135
+  },
+  {
+    "file": "tests/unit/unit_test_orchestrator.nim",
+    "symbol": "runUnitTestJob",
+    "rule": "S1",
+    "reason": "test isolation: best-effort compile-log read — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 183
+  },
+  {
+    "file": "tests/unit/unit_test_orchestrator.nim",
+    "symbol": "runUnitTestJob",
+    "rule": "S1",
+    "reason": "test isolation: best-effort run-log read — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 199
+  },
+  {
+    "file": "tests/unit/unit_test_orchestrator.nim",
+    "symbol": "main",
+    "rule": "S1",
+    "reason": "test isolation: best-effort mtime probe — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 271
+  },
+  {
+    "file": "tests/verification/test_healing_orchestrator.nim",
+    "symbol": "makeVulnHit",
+    "rule": "S1",
+    "reason": "test isolation: teardown removeDir best-effort — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 317
+  },
+  {
+    "file": "tests/verification/test_healing_orchestrator.nim",
+    "symbol": "makeVulnHit",
+    "rule": "S1",
+    "reason": "test isolation: teardown removeDir best-effort — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 335
+  },
+  {
+    "file": "tests/verification/test_healing_orchestrator.nim",
+    "symbol": "makeVulnHit",
+    "rule": "S1",
+    "reason": "test isolation: teardown removeDir best-effort — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 350
+  },
+  {
+    "file": "tests/verification/test_healing_orchestrator.nim",
+    "symbol": "makeVulnHit",
+    "rule": "S1",
+    "reason": "test isolation: teardown removeDir best-effort — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 368
+  },
+  {
+    "file": "tests/verification/test_healing_orchestrator.nim",
+    "symbol": "makeVulnHit",
+    "rule": "S1",
+    "reason": "test isolation: teardown removeDir best-effort — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 380
+  },
+  {
+    "file": "tests/verification/test_healing_orchestrator.nim",
+    "symbol": "makeVulnHit",
+    "rule": "S1",
+    "reason": "test isolation: teardown removeDir best-effort — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 393
+  },
+  {
+    "file": "tests/verification/test_healing_orchestrator.nim",
+    "symbol": "makeVulnHit",
+    "rule": "S3",
+    "reason": "test isolation: empty except body in teardown — grandfathered; new S3 theater still gated",
+    "rationale": "",
+    "line": 393
+  },
+  {
+    "file": "tools/ast_rewriter.nim",
+    "symbol": "processFile",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 570
+  },
+  {
+    "file": "tools/ast_rewriter.nim",
+    "symbol": "processFile",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 584
+  },
+  {
+    "file": "tools/ast_splitter.nim",
+    "symbol": "writeFileIfNew",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 790
+  },
+  {
+    "file": "tools/ast_splitter.nim",
+    "symbol": "writeFileIfNew",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 799
+  },
+  {
+    "file": "tools/ast_splitter.nim",
+    "symbol": "writeFileIfNew",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 811
+  },
+  {
+    "file": "tools/ast_splitter.nim",
+    "symbol": "writeFileIfNew",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 820
+  },
+  {
+    "file": "tools/ast_splitter.nim",
+    "symbol": "writeFileIfNew",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 836
+  },
+  {
+    "file": "tools/baseline_ratchet.nim",
+    "symbol": "saveBaseline",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 112
+  },
+  {
+    "file": "tools/ci/detect_proc_to_func_per_routine.nim",
+    "symbol": "filterChanged",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 157
+  },
+  {
+    "file": "tools/ci/detect_proc_to_func_per_routine.nim",
+    "symbol": "main",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 294
+  },
+  {
+    "file": "tools/cli_surface_generator.nim",
+    "symbol": "generateCliSurface",
+    "rule": "S4",
+    "reason": "pre-existing discarded write (best-effort I/O) — grandfathered; new S4 theater still gated",
+    "rationale": "",
+    "line": 317
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalDirBin001",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 237
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalDirBin002",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 265
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalDirBin003",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 296
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalDirArt001",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 330
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalTool001",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 387
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalTool001",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 404
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalTest001",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 423
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalTest001",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 440
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalDocLink001",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 494
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalDocCla001",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 534
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalQuirkBase",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 588
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalTc001",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 628
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalLog001",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 656
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalLog002",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 675
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalLog002",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 692
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalLog003",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 715
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalAud001",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 741
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalAud002",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 758
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalAud002",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 776
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_rules.nim",
+    "symbol": "evalAud003",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 801
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_snapshot.nim",
+    "symbol": "probeToolVersion",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 90
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_snapshot.nim",
+    "symbol": "writePreSnapshot",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 302
+  },
+  {
+    "file": "src/infrastructure/debt_audit/audit_observations.nim",
+    "symbol": "extractObservations",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 431
+  },
+  {
+    "file": "src/verification/obligation/metrics_io.nim",
+    "symbol": "readObligationMetrics",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 117
+  },
+  {
+    "file": "tools/collect_evidence_probe.nim",
+    "symbol": "needValue",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 149
+  },
+  {
+    "file": "tools/collect_evidence_probe.nim",
+    "symbol": "needValue",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 159
+  },
+  {
+    "file": "tools/debt_engine.nim",
+    "symbol": "auditProbeVersion",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 1863
+  },
+  {
+    "file": "tools/debt_engine.nim",
+    "symbol": "auditRefsCombined",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 1894
+  },
+  {
+    "file": "tools/debt_engine.nim",
+    "symbol": "auditKnownProducers",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 1912
+  },
+  {
+    "file": "tools/debt_engine.nim",
+    "symbol": "verify09_mutationBoundary",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 2782
+  },
+  {
+    "file": "tests/gateway/productization_start_vertical_slice_feature_test.nim",
+    "symbol": "vaultCertDigest",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 193
+  },
+  {
+    "file": "tests/verification/test_i5_no_reexec.nim",
+    "symbol": "main",
+    "rule": "S1",
+    "reason": "pre-existing swallowed-failure at I/O boundary — grandfathered; new S1 theater still gated",
+    "rationale": "",
+    "line": 95
+  },
+  {
+    "file": "tests/readiness/readiness_feature_test.nim",
+    "symbol": "readiness_feature_test",
+    "rule": "S2",
+    "reason": "test scaffolding: trivial always-pass in test helper — grandfathered; new S2 theater still gated",
+    "rationale": "",
+    "line": 17
+  },
+  {
+    "file": "tests/unit/evidence_propagation_test.nim",
+    "symbol": "canon",
+    "rule": "S2",
+    "reason": "test scaffolding: trivial always-pass in test helper — grandfathered; new S2 theater still gated",
+    "rationale": "",
+    "line": 128
+  }
+]

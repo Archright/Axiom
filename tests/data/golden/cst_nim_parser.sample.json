@@ -1,0 +1,13 @@
+{
+  "script": "tools/cst_nim_parser.py",
+  "description": "tree-sitter-nim CST parser core — provides deterministic, grammar-guaranteed parsing of Nim source code with no regex or heuristics",
+  "inputSample": {
+    "args": ["src/core/checker.nim"],
+    "stdin": "proc verify(x: int): bool =\n  result = x > 0"
+  },
+  "outputSample": {
+    "stdout": "parsed: 1 proc_def, 1 return_stmt, 2 ident, 1 int_lit",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

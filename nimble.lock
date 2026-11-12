@@ -1,0 +1,74 @@
+{
+  "version": 2,
+  "packages": {
+    "nim": {
+      "version": "2.2.10",
+      "vcsRevision": "9fe2137fa2f3f66cf5a44f357d461829ac9e20c4",
+      "url": "https://github.com/nim-lang/Nim.git",
+      "downloadMethod": "git",
+      "dependencies": [],
+      "checksums": {
+        "sha1": "17ec440fdb89f8903db29a17898af590087d2b64"
+      }
+    },
+    "malebolgia": {
+      "version": "1.3.2",
+      "vcsRevision": "ab17bef08e8e84fabc33e0b039b324438e1ce27b",
+      "url": "https://github.com/Araq/malebolgia",
+      "downloadMethod": "git",
+      "dependencies": [
+        "nim"
+      ],
+      "checksums": {
+        "sha1": "5259d27784981c9146c823157d06fbba0bcf6d99"
+      }
+    },
+    "checksums": {
+      "version": "0.2.2",
+      "vcsRevision": "0845c735a9746188b2257ee2cff672eb6ec26e8a",
+      "url": "https://github.com/nim-lang/checksums",
+      "downloadMethod": "git",
+      "dependencies": [
+        "nim"
+      ],
+      "checksums": {
+        "sha1": "6357ab195ec23e0e0a54d4d8b5e0212456bf899e"
+      }
+    },
+    "fusion": {
+      "version": "1.2",
+      "vcsRevision": "0b0a0273b8df860cd54e3fcca7bb4c617244ac77",
+      "url": "",
+      "downloadMethod": "git",
+      "dependencies": [
+        "nim"
+      ],
+      "checksums": {
+        "sha1": "408bde8679bce63dfb6f424e107eb37c5eb31510"
+      }
+    },
+    "ed25519": {
+      "version": "0.1.1",
+      "vcsRevision": "176aff141a27ec94f954e961be21671b64531b39",
+      "url": "https://github.com/niv/ed25519.nim",
+      "downloadMethod": "git",
+      "dependencies": [
+        "nim"
+      ],
+      "checksums": {
+        "sha1": "c8d6d44c661267fb2474e73d3f2cf601c6fd4d68"
+      }
+    },
+    "nimcrypto": {
+      "version": "0.7.3",
+      "vcsRevision": "b3dbc9c4d08e58c5b7bfad6dc7ef2ee52f2f4c08",
+      "url": "https://github.com/cheatfate/nimcrypto",
+      "downloadMethod": "git",
+      "dependencies": [],
+      "checksums": {
+        "sha1": "f72b90fe3f4da09efa482de4f8729e7ee4abea2f"
+      }
+    }
+  },
+  "tasks": {}
+}

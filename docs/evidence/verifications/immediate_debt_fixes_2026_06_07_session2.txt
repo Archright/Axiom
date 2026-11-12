@@ -1,0 +1,51 @@
+Evidence: Immediate Debt Fixes — 2026-06-07 (Session 2)
+=======================================================
+
+Method: Context7 MCP (Fowler Debt Quadrant, Refactoring Guru Code Smells)
+Scope: Items resolvable without architectural planning
+
+## Changes Made
+
+### DEBT#190: tests/features/ ELF Binary Removal
+- Removed 4 ELF binaries: complexity_entropy_test, k_induction_test, pattern_guard_test, tactic_backtrack_test
+- Added `tests/features/*_test` pattern to .gitignore
+- Verification: `find tests/features/ -type f -exec file {} \; | grep ELF` → 0 results
+
+### DEBT#202: pbt_policy.md Dead Reference Cleanup
+- Removed 5 stale references to deleted `fuzz_queries.nim`
+- Consolidated §5 into a single clear "Inactive" section
+- Removed redundant `RequiredInvariantPatterns` notes from §2 and §6
+- Verification: `grep -c 'fuzz_queries' docs/spec/pbt_policy.md` → 0
+
+### DEBT#203: Magic Number Extraction
+- Extracted `96` in `the_judge_lean.nim:162` → `leanFieldParseWindow` constant in `constants.nim`
+- Added import of `constants` module to `the_judge_lean.nim`
+- Note: `z3RlimitMultiplier=1000` was already a named constant in constants.nim
+- Note: `threshold=3.0` in interface_auditor.nim is a documented default parameter (acceptable)
+- Verification: `nim c --hints:off src/core/the_judge_lean.nim` → PASS (warnings only)
+
+### DEBT#197: fixedpoint_engine Spec Coverage
+- Added 46-line "Fixedpoint / PDR Backend" section to `solver_infrastructure_spec.md`
+- Covers: HornClause/FixedpointResult types, emitHornClauses/solveFixedpoint/proveWithFixedpoint entry points, CHC encoding pattern, integration points
+- Added 2 known limitations to existing limitations section
+- Verification: `nim c --hints:off src/verification/solver/fixedpoint_engine.nim` → PASS
+
+### DEBT#192: echo "hi" Debug Residue
+- Already resolved in previous session (confirmed: grep returns 0 matches)
+
+## Compilation Verification
+```
+$ nim c --hints:off src/core/constants.nim           → PASS
+$ nim c --hints:off src/core/the_judge_lean.nim       → PASS (pre-existing warnings only)
+$ nim c --hints:off src/verification/solver/fixedpoint_engine.nim → PASS (pre-existing warnings only)
+```
+
+## Git Diff Summary
+```
+ .gitignore                              |  1 +
+ docs/spec/pbt_policy.md                 | 23 +++--------------
+ docs/spec/solver_infrastructure_spec.md | 46 +++++++++++++++++++++++++++++++++
+ src/core/constants.nim                  |  1 +
+ src/core/the_judge_lean.nim             |  3 ++-
+ 5 files changed, 53 insertions(+), 21 deletions(-)
+```

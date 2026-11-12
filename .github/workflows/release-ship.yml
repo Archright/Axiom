@@ -1,0 +1,1262 @@
+# =============================================================================
+# release-ship — Release-boundary authority 전환 (ADR-0024) — "검증 → 확인 →
+# publish" 단일 출하 경로. tag push 자동 발화(A1.3) 폐기, workflow_dispatch
+# (실행 정책 authority-first-P-ship: allowed_events=[workflow_dispatch],
+# allowed_actors=[User 53123826]) → freeze(4중 바인딩) → L2 위임(build +
+# provenance) → environment release-authority (control confirmation) → App
+# axiom-release-authority의 v* tag 생성 + Release 생성으로 대체한다.
+#
+# 권위 모델 (ADR-0024 필수 문구 — 과장 금지):
+#   Release 객체 자체의 creator는 GitHub native policy로 제한되지 않는다.
+#   Axiom이 강제하는 보안 경계는 v* tag 생성 권위다: 모든 출하 가능한 v* tag는
+#   release-authority App만 생성할 수 있고, 정확한 SHA의 L2 PASS와 control
+#   confirmation 이후에만 생성된다. Release provenance = 해당 tag의 peel로
+#   판정한다 (release.tag_name == version ∧ peel(tag) == FROZEN_SHA;
+#   targetCommitish는 기존 tag에서 unused — 증거로 사용하지 않음).
+#   [실행 범위 정정 2026-10-20] 이 경로의 L2는 build + provenance다 —
+#   gateway 스위트(86 시나리오)는 SL-09 미승격으로 실행되지 않는다
+#   (config/policy/epoch_manifest.json). 실행 집합은 callee가 발행하고
+#   assert-l2-scope 잡이 기대 계약과 대조(fail-closed)한다. (이 파일의
+#   이전 "Full L2" 표현은 이 정정 이전의 과장 표현이었다.)
+#   [현재 상태 2026-10-19] v* ruleset 미등록(Owner 결정 #16)으로 위 App-only
+#   경계는 서버측에서 강제되지 않는다. 이 워크플로는 자신이 생성하는 태그에
+#   대해서만 버전 일치를 강제하며, 모든 v* tag 정책은 별도 결정 대상이다.
+#
+# 배포 전제 (Phase 1/3 — 정책 PR 선행, ADR-0024 In Scope #1/#2/#6/#8/#9):
+#   * 실행 정책 P-ship 등록 (release-ship.yml / workflow_dispatch / User 53123826)
+#   * P-rpool(5564) allowed_events에 workflow_call 추가 (이 PR에서 함께)
+#   * 표면 v16 3경로 등록 (release-ship.yml, docs/adr/0024,
+#     docs/evidence/release_boundary_protocol.md)
+#   * environment release-authority: reviewers=[wintrover],
+#     prevent_self_review=false·can_admins_bypass=TRUE (2026-10-20 REST 실측)
+#     — 동일 관리자가 자기 실행을 승인/우회할 수 있으므로 이 게이트는
+#     "required reviewer 밖 행위자 차단 + 거부 기회 + 감사 기록"만 보장한다
+#     (ADR-0024 [3] 부정적 정의와 동일 범위).
+#   * GitHub App axiom-release-authority (Contents:write만, Axiom 핀) +
+#     environment 스코프 시크릿 RELEASE_AUTHORITY_APP_ID / RELEASE_AUTHORITY_PRIVATE_KEY
+#   * v* ruleset + Immutable releases (Phase 3) — 현재 v* ruleset은 미등록
+#     (Owner 결정 #16). 이 워크플로의 버전 게이트는 release-ship이 생성하는
+#     공식 릴리스 태그에만 적용되며, 모든 v* tag push의 서버측 차단을 주장하지 않는다.
+#   * 발행 경로 = [A] 단일 POST (CE#2 실험 2026-09-26 채택: M3 human 차단 +
+#     M6 App 단일 POST 성공 — release_boundary_protocol.md §5)
+#   * [Amendment G 2026-10-19] verify-metadata(tag↔nimble) → full-l2 →
+#     verify-binary(artifact provenance + --version) → publish.
+#     [2026-10-20] full-l2 뒤에 assert-l2-scope(callee 실행 집합 계약 대조 —
+#     fail-closed)가 추가되어 publish는 스코프 단언까지 통과해야 한다.
+#     validation_only=true는 freeze/publish를 skip하고 verify jobs만 실행한다
+#     (publish 불가; validation-only-assert가 skipped를 단언한다).
+#   * [Phase 6 S3 2026-11-08] verify-binary 뒤에 §1b 바이너리 배포 확장:
+#     assemble-bundle(번들 tar.gz·SHA256SUMS·manifest.json 조립+전수 검증)
+#     → attest-bundle(artifact attestation 생성 + 오프라인 --bundle/
+#     --signer-repo Archright/Axiom 검증) → publish 잡이 Archright/axiom-cli
+#     cross-repo 발행(공개 배포, immutable releases)까지 수행한다.
+#     정본 계약: docs/spec/productization_contract.md §1b Binary Distribution
+#     Contract. validation_only=true는 assemble-bundle·attest-bundle도
+#     skip한다(validation-only-assert가 skipped를 단언).
+# =============================================================================
+name: release-ship
+run-name: release-ship ${{ inputs.version }}${{ inputs.validation_only && ' [validation-only]' || '' }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '출하 버전 — v\d+\.\d+\.\d+ 형식 (예: v0.5.6). freeze가 정규화+검증한다.'
+        type: string
+        required: true
+      target_sha:
+        description: '출하 대상 commit SHA (40-hex, 현재 main tip이어야 함).'
+        type: string
+        required: true
+      validation_only:
+        description: '검증 job만 실행하고 freeze/publish를 건너뛴다 (릴리스 불가).'
+        type: boolean
+        default: false
+
+# SHA 단위 직렬화 (ADR-0024 — 2중 유일성 메커니즘 1):
+#   group = release-ship-<target_sha> → 같은 SHA 출하는 직렬 (freeze 경쟁 제거).
+#   다른 SHA는 병렬 (글로벌 lock 아님). version 기준 그룹은 다른 SHA가 같은
+#   버전을 노리는 우회가 가능해 사용하지 않는다 — 같은 version의 동시 충돌은
+#   publish 단계의 git ref 원자 충돌(422 → definitive FAIL)로 닫힌다 (메커니즘 2).
+#   cancel-in-progress: false — 진행 중인 출하를 취소하지 않는다 (ADR-0024 ⑥).
+concurrency:
+  group: release-ship-${{ inputs.target_sha }}
+  cancel-in-progress: false
+
+# TrustedWriterSet 준수 (ADR-0022 §4, tools/ci/verify_trusted_writer_set.sh):
+#   top-level contents: read 유지 — release-ship은 TrustedWriterSet 관측 집합에
+#   변화를 주지 않는다 (무개정). 발행 write는 publish job의 App installation
+#   token으로만 수행된다 (GITHUB_TOKEN은 여기서 read-only).
+permissions:
+  contents: read
+
+jobs:
+  # ── freeze — 출하 사전 조건 fail-closed (GitHub API만 사용) ──────────────
+  # ADR-0024 4중 바인딩 + 유일성:
+  #   ① github.ref == refs/heads/main      (--ref 변조 브랜치 발화 차단)
+  #   ② github.sha == inputs.target_sha    (실행 워크플로와 출하 대상 동일 commit)
+  #   ③ GET /git/ref/heads/main == target  (현재 main tip — gh api 사용,
+  #      로컬 rev-parse 금지: 체크아웃된 트리는 신뢰 경계 밖)
+  #   ④ version 정규화 + ^v\d+\.\d+\.\d+$  (ref 문자셋 안전 보장)
+  #   ⑤ 기존 tag(ref) 멱등 판정 — 존재는 곧 FAIL이 아니다 (peel 비교):
+  #      동일 tag+동일 SHA → NO-OP 성공(freeze_verdict=noop, ⑥⑦ 생략),
+  #      동일 tag+다른 SHA → FAIL(clobber 금지), tag 부재 → 진행,
+  #      불명확(5xx/네트워크) → fail-closed FAIL.
+  #      판정표: docs/spec/gh_api_paginate_output_quirks.md
+  #   ⑥ 기존 Release 없음 ⑦ SHA uniqueness
+  #      (기존 Release의 tag peel == target_sha 전수 검사 — NO-OP 시 생략)
+  # 모든 실패 = exit non-zero (swallow 금지). 불명(5xx/네트워크)도 FAIL — 
+  # UNCERTAIN(exit 2) 시맨틱은 publish 단계 전용 (ADR-0024 FAIL/UNCERTAIN 구분).
+  freeze:
+    if: ${{ !inputs.validation_only }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      frozen_sha: ${{ steps.freeze.outputs.frozen_sha }}
+      version_norm: ${{ steps.freeze.outputs.version_norm }}
+      freeze_verdict: ${{ steps.freeze.outputs.freeze_verdict }}
+    steps:
+      - name: Freeze checks (4중 바인딩 + 유일성, fail-closed)
+        id: freeze
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_REF: ${{ github.ref }}
+          RUN_SHA: ${{ github.sha }}
+          TARGET_RAW: ${{ inputs.target_sha }}
+          VERSION_RAW: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::FREEZE: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          # ① ref 바인딩 (workflow_dispatch --ref 변조 발화 차단, ADR-0024 ⑥-④)
+          [ "$RUN_REF" = "refs/heads/main" ] || fail "① github.ref='$RUN_REF' != refs/heads/main"
+          # ② target 정규화 + sha 바인딩 (실행 워크플로 == 출하 대상 commit)
+          TARGET_SHA="$(printf '%s' "$TARGET_RAW" | tr -d '[:space:]')"
+          printf '%s' "$TARGET_SHA" | grep -qE '^[0-9a-f]{40}$' || fail "② target_sha is not 40-hex: '$TARGET_RAW'"
+          [ "$RUN_SHA" = "$TARGET_SHA" ] || fail "② github.sha=${RUN_SHA:0:12} != inputs.target_sha=${TARGET_SHA:0:12}"
+          echo "FREEZE: ①② OK — ref=main, run SHA == target ${TARGET_SHA:0:12}"
+          # ③ main tip — GitHub ref API (로컬 rev-parse 금지, ADR-0024 ⑥-⑥)
+          MAIN_REF="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main")" \
+            || fail "③ GET git/ref/heads/main failed (gh api fatal)"
+          MAIN_SHA="$(printf '%s' "$MAIN_REF" | jq -r '.object.sha')"
+          [ "$MAIN_SHA" = "$TARGET_SHA" ] || fail "③ main tip ${MAIN_SHA:0:12} != target ${TARGET_SHA:0:12} (main이 dispatch 후 전진 — 새 SHA로 재디스패치)"
+          echo "FREEZE: ③ OK — GET git/ref/heads/main == target"
+          # ④ version 정규화 + 형식 (regex에 한정된 문자셋 = ref 안전)
+          VERSION_NORM="$(printf '%s' "$VERSION_RAW" | tr -d '[:space:]')"
+          case "$VERSION_NORM" in v*) ;; *) VERSION_NORM="v$VERSION_NORM" ;; esac
+          printf '%s' "$VERSION_NORM" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$' \
+            || fail "④ version '$VERSION_NORM' does not match ^v\d+\.\d+\.\d+$"
+          [ "${#VERSION_NORM}" -le 100 ] || fail "④ version 길이 ${#VERSION_NORM} > 100"
+          echo "FREEZE: ④ OK — version=$VERSION_NORM"
+          # ⑤ 기존 tag(ref) 멱등 판정 — GET /git/ref/tags/{version}: rc==0 = 존재.
+          #    존재를 무조건 FAIL하지 않는다 — ⑦과 동일 peel 논리(object.type==
+          #    "tag"면 /git/tags/{oid}로 peel, 아니면 .object.sha)로 target과
+          #    비교한다 (판정표: docs/spec/gh_api_paginate_output_quirks.md):
+          #      동일 SHA → NO-OP 성공: freeze_verdict=noop + frozen_sha/
+          #        version_norm 출력, ⑥⑦ 생략, downstream 전부 skip (멱등).
+          #      다른 SHA → 명시 FAIL — 덮어쓰기 없음 (clobber 금지).
+          #    404 = 부재(진행), 그 외(5xx/네트워크/미판별) = fail-closed FAIL.
+          set +e
+          TAG_RESP="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$VERSION_NORM" 2>&1)"
+          TAG_RC=$?
+          set -e
+          if [ "$TAG_RC" -eq 0 ]; then
+            if [ "$(printf '%s' "$TAG_RESP" | jq -r '.object.type')" = "tag" ]; then
+              TAG_OID="$(printf '%s' "$TAG_RESP" | jq -r '.object.sha')"
+              TAG_OBJ="$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$TAG_OID")" \
+                || fail "⑤ GET git/tags/$TAG_OID failed (peel) — fail-closed"
+              TAG_PEEL="$(printf '%s' "$TAG_OBJ" | jq -r '.object.sha')"
+            else
+              TAG_PEEL="$(printf '%s' "$TAG_RESP" | jq -r '.object.sha')"
+            fi
+            if [ "$TAG_PEEL" = "$TARGET_SHA" ]; then
+              echo "FREEZE: ⑤ NO-OP — tag $VERSION_NORM exists at identical SHA ${TARGET_SHA:0:12} — idempotent re-dispatch (⑥⑦ skipped, downstream skipped)"
+              echo "freeze_verdict=noop" >> "$GITHUB_OUTPUT"
+              echo "frozen_sha=$TARGET_SHA" >> "$GITHUB_OUTPUT"
+              echo "version_norm=$VERSION_NORM" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            fail "⑤ tag $VERSION_NORM exists at different SHA ${TAG_PEEL:0:12} != target ${TARGET_SHA:0:12} — 덮어쓰기 없음 (clobber 금지)"
+          fi
+          TAG_HTTP="$(printf '%s' "$TAG_RESP" | sed -n 's/.*HTTP \([0-9][0-9][0-9]\).*/\1/p' || true)"
+          [ "$TAG_HTTP" = "404" ] || fail "⑤ tag ref check inconclusive (rc=$TAG_RC, HTTP '${TAG_HTTP:-<none>}') — fail-closed"
+          echo "FREEZE: ⑤ OK — no existing tag $VERSION_NORM"
+          # ⑥ 기존 Release 없음 + ⑦ SHA uniqueness (레포 release 목록 전수, ADR-0024 ⑦)
+          # gh --paginate 출력 형태는 버전 의존이다: 페이지 병합 단일 배열(신형) 또는
+          # 문서 연결 스트림(구형) — docs/spec/gh_api_paginate_output_quirks.md.
+          # jq -s로 전체 입력 문서를 slurp하고, 모든 문서가 배열인지 검증(비-배열
+          # 문서 = jq error = fail-closed), flatten 후 일치 tag_name을 센다. 빈
+          # 입력도 길이 0으로 안전. ⑦ 열거('.[].tag_name')는 문서별 반복이라
+          # 연결 스트림에서도 안전 — 같은 $RELEASES를 소비한다.
+          RELEASES="$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases")" \
+            || fail "⑥ GET releases failed (gh api fatal)"
+          n_same="$(printf '%s' "$RELEASES" | jq -s --arg v "$VERSION_NORM" 'if (map(select(type != "array")) | length) > 0 then error("releases response: non-array document in gh --paginate output — fail-closed") else ([.[] | .[] | select(.tag_name == $v)] | length) end')"
+          [ "$n_same" = "0" ] || fail "⑥ release with tag_name=$VERSION_NORM already exists (n=$n_same)"
+          while IFS= read -r EXISTING_TAG; do
+            [ -n "$EXISTING_TAG" ] || continue
+            set +e
+            EX_REF="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$EXISTING_TAG" 2>&1)"
+            EX_RC=$?
+            set -e
+            if [ "$EX_RC" -ne 0 ]; then
+              EX_HTTP="$(printf '%s' "$EX_REF" | sed -n 's/.*HTTP \([0-9][0-9][0-9]\).*/\1/p' || true)"
+              if [ "$EX_HTTP" = "404" ]; then
+                echo "FREEZE: ⑦ skip '$EXISTING_TAG' (release tag ref 없음 — draft/stale)"
+                continue
+              fi
+              fail "⑦ cannot resolve existing release tag '$EXISTING_TAG' (rc=$EX_RC, HTTP '${EX_HTTP:-<none>}') — fail-closed"
+            fi
+            # annotated tag(tag type) → /git/tags/{sha}로 peel / lightweight(commit) → 그 자체
+            if [ "$(printf '%s' "$EX_REF" | jq -r '.object.type')" = "tag" ]; then
+              EX_TAG_OID="$(printf '%s' "$EX_REF" | jq -r '.object.sha')"
+              EX_TAG_OBJ="$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$EX_TAG_OID")" \
+                || fail "⑦ GET git/tags/$EX_TAG_OID failed"
+              EX_PEEL="$(printf '%s' "$EX_TAG_OBJ" | jq -r '.object.sha')"
+            else
+              EX_PEEL="$(printf '%s' "$EX_REF" | jq -r '.object.sha')"
+            fi
+            if [ "$EX_PEEL" = "$TARGET_SHA" ]; then
+              fail "⑦ SHA uniqueness violated — target ${TARGET_SHA:0:12} is already released as tag '$EXISTING_TAG'"
+            fi
+          done < <(printf '%s' "$RELEASES" | jq -r '.[].tag_name')
+          echo "FREEZE: ⑥⑦ OK — no release for $VERSION_NORM, SHA ${TARGET_SHA:0:12} not yet released"
+          # FROZEN_SHA = target_sha (모든 검증 통과 후 — ADR-0024 권위 그래프)
+          echo "freeze_verdict=fresh" >> "$GITHUB_OUTPUT"
+          echo "frozen_sha=$TARGET_SHA" >> "$GITHUB_OUTPUT"
+          echo "version_norm=$VERSION_NORM" >> "$GITHUB_OUTPUT"
+          echo "FREEZE: OK — FROZEN_SHA=${TARGET_SHA:0:12} VERSION=$VERSION_NORM"
+
+  # ── full-l2 — L2 위임 (runner-pool-acceptance workflow_call, ADR-0024) ────────
+  # ⚠️ 실행 범위 — "Full L2"가 아니라 **build + provenance**다 (과장 금지).
+  # force_full=true → runner-pool select job 건너뜀(P-rpool의 workflow_call 등록
+  # 필수). force_full은 SL-09 게이트를 열지 *않는다* — SL-09 승격 여부는
+  # callee의 sl09-scope 잡이 config/policy/epoch_manifest.json에서 판정한다.
+  # 현재 epoch N+7에서 SL-09는 notYetImplementedSlices이므로 SL-09 귀속 잡
+  # (candidate-build-arm · gateway-shard×8 · gateway-identity-gate ·
+  # proof-reconcile)은 **미실행**이다. 따라서 이 경로가 실제로 검증하는
+  # 것은 (1) ci-bootstrap의 x64 빌드 산출물과 (2) verify-binary의 provenance
+  # (빌드 SHA == FROZEN_SHA 트리)까지다 — gateway 스위트(86 시나리오)는
+  # 실행되지 않는다. 이 사실은 숨기지 않는다: callee가 발행하는
+  # `executed_jobs` 출력(실행된 잡 집합)을 아래 assert-l2-scope 잡이 기대
+  # 계약과 대조해 fail-closed로 검증한다.
+  # runner-pool checkout/빌드 바인딩 수정(+inputs.target_sha)이 전제 — L2가 항상
+  # frozen tree를 검증한다 (freeze ③이 dispatch 시점 동일성을 보증하지만
+  # freeze→L2 사이 main 전진에 대비, ADR-0024 In Scope #4/#5).
+  # secrets: inherit 생략 — runner-pool은 저장소 시크릿을 전혀 사용하지 않는다
+  # (actions/checkout 기본 토큰 + 캐시만; 최소 권한, inherit 불필요).
+  # workflow_call 실행 시 github.event_name은 'workflow_call' → runner-pool의
+  # B-cache save 게이트(== 'push' && main)가 자연히 꺼짐 = 콜드 L2 (ADR-0024 約
+  # 예산 증가는 ledger 다음 round로 상쇄 — 계획서 Constraints).
+  # ── verify-metadata — frozen tree의 nimble version과 입력 tag의 정합성 ──────
+  # validation_only=true이면 freeze를 건너뛰고 이 job만 독립 검증 경로로 실행한다.
+  # publish는 validation_only에서 절대 실행되지 않는다(아래 publish if).
+  verify-metadata:
+    needs: [freeze]
+    # freeze_verdict=noop(동일 tag+동일 SHA 재디스패치 — 이미 출하된 상태)면
+    # 이 잡을 skip한다. needs-success 체인에 의해 full-l2 → assert-l2-scope →
+    # verify-binary → publish가 연쇄 skip된다 — 재빌드·아티팩트 재업로드·중복
+    # 발행이 없는 멱등 NO-OP의 유일 배선 지점 (다른 잡의 if는 건드리지 않는다).
+    # validation_only=true면 freeze가 아예 실행되지 않아 outputs가 비어 있고
+    # '' != 'noop'이 참 → 기존 validation 경로는 불변이다.
+    if: ${{ always() && (inputs.validation_only || (needs.freeze.result == 'success' && needs.freeze.outputs.freeze_verdict != 'noop')) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    outputs:
+      frozen_sha: ${{ steps.verify.outputs.frozen_sha }}
+      version_norm: ${{ steps.verify.outputs.version_norm }}
+      pre_tag_exists: ${{ steps.preflight.outputs.pre_tag_exists }}
+      pre_tag_sha: ${{ steps.preflight.outputs.pre_tag_sha }}
+      pre_release_exists: ${{ steps.preflight.outputs.pre_release_exists }}
+    steps:
+      - name: Resolve frozen target
+        id: verify
+        env:
+          FROZEN_SHA: ${{ needs.freeze.outputs.frozen_sha }}
+          FROZEN_VERSION: ${{ needs.freeze.outputs.version_norm }}
+          INPUT_SHA: ${{ inputs.target_sha }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          TARGET_SHA="${FROZEN_SHA:-$INPUT_SHA}"
+          VERSION="${FROZEN_VERSION:-$INPUT_VERSION}"
+          printf '%s' "$TARGET_SHA" | grep -qE '^[0-9a-f]{40}$' \
+            || { echo "::error::verify-metadata: invalid target_sha '$TARGET_SHA'"; exit 1; }
+          printf '%s' "$VERSION" | grep -qE '^v?[0-9]+\.[0-9]+\.[0-9]+$' \
+            || { echo "::error::verify-metadata: invalid version '$VERSION'"; exit 1; }
+          echo "frozen_sha=$TARGET_SHA" >> "$GITHUB_OUTPUT"
+          echo "version_norm=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Preflight tag/release state (validation_only)
+        id: preflight
+        if: ${{ inputs.validation_only }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.verify.outputs.version_norm }}
+        run: |
+          set -euo pipefail
+          TAG_VERSION="$VERSION"
+          case "$TAG_VERSION" in v*) ;; *) TAG_VERSION="v$TAG_VERSION" ;; esac
+          set +e
+          TAG_RESP="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG_VERSION" 2>&1)"; TAG_RC=$?
+          REL_RESP="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG_VERSION" 2>&1)"; REL_RC=$?
+          set -e
+          if [ "$TAG_RC" -eq 0 ]; then
+            TAG_SHA="$(printf '%s' "$TAG_RESP" | jq -r '.object.sha')"
+            echo "pre_tag_exists=true" >> "$GITHUB_OUTPUT"
+            echo "pre_tag_sha=$TAG_SHA" >> "$GITHUB_OUTPUT"
+          else
+            printf '%s' "$TAG_RESP" | grep -q 'HTTP 404' \
+              || { echo "::error::preflight tag check inconclusive"; exit 1; }
+            echo "pre_tag_exists=false" >> "$GITHUB_OUTPUT"
+            echo "pre_tag_sha=" >> "$GITHUB_OUTPUT"
+          fi
+          if [ "$REL_RC" -eq 0 ]; then
+            echo "pre_release_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            printf '%s' "$REL_RESP" | grep -q 'HTTP 404' \
+              || { echo "::error::preflight release check inconclusive"; exit 1; }
+            echo "pre_release_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+      # ── Trust boundary: gate는 workflow ref(main)에서, target은 read-only ──
+      # 대상 SHA 트리에서 게이트를 빌드하면 그 트리에 --tag CLI가 없을 때
+      # 게이트가 push-ref 모드로 fallthrough해 "No version tags in push —
+      # gate passes silently"로 통과한다 (historical v0.5.8 실측 결함).
+      # 따라서 게이트 소스는 workflow ref에서만 가져오고, 대상 트리는 커밋
+      # 객체를 별도 worktree로 materialize해 메타데이터만 읽는다.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          cache-build-source: ${{ github.sha }}
+      - name: Materialize release target metadata (read-only worktree)
+        env:
+          TARGET_SHA: ${{ steps.verify.outputs.frozen_sha }}
+        run: |
+          set -euo pipefail
+          [ "$(git rev-parse HEAD)" = "$GITHUB_SHA" ] \
+            || { echo "::error::verify-metadata: trusted checkout SHA mismatch"; exit 1; }
+          if ! git cat-file -e "${TARGET_SHA}^{commit}" 2>/dev/null; then
+            git fetch --no-tags origin "$TARGET_SHA" --depth=1 \
+              || { echo "::error::verify-metadata: cannot fetch target $TARGET_SHA"; exit 1; }
+          fi
+          git worktree add --detach /tmp/release-target "$TARGET_SHA"
+          [ "$(git -C /tmp/release-target rev-parse HEAD)" = "$TARGET_SHA" ] \
+            || { echo "::error::verify-metadata: target worktree SHA mismatch"; exit 1; }
+          ( cd /tmp/release-target && nimble dump --json > /tmp/target-nimble.json )
+          jq -e '.version | type == "string"' /tmp/target-nimble.json >/dev/null \
+            || { echo "::error::verify-metadata: nimble dump JSON has no string version"; exit 1; }
+          echo "TARGET_METADATA: version=$(jq -r .version /tmp/target-nimble.json) sha=$TARGET_SHA"
+      - name: Verify release tag against target metadata (trusted gate)
+        env:
+          TARGET_SHA: ${{ steps.verify.outputs.frozen_sha }}
+          VERSION_NORM: ${{ steps.verify.outputs.version_norm }}
+        run: |
+          set -euo pipefail
+          [ "$(git rev-parse HEAD)" = "$GITHUB_SHA" ] \
+            || { echo "::error::verify-metadata: trusted checkout SHA mismatch"; exit 1; }
+          CH="$(nimble path checksums | head -1)"
+          [ -n "$CH" ] || { echo "::error::verify-metadata: checksums dependency path missing"; exit 1; }
+          nim c --hints:off --skipParentCfg --skipProjCfg \
+            --path:src --path:tools --path:"$CH" \
+            -o:/tmp/release_version_gate src/gate/runners/release_version_gate.nim
+          /tmp/release_version_gate --tag "$VERSION_NORM" \
+            --nimble-json /tmp/target-nimble.json \
+            --lakefile /tmp/release-target/lakefile.toml
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-version-gate
+          path: /tmp/release_version_gate
+          retention-days: 1
+          if-no-files-found: error
+
+  full-l2:
+    needs: [freeze, verify-metadata]
+    if: ${{ always() && needs.verify-metadata.result == 'success' }}
+    uses: ./.github/workflows/runner-pool-acceptance.yml
+    with:
+      force_full: true
+      target_sha: ${{ needs.verify-metadata.outputs.frozen_sha }}
+
+  # ── assert-l2-scope — callee 실행 범위 계약 대조 (fail-closed) ─────────────
+  # 왜 형제 잡인가 — GitHub Actions 제약: `uses:` 재사용 워크플로 잡은 `steps:`
+  # 를 가질 수 없다. 따라서 대조는 형제 잡(full-l2와 동일 needs 체인)에서
+  # 수행한다. full-l2가 "호출 성공"이어도 *무엇이* 실행되었는지는 별도 검증
+  # 대상이다 — callee가 발행한 실행 집합을 기대 계약과 정확히 대조한다.
+  #
+  # 기대 계약 (epoch N+7 — SL-09 미승격): build + provenance.
+  #   권위: config/policy/epoch_manifest.json — SL-09 ∈ notYetImplementedSlices
+  #         → SL-09 귀속 잡 4종은 게이트 false로 미실행.
+  #   형태: callee의 `executed_jobs` 정규 문자열(name=conclusion, 정렬, 쉼표
+  #         결합). SKIPPED는 SUCCESS와 collapse되지 않으며, SL-09 미승격
+  #         스킵은 사유 토큰(sl09_not_promoted)을 명시한다.
+  #   갱신 규칙: SL-09 승격 PR(epoch 변경)은 이 계약 문자열을 *함께* 갱신해야
+  #         한다 — 갱신하지 않으면 이 잡이 fail-closed로 출하를 막는다. 이것이
+  #         의도된 동작이다(검증 스코프 변경은 명시적 계약을 요구한다).
+  #         (proof-reconcile은 decision 부재 경로에서 설계상 계속 skipped다 —
+  #          ADR-0024 — 따라서 승격 후에도 expected의 proof-reconcile 항목은
+  #          skipped 유지.)
+  assert-l2-scope:
+    needs: [verify-metadata, full-l2]
+    if: ${{ always() && needs.verify-metadata.result == 'success' && needs['full-l2'].result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Assert callee executed-job set matches the epoch scope contract
+        env:
+          EXECUTED_JOBS: ${{ needs['full-l2'].outputs.executed_jobs }}
+          SCOPE_SL09: ${{ needs['full-l2'].outputs.scope_sl09 }}
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::assert-l2-scope: $1"; exit 1; }
+          EXPECTED='candidate-build-arm=skipped(sl09_not_promoted),ci-bootstrap=success,gateway-identity-gate=skipped(sl09_not_promoted),gateway-shard=skipped(sl09_not_promoted),proof-reconcile=skipped(sl09_not_promoted),select=skipped'
+          OBSERVED="${EXECUTED_JOBS:-}"
+          [ -n "$OBSERVED" ] || fail "callee published no executed_jobs output — the callee's executed-job set is unobserved (fail-closed)"
+          [ "$SCOPE_SL09" = "false" ] || fail "callee scope_sl09='$SCOPE_SL09' — the expected contract below is the SL-09-not-promoted epoch (config/policy/epoch_manifest.json notYetImplementedSlices); an SL-09 promotion PR must update this contract in the same change"
+          if [ "$OBSERVED" != "$EXPECTED" ]; then
+            echo "::error::assert-l2-scope: executed-job set mismatch (fail-closed)"
+            echo "expected: $EXPECTED"
+            echo "observed: $OBSERVED"
+            declare -a exp=() obs=()
+            IFS=',' read -r -a exp <<< "$EXPECTED"
+            IFS=',' read -r -a obs <<< "$OBSERVED"
+            for e in "${exp[@]}"; do
+              hit=0
+              for o in "${obs[@]}"; do
+                if [ "$e" = "$o" ]; then hit=1; break; fi
+              done
+              if [ "$hit" -ne 1 ]; then
+                echo "::error::assert-l2-scope: missing or mis-concluded: $e"
+              fi
+            done
+            for o in "${obs[@]}"; do
+              hit=0
+              for e in "${exp[@]}"; do
+                if [ "$e" = "$o" ]; then hit=1; break; fi
+              done
+              if [ "$hit" -ne 1 ]; then
+                echo "::error::assert-l2-scope: unexpected job entry: $o"
+              fi
+            done
+            exit 1
+          fi
+          echo "assert-l2-scope: OK — callee executed-job set matches the epoch scope contract"
+          echo "observed: $OBSERVED"
+
+  # ── verify-binary — full-l2 산출 bin/ax의 provenance와 --version 검증 ──────
+  # ci-bootstrap-artifacts의 bin/ax가 frozen_sha 트리에서 빌드됐음을
+  # --check-provenance(BuildSourceHash == live src tree)로 확인한다.
+  verify-binary:
+    needs: [freeze, verify-metadata, full-l2]
+    if: ${{ always() && needs.verify-metadata.result == 'success' && needs['full-l2'].result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.verify-metadata.outputs.frozen_sha }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        id: ci-artifact
+        with:
+          name: ci-bootstrap-artifacts
+          path: /tmp/ci-bootstrap-artifacts
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-version-gate
+          path: /tmp/release-version-gate
+      - name: Install libpcre3 (bin/ax dlopen dependency)
+        run: |
+          set -euo pipefail
+          if ldconfig -p 2>/dev/null | grep -q 'libpcre\.so\.3'; then
+            echo "libpcre3 present — skip install"
+          else
+            sudo apt-get -o DPkg::Lock::Timeout=300 update -qq
+            sudo apt-get -o DPkg::Lock::Timeout=300 install -y -qq libpcre3
+          fi
+          ldconfig -p | grep 'libpcre\.so\.3' >/dev/null \
+            || { echo "::error::verify-binary: libpcre.so.3 absent after install"; exit 1; }
+      - name: Verify artifact provenance and binary version
+        env:
+          TARGET_SHA: ${{ needs.verify-metadata.outputs.frozen_sha }}
+          VERSION_NORM: ${{ needs.verify-metadata.outputs.version_norm }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          [ "$(git rev-parse HEAD)" = "$TARGET_SHA" ] \
+            || { echo "::error::verify-binary: checkout SHA mismatch"; exit 1; }
+          ARTIFACT_JSON="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?name=ci-bootstrap-artifacts")"
+          ARTIFACT_ID="$(printf '%s' "$ARTIFACT_JSON" | jq -r '.artifacts[0].id // empty')"
+          ARTIFACT_DIGEST="$(printf '%s' "$ARTIFACT_JSON" | jq -r '.artifacts[0].digest // empty')"
+          [ -n "$ARTIFACT_ID" ] && [ -n "$ARTIFACT_DIGEST" ] \
+            || { echo "::error::verify-binary: artifact identity unavailable"; exit 1; }
+          printf 'run_id=%s\nrun_attempt=%s\nartifact_id=%s\nartifact_digest=%s\n' \
+            "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$ARTIFACT_ID" "$ARTIFACT_DIGEST" \
+            | tee /tmp/artifact-identity.txt
+          mkdir -p bin
+          cp /tmp/ci-bootstrap-artifacts/bin/ax bin/ax
+          chmod +x bin/ax /tmp/release-version-gate/release_version_gate
+          sha256sum bin/ax | tee /tmp/artifact-sha256.txt
+          cat /tmp/ci-bootstrap-artifacts/manifest.txt | tee /tmp/artifact-manifest.txt
+          BUILD_SHA="$(sed -n 's/^build_sha *= *//p' /tmp/ci-bootstrap-artifacts/manifest.txt | head -1)"
+          [ "$BUILD_SHA" = "$TARGET_SHA" ] \
+            || { echo "::error::verify-binary: manifest build_sha '$BUILD_SHA' != frozen '$TARGET_SHA'"; exit 1; }
+          EXPECTED_SHA="$(awk '$2 == "bin/ax" {print $1}' /tmp/ci-bootstrap-artifacts/manifest.txt | head -1)"
+          ACTUAL_SHA="$(sha256sum bin/ax | cut -d' ' -f1)"
+          [ -n "$EXPECTED_SHA" ] && [ "$ACTUAL_SHA" = "$EXPECTED_SHA" ] \
+            || { echo "::error::verify-binary: bin/ax sha256 '$ACTUAL_SHA' != manifest '$EXPECTED_SHA'"; exit 1; }
+          AXIOM_ROOT="$GITHUB_WORKSPACE" bin/ax --check-provenance > /tmp/provenance.txt 2>&1 \
+            || { cat /tmp/provenance.txt; echo "::error::verify-binary: provenance FAIL"; exit 1; }
+          cat /tmp/provenance.txt
+          /tmp/release-version-gate/release_version_gate --tag "$VERSION_NORM" --binary bin/ax
+          bin/ax --version | tee /tmp/binary-version.txt
+      - name: Preserve verification evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-verify-evidence
+          path: |
+            /tmp/artifact-identity.txt
+            /tmp/artifact-sha256.txt
+            /tmp/artifact-manifest.txt
+            /tmp/provenance.txt
+            /tmp/binary-version.txt
+          retention-days: 7
+          if-no-files-found: warn
+
+  # ── assemble-bundle — §1b 바이너리 배포 번들 조립 (Phase 6 S3) ──────────
+  # ci-bootstrap-artifacts의 bin/ax(verify-binary가 provenance·manifest
+  # sha256·--version를 이미 단언)와 frozen tree의 tracked §1b 입력으로 배포
+  # 자산 3종을 조립한다:
+  #   * axiom-bundle-<version>-linux-x86_64.tar.gz — ax를 번들 루트에 직접
+  #     배치(§1b: bin/ 하위 배치 시 SourceCoherence FATAL — bundle_tool이
+  #     명시 거부) + config/spec/ + data/verification_scope.lock·baseline.json·
+  #     bug_attribution/ + .axiom_root + SAL 1.0 §6.1 파일 3종
+  #   * SHA256SUMS(bundle tar.gz + manifest.json 커버 — attestation-bundle은
+  #     GitHub 서명 이후 산출되고 스스로 서명 인증되므로 제외)
+  #   * manifest.json(버전·원본 소스 커밋·빌드 SHA·바이너리 sha256)
+  # 도구(tools/release/bundle_tool.nim)는 2회 조립 바이트 cmp 단언 +
+  # nimble 버전 재단언(태그=nimble 버전) + tracked-input dirty 거부를
+  # fail-closed로 수행한다. 조립 직후 bundle_tool verify가 해제·레이아웃·
+  # 해시 결속·트리 완전 동치·./ax --version 실실행(libpcre3 포함)으로
+  # 전수 재검증한다 — 검증 로직의 단일 구현을 릴리즈 빌드 측과 고객측이
+  # 공유한다(theater 금지: 별도의 느슨한 사본을 만들지 않는다).
+  assemble-bundle:
+    needs: [freeze, verify-metadata, full-l2, assert-l2-scope, verify-binary]
+    if: ${{ !inputs.validation_only && needs.freeze.result == 'success' && needs.verify-metadata.result == 'success' && needs['full-l2'].result == 'success' && needs.assert-l2-scope.result == 'success' && needs.verify-binary.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.verify-metadata.outputs.frozen_sha }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ci-bootstrap-artifacts
+          path: /tmp/ci-bootstrap-artifacts
+      - name: Install libpcre3 (bundle ax runtime dlopen dependency)
+        run: |
+          set -euo pipefail
+          if ldconfig -p 2>/dev/null | grep -q 'libpcre\.so\.3'; then
+            echo "libpcre3 present — skip install"
+          else
+            sudo apt-get -o DPkg::Lock::Timeout=300 update -qq
+            sudo apt-get -o DPkg::Lock::Timeout=300 install -y -qq libpcre3
+          fi
+          ldconfig -p | grep 'libpcre\.so\.3' >/dev/null \
+            || { echo "::error::assemble-bundle: libpcre.so.3 absent after install"; exit 1; }
+      # bundle_tool 컴파일 — §1b 조립·검증 로직의 단일 구현(tools/release/
+      # bundle_tool.nim, Language Ban: 신규 .sh 금지 → Nim 정경로). freeze ②
+      # 바인딩(frozen SHA == github.sha)이므로 이 트리 == 워크플로 ref 트리.
+      # 캐시는 B-restore만(save 없음 — ci-cache-publisher가 유일 save 권한).
+      - uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          cache-save-enabled: 'false'
+          cache-build-source: ${{ needs.verify-metadata.outputs.frozen_sha }}
+      - name: Compile bundle_tool (single-source assemble/verify tool)
+        run: |
+          set -euo pipefail
+          CH="$(nimble path checksums | head -1)"
+          [ -n "$CH" ] || { echo "::error::assemble-bundle: checksums dependency path missing"; exit 1; }
+          nim c --hints:off --skipParentCfg --skipProjCfg \
+            --path:src --path:tools --path:"$CH" \
+            -o:/tmp/bundle_tool tools/release/bundle_tool.nim
+      - name: Assemble §1b distribution bundle (fail-closed chain from L2 build)
+        env:
+          TARGET_SHA: ${{ needs.verify-metadata.outputs.frozen_sha }}
+          VERSION_NORM: ${{ needs.verify-metadata.outputs.version_norm }}
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::assemble-bundle: $1" >&2; exit 1; }
+          [ "$(git rev-parse HEAD)" = "$TARGET_SHA" ] \
+            || fail "checkout SHA mismatch (expected frozen $TARGET_SHA)"
+          # L2 빌드 체인 재단언(verify-binary와 동일 규칙): ci manifest
+          # build_sha == frozen sha ∧ artifact bin/ax sha256 == ci manifest.
+          BUILD_SHA="$(sed -n 's/^build_sha *= *//p' /tmp/ci-bootstrap-artifacts/manifest.txt | head -1)"
+          [ "$BUILD_SHA" = "$TARGET_SHA" ] \
+            || fail "ci manifest build_sha '$BUILD_SHA' != frozen '$TARGET_SHA'"
+          EXPECTED_BIN_SHA="$(awk '$2 == "bin/ax" {print $1}' /tmp/ci-bootstrap-artifacts/manifest.txt | head -1)"
+          [ -n "$EXPECTED_BIN_SHA" ] || fail "ci manifest has no bin/ax sha256 line"
+          ACTUAL_BIN_SHA="$(sha256sum /tmp/ci-bootstrap-artifacts/bin/ax | cut -d' ' -f1)"
+          [ "$ACTUAL_BIN_SHA" = "$EXPECTED_BIN_SHA" ] \
+            || fail "artifact bin/ax sha256 '$ACTUAL_BIN_SHA' != ci manifest '$EXPECTED_BIN_SHA'"
+          # download-artifact는 실행 비트를 보존하지 않고(실측: run
+          # 42544374665 Permission denied), --check-provenance의 SourceCoherence
+          # 계약은 self==<repoRoot>/bin/ax 정경로 단언이다(provenance_probe.nim:
+          # "non-canonical self-path is itself a provenance failure" — 실측: run
+          # 42547528046). verify-binary와 동일하게 sha256 검증 통과 후
+          # 워크스페이스 bin/ax로 복사·chmod하고 정경로에서 실행한다
+          # (bin/ax는 git 미추적 — 트리 무변경, bundle_tool도 동일 카피 소비).
+          cp /tmp/ci-bootstrap-artifacts/bin/ax "$GITHUB_WORKSPACE/bin/ax"
+          chmod +x "$GITHUB_WORKSPACE/bin/ax"
+          AXIOM_ROOT="$GITHUB_WORKSPACE" "$GITHUB_WORKSPACE/bin/ax" --check-provenance \
+            || fail "bin/ax provenance FAIL against frozen tree (SourceCoherence)"
+          /tmp/bundle_tool assemble \
+            --repo-root "$GITHUB_WORKSPACE" \
+            --binary "$GITHUB_WORKSPACE/bin/ax" \
+            --expected-binary-sha256 "$EXPECTED_BIN_SHA" \
+            --version "$VERSION_NORM" \
+            --source-commit "$TARGET_SHA" \
+            --build-sha "$BUILD_SHA" \
+            --out-dir /tmp/release-bundle-assets
+      - name: Verify bundle (layout · hashes · manifest · tree equality · runtime)
+        env:
+          TARGET_SHA: ${{ needs.verify-metadata.outputs.frozen_sha }}
+          VERSION_NORM: ${{ needs.verify-metadata.outputs.version_norm }}
+        run: |
+          set -euo pipefail
+          /tmp/bundle_tool verify \
+            --dir /tmp/release-bundle-assets \
+            --extract-to /tmp/bundle-verify-extract \
+            --repo-root "$GITHUB_WORKSPACE" \
+            --expect-version "$VERSION_NORM" \
+            --expect-source-commit "$TARGET_SHA" \
+            --expect-build-sha "$TARGET_SHA" \
+            --run-binary
+      - name: Upload distribution assets (bundle · sums · manifest)
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-bundle-assets
+          path: /tmp/release-bundle-assets
+          retention-days: 7
+          if-no-files-found: error
+
+  # ── attest-bundle — §1b attestation bundle 생성 + 오프라인 검증 (S3) ─────
+  # bundle tar.gz에 GitHub artifact attestation을 생성하고(actions/
+  # attest-build-provenance, SHA 핀), 그 번들을 다운로드해 배포 자산
+  # (attestation-bundle.jsonl)으로 동반한다. 검증은 고객측과 동일한 명령
+  # 경로(gh attestation verify --bundle … --repo/--signer-repo
+  # Archright/Axiom 핀)로 오프라인 수행한다 — §1b 신뢰 모델: 고객은 자기
+  # GITHUB_TOKEN만 쓰고 Archright API 접근 0.
+  # 권한: id-token:write + attestations:write(OIDC 서명 + attestation 저장).
+  # contents:write 없음 — TrustedWriterSet 관측 집합 무변경(top-level
+  # contents: read 유지).
+  # bundle_tool verify는 자산 일관성(SHA256SUMS·manifest·레이아웃·바이너리
+  # sha256)도 재검증한다(artifact 왕복 무결성) — assemble-bundle이 이미
+  # 수행한 트리 동치·실실행과 중복되지 않는 고객측 부분집합 + attestation.
+  attest-bundle:
+    needs: [freeze, verify-metadata, full-l2, assert-l2-scope, verify-binary, assemble-bundle]
+    if: ${{ !inputs.validation_only && needs.freeze.result == 'success' && needs.verify-metadata.result == 'success' && needs['full-l2'].result == 'success' && needs.assert-l2-scope.result == 'success' && needs.verify-binary.result == 'success' && needs.assemble-bundle.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      # 게이트·도구는 workflow ref(=dispatch ref, main)에서 — frozen tree가
+      # 이 도구를 갖고 있지 않을 수 있는 과도기에도 검증 로직이 파손되지
+      # 않는다(verify-metadata의 신뢰 경계 원칙과 동일).
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-bundle-assets
+          path: /tmp/release-bundle-assets
+      # bundle_tool 컴파일 — assemble 측과 동일 단일 소스(tools/release/
+      # bundle_tool.nim)를 워크플로 ref 트리(github.sha 체크아웃)에서
+      # 컴파일한다. B-restore만(save 없음).
+      - uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          cache-save-enabled: 'false'
+          cache-build-source: ${{ github.sha }}
+      - name: Compile bundle_tool (single-source verify tool, workflow ref)
+        run: |
+          set -euo pipefail
+          CH="$(nimble path checksums | head -1)"
+          [ -n "$CH" ] || { echo "::error::attest-bundle: checksums dependency path missing"; exit 1; }
+          nim c --hints:off --skipParentCfg --skipProjCfg \
+            --path:src --path:tools --path:"$CH" \
+            -o:/tmp/bundle_tool tools/release/bundle_tool.nim
+      - name: Attest bundle tar.gz (build provenance)
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: /tmp/release-bundle-assets/axiom-bundle-*.tar.gz
+      - name: Download attestation bundle + offline verify (customer-side contract)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_SHA: ${{ needs.verify-metadata.outputs.frozen_sha }}
+          VERSION_NORM: ${{ needs.verify-metadata.outputs.version_norm }}
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::attest-bundle: $1" >&2; exit 1; }
+          cd /tmp/release-bundle-assets
+          BUNDLE_TAR="$(ls axiom-bundle-*.tar.gz | head -1)"
+          [ -n "$BUNDLE_TAR" ] || fail "no bundle tarball in artifact"
+          # gh attestation download는 현재 디렉터리에 sha256:<digest>.jsonl로
+          # 기록한다(실측: run 42551092887 러너 + 로컬 gh 재현 — 콜론 형식.
+          # 이전 주석의 'sha256-' 대시 형식은 관측 오기였다). 세퍼레이터는 gh
+          # 버전에 따라 달라질 수 있으므로 두 형식을 모두 수용한다. 배포
+          # 자산명으로 고정 이동.
+          gh attestation download "$BUNDLE_TAR" -R "$GITHUB_REPOSITORY" \
+            || fail "gh attestation download failed (attestation absent for $BUNDLE_TAR)"
+          ATTEST_FILE="$(find . -maxdepth 1 -type f \( -name 'sha256:*.jsonl' -o -name 'sha256-*.jsonl' \) -print -quit 2>/dev/null || true)"
+          [ -n "$ATTEST_FILE" ] || fail "attestation bundle file not produced by download"
+          mv "$ATTEST_FILE" attestation-bundle.jsonl
+          # 고객측 검증 경로 재실행(오프라인 --bundle + --signer-repo 핀) —
+          # bundle_tool verify가 자산 일관성도 함께 재검증한다.
+          /tmp/bundle_tool verify \
+            --dir /tmp/release-bundle-assets \
+            --extract-to /tmp/bundle-attest-verify \
+            --expect-version "$VERSION_NORM" \
+            --expect-source-commit "$TARGET_SHA" \
+            --expect-build-sha "$TARGET_SHA" \
+            --attestation-bundle /tmp/release-bundle-assets/attestation-bundle.jsonl
+      - name: Upload final distribution assets (+ attestation-bundle)
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-bundle-final
+          path: /tmp/release-bundle-assets
+          retention-days: 7
+          if-no-files-found: error
+
+  # ── publish — control confirmation 후 App 토큰으로만 발행 (ADR-0024) ──────
+  # environment: release-authority = 명시적 출하 확인 (required reviewer
+  # wintrover, prevent_self_review=false, can_admins_bypass=true — 2026-10-20 REST 실측;
+  # 단일 관리자 체제에서 이 게이트는 자기 승인/관리자 우회를 막지 못한다).
+  # ADR-0024 [3] 부정적 정의: 단일 운영자 조직에서 이는 4-eyes review가 아니라
+  # control confirmation이며, 차단하는 것은 (a) required reviewer 밖 행위자의
+  # 발행, (b) L2 결과를 보고 거부할 기회, (c) 감사 기록뿐이다.
+  # GITHUB_TOKEN은 contents: read — 모든 ref/release write는 App 토큰으로만.
+  publish:
+    needs: [freeze, verify-metadata, full-l2, assert-l2-scope, verify-binary, assemble-bundle, attest-bundle]
+    # 계획서 표기 needs.full_l2 = 이 파일의 job id full-l2 (bracket 접근).
+    # assert-l2-scope = callee 실행 집합 계약 대조 (build+provenance 스코프
+    # 단언) — 게이트는 fail-closed이므로 이 잡이 성공해야 발행된다.
+    # assemble-bundle·attest-bundle = §1b S3: 배포 자산(번들·SHA256SUMS·
+    # manifest·attestation-bundle)이 검증 통과 상태로 이 잡에 도달해야
+    # 발행한다(잡 미성공 = 발행 불가, fail-closed).
+    if: ${{ !inputs.validation_only && needs.freeze.result == 'success' && needs.verify-metadata.result == 'success' && needs['full-l2'].result == 'success' && needs.assert-l2-scope.result == 'success' && needs.verify-binary.result == 'success' && needs.assemble-bundle.result == 'success' && needs.attest-bundle.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: release-authority
+    env:
+      # 발행 경로 = [A] 단일 POST (CE#2 실험 2026-09-26 — 사전 등록 규칙 충족:
+      # M3(human 신규 v* 자동생성) BLOCK AND M6(App 단일 POST) ALLOW → [A] 채택.
+      # 실측: release_boundary_protocol.md §5 (6칸 matrix + 대조 실험).
+      #   A = 단일 POST /releases (tag_name + target_commitish=FROZEN_SHA 자동
+      #       tag 생성) — 더 작음 (orphan/ref실패/human race 제거). peel 단언은
+      #       경로 공통 단계에서 lightweight/annotated 이중 처리로 실측 검증됨.
+      #   B = 4단계 (예비 경로 — 코드 보존, 미사용).
+      PUBLISH_PATH: A
+    steps:
+      # ── App installation token (axiom-release-authority, Contents:write) ──
+      # 키 = release-authority environment 스코프 시크릿 (환경 밖 접근 불가).
+      # 저장소 pin 관례(SHA + # major 주석)에 따라 공식 릴리즈 v3.2.0 커밋으로
+      # 핀 (bcd2ba4… = actions/create-github-app-token v3.2.0 tag peel 검증 완료).
+      # App 미생성 시점(Phase 3 전)에는 시크릿 부재로 이 job이 실패 — 그게
+      # fail-closed다 (조용한 우회 없음).
+      # 대안 (액션 도입 불가 시): App PEM으로 JWT(ES256) 서명 후
+      #   POST /app/installations/{installation_id}/access_tokens 로 토큰 직접
+      #   발급 (curl + openssl dgst -sha256 -sign PEM — ADR-0024 §8 PEM 절차).
+      - name: Create App installation token (release-authority)
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          # numeric App ID(5082347)와 일치하는 app-id 입력 사용 (v3의 client-id는
+          # Client ID 문자열(Iv...) 전용 — README: legacy app-id 입력도 계속 지원).
+          app-id: ${{ secrets.RELEASE_AUTHORITY_APP_ID }}
+          private-key: ${{ secrets.RELEASE_AUTHORITY_PRIVATE_KEY }}
+          # App 설치가 이 repo 단일이면 생략 가능. 다중 설치 시 확정 필수:
+          # installation-id: ${{ secrets.RELEASE_AUTHORITY_INSTALLATION_ID }}
+          # 최소 권한: Release/ref write에 필요한 contents만 (App 자체 권한도
+          # Contents:write만 — ADR-0024 In Scope #8).
+          permission-contents: write
+
+      # ── 발행 (PUBLISH_PATH 상수로 A/B 전환) ──
+      # 실패 분류 (ADR-0024 FAIL/UNCERTAIN, 동일 job):
+      #   definitive (4xx) → release 존재 확인 → 없으면 tag 삭제 후 exit 1
+      #   ambiguous (timeout/5xx/미판별) → tag 삭제 금지, ::error UNCERTAIN 후
+      #   exit 2 (수동 재확인 전 출하 금지). 분류는 gh api exit + stderr의
+      #   "HTTP <code>" 패턴으로 판별한다. 성공/실패 모드는 GITHUB_ENV
+      #   (PUBLISH_RESULT)로 기록해 if: always() 정리 step에 전달.
+      - name: Publish release (PATH=$PUBLISH_PATH)
+        id: publish
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          FROZEN_SHA: ${{ needs.freeze.outputs.frozen_sha }}
+          VERSION_NORM: ${{ needs.freeze.outputs.version_norm }}
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::RELEASE_PUBLISH: FAIL — $1" >&2; exit 1; }
+          uncertain() {
+            echo "::error::RELEASE_PUBLISH: UNCERTAIN — $1 — tag 보존, 수동 재확인 후 재출하 (ADR-0024 UNCERTAIN)" >&2
+            echo "PUBLISH_RESULT=uncertain" >> "$GITHUB_ENV"
+            exit 2
+          }
+          classify() {
+            KIND="$1"; RESP="$2"; RC="$3"
+            if [ "$RC" -eq 0 ]; then
+              return 0
+            fi
+            HTTP="$(printf '%s' "$RESP" | sed -n 's/.*HTTP \([0-9][0-9][0-9]\).*/\1/p' || true)"
+            case "$HTTP" in
+              4[0-9][0-9])
+                # definitive — release 존재 확인 후 정리 (없으면 tag 삭제)
+                set +e
+                gh api "repos/$GITHUB_REPOSITORY/releases/tags/$VERSION_NORM" >/dev/null 2>&1
+                REL_RC=$?
+                set -e
+                if [ "$REL_RC" -eq 0 ]; then
+                  echo "PUBLISH_RESULT=release-exists" >> "$GITHUB_ENV"
+                  fail "$KIND HTTP $HTTP — 하지만 release $VERSION_NORM 존재 — 삭제 금지, 수동 검토 필요"
+                fi
+                # tag ref가 실제 존재할 때만 삭제 (없으면 정리 대상 없음)
+                set +e
+                gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$VERSION_NORM" >/dev/null 2>&1
+                REF_RC=$?
+                set -e
+                if [ "$REF_RC" -eq 0 ]; then
+                  if ! gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/$VERSION_NORM" >/dev/null 2>&1; then
+                    echo "::error::RELEASE_PUBLISH: tag $VERSION_NORM 삭제 실패 — 수동 정리 필요 (gh api -X DELETE .../git/refs/tags/$VERSION_NORM)" >&2
+                  fi
+                else
+                  echo "RELEASE_PUBLISH: tag ref $VERSION_NORM 없음 — 정리 대상 없음"
+                fi
+                echo "PUBLISH_RESULT=definitive-fail" >> "$GITHUB_ENV"
+                fail "$KIND HTTP $HTTP — definitive 실패: release 없음 확인 + tag 삭제 완료"
+                ;;
+              5[0-9][0-9]|"")
+                uncertain "$KIND HTTP ${HTTP:-<미판별>} (rc=$RC)"
+                ;;
+              *)
+                echo "PUBLISH_RESULT=ambiguous-other" >> "$GITHUB_ENV"
+                fail "$KIND HTTP $HTTP (rc=$RC) — 예상 밖 HTTP 상태"
+                ;;
+            esac
+          }
+          case "$PUBLISH_PATH" in
+            A)
+              # ─────────────────────────────────────────────────────────────
+              # [A] 단일 POST /releases — Release API가 tag_name +
+              # target_commitish=FROZEN_SHA로 tag를 자동 생성한다 (lightweight/
+              # commit-type일 수 있음 → peel 단언이 두 형태를 모두 처리).
+              # target==default branch tip이므로 Workflows:write 미발동
+              # (ADR-0024 ⑨) — 단 v* ruleset 통과 여부는 미문서 → Phase 3
+              # 실험에서 App 성공 + human 신규 v* 차단 확인 후에만 [A] 활성화.
+              # ─────────────────────────────────────────────────────────────
+              set +e
+              PUB_RESP="$(gh api "repos/$GITHUB_REPOSITORY/releases" -X POST \
+                -f tag_name="$VERSION_NORM" \
+                -f target_commitish="$FROZEN_SHA" \
+                -F draft=false 2>&1)"
+              PUB_RC=$?
+              set -e
+              if [ "$PUB_RC" -eq 0 ]; then
+                echo "PUBLISH_RESULT=success" >> "$GITHUB_ENV"
+                printf '%s' "$PUB_RESP" | jq -r '"RELEASE_PUBLISH [A]: OK — " + (.html_url // .url)'
+              else
+                classify "POST /releases [A]" "$PUB_RESP" "$PUB_RC"
+              fi
+              ;;
+            B)
+              # ─────────────────────────────────────────────────────────────
+              # [B] 4단계 (기본): ①POST /git/tags ②POST /git/refs ③peel 단언
+              # (다음 step) ④POST /releases. ②의 ref 생성이 같은 version 동시
+              # 충돌의 원자적 차단점 (422 → definitive, ADR-0024 2중 유일성 2).
+              # ①의 orphan tag object(② 실패 시)는 ref가 없으면 보이지 않고
+              # GitHub GC 대상 (ADR-0024 잔여 한계 인지). ④의 targetCommitish는
+              # 기존 tag에서 unused — provenance는 peel로만 판정한다.
+              # ─────────────────────────────────────────────────────────────
+              set +e
+              TAG_RESP="$(gh api "repos/$GITHUB_REPOSITORY/git/tags" -X POST \
+                -f tag="$VERSION_NORM" \
+                -f message="Release $VERSION_NORM — frozen $FROZEN_SHA (release-ship, ADR-0024)" \
+                -f object="$FROZEN_SHA" -f type=commit 2>&1)"
+              TAG_RC=$?
+              set -e
+              if [ "$TAG_RC" -ne 0 ]; then
+                classify "POST /git/tags [B]①" "$TAG_RESP" "$TAG_RC"
+              fi
+              TAG_OBJ_SHA="$(printf '%s' "$TAG_RESP" | jq -r '.sha')"
+              printf '%s' "$TAG_OBJ_SHA" | grep -qE '^[0-9a-f]{40}$' || fail "[B]① tag object sha malformed: '$TAG_OBJ_SHA'"
+              set +e
+              REF_RESP="$(gh api "repos/$GITHUB_REPOSITORY/git/refs" -X POST \
+                -f ref="refs/tags/$VERSION_NORM" -f sha="$TAG_OBJ_SHA" 2>&1)"
+              REF_RC=$?
+              set -e
+              if [ "$REF_RC" -ne 0 ]; then
+                classify "POST /git/refs [B]②" "$REF_RESP" "$REF_RC"
+              fi
+              set +e
+              REL_RESP="$(gh api "repos/$GITHUB_REPOSITORY/releases" -X POST \
+                -f tag_name="$VERSION_NORM" \
+                -f name="$VERSION_NORM" \
+                -f body="Axiom $VERSION_NORM — frozen $FROZEN_SHA — peel provenance (ADR-0024)" 2>&1)"
+              REL_RC=$?
+              set -e
+              if [ "$REL_RC" -eq 0 ]; then
+                echo "PUBLISH_RESULT=success" >> "$GITHUB_ENV"
+                printf '%s' "$REL_RESP" | jq -r '"RELEASE_PUBLISH [B]: OK — " + (.html_url // .url)'
+              else
+                classify "POST /releases [B]④" "$REL_RESP" "$REL_RC"
+              fi
+              ;;
+            *)
+              fail "unknown PUBLISH_PATH='$PUBLISH_PATH' (A|B) — PUBLISH_PATH 상수 오류"
+              ;;
+          esac
+
+      # ── peel 단언 — provenance 필수 (ADR-0024, 경로 A/B 공통) ──────────────
+      # GET /git/ref/tags/{version} →
+      #   object.type == 'tag' (annotated, 경로 B) → GET /git/tags/{sha} →
+      #     object.sha == FROZEN_SHA
+      #   object.type == 'commit' (lightweight — 경로 A의 Release API 자동 생성
+      #     tag) → object.sha 자체 == FROZEN_SHA
+      # targetCommitish는 증거로 사용하지 않는다 (ADR-0024 필수).
+      - name: Assert peel provenance (fail-closed)
+        if: ${{ steps.publish.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          FROZEN_SHA: ${{ needs.freeze.outputs.frozen_sha }}
+          VERSION_NORM: ${{ needs.freeze.outputs.version_norm }}
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::PEEL_ASSERT: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          REF_JSON="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$VERSION_NORM")" \
+            || fail "GET git/ref/tags/$VERSION_NORM failed"
+          OBJ_TYPE="$(printf '%s' "$REF_JSON" | jq -r '.object.type')"
+          OBJ_SHA="$(printf '%s' "$REF_JSON" | jq -r '.object.sha')"
+          case "$OBJ_TYPE" in
+            tag)
+              TAG_OBJ="$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$OBJ_SHA")" \
+                || fail "GET git/tags/$OBJ_SHA failed"
+              PEELED="$(printf '%s' "$TAG_OBJ" | jq -r '.object.sha')"
+              ;;
+            commit)
+              PEELED="$OBJ_SHA"
+              ;;
+            *)
+              fail "ref object.type='$OBJ_TYPE' (expect tag|commit) — provenance 불가"
+              ;;
+          esac
+          printf '%s' "$PEELED" | grep -qE '^[0-9a-f]{40}$' || fail "peeled sha malformed: '$PEELED'"
+          [ "$PEELED" = "$FROZEN_SHA" ] || fail "peel($VERSION_NORM)=${PEELED:0:12} != FROZEN_SHA=${FROZEN_SHA:0:12}"
+          echo "PEEL_ASSERT: OK — $VERSION_NORM peels to $FROZEN_SHA (ref type=$OBJ_TYPE)"
+
+      # ── §1b S3: Archright/axiom-cli 공개 배포 (cross-repo publish) ──────
+      # 동일한 control confirmation(environment release-authority)이 Axiom
+      # 릴리즈와 axiom-cli 배포를 함께 승인한다 — 단일 출하 승인 경계.
+      # 발행 절차 = draft 3단계(생성→자산→발행): axiom-cli는 immutable
+      # releases가 활성된 저장소이므로(실측: GET /immutable-releases →
+      # {"enabled":true}) 발행(published) 즉시 자산 추가가 422로 차단된다
+      # (실측: run 42554460237 — "Cannot upload assets to an immutable
+      # release"). GitHub 공식 권장 워크플로("create as drafts first, attach
+      # all assets, then publish")를 따른다. 태그는 publish 시점에
+      # target_commitish(②에서 캡처·핀한 axiom-cli main tip)에서 자동
+      # 생성된다(draft 생성 시점에는 존재하지 않는다 — 실측).
+      # 실패 의미론: Axiom 릴리즈가 이미 존재하는 상태에서 axiom-cli 발행이
+      # 실패하면(①~⑤ 어느 단계든) 이 잡은 exit 1로 실패하고 cleanup-guard는
+      # "release 존재 시 절대 삭제" 원칙에 따라 Axiom 릴리즈를 보존한다.
+      # axiom-cli 측 부분 상태(잔여 draft release 포함)는 절대 자동 삭제하지
+      # 않는다 — 수동 조정 대상이다(부분 상태가 draft여도 예외 없음).
+      # 재시도 경로의 잔여 한계: freeze NO-OP(동일 tag+SHA 재디스패치)은
+      # downstream 전부를 skip하므로 axiom-cli 누락분 자동 재발행 경로가
+      # 없다 — 수동 조정 또는 별도 개정이 필요하다(과장 금지: 명시 기록).
+      # 전문(실측 판정표 + 공식 문서 인용): docs/spec/gh_immutable_releases_quirks.md
+      - name: Download final distribution assets
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-bundle-final
+          path: /tmp/release-bundle-final
+
+      # Cross-repo 발행 자격 증명 — axiom-cli 쓰기 권한 GitHub App
+      # (axiom-cli-release-authority). Axiom 발행 App(axiom-release-
+      # authority)은 ADR-0024 In Scope #8의 Axiom 핀 위반 없이 재사용할 수
+      # 없으므로 별도 App이다(Contents:write, Archright/axiom-cli에만 설치).
+      # 시크릿은 release-authority environment에 스코프한다(환경 밖 접근
+      # 불가 — RELEASE_AUTHORITY_*와 동일 패턴).
+      # [운영자 프로비저닝 단계 — 이 워크플로는 선언적으로 소비만 한다]
+      #   1) GitHub App 생성(Contents: read & write, "Only on this
+      #      account" 설치는 axiom-cli 단일 저장소로 한정)
+      #   2) App installation → Archright/axiom-cli
+      #   3) release-authority environment 시크릿 등록:
+      #      AXIOM_CLI_RELEASE_APP_ID / AXIOM_CLI_RELEASE_PRIVATE_KEY
+      # 시크릿 부재 시 이 step이 실패한다 — 조용한 우회 없음(fail-closed).
+      - name: Create axiom-cli App installation token (release-authority)
+        id: cli-app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ secrets.AXIOM_CLI_RELEASE_APP_ID }}
+          private-key: ${{ secrets.AXIOM_CLI_RELEASE_PRIVATE_KEY }}
+          owner: Archright
+          repositories: axiom-cli
+          # 최소 권한: release(+tag) 발행에 필요한 contents만.
+          permission-contents: write
+
+      - name: Publish binary distribution release to Archright/axiom-cli (§1b)
+        env:
+          GH_TOKEN: ${{ steps.cli-app-token.outputs.token }}
+          FROZEN_SHA: ${{ needs.freeze.outputs.frozen_sha }}
+          VERSION_NORM: ${{ needs.freeze.outputs.version_norm }}
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::AXIOM_CLI_PUBLISH: FAIL — $1" >&2; exit 1; }
+          CLI_REPO="Archright/axiom-cli"
+          ASSETS="/tmp/release-bundle-final"
+          TARBALL="$(ls "$ASSETS"/axiom-bundle-*.tar.gz | head -1)"
+          [ -n "$TARBALL" ] || fail "bundle tarball missing in release-bundle-final artifact"
+          TARBALL_NAME="$(basename "$TARBALL")"
+          for asset in SHA256SUMS manifest.json attestation-bundle.jsonl; do
+            [ -f "$ASSETS/$asset" ] || fail "distribution asset '$asset' missing in release-bundle-final artifact"
+          done
+          BUNDLE_SHA="$(sha256sum "$TARBALL" | cut -d' ' -f1)"
+          BIN_SHA="$(jq -r '.binarySha256' "$ASSETS/manifest.json")"
+          # ① 기존 release/tag/draft 부재 단언 — immutable releases: clobber 없음.
+          #    published release는 GET /releases/tags/{tag}(published 전용),
+          #    git tag는 GET /git/ref/tags/{tag}, pending draft는 GraphQL
+          #    release(tagName:)(gh release upload가 draft를 해석하는 동일
+          #    조회 — REST 목록은 draft 생성 직후 eventual-consistency 지연이
+          #    관측된다). POST /releases는 동일 tag_name 중복을 거부하지
+          #    않으므로(실측) 이 단언이 유일성의 유일 게이트다.
+          #    404/null 외 응답(5xx/네트워크)은 fail-closed FAIL(불명확 = 진행 불가).
+          set +e
+          REL_RESP="$(gh api "repos/$CLI_REPO/releases/tags/$VERSION_NORM" 2>&1)"; REL_RC=$?
+          TAG_RESP="$(gh api "repos/$CLI_REPO/git/ref/tags/$VERSION_NORM" 2>&1)"; TAG_RC=$?
+          DRAFT_GQL="$(gh api graphql \
+            -f query='query($owner:String!,$repo:String!,$tag:String!){repository(owner:$owner,name:$repo){release(tagName:$tag){databaseId isDraft}}}' \
+            -f owner=Archright -f repo=axiom-cli -f tag="$VERSION_NORM" 2>&1)"; DRAFT_RC=$?
+          set -e
+          if [ "$REL_RC" -eq 0 ]; then
+            fail "① axiom-cli release $VERSION_NORM already exists (immutable — 재발행은 새 버전 필요)"
+          fi
+          printf '%s' "$REL_RESP" | grep -q 'HTTP 404' || fail "① release check inconclusive (rc=$REL_RC)"
+          if [ "$TAG_RC" -eq 0 ]; then
+            fail "① axiom-cli tag $VERSION_NORM exists without a release — 수동 조정 필요"
+          fi
+          printf '%s' "$TAG_RESP" | grep -q 'HTTP 404' || fail "① tag check inconclusive (rc=$TAG_RC)"
+          if [ "$DRAFT_RC" -ne 0 ]; then
+            fail "① draft check inconclusive (rc=$DRAFT_RC)"
+          fi
+          printf '%s' "$DRAFT_GQL" | jq -e 'has("errors") | not' >/dev/null \
+            || fail "① draft check inconclusive (GraphQL response unusable — errors/parse)"
+          printf '%s' "$DRAFT_GQL" | jq -e '.data.repository != null' >/dev/null \
+            || fail "① draft check inconclusive (repository unresolved)"
+          printf '%s' "$DRAFT_GQL" | jq -e '.data.repository.release == null' >/dev/null \
+            || fail "① axiom-cli draft release (pending tag $VERSION_NORM) exists — 이전 실패 run 잔재, 수동 조정 필요"
+          echo "AXIOM_CLI_PUBLISH: ① OK — no existing release/tag/draft $VERSION_NORM on $CLI_REPO"
+          # ② draft Release 생성 — 발행(published) 즉시 immutable이 되어 자산
+          #    업로드가 422로 차단되므로(실측: run 42554460237), GitHub 공식
+          #    권장(draft 생성 → 자산 첨부 → publish)으로 자산을 발행 *전에*
+          #    확정한다. target_commitish는 현재 axiom-cli main tip을 캡처해
+          #    핀한다 — 태그는 publish 시점에 이 SHA에서 자동 생성되고(draft
+          #    생성 시점엔 존재하지 않는다 — 실측), 핀으로 업로드/검증 사이
+          #    main 전진에도 태그 대상이 결정론적으로 유지된다(⑤에서 단언).
+          #    provenance 기록(Axiom FROZEN_SHA·해시·검증 절차)은 body에 남긴다.
+          BODY="Axiom $VERSION_NORM — binary distribution (productization contract §1b)
+
+          Source: Archright/Axiom@$FROZEN_SHA (release-ship freeze)
+          Assets:
+          - $TARBALL_NAME (sha256 $BUNDLE_SHA)
+          - SHA256SUMS — asset integrity (sha256sum -c SHA256SUMS)
+          - manifest.json — version / sourceCommit / buildSha / binarySha256
+          - attestation-bundle.jsonl — offline verification input
+
+          Customer-side verification (§1b trust model — own GITHUB_TOKEN only,
+          zero Archright API access):
+            sha256sum -c SHA256SUMS
+            gh attestation verify $TARBALL_NAME \
+              --bundle attestation-bundle.jsonl --repo Archright/Axiom \
+              --signer-repo Archright/Axiom
+
+          Bundle layout: ax at bundle root (not bin/), .axiom_root anchor,
+          config/spec/, data/verification_scope.lock + baseline.json +
+          bug_attribution/, SAL 1.0 compliance files (LICENSE, LICENSES/,
+          THIRD-PARTY-NOTICES.md — §5.1/§6.1).
+          Binary ax sha256: $BIN_SHA"
+          CLI_MAIN_SHA="$(gh api "repos/$CLI_REPO/git/ref/heads/main" --jq '.object.sha')" \
+            || fail "② GET $CLI_REPO main tip failed"
+          printf '%s' "$CLI_MAIN_SHA" | grep -qE '^[0-9a-f]{40}$' \
+            || fail "② axiom-cli main tip sha malformed: '$CLI_MAIN_SHA'"
+          DRAFT_RESP="$(gh api "repos/$CLI_REPO/releases" -X POST \
+            -f tag_name="$VERSION_NORM" \
+            -f name="Axiom $VERSION_NORM — binary distribution" \
+            -f body="$BODY" \
+            -f target_commitish="$CLI_MAIN_SHA" \
+            -F draft=true)" \
+            || fail "② POST $CLI_REPO draft release failed"
+          RELEASE_ID="$(printf '%s' "$DRAFT_RESP" | jq -r '.id')"
+          printf '%s' "$RELEASE_ID" | grep -qE '^[0-9]+$' \
+            || fail "② draft release id malformed in response: '$RELEASE_ID'"
+          [ "$(printf '%s' "$DRAFT_RESP" | jq -r '.draft')" = "true" ] \
+            || fail "② created release is not a draft — immutable 자산 차단 회피 불가, 수동 조정 필요"
+          echo "AXIOM_CLI_PUBLISH: ② OK — draft release $VERSION_NORM created (id $RELEASE_ID, tag deferred to publish at ${CLI_MAIN_SHA:0:12})"
+          # ③ 자산 업로드 4종(gh 네이티브 경로 — 자격 증명은 GH_TOKEN 주입).
+          #    gh release upload는 pending tag name으로 draft release를
+          #    해석한다(gh FetchRelease의 GraphQL 병행 조회 — gh ≥ 2.60).
+          gh release upload "$VERSION_NORM" \
+            "$ASSETS/$TARBALL_NAME" \
+            "$ASSETS/SHA256SUMS" \
+            "$ASSETS/manifest.json" \
+            "$ASSETS/attestation-bundle.jsonl" \
+            --repo "$CLI_REPO" \
+            || fail "③ asset upload failed (draft release 존재 — 수동 조정 필요, 자동 삭제 없음)"
+          echo "AXIOM_CLI_PUBLISH: ③ OK — 4 assets uploaded to draft"
+          # ④ Readback 검증 (draft 상태에서 수행 — 발행 시점에는 이미 바이트
+          #    검증 완료 상태다) — 자산 4종 존재 + 다운로드 재해시 결속
+          #    (서버측 digest 필드가 아닌 실제 바이트 재취득으로 단언).
+          #    GET /releases/tags/{tag}는 published 전용이므로(REST 문서:
+          #    "Get a published release with the specified tag") draft는
+          #    ②에서 확보한 release id로 조회한다.
+          REL_JSON="$(gh api "repos/$CLI_REPO/releases/$RELEASE_ID")" \
+            || fail "④ readback: GET draft release (id $RELEASE_ID) failed"
+          ASSET_COUNT="$(printf '%s' "$REL_JSON" | jq '.assets | length')"
+          [ "$ASSET_COUNT" = "4" ] || fail "④ readback: asset count $ASSET_COUNT != 4"
+          for f in "$TARBALL_NAME" SHA256SUMS manifest.json attestation-bundle.jsonl; do
+            ASSET_ID="$(printf '%s' "$REL_JSON" | jq -r --arg n "$f" '.assets[] | select(.name == $n) | .id' | head -1)"
+            [ -n "$ASSET_ID" ] || fail "④ readback: asset '$f' not found"
+            LOCAL_SHA="$(sha256sum "$ASSETS/$f" | cut -d' ' -f1)"
+            REMOTE_SHA="$(gh api "repos/$CLI_REPO/releases/assets/$ASSET_ID" \
+              -H 'Accept: application/octet-stream' | sha256sum | cut -d' ' -f1)"
+            [ "$REMOTE_SHA" = "$LOCAL_SHA" ] \
+              || fail "④ readback: asset '$f' remote sha256 $REMOTE_SHA != local $LOCAL_SHA"
+          done
+          echo "AXIOM_CLI_PUBLISH: ④ OK — 4 assets byte-verified by re-download (draft state)"
+          # ⑤ 발행 — PATCH /releases/{id} draft=false. 이 시점에 release는
+          #    published·immutable가 되고 태그가 target_commitish(②에서 핀한
+          #    axiom-cli main tip)에서 자동 생성된다(실측). 발행 단언:
+          #    published 전용 tag 조회가 해석되고, immutable이 true이며,
+          #    자산 4종이 그대로이고, 태그가 핀된 SHA에 존재한다.
+          gh api "repos/$CLI_REPO/releases/$RELEASE_ID" -X PATCH -F draft=false >/dev/null \
+            || fail "⑤ PATCH draft=false (publish) failed — draft release 존재, 수동 조정 필요"
+          PUB_JSON="$(gh api "repos/$CLI_REPO/releases/tags/$VERSION_NORM")" \
+            || fail "⑤ publish assert: GET published release by tag failed"
+          [ "$(printf '%s' "$PUB_JSON" | jq -r '.draft')" = "false" ] \
+            || fail "⑤ publish assert: release still draft after PATCH"
+          [ "$(printf '%s' "$PUB_JSON" | jq -r '.immutable')" = "true" ] \
+            || fail "⑤ publish assert: release immutable != true (§1b 배포 계약 위반 — 수동 검토 필요)"
+          [ "$(printf '%s' "$PUB_JSON" | jq '.assets | length')" = "4" ] \
+            || fail "⑤ publish assert: asset count != 4 after publish"
+          TAG_SHA="$(gh api "repos/$CLI_REPO/git/ref/tags/$VERSION_NORM" --jq '.object.sha')" \
+            || fail "⑤ publish assert: GET tag $VERSION_NORM failed"
+          [ "$TAG_SHA" = "$CLI_MAIN_SHA" ] \
+            || fail "⑤ publish assert: tag $VERSION_NORM at ${TAG_SHA:0:12} != pinned axiom-cli main ${CLI_MAIN_SHA:0:12}"
+          echo "AXIOM_CLI_PUBLISH: ⑤ OK — published (immutable), tag at axiom-cli main ${CLI_MAIN_SHA:0:12}"
+          echo "AXIOM_CLI_PUBLISH: OK — $CLI_REPO $VERSION_NORM published (bundle sha256 $BUNDLE_SHA)"
+
+      # ── if: always() 정리 가드 (ADR-0024) ─────────────────────────────────
+      # release 존재 여부를 GET /releases/tags/{version}로 확인 — 존재하면
+      # 절대 삭제하지 않는다 (어떤 실패 모드에서도). definitive-fail은 publish
+      # step이 이미 tag를 삭제 — 여기서는 잔여 ref만 방어적 정리. uncertain은
+      # tag 삭제 금지. release-exists = 발행됐지만 후속 검증 실패 — 수동 검토.
+      - name: Cleanup guard (release 존재 시 절대 삭제 안 함)
+        if: always()
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          VERSION_NORM: ${{ needs.freeze.outputs.version_norm }}
+        run: |
+          set -euo pipefail
+          set +e
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$VERSION_NORM" >/dev/null 2>&1
+          REL_RC=$?
+          set -e
+          RESULT="${PUBLISH_RESULT:-unknown}"
+          if [ "$REL_RC" -eq 0 ]; then
+            echo "CLEANUP: release $VERSION_NORM exists — 절대 삭제하지 않음 (result=$RESULT)"
+            exit 0
+          fi
+          case "$RESULT" in
+            uncertain)
+              echo "::error::CLEANUP: UNCERTAIN — tag $VERSION_NORM 보존 (수동 재확인 필수, ADR-0024), release 없음" >&2
+              ;;
+            definitive-fail)
+              set +e
+              gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$VERSION_NORM" >/dev/null 2>&1
+              REF_RC=$?
+              set -e
+              if [ "$REF_RC" -eq 0 ]; then
+                gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/$VERSION_NORM" >/dev/null 2>&1 \
+                  && echo "CLEANUP: 잔여 tag ref $VERSION_NORM 삭제 (release 부재 확인됨)" \
+                  || { echo "::error::CLEANUP: 잔여 tag ref 삭제 실패 — 수동 정리 필요" >&2; exit 1; }
+              else
+                echo "CLEANUP: tag ref $VERSION_NORM 없음 — 정리 완료"
+              fi
+              ;;
+            *)
+              echo "CLEANUP: release 없음, result=$RESULT — 정리 보류 (수동 검토)"
+              ;;
+          esac
+          exit 0
+
+  # ── validation-only-assert — publish가 실제로 skipped였음을 단언 ──────────
+  validation-only-assert:
+    needs: [verify-metadata, full-l2, assert-l2-scope, verify-binary, assemble-bundle, attest-bundle, publish]
+    if: ${{ always() && inputs.validation_only }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Assert validation-only cannot publish
+        env:
+          METADATA_RESULT: ${{ needs.verify-metadata.result }}
+          L2_RESULT: ${{ needs['full-l2'].result }}
+          SCOPE_RESULT: ${{ needs.assert-l2-scope.result }}
+          BINARY_RESULT: ${{ needs.verify-binary.result }}
+          ASSEMBLE_BUNDLE_RESULT: ${{ needs.assemble-bundle.result }}
+          ATTEST_BUNDLE_RESULT: ${{ needs.attest-bundle.result }}
+          PUBLISH_RESULT: ${{ needs.publish.result }}
+          VERSION_NORM: ${{ needs.verify-metadata.outputs.version_norm }}
+          PRE_TAG_EXISTS: ${{ needs.verify-metadata.outputs.pre_tag_exists }}
+          PRE_TAG_SHA: ${{ needs.verify-metadata.outputs.pre_tag_sha }}
+          PRE_RELEASE_EXISTS: ${{ needs.verify-metadata.outputs.pre_release_exists }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::$1"; exit 1; }
+          [ "$METADATA_RESULT" = "success" ] || fail "verify-metadata=$METADATA_RESULT"
+          [ "$L2_RESULT" = "success" ] || fail "full-l2=$L2_RESULT"
+          [ "$SCOPE_RESULT" = "success" ] || fail "assert-l2-scope=$SCOPE_RESULT (callee executed-job set contract)"
+          [ "$BINARY_RESULT" = "success" ] || fail "verify-binary=$BINARY_RESULT"
+          [ "$ASSEMBLE_BUNDLE_RESULT" = "skipped" ] || fail "assemble-bundle=$ASSEMBLE_BUNDLE_RESULT (validation_only must not assemble for publication)"
+          [ "$ATTEST_BUNDLE_RESULT" = "skipped" ] || fail "attest-bundle=$ATTEST_BUNDLE_RESULT (validation_only must not attest for publication)"
+          [ "$PUBLISH_RESULT" = "skipped" ] || fail "publish=$PUBLISH_RESULT (validation_only must never publish)"
+          TAG_VERSION="$VERSION_NORM"
+          case "$TAG_VERSION" in v*) ;; *) TAG_VERSION="v$TAG_VERSION" ;; esac
+          [ "$PRE_RELEASE_EXISTS" = "false" ] || fail "validation-only requires a version without an existing release ($TAG_VERSION)"
+          set +e
+          REL_RESP="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG_VERSION" 2>&1)"; REL_RC=$?
+          set -e
+          if [ "$REL_RC" -eq 0 ]; then fail "validation-only created release $TAG_VERSION"; fi
+          printf '%s' "$REL_RESP" | grep -q 'HTTP 404' || fail "release check inconclusive"
+          set +e
+          TAG_RESP="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG_VERSION" 2>&1)"; TAG_RC=$?
+          set -e
+          if [ "$PRE_TAG_EXISTS" = "false" ]; then
+            if [ "$TAG_RC" -eq 0 ]; then fail "validation-only created tag $TAG_VERSION"; fi
+            printf '%s' "$TAG_RESP" | grep -q 'HTTP 404' || fail "tag check inconclusive"
+          else
+            [ "$TAG_RC" -eq 0 ] || fail "pre-existing tag $TAG_VERSION disappeared"
+            NOW_SHA="$(printf '%s' "$TAG_RESP" | jq -r '.object.sha')"
+            [ "$NOW_SHA" = "$PRE_TAG_SHA" ] || fail "tag $TAG_VERSION moved ($PRE_TAG_SHA -> $NOW_SHA)"
+          fi
+          echo "VALIDATION_ONLY PASS: publish skipped; release/tag state unchanged"

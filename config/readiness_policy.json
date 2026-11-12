@@ -1,0 +1,321 @@
+{
+  "schemaVersion": 1,
+  "policyId": "axiom-readiness-v1",
+  "description": "Readiness policy parameters for the Axiom v1 productization contract. Parameters only: invariant criticality, observation key schemas, thresholds, freshness. All semantics (PASS/FAIL/UNKNOWN algebra, promotion rules, verdict table) live in tools/readiness_evaluator.nim.",
+  "invariants": {
+    "R1": {
+      "name": "Product Contract",
+      "criticality": "critical"
+    },
+    "R2": {
+      "name": "Result Semantics",
+      "criticality": "critical"
+    },
+    "R3": {
+      "name": "Verification Determinism",
+      "criticality": "critical"
+    },
+    "R4": {
+      "name": "Artifact/Provenance Integrity",
+      "criticality": "critical"
+    },
+    "R5": {
+      "name": "CLI Contract Stability",
+      "criticality": "critical"
+    },
+    "R6": {
+      "name": "Failure Semantics",
+      "criticality": "critical"
+    },
+    "R7": {
+      "name": "Scope/Coverage Honesty",
+      "criticality": "non-critical"
+    },
+    "R8": {
+      "name": "Reproducible Operability",
+      "criticality": "critical"
+    }
+  },
+  "observationKeys": {
+    "R1": [
+      {
+        "key": "documentedCommand",
+        "type": "string"
+      },
+      {
+        "key": "commandExists",
+        "type": "bool",
+        "scope": "surface"
+      },
+      {
+        "key": "promiseOutputExists",
+        "type": "bool"
+      },
+      {
+        "key": "subjectLane",
+        "type": "stringlist"
+      }
+    ],
+    "R2": [
+      {
+        "key": "certGreenDualEvidenceRequired",
+        "type": "bool"
+      },
+      {
+        "key": "z3OnlyCanProduceCertGreen",
+        "type": "bool"
+      },
+      {
+        "key": "summaryVerifiedIncludesVacuous",
+        "type": "bool"
+      },
+      {
+        "key": "z3VsDualDistinguishable",
+        "type": "bool"
+      },
+      {
+        "key": "verifiedSemanticsDocumented",
+        "type": "bool"
+      }
+    ],
+    "R3": [
+      {
+        "key": "canonicalProjectionHashEqual",
+        "type": "bool"
+      },
+      {
+        "key": "canonicalInputHash",
+        "type": "string"
+      },
+      {
+        "key": "configHash",
+        "type": "string"
+      },
+      {
+        "key": "solverIdentity",
+        "type": "string"
+      },
+      {
+        "key": "cachePolicy",
+        "type": "string"
+      },
+      {
+        "key": "canonicalExecutionFingerprint",
+        "type": "string"
+      },
+      {
+        "key": "environmentControlled",
+        "type": "bool"
+      },
+      {
+        "key": "subjectRunProjectionHashEqual",
+        "type": "bool"
+      },
+      {
+        "key": "pathIndependentProjectionEqual",
+        "type": "bool"
+      }
+    ],
+    "R4": [
+      {
+        "key": "certFieldPresent",
+        "type": "bool"
+      },
+      {
+        "key": "provenanceReconstructible",
+        "type": "bool"
+      },
+      {
+        "key": "subjectTreeImmutableAcrossRun",
+        "type": "bool"
+      }
+    ],
+    "R5": [
+      {
+        "key": "commandExists",
+        "type": "bool"
+      },
+      {
+        "key": "helpSurface",
+        "type": "bool"
+      },
+      {
+        "key": "successExitCode",
+        "type": "int"
+      },
+      {
+        "key": "verificationFailureExitCode",
+        "type": "int"
+      },
+      {
+        "key": "invalidInputExitCode",
+        "type": "int"
+      },
+      {
+        "key": "internalErrorExitCode",
+        "type": "int"
+      },
+      {
+        "key": "jsonSchemaVersion",
+        "type": "string"
+      },
+      {
+        "key": "stdoutStderrSplit",
+        "type": "bool"
+      }
+    ],
+    "R6": [
+      {
+        "key": "failureConvertsToSuccess",
+        "type": "bool"
+      },
+      {
+        "key": "exceptionSwallowed",
+        "type": "bool"
+      }
+    ],
+    "R7": [
+      {
+        "key": "claimedScope",
+        "type": "stringlist"
+      },
+      {
+        "key": "measuredCoverage",
+        "type": "float"
+      },
+      {
+        "key": "verifiedEmitterScope",
+        "type": "stringlist"
+      }
+    ],
+    "R8": [
+      {
+        "key": "installFollowed",
+        "type": "bool"
+      },
+      {
+        "key": "manualStepsRequired",
+        "type": "bool"
+      },
+      {
+        "key": "cleanRunSucceeded",
+        "type": "bool"
+      },
+      {
+        "key": "documentedRunSteps",
+        "type": "bool"
+      },
+      {
+        "key": "axiomOwnedColdSetDeletedBeforeRun",
+        "type": "bool"
+      }
+    ]
+  },
+  "r1": {
+    "contractCommands": [
+      "ax prove",
+      "ax report"
+    ],
+    "surfaceCommandObservationScope": "surface",
+    "trustBoundaryLanes": {
+      "nim": [
+        "SHA-256 implementation",
+        "Lean kernel",
+        "Z3 result",
+        "BMC engine",
+        "Axiom CLI"
+      ],
+      "rust": [
+        "rustc to LLBC lowering",
+        "LLBC to shared canonical translation",
+        "dual IR derivation from shared canonical"
+      ]
+    }
+  },
+  "r4": {
+    "requiredFields": [
+      "claim",
+      "attestation",
+      "inputHash",
+      "provenance",
+      "toolchainIdentity",
+      "solverInvocation",
+      "solverInputDigest",
+      "solverResultDigest"
+    ],
+    "artifactNature": "local-replay-bound",
+    "artifactReplayDefinition": ["cert", "trusted journal", "claims/solver", "source repo"],
+    "portableEvidenceArtifact": false,
+    "inputIdentity": ["sourceHash", "irHash"],
+    "canonicalInputHashNewImplementation": false
+  },
+  "r5": {
+    "contractCommands": [
+      "ax prove",
+      "ax report"
+    ],
+    "definedExitCodes": [
+      "success",
+      "verification-failure",
+      "invalid-input",
+      "internal-error"
+    ],
+    "successExitCode": 0,
+    "exitCodeContract": {
+      "0": "VERIFIED (success)",
+      "1": "VERIFICATION_FAILED (verification-failure)",
+      "2": "INTERNAL_ERROR (normal-classifiable internal error; Nim unhandled exception 기본)",
+      "3": "INVALID_INPUT",
+      "signal": "out-of-contract failure — 4-state 밖; supported execution에서 관측되면 R5/R8 FAIL 기록; signal→exit-code 변환 shim 신설 금지"
+    }
+  },
+  "r7": {
+    "vkdMinThreshold": 0.5,
+    "coverageSubjects": [
+      "vkd",
+      "module-coverage"
+    ],
+    "promotionRule": "verifiedEmitterScope tokens not subset of claimedScope tokens -> R1 FAIL + R2 FAIL",
+    "vkdContract": {
+      "formula": "|VKS ∩ certGreen| / |VKS|",
+      "vksSize": 23,
+      "vksDerivation": "kernel 40 - exempt 17",
+      "numeratorAllowed": ["isVkdAdmissible"],
+      "numeratorForbidden": ["isDeepVerified"],
+      "valueIsTargetOnly": true,
+      "valueRefresh": "Phase 3 완료 후 실행으로 산출한 값 X로 갱신"
+    }
+  },
+  "r8": {
+    "cleanRunRequired": true,
+    "prepareSequenceCommands": [
+      "cargo fetch --locked",
+      "cargo metadata --format-version=1 --locked",
+      "cargo build --frozen"
+    ],
+    "distribution": {
+      "v1": "developer-source install",
+      "prereqs": ["Nim 2.2.10+", "Lean 4.29+", "Z3 4.13+"],
+      "documentation": "README 준수",
+      "binaryDistribution": false
+    }
+  },
+  "freshness": {
+    "defaultFreshnessDays": 30
+  },
+  "tierCountsContract": {
+    "sumTierCountsEqualsClassifiedNodes": true,
+    "tierCountsScope": "정상 분류된(verified/등급 부여된) 노드만 포함",
+    "failedSkippedTimeout": "statusCounts에 별도 집계, tierCounts에는 포함되지 않음",
+    "implementation": "Phase 5에서 happy"
+  },
+  "semanticMapping": {
+    "Input identity": {"existing": "sourceHash + irHash", "meaning": "입입/번역 상태"},
+    "Proof identity": {"existing": "proofArtifactDigest", "meaning": "증명 artifact digest"},
+    "Certificate identity": {"existing": "identityDigest", "meaning": "certificate canonical digest (provenance가 아니다)"},
+    "Attestation reference": {"existing": "trustCommitId", "meaning": "journal-backed attestation 참조 (Phase 2 신규)"},
+    "Toolchain": {"existing": "solverIdentity + buildEnv", "meaning": "실행 환경"},
+    "Policy": {"existing": "policyId", "meaning": "정책 식별"},
+    "Verdict": {"existing": "status + verificationTier", "meaning": "결과/등급"}
+  }
+}

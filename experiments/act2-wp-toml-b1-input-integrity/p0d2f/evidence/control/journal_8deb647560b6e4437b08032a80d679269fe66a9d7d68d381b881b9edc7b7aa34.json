@@ -1,0 +1,14 @@
+{
+  "kind": "tcVerifiedProof",
+  "evidenceId": "e517b15b51c771955d50d2ee440014c2efc985b4e03887e54878b84dfeea8f2d",
+  "claim": "{\"irHash\":\"14006f9720c32db3a3fc8ac25450d1ffb8634920017e5c9b2b69aee44dad7ac2\",\"kind\":\"z3out\",\"leanCompilerVerified\":true,\"leanProposition\":\"def d2Utf8AppendLen : Int → Int :=\\n  fun code => (1 + (code / 128))\\n\\ntheorem d2Utf8AppendLen_post :\\n  ∀ (code : Int), ((code ≥ 0) ∧ (code ≤ 255)) → ¬ (128 = 0) → ((d2Utf8AppendLen code) = (1 + (code / 128))) := by\\n  intro code h0 h1\\n  unfold d2Utf8AppendLen\\n  omega\\n\",\"negativeTestResult\":false,\"smtlib2\":\"\",\"solverProvenance\":\"spHeuristic\",\"solverStatus\":\"\",\"solverVersion\":\"4.13.3\",\"vacuityChecked\":true,\"vacuityProven\":false,\"z3Executed\":false}",
+  "solverInvocation": "z3out",
+  "attestation": "Z3 solver result payload captured in TrustCommit journal",
+  "certificateDigest": "d6a40550764a9ed935cc4625309e0f712fb52a9776625c4789b09ae5c0bc8333",
+  "scopeDigest": "479ae136a0c899b96d83520af8cd67af6ba408f5504b99775d13b87fca89f6d2",
+  "configDigest": "0b80d88ce440b39c548949e4c4d48f94619e1fa07183f76fae42ebf4810d3f2b",
+  "parentCommit": null,
+  "projection": null,
+  "quarantineReason": "",
+  "originalStatus": ""
+}

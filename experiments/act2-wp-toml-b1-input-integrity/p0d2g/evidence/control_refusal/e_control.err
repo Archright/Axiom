@@ -1,0 +1,5 @@
+[INFO] axiom_engine: analyzing topology...
+[INFO] topology_cli: topology: 31 files, 31 changed, sourceRoot=experiments/act2-wp-toml-b1-input-integrity/p0d2g/env_p/subject
+[INFO] axiom_engine: topology: 31 files, 344 candidates
+[INFO] frontier_selection: --target=toml_serialization/lexer.nim::d2CommentGateReject not found in frontier — canonical target: NotFound (fail-closed, empty selection)
+[ERROR] action_interpreter_cli: [ERROR] --target toml_serialization/lexer.nim::d2CommentGateReject resolved to no frontier nodes (NotFound or Ambiguous). Canonical targets require exactly one match; 0 matches = NotFound, >1 = Ambiguous. Refuse to run an implicit full-frontier verification on a canonical target.

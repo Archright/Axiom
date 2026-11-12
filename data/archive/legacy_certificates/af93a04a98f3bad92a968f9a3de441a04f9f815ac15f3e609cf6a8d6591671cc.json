@@ -1,0 +1,18 @@
+{
+  "modulePath": "src/core/orchestrator/orchestrator_vault.nim",
+  "functionName": "safeSpeedupRatioCore",
+  "status": "certZ3Verified",
+  "reason": "ir-bmc-z3-unsat",
+  "winningStrategy": "ir-bmc-z3",
+  "irHash": "af93a04a98f3bad92a968f9a3de441a04f9f815ac15f3e609cf6a8d6591671cc",
+  "leanProposition": "",
+  "fingerprint": "800a8a3ef9b605f902b9af00ffb3bda777ff42b121c91735c1b8af90924a9c69",
+  "smtlib2": "(set-logic QF_BV)\n(set-option :rlimit 30000000)\n(define-fun no_overflow_add ((a (_ BitVec 64)) (b (_ BitVec 64))) Bool\n  (let ((sum (bvadd a b)))\n    (not (or\n      (and (bvsgt a #x0000000000000000) (bvsgt b #x0000000000000000) (bvslt sum #x0000000000000000))\n      (and (bvslt a #x0000000000000000) (bvslt b #x0000000000000000) (bvsgt sum #x0000000000000000))))))\n(define-fun no_underflow_add ((a (_ BitVec 64)) (b (_ BitVec 64))) Bool\n  (let ((sum (bvadd a b)))\n    (not (and (bvslt a #x0000000000000000) (bvslt b #x0000000000000000) (bvsgt sum #x0000000000000000)))))\n(define-fun no_overflow_mul ((_a (_ BitVec 64)) (_b (_ BitVec 64))) Bool\n  (let ((p (bvmul _a _b)))\n    (and (or (= _a #x0000000000000000) (= _b #x0000000000000000) (= (bvsdiv p _a) _b))\n         (not (and (= _a #x8000000000000000) (= _b #xFFFFFFFFFFFFFFFF)))\n         (not (and (= _a #xFFFFFFFFFFFFFFFF) (= _b #x8000000000000000))))))\n(define-fun no_underflow_mul ((_a (_ BitVec 64)) (_b (_ BitVec 64))) Bool\n  (let ((p (bvmul _a _b)))\n    (and (or (= _a #x0000000000000000) (= _b #x0000000000000000) (= (bvsdiv p _a) _b))\n         (not (and (= _a #x8000000000000000) (= _b #xFFFFFFFFFFFFFFFF)))\n         (not (and (= _a #xFFFFFFFFFFFFFFFF) (= _b #x8000000000000000))))))\n(define-fun no_overflow_sub ((a (_ BitVec 64)) (b (_ BitVec 64))) Bool\n  (let ((diff (bvsub a b)))\n    (not (and (bvsgt a #x0000000000000000) (bvslt b #x0000000000000000) (bvslt diff #x0000000000000000)))))\n(define-fun no_underflow_sub ((a (_ BitVec 64)) (b (_ BitVec 64))) Bool\n  (let ((diff (bvsub a b)))\n    (not (and (bvslt a #x0000000000000000) (bvsgt b #x0000000000000000) (bvsgt diff #x0000000000000000)))))\n(declare-fun serialBaselineMs () (_ BitVec 64))\n(declare-fun wallMs () (_ BitVec 64))\n(define-fun safeSpeedupRatioCore_impl ((serialBaselineMs (_ BitVec 64)) (wallMs (_ BitVec 64))) (_ BitVec 64)\n  (ite (or (bvsle wallMs #x0000000000000000) (bvsle serialBaselineMs #x0000000000000000)) #x0000000000000064 (ite (bvslt (bvsdiv (bvmul serialBaselineMs #x0000000000000064) wallMs) #x0000000000000064) #x0000000000000064 (bvsdiv (bvmul serialBaselineMs #x0000000000000064) wallMs))))\n(assert (not (= wallMs #x0000000000000000)))\n(assert (not (= wallMs #x0000000000000000)))\n(assert (let ((result (safeSpeedupRatioCore_impl serialBaselineMs wallMs))) (not (bvsge result #x0000000000000064))))\n(check-sat)",
+  "solverStatus": "unsat",
+  "sourceHash": "33c6637a960e58c420d593c5fc302bae685ae7028ac070180befa773f3dc6d7c",
+  "solverMeta": {
+    "leanCompilerVerified": false,
+    "z3Executed": true,
+    "solverProvenance": "spZ3SAT"
+  }
+}

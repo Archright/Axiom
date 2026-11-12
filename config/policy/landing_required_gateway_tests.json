@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "policyId": "axiom-landing-required-gateway-tests-v1",
+  "description": "착지(landing)에 필수로 실행되어야 하는 gateway 테스트의 커밋 정책 집합 (plan Phase 2 산출물 1, E4/R13c). 이 파일이 RequiredPolicy의 유일 원본(SSOT)이며 ls/디렉터리 나열로 파생하지 않는다. 판정 등식: ∀ r ∈ RequiredPolicy: r resolves successfully (testPath 트리 존재) ∧ r ∈ Executed (junit run-suite에 basename 존재) ∧ r 무실패(해당 junit testcase에 failure 없음) ∧ policy identity 중복 0 (policyId·testPath 각각 유일) — 위반 = exit 1 (fail-closed). mustRef 참조체크: certification_continuity_contract.md §5의 INV-1..INV-13 또는 config/readiness_policy.json의 R1..R8 실존 id만 허용. mustRef=\"UNRESOLVED\" 항목은 Phase-3 semantic proof 대기 후보로 별도 취급한다 (justification이 정확히 \"candidate pending Phase-3 semantic proof\"인 경우에만 허용; 이후 단계 게이트는 UNRESOLVED 항목에 대해 편입/기각 확정을 요구). 정책 게이트는 mode(ALL/EMPTY)와 무관하게 무조건 발화한다 — 착지 집합은 스코프 선택기와 관계없이 항상 실행되어야 하며(누락 = FAIL), 정책원본 테스트 삭제 시뮬레이션은 resolution FAIL이어야 한다. v2 기각(2026-10-02): LG-011(context_size_guard_feature_test, UNRESOLVED) 기각 — context_size_guard 게이트군 purge(건축가 지시)로 resolve 대상 소멸. 착지 필수 집합 14→13.",
+  "revision": 2,
+  "tests": [
+    {
+      "policyId": "LG-001",
+      "mustRef": "INV-5",
+      "testPath": "tests/gateway/anti_theater_gate_feature_test.nim",
+      "justification": "극장(위조·항상-통과·스텁 게이트) 차단 — FAIL → 게이트 verdict 위조 가능(§0.9) → lane conclusion 비신뢰 → mint P6가 위조 evidence를 인증 → INV-5(L1 evidence 인증 배제·인증 거부) 위반."
+    },
+    {
+      "policyId": "LG-002",
+      "mustRef": "INV-7",
+      "testPath": "tests/gateway/import_encapsulation_gate_feature_test.nim",
+      "justification": "§-1 실행 게이트 계층 경계 강제 — FAIL → 비소유 surface import 허용 → 실행 게이트 verdict 경로 오염 → lane conclusion이 untrusted surface에서 산출 → INV-7(contents:read + 시크릿 미참조 정적 게이트 강제) 위반."
+    },
+    {
+      "policyId": "LG-003",
+      "mustRef": "R3",
+      "testPath": "tests/gateway/core_invariant_gate_feature_test.nim",
+      "justification": "src/core 순수성(금지 I/O 원시) 강제 — FAIL → 검증 판정 로직에 I/O 유입 → verdict 비결정화 → lane conclusion 재현 불가 → R3(Verification Determinism) 위반."
+    },
+    {
+      "policyId": "LG-004",
+      "mustRef": "INV-8",
+      "testPath": "tests/gateway/command_policy_gate_feature_test.nim",
+      "justification": "git 명령 allowlist(Layer 0) — FAIL → wrapper가 허용 외 명령 실행 → side-ref 원장·ref 비-FF 변조 경로 → INV-8(certificate 원장 main tree 밖 side-ref FF-only append) 위반 → cert 원장 무결성 상실."
+    },
+    {
+      "policyId": "LG-005",
+      "mustRef": "INV-11",
+      "testPath": "tests/gateway/conflict_marker_gate_feature_test.nim",
+      "justification": "충돌 마커 잔존 탐지 — FAIL → 후보 트리에 미해결 conflict 잔존 → merge-tree lossy → INV-11(conflict/lossy = 인증 거부) 위반 → 반드시 거부되어야 할 대상이 승인 경로에 진입."
+    },
+    {
+      "policyId": "LG-006",
+      "mustRef": "INV-2",
+      "testPath": "tests/gateway/git_wrapper_feature_test.nim",
+      "justification": "merge-tree·commit 객체 생성 계층 — FAIL → 착지 merge-commit parents/tree shape 오류 → continuity의 인증 입력 상속 검증 불가 → INV-2(착지는 native MERGE commit, parents/tree 실측) 위반."
+    },
+    {
+      "policyId": "LG-007",
+      "mustRef": "R2",
+      "testPath": "tests/gateway/run_gate_feature_test.nim",
+      "justification": "게이트 오케스트레이터(dispatch/exit 의미론) — FAIL → lane conclusion 산출 메커니즘 붕괴 → mint P6가 부정확한 verdict를 인증 → R2(Result Semantics) 위반."
+    },
+    {
+      "policyId": "LG-008",
+      "mustRef": "R3",
+      "testPath": "tests/gateway/cegar_engine_feature_test.nim",
+      "justification": "CEGAR 증명 탐색/Z3 연동 — FAIL → ax prove verdict 오판·비결정성 → 증명 evidence(prove 경로) 왜곡 → R3(Verification Determinism) 위반."
+    },
+    {
+      "policyId": "LG-009",
+      "mustRef": "INV-4",
+      "testPath": "tests/gateway/formal_text_diff_feature_test.nim",
+      "justification": "형식 텍스트 diff FSM 분류 — FAIL → 추출기 differential(extraction agreement) 판정 오분류 → INV-4(구조적 독립성·다른 유도·다른 spec 판독) 무효화 → extractor 합의 evidence 오판."
+    },
+    {
+      "policyId": "LG-010",
+      "mustRef": "R7",
+      "testPath": "tests/gateway/hotspot_coverage_feature_test.nim",
+      "justification": "churn/핫스팟 coverage 산출 — FAIL → 커버리지·범위 주장 부정직 → R7(Scope/Coverage Honesty) 위반 → 허위 범위 위에 admission evidence 성립."
+    },
+    {
+      "policyId": "LG-012",
+      "mustRef": "R1",
+      "testPath": "tests/gateway/productization_start_vertical_slice_feature_test.nim",
+      "justification": "실제 ax CLI 수직 슬라이스(A/B 재생) — FAIL → 제품 계약(prove/report) 행동 붕괴 → 수직 슬라이스 증명 무효 → R1(Product Contract) 위반 → admission 증거(report·cert 경로) 무효."
+    },
+    {
+      "policyId": "LG-013",
+      "mustRef": "INV-6",
+      "testPath": "tests/gateway/ir_to_smt_feature_test.nim",
+      "justification": "IR→SMT-LIB2 인코딩 — 로드베어링 보존 항목(대체 배선 전 유지, plan Phase 3) — FAIL → SMT 인코딩 오류 → Z3 재실행(kernel re-execution) verdict 왜곡 → INV-6(kernel verdict만 unforgeable·재실행 검증) 위반 → mint fail-closed."
+    },
+    {
+      "policyId": "LG-014",
+      "mustRef": "R6",
+      "testPath": "tests/gateway/reliability_gate_feature_test.nim",
+      "justification": "비상 우회 차단(신뢰도 < 80 → emergency bypass 차단, 재작성 전 보존 항목) — FAIL → 게이트 비상 우회 무차단 → break-glass 경로 fail-open → gate failure 의미론 붕괴 → R6(Failure Semantics) 위반 → admission 게이트 우회 가능."
+    }
+  ]
+}

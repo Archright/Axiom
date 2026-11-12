@@ -1,0 +1,77 @@
+{
+  "experiment": "r8a2_verification",
+  "baseCommit": "eaed53d8a",
+  "timestamp": "2026-09-05",
+  "rows": [
+    {
+      "class": "C07",
+      "file": "src/core/sorter/sorter_core_index_table.nim",
+      "targetSymbol": "hasVaultEntry",
+      "mutation": "inserted '  let _c3bNoop = 0' after func hasVaultEntry signature",
+      "diffEvidence": {
+        "stat": "src/core/sorter/sorter_core_index_table.nim | 1 +",
+        "hunk": "@@ -31,6 +31,7 @@ func findVaultEntryIndex*(vaultEntryIndexTable: Table[string, int]; nodeId: Sort\n   ## axiom-smt: (assert (and ast_parse_failed_isolated (>= (seq.len state_nodes) 0) (>= (seq.len state_vaultEntries) 0) (>= (seq.len state_vaultIntegrityBlocks) 0)))\n   ## axiom-lean: ast_parse_failed_isolated ∧ state_nodes.size ≥ 0 ∧ state_vaultEntries.size ≥ 0 ∧ state_vaultIntegrityBlocks.size ≥ 0\n func hasVaultEntry*(state: SorterState; nodeId: SorterNodeId): bool {.axiomTryImpl.} =\n+  let _c3bNoop = 0\n   findVaultEntryIndex(state, nodeId) >= 0"
+      },
+      "digestDiffers": true,
+      "baseChangeSetDigest": "4776728dc8e6b2adfa98dae12382d774c909443c68ae5365939f5d8112cf0a",
+      "mutatedChangeSetDigest": "35c772310a2f2cfc917ea6fc2759dba9c86c576c7a7038c0da4bba56b6abdd",
+      "planStatus": "VALID",
+      "selectedUnits": [
+        "src/core/sorter/sorter_core_index_table.nim::hasVaultEntry"
+      ],
+      "selectedCount": 1,
+      "classification": "OBSERVED",
+      "reason": "Diff applied; changeSetDigest differs from base; selected count = 1 > 0"
+    },
+    {
+      "class": "C09",
+      "file": "src/gate/gate_rules_module_classifier.nim",
+      "targetSymbol": "initModuleClassificationCache",
+      "mutation": "inserted '  let _c3bNoop = 0' after proc initModuleClassificationCache signature",
+      "diffEvidence": {
+        "stat": "src/gate/gate_rules_module_classifier.nim | 1 +",
+        "hunk": "@@ -28,6 +28,7 @@ var moduleClassificationCacheImpl: ModuleClassificationCache\n   ## axiom-smt: (assert (and ast_parse_failed_isolated (>= depth 0)))\n   ## axiom-lean: ast_parse_failed_isolated ∧ depth >= 0\n proc initModuleClassificationCache() {.axiom, axiomImpl.} =\n+  let _c3bNoop = 0\n   initLock(moduleClassificationCacheImpl.gate)"
+      },
+      "digestDiffers": true,
+      "baseChangeSetDigest": "4776728dc8e6b2adfa98dae12382d774c909443c68ae5365939f5d8112cf0a",
+      "mutatedChangeSetDigest": "55336ae57a11f1d07b25e744320abfacaa3e6d441a6e7bb64f4dd4d9c296a680",
+      "planStatus": "VALID",
+      "selectedUnits": [
+        "src/gate/gate_rules_module_classifier.nim::buildModulePathMap",
+        "src/gate/gate_rules_module_classifier.nim::buildQualifiedCallGraph",
+        "src/gate/gate_rules_module_classifier.nim::computeMaxCallDepth",
+        "src/gate/gate_rules_module_classifier.nim::initModuleClassificationCache"
+      ],
+      "selectedCount": 4,
+      "classification": "OBSERVED",
+      "reason": "Diff applied; changeSetDigest differs from base; selected count = 4 > 0"
+    },
+    {
+      "class": "C10",
+      "file": "src/verification/analyzer/analyzer_shared_cert.nim",
+      "targetSymbol": "cumulativeDefectSum",
+      "mutation": "inserted '  let _c3bNoop = 0' after func cumulativeDefectSum signature",
+      "diffEvidence": {
+        "stat": "src/verification/analyzer/analyzer_shared_cert.nim | 1 +",
+        "hunk": "@@ -71,6 +71,7 @@ proc parseJsonSafe*(content: string): Option[JsonNode] {.raises: [], axiom: [\"(a\n \n \n func cumulativeDefectSum*(counts: seq[int]): int {.axiom, axiomImpl.} =\n+  let _c3bNoop = 0\n   ## Functional core: pure int-reduction (sum) over pre-extracted defect counts."
+      },
+      "digestDiffers": true,
+      "baseChangeSetDigest": "4776728dc8e6b2adfa98dae12382d774c909443c68ae5365939f5d8112cf0a",
+      "mutatedChangeSetDigest": "e656aa81e953f452f35b84005be601c8e8e8bdee4d23aefcbf86554ca8613d4c",
+      "planStatus": "VALID",
+      "selectedUnits": [
+        "src/verification/analyzer/analyzer_shared_cert.nim::collectKnownFunctions",
+        "src/verification/analyzer/analyzer_shared_cert.nim::cumulativeDefectSum"
+      ],
+      "selectedCount": 2,
+      "classification": "OBSERVED",
+      "reason": "Diff applied; changeSetDigest differs from base; selected count = 2 > 0"
+    }
+  ],
+  "fixtureCoverageFindings": [
+    "All three target files listed in /tmp/diag-symbols.json fileSymbols: sorter_core_index_table.nim has 17 symbols (including hasVaultEntry), gate_rules_module_classifier.nim has 12 symbols (including initModuleClassificationCache), analyzer_shared_cert.nim has 11 symbols (including cumulativeDefectSum). No fixture-coverage gaps detected for these files."
+  ],
+  "worktreeCleanup": {
+    "status": "pending"
+  }
+}

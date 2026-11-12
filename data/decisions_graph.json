@@ -1,0 +1,1448 @@
+{
+  "version": 1,
+  "fingerprint": "27eac9c4492b033a0f30cf9f72a8d4dd59ea68f3c7810ab6c1b7f37f7fe3d183",
+  "generatedBy": "tools/sync_decisions.nim",
+  "nodes": [
+    {
+      "id": "ADR-0001",
+      "category": "safety",
+      "title": "Fail-Closed Result Type",
+      "rationale": "The Axiom integrity engine must guarantee that any verification failure is surfaced, never silently swallowed. Adopt a fail-closed result type pattern across all core modules.",
+      "files": [
+        "src/core/types/result_types.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "2026-03-01"
+    },
+    {
+      "id": "ADR-0002",
+      "category": "architecture",
+      "title": "PEG Parser Migration",
+      "rationale": "Axiom needs a reliable, maintainable parser for its domain-specific configuration formats. Migrate to a PEG parser library with declarative grammar rules generated at build time.",
+      "files": [
+        "src/core/parser/peg.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "2026-03-15"
+    },
+    {
+      "id": "ADR-0003",
+      "category": "performance",
+      "title": "DAG Parallel Execution",
+      "rationale": "Gate execution has linear dependencies but many can execute in parallel. Model gate dependencies as a DAG and schedule independent nodes for concurrent execution using malebolgia.",
+      "files": [
+        "src/gate/orchestrator/dag_scheduler.nim"
+      ],
+      "dependsOn": [
+        "ADR-0004"
+      ],
+      "status": "accepted",
+      "date": "2026-04-01"
+    },
+    {
+      "id": "ADR-0004",
+      "category": "architecture",
+      "title": "SSOT Gate Registry",
+      "rationale": "Gate metadata was scattered across multiple sources causing drift. Establish src/gate/topology_spec.nim as the single source of truth and generate all downstream artifacts from it.",
+      "files": [
+        "src/gate/topology_spec.nim",
+        "tools/sync_topology.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "2026-04-15"
+    },
+    {
+      "id": "ADR-0005",
+      "category": "architecture",
+      "title": "Predicate-Based Gates",
+      "rationale": "Early gate implementations mixed routing logic with verification logic. Separate gate behavior into predicates (what conditions trigger the gate) and runners (what verification executes).",
+      "files": [
+        "src/gate/runners/",
+        "src/gate/predicates/"
+      ],
+      "dependsOn": [
+        "ADR-0004"
+      ],
+      "status": "accepted",
+      "date": "2026-05-01"
+    },
+    {
+      "id": "ADR-0006",
+      "category": "performance",
+      "title": "CAS Cache Engine",
+      "rationale": "Running the full gate suite on every commit was too slow. Implement a content-addressable storage cache keyed by SHA-256 hashes of gate inputs to skip unchanged gate executions.",
+      "files": [
+        "src/gate/cache/cas_cache.nim"
+      ],
+      "dependsOn": [
+        "ADR-0004"
+      ],
+      "status": "accepted",
+      "date": "2026-05-15"
+    },
+    {
+      "id": "ADR-0007",
+      "category": "safety",
+      "title": "PR Coverage Bot",
+      "rationale": "Pull requests introducing new code often bypass verification gates. Deploy an automated bot that reviews every pull request for gate coverage recorded in the receipt log.",
+      "files": [
+        "src/gate/bot/pr_coverage_bot.nim"
+      ],
+      "dependsOn": [
+        "ADR-0006"
+      ],
+      "status": "accepted",
+      "date": "2026-05-15"
+    },
+    {
+      "id": "ADR-0008",
+      "category": "safety",
+      "title": "Theater Prohibition",
+      "rationale": "Patterns emerged that created the appearance of rigor without actual guarantees. Formalize the theater prohibition policy — any code claiming a guarantee while guaranteeing nothing is theater.",
+      "files": [
+        "AGENTS.md",
+        "data/debt_registry.json"
+      ],
+      "dependsOn": [
+        "ADR-0005"
+      ],
+      "status": "accepted",
+      "date": "2026-05-15"
+    },
+    {
+      "id": "ADR-0009",
+      "category": "architecture",
+      "title": "Decision Binding Framework",
+      "rationale": "Stateless agent sessions cannot discover the 'why' behind decisions. Implement a 4-pillar push-based decision narrative system: AST annotation pragma, Decision Knowledge Graph, Context IR 2.0 lazy injection, and a native deterministic linter with grandfathering waivers.",
+      "files": [
+        "docs/adr/0009-decision-binding-framework.md",
+        "docs/spec/decision_binding_framework.md",
+        "config/decision_binding.waiver.toml",
+        "config/decision_binding.waiver.json",
+        "tools/sync_decisions.nim",
+        "tools/decision_binding_checker.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "2026-07-31"
+    },
+    {
+      "id": "ADR-0010",
+      "category": "architecture",
+      "title": "CI Baseline Gate & Ephemeral Proof Pipeline",
+      "rationale": "CI baseline check risked becoming a meaningless gate due to fail-open/fail-closed ambiguity and empty cert directories on clean checkouts. Adopt a single hydrate path, macro I/O isolation, provenance truth separation, baseline exit contract, and volatile local vault to prevent proof regression and theater.",
+      "files": [
+        "src/cli/baseline_cli.nim",
+        "src/cli/shared/baseline_snapshot_core.nim",
+        "src/verification/certificates/",
+        "docs/spec/hermetic_gate_framework.md"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "2026-08-03"
+    },
+    {
+      "id": "ADR-0011",
+      "category": "safety",
+      "title": "VKD Target Ratchet",
+      "rationale": "VKD target could be silently under-selected, starving the VKD numerator and inflating apparent coverage. Adopt a monotonic ratchet formula max(cliLimit, ceil(kernelTotal x targetVkd) + 1, kernelTotal) with a kernelTotal floor for full kernel scope, fail-closed degenerate branches, and verifiableOnly+pureOnly certificate selection so every cert counts toward VKD.",
+      "files": [
+        "src/verification/batch_uap/ir_pipeline_runner.nim",
+        "docs/adr/0011-vkd-target-ratchet.md"
+      ],
+      "dependsOn": [
+        "ADR-0009",
+        "ADR-0010"
+      ],
+      "status": "accepted",
+      "date": "2026-08-06"
+    },
+    {
+      "id": "DECISION-0011",
+      "category": "architecture",
+      "title": "Monotonic VKD target ratchet; kernelTotal floor guarantees full kernel scope feeds the VKD numerator",
+      "rationale": "Monotonic VKD target ratchet; kernelTotal floor guarantees full kernel scope feeds the VKD numerator",
+      "files": [
+        "src/verification/batch_uap/ir_pipeline_runner.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v31"
+    },
+    {
+      "id": "DECISION-0015",
+      "category": "architecture",
+      "title": "irLoop to CHC/Spacer bridge proves unresolved-bound for-loops inductively instead of honoring the vpBmcSkipped skip; sound encoding threads idx+result accumulator through the CHC state",
+      "rationale": "irLoop to CHC/Spacer bridge proves unresolved-bound for-loops inductively instead of honoring the vpBmcSkipped skip; sound encoding threads idx+result accumulator through the CHC state",
+      "files": [
+        "src/core/trusted/private/ir_loop_to_horn.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0020",
+      "category": "architecture",
+      "title": "Select SMT logic (QF_BV/QF_AUFBV) based on function's IR type profile — no side effects, pure type-level dispatch",
+      "rationale": "Select SMT logic (QF_BV/QF_AUFBV) based on function's IR type profile — no side effects, pure type-level dispatch",
+      "files": [
+        "src/verification/batch_uap/ir_pipeline_runner.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0021",
+      "category": "architecture",
+      "title": "CHC transition system construction — always generates init+trans rules independent of postconditions",
+      "rationale": "CHC transition system construction — always generates init+trans rules independent of postconditions",
+      "files": [
+        "src/core/trusted/private/ir_loop_to_horn.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0022",
+      "category": "architecture",
+      "title": "CHC property construction — generates error rule + query only when postcondition exists",
+      "rationale": "CHC property construction — generates error rule + query only when postcondition exists",
+      "files": [
+        "src/core/trusted/private/ir_loop_to_horn.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0023",
+      "category": "architecture",
+      "title": "Domain VerificationModel → CHC/Spacer script; emits init/trans/obligation rules from the lowered transition system, classifying each non-encodable case explicitly (C12/C13)",
+      "rationale": "Domain VerificationModel → CHC/Spacer script; emits init/trans/obligation rules from the lowered transition system, classifying each non-encodable case explicitly (C12/C13)",
+      "files": [
+        "src/core/trusted/private/ir_loop_to_horn.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v34"
+    },
+    {
+      "id": "DECISION-0024",
+      "category": "architecture",
+      "title": "irLoop → VerificationModel → CHC bridge; lowerLoopToTransition builds the domain transition system, buildChcFromVerificationModel emits the script, classifying every non-success explicitly (C13)",
+      "rationale": "irLoop → VerificationModel → CHC bridge; lowerLoopToTransition builds the domain transition system, buildChcFromVerificationModel emits the script, classifying every non-success explicitly (C13)",
+      "files": [
+        "src/core/trusted/private/ir_loop_to_horn.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v34"
+    },
+    {
+      "id": "DECISION-0026",
+      "category": "architecture",
+      "title": "Loop-to-VerificationModel transition lowering controls the domain model shape for downstream CHC verification",
+      "rationale": "Loop-to-VerificationModel transition lowering controls the domain model shape for downstream CHC verification",
+      "files": [
+        "src/core/trusted/private/loop_transition_lowering.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0027",
+      "category": "architecture",
+      "title": "Build the canonical semantic edge key of a transition without any serialization ordinal (C14 identity != ordering)",
+      "rationale": "Build the canonical semantic edge key of a transition without any serialization ordinal (C14 identity != ordering)",
+      "files": [
+        "src/core/trusted/private/semantic_identity.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v35"
+    },
+    {
+      "id": "DECISION-0040",
+      "category": "architecture",
+      "title": "Normative enum of transition-formula laws that the Semantic Kernel must conform to",
+      "rationale": "Normative enum of transition-formula laws that the Semantic Kernel must conform to",
+      "files": [
+        "src/core/trusted/private/semantic_contract.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0041",
+      "category": "architecture",
+      "title": "Data record for a normative law — no executable encoding, only description data",
+      "rationale": "Data record for a normative law — no executable encoding, only description data",
+      "files": [
+        "src/core/trusted/private/semantic_contract.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0042",
+      "category": "architecture",
+      "title": "Normative specification container: laws, invariants, and conformance predicate names — DATA and PREDICATES only, no executable encoding",
+      "rationale": "Normative specification container: laws, invariants, and conformance predicate names — DATA and PREDICATES only, no executable encoding",
+      "files": [
+        "src/core/trusted/private/semantic_contract.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0043",
+      "category": "architecture",
+      "title": "Construct the normative SemanticContract with all laws, invariants, and predicate names",
+      "rationale": "Construct the normative SemanticContract with all laws, invariants, and predicate names",
+      "files": [
+        "src/core/trusted/private/semantic_contract.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0044",
+      "category": "architecture",
+      "title": "Predicate: exactly one var assigned, rest frame — verifies the assignment law from the Semantic Contract",
+      "rationale": "Predicate: exactly one var assigned, rest frame — verifies the assignment law from the Semantic Contract",
+      "files": [
+        "src/core/trusted/private/semantic_contract.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0045",
+      "category": "architecture",
+      "title": "Predicate: multiple vars assigned, none havoc, rest frame — verifies parallel assignment law",
+      "rationale": "Predicate: multiple vars assigned, none havoc, rest frame — verifies parallel assignment law",
+      "files": [
+        "src/core/trusted/private/semantic_contract.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0046",
+      "category": "architecture",
+      "title": "Predicate: two vars cross-reference each other in nextSmt — verifies swap is simultaneous not sequential",
+      "rationale": "Predicate: two vars cross-reference each other in nextSmt — verifies swap is simultaneous not sequential",
+      "files": [
+        "src/core/trusted/private/semantic_contract.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0047",
+      "category": "architecture",
+      "title": "Predicate: at least one havoc var, rest frame — verifies havoc law",
+      "rationale": "Predicate: at least one havoc var, rest frame — verifies havoc law",
+      "files": [
+        "src/core/trusted/private/semantic_contract.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0048",
+      "category": "architecture",
+      "title": "Predicate: all vars frame (nextSmt == stateVar) — verifies frame law",
+      "rationale": "Predicate: all vars frame (nextSmt == stateVar) — verifies frame law",
+      "files": [
+        "src/core/trusted/private/semantic_contract.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0049",
+      "category": "architecture",
+      "title": "Predicate: guardSmt is not 'true' — verifies guard law",
+      "rationale": "Predicate: guardSmt is not 'true' — verifies guard law",
+      "files": [
+        "src/core/trusted/private/semantic_contract.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0050",
+      "category": "architecture",
+      "title": "Predicate: all vars frame when update is empty — verifies empty-noop law",
+      "rationale": "Predicate: all vars frame when update is empty — verifies empty-noop law",
+      "files": [
+        "src/core/trusted/private/semantic_contract.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0051",
+      "category": "architecture",
+      "title": "Predicate: guard present, at least one assignment, at least one frame var — verifies composed law",
+      "rationale": "Predicate: guard present, at least one assignment, at least one frame var — verifies composed law",
+      "files": [
+        "src/core/trusted/private/semantic_contract.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0052",
+      "category": "architecture",
+      "title": "Predicate: formula is well-formed with correct postArgs length — verifies branch law",
+      "rationale": "Predicate: formula is well-formed with correct postArgs length — verifies branch law",
+      "files": [
+        "src/core/trusted/private/semantic_contract.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0053",
+      "category": "architecture",
+      "title": "Aggregate predicate: runs each of the 9 conformance predicates and requires all applicable laws to pass; genuinely evaluates each predicate and returns false if any fails",
+      "rationale": "Aggregate predicate: runs each of the 9 conformance predicates and requires all applicable laws to pass; genuinely evaluates each predicate and returns false if any fails",
+      "files": [
+        "src/core/trusted/private/semantic_contract.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0102",
+      "category": "architecture",
+      "title": "Structural serialization of a transition identity (identity, not a digest) for deterministic indexing (C14)",
+      "rationale": "Structural serialization of a transition identity (identity, not a digest) for deterministic indexing (C14)",
+      "files": [
+        "src/core/trusted/private/semantic_identity.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v35"
+    },
+    {
+      "id": "DECISION-0301",
+      "category": "architecture",
+      "title": "Enumeration of evidence provenance sources for CandidateEvidence (C18)",
+      "rationale": "Enumeration of evidence provenance sources for CandidateEvidence (C18)",
+      "files": [
+        "src/core/trusted/candidate_evidence.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0302",
+      "category": "architecture",
+      "title": "Contract C18: backend-neutral candidate evidence type with RelationId keys per C19; carries SAT model string when source is cesSolver (P4)",
+      "rationale": "Contract C18: backend-neutral candidate evidence type with RelationId keys per C19; carries SAT model string when source is cesSolver (P4)",
+      "files": [
+        "src/core/trusted/candidate_evidence.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0303",
+      "category": "architecture",
+      "title": "C20: missing evidence (no invariants AND no solver model) yields Inconclusive; empty check is the gate predicate. S6: the SAT-model leg is evidence of a counterexample (DECISION-0302 carries it for cesSolver) — a model-carrying candidate is NOT empty, otherwise the P4 cvConfirmed promotion would be unreachable for every BMC SAT",
+      "rationale": "C20: missing evidence (no invariants AND no solver model) yields Inconclusive; empty check is the gate predicate. S6: the SAT-model leg is evidence of a counterexample (DECISION-0302 carries it for cesSolver) — a model-carrying candidate is NOT empty, otherwise the P4 cvConfirmed promotion would be unreachable for every BMC SAT",
+      "files": [
+        "src/core/trusted/candidate_evidence.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0304",
+      "category": "architecture",
+      "title": "Convenient constructor for CandidateEvidence from openArray of RelationId->Formula pairs (C19); carries SAT model string for cesSolver when model is provided",
+      "rationale": "Convenient constructor for CandidateEvidence from openArray of RelationId->Formula pairs (C19); carries SAT model string for cesSolver when model is provided",
+      "files": [
+        "src/core/trusted/candidate_evidence.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0305",
+      "category": "architecture",
+      "title": "Check whether candidate evidence originates from the solver (cesSolver) per C18",
+      "rationale": "Check whether candidate evidence originates from the solver (cesSolver) per C18",
+      "files": [
+        "src/core/trusted/candidate_evidence.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0306",
+      "category": "architecture",
+      "title": "Constructor for ObligationDischarger providing Z3-backed obligation discharge (C17)",
+      "rationale": "Constructor for ObligationDischarger providing Z3-backed obligation discharge (C17)",
+      "files": [
+        "src/verification/obligation_discharger.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0307",
+      "category": "architecture",
+      "title": "Backend-neutral obligation discharge: runs SMT script and returns whether unsat (discharged)",
+      "rationale": "Backend-neutral obligation discharge: runs SMT script and returns whether unsat (discharged)",
+      "files": [
+        "src/verification/obligation_discharger.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0308",
+      "category": "architecture",
+      "title": "Constructs EvidenceValidator with a Z3-backed ObligationDischarger (C17)",
+      "rationale": "Constructs EvidenceValidator with a Z3-backed ObligationDischarger (C17)",
+      "files": [
+        "src/verification/evidence_validator.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0309",
+      "category": "architecture",
+      "title": "C18+C20: validate consumes neutral CandidateEvidence via the Obligation Model (buildObligations); gates missing evidence (C20) to prevent proving without invariants; consecution/safety use per-edge obligation data from the kernel",
+      "rationale": "C18+C20: validate consumes neutral CandidateEvidence via the Obligation Model (buildObligations); gates missing evidence (C20) to prevent proving without invariants; consecution/safety use per-edge obligation data from the kernel",
+      "files": [
+        "src/verification/evidence_validator.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0310",
+      "category": "architecture",
+      "title": "Constructs CounterexampleValidator with a Z3-backed ObligationDischarger for semantic witness validation (P4)",
+      "rationale": "Constructs CounterexampleValidator with a Z3-backed ObligationDischarger for semantic witness validation (P4)",
+      "files": [
+        "src/verification/counterexample_validator.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0310",
+      "category": "architecture",
+      "title": "Interval invariant synthesizer for single-counter accumulator loops (C20: second candidate-evidence source alongside solver-derived certs)",
+      "rationale": "Interval invariant synthesizer for single-counter accumulator loops (C20: second candidate-evidence source alongside solver-derived certs)",
+      "files": [
+        "src/verification/invariant_synthesizer.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0311",
+      "category": "architecture",
+      "title": "P4 semantic witness validation: determines whether a SAT candidate counterexample genuinely violates the postcondition under the precondition, or is a spurious lowering/encoding artifact",
+      "rationale": "P4 semantic witness validation: determines whether a SAT candidate counterexample genuinely violates the postcondition under the precondition, or is a spurious lowering/encoding artifact",
+      "files": [
+        "src/verification/counterexample_validator.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0312",
+      "category": "architecture",
+      "title": "P4 finalization: maps CounterexampleVerdict to VerificationResult; cvConfirmed promotes to vsDisproved (I3 invariant: DISPROVED iff solver SAT and validation passed), cvSpurious/cvUnresolved preserves rkCandidateCounterexample",
+      "rationale": "P4 finalization: maps CounterexampleVerdict to VerificationResult; cvConfirmed promotes to vsDisproved (I3 invariant: DISPROVED iff solver SAT and validation passed), cvSpurious/cvUnresolved preserves rkCandidateCounterexample",
+      "files": [
+        "src/verification/counterexample_validator.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0319",
+      "category": "architecture",
+      "title": "Constructs the post-state invariant conjunct Inv(θ(x)) by substitution over the semantic-kernel successor expressions, forming the genuinely-inductive consecution consequent (P4)",
+      "rationale": "Constructs the post-state invariant conjunct Inv(θ(x)) by substitution over the semantic-kernel successor expressions, forming the genuinely-inductive consecution consequent (P4)",
+      "files": [
+        "src/verification/evidence_validator.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0401",
+      "category": "architecture",
+      "title": "Init is not a transition (kernel is Transition-only per §0.2 God-Object prevention); irExprToSmt is architecturally correct for init conjuncts. State variable names match the kernel's stateNames ordering (consistency with buildConsecutions).",
+      "rationale": "Init is not a transition (kernel is Transition-only per §0.2 God-Object prevention); irExprToSmt is architecturally correct for init conjuncts. State variable names match the kernel's stateNames ordering (consistency with buildConsecutions).",
+      "files": [
+        "src/core/trusted/private/verification_obligations.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0402",
+      "category": "architecture",
+      "title": "Consecution IS a transition obligation; kernel (buildTransitionFormula) is the single source of truth for post-state per C5.1 Golden semantics.",
+      "rationale": "Consecution IS a transition obligation; kernel (buildTransitionFormula) is the single source of truth for post-state per C5.1 Golden semantics.",
+      "files": [
+        "src/core/trusted/private/verification_obligations.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0403",
+      "category": "architecture",
+      "title": "Safety property is not a transition (kernel is Transition-only); irExprToSmt is architecturally correct for property extraction.",
+      "rationale": "Safety property is not a transition (kernel is Transition-only); irExprToSmt is architecturally correct for property extraction.",
+      "files": [
+        "src/core/trusted/private/verification_obligations.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0404",
+      "category": "architecture",
+      "title": "Aggregates all three obligation families; consecution is kernel-derived, init/safety are property-level (not transition-level) per §0.2 God-Object prevention.",
+      "rationale": "Aggregates all three obligation families; consecution is kernel-derived, init/safety are property-level (not transition-level) per §0.2 God-Object prevention.",
+      "files": [
+        "src/core/trusted/private/verification_obligations.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0405",
+      "category": "architecture",
+      "title": "Single classifier SSOT for VerificationResult — all factories route through this function; incoherent (status,reason) pairs are coerced to the canonical choice deterministically; proofScope disambiguates bounded vs unbounded proofs",
+      "rationale": "Single classifier SSOT for VerificationResult — all factories route through this function; incoherent (status,reason) pairs are coerced to the canonical choice deterministically; proofScope disambiguates bounded vs unbounded proofs",
+      "files": [
+        "src/core/trusted/verification_result_types.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v34"
+    },
+    {
+      "id": "DECISION-0410",
+      "category": "architecture",
+      "title": "Single SSOT predicate for kernel-scope membership — encapsulates the 4-condition filter (isKernel, non-opaque IR, Pure effect, non-BMC-skippable) used by countKernelFunctions and collectKernelSymbols",
+      "rationale": "Single SSOT predicate for kernel-scope membership — encapsulates the 4-condition filter (isKernel, non-opaque IR, Pure effect, non-BMC-skippable) used by countKernelFunctions and collectKernelSymbols",
+      "files": [
+        "src/core/trusted/axiom_pragmas_procs.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v35"
+    },
+    {
+      "id": "DECISION-0501",
+      "category": "architecture",
+      "title": "L1 blocking: kernel must conform to normative contract; a divergence is a soundness bug",
+      "rationale": "L1 blocking: kernel must conform to normative contract; a divergence is a soundness bug",
+      "files": [
+        "src/core/trusted/private/contract_conformance.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0502",
+      "category": "architecture",
+      "title": "L1 blocking: kernel must conform to normative contract; a divergence is a soundness bug",
+      "rationale": "L1 blocking: kernel must conform to normative contract; a divergence is a soundness bug",
+      "files": [
+        "src/core/trusted/private/contract_conformance.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0601",
+      "category": "architecture",
+      "title": "Primitive nominal type for relation identity shared by canonical and evidence layers",
+      "rationale": "Primitive nominal type for relation identity shared by canonical and evidence layers",
+      "files": [
+        "src/core/trusted/private/identity_core.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v37"
+    },
+    {
+      "id": "DECISION-0602",
+      "category": "architecture",
+      "title": "State signature with parameter names and sorts for canonical encoding",
+      "rationale": "State signature with parameter names and sorts for canonical encoding",
+      "files": [
+        "src/core/trusted/private/canonical_identity.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v37"
+    },
+    {
+      "id": "DECISION-0603",
+      "category": "architecture",
+      "title": "Encoding-only identity: relation id and state signature; backend field removed (BackendId dead per C19)",
+      "rationale": "Encoding-only identity: relation id and state signature; backend field removed (BackendId dead per C19)",
+      "files": [
+        "src/core/trusted/private/canonical_identity.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v37"
+    },
+    {
+      "id": "DECISION-0604",
+      "category": "architecture",
+      "title": "Top-level canonical identity wrapping a single RelationIdentity",
+      "rationale": "Top-level canonical identity wrapping a single RelationIdentity",
+      "files": [
+        "src/core/trusted/private/canonical_identity.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v37"
+    },
+    {
+      "id": "DECISION-0605",
+      "category": "architecture",
+      "title": "Provenance-complete certificate identity binding the full chain (schema, function, spec, source, IR, SMT, translation, solver, proof); legacy formula field retained for backward compat; legacy computeVerificationFingerprint NOT retroactively applied",
+      "rationale": "Provenance-complete certificate identity binding the full chain (schema, function, spec, source, IR, SMT, translation, solver, proof); legacy formula field retained for backward compat; legacy computeVerificationFingerprint NOT retroactively applied",
+      "files": [
+        "src/core/trusted/private/evidence_identity.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v37"
+    },
+    {
+      "id": "DECISION-0606",
+      "category": "architecture",
+      "title": "Evidence identity binding a certificate; old candidateEvidenceId+fingerprint design removed (dead)",
+      "rationale": "Evidence identity binding a certificate; old candidateEvidenceId+fingerprint design removed (dead)",
+      "files": [
+        "src/core/trusted/private/evidence_identity.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v37"
+    },
+    {
+      "id": "DECISION-0607",
+      "category": "architecture",
+      "title": "Bidirectional map between semantic NodeId and canonical RelationId (C14 explicit identity)",
+      "rationale": "Bidirectional map between semantic NodeId and canonical RelationId (C14 explicit identity)",
+      "files": [
+        "src/core/trusted/private/identity_mapping.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v37"
+    },
+    {
+      "id": "DECISION-0608",
+      "category": "architecture",
+      "title": "Record deterministic bidirectional NodeId <-> RelationId mapping (C14 explicit identity); typed RelationId key per C19",
+      "rationale": "Record deterministic bidirectional NodeId <-> RelationId mapping (C14 explicit identity); typed RelationId key per C19",
+      "files": [
+        "src/core/trusted/private/identity_mapping.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v37"
+    },
+    {
+      "id": "DECISION-0610",
+      "category": "architecture",
+      "title": "Shallow semantic contract context threaded into CHC lowering; postConditions feed VMSemantic.property",
+      "rationale": "Shallow semantic contract context threaded into CHC lowering; postConditions feed VMSemantic.property",
+      "files": [
+        "src/core/trusted/verification_model_types.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v37"
+    },
+    {
+      "id": "DECISION-0612",
+      "category": "architecture",
+      "title": "Per-backend capability table — the SSOT that maps a backend to its representable feature set (theories × control × contracts); Lean is future/absent",
+      "rationale": "Per-backend capability table — the SSOT that maps a backend to its representable feature set (theories × control × contracts); Lean is future/absent",
+      "files": [
+        "src/core/trusted/backend_capability.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v37"
+    },
+    {
+      "id": "DECISION-0613",
+      "category": "architecture",
+      "title": "Derive a VerificationModel's required-representation profile (theories × control × contracts) from its semantic fields",
+      "rationale": "Derive a VerificationModel's required-representation profile (theories × control × contracts) from its semantic fields",
+      "files": [
+        "src/core/trusted/backend_capability.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v37"
+    },
+    {
+      "id": "DECISION-0614",
+      "category": "architecture",
+      "title": "canEncode — true iff the obligation's required features are a subset of the backend's capabilities (sound-representation, not provability)",
+      "rationale": "canEncode — true iff the obligation's required features are a subset of the backend's capabilities (sound-representation, not provability)",
+      "files": [
+        "src/core/trusted/backend_capability.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v37"
+    },
+    {
+      "id": "DECISION-0615",
+      "category": "architecture",
+      "title": "Convenience overload — canEncode(profile, backend) resolves the backend's capability table",
+      "rationale": "Convenience overload — canEncode(profile, backend) resolves the backend's capability table",
+      "files": [
+        "src/core/trusted/backend_capability.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v37"
+    },
+    {
+      "id": "DECISION-0616",
+      "category": "architecture",
+      "title": "canEncode(model, backend) — derives the model profile then consults the capability table",
+      "rationale": "canEncode(model, backend) — derives the model profile then consults the capability table",
+      "files": [
+        "src/core/trusted/backend_capability.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v37"
+    },
+    {
+      "id": "DECISION-0617",
+      "category": "architecture",
+      "title": "Deterministic human-readable explanation of WHY an obligation is (un)encodable for a backend; aids diagnostics without weakening decisions",
+      "rationale": "Deterministic human-readable explanation of WHY an obligation is (un)encodable for a backend; aids diagnostics without weakening decisions",
+      "files": [
+        "src/core/trusted/backend_capability.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v37"
+    },
+    {
+      "id": "DECISION-0618",
+      "category": "architecture",
+      "title": "Execution-availability predicate — true only for backends that have a wired execution path today; routes routing targets through a single source of truth (capabilitiesOf)",
+      "rationale": "Execution-availability predicate — true only for backends that have a wired execution path today; routes routing targets through a single source of truth (capabilitiesOf)",
+      "files": [
+        "src/core/trusted/backend_capability.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v37"
+    },
+    {
+      "id": "DECISION-0619",
+      "category": "architecture",
+      "title": "Admission gate: permits backend selection only when the obligation is encodable for a runnable backend; bkChc is the sole executable backend, bkBmc is capability-registered but has no executor",
+      "rationale": "Admission gate: permits backend selection only when the obligation is encodable for a runnable backend; bkChc is the sole executable backend, bkBmc is capability-registered but has no executor",
+      "files": [
+        "src/verification/batch_uap/ir_pipeline_runner.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v37"
+    },
+    {
+      "id": "DECISION-0621",
+      "category": "architecture",
+      "title": "Semantic role-based certificate vault resolution: cvCanonicalRead for reference/engineering readers (src/verification/certificates), cvRuntimeCanonical for current-product-truth runtime store (data/trusted/certificates), cvTransientWrite for build-time staging (build/certificates)",
+      "rationale": "Semantic role-based certificate vault resolution: cvCanonicalRead for reference/engineering readers (src/verification/certificates), cvRuntimeCanonical for current-product-truth runtime store (data/trusted/certificates), cvTransientWrite for build-time staging (build/certificates)",
+      "files": [
+        "src/verification/cert_vault_role.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0622",
+      "category": "architecture",
+      "title": "Write-side vault resolver with canonical-path write guard; rejects src/verification/certificates unless promotionActive is set",
+      "rationale": "Write-side vault resolver with canonical-path write guard; rejects src/verification/certificates unless promotionActive is set",
+      "files": [
+        "src/verification/cert_vault_role.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0623",
+      "category": "architecture",
+      "title": "Backward-compat wrapper for resolveVaultDirForWrite; defaults to write mode (build/certificates)",
+      "rationale": "Backward-compat wrapper for resolveVaultDirForWrite; defaults to write mode (build/certificates)",
+      "files": [
+        "src/cli/axiom_engine.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0623",
+      "category": "architecture",
+      "title": "Backward-compat wrapper for resolveVaultDirForWrite; defaults to write mode (build/certificates)",
+      "rationale": "Backward-compat wrapper for resolveVaultDirForWrite; defaults to write mode (build/certificates)",
+      "files": [
+        "src/verification/cert_vault_role.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0624",
+      "category": "architecture",
+      "title": "Write guard for canonical path enforced before certificate persistence",
+      "rationale": "Write guard for canonical path enforced before certificate persistence",
+      "files": [
+        "src/verification/certificate_manager.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0625",
+      "category": "architecture",
+      "title": "Write guard for canonical path enforced before certificate quarantine",
+      "rationale": "Write guard for canonical path enforced before certificate quarantine",
+      "files": [
+        "src/verification/certificate_manager.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0626",
+      "category": "architecture",
+      "title": "Write guard for canonical path enforced before stale certificate isolation",
+      "rationale": "Write guard for canonical path enforced before stale certificate isolation",
+      "files": [
+        "src/verification/certificate_manager.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0627",
+      "category": "architecture",
+      "title": "Canonical 3-state admissibility decision (ADMISSIBLE / INELIGIBLE / DEFER_TO_RUNTIME) so candidate selection and proof execution share one eligibility contract instead of duplicating drift-prone private logic",
+      "rationale": "Canonical 3-state admissibility decision (ADMISSIBLE / INELIGIBLE / DEFER_TO_RUNTIME) so candidate selection and proof execution share one eligibility contract instead of duplicating drift-prone private logic",
+      "files": [
+        "src/verification/admissibility.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v39"
+    },
+    {
+      "id": "DECISION-0627",
+      "category": "architecture",
+      "title": "Write guard for canonical path enforced before batch certificate writing",
+      "rationale": "Write guard for canonical path enforced before batch certificate writing",
+      "files": [
+        "src/verification/cert_builder.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0628",
+      "category": "architecture",
+      "title": "Write guard for canonical path enforced before UAP certificate writing",
+      "rationale": "Write guard for canonical path enforced before UAP certificate writing",
+      "files": [
+        "src/verification/cert_writer.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0629",
+      "category": "architecture",
+      "title": "Write guard for canonical path enforced before fingerprint certificate writing",
+      "rationale": "Write guard for canonical path enforced before fingerprint certificate writing",
+      "files": [
+        "src/verification/cert_writer.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0630",
+      "category": "architecture",
+      "title": "Updated raises clause to accommodate canonical write guard in writeCertificate",
+      "rationale": "Updated raises clause to accommodate canonical write guard in writeCertificate",
+      "files": [
+        "src/verification/analyzer/stage_02_fingerprint.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0631",
+      "category": "architecture",
+      "title": "Enables the canonical write chokepoint so promotion context allows direct cert write to data/trusted/certificates (runtime canonical store)",
+      "rationale": "Enables the canonical write chokepoint so promotion context allows direct cert write to data/trusted/certificates (runtime canonical store)",
+      "files": [
+        "src/verification/cert_promotion.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0632",
+      "category": "architecture",
+      "title": "Disables the canonical write chokepoint after promotion completes; restores fail-closed guard",
+      "rationale": "Disables the canonical write chokepoint after promotion completes; restores fail-closed guard",
+      "files": [
+        "src/verification/cert_promotion.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0633",
+      "category": "architecture",
+      "title": "Validates candidate via gate, then copies cert into runtime canonical vault (data/trusted/certificates/) under promotion context; reverts on any failure",
+      "rationale": "Validates candidate via gate, then copies cert into runtime canonical vault (data/trusted/certificates/) under promotion context; reverts on any failure",
+      "files": [
+        "src/verification/cert_promotion.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0634",
+      "category": "architecture",
+      "title": "Parse VerifiedClaim from JSON node with Option return type",
+      "rationale": "Parse VerifiedClaim from JSON node with Option return type",
+      "files": [
+        "src/core/trusted/claim_store_persist.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0634",
+      "category": "architecture",
+      "title": "Updates manifest.json after a successful promotion to include the new canonical entry with lifecycleStage=canonical",
+      "rationale": "Updates manifest.json after a successful promotion to include the new canonical entry with lifecycleStage=canonical",
+      "files": [
+        "src/verification/cert_promotion.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0635",
+      "category": "architecture",
+      "title": "Pure hex validation helper for fingerprint contentHash checks in promotion gate",
+      "rationale": "Pure hex validation helper for fingerprint contentHash checks in promotion gate",
+      "files": [
+        "src/verification/cert_promotion.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0635",
+      "category": "architecture",
+      "title": "Read records from append-store file with early-return validation",
+      "rationale": "Read records from append-store file with early-return validation",
+      "files": [
+        "src/core/trusted/append_store.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0636",
+      "category": "architecture",
+      "title": "Reclassifies overstated canonical certificates by deriving status from stored evidence rather than string-patching statuses",
+      "rationale": "Reclassifies overstated canonical certificates by deriving status from stored evidence rather than string-patching statuses",
+      "files": [
+        "src/verification/cert_promotion.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-0640",
+      "category": "architecture",
+      "title": "Structural fail-closed validation gate for TrustCommit; rejects tampered/empty records before admission to trust state",
+      "rationale": "Structural fail-closed validation gate for TrustCommit; rejects tampered/empty records before admission to trust state",
+      "files": [
+        "src/core/trusted/trust_commit.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0644",
+      "category": "architecture",
+      "title": "Maintenance-only reissue of a reference certificate by reclassifying its status from stored evidence; never auto-calls ax prove; operates only on the reference namespace",
+      "rationale": "Maintenance-only reissue of a reference certificate by reclassifying its status from stored evidence; never auto-calls ax prove; operates only on the reference namespace",
+      "files": [
+        "src/verification/cert_promotion.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0645",
+      "category": "architecture",
+      "title": "Parse FrameTag enum from its single-character wire representation for journal frame dispatch",
+      "rationale": "Parse FrameTag enum from its single-character wire representation for journal frame dispatch",
+      "files": [
+        "src/core/debt/debt_events.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0648",
+      "category": "architecture",
+      "title": "Parse a single journal frame line into its tag and JSON payload; fail-closed on malformed JSON",
+      "rationale": "Parse a single journal frame line into its tag and JSON payload; fail-closed on malformed JSON",
+      "files": [
+        "src/core/debt/debt_events.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0649",
+      "category": "architecture",
+      "title": "Parse a DECISION frame JSON node into a PolicyDecision; fail-closed on unknown verdict",
+      "rationale": "Parse a DECISION frame JSON node into a PolicyDecision; fail-closed on unknown verdict",
+      "files": [
+        "src/core/debt/debt_events.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0650",
+      "category": "architecture",
+      "title": "Parse an EVENT frame JSON node into a ClassificationEvent; fail-closed on unknown class",
+      "rationale": "Parse an EVENT frame JSON node into a ClassificationEvent; fail-closed on unknown class",
+      "files": [
+        "src/core/debt/debt_events.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0651",
+      "category": "architecture",
+      "title": "Parse a COMMIT frame JSON node into its closure tuple; fail-closed on missing fields",
+      "rationale": "Parse a COMMIT frame JSON node into its closure tuple; fail-closed on missing fields",
+      "files": [
+        "src/core/debt/debt_events.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0654",
+      "category": "architecture",
+      "title": "Map a stripped source line to an ObservedIntegrityPattern via the centralized keyword table",
+      "rationale": "Map a stripped source line to an ObservedIntegrityPattern via the centralized keyword table",
+      "files": [
+        "src/core/debt/integrity_patterns.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0656",
+      "category": "architecture",
+      "title": "Parse a journal line as either canonical JSON or legacy pipe-delimited form into a DebtObservation",
+      "rationale": "Parse a journal line as either canonical JSON or legacy pipe-delimited form into a DebtObservation",
+      "files": [
+        "src/core/debt/debt_observation.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0658",
+      "category": "architecture",
+      "title": "Look up a ProvenanceNode by its nodeId in the graph; none if absent",
+      "rationale": "Look up a ProvenanceNode by its nodeId in the graph; none if absent",
+      "files": [
+        "src/core/debt/debt_provenance.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0659",
+      "category": "architecture",
+      "title": "Find the shortest path between two nodes in the provenance DAG via BFS; empty seq if unreachable",
+      "rationale": "Find the shortest path between two nodes in the provenance DAG via BFS; empty seq if unreachable",
+      "files": [
+        "src/core/debt/debt_provenance.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0810",
+      "category": "architecture",
+      "title": "Canonical ok-path constructor for TransitionResult — successful transitions of the obligation proof state machine",
+      "rationale": "Canonical ok-path constructor for TransitionResult — successful transitions of the obligation proof state machine",
+      "files": [
+        "src/verification/obligation/proof_state_machine.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v39"
+    },
+    {
+      "id": "DECISION-0811",
+      "category": "architecture",
+      "title": "Fail-closed constructor for TransitionResult — failed transitions carry the rejection reason",
+      "rationale": "Fail-closed constructor for TransitionResult — failed transitions carry the rejection reason",
+      "files": [
+        "src/verification/obligation/proof_state_machine.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v39"
+    },
+    {
+      "id": "DECISION-0813",
+      "category": "architecture",
+      "title": "Shared terminal-state guard for all state-machine transitions — terminal outcomes reject further transitions",
+      "rationale": "Shared terminal-state guard for all state-machine transitions — terminal outcomes reject further transitions",
+      "files": [
+        "src/verification/obligation/proof_state_machine.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v39"
+    },
+    {
+      "id": "DECISION-0814",
+      "category": "architecture",
+      "title": "Candidate → Analyzed transition — the single allowed advance from the candidate phase",
+      "rationale": "Candidate → Analyzed transition — the single allowed advance from the candidate phase",
+      "files": [
+        "src/verification/obligation/proof_state_machine.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v39"
+    },
+    {
+      "id": "DECISION-0815",
+      "category": "architecture",
+      "title": "Analyzed → ObligationDecision/Terminal 4-way routing from the generation-result classification",
+      "rationale": "Analyzed → ObligationDecision/Terminal 4-way routing from the generation-result classification",
+      "files": [
+        "src/verification/obligation/proof_state_machine.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v39"
+    },
+    {
+      "id": "DECISION-0816",
+      "category": "architecture",
+      "title": "ObligationDecision → ProofAttempted transition — marks proof attempt initiation",
+      "rationale": "ObligationDecision → ProofAttempted transition — marks proof attempt initiation",
+      "files": [
+        "src/verification/obligation/proof_state_machine.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v39"
+    },
+    {
+      "id": "DECISION-0817",
+      "category": "architecture",
+      "title": "ProofAttempted → Terminal verdict resolution; ptProved/ptRefuted reachable only via evidence-backed settle events",
+      "rationale": "ProofAttempted → Terminal verdict resolution; ptProved/ptRefuted reachable only via evidence-backed settle events",
+      "files": [
+        "src/verification/obligation/proof_state_machine.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v39"
+    },
+    {
+      "id": "DECISION-0818",
+      "category": "architecture",
+      "title": "Single-step pipeline analyze → decide → attempt → settle with early-exit on non-generated terminal results",
+      "rationale": "Single-step pipeline analyze → decide → attempt → settle with early-exit on non-generated terminal results",
+      "files": [
+        "src/verification/obligation/proof_state_machine.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v39"
+    },
+    {
+      "id": "DECISION-0820",
+      "category": "architecture",
+      "title": "Refuse to record a solver binary identity that was not observed; an unresolvable path or unreadable executable must fail closed instead of degrading to an empty digest",
+      "rationale": "Refuse to record a solver binary identity that was not observed; an unresolvable path or unreadable executable must fail closed instead of degrading to an empty digest",
+      "files": [
+        "src/verification/solver/solver_invocation_provenance.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0821",
+      "category": "architecture",
+      "title": "Resolve the canonical solver executable and memoize its content digest so the digest cannot drift between invocations in one run",
+      "rationale": "Resolve the canonical solver executable and memoize its content digest so the digest cannot drift between invocations in one run",
+      "files": [
+        "src/verification/solver/solver_invocation_provenance.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-0822",
+      "category": "architecture",
+      "title": "Evidence capture is fail-closed on solver identity: a bundle whose SolverInvocation cannot name the executable that received the problem is a false-authority record, so it is refused rather than written with an empty binary digest",
+      "rationale": "Evidence capture is fail-closed on solver identity: a bundle whose SolverInvocation cannot name the executable that received the problem is a false-authority record, so it is refused rather than written with an empty binary digest",
+      "files": [
+        "src/verification/solver/solver_invocation_provenance.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v33"
+    },
+    {
+      "id": "DECISION-HELPERS-1",
+      "category": "architecture",
+      "title": "Non-gate runner modules declared in SSOT so manifest_consistency Check 6 uses deterministic data instead of code heuristics",
+      "rationale": "Non-gate runner modules declared in SSOT so manifest_consistency Check 6 uses deterministic data instead of code heuristics",
+      "files": [
+        "src/gate/helper_spec.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v32"
+    },
+    {
+      "id": "DECISION-NNNN",
+      "category": "architecture",
+      "title": "Atomic receipt serialization for cross-process integrity",
+      "rationale": "Atomic receipt serialization for cross-process integrity",
+      "files": [
+        "src/core/trusted/axiom_pragmas_lite.nim"
+      ],
+      "dependsOn": [],
+      "status": "accepted",
+      "date": "v27"
+    }
+  ]
+}

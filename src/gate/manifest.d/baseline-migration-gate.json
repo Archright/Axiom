@@ -1,0 +1,14 @@
+{
+  "id": "baseline-migration-gate",
+  "name": "Baseline transition gate (migration-aware classifier)",
+  "layer": "functional",
+  "entry": "src/gate/runners/baseline_migration_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "data/|src/",
+  "passFilenames": false,
+  "weight": "light",
+  "category": "rule",
+  "severity": "error"
+}

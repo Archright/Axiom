@@ -1,0 +1,78 @@
+================================================================================
+EVIDENCE: Pre-Commit Gate Hook 300s Timeout Root Cause
+Date: 2026-05-28
+Commit: 0e114528
+================================================================================
+
+[EMPIRICAL DATA] Per-gate wall-clock measurements (pre-commit stage)
+--------------------------------------------------------------------------------
+gate-self-check          :   0.008s  PASS
+sentinel                 :   0.010s  PASS
+unstaged-guard           :   0.018s  PASS
+quality-gate-marker      :   0.010s  PASS
+external-cli-smoke       :  21.970s  PASS  <-- BUG: env var lost
+procedure-gate           :   0.009s  PASS
+nim-check (incremental)  :   0.006s  PASS
+drnim                    :   1.395s  PASS
+gateway-test             :   0.006s  PASS
+integrity-test           :  >60.000s TIMEOUT <-- BOTTLENECK
+asi-hard-gate            :   0.011s  FAIL   (ASI 0.0000)
+context7-evidence-gate   :   0.011s  PASS
+nimtry                   :   0.637s  PASS
+policy-validator         :   0.010s  PASS
+context-size-guard       :   0.010s  PASS
+memory-policy-gate       :   0.009s  PASS
+intent-gate              :   0.010s  PASS
+spec-presence-gate       :   0.016s  PASS
+test-coverage-gate       :   0.019s  PASS
+
+[ROOT CAUSE 1] external_cli_smoke env var propagation failure
+--------------------------------------------------------------------------------
+Command: time AXIOM_SKIP_HEAVY_TESTS=true bin/external_cli_smoke
+Result:  0.002s  "Skipping external CLI smoke (AXIOM_SKIP_HEAVY_TESTS=true)"
+
+Command: time AXIOM_SINGLE_GATE_ID=external-cli-smoke bin/gate_hook pre-commit
+Result:  21.97s  (full smoke_test.nim executes, env var NOT propagated)
+
+Code location: scripts/gate_hook.nim lines 218-224
+  putEnv(k, v)  <-- modifies parent env
+  startProcess("bin/gate_hook", ...)  <-- child inherits, but grandchild?
+
+[ROOT CAUSE 2] integrity-test compiles full suite with separate cache
+--------------------------------------------------------------------------------
+Code location: src/gate/runners/integrity_test.nim
+  execCmdEx("nim c --nimcache:nimcache -r tests/integrity_check.nim")
+
+Command: time bin/integrity_test
+Result:  >60s (killed by timeout)
+
+[ROOT CAUSE 3] No L2 gate timeout
+--------------------------------------------------------------------------------
+Code location: scripts/gate_hook.nim lines 235-250
+  peekExitCode(rg.process)  <-- polling loop
+  sleep(50)                 <-- 50ms sleep, NO MAX DURATION
+
+[OFFICIAL DOC CITATIONS]
+--------------------------------------------------------------------------------
+1. Nim osproc (Context7 /nim-lang/nim, 1.4.0 changelog):
+   "A bug fix in osproc.startProcess addresses hangs that occurred when a
+    process had both stdin reads and stdout writes by ensuring close on io
+    streams is no longer a no-op."
+
+2. Nim osproc execCmdEx (Context7 /nim-lang/nim):
+   "osproc.execCmdEx has been enhanced to accept optional input for stdin,
+    workingDir, and env parameters."
+
+3. systemd CONTROL_GROUP_INTERFACE.md (Context7 /systemd/systemd):
+   "systemd-run tool is a wrapper for StartTransientUnit(). ... TimeoutStopUSec
+    and PIDs (for scopes), and numerous resource control settings."
+
+4. AGENTS.md §2.7 / gate_list.nim static assertion:
+   "Heavy gate exceeds pre-commit < 10s budget"
+
+[VERIFY]
+--------------------------------------------------------------------------------
+All measurements reproducible on commit 0e114528 with 3 changed test files.
+Host: 16-core / 32GB / Nim 2.2.10 / systemd 255
+
+================================================================================

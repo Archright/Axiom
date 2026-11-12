@@ -1,0 +1,11 @@
+# build/toolchain_id.txt — toolchain identity at judgment/bundle time (2026-10-11)
+# Verbatim from env/toolchain.md (B-1 slice); re-checked at bundle time by replay.sh run.
+
+nim_version_line   = Nim Compiler Version 2.2.10 [Linux: amd64]
+nim_git_hash       = bfeb3146d1638b39f69007a4ae5a23e23ae4e5ef
+nim_binary         = <user-home>/.choosenim/toolchains/nim-2.2.10/bin/nim
+nimble             = v0.22.2
+cc                 = gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+kernel             = Linux 6.17.0-42-generic x86_64
+ulimit_s           = 8192
+mm                 = --mm:orc

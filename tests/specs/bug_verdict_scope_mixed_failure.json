@@ -1,0 +1,31 @@
+{
+  "schema": "bug-verdict-scoped-projection-fixture-v1",
+  "glossary": "docs/spec/bug_verdict_glossary.md §2.4d (스코프·표시 결속 규칙)",
+  "purpose": "혼합-실패 수용 하니스(§2.4d)의 시드 증거 — 오버레이가 다루는 유닛(A)은 검증되고 무관한 변이체 유닛(B)이 시드 반례로 전역 실패를 내는 두-후보 실행의 유닛-스코프 증거를 고정한다. 시드 값은 S6 기록 형태(replay.subjectGitRef=/input./propertyViolated=/replay.verdict=)를 따른다.",
+  "overlayGovernedUnit": "stew/base36.nim::decodedLength",
+  "candidateA": {
+    "note": "오버레이 대상 유닛 — golden fixture 위에서 검증됨. canonical/Lean 조기-반환 경로는 verifiedClaim을 만들지 않는다(결석-비조작: absent-not-fabricated).",
+    "unit": "stew/base36.nim::decodedLength",
+    "rowStatus": "verified",
+    "claim": null,
+    "counterExample": []
+  },
+  "candidateB": {
+    "note": "무관한 변이체 유닛 — 시드 반례를 운반하며 전역 vrFail의 원인. A의 규칙 이름 결속에는 어떤 근거도 제공하지 않는다.",
+    "unit": "stew/base36.nim::encodedLength",
+    "rowStatus": "failed",
+    "claim": {
+      "claimId": "seededfailingclaim000000000000000000000000000000000000000000000000",
+      "claimOutcome": "clDisproved",
+      "evidenceId": "seededfailingevide00000000000000000000000000000000000000000000",
+      "obligationId": "seededfailingoblig00000000000000000000000000000000000000000000",
+      "specificationId": "seededfailingspec00000000000000000000000000000000000000000"
+    },
+    "counterExample": [
+      "replay.subjectGitRef=seededfailingmutantcommit0000000000000000000000000000",
+      "input.length=3",
+      "propertyViolated=roundtrip_dec_enc_post (bvsdiv-eroded conjunct)",
+      "replay.verdict=rvAgree"
+    ]
+  }
+}

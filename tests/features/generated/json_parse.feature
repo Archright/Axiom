@@ -1,0 +1,24 @@
+@generated @critical
+Feature: json_parse
+  # generated | src/core/pure_deps/json_parse.nim | core | critical
+
+  Scenario: module compiles without errors
+    Given the module "core/pure_deps/json_parse" is loaded
+    Then compilation should succeed
+
+  Scenario: exported types have valid defaults
+    Given the module exports types (none)
+    Then each type should be instantiable via default(T)
+
+  Scenario: module respects import boundary
+    Given the module "core/pure_deps/json_parse" is loaded
+    Then it should not directly import "core/trusted/" or "core/types/"
+    And all internal imports should go through forwarding stubs
+
+  Scenario: exported funcs declare exception contracts
+    Given the module exports funcs pureParseJson
+    Then each func should have {.raises: [].} or {.raises: [CatchableError].}
+
+  Scenario: func pureParseJson is callable
+    Given the module "core/pure_deps/json_parse" is loaded
+    Then func pureParseJson should return a valid value

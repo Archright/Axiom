@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/ratchet_shrink.sh",
+  "description": "Weekly ceiling reduction for the ratchet effect — reduces legacy_violations_ceiling and impure_proc_ceiling by shrink_rate_percent",
+  "inputSample": {
+    "args": ["--dry-run"]
+  },
+  "outputSample": {
+    "stdout": "ratchet_shrink: legacy_violations_ceiling 10 -> 9, impure_proc_ceiling 5 -> 4 (dry-run)",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

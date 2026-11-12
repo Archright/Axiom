@@ -1,0 +1,77 @@
+{
+ "schema": "axiom.promotion-manifest.v1",
+ "promotion": "gpa-v1-activation",
+ "phase": "1-bootstrap",
+ "recordedAt": "2026-10-21T21:20:00Z",
+ "authority": {
+  "mergeAuthority": "GitHub (ruleset 20303214 merge queue — P12 delegation)",
+  "activationAuthority": "operator ruleset PUT (wintrover, org admin)",
+  "policySSOT": "config/policy/merge_admission.json v1.16.1"
+ },
+ "candidate": {
+  "pr": 1024,
+  "headSha": "0ce4f2f6a",
+  "mergeCommit": "f490c66a8027d7f3642b888534430f28d86e491f",
+  "mergedAt": "2026-10-21T20:52:33Z",
+  "selfRunPullRequest": {
+   "id": 39671384245,
+   "conclusion": "success",
+   "verdict": "ACCEPTED",
+   "l2": "PROMOTION_PENDING"
+  },
+  "selfRunMergeGroup": {
+   "id": 39672117311,
+   "event": "merge_group",
+   "conclusion": "success"
+  }
+ },
+ "probe": {
+  "pr": 1025,
+  "mergeCommit": "b65b28b32251d3dd13b51c5db73f43415760f21b",
+  "mergedAt": "2026-10-21T21:11:48Z",
+  "run": {
+   "id": 39674813716,
+   "event": "pull_request",
+   "conclusion": "success",
+   "verdict": "ACCEPTED (NO_SURFACE_DELTA)",
+   "duration": "19s"
+  }
+ },
+ "uniqueness": {
+  "workflowId": 392117427,
+  "workflowPath": ".github/workflows/generation-acceptance.yml",
+  "registryState": "active",
+  "verifiedAt": "2026-10-21T21:00:00Z",
+  "evidence": "sole job-name occurrence on origin/main; exactly 1 check-run named generation-acceptance on main head; platform assignment 2026-10-22T04:53:43+09:00"
+ },
+ "activation": {
+  "rulesetId": 20303214,
+  "method": "PUT /repos/Archright/Axiom/rulesets/20303214",
+  "executedAt": "2026-10-21T21:18:00Z",
+  "expectedChecks": [
+   "admission-check",
+   "bsec-integrity",
+   "debt-registry-gate",
+   "generation-acceptance"
+  ],
+  "readback": {
+   "provenance": "operator-promotion-adapter (org admin gh readback — job GITHUB_TOKEN cannot read this: MUST#8)",
+   "fetchedAt": "2026-10-21T21:19:00Z",
+   "actualChecks": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance"
+   ],
+   "integrationIds": {
+    "admission-check": 15368,
+    "bsec-integrity": 15368,
+    "debt-registry-gate": 15368,
+    "generation-acceptance": 15368
+   },
+   "enforcement": "active",
+   "equal": true
+  }
+ },
+ "bootstrapClause": "ADR-0036 — GPA v1 landed through the v5.1 generation's operator rotation path; activation preconditions: self-PR green (PR+merge_group), probe fast-path green, uniqueness verified. This manifest PR is the first merge under the 4-check regime."
+}

@@ -1,0 +1,13 @@
+// closure-watcher controlled drift test fixture — SYNTHETIC, NOT a live policy pin.
+// Consumed by .github/workflows/closure-watcher.yml detect job in DRIFT TEST mode
+// (workflow_dispatch inputs.drift_test, or repo Actions variable
+// CLOSURE_WATCHER_DRIFT_TEST=1). The intentional derived-only member below is what
+// the compare step must detect; JSONC comment lines exercise the string-aware
+// stripper path (1:1 port of merge_cli.nim stripJsoncComments) at the same time.
+{
+  "trustedCheckerTreeClosure": {
+    "src/fixture_a.nim": { "mode": "content", "type": "blob", "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+    "src/fixture_b.nim": { "mode": "content", "type": "blob", "sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
+    "src/fixture_c.nim": { "mode": "content", "type": "blob", "sha": "cccccccccccccccccccccccccccccccccccccccc" }
+  }
+}

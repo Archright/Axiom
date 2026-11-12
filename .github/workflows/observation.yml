@@ -1,0 +1,188 @@
+name: observer-manifest-consistency
+
+# 관측 전용 워크플로 — 결정 #20의 #13(6) 해석("required 아니고 contents: read인
+# 관측 전용 워크플로는 authority surface가 아니다")에 따른 비권위 관측자.
+# required check 아님 · 어떤 merge도 막지 않음 · 승격 판단 시 Owner가 집계 명령을
+# 실행해 증거를 모은다(ADR-0033 §승격 규칙, 결정 #19(c)/#20).
+#
+# Gate A 정합: 판정기(manifest-consistency-gate)는 B에서 빌드하고, 대상 트리는
+# DATA로만 읽는다(_candidate — "no execution from the H tree").
+# 신원(재유도, 결정 #20(c)): payload에 B/H/event를 기록하고 계수 시
+# H:observation.yml == B:observation.yml + gateSourceBlobOid만 단언한다.
+#
+# 무권한 증명: triggers = pull_request + merge_group뿐(dispatch·push 없음),
+# 최상위 permissions = contents: read 단독, external uses:는 전부 커밋 SHA 고정
+# (repo 정책 sha_pinning_required). ADR-0025 Amendment B: main 머지 이벤트
+# 실행 0 유지 — `push: main` 금지.
+
+on:
+  pull_request:
+    branches: [main]
+  merge_group:
+    types: [checks_requested]
+
+permissions:
+  contents: read
+
+# B3 교훈(admission-check.yml:158-181): 그룹 키에 event_name 스코프 필수.
+# cancel-in-progress: false — 취소된 라운드는 OBSERVER-FAULT(미계수+연속 단절)로
+# 분류되므로 라운드 증거를 보존하려면 취소를 만들지 말아야 한다(결정 #19(c)①).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.merge_group.head_sha || github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  observe:
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 10
+    steps:
+      - name: "[observe] Checkout executor tree = B (base.sha, workspace root — judge source)"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (repo sha-pin)
+        with:
+          ref: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          fetch-depth: 0
+
+      - id: setup
+        uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          cache-save-enabled: 'false'
+          cache-build-source: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          provision-scope: 'full'
+
+      - name: "[observe] Checkout candidate = H (subject tree, data-only path)"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (repo sha-pin)
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
+          path: _candidate
+
+      # ── [s5] Supply-mode judgment (J3 §3.1 공급 재사용 — admission-check.yml의
+      # [s5] 스텝과 동일 관용구) ──
+      # 위 setup-axiom-toolchain의 B-restore 연쇄는 exact-key 복원 → trusted-input
+      # fingerprint verify(신원 재유도 + 항목별 sha256) → semantic provenance
+      # probe(복원된 4종 ci-compile 바이너리 전수 --check-provenance)이고, verify/
+      # probe FAIL 경로는 복원물을 삭제한다(fail-closed). 따라서 b-cache-hit=true
+      # AND bin/ax 실행 가능 = 검증된 공급이 온전하다는 판정이다. HIT이면
+      # config/integrity.nims:100-104가 src/gate·tests 도메인의 모든 nim c에
+      # 요구하는 bin/ax 존재가 이미 충족되므로 nimble build 전체 컴파일을
+      # 생략한다(HIT = verified computation SUPPLY REUSE — cache is acceleration,
+      # never evidence). 그 외(B 미스, 또는 복원물이 verify/probe FAIL로 폐기됨)는
+      # 종전 콜드 경로 그대로. 명시적 판정 라인이 의무다 — 플랫폼은 스킵 스텝을
+      # 성공으로 계수하므로 조용한 스킵은 극장이다(§0.9). 판정 자체는 아래 스텝에서
+      # 두 경로 모두 항상 재계산된다(J3: verdicts are always recomputed).
+      - name: "[s5] Supply-mode judgment (verified bin/ax HIT = supply reuse / else cold build)"
+        id: s5-supply
+        env:
+          B_CACHE_HIT: ${{ steps.setup.outputs.b-cache-hit }}
+        run: |
+          set -euo pipefail
+          if [ "$B_CACHE_HIT" = "true" ] && [ -x bin/ax ]; then
+            echo "mode=skip" >> "$GITHUB_OUTPUT"
+            echo "SUPPLY REUSE — verified bin/ax restored; nimble build skipped (J3 §3.1)"
+          else
+            echo "mode=build" >> "$GITHUB_OUTPUT"
+            echo "OBSERVER COLD BUILD — verified supply absent; building (cache is acceleration, never evidence)"
+          fi
+
+      - name: "[observe] Observe (3-state verdict → job conclusion mapping)"
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          B_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          H_SHA: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
+          A_CACHE_HIT: ${{ steps.setup.outputs.a-cache-hit }}
+          S5_MODE: ${{ steps.s5-supply.outputs.mode }}
+        run: |
+          set -uo pipefail
+          # 3상태→job 결론 매핑(단일 스텝 — 결정 #19(c)): PASS→0,
+          # WOULD-BLOCK→::warning::+0, FAULT→::error::+1(비필수 빨강 = Owner 표시,
+          # 머지 비차단 — required=1 불변). E-A 계수는 job 결론이 아니라 payload만 읽는다.
+          GATE="$GITHUB_WORKSPACE/bin/manifest_consistency_gate"
+          PAYLOAD_DIR="$RUNNER_TEMP/observer-payload"
+          mkdir -p "$PAYLOAD_DIR"
+
+          emit_payload() {
+            # $1=verdict $2=fault_cause $3=violations_json $4=rc
+            local verdict="$1" cause="$2" vio="$3" rc="$4"
+            local gate_src_oid h_wfb b_wfb identity_ok
+            if ! gate_src_oid="$(git -C "$GITHUB_WORKSPACE" rev-parse "$B_SHA:src/gate/runners/manifest_consistency_gate.nim" 2>/dev/null)"; then
+              emit_payload "OBSERVER-FAULT" "gate" "[]" "1"
+              echo "::error::[observation] OBSERVER-FAULT (gate) — gateSourceBlobOid unresolvable (fail-closed)"
+              exit 1
+            fi
+            if ! h_wfb="$(git -C "$GITHUB_WORKSPACE/_candidate" rev-parse "HEAD:.github/workflows/observation.yml" 2>/dev/null)"; then
+              h_wfb="ABSENT"
+            fi
+            if ! b_wfb="$(git -C "$GITHUB_WORKSPACE" rev-parse "$B_SHA:.github/workflows/observation.yml" 2>/dev/null)"; then
+              b_wfb="ABSENT"
+            fi
+            identity_ok="false"
+            if [ "$h_wfb" = "$b_wfb" ] && [ "$h_wfb" != "ABSENT" ]; then identity_ok="true"; fi
+            cat > "$PAYLOAD_DIR/payload.json" <<EOF
+          {"schemaVersion":1,"event":"$EVENT_NAME","B":"$B_SHA","H":"$H_SHA","verdict":"$verdict","violations":$vio,"judgmentKey":"manifest-consistency|$B_SHA|$H_SHA","fault_cause":"$cause","gateSourceBlobOid":"$gate_src_oid","workflowBlobAtH":"$h_wfb","workflowBlobAtB":"$b_wfb","identityOk":$identity_ok,"aCacheHit":"$A_CACHE_HIT","rc":$rc,"runAttempt":${{ github.run_attempt }}}
+          EOF
+          }
+
+          # ── 판정기 = B에서 빌드(Gate A) ──
+          # config/integrity.nims가 src/gate·tests 도메인의 모든 nim c 앞에 bin/ax
+          # 존재를 요구한다(config/integrity.nims:100-104, tests/config.nims:8-12)
+          # — [s5] 판정이 skip이 아니면 이 요건을 채우는 선행 nimble build가
+          # 필요하다(2026-10-10 실측: bin/ax 부재 시 "[Integrity Violation] bin/ax
+          # is missing"으로 fail-closed). skip이면 검증된 B-공급(bin/ax)이 이미
+          # 존재하므로 부트스트랩 재컴파일 없이 재사용한다(J3 §3.1 — 판정은
+          # 항상 재계산). nimble build 실패 = 공급 확립 실패 → OBSERVER-FAULT.
+          if [ "$S5_MODE" != "skip" ]; then
+            set +e
+            nimble build > "$PAYLOAD_DIR/bootstrap.log" 2>&1
+            boot_rc=$?
+            set -e
+            if [ "$boot_rc" -ne 0 ]; then
+              emit_payload "OBSERVER-FAULT" "toolchain" "[]" "$boot_rc"
+              echo "::error::[observation] OBSERVER-FAULT (toolchain) — nimble build failed (fail-closed)"
+              exit 1
+            fi
+          fi
+          set +e
+          nim c -d:danger --hints:off -o:"$GATE" src/gate/runners/manifest_consistency_gate.nim > "$PAYLOAD_DIR/build.log" 2>&1
+          build_rc=$?
+          set -e
+          if [ "$build_rc" -ne 0 ]; then
+            emit_payload "OBSERVER-FAULT" "toolchain" "[]" "$build_rc"
+            echo "::error::[observation] OBSERVER-FAULT (toolchain) — gate build from B failed (fail-closed)"
+            exit 1
+          fi
+
+          # ── 관측: 대상 트리(_candidate)는 DATA 전용 — 실행은 B-빌드 판정기만 ──
+          set +e
+          ( cd _candidate && "$GATE" --json > "$PAYLOAD_DIR/verdict.json" 2> "$PAYLOAD_DIR/verdict.stderr" )
+          rc=$?
+          set -e
+
+          if ! jq -e . "$PAYLOAD_DIR/verdict.json" > /dev/null 2>&1; then
+            emit_payload "OBSERVER-FAULT" "gate" "[]" "$rc"
+            echo "::error::[observation] OBSERVER-FAULT (gate) — verdict JSON absent/unparseable (fail-closed)"
+            exit 1
+          fi
+          verdict="$(jq -r '.verdict // empty' "$PAYLOAD_DIR/verdict.json")"
+          vio="$(jq -c '.violations // []' "$PAYLOAD_DIR/verdict.json")"
+          case "$verdict" in
+            PASS)
+              emit_payload "PASS" "" "$vio" "$rc"
+              echo "[observation] PASS"
+              exit 0 ;;
+            WOULD-BLOCK)
+              emit_payload "WOULD-BLOCK" "" "$vio" "$rc"
+              echo "::warning::[observation] WOULD-BLOCK — $vio"
+              exit 0 ;;
+            *)
+              emit_payload "OBSERVER-FAULT" "gate" "$vio" "$rc"
+              echo "::error::[observation] OBSERVER-FAULT (gate) — unknown verdict token '$verdict'"
+              exit 1 ;;
+          esac
+
+      - name: "[observe] Upload observer payload"
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2 (repo sha-pin)
+        with:
+          name: observer-payload-${{ github.event.merge_group.head_sha || github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/observer-payload/payload.json
+          if-no-files-found: error
+          retention-days: 30

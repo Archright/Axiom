@@ -1,0 +1,61 @@
+# workflow_lane_guard fixture — DESIGNED VERDICT: PASS (whole scan exit 0).
+# Recipe shape of 2555ab966e35e8a5023c28e87c1836b1744bd7a9
+# (fix/go-critical-cold-race-residual, admission-check.yml): the same lane
+# execution as lane_without_emission.yml PLUS both mandatory emission markers —
+# (a) failure re-emission of the per-lane run.log into the step log
+# (`cat "$d/run.log"`; the live-tee alternative is the Slice B S2 recipe,
+# queue-probe f1e600965, `nim … 2>&1 | tee "$d/run.log"`), and (b) an
+# `if: always()` upload-artifact step covering the lane logs. Guard rule:
+# tools/ci/validate_workflow_shell.sh; prereg §8 amendment 2026-10-15.
+name: lane-guard-fixture-positive
+jobs:
+  attest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "[check] GO-critical admission tests (fixture — lane, with emission)"
+        run: |
+          set -e
+          LANE_ROOT=/tmp/go-critical-lanes
+          rm -rf "$LANE_ROOT"
+          mkdir -p "$LANE_ROOT"
+          lane_run() { # lane_run <slug> <test-path>
+            local slug="$1" t="$2" rc=0
+            local d="$LANE_ROOT/$slug"
+            mkdir -p "$d"
+            make test-fast-one T="$t" \
+              OUT="/tmp/opencode/ax-one-$slug" > "$d/run.log" 2>&1 || rc=$?
+            echo "$rc" > "$d/status"
+            return "$rc"
+          }
+          LANE_PIDS=""
+          for t in tests/unit/proof_integrity_test.nim \
+                   tests/unit/test_s1a_lean_golden.nim; do
+            case "$t" in
+              tests/unit/proof_integrity_test.nim) lane_run pi "$t" & LANE_PIDS="$LANE_PIDS $!" ;;
+              tests/unit/test_s1a_lean_golden.nim) lane_run s1a "$t" & LANE_PIDS="$LANE_PIDS $!" ;;
+            esac
+          done
+          FAILS=0
+          for p in $LANE_PIDS; do wait "$p" || FAILS=$((FAILS + 1)); done
+          d="$LANE_ROOT/pi"
+          if [ "$FAILS" -ne 0 ] && [ -f "$d/run.log" ]; then
+            echo "[admission-tests] ── lane transcript (run.log, rc≠0) ──"
+            cat "$d/run.log"
+          fi
+          if [ ! -f "$d/status" ]; then
+            echo "[admission-tests] FAIL — lane produced no status file"
+            exit 1
+          fi
+          if [ "$FAILS" -ne 0 ]; then
+            exit 1
+          fi
+      - name: "[check] Upload GO-critical lane logs (forensics — always; fixture)"
+        # always(): a failed lane's transcript lives ONLY in
+        # /tmp/go-critical-lanes/<slug>/run.log — without this upload a failed
+        # attempt would lose the transcript with the runner (2555ab966 recipe).
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4 (repo sha-pin)
+        with:
+          name: go-critical-lane-logs-fixture
+          path: /tmp/go-critical-lanes/**
+          if-no-files-found: warn

@@ -1,0 +1,88 @@
+# field_probe output — captured 2026-10-11
+# profile: pinned (explicit --path: serialization-0.5.4 + faststreams-0.5.2 + stew-0.5.0 + repo @4aa8e22)
+
+########## [1] field_probe.nim (alpha/beta/gamma) — --mm:orc --run --skipParentCfg, cwd=/tmp
+Hint: used config file '<user-home>/.choosenim/toolchains/nim-2.2.10/config/nim.cfg' [Conf]
+Hint: used config file '<user-home>/.choosenim/toolchains/nim-2.2.10/config/config.nims' [Conf]
+................................................................................................
+totalSerializedFields = 3
+field: alpha
+field: beta
+field: gamma
+CC: system/exceptions.nim
+CC: std/private/digitsutils.nim
+CC: system/dollars.nim
+CC: system.nim
+CC: serialization/errors.nim
+CC: field_probe.nim
+Hint:  [Link]
+Hint: mm: orc; threads: on; opt: none (DEBUG BUILD, `-d:release` generates faster code)
+42687 lines; 0.677s; 47.398MiB peakmem; proj: ./experiments/act2-wp-toml-b1-input-integrity/env/field_probe.nim; out: ./experiments/act2-wp-toml-b1-input-integrity/env/field_probe [SuccessX]
+Hint: './experiments/act2-wp-toml-b1-input-integrity/env/field_probe' [Exec]
+field_probe: OK (all assertions passed)
+exit=0
+
+########## [2] field_probe_abc.nim (a/b/c) — same profile
+Hint: used config file '<user-home>/.choosenim/toolchains/nim-2.2.10/config/nim.cfg' [Conf]
+Hint: used config file '<user-home>/.choosenim/toolchains/nim-2.2.10/config/config.nims' [Conf]
+................................................................................................
+totalSerializedFields = 3
+field: a
+field: b
+field: c
+CC: system/exceptions.nim
+CC: std/private/digitsutils.nim
+CC: system/dollars.nim
+CC: system.nim
+CC: serialization/errors.nim
+CC: field_probe_abc.nim
+Hint:  [Link]
+Hint: mm: orc; threads: on; opt: none (DEBUG BUILD, `-d:release` generates faster code)
+42683 lines; 0.676s; 47.391MiB peakmem; proj: ./experiments/act2-wp-toml-b1-input-integrity/env/field_probe_abc.nim; out: ./experiments/act2-wp-toml-b1-input-integrity/env/field_probe_abc [SuccessX]
+Hint: './experiments/act2-wp-toml-b1-input-integrity/env/field_probe_abc' [Exec]
+field_probe_abc: OK (all assertions passed)
+exit=0
+
+########## [3] field_probe.nim — auto-discovery (no --path), cwd=/tmp, --mm:orc
+Hint: used config file '<user-home>/.choosenim/toolchains/nim-2.2.10/config/nim.cfg' [Conf]
+Hint: used config file '<user-home>/.choosenim/toolchains/nim-2.2.10/config/config.nims' [Conf]
+................................................................................................
+totalSerializedFields = 3
+field: alpha
+field: beta
+field: gamma
+CC: system/exceptions.nim
+CC: std/private/digitsutils.nim
+CC: system/dollars.nim
+CC: system.nim
+CC: serialization-0.5.4-6a75be38ab6c8a5d49108a54b494ff70d68ea011/serialization/errors.nim
+CC: field_probe.nim
+Hint:  [Link]
+Hint: mm: orc; threads: on; opt: none (DEBUG BUILD, `-d:release` generates faster code)
+42687 lines; 0.688s; 47.312MiB peakmem; proj: ./experiments/act2-wp-toml-b1-input-integrity/env/field_probe.nim; out: ./experiments/act2-wp-toml-b1-input-integrity/env/field_probe [SuccessX]
+Hint: './experiments/act2-wp-toml-b1-input-integrity/env/field_probe' [Exec]
+field_probe: OK (all assertions passed)
+exit=0
+
+########## [4] field_probe.nim — --mm:refc --run --skipParentCfg (feasibility)
+Hint: used config file '<user-home>/.choosenim/toolchains/nim-2.2.10/config/nim.cfg' [Conf]
+Hint: used config file '<user-home>/.choosenim/toolchains/nim-2.2.10/config/config.nims' [Conf]
+...................................................................................................
+totalSerializedFields = 3
+field: alpha
+field: beta
+field: gamma
+CC: system/exceptions.nim
+CC: std/private/digitsutils.nim
+CC: system/dollars.nim
+CC: std/typedthreads.nim
+CC: sharedlist.nim
+CC: system.nim
+CC: serialization/errors.nim
+CC: field_probe.nim
+Hint:  [Link]
+Hint: mm: refc; threads: on; opt: none (DEBUG BUILD, `-d:release` generates faster code)
+43812 lines; 0.743s; 47.391MiB peakmem; proj: ./experiments/act2-wp-toml-b1-input-integrity/env/field_probe.nim; out: ./experiments/act2-wp-toml-b1-input-integrity/env/field_probe [SuccessX]
+Hint: './experiments/act2-wp-toml-b1-input-integrity/env/field_probe' [Exec]
+field_probe: OK (all assertions passed)
+exit=0

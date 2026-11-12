@@ -1,0 +1,69 @@
+# Axiom Hermetic Policy Verifier Image
+#
+# This image does NOT compile Axiom project code. It is a minimal runtime
+# sandbox that executes a pre-built Axiom binary under strace and audits every
+# execve against src/policy/build_constraint.nim.
+#
+# Usage:
+#   nimble build                              # host side
+#   bin/hermetic-build bin/axiom --version    # verification side
+#
+# The container runs with --network=none and --cap-add SYS_PTRACE.
+
+ARG NIM_VERSION=2.2.10
+
+# ─── Stage 1: Builder ────────────────────────────────────────────────────────
+# Full Nim toolchain used only to compile tools/hermetic_entry.nim.
+# Only the files required for that compilation are copied, so the image build
+# is not invalidated by unrelated project changes.
+FROM ubuntu:22.04 AS builder
+
+ARG NIM_VERSION
+ENV CHOOSENIM_NO_ANALYTICS=1
+ENV PATH="/root/.nimble/bin:/root/.choosenim/toolchains/nim-${NIM_VERSION}/bin:${PATH}"
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    ca-certificates \
+    curl \
+    libssl-dev \
+    pkg-config \
+    && curl https://nim-lang.org/choosenim/init.sh -sSf | sh -s -- -y \
+    && /root/.nimble/bin/choosenim ${NIM_VERSION} \
+    && apt-get purge -y curl \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src
+
+# Minimal source set required to compile hermetic_entry.nim.
+COPY config.nims ./
+COPY AGENTS.md ./
+COPY docs/agents/architecture.md docs/agents/rules_workflow.md docs/agents/context7-fallback.md ./docs/agents/
+COPY src/core/trusted/axiom_pragmas.nim ./src/core/trusted/
+COPY src/core/parsers/safe_parsers.nim ./src/core/parsers/
+COPY src/core/types/results.nim ./src/core/types/
+COPY src/policy/build_constraint.nim ./src/policy/
+COPY tools/hermetic_entry.nim ./tools/
+
+RUN nim c -d:release -o:/usr/local/bin/hermetic_entry tools/hermetic_entry.nim \
+    && strip /usr/local/bin/hermetic_entry
+
+# ─── Stage 2: Runtime ────────────────────────────────────────────────────────
+# Minimal Ubuntu 22.04 runtime matching the CI executor image (Dockerfile.ci).
+# Contains only the libraries needed to run Nim binaries plus strace.
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    libpcre3 \
+    libssl3 \
+    strace \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd -m -u 10001 axiom
+
+COPY --from=builder /usr/local/bin/hermetic_entry /usr/local/bin/hermetic_entry
+
+USER axiom
+
+ENTRYPOINT ["/usr/local/bin/hermetic_entry"]

@@ -1,0 +1,11 @@
+{
+  "module": "asi_cli",
+  "path": "src/cli/asi_cli.nim",
+  "capturedAt": "2026-06-24T11:45:00Z",
+  "linesOfCode": 0,
+  "procCount": 0,
+  "funcCount": 0,
+  "procs": [],
+  "funcs": [],
+  "note": "deleted module — golden retained for churn history"
+}

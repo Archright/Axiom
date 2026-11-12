@@ -1,0 +1,15 @@
+{
+  "id": "asset-hygiene-gate",
+  "name": "Axiom asset hygiene gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/asset_hygiene_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": ".gitattributes|docs/|src/|data/asset_hygiene_baseline.json",
+  "passFilenames": false,
+  "weight": "medium",
+  "category": "rule",
+  "severity": "error",
+  "execution_mode": "interpreted"
+}

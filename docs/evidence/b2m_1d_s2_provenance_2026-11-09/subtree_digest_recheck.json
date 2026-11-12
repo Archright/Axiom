@@ -1,0 +1,16 @@
+{
+ "inputs/leanproj/deps/aeneas-lean/": {
+  "measured_files": 4673,
+  "measured_bytes": 504319893,
+  "measured_digest": "1d5bd051b63b3af0e75810de372e8bdf36ab62354878bc9e8145a7f50175f567",
+  "original_digest": "1d5bd051b63b3af0e75810de372e8bdf36ab62354878bc9e8145a7f50175f567",
+  "verdict": "MATCH"
+ },
+ "inputs/leanproj/.lake/packages/": {
+  "measured_files": 148316,
+  "measured_bytes": 7248549946,
+  "measured_digest": "c52d67f07be99d465fc7ede49e064d8164a36d3bfc9a11e7c917a7d99266b5bc",
+  "original_digest": "11509afcd86ac32000ffe4c9d77143175f801a69bafdd2534513d27c4c885f9d",
+  "verdict": "MISMATCH"
+ }
+}

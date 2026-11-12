@@ -1,0 +1,624 @@
+{
+  "entries": [
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "aesop",
+      "srcHash": "8b6b58fc994ab944e644e45baad68ec47e73369281adc8ee31ccc397ce46fc91"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "apply",
+      "srcHash": "c2d11b55be3cfdafbf584b05a845df61ebfce3dbabe290c99e7841f2d576bf4c"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "audit_storage_interface",
+      "srcHash": "bbdb408ca0f81dd36881507dfa67cb70eee25ec8336de8625bd77575db8abc55"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "audit_types",
+      "srcHash": "54d421e6f8bd3e0d42a3a627f997a978c1a83afa0178e16e6d525a7b5015f064"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "axiom_codemod",
+      "srcHash": "c873473c271c2276facdabc606723fb2aabf996e1ec1979d4daad55c43dd019c"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "axiom_dsl",
+      "srcHash": "c80421d0cb7b1b287109c19b566df5b95c1c3dc569be9f41c54496393268d16b"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "axiom_engine",
+      "srcHash": "4a0531b322c2f2aa9ef430d71072b390e82b8ca61e1b4a41799827a93208ed42"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "axiom_identity",
+      "srcHash": "20e32369e5d7f398b7f27d87f1695996980ca1e087f5e0a298eb3d14d3a415bc"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "axiom_local_docs_lookup",
+      "srcHash": "1b835ecdc635211a8a548b36db2b1e3fad129ae58a9a746546ba5d04d86bff2c"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "axiom_runner",
+      "srcHash": "5869503762b0f6dfcde75ebff2c9d6e14f913cda50d2da6e82dd0c2f4f97be4b"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "axiom_task",
+      "srcHash": "0d3e88c9461d2bbb9cf1457ec2921545de506c45b1735351fc653492cfd5b9d6"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "axiom_topology",
+      "srcHash": "38f0917a1e9cc91a8508442c9611d7204f869d6207ae98469ecce81f0fb17e08"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "burn_down_queue",
+      "srcHash": "832b8ac0aeee84ca5f501223de11c54bb1199441ddfad3e880b6ac08d831496c"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "cache_manifest",
+      "srcHash": "b45a114c7e4749be4ecf1011a770186cd826e3394c975c335a951956f88df68e"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "cli_surface_generated",
+      "srcHash": "1e564ae1ca11c05520dc5145b5673d8d2d7115be6eab2809beaba73dc78b075a"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "command_registry",
+      "srcHash": "620a71a4bd5f527d9b90e800ff203903d2f72ab0518342a11514daf3af43fc57"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "compile_time_manifest",
+      "srcHash": "667943cd97479af2f2b8e04a93761cce894ca268199e0c273527e1b33f1e1a87"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "compile_time_source_scanner",
+      "srcHash": "21cffe39701d3118b3de61f1e34f7d980151b2ac732df9bd2de74076891f3479"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "compile_time_vacuity_guard",
+      "srcHash": "868f5653995dc709699048b4bde98b8e5d834b4edeaedb40c66bdb0c73111fb8"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "constants",
+      "srcHash": "031c34726423d4e5721fe98251a59d8b996bc25e6579e71d42b9174915b1c071"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "contract_ast_extractor",
+      "srcHash": "203f91a54ef65a5efa48c605fe632947114d8f0b805ae9cacb9365f6742ee24c"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "contract_types",
+      "srcHash": "c29db370a685c5ced16e9132affb0792e6f59c7a9f0eb0778a1080f37283b67c"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "decide",
+      "srcHash": "ed0efaff49d440ebfdf8009ce595d69ef984cd1e439494cc71a1b00d40a6054b"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "declaration",
+      "srcHash": "6878d70bcbc8733c9f804795f849a9754a3221381b1c25de7c4dd06f1cc1b055"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "encoding_properties",
+      "srcHash": "487bfdb98c03864ba99bc2f3d36f5039c843f8cb1491bbee002cf9dc82f62569"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "encoding_transition",
+      "srcHash": "8a3e509c3c52cbfadcdf6af409f3f3b00dab1a476e2012a5978ee9260144ac54"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "equality",
+      "srcHash": "bd3bb439637ed23d32bd2c782c2b358bab159cbea6eda4af9107c2d7aba8f0ef"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "explain",
+      "srcHash": "7d6caa922b89583be1f1b7f8768b64f7d9074fe6516a0a664b132a7ef7ddd24b"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "feature_manifest_guard",
+      "srcHash": "87e520eb7500ce426702337602ece48cbae0bceee17b4f550cab16c48c4829c1"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "file_utils",
+      "srcHash": "ed63dd8afaabfc202c2940745b39cce2499498d95ef48384a922ace2a6eba3cf"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "finite_equality",
+      "srcHash": "75632a1a06516c14b5b63d46e936d289b7d0ff79d9ab2d6a2f5a093ed9d79bea"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "function_source_extractor",
+      "srcHash": "5ff28f8f43f81e17ab816442ff80148f31e1cbd4af188f76fbac6d8b8a59a827"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "function_verification_summary",
+      "srcHash": "5be4f9b9f02049a74f05fcd76ec77c8704b1fa72b66d4b552df13d99684a7319"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "gate_runtime",
+      "srcHash": "22054672b05bbd6499af6e16bf8e7f04ca01c309b897347d63f5cdde352d5e73"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "general",
+      "srcHash": "60ed34635e96c7fd097500c2da9f43fded2815042e29e7eadb7df6859922150c"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "global_symbol_graph_builder_part1",
+      "srcHash": "66786fafc7f34648bcd6a0b9ade54b659cceaac93f15e7a07d4951e2da2fcc5f"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "global_symbol_graph_query",
+      "srcHash": "d347cdd5eabd495ab58498861024e20353171a08c8127eae9daa63d3ceefaad0"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "grind",
+      "srcHash": "50aaa98a494ba8b3168e045eb2120f9f9bcfa69ae239f81ab7e4674e20f956f5"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "hash_types",
+      "srcHash": "4b2cfc60e673a8d157d563321623a255b9afad2a8045d375596c3421e49b77f3"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "hermetic_effects",
+      "srcHash": "27634af93b73dd8e04d81b079f68b1287d1040160235681f29cf480761c9c795"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "hotspot_gate",
+      "srcHash": "a9c8aa0f80cd3238561a89b4c0b49d529df708ffe1e6b85deb702ee800c44bce"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "in_process_gates",
+      "srcHash": "17dec3dc9416188594649e465befa1d7170533ec29390cb4cb9a3828e0cd954a"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "induction",
+      "srcHash": "c1cd890cfb544cba93933ef105efc219195c6cef4b3661c4c5ff72429df69372"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "inductive_structure",
+      "srcHash": "69e0a3f968d51cf305e7a07c6347f059ad36c10f6972061564c87a84cbe2c02b"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "io_executor",
+      "srcHash": "b96c0bca885c3c3bb465eeb532cd083cf68bf9cee4c273a3e58d845abaf9fd8d"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "json_parse",
+      "srcHash": "1aa8fef67d23670504873c5744de1a4fac3c7357a5adbde4fdd97b27b3f4cf45"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "layer1_bmc",
+      "srcHash": "8fe9a36be7d8bdd1b6285f66305192470f836b2e5663535bed1c052e2ae66084"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "layer_guard",
+      "srcHash": "d76b84e45a75f85dab620bc3c832c6c9336b087e8a4105d84890c7187d0e551f"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "lean_diagnostic",
+      "srcHash": "9cd420252dd613b580ba4d5fe78f8c8c70a689ce375dcc166f74296b082ebf76"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "legislator",
+      "srcHash": "4b1a31e505ba47c962af8edb3b18fe11d8062a21f1fa5e97b491a85e0604d0c8"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "legislator_feedback",
+      "srcHash": "a2a6e13c42e2351cf71b657d83cda95566d4f9a0e567a2cc018a490fa1163c61"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "linear_arithmetic",
+      "srcHash": "b4cf048fcb420255369193a27ec936ce7ba64a76dde4d1fcb8534fa45790dfe4"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "llm_fallback",
+      "srcHash": "b7aebac225288bb4ed7ff5a9c6d5fb269b110251e149abc884292c7988236f31"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "lock_update",
+      "srcHash": "8937ec22f25e48a3a4cf98062261f9512726a19e101aa6d06a1e3036f9168fff"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "loop_driver",
+      "srcHash": "145226a1747f9c9899da2c4d1da1a647f41663e07968ec64e1e034bf5999af86"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "manifest",
+      "srcHash": "9625c2a98d87e9a101f6dae6ad1738ddcc19a29f97f9045bbef6d92966af7b39"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "metrics",
+      "srcHash": "ac80af4278dd6216732615dc7fd4500cb6d3d63bd30ecc0f763ad1a19cf728f0"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "native_decide",
+      "srcHash": "7b76c4b3279a6e3a69cb7bb71cb4c8aaf89a639ce66d763b60fb48ea0fdf39c1"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "observability",
+      "srcHash": "137d193d5c7a599484364d90ff493fb3eda0f2eae7e3846aa5f1cc017004296c"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "omega",
+      "srcHash": "837f7a076b149f043730dd441bb4191a66aadbf9b110ece3ca15d609eebe52dc"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "orchestrator_pure",
+      "srcHash": "25813af2c62840669bd18146707a1831a314510eebe530a0b779ef5cf41200ae"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "orchestrator_token",
+      "srcHash": "332c466bffec1d5b1921040e9a4a7703a0ba540a7023eb67ee2c7edb6ebb8b56"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "pending_feature_guard",
+      "srcHash": "492339dbf0e1b6fc60d74331577addd10e18424b4dfbea8aedd082d0c11cbf64"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "pipeline_core_types",
+      "srcHash": "a904306f252fff401d28815fc46f4bfefea5e79f9fcb85b5ed1b09264c6dc182"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "plan",
+      "srcHash": "6687d8cefe92db9d98db10774949880a0fd5d9163fe0d60dc2a96ea4dc18d65b"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "policy",
+      "srcHash": "45909827c13400d116eec4b8d9af0a9fbd61a54f98b930f22ce7cbf887a35321"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "process_selector",
+      "srcHash": "d76608b4cbb0b244eb604ec3f56ed43656e988ba2c6522e02f8c357a624f9fc1"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "proof_cache",
+      "srcHash": "e6cb15307ff33884401084fd6b9b096ec1d40aeac4694d1c9a98ba47235f0951"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "proof_summarizer",
+      "srcHash": "1e05c17ddf255115d05744040997df80de95bbf02beeb23485f92cfefdb3b470"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "pure_path",
+      "srcHash": "b2478d55b103c834c4b2249594ce39e925666441da82a1cce13d3281aaa3fb90"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "pure_stdlib",
+      "srcHash": "cfff69c29e20fa682576449326c3ab8af0860da959ca07e00ca90a34ae55adfe"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "request_builder",
+      "srcHash": "16456a0d03a1081faa09ea25d544131e5bf1cd64623f63926639c42f7a896ae6"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "rewrite",
+      "srcHash": "b085b859b9361b5faec5eb4dcdfb3a09fed2a9c06968bd00ce011a6e3528074b"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "rfl",
+      "srcHash": "2b19772780ca00b0269cf98f3f0f19d0075640383e62471b346c319f8f56b5a3"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "runtime_context",
+      "srcHash": "dc3b81b0f8abb01f7b04df6d22f636bda54a8c4e1490c24c348de733dffb3979"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "schema",
+      "srcHash": "45685d87c9415f891d8723ed5ba96b59c6bd36e90a60bc7cbcf16702eaaaed37"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "script_registry",
+      "srcHash": "d144296b4d1daac9da57ac3abe235223f33d440b526457ce7fc32fa9641db5a3"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "script_wrapper",
+      "srcHash": "0bc0bf06b6948393fcd70d318866fc9444288f3c406bbef5e58e56c69228b06d"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "selection_state",
+      "srcHash": "a725119dba95882d7d25091fbde5aeb837222d8807f6366d42dcce3aa92c6295"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "sieve_engine",
+      "srcHash": "1b6874b86fd5bc0b346862ea50a82ca339b947d4bb80fddacc8ab715e4c8aab3"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "sign_integrity_gate",
+      "srcHash": "f2f09e8a77726222975b82d8ff80d6ebe6806b9a4e684d18b180709c98ce138b"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "simp",
+      "srcHash": "91d1dfe4fcd68d1b6b028ea32ed6bbe8dd0e1613793f7f69b0ec4a2903c06d70"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "simp_omega",
+      "srcHash": "9e230cd82d7192a7aaf385703d7a243de0a00c4c785c511a8dc088b2b480426d"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "smt_hint_validation",
+      "srcHash": "fc185cb0d597bf3b61d36bbce01317e4259d335e55a80af13d3b54fe9b69ebef"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "sorter_node_id",
+      "srcHash": "64861da9b8a7c4e9793a890a7030e4779ee37bbd37b4bd74e472e1c17042c797"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "stage_01_ast_extract",
+      "srcHash": "e5f62346d0aa5ab1a285f1317a07f83625de7f2338c08e53f4fc9ceb9b3483f5"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "stage_02_fingerprint",
+      "srcHash": "7523ab48a6896f3f1e9935031dc5216b50fb09b7043dfedf53bb3cfb641c14c9"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "stages",
+      "srcHash": "f81e0cb941b98f714770602b5e50fff8b407e20fba97036146df949679759556"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "staging",
+      "srcHash": "c5be1b69be50bcba43a686fc8254c2c46bf2f33df7da6fd02e81c9a1bf4f4705"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "strategy_registry",
+      "srcHash": "2f6bb1b157a28bc56f182dc6a6d18822bcff572d78f1f2bdb816fb361dbe79ee"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "suggest",
+      "srcHash": "fa2973f5129b3be58c60c652e93941de0b0248b43da2b3fab2e7cfe6e7ac6997"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "symbol_hasher",
+      "srcHash": "0ddf2ed49926128127f33f211d2fcc6b5a04d43f789ab66665c6a10b44afe19a"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "symbol_interning",
+      "srcHash": "c606cf4d8e42df756a23a0f0da3a1d6317691122d89dac90e83a09bbb2f3fc8d"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "test_coverage_gate",
+      "srcHash": "3d0962de4d305924d640c7a212ceb2e07b1f06d39b44234c8cc3b9a9ae04f635"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "test_helper",
+      "srcHash": "2b3465f882ea0fae7b0d75f099eabc84bd65d616994a96f78b2a0638f986a8f5"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "trivial_filter",
+      "srcHash": "8d80b3edfa067acc93ac3de97eed81298dc6ef32a12b3386de3eb1e1b76b02b2"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "type_logic_registry",
+      "srcHash": "3c816d7aecae12fb17fe218d49379102b616e1d6a0bf920f375e66abc2aa3b8c"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "unknown",
+      "srcHash": "fffa014bb0fda91f1c5ecb504baaf624d70a97855e954d283be79b88779225e2"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "vault_manager_spec",
+      "srcHash": "149fe8fd55a37f374fce75a68cc64c8ccec92770304fc7672f1de286f82fb8a4"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "vendored_build",
+      "srcHash": "8835a2dfa60136ab14344945579b46f93cee3e2df8295275627c194bd0bbcee9"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "verification_pipeline_context",
+      "srcHash": "b6a66c62c4c5c9ee24e437a45fb40f0b6c7ff0020911e8db7c251ce6f4586829"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "wf_planning",
+      "srcHash": "104a1eae50faee574dac6ccf48770df79d6f17f648b7fd8c7fb6df6e7e2de4d5"
+    },
+    {
+      "coverage": 100.0,
+      "lastCommit": "",
+      "module": "z3_integrity",
+      "srcHash": "98404acee8067b94ecacf6437c451e7686f0d84416af92fd3c8f51446d219f03"
+    }
+  ],
+  "note": "Ratchet baseline with SHA-256 srcHash binding. srcHash mismatch = module modified, must comply.",
+  "version": 1
+}

@@ -1,0 +1,4 @@
+EXIT_A=0
+EXIT_B=0
+EXIT_C=0
+EXIT_D=0

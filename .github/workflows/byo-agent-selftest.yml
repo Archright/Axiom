@@ -1,0 +1,295 @@
+# BYO-Agent Phase 3 — same-repo selftest of the reusable byo-agent workflow.
+#
+# Contract SSOT: docs/spec/byo_agent_proposition_contract.md
+#
+# ADDITIVE WORKFLOW (AGENTS.md §2.5 CI Self-Bootstrap): landed as a new
+# workflow file only — no existing live CI path is modified. It is
+# push-triggered on its workstream branches; workflow_dispatch serves the
+# post-merge main re-run (a workflow file that exists on the default branch
+# IS dispatchable — the pre-merge branch-only file was not, which is why
+# the dispatch trigger is paired with the branch push, not relied on
+# alone).
+#
+# Judged assertion (task contract) — now ENFORCED, not merely observed:
+#   1. the reusable workflow's prove job is GREEN even though ax prove exits
+#      1 (DISPROVED) — the §8 exit transition under observation;
+#   2. the evidence artifact (ax_proof_state.json + prove.log + proposals)
+#      is uploaded;
+#   3. the pinned propositions fixture below verifiably reaches DISPROVED
+#      with BUG_SUSPECTED attribution on the pinned subject commit —
+#      asserted by the acceptance job below (reusable-workflow outputs).
+# First-run record (2026-11-02, run 41469574000 @ 3f8725937): the workflow
+# conclusion was success while the actual verdict was UNKNOWN — a green
+# without a judgment (§0.9 theater). Root cause: no replay dependency
+# provisioning → ce-replay dep resolution fail-closed → pre-sieved →
+# UNKNOWN → exit 0. Fix + honest record:
+# docs/evidence/byo_agent_phase3_selftest_deps_fix_2026-11-03.md.
+#
+# NOTE (A8, §0.9): the propositions document below is a SCRIPTED FIXTURE,
+# not a live AI-agent demonstration — it must never be counted as a
+# "BYO real-agent" proof.
+#
+# Subject: iftech/nim-libp2p (public) @ a130a7f32219909bdcda14b7f1e64d0804fc832c
+# — the same pinned commit and target as the bytesview canonical acceptance
+# E2E (docs/evidence/bytesview_canonical_main_acceptance_2026-11-02.md),
+# whose expected outcome is PROPOSITION_DISPROVED (exit 1).
+# Determinism observation (not a judged assertion): the run records
+# canonicalRunDigest from the evidence artifact; the acceptance evidence doc
+# compares it with a local same-input run (d1) — equality is the
+# cross-environment determinism proof.
+
+name: 'BYO-Agent selftest (Phase 3)'
+
+on:
+  push:
+    branches:
+      - 'work/byoa-phase3-reusable-workflow'
+      - 'work/byoa-phase3-selftest-deps-fix'
+      - 'work/byoa-phase5-incapable'
+  # Post-merge re-run on main (dispatchable once this file exists on the
+  # default branch — the additive-branch trigger alone cannot re-run main).
+  workflow_dispatch:
+
+jobs:
+  build-proposals:
+    name: 'Job 1 — customer agent: emit proposals artifact (fixture)'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: 'Write pinned propositions JSON (schema v2 fixtures)'
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/byoa"
+          # Fixture 1 — the canonical single-proposition slice (exit 1 path).
+          cat > "${RUNNER_TEMP}/byoa/proposals.json" <<'JSON'
+          {"schema_version":2,"subject":{"repository":"iftech/nim-libp2p","commit":"a130a7f32219909bdcda14b7f1e64d0804fc832c"},"agent":{"id":"phase3-selftest-agent","version":"1.0"},"propositions":[{"id":"bv-slice-toopenarray","specId":"SPEC-LIBP2P-BV-SLICE","target":"libp2p/utils/bytesview.nim::toOpenArray","source_location":{"file":"libp2p/utils/bytesview.nim","line":18},"explanation":"Phase 3 selftest — pinned BYO proposition"}]}
+          JSON
+          # Fixture 2 — mixed capability document (same subject/target): one
+          # catalog-resolvable lane proposition, one unknown specId, one
+          # claim-form. Judged expectation: exit 1 (the capable proposition
+          # DISPROVES); propositions[] = 1 CAPABLE{DISPROVED} + 2 INCAPABLE
+          # (UNKNOWN_SPEC / UNSUPPORTED_LOGIC, attempted=false, verdict null).
+          cat > "${RUNNER_TEMP}/byoa/mixed-proposals.json" <<'JSON'
+          {"schema_version":2,"subject":{"repository":"iftech/nim-libp2p","commit":"a130a7f32219909bdcda14b7f1e64d0804fc832c"},"agent":{"id":"phase3-selftest-agent","version":"1.0"},"propositions":[{"id":"bv-slice-toopenarray","specId":"SPEC-LIBP2P-BV-SLICE","target":"libp2p/utils/bytesview.nim::toOpenArray","source_location":{"file":"libp2p/utils/bytesview.nim","line":18},"explanation":"Phase 5 selftest — capable lane proposition"},{"id":"prop-unknown-spec","specId":"SPEC-DOES-NOT-EXIST","target":"libp2p/utils/bytesview.nim::toOpenArray","explanation":"Phase 5 selftest — unknown specId must seed INCAPABLE{UNKNOWN_SPEC}, not reject"},{"id":"prop-claim-form","logic":"forbid-set-membership","expression":"toOpenArray(bv,1,3).len == 3","target":"libp2p/utils/bytesview.nim::toOpenArray","explanation":"Phase 5 selftest — claim-form must seed INCAPABLE{UNSUPPORTED_LOGIC} in v1 (no parser)"}]}
+          JSON
+          # Fixture 3 — all-INCAPABLE document: honest completion (exit 0),
+          # zero reportable units, rollup persisted. Both propositions target
+          # the UNEQUIPPED varint lane (ax capability: SPEC-LIBP2P-VARINT-RT
+          # is the only NOT_EQUIPPED entry) — an equipped target (bytesview)
+          # would run Axiom's own registered-lane verification (Phase 4
+          # canonical standing behavior) and legitimately DISPROVE, breaking
+          # the exit-0 observation (selftest run 41603965184 Job 3c). Same
+          # correction class as the 5.2 customer fixture (124f83f).
+          cat > "${RUNNER_TEMP}/byoa/incapable-proposals.json" <<'JSON'
+          {"schema_version":2,"subject":{"repository":"iftech/nim-libp2p","commit":"a130a7f32219909bdcda14b7f1e64d0804fc832c"},"agent":{"id":"phase3-selftest-agent","version":"1.0"},"propositions":[{"id":"prop-unknown-spec","specId":"SPEC-DOES-NOT-EXIST","target":"libp2p/varint.nim::putUVarint","explanation":"Phase 5 selftest — INCAPABLE{UNKNOWN_SPEC}"},{"id":"prop-claim-form","logic":"forbid-set-membership","expression":"toOpenArray(bv,1,3).len == 3","target":"libp2p/varint.nim::putUVarint","explanation":"Phase 5 selftest — INCAPABLE{UNSUPPORTED_LOGIC}"}]}
+          JSON
+          # Fail-closed: an unparsable fixture must not become an artifact.
+          for f in proposals.json mixed-proposals.json incapable-proposals.json; do
+            python3 -m json.tool "${RUNNER_TEMP}/byoa/$f" >/dev/null
+          done
+
+      - name: 'Upload proposals artifact — canonical fixture (Job-1 boundary, §9)'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: 'byoa-phase3-selftest-proposals'
+          path: '${{ runner.temp }}/byoa/proposals.json'
+          if-no-files-found: error
+
+      - name: 'Upload proposals artifact — mixed capability fixture (§9)'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: 'byoa-phase5-selftest-proposals-mixed'
+          path: '${{ runner.temp }}/byoa/mixed-proposals.json'
+          if-no-files-found: error
+
+      - name: 'Upload proposals artifact — all-INCAPABLE fixture (§9)'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: 'byoa-phase5-selftest-proposals-incapable'
+          path: '${{ runner.temp }}/byoa/incapable-proposals.json'
+          if-no-files-found: error
+
+  prove:
+    name: 'Job 2 — Axiom prove via reusable byo-agent workflow'
+    needs: build-proposals
+    uses: ./.github/workflows/byo-agent.yml
+    permissions:
+      contents: read
+      issues: write
+    with:
+      proposal-artifact: 'byoa-phase3-selftest-proposals'
+      subject-repository: 'iftech/nim-libp2p'
+      subject-commit: 'a130a7f32219909bdcda14b7f1e64d0804fc832c'
+      axiom-ref: ${{ github.sha }}
+      proposals-path: 'proposals.json'
+      dry-run: true
+
+  # Judged acceptance (§0.9 — a green workflow must carry a judgment):
+  # the pinned fixture is REQUIRED to reach exit 1 ∧ DISPROVED ∧
+  # BUG_SUSPECTED. An inconclusive (UNKNOWN) prove that exits 0 — exactly
+  # what the first run did — fails here instead of passing silently.
+  acceptance:
+    name: 'Job 3 — judged acceptance: exit 1 ∧ DISPROVED ∧ BUG_SUSPECTED'
+    needs: prove
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: 'Assert judged outcomes (no green UNKNOWN — §0.9)'
+        env:
+          AX_PROVE_EXIT: ${{ needs.prove.outputs.ax_prove_exit }}
+          AX_VERDICT: ${{ needs.prove.outputs.ax_verdict }}
+          AX_ATTRIBUTION: ${{ needs.prove.outputs.ax_attribution }}
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::$1"; exit 1; }
+          [ "${AX_PROVE_EXIT:-}" = "1" ] \
+            || fail "expected ax prove exit 1 (DISPROVED — §8 in-contract transition), got '${AX_PROVE_EXIT:-<empty>}'"
+          [ "$AX_VERDICT" = "DISPROVED" ] \
+            || fail "expected propositionVerdict DISPROVED on the pinned fixture, got '$AX_VERDICT' — a green workflow with an inconclusive verdict is a defect, not a pass"
+          [ "$AX_ATTRIBUTION" = "BUG_SUSPECTED" ] \
+            || fail "expected bugAttribution BUG_SUSPECTED, got '$AX_ATTRIBUTION'"
+          echo "judged acceptance PASS: exit=1 (DISPROVED §8), verdict=$AX_VERDICT, attribution=$AX_ATTRIBUTION"
+
+      - name: 'Download evidence artifact'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: 'byoa-evidence-byoa-phase3-selftest-proposals'
+
+      - name: 'Record canonical digest (observation — determinism record, not a judged assertion)'
+        run: |
+          set -euo pipefail
+          test -f ax_proof_state.json || { echo "::error::evidence artifact missing ax_proof_state.json"; exit 1; }
+          digest="$(jq -r '.canonicalRunDigest' ax_proof_state.json)"
+          {
+            echo "## BYO-Agent selftest — evidence record"
+            echo ""
+            echo "| field | value |"
+            echo "|---|---|"
+            echo "| canonicalRunDigest | \`$digest\` |"
+            echo "| verdicts | $(jq -c '[.display.units[] | {propositionVerdict, bugAttribution}]' ax_proof_state.json) |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "canonicalRunDigest=$digest"
+          jq '{canonicalRunDigest, runOutcome}' ax_proof_state.json
+
+  # Phase 5.1 — mixed capability document: one catalog-resolvable lane
+  # proposition (attempted, judged DISPROVED), one unknown specId and one
+  # claim-form proposition (INCAPABLE capability facts — never verified,
+  # never reported). The run completes IN-CONTRACT on exit 1.
+  prove-mixed:
+    name: 'Job 2b — Axiom prove (mixed capability fixture) via reusable byo-agent workflow'
+    needs: build-proposals
+    uses: ./.github/workflows/byo-agent.yml
+    permissions:
+      contents: read
+      issues: write
+    with:
+      proposal-artifact: 'byoa-phase5-selftest-proposals-mixed'
+      subject-repository: 'iftech/nim-libp2p'
+      subject-commit: 'a130a7f32219909bdcda14b7f1e64d0804fc832c'
+      axiom-ref: ${{ github.sha }}
+      proposals-path: 'mixed-proposals.json'
+      dry-run: true
+
+  prove-incapable:
+    name: 'Job 2c — Axiom prove (all-INCAPABLE fixture) via reusable byo-agent workflow'
+    needs: build-proposals
+    uses: ./.github/workflows/byo-agent.yml
+    permissions:
+      contents: read
+      issues: write
+    with:
+      proposal-artifact: 'byoa-phase5-selftest-proposals-incapable'
+      subject-repository: 'iftech/nim-libp2p'
+      subject-commit: 'a130a7f32219909bdcda14b7f1e64d0804fc832c'
+      axiom-ref: ${{ github.sha }}
+      proposals-path: 'incapable-proposals.json'
+      dry-run: true
+
+  # Judged acceptance for the mixed document (§0.9 — a green must carry a
+  # judgment): exit 1 ∧ exactly one CAPABLE{DISPROVED} ∧ the two INCAPABLE
+  # entries with attempted=false ∧ verdict null ∧ INCAPABLE units never
+  # became unit blocks.
+  acceptance-mixed:
+    name: 'Job 3b — judged acceptance: exit 1 ∧ CAPABLE{DISPROVED} ∧ INCAPABLE{UNKNOWN_SPEC} ∧ INCAPABLE{UNSUPPORTED_LOGIC}'
+    needs: prove-mixed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: 'Assert judged outcomes (§8 in-contract exit 1 with capability rollup)'
+        env:
+          AX_PROVE_EXIT: ${{ needs.prove-mixed.outputs.ax_prove_exit }}
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::$1"; exit 1; }
+          [ "${AX_PROVE_EXIT:-}" = "1" ] \
+            || fail "expected ax prove exit 1 (DISPROVED on the capable proposition — §8 in-contract), got '${AX_PROVE_EXIT:-<empty>}'"
+          echo "judged acceptance PASS: mixed run exit=1 (in-contract §8)"
+
+      - name: 'Download mixed-run evidence artifact'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: 'byoa-evidence-byoa-phase5-selftest-proposals-mixed'
+
+      - name: 'Assert the propositions rollup (machine judgment, not observation)'
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::$1"; exit 1; }
+          test -f ax_proof_state.json || fail "evidence artifact missing ax_proof_state.json"
+          props="$(jq '(((.reportJson.display // .display).propositions) // [])' ax_proof_state.json)"
+          [ "$(echo "$props" | jq 'length')" = "3" ] || fail "expected 3 rollup entries, got $(echo "$props" | jq 'length')"
+          capable="$(echo "$props" | jq '[.[] | select(.capability.status == "CAPABLE" and .verification.verdict == "DISPROVED" and .verification.attempted == true)] | length')"
+          [ "$capable" = "1" ] || fail "expected exactly one CAPABLE{DISPROVED, attempted=true} entry, got $capable"
+          unknown="$(echo "$props" | jq '[.[] | select(.capability.status == "INCAPABLE" and .capability.reason == "UNKNOWN_SPEC" and .verification.attempted == false and .verification.verdict == null)] | length')"
+          [ "$unknown" = "1" ] || fail "expected exactly one INCAPABLE{UNKNOWN_SPEC, attempted=false, verdict=null} entry, got $unknown"
+          claim="$(echo "$props" | jq '[.[] | select(.capability.status == "INCAPABLE" and .capability.reason == "UNSUPPORTED_LOGIC" and .verification.attempted == false and .verification.verdict == null)] | length')"
+          [ "$claim" = "1" ] || fail "expected exactly one INCAPABLE{UNSUPPORTED_LOGIC, attempted=false, verdict=null} entry, got $claim"
+          units="$(jq '(((.reportJson.display // .display).units) // []) | length' ax_proof_state.json)"
+          [ "$units" = "1" ] || fail "expected exactly 1 unit block (the capable proposition — INCAPABLE units never get one), got $units"
+          reportable="$(jq '[((.reportJson.display // .display).units // [])[] | select((.bugAttribution == "BUG_FOUND" or .bugAttribution == "BUG_SUSPECTED") and .propositionVerdict == "DISPROVED")] | length' ax_proof_state.json)"
+          echo "judged acceptance PASS: propositions=3 (1 CAPABLE{DISPROVED} + 1 INCAPABLE{UNKNOWN_SPEC} + 1 INCAPABLE{UNSUPPORTED_LOGIC}), units=$units, reportable=$reportable"
+
+  # Judged acceptance for the all-INCAPABLE document: honest completion —
+  # exit 0, zero reportable units, the rollup PERSISTED (the display
+  # container survives with zero unit blocks — §8 프로그램 실행 성공 ≠ 검증 성공).
+  acceptance-incapable:
+    name: 'Job 3c — judged acceptance: exit 0 ∧ zero reportable units ∧ rollup persisted'
+    needs: prove-incapable
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: 'Assert honest completion (exit 0 without any verification claim)'
+        env:
+          AX_PROVE_EXIT: ${{ needs.prove-incapable.outputs.ax_prove_exit }}
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::$1"; exit 1; }
+          [ "${AX_PROVE_EXIT:-}" = "0" ] \
+            || fail "expected ax prove exit 0 (honest in-contract completion — §8 all-INCAPABLE), got '${AX_PROVE_EXIT:-<empty>}'"
+
+      - name: 'Download all-INCAPABLE evidence artifact'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: 'byoa-evidence-byoa-phase5-selftest-proposals-incapable'
+
+      - name: 'Assert zero reportable units and a persisted rollup'
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::$1"; exit 1; }
+          test -f ax_proof_state.json || fail "evidence artifact missing ax_proof_state.json"
+          props="$(jq '(((.reportJson.display // .display).propositions) // [])' ax_proof_state.json)"
+          [ "$(echo "$props" | jq 'length')" = "2" ] || fail "expected 2 persisted rollup entries, got $(echo "$props" | jq 'length')"
+          incapable="$(echo "$props" | jq '[.[] | select(.capability.status == "INCAPABLE" and .verification.attempted == false and .verification.verdict == null)] | length')"
+          [ "$incapable" = "2" ] || fail "expected all 2 entries INCAPABLE with attempted=false, got $incapable"
+          units="$(jq '(((.reportJson.display // .display).units) // []) | length' ax_proof_state.json)"
+          [ "$units" = "0" ] || fail "expected zero unit blocks on an all-INCAPABLE document, got $units"
+          reportable="$(jq '[((.reportJson.display // .display).units // [])[] | select((.bugAttribution == "BUG_FOUND" or .bugAttribution == "BUG_SUSPECTED") and .propositionVerdict == "DISPROVED")] | length' ax_proof_state.json)"
+          [ "$reportable" = "0" ] || fail "expected zero reportable units, got $reportable"
+          echo "judged acceptance PASS: all-INCAPABLE exit 0, rollup persisted, zero reportable units — 프로그램 실행 성공 ≠ 검증 성공"

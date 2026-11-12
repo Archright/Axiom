@@ -1,0 +1,5 @@
+tools/ci/reanchor_pin.nim
+src/core/policy/rotation_closure_facts.nim
+src/core/types/results.nim
+src/core/trusted/stdlib_shield.nim
+src/core/trusted/layer_declaration.nim

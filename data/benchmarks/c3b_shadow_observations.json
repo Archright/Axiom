@@ -1,0 +1,53 @@
+{
+  "high": {
+    "impactRatio": 0.1,
+    "mutationId": "S002",
+    "planDigest": "57fd041baf80768dba0605100ab9ba58fac2f5fb0894b4d847b6d26dd4bcbea",
+    "planMode": "umSelected",
+    "planStatus": "VALID",
+    "scenario": "high",
+    "selectionCount": 0,
+    "selectionDigest": "a6f198319088809378da6bc83e0909b55a0e24fefd445b9a1ffe5d415b842b",
+    "semanticInputIdentity": {
+      "changeSetDigest": "de2578d7102d63017f218c541f6c483b679cdf8ea2c98f3f2be792e2eaac6d",
+      "graphDigest": "84d89c51c28f97a76d5a8500bdae2c802ff2aa1d107b56aabdfe801c3be4bc0c",
+      "policyDigest": "policy:S2-local-ci-parity-v1",
+      "universeDigest": "e51e510f86e7ad280ec1f481c2234a82420527a9e9990675e636702b2c586"
+    },
+    "triggerFile": "src/core/topology/topology_dependency.nim"
+  },
+  "low": {
+    "impactRatio": 0.05,
+    "mutationId": "S001",
+    "planDigest": "57fd041baf80768dba0605100ab9ba58fac2f5fb0894b4d847b6d26dd4bcbea",
+    "planMode": "umSelected",
+    "planStatus": "VALID",
+    "scenario": "low",
+    "selectionCount": 1,
+    "selectionDigest": "a6f198319088809378da6bc83e0909b55a0e24fefd445b9a1ffe5d415b842b",
+    "semanticInputIdentity": {
+      "changeSetDigest": "de2578d7102d63017f218c541f6c483b679cdf8ea2c98f3f2be792e2eaac6d",
+      "graphDigest": "84d89c51c28f97a76d5a8500bdae2c802ff2aa1d107b56aabdfe801c3be4bc0c",
+      "policyDigest": "policy:S2-local-ci-parity-v1",
+      "universeDigest": "e51e510f86e7ad280ec1f481c2234a82420527a9e9990675e636702b2c586"
+    },
+    "triggerFile": "src/core/vault/vault_manager_spec.nim"
+  },
+  "medium": {
+    "impactRatio": 0.075,
+    "mutationId": "S003",
+    "planDigest": "57fd041baf80768dba0605100ab9ba58fac2f5fb0894b4d847b6d26dd4bcbea",
+    "planMode": "umSelected",
+    "planStatus": "VALID",
+    "scenario": "medium",
+    "selectionCount": 0,
+    "selectionDigest": "a6f198319088809378da6bc83e0909b55a0e24fefd445b9a1ffe5d415b842b",
+    "semanticInputIdentity": {
+      "changeSetDigest": "de2578d7102d63017f218c541f6c483b679cdf8ea2c98f3f2be792e2eaac6d",
+      "graphDigest": "84d89c51c28f97a76d5a8500bdae2c802ff2aa1d107b56aabdfe801c3be4bc0c",
+      "policyDigest": "policy:S2-local-ci-parity-v1",
+      "universeDigest": "e51e510f86e7ad280ec1f481c2234a82420527a9e9990675e636702b2c586"
+    },
+    "triggerFile": "src/generated/gate_registry.nim"
+  }
+}

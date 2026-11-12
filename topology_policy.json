@@ -1,0 +1,42 @@
+{
+  "_schema": "axiom-topology-policy/v1",
+  "namespace_uuid": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+  "defaults": {
+    "max_directory_files": 40,
+    "allow_transitional_modules": true,
+    "transitional_max_age_days": 14,
+    "collapse_singletons": true,
+    "forbid_empty_directories": true,
+    "transitional_detection": {
+      "patterns": ["*_part*.nim", "*_impl*.nim", "*_fragment*.nim"],
+      "generalized_rule": "same_prefix_with_numeric_suffix"
+    }
+  },
+  "severity_rules": {
+    "singleton_uncollapsed": "warning",
+    "transitional_expired": "error",
+    "top_level_stranded": "warning",
+    "lock_orphan": "error",
+    "lock_missing": "error",
+    "oversized_directory": "warning",
+    "empty_directory": "warning",
+    "suppression_expired": "error"
+  },
+  "exceptions": [
+    {
+      "path": "src/cli/commands",
+      "reason": "public_api_collection",
+      "collapse_singletons": false
+    },
+    {
+      "path": "src/core/assets",
+      "reason": "non_nim_assets",
+      "collapse_singletons": false
+    },
+    {
+      "path": "src/semantic_proofs/lib",
+      "reason": "lean_files",
+      "collapse_singletons": false
+    }
+  ]
+}

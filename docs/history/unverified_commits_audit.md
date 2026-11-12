@@ -1,0 +1,936 @@
+# Unverified Commits Audit
+
+Generated: 2026-05-27
+Total commits analyzed: 718
+
+## MISSING_FEATURE (291 commits)
+
+- `2026-05-27` `77bf217b` fix: resolve pre-push gate failures fundamentally
+  - `M	src/core/axiom_api.nim`
+  - `M	src/core/verified_axioms_catalog.nim`
+  - `M	src/gate/runners/gate_self_check.nim`
+- `2026-05-27` `aec0b622` feat: add Mandatory Parallel Decomposition Protocol (§2.6a)
+  - `M	.agents/skills/subagent-driven-development/SKILL.md`
+  - `M	.agents/skills/subagent-mandate/SKILL.md`
+  - `M	.gitignore`
+  - ... and 4 more files
+- `2026-05-27` `5b2f88f1` chore: purge Hermes legacy from entire codebase
+  - `M	.agents/skills/axiom-quality-gate/SKILL.md`
+  - `M	.agents/skills/axiom-quality-gate/references/2026-05-25-four-dimension-audit.md`
+  - `M	.agents/skills/axiom-quality-gate/references/agents-md-compression-pipeline.md`
+  - ... and 46 more files
+- `2026-05-26` `86a7c5e8` feat(gate): meta-gate self-check + forensic replay engine
+  - `M	scripts/gate_replay.nim`
+  - `M	src/gate/runners/gate_self_check.nim`
+- `2026-05-26` `cf5732a2` refactor: eliminate all module_overrides (8→0)
+  - `M	AGENTS.md`
+  - `A	CODEBASE_INVENTORY.md`
+  - ... and 588 more files
+- `2026-05-26` `7f079b96` fix: remove 6 no-op module_overrides, fix thought_dashboard compilation
+  - `M	src/gate/architecture_policy.lock`
+  - `M	src/verification/thought_dashboard.nim`
+- `2026-05-26` `ca36c1c5` fix: resolve pre-existing gate debt — unused imports, warnings, Nim 2.0 compat
+  - `M	config.nims`
+  - `M	src/core/domain_types.nim`
+  - `M	src/core/file_utils.nim`
+  - ... and 7 more files
+- `2026-05-26` `24a4b6c6` perf(gate): malebolgia-based parallel gate execution + DRY duplicate removal
+  - `M	scripts/gate_hook.nim`
+  - `M	src/gate/git.nim`
+  - `D	src/gate/runners/architecture_principle_gate.nim`
+- `2026-05-25` `91637bd4` fix(gate): 24 SRP violations resolved — LCOM/TCC per-module override + 6 module split
+  - `M	src/cli/cli_io.nim`
+  - `A	src/cli/cli_io_error.nim`
+  - `A	src/cli/cli_io_input.nim`
+  - ... and 15 more files
+- `2026-05-25` `7367e594` refactor: align directory layout with industry standards
+  - `M	.gitignore`
+  - `D	.hermes/plans/2026-05-22_020000-quality-gate-reconstruction-progress.md`
+  - `D	.hermes/plans/2026-05-22_020000-quality-gate-reconstruction.md`
+  - ... and 66 more files
+- `2026-05-25` `3fc5227f` refactor: split gateway.nim (26→15 exports), remove gateway module_override
+  - `A	.hermes/plans/2026-05-25_201500-module-overrides-ideal-resolution.md`
+  - `A	.hermes/plans/2026-05-25_220000-module-overrides-final-2.md`
+  - `A	.hermes/plans/2026-05-25_230000-agents-md-ssot-plan-v2.md`
+  - ... and 71 more files
+- `2026-05-25` `4d393acc` refactor: purge dead test blocks (discard stubs) from gateway tests
+  - `A	src/gate/runners/sentinel`
+  - `M	tests/gateway/gateway_cli_test.nim`
+  - `M	tests/gateway/gateway_topology_verify_test.nim`
+- `2026-05-25` `2e136c97` fix: gateway runner recursive gate + verify_workflow refactor + test migration
+  - `A	.hermes/plans/2026-05-25_150000-gateway-runner-perf.md`
+  - `M	diff.diff`
+  - `M	src/cli/verify_workflow_cli.nim`
+  - ... and 13 more files
+- `2026-05-25` `da1edf22` fix: gate infrastructure — argv[0] auto-detect, sentinel CWD anchor, nimble hooks bypass
+  - `A	.hermes/plans/2026-05-25_123000-gate-infrastructure-restoration-v2.md`
+  - `A	.hermes/plans/2026-05-25_123000-gate-infrastructure-restoration.md`
+  - `A	.hermes/plans/2026-05-25_124000-gate-issues-remaining-fix.md`
+  - ... and 11 more files
+- `2026-05-25` `1587525a` refactor: eradicate duplicate bridges, unify type system, rewire to the_judge_eval
+  - `A	.hermes/plans/2026-05-25_120000-duplicate-bridge-extermination-v2.md`
+  - `A	.hermes/plans/2026-05-25_120000-duplicate-bridge-extermination.md`
+  - `M	src/cli/verify_workflow_cli.nim`
+  - ... and 9 more files
+- `2026-05-25` `2f5d8482` docs: update CONTEXT.md refs to AGENTS.md, integrate agmd-check into pre-commit hook
+  - `M	GUARDIAN.md`
+  - `M	scripts/gate_hook.nim`
+  - `M	src/gate/runners/gate_hook.nim`
+- `2026-05-25` `846f5c0e` docs: restructure AGENTS.md as SSOT, merge CONTEXT.md constitution, add agmd-check gate
+  - `A	.hermes/plans/2026-05-25_013000-agmd-restructure-plan.md`
+  - `M	AGENTS.md`
+  - `M	CONTEXT.md`
+  - ... and 8 more files
+- `2026-05-25` `12818343` axiom-integrity: SMT/Lean codegen + End-to-End proof pipeline (Phase 5.1-5.2)
+  - `A	.hermes/plans/2026-05-25_010000-axiom-remaining-debt-phase-5-1-v2.md`
+  - `A	.hermes/plans/2026-05-25_010000-axiom-remaining-debt-phase-5-1.md`
+  - `M	src/core/lean_bridge.nim`
+  - ... and 3 more files
+- `2026-05-25` `87b79112` axiom-integrity: Z3/Lean bridges + VFS + Cross-Validation (Phases 3-6)
+  - `M	src/cli/verify_workflow_cli.nim`
+  - `A	src/core/cross_validator.nim`
+  - `A	src/core/lean_bridge.nim`
+  - ... and 1 more files
+- `2026-05-25` `7fe9da66` axiom-integrity: Deep Verification Gate + VFS scaffold
+  - `A	.hermes/plans/2026-05-24_220000-quality-gate-4d-upgrade.md`
+  - `A	.hermes/plans/2026-05-24_223000-quality-gate-4d-upgrade-v2.md`
+  - `A	.hermes/plans/2026-05-24_224000-fundamental-a-grade-analysis.md`
+  - ... and 16 more files
+- `2026-05-24` `2c6743ea` proof-universe: Auto-heal empty graph with cache purge
+  - `M	src/verification/proof_universe_commit.nim`
+- `2026-05-24` `15effee2` skeleton-reconstruction: Restore ecosystem_linkage.nim (Wave 6 federated integrity)
+  - `A	src/core/ecosystem_linkage.nim`
+- `2026-05-24` `6d494104` skeleton-reconstruction: Restore scheduler.nim (Wave 12 task duration tracker)
+  - `M	src/gate/architecture_policy.lock`
+  - `M	src/gate/architecture_policy.nim`
+- `2026-05-24` `f6e42cab` pre-compiled-metadata: certified_exempt classification for generated files
+  - `M	proof_universe.lock`
+  - `M	src/core/parsers/tree_sitter/query/collect.nim`
+  - `M	src/core/parsers/tree_sitter/query/pred.nim`
+  - ... and 6 more files
+- `2026-05-24` `2de6e488` pre-compiled-metadata: Replace macro-generated cli_surface with standalone generator
+  - `M	proof_universe.lock`
+  - `M	src/cli/cli_surface_generated.nim`
+  - `D	src/cli/cli_surface_macro.nim`
+  - ... and 5 more files
+- `2026-05-24` `0ac82c9b` feat(trusted-tcb): realize all 5 stub phases — Z3 pool, Lean replay, SMT-Lean cross-check, SHA-256, CBOR
+  - `A	.hermes/plans/2026-05-24_200000-trusted-tcb-stub-realization-plan.md`
+  - `A	src/core/lean_replay.nim`
+  - `M	src/core/the_judge_eval.nim`
+  - ... and 3 more files
+- `2026-05-24` `3dc3f976` Trusted TCB + The Judge recovery: distinct types + SMT-First architecture
+  - `A	.hermes/plans/2026-05-24_190000-trusted-modules-and-judge-recovery.md`
+  - `M	src/core/the_judge_eval.nim`
+  - `M	src/core/trusted/cbor.nim`
+  - ... and 4 more files
+- `2026-05-24` `4fa44158` Nim 2.x migration: Zero-Macro pattern + heal route removal + SOLID decomposition
+  - `A	.hermes/plans/2026-05-24_180000-nim2x-migration-debt-resolution.md`
+  - `A	.hermes/plans/2026-05-24_183000-zero-macro-results-refactor.md`
+  - `A	diff.diff`
+  - ... and 105 more files
+- `2026-05-24` `6ce8871b` refactor(cleanup): consolidate scripts/gates/ into src/gate/runners/
+  - `M	scripts/refresh_cli_binaries.nim`
+  - `M	src/gate/git.nim`
+  - `R092	scripts/gates/architecture_gate.nim	src/gate/runners/architecture_guard.nim`
+  - ... and 16 more files
+- `2026-05-24` `48a0d400` refactor(cleanup): eliminate SSOT/SOLID/DRY/SoC directory violations
+  - `M	.gitignore`
+  - `D	bin_gateway_test/gateway_mcp_core_test`
+  - `D	bin_gateway_test/gateway_pipeline_test`
+  - ... and 21 more files
+- `2026-05-24` `b516ea48` feat(gate): resolve all 6 architecture violations
+  - `A	.hermes/plans/2026-05-24_000000-remaining-6-violations-plan.md`
+  - `M	src/cli/wf_runners.nim`
+  - `A	src/cli/wf_runners_common.nim`
+  - ... and 30 more files
+- `2026-05-23` `e8e4ff29` WIP: SOLID modularization Phase 4-5
+  - `M	src/cli/commands/heal_analysis.nim`
+  - `M	src/cli/commands/heal_injection.nim`
+  - `M	src/cli/commands/heal_node_executor.nim`
+  - ... and 49 more files
+- `2026-05-23` `d848d808` WIP: SOLID modularization Phase 2-3
+  - `M	src/cli/ax_heal_action_cli.nim`
+  - `A	src/cli/progress_reporter_proof.nim`
+  - `R074	src/cli/progress_reporter.nim	src/cli/progress_reporter_topology.nim`
+  - ... and 24 more files
+- `2026-05-23` `45e00bbc` WIP: SOLID modularization Phase 0-2
+  - `A	.hermes/plans/2026-05-23_230000-solid-modularization-plan.md`
+  - `A	.hermes/plans/2026-05-24_000000-solid-modularization-execution-plan.md`
+  - `M	src/cli/certificate_refinement.nim`
+  - ... and 19 more files
+- `2026-05-23` `c012e893` feat(gate): DRY elimination — jsonStringArray unified, threshold 10→30
+  - `A	.hermes/plans/2026-05-23_220000-dry-elimination-plan.md`
+  - `M	src/cli/topology_cli.nim`
+  - `M	src/cli/verify_workflow_cli.nim`
+  - ... and 2 more files
+- `2026-05-23` `9beea642` feat(gate): Z3 sidecar & Mirror Integrity macro
+  - `A	src/core/std_redirect.nim`
+  - `M	src/gate/architecture_guard.nim`
+  - `M	src/gate/ast_architecture_gate.nim`
+  - ... and 2 more files
+- `2026-05-23` `22acc3b0` feat(gate): nimtry parser extension & symbolic link DRY fix
+  - `A	.hermes/plans/2026-05-23_210000-nimtry-deterministic-fixes-plan.md`
+  - `M	src/gate/architecture_policy.lock`
+  - `M	src/gate/architecture_policy.nim`
+  - ... and 4 more files
+- `2026-05-23` `f521988c` feat(gate): nimtry Zero-Catch & Self-Hosting Gate
+  - `A	.hermes/plans/2026-05-23_200000-nimtry-zero-catch-self-hosting-plan.md`
+  - `M	src/cli/cst_cli.nim`
+  - `M	src/cli/git_cli.nim`
+  - ... and 109 more files
+- `2026-05-23` `fc4a2c19` feat(gate): nimtry DIY static analyzer
+  - `A	.hermes/plans/2026-05-22_020000-quality-gate-reconstruction-progress.md`
+  - `A	.hermes/plans/2026-05-22_020000-quality-gate-reconstruction.md`
+  - `A	.hermes/plans/2026-05-22_183800-quality-gate-wave8-ast-policy.md`
+  - ... and 38 more files
+- `2026-05-23` `9bef3eab` fix(AMU): ASI Metric Unification — ValidatedAsi type-level enforcement
+  - `A	docs/history/2026_05_asi_metric_unification.md`
+  - `M	src/cli/report_cli.nim`
+  - `M	src/cli/wf_runners.nim`
+  - ... and 12 more files
+- `2026-05-23` `7a78e1e7` fix: tree-sitter fallback for global symbol graph builder
+  - `A	docs/history/2026_05_tree_sitter_fallback.md`
+  - `M	proof_universe.lock`
+  - `M	src/core/global_symbol_graph_builder.nim`
+  - ... and 2 more files
+- `2026-05-23` `813d205e` perf: Wave 10 parallelization optimization - gateway runner per-test nimcache + SHA256 cache, orchestrator malebolgia migration, refresh per-target hash, Linux /proc resource sampling
+  - `M	docs/spec/threadpool_migration.md`
+  - `M	scripts/refresh_cli_binaries.nim`
+  - `M	src/core/orchestrator.nim`
+  - ... and 13 more files
+- `2026-05-22` `039039b6` fix: Phase C2 — certificate/ASI expectation updates + error handling
+  - `A	src/core/ecosystem_linkage.nim`
+  - `M	tests/gateway/asi_cli_test.nim`
+  - `M	tests/gateway/asi_report_fixture_helpers.nim`
+  - ... and 1 more files
+- `2026-05-22` `f107dc20` fix: gates.nim function ordering + walkDir OSError guard
+  - `M	src/gate/git.nim`
+- `2026-05-22` `b25f0443` feat: Wave 9.5 — fusion/matching rule engine + policy SSOT + import fixes
+  - `M	src/gate/architecture_debt_baseline.toml`
+  - `M	src/gate/architecture_policy.lock`
+  - `M	src/gate/architecture_policy.nim`
+  - ... and 10 more files
+- `2026-05-22` `ed93e119` feat: Wave 9 — full-tree architecture gate + Nim 2.x compatibility
+  - `M	src/core/json_utils.nim`
+  - `M	src/gate/architecture_guard.nim`
+  - `M	src/gate/ast_architecture_gate.nim`
+  - ... and 5 more files
+- `2026-05-22` `0522b5d9` feat: Wave 8 — AST-backed architecture gate with canonical policy SSOT
+  - `M	.agents/skills/architecture-principles/SKILL.md`
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	proof_universe.lock`
+  - ... and 18 more files
+- `2026-05-21` `25b6d2da` fix: make proof universe lock hash deterministic
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	proof_universe.lock`
+  - `M	scripts/gates/cli_build.nim`
+  - ... and 6 more files
+- `2026-05-20` `ae2c426a` refactor(verification): Wave 7 architecture debt eradication — SoC DIP DRY + gate hardening
+  - `M	axiom.nimble`
+  - `M	config.nims`
+  - `M	docs/false-positives.md`
+  - ... and 19 more files
+- `2026-05-20` `7d11eaae` fix(verification): resolve 4 residual convergence issues with deterministic pipeline
+  - `M	docs/history/2026_05_cli_rewrite.md`
+  - `M	proof_universe.lock`
+  - `M	src/cli/cli_surface_macro.nim`
+  - ... and 7 more files
+
+## MISSING_CONTEXT7 (516 commits)
+
+- `2026-05-27` `77bf217b` fix: resolve pre-push gate failures fundamentally
+  - `M	src/core/axiom_api.nim`
+  - `M	src/core/verified_axioms_catalog.nim`
+  - `M	src/gate/runners/gate_self_check.nim`
+- `2026-05-27` `aec0b622` feat: add Mandatory Parallel Decomposition Protocol (§2.6a)
+  - `M	.agents/skills/subagent-driven-development/SKILL.md`
+  - `M	.agents/skills/subagent-mandate/SKILL.md`
+  - `M	.gitignore`
+  - ... and 4 more files
+- `2026-05-27` `5b2f88f1` chore: purge Hermes legacy from entire codebase
+  - `M	.agents/skills/axiom-quality-gate/SKILL.md`
+  - `M	.agents/skills/axiom-quality-gate/references/2026-05-25-four-dimension-audit.md`
+  - `M	.agents/skills/axiom-quality-gate/references/agents-md-compression-pipeline.md`
+  - ... and 46 more files
+- `2026-05-26` `86a7c5e8` feat(gate): meta-gate self-check + forensic replay engine
+  - `M	scripts/gate_replay.nim`
+  - `M	src/gate/runners/gate_self_check.nim`
+- `2026-05-26` `cf5732a2` refactor: eliminate all module_overrides (8→0)
+  - `M	AGENTS.md`
+  - `A	CODEBASE_INVENTORY.md`
+  - ... and 588 more files
+- `2026-05-26` `7f079b96` fix: remove 6 no-op module_overrides, fix thought_dashboard compilation
+  - `M	src/gate/architecture_policy.lock`
+  - `M	src/verification/thought_dashboard.nim`
+- `2026-05-26` `ca36c1c5` fix: resolve pre-existing gate debt — unused imports, warnings, Nim 2.0 compat
+  - `M	config.nims`
+  - `M	src/core/domain_types.nim`
+  - `M	src/core/file_utils.nim`
+  - ... and 7 more files
+- `2026-05-26` `24a4b6c6` perf(gate): malebolgia-based parallel gate execution + DRY duplicate removal
+  - `M	scripts/gate_hook.nim`
+  - `M	src/gate/git.nim`
+  - `D	src/gate/runners/architecture_principle_gate.nim`
+- `2026-05-25` `91637bd4` fix(gate): 24 SRP violations resolved — LCOM/TCC per-module override + 6 module split
+  - `M	src/cli/cli_io.nim`
+  - `A	src/cli/cli_io_error.nim`
+  - `A	src/cli/cli_io_input.nim`
+  - ... and 15 more files
+- `2026-05-25` `7367e594` refactor: align directory layout with industry standards
+  - `M	.gitignore`
+  - `D	.hermes/plans/2026-05-22_020000-quality-gate-reconstruction-progress.md`
+  - `D	.hermes/plans/2026-05-22_020000-quality-gate-reconstruction.md`
+  - ... and 66 more files
+- `2026-05-25` `3fc5227f` refactor: split gateway.nim (26→15 exports), remove gateway module_override
+  - `A	.hermes/plans/2026-05-25_201500-module-overrides-ideal-resolution.md`
+  - `A	.hermes/plans/2026-05-25_220000-module-overrides-final-2.md`
+  - `A	.hermes/plans/2026-05-25_230000-agents-md-ssot-plan-v2.md`
+  - ... and 71 more files
+- `2026-05-25` `4d393acc` refactor: purge dead test blocks (discard stubs) from gateway tests
+  - `A	src/gate/runners/sentinel`
+  - `M	tests/gateway/gateway_cli_test.nim`
+  - `M	tests/gateway/gateway_topology_verify_test.nim`
+- `2026-05-25` `2e136c97` fix: gateway runner recursive gate + verify_workflow refactor + test migration
+  - `A	.hermes/plans/2026-05-25_150000-gateway-runner-perf.md`
+  - `M	diff.diff`
+  - `M	src/cli/verify_workflow_cli.nim`
+  - ... and 13 more files
+- `2026-05-25` `da1edf22` fix: gate infrastructure — argv[0] auto-detect, sentinel CWD anchor, nimble hooks bypass
+  - `A	.hermes/plans/2026-05-25_123000-gate-infrastructure-restoration-v2.md`
+  - `A	.hermes/plans/2026-05-25_123000-gate-infrastructure-restoration.md`
+  - `A	.hermes/plans/2026-05-25_124000-gate-issues-remaining-fix.md`
+  - ... and 11 more files
+- `2026-05-25` `1587525a` refactor: eradicate duplicate bridges, unify type system, rewire to the_judge_eval
+  - `A	.hermes/plans/2026-05-25_120000-duplicate-bridge-extermination-v2.md`
+  - `A	.hermes/plans/2026-05-25_120000-duplicate-bridge-extermination.md`
+  - `M	src/cli/verify_workflow_cli.nim`
+  - ... and 9 more files
+- `2026-05-25` `2f5d8482` docs: update CONTEXT.md refs to AGENTS.md, integrate agmd-check into pre-commit hook
+  - `M	GUARDIAN.md`
+  - `M	scripts/gate_hook.nim`
+  - `M	src/gate/runners/gate_hook.nim`
+- `2026-05-25` `846f5c0e` docs: restructure AGENTS.md as SSOT, merge CONTEXT.md constitution, add agmd-check gate
+  - `A	.hermes/plans/2026-05-25_013000-agmd-restructure-plan.md`
+  - `M	AGENTS.md`
+  - `M	CONTEXT.md`
+  - ... and 8 more files
+- `2026-05-25` `12818343` axiom-integrity: SMT/Lean codegen + End-to-End proof pipeline (Phase 5.1-5.2)
+  - `A	.hermes/plans/2026-05-25_010000-axiom-remaining-debt-phase-5-1-v2.md`
+  - `A	.hermes/plans/2026-05-25_010000-axiom-remaining-debt-phase-5-1.md`
+  - `M	src/core/lean_bridge.nim`
+  - ... and 3 more files
+- `2026-05-25` `87b79112` axiom-integrity: Z3/Lean bridges + VFS + Cross-Validation (Phases 3-6)
+  - `M	src/cli/verify_workflow_cli.nim`
+  - `A	src/core/cross_validator.nim`
+  - `A	src/core/lean_bridge.nim`
+  - ... and 1 more files
+- `2026-05-25` `7fe9da66` axiom-integrity: Deep Verification Gate + VFS scaffold
+  - `A	.hermes/plans/2026-05-24_220000-quality-gate-4d-upgrade.md`
+  - `A	.hermes/plans/2026-05-24_223000-quality-gate-4d-upgrade-v2.md`
+  - `A	.hermes/plans/2026-05-24_224000-fundamental-a-grade-analysis.md`
+  - ... and 16 more files
+- `2026-05-24` `2c6743ea` proof-universe: Auto-heal empty graph with cache purge
+  - `M	src/verification/proof_universe_commit.nim`
+- `2026-05-24` `15effee2` skeleton-reconstruction: Restore ecosystem_linkage.nim (Wave 6 federated integrity)
+  - `A	src/core/ecosystem_linkage.nim`
+- `2026-05-24` `6d494104` skeleton-reconstruction: Restore scheduler.nim (Wave 12 task duration tracker)
+  - `M	src/gate/architecture_policy.lock`
+  - `M	src/gate/architecture_policy.nim`
+- `2026-05-24` `f6e42cab` pre-compiled-metadata: certified_exempt classification for generated files
+  - `M	proof_universe.lock`
+  - `M	src/core/parsers/tree_sitter/query/collect.nim`
+  - `M	src/core/parsers/tree_sitter/query/pred.nim`
+  - ... and 6 more files
+- `2026-05-24` `2de6e488` pre-compiled-metadata: Replace macro-generated cli_surface with standalone generator
+  - `M	proof_universe.lock`
+  - `M	src/cli/cli_surface_generated.nim`
+  - `D	src/cli/cli_surface_macro.nim`
+  - ... and 5 more files
+- `2026-05-24` `e8a44710` quality-gate: Zero Tolerance 4D upgrade — debt baseline abolished, hardcoding extracted to policy lock, layer-specific limits, srp-catalog role purged
+  - `A	docs/history/2026-05-24_quality_gate_4d_upgrade.md`
+  - `D	src/gate/architecture_debt_baseline.toml`
+  - `M	src/gate/architecture_policy.lock`
+  - ... and 5 more files
+- `2026-05-24` `0ac82c9b` feat(trusted-tcb): realize all 5 stub phases — Z3 pool, Lean replay, SMT-Lean cross-check, SHA-256, CBOR
+  - `A	.hermes/plans/2026-05-24_200000-trusted-tcb-stub-realization-plan.md`
+  - `A	src/core/lean_replay.nim`
+  - `M	src/core/the_judge_eval.nim`
+  - ... and 3 more files
+- `2026-05-24` `3dc3f976` Trusted TCB + The Judge recovery: distinct types + SMT-First architecture
+  - `A	.hermes/plans/2026-05-24_190000-trusted-modules-and-judge-recovery.md`
+  - `M	src/core/the_judge_eval.nim`
+  - `M	src/core/trusted/cbor.nim`
+  - ... and 4 more files
+- `2026-05-24` `4fa44158` Nim 2.x migration: Zero-Macro pattern + heal route removal + SOLID decomposition
+  - `A	.hermes/plans/2026-05-24_180000-nim2x-migration-debt-resolution.md`
+  - `A	.hermes/plans/2026-05-24_183000-zero-macro-results-refactor.md`
+  - `A	diff.diff`
+  - ... and 105 more files
+- `2026-05-24` `6ce8871b` refactor(cleanup): consolidate scripts/gates/ into src/gate/runners/
+  - `M	scripts/refresh_cli_binaries.nim`
+  - `M	src/gate/git.nim`
+  - `R092	scripts/gates/architecture_gate.nim	src/gate/runners/architecture_guard.nim`
+  - ... and 16 more files
+- `2026-05-24` `386e8e46` refactor(cleanup): consolidate tests/ + vendor submodule + remove config.nims duplicates
+  - `M	.gitignore`
+  - `A	.gitmodules`
+  - `D	scripts/gate_hook`
+  - ... and 114 more files
+- `2026-05-24` `48a0d400` refactor(cleanup): eliminate SSOT/SOLID/DRY/SoC directory violations
+  - `M	.gitignore`
+  - `D	bin_gateway_test/gateway_mcp_core_test`
+  - `D	bin_gateway_test/gateway_pipeline_test`
+  - ... and 21 more files
+- `2026-05-24` `b516ea48` feat(gate): resolve all 6 architecture violations
+  - `A	.hermes/plans/2026-05-24_000000-remaining-6-violations-plan.md`
+  - `M	src/cli/wf_runners.nim`
+  - `A	src/cli/wf_runners_common.nim`
+  - ... and 30 more files
+- `2026-05-23` `e8e4ff29` WIP: SOLID modularization Phase 4-5
+  - `M	src/cli/commands/heal_analysis.nim`
+  - `M	src/cli/commands/heal_injection.nim`
+  - `M	src/cli/commands/heal_node_executor.nim`
+  - ... and 49 more files
+- `2026-05-23` `d848d808` WIP: SOLID modularization Phase 2-3
+  - `M	src/cli/ax_heal_action_cli.nim`
+  - `A	src/cli/progress_reporter_proof.nim`
+  - `R074	src/cli/progress_reporter.nim	src/cli/progress_reporter_topology.nim`
+  - ... and 24 more files
+- `2026-05-23` `45e00bbc` WIP: SOLID modularization Phase 0-2
+  - `A	.hermes/plans/2026-05-23_230000-solid-modularization-plan.md`
+  - `A	.hermes/plans/2026-05-24_000000-solid-modularization-execution-plan.md`
+  - `M	src/cli/certificate_refinement.nim`
+  - ... and 19 more files
+- `2026-05-23` `c012e893` feat(gate): DRY elimination — jsonStringArray unified, threshold 10→30
+  - `A	.hermes/plans/2026-05-23_220000-dry-elimination-plan.md`
+  - `M	src/cli/topology_cli.nim`
+  - `M	src/cli/verify_workflow_cli.nim`
+  - ... and 2 more files
+- `2026-05-23` `9beea642` feat(gate): Z3 sidecar & Mirror Integrity macro
+  - `A	src/core/std_redirect.nim`
+  - `M	src/gate/architecture_guard.nim`
+  - `M	src/gate/ast_architecture_gate.nim`
+  - ... and 2 more files
+- `2026-05-23` `22acc3b0` feat(gate): nimtry parser extension & symbolic link DRY fix
+  - `A	.hermes/plans/2026-05-23_210000-nimtry-deterministic-fixes-plan.md`
+  - `M	src/gate/architecture_policy.lock`
+  - `M	src/gate/architecture_policy.nim`
+  - ... and 4 more files
+- `2026-05-23` `f521988c` feat(gate): nimtry Zero-Catch & Self-Hosting Gate
+  - `A	.hermes/plans/2026-05-23_200000-nimtry-zero-catch-self-hosting-plan.md`
+  - `M	src/cli/cst_cli.nim`
+  - `M	src/cli/git_cli.nim`
+  - ... and 109 more files
+- `2026-05-23` `fc4a2c19` feat(gate): nimtry DIY static analyzer
+  - `A	.hermes/plans/2026-05-22_020000-quality-gate-reconstruction-progress.md`
+  - `A	.hermes/plans/2026-05-22_020000-quality-gate-reconstruction.md`
+  - `A	.hermes/plans/2026-05-22_183800-quality-gate-wave8-ast-policy.md`
+  - ... and 38 more files
+- `2026-05-23` `9bef3eab` fix(AMU): ASI Metric Unification — ValidatedAsi type-level enforcement
+  - `A	docs/history/2026_05_asi_metric_unification.md`
+  - `M	src/cli/report_cli.nim`
+  - `M	src/cli/wf_runners.nim`
+  - ... and 12 more files
+- `2026-05-23` `7a78e1e7` fix: tree-sitter fallback for global symbol graph builder
+  - `A	docs/history/2026_05_tree_sitter_fallback.md`
+  - `M	proof_universe.lock`
+  - `M	src/core/global_symbol_graph_builder.nim`
+  - ... and 2 more files
+- `2026-05-23` `813d205e` perf: Wave 10 parallelization optimization - gateway runner per-test nimcache + SHA256 cache, orchestrator malebolgia migration, refresh per-target hash, Linux /proc resource sampling
+  - `M	docs/spec/threadpool_migration.md`
+  - `M	scripts/refresh_cli_binaries.nim`
+  - `M	src/core/orchestrator.nim`
+  - ... and 13 more files
+- `2026-05-22` `039039b6` fix: Phase C2 — certificate/ASI expectation updates + error handling
+  - `A	src/core/ecosystem_linkage.nim`
+  - `M	tests/gateway/asi_cli_test.nim`
+  - `M	tests/gateway/asi_report_fixture_helpers.nim`
+  - ... and 1 more files
+- `2026-05-22` `f107dc20` fix: gates.nim function ordering + walkDir OSError guard
+  - `M	src/gate/git.nim`
+- `2026-05-22` `b25f0443` feat: Wave 9.5 — fusion/matching rule engine + policy SSOT + import fixes
+  - `M	src/gate/architecture_debt_baseline.toml`
+  - `M	src/gate/architecture_policy.lock`
+  - `M	src/gate/architecture_policy.nim`
+  - ... and 10 more files
+- `2026-05-22` `ed93e119` feat: Wave 9 — full-tree architecture gate + Nim 2.x compatibility
+  - `M	src/core/json_utils.nim`
+  - `M	src/gate/architecture_guard.nim`
+  - `M	src/gate/ast_architecture_gate.nim`
+  - ... and 5 more files
+- `2026-05-22` `0522b5d9` feat: Wave 8 — AST-backed architecture gate with canonical policy SSOT
+  - `M	.agents/skills/architecture-principles/SKILL.md`
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	proof_universe.lock`
+  - ... and 18 more files
+- `2026-05-21` `25b6d2da` fix: make proof universe lock hash deterministic
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	proof_universe.lock`
+  - `M	scripts/gates/cli_build.nim`
+  - ... and 6 more files
+
+## MISSING_ARCHITECTURE (62 commits)
+
+- `2026-05-27` `77bf217b` fix: resolve pre-push gate failures fundamentally
+  - `M	src/core/axiom_api.nim`
+  - `M	src/core/verified_axioms_catalog.nim`
+  - `M	src/gate/runners/gate_self_check.nim`
+- `2026-05-27` `5b2f88f1` chore: purge Hermes legacy from entire codebase
+  - `M	.agents/skills/axiom-quality-gate/SKILL.md`
+  - `M	.agents/skills/axiom-quality-gate/references/2026-05-25-four-dimension-audit.md`
+  - `M	.agents/skills/axiom-quality-gate/references/agents-md-compression-pipeline.md`
+  - ... and 46 more files
+- `2026-05-26` `86a7c5e8` feat(gate): meta-gate self-check + forensic replay engine
+  - `M	scripts/gate_replay.nim`
+  - `M	src/gate/runners/gate_self_check.nim`
+- `2026-05-26` `24a4b6c6` perf(gate): malebolgia-based parallel gate execution + DRY duplicate removal
+  - `M	scripts/gate_hook.nim`
+  - `M	src/gate/git.nim`
+  - `D	src/gate/runners/architecture_principle_gate.nim`
+- `2026-05-25` `7367e594` refactor: align directory layout with industry standards
+  - `M	.gitignore`
+  - `D	.hermes/plans/2026-05-22_020000-quality-gate-reconstruction-progress.md`
+  - `D	.hermes/plans/2026-05-22_020000-quality-gate-reconstruction.md`
+  - ... and 66 more files
+- `2026-05-25` `4d393acc` refactor: purge dead test blocks (discard stubs) from gateway tests
+  - `A	src/gate/runners/sentinel`
+  - `M	tests/gateway/gateway_cli_test.nim`
+  - `M	tests/gateway/gateway_topology_verify_test.nim`
+- `2026-05-25` `2e136c97` fix: gateway runner recursive gate + verify_workflow refactor + test migration
+  - `A	.hermes/plans/2026-05-25_150000-gateway-runner-perf.md`
+  - `M	diff.diff`
+  - `M	src/cli/verify_workflow_cli.nim`
+  - ... and 13 more files
+- `2026-05-25` `da1edf22` fix: gate infrastructure — argv[0] auto-detect, sentinel CWD anchor, nimble hooks bypass
+  - `A	.hermes/plans/2026-05-25_123000-gate-infrastructure-restoration-v2.md`
+  - `A	.hermes/plans/2026-05-25_123000-gate-infrastructure-restoration.md`
+  - `A	.hermes/plans/2026-05-25_124000-gate-issues-remaining-fix.md`
+  - ... and 11 more files
+- `2026-05-25` `3b3c6c0f` refactor: migrate CONTEXT.md references to AGENTS.md + registry.md
+  - `A	.hermes/plans/2026-05-25_013000-axiom-infrastructure-reconciliation.md`
+  - `A	.hermes/plans/2026-05-25_020000-context-md-eradication-plan.md`
+  - `M	docs/evidence/architecture_decision_record.md`
+  - ... and 21 more files
+- `2026-05-25` `2f5d8482` docs: update CONTEXT.md refs to AGENTS.md, integrate agmd-check into pre-commit hook
+  - `M	GUARDIAN.md`
+  - `M	scripts/gate_hook.nim`
+  - `M	src/gate/runners/gate_hook.nim`
+- `2026-05-25` `846f5c0e` docs: restructure AGENTS.md as SSOT, merge CONTEXT.md constitution, add agmd-check gate
+  - `A	.hermes/plans/2026-05-25_013000-agmd-restructure-plan.md`
+  - `M	AGENTS.md`
+  - `M	CONTEXT.md`
+  - ... and 8 more files
+- `2026-05-24` `2de6e488` pre-compiled-metadata: Replace macro-generated cli_surface with standalone generator
+  - `M	proof_universe.lock`
+  - `M	src/cli/cli_surface_generated.nim`
+  - `D	src/cli/cli_surface_macro.nim`
+  - ... and 5 more files
+- `2026-05-24` `4fa44158` Nim 2.x migration: Zero-Macro pattern + heal route removal + SOLID decomposition
+  - `A	.hermes/plans/2026-05-24_180000-nim2x-migration-debt-resolution.md`
+  - `A	.hermes/plans/2026-05-24_183000-zero-macro-results-refactor.md`
+  - `A	diff.diff`
+  - ... and 105 more files
+- `2026-05-24` `48a0d400` refactor(cleanup): eliminate SSOT/SOLID/DRY/SoC directory violations
+  - `M	.gitignore`
+  - `D	bin_gateway_test/gateway_mcp_core_test`
+  - `D	bin_gateway_test/gateway_pipeline_test`
+  - ... and 21 more files
+- `2026-05-23` `9beea642` feat(gate): Z3 sidecar & Mirror Integrity macro
+  - `A	src/core/std_redirect.nim`
+  - `M	src/gate/architecture_guard.nim`
+  - `M	src/gate/ast_architecture_gate.nim`
+  - ... and 2 more files
+- `2026-05-22` `f107dc20` fix: gates.nim function ordering + walkDir OSError guard
+  - `M	src/gate/git.nim`
+- `2026-05-22` `ed93e119` feat: Wave 9 — full-tree architecture gate + Nim 2.x compatibility
+  - `M	src/core/json_utils.nim`
+  - `M	src/gate/architecture_guard.nim`
+  - `M	src/gate/ast_architecture_gate.nim`
+  - ... and 5 more files
+- `2026-05-20` `ae2c426a` refactor(verification): Wave 7 architecture debt eradication — SoC DIP DRY + gate hardening
+  - `M	axiom.nimble`
+  - `M	config.nims`
+  - `M	docs/false-positives.md`
+  - ... and 19 more files
+- `2026-05-20` `e3daf3ad` feat(cli): constitutional rewrite of CLI surface with macro-generated parsers
+  - `M	CONTEXT.md`
+  - `A	docs/history/2026_05_cli_rewrite.md`
+  - `M	proof_universe.lock`
+  - ... and 15 more files
+- `2026-05-20` `043b89fe` refactor(verification): complete Wave 7 architecture debt eradication
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	proof_universe.lock`
+  - `M	src/gate/architecture_debt_baseline.toml`
+  - ... and 7 more files
+- `2026-05-20` `b2601983` feat(wave7): stratify 3 modules per topological principles
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	proof_universe.lock`
+  - `A	src/core/asset_collector.nim`
+  - ... and 13 more files
+- `2026-05-20` `8d8e79db` fix(gate): Seven-Issue Eradication — Batman-Patriot-Black-Hawk Plan
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	proof_universe.lock`
+  - `D	scripts/gates/pre_commit_hook.nim`
+  - ... and 15 more files
+- `2026-05-19` `81a4924e` refactor(srp): rollback gateway.nim to core, fix persona re-exports, register import-facade roles
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/allowed_imports.lock`
+  - `M	src/cli/certificate_cli.nim`
+  - ... and 21 more files
+- `2026-05-19` `0eccd300` refactor(core): move type inference modules to core/type_system subdomain
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/allowed_imports.lock`
+  - `M	src/core/boundary_extractor.nim`
+  - ... and 6 more files
+- `2026-05-19` `24d83ad8` feat(gate): harden quality gates to block all SOLID/DRY/SSOT/SoC violations
+  - `M	.agents/skills/architecture-principles/SKILL.md`
+  - `M	GUARDIAN.md`
+  - `A	docs/history/2026_05_gate_hardening.md`
+  - ... and 11 more files
+- `2026-05-19` `97a5f2ea` feat: strengthen architecture gate and reorganize core modules
+  - `M	CONTEXT.md`
+  - `M	GUARDIAN.md`
+  - `D	allowed_imports.lock`
+  - ... and 37 more files
+- `2026-05-18` `3fbea026` feat(verification): positive SSOT convergence gate for certificate/proof-state
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	proof_universe.lock`
+  - `M	src/cli/report_cli.nim`
+  - ... and 10 more files
+- `2026-05-17` `68a3cc44` feat: topology traversal guards, module path cache, and runtime ASI lock defense
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	hooks/pre-commit`
+  - `M	hooks/pre-push`
+  - ... and 22 more files
+- `2026-05-17` `bdd7bb8e` feat(v0.6.0-extinction): freeze graph cache CLI wiring + spec ④ completion
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/cli/ax_workflow_shortcuts.nim`
+  - `M	src/cli/commands/heal_batch_scheduler.nim`
+  - ... and 19 more files
+- `2026-05-17` `be01f2c4` refactor(debt): purge blockingFailure phantom, inject decEq, facade rebuild_assets
+  - `M	allowed_imports.lock`
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/core/axiom_prelude.nim`
+  - ... and 16 more files
+- `2026-05-17` `7172672f` refactor(solid): resolve heal_leanstral.nim triple violation and reach ASI 1.0000
+  - `M	CONTEXT.md`
+  - `M	allowed_imports.lock`
+  - `M	hooks/pre-commit`
+  - ... and 26 more files
+- `2026-05-17` `576261d0` refactor(solid): extract heal.nim batch scheduler to comply with 15-func limit
+  - `M	allowed_imports.lock`
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/cli/commands/heal.nim`
+  - ... and 13 more files
+- `2026-05-17` `625abe3f` fix(vault): unify certificate filename generation via getCanonicalCertFilename SSOT
+  - `M	.gitignore`
+  - `M	allowed_imports.lock`
+  - `M	docs/history/2026_05_refactoring.md`
+  - ... and 38 more files
+- `2026-05-16` `64e4e704` feat(cli): P1--P3 entropy removal (--cached, Virtual GC, --force split)
+  - `M	allowed_imports.lock`
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/cli/action_plan_cli.nim`
+  - ... and 9 more files
+- `2026-05-16` `c41a6386` refactor(core): 7-module SRP decomposition of contract_extractor.nim
+  - `M	.gitignore`
+  - `A	allowed_imports.lock`
+  - `M	docs/history/2026_05_refactoring.md`
+  - ... and 26 more files
+- `2026-05-15` `1d0413b6` fix(synthesis): full sanitizeLeanSource as final pass
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/cli/action_output_cli.nim`
+  - `M	src/cli/certificate_refinement.nim`
+  - ... and 28 more files
+- `2026-05-15` `38d9d74d` fix(synthesis): final total nuclear pass after prelude assembly
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/cli/cst_cli.nim`
+  - `M	src/cli/ax_heal_action_cli.nim`
+  - ... and 20 more files
+- `2026-05-15` `5ea9c5b5` fix(synthesis): sanitize axiom prelude before Lean compilation
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/cli/commands/heal.nim`
+  - `M	src/cli/commands/observability.nim`
+  - ... and 10 more files
+- `2026-05-14` `03904513` feat(translator): Semantic Eraser 2.0
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/cli/action_command_registry.nim`
+  - `M	src/cli/action_dispatch_cli.nim`
+  - ... and 36 more files
+- `2026-05-14` `92ec1493` fix(synthesis): double nuclear colon pass
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/cli/git_cli.nim`
+  - `M	src/cli/ax_workflow_shortcuts.nim`
+  - ... and 25 more files
+- `2026-05-14` `b965cc50` fix(translator): expand namespace isolation + semantic eraser
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/cli/commands/recertify_lean.nim`
+  - `M	src/cli/commands/submit.nim`
+  - ... and 20 more files
+- `2026-05-14` `983abd16` fix(translator): total nuclear colon removal - strip ALL colons from body
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/cli/action_output_cli.nim`
+  - `M	src/cli/action_plan_cli.nim`
+  - ... and 56 more files
+- `2026-05-14` `193d4773` feat(cli): proof preservation gate + tautology fast-track certGreen
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/api/verification_loop.nim`
+  - `M	src/cli/cli_io.nim`
+  - ... and 30 more files
+- `2026-05-14` `6002d2ce` feat(translator): Collection & Assembly import architecture (Wave F)
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/api/verification_loop.nim`
+  - `M	src/cli/action_command_registry.nim`
+  - ... and 46 more files
+- `2026-05-14` `fe2d223d` fix(translator,verification): generalized regex colon filter + AST pre-cleaning
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/cli/commands/heal.nim`
+  - `M	src/cli/progress_reporter.nim`
+  - ... and 23 more files
+- `2026-05-14` `7845255b` fix(translator,cli): connect tautology proof to ULA pipeline + fixes
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/cli/commands/observability.nim`
+  - `M	src/cli/evidence_cli.nim`
+  - ... and 45 more files
+- `2026-05-13` `0c16d5ec` chore: clean up unused root config files and sync axiom hints
+  - `D	asi_milestones.toml`
+  - `D	axiom_baseline_20260511.json`
+  - `M	src/core/io_utils.nim`
+  - ... and 2 more files
+- `2026-05-12` `232245ce` feat(verification): ASI recovery to 1.0000 — Int/Nat fix, certRed promotion, macro evidence
+  - `A	axiom.toml`
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/cli/commands/recertify_lean.nim`
+  - ... and 9 more files
+- `2026-05-10` `84c24dd2` feat(cli): unify ax prove workflow
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/cli/action_plan_cli.nim`
+  - `M	src/cli/ax_workflow_shortcuts.nim`
+  - ... and 12 more files
+- `2026-05-09` `3c21257e` fix: stabilize ax heal recovery to ASI 1
+  - `M	CONTEXT.md`
+  - `M	src/api/verification_loop.nim`
+  - `M	src/cli/action_command_registry.nim`
+  - ... and 139 more files
+
+## MISSING_TESTS (80 commits)
+
+- `2026-05-27` `77bf217b` fix: resolve pre-push gate failures fundamentally
+  - `M	src/core/axiom_api.nim`
+  - `M	src/core/verified_axioms_catalog.nim`
+  - `M	src/gate/runners/gate_self_check.nim`
+- `2026-05-27` `aec0b622` feat: add Mandatory Parallel Decomposition Protocol (§2.6a)
+  - `M	.agents/skills/subagent-driven-development/SKILL.md`
+  - `M	.agents/skills/subagent-mandate/SKILL.md`
+  - `M	.gitignore`
+  - ... and 4 more files
+- `2026-05-26` `86a7c5e8` feat(gate): meta-gate self-check + forensic replay engine
+  - `M	scripts/gate_replay.nim`
+  - `M	src/gate/runners/gate_self_check.nim`
+- `2026-05-26` `cf5732a2` refactor: eliminate all module_overrides (8→0)
+  - `M	AGENTS.md`
+  - `A	CODEBASE_INVENTORY.md`
+  - ... and 588 more files
+- `2026-05-26` `7f079b96` fix: remove 6 no-op module_overrides, fix thought_dashboard compilation
+  - `M	src/gate/architecture_policy.lock`
+  - `M	src/verification/thought_dashboard.nim`
+- `2026-05-26` `24a4b6c6` perf(gate): malebolgia-based parallel gate execution + DRY duplicate removal
+  - `M	scripts/gate_hook.nim`
+  - `M	src/gate/git.nim`
+  - `D	src/gate/runners/architecture_principle_gate.nim`
+- `2026-05-25` `91637bd4` fix(gate): 24 SRP violations resolved — LCOM/TCC per-module override + 6 module split
+  - `M	src/cli/cli_io.nim`
+  - `A	src/cli/cli_io_error.nim`
+  - `A	src/cli/cli_io_input.nim`
+  - ... and 15 more files
+- `2026-05-25` `7367e594` refactor: align directory layout with industry standards
+  - `M	.gitignore`
+  - `D	.hermes/plans/2026-05-22_020000-quality-gate-reconstruction-progress.md`
+  - `D	.hermes/plans/2026-05-22_020000-quality-gate-reconstruction.md`
+  - ... and 66 more files
+- `2026-05-25` `3fc5227f` refactor: split gateway.nim (26→15 exports), remove gateway module_override
+  - `A	.hermes/plans/2026-05-25_201500-module-overrides-ideal-resolution.md`
+  - `A	.hermes/plans/2026-05-25_220000-module-overrides-final-2.md`
+  - `A	.hermes/plans/2026-05-25_230000-agents-md-ssot-plan-v2.md`
+  - ... and 71 more files
+- `2026-05-25` `1587525a` refactor: eradicate duplicate bridges, unify type system, rewire to the_judge_eval
+  - `A	.hermes/plans/2026-05-25_120000-duplicate-bridge-extermination-v2.md`
+  - `A	.hermes/plans/2026-05-25_120000-duplicate-bridge-extermination.md`
+  - `M	src/cli/verify_workflow_cli.nim`
+  - ... and 9 more files
+- `2026-05-25` `2f5d8482` docs: update CONTEXT.md refs to AGENTS.md, integrate agmd-check into pre-commit hook
+  - `M	GUARDIAN.md`
+  - `M	scripts/gate_hook.nim`
+  - `M	src/gate/runners/gate_hook.nim`
+- `2026-05-25` `846f5c0e` docs: restructure AGENTS.md as SSOT, merge CONTEXT.md constitution, add agmd-check gate
+  - `A	.hermes/plans/2026-05-25_013000-agmd-restructure-plan.md`
+  - `M	AGENTS.md`
+  - `M	CONTEXT.md`
+  - ... and 8 more files
+- `2026-05-25` `12818343` axiom-integrity: SMT/Lean codegen + End-to-End proof pipeline (Phase 5.1-5.2)
+  - `A	.hermes/plans/2026-05-25_010000-axiom-remaining-debt-phase-5-1-v2.md`
+  - `A	.hermes/plans/2026-05-25_010000-axiom-remaining-debt-phase-5-1.md`
+  - `M	src/core/lean_bridge.nim`
+  - ... and 3 more files
+- `2026-05-25` `87b79112` axiom-integrity: Z3/Lean bridges + VFS + Cross-Validation (Phases 3-6)
+  - `M	src/cli/verify_workflow_cli.nim`
+  - `A	src/core/cross_validator.nim`
+  - `A	src/core/lean_bridge.nim`
+  - ... and 1 more files
+- `2026-05-25` `7fe9da66` axiom-integrity: Deep Verification Gate + VFS scaffold
+  - `A	.hermes/plans/2026-05-24_220000-quality-gate-4d-upgrade.md`
+  - `A	.hermes/plans/2026-05-24_223000-quality-gate-4d-upgrade-v2.md`
+  - `A	.hermes/plans/2026-05-24_224000-fundamental-a-grade-analysis.md`
+  - ... and 16 more files
+- `2026-05-24` `2c6743ea` proof-universe: Auto-heal empty graph with cache purge
+  - `M	src/verification/proof_universe_commit.nim`
+- `2026-05-24` `15effee2` skeleton-reconstruction: Restore ecosystem_linkage.nim (Wave 6 federated integrity)
+  - `A	src/core/ecosystem_linkage.nim`
+- `2026-05-24` `6d494104` skeleton-reconstruction: Restore scheduler.nim (Wave 12 task duration tracker)
+  - `M	src/gate/architecture_policy.lock`
+  - `M	src/gate/architecture_policy.nim`
+- `2026-05-24` `f6e42cab` pre-compiled-metadata: certified_exempt classification for generated files
+  - `M	proof_universe.lock`
+  - `M	src/core/parsers/tree_sitter/query/collect.nim`
+  - `M	src/core/parsers/tree_sitter/query/pred.nim`
+  - ... and 6 more files
+- `2026-05-24` `2de6e488` pre-compiled-metadata: Replace macro-generated cli_surface with standalone generator
+  - `M	proof_universe.lock`
+  - `M	src/cli/cli_surface_generated.nim`
+  - `D	src/cli/cli_surface_macro.nim`
+  - ... and 5 more files
+- `2026-05-24` `0ac82c9b` feat(trusted-tcb): realize all 5 stub phases — Z3 pool, Lean replay, SMT-Lean cross-check, SHA-256, CBOR
+  - `A	.hermes/plans/2026-05-24_200000-trusted-tcb-stub-realization-plan.md`
+  - `A	src/core/lean_replay.nim`
+  - `M	src/core/the_judge_eval.nim`
+  - ... and 3 more files
+- `2026-05-24` `3dc3f976` Trusted TCB + The Judge recovery: distinct types + SMT-First architecture
+  - `A	.hermes/plans/2026-05-24_190000-trusted-modules-and-judge-recovery.md`
+  - `M	src/core/the_judge_eval.nim`
+  - `M	src/core/trusted/cbor.nim`
+  - ... and 4 more files
+- `2026-05-24` `4fa44158` Nim 2.x migration: Zero-Macro pattern + heal route removal + SOLID decomposition
+  - `A	.hermes/plans/2026-05-24_180000-nim2x-migration-debt-resolution.md`
+  - `A	.hermes/plans/2026-05-24_183000-zero-macro-results-refactor.md`
+  - `A	diff.diff`
+  - ... and 105 more files
+- `2026-05-24` `b516ea48` feat(gate): resolve all 6 architecture violations
+  - `A	.hermes/plans/2026-05-24_000000-remaining-6-violations-plan.md`
+  - `M	src/cli/wf_runners.nim`
+  - `A	src/cli/wf_runners_common.nim`
+  - ... and 30 more files
+- `2026-05-23` `e8e4ff29` WIP: SOLID modularization Phase 4-5
+  - `M	src/cli/commands/heal_analysis.nim`
+  - `M	src/cli/commands/heal_injection.nim`
+  - `M	src/cli/commands/heal_node_executor.nim`
+  - ... and 49 more files
+- `2026-05-23` `d848d808` WIP: SOLID modularization Phase 2-3
+  - `M	src/cli/ax_heal_action_cli.nim`
+  - `A	src/cli/progress_reporter_proof.nim`
+  - `R074	src/cli/progress_reporter.nim	src/cli/progress_reporter_topology.nim`
+  - ... and 24 more files
+- `2026-05-23` `45e00bbc` WIP: SOLID modularization Phase 0-2
+  - `A	.hermes/plans/2026-05-23_230000-solid-modularization-plan.md`
+  - `A	.hermes/plans/2026-05-24_000000-solid-modularization-execution-plan.md`
+  - `M	src/cli/certificate_refinement.nim`
+  - ... and 19 more files
+- `2026-05-23` `c012e893` feat(gate): DRY elimination — jsonStringArray unified, threshold 10→30
+  - `A	.hermes/plans/2026-05-23_220000-dry-elimination-plan.md`
+  - `M	src/cli/topology_cli.nim`
+  - `M	src/cli/verify_workflow_cli.nim`
+  - ... and 2 more files
+- `2026-05-23` `9beea642` feat(gate): Z3 sidecar & Mirror Integrity macro
+  - `A	src/core/std_redirect.nim`
+  - `M	src/gate/architecture_guard.nim`
+  - `M	src/gate/ast_architecture_gate.nim`
+  - ... and 2 more files
+- `2026-05-23` `22acc3b0` feat(gate): nimtry parser extension & symbolic link DRY fix
+  - `A	.hermes/plans/2026-05-23_210000-nimtry-deterministic-fixes-plan.md`
+  - `M	src/gate/architecture_policy.lock`
+  - `M	src/gate/architecture_policy.nim`
+  - ... and 4 more files
+- `2026-05-23` `f521988c` feat(gate): nimtry Zero-Catch & Self-Hosting Gate
+  - `A	.hermes/plans/2026-05-23_200000-nimtry-zero-catch-self-hosting-plan.md`
+  - `M	src/cli/cst_cli.nim`
+  - `M	src/cli/git_cli.nim`
+  - ... and 109 more files
+- `2026-05-22` `f107dc20` fix: gates.nim function ordering + walkDir OSError guard
+  - `M	src/gate/git.nim`
+- `2026-05-16` `05b90798` feat(horizon): v0.4.0 Graph Horizon Lock + Vacuous Circuit Demotion
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	src/cli/wf_runners.nim`
+  - `M	src/verification/analyzer.nim`
+- `2026-05-15` `706b4233` refactor: Verified Core classification + design annotations
+  - `M	docs/history/2026_05_refactoring.md`
+  - `M	scripts/cert_refactor_equivalence`
+  - `M	scripts/cert_refactor_equivalence.nim`
+  - ... and 5 more files
+- `2026-05-15` `8a0ae037` refactor(analyzer): Wave Z Step 1 — 13 incremental refinement boundary markers
+  - `M	src/verification/analyzer.nim`
+- `2026-05-15` `ec6d5870` docs(analyzer): add Wave Z design annotation to verifyCertificates
+  - `M	src/verification/analyzer.nim`
+- `2026-05-15` `b55ab8ac` fix(display): simplify update axiom-hint to tautology
+  - `M	src/ui/display.nim`
+- `2026-05-15` `78d95ade` chore: final auto-injected hints from 70 batch marathon
+  - `M	src/api/verification_loop.nim`
+  - `M	src/cli/ax_workflow_shortcuts.nim`
+  - `M	src/cli/log.nim`
+  - ... and 24 more files
+- `2026-05-14` `ad9d15ae` chore: auto-injected axiom hints from heal batch (51 batches cumulative)
+  - `M	src/cli/action_plan_cli.nim`
+  - `M	src/cli/commands/observability.nim`
+  - `M	src/cli/commands/recertify_lean.nim`
+  - ... and 24 more files
+- `2026-05-14` `1545ef52` fix(core): nil-guard findNodesMultiTag
+  - `M	src/cli/commands/heal_injection.nim`
+  - `M	src/cli/wf_state.nim`
+  - `M	src/core/integrity_refinement_loop.nim`
+  - ... and 10 more files
+- `2026-05-14` `7ab5af7e` heal: auto-injected axiom hints from ax prove batch
+  - `M	src/cli/report_cli.nim`
+  - `M	src/core/io_utils.nim`
+  - `M	src/core/proof_vacuity_gate.nim`
+  - ... and 9 more files
+- `2026-05-13` `0c16d5ec` chore: clean up unused root config files and sync axiom hints
+  - `D	asi_milestones.toml`
+  - `D	axiom_baseline_20260511.json`
+  - `M	src/core/io_utils.nim`
+  - ... and 2 more files
+- `2026-05-05` `f8f430f1` fix: resolve remaining tech debt - DRY, purity, dead code
+  - `M	src/cli/cst_cli.nim`
+  - `M	src/cli/certificate_cli.nim`
+  - `M	src/cli/commands/heal.nim`
+  - ... and 5 more files
+- `2026-05-05` `5271c123` fix(topology,verify): resolve phantom nodes and fingerprint mismatches
+  - `M	scripts/refresh_cli_binaries`
+  - `M	src/cli/commands/heal_leanstral.nim`
+  - `M	src/cli/verify_workflow_cli.nim`
+  - ... and 5 more files
+- `2026-05-04` `a83a2a35` feat(gate): enforce physically-impure module deny-list
+  - `A	docs/history/reports/proc_func_mass_conversion_incident_2026_05_04.md`
+  - `M	scripts/gates/guardian_compliance_scanner.nim`
+  - `M	scripts/gates/inject_core_pragmas.nim`
+  - ... and 1 more files
+- `2026-05-04` `c0eb967b` feat(gate): dynamic default for AXIOM_JOBS based on CPU count
+  - `M	src/gate/orchestrator.nim`
+- `2026-05-04` `3143053c` refactor(core,cli): migrate orchestrator and heal from std/threadpool to malebolgia
+  - `M	axiom.nimble`
+  - `A	docs/spec/threadpool_migration.md`
+  - `M	src/cli/commands/heal.nim`
+  - ... and 1 more files
+- `2026-05-04` `047380ec` feat(gate): port all remaining gates to Nim and remove prek legacy
+  - `D	prek.toml`
+  - `A	scripts/gates/asi_hard_gate.nim`
+  - `A	scripts/gates/cli_build.nim`
+  - ... and 9 more files
+- `2026-05-04` `23f6a03d` refactor: remove unused imports, revert to checksums/sha1, and clean gate runner PATH
+  - `M	src/core/axiom_api.nim`
+  - `M	src/core/solver_bridge.nim`
+  - `M	src/core/state_manager.nim`
+  - ... and 1 more files
+- `2026-05-04` `5d7d7a9e` fix: align prek hook with gate orchestrator and remove broken gcc override
+  - `M	config.nims`
+  - `M	scripts/prek_hook_wrapper.sh`
+  - `M	src/core/state_manager.nim`
+  - ... and 1 more files
+

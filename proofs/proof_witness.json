@@ -1,0 +1,87 @@
+{
+  "lean_version": "4.33.0",
+  "traces": {
+    "GateInvariants.trace": {
+      "depHash": "233a605c7fb086bd",
+      "oleanHash": "363d3ee8346aeec9",
+      "sourceFile": "<workspace>/wt-gap8-misc-fixes/proofs/GateInvariants.lean"
+    },
+    "GateInvariants/CacheKeyCompleteness.trace": {
+      "depHash": "4460ec0cc770fe7e",
+      "oleanHash": "63237ae7f7e3e9fd",
+      "sourceFile": "<workspace>/wt-gap8-misc-fixes/proofs/GateInvariants/CacheKeyCompleteness.lean"
+    },
+    "GateInvariants/DagAcyclicity.trace": {
+      "depHash": "264c963ebc4b0cc4",
+      "oleanHash": "8677b2ce2bbcebeb",
+      "sourceFile": "<workspace>/wt-gap8-misc-fixes/proofs/GateInvariants/DagAcyclicity.lean"
+    },
+    "GateInvariants/GateData.trace": {
+      "depHash": "4699a61558f5589f",
+      "oleanHash": "8d18b9d938bbdaac",
+      "sourceFile": "<workspace>/wt-gap8-misc-fixes/proofs/GateInvariants/GateData.lean"
+    },
+    "GateInvariants/MphfInjectivity.trace": {
+      "depHash": "1178a64052eb2d82",
+      "oleanHash": "71dbf99b71e044b0",
+      "sourceFile": "<workspace>/wt-gap8-misc-fixes/proofs/GateInvariants/MphfInjectivity.lean"
+    },
+    "GateInvariants/VfsInvariants.trace": {
+      "depHash": "5c9186db130152ac",
+      "oleanHash": "b4dd1b9f7d96b88b",
+      "sourceFile": "<workspace>/wt-gap8-misc-fixes/proofs/GateInvariants/VfsInvariants.lean"
+    },
+    "Generated/SharedIRHeader.trace": {
+      "depHash": "d3650c3f4ada89cb",
+      "oleanHash": "c5522c3737899aff",
+      "sourceFile": "<workspace>/wt-gap8-misc-fixes/proofs/Generated/SharedIRHeader.lean"
+    },
+    "IR/AxiomIRExpr.trace": {
+      "depHash": "d547b92f1fdf173c",
+      "oleanHash": "0130ccdf2870db1f",
+      "sourceFile": "<workspace>/wt-gap8-misc-fixes/proofs/IR/AxiomIRExpr.lean"
+    },
+    "IR/Denotation.trace": {
+      "depHash": "92ef93a94e9ae135",
+      "oleanHash": "6273ca7853ef380f",
+      "sourceFile": "<workspace>/wt-gap8-misc-fixes/proofs/IR/Denotation.lean"
+    },
+    "IR/ForkFFI.trace": {
+      "depHash": "e45231e064db58d0",
+      "oleanHash": "9818cce1494b2b77",
+      "sourceFile": "<workspace>/wt-gap8-misc-fixes/proofs/IR/ForkFFI.lean"
+    },
+    "IR/IRCheckWorker.trace": {
+      "depHash": "cea2e366598b3ed3",
+      "oleanHash": "72e71d7e7a05dbc8",
+      "sourceFile": "<workspace>/wt-gap8-misc-fixes/proofs/IR/IRCheckWorker.lean"
+    },
+    "IR/LeanWorker.trace": {
+      "depHash": "4236fb3873b742b1",
+      "oleanHash": "a0f96dff9809d256",
+      "sourceFile": "<workspace>/wt-gap8-misc-fixes/proofs/IR/LeanWorker.lean"
+    },
+    "IR/MetaCheckIR.trace": {
+      "depHash": "7dee4b117d486dc6",
+      "oleanHash": "45206eee5c82b884",
+      "sourceFile": "<workspace>/wt-gap8-misc-fixes/proofs/IR/MetaCheckIR.lean"
+    },
+    "IR/ReferenceExtractor.trace": {
+      "depHash": "dff63a887181c5fa",
+      "oleanHash": "b56dfd492e9d3209",
+      "sourceFile": "<workspace>/wt-gap8-misc-fixes/proofs/IR/ReferenceExtractor.lean"
+    },
+    "IR/ShmFFI.trace": {
+      "depHash": "13b42921773a3fd7",
+      "oleanHash": "f86c2208d770ed8b",
+      "sourceFile": "<workspace>/wt-gap8-misc-fixes/proofs/IR/ShmFFI.lean"
+    },
+    "IR/TranslatorEquivalence.trace": {
+      "depHash": "afbe90cd6b356136",
+      "oleanHash": "587ae34035d44700",
+      "sourceFile": "<workspace>/wt-gap8-misc-fixes/proofs/IR/TranslatorEquivalence.lean"
+    }
+  },
+  "source_hash": "db4d0b6f50573d3d70d0651d95f0f5ba42617f9146f293cf68b01c49bf4da212",
+  "overall_hash": "fd8c15ed62b546dccfd0a04668e6508589001dea92793fb260becbba3030e82b"
+}

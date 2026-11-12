@@ -1,0 +1,106 @@
+# Pinned build commands — exact invocations (bash, verbatim)
+
+Conventions:
+  PKGS2=<user-home>/.nimble/pkgs2
+  REPO=<workspace>/nim-toml-serialization
+  ENVDIR=./experiments/act2-wp-toml-b1-input-integrity/env
+
+## CRITICAL environment rules (see toolchain.md §Configuration)
+
+1. Run from a cwd OUTSIDE Axiom3 (e.g. `/tmp`) unless you pass explicit --path
+   for every dependency: a `nimble.lock` in the cwd ancestor chain (Axiom3 has
+   one) makes the compiler disable nimblePath entirely (compiler/nim.nim:84).
+2. Any project file under `Axiom3/**` (incl. ENVDIR) inherits
+   `Axiom3/config.nims` via the project-ancestor chain → hermetic bootstrap
+   hijacks/fails the build. `--skipParentCfg` is REQUIRED for the probes below.
+3. The explicit `--path` set makes the build cwd-independent and pins the
+   dependency set byte-exactly; the auto-discovery variant is recorded as
+   corroboration and consumes the identical files (strace-verified).
+
+## 0. The pinned --path set (fresh-resolve profile; the ONLY set that compiles this commit)
+
+  --path:"$REPO"
+  --path:"$PKGS2/serialization-0.5.4-6a75be38ab6c8a5d49108a54b494ff70d68ea011/"
+  --path:"$PKGS2/faststreams-0.5.2-589a9cf07e1d978f460f3da7f8de9b37ac3141af/"
+  --path:"$PKGS2/stew-0.5.0-db22942939773ab7d5a0f2b2668c237240c67dd6/"
+
+## 1. Main import probe (which sources does the compiler open for the real program)
+
+  cd /tmp
+  strace -f -e trace=%file -o "$ENVDIR/raw_evidence/strace_G.log" \
+    <user-home>/.choosenim/toolchains/nim-2.2.10/bin/nim c --compileOnly --mm:orc \
+    --path:"$REPO" \
+    --path:"$PKGS2/serialization-0.5.4-6a75be38ab6c8a5d49108a54b494ff70d68ea011/" \
+    --path:"$PKGS2/faststreams-0.5.2-589a9cf07e1d978f460f3da7f8de9b37ac3141af/" \
+    --path:"$PKGS2/stew-0.5.0-db22942939773ab7d5a0f2b2668c237240c67dd6/" \
+    --nimcache:/tmp/toml_b1_env/main_probe/nimcache_G \
+    /tmp/toml_b1_env/main_probe/main_probe.nim
+  # main_probe.nim: import toml_serialization / import serialization/object_serialization / echo
+  # exit 0 (SuccessX). Successful .nim opens extracted via:
+  #   grep '\.nim' strace_G.log | grep -v ENOENT | ... (see consumed_files_strace.txt)
+
+## 2. Field probes (primary, --mm:orc)
+
+  cd /tmp
+  nim c --mm:orc --run --skipParentCfg \
+    --path:"$REPO" \
+    --path:"$PKGS2/serialization-0.5.4-6a75be38ab6c8a5d49108a54b494ff70d68ea011/" \
+    --path:"$PKGS2/faststreams-0.5.2-589a9cf07e1d978f460f3da7f8de9b37ac3141af/" \
+    --path:"$PKGS2/stew-0.5.0-db22942939773ab7d5a0f2b2668c237240c67dd6/" \
+    --nimcache:/tmp/toml_b1_env/field_probe/nc_orc2 \
+    "$ENVDIR/field_probe.nim"
+  # exit 0 — output in field_probe_output.txt
+
+  cd /tmp
+  nim c --mm:orc --run --skipParentCfg \
+    --path:"$REPO" \
+    --path:"$PKGS2/serialization-0.5.4-6a75be38ab6c8a5d49108a54b494ff70d68ea011/" \
+    --path:"$PKGS2/faststreams-0.5.2-589a9cf07e1d978f460f3da7f8de9b37ac3141af/" \
+    --path:"$PKGS2/stew-0.5.0-db22942939773ab7d5a0f2b2668c237240c67dd6/" \
+    --nimcache:/tmp/toml_b1_env/field_probe/nc_abc_orc2 \
+    "$ENVDIR/field_probe_abc.nim"
+  # exit 0 — output in field_probe_output.txt
+
+## 3. Auto-discovery corroboration (NO --path; cwd must be neutral)
+
+  cd /tmp
+  nim c --mm:orc --run --skipParentCfg --nimcache:/tmp/toml_b1_env/field_probe/nc_auto \
+    "$ENVDIR/field_probe.nim"
+  # exit 0 — identical output; consumes serialization-0.5.4 + faststreams-0.5.2 + stew-0.5.0
+  # via the nimblePath highest-version pick (raw_evidence/strace_M1.log, strace_M2.log)
+
+## 4. --mm:refc feasibility (same probe)
+
+  cd /tmp
+  nim c --mm:refc --run --skipParentCfg \
+    --path:"$REPO" \
+    --path:"$PKGS2/serialization-0.5.4-6a75be38ab6c8a5d49108a54b494ff70d68ea011/" \
+    --path:"$PKGS2/faststreams-0.5.2-589a9cf07e1d978f460f3da7f8de9b37ac3141af/" \
+    --path:"$PKGS2/stew-0.5.0-db22942939773ab7d5a0f2b2668c237240c67dd6/" \
+    --nimcache:/tmp/toml_b1_env/field_probe/nc_refc \
+    "$ENVDIR/field_probe.nim"
+  # exit 0 — identical probe output. refc is feasible for this dependency set.
+
+## 5. Negative controls (declared-vs-actual drift proof)
+
+  # Degraded set — FAILS (serialization 0.2.6 cannot compile this commit):
+  cd /tmp
+  nim c --compileOnly --mm:orc \
+    --path:"$REPO" \
+    --path:"$PKGS2/serialization-0.2.6-26deca68e1a027be90e2bf2856e25aa819101d1e/" \
+    --path:"$PKGS2/faststreams-0.3.0-ec2d92793e7d1bd0c30ab29c0d20548a054cfa8e/" \
+    --path:"$PKGS2/stew-0.5.0-db22942939773ab7d5a0f2b2668c237240c67dd6/" \
+    --nimcache:/tmp/toml_b1_env/main_probe/nimcache_A_stew050_orc \
+    /tmp/toml_b1_env/main_probe/main_probe.nim
+  # exit 1 — toml_serialization/desc.nim(16,1) Error: unknown named parameter: version
+  # (raw_evidence/attempt_A_full.log; stew-0.2.0 variant: attempt_B_full.log, also exit 1)
+
+  # Fresh set but forced stew-0.2.0 — compiles (stew is not compiler-forced
+  # under manual paths; the version is pinned by the command line):
+  #   attempt_D_full.log (exit 0)
+
+## 6. Probe files used (also copied under raw_evidence/probes/)
+
+  /tmp/toml_b1_env/main_probe/main_probe.nim
+  /tmp/toml_b1_env/stew_lentutils/probe_lentutils.nim   # import stew/lentutils
+  /tmp/toml_b1_env/stew_result/probe_result.nim          # import stew/result

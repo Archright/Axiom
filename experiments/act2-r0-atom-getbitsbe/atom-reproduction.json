@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "experimentId": "ACT2-R0-ATOM-1",
+  "atomId": "bitops2.getBitsBE",
+  "nodeIdForm": "stew/bitops2.nim::getBitsBE",
+  "targetNotation": "stew/bitops2.nim::getBitsBE (R0 v3 표기 — --target 'stew/bitops2.nim::getBitsBE')",
+  "generatedAt": "2026-10-01",
+  "authorityTuple": {
+    "subject": "nim-stew@c75502ceedb5ed2a37b7b5e4744fc71313682859",
+    "execution": "axiomCommit=827329cbd8a95d614c09aa600cb7385307e66178, axBinarySha256=fd7c36b1026c78605a5fac72d9a06edb468eb2f1aa805373873f541e4da3884b, rebuiltInWorktree=Axiom-worktree-r0, AXIOM_GIT_HASH=827329cbd8a95d614c09aa600cb7385307e66178",
+    "state": "fresh seed (3종 동일, universe absent-fresh)",
+    "env": "allowlist 8변수 + amendments 3건, unshare -rni + env -i"
+  },
+  "command": "cd .-worktree-r0 && unshare -rni -- env -i PATH=\"<host PATH 22-entry 실측>\" HOME=/tmp/act2atom_getbitsbe_1790833655/home ELAN_HOME=<user-home>/.elan TMPDIR=/tmp/act2atom_getbitsbe_1790833655/tmp AXIOM_STATE_DIR=/tmp/act2atom_getbitsbe_1790833655 LANG=C LC_ALL=C GIT_CONFIG_NOSYSTEM=1 bin/ax prove --project <workspace>/nim-stew --target 'stew/bitops2.nim::getBitsBE' --limit 1 >/tmp/act2atom_getbitsbe_1790833655/stdout.log 2>/tmp/act2atom_getbitsbe_1790833655/stderr.log",
+  "exitCode": 2,
+  "exitProvenance": "stderr Diagnosis-Gate passed=false (verified 0/1) + runAccounting.gateVerdict=FAIL + verified=0/40 -> CLI verification-failure exit 2 (R0 exitCode=2 same-class)",
+  "gates": {
+    "G1_binarySha": "fd7c36b1026c78605a5fac72d9a06edb468eb2f1aa805373873f541e4da3884b — PASS (== R0)",
+    "G2_version": "bin/ax --version exit 0 (v0.3.7) + BuildSourceHash=2739333566168504023 — PASS (== R0)",
+    "G3_ingressDigest": "978d826944f301260c64169b813262c50e068f27f26d24c9cae5f0a07517a0a3 — PASS, manifest byte-identical to R0 (87 entries)",
+    "G4_executionIngressDigest": "2237e13ab4edf759ac590879210de69e6f355e0e1991fcfe8451793e0adc33fd — PASS, raw byte-identical to R0 (4688 entries, 666957 bytes)",
+    "G5_stateSeedDigest": "34b5e10f081968ad80b557e23d36abbcaddd1d12440b7daacc83b3f5178daf7a — PASS, raw byte-identical to R0; scope.lock 7a4cd3eb0e85bcee3a8e454760421bc77c83199abe943944010ad9941ed3d630, baseline 085caf2cc17f2b6cbadc9c567bc25477529898d0089cd5491011bbe44362933a, universe absent-fresh",
+    "G6_envAllowlistDigest": "R0 산출 방법 확인: R0은 envAllowlist를 값 객체(8변수 verbatim + amendments 3건)로 기록 — 수치 digest 미기록 (reproduction.json 필드 = pointer 문자열 'see r0-evidence-manifest.json envAllowlist (values recorded verbatim)', reproduction_v1.json = null). 동일 방법으로 재현: 8변수 동일 형식 (HOME=$STATE/home, TMPDIR=$STATE/tmp, AXIOM_STATE_DIR=$STATE, ELAN_HOME=<user-home>/.elan, LANG=C, LC_ALL=C, GIT_CONFIG_NOSYSTEM=1, PATH=실측) + amendments 3건 동일. 구조 동일성 PASS. PATH: 실측 22 entries (R0 자리표시자 기록 '24-entry' — 호스트 셸 드리프트, 어떤 R0 수치 기록과도 충돌 없음). 판정: PASS — 두 사실 병기 (a) R0 수치 env digest 미기록 = 기록 방식 (b) PATH entry 24->22 = 호스트 env 드리프트",
+    "subjectPreCheck": "HEAD c75502ceedb5ed2a37b7b5e4744fc71313682859, status --porcelain='?? data/' 1줄, untracked *.nim/*.nims = ∅ (R0 subject 사전 조건과 동일)"
+  },
+  "digestsBilledWithR0": {
+    "ingressDigest": "978d826944f301260c64169b813262c50e068f27f26d24c9cae5f0a07517a0a3 (R0 동일)",
+    "executionIngressDigest": "2237e13ab4edf759ac590879210de69e6f355e0e1991fcfe8451793e0adc33fd (R0 동일)",
+    "stateSeedDigest": "34b5e10f081968ad80b557e23d36abbcaddd1d12440b7daacc83b3f5178daf7a (R0 동일)",
+    "envAllowlistDigest": "R0 기록 방식 (값 객체 verbatim + amendments 3건) — 수치 digest는 R0에도 미기록; 구조 동일성 확인 (G6)"
+  },
+  "canonicalArtifacts": {
+    "repo:bin/ax": "fd7c36b1026c78605a5fac72d9a06edb468eb2f1aa805373873f541e4da3884b",
+    "repo:data/verification_scope.lock": "7a4cd3eb0e85bcee3a8e454760421bc77c83199abe943944010ad9941ed3d630",
+    "repo:data/baseline.json": "085caf2cc17f2b6cbadc9c567bc25477529898d0089cd5491011bbe44362933a",
+    "state:logs/ax_proof_state.json": "57ad7e91c63b4ee62926e683fee49a36451f76e0be3b760d3379bc784ffd22aa",
+    "state:stdout.log": "ea2b5529a4a0706ed09d4e7d6998c23749b8d13b538c6171e98b4c9ba9bff226",
+    "state:stderr.log": "e955ce2ae78c6a75e1c60da6a636e5aac20718d409d6000a6ebc5b7d0bfd95cd",
+    "state:logs/z3_telemetry.jsonl": "f3def50d62aa9a938ca8a37ca5a0ed17d6018837ebcd8b941f2ebb0f10bdef29",
+    "state:logs/ax_prove_trajectory.jsonl": "a209ae1a3f80518e494476bc7afeec2232c65f26b3fa7eab87dbdd7ec54678bf",
+    "state:logs/audit/vsr_ledger.jsonl": "4c6d6aebeb935050aebd4cb48289bd1e72fa1c15b0657f9a1555d3c4a929a182",
+    "state:.axiom/cache/evidence/df2ff30d5f73102dd89274c1df96ea9a922e935954714e81808e60fc8a60691c.json": "c80cce759cfa5fbc8e2a39bd7463bfdfd02615b99211ba2d4842933ec2148990",
+    "state:.axiom/cache/evidence/df2ff30d5f73102dd89274c1df96ea9a922e935954714e81808e60fc8a60691c.witness.json": "fdb0d821430763d9e78cff5e7476cac64fb46a2a234253cc304e4156f273dd1f",
+    "state:.axiom/cache/git_file_list.json": "e3eaac93d38eccaffe71411e33ec905a13c114df2d30b5378d6a2af10e4a9b71"
+  },
+  "equalityLayer1": {
+    "result": "PASS",
+    "detail": "subject ingress manifest 재생성 byte-identical to R0 (G3: 87 entries, sha256 978d8269…) — subject HEAD c75502ceedb5ed2a37b7b5e4744fc71313682859 동일, status '?? data/' 동일, untracked nim ∅"
+  },
+  "subjectPostCheck": "git status --porcelain = '?? data/' 1줄만 (사후 재확인 — subject 불변 유지)",
+  "binarySha": "fd7c36b1026c78605a5fac72d9a06edb468eb2f1aa805373873f541e4da3884b",
+  "runOutcome": {
+    "planComplete": true,
+    "executionComplete": true,
+    "verificationComplete": false,
+    "gateVerdict": "FAIL"
+  },
+  "verdict": {
+    "verdictAuthority": {
+      "source": "runOutcome",
+      "verdict": "BLOCKED"
+    },
+    "evidence": "repo:experiments/act2-r0-atom-getbitsbe/verdict.json"
+  },
+  "sameClassEvidenceVsR0": [
+    "exitCode 2 동일",
+    "verified=0/40, verifiedRatio=0.0000, statusCounts 동일 (pre_sieved=1 유일 non-zero)",
+    "completeness evidence byte-identical: df2ff30d5f….json sha256 c80cce75… (R0 기록값 일치), witness byte-identical sha256 fdb0d821…",
+    "irDigest df2ff30d5f73102dd89274c1df96ea9a922e935954714e81808e60fc8a60691c 동일 (stderr ir-cas MISS getBitsBE key 동일)",
+    "z3_telemetry envelope digest set 11/11 identical; R0 기록 d067de02…(sat) 존재",
+    "getBitsBE psFail solverMethod=smBMC provenance=pkZ3Bmc + StructuralAST srNoTransformApplied skip 동일",
+    "UAP requests=1 results=0 동일",
+    "toolchain shims sha 동일 (lake/lean e0f4b30b…, z3 4c13bd5b…, git 2a8c18fb…)"
+  ],
+  "canonicalRunDigest": "ba1ecb85131e91b1adfe22574d50237ec8c588f1e6ba203d2681fec4c304e504",
+  "runAccountingDigest": "636f1a26b348b53f47ef613af83b3f4bc1b221a848e040d4c7694ffd4f15cc69",
+  "runOutcomeDigest": "05b436143d9f96736d46b84b2ef4ae1331ca98c5e11c9704267a704343462b5e",
+  "universeDigestRef": "34cf28ba1e051d3913d4b590c07d5c3d31e10e0ca7455a9989fdb32b57269caa",
+  "envAllowlistDetail": {
+    "values": {
+      "PATH": "<host PATH 실측 22 entries, env -i 고정>",
+      "HOME": "/tmp/act2atom_getbitsbe_1790833655/home (empty scaffold — git config neutralization)",
+      "ELAN_HOME": "<user-home>/.elan (amendment — elan toolchain discovery)",
+      "TMPDIR": "/tmp/act2atom_getbitsbe_1790833655/tmp",
+      "AXIOM_STATE_DIR": "/tmp/act2atom_getbitsbe_1790833655",
+      "LANG": "C",
+      "LC_ALL": "C",
+      "GIT_CONFIG_NOSYSTEM": "1 (amendment — /etc/gitconfig excluded)"
+    },
+    "amendments": [
+      "HOME→state home scaffold (git config 중립화 — R0 v3 0회 실측)",
+      "GIT_CONFIG_NOSYSTEM=1 (system gitconfig 제거 — R0 v3 0회)",
+      "ELAN_HOME=<user-home>/.elan (R0 v2 divergence 근거 — HOME 중립화로 elan 발견 실패→다운로드 시도→netns 차단; amendment 후 same-class exit 2 복원)"
+    ],
+    "stateDir": "/tmp/act2atom_getbitsbe_1790833655"
+  },
+  "notes": [
+    "R0 수치 envAllowlistDigest 미기록 — G6는 R0 기록 방식(값 객체) 재현으로 판정 (두 가능성 기록: 기록 방식 vs PATH 24→22 host drift)",
+    "strace observe 생략 (계획상 archival 선택 제외) — executionIngressManifest는 R0 관측(v1_parsed.json) + 동일 commit 파일 해시 재계산으로 G4 통과",
+    "캠페인 전이는 P4 에이전트 몫 — RUN TERMINAL(BLOCKED) ≠ CAMPAIGN TERMINAL, currentTruth=OPEN 유지"
+  ]
+}

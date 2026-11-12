@@ -1,0 +1,21 @@
+{
+  "capturedAt": "<TIMESTAMP>",
+  "funcCount": 7,
+  "funcs": [
+    "analyzeBottleneckAst*",
+    "analyzeBottleneckAstImpl",
+    "bottleneckCausesToString*",
+    "elemBoundaryConstraints*",
+    "extractHintFromLine*",
+    "inferenceStrategyLabel*",
+    "selectInferenceStrategy*"
+  ],
+  "linesOfCode": 326,
+  "module": "smart_search",
+  "path": "src/core/judge/smart_search.nim",
+  "procCount": 2,
+  "procs": [
+    "generateSemanticHint*",
+    "generateSemanticHintWithStrategy*"
+  ]
+}

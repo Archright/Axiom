@@ -1,0 +1,46 @@
+{
+  "string": [
+    "empty",
+    "single_char",
+    "long_1000",
+    "whitespace"
+  ],
+  "int": [
+    "0",
+    "1",
+    "-1",
+    "max_int",
+    "min_int"
+  ],
+  "int8": [
+    "0",
+    "1",
+    "-1",
+    "127",
+    "-128"
+  ],
+  "float": [
+    "0.0",
+    "1.0",
+    "-1.0",
+    "Inf",
+    "-Inf"
+  ],
+  "bool": [
+    "true",
+    "false"
+  ],
+  "char": [
+    "null_char",
+    "a",
+    "max_char"
+  ],
+  "seq": [
+    "empty_seq",
+    "single_elem"
+  ],
+  "option": [
+    "none",
+    "some_default"
+  ]
+}

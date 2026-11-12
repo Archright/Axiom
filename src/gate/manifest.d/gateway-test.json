@@ -1,0 +1,26 @@
+{
+  "id": "gateway-test",
+  "name": "Axiom gateway test gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/gateway_test_gate.nim",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/|tests/|axiom.nimble|config.nims",
+  "passFilenames": false,
+  "weight": "heavy",
+  "category": "rule",
+  "argsTemplate": [
+    "$repoRoot",
+    "$mode",
+    "$maxJobs"
+  ],
+  "after": [
+    "nim-check"
+  ],
+  "severity": "error",
+  "depsDirs": [
+    "tests/gateway/",
+    "bin/gateway_test_gate"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/nimtry_dashboard.py",
+  "description": "Trend report for nimtry violation snapshots — reads all logs/nimtry_history/*.json snapshots and data/nimtry_baseline.json for regression tracking",
+  "inputSample": {
+    "args": []
+  },
+  "outputSample": {
+    "stdout": "nimtry_dashboard: 7 snapshots analyzed, trend=improving (14 violations -> 5 over 7 days)",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

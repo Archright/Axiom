@@ -1,0 +1,56 @@
+=== Axiom_Enterprise Documentation Gap Analysis ===
+
+Total files: 357
+Files WITH module docs: 83
+Files WITHOUT module docs: 274
+
+Total symbols: 2509
+Documented symbols: 1112
+Undocumented exported symbols: 1392
+
+Large undocumented functions in core/: 103
+
+TOP 20 LEAST-DOCUMENTED FILES:
+rank	score	syms	docced	lines	module_doc	filepath
+1	0.000	0	0	4	no	api.nim
+2	0.000	2	0	56	no	cli/action_interpreter_cli.nim
+3	0.000	0	0	15	no	cli/ax.nim
+4	0.000	0	0	164	no	cli/cli_types.nim
+5	0.000	1	0	88	no	cli/commands/gate.nim
+6	0.000	18	0	253	no	cli/commands/heal_batch_scheduler.nim
+7	0.000	3	0	193	no	cli/commands/status_graph.nim
+8	0.000	22	0	429	no	cli/evidence_cli.nim
+9	0.000	6	0	77	no	core/asset_collector.nim
+10	0.000	4	0	138	no	core/axiom_lemmas.nim
+11	0.000	1	0	306	no	core/axiom_prelude.nim
+12	0.000	0	0	14	no	core/bmc_race.nim
+13	0.000	0	0	113	no	core/constants.nim
+14	0.000	0	0	14	no	core/contract_types.nim
+15	0.000	3	0	101	no	core/cross_validator.nim
+16	0.000	0	0	232	no	core/integrity_refinement_types.nim
+17	0.000	5	0	52	no	core/intrinsic_filter.nim
+18	0.000	2	0	25	no	core/json_safe.nim
+19	0.000	0	0	159	no	core/logic/pipeline_core_types.nim
+20	0.000	0	0	31	no	core/logic/universal_translation_types.nim
+
+TOP 20 BEST-DOCUMENTED FILES:
+1	1.000	7	7	103	no	api/verification_loop.nim
+2	1.000	4	4	53	no	cli/action_command_registry.nim
+3	1.000	1	1	292	yes	cli/basic_commands_cli.nim
+4	1.000	1	1	7	yes	cli/cli_io_error.nim
+5	1.000	6	6	52	yes	cli/cli_io_input.nim
+6	1.000	8	8	138	yes	cli/commands/heal_parsing.nim
+7	1.000	1	1	149	yes	cli/commands/vault_sync.nim
+8	1.000	1	1	11	yes	cli/mcp_command_cli.nim
+9	1.000	15	15	120	no	cli/progress_reporter_topology.nim
+10	1.000	3	3	104	yes	cli/proof_json_cli.nim
+11	1.000	7	7	50	yes	cli/report_format.nim
+12	1.000	3	3	70	yes	cli/report_layout.nim
+13	1.000	13	13	120	yes	cli/report_render.nim
+14	1.000	1	1	327	yes	cli/symbolic_cli.nim
+15	1.000	5	5	131	yes	cli/wf_planning.nim
+16	1.000	6	6	266	yes	cli/wf_render.nim
+17	1.000	4	4	333	yes	cli/wf_semantic.nim
+18	1.000	5	5	152	yes	cli/wf_state_parsing.nim
+19	1.000	4	4	68	no	core/axiom_identity.nim
+20	1.000	4	4	78	no	core/bmc_types.nim

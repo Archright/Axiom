@@ -1,0 +1,513 @@
+byte	hex	flavor	input_hex	decoded_hex	category	note
+0	00	v100	00	00	byte_preserving	
+1	01	v100	01	01	byte_preserving	
+2	02	v100	02	02	byte_preserving	
+3	03	v100	03	03	byte_preserving	
+4	04	v100	04	04	byte_preserving	
+5	05	v100	05	05	byte_preserving	
+6	06	v100	06	06	byte_preserving	
+7	07	v100	07	07	byte_preserving	
+8	08	v100	08	08	byte_preserving	
+9	09	v100	09	09	byte_preserving	
+10	0A	v100	0A	0A	byte_preserving	
+11	0B	v100	0B	0B	byte_preserving	
+12	0C	v100	0C	0C	byte_preserving	
+13	0D	v100	0D	0D	byte_preserving	
+14	0E	v100	0E	0E	byte_preserving	
+15	0F	v100	0F	0F	byte_preserving	
+16	10	v100	10	10	byte_preserving	
+17	11	v100	11	11	byte_preserving	
+18	12	v100	12	12	byte_preserving	
+19	13	v100	13	13	byte_preserving	
+20	14	v100	14	14	byte_preserving	
+21	15	v100	15	15	byte_preserving	
+22	16	v100	16	16	byte_preserving	
+23	17	v100	17	17	byte_preserving	
+24	18	v100	18	18	byte_preserving	
+25	19	v100	19	19	byte_preserving	
+26	1A	v100	1A	1A	byte_preserving	
+27	1B	v100	1B	1B	byte_preserving	
+28	1C	v100	1C	1C	byte_preserving	
+29	1D	v100	1D	1D	byte_preserving	
+30	1E	v100	1E	1E	byte_preserving	
+31	1F	v100	1F	1F	byte_preserving	
+32	20	v100	20	20	byte_preserving	
+33	21	v100	21	21	byte_preserving	
+34	22	v100	22	22	byte_preserving	
+35	23	v100	23	23	byte_preserving	
+36	24	v100	24	24	byte_preserving	
+37	25	v100	25	25	byte_preserving	
+38	26	v100	26	26	byte_preserving	
+39	27	v100	27	27	byte_preserving	
+40	28	v100	28	28	byte_preserving	
+41	29	v100	29	29	byte_preserving	
+42	2A	v100	2A	2A	byte_preserving	
+43	2B	v100	2B	2B	byte_preserving	
+44	2C	v100	2C	2C	byte_preserving	
+45	2D	v100	2D	2D	byte_preserving	
+46	2E	v100	2E	2E	byte_preserving	
+47	2F	v100	2F	2F	byte_preserving	
+48	30	v100	30	30	byte_preserving	
+49	31	v100	31	31	byte_preserving	
+50	32	v100	32	32	byte_preserving	
+51	33	v100	33	33	byte_preserving	
+52	34	v100	34	34	byte_preserving	
+53	35	v100	35	35	byte_preserving	
+54	36	v100	36	36	byte_preserving	
+55	37	v100	37	37	byte_preserving	
+56	38	v100	38	38	byte_preserving	
+57	39	v100	39	39	byte_preserving	
+58	3A	v100	3A	3A	byte_preserving	
+59	3B	v100	3B	3B	byte_preserving	
+60	3C	v100	3C	3C	byte_preserving	
+61	3D	v100	3D	3D	byte_preserving	
+62	3E	v100	3E	3E	byte_preserving	
+63	3F	v100	3F	3F	byte_preserving	
+64	40	v100	40	40	byte_preserving	
+65	41	v100	41	41	byte_preserving	
+66	42	v100	42	42	byte_preserving	
+67	43	v100	43	43	byte_preserving	
+68	44	v100	44	44	byte_preserving	
+69	45	v100	45	45	byte_preserving	
+70	46	v100	46	46	byte_preserving	
+71	47	v100	47	47	byte_preserving	
+72	48	v100	48	48	byte_preserving	
+73	49	v100	49	49	byte_preserving	
+74	4A	v100	4A	4A	byte_preserving	
+75	4B	v100	4B	4B	byte_preserving	
+76	4C	v100	4C	4C	byte_preserving	
+77	4D	v100	4D	4D	byte_preserving	
+78	4E	v100	4E	4E	byte_preserving	
+79	4F	v100	4F	4F	byte_preserving	
+80	50	v100	50	50	byte_preserving	
+81	51	v100	51	51	byte_preserving	
+82	52	v100	52	52	byte_preserving	
+83	53	v100	53	53	byte_preserving	
+84	54	v100	54	54	byte_preserving	
+85	55	v100	55	55	byte_preserving	
+86	56	v100	56	56	byte_preserving	
+87	57	v100	57	57	byte_preserving	
+88	58	v100	58	58	byte_preserving	
+89	59	v100	59	59	byte_preserving	
+90	5A	v100	5A	5A	byte_preserving	
+91	5B	v100	5B	5B	byte_preserving	
+92	5C	v100	5C	5C	byte_preserving	
+93	5D	v100	5D	5D	byte_preserving	
+94	5E	v100	5E	5E	byte_preserving	
+95	5F	v100	5F	5F	byte_preserving	
+96	60	v100	60	60	byte_preserving	
+97	61	v100	61	61	byte_preserving	
+98	62	v100	62	62	byte_preserving	
+99	63	v100	63	63	byte_preserving	
+100	64	v100	64	64	byte_preserving	
+101	65	v100	65	65	byte_preserving	
+102	66	v100	66	66	byte_preserving	
+103	67	v100	67	67	byte_preserving	
+104	68	v100	68	68	byte_preserving	
+105	69	v100	69	69	byte_preserving	
+106	6A	v100	6A	6A	byte_preserving	
+107	6B	v100	6B	6B	byte_preserving	
+108	6C	v100	6C	6C	byte_preserving	
+109	6D	v100	6D	6D	byte_preserving	
+110	6E	v100	6E	6E	byte_preserving	
+111	6F	v100	6F	6F	byte_preserving	
+112	70	v100	70	70	byte_preserving	
+113	71	v100	71	71	byte_preserving	
+114	72	v100	72	72	byte_preserving	
+115	73	v100	73	73	byte_preserving	
+116	74	v100	74	74	byte_preserving	
+117	75	v100	75	75	byte_preserving	
+118	76	v100	76	76	byte_preserving	
+119	77	v100	77	77	byte_preserving	
+120	78	v100	78	78	byte_preserving	
+121	79	v100	79	79	byte_preserving	
+122	7A	v100	7A	7A	byte_preserving	
+123	7B	v100	7B	7B	byte_preserving	
+124	7C	v100	7C	7C	byte_preserving	
+125	7D	v100	7D	7D	byte_preserving	
+126	7E	v100	7E	7E	byte_preserving	
+127	7F	v100	7F	7F	byte_preserving	
+128	80	v100	80	C2 80	value_preserving_only	raw byte interpreted as code point U+0080; decoded to its UTF-8 (C2 80) — bytes differ
+129	81	v100	81	C2 81	value_preserving_only	raw byte interpreted as code point U+0081; decoded to its UTF-8 (C2 81) — bytes differ
+130	82	v100	82	C2 82	value_preserving_only	raw byte interpreted as code point U+0082; decoded to its UTF-8 (C2 82) — bytes differ
+131	83	v100	83	C2 83	value_preserving_only	raw byte interpreted as code point U+0083; decoded to its UTF-8 (C2 83) — bytes differ
+132	84	v100	84	C2 84	value_preserving_only	raw byte interpreted as code point U+0084; decoded to its UTF-8 (C2 84) — bytes differ
+133	85	v100	85	C2 85	value_preserving_only	raw byte interpreted as code point U+0085; decoded to its UTF-8 (C2 85) — bytes differ
+134	86	v100	86	C2 86	value_preserving_only	raw byte interpreted as code point U+0086; decoded to its UTF-8 (C2 86) — bytes differ
+135	87	v100	87	C2 87	value_preserving_only	raw byte interpreted as code point U+0087; decoded to its UTF-8 (C2 87) — bytes differ
+136	88	v100	88	C2 88	value_preserving_only	raw byte interpreted as code point U+0088; decoded to its UTF-8 (C2 88) — bytes differ
+137	89	v100	89	C2 89	value_preserving_only	raw byte interpreted as code point U+0089; decoded to its UTF-8 (C2 89) — bytes differ
+138	8A	v100	8A	C2 8A	value_preserving_only	raw byte interpreted as code point U+008A; decoded to its UTF-8 (C2 8A) — bytes differ
+139	8B	v100	8B	C2 8B	value_preserving_only	raw byte interpreted as code point U+008B; decoded to its UTF-8 (C2 8B) — bytes differ
+140	8C	v100	8C	C2 8C	value_preserving_only	raw byte interpreted as code point U+008C; decoded to its UTF-8 (C2 8C) — bytes differ
+141	8D	v100	8D	C2 8D	value_preserving_only	raw byte interpreted as code point U+008D; decoded to its UTF-8 (C2 8D) — bytes differ
+142	8E	v100	8E	C2 8E	value_preserving_only	raw byte interpreted as code point U+008E; decoded to its UTF-8 (C2 8E) — bytes differ
+143	8F	v100	8F	C2 8F	value_preserving_only	raw byte interpreted as code point U+008F; decoded to its UTF-8 (C2 8F) — bytes differ
+144	90	v100	90	C2 90	value_preserving_only	raw byte interpreted as code point U+0090; decoded to its UTF-8 (C2 90) — bytes differ
+145	91	v100	91	C2 91	value_preserving_only	raw byte interpreted as code point U+0091; decoded to its UTF-8 (C2 91) — bytes differ
+146	92	v100	92	C2 92	value_preserving_only	raw byte interpreted as code point U+0092; decoded to its UTF-8 (C2 92) — bytes differ
+147	93	v100	93	C2 93	value_preserving_only	raw byte interpreted as code point U+0093; decoded to its UTF-8 (C2 93) — bytes differ
+148	94	v100	94	C2 94	value_preserving_only	raw byte interpreted as code point U+0094; decoded to its UTF-8 (C2 94) — bytes differ
+149	95	v100	95	C2 95	value_preserving_only	raw byte interpreted as code point U+0095; decoded to its UTF-8 (C2 95) — bytes differ
+150	96	v100	96	C2 96	value_preserving_only	raw byte interpreted as code point U+0096; decoded to its UTF-8 (C2 96) — bytes differ
+151	97	v100	97	C2 97	value_preserving_only	raw byte interpreted as code point U+0097; decoded to its UTF-8 (C2 97) — bytes differ
+152	98	v100	98	C2 98	value_preserving_only	raw byte interpreted as code point U+0098; decoded to its UTF-8 (C2 98) — bytes differ
+153	99	v100	99	C2 99	value_preserving_only	raw byte interpreted as code point U+0099; decoded to its UTF-8 (C2 99) — bytes differ
+154	9A	v100	9A	C2 9A	value_preserving_only	raw byte interpreted as code point U+009A; decoded to its UTF-8 (C2 9A) — bytes differ
+155	9B	v100	9B	C2 9B	value_preserving_only	raw byte interpreted as code point U+009B; decoded to its UTF-8 (C2 9B) — bytes differ
+156	9C	v100	9C	C2 9C	value_preserving_only	raw byte interpreted as code point U+009C; decoded to its UTF-8 (C2 9C) — bytes differ
+157	9D	v100	9D	C2 9D	value_preserving_only	raw byte interpreted as code point U+009D; decoded to its UTF-8 (C2 9D) — bytes differ
+158	9E	v100	9E	C2 9E	value_preserving_only	raw byte interpreted as code point U+009E; decoded to its UTF-8 (C2 9E) — bytes differ
+159	9F	v100	9F	C2 9F	value_preserving_only	raw byte interpreted as code point U+009F; decoded to its UTF-8 (C2 9F) — bytes differ
+160	A0	v100	A0	C2 A0	value_preserving_only	raw byte interpreted as code point U+00A0; decoded to its UTF-8 (C2 A0) — bytes differ
+161	A1	v100	A1	C2 A1	value_preserving_only	raw byte interpreted as code point U+00A1; decoded to its UTF-8 (C2 A1) — bytes differ
+162	A2	v100	A2	C2 A2	value_preserving_only	raw byte interpreted as code point U+00A2; decoded to its UTF-8 (C2 A2) — bytes differ
+163	A3	v100	A3	C2 A3	value_preserving_only	raw byte interpreted as code point U+00A3; decoded to its UTF-8 (C2 A3) — bytes differ
+164	A4	v100	A4	C2 A4	value_preserving_only	raw byte interpreted as code point U+00A4; decoded to its UTF-8 (C2 A4) — bytes differ
+165	A5	v100	A5	C2 A5	value_preserving_only	raw byte interpreted as code point U+00A5; decoded to its UTF-8 (C2 A5) — bytes differ
+166	A6	v100	A6	C2 A6	value_preserving_only	raw byte interpreted as code point U+00A6; decoded to its UTF-8 (C2 A6) — bytes differ
+167	A7	v100	A7	C2 A7	value_preserving_only	raw byte interpreted as code point U+00A7; decoded to its UTF-8 (C2 A7) — bytes differ
+168	A8	v100	A8	C2 A8	value_preserving_only	raw byte interpreted as code point U+00A8; decoded to its UTF-8 (C2 A8) — bytes differ
+169	A9	v100	A9	C2 A9	value_preserving_only	raw byte interpreted as code point U+00A9; decoded to its UTF-8 (C2 A9) — bytes differ
+170	AA	v100	AA	C2 AA	value_preserving_only	raw byte interpreted as code point U+00AA; decoded to its UTF-8 (C2 AA) — bytes differ
+171	AB	v100	AB	C2 AB	value_preserving_only	raw byte interpreted as code point U+00AB; decoded to its UTF-8 (C2 AB) — bytes differ
+172	AC	v100	AC	C2 AC	value_preserving_only	raw byte interpreted as code point U+00AC; decoded to its UTF-8 (C2 AC) — bytes differ
+173	AD	v100	AD	C2 AD	value_preserving_only	raw byte interpreted as code point U+00AD; decoded to its UTF-8 (C2 AD) — bytes differ
+174	AE	v100	AE	C2 AE	value_preserving_only	raw byte interpreted as code point U+00AE; decoded to its UTF-8 (C2 AE) — bytes differ
+175	AF	v100	AF	C2 AF	value_preserving_only	raw byte interpreted as code point U+00AF; decoded to its UTF-8 (C2 AF) — bytes differ
+176	B0	v100	B0	C2 B0	value_preserving_only	raw byte interpreted as code point U+00B0; decoded to its UTF-8 (C2 B0) — bytes differ
+177	B1	v100	B1	C2 B1	value_preserving_only	raw byte interpreted as code point U+00B1; decoded to its UTF-8 (C2 B1) — bytes differ
+178	B2	v100	B2	C2 B2	value_preserving_only	raw byte interpreted as code point U+00B2; decoded to its UTF-8 (C2 B2) — bytes differ
+179	B3	v100	B3	C2 B3	value_preserving_only	raw byte interpreted as code point U+00B3; decoded to its UTF-8 (C2 B3) — bytes differ
+180	B4	v100	B4	C2 B4	value_preserving_only	raw byte interpreted as code point U+00B4; decoded to its UTF-8 (C2 B4) — bytes differ
+181	B5	v100	B5	C2 B5	value_preserving_only	raw byte interpreted as code point U+00B5; decoded to its UTF-8 (C2 B5) — bytes differ
+182	B6	v100	B6	C2 B6	value_preserving_only	raw byte interpreted as code point U+00B6; decoded to its UTF-8 (C2 B6) — bytes differ
+183	B7	v100	B7	C2 B7	value_preserving_only	raw byte interpreted as code point U+00B7; decoded to its UTF-8 (C2 B7) — bytes differ
+184	B8	v100	B8	C2 B8	value_preserving_only	raw byte interpreted as code point U+00B8; decoded to its UTF-8 (C2 B8) — bytes differ
+185	B9	v100	B9	C2 B9	value_preserving_only	raw byte interpreted as code point U+00B9; decoded to its UTF-8 (C2 B9) — bytes differ
+186	BA	v100	BA	C2 BA	value_preserving_only	raw byte interpreted as code point U+00BA; decoded to its UTF-8 (C2 BA) — bytes differ
+187	BB	v100	BB	C2 BB	value_preserving_only	raw byte interpreted as code point U+00BB; decoded to its UTF-8 (C2 BB) — bytes differ
+188	BC	v100	BC	C2 BC	value_preserving_only	raw byte interpreted as code point U+00BC; decoded to its UTF-8 (C2 BC) — bytes differ
+189	BD	v100	BD	C2 BD	value_preserving_only	raw byte interpreted as code point U+00BD; decoded to its UTF-8 (C2 BD) — bytes differ
+190	BE	v100	BE	C2 BE	value_preserving_only	raw byte interpreted as code point U+00BE; decoded to its UTF-8 (C2 BE) — bytes differ
+191	BF	v100	BF	C2 BF	value_preserving_only	raw byte interpreted as code point U+00BF; decoded to its UTF-8 (C2 BF) — bytes differ
+192	C0	v100	C0	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+193	C1	v100	C1	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+194	C2	v100	C2	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+195	C3	v100	C3	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+196	C4	v100	C4	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+197	C5	v100	C5	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+198	C6	v100	C6	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+199	C7	v100	C7	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+200	C8	v100	C8	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+201	C9	v100	C9	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+202	CA	v100	CA	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+203	CB	v100	CB	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+204	CC	v100	CC	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+205	CD	v100	CD	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+206	CE	v100	CE	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+207	CF	v100	CF	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+208	D0	v100	D0	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+209	D1	v100	D1	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+210	D2	v100	D2	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+211	D3	v100	D3	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+212	D4	v100	D4	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+213	D5	v100	D5	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+214	D6	v100	D6	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+215	D7	v100	D7	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+216	D8	v100	D8	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+217	D9	v100	D9	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+218	DA	v100	DA	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+219	DB	v100	DB	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+220	DC	v100	DC	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+221	DD	v100	DD	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+222	DE	v100	DE	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+223	DF	v100	DF	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+224	E0	v100	E0	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+225	E1	v100	E1	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+226	E2	v100	E2	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+227	E3	v100	E3	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+228	E4	v100	E4	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+229	E5	v100	E5	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+230	E6	v100	E6	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+231	E7	v100	E7	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+232	E8	v100	E8	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+233	E9	v100	E9	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+234	EA	v100	EA	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+235	EB	v100	EB	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+236	EC	v100	EC	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+237	ED	v100	ED	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+238	EE	v100	EE	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+239	EF	v100	EF	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+240	F0	v100	F0	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+241	F1	v100	F1	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+242	F2	v100	F2	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+243	F3	v100	F3	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+244	F4	v100	F4	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+245	F5	v100	F5	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+246	F6	v100	F6	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+247	F7	v100	F7	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+248	F8	v100	F8	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+249	F9	v100	F9	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+250	FA	v100	FA	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+251	FB	v100	FB	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+252	FC	v100	FC	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+253	FD	v100	FD	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+254	FE	v100	FE	C3 BE	value_preserving_only	raw byte interpreted as code point U+00FE; decoded to its UTF-8 (C3 BE) — bytes differ
+255	FF	v100	FF	C3 BF	value_preserving_only	raw byte interpreted as code point U+00FF; decoded to its UTF-8 (C3 BF) — bytes differ
+0	00	v110	00	00	byte_preserving	
+1	01	v110	01	01	byte_preserving	
+2	02	v110	02	02	byte_preserving	
+3	03	v110	03	03	byte_preserving	
+4	04	v110	04	04	byte_preserving	
+5	05	v110	05	05	byte_preserving	
+6	06	v110	06	06	byte_preserving	
+7	07	v110	07	07	byte_preserving	
+8	08	v110	08	08	byte_preserving	
+9	09	v110	09	09	byte_preserving	
+10	0A	v110	0A	0A	byte_preserving	
+11	0B	v110	0B	0B	byte_preserving	
+12	0C	v110	0C	0C	byte_preserving	
+13	0D	v110	0D	0D	byte_preserving	
+14	0E	v110	0E	0E	byte_preserving	
+15	0F	v110	0F	0F	byte_preserving	
+16	10	v110	10	10	byte_preserving	
+17	11	v110	11	11	byte_preserving	
+18	12	v110	12	12	byte_preserving	
+19	13	v110	13	13	byte_preserving	
+20	14	v110	14	14	byte_preserving	
+21	15	v110	15	15	byte_preserving	
+22	16	v110	16	16	byte_preserving	
+23	17	v110	17	17	byte_preserving	
+24	18	v110	18	18	byte_preserving	
+25	19	v110	19	19	byte_preserving	
+26	1A	v110	1A	1A	byte_preserving	
+27	1B	v110	1B	1B	byte_preserving	
+28	1C	v110	1C	1C	byte_preserving	
+29	1D	v110	1D	1D	byte_preserving	
+30	1E	v110	1E	1E	byte_preserving	
+31	1F	v110	1F	1F	byte_preserving	
+32	20	v110	20	20	byte_preserving	
+33	21	v110	21	21	byte_preserving	
+34	22	v110	22	22	byte_preserving	
+35	23	v110	23	23	byte_preserving	
+36	24	v110	24	24	byte_preserving	
+37	25	v110	25	25	byte_preserving	
+38	26	v110	26	26	byte_preserving	
+39	27	v110	27	27	byte_preserving	
+40	28	v110	28	28	byte_preserving	
+41	29	v110	29	29	byte_preserving	
+42	2A	v110	2A	2A	byte_preserving	
+43	2B	v110	2B	2B	byte_preserving	
+44	2C	v110	2C	2C	byte_preserving	
+45	2D	v110	2D	2D	byte_preserving	
+46	2E	v110	2E	2E	byte_preserving	
+47	2F	v110	2F	2F	byte_preserving	
+48	30	v110	30	30	byte_preserving	
+49	31	v110	31	31	byte_preserving	
+50	32	v110	32	32	byte_preserving	
+51	33	v110	33	33	byte_preserving	
+52	34	v110	34	34	byte_preserving	
+53	35	v110	35	35	byte_preserving	
+54	36	v110	36	36	byte_preserving	
+55	37	v110	37	37	byte_preserving	
+56	38	v110	38	38	byte_preserving	
+57	39	v110	39	39	byte_preserving	
+58	3A	v110	3A	3A	byte_preserving	
+59	3B	v110	3B	3B	byte_preserving	
+60	3C	v110	3C	3C	byte_preserving	
+61	3D	v110	3D	3D	byte_preserving	
+62	3E	v110	3E	3E	byte_preserving	
+63	3F	v110	3F	3F	byte_preserving	
+64	40	v110	40	40	byte_preserving	
+65	41	v110	41	41	byte_preserving	
+66	42	v110	42	42	byte_preserving	
+67	43	v110	43	43	byte_preserving	
+68	44	v110	44	44	byte_preserving	
+69	45	v110	45	45	byte_preserving	
+70	46	v110	46	46	byte_preserving	
+71	47	v110	47	47	byte_preserving	
+72	48	v110	48	48	byte_preserving	
+73	49	v110	49	49	byte_preserving	
+74	4A	v110	4A	4A	byte_preserving	
+75	4B	v110	4B	4B	byte_preserving	
+76	4C	v110	4C	4C	byte_preserving	
+77	4D	v110	4D	4D	byte_preserving	
+78	4E	v110	4E	4E	byte_preserving	
+79	4F	v110	4F	4F	byte_preserving	
+80	50	v110	50	50	byte_preserving	
+81	51	v110	51	51	byte_preserving	
+82	52	v110	52	52	byte_preserving	
+83	53	v110	53	53	byte_preserving	
+84	54	v110	54	54	byte_preserving	
+85	55	v110	55	55	byte_preserving	
+86	56	v110	56	56	byte_preserving	
+87	57	v110	57	57	byte_preserving	
+88	58	v110	58	58	byte_preserving	
+89	59	v110	59	59	byte_preserving	
+90	5A	v110	5A	5A	byte_preserving	
+91	5B	v110	5B	5B	byte_preserving	
+92	5C	v110	5C	5C	byte_preserving	
+93	5D	v110	5D	5D	byte_preserving	
+94	5E	v110	5E	5E	byte_preserving	
+95	5F	v110	5F	5F	byte_preserving	
+96	60	v110	60	60	byte_preserving	
+97	61	v110	61	61	byte_preserving	
+98	62	v110	62	62	byte_preserving	
+99	63	v110	63	63	byte_preserving	
+100	64	v110	64	64	byte_preserving	
+101	65	v110	65	65	byte_preserving	
+102	66	v110	66	66	byte_preserving	
+103	67	v110	67	67	byte_preserving	
+104	68	v110	68	68	byte_preserving	
+105	69	v110	69	69	byte_preserving	
+106	6A	v110	6A	6A	byte_preserving	
+107	6B	v110	6B	6B	byte_preserving	
+108	6C	v110	6C	6C	byte_preserving	
+109	6D	v110	6D	6D	byte_preserving	
+110	6E	v110	6E	6E	byte_preserving	
+111	6F	v110	6F	6F	byte_preserving	
+112	70	v110	70	70	byte_preserving	
+113	71	v110	71	71	byte_preserving	
+114	72	v110	72	72	byte_preserving	
+115	73	v110	73	73	byte_preserving	
+116	74	v110	74	74	byte_preserving	
+117	75	v110	75	75	byte_preserving	
+118	76	v110	76	76	byte_preserving	
+119	77	v110	77	77	byte_preserving	
+120	78	v110	78	78	byte_preserving	
+121	79	v110	79	79	byte_preserving	
+122	7A	v110	7A	7A	byte_preserving	
+123	7B	v110	7B	7B	byte_preserving	
+124	7C	v110	7C	7C	byte_preserving	
+125	7D	v110	7D	7D	byte_preserving	
+126	7E	v110	7E	7E	byte_preserving	
+127	7F	v110	7F	7F	byte_preserving	
+128	80	v110	80	80	byte_preserving	
+129	81	v110	81	81	byte_preserving	
+130	82	v110	82	82	byte_preserving	
+131	83	v110	83	83	byte_preserving	
+132	84	v110	84	84	byte_preserving	
+133	85	v110	85	85	byte_preserving	
+134	86	v110	86	86	byte_preserving	
+135	87	v110	87	87	byte_preserving	
+136	88	v110	88	88	byte_preserving	
+137	89	v110	89	89	byte_preserving	
+138	8A	v110	8A	8A	byte_preserving	
+139	8B	v110	8B	8B	byte_preserving	
+140	8C	v110	8C	8C	byte_preserving	
+141	8D	v110	8D	8D	byte_preserving	
+142	8E	v110	8E	8E	byte_preserving	
+143	8F	v110	8F	8F	byte_preserving	
+144	90	v110	90	90	byte_preserving	
+145	91	v110	91	91	byte_preserving	
+146	92	v110	92	92	byte_preserving	
+147	93	v110	93	93	byte_preserving	
+148	94	v110	94	94	byte_preserving	
+149	95	v110	95	95	byte_preserving	
+150	96	v110	96	96	byte_preserving	
+151	97	v110	97	97	byte_preserving	
+152	98	v110	98	98	byte_preserving	
+153	99	v110	99	99	byte_preserving	
+154	9A	v110	9A	9A	byte_preserving	
+155	9B	v110	9B	9B	byte_preserving	
+156	9C	v110	9C	9C	byte_preserving	
+157	9D	v110	9D	9D	byte_preserving	
+158	9E	v110	9E	9E	byte_preserving	
+159	9F	v110	9F	9F	byte_preserving	
+160	A0	v110	A0	A0	byte_preserving	
+161	A1	v110	A1	A1	byte_preserving	
+162	A2	v110	A2	A2	byte_preserving	
+163	A3	v110	A3	A3	byte_preserving	
+164	A4	v110	A4	A4	byte_preserving	
+165	A5	v110	A5	A5	byte_preserving	
+166	A6	v110	A6	A6	byte_preserving	
+167	A7	v110	A7	A7	byte_preserving	
+168	A8	v110	A8	A8	byte_preserving	
+169	A9	v110	A9	A9	byte_preserving	
+170	AA	v110	AA	AA	byte_preserving	
+171	AB	v110	AB	AB	byte_preserving	
+172	AC	v110	AC	AC	byte_preserving	
+173	AD	v110	AD	AD	byte_preserving	
+174	AE	v110	AE	AE	byte_preserving	
+175	AF	v110	AF	AF	byte_preserving	
+176	B0	v110	B0	B0	byte_preserving	
+177	B1	v110	B1	B1	byte_preserving	
+178	B2	v110	B2	B2	byte_preserving	
+179	B3	v110	B3	B3	byte_preserving	
+180	B4	v110	B4	B4	byte_preserving	
+181	B5	v110	B5	B5	byte_preserving	
+182	B6	v110	B6	B6	byte_preserving	
+183	B7	v110	B7	B7	byte_preserving	
+184	B8	v110	B8	B8	byte_preserving	
+185	B9	v110	B9	B9	byte_preserving	
+186	BA	v110	BA	BA	byte_preserving	
+187	BB	v110	BB	BB	byte_preserving	
+188	BC	v110	BC	BC	byte_preserving	
+189	BD	v110	BD	BD	byte_preserving	
+190	BE	v110	BE	BE	byte_preserving	
+191	BF	v110	BF	BF	byte_preserving	
+192	C0	v110	C0	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+193	C1	v110	C1	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+194	C2	v110	C2	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+195	C3	v110	C3	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+196	C4	v110	C4	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+197	C5	v110	C5	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+198	C6	v110	C6	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+199	C7	v110	C7	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+200	C8	v110	C8	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+201	C9	v110	C9	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+202	CA	v110	CA	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+203	CB	v110	CB	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+204	CC	v110	CC	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+205	CD	v110	CD	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+206	CE	v110	CE	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+207	CF	v110	CF	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+208	D0	v110	D0	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+209	D1	v110	D1	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+210	D2	v110	D2	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+211	D3	v110	D3	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+212	D4	v110	D4	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+213	D5	v110	D5	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+214	D6	v110	D6	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+215	D7	v110	D7	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+216	D8	v110	D8	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+217	D9	v110	D9	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+218	DA	v110	DA	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+219	DB	v110	DB	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+220	DC	v110	DC	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+221	DD	v110	DD	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+222	DE	v110	DE	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+223	DF	v110	DF	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+224	E0	v110	E0	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+225	E1	v110	E1	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+226	E2	v110	E2	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+227	E3	v110	E3	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+228	E4	v110	E4	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+229	E5	v110	E5	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+230	E6	v110	E6	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+231	E7	v110	E7	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+232	E8	v110	E8	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+233	E9	v110	E9	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+234	EA	v110	EA	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+235	EB	v110	EB	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+236	EC	v110	EC	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+237	ED	v110	ED	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+238	EE	v110	EE	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+239	EF	v110	EF	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+240	F0	v110	F0	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+241	F1	v110	F1	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+242	F2	v110	F2	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+243	F3	v110	F3	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+244	F4	v110	F4	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+245	F5	v110	F5	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+246	F6	v110	F6	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+247	F7	v110	F7	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+248	F8	v110	F8	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+249	F9	v110	F9	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+250	FA	v110	FA	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+251	FB	v110	FB	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+252	FC	v110	FC	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+253	FD	v110	FD	EF BF BD	lossy	input byte re-decoded as U+FFFD replacement (Nim fastRuneAt maps lone UTF-8 lead bytes 0xC0-0xFD — 2- to 6-byte leads — to replRune U+FFFD; writer.nim:137 iterates runes())
+254	FE	v110	FE	FE	byte_preserving	
+255	FF	v110	FF	FF	byte_preserving	

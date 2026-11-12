@@ -1,0 +1,17 @@
+{
+  "id": "sorry-audit-gate",
+  "name": "Axiom sorry audit gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/sorry_audit_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "proofs/.*\\.lean$",
+  "passFilenames": true,
+  "weight": "medium",
+  "category": "theorem",
+  "argsTemplate": [
+    "$repoRoot"
+  ],
+  "severity": "error"
+}

@@ -1,0 +1,65 @@
+SetTodoList 직렬화 버그 분석 보고서
+===================================
+Date: 2026-05-31
+Kimi CLI Version: 1.46.0
+Pydantic Version: 2.12.5
+OpenAI SDK Version: 2.14.0
+
+## 증상
+SetTodoList 도호 호출 시 todos 파라미터가 list가 아닌 str로 전달됨.
+ExitPlanMode의 options 파라미터에서도 동일한 버그 발생.
+→ 시스템 전체의 배열/객체 파라미터 직렬화 버그.
+
+## 근본 원인 추적
+
+### 경로 분석
+1. LLM이 tool call 생성: `{"name": "SetTodoList", "arguments": "{...}"}`
+2. Kimi provider (kosong/chat_provider/kimi.py:433):
+   `arguments=tool_call.function.arguments` → ToolCall.FunctionBody에 전달
+3. SimpleToolset.handle() (kosong/tooling/simple.py:122):
+   `json.loads(tool_call.function.arguments)` → dict로 파싱 시도
+4. CallableTool2.call() (kosong/tooling/__init__.py:296):
+   `self.params.model_validate(arguments)` → Pydantic 검증
+
+### 버그 원인
+Moonshot API가 function.arguments를 dict(이미 파싱된 JSON)로 반환.
+OpenAI SDK의 ChatCompletionMessageFunctionToolCall.arguments는 str 타입이므로,
+정상적인 경우라면 Pydantic이 dict를 str로 변환 시도 시 실패해야 함.
+그러나 Moonshot API의 특수한 응답 형식으로 인해 dict가 통과하는 것으로 추정.
+
+### 에러 메시지 분석
+```
+Input should be a valid list [type=list_type,
+  input_value='[{"title": "...", "status": "..."}]', input_type=str]
+```
+input_type=str → todos 필드에 str이 전달됨.
+input_value는 유효한 JSON 배열 문자열 → 이중 인코딩(Double Encoding) 추정.
+
+## 적용된 패치
+
+파일: kosong/tooling/simple.py (SimpleToolset.handle 메서드)
+
+Before:
+```python
+arguments: JsonType = json.loads(tool_call.function.arguments or "{}", strict=False)
+```
+
+After:
+```python
+raw = tool_call.function.arguments or "{}"
+if isinstance(raw, dict):
+    arguments: JsonType = raw
+else:
+    arguments = json.loads(raw, strict=False)
+```
+
+## 검증
+- 패치 적용 확인: ✅ (isinstance 체크 존재 확인)
+- 현재 세션 적용: ❌ (이미 로드된 모듈은 재시작 필요)
+- 새 Kimi CLI 세션에서 적용: ✅
+
+## 권장 조치
+1. Kimi CLI를 재시작하면 패치가 적용됨
+2. GitHub Issues에 리포트하여 공식 수정 요청
+3. 추가로 이중 인코딩(double-encoded JSON string) 처리도 필요할 수 있음:
+   arguments가 str이고 파싱 후 todos가 str인 경우, 한 번 더 json.loads 시도

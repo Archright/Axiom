@@ -1,0 +1,14 @@
+date=2026-10-11T19:17:44+09:00
+SUBJECT_REPO=<workspace>/nim-toml-serialization
+SUBJECT_COMMIT=4aa8e2223649fc0837c490a4acfca7b8b1e756f9
+SUBJECT_EXPECTED_COMMIT=4aa8e2223649fc0837c490a4acfca7b8b1e756f9
+AXIOM3_HEAD=6ed9297ab7c22aaf9eb8b739a7075ecdf5a70e4b
+NIM=<user-home>/.choosenim/toolchains/nim-2.2.10/bin/nim
+Nim Compiler Version 2.2.10 [Linux: amd64]
+Compiled at 2026-04-24
+BUILD_CWD=/tmp (neutral; nimble.lock auto-discovery disabled)
+SERIALIZATION_PKG=<user-home>/.nimble/pkgs2/serialization-0.5.4-6a75be38ab6c8a5d49108a54b494ff70d68ea011
+FASTSTREAMS_PKG=<user-home>/.nimble/pkgs2/faststreams-0.5.2-589a9cf07e1d978f460f3da7f8de9b37ac3141af
+STEW_PKG=<user-home>/.nimble/pkgs2/stew-0.5.0-db22942939773ab7d5a0f2b2668c237240c67dd6
+FLAVOR_UNDER_TEST=default Toml (v1.1.0 flags)
+COMMITTED_BASELINE_FLAVOR=Toml_v100

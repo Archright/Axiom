@@ -1,0 +1,73 @@
+[INFO] axiom_engine: analyzing topology...
+[INFO] topology_cli: topology: 31 files, 31 changed, sourceRoot=experiments/act2-wp-toml-b1-input-integrity/p0d2g/env_p/subject
+[INFO] axiom_engine: topology: 31 files, 344 candidates
+[INFO] axiom_engine: toml d2-agent overlay carriers synthesized: d2StringGateReject (gate d2StringGateReject=@[8, 16, 31, 127]) + d2CommentGateReject (forbid 8/10/31/127) domain=1<=c<=255 exclusions=4 obligations=7/7 eligible=true/true source=toml_serialization/lexer.nim
+[INFO] axiom_engine: --target filter: 1 node(s) match 'toml_serialization/lexer.nim::scanString'
+[INFO] axiom_engine: frontier eligibility gate: excluded 164 non-proof-candidate candidate(s); eligible=1
+[INFO] axiom_engine: phase-10: IR extraction — 6/230 entries (limit=1)
+[WARN] ir_pipeline_runner: [canonical-declined] normalizeMaxWorkers — evidence=inconclusive sealError=subject binding: parse-bound components unmeasured at the selection boundary (pnodeV2/extraction agreement: EA_UNSUPPORTED: unsupported AST node (ckIfStmt) outside the certified-subset wire set)
+[INFO] ir_pipeline_runner: [classify] normalizeMaxWorkers → vtSmtNative (simple bitvec/bool operations)
+[INFO] ir_pipeline_runner: [ir-cas] MISS func=normalizeMaxWorkers key=4c0b525bcce36ba8806dbdd9dc73293f591e657fde5850c3ac63266da7d30561
+[WARN] ir_pipeline_runner: [canonical-declined] calcDynamicTimeoutCore — evidence=inconclusive
+[INFO] ir_pipeline_runner: [classify] calcDynamicTimeoutCore → vtStructural (complex body operations)
+[WARN] ir_pipeline_runner: [implication] calcDynamicTimeoutCore: invariant does not imply postcondition
+[INFO] ir_pipeline_runner: [ce-replay] calcDynamicTimeoutCore — replay rvUnavailable:harness nonzero exit 1; fail-closed cvUnresolved
+[INFO] ir_pipeline_runner: [ir-cas] MISS func=calcDynamicTimeoutCore key=8be0d86f2020cf94e5b23a8d7ecc3eca67ee88be1fcdc6437f94510dd69af680
+[WARN] ir_pipeline_runner: [canonical-declined] safeSpeedupRatioCore — evidence=inconclusive sealError=subject binding: parse-bound components unmeasured at the selection boundary (pnodeV2/extraction agreement: EA_UNSUPPORTED: unsupported AST node (ckIfStmt) outside the certified-subset wire set)
+[INFO] ir_pipeline_runner: [classify] safeSpeedupRatioCore → vtSmtNative (simple bitvec/bool operations)
+[WARN] ir_pipeline_runner: [implication] safeSpeedupRatioCore: invariant does not imply postcondition
+[INFO] ir_pipeline_runner: [ir-cas] MISS func=safeSpeedupRatioCore key=db4591d027608dc43d169f7523c66823c58aa4101f86d5a2f7fd0873a1d1bd03
+[WARN] ir_pipeline_runner: [canonical-declined] proximityScore — evidence=inconclusive sealError=subject binding: completenessRecordDigest unmeasurable — no CompletenessEvidence artifact for this funcDef (the external materializer must run before canonical verification)
+[INFO] ir_pipeline_runner: [classify] proximityScore → vtSmtNative (simple bitvec/bool operations)
+[WARN] ir_pipeline_runner: [implication] proximityScore: invariant does not imply postcondition
+[INFO] ir_pipeline_runner: type-level candidate 'proximityScore' but no LSP — routed to standard SMT pipeline
+[INFO] ir_pipeline_runner: [ce-replay] proximityScore — replay rvUnavailable:model does not bind parameter 'nodeCount' (exact-input required); fail-closed cvUnresolved
+[INFO] ir_pipeline_runner: [ir-cas] MISS func=proximityScore key=1919ede22a2e20ecdf3fb4aaeaf0145b620e71d846125949bb24e53c7e494453
+[WARN] ir_pipeline_runner: [canonical-declined] d2CommentGateReject — evidence=inconclusive sealError=subject binding: parse-bound components unmeasured at the selection boundary (pnodeV2/extraction agreement: EA_UNSUPPORTED: unsupported AST node (ckVarTy) outside the certified-subset wire set)
+[INFO] ir_pipeline_runner: [classify] d2CommentGateReject → vtSmtNative (simple bitvec/bool operations)
+[INFO] ir_pipeline_runner: type-level candidate 'd2CommentGateReject' but no LSP — routed to standard SMT pipeline
+[INFO] ir_pipeline_runner: [ir-cas] MISS func=d2CommentGateReject key=9ea6fb764000cde00adb4d2f1939070660c936bc7810edb3c1bb6955998c65b3
+[WARN] ir_pipeline_runner: [canonical-declined] scanString — evidence=inconclusive sealError=subject binding: parse-bound components unmeasured at the selection boundary (pnodeV2/extraction agreement: EA_UNSUPPORTED: unsupported AST node (ckVarTy) outside the certified-subset wire set)
+[INFO] ir_pipeline_runner: [classify] scanString → vtSmtNative (simple bitvec/bool operations)
+[WARN] ir_pipeline_runner: [implication] scanString: invariant does not imply postcondition
+[INFO] ir_pipeline_runner: type-level candidate 'scanString' but no LSP — routed to standard SMT pipeline
+[INFO] ir_pipeline_runner: [ir-cas] MISS func=d2StringGateReject key=bf405bfb7f449e97b0cad9f79c4570c08352948c39de26da9f8920594da013c5
+[INFO] loop_driver: Axiom Pre-flight: Probing verification sandbox...
+[INFO] loop_driver: Axiom Pre-flight: Sandbox probe successful
+[INFO] loop_driver: PBT Registry: 230 properties registered
+[INFO] loop_driver: batch-uap: IR pipeline — using 6 pre-computed results (parallel path)
+[ERROR] loop_driver: IR pipeline FAIL: calcDynamicTimeoutCore status=psFail provenance=solverMethod=smBMC,provenance=pkNone
+[ERROR] loop_driver: IR pipeline FAIL: safeSpeedupRatioCore status=psFail provenance=solverMethod=smBMC,provenance=pkNone
+[ERROR] loop_driver: IR pipeline FAIL: proximityScore status=psFail provenance=solverMethod=smBMC,provenance=pkNone
+[ERROR] loop_driver: IR pipeline FAIL: scanString status=psFail provenance=solverMethod=smBMC,provenance=pkNone
+[INFO] loop_driver: batch-uap: IR pipeline completed — ── Proof Summary ──
+  Total: 6
+  Pass:  2
+  Fail:  4
+  TO:    0
+  Skip:  0
+  Error: 0
+  Time:  0ms
+[INFO] loop_driver: priming fingerprint cache (1 nodes)...
+[INFO] loop_driver: fingerprint cache ready
+[INFO] loop_driver: verifying 1 nodes (primed=0)...
+[ERROR] loop_driver:   [1/1] toml_serialization/lexer.nim::scanString — failed
+[WARN] loop_driver: Verification-Gate: UAP produced 0 results (requests=1)
+[ERROR] axiom_engine: IR pipeline FAIL: calcDynamicTimeoutCore status=psFail provenance=solverMethod=smBMC,provenance=pkNone
+[ERROR] axiom_engine: IR pipeline FAIL: safeSpeedupRatioCore status=psFail provenance=solverMethod=smBMC,provenance=pkNone
+[ERROR] axiom_engine: IR pipeline FAIL: proximityScore status=psFail provenance=solverMethod=smBMC,provenance=pkNone
+[ERROR] axiom_engine: IR pipeline FAIL: scanString status=psFail provenance=solverMethod=smBMC,provenance=pkNone
+[INFO] axiom_engine: phase-10: IR pipeline completed — ── Proof Summary ──
+  Total: 6
+  Pass:  2
+  Fail:  4
+  TO:    0
+  Skip:  0
+  Error: 0
+  Time:  0ms
+[INFO] axiom_engine: phase-13: vault manifest synced — 6 entries → experiments/act2-wp-toml-b1-input-integrity/p0d2g/vault_e_defect/manifest.json
+[INFO] axiom_engine: done: verifiedRatio=0.0000, verified=0/40
+[INFO] axiom_engine: cross-validation: running IR consistency check (scope=1)...
+[INFO] axiom_engine: [axiom_engine] cross-validation skipped (vacuous — no postconditions): die digest=6e32d25386399a01a6316512a3cd3979de432aafa2adc2f5d55c650cc2e6e113
+[WARN] axiom_engine: canonical run accounting: contestedCount=0 ∨ unsatisfiedCount=1 ⇒ GateVerdict=FAIL (fail-closed; see reportJson.runOutcome)
+[Depth 1/1] Checking: lexer.nim::scanString... [FAILED]

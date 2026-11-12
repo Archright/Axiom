@@ -1,0 +1,117 @@
+name: dependabot-auto-merge
+
+# Owner decision: repository_surface.json v86 re-registration (PR #1045);
+# decision basis '권한이 필요한 부분은 전면 허가한다' (2026-10-22), of which the
+# consuming slice (this file) is the record. Official pattern:
+# https://docs.github.com/en/code-security/dependabot/working-with-dependabot/automating-dependabot-with-github-actions
+#
+# NOT a required check — the job name is deliberately distinct from the six
+# required contexts (admission-check / bsec-integrity / debt-registry-gate /
+# generation-acceptance / axiom-operational-slice / publication-integrity).
+# Merge authority stays with GitHub (ruleset 20303214 + merge queue; [2026-11-07
+# 매핑 — v1.19.0] 20303214은 구 저장소 id, 현행은 26702792, 이름 해석으로 식별);
+# this workflow only ENABLES auto-merge on Dependabot-authored PRs that pass
+# every required check — it decides nothing.
+#
+# The built-in GITHUB_TOKEN cannot enable auto-merge on a merge-queue branch
+# (official docs; measured Q14 in merge-queue-rearm — arm success 0/16), so the
+# arm step authenticates with a short-lived GitHub App installation token
+# minted IN-JOB — pinned actions/create-github-app-token (same pin as
+# release-ship.yml / diagnostic-authority.yml / admission-ssot-drift.yml /
+# ci-provider-router.yml) from DEPENDABOT_APP_ID / DEPENDABOT_APP_PRIVATE_KEY,
+# per-issuance scoped to pull-requests: write; the action's post step revokes
+# the token at job end. pull_request runs authored by dependabot[bot] can only
+# read DEPENDABOT secrets (not Actions secrets), so both credentials are
+# provisioned as Dependabot secrets — they supersede the fine-grained PAT
+# secret DEPENDABOT_ARM_TOKEN (2026-10-22).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: dependabot-auto-merge-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  # fetch-metadata reads PR metadata and the trust-surface guard lists PR files
+  # (`gh pr view --json files`): pull-requests: read is required or the job
+  # fails. (Measured 2026-10-23: previous runs died earlier at startup because
+  # the repository selected-actions allowlist lacked dependabot/fetch-metadata
+  # — that repo-policy leg was fixed via the selected-actions API; this is the
+  # workflow-side leg.)
+  pull-requests: read
+
+jobs:
+  dependabot-arm:
+    name: dependabot-arm
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.event.pull_request.base.ref == 'main'
+    steps:
+      - name: Guard — arm App credentials provisioned (fail visible, never swallowed)
+        env:
+          ARM_APP_ID_PRESENT: ${{ secrets.DEPENDABOT_APP_ID != '' }}
+          ARM_APP_KEY_PRESENT: ${{ secrets.DEPENDABOT_APP_PRIVATE_KEY != '' }}
+        run: |
+          if [ "${ARM_APP_ID_PRESENT}" != "true" ] || [ "${ARM_APP_KEY_PRESENT}" != "true" ]; then
+            echo "::error::DEPENDABOT_APP_ID / DEPENDABOT_APP_PRIVATE_KEY are not provisioned — the armer cannot operate. Provision both as Dependabot secrets (pull_request runs authored by dependabot[bot] can only read Dependabot secrets) once the arm App is registered (see docs/evidence/ci_epoch_record_2026-10-22-dependabot-automerge.md)."
+            exit 1
+          fi
+
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Guard — trust-surface files in the diff are never auto-armed (defense in depth)
+        id: guard
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr view "$PR_NUMBER" --json files --jq '.files[].path' | tee /tmp/pr_files.txt
+          if grep -qxE \
+            '(\.github/actions/setup-axiom-toolchain/.*|\.github/workflows/(admission-check|certificate-mint|runner-pool-acceptance|repository_surface|bsec-integrity|debt-registry-gate|generation-acceptance)\.yml|\.github/dependabot\.yml|config/policy/merge_admission\.json|config/app_landing_binding\.json|config/executor_authority\.json|config/trusted_writer_set\.json|src/cli/merge_cli\.nim|src/core/trusted/trust_boundary\.nim|src/verification/verification_subject\.nim|experiments/act2-wp-toml-b1-input-integrity/bsec/replay\.sh|\.github/CODEOWNERS)' \
+            /tmp/pr_files.txt; then
+            echo "TRUST_SURFACE=1" >> "$GITHUB_OUTPUT"
+            echo "::notice::trust-surface file in diff — NOT arming (manual merge path, MUST-T2; exclude-paths is the primary control, this guard is the second line)."
+          else
+            echo "TRUST_SURFACE=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Mint arm App installation token (in-job, same-job consumption, pinned action)
+        id: arm-app-token
+        if: >-
+          steps.guard.outputs.TRUST_SURFACE == '0' &&
+          (steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+           steps.metadata.outputs.update-type == 'version-update:semver-minor')
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ secrets.DEPENDABOT_APP_ID }}
+          private-key: ${{ secrets.DEPENDABOT_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          # Per-issuance ceiling = the arm's only need. Measured floor: the
+          # superseded fine-grained PAT carried "Pull requests: read and write"
+          # + "Contents: read-only" and armed successfully (epoch record
+          # 2026-10-22 Stage 7, enabledBy=wintrover). The exact App-token floor
+          # stays UNKNOWN (docs/spec/rearm_recovery_status.md §4.2), so no
+          # speculative contents: write is requested here.
+          permission-pull-requests: write
+
+      - name: Enable auto-merge (patch/minor only; major updates stay manual)
+        if: >-
+          steps.guard.outputs.TRUST_SURFACE == '0' &&
+          (steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+           steps.metadata.outputs.update-type == 'version-update:semver-minor')
+        env:
+          GH_TOKEN: ${{ steps.arm-app-token.outputs.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: gh pr merge "$PR_URL" --auto --merge --match-head-commit "$HEAD_SHA"

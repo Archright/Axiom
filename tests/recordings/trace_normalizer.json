@@ -1,0 +1,6 @@
+{
+  "module": "trace/trace_normalizer",
+  "trace": "Hint: used config file '<user-home>/.choosenim/toolchains/nim-2.2.10/config/nim.cfg' [Conf]\nHint: used config file '<user-home>/.choosenim/toolchains/nim-2.2.10/config/config.nims' [Conf]\nHint: used config file '{{PROJECT_ROOT}}/config.nims' [Conf]\n{{COMPILER_STATS}}\nHint: '{{PROJECT_ROOT}}/bin/trace_normalizer' [Exec]\n[trace-normalizer] Smoke test passed\n",
+  "exitCode": 0,
+  "capturedAt": "{{TIMESTAMP}}"
+}

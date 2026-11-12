@@ -1,0 +1,229 @@
+# DiscardedResult Site Registry
+# Phase 1 — Impact Assessment for Fail-Closed paradigm shift
+# Generated: 2026-07-28
+# Nim version: 2.2.10
+# Note: Nim 2.2.10 does NOT have a built-in `DiscardedResult` warning.
+#   The project uses a custom Result[T,E] type (core/types/results.nim).
+#   The existing `checkDiscardResult` macro (core/lint/discard_result_linter.nim)
+#   provides equivalent compile-time detection but is only applied in
+#   core/interfaces/io_executor.nim:77.
+#
+# This file lists ALL discard sites where a Result-returning function's
+# return value is discarded. Categorized by remediation strategy.
+#
+# ── Summary ──────────────────────────────────────────────────────────────
+# Total Result-discard sites (src/):  97
+# Total Result-discard sites (tests/): 42
+#   Category A (Legitimate cleanup — needs `# axiom:best-effort` annotation):
+#     ~94 sites (writeFileOpt, removeFileOpt, moveFileOpt cleanup patterns)
+#   Category B (Bug — needs Result handling with `??` or `isOk` check):
+#     0 sites found
+#   Category C (Test code — may need different handling):
+#     ~45 sites (addNode, writeFileOpt, existsOrCreateDirOpt in tests)
+#
+# ── Key Result-returning functions whose values are discarded ──────────
+#   - writeFileOpt(path, content)         → Result[bool, string]
+#   - removeFileOpt(path)                  → Result[bool, string]
+#   - moveFileOpt(source, dest)            → Result[bool, string]
+#   - existsOrCreateDirOpt(path)           → Result[bool, string]
+#   - appendFileLineOpt(path, lines)       → Result[bool, string]
+#   - addNode(dag, node)                   → Result[void, string]
+#   - writeFileAtomic(path, content)       → Result[void, string]  (not found discarded)
+#
+# ── Category A: Legitimate cleanup/discard (best-effort I/O) ────────────
+# These are all best-effort file I/O operations where failure is non-fatal.
+# Fix: Mark each with `# axiom:best-effort(description)` comment.
+#
+# === src/ (97 sites) ===
+#
+# src/engine/engine.nim:
+#   98:  discard writeFileOpt(z3InputPath, smtQuery)
+#   102: discard removeFileOpt(z3InputPath)
+#
+# src/mcp/tools.nim:
+#   348: discard appendFileLineOpt(mcpServerLogPath, @[...])
+#
+# src/mcp/server.nim:
+#   19:  discard existsOrCreateDirOpt(parentDir(logPath))
+#
+# src/cli/report_cli.nim:
+#   133: discard moveFileOpt(proofStatePath, stalePath)
+#
+# src/infrastructure/gate_signing/z3_proof_to_lean.nim:
+#   147: discard safeParseInt(tokens[pos].literal, atomId)     — bool-returning overload (NOT Result)
+#   159: discard safeParseInt(tokens[pos].literal, atomId)     — bool-returning overload (NOT Result)
+#   235: discard safeParseInt(t.literal, idx)                  — bool-returning overload (NOT Result)
+#
+# src/verification/cert_writer.nim:
+#   63:  discard removeFileOpt(path)
+#   117: discard existsOrCreateDirOpt(certDir)
+#   212: discard existsOrCreateDirOpt(certDir)
+#   241: discard existsOrCreateDirOpt(certDir)
+#   335: discard existsOrCreateDirOpt(certDir)
+#   393: discard removeFileOpt(path)
+#   403: discard removeFileOpt(path)
+#
+# src/verification/certificate_manager.nim:
+#   143: discard existsOrCreateDirOpt(staleDir)
+#   149: discard moveFileOpt(path, dest)
+#
+# src/verification/state_manager.nim:
+#   34:  discard writeFileOpt(tmpPath, content)
+#   35:  discard moveFileOpt(tmpPath, path)
+#   39:  discard removeFileOpt(tmpPath)
+#   48:  discard existsOrCreateDirOpt(evidenceDir)
+#   296: discard existsOrCreateDirOpt(dir)
+#   345: discard existsOrCreateDirOpt(dir)
+#   382: discard existsOrCreateDirOpt(dir)
+#   419: discard existsOrCreateDirOpt(dir)
+#
+# src/verification/proof_universe_commit.nim:
+#   53:  discard removeFileOpt(path)
+#   81:  discard removeFileOpt(cachePath)
+#
+# src/verification/integrity_guard.nim:
+#   53:  discard writeFileOpt(modulePath, backupRes.get())
+#
+# src/verification/vault_index.nim:
+#   123: discard existsOrCreateDirOpt(dir)
+#   125: discard writeFileOpt(path, pretty(root))
+#
+# src/verification/pipeline_negative_scan_part2.nim:
+#   307: discard writeFileOpt(smtPath, translation.smt2)
+#   366: discard removeFileOpt(smtPath)
+#
+# src/verification/unified_trajectory.nim:
+#   53:  discard appendFileLineOpt(trajectoryLogPath, @[$entry])
+#
+# src/verification/discovery_error.nim:
+#   168: discard writeFileOpt(metaPath, $toJson(err))
+#   171: discard writeFileOpt(sourcePath, err.leanSource)
+#
+# src/verification/lean_spec_generator.nim:
+#   37:  discard writeFileOpt(path, lines.join("\n"))
+#
+# src/verification/pipeline_core_runner_part1.nim:
+#   38:  discard existsOrCreateDirOpt(path)
+#
+# src/verification/static_rules.nim:
+#   38:  discard existsOrCreateDirOpt(result)
+#   98:  discard writeFileOpt(path, $staticRuleToJson(rule))
+#
+# src/core/symbol_graph/global_symbol_graph_builder_part2.nim:
+#   63:  discard existsOrCreateDirOpt(dir)
+#   64:  discard writeFileOpt(cachePath, pretty(root))
+#   247: discard existsOrCreateDirOpt(dir)
+#   248: discard writeFileOpt(cachePath, pretty(root))
+#
+# src/core/solver/solver_bridge.nim:
+#   155: discard existsOrCreateDirOpt(outDir)
+#   166: discard writeFileOpt(lakefilePath, lakefileContent)
+#   174: discard writeFileOpt(leanToolchainPath, "...")
+#   179: discard writeFileOpt(smt2Path, smt2Content)
+#   184: discard writeFileOpt(leanPath, leanContent)
+#
+# src/core/encoding/vfs.nim:
+#   26:  discard existsOrCreateDirOpt(VfsLeanDir)
+#   27:  discard existsOrCreateDirOpt(VfsZ3Dir)
+#   77:  discard existsOrCreateDirOpt(VfsLeanDir)
+#   78:  discard existsOrCreateDirOpt(VfsZ3Dir)
+#
+# src/core/proof/proof_universe_lock.nim:
+#   128: discard removeFileOpt(cachePath)
+#
+# src/core/boundary/boundary_extractor_part1_part1.nim:
+#   60:  discard writeFileOpt(filePath, content)
+#   112: discard writeFileOpt(filePath, newContent)
+#
+# src/core/vault/vault_factory.nim:
+#   59:  discard existsOrCreateDirOpt(parent)
+#
+# src/core/judge/lean_replay.nim:
+#   182: discard existsOrCreateDirOpt(tmpDir)
+#   231: discard removeFileOpt(tmpFile)
+#   239: discard existsOrCreateDirOpt(debugDir)
+#   241: discard writeFileOpt(dbgBase & ".lean", leanSource)
+#   242: discard writeFileOpt(dbgBase & ".stdout.txt", output)
+#   243: discard writeFileOpt(dbgBase & ".stderr.txt", errOutput)
+#   244: discard writeFileOpt(dbgBase & ".exitcode.txt", $exitCode)
+#
+# src/core/parsers/tree_sitter_parser.nim:
+#   47:  defer: discard removeFileOpt(tmpPath)
+#
+# src/core/parsers/tree_sitter_parse.nim:
+#   26:  discard removeFileOpt(path)
+#
+# src/core/gate/git_index_mtime_cache.nim:
+#   94:  discard moveFileOpt(tmpPath, path)
+#
+# src/core/gate/gate_memo.nim:
+#   372: discard existsOrCreateDirOpt(GateMemoBaseDir)
+#   384: discard existsOrCreateDirOpt(dest)
+#   395: discard writeFileOpt(epochPath, $newEpoch & "\n")
+#   426: discard existsOrCreateDirOpt(lockDir)
+#   432: discard writeFileOpt(lockPath, lockContent & "\n")
+#   452: discard existsOrCreateDirOpt(epochDir)
+#   464: discard writeFileOpt(epochPath, "0\n")
+#   649: discard existsOrCreateDirOpt(epochDir)
+#   671: discard existsOrCreateDirOpt(casFilePath.parentDir())
+#   672: discard writeFileOpt(casFilePath, jsonContent)
+#
+# src/core/gate/gate_cas.nim:
+#   165: discard existsOrCreateDirOpt(casDir)
+#   182: discard existsOrCreateDirOpt(nimcacheDir)
+#   233: discard existsOrCreateDirOpt(casDir)
+#   247: discard existsOrCreateDirOpt(nimcacheDir)
+#   322: discard existsOrCreateDirOpt(contentDir)
+#   401: discard existsOrCreateDirOpt(contentDir)
+#
+# src/core/gate/gate_cas_gc.nim:
+#   46:  discard existsOrCreateDirOpt(GateMemoBaseDir)
+#   48:  discard writeFileOpt(CasGcStateFile, ...)
+#
+# src/gate/runners/integrity_test.nim:
+#   21:  discard existsOrCreateDirOpt(IntegrityCacheDir)
+#   45:  discard existsOrCreateDirOpt("logs")
+#   46:  discard writeFileOpt("logs/.integrity_gate_passed_epoch", ...)
+#
+# src/gate/runners/context7_evidence_gate.nim:
+#   205: discard existsOrCreateDirOpt(evidenceDir)
+#   359: discard existsOrCreateDirOpt(evidenceDir)
+#
+# src/gate/runners/external_cli_smoke.nim:
+#   39:  discard existsOrCreateDirOpt(SmokeCacheDir)
+#
+# === tests/ (42 sites) ===
+#
+# tests/engine/dag_executor_test.nim:
+#   48:  discard addNode(dag, node)
+#   53:  discard addNode(dag, ...)     (also lines 54, 59, 60, 65, 72, 82-84)
+#   96-99, 112-114, 123-124, 131, 143, 167, 175, 178
+#   188, 191, 199, 202, 205, 208, 218, 221, 233, 236
+#   Total: 34 sites discarding addNode() → Result[void, string]
+#
+# tests/gateway/proof_universe_lock_gate_test.nim:
+#   35, 46, 64, 79, 93: discard writeFileOpt(lock, ...)
+#
+# tests/gateway/verified_set_hydration_test.nim:
+#   68, 88, 106, 125: discard existsOrCreateDirOpt(tmpDir)
+#
+# ── Category B: Bug (needs Result handling with `??` or `isOk` check) ──
+#   None found. All existing Result discards in src/ are deliberate
+#   best-effort I/O operations on non-critical paths.
+#
+# ── Category C: Test code ───────────────────────────────────────────────
+#   tests/engine/dag_executor_test.nim — 34× discard addNode()
+#     Fix: Either wrap test setup in checkDiscardResult macro, or
+#     use `let _ = addNode(...)` instead of `discard addNode(...)`
+#
+#   tests/gateway/proof_universe_lock_gate_test.nim — 5× discard writeFileOpt()
+#   tests/gateway/verified_set_hydration_test.nim — 4× discard existsOrCreateDirOpt()
+#     Fix: Use `let _ = ...` or wrap in test macro
+#
+# ── Action Plan for Phase 8 (Fail-Closed) ──────────────────────────────
+# 1. Add `# axiom:best-effort(...)` annotation to every Category A site
+# 2. Wire `checkDiscardResult` macro at module level for Category C test files
+# 3. Enable `checkDiscardResult` macro in config/effects.nims via
+#    `--import:core/lint/discard_result_linter` to apply globally
+# 4. Write a `discarded_write_audit_gate.nim` gate that enforces the annotation
+#    (already partially exists — see src/gate/runners/discarded_write_audit_gate.nim)

@@ -1,0 +1,15 @@
+{
+  "id": "discarded-write-audit-gate",
+  "name": "Discarded write audit gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/discarded_write_audit_gate",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/",
+  "passFilenames": false,
+  "weight": "medium",
+  "category": "rule",
+  "severity": "error",
+  "execution_mode": "interpreted"
+}

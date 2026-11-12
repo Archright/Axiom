@@ -1,0 +1,7 @@
+{
+  "version": "1.0.0",
+  "description": "Axiom source file dependency graph for SCC-based parallel compilation",
+  "generated": "auto",
+  "nodes": [],
+  "edges": []
+}

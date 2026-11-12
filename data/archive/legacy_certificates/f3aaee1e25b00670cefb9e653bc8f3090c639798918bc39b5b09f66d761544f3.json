@@ -1,0 +1,24 @@
+{
+  "modulePath": "src/core/json/std_redirect.nim",
+  "functionName": "parseJson",
+  "fingerprint": "d680bc037b3cff5ed579090704fe6c9f183e95f87489fa8c30bee1a3796f3add",
+  "sourceHash": "f8a5d7aa10a0c1187410ec153d15f6c9be51852e7f48e4179007d8c189dac874",
+  "trusted": true,
+  "status": "certLeanVerified",
+  "reason": "uap-lean-verified",
+  "kernel": false,
+  "solverStatus": "sat",
+  "winningStrategy": "lean-replay",
+  "solverMeta": {
+    "leanCompilerVerified": true,
+    "negativeTestResult": false,
+    "vacuityChecked": true,
+    "vacuityProven": false,
+    "solverVersion": "4.13.3",
+    "solverProvenance": "spHeuristic",
+    "z3Executed": true
+  },
+  "verificationTier": "lean-verified",
+  "leanProposition": "",
+  "irHash": "f3aaee1e25b00670cefb9e653bc8f3090c639798918bc39b5b09f66d761544f3"
+}

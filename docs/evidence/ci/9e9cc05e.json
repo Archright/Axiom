@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "commitSha": "9e9cc05ef9f52f4c779291737ce7f9704c972dea",
+  "branch": "",
+  "checkedAt": "2026-08-01T07:13:04Z",
+  "overallStatus": "failure",
+  "jobs": [
+    {
+      "name": "setup",
+      "status": "failure",
+      "conclusion": "failed",
+      "durationSec": 26,
+      "detailsUrl": "",
+      "jobNumber": 1811
+    }
+  ],
+  "failureReason": "",
+  "consecutiveFailures": 0
+}

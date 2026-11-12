@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "archivedAt": "2026-08-18T01:55:36Z",
+  "archivedBy": "B4-B recovery plan (agent-120)",
+  "entries": [
+    {
+      "originalName": "092c603556d3ad08fd42e3e198cc9701f5e612479bc498c09379adaf5a8400e7.json",
+      "originalPath": "src/verification/certificates/092c603556d3ad08fd42e3e198cc9701f5e612479bc498c09379adaf5a8400e7.json",
+      "archivePath": "data/archive/src/core/orchestrator/092c603556d3ad08fd42e3e198cc9701f5e612479bc498c09379adaf5a8400e7.json",
+      "modulePath": "src/core/orchestrator/orchestrator_api.nim",
+      "functionName": "normalizeMaxWorkers",
+      "staleReason": "worktree source no longer matches committed certificate",
+      "sourceHash": "9aec4a85497834555516c37b969aaf08f5d95cd49fe21828a59e5f142f62a46a",
+      "irHash": "092c603556d3ad08fd42e3e198cc9701f5e612479bc498c09379adaf5a8400e7",
+      "status": "certZ3Verified",
+      "solverStatus": "unsat"
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "experiment": "WP4-j.1 Phase B — getBitsBE E2E replay",
+  "subject": "nim-stew::stew/bitops2.nim::getBitsBE",
+  "subjectRevision": "c75502ceedb5ed2a37b7b5e4744fc71313682859",
+  "axiomRevision": "44fefd470fc6ad9c24ba40350d5721d4d6a9605c",
+  "command": "bin/ax prove --project <workspace>/nim-stew-clean-c75502c --target 'stew/bitops2.nim::getBitsBE' --limit 1",
+  "exitCode": { "runA": 2, "runB": 2 },
+  "obligationCount": 6,
+  "obligationKinds": ["vtStructural", "vtSmtNative"],
+  "obligationKindsNote": "From stdout: 6 IR entries extracted; classify lines show getBitsBE→vtStructural, calcDynamicTimeoutCore→vtStructural, safeSpeedupRatioCore→vtSmtNative, proximityScore→vtSmtNative. normalizeMaxWorkers and clampTimeoutMs have no explicit classify line in stdout.",
+  "verificationTier": "vtStructural",
+  "selectedStrategy": "structural_ast",
+  "strategyApplicability": "Strategy was selected (line 94: '→ getBitsBE: structural_ast (io_boundary)') but the structural transform was not applied (srNoTransformApplied). The strategy was applicable in selection but not executed.",
+  "strategyFailureReason": "srNoTransformApplied",
+  "preSieveDecision": "pre-sieved — getBitsBE passed the pre-sieve gate (lines 39, 90: '[PRE-SIEVED]')",
+  "executionDecision": "structural_ast selected but srNoTransformApplied — no solver invoked (solverMethod=smNone, provenance=pkNone)",
+  "proofResult": "psFail solverMethod=smNone provenance=pkNone (lines 27, 43)",
+  "uapObservation": { "requests": 1, "results": 0, "evidence": "UAP produced 0 results (requests=1) — lines 40, 78" },
+  "determinism": {
+    "runAVsRunB_identicalAfterTimestampRemoval": true,
+    "diffNote": "diff of timestamp-stripped Run A vs Run B output produces no differences",
+    "casKey_getBitsBE": "cf4013de578c923dc566aa3817b01b76927bfeac1b4f4fed1a41a1b07dd8c556",
+    "casKeyIdenticalAcrossRuns": true
+  },
+  "Q1": {
+    "question": "getBitsBE에 obligation이 존재하는가?",
+    "answer": "YES",
+    "evidence": [
+      "[INFO] ir_pipeline_runner: [classify] getBitsBE → vtStructural (complex body operations)  (line 19)",
+      "[ERROR] loop_driver: IR pipeline FAIL: getBitsBE status=psFail provenance=solverMethod=smNone,provenance=pkNone  (line 27)",
+      "[INFO] axiom_engine: phase-10: IR extraction — 6/229 entries (limit=1)  (line 6)",
+      "[INFO] loop_driver:   [1/1] stew/bitops2.nim::getBitsBE — pre-sieved  (line 39)"
+    ]
+  },
+  "Q2": {
+    "question": "strategy가 applicable하지 않은 것이 proof rejection의 원인인가?",
+    "answer": "NO",
+    "evidence": [
+      "→ getBitsBE: structural_ast (io_boundary)  (line 94) — strategy WAS selected/applicable",
+      "srNoTransformApplied is a transform-not-applied failure, not a strategy-inapplicability failure",
+      "The strategy was chosen but its transform produced no result; the rejection is downstream of strategy selection"
+    ]
+  },
+  "Q3": {
+    "question": "다른 applicable strategy가 존재하는가?",
+    "answer": "UNKNOWN",
+    "evidence": [
+      "Stdout mentions only structural_ast for getBitsBE (line 94)",
+      "No other strategy name appears in the output for this target",
+      "Insufficient stdout evidence to confirm or deny other applicable strategies"
+    ],
+    "missingInfo": "The stdout does not enumerate the full strategy registry or alternative strategies for vtStructural classification"
+  },
+  "Q4": {
+    "question": "strategy failure가 ProofFailure(psFail)로 승격되는가?",
+    "answer": "YES",
+    "evidence": [
+      "⚠ getBitsBE — skipped: srNoTransformApplied  (line 87)",
+      "[ERROR] loop_driver: IR pipeline FAIL: getBitsBE status=psFail provenance=solverMethod=smNone,provenance=pkNone  (line 27)",
+      "[ERROR] axiom_engine: IR pipeline FAIL: getBitsBE status=psFail provenance=solverMethod=smNone,provenance=pkNone  (line 43)",
+      "srNoTransformApplied (a skip) is followed immediately by psFail in the pipeline status"
+    ]
+  },
+  "Q5": {
+    "question": "srNoTransformApplied가 execution-not-attempted를 의미하는가?",
+    "answer": "YES",
+    "evidence": [
+      "⚠ getBitsBE — skipped: srNoTransformApplied  (line 87) — 'skipped' indicates no execution",
+      "solverMethod=smNone in psFail provenance (lines 27, 43) — no solver was invoked",
+      "StructuralAST: failed (unknown) (line 88) — the structural path did not attempt proof execution",
+      "UAP produced 0 results (requests=1) (lines 40, 78) — request was made but no execution produced a result"
+    ]
+  },
+  "Q6": {
+    "question": "obligation이 존재하는데 실행 대상 목록에서 제거되는가?",
+    "answer": "YES",
+    "evidence": [
+      "getBitsBE appears in IR pipeline (lines 19-20, 27, 43) as an obligation",
+      "But it is marked 'skipped: srNoTransformApplied' (line 87) — removed from active execution",
+      "UAP produced 0 results despite 1 request (lines 40, 78) — the obligation was requested but no result was produced",
+      "The pre-sieved node enters the pipeline but exits as 'skipped' without solver engagement"
+    ]
+  },
+  "telemetrySnapshots": {
+    "preRunA": "probe/telemetry-pre-runA.jsonl",
+    "postRunA": "probe/telemetry-post-runA.jsonl",
+    "preRunB": "probe/telemetry-pre-runB.jsonl",
+    "postRunB": "probe/telemetry-post-runB.jsonl"
+  },
+  "notes": {
+    "exitCodeExpectation": "Exit code 2 is expected (PERSIST FAIL from unrelated safeSpeedupRatioCore/proximityScore cert promotion). This is a known observation, not an anomaly.",
+    "readOnlyProbe": "No src/ files were modified. All observations are from stdout/stderr and telemetry logs only.",
+    "limitations": "obligationCount (6) and obligationKinds are from stdout IR extraction summary, not from a dedicated obligation enumeration command. The task mentions 13 intrinsic proof obligations for getBitsBE but stdout shows 6 IR entries in this run — the discrepancy may be due to the --limit 1 flag or IR extraction scope."
+  }
+}

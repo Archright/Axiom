@@ -1,0 +1,5 @@
+{
+  "expected_version": "2.2.10",
+  "locked_date": "2026-06-15",
+  "docker_image": "ghcr.io/archright/axiom-ci:nim-2.2.10-lean-4.29.0-v2"
+}

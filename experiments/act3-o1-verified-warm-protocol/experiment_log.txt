@@ -1,0 +1,22 @@
+[2026-08-30 11:10:35] === E1a Warm Nimcache Protocol Experiment ===
+[2026-08-30 11:10:35] Repo root: ../Axiom-debt
+[2026-08-30 11:10:35] Worktree: <user-home>/.cache/axiom/purity-check
+[2026-08-30 11:10:35] Persist dir: <user-home>/.cache/axiom/purity-nimcache
+[2026-08-30 11:10:35] Nim version: Nim Compiler Version 2.2.10 [Linux: amd64]
+[2026-08-30 11:10:35] Hostname: axiom-verified-host
+[2026-08-30 11:10:35] Date: 2026-08-30T11:10:35+09:00
+[2026-08-30 11:10:35] Repo HEAD: 72e896d06e4bc65c774f18f8fb3fb4925f6b0b08
+[2026-08-30 11:10:35] 
+[2026-08-30 11:10:35] ========== COLD BUILD ==========
+[2026-08-30 11:10:35] Creating throwaway worktree at <user-home>/.cache/axiom/purity-check
+[2026-08-30 11:10:35] Worktree created
+[2026-08-30 11:10:35] Worktree ready with stub and clean
+[2026-08-30 11:10:35] === COLD: Building in <user-home>/.cache/axiom/purity-check ===
+[2026-08-30 11:11:24] COLD: wall-clock=46937ms, CC_lines=599, digest=81b044304031a359ad3eee2a649654909fd3a058f8968853d5f1a4d99743bb0d
+[2026-08-30 11:11:24] Cold metrics: elapsed=46937ms, CC_lines=599, digest=81b044304031a359ad3eee2a649654909fd3a058f8968853d5f1a4d99743bb0d
+[2026-08-30 11:11:24] 
+[2026-08-30 11:11:24] ========== COPY-OUT ==========
+[2026-08-30 11:11:24] === Copy-out protocol ===
+[2026-08-30 11:11:24] Copied nimcache to <user-home>/.cache/axiom/purity-nimcache/units/unit-1/nimcache/
+[2026-08-30 11:11:24] Stamp written: 68dffaa50f7ae88a1aa88437e833b05db309a100560d737f90da9819c3d93d7b
+[2026-08-30 11:11:24] Active symlink flipped to unit-1

@@ -1,0 +1,192 @@
+// config/policy/metric_specs.json
+// Canonical metric contracts — documents existing evaluator behaviour verbatim.
+// SSOT: docs/spec/canonical_contract_policy_layer.md §3
+// Version: v1.0.0 (Phase 0 baseline freeze)
+//
+// Each entry is a *frozen description* of how the current evaluator computes
+// the metric value.  No behavioural change is introduced by this file; it is
+// purely declarative so that downstream gates can validate projections,
+// tolerances, and direction mappings against a single source of truth.
+
+[
+  {
+    "metricId": "import_lint_violations",
+    "metricCategory": "bcImportLint",
+    "description": "tools/ files importing src/core/ or src/gate/ directly (static regex count)",
+    "contract": {
+      "projection": {
+        "kind": "count",
+        "scope": "tools/",
+        "selector": "regex:^\\s*(?:import|include).*(?:src/core/|src/gate/)",
+        "aggregation": "sum"
+      },
+      "tolerance": {
+        "mode": "disabled"
+      },
+      "comparison": {
+        "operator": "lte",
+        "threshold": 0
+      },
+      "normalization": {
+        "method": "none"
+      },
+      "directionMapping": {
+        "eq": "PASS",
+        "lte": "IMPROVEMENT_OR_PASS",
+        "gt": "REGRESSION"
+      },
+      "version": "v2",
+      "rationale": "Import boundary enforcement — tools must not depend on core/gate implementation modules."
+    }
+  },
+  {
+    "metricId": "layer_violations",
+    "metricCategory": "bcLayerViolation",
+    "description": "src/core/ files importing gate/ directly (static regex count)",
+    "contract": {
+      "projection": {
+        "kind": "count",
+        "scope": "src/core/",
+        "selector": "regex:^\\s*(?:import|include).*gate/",
+        "aggregation": "sum"
+      },
+      "tolerance": {
+        "mode": "disabled"
+      },
+      "comparison": {
+        "operator": "lte",
+        "threshold": 0
+      },
+      "normalization": {
+        "method": "none"
+      },
+      "directionMapping": {
+        "eq": "PASS",
+        "lte": "IMPROVEMENT_OR_PASS",
+        "gt": "REGRESSION"
+      },
+      "version": "v2",
+      "rationale": "Layer separation — src/core/ must never import gate/ directly."
+    }
+  },
+  {
+    "metricId": "effect_violations",
+    "metricCategory": "bcEffectViolation",
+    "description": "measured count of procs in src/core/ lacking an inline {.raises: [...]} pragma in the declaration header or file-scope push raises scope (AST-semantic projection)",
+    "contract": {
+      "projection": {
+        "kind": "count",
+        "scope": "src/core/",
+        "selector": "ast:procWithoutRaisesPragma",
+        "aggregation": "count"
+      },
+      "tolerance": {
+        "mode": "disabled"
+      },
+      "comparison": {
+        "operator": "lte",
+        "threshold": 0
+      },
+      "normalization": {
+        "method": "none"
+      },
+      "directionMapping": {
+        "eq": "PASS",
+        "lte": "IMPROVEMENT_OR_PASS",
+        "gt": "REGRESSION"
+      },
+      "version": "v2",
+      "rationale": "Effect hygiene — every proc in src/core/ must declare its exception profile via {.raises: [].} or explicit list."
+    }
+  },
+  {
+    "metricId": "nimtry_violations",
+    "metricCategory": "bcNimtryViolation",
+    "description": "soc-domain-imports violations reported by bin/nimtry src/ (check-arch gate); 0 after registry re-baseline + nimtry build restored",
+    "contract": {
+      "projection": {
+        "kind": "count",
+        "scope": "src/",
+        "selector": "nimtry:soc-domain-imports",
+        "aggregation": "sum"
+      },
+      "tolerance": {
+        "mode": "disabled"
+      },
+      "comparison": {
+        "operator": "lte",
+        "threshold": 0
+      },
+      "normalization": {
+        "method": "none"
+      },
+      "directionMapping": {
+        "eq": "PASS",
+        "lte": "IMPROVEMENT_OR_PASS",
+        "gt": "REGRESSION"
+      },
+      "version": "v2",
+      "rationale": "Nimtry architecture checks enforce domain import boundaries across src/."
+    }
+  },
+  {
+    "metricId": "debt_registry_open",
+    "metricCategory": "bcDebtRegistryOpen",
+    "description": "open entries in data/debt_registry.json",
+    "contract": {
+      "projection": {
+        "kind": "count",
+        "scope": "data/debt_registry.json",
+        "selector": "jsonpath:$.entries[?(@.status=='open')]",
+        "aggregation": "count"
+      },
+      "tolerance": {
+        "mode": "disabled"
+      },
+      "comparison": {
+        "operator": "lte",
+        "threshold": 0
+      },
+      "normalization": {
+        "method": "none"
+      },
+      "directionMapping": {
+        "eq": "PASS",
+        "lte": "IMPROVEMENT_OR_PASS",
+        "gt": "REGRESSION"
+      },
+      "version": "v2",
+      "rationale": "Debt registry open count — target is zero open entries."
+    }
+  },
+  {
+    "metricId": "debt_registry_closed",
+    "metricCategory": "bcDebtRegistryClosed",
+    "description": "closed entries in data/debt_registry.json",
+    "contract": {
+      "projection": {
+        "kind": "count",
+        "scope": "data/debt_registry.json",
+        "selector": "jsonpath:$.entries[?(@.status=='closed' || @.status=='accepted')]",
+        "aggregation": "count"
+      },
+      "tolerance": {
+        "mode": "disabled"
+      },
+      "comparison": {
+        "operator": "gte",
+        "threshold": 92
+      },
+      "normalization": {
+        "method": "none"
+      },
+      "directionMapping": {
+        "eq": "PASS",
+        "gte": "MAINTAINED_OR_IMPROVED",
+        "lt": "REGRESSION"
+      },
+      "version": "v2",
+      "rationale": "Debt registry closed count — target is ≥92 resolved entries."
+    }
+  }
+]

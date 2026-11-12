@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "contractVersion": "v1",
+  "predicateVocabularyVersion": "v1",
+  "predicateVocabulary": [
+    "EVIDENCE_ALL_SATISFIED",
+    "EVIDENCE_ANY_SATISFIED",
+    "NO_BLOCKER_IN_REQUIRED_SET"
+  ],
+  "requirements": {
+    "CANONICAL_EXECUTION": {
+      "requiredEvidence": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "predicate": "EVIDENCE_ALL_SATISFIED",
+      "requiredEvidenceRefs": [
+        "data/readiness/decision.independent.20260819T122137Z.json"
+      ],
+      "status": "REQUIRED"
+    },
+    "REPRODUCIBLE_RESULT": {
+      "requiredEvidence": [
+        "R5"
+      ],
+      "predicate": "EVIDENCE_ALL_SATISFIED",
+      "requiredEvidenceRefs": [
+        "data/readiness/decision.independent.20260819T122137Z.json"
+      ],
+      "status": "REQUIRED"
+    },
+    "EVIDENCE_BACKED_CERTIFICATE": {
+      "requiredEvidence": [
+        "R4",
+        "R8-P"
+      ],
+      "predicate": "EVIDENCE_ALL_SATISFIED",
+      "requiredEvidenceRefs": [
+        "data/readiness/decision.independent.20260819T122137Z.json"
+      ],
+      "status": "REQUIRED"
+    },
+    "PROVENANCE": {
+      "requiredEvidence": [
+        "R3",
+        "R4"
+      ],
+      "predicate": "EVIDENCE_ALL_SATISFIED",
+      "requiredEvidenceRefs": [
+        "data/readiness/decision.independent.20260819T122137Z.json"
+      ],
+      "status": "REQUIRED"
+    },
+    "CLI_CONTRACT": {
+      "requiredEvidence": [
+        "R7"
+      ],
+      "predicate": "EVIDENCE_ALL_SATISFIED",
+      "requiredClosureState": "CLI termination semantic-partition ratification pending (R7)",
+      "requiredEvidenceRefs": [
+        "data/readiness/decision.independent.20260819T122137Z.json"
+      ],
+      "status": "REQUIRED"
+    },
+    "RUNTIME_BOUNDARY": {
+      "requiredEvidence": [
+        "R6"
+      ],
+      "predicate": "EVIDENCE_ALL_SATISFIED",
+      "requiredEvidenceRefs": [
+        "data/readiness/decision.independent.20260819T122137Z.json"
+      ],
+      "status": "REQUIRED"
+    }
+  }
+}

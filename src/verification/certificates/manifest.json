@@ -1,0 +1,60 @@
+{
+  "version": 2,
+  "fingerprint": "b016845825ff7a1130311d0ea6566655aca868a6f8332973d1e1fcbfe6383d6c",
+  "metadata": {
+    "contentHash": "sha256:9a7da3461c90404b4a63259c22262bddaddb5fc3e60e9654d9f90913bef684d8",
+    "digestContractVersion": 1
+  },
+  "entries": [
+    {
+      "modulePath": "src/core/orchestrator/orchestrator_api.nim",
+      "functionName": "normalizeMaxWorkers",
+      "irHash": "e57ee9394d16b8dcb8a859eb205f59a55dc3926227dc2250a21448c8d5ebf200",
+      "fingerprint": "8e3b82cef849b7ec2a38f9ad97a14f9fc0e73fc9bb926fee58f2e23b4ec901c9",
+      "contentHash": "sha256:1b5f9e09a624aa24be49d2830db005e2b155024525b0a76fb430ff112082995d",
+      "status": "",
+      "backend": "smt",
+      "lifecycleStage": "canonical"
+    },
+    {
+      "modulePath": "src/core/orchestrator/orchestrator_topology_worker.nim",
+      "functionName": "calcDynamicTimeoutCore",
+      "irHash": "93079fe23d613d467a95b3950f3100b89c4bf3806f3bc8ce56bad978d50acf0e",
+      "fingerprint": "49cef3270d557b860620c665d6d3443c20fa1b7f68ecd40bb189819e1311c15f",
+      "contentHash": "sha256:5fb743a5816c4fad23aaee2353be0851e03d20e99a22b53e2edf88c042187355",
+      "status": "",
+      "backend": "smt",
+      "lifecycleStage": "canonical"
+    },
+    {
+      "modulePath": "src/core/orchestrator/orchestrator_topology_worker.nim",
+      "functionName": "clampTimeoutMs",
+      "irHash": "7e5a975faec166f9bb49678a84dcd1d3c59dc30a3ab9cdb7883abfc778083f01",
+      "fingerprint": "0c4abd5709ac008dc7594731cdcca36657101a499e3c97db943f4d82bcbe3017",
+      "contentHash": "sha256:038036d58c7221456a47e50b916bf559b895b28e33687e8862b4da740c527ce4",
+      "status": "",
+      "backend": "smt",
+      "lifecycleStage": "canonical"
+    },
+    {
+      "modulePath": "src/core/orchestrator/orchestrator_vault.nim",
+      "functionName": "safeSpeedupRatioCore",
+      "irHash": "4ec55e9c8e848346f5d876e9e54540a8944f499b9067af73769c526455c2aac4",
+      "fingerprint": "4f4247e069162341d944d6bad408241b6328ec33c2360bce4762a00a66c55a9c",
+      "contentHash": "sha256:564f4b07c524d4ef856bb9297eec7485027e5a6f923d4efd117408a66f30b67b",
+      "status": "",
+      "backend": "smt",
+      "lifecycleStage": "canonical"
+    },
+    {
+      "modulePath": "src/verification/analyzer/analyzer_shared_json.nim",
+      "functionName": "firstBoolCore",
+      "irHash": "7fe53565b0e774a2ea20bf2980c20bfa98f21093b68d578ddd8220d226211114",
+      "fingerprint": "85e6be515c6013b86e9b0b2611b5970f0b6d21e5ce025f9dc3d21c3f128bf68d",
+      "contentHash": "sha256:84401368d9bc2b6abd51d0053011f9692a6231a7498b66df144e6128781e8926",
+      "status": "",
+      "backend": "lean",
+      "lifecycleStage": "canonical"
+    }
+  ]
+}

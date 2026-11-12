@@ -1,0 +1,57 @@
+{
+  "layers": {
+    "L0_infrastructure": {
+      "priority": 0,
+      "allowed_deps": [],
+      "description": "OS interaction, parsing, frontend bindings"
+    },
+    "L1_core_engine": {
+      "priority": 1,
+      "allowed_deps": ["L0_infrastructure"],
+      "description": "BMC engine, encoding, semantic proofs, trusted base"
+    },
+    "L2_domain": {
+      "priority": 2,
+      "allowed_deps": ["L0_infrastructure", "L1_core_engine"],
+      "description": "Domain logic: boundary extraction, proof, vault, types, contracts"
+    },
+    "L3_application": {
+      "priority": 3,
+      "allowed_deps": ["L0_infrastructure", "L1_core_engine", "L2_domain"],
+      "description": "Application layer: orchestrator, API, personas"
+    },
+    "L4_interface": {
+      "priority": 4,
+      "allowed_deps": ["L0_infrastructure", "L1_core_engine", "L2_domain", "L3_application"],
+      "description": "External interfaces: CLI, MCP, gate hooks"
+    }
+  },
+  "domains": [
+    { "name": "infrastructure", "import_path": "infrastructure", "layer": "L0_infrastructure", "owner": "platform" },
+    { "name": "parsers", "import_path": "core/parsers", "layer": "L0_infrastructure", "owner": "platform" },
+    { "name": "frontend", "import_path": "frontend", "layer": "L0_infrastructure", "owner": "platform" },
+    { "name": "bmc", "import_path": "core/bmc", "layer": "L1_core_engine", "owner": "engine" },
+    { "name": "encoding", "import_path": "core/encoding", "layer": "L1_core_engine", "owner": "engine" },
+    { "name": "semantic_proofs", "import_path": "semantic_proofs", "layer": "L1_core_engine", "owner": "engine" },
+    { "name": "trusted", "import_path": "core/trusted", "layer": "L1_core_engine", "owner": "engine" },
+    { "name": "engine", "import_path": "engine", "layer": "L1_core_engine", "owner": "engine" },
+    { "name": "boundary", "import_path": "core/boundary", "layer": "L2_domain", "owner": "engine" },
+    { "name": "proof", "import_path": "core/proof", "layer": "L2_domain", "owner": "engine" },
+    { "name": "vault", "import_path": "core/vault", "layer": "L2_domain", "owner": "engine" },
+    { "name": "types", "import_path": "core/types", "layer": "L2_domain", "owner": "engine" },
+    { "name": "contracts", "import_path": "core/contracts", "layer": "L2_domain", "owner": "engine" },
+    { "name": "orchestrator", "import_path": "core/orchestrator", "layer": "L3_application", "owner": "app" },
+    { "name": "api", "import_path": "api", "layer": "L3_application", "owner": "app" },
+    { "name": "personas", "import_path": "personas", "layer": "L3_application", "owner": "app" },
+    { "name": "application", "import_path": "core/application", "layer": "L3_application", "owner": "app" },
+    { "name": "cli", "import_path": "cli", "layer": "L4_interface", "owner": "interface" },
+    { "name": "mcp", "import_path": "mcp", "layer": "L4_interface", "owner": "interface" },
+    { "name": "gate", "import_path": "gate", "layer": "L4_interface", "owner": "interface" },
+    { "name": "verification", "import_path": "verification", "layer": "L4_interface", "owner": "interface" }
+  ],
+  "metadata": {
+    "schema_version": "4.1.0",
+    "last_updated": "2026-06-16",
+    "description": "Domain layer DAG matrix — single source of truth for architecture guard"
+  }
+}

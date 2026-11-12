@@ -1,0 +1,14 @@
+{
+  "id": "policy-validator",
+  "name": "Axiom policy validator",
+  "layer": "functional",
+  "entry": "src/gate/runners/policy_validator.nim",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/|architecture_policy.lock",
+  "passFilenames": false,
+  "weight": "light",
+  "category": "policy",
+  "severity": "error"
+}

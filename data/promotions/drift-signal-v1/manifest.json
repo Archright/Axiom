@@ -1,0 +1,39 @@
+{
+ "schemaVersion": 1,
+ "repository": "Archright/Axiom",
+ "promotionId": "drift-signal-v1",
+ "candidateSha": "17d1a7955f06ceebc9668170d2dfbc85c9757dfe",
+ "candidatePr": 1032,
+ "mergeSha": "619d4a8d28d5dff7e7ebe6985a96745dbc86cffa",
+ "acceptanceRun": {
+  "id": 39684342900,
+  "workflow": "generation-acceptance",
+  "event": "merge_group",
+  "conclusion": "success",
+  "headSha": "619d4a8d28d5dff7e7ebe6985a96745dbc86cffa"
+ },
+ "rulesetReadback": {
+  "provenance": "operator-promotion-adapter",
+  "fetchedAt": "2026-10-21T22:30:00Z",
+  "expected": [
+   "admission-check",
+   "bsec-integrity",
+   "debt-registry-gate",
+   "generation-acceptance"
+  ],
+  "actual": [
+   "admission-check",
+   "bsec-integrity",
+   "debt-registry-gate",
+   "generation-acceptance"
+  ],
+  "equal": true,
+  "provenanceNote": "org admin gh readback — job GITHUB_TOKEN cannot read org ruleset (MUST#8)"
+ },
+ "productionRun": {
+  "id": 39686297503,
+  "workflow": "drift-signal",
+  "event": "workflow_run",
+  "headSha": "619d4a8d28d5dff7e7ebe6985a96745dbc86cffa"
+ }
+}

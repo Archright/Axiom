@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0",
+  "study": "x2_feedback_cp_baseline",
+  "date": "2026-09-07",
+  "objectiveFunctions": {
+    "CI_RUN_CP": "critical path of ONE CI workflow run (observed: warm 28m37-45s / stale 59m24s)",
+    "FEEDBACK_CP": "PR CI -> merge -> post-merge CI critical path back to the developer (observed: fresh pair 57m22s / stale pair ~118m48s)",
+    "topLevelTarget": "minimize FEEDBACK_CP"
+  },
+  "measuredPairs": [
+    {"pr": 47, "prRun": 34055586611, "prVi": "28m45s", "postMergeRun": 34079669387, "postMergeVi": "28m37s", "feedbackCP": "57m22s", "cacheState": "fresh"},
+    {"pr": 46, "prRun": 34062398285, "prVi": "59m24s", "postMergeRun": 34066011764, "postMergeVi": "59m24s", "feedbackCP": "118m48s", "cacheState": "stale"}
+  ],
+  "staticProof": {
+    "claim": "base-unmoved rebase-merged PR: PR CI guarantees ⊇ post-merge CI guarantees — 3 verify jobs (verify-static, verify-integration, verify-coverage-guard) 100% content-redundant",
+    "jobIdentity": "identical job definitions, event-agnostic (ci.yml:58/:179/:311); only event-dependent bits: checkout ref (refs/pull/N/merge vs pushed SHA — same tree when base unmoved), coverage-guard cache key base.sha (ci.yml:326)",
+    "residuals": ["base-moved merged-tree coverage (auto_merge.yml base-freshness guard pre-cludes most; residual = manual merges + base-race window)", "generate-docs ~2m (main-only)", "nightly ([run-nightly] gated)"]
+  },
+  "plannedCycles": {
+    "F-B": "2xCX23 2-runner split: R1(bootstrap->e2e-full->verify-contract(g7-consume)->ci-gates) + R2(ci-unit-tests||verify-all||test-gateway||ci-lake-build); bin/ax 8.4MB artifact R1->R2; R2 cache restore-only. Expected CI_RUN_CP: warm 28m37s->15.3m / cold 31m",
+    "F-C": "post-merge tree-identity detector: pushed SHA -> commits/{sha}/pulls API -> refs/pull/N/merge^{tree} vs HEAD^{tree}; identical -> skip 3 verify jobs (fail-closed: API/ref failure -> full run); generate-docs/nightly preserved; L2 role redefined (PR CI = merge-boundary certification, post-merge = merged-tree/docs certification)",
+    "expectedFEEDBACKCP": "F-B+F-C landed: FEEDBACK_CP = one CI_RUN_CP (warm 15.3m / cold 31m)"
+  },
+  "invariants": ["semantic equivalence", "verification coverage (removal of DUPLICATION only, never verification)", "determinism", "isolation", "fail-closed detector"]
+}

@@ -1,0 +1,13 @@
+name = "axiom_enterprise"
+version = "0.6.3"
+defaultTargets = ["AxiomVerification", "AxiomSemanticProofs"]
+
+[[lean_lib]]
+name = "AxiomVerification"
+srcDir = "src/verification"
+roots = ["spec", "spec_auto", "ax_solve", "ax_vacuity_check"]
+
+[[lean_lib]]
+name = "AxiomSemanticProofs"
+srcDir = "src/semantic_proofs"
+roots = ["main", "univalue_cpp_checkType", "univalue_cpp_otherFunc", "lib.MemorySafety", "smt_reconstruction"]

@@ -1,0 +1,34 @@
+# callform/consumer_imthemes.txt — call-site evidence for consumer ImThemes
+# Sources: bsec/evidence/probes/probe_imthemes_profile.nim + raw log (dynamic), git show at
+# b5b387e6 (static, re-verified at bundle time), approved plan §반박① (retraction record).
+
+consumer            = ImThemes
+consumer_commit     = UNRECORDED — the ImThemes repository revision itself was not pinned into
+                      the record. Recorded as UNRECORDED (fail-closed), never invented.
+resolved_dep_commit = b5b387e6fb2a7cc75d54a269b07cc6218361bd46  (nim-toml-serialization,
+                      2025-09-25, "v0.2.18 (#99)") — ancestor of 4aa8e22 — via ImThemes'
+                      nimble.lock chain: niprefs 0.3.5 @ 30f522ac1888ae2930e833ab6c5d954baf3e8702
+                      (re-export chain pulls toml_serialization @ b5b387e6).
+call_form           = src/browseview.nim:193
+                      `Toml.loadFile(path, TomlValueRef)["themes"].getTables()`
+                      — value-tree path, NO typed object, no flags argument.
+flags               = none (defaults)
+flavor              = bare `Toml`; AT b5b387e6 there is no v1.1.0 flag binding (format.nim absent)
+                      -> runtimeFlags {} -> TomlHexEscape INACTIVE.
+
+# Per-revision structural facts AT THIS PIN (static): format.nim ABSENT (git cat-file);
+# TomlReader.init defaults flags = {} (reader.nim:42-53); scanHexEscape raises unless
+# TomlHexEscape in flags (lexer.nim:391-392).
+# Dynamic confirmation (probe_imthemes_profile, exact ImThemes call form via the niprefs chain):
+#   imthemes_control : OK
+#   imthemes_hex_45  : REJECTED TomlError "(2, 14) invalid hex escape, not supported by standard,
+#                       please use `TomlHexEscape`"
+#   imthemes_hex_80  : REJECTED TomlError "(2, 11) invalid hex escape ..."
+# => \xHH is REJECTED and TomlHexEscape is INACTIVE for ImThemes' actual locked build path.
+# Counterfactual (probe_head_profile @ 4aa8e22 — SAME declared version "0.2.18"): both probes OK
+# -> activation is a property of the RESOLVED REVISION, not of the version string.
+
+# Pin-level negative result only: it does NOT establish B-SEC-03 unreachable "for ImThemes"
+# in general — activation depends on the dep revision the lock resolves at build time; the
+# consumer repo commit itself remains unpinned, so the verdict stays UNKNOWN
+# (see rules/rule_table.tsv R5).

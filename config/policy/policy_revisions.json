@@ -1,0 +1,54 @@
+// config/policy/policy_revisions.json
+// Policy revision chain SSOT — genesis PolicyDefinition + patch revisions.
+// P0-3: materialize reconstructs the full current policy from genesis+patches alone.
+// P0-2: linear chain invariants enforced by tools/policy/revision_chain.nim
+
+{
+  "schema": "policy_revisions",
+  "version": "1.0.0",
+  "revisions": [
+    {
+      "revisionId": "policy-genesis",
+      "parentRevisionId": null,
+      "rationale": "Initial PolicyDefinition: fail-closed default (ERROR), all known states map to INFO",
+      "evidenceRef": "config/policy/policy_revisions.json",
+      "payload": {
+        "policyId": "POLICY-001",
+        "statusDomain": ["PASS", "DRIFT"],
+        "defaultDisposition": "ERROR",
+        "rules": [
+          {"state": "DRIFT", "disposition": "INFO"},
+          {"state": "PASS", "disposition": "INFO"}
+        ]
+      }
+    },
+    {
+      "revisionId": "policy-rev-001",
+      "parentRevisionId": "policy-genesis",
+      "rationale": "Confirm effect_violations DRIFT→INFO after evaluator resolves (P0-1: baseline is NOT a Decision input)",
+      "evidenceRef": "config/policy/policy_revisions.json",
+      "patches": [
+        {
+          "op": "setRule",
+          "arguments": {"state": "DRIFT", "disposition": "INFO"}
+        },
+        {
+          "op": "setDefault",
+          "arguments": {"disposition": "ERROR"}
+        }
+      ]
+    },
+    {
+      "revisionId": "policy-rev-002",
+      "parentRevisionId": "policy-rev-001",
+      "rationale": "P3 Policy Ratchet: import_lint violations IMPROVEMENT drift → INFO maintained; open-closed increase REGRESSION direction + minStable guard",
+      "evidenceRef": "config/policy/policy_revisions.json",
+      "stability": {
+        "minStableRevisions": 3,
+        "direction": "REGRESSION",
+        "requiredConsecutiveObservations": 5
+      },
+      "patches": []
+    }
+  ]
+}

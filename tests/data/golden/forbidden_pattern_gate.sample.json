@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/forbidden_pattern_gate.py",
+  "description": "Forbidden Pattern Gate — blocks forbidden patterns (e.g., direct file I/O in core modules, magic numbers, hardcoded paths) in src/core/ files",
+  "inputSample": {
+    "args": []
+  },
+  "outputSample": {
+    "stdout": "forbidden_pattern: PASS (0 forbidden patterns found in src/core/)",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

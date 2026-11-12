@@ -1,0 +1,14 @@
+{
+  "id": "spec-binding-gate",
+  "name": "Axiom spec binding gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/spec_binding_gate.nim",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/cli/|tests/features/",
+  "passFilenames": false,
+  "weight": "light",
+  "category": "policy",
+  "severity": "error"
+}

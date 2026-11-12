@@ -1,0 +1,8 @@
+{
+  "nimType": "float",
+  "leanType": "Float",
+  "smtSort": "Real",
+  "mappingProofObligation": "nim_lean_float_iso",
+  "verified": false,
+  "sourceHash": ""
+}

@@ -1,0 +1,22 @@
+{
+  "moves": [
+    {
+      "from": "core/pure_deps/",
+      "to": "core/pure/",
+      "files": ["json_parse.nim"],
+      "description": "Merge pure_deps into pure"
+    },
+    {
+      "from": "core/test/",
+      "to": "core/test_support/",
+      "files": [],
+      "description": "Merge single-file test dir into test_support"
+    },
+    {
+      "from": "core/verification/",
+      "to": "core/proof/",
+      "files": [],
+      "description": "Merge single-file verification into proof"
+    }
+  ]
+}

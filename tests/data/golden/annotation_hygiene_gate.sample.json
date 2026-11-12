@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/annotation_hygiene_gate.py",
+  "description": "Annotation Hygiene Gate — ensures all procs in src/core/ have explicit effect annotations ({.raises: [].} or {.noSideEffect.})",
+  "inputSample": {
+    "args": []
+  },
+  "outputSample": {
+    "stdout": "annotation_hygiene: PASS (all 87 core procs have explicit effect annotations)",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

@@ -1,0 +1,14 @@
+{
+  "id": "spec-presence-gate",
+  "name": "Axiom spec presence gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/spec_presence_gate.nim",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "src/**",
+  "passFilenames": false,
+  "weight": "light",
+  "category": "policy",
+  "severity": "error"
+}

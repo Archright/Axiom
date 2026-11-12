@@ -1,0 +1,7 @@
+# Axiom Evidence Receipt
+# Generated: 2026-05-26T05:12:50.921483+00:00
+# HEAD: 1d767f9e164ecd6a45c3b387b50c44a81a7ddd0a
+# Result: ALL_VERIFIED
+# Signature: sha256:396cd34def9b7fa1
+---
+VERIFY[0]: grep 'maxExportedFunctions' ./src/gate/architecture_policy.lock | grep -v '^[a-z]' | wc -l | grep 2 → PASS

@@ -1,0 +1,76 @@
+{
+  "contractVersion": "v1",
+  "decisionSource": "decision.independent.20260820T054103Z.json",
+  "perRequirement": {
+    "CANONICAL_EXECUTION": {
+      "satisfied": true,
+      "status": "REQUIRED",
+      "blockers": [],
+      "evidenceStates": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ]
+    },
+    "REPRODUCIBLE_RESULT": {
+      "satisfied": true,
+      "status": "REQUIRED",
+      "blockers": [],
+      "evidenceStates": [
+        "PASS"
+      ]
+    },
+    "EVIDENCE_BACKED_CERTIFICATE": {
+      "satisfied": true,
+      "status": "REQUIRED",
+      "blockers": [],
+      "evidenceStates": [
+        "PASS",
+        "PASS"
+      ]
+    },
+    "PROVENANCE": {
+      "satisfied": true,
+      "status": "REQUIRED",
+      "blockers": [],
+      "evidenceStates": [
+        "PASS",
+        "PASS"
+      ]
+    },
+    "CLI_CONTRACT": {
+      "satisfied": true,
+      "status": "REQUIRED",
+      "blockers": [],
+      "evidenceStates": [
+        "PASS"
+      ],
+      "closureStateSecondary": "CLI termination semantic-partition ratification pending (R7)"
+    },
+    "RUNTIME_BOUNDARY": {
+      "satisfied": true,
+      "status": "REQUIRED",
+      "blockers": [],
+      "evidenceStates": [
+        "PASS"
+      ]
+    }
+  },
+  "verdict": {
+    "launchStatus": "GO",
+    "model": "binary GO/NO-GO over Launch-Critical (status=REQUIRED) layer; Integrity-Hardening reported separately and does not affect the verdict",
+    "note": "all Launch-Critical requirements satisfied"
+  },
+  "layers": {
+    "launchCritical": {
+      "count": 6,
+      "satisfiedCount": 6,
+      "allSatisfied": true
+    },
+    "integrityHardening": {
+      "state": "NOT_EVALUATED",
+      "count": 0,
+      "satisfiedCount": 0
+    }
+  }
+}

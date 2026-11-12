@@ -1,0 +1,86 @@
+# Axiom External Dependency Allowlist
+# Format: /org/project module reason
+# This file is the SSOT for all external std/* and pkg/* imports.
+# When adding a new import, update this file and provide Context7 evidence.
+# Lock version: 2026-05-15-rev3 (v0.4.0)
+
+# --- Nim Standard Library ---
+/nim-lang/Nim std/algorithm sorting and ordering operations
+/nim-lang/Nim std/asyncdispatch async event loop and futures
+/nim-lang/Nim std/asyncfutures Future[T] type for async
+/nim-lang/Nim std/cpuinfo CPU core count detection
+/nim-lang/Nim std/exitprocs process exit handlers
+/nim-lang/Nim std/hashes hash functions for HashSet and Table
+/nim-lang/Nim std/json JSON parsing and JsonNode trees
+/nim-lang/Nim std/locks thread synchronization primitives
+/nim-lang/Nim std/macros compile-time AST macros
+/nim-lang/Nim std/math mathematical functions
+/nim-lang/Nim std/options Option[T] type
+/nim-lang/Nim std/os filesystem paths and environment
+/nim-lang/Nim std/osproc process execution and pipe management
+/nim-lang/Nim std/posix POSIX select and fd polling for non-blocking I/O
+/nim-lang/Nim std/sequtils sequence utilities
+/nim-lang/Nim std/sets HashSet implementation
+/nim-lang/Nim std/strformat string interpolation
+/nim-lang/Nim std/streams stream I/O abstractions
+/nim-lang/Nim std/strutils string manipulation
+/nim-lang/Nim std/tables Table and CountTable
+/nim-lang/Nim std/tempfiles secure temporary file creation for tree-sitter bridge
+/nim-lang/Nim std/terminal TTY detection colors and width
+/nim-lang/Nim std/xmltree XML DOM tree construction from tree-sitter output
+/nim-lang/Nim std/xmlparser XML stream parser for tree-sitter AST deserialization
+/nim-lang/Nim std/times time and DateTime for vault entry timestamping
+# 2026-05-01 refresh: std/json std/os std/strutils std/options std/sets std/tables std/times std/algorithm std/hashes remain approved for json_scan.nim mcp_params.nim global_symbol_graph.nim and rebuild_assets.nim
+/nim-lang/Nim std/unicode Unicode rune handling
+/nim-lang/Nim std/winlean Windows API bindings
+
+# --- Lean 4 Ecosystem ---
+/leanprover/lean4 lean4 proof tactics and theorem replay
+/leanprover-community/mathlib4 mathlib4 linear arithmetic and omega
+
+# --- Hook and CI Frameworks ---
+/j178/prek prek pre-commit hook framework
+/pre-commit/pre-commit.com precommit git hooks framework
+
+# --- Protocols and APIs ---
+/modelcontextprotocol/modelcontextprotocol mcp JSON-RPC 2.0 protocol
+
+# --- Platform and Environment ---
+/microsoftdocs/powershell-docs powershell PowerShell environment management
+/websites/learn_microsoft_en-us_windows wdac Windows Defender Application Control
+
+# --- External Analysis Targets ---
+/bitcoin/bitcoin bitcoin generic hint extraction patterns
+
+# --- Documentation and Tooling ---
+/websites/nim-lang_github_io_nim nim_website Nim documentation reference
+/websites/github_en-us_actions github_actions CI/CD workflow patterns
+/nim-lang/nimble nimble package versioning
+
+# --- Solvers ---
+/z3prover/z3 z3 SMT solver integration
+/nim-lang/checksums checksums/sha2 SHA-256 proof artifact linkage hashing
+
+# --- Axiom Internal Modules ---
+/Archright/Axiom_Enterprise engine/validation Hint type for saveHint zero-vacuity check
+/Archright/Axiom_Enterprise frontend/nim/nim_frontend NimFrontend for Axiom-IR extraction in leanstral prompts
+/nim-lang/Nim std/syncio synchronous console I/O (stderr.writeLine used in validation.nim)
+
+# 2026-05-04 refresh: std/strtabs Lake added per compiler hygiene audit
+/nim-lang/Nim std/strtabs StringTable for gate/orchestrator.nim
+# std/threadpool entry retained for future use; see experimental/pending_deprecation/2026_06_02/concurrency_adapter.nim
+# /nim-lang/Nim std/threadpool parallel task execution (moved to experimental 2026-06-02)
+/leanprover/lean4 Lake lake build system integration for solver_bridge.nim
+
+# --- Architecture Policy Migration ---
+# Architecture layer edges and module roles moved to src/gate/architecture_policy.lock.
+# This file remains the external dependency allowlist consumed by Context7/procedure gates.
+
+# --- DEBT#001 + DEBT#006: SoC Import Boundary Enforcement ---
+# FORBIDDEN: src/cli/** → src/verification/** (direct individual module imports)
+# ALLOWED: src/cli/** → src/verification/cli_bridge (single facade import)
+# Rationale: AGENTS.md §1.2 "Direction: Presentation → Infrastructure → Domain."
+#   CLI (Presentation) must not directly import individual verification (Infrastructure) modules.
+#   All verification access from CLI goes through verification/cli_bridge.nim.
+#   Phase 2: Move shared types to src/core/ and eliminate bridge dependency.
+/Archright/Axiom_Enterprise verification/cli_bridge DEBT#001+DEBT#006 SoC facade for CLI→verification boundary

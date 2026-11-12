@@ -1,0 +1,314 @@
+{
+ "experiment": "b2m_1d/stageB — Stage B' 오프라인 격리 실행 ×2 (Run1'/Run2') + 4축 Acceptance",
+ "date": "2026-11-08",
+ "contract": "docs/spec/capsule_minimal_materialization.md (1d) §10·§11·§12 — MERGE_SHA1 ca06476a51fb2a50bb5c4c1803f26a87495a996c",
+ "subject": {
+  "project": "serde_json v1.0.154",
+  "head": "8c535a260ce561eaab4111aafc29038eb9f77ff3",
+  "working_tree_manifest_sha256": "8045f3b1ce56398fe506aeec9f9344405e32cd7dffda64ddaff4dbd0db6c7cd4"
+ },
+ "inventory_binding": {
+  "path": "b2m_1d/capsuleM/inventory.json",
+  "sha256": "7d96a4adef97267ee60a8b63fabdd4d847e52e89a263b8054520704a4697a6dd",
+  "note": "자기참조 회피 — inventory.json 자신은 열자에서 제외, 그 digest를 본 기록에 결속 (사후 재실측 MATCH)"
+ },
+ "axis1_verdict_kernel": {
+  "run1prime": {
+   "print_axioms_2_lines": {
+    "measured": [
+     "'AsBool.Spec.as_bool_bool_some' depends on axioms: [propext, Quot.sound]",
+     "'AsBool.Spec.as_bool_non_bool_none' depends on axioms: [propext, Quot.sound]"
+    ],
+    "expected": [
+     "'AsBool.Spec.as_bool_bool_some' depends on axioms: [propext, Quot.sound]",
+     "'AsBool.Spec.as_bool_non_bool_none' depends on axioms: [propext, Quot.sound]"
+    ],
+    "verdict": "MATCH (바이트 동일)"
+   },
+   "sorryAx_count": {
+    "measured": 0,
+    "expected": 0,
+    "verdict": "MATCH"
+   },
+   "built_5_fresh_recompile": {
+    "measured_built": [
+     "AsBool.TypesExternal (2.8s)",
+     "AsBool.Types (2.1s)",
+     "AsBool.Funs (1.8s)",
+     "AsBool.Spec (1.8s)",
+     "AsBool (1.6s)"
+    ],
+    "expected": [
+     "AsBool.TypesExternal",
+     "AsBool.Types",
+     "AsBool.Funs",
+     "AsBool.Spec",
+     "AsBool"
+    ],
+    "jobs_total": 1801,
+    "verdict": "MATCH",
+    "fresh_compile_evidence": "루트 .lake/build 사전 부재(pristine) + [2] rm -rf + Built 5행 모듈별 컴파일 시간 관측(1.6~3.1s) — 캐시 hit 아닌 실재 재컴파일"
+   },
+   "verdict": "PASS"
+  },
+  "run2prime": {
+   "print_axioms_2_lines": {
+    "measured": [
+     "'AsBool.Spec.as_bool_bool_some' depends on axioms: [propext, Quot.sound]",
+     "'AsBool.Spec.as_bool_non_bool_none' depends on axioms: [propext, Quot.sound]"
+    ],
+    "expected": [
+     "'AsBool.Spec.as_bool_bool_some' depends on axioms: [propext, Quot.sound]",
+     "'AsBool.Spec.as_bool_non_bool_none' depends on axioms: [propext, Quot.sound]"
+    ],
+    "verdict": "MATCH (바이트 동일)"
+   },
+   "sorryAx_count": {
+    "measured": 0,
+    "expected": 0,
+    "verdict": "MATCH"
+   },
+   "built_5_fresh_recompile": {
+    "measured_built": [
+     "AsBool.TypesExternal (3.1s)",
+     "AsBool.Types (1.9s)",
+     "AsBool.Funs (1.6s)",
+     "AsBool.Spec (1.7s)",
+     "AsBool (1.6s)"
+    ],
+    "expected": [
+     "AsBool.TypesExternal",
+     "AsBool.Types",
+     "AsBool.Funs",
+     "AsBool.Spec",
+     "AsBool"
+    ],
+    "jobs_total": 1801,
+    "verdict": "MATCH",
+    "fresh_compile_evidence": "루트 .lake/build 사전 부재(pristine) + [2] rm -rf + Built 5행 모듈별 컴파일 시간 관측(1.6~3.1s) — 캐시 hit 아닌 실재 재컴파일"
+   },
+   "verdict": "PASS"
+  }
+ },
+ "axis2_reproduction": {
+  "run1prime": {
+   "olean_digests_5": {
+    "AsBool.olean": {
+     "measured": "e5b1ef421f5ebccb6aa35ebeff066db35dd944e97dbfcace61362c8d43340d58",
+     "expected": "e5b1ef421f5ebccb6aa35ebeff066db35dd944e97dbfcace61362c8d43340d58",
+     "verdict": "MATCH"
+    },
+    "AsBool/Funs.olean": {
+     "measured": "bdf7f0ff6dfc84804d36a640348e9a5af6fe9f1d7e8c8a63b41ce099a6133ad9",
+     "expected": "bdf7f0ff6dfc84804d36a640348e9a5af6fe9f1d7e8c8a63b41ce099a6133ad9",
+     "verdict": "MATCH"
+    },
+    "AsBool/Spec.olean": {
+     "measured": "5f604d403600172d402091048aebdba1e646c39a30fbe19ff095dfec6601f816",
+     "expected": "5f604d403600172d402091048aebdba1e646c39a30fbe19ff095dfec6601f816",
+     "verdict": "MATCH"
+    },
+    "AsBool/Types.olean": {
+     "measured": "d66574f5f531a479d158654351aef301446b61ab7da47684526360a2fd396db8",
+     "expected": "d66574f5f531a479d158654351aef301446b61ab7da47684526360a2fd396db8",
+     "verdict": "MATCH"
+    },
+    "AsBool/TypesExternal.olean": {
+     "measured": "a41a0bed960f683f4134dddd3edb72da8cd067f369ea66c5d516404ff8bd09b8",
+     "expected": "a41a0bed960f683f4134dddd3edb72da8cd067f369ea66c5d516404ff8bd09b8",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "PASS"
+  },
+  "run2prime": {
+   "olean_digests_5": {
+    "AsBool.olean": {
+     "measured": "e5b1ef421f5ebccb6aa35ebeff066db35dd944e97dbfcace61362c8d43340d58",
+     "expected": "e5b1ef421f5ebccb6aa35ebeff066db35dd944e97dbfcace61362c8d43340d58",
+     "verdict": "MATCH"
+    },
+    "AsBool/Funs.olean": {
+     "measured": "bdf7f0ff6dfc84804d36a640348e9a5af6fe9f1d7e8c8a63b41ce099a6133ad9",
+     "expected": "bdf7f0ff6dfc84804d36a640348e9a5af6fe9f1d7e8c8a63b41ce099a6133ad9",
+     "verdict": "MATCH"
+    },
+    "AsBool/Spec.olean": {
+     "measured": "5f604d403600172d402091048aebdba1e646c39a30fbe19ff095dfec6601f816",
+     "expected": "5f604d403600172d402091048aebdba1e646c39a30fbe19ff095dfec6601f816",
+     "verdict": "MATCH"
+    },
+    "AsBool/Types.olean": {
+     "measured": "d66574f5f531a479d158654351aef301446b61ab7da47684526360a2fd396db8",
+     "expected": "d66574f5f531a479d158654351aef301446b61ab7da47684526360a2fd396db8",
+     "verdict": "MATCH"
+    },
+    "AsBool/TypesExternal.olean": {
+     "measured": "a41a0bed960f683f4134dddd3edb72da8cd067f369ea66c5d516404ff8bd09b8",
+     "expected": "a41a0bed960f683f4134dddd3edb72da8cd067f369ea66c5d516404ff8bd09b8",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "PASS"
+  },
+  "run1_run2_identity": {
+   "normalized_full_log_diff": "EMPTY (모듈별 컴파일 시간 정규화 후 diff 0행 — capsule §5.5 절차 준용)",
+   "file": "stageB/run1_run2_normalized.diff",
+   "verdict": "IDENTICAL"
+  },
+  "run_vs_original": {
+   "olean_5": "Run1'=Run2'=Original (capsule §5.5 기록값)",
+   "axioms_2_lines": "바이트 동일",
+   "sorryAx": 0,
+   "built_5": "동일 5모듈·동일 순서",
+   "lake_build_line": {
+    "original": "Build completed successfully (1801 jobs)",
+    "measured_both_runs": "Build completed successfully (1801 jobs).",
+    "verdict": "MATCH"
+   },
+   "bwrap_exit": {
+    "original": 0,
+    "run1": "0",
+    "run2": "0",
+    "verdict": "MATCH"
+   },
+   "verdict": "PASS"
+  },
+  "verdict": "PASS"
+ },
+ "axis3_remeasurement": {
+  "pre_gate": {
+   "gate5": "stageB/gate/gate_5.json — §5.1·§5.2·§5.3 전 항목 MATCH (관문 verdict: PASS)",
+   "gate6_2": "stageB/gate/gate_6_2.json — OS·kernel·glibc·bwrap(sha)·ldd closure·시스템/툴체인 lib identity 전부 원본 기준값과 일치",
+   "stage_A_reference": "Stage A′(stageA/report.md) 4계층 전 판정축 MATCH — identity-only 항목(aeneas·charon·LLBC·생성 Lean 3종·Cargo.lock) 본 관문에서 재실측 일치"
+  },
+  "post_run_invariance": {
+   "per_file": "stageB/gate/post_run_files.json — 코어 9·bin 4·lib 5·stage_b.sh·inventory.json 전부 MATCH",
+   "trees": [
+    {
+     "tree": "leanproj_whole",
+     "pre_digest": "3a4cd397ea55f47fbaed54096ffa5d275d505ee454cceb32edbe13471b348c1c",
+     "post_digest": "3a4cd397ea55f47fbaed54096ffa5d275d505ee454cceb32edbe13471b348c1c",
+     "file_count": 153006,
+     "bytes": 7754673852,
+     "verdict": "MATCH"
+    },
+    {
+     "tree": "deps_aeneas_lean",
+     "pre_digest": "762f22efedf21ecca3055eddc94d85abfad5cd55dd406934a2343c0cafc543c2",
+     "post_digest": "762f22efedf21ecca3055eddc94d85abfad5cd55dd406934a2343c0cafc543c2",
+     "file_count": 4673,
+     "bytes": 504319893,
+     "verdict": "MATCH"
+    },
+    {
+     "tree": "lake_packages",
+     "pre_digest": "bcf757c7faad46df4e875c004a08e149127c48faf864a263c30633a8f317c91c",
+     "post_digest": "bcf757c7faad46df4e875c004a08e149127c48faf864a263c30633a8f317c91c",
+     "file_count": 148316,
+     "bytes": 7248549946,
+     "verdict": "MATCH"
+    },
+    {
+     "tree": "toolchain",
+     "pre_digest": "c00fd0efd638aa1f181714003a918a774c6ebdb9e999aa4517e28c798d87983c",
+     "post_digest": "c00fd0efd638aa1f181714003a918a774c6ebdb9e999aa4517e28c798d87983c",
+     "file_count": 17925,
+     "bytes": 3137937793,
+     "verdict": "MATCH"
+    },
+    {
+     "tree": "cache_S",
+     "pre_digest": "d51c77006279e816106ba00a53d898903f1c7780e3c7e99596dfc3b272f56a67",
+     "post_digest": "d51c77006279e816106ba00a53d898903f1c7780e3c7e99596dfc3b272f56a67",
+     "file_count": 1478,
+     "bytes": 102362602,
+     "verdict": "MATCH"
+    }
+   ],
+   "subject": {
+    "manifest_sha256": "8045f3b1ce56398fe506aeec9f9344405e32cd7dffda64ddaff4dbd0db6c7cd4",
+    "head": "8c535a260ce561eaab4111aafc29038eb9f77ff3",
+    "porcelain_lines": 0,
+    "verdict": "MATCH (사후 재실측)"
+   },
+   "local_ltar_cache": "9,031파일·455,355,304B (사전 관문 재실측 — 원본 Stage A 산출물)"
+  },
+  "verdict": "PASS"
+ },
+ "axis4_record": {
+  "decompressed_files": {
+   "original": "Already decompressed 9031 file(s)",
+   "run1prime": "Already decompressed 1478 file(s)",
+   "run2prime": "Already decompressed 1478 file(s)",
+   "note": "|S|=1,478 그대로 관측 — M의 캡슐 캐시가 원본 9,031 대신 S를 봉입한 사실의 직접 관측(변동 허용 축)"
+  },
+  "lake_build_jobs": {
+   "original": 1801,
+   "run1prime": 1801,
+   "run2prime": 1801,
+   "note": "빌드 플랜(패키지 폐쇄 구조)은 캐시 축소와 무관 — 원본과 동일 1801 관측"
+  },
+  "bytes_S": {
+   "S_bytes": 102362602,
+   "original_ltar_total_bytes": 455355304,
+   "file_ratio": "1478/9031 = 0.163659",
+   "bytes_ratio": "102362602/455355304 = 0.224797",
+   "note": "파일 수 비율과 bytes 비율은 별도 사실로 별도 보고(수정안2)"
+  },
+  "curl_exit": {
+   "original_expected": "curl_exit=6 (DNS 실패 예상)",
+   "run1prime": 6,
+   "run2prime": 6
+  },
+  "wall_time": {
+   "run1prime": "48.4s (16:43:36.9 -> 16:44:25.3)",
+   "run2prime": "52.3s (16:48:53.8 -> 16:49:46.2)"
+  },
+  "module_compile_times": {
+   "run1prime": {
+    "AsBool.TypesExternal": "2.8s",
+    "AsBool.Types": "2.1s",
+    "AsBool.Funs": "1.8s",
+    "AsBool.Spec": "1.8s",
+    "AsBool": "1.6s"
+   },
+   "run2prime": {
+    "AsBool.TypesExternal": "3.1s",
+    "AsBool.Types": "1.9s",
+    "AsBool.Funs": "1.6s",
+    "AsBool.Spec": "1.7s",
+    "AsBool": "1.6s"
+   }
+  },
+  "cache_exe_observation": "실행 관측상 별도 재빌드 없음(lake exe cache가 기존 빌드 실행파일 사용 — 원본과 동일 구조)",
+  "verdict": "RECORDED (변동 허용, 값 기록)"
+ },
+ "network_claim": "외부 네트워크 통신 불가능 상태에서 실행 (bwrap --unshare-net + /etc 미마운트). curl_exit=6은 관측값일 뿐 시도 부재의 증명이 아니다 (capsule §5.5·expected_verdict 준용).",
+ "mutation_inheritance_12": {
+  "conditions": "§5 전 항목 재실측 일치(§5.1·§5.2 — G 동일성) 및 stage_b_inputs 9파일 대조 일치 = §5 관문 통과",
+  "gate_result": "PASS (사전 관문 전 항목 MATCH)",
+  "verdict": "상속 조건 충족 — B-1 mutation 음성 대조 증거(Gate A §4.10: clause 1 킬·clause 2 생존·⊢ False)는 'B-1에서 실행·기록된 관측의 인용'으로 M의 실험 기록에 상속 가능",
+  "note": "mutation 재실행은 본 계약 범위 밖(§12) — 인용이지 M의 실행이 아니다(1a §4.2 인용 규칙)"
+ },
+ "final_acceptance": {
+  "rule": "4축 전부 충족 + §5 관문 통과 + §6 판정 통과일 때만 Acceptance(M)=PASS (§11)",
+  "axis1": true,
+  "axis2": true,
+  "axis3": true,
+  "axis4_recorded": true,
+  "gate5": "PASS",
+  "gate6_1_must": "PASS (toolchain bin 4종 + lake-manifest)",
+  "gate6_2": "일치 (UNKNOWN 항목 없음)",
+  "section8_digest_mismatch": "없음 — olean 5종·실행 간 동일성 전부 일치 (§8 절차 미발생)",
+  "verdict": "PASS"
+ },
+ "contract_erratum": {
+  "where": "docs/spec/capsule_minimal_materialization.md §5.1 표 (line 155)",
+  "item": "생성 TypesExternal_Template.lean",
+  "contract_inline_value": "514fbfd947d7cb617d81046e60e874b59301b766a52a4b16af4bd72cccf485 (62자 — 무효 길이)",
+  "anchor_of_record": "b1 Gate A §5.3: 514fbfd947d7cb617d81046e60e874b59301b766a52a4b16af4bd72cccfef485 (64자)",
+  "measured": "514fbfd947d7cb617d81046e60e874b59301b766a52a4b16af4bd72cccfef485",
+  "resolution": "측정값 == anchor (byte-exact). 계약 인라인 값만 손상 — 유일한 무효 길이 digest(전수 스캔 1건)."
+ }
+}

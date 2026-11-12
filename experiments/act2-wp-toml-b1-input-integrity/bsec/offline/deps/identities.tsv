@@ -1,0 +1,14 @@
+# deps/identities.tsv — vendored dependency identity (commit SHAs, never version strings)
+# The version strings below are descriptive only; identity = vcsRevision (commit SHA) + per-file hashes (experiment-root MANIFEST).
+# Vendored copies = full package source trees copied from the nimble-managed cache at bundle time;
+# hash-enforced by the experiment-root MANIFEST (bsec/replay.sh verify). Reproduction builds against THESE copies.
+# pkg	version	vcsRevision(commit)	origin_url	vendored_dir
+serialization	0.5.4	b5473564e80a4908cf6c5a038e4c4a6ca7de2223	https://github.com/status-im/nim-serialization	deps/serialization-0.5.4
+faststreams	0.5.2	059bc2f52546ac14b583639c33372c14b1d46fa3	https://github.com/status-im/nim-faststreams	deps/faststreams-0.5.2
+stew	0.5.0	4382b18f04b3c43c8409bfcd6b62063773b2bbaa	https://github.com/status-im/nim-stew	deps/stew-0.5.0
+
+# Resolution authority for this bundle: the compiler consumed exactly these packages
+# (strace-proven closure: experiments/act2-wp-toml-b1-input-integrity/env/consumed_files_strace.txt,
+#  env/dependency_sources.md §1-§3). results/unittest2 are NOT in the compiled closure.
+# serialization 0.2.6 cannot compile subject commit 4aa8e22 (desc.nim(16,1) `version` param) — see
+# env/dependency_sources.md §4. stew 0.5.0 is what highest-version nimblePath auto-discovery picks.

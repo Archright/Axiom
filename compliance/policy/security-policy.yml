@@ -1,0 +1,121 @@
+# security-policy — the machine-readable security-scan policy for
+# publication integrity (secret scan + dependency vulnerability scan).
+#
+# SSOT relationship: consumed by .github/workflows/publication-integrity.yml
+# (secret-scan and dependency-scan jobs) and recorded in the
+# publication-readiness report. The one-shot evidence predecessors are
+# docs/evidence/sal10_publication/B2_gitleaks_scan_report.md (gitleaks 8.30.1,
+# pre-migration repository, 2026-11-05) — this policy turns that one-shot
+# evidence into a REPEATED, fail-closed gate.
+#
+# Format contract: restricted YAML subset consumed by
+# tools/ci/publication_yaml.nim (flat mappings, quoted strings, `- ` lists,
+# 2-space indent).
+
+schemaVersion: "1"
+policyId: "axiom-publication-security-policy-v1"
+
+secretScan:
+  tool: "gitleaks"
+  pinnedVersion: "8.30.1"
+  # Release-binary pin: the workflow downloads the official release tarball
+  # and verifies its sha256 against this digest before executing it.
+  releaseAsset: "gitleaks_8.30.1_linux_x64.tar.gz"
+  releaseUrl: "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz"
+  # Verified against the release's gitleaks_8.30.1_checksums.txt asset
+  # (2026-11-09). The locally measured gitleaks binary is the same version.
+  pinnedSha256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+  # SCAN SCOPE = the publication surface: every commit reachable from the
+  # default branch (origin/main), the current HEAD (PR merge commit /
+  # merge-group commit / main), and all refs/pull/*/head server refs — the
+  # refs that become visible when the repository is made public. Local-only
+  # ref namespaces (archive fetch remnants, pre-cutover preservation refs,
+  # local tags not on the server) are deliberately OUT of scope: they are not
+  # part of the published repository. The workflow fetches exactly these
+  # refspecs before scanning, so the local baseline and CI scan the SAME
+  # commit set (deterministic verdicts).
+  historyScopeLogOpts: "origin/main HEAD --glob=refs/remotes/pr/*"
+  fetchRefspecs:
+    - "+refs/heads/*:refs/remotes/origin/*"
+    - "+refs/pull/*/head:refs/remotes/pr/*"
+  # Current-tree scan (gitleaks dir) covers the working tree state in
+  # addition to history: a secret introduced in the scanned commit set is
+  # caught by BOTH legs; the dir leg additionally catches files whose
+  # history is not in scope (none today — both legs share the tree).
+  treeScan: "enabled"
+  # BASELINE TRIAGE: findings are allow-listed ONLY by exact fingerprint
+  # (gitleaks format: `<commit>:<file>:<rule>:<line>` for history,
+  # `<file>:<rule>:<line>` for the tree scan). A NEW fingerprint is always a
+  # FAIL — this cannot hide a real secret inside an allow-listed path,
+  # because the baseline pins the exact (commit, file, rule, line) tuples.
+  baselineFile: "compliance/policy/secret-scan-baseline.json"
+  # Every baseline entry carries a classification; the closed set:
+  classifications:
+    - "synthetic-hash-or-cas-key"
+    - "synthetic-test-fixture"
+    - "identifier-false-positive"
+  verdictSemantics:
+    pass: "history scan + tree scan completed with zero findings outside the fingerprint baseline"
+    fail: "any finding outside the fingerprint baseline, or a scan that did not complete (tool download/install/execution failure, timeout) — reported as UNKNOWN with cause and BLOCKS"
+    unknown: "scan unavailable or unparseable — blocking, never a pass (fail-closed)"
+
+dependencyScan:
+  tool: "osv-scanner"
+  pinnedVersion: "v2.7.1"
+  releaseAsset: "osv-scanner_linux_amd64"
+  releaseUrl: "https://github.com/google/osv-scanner/releases/download/v2.7.1/osv-scanner_linux_amd64"
+  # Verified against the release's osv-scanner_SHA256SUMS asset (2026-11-09).
+  pinnedSha256: "fb7dab19a8bd9bbe5c3189f09d4b7ee1820c9553a23bac202648a56efd2f6ee8"
+  scanTargets:
+    - "."
+  verdictSemantics:
+    pass: "scan completed with zero known vulnerabilities across every ecosystem OSV indexes"
+    fail: "any known vulnerability matched in a scannable ecosystem, or the scan did not complete — blocking"
+    unknown: "scan unavailable or unparseable — blocking, never a pass (fail-closed)"
+  # DECLARED coverage limitation (honesty, not weakening): the OSV database
+  # has NO index for the Nim or Lean ecosystems. This repository's runtime
+  # dependencies (nimble.lock: malebolgia, checksums, fusion, nimcrypto;
+  # proofs/lake-manifest.json: none) are therefore outside OSV's reach.
+  # The scan still fully covers every ecosystem OSV indexes (and the SPDX
+  # SBOM produced by sbom-validate is scanned as a package source). This
+  # residual is recorded in every report — it is a limitation of external
+  # databases, not a silently skipped area (AGENTS.md §0.9).
+  declaredCoverageLimitations:
+    - "Nim ecosystem (nimble.lock) is not indexed by OSV — no CVE feed exists for it"
+    - "Lean ecosystem (lake-manifest.json) is not indexed by OSV"
+  # Exit-code adjudication (measured, osv-scanner v2.7.1): 0 = scan
+  # completed (parse the report; vulnerabilities found are FAIL); 100 =
+  # vulnerabilities found; 128 = "No package sources found" (a COMPLETED
+  # scan over a repo whose lockfiles are all outside OSV ecosystems —
+  # PASS with the limitations above recorded); any other code or a missing
+  # report = UNKNOWN (blocking). ORT Reporter would additionally do license
+  # policy evaluation; the hosted ubuntu runner has no JVM, so the ORT
+  # Reporter role is substituted by syft (SBOM) + the license evaluator —
+  # SAME verdict semantics, documented substitution, no coverage area
+  # deleted (task theater-prohibition rule).
+  exitCodeAdjudication:
+    - "0: completed — parse report, findings → FAIL"
+    - "100: vulnerabilities found → FAIL"
+    - "128: no package sources found → PASS with declaredCoverageLimitations recorded"
+    - "other: UNKNOWN → blocking"
+
+sbom:
+  tool: "syft"
+  pinnedVersion: "v1.57.0"
+  releaseAsset: "syft_1.57.0_linux_amd64.tar.gz"
+  releaseUrl: "https://github.com/anchore/syft/releases/download/v1.57.0/syft_1.57.0_linux_amd64.tar.gz"
+  pinnedSha256: "9c077a7d43029b3b13e98a8db720661e700c4d58db6352153a06395ae4a2a704"
+  outputFormat: "spdx-json"
+  # Substitution note (documented, not a deletion): the task's ORT Reporter
+  # option requires a JVM; the hosted ubuntu-24.04 runner (CI_RUNNER_MAP x64)
+  # provides none. syft produces the SPDX SBOM with identical role: inventory
+  # + hash record. The license adjudication ORT would add is covered by
+  # license-scan; the dependency part by dependency-scan. Coverage matrix:
+  # docs/spec/publication_integrity_gate.md.
+  verdictSemantics:
+    pass: "SPDX JSON produced, schema-validated (SPDX-2.x fields present), sha256 recorded, non-vacuous (≥1 package or file entry)"
+    fail: "tool execution failure, unparsable/invalid SPDX, or a vacuous SBOM"
+    unknown: "tool unavailable or output missing — blocking, never a pass (fail-closed)"
+  determinismNote: "same tree + same syft version → identical SBOM modulo creationInfo.created timestamp; the recorded sha256 binds the emitted artifact (reproducibility claim, not a correctness claim — cf. ADR-0037 §5)"
+  declaredCoverageLimitations:
+    - "syft has no Nim package-manager cataloger — nimble.lock dependencies appear as files, not as SPDX package records"

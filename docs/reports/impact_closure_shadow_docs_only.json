@@ -1,0 +1,27 @@
+{
+  "base": "29aba5f4179fa6e89145052b5b2b0deb299d5f88~1",
+  "head": "29aba5f4179fa6e89145052b5b2b0deb299d5f88",
+  "changeFingerprint": "sha256:12d935bcc0ea5bf5051e3a5a9d64b4b40dfc1e0f3901917fa8e9f6d32a8d0b1e",
+  "changedFiles": [
+    {
+      "path": "docs/DEBT_REGISTRY.md",
+      "status": "M",
+      "blobHash": "f5758198258d156e6f60a9b5dae2b37a6307c119"
+    }
+  ],
+  "selectedWorkUnits": [],
+  "costComparison": {
+    "estimatedAffectedClosure_minutes": 0.0,
+    "fullPipeline_baseline_minutes": 73.7,
+    "savings_minutes": 73.7,
+    "savings_percent": 100.0
+  },
+  "limitations": [
+    "import_graph.nim cannot be imported (checksums/sha2 dependency gap in Nim 2.2.10); core transitive-dependency resolution is reimplemented inline (same BFS algorithm)",
+    "ci-lake-build (W9) duration is UNKNOWN; excluded from cost sums",
+    "Normative doc → cache-key invalidation (G4) is not yet wired; conservative over-approximation applied",
+    "Makefile pervasive-invocation over-approximation may over-claim W1–W9 for recipe-level changes",
+    "Gate-target closure beyond src/core/ is a known gap (import_graph.nim is core-only per handoff note)"
+  ],
+  "determinism": "identical (base, head, repo state) inputs produce byte-identical output; all sets sorted, no timestamps in body"
+}

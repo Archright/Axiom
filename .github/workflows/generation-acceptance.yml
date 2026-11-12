@@ -1,0 +1,778 @@
+# generation-acceptance — Generation Promotion Acceptance(GPA) v1.
+#
+# 정본 계약: docs/adr/0036-generation-promotion-acceptance.md
+# 정책 SSOT: config/policy/merge_admission.json (requiredValidations의
+#   'generation-acceptance' 항목 — 이 워크플로의 정체성 미러).
+#
+# ── 이 워크플로가 하는 일 ──────────────────────────────────────────────
+# 새 검증·정책 세대가 운영 권한을 얻기 **전**에, 신뢰된 판정기(Driver)가
+# 후보 세대의 적합성을 검사하고 verdict만 생산한다. 병합 판정은 재구현하지
+# 않는다 — GitHub가 강제하고, GPA는 판정만 생산한다(P12 위임, ADR-0035 §2).
+#
+# ── 신뢰 경계: Driver / Candidate 분리 (ADR-0036 §3) ──────────────────
+# pull_request 이벤트는 **PR의 merge commit에 있는 워크플로 파일**을 실행하고
+# 기본 체크아웃도 그 merge commit이다(GitHub 공식 문서: pull_request_target
+# 보안 문서 — "it runs the workflow file from the merge commit of the pull
+# request … actions/checkout … checks out the pull request's merge commit").
+# 따라서 후보가 워크플로 파일을 조작하면 자기 판정을 조작할 수 있다.
+# 구조적 방어: **판정 로직·fixture·판정 기준은 전부 base ref에서 체크아웃한
+# Driver 트리에서 온다.** 후보는 `path: candidate`의 **데이터**로만 존재한다.
+#
+# 격리 원칙 (후보 실행 코드에 관하여):
+#   - L1~L4의 판정 로직은 전부 Driver(베이스) 트리의 바이너리다. 후보
+#     트리의 코드는 **실행되지 않는다** — 파일로 읽혀 데이터로만 쓰인다.
+#   - 후보가 실행 코드를 포함하는 경우(예: 드리프트 도구를 후보가 수정),
+#     그 실행은 **별도 무권한 step**에서만 일어난다: credential·secret이
+#     없는 환경(GH_TOKEN/GITHUB_TOKEN/ACTIONS_RUNTIME_TOKEN 미설정),
+#     repo write 권한 없음, 그 **출력은 Driver가 판정한다**(출력이 판정이
+#     아니다 — ADR-0036 §3).
+#
+# ── always-report 설계 ────────────────────────────────────────────────
+# job 이름이 곧 required check context다("generation-acceptance"). job은
+# 절대 skip되지 않는다(조건식 없음). 모든 판정 step은 결과를
+# $RESULTS_DIR/<step>.result 파일로 기록하고, 마지막 결론 step이
+# `if: always()`로 **항상** 실행되어 기록되지 않은 step이 있으면
+# REJECTED:INCOMPLETE로 fail-closed한다 — "생략은 성공으로 읽히지 않는다".
+#
+# 권한 상한: contents:read(체크아웃) / pull-requests:read(PR files API) /
+#   actions:read(워크플로 identity·run 조회 — required 등록 전 유일성
+#   사전 검증과 post-push workflowId 재등록 readback에 필요) /
+#   checks:read(check-runs 조회 — 동일하게 유일성 사전 검증 경로).
+#   repo ruleset 읽기는 워크플로 `permissions:` 키에 administration 항목이
+#   없음에도 job의 GITHUB_TOKEN으로 성립한다(실측 2026-10-21, drift run
+#   39603184495 — ruleset drift 4/4 PASS). 거기에 머뭄이 아니라
+#   org ruleset·bypass actor는 Administration org write가 필요해 GPA의
+#   조회 범위 밖이다 → operator-adapter 티어(ADR-0036 §4).
+#
+# 외부 action은 커밋 SHA 고정(repo 정책 sha_pinning_required).
+
+name: generation-acceptance
+
+on:
+  pull_request:
+  merge_group:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+  checks: read
+
+concurrency:
+  group: generation-acceptance-${{ github.event.pull_request.number || github.event.merge_group.head_sha || github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  # job id가 곧 check context다 — `name:` 를 붙이지 않는다(붙이면 context가
+  # 이름으로 바뀐다). required 등록 전 유일성 사전 검증 대상.
+  generation-acceptance:
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 30
+    env:
+      # RESULTS_DIR은 job-level env가 아니라 [init] step에서 $GITHUB_ENV로
+      # 내보낸다 — runner context는 jobs.<job_id>.env에서 허용되지 않는다
+      # (workflow schema; 이 위반이 등록 실패 "workflow file issue"의 원인이었다).
+      DRIVER_REF: ${{ github.event.merge_group.base_sha || github.event.pull_request.base.sha || github.sha }}
+      CANDIDATE_REF: ${{ github.event.merge_group.head_sha || github.event.pull_request.head.sha || github.sha }}
+    steps:
+      # ── 결과 프로토콜 초기화 ──────────────────────────────────────
+      - name: "[init] result protocol init"
+        run: |
+          set -euo pipefail
+          echo "RESULTS_DIR=$RUNNER_TEMP/gpa-results" >> "$GITHUB_ENV"
+          RESULTS_DIR="$RUNNER_TEMP/gpa-results"
+          mkdir -p "$RESULTS_DIR"
+          echo "GPA results dir: $RESULTS_DIR"
+
+      # ── Driver: 신뢰 트리(base ref) ───────────────────────────────
+      # ref를 **명시적으로** base로 고정한다 — pull_request의 기본 체크아웃은
+      # merge commit이고, 그 안의 워크플로 파일은 후보가 쓰기 가능하다.
+      - name: "[driver] Checkout the TRUSTED base tree (judgment code + criteria)"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.merge_group.base_sha || github.event.pull_request.base.sha || github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+
+      # ── Candidate: 데이터 전용 ────────────────────────────────────
+      - name: "[candidate] Checkout the candidate tree (DATA ONLY — never executed)"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.merge_group.head_sha || github.event.pull_request.head.sha || github.sha }}
+          path: candidate
+          persist-credentials: false
+          # fetch-depth 0 — 서버 유래 파일 목록의 완전성 증인(로컬 diff witness)과
+          # 후보 트리의 blob sha 계산에 필요.
+          fetch-depth: 0
+
+      # ── 변경 파일 목록: 서버 유도 + execution surface 교집합 ──────
+      - name: "[surface] Server-derived changed-file list + execution-surface intersection"
+        id: surface
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          MG_BASE: ${{ github.event.merge_group.base_sha }}
+          MG_HEAD: ${{ github.event.merge_group.head_sha }}
+        run: |
+          set -uo pipefail
+          set +e
+          export LC_ALL=C
+          RES="$RESULTS_DIR"
+
+          reject() {
+            echo "REJECTED:DIFF_UNAVAILABLE" > "$RES/surface.result"
+            echo "::error::GPA — $1 (fail-closed: 관측 불가한 입력을 통과로 읽지 않는다)"
+            exit 0
+          }
+
+          # ── 1) 서버 유도 변경 파일 목록 ───────────────────────────
+          # pull_request: PR files API(GitHub이 계산한 diff — 후보가 만든
+          #   파일 목록을 신뢰하지 않는다).
+          # merge_group: PR 객체가 없다 → compare API로 base...head 비교.
+          #   merge_group의 head_sha는 큐가 만든 임시 merge 커밋이며 PR head와
+          #   **다르다**(MUST#9). 그래도 base_sha...head_sha 비교는 "base 대비
+          #   큐가 만든 후보 커밋의 변경"을 정확히 준다.
+          # workflow_dispatch: PR이 없다 → 해당 커밋의 첫 부모를 base로 삼아
+          #   같은 compare API를 쓴다(수동 재검증 경로).
+          BASE=""; HEAD=""; SOURCE=""
+          if [ -n "${PR_NUMBER:-}" ]; then
+            SOURCE="pull_request_files_api"
+            BASE="$PR_BASE"; HEAD="$PR_HEAD"
+            gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files?per_page=100" \
+              --jq '.[].filename' > "$RES/changed_server.txt" \
+              || reject "서버 유래 PR 파일 목록을 취득하지 못했다"
+          else
+            if [ -n "${MG_BASE:-}" ] && [ -n "${MG_HEAD:-}" ]; then
+              SOURCE="merge_group_compare_api"
+              BASE="$MG_BASE"; HEAD="$MG_HEAD"
+            else
+              SOURCE="dispatch_compare_api"
+              HEAD="$CANDIDATE_REF"
+              if ! BASE="$(git -C candidate rev-parse "${CANDIDATE_REF}^" 2>/dev/null)"; then
+                # 1-commit root (G4_ROOT) fallback when ${CANDIDATE_REF}^ does not exist
+                BASE="$(git -C candidate rev-parse "${CANDIDATE_REF}" 2>/dev/null || echo 4b825dc642cb6eb9a060e54bf8d69288fbee4904)"
+              fi
+              [ -n "$BASE" ] || reject "dispatch 경로의 base 커밋(첫 부모)을 결정할 수 없다"
+            fi
+            gh api "repos/$REPO/compare/$BASE...$HEAD" --jq '.files[].filename' \
+              > "$RES/changed_server.txt" \
+              || reject "서버 유래 compare 목록을 취득하지 못했다"
+          fi
+          sort -u "$RES/changed_server.txt" -o "$RES/changed_server.txt"
+
+          # ── 2) 완전성 증인(로컬 diff witness) ─────────────────────
+          # 두 API는 파일 수 상한이 있다(PR files 3000 / compare 300).
+          # 잘린 목록은 "변경 없음"으로 오독될 수 있으므로, **같은 두 커밋의**
+          # 로컬 diff(서버에서 받은 트리 기준)를 교차 검증한다. 로컬 목록에
+          # 있는데 서버 목록에 없는 파일이 하나라도 있으면 잘린 것 → fail-closed.
+          MB="$(git -C candidate merge-base "$BASE" "$HEAD" 2>/dev/null)"
+          [ -n "$MB" ] || reject "base/head의 merge-base를 결정할 수 없다"
+          git -C candidate diff --name-only "$MB" "$HEAD" 2>/dev/null | sort -u > "$RES/changed_local.txt"
+          MISSING="$(comm -23 "$RES/changed_local.txt" "$RES/changed_server.txt" 2>/dev/null)"
+          COMM_RC=$?
+          if [ "$COMM_RC" -ne 0 ]; then
+            reject "변경 파일 목록의 완전성 교차검증(comm)이 실패했다"
+          fi
+          if [ -n "$MISSING" ]; then
+            reject "서버 유래 파일 목록이 잘렸다(누락: $(echo "$MISSING" | tr '\n' ' '))"
+          fi
+          cp "$RES/changed_server.txt" "$RES/changed.txt"
+
+          # ── 3) execution surface 교집합 ───────────────────────────
+          # surface = merge_admission.json의 trustSurface(베이스 트리 — Driver의
+          #   기준) ∪ .github/workflows/** ∪ .github/actions/** ∪
+          #   config/policy/** ∪ dynamic/**
+          # (heredoc 본문은 블록 스칼라 dedent 후 열 0이 된다 — Python 최상위
+          #  블록이 들여쓰기되면 IndentationError이므로 의도적으로 정렬한다.)
+          cat > "$RES/surface.py" <<'PY'
+          import fnmatch, json, sys
+
+          changed_path, policy_path, out_path = sys.argv[1], sys.argv[2], sys.argv[3]
+
+
+          def strip_jsonc(raw):
+              return "\n".join(
+                  "" if l.strip().startswith("//") else l for l in raw.split("\n"))
+
+
+          with open(policy_path, encoding="utf-8") as fh:
+              policy = json.loads(strip_jsonc(fh.read()))
+          surface = [e for e in (policy.get("trustSurface") or []) if isinstance(e, str)]
+          prefixes = [".github/workflows/", ".github/actions/", "config/policy/", "dynamic/"]
+
+
+          def matches(path, entry):
+              if entry.endswith("/**"):
+                  return path.startswith(entry[:-2])
+              if "*" in entry:
+                  return fnmatch.fnmatch(path, entry)
+              return path == entry
+
+
+          with open(changed_path, encoding="utf-8") as fh:
+              changed = [l.strip() for l in fh if l.strip()]
+
+          hits = []
+          for p in changed:
+              why = []
+              for e in surface:
+                  if matches(p, e):
+                      why.append("trustSurface:" + e)
+              for pre in prefixes:
+                  if p.startswith(pre):
+                      why.append("surface-prefix:" + pre)
+              if why:
+                  hits.append({"path": p, "reasons": why})
+
+          with open(out_path, "w", encoding="utf-8") as fh:
+              json.dump({
+                  "changedCount": len(changed),
+                  "hits": hits,
+                  "hasSurfaceDelta": bool(hits),
+                  "monitorChanged": "tools/merge_ruleset_drift_monitor.nim" in changed,
+              }, fh, indent=2, sort_keys=True)
+          PY
+          python3 "$RES/surface.py" "$RES/changed.txt" \
+            "config/policy/merge_admission.json" "$RES/surface.json" \
+            || reject "execution surface 교집합 계산에 실패했다"
+
+          HAS_DELTA="$(python3 -c 'import json,sys;print("true" if json.load(open(sys.argv[1]))["hasSurfaceDelta"] else "false")' "$RES/surface.json")"
+          MONITOR_CHANGED="$(python3 -c 'import json,sys;print("true" if json.load(open(sys.argv[1]))["monitorChanged"] else "false")' "$RES/surface.json")"
+          echo "has_surface_delta=$HAS_DELTA" >> "$GITHUB_OUTPUT"
+          echo "monitor_changed=$MONITOR_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "changed_count=$(wc -l < "$RES/changed.txt")" >> "$GITHUB_OUTPUT"
+          echo "diff_source=$SOURCE" >> "$GITHUB_OUTPUT"
+          echo "changed file list source: $SOURCE (base=$BASE head=$HEAD)"
+
+      # ── fast-path: execution surface 무변경 ───────────────────────
+      - name: "[verdict] fast-path — NO_SURFACE_DELTA"
+        if: steps.surface.outputs.has_surface_delta == 'false'
+        env:
+          # DEBT#516: 모니터 변경이 있으면 이 단계는 최종 판정을 선언하지
+          # 않는다 — L4-iso 격리 자기시험이 아래 최종 verdict에서 판정한다.
+          MONITOR_CHANGED: ${{ steps.surface.outputs.monitor_changed }}
+        run: |
+          set -euo pipefail
+          RES="$RESULTS_DIR"
+          echo "NO_SURFACE_DELTA" > "$RES/surface.result"
+          {
+            echo "## GPA verdict — NO_SURFACE_DELTA"
+            echo ""
+            echo "- changed files: $(wc -l < "$RES/changed.txt")"
+            echo "- execution-surface delta: none"
+            if [ "${MONITOR_CHANGED:-false}" = "true" ]; then
+              echo "- verdict: DEFERRED — 모니터 변경: L4-iso 격리 자기시험이 최종 판정한다 (아래 최종 verdict 참조)"
+            else
+              echo "- verdict: ACCEPTED (fast path — 검증 대상 surface 무변경)"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "GPA: NO_SURFACE_DELTA — the candidate touches no execution surface; the full L1~L4 acceptance is not applicable (monitor-only changes are adjudicated by L4-iso)."
+
+      # ── 툴체인 (L2/L4가 베이스 트리의, L4-iso가 후보 트리의 도구를
+      #    빌드한다) ────────────────────────────────────────────────
+      # monitor-only PR(has_surface_delta=false, monitor_changed=true)도
+      # L4-iso가 후보 모니터를 nim으로 빌드하므로 툴체인이 필요하다.
+      # 2026-11-07 run 42362547342: 이 조건 불일치로 격리 빌드가
+      # `nim: command not found`로 죽었다 — DEBT#516의 발동 경로.
+      - name: "[toolchain] pinned Axiom toolchain (same supply path as the drift workflow)"
+        if: steps.surface.outputs.has_surface_delta == 'true' || steps.surface.outputs.monitor_changed == 'true'
+        uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          # Ubicloud runners start with a cold ~/.nimble; the driver tree's
+          # nimble.lock dependencies (checksums/sha2 et al.) must be installed
+          # before L2 builds tools/merge_ruleset_drift_monitor.nim.
+          skip-nimble-install: 'false'
+          cache-save-enabled: 'false'
+          # github.sha는 pull_request에서 merge commit(=driver 워크스페이스에
+          # 없는 객체)이라 rev-parse가 exit 128로 죽는다. 주 워크스페이스는
+          # driver(base)이고 toolchain이 컴파일하는 것도 driver의 도구다 —
+          # base sha를 넘긴다(신뢰 모델과 일치).
+          cache-build-source: ${{ env.DRIVER_REF }}
+
+      # ── L1 정적: 후보의 변경된 workflow/action YAML 파싱 ─────────
+      - name: "[L1] static — parse the candidate's changed workflow/action YAML"
+        if: steps.surface.outputs.has_surface_delta == 'true'
+        run: |
+          set -uo pipefail
+          set +e
+          RES="$RESULTS_DIR"
+          if ! python3 -c 'import yaml' 2>/dev/null; then
+            echo "REJECTED:TOOLCHAIN_UNAVAILABLE" > "$RES/L1.result"
+            echo "::error::GPA L1 — PyYAML을 사용할 수 없다(검증 불가 = fail-closed)"
+            exit 0
+          fi
+          grep -E '^\.github/(workflows|actions)/.*\.ya?ml$' "$RES/changed.txt" > "$RES/wf_list.txt"
+          GREP_RC=$?
+          if [ "$GREP_RC" -gt 1 ]; then
+            echo "REJECTED:INCOMPLETE" > "$RES/L1.result"
+            echo "::error::GPA L1 — 변경 파일 목록을 읽지 못했다(grep rc=$GREP_RC) (fail-closed)"
+            exit 0
+          fi
+          mapfile -t WFS < "$RES/wf_list.txt"
+          if [ "${#WFS[@]}" -eq 0 ]; then
+            echo "OK" > "$RES/L1.result"
+            echo "L1: 변경된 workflow/action YAML 파일 없음 — 파싱 대상 0건"
+            exit 0
+          fi
+          for f in "${WFS[@]}"; do
+            if [ ! -f "candidate/$f" ]; then
+              echo "REJECTED:YAML_PARSE" > "$RES/L1.result"
+              echo "::error::GPA L1 — 변경된 워크플로 파일이 후보 트리에 없다: $f"
+              exit 0
+            fi
+            if ! python3 -c 'import sys,yaml; yaml.safe_load(open(sys.argv[1], encoding="utf-8"))' \
+                 "candidate/$f" 2>"$RES/l1_err.txt"; then
+              echo "REJECTED:YAML_PARSE" > "$RES/L1.result"
+              echo "::error::GPA L1 — YAML 파싱 실패: $f ($(head -n 1 "$RES/l1_err.txt"))"
+              exit 0
+            fi
+            echo "L1: parsed $f"
+          done
+          echo "OK" > "$RES/L1.result"
+
+      # ── L2 정책 3-leg: base 도구 + candidate 값 + live ruleset ────
+      - name: "[L2] policy ⇔ constants ⇔ live ruleset (base-built monitor, candidate values)"
+        if: steps.surface.outputs.has_surface_delta == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -uo pipefail
+          set +e
+          export LC_ALL=C
+          RES="$RESULTS_DIR"
+          STRIP_SED='s|^[[:space:]]*//.*$||'
+
+          reject() {
+            echo "REJECTED:POLICY_RULESET_MISMATCH" > "$RES/L2.result"
+            echo "::error::GPA L2 — $1"
+            exit 0
+          }
+
+          # ── (a) 베이스 트리의 드리프트 도구 빌드 ─────────────────
+          # 판정 로직은 후보가 아니라 **베이스(Driver)** 트리에서 온다.
+          # 후보가 도구를 변조해 L2를 무력화할 수 없게 한다.
+          if ! nim c --hints:off -o:bin/gpa_drift_monitor \
+               tools/merge_ruleset_drift_monitor.nim > "$RES/l2_build.log" 2>&1; then
+            echo "REJECTED:TOOLCHAIN_UNAVAILABLE" > "$RES/L2.result"
+            echo "::error::GPA L2 — 베이스 트리의 드리프트 도구 빌드 실패 (판정 불가 = fail-closed)"
+            tail -n 20 "$RES/l2_build.log"
+            exit 0
+          fi
+
+          # ── (b) live ruleset 조회 (GPA 직접 티어) ───────────────
+          # job의 GITHUB_TOKEN은 repo ruleset을 읽을 수 있다(실측 2026-10-21).
+          # 읽지 못하면 degraded mode로 내리지 않고 fail-closed한다 —
+          # 부분 판정을 전체 GREEN으로 위장하지 않는다.
+          # ruleset 식별은 숫자 id가 아니라 **이름 해석**이다(policy v1.19.0
+          # hybrid authority rotation): ruleset 숫자 id는 저장소 스코프
+          # 자원이라 재생성 시 재발급되고, 구 id(20303214, 구 저장소 소속)는
+          # 신규 저장소에서 404한다. 해석 의미(semantics)는
+          # tools/merge_ruleset_drift_monitor.nim(resolveMainRuleset)·
+          # tools/ci/landing_observe.sh와 동일하다 — 선택 조건 전부:
+          # name=="main" ∧ enforcement=="active" ∧ target=="branch" ∧
+          # source==저장소 수준 ∧ conditions가 refs/heads/main 대상 ∧
+          # required_status_checks 구성이 정책 기대와 일치 + rules/branches/main
+          # 교차검증. 정확히 1개 → 해석 성공 / 0개·2개+ → fail-closed /
+          # 조회 실패·페이지 미완결 → UNKNOWN(빈 결과와 구분, 전부
+          # REJECTED:RULESET_UNAVAILABLE로 fail-closed).
+          # 기대 문맥 집합은 **베이스** 정책에서 유도한다 — 해석이 후보
+          # 기대와 무관해야 PROMOTION_PENDING 경로가 보존된다.
+          if ! gh api --paginate --slurp \
+               "repos/$REPO/rulesets?includes_parents=true&per_page=100" \
+               > "$RES/ruleset_pages.json" 2>"$RES/l2_list_err.txt"; then
+            echo "REJECTED:RULESET_UNAVAILABLE" > "$RES/L2.result"
+            echo "::error::GPA L2 — ruleset 목록(전체 페이지) 조회 실패 — UNKNOWN(페이지 미완결 포함, 빈 결과와 구분) = fail-closed: $(head -n 1 "$RES/l2_list_err.txt")"
+            exit 0
+          fi
+          BASE_EXPECTED="$(jq -r '[.requiredValidations[]?.job, .requiredWorkflowDetection.verdictJob]
+                                 | map(select(type == "string" and length > 0))
+                                 | unique | sort | join(",")' config/policy/merge_admission.json)"
+          mapfile -t CANDS < <(jq -r --arg repo "$REPO" '
+                flatten | map(select((.name? == "main") and (.enforcement? == "active")
+                                     and (.target? == "branch") and (.source? == $repo)))
+                | .[].id' "$RES/ruleset_pages.json" 2>/dev/null)
+          if [ "${#CANDS[@]}" -eq 0 ] || [ -z "${CANDS[0]:-}" ]; then
+            echo "REJECTED:RULESET_UNAVAILABLE" > "$RES/L2.result"
+            echo "::error::GPA L2 — 이름 해석: 리스트 수준 후보 0건(name/enforcement/target/source 불일치 — org 소유·push 대상·비활성 전부 제외됨) = fail-closed"
+            exit 0
+          fi
+          MATCHED=""
+          MATCH_COUNT=0
+          for cid in "${CANDS[@]}"; do
+            if ! gh api "repos/$REPO/rulesets/$cid" > "$RES/cand_$cid.json" 2>"$RES/l2_cand_err.txt"; then
+              echo "REJECTED:RULESET_UNAVAILABLE" > "$RES/L2.result"
+              echo "::error::GPA L2 — 이름 해석: ruleset $cid 상세 조회 실패 — UNKNOWN = fail-closed: $(head -n 1 "$RES/l2_cand_err.txt")"
+              exit 0
+            fi
+            COND_OK="$(jq -r '([.conditions.ref_name.include[]?]
+                              | (index("~DEFAULT_BRANCH") != null) or (index("refs/heads/main") != null))' \
+                        "$RES/cand_$cid.json" 2>/dev/null)" || COND_OK="false"
+            CHECKS_OK="$(jq -r --arg exp "$BASE_EXPECTED" '
+                ([.rules[]? | select(.type == "required_status_checks")
+                  | .parameters.required_status_checks[]?] as $entries
+                 | (($entries | map(.context) | unique | sort | join(",")) == $exp)
+                   and ($entries | all(.integration_id? == 15368)))' \
+                        "$RES/cand_$cid.json" 2>/dev/null)" || CHECKS_OK="false"
+            if [ "$COND_OK" = "true" ] && [ "$CHECKS_OK" = "true" ]; then
+              MATCHED="$cid"
+              MATCH_COUNT=$((MATCH_COUNT + 1))
+            fi
+          done
+          if [ "$MATCH_COUNT" -eq 0 ]; then
+            echo "REJECTED:RULESET_UNAVAILABLE" > "$RES/L2.result"
+            echo "::error::GPA L2 — 이름 해석: 후보 ${#CANDS[@]}건 중 선택 조건(conditions→main·required_status_checks==정책 기대) 만족 0건 = fail-closed"
+            exit 0
+          fi
+          if [ "$MATCH_COUNT" -ge 2 ]; then
+            echo "REJECTED:RULESET_UNAVAILABLE" > "$RES/L2.result"
+            echo "::error::GPA L2 — 이름 해석: 선택 조건 만족 ruleset ${MATCH_COUNT}건 — admission 표면 모호 = fail-closed"
+            exit 0
+          fi
+          if ! gh api "repos/$REPO/rules/branches/main" > "$RES/branch_rules.json" 2>"$RES/l2_branch_err.txt"; then
+            echo "REJECTED:RULESET_UNAVAILABLE" > "$RES/L2.result"
+            echo "::error::GPA L2 — rules/branches/main 교차검증 조회 실패 — UNKNOWN = fail-closed: $(head -n 1 "$RES/l2_branch_err.txt")"
+            exit 0
+          fi
+          if ! jq -e --argjson id "$MATCHED" 'map(.ruleset_id? == $id) | any' \
+               "$RES/branch_rules.json" >/dev/null 2>&1; then
+            echo "REJECTED:RULESET_UNAVAILABLE" > "$RES/L2.result"
+            echo "::error::GPA L2 — 교차검증 실패: ruleset $MATCHED 가 rules/branches/main 응답에 없음 = fail-closed"
+            exit 0
+          fi
+          cp "$RES/cand_$MATCHED.json" "$RES/live_ruleset.json"
+          echo "L2: ruleset \"main\" 이름 해석 → id $MATCHED (선택 조건 6종 + rules/branches/main 교차검증 통과)"
+
+          # ── (c) 3-leg 실행: 기대 집합과 상수는 **후보의 값** ─────
+          # --policy-file / --merge-cli-source 로 후보 트리의 정책·상수를
+          # 주입한다(도구의 실제 CLI 인터페이스). 비교 대상 ruleset은 live.
+          # --observe-sha는 주지 않는다: producer leg은 merge_group 큐의
+          # 임시 커밋에서 아직 생성되지 않은 check-run을 "missing != clean"
+          # 으로 오독해 FALSE RED를 낸다(ADR-0035 §Consequences의 실측 교정).
+          # 그 leg은 도구가 "NOT PERFORMED"로 명시 보고한다 — 조용한 생략이
+          # 아니다(3-leg 중 2개가 정규 기대, 3번째는 가산 관측).
+          bin/gpa_drift_monitor \
+            --policy-file candidate/config/policy/merge_admission.json \
+            --merge-cli-source candidate/src/cli/merge_cli.nim \
+            --ruleset-file "$RES/live_ruleset.json" > "$RES/l2_monitor.out" 2>&1
+          RC=$?
+          cat "$RES/l2_monitor.out"
+
+          # ── (d) 판정 분류 ──────────────────────────────────────
+          # 후보 기대 집합 C / live 집합 L / 베이스 기대 집합 B
+          contexts_of() {  # $1 = 정책 파일
+            sed -E "$STRIP_SED" "$1" | jq -r '
+              [.requiredValidations[]?.job, .requiredWorkflowDetection.verdictJob]
+              | map(select(type == "string" and length > 0)) | unique | .[]' | sort -u
+          }
+          contexts_of "candidate/config/policy/merge_admission.json" > "$RES/ctx_candidate.txt"
+          contexts_of "config/policy/merge_admission.json" > "$RES/ctx_base.txt"
+          jq -r '.rules[] | select(.type == "required_status_checks")
+                 | .parameters.required_status_checks[]? | .context' \
+             "$RES/live_ruleset.json" | sort -u > "$RES/ctx_live.txt"
+
+          ADDED="$(comm -13 "$RES/ctx_live.txt" "$RES/ctx_candidate.txt" 2>/dev/null)"
+          C1=$?
+          REMOVED="$(comm -23 "$RES/ctx_live.txt" "$RES/ctx_candidate.txt" 2>/dev/null)"
+          C2=$?
+          BASE_DROPPED="$(comm -23 "$RES/ctx_live.txt" "$RES/ctx_base.txt" 2>/dev/null)"
+          C3=$?
+          if [ "$C1" -ne 0 ] || [ "$C2" -ne 0 ] || [ "$C3" -ne 0 ]; then
+            reject "요구 집합 비교(comm)가 실패했다 — 판정 불가(fail-closed)"
+          fi
+
+          if [ "$RC" -eq 0 ]; then
+            echo "OK" > "$RES/L2.result"
+            echo "L2: policy(후보) ⇔ constants(후보) ⇔ live ruleset — 3-leg 일치"
+            exit 0
+          fi
+
+          # PROMOTION_PENDING: 후보가 요구 집합에 **자기 자신의 context 하나만**
+          # 추가했고, 라이브 ruleset이 아직 그 PUT을 받지 않은 상태.
+          # 라이브 강제 집합은 줄어들지 않는다(BASE_DROPPED가 비어야 함) →
+          # 안전성이 낮아지지 않으므로 허용하되, 상태를 명시적으로 기록한다
+          # (조용한 생략이 아니다). 다른 어떤 추가·삭제도 REJECTED다.
+          if [ -z "$REMOVED" ] && [ -z "$BASE_DROPPED" ] \
+             && [ "$ADDED" = "generation-acceptance" ]; then
+            echo "OK:PROMOTION_PENDING" > "$RES/L2.result"
+            echo "L2: PROMOTION_PENDING — 후보가 'generation-acceptance' 요구를 추가했으나 라이브 ruleset의 PUT이 아직 없다(라이브 강제 집합은 축소되지 않음)"
+            exit 0
+          fi
+
+          {
+            echo "cause: monitor_rc=$RC"
+            echo "added(not in live): ${ADDED:-<none>}"
+            echo "removed(live but not in candidate): ${REMOVED:-<none>}"
+            echo "base dropped by candidate: ${BASE_DROPPED:-<none>}"
+          } > "$RES/l2_cause.txt"
+          reject "후보의 정책/상수가 live ruleset과 어긋난다 — $(tr '\n' ' ' < "$RES/l2_cause.txt")"
+
+      # ── L3 승격 정합성: epoch ⇔ TWS ⇔ admission-check blob ──────
+      - name: "[L3] promotion coherence — epoch pin ⇔ TWS sha ⇔ admission-check blob"
+        if: steps.surface.outputs.has_surface_delta == 'true'
+        run: |
+          set -uo pipefail
+          set +e
+          RES="$RESULTS_DIR"
+          STRIP_SED='s|^[[:space:]]*//.*$||'
+
+          EPOCH_PIN="$(sed -E "$STRIP_SED" candidate/config/policy/epoch_manifest.json \
+            | jq -r '.productionExecutionPin // ""' 2>/dev/null)"
+          TWS_SHA="$(sed -E "$STRIP_SED" candidate/config/trusted_writer_set.json \
+            | jq -r '.trustedAdmissionWorkflowSha // ""' 2>/dev/null)"
+          BLOB="$(git -C candidate rev-parse HEAD:.github/workflows/admission-check.yml 2>/dev/null)"
+
+          if [ -z "$EPOCH_PIN" ] || [ -z "$TWS_SHA" ] || [ -z "$BLOB" ]; then
+            echo "REJECTED:UNPROMOTED_PIN" > "$RES/L3.result"
+            echo "::error::GPA L3 — 승격 핀 값을 읽지 못했다(epoch='$EPOCH_PIN' tws='$TWS_SHA' blob='$BLOB') (fail-closed)"
+            exit 0
+          fi
+          if [ "$EPOCH_PIN" != "$BLOB" ] || [ "$TWS_SHA" != "$BLOB" ]; then
+            echo "REJECTED:UNPROMOTED_PIN" > "$RES/L3.result"
+            echo "::error::GPA L3 — 승격 정합성 파괴: epoch_manifest.productionExecutionPin='$EPOCH_PIN' trusted_writer_set.trustedAdmissionWorkflowSha='$TWS_SHA' admission-check.yml blob='$BLOB'"
+            exit 0
+          fi
+          echo "OK" > "$RES/L3.result"
+          echo "L3: 승격 정합성 일치 — epoch pin ⇔ TWS sha ⇔ admission-check.yml blob = $BLOB"
+
+      # ── L4 자기 시험: SHA 유도 known-bad fixture ─────────────────
+      - name: "[L4] self-test — the SHA-derived known-bad fixture MUST be rejected"
+        if: steps.surface.outputs.has_surface_delta == 'true'
+        run: |
+          set -uo pipefail
+          set +e
+          export LC_ALL=C
+          RES="$RESULTS_DIR"
+          STRIP_SED='s|^[[:space:]]*//.*$||'
+
+          # 기준 = Driver(베이스) 트리의 정책 기대 집합.
+          contexts_of() {
+            sed -E "$STRIP_SED" "$1" | jq -r '
+              [.requiredValidations[]?.job, .requiredWorkflowDetection.verdictJob]
+              | map(select(type == "string" and length > 0)) | unique | .[]' | sort -u
+          }
+          contexts_of "config/policy/merge_admission.json" > "$RES/ctx_base.txt"
+          N="$(wc -l < "$RES/ctx_base.txt" | tr -d ' ')"
+          if [ "$N" -lt 1 ]; then
+            echo "REJECTED:SELF_TEST_FAILED" > "$RES/L4.result"
+            echo "::error::GPA L4 — 베이스 정책이 기대 집합을 산출하지 못한다(자기 시험 불가 = fail-closed)"
+            exit 0
+          fi
+
+          # fixture 특수화 저항: 어느 context를 변조할지를 **후보 SHA에서
+          # 결정론적으로** 유도한다(고정 fixture는 공격자가 미리 맞춘다).
+          LAST_NIBBLE="${CANDIDATE_REF: -1}"
+          IDX=$(( 16#$LAST_NIBBLE % N ))
+          SELECTED="$(sed -n "$((IDX + 1))p" "$RES/ctx_base.txt")"
+          echo "L4: fixture index=$IDX (sha tail nibble=$LAST_NIBBLE of $N) → context='$SELECTED'"
+
+          # known-bad 정책: 선택된 context를 기대 집합에서 제거한다.
+          jq --arg ctx "$SELECTED" '
+            del(.requiredValidations[] | select(.job == $ctx))
+            | (if .requiredWorkflowDetection.verdictJob == $ctx
+               then .requiredWorkflowDetection.verdictJob = "" else . end)' \
+            "config/policy/merge_admission.json" > "$RES/bad_policy.json"
+
+          # known-good 기준선: 베이스 정책의 기대 집합을 그대로 담은 합성 ruleset.
+          # (실제 live ruleset이 아니라 **판정 로직 자체**를 시험하기 위한
+          #  결정론적 fixture다 — live 상태는 L2의 몫이다.)
+          jq -n --args '{
+            rules: [
+              {type: "merge_queue",
+               parameters: {merge_method: "MERGE", grouping_strategy: "ALLGREEN"}},
+              {type: "required_status_checks",
+               parameters: {required_status_checks:
+                 [$ARGS.positional[] | {context: ., integration_id: 15368}]}},
+              {type: "pull_request",
+               parameters: {required_approving_review_count: 0}}
+            ] }' $(cat "$RES/ctx_base.txt") > "$RES/synthetic_ruleset.json"
+
+          # (1) known-good → 반드시 PASS(0)
+          bin/gpa_drift_monitor \
+            --policy-file "config/policy/merge_admission.json" \
+            --merge-cli-source "src/cli/merge_cli.nim" \
+            --ruleset-file "$RES/synthetic_ruleset.json" > "$RES/l4_good.out" 2>&1
+          GOOD_RC=$?
+          # (2) known-bad → 반드시 REJECT(0이 아니어야 함)
+          bin/gpa_drift_monitor \
+            --policy-file "$RES/bad_policy.json" \
+            --merge-cli-source "src/cli/merge_cli.nim" \
+            --ruleset-file "$RES/synthetic_ruleset.json" > "$RES/l4_bad.out" 2>&1
+          BAD_RC=$?
+
+          if [ "$GOOD_RC" -ne 0 ]; then
+            echo "REJECTED:SELF_TEST_FAILED" > "$RES/L4.result"
+            echo "::error::GPA L4 — known-good fixture가 통과하지 못했다(판정 로직이 정상 입력을 거부한다): $(tail -n 3 "$RES/l4_good.out" | tr '\n' ' ')"
+            exit 0
+          fi
+          if [ "$BAD_RC" -eq 0 ]; then
+            echo "REJECTED:SELF_TEST_FAILED" > "$RES/L4.result"
+            echo "::error::GPA L4 — known-bad fixture가 통과했다(Driver의 L2 판정 로직이 결함을 검출하지 못한다)"
+            exit 0
+          fi
+          echo "OK" > "$RES/L4.result"
+          echo "L4: known-good=0 known-bad=$BAD_RC — 자기 시험 통과"
+
+      # ── L4-iso 격리: 후보가 드리프트 도구를 바꾸면 격리 실행 ────
+      - name: "[L4-iso] isolated — the candidate's own monitor must also reject the known-bad fixture"
+        if: steps.surface.outputs.monitor_changed == 'true'
+        env:
+          # 격리: 어떤 credential도 이 step에 주지 않는다(무권한).
+          GH_TOKEN: ""
+          GITHUB_TOKEN: ""
+          ACTIONS_RUNTIME_TOKEN: ""
+          AXIOM_DIAG_TOKEN: ""
+        run: |
+          set -uo pipefail
+          set +e
+          RES="$RESULTS_DIR"
+          # 후보의 드리프트 도구는 **착지 후** 상시 드리프트 감지가 실제로
+          # 실행할 코드다 — 후보가 이 도구를 조작해 감지를 무력화할 수 있다.
+          # 그래서 후보의 도구는 무권한 격리 step에서 빌드·실행하고, 그
+          # **출력은 Driver(베이스)가 판정한다**(출력이 판정이 아니다).
+          #
+          # 빌드 위치: candidate/는 워크스페이스 안에 있으므로 그 조상 체인에
+          # Driver 트리의 config.nims가 들어간다 — Nim은 조상의 config.nims를
+          # **모두** 로드해 두 개의 src/가 이중 등록되고 빌드가 불가능해진다
+          # (docs/spec/nested_worktree_config_quirks.md). 따라서 후보 트리를
+          # 워크스페이스 **밖**(runner.temp — 조상에 config.nims가 없다)에
+          # worktree로 다시 materialize하여 거기서 빌드한다.
+          CAND_BUILD="$RUNNER_TEMP/gpa_candidate_build"
+          # GIT_LFS_SKIP_SMUDGE=1: this step is deliberately credential-free
+          # (격리 — 아래 env 참조), but `git worktree add` runs the LFS smudge
+          # filter, which for a PRIVATE repository requires auth to download
+          # objects — the 2026-11-07 first-ever monitor_changed run failed
+          # here by construction ("fatal: could not read Username for
+          # 'https://github.com'" while smudging the 10 MB SVF pdf; Axiom
+          # run 42351952953). The isolated build compiles Nim sources only
+          # and the judgment inputs are source files + generated JSON
+          # fixtures — LFS payloads are never read — so pointer files are
+          # equivalent here. Quirk record:
+          # docs/spec/lfs_smudge_credential_isolation_quirks.md
+          if ! GIT_LFS_SKIP_SMUDGE=1 git -C candidate worktree add --detach "$CAND_BUILD" HEAD \
+               > "$RES/l4iso_build.log" 2>&1; then
+            echo "REJECTED:SELF_TEST_FAILED" > "$RES/L4ISO.result"
+            echo "::error::GPA L4-iso — 후보 트리를 격리 위치에 materialize하지 못했다"
+            tail -n 10 "$RES/l4iso_build.log"
+            exit 0
+          fi
+          if ! ( cd "$CAND_BUILD" && nim c --hints:off -o:"$RES/candidate_monitor" \
+                   tools/merge_ruleset_drift_monitor.nim ) >> "$RES/l4iso_build.log" 2>&1; then
+            git -C candidate worktree remove --force "$CAND_BUILD" >/dev/null 2>&1
+            echo "REJECTED:SELF_TEST_FAILED" > "$RES/L4ISO.result"
+            echo "::error::GPA L4-iso — 후보의 드리프트 도구가 빌드되지 않는다"
+            tail -n 10 "$RES/l4iso_build.log"
+            exit 0
+          fi
+          git -C candidate worktree remove --force "$CAND_BUILD" >/dev/null 2>&1
+          "$RES/candidate_monitor" \
+            --policy-file "$RES/bad_policy.json" \
+            --merge-cli-source "src/cli/merge_cli.nim" \
+            --ruleset-file "$RES/synthetic_ruleset.json" > "$RES/l4iso.out" 2>&1
+          RC=$?
+          if [ "$RC" -eq 0 ]; then
+            echo "REJECTED:SELF_TEST_FAILED" > "$RES/L4ISO.result"
+            echo "::error::GPA L4-iso — 후보의 드리프트 도구가 known-bad fixture를 통과했다(착지 후 상시 감지가 무력화된다)"
+            exit 0
+          fi
+          echo "OK" > "$RES/L4ISO.result"
+          echo "L4-iso: 후보의 모니터도 known-bad를 거부했다 (rc=$RC)"
+
+      # ── 최종 결론: 항상 실행 ────────────────────────────────────
+      - name: "[verdict] GPA final verdict (always — no silent skip)"
+        if: always()
+        env:
+          HAS_DELTA: ${{ steps.surface.outputs.has_surface_delta }}
+          MONITOR_CHANGED: ${{ steps.surface.outputs.monitor_changed }}
+        run: |
+          set -uo pipefail
+          set +e
+          RES="$RESULTS_DIR"
+          SUMMARY="$GITHUB_STEP_SUMMARY"
+          VERDICT=""; CODE=""; DETAIL=""
+
+          SURFACE_RC="$(cat "$RES/surface.result" 2>/dev/null)"
+          case "$SURFACE_RC" in
+            REJECTED:*)
+              VERDICT="REJECTED"; CODE="${SURFACE_RC#REJECTED:}"
+              DETAIL="변경 파일 목록 단계가 거부했다";;
+            NO_SURFACE_DELTA)
+              # monitor-only PRs (tools/merge_ruleset_drift_monitor.nim is
+              # outside trustSurface — L4-iso runs on monitor_changed alone):
+              # the fast path must still require the isolated self-test's
+              # OK record. Scanning only the delta path (below) let a failed
+              # or unrun L4-iso read as ACCEPTED here — a fail-open hole
+              # found 2026-11-07 (DEBT#516): a monitor that accepts the
+              # known-bad fixture could land green via this branch.
+              L4ISO_RC="$(cat "$RES/L4ISO.result" 2>/dev/null)"
+              if [ "${MONITOR_CHANGED:-false}" = "true" ] && [ "$L4ISO_RC" != "OK" ]; then
+                VERDICT="REJECTED"
+                case "$L4ISO_RC" in
+                  REJECTED:*) CODE="${L4ISO_RC#REJECTED:}"
+                              DETAIL="L4-iso 단계가 거부했다(no-surface-delta 경로)";;
+                  *) CODE="INCOMPLETE"
+                     DETAIL="모니터 변경이 있는데 L4-iso 격리 자기시험 기록이 없다 (fail-closed — 생략은 성공으로 읽히지 않는다)";;
+                esac
+              else
+                VERDICT="ACCEPTED"; CODE="NO_SURFACE_DELTA"
+              fi;;
+            *)
+              MISSING=""
+              for s in L1 L2 L3 L4; do
+                [ -f "$RES/$s.result" ] || MISSING="$MISSING $s"
+              done
+              if [ "${MONITOR_CHANGED:-false}" = "true" ] && [ ! -f "$RES/L4ISO.result" ]; then
+                MISSING="$MISSING L4ISO"
+              fi
+              if [ -n "$MISSING" ]; then
+                VERDICT="REJECTED"; CODE="INCOMPLETE"
+                DETAIL="판정이 기록되지 않은 단계:$MISSING (fail-closed — 생략은 성공으로 읽히지 않는다)"
+              else
+                for s in L1 L2 L3 L4 L4ISO; do
+                  [ -f "$RES/$s.result" ] || continue
+                  R="$(cat "$RES/$s.result")"
+                  case "$R" in
+                    REJECTED:*)
+                      VERDICT="REJECTED"; CODE="${R#REJECTED:}"
+                      DETAIL="$s 단계가 거부했다"; break;;
+                    OK:PROMOTION_PENDING)
+                      DETAIL="L2 = PROMOTION_PENDING (요구 집합 추가 — live ruleset PUT 대기)";;
+                  esac
+                done
+                [ -n "$VERDICT" ] || VERDICT="ACCEPTED"
+              fi;;
+          esac
+
+          {
+            echo "## GPA — Generation Promotion Acceptance (v1)"
+            echo ""
+            echo "- driver tree (trusted base): \`$DRIVER_REF\`"
+            echo "- candidate tree (data only): \`$CANDIDATE_REF\`"
+            echo "- execution-surface delta: ${HAS_DELTA:-unknown}"
+            echo "- candidate monitor changed: ${MONITOR_CHANGED:-unknown}"
+            echo ""
+            echo "### verdict: $VERDICT${CODE:+ ($CODE)}"
+            [ -n "$DETAIL" ] && echo "- detail: $DETAIL"
+            echo ""
+            echo "| stage | result |"
+            echo "|---|---|"
+            for s in surface L1 L2 L3 L4 L4ISO; do
+              if [ -f "$RES/$s.result" ]; then
+                echo "| $s | \`$(cat "$RES/$s.result")\` |"
+              else
+                echo "| $s | (not recorded) |"
+              fi
+            done
+          } >> "$SUMMARY"
+
+          if [ "$VERDICT" = "REJECTED" ]; then
+            echo "::error::GPA verdict: REJECTED:$CODE — $DETAIL"
+            exit 1
+          fi
+          echo "GPA verdict: ACCEPTED${CODE:+ ($CODE)}"

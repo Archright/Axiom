@@ -1,0 +1,13 @@
+=== summary ===
+run_a exit=0 pre=8045f3b1ce56398fe506aeec9f9344405e32cd7dffda64ddaff4dbd0db6c7cd4 post=8045f3b1ce56398fe506aeec9f9344405e32cd7dffda64ddaff4dbd0db6c7cd4
+run_b exit=0 pre=8045f3b1ce56398fe506aeec9f9344405e32cd7dffda64ddaff4dbd0db6c7cd4 post=8045f3b1ce56398fe506aeec9f9344405e32cd7dffda64ddaff4dbd0db6c7cd4
+run_c exit=0 pre=ce881efd4ae0c33c879edd8082a893dacbef6f8be2f2c427423c659ba5ee9b4f post=ce881efd4ae0c33c879edd8082a893dacbef6f8be2f2c427423c659ba5ee9b4f
+run_d exit=0 pre=8045f3b1ce56398fe506aeec9f9344405e32cd7dffda64ddaff4dbd0db6c7cd4 post=8045f3b1ce56398fe506aeec9f9344405e32cd7dffda64ddaff4dbd0db6c7cd4
+cmp_ab exit=0 verdict=equal
+cmp_ca exit=0 verdict=not_equal
+cmp_da exit=0 verdict=not_equal
+=== embeddedContentAttested (A/B/C/D) ===
+embedded_a: [  {    "contentSha256": "30c7e046bfa6c6cf17498e5dac35232b89cb62a2116ba976bfd749bdc763c143",    "crateName": "serde_json",    "index": 1  }]
+embedded_b: [  {    "contentSha256": "30c7e046bfa6c6cf17498e5dac35232b89cb62a2116ba976bfd749bdc763c143",    "crateName": "serde_json",    "index": 1  }]
+embedded_c: [  {    "contentSha256": "30c7e046bfa6c6cf17498e5dac35232b89cb62a2116ba976bfd749bdc763c143",    "crateName": "serde_json",    "index": 1  }]
+embedded_d: [  {    "contentSha256": "30c7e046bfa6c6cf17498e5dac35232b89cb62a2116ba976bfd749bdc763c143",    "crateName": "serde_json",    "index": 1  }]

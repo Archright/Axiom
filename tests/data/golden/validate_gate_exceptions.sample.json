@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/validate_gate_exceptions.py",
+  "description": "Schema validation for gate_exceptions.json — verifies required fields: gate, check, expires, review_action, approved_by",
+  "inputSample": {
+    "args": ["data/gate_exceptions.json"]
+  },
+  "outputSample": {
+    "stdout": "validate_gate_exceptions: PASS (5 exceptions valid, 0 schema violations)",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

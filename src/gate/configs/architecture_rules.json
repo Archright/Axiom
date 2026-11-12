@@ -1,0 +1,85 @@
+{
+  "rules": {
+    "layer-isolation": {
+      "severity": "error",
+      "description": "Core layer must not import from presentation layers",
+      "source": "src/core",
+      "forbidden": [
+        "src/cli",
+        "src/ui"
+      ],
+      "exempt": [
+        "persona_context_init",
+        "verification_interface"
+      ]
+    },
+    "domain-to-infra": {
+      "severity": "error",
+      "description": "Domain layer must not import from infrastructure",
+      "source": "src/core",
+      "forbidden": [
+        "src/verification"
+      ],
+      "exempt": [
+        "persona_context_init",
+        "verification_interface",
+        "persona_boundary"
+      ]
+    },
+    "srp-import-prefix": {
+      "severity": "warn",
+      "description": "File imports from too many distinct domain prefixes",
+      "max_prefixes": 3,
+      "scan_roots": [
+        "src/core",
+        "src/cli",
+        "src/verification",
+        "src/sieve"
+      ],
+      "debt_registry": "data/architecture_debt.json",
+      "new_file_severity": "error",
+      "auto_update": true
+    },
+    "ssot-mutation": {
+      "severity": "error",
+      "description": "Certificate fields mutated outside owner module",
+      "patterns": [
+        "cert.status =",
+        "cert.reason ="
+      ],
+      "exempt_files": [
+        "certificate_manager.nim"
+      ]
+    },
+    "sieve-layer": {
+      "severity": "error",
+      "description": "Sieve layer must not import from CLI/UI layers",
+      "source": "src/sieve",
+      "forbidden": [
+        "src/cli",
+        "src/ui"
+      ],
+      "exempt": []
+    },
+    "core-to-infra": {
+      "severity": "error",
+      "description": "Core layer must not import from infrastructure (except logger)",
+      "source": "src/core",
+      "forbidden": [
+        "src/infrastructure"
+      ],
+      "exempt": [
+        "infrastructure/logger"
+      ]
+    },
+    "engine-to-solver": {
+      "severity": "error",
+      "description": "Engine layer must not import verification/solver directly",
+      "source": "src/engine",
+      "forbidden": [
+        "src/verification/solver"
+      ],
+      "exempt": []
+    }
+  }
+}

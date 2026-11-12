@@ -1,0 +1,52 @@
+[
+  {
+    "url": "https://api.github.com/repos/Archright/Axiom/releases/200001",
+    "html_url": "https://github.com/Archright/Axiom/releases/tag/v0.5.4",
+    "assets_url": "https://api.github.com/repos/Archright/Axiom/releases/200001/assets",
+    "upload_url": "https://uploads.github.com/repos/Archright/Axiom/releases/200001/assets{?name,label}",
+    "tarball_url": "https://api.github.com/repos/Archright/Axiom/tarball/v0.5.4",
+    "zipball_url": "https://api.github.com/repos/Archright/Axiom/zipball/v0.5.4",
+    "id": 200001,
+    "node_id": "RE_relship_fixture_p1_row1",
+    "tag_name": "v0.5.4",
+    "target_commitish": "main",
+    "name": "v0.5.4",
+    "body": "Axiom v0.5.4 (fixture row)",
+    "draft": false,
+    "prerelease": false,
+    "created_at": "2026-10-20T00:00:00Z",
+    "published_at": "2026-10-20T00:00:00Z",
+    "author": {
+      "login": "wintrover",
+      "id": 53123826,
+      "node_id": "MDQ6VXNlcnk1MzEyMzgyNg==",
+      "type": "User",
+      "site_admin": false
+    }
+  },
+  {
+    "url": "https://api.github.com/repos/Archright/Axiom/releases/200002",
+    "html_url": "https://github.com/Archright/Axiom/releases/tag/v0.5.5",
+    "assets_url": "https://api.github.com/repos/Archright/Axiom/releases/200002/assets",
+    "upload_url": "https://uploads.github.com/repos/Archright/Axiom/releases/200002/assets{?name,label}",
+    "tarball_url": "https://api.github.com/repos/Archright/Axiom/tarball/v0.5.5",
+    "zipball_url": "https://api.github.com/repos/Archright/Axiom/zipball/v0.5.5",
+    "id": 200002,
+    "node_id": "RE_relship_fixture_p1_row2",
+    "tag_name": "v0.5.5",
+    "target_commitish": "main",
+    "name": "v0.5.5",
+    "body": "Axiom v0.5.5 (fixture row)",
+    "draft": false,
+    "prerelease": false,
+    "created_at": "2026-10-27T00:00:00Z",
+    "published_at": "2026-10-27T00:00:00Z",
+    "author": {
+      "login": "wintrover",
+      "id": 53123826,
+      "node_id": "MDQ6VXNlcnk1MzEyMzgyNg==",
+      "type": "User",
+      "site_admin": false
+    }
+  }
+]

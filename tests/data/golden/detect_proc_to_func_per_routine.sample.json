@@ -1,0 +1,12 @@
+{
+  "script": "tools/ci/detect_proc_to_func_per_routine.sh",
+  "description": "Per-Routine proc-to-func Detection — incremental, parallel, cache-optimized proc-to-func eligibility verification",
+  "inputSample": {
+    "args": []
+  },
+  "outputSample": {
+    "stdout": "proc_to_func_detect: 3 eligible procs found, 0 violations",
+    "stderr": ""
+  },
+  "exitCode": 0
+}

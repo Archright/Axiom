@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "specs": {
+    "axiom_rust_probe::add_u8": {
+      "post": "result == a + b",
+      "conditions": ["0 <= a", "a < 256", "0 <= b", "b < 256", "a + b < 256"]
+    },
+    "axiom_rust_probe::add_u8_mutant": {
+      "post": "result == a + b",
+      "conditions": ["0 <= a", "a < 256", "0 <= b", "b < 256", "a + b < 256"]
+    }
+  }
+}

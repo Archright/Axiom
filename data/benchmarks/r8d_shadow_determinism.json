@@ -1,0 +1,66 @@
+{
+ "experiment": "r8d_shadow_determinism",
+ "status": "IDENTICAL",
+ "method": "two runs of bin/selection-report with distinct AXIOM_STATE_DIR (/tmp/r8d-sd1, /tmp/r8d-sd2), same HEAD (c3adfb995 in /tmp/r8b3-worktree), same base d3a4d2f75, same symbols file (/tmp/symbols_file_v2.json)",
+ "runs": {
+  "run1": {
+   "stateDir": "/tmp/r8d-sd1",
+   "report": "/tmp/r8d-report1.json",
+   "plan": "/tmp/r8d-plan1.json",
+   "exitCode": 0
+  },
+  "run2": {
+   "stateDir": "/tmp/r8d-sd2",
+   "report": "/tmp/r8d-report2.json",
+   "plan": "/tmp/r8d-plan2.json",
+   "exitCode": 0
+  }
+ },
+ "shadowDigests": {
+  "run1": {
+   "changeSetDigest": "d97c1d7281abb270fd0e1d15d5c3a8720af382609cbb1d4b8ddfd1ff1243f276",
+   "graphDigest": "84d89c51c28f97a76d5a8500bdae2c802ff2aa1d107b56aabdfe801c3be4bc0c",
+   "selectionDigest": "937b8007331ff7008ce798da3959e43c8f5b62b555760ef148b0b03f22b9e6bf",
+   "requestDerivationDigest": "937b8007331ff7008ce798da3959e43c8f5b62b555760ef148b0b03f22b9e6bf",
+   "planDigest": "e8600762d983b1ed5ba1123736dee3bb66eb2d1d58335de0edefd5bc243106d2"
+  },
+  "run2": {
+   "changeSetDigest": "d97c1d7281abb270fd0e1d15d5c3a8720af382609cbb1d4b8ddfd1ff1243f276",
+   "graphDigest": "84d89c51c28f97a76d5a8500bdae2c802ff2aa1d107b56aabdfe801c3be4bc0c",
+   "selectionDigest": "937b8007331ff7008ce798da3959e43c8f5b62b555760ef148b0b03f22b9e6bf",
+   "requestDerivationDigest": "937b8007331ff7008ce798da3959e43c8f5b62b555760ef148b0b03f22b9e6bf",
+   "planDigest": "e8600762d983b1ed5ba1123736dee3bb66eb2d1d58335de0edefd5bc243106d2"
+  }
+ },
+ "identicalPerStep": {
+  "changeSetDigest": true,
+  "graphDigest": true,
+  "selectionDigest": true,
+  "requestDerivationDigest": true,
+  "planDigest": true
+ },
+ "selectionStatus": [
+  "VALID",
+  "VALID"
+ ],
+ "selectedCounts": [
+  3,
+  3
+ ],
+ "planIdentityRun1": {
+  "selectionDigest": "937b8007331ff7008ce798da3959e43c8f5b62b555760ef148b0b03f22b9e6bf",
+  "changeSetDigest": "d97c1d7281abb270fd0e1d15d5c3a8720af382609cbb1d4b8ddfd1ff1243f276",
+  "graphDigest": "84d89c51c28f97a76d5a8500bdae2c802ff2aa1d107b56aabdfe801c3be4bc0c",
+  "universeDigest": "ca769aba8f38074a2fbfd4b3bd5fc46041fbd5a9ba7bc6899f6d8d509e602d63",
+  "policyDigest": "policy:S2-local-ci-parity-v1",
+  "planDigest": "e8600762d983b1ed5ba1123736dee3bb66eb2d1d58335de0edefd5bc243106d2"
+ },
+ "provenance": {
+  "commands": [
+   "AXIOM_STATE_DIR=/tmp/r8d-sd1 bin/selection-report --base d3a4d2f75 --head HEAD --symbols-file /tmp/symbols_file_v2.json --output /tmp/r8d-report1.json --plan-out /tmp/r8d-plan1.json",
+   "AXIOM_STATE_DIR=/tmp/r8d-sd2 bin/selection-report --base d3a4d2f75 --head HEAD --symbols-file /tmp/symbols_file_v2.json --output /tmp/r8d-report2.json --plan-out /tmp/r8d-plan2.json"
+  ],
+  "executedAt": "2026-09-05",
+  "note": "selectionDigest==requestDerivationDigest at this tool schema level (derivationDigest/witnessDigest identical); planDigest covers requests (P2 wiring). CLM-DIGEST audit: all 5 digest inputs SHA-256 + canonical sorting, state-dir invariant."
+ }
+}

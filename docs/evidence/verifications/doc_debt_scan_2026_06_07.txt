@@ -1,0 +1,299 @@
+DOCUMENTATION DEBT SCAN RESULTS — 2026-06-07
+==============================================
+Scanner: Axiom documentation debt audit (read-only)
+Working directory: ../Axiom-core
+
+═══════════════════════════════════════════════
+[DOC-01] fixedpoint_engine.nim — Spec Coverage Gap
+═══════════════════════════════════════════════
+File:     src/verification/solver/fixedpoint_engine.nim (273 lines, 10798 bytes)
+Modified: 2026-06-05
+
+Status:   ⚠️ PARTIAL GAP
+
+Evidence:
+  - docs/spec/architecture_v2.md:165 — mentions fixedpoint_engine.nim in
+    Korean-language narrative only: "detective.nim의 investigate() →
+    cegar_engine.nim의 CEGAR 루프 → fixedpoint_engine.nim의 고정점 분석 순서로
+    진행됩니다." — narrative description, NOT a formal spec.
+  - docs/spec/solver_infrastructure_spec.md: Does NOT mention fixedpoint,
+    CHC, Horn clauses, PDR, or Spacer at all. Its headings are: Purpose,
+    Module Map, Key Types, Entry Points, S-Expression Constructor Hierarchy,
+    Integration Points, Key Contracts, Known Limitations.
+  - docs/spec/Subjective_logic.pdf — contains "CHC" as incidental text
+    (likely "CHC" abbreviation in probabilistic reasoning context, not
+    Constrained Horn Clauses).
+
+Gap: The solver_infrastructure_spec.md covers the Z3/SMT-LIB layer but
+completely omits the fixedpoint engine (CHC/PDR/Spacer-based analysis).
+A 273-line verification-critical module has no dedicated spec.
+
+Severity: HIGH — verification pipeline module without spec coverage.
+
+═══════════════════════════════════════════════
+[DOC-02] config.nims — injectAxiomDependencies Spec Gap
+═══════════════════════════════════════════════
+File:     config.nims (40 lines, 1847 bytes)
+Modified: 2026-06-06
+
+Status:   ⚠️ GAP
+
+Evidence:
+  - injectAxiomDependencies: ZERO mentions in docs/spec/. This is a
+    build-critical proc that determines how Nim resolves package paths at
+    compile time.
+  - config.nims: referenced in docs/spec/concurrency_policy.md only in
+    passing (likely the strictEffects/caseStmtMacros switches).
+  - axiom.toml: mentioned in docs/spec/architecture_v2.md (line 417,
+    loadTomlConfig("axiom.toml")) and
+    docs/spec/architectural_decisions_and_structural_limits.md.
+
+Gap: The Declarative Dependency Injection Protocol in config.nims is a
+non-obvious build mechanism (walking ~/.nimble/pkgs2/ dynamically). There
+is no spec documenting this behavior, its failure modes, or how to add
+new packages. DEBT#140 closed this as a build fix but the spec was never
+written.
+
+Severity: MEDIUM — build infrastructure without spec documentation.
+
+═══════════════════════════════════════════════
+[DOC-03] solver_infrastructure_spec.md — CHC/Spacer Gap
+═══════════════════════════════════════════════
+File:     docs/spec/solver_infrastructure_spec.md
+Modified: 2026-06-05
+
+Status:   ❌ MAJOR GAP
+
+Evidence:
+  - grep for fixedpoint|CHC|Horn|PDR|Spacer returns: NO MENTIONS
+  - Headings cover: Purpose, Module Map, Key Types, Entry Points,
+    S-Expression Constructor Hierarchy, Integration Points, Key Contracts,
+    Known Limitations.
+  - None of these sections address the CHC-based fixedpoint analysis.
+
+Gap: The fixedpoint engine is a core verification component (CEGAR loop,
+candidate invariant generation, Z3 refinement). The solver infrastructure
+spec covers only the Z3 bridge/SMT-LIB layer, completely omitting the
+abstract interpretation / fixedpoint analysis pipeline.
+
+Severity: HIGH — spec claims to cover "Solver Infrastructure" but omits
+an entire solver subsystem.
+
+═══════════════════════════════════════════════
+[DOC-04] pbt_policy.md — Stale Reference to Deleted fuzz_queries.nim
+═══════════════════════════════════════════════
+File:     docs/spec/pbt_policy.md
+
+Status:   ❌ STALE REFERENCES (5 occurrences)
+
+Evidence:
+  Line  7: "Note: src/gate/nimtry/fuzz_queries.nim was removed from the
+            codebase. PBT nimtry queries are no longer registered."
+  Line 33: "Add the function name to RequiredInvariantPatterns in
+            fuzz_queries.nim (file removed — PBT query registration
+            currently inactive)"
+  Line 102: "fuzz_queries.nim (removed from src/gate/nimtry/) previously
+             registered four L2 gate queries:"
+  Line 116: "import ./fuzz_queries"
+  Line 158: "Add to RequiredInvariantPatterns in fuzz_queries.nim"
+
+  find src/ tests/ for fuzz_queries.nim: FILE DOES NOT EXIST
+
+Gap: The policy document acknowledges the file was removed but still
+contains actionable instructions (lines 33, 158) referencing the deleted
+file as if it exists. Lines 102-116 contain dead code examples. The
+"Note" at line 7 is insufficient — the actionable steps should be
+updated to reflect current state.
+
+Severity: LOW — doc self-acknowledges removal, but actionable steps
+are misleading for agents following the policy.
+
+═══════════════════════════════════════════════
+[DOC-05] axiom.toml — Spec Coverage
+═══════════════════════════════════════════════
+File:     axiom.toml (Trust Layer Policy + Prove config)
+Modified: present in project root
+
+Status:   ✅ ADEQUATE (with minor gap)
+
+Evidence:
+  - docs/spec/architecture_v2.md:417 — loadTomlConfig("axiom.toml")
+    documented in workflow diagram.
+  - docs/spec/architectural_decisions_and_structural_limits.md — mentions
+    axiom.toml.
+  - The TOML file itself is self-documenting with inline comments.
+
+Minor gap: The [trust.axiom] section's trusted_patterns list and
+auto_promote_lean_replay logic have no formal spec explaining the
+promotion criteria beyond inline comments.
+
+Severity: LOW — inline comments are sufficient for now.
+
+═══════════════════════════════════════════════
+[DOC-06] Version Mismatch — nimble/lakefile vs. git HEAD
+═══════════════════════════════════════════════
+Status:   ⚠️ MISMATCH DETECTED
+
+Evidence:
+  - axiom.nimble: version = "0.3.6"
+  - lakefile.toml: version = "0.3.6"
+  - git HEAD commit: "chore(debt): establish pristine axiom v0.3.7
+    baseline via technical debt immunity protocol"
+
+Gap: The latest commit message declares v0.3.7 as the baseline, but both
+axiom.nimble and lakefile.toml still report version "0.3.6". The version
+was not bumped to match the declared release.
+
+Severity: MEDIUM — version declaration mismatch between commit metadata
+and package manifests.
+
+═══════════════════════════════════════════════
+[DOC-07] AGENTS.md SSOT Path Ambiguity — certificate_manager
+═══════════════════════════════════════════════
+Status:   ⚠️ AMBIGUOUS PATH
+
+Evidence:
+  - AGENTS.md §1.3 states: "Certificates → certificate_manager.nim"
+    (bare filename, no directory prefix)
+  - Actual location: src/verification/certificate_manager.nim
+  - AGENTS.md correctly prefixes other entries: "Types → domain_types.nim"
+    (also bare), "ASI → src/core/metrics.nim" (has prefix)
+
+Gap: Inconsistent path prefixing in the SSOT table. certificate_manager
+is in src/verification/ but AGENTS.md omits the directory. Agents
+searching src/core/ (where domain_types.nim lives) would not find it.
+Should be: "Certificates → src/verification/certificate_manager.nim".
+
+Severity: LOW — agents can find it via `find`, but the inconsistency
+creates ambiguity in the SSOT table.
+
+═══════════════════════════════════════════════
+[BONUS-01] Broken .nim File References in docs/spec/
+═══════════════════════════════════════════════
+Status:   ⚠️ BROKEN REFERENCES FOUND
+
+BROKEN: docs/spec/architectural_decisions_and_structural_limits.md
+  - `osdirs.nim`  → NOT FOUND in src/ or tests/ (Nim stdlib module,
+    not a project file — false positive if referring to stdlib)
+  - `syncio.nim`  → NOT FOUND in src/ or tests/ (Nim stdlib module)
+  - `times.nim`   → NOT FOUND in src/ or tests/ (Nim stdlib module)
+
+BROKEN: docs/spec/pbt_policy.md
+  - `fuzz_queries.nim` → NOT FOUND (see DOC-04 above)
+
+Note: osdirs.nim, syncio.nim, times.nim are Nim stdlib modules. The
+references are likely documenting stdlib behavior, not project files.
+These are false positives for "broken project references" but indicate
+that the docs should clarify stdlib vs. project scope.
+
+Severity: LOW — stdlib references are technically correct; fuzz_queries
+is genuinely broken.
+
+═══════════════════════════════════════════════
+[BONUS-02] docs/spec/ Freshness
+═══════════════════════════════════════════════
+Total .md files in docs/spec/: 31
+
+Most recently modified (top 10):
+  2026-06-05  docs/spec/type_system_spec.md
+  2026-06-05  docs/spec/translator_spec.md
+  2026-06-05  docs/spec/solver_infrastructure_spec.md
+  2026-06-05  docs/spec/personas_spec.md
+  2026-06-05  docs/spec/frontend_framework_spec.md
+  2026-06-05  docs/spec/architecture_v2.md
+  2026-06-05  docs/spec/sieve_subjective_logic_spec.md
+  2026-06-05  docs/spec/mcp_protocol_spec.md
+  2026-06-05  docs/spec/healing_orchestrator_spec.md
+  2026-06-05  docs/spec/threadpool_migration.md
+
+Stale docs (>30 days): NONE
+
+Status: ✅ ALL FRESH — all docs/spec/ files modified within last 30 days.
+
+═══════════════════════════════════════════════
+[BONUS-03] README Files Across Project
+═══════════════════════════════════════════════
+  ./README.md
+  ./verifications/README.md
+  ./certified_patterns/README.md
+  ./experimental/README.md
+  ./tests/unit/nimtry_fixtures/README.md
+  ./tests/test_data/README.md
+  ./tests/snapshots/README.md
+
+Status: ✅ 7 README files present across project.
+
+═══════════════════════════════════════════════
+[BONUS-04] DEBT_REGISTRY Cross-Check
+═══════════════════════════════════════════════
+- config.nims: DEBT#061, #063, #064, #086, #140 — all CLOSED.
+  No open debt entries for config.nims.
+- certificate_manager: DEBT#171 (test coverage) — CLOSED.
+  DEBT-GW271, DEBT-GW272 — CLOSED.
+- fixedpoint_engine: NO DEBT ENTRIES FOUND.
+- fuzz_queries: NO DEBT ENTRIES FOUND (file deleted, debt entry never
+  created for the orphaned documentation).
+
+═══════════════════════════════════════════════
+SUMMARY TABLE
+═══════════════════════════════════════════════
+┌─────────┬─────────────────────────────────────────────┬──────────┬──────────┐
+│  ID     │  Finding                                    │ Severity │ Action   │
+├─────────┼─────────────────────────────────────────────┼──────────┼──────────┤
+│ DOC-01  │ fixedpoint_engine.nim has no formal spec    │ HIGH     │ Write    │
+│         │ (273 lines, verification-critical)          │          │ spec doc │
+├─────────┼─────────────────────────────────────────────┼──────────┼──────────┤
+│ DOC-02  │ config.nims injectAxiomDependencies undocumented │ MEDIUM │ Write  │
+│         │ in docs/spec/                               │          │ spec doc │
+├─────────┼─────────────────────────────────────────────┼──────────┼──────────┤
+│ DOC-03  │ solver_infrastructure_spec.md omits entire  │ HIGH     │ Extend   │
+│         │ CHC/fixedpoint/PDR subsystem                │          │ existing │
+├─────────┼─────────────────────────────────────────────┼──────────┼──────────┤
+│ DOC-04  │ pbt_policy.md has 5 stale refs to deleted   │ LOW      │ Update   │
+│         │ fuzz_queries.nim (incl. actionable steps)   │          │ or prune │
+├─────────┼─────────────────────────────────────────────┼──────────┼──────────┤
+│ DOC-05  │ axiom.toml spec coverage adequate           │ LOW      │ None     │
+│         │ (inline comments + architecture_v2.md)      │          │ needed   │
+├─────────┼─────────────────────────────────────────────┼──────────┼──────────┤
+│ DOC-06  │ Version mismatch: nimble/lakefile say 0.3.6 │ MEDIUM   │ Bump to  │
+│         │ but git HEAD declares v0.3.7 baseline       │          │ 0.3.7    │
+├─────────┼─────────────────────────────────────────────┼──────────┼──────────┤
+│ DOC-07  │ AGENTS.md SSOT table: bare filename for     │ LOW      │ Add full │
+│         │ certificate_manager (inconsistent prefix)   │          │ path     │
+├─────────┼─────────────────────────────────────────────┼──────────┼──────────┤
+│ BONUS-01│ 4 broken .nim refs in docs/spec/ (3 stdlib, │ LOW      │ Clarify  │
+│         │ 1 genuinely deleted)                        │          │ scope    │
+├─────────┼─────────────────────────────────────────────┼──────────┼──────────┤
+│ BONUS-02│ docs/spec/ freshness: ALL files <30 days    │ OK       │ None     │
+├─────────┼─────────────────────────────────────────────┼──────────┼──────────┤
+│ BONUS-03│ 7 README files across project               │ OK       │ None     │
+├─────────┼─────────────────────────────────────────────┼──────────┼──────────┤
+│ BONUS-04│ DEBT_REGISTRY cross-check: 2 findings       │ INFO     │ Monitor  │
+│         │ have no debt entries (fixedpoint, fuzz_docs)│          │          │
+└─────────┴─────────────────────────────────────────────┴──────────┴──────────┘
+
+═══════════════════════════════════════════════
+PRIORITIZED ACTION ITEMS
+═══════════════════════════════════════════════
+P1 (HIGH):
+  1. Write docs/spec/fixedpoint_engine_spec.md covering CHC, PDR, Spacer,
+     candidate invariant generation, CEGAR loop integration, Z3 refinement.
+  2. Extend docs/spec/solver_infrastructure_spec.md to include the
+     fixedpoint analysis subsystem (or cross-reference new spec).
+
+P2 (MEDIUM):
+  3. Document config.nims Declarative Dependency Injection Protocol in
+     docs/spec/ (injectAxiomDependencies proc, failure modes, how to add
+     packages).
+  4. Bump axiom.nimble and lakefile.toml version to 0.3.7 to match git
+     HEAD commit declaration.
+
+P3 (LOW):
+  5. Update docs/spec/pbt_policy.md actionable steps (lines 33, 158) to
+     reflect that fuzz_queries.nim no longer exists and PBT registration
+     is inactive.
+  6. Fix AGENTS.md §1.3 SSOT table: certificate_manager →
+     src/verification/certificate_manager.nim.
+  7. Clarify stdlib vs. project scope in docs/spec/
+     architectural_decisions_and_structural_limits.md for osdirs.nim,
+     syncio.nim, times.nim references.

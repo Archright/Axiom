@@ -1,0 +1,1158 @@
+FUNCTION-TYPE ONLY — axiom-self
+groups=188 residual=22
+GROUP cli.shared.proof_hydration::countKernelSymbolsDeepVerified kinds=['proc', 'proc']
+   [73-77] kind=proc export=True sha=5726b275dbbc
+      'proc countKernelSymbolsDeepVerified*(\nscope: KernelScopeInfo;\ncertProvider: proc(modulePath: string; functionName: string): JsonNode {.raises: [].};\nverifier: DeepVerifyFn\n): int {.raises: [].} ='
+   [106-109] kind=proc export=True sha=82e1886e57b9
+      'proc countKernelSymbolsDeepVerified*(\ncertDir: string;\nscope: KernelScopeInfo\n): int {.raises: [].} ='
+GROUP core.metrics::% kinds=['func', 'proc', 'proc', 'proc']
+   [26-26] kind=func export=False sha=1e94e8c251a3
+      'func `%`*(x: CurrentRunVerified): JsonNode = %(int(x))'
+   [27-27] kind=proc export=False sha=5c796ff9d59a
+      'proc `%`*(x: TotalKernelCount): JsonNode = %(int(x))'
+   [28-28] kind=proc export=False sha=c9c6bf4ba8d0
+      'proc `%`*(x: ASIRatio): JsonNode = %(toFloat(x))'
+   [29-29] kind=proc export=False sha=118f39f75995
+      'proc `%`*(x: VerifiedKernelRatio): JsonNode = %(toFloat(x))'
+GROUP core.contract.contract_ast_extractor::tryExtractContractViaAst kinds=['proc', 'proc']
+   [275-276] kind=proc export=False sha=0741a31fe6c6
+      'proc tryExtractContractViaAst(functionName, body: string; params: seq[(string, string)];\nreturnType: string = ""): Option[ct.ExtractedContract]'
+   [334-335] kind=proc export=False sha=b8037c4d85cf
+      'proc tryExtractContractViaAst(functionName, body: string; params: seq[(string, string)];\nreturnType: string = ""): Option[ct.ExtractedContract] {.raises: [].} ='
+GROUP core.telemetry.trace_normalizer::$ kinds=['func', 'proc']
+   [79-79] kind=func export=False sha=3139c22ac9d0
+      'func `$`*(nt: NormalizedTrace): string {.raises: [].} = string(nt)'
+   [81-81] kind=proc export=False sha=a9b2eba0decb
+      'proc `$`*(nt: NormalizedTrace): string {.raises: [].} = string(nt)'
+GROUP core.solver.smt2_lexer::alphaRename kinds=['func', 'func']
+   [308-309] kind=func export=True sha=0acdcf354acd
+      'func alphaRename*(node: SExprNode;\nenv: Table[string, int]; nextIdx: int): string {.noSideEffect.} ='
+   [328-328] kind=func export=True sha=25ddfce857fe
+      'func alphaRename*(node: SExprNode): string {.noSideEffect.} ='
+GROUP core.macros.best_effort::bestEffort kinds=['template', 'macro']
+   [14-14] kind=template export=True sha=49574a05c0c9
+      'template bestEffort*(reason: static string) {.pragma.}'
+   [16-16] kind=macro export=True sha=942580c3c50f
+      'macro bestEffort*(reason: static string, procDef: untyped): untyped ='
+GROUP core.gates.gate_types::$ kinds=['func', 'func']
+   [77-77] kind=func export=False sha=1268fa8a7a83
+      'func `$`*(kind: GateStatusKind): string ='
+   [85-85] kind=func export=False sha=38d4e1a8b79d
+      'func `$`*(res: GateResult): string ='
+GROUP core.integrity.integrity_refinement_loop::runIntegrityLoop kinds=['func', 'func']
+   [263-270] kind=func export=True sha=e7dbf20eb081
+      'func runIntegrityLoop*(\nsourceCode: string;\nsourcePath: string;\ntargetProfile: TargetProfile;\nbudgetMs: int = integrityBudgetMs;\nmaxIterations: int = integrityMaxIterations;\nfixedSeed: int = integrity'
+   [349-353] kind=func export=True sha=9feb213f173b
+      'func runIntegrityLoop*(\nbudgetMs: int = integrityBudgetMs;\nmaxIterations: int = integrityMaxIterations;\nfixedSeed: int = integrityFixedSeed\n): IntegrityLoopResult {.raises: [].} ='
+GROUP core.interfaces.file_io_executor::fileExists kinds=['proc', 'func']
+   [37-37] kind=proc export=True sha=da2fcbad745b
+      'proc fileExists*(e: SystemFileIoExecutor, path: string): bool {.axiomEffect: IOEffect, tags: [IOEffect].} ='
+   [108-108] kind=func export=True sha=d544a92c648a
+      'func fileExists*(e: var MockFileIoExecutor, path: string): bool {.raises: [].} ='
+GROUP core.interfaces.file_io_executor::dirExists kinds=['proc', 'func']
+   [40-40] kind=proc export=True sha=37e499c12963
+      'proc dirExists*(e: SystemFileIoExecutor, path: string): bool {.axiomEffect: IOEffect, tags: [IOEffect].} ='
+   [111-111] kind=func export=True sha=68018f0d9f11
+      'func dirExists*(e: var MockFileIoExecutor, path: string): bool {.raises: [].} ='
+GROUP core.interfaces.file_io_executor::readFile kinds=['proc', 'func']
+   [43-43] kind=proc export=True sha=cb297344c5a9
+      'proc readFile*(e: SystemFileIoExecutor, path: string): string {.axiomEffect: IOEffect, tags: [IOEffect].} ='
+   [114-114] kind=func export=True sha=841c5f9ea4fd
+      'func readFile*(e: var MockFileIoExecutor, path: string): string {.raises: [].} ='
+GROUP core.interfaces.file_io_executor::readLines kinds=['proc', 'func']
+   [69-69] kind=proc export=True sha=4002e0bb9cc2
+      'proc readLines*(e: SystemFileIoExecutor, path: string): seq[string] {.axiomEffect: IOEffect, tags: [IOEffect].} ='
+   [117-117] kind=func export=True sha=9d562888f4e1
+      'func readLines*(e: var MockFileIoExecutor, path: string): seq[string] {.raises: [].} ='
+GROUP core.interfaces.file_io_executor::walkDirEntries kinds=['proc', 'func']
+   [75-75] kind=proc export=True sha=ba49734dbcb4
+      'proc walkDirEntries*(e: SystemFileIoExecutor, path: string): seq[string] {.axiomEffect: IOEffect, tags: [IOEffect].} ='
+   [120-120] kind=func export=True sha=bca6c15cb2d2
+      'func walkDirEntries*(e: var MockFileIoExecutor, path: string): seq[string] {.raises: [].} ='
+GROUP core.interfaces.git_operations::toGitError kinds=['func', 'func']
+   [193-193] kind=func export=False sha=a1b936f36fd0
+      'func toGitError(pr: ProcessResult, cmdStr: string, context: string):'
+   [199-199] kind=func export=False sha=fca2e6f33ec7
+      'func toGitError(execErr: string, cmdStr: string, context: string):'
+GROUP core.interfaces.git_operations::merge kinds=['func', 'func']
+   [339-340] kind=func export=True sha=3d2ed92c3581
+      'func merge*(g: var DryRunGitOps, strategy: MergeStrategy,\nbranch: string): Result[MergeResult, GitError] {.raises: [].} ='
+   [427-428] kind=func export=True sha=bd5d9a5e60ba
+      'func merge*(g: var MockGitOps, strategy: MergeStrategy,\nbranch: string): Result[MergeResult, GitError] {.raises: [].} ='
+GROUP core.interfaces.git_operations::rebaseOnto kinds=['func', 'func']
+   [351-352] kind=func export=True sha=8e9f8f42412b
+      'func rebaseOnto*(g: var DryRunGitOps, upstream: string,\nbranch: string): Result[MergeResult, GitError]'
+   [439-440] kind=func export=True sha=b9daf3cb92d0
+      'func rebaseOnto*(g: var MockGitOps, upstream: string,\nbranch: string): Result[MergeResult, GitError]'
+GROUP core.interfaces.git_operations::updateRef kinds=['func', 'func']
+   [358-359] kind=func export=True sha=b2e3b527dd62
+      'func updateRef*(g: var DryRunGitOps, refname: string,\nnewTarget: string): Result[void, GitError] {.raises: [].} ='
+   [446-447] kind=func export=True sha=acf4c3a4d2a7
+      'func updateRef*(g: var MockGitOps, refname: string,\nnewTarget: string): Result[void, GitError] {.raises: [].} ='
+GROUP core.interfaces.git_operations::worktreeAdd kinds=['func', 'func']
+   [365-366] kind=func export=True sha=856f0b1a4077
+      'func worktreeAdd*(g: var DryRunGitOps, path: string,\nbranch: string): Result[void, GitError] {.raises: [].} ='
+   [452-453] kind=func export=True sha=e122c1605989
+      'func worktreeAdd*(g: var MockGitOps, path: string,\nbranch: string): Result[void, GitError] {.raises: [].} ='
+GROUP core.interfaces.git_operations::worktreeRemove kinds=['func', 'func']
+   [372-373] kind=func export=True sha=c6dc5b6a45a8
+      'func worktreeRemove*(g: var DryRunGitOps,\npath: string): Result[void, GitError] {.raises: [].} ='
+   [458-459] kind=func export=True sha=91aecee37dce
+      'func worktreeRemove*(g: var MockGitOps,\npath: string): Result[void, GitError] {.raises: [].} ='
+GROUP core.interfaces.git_operations::isDirty kinds=['func', 'func']
+   [379-379] kind=func export=True sha=331147931792
+      'func isDirty*(g: var DryRunGitOps): Result[bool, GitError] {.raises: [].} ='
+   [464-464] kind=func export=True sha=303dddd00f56
+      'func isDirty*(g: var MockGitOps): Result[bool, GitError] {.raises: [].} ='
+GROUP core.interfaces.git_operations::currentBranch kinds=['func', 'func']
+   [384-384] kind=func export=True sha=937a642df73e
+      'func currentBranch*(g: var DryRunGitOps): Result[string, GitError]'
+   [469-469] kind=func export=True sha=d3bc5394713d
+      'func currentBranch*(g: var MockGitOps): Result[string, GitError]'
+GROUP core.interfaces.git_operations::revParse kinds=['func', 'func']
+   [390-391] kind=func export=True sha=41fcd7a3b67d
+      'func revParse*(g: var DryRunGitOps,\nrefname: string): Result[string, GitError] {.raises: [].} ='
+   [475-476] kind=func export=True sha=525dbc10e9f2
+      'func revParse*(g: var MockGitOps,\nrefname: string): Result[string, GitError] {.raises: [].} ='
+GROUP core.interfaces.git_operations::status kinds=['func', 'func']
+   [396-396] kind=func export=True sha=380ef7aa3b74
+      'func status*(g: var DryRunGitOps): Result[string, GitError] {.raises: [].} ='
+   [481-481] kind=func export=True sha=ae2c579fb1e9
+      'func status*(g: var MockGitOps): Result[string, GitError] {.raises: [].} ='
+GROUP core.interfaces.git_operations::listFiles kinds=['func', 'func']
+   [401-401] kind=func export=True sha=0dfde0ac8d3d
+      'func listFiles*(g: var DryRunGitOps): Result[seq[string], GitError]'
+   [486-486] kind=func export=True sha=b808cb0c5d02
+      'func listFiles*(g: var MockGitOps): Result[seq[string], GitError]'
+GROUP core.interfaces.io_executor::$ kinds=['func', 'func']
+   [93-93] kind=func export=False sha=780c1d2e5cda
+      'func `$`*(cap: IOCapability): string {.raises: [].} ='
+   [107-107] kind=func export=False sha=c8acf53ad500
+      'func `$`*(gc: GitCommand): string {.inline, raises: [].} ='
+GROUP core.interfaces.io_executor::execute kinds=['proc', 'func']
+   [133-133] kind=proc export=True sha=8d0df352a525
+      'proc execute*(e: SystemExecutor, cmd: ProcessCommand): Result[ProcessResult, string]'
+   [166-166] kind=func export=True sha=02dc66e3792e
+      'func execute*(e: var MockExecutor, cmd: ProcessCommand): Result[ProcessResult, string] {.raises: [].} ='
+GROUP core.interfaces.io_executor::executeGit kinds=['proc', 'func']
+   [147-147] kind=proc export=True sha=b6848cc9a2a4
+      'proc executeGit*(e: SystemExecutor, cmd: GitCommand): Result[ProcessResult, string]'
+   [176-176] kind=func export=True sha=a0218cc505eb
+      'func executeGit*(e: var MockExecutor, cmd: GitCommand): Result[ProcessResult, string] {.raises: [].} ='
+GROUP core.interfaces.logging_hub::logInfo kinds=['template', 'template']
+   [37-37] kind=template export=True sha=a596d0f62d68
+      'template logInfo*(msg: string) ='
+   [40-40] kind=template export=True sha=9ae74bbf6d0e
+      'template logInfo*(module, msg: string) ='
+GROUP core.resilience.retry_policy::defaultClockMs kinds=['proc', 'func']
+   [41-41] kind=proc export=True sha=21b3fd264dc7
+      'proc defaultClockMs*(clk: SystemClock): int64 {.inline, tags: [AxiomIOEffect, IOEffect, TimeEffect, RootEffect], axiomEffect: IOEffect.} ='
+   [46-46] kind=func export=True sha=82378bde005a
+      'func defaultClockMs*(clk: DeterministicClock): int64 {.inline, noSideEffect.} ='
+GROUP core.fsm.proof_typestate::retry kinds=['func', 'func', 'func', 'func']
+   [78-78] kind=func export=True sha=118d87e74463
+      'func retry*(s: AxProofTimedOut): AxProofUnattempted {.inline.} ='
+   [81-81] kind=func export=True sha=0a24cf874c4a
+      'func retry*(s: AxProofCounterEx): AxProofUnattempted {.inline.} ='
+   [84-84] kind=func export=True sha=92011c927907
+      'func retry*(s: AxProofUnverifiable): AxProofUnattempted {.inline.} ='
+   [87-87] kind=func export=True sha=859abf1cbff5
+      'func retry*(s: AxProofVacuous): AxProofUnattempted {.inline.} ='
+GROUP core.fsm.proof_typestate::isTerminal kinds=['func', 'func', 'func', 'func', 'func', 'func', 'func', 'func', 'func']
+   [106-106] kind=func export=True sha=7ac113a52070
+      'func isTerminal*(s: AxProofVerified): bool {.inline.} = true'
+   [107-107] kind=func export=True sha=7e5d7e088dcc
+      'func isTerminal*(s: AxProofCounterEx): bool {.inline.} = true'
+   [108-108] kind=func export=True sha=ebf231343453
+      'func isTerminal*(s: AxProofTimedOut): bool {.inline.} = true'
+   [109-109] kind=func export=True sha=f235e9759e48
+      'func isTerminal*(s: AxProofUnverifiable): bool {.inline.} = true'
+   [110-110] kind=func export=True sha=0beb20de306e
+      'func isTerminal*(s: AxProofBlocked): bool {.inline.} = true'
+   [111-111] kind=func export=True sha=52bf02682918
+      'func isTerminal*(s: AxProofVacuous): bool {.inline.} = true'
+   [112-112] kind=func export=True sha=56b7ea036e3b
+      'func isTerminal*(s: AxProofUnknown): bool {.inline.} = true'
+   [113-113] kind=func export=True sha=1723ca6ca7b5
+      'func isTerminal*(s: AxProofUnattempted): bool {.inline.} = false'
+   [114-114] kind=func export=True sha=b7f0480f4d81
+      'func isTerminal*(s: AxProofInProgress): bool {.inline.} = false'
+GROUP core.fsm.proof_typestate::isVerified kinds=['func', 'func']
+   [116-116] kind=func export=True sha=217465aa2eaa
+      'func isVerified*(s: AxProofVerified): bool {.inline.} = true'
+   [117-119] kind=func export=True sha=28dfea5a99cb
+      'func isVerified*(s: AxProofUnattempted | AxProofInProgress | AxProofCounterEx |\nAxProofTimedOut | AxProofUnverifiable | AxProofBlocked |\nAxProofVacuous | AxProofUnknown): bool {.inline.} = false'
+GROUP core.fsm.proof_typestate::stateName kinds=['func', 'func', 'func', 'func', 'func', 'func', 'func', 'func', 'func']
+   [125-125] kind=func export=True sha=8d2a32a3e9a3
+      'func stateName*(s: AxProofUnattempted): string = "unattempted"'
+   [126-126] kind=func export=True sha=2def6c31977b
+      'func stateName*(s: AxProofInProgress): string = "in_progress"'
+   [127-127] kind=func export=True sha=68775a6c20c6
+      'func stateName*(s: AxProofVerified): string = "verified"'
+   [128-128] kind=func export=True sha=6ed0c08a3604
+      'func stateName*(s: AxProofCounterEx): string = "counter_example"'
+   [129-129] kind=func export=True sha=9791851f8804
+      'func stateName*(s: AxProofTimedOut): string = "timed_out"'
+   [130-130] kind=func export=True sha=bd6450967103
+      'func stateName*(s: AxProofUnverifiable): string = "unverifiable"'
+   [131-131] kind=func export=True sha=82c035e06a6b
+      'func stateName*(s: AxProofBlocked): string = "blocked"'
+   [132-132] kind=func export=True sha=abaad2d406f3
+      'func stateName*(s: AxProofVacuous): string = "vacuous_contradiction"'
+   [133-133] kind=func export=True sha=c35b62c6dc94
+      'func stateName*(s: AxProofUnknown): string = "unknown"'
+GROUP core.fsm.proof_typestate::transitionName kinds=['func', 'func', 'func', 'func', 'func', 'func', 'func', 'func', 'func', 'func', 'func', 'func', 'func', 'func']
+   [139-139] kind=func export=True sha=d0944c93f2db
+      'func transitionName*(src: AxProofUnattempted, dst: AxProofInProgress): string = "start"'
+   [140-140] kind=func export=True sha=729f1eb3a8f5
+      'func transitionName*(src: AxProofInProgress, dst: AxProofVerified): string = "succeed"'
+   [141-141] kind=func export=True sha=d4b51fd62ec2
+      'func transitionName*(src: AxProofInProgress, dst: AxProofCounterEx): string = "counter_example"'
+   [142-142] kind=func export=True sha=caff92367efd
+      'func transitionName*(src: AxProofInProgress, dst: AxProofTimedOut): string = "timeout"'
+   [143-143] kind=func export=True sha=fd2cde184b23
+      'func transitionName*(src: AxProofInProgress, dst: AxProofUnverifiable): string = "unverifiable"'
+   [144-144] kind=func export=True sha=9580135650ae
+      'func transitionName*(src: AxProofInProgress, dst: AxProofBlocked): string = "markBlocked"'
+   [145-145] kind=func export=True sha=d18e6c9478ee
+      'func transitionName*(src: AxProofInProgress, dst: AxProofVacuous): string = "vacuous"'
+   [146-146] kind=func export=True sha=3fd49a4d5c1a
+      'func transitionName*(src: AxProofTimedOut, dst: AxProofUnattempted): string = "retry"'
+   [147-147] kind=func export=True sha=444ab89db562
+      'func transitionName*(src: AxProofCounterEx, dst: AxProofUnattempted): string = "retry"'
+   [148-148] kind=func export=True sha=9f3ca47d49f5
+      'func transitionName*(src: AxProofUnverifiable, dst: AxProofUnattempted): string = "retry"'
+   [149-149] kind=func export=True sha=e4f1b63ed47c
+      'func transitionName*(src: AxProofVacuous, dst: AxProofUnattempted): string = "retry"'
+   [150-150] kind=func export=True sha=8ce34b83814f
+      'func transitionName*(src: AxProofBlocked, dst: AxProofUnattempted): string = "unblock"'
+   [151-151] kind=func export=True sha=5f2f2fc8b6f5
+      'func transitionName*(src: AxProofVerified, dst: AxProofUnknown): string = "demote"'
+   [152-152] kind=func export=True sha=011cb503e7a0
+      'func transitionName*(src: AxProofUnknown, dst: AxProofUnattempted): string = "reverify"'
+GROUP core.schema.cst_schema::$ kinds=['func', 'proc']
+   [30-30] kind=func export=False sha=9797f9096c78
+      'func `$`*(p: FilePath): string {.raises: [].} ='
+   [37-37] kind=proc export=False sha=85b9fd3de408
+      'proc `$`*(p: FilePath): string {.raises: [].} ='
+GROUP core.schema.cst_schema::== kinds=['func', 'proc']
+   [32-32] kind=func export=False sha=7417b5b9688a
+      'func `==`*(a, b: FilePath): bool {.raises: [].} ='
+   [39-39] kind=proc export=False sha=a98720c12ade
+      'proc `==`*(a, b: FilePath): bool {.raises: [].} ='
+GROUP core.schema.git_schema::toJson kinds=['func', 'func', 'func', 'func', 'func', 'func', 'func', 'func', 'func', 'func']
+   [203-203] kind=func export=True sha=9cfbaee26c31
+      'func toJson*(e: GitErrorKind): JsonNode {.raises: [].} ='
+   [224-224] kind=func export=True sha=437ddc05a099
+      'func toJson*(e: GitError): JsonNode {.raises: [].} ='
+   [244-244] kind=func export=True sha=8555ba05f0d4
+      'func toJson*(b: BranchType): JsonNode {.raises: [].} ='
+   [260-260] kind=func export=True sha=e332fd18e03b
+      'func toJson*(m: MergeResult): JsonNode {.raises: [].} ='
+   [286-286] kind=func export=True sha=0f230bab6a63
+      'func toJson*(r: RebaseResult): JsonNode {.raises: [].} ='
+   [304-304] kind=func export=True sha=08816fd05248
+      'func toJson*(ls: LocalState): JsonNode {.raises: [].} ='
+   [337-337] kind=func export=True sha=c93d6b97a51c
+      'func toJson*(repo: Repository): JsonNode {.raises: [].} ='
+   [359-359] kind=func export=True sha=1e9a17f3a2c5
+      'func toJson*(ws: WorkingState): JsonNode {.raises: [].} ='
+   [379-379] kind=func export=True sha=625cca04f579
+      'func toJson*(v: Verdict): JsonNode {.raises: [].} ='
+   [412-412] kind=func export=True sha=8e76d08c1337
+      'func toJson*(ci: ConflictInfo): JsonNode {.raises: [].} ='
+GROUP core.schema.io_schema::$ kinds=['func', 'proc']
+   [297-297] kind=func export=False sha=efad9df0f335
+      'func `$`*(e: ProcessExitCode): string {.raises: [].} ='
+   [300-300] kind=proc export=False sha=a224b28947c4
+      'proc `$`*(e: ProcessExitCode): string {.raises: [].} ='
+GROUP core.schema.policy_schema::$ kinds=['func', 'proc']
+   [13-13] kind=func export=False sha=299cdae308e0
+      'func `$`*(v: PolicyVersion): string {.inline.} ='
+   [23-23] kind=proc export=False sha=76e299af7f45
+      'proc `$`*(v: PolicyVersion): string {.inline.} ='
+GROUP core.schema.policy_schema::== kinds=['func', 'proc']
+   [15-15] kind=func export=False sha=6bb1556ab1df
+      'func `==`*(a, b: PolicyVersion): bool {.inline.} ='
+   [47-47] kind=proc export=False sha=963980223c14
+      'proc `==`*(a, b: PolicyVersion): bool {.inline.} ='
+GROUP core.schema.schema_utils_runtime::validateAll kinds=['func', 'func']
+   [204-204] kind=func export=True sha=b932b0b6978a
+      'func validateAll*(validators: openArray[SchemaValidator]): seq[SchemaViolation] ='
+   [219-220] kind=func export=True sha=d4e08498bfe1
+      'func validateAll*(configs: openArray[JsonNode];\nschemas: openArray[PolicySchema]): seq[SchemaViolation] ='
+GROUP core.schema.schema_utils_types::$ kinds=['func', 'func', 'func']
+   [65-65] kind=func export=False sha=d6806000f309
+      'func `$`*(v: ViolationSeverity): string {.inline.} ='
+   [70-70] kind=func export=False sha=bf2c64d98929
+      'func `$`*(sv: SchemaViolation): string ='
+   [77-77] kind=func export=False sha=577353e79b7c
+      'func `$`*(pk: PolicyFieldKind): string ='
+GROUP core.schema.task_schema::% kinds=['func', 'func', 'func', 'func', 'func', 'func']
+   [158-158] kind=func export=False sha=87e603c47f35
+      'func `%`*(s: TaskState): JsonNode {.noSideEffect.} ='
+   [176-176] kind=func export=False sha=32a9ddf55ad4
+      'func `%`*(rc: ResourceClass): JsonNode {.noSideEffect.} ='
+   [183-183] kind=func export=False sha=0ebb94a63719
+      'func `%`*(id: TaskId): JsonNode {.noSideEffect.} ='
+   [196-196] kind=func export=False sha=e4dd232ebccc
+      'func `%`*(spec: TaskSpec): JsonNode {.noSideEffect.} ='
+   [334-334] kind=func export=False sha=751ce631dc8f
+      'func `%`*(cfg: DagConfig): JsonNode {.noSideEffect.} ='
+   [379-379] kind=func export=False sha=b7efdac5c804
+      'func `%`*(st: ShadowTolerance): JsonNode {.noSideEffect.} ='
+GROUP core.schema.task_schema::fromJson kinds=['func', 'func', 'func', 'func', 'func', 'func']
+   [186-186] kind=func export=True sha=f2c1ca889ee0
+      'func fromJson*(node: JsonNode, _: typedesc[TaskId]): Result[TaskId, string] {.noSideEffect.} ='
+   [210-210] kind=func export=True sha=eede99f53e46
+      'func fromJson*(node: JsonNode, _: typedesc[TaskState]): Result[TaskState, string] {.noSideEffect.} ='
+   [216-216] kind=func export=True sha=fa5815fa75d9
+      'func fromJson*(node: JsonNode, _: typedesc[ResourceClass]): Result[ResourceClass, string] {.noSideEffect.} ='
+   [222-222] kind=func export=True sha=05c964ab8f9b
+      'func fromJson*(node: JsonNode, _: typedesc[TaskSpec]): Result[TaskSpec, string] {.noSideEffect.} ='
+   [341-341] kind=func export=True sha=0560d11ffc57
+      'func fromJson*(node: JsonNode, _: typedesc[DagConfig]): Result[DagConfig, string] {.noSideEffect.} ='
+   [389-389] kind=func export=True sha=288e563e50e3
+      'func fromJson*(node: JsonNode, _: typedesc[ShadowTolerance]): Result[ShadowTolerance, string] {.noSideEffect.} ='
+GROUP core.schema.task_schema::toJson kinds=['func', 'func', 'func', 'func', 'func', 'func']
+   [456-456] kind=func export=True sha=432006a5f3c3
+      'func toJson*(id: TaskId): JsonNode {.noSideEffect.} ='
+   [460-460] kind=func export=True sha=db9b5a88dfa3
+      'func toJson*(state: TaskState): JsonNode {.noSideEffect.} ='
+   [464-464] kind=func export=True sha=214e3353de0b
+      'func toJson*(rc: ResourceClass): JsonNode {.noSideEffect.} ='
+   [468-468] kind=func export=True sha=346a9662da51
+      'func toJson*(spec: TaskSpec): JsonNode {.noSideEffect.} ='
+   [472-472] kind=func export=True sha=c2800fc908c2
+      'func toJson*(cfg: DagConfig): JsonNode {.noSideEffect.} ='
+   [476-476] kind=func export=True sha=5286094e3889
+      'func toJson*(st: ShadowTolerance): JsonNode {.noSideEffect.} ='
+GROUP core.parsers.cst_offset_extractor::extractFuncSpan kinds=['proc', 'proc']
+   [60-61] kind=proc export=False sha=7e0ce74f3b94
+      'proc extractFuncSpan(node: TSNode; source: string;\ndepth: int; inWhen: bool): Option[SymbolSpan] {.'
+   [182-183] kind=proc export=False sha=7e0ce74f3b94
+      'proc extractFuncSpan(node: TSNode; source: string;\ndepth: int; inWhen: bool): Option[SymbolSpan] {.'
+GROUP core.parsers.cst_offset_extractor::extractTypeSpan kinds=['proc', 'proc']
+   [63-64] kind=proc export=False sha=4989c50fe6ab
+      'proc extractTypeSpan(node: TSNode; source: string;\ndepth: int; inWhen: bool): Option[SymbolSpan] {.'
+   [232-233] kind=proc export=False sha=4989c50fe6ab
+      'proc extractTypeSpan(node: TSNode; source: string;\ndepth: int; inWhen: bool): Option[SymbolSpan] {.'
+GROUP core.parsers.cst_offset_extractor::findChildAfterEquals kinds=['proc', 'proc']
+   [66-66] kind=proc export=False sha=1d9ab317696b
+      'proc findChildAfterEquals(node: TSNode): TSNode {.'
+   [238-238] kind=proc export=False sha=1d9ab317696b
+      'proc findChildAfterEquals(node: TSNode): TSNode {.'
+GROUP core.parsers.cst_offset_extractor::walkChildren kinds=['proc', 'proc']
+   [68-69] kind=proc export=False sha=2e1afabfa3e6
+      'proc walkChildren(parent: TSNode; spans: var seq[SymbolSpan];\nsource: string; depth: int; inWhen: bool) {.'
+   [137-138] kind=proc export=False sha=2e1afabfa3e6
+      'proc walkChildren(parent: TSNode; spans: var seq[SymbolSpan];\nsource: string; depth: int; inWhen: bool) {.'
+GROUP core.parsers.cst_offset_extractor::processNode kinds=['proc', 'proc']
+   [71-72] kind=proc export=False sha=1b29184e6906
+      'proc processNode(node: TSNode; spans: var seq[SymbolSpan];\nsource: string; depth: int; inWhen: bool) {.'
+   [147-148] kind=proc export=False sha=1b29184e6906
+      'proc processNode(node: TSNode; spans: var seq[SymbolSpan];\nsource: string; depth: int; inWhen: bool) {.'
+GROUP core.parsers.cst_offset_extractor::walkWhen kinds=['proc', 'proc']
+   [74-75] kind=proc export=False sha=1829f938c7b1
+      'proc walkWhen(node: TSNode; spans: var seq[SymbolSpan];\nsource: string; depth: int; inWhen: bool) {.'
+   [161-162] kind=proc export=False sha=1829f938c7b1
+      'proc walkWhen(node: TSNode; spans: var seq[SymbolSpan];\nsource: string; depth: int; inWhen: bool) {.'
+GROUP core.parsers.cst_offset_extractor::walkTypeSection kinds=['proc', 'proc']
+   [77-78] kind=proc export=False sha=16b0d0a3d39b
+      'proc walkTypeSection(node: TSNode; spans: var seq[SymbolSpan];\nsource: string; depth: int; inWhen: bool) {.'
+   [167-168] kind=proc export=False sha=16b0d0a3d39b
+      'proc walkTypeSection(node: TSNode; spans: var seq[SymbolSpan];\nsource: string; depth: int; inWhen: bool) {.'
+GROUP core.parsers.cst_offset_extractor::sourceText kinds=['func', 'func']
+   [80-80] kind=func export=True sha=c8a8795da156
+      'func sourceText*(node: TSNode; source: string): string'
+   [255-255] kind=func export=True sha=e8f8436fef1d
+      'func sourceText*(node: TSNode; source: string): string {.'
+GROUP core.parsers.cst_offset_extractor::calcIndent kinds=['func', 'func']
+   [81-81] kind=func export=True sha=ef804a21bb97
+      'func calcIndent*(source: string; byteOffset: int): int'
+   [264-264] kind=func export=True sha=262ebe43ac45
+      'func calcIndent*(source: string; byteOffset: int): int {.'
+GROUP core.parsers.pnode_nav::findNodes kinds=['func', 'func']
+   [499-499] kind=func export=True sha=107ee5a2d158
+      'func findNodes*(root: PNode; tag: string): seq[PNode] ='
+   [509-509] kind=func export=True sha=ef581930f8ed
+      'func findNodes*(root: PNode; tag: string; excludeTags: openArray[string]): seq[PNode] ='
+GROUP core.boundary.boundary_extraction_helpers::auxConvertInfix kinds=['proc', 'proc']
+   [196-196] kind=proc export=False sha=d95182bcec41
+      'proc auxConvertInfix(expr: PNode): tuple[smt: string, lean: string] {.inline, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].}'
+   [236-236] kind=proc export=False sha=1104af242943
+      'proc auxConvertInfix(expr: PNode): tuple[smt: string, lean: string] {.inline, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} ='
+GROUP core.boundary.boundary_extraction_helpers::auxConvertPrefix kinds=['proc', 'proc']
+   [198-198] kind=proc export=False sha=2142b286e4cd
+      'proc auxConvertPrefix(expr: PNode): tuple[smt: string, lean: string] {.inline, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].}'
+   [268-268] kind=proc export=False sha=da5296917c73
+      'proc auxConvertPrefix(expr: PNode): tuple[smt: string, lean: string] {.inline, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} ='
+GROUP core.boundary.boundary_extraction_helpers::auxConvertDot kinds=['proc', 'proc']
+   [200-200] kind=proc export=False sha=8c9ca26f2b05
+      'proc auxConvertDot(expr: PNode): tuple[smt: string, lean: string] {.inline, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].}'
+   [283-283] kind=proc export=False sha=93987b5c163b
+      'proc auxConvertDot(expr: PNode): tuple[smt: string, lean: string] {.inline, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} ='
+GROUP core.boundary.boundary_extraction_helpers::auxConvertCall kinds=['proc', 'proc']
+   [202-202] kind=proc export=False sha=38970594eaca
+      'proc auxConvertCall(expr: PNode): tuple[smt: string, lean: string] {.inline, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].}'
+   [304-304] kind=proc export=False sha=a7ba2216a1f7
+      'proc auxConvertCall(expr: PNode): tuple[smt: string, lean: string] {.inline, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} ='
+GROUP core.boundary.boundary_extraction_helpers::auxConvertBracket kinds=['proc', 'proc']
+   [204-204] kind=proc export=False sha=105693f341ae
+      'proc auxConvertBracket(expr: PNode): tuple[smt: string, lean: string] {.inline, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].}'
+   [352-352] kind=proc export=False sha=6c234e4347f0
+      'proc auxConvertBracket(expr: PNode): tuple[smt: string, lean: string] {.inline, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} ='
+GROUP core.boundary.boundary_extraction_helpers::auxConvertIf kinds=['proc', 'proc']
+   [206-206] kind=proc export=False sha=3cca344b5996
+      'proc auxConvertIf(expr: PNode): tuple[smt: string, lean: string] {.inline, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].}'
+   [364-364] kind=proc export=False sha=fc504f12ee9d
+      'proc auxConvertIf(expr: PNode): tuple[smt: string, lean: string] {.inline, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} ='
+GROUP core.boundary.boundary_extraction_helpers::auxConvertBlock kinds=['proc', 'proc']
+   [208-208] kind=proc export=False sha=616a3ed19ead
+      'proc auxConvertBlock(expr: PNode): tuple[smt: string, lean: string] {.inline, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].}'
+   [381-381] kind=proc export=False sha=22df97638cbc
+      'proc auxConvertBlock(expr: PNode): tuple[smt: string, lean: string] {.inline, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} ='
+GROUP core.encoding.smt_to_lean.private.parser::smtExprToLeanExpr kinds=['func', 'func']
+   [117-117] kind=func export=True sha=69ae27d3891d
+      'func smtExprToLeanExpr*(sexpr: SExprNode; declTypes: Table[string, string] = initTable[string, string]()): Result[string, SmtToLeanError] {.raises: [].}'
+   [276-276] kind=func export=True sha=2b4a3ca121a3
+      'func smtExprToLeanExpr*(sexpr: SExprNode; declTypes: Table[string, string] = initTable[string, string]()): Result[string, SmtToLeanError] {.raises: [].} ='
+GROUP core.contracts.spec_binding_macro::contractProc kinds=['template', 'macro']
+   [78-78] kind=template export=True sha=5eb7bb4c9f7b
+      'template contractProc* {.pragma.}'
+   [112-112] kind=macro export=True sha=b7279920a4d9
+      'macro contractProc*(procDef: untyped): untyped ='
+GROUP core.gateway.gateway_types::requireLen kinds=['func', 'proc']
+   [63-63] kind=func export=True sha=5252ddc95005
+      'func requireLen*(raw: string; expected: int; errValue: AxiomError): Result[string, AxiomError] {.'
+   [107-107] kind=proc export=True sha=e3e5d068e48b
+      'proc requireLen*(raw: string; expected: int; errValue: AxiomError): Result[string, AxiomError] {.'
+GROUP core.crypto.hash_kernel::hexVal kinds=['proc', 'proc']
+   [70-70] kind=proc export=False sha=25c10ee8483d
+      'proc hexVal(c: char): uint8 {.inline, raises: [].} ='
+   [96-96] kind=proc export=False sha=b4ad4a07ca37
+      'proc hexVal(c: char): byte {.inline, raises: [].} ='
+GROUP core.protocol.axiom_protocol::% kinds=['func', 'func', 'func']
+   [158-158] kind=func export=False sha=11ef422afb11
+      'func `%`*(v: ProtocolViolation): JsonNode {.noSideEffect.} ='
+   [168-168] kind=func export=False sha=e76d391c817f
+      'func `%`*(m: ProtocolMetrics): JsonNode {.noSideEffect.} ='
+   [178-178] kind=func export=False sha=89aca545e1eb
+      'func `%`*(p: AxiomProtocol): JsonNode {.noSideEffect.} ='
+GROUP core.protocol.axiom_protocol::fromJson kinds=['func', 'func', 'func']
+   [203-203] kind=func export=True sha=e661f67f7e7f
+      'func fromJson*(node: JsonNode, _: typedesc[ProtocolViolation]): ProtocolViolation {.noSideEffect.} ='
+   [219-219] kind=func export=True sha=f6a5b4140617
+      'func fromJson*(node: JsonNode, _: typedesc[ProtocolMetrics]): ProtocolMetrics {.noSideEffect.} ='
+   [229-229] kind=func export=True sha=89ea7d126411
+      'func fromJson*(node: JsonNode, _: typedesc[AxiomProtocol]): AxiomProtocol {.noSideEffect.} ='
+GROUP core.types.certificate_types::== kinds=['func', 'func']
+   [30-30] kind=func export=False sha=f8ab8684b616
+      'func `==`*(a, b: CertificateStatus): bool ='
+   [174-174] kind=func export=False sha=259db30276e8
+      'func `==`*(a, b: NonNegativeDuration): bool {.inline.} ='
+GROUP core.types.certificate_types::$ kinds=['func', 'func']
+   [32-32] kind=func export=False sha=290cc19f2d71
+      'func `$`*(a: CertificateStatus): string ='
+   [171-171] kind=func export=False sha=cae300e966f0
+      'func `$`*(d: NonNegativeDuration): string {.inline.} ='
+GROUP core.types.debt_types::raw kinds=['func', 'func', 'func', 'func', 'func', 'func', 'func', 'func']
+   [312-312] kind=func export=True sha=b7ca18501368
+      'func raw*(x: ContentDigest): string {.raises: [].} = string(x)'
+   [313-313] kind=func export=True sha=c01390fe1ec6
+      'func raw*(x: ExecutionId): string   {.raises: [].} = string(x)'
+   [314-314] kind=func export=True sha=61859b5cdd01
+      'func raw*(x: LineageId): string     {.raises: [].} = string(x)'
+   [315-315] kind=func export=True sha=acec2549c7e4
+      'func raw*(x: PromotionId): string   {.raises: [].} = string(x)'
+   [316-316] kind=func export=True sha=75e324e5e257
+      'func raw*(x: AuditInputId): string  {.raises: [].} = string(x)'
+   [317-317] kind=func export=True sha=79838b6f1184
+      'func raw*(x: AuditRunId): string    {.raises: [].} = string(x)'
+   [318-318] kind=func export=True sha=2a04b75110f1
+      'func raw*(x: EventId): string       {.raises: [].} = string(x)'
+   [319-319] kind=func export=True sha=188fd4b150a5
+      'func raw*(x: CandidateId): string   {.raises: [].} = string(x)'
+GROUP core.types.debt_types::$ kinds=['func', 'func', 'func', 'func', 'func', 'func', 'func', 'func', 'func']
+   [322-322] kind=func export=False sha=9bdbd62af2f1
+      'func `$`*(x: ContentDigest): string {.raises: [].} = string(x)'
+   [323-323] kind=func export=False sha=3a0289d9f06d
+      'func `$`*(x: ExecutionId): string   {.raises: [].} = string(x)'
+   [324-324] kind=func export=False sha=bc1dc7ad409a
+      'func `$`*(x: LineageId): string     {.raises: [].} = string(x)'
+   [325-325] kind=func export=False sha=92c7b24b2ae2
+      'func `$`*(x: PromotionId): string   {.raises: [].} = string(x)'
+   [326-326] kind=func export=False sha=c415c2cf4b83
+      'func `$`*(x: AuditInputId): string  {.raises: [].} = string(x)'
+   [327-327] kind=func export=False sha=3d430453dc0e
+      'func `$`*(x: AuditRunId): string    {.raises: [].} = string(x)'
+   [328-328] kind=func export=False sha=a9c618daa4bd
+      'func `$`*(x: EventId): string       {.raises: [].} = string(x)'
+   [329-329] kind=func export=False sha=c8059e75d9d0
+      'func `$`*(x: CandidateId): string   {.raises: [].} = string(x)'
+   [330-330] kind=func export=False sha=0d2d5ab9e740
+      'func `$`*[T](x: Digest[T]): string  {.raises: [].} = string(x)'
+GROUP core.types.debt_types::== kinds=['func', 'func', 'func', 'func', 'func', 'func', 'func', 'func', 'func']
+   [334-334] kind=func export=False sha=e15bfe9cb175
+      'func `==`*(a, b: ContentDigest): bool {.raises: [].} = string(a) == string(b)'
+   [335-335] kind=func export=False sha=3a7f462c8322
+      'func `==`*(a, b: ExecutionId): bool   {.raises: [].} = string(a) == string(b)'
+   [336-336] kind=func export=False sha=54007025a3e8
+      'func `==`*(a, b: LineageId): bool     {.raises: [].} = string(a) == string(b)'
+   [337-337] kind=func export=False sha=ffdacbe89f97
+      'func `==`*(a, b: PromotionId): bool   {.raises: [].} = string(a) == string(b)'
+   [338-338] kind=func export=False sha=164958621688
+      'func `==`*(a, b: AuditInputId): bool  {.raises: [].} = string(a) == string(b)'
+   [339-339] kind=func export=False sha=fc93dc28322d
+      'func `==`*(a, b: AuditRunId): bool    {.raises: [].} = string(a) == string(b)'
+   [340-340] kind=func export=False sha=0a552ef646ef
+      'func `==`*(a, b: EventId): bool       {.raises: [].} = string(a) == string(b)'
+   [341-341] kind=func export=False sha=e9470e2617b4
+      'func `==`*(a, b: CandidateId): bool   {.raises: [].} = string(a) == string(b)'
+   [342-342] kind=func export=False sha=5f09dadb76ba
+      'func `==`*[T](a, b: Digest[T]): bool  {.raises: [].} = string(a) == string(b)'
+GROUP core.types.debt_types::!= kinds=['func', 'func', 'func', 'func', 'func', 'func', 'func', 'func', 'func']
+   [344-344] kind=func export=False sha=42fd66613ed1
+      'func `!=`*(a, b: ContentDigest): bool {.raises: [].} = not (a == b)'
+   [345-345] kind=func export=False sha=273d533f960c
+      'func `!=`*(a, b: ExecutionId): bool   {.raises: [].} = not (a == b)'
+   [346-346] kind=func export=False sha=32d4dbae9e31
+      'func `!=`*(a, b: LineageId): bool     {.raises: [].} = not (a == b)'
+   [347-347] kind=func export=False sha=e000d58ada13
+      'func `!=`*(a, b: PromotionId): bool   {.raises: [].} = not (a == b)'
+   [348-348] kind=func export=False sha=977ce952d72f
+      'func `!=`*(a, b: AuditInputId): bool  {.raises: [].} = not (a == b)'
+   [349-349] kind=func export=False sha=60cf23faef2e
+      'func `!=`*(a, b: AuditRunId): bool    {.raises: [].} = not (a == b)'
+   [350-350] kind=func export=False sha=5a96139eed15
+      'func `!=`*(a, b: EventId): bool       {.raises: [].} = not (a == b)'
+   [351-351] kind=func export=False sha=324b6e444967
+      'func `!=`*(a, b: CandidateId): bool   {.raises: [].} = not (a == b)'
+   [352-352] kind=func export=False sha=1a0d8a7f3122
+      'func `!=`*[T](a, b: Digest[T]): bool  {.raises: [].} = not (a == b)'
+GROUP core.types.obligation_evidence::toCanonicalJson kinds=['func', 'func']
+   [264-264] kind=func export=True sha=5d127ca9fdd1
+      'func toCanonicalJson*(g: DerivationGraph): JsonNode {.raises: [].} ='
+   [276-276] kind=func export=True sha=204d09ad606f
+      'func toCanonicalJson*(ev: ObligationEvidence): JsonNode {.raises: [CatchableError].} ='
+GROUP core.types.pipeline_core_types::getFingerprintSeed kinds=['func', 'func', 'func', 'func', 'func']
+   [195-195] kind=func export=True sha=acc59cf580af
+      'func getFingerprintSeed*(bo: BufferOverflowInfo): string {.raises: [].} ='
+   [198-198] kind=func export=True sha=5d80c3c067bb
+      'func getFingerprintSeed*(np: NullPointerInfo): string {.raises: [].} ='
+   [201-201] kind=func export=True sha=67d0362c575b
+      'func getFingerprintSeed*(io: IntegerOverflowInfo): string {.raises: [].} ='
+   [204-204] kind=func export=True sha=b6a02db54467
+      'func getFingerprintSeed*(gu: GhostUpdateInfo): string {.raises: [].} ='
+   [207-207] kind=func export=True sha=15f57fb44cb4
+      'func getFingerprintSeed*(dl: DeadlockInfo): string {.raises: [].} ='
+GROUP core.sorter.sorter_core_index_table::hasVaultEntry kinds=['func', 'func']
+   [33-33] kind=func export=True sha=685d4d9a79bd
+      'func hasVaultEntry*(state: SorterState; nodeId: SorterNodeId): bool {.axiomTryImpl.} ='
+   [36-36] kind=func export=True sha=2012f7ab8bca
+      'func hasVaultEntry*(vaultEntryIndexTable: Table[string, int]; nodeId: SorterNodeId): bool ='
+GROUP core.sorter.sorter_core_index_table::findVaultIntegrityBlockIndex kinds=['func', 'func']
+   [61-61] kind=func export=True sha=e18f2630a6f4
+      'func findVaultIntegrityBlockIndex*(state: SorterState; nodeId: SorterNodeId): int {.axiomTryImpl.} ='
+   [73-76] kind=func export=True sha=f4e057ee4b66
+      'func findVaultIntegrityBlockIndex*(\nvaultIntegrityBlockIndexTable: Table[string, int];\nnodeId: SorterNodeId\n): int ='
+GROUP core.json.json_scan_skip::skipJsonValue kinds=['func', 'func']
+   [166-166] kind=func export=True sha=09311dc4f80d
+      'func skipJsonValue*(raw: string; startIdx: int): int {.axiomTryImpl.}'
+   [226-226] kind=func export=True sha=cd0371fc5000
+      'func skipJsonValue*(raw: string; startIdx: int): int ='
+GROUP core.gate.gate_memo::computeCompositeLockHash kinds=['proc', 'proc']
+   [244-248] kind=proc export=True sha=0ab75dc4b299
+      'proc computeCompositeLockHash*(inputFiles: seq[string]; gateSourcePath: string;\nrepoRoot: string; subtreeRoot: string = "";\nbinaryHash: string = "";\nenvHash: string = "";\ntransitiveHash: string = ""):'
+   [266-270] kind=proc export=True sha=960594fb3fbb
+      'proc computeCompositeLockHash*(precomputedInputHash: string; gateSourcePath: string;\nrepoRoot: string; subtreeRoot: string = "";\nbinaryHash: string = "";\nenvHash: string = "";\ntransitiveHash: string ='
+GROUP core.gate.gate_resolver::resolveGateSourcePath kinds=['proc', 'proc']
+   [58-58] kind=proc export=True sha=062286729d68
+      'proc resolveGateSourcePath*(entry: string): string ='
+   [67-67] kind=proc export=True sha=fda61128e784
+      'proc resolveGateSourcePath*(entry: string; repoRoot: string): string ='
+GROUP core.gate.state_ledger::crc32 kinds=['func', 'func']
+   [81-81] kind=func export=True sha=0198b03b517d
+      'func crc32*(data: ptr UncheckedArray[byte], len: int): uint32 {.inline, raises: [].} ='
+   [88-88] kind=func export=True sha=e81480dfaed4
+      'func crc32*(data: openArray[byte]): uint32 {.inline, raises: [].} ='
+GROUP core.gate.state_ledger_types::=copy kinds=['func', 'proc', 'proc', 'proc']
+   [114-114] kind=func export=False sha=f9bea0d0f165
+      'func `=copy`*(dest: var GateLedger; src: GateLedger) {.'
+   [119-119] kind=proc export=False sha=822579e08fca
+      'proc `=copy`*(dest: var LedgerHeader; src: LedgerHeader) {.'
+   [121-121] kind=proc export=False sha=0a5fb34cc95b
+      'proc `=copy`*(dest: var WorkspaceState; src: WorkspaceState) {.'
+   [123-123] kind=proc export=False sha=4f5a89e0b8e4
+      'proc `=copy`*(dest: var GateStateEntry; src: GateStateEntry) {.'
+GROUP core.topology.symbol_interning::== kinds=['func', 'func', 'func']
+   [33-33] kind=func export=False sha=bb71c16ec061
+      'func `==`*(x, y: PathId): bool {.borrow.}'
+   [35-35] kind=func export=False sha=13560bab0e3c
+      'func `==`*(x, y: NodeId): bool {.borrow.}'
+   [37-37] kind=func export=False sha=a0b73da39929
+      'func `==`*(x, y: SymbolId): bool {.borrow.}'
+GROUP core.topology.symbol_interning::hash kinds=['func', 'func', 'func']
+   [34-34] kind=func export=True sha=074ba4899550
+      'func hash*(x: PathId): Hash {.borrow.}'
+   [36-36] kind=func export=True sha=2fbcad4cff8d
+      'func hash*(x: NodeId): Hash {.borrow.}'
+   [38-38] kind=func export=True sha=6b4547ceb7d6
+      'func hash*(x: SymbolId): Hash {.borrow.}'
+GROUP core.topology.symbol_interning::$ kinds=['func', 'func', 'func']
+   [40-40] kind=func export=False sha=6bc3dc91eee2
+      'func `$`*(id: PathId): string {.inline.} = $uint32(id)'
+   [41-41] kind=func export=False sha=74944b0e99b2
+      'func `$`*(id: NodeId): string {.inline.} = $uint32(id)'
+   [42-42] kind=func export=False sha=fe5c8c25b3ea
+      'func `$`*(id: SymbolId): string {.inline.} = $uint32(id)'
+GROUP core.topology.symbol_interning::resolveNode kinds=['func', 'func']
+   [86-86] kind=func export=True sha=9d6c52ccd7ac
+      'func resolveNode*(pool: InternPool; id: NodeId): string {.inline.} ='
+   [93-93] kind=func export=True sha=92957c75bc53
+      'func resolveNode*(pool: InternPoolSnapshot; id: NodeId): string {.inline.} ='
+GROUP core.topology.symbol_interning::nodeIdForSorter kinds=['func', 'func']
+   [138-138] kind=func export=True sha=a682416f0d68
+      'func nodeIdForSorter*(pool: var InternPool; nodeId: SorterNodeId): NodeId {.raises: [].} ='
+   [163-163] kind=func export=True sha=695f970059f9
+      'func nodeIdForSorter*(pool: InternPoolSnapshot; nodeId: SorterNodeId): Option[NodeId] {.inline.} ='
+GROUP core.topology.symbol_interning::sorterNodeIdForNode kinds=['func', 'func']
+   [142-142] kind=func export=True sha=497964b016ae
+      'func sorterNodeIdForNode*(pool: InternPool; id: NodeId): SorterNodeId {.inline.} ='
+   [146-146] kind=func export=True sha=f0164d33bb26
+      'func sorterNodeIdForNode*(pool: InternPoolSnapshot; id: NodeId): SorterNodeId {.inline.} ='
+GROUP core.ir.ir_to_lean::irToLeanRefinedDefinition kinds=['proc', 'proc']
+   [51-51] kind=proc export=True sha=4791e76444a2
+      'proc irToLeanRefinedDefinition*(ir: AxiomIRNode): Option[string]'
+   [69-69] kind=proc export=True sha=4b47f6cc4302
+      'proc irToLeanRefinedDefinition*(ir: AxiomIRNode): Option[string] ='
+GROUP core.identity.axiom_identity::computeAxiomFingerprintCandidates kinds=['func', 'func']
+   [57-57] kind=func export=True sha=1ac6ac86fa1b
+      'func computeAxiomFingerprintCandidates*(payload: string; constraints: seq[string] = @[]): seq[string] {.noSideEffect.} ='
+   [78-78] kind=func export=True sha=ca8aed4fc74c
+      'func computeAxiomFingerprintCandidates*(payload: string; constraints: seq[string]; engineSalt: string): seq[string] {.noSideEffect.} ='
+GROUP core.logic.lean_diagnostic::diagnosticKind kinds=['func', 'func']
+   [47-47] kind=func export=True sha=5521726a25d4
+      'func diagnosticKind*(message: string): string {.raises: [], noSideEffect.} ='
+   [77-77] kind=func export=True sha=42563074d8ea
+      'func diagnosticKind*(diag: LeanDiagnostic): string {.raises: [], noSideEffect.} ='
+GROUP core.logic.pipeline_fingerprint_engine::computeAsiFixed4 kinds=['func', 'func']
+   [77-77] kind=func export=True sha=5259cce21a8b
+      'func computeAsiFixed4*(finalScan: NegativeInvariantScan): string ='
+   [87-87] kind=func export=True sha=74c439825b35
+      'func computeAsiFixed4*(finalScan: NegativeInvariantScan; verdict: string): string ='
+GROUP core.trusted.append_store::fsyncDirHandle kinds=['proc', 'proc']
+   [27-27] kind=proc export=False sha=f068f1e68f88
+      'proc fsyncDirHandle(dir: string): bool {.inline.} ='
+   [31-31] kind=proc export=False sha=a7c7f506a689
+      'proc fsyncDirHandle(dir: string): bool {.raises: [], axiomEffect: IOEffect.} ='
+GROUP core.trusted.architecture_invariants::debtTTL kinds=['macro', 'macro']
+   [320-320] kind=macro export=True sha=3185bd11e82a
+      'macro debtTTL*(): untyped ='
+   [331-331] kind=macro export=True sha=73d534249547
+      'macro debtTTL*(id: static string, baselineCommit: static int, ttl: static int): untyped ='
+GROUP core.trusted.ast_to_ir::convertExpr kinds=['func', 'func']
+   [215-215] kind=func export=True sha=f180d41e9d23
+      'func convertExpr*(n: NimNode, ctx: IrContext): IRExpr'
+   [245-245] kind=func export=True sha=178c49c64af3
+      'func convertExpr*(n: NimNode, ctx: IrContext): IRExpr ='
+GROUP core.trusted.ast_to_ir::convertIfExpr kinds=['func', 'func']
+   [216-216] kind=func export=True sha=8a9abcff9224
+      'func convertIfExpr*(n: NimNode, ctx: IrContext): IRExpr'
+   [347-347] kind=func export=True sha=799d213fdb2c
+      'func convertIfExpr*(n: NimNode, ctx: IrContext): IRExpr ='
+GROUP core.trusted.ast_to_ir::convertIfStmt kinds=['func', 'func']
+   [217-217] kind=func export=True sha=f524319bbbdd
+      'func convertIfStmt*(n: NimNode, ctx: IrContext): IRExpr'
+   [383-383] kind=func export=True sha=81c5f9423a6d
+      'func convertIfStmt*(n: NimNode, ctx: IrContext): IRExpr ='
+GROUP core.trusted.ast_to_ir::convertCaseStmt kinds=['func', 'func']
+   [218-218] kind=func export=True sha=50dd1abc51aa
+      'func convertCaseStmt*(n: NimNode, ctx: IrContext): IRExpr'
+   [391-391] kind=func export=True sha=556fecb7dc3c
+      'func convertCaseStmt*(n: NimNode, ctx: IrContext): IRExpr ='
+GROUP core.trusted.ast_to_ir::convertBody kinds=['func', 'func']
+   [219-219] kind=func export=True sha=f3a154b761ec
+      'func convertBody*(stmts: NimNode, ctx: IrContext): IRExpr'
+   [798-798] kind=func export=True sha=c2dab13567b8
+      'func convertBody*(stmts: NimNode, ctx: IrContext): IRExpr ='
+GROUP core.trusted.ast_to_ir::convertBodyFrom kinds=['func', 'func']
+   [220-220] kind=func export=False sha=112eb3237e6a
+      'func convertBodyFrom(stmts: NimNode, idx: int, ctx: IrContext): IRExpr'
+   [506-506] kind=func export=False sha=c941a8988e7c
+      'func convertBodyFrom(stmts: NimNode, idx: int, ctx: IrContext): IRExpr ='
+GROUP core.trusted.ast_to_ir::resolveConstVal kinds=['func', 'func']
+   [221-221] kind=func export=False sha=6c20fad18270
+      'func resolveConstVal(name: string): (bool, int64)'
+   [474-474] kind=func export=False sha=039f5d1d1fae
+      'func resolveConstVal(name: string): (bool, int64) ='
+GROUP core.trusted.ast_to_ir::collectLoopVarTargets kinds=['func', 'func']
+   [224-224] kind=func export=False sha=8d29758f4c6f
+      'func collectLoopVarTargets(body: NimNode): seq[string]'
+   [423-423] kind=func export=False sha=cb802ad1a76d
+      'func collectLoopVarTargets(body: NimNode): seq[string] ='
+GROUP core.trusted.ast_to_ir::hasEarlyReturn kinds=['func', 'func']
+   [225-225] kind=func export=False sha=7e0b39ef20db
+      'func hasEarlyReturn(body: NimNode): bool'
+   [459-459] kind=func export=False sha=e01486d48af2
+      'func hasEarlyReturn(body: NimNode): bool ='
+GROUP core.trusted.ast_to_ir::extractWhileVariant kinds=['func', 'func']
+   [226-226] kind=func export=False sha=d98cf1819b27
+      'func extractWhileVariant(cond: NimNode, loopVars: seq[string]): NimNode'
+   [449-449] kind=func export=False sha=4347019de927
+      'func extractWhileVariant(cond: NimNode, loopVars: seq[string]): NimNode ='
+GROUP core.trusted.ast_to_ir::convertExprCanon kinds=['func', 'func']
+   [235-235] kind=func export=True sha=ee7a837e151f
+      'func convertExprCanon*(n: CanonNode, ctx: IrContext): IRExpr'
+   [814-814] kind=func export=True sha=7372a7db77bb
+      'func convertExprCanon*(n: CanonNode, ctx: IrContext): IRExpr ='
+GROUP core.trusted.ast_to_ir::convertIfExprCanon kinds=['func', 'func']
+   [236-236] kind=func export=True sha=707bd7323868
+      'func convertIfExprCanon*(n: CanonNode, ctx: IrContext): IRExpr'
+   [865-865] kind=func export=True sha=71ac87497964
+      'func convertIfExprCanon*(n: CanonNode, ctx: IrContext): IRExpr ='
+GROUP core.trusted.ast_to_ir::convertCaseStmtCanon kinds=['func', 'func']
+   [237-237] kind=func export=True sha=d88a3c162e07
+      'func convertCaseStmtCanon*(n: CanonNode, ctx: IrContext): IRExpr'
+   [890-890] kind=func export=True sha=9aa6af6ed697
+      'func convertCaseStmtCanon*(n: CanonNode, ctx: IrContext): IRExpr ='
+GROUP core.trusted.ast_to_ir::convertBodyCanon kinds=['func', 'func']
+   [238-238] kind=func export=True sha=7b89502bf81a
+      'func convertBodyCanon*(stmts: CanonNode, ctx: IrContext): IRExpr'
+   [939-939] kind=func export=True sha=df155cba0d9d
+      'func convertBodyCanon*(stmts: CanonNode, ctx: IrContext): IRExpr ='
+GROUP core.trusted.ast_to_ir::convertBodyFromCanon kinds=['func', 'func']
+   [239-239] kind=func export=False sha=5e26810d04dc
+      'func convertBodyFromCanon(stmts: CanonNode, idx: int, ctx: IrContext): IRExpr'
+   [943-943] kind=func export=False sha=d15a44973bff
+      'func convertBodyFromCanon(stmts: CanonNode, idx: int, ctx: IrContext): IRExpr ='
+GROUP core.trusted.axiom_ir::serializeIRExpr kinds=['func', 'func']
+   [212-212] kind=func export=True sha=417e7b094129
+      'func serializeIRExpr*(e: IRExpr): string {.raises: [].}'
+   [223-223] kind=func export=True sha=567a8e5a85c5
+      'func serializeIRExpr*(e: IRExpr): string {.raises: [].} ='
+GROUP core.trusted.axiom_ir::parseBinOpKind kinds=['func', 'func']
+   [703-703] kind=func export=True sha=56fd7d73b83a
+      'func parseBinOpKind*(s: string; pos: var int): BinOpKind {.raises: [].}'
+   [912-912] kind=func export=True sha=21ea03014cad
+      'func parseBinOpKind*(s: string; pos: var int): BinOpKind {.raises: [].} ='
+GROUP core.trusted.axiom_ir::parseUnaryOpKind kinds=['func', 'func']
+   [704-704] kind=func export=True sha=4947629486cd
+      'func parseUnaryOpKind*(s: string; pos: var int): UnaryOpKind {.raises: [].}'
+   [934-934] kind=func export=True sha=add93d11fa79
+      'func parseUnaryOpKind*(s: string; pos: var int): UnaryOpKind {.raises: [].} ='
+GROUP core.trusted.axiom_ir::parseIRExprSeq kinds=['func', 'func']
+   [705-705] kind=func export=True sha=5856f00c4bba
+      'func parseIRExprSeq*(s: string; pos: var int): seq[IRExpr] {.raises: [].}'
+   [943-943] kind=func export=True sha=d1b17ddb2953
+      'func parseIRExprSeq*(s: string; pos: var int): seq[IRExpr] {.raises: [].} ='
+GROUP core.trusted.axiom_ir_helpers::irCall kinds=['func', 'func']
+   [78-78] kind=func export=True sha=9f4c8633400a
+      'func irCall*(name: string, args: seq[IRExpr]): IRExpr {.inline.} ='
+   [82-82] kind=func export=True sha=5636ac4efd15
+      'func irCall*(name: string, args: seq[IRExpr], retTyp: IRType): IRExpr {.inline.} ='
+GROUP core.trusted.axiom_ir_helpers::$ kinds=['func', 'func']
+   [261-261] kind=func export=False sha=de0ce7d309f1
+      'func `$`*(expr: IRExpr): string ='
+   [339-339] kind=func export=False sha=26d205e73a6e
+      'func `$`*(def: IRFuncDef): string ='
+GROUP core.trusted.axiom_pragmas_macros::axiomDebt kinds=['macro', 'template']
+   [548-548] kind=macro export=True sha=a80277d0e532
+      'macro axiomDebt*(args: varargs[untyped]): untyped ='
+   [564-564] kind=template export=True sha=077fa6304cbd
+      'template axiomDebt*(id: static[string], category: static[string] = "") {.pragma.}'
+GROUP core.trusted.backend_capability::canEncode kinds=['func', 'func', 'func']
+   [134-138] kind=func export=True sha=2085bdfb377e
+      'func canEncode*(profile: ContractProfile; capability: BackendCapability): bool {.axiomDecision(\nid = "DECISION-0614",\nreason = "canEncode — true iff the obligation\'s required features are a subset of '
+   [144-148] kind=func export=True sha=443d560683be
+      'func canEncode*(profile: ContractProfile; backend: Backend): bool {.axiomDecision(\nid = "DECISION-0615",\nreason = "Convenience overload — canEncode(profile, backend) resolves the backend\'s capability '
+   [151-155] kind=func export=True sha=4fa51e239314
+      'func canEncode*(model: VerificationModel; backend: Backend): bool {.axiomDecision(\nid = "DECISION-0616",\nreason = "canEncode(model, backend) — derives the model profile then consults the capability ta'
+GROUP core.trusted.context_monad::withContext kinds=['template', 'macro']
+   [23-23] kind=template export=True sha=71bea95aa344
+      'template withContext*() {.pragma.}'
+   [58-58] kind=macro export=True sha=ed1ace40ccdd
+      'macro withContext*(procDef: untyped): untyped ='
+GROUP core.trusted.contract_synthesis::walk kinds=['func', 'func', 'func']
+   [19-19] kind=func export=False sha=633ba2496f1f
+      'func walk(e: IRExpr, acc: var seq[IRExpr]) {.raises: [].} ='
+   [63-63] kind=func export=False sha=633ba2496f1f
+      'func walk(e: IRExpr, acc: var seq[IRExpr]) {.raises: [].} ='
+   [273-273] kind=func export=False sha=633ba2496f1f
+      'func walk(e: IRExpr, acc: var seq[IRExpr]) {.raises: [].} ='
+GROUP core.trusted.ir_to_lean::irExprToLean kinds=['func', 'func']
+   [101-101] kind=func export=True sha=d57da84de5c0
+      'func irExprToLean*(e: IRExpr, indent: int = 0): string {.raises: [].}'
+   [358-358] kind=func export=True sha=13598324214b
+      'func irExprToLean*(e: IRExpr, indent: int = 0): string {.raises: [].} ='
+GROUP core.trusted.ir_to_lean::refinedExprToProp kinds=['func', 'func']
+   [102-102] kind=func export=True sha=3ec4f8eb289e
+      'func refinedExprToProp*(e: IRExpr): Result[string, string] {.raises: [].}'
+   [696-696] kind=func export=True sha=06ac5e6401ff
+      'func refinedExprToProp*(e: IRExpr): Result[string, string] {.raises: [].} ='
+GROUP core.trusted.trust_commit::commitVerification kinds=['proc', 'proc']
+   [208-210] kind=proc export=True sha=4dc3c05eae5f
+      'proc commitVerification*(\nbaseDir: string; c: TrustCommit\n): Result[CommitId, string] {.raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].}'
+   [338-340] kind=proc export=True sha=b224fd903ae4
+      'proc commitVerification*(\nbaseDir: string; c: TrustCommit\n): Result[CommitId, string] {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} ='
+GROUP core.utils.axiom_clock::wallSec kinds=['proc', 'func']
+   [29-29] kind=proc export=True sha=cd3519b8a1b9
+      'proc wallSec*(clk: SystemClock): int64 {.inline, tags: [IOEffect, TimeEffect].} ='
+   [37-37] kind=func export=True sha=d41013b9bd20
+      'func wallSec*(clk: DeterministicClock): int64 {.inline, noSideEffect.} ='
+GROUP core.utils.axiom_clock::monoNs kinds=['proc', 'func']
+   [32-32] kind=proc export=True sha=a0c03fe84310
+      'proc monoNs*(clk: SystemClock): int64 {.inline, tags: [IOEffect, TimeEffect].} ='
+   [40-40] kind=func export=True sha=9ecab158e1f5
+      'func monoNs*(clk: DeterministicClock): int64 {.inline, noSideEffect.} ='
+GROUP core.utils.axiom_clock::tick kinds=['func', 'proc']
+   [45-45] kind=func export=True sha=c58c19fa7240
+      'func tick*(clk: var DeterministicClock) {.inline, noSideEffect.} ='
+   [51-51] kind=proc export=True sha=d4ac29b1bcc7
+      'proc tick*(clk: var SystemClock) {.inline, tags: [IOEffect, TimeEffect].} ='
+GROUP core.codec.codec_codegen_funcs::procName kinds=['func', 'func', 'func', 'func']
+   [152-152] kind=func export=False sha=7e4eb3fe8a4f
+      'func `procName`*(`paramX`: `typeName`): JsonNode'
+   [164-164] kind=func export=False sha=7e4eb3fe8a4f
+      'func `procName`*(`paramX`: `typeName`): JsonNode'
+   [191-191] kind=func export=False sha=e930565117b7
+      'func `procName`*(`paramNode`: JsonNode; `paramDisc`: typedesc[`typeName`]):'
+   [591-592] kind=func export=False sha=73ca830a141b
+      'func `procName`*(`paramNode`: JsonNode;\n`paramDisc`: typedesc[`typeName`]):'
+GROUP verification.cegar_adapter::toCanonical kinds=['func', 'func']
+   [31-31] kind=func export=True sha=16cf5a9e6b8c
+      'func toCanonical*(verdict: CegarEngineVerdict): CegarVerdict {.raises: [].} ='
+   [39-39] kind=func export=True sha=f11175018744
+      'func toCanonical*(engineResult: CegarEngineResult): CegarResult {.raises: [].} ='
+GROUP verification.cegar_bmc_bridge::bridgeCegarToBmc kinds=['func', 'func']
+   [49-54] kind=func export=True sha=a6899c384ed9
+      'func bridgeCegarToBmc*(\ncegarResult: CegarResult;\nsourceCode: string;\ninitialValues: seq[int] = @[];\ndelta: int = 0\n): CegarBmcResult {.raises: [].} ='
+   [74-78] kind=func export=True sha=fdc13d9a551c
+      'func bridgeCegarToBmc*(\nsourceCode: string;\ninitialValues: seq[int] = @[];\ndelta: int = 0\n): CegarBmcResult {.raises: [].} ='
+GROUP verification.certificate_manager::validateCertGreenWritable kinds=['func', 'func']
+   [122-122] kind=func export=True sha=48e49256639b
+      'func validateCertGreenWritable*(node: JsonNode): bool {.raises: [].} ='
+   [163-163] kind=func export=True sha=4b6c19ab97cc
+      'func validateCertGreenWritable*(cert: FunctionCertificate): bool {.raises: [].} ='
+GROUP verification.dependency_analyzer::dfs kinds=['proc', 'proc']
+   [151-151] kind=proc export=False sha=91f25f751add
+      'proc dfs(node: int) ='
+   [211-211] kind=proc export=False sha=91f25f751add
+      'proc dfs(node: int) ='
+GROUP verification.lean_lsp_compiler::verifyGeneratedLeanSourceWithCompiler kinds=['proc', 'proc']
+   [214-218] kind=proc export=True sha=206768aeef87
+      'proc verifyGeneratedLeanSourceWithCompiler*(\ntheoremSource: string;\nartifactPath: string;\nleanExe: string = ""\n): LeanCompilerResult {.raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEf'
+   [298-304] kind=proc export=True sha=f55e0ecd3fd9
+      'proc verifyGeneratedLeanSourceWithCompiler*(\ntheoremSource: string;\nartifactPath: string;\nnegativeTestSource: string;\nnegativeTestPath: string;\nleanExe: string = ""\n): LeanCompilerResult {.raises: [Ca'
+GROUP verification.lean_lsp_feedback::collectFeedback kinds=['proc', 'proc']
+   [20-20] kind=proc export=True sha=114e3fee6f14
+      'proc collectFeedback*(client: LeanLspClient; line: int): Future[LeanFeedback] {.async, warning[BareExcept]: off, raises: [CatchableError, Exception], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEff'
+   [68-68] kind=proc export=True sha=9c671260305a
+      'proc collectFeedback*(client: LeanLspClient; line: int): Future[LeanFeedback] {.async, warning[BareExcept]: off, raises: [CatchableError].} ='
+GROUP verification.lean_lsp_feedback::getLiveDiagnosticFeedback kinds=['proc', 'proc']
+   [104-109] kind=proc export=True sha=7e961217ea90
+      'proc getLiveDiagnosticFeedback*(\nclient: LeanLspClient;\nline: int;\nwindow: int = 2;\ntimeoutMs: int = leanLspHardTimeoutMs\n): Future[LeanLiveDiagnosticFeedback] {.async, warning[BareExcept]: off, raise'
+   [114-121] kind=proc export=True sha=a03a5c71a7d5
+      'proc getLiveDiagnosticFeedback*(\nfilePath: string;\nsource: string;\nline: int;\nleanExe: string = "";\nwindow: int = 2;\ntimeoutMs: int = leanLspHardTimeoutMs\n): LeanLiveDiagnosticFeedback {.raises: [Axio'
+GROUP verification.lean_lsp_protocol::getDocumentSymbols kinds=['proc', 'proc']
+   [663-663] kind=proc export=True sha=6b406a8cc5dc
+      'proc getDocumentSymbols*(client: LeanLspClient; uri: string): seq[LeanDocumentSymbol] {.raises: [Exception, CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} ='
+   [738-738] kind=proc export=True sha=a30ef1ec222e
+      'proc getDocumentSymbols*(client: LeanLspClient; uri: string; maxWaitCycles: int = 500): seq[LeanSymbol] {.raises: [CatchableError, Exception], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, Ro'
+GROUP verification.lean_repl_bridge::runZ3Bmc kinds=['proc', 'proc', 'proc', 'proc']
+   [269-269] kind=proc export=True sha=2588ff579ac7
+      'proc runZ3Bmc*(smtQuery: string; timeoutMs: int = 10000): Z3BmcResult {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect].} ='
+   [293-293] kind=proc export=True sha=253afe85fff4
+      'proc runZ3Bmc*(ir: AxiomIRNode; kBound: int = 20; timeoutMs: int = 10000): Z3BmcResult {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect].} ='
+   [297-297] kind=proc export=True sha=6e3eee5f43f2
+      'proc runZ3Bmc*(ir: AxiomIRNode; depth: int; timeoutMs: int = 10000): Z3BmcResult {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect].} ='
+   [300-300] kind=proc export=True sha=d11a664df234
+      'proc runZ3Bmc*(spec: AxiomSpec; depth: int = 10; timeoutMs: int = 10000): Z3BmcResult {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect].} ='
+GROUP verification.lean_repl_bridge::runVerificationPipeline kinds=['proc', 'proc']
+   [311-311] kind=proc export=True sha=6db124deb118
+      'proc runVerificationPipeline*(ir: AxiomIRNode): bool {.raises: [Exception].} ='
+   [320-320] kind=proc export=True sha=17a9cfb62325
+      'proc runVerificationPipeline*(spec: AxiomSpec; leanFilePath: string; depth: int = 10; timeoutMs: int = 10000): VerificationStatus {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect, T'
+GROUP verification.spacer_chc_router::trySpacerInvariantSynthesis kinds=['proc', 'proc']
+   [337-342] kind=proc export=True sha=9f7abcedf016
+      'proc trySpacerInvariantSynthesis*(\ntransitions: seq[BmcTransition];\ninitialState: seq[tuple[name: string, sort: string]];\nviolationCondition: string;\ntimeoutMs: int = z3SafetyNetMs\n): SpacerChcResult '
+   [460-465] kind=proc export=True sha=7cb8b1b31e00
+      'proc trySpacerInvariantSynthesis*(\ntransitions: seq[BmcTransition];\ninitialState: seq[tuple[name: string, sort: string]];\nviolationCondition: string;\ntimeoutMs: int = 30000\n): SpacerChcResult ='
+GROUP verification.spacer_chc_router::trySpacerInvariantSynthesisWithBudget kinds=['proc', 'proc']
+   [425-431] kind=proc export=True sha=b700b363704d
+      'proc trySpacerInvariantSynthesisWithBudget*(\ntransitions: seq[BmcTransition];\ninitialState: seq[tuple[name: string, sort: string]];\nviolationCondition: string;\nbudget: var ProofBudget;\ntimeoutMs: int '
+   [522-528] kind=proc export=True sha=b700b363704d
+      'proc trySpacerInvariantSynthesisWithBudget*(\ntransitions: seq[BmcTransition];\ninitialState: seq[tuple[name: string, sort: string]];\nviolationCondition: string;\nbudget: var ProofBudget;\ntimeoutMs: int '
+GROUP verification.obligation.post_satisfaction::peel kinds=['proc', 'proc']
+   [202-202] kind=proc export=False sha=7903e6d844dc
+      'proc peel(e: IRExpr) {.raises: [].} ='
+   [255-255] kind=proc export=False sha=7903e6d844dc
+      'proc peel(e: IRExpr) {.raises: [].} ='
+GROUP verification.solver.provers::prove kinds=['proc', 'proc']
+   [39-39] kind=proc export=True sha=86c68a4edd6b
+      'proc prove*(p: Z3PoolProver; query: string; timeoutMs: int): bool {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, TimeEffect, RootEffect].} ='
+   [46-46] kind=proc export=True sha=fbce4a656a7c
+      'proc prove*(p: LeanProver; query: string; timeoutMs: int): bool {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, TimeEffect, RootEffect].} ='
+GROUP verification.solver.provers::name kinds=['proc', 'proc']
+   [44-44] kind=proc export=True sha=7c30e0195f3c
+      'proc name*(p: Z3PoolProver): string = "Z3PoolProver"'
+   [51-51] kind=proc export=True sha=e300984b51e6
+      'proc name*(p: LeanProver): string = "LeanProver"'
+GROUP verification.solver.provider_impl::execute kinds=['proc', 'proc']
+   [24-24] kind=proc export=True sha=8129c5c2bbe2
+      'proc execute*(provider: Z3Provider; query: string): ProviderResult {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} ='
+   [46-46] kind=proc export=True sha=4c54b05fdf6c
+      'proc execute*(provider: Lean4Provider; source: string): ProviderResult {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} ='
+GROUP verification.solver.provider_impl::providerName kinds=['func', 'func']
+   [39-39] kind=func export=True sha=1ce54e299b5a
+      'func providerName*(provider: Z3Provider): string {.inline, raises: [].} ='
+   [60-60] kind=func export=True sha=222409027bf1
+      'func providerName*(provider: Lean4Provider): string {.inline, raises: [].} ='
+GROUP verification.solver.z3_pool::z3WorkerHasData kinds=['proc', 'proc']
+   [39-39] kind=proc export=False sha=df1af3846486
+      'proc z3WorkerHasData(process: Process): bool ='
+   [51-51] kind=proc export=False sha=df1af3846486
+      'proc z3WorkerHasData(process: Process): bool ='
+GROUP verification.solver.z3_pool::getThreadZ3Worker kinds=['proc', 'proc']
+   [171-171] kind=proc export=True sha=fe053b2c3457
+      'proc getThreadZ3Worker*(): var ThreadZ3Worker {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].}'
+   [334-334] kind=proc export=True sha=f89d8755f188
+      'proc getThreadZ3Worker*(): var ThreadZ3Worker {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} ='
+GROUP verification.solver.z3_pool::initThreadZ3Worker kinds=['proc', 'proc']
+   [172-172] kind=proc export=True sha=5020ffc8d928
+      'proc initThreadZ3Worker*(worker: var ThreadZ3Worker; command: string; args: seq[string]): Result[bool, string] {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].}'
+   [341-341] kind=proc export=True sha=686b05c8b3cd
+      'proc initThreadZ3Worker*(worker: var ThreadZ3Worker; command: string; args: seq[string]): Result[bool, string] {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} ='
+GROUP verification.solver.z3_pool::stopThreadZ3Worker kinds=['proc', 'proc']
+   [173-173] kind=proc export=True sha=225a2bd3caa3
+      'proc stopThreadZ3Worker*(worker: var ThreadZ3Worker) {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect].}'
+   [360-360] kind=proc export=True sha=d1ac1dc8f4b1
+      'proc stopThreadZ3Worker*(worker: var ThreadZ3Worker) {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect].} ='
+GROUP verification.solver.z3_pool::replayScopeToWorker kinds=['proc', 'proc']
+   [174-174] kind=proc export=True sha=344701ea2115
+      'proc replayScopeToWorker*(worker: var ThreadZ3Worker; command: string; args: seq[string]): Result[bool, string] {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].}'
+   [375-375] kind=proc export=True sha=3c2e6df645a6
+      'proc replayScopeToWorker*(worker: var ThreadZ3Worker; command: string; args: seq[string]): Result[bool, string] {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} ='
+GROUP verification.solver.z3_pool::z3EnsurePersistentPool kinds=['proc', 'proc']
+   [222-222] kind=proc export=True sha=a826c16eaed1
+      'proc z3EnsurePersistentPool*(desiredWorkers: int)'
+   [574-574] kind=proc export=True sha=4189d5a62f93
+      'proc z3EnsurePersistentPool*(desiredWorkers: int) ='
+GROUP verification.solver.z3_pool::z3ExecPersistent kinds=['proc', 'proc']
+   [223-223] kind=proc export=True sha=9f3d7cd40fc9
+      'proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; enableProofs: bool = false; queryType: string = "unknown"; cegarIters: int = 0): Result[string, string] {.gcsafe, raises:'
+   [745-745] kind=proc export=True sha=81bfdb683cda
+      'proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; enableProofs: bool = false; queryType: string = "unknown"; cegarIters: int = 0): Result[string, string] {.gcsafe, raises:'
+GROUP verification.analyzer.types::== kinds=['proc', 'proc']
+   [25-25] kind=proc export=False sha=87fc17d96e29
+      'proc `==`*(a, b: NodeId): bool {.inline.} = a.uint32 == b.uint32'
+   [26-26] kind=proc export=False sha=693887d3f97c
+      'proc `==`*(a, b: SymbolId): bool {.inline.} = a.uint32 == b.uint32'
+GROUP verification.analyzer.types::$ kinds=['proc', 'proc']
+   [27-27] kind=proc export=False sha=bd2791e3df89
+      'proc `$`*(id: NodeId): string {.inline.} = $id.uint32'
+   [28-28] kind=proc export=False sha=927604ad64c4
+      'proc `$`*(id: SymbolId): string {.inline.} = $id.uint32'
+GROUP verification.orchestrator.private.healing_orchestrator_part1::mockCounterExampleCheck kinds=['func', 'proc']
+   [217-217] kind=func export=True sha=2a3624a68c71
+      'func mockCounterExampleCheck*(proposition: string): GateResult ='
+   [231-231] kind=proc export=True sha=937a4ff834f5
+      'proc mockCounterExampleCheck*(proposition: string): GateResult ='
+GROUP verification.batch_uap.ir_pipeline_runner::runZ3CheckViaIR kinds=['proc', 'proc']
+   [249-249] kind=proc export=True sha=ce57097b4ab9
+      'proc runZ3CheckViaIR*(funcDef: IRFuncDef, phase: SmtPhase = spBmc): SolverOutcome {.gcsafe, raises: []} ='
+   [272-272] kind=proc export=True sha=da0380714a93
+      'proc runZ3CheckViaIR*(smtScript: string, phase: SmtPhase = spBmc): SolverOutcome {.gcsafe, raises: []} ='
+GROUP verification.batch_uap.stages::findMatchingRequest kinds=['proc', 'proc']
+   [177-178] kind=proc export=True sha=fe5327eb17ed
+      'proc findMatchingRequest*(nodeId: SorterNodeId;\nrequests: seq[OrchestrationProofRequest]): (OrchestrationProofRequest, bool) {.raises: [].} ='
+   [193-194] kind=proc export=True sha=fcd5444e98c0
+      'proc findMatchingRequest*(nodeId: SorterNodeId;\nrequestMap: Table[SorterNodeId, OrchestrationProofRequest]): (OrchestrationProofRequest, bool) {.raises: [].} ='
+GROUP infrastructure.ir_binary_codec::serializeIRExprAligned kinds=['func', 'func']
+   [200-200] kind=func export=True sha=412343a9988d
+      'func serializeIRExprAligned*(ir: IRExpr): seq[byte]'
+   [226-226] kind=func export=True sha=3f8349e577c5
+      'func serializeIRExprAligned*(ir: IRExpr): seq[byte] ='
+GROUP infrastructure.ir_binary_codec::deserializeIRExprAlignedAt kinds=['func', 'func']
+   [317-317] kind=func export=False sha=a04ea1adf6c2
+      'func deserializeIRExprAlignedAt(data: openArray[byte], offset: var int): IRExpr'
+   [344-344] kind=func export=False sha=1efe82fea513
+      'func deserializeIRExprAlignedAt(data: openArray[byte], offset: var int): IRExpr ='
+GROUP infrastructure.native_cgroup::detectNativeCgroup kinds=['proc', 'proc']
+   [67-67] kind=proc export=True sha=52796ea1d411
+      'proc detectNativeCgroup*(): bool {.raises: [], axiomEffect: IOEffect.} ='
+   [231-231] kind=proc export=True sha=52796ea1d411
+      'proc detectNativeCgroup*(): bool {.raises: [], axiomEffect: IOEffect.} ='
+GROUP infrastructure.native_cgroup::getCgroupBasePath kinds=['proc', 'func']
+   [87-87] kind=proc export=True sha=5a6aecffb550
+      'proc getCgroupBasePath*(): string {.raises: [], axiomEffect: IOEffect.} ='
+   [235-235] kind=func export=True sha=3f9b754a56c1
+      'func getCgroupBasePath*(): string ='
+GROUP infrastructure.native_cgroup::createCgroupSlice kinds=['proc', 'proc']
+   [95-95] kind=proc export=True sha=9378870a0d2b
+      'proc createCgroupSlice*(name: string): string {.raises: [], axiomEffect: IOEffect.} ='
+   [238-238] kind=proc export=True sha=9378870a0d2b
+      'proc createCgroupSlice*(name: string): string {.raises: [], axiomEffect: IOEffect.} ='
+GROUP infrastructure.native_cgroup::setResourceLimits kinds=['proc', 'proc']
+   [113-113] kind=proc export=True sha=5ed4e2399aac
+      'proc setResourceLimits*(cgroupDir: string; cfg: CgroupConfig) {.raises: [], axiomEffect: IOEffect.} ='
+   [242-242] kind=proc export=True sha=5ed4e2399aac
+      'proc setResourceLimits*(cgroupDir: string; cfg: CgroupConfig) {.raises: [], axiomEffect: IOEffect.} ='
+GROUP infrastructure.native_cgroup::assignProcess kinds=['proc', 'proc']
+   [135-135] kind=proc export=True sha=7735f1279745
+      'proc assignProcess*(cgroupDir: string; pid: int) {.raises: [], axiomEffect: IOEffect.} ='
+   [245-245] kind=proc export=True sha=7735f1279745
+      'proc assignProcess*(cgroupDir: string; pid: int) {.raises: [], axiomEffect: IOEffect.} ='
+GROUP infrastructure.native_cgroup::killCgroup kinds=['proc', 'proc']
+   [150-150] kind=proc export=True sha=d661e60dadd5
+      'proc killCgroup*(cgroupDir: string) {.raises: [], axiomEffect: IOEffect.} ='
+   [248-248] kind=proc export=True sha=d661e60dadd5
+      'proc killCgroup*(cgroupDir: string) {.raises: [], axiomEffect: IOEffect.} ='
+GROUP infrastructure.native_cgroup::preCreateCgroupSlices kinds=['proc', 'proc']
+   [193-193] kind=proc export=True sha=738287d7c579
+      'proc preCreateCgroupSlices*(gateIds: seq[string]; cfg: CgroupConfig): seq[string] {.raises: [], axiomEffect: IOEffect.} ='
+   [251-251] kind=proc export=True sha=738287d7c579
+      'proc preCreateCgroupSlices*(gateIds: seq[string]; cfg: CgroupConfig): seq[string] {.raises: [], axiomEffect: IOEffect.} ='
+GROUP infrastructure.native_cgroup::defaultConfig kinds=['func', 'func']
+   [206-206] kind=func export=True sha=f9468ec2e866
+      'func defaultConfig*(): CgroupConfig ='
+   [255-255] kind=func export=True sha=f9468ec2e866
+      'func defaultConfig*(): CgroupConfig ='
+GROUP infrastructure.native_cgroup::configureFromEnv kinds=['proc', 'proc']
+   [214-214] kind=proc export=True sha=bf98dceba430
+      'proc configureFromEnv*(): CgroupConfig {.raises: [], axiomEffect: IOEffect.} ='
+   [262-262] kind=proc export=True sha=602074e4db51
+      'proc configureFromEnv*(): CgroupConfig ='
+GROUP infrastructure.debt_audit.audit_observations::toJson kinds=['func', 'func']
+   [438-438] kind=func export=True sha=1edb94baa3ff
+      'func toJson*(files: seq[FileObs]): JsonNode {.raises: [].} ='
+   [447-447] kind=func export=True sha=18dbde873079
+      'func toJson*(obs: seq[Obs]): JsonNode {.raises: [].} ='
+GROUP infrastructure.debt_audit.audit_rules::evalQuirkBase kinds=['proc', 'proc']
+   [540-540] kind=proc export=True sha=7ed7d69eced6
+      'proc evalQuirkBase*(ctx: RuleCtx, ruleId, marker, docPath: string): seq[RuleResult]'
+   [559-559] kind=proc export=True sha=97979645dcd4
+      'proc evalQuirkBase*(ctx: RuleCtx, ruleId, marker, docPath: string): seq[RuleResult] {.raises: [].} ='
+GROUP infrastructure.gate_signing.proof_artifact_types::toJson kinds=['func', 'func', 'func']
+   [81-81] kind=func export=True sha=71efd6c2b3f3
+      'func toJson*(pa: ProofArtifact): JsonNode ='
+   [106-106] kind=func export=True sha=43570dd67d32
+      'func toJson*(req: SignRequest): JsonNode ='
+   [120-120] kind=func export=True sha=01493493e9b6
+      'func toJson*(resp: SignResponse): JsonNode ='
+GROUP infrastructure.gate_signing.proof_artifact_types::fromJson kinds=['func', 'func', 'func']
+   [92-92] kind=func export=True sha=17af4fedfbad
+      'func fromJson*(node: JsonNode, _: typedesc[ProofArtifact]): ProofArtifact {.raises: [CatchableError].} ='
+   [110-110] kind=func export=True sha=f72a68c663f4
+      'func fromJson*(node: JsonNode, _: typedesc[SignRequest]): SignRequest {.raises: [CatchableError].} ='
+   [129-129] kind=func export=True sha=8f3be6f85a78
+      'func fromJson*(node: JsonNode, _: typedesc[SignResponse]): SignResponse {.raises: [CatchableError].} ='
+GROUP gate.gate_loader::loadConfig kinds=['proc', 'proc']
+   [86-86] kind=proc export=True sha=4a1c5871efdc
+      'proc loadConfig*(loader: var GateLoader, root: string) {.'
+   [104-104] kind=proc export=True sha=ed17df363279
+      'proc loadConfig*(loader: var GateLoader) {.'
+GROUP gate.gate_loader::fullLoad kinds=['proc', 'proc']
+   [217-217] kind=proc export=True sha=cd5644dac540
+      'proc fullLoad*(loader: var GateLoader, root: string) {.'
+   [224-224] kind=proc export=True sha=d595a1963614
+      'proc fullLoad*(loader: var GateLoader) {.'
+GROUP gate.gate_run_context::isValid kinds=['func', 'func']
+   [127-127] kind=func export=True sha=27cb14ccde93
+      'func isValid*(handle: VfsHandle): bool {.inline, noSideEffect, raises: [].} ='
+   [131-131] kind=func export=True sha=e73c59c40111
+      'func isValid*(view: LedgerView): bool {.inline, noSideEffect, raises: [].} ='
+GROUP gate.manifest_schema_validator::validateEnumField kinds=['func', 'func']
+   [49-49] kind=func export=False sha=9a21e9a64007
+      'func validateEnumField(node: JsonNode; field: string; validValues: openArray[string]): seq[string] ='
+   [64-64] kind=func export=False sha=8dd3658a934f
+      'func validateEnumField(node: JsonNode; field: string; validValues: openArray[int]): seq[string] ='
+GROUP gate.quality_gate::collectTransitiveAffected kinds=['proc', 'proc']
+   [39-42] kind=proc export=True sha=306689da8b87
+      'proc collectTransitiveAffected*(\nchangedFiles: seq[string]; graph: DependencyGraph;\nmaxDepth: int = 2\n): HashSet[string] {.raises: [].} ='
+   [134-138] kind=proc export=True sha=cfbebe32c48f
+      'proc collectTransitiveAffected*(\ngraph: DependencyGraph;\nchangedFiles: seq[string];\nmaxDepth: int = 5\n): HashSet[string] {.raises: [].} ='
+GROUP gate.runners.debt_scan_gate::walkRec kinds=['proc', 'proc']
+   [165-165] kind=proc export=False sha=4a1fc66b5ebc
+      'proc walkRec(dir: string) ='
+   [222-222] kind=proc export=False sha=4a1fc66b5ebc
+      'proc walkRec(dir: string) ='
+GROUP gate.runners.decision_binding_gate::checkProc kinds=['proc', 'proc']
+   [146-146] kind=proc export=True sha=e028f30c59f3
+      'proc checkProc*(procDecl: string, procBody: string, filePath: string, startLine: int): tuple[violations: bool, reasons: seq[string]] {.raises: [].}'
+   [212-212] kind=proc export=True sha=8448f1be3afa
+      'proc checkProc*(procDecl: string, procBody: string, filePath: string, startLine: int): tuple[violations: bool, reasons: seq[string]] {.raises: [].} ='
+GROUP gate.runners.decision_binding_gate::walkRec kinds=['proc', 'proc']
+   [249-249] kind=proc export=False sha=4a1fc66b5ebc
+      'proc walkRec(dir: string) ='
+   [303-303] kind=proc export=False sha=4a1fc66b5ebc
+      'proc walkRec(dir: string) ='
+GROUP gate.runners.hotspot_coverage_gate::walk kinds=['proc', 'proc']
+   [86-86] kind=proc export=False sha=d108649deb67
+      'proc walk(dir: string) ='
+   [142-142] kind=proc export=False sha=99dce372700e
+      'proc walk(dir: string): string ='
+GROUP gate.runners.runner_process_pool::drainAvailableBytes kinds=['proc', 'proc']
+   [213-213] kind=proc export=False sha=534ccbf384aa
+      'proc drainAvailableBytes(p: Process): string {.raises: [].} ='
+   [238-238] kind=proc export=False sha=534ccbf384aa
+      'proc drainAvailableBytes(p: Process): string {.raises: [].} ='
+GROUP gate.runners.semantic_boundary_guard::walk kinds=['proc', 'proc']
+   [124-124] kind=proc export=False sha=d29baee5315e
+      'proc walk(node: PNode; acc: var seq[ExportedSymbol]; depth: int = 0) {.raises: [].} ='
+   [268-268] kind=proc export=False sha=ac52374c3277
+      'proc walk(node: PNode; acc: var seq[ImportEntry]; depth: int = 0) {.raises: [].} ='
+GROUP gate.runners.unified_gate_runner::checkNode kinds=['proc', 'proc']
+   [362-362] kind=proc export=False sha=365bb0f53748
+      'proc checkNode(node: PNode; depth: int = 0) ='
+   [594-594] kind=proc export=False sha=cd04eaff208d
+      'proc checkNode(node: PNode; depth: int = 0) {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} ='
+GROUP gate.nimtry.nimtry_extract_part1::walk kinds=['proc', 'proc']
+   [144-144] kind=proc export=False sha=30ef4e8a5179
+      'proc walk(m: PNode) ='
+   [192-192] kind=proc export=False sha=c076eec9ba39
+      'proc walk(n: PNode) ='
+GROUP gate.nimtry.nimtry_extract_part3_part1::walk kinds=['proc', 'proc', 'proc', 'proc', 'proc', 'proc']
+   [30-30] kind=proc export=False sha=c076eec9ba39
+      'proc walk(n: PNode) ='
+   [98-98] kind=proc export=False sha=c076eec9ba39
+      'proc walk(n: PNode) ='
+   [204-204] kind=proc export=False sha=c076eec9ba39
+      'proc walk(n: PNode) ='
+   [297-297] kind=proc export=False sha=e37dd50d5fe5
+      'proc walk(n: PNode; insideFactory: bool = false) ='
+   [378-378] kind=proc export=False sha=c076eec9ba39
+      'proc walk(n: PNode) ='
+   [422-422] kind=proc export=False sha=c076eec9ba39
+      'proc walk(n: PNode) ='
+GROUP gate.nimtry.nimtry_extract_part3_part2::walk kinds=['proc', 'proc', 'proc', 'proc', 'proc']
+   [16-16] kind=proc export=False sha=c076eec9ba39
+      'proc walk(n: PNode) ='
+   [103-103] kind=proc export=False sha=c076eec9ba39
+      'proc walk(n: PNode) ='
+   [142-142] kind=proc export=False sha=c076eec9ba39
+      'proc walk(n: PNode) ='
+   [177-177] kind=proc export=False sha=40161ac4204f
+      'proc walk(n: PNode; acc: var seq[string]) ='
+   [210-210] kind=proc export=False sha=c076eec9ba39
+      'proc walk(n: PNode) ='
+GROUP policy.types::$ kinds=['proc', 'proc', 'proc', 'proc', 'proc', 'proc', 'proc']
+   [32-32] kind=proc export=False sha=d6ef7a34ab69
+      'proc `$`*(p: FilePath): string {.inline.} = string(p)'
+   [33-33] kind=proc export=False sha=10941422b178
+      'proc `$`*(i: IssueId): string {.inline.} = string(i)'
+   [34-34] kind=proc export=False sha=62f8f5b52abb
+      'proc `$`*(d: ExpiryDate): string {.inline.} = string(d)'
+   [35-35] kind=proc export=False sha=1c58311e9396
+      'proc `$`*(a: ApprovedBy): string {.inline.} = string(a)'
+   [36-36] kind=proc export=False sha=22af169d11e1
+      'proc `$`*(r: Reason): string {.inline.} = string(r)'
+   [37-37] kind=proc export=False sha=22b3a8a8a548
+      'proc `$`*(l: LibraryId): string {.inline.} = string(l)'
+   [38-38] kind=proc export=False sha=b6aec307bcbd
+      'proc `$`*(n: LibraryName): string {.inline.} = string(n)'
+GROUP engine.profiler::profileBlock kinds=['template', 'template']
+   [49-49] kind=template export=True sha=73b70140f0fc
+      'template profileBlock*(stepName: string; body: untyped): untyped ='
+   [52-52] kind=template export=True sha=cd54b67e5287
+      'template profileBlock*(stepName: string, maxMs: int; body: untyped): untyped ='

@@ -1,0 +1,55 @@
+{
+  "specId": "SPEC-B36-SIDECAR",
+  "specOrigin": "soExplicit",
+  "ruleId": "external:stew/base36/sidecar-adoption",
+  "ruleVersion": "1.0.0",
+  "contract": "docs/spec/nim_stew_base36_sidecar_contract.md",
+  "description": "Axiom-owned out-of-tree proposition sidecar (module+symbol keyed, closed grammar nim-sidecar-expr-v1) for stew/base36.nim decodedLength. Two propositions over the ORIGINAL function body (length == 1 -> result == (length + 4) defect — the law inferred by frozen blind-discovery agent A1, pinned at its suspected input, superseding the first adoption's C_out-pinned instance length == 3 -> result == 2, which is retained as superseded history in the contract doc; length == 2 -> result == 1 control unchanged as the injection guard), adopted with a HASH-BOUND adoption record: the loader recomputes the specification artifact's spec identity (SpecID = H(sorted canonicalSpecIR | origin | ruleVersion)) from the loaded proposition content and fails closed unless it byte-equals adoption.adoptedSpecHash, and verifies adoption.subject.blobSha256 against the actual module bytes at the recorded path under the subject root. The subject tree is READ-ONLY (Zero-Footprint); this file is the only legitimate place the proposition lives.",
+  "valueParam": "length",
+  "canonicalSpecIR": [
+    "length == 1",
+    "result == (length + 4)",
+    "length == 2",
+    "result == 1"
+  ],
+  "propositions": [
+    {
+      "kind": "defect",
+      "pre": "length == 1",
+      "post": "result == (length + 4)"
+    },
+    {
+      "kind": "control",
+      "pre": "length == 2",
+      "post": "result == 1"
+    }
+  ],
+  "adoption": {
+    "adoptedSpecHash": "3f55eaa79f3708894a04d62bc7ac32c9e2a8fe84d4f575348318d7290d237ea8",
+    "adopter": "axiom (followup/sidecar-adopt-agent-proposition, user-approved mission)",
+    "adoptedAt": "2026-10-19",
+    "basis": "adopted verbatim from frozen blind-discovery agent A1 output (see experiments/sidecar-adoption-e2e/FREEZE.md)",
+    "grammarVersion": "nim-sidecar-expr-v1",
+    "subject": {
+      "source": "status-im/nim-stew (stew 0.5.0; byte-identical between the nimble pkgs2 store and the @1853f20b clone)",
+      "module": "stew/base36.nim",
+      "symbol": "decodedLength",
+      "commit": "1853f20bdfeda61331a0b7e02f7aace0e88a0dfe",
+      "blobSha256": "b8a42a6ac6d1057fca0be079aac5750463729fdad771823f1be53b8723a5e0a8"
+    },
+    "provenance": "The proposition CONTENT is agent-authored: the defect clause is adopted VERBATIM from frozen blind-discovery agent A1 (zero-context run over the read-only nim-stew clone @1853f20b; the agent independently located stew/base36.nim::decodedLength and inferred result == (length + 4), grounded in stew/base58.nim:55-58 identical docstring 'length + 4', stew/base36.nim:134-138 decode requirement payload.len + 4, tests/test_base36.nim:84-85, with suspected input length = 1 -> returns 0 where the law demands 5); the pinned pre length == 1 is that suspected input — the loader schema requires a non-empty pre (axiom_engine.nim), so the general law carries the minimal grammar-expressible instance pre, and the model binding is deterministic. Content authorship confers NO authority. The AUTHORITY for verifying against it is the explicit adoption act: this committed Axiom-owned sidecar whose adoption record hash-binds the exact proposition content and subject bytes. This record SUPERSEDES the first adoption (defect length == 3 -> result == 2, adoptedSpecHash 8e9564842090127b261c30fdd95db095957ad2628fb5a35e4c4016673441e3be, adopter axiom (followup/sidecar-adoption-binding slice, user-approved mission)) — the superseded proposition and hash are preserved verbatim in docs/spec/nim_stew_base36_sidecar_contract.md (adoption-evolution amendment); they are NOT silently rewritten. Any post-adoption content, ruleVersion, or subject-byte change mechanically invalidates the adoption (loader fail-closed)."
+  },
+  "semanticCaveats": [
+    "The typedesc[Base36Types] formal is a static discriminator, not a value parameter: the propositions bind only the declared value param 'length', and the replay renders the call as decodedLength(Base36Types, <length>) (the measured carrier token; the C_out replay shape).",
+    "Nim int is pointer-width signed; the proposition clauses use literals (1, 4, 2, 1) far from any overflow boundary, and decodedLength's body ((length * 179) div 277) and the law's length + 4 stay in range on the pinned instances.",
+    "The propositions are INSTANCE obligations (pre pins one length per case), not universal theorems: the defect pre length == 1 is the blind agent's suspected input, NOT a claim that the inferred law result == (length + 4) holds or fails elsewhere; SAT on the defect case is a counterexample witness against the adopted law AT that instance, UNSAT on the control case is the injection guard."
+  ],
+  "nonClaims": [
+    "NOT a claim that the inferred sizing law result == (length + 4) is correct (or that decodedLength is incorrect) for any input outside the pinned defect instance (length == 1 only); the first adoption's instance (length == 3) remains superseded history, not a co-governing proposition",
+    "NOT a memory-safety claim",
+    "NOT a claim about encodedLength, decode, or any other base36 symbol",
+    "NOT a claim that nim-stew was modified or annotated in-tree (Zero-Footprint)",
+    "NOT a claim that the replay validates the sizing formula or the inferred law in general — it observes ONE pinned input per case on the pinned subject bytes",
+    "NOT an LLM/mined spec: the proposition content's AUTHORSHIP is a blind agent's output, but specOrigin is pinned soExplicit by explicitSpecFromOverlay and the authority is the hash-bound adoption act; any other declared origin fails closed"
+  ]
+}

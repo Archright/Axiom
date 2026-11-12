@@ -1,0 +1,818 @@
+#!/bin/bash
+# Axiom pre-push hook — Deep verification with cache (< 1.5s)
+# Self-Healing: Auto-builds gate binaries if missing
+set -e
+
+cd "$(git rev-parse --show-toplevel)"
+
+# ── Part 4a: content-identity gate freshness (VS-1) — function definitions ──
+# Adjudication contract (replaces the former 7-pair mtime check):
+#   - mtime is NEVER an adjudication input (touch-rollback immunity);
+#   - the closure is the compiler's own interpretation (nim genDepend .deps),
+#     never a hand-written file list;
+#   - every recorded closure file must hash — a missing/unreadable file is a
+#     mismatch (rebuild), never a skip;
+#   - the canonical rebuild is `make -B bin/<gate>` (Makefile = closure SSOT);
+#     a rebuild that still cannot establish a verified stamp FAILs closed with
+#     the exact manual command (§0.9 — no swallowed failures);
+#   - stamps are checkout-local (.cache/, gitignored): the same OID yields
+#     different binary bytes in different worktrees, so stamps are never
+#     committed or shared;
+#   - stamp writes are atomic (PID-unique tmp + mv — atomicWriteFile
+#     precedent, tools/hermetic_build.nim:949-953).
+# genDepend quirks (exit≠0 despite a complete .deps; .deps lands in the
+# --nimcache directory; `when fileExists` resolves against the compiler CWD):
+# docs/spec/nim_gendepend_quirks.md (§0.5 Quirk Mandate).
+GATE_STAMP_DIR=".cache/axiom/prepush/gates"
+GATE_PAIRS=(
+    "bin/debt_engine:tools/debt_engine.nim"
+    "bin/check_nim_theater:tools/ci/check_nim_theater.nim"
+    "bin/doc_path_validator:tools/ci/doc_path_validator.nim"
+    "bin/proof_unit_consistency_gate:tools/ci/proof_unit_consistency_gate.nim"
+    "bin/proof_reconcile_gate:tools/ci/proof_reconcile_gate.nim"
+    "bin/epoch_transaction_gate:tools/ci/epoch_transaction_gate.nim"
+    "bin/layer_enforcement_gate:src/gate/runners/layer_enforcement_gate.nim"
+)
+declare -A GATE_FILE_SHA=()
+PP_SHA=""
+
+pp_file_sha() {
+    # Memoized sha256 of one input file (results in PP_SHA). Only build INPUTS
+    # go through the memo — their content is stable for the duration of one
+    # hook run; bin/ artifacts are always hashed fresh, never memoized.
+    local p="$1" h
+    if [ -z "${GATE_FILE_SHA[$p]+x}" ]; then
+        h="$(sha256sum "$p" 2>/dev/null | cut -d' ' -f1)"
+        if [ -n "$h" ]; then
+            GATE_FILE_SHA["$p"]="$h"
+        fi
+    fi
+    PP_SHA="${GATE_FILE_SHA[$p]}"
+}
+
+pp_hash_files_batch() {
+    # Batch-hashes the given paths into GATE_FILE_SHA; already-hashed files are
+    # skipped, so stdlib members shared across gates hash once per push.
+    local f line h p
+    local -a todo=()
+    for f in "$@"; do
+        if [ -n "$f" ] && [ -z "${GATE_FILE_SHA[$f]+x}" ]; then
+            todo+=("$f")
+        fi
+    done
+    if [ "${#todo[@]}" -eq 0 ]; then
+        return 0
+    fi
+    while IFS= read -r line; do
+        h="${line%% *}"
+        p="${line#*  }"
+        if [ "${#h}" -eq 64 ] && [ "$p" != "$line" ]; then
+            GATE_FILE_SHA["$p"]="$h"
+        fi
+    done < <(sha256sum "${todo[@]}" 2>/dev/null || true)
+    return 0
+}
+
+pp_canonical_flags() {
+    # NIM_TOOL_FLAGS as make itself resolves it (`make -pn` database print —
+    # SSOT: the hook never greps Makefile text for it). Repo-relative
+    # --path/--nimcache values are re-anchored at the repo root so the value
+    # is CWD-independent and stable to hash. One hook-owned flag is appended:
+    # --skipUserCfg — the user cfg (~/.config/nim/nim.cfg) is an untracked,
+    # machine-local input that genDepend honors (nimc.md cfg order: global →
+    # user → parent → project), and it can shift or break the captured
+    # closure (measured: --threads:off drops 7 stdlib thread modules from the
+    # closure; --define:windows makes the capture fail outright). Skipping it
+    # makes the closure a function of repo + toolchain + this flag string
+    # only (DEBT#521 pre-push half). The global toolchain cfg is NOT skipped:
+    # the real `make -B` build loads it and its sha256 is bound into the
+    # identity (TOOLCHAIN_CFG in pp_identity_compute). Details:
+    # docs/spec/nim_gendepend_quirks.md.
+    local raw token val out=""
+    raw="$(make -pn 2>/dev/null | grep -m1 '^NIM_TOOL_FLAGS := ')" || return 1
+    raw="${raw#NIM_TOOL_FLAGS := }"
+    if [ -z "$raw" ]; then
+        return 1
+    fi
+    local -a tokens=()
+    read -ra tokens <<< "$raw"
+    for token in "${tokens[@]}"; do
+        case "$token" in
+            --path:*|--nimcache:*)
+                val="${token#*:}"
+                case "$val" in
+                    /*) ;;
+                    *) token="${token%%:*}:$(pwd)/$val" ;;
+                esac
+                ;;
+        esac
+        out+="$token "
+    done
+    out+="--skipUserCfg "
+    printf '%s\n' "${out% }"
+}
+
+pp_manifest_hash_stream() {
+    # Emits the closure/probe contribution to the identity stream from a
+    # manifest of CLOSUE:/PROBE: lines. A missing or unreadable closure file
+    # emits a deterministic MISSING line — a stamp mismatch, never a skip.
+    local manifest="$1" line path h
+    local -a files=()
+    while IFS= read -r line || [ -n "$line" ]; do
+        case "$line" in
+            CLOSURE:*) files+=("${line#CLOSURE:}") ;;
+        esac
+    done < "$manifest"
+    pp_hash_files_batch "${files[@]}"
+    while IFS= read -r line || [ -n "$line" ]; do
+        case "$line" in
+            CLOSURE:*)
+                path="${line#CLOSURE:}"
+                if [ -n "${GATE_FILE_SHA[$path]+x}" ]; then
+                    printf 'CLOSURE_SHA:%s  %s\n' "${GATE_FILE_SHA[$path]}" "$path"
+                else
+                    printf 'CLOSURE_MISSING:%s\n' "$path"
+                fi
+                ;;
+            PROBE:*)
+                path="${line#PROBE:}"
+                h=""
+                if [ -r "$path" ]; then
+                    h="$(sha256sum "$path" 2>/dev/null | cut -d' ' -f1)"
+                fi
+                if [ -n "$h" ]; then
+                    printf 'PROBE_SHA:%s  %s\n' "$h" "$path"
+                elif [ -e "$path" ]; then
+                    printf 'PROBE_UNREADABLE:%s\n' "$path"
+                else
+                    printf 'PROBE_ABSENT:%s\n' "$path"
+                fi
+                ;;
+        esac
+    done < "$manifest"
+}
+
+pp_identity_compute() {
+    # $1 canonical genDepend flags, $2 manifest file (CLOSURE:/PROBE: lines).
+    # Prints the composite input_identity (sha256 hex). Every stream line is
+    # deterministic for identical inputs — no timestamps, no mtimes.
+    local flags="$1" manifest="$2"
+    local nimbin cfg stream id
+    nimbin="$(command -v nim 2>/dev/null)"
+    if [ -z "$nimbin" ]; then
+        nimbin="nim"
+    fi
+    cfg="$(dirname "$(dirname "$nimbin")")/config/nim.cfg"
+    stream="$(mktemp)" || return 1
+    {
+        printf 'NIM_VERSION:%s\n' "$(nim --version 2>/dev/null | head -1)"
+        pp_file_sha "$nimbin"
+        printf 'NIM_SHA:%s  %s\n' "$PP_SHA" "$nimbin"
+        printf 'GCC_VERSION:%s\n' "$(gcc --version 2>/dev/null | head -1)"
+        pp_file_sha "$(pwd)/Makefile"
+        printf 'MAKEFILE_SHA:%s  %s\n' "$PP_SHA" "$(pwd)/Makefile"
+        if [ -f "$cfg" ]; then
+            pp_file_sha "$cfg"
+            printf 'TOOLCHAIN_CFG:%s  %s\n' "$PP_SHA" "$cfg"
+        else
+            printf 'TOOLCHAIN_CFG:ABSENT\n'
+        fi
+        printf 'HOST:%s\n' "$(uname -sr 2>/dev/null)"
+        printf 'FLAGS:%s\n' "$flags"
+        pp_manifest_hash_stream "$manifest"
+    } > "$stream"
+    id="$(sha256sum "$stream" 2>/dev/null | cut -d' ' -f1)"
+    rm -f "$stream"
+    printf '%s\n' "$id"
+}
+
+pp_probe_lines() {
+    # Emits sorted PROBE:<abs> lines for every `when fileExists("<path>")`
+    # argument found in the closure files. Conditional-import targets compile
+    # only when the path exists at the compiler's CWD; genDepend runs from a
+    # throwaway CWD and takes the absent branch, so the probe binds the
+    # present-file content (an absent→created transition changes the identity
+    # and forces a rebuild).
+    local deps="$1" p pr
+    local -a files=()
+    while IFS= read -r p; do
+        if [ -n "$p" ]; then
+            files+=("$p")
+        fi
+    done < "$deps"
+    if [ "${#files[@]}" -eq 0 ]; then
+        return 0
+    fi
+    grep -hoE 'when[[:space:]]+fileExists\([[:space:]]*"[^"]+"' "${files[@]}" 2>/dev/null \
+        | sed -E 's/^[^"]*"([^"]*)".*/\1/' \
+        | LC_ALL=C sort -u \
+        | while IFS= read -r pr; do
+            if [ -n "$pr" ]; then
+                case "$pr" in
+                    /*) printf 'PROBE:%s\n' "$pr" ;;
+                    *) printf 'PROBE:%s\n' "$(pwd)/$pr" ;;
+                esac
+            fi
+        done
+    return 0
+}
+
+pp_capture_manifest() {
+    # $1 main module (absolute), $2 canonical flags, $3 manifest output file.
+    # Runs `nim genDepend` in a throwaway CWD+nimcache so no artifact can
+    # touch the repository, then validates the .deps artifact itself (the
+    # genDepend exit status is meaningless without graphviz — see
+    # docs/spec/nim_gendepend_quirks.md). rc 0 = manifest written with sorted
+    # CLOSUE: lines + sorted PROBE: lines; rc 1 = UNKNOWN (fail-closed).
+    local main="$1" flags="$2" out="$3"
+    local modname tmpd deps p rc token
+    modname="$(basename "$main" .nim)"
+    tmpd="$(mktemp -d)" || return 1
+    # Quirk: genDepend also writes <module>.dot next to the MAIN module —
+    # into the repository itself (docs/spec/nim_gendepend_quirks.md). A newly
+    # created untracked file would flip the F5 git-status comparison, so it is
+    # removed when (and only when) this run created it; a pre-existing file is
+    # not ours to remove, and rewriting an already-untracked file leaves
+    # `git status --porcelain` unchanged.
+    local dotfile="${main%/*}/$modname.dot" dot_preexisted=0
+    if [ -e "$dotfile" ]; then
+        dot_preexisted=1
+    fi
+    local -a genflags=() tokens=()
+    read -ra tokens <<< "$flags"
+    for token in "${tokens[@]}"; do
+        if [[ "$token" == --nimcache:* ]]; then
+            genflags+=("--nimcache:$tmpd")
+        else
+            genflags+=("$token")
+        fi
+    done
+    (
+        cd "$tmpd" || exit 0
+        nim genDepend "${genflags[@]}" "$main" > /dev/null 2>&1 || true
+    ) || true
+    if [ "$dot_preexisted" -eq 0 ] && [ -e "$dotfile" ]; then
+        rm -f "$dotfile"
+    fi
+    deps="$tmpd/$modname.deps"
+    rc=0
+    if [ ! -s "$deps" ]; then
+        rc=1
+    fi
+    if [ "$rc" -eq 0 ] && ! grep -Fqx "$main" "$deps"; then
+        rc=1
+    fi
+    if [ "$rc" -eq 0 ]; then
+        # Artifact validation: every line must be an absolute readable file.
+        while IFS= read -r p; do
+            if [ -z "$p" ]; then
+                continue
+            fi
+            case "$p" in
+                /*) ;;
+                *) rc=1; break ;;
+            esac
+            if [ ! -r "$p" ]; then
+                rc=1
+                break
+            fi
+        done < "$deps"
+    fi
+    if [ "$rc" -ne 0 ]; then
+        rm -rf "$tmpd"
+        return 1
+    fi
+    if ! {
+        LC_ALL=C sort -u "$deps" | sed 's/^/CLOSURE:/'
+        pp_probe_lines "$deps"
+    } > "$out"; then
+        rm -rf "$tmpd"
+        return 1
+    fi
+    rm -rf "$tmpd"
+    return 0
+}
+
+pp_meta_lines() {
+    # Stamp metadata (diagnostics only — the identity is recomputed from live
+    # inputs at every push; these lines are never compared directly).
+    local flags="$1" make_target="$2"
+    local nimbin cfg
+    nimbin="$(command -v nim 2>/dev/null)"
+    if [ -z "$nimbin" ]; then
+        nimbin="nim"
+    fi
+    cfg="$(dirname "$(dirname "$nimbin")")/config/nim.cfg"
+    printf 'META_NIM_VERSION=%s\n' "$(nim --version 2>/dev/null | head -1)"
+    pp_file_sha "$nimbin"
+    printf 'META_NIM_SHA256=%s\n' "$PP_SHA"
+    printf 'META_GCC_VERSION=%s\n' "$(gcc --version 2>/dev/null | head -1)"
+    pp_file_sha "$(pwd)/Makefile"
+    printf 'META_MAKEFILE_SHA256=%s\n' "$PP_SHA"
+    if [ -f "$cfg" ]; then
+        pp_file_sha "$cfg"
+        printf 'META_TOOLCHAIN_CFG_SHA256=%s\n' "$PP_SHA"
+    else
+        printf 'META_TOOLCHAIN_CFG_SHA256=ABSENT\n'
+    fi
+    printf 'META_HOST=%s\n' "$(uname -sr 2>/dev/null)"
+    printf 'META_GENDEPEND_FLAGS=%s\n' "$flags"
+    printf 'META_MAKE_TARGET=%s\n' "$make_target"
+}
+
+pp_verify_stamp() {
+    # $1 pair, $2 canonical flags. rc: 0 = fresh (reuse), 1 = input identity
+    # mismatch, 2 = binary sha256 mismatch (overwritten/tampered/missing),
+    # 3 = UNKNOWN (stamp absent, incomplete, or corrupt).
+    local pair="$1" flags="$2"
+    # NB: dependent expansions must NOT share a `local` statement — bash
+    # expands every argument before any assignment lands, so
+    # `local bin=… gate=${bin#bin/}` would leave gate empty.
+    local bin="${pair%%:*}"
+    local src="${pair##*:}"
+    local gate="${bin#bin/}"
+    local stamp="$GATE_STAMP_DIR/$gate.stamp"
+    local src_abs schema want_id want_bsha manifest id bsha
+    if [ ! -f "$stamp" ]; then
+        return 3
+    fi
+    src_abs="$(pwd)/$src"
+    schema="$(sed -n 's/^SCHEMA=//p' "$stamp" | head -1)"
+    want_id="$(sed -n 's/^INPUT_IDENTITY=//p' "$stamp" | head -1)"
+    want_bsha="$(sed -n 's/^BINARY_SHA256=//p' "$stamp" | head -1)"
+    manifest="$(mktemp)" || return 3
+    grep -E '^(CLOSURE|PROBE):' "$stamp" > "$manifest" || true
+    if [ "$schema" != "vs1-gate-stamp/1" ] \
+       || [ "${#want_id}" -ne 64 ] || [ "${#want_bsha}" -ne 64 ] \
+       || [[ "$want_id" == *[!0-9a-f]* ]] || [[ "$want_bsha" == *[!0-9a-f]* ]] \
+       || ! grep -qxF "CLOSURE:$src_abs" "$manifest"; then
+        rm -f "$manifest"
+        return 3
+    fi
+    id="$(pp_identity_compute "$flags" "$manifest")"
+    rm -f "$manifest"
+    if [ -z "$id" ] || [ "$id" != "$want_id" ]; then
+        return 1
+    fi
+    bsha="$(sha256sum "$bin" 2>/dev/null | cut -d' ' -f1)"
+    if [ -z "$bsha" ] || [ "$bsha" != "$want_bsha" ]; then
+        return 2
+    fi
+    return 0
+}
+
+pp_rebuild_and_stamp() {
+    # Canonical rebuild + stamp write. rc: 0 = rebuilt, stamped, re-verified;
+    # 1 = `make -B` failed (compile error); 2 = closure capture failed
+    # (UNKNOWN); 3 = post-write re-verification still mismatched.
+    local pair="$1" flags="$2"
+    # NB: dependent expansions must NOT share a `local` statement — bash
+    # expands every argument before any assignment lands, so
+    # `local bin=… gate=${bin#bin/}` would leave gate empty.
+    local bin="${pair%%:*}"
+    local gate="${bin#bin/}"
+    local stamp="$GATE_STAMP_DIR/$gate.stamp"
+    local manifest id bsha tmpstamp
+    if ! make -B "$bin" > /dev/null 2>&1; then
+        return 1
+    fi
+    if [ ! -f "$bin" ]; then
+        return 1
+    fi
+    manifest="$(mktemp)" || return 2
+    if ! pp_capture_manifest "$(pwd)/${pair##*:}" "$flags" "$manifest"; then
+        rm -f "$manifest"
+        return 2
+    fi
+    id="$(pp_identity_compute "$flags" "$manifest")"
+    if [ -z "$id" ]; then
+        rm -f "$manifest"
+        return 2
+    fi
+    bsha="$(sha256sum "$bin" 2>/dev/null | cut -d' ' -f1)"
+    if [ -z "$bsha" ]; then
+        rm -f "$manifest"
+        return 1
+    fi
+    mkdir -p "$GATE_STAMP_DIR"
+    tmpstamp="$stamp.tmp.$$.$RANDOM"
+    if ! {
+        printf 'SCHEMA=vs1-gate-stamp/1\n'
+        printf 'INPUT_IDENTITY=%s\n' "$id"
+        printf 'BINARY_SHA256=%s\n' "$bsha"
+        cat "$manifest"
+        pp_meta_lines "$flags" "make -B $bin"
+        printf 'BUILT_AT=%s\n' "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    } > "$tmpstamp"; then
+        rm -f "$manifest" "$tmpstamp"
+        return 2
+    fi
+    rm -f "$manifest"
+    if ! mv -f "$tmpstamp" "$stamp"; then
+        rm -f "$tmpstamp"
+        return 2
+    fi
+    # Re-verify once against the freshly written stamp — the identity must
+    # recompute identically from the stamp (fail-closed on nondeterminism).
+    if ! pp_verify_stamp "$pair" "$flags"; then
+        return 3
+    fi
+    return 0
+}
+
+pp_adjudicate_pair() {
+    # $1 pair, $2 canonical flags. rc 0 = gate adjudicated fresh (reuse) or
+    # rebuilt + verified; rc 1 = FAIL (could not establish a verified stamp).
+    # Sets PP_VERDICT (reuse|rebuilt|unknown) and PP_REASON. Like ensure_tool,
+    # this must be invoked in a context where set -e is ignored (if/||).
+    local pair="$1" flags="$2"
+    # NB: dependent expansions must NOT share a `local` statement — bash
+    # expands every argument before any assignment lands, so
+    # `local bin=… gate=${bin#bin/}` would leave gate empty.
+    local bin="${pair%%:*}"
+    local gate="${bin#bin/}"
+    local vrc rrc trigger
+    PP_VERDICT="unknown"
+    PP_REASON=""
+    pp_verify_stamp "$pair" "$flags"
+    vrc=$?
+    if [ "$vrc" -eq 0 ]; then
+        PP_VERDICT="reuse"
+        return 0
+    fi
+    case "$vrc" in
+        1) trigger="input identity mismatch" ;;
+        2) trigger="binary sha256 mismatch" ;;
+        *) trigger="stamp missing or incomplete" ;;
+    esac
+    echo "[Hook] Rebuilding $gate ($trigger) — make -B $bin"
+    pp_rebuild_and_stamp "$pair" "$flags"
+    rrc=$?
+    if [ "$rrc" -eq 0 ]; then
+        PP_VERDICT="rebuilt"
+        return 0
+    fi
+    case "$rrc" in
+        1) PP_REASON="make -B $bin failed (compile error)" ;;
+        2) PP_REASON="genDepend closure could not be captured or validated (UNKNOWN)" ;;
+        3) PP_REASON="post-rebuild verification still mismatched" ;;
+        *) PP_REASON="rebuild failed (exit $rrc)" ;;
+    esac
+    return 1
+}
+
+pp_sha_json() {
+    # Telemetry helper: {"<gate>":"<sha>",...} for all 7 gate binaries.
+    # Fresh hashes every call — binaries may have just been rebuilt.
+    local pair gate sha out=""
+    for pair in "${GATE_PAIRS[@]}"; do
+        gate="${pair%%:*}"
+        gate="${gate#bin/}"
+        sha="$(sha256sum "${pair%%:*}" 2>/dev/null | cut -d' ' -f1)"
+        out+="\"$gate\":\"$sha\","
+    done
+    printf '{%s}\n' "${out%,}"
+}
+
+pp_rebuilt_json() {
+    # Telemetry helper: ["<gate>",...] from the PP_REBUILT array.
+    local g out=""
+    for g in "${PP_REBUILT[@]}"; do
+        out+="\"$g\","
+    done
+    printf '[%s]\n' "${out%,}"
+}
+
+pp_verdict_json() {
+    # Telemetry helper: {"<gate>":"reuse|rebuilt|unknown",...} from PP_VERDICTS.
+    local v gate verdict out=""
+    for v in "${PP_VERDICTS[@]}"; do
+        gate="${v%%=*}"
+        verdict="${v#*=}"
+        out+="\"$gate\":\"$verdict\","
+    done
+    printf '{%s}\n' "${out%,}"
+}
+
+# VS-1 unit-test harness hook: sourcing this file with PREPUSH_SOURCE_ONLY=1
+# defines the Part 4a functions and returns before any check executes. The
+# BASH_SOURCE guard keeps a leaked PREPUSH_SOURCE_ONLY env value from ever
+# affecting a real (executed) hook run.
+if [ "${PREPUSH_SOURCE_ONLY:-}" = "1" ] && [ "${BASH_SOURCE[0]}" != "$0" ]; then
+    return 0
+fi
+
+# ── Part 1: gate_tier_integrity (existing) ──
+if [ ! -f bin/gate_tier_integrity ]; then
+    echo "[Hook] Building gate_tier_integrity..."
+    nim c -d:danger --hints:off -o:bin/gate_tier_integrity tools/gate_tier_integrity.nim > /dev/null 2>&1
+fi
+
+bin/gate_tier_integrity --strict || {
+    echo "[Pre-push FAIL] Tier integrity or Z3 contract violation."
+    echo "   Fix violations above. DO NOT use --no-verify."
+    exit 1
+}
+
+# ── Part 2: anti_theater_gate — REMOVED (authority-boundary simplification) ──
+# The gate scans `git diff --cached` / `git diff HEAD` only
+# (anti_theater_gate.nim getDiffOutput); both diffs are empty at push time, so
+# the push-time run never saw the pushed OIDs — a vacuous re-run. Committed
+# content is covered by check_nim_theater in the push-admissibility OID
+# snapshot; staged-diff coverage remains in pre-commit. Accepted behavior
+# change: no WIP tripwire at push.
+
+# ── Part 3: layer_enforcement_gate (build if missing or stale) ──
+# Stale-binary guard: layer_rules.nim / layer_enforcement_gate.nim newer than
+# the binary means the rule table changed — rebuild instead of enforcing a
+# stale whitelist (a stale binary misreports new import paths as violations).
+if [ ! -f bin/layer_enforcement_gate ] || \
+   [ src/core/trusted/layer_rules.nim -nt bin/layer_enforcement_gate ] || \
+   [ src/gate/runners/layer_enforcement_gate.nim -nt bin/layer_enforcement_gate ]; then
+    echo "[Hook] Building layer_enforcement_gate..."
+    nim c -d:danger --hints:off -o:bin/layer_enforcement_gate src/gate/runners/layer_enforcement_gate.nim > /dev/null 2>&1
+fi
+bin/layer_enforcement_gate --strict || {
+    echo "[Pre-push FAIL] Layer enforcement gate detected violations."
+    echo "   Fix layer boundary violations above. DO NOT use --no-verify."
+    exit 1
+}
+
+# ── Part 4: Push-Target OID Static Admissibility (Phase 1) ──
+# Mechanism A: worktree-add --detach <OID> → symlink prebuilt bin/ → make -C snapshot push-admissibility.
+# The gate SET is declared exactly once in the Makefile (PUSH_ADMISSIBILITY_GATES —
+# single definition point; the push-admissibility thin target + integrity check consume it).
+# Hooks only call make; the single Makefile-variable exception is NIM_TOOL_FLAGS,
+# resolved by make itself via `make -pn` (make's own database print, not text
+# parsing) for the VS-1 content-identity stamp adjudication below. The hook
+# appends exactly one non-make flag to that resolution: --skipUserCfg (user-cfg
+# machine-independence for the genDepend capture — DEBT#521 pre-push half; see
+# pp_canonical_flags and docs/spec/nim_gendepend_quirks.md).
+# Provenance is telemetry-only (log.jsonl append-only); no correctness/selection logic reads it.
+declare -A OID_REF
+PUSH_OIDS=()
+while IFS=' ' read -r lr lo rr ro || [ -n "$lr" ]; do
+    [ "$lo" = "0000000000000000000000000000000000000000" ] && continue
+    # Dedupe: keep first seen ref for this OID.
+    if [ -z "${OID_REF[$lo]+x}" ]; then
+        OID_REF[$lo]="$lr"
+        PUSH_OIDS+=("$lo")
+    fi
+done
+
+# ── Part 5: rotation pin@OID anchor (fail-fast, BEFORE the per-OID snapshot) ──
+# The fact being checked — pin@H anchors derived(H) (ADR-0025 §7/§13 ④, landing
+# Pass 2.75) — is computed by the SAME shared predicate the landing venue uses
+# (core/policy/rotation_closure_facts). bin/reanchor_pin owns only the CLI +
+# tree I/O; it does not re-implement the judgment.
+#
+# Placement is the point: this runs BEFORE the push-admissibility snapshot
+# below (which materializes a worktree and runs make per OID), so a stale pin
+# costs a local second instead of the remote CI round-trip that motivated this
+# hook part.
+#
+# Input discipline (githooks(5)): the stdin local-ref field is NOT a filter —
+# `git push origin HEAD` supplies the literal `HEAD`, a raw OID, or an expanded
+# name, so filtering on refs/heads/* would silently skip the check. Deletions
+# are already dropped by the parse loop (all-zero local OID); commit-ness is
+# the real precondition and is checked structurally below.
+PIN_LIST_DIR=tools/ci/tool_sources
+
+ensure_tool() {
+    # Content-addressed freshness. mtime (or "exists ⇒ reuse") would let a
+    # binary built from older sources render a verdict under the OLD derivation
+    # rules — the exact defect this part must not reintroduce. A missing
+    # stamp, an unreadable source, a flags change or a nim-version change all
+    # force a rebuild.
+    local name="$1" tool="bin/$1" src="tools/ci/$1.nim" list="$PIN_LIST_DIR/$1.list"
+    # Stamp location: .cache/ (root-contract allowed, gitignored) — NOT bin/.
+    # The admission path must honor the Filesystem Contract V2 it enforces:
+    # bin/ is the canonical binary surface; a bin/<tool>.srchash sidecar is an
+    # unclassified materialization that fails validate-root-layout.
+    local stamp=".cache/axiom/prepush/$name.srchash"
+    local want have
+    if [ ! -f "$list" ]; then
+        echo "[Pre-push FAIL] Tool source list missing: $list"
+        return 1
+    fi
+    want="$({
+        nim --version 2>/dev/null | head -1
+        echo "FLAGS:-d:danger --hints:off -d:axiomNoLto"
+        # The `|| [ -n "$p" ]` guard is required: a list whose last line has no
+        # trailing newline would otherwise drop that line from the hash, so a
+        # change to the final source would silently reuse a stale binary.
+        while IFS= read -r p || [ -n "$p" ]; do
+            [ -z "$p" ] && continue
+            printf 'SRC:%s\n' "$p"
+            sha256sum "$p" 2>/dev/null || printf 'MISSING:%s\n' "$p"
+        done < "$list"
+    } | sha256sum | cut -d' ' -f1)"
+    have="$(cat "$stamp" 2>/dev/null || true)"
+    if [ -f "$tool" ] && [ "$want" = "$have" ]; then
+        return 0
+    fi
+    echo "[Hook] Building $name (source, flags, or nim version differs from the stamp)..."
+    if ! nim c -d:danger --hints:off -d:axiomNoLto -o:"$tool" "$src" > /dev/null 2>&1; then
+        echo "[Pre-push FAIL] $name build failed."
+        echo "   Run: nim c -d:danger --hints:off -d:axiomNoLto -o:$tool $src"
+        return 1
+    fi
+    mkdir -p .cache/axiom/prepush
+    printf '%s\n' "$want" > "$stamp"
+    return 0
+}
+
+if ! ensure_tool derive_checker_closure || ! ensure_tool reanchor_pin; then
+    echo "   DO NOT use --no-verify."
+    exit 1
+fi
+
+for OID in "${PUSH_OIDS[@]}"; do
+    git cat-file -e "${OID}^{commit}" 2>/dev/null || continue
+    if pin_out="$(bin/reanchor_pin --ref "$OID" 2>&1)"; then
+        continue
+    else
+        pin_rc=$?
+    fi
+    echo "[Pre-push] $pin_out"
+    case "$pin_rc" in
+        1)
+            echo "[Pre-push FAIL] rotation pin does not anchor pushed commit $OID."
+            echo "   Fix: bin/reanchor_pin --ref $OID --write   (then commit the updated pin)"
+            ;;
+        3)
+            echo "[Pre-push FAIL] rotation pin MEMBERSHIP changed for pushed commit $OID."
+            echo "   The checker closure gained or lost members — that needs a reviewed"
+            echo "   rotation (ADR-0025 §7), not an automatic value update."
+            ;;
+        *)
+            echo "[Pre-push FAIL] pin anchor could not be evaluated (exit $pin_rc) — fail-closed."
+            ;;
+    esac
+    echo "   DO NOT use --no-verify."
+    exit 1
+done
+
+# ── Part 5b: publication_provenance_validator (Single Publication Admission Validator) ──
+# Enforces provenance coverage, PII hygiene, forbidden .log/archive exclusion,
+# and THIRD-PARTY-NOTICES.md consistency before pushing any commit (fail-closed).
+if [ "${#PUSH_OIDS[@]}" -gt 0 ]; then
+    if [ ! -f build/vsi_provenance ] || \
+       [ tools/ci/publication_provenance_validator.nim -nt build/vsi_provenance ] || \
+       [ tools/ci/publication_origin.nim -nt build/vsi_provenance ] || \
+       [ tools/ci/publication_yaml.nim -nt build/vsi_provenance ]; then
+        echo "[Hook] Building publication_provenance_validator..."
+        nim c --hints:off --warnings:off --skipParentCfg --skipProjCfg --path:. --path:src \
+            --nimcache:build/nimcache/vsi_provenance \
+            -o:build/vsi_provenance tools/ci/publication_provenance_validator.nim > /dev/null 2>&1 || {
+            echo "[Pre-push FAIL] publication_provenance_validator build failed."
+            echo "   DO NOT use --no-verify."
+            exit 1
+        }
+    fi
+    PROV_REPORT="$(mktemp)"
+    if ! build/vsi_provenance --out "$PROV_REPORT"; then
+        rm -f "$PROV_REPORT"
+        echo "[Pre-push FAIL] Publication provenance / hygiene validation failed."
+        echo "   Fix provenance, PII, forbidden artifact, or THIRD-PARTY-NOTICES.md violations above. DO NOT use --no-verify."
+        exit 1
+    fi
+    rm -f "$PROV_REPORT"
+fi
+
+SNAP_ROOT=~/.cache/axiom/push-admissibility
+mkdir -p "$SNAP_ROOT"
+main_status_before=$(git status --porcelain)
+fails=0
+for OID in "${PUSH_OIDS[@]}"; do
+    oid_start=$(date +%s)
+    # Identity verification (VS-1 content identity — the sole FAIL basis).
+    # mtime is never read for adjudication: the stamp records the
+    # compiler-interpreted closure (nim genDepend), the toolchain/flags
+    # identity and the binary sha256 at build time; a push re-hashes the
+    # recorded inputs and the binary. Any mismatch — or an absent, incomplete
+    # or corrupt stamp — triggers a canonical `make -B bin/<gate>` rebuild
+    # (mtime-ignoring, Makefile = closure SSOT); a rebuild that still cannot
+    # establish a verified stamp FAILs closed (§0.9 — no swallowed failures).
+    PP_FLAGS=""
+    if ! PP_FLAGS="$(pp_canonical_flags)"; then
+        echo "[Pre-push FAIL] NIM_TOOL_FLAGS could not be extracted from the Makefile (make -pn)."
+        echo "   DO NOT use --no-verify."
+        fails=1
+        break
+    fi
+    PP_VERDICTS=()
+    PP_REBUILT=()
+    for pair in "${GATE_PAIRS[@]}"; do
+        gate="${pair%%:*}"
+        gate="${gate#bin/}"
+        if pp_adjudicate_pair "$pair" "$PP_FLAGS"; then
+            PP_VERDICTS+=("$gate=$PP_VERDICT")
+            if [ "$PP_VERDICT" = "rebuilt" ]; then
+                PP_REBUILT+=("$gate")
+            fi
+            continue
+        fi
+        PP_VERDICTS+=("$gate=unknown")
+        echo "[Pre-push FAIL] $gate: gate freshness could not be established ($PP_REASON)."
+        echo "   Run: make -B bin/$gate"
+        echo "   DO NOT use --no-verify."
+        fails=1
+        # Provenance FAIL record (telemetry-only; never read by any adjudication logic).
+        _oid_end=$(date +%s)
+        _dur=$((_oid_end - oid_start))
+        _ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        _ref="${OID_REF[$OID]#refs/heads/}"
+        _ref="${_ref#refs/tags/}"
+        _log="{\"ts\":\"$_ts\",\"oid\":\"$OID\",\"ref\":\"$_ref\",\"result\":\"FAIL\",\"duration_s\":$_dur,\"sha256\":$(pp_sha_json),\"rebuilt_gates\":$(pp_rebuilt_json),\"verdicts\":$(pp_verdict_json),\"budget_s\":120}"
+        printf '%s\n' "$_log" >> "$SNAP_ROOT/log.jsonl"
+        break 2
+    done
+    if [ "$fails" -ne 0 ]; then
+        break
+    fi
+    # Identity recording (sha256 — provenance only; the adjudication above has
+    # already verified every binary against its stamp's BINARY_SHA256).
+    _sha_json="$(pp_sha_json)"
+    _verdicts_json="$(pp_verdict_json)"
+    _rebuilt_json="$(pp_rebuilt_json)"
+    # Snapshot boot.
+    SNAP="$SNAP_ROOT/$OID"
+    if [ -d "$SNAP" ]; then
+        echo "[Pre-push] Reusing existing snapshot $SNAP for $OID"
+    else
+        git worktree add --detach "$SNAP" "$OID" >/dev/null 2>&1 || {
+            echo "[Pre-push FAIL] git worktree add --detach $SNAP $OID failed."
+            echo "   DO NOT use --no-verify."
+            fails=1
+            break
+        }
+    fi
+    # Symlink prebuilt binaries into snapshot bin/ (skip if already present).
+    ln -sf "$(pwd)/bin/debt_engine" "$SNAP/bin/debt_engine" 2>/dev/null || true
+    ln -sf "$(pwd)/bin/check_nim_theater" "$SNAP/bin/check_nim_theater" 2>/dev/null || true
+    ln -sf "$(pwd)/bin/doc_path_validator" "$SNAP/bin/doc_path_validator" 2>/dev/null || true
+    ln -sf "$(pwd)/bin/proof_unit_consistency_gate" "$SNAP/bin/proof_unit_consistency_gate" 2>/dev/null || true
+    ln -sf "$(pwd)/bin/proof_reconcile_gate" "$SNAP/bin/proof_reconcile_gate" 2>/dev/null || true
+    ln -sf "$(pwd)/bin/epoch_transaction_gate" "$SNAP/bin/epoch_transaction_gate" 2>/dev/null || true
+    ln -sf "$(pwd)/bin/layer_enforcement_gate" "$SNAP/bin/layer_enforcement_gate" 2>/dev/null || true
+    # Ensure snapshot has the current Makefile (worktree may be at committed OID without thin target).
+    cp -f "$(pwd)/Makefile" "$SNAP/Makefile" 2>/dev/null || true
+    # Thin target execution (snapshot CWD). githooks(5): git exports GIT_DIR etc.
+    # to hooks; inherited into make they make the snapshot's git commands resolve
+    # HEAD to the SOURCE worktree instead of $OID. Unset them so the snapshot's
+    # own .git file governs.
+    if ! env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_QUARANTINE_PATH \
+        -u GIT_OBJECT_DIRECTORY -u GIT_ALTERNATE_OBJECT_DIRECTORIES \
+        make -C "$SNAP" push-admissibility; then
+        echo "[Pre-push FAIL] Push-target OID $OID failed static admissibility (snapshot)."
+        echo "   DO NOT use --no-verify."
+        fails=1
+        # Provenance FAIL record (telemetry-only; never read by any adjudication logic).
+        _oid_end=$(date +%s)
+        _dur=$((_oid_end - oid_start))
+        _ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        _ref="${OID_REF[$OID]#refs/heads/}"
+        _ref="${_ref#refs/tags/}"
+        _log="{\"ts\":\"$_ts\",\"oid\":\"$OID\",\"ref\":\"$_ref\",\"result\":\"FAIL\",\"duration_s\":$_dur,\"sha256\":$_sha_json,\"rebuilt_gates\":$_rebuilt_json,\"verdicts\":$_verdicts_json,\"budget_s\":120}"
+        printf '%s\n' "$_log" >> "$SNAP_ROOT/log.jsonl"
+        # F5: clean up this snapshot before recording failure.
+        git worktree remove --force "$SNAP" 2>/dev/null || true
+        rm -rf "$SNAP" 2>/dev/null || true
+        git worktree prune --expire now 2>/dev/null || true
+        break
+    fi
+    # F5: original-tree contamination verification.
+    main_status_after=$(git status --porcelain)
+    if [ "$main_status_before" != "$main_status_after" ]; then
+        echo "[Pre-push FAIL] Original tree contaminated by snapshot run for OID $OID."
+        echo "   git status diff detected; restore working tree."
+        echo "   DO NOT use --no-verify."
+        fails=1
+        git worktree remove --force "$SNAP" 2>/dev/null || true
+        rm -rf "$SNAP" 2>/dev/null || true
+        git worktree prune --expire now 2>/dev/null || true
+        break
+    fi
+    oid_end=$(date +%s)
+    duration=$((oid_end - oid_start))
+    budget=120
+    if [ "$duration" -gt "$budget" ]; then
+        echo "[Pre-push] WARNING: OID $OID exceeded ${budget}s budget (${duration}s). Developer-feedback budget (operational policy value, not an invariant). Review and prune."
+    fi
+    # Provenance telemetry append-only.
+    ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    ref_short="${OID_REF[$OID]#refs/heads/}"
+    ref_short="${ref_short#refs/tags/}"
+    log_entry="{\"ts\":\"$ts\",\"oid\":\"$OID\",\"ref\":\"$ref_short\",\"result\":\"PASS\",\"duration_s\":$duration,\"sha256\":$_sha_json,\"rebuilt_gates\":$_rebuilt_json,\"verdicts\":$_verdicts_json,\"budget_s\":$budget}"
+    printf '%s\n' "$log_entry" >> "$SNAP_ROOT/log.jsonl"
+    # F5: clean up this snapshot.
+    git worktree remove --force "$SNAP" 2>/dev/null || true
+    rm -rf "$SNAP" 2>/dev/null || true
+    git worktree prune --expire now 2>/dev/null || true
+done
+if [ "$fails" -ne 0 ]; then
+    exit 1
+fi
+
+echo "[PASS] Pre-push checks passed"

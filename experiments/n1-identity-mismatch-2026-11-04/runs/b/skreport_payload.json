@@ -1,0 +1,32 @@
+{
+  "charon": {
+    "measured": "0.1.281 (798016509139eb51f0d764645f76d068d34ba5f6)",
+    "ok": true,
+    "pinned": "0.1.281 (798016509139eb51f0d764645f76d068d34ba5f6)",
+    "reason": ""
+  },
+  "identityBundleDigest": "becdcfeb3b0d26c651ee9158eb4d6298c4aa4ea71c98f57b475c76face0c108f",
+  "schemaVersion": "axiom.report.v1",
+  "subjectLane": "rust",
+  "summary": {
+    "failedCount": 0,
+    "statusCounts": {
+      "error": 0,
+      "failed": 0,
+      "unknown": 0,
+      "verified": 1
+    },
+    "timeoutCount": 0,
+    "verified": 1,
+    "verifiedRatio": 1.0
+  },
+  "targets": [
+    {
+      "certPath": "/tmp/n1_obs_wt/experiments/n1-identity-mismatch-2026-11-04/vault_b/8fd2dae5215d11192e40e753a5e917bc4c8504abfedf2328f98fa409f218fc87.json",
+      "irHash": "8fd2dae5215d11192e40e753a5e917bc4c8504abfedf2328f98fa409f218fc87",
+      "name": "axiom_u64_probe::u64_add",
+      "reason": "",
+      "status": "verified"
+    }
+  ]
+}

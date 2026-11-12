@@ -1,0 +1,14 @@
+{
+  "id": "language-ban-gate",
+  "name": "Axiom language ban gate",
+  "layer": "functional",
+  "entry": "src/gate/runners/language_ban_gate.nim",
+  "stages": [
+    "manual"
+  ],
+  "filesPattern": "",
+  "passFilenames": true,
+  "weight": "medium",
+  "category": "policy",
+  "severity": "error"
+}

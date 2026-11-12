@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "runGeneration": "v3 (canonical)",
+  "runHistory": {
+    "v1": "exit 2, same-class verified, run at /tmp/act2r0_witness_1790821709 — preserved in reproduction_v1.json",
+    "v2": "exit 0, DIVERGENT — HOME neutralization broke elan toolchain discovery (download attempt blocked by netns, DGRAM DNS sockets observed, 'Lean compiler dysfunctional'), executionComplete=false, statusCounts=null. Evidence for ELAN_HOME amendment. State: /tmp/act2r0_witness_v2_1790824471",
+    "v3": "canonical — HOME neutralized + ELAN_HOME=<user-home>/.elan amendment; exit 2, same-class with v1"
+  },
+  "targetNotation": "stew/bitops2.nim::getBitsBE",
+  "notationLadder": {
+    "attempted": ["stew/bitops2.nim::getBitsBE"],
+    "succeeded": "stew/bitops2.nim::getBitsBE (1순위)",
+    "note": "역사 실행 prove_getbitsBE_run1.log과 동일 표기가 frontier에서 1 node 정확 매치('--target filter: 1 node(s) match'). 사다리 2/3순위 불필요."
+  },
+  "command": "cd .-worktree-r0 && strace -f -e trace=openat,openat2,execve,socket,connect -o $STATE3/execution_observe_v3.log unshare -rni -- env -i PATH=<host PATH> HOME=$STATE3/home ELAN_HOME=<user-home>/.elan TMPDIR=$STATE3/tmp AXIOM_STATE_DIR=$STATE3 LANG=C LC_ALL=C GIT_CONFIG_NOSYSTEM=1 bin/ax prove --project <workspace>/nim-stew --target stew/bitops2.nim::getBitsBE --limit 1",
+  "allowlistValues": {
+    "PATH": "<host PATH, 24 entries — unchanged across v1/v2/v3>",
+    "HOME": "$STATE3/home = /tmp/act2r0_witness_v3_1790824830/home (empty scaffold — git config neutralization)",
+    "ELAN_HOME": "<user-home>/.elan (amendment — elan toolchain discovery; v2 evidence: without it elan attempts download)",
+    "TMPDIR": "$STATE3/tmp = /tmp/act2r0_witness_v3_1790824830/tmp",
+    "AXIOM_STATE_DIR": "$STATE3 = /tmp/act2r0_witness_v3_1790824830",
+    "LANG": "C",
+    "LC_ALL": "C",
+    "GIT_CONFIG_NOSYSTEM": "1 (amendment — /etc/gitconfig system config excluded; v2 기존 allowlist amendment 기록)"
+  },
+  "envAllowlistDigest": "see r0-evidence-manifest.json envAllowlist (values recorded verbatim)",
+  "exitCode": 2,
+  "stateSeedManifestRaw": "/tmp/state_seed_manifest_v2.txt",
+  "stateSeedDigest": "34b5e10f081968ad80b557e23d36abbcaddd1d12440b7daacc83b3f5178daf7a",
+  "stateSeedEntries": {
+    "state:data/verification_scope.lock": "7a4cd3eb0e85bcee3a8e454760421bc77c83199abe943944010ad9941ed3d630",
+    "state:data/baseline.json": "085caf2cc17f2b6cbadc9c567bc25477529898d0089cd5491011bbe44362933a",
+    "state:data/universe_merkle.lock": "absent-fresh",
+    "dir:state:data": "scaffold",
+    "dir:state:tmp": "scaffold",
+    "dir:state:home": "scaffold",
+    "dir:state:.axiom": "scaffold",
+    "dir:state:.axiom/cache": "scaffold (git_file_list.json write target — v1 ENOENT 결함 해소)"
+  },
+  "observeLog": "/tmp/act2r0_witness_v3_1790824830/execution_observe_v3.log",
+  "observeLogSha256": "79e8596325026da5c9ce75ef9ebb7b8998f616bdc18185bda8d8e6041eba04da",
+  "observeLogSummary": "22,152 lines; socket(AF_UNIX) 20건, connect 20건 — 전부 /var/run/nscd/socket(pathname system 서비스), 전부 -1 ENOENT(연결 성립 0, 데이터 교환 0); AF_INET/AF_INET6 connect 0건. nscd 프로브 pid = /bin/bash(lake env 래퍼, glibc NSS 프로브) — v1과 동일 패턴. systemIPCAllowlist amendment로 목록화(requiresRatification=true).",
+  "networkConnectAttempts": 0,
+  "unixSocketConnectAttempts": 20,
+  "unixSocketConnectNote": "20건 전부 glibc NSS nscd 프로브(/var/run/nscd/socket), 전부 ENOENT 실패 — 연결 성립 0. 프로세스당 2회 패턴(총 10개 bash 프로세스 x 2회 = v1과 동일 분포).",
+  "undeclaredIngressPaths": [],
+  "undeclaredIngressDetail": {
+    "successfulReadsUndeclared": {
+      "repo": 0,
+      "subject": 0,
+      "toolchain": 0,
+      "state": "0 — 28건 전부 seed(2) 또는 derived(26: write-then-read 20 + rename-chain .tmp.tmp→.tmp 6), derivedWithinStateRule 적용",
+      "env": "0 — HOME 중립화 성공 (gitconfig 읽기 0건; v1 18건)",
+      "system": "OS runtime baseline 24건 — excluded class(문서화)"
+    },
+    "dirListingsUndeclared": 0,
+    "execveTargetsUndeclared": 0,
+    "failedProbes": {
+      "repo": "3 (.lake/build/lib libc variants) — declared absent",
+      "subject": "8 (nested .gitignore 파일 8종 미존재) — declared absent",
+      "toolchain": "27 (glibc-hwcaps/elan lib probes) — declared absent",
+      "state": "3 (topology_merkle.json cache-miss, stew_bitops2_nim__getBitsBE.json certificate 미발행, universe_merkle.lock absent-fresh seed) — derived/seed 규칙 적용",
+      "system": "13 (Ws2_32.dll Windows shim probes 등) — OS baseline"
+    },
+    "envexclusions": "~/.gitconfig + ~/.config/git/ignore: v1 관측 18/5건 → HOME 중립화로 v3 0건 — 선언 불필요 확정",
+    "note": "관측(성공 읽기) ⊆ 선언(executionIngressManifest + subject_authority ingressManifest) 성립. 선언 manifest 4,688 entry(path→sha256 또는 absent 또는 dir:), executionIngressDigest=2237e13ab4edf759ac590879210de69e6f355e0e1991fcfe8451793e0adc33fd."
+  },
+  "canonicalArtifacts": {
+    "logs/ax_proof_state.json": "915c7e1ca6c6e1d8c6b459999a6e3c3a781cc569ba593617d4c37f905c89db62",
+    "logs/ax_prove_trajectory.jsonl": "b34818314d3794c2f61765b9da5ea0a615a6f6ff16639df3418935755f5272ed",
+    "logs/global_symbol_graph.json": "40c887ba4c4cfcd81cf0f8c8f494d6ea9ce346eb5a6b6cac0bbf97ce9d89d9b7",
+    "logs/global_symbol_graph.a60f700c4f0d222376d8f0ecf33b2548467dcb3e9375d86017e142ad8768cb41.cache.json": "3f2d7f27c5cf3d718efd61bdd989519292030fcf1abd875f6e3039c2f4789310",
+    "logs/z3_telemetry.jsonl": "471eaee7bde1b9867495cd76ca2b170c3fcaf9966e44bf61077012c0896bdc6c",
+    "logs/audit/vsr_ledger.jsonl": "29ce0a7dde3b47cbaa1f951c32f76360aa1789ec4dae5a2f16bbb63229ab22a9",
+    "build/certificates/manifest.json": "c9e0f81ef587074a15b7af0b1f80de733555c9b2337c6127d1a6ecfda7aa1ff1",
+    "build/certificates/data/trusted/journal/2c1389136be7127fa4e7234e7e7a5b5686ae279073eaeed901da050d19b3e0d9.json": "7aad073ff3d10ba353e1e27b1ce48078548b168d8a40b48397f4e642ec4bffcb",
+    "build/certificates/data/trusted/journal/472b52ea6574d6ac86ce26f47cf37fdb9649a1d235b8f8ee7e2fb3eed5475e88.json": "9dc79fa6b4431fb89dc2a657e73e4ce11818364adac434205e60675ceb54b739",
+    "build/certificates/data/trusted/journal/635995752bc8f86e541c55165b07491406576b1d78cf9acbcce7623153315007.json": "6111782e4487d7df7fe8a244a2182a200b490a3f1adf5c8e0e81946dce90726a",
+    "build/certificates/data/trusted/journal/7336f4a7f16f80bf64fee5a4a730bb7af8f8849c28f1cf664fad30ddbc7da692.json": "541493ed1496d9d1ba43ddd5e28be5f9035f1472f5fc4c919f627fccc57790c8",
+    "build/certificates/data/trusted/journal/7df0497bf4e28132a3cd9bd8f673bf23c2b44246a21395782fc49a13580b70bd.json": "56edb474efde9e2da3dd9a70ad85e9dd6a932becee8599e396fdf5065b41b7ed",
+    "build/certificates/data/trusted/journal/801835d601df7e942e2fa732b20afda8ba67600b2ae49de106d6f36fb3651c0e.json": "3ab001be5007d43c1fa3ea1106225e0fae4a0d78837032936cab25b73f809469",
+    ".axiom/cache/evidence/df2ff30d5f73102dd89274c1df96ea9a922e935954714e81808e60fc8a60691c.json": "c80cce759cfa5fbc8e2a39bd7463bfdfd02615b99211ba2d4842933ec2148990",
+    ".axiom/cache/evidence/df2ff30d5f73102dd89274c1df96ea9a922e935954714e81808e60fc8a60691c.witness.json": "fdb0d821430763d9e78cff5e7476cac64fb46a2a234253cc304e4156f273dd1f",
+    ".axiom/cache/node_selection_state.json": "d747e19f78bea6ae224c787dc0152fa01f9b0d2fa255ca1a43a79b72a9c44b28",
+    ".axiom/cache/git_file_list.json": "e3eaac93d38eccaffe71411e33ec905a13c114df2d30b5378d6a2af10e4a9b71",
+    ".axiom/cache/topology_analysis_cache.json": "f5ca64ddcff0a6d5b477d042f0f91a73b798fde867d9c4311eb6394414554ebd",
+    ".axiom/cache/topology_merkle.json": "f439cb3e50b65b1b0ebd58f14f8dda842446003d2ebc4a8e128f4a054c4125d1",
+    "data/baseline.json": "085caf2cc17f2b6cbadc9c567bc25477529898d0089cd5491011bbe44362933a",
+    "data/verification_scope.lock": "7a4cd3eb0e85bcee3a8e454760421bc77c83199abe943944010ad9941ed3d630",
+    "execution_observe_v3.log": "79e8596325026da5c9ce75ef9ebb7b8998f616bdc18185bda8d8e6041eba04da",
+    "tmp/axiom_global_symbol_graph_inc.a60f700c4f0d222376d8f0ecf33b2548467dcb3e9375d86017e142ad8768cb41.json": "594257d36ba9ee705bf51d1dcda35a9bd60520ad1fef00d4fdca951484af90b6"
+  },
+  "nodeId": "stew/bitops2.nim::getBitsBE",
+  "statusCounts": {"verified": 0, "inductive_valid": 0, "failed": 0, "skipped": 0, "timeout": 0, "blocked": 0, "vacuous": 0, "pre_sieved": 1, "reused": 0},
+  "statusCountsSource": "v3 stdout + ax_proof_state.json summary (preSieved=1, failedCount=0, vacuousCount=0, timeoutCount=0, blockedCount=0, reusedCount=0, verifiedRatio=0.0000, verified=0/40) — v1과 동일 source·동일 값",
+  "runOutcome": {"planComplete": true, "executionComplete": true, "verificationComplete": false, "gateVerdict": "FAIL"},
+  "verifiedRatio": 0.0,
+  "proofSummary": "IR pipeline: Total 6, Pass 3, Fail 3 (getBitsBE psFail solverMethod=smBMC provenance=pkZ3Bmc); Sieve-Gate getBitsBE StructuralAST succeeded → srNoTransformApplied skip; UAP 0 results (requests=1); verified=0/40",
+  "semanticComparison": {
+    "historical": "Incomplete/fact-blocked (WP4j34): exit 2, translationLossFree=false 15 vs 13 (opaque-boundary), getBitsBE psFail pkZ3Bmc, z3 digest d067de02…(sat), fact 미주입",
+    "current": "Incomplete/fact-blocked: exit 2, completeness false 15 vs 13 (opaque-boundary-present: sourceBindingCount=15, irBindingCount=13), getBitsBE psFail smBMC/pkZ3Bmc, z3 digest d067de0283743d9117ac7a7e900452bd6d7a0fab013e734e identical in v1/v3 z3_telemetry.jsonl, UAP 0 results, verificationComplete=false, gateVerdict FAIL, fact 미주입",
+    "verdict": "same-class",
+    "attributionEvidence": "4중 기계 일치(v3, v1보다 강화): ① completeness evidence **byte-identical** — df2ff30d5f….json(v1 c80cce75… = v3 c80cce75…, translationLossFree=false, bindingUniverseComplete=false, opaque-boundary-present, source 15 vs IR 13) + witness.json 동일 ② Z3 스크립트 digest 문자열 동일(d067de0283743d9117ac7a7e900452bd6d7a0fab013e734e — v1/v3 z3_telemetry 둘 다 존재) + canonical_envelope_digest 3종 전부 동일 ③ provenance 쌍 동일(smBMC/pkZ3Bmc) ④ exit 코드 동일(2). 부가: node_selection_state.json 바이트 동일, trajectory 상태열 동일(4 ssStarted), certificate journal 6건(v1=6건). 축1(X1 스키마 필드 차이): ax_proof_state.json schemaVersion='axiom.report.v1' — v1/v3 동일 구조(keys 23개 diff 0). 축2(toolchainIdentity): nim-2.2.10|lean-4.33.0|z3-4.13.3 실측 일치. subject 커밋 c75502c 동일. Axiom 바이너리 rev 상이(역사 44fefd470 vs 현재 827329cbd) — 의미론 페이로드 발산 없음."
+  },
+  "subjectPostCheck": "?? data/ only (git status --porcelain 1줄, exit 0)",
+  "equalityLayer1_gitFileList": {
+    "result": "PASS (path-level, .nims 제외)",
+    "detail": "v3 .axiom/cache/git_file_list.json 생성 성공(pre-created .axiom/cache — v1 ENOENT 결함 해소). files 86건 중 *.nim 86건. subject_authority ingressManifest의 subject:.nim(86건, config.nims 제외)과 비교: missing=0, extra=0 — 86/86 완전 일치. gitIndexHash=6b38830d1f29de8f3b48c55a429827005d78e65a35dbc2c6a8a439aeaedb9986."
+  },
+  "equalityLayer2_sourceFingerprint": {
+    "result": "unable",
+    "detail": "런타임 sourceFingerprint 미기록: ax_proof_state.json runtimeMeta = {totalWallTimeMs, hotspotElapsedMs, hotspotLabel} — v1/v3 모두 subject 키 구조적으로 미존재(스키마에 필드 없음). $STATE3 산출물(ax_proof_state·trajectory·vsr_ledger·global_symbol_graph·evidence)에서 'sourceFingerprint' 문자열 0건(유일 출현 = execution_observe_v3.log 본문 — 실행 로그 텍스트). 독립 재계산(정확 복제, v1과 동일 절차) = e9d0250442574eba9496465567ed61f60186498228ed691d7bbea8ec3e55565f (경로 87건 = ingressManifest 87키와 일치). 런타임 값이 없어 match/mismatch 판정 불가 — 'unable' 유지."
+  }
+}

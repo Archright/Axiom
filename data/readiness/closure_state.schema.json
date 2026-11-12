@@ -1,0 +1,584 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://axiom.local/readiness/closure_state.schema.json",
+  "title": "ReadinessClosureState",
+  "description": "Machine-readable readiness-closure ledger. Defines (a) the per-blocker ReadinessClosureRecord shape (one record per blocked readiness invariant, e.g. R4/R7/R8) and (b) the per-state required-evidence / transition contracts (stateContracts + record-level if-then constraints). Contract SSOT: docs/design/readiness_closure_protocol.md. Enforcement: tools/readiness_closure_check.nim. Evaluation identities follow the frozen formulas in docs/design/phasec_boundaries.md:139-144: EvaluationInputIdentity = H(EvidenceDigest || PolicyDigest || EvaluatorArtifactDigest || SchemaDigest || ExecutionContractDigest); DecisionIdentity = H(EvaluationInputIdentity || Verdict || Outcome). Absent composite terms are marked toBeComputedAt and are never replaced with a fabricated digest.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "protocol",
+    "records"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "protocol": {
+      "const": "readiness-closure"
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/ReadinessClosureRecord"
+      }
+    }
+  },
+  "definitions": {
+    "InvariantId": {
+      "type": "string",
+      "pattern": "^R[0-9]+$",
+      "description": "Readiness invariant identifier, e.g. 'R4'."
+    },
+    "ReadinessState": {
+      "type": "string",
+      "enum": [
+        "OBSERVED",
+        "CLASSIFIED",
+        "SEMANTICALLY_RATIFIED",
+        "CONTRACT_REVISION_RATIFIED",
+        "IMPLEMENTED",
+        "INDEPENDENTLY_REEVALUATED",
+        "CLOSED",
+        "BLOCKED_BY_DECISION",
+        "BLOCKED_BY_RESEARCH",
+        "BLOCKED_BY_IMPLEMENTATION"
+      ]
+    },
+    "BlockerClass": {
+      "type": "string",
+      "enum": [
+        "SEMANTIC_DECISION",
+        "CONTRACT_ARCHITECTURE_DECISION",
+        "BOUNDARY_NON_GOAL",
+        "RESEARCH",
+        "IMPLEMENTATION"
+      ]
+    },
+    "RecordStatus": {
+      "type": "string",
+      "enum": [
+        "active",
+        "closed"
+      ],
+      "description": "Lifecycle status of the closure track. 'active' = being tracked; 'closed' = the record is retired (typically alongside a CLOSED currentState or an explicit archival decision)."
+    },
+    "Sha256Hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "CommitShaHex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "RatificationItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ref",
+        "title"
+      ],
+      "properties": {
+        "ref": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Repo-relative path of the ADR/document that ratifies the semantic decision, optionally with a :line anchor, e.g. docs/adr/0016-r4-promotion-eligibility.md."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Short title of the ratified decision."
+        }
+      }
+    },
+    "PriorEvaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decisionId",
+        "evidenceManifestDigest",
+        "verdict",
+        "note"
+      ],
+      "properties": {
+        "decisionId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "decisionId of a PRIOR independent evaluation decision artifact (HISTORICAL reference only, e.g. data/readiness/decision.independent.*.json). Never the canonical evaluationIdentity."
+        },
+        "evidenceManifestDigest": {
+          "$ref": "#/definitions/Sha256Hex"
+        },
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "FAIL",
+            "NOT_EVALUATED"
+          ]
+        },
+        "note": {
+          "type": "string",
+          "description": "Free-text note about that historical evaluation."
+        }
+      }
+    },
+    "DigestTerm": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Computed digest value."
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "toBeComputedAt"
+          ],
+          "properties": {
+            "toBeComputedAt": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Marker for an absent/not-yet-computable term: what must be established before this term can be computed. A term marked toBeComputedAt must NEVER be replaced by a fabricated digest (ADR-0015 F2; AGENTS.md 0.9 theater prohibition)."
+            }
+          }
+        }
+      ],
+      "description": "One composite identity term. Either a computed 64-hex digest or an explicit toBeComputedAt marker. The frozen formulas are docs/design/phasec_boundaries.md:139-144."
+    },
+    "EvaluationIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "computed",
+        "inputTerms",
+        "evaluationInputIdentity",
+        "verdict",
+        "outcome",
+        "decisionIdentity"
+      ],
+      "properties": {
+        "computed": {
+          "type": "boolean",
+          "description": "true only when evaluationInputIdentity has been derived from all five input terms via the frozen formula (phasec_boundaries.md:139-141). False for any pending record."
+        },
+        "inputTerms": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "EvidenceDigest",
+            "PolicyDigest",
+            "EvaluatorArtifactDigest",
+            "SchemaDigest",
+            "ExecutionContractDigest"
+          ],
+          "properties": {
+            "EvidenceDigest": {
+              "$ref": "#/definitions/DigestTerm"
+            },
+            "PolicyDigest": {
+              "$ref": "#/definitions/DigestTerm"
+            },
+            "EvaluatorArtifactDigest": {
+              "$ref": "#/definitions/DigestTerm"
+            },
+            "SchemaDigest": {
+              "$ref": "#/definitions/DigestTerm"
+            },
+            "ExecutionContractDigest": {
+              "$ref": "#/definitions/DigestTerm"
+            }
+          }
+        },
+        "evaluationInputIdentity": {
+          "$ref": "#/definitions/DigestTerm",
+          "description": "H(EvidenceDigest || PolicyDigest || EvaluatorArtifactDigest || SchemaDigest || ExecutionContractDigest) — no verdict (phasec_boundaries.md:139-141)."
+        },
+        "verdict": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "PASS",
+                "FAIL",
+                "NOT_EVALUATED"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outcome": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "GO",
+                "NO-GO"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "decisionIdentity": {
+          "$ref": "#/definitions/DigestTerm",
+          "description": "H(EvaluationInputIdentity || Verdict || Outcome) (phasec_boundaries.md:143-144). Never fabricated; toBeComputedAt until the evaluation input identity exists."
+        }
+      }
+    },
+    "stateContracts": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Per-state required-evidence / transition contracts. The checker (tools/readiness_closure_check.nim) enforces these; the schema carries them as structured annotations mirrored by the if/then constraints in the ReadinessClosureRecord definition.",
+      "required": [
+        "OBSERVED",
+        "CLASSIFIED",
+        "SEMANTICALLY_RATIFIED",
+        "CONTRACT_REVISION_RATIFIED",
+        "IMPLEMENTED",
+        "INDEPENDENTLY_REEVALUATED",
+        "CLOSED",
+        "BLOCKED_BY_DECISION",
+        "BLOCKED_BY_RESEARCH",
+        "BLOCKED_BY_IMPLEMENTATION"
+      ],
+      "properties": {
+        "OBSERVED": {
+          "requiredEvidence": [
+            "observedEvidenceDigest present (non-null sha256 hex)"
+          ],
+          "transition": "The blocker invariant is observed: an evidence manifest digest is recorded. No ratification or revision required yet. Next state: CLASSIFIED."
+        },
+        "CLASSIFIED": {
+          "requiredEvidence": [
+            "blockerClass present and one of the BlockerClass enum values"
+          ],
+          "transition": "The observed evidence is classified into exactly one blocker class. Next: SEMANTICALLY_RATIFIED or a BLOCKED_* state."
+        },
+        "SEMANTICALLY_RATIFIED": {
+          "requiredEvidence": [
+            "ratification[] non-empty: at least one ADR/doc reference (ref+title)"
+          ],
+          "transition": "To ENTER this state, ratification reference(s) must be present: the semantic decision behind the blocker is ratified. Next: CONTRACT_REVISION_RATIFIED (a contractRevision sha)."
+        },
+        "CONTRACT_REVISION_RATIFIED": {
+          "requiredEvidence": [
+            "contractRevision present (commit sha, not null)"
+          ],
+          "transition": "To ENTER this state, a contractRevision sha must be present. The ratified decision has a concrete contract text revision. Next: IMPLEMENTED (an implementationRevision sha)."
+        },
+        "IMPLEMENTED": {
+          "requiredEvidence": [
+            "implementationRevision present (commit sha, not null)"
+          ],
+          "transition": "To ENTER this state, an implementationRevision sha must be present. Next: INDEPENDENTLY_REEVALUATED (a fresh independent evaluation of the new evidence) then CLOSED."
+        },
+        "INDEPENDENTLY_REEVALUATED": {
+          "requiredEvidence": [
+            "priorEvaluations[] contains at least one independent re-evaluation entry (decisionId + evidenceManifestDigest + verdict)"
+          ],
+          "transition": "A fresh independent evaluation has been run against the current evidence snapshot and the resulting decision artifact reference is appended to priorEvaluations. Next: CLOSED."
+        },
+        "CLOSED": {
+          "requiredEvidence": [
+            "ratification[] non-empty",
+            "contractRevision present (commit sha, not null)",
+            "implementationRevision present (commit sha, not null)",
+            "evaluationIdentity.computed == true"
+          ],
+          "transition": "To ENTER CLOSED, ALL of {ratification, contractRevision, implementationRevision, evaluationIdentity.computed} must be present. CHECKER RULE: a record whose currentState is CLOSED but lacks any required evidence is INVALID (fail-closed; mirrors the if/then constraint)."
+        },
+        "BLOCKED_BY_DECISION": {
+          "requiredEvidence": [
+            "pendingDecision present (non-empty string)"
+          ],
+          "transition": "The record is suspended pending a specific decision (e.g. a ratified revision step). pendingDecision describes exactly which decision is awaited. Closure evidence may exist but is not yet complete."
+        },
+        "BLOCKED_BY_RESEARCH": {
+          "requiredEvidence": [
+            "researchReference present (non-empty string)"
+          ],
+          "transition": "The record is suspended pending a research workstream. researchReference cites the research charter / blocker. A research result re-enters the product path only after deliberate adoption, a NEW evidence snapshot, and a NEW evaluator run."
+        },
+        "BLOCKED_BY_IMPLEMENTATION": {
+          "requiredEvidence": [
+            "pendingDecision or researchReference describing the blocking implementation dependency"
+          ],
+          "transition": "The record is suspended on an implementation dependency. As of schema v1 no record instantiates this state; the checker expects a traceable annotation identifying the blocking dependency."
+        }
+      }
+    },
+    "ReadinessClosureRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invariant",
+        "currentState",
+        "blockerClass",
+        "status",
+        "observedEvidenceDigest",
+        "ratification",
+        "contractRevision",
+        "implementationRevision",
+        "evaluationIdentity",
+        "priorEvaluations",
+        "predecessor",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "invariant": {
+          "$ref": "#/definitions/InvariantId"
+        },
+        "currentState": {
+          "$ref": "#/definitions/ReadinessState"
+        },
+        "blockerClass": {
+          "$ref": "#/definitions/BlockerClass"
+        },
+        "status": {
+          "$ref": "#/definitions/RecordStatus"
+        },
+        "observedEvidenceDigest": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Sha256Hex"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The evidence manifest digest observed for this invariant (string) or null while no observation exists."
+        },
+        "ratification": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RatificationItem"
+          },
+          "description": "Ratified ADR/doc references backing the semantic decision. At least one item is required in states SEMANTICALLY_RATIFIED and beyond."
+        },
+        "contractRevision": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/CommitShaHex"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "40-hex commit sha of the ratified contract text, or null while pending."
+        },
+        "implementationRevision": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/CommitShaHex"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "40-hex commit sha of the implementation, or null while pending."
+        },
+        "evaluationIdentity": {
+          "$ref": "#/definitions/EvaluationIdentity"
+        },
+        "priorEvaluations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PriorEvaluation"
+          },
+          "description": "HISTORICAL evaluation references only (decision artifacts on record). Explicitly NOT the canonical evaluationIdentity."
+        },
+        "pendingDecision": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Present (and non-empty) iff the currentState is BLOCKED_BY_DECISION — the specific decision awaited."
+        },
+        "researchReference": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Present (and non-empty) iff the currentState is BLOCKED_BY_RESEARCH — the research charter / blocker reference."
+        },
+        "note": {
+          "type": "string",
+          "description": "Free-form record note (e.g. keeping-verdict implications)."
+        },
+        "predecessor": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/InvariantId"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Invariant id of the prior closure record in a chain (e.g. 'R3'), or null for the head record."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "currentState": {
+                "const": "SEMANTICALLY_RATIFIED"
+              }
+            },
+            "required": [
+              "currentState"
+            ]
+          },
+          "then": {
+            "properties": {
+              "ratification": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "currentState": {
+                "const": "CONTRACT_REVISION_RATIFIED"
+              }
+            },
+            "required": [
+              "currentState"
+            ]
+          },
+          "then": {
+            "properties": {
+              "contractRevision": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "currentState": {
+                "const": "IMPLEMENTED"
+              }
+            },
+            "required": [
+              "currentState"
+            ]
+          },
+          "then": {
+            "properties": {
+              "ratification": {
+                "minItems": 1
+              },
+              "contractRevision": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              },
+              "implementationRevision": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "currentState": {
+                "const": "CLOSED"
+              }
+            },
+            "required": [
+              "currentState"
+            ]
+          },
+          "then": {
+            "properties": {
+              "ratification": {
+                "minItems": 1
+              },
+              "contractRevision": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              },
+              "implementationRevision": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              },
+              "evaluationIdentity": {
+                "properties": {
+                  "computed": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "computed"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "currentState": {
+                "const": "BLOCKED_BY_DECISION"
+              }
+            },
+            "required": [
+              "currentState"
+            ]
+          },
+          "then": {
+            "required": [
+              "pendingDecision"
+            ],
+            "properties": {
+              "pendingDecision": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "currentState": {
+                "const": "BLOCKED_BY_RESEARCH"
+              }
+            },
+            "required": [
+              "currentState"
+            ]
+          },
+          "then": {
+            "required": [
+              "researchReference"
+            ],
+            "properties": {
+              "researchReference": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

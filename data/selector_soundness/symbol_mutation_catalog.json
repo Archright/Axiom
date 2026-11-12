@@ -1,0 +1,75 @@
+[
+  {
+    "id": "S001",
+    "class": "implementation",
+    "classificationState": "classified",
+    "triggerFile": "src/core/vault/vault_manager_spec.nim",
+    "mutationDescription": "Core vault spec mutation: append '# soundness-test' comment. This symbol is in the VKS universe and is a seed for selection.",
+    "expectedAffected": [
+      "src/core/vault/vault_manager_spec.nim::axiomSpecToJsonNode",
+      "src/core/vault/vault_manager_spec.nim::hasVaultEntry",
+      "src/core/sorter/sorter_core_index_table.nim::hasVaultEntry"
+    ],
+    "expectedAffectedDerivation": "symbol-level oracle: triggerFile maps to the changed symbol; upward propagation via symbolDependents reaches hasVaultEntry in sorter_core_index_table (which depends on vault_manager_spec).",
+    "declaredOracleRef": "symbol-catalog"
+  },
+  {
+    "id": "S002",
+    "class": "implementation",
+    "classificationState": "classified",
+    "triggerFile": "src/core/topology/topology_dependency.nim",
+    "mutationDescription": "Topology dependency mutation: append '# soundness-test' comment. Changes a core topology module that multiple downstream symbols depend on.",
+    "expectedAffected": [
+      "src/core/topology/topology_dependency.nim::proximityScore",
+      "src/core/topology/topology_engine.nim::findTopologyMetricIndex",
+      "src/core/topology/topology_engine.nim::findTopologySymbolIndex",
+      "src/core/topology/topology_engine.nim::findTopologyNodeContext"
+    ],
+    "expectedAffectedDerivation": "symbol-level oracle: triggerFile maps to proximityScore; upward propagation via symbolDependents reaches the four topology_engine symbols that depend on topology_dependency.",
+    "declaredOracleRef": "symbol-catalog"
+  },
+  {
+    "id": "S003",
+    "class": "generated-artifact",
+    "classificationState": "classified",
+    "triggerFile": "src/generated/gate_registry.nim",
+    "mutationDescription": "Generated gate registry mutation: append '# soundness-test' comment. Generated code propagates to all compilation-dependent symbols.",
+    "expectedAffected": [
+      "src/generated/gate_registry.nim::normalizedEntries",
+      "src/gate/gate_rules_normalization.nim::normalizedEntries",
+      "src/gate/gate_rules_module_classifier.nim::initModuleClassificationCache",
+      "src/gate/gate_rules_module_classifier.nim::buildModulePathMap"
+    ],
+    "expectedAffectedDerivation": "symbol-level oracle: triggerFile maps to normalizedEntries in gate_registry; upward propagation reaches gate_rules_normalization and gate_rules_module_classifier symbols.",
+    "declaredOracleRef": "symbol-catalog"
+  },
+  {
+    "id": "S004",
+    "class": "contract-document",
+    "classificationState": "classified",
+    "triggerFile": "docs/spec/canonical_execution_semantics.md",
+    "mutationDescription": "Normative spec mutation: append a clause to the canonical execution semantics spec. Spec changes semantically affect contract and gate verification symbols.",
+    "expectedAffected": [
+      "src/gate/gate_rules_normalization.nim::normalizedEntries",
+      "src/gate/gate_rules_module_classifier.nim::initModuleClassificationCache",
+      "src/gate/gate_rules_architecture.nim::applyCallDepthCheck"
+    ],
+    "expectedAffectedDerivation": "symbol-level oracle: docs/spec/ change is conservatively mapped to gate verification symbols that implement the spec's contracts.",
+    "declaredOracleRef": "symbol-catalog"
+  },
+  {
+    "id": "S005",
+    "class": "implementation",
+    "classificationState": "classified",
+    "triggerFile": "src/core/asset_collector.nim",
+    "mutationDescription": "Core implementation mutation: append '# soundness-test' comment to a core module. Changes implementation logic that downstream symbols depend on.",
+    "expectedAffected": [
+      "src/core/asset_collector.nim::cumulativeDefectSum",
+      "src/core/asset_collector.nim::collectKnownFunctions",
+      "src/verification/analyzer/analyzer_shared_cert.nim::cumulativeDefectSum",
+      "src/verification/analyzer/analyzer_shared_cert.nim::collectKnownFunctions"
+    ],
+    "expectedAffectedDerivation": "symbol-level oracle: triggerFile maps to cumulativeDefectSum and collectKnownFunctions in asset_collector; upward propagation reaches analyzer_shared_cert symbols that depend on them.",
+    "declaredOracleRef": "symbol-catalog"
+  }
+]
