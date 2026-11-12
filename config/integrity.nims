@@ -167,7 +167,22 @@ when not defined(AXIOM_GATE_BOND) and not existsEnv("AXIOM_HERMETIC_BUILDING"):
     # of concurrently relinking `bin/feature_manifest_generator_<hash>`
     # (usenimcache suffix) into the same shared path.
     const genBin = "bin/feature_manifest_generator"
-    const genCmd = "nim c -r --hints:off -d:AXIOM_GATE_BOND=1 -d:skipImportLint --skipUserCfg --out:" & genBin & " tools/feature_manifest_generator.nim"
+    const genFlags = "--hints:off -d:AXIOM_GATE_BOND=1 -d:skipImportLint --skipUserCfg"
+    const stampPath = ".axiom/cache/feature_manifest_generator.srchash"
+    const genClosure = [
+      "tools/feature_manifest_generator.nim",
+      "tools/safe_move.nim",
+      "src/shared_types/shared_types.nim",
+      "src/core/trusted/layer_declaration.nim",
+      "src/core/types/results.nim",
+      "src/core/trusted/effect_bridge.nim",
+      "src/core/trusted/axiom_pragmas.nim",
+      "src/core/trusted/axiom_pragmas_lite.nim",
+      "src/core/utils/repo_root.nim",
+      "src/core/utils/idempotent_write.nim",
+      "axiom.nimble",
+      "nimble.lock"
+    ]
     if existsEnv("AXIOM_VERIFY_CONTRACT_FANOUT"):
       # Parallel phase of `make verify-contract`: shared artifacts were built
       # once by the serial `verify-contract-artifacts` prerequisite and are
@@ -179,14 +194,35 @@ when not defined(AXIOM_GATE_BOND) and not existsEnv("AXIOM_HERMETIC_BUILDING"):
         quit(1)
       echo "[Axiom] Checking feature_manifest.json freshness (content-hash)..."
       exec genBin & " ensure"
-    elif not fileExists(manifestPath):
-      echo "[Axiom] feature_manifest.json missing. Auto-generating..."
-      exec genCmd
     else:
-      # Deterministic content-hash check (no mtime snapshot comparison).
-      # `ensure` exits 0 after guaranteeing the manifest is fresh.
-      echo "[Axiom] Checking feature_manifest.json freshness (content-hash)..."
-      exec genCmd & " ensure"
+      var closureMaterial = NimVersion & "|" & genFlags
+      for p in genClosure:
+        if fileExists(p):
+          closureMaterial &= "|" & p & ":" & $hash(readFile(p))
+        else:
+          closureMaterial &= "|" & p & ":missing"
+      let wantHash = $hash(closureMaterial)
+      let binFresh = fileExists(genBin) and fileExists(stampPath) and
+                     readFile(stampPath).strip() == wantHash
+      if not binFresh:
+        let pid = staticExec("echo $PPID").strip()
+        let pidSuffix = if pid.len > 0: pid else: "0"
+        let tmpBin = genBin & ".tmp." & pidSuffix
+        exec "AXIOM_HERMETIC_BUILDING=1 nim c " & genFlags & " --out:" & tmpBin & " tools/feature_manifest_generator.nim"
+        exec "mv -f " & tmpBin & " " & genBin
+        if not dirExists(".axiom/cache"):
+          mkDir(".axiom/cache")
+        let tmpStamp = stampPath & ".tmp." & pidSuffix
+        writeFile(tmpStamp, wantHash & "\n")
+        exec "mv -f " & tmpStamp & " " & stampPath
+      if not fileExists(manifestPath):
+        echo "[Axiom] feature_manifest.json missing. Auto-generating..."
+        exec genBin
+      else:
+        # Deterministic content-hash check (no mtime snapshot comparison).
+        # `ensure` exits 0 after guaranteeing the manifest is fresh.
+        echo "[Axiom] Checking feature_manifest.json freshness (content-hash)..."
+        exec genBin & " ensure"
 
 # ─── Certificate Manifest Integrity ────────────────────────────────
 # Deterministic content-hash verification of src/verification/certificates/
@@ -206,7 +242,15 @@ when not defined(AXIOM_GATE_BOND) and not existsEnv("AXIOM_HERMETIC_BUILDING"):
     # manifestBootstrap above. Parallel verify-contract subtargets must never
     # relink this shared binary concurrently.
     const certBin = "bin/sync_certs"
-    const certEnsureCmd = "nim c -r --hints:off -d:AXIOM_GATE_BOND=1 -d:skipImportLint --skipUserCfg --out:" & certBin & " tools/sync_certs.nim --ensure"
+    const certFlags = "--hints:off -d:AXIOM_GATE_BOND=1 -d:skipImportLint --skipUserCfg"
+    const stampPath = ".axiom/cache/sync_certs.srchash"
+    const certClosure = [
+      "tools/sync_certs.nim",
+      "src/core/lint/discard_result_linter.nim",
+      "src/core/trusted/layer_declaration.nim",
+      "axiom.nimble",
+      "nimble.lock"
+    ]
     if existsEnv("AXIOM_VERIFY_CONTRACT_FANOUT"):
       # Parallel phase of `make verify-contract`: execute the frozen binary
       # read-only. Fail-closed when the serial prebuild was skipped.
@@ -215,7 +259,27 @@ when not defined(AXIOM_GATE_BOND) and not existsEnv("AXIOM_HERMETIC_BUILDING"):
         quit(1)
       exec certBin & " --ensure"
     elif dirExists("src/verification/certificates"):
-      exec certEnsureCmd
+      var closureMaterial = NimVersion & "|" & certFlags
+      for p in certClosure:
+        if fileExists(p):
+          closureMaterial &= "|" & p & ":" & $hash(readFile(p))
+        else:
+          closureMaterial &= "|" & p & ":missing"
+      let wantHash = $hash(closureMaterial)
+      let binFresh = fileExists(certBin) and fileExists(stampPath) and
+                     readFile(stampPath).strip() == wantHash
+      if not binFresh:
+        let pid = staticExec("echo $PPID").strip()
+        let pidSuffix = if pid.len > 0: pid else: "0"
+        let tmpBin = certBin & ".tmp." & pidSuffix
+        exec "AXIOM_HERMETIC_BUILDING=1 nim c " & certFlags & " --out:" & tmpBin & " tools/sync_certs.nim"
+        exec "mv -f " & tmpBin & " " & certBin
+        if not dirExists(".axiom/cache"):
+          mkDir(".axiom/cache")
+        let tmpStamp = stampPath & ".tmp." & pidSuffix
+        writeFile(tmpStamp, wantHash & "\n")
+        exec "mv -f " & tmpStamp & " " & stampPath
+      exec certBin & " --ensure"
 
 # ─── Manifest Index Ownership ─────────────────────────────────────
 # _index.json is written by tools/sync_topology.nim (single writer, gate-ID

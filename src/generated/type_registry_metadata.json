@@ -129549,6 +129549,49 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "MeasuredFileStat",
+      "module": "src/verification/obligation/measured_digests.nim",
+      "name": "captureStatIdentity",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "MeasuredFileStat",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/obligation/measured_digests.nim",
+      "name": "isRacyStat",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/obligation/measured_digests.nim",
+      "name": "lookupCachedLeanPath",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "String",
       "module": "src/verification/obligation/measured_digests.nim",
       "name": "measuredBinaryDigest",
@@ -129563,6 +129606,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "tuple[hits, misses: int]",
+      "module": "src/verification/obligation/measured_digests.nim",
+      "name": "measuredDigestStats",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "tuple[hits, misses: int]",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "String",
       "module": "src/verification/obligation/measured_digests.nim",
       "name": "measuredFileDigest",
@@ -129573,6 +129630,52 @@
       "returnType": "string",
       "smtSort": "String",
       "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/obligation/measured_digests.nim",
+      "name": "readStableAndStoreMemo",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/obligation/measured_digests.nim",
+      "name": "resetMeasuredDigestStats",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/obligation/measured_digests.nim",
+      "name": "storeCachedLeanPath",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
     },
     {
       "hasAxiomHint": false,

@@ -48,7 +48,7 @@
     "config.nims": {
       "mode": "100644",
       "type": "blob",
-      "sha": "2cd93f5f35fbae62314d70b688e8ab05262a653c"
+      "sha": "0fd750908f9df57f428ce66844ba8e421c11b347"
     },
     "config/effects.nims": {
       "mode": "100644",
@@ -3983,12 +3983,12 @@
     "src/verification/obligation/lean_kernel_boundary.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "8174d1a840039e6e3ba343f45363cb4530153403"
+      "sha": "2fbf043a4aea9bf3397fdd1df490f29c87c06233"
     },
     "src/verification/obligation/measured_digests.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "812a57c13d003d5a3a9f964d719ee29d088d1ada"
+      "sha": "8f59a0ec67de946113176e4b76152aefa4d9e93b"
     },
     "src/verification/obligation/metrics.nim": {
       "mode": "100644",
@@ -4473,7 +4473,7 @@
     "tools/hermetic_build.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "a766d611ce361eed296288198ea64e746fbc1b00"
+      "sha": "57a51371a0f705931f2c8579236f6d3cd6bd3d34"
     },
     "tools/safe_move.nim": {
       "mode": "100644",
