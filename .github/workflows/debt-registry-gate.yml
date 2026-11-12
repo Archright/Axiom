@@ -21,6 +21,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup-axiom-toolchain
         with:
+          # nim scope — this job's only toolchain use is `make bin/debt_engine`
+          # (Makefile:14-22 already compiles with --skipParentCfg --skipProjCfg)
+          # plus `bin/debt_engine --validate`; neither invokes lean/lake.
+          # ~/.elan is the only path this scope drops and it dominates the
+          # 1.16GB full payload. The nimble package closure stays in the
+          # payload because debt_engine imports checksums/sha2 transitively.
+          provision-scope: nim
           cache-build-source: ${{ github.sha }}
       - name: Ensure Draft 2020-12 validator
         # PEP 668: Ubuntu 24.04 marks the system interpreter EXTERNALLY-MANAGED,

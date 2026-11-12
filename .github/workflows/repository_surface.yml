@@ -36,12 +36,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Restore-only cache reader (no save post-step) — no cache-write races;
-      # nimble install은 액션 차원에서 skip하고, guard 빌드가 필요로 하는
-      # 유일한 nimble 의존(checksums)만 아래 전용 스텝에서 핀 설치한다.
+      # Restore-only cache reader (no save post-step) — no cache-write races.
       - uses: ./.github/actions/setup-axiom-toolchain
         with:
-          skip-nimble-install: 'true'
+          # nim scope — the stdlib-only guard is compiled with the full
+          # hermetic flag set below, so no project bootstrap runs and lean/lake
+          # are never invoked. skip-nimble-install stays 'false': the action's
+          # nim-scope verification stamp structurally requires the lockfile
+          # package closure in ~/.nimble/pkgs2, so a cold A-cache must be able
+          # to materialize it deterministically instead of relying on a
+          # previous run's cache.
+          provision-scope: nim
+          skip-nimble-install: 'false'
           cache-save-enabled: 'false'
           cache-build-source: ${{ github.sha }}
 
@@ -57,17 +63,21 @@ jobs:
       - name: Extract base policy (base-policy binding)
         run: git show "$BASE_SHA:config/repository_surface.json" > /tmp/base_policy.json
 
-      - name: Provision nimble packages (surface guard)
-        # surface_guard 빌드의 integrity manifest bootstrap이
-        # tools/feature_manifest_generator.nim을 재컴파일하며, 이 파일은 nimble
-        # 패키지 checksums/sha2(비-stdlib)를 import한다. 캐시 writer 부재 시
-        # 신선 러너에 패키지가 없어 컴파일 실패 → 단일 패키지를 핀 설치
-        # (config/paths.nims injectAxiomDependencies가 ~/.nimble/pkgs2에서
-        # checksums-* 디렉터리를 자동 path 주입).
-        run: nimble install -y checksums@0.2.2
-
       - name: Build surface guard
-        run: mkdir -p build && nim c --hints:off -d:release --nimcache:.nimcache_surface_guard -o:build/surface_guard tools/surface_guard.nim
+        # Full hermetic flag set: --skipProjCfg prevents config.nims /
+        # config/integrity.nims from firing, whose manifest bootstrap compiled
+        # tools/feature_manifest_generator.nim (and needed checksums) on every
+        # `nim c`. surface_guard imports std/* only, so no path/package is
+        # required — the flags narrow the compile to exactly its declared
+        # dependencies. Measured cold: 2.55s (was ~11s through the bootstrap).
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          nim c --hints:off -d:release \
+            --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath \
+            --path:. --path:src \
+            --nimcache:.nimcache_surface_guard \
+            -o:build/surface_guard tools/surface_guard.nim
 
       - name: Classify PR diff (BASE_SHA...HEAD)
         run: |

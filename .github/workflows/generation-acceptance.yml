@@ -283,6 +283,10 @@ jobs:
         if: steps.surface.outputs.has_surface_delta == 'true' || steps.surface.outputs.monitor_changed == 'true'
         uses: ./.github/actions/setup-axiom-toolchain
         with:
+          # nim scope — this job builds the drift monitor with `nim c` only and
+          # never invokes lean/lake. ~/.elan is the only dropped path and it
+          # dominates the 1.16GB full payload.
+          provision-scope: nim
           # Ubicloud runners start with a cold ~/.nimble; the driver tree's
           # nimble.lock dependencies (checksums/sha2 et al.) must be installed
           # before L2 builds tools/merge_ruleset_drift_monitor.nim.
@@ -339,6 +343,13 @@ jobs:
       - name: "[L2] policy ⇔ constants ⇔ live ruleset (base-built monitor, candidate values)"
         if: steps.surface.outputs.has_surface_delta == 'true'
         env:
+          # Hermetic build mode (ci/checker.mk:437): skips config/integrity.nims'
+          # recursive manifest bootstrap. Its outputs are not inputs to the
+          # drift tool, whose verdict inputs are the policy JSON, the candidate
+          # values and the live ruleset. config.nims still injects the pinned
+          # toolchain/package paths and seeds src/generated/build_env.nim.
+          # Measured cold compile: 12.9s.
+          AXIOM_HERMETIC_BUILDING: '1'
           GH_TOKEN: ${{ github.token }}
           GITHUB_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}

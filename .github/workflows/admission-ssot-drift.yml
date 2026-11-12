@@ -129,7 +129,13 @@ jobs:
       # ── 툴체인 — repository_surface.yml / diagnostic-authority.yml과 동일 공급 경로 ──
       - uses: ./.github/actions/setup-axiom-toolchain
         with:
-          skip-nimble-install: 'true'
+          # nim scope — the monitor is compiled with `nim c` and never invokes
+          # lean/lake. skip-nimble-install must be 'false': the nim-scope
+          # verification stamp requires the lockfile package closure in
+          # ~/.nimble/pkgs2, and tools/merge_ruleset_drift_monitor.nim imports
+          # checksums/sha2 + malebolgia through src/api/tools_facade.
+          provision-scope: nim
+          skip-nimble-install: 'false'
           cache-save-enabled: 'false'
           cache-build-source: ${{ github.sha }}
 
@@ -163,7 +169,15 @@ jobs:
           fi
           echo "observation SHA: $SHA"
 
-          nim c --hints:off -o:bin/ssot_drift_monitor tools/merge_ruleset_drift_monitor.nim
+          # AXIOM_HERMETIC_BUILDING=1 is the repo's hermetic build mode
+          # (ci/checker.mk:437; every ci-compile product sets it): config.nims
+          # still injects the pinned toolchain/package paths and seeds
+          # src/generated/build_env.nim from its .default, but
+          # config/integrity.nims' recursive manifest bootstrap
+          # (feature_manifest_generator / cert manifests) is skipped. None of
+          # that bootstrap's outputs is an input to the drift monitor — its
+          # verdict inputs are the policy JSON and the merge_cli source.
+          AXIOM_HERMETIC_BUILDING=1 nim c --hints:off -o:bin/ssot_drift_monitor tools/merge_ruleset_drift_monitor.nim
 
           ARGS="--policy-file config/policy/merge_admission.json --merge-cli-source src/cli/merge_cli.nim --repo $REPO --observe-sha $SHA"
           if [ "${{ steps.tier.outputs.tier }}" != "diagnostic-app" ]; then
