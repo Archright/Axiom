@@ -327,8 +327,10 @@ jobs:
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
+      # nim scope: 이 잡의 toolchain 사용은 nimble dump·nim c뿐이다(lean/lake/z3 미사용).
       - uses: ./.github/actions/setup-axiom-toolchain
         with:
+          provision-scope: 'nim'
           cache-build-source: ${{ github.sha }}
       - name: Materialize release target metadata (read-only worktree)
         env:
@@ -577,8 +579,10 @@ jobs:
       # bundle_tool.nim, Language Ban: 신규 .sh 금지 → Nim 정경로). freeze ②
       # 바인딩(frozen SHA == github.sha)이므로 이 트리 == 워크플로 ref 트리.
       # 캐시는 B-restore만(save 없음 — ci-cache-publisher가 유일 save 권한).
+      # nim scope: bundle_tool 컴파일(nim c)이 이 잡의 유일 toolchain 사용이다.
       - uses: ./.github/actions/setup-axiom-toolchain
         with:
+          provision-scope: 'nim'
           cache-save-enabled: 'false'
           cache-build-source: ${{ needs.verify-metadata.outputs.frozen_sha }}
       - name: Compile bundle_tool (single-source assemble/verify tool)
@@ -684,9 +688,10 @@ jobs:
           path: /tmp/release-bundle-assets
       # bundle_tool 컴파일 — assemble 측과 동일 단일 소스(tools/release/
       # bundle_tool.nim)를 워크플로 ref 트리(github.sha 체크아웃)에서
-      # 컴파일한다. B-restore만(save 없음).
+      # 컴파일한다. B-restore만(save 없음). nim scope: nim c가 유일 toolchain 사용.
       - uses: ./.github/actions/setup-axiom-toolchain
         with:
+          provision-scope: 'nim'
           cache-save-enabled: 'false'
           cache-build-source: ${{ github.sha }}
       - name: Compile bundle_tool (single-source verify tool, workflow ref)
