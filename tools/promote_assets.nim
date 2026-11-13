@@ -132,7 +132,7 @@ proc main() =
   let canonicalDir = joinPath(projectRoot, CanonicalTypeMapDir)
   let stagingDir = joinPath(projectRoot, StagingTypeMapBaseDir)
   if intentArg.len == 0:
-    intentArg = joinPath(projectRoot, IntentFileName)
+    intentArg = joinPath(projectRoot, "config", IntentFileName)
   if not fileExists(intentArg):
     echo errMsg("promotion intent not found: " & intentArg)
     quit(1)

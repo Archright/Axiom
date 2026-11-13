@@ -2,6 +2,8 @@
 
 Status: NORMATIVE
 
+Revision 2026-11-13 (VS-1 config SSOT migration): `topology.json`, `topology_policy.json`, and `promotion_intent.json` removed from root EXACT_ALLOWED (§2.4) — canonical locations are now `config/topology.json`, `config/topology_policy.json`, `config/promotion_intent.json` (policy/threshold home per §2 role table); root re-entry is denied as clUnknown.
+
 Revision 2026-11-13 (VS-0 root dead-entry removal): lfs_exceptions.json, .env.example, and .envrc.example removed from EXACT_ALLOWED (§2.4).
 
 Revision 2026-11-09 (VS-I publication-integrity gate): `compliance/` registered as an EXACT_ALLOWED tracked content directory (§2.4) — publication policy SSOT home (merge_admission v1.20.0 trustSurface content).
@@ -99,10 +101,7 @@ Entry exists at the root → PASS (no further content inspection).
 | `nimble.lock` |
 | `axiom.lock` |
 | `axiom.toml` |
-| `topology.json` |
 | `topology.lock` |
-| `topology_policy.json` |
-| `promotion_intent.json` |
 | `flake.nix` |
 | `lakefile.toml` |
 | `lake-manifest.json` |

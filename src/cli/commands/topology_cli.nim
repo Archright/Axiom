@@ -52,7 +52,7 @@ proc parseAuditFlags*(args: seq[string]; outFormat: var AuditFormat;
         return false
   result = true
 proc parseGenerateManifestFlags*(args: seq[string]; outputPath: var string; dryRun: var bool): bool {.raises: [system.IOError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
-  outputPath = "topology.json"
+  outputPath = topologyDeclPath
   dryRun = false
   var i = 1
   while i < args.len:
@@ -274,7 +274,7 @@ proc runTopologyGenerateManifest*(args: seq[string]): int {.raises: [CatchableEr
   if not parseGenerateManifestFlags(args, outputPath, dryRun):
     return 2
 
-  let existingDeclPath = if fileExists("topology.json"): "topology.json" else: ""
+  let existingDeclPath = if fileExists(topologyDeclPath): topologyDeclPath else: ""
   var decl = TopologyDeclaration()
   if existingDeclPath.len > 0:
     let declJson = safeReadFile(existingDeclPath)

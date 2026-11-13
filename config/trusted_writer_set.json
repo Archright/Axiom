@@ -173,7 +173,7 @@
     "src/cli/commands/topology_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "0b7c1b258454d3de6a6621f9be016bfcc837fd8f"
+      "sha": "f28108fc26e24c7c23c2aaeb4276881825325a78"
     },
     "src/cli/config_cli.nim": {
       "mode": "100644",
@@ -1893,7 +1893,7 @@
     "src/core/topology/gate_ops.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "891102c81a44ffa72592e306ec88eea88eeb30c5"
+      "sha": "73691e59675b316f03916a45a5575cc0ffb9a440"
     },
     "src/core/topology/import_graph.nim": {
       "mode": "100644",

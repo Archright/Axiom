@@ -111,12 +111,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:80deb5042f7743f8de09e97b0df0b6ebcb78d3ee56d969e35ea7a318a7daf2e8",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:4e621d24d2cee8ce6a75201820f5d2790fc82f650059dfbff8b26d7f4d5ce59c",
       "count": 1,
       "file": "src/cli/commands/topology_cli.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:9e9a29d487708989db8e3a926bfad137ffe11aeb2f5a2a0c1de055a124fe5b6f"
+      "rawContentHash": "sha256:5145861b7657ca97a180554a8fe333307b1a06b8c2e59b1e562f46cfa62a1137"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
