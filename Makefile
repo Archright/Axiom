@@ -167,6 +167,15 @@ bin/check_imports_ast: tools/check_imports_ast.nim
 bin/check_debt_sync: tools/check_debt_sync.nim
 	$(NIM) c $(NIM_TOOL_FLAGS) -o:$@ $<
 
+# -d:release is mandatory: in dev builds the reduction ratchet downgrades a
+# violation to WARN (debt_integrity_gate.nim:301-303), which would let a
+# baseline regression pass as green — exactly the theater this gate exists
+# to forbid. CI runs the binary unconditionally after this target.
+bin/debt_integrity_gate: src/gate/runners/debt_integrity_gate.nim \
+                         src/core/debt/debt_integrity.nim \
+                         src/gate/lib/debt_scanner.nim
+	$(NIM) c $(NIM_TOOL_FLAGS) -d:release -o:$@ $<
+
 bin/layer_enforcement_gate: src/gate/runners/layer_enforcement_gate.nim \
                             src/core/trusted/layer_rules.nim \
                             src/core/trusted/layer_enforcement.nim \

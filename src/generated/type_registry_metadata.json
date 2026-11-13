@@ -92443,6 +92443,21 @@
       "ignorable": false,
       "leanType": "Bool",
       "module": "src/gate/runners/debt_integrity_gate.nim",
+      "name": "hasBindingRationale",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/gate/runners/debt_integrity_gate.nim",
       "name": "isAcceptedStatus",
       "negativeConstraints": [
         "result >= 0 is invalid — Bool is not numeric",
@@ -92474,6 +92489,21 @@
       "leanType": "Bool",
       "module": "src/gate/runners/debt_integrity_gate.nim",
       "name": "isOpenStatus",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/gate/runners/debt_integrity_gate.nim",
+      "name": "isRegistryDisposition",
       "negativeConstraints": [
         "result >= 0 is invalid — Bool is not numeric",
         "Use '(= result true) or (= result false)' instead"
