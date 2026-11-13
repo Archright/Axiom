@@ -5215,11 +5215,14 @@
         "tools/ci/proof_unit_consistency_gate.nim"
       ],
       "source": "writer_set_audit_2026-11-13",
-      "status": "open",
-      "lastVerifiedAt": "2026-11-13T08:42:09Z",
-      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9 (theater is registered, not quietly patched) and the authority-invariant protocol (the checker adjudicating this very change must not have its discovery logic modified by that change); no current wrong verdict, since the invisible sites are the canonical --close path's own legitimate writes; fix path: teach splitCallArguments to capture a trailing bare-identifier final argument (count the call's own open parenthesis) so rule R4 resolves moveFile's destination and rule R3 collects atomicWriteJson, then re-run the writer-set audit and register every newly discovered site in RegisteredDebtRoleEntries",
+      "status": "closed",
+      "lastVerifiedAt": "2026-11-13T15:24:43Z",
+      "resolution": "FIXED 2026-11-13 (workstream/vs-527-writer-set-discovery): (1) splitCallArguments in tools/ci/proof_unit_consistency_gate.nim now counts the call's own opening parenthesis at depth 0 and captures the final argument on the matching closing parenthesis (plus scans forward for the call paren on bare tokens and skips quoted literals), so rule R4 resolves moveFile(tmpPath, path) to its destination parameter path and rule R3 collects atomicWriteJson as a write wrapper; (2) firstTokenOnLine enforces isTokenBoundaryAfter on identifier-ending vocabulary tokens (atomicWrite, fmWrite) so atomicWriteJson no longer prefix-matches bare atomicWrite and same-line secondary sinks are never masked; (3) the three legitimate cmdClose materialization sites in tools/debt_engine.nim (lines 2147, 2150, 2151) are registered in RegisteredDebtRoleEntries; (4) independent Nim compiler/parser AST oracle and defect-regression mutant-kill harness (tests/ci/test_writer_set_discovery_mutation.nim) plus bin/proof_unit_consistency_gate are wired into .github/workflows/debt-registry-gate.yml.",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the finding is a coverage property of the checker's writer-set discovery in tools/, not a code site the src/-only axiomDebt marker scan can anchor; trace: probe binary build/pucg_probe2 (patched copy /tmp/pucg_probe.nim, never the repo file) echoing collectWriteWrappers and resolved sink targets on 2026-11-13; reopen: splitCallArguments capture fix plus writer-set re-audit plus registration of the atomicWriteJson sites, or any new tmp+rename wrapper writer entering the (j) scan universe"
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the finding is a coverage property of the checker's writer-set discovery in tools/, not a code site the src/-only axiomDebt marker scan can anchor; trace: probe binary build/pucg_probe2 (patched copy /tmp/pucg_probe.nim, never the repo file) echoing collectWriteWrappers and resolved sink targets on 2026-11-13; reopen: splitCallArguments capture fix plus writer-set re-audit plus registration of the atomicWriteJson sites, or any new tmp+rename wrapper writer entering the (j) scan universe",
+      "resolvedAt": "2026-11-14",
+      "resolvedBy": "archright-vs527",
+      "resolutionNote": "Closed via canonical --close atomic mutation path; verified by independent compiler/parser AST oracle and mutant-kill harness in tests/ci/test_writer_set_discovery_mutation.nim."
     }
   ]
 }
