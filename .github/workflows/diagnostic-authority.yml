@@ -126,17 +126,16 @@ jobs:
           } | tee -a "$GITHUB_STEP_SUMMARY"
 
       # ── 툴체인 — repository_surface.yml과 동일 공급 경로(pinned Nim 2.2.10) ──
+      # nim scope: 이 잡의 toolchain 사용은 nim c뿐이다(lean/lake/z3 미사용 —
+      # publication-integrity 6개 평가자와 동일 계약). skip-nimble-install=false로
+      # 액션이 nimble.lock 전체 클로저를 설치·검증한다(config.nims manifest
+      # bootstrap이 checksums/sha2를 요구) — 수동 단일 핀 설치보다 강한 경로.
       - uses: ./.github/actions/setup-axiom-toolchain
         with:
-          skip-nimble-install: 'true'
+          provision-scope: 'nim'
+          skip-nimble-install: 'false'
           cache-save-enabled: 'false'
           cache-build-source: ${{ github.sha }}
-
-      # repository_surface.yml 선례 — surface_guard 빌드의 integrity manifest
-      # bootstrap이 nimble 비-stdlib 패키지(checksums/sha2)를 요구한다. 캐시 writer
-      # 부재 시 신선 러너 컴파일 실패 → 동일 단일 패키지 핀 설치.
-      - name: "Provision nimble packages (diagnostic tool compiles)"
-        run: nimble install -y checksums@0.2.2
 
       - name: "[diagnose] Delegated diagnostics (credential-source enforced — AXIOM_DIAG_STRICT=1)"
         env:
