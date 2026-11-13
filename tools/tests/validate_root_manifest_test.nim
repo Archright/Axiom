@@ -489,6 +489,32 @@ proc main() =
         echo "  PASS: " & deadName
       removeFile(tmpDir / deadName)
 
+  # Test 23: VS-1 moved root entries → exit 1 (config/ is the canonical location; root re-entry denied)
+  block movedRootEntriesRejected:
+    echo "TEST 23: VS-1 moved root entries (topology.json/topology_policy.json/promotion_intent.json) → exit 1"
+    let tmpDir = createTempDir()
+    defer: removeDir(tmpDir)
+    for d in ["src", "tests", "tools", "proofs", "data", "docs", "config"]:
+      createDir(tmpDir / d)
+    for (movedName, movedContent, expectedMsg) in [
+      ("topology.json", "{}\n", "FAIL: topology.json unknown"),
+      ("topology_policy.json", "{}\n", "FAIL: topology_policy.json unknown"),
+      ("promotion_intent.json", "{\"expectedNimTypes\": []}\n", "FAIL: promotion_intent.json unknown"),
+    ]:
+      writeFile(tmpDir / movedName, movedContent)
+      let r = runValidator(tmpDir)
+      if r.exitCode != 1:
+        echo "  FAIL: expected exit 1 for " & movedName & ", got " & $r.exitCode
+        echo "  output: " & r.output
+        inc failures
+      elif expectedMsg notin r.output:
+        echo "  FAIL: expected '" & expectedMsg & "' in output for " & movedName
+        echo "  output: " & r.output
+        inc failures
+      else:
+        echo "  PASS: " & movedName
+      removeFile(tmpDir / movedName)
+
   echo ""
   if failures > 0:
     echo $failures & " test(s) FAILED"

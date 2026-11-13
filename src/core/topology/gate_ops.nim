@@ -15,9 +15,9 @@ import core/axiom_pragmas
 # axiomIoBoundary
 
 const
-  topologyPolicyPath* = "topology_policy.json"
+  topologyPolicyPath* = "config/topology_policy.json"
   topologyLockPath* = "topology.lock"
-  topologyDeclPath* = "topology.json"
+  topologyDeclPath* = "config/topology.json"
 
 # @axiom-hint: smt="vacuous_primitive"  # axiom:certified-exempt(import-heuristic; annotate-then-purge DEBT#303)
 proc runTopologyCheck*(policyPath, lockPath: string): int {.raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =

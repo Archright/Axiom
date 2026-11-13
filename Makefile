@@ -312,11 +312,11 @@ check-cert-integrity-fast: ## Certificate integrity gate (fast mode — changed 
 
 promote-assets: bin/promote_assets ## Asset promotion (staging → validated → atomic canonical)
 	@echo "=== [promote-assets] AssetPromotionBoundary (Intent Delta inspection) ==="
-	@bin/promote_assets --intent promotion_intent.json
+	@bin/promote_assets --intent config/promotion_intent.json
 
 promote-assets-apply: bin/promote_assets ## Asset promotion, apply to canonical
 	@echo "=== [promote-assets-apply] AssetPromotionBoundary (apply) ==="
-	@bin/promote_assets --intent promotion_intent.json --apply
+	@bin/promote_assets --intent config/promotion_intent.json --apply
 
 bin/promote_assets: tools/promote_assets.nim src/shared_types/io_bridge.nim
 	@nim c --hints:off -o:bin/promote_assets tools/promote_assets.nim
