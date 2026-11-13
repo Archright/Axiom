@@ -5,9 +5,12 @@
 # Supported modes:
 #   --audit-refs               Fetch refs/heads/*, refs/tags/*, and refs/pull/*/head
 #                              into an isolated temp workspace and run gitleaks
-#                              (--redact=100) + publication_provenance_validator
-#                              across namespaces, isolating closed/unmerged PR
-#                              ref findings from the publication surface (main/tags).
+#                              (--redact=100) over the declared publication surface
+#                              (security-policy.yml secretScan.historyScopeLogOpts:
+#                              origin/main + HEAD + refs/pull/*/head) +
+#                              publication_provenance_validator. Closed/unmerged
+#                              PR refs are inside that surface: their findings are
+#                              publication findings, not a separate isolated lane.
 #   --purge-run-logs <run_id>  Delete workflow run logs via GitHub REST API:
 #                              gh api -X DELETE repos/<owner>/<repo>/actions/runs/<run_id>/logs
 #   --purge-leaky-artifacts    Enumerate non-expired workflow artifacts (specifically
@@ -42,9 +45,11 @@ usage() {
 Usage: tools/ci/publication_self_heal.sh [OPTIONS]
 
 Modes (one or more):
-  --audit-refs                 Audit refs/heads/*, refs/tags/*, and refs/pull/*/head
-                               in an isolated temporary git workspace using
-                               gitleaks (--redact=100) and publication_provenance_validator.
+  --audit-refs                 Audit the declared publication surface (origin/main +
+                               HEAD + refs/pull/*/head — security-policy.yml
+                               secretScan.historyScopeLogOpts) in an isolated
+                               temporary git workspace using gitleaks (--redact=100)
+                               and publication_provenance_validator.
   --purge-run-logs <run_id>    Delete GitHub Actions logs for <run_id> via
                                gh api -X DELETE repos/<owner>/<repo>/actions/runs/<run_id>/logs
   --purge-leaky-artifacts      Delete leaky / raw secret-scan workflow artifacts via
@@ -173,7 +178,7 @@ run_audit_refs() {
   if [ "$DRY_RUN" -eq 1 ]; then
     echo "[dry-run] Would create isolated temp git workspace from $repo_root"
     echo "[dry-run] Would fetch +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +refs/pull/*/head:refs/remotes/pr/*"
-    echo "[dry-run] Would run gitleaks git --redact=100 on publication surface (--branches --tags --remotes=origin HEAD) and closed-PR surface (--glob=refs/remotes/pr/* --not --branches --tags --remotes=origin)"
+    echo "[dry-run] Would run gitleaks git --redact=100 on the declared publication surface (--log-opts 'origin/main HEAD --glob=refs/remotes/pr/*' — security-policy.yml secretScan.historyScopeLogOpts)"
     echo "[dry-run] Would compile and run tools/ci/publication_provenance_validator.nim on HEAD"
     return 0
   fi
@@ -197,10 +202,19 @@ run_audit_refs() {
   local gl_bin
   gl_bin="$(ensure_gitleaks "$tmpdir")"
 
-  echo "[audit-refs] Scanning publication surface (branches + tags + HEAD) with --redact=100..."
+  echo "[audit-refs] Scanning the declared publication surface (origin/main + HEAD + refs/pull/*/head) with --redact=100..."
+  # SSOT: compliance/policy/security-policy.yml secretScan.historyScopeLogOpts —
+  # the same scope the publication-integrity secret-scan job scans, so this local
+  # audit and CI adjudicate the SAME commit set. The former wider surface
+  # (--branches --tags --remotes=origin HEAD) reached out-of-tree evidence ledgers
+  # whose fresh 64-hex CAS evidenceKeys are false positives no static baseline can
+  # contain, and the former second lane (--glob=refs/remotes/pr/* --not ...) only
+  # recomputed a subset of this scope: refs/pull/*/head are positive revisions of
+  # the declared scope (duplicated-lane anti-pattern, retired in the workflow's
+  # secret-scan 2026-11-13).
   "$gl_bin" git \
     --redact=100 \
-    --log-opts "--branches --tags --remotes=origin HEAD" \
+    --log-opts "origin/main HEAD --glob=refs/remotes/pr/*" \
     --report-format json \
     --report-path "$tmpdir/pub_history.json" \
     --no-banner --exit-code 1 "$tmpdir/repo" || true
@@ -209,34 +223,6 @@ run_audit_refs() {
     pub_count="$(jq 'length' "$tmpdir/pub_history.json")"
   fi
   echo "[audit-refs] Publication surface findings (redacted): $pub_count"
-
-  if git -C "$tmpdir/repo" for-each-ref --format='%(refname)' refs/remotes/pr/ | grep -q .; then
-    echo "[audit-refs] Scanning unmerged/closed PR refs (refs/pull/*/head outside publication surface)..."
-    "$gl_bin" git \
-      --redact=100 \
-      --log-opts "--glob=refs/remotes/pr/* --not --branches --tags --remotes=origin" \
-      --report-format json \
-      --report-path "$tmpdir/pr_history.json" \
-      --no-banner --exit-code 1 "$tmpdir/repo" || true
-    local pr_count=0
-    if [ -s "$tmpdir/pr_history.json" ]; then
-      pr_count="$(jq 'length' "$tmpdir/pr_history.json")"
-    fi
-    echo "[audit-refs] Unmerged PR ref findings (redacted): $pr_count"
-    if [ "$pr_count" -gt 0 ]; then
-      echo "[audit-refs] Polluted PR refs and commit SHAs:"
-      while IFS=' ' read -r ref sha; do
-        local c_hits
-        c_hits="$(jq --arg s "$sha" '[.[] | select(.Commit == $s)] | length' "$tmpdir/pr_history.json")"
-        if [ "${c_hits:-0}" -gt 0 ]; then
-          local pr_num="${ref#refs/remotes/pr/}"
-          echo "  - refs/pull/${pr_num}/head -> $sha ($c_hits finding(s))"
-        fi
-      done < <(git -C "$tmpdir/repo" for-each-ref --format='%(refname) %(objectname)' refs/remotes/pr/)
-    fi
-  else
-    echo "[audit-refs] No refs/pull/*/head refs fetched."
-  fi
 
   echo "[audit-refs] Running publication_provenance_validator on working tree..."
   nim c --hints:off --warnings:off --skipParentCfg --skipProjCfg --path:"$repo_root" --path:"$repo_root/src" \
