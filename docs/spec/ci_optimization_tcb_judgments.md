@@ -68,14 +68,14 @@ Proj_sem(Result(U, Plan_A)) == Proj_sem(Result(U, Plan_B))   ∀U ∈ Selected_A
 - **패리티 green은 그 자체로 아무것도 승인하지 않는다**: TCB(머지 권한 컴포넌트 집합)는 패리티 관측과 별개의 불변식 집합(§2의 invariant 집합 + 기존 게이트 스택)이다. 패리티는 권한의 증거가 아니라 "관측 유지" 신호다 — `ci_shadow_runner.sh:96` ("PASS — Project(Full,Selected) == plan-run (관측 유지)").
 - 이 구분은 설계 교정으로 확정된 사항이며, 사양은 이를 **보존**한다(회귀 금지).
 
-### 1.4 KNOWN VIOLATION — 판정 대상 공개 항목 (open item, 조용히 수정 금지)
+### 1.4 KNOWN VIOLATION — 해소됨 (2026-11-14, 판정 이력으로 보존)
 
-전역 budget 스케일링은 문서화된 §8 위반이다. **이 위반은 P2에서 수정하지 않는다** — 판정의 입력으로 기록하고 J1 판정 시 예외로 명시한다:
+전역 budget 스케일링은 §8 위반으로 문서화되었고, **2026-11-14에 코드와 사양이 동일 세대로 해소**되었다. 본 절은 판정 이력이므로 삭제하지 않고 해소 사실과 기계적 근거를 함께 기록한다.
 
-- `src/cli/axiom_engine.nim:5727-5728` (2026-11-14, main 80a5119 실측; 과거 인용 `:844-845`) — `prepared.engine = initAxiomEngine(getMonoTime().ticks, task.budgetGas, max(1, prepared.frontier.len))` (budget이 frontier 크기에 비례 스케일링; 사양 인용 위치 `canonical_execution_semantics.md:344-357`의 `axiom_engine.nim` 인용도 현행 실측 `:5727-5728`로 동기화 — 실측 위치를 판정 기준으로 사용).
-- `src/verification/batch_uap/loop_driver.nim:606-618` (과거 인용 `:478`) — per-unit `checkBudget(unitBudget) != pbvContinue` 조기 반환(timedOut), **:1186-1196** (과거 인용 **:999**) — `status: orchestrationTimedOut` 기록(전역 budget 부족을 unit 실패로 처리; 사양 인용 위치 `canonical_execution_semantics.md:348`의 `loop_driver.nim` 인용도 현행 실측 `:606-618`/`:1186-1196`으로 동기화).
-- 영향: frontier가 다른 두 계획 하에서 동일 unit의 결과가 달라질 수 있음(`Result(U, Plan_A) ≠ Result(U, Plan_B)`).
-- 처리: J1 판정에서 이 경로가 관련된 후보(계획/셀렉터 변경)는 **FAIL이어야** 하며, 수정은 사양 §8.3(:350-357, per-unit contract budget)에 따라 별도 작업으로만 진행한다.
+- 해소 전 표면: `src/cli/axiom_engine.nim`의 `max(1, prepared.frontier.len)` 스케일링(과거 인용 `:844-845`, 2026-11-14 실측 `:5727-5728`)과 `src/verification/batch_uap/loop_driver.nim:606-618`(과거 인용 `:478`)의 전역 budget → unit 실패 경로.
+- 해소 후 실측(2026-11-14, `workstream/vs-b5-per-unit-budget`): `initAxiomEngine(startMono: int64)`(`axiom_engine.nim:271-277`) — 엔진에 gas 풀이 없다. 오케스트레이션 호출부의 `gasLimit = engine.budget.gasTotal` 전달이 제거되어 집계 gas는 telemetry 전용이며, ci-cd 게이트는 `depthCoverage`만 판정한다(`:559-563`). `loop_driver.nim:606`의 `checkBudget(unitBudget)`은 유닛 고유 예산만 소비한다.
+- 기계적 근거: `tests/cli/test_axiom_engine.nim`의 음성 통제(`not compiles(initAxiomEngine(..., expectedNodeCount = …))`) + `tests/unit/batch_uap_orchestrator_test.nim` exit 0.
+- 미해소 잔여(본 슬라이스 밖, 조용히 수정 금지): `checkBudget(unitBudget)`이 생성 직후 fresh 예산에 수행되는 도달 불가 경로. **DEBT 미등록 상태이며, 등록은 이를 다루는 별도 슬라이스의 착수 조건**이다.
 
 ### 1.5 판정 프로토콜
 
@@ -253,7 +253,7 @@ semantic equivalence ∧ evidence equivalence ∧ canonical identity equivalence
 ## 5. 판정 종합 (VALID 확정 규칙)
 
 - 후보는 **J1 ∧ J2 ∧ J3 ∧ J4 전부 PASS**일 때만 VALID (각 판정의 exit 0).
-- J1의 알려진 위반(§1.4)에 걸리는 후보는 J1 FAIL — 위반은 사양 §8.3 수정(axiom_engine.nim per-unit budget) 후에만 해소된다.
+- J1의 알려진 위반(§1.4)은 2026-11-14에 해소되었다(코드·사양 동일 세대). J1 FAIL 예외 조항은 효력을 종료하며, 이후 후보는 통상 J1 판정 절차를 따른다. 단, 해소 이전에 생성된 판정 증거는 재사용하지 않는다(§0.9).
 - 중복 실행·반복 부수효과 관측 시: retry/cooldown 추가가 아닌 근본 권한 분석을 우선한다(AGENTS.md §2.2-8).
 - P2는 판정 도구가 FAIL을 그대로 출력하는 상태를 유지한다 — **미구현 개선(P2-3(a) 등)을 은폐하려는 "통과" 조정 금지**(§0.9 theater).
 

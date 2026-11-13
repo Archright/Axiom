@@ -121,7 +121,6 @@ type
     vaultDir*: string
     emitJson*: bool
     maxRounds*: int
-    budgetGas*: int
     target*: string
     planPath*: string               ## --plan <path> — consume an ExecutionPlan JSON
     propositionIntake*: PropositionIntake = PropositionIntake()
@@ -149,7 +148,7 @@ type
 
 
   AxiomEngine* = object
-    budget*: ProofBudget
+    startMono*: int64
 
   ## === FCIS: Pure Data Algebra (v3) ===
   ## All dependencies as values, side-effect spec as return data.
@@ -255,7 +254,6 @@ proc executePipeline*(
 proc buildProofTask*(
   flags: AxProveFlags;
   configVaultDir: string = "";
-  configBudgetGas: int = 0;
   emitJson: bool = false
 ): Result[ProofTask, string] {.raises: [].} =
   ## Convert parsed CLI flags into the canonical domain task.
@@ -268,17 +266,15 @@ proc buildProofTask*(
     vaultDir: configVaultDir,
     emitJson: emitJson,
     maxRounds: 6,
-    budgetGas: configBudgetGas,
     target: flags.target
   ))
-proc initAxiomEngine*(startMono: int64; budgetGas: int = 0; expectedNodeCount: int = 0): AxiomEngine {.raises: [].} =
-  ## Pure constructor — inject monotonic clock at the boundary.
-  ## When budgetGas=0, auto-scales from expectedNodeCount × MaxGasCostPerNode.
-  ## Falls back to maxTotalSolverInvocations when both are 0 (test compatibility).
-  let gasLimit = if budgetGas > 0: budgetGas
-                 elif expectedNodeCount > 0: expectedNodeCount * MaxGasCostPerNode
-                 else: maxTotalSolverInvocations
-  AxiomEngine(budget: initProofBudgetFromMono(startMono, gasLimit = gasLimit))
+func initAxiomEngine*(startMono: int64): AxiomEngine {.raises: [].} =
+  ## Pure constructor — inject the monotonic clock at the boundary.
+  ## The engine carries no gas budget. A run-global pool scaled by the
+  ## target/frontier node count made a unit's budget depend on the plan it
+  ## executed in (canonical_execution_semantics §8.3 #4); unit budgets come
+  ## solely from `initPerUnitBudget`, which reads the unit's own signals.
+  AxiomEngine(startMono: startMono)
 proc newGateReporter*(): GateReporter =
   GateReporter(events: @[])
 proc report*(reporter: GateReporter; gateName: string; passed: bool; detail: string; timestamp: int64) =
@@ -388,7 +384,6 @@ proc runBatchVerification*(
     vaultDir,
     topologyAnalysis = topologyAnalysis,
     maxRounds = task.maxRounds,
-    gasLimit = engine.budget.gasTotal,
     stallCount = stallCount,
     preComputedIrResults = irResults,
     skipIrPipeline = false,
@@ -532,7 +527,6 @@ proc runBatchVerification*(
         vaultDir,
         topologyAnalysis = topologyAnalysis,
         maxRounds = task.maxRounds,
-        gasLimit = engine.budget.gasTotal,
         stallCount = stallCount,
         # Seed the refactor loop's IR memo cache with the first call's same-run
         # CAS-keyed results so identical inlined IR funcDefs are reused instead
@@ -562,10 +556,11 @@ proc runBatchVerification*(
   let allPassed = verifiedCount == batchReport.orchestrationReport.nodeReports.len and batchReport.orchestrationReport.nodeReports.len > 0
   reporter.report(toDisplayName(toSemanticAlias("pre-push")), allPassed, "verified " & $verifiedCount & "/" & $batchReport.orchestrationReport.nodeReports.len & " nodes (inductiveValid=" & $inductiveCount & ")", getMonoTime().ticks)
 
-  # Gate 3: CI/CD — budget healthy and depth coverage
-  let budgetHealthy = batchReport.budget.gasRemaining >= 0
+  # Gate 3: CI/CD — depth coverage. The shared gas pool is aggregate telemetry,
+  # never a judgment input (§8.3 #4): observing it here made the gate verdict
+  # depend on the plan's frontier size.
   let depthCoverage = batchReport.orchestrationReport.executionStats.depthStats.len > 0
-  reporter.report(toDisplayName(toSemanticAlias("ci-cd")), budgetHealthy and depthCoverage, "budgetRemaining=" & $batchReport.budget.gasRemaining & " depthCoverage=" & $depthCoverage, getMonoTime().ticks)
+  reporter.report(toDisplayName(toSemanticAlias("ci-cd")), depthCoverage, "depthCoverage=" & $depthCoverage, getMonoTime().ticks)
 
   # Pure computation: ASI/VSR metrics + ledger event spec (no IO, no JSON)
   let (canonicalState, _, ledgerEvent) = computeGateAssessment(
@@ -5725,7 +5720,7 @@ proc prepareProofRun(task: ProofTask; sourceRoot: string;
   rankBySelectionScore(prepared.frontier, prepared.selState)
 
   # Adaptive budget: scale with frontier size × MaxGasCostPerNode
-  prepared.engine = initAxiomEngine(getMonoTime().ticks, task.budgetGas, max(1, prepared.frontier.len))
+  prepared.engine = initAxiomEngine(getMonoTime().ticks)
   prepared.reportJson = buildPreLoopReport(bundle, prepared.frontier, prepared.census.records)
   # §13.1: the pre-run snapshot document carries the declared set.
   prepared.reportJson["declaredRequired"] = %prepared.declaredRequired
@@ -6052,7 +6047,6 @@ proc runAxiomEngineCli*(
       if rootRes.isOk(): rootRes.get() / "axiom.toml" else: ""
   let proveConfig = loadTomlConfigIfPresent(tomlPath).getSection("prove")
   let configVaultDir = proveConfig.getString("vault_dir", "")
-  let configBudgetGas = proveConfig.getInt("budget_gas", 0)
 
   # Bootstrap Leanstral environment from axiom.toml if not set
   let leanstralConfig = loadTomlConfigIfPresent(tomlPath).getSection("leanstral")
@@ -6070,7 +6064,7 @@ proc runAxiomEngineCli*(
       putEnv("AXIOM_LLM_API_KEY", key)
 
   let emitJson = not isatty(stdout)
-  let taskRes = buildProofTask(flags, configVaultDir, configBudgetGas, emitJson)
+  let taskRes = buildProofTask(flags, configVaultDir, emitJson)
   if taskRes.isErr():
     return err(CliError(kind: CliOutcome.INVALID_INPUT, msg: taskRes.error))
   var task = taskRes.get()
