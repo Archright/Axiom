@@ -1,6 +1,7 @@
 ## test_ast_hash_whitespace.nim — Verify AST hash is whitespace-invariant
 import std/[strutils, os]
 import core/ast_hash
+import core/parser_utils
 
 proc main() =
   echo "=== AST Hash Whitespace Invariance Test ==="
@@ -99,6 +100,71 @@ proc main() =
     echo "Test 5: SKIPPED (file not found: " & projectFile & ")"
   echo ""
 
+  echo "=== VS-R2c parse-memo regression battery ==="
+  ## Mirrors the measured_digests memo battery style
+  ## (tests/unit/test_capture_toolchain_fingerprint.nim): same path parsed
+  ## twice → memo hit + identical hash; same-size content mutation → memo
+  ## invalidation; whitespace variants → distinct memo keys, same AST hash.
+  var memoPassed = 0
+  var memoFailed = 0
+
+  template memoCheck(name: string, body: untyped) =
+    block:
+      try:
+        body
+        inc memoPassed
+        echo "  PASS: " & name
+      except CatchableError:
+        inc memoFailed
+        echo "  FAIL: " & name & " - " & getCurrentExceptionMsg()
+      except Defect:
+        inc memoFailed
+        echo "  FAIL: " & name & " - " & getCurrentExceptionMsg()
+
+  let tmpRoot = getTempDir() / ("axiom_vs_r2c_test_" & $getCurrentProcessId())
+  createDir(tmpRoot)
+  try:
+    memoCheck "Scenario 1: same path parsed twice is a memo hit returning the SAME PNode with identical hash":
+      let subj = tmpRoot / "subject_mod.nim"
+      writeFile(subj, "proc alpha*(n: int): int =\n  n + 7\n")
+      resetParseMemoStats()
+      doAssert parseMemoStats() == (hits: 0, misses: 0)
+      let ast1 = parseFileAST(subj)
+      doAssert not ast1.isNil
+      let ast2 = parseFileAST(subj)
+      doAssert not ast2.isNil
+      doAssert ast1 == ast2  # ref identity: the memo returns the SAME node
+      doAssert parseMemoStats() == (hits: 1, misses: 1)
+      let h1 = computeAstHash(readFile(subj))
+      let h2 = computeAstHash(readFile(subj))
+      doAssert h1 == h2  # memo hit across initParserUtils resets
+      doAssert parseMemoStats() == (hits: 3, misses: 1)
+
+    memoCheck "Scenario 2: same-size content mutation ('alpha'->'bravo', '7'->'9') invalidates the memo":
+      let subj = tmpRoot / "subject_mod.nim"
+      let hBefore = computeAstHash(readFile(subj))
+      resetParseMemoStats()
+      writeFile(subj, "proc bravo*(n: int): int =\n  n + 9\n")  # same byte length (35)
+      let ast3 = parseFileAST(subj)
+      doAssert not ast3.isNil
+      doAssert parseMemoStats() == (hits: 0, misses: 1)  # stale entry not served
+      let hAfter = computeAstHash(readFile(subj))
+      doAssert hAfter != hBefore
+      doAssert parseMemoStats() == (hits: 1, misses: 1)
+
+    memoCheck "Scenario 3: whitespace variants are distinct memo keys yet hash-identical (bytes identity != AST identity)":
+      resetParseMemoStats()
+      let hw1 = computeAstHash("let x = 1 + 2")
+      let hw2 = computeAstHash("let x=1+2")
+      doAssert parseMemoStats() == (hits: 0, misses: 2)  # different bytes: no cross-hit
+      doAssert hw1 == hw2  # whitespace-invariant AST hash preserved
+  finally:
+    removeDir(tmpRoot)
+
+  echo ""
   echo "=== Test Complete ==="
+  if memoFailed > 0:
+    echo "=== Results: " & $memoFailed & " memo scenario(s) FAILED ==="
+    quit(1)
 
 main()

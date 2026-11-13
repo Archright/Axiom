@@ -1038,22 +1038,15 @@ proc verifyJournalClaimClosure*(
     axiomDecision(id = "DECISION-0672", reason = "verifyCertificateClosure over the journal claim reconstructed with its trustCommitId; only closure-PASS evidence is VKD-admissible", adr = "docs/adr/0001-fail-closed-result-type.md", introduced = "v33").} =
   ## Reconstruct the journal claim as a certificate (claim + trustCommitId —
   ## the claim cannot carry its own commit id) and run the v1 trust closure
-  ## on it via a temp file. Fail-closed: any closure outcome other than
-  ## ccsPass rejects the record.
+  ## on it in memory: verifyCertificateClosureNode consumes the JsonNode
+  ## directly (same closure implementation as `ax cert verify`, no disk
+  ## round-trip). Fail-closed: any closure outcome other than ccsPass
+  ## rejects the record.
   var certNode = claim
   certNode["trustCommitId"] = newJString(commitId)
-  let tmpPath = getTempDir() / ("axiom_journal_vkd_" & commitId & ".json")
-  try:
-    try:
-      writeFile(tmpPath, canonicalCertificateString(certNode))
-    except CatchableError:
-      return false
-    let closure = verifyCertificateClosure(tmpPath, projectRoot)
-    result = closure.status == ccsPass
-  finally:
-    if fileExists(tmpPath):
-      try: removeFile(tmpPath)
-      except CatchableError: discard  # axiom:best-effort(temp file cleanup is best-effort; canonical outcome already decided)
+  let closure = verifyCertificateClosureNode(
+    certNode, "journal:" & commitId, projectRoot)
+  result = closure.status == ccsPass
 
 proc computeJournalVkdAdmission*(
   journalBaseDir: string;
@@ -1079,7 +1072,7 @@ proc computeJournalVkdAdmission*(
   ##      AXIOM_EVIDENCE_STRICT=1;
   ##   4. tcQuarantine exclusion: a quarantine record matching the claim
   ##      identity AND sourceHash demotes the evidence;
-  ##   5. verifyCertificateClosure must PASS (reconstructed cert, temp file);
+  ##   5. verifyCertificateClosure must PASS (reconstructed cert, in-memory);
   ##   6. proof_integrity.isVkdAdmissible must admit (kernel entry);
   ##   7. dedup identical eligible records by identityDigest; >1 distinct
   ##      eligible full claim for a symbol → jvAmbiguous (UNKNOWN), never a

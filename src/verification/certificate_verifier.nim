@@ -206,22 +206,18 @@ func sameReplayInputs(certNode, journalClaim: JsonNode): bool {.raises: [].} =
       return false
   true
 
-proc verifyCertificateClosure*(
-  certPath: string;
-  projectRoot: string = ""
+proc verifyCertificateClosureNode*(
+  certNode: JsonNode; certPath: string; projectRoot: string
 ): CertClosureResult {.raises: [CatchableError], axiomEffect: IOEffect, tags: [IOEffect, RootEffect, AxiomIOEffect].} =
-  ## v1 certificate trust closure — the single entry point for `ax cert verify`.
+  ## v1 certificate trust closure over an in-memory certificate node — the
+  ## single shared implementation behind two thin adapters: the file adapter
+  ## `verifyCertificateClosure` (`ax cert verify`) and the in-memory
+  ## journal-claim adapter (cert_reconcile.verifyJournalClaimClosure).
   ## Fail-closed: any absent/mismatched element fails verification.
-  if not fileExists(certPath):
-    return CertClosureResult(status: ccsMalformed, detail: "certificate file not found")
-  var certNode: JsonNode
-  try:
-    certNode = parseJson(readFile(certPath))
-  except CatchableError as e:
-    return CertClosureResult(status: ccsMalformed, detail: "malformed certificate JSON: " & e.msg)
-  if certNode.isNil or certNode.kind != JObject:
-    return CertClosureResult(status: ccsMalformed, detail: "certificate is not a JSON object")
-
+  ## `certPath` is the certificate origin identifier (real path from the file
+  ## adapter, "journal:<commitId>" from the journal adapter); it is forwarded
+  ## to isDeepVerified, whose certPath parameter is never read, so both
+  ## adapters see identical closure semantics.
   # Reuse the existing deep-verification predicate (fingerprint / source
   # staleness / kernel-sorry / status whitelist).
   let entry = RuntimeAxiomEntry(
@@ -305,6 +301,24 @@ proc verifyCertificateClosure*(
       detail: "semantic projection mismatch: cert='" & certHash & "' journal='" & journalHash & "'")
   CertClosureResult(status: ccsPass, replayMatched: true,
     semanticHash: certHash)
+
+proc verifyCertificateClosure*(
+  certPath: string;
+  projectRoot: string = ""
+): CertClosureResult {.raises: [CatchableError], axiomEffect: IOEffect, tags: [IOEffect, RootEffect, AxiomIOEffect].} =
+  ## v1 certificate trust closure — the single entry point for `ax cert verify`.
+  ## File adapter: reads and parses the certificate, then delegates to
+  ## verifyCertificateClosureNode.
+  if not fileExists(certPath):
+    return CertClosureResult(status: ccsMalformed, detail: "certificate file not found")
+  var certNode: JsonNode
+  try:
+    certNode = parseJson(readFile(certPath))
+  except CatchableError as e:
+    return CertClosureResult(status: ccsMalformed, detail: "malformed certificate JSON: " & e.msg)
+  if certNode.isNil or certNode.kind != JObject:
+    return CertClosureResult(status: ccsMalformed, detail: "certificate is not a JSON object")
+  verifyCertificateClosureNode(certNode, certPath, projectRoot)
 
 {.pop.}
 {.pop.}

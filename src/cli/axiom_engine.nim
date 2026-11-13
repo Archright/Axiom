@@ -451,6 +451,9 @@ proc runBatchVerification*(
         manifest.mergeResult(
           cert.functionName, modulePath, cert.irHash,
           status, $cert.solverMethod)
+    if irBatch.certificates.len > 0:
+      # Single persist at the loop boundary: entries accumulate in memory via
+      # mergeResult, the manifest authority proc writes exactly once per batch.
       manifest.atomicWriteManifest(manifestPath)
     logInfo("axiom_engine", "phase-13: vault manifest synced — " &
       $manifest.entries.len & " entries → " & manifestPath)
