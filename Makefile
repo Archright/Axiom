@@ -167,6 +167,15 @@ bin/check_imports_ast: tools/check_imports_ast.nim
 bin/check_debt_sync: tools/check_debt_sync.nim
 	$(NIM) c $(NIM_TOOL_FLAGS) -o:$@ $<
 
+# -d:release is mandatory: in dev builds the reduction ratchet downgrades a
+# violation to WARN (debt_integrity_gate.nim:301-303), which would let a
+# baseline regression pass as green — exactly the theater this gate exists
+# to forbid. CI runs the binary unconditionally after this target.
+bin/debt_integrity_gate: src/gate/runners/debt_integrity_gate.nim \
+                         src/core/debt/debt_integrity.nim \
+                         src/gate/lib/debt_scanner.nim
+	$(NIM) c $(NIM_TOOL_FLAGS) -d:release -o:$@ $<
+
 bin/layer_enforcement_gate: src/gate/runners/layer_enforcement_gate.nim \
                             src/core/trusted/layer_rules.nim \
                             src/core/trusted/layer_enforcement.nim \
@@ -312,11 +321,11 @@ check-cert-integrity-fast: ## Certificate integrity gate (fast mode — changed 
 
 promote-assets: bin/promote_assets ## Asset promotion (staging → validated → atomic canonical)
 	@echo "=== [promote-assets] AssetPromotionBoundary (Intent Delta inspection) ==="
-	@bin/promote_assets --intent promotion_intent.json
+	@bin/promote_assets --intent config/promotion_intent.json
 
 promote-assets-apply: bin/promote_assets ## Asset promotion, apply to canonical
 	@echo "=== [promote-assets-apply] AssetPromotionBoundary (apply) ==="
-	@bin/promote_assets --intent promotion_intent.json --apply
+	@bin/promote_assets --intent config/promotion_intent.json --apply
 
 bin/promote_assets: tools/promote_assets.nim src/shared_types/io_bridge.nim
 	@nim c --hints:off -o:bin/promote_assets tools/promote_assets.nim

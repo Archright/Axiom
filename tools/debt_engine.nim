@@ -1334,7 +1334,19 @@ proc validateLiveFileExistence(json: JsonNode): bool {.raises: [].} =
     echo "\u2705 [live-file existence] all open/deferred files refs exist on disk"
   passed
 
-proc cmdValidate() {.raises: [CatchableError].} =
+type
+  ValidateOutcome {.pure.} = enum
+    voPass, voChecksFailed, voErrorDisposition, voFatal
+
+proc runValidateCore(): ValidateOutcome {.raises: [CatchableError].} =
+  ## The complete --validate body (Parts A–D) without any quit: verdicts come
+  ## back as a ValidateOutcome instead. Extracted so `--close` can run the
+  ## exact same validation in-process (pre-check and post-mutation check) — a
+  ## quit inside the core would bypass --close's rollback. Check counters
+  ## restart at 0 on every call so in-process reuse cannot accumulate verdicts.
+  totalChecks = 0
+  passedChecks = 0
+  failedChecks = 0
   echo "debt_engine --validate: comprehensive debt validation"
   echo ""
 
@@ -1375,9 +1387,9 @@ proc cmdValidate() {.raises: [CatchableError].} =
   echo ""
   echo "=== Part C: Full sync validation ==="
   if not fileExists(RegistryPath):
-    echo "FATAL: " & RegistryPath & " not found"; quit(1)
+    echo "FATAL: " & RegistryPath & " not found"; return voFatal
   if not fileExists(LedgerPath):
-    echo "FATAL: " & LedgerPath & " not found"; quit(1)
+    echo "FATAL: " & LedgerPath & " not found"; return voFatal
   let reg = parseRegistry(RegistryPath)
   let ledger = parseLedger(LedgerPath)
   let md = parseMarkdownHeader(MarkdownPath)
@@ -1587,12 +1599,25 @@ proc cmdValidate() {.raises: [CatchableError].} =
   echo "\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501"
 
   if failedChecks > 0 or not structuralPassed:
+    return voChecksFailed
+  elif hasErrorDisposition:
+    return voErrorDisposition
+  else:
+    return voPass
+
+proc cmdValidate() {.raises: [CatchableError].} =
+  ## CLI wrapper: the verdict echo and exit code stay here so `--validate`
+  ## output and exit semantics are byte-identical to the pre-refactor command.
+  let outcome = runValidateCore()
+  if outcome == voChecksFailed:
     echo ""
     echo "  Validation FAILED."
     quit(1)
-  elif hasErrorDisposition:
+  elif outcome == voErrorDisposition:
     echo ""
     echo "  Validation FAILED (ERROR disposition in policy)."
+    quit(1)
+  elif outcome == voFatal:
     quit(1)
   else:
     echo ""
@@ -1823,27 +1848,44 @@ proc formatResolution(r: ResolutionKind): string =
 
 ## ── cmdSyncBudget ──────────────────────────────────────────────────────────────
 
-proc cmdSyncBudget(dryRun: bool) {.raises: [CatchableError].} =
-  echo "debt_engine --sync-budget: metric-driven BUDGET reconciliation"
-  echo ""
+type
+  SyncBudgetResult = object
+    ## The --sync-budget computation: the ledger with every update applied in
+    ## memory, plus the reporting rows. cmdSyncBudget writes it to
+    ## data/debt_ledger.json; `--close` materializes it only after
+    ## post-validation passes.
+    ledgerJson: JsonNode
+    updates: seq[BudgetUpdate]
+    skipped: seq[string]
+    recordsProcessed: int
 
+proc syncBudgetCore(): SyncBudgetResult {.raises: [CatchableError].} =
+  ## The full --sync-budget computation: evaluator registry, budget/ledger
+  ## gates, and the reconciliation loop with all updates applied to the
+  ## in-memory ledger. Gates echo the same diagnostic cmdSyncBudget always
+  ## printed, then raise instead of quitting — `--close` calls this core after
+  ## the SSOT is materialized, where a quit would bypass its rollback.
   # Initialize evaluator registry
   initMetricEvaluators()
   echo "  Evaluators registered: " & $metricEvaluators.len
 
   # Load budgets SSOT
   if not fileExists(BudgetsPath):
-    echo "ERROR: " & BudgetsPath & " not found"; quit(1)
+    echo "ERROR: " & BudgetsPath & " not found"
+    raise newException(CatchableError, BudgetsPath & " not found")
   let budgetsJson = parseJson(readFile(BudgetsPath))
   if not budgetsJson.hasKey("metrics"):
-    echo "ERROR: " & BudgetsPath & " missing 'metrics' object"; quit(1)
+    echo "ERROR: " & BudgetsPath & " missing 'metrics' object"
+    raise newException(CatchableError, BudgetsPath & " missing 'metrics' object")
 
   # Load ledger
   if not fileExists(LedgerPath):
-    echo "FATAL: " & LedgerPath & " not found"; quit(1)
+    echo "FATAL: " & LedgerPath & " not found"
+    raise newException(CatchableError, LedgerPath & " not found")
   var ledgerJson = parseJson(readFile(LedgerPath))
   if not ledgerJson.hasKey("records") or ledgerJson["records"].kind != JArray:
-    echo "FATAL: " & LedgerPath & " missing 'records' array"; quit(1)
+    echo "FATAL: " & LedgerPath & " missing 'records' array"
+    raise newException(CatchableError, LedgerPath & " missing 'records' array")
   var recordsArr = ledgerJson["records"]
 
   # Process each record
@@ -1900,42 +1942,57 @@ proc cmdSyncBudget(dryRun: bool) {.raises: [CatchableError].} =
     recordsArr[idx]["status"] = %formatStatus(newStatus)
     recordsArr[idx]["resolution"] = %formatResolution(newResolution)
 
+  result.ledgerJson = ledgerJson
+  result.updates = updates
+  result.skipped = skipped
+  result.recordsProcessed = recordsArr.len
+
+proc cmdSyncBudget(dryRun: bool) {.raises: [CatchableError].} =
+  echo "debt_engine --sync-budget: metric-driven BUDGET reconciliation"
+  echo ""
+  var res: SyncBudgetResult
+  try:
+    res = syncBudgetCore()
+  except CatchableError:
+    # syncBudgetCore already printed the gate diagnostic
+    quit(1)
+
   # Output results
   echo ""
-  echo "  Records processed: " & $recordsArr.len
-  echo "  Updates applied:   " & $updates.len
-  echo "  Skipped (no evaluator): " & $skipped.len
+  echo "  Records processed: " & $res.recordsProcessed
+  echo "  Updates applied:   " & $res.updates.len
+  echo "  Skipped (no evaluator): " & $res.skipped.len
 
-  if updates.len > 0:
+  if res.updates.len > 0:
     echo ""
     echo "  Changes:"
-    for upd in updates:
+    for upd in res.updates:
       echo "    " & upd.id & " metric=" & upd.metric
       echo "      current: " & $upd.oldCurrent & " → " & $upd.newCurrent
       echo "      status:  " & formatStatus(upd.oldStatus) & " → " & formatStatus(upd.newStatus)
       echo "      resolution: " & formatResolution(upd.oldResolution) & " → " & formatResolution(upd.newResolution)
       echo "      lastVerifiedAt: PRESERVED (" & upd.lastVerifiedAt & ")"
 
-  if skipped.len > 0:
+  if res.skipped.len > 0:
     echo ""
     echo "  Skipped (no evaluator):"
-    for s in skipped:
+    for s in res.skipped:
       echo "    " & s
 
   # Write or dry-run
   echo ""
   if dryRun:
     echo "  [DRY-RUN] No files written."
-    if updates.len == 0:
+    if res.updates.len == 0:
       echo "  [DRY-RUN] No changes detected — fully synced."
     else:
-      echo "  [DRY-RUN] " & $updates.len & " record(s) would be updated."
+      echo "  [DRY-RUN] " & $res.updates.len & " record(s) would be updated."
       echo "  Run without --dry-run to apply."
   else:
     echo "  Writing " & LedgerPath & "..."
     try:
-      atomicWriteJson(LedgerPath, ledgerJson.pretty())
-      echo "  Done. " & $updates.len & " record(s) updated."
+      atomicWriteJson(LedgerPath, res.ledgerJson.pretty())
+      echo "  Done. " & $res.updates.len & " record(s) updated."
     except CatchableError:
       echo "  ERROR writing " & LedgerPath & ": " & getCurrentExceptionMsg()
     except Exception:
@@ -1943,6 +2000,186 @@ proc cmdSyncBudget(dryRun: bool) {.raises: [CatchableError].} =
 
   echo ""
   echo "Sync complete."
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# --close: DEBT#437 atomic registry mutation path
+# ═══════════════════════════════════════════════════════════════════════════════
+
+type
+  CloseBackup = object
+    ## Pre-mutation bytes of one file `--close` may touch. Rollback restores
+    ## exactly these bytes, so a failed close leaves the checkout identical to
+    ## the pre-close state (DEBT#437 atomicity contract).
+    path: string
+    existed: bool
+    content: string
+
+proc rollbackClose(backups: seq[CloseBackup]) {.raises: [CatchableError, Exception].} =
+  for b in backups:
+    if b.existed:
+      atomicWriteJson(b.path, b.content)
+    elif fileExists(b.path):
+      removeFile(b.path)
+
+proc closeUsage() =
+  echo "Usage: bin/debt_engine --close DEBT#NNN --resolution \"<text>\" [--note \"<text>\"] [--resolved-by \"<who>\"]"
+
+proc abortClose(backups: seq[CloseBackup]; msg: string) {.raises: [CatchableError].} =
+  ## Report a close-path failure and restore the pre-close bytes of all four
+  ## touched files. Callers quit(1) immediately after. A rollback that itself
+  ## fails is NOT swallowed: it is reported loudly and exits fail-closed,
+  ## directing the operator to `--validate` — a silent partial close is the
+  ## exact failure mode DEBT#437 exists to prevent.
+  echo ""
+  echo "  \u274c " & msg & " — rolling back."
+  try:
+    rollbackClose(backups)
+    echo "  \u21ba Rolled back to pre-close bytes: " & RegistryPath & ", " &
+      MarkdownOut & ", " & ConstantsOut & ", " & LedgerPath
+  except Exception as e:
+    echo "  \u274c ROLLBACK FAILED: " & e.msg
+    echo "  The checkout may hold a partially applied close — run bin/debt_engine --validate."
+    quit(1)
+
+proc cmdClose(rest: seq[string]) {.raises: [CatchableError].} =
+  ## DEBT#437: the dedicated single-step mutation path. Orchestrates in one
+  ## process: validate → mutate SSOT entry → regenerate P1 → sync P2 →
+  ## re-validate → rollback-or-keep. Every write goes through atomicWriteJson
+  ## (temp file + rename); any failure after the first write restores the exact
+  ## pre-mutation bytes of all four touched files, so the repository can never
+  ## observe a half-closed state. Refuses to run on a checkout that does not
+  ## already pass `--validate`.
+  var debtId = ""
+  var resolution = ""
+  var note = ""
+  var resolvedBy = ""
+  var i = 0
+  while i < rest.len:
+    let a = rest[i]
+    if a == "--resolution" and i + 1 < rest.len:
+      resolution = rest[i + 1]; inc i
+    elif a == "--note" and i + 1 < rest.len:
+      note = rest[i + 1]; inc i
+    elif a == "--resolved-by" and i + 1 < rest.len:
+      resolvedBy = rest[i + 1]; inc i
+    elif a in ["--resolution", "--note", "--resolved-by"]:
+      echo "ERROR: " & a & " requires a value"
+      closeUsage(); quit(1)
+    elif debtId.len == 0 and a.len > 0 and a[0] != '-':
+      debtId = a
+    else:
+      echo "ERROR: unrecognized --close argument: " & a
+      closeUsage(); quit(1)
+    inc i
+  if debtId.len == 0 or resolution.len == 0:
+    echo "ERROR: --close requires a debt id and --resolution \"<text>\""
+    closeUsage(); quit(1)
+  if not matchesDebtId(debtId):
+    echo "ERROR: invalid debt id '" & debtId & "' (expected DEBT#NNN)"
+    quit(1)
+  if resolvedBy.len == 0:
+    resolvedBy = "debt_engine --close"
+
+  echo "debt_engine --close: DEBT#437 atomic mutation path"
+  echo "  target:     " & debtId
+  echo "  resolution: " & resolution
+  echo ""
+
+  # [close/1] Pre-validation — refuse to mutate an inconsistent checkout.
+  # Failure here quits before any write: atomicity is trivial at this stage.
+  echo "=== [close/1] Pre-validation (in-process --validate) ==="
+  if runValidateCore() != voPass:
+    echo ""
+    echo "  \u274c Pre-validation FAILED — refusing to mutate an inconsistent checkout."
+    quit(1)
+  echo "  \u2705 Pre-validation passed."
+  echo ""
+
+  # [close/2] Locate and mutate the SSOT entry in memory.
+  echo "=== [close/2] Mutate SSOT entry (" & RegistryPath & ") ==="
+  let registryRaw = readFile(RegistryPath)
+  let registryNode = parseJson(registryRaw)
+  var targetEntry: JsonNode = nil
+  for e in registryNode{"entries"}:
+    if e{"id"}.getStr() == debtId:
+      targetEntry = e
+      break
+  if targetEntry.isNil:
+    echo "  \u274c " & debtId & " not found in " & RegistryPath
+    quit(1)
+  if not isOpen(targetEntry{"status"}.getStr()):
+    echo "  \u274c " & debtId & " is already closed (status: " & targetEntry{"status"}.getStr() & ")"
+    quit(1)
+  # Closed-field structure mirrors the most recent registry closures (e.g.
+  # DEBT#526): status + resolution + resolvedAt + resolvedBy + resolutionNote,
+  # with lastVerifiedAt refreshed because closing is a verification event.
+  let today = now().format("yyyy-MM-dd")
+  let verifiedAt = now().utc().format("yyyy-MM-dd'T'HH:mm:ss'Z'")
+  targetEntry["status"] = %"closed"
+  targetEntry["resolution"] = %resolution
+  targetEntry["resolvedAt"] = %today
+  targetEntry["resolvedBy"] = %resolvedBy
+  if note.len > 0:
+    targetEntry["resolutionNote"] = %note
+  targetEntry["lastVerifiedAt"] = %verifiedAt
+  var newRegistry = registryNode.pretty()
+  if registryRaw.endsWith("\n"):
+    newRegistry.add("\n")
+  echo "  \u2705 " & debtId & ": status open \u2192 closed; resolution/resolvedAt/resolvedBy set"
+
+  # Backups taken after pre-validation proved all four target files exist.
+  var backups: seq[CloseBackup]
+  for p in [RegistryPath, MarkdownOut, ConstantsOut, LedgerPath]:
+    backups.add(CloseBackup(path: p, existed: fileExists(p),
+                            content: if fileExists(p): readFile(p) else: ""))
+
+  # [close/3..5] Materialize, then re-validate. Any exception or non-pass
+  # verdict from here restores the backups byte-for-byte. The in-process
+  # validation core is quit-free by construction (runValidateCore); the only
+  # quit-capable callee left in this window is parseLedger, whose failure
+  # paths are unreachable post-mutation: syncBudgetCore only rewrites
+  # current/status/resolution on records pre-validation already parsed, and
+  # those fields always receive the exact enum strings parseLedger accepts
+  # (formatStatus/formatResolution).
+  try:
+    echo ""
+    echo "=== [close/3] Materialize SSOT + regenerate P1 projection ==="
+    atomicWriteJson(RegistryPath, newRegistry)
+    echo "  [write] " & RegistryPath & " (" & $newRegistry.len & " bytes)"
+    let (md, constants) = generateProjections(newRegistry)
+    atomicWriteJson(ConstantsOut, constants)
+    atomicWriteJson(MarkdownOut, md)
+    echo "  [write] " & ConstantsOut & " (" & $constants.len & " bytes)"
+    echo "  [write] " & MarkdownOut & " (" & $md.len & " bytes)"
+
+    echo ""
+    echo "=== [close/4] Sync P2 budget ledger (BUDGET#005/#006) ==="
+    let sync = syncBudgetCore()
+    let newLedger = sync.ledgerJson.pretty()
+    atomicWriteJson(LedgerPath, newLedger)
+    echo "  [write] " & LedgerPath & " (" & $newLedger.len & " bytes, " &
+      $sync.updates.len & " budget record(s) updated)"
+
+    echo ""
+    echo "=== [close/5] Post-validation (in-process --validate) ==="
+    let verdict = runValidateCore()
+    if verdict != voPass:
+      abortClose(backups, "Post-validation FAILED (" & $verdict & ")")
+      quit(1)
+    echo "  \u2705 Post-validation passed."
+  except CatchableError:
+    abortClose(backups, "--close failed: " & getCurrentExceptionMsg())
+    quit(1)
+  except Exception:
+    abortClose(backups, "--close failed: " & getCurrentExceptionMsg())
+    quit(1)
+
+  echo ""
+  echo "Close complete: " & debtId & " (status: open \u2192 closed)"
+  echo "  Materialized atomically: " & RegistryPath & ", " & MarkdownOut & ", " &
+    ConstantsOut & ", " & LedgerPath
+  echo "  ProjectionStatus: P1=complete P2=synced (post-validation passed)"
+  quit(0)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # --regen-arch: deterministic regeneration of architecture_debt.json hashes
@@ -3472,6 +3709,9 @@ proc usage() {.raises: [].} =
   echo "  --prune       Print stale entries whose files no longer exist (dry-run)"
   echo "  --prune --apply  Actually prune stale entries from debt_registry.json"
   echo "  --sync-budget [--dry-run]  Reconcile BUDGET record current/status from metric evaluators"
+  echo "  --close DEBT#NNN --resolution \"<text>\" [--note \"<text>\"] [--resolved-by \"<who>\"]"
+  echo "                Atomic mutation path (DEBT#437): validate \u2192 mutate SSOT entry \u2192 regenerate P1"
+  echo "                \u2192 sync P2 ledger \u2192 re-validate \u2192 rollback-or-keep. All-or-nothing."
   echo "  --audit-dir-doc [--apply|--rerun|--project-only]  Deterministic directory/documentation debt audit (bundle in tmp/audit_20260817)"
   echo "  --baseline-verify [bundle-dir]  Run all 9 baseline verification checks (VERIFY-01..09)"
   echo "  --lineage-check [bundle-dir]   Check lineage cardinality for DEBT#418/419/420"
@@ -3491,6 +3731,7 @@ proc main() {.raises: [CatchableError].} =
   of "--regen-arch": cmdRegenArch()
   of "--prune": cmdPrune(args.len > 1 and args[1] == "--apply")
   of "--sync-budget": cmdSyncBudget(args.len > 1 and args[1] == "--dry-run")
+  of "--close": cmdClose(args[1 .. ^1])
   of "--audit-dir-doc": cmdAuditDirDoc(args.len > 1 and args[1] == "--apply", args.len > 1 and args[1] == "--rerun", args.len > 1 and args[1] == "--project-only")
   of "--baseline-verify": cmdBaselineVerify(if args.len > 1: args[1] else: "")
   of "--lineage-check": cmdLineageCheck(if args.len > 1: args[1] else: "")

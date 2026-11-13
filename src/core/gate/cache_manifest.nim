@@ -4,6 +4,7 @@ axiomLayer "domain"
 import std/[tables, strutils, os]
 import core/axiom_pragmas
 import core/types/results
+const debtMarker525 {.axiomDebt: "DEBT#525".} = true
 
 type
   TxKind* = enum

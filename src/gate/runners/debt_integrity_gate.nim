@@ -3,7 +3,7 @@
 ##
 ## Reads data/debt_registry.json, scans src/ for {.axiomDebt.} pragmas,
 ## and enforces:
-##   1. Every open debt in the registry MUST have a code marker (fail-closed)
+##   1. Every open debt MUST be bound: {.axiomDebt.} marker or registry_disposition with bindingRationale (fail-closed, docs/spec/debt_registry_schema.md §10)
 ##   2. Accepted/exempted debts without markers produce warnings
 ##   3. Code markers without a registry entry produce warnings
 ##   4. JSON schema validation of debt data files (merged from debt-ct-gate)
@@ -226,16 +226,30 @@ proc saveBaselineMetrics(repoRoot: string, metrics: seq[(string, int)]) =
   writeFile(baselinePath, $(%*{"metrics": metricsObj}) & "\n")
 
 # ── Original: Bidirectional binding ──────────────────────────────────────────
+const RegistryDispositionBinding = "registry_disposition"
+
 type
   RegistryEntry = object
     id: string
     status: string
+    binding: string
+    bindingRationale: string
 
 func isAcceptedStatus(status: string): bool =
   result = status == "accepted" or status == "exempted"
 
 func isOpenStatus(status: string): bool =
   result = status == "open"
+
+func isRegistryDisposition(e: RegistryEntry): bool {.raises: [].} =
+  ## docs/spec/debt_registry_schema.md §10.1 — the registry entry itself is the
+  ## binding medium; the {.axiomDebt.} marker requirement does not apply.
+  e.binding == RegistryDispositionBinding
+
+func hasBindingRationale(e: RegistryEntry): bool {.raises: [].} =
+  ## §10.2 — registry_disposition requires a non-blank bindingRationale;
+  ## blank means a BINDING-CONTRACT failure, not a silent pass.
+  e.bindingRationale.strip().len > 0
 
 proc parseRegistry(jsonPath: string): seq[RegistryEntry] =
   let content = readFile(jsonPath)
@@ -245,7 +259,12 @@ proc parseRegistry(jsonPath: string): seq[RegistryEntry] =
   for node in entriesNode:
     let id = node{"id"}.getStr("")
     let status = node{"status"}.getStr("")
-    if id.len > 0: result.add(RegistryEntry(id: id, status: status))
+    if id.len > 0:
+      result.add(RegistryEntry(
+        id: id,
+        status: status,
+        binding: node{"binding"}.getStr(""),
+        bindingRationale: node{"bindingRationale"}.getStr("")))
 
 proc run(repoRoot: string): int =
   let jsonPath = repoRoot / "data" / "debt_registry.json"
@@ -300,12 +319,22 @@ proc run(repoRoot: string): int =
   let entries = parseRegistry(jsonPath)
   var openIds: seq[string]
   var acceptedIds: seq[string]
+  var registryDispositionIds: HashSet[string]
+  var markerBoundOpenCount = 0
+  var registryBoundCount = 0
   for e in entries:
-    if isOpenStatus(e.status): openIds.add(e.id)
+    if isOpenStatus(e.status):
+      openIds.add(e.id)
+      if isRegistryDisposition(e):
+        registryDispositionIds.incl(e.id)
+        if hasBindingRationale(e): inc registryBoundCount
+      else: inc markerBoundOpenCount
     elif isAcceptedStatus(e.status): acceptedIds.add(e.id)
 
   logInfo(GateTag, "Registry: " & $entries.len & " entries (" &
     $openIds.len & " open, " & $acceptedIds.len & " accepted)")
+  logInfo(GateTag, "Open: " & $markerBoundOpenCount & " marker-bound, " &
+    $registryBoundCount & " registry_disposition-bound (rationale verified)")
 
   # Step 4: Scan code for pragmas
   let scanned = scanDebtPragmas(repoRoot / "src")
@@ -317,8 +346,14 @@ proc run(repoRoot: string): int =
   var failures: seq[string]
   var warnings: seq[string]
   for id in openIds:
+    if id in registryDispositionIds: continue
     if id notin codeIds:
       failures.add("STALE: " & id & " is open in registry but has no {.axiomDebt.} marker")
+  for e in entries:
+    if isOpenStatus(e.status) and isRegistryDisposition(e) and
+        not hasBindingRationale(e):
+      failures.add("BINDING-CONTRACT: " & e.id &
+        " uses registry_disposition without bindingRationale")
   for id in acceptedIds:
     if id notin codeIds:
       warnings.add("ORPHAN-ACCEPTED: " & id & " is accepted but has no marker")

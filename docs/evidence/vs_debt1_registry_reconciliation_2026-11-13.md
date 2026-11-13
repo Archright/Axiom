@@ -1,7 +1,7 @@
 # VS-DEBT-1 재조사 원장 및 레지스트리 정합 복구 (2026-11-13)
 
 - **Workstream**: `workstream/vs-debt-1-registry-reconciliation`
-- **Base**: `main @ 2f32580`
+- **Base**: `main @ 923633f` (initial observation at `2f32580`; merged with PR #21/#22 landing `923633f`)
 - **D3 폐쇄 권한 (MUST-T2a)**: 사용자 전면 승인(2026-11-13 4-Slice 계획 승인) — 인간 전용 D3 판정(`docs/evidence/stale_debt_verification_2026-11-02.md` 헤더)을 계획 승인이 대행.
 
 ---
@@ -46,7 +46,7 @@
 | 14 | DEBT#520 | `src/gate/runners/gate_hook.nim:399-400` | FROZEN `src/gate/**` (`registry_disposition`) | still-holds (금일 신규 검증) | **OPEN 유지** | `repoRoot / g.entry` 확장자 미해석 그대로, `src/gate/manifest.d/` 54개 중 비-`.nim` 40 / `.nim` 14 정확 재현 |
 | 15 | **DEBT#523** | `src/core/gate/gate_cas.nim` | 미래 설계 제약 등록 (`registry_disposition`) | **resolved-by-adjudication** | **CLOSED (`FIXED`)** | `bindingRationale`에 `resolved-by-observation 2026-11-09` + Owner 최종 판정("CAS 공유 범위는 현재 워크트리 내부로 한정", F 기각, `docs/evidence/ef_cas_isolation_verdict_2026-11-09.md` §2·§7) 이미 기록. 고정 정책 하에서 교차 워크트리 오재사용 경로 불가능. 재오픈 조건 3항 보존 |
 | 16 | DEBT#524 | `src/core/gate/gate_cas.nim:180,202,241-242` | 조건부 등록 (`registry_disposition`) | still-holds (금일 신규 검증) | **OPEN 유지** | `fileExists(casBinary)` 단일 HIT 판정·저장 digest 비교 부재·`getBinaryHash` 호출자 0건 현존 (#523 재오픈 조건 (3)의 짝 항목) |
-| 17 | **DEBT#525** | `src/core/gate/cache_manifest.nim:1-81`, `tests/features/cache_manifest.feature` | **결손 → 금일 `registry_disposition` 보강** | still-holds (금일 신규 검증) | **OPEN 유지 + `binding` 보강** | 파일 바이트 불변(sha256 `68edad41…` 일치)·importer 0건·`computeContentHash` `$payload` 반환·`compactManifests` 무조건 ok·`.axiom/cache/manifests` 부재 전부 현존. 17건 중 유일한 `binding` 결손 해소; 코드 마커 삽입은 Owner 모듈 삭제 결정 대기 및 `contentHash` 보존(최소 변경)을 위해 보류 |
+| 17 | **DEBT#525** | `src/core/gate/cache_manifest.nim:1-81`, `tests/features/cache_manifest.feature` | `main @ 923633f`(VS-2 `389fa03`)에서 코드 마커(`const debtMarker525 {.axiomDebt: "DEBT#525".} = true`)로 바인딩 완료 | still-holds (금일 신규 검증) | **OPEN 유지** (코드 마커 바인딩 보존) | 극장 요소 3종(`computeContentHash` `$payload` 반환 `:31-36`, `compactManifests` 무조건 ok `:79-81`, `.axiom/cache/manifests` 부재 `:28`) 및 importer 0건 현존. `389fa03`이 코드 마커 바인딩을 부여했으므로 중복 `registry_disposition` 없이 `marker-bound` 분류 그대로 보존 |
 
 주의: `bin/debt_engine --prune` dry-run이 표시하는 "files missing" 4건(#506/#507/#509/#512)은 `cmdPrune`(`tools/debt_engine.nim:2004-2007`)이 `Makefile:883-935` 형태의 라인 범위 접미사를 제거하지 않는 오탐이며, `--validate`의 live-file 검사(`:1319-1335`)는 접미사 제거 후 정상 통과한다.
 
@@ -65,36 +65,33 @@
 
 ## §3. 실행 및 기계 검증 증거
 
-ADR-0029 §5 프로토콜(`data/debt_registry.json` 수동 편집 → `bin/debt_engine --codegen` → `--sync-budget` → `--validate`)을 그대로 실행했다.
+`main @ 923633f`(`389fa03`)에서 착지한 원자적 5-단계 폐쇄 명령 `bin/debt_engine --close DEBT#506 ...` 및 `bin/debt_engine --close DEBT#523 ...`(`validate → mutate SSOT → regenerate P1 → sync P2 ledger → re-validate`)을 그대로 실행했다.
 
-### 3.1 `bin/debt_engine --codegen`
+### 3.1 `bin/debt_engine --close DEBT#506` & `--close DEBT#523`
 
-- 재생성 파일: `src/generated/debt_constants.nim`, `docs/DEBT_REGISTRY.md` (`ProjectionStatus: P1=complete`).
+- 원자적 갱신 파일: `data/debt_registry.json`, `docs/DEBT_REGISTRY.md`, `src/generated/debt_constants.nim`, `data/debt_ledger.json` (`ProjectionStatus: P1=complete P2=synced`).
+- `BUDGET#005` (`debt_registry_open`): `current: 54 → 52` (`status: open`, `open: 35 + deferred: 17 = 52`).
+- `BUDGET#006` (`debt_registry_closed`): `current: 204 → 206` (`status: closed`, 총 258 엔트리).
+- 사전 계산 기대값(`54 - 2 = 52`)과 evaluator 산출값이 정확히 일치한다.
 
-### 3.2 `bin/debt_engine --sync-budget`
-
-```
-BUDGET#005 metric=debt_registry_open    current: 54 → 52 (status: open)
-BUDGET#006 metric=debt_registry_closed  current: 203 → 205 (status: closed)
-```
-
-- 레지스트리 실측(`open: 34, deferred: 18, closed: 205`, 총 257)에서 도출한 사전 기대값(`34 + 18 = 52`)과 evaluator 산출값이 정확히 일치한다.
-
-### 3.3 `bin/debt_engine --validate`
+### 3.2 `bin/debt_engine --validate` (in-process post-validation)
 
 ```
-Checks: 1616 total, 1616 passed, 0 failed
+Checks: 1621 total, 1621 passed, 0 failed
 Metric evaluation: 6 PASS, 0 DRIFT
-All debt validation checks passed.
+Post-validation passed.
 EXIT=0
 ```
 
-### 3.4 진단 관측: `AXIOM_DEV_MODE=1 bin/debt_integrity_gate`
+### 3.3 `bin/debt_integrity_gate` (release 빌드 정식 게이트)
 
 ```
-[INFO] [debt-integrity-gate]: Registry: 257 entries (34 open, 0 accepted)
-[INFO] [debt-integrity-gate]: Code: 23 {.axiomDebt.} markers found
-[ERROR] [debt-integrity-gate]: 15 stale debt(s) — FAIL (GATE_EXIT=1)
+[INFO] [debt-integrity-gate]: nimtry — Active Violations: 4275 / Historical Baseline Cap: 4275
+[INFO] [debt-integrity-gate]: Registry: 258 entries (35 open, 0 accepted)
+[INFO] [debt-integrity-gate]: Open: 20 marker-bound, 15 registry_disposition-bound (rationale verified)
+[INFO] [debt-integrity-gate]: Code: 24 {.axiomDebt.} markers found
+[INFO] [debt-integrity-gate]: All 35 open debts have code markers. PASS.
+GATE_EXIT=0
 ```
 
-- STALE 진단 수치가 **17 → 15**로 정확히 폐쇄된 2건(`DEBT#506`, `DEBT#523`)만큼 감소했고, 잔여 15건 전원이 `binding: "registry_disposition"`을 보유한 문서화된 무마커 항목임이 확인됐다.
+- `registry_disposition-bound` open 엔트리가 **17(구 STALE) → 16(`389fa03`의 `#525` 코드 마커 전환) → 15(본 슬라이스의 `#506`, `#523` 폐쇄)**로 감소했고, 잔여 15건 전원의 `bindingRationale` 비공백 계약 및 20건 `marker-bound` 양방향 바인딩이 `GATE_EXIT=0`으로 검증됐다.

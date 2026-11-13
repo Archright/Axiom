@@ -17,11 +17,20 @@
 ##        projection bytes do not move
 ##     6. precondition — the architecture_debt companion is existence-gated,
 ##        and is not read by the projection core
+##   "debt close atomic mutation (DEBT#437)"
+##     7. success path — `--close` mutates the SSOT entry and every derived
+##        artifact (P1 markdown, P1 constants, P2 ledger) in one operation
+##        whose post-state passes `--validate`
+##     8. failure paths — unknown id / already-closed target / inconsistent
+##        checkout / post-validation failure: every touched file stays
+##        byte-identical to its pre-close state (rollback contract)
 ##
 ## All logic is in-memory plus per-test temp trees; no repo data file is read or
-## written.
+## written. (Suite 3 is the exception by design: it drives the compiled CLI in
+## a temp miniature checkout, never in the repository itself — it reads only
+## `data/debt_schema.json` as a read-only template.)
 
-import std/[unittest, json, os, strutils, tables, tempfiles, algorithm]
+import std/[unittest, json, os, osproc, strutils, tables, tempfiles, algorithm]
 import core/debt/debt_registry_projection as engine
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -324,3 +333,266 @@ suite "debt projection semantic input":
     # the stronger property that the arch file cannot reach it at all.
     check not fileExists(root / "data" / "architecture_debt.json")
     check missing.md.len > 0
+# ═══════════════════════════════════════════════════════════════════════════════
+# Suite 3 — `--close` atomic mutation path (DEBT#437)
+#
+# The pure core suites above cover Generate(registry); this suite covers the
+# ORCHESTRATION, which exists only in the compiled CLI: validate -> mutate SSOT
+# entry -> regenerate P1 -> sync P2 -> re-validate -> rollback-or-keep. Each
+# scenario builds a complete miniature checkout (registry, architecture debt,
+# ledger, budgets, policy dispositions, JSON schema) in a temp tree, runs a real
+# `--codegen` to materialize the P1 pair, then drives `--close` as a subprocess.
+# The repository itself is never written: the engine's paths are relative and
+# the subprocess runs with the temp tree as CWD.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+let RepoRoot = getCurrentDir() ## tests execute from the repository root
+
+proc engineBinary(): string =
+  ## The debt_engine binary under test. AXIOM_DEBT_ENGINE_BIN pins a
+  ## work-in-progress build; the default is the canonical Makefile output.
+  result = getEnv("AXIOM_DEBT_ENGINE_BIN", "bin/debt_engine")
+  if not result.isAbsolute:
+    result = RepoRoot / result
+
+proc runEngine(binary, cwd, args: string): tuple[output: string, exitCode: int] =
+  let previous = getCurrentDir()
+  setCurrentDir(cwd)
+  defer: setCurrentDir(previous)
+  execCmdEx(quoteShell(binary) & " " & args, options = {poStdErrToStdOut})
+
+const CloseRegistryFixture = """{
+  "version": 1,
+  "generatedAt": null,
+  "scanner": "vs2-fixture",
+  "entries": [
+    {
+      "id": "DEBT#900",
+      "severity": "medium",
+      "status": "open",
+      "source": "manual",
+      "category": "test",
+      "description": "Fixture debt for --close atomic mutation tests",
+      "files": ["data/debt_registry.json"]
+    }
+  ]
+}"""
+
+const CloseArchFixture = """{
+  "version": 1,
+  "entries": []
+}"""
+
+## BUDGET#005/#006 committed currents match the fixture's 1 open / 0 closed
+## entries, so the miniature checkout starts fully consistent.
+const CloseLedgerFixture = """{
+  "version": "1.1.0",
+  "generated": "2026-11-13T00:00:00Z",
+  "description": "vs2 fixture ledger for --close tests",
+  "totalRecords": 2,
+  "records": [
+    {
+      "id": "BUDGET#005",
+      "category": "BudgetCategory",
+      "description": "Open registry entries",
+      "budgetCategory": "bcDebtRegistryOpen",
+      "metric": "debt_registry_open",
+      "baseline": 1,
+      "target": 0,
+      "current": 1,
+      "severity": "medium",
+      "source": "fixture",
+      "status": "open",
+      "resolution": "WONT_FIX",
+      "lastVerifiedAt": "2026-11-13T00:00:00Z"
+    },
+    {
+      "id": "BUDGET#006",
+      "category": "BudgetCategory",
+      "description": "Closed registry entries",
+      "budgetCategory": "bcDebtRegistryClosed",
+      "metric": "debt_registry_closed",
+      "baseline": 0,
+      "target": 0,
+      "current": 0,
+      "severity": "low",
+      "source": "fixture",
+      "status": "closed",
+      "resolution": "FIXED",
+      "lastVerifiedAt": "2026-11-13T00:00:00Z"
+    }
+  ]
+}"""
+
+proc writeCloseFixture(sandbox: string; rejectNonWontFixResolution: bool) =
+  ## Materialize the miniature checkout. `rejectNonWontFixResolution` is the
+  ## post-validation failure injection: the schema's `resolution` pattern
+  ## accepts WONT_FIX only, which the OPEN fixture entry trivially satisfies
+  ## (it has no resolution) but the entry `--close` would write ("FIXED ...")
+  ## does not. Pre-validation therefore passes and only the post-mutation
+  ## validation can fail — exactly the rollback scenario under test.
+  createDir(sandbox / "data")
+  createDir(sandbox / "config" / "policy")
+  writeFile(sandbox / "data" / "debt_registry.json", CloseRegistryFixture)
+  writeFile(sandbox / "data" / "architecture_debt.json", CloseArchFixture)
+  writeFile(sandbox / "data" / "debt_ledger.json", CloseLedgerFixture)
+  writeFile(sandbox / "data" / "debt_budgets.json", """{"metrics": {}}""")
+  writeFile(sandbox / "config" / "policy" / "policy_dispositions.json",
+            """{"version": "1.0.0", "metrics": {}}""")
+  let schemaRaw = readFile(RepoRoot / "data" / "debt_schema.json")
+  if not rejectNonWontFixResolution:
+    writeFile(sandbox / "data" / "debt_schema.json", schemaRaw)
+  else:
+    let schema = parseJson(schemaRaw)
+    schema["definitions"]["DebtRegistryEntry"]["properties"]["resolution"] = %*{
+      "type": "string", "pattern": "^WONT_FIX$",
+      "description": "INJECTED by the DEBT#437 rollback test"}
+    writeFile(sandbox / "data" / "debt_schema.json", schema.pretty() & "\n")
+
+const CloseTargets = ["data/debt_registry.json", "docs/DEBT_REGISTRY.md",
+                      "src/generated/debt_constants.nim", "data/debt_ledger.json"]
+
+proc snapshotCloseTargets(root: string): seq[tuple[path, bytes: string]] =
+  for rel in CloseTargets:
+    let p = root / rel
+    result.add((rel, if fileExists(p): readFile(p) else: ""))
+
+proc checkByteIdentical(root: string; snap: seq[tuple[path, bytes: string]]) =
+  ## The DEBT#437 atomicity verdict: content bytes, not mtimes. A failed close
+  ## must leave every touched file byte-identical to its pre-close state.
+  for (rel, bytes) in snap:
+    let p = root / rel
+    var matches = false
+    if bytes.len == 0:
+      matches = not fileExists(p)
+    else:
+      matches = fileExists(p) and readFile(p) == bytes
+    if not matches:
+      echo "  [byte-mismatch] " & rel & (if bytes.len == 0: " (must not exist)" else: "")
+    check matches
+
+const CloseSuccessArgs =
+  "--close DEBT#900 " &
+  "--resolution \"FIXED 2026-11-13 (vs2-fixture): atomic close verified\" " &
+  "--note \"closed by the DEBT#437 unit suite\" " &
+  "--resolved-by \"vs2-unit-test\""
+
+suite "debt close atomic mutation (DEBT#437)":
+
+  test "success: one operation closes the entry and keeps SSOT, P1 and P2 consistent":
+    let engine = engineBinary()
+    checkpoint "engine under test: " & engine
+    require fileExists(engine)
+    let root = createTempDir("axiom_debtclose_", "")
+    defer: removeDir(root)
+    writeCloseFixture(root, false)
+    check runEngine(engine, root, "--codegen").exitCode == 0
+    check runEngine(engine, root, "--validate").exitCode == 0
+
+    let closed = runEngine(engine, root, CloseSuccessArgs)
+    check closed.exitCode == 0
+    check "Close complete: DEBT#900" in closed.output
+    check "Post-validation passed." in closed.output
+
+    # SSOT entry carries the closed five-field structure (cf. DEBT#526) and
+    # the registry's non-entry keys survive the parse->mutate->pretty roundtrip.
+    let reg = parseJson(readFile(root / "data" / "debt_registry.json"))
+    let entry = reg{"entries"}[0]
+    check entry{"id"}.getStr() == "DEBT#900"
+    check entry{"status"}.getStr() == "closed"
+    check entry{"resolution"}.getStr() ==
+      "FIXED 2026-11-13 (vs2-fixture): atomic close verified"
+    check entry{"resolvedBy"}.getStr() == "vs2-unit-test"
+    check entry{"resolutionNote"}.getStr() == "closed by the DEBT#437 unit suite"
+    check entry{"resolvedAt"}.getStr().len == 10  # date-only, like DEBT#526
+    check entry{"lastVerifiedAt"}.getStr().len == 20  # strict ISO-8601 Z (schema)
+    check reg{"version"}.getInt() == 1
+    check reg{"scanner"}.getStr() == "vs2-fixture"
+
+    # P1 markdown: header counts and the row's status cell moved together.
+    let md = readFile(root / "docs" / "DEBT_REGISTRY.md")
+    check "> Open: 0 | Closed: 1" in md
+    check "| DEBT#900 | Medium | test |" in md
+    check "data/debt_registry.json | Closed |" in md
+
+    # P1 constants: the open count the compile-time gate asserts on.
+    let constants = readFile(root / "src" / "generated" / "debt_constants.nim")
+    check "DebtOpenCount* {.intdefine.} = 0" in constants
+    check "DebtEntryCount* {.intdefine.} = 1" in constants
+
+    # P2 ledger: BUDGET#005/#006 re-derived from the closed registry.
+    let ledger = parseJson(readFile(root / "data" / "debt_ledger.json"))
+    var byId: Table[string, JsonNode]
+    for r in ledger{"records"}: byId[r{"id"}.getStr()] = r
+    check byId["BUDGET#005"]{"current"}.getInt() == 0
+    check byId["BUDGET#005"]{"status"}.getStr() == "closed"
+    check byId["BUDGET#006"]{"current"}.getInt() == 1
+
+    # Terminal state: a standalone --validate run over the closed fixture passes.
+    check runEngine(engine, root, "--validate").exitCode == 0
+
+  test "failure: unknown id changes no target file (byte-identical)":
+    let engine = engineBinary()
+    require fileExists(engine)
+    let root = createTempDir("axiom_debtclose_", "")
+    defer: removeDir(root)
+    writeCloseFixture(root, false)
+    check runEngine(engine, root, "--codegen").exitCode == 0
+    let snap = snapshotCloseTargets(root)
+
+    let res = runEngine(engine, root, "--close DEBT#999 --resolution \"FIXED ghost\"")
+    check res.exitCode != 0
+    check "DEBT#999 not found" in res.output
+    checkByteIdentical(root, snap)
+
+  test "failure: post-validation failure rolls every target file back to pre-close bytes":
+    let engine = engineBinary()
+    require fileExists(engine)
+    let root = createTempDir("axiom_debtclose_", "")
+    defer: removeDir(root)
+    writeCloseFixture(root, true)
+    check runEngine(engine, root, "--codegen").exitCode == 0
+    # The injected schema passes while the entry is open — the failure can only
+    # fire AFTER --close has materialized its candidate state.
+    check runEngine(engine, root, "--validate").exitCode == 0
+    let snap = snapshotCloseTargets(root)
+
+    let res = runEngine(engine, root, CloseSuccessArgs)
+    check res.exitCode != 0
+    check "Post-validation FAILED" in res.output
+    check "Rolled back to pre-close bytes" in res.output
+    checkByteIdentical(root, snap)
+
+  test "failure: an already-closed target is refused without further mutation":
+    let engine = engineBinary()
+    require fileExists(engine)
+    let root = createTempDir("axiom_debtclose_", "")
+    defer: removeDir(root)
+    writeCloseFixture(root, false)
+    check runEngine(engine, root, "--codegen").exitCode == 0
+    check runEngine(engine, root, CloseSuccessArgs).exitCode == 0
+    let snap = snapshotCloseTargets(root)
+
+    let res = runEngine(engine, root, CloseSuccessArgs)
+    check res.exitCode != 0
+    check "already closed" in res.output
+    checkByteIdentical(root, snap)
+
+  test "failure: an inconsistent checkout is refused before any mutation":
+    let engine = engineBinary()
+    require fileExists(engine)
+    let sandbox = createTempDir("axiom_debtclose_", "")
+    defer: removeDir(sandbox)
+    writeCloseFixture(sandbox, false)
+    check runEngine(engine, sandbox, "--codegen").exitCode == 0
+    # Simulate the manual-protocol drift DEBT#436 recorded: a hand-edited
+    # projection the SSOT no longer matches.
+    writeFile(sandbox / "docs" / "DEBT_REGISTRY.md",
+              readFile(sandbox / "docs" / "DEBT_REGISTRY.md") & "\n<!-- hand edit drift -->\n")
+    let snap = snapshotCloseTargets(sandbox)
+
+    let res = runEngine(engine, sandbox, CloseSuccessArgs)
+    check res.exitCode != 0
+    check "Pre-validation FAILED" in res.output
+    # Nothing was written — not even a "repair" of the drifted markdown.
+    checkByteIdentical(sandbox, snap)

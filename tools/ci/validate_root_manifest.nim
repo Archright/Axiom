@@ -30,8 +30,8 @@ const ForbiddenFiles: seq[string] = @[
 const ExactAllowedFiles: seq[string] = @[
   "AGENTS.md", "README.md", "LICENSE", "THIRD-PARTY-NOTICES.md", "Makefile",
   "axiom.nimble", "config.nims", "nimble.lock", "axiom.lock",
-  "axiom.toml", "topology.json", "topology.lock", "topology_policy.json",
-  "promotion_intent.json", "flake.nix",
+  "axiom.toml", "topology.lock",
+  "flake.nix",
   "lakefile.toml", "lake-manifest.json", "lean-toolchain",
   "Dockerfile.build",
   # dot / toolchain files
