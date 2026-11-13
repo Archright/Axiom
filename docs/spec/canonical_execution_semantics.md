@@ -343,9 +343,9 @@ Result(U, Plan_A) == Result(U, Plan_B)   (동일 unit semantic input, U ∈ 양�
 
 현재 budget이 per-unit contract budget이 아닌 전역 shared budget으로 관리되어, non-interference 원칙을 위반한다:
 
-1. **`src/cli/axiom_engine.nim:812-813`**: `targetNodeCount = max(1, frontier.len)` 및 `initAxiomEngine(getMonoTime().ticks, task.budgetGas, targetNodeCount)` — budget이 frontier 크기에 비례하여 스케일링된다. 이는 `Plan_A`의 frontier가 `Plan_B`보다 크면 `Plan_A`의 per-unit budget이 더 작아짐을 의미하며, 동일 unit `U`에 대해 `Result(U, Plan_A) ≠ Result(U, Plan_B)`가 될 수 있다.
+1. **`src/cli/axiom_engine.nim:5727-5728` (2026-11-14, main 80a5119 실측; 과거 인용 `:812-813`)**: `max(1, prepared.frontier.len)` 및 `initAxiomEngine(getMonoTime().ticks, task.budgetGas, max(1, prepared.frontier.len))` — budget이 frontier 크기에 비례하여 스케일링된다. 이는 `Plan_A`의 frontier가 `Plan_B`보다 크면 `Plan_A`의 per-unit budget이 더 작아짐을 의미하며, 동일 unit `U`에 대해 `Result(U, Plan_A) ≠ Result(U, Plan_B)`가 될 수 있다.
 
-2. **`src/verification/batch_uap/loop_driver.nim:871-882`**: `checkBudget(budget)` → `budgetVerdict != pbContinue`이면 `orchestrationTimedOut` 상태로 node report를 기록하고 루프를 종료한다. 이 `orchestrationTimedOut` 덮어쓰기는 per-unit contract budget을 무시하고 전역 budget 부족을 unit 실패로 처리한다.
+2. **`src/verification/batch_uap/loop_driver.nim:606-618, 1186-1196` (2026-11-14, main 80a5119 실측; 과거 인용 `:871-882`)**: `checkBudget(budget)` → `budgetVerdict != pbContinue`이면 `orchestrationTimedOut` 상태로 node report를 기록하고 루프를 종료한다. 이 `orchestrationTimedOut` 덮어쓰기는 per-unit contract budget을 무시하고 전역 budget 부족을 unit 실패로 처리한다.
 
 ### 8.3 수정 요구 (Normative)
 
@@ -354,12 +354,12 @@ budget은 per-unit contract budget으로 수정되어야 한다:
 1. 각 unit은 `ExecutionPlan`에 포함될 때 고유한 `unitBudget`를 부여받는다.
 2. `unitBudget`는 `ExecutionPlan`의 입력으로 결정되며, runtime frontier 크기나 shared gas limit에 의존하지 않는다.
 3. `orchestrationTimedOut`은 `unitBudget` exhausted의 결과로 기록되며, 전역 budget 부족의 결과가 아니다.
-4. `axiom_engine.nim:812-813`의 `targetNodeCount` 기반 budget 스케일링은 제거된다.
+4. `axiom_engine.nim:5727-5728`의 `targetNodeCount` 기반(현행 코드: `max(1, prepared.frontier.len)`) budget 스케일링은 제거된다.
 
 ### 8.4 Anchor
 
-- `src/cli/axiom_engine.nim:812-813` — `targetNodeCount = max(1, frontier.len)` / `initAxiomEngine(getMonoTime().ticks, task.budgetGas, targetNodeCount)` (budget leak)
-- `src/verification/batch_uap/loop_driver.nim:871-882` — `checkBudget(budget)` → `orchestrationTimedOut` (per-unit budget 무시)
+- `src/cli/axiom_engine.nim:5727-5728` (2026-11-14, main 80a5119 실측; 과거 인용 `:812-813`) — `max(1, prepared.frontier.len)` / `initAxiomEngine(getMonoTime().ticks, task.budgetGas, max(1, prepared.frontier.len))` (budget leak)
+- `src/verification/batch_uap/loop_driver.nim:606-618, 1186-1196` (과거 인용 `:871-882`) — `checkBudget(budget)` → `orchestrationTimedOut` (per-unit budget 무시)
 
 ---
 
