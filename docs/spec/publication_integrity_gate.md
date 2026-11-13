@@ -1,6 +1,6 @@
 # publication-integrity 게이트 — 단일 판정 공개 준비성 계약
 
-**Status**: Normative (v1.2, 2026-11-10 — license-scan shard 스테이징 단일 루트 스캔 재구성과 같은 커밋; v1.1 = 2-shard 구조화 도입)
+**Status**: Normative (v1.3, 2026-11-13 — license-scan shard 3-레그 확장(VS-PI-3) 반영 + self-heal 로컬 감사 스코프 정렬; v1.2 = 2026-11-10 스테이징 단일 루트 스캔 재구성; v1.1 = 2-shard 구조화 도입)
 **워크플로**: `.github/workflows/publication-integrity.yml` (required context `publication-integrity`)
 **정책 SSOT**:
 - `compliance/policy/license-policy.yml` — 허용 라이선스 allowlist + 거부 가족
@@ -46,9 +46,9 @@ sbom ─────────────┘  syft v1.57.0 → publication_sb
 ```
 
 - sub-job id = 차원 이름 (secret-scan, license-scan, dependency-scan, provenance, sbom).
-- license-scan 차원은 내부적으로 `license-scan-shards`(matrix 2-레그 — HEAD 트리
+- license-scan 차원은 내부적으로 `license-scan-shards`(matrix 3-레그 — HEAD 트리
   blob 집합에서 ScanCode 기본 무시 이름(`ignores_VCS`)을 뺀 스캔 표면의 **크기-그리디
-  결정적 2-분할**, 각 레그는 자기 파일 집합을 **작업공간 basename과 동일명의 루트
+  결정적 3-분할**, 각 레그는 자기 파일 집합을 **작업공간 basename과 동일명의 루트
   디렉터리에 스테이징해 그 디렉터리 하나를 스캔** — 단일 디렉터리 인자가 ScanCode가
   올바르게 취급하는 유일한 입력 형태다, §5) + `license-scan`(shard 보고서 병합·판정
   잡)로 실행된다. **판정은 단일 평가기·단일 병합 보고서로 유지된다** —
@@ -68,6 +68,15 @@ sbom ─────────────┘  syft v1.57.0 → publication_sb
 ### 3.1 secret-scan
 - 스코프 = 공개 표면: `origin/main HEAD --glob=refs/remotes/pr/*`
   (security-policy.yml `secretScan.historyScopeLogOpts`) + 현재 트리 dir 스캔.
+- 로컬 감사(`tools/ci/publication_self_heal.sh --audit-refs`)도 동일 선언 스코프를
+  소비한다(동일 history pass — 격리 클론의 working tree가 HEAD 트리와 동일하므로 별도
+  dir leg는 중복이다). 로컬 감사와 CI가 같은 커밋 집합을 스캔한다 (판정 결정성).
+  구 폐쇄-PR 정보 lane(`--glob=refs/remotes/pr/* --not ...`)은 폐지한다:
+  refs/pull/*/head가 선언 스코프의 positive revision이므로 두 번째 lane은 같은
+  커밋 집합을 재계산할 뿐이다 (duplicated-lane anti-pattern — 워크플로의 2026-11-13
+  폐지 결정과 동일). `--support-bundle`의 PR-only 열거(`--not` 제외 포함)는
+  dereference 티켓 의미론상 유지하며 게이트 판정 lane이 아니다. baseline
+  `_meta.historyScope`는 이 선언 스코프를 기록한다.
 - 회계 단위 = gitleaks 핑거프린트(`Commit:File:Rule:Line` / `File:Rule:Line`) —
   경로가 아니라 정확한 튜플로 baseline이 고정되므로 baseline에 숨은 경로 안에서
   실제 비밀이 새 핑거프린트로 잡힌다.
@@ -93,7 +102,7 @@ sbom ─────────────┘  syft v1.57.0 → publication_sb
 - **shard 병합 완전성 계약**: 병합 보고서의 파일 경로 **집합** == **기대 스캔
   가능 집합**(`git ls-tree -r -l HEAD` blob 집합에서 ScanCode `ignores_VCS` 이름을
   뺀 집합 — shard 분할과 동일 유도, 중복 없음). 누락·중복·예상 밖 파일 전부
-  FAIL이다. 집합 비교이지 개수 비교가 아니며, shard 보고서가 정확히 2개가 아니면
+  FAIL이다. 집합 비교이지 개수 비교가 아니며, shard 보고서가 정확히 3개가 아니면
   판정 자체를 진행하지 않는다 (부분 스캔 표면 위 판정 금지 — fail-closed).
   (v1.1까지의 "`git ls-files` 집합" 기술은 오류였다 — ScanCode가
   `.gitignore`·`.gitattributes`를 어떤 토폴로지에서도 방출하지 않으므로(§5) 그
