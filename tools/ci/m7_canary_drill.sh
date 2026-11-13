@@ -68,7 +68,7 @@ DRY_RUN=0
 TIMEOUT=30
 # TRUST ANCHOR — see the header comment. Deliberately NOT resolved by name:
 # a canary must never discover its own protection target at runtime.
-PROD_RULESET_ID="26996019"
+PROD_RULESET_ID="27097366"
 
 usage() {
   echo "usage: m7_canary_drill.sh --canary-pr <N> [--repo <owner/repo>] [--ruleset-id <id>] [--dry-run] [--timeout <s>]" >&2
