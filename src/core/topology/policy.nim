@@ -59,22 +59,22 @@ proc parseTopologyPolicy*(path: string): Result[TopologyPolicy, string] =
     return err("topology policy parse error: " & e.msg & " — failing closed per §0.9")
   var policy = TopologyPolicy(
     schema: j{"_schema"}.getStr,
-    namespaceUuid: j{"namespaceUuid"}.getStr
+    namespaceUuid: j{"namespace_uuid"}.getStr
   )
-  policy.defaults.maxDirectoryFiles = j{"defaults"}{"maxDirectoryFiles"}.getInt
-  policy.defaults.allowTransitionalModules = j{"defaults"}{"allowTransitionalModules"}.getBool
-  policy.defaults.transitionalMaxAgeDays = j{"defaults"}{"transitionalMaxAgeDays"}.getInt
-  policy.defaults.collapseSingletons = j{"defaults"}{"collapseSingletons"}.getBool
-  policy.defaults.forbidEmptyDirectories = j{"defaults"}{"forbidEmptyDirectories"}.getBool
+  policy.defaults.maxDirectoryFiles = j{"defaults"}{"max_directory_files"}.getInt
+  policy.defaults.allowTransitionalModules = j{"defaults"}{"allow_transitional_modules"}.getBool
+  policy.defaults.transitionalMaxAgeDays = j{"defaults"}{"transitional_max_age_days"}.getInt
+  policy.defaults.collapseSingletons = j{"defaults"}{"collapse_singletons"}.getBool
+  policy.defaults.forbidEmptyDirectories = j{"defaults"}{"forbid_empty_directories"}.getBool
   policy.defaults.transitionalDetection.patterns = @[]
-  for p in j{"defaults"}{"transitionalDetection"}{"patterns"}:
+  for p in j{"defaults"}{"transitional_detection"}{"patterns"}:
     policy.defaults.transitionalDetection.patterns.add(p.getStr)
   policy.defaults.transitionalDetection.generalizedRule =
-    j{"defaults"}{"transitionalDetection"}{"generalizedRule"}.getStr
+    j{"defaults"}{"transitional_detection"}{"generalized_rule"}.getStr
 
   policy.severityRules = initTable[string, string]()
-  if j.hasKey("severityRules"):
-    policy.severityRules = parseSeverityRules(j{"severityRules"})
+  if j.hasKey("severity_rules"):
+    policy.severityRules = parseSeverityRules(j{"severity_rules"})
 
   policy.exceptions = @[]
   if j.hasKey("exceptions") and j{"exceptions"}.kind == JArray:
@@ -89,7 +89,7 @@ proc parseTopologyPolicy*(path: string): Result[TopologyPolicy, string] =
       policy.exceptions.add(PolicyException(
         path: e{"path"}.getStr,
         reason: e{"reason"}.getStr,
-        collapseSingletons: e{"collapseSingletons"}.getBool,
+        collapseSingletons: e{"collapse_singletons"}.getBool,
         suppressAudit: suppressAudit,
         suppressUntil: suppressUntil
       ))
