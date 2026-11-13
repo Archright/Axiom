@@ -303,8 +303,8 @@ proc adjudicate(inputs: Inputs): tuple[verdict: ProvenanceVerdict, report: JsonN
               for pat in forbiddenContentPatterns:
                 if pat.len > 0 and content.contains(pat):
                   forbiddenContentViolations.add(f & " (contains " & pat & ")")
-          except CatchableError:
-            discard
+          except CatchableError as e:
+            forbiddenContentViolations.add(f & " (read error: " & e.msg & ")")
 
     var matched: seq[Declaration] = @[]
     for idx, d in decls:

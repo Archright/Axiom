@@ -89,7 +89,7 @@
       "metric": "debt_registry_closed",
       "baseline": 0,
       "target": 92,
-      "current": 202,
+      "current": 203,
       "severity": "low",
       "source": "debt_budgets.json",
       "status": "closed",
