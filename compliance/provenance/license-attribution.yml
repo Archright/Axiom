@@ -210,6 +210,11 @@ attributions:
     evidence: "the epoch record quotes artifact and policy paths ('report_license.json', 'summary.json', 'merge_admission.json', 'source-origin.yml') while describing the J2 comparison and the attribution contract; the 2-token json_8.RULE matches the '.json' filename token — path text, not a grant (same class as .github/workflows/publication-integrity.yml and experiments/serde-json-claim-2026-10-31/*/subject_manifest_*.sha256)"
     licenses:
       - "JSON"
+  - file: "docs/evidence/external_verification_campaign_live_agent_2026-11-13.md"
+    classification: "documentary-mention"
+    evidence: "the live-agent campaign evidence names the Apache-2.0 SPDX id of the pinned Qwen2.5-Coder-1.5B-Instruct-GGUF model as an agent-provenance pin (§4/§5 quote agent-provenance.json verbatim, incl. model_license) — the mention records what the external artifact IS licensed under, not a grant over this file"
+    licenses:
+      - "Apache-2.0"
   - file: "data/ci_optimization/pi_shard_j1_2026-11-10/summary.json"
     classification: "documentary-mention"
     evidence: "the J1 iteration-1 measurement summary records the evaluator verdict atoms (incl. the denied-family GPL-3.0-only FAIL and the MIT atom of the vacuous merged pass) as scan-report data — recorded detections, not grants"
