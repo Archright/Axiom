@@ -85,7 +85,7 @@ $ bin/ax baseline check
 ## §4. Current-main 재수용 — verifier build 이동 후 재캠페인 (2026-11-14)
 
 - **main = `78b4f1f8cadf528a1bb846be8c7c25e4de322582`** (PR #31 native MERGE, 부모 `[3380931c7, ec09197]`).
-- **`VerifierBuildId` 이동**: `9cc33118…` → **`dd1f769f6b379e8ded00628b9fb5af9eb7c9890c7712200116fef88154ea8278`**. 원인은 §2 캠페인 이후 main에 착지한 `3380931c7`이 `axiom.nimble`(version `0.6.3` → `0.6.4`)·`lakefile.toml`을 수정한 것 — 두 파일은 `computeVerifierBuildId` 매니페스트 입력(`src/verification/verifier_build_identity.nim`)이다. `VerifierBuildSourceHash`는 불변(`vs1-tree-hash/1:-6545338185094167100`).
+- **`VerifierBuildId` 이동**: `9cc33118…` → **`dd1f769f6b379e8ded00628b9fb5af9eb7c9890c7712200116fef88154ea8278`**. 원인은 §2 캠페인 이후 main에 착지한 `3380931c7`이 `axiom.nimble`(version `0.6.3` → `0.6.4`)·`lakefile.toml`을 수정한 것 — 두 파일은 `computeVerifierBuildId` 매니페스트 입력(`src/core/trusted/verifier_build_identity.nim`)이다. `VerifierBuildSourceHash`는 불변(`vs1-tree-hash/1:-6545338185094167100`).
 - **stale 바이너리 차단**: `bin/hermetic_build`는 `build_env.nim`만 재생성하고 `bin/ax`를 재컴파일하지 않는다. 정본 릴리스 빌드 권한 `AXIOM_HERMETIC_BUILDING=1 make -f ci/checker.mk ci-compile -j4`(RC=0, 34.9s)로 `bin/ax`를 재빌드한 뒤에만 수용 측정을 수행했다. 재빌드 전 바이너리(임베디드 `9cc33118…`)로 측정한 VKD는 "현재 엔진" 증거가 아니다.
 - **23개 전수 재실행** (현재 엔진 `dd1f769f…`): `TOTAL_MS=102000`. 새 저널 flat 클레임은 `engineBuild = dd1f769f…`, `axiomVersion = v0.6.4`, `completenessContract = strict-v1`, `status = certGreen`을 기록했다.
 
