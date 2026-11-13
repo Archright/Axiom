@@ -38,20 +38,36 @@ const
 when defined(posix):
 # @axiom-hint: lean="depth >= 0" smt="(assert (and (>= depth 0)))"
 # @axiom-hint: lean="(tv ≥ 0) ∧ (result ≥ 0)" smt="(assert (and (>= tv 0) (>= result 0)))"
-  proc z3WorkerHasData(process: Process): bool =
-    ## Check if the Z3 worker process has data available on stdout.
-    ## Uses poll() instead of select()/FD_SET to avoid buffer overflow
-    ## when file descriptors exceed FD_SETSIZE (1024).
+  proc z3WorkerWaitData(process: Process; deadlineMs: int64): bool =
+    ## Block until the Z3 worker stdout is readable, or the absolute deadline
+    ## (epochMilliseconds) passes. Uses poll() instead of select()/FD_SET to
+    ## avoid buffer overflow when file descriptors exceed FD_SETSIZE (1024).
+    ## The OS owns the wait (one poll(2) per remaining window — no busy-wake);
+    ## POLLHUP/POLLERR also report readiness so the caller's read() loop keeps
+    ## sole authority over EOF/error classification, and a negative poll
+    ## result (EINTR et al.) recomputes the window against the same deadline:
+    ## retries can never extend the wait past it.
     let h = outputHandle(process)
     if h < 0: return false
-    var pfd: TPollfd
-    pfd.fd = cint(h)
-    pfd.events = cshort(POLLIN)
-    pfd.revents = 0
-    result = poll(addr pfd, 1, 0) == 1 and (pfd.revents and POLLIN) != 0
+    while true:
+      let remaining = deadlineMs - epochMilliseconds()
+      if remaining <= 0: return false
+      var pfd: TPollfd
+      pfd.fd = cint(h)
+      pfd.events = cshort(POLLIN)
+      pfd.revents = 0
+      let rc = poll(addr pfd, 1, cint(min(remaining, int64(high(int32)))))
+      if rc == 1:
+        return (pfd.revents and (POLLIN or POLLHUP or POLLERR)) != 0
+      if rc == 0:
+        return false
 else:
-  proc z3WorkerHasData(process: Process): bool =
-    hasData(process)
+  proc z3WorkerWaitData(process: Process; deadlineMs: int64): bool =
+    ## Non-POSIX fallback: poll the stream in small steps until the deadline.
+    while epochMilliseconds() < deadlineMs:
+      if hasData(process): return true
+      sleep(5)
+    false
 type
   Z3ScopeEntry = object
     rawQuery: string
@@ -433,7 +449,7 @@ proc waitForSentinel(worker: var Z3PersistentWorker; sentinel: string; timeoutMs
   var chunk: array[256, char]
 
   while epochMilliseconds() < deadline:
-    if z3WorkerHasData(worker.process):
+    if z3WorkerWaitData(worker.process, deadline):
       let n = posix.read(cint(outputHandle(worker.process)), addr chunk[0], 256)
       if n > 0:
         for i in 0..<n:
@@ -448,7 +464,6 @@ proc waitForSentinel(worker: var Z3PersistentWorker; sentinel: string; timeoutMs
         if found: break
       elif n == 0:
         return err("Z3 process pipe closed prematurely")
-    sleep(1)
 
   if found: ok(true)
   else: err("Z3 sentinel timeout. Expected: " & sentinel)
@@ -980,12 +995,12 @@ proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; e
           ok = false
           break
         let stepDeadline = min(epochMilliseconds() + int64(z3ReadStepTimeoutMs), readDeadlineMs)
-        var hasDataAvailable = false
-        while epochMilliseconds() < stepDeadline:
-          if z3WorkerHasData(z3Manager().pool.workers[workerIdx].process):
-            hasDataAvailable = true
-            break
-          sleep(5)
+        # W2-F: single blocking poll(2) until readable or stepDeadline — the
+        # OS owns the wait. hasDataAvailable == false keeps the exact original
+        # branch semantics (recheck readDeadline, else continue the outer
+        # loop); EOF stays owned by the read() path below.
+        let hasDataAvailable = z3WorkerWaitData(
+          z3Manager().pool.workers[workerIdx].process, stepDeadline)
         if not hasDataAvailable:
           if epochMilliseconds() >= readDeadlineMs:
             ok = false

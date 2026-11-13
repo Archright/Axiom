@@ -7,6 +7,7 @@ import core/results
 import core/trusted/trust_commit
 import core/trusted/scope_identity
 import core/json/json_utils
+import verification/vault_manifest
 
 proc expect(cond: bool; msg: string) =
   if not cond:
@@ -326,6 +327,79 @@ block:
   expect(validateCommit(bad).isErr(), "evidenceId mismatch rejected")
 
   echo "  PASSED: validateCommit fail-closed"
+
+# ---------------------------------------------------------------------------
+# Test 7: batched vault-manifest sync — N in-memory merges, ONE disk write.
+# Regression for the phase-13 loop in cli/axiom_engine.nim: entries accumulate
+# via mergeResult in memory and atomicWriteManifest (the single-writer
+# authority) runs once at the loop boundary. Each atomicWriteManifest
+# invocation appends exactly one immutable vault-manifest journal record, so
+# the journal-record count is the durable write counter — deterministic, no
+# mtime/timing dependence.
+# ---------------------------------------------------------------------------
+block:
+  echo "Test 7: batched manifest sync (N merges → 1 write)"
+  let base = tmpBase()
+  let certDir = base / "certs"
+  createDir(certDir)
+  let manifestPath = certDir / "manifest.json"
+  # Mirror atomicWriteManifest's own journal-root resolution (vault_manifest.nim)
+  let resolvedRoot = repoRootForPath(manifestPath)
+  let journalBase = if resolvedRoot.len > 0: resolvedRoot else: manifestPath.parentDir()
+
+  proc vaultManifestWriteCount(root: string): int =
+    let ids = listCommitIds(root)
+    expect(ids.ok, "listCommitIds ok: " & (if ids.isErr(): ids.error else: ""))
+    for id in ids.value:
+      let rc = readCommit(root, id)
+      expect(rc.ok, "readCommit ok for " & id)
+      if rc.value.solverInvocation == "vault-manifest":
+        inc result
+
+  # The batched engine sequence: load once, merge N results, persist once.
+  var manifest = loadManifest(manifestPath)
+  for i in 1 .. 4:
+    manifest.mergeResult("f" & $i, "src/mod" & $i & ".nim", "hash" & $i,
+      "certGreen", "smFFI")
+  manifest.atomicWriteManifest(manifestPath)
+
+  expect(vaultManifestWriteCount(journalBase) == 1,
+    "batched sync: exactly 1 vault-manifest journal record")
+
+  # All N entries land in the manifest, in insertion order.
+  let reloaded = loadManifest(manifestPath)
+  expect(reloaded.entries.len == 4, "manifest carries 4 entries")
+  expect(reloaded.entries.mapIt(it.functionName) == @["f1", "f2", "f3", "f4"],
+    "entry insertion order preserved")
+
+  # Determinism: rewriting the identical entry set yields byte-identical
+  # manifest bytes (timestamps are fixed at merge time, not write time).
+  let firstBytes = readFile(manifestPath)
+  manifest.atomicWriteManifest(manifestPath)
+  expect(readFile(manifestPath) == firstBytes,
+    "same entry set → byte-identical manifest rewrite")
+  expect(vaultManifestWriteCount(journalBase) == 1,
+    "identical rewrite keeps exactly 1 journal record (content-addressed)")
+
+  # Counter sensitivity: the per-item pattern (persist inside the merge loop)
+  # leaves one journal record per entry — proving the counter counts
+  # atomicWriteManifest invocations, so a regression back to per-item writes
+  # fails the assertion above.
+  let perItemBase = tmpBase()
+  let perItemDir = perItemBase / "certs"
+  createDir(perItemDir)
+  let perItemPath = perItemDir / "manifest.json"
+  let perItemRoot = repoRootForPath(perItemPath)
+  let perItemJournal = if perItemRoot.len > 0: perItemRoot else: perItemPath.parentDir()
+  var perItem = loadManifest(perItemPath)
+  for i in 1 .. 4:
+    perItem.mergeResult("g" & $i, "src/mod" & $i & ".nim", "ihash" & $i,
+      "certGreen", "smFFI")
+    perItem.atomicWriteManifest(perItemPath)
+  expect(vaultManifestWriteCount(perItemJournal) == 4,
+    "per-item sync: 4 entries → 4 vault-manifest journal records")
+
+  echo "  PASSED: batched manifest sync"
 
 echo ""
 if failures == 0:

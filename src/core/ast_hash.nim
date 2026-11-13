@@ -22,7 +22,10 @@ func hashNode(n: PNode): Hash {.raises: [].} =
   # Leaf nodes with semantic values — hash them to differentiate content
   case n.kind
   of nkIdent:
-    # Identifier nodes: hash the PIdent pointer (deterministic per parse session)
+    # Identifier nodes: hash(n.ident) is PIdent.h — the interned identifier
+    # STRING hash (compiler/idents.nim "hash(x: PIdent) = x.h"). It is
+    # content-based, not pointer identity, so hashes are stable across parse
+    # sessions and across the shared (memoized) PNodes of parser_utils.
     h = h !& hash(n.ident)
   of nkCharLit..nkUInt64Lit:
     h = h !& hash(n.intVal)

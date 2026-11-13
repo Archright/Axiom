@@ -171,6 +171,45 @@ The second clause is incorrect (see above). The accompanying code at
 in the comment. Recorded here because the file is outside this change's edit
 scope; correcting the comment is a follow-up for the file's owner.
 
+## Q4: `hash(PIdent)` is the interned identifier-STRING hash (`PIdent.h`), not pointer identity
+
+Discovered 2026-11-13 while landing the VS-R2c parse memo
+(`src/core/parser_utils.nim` — sharing one cached `PNode` across repeated
+parses of identical bytes). The question "does PIdent pointer identity leak
+into hashes?" is decided by the compiler's own overload:
+
+```
+$ grep -n "proc hash" ~/.choosenim/toolchains/nim-2.2.10/compiler/idents.nim
+120:proc hash*(x: PIdent): Hash {.inline.} = x.h
+```
+
+`PIdent.h` is the `Hash` of the interned identifier string, computed once at
+`getIdent` time (`compiler/idents.nim:25-26` — `next`, `h: Hash # hash value
+of s`). Note also that std/hashes' own `hash(ref)` is **only** defined under
+`-d:nimPreviewHashRef` (not a default in Nim 2.2.10), so `hash(x: PIdent)`
+can only resolve to the compiler's content-based overload.
+
+Probe result against the pinned toolchain (two **different** `IdentCache`
+instances, hence two **different** `PIdent` pointers for the same name):
+
+```
+same-cache same ident ptr? true
+diff-cache same ident ptr? false
+hash a == hash b (same cache): true
+hash a == hash c (diff cache): true
+hash a: 8473567726948921645 hash c: 8473567726948921645
+```
+
+### Consequence
+
+- `hash(n.ident)` for `nkIdent` (as in `src/core/ast_hash.nim` `hashNode`) is
+  stable across parse sessions, across `IdentCache` re-creation, and across
+  the shared/memoized `PNode` trees of `parser_utils` — it never depends on
+  where the `PIdent` object lives.
+- The historical comment "hash the PIdent pointer (deterministic per parse
+  session)" was wrong about the mechanism (it stated pointer hashing); it has
+  been corrected in `src/core/ast_hash.nim` to name the actual overload.
+
 ## Verification
 
 Every shape above was produced by the following standalone probe (no project

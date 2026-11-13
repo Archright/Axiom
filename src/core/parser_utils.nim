@@ -4,6 +4,7 @@
 
 import core/trusted/axiom_pragmas_lite
 import compiler/[parser, ast, idents, options, llstream, pathutils, lineinfos]
+import core/crypto/hash_kernel
 import core/results
 import core/utils/io_utils
 import std/json
@@ -11,6 +12,75 @@ import std/json
 # ── Global thread-local caches ────────────────────────────────────
 var identCache* {.threadvar.}: IdentCache
 var configRef* {.threadvar.}: ConfigRef
+
+# ── Parse memo (VS-R2c "AST single parse") ────────────────────────
+# The parse input at this seam is BYTES, so the memo identity is the content
+# itself — sha256 via core/crypto/hash_kernel (the project hash SSOT). Content
+# identity is strictly stronger than a path/stat identity: a same-size,
+# same-stat overwrite of a file changes the bytes and therefore the key.
+# Bounded FIFO: only clean parses (non-nil AST, no parse-error increment) are
+# stored; failed or partial parses stay uncached so their per-call diagnostic
+# capture (captureParseFailure) keeps firing. Sharing the returned PNode is
+# safe because every consumer treats the parse result as read-only (verified
+# by grep: the only PNode-tree mutation in src/ operates on a copyTree copy
+# in the nimtry gate, which parses through its own parser instance), and
+# hash(PIdent) is the interned identifier STRING hash, not pointer identity
+# (docs/spec/nim_ast_node_shape_quirks.md Q4).
+const ParseMemoCapacity = 16
+
+type
+  ParseMemoEntry = object
+    contentSha: string
+    ast: PNode
+
+var
+  parseMemo {.threadvar.}: seq[ParseMemoEntry]
+  parseMemoHits* {.threadvar.}: int
+  parseMemoMisses* {.threadvar.}: int
+
+template lookupParseMemo(contentSha: string): PNode =
+  ## Returns the memoized AST for `contentSha` (nil = miss) and maintains the
+  ## thread-local hit/miss counters. A template, not a func: the effect system
+  ## rejects threadvar access in funcs, and the src/core/ proc-count ratchet
+  ## (architecture_invariants.nim) permits no new proc declarations.
+  block:
+    var hit: PNode = nil
+    for i in 0 ..< parseMemo.len:
+      if parseMemo[i].contentSha == contentSha:
+        hit = parseMemo[i].ast
+        inc parseMemoHits
+        break
+    if hit.isNil:
+      inc parseMemoMisses
+    hit
+
+template storeParseMemo(contentSha: string; parsedAst: PNode) =
+  ## Insert/refresh a memo entry (threadvar mutation — template, inlined at
+  ## the proc call site; src/core/ proc ratchet: no new proc declarations).
+  ## The parameter is named `parsedAst` (not `ast`): template parameter
+  ## substitution is identifier-textual in Nim 2.2.10 and would rewrite the
+  ## `parseMemo[i].ast` field selector to the argument expression.
+  block:
+    var updated = false
+    for i in 0 ..< parseMemo.len:
+      if parseMemo[i].contentSha == contentSha:
+        parseMemo[i].ast = parsedAst
+        updated = true
+        break
+    if not updated:
+      if parseMemo.len >= ParseMemoCapacity:
+        parseMemo.delete(0)
+      parseMemo.add(ParseMemoEntry(contentSha: contentSha, ast: parsedAst))
+
+template parseMemoStats*(): tuple[hits, misses: int] =
+  ## Thread-local parse-memo hit/miss counters for deterministic verification.
+  (hits: parseMemoHits, misses: parseMemoMisses)
+
+template resetParseMemoStats*() =
+  ## Reset thread-local parse-memo state and hit/miss counters for testing.
+  parseMemo.setLen(0)
+  parseMemoHits = 0
+  parseMemoMisses = 0
 
 proc initParserUtils*() {.raises: [].} =
   ## Initialize the global parser caches for the current thread.
@@ -67,9 +137,19 @@ proc captureParseFailure(content: string) {.raises: [], axiomEffect: IOEffect, t
 proc parseStringAST*(content: string): PNode {.raises: [].} =
   ## Parse Nim source string into AST using global thread-local caches.
   ## Returns nil on failure.
+  ## VS-R2c: identical bytes parsed repeatedly in one thread return the SAME
+  ## cached PNode (content-keyed memo). The prove pipeline's selection
+  ## boundary parses one subject module three times per candidate (canonical
+  ## AST hash, extraction agreement, binding inventory); the memo collapses
+  ## those to a single parse with byte-identical downstream results.
   {.push warning[BareExcept]: off.}
   try:
     if content.len == 0: return
+    let contentSha = sha256Hex(content)
+    let memoHit = lookupParseMemo(contentSha)
+    if not memoHit.isNil:
+      result = memoHit
+      return
     if configRef.isNil: initParserUtils()
     var stream = llStreamOpen(content)
     let fakePath = AbsoluteFile("<string>")
@@ -80,6 +160,8 @@ proc parseStringAST*(content: string): PNode {.raises: [].} =
     closeParser(p)
     if result.isNil or configRef.errorCounter > errCountBefore:
       captureParseFailure(content)
+    else:
+      storeParseMemo(contentSha, result)
   except CatchableError:
     captureParseFailure(content)
   except Exception:

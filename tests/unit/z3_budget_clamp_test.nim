@@ -163,3 +163,28 @@ suite "Z3WorkerLease":
     joinThreads(t)
     releaseZ3WorkerLease(a)
     releaseZ3WorkerLease(probe.idx)
+
+# ── Z3WorkerWaitData: OS-delegated wait round-trip ─────────────────────
+# VS-R2a regression: with the pipe wait delegated to one blocking poll(2)
+# per step (no hasData+sleep busy-wait), a trivial query must still
+# round-trip through the persistent worker — spawn sentinel barrier, query
+# read loop, sentinel scan, post-query clean — and return the solver's
+# verdict. A wait that failed to wake on data would burn the whole
+# z3SafetyNetMs (60s) read deadline and error out instead of answering.
+
+suite "Z3WorkerWaitData":
+  test "blocking-poll wait: query round-trip returns verdict inside the read deadline":
+    z3EnsurePersistentPool(2)
+    var cd, td: string
+    let start = getMonoTime()
+    let res = z3ExecPersistent("(declare-fun x () Int)\n(assert (= x 7))\n(check-sat)\n",
+      5000, desiredWorkers = 2,
+      canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
+    let elapsedMs = (getMonoTime() - start).inMilliseconds
+    check res.isOk
+    if res.isOk:
+      check res.get() == "sat"
+    # Liveness backstop: the read deadline is z3SafetyNetMs = 60_000ms; a
+    # wait that never wakes burns the full window before erroring. The
+    # script has no solver work, so 20s is already a 3x probe-ceiling margin.
+    check elapsedMs < 20_000

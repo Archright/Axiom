@@ -39384,12 +39384,40 @@
       "ignorable": false,
       "leanType": "PNode",
       "module": "src/core/parser_utils.nim",
+      "name": "lookupParseMemo",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "PNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "PNode",
+      "module": "src/core/parser_utils.nim",
       "name": "parseFileAST",
       "negativeConstraints": [
         "result >= 0 is invalid — object types are not numeric"
       ],
       "resultConstraintTemplate": "",
       "returnType": "PNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "tuple[hits, misses: int]",
+      "module": "src/core/parser_utils.nim",
+      "name": "parseMemoStats",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "tuple[hits, misses: int]",
       "smtSort": "Int",
       "typeCategory": "object"
     },
@@ -39421,6 +39449,38 @@
       "returnType": "PNode",
       "smtSort": "Int",
       "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/core/parser_utils.nim",
+      "name": "resetParseMemoStats",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/core/parser_utils.nim",
+      "name": "storeParseMemo",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
     },
     {
       "hasAxiomHint": false,
@@ -118385,6 +118445,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "CertClosureResult",
+      "module": "src/verification/certificate_verifier.nim",
+      "name": "verifyCertificateClosureNode",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "CertClosureResult",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "Bool",
       "module": "src/verification/charon_runner.nim",
       "name": "charonExeAvailable",
@@ -142382,7 +142456,7 @@
       "ignorable": false,
       "leanType": "Bool",
       "module": "src/verification/solver/z3_pool.nim",
-      "name": "z3WorkerHasData",
+      "name": "z3WorkerWaitData",
       "negativeConstraints": [
         "result >= 0 is invalid — Bool is not numeric",
         "Use '(= result true) or (= result false)' instead"
@@ -142397,7 +142471,7 @@
       "ignorable": false,
       "leanType": "Bool",
       "module": "src/verification/solver/z3_pool.nim",
-      "name": "z3WorkerHasData",
+      "name": "z3WorkerWaitData",
       "negativeConstraints": [
         "result >= 0 is invalid — Bool is not numeric",
         "Use '(= result true) or (= result false)' instead"
