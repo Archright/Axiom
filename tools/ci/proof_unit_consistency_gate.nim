@@ -863,11 +863,25 @@ func isWordBoundaryBefore(body: string, pos: int): bool =
   let prev = body[pos - 1]
   prev notin IdentChars and prev != '.' and prev != '-' and prev != '/'
 
+func isTokenBoundaryAfter(body: string, endPos: int, token: string): bool =
+  ## Token-level suffix boundary: a vocabulary token ending in an identifier
+  ## character (a bare name such as `fmWrite`/`atomicWrite`) must END a whole
+  ## identifier, so it cannot match as the prefix of a longer name —
+  ## `atomicWrite` inside `atomicWriteJson(`. A token ending in `(` needs no
+  ## suffix check: the paren already terminated the identifier.
+  if token.len > 0 and token[^1] in IdentChars:
+    return endPos >= body.len or body[endPos] notin IdentChars
+  true
+
 func firstTokenOnLine(line: string, vocabulary: openArray[string]): string =
-  ## First vocabulary token on `line`, at an IDENTIFIER boundary. The boundary
-  ## is what separates a sink call from a different proc whose name merely ends
-  ## in the sink's suffix: `removeFile(p)` contains `moveFile(` and DELETES the
-  ## target, so counting it as a writer inverts the check.
+  ## First vocabulary token on `line`, at an IDENTIFIER boundary on BOTH
+  ## sides. The leading boundary is what separates a sink call from a
+  ## different proc whose name merely ends in the sink's suffix:
+  ## `removeFile(p)` contains `moveFile(` and DELETES the target, so counting
+  ## it as a writer inverts the check. The trailing boundary keeps a bare
+  ## name token from matching a longer proc — `atomicWriteJson(a, x)` must
+  ## not absorb `atomicWrite` as a prefix match, or the line-level match
+  ## would mask a real second sink on the same line (`; writeFile(b, y)`).
   for v in vocabulary:
     var at = 0
     while true:
@@ -875,7 +889,8 @@ func firstTokenOnLine(line: string, vocabulary: openArray[string]): string =
       if pos < 0:
         break
       at = pos + v.len
-      if isWordBoundaryBefore(line, pos):
+      if isWordBoundaryBefore(line, pos) and
+          isTokenBoundaryAfter(line, pos + v.len, v):
         return v
   ""
 
@@ -1168,33 +1183,85 @@ func resolvePathExpr(expr: string, bindings: Table[string, string]): string =
 
 func splitCallArguments(body, sinkToken: string): seq[string] =
   ## Arguments of the sink call on `body`, at depth 0 of the call. Empty when
-  ## the token is a bare identifier form (an open-array sink referenced without
-  ## a parenthesis) or the call is not present on this line.
+  ## the token is absent at an identifier boundary, is a bare identifier form
+  ## with no call parenthesis after it, or the line carries no depth-0 comma
+  ## before an unclosed call — the caller then fails closed on the empty
+  ## list. Depth starts at the call's OWN opening parenthesis, so the call's
+  ## closing `)` at depth 0 is what captures the FINAL argument
+  ## (`moveFile(tmpPath, path)` yields both args, destination included);
+  ## inner brackets close back to depth > 0 and keep the scan going. String
+  ## and char literals (including `"""` triple-quoted forms) are skipped, so
+  ## commas and brackets inside them cannot corrupt the split. A multi-line
+  ## invocation keeps the arguments its opening line captured at depth-0
+  ## commas; only its final argument is unavailable.
   result = @[]
+  var openPos = -1
+  var at = 0
+  while true:
+    let pos = body.find(sinkToken, at)
+    if pos < 0:
+      return
+    at = pos + sinkToken.len
+    if isWordBoundaryBefore(body, pos) and
+        isTokenBoundaryAfter(body, pos + sinkToken.len, sinkToken):
+      openPos = pos
+      break
+  var parenPos = -1
   let openRel = sinkToken.rfind('(')
-  if openRel < 0:
-    return
-  let openPos = body.find(sinkToken)
-  if openPos < 0:
+  if openRel >= 0:
+    parenPos = openPos + openRel
+  else:
+    var i = openPos + sinkToken.len
+    while i < body.len and body[i] in {' ', '\t'}:
+      inc i
+    if i < body.len and body[i] == '(':
+      parenPos = i
+  if parenPos < 0 or parenPos >= body.len:
     return
   var depth = 0
-  var argStart = openPos + openRel + 1
+  var argStart = parenPos + 1
   var j = argStart
+  var inQuote = false
+  var quoteChar = '\0'
   while j < body.len:
     let ch = body[j]
-    if ch in {'(', '[', '{'}:
+    if inQuote:
+      if ch == '\\':
+        inc j
+      elif ch == quoteChar:
+        inQuote = false
+    elif ch == '"':
+      if j + 2 < body.len and body[j + 1] == '"' and body[j + 2] == '"':
+        var k = j + 3
+        while k + 2 < body.len and not (body[k] == '"' and
+                body[k + 1] == '"' and body[k + 2] == '"'):
+          inc k
+        j = k + 2
+      else:
+        inQuote = true
+        quoteChar = ch
+    elif ch == '\'':
+      inQuote = true
+      quoteChar = ch
+    elif ch in {'(', '[', '{'}:
       inc depth
     elif ch in {')', ']', '}'}:
-      dec depth
       if depth == 0:
-        let arg = body[argStart ..< j]
-        if arg.strip.len > 0:
-          result.add(arg)
-        return
+        if ch == ')':
+          let arg = body[argStart ..< j].strip()
+          if arg.len > 0:
+            result.add(arg)
+          return
+        return @[]
+      dec depth
     elif ch == ',' and depth == 0:
-      result.add(body[argStart ..< j])
+      result.add(body[argStart ..< j].strip())
       argStart = j + 1
     inc j
+  # The call does not CLOSE on this line (a multi-line invocation): the
+  # arguments already captured at depth-0 commas are real, so they stand —
+  # only the final argument is unavailable. A line with no depth-0 comma
+  # yields no arguments and the caller fails closed on the empty list.
 
 func sinkTargetArgument(body, sinkToken: string): string =
   ## The argument a sink call PERSISTS TO (resolver rule R4). A rename/move
@@ -1883,6 +1950,12 @@ const
     (file: "tools/debt_engine.nim", line: 265, artifact: "src/generated/debt_constants.nim",
      role: RoleProjectionGen),
     (file: "tools/debt_engine.nim", line: 267, artifact: "docs/DEBT_REGISTRY.md",
+     role: RoleProjectionGen),
+    (file: "tools/debt_engine.nim", line: 2147, artifact: "data/debt_registry.json",
+     role: RoleSsotMutator),
+    (file: "tools/debt_engine.nim", line: 2150, artifact: "src/generated/debt_constants.nim",
+     role: RoleProjectionGen),
+    (file: "tools/debt_engine.nim", line: 2151, artifact: "docs/DEBT_REGISTRY.md",
      role: RoleProjectionGen),
     (file: "tools/debt_engine.nim", line: 2268, artifact: "data/debt_registry.json",
      role: RoleSsotMutator),

@@ -54,3 +54,15 @@ jobs:
         run: make bin/debt_integrity_gate
       - name: Enforce bidirectional debt registry↔code binding (unconditional)
         run: bin/debt_integrity_gate
+      - name: Build proof-unit and writer-set consistency gate
+        run: make bin/proof_unit_consistency_gate
+      - name: Enforce closed-world writer-set consistency (unconditional)
+        run: bin/proof_unit_consistency_gate
+      - name: Enforce writer-set discovery AST oracle and mutation harness
+        run: |
+          nim c -r --hints:off --skipParentCfg --skipProjCfg \
+            --path:$HOME/.choosenim/toolchains/nim-2.2.10 \
+            --path:. --path:src --path:tools \
+            --nimcache:build/nimcache/test_ws_mut \
+            -o:build/test_writer_set_discovery_mutation \
+            tests/ci/test_writer_set_discovery_mutation.nim
