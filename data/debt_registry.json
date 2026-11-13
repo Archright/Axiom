@@ -4776,15 +4776,18 @@
       "symbol": "verify-contract-release-e2e-full (make target)",
       "contentHash": "sha256:c506897c156fff4801aff12481df122153bbef992dd721ad669c6681b9fea14a",
       "lineRange": "Makefile:883-935",
-      "resolution": "UNRESOLVED",
-      "lastVerifiedAt": "2026-10-23T01:45:55Z",
+      "resolution": "FIXED 2026-11-13 (VS-DEBT-1 registry reconciliation; D3 closure authority = approved 4-Slice plan): resolved at the caller layer — the required check's binary supply is the release build authority (.github/workflows/axiom-operational-slice.yml:92-109 'make ci-compile' precedes the E2E at :143; ci-compile-ax in ci/checker.mk compiles bin/ax with -d:release; commit 0d3336ae7 2026-10-24 'verify(contract): bind acceptance evidence to the tested binary (Phase 0)') and the target asserts bin/ax --check-provenance (Makefile:883-935).",
+      "lastVerifiedAt": "2026-11-13T14:53:01Z",
       "files": [
         "Makefile:883-935",
         ".github/workflows/axiom-operational-slice.yml:42-53",
         "Makefile:943-947"
       ],
       "source": "theater_audit_2026-10-23",
-      "status": "open"
+      "status": "closed",
+      "resolvedAt": "2026-11-13",
+      "resolvedBy": "vs_debt1_registry_reconciliation",
+      "resolutionNote": "Verified 2026-11-02 (docs/evidence/stale_debt_verification_2026-11-02.md §3.7: resolved — the registered defect state 'required check E2Es a debug binary' is not observed on the base tree) and re-confirmed 2026-11-13 on main 923633f (ci-compile steps :92-109 + --check-provenance in the target recipe observed)."
     },
     {
       "id": "DEBT#507",
@@ -5135,10 +5138,14 @@
         "src/core/gate/gate_cas.nim"
       ],
       "source": "vst_dependency_authority_handoff_2026-11-08",
-      "status": "open",
-      "resolution": "UNRESOLVED — structural constraint registration; no current false-reuse path (per-worktree CAS); revisit before any cross-worktree CAS sharing",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-13 (VS-DEBT-1 registry reconciliation; D3 closure authority = approved 4-Slice plan): resolved-by-observation 2026-11-09 (workstream/ef-cas-isolation) — per-worktree physical CAS isolation is a machine-observed fact (same-commit two-checkout matrix: identical 54-key sets, 50/54 byte-identical, 4/54 differing digests as self-build proof, no cross-lookup) and the Owner adjudicated 2026-11-09 the fixed policy 'CAS sharing scope is limited to the current worktree interior', so the registered hazard (cross-worktree false reuse of path-embedding binaries) cannot occur under the fixed policy.",
       "binding": "registry_disposition",
-      "bindingRationale": "No current defect (per-worktree CAS unaffected) — constraint exists only for a future design; trace: docs/evidence/vst_dependency_authority_handoff_2026-11-08.md §10; deepened 2026-11-09 by VS-2b/3 build verdict (3-layer path-embedding mechanism §4, 4/54 quantification §8, landing re-verification §10): docs/evidence/vs2b3_build_verdict_2026-11-09.md; resolved-by-observation 2026-11-09 (workstream/ef-cas-isolation): per-worktree physical isolation is now a machine-observed fact (same-commit two-checkout matrix — identical 54-key sets, 50/54 byte-identical, 4/54 differing digests as self-build proof, no cross-lookup: B compiled 54/54 from MISS while A's cache was fully populated) and Owner adjudicated 2026-11-09 the policy \"CAS sharing scope is limited to the current worktree interior\" (final verdict — the earlier handoff/VS-2b3 'revisit before cross-worktree sharing' recommendation wording is now fixed policy, F parallelization rejected); reopen conditions recorded: (1) disambiguate identity of path-embedding binaries (binary-level mechanism refined: 2 plaintext NIM_STRLIT + 2 path-derived NTIv2 mangled-hash gates — §ffile-prefix-map cannot scrub either class), (2) define shared-cache write/read authority (single-writer trust boundary), (3) verify cache-key to artifact-identity match (stored-digest comparison — DEBT#524): docs/evidence/ef_cas_isolation_verdict_2026-11-09.md"
+      "bindingRationale": "No current defect (per-worktree CAS unaffected) — constraint exists only for a future design; trace: docs/evidence/vst_dependency_authority_handoff_2026-11-08.md §10; deepened 2026-11-09 by VS-2b/3 build verdict (3-layer path-embedding mechanism §4, 4/54 quantification §8, landing re-verification §10): docs/evidence/vs2b3_build_verdict_2026-11-09.md; resolved-by-observation 2026-11-09 (workstream/ef-cas-isolation): per-worktree physical isolation is now a machine-observed fact (same-commit two-checkout matrix — identical 54-key sets, 50/54 byte-identical, 4/54 differing digests as self-build proof, no cross-lookup: B compiled 54/54 from MISS while A's cache was fully populated) and Owner adjudicated 2026-11-09 the policy \"CAS sharing scope is limited to the current worktree interior\" (final verdict — the earlier handoff/VS-2b3 'revisit before cross-worktree sharing' recommendation wording is now fixed policy, F parallelization rejected); reopen conditions recorded: (1) disambiguate identity of path-embedding binaries (binary-level mechanism refined: 2 plaintext NIM_STRLIT + 2 path-derived NTIv2 mangled-hash gates — §ffile-prefix-map cannot scrub either class), (2) define shared-cache write/read authority (single-writer trust boundary), (3) verify cache-key to artifact-identity match (stored-digest comparison — DEBT#524): docs/evidence/ef_cas_isolation_verdict_2026-11-09.md",
+      "resolvedAt": "2026-11-13",
+      "resolvedBy": "vs_debt1_registry_reconciliation",
+      "resolutionNote": "Reopen conditions preserved in bindingRationale: (1) path-embedding binary identity disambiguation, (2) shared-cache write/read authority definition, (3) cache-key-to-artifact-identity verification (DEBT#524 — remains open). Evidence: docs/evidence/ef_cas_isolation_verdict_2026-11-09.md.",
+      "lastVerifiedAt": "2026-11-13T14:54:21Z"
     },
     {
       "id": "DEBT#524",
