@@ -2,6 +2,8 @@
 
 Status: NORMATIVE
 
+Revision 2026-11-13 (VS-0 root dead-entry removal): lfs_exceptions.json, .env.example, and .envrc.example removed from EXACT_ALLOWED (§2.4).
+
 Revision 2026-11-09 (VS-I publication-integrity gate): `compliance/` registered as an EXACT_ALLOWED tracked content directory (§2.4) — publication policy SSOT home (merge_admission v1.20.0 trustSurface content).
 
 Revision 2026-11-06 (Gate 3 SAL 1.0): `THIRD-PARTY-NOTICES.md` registered as an EXACT_ALLOWED single file; `LICENSES/`·`CLA/` registered as EXACT_ALLOWED tracked content directories (§2.4) — SAL 1.0 publication surface.
@@ -105,7 +107,6 @@ Entry exists at the root → PASS (no further content inspection).
 | `lakefile.toml` |
 | `lake-manifest.json` |
 | `lean-toolchain` |
-| `lfs_exceptions.json` |
 | `Dockerfile.build` |
 
 **Dot / toolchain files:**
@@ -118,9 +119,7 @@ Entry exists at the root → PASS (no further content inspection).
 | `.editorconfig` |
 | `.dockerignore` |
 | `.cursorrules` |
-| `.env.example` |
 | `.envrc` |
-| `.envrc.example` |
 
 **Dot / toolchain directories:**
 

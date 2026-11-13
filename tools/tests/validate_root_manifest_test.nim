@@ -463,6 +463,32 @@ proc main() =
     else:
       echo "  PASS"
 
+  # Test 22: removed dead root entries → exit 1 (lfs_exceptions.json unknown; .env* pattern forbidden)
+  block deadRootEntriesRejected:
+    echo "TEST 22: dead root entries (lfs_exceptions.json/.env.example/.envrc.example) → exit 1"
+    let tmpDir = createTempDir()
+    defer: removeDir(tmpDir)
+    for d in ["src", "tests", "tools", "proofs", "data", "docs", "config"]:
+      createDir(tmpDir / d)
+    for (deadName, deadContent, expectedMsg) in [
+      ("lfs_exceptions.json", "{}\n", "FAIL: lfs_exceptions.json unknown"),
+      (".env.example", "KEY=VALUE\n", "FAIL: .env.example forbidden"),
+      (".envrc.example", "KEY=VALUE\n", "FAIL: .envrc.example forbidden"),
+    ]:
+      writeFile(tmpDir / deadName, deadContent)
+      let r = runValidator(tmpDir)
+      if r.exitCode != 1:
+        echo "  FAIL: expected exit 1 for " & deadName & ", got " & $r.exitCode
+        echo "  output: " & r.output
+        inc failures
+      elif expectedMsg notin r.output:
+        echo "  FAIL: expected '" & expectedMsg & "' in output for " & deadName
+        echo "  output: " & r.output
+        inc failures
+      else:
+        echo "  PASS: " & deadName
+      removeFile(tmpDir / deadName)
+
   echo ""
   if failures > 0:
     echo $failures & " test(s) FAILED"

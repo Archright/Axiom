@@ -99,7 +99,6 @@ Each row specifies `(class, persistence)` for a concrete artifact or well-define
 | `docs/**/*.md` | CANONICAL | TRACKED | All specifications, guides, ADRs |
 | `docs/spec/certified_patterns/**/*` | CANONICAL | TRACKED | Lean 4 verified patterns |
 | `AGENTS.md`, `axiom.nimble`, `axiom.lock` | CANONICAL | TRACKED | Project metadata |
-| `.env.example`, `.envrc.example` | CANONICAL | TRACKED | Example configs (not secrets) |
 | `.github/workflows/*.yml` | CANONICAL | TRACKED | CI pipeline definitions — **RETIRED** (CI=0 cutover, 2026-09-20로 디렉터리 제거, 빈 상태) |
 | `.github/**/*` | CANONICAL | TRACKED | GitHub configuration |
 | `.gitignore`, `.editorconfig`, `.gitattributes` | CANONICAL | TRACKED | Repository-level config |

@@ -33,10 +33,10 @@ const ExactAllowedFiles: seq[string] = @[
   "axiom.toml", "topology.json", "topology.lock", "topology_policy.json",
   "promotion_intent.json", "flake.nix",
   "lakefile.toml", "lake-manifest.json", "lean-toolchain",
-  "lfs_exceptions.json", "Dockerfile.build",
+  "Dockerfile.build",
   # dot / toolchain files
   ".axiom_root", ".gitignore", ".gitattributes", ".editorconfig",
-  ".dockerignore", ".cursorrules", ".env.example", ".envrc", ".envrc.example",
+  ".dockerignore", ".cursorrules", ".envrc",
   # ignored root (EXACT_ALLOWED)
   "config.json", "nimble.paths", "opencode.json",
 ]
