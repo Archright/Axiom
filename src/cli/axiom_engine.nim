@@ -268,7 +268,7 @@ proc buildProofTask*(
     maxRounds: 6,
     target: flags.target
   ))
-proc initAxiomEngine*(startMono: int64): AxiomEngine {.raises: [].} =
+func initAxiomEngine*(startMono: int64): AxiomEngine {.raises: [].} =
   ## Pure constructor — inject the monotonic clock at the boundary.
   ## The engine carries no gas budget. A run-global pool scaled by the
   ## target/frontier node count made a unit's budget depend on the plan it
