@@ -79,3 +79,28 @@ $ bin/ax baseline check
 === Axiom Baseline Check ===
 [OK] Baseline maintained: 0.0250 >= 0.0000
 ```
+
+---
+
+## §4. Current-main 재수용 — verifier build 이동 후 재캠페인 (2026-11-14)
+
+- **main = `78b4f1f8cadf528a1bb846be8c7c25e4de322582`** (PR #31 native MERGE, 부모 `[3380931c7, ec09197]`).
+- **`VerifierBuildId` 이동**: `9cc33118…` → **`dd1f769f6b379e8ded00628b9fb5af9eb7c9890c7712200116fef88154ea8278`**. 원인은 §2 캠페인 이후 main에 착지한 `3380931c7`이 `axiom.nimble`(version `0.6.3` → `0.6.4`)·`lakefile.toml`을 수정한 것 — 두 파일은 `computeVerifierBuildId` 매니페스트 입력(`src/verification/verifier_build_identity.nim`)이다. `VerifierBuildSourceHash`는 불변(`vs1-tree-hash/1:-6545338185094167100`).
+- **stale 바이너리 차단**: `bin/hermetic_build`는 `build_env.nim`만 재생성하고 `bin/ax`를 재컴파일하지 않는다. 정본 릴리스 빌드 권한 `AXIOM_HERMETIC_BUILDING=1 make -f ci/checker.mk ci-compile -j4`(RC=0, 34.9s)로 `bin/ax`를 재빌드한 뒤에만 수용 측정을 수행했다. 재빌드 전 바이너리(임베디드 `9cc33118…`)로 측정한 VKD는 "현재 엔진" 증거가 아니다.
+- **23개 전수 재실행** (현재 엔진 `dd1f769f…`): `TOTAL_MS=102000`. 새 저널 flat 클레임은 `engineBuild = dd1f769f…`, `axiomVersion = v0.6.4`, `completenessContract = strict-v1`, `status = certGreen`을 기록했다.
+
+```
+$ ./bin/ax report --json | jq -c '.metrics.vkd'
+{"verified":2,"total":23,"ratio":0.08695652173913043}
+
+$ ./bin/ax cert verify --kernel data/trusted/certificates/89b0a232bd4bc34aa6bb4af955e286a5bc9f0704cdcabe665db28cd25c471a10.json
+[cert] Verify: PASS (kernel re-execution — lean=re-executed, z3=unsat, leanchecker=passed)
+$ ./bin/ax cert verify --kernel data/trusted/certificates/e57ee9394d16b8dcb8a859eb205f59a55dc3926227dc2250a21448c8d5ebf200.json
+[cert] Verify: PASS (kernel re-execution — lean=re-executed, z3=unsat, leanchecker=passed)
+$ ./bin/ax baseline check
+=== Axiom Baseline Check ===
+[OK] Baseline maintained: 0.0250 >= 0.0000
+```
+
+- **A/B 실측 (동일 바이너리, HEAD만 변경)**: `HEAD=107ef8a` → VKD `2/23`; `HEAD=ec09197`(문서 1건 추가, 모듈 바이트·tree merkle 불변) → `0/23`. 원인은 strict 바인딩 `sourceIdentity`가 `measureSubjectGitRef`(`git rev-parse HEAD`)를 포함하기 때문 — `docs/spec/strict_completeness_binding.md` §5.2a.
+- VKD는 저널(`data/trusted/journal`)·바인딩 캐시(`.axiom/cache/evidence`)에 대한 **런타임 측정**이며 git으로 이전되지 않는다. 새 클론·CI는 동일 캠페인을 재실행하기 전까지 `0/23`이다.
