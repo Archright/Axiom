@@ -138,10 +138,31 @@ SHA-256을 그대로 python으로 재현, 전환 전(`/tmp/vsr3_pre_state.json` 
 
 ## 6. 착지 증거
 
-PR·필수 체크·Merge Queue·native MERGE·canonical main 수용 결과는 착지 후 §7에 기록한다
-(선례: VS-R2 — 본 PR에 로컬 검증까지, post-merge 수용은 후속 증거 커밋으로 보강).
+PR **#15**(`workstream/vs-r3-no-lto-default`, head `910155e`): 6대 필수 체크
+(admission-check·axiom-operational-slice·bsec-integrity·debt-registry-gate·generation-acceptance·publication-integrity)
+**전부 pass** → `gh pr merge 15 --merge`(GitHub Merge Queue) → native MERGE 커밋
+`1d881b0f274ea8661b951ab8f9a44ac247819101`(2-parent: merge-group base `52413df` + branch head
+`910155e`). merge_group 워크플로 관측: trusted-writer-set·debt-registry-gate·landing-integrity·
+generation-acceptance·probe-merge-queue·bsec-integrity·observer-manifest-consistency·
+publication-integrity·axiom-operational-slice·admission-gate **전부 success**.
 
-## 7. canonical main 수용 (착지 후 기입)
+## 7. canonical main 수용 (2026-11-13, merge `1d881b0`)
 
-(예정: `ci-compile`, `--check-provenance`, `verify-contract-release-e2e-full`, ①~④ 재확인,
-semantic parity 재계산, merge SHA, `git status --short` clean)
+복합 main(PR #14 `52413df` 포함)에서 실측한 수용 결과:
+
+| 검증 | 결과 |
+|---|---|
+| `make -f ci/checker.mk ci-compile -j4` (ax 콜드) | 67.88s, integrity merkle 일치(`62f0c2f4…`) |
+| `./bin/ax --check-provenance` | `AXIOM_PROVENANCE: OK` (exit 0) |
+| `make verify-contract-release-e2e-full` | `[cert] Verify: PASS (kernel re-execution — lean=re-executed, z3=unsat, leanchecker=passed)`, `G7 pass (tier=dual-verified)`, `✅ PASSED` (exit 0) |
+| ① linkcmd | main `build/nimcache/ci-compile/ax/ax.json`의 `linkcmd`에 `-flto` **없음** — 정본 No-LTO 운영 확정 |
+| ② Identity | `VerifierBuildId` `a0606d88…`(본 슬라이스 `b6b22c47…`에서 재이동 — PR #14 src 변경 포함, 매니페스트 정상 동작). `BuildSourceHash` `vs1-tree-hash/1:2126190727417608340`(PR #14 반영). **슬라이스 범위 패리티(§3.2 — 동일 입력에서 config.nims만 변경)가 권위 비교로 유지된다** |
+| ④ Tier C | `./bin/reanchor_pin --ref HEAD` → `OK no-drift` (exit 0) |
+| canonical digest | `ax report --canonical-digest` = `301a1283…` (exit 0) — 복합 main 상태(executionIdentity·src 변동 반영, §2.2 교정 기준상 정상) |
+| 병합 후 push CI | trusted-writer-set·axiom-operational-slice `success` |
+| 작업 트리 | `git status --short` 빈 출력(clean) |
+
+**VKD 운영 관측**: main e2e 재증명으로 VKD가 `0/23 → 1/23`(ratio 0.043)로 이동 — 캐너리
+커널(`orchestrator_api.nim::normalizeMaxWorkers`)의 신규 클레인이 현재 engineBuild로 발행·
+admission됐다. §2.2의 "회복은 실제 재증명 → 신규 클레인 경로뿐" 메커니즘의 운영 실증이며,
+전체 VKD 회복은 별도 재증명 슬라이스로 분리된다.
