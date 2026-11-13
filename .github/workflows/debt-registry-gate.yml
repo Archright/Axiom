@@ -21,9 +21,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup-axiom-toolchain
         with:
-          # nim scope — this job's only toolchain use is `make bin/debt_engine`
-          # (Makefile:14-22 already compiles with --skipParentCfg --skipProjCfg)
-          # plus `bin/debt_engine --validate`; neither invokes lean/lake.
+          # nim scope — this job's only toolchain uses are `make bin/debt_engine`
+          # + `bin/debt_engine --validate` and `make check-nim-theater`
+          # (`bin/check_nim_theater`); Makefile:14-22 compiles both with
+          # --skipParentCfg --skipProjCfg and neither invokes lean/lake.
           # ~/.elan is the only path this scope drops and it dominates the
           # 1.16GB full payload. The nimble package closure stays in the
           # payload because debt_engine imports checksums/sha2 transitively.
@@ -41,3 +42,5 @@ jobs:
         run: bin/debt_engine --validate
       - name: Theater five-field negative fixture
         run: python3 tests/ci/test_debt_schema_theater_rule.py
+      - name: Enforce Nim theater static scan (unconditional)
+        run: make check-nim-theater

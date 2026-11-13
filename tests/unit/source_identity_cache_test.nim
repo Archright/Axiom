@@ -211,7 +211,7 @@ suite "source identity cache — contract":
       if not fired and path.endsWith("alpha.nim"):
         fired = true
         try: writeFile(path, "echo 9\n")
-        except CatchableError: discard
+        except CatchableError: discard # axiom:best-effort(test mutation hook is raises:[] closure; write effect verified by check fired)
     var stats: SourceIdentityStats
     let seen = computeSourceTreeDigestCachedWithStats(t.srcDir, t.cachePath, stats, hook)
     check fired

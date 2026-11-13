@@ -3338,7 +3338,7 @@
     "src/infrastructure/source_identity_cache.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "19124339c82094dc305831c0c7e3e459ba39e31b"
+      "sha": "d8c982f63197b1441a6cf7fbfa8b3f6087f3b907"
     },
     "src/infrastructure/topology_executor.nim": {
       "mode": "100644",

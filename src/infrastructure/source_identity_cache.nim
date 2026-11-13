@@ -198,7 +198,7 @@ proc saveCache(path: string; cache: CacheFile) {.raises: [].} =
         discard tryRemoveFile(tmpPath)
     else:
       moveFile(tmpPath, path)
-  except CatchableError:
+  except CatchableError: # axiom:best-effort(stat-digest cache write is speed-only; digest is always recomposed from live walk)
     discard
 
 proc computeSourceTreeDigestUncached*(srcDir: string): string {.
