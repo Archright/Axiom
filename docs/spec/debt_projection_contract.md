@@ -4,7 +4,7 @@
 > **SSOT**: `data/debt_registry.json` (see AGENTS.md §5 SSOT locations table).
 > **Generator**: `tools/debt_engine.nim` compiled as `bin/debt_engine`.
 > **Authority**: [ADR-0029](adr/0029-debt-projection-writer-authority.md) — writer/generator authority, role-sets, and the canonical mutation device.
-> **Related**: DEBT#436 (dependency file drift / CI test-swallow fail-open remediation), DEBT#437 (dedicated `ax debt add/update/close` mutation path — not yet implemented; see §9 Rationale).
+> **Related**: DEBT#436 (dependency file drift / CI test-swallow fail-open remediation), DEBT#437 (dedicated `--close` mutation path — implemented as `bin/debt_engine --close`; see §5.1 and §9 Rationale).
 
 ---
 
@@ -24,7 +24,7 @@ The contract lives under `docs/spec/` per the SSOT location convention (AGENTS.m
 
 ## 1. Source of Truth (SSOT)
 
-`data/debt_registry.json` is the **sole authoritative source** for the debt registry. It is the only file developers edit to register, close, or reclassify a debt entry.
+`data/debt_registry.json` is the **sole authoritative source** for the debt registry. It is the only file whose semantic content is authored (directly, or through the canonical `--close` mutation path in §5.1 — the tool writes the SSOT, the file remains the sole source of truth).
 
 The two projections are **materialized views**, not sources of truth:
 
@@ -189,6 +189,7 @@ No side effects (no network calls, no random number generation, no clock reads) 
 | `bin/debt_engine --codegen` | `src/generated/debt_constants.nim` + `docs/DEBT_REGISTRY.md` | P1 projection: regenerates both artifacts from the SSOT. Prints `ProjectionStatus: P1=complete` on success. |
 | `bin/debt_engine --sync-budget` | `data/debt_ledger.json` (updated `current`/`status`/`resolution` fields) | P2 reconciliation: evaluates metric evaluators and reconciles the ledger's `current` values against live counts. |
 | `bin/debt_engine --validate` | Exit code 0 (pass) or 1 (fail) | Read-side invariant check: structural validation + cross-file consistency + P1 byte-identity guard + P2 metric evaluation + policy disposition resolution. |
+| `bin/debt_engine --close DEBT#NNN --resolution "<text>"` | Mutated `data/debt_registry.json` + regenerated P1 pair + updated `data/debt_ledger.json` | DEBT#437 atomic mutation path (§5.1): validate → mutate SSOT entry → regenerate P1 → sync P2 → re-validate → rollback-or-keep. |
 
 The canonical build path compiles the generator from source:
 
@@ -204,7 +205,30 @@ compile at `Makefile:940`). Note that `pre-commit` runs `bin/debt_engine --valid
 
 ## 5. Atomic Materialization (Mutation Protocol)
 
-Because `--codegen` computes both P1 projections fully in memory before writing either file, a failure never leaves the Markdown and Nim files mutually out of sync. The mutation protocol is:
+### 5.1 Canonical path — `--close` (DEBT#437)
+
+Closing a debt entry is performed by the dedicated atomic mutation path, not by hand-editing the SSOT:
+
+```
+bin/debt_engine --close DEBT#NNN --resolution "<text>" [--note "<text>"] [--resolved-by "<who>"]
+```
+
+The command is a single all-or-nothing operation that orchestrates, in one process:
+
+1. **pre-validation** — the current checkout must already pass `--validate`; a failure refuses to mutate anything (fail-closed on inconsistent state, including the DEBT#436 drift shape).
+2. **mutate SSOT** — the target entry (must exist and be open) receives the closed five-field structure (`status`, `resolution`, `resolvedAt`, `resolvedBy`, `resolutionNote`, mirroring the most recent registry closures) with `lastVerifiedAt` refreshed; the registry is materialized through temp-file + rename.
+3. **regenerate P1** — both projections are recomputed from the mutated registry (`generateProjections`, the same pure core `--codegen` uses) and materialized through temp-file + rename.
+4. **sync P2** — the ledger's BUDGET#005/#006 `current` values are re-derived from the mutated registry via the `--sync-budget` computation (closing always changes the open/closed counts, so the sync is unconditional here).
+5. **post-validation** — the mutated + regenerated state must pass the full `--validate` in-process.
+6. **rollback-or-keep** — any failure or exception after the first write restores the exact pre-mutation bytes of all four touched files (`data/debt_registry.json`, `docs/DEBT_REGISTRY.md`, `src/generated/debt_constants.nim`, `data/debt_ledger.json`) and exits non-zero; on success the four files are already materialized and the exit code is 0.
+
+The commit that lands a close therefore contains exactly the four files step 2–4 wrote, and nothing else. The atomicity window is per-file atomic renames plus a byte-exact rollback; the guarantee is that **any failed close leaves the checkout byte-identical to its pre-close state**, which is enforced by the suite "debt close atomic mutation (DEBT#437)" in `tests/unit/test_debt_projection_determinism.nim`.
+
+### 5.2 Recovery path — manual protocol (fallback)
+
+The mutation protocol from the previous revision of this section is retained as the **recovery path**: the documented fallback for mutation shapes `--close` does not cover (e.g. registering a new entry, reclassifying severity) or for repairing a checkout by hand.
+
+Because `--codegen` computes both P1 projections fully in memory before writing either file, a failure never leaves the Markdown and Nim files mutually out of sync. The manual protocol is:
 
 ```
 1. validate   → bin/debt_engine --validate
@@ -230,7 +254,7 @@ If step 3 or step 4 fails, no commit is made. The mutation is all-or-nothing.
 
 ### When to run `--sync-budget`
 
-Run `bin/debt_engine --sync-budget` **only** when the registry mutation changes the count of open/closed entries that map to BUDGET#005 (`debt_registry_open`) or BUDGET#006 (`debt_registry_closed`). For all other registry mutations (severity changes, description edits, new entries that don't change open/close counts), `--sync-budget` is not required.
+Run `bin/debt_engine --sync-budget` **only** when the registry mutation changes the count of open/closed entries that map to BUDGET#005 (`debt_registry_open`) or BUDGET#006 (`debt_registry_closed`). For all other registry mutations (severity changes, description edits, new entries that don't change open/close counts), `--sync-budget` is not required. The canonical `--close` path (§5.1) runs this sync unconditionally as step 4, so a close never needs a separate `--sync-budget` invocation.
 
 ---
 
@@ -470,7 +494,7 @@ cell carrying every reference — and points back at this section.
 
 ### Prohibition
 
-Developers **must not** hand-edit `docs/DEBT_REGISTRY.md` or `src/generated/debt_constants.nim`. These are generated artifacts. The only legitimate edit path is:
+Developers **must not** hand-edit `docs/DEBT_REGISTRY.md` or `src/generated/debt_constants.nim`. These are generated artifacts. For closing a debt entry, the canonical path is `bin/debt_engine --close` (§5.1). For every other mutation (new entry, reclassification, description edit), the only legitimate edit path is:
 
 1. Edit `data/debt_registry.json` (the SSOT).
 2. Run `bin/debt_engine --codegen`.
@@ -524,9 +548,9 @@ this is declared in [ADR-0029](adr/0029-debt-projection-writer-authority.md) §2
 
 The projection contract addresses DEBT#436 by ensuring that derived files are **pure projections, materialized at mutation time and re-derived at CI time**. The byte-identity guard (`--validate` check [4.5/6]) closes the fail-open path that allowed CI to swallow drift between the registry and its materializations. Before this contract, there was no systematic check that `docs/DEBT_REGISTRY.md` and `src/generated/debt_constants.nim` were in sync with `data/debt_registry.json` at CI time; the `--validate` byte-identity guard makes this invariant explicit and fail-closed.
 
-### DEBT#437 — Dedicated Mutation Path (Not Yet Implemented)
+### DEBT#437 — Dedicated Mutation Path (Implemented)
 
-This document is the contract that a future `ax debt add/update/close` CLI path will implement. Today, mutation is manual: edit `data/debt_registry.json` + run `bin/debt_engine --codegen` + run `bin/debt_engine --validate`. A dedicated `ax debt` subcommand would automate the mutation protocol (§5) — validate → mutate SSOT → regenerate all P1 → validate outputs → single changeset — but that path does not yet exist. This spec defines the invariants that such a path must satisfy.
+This section used to record that the mutation path was manual: edit `data/debt_registry.json`, then run `bin/debt_engine --codegen`, then run `bin/debt_engine --validate` — a protocol that depends on a human remembering the regeneration step, which is exactly the failure shape DEBT#436 recorded. The dedicated path now exists: `bin/debt_engine --close` implements the mutation protocol (§5.1) as a single atomic operation — validate → mutate SSOT entry → regenerate P1 → sync P2 → re-validate → rollback-or-keep — so a closure can no longer land without its derived artifacts. The manual protocol remains as the documented recovery path (§5.2). The invariants this spec declared for the path (single changeset, all-or-nothing, byte-identical checkout on any failure) are enforced by the implementation and verified by the suite "debt close atomic mutation (DEBT#437)" in `tests/unit/test_debt_projection_determinism.nim`.
 
 ### Single Source of Truth & Idempotent Deterministic Codegen
 
@@ -549,6 +573,7 @@ The principle that derived files must be pure projections, materialized at mutat
 | Codegen command | `bin/debt_engine --codegen` | `case` dispatch in `main` → `cmdCodegen` (`tools/debt_engine.nim`) |
 | Validate command | `bin/debt_engine --validate` | `case` dispatch in `main` → `cmdValidate` (`tools/debt_engine.nim`) |
 | Sync-budget command | `bin/debt_engine --sync-budget` | `case` dispatch in `main` → `cmdSyncBudget` (`tools/debt_engine.nim`) |
+| Close command (DEBT#437) | `bin/debt_engine --close DEBT#NNN --resolution "<text>"` | `case` dispatch in `main` → `cmdClose` (`tools/debt_engine.nim`); contract §5.1 |
 | GeneratorVersion | `DebtProjectionVersion = "2"` | `tools/debt_engine.nim:108` |
 | Critical threshold | `CriticalThreshold = 30` | `tools/debt_engine.nim:102` |
 | Projection declaration table (field contract) | `DebtRowFields` / `DebtRegistryFieldsOutOfContract` | `tools/debt_engine.nim` — see §6.1.2 |

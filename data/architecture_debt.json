@@ -867,12 +867,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:cf3a2b32baeb702c9f989e42d96172a7b767faa74d2ee3570a95f8cc28c18a47",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:b5d5bb344d2970f06576cda22e705be640868ad5547ec1057c3a56a639e78047",
       "count": 1,
       "file": "src/core/gate/cache_manifest.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:68edad41b5f74ce386c7c85c5aecd03255b17a35e1c02ad074115b6da9c9aaac"
+      "rawContentHash": "sha256:c1578dc1b79265037038d4ae0ae67968facff4deb61ae050d34d3a25ea0ecd89"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
