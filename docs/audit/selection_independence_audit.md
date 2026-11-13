@@ -19,7 +19,7 @@
 
 | # | 경로 | 상태 | 파일:라인 | 증거 |
 |---|------|------|-----------|------|
-| 1 | **공유 가스 예산 (Shared Gas Budget)** | **LEAK** | `src/cli/axiom_engine.nim:812-813` | `gasLimit = frontier.len × MaxGasCostPerNode` (line 812: `targetNodeCount = max(1, frontier.len)`, line 813: `initAxiomEngine(..., task.budgetGas, targetNodeCount)` → line 247: `expectedNodeCount * MaxGasCostPerNode`). 공유 `ProofBudget` (`src/verification/batch_uap/loop_driver.nim:745`: `var budget = if gasLimit > 0: initProofBudget(gasLimit = gasLimit) else: initProofBudget()`). 고갈 시 `orchestrationTimedOut` 오버라이드 (`loop_driver.nim:871-882`, `loop_depth_scheduler.nim:390-397`). **Plan B가 더 많은 노드를 포함하면 더 많은 가스를 할당받아 U의 판정이 달라질 수 있음.** |
+| 1 | **공유 가스 예산 (Shared Gas Budget)** | **LEAK** | `src/cli/axiom_engine.nim:5727-5728` (2026-11-14, main 80a5119 실측; 과거 인용 `:812-813`) | `gasLimit = frontier.len × MaxGasCostPerNode` (현행 실측 line 5728: `prepared.engine = initAxiomEngine(getMonoTime().ticks, task.budgetGas, max(1, prepared.frontier.len))` — 과거 인용 line 812-813은 `targetNodeCount` 변수 시절 행 번호; → line 279: `expectedNodeCount * MaxGasCostPerNode`, `initAxiomEngine` 본체 `:274-281` — 과거 인용 line 247). 공유 `ProofBudget` (`src/verification/batch_uap/loop_driver.nim:910` — 과거 인용 `:745`: `var budget = if gasLimit > 0: initProofBudget(gasLimit = gasLimit) else: initProofBudget()`). 고갈 시 `orchestrationTimedOut` 오버라이드 (`loop_driver.nim:606-618, 1186-1196` — 과거 인용 `:871-882`; `loop_depth_scheduler.nim:392-398` — 과거 인용 `:390-397`). **Plan B가 더 많은 노드를 포함하면 더 많은 가스를 할당받아 U의 판정이 달라질 수 있음.** |
 | 2 | **배치 메모리 캐시 (memoCache)** | **CLEAN** | `src/verification/batch_uap/ir_pipeline_runner.nim:1217-1234` | CAS 키 = `computeDeterministicCasKey(serializeIRFuncDef(funcDef))` (line 1224). `computeDeterministicCasKey`는 `src/core/deterministic_cas_key.nim:17-23`에서 SHA-256 기반 순수 함수. 캐시는 **per-worker** `var memoCache: var Table[string, IrPipelineResult]` (line 1219, 1374)로 격리되어 다른 Plan의 worker와 공유되지 않음. |
 | 3 | **summaryCache** | **CLEAN** | `src/verification/batch_uap/private/types.nim:18` | 키 = `modulePath#functionName` (`makeCacheKey` at `src/core/types/function_verification_summary.nim:28-29`). 값에 `checksum` 필드 포함 (`FunctionVerificationSummary.checksum` at `function_verification_summary.nim:22`)으로 지문(fingerprint) 일치 검증. Plan과 무관한 순수 키-값 조회. |
 | 4 | **배치 순서 (Batch Ordering)** | **CLEAN** | `src/verification/batch_uap/loop_depth_scheduler.nim:467-470` | 결과는 `taskIndex` 기준으로 결정적으로 재정렬: `for collectIdx in 0..<pendingItems.len: let res = channelPtr[].recv(); results[res.taskIndex] = res` (line 467-470). 단위 검증은 순서와 독립적 (예산 제외). |
@@ -58,8 +58,8 @@
 ### 재감사 절차 (Re-Audit Procedure)
 
 1. `docs/audit/selection_independence_audit.md`의 8개 경로를 모두 재확인
-2. `src/cli/axiom_engine.nim:812-813`의 가스 계산 로직 변경 여부 확인
-3. `src/verification/batch_uap/loop_driver.nim:745`의 `ProofBudget` 초기화 경로 변경 여부 확인
+2. `src/cli/axiom_engine.nim:5727-5728`의 가스 계산 로직 변경 여부 확인 (과거 인용 `:812-813`; `initAxiomEngine` 본체는 `:274-281`)
+3. `src/verification/batch_uap/loop_driver.nim:910`의 `ProofBudget` 초기화 경로 변경 여부 확인 (과거 인용 `:745`)
 4. 8개 경로 각각에 대해 `git diff`로 수정 범위 확인 후 표 갱신
 5. 변경 사항이 있으면 `docs/audit/selection_independence_audit.md` 갱신 + `data/debt_registry.json`에 새로운 DEBT 항목 등록
 

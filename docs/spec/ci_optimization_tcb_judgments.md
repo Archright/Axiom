@@ -72,8 +72,8 @@ Proj_sem(Result(U, Plan_A)) == Proj_sem(Result(U, Plan_B))   ∀U ∈ Selected_A
 
 전역 budget 스케일링은 문서화된 §8 위반이다. **이 위반은 P2에서 수정하지 않는다** — 판정의 입력으로 기록하고 J1 판정 시 예외로 명시한다:
 
-- `src/cli/axiom_engine.nim:844-845` — `let targetNodeCount = max(1, frontier.len)` → `initAxiomEngine(getMonoTime().ticks, task.budgetGas, targetNodeCount)` (budget이 frontier 크기에 비례 스케일링; 사양 인용 위치 `canonical_execution_semantics.md:344-357`의 `axiom_engine.nim:812-813`은 동일 코드의 이전 행 기준 — 실측 위치를 판정 기준으로 사용).
-- `src/verification/batch_uap/loop_driver.nim:478` — per-unit `checkBudget(unitBudget) != pbvContinue` 조기 반환(timedOut), **:999** — `status: orchestrationTimedOut` 기록(전역 budget 부족을 unit 실패로 처리; 사양 인용 위치 `loop_driver.nim:871-882`는 이전 행 기준).
+- `src/cli/axiom_engine.nim:5727-5728` (2026-11-14, main 80a5119 실측; 과거 인용 `:844-845`) — `prepared.engine = initAxiomEngine(getMonoTime().ticks, task.budgetGas, max(1, prepared.frontier.len))` (budget이 frontier 크기에 비례 스케일링; 사양 인용 위치 `canonical_execution_semantics.md:344-357`의 `axiom_engine.nim` 인용도 현행 실측 `:5727-5728`로 동기화 — 실측 위치를 판정 기준으로 사용).
+- `src/verification/batch_uap/loop_driver.nim:606-618` (과거 인용 `:478`) — per-unit `checkBudget(unitBudget) != pbvContinue` 조기 반환(timedOut), **:1186-1196** (과거 인용 **:999**) — `status: orchestrationTimedOut` 기록(전역 budget 부족을 unit 실패로 처리; 사양 인용 위치 `canonical_execution_semantics.md:348`의 `loop_driver.nim` 인용도 현행 실측 `:606-618`/`:1186-1196`으로 동기화).
 - 영향: frontier가 다른 두 계획 하에서 동일 unit의 결과가 달라질 수 있음(`Result(U, Plan_A) ≠ Result(U, Plan_B)`).
 - 처리: J1 판정에서 이 경로가 관련된 후보(계획/셀렉터 변경)는 **FAIL이어야** 하며, 수정은 사양 §8.3(:350-357, per-unit contract budget)에 따라 별도 작업으로만 진행한다.
 
