@@ -47,7 +47,14 @@ switch("define", "AXIOM_ENFORCE_GATE_PRAGMAS=1")
 when (defined(release) or defined(danger)) and defined(gcc):
   switch("opt", "speed")
   switch("panics", "on")
-  when not defined(axiomNoLto):
+  # VS-R3 (2026-11-13): LTO is opt-in (-d:axiomLto); default release/danger
+  # builds link WITHOUT LTO. U1 cross-measurement: runtime gain 0%, link cost
+  # +98.60s (docs/evidence/vs_r2_authority_followups_acceptance_2026-11-13.md
+  # §4). Precedence: -d:axiomNoLto wins when both defines are present.
+  # GCC-only contract (docs/spec/lto_link_parallelism.md §1): `defined(gcc)`
+  # cannot block a later --cc:clang selection (Nim 2-pass config processing),
+  # so -d:axiomLto combined with --cc:clang would pass GCC-only flags.
+  when defined(axiomLto) and not defined(axiomNoLto):
     switch("passC", "-flto")
     switch("passC", "-Wno-stringop-overflow")
     # L1-a (CI): parallel-balance LTO (was serial one/1). Actual CX23 observation:
