@@ -45,7 +45,10 @@ suite "resolveVaultDir — priority logic":
   test "default path when both are empty":
     var env = initTable[string, string]()
     let result = resolveVaultDir("", env)
-    check result == "logs" / "proof_vault"
+    let stateBase = block:
+      let v = getEnv("AXIOM_STATE_DIR")
+      if v.len > 0: v else: getCurrentDir()
+    check result == stateBase / "build" / "certificates"
 
   test "env vault dir ignored when task dir is non-empty":
     var env = initTable[string, string]()
@@ -62,14 +65,17 @@ suite "resolveVaultDir — priority logic":
     var env = initTable[string, string]()
     env["UNRELATED_KEY"] = "something"
     let result = resolveVaultDir("", env)
-    check result == "logs" / "proof_vault"
+    let stateBase = block:
+      let v = getEnv("AXIOM_STATE_DIR")
+      if v.len > 0: v else: getCurrentDir()
+    check result == stateBase / "build" / "certificates"
 
 suite "buildVsrLedgerJson — serialization":
   test "all fields present in output JSON":
     let entry = LedgerEvent(
       timestamp: "2026-07-04T12:00:00Z",
       vsr: 0.8750,
-      asi: "0.9200",
+      vkd: "0.9200",
       verified: 45,
       total: 50,
       delta: 5
@@ -77,7 +83,7 @@ suite "buildVsrLedgerJson — serialization":
     let node = buildVsrLedgerJson(entry)
     check node.hasKey("ts")
     check node.hasKey("vsr")
-    check node.hasKey("asi")
+    check node.hasKey("vkd")
     check node.hasKey("verified")
     check node.hasKey("total")
     check node.hasKey("delta")
@@ -102,10 +108,10 @@ suite "buildVsrLedgerJson — serialization":
     let node = buildVsrLedgerJson(entry)
     check node["vsr"].getStr() == "1.0000"
 
-  test "asi string preserved":
-    let entry = LedgerEvent(asi: "0.9500")
+  test "vkd string preserved":
+    let entry = LedgerEvent(vkd: "0.9500")
     let node = buildVsrLedgerJson(entry)
-    check node["asi"].getStr() == "0.9500"
+    check node["vkd"].getStr() == "0.9500"
 
   test "integer fields preserved":
     let entry = LedgerEvent(verified: 100, total: 200, delta: 10)
@@ -130,7 +136,7 @@ suite "buildVsrLedgerJson — serialization":
     let entry = LedgerEvent(
       timestamp: "2026-07-04T12:00:00Z",
       vsr: 0.8750,
-      asi: "0.9200",
+      vkd: "0.9200",
       verified: 45,
       total: 50,
       delta: 5
@@ -301,12 +307,12 @@ suite "GateReporter — event accumulation":
 suite "LedgerEvent — type construction":
   test "all fields settable":
     let e = LedgerEvent(
-      timestamp: "t", vsr: 0.5, asi: "0.6",
+      timestamp: "t", vsr: 0.5, vkd: "0.6",
       verified: 10, total: 20, delta: 5
     )
     check e.timestamp == "t"
     check e.vsr == 0.5
-    check e.asi == "0.6"
+    check e.vkd == "0.6"
     check e.verified == 10
     check e.total == 20
     check e.delta == 5
@@ -315,7 +321,7 @@ suite "LedgerEvent — type construction":
     let e = LedgerEvent()
     check e.timestamp.len == 0
     check e.vsr == 0.0
-    check e.asi.len == 0
+    check e.vkd.len == 0
     check e.verified == 0
     check e.total == 0
     check e.delta == 0
@@ -327,7 +333,7 @@ suite "persistVsrLedger — IO append":
     let entry = LedgerEvent(
       timestamp: "2026-07-04T12:00:00Z",
       vsr: 0.8750,
-      asi: "0.9200",
+      vkd: "0.9200",
       verified: 45,
       total: 50,
       delta: 5
@@ -380,7 +386,7 @@ suite "persistVsrLedger — IO append":
     let entry = LedgerEvent(
       timestamp: "2026-07-04T23:59:59Z",
       vsr: 0.0001,
-      asi: "1.0000",
+      vkd: "1.0000",
       verified: 999,
       total: 1000,
       delta: 1
@@ -389,7 +395,7 @@ suite "persistVsrLedger — IO append":
     let parsed = parseJson(readFile(ledgerPath).strip())
     check parsed["ts"].getStr() == "2026-07-04T23:59:59Z"
     check parsed["vsr"].getStr() == "0.0001"
-    check parsed["asi"].getStr() == "1.0000"
+    check parsed["vkd"].getStr() == "1.0000"
     check parsed["verified"].getInt() == 999
     check parsed["total"].getInt() == 1000
     check parsed["delta"].getInt() == 1

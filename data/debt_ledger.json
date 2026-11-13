@@ -59,7 +59,7 @@
       "metric": "nimtry_violations",
       "baseline": 704,
       "target": 0,
-      "current": 3,
+      "current": 2,
       "severity": "low",
       "source": "debt_budgets.json",
       "status": "open",
