@@ -339,27 +339,29 @@ Result(U, Plan_A) == Result(U, Plan_B)   (동일 unit semantic input, U ∈ 양�
 
 동일한 unit `U`와 동일한 semantic input에 대해, 두 개의 서로 다른 `ExecutionPlan`(`Plan_A`, `Plan_B`)이 실행되어도 `U`의 결과는 동일해야 한다. 이는 `Plan_A`와 `Plan_B`의 선택 집합이 다르더라도, `U`가 양쪽 모두에 포함되어 있다면 `U`의 결과는 변하지 않아야 함을 의미한다.
 
-### 8.2 현재 budget 누수 (Normative 위반)
+### 8.2 전역 budget 누수 (해소됨 — 2026-11-14)
 
-현재 budget이 per-unit contract budget이 아닌 전역 shared budget으로 관리되어, non-interference 원칙을 위반한다:
+종전 위반(아래)은 **2026-11-14에 코드와 사양이 동일 세대로 해소**되었다:
 
-1. **`src/cli/axiom_engine.nim:5727-5728` (2026-11-14, main 80a5119 실측; 과거 인용 `:812-813`)**: `max(1, prepared.frontier.len)` 및 `initAxiomEngine(getMonoTime().ticks, task.budgetGas, max(1, prepared.frontier.len))` — budget이 frontier 크기에 비례하여 스케일링된다. 이는 `Plan_A`의 frontier가 `Plan_B`보다 크면 `Plan_A`의 per-unit budget이 더 작아짐을 의미하며, 동일 unit `U`에 대해 `Result(U, Plan_A) ≠ Result(U, Plan_B)`가 될 수 있다.
+1. ~~`src/cli/axiom_engine.nim`의 `max(1, prepared.frontier.len)` 스케일링~~ — `initAxiomEngine`에서 `budgetGas`/`expectedNodeCount` 파라미터와 엔진의 `ProofBudget` 필드가 제거되었다(`:271-277`). 엔진은 `startMono`만 보유하며 어떤 실행 계획 크기에도 비례하지 않는다.
+2. ~~전역 budget 부족이 unit 실패로 기록되는 경로~~ — 오케스트레이션 호출부의 `gasLimit = engine.budget.gasTotal` 전달이 제거되었고(`:5723`가 생성자 계약), 집계 gas는 판정·게이트 입력이 아닌 telemetry로만 남는다. `orchestrationTimedOut`은 `unitBudget`(유닛 고유 신호) 소진의 결과로만 기록된다(`src/verification/batch_uap/loop_driver.nim:606`).
 
-2. **`src/verification/batch_uap/loop_driver.nim:606-618, 1186-1196` (2026-11-14, main 80a5119 실측; 과거 인용 `:871-882`)**: `checkBudget(budget)` → `budgetVerdict != pbContinue`이면 `orchestrationTimedOut` 상태로 node report를 기록하고 루프를 종료한다. 이 `orchestrationTimedOut` 덮어쓰기는 per-unit contract budget을 무시하고 전역 budget 부족을 unit 실패로 처리한다.
+해소의 기계적 근거: `tests/cli/test_axiom_engine.nim`의 음성 통제(`not compiles(initAxiomEngine(..., expectedNodeCount = …))`)와 `tests/unit/batch_uap_orchestrator_test.nim` exit 0.
 
-### 8.3 수정 요구 (Normative)
+### 8.3 수정 요구 (Normative — 구현 완료)
 
-budget은 per-unit contract budget으로 수정되어야 한다:
+budget은 per-unit contract budget이다:
 
-1. 각 unit은 `ExecutionPlan`에 포함될 때 고유한 `unitBudget`를 부여받는다.
-2. `unitBudget`는 `ExecutionPlan`의 입력으로 결정되며, runtime frontier 크기나 shared gas limit에 의존하지 않는다.
+1. 각 unit은 `ExecutionPlan`에 포함될 때 고유한 `unitBudget`를 부여받는다 — `src/verification/batch_uap/loop_driver.nim:602-605`, `loop_depth_scheduler.nim:334-337`.
+2. `unitBudget`는 유닛 고유 신호로 결정되며(`src/core/proof/proof_budget.nim:270-280`), runtime frontier 크기나 shared gas limit에 의존하지 않는다.
 3. `orchestrationTimedOut`은 `unitBudget` exhausted의 결과로 기록되며, 전역 budget 부족의 결과가 아니다.
-4. `axiom_engine.nim:5727-5728`의 `targetNodeCount` 기반(현행 코드: `max(1, prepared.frontier.len)`) budget 스케일링은 제거된다.
+4. targetNodeCount 기반 budget 스케일링은 **제거되었다** — 생성자는 `initAxiomEngine(startMono: int64)`(`src/cli/axiom_engine.nim:271-277`), 호출부는 `:5723`이다. 파라미터 재도입은 테스트 컴파일 실패로 차단된다.
 
 ### 8.4 Anchor
 
-- `src/cli/axiom_engine.nim:5727-5728` (2026-11-14, main 80a5119 실측; 과거 인용 `:812-813`) — `max(1, prepared.frontier.len)` / `initAxiomEngine(getMonoTime().ticks, task.budgetGas, max(1, prepared.frontier.len))` (budget leak)
-- `src/verification/batch_uap/loop_driver.nim:606-618, 1186-1196` (과거 인용 `:871-882`) — `checkBudget(budget)` → `orchestrationTimedOut` (per-unit budget 무시)
+- `src/cli/axiom_engine.nim:271-277` — 엔진은 시계만 주입받는다(전역 gas 풀 없음).
+- `src/cli/axiom_engine.nim:559-563` — ci-cd 게이트는 `depthCoverage`만 판정한다(전역 예산 관측 제거 → 리포트 결정론).
+- `src/verification/batch_uap/loop_driver.nim:602-618` — 유닛 판정은 `checkBudget(unitBudget)`만 소비한다.
 
 ---
 
