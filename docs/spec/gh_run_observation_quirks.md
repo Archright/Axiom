@@ -604,3 +604,81 @@ CheckSuite.checkRuns`다: `Commit.checkRuns` 필드는 현행 스키마에 없�
 `id`·`completed_at` 값으로 판정한다. 커밋된 도구 선례:
 `tools/merge_ruleset_drift_monitor.nim:755`는 이미 `check-runs?per_page=100` +
 total_count 불완전 감지(:654)를 구현한다.
+
+**재측정 (2026-11-13, merge-queue 착지 커밋 — "착지 후 check-run 소멸" 오판의
+정체; Q19의 확장이며 대체가 아니다)**
+
+착지된 merge 커밋의 check-runs를 `per_page` 무지정 단일 호출로 읽으면, 큐
+페이즈(merge_group 런 실행 중)에 관측했던 required check들이 착지 후 **소멸한
+것처럼** 판독된다 — "착지 커밋의 check-run 집합이 런 중 관측보다 작다"는 비교
+관측은 본 Q19의 기본 30건 절단이 만드는 오판이다. check-run 소멸은 일어나지
+않았다(관측 서명: 무지정 호출 `total_count` > `check_runs` 길이).
+
+**측정** (2026-11-13 — PR #9 착지 커밋 `d01e00dfed…`(병합 04:13:30Z) / 비교군
+PR #8 착지 `c2dcf4045…`; 큐 ref `gh-readonly-queue/main/pr-9-c2dcf4045…`의
+head_sha가 착지 커밋과 동일 — Q8 어댑터로 run 관측, org 게이트 런의 `gh run
+watch` 404는 Q8·`gh_org_required_workflow_run_quirks.md`가 담당):
+
+- `d01e00d`의 check-runs `total_count` 50 = merge_group 페이즈 45건(04:05:31Z
+  생성 9개 워크플로 런: admission-gate(org)·landing-integrity(org)·
+  publication-integrity·probe-merge-queue·observer-manifest-consistency·
+  bsec-integrity·debt-registry-gate·axiom-operational-slice·
+  generation-acceptance) + **착지 후 push 이벤트 런이 추가한 5건**(04:13:35Z~
+  시작: axiom-operational-slice 재실행·verify-trusted-writer-set·Analyze
+  (actions)·skip-report·publish — 동일 이름 check-run 공존 시 2건). 무지정 호출은
+  **30건만** 반환한다(관측: 첫 항목 skip-report, 끝 gateway / sl09-scope).
+- 큐 페이즈에서 "사라졌다"고 관측된 4개 required check는 전부 **존재·success**:
+  bsec-integrity(런 43363208223)·generation-acceptance(43363208192)·
+  debt-registry-gate(43363208210)·axiom-operational-slice(43363208310) — 각
+  check-run의 details_url이 merge_group 런을 가리킨다. 착지 직후(04:13:03~
+  04:13:35Z 사이) 관측된 "최종 목록 30개"(admission-check·anchor-resolve·
+  attest/…·verdict/…·gateway/…·mint-…·license-scan·publication-integrity 등)는
+  해당 시점 첫 페이지 30건과 조성이 정확히 일치한다. 관측된 첫 페이지 순서는
+  check-run id 내림차순(NOT_DOCUMENTED — 문서 미보증 관측치)이므로 **가장 먼저
+  생성된 required contexts가 먼저 탈락**하고, 늦게 완료되는 org 게이트 잡이 첫
+  페이지를 채운다 — "착지 후 집합 축소"로 오독되는 구조다.
+- 비교군 `c2dcf40`: `total_count` 52, 무지정 30건 — axiom-operational-slice(착지
+  후 push 재실행판, 높은 id)는 포함되고 bsec-integrity·debt-registry-gate·
+  generation-acceptance는 절단된다. "PR #8은 operational-slice를 유지했다"는
+  비교 관측도 동일 절단 아티팩트다.
+- commit statuses는 `d01e00d`에서 **0건**(빈 combined status) — required 충족은
+  전량 check-runs 경로였다(statuses 병행 보고 없음).
+- live ruleset "main"(#27097366, ALLGREEN 큐)의 required 6 contexts: admission-check·
+  bsec-integrity·debt-registry-gate·generation-acceptance·axiom-operational-slice·
+  publication-integrity — 무지정 첫 페이지에는 이 중 늦게 완료된 것만 남는다.
+
+**공식 문서 근거** (2026-11-13, Context7 `/github/docs` 경유 검증):
+
+- REST 스키마 `GET /repos/{owner}/{repo}/commits/{ref}/check-runs`: `per_page`
+  "The number of results per page (max 100). Default: 30"
+  (src/rest/data/fpt-2026-03-10/checks.json — 본 Q19 상기 인용의 재확인).
+- Checks API에 check-run **삭제** 엔드포인트는 문서화돼 있지 않다(생성·갱신만;
+  conclusion `stale`은 "You cannot change a check run conclusion to `stale`, only
+  GitHub can set this"). 착지·큐 브랜치(`gh-readonly-queue/*`) 삭제가 check-run을
+  소멸시킨다는 문서화된 동작도 없다 — "소멸" 가설은 위 실측으로 반증된다(큐
+  브랜치 삭제 후에도 merge_group 페이즈 check-runs 잔존).
+- merge_group webhook: "you should perform checks on the head SHA and report
+  status back using check runs or commit statuses"
+  (https://docs.github.com/en/webhooks/webhook-events-and-payloads) — 큐 페이즈
+  보고 경로의 정의. required status checks는 "checks or commit statuses" 둘 다
+  가능하지만(protected branches 문서) 본 실측 착지 커밋은 check-runs 경로만
+  사용했다.
+- 착지 후 집합이 정적인 것이 아닌 이유(착지 push 런이 check-runs를 추가): PR
+  롤업과 무관하게 push 이벤트 런은 커밋에 check-run을 보고한다 — PR 체크
+  섹션·required 평가의 이벤트 한정("push, pull_request, …")과 "Merge queues
+  require the separate `merge_group` event"로 큐 관측 시 차이가 설명되는 것과
+  같은 문서 기반
+  (https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks
+  — `gh pr checks`의 큐 페이즈 비가시성 상세는
+  `gh_automerge_merge_queue_quirks.md` Q1·`rearm_observation_quirks.md` Q7가
+  이미 담당: 중복 기록하지 않는다).
+
+**판정 규칙 (착지 커밋 사후 검증)**: 착지된 merge 커밋의 check-run 집합은
+정적이지 않다 — 착지 후 push 이벤트 런이 check-runs를 **추가**한다(감소가 아니라
+성장). 착지 merge의 사후 검증은 (1) Q19의 페이지네이션 규칙(`per_page=100` +
+Link 헤더 종주 + `total_count` 대조)을 적용한 check-runs 관측, 또는 (2) runs API
+`GET /repos/{owner}/{repo}/actions/runs?event=merge_group&head_sha=<착지 sha>`를
+큐 페이즈의 권위 기록으로 사용한다. 무지정 단일 호출의 부재 목록은 "check-run이
+착지 후 소멸했다"의 증거가 아니라 **절단 서명**이다(`total_count` > 반환 건수) —
+"착지 후 required check 소멸" 판독으로 착지 무결성을 fail로 닫기 전에 반드시
+절단 여부를 대조한다.

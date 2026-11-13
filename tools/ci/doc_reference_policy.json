@@ -69,6 +69,10 @@
   "src/graphql/data/fpt/schema-actions.json": {
     "policy": "EXTERNAL_ALLOWED",
     "comment": "Denotes the github/docs upstream repository GraphQL schema source (WorkflowFileReferenceInput), never an Axiom repo file — referenced from docs/spec/gh_automerge_merge_queue_quirks.md Q9 (fetched 2026-11-02 via Context7 /github/docs). Unclassified default MUST_EXIST mis-classified the upstream path as a repo-relative target."
+  },
+  "src/rest/data/fpt-2026-03-10/checks.json": {
+    "policy": "EXTERNAL_ALLOWED",
+    "comment": "Denotes the github/docs upstream repository REST checks schema snapshot (commit check-runs endpoint per_page default 30 / max 100), never an Axiom repo file — referenced from docs/spec/gh_run_observation_quirks.md Q19 re-measurement (fetched 2026-11-13 via Context7 /github/docs). Unclassified default MUST_EXIST mis-classified the upstream path as a repo-relative target."
   }
 ,
   "docs/evidence/resid22_org_repin_closure_2026-11-02.md": {
