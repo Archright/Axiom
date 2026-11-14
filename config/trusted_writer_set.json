@@ -3958,7 +3958,7 @@
     "src/verification/obligation/canonical_verification.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "dd999706befe1a862370303e11d626b2f8aa26b5"
+      "sha": "e1ebec92c723692f5be71ec6a7b633d4dbd51831"
     },
     "src/verification/obligation/golden_fixture_ir.nim": {
       "mode": "100644",
