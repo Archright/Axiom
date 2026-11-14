@@ -2023,7 +2023,7 @@
     "src/core/trusted/architecture_invariants.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "b57fe9cedd471176bfc5782453a9df45cb60baf9"
+      "sha": "4654fdd9192ac4c2fabfa5a60190153dda0252d1"
     },
     "src/core/trusted/asset_collector.nim": {
       "mode": "100644",
