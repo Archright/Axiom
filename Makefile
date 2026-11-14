@@ -75,6 +75,7 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/test_theater_allowlist_structure.nim \
                   tests/unit/test_lane_module_resolution.nim \
                   tests/unit/test_hollow_cas_closure.nim \
+                  tests/unit/test_gate_cas_tamper_detection.nim \
                   tests/unit/test_assurance_tier_node_report.nim \
                   tests/unit/test_vkd_determinism.nim \
                   tests/unit/test_certificate_trust_closure.nim \
