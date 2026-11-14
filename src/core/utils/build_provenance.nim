@@ -43,7 +43,7 @@ axiomLayer "domain"
 ## NimScript VM where std/sha1|sha2 do not compile (config.nims:392-393), and
 ## the VM and compiled `$hash` agree byte-for-byte (measured 2026-11-12).
 
-import std/[algorithm, hashes]
+import std/[algorithm, hashes, strutils]
 
 const ProvenanceSelfCheckFlag* = "--check-provenance"
 
@@ -77,6 +77,19 @@ func sourceTreeDigest*(
     stream.add(f.fileDigest)
     stream.add('\n')
   BuildSourceHashFormula & ":" & $hash(stream)
+
+func extractBuildEnvField*(content, field: string): string {.raises: [].} =
+  ## Read one `  <field>* = "<value>"` line out of a build_env.nim body.
+  ## Returns "" when the field is absent — callers treat empty as "no
+  ## observation", never as a matching identity.
+  let prefix = field & "* = \""
+  for line in content.splitLines():
+    let trimmed = line.strip()
+    if not trimmed.startsWith(prefix): continue
+    let parts = trimmed.split('"')
+    if parts.len >= 3: return parts[1]
+    return ""
+  result = ""
 
 func hashSourceContents*(
     relFiles: seq[tuple[relPath: string, content: string]]): string {.raises: [].} =
