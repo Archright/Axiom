@@ -600,6 +600,71 @@ proc main() =
     else:
       echo "  PASS"
 
+  # Test 30: divergent Lean pins → exit 1 (declared-pin equality)
+  block leanPinDivergence:
+    echo "TEST 30: lean-toolchain != proofs/lean-toolchain → exit 1"
+    let tmpDir = createTempDir()
+    defer: removeDir(tmpDir)
+    for d in ["src", "tests", "tools", "proofs", "data", "docs", "config"]:
+      createDir(tmpDir / d)
+    writeFile(tmpDir / "lean-toolchain", "leanprover/lean4:v4.33.0\n")
+    writeFile(tmpDir / "proofs" / "lean-toolchain", "leanprover/lean4:v4.29.0\n")
+    let r = runValidator(tmpDir)
+    if r.exitCode != 1:
+      echo "  FAIL: expected exit 1, got " & $r.exitCode
+      echo "  output: " & r.output
+      inc failures
+    elif "lean-toolchain-pin-equality" notin r.output:
+      echo "  FAIL: expected pin-equality violation in output"
+      echo "  output: " & r.output
+      inc failures
+    else:
+      echo "  PASS"
+
+  # Test 31: one pin location only → exit 1 (fail-closed)
+  block leanPinHalfPresent:
+    echo "TEST 31: pin present only at proofs/ → exit 1"
+    let tmpDir = createTempDir()
+    defer: removeDir(tmpDir)
+    for d in ["src", "tests", "tools", "proofs", "data", "docs", "config"]:
+      createDir(tmpDir / d)
+    writeFile(tmpDir / "proofs" / "lean-toolchain", "leanprover/lean4:v4.33.0\n")
+    let r = runValidator(tmpDir)
+    if r.exitCode != 1:
+      echo "  FAIL: expected exit 1, got " & $r.exitCode
+      echo "  output: " & r.output
+      inc failures
+    elif "pin present only at proofs/lean-toolchain" notin r.output:
+      echo "  FAIL: expected half-present violation in output"
+      echo "  output: " & r.output
+      inc failures
+    else:
+      echo "  PASS"
+
+  # Test 32: matching pins plus neither present → no pin-equality violation
+  block leanPinEqualAndAbsent:
+    echo "TEST 32: equal pins → exit 0; both absent → exit 0"
+    let tmpEqual = createTempDir()
+    defer: removeDir(tmpEqual)
+    for d in ["src", "tests", "tools", "proofs", "data", "docs", "config"]:
+      createDir(tmpEqual / d)
+    writeFile(tmpEqual / "lean-toolchain", "leanprover/lean4:v4.33.0\n")
+    writeFile(tmpEqual / "proofs" / "lean-toolchain", "leanprover/lean4:v4.33.0\n")
+    let rEqual = runValidator(tmpEqual)
+    let tmpAbsent = createTempDir()
+    defer: removeDir(tmpAbsent)
+    for d in ["src", "tests", "tools", "proofs", "data", "docs", "config"]:
+      createDir(tmpAbsent / d)
+    let rAbsent = runValidator(tmpAbsent)
+    if rEqual.exitCode != 0 or rAbsent.exitCode != 0:
+      echo "  FAIL: expected exit 0, got equal=" & $rEqual.exitCode &
+           " absent=" & $rAbsent.exitCode
+      echo "  output(equal): " & rEqual.output
+      echo "  output(absent): " & rAbsent.output
+      inc failures
+    else:
+      echo "  PASS"
+
   echo ""
   if failures > 0:
     echo $failures & " test(s) FAILED"

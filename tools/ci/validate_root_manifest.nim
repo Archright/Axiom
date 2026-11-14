@@ -376,6 +376,48 @@ proc checkVendorGitDir(rootDir: string): seq[string] =
     result.add "FAIL: vendor/ed25519/.git exists (embedded git directory forbidden)"
 
 # ---------------------------------------------------------------------------
+# lean-toolchain declared-pin equality
+# ---------------------------------------------------------------------------
+# Scope is deliberately narrow: this compares the two DECLARED pin files, and
+# nothing else. It does not observe which Lean binary a build path actually
+# resolves (runtime fallbacks — e.g. tools/hermetic_build.nim writes a
+# fabricated "v4.29.0" pin when the copy fails — are a separate defect).
+#
+# Both files are load-bearing and cannot be collapsed into one:
+#   root lean-toolchain      — elan/lake resolution for the repository
+#   proofs/lean-toolchain    — staticRead at compile time
+#                              (src/core/proof/proof_witness_checker.nim:89)
+# Divergence means the witness checker validates against a different pin than
+# `lake build` compiles with.
+#
+# Absence policy: synthetic roots (the validator's own test fixtures) carry
+# neither file and are not in scope. Exactly one present is a defect and fails
+# closed.
+proc checkLeanPinEquality(rootDir: string): seq[string] =
+  let rootPin = rootDir / "lean-toolchain"
+  let proofsPin = rootDir / "proofs" / "lean-toolchain"
+  let rootExists = fileExists(rootPin)
+  let proofsExists = fileExists(proofsPin)
+  if not rootExists and not proofsExists:
+    return
+  if rootExists != proofsExists:
+    let present = if rootExists: "lean-toolchain" else: "proofs/lean-toolchain"
+    result.add "FAIL: lean-toolchain-pin-equality: pin present only at " & present &
+               " (both the elan pin and the compile-time proofs pin are required)"
+    return
+  var rootContent, proofsContent: string
+  try:
+    rootContent = readFile(rootPin)
+    proofsContent = readFile(proofsPin)
+  except CatchableError:
+    result.add "FAIL: lean-toolchain-pin-equality: unreadable pin (fail-closed)"
+    return
+  if rootContent != proofsContent:
+    result.add "FAIL: lean-toolchain-pin-equality: lean-toolchain='" &
+               rootContent.strip & "' != proofs/lean-toolchain='" &
+               proofsContent.strip & "'"
+
+# ---------------------------------------------------------------------------
 # Main validation logic
 # ---------------------------------------------------------------------------
 
@@ -445,6 +487,11 @@ proc validateRoot(rootDir: string,
   # Check vendor/ embedded git directories
   let vendorViolations = checkVendorGitDir(rootDir)
   for v in vendorViolations:
+    violations.add v
+
+  # Check the two declared Lean pins agree (declared-pin equality only)
+  let leanPinViolations = checkLeanPinEquality(rootDir)
+  for v in leanPinViolations:
     violations.add v
 
   return violations
