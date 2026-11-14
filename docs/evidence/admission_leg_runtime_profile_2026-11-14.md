@@ -120,7 +120,7 @@ subprocess"에 귀속했다(근거: "cold 시 libleanshared 로드가 지배" + 
 전문 read+sha256**으로 확정됐다(`src/verification/obligation/canonical_verification.nim:1054-1058`).
 동일 114MB 파일에 대한 직접 측정(같은 체크아웃, warm page cache):
 
-| 구간 | 실측 |
+| 구간 | 실측(debug 빌드) |
 |---|---|
 | `readFile` 114MB | **0.0911s** |
 | `sha256Hex(s)` 1회차 | **46.5816s** |
@@ -136,9 +136,23 @@ subprocess"에 귀속했다(근거: "cold 시 libleanshared 로드가 지배" + 
 **digest 재계산 한 건**이다. 검증 주체는 1,170 bytes이지만 해시 대상은 114MB worker 바이너리다.
 이것이 3개 테스트가 모두 ~40s에 몰리는 형태(subject별 1회)와 정확히 일치한다.
 
+**동일 바이너리·동일 digest에 대한 빌드 모드 차분 (2026-11-14 직접 측정).** 위 수치는 모두
+**debug 빌드**(`nim c` 기본, 레인은 `nim r`로 실행)다. `-d:release`로 같은 소스를 빌드하면:
+
+| 모드 | run1 | run2 | digest |
+|---|---|---|---|
+| debug | **44.848s** | **45.252s** | `1d0bb7324ead8cc6…` |
+| release | **0.749s** | **0.750s** | `1d0bb7324ead8cc6…` |
+
+즉 **2.6 MB/s는 Nim `sha2`의 알고리즘 한계가 아니라 debug 빌드의 최적화 부재 효과**이며,
+release에서는 약 **114 MB/s**(약 60배)다. digest 값은 동일하다. 따라서 비용의 원인은
+"해시를 쓴다"가 아니라 **"해시 코드가 최적화 없이 컴파일된 채로 114MB를 3번 처리한다"**이다.
+운영 레인의 s1a 40.1s/건은 로컬 debug 44.8s와 같은 등급이다.
+
 근거 체인: `src/core/crypto/hash_kernel.nim:58`의 `sha256Hex = $secureHash(Sha_256, data)`가
 Nim 표준 `checksums/sha2` **순수 Nim 구현**을 호출한다 — OpenSSL/하드웨어 가속 경로가 아니다.
-2.6 MB/s는 백엔드 특성이며, **알고리즘·digest 값 자체는 변경 대상이 아니다.**
+그 순수 Nim 구현은 debug에서 2.6 MB/s, release에서 114 MB/s다. **알고리즘·digest 값 자체는
+변경 대상이 아니므로 두 레버(memo, 빌드 모드) 모두 판정 정체성을 바꾸지 않는다.**
 
 이 확정은 "warm 캐시에서 114MB sha256은 sub-second"라는 사전 가정을 반증한다 — 그 가정은 Python
 `hashlib`(OpenSSL, GB/s) 측정을 Nim 순수 구현에 잘못 옮긴 것이었다. 잔여 후보 정리:
@@ -149,9 +163,10 @@ Nim 표준 `checksums/sha2` **순수 Nim 구현**을 호출한다 — OpenSSL/�
 3. ~~미귀속 세그먼트~~ — 잔여가 남지 않는다.
 
 **C4 절감 상한(갱신)**: subject별 digest 1회를 프로세스 내에서 재사용하면 3회 중 2회가 사라진다.
-s1a 150.6s 중 120.3s가 3개 느린 테스트이고 그 대부분이 digest이므로 **상한 ≈ 80s**
-(2/3 × 120.3s)다. 이는 30s/배치 임계값을 넘는다. 단 이 상한은 로컬 단일 호스트 측정에서 유도한
-것이므로, **CI 러너에서의 실제 절감은 merge_group 실행으로 확인해야 한다**(본 슬라이스 완료 조건).
+s1a 150.6s 중 120.3s가 3개 느린 테스트이고 그 대부분이 digest이므로, **memo 변형의 상한은 ≈ 80s**
+(2/3 × 120.3s)다. 이는 30s/배치 임계값을 넘는다. **빌드 모드 변형은 상한 ≈ 120s**지만
+레인 전체의 실행 의미(assertion·오버플로 검사)를 바꾸므로 판정 정체성 검토가 선행되어야 한다.
+memo 변형의 남은 선행 조건은 **merge_group 실행에서의 실측 확인**이다.
 
 ## 4. 후보별 실측 상한과 판정 정체성 영향
 
@@ -160,7 +175,7 @@ s1a 150.6s 중 120.3s가 3개 느린 테스트이고 그 대부분이 digest이�
 | C1 | full-chain의 axiom probe를 kernel check에 병합 (동일 소스 2회 실행 → 1회) | chain 시간의 **50%** — Run A 기준 s1a 60s, Run B 기준 30s | **변경됨**. KAA identity는 `ArtifactIdentity`·`KernelAcceptanceFact`를 포함하고(`kernel_acceptance_authority.nim` KAA identity 절), `proofDigest`는 receipt observation 원문이다. 병합은 증거 세대를 1회 flip한다 | **NO-GO (현 MUST)** — "증거 동일성" 위반. 의미 동등성은 증명 가능하나 **별도 epoch 승인**이 선행 조건 |
 | C2 | B-layer가 `build/nimcache/test`를 공급 (warm compile) | 정규화 후 **0s** (§3.2) | 변경 없음 | **NO-GO** — 절감 증거 없음 |
 | C3 | checker compile과 probe compile 병합 (probe가 `runSelfCheck`를 흡수) | **14.6s / 7.7s** (30s 미만) | 변경 없음 (probe는 pin 대상 → 2단계 pin 갱신 필요) | **NO-GO** — 임계값 미달 |
-| C4 | subject별 EA 측정 1회 메모 + ircheck digest를 `measuredBinaryDigest` 경로로 | **≈80s 상한** — 3개 느린 테스트 120.3s 중 subject별 digest 재계산 2회분(§3.3 확정 측정: 41.7s/건). CI 실측으로 확정 필요 | **변경 없음** — 동일 bytes의 동일 sha256, 메모는 결정론적 값의 재사용 | **GO** — 선행 조건: merge_group에서 실측 절감 확인 |
+| C4 | subject별 EA 측정 1회 메모 + ircheck digest를 `measuredBinaryDigest` 경로로 | **≈80s 상한** — 3개 느린 테스트 120.3s 중 subject별 digest 재계산 2회분(§3.3 확정 측정: debug 44.8s/건). 빌드 모드 변형은 ≈120s 상한이나 레인 의미 변경 검토 선행 | **변경 없음** — 동일 bytes의 동일 sha256, 메모는 결정론적 값의 재사용 | **GO** — 선행 조건: merge_group에서 실측 절감 확인 |
 
 ## 5. 판정
 
@@ -174,6 +189,8 @@ s1a 150.6s 중 120.3s가 3개 느린 테스트이고 그 대부분이 digest이�
    (ii) EA 측정을 `(contentSha, funcName)`당 1회 메모(기존 parse memo와 동형, 결정론적 값 재사용),
    (iii) suite 전 Lean 런타임 예열(코드 변경 0 — §3.3 측정으로 근거 소거: 런타임 초기화는 ~30ms).
    (ii)의 절감은 §3.3에서 확정됐고 남은 선행 조건은 **merge_group 실행에서의 실측 확인**이다.
+   §3.3의 빌드 모드 차분(debug 44.8s ↔ release 0.75s, 동일 digest)은 네 번째 레버이지만, 레인
+   전체의 실행 의미를 바꾸므로 **판정 정체성 검토가 선행**되어야 한다 — 본 슬라이스 범위 밖이다.
    C1은 증거 세대 전환 승인이, SLO 운영 계약 강제는 러너 등급·동시성 정책 결정이 선행되어야
    하므로 별도 승인 대상이다.
 
