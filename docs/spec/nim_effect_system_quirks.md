@@ -775,13 +775,12 @@ created: 2026-06-16
 **`repo_root.nim` (runtime)**:
 ```nim
 const axiomRoot* = ".axiom_root"
-const axiomToml* = "axiom.toml"
 
 proc findRepoRoot*(startDir: string = getAppDir()): string {.raises: [].} =
+  # AXIOM_ROOT env first (deterministic injection), then anchor walk.
   result = startDir
   for _ in 0..10:
     if fileExists(result / axiomRoot): return result
-    if fileExists(result / axiomToml): return result
     let parent = parentDir(result)
     if parent == result: break
     result = parent

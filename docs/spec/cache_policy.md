@@ -50,10 +50,14 @@ Old epoch directories are preserved until garbage collection.
 
 | Parameter | Default | Location |
 |-----------|---------|----------|
-| `maxRetainedEpochs` | 3 | `axiom.toml` `[gate.cache]` section |
+| `maxRetainedEpochs` | 3 | code default — `garbageCollectOldEpochs(maxRetained = 3)` (`src/core/gate/gate_memo.nim`) |
 
 GC runs lazily after each gate batch completion. Epoch directories older than
 `current_epoch - maxRetainedEpochs` are removed.
+
+Retention is a compile-time default, not a TOML key. `config/axiom.toml` has no
+`[gate.cache]` section and no code path reads one; changing retention requires
+changing the call sites (`src/gate/orchestrator/hook/executor.nim`).
 
 ### Foreign directory guard
 
@@ -112,11 +116,10 @@ are automatically migrated to `.axiom/cache/gate_memo/epoch_0/`.
 
 ## Configuration
 
-```toml
-# axiom.toml
-[gate.cache]
-maxRetainedEpochs = 3
-```
+There is no TOML key for cache retention. `garbageCollectOldEpochs` defaults to
+`maxRetained = 3` (`src/core/gate/gate_memo.nim`) and its call sites in
+`src/gate/orchestrator/hook/executor.nim` pass no override, so the retention
+window is a compile-time default.
 
 ## Environment Variables
 
