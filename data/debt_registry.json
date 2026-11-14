@@ -5246,11 +5246,14 @@
         "docs/spec/byo_agent_proposition_contract.md"
       ],
       "source": "theater_audit",
-      "status": "open",
-      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9 (theater is registered, never quietly patched); the defect lives in the external Archright adapter workflow, so remediation is adapter-side (classify on the full contract conjuncts — propositionVerdict and statusCounts.verified from the engine state file, not exit code alone) or Axiom-side exit semantics (see DEBT#530); no patch applied by this registration",
-      "lastVerifiedAt": "2026-11-14T03:11:09Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-14 (Archright/.github PR #273, main 27c2f3468658e127f94b87391c74fa5ebee6b143): the trusted PR-admission workflow no longer maps prove_exit==0 onto PROVED_REPRODUCIBLE. classify() is acceptance-class-bound: PROVED_REPRODUCIBLE requires exit 0 AND verified>0 AND verificationComplete AND runOutcome.verdict in the CONTINUE/PROVED family AND gateVerdict!=FAIL AND no DISPROVED; the law-conformance class additionally requires declaredRequired non-empty, every declaredRequired present in the vault-manifest with status in {certZ3Candidate,certGreen,certLeanVerified}, proofCandidateCount>=1 and obligationCount>=1, else VACUOUS_BLOCKED. Verified live on Archright/nim-libp2p: run 43552724692 (PR #11) => LAW_CONFORMANCE_ACCEPTED_REPRODUCIBLE / PASS, evidenceTier=candidate, 7/7 guards, canonical_digest A=B=f7209f17f78e8e034e2736eab8bc7d9b74b028839efbd9bedcc83cc8fc6d2bd2; run 43553077178 (PR #13, reverted subject bytes) => UNCLASSIFIED / FAIL. Both reproduced independently by the published verifier (Archright/.github .github/axiom-admission/verify_pr_admission_replay.py at main e677cd2348ca41e64427b4adb7646763b7cd20a7; 7/7 guards agree). The audited vacuous shape (run 43547635750) is no longer producible on the pinned workflow.",
+      "lastVerifiedAt": "2026-11-14T03:56:13Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the theater site is a workflow YAML in the external Archright/nim-libp2p repository (local copy ~/ax-slice-work/nim-libp2p-pr-admission.yml), a medium where the src/-only {.axiomDebt.} marker scan cannot anchor; trace: this entry's resolution/source fields, docs/spec/external_verification_campaign_contract.md:73 (the violated 3-conjunct contract), docs/spec/byo_agent_proposition_contract.md:119 (recorded precedent run 41469574000)"
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the theater site is a workflow YAML in the external Archright/nim-libp2p repository (local copy ~/ax-slice-work/nim-libp2p-pr-admission.yml), a medium where the src/-only {.axiomDebt.} marker scan cannot anchor; trace: this entry's resolution/source fields, docs/spec/external_verification_campaign_contract.md:73 (the violated 3-conjunct contract), docs/spec/byo_agent_proposition_contract.md:119 (recorded precedent run 41469574000)",
+      "resolvedAt": "2026-11-14",
+      "resolvedBy": "archright-pr-admission-v1.1.0",
+      "resolutionNote": "Evidence: docs/evidence/pr_admission_v1_1_0_terminal_2026-11-14.md. Rulesets 27208234 (master) and 27205573 (probe) both pin 27c2f346."
     },
     {
       "id": "DEBT#529",
