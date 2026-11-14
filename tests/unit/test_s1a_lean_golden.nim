@@ -149,7 +149,8 @@ proc materializeCompletenessFor(fd: IRFuncDef; sourcePath: string) =
       "for key " & key & " (capture.sourceIdentity.len=" &
       $capture.sourceIdentity.len & ") — a legacy-only environment cannot " &
       "silently pass the strict contract"
-  check strictLanded == true
+  ## NEGATIVE CONTROL (VS-T3 Phase A-2): this assertion was deliberately removed
+  ## to prove the verdict-input byte guard rejects a weakened GO-critical test.
   check fileExists(completenessBindingCachePath(key))
   check fileExists(strictGenerationMarkerPath(key))
 
