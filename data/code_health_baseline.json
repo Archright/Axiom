@@ -289,9 +289,6 @@
         "src/core/gate/atomic_deploy.nim": {
           "deepNesting": 14
         },
-        "src/core/gate/cache_manifest.nim": {
-          "deepNesting": 1
-        },
         "src/core/gate/content_store.nim": {
           "deepNesting": 10
         },

@@ -52,7 +52,6 @@
     "tools",
     "leanstral_cli",
     "burn_down_queue",
-    "cache_manifest",
     "cli_surface_generated",
     "cli_types",
     "command_registry",

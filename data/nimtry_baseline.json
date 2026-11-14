@@ -1,10 +1,10 @@
 {
   "version": 2,
   "created": "2026-11-14T08:31:42+09:00",
-  "total_violations": 4275,
+  "total_violations": 4265,
   "by_severity": {
-    "warning": 3898,
-    "error": 377
+    "warning": 3889,
+    "error": 376
   },
   "violations": [
     {
@@ -7988,20 +7988,6 @@
       "severity": "warning"
     },
     {
-      "id": "d0a064dcb85bb5a94e4af17b7f4877357b77a2bf949c2a15e7b58e46d91ade40",
-      "rule": "SAFETY-proc-purity",
-      "file": "src/core/gate/cache_manifest.nim",
-      "detail": "[safety-proc-purity] manifestDir (src/core/gate/cache_manifest.nim:47) is proc but has no transitive I/O calls. Convert to func.",
-      "severity": "warning"
-    },
-    {
-      "id": "becf9b952acf99b9e44fdfd3d4c25195a0854fe3efb29ff89ef8ac9a037d07a7",
-      "rule": "SAFETY-proc-purity",
-      "file": "src/core/gate/cache_manifest.nim",
-      "detail": "[safety-proc-purity] compactManifests (src/core/gate/cache_manifest.nim:80) is proc but has no transitive I/O calls. Convert to func.",
-      "severity": "warning"
-    },
-    {
       "id": "c383521549cdbc2a7ed6dc34da11d35514d93ab762f89df25f3db3e10a95a242",
       "rule": "SAFETY-proc-purity",
       "file": "src/core/gate/content_store.nim",
@@ -11422,48 +11408,6 @@
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/core/encoding/type_logic_registry.nim",
       "detail": "[purity-new-code-must-be-func] src/core/encoding/type_logic_registry.nim:186 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
-      "severity": "warning"
-    },
-    {
-      "id": "55b08657703c8d5514d445b2567f385b3333eb36c3c25840142afa48a8a58604",
-      "rule": "PURITY-new-code-must-be-func",
-      "file": "src/core/gate/cache_manifest.nim",
-      "detail": "[purity-new-code-must-be-func] src/core/gate/cache_manifest.nim:32 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
-      "severity": "warning"
-    },
-    {
-      "id": "55b08657703c8d5514d445b2567f385b3333eb36c3c25840142afa48a8a58604",
-      "rule": "PURITY-new-code-must-be-func",
-      "file": "src/core/gate/cache_manifest.nim",
-      "detail": "[purity-new-code-must-be-func] src/core/gate/cache_manifest.nim:40 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
-      "severity": "warning"
-    },
-    {
-      "id": "55b08657703c8d5514d445b2567f385b3333eb36c3c25840142afa48a8a58604",
-      "rule": "PURITY-new-code-must-be-func",
-      "file": "src/core/gate/cache_manifest.nim",
-      "detail": "[purity-new-code-must-be-func] src/core/gate/cache_manifest.nim:47 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
-      "severity": "warning"
-    },
-    {
-      "id": "55b08657703c8d5514d445b2567f385b3333eb36c3c25840142afa48a8a58604",
-      "rule": "PURITY-new-code-must-be-func",
-      "file": "src/core/gate/cache_manifest.nim",
-      "detail": "[purity-new-code-must-be-func] src/core/gate/cache_manifest.nim:50 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
-      "severity": "warning"
-    },
-    {
-      "id": "55b08657703c8d5514d445b2567f385b3333eb36c3c25840142afa48a8a58604",
-      "rule": "PURITY-new-code-must-be-func",
-      "file": "src/core/gate/cache_manifest.nim",
-      "detail": "[purity-new-code-must-be-func] src/core/gate/cache_manifest.nim:71 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
-      "severity": "warning"
-    },
-    {
-      "id": "55b08657703c8d5514d445b2567f385b3333eb36c3c25840142afa48a8a58604",
-      "rule": "PURITY-new-code-must-be-func",
-      "file": "src/core/gate/cache_manifest.nim",
-      "detail": "[purity-new-code-must-be-func] src/core/gate/cache_manifest.nim:80 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
@@ -21687,13 +21631,6 @@
       "severity": "warning"
     },
     {
-      "id": "b95c1c1f70ea8ac947a6fd6877b85ac43f8954eeb155bb218bb11ba8608c245d",
-      "rule": "FEATURE-missing-runner",
-      "file": "",
-      "detail": "[feature-cardinality] tests/features/cache_manifest.feature has no matching tests/gateway/cache_manifest_feature_test.nim (nor tests/gateway_coverage/cache_manifest_feature_test.nim). Add a test runner or tag the feature @manual.",
-      "severity": "warning"
-    },
-    {
       "id": "00fff4672201b27dfbb58d5c71bb24f3ccc8d46e00257fd96dcfe548df7bd4e3",
       "rule": "FEATURE-missing-runner",
       "file": "",
@@ -28152,13 +28089,6 @@
       "rule": "EFFECT-enforce-proc-purity",
       "file": "src/core/encoding/type_logic_registry.nim",
       "detail": "[enforce-proc-purity] getTypeCategory is proc but not in impure_procedures_whitelist and not marked {.raises: [].}",
-      "severity": "error"
-    },
-    {
-      "id": "d55b734ef5658193a450c8634b4db4eebc65b7a2bc0b23b3d0357adf6a747fa5",
-      "rule": "EFFECT-enforce-proc-purity",
-      "file": "src/core/gate/cache_manifest.nim",
-      "detail": "[enforce-proc-purity] compactManifests is proc but not in impure_procedures_whitelist and not marked {.raises: [].}",
       "severity": "error"
     },
     {

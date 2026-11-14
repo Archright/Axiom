@@ -400,15 +400,6 @@
          {
           "imports": [
             "trusted/layer_declaration",
-             "axiom_pragmas",
-             "types/results"
-          ],
-           "path": "gate/cache_manifest",
-           "tier": "tier2"
-        },
-         {
-          "imports": [
-            "trusted/layer_declaration",
              "types/results",
              "symbolic/cfg_types",
              "parsers/pnode_nav",

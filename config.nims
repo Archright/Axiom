@@ -110,62 +110,83 @@ include "config/vendors.nims"    # Hermetic build, Z3 FFI, source scanner
 # flip-flop을 일으켜 hermetic env-hash 캐시 게이트가 안정화되지 못했음.
 # Removed 2026-08-07 (sync_topology 단일 writer 유지).
 
-# ── Gate Runner Freshness Guard (Pure Nim Hermetic) ───────────────────────────
-# Pure Nim compile-time freshness check — zero external shell dependency.
-# Uses std/hashes hash() + readFile for platform-independent deterministic hashing.
-# Note: std/sha1 is NOT usable in NimScript (depends on copyMem via std/endians).
-# std/hashes provides a 64-bit FarmHash which is collision-resistant for freshness.
+# ── Gate Runner Freshness Guard (sha256sum via gorge) ──────────────────────────
+# Freshness check shells out to external `sha256sum` through one gorge() call —
+# no std/hashes / FarmHash involvement. NimScript cannot use std/sha1 or
+# std/sha256 (both depend on copyMem via std/endians, rejected by the VM), so
+# the external sha256sum primitive stays (docs/spec/gorge_inventory.md G1 lineage).
 proc computeSourceHash(path: string): string =
-  ## SHA-256 hermetic hash — matches config/integrity.nims merkle algorithm.
-  ## 단일 서브쉘 호출로 모든 파일 해시를 한 번에 계산 (fork 절감).
-  let sourcePaths = @[
+  ## SHA-256 digests of the target file's content PLUS the shared gate-infrastructure
+  ## set, flat-concatenated per slot in fixed order — NOT a merkle root and NOT the
+  ## config/integrity.nims chain (that hashes a disjoint src/core/trusted set).
+  ## 단일 sha256sum 호출로 전체 파일 목록을 한 번에 계산 (fork 절감).
+  ## Missing files occupy their slot as the literal `MISSING:<path>` sentinel, so
+  ## a missing input is visible in (and changes) the returned value.
+  let infraPaths = @[
     "src/gate/runners/gate_hook.nim",
     "src/gate/orchestrator_hook.nim",
     "src/gate/gate_utils.nim",
     "src/gate/git.nim",
     "src/gate/types.nim"
   ]
-  var existing: seq[string] = @[]
-  for p in sourcePaths:
+  # De-duplicated, deterministic order: target first, then infra files that differ
+  # from it (the gate_hook target IS infraPaths[0] — dedups to 5 slots).
+  var paths: seq[string] = @[path]
+  for p in infraPaths:
+    if p != path:
+      paths.add(p)
+  var slots: seq[string] = @[]       # per-path digest or MISSING:<path> sentinel
+  var hashedSlotIdx: seq[int] = @[]  # slot index -> hashed-file ordinal
+  var cmdPaths: seq[string] = @[]
+  for p in paths:
     if fileExists(p):
-      existing.add(p)
+      hashedSlotIdx.add(slots.len)
+      slots.add("")
+      cmdPaths.add(p)
     else:
-      existing.add("MISSING:" & p)
-  if existing.len == 0:
-    return ""
-  # 모든 파일을 하나의 sha256sum 호출로 처리 — 8회 fork 대신 1회.
-  let cmd = "sha256sum " & existing.join(" ")
+      slots.add("MISSING:" & p)
+  if cmdPaths.len == 0:
+    return slots.join("")
+  # 존재하는 파일 전체를 하나의 sha256sum 호출로 처리.
+  let cmd = "sha256sum " & cmdPaths.join(" ")
   let raw = gorge(cmd)
-  # 각 줄의 첫 해시만 추출하여 결합
-  var hashes: seq[string] = @[]
+  # sha256sum은 operand 순서대로 `<digest>  <file>` 줄을 출력 — 첫 필드만 추출.
+  var digests: seq[string] = @[]
   for line in raw.splitLines():
-    let parts = line.split(" ")
-    if parts.len > 0:
-      hashes.add(parts[0])
-  return hashes.join("")
+    let h = line.split(" ")[0]
+    if h.len > 0:
+      digests.add(h)
+  if digests.len != cmdPaths.len:
+    echo "[config.nims] ERROR: computeSourceHash: sha256sum returned " &
+      $digests.len & " digests for " & $cmdPaths.len & " files: " & cmd
+    quit(1)
+  for i, slotIdx in hashedSlotIdx:
+    slots[slotIdx] = digests[i]
+  return slots.join("")
 
-# NimScript VM quirk (Nim 2.2.10 — docs/spec/nimscript_arc_closure_quirk.md):
-# a proc defined inside a `task` body that references a task-local var creates
-# a closure; ARC closure lowering needs the `nimDestroyAndDispose`
-# compilerproc, which the VM's system module does not register, so every
-# `nim buildGateRunners` aborted with "system module needs:
-# nimDestroyAndDispose". Top-level declarations reference globals — no
-# closure, VM-safe; identical lookup semantics.
-var prevHashes: seq[(string, string)] = @[]
-
-proc getStoredHash(bin: string): string =
+proc storedHashFor(prevHashes: seq[(string, string)]; bin: string): string =
+  ## Pure lookup over the persisted (binary, source-hash) pairs. Kept a
+  ## module-level proc with an explicit parameter rather than a task-local
+  ## closure: under the repo's `--mm:arc` (config/effects.nims:16) the
+  ## NimScript VM cannot destroy a closure environment that captures a seq
+  ## ("system module needs: nimDestroyAndDispose") —
+  ## docs/spec/nimscript_arc_closure_quirk.md.
   for (b, h) in prevHashes:
     if b == bin: return h
   return ""
 
-task buildGateRunners, "Pure Nim hermetic freshness check & build":
+task buildGateRunners, "Gate runner freshness check & build (sha256sum via gorge)":
+  # Exactly the runner sources that exist. Two historical entries were removed
+  # here after the fail-loud guard below exposed them as phantom: 
+  # ("bin/structural_safety_gate", "src/gate/runners/structural_safety_gate.nim")
+  # and ("bin/drnim", "src/gate/runners/drnim_gate.nim") — neither source has
+  # ever existed at this commit and no Makefile/ci/gates.json consumer references
+  # either binary (DEBT#517 follow-through: unbuildable entries are not runners).
   let runners = @[
     ("bin/gate_hook", "src/gate/runners/gate_hook.nim"),
     ("bin/conflict_marker_gate", "src/gate/runners/conflict_marker_gate.nim"),
     ("bin/hotspot_coverage_gate", "src/gate/runners/hotspot_coverage_gate.nim"),
-    ("bin/structural_safety_gate", "src/gate/runners/structural_safety_gate.nim"),
     ("bin/hermetic_test_gate", "src/gate/runners/hermetic_test_gate.nim"),
-    ("bin/drnim", "src/gate/runners/drnim_gate.nim"),
   ]
   let hashStore = ".axiom/cache/gate_hashes.json"
 
@@ -173,9 +194,8 @@ task buildGateRunners, "Pure Nim hermetic freshness check & build":
   if not dirExists(".axiom/cache"):
     mkDir(".axiom/cache")
 
-  # Load previous hashes (into the top-level prevHashes — a task-local var
-  # captured by a task-local proc is a closure the ARC VM cannot lower; see
-  # the quirk note above this task)
+  # Load previous hashes
+  var prevHashes: seq[(string, string)] = @[]
   if fileExists(hashStore):
     for line in readFile(hashStore).split("\n"):
       if "\t" in line:
@@ -184,11 +204,17 @@ task buildGateRunners, "Pure Nim hermetic freshness check & build":
 
   var newHashes: seq[(string, string)] = @[]
   for (bin, src) in runners:
+    # Fail-loud: a missing runner source or freshness input must never yield a
+    # silent "✓ Up-to-date" verdict (DEBT#517 fail-open closure).
     if not fileExists(src):
-      echo "⚠️ Source not found: " & src & " — skipping"
-      continue
+      echo "[config.nims] ERROR: buildGateRunners: source not found: " & src
+      quit(1)
     let srcHash = computeSourceHash(src)
-    let storedHash = getStoredHash(bin)
+    if "MISSING:" in srcHash:
+      echo "[config.nims] ERROR: buildGateRunners: freshness input missing for " &
+        bin & ": " & srcHash
+      quit(1)
+    let storedHash = storedHashFor(prevHashes, bin)
     if not fileExists(bin) or srcHash != storedHash:
       echo "Rebuilding: " & bin & " (hash mismatch or missing)"
       if bin == "bin/gate_hook":
@@ -210,15 +236,30 @@ task buildGateRunners, "Pure Nim hermetic freshness check & build":
   writeFile(hashStore, hashContent)
   echo "Gate runner hashes saved: " & hashStore
 
-  # Atomic checksum storage: temp + moveFile (POSIX rename is atomic)
-  # Uses computeSourceHash (std/hashes FarmHash) — no external shell dependency.
-  var checksumContent = ""
+  # Atomic checksum storage: temp + mv (POSIX rename is atomic).
+  # Each line stores the SHA-256 of the compiled BINARY itself (sha256sum <bin>)
+  # keyed by binary name — the docs/spec/gorge_inventory.md G1 intent.
+  # 모든 바이너리를 하나의 sha256sum 호출로 처리 (fork 절감); 출력 줄은
+  # operand 순서와 1:1로 대응.
+  var bins: seq[string] = @[]
   for (bin, _) in runners:
     if fileExists(bin):
-      let sha = computeSourceHash(bin)
-      if checksumContent.len > 0: checksumContent.add("\n")
-      checksumContent.add(bin.split("/")[^1] & "\t" & sha)
-  if checksumContent.len > 0:
+      bins.add(bin)
+  if bins.len > 0:
+    let raw = gorge("sha256sum " & bins.join(" "))
+    var binDigests: seq[string] = @[]
+    for line in raw.splitLines():
+      let h = line.split(" ")[0]
+      if h.len > 0:
+        binDigests.add(h)
+    if binDigests.len != bins.len:
+      echo "[config.nims] ERROR: buildGateRunners: sha256sum returned " &
+        $binDigests.len & " digests for " & $bins.len & " binaries"
+      quit(1)
+    var checksumContent =
+      "# format: one line per runner — <binaryName> TAB <sha256-hex of the compiled binary>"
+    for i, bin in bins:
+      checksumContent.add("\n" & bin.split("/")[^1] & "\t" & binDigests[i])
     let tmpPath = ".axiom/cache/.checksums.tmp"
     writeFile(tmpPath, checksumContent)
     exec "mv " & tmpPath & " .axiom/cache/binary_checksums.json"

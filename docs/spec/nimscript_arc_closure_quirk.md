@@ -4,7 +4,7 @@
 > `switch("mm", "arc")` 하에서 VM에서 **컴파일 자체가 불가능**하다는 Nim 2.2.10 툴체인 quirk를
 > 기록한다. nims 태스크를 수정하는 모든 에이전트는 이 문서를 먼저 읽어야 한다.
 > AGENTS.md §0.5 — Quirk Mandate (Documentation-First)의 실행 부속서다.
-> 발견 계기: DEBT#524 슬라이스(2026-11-14) — `nim buildGateRunners` 복구.
+> 발견 계기: `nim buildGateRunners` 복구 (DEBT#517/518/519 슬라이스, 2026-11-14).
 
 ---
 
@@ -14,14 +14,15 @@
 $ nim buildGateRunners
 [integrity] merkle concat: ...
 [Axiom] Checking feature_manifest.json freshness (content-hash)...
-config.nims(181, 22) Error: system module needs: nimDestroyAndDispose
+config.nims(207, 22) Error: system module needs: nimDestroyAndDispose
 ```
 
-- 메인 클론과 worktree 양쪽에서 **동일하게** 실패 (9d44c4a 및 d4bbbe1 베이스에서 재현,
-  nim 2.2.10 choosenim).
+- 메인 클론과 worktree 양쪽에서 **동일하게** 실패 (HEAD 9d44c4a, nim 2.2.10 choosenim).
 - `nim buildGateRunners`는 DEBT#517/518 조사(2026-11-08)에서 "자동 호출자 0건"으로
   확인된 수동 태스크라 이 실패가 조용히 잠복해 있었다.
 - 태스크 본문 실행 전(semantic analysis 단계)에 중단 — 실패는 파일 상태와 무관하다.
+- 보고되는 위치는 원인 노드가 아니라 **클로저 환경을 destroy해야 하는 첫 참조 지점**이다
+  (관측 예: `let storedHash = getStoredHash(bin)` 의 호출 열).
 
 ## §2. Root cause
 
@@ -38,6 +39,8 @@ config.nims(181, 22) Error: system module needs: nimDestroyAndDispose
 - top-level var + top-level proc (closure 아님) → 정상 (실측).
 - task 본문 proc이 지역 var을 참조하지 않으면 closure가 아니므로 이론상 안전
   (본 저장소에서 해당 사례는 buildGateRunners가 유일).
+- `quit(1)` / `raise`를 태스크 안에 넣는 것만으로는 재현되지 않는다 (실측 — 이 quirk는
+  클로저와 메모리 모델의 상호작용이지 예외 처리의 문제가 아니다).
 
 ## §3. Reproduction (minimal)
 
@@ -61,23 +64,26 @@ $ nim tprobe
 config.nims(11, 8) Error: system module needs: nimDestroyAndDispose   # exit 1
 ```
 
-`var`/`proc`을 top-level로 올리면 (task가 top-level var을 mutate하는 것 포함) exit 0.
+`var`/`proc`을 top-level로 올리거나, 캡처 대신 **명시적 파라미터**로 넘기면 exit 0.
 
 ## §4. Fix pattern
 
-**closure를 만들지 마라**: 태스크 본문 안의 proc이 지역 변수를 필요로 하면
-해당 `var` + `proc`을 top-level로 호이스트하라 (lookup 의미는 동일 — top-level
-nims var은 스크립트 전역이다). `mm:arc`를 건드리는 대안(스위치 제거/refc 전환)은
-컴파일 산출물의 메모리 모델 계약을 깨뜨리므로 금지.
+**closure를 만들지 마라.** 두 가지 등가 형태가 있다:
 
-적용: `config.nims` `buildGateRunners`의 `prevHashes`/`getStoredHash` 호이스트
-(DEBT#524 슬라이스 — `nim buildGateRunners` exit 0 복구 커밋). 태스크 본문의 나머지
-논리는 불변.
+1. **명시적 파라미터 (채택)** — task 지역 상태를 proc 인자로 넘긴다:
+   `proc storedHashFor(prevHashes: seq[(string, string)]; bin: string): string`.
+   캡처가 없으므로 closure 환경도, destroy도 필요 없다. 착지: `config.nims`
+   `buildGateRunners` (DEBT#517/518/519 슬라이스).
+2. **top-level 호이스트** — `var prevHashes`와 `proc getStoredHash`를 모듈 수준으로
+   올린다. lookup 의미는 동일(top-level nims var은 스크립트 전역)하지만 가변 전역
+   상태가 남는다.
+
+`mm:arc`를 건드리는 대안(스위치 제거/refc 전환)은 컴파일 산출물의 메모리 모델 계약을
+깨뜨리므로 금지한다.
 
 ## §5. 영향 범위 (2026-11-14 실측)
 
-- 저장소 내 nims 태스크 중 task 본문 내부 proc을 가진 것은 `buildGateRunners`가
-  유일 — 나머지는 `exec` 호출뿐.
+- 저장소 내 nims 태스크 8개(`config.nims` 7 + 위임) 중 task 본문 내부 proc을 가진
+  것은 `buildGateRunners`가 유일 — 나머지는 `exec` 호출뿐.
 - `config/*.nims` include의 proc들은 include 확장 후 top-level이므로 무관.
 - Nim 2.2.10 (저장소 pinned, choosenim). 상위 Nim 버전에서의 해소 여부는 미검증.
-
