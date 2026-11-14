@@ -731,6 +731,9 @@ jobs:
             [ "$want" = "$got" ] || fail "sha256 mismatch for '$file_rel' (manifest '$want' != actual '$got')"
           done < <(awk '/^[0-9a-f]{64}[[:space:]]{2}/{print $1 "\t" $2}' "$manifest")
           [ -f "$RUNNER_TEMP/base-artifacts/bin/ax" ] || fail "bin/ax missing inside artifact '$want_name'"
+          # bin/ is untracked build output — a fresh checkout has no such
+          # directory since VS-R2 deleted the last tracked file under it.
+          mkdir -p "$GITHUB_WORKSPACE/bin"
           install -m 755 "$RUNNER_TEMP/base-artifacts/bin/ax" "$GITHUB_WORKSPACE/bin/ax"
           # (4) attest --sign의 stage-(b) 추출 합의가 ircheck를 실행한다
           # (extraction_agreement.nim runReferenceExtractorOnWire — worker =
