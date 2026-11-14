@@ -3,7 +3,7 @@
 # Usage: validate_root_manifest [--root <dir>] [--expected-forbidden <path>...] [--strict]
 # Exit 0 = PASS, exit 1 = violation.
 
-import std/[os, osproc, strutils, tables]
+import std/[os, osproc, strutils, tables, times]
 
 # ---------------------------------------------------------------------------
 # Classification constants
@@ -27,28 +27,123 @@ const ForbiddenFiles: seq[string] = @[
   "debug_real.nims", "deferred_migration.json", "proof_universe.lock"
 ]
 
-const ExactAllowedFiles: seq[string] = @[
-  "AGENTS.md", "README.md", "LICENSE", "THIRD-PARTY-NOTICES.md", "Makefile",
-  "axiom.nimble", "config.nims", "nimble.lock", "axiom.lock",
-  "axiom.toml", "topology.lock",
-  "flake.nix",
-  "lakefile.toml", "lake-manifest.json", "lean-toolchain",
-  "Dockerfile.build",
+type
+  SurfaceBasis* = enum
+    sbUnset
+    sbToolchain
+    sbPlatform
+    sbInternal
+    sbLegacy
+
+  RootEntry* = object
+    name*: string
+    isDir*: bool
+    basis*: SurfaceBasis
+    removalCondition*: string
+    reviewBy*: string
+
+const ExactAllowedEntries*: array[39, RootEntry] = [
+  # single files
+  RootEntry(name: "AGENTS.md", basis: sbInternal),
+  RootEntry(name: "README.md", basis: sbPlatform),
+  RootEntry(name: "LICENSE", basis: sbPlatform),
+  RootEntry(name: "THIRD-PARTY-NOTICES.md", basis: sbPlatform),
+  RootEntry(name: "Makefile", basis: sbToolchain),
+  RootEntry(name: "axiom.nimble", basis: sbToolchain),
+  RootEntry(name: "config.nims", basis: sbToolchain),
+  RootEntry(name: "nimble.lock", basis: sbToolchain),
+  RootEntry(name: "axiom.lock", basis: sbInternal),
+  RootEntry(name: "axiom.toml", basis: sbInternal),
+  RootEntry(name: "topology.lock", basis: sbInternal),
+  RootEntry(name: "flake.nix", basis: sbToolchain),
+  RootEntry(name: "lakefile.toml", basis: sbToolchain),
+  RootEntry(name: "lake-manifest.json", basis: sbToolchain),
+  RootEntry(name: "lean-toolchain", basis: sbToolchain),
+  RootEntry(name: "Dockerfile.build", basis: sbToolchain),
   # dot / toolchain files
-  ".axiom_root", ".gitignore", ".gitattributes", ".editorconfig",
-  ".dockerignore", ".cursorrules", ".envrc",
+  RootEntry(name: ".axiom_root", basis: sbInternal),
+  RootEntry(name: ".gitignore", basis: sbPlatform),
+  RootEntry(name: ".gitattributes", basis: sbPlatform),
+  RootEntry(name: ".editorconfig", basis: sbPlatform),
+  RootEntry(name: ".dockerignore", basis: sbToolchain),
+  RootEntry(name: ".cursorrules", basis: sbPlatform),
+  RootEntry(name: ".envrc", basis: sbPlatform),
   # ignored root (EXACT_ALLOWED)
-  "config.json", "nimble.paths", "opencode.json",
+  RootEntry(name: "config.json", basis: sbPlatform),
+  RootEntry(name: "nimble.paths", basis: sbToolchain),
+  RootEntry(name: "opencode.json", basis: sbPlatform),
+  # dot / toolchain directories
+  RootEntry(name: ".githooks", isDir: true, basis: sbPlatform),
+  RootEntry(name: ".github", isDir: true, basis: sbPlatform),
+  RootEntry(name: ".config", isDir: true, basis: sbInternal),
+  RootEntry(name: ".opencode", isDir: true, basis: sbPlatform),
+  # VCS-internal + runtime state dirs
+  RootEntry(name: ".git", isDir: true, basis: sbPlatform),
+  RootEntry(name: ".axiom", isDir: true, basis: sbInternal),
+  RootEntry(name: ".cache", isDir: true, basis: sbInternal),
+  # tracked content directories
+  RootEntry(name: "ci", isDir: true, basis: sbInternal),
+  RootEntry(name: "experiments", isDir: true, basis: sbInternal),
+  RootEntry(name: "_lto_evidence", isDir: true, basis: sbInternal),
+  RootEntry(name: "LICENSES", isDir: true, basis: sbPlatform),
+  RootEntry(name: "CLA", isDir: true, basis: sbPlatform),
+  RootEntry(name: "compliance", isDir: true, basis: sbInternal),
 ]
 
-const ExactAllowedDirs: seq[string] = @[
-  ".githooks", ".github", ".config", ".opencode",
-  # VCS-internal + runtime state dirs (always allowed)
-  ".git", ".axiom", ".cache",
-  # tracked content directories (EXACT_ALLOWED — docs/spec/filesystem_contract.md §2.4)
-  "ci", "experiments", "_lto_evidence",
-  "LICENSES", "CLA", "compliance",
-]
+let ExactAllowedFileNames = block:
+  var names: seq[string]
+  for e in ExactAllowedEntries:
+    if not e.isDir:
+      names.add e.name
+  names
+
+let ExactAllowedDirNames = block:
+  var names: seq[string]
+  for e in ExactAllowedEntries:
+    if e.isDir:
+      names.add e.name
+  names
+
+proc isIsoDate(s: string): bool =
+  if s.len != 10:
+    return false
+  for i, ch in s:
+    if i == 4 or i == 7:
+      if ch != '-':
+        return false
+    elif ch notin {'0'..'9'}:
+      return false
+  true
+
+proc currentUtcDate*(): string =
+  let override = getEnv("AXIOM_TODAY")
+  if override.len > 0:
+    return override
+  now().format("yyyy-MM-dd")
+
+proc validateBasisInventory*(entries: openArray[RootEntry], today: string): seq[string] =
+  ## Machine-checkable subset of the Basis contract: enum validity, uniqueness,
+  ## and LEGACY removal metadata. The truth of each basis claim is human-audited.
+  var seen = initTable[string, bool]()
+  for e in entries:
+    if e.name.strip.len == 0:
+      result.add "FAIL: exact-allowed entry has empty name"
+      continue
+    if seen.hasKey(e.name):
+      result.add "FAIL: " & e.name & " duplicate exact-allowed entry"
+    seen[e.name] = true
+
+    if e.basis == sbUnset:
+      result.add "FAIL: " & e.name & " basis missing (TOOLCHAIN/PLATFORM/INTERNAL/LEGACY required)"
+      continue
+
+    if e.basis == sbLegacy:
+      if e.removalCondition.strip.len == 0:
+        result.add "FAIL: " & e.name & " LEGACY missing removalCondition"
+      if not isIsoDate(e.reviewBy):
+        result.add "FAIL: " & e.name & " LEGACY missing/invalid reviewBy (YYYY-MM-DD)"
+      elif e.reviewBy < today:
+        result.add "FAIL: " & e.name & " LEGACY review overdue (reviewBy=" & e.reviewBy & ")"
 
 const PatternAllowedEnvs: seq[string] = @[
   "production", "development", "staging", "test", "local"
@@ -152,11 +247,11 @@ proc isHashSuffixBinary(name: string): bool =
 
 proc classifyEntry(name: string): Classification =
   # 1. EXACT_ALLOWED files
-  if name in ExactAllowedFiles:
+  if name in ExactAllowedFileNames:
     return clExactAllowed
 
   # 2. EXACT_ALLOWED dirs
-  if name in ExactAllowedDirs:
+  if name in ExactAllowedDirNames:
     return clExactAllowed
 
   # 3. PATTERN_ALLOWED: .env.<env> where env is in the allowed set
@@ -337,6 +432,10 @@ proc validateRoot(rootDir: string,
   for d in RequiredDirs:
     if not requiredPresent.getOrDefault(d, false):
       violations.add "FAIL: " & d & " required missing"
+
+  # Check EXACT_ALLOWED Basis inventory (machine-checkable subset)
+  for v in validateBasisInventory(ExactAllowedEntries, currentUtcDate()):
+    violations.add v
 
   # Check bin/ contents contract
   let binViolations = checkBinContents(rootDir)

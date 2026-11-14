@@ -3,6 +3,7 @@
 > **Status**: Analysis document (read-only, no code changes)
 > **Date**: 2026-08-13
 > **Scope**: P3 — 16 `cnaNoObligations` kernel symbols classified by causeClass
+> **Revision 2026-11-14**: `data/vks_topology.json` was removed as a dead entry (no code reader or writer; 4,032 bytes; last touched in the initial baseline). The snapshot remains in git history at commit `14fea90`. This document is preserved as a historical analysis record.
 > **Related**: [VKD — Verified Kernel Density](./verification_density.md), [Proof Integrity](../core/proof/proof_integrity.nim)
 
 ---

@@ -5,7 +5,6 @@ scripts/source_dump*.txt
 
 # Local environment variables
 .env
-.envrc
 
 # Tools and temp
 .tools/
@@ -31,16 +30,7 @@ bin/*
 bin_gateway_test/*
 /tools/baseline_snapshot
 
-!bin/readfile_guard
-
-!bin/.gitignore
-!bin/axiom-upgrade
 !bin/axiom.nim
-!bin/generate-pbt-tests
-!bin/generate-runners
-!bin/hermetic-build
-!bin/axiom_local_docs_lookup
-!bin/setup-agent-capabilities
 # ── Language Ban: src/ & tests/ whitelist (AGENTS.md §0.2) ────────────
 # Pure allowlist: only .nim, .lean, .nims, .md, .json, .lock, .feature
 # Git tracked data files: .json (domain_layout, certificates), .lock (gate policy)
@@ -296,13 +286,6 @@ tools/cli_surface_generator
 
 # Phase 1 debt cleanup — whitelisted bin/ scripts
 bin/nimtry
-!bin/clean_unused_imports
-!bin/run-gate
-!bin/run-quality-audit
-!bin/diagnose-cursor
-!bin/git-commit-atomic
-!bin/sync-branch
-!bin/sync-main-worktree
 
 # ELF binaries (vacuum-generated)
 src/cli/procedure_gate
@@ -316,7 +299,6 @@ tests/features/complexity_entropy_test
 tests/features/pattern_guard_test
 tests/features/k_induction_test
 tests/features/*_test
-axiom.toml
 
 # P4 topology apply staging directory
 .axiom/
@@ -380,7 +362,6 @@ docs/audit/*
 !docs/audit/ci_semantic_reduction_audit_2026-09-27.md
 
 # Generated metadata (runtime, not committed)
-proofs/proof_witness.json
 src/generated/type_registry_metadata.json
 
 # Nim compiled binaries (in source tree)

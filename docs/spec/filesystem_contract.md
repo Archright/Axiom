@@ -2,6 +2,8 @@
 
 Status: NORMATIVE
 
+Revision 2026-11-14 (VS-R0 root manifest Basis): every EXACT_ALLOWED entry records a Basis (TOOLCHAIN/PLATFORM/INTERNAL/LEGACY); duplicate `compliance/` row removed; `data/vks_topology.json` removed as a dead entry; LEGACY requires `removalCondition` + `reviewBy` enforced by `validate_root_manifest`.
+
 Revision 2026-11-13 (VS-1 config SSOT migration): `topology.json`, `topology_policy.json`, and `promotion_intent.json` removed from root EXACT_ALLOWED (§2.4) — canonical locations are now `config/topology.json`, `config/topology_policy.json`, `config/promotion_intent.json` (policy/threshold home per §2 role table); root re-entry is denied as clUnknown.
 
 Revision 2026-11-13 (VS-0 root dead-entry removal): lfs_exceptions.json, .env.example, and .envrc.example removed from EXACT_ALLOWED (§2.4).
@@ -9,8 +11,6 @@ Revision 2026-11-13 (VS-0 root dead-entry removal): lfs_exceptions.json, .env.ex
 Revision 2026-11-09 (VS-I publication-integrity gate): `compliance/` registered as an EXACT_ALLOWED tracked content directory (§2.4) — publication policy SSOT home (merge_admission v1.20.0 trustSurface content).
 
 Revision 2026-11-06 (Gate 3 SAL 1.0): `THIRD-PARTY-NOTICES.md` registered as an EXACT_ALLOWED single file; `LICENSES/`·`CLA/` registered as EXACT_ALLOWED tracked content directories (§2.4) — SAL 1.0 publication surface.
-
-Revision 2026-11-09 (VS-I publication-integrity): `compliance/` registered as an EXACT_ALLOWED tracked content directory (§2.4) — the publication gate's policy SSOT zone (license/security/provenance policies, secret-scan baseline, source-origin + license-attribution declarations).
 
 Revision 2026-11-04 (VS-1 root-write-closure PR-1): `ci/`·`experiments/`·`_lto_evidence/` registered as EXACT_ALLOWED tracked content directories (§2.4); `bin/axiom.nim` registered as the §7.1 legacy exception; §6 Enforcement Scope added; `logs/` tracked-status git failure now fail-closed in the validator.
 
@@ -87,75 +87,87 @@ Entry must NOT exist at the repository root. Presence → FAIL (unless explicitl
 
 Entry exists at the root → PASS (no further content inspection).
 
+Every entry carries a **Basis** — the kind of authority that requires it at the root. Basis is a classification label, not proof of necessity; the truth of each claim is human-audited (§2.4.1).
+
 **Single files:**
 
-| Entry |
-|---|
-| `AGENTS.md` |
-| `README.md` |
-| `LICENSE` |
-| `THIRD-PARTY-NOTICES.md` |
-| `Makefile` |
-| `axiom.nimble` |
-| `config.nims` |
-| `nimble.lock` |
-| `axiom.lock` |
-| `axiom.toml` |
-| `topology.lock` |
-| `flake.nix` |
-| `lakefile.toml` |
-| `lake-manifest.json` |
-| `lean-toolchain` |
-| `Dockerfile.build` |
+| Entry | Basis |
+|---|---|
+| `AGENTS.md` | INTERNAL |
+| `README.md` | PLATFORM |
+| `LICENSE` | PLATFORM |
+| `THIRD-PARTY-NOTICES.md` | PLATFORM |
+| `Makefile` | TOOLCHAIN |
+| `axiom.nimble` | TOOLCHAIN |
+| `config.nims` | TOOLCHAIN |
+| `nimble.lock` | TOOLCHAIN |
+| `axiom.lock` | INTERNAL |
+| `axiom.toml` | INTERNAL |
+| `topology.lock` | INTERNAL |
+| `flake.nix` | TOOLCHAIN |
+| `lakefile.toml` | TOOLCHAIN |
+| `lake-manifest.json` | TOOLCHAIN |
+| `lean-toolchain` | TOOLCHAIN |
+| `Dockerfile.build` | TOOLCHAIN |
 
 **Dot / toolchain files:**
 
-| Entry |
-|---|
-| `.axiom_root` |
-| `.gitignore` |
-| `.gitattributes` |
-| `.editorconfig` |
-| `.dockerignore` |
-| `.cursorrules` |
-| `.envrc` |
+| Entry | Basis |
+|---|---|
+| `.axiom_root` | INTERNAL |
+| `.gitignore` | PLATFORM |
+| `.gitattributes` | PLATFORM |
+| `.editorconfig` | PLATFORM |
+| `.dockerignore` | TOOLCHAIN |
+| `.cursorrules` | PLATFORM |
+| `.envrc` | PLATFORM |
 
 **Dot / toolchain directories:**
 
-| Entry |
-|---|
-| `.githooks/` |
-| `.github/` |
-| `.config/` |
-| `.opencode/` |
+| Entry | Basis |
+|---|---|
+| `.githooks/` | PLATFORM |
+| `.github/` | PLATFORM |
+| `.config/` | INTERNAL |
+| `.opencode/` | PLATFORM |
 
 **VCS / runtime state directories (EXACT_ALLOWED):**
 
-| Entry | Rationale |
-|---|---|
-| `.git/` | VCS-internal — always outside the contract |
-| `.axiom/` | CLI runtime state (untracked) |
-| `.cache/` | Tool cache (untracked) |
+| Entry | Rationale | Basis |
+|---|---|---|
+| `.git/` | VCS-internal — always outside the contract | PLATFORM |
+| `.axiom/` | CLI runtime state (untracked) | INTERNAL |
+| `.cache/` | Tool cache (untracked) | INTERNAL |
 
 **Tracked content directories (EXACT_ALLOWED):** Presence → PASS (no contents contract — tracked content zones, distinct from the generated/ephemeral OPTIONAL zone).
 
-| Entry | Rationale |
-|---|---|
-| `ci/` | CI checker definitions (Tier C closure member — `ci/checker.mk`) |
-| `compliance/` | Publication gate policy SSOT (VS-I: license/security/provenance policies, secret baseline, origin + attribution declarations) |
-| `LICENSES/` | Third-party license full texts (SAL 1.0 publication surface — `THIRD-PARTY-NOTICES.md` counterparts) |
-| `CLA/` | Contributor License Agreements (individual/entity — external contribution gate) |
-| `experiments/` | Tracked experiment records |
-| `_lto_evidence/` | Tracked LTO measurement evidence |
-| `compliance/` | Publication-integrity policy SSOT (license/security/provenance policy, secret-scan baseline, per-path origin + attribution declarations — VS-I, merge_admission v1.20.0 trustSurface content) |
+| Entry | Rationale | Basis |
+|---|---|---|
+| `ci/` | CI checker definitions (Tier C closure member — `ci/checker.mk`) | INTERNAL |
+| `compliance/` | Publication gate policy SSOT (VS-I: license/security/provenance policies, secret baseline, origin + attribution declarations) | INTERNAL |
+| `LICENSES/` | Third-party license full texts (SAL 1.0 publication surface — `THIRD-PARTY-NOTICES.md` counterparts) | PLATFORM |
+| `CLA/` | Contributor License Agreements (individual/entity — external contribution gate) | PLATFORM |
+| `experiments/` | Tracked experiment records | INTERNAL |
+| `_lto_evidence/` | Tracked LTO measurement evidence | INTERNAL |
 
 **Ignored root entries (EXACT_ALLOWED):** These files may exist at root but are not tracked as part of the contract surface. Their presence → PASS.
 
-| Entry |
-|---|
-| `config.json` |
-| `nimble.paths` |
-| `opencode.json` |
+| Entry | Basis |
+|---|---|
+| `config.json` | PLATFORM |
+| `nimble.paths` | TOOLCHAIN |
+| `opencode.json` | PLATFORM |
+
+#### 2.4.1 Basis semantics
+
+| Basis | Meaning | Machine-checked by `validate_root_manifest` | Human-audited |
+|---|---|---|---|
+| TOOLCHAIN | A pinned external tool reads this path (Nim/nimble, Lake/Lean, Nix, Docker, Make) | enum validity, uniqueness | that the tool actually requires this exact path |
+| PLATFORM | Git, GitHub, or an editor/runtime platform entrypoint | enum validity, uniqueness | currency of the platform contract |
+| INTERNAL | Axiom's own contract/runtime state with an in-repo consumer | enum validity, uniqueness | that the consumer is live and the classification is correct |
+| LEGACY | Grandfathered entry that cannot be removed yet | `removalCondition` present; `reviewBy` is a valid `YYYY-MM-DD` and not past | whether the removal condition is genuinely met |
+
+`validate_root_manifest` enforces only the machine-checked column. A PASS does **not** prove that an entry is necessary. `LEGACY` entries without `removalCondition` and a future `reviewBy` fail the validator, so `LEGACY` cannot become a permanent dumping ground. The `AXIOM_TODAY` environment variable overrides the review date for deterministic tests.
 
 ### 2.5 PATTERN_ALLOWED
 
