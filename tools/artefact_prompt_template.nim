@@ -63,7 +63,6 @@ Call YieldArtifact with:
 # AgentSwarm(
 #   prompt_template=PROMPT_TEMPLATE,
 #   items=[
-#     "Create src/core/gate/cache_manifest.nim — a cache manifest generator",
 #     "Create src/core/gate/merge_defs.nim — a gate definition merger",
 #     "Create src/core/gate/orchestrator_hook.nim — an orchestrator hook handler"
 #   ],
