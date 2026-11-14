@@ -99,3 +99,42 @@ func hashSourceContents*(
   for f in relFiles:
     entries.add((f.relPath, fileContentDigest(f.content)))
   sourceTreeDigest(entries)
+
+# ── Trusted-artifact anchor adjudication (DEBT#533) ──────────────────────────
+#
+# `data/expected_invariant_hash.txt` pins the digest of
+# `src/core/trusted/architecture_invariants.nim`. Deciding whether that pin is
+# satisfied is the same family as `sourceTreeDigest`: a pinned digest compared
+# against live content. It lives here, as a pure judgment, so the fail-closed
+# contract is testable without the build orchestrator.
+#
+# Contract: a missing anchor is a FAILURE, never an invitation to derive a new
+# anchor from the artifact under test. Deriving it from the live tree lets one
+# change both the invariant source and its reference hash and still observe a
+# green verdict — the definition of a fail-open trust boundary. Re-anchoring is
+# an explicit, separate act (`bin/reanchor_pin`), never a build side effect.
+
+type
+  InvariantAnchorVerdict* = enum
+    ## Outcome of comparing a trusted artifact against its committed anchor.
+    iavOk
+    iavInvariantsMissing
+    iavAnchorMissing
+    iavMismatch
+
+func judgeInvariantAnchor*(invariantsPresent, anchorPresent: bool,
+                           currentHash, expectedHash: string):
+                           InvariantAnchorVerdict {.raises: [].} =
+  ## Pure: decide whether the trusted artifact is anchored.
+  ##
+  ## Precedence is structural, not textual: absent inputs are reported before
+  ## content comparison because a missing anchor carries no expected hash.
+  ## `expectedHash` is compared verbatim — trimming is the caller's contract, so
+  ## a blank-padded anchor cannot be normalized into agreement here.
+  if not invariantsPresent:
+    return iavInvariantsMissing
+  if not anchorPresent:
+    return iavAnchorMissing
+  if currentHash != expectedHash:
+    return iavMismatch
+  iavOk

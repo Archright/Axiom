@@ -2723,7 +2723,7 @@
     "src/core/utils/build_provenance.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "604fe7991a762eb51a5fc6d4523419fdb827eb4b"
+      "sha": "7c762e125df1a7398875ddb6abb7e4fe67e15e23"
     },
     "src/core/utils/canonical_projection.nim": {
       "mode": "100644",
@@ -4473,7 +4473,7 @@
     "tools/hermetic_build.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "7931b49a84809f2d9240546e1a66328bb1b8805f"
+      "sha": "b03fdf4a1679753c116d5d8e3ff42ac606d25569"
     },
     "tools/safe_move.nim": {
       "mode": "100644",

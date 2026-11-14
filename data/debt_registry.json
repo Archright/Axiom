@@ -5376,11 +5376,13 @@
         "data/expected_invariant_hash.txt"
       ],
       "source": "theater_audit",
-      "status": "open",
-      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9 (fail-open paths are registered, never quietly patched). Fix direction: make a missing anchor a hard FAIL in CI/landing venues and keep the cold-start bootstrap behind an explicit one-shot flag; the anchor's own update must then be a separate, reviewed commit.",
-      "lastVerifiedAt": "2026-11-14T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-14. tools/hermetic_build.nim:verifyInvariantHash no longer bootstraps a missing data/expected_invariant_hash.txt; the adjudication is the pure judgeInvariantAnchor (src/core/trusted/invariant_anchor.nim), which returns iavAnchorMissing and the caller returns false. Evidence: (a) pre-fix reproduction — deleting the anchor made bin/hermetic_build print '[bootstrap] cold-start: created ... with hash 3da71963...' and 'Invariant hash: OK' at exit 0; (b) post-fix — the same deletion yields '❌ [guard] ... not found — failing invariant hash check' at exit 1 and creates no anchor; (c) the normal path still prints 'Invariant hash: OK' at exit 0; (d) tests/unit/test_invariant_anchor_fail_closed.nim passes 7/7 and a mutant restoring iavAnchorMissing->iavOk fails 2 assertions at exit 1, so the suite is non-vacuous. Re-anchoring remains an explicit act via bin/reanchor_pin.",
+      "lastVerifiedAt": "2026-11-14T13:02:40Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is tooling (tools/hermetic_build.nim), outside the src/-only {.axiomDebt.} marker scan; trace: this entry's lineRange/contentHash plus the captured bootstrap branch."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is tooling (tools/hermetic_build.nim), outside the src/-only {.axiomDebt.} marker scan; trace: this entry's lineRange/contentHash plus the captured bootstrap branch.",
+      "resolvedAt": "2026-11-14",
+      "resolvedBy": "workstream/vs-533-anchor"
     },
     {
       "id": "DEBT#534",

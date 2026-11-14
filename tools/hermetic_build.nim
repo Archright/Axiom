@@ -1079,30 +1079,33 @@ proc checkImportBoundaries(): bool =
   return true
 proc verifyInvariantHash(): bool =
   ## Verify architecture_invariants.nim hasn't been tampered with.
-  ## Cold-start bootstrap: if ExpectedHashPath missing, create it from current invariants hash.
+  ## Fail-closed (DEBT#533): a missing anchor is a FAILURE. Deriving the anchor
+  ## from the tree under test would let one change both the invariant source and
+  ## its reference hash and still observe "Invariant hash: OK". Re-anchoring is
+  ## an explicit, separate act (`bin/reanchor_pin`), never a build side effect.
   if not fileExists(InvariantsPath):
     echo "  ❌ " & InvariantsPath & " not found — failing invariant hash check"
     return false
-  if not fileExists(ExpectedHashPath):
-    let content = readFile(InvariantsPath)
-    let currentHash = sha256String(content)
-    let dir = parentDir(ExpectedHashPath)
-    if dir.len > 0 and not dirExists(dir):
-      createDir(dir)
-    let tmpPath = ExpectedHashPath & ".tmp." & $getCurrentProcessId()
-    writeFile(tmpPath, currentHash & "\n")
-    safeMoveFile(tmpPath, ExpectedHashPath)
-    echo "  [bootstrap] cold-start: created " & ExpectedHashPath & " with hash " & currentHash
-    return true
   let content = readFile(InvariantsPath)
   let currentHash = sha256String(content)
-  let expectedHash = readFile(ExpectedHashPath).strip()
-  if currentHash != expectedHash:
+  let anchorPresent = fileExists(ExpectedHashPath)
+  let expectedHash =
+    if anchorPresent: readFile(ExpectedHashPath).strip()
+    else: ""
+  case judgeInvariantAnchor(true, anchorPresent, currentHash, expectedHash)
+  of iavOk:
+    return true
+  of iavInvariantsMissing:
+    return false
+  of iavAnchorMissing:
+    echo "  ❌ [guard] " & ExpectedHashPath & " not found — failing invariant hash check"
+    echo "    re-anchor explicitly from a trusted tree: bin/reanchor_pin"
+    return false
+  of iavMismatch:
     echo "  ❌ [guard] architecture_invariants.nim hash mismatch — possible tampering"
     echo "    expected: " & expectedHash
     echo "    current:  " & currentHash
     return false
-  return true
 proc generateManifest(): bool =
   ## Content-derived deterministic manifest (§0.2). No wall-clock timestamps.
   ## manifest_content_hash = SHA-256(invariant_hash + scope_lock_version)
