@@ -113,6 +113,14 @@ Every entry carries a **Basis** — the kind of authority that requires it at th
 | `lean-toolchain` | TOOLCHAIN |
 | `Dockerfile.build` | TOOLCHAIN |
 
+`lean-toolchain` and `proofs/lean-toolchain` are two load-bearing declarations of
+the same pin, and neither can be collapsed: `elan`/`lake` resolve the root file,
+while `src/core/proof/proof_witness_checker.nim` reads `proofs/lean-toolchain`
+at compile time (`staticRead`). `bin/validate_root_manifest` therefore enforces
+byte equality between them (`lean-toolchain-pin-equality`). The assertion is
+scoped to the declared files only — it does not observe which Lean binary a
+build path actually resolves at runtime.
+
 **Dot / toolchain files:**
 
 | Entry | Basis |
