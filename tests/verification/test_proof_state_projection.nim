@@ -5,6 +5,8 @@
 
 import std/[unittest, json, os, tables, times]
 import verification/proof_state_projection
+import core/types/certificate_types
+import core/types/verification_tier
 import core/utils/constants
 
 # ---------------------------------------------------------------------------
@@ -240,14 +242,16 @@ suite "applyProofStateSyncStatus":
     check node["reason"].getStr() == "proof-state-kernel-replay"
     check node["winningStrategy"].getStr() == "lean-replay"
 
-  test "substantive + z3-only evidence → certZ3Verified (never certGreen)":
+  test "substantive + z3-only evidence → certZ3Candidate (never certGreen)":
+    # DEBT#504: Z3-only now projects through the canonical tierToStatusString
+    # (DECISION-0630) — the honest candidate state, never certGreen.
     var node = %*{
       "status": "x",
       "solverStatus": "unsat",
       "solverMeta": %*{"leanCompilerVerified": false}
     }
     applyProofStateSyncStatus(node, true)
-    check node["status"].getStr() == "certZ3Verified"
+    check node["status"].getStr() == "certZ3Candidate"
 
   test "substantive but no dual evidence → honest tier, not certGreen":
     # P0: certGreen requires z3Passed ∧ leanVerified. A substantive flag alone
@@ -266,6 +270,118 @@ suite "applyProofStateSyncStatus":
     applyProofStateSyncStatus(node, false)
     check node["status"].getStr() == "certPseudoVerified"
     check node["trusted"].getBool() == false
+
+# ---------------------------------------------------------------------------
+# applyProofStateSyncStatus — canonical tier projection (DEBT#504)
+# ---------------------------------------------------------------------------
+
+suite "applyProofStateSyncStatus canonical tier projection":
+  test "tierToStatusString maps all six tiers canonically (DECISION-0630)":
+    # DEBT#504: sync projects through the single canonical tierToStatusString
+    # (core/types/certificate_types.nim). Pin the six values so any drift in
+    # the canonical mapping surfaces in the projection contract.
+    check tierToStatusString(vtDual) == "certGreen"
+    check tierToStatusString(vtZ3Only) == "certZ3Candidate"
+    check tierToStatusString(vtKInduction) == "certZ3Candidate"
+    check tierToStatusString(vtLeanOnly) == "certLeanVerified"
+    check tierToStatusString(vtNone) == "certNoObligation"
+    check tierToStatusString(vtUfAbstract) == "certZ3Candidate"
+
+  test "lean-only evidence → certLeanVerified":
+    var node = %*{
+      "status": "x",
+      "solverMeta": %*{"leanCompilerVerified": true},
+      "kernel": true
+    }
+    applyProofStateSyncStatus(node, true)
+    check node["status"].getStr() == "certLeanVerified"
+
+  test "no evidence (vtNone) → certNoObligation, never certRed":
+    # vtNone means "no evidence and no obligation tracked" — projecting it to
+    # certRed would fabricate a counterexample. The proof-state leg is stable:
+    # certNoObligation maps to no_obligation.
+    var node = %*{"status": "x"}
+    applyProofStateSyncStatus(node, true)
+    check node["status"].getStr() == "certNoObligation"
+    check certificateStatusToProofStateStatus(node["status"].getStr()) == "no_obligation"
+
+# ---------------------------------------------------------------------------
+# legacy certZ3Verified normalization (DEBT#504)
+# ---------------------------------------------------------------------------
+
+suite "legacy certZ3Verified normalization":
+  test "synced certZ3Candidate projects back to z3_candidate":
+    var node = %*{
+      "status": "x",
+      "solverStatus": "unsat",
+      "solverMeta": %*{"leanCompilerVerified": false}
+    }
+    applyProofStateSyncStatus(node, true)
+    check node["status"].getStr() == "certZ3Candidate"
+    check certificateStatusToProofStateStatus(node["status"].getStr()) == "z3_candidate"
+
+  test "certZ3Candidate certificate converges with z3_candidate entry":
+    let entry = %*{"status": "z3_candidate"}
+    let proj = CertificateProjection(status: "certZ3Candidate")
+    check proofStateEntryConvergesWithCertificate(entry, proj) == true
+
+  test "legacy certZ3Verified certificate converges with z3_candidate entry":
+    # Legacy spelling is canonicalized on read — proof-state semantics are
+    # unchanged by the DEBT#504 projection fix.
+    let entry = %*{"status": "z3_candidate"}
+    let proj = CertificateProjection(status: "certZ3Verified")
+    check proofStateEntryConvergesWithCertificate(entry, proj) == true
+
+# ---------------------------------------------------------------------------
+# spNoObligation provenance guard (unchanged by DEBT#504)
+# ---------------------------------------------------------------------------
+
+suite "spNoObligation provenance guard":
+  test "top-level solverProvenance=spNoObligation is derived":
+    check isNoObligationDerived(%*{"solverProvenance": "spNoObligation"}) == true
+
+  test "nested solverMeta.solverProvenance=spNoObligation is derived":
+    check isNoObligationDerived(%*{"solverMeta": %*{"solverProvenance": "spNoObligation"}}) == true
+
+  test "other provenance is not derived":
+    check isNoObligationDerived(%*{"solverProvenance": "spZ3"}) == false
+    check isNoObligationDerived(%*{}) == false
+
+  test "spNoObligation + substantive dual evidence blocks certGreen (§0.9)":
+    var node = %*{
+      "status": "unattempted",
+      "solverProvenance": "spNoObligation",
+      "solverStatus": "unsat",
+      "solverMeta": %*{"leanCompilerVerified": true},
+      "kernel": true
+    }
+    applyProofStateSyncStatus(node, true)
+    check node["status"].getStr() != "certGreen"
+    check node["status"].getStr() == "certPseudoVerified"
+    check node["trusted"].getBool() == false
+
+  test "nested spNoObligation + substantive dual evidence blocks certGreen":
+    var node = %*{
+      "status": "unattempted",
+      "solverStatus": "unsat",
+      "solverMeta": %*{"leanCompilerVerified": true, "solverProvenance": "spNoObligation"},
+      "kernel": true
+    }
+    applyProofStateSyncStatus(node, true)
+    check node["status"].getStr() != "certGreen"
+    check node["status"].getStr() == "certPseudoVerified"
+
+  test "non-spNoObligation provenance does not trigger the guard":
+    var node = %*{
+      "status": "unattempted",
+      "solverProvenance": "spZ3",
+      "solverStatus": "unsat",
+      "solverMeta": %*{"leanCompilerVerified": true},
+      "kernel": true
+    }
+    applyProofStateSyncStatus(node, true)
+    check node["status"].getStr() == "certGreen"
+
 
 # ---------------------------------------------------------------------------
 # proofStateEntryFromCertificate

@@ -4193,12 +4193,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:52843aad3256228f795a98a8dbc51642571fb85edd02fcc84046e883ec28e8e1",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:c4481c75244b745b6f2857efb2f3a07131972fb304a1842a0d0155962dfa4f7e",
       "count": 6,
       "file": "src/verification/proof_state_projection.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:2b4dd4d8a40c0c5c9b44652eb1ef3d905cd10f3ac1f62944f8796189eeed3273"
+      "rawContentHash": "sha256:5e5e7e57da0097d71fcc6c88e39583d864f1dce46592c113f5b529f6f2d55582"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
