@@ -37,7 +37,7 @@
 
 **실행 계약**:
 
-- 루트 해석: `AXIOM_ROOT` env 최우선 → 미설정 시 바이너리 위치에서 상향 `.axiom_root`/`axiom.toml` 앵커 탐색(첫 앵커 종료). 번들 루트에 `ax`+`.axiom_root` 배치 시 자동 재현. 트리 밖 앵커 미스는 카탈로그 read fail-closed(Q-013, `docs/spec/nim_2_2_10_stdlib_quirks.md`)
+- 루트 해석: `AXIOM_ROOT` env 최우선 → 미설정 시 바이너리 위치에서 상향 `.axiom_root` 앵커 탐색(첫 앵커 종료). 번들 루트에 `ax`+`.axiom_root` 배치 시 자동 재현. 트리 밖 앵커 미스는 카탈로그 read fail-closed(Q-013, `docs/spec/nim_2_2_10_stdlib_quirks.md`)
 - 상태: `AXIOM_STATE_DIR` 지정(시드는 `$AXIOM_STATE_DIR/data` 우선 탐색)
 - 런타임 툴체인(전부 공개 소스, 고객 CI 버전 핀 프로비저닝): nim 2.2.10(harness 런타임 컴파일 — 제품 설계상 의도)·z3 4.13.3·lean 4.33.0/elan·git·libpcre3(로드 타임 dlopen 하드 의존)
 - replay deps 4종: 번들 미포함 — 공개 repo에서 SHA 핀 클론(카탈로그 지정 slug)
