@@ -42,7 +42,7 @@ type
     removalCondition*: string
     reviewBy*: string
 
-const ExactAllowedEntries*: array[39, RootEntry] = [
+const ExactAllowedEntries*: array[38, RootEntry] = [
   # single files
   RootEntry(name: "AGENTS.md", basis: sbInternal),
   RootEntry(name: "README.md", basis: sbPlatform),
@@ -53,7 +53,6 @@ const ExactAllowedEntries*: array[39, RootEntry] = [
   RootEntry(name: "config.nims", basis: sbToolchain),
   RootEntry(name: "nimble.lock", basis: sbToolchain),
   RootEntry(name: "axiom.lock", basis: sbInternal),
-  RootEntry(name: "axiom.toml", basis: sbInternal),
   RootEntry(name: "topology.lock", basis: sbInternal),
   RootEntry(name: "flake.nix", basis: sbToolchain),
   RootEntry(name: "lakefile.toml", basis: sbToolchain),

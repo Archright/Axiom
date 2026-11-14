@@ -6032,10 +6032,12 @@ proc runAxiomEngineCli*(
   # Load config defaults from axiom.toml
   # §1b:40 root resolution (productization contract): AXIOM_ROOT env first,
   # else the anchor walk up from the binary location (first
-  # .axiom_root/axiom.toml terminates) — the same strict seam the catalog
+  # .axiom_root terminates) — the same strict seam the catalog
   # read uses (findRepoRootStrict, VS-2 §2.3 amendment). A --project subject
-  # carrying its own axiom.toml still wins. The CWD-relative join is gone:
-  # CWD is convenience, never identity (§10). A tree-external anchor miss
+  # carrying its own axiom.toml still wins. The anchored root resolves the
+  # canonical `config/axiom.toml` first (Axiom-owned layout) and falls back to
+  # a root `axiom.toml` (subject-project contract). The CWD-relative join is
+  # gone: CWD is convenience, never identity (§10). A tree-external anchor miss
   # yields the optional EMPTY config — every prove-consumed field carries a
   # safe default; fail-closed (§1b:40, Q-013) governs catalog reads, not
   # the optional toml.
@@ -6044,7 +6046,11 @@ proc runAxiomEngineCli*(
       projectAbs / "axiom.toml"
     else:
       let rootRes = findRepoRootStrict()
-      if rootRes.isOk(): rootRes.get() / "axiom.toml" else: ""
+      if rootRes.isOk():
+        let root = rootRes.get()
+        if fileExists(root / "config" / "axiom.toml"): root / "config" / "axiom.toml"
+        else: root / "axiom.toml"
+      else: ""
   let proveConfig = loadTomlConfigIfPresent(tomlPath).getSection("prove")
   let configVaultDir = proveConfig.getString("vault_dir", "")
 

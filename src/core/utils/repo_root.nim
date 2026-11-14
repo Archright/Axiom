@@ -46,6 +46,27 @@ proc findRepoRoot*(startDir: string = getAppDir()): string {.raises: [], axiomEf
   # Fallback: one level up (legacy compat for bin/ layout)
   result = parentDir(startDir)
 # @axiom-hint: smt="vacuous_primitive"  # axiom:certified-exempt(import-heuristic; annotate-then-purge DEBT#303)
+proc axiomConfigPath*(startDir: string = ""): string {.raises: [], axiomEffect: IOEffect.} =
+  ## Canonical axiom config file for the project containing `startDir`.
+  ## `config/axiom.toml` is the Axiom-owned layout; a root `axiom.toml` is the
+  ## subject-project contract written by `ax scope init` and stays supported.
+  ## Returns "" when neither exists — callers keep optional-empty semantics.
+  var start = startDir
+  if start.len == 0:
+    try:
+      start = getCurrentDir()
+    except CatchableError:
+      start = getAppDir()
+  let root = findRepoRoot(start)
+  try:
+    if fileExists(root / "config" / "axiom.toml"):
+      return root / "config" / "axiom.toml"
+    if fileExists(root / "axiom.toml"):
+      return root / "axiom.toml"
+  except CatchableError:
+    discard  # axiom:best-effort(ioboundary catch)
+  ""
+# @axiom-hint: smt="vacuous_primitive"  # axiom:certified-exempt(import-heuristic; annotate-then-purge DEBT#303)
 proc resolveRepoRoot*(): string {.axiomEffect: IOEffect.} =
   ## Runtime project root resolution wrapper.
   ## Calls findRepoRoot at runtime — allows exported proc address checks.

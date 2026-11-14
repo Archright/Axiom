@@ -17,6 +17,7 @@ import std/strutils
 import core/types/results
 import core/parsers/safe_parsers
 import core/trusted/axiom_pragmas_lite
+import core/utils/repo_root
 type
   ResilienceConfig* = object
     retryMaxAttempts*: int
@@ -57,17 +58,23 @@ func parseFloatOrDefault(s: string; default: float): float {.noSideEffect.} =
   if r.isOk(): r.get() else: default
 
 # @axiom-hint: smt="vacuous_primitive"  # axiom:certified-exempt(import-heuristic; annotate-then-purge DEBT#303)
-proc loadResilienceConfig*(tomlPath: string = "axiom.toml"): ResilienceConfig {.raises: [], axiomEffect: IOEffect.} =
+proc loadResilienceConfig*(tomlPath: string = ""): ResilienceConfig {.raises: [], axiomEffect: IOEffect.} =
   ## Load resilience config from [resilience] section in axiom.toml.
+  ## `tomlPath` overrides resolution; otherwise the canonical project config
+  ## is used (`config/axiom.toml`, falling back to a root subject `axiom.toml`).
   ## Falls back to defaults for missing keys.
   ## Environment variables override TOML values:
   ##   AXIOM_RESILIENCE_RETRY_MAX_ATTEMPTS, AXIOM_RESILIENCE_CIRCUIT_FAILURE_THRESHOLD, etc.
   result = defaultResilienceConfig()
 
+  let resolvedPath = if tomlPath.len > 0: tomlPath else: axiomConfigPath()
+  if resolvedPath.len == 0:
+    return
+
   # Minimal inline TOML parser — flat key=value only, no arrays/nested tables.
   var cfg = initTable[string, Table[string, string]]()
   try:
-    let content = readFile(tomlPath)
+    let content = readFile(resolvedPath)
     var currentSection = ""
     for rawLine in content.splitLines():
       let line = rawLine.strip()

@@ -2,6 +2,8 @@
 
 Status: NORMATIVE
 
+Revision 2026-11-14 (VS-R1b config relocation): `axiom.toml` moved from the repository root to `config/axiom.toml` — root EXACT_ALLOWED row removed. Root `axiom.toml` remains the subject-project contract written by `ax scope init`; Axiom's own config resolves `config/axiom.toml` first.
+
 Revision 2026-11-14 (VS-R0 root manifest Basis): every EXACT_ALLOWED entry records a Basis (TOOLCHAIN/PLATFORM/INTERNAL/LEGACY); duplicate `compliance/` row removed; `data/vks_topology.json` removed as a dead entry; LEGACY requires `removalCondition` + `reviewBy` enforced by `validate_root_manifest`.
 
 Revision 2026-11-13 (VS-1 config SSOT migration): `topology.json`, `topology_policy.json`, and `promotion_intent.json` removed from root EXACT_ALLOWED (§2.4) — canonical locations are now `config/topology.json`, `config/topology_policy.json`, `config/promotion_intent.json` (policy/threshold home per §2 role table); root re-entry is denied as clUnknown.
@@ -102,7 +104,6 @@ Every entry carries a **Basis** — the kind of authority that requires it at th
 | `config.nims` | TOOLCHAIN |
 | `nimble.lock` | TOOLCHAIN |
 | `axiom.lock` | INTERNAL |
-| `axiom.toml` | INTERNAL |
 | `topology.lock` | INTERNAL |
 | `flake.nix` | TOOLCHAIN |
 | `lakefile.toml` | TOOLCHAIN |

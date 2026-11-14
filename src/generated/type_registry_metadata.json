@@ -75658,6 +75658,20 @@
       "ignorable": false,
       "leanType": "String",
       "module": "src/core/utils/repo_root.nim",
+      "name": "axiomConfigPath",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": true,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/core/utils/repo_root.nim",
       "name": "findRepoRoot",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (str.len result) 0)"
