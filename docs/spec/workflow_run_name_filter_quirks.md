@@ -84,10 +84,13 @@ on:
   등록 이름을 이 항과 일치시키면 수정 없이 흡수한다(예비항의 의도).
 - 자기-연쇄(publisher 완료 → publisher 재발화)는 화이트리스트에 publisher
   이름이 없어 구조적으로 배제된다(구 `!ci-cache-publisher` 위생 항 소멸).
-- **게시 판정 authority는 이름 항이 아니라 in-job guard다**: guard가 API로
-  트리거 run의 `path`(`.github/workflows/admission-gate-v2.yml`, `@ref`
+- **게시 판정 authority는 이름 항이 아니라 in-job guard다**: guard가 트리거
+  run의 `path`(`.github/workflows/admission-gate-v2.yml`, `@ref`
   suffix 허용 — `ci_provider_failover_quirks.md` Q-series의 path 규율)를
-  읽어 fail-closed 판정한다. 이름 항은 넓은 그물이고, path guard가
+  **workflow_run 이벤트 페이로드**(서버 생성 필드 — job-if가 이미 신뢰하는
+  동일 원천)에서 읽어 fail-closed 판정한다(2026-11-14 — REST
+  `/actions/runs/{RUN_ID}` 재조회 제거; guard의 API 호출은 아티팩트 열거만
+  잔존). 이름 항은 넓은 그물이고, path guard가
   최종 authority다 — 세대 드리프트로 이름 그물이 빈 경우의 최악은 발화
   부재(침묵)이지 오판 발화가 아니다.
 - 이중 예비 항에도 불구하고 남는 잔여: 등록 세대가 제1·2항 어느 이름과도
@@ -104,8 +107,10 @@ org-hosted 게이트 런은 repo runs API로 열거 불가하다
 1. **publisher 런 존재·빈도**: publisher는 in-repo workflow이므로
    `gh run list --workflow ci-cache-publisher.yml` 정상 열거 가능.
 2. **게이트 귀속 판정**: publisher publish 잡의 guard 로그(`guard=true`,
-   `[publish-skip] run path '…' != …`)가 트리거 run의 path를 API로 재판정한
-   값 — 이것이 게이트 귀속의 기록 증거다.
+   `[publish-skip] run path '…' != …`)가 트리거 run의 path를 workflow_run
+   이벤트 페이로드로 판정한 값 — 이것이 게이트 귀속의 기록 증거다(2026-11-14
+   변경; 그 이전 런의 로그 값은 API 재조회 판정이다 — 같은 서버 진실의 다른
+   전달 경로였다).
 3. **트리거 이벤트 수신의 간접 증명**: 동일 이름 필터를 상용하는 router의
    guard 로그(Q1 실측) — 두 소비자가 같은 플랫폼 사실에 의존하므로 수신
    가능성의 교차 근거가 된다.
