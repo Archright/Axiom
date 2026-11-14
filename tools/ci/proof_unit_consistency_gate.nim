@@ -812,7 +812,7 @@ const
   ## produces); RESIDUAL entries are sanctioned non-canonical writers (a frozen
   ## src/gate/** runtime default, and temp-dir test fixtures).
   RegisteredGatesWriters: seq[RegistryEntry] = @[
-    (file: SyncTopologyPath, line: 250, role: "SOLE"),
+    (file: SyncTopologyPath, line: 248, role: "SOLE"),
     (file: ConfigLoaderPath, line: 133, role: "RESIDUAL"),
     (file: "tests/unit/verification_query_engine_test.nim", line: 42, role: "RESIDUAL"),
     (file: "tests/unit/test_experiment_replay.nim", line: 123, role: "RESIDUAL"),
