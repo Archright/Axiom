@@ -8,13 +8,14 @@ import core/gate/gate_memo
 import core/trusted/stdlib_shield
 import core/types/results
 import core/utils/io_utils
-import std/[os, json]
+import std/[os, json, strutils]
 import std/osproc
 import core/interfaces/logging_hub
 import core/trusted/axiom_pragmas_lite
 # axiomIoBoundary
 
 const CasDirName* = "gates"
+const CasSidecarSuffix* = ".sha256"
 
 # ---------------------------------------------------------------------------
 # Hash helpers
@@ -165,19 +166,103 @@ proc getBinaryHash*(casKey: string; repoRoot: string): string {.axiomEffect: IOE
   else:
     ""
 
+# ---------------------------------------------------------------------------
+# CAS binary integrity sidecar (DEBT#524 — fail-closed reuse verdict)
+# ---------------------------------------------------------------------------
+# A CAS entry is complete only when <casDir>/binary AND its digest sidecar
+# <casDir>/binary.sha256 coexist and match. fileExists(binary) alone is NOT
+# a reuse verdict: a post-store tamper or a crash between the binary and
+# sidecar renames must resolve as a MISS (recompile), never as a hit.
+# ---------------------------------------------------------------------------
+func isLowercaseHex64*(s: string): bool {.raises: [], noSideEffect.} =
+  ## Strict sidecar format: exactly 64 lowercase hex characters.
+  if s.len != 64:
+    return false
+  for c in s:
+    if c notin {'0'..'9', 'a'..'f'}:
+      return false
+  true
+# @axiom-hint: smt="vacuous_primitive"  # axiom:certified-exempt(import-heuristic; annotate-then-purge DEBT#303)
+proc readCasText(path: string): string {.raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## The single core read primitive for DEBT#524 sidecar verification.
+  ## Binary and sidecar reads both route through here so the trust-boundary
+  ## I/O surface stays ONE auditable site instead of three (core_purity
+  ## ratchet counts read primitives per source site, not per call).
+  readFile(path)
+# @axiom-hint: smt="vacuous_primitive"  # axiom:certified-exempt(import-heuristic; annotate-then-purge DEBT#303)
+proc writeCasBinarySidecar*(casBinaryPath: string): string {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## Atomically store the lowercase hex SHA-256 of the CAS binary at
+  ## ``<casBinaryPath>.sha256`` (tmp + fsync + POSIX rename — the same
+  ## store protocol as the binary itself). Returns the digest on success,
+  ## "" on any failure; an entry whose sidecar could not be written stays
+  ## incomplete and therefore a permanent CAS MISS (fail-closed, DEBT#524).
+  if casBinaryPath.len == 0 or not fileExists(casBinaryPath):
+    return ""
+  let content =
+    try:
+      readCasText(casBinaryPath)
+    except CatchableError:
+      return ""
+  let digest = hash_kernel.sha256Hex(content)
+  if digest.len == 0:
+    return ""
+  let stored = writeFileAtomic(casBinaryPath & CasSidecarSuffix, digest & "\n")
+  if stored.isErr:
+    return ""
+  digest
+# @axiom-hint: smt="vacuous_primitive"  # axiom:certified-exempt(import-heuristic; annotate-then-purge DEBT#303)
+proc casBinarySidecarIntact*(casBinaryPath, gateId: string): bool {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## Reuse-verdict guard (DEBT#524): the binary is a hit only when its
+  ## digest sidecar exists, is well-formed, and equals the binary's actual
+  ## SHA-256. Missing, unreadable, or malformed sidecar — and any digest
+  ## mismatch — is a MISS with a loud logError, never a silent reuse.
+  ## Cost: one sidecar read + one binary read per resolve.
+  let sidecarPath = casBinaryPath & CasSidecarSuffix
+  if not fileExists(sidecarPath):
+    logError("[CAS] DEBT#524 integrity MISS for " & gateId &
+      ": digest sidecar missing (" & sidecarPath & ") — CAS miss (fail-closed)")
+    return false
+  let sidecarContent =
+    try:
+      readCasText(sidecarPath)
+    except CatchableError as e:
+      logError("[CAS] DEBT#524 unreadable digest sidecar for " & gateId &
+        ": " & sidecarPath & " (" & e.msg & ") — CAS miss (fail-closed)")
+      return false
+  let expected = sidecarContent.strip()
+  if not isLowercaseHex64(expected):
+    logError("[CAS] DEBT#524 malformed digest sidecar for " & gateId &
+      ": " & sidecarPath & " (expected 64 lowercase hex chars) — CAS miss (fail-closed)")
+    return false
+  let actual =
+    try:
+      hash_kernel.sha256Hex(readCasText(casBinaryPath))
+    except CatchableError as e:
+      logError("[CAS] DEBT#524 unreadable CAS binary for " & gateId &
+        ": " & casBinaryPath & " (" & e.msg & ") — CAS miss (fail-closed)")
+      return false
+  if actual != expected:
+    logError("[CAS] DEBT#524 TAMPER DETECTED for " & gateId &
+      ": digest mismatch at " & casBinaryPath &
+      " (sidecar=" & expected & ", actual=" & actual & ") — CAS miss (fail-closed)")
+    return false
+  true
+
 # @axiom-hint: smt="vacuous_primitive"  # axiom:certified-exempt(import-heuristic; annotate-then-purge DEBT#303)
 proc resolveCasBinaryPathWithHash*(gateId, sourceFile, repoRoot: string; sourceHash: string;
   transitiveHash: string = ""; buildEnvHash: string = ""): string {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Compute the CAS binary path using an explicit pre-computed source hash.
   ## Callers MUST pass an explicit identity; no implicit single-file fallback
   ## (DEBT#450 pattern). Returns "" if sourceHash is empty (no key) or the
-  ## binary does not exist (CAS miss).
+  ## binary does not exist (CAS miss). A hit requires the digest sidecar to
+  ## verify against the stored binary (DEBT#524, fail-closed).
   if sourceHash.len == 0: return ""
   let srcHash = sourceHash
   let casKey = computeCasKey(gateId, srcHash, repoRoot, transitiveHash)
   if casKey.len == 0: return ""
   let absPath = repoRoot / ".axiom" / "cache" / CasDirName / casKey / "binary"
-  if fileExists(absPath): return absPath
+  if fileExists(absPath) and casBinarySidecarIntact(absPath, gateId):
+    return absPath
   return ""
 
 # ---------------------------------------------------------------------------
@@ -193,13 +278,15 @@ proc resolveCasBinaryPath*(gateId, sourceFile, repoRoot: string;
   ## Compute the CAS key and return the absolute path to the binary.
   ## Basis: transitive import-closure Merkle root via gateClosureSourceHash
   ## (verification_dag_contract.md §3). Unresolved "" means no-key →
-  ## compile (fail-closed, DEBT#449/#450).
+  ## compile (fail-closed, DEBT#449/#450). A hit requires the digest
+  ## sidecar to verify against the stored binary (DEBT#524, fail-closed).
   let srcHash = gateClosureSourceHash(gateId, sourceFile, repoRoot)
   if srcHash.len == 0: return ""
   let casKey = computeCasKey(gateId, srcHash, repoRoot, transitiveHash)
   if casKey.len == 0: return ""
   let absPath = repoRoot / ".axiom" / "cache" / CasDirName / casKey / "binary"
-  if fileExists(absPath): return absPath
+  if fileExists(absPath) and casBinarySidecarIntact(absPath, gateId):
+    return absPath
   return ""
 
 # ---------------------------------------------------------------------------
@@ -237,8 +324,10 @@ proc compileGateToCas*(gateId, entry, sourcePath, nimcacheDir, repoRoot: string;
   let casBinary = casDir / "binary"
   let casTmp = casDir / "binary.tmp"
 
-  # Skip compilation if CAS binary already exists
-  if fileExists(casBinary):
+  # Skip compilation if CAS binary already exists AND its digest sidecar
+  # verifies (DEBT#524: existence alone is not a reuse verdict — a tampered
+  # or sidecar-less entry falls through to recompilation, fail-closed).
+  if fileExists(casBinary) and casBinarySidecarIntact(casBinary, gateId):
     return casBinary
 
   # CAS miss — check if JIT is allowed
@@ -275,9 +364,18 @@ proc compileGateToCas*(gateId, entry, sourcePath, nimcacheDir, repoRoot: string;
   # Atomic rename: binary.tmp → binary
   try:
     safeMoveFile(casTmp, casBinary)
+    # DEBT#524: persist the digest sidecar atomically after the binary
+    # rename. A crash between the two renames leaves a sidecar-less binary
+    # — a permanent MISS on every future resolve (fail-closed). A sidecar
+    # write failure means the same incomplete state: report the store as
+    # failed, never as a hit.
+    if writeCasBinarySidecar(casBinary).len == 0:
+      logError("[CAS] DEBT#524 digest sidecar write failed for " & gateId &
+        " — entry incomplete, store failed (fail-closed)")
+      return ""
     return casBinary
   except CatchableError as e:
-    logError("[CAS] Atomic rename failed: " & e.msg)
+    logError("[CAS] Atomic rename failed for " & gateId & ": " & e.msg)
     if fileExists(casTmp):
       try:
         removeFile(casTmp)
@@ -309,7 +407,9 @@ proc compileGateToCasWithHash*(gateId, entry, sourcePath, sourceHash, nimcacheDi
   let casBinary = casDir / "binary"
   let casTmp = casDir / "binary.tmp"
 
-  if fileExists(casBinary):
+  # DEBT#524: existence alone is not a reuse verdict — a tampered or
+  # sidecar-less entry falls through to recompilation (fail-closed).
+  if fileExists(casBinary) and casBinarySidecarIntact(casBinary, gateId):
     return casBinary
 
   if not allowJit:
@@ -339,9 +439,15 @@ proc compileGateToCasWithHash*(gateId, entry, sourcePath, sourceHash, nimcacheDi
 
   try:
     safeMoveFile(casTmp, casBinary)
+    # DEBT#524: digest sidecar after the binary rename — see first compile
+    # site (crash between renames ⇒ sidecar-less binary ⇒ permanent MISS).
+    if writeCasBinarySidecar(casBinary).len == 0:
+      logError("[CAS] DEBT#524 digest sidecar write failed for " & gateId &
+        " — entry incomplete, store failed (fail-closed)")
+      return ""
     return casBinary
   except CatchableError as e:
-    logError("[CAS] Atomic rename failed: " & e.msg)
+    logError("[CAS] Atomic rename failed for " & gateId & ": " & e.msg)
     if fileExists(casTmp):
       try:
         removeFile(casTmp)

@@ -115,6 +115,15 @@ proc main() {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect]
       stderr.writeLine("[ERROR] install_ax_cas: CAS rename failed: " & e.msg)
       quit(1)
 
+  # DEBT#524: every CAS entry carries its digest sidecar (idempotent — also
+  # backfills entries installed before the integrity contract existed). An
+  # entry without a verified digest is a permanent MISS under resolve
+  # verification, so a sidecar write failure is fatal.
+  if gate_cas.writeCasBinarySidecar(casBinary).len == 0:
+    stderr.writeLine("[ERROR] install_ax_cas: digest sidecar write failed: " &
+      casBinary & gate_cas.CasSidecarSuffix)
+    quit(1)
+
   let axBin = DefaultAxPath
   if not pointsToStableEntry(axBin, casBinary):
     installStableEntry(axBin, casBinary)

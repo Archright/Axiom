@@ -228,7 +228,7 @@
     "src/cli/install_ax_cas.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "fa7fcc06885c66158259a79ff9d953368663070d"
+      "sha": "3b0941e450ac0d84cc05fe021d5013ef75e93e25"
     },
     "src/cli/io_cli.nim": {
       "mode": "100644",
@@ -273,7 +273,7 @@
     "src/cli/precompile_gates.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "67955828a8f9b7c337394aa89195d83860e2d89b"
+      "sha": "79597a7892efcd2e280e076697f97ba84479f089"
     },
     "src/cli/proof_gate.nim": {
       "mode": "100644",
@@ -973,7 +973,7 @@
     "src/core/gate/gate_cas.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "d1b603188e5dcc35aff82eae83a5e950ceca69df"
+      "sha": "c1aa4c79799891b5a2031549b0f60b41cfc92711"
     },
     "src/core/gate/gate_cas_gc.nim": {
       "mode": "100644",
@@ -3843,7 +3843,7 @@
     "src/verification/kernel_reexecution.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "941408265c5c58e90a0f79f56b12a887a36a96a5"
+      "sha": "d2ec14b0ac874ea7b6a29c6229b0543429e5e657"
     },
     "src/verification/layer1_bmc.nim": {
       "mode": "100644",
@@ -4473,7 +4473,7 @@
     "tools/hermetic_build.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "57a51371a0f705931f2c8579236f6d3cd6bd3d34"
+      "sha": "7931b49a84809f2d9240546e1a66328bb1b8805f"
     },
     "tools/safe_move.nim": {
       "mode": "100644",
