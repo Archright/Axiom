@@ -144,6 +144,20 @@ proc computeSourceHash(path: string): string =
       hashes.add(parts[0])
   return hashes.join("")
 
+# NimScript VM quirk (Nim 2.2.10 — docs/spec/nimscript_arc_closure_quirk.md):
+# a proc defined inside a `task` body that references a task-local var creates
+# a closure; ARC closure lowering needs the `nimDestroyAndDispose`
+# compilerproc, which the VM's system module does not register, so every
+# `nim buildGateRunners` aborted with "system module needs:
+# nimDestroyAndDispose". Top-level declarations reference globals — no
+# closure, VM-safe; identical lookup semantics.
+var prevHashes: seq[(string, string)] = @[]
+
+proc getStoredHash(bin: string): string =
+  for (b, h) in prevHashes:
+    if b == bin: return h
+  return ""
+
 task buildGateRunners, "Pure Nim hermetic freshness check & build":
   let runners = @[
     ("bin/gate_hook", "src/gate/runners/gate_hook.nim"),
@@ -159,18 +173,14 @@ task buildGateRunners, "Pure Nim hermetic freshness check & build":
   if not dirExists(".axiom/cache"):
     mkDir(".axiom/cache")
 
-  # Load previous hashes
-  var prevHashes: seq[(string, string)] = @[]
+  # Load previous hashes (into the top-level prevHashes — a task-local var
+  # captured by a task-local proc is a closure the ARC VM cannot lower; see
+  # the quirk note above this task)
   if fileExists(hashStore):
     for line in readFile(hashStore).split("\n"):
       if "\t" in line:
         let parts = line.split("\t", 1)
         prevHashes.add((parts[0], parts[1]))
-
-  proc getStoredHash(bin: string): string =
-    for (b, h) in prevHashes:
-      if b == bin: return h
-    return ""
 
   var newHashes: seq[(string, string)] = @[]
   for (bin, src) in runners:
