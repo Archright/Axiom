@@ -113,25 +113,45 @@ subprocess"에 귀속했다(근거: "cold 시 libleanshared 로드가 지배" + 
   `ReferenceExtractor: FAIL (malformed AST wire or unsupported node kind)`(rc=1, 출력 파일 없음).
 
 즉 **프로세스 startup + Lean 런타임 초기화는 ~30ms 등급이며, `ircheck` spawn은 20–40s를 설명할
-수 없다.** 형태 일치는 인과가 아니다 — 직접 측정이 소거법 추론을 대체한다. s1a 잔여 39s×3의
-진원은 현재 **미귀속**이며, 생존 후보는 다음 세 가지다(어느 것도 아직 확정·배제되지 않았다):
+수 없다.** 형태 일치는 인과가 아니다 — 직접 측정이 소거법 추론을 대체한다.
 
-1. **fresh CI 러너에서 114MB not-stripped 바이너리의 cold page-cache 적재.** 본 로컬 측정은
-   warm 페이지 캐시에서 이뤄졌고, 같은 파일시스템 fresh-copy는 디스크-cold 조건을 완전히
-   재현하지 못한다.
-2. **`measureExtractionAgreement` 내부의 미메모 worker 바이너리 전문 read+sha256**
-   (`src/verification/obligation/canonical_verification.nim:1054-1058`): subject마다 114MB 전문
-   readFile+sha256 1회, 3개 subject = 3회 — 세 테스트가 모두 ~40s에 몰리는 형태와 부합한다.
-   단 로컬 warm 캐시에서 114MB sha256은 sub-second 등급이므로, 이것이 CI의 40s를 설명하려면
-   CI 측 I/O 병목이 전제여야 한다(미검증).
-3. **아직 귀속되지 않은 세그먼트.** 본 프로파일의 로그 마커 해상도(테스트 단위 `duration_ms`)로는
-   잔여 내부를 더 분해할 수 없다.
+**잔여 ~39s의 확정 귀속 — worker digest 재계산 (2026-11-14 추가 직접 측정).** 잔여 후보를
+개별 계측한 결과, 잔여 구간은 **`measureExtractionAgreement` 내부의 미메모 worker 바이너리
+전문 read+sha256**으로 확정됐다(`src/verification/obligation/canonical_verification.nim:1054-1058`).
+동일 114MB 파일에 대한 직접 측정(같은 체크아웃, warm page cache):
 
-**판별 측정 요건(갱신)**: C4의 절감량("상한 3×39s ≈ 117s")은 **spawn-비용 추정으로서 더 이상
-지지되지 않는다** — 반증된 귀속 위에 세워진 수치다. 절감량은 위 생존 후보에 대한 **CI 러너
-직접 측정**((a) ircheck 바이너리의 cold/warm read+hash, (b) 페이지 캐시 클리어 후 spawn,
-(c) `measureExtractionAgreement` 구간의 CI 실측)에서 **재도출되어야 한다**. 본 개정은 대체
-수치를 제시하지 않는다 — 측정 없는 수치는 증거가 아니라 주장이다.
+| 구간 | 실측 |
+|---|---|
+| `readFile` 114MB | **0.0911s** |
+| `sha256Hex(s)` 1회차 | **46.5816s** |
+| `sha256Hex(s)` 2회차 | **43.9637s**(≈2.6 MB/s) |
+| `parseStringAST` cold | 0.0010s |
+| `canonicalizePNode` | 0.0001s(492 chars) |
+| `computeCanonicalAstHash` | 0.0007–0.0011s |
+| `runExtractionAgreement`(exe 미지정 / ircheck 명시) | 0.0475s / 0.0530s |
+| **`measureExtractionAgreement`** | **41.7159s** |
+| **`measureParseBoundComponents`**(`tests/golden/identity_postcondition.nim`, 1,170 bytes, `eaAgreed=true`) | **41.2509s** |
+
+`runExtractionAgreement` 자체는 0.05s인데 `measureExtractionAgreement`는 41.7s다 — 차액 ~41.7s가
+**digest 재계산 한 건**이다. 검증 주체는 1,170 bytes이지만 해시 대상은 114MB worker 바이너리다.
+이것이 3개 테스트가 모두 ~40s에 몰리는 형태(subject별 1회)와 정확히 일치한다.
+
+근거 체인: `src/core/crypto/hash_kernel.nim:58`의 `sha256Hex = $secureHash(Sha_256, data)`가
+Nim 표준 `checksums/sha2` **순수 Nim 구현**을 호출한다 — OpenSSL/하드웨어 가속 경로가 아니다.
+2.6 MB/s는 백엔드 특성이며, **알고리즘·digest 값 자체는 변경 대상이 아니다.**
+
+이 확정은 "warm 캐시에서 114MB sha256은 sub-second"라는 사전 가정을 반증한다 — 그 가정은 Python
+`hashlib`(OpenSSL, GB/s) 측정을 Nim 순수 구현에 잘못 옮긴 것이었다. 잔여 후보 정리:
+
+1. ~~fresh CI 러너에서의 cold page-cache 적재~~ — **폐기**. digest 재계산만으로 41.7s가 설명되고
+   `readFile` 자체는 0.09s이므로, 페이지 캐시 조건은 잔여 시간의 설명 변수가 아니다.
+2. **확정: `measureExtractionAgreement` 내부의 미메모 worker digest 재계산** — 위 표.
+3. ~~미귀속 세그먼트~~ — 잔여가 남지 않는다.
+
+**C4 절감 상한(갱신)**: subject별 digest 1회를 프로세스 내에서 재사용하면 3회 중 2회가 사라진다.
+s1a 150.6s 중 120.3s가 3개 느린 테스트이고 그 대부분이 digest이므로 **상한 ≈ 80s**
+(2/3 × 120.3s)다. 이는 30s/배치 임계값을 넘는다. 단 이 상한은 로컬 단일 호스트 측정에서 유도한
+것이므로, **CI 러너에서의 실제 절감은 merge_group 실행으로 확인해야 한다**(본 슬라이스 완료 조건).
 
 ## 4. 후보별 실측 상한과 판정 정체성 영향
 
@@ -140,7 +160,7 @@ subprocess"에 귀속했다(근거: "cold 시 libleanshared 로드가 지배" + 
 | C1 | full-chain의 axiom probe를 kernel check에 병합 (동일 소스 2회 실행 → 1회) | chain 시간의 **50%** — Run A 기준 s1a 60s, Run B 기준 30s | **변경됨**. KAA identity는 `ArtifactIdentity`·`KernelAcceptanceFact`를 포함하고(`kernel_acceptance_authority.nim` KAA identity 절), `proofDigest`는 receipt observation 원문이다. 병합은 증거 세대를 1회 flip한다 | **NO-GO (현 MUST)** — "증거 동일성" 위반. 의미 동등성은 증명 가능하나 **별도 epoch 승인**이 선행 조건 |
 | C2 | B-layer가 `build/nimcache/test`를 공급 (warm compile) | 정규화 후 **0s** (§3.2) | 변경 없음 | **NO-GO** — 절감 증거 없음 |
 | C3 | checker compile과 probe compile 병합 (probe가 `runSelfCheck`를 흡수) | **14.6s / 7.7s** (30s 미만) | 변경 없음 (probe는 pin 대상 → 2단계 pin 갱신 필요) | **NO-GO** — 임계값 미달 |
-| C4 | subject별 EA 측정 1회 메모 + ircheck digest를 `measuredBinaryDigest` 경로로 | **상한 수치 미지원** — 구 "3×39s ≈ 117s"는 ircheck spawn-cost 상한이었으나 §3.3 직접 측정으로 반증됨. 절감량은 §3.3 생존 후보의 CI 측정에서 재도출 전까지 미확정(대체 수치 없음) | **변경 없음** — 동일 bytes의 동일 sha256, 메모는 결정론적 값의 재사용 | **GO 후보** — 선행 조건: §3.3 생존 후보에 대한 CI 직접 측정으로 절감량 재도출 |
+| C4 | subject별 EA 측정 1회 메모 + ircheck digest를 `measuredBinaryDigest` 경로로 | **≈80s 상한** — 3개 느린 테스트 120.3s 중 subject별 digest 재계산 2회분(§3.3 확정 측정: 41.7s/건). CI 실측으로 확정 필요 | **변경 없음** — 동일 bytes의 동일 sha256, 메모는 결정론적 값의 재사용 | **GO** — 선행 조건: merge_group에서 실측 절감 확인 |
 
 ## 5. 판정
 
@@ -148,14 +168,14 @@ subprocess"에 귀속했다(근거: "cold 시 libleanshared 로드가 지배" + 
    이것은 실패가 아니라 계획이 예정한 정당한 종결이다(계획 §Phase C: "통과 후보가 없으면 NO-GO로 종결").
 2. **Tier 3의 구조적 발견**: merge_group 시간의 지배 변수는 러너 인스턴스(2배)다. 코드 최적화로
    SLO를 안정화하려면 느린 호스트 기준(541s)에서 60s 이상을 줄여야 한다. 그 상한을 가진 후보는
-   C1(증거 epoch 필요)과 C4(identity-보존, 상한 미확정 — 구 117s는 반증된 spawn-cost 추정)다.
+   C1(증거 epoch 필요)과 C4(identity-보존, ≈80s 상한 — §3.3 확정 측정)다.
 3. **C4가 다음 슬라이스의 첫 후보**다 — 세 가지 변형 모두 판정 정체성을 바꾸지 않는다:
    (i) ircheck digest를 `measuredBinaryDigest`로 라우팅(동일 bytes → 동일 sha256),
    (ii) EA 측정을 `(contentSha, funcName)`당 1회 메모(기존 parse memo와 동형, 결정론적 값 재사용),
-   (iii) suite 전 Lean 런타임 예열(코드 변경 0 — §3.3 측정 후 근거 약화: 런타임 초기화는 ~30ms).
-   선행 조건은 §3.3 생존 후보에 대한 CI 직접 측정으로 절감량을 재도출하는 것이며, 그 측정은
-   본 슬라이스의 권한 안에 있다. C1은 증거 세대 전환 승인이, SLO 운영 계약 강제는 러너 등급·동시성
-   정책 결정이 선행되어야 하므로 별도 승인 대상이다.
+   (iii) suite 전 Lean 런타임 예열(코드 변경 0 — §3.3 측정으로 근거 소거: 런타임 초기화는 ~30ms).
+   (ii)의 절감은 §3.3에서 확정됐고 남은 선행 조건은 **merge_group 실행에서의 실측 확인**이다.
+   C1은 증거 세대 전환 승인이, SLO 운영 계약 강제는 러너 등급·동시성 정책 결정이 선행되어야
+   하므로 별도 승인 대상이다.
 
 ## 6. 재현 명령
 
