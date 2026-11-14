@@ -4203,7 +4203,7 @@
     "src/verification/proof_state_projection.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "44812ab6ba7c3fb63e34c6d3e47cc59ccbc8c870"
+      "sha": "4a5d715d6d8a9b2cf784f6a2e8079e1c4d9d670d"
     },
     "src/verification/proof_summarizer.nim": {
       "mode": "100644",
