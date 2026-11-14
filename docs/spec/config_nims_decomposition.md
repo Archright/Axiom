@@ -19,7 +19,7 @@ The canonical include order in `config.nims`:
 
 config.nims defines the following tasks via `task name, "description":`:
 
-- `buildGateRunners` — Pure Nim hermetic freshness check & gate binary build. Uses SHA-256 hashing via `computeSourceHash()` for up-to-date detection.
+- `buildGateRunners` — Gate runner freshness check & gate binary build via external `sha256sum` (one `gorge()` call). `computeSourceHash(path)` concatenates the SHA-256 digests of the runner source plus the shared gate-infrastructure set for up-to-date detection; `.axiom/cache/binary_checksums.json` stores per-binary `sha256sum <bin>` checksums.
 - `buildGates` — Manifest-driven gate builder. Reads `src/gate/manifest.d/_index.json` and compiles all registered gates.
 - `genmanifest` — Generates feature manifest from `.feature` files.
 - `buildPbtTools` — Builds PBT generator, seed parser, and forwarding stubs tool binaries.
