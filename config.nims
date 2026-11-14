@@ -167,9 +167,10 @@ proc computeSourceHash(path: string): string =
 proc storedHashFor(prevHashes: seq[(string, string)]; bin: string): string =
   ## Pure lookup over the persisted (binary, source-hash) pairs. Kept a
   ## module-level proc with an explicit parameter rather than a task-local
-  ## closure: under `--mm:orc` (config/vendors.nims) the NimScript VM cannot
-  ## destroy a closure environment that captures a seq
-  ## ("system module needs: nimDestroyAndDispose").
+  ## closure: under the repo's `--mm:arc` (config/effects.nims:16) the
+  ## NimScript VM cannot destroy a closure environment that captures a seq
+  ## ("system module needs: nimDestroyAndDispose") —
+  ## docs/spec/nimscript_arc_closure_quirk.md.
   for (b, h) in prevHashes:
     if b == bin: return h
   return ""
