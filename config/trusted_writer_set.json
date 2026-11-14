@@ -98,7 +98,7 @@
     "src/cli/axiom_engine.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "19cdf6b0df87f421cf91ad87869c087d8fc6761d"
+      "sha": "66fda3d2e1704cd24e553573f7be1167c98efedc"
     },
     "src/cli/axiom_status.nim": {
       "mode": "100644",
@@ -2723,7 +2723,7 @@
     "src/core/utils/build_provenance.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "a320344b33a1fc93131802ddb37274673916f896"
+      "sha": "604fe7991a762eb51a5fc6d4523419fdb827eb4b"
     },
     "src/core/utils/canonical_projection.nim": {
       "mode": "100644",
@@ -3333,7 +3333,7 @@
     "src/infrastructure/provenance_probe.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "69cf0fb140ed354041d0b792d65676c0376642c4"
+      "sha": "8e81075453f404c3950f69943b8b4bad2a108c78"
     },
     "src/infrastructure/source_identity_cache.nim": {
       "mode": "100644",
@@ -3608,7 +3608,7 @@
     "src/verification/batch_uap/loop_driver.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "cc198e06535e3e4ebace07a2ca7a4dbc9f6f6ad1"
+      "sha": "11bff3fa0f8863dbf84a2955611a56ac7df2212b"
     },
     "src/verification/batch_uap/loop_topology.nim": {
       "mode": "100644",

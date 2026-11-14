@@ -6,7 +6,8 @@
 ## Measured here:
 ##   1. The committed overlay loads through the soExplicit authority path and
 ##      pins the adopted length domain (1 <= e <= 5), the two carrier MODELS
-##      (e - 1 at b = 1, e + 1 at b = 0), the two adopted LAW sides (e at
+##      (e at b = 1 — the FIXED template's actual length, law conformance;
+##      e + 1 at b = 0), the two adopted LAW sides (e at
 ##      b = 1, e + 1 at b = 0 — stated as DATA in canonicalSpecIR, not as
 ##      engine prose), the exact-commit subject pin, and the adoption
 ##      provenance. Every tampered shape fails closed (pure validation core).
@@ -15,7 +16,8 @@
 ##      recorded path under the subject root and fails closed on any
 ##      mismatch; a root without the governed module is inert.
 ##   3. The synthesized carrier pair: CONSTRUCTED-IR length models — the
-##      defect body is e - 1, the control body is e + 1; the preconditions
+##      defect body is e (the FIXED template's actual length at b = 1), the
+##      control body is e + 1; the preconditions
 ##      are the domain conjuncts; the claim `model == law` is β-spliced with
 ##      exactly one body instance; the parse bound carries the honest
 ##      single-origin legs (the subject symbol is a TEMPLATE — no extraction
@@ -23,8 +25,9 @@
 ##   4. The replay binding: the stamped harness observes the ORIGINAL
 ##      template through its defining module — an end-to-end replay against
 ##      the BYTE-EXACT pinned subject decides the observed length against
-##      `result == e` (e = 3 → observed 2 → rvAgree; the observation, not the
-##      model, decides).
+##      `result == e` (e = 3 → the FIXED template observes 3 → a
+##      hypothetical counterexample is contradicted (rvDisagree); the PRE-FIX
+##      bytes observed 2 → rvAgree; the observation, not the model, decides).
 import std/[algorithm, json, os, osproc, options, tables, strutils, sequtils, unittest]
 import ../../src/core/results
 import ../../src/core/crypto/hash_kernel
@@ -42,9 +45,9 @@ import ../../src/core/trusted/verification_result_types as vrt
 
 putEnv("AXIOM_STATE_DIR", getTempDir() / "ax_libp2p_bv_test_state")
 
-# The BYTE-EXACT pinned subject module (nim-libp2p @ a130a7f3,
-# libp2p/utils/bytesview.nim, blob sha256
-# b205c969ba04f4199d8fd4a121d4b6fccdc82c426e336add0e1e9fd0e961e5ee).
+# The BYTE-EXACT pinned subject module (Archright/nim-libp2p @ d9e8769c,
+# fix/bytesview-toopenarray-slice-bounds, libp2p/utils/bytesview.nim, blob
+# sha256 e5c73a4fc4b4f390a74a95078809639f4773510e029673c3fb7884d53f584c85).
 # The fixture is a COPY for the out-of-tree replay: the subject tree itself is
 # READ-ONLY (Zero-Footprint) and is never written by this test. The bytes are
 # embedded verbatim so the pin check and the replay observe the SUBJECT's own
@@ -69,7 +72,7 @@ const BvSubjectModuleBytes* =
   "  v.rpos += n\n" &
   "\n" &
   "template toOpenArray*(v: BytesView, b, e: int): openArray[byte] =\n" &
-  "  v.data.toOpenArray(v.rpos + b, v.rpos + e - b)\n" &
+  "  v.data.toOpenArray(v.rpos + b, v.rpos + e)\n" &
   "\n" &
   "template data*(v: BytesView): openArray[byte] =\n" &
   "  v.data.toOpenArray(v.rpos, v.data.len - 1)\n"
@@ -109,18 +112,15 @@ suite "bytesview slice overlay — soExplicit load + fail-closed validation":
     check domain.symbols == @["toOpenArray"]
     check domain.importModule == "libp2p/utils/bytesview"
     check domain.subjectBlobSha256 ==
-      "b205c969ba04f4199d8fd4a121d4b6fccdc82c426e336add0e1e9fd0e961e5ee"
+      "e5c73a4fc4b4f390a74a95078809639f4773510e029673c3fb7884d53f584c85"
     check domain.domainVar == "e"
     check domain.domainLower == 1
     check domain.domainBound == 5
     check domain.ruleId == "external:libp2p/bytesview/slice-length-law"
-    # The DEFECT model: the template's actual length at b = 1 → e - 1.
-    check domain.defectModel.kind == irBinOp
-    check domain.defectModel.binOp == boSub
-    check domain.defectModel.binLhs.kind == irVar
-    check domain.defectModel.binLhs.varName == "e"
-    check domain.defectModel.binRhs.kind == irLit
-    check domain.defectModel.binRhs.litVal == 1
+    # The DEFECT model: the FIXED template's actual length at b = 1 → e
+    # (law conformance — the model equals the law side for every e).
+    check domain.defectModel.kind == irVar
+    check domain.defectModel.varName == "e"
     # The defect LAW side: the inclusive view-relative law at b = 1 → e.
     check domain.defectLaw.kind == irVar
     check domain.defectLaw.varName == "e"
@@ -148,7 +148,7 @@ suite "bytesview slice overlay — soExplicit load + fail-closed validation":
     # carrier, so the engine binds the claim without hardcoding law content.
     check spec.canonicalSpecIR.len == 6
     check spec.canonicalSpecIR.contains("bvSliceLenLaw1(e) == e")
-    check spec.canonicalSpecIR.contains("bvSliceLenActual(e) == (e - 1)")
+    check spec.canonicalSpecIR.contains("bvSliceLenActual(e) == e")
     check spec.canonicalSpecIR.contains("bvSliceLenLaw0(e) == (e + 1)")
     check spec.canonicalSpecIR.contains("bvSliceLenControl(e) == (e + 1)")
 
@@ -328,7 +328,7 @@ suite "bytesview slice subject pin — byte-level blob verification":
     check pin.error.contains("blob mismatch")
     check pin.error.contains("does not bind this subject tree")
 
-  test "fail-closed: a WRONG pinned digest (one flipped hex char) fails the pin":
+  test "fail-closed: a WRONG pinned digest (the stale v1.0.0-era digest) fails the pin":
     let root = bvFixtureRoot("ax_libp2p_bv_pin_wrong", BvSubjectModuleBytes)
     var node = committedOverlayNode()
     node["subject"]["blobSha256"] = %"b205c969ba04f4199d8fd4a121d4b6fccdc82c426e336add0e1e9fd0e961e5ef"
@@ -406,16 +406,13 @@ suite "bytesview slice synthesis — two constructed-IR length carriers":
     check defect.len == 1
     check defect[0].funcDef.name == "bvSliceLenActual"
 
-  test "the defect body is the template's actual length at b = 1 (e - 1)":
+  test "the defect body is the FIXED template's actual length at b = 1 (e)":
     let fd = census.get.carrier("bvSliceLenActual").funcDef
     check fd.name == "bvSliceLenActual"
     check fd.params.len == 1
     check fd.params[0].name == "e"
     check fd.retType != nil and fd.retType.kind == irtBitVec64
-    check fd.body.kind == irBinOp
-    check fd.body.binOp == boSub
-    check fd.body.binLhs.kind == irVar and fd.body.binLhs.varName == "e"
-    check fd.body.binRhs.kind == irLit and fd.body.binRhs.litVal == 1
+    check fd.body.kind == irVar and fd.body.varName == "e"
 
   test "the control body is the same template at b = 0 (e + 1)":
     let fd = census.get.carrier("bvSliceLenControl").funcDef
@@ -445,11 +442,9 @@ suite "bytesview slice synthesis — two constructed-IR length carriers":
     let post = defectFd.postConditions[0]
     check post.kind == irBinOp
     check post.binOp == boEq
-    # LHS: the spliced model (e - 1) — the result slot was REPLACED by a
-    # structural clone of the carrier body.
-    check post.binLhs.kind == irBinOp and post.binLhs.binOp == boSub
-    check post.binLhs.binLhs.varName == "e"
-    check post.binLhs.binRhs.litVal == 1
+    # LHS: the spliced model (e) — the result slot was REPLACED by a
+    # structural clone of the carrier body (a bare variable).
+    check post.binLhs.kind == irVar and post.binLhs.varName == "e"
     # RHS: the adopted LAW side (e) — the law is data, not engine prose.
     check post.binRhs.kind == irVar and post.binRhs.varName == "e"
     # the spliced claim carries NO dangling `result` var (the debug printer
@@ -543,11 +538,12 @@ proc makeSubjectFixture(dirName: string): string =
                     options = {poStdErrToStdOut, poUsePath})
   root
 
-const BvLawSatisfyingModuleBytes* =
-  "# A FIXTURE subject whose slice length follows the adopted inclusive law\n" &
-  "# (v.data.toOpenArray(rpos + b, rpos + e)) — the counterfactual twin of the\n" &
-  "# pinned subject. It exists so the replay can be observed DISAGREEING: the\n" &
-  "# pipeline must not report a disproof it did not observe.\n" &
+const BvPreFixModuleBytes* =
+  "# A FIXTURE subject carrying the PRE-FIX (v1.0.0-pinned) template body —\n" &
+  "# v.data.toOpenArray(v.rpos + b, v.rpos + e - b) — the historical defect.\n" &
+  "# It exists so the replay can be observed AGREEING with a solver\n" &
+  "# counterexample model: the mechanism that produced the v1.0.0 disproof\n" &
+  "# still detects the defect bytes (historical control).\n" &
   "type BytesView* = object\n" &
   "  data: seq[byte]\n" &
   "  rpos: int\n" &
@@ -559,15 +555,15 @@ const BvLawSatisfyingModuleBytes* =
   "  v.data.len - v.rpos\n" &
   "\n" &
   "template toOpenArray*(v: BytesView, b, e: int): openArray[byte] =\n" &
-  "  v.data.toOpenArray(v.rpos + b, v.rpos + e)\n"
+  "  v.data.toOpenArray(v.rpos + b, v.rpos + e - b)\n"
 
-proc makeLawSatisfyingSubjectFixture(dirName: string): string =
-  ## The counterfactual fixture: the same subject shape, but a template whose
-  ## length matches the adopted law.
+proc makePreFixSubjectFixture(dirName: string): string =
+  ## The historical-control fixture: the same subject shape, but the PRE-FIX
+  ## (v1.0.0-era) template body whose length violates the adopted law.
   let root = getTempDir() / dirName
   removeDir(root)
   createDir(root / "libp2p" / "utils")
-  writeFile(root / "libp2p" / "utils" / "bytesview.nim", BvLawSatisfyingModuleBytes)
+  writeFile(root / "libp2p" / "utils" / "bytesview.nim", BvPreFixModuleBytes)
   discard execCmdEx("git -C \"" & root & "\" init -q",
                     options = {poStdErrToStdOut, poUsePath})
   discard execCmdEx("git -C \"" & root & "\" add -A",
@@ -589,17 +585,18 @@ suite "bytesview slice replay — the ORIGINAL template's length decides":
     check shape.carrierTypename.len == 0
 
   test "dry-run: the observed length is evaluated against the adopted law concretely":
-    ## e = 3: the template yields 2 where the law demands 3 → propertyHolds =
-    ## false → rvAgree. The observation enters the decision — the model alone
-    ## cannot produce it.
+    ## e = 3: the FIXED template yields 3 where the law demands 3 → the
+    ## conformance claim HOLDS for the pinned instance; a hypothetical solver
+    ## counterexample would be contradicted by the observation. The
+    ## observation enters the decision — the model alone cannot produce it.
     let defectFd = bvCensus.get.carrier("bvSliceLenActual").funcDef
     # The claim the solver decided is the SPLICED model-equals-law equality
-    # ((e - 1) == e) — it is violated for every e in the domain.
+    # ((e) == e) — it holds for every e in the domain (law conformance).
     let claim = defectFd.postConditions[0]
     check claim.kind == irBinOp and claim.binOp == boEq
     var env = initTable[string, ConcreteValue]()
     env["e"] = ConcreteValue(kind: ckInt, i: 3)
-    check evaluatePostconditions(defectFd.postConditions, env) == some(false)
+    check evaluatePostconditions(defectFd.postConditions, env) == some(true)
     # The REPLAY postcondition (what the adapter evaluates on the OBSERVED
     # value) is `result == <law side>` — the observed length against the
     # adopted law.
@@ -615,12 +612,30 @@ suite "bytesview slice replay — the ORIGINAL template's length decides":
     check decideReplayVerdict(harnessRan = true,
       propertyHolds = some(true)) == rvDisagree
 
-  test "end-to-end: replay against the ORIGINAL template — e = 3 agrees":
+  test "end-to-end: replay against the FIXED pinned template — a hypothetical counterexample disagrees":
     putEnv("AXIOM_STATE_DIR", getTempDir() / "ax_libp2p_bv_test_state")
     let root = makeSubjectFixture("ax_libp2p_bv_replay")
     let defect = bvCensus.get.carrier("bvSliceLenActual")
-    # The template's actual length at b = 1, e = 3 is 2 — the law demands 3 →
-    # the violation reproduces → rvAgree.
+    # The FIXED template's actual length at b = 1, e = 3 is 3 — equal to the
+    # law — so a (hypothetical) solver counterexample claim is CONTRADICTED
+    # by the observation (rvDisagree): the pipeline cannot report a disproof
+    # it did not observe. Under the v1.1.0 conformance model no counterexample
+    # exists, so this lane is the anti-theater backstop.
+    let disagreed = replayConfirmedDisproof(root,
+      "libp2p/utils/bytesview.nim", defect.funcDef, modelRawFor(3),
+      defect.parseBound)
+    check not disagreed.agreed
+    check disagreed.diagnostics.startsWith("rvDisagree")
+
+  test "end-to-end: the observation decides — the PRE-FIX defect bytes still agree (historical control)":
+    ## The anti-theater direction: the ORIGINAL template's arithmetic, not the
+    ## model, decides the agreement. The v1.0.0-era subject (v.rpos + e - b)
+    ## observes 2 at (b = 1, e = 3) where the law demands 3 — a solver
+    ## counterexample over THOSE bytes would be CONFIRMED (rvAgree): the
+    ## replay mechanism that produced the v1.0.0 disproof still detects the
+    ## defect bytes.
+    let root = makePreFixSubjectFixture("ax_libp2p_bv_replay_agree_prefix")
+    let defect = bvCensus.get.carrier("bvSliceLenActual")
     let agreed = replayConfirmedDisproof(root,
       "libp2p/utils/bytesview.nim", defect.funcDef, modelRawFor(3),
       defect.parseBound)
@@ -628,21 +643,6 @@ suite "bytesview slice replay — the ORIGINAL template's length decides":
     check agreed.diagnostics.len == 0
     check agreed.payload.anyIt(it == "input.e=3")
     check agreed.payload.anyIt(it == "replay.verdict=rvAgree")
-    check agreed.payload.anyIt(it.startsWith("propertyViolated=") and
-                               it.contains("="))
-
-  test "end-to-end: the observation decides — a law-satisfying subject disagrees":
-    ## The anti-theater direction: the ORIGINAL template's arithmetic, not the
-    ## model, decides the agreement. A subject whose slice length matched the
-    ## adopted law would CONTRADICT the solver model (rvDisagree) — the
-    ## pipeline could not report a disproof it did not observe.
-    let root = makeLawSatisfyingSubjectFixture("ax_libp2p_bv_replay_disagree")
-    let defect = bvCensus.get.carrier("bvSliceLenActual")
-    let disagreed = replayConfirmedDisproof(root,
-      "libp2p/utils/bytesview.nim", defect.funcDef, modelRawFor(3),
-      defect.parseBound)
-    check not disagreed.agreed
-    check disagreed.diagnostics.startsWith("rvDisagree")
 
   echo "bytesview slice binding tests done (state dir: " &
         getEnv("AXIOM_STATE_DIR") & ")"

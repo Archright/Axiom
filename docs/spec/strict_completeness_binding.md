@@ -285,6 +285,30 @@ binding must match — measured, not taken from the claim:
 
 Every component fails closed to "" when unmeasurable.
 
+### 5.2a Operational consequence — strict evidence is verifier-build- and commit-bound
+
+Two independent fail-closed gates make every strict claim valid ONLY for the exact context
+that captured it:
+
+1. `sourceIdentity` includes `measureSubjectGitRef` (`git rev-parse HEAD` of the subject
+   root, `src/verification/obligation/canonical_verification.nim`). When Axiom verifies
+   itself the subject root IS the Axiom clone, so ANY commit — including a docs-only commit
+   that leaves every module byte and the tree merkle root unchanged — changes `sourceIdentity`
+   and makes every previously captured strict binding unloadable (loader check 5).
+2. `toolchainIdentityMatchesPin` (`src/verification/cert_reconcile.nim`) requires the
+   claim's `toolchainIdentity` (including `engineBuild` and `axiomVersion`) to equal the
+   RUNNING verifier's `verifierToolchainIdentityJson()`. A verifier-build move — any change
+   to the `computeVerifierBuildId` manifest (`src/**/*.nim`, `config.nims`, `axiom.nimble`,
+   `axiom.lock`) — drops every prior claim.
+
+Neither gate is a regression: a downgraded identity is never accepted. The operational
+consequence is that VKD reads `0/23` after any commit or verifier-build move until the
+evidence is re-captured at the new context; VKD is a runtime measurement over the local
+TrustCommit journal + binding cache, not a git-carried artifact. Measured A/B (2026-11-14,
+same binary): HEAD `107ef8a` → `2/23`; HEAD `ec09197` (docs-only) → `0/23`; main
+`78b4f1f8c` with verifier `dd1f769f…` → `2/23` after a 23-symbol re-proof campaign —
+evidence: `docs/evidence/vs_vkd1_current_engine_recovery_campaign_2026-11-13.md` §4.
+
 ### 5.3 Certificate/claim admission (`strictCompletenessAdmits`)
 
 A journal/certificate claim belongs to the strict generation when
