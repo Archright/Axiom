@@ -166,7 +166,24 @@ Nim 표준 `checksums/sha2` **순수 Nim 구현**을 호출한다 — OpenSSL/�
 s1a 150.6s 중 120.3s가 3개 느린 테스트이고 그 대부분이 digest이므로, **memo 변형의 상한은 ≈ 80s**
 (2/3 × 120.3s)다. 이는 30s/배치 임계값을 넘는다. **빌드 모드 변형은 상한 ≈ 120s**지만
 레인 전체의 실행 의미(assertion·오버플로 검사)를 바꾸므로 판정 정체성 검토가 선행되어야 한다.
-memo 변형의 남은 선행 조건은 **merge_group 실행에서의 실측 확인**이다.
+
+**CI 확인 — merge_group 실측 (2026-11-14, PR #59).** memo 변형 착지 후 같은 로그 지표
+(`[admission-tests] LANE lane=0 test_s1a_lean_golden duration_ms`)로 전후를 비교했다:
+
+| 런 | runner | `test_s1a_lean_golden duration_ms` |
+|---|---|---|
+| `43529537636` (PR #34, 기준선) | `1000054630` | **150,617 ms** |
+| `43542716164` (PR #36, 기준선) | `1000054709` | **77,405 ms** |
+| `43595326967` (PR #59, memo 적용) | `1000057616` | **56,479 ms** |
+
+- 느린 호스트 기준 **−94.1s(−62.5%)**, 빠른 호스트 기준 **−20.9s(−27%)**.
+- **판정 불변**: 같은 런에서 `verdict=PASS basis=EXECUTED evidenceKey=b7d19b96b689`가 생성됐다 —
+  digest는 여전히 계산되고 증거 키도 그대로 산출된다(값이 재사용될 뿐 사라지지 않는다).
+- **범위 불변**: lane 1의 세 테스트는 `21,121 / 24,925 / 22,180 ms`로 기준선(67–68s)과 동일하다.
+  감소가 s1a의 중복 digest에 국한되고 검증 집합은 줄지 않았음을 보여준다.
+- **한계**: 세 런의 runner가 모두 달라 호스트 성분을 분리하지 못했다. memo는 3회 중 2회를
+  제거하므로 같은 호스트에서의 절감은 구조적으로 보장되지만, 위 수치의 호스트 귀속은 미분리다.
+  빌드 모드 변형(≈120s 상한)은 이 확인에 포함되지 않았다 — 별도 판정 정체성 검토 대상이다.
 
 ## 4. 후보별 실측 상한과 판정 정체성 영향
 
@@ -175,7 +192,7 @@ memo 변형의 남은 선행 조건은 **merge_group 실행에서의 실측 확�
 | C1 | full-chain의 axiom probe를 kernel check에 병합 (동일 소스 2회 실행 → 1회) | chain 시간의 **50%** — Run A 기준 s1a 60s, Run B 기준 30s | **변경됨**. KAA identity는 `ArtifactIdentity`·`KernelAcceptanceFact`를 포함하고(`kernel_acceptance_authority.nim` KAA identity 절), `proofDigest`는 receipt observation 원문이다. 병합은 증거 세대를 1회 flip한다 | **NO-GO (현 MUST)** — "증거 동일성" 위반. 의미 동등성은 증명 가능하나 **별도 epoch 승인**이 선행 조건 |
 | C2 | B-layer가 `build/nimcache/test`를 공급 (warm compile) | 정규화 후 **0s** (§3.2) | 변경 없음 | **NO-GO** — 절감 증거 없음 |
 | C3 | checker compile과 probe compile 병합 (probe가 `runSelfCheck`를 흡수) | **14.6s / 7.7s** (30s 미만) | 변경 없음 (probe는 pin 대상 → 2단계 pin 갱신 필요) | **NO-GO** — 임계값 미달 |
-| C4 | subject별 EA 측정 1회 메모 + ircheck digest를 `measuredBinaryDigest` 경로로 | **≈80s 상한** — 3개 느린 테스트 120.3s 중 subject별 digest 재계산 2회분(§3.3 확정 측정: debug 44.8s/건). 빌드 모드 변형은 ≈120s 상한이나 레인 의미 변경 검토 선행 | **변경 없음** — 동일 bytes의 동일 sha256, 메모는 결정론적 값의 재사용 | **GO** — 선행 조건: merge_group에서 실측 절감 확인 |
+| C4 | subject별 EA 측정 1회 메모 + ircheck digest를 `measuredBinaryDigest` 경로로 | **상한 ≈80s / CI 실측 −94.1s(느린 호스트)·−20.9s(빠른 호스트)** — §3.3 참조. 빌드 모드 변형은 ≈120s 상한이나 레인 의미 변경 검토 선행 | **변경 없음** — 동일 bytes의 동일 sha256, 메모는 결정론적 값의 재사용 | **LANDED** — PR #59, 2-parent merge `dfd0e950` |
 
 ## 5. 판정
 
