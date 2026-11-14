@@ -5169,10 +5169,13 @@
         "src/core/gate/gate_cas.nim"
       ],
       "source": "ef_cas_isolation_verdict_2026-11-09",
-      "status": "open",
-      "resolution": "UNRESOLVED — conditional registration; no current hazard (local single-writer trust boundary, per-worktree cache); revisit when cross-worktree/shared cache or cache integrity verification is required",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-14 (PR #47, merge 3ca280bad16868850a2900098baf10558ea126e3): the CAS reuse verdict is no longer fileExists-based. A CAS entry is now a HIT only when <casDir>/binary.sha256 exists, is exactly 64 lowercase hex characters, and equals the SHA-256 of <casDir>/binary; missing, unreadable, malformed, or mismatched sidecars resolve as a MISS with logError on the production path and force a recompile (fail-closed). writeCasBinarySidecar stores the digest with the same atomic tmp+fsync+rename protocol as the binary, so a crash between the two renames leaves an incomplete entry that can never resolve as a hit. The three sidecar reads are routed through one auditable core primitive (readCasText), and core_purity baseline anchor io_primitive readFile( for gate_cas.nim was pre-authorized 6 -> 7 in PR #55 before the code landed (core_purity_gate reads its baseline from the base commit, so the anchor could not travel with the change it authorizes). Evidence: tests/unit/test_gate_cas_tamper_detection.nim 17/17 PASS (cases a-e: oracle digest, tampered binary, sidecar-less binary, malformed sidecar classes, compile-layer fail-closed skip) and tests/unit/test_hollow_cas_closure.nim I5a-I5f PASS, both reproduced on canonical main 3ca280b; a mutation reintroducing the pre-fix 'binary exists => hit' behaviour is killed by 8 failing assertions, so the suite is not vacuous. Landing verdicts: merge_group admission-check SUCCESS (attest / admission-independents, generation-acceptance, debt-registry-gate, bsec-integrity, axiom-operational-slice, publication-integrity) and canonical main re-verified: debt_engine --validate 1651/1651, core_purity PASS, check_nim_theater PASS, debt_integrity_gate PASS, proof_unit_consistency_gate PASS, proof_reconcile_gate PASS, reanchor_pin OK no-drift.",
       "binding": "registry_disposition",
-      "bindingRationale": "Hazard is conditional on introducing shared/multi-writer caches or external tampering — both out of the current trust boundary; trace: docs/evidence/ef_cas_isolation_verdict_2026-11-09.md §4.2 (observed), §5 (code citations), §6 (key-scope contract and DEBT#523 reopen conditions this debt completes); reopen: introduce stored-digest comparison at HIT verdict when cross-worktree/shared cache lands or integrity verification is required"
+      "bindingRationale": "Hazard is conditional on introducing shared/multi-writer caches or external tampering — both out of the current trust boundary; trace: docs/evidence/ef_cas_isolation_verdict_2026-11-09.md §4.2 (observed), §5 (code citations), §6 (key-scope contract and DEBT#523 reopen conditions this debt completes); reopen: introduce stored-digest comparison at HIT verdict when cross-worktree/shared cache lands or integrity verification is required",
+      "resolvedAt": "2026-11-14",
+      "resolvedBy": "workstream/vs-524-cas-tamper",
+      "lastVerifiedAt": "2026-11-14T12:14:02Z"
     },
     {
       "id": "DEBT#525",
