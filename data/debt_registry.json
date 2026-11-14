@@ -3601,15 +3601,17 @@
       "symbol": "writeCertificateFromUapResult",
       "contentHash": "sha256:521a4ca0d4311d594f9dd2ca94b4e2f8989e958631cf069ea2d31420012b4e95",
       "lineRange": "src/verification/cert_writer.nim; src/verification/certificate_verifier.nim",
-      "resolution": "OPEN",
-      "lastVerifiedAt": "2026-08-29T00:00:00Z",
+      "resolution": "Producer/consumer contract verified identical: writeCertificateFromUapResult does not emit 'passed'; certificate_verifier.nim:125 is the single verdict; SSOT src/core/types/verification_tier.nim DECISION-0630; producer->verifier lifecycle fixed by tests/unit/test_certificate_lifecycle_v3_test.nim",
+      "lastVerifiedAt": "2026-11-14T03:47:06Z",
       "files": [
         "src/verification/cert_writer.nim",
         "src/verification/certificate_verifier.nim",
         "src/core/types/verification_tier.nim"
       ],
       "source": "WP4-g.1",
-      "status": "open"
+      "status": "closed",
+      "resolvedAt": "2026-11-14",
+      "resolvedBy": "audit:VS-517-519"
     },
     {
       "id": "DEBT#448",
@@ -4738,9 +4740,11 @@
         "src/verification/cert_writer.nim"
       ],
       "source": "verification-semantics authority-split sweep 2026-10-12 (DECISION-0630)",
-      "status": "open",
-      "resolution": "UNRESOLVED deferred 2026-10-12 (rotation-class PR — src/verification/proof_state_projection.nim is a trustedCheckerTreeClosure member; registration is the mandated action per AGENTS §0.9, code untouched)",
-      "lastVerifiedAt": "2026-10-12T00:00:00Z"
+      "status": "closed",
+      "resolution": "Single canonical cert-status projection: private tierToCertStatusString deleted; tierToStatusString(tier) is the sole projection; behavior change vtZ3Only->certZ3Candidate, vtNone->certNoObligation, vtUfAbstract->certZ3Candidate; tests/verification/test_proof_state_projection.nim 67 OK",
+      "lastVerifiedAt": "2026-11-14T03:47:28Z",
+      "resolvedAt": "2026-11-14",
+      "resolvedBy": "audit:VS-517-519"
     },
     {
       "id": "DEBT#505",
@@ -5021,11 +5025,13 @@
         "config.nims"
       ],
       "source": "axiom_source_hash_removal_investigation_2026-11-08",
-      "status": "open",
-      "resolution": "UNRESOLVED — registered as follow-up; deliberately not fixed in the AxiomSourceHash removal slice (scope discipline: dead-verifier removal only, computeSourceHash residual uses untouched)",
-      "lastVerifiedAt": "2026-11-08T01:49:37Z",
+      "status": "closed",
+      "resolution": "computeSourceHash now hashes its path argument: slots are [path] + infra(path excluded, dedup, fixed order) in one sha256sum call; 4 runners produce distinct hashes; Python hashlib independently reproduced 4/4",
+      "lastVerifiedAt": "2026-11-14T03:47:49Z",
       "binding": "registry_disposition",
-      "bindingRationale": "NimScript task media — the defect site in config.nims cannot carry a {.axiomDebt.} marker; trace: this entry's resolution=UNRESOLVED and source=axiom_source_hash_removal_investigation_2026-11-08, evidence docs/evidence/axiom_source_hash_removal_2026-11-08.md DEBT#517"
+      "bindingRationale": "NimScript task media — the defect site in config.nims cannot carry a {.axiomDebt.} marker; trace: this entry's resolution=UNRESOLVED and source=axiom_source_hash_removal_investigation_2026-11-08, evidence docs/evidence/axiom_source_hash_removal_2026-11-08.md DEBT#517",
+      "resolvedAt": "2026-11-14",
+      "resolvedBy": "audit:VS-517-519"
     },
     {
       "id": "DEBT#518",
@@ -5042,11 +5048,13 @@
         "config.nims"
       ],
       "source": "axiom_source_hash_removal_investigation_2026-11-08",
-      "status": "open",
-      "resolution": "UNRESOLVED — registered as follow-up; deliberately not fixed in the AxiomSourceHash removal slice (scope discipline: dead-verifier removal only, computeSourceHash residual uses untouched)",
-      "lastVerifiedAt": "2026-11-08T01:49:37Z",
+      "status": "closed",
+      "resolution": "binary_checksums.json now records sha256sum of the actual bin/<name> content instead of the source hash; verified equal to sha256sum bin/<name>",
+      "lastVerifiedAt": "2026-11-14T03:48:10Z",
       "binding": "registry_disposition",
-      "bindingRationale": "NimScript task media — the defect site in config.nims cannot carry a {.axiomDebt.} marker; trace: this entry's resolution=UNRESOLVED and source=axiom_source_hash_removal_investigation_2026-11-08, evidence docs/evidence/axiom_source_hash_removal_2026-11-08.md DEBT#518"
+      "bindingRationale": "NimScript task media — the defect site in config.nims cannot carry a {.axiomDebt.} marker; trace: this entry's resolution=UNRESOLVED and source=axiom_source_hash_removal_investigation_2026-11-08, evidence docs/evidence/axiom_source_hash_removal_2026-11-08.md DEBT#518",
+      "resolvedAt": "2026-11-14",
+      "resolvedBy": "audit:VS-517-519"
     },
     {
       "id": "DEBT#519",
@@ -5063,11 +5071,13 @@
         "config.nims"
       ],
       "source": "axiom_source_hash_removal_investigation_2026-11-08",
-      "status": "open",
-      "resolution": "UNRESOLVED — comment corrections registered as follow-up; deliberately deferred out of the AxiomSourceHash removal slice (minimal-change principle)",
-      "lastVerifiedAt": "2026-11-08T01:49:37Z",
+      "status": "closed",
+      "resolution": "computeSourceHash header/inline comments rewritten to match the implementation (flat per-slot digest concatenation, not a merkle root, not config/integrity.nims); NimScript ARC closure quirk documented in docs/spec/nimscript_arc_closure_quirk.md",
+      "lastVerifiedAt": "2026-11-14T03:48:31Z",
       "binding": "registry_disposition",
-      "bindingRationale": "NimScript comment media — config.nims comments cannot carry a {.axiomDebt.} marker; trace: this entry's resolution=UNRESOLVED and source=axiom_source_hash_removal_investigation_2026-11-08, evidence docs/evidence/axiom_source_hash_removal_2026-11-08.md DEBT#519"
+      "bindingRationale": "NimScript comment media — config.nims comments cannot carry a {.axiomDebt.} marker; trace: this entry's resolution=UNRESOLVED and source=axiom_source_hash_removal_investigation_2026-11-08, evidence docs/evidence/axiom_source_hash_removal_2026-11-08.md DEBT#519",
+      "resolvedAt": "2026-11-14",
+      "resolvedBy": "audit:VS-517-519"
     },
     {
       "id": "DEBT#520",
