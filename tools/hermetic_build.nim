@@ -22,13 +22,10 @@ import safe_move
 # Pattern: src/core/utils/repo_root.nim (SSOT)
 proc findProjectRoot(): string =
   ## Walk upward from CWD looking for ``.axiom_root`` (SSOT anchor).
-  ## Falls back to ``axiom.toml`` for backward compatibility.
   ## Deterministic: returns the unique ancestor directory with the anchor.
   var dir = getCurrentDir()
   while true:
     if fileExists(dir / ".axiom_root"):
-      return dir
-    if fileExists(dir / "axiom.toml"):
       return dir
     let parent = dir.parentDir()
     if parent == dir:  # reached filesystem root

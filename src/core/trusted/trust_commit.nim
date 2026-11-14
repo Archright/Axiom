@@ -108,7 +108,7 @@ proc repoRootForPath*(path: string): string {.raises: [CatchableError], axiomEff
   ## masked by re-verifying the anchor, so callers' empty-string branches
   ## (legacy baseDir / currentDir fallbacks) stay exact.
   let resolved = findRepoRoot(path)
-  if fileExists(resolved / axiomRoot) or fileExists(resolved / axiomToml):
+  if fileExists(resolved / axiomRoot):
     return resolved
   ""
 

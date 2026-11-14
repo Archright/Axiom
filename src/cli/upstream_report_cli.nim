@@ -1493,10 +1493,9 @@ proc runUpstreamReport*(stateJson: JsonNode; cfg: UpstreamRunConfig; gh: GhAdapt
   let units = unitsRes.get()
 
   let repoRoot = cfg.repoRoot
-  if repoRoot.len == 0 or (not fileExists(joinPath(repoRoot, ".axiom_root")) and
-      not fileExists(joinPath(repoRoot, "axiom.toml"))):
+  if repoRoot.len == 0 or not fileExists(joinPath(repoRoot, ".axiom_root")):
     return err("upstream report must be executed within an Axiom repository " &
-      "worktree (.axiom_root / axiom.toml not found at " & repoRoot & ")")
+      "worktree (.axiom_root not found at " & repoRoot & ")")
 
   var outcomes: seq[UpstreamUnitOutcome] = @[]
   var preflighted = false
@@ -2110,8 +2109,7 @@ proc runUpstreamReportCli*(args: seq[string]; stateFilePath: string):
     if flags.stateFilePath.len > 0: flags.stateFilePath
     else: stateFilePath
   let repoRoot = findRepoRoot()
-  if repoRoot.len == 0 or (not fileExists(joinPath(repoRoot, ".axiom_root")) and
-      not fileExists(joinPath(repoRoot, "axiom.toml"))):
+  if repoRoot.len == 0 or not fileExists(joinPath(repoRoot, ".axiom_root")):
     return err("ax report --upstream must be executed within an Axiom " &
       "repository worktree. Set AXIOM_ROOT env var or run from project root.")
   let cfg = UpstreamRunConfig(

@@ -24,8 +24,6 @@ proc findProjectRoot(): string =
   while true:
     if fileExists(dir / ".axiom_root"):
       return dir
-    if fileExists(dir / "axiom.toml"):
-      return dir
     let parent = dir.parentDir()
     if parent == dir:
       break

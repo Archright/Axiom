@@ -1,7 +1,7 @@
 ## validate_axiom_root.nim — Validates deterministic project root resolution.
 ##
 ## Checks that AXIOM_ROOT (when set) points to a real project root containing
-## `.axiom_root` or `axiom.toml`, and that it matches the walk computed from the
+## `.axiom_root`, and that it matches the walk computed from the
 ## binary's own location.
 ##
 ## Exit codes:
@@ -18,17 +18,14 @@ import std/os
 
 const
   axiomRootAnchor = ".axiom_root"
-  axiomTomlFallback = "axiom.toml"
 
 proc findProjectRoot*(startDir: string): string {.raises: [].} =
   ## Deterministic walk: mirror of repo_root.nim logic.
-  ## Walks up to 10 ancestors looking for the anchor files.
+  ## Walks up to 10 ancestors looking for the anchor file.
   result = startDir
   for _ in 0..10:
     try:
       if fileExists(result / axiomRootAnchor):
-        return result
-      if fileExists(result / axiomTomlFallback):
         return result
     except CatchableError:
       discard  # axiom:best-effort(path access failure — continues walking up)
@@ -74,14 +71,13 @@ proc main() =
     stderr.writeLine("  actual   (AXIOM_ROOT): " & normalizedEnv)
     quit(1)
 
-  # 2. Must contain .axiom_root or axiom.toml.
+  # 2. Must contain .axiom_root.
   let hasAnchor = fileExists(normalizedEnv / axiomRootAnchor)
-  let hasFallback = fileExists(normalizedEnv / axiomTomlFallback)
-  if not (hasAnchor or hasFallback):
+  if not hasAnchor:
     stderr.writeLine("VALIDATE AXIOM_ROOT FAIL: no project root anchor found")
     stderr.writeLine("  expected (computed): " & computedRoot)
     stderr.writeLine("  actual   (AXIOM_ROOT): " & normalizedEnv)
-    stderr.writeLine("  missing: " & axiomRootAnchor & " and " & axiomTomlFallback)
+    stderr.writeLine("  missing: " & axiomRootAnchor)
     quit(1)
 
   # 3. Must match the deterministic walk from binary location.

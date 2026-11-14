@@ -5,22 +5,20 @@ import core/trusted/env_access
 import std/[os, staticos]
 import core/trusted/axiom_pragmas_lite
 const axiomRoot* = ".axiom_root"  ## Primary project root anchor (declarative).
-const axiomToml* = "axiom.toml"  ## Fallback project marker (legacy compat).
 func repoRootConst*(): string {.compileTime.} =
   ## Compile-time project root resolution.
-  ## Walks up from currentSourcePath() until .axiom_root or axiom.toml is found.
+  ## Walks up from currentSourcePath() until .axiom_root is found.
   ## Guard: parent == current detects filesystem root to prevent infinite loop.
   var current = currentSourcePath().parentDir()
   while current.len > 0:
-    if staticFileExists(current / axiomRoot) or
-       staticFileExists(current / axiomToml):
+    if staticFileExists(current / axiomRoot):
       return current
     let parent = current.parentDir()
     if parent == current:  # Root directory detection
-      doAssert false, "Axiom root marker (.axiom_root / axiom.toml) not found from: " &
+      doAssert false, "Axiom root anchor (.axiom_root) not found from: " &
                       currentSourcePath()
     current = parent
-  doAssert false, "Axiom root marker not found from: " & currentSourcePath()
+  doAssert false, "Axiom root anchor not found from: " & currentSourcePath()
 # @axiom-hint: smt="vacuous_primitive"  # axiom:certified-exempt(import-heuristic; annotate-then-purge DEBT#303)
 proc findRepoRoot*(startDir: string = getAppDir()): string {.raises: [], axiomEffect: IOEffect.} =
   ## Check AXIOM_ROOT env var first for deterministic root injection.
@@ -38,8 +36,6 @@ proc findRepoRoot*(startDir: string = getAppDir()): string {.raises: [], axiomEf
   for _ in 0..10:
     try:
       if fileExists(result / axiomRoot):
-        return result
-      if fileExists(result / axiomToml):
         return result
     except CatchableError:
       discard  # axiom:best-effort(ioboundary catch)

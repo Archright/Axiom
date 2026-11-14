@@ -387,9 +387,6 @@ macro verifySpecification*(specPath: static string): untyped =
     if fileExists(d / ".axiom_root"):
       projectRoot = d
       break
-    if fileExists(d / "axiom.toml"):
-      projectRoot = d
-      break
     let p = parentDir(d)
     if p == d: break
     d = p
@@ -616,9 +613,6 @@ macro verifyTestExists*(modulePath: static string): untyped =
   var d = absDir
   for _ in 0..10:
     if fileExists(d / ".axiom_root"):
-      projectRoot = d
-      break
-    if fileExists(d / "axiom.toml"):
       projectRoot = d
       break
     let p = parentDir(d)

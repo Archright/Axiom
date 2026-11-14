@@ -21,8 +21,6 @@ proc findProjectRoot(): string =
   while true:
     if fileExists(dir / ProjectRootAnchor):
       return dir
-    if fileExists(dir / "axiom.toml"):
-      return dir
     let parent = dir.parentDir()
     if parent == dir:
       quit("ERROR: " & ProjectRootAnchor & " not found. Run from Axiom project directory.")

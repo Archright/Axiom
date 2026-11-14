@@ -46,7 +46,7 @@ const BaselinePath = "data/baseline.json"
 proc findRepoRoot(): string =
   var dir = getCurrentDir()
   while dir.len > 0:
-    if fileExists(dir / ".axiom_root") or fileExists(dir / "axiom.toml"):
+    if fileExists(dir / ".axiom_root"):
       return dir
     let parent = dir.parentDir()
     if parent == dir:
