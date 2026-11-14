@@ -58,25 +58,25 @@ func parseTopologyLockJson*(jsonStr: string): Result[TopologyLock, string] {.rai
 
     lock.modules = initTable[string, ModuleEntry]()
     let modulesNode = j{"modules"}
-    if modulesNode.kind == JObject:
+    if not modulesNode.isNil and modulesNode.kind == JObject:
       for key, val in modulesNode.pairs:
         var entry = ModuleEntry(
-          currentPath: val{"currentPath"}.getStr(""),
-          initialPath: val{"initialPath"}.getStr("")
+          currentPath: val{"current_path"}.getStr(""),
+          initialPath: val{"initial_path"}.getStr("")
         )
         if val.hasKey("history"):
           for h in val{"history"}:
             entry.history.add(ModuleHistoryEntry(
               path: h{"path"}.getStr(""),
-              changedAt: h{"changedAt"}.getStr(""),
-              changeType: h{"changeType"}.getStr(""),
-              approvedInLock: h{"approvedInLock"}.getInt(0)
+              changedAt: h{"changed_at"}.getStr(""),
+              changeType: h{"change_type"}.getStr(""),
+              approvedInLock: h{"approved_in_lock"}.getInt(0)
             ))
         lock.modules[key] = entry
 
     lock.shards = initTable[string, ShardEntry]()
     let shardsNode = j{"shards"}
-    if shardsNode.kind == JObject:
+    if not shardsNode.isNil and shardsNode.kind == JObject:
       for key, val in shardsNode.pairs:
         var entry = ShardEntry()
         if val.hasKey("members"):
@@ -90,7 +90,7 @@ func parseTopologyLockJson*(jsonStr: string): Result[TopologyLock, string] {.rai
 
     lock.transitionalModules = initTable[string, TransitionalEntry]()
     let transNode = j{"transitional_modules"}
-    if transNode.kind == JObject:
+    if not transNode.isNil and transNode.kind == JObject:
       for key, val in transNode.pairs:
         var entry = TransitionalEntry()
         if val.hasKey("created_at"):
