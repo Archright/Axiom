@@ -49,6 +49,7 @@ import verification/obligation/obligation_ir
 import verification/obligation/semantic_target_extractor
 import verification/obligation/canonical_obligation_generator
 import verification/obligation/lean_kernel_boundary
+import verification/obligation/measured_digests
 import verification/obligation/toolchain_capture
 import verification/obligation/lean_evidence
 import verification/obligation/kernel_acceptance_authority
@@ -1018,6 +1019,31 @@ proc measureSubjectTreeMerkleRoot*(subjectRoot: string; moduleRelPath: string;
       return ""
   sha256Hex(records.join("\n"))
 
+proc ircheckWorkerBinaryDigest*(worker: string): string {.
+    raises: [], axiomEffect: IOEffect,
+    tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## sha256 of the ircheck worker binary, memoized per process/thread: the
+  ## binary is ~119 MB, one debug-mode digest costs ~60 s, and the golden
+  ## lanes measure it once per golden subject in the SAME process. The memo
+  ## authority is `measuredBinaryDigest` (measured_digests.nim) — its key
+  ## carries the worker path plus stat identity (size, mtimeNs, ctimeNs,
+  ## dev/ino) precisely so a REBUILD can never reuse a stale digest: a
+  ## rebuilt worker has a new mtime/ctime and is re-hashed from its new
+  ## bytes. Same bytes → same digest string, byte-identical to
+  ## sha256Hex(readFile(worker)). Fail-closed shape preserved: absent,
+  ## unreadable, or empty worker → "" (the EA binding stays unbound
+  ## upstream); a file mutating while being read is unmeasured → ""
+  ## (strictly tighter than a torn-bytes digest). NOT gcsafe — measured on
+  ## the main thread only, same contract as `measureExtractionAgreement`.
+  try:
+    if worker.len == 0 or not fileExists(worker):
+      return ""
+    if getFileInfo(worker).size <= 0'i64:
+      return "" # identity with the unmemoized path: empty file → ""
+  except CatchableError:
+    return ""
+  measuredBinaryDigest(worker)
+
 proc measureExtractionAgreement*(moduleSource: string; funcName: string): tuple[
     nimDigest, leanDigest, ircheckBinaryDigest: string, agreed: bool, reason: string] {.
   raises: [], axiomEffect: IOEffect,
@@ -1027,7 +1053,9 @@ proc measureExtractionAgreement*(moduleSource: string; funcName: string): tuple[
   ## module source for this funcDef, and measures the ircheck worker binary
   ## content at the same resolution the worker itself uses
   ## (AXIOM_IRCHECK_CMD override, else <repoRoot>/proofs/.lake/build/bin/ircheck
-  ## — the extraction_agreement.nim default). No digest is ever fabricated:
+  ## — the extraction_agreement.nim default). The binary digest is memoized
+  ## per process on stat identity (`ircheckWorkerBinaryDigest` — same bytes
+  ## → same digest, a rebuild re-measures). No digest is ever fabricated:
   ## any unmeasured leg stays "" and fails the binding closed upstream.
   ## NOT gcsafe (parses the subject source; the Nim parser holds process
   ## globals) — only `measureParseBoundComponents` (main thread) may call it.
@@ -1051,13 +1079,7 @@ proc measureExtractionAgreement*(moduleSource: string; funcName: string): tuple[
       getEnv("AXIOM_IRCHECK_CMD", "")
     else:
       resolveRepoRoot() / "proofs" / ".lake" / "build" / "bin" / "ircheck"
-  try:
-    if worker.len > 0 and fileExists(worker):
-      let bin = readFile(worker)
-      if bin.len > 0:
-        result.ircheckBinaryDigest = sha256Hex(bin)
-  except CatchableError: # bestEffort("""unreadable ircheck binary — empty digest leaves EA unbound, fail-closed""")
-    discard
+  result.ircheckBinaryDigest = ircheckWorkerBinaryDigest(worker)
 
 type SubjectParseBoundComponents* = object
   ## §2.1a components whose measurement requires the Nim parser

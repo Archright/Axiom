@@ -128244,6 +128244,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/obligation/canonical_verification.nim",
+      "name": "ircheckWorkerBinaryDigest",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "CanonicalVerificationResult",
       "module": "src/verification/obligation/canonical_verification.nim",
       "name": "kernelRejectedResult",
