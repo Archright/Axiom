@@ -569,16 +569,7 @@ static:
             inc procCount
       except CatchableError:
         discard  # axiom:best-effort(ioboundary catch)
-  # Ratchet 954: DEBT#524 (CAS tamper-detection, 2026-11-14) added exactly
-  # two new I/O-boundary procs —
-  #   core/gate/gate_cas.nim: writeCasBinarySidecar (atomic digest-sidecar
-  #   store: readFile + writeFileAtomic) and casBinarySidecarIntact (reuse-
-  #   verdict guard: sidecar + binary read/verify + logError). The digest
-  #   format check is a func (isLowercaseHex64); both procs are whole-job
-  #   I/O reader/contract APIs (AGENTS.md §0.6 permits procs at I/O
-  #   boundaries) with no reducible proc surface. The ratchet still blocks
-  #   the next unreflective `proc` in src/core/.
-  # Prior ratchet 952: VS-T (dependency authority handoff, 2026-11-08) added
+  # Ratchet 952: VS-T (dependency authority handoff, 2026-11-08) added
   # exactly two new I/O-boundary procs —
   #   core/gate/closure_manifest.nim: genDependProfile (filesystem probe
   #   of the canonical genDepend resolution roots) and loadProjectClosure
@@ -586,10 +577,11 @@ static:
   #   func and every single-use I/O helper is inlined at its call site, so
   #   the module's proc surface is irreducible: both procs are exported
   #   reader/writer-contract APIs whose whole job is I/O (AGENTS.md §0.6
-  #   permits procs at I/O boundaries).
+  #   permits procs at I/O boundaries). The ratchet still blocks the next
+  #   unreflective `proc` in src/core/.
   # Prior ratchet 950: git_content_cas promoteContentToGitCAS (I/O
   #   boundary, hotspot_analyzer precedent) — see git history.
-  doAssert procCount <= 954,
+  doAssert procCount <= 952,
     "proc→func regression: too many proc declarations in src/core/. Use func. See AGENTS.md §0.6"
 
 # ── Invariant 7: stderr Ban ──
