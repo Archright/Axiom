@@ -72,7 +72,7 @@ Proj_sem(Result(U, Plan_A)) == Proj_sem(Result(U, Plan_B))   ∀U ∈ Selected_A
 
 전역 budget 스케일링은 §8 위반으로 문서화되었고, **2026-11-14에 코드와 사양이 동일 세대로 해소**되었다. 본 절은 판정 이력이므로 삭제하지 않고 해소 사실과 기계적 근거를 함께 기록한다.
 
-- 해소 전 표면: `src/cli/axiom_engine.nim`의 `max(1, prepared.frontier.len)` 스케일링(과거 인용 `:844-845`, 2026-11-14 실측 `:5727-5728`)과 `src/verification/batch_uap/loop_driver.nim:606-618`(과거 인용 `:478`)의 전역 budget → unit 실패 경로.
+- 해소 전 표면: `src/cli/axiom_engine.nim`의 `max(1, prepared.frontier.len)` 스케일링 — 문서 v1.0.0(2026-09-25)의 `:844-845` 인용은 public history에서 유효한 적이 없고, B5 이전 main `80a5119` 실측 위치는 `:5727-5728`이었다(해소 후 그 라인은 `buildPreRunContext`/`resolveAxStatePath`이며 스케일링은 부재). `src/verification/batch_uap/loop_driver.nim:606-618`은 해소 전후 동일하며, 전역 결속은 B5가 제거한 `gasLimit` 파라미터(`:776`/`:910`)였다.
 - 해소 후 실측(2026-11-14, `workstream/vs-b5-per-unit-budget`): `initAxiomEngine(startMono: int64)`(`axiom_engine.nim:271-277`) — 엔진에 gas 풀이 없다. 오케스트레이션 호출부의 `gasLimit = engine.budget.gasTotal` 전달이 제거되어 집계 gas는 telemetry 전용이며, ci-cd 게이트는 `depthCoverage`만 판정한다(`:559-563`). `loop_driver.nim:606`의 `checkBudget(unitBudget)`은 유닛 고유 예산만 소비한다.
 - 기계적 근거: `tests/cli/test_axiom_engine.nim`의 음성 통제(`not compiles(initAxiomEngine(..., expectedNodeCount = …))`) + `tests/unit/batch_uap_orchestrator_test.nim` exit 0.
 - 미해소 잔여(본 슬라이스 밖, 조용히 수정 금지): `checkBudget(unitBudget)`이 생성 직후 fresh 예산에 수행되는 도달 불가 경로. **DEBT 미등록 상태이며, 등록은 이를 다루는 별도 슬라이스의 착수 조건**이다.

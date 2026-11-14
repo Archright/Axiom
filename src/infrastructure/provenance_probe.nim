@@ -42,6 +42,36 @@ proc computeSourceTreeHash*(srcDir: string): string {.raises: [CatchableError], 
   ## must not depend on any persistent cache.
   source_identity_cache.computeSourceTreeDigestUncached(srcDir)
 
+proc requireVerifierIdentity(projectRoot, binaryRelPath: string) {.raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## Second coherence axis: the binary's embedded VerifierBuildId must equal the
+  ## identity declared by src/generated/build_env.nim.
+  ##
+  ## BuildSourceHash covers src/**/*.nim only; VerifierBuildId additionally
+  ## covers config.nims, config/effects.nims, src/gate/config.nims, Makefile,
+  ## axiom.nimble, axiom.lock and proofs/lean-toolchain (spec §2). A change to
+  ## only those inputs therefore rotates the identity WITHOUT moving
+  ## BuildSourceHash — a binary compiled before that rotation would pass the
+  ## tree-hash axis while judging under a stale identity. This axis closes it.
+  ##
+  ## Absence semantics: build_env.nim is gitignored, so every restored-binary
+  ## probe site (B-layer semantic probe, S5 gates, release-ship) materializes a
+  ## tree that cannot contain it — absent = no observation, and the tree-hash
+  ## axis above already carries the fail-closed verdict there. A bare
+  ## `.default` seed is never an identity (its value is the "unmeasured" seed).
+  let buildEnvPath = projectRoot / "src" / "generated" / "build_env.nim"
+  if not fileExists(buildEnvPath):
+    stderr.writeLine("[provenance] identity axis skipped: " & buildEnvPath & " absent (git-materialized root)")
+    return
+  let onDiskId = extractBuildEnvField(readFile(buildEnvPath), "VerifierBuildId")
+  if onDiskId.len == 0:
+    stderr.writeLine("[provenance] identity axis skipped: no VerifierBuildId line in " & buildEnvPath)
+    return
+  if onDiskId == VerifierBuildId: return
+  stderr.writeLine("[FATAL] VerifierBuildId mismatch (SourceCoherence FAIL) binary=" & binaryRelPath &
+                   " embedded=" & VerifierBuildId & " build_env=" & onDiskId &
+                   " — binary predates this src/generated/build_env.nim; rebuild via 'make ci-bootstrap'")
+  quit(1)
+
 proc verifyProvenanceOrFatal*(binaryRelPath: string) {.raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Strict self-check for the cache provenance probe (--check-provenance):
   ## the running binary must BE the canonical <repoRoot>/<binaryRelPath> copy
@@ -57,7 +87,9 @@ proc verifyProvenanceOrFatal*(binaryRelPath: string) {.raises: [CatchableError],
                      " (self=" & currentBin & " canonical=" & canonicalBin & ")")
     quit(1)
   let srcHash = computeSourceTreeHash(projectRoot / "src")
-  if srcHash == BuildSourceHash: return
+  if srcHash == BuildSourceHash:
+    requireVerifierIdentity(projectRoot, binaryRelPath)
+    return
   stderr.writeLine("[FATAL] Engine source/source mismatch (SourceCoherence FAIL) binary=" & binaryRelPath &
                    " tree=" & srcHash & " embedded=" & BuildSourceHash & " — run 'make build' or 'make ci-bootstrap'")
   quit(1)
