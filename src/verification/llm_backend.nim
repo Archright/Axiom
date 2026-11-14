@@ -7,6 +7,7 @@ import std/options
 import std/os
 import std/strutils
 import core/trusted/axiom_pragmas
+import core/utils/repo_root
 
 type
   LLMRequest* = object
@@ -109,7 +110,10 @@ func processLLMBackend*(processPath: string): LLMBackend =
 ## per AGENTS.md §0.2 (deterministic precedence).
 proc loadLeanstralConfigFromToml(): tuple[apiUrl, apiKey, apiModel: string] {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   try:
-    let content = readFile("axiom.toml")
+    let tomlPath = axiomConfigPath()
+    if tomlPath.len == 0:
+      return
+    let content = readFile(tomlPath)
     var inLeanstralSection = false
     for line in content.splitLines():
       let stripped = line.strip()

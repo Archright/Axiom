@@ -47,9 +47,10 @@ func combineHashes*(a, b: string): string =
 proc loadConfigSnapshot*(repoRoot: string): ConfigSnapshot {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].}
  =
   ## Load and hash all config files. Returns cached snapshot if mtime unchanged.
-  ## Config files: axiom.toml, nimble.lock, any .ratchet, gate_manifest.json
+  ## Config files: axiom.toml (config/ first, then root), nimble.lock, gate_manifest.json
   let configPaths = [
-    repoRoot / "axiom.toml",
+    (if fileExists(repoRoot / "config" / "axiom.toml"): repoRoot / "config" / "axiom.toml"
+     else: repoRoot / "axiom.toml"),
     repoRoot / "nimble.lock",
     repoRoot / ".axiom" / "ratchet.json"
   ]

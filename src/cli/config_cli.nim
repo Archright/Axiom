@@ -15,15 +15,15 @@ import std/os
 import std/tables
 import cli/config_loader
 import core/trusted/axiom_pragmas
+import core/utils/repo_root
 import infrastructure/logging_facade
 
-const axiomTomlPath = "axiom.toml"
-
 proc configShow*(): int {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
-  if not fileExists(axiomTomlPath):
-    echo "[config] No axiom.toml found in project root."
+  let tomlPath = axiomConfigPath()
+  if tomlPath.len == 0:
+    echo "[config] No axiom.toml found (config/axiom.toml or project root)."
     return 0
-  let config = loadTomlConfig(axiomTomlPath)
+  let config = loadTomlConfig(tomlPath)
   if len(config) == 0:
     echo "[config] axiom.toml is empty or could not be parsed."
     return 0
@@ -38,10 +38,11 @@ proc configShow*(): int {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect,
   return 0
 
 proc configValidate*(): int {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
-  if not fileExists(axiomTomlPath):
+  let tomlPath = axiomConfigPath()
+  if tomlPath.len == 0:
     echo "[config] No axiom.toml found — nothing to validate."
     return 0
-  let config = loadTomlConfig(axiomTomlPath)
+  let config = loadTomlConfig(tomlPath)
   var errors = 0
   # Basic structural validation
   if len(config) == 0:
