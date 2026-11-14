@@ -30,7 +30,6 @@ bin/*
 bin_gateway_test/*
 /tools/baseline_snapshot
 
-!bin/axiom.nim
 # ── Language Ban: src/ & tests/ whitelist (AGENTS.md §0.2) ────────────
 # Pure allowlist: only .nim, .lean, .nims, .md, .json, .lock, .feature
 # Git tracked data files: .json (domain_layout, certificates), .lock (gate policy)

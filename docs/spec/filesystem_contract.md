@@ -14,7 +14,9 @@ Revision 2026-11-09 (VS-I publication-integrity gate): `compliance/` registered 
 
 Revision 2026-11-06 (Gate 3 SAL 1.0): `THIRD-PARTY-NOTICES.md` registered as an EXACT_ALLOWED single file; `LICENSES/`·`CLA/` registered as EXACT_ALLOWED tracked content directories (§2.4) — SAL 1.0 publication surface.
 
-Revision 2026-11-04 (VS-1 root-write-closure PR-1): `ci/`·`experiments/`·`_lto_evidence/` registered as EXACT_ALLOWED tracked content directories (§2.4); `bin/axiom.nim` registered as the §7.1 legacy exception; §6 Enforcement Scope added; `logs/` tracked-status git failure now fail-closed in the validator.
+Revision 2026-11-14 (VS-R2 stub generation): the tracked `bin/` Nim stub is deleted — the mutation harness now generates its scanner compile-entry at `build/mutation/axiom_stub_scanner.nim` (gitignored), removing the §7.1 legacy exception and the `.gitignore` re-include. `bin/` contains no Nim sources.
+
+Revision 2026-11-04 (VS-1 root-write-closure PR-1): `ci/`·`experiments/`·`_lto_evidence/` registered as EXACT_ALLOWED tracked content directories (§2.4); the `bin/` Nim stub registered as the §7.1 legacy exception; §6 Enforcement Scope added; `logs/` tracked-status git failure now fail-closed in the validator.
 
 ---
 
@@ -248,9 +250,7 @@ When an OPTIONAL entry is present, its contents are inspected against these rule
 3. **ELF executables**: Any dynamically linked ELF binary without a forbidden extension
 4. **Other ELF binaries**: Any ELF executable that does not match a forbidden name pattern
 
-**Legacy exception (grandfathered):** `bin/axiom.nim` — tracked Nim source stub (compile-time gate stub detection, NOT ELF), grandfathered under I2; tracked before the contents contract and not relocated in this revision.
-
-**Unclassified materialization**: any file that is NOT one of the above (not canonical surface, not hash-suffix, not ELF, not a grandfathered legacy exception) → FAIL. The `bin/` directory is single-depth: subdirectories → FAIL.
+**Unclassified materialization**: any file that is NOT one of the above (not canonical surface, not hash-suffix, not ELF) → FAIL. The `bin/` directory is single-depth: subdirectories → FAIL.
 
 **Prohibited:**
 

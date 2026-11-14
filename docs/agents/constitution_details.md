@@ -263,7 +263,7 @@ Step 2: Audit `src/gate/static_gate_scanner.nim` (small TCB; currently 121 lines
         └── If suspicious → Register DEBT entry
 
 Step 3: Verify both engines independently
-        └── Nim: `nim c bin/axiom.nim` (build success)
+        └── Nim: `nim check build/mutation/axiom_stub_scanner.nim` (generated scanner entry)
         └── Lean: `lake build` (proof compilation)
         └── If either fails → Investigate domain-specific theater
 ```

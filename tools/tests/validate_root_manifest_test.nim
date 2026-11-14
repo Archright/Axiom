@@ -409,9 +409,9 @@ proc main() =
     else:
       echo "  PASS"
 
-  # Test 19: bin/axiom.nim (LegacyBinExceptions) → exit 0
-  block binLegacyException:
-    echo "TEST 19: bin/axiom.nim present (legacy exception) → exit 0"
+  # Test 19: bin/ Nim source → exit 1 (no legacy exception since VS-R2)
+  block binSourceRejected:
+    echo "TEST 19: bin/axiom.nim present (no legacy exception) → exit 1"
     let tmpDir = createTempDir()
     defer: removeDir(tmpDir)
     for d in ["src", "tests", "tools", "proofs", "data", "docs", "config"]:
@@ -419,8 +419,12 @@ proc main() =
     createDir(tmpDir / "bin")
     writeFile(tmpDir / "bin" / "axiom.nim", "import gate/static_gate_scanner\n")
     let r = runValidator(tmpDir)
-    if r.exitCode != 0:
-      echo "  FAIL: expected exit 0, got " & $r.exitCode
+    if r.exitCode != 1:
+      echo "  FAIL: expected exit 1, got " & $r.exitCode
+      echo "  output: " & r.output
+      inc failures
+    elif "source extension in bin/" notin r.output:
+      echo "  FAIL: expected 'source extension in bin/' in output"
       echo "  output: " & r.output
       inc failures
     else:

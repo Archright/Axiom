@@ -120,19 +120,9 @@ type SlotLock = object
   ## exit — so there is no path that can leave a slot wedged.
   fd: cint
 
-# Stub content is built from parts so no source line starts with "import "
-# (the layer-enforcement gate line-scans for `startsWith("import")` and would
-# otherwise false-positive on the embedded mutation-harness stub source).
-# The emitted bytes MUST be identical to the tracked bin/axiom.nim: the
-# worktree purity gate inside this tool runs `git status --porcelain` after
-# the stub is written, and any divergence from the tracked artifact would
-# report the tool's own stub as a dirty tree (observed 2026-10-08).
-const StubScannerModule = "gate" & "/static_gate_scanner"
-const StubContent = "import " & StubScannerModule & "\n" &
-  "\n" &
-  "# Compile-time gate stub detection\n" &
-  "static:\n" &
-  "  scanGateRegistryStubs()\n"
+# The mutation harness generates its own scanner compile-entry under
+# build/mutation/ (gitignored), so no stub is written into this worktree: a
+# tracked bin/axiom.nim no longer exists (VS-R2).
 
 proc git(repoDir, args: string): (string, int) =
   execCmdEx("git -C " & quoteShell(repoDir) & " " & args)
@@ -397,14 +387,6 @@ proc main() =
   # drop a stray `--global` hook-template dir into the worktree root (untracked).
   # Remove it so it can never trip the worktree's git purity gate.
   discard execCmdEx("rm -rf " & quoteShell(wtPath / "--global"))
-
-  let stubFile = wtPath / "bin" / "axiom.nim"
-  try:
-    createDir(stubFile.parentDir())
-    writeFile(stubFile, StubContent)
-  except CatchableError as e:
-    echo "ERROR: failed to write mutation-harness stub '", stubFile, "': ", e.msg
-    quit(4)
 
   putEnv("AXIOM_ENV", "dev")
 

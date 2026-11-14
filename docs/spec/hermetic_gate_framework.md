@@ -63,7 +63,7 @@ sync_topology.nim (auto-generates)
 static_gate_scanner.nim (compile-time verification)
         │
         ▼
-nim c bin/axiom.nim (build with gate checks)
+nim check build/mutation/axiom_stub_scanner.nim (generated entry; gate checks)
 ```
 
 ## Pragma Standard
