@@ -5462,6 +5462,27 @@
       "lastVerifiedAt": "2026-11-14T00:00:00Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is a data artifact plus a Makefile target, outside the src/-only marker scan; trace: this entry's contentHash over R1.json and the Makefile wiring audit."
+    },
+    {
+      "id": "DEBT#538",
+      "category": "Theater/Unenforced Claim",
+      "impact": "medium",
+      "severity": "medium",
+      "title": "Makefile is registered in both CONTROLLED and FROZEN and resolveClass returns CONTROLLED first, so the FROZEN registration is inert and every Makefile change is judged PASS",
+      "description": "Machine-observed 2026-11-14. config/repository_surface.json (policyVersion 98) lists `Makefile` in classes.CONTROLLED and again in classes.FROZEN; rules.FROZEN is ADD/MODIFY/DELETE=FAIL while rules.CONTROLLED is all PASS. tools/surface_guard.nim:188-197 resolveClass iterates [\"PRODUCT\",\"CONTROLLED\",\"FROZEN\"] and returns the first match, so the CONTROLLED entry wins and FROZEN never binds. Measured: diff `M\\tMakefile` -> verdict PASS (exit 0) versus diff `A\\tsrc/gate/runners/newthing.nim` -> verdict FAIL SURFACE_FORBIDDEN (exit 1, changeClass FROZEN). The policy's knownBlindSpots list discloses that CONTROLLED is all-PASS for data files (ledger tampering is outside the gate's scope) but does not disclose that one path can carry two class registrations with the stricter one silently dropped, so a reader of classes.FROZEN is told Makefile is frozen while the gate permits every edit. This is the declare-protection-enforce-nothing class that AGENTS.md §0.9 prohibits, and it makes the reviewer belief 'Makefile is FROZEN' unreliable in both directions.",
+      "symbol": "config/repository_surface.json classes.CONTROLLED/classes.FROZEN 'Makefile' + tools/surface_guard.nim resolveClass",
+      "contentHash": "sha256:758caf918a64685e44665816fc9a18ec74ed2f2c2651e2404813f1657e314cd1",
+      "lineRange": "config/repository_surface.json classes.CONTROLLED 'Makefile', classes.FROZEN 'Makefile', classResolutionOrder; tools/surface_guard.nim:188-197",
+      "files": [
+        "config/repository_surface.json",
+        "tools/surface_guard.nim"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED — architect decision required: either remove `Makefile` from classes.CONTROLLED so the FROZEN binding takes effect (a FROZEN-surface policy change and a CI Epoch transition, because the stricter rule changes landing admission), or remove it from classes.FROZEN so the current all-PASS posture is stated honestly. Keeping both registrations is not a third option: the first-match resolver makes one of them a lie.",
+      "lastVerifiedAt": "2026-11-14T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the sites are a FROZEN policy JSON and a tools/ Nim guard, both outside the src/-only marker scan; trace: this entry's contentHash over config/repository_surface.json (sha256 758caf91...) plus the measured surface_guard verdict pair (M Makefile PASS vs A src/gate FROZEN FAIL)."
     }
   ]
 }
