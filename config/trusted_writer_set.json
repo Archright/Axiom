@@ -98,7 +98,7 @@
     "src/cli/axiom_engine.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "66fda3d2e1704cd24e553573f7be1167c98efedc"
+      "sha": "d436509d64db42be8b208003a4bf4e546c980538"
     },
     "src/cli/axiom_status.nim": {
       "mode": "100644",
@@ -178,7 +178,7 @@
     "src/cli/config_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "2e97aa344999073c949b089360c971fdfc5bfeb4"
+      "sha": "fdf4ab92d294149cc6634d861b5077a7f9a41e76"
     },
     "src/cli/config_loader.nim": {
       "mode": "100644",
@@ -1618,7 +1618,7 @@
     "src/core/resilience/resilience_config.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "e0fcce2b569f7a990641636c22fe3803d321f5ef"
+      "sha": "621c1362ef3fe7a00cd815da7200b03038d3f0db"
     },
     "src/core/results.nim": {
       "mode": "100644",
@@ -2773,7 +2773,7 @@
     "src/core/utils/repo_root.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "d1137d4346f6d00b513c218a3149d308c54fa4f5"
+      "sha": "bc7d0744063848291099c2dbfc2a8f70257e4f46"
     },
     "src/core/utils/shadow_digests.nim": {
       "mode": "100644",
@@ -3578,7 +3578,7 @@
     "src/verification/batch_uap/ast_hash.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "a2e2165a7f043931847c7a3dae9cdad02d22cf72"
+      "sha": "263b046e776980ee83edb26066483cb0a72ac000"
     },
     "src/verification/batch_uap/cache_middleware.nim": {
       "mode": "100644",
@@ -3933,7 +3933,7 @@
     "src/verification/llm_backend.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "6221770845e0cb4f8ea8a16e3f64a9966d623ac8"
+      "sha": "150fdd0ecaf2ba13442642e0a9aefebd2538aeab"
     },
     "src/verification/loop_invariant_synthesis.nim": {
       "mode": "100644",
