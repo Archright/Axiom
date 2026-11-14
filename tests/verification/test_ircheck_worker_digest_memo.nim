@@ -120,7 +120,7 @@ putEnv("AXIOM_IRCHECK_CMD", "")
 for f in [tmpA, tmpB, tmpEmpty]:
   try:
     removeFile(f)
-  except CatchableError:
+  except CatchableError: # axiom:best-effort("temp cleanup in a test — a failed unlink cannot change any assertion")
     discard
 
 echo ""
