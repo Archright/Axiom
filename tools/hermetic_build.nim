@@ -848,24 +848,39 @@ proc computeLeanSourceHash(): string =
   if combined.len == 0:
     return sha256String("")
   sha256String(combined)
-proc computeDeterministicSourceHash(srcDir: string): string =
-  ## Gather (relPath, content) for every .nim file under srcDir (excluding
-  ## /generated/) and delegate to hashSourceContents: the digest formula is
-  ## defined in the kernel (src/core/utils/build_provenance.nim) — this proc
-  ## is the build-time gather twin, byte-identical to the runtime twin by
-  ## construction (shared kernel, no local re-implementation).
-  var relFiles: seq[tuple[relPath: string, content: string]] = @[]
+proc gatherSourceTree(srcDir: string): tuple[
+    files: seq[tuple[relPath: string, content: string]], complete: bool] =
+  ## ONE walkDirRec + ONE readFile per .nim file under srcDir (excluding
+  ## /generated/). The single (src-relative path, content) set feeds BOTH
+  ## derivations — BuildSourceHash (hashSourceContents kernel) and the
+  ## VerifierBuildId manifest — where each derivation used to re-walk and
+  ## re-read the same tree. ``complete`` is false when a source file was
+  ## unreadable: the tree-hash twin keeps its warn-and-skip semantics over the
+  ## files that WERE read, while the manifest twin fails closed
+  ## ("unmeasured") — both exactly as the two pre-change walks behaved.
+  result.files = @[]
+  result.complete = true
   for f in walkDirRec(srcDir):
     if f.endsWith(".nim") and not f.contains("/generated/"):
       try:
-        relFiles.add((relativePath(f, srcDir, '/'), readFile(f)))
+        result.files.add((relativePath(f, srcDir, '/'), readFile(f)))
       except CatchableError:
-        stderr.writeLine("[hermetic] WARNING: Failed to read source file for hash: " & f)
-  result = hashSourceContents(relFiles)
+        stderr.writeLine("[hermetic] WARNING: Failed to read source file " & f &
+          " — tree hash omits it; VerifierBuildId fails closed (\"unmeasured\")")
+        result.complete = false
+proc computeDeterministicSourceHash(srcDir: string): string =
+  ## Delegate to hashSourceContents: the digest formula is defined in the
+  ## kernel (src/core/utils/build_provenance.nim) — this proc is the
+  ## build-time gather twin, byte-identical to the runtime twin by
+  ## construction (shared kernel, no local re-implementation). Single-walk
+  ## route for --check-source-hash / --materialize; generateBuildEnvPair
+  ## instead shares one gatherSourceTree across both derivations.
+  hashSourceContents(gatherSourceTree(srcDir).files)
 proc getBuildDate(): string =
   ## Get current UTC build date in yyyy-MM-dd format.
   utc(now()).format("yyyy-MM-dd")
-proc computeVerifierBuildManifest(): seq[(string, string)] =
+proc computeVerifierBuildManifest(files: seq[tuple[relPath: string, content: string]],
+                                  complete: bool): seq[(string, string)] =
   ## Collect the VERIFIER BUILD INPUT manifest: (repo-relative path, sha256 of
   ## file bytes) for every input the verifier binary is compiled from —
   ##   - src/**/*.nim (excluding src/generated/: generated code is an OUTPUT),
@@ -878,20 +893,20 @@ proc computeVerifierBuildManifest(): seq[(string, string)] =
   ## and are excluded: a docs-only commit keeps the identity; a verifier source
   ## change moves it. The pure composition lives in
   ## src/core/trusted/verifier_build_identity.nim (shared with the tests).
+  ## ``files`` is the ONE shared gather (src-relative paths); records carry the
+  ## repo-relative "src/"-prefixed paths the pre-change dedicated walk
+  ## produced. ``complete == false`` (an unreadable source file) fails closed:
+  ## @[] → computeVerifierBuildId → "" ("unmeasured"), never a partial
+  ## identity over a half-read tree.
+  if not complete:
+    return @[]
   let sha = proc(content: string): string =
     sha256String(content)
   var records: seq[(string, string)]
   template addRecord(relPath: string; content: string) =
     records.add((relPath, sha(content)))
-  let srcDir = projectRoot / "src"
-  for f in walkDirRec(srcDir):
-    if f.endsWith(".nim") and not f.contains("/generated/"):
-      try:
-        addRecord(relativePath(f, projectRoot), readFile(f))
-      except CatchableError:
-        stderr.writeLine("[hermetic] WARNING: cannot read verifier input " & f &
-          " — VerifierBuildId fails closed (\"unmeasured\")")
-        return @[]
+  for f in files:
+    addRecord("src" / f.relPath, f.content)
   for extra in ["config.nims", "config/effects.nims", "src/gate/config.nims",
                 "Makefile", "axiom.nimble", "axiom.lock",
                 "proofs/lean-toolchain"]:
@@ -908,11 +923,18 @@ proc computeVerifierBuildManifest(): seq[(string, string)] =
         " — VerifierBuildId fails closed (\"unmeasured\")")
       return @[]
   records
-proc measuredVerifierBuildId(): string =
+proc measuredVerifierBuildId(files: seq[tuple[relPath: string, content: string]];
+                             complete: bool): string =
   ## Content-based verifier build identity (Phase 1B `engineBuild`). Explicitly
   ## NOT the repo commit (BuildEnvGitHash): that churns on docs-only and
   ## topic-vs-merge commits that change nothing the verifier compiled.
-  computeVerifierBuildId(computeVerifierBuildManifest())
+  ## Takes the shared gather so generateBuildEnvPair reads src/ once for BOTH
+  ## derivations.
+  computeVerifierBuildId(computeVerifierBuildManifest(files, complete))
+proc measuredVerifierBuildId(): string =
+  ## --materialize route: no shared gather in scope — walks the tree itself.
+  let g = gatherSourceTree(projectRoot / "src")
+  measuredVerifierBuildId(g.files, g.complete)
 proc generateBuildEnvPair(): tuple[content: string, bodyContent: string] =
   ## Generate build_env.nim content and its placeholder-templated body cache in
   ## a single pass (computing BuildSourceHash and VerifierBuildId once).
@@ -921,8 +943,9 @@ proc generateBuildEnvPair(): tuple[content: string, bodyContent: string] =
   let gitHash = getGitHash()
   let buildDate = getBuildDate()
   let leanHash = computeLeanSourceHash()
-  let verifierSourceHash = computeDeterministicSourceHash(projectRoot / "src")
-  let verifierBuildId = measuredVerifierBuildId()
+  let srcTree = gatherSourceTree(projectRoot / "src")
+  let verifierSourceHash = hashSourceContents(srcTree.files)
+  let verifierBuildId = measuredVerifierBuildId(srcTree.files, srcTree.complete)
 
   var header = "# src/generated/build_env.nim — AUTO-GENERATED by bin/hermetic_build\n"
   header &= "# DO NOT EDIT. Regenerated only when values change.\n"
