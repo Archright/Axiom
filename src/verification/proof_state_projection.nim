@@ -3,6 +3,7 @@ axiomLayer "infrastructure"
 {.push raises: [].}
 
 import core/trusted/axiom_pragmas
+import core/types/certificate_types
 import core/types/verification_tier
 import core/utils/constants
 import core/json/json_utils
@@ -199,19 +200,6 @@ func isNoObligationDerived*(entry: JsonNode): bool {.raises: [].} =
     return false
   solverMeta.getOrDefault("solverProvenance").getStr("") == "spNoObligation"
 
-func tierToCertStatusString(tier: VerificationTier): string {.raises: [].} =
-  ## Mirrors cert_writer.tierToStatusString — the canonical dual-assurance
-  ## status is certGreen; Z3-only is certZ3Verified (never certGreen). Kept
-  ## local to preserve {.raises: [].} (cert_writer's mapping raises
-  ## CatchableError under its module push).
-  case tier
-  of vtDual: "certGreen"
-  of vtZ3Only: "certZ3Verified"
-  of vtLeanOnly: "certLeanVerified"
-  of vtNone: "certRed"
-  of vtKInduction: "certZ3Verified"
-  of vtUfAbstract: "certLeanVerified"
-
 func applyProofStateSyncStatus*(node: var JsonNode; substantive: bool) {.raises: [].} =
   ## Applies status sync from proof state to certificate node.
   ## Provenance guard: NoObligation-derived certificates (spNoObligation) are
@@ -229,9 +217,17 @@ func applyProofStateSyncStatus*(node: var JsonNode; substantive: bool) {.raises:
       if node.getOrDefault("winningStrategy").getStr("").len == 0:
         node["winningStrategy"] = newJString("lean-replay")
     else:
-      # Evidence does not support dual assurance — assign the honest tier status
-      # (certZ3Verified / certLeanVerified / certRed) instead of overclaiming.
-      node[statusKey] = newJString(tierToCertStatusString(tier))
+      # Evidence does not support dual assurance — assign the honest tier
+      # status (certZ3Candidate / certLeanVerified / certNoObligation) instead
+      # of overclaiming.
+      # Authority: tierToStatusString (core/types/certificate_types.nim) is
+      # the single canonical tier→status projection (DECISION-0630).
+      # DEBT#504: this module previously mirrored it as a private
+      # tierToCertStatusString that drifted (certZ3Verified / certRed /
+      # certLeanVerified for Z3-only / none / UF-abstract tiers); projecting
+      # through the canonical source removes the drift.
+      # certificate_types.nim is {.push raises: [].}, so no wrapper is needed.
+      node[statusKey] = newJString(tierToStatusString(tier))
       node[reasonKey] = newJString("proof-state-sync-evidence-derived")
   else:
     node[statusKey] = newJString("certPseudoVerified")

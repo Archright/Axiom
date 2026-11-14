@@ -235,7 +235,6 @@
     "core/gate/architecture_policy.nim",
     "core/gate/artifact_manifest.nim",
     "core/gate/atomic_deploy.nim",
-    "core/gate/cache_manifest.nim",
     "core/gate/content_store.nim",
     "core/gate/deterministic_env.nim",
     "core/gate/env_gate.nim",

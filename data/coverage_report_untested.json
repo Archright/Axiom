@@ -1,5 +1,5 @@
 {
-  "count": 887,
+  "count": 886,
   "modules": [
     "src/personas/strategy_registry.nim",
     "src/personas/legislator.nim",
@@ -352,7 +352,6 @@
     "src/core/gate/hash_types.nim",
     "src/core/gate/gate_memo_build_env.nim",
     "src/core/gate/gate_to_smt.nim",
-    "src/core/gate/cache_manifest.nim",
     "src/core/gate/transitive_hash.nim",
     "src/core/gate/symbol_hasher.nim",
     "src/core/gate/baseline_manager.nim",

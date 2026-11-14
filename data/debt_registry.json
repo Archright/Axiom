@@ -3,7 +3,7 @@
   "$comment": "Axiom debt registry schema comment. The registry is a JSON object with top-level version, generatedAt, scanner, and entries. Theater entries from DEBT#357 onward MUST include symbol, contentHash, lineRange, resolution, and lastVerifiedAt. contentHash is a sha256: digest of the canonical procedure/function body or exact artifact content referenced by lineRange.; union-merger act2.1 rebase commit 4/5 preserve-all (dup ids temporary); Phase3 renumber: branch #436-439 -> #445-448 (main #436-439 immutable), nextDebtNum=449; DEBT#509 registered 2026-10-27 (A-cache fail-open, PR #1110 diagnosis)",
   "version": 3,
   "generatedAt": null,
-  "scanner": "Theater audit 2026-08-02 - Parallel full-codebase audit (7 agents): dead-gate, vacuous-proof, disguised-stub, swallowed-failure, unenforced-claim findings DEBT#395-403; Phase 2 T4 Tier 4 kernel registration 2026-08-10; DX 4-layer guardrails + .git/index cache identity debt DEBT#417 2026-08-13; upstream_report_cli READY-receipt swallow theater_audit 2026-11-01 DEBT#510; DEBT#517-519 registered 2026-11-08 (AxiomSourceHash removal follow-up: computeSourceHash per-runner hash ignores path arg, binary_checksums.json stores source hashes, contradictory config.nims comments — docs/evidence/axiom_source_hash_removal_2026-11-08.md); DEBT#520-523 registered 2026-11-08 (VS-T dependency authority handoff: gate_hook AOT guard extension gap, hook user-cfg hole, closure-manifest cost data, cross-worktree binary identity constraint — docs/evidence/vst_dependency_authority_handoff_2026-11-08.md); DEBT#523 evidence deepened 2026-11-09 (VS-2b/3 build verdict: 3-layer path-embedding mechanism, 4/54 quantification, landing re-verification — docs/evidence/vs2b3_build_verdict_2026-11-09.md; no new ID registered — the constraint is already fully covered by DEBT#523, a second entry would be duplicate semantic state); DEBT#523 isolation adjudicated 2026-11-09 (EF CAS isolation evidence: same-commit two-checkout observation matrix, Owner policy CAS sharing scope = current worktree interior, reopen conditions (identity/write-authority/key-match) recorded — docs/evidence/ef_cas_isolation_verdict_2026-11-09.md); DEBT#524 registered 2026-11-09 (EF integrity observation split: CAS gate-binary reuse verdict is fileExists-based — post-store tamper undetected (machine-observed), hazard only if cache dir is externally tampered or shared/multi-writer introduced; reopen with cross-worktree/shared cache or integrity-verification requirement via stored-digest comparison — docs/evidence/ef_cas_isolation_verdict_2026-11-09.md); DEBT#525 registered 2026-11-10 (theater_audit: cache_manifest zero-importer corpse — computeContentHash returns the payload verbatim (not a hash, Merkle-DAG claim unbacked), compactManifests unconditional ok stub despite topological-sort comment, .axiom/cache/manifests never exists, orphan Gherkin spec tests/features/cache_manifest.feature with empty runner field — docs/evidence/cache_manifest_theater_audit_2026-11-10.md); DEBT#526 registered and closed 2026-11-13 (VS-1 Theater Accountability: publication_provenance_validator adjudicate swallowed CatchableError on forbiddenContentPatterns file read + check-nim-theater wired into required debt-registry-gate workflow); DEBT#527 registered 2026-11-13 (writer_set_audit: proof_unit_consistency_gate (j) wrapper one-hop discovery misses atomicWriteJson-shaped call sites — splitCallArguments drops the trailing bare-identifier argument of moveFile(tmpPath, path) so rules R3/R4 never collect the tmp+rename wrapper and the --close path's registry/projection writes are invisible to check (j); registered per AGENTS.md §0.9, the checker's logic is untouched by the change it adjudicates)",
+  "scanner": "Theater audit 2026-08-02 - Parallel full-codebase audit (7 agents): dead-gate, vacuous-proof, disguised-stub, swallowed-failure, unenforced-claim findings DEBT#395-403; Phase 2 T4 Tier 4 kernel registration 2026-08-10; DX 4-layer guardrails + .git/index cache identity debt DEBT#417 2026-08-13; upstream_report_cli READY-receipt swallow theater_audit 2026-11-01 DEBT#510; DEBT#517-519 registered 2026-11-08 (AxiomSourceHash removal follow-up: computeSourceHash per-runner hash ignores path arg, binary_checksums.json stores source hashes, contradictory config.nims comments — docs/evidence/axiom_source_hash_removal_2026-11-08.md); DEBT#520-523 registered 2026-11-08 (VS-T dependency authority handoff: gate_hook AOT guard extension gap, hook user-cfg hole, closure-manifest cost data, cross-worktree binary identity constraint — docs/evidence/vst_dependency_authority_handoff_2026-11-08.md); DEBT#523 evidence deepened 2026-11-09 (VS-2b/3 build verdict: 3-layer path-embedding mechanism, 4/54 quantification, landing re-verification — docs/evidence/vs2b3_build_verdict_2026-11-09.md; no new ID registered — the constraint is already fully covered by DEBT#523, a second entry would be duplicate semantic state); DEBT#523 isolation adjudicated 2026-11-09 (EF CAS isolation evidence: same-commit two-checkout observation matrix, Owner policy CAS sharing scope = current worktree interior, reopen conditions (identity/write-authority/key-match) recorded — docs/evidence/ef_cas_isolation_verdict_2026-11-09.md); DEBT#524 registered 2026-11-09 (EF integrity observation split: CAS gate-binary reuse verdict is fileExists-based — post-store tamper undetected (machine-observed), hazard only if cache dir is externally tampered or shared/multi-writer introduced; reopen with cross-worktree/shared cache or integrity-verification requirement via stored-digest comparison — docs/evidence/ef_cas_isolation_verdict_2026-11-09.md); DEBT#525 registered 2026-11-10 (theater_audit: cache_manifest zero-importer corpse — computeContentHash returns the payload verbatim (not a hash, Merkle-DAG claim unbacked), compactManifests unconditional ok stub despite topological-sort comment, .axiom/cache/manifests never exists, orphan Gherkin spec tests/features/cache_manifest.feature with empty runner field — docs/evidence/cache_manifest_theater_audit_2026-11-10.md); DEBT#526 registered and closed 2026-11-13 (VS-1 Theater Accountability: publication_provenance_validator adjudicate swallowed CatchableError on forbiddenContentPatterns file read + check-nim-theater wired into required debt-registry-gate workflow); DEBT#527 registered 2026-11-13 (writer_set_audit: proof_unit_consistency_gate (j) wrapper one-hop discovery misses atomicWriteJson-shaped call sites — splitCallArguments drops the trailing bare-identifier argument of moveFile(tmpPath, path) so rules R3/R4 never collect the tmp+rename wrapper and the --close path's registry/projection writes are invisible to check (j); registered per AGENTS.md §0.9, the checker's logic is untouched by the change it adjudicates); DEBT#528-531 registered 2026-11-14 (theater_audit: PR-admission vacuous green — the Archright adapter's classify() maps prove_exit==0 alone onto PROVED_REPRODUCIBLE while the same run's engine state holds summary.verified=0 / runOutcome INCONCLUSIVE / gateVerdict=FAIL (run 43547635750; local reproduction on the v0.6.4 bundle — /tmp/e4-evidence, /tmp/e4-state); the defect-lane carrier's vault record is keyed by its wave-facing name only — functionName=toOpenArray (certZ3Candidate) with no carrier identity field, so census-to-vault binding for bvSliceLenActual requires the out-of-band rename rule (src/cli/axiom_engine.nim:3361-3372, docs/spec/nim_libp2p_bytesview_slice_contract.md §3; DEBT#529 corrected 2026-11-14 — the original 'silently dropped at the phase-10 IR extraction budget' premise was falsified by the manifest's toOpenArray entry); projectRunOutcome + axProofShortcutExitCode empty-run exit 0 is a contract-compliant fail-open surface the adapter misreads (byo_agent_proposition_contract.md:112,119); propositionVerdictOf never emits NOT_DISPROVED so the contract's PROVED_REPRODUCIBLE class is product-wide unobservable — registry-only registration: projections and ledger deliberately not re-synced in this change, run bin/debt_engine --codegen and bin/debt_engine --sync-budget when landing)",
   "entries": [
     {
       "id": "DEBT-CI#001",
@@ -3601,15 +3601,17 @@
       "symbol": "writeCertificateFromUapResult",
       "contentHash": "sha256:521a4ca0d4311d594f9dd2ca94b4e2f8989e958631cf069ea2d31420012b4e95",
       "lineRange": "src/verification/cert_writer.nim; src/verification/certificate_verifier.nim",
-      "resolution": "OPEN",
-      "lastVerifiedAt": "2026-08-29T00:00:00Z",
+      "resolution": "Producer/consumer contract verified identical: writeCertificateFromUapResult does not emit 'passed'; certificate_verifier.nim:125 is the single verdict; SSOT src/core/types/verification_tier.nim DECISION-0630; producer->verifier lifecycle fixed by tests/unit/test_certificate_lifecycle_v3_test.nim",
+      "lastVerifiedAt": "2026-11-14T03:47:06Z",
       "files": [
         "src/verification/cert_writer.nim",
         "src/verification/certificate_verifier.nim",
         "src/core/types/verification_tier.nim"
       ],
       "source": "WP4-g.1",
-      "status": "open"
+      "status": "closed",
+      "resolvedAt": "2026-11-14",
+      "resolvedBy": "audit:VS-517-519"
     },
     {
       "id": "DEBT#448",
@@ -4738,9 +4740,11 @@
         "src/verification/cert_writer.nim"
       ],
       "source": "verification-semantics authority-split sweep 2026-10-12 (DECISION-0630)",
-      "status": "open",
-      "resolution": "UNRESOLVED deferred 2026-10-12 (rotation-class PR — src/verification/proof_state_projection.nim is a trustedCheckerTreeClosure member; registration is the mandated action per AGENTS §0.9, code untouched)",
-      "lastVerifiedAt": "2026-10-12T00:00:00Z"
+      "status": "closed",
+      "resolution": "Single canonical cert-status projection: private tierToCertStatusString deleted; tierToStatusString(tier) is the sole projection; behavior change vtZ3Only->certZ3Candidate, vtNone->certNoObligation, vtUfAbstract->certZ3Candidate; tests/verification/test_proof_state_projection.nim 67 OK",
+      "lastVerifiedAt": "2026-11-14T03:47:28Z",
+      "resolvedAt": "2026-11-14",
+      "resolvedBy": "audit:VS-517-519"
     },
     {
       "id": "DEBT#505",
@@ -5021,11 +5025,13 @@
         "config.nims"
       ],
       "source": "axiom_source_hash_removal_investigation_2026-11-08",
-      "status": "open",
-      "resolution": "UNRESOLVED — registered as follow-up; deliberately not fixed in the AxiomSourceHash removal slice (scope discipline: dead-verifier removal only, computeSourceHash residual uses untouched)",
-      "lastVerifiedAt": "2026-11-08T01:49:37Z",
+      "status": "closed",
+      "resolution": "computeSourceHash now hashes its path argument: slots are [path] + infra(path excluded, dedup, fixed order) in one sha256sum call; 4 runners produce distinct hashes; Python hashlib independently reproduced 4/4",
+      "lastVerifiedAt": "2026-11-14T03:47:49Z",
       "binding": "registry_disposition",
-      "bindingRationale": "NimScript task media — the defect site in config.nims cannot carry a {.axiomDebt.} marker; trace: this entry's resolution=UNRESOLVED and source=axiom_source_hash_removal_investigation_2026-11-08, evidence docs/evidence/axiom_source_hash_removal_2026-11-08.md DEBT#517"
+      "bindingRationale": "NimScript task media — the defect site in config.nims cannot carry a {.axiomDebt.} marker; trace: this entry's resolution=UNRESOLVED and source=axiom_source_hash_removal_investigation_2026-11-08, evidence docs/evidence/axiom_source_hash_removal_2026-11-08.md DEBT#517",
+      "resolvedAt": "2026-11-14",
+      "resolvedBy": "audit:VS-517-519"
     },
     {
       "id": "DEBT#518",
@@ -5042,11 +5048,13 @@
         "config.nims"
       ],
       "source": "axiom_source_hash_removal_investigation_2026-11-08",
-      "status": "open",
-      "resolution": "UNRESOLVED — registered as follow-up; deliberately not fixed in the AxiomSourceHash removal slice (scope discipline: dead-verifier removal only, computeSourceHash residual uses untouched)",
-      "lastVerifiedAt": "2026-11-08T01:49:37Z",
+      "status": "closed",
+      "resolution": "binary_checksums.json now records sha256sum of the actual bin/<name> content instead of the source hash; verified equal to sha256sum bin/<name>",
+      "lastVerifiedAt": "2026-11-14T03:48:10Z",
       "binding": "registry_disposition",
-      "bindingRationale": "NimScript task media — the defect site in config.nims cannot carry a {.axiomDebt.} marker; trace: this entry's resolution=UNRESOLVED and source=axiom_source_hash_removal_investigation_2026-11-08, evidence docs/evidence/axiom_source_hash_removal_2026-11-08.md DEBT#518"
+      "bindingRationale": "NimScript task media — the defect site in config.nims cannot carry a {.axiomDebt.} marker; trace: this entry's resolution=UNRESOLVED and source=axiom_source_hash_removal_investigation_2026-11-08, evidence docs/evidence/axiom_source_hash_removal_2026-11-08.md DEBT#518",
+      "resolvedAt": "2026-11-14",
+      "resolvedBy": "audit:VS-517-519"
     },
     {
       "id": "DEBT#519",
@@ -5063,11 +5071,13 @@
         "config.nims"
       ],
       "source": "axiom_source_hash_removal_investigation_2026-11-08",
-      "status": "open",
-      "resolution": "UNRESOLVED — comment corrections registered as follow-up; deliberately deferred out of the AxiomSourceHash removal slice (minimal-change principle)",
-      "lastVerifiedAt": "2026-11-08T01:49:37Z",
+      "status": "closed",
+      "resolution": "computeSourceHash header/inline comments rewritten to match the implementation (flat per-slot digest concatenation, not a merkle root, not config/integrity.nims); NimScript ARC closure quirk documented in docs/spec/nimscript_arc_closure_quirk.md",
+      "lastVerifiedAt": "2026-11-14T03:48:31Z",
       "binding": "registry_disposition",
-      "bindingRationale": "NimScript comment media — config.nims comments cannot carry a {.axiomDebt.} marker; trace: this entry's resolution=UNRESOLVED and source=axiom_source_hash_removal_investigation_2026-11-08, evidence docs/evidence/axiom_source_hash_removal_2026-11-08.md DEBT#519"
+      "bindingRationale": "NimScript comment media — config.nims comments cannot carry a {.axiomDebt.} marker; trace: this entry's resolution=UNRESOLVED and source=axiom_source_hash_removal_investigation_2026-11-08, evidence docs/evidence/axiom_source_hash_removal_2026-11-08.md DEBT#519",
+      "resolvedAt": "2026-11-14",
+      "resolvedBy": "audit:VS-517-519"
     },
     {
       "id": "DEBT#520",
@@ -5180,9 +5190,12 @@
         "tests/features/cache_manifest.feature"
       ],
       "source": "theater_audit",
-      "status": "open",
-      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9; no patch applied by this audit (theater is registered, not quietly fixed); module/spec deletion is an Owner decision outside audit scope (§2.2 no opportunistic refactoring)",
-      "lastVerifiedAt": "2026-11-10T02:16:22Z"
+      "status": "closed",
+      "resolution": "ORPHANED 2026-11-14 (workstream/vs-525-cache-manifest): zero-importer corpse deleted with its orphan Gherkin spec; theater removed, not patched.",
+      "lastVerifiedAt": "2026-11-14T02:10:00Z",
+      "resolvedAt": "2026-11-14",
+      "resolvedBy": "archright-vs525",
+      "resolutionNote": "Deleted src/core/gate/cache_manifest.nim (computeContentHash returns payload verbatim, compactManifests unconditionally ok, .axiom/cache/manifests never exists) and tests/features/cache_manifest.feature (runner \"\" orphan). Zero importers re-proven at close time: repo-wide .nim token scan finds only the module's own header comment; import/from/include/export forms 0 hits. contentHash/files retained as the pre-deletion record for §0.9a skip matching. Grandfather waiver entry removed from config/decision_binding.waiver.json; projections regenerated or pruned (see PR)."
     },
     {
       "id": "DEBT#526",
@@ -5233,6 +5246,97 @@
     },
     {
       "id": "DEBT#528",
+      "category": "Theater/Fail-Open Verdict",
+      "impact": "high",
+      "severity": "high",
+      "title": "Archright PR-admission trust workflow classify() maps prove_exit==0 alone onto PROVED_REPRODUCIBLE — a vacuous green issued over an engine state of verified=0 / INCONCLUSIVE / gateVerdict=FAIL",
+      "description": "Machine-observed 2026-11-14 (upstream run 43547635750 + local reproduction). The Archright/.github PR-admission trust workflow's classify() (local copy ~/ax-slice-work/nim-libp2p-pr-admission.yml:311-326) classifies a leg pair as PROVED_REPRODUCIBLE when prove_exit_a == prove_exit_b == 0 — the only evidence consulted is the process exit code. Axiom's committed contract for that label (docs/spec/external_verification_campaign_contract.md:73) requires three conjuncts: both jobs exit 0 AND propositionVerdict = NOT_DISPROVED AND statusCounts.verified > 0; the workflow checks 1 of 3. The same run's engine state (/tmp/e4-state/logs/ax_proof_state.json): summary.verified=0, summary.preSieved=1, runOutcome.verificationComplete=false, runOutcome.verdict=INCONCLUSIVE, runOutcome.basis=NONE, runOutcome.gateVerdict=FAIL, runAccounting.units[0] = {requirementDecision: REQUIRED, verificationOutcome: PENDING, satisfactionSource: NONE}. Local reproduction (2026-11-14, v0.6.4 bundle /tmp/rel064/axiom-v0.6.4-linux-x86_64, subject commit 67ed96d607592b5939697d5434488a398e2e140d, proposals sha256 949adaa54b9b25f402df1d4040ba89521b0b118a4cb7207985dd918c658c2152) produced the identical vacuous exit 0 (PROVE_EXIT=0): evidence /tmp/e4-evidence/prove.log, /tmp/e4-state/logs/ax_proof_state.json. The admission job's PASS therefore asserts 'proved reproducible' while the engine recorded zero verified units and a FAIL gate verdict — a green that guarantees nothing (AGENTS.md §0.9 theater). Failure precedent of the same shape is already recorded by the contract itself: docs/spec/byo_agent_proposition_contract.md:119 (run 41469574000, 판정 없는 green, 2026-11-02). Enabling surfaces registered alongside: DEBT#529 (the carrier's vault record carries no carrier identity), DEBT#530 (the exit-0-on-empty-run surface the adapter misreads), DEBT#531 (NOT_DISPROVED unobservable, so the contract's other two conjuncts are uncheckable by any consumer). The defect site is the external Archright workflow; registered in Axiom's registry because the misread surface is Axiom's own committed contract and exit semantics (§0.3 trust boundary — the adapter is a documented consumer).",
+      "symbol": "classify (Archright/.github PR-admission trust workflow — local copy ~/ax-slice-work/nim-libp2p-pr-admission.yml)",
+      "contentHash": "sha256:7ab004973e01ea37469ade57fdd2754ebad16fc98e9228475a0c71711df79995",
+      "lineRange": "~/ax-slice-work/nim-libp2p-pr-admission.yml:311-326 (classify body, contentHash = sha256 of those lines); contract violated: docs/spec/external_verification_campaign_contract.md:73; precedent: docs/spec/byo_agent_proposition_contract.md:119",
+      "files": [
+        "docs/spec/external_verification_campaign_contract.md",
+        "docs/spec/byo_agent_proposition_contract.md"
+      ],
+      "source": "theater_audit",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-14 (Archright/.github PR #273, main 27c2f3468658e127f94b87391c74fa5ebee6b143): the trusted PR-admission workflow no longer maps prove_exit==0 onto PROVED_REPRODUCIBLE. classify() is acceptance-class-bound: PROVED_REPRODUCIBLE requires exit 0 AND verified>0 AND verificationComplete AND runOutcome.verdict in the CONTINUE/PROVED family AND gateVerdict!=FAIL AND no DISPROVED; the law-conformance class additionally requires declaredRequired non-empty, every declaredRequired present in the vault-manifest with status in {certZ3Candidate,certGreen,certLeanVerified}, proofCandidateCount>=1 and obligationCount>=1, else VACUOUS_BLOCKED. Verified live on Archright/nim-libp2p: run 43552724692 (PR #11) => LAW_CONFORMANCE_ACCEPTED_REPRODUCIBLE / PASS, evidenceTier=candidate, 7/7 guards, canonical_digest A=B=f7209f17f78e8e034e2736eab8bc7d9b74b028839efbd9bedcc83cc8fc6d2bd2; run 43553077178 (PR #13, reverted subject bytes) => UNCLASSIFIED / FAIL. Both reproduced independently by the published verifier (Archright/.github .github/axiom-admission/verify_pr_admission_replay.py at main e677cd2348ca41e64427b4adb7646763b7cd20a7; 7/7 guards agree). The audited vacuous shape (run 43547635750) is no longer producible on the pinned workflow.",
+      "lastVerifiedAt": "2026-11-14T03:56:13Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the theater site is a workflow YAML in the external Archright/nim-libp2p repository (local copy ~/ax-slice-work/nim-libp2p-pr-admission.yml), a medium where the src/-only {.axiomDebt.} marker scan cannot anchor; trace: this entry's resolution/source fields, docs/spec/external_verification_campaign_contract.md:73 (the violated 3-conjunct contract), docs/spec/byo_agent_proposition_contract.md:119 (recorded precedent run 41469574000)",
+      "resolvedAt": "2026-11-14",
+      "resolvedBy": "archright-pr-admission-v1.1.0",
+      "resolutionNote": "Evidence: docs/evidence/pr_admission_v1_1_0_terminal_2026-11-14.md. Rulesets 27208234 (master) and 27205573 (probe) both pin 27c2f346."
+    },
+    {
+      "id": "DEBT#529",
+      "category": "Theater/Evidence Identity",
+      "impact": "medium",
+      "severity": "high",
+      "title": "Vault evidence for the bytesview defect carrier is keyed by its wave-facing name only — the manifest record functionName=toOpenArray carries no carrier identity (bvSliceLenActual), so census-to-vault binding requires the out-of-band rename rule, and one run logs the same entry under both names",
+      "description": "Corrected 2026-11-14 in place (same ID, mechanism rewritten): this entry was originally registered as 'defect-lane carrier bvSliceLenActual is silently dropped at the phase-10 IR extraction budget — no classify, no solver, no vault record, and no error or warning'. That premise is FALSE — falsified by machine observation of the same E4 run it cited (v0.6.4 bundle /tmp/rel064/axiom-v0.6.4-linux-x86_64, subject commit 67ed96d607592b5939697d5434488a398e2e140d, proposals sha256 949adaa54b9b25f402df1d4040ba89521b0b118a4cb7207985dd918c658c2152): the defect carrier executed end-to-end. The vault manifest /tmp/e4-state/build/certificates/manifest.json (prove.log:75 phase-13 sync, 6 entries) holds the carrier's record as {\"modulePath\": \"libp2p/utils/bytesview.nim\", \"functionName\": \"toOpenArray\", \"status\": \"certZ3Candidate\", \"solverMethod\": \"smCLI\", \"irHash\": \"66d1e2760df77d1c42068d13191f563768708c94317e258c00f62a4958b5435b\"}; the engine state /tmp/e4-state/logs/ax_proof_state.json holds census.proofCandidates = [\"libp2p/utils/bytesview.nim::bvSliceLenActual\", \"libp2p/utils/bytesview.nim::bvSliceLenControl\"], census.obligationCount = 6, declaredRequired = [\"libp2p/utils/bytesview.nim::toOpenArray\"], runAccounting.units[0].unitId = \"libp2p/utils/bytesview.nim::toOpenArray\". Mechanism (code): src/cli/axiom_engine.nim:3361-3372 — the eligible defect entry is WAVE-FACING: waveEntry.name = examinedFn, so the pipeline attributes results to the examined symbol, while the claim identity stays the carrier name everywhere else (census record, funcDef name, obligation ids); the control carrier rides under its own name. The rename is documented contract behavior (docs/spec/nim_libp2p_bytesview_slice_contract.md §3, line 108: 'The defect carrier is wave-faced under the examined symbol; the control carrier rides under its own name'). The same entry therefore appears under two names in one run: [classify] logs entry.name — '[classify] toOpenArray → vtSmtNative' (src/verification/batch_uap/ir_pipeline_runner.nim:791; prove.log:37) — while the IR cache line logs ve.funcDef.name — '[ir-cas] MISS func=bvSliceLenActual' (ir_pipeline_runner.nim:1626; prove.log:39) — and the phase-13 manifest write keys on cert.functionName (src/cli/axiom_engine.nim:442-459), the wave-facing name. The actual finding (evidence identity gap): the vault record — the durable per-carrier evidence — carries no carrier identity. 'Did the defect carrier reach the solver?' is answerable only under the wave-facing name toOpenArray; nothing in the manifest, the run state, or any single log line binds bvSliceLenActual to that record. A consumer holding the census identity (auditor, wrapper, future gate) must know the contract's rename rule to confirm carrier coverage — the coverage question is unanswerable from the evidence surface in-band, and the log stream mixes the two names so even log-level correlation requires the rule. This is precisely how the original audit produced the falsified premise: a census-keyed lookup for bvSliceLenActual across [classify]/vault surfaces finds only the [ir-cas] MISS line and reads 'dropped'. The rename itself is contract-compliant (not a swallowed execution failure), and the engine's aggregate verdict was unaffected (runOutcome INCONCLUSIVE / gateVerdict=FAIL / summary.verified=0; certZ3Candidate is candidate-level evidence, never VERIFIED). Registered per AGENTS.md §0.9 as evidence-identity theater: an evidence surface that records carrier outcomes without carrier identity, leaving the carrier-coverage claim unverifiable without out-of-band documentation — the adjacent evidence-surface defect to the DEBT#528 exit-code-only classification (even a state-inspecting consumer cannot bind carrier coverage from state + vault alone).",
+      "symbol": "vault manifest record functionName=toOpenArray for the wave-faced defect carrier (src/cli/axiom_engine.nim:442-459 phase-13 mergeResult, keyed on cert.functionName); wave-facing rename src/cli/axiom_engine.nim:3361-3372 (waveEntry.name = examinedFn); carrier identity bvSliceLenActual (config/spec/nim_libp2p_bytesview_slice.json carriers[0])",
+      "contentHash": "sha256:dc3841adeac1602aca310e4637bd78318183b65a2f47fcd75084834b9d1b907d",
+      "lineRange": "src/cli/axiom_engine.nim:3361-3372 (wave-facing rename — waveEntry.name = examinedFn; contentHash = sha256 of those lines); manifest write keyed by cert.functionName only: src/cli/axiom_engine.nim:442-459; carrier declarations: config/spec/nim_libp2p_bytesview_slice.json:31-44 (bvSliceLenActual :31-37 defect lane, bvSliceLenControl :38-44 control); documented rename rule: docs/spec/nim_libp2p_bytesview_slice_contract.md:108; log dual naming: src/verification/batch_uap/ir_pipeline_runner.nim:791 (entry.name) vs :1626 (ve.funcDef.name); evidence: /tmp/e4-evidence/prove.log:36-39,75; /tmp/e4-state/build/certificates/manifest.json; /tmp/e4-state/logs/ax_proof_state.json",
+      "files": [
+        "src/cli/axiom_engine.nim:3361-3372",
+        "src/cli/axiom_engine.nim:442-459",
+        "src/verification/batch_uap/ir_pipeline_runner.nim:791",
+        "src/verification/batch_uap/ir_pipeline_runner.nim:1626",
+        "config/spec/nim_libp2p_bytesview_slice.json",
+        "docs/spec/nim_libp2p_bytesview_slice_contract.md"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9 (theater is registered, never quietly patched); corrected 2026-11-14 in place: the original premise (carrier silently dropped at the phase-10 IR extraction budget — no classify, no solver, no vault record) was falsified by the vault manifest's toOpenArray entry and the census state; the carrier executed and reached certZ3Candidate; fix path: carry carrier identity in the evidence surface — record the carrier name (or an explicit carrier-to-examined-symbol binding) in the vault manifest entry and run state so census-keyed consumers can verify carrier coverage in-band, and log one identity per entry across [classify]/[ir-cas]; no patch applied by this registration",
+      "lastVerifiedAt": "2026-11-14T03:27:02Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — this registration/correction does not modify src/ (adding a {.axiomDebt.} marker to the rename or manifest-write sites is a separate code change outside this registration); trace: this entry's resolution/source fields, src/cli/axiom_engine.nim:3361-3372 (the wave-facing rename) and :442-459 (manifest write keyed on cert.functionName), docs/spec/nim_libp2p_bytesview_slice_contract.md:108 (the documented rename rule), /tmp/e4-state/build/certificates/manifest.json (the vault record that falsified the original premise)"
+    },
+    {
+      "id": "DEBT#530",
+      "category": "Theater/Fail-Open",
+      "impact": "medium",
+      "severity": "medium",
+      "title": "Proposal-mode ax prove exits 0 on an empty (no-obligation) run — axProofShortcutExitCode collapses projectRunOutcome's empty-run OutcomeContinue into a green that contract-compliant consumers must not, but demonstrably do, misread as verification",
+      "description": "Machine-observed 2026-11-14 (E4 local reproduction; the same exit shape was machine-observed upstream in run 43547635750). src/core/utils/decision_algebra.nim:188-228 projectRunOutcome — THE single run-exit rule — returns OutcomeContinue when failedCount==0 and timeoutCount==0, explicitly including verified==0 empty (no-obligation) runs (docstring: 'CONTINUE — failedCount == 0 ∧ timeoutCount == 0, and either verified > 0 or an empty (no-obligation) run'; closing comment: §7 requires a failed or timed-out node to make verified == 0 a failure). src/cli/wf_runners.nim:46 axProofShortcutExitCode maps OutcomeContinue to exit 0. Result: ax prove --proposals exits 0 on a run whose obligation set executed zero verifications — the E4 state (summary.verified=0, failedCount=0, timeoutCount=0) is exactly this shape and produced PROVE_EXIT=0. Scope of the finding, stated precisely: this is NOT a contract violation — docs/spec/byo_agent_proposition_contract.md:112 explicitly disclaims the misreading (exit 0을 전명제 검증으로 읽지 않는다) and :119 records the identical failure shape as a wrapper-side misreading precedent (run 41469574000, 판정 없는 green, 2026-11-02). What is registered is the fail-open surface: an exit code that is contract-honest but consumer-unsafe — the only widely-observed green signal, which the real consumer (the Archright adapter, DEBT#528) demonstrably misreads as full verification. The empty-run OutcomeContinue is a deliberate productization_contract §7 decision, so any change (a distinct exit for no-obligation runs, or mandatory state inspection by wrappers) is a contract revision requiring owner authority — registered, not patched (AGENTS.md §0.9: discovery is registered, never quietly fixed).",
+      "symbol": "projectRunOutcome (src/core/utils/decision_algebra.nim:188); axProofShortcutExitCode (src/cli/wf_runners.nim:46)",
+      "contentHash": "sha256:a2f977f366c4c35a1ced152e7525e1fb3c6f983266e53307bf696cb10c7c0c16",
+      "lineRange": "src/core/utils/decision_algebra.nim:188-228 (projectRunOutcome body, contentHash = sha256 of those lines); src/cli/wf_runners.nim:46 (axProofShortcutExitCode)",
+      "files": [
+        "src/core/utils/decision_algebra.nim:188-228",
+        "src/cli/wf_runners.nim:46"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9 (theater is registered, never quietly patched); explicitly NOT a contract violation (docs/spec/byo_agent_proposition_contract.md:112,119 — exit 0 is 런 완료, never 전명제 검증); candidate remediations requiring owner authority: a distinct exit or mandatory-state-inspection contract for no-obligation runs, or adapter-side classification on engine state (DEBT#528); no patch applied by this registration",
+      "lastVerifiedAt": "2026-11-14T03:11:09Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registered per the AGENTS.md §0.9 registration discipline without modifying src/ (the audited code carries no {.axiomDebt.} marker; adding one is a separate code change outside this registration); trace: this entry's resolution/source fields, docs/spec/byo_agent_proposition_contract.md:112,119 (the contract that keeps the exit honest and records the misreading precedent)"
+    },
+    {
+      "id": "DEBT#531",
+      "category": "Theater/Unenforced Claim",
+      "impact": "high",
+      "severity": "medium",
+      "title": "The positive proposition-verdict axis is unimplemented product-wide: propositionVerdictOf emits only DISPROVED or UNKNOWN, NOT_DISPROVED is unreachable, so the contract's PROVED_REPRODUCIBLE class is unobservable for every proposition",
+      "description": "Machine-observed 2026-11-14 (code-reading on the current tree, cross-checked against the E4 run). src/cli/verdict_display.nim:203-227 propositionVerdictOf returns DISPROVED only when machineVerdict == \"FAIL\" and claimOutcome == \"clDisproved\" and quartetComplete; every other combination returns UNKNOWN. NOT_DISPROVED is defined but unreachable — the docstring states it explicitly: 'NOT_DISPROVED is UNREACHABLE here (fail-closed): §2.1's vdVerified conjunct is never serialized into wave/runResult/unitEvidence, so the display layer can never observe it … The serialization gap is a follow-up; until it closes, NOT_DISPROVED stays an unobservable state'. Consequence: docs/spec/external_verification_campaign_contract.md:73 defines PROVED_REPRODUCIBLE as exit 0 AND propositionVerdict = NOT_DISPROVED AND statusCounts.verified > 0 — the second conjunct can never be satisfied by any run, so the contract's proved class is a label with no reachable evidence path anywhere in the product (fail-closed: the engine never claims a positive it did not establish, but it also cannot express the positive it did). Compounding floor: src/core/types/verification_tier.nim:12 rules Z3 unsat → certZ3Candidate ('candidate evidence, never VERIFIED') — the E4 vault's carrier entry is certZ3Candidate (solverMethod=smCLI), so no vault-backed positive verdict exists either; the Z3 lane is structurally capped below verified. This is the structural reason the only green signal available to wrappers is the process exit code — which the Archright adapter (DEBT#528) then treats as proof. The unreachability is a documented, acknowledged gap (verdict_display docstring: the serialization gap is a follow-up), registered here per AGENTS.md §0.9 because the contract surface promises a class the product cannot observe — an unenforced claim.",
+      "symbol": "propositionVerdictOf (src/cli/verdict_display.nim:203); certZ3Candidate (src/core/types/verification_tier.nim:12)",
+      "contentHash": "sha256:76ee290a681e3a1cc479946907f0f58a020f34196d2a6f9d8caa80b10a18c04a",
+      "lineRange": "src/cli/verdict_display.nim:203-227 (propositionVerdictOf body, contentHash = sha256 of those lines); src/core/types/verification_tier.nim:12 (certZ3Candidate — candidate evidence, never VERIFIED)",
+      "files": [
+        "src/cli/verdict_display.nim:203-227",
+        "src/core/types/verification_tier.nim:12"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9 (theater is registered, never quietly patched); fix path: serialize the §2.1 vdVerified conjunct into wave/runResult/unitEvidence so the display layer can observe it and NOT_DISPROVED becomes reachable (the acknowledged follow-up in the propositionVerdictOf docstring); no patch applied by this registration",
+      "lastVerifiedAt": "2026-11-14T03:11:09Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registered per the AGENTS.md §0.9 registration discipline without modifying src/ (the gap is itself documented in the audited code's docstring as a follow-up; adding a {.axiomDebt.} marker is a separate code change outside this registration); trace: this entry's resolution/source fields, docs/spec/external_verification_campaign_contract.md:73 (the contract whose PROVED_REPRODUCIBLE class is unobservable)"
+    },
+    {
+      "id": "DEBT#532",
       "category": "Theater/Unenforced Claim",
       "impact": "medium",
       "severity": "medium",

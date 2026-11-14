@@ -65,7 +65,7 @@ proc readTopologyLockModules(): seq[FacadeEntry] {.axiomEffect: IOEffect, tags: 
   for key, val in modules.pairs:
     if val.kind != JObject:
       continue
-    let currentPath = val.getOrDefault("currentPath").getStr("")
+    let currentPath = val.getOrDefault("current_path").getStr("")
     let deprecationDate = val.getOrDefault("deprecation_date").getStr("")
     let reason = val.getOrDefault("deprecation_reason").getStr("")
     if deprecationDate.len > 0:

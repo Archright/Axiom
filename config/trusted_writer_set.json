@@ -48,7 +48,7 @@
     "config.nims": {
       "mode": "100644",
       "type": "blob",
-      "sha": "fd9333a2958a134ffc828a588ae1bbc7156181a0"
+      "sha": "a6cea073649399d2bf87a4bb1940ded65567efe4"
     },
     "config/effects.nims": {
       "mode": "100644",
@@ -1888,7 +1888,7 @@
     "src/core/topology/declaration.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "fb3b63e21722312a81305cd06828fe17279258c3"
+      "sha": "e106d99f209b97c2f4e6715b4d4ecd5a6eea55fd"
     },
     "src/core/topology/gate_ops.nim": {
       "mode": "100644",
@@ -1903,12 +1903,12 @@
     "src/core/topology/lock.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "dc72411d59b9ff21541615cb458d75ab8fb6b5ca"
+      "sha": "d86ddaf54f9d75a8d8b06c8aaf3f339bc2ff56fe"
     },
     "src/core/topology/lock_update.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "04791a3f7933bb1d47230a3d096b86df2822a1ce"
+      "sha": "998a2aeed5c3fe1f117c0dac4d046abf0afdf475"
     },
     "src/core/topology/merkle_cache.nim": {
       "mode": "100644",
@@ -1928,7 +1928,7 @@
     "src/core/topology/policy.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "c25ef86bf4aeeba71de9c8e9c88d6eac96ccf3d3"
+      "sha": "98f572695f63beeeb0a79930ac35d0cb3fc68cbe"
     },
     "src/core/topology/rewrite.nim": {
       "mode": "100644",
@@ -4203,7 +4203,7 @@
     "src/verification/proof_state_projection.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "44812ab6ba7c3fb63e34c6d3e47cc59ccbc8c870"
+      "sha": "4a5d715d6d8a9b2cf784f6a2e8079e1c4d9d670d"
     },
     "src/verification/proof_summarizer.nim": {
       "mode": "100644",
