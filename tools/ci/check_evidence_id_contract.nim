@@ -2,7 +2,7 @@ import core/trusted/layer_declaration
 import core/trusted/axiom_pragmas_lite
 axiomLayer "tools"
 
-import std/[json, os, strutils, parseopt]
+import std/[json, os, strutils, parseopt, osproc]
 
 {.push raises: [].}
 
@@ -220,6 +220,172 @@ proc checkArtifactFile*(path: string): Result[string, string] {.raises: [].} =
     (if parsed.get.completenessBindingDigest.len > 0: " strict" else: " legacy"))
 
 # ---------------------------------------------------------------------------
+# Verdict-input integrity — the candidate never supplies the measuring stick
+# ---------------------------------------------------------------------------
+#
+# The lane overlays the candidate's OWN copies of the GO-critical test files
+# and the tests/golden/ fixtures onto B's workspace (admission-check.yml, step
+# "Overlay M src/+GO-critical tests onto the B workspace"). Every executor
+# surface beside them — Makefile, config.nims, tests/config.nims,
+# config/effects.nims, nimble.lock, tools/, config/ — stays B's and is
+# byte-guarded by that same step. The overlay inputs themselves are NOT
+# guarded: a candidate can delete a `check` line and the lane still reports
+# PASS. The B-owned attest payload validator pins the 17/14/[3,2,1,11]
+# OUTCOME shape, not the assertions that establish it, and repository_surface
+# judges these paths PRODUCT (MODIFY=PASS).
+#
+# This guard closes that. Every tracked file under tests/ that differs from
+# B's blob — modified, deleted, renamed, or newly added — must be pinned HERE
+# by its exact git blob oid and must still carry at least the approved number
+# of assertion sites. The pins live in this B-owned file, and the lane
+# executes B's copy, so a candidate that edits them is invisible to the run
+# that judges it: changing an approved test is a two-step policy landing
+# (pin update first, test change second), never a self-service.
+#
+# Deliberately NOT sha256Hex: that primitive is imported from the overlaid
+# candidate src/ (core/crypto/hash_kernel), so the judged tree would supply
+# the judge's hash. Both sides of every comparison here are computed by git.
+
+const VerdictInputRoot* = "tests"
+const VerdictInputDivergedMarker* = "GO_TEST_BYTES_DIVERGED"
+const VerdictInputReducedMarker* = "GO_TEST_OBLIGATIONS_REDUCED"
+const VerdictInputPinMalformedMarker* = "GO_TEST_PIN_MALFORMED"
+
+type PinnedVerdictInput* = object
+  ## One approved verdict input: the exact bytes (git blob oid) and the
+  ## weakening floor (assertion sites) that approval covered.
+  path*: string
+  blobOid*: string
+  obligations*: int
+
+const PinnedVerdictInputs* = [
+  PinnedVerdictInput(path: "tests/unit/test_s1a_lean_golden.nim",
+    blobOid: "377e5c641386218ce2138ed4bcfa7ab11635535d", obligations: 95),
+  PinnedVerdictInput(path: "tests/unit/proof_integrity_test.nim",
+    blobOid: "8a5a7f142134050a7205144c6139672e70c106a3", obligations: 17),
+  PinnedVerdictInput(path: "tests/unit/test_d2_golden.nim",
+    blobOid: "ba294f29118f21d84c2609f3170a538888ce27ac", obligations: 62),
+  PinnedVerdictInput(path: "tests/unit/test_d2_persist.nim",
+    blobOid: "6eba34131d910d052a08b76bc2bd738ce510a9f1", obligations: 8)]
+  ## The four GO-critical matrix tests (admission-check.yml:3429 lane 0,
+  ## :3432 lane 1). `obligations` counts `check …`/`doAssert …` sites in the
+  ## approved bytes.
+
+func trimmedLeading(line: string): string {.raises: [].} =
+  var i = 0
+  while i < line.len and line[i] in {' ', '\t'}:
+    inc i
+  if i >= line.len: "" else: line[i .. ^1]
+
+func obligationCount*(content: string): int {.raises: [].} =
+  ## The weakening floor: `check …` / `doAssert …` sites, counted after
+  ## leading whitespace. A ratchet against silent deletion — never a proof of
+  ## strength. Lowering a pin's count is an explicit operator-merged act.
+  var n = 0
+  for line in content.splitLines():
+    let t = trimmedLeading(line)
+    if t.startsWith("check ") or t.startsWith("doAssert "):
+      inc n
+  n
+
+proc gitRun(args: openArray[string]): Result[string, string] {.
+    raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, ExecIOEffect, RootEffect].} =
+  ## Run git and capture stdout. Non-zero exit = err (never a silent skip).
+  var cmd = "git"
+  for a in args:
+    cmd.add(' ')
+    cmd.add(quoteShell(a))
+  try:
+    let r = execCmdEx(cmd, options = {poStdErrToStdOut, poUsePath, poEvalCommand})
+    if r.exitCode != 0:
+      return err("git " & args[0] & " exited " & $r.exitCode & ": " &
+        r.output.strip())
+    ok(r.output)
+  except CatchableError as e:
+    err("git " & args[0] & " could not run: " & e.msg)
+
+func divergedPaths*(porcelainZ: string): seq[string] {.raises: [].} =
+  ## `git status --porcelain -z` records are `XY <path>`; rename/copy records
+  ## are followed by the source path record. BOTH paths are surfaced so a
+  ## rename can never hide the deletion it performs.
+  let records = porcelainZ.split('\0')
+  var i = 0
+  while i < records.len:
+    let rec = records[i]
+    inc i
+    if rec.len < 4:
+      continue
+    let status = rec[0 .. 1]
+    result.add(rec[3 .. ^1])
+    if status[0] in {'R', 'C'} and i < records.len:
+      result.add(records[i])
+      inc i
+
+func pinIndex(path: string): int {.raises: [].} =
+  result = -1
+  for i in 0 ..< PinnedVerdictInputs.len:
+    if PinnedVerdictInputs[i].path == path:
+      return i
+
+proc verifyOnePinnedInput(path: string): Result[string, string] {.
+    raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, ExecIOEffect, RootEffect].} =
+  ## One diverged path: deleted / unpinned / wrong bytes / pruned assertions.
+  if not fileExists(path):
+    return err(VerdictInputDivergedMarker & "(" & path &
+      ") deleted — a verdict input was removed; the candidate may not delete " &
+      "the measuring stick (fail-closed)")
+  let idx = pinIndex(path)
+  if idx < 0:
+    return err(VerdictInputDivergedMarker & "(" & path &
+      ") not pinned — the candidate changed a verdict input that carries no " &
+      "approved pin (fail-closed)")
+  let pin = PinnedVerdictInputs[idx]
+  let oid = gitRun(["hash-object", "--no-filters", "--", path])
+  if oid.isErr:
+    return err(oid.error)
+  let measured = oid.get.strip()
+  if measured != pin.blobOid:
+    return err(VerdictInputDivergedMarker & "(" & path & ") bytes=" &
+      measured[0 ..< 12] & "… != approved pin=" & pin.blobOid[0 ..< 12] &
+      "… — the candidate's bytes are not the approved bytes (fail-closed)")
+  var content = ""
+  try:
+    content = readFile(path)
+  except CatchableError as e:
+    return err(VerdictInputDivergedMarker & "(" & path & ") unreadable: " & e.msg)
+  let measuredObligations = obligationCount(content)
+  if measuredObligations < pin.obligations:
+    return err(VerdictInputReducedMarker & "(" & path & ") obligations=" &
+      $measuredObligations & " < approved=" & $pin.obligations &
+      " — the approved bytes were pruned (fail-closed)")
+  ok("")
+
+proc checkVerdictInputs*(): Result[string, string] {.
+    raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, ExecIOEffect, RootEffect].} =
+  ## ok("") = inert (not a venue that executes the GO lane);
+  ## ok(report) = armed and PASS; err(reason) = fail-closed.
+  if getEnv("GITHUB_ACTIONS") != "true":
+    return ok("")
+  if getEnv("GITHUB_EVENT_NAME") notin ["merge_group", "workflow_call"]:
+    return ok("")
+  for pin in PinnedVerdictInputs:
+    if not pin.path.startsWith(VerdictInputRoot & "/") or
+        pin.blobOid.len != 40 or pin.obligations <= 0:
+      return err(VerdictInputPinMalformedMarker & "(" & pin.path &
+        ") malformed pin (fail-closed)")
+  let status = gitRun(["status", "--porcelain", "-z", "--untracked-files=all",
+    "--", VerdictInputRoot])
+  if status.isErr:
+    return err(status.error)
+  let changed = divergedPaths(status.get)
+  for path in changed:
+    let verdict = verifyOnePinnedInput(path)
+    if verdict.isErr:
+      return err(verdict.error)
+  ok("ARMED event=" & getEnv("GITHUB_EVENT_NAME") & " diverged=" &
+    $changed.len & "/" & $PinnedVerdictInputs.len & " pins " & VerdictInputRoot & "/**")
+
+# ---------------------------------------------------------------------------
 # Self-check — the embedded fixture battery (the lane's make test-fast-one run)
 # ---------------------------------------------------------------------------
 
@@ -340,6 +506,15 @@ proc usage(): int =
 
 proc main(): int {.raises: [CatchableError, OSError, Exception],
     axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  # Verdict-input integrity runs FIRST: before any compile of the candidate
+  # chain, and long before the GO-critical tests this checker's caller runs
+  # next (the lane's step order is overlay → this check → GO tests).
+  let verdictInputs = checkVerdictInputs()
+  if verdictInputs.isErr:
+    echo "[verdict-inputs] FAIL — " & verdictInputs.error
+    return 1
+  if verdictInputs.get.len > 0:
+    echo "[verdict-inputs] " & verdictInputs.get
   var mode = "self-check"
   var artifact = ""
   var p = initOptParser()

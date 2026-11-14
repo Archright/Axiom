@@ -33,6 +33,7 @@
 # Landing/attestation platform trust config (external landing-integrity workflow invariant)
 /config/app_landing_binding.json            @Archright/architect
 /config/trusted_writer_set.json             @Archright/architect
+/tools/ci/check_evidence_id_contract.nim    @Archright/architect
 /AGENTS.md                                  @Archright/architect
 
 # Tier C — gateway execution closure (ADR-0021 execution authority; 실행 코드
