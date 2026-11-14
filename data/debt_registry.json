@@ -5180,9 +5180,12 @@
         "tests/features/cache_manifest.feature"
       ],
       "source": "theater_audit",
-      "status": "open",
-      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9; no patch applied by this audit (theater is registered, not quietly fixed); module/spec deletion is an Owner decision outside audit scope (§2.2 no opportunistic refactoring)",
-      "lastVerifiedAt": "2026-11-10T02:16:22Z"
+      "status": "closed",
+      "resolution": "ORPHANED 2026-11-14 (workstream/vs-525-cache-manifest): zero-importer corpse deleted with its orphan Gherkin spec; theater removed, not patched.",
+      "lastVerifiedAt": "2026-11-14T02:10:00Z",
+      "resolvedAt": "2026-11-14",
+      "resolvedBy": "archright-vs525",
+      "resolutionNote": "Deleted src/core/gate/cache_manifest.nim (computeContentHash returns payload verbatim, compactManifests unconditionally ok, .axiom/cache/manifests never exists) and tests/features/cache_manifest.feature (runner \"\" orphan). Zero importers re-proven at close time: repo-wide .nim token scan finds only the module's own header comment; import/from/include/export forms 0 hits. contentHash/files retained as the pre-deletion record for §0.9a skip matching. Grandfather waiver entry removed from config/decision_binding.waiver.json; projections regenerated or pruned (see PR)."
     },
     {
       "id": "DEBT#526",

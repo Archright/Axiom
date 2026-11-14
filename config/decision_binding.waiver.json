@@ -341,11 +341,6 @@
       "expires": "2026-12-31"
     },
     {
-      "file": "src/core/gate/cache_manifest.nim",
-      "reason": "Grandfathered legacy code - pending rationale extraction",
-      "expires": "2026-12-31"
-    },
-    {
       "file": "src/core/gate/file_hash_cache.nim",
       "reason": "Grandfathered legacy code - pending rationale extraction",
       "expires": "2026-12-31"

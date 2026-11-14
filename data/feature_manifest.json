@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "total_count": 770,
+  "total_count": 769,
   "generated_count": 423,
-  "hand_written_count": 347,
-  "source_hash": "8e051acdc7c0393775e77ecbe4a0f96f1e0ba6a59bedf3cebd560a5d5f6030c9",
+  "hand_written_count": 346,
+  "source_hash": "991a40b541341da1037fc74cddeb671f61959e7e2f2ba39888c8fcabc4fc86db",
   "features": [
     {
       "name": "action_cache",
@@ -767,16 +767,6 @@
       "tags": [
         "@legacy"
       ],
-      "domain": "",
-      "source_module": "",
-      "priority": "",
-      "runner": "",
-      "origin": "hand-written"
-    },
-    {
-      "name": "cache_manifest",
-      "path": "cache_manifest.feature",
-      "tags": [],
       "domain": "",
       "source_module": "",
       "priority": "",

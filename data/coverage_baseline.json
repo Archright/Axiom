@@ -81,12 +81,6 @@
     {
       "coverage": 100.0,
       "lastCommit": "",
-      "module": "cache_manifest",
-      "srcHash": "b45a114c7e4749be4ecf1011a770186cd826e3394c975c335a951956f88df68e"
-    },
-    {
-      "coverage": 100.0,
-      "lastCommit": "",
       "module": "cli_surface_generated",
       "srcHash": "1e564ae1ca11c05520dc5145b5673d8d2d7115be6eab2809beaba73dc78b075a"
     },
