@@ -49,7 +49,7 @@
 
 ### 1. 가스 예산 누출 (Gas Budget Leak)
 
-위 경로 1에서 확인된 대로, `gasLimit = frontier.len × MaxGasCostPerNode`로 Plan 크기에 따라 가스가 변한다. 이는 선택 독립성 불변식을 위반한다. **S0b 예산 작업 스트림에서 수정 완료**: 공유 `ProofBudget`의 verdict 제어를 제거하고, unit 자체 complexity 신호(`calculateAdaptiveGas`)에서 유도한 per-unit budget(`initPerUnitBudget`, `proof_budget.nim`)으로 대체했다. 공유 budget은 집계 보고용으로만 유지된다(verdict 비영향). 회귀 테스트 `tests/unit/selection_independence_test.nim`의 "Per-Unit Budget Independence" suite(3건)가 이를 검증한다. S4 이전에 재감사(re-audit)는 유지한다.
+위 경로 1에서 확인된 대로, `gasLimit = frontier.len × MaxGasCostPerNode`로 Plan 크기에 따라 가스가 변한다. 이는 선택 독립성 불변식을 위반한다. **S0b 예산 작업 스트림에서 수정 완료**: 공유 `ProofBudget`의 verdict 제어를 제거하고, unit 자체 complexity 신호(`calculateAdaptiveGas`)에서 유도한 per-unit budget(`initPerUnitBudget`, `proof_budget.nim`)으로 대체했다. **2026-11-14 후속(VS-B5 Option C)에서 잔여 누출까지 폐쇄**: 엔진의 전역 gas 풀(`initAxiomEngine`의 `budgetGas`/`expectedNodeCount`)과 오케스트레이션 전달 경로를 제거했고, ci-cd 게이트는 전역 예산을 관측하지 않는다. 회귀 테스트 `tests/unit/selection_independence_test.nim`의 "Per-Unit Budget Independence" suite(3건)가 이를 검증한다. S4 이전에 재감사(re-audit)는 유지한다.
 
 ### 2. 이후 추가 상태 (New State Added Later)
 
@@ -70,5 +70,5 @@
 `tests/unit/selection_independence_test.nim` — 선택 독립성 불변식을 검증하는 회귀 테스트.
 
 - **CLEAN 경로**: 7개 경로(2-8)에 대한 결정적 동일성 어설션 포함
-- **예산 경로**: `initAxiomEngine`의 `expectedNodeCount` 매개변수가 가스 한도에 영향을 미침을 검증하여 누출을 감지하는 어설션 포함 (현재 실패 — 이는 실제 발견 사항)
+- **예산 경로**: 누출 감지는 **구조적 음성 통제**다 — `tests/cli/test_axiom_engine.nim`이 `initAxiomEngine(..., expectedNodeCount = …)` / `(..., budgetGas = …)`가 **컴파일되지 않음**을 검증한다(파라미터 재도입 시 컴파일 실패). `initPerUnitBudget` 독립성 3건은 이 파일에서 계속 검증한다.
 - **실행 방법**: `nim c -r --hints:off tests/unit/selection_independence_test.nim`

@@ -1,48 +1,46 @@
 # nim-libp2p BytesView.toOpenArray slice-length binding — Product Contract
 
 > **Status**: Committed product contract — the external-subject spec overlay slice (`followup/libp2p-bytesview-slice`)
-> **Created**: 2026-10-22
+> **Created**: 2026-10-22 (v1.0.0) — **Re-adopted**: 2026-11-14 (v1.1.0 — law conformance over the FIXED tree)
 > **AGENTS.md reference**: §0.12 (product contract precedes), §0.9 (theater prohibition), §0.3 (trust boundary), §0.2a (legislator LLM-only — not engaged here: the spec content is the investigation agent chain's adopted work product, not a legislator invariant), §4 (GUARDIAN)
 > **Related**: [toml_d2_agent_binding_contract.md](./toml_d2_agent_binding_contract.md) (overlay / constructed-carrier / adoption-provenance precedent), [nim_stew_base36_sidecar_contract.md](./nim_stew_base36_sidecar_contract.md) (adoption + non-claims precedent), [authority_contract.md](./authority_contract.md), [obligation_semantics.md](./obligation_semantics.md), [counterexample_replay_adapter.md](./counterexample_replay_adapter.md)
-> **Spec registry**: `SPEC-LIBP2P-BV-SLICE` — binding overlay `config/spec/nim_libp2p_bytesview_slice.json` (soExplicit)
+> **Spec registry**: `SPEC-LIBP2P-BV-SLICE` — binding overlay `config/spec/nim_libp2p_bytesview_slice.json` (soExplicit), rule `external:libp2p/bytesview/slice-length-law` v`1.1.0`
 
 ---
 
 ## 1. Proposition — the slice-length law
 
-**Subject**: `libp2p/utils/bytesview.nim` of an **unmodified** READ-ONLY clone of status-im/nim-libp2p (local clone `<workspace>/nim-libp2p`; origin `iftech/nim-libp2p`, a fork of status-im/nim-libp2p) @ `a130a7f32219909bdcda14b7f1e64d0804fc832c`. Subject pin: module blob sha256 `b205c969ba04f4199d8fd4a121d4b6fccdc82c426e336add0e1e9fd0e961e5ee` at the pin (measured 2026-10-22 from the working tree AND from the committed blob; the git object ID `a130a7f3…:libp2p/utils/bytesview.nim` is a SHA-1 over the repository's object graph — a different hash kind, recorded separately in the run evidence). Governed symbol: `toOpenArray` — a **template** (`:18-19`), not a materializable `func`. The subject tree is READ-ONLY at all times (Zero-Footprint Integrity): `git -C <subject> status --porcelain` must remain empty at every stage, and the replay harness is compiled OUT OF TREE.
+**Subject**: `libp2p/utils/bytesview.nim` of an **unmodified** READ-ONLY clone of Archright/nim-libp2p (fork of status-im/nim-libp2p; local clone `<workspace>/nim-libp2p`) @ `d9e8769c3c989fc7dc78182b1358f60c85f14238` (branch `fix/bytesview-toopenarray-slice-bounds` — the one-line fix `v.rpos + e - b` → `v.rpos + e`). Subject pin: module blob sha256 `e5c73a4fc4b4f390a74a95078809639f4773510e029673c3fb7884d53f584c85` at the pin (measured from the fixed commit's blob; the git object ID `d9e8769c…:libp2p/utils/bytesview.nim` is a SHA-1 over the repository's object graph — a different hash kind, recorded separately in the run evidence). The v1.0.0 subject pin was status-im/nim-libp2p @ `a130a7f32219909bdcda14b7f1e64d0804fc832c` (origin `iftech/nim-libp2p`), blob sha256 `b205c969ba04f4199d8fd4a121d4b6fccdc82c426e336add0e1e9fd0e961e5ee` — the PRE-FIX bytes, kept as history (§8). Governed symbol: `toOpenArray` — a **template** (`:18-19`), not a materializable `func`. The subject tree is READ-ONLY at all times (Zero-Footprint Integrity): `git -C <subject> status --porcelain` must remain empty at every stage, and the replay harness is compiled OUT OF TREE.
 
-**The math.** The template body is
+**The math.** The FIXED template body is
 
 ```nim
-libp2p/utils/bytesview.nim:18-19
+libp2p/utils/bytesview.nim:18-19 (fix/bytesview-toopenarray-slice-bounds)
   template toOpenArray*(v: BytesView, b, e: int): openArray[byte] =
-    v.data.toOpenArray(v.rpos + b, v.rpos + e - b)
+    v.data.toOpenArray(v.rpos + b, v.rpos + e)
 ```
 
-`data` is a `seq[byte]` and the system `toOpenArray(x, first, last)` is INCLUSIVE. The template therefore materializes the inclusive interval `[rpos + b, rpos + e - b]`, whose length is
+`data` is a `seq[byte]` and the system `toOpenArray(x, first, last)` is INCLUSIVE. The template therefore materializes the inclusive interval `[rpos + b, rpos + e]`, whose length is
 
 ```
-L_actual(b, e) = (rpos + e - b) - (rpos + b) + 1 = e - 2b + 1
+L_actual(b, e) = (rpos + e) - (rpos + b) + 1 = e - b + 1
 L_incl(b, e)   = e - b + 1          # the inclusive view-relative law (Nim system semantics)
-L_half(b, e)   = e - b              # the half-open reading
 ```
 
-- `b = 0` → `L_actual = e + 1 = L_incl` — the law HOLDS.
-- `b > 0` → `L_actual = L_incl - b` — exactly **b elements short** of the inclusive law.
-- `L_actual == L_half` holds **only at b = 1** (`e - 2b + 1 = e - b ⟺ b = 1`); for `b ≥ 2` the actual length matches neither reading. Concrete: `b = 2, e = 5` → actual `2`, inclusive predicts `4`, half-open predicts `3`.
-- **Defect pinned at b = 1**: actual `e - 1` against the inclusive law `e` — violated for **every** `e` in the domain. Concrete: `b = 1, e = 3` → `2` observed where the law demands `3`.
+- `L_actual == L_incl` for **every** `b` — the FIXED template conforms to the adopted law exactly.
+- `b = 0` → `L_actual = e + 1` — **byte-identical to the pre-fix arithmetic** (the fix changes only the `b > 0` paths), so the production call sites (noise.nim, all `b = 0`) are unaffected.
+- **Historical (v1.0.0, PRE-FIX bytes)**: the body `v.data.toOpenArray(v.rpos + b, v.rpos + e - b)` materialized `[rpos + b, rpos + e - b]`, length `e - 2b + 1` — exactly `b` elements short of the law; pinned at `b = 1` the actual `e - 1` against the law `e` was violated for **every** `e` in the domain. That disproof is the preserved historical demonstration (§8); `b = 1, e = 3` → `2` observed where the law demanded `3`.
 
-**Adopted claim (S1)** — stated as **DATA** in the overlay's `canonicalSpecIR` (the engine hardcodes no law content; only the carrier/law NAMES are binding identities):
+**Adopted claim (S1, v1.1.0 — law conformance)** — stated as **DATA** in the overlay's `canonicalSpecIR` (the engine hardcodes no law content; only the carrier/law NAMES are binding identities):
 
 ```
 D                   = { e | (e ≥ 1) ∧ (e ≤ 5) }         # clauses 1-2
 bvSliceLenLaw1(e)   == e          # clause 3 — the inclusive law at b = 1
-bvSliceLenActual(e) == (e - 1)    # clause 4 — the template's actual length at b = 1
+bvSliceLenActual(e) == e          # clause 4 — the FIXED template's actual length at b = 1
 bvSliceLenLaw0(e)   == (e + 1)    # clause 5 — the inclusive law at b = 0
-bvSliceLenControl(e) == (e + 1)   # clause 6 — the template's actual length at b = 0
+bvSliceLenControl(e) == (e + 1)   # clause 6 — the FIXED template's actual length at b = 0
 
-S1:      ∀ e ∈ D:  bvSliceLenActual(e)  == bvSliceLenLaw1(e)   # L_actual(1, e) == e
+S1:      ∀ e ∈ D:  bvSliceLenActual(e)  == bvSliceLenLaw1(e)   # L_actual(1, e) == e — NO counterexample
 control: ∀ e ∈ D:  bvSliceLenControl(e) == bvSliceLenLaw0(e)   # L_actual(0, e) == e + 1
 ```
 
@@ -68,25 +66,25 @@ The clause grammar is **CLOSED**: a definition body is `<var>`, `<var> + <INT>` 
 
 Both carriers are **CONSTRUCTED IR** — the subject symbol is a template, so there is no materializable `func` body to carry; the carriers state the subject's index arithmetic as IR predicates over ONE model parameter (`e`), with the start offset `b` fixed per carrier.
 
-**Defect carrier `bvSliceLenActual`** — the template's actual length with `b` pinned at 1:
+**Defect-lane carrier `bvSliceLenActual`** — the FIXED template's actual length with `b` pinned at 1:
 
 ```
-bytesview.nim:18-19, b = 1:  v.data.toOpenArray(v.rpos + 1, v.rpos + e - 1)
-length = (rpos + e - 1) - (rpos + 1) + 1 = e - 1
+bytesview.nim:18-19 (FIXED), b = 1:  v.data.toOpenArray(v.rpos + 1, v.rpos + e)
+length = (rpos + e) - (rpos + 1) + 1 = e
 ```
 
-Model: `bvSliceLenActual(e) == (e - 1)`; the law side is the overlay's `bvSliceLenLaw1(e) == e` (clause 3), so the obligation is `bvSliceLenActual(e) == bvSliceLenLaw1(e)` — the spliced claim reads `(e - 1) == e`. **SAT expected** — the model violates the law for every `e` in `D`; the solver selects ONE witness, the replay observes that pinned instance on the subject's actual bytes.
+Model: `bvSliceLenActual(e) == e`; the law side is the overlay's `bvSliceLenLaw1(e) == e` (clause 3), so the obligation is `bvSliceLenActual(e) == bvSliceLenLaw1(e)` — the spliced claim reads `(e) == e`. **UNSAT expected — the law-conformance claim**: the obligation holds for every `e` in `D`, so the solver finds NO counterexample and no witness is ever selected or replayed. (The carrier's `kind` label stays `defect` — it is the lane's structural name, not a claim that a defect exists; v0.6.3's engine constants name the lane and hardcode no law content.) The v1.0.0 model over the PRE-FIX bytes was `e - 1`, spliced claim `(e - 1) == e` — SAT for every `e`; that generation is history (§8).
 
 **Control carrier `bvSliceLenControl`** — the same template with `b` pinned at 0:
 
 ```
-bytesview.nim:18-19, b = 0:  v.data.toOpenArray(v.rpos, v.rpos + e)
+bytesview.nim:18-19 (FIXED), b = 0:  v.data.toOpenArray(v.rpos, v.rpos + e)
 length = (rpos + e) - rpos + 1 = e + 1
 ```
 
-Model: `bvSliceLenControl(e) == (e + 1)`; the law side is `bvSliceLenLaw0(e) == (e + 1)` (clause 5), so the obligation is `bvSliceLenControl(e) == bvSliceLenLaw0(e)` — the spliced claim reads `(e + 1) == (e + 1)`. **UNSAT expected** — at `b = 0` the actual length equals the inclusive law `e - 0 + 1` exactly.
+Model: `bvSliceLenControl(e) == (e + 1)`; the law side is `bvSliceLenLaw0(e) == (e + 1)` (clause 5), so the obligation is `bvSliceLenControl(e) == bvSliceLenLaw0(e)` — the spliced claim reads `(e + 1) == (e + 1)`. **UNSAT expected** — at `b = 0` the actual length equals the inclusive law `e - 0 + 1` exactly, and this is byte-identical to the pre-fix arithmetic (the fix changes only the `b > 0` paths).
 
-**The honest limit**: the solver verifies the ADOPTED MODEL, not the subject. The subject's connection to the verdict is the stamped replay harness alone (§4) — the same model↔original gap the d2 lane documents. The carriers' `carriers` overlay block records the per-carrier grounding symbol (`toOpenArray`) and lines (`18-19` / `18-19, 21-22`).
+**The honest limit**: the solver verifies the ADOPTED MODEL, not the subject. The subject's connection to a verdict is the stamped replay harness alone (§4) — the same model↔original gap the d2 lane documents. The carriers' `carriers` overlay block records the per-carrier grounding symbol (`toOpenArray`) and lines (`18-19` / `18-19, 21-22`).
 
 ### 3.1 Engine wiring — the `ax prove` lane
 
@@ -111,7 +109,7 @@ The carrier pair is CONSTRUCTED IR — the subject symbol is a template, so no s
 
 ## 4. Replay mechanism — the ORIGINAL template decides
 
-A confirmed disproof (SAT model → P4 → cvConfirmed → vsDisproved) is replayed against the ORIGINAL template through a stamped harness. The harness is compiled OUT OF TREE (scratch nimcache and outdir; the subject tree is never written to) and imports the subject module by path:
+A confirmed disproof (SAT model → P4 → cvConfirmed → vsDisproved) is replayed against the ORIGINAL template through a stamped harness. Under the v1.1.0 law-conformance model **no counterexample exists, so this lane never fires in production** — it remains the anti-theater backstop: a future solver SAT against this overlay (e.g., a spec-injection regression) would still be replayed. The harness is compiled OUT OF TREE (scratch nimcache and outdir; the subject tree is never written to) and imports the subject module by path:
 
 ```nim
 import libp2p/utils/bytesview
@@ -126,7 +124,7 @@ The `<lit>` slot is filled by the replay adapter with the solver's concrete `e`.
 
 The fixture binds the domain: `BytesView.init(@[byte 1, 2, 3, 4, 5, 6])` with `rpos = 0` — a view-relative inclusive window `[1..e]` is valid up to `e = 5`, and the control's `b = 0` window `[0..e]` up to `e = 5` (6 bytes).
 
-Observed on the pinned subject (2026-10-22, out-of-tree scratch compile, Nim 2.2.10): `b = 1` → lengths `0, 1, 2, 3, 4` for `e = 1..5` (= `e - 1`); `b = 0` → `2, 3, 4, 5, 6` (= `e + 1`).
+Observed on the pinned FIXED subject (2026-11-13, out-of-tree scratch compile, Nim 2.2.10): `b = 1` → lengths `1, 2, 3, 4, 5` for `e = 1..5` (= `e`, the law); `b = 0` → `2, 3, 4, 5, 6` (= `e + 1`, **byte-identical to the pre-fix observation**). Historical (2026-10-22, PRE-FIX pinned subject): `b = 1` → `0, 1, 2, 3, 4` (= `e - 1`, the defect); `b = 0` → `2, 3, 4, 5, 6`.
 
 Subject integrity folds (exact commit, tree Merkle, module sha256 pre/post, porcelain check, GateEnvLock triple) are unchanged — the replay never writes into the subject tree.
 
@@ -134,20 +132,19 @@ Subject integrity folds (exact commit, tree Merkle, module sha256 pre/post, porc
 
 `bvSliceLenControl` is a **solver-level injection guard, not a subject observation**. It rides the same solver machinery as the defect carrier and is expected **UNSAT**: the model `e + 1` and the law `e + 1` agree for every `e`. A control SAT would indict the SPEC INJECTION (β-splice mis-binding, lost precondition, stale body marshaling) — not the subject — and fails the run closed. The control is never executed against the subject (§7).
 
-## 6. Acceptance criteria
+## 6. Acceptance criteria (v1.1.0 — law conformance)
 
 The slice is accepted only when the run produces ALL of the following, observed mechanically:
 
-1. **Exit code 1** (`VERIFICATION_FAILURE`) — the defect is a confirmed disproof, not a pass.
-2. **stderr** carries a `[ce-replay]` line reporting that the replay AGREED with the model's verdict.
-3. **PROPOSITION_DISPROVED payload** (17 records) pinning:
-   - `replay.subjectGitRef == a130a7f32219909bdcda14b7f1e64d0804fc832c`
-   - `replay.moduleSha256 == b205c969ba04f4199d8fd4a121d4b6fccdc82c426e336add0e1e9fd0e961e5ee` (and `replay.moduleSha256AfterRun` equal to it)
-   - `replay.worktreeStable == true`
-4. **Control UNSAT** — `certZ3Candidate` carries NO counterexample for `bvSliceLenControl`.
-5. **Two cold runs** agree: identical `canonicalRunDigest` AND payload-level equality (the claim rows, the certificate's `counterExample` object, and the evidence CAS files).
-6. **Subject pins identical pre/post** — git OID `HEAD`/`tree` unchanged and the module's file sha256 unchanged across the run.
-7. **Determinism scope** — the two runs are the same FIXED environment (Nim 2.2.10 toolchain + the local nimble `pkgs2` store); the run records the engine build identity under test.
+1. **Exit code 0** (`CliOutcome SUCCESS` — "verification ran; no failures"). **This is NOT a serialized `PROVED` verdict**: v0.6.3 structurally cannot serialize a positive proposition verdict (`NOT_DISPROVED` is unreachable in the display layer — the documented serialization gap); the run verdict spelling for this outcome is `INCONCLUSIVE`.
+2. **No counterexample for `bvSliceLenActual`** — the spliced obligation `(e) == e` is UNSAT over the domain; the carrier obligations (3/3) pass with the counterexample gone.
+3. **Control UNSAT** — `certZ3Candidate` carries NO counterexample for `bvSliceLenControl` (unchanged from v1.0.0).
+4. **Two cold runs agree**: identical `canonicalRunDigest` AND payload-level equality. The local pre-verification observed this twice (canonical run digest `ac22df50bfb4e8607c43e4683914d326bdc9aa08f4f2324929c65a275b1642c9`, two cold runs, 2026-11-13).
+5. **Subject pins verified** — the run's subject tree hashes to `subject.blobSha256` `e5c73a4f…` at the recorded module path (intake subject-pin check); `replay.subjectGitRef == d9e8769c3c989fc7dc78182b1358f60c85f14238` and `replay.moduleSha256AfterRun == e5c73a4f…` on any fired replay.
+6. **Subject pins identical pre/post** — git OID `HEAD`/`tree` unchanged and the module's file sha256 unchanged across the run (`worktreeStable == true`).
+7. **Determinism scope** — the runs are the same FIXED environment (Nim 2.2.10 toolchain + the local nimble `pkgs2` store); the run records the engine build identity under test.
+
+**Historical (v1.0.0 acceptance, satisfied 2026-10-22 — the preserved disproof demonstration)**: exit code 1 (`VERIFICATION_FAILURE`); a `[ce-replay]` line reporting the replay AGREED; a `PROPOSITION_DISPROVED` payload (17 records) pinning `replay.subjectGitRef == a130a7f3…` and `replay.moduleSha256 == b205c969…`; control UNSAT; two cold runs identical (`canonicalRunDigest` + payload equality); subject pins identical pre/post.
 
 ## 7. Non-claims
 
@@ -155,13 +152,22 @@ The slice is accepted only when the run produces ALL of the following, observed 
 - NOT a claim about the subject's `b = 0` runtime behavior — the control is a solver-level injection guard; the subject is never executed for it.
 - NOT a claim that the pipeline extracted or verified the original template body — the model is CONSTRUCTED IR; the subject connection is the stamped replay harness observation only.
 - NOT a general theorem about `BytesView.toOpenArray` for arbitrary `b` and `e`.
-- NOT a claim that nim-libp2p was modified or annotated in-tree (Zero-Footprint) — the fix decision belongs to the subject's maintainers.
+- NOT a formal `PROVED` verdict in the engine's verdict vocabulary — v0.6.3 structurally cannot serialize one (`NOT_DISPROVED` unreachable, the documented serialization gap); the v1.1.0 claim is law conformance WITHIN the pinned carriers (the absence of a counterexample over the pinned domain).
+- NOT a claim that nim-libp2p was modified or annotated in-tree by the verification (Zero-Footprint) — the fix belongs to the subject fork's `fix/bytesview-toopenarray-slice-bounds` commit, and the fix decision belongs to the subject's maintainers.
 - NOT a claim about nim-libp2p's overall correctness, safety, or memory safety.
 - NOT a fully-autonomous proposition discovery — the rule's justification (Nim official inclusive `toOpenArray` semantics + production call-site requirements) was established by external investigation and adopted by an explicit user-approved act.
 
-## 8. Adoption record
+## 8. Adoption record and version history
 
+**v1.0.0 (2026-10-22) — the disproof generation.**
 - **Content authorship**: the investigation agent chain (contradiction-candidate survey → fact re-verification → two critique rounds). **No human authored the content; this contract claims no human authorship of it.**
-- **Authority for verifying against it**: the explicit adoption act — the user-approved mission (plan `archangel-cable-plastic-man` v3, 2026-10-22) plus this committed overlay and contract. The overlay's `claimOwnership.provenance` records the same split (content = agent chain; authority = adoption). **Authorship confers NO authority.**
-- **Raw outputs**: preserved verbatim under `experiments/nim-libp2p-bytesview-slice-e2e/discovery/` at the evidence PR.
-- **Spec registry**: `SPEC-LIBP2P-BV-SLICE` — binding overlay `config/spec/nim_libp2p_bytesview_slice.json` (`soExplicit`), rule `external:libp2p/bytesview/slice-length-law` v`1.0.0`.
+- **Authority for verifying against it**: the explicit adoption act — the user-approved mission (plan `archangel-cable-plastic-man` v3, 2026-10-22) plus the committed overlay and contract. The overlay's `claimOwnership.provenance` records the same split (content = agent chain; authority = adoption). **Authorship confers NO authority.**
+- **Outcome**: DISPROVED over the PRE-FIX subject (status-im/nim-libp2p @ `a130a7f3…`, blob `b205c969…`), counterexample `(b = 1, e = 4)` — observed length `3` against the law's `4`; reproduced by the live campaign (run 43363278211) and by the local negative control (exit 1, twice). This demonstration is preserved as history: the disproof motivated the subject-side fix.
+
+**v1.1.0 (2026-11-14, this re-adoption) — the law-conformance generation.**
+- **Act**: the user-approved re-adoption (PR `readopt/spec-bv-slice-v1-1-0`) — the SAME adopted law, re-adopted as a no-counterexample proposition over the FIXED subject tree Archright/nim-libp2p @ `d9e8769c…` (blob `e5c73a4f…`). The subject pin and the defect-lane model are the only semantic deltas; the law clauses, the control, the domain, and the replay fixture are carried verbatim.
+- **Content authorship**: the law content is inherited verbatim from the v1.0.0 adopted work product (the original agent chain); the v1.1.0 delta (pin + model) was authored by the re-adoption agent chain. Authorship confers NO authority; the authority is this committed overlay + contract, user-approved via the PR landing.
+- **Pre-verification evidence (2026-11-13, local, v0.6.3 release bundle, integrity-verified)**: two cold `ax prove` runs over the FIXED checkout with the re-pinned overlay — CLI exit 0 both times, identical canonical run digest (`ac22df50…`), carrier obligations 3/3 passing with the counterexample gone; the master negative control reproduced the v1.0.0 disproof (exit 1, twice); the shipped v1.0.0 overlay over the FIXED tree was rejected fail-closed (exit 2, subject pin mismatch) — proving the pin binds the generation. Direct out-of-tree harness observation on the FIXED bytes: `b = 1` → `1, 2, 3, 4, 5` (= `e`); `b = 0` → `2, 3, 4, 5, 6` (= `e + 1`, unchanged).
+- **Raw outputs**: the v1.0.0 investigation chain's outputs are preserved verbatim under `experiments/nim-libp2p-bytesview-slice-e2e/discovery/` at the evidence PR; the pre-verification session evidence is cited in the re-adoption PR body.
+
+**Spec registry**: `SPEC-LIBP2P-BV-SLICE` — binding overlay `config/spec/nim_libp2p_bytesview_slice.json` (`soExplicit`), rule `external:libp2p/bytesview/slice-length-law` v`1.1.0`.

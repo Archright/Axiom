@@ -15,8 +15,10 @@ diff는 docs-only다 — repo에는 불일치가 없다.
 ## Root cause
 
 `make push-admissibility`의 레시피가 `bin/epoch_transaction_gate --diff … HEAD`를
-**prerequisite 선언 없이 직접 호출**한다(타깃 선언부의 prerequisite은
-`bin/effect_contract_projection bin/nimtry`뿐). `bin/epoch_transaction_gate`는
+**prerequisite 선언 없이 직접 호출**한다(실측 당시 타깃 선언부의 prerequisite은
+`bin/effect_contract_projection bin/nimtry`뿐이었으며, 2026-11-13 VS-PUSH-1에서
+그 두 평가자도 RUN 전용 sub-target `push-admissibility-debt-prereqs`로 이동해
+`push-admissibility:` 자체는 무-prerequisite 타깃이 됨). `bin/epoch_transaction_gate`는
 미추적 로컬 빌드 산출물이고, Makefile 규칙
 (`bin/epoch_transaction_gate: tools/ci/epoch_transaction_gate.nim src/gate/slice_catalog.nim`)이
 존재하지만 레시피 직접 호출 경로에서는 평가되지 않는다. 결과: 디스크의 스테일

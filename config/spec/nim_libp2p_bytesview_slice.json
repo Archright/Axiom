@@ -2,28 +2,28 @@
   "specId": "SPEC-LIBP2P-BV-SLICE",
   "specOrigin": "soExplicit",
   "ruleId": "external:libp2p/bytesview/slice-length-law",
-  "ruleVersion": "1.0.0",
+  "ruleVersion": "1.1.0",
   "contract": "docs/spec/nim_libp2p_bytesview_slice_contract.md",
   "claimOwnership": {
     "owner": "axiom-defined-rule",
     "contract": "docs/spec/nim_libp2p_bytesview_slice_contract.md",
-    "adoptionRef": "user-approved mission (plan archangel-cable-plastic-man v3, 2026-10-22): nim-libp2p C2 bytesview slice",
-    "provenance": "The proposition CONTENT was authored by the investigation agent chain (contradiction-candidate survey + fact re-verification + two critique rounds; raw outputs preserved in experiments/nim-libp2p-bytesview-slice-e2e/discovery/ at the evidence PR) — no human authored the content; the AUTHORITY for verifying against it is the explicit adoption act (this committed overlay + contract, user-approved). Authorship confers NO authority."
+    "adoptionRef": "user-approved re-adoption act (PR readopt/spec-bv-slice-v1-1-0, 2026-11-14): the SAME adopted inclusive slice-length law, re-adopted as a LAW-CONFORMANCE (no-counterexample) proposition over the FIXED subject tree Archright/nim-libp2p@d9e8769c3c989fc7dc78182b1358f60c85f14238 (branch fix/bytesview-toopenarray-slice-bounds); the v1.0.0 adoption (user-approved mission archangel-cable-plastic-man v3, 2026-10-22) and its DISPROVED demonstration over the pre-fix tree a130a7f3 remain the historical record",
+    "provenance": "The proposition CONTENT inherits the v1.0.0 adopted law verbatim — authored by the original investigation agent chain (contradiction-candidate survey + fact re-verification + two critique rounds; raw outputs preserved in experiments/nim-libp2p-bytesview-slice-e2e/discovery/ at the evidence PR); no human authored the law content. The v1.1.0 delta — the subject pin moved to the fixed blob (e5c73a4f…) and the defect-lane model restated as the fixed template's actual length (e) — was authored by the re-adoption agent chain and pre-verified locally against the integrity-verified v0.6.3 release bundle over the fixed checkout: two cold runs, CLI exit 0, identical canonical run digest, carrier obligations 3/3 with NO counterexample (session evidence, 2026-11-13). The AUTHORITY for verifying against it is the explicit re-adoption act — this committed overlay + contract, user-approved via the PR landing. Authorship confers NO authority."
   },
-  "description": "Out-of-tree explicit spec for the slice-length defect of nim-libp2p's BytesView.toOpenArray. The template body (libp2p/utils/bytesview.nim:18-19) `v.data.toOpenArray(v.rpos + b, v.rpos + e - b)` yields length e-2b+1 — exactly b elements short of the inclusive view-relative law e-b+1 (Nim system toOpenArray semantics — official example s.toOpenArray(1,3) == [1,2,3], 3 elements) — and coinciding with a half-open law e-b only at b=1 (where the template's inclusive interval is mis-derived by subtracting the start offset twice). Two CONSTRUCTED-IR carriers (the subject is a template, not a materializable func): bvSliceLenActual (defect — b pinned at 1, model e-1, adopted law result == e; every e in the domain is a counterexample) and bvSliceLenControl (control — b pinned at 0, model e+1, law result == e+1; solver-level injection guard). The adopted LAW is DATA, not engine prose: canonicalSpecIR names one law symbol per carrier (bvSliceLenLaw1, bvSliceLenLaw0) and states its body, so the obligation (model == law) is fully determined by this document and the engine hardcodes no law content. A confirmed counterexample is replayed against the ORIGINAL template through a stamped harness observing len(bv.toOpenArray(1, e)) on BytesView.init(@[byte 1, 2, 3, 4, 5, 6]) — the observation, not the model, decides. The subject tree is READ-ONLY (Zero-Footprint).",
+  "description": "Out-of-tree explicit spec for the slice-length LAW CONFORMANCE of nim-libp2p's BytesView.toOpenArray on the FIXED template (fix/bytesview-toopenarray-slice-bounds: v.rpos + e - b -> v.rpos + e, one line). The template body (libp2p/utils/bytesview.nim:18-19) now reads v.data.toOpenArray(v.rpos + b, v.rpos + e): at b=1 the underlying inclusive range is [rpos+1, rpos+e], length = e - 1 + 1 = e — EQUAL to the adopted inclusive law e; at b=0 the range [rpos, rpos+e] has length e+1, equal to the law e-0+1, exactly as before the fix (b=0 behavior is byte-identical, which is why the production call sites in noise.nim — all b=0 — are unaffected). Two CONSTRUCTED-IR carriers (the subject is a template): bvSliceLenActual (defect lane, b pinned at 1, model e, adopted law e — the law-conformance obligation (e) == (e) holds for EVERY e in the domain, so NO counterexample exists and no witness is ever selected) and bvSliceLenControl (control, b pinned at 0, model e+1, law e+1; solver-level injection guard). The adopted LAW is DATA, not engine prose: canonicalSpecIR names one law symbol per carrier (bvSliceLenLaw1, bvSliceLenLaw0) and states its body, so the obligation (model == law) is fully determined by this document and the engine hardcodes no law content. A confirmed counterexample would be replayed against the ORIGINAL template through a stamped harness observing len(bv.toOpenArray(1, e)) on BytesView.init(@[byte 1, 2, 3, 4, 5, 6]) — the observation, not the model, decides. The subject tree is READ-ONLY (Zero-Footprint).",
   "subject": {
-    "repository": "status-im/nim-libp2p (local READ-ONLY clone <workspace>/nim-libp2p @ a130a7f32219909bdcda14b7f1e64d0804fc832c; origin iftech/nim-libp2p fork of status-im/nim-libp2p)",
-    "commit": "a130a7f32219909bdcda14b7f1e64d0804fc832c",
+    "repository": "Archright/nim-libp2p (local READ-ONLY clone <workspace>/nim-libp2p @ d9e8769c3c989fc7dc78182b1358f60c85f14238, branch fix/bytesview-toopenarray-slice-bounds)",
+    "commit": "d9e8769c3c989fc7dc78182b1358f60c85f14238",
     "module": "libp2p/utils/bytesview.nim",
     "symbols": ["toOpenArray"],
     "sourceLines": "18-19",
-    "blobSha256": "b205c969ba04f4199d8fd4a121d4b6fccdc82c426e336add0e1e9fd0e961e5ee"
+    "blobSha256": "e5c73a4fc4b4f390a74a95078809639f4773510e029673c3fb7884d53f584c85"
   },
   "canonicalSpecIR": [
     "1 <= e",
     "e <= 5",
     "bvSliceLenLaw1(e) == e",
-    "bvSliceLenActual(e) == (e - 1)",
+    "bvSliceLenActual(e) == e",
     "bvSliceLenLaw0(e) == (e + 1)",
     "bvSliceLenControl(e) == (e + 1)"
   ],
@@ -33,23 +33,24 @@
       "kind": "defect",
       "groundingSymbol": "toOpenArray",
       "groundingLines": "18-19",
-      "grounding": "bytesview.nim:18-19 — the template's actual index arithmetic with b pinned at 1: underlying inclusive range [rpos+1, rpos+e-1], length = e - 2*1 + 1 = e - 1; machine-extracted model, not a carried body (the subject is a template)"
+      "grounding": "bytesview.nim:18-19 (FIXED) — the template's actual index arithmetic with b pinned at 1: underlying inclusive range [rpos+1, rpos+e], length = e - 1 + 1 = e; machine-extracted model of the fixed arithmetic, not a carried body (the subject is a template)"
     },
     {
       "name": "bvSliceLenControl",
       "kind": "control",
       "groundingSymbol": "toOpenArray",
       "groundingLines": "18-19, 21-22",
-      "grounding": "at b=0 the actual length is e+1, equal to the inclusive law e-0+1 — the b=0 path exercised by the production call sites (noise.nim:314,333: 32-byte destinations) and by the sibling `data` template's inclusive idiom (bytesview.nim:21-22); injection guard only"
+      "grounding": "at b=0 the fixed template's actual length is e+1 (range [rpos, rpos+e]), equal to the inclusive law e-0+1 — identical to the pre-fix b=0 arithmetic (the fix changes only the b>0 paths); the b=0 path is exercised by the production call sites (noise.nim:314,333: 32-byte destinations) and by the sibling `data` template's inclusive idiom (bytesview.nim:21-22); injection guard only"
     }
   ],
   "semanticCaveats": [
     "toOpenArray is a template — the carriers are CONSTRUCTED IR; the solver verifies the ADOPTED MODEL, and the subject connection is the stamped replay harness, which imports libp2p/utils/bytesview and expands the template from the defining module (Nim manual: template symbols are bound from the definition scope)",
     "the adopted law is stated as DATA in canonicalSpecIR (bvSliceLenLaw1 = e at b = 1, bvSliceLenLaw0 = e + 1 at b = 0) — the engine parses the named definitions and hardcodes no law content; the two carriers' obligations are the model-equals-law equalities over the SAME domain variable",
     "the domain 1 <= e <= 5 is bound to the replay fixture BytesView.init(@[byte 1, 2, 3, 4, 5, 6]) with rpos = 0 (a view-relative inclusive [1..e] is valid up to e = 5)",
-    "each carrier has exactly ONE model parameter (e); b is fixed at 1 (defect) / 0 (control) — a deliberate narrowing required by the single-parameter replay contract",
-    "the defect claim (e - 1) == e is violated for EVERY e in the domain — the solver selects one witness; the replay observes that pinned instance on the subject's actual bytes",
-    "the replay observation is the integer length echoed between the AXIOM_REPLAY_BEGIN/AXIOM_REPLAY_END markers",
+    "each carrier has exactly ONE model parameter (e); b is fixed at 1 (defect lane) / 0 (control) — a deliberate narrowing required by the single-parameter replay contract",
+    "the conformance obligations ((e) == (e) at b = 1, (e + 1) == (e + 1) at b = 0) hold for EVERY e in the domain — the solver finds NO counterexample and the ce-replay lane never fires; the v1.0.0 defect claim ((e - 1) == e, violated for every e) is the historical record over the pre-fix bytes (subject a130a7f3, blob b205c969…)",
+    "the v0.6.3 engine cannot serialize a positive proposition verdict (NOT_DISPROVED is unreachable in the display layer — the documented serialization gap): the machine-observable conformance evidence is the carrier obligations passing with NO counterexample and CLI exit 0 (CliOutcome SUCCESS — 'verification ran; no failures'); the run verdict spelling for this outcome is INCONCLUSIVE, and the local pre-verification observed two cold runs with the identical canonical run digest",
+    "the replay observation (when it fires) is the integer length echoed between the AXIOM_REPLAY_BEGIN/AXIOM_REPLAY_END markers",
     "subject pins use the module file's content sha256; git object IDs (a SHA-1 repo) are a different hash kind and are recorded separately in the run evidence"
   ],
   "nonClaims": [
@@ -57,8 +58,9 @@
     "NOT a claim about the subject's b=0 runtime behavior — the control is a solver-level injection guard; the subject is never executed for it",
     "NOT a claim that the pipeline extracted or verified the original template body — the model is constructed IR; the subject connection is the stamped replay harness observation only",
     "NOT a general theorem about BytesView.toOpenArray for arbitrary b and e",
-    "NOT a claim that nim-libp2p was modified or annotated in-tree (Zero-Footprint) — the fix decision belongs to the subject's maintainers",
+    "NOT a claim that nim-libp2p was modified or annotated in-tree by the verification (Zero-Footprint) — the fix belongs to the subject fork's fix/bytesview-toopenarray-slice-bounds commit, and the verification never writes into the subject tree",
     "NOT a claim about nim-libp2p's overall correctness, safety, or memory safety",
+    "NOT a formal PROVED verdict in the engine's verdict vocabulary — v0.6.3 structurally cannot serialize one (NOT_DISPROVED unreachable, the documented serialization gap); the committed v1.1.0 claim is law conformance WITHIN the pinned carriers (the absence of a counterexample over the pinned domain), locally pre-verified twice over the fixed checkout and to be re-observed by the PR-time campaign over this committed overlay",
     "NOT a fully-autonomous proposition discovery — the rule's justification (Nim official inclusive toOpenArray semantics + production call-site requirements) was established by external investigation and adopted by an explicit user-approved act"
   ]
 }

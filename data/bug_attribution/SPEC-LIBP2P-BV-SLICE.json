@@ -1,8 +1,8 @@
 {
   "schema": "bug-attribution-grounds-v1",
   "specId": "SPEC-LIBP2P-BV-SLICE",
-  "subjectCommit": "a130a7f32219909bdcda14b7f1e64d0804fc832c",
-  "moduleSha256": "b205c969ba04f4199d8fd4a121d4b6fccdc82c426e336add0e1e9fd0e961e5ee",
+  "subjectCommit": "d9e8769c3c989fc7dc78182b1358f60c85f14238",
+  "moduleSha256": "e5c73a4fc4b4f390a74a95078809639f4773510e029673c3fb7884d53f584c85",
   "requirementSourceStatus": "unrecorded",
   "requirementSourceRefs": [
     "Nim std lib system module — system.toOpenArray(x, first, last) INCLUSIVE semantics (lib/system.nim toOpenArray; both bounds inclusive, length = last - first + 1)",
@@ -10,25 +10,25 @@
   ],
   "anomaly": {
     "observationQuartet": {
-      "exactCommit": "a130a7f32219909bdcda14b7f1e64d0804fc832c",
+      "exactCommit": "d9e8769c3c989fc7dc78182b1358f60c85f14238",
       "exactInput": {
         "e": 4,
         "b": 1,
         "rpos": 0,
         "fixture": "BytesView.init(@[byte 1, 2, 3, 4, 5, 6])"
       },
-      "violationStatement": "the adopted inclusive view-relative slice-length law (len(bv.toOpenArray(b, e)) == e - b + 1) demands length 4 for (b=1, e=4) on the pinned fixture; the pinned subject observation is 3 — the template (libp2p/utils/bytesview.nim:18-19) computes v.data.toOpenArray(v.rpos + b, v.rpos + e - b), subtracting the start offset twice (actual length e - 2b + 1 = e - 1)",
+      "violationStatement": "the adopted inclusive view-relative slice-length law (len(bv.toOpenArray(b, e)) == e - b + 1) demands length 4 for (b=1, e=4) on the pinned fixture; the pinned FIXED subject observation is 4 — the law HOLDS at the pinned instance and this record exhibits NO violation (the fixed template (libp2p/utils/bytesview.nim:18-19) computes v.data.toOpenArray(v.rpos + b, v.rpos + e), length = e - b + 1; the v1.0.0 disproof over the pre-fix template — which computed v.rpos + e - b and observed 3 — is preserved as history in docs/spec/nim_libp2p_bytesview_slice_contract.md §8, subject a130a7f3, blob b205c969ba04f4199d8fd4a121d4b6fccdc82c426e336add0e1e9fd0e961e5ee)",
       "reproduction": {
         "observedOutput": {
           "status": "Success",
-          "echoedLength": 3,
-          "elements": "02 03 04",
+          "echoedLength": 4,
+          "elements": "02 03 04 05",
           "markers": "AXIOM_REPLAY_BEGIN / AXIOM_REPLAY_END"
         },
-        "replayCommand": "nim c --hints:off --warnings:off --skipUserCfg --path:<workspace>/nim-libp2p --nimcache:tmp/bv_grounds_replay/nimcache -o:tmp/bv_grounds_replay/replay_harness_bin tmp/bv_grounds_replay/replay_harness.nim && ./tmp/bv_grounds_replay/replay_harness_bin — harness body: import libp2p/utils/bytesview; var bv = BytesView.init(@[byte 1, 2, 3, 4, 5, 6]); echo \"AXIOM_REPLAY_BEGIN\"; echo $(bv.toOpenArray(1, 4).len); echo \"AXIOM_REPLAY_END\" (the stamped bv-slice-len-v1 template, <module>=libp2p/utils/bytesview, <lit>=4)",
+        "replayCommand": "nim c --hints:off --warnings:off --skipUserCfg --path:<workspace>/nim-libp2p --nimcache:tmp/bv_grounds_replay/nimcache -o:tmp/bv_grounds_replay/replay_harness_bin tmp/bv_grounds_replay/replay_harness.nim && ./tmp/bv_grounds_replay/replay_harness_bin — harness body: import libp2p/utils/bytesview; var bv = BytesView.init(@[byte 1, 2, 3, 4, 5, 6]); echo \"AXIOM_REPLAY_BEGIN\"; echo $(bv.toOpenArray(1, 4).len); echo \"AXIOM_REPLAY_END\" (the stamped bv-slice-len-v1 template, <module>=libp2p/utils/bytesview, <lit>=4; observed on the FIXED checkout fix/bytesview-toopenarray-slice-bounds @ d9e8769c3c989fc7dc78182b1358f60c85f14238)",
         "toolchain": "Nim Compiler Version 2.2.10 [Linux: amd64]",
         "hostPlatform": "linux-amd64",
-        "source": "Nim system toOpenArray inclusive semantics (external expected-behavior source): lib/system.nim toOpenArray + official example s.toOpenArray(1, 3) == [1, 2, 3] — 3 elements; the replay observation is the integer length echoed between the markers on the pinned subject bytes (sha256 b205c969ba04f4199d8fd4a121d4b6fccdc82c426e336add0e1e9fd0e961e5ee)"
+        "source": "Nim system toOpenArray inclusive semantics (external expected-behavior source): lib/system.nim toOpenArray + official example s.toOpenArray(1, 3) == [1, 2, 3] — 3 elements; the replay observation is the integer length echoed between the markers on the pinned FIXED subject bytes (sha256 e5c73a4fc4b4f390a74a95078809639f4773510e029673c3fb7884d53f584c85) — observed 4, equal to the law e - b + 1 = 4 (conformance; the v1.0.0 pre-fix observation was 3)"
       }
     }
   },
@@ -51,10 +51,10 @@
   "corroboration": {
     "machineRef": {
       "specId": "SPEC-LIBP2P-BV-SLICE",
-      "verdict": "vsDisproved",
-      "replayVerdict": "rvAgree"
+      "verdict": "INCONCLUSIVE",
+      "replayVerdict": "rvUnavailable"
     },
-    "note": "corroboration ONLY — M 무효화 시 보강 가치만 감소하며 C-carried 재현 요건을 결코 충족하지 않는다 (glossary §2.4a; C는 자립)"
+    "note": "corroboration ONLY — M 무효화 시 보강 가치만 감소하며 C-carried 재현 요건을 결코 충족하지 않는다 (glossary §2.4a; C는 자립). v1.1.0 machineRef 의미: 로컬 사전검증 2회 차가운 실행(재핀 오버레이 + 수정 체크아웃 d9e8769c) — CLI exit 0, 동일 canonical run digest, 캐리어 의무 3/3 통과·반례 소멸으로 ce-replay 레인이 기동되지 않았다(replay verdict 부재 → rvUnavailable로 기록). v0.6.3 엔진은 긍정 propositions 판정을 직렬화하지 않는 문서화된 직렬화 격차가 있어 run verdict 표기는 INCONCLUSIVE다 — exit 0의 의미는 'verification ran; no failures'지 PROVED 판정의 출력이 아니다"
   },
-  "recordDigest": "52a643b23ca7dece7bfb4ca2fbb654ae9b67fdd0fc678a754eedd1f07449c930"
+  "recordDigest": "52d1c7404fbfdac470cc54595cac9094a9802e99222f6df39676fc78e304bc97"
 }

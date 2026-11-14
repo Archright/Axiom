@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "created": "2026-11-13T17:18:16+09:00",
+  "created": "2026-11-14T08:31:42+09:00",
   "total_violations": 4265,
   "by_severity": {
     "warning": 3889,
@@ -64,143 +64,143 @@
       "severity": "warning"
     },
     {
-      "id": "86209c63c6d4d32498b5a6a838b07f926e6b12912f334616d95943f5ce4922f1",
+      "id": "d6261f15a1feed4bfe479531299ff30a06b63aad6bdf2c2c401cded1a1374a80",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:309 function runBatchVerification spans 289 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:305 function runBatchVerification spans 286 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "80a96172c053a47b1f69f784bb891c6f9d85752fd66566853a6785088f24ed22",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:974 function loadBase36OverlayDomain spans 63 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:969 function loadBase36OverlayDomain spans 63 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "a25793452eac0841ab288bbc3a1f581ef71162308c2c8cb6aea3b3b2c6d40441",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:1123 function loadBase32RemOverlayDomain spans 61 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:1118 function loadBase32RemOverlayDomain spans 61 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "ee1dd821873b72e36cc6b5eba8f9cdc3803fab0d2c3eef07f3504e16e7da0113",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:1291 function validateCoutOverlayNode spans 65 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:1286 function validateCoutOverlayNode spans 65 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "d45afc0564969851a7201888d3da982561d183b4d0bd03cbb642e62005ea8419",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:1595 function validateTomlD2AgentOverlayNode spans 98 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:1590 function validateTomlD2AgentOverlayNode spans 98 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "406c7ddf57a37198c08d0c7310aea5b253a44445c5e8b2725e31aebb91baeb00",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:2076 function validateNimLibp2pBytesviewSliceOverlayNode spans 88 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:2071 function validateNimLibp2pBytesviewSliceOverlayNode spans 88 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "b404fab962dbe843c4970374248593b1bfead561bd825879274e433fc5b747be",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:2553 function validateSidecarOverlayNode spans 71 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:2548 function validateSidecarOverlayNode spans 71 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "31303824c513a84ff3f5ec33f6ad8d6902054fe836b394ce87aa7c3cd1a17de0",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:2949 function substituteParamUse spans 66 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:2944 function substituteParamUse spans 66 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "f79f881fad2162fde1301f81b45bada0245566c72c682cc4fb0b39f74ce2ca78",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:3028 function synthesizeTomlD2AgentCandidate spans 122 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:3023 function synthesizeTomlD2AgentCandidate spans 122 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "bf506c4b719aecfa9ba38ae8df9dfc81a9ac66378e3695f5cc6d5a6896d09399",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:3211 function synthesizeNimLibp2pBytesviewSliceCandidate spans 121 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:3206 function synthesizeNimLibp2pBytesviewSliceCandidate spans 121 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "51722c9e3aa69f190b516315efafe540420314e6ef03770859784489e363c584",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:3398 function synthesizeNimSidecarCandidates spans 192 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:3393 function synthesizeNimSidecarCandidates spans 192 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "4c9bda5768ea5ce1f90d532efe0e74473757accbbb536f51c84212efae4f6458",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:3615 function synthesizeBase36RelationalCandidate spans 144 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:3610 function synthesizeBase36RelationalCandidate spans 144 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "d8e734565445b1764098926501a478d31629d0b877b497fae8dbabf3164078ff",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:3803 function synthesizeBase32RemRangeCandidate spans 168 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:3798 function synthesizeBase32RemRangeCandidate spans 168 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "4a57c68ac9429521e5d8768d939e167720fa70ce06bc4e8b8f88e5edde3610ce",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:3856 function findRemTerm spans 55 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:3851 function findRemTerm spans 55 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "d72ae8dd60e478125c61fce5494574b5166984b6481b8105ea24801f232b574e",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:4027 function synthesizeBase36CoutCandidate spans 119 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:4022 function synthesizeBase36CoutCandidate spans 119 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "8f74c2349eeda0c8c8d690397ec9e3276ca707206809bf76d9108b1c2adba7f5",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:4237 function publishExternalCandidate spans 52 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:4232 function publishExternalCandidate spans 52 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "cb0ae314c6abb2f8425305a6a9d672fd3328f742875c5ad85aa0a00bb587e53a",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:4798 function runVerificationWaves spans 79 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:4793 function runVerificationWaves spans 79 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "2cb4daf711971061bc1468ceb46f1551701f88d1a7ab80b752be381012eeb5e2",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:5293 function prepareProofRun spans 357 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:5288 function prepareProofRun spans 357 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "80d0b636d505f932268b410d78b42a5100cdae50fbb648d1d34c3ae4cc4120b8",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:5738 function appendDisplayAndPersist spans 106 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:5733 function appendDisplayAndPersist spans 106 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
-      "id": "bf770459c081a5a80692f2588a5252aa03dc215303214b731971679f41813f82",
+      "id": "95c37ad2227d8badc0443df5a0dd9577182a194110668f411149fbf2176f7267",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:5926 function runAxiomEngineCli spans 155 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:5921 function runAxiomEngineCli spans 154 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -2409,10 +2409,10 @@
       "severity": "warning"
     },
     {
-      "id": "0cdde5742543f645c528c1e250fab12f946d1041c63b8d55fe720bd51546f5a9",
+      "id": "c9af0760dc8a9f0839113b857d55b75253e26219ccf9a1c022efc85b78b33db6",
       "rule": "SOLID",
       "file": "src/gate/runners/debt_integrity_gate.nim",
-      "detail": "[soc-surface-area] src/gate/runners/debt_integrity_gate.nim:250 function run spans 78 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/gate/runners/debt_integrity_gate.nim:269 function run spans 94 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -3116,10 +3116,10 @@
       "severity": "warning"
     },
     {
-      "id": "e74afe17721d0a0460e81b7c356233d56d9dad59b95b1154b196126e5dd8a1c3",
+      "id": "d180c5fecb3423f3937e5ae83d061f3212598ded031ab792c76cc924427a7d00",
       "rule": "SOLID",
       "file": "src/verification/batch_uap/loop_driver.nim",
-      "detail": "[soc-surface-area] src/verification/batch_uap/loop_driver.nim:769 function runBatchUapOrchestration spans 616 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/verification/batch_uap/loop_driver.nim:769 function runBatchUapOrchestration spans 615 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -7501,21 +7501,21 @@
       "id": "ff0bb3faee03651bad0cff9450627e5f16b27cda05ae43d18d0fd740fd173811",
       "rule": "SAFETY-proc-purity",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[safety-proc-purity] newGateReporter (src/cli/axiom_engine.nim:282) is proc but has no transitive I/O calls. Convert to func.",
+      "detail": "[safety-proc-purity] newGateReporter (src/cli/axiom_engine.nim:278) is proc but has no transitive I/O calls. Convert to func.",
       "severity": "warning"
     },
     {
       "id": "49694305a376a499e1483b5224f1e4acdf44a0de7ac984301491903d9a2b28e0",
       "rule": "SAFETY-proc-purity",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[safety-proc-purity] report (src/cli/axiom_engine.nim:284) is proc but has no transitive I/O calls. Convert to func.",
+      "detail": "[safety-proc-purity] report (src/cli/axiom_engine.nim:280) is proc but has no transitive I/O calls. Convert to func.",
       "severity": "warning"
     },
     {
       "id": "415a2639d8098843ae13426ce19544355a4d01a1192be382b43bdccd8721a1ea",
       "rule": "SAFETY-proc-purity",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[safety-proc-purity] overlayDeclaresSubject (src/cli/axiom_engine.nim:1041) is proc but has no transitive I/O calls. Convert to func.",
+      "detail": "[safety-proc-purity] overlayDeclaresSubject (src/cli/axiom_engine.nim:1036) is proc but has no transitive I/O calls. Convert to func.",
       "severity": "warning"
     },
     {
