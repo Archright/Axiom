@@ -4,7 +4,7 @@
 
 import core/trusted/layer_declaration
 axiomLayer "domain"
-import std/[json, tables]
+import std/[algorithm, json, tables]
 import core/topology/lock
 import core/topology/plan
 {.push raises: [].}
@@ -41,32 +41,51 @@ func updateLockModel*(lock: TopologyLock; moves: seq[MoveOp];
 
 func renderLockJson*(lock: TopologyLock): string {.raises: [].} =
   ## Pure: render a TopologyLock model to JSON string.
+  ## Key order is canonical (sorted per table) so output is insertion-order independent.
+  var moduleIds: seq[string] = @[]
+  for mid in lock.modules.keys:
+    moduleIds.add(mid)
+  moduleIds.sort()
+
   var modulesObj = newJObject()
-  for mid, entry in lock.modules:
+  for mid in moduleIds:
+    let entry = lock.modules.getOrDefault(mid)
     var historyArr = newJArray()
     for h in entry.history:
       historyArr.add(%*{
         "path": h.path,
-        "changedAt": h.changedAt,
-        "changeType": h.changeType,
-        "approvedInLock": h.approvedInLock
+        "changed_at": h.changedAt,
+        "change_type": h.changeType,
+        "approved_in_lock": h.approvedInLock
       })
     modulesObj[mid] = %*{
-      "currentPath": entry.currentPath,
-      "initialPath": entry.initialPath,
+      "current_path": entry.currentPath,
+      "initial_path": entry.initialPath,
       "history": historyArr
     }
 
+  var shardIds: seq[string] = @[]
+  for sid in lock.shards.keys:
+    shardIds.add(sid)
+  shardIds.sort()
+
   var shardsObj = newJObject()
-  for sid, shard in lock.shards:
+  for sid in shardIds:
+    let shard = lock.shards.getOrDefault(sid)
     shardsObj[sid] = %*{
       "members": shard.members,
       "type": shard.moduleType,          # JSON key matches parser expectation
       "note": shard.note
     }
 
+  var transitionalIds: seq[string] = @[]
+  for tid in lock.transitionalModules.keys:
+    transitionalIds.add(tid)
+  transitionalIds.sort()
+
   var transitionalObj = newJObject()
-  for tid, tm in lock.transitionalModules:
+  for tid in transitionalIds:
+    let tm = lock.transitionalModules.getOrDefault(tid)
     transitionalObj[tid] = %*{
       "created_at": tm.createdAt,
       "resolved_at": tm.resolvedAt

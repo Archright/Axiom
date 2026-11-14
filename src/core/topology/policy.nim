@@ -80,12 +80,12 @@ proc parseTopologyPolicy*(path: string): Result[TopologyPolicy, string] =
   if j.hasKey("exceptions") and j{"exceptions"}.kind == JArray:
     for e in j{"exceptions"}:
       var suppressAudit: seq[string] = @[]
-      if e.hasKey("suppressAudit"):
-        for s in e{"suppressAudit"}:
+      if e.hasKey("suppress_audit"):
+        for s in e{"suppress_audit"}:
           suppressAudit.add(s.getStr)
       var suppressUntil = ""
-      if e.hasKey("suppressUntil"):
-        suppressUntil = e{"suppressUntil"}.getStr
+      if e.hasKey("suppress_until"):
+        suppressUntil = e{"suppress_until"}.getStr
       policy.exceptions.add(PolicyException(
         path: e{"path"}.getStr,
         reason: e{"reason"}.getStr,

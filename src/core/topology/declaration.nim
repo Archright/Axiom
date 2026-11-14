@@ -96,10 +96,10 @@ func parseDomains*(j: JsonNode): Table[string, Domain] {.raises: [].} =
     var d = Domain(
       description: if val.hasKey("description"): val{"description"}.getStr else: "",
       level: if val.hasKey("level"): val{"level"}.getInt else: 0,
-      targetLevel: if val.hasKey("targetLevel"): val{"targetLevel"}.getInt else: 0
+      targetLevel: if val.hasKey("target_level"): val{"target_level"}.getInt else: 0
     )
-    if val.hasKey("allowedImports"):
-      d.allowedImports = parseStringSeq(val{"allowedImports"})
+    if val.hasKey("allowed_imports"):
+      d.allowedImports = parseStringSeq(val{"allowed_imports"})
     if val.hasKey("subdomains"):
       d.subdomains = parseSubdomains(val{"subdomains"})
     result[name] = d
