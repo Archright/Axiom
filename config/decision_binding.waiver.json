@@ -17,102 +17,102 @@
     },
     {
       "file": "src/verification/solver/z3_pool.nim",
-      "reason": "Highest violation count (17) \u2014 core Z3 solver pool predates decision-binding policy",
+      "reason": "Highest violation count (17) — core Z3 solver pool predates decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/core/vault/vault_factory.nim",
-      "reason": "High violation count (13) \u2014 vault factory predates decision-binding policy",
+      "reason": "High violation count (13) — vault factory predates decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/core/io/io_utils.nim",
-      "reason": "High violation count (12) \u2014 IO utils predate decision-binding policy",
+      "reason": "High violation count (12) — IO utils predate decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/core/encoding/smt_to_lean/private/parser.nim",
-      "reason": "High violation count (12) \u2014 SMT to Lean parser predates decision-binding policy",
+      "reason": "High violation count (12) — SMT to Lean parser predates decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/core/schema/task_schema.nim",
-      "reason": "High violation count (11) \u2014 task schema predate decision-binding policy",
+      "reason": "High violation count (11) — task schema predate decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/core/interfaces/git_operations.nim",
-      "reason": "High violation count (11) \u2014 git operations predate decision-binding policy",
+      "reason": "High violation count (11) — git operations predate decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/gate/manifest_parser.nim",
-      "reason": "High violation count (10) \u2014 manifest parser predates decision-binding policy",
+      "reason": "High violation count (10) — manifest parser predates decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/core/types/results.nim",
-      "reason": "High violation count (9) \u2014 core types predate decision-binding policy",
+      "reason": "High violation count (9) — core types predate decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/core/gateway/gateway_json.nim",
-      "reason": "High violation count (9) \u2014 gateway JSON predates decision-binding policy",
+      "reason": "High violation count (9) — gateway JSON predates decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/core/session/session_parser_validators.nim",
-      "reason": "High violation count (8) \u2014 session parser predates decision-binding policy",
+      "reason": "High violation count (8) — session parser predates decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/core/proof/proof_universe_lock.nim",
-      "reason": "High violation count (8) \u2014 proof universe lock predates decision-binding policy",
+      "reason": "High violation count (8) — proof universe lock predates decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/core/json/json_utils.nim",
-      "reason": "High violation count (7) \u2014 JSON utils predate decision-binding policy",
+      "reason": "High violation count (7) — JSON utils predate decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/core/json/json_scan_parse.nim",
-      "reason": "High violation count (7) \u2014 JSON scan parse predates decision-binding policy",
+      "reason": "High violation count (7) — JSON scan parse predates decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/verification/solver/wp_simplifier.nim",
-      "reason": "High violation count (6) \u2014 WP simplifier predates decision-binding policy",
+      "reason": "High violation count (6) — WP simplifier predates decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/verification/proof_state_projection.nim",
-      "reason": "High violation count (6) \u2014 proof state projection predates decision-binding policy",
+      "reason": "High violation count (6) — proof state projection predates decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/verification/ast_extractor.nim",
-      "reason": "High violation count (6) \u2014 AST extractor predates decision-binding policy",
+      "reason": "High violation count (6) — AST extractor predates decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/sieve/sieve_rules.nim",
-      "reason": "High violation count (6) \u2014 sieve rules predate decision-binding policy",
+      "reason": "High violation count (6) — sieve rules predate decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/personas/legislator.nim",
-      "reason": "High violation count (6) \u2014 legislator persona predates decision-binding policy",
+      "reason": "High violation count (6) — legislator persona predates decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/engine/dag_executor.nim",
-      "reason": "High violation count (6) \u2014 DAG executor predates decision-binding policy",
+      "reason": "High violation count (6) — DAG executor predates decision-binding policy",
       "expires": "2026-12-31"
     },
     {
       "file": "src/core/verifier/legislator.nim",
-      "reason": "High violation count (6) \u2014 core verifier predates decision-binding policy",
+      "reason": "High violation count (6) — core verifier predates decision-binding policy",
       "expires": "2026-12-31"
     },
     {
