@@ -210,7 +210,7 @@ proc loadProjectClosure*(sourcePath: string): seq[string] {.raises: [], axiomEff
     if isAbsolute(sourcePath): normalizedPath(sourcePath)
     else: normalizedPath(cwd / sourcePath)
   # Deterministic repository root for an in-repo absolute path: nearest
-  # ancestor carrying the .axiom_root anchor (axiom.toml legacy fallback).
+  # ancestor carrying the .axiom_root anchor.
   # Deliberately NOT AXIOM_ROOT-driven (core/utils/repo_root env seam):
   # CAS identity must depend on the file's actual location, not the
   # environment. Empty when no anchor is found (fail-closed).
@@ -221,7 +221,7 @@ proc loadProjectClosure*(sourcePath: string): seq[string] {.raises: [], axiomEff
       for _ in 0..10:
         if cur.len == 0:
           break
-        if fileExists(cur / ".axiom_root") or fileExists(cur / "axiom.toml"):
+        if fileExists(cur / ".axiom_root"):
           repoRoot = cur
           break
         let parent = cur.parentDir()

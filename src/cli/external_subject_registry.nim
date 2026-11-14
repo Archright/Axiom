@@ -55,7 +55,7 @@ proc findRepoRootStrict*(startDir: string = getAppDir()):
   ## Strict runtime root resolution for the catalog seam (VS-2 §2.3
   ## root-resolution amendment 2026-11-08; productization contract §1b;
   ## bytesview contract §3.1): `AXIOM_ROOT` env first, else the anchor walk
-  ## up from `startDir` — the FIRST `.axiom_root`/`axiom.toml` terminates.
+  ## up from `startDir` — the FIRST `.axiom_root` terminates.
   ## Unlike `core/utils/repo_root.findRepoRoot` there is NO legacy
   ## one-level-up fallback: a tree-external anchor miss is an error
   ## (fail-closed), never `parentDir(startDir)` and never a CWD-relative
@@ -75,8 +75,7 @@ proc findRepoRootStrict*(startDir: string = getAppDir()):
     if current.len == 0:
       break
     try:
-      if fileExists(current / axiomRoot) or
-         fileExists(current / axiomToml):
+      if fileExists(current / axiomRoot):
         return ok(current)
     except CatchableError:
       discard  # axiom:best-effort(ioboundary catch)
@@ -85,7 +84,7 @@ proc findRepoRootStrict*(startDir: string = getAppDir()):
       break
     current = parent
   err("catalog root unresolved (fail-closed): AXIOM_ROOT is unset and no " &
-      ".axiom_root/axiom.toml anchor found from \"" & startDir &
+      ".axiom_root anchor found from \"" & startDir &
       "\" — a tree-external binary must set AXIOM_ROOT (productization " &
       "contract §1b, Q-013)")
 
@@ -96,7 +95,7 @@ proc resolveExternalSubjectSpecDir*(): Result[string, string] {.
   ## root-resolution contract (VS-2 §2.3 root-resolution amendment
   ## 2026-11-08; productization contract §1b; bytesview contract §3.1):
   ## `AXIOM_ROOT` env first, else the STRICT anchor walk from the binary
-  ## location (`findRepoRootStrict` — first `.axiom_root`/`axiom.toml`
+  ## location (`findRepoRootStrict` — first `.axiom_root`
   ## terminates). A tree-external anchor miss is a catalog read failure,
   ## fail-closed — the legacy one-level-up fallback and the CWD-relative
   ## `""` join (Q-013) are both unreachable. Source-tree behavior is

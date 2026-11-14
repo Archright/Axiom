@@ -38,7 +38,7 @@ const
 proc repoRoot(): string =
   var dir = getCurrentDir()
   for _ in 0 .. 8:
-    if fileExists(dir / ".axiom_root") or fileExists(dir / "axiom.toml"):
+    if fileExists(dir / ".axiom_root"):
       return dir
     dir = dir.parentDir()
   getCurrentDir()

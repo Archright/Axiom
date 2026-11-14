@@ -59,13 +59,10 @@ var
 
 func findProjectRoot*(): string =
   ## Walk upward from CWD looking for ``.axiom_root`` (SSOT anchor).
-  ## Falls back to ``axiom.toml`` for backward compatibility.
   ## See AGENTS.md § Deterministic Root Resolution.
   var dir = getCurrentDir()
   while true:
     if fileExists(dir / ".axiom_root"):
-      return dir
-    if fileExists(dir / "axiom.toml"):
       return dir
     let parent = dir.parentDir()
     if parent == dir:

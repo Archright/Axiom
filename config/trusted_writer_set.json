@@ -208,7 +208,7 @@
     "src/cli/external_subject_registry.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "479efe14d2bc86e7191ae838bb7a11a97d8eb347"
+      "sha": "fad801b61be6f58f89c40a9c4838572e5bb31a21"
     },
     "src/cli/frontier_selection.nim": {
       "mode": "100644",
@@ -273,7 +273,7 @@
     "src/cli/precompile_gates.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "79597a7892efcd2e280e076697f97ba84479f089"
+      "sha": "04ba8e701d7b2aebc8dce65921fcbaee95f3e95f"
     },
     "src/cli/proof_gate.nim": {
       "mode": "100644",
@@ -298,7 +298,7 @@
     "src/cli/report_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "1c28d6820a43c96faf73439308643f461cd7fffc"
+      "sha": "b98728a4a2b81b6d7863ad3a603990c9c365fedf"
     },
     "src/cli/report_format.nim": {
       "mode": "100644",
@@ -358,7 +358,7 @@
     "src/cli/upstream_report_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "f854ad6aac9298ae8d11c5cde09e91837d48b6d8"
+      "sha": "ad3e09cb5defc5db548ff24c21ac3bce5e3d3f4f"
     },
     "src/cli/vacuity_classifier.nim": {
       "mode": "100644",
@@ -963,7 +963,7 @@
     "src/core/gate/closure_manifest.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "b7e378a2278fe5340072a03410cbe0598721a39f"
+      "sha": "a0bb36ea3e8d5721f76c33b4756acf07d32cd2a1"
     },
     "src/core/gate/file_hash_cache.nim": {
       "mode": "100644",
@@ -2073,7 +2073,7 @@
     "src/core/trusted/axiom_pragmas_macros.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "0869afa94c125eb84050609d7ab3dc185bcc3909"
+      "sha": "e88892b18b881da467749d17a5a833806111458d"
     },
     "src/core/trusted/axiom_pragmas_procs.nim": {
       "mode": "100644",
@@ -2408,7 +2408,7 @@
     "src/core/trusted/trust_commit.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "ffb57e933bfc964ce120ab94249edb9499e4bd72"
+      "sha": "39a83d28376ae492991b57b575b1739b996adc55"
     },
     "src/core/trusted/type_manifest_registry.nim": {
       "mode": "100644",
@@ -2773,7 +2773,7 @@
     "src/core/utils/repo_root.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "b540599592ac0af169e591107d8a3d617a112e0a"
+      "sha": "d1137d4346f6d00b513c218a3149d308c54fa4f5"
     },
     "src/core/utils/shadow_digests.nim": {
       "mode": "100644",
@@ -4473,7 +4473,7 @@
     "tools/hermetic_build.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "b03fdf4a1679753c116d5d8e3ff42ac606d25569"
+      "sha": "1d44e8ed2071df706dd072141aabe9a001026635"
     },
     "tools/safe_move.nim": {
       "mode": "100644",

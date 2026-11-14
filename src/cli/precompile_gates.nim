@@ -37,7 +37,7 @@ proc findRepoRoot*(startDir: string = ""): string {.raises: [], axiomEffect: IOE
   ## miss so main() fails closed (len == 0 → quit(1)).
   let anchor = if startDir.len > 0: startDir else: getAppDir()
   let resolved = rr.findRepoRoot(anchor)
-  if fileExists(resolved / rr.axiomRoot) or fileExists(resolved / rr.axiomToml):
+  if fileExists(resolved / rr.axiomRoot):
     return resolved
   ""
 

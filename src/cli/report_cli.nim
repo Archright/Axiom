@@ -434,7 +434,7 @@ proc runReportCli*(args: seq[string]): Result[AxCommandCliResult, string] {.rais
     return err("report schemaVersion '" & existingVersion & "' != contract '" & axiomReportSchemaVersion & "' — report state was produced by an incompatible Axiom version")
 
   let repoRoot = findRepoRoot()
-  if not fileExists(repoRoot / ".axiom_root") and not fileExists(repoRoot / "axiom.toml"):
+  if not fileExists(repoRoot / ".axiom_root"):
     return err("ax report must be executed within an Axiom repository worktree. " &
                "Set AXIOM_ROOT env var or run from project root.")
 
