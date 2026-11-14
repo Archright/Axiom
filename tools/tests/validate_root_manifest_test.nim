@@ -6,6 +6,7 @@
 ## Usage: nim c -r tools/tests/validate_root_manifest_test.nim
 
 import std/[os, osproc, strutils, random]
+import ../ci/validate_root_manifest
 
 let
   projectRoot = getEnv("AXIOM_PROJECT_ROOT", getAppDir().parentDir())
@@ -514,6 +515,86 @@ proc main() =
       else:
         echo "  PASS: " & movedName
       removeFile(tmpDir / movedName)
+
+  # Test 24: Basis inventory — valid entries produce no violations
+  block basisInventoryValid:
+    echo "TEST 24: Basis inventory (valid LEGACY metadata) → 0 violations"
+    let entries = @[
+      RootEntry(name: "tool.nim", basis: sbToolchain),
+      RootEntry(name: "old.txt", basis: sbLegacy,
+                removalCondition: "consumer migration complete", reviewBy: "2099-01-01"),
+    ]
+    let v = validateBasisInventory(entries, "2026-11-14")
+    if v.len != 0:
+      echo "  FAIL: expected 0 violations, got " & $v.len & ": " & $v.join("; ")
+      inc failures
+    else:
+      echo "  PASS"
+
+  # Test 25: duplicate exact-allowed entry → FAIL
+  block basisInventoryDuplicate:
+    echo "TEST 25: duplicate exact-allowed entry → FAIL"
+    let entries = @[
+      RootEntry(name: "dup", basis: sbInternal),
+      RootEntry(name: "dup", basis: sbInternal),
+    ]
+    let v = validateBasisInventory(entries, "2026-11-14")
+    if v.len != 1 or "duplicate" notin v[0]:
+      echo "  FAIL: expected one duplicate violation, got: " & v.join("; ")
+      inc failures
+    else:
+      echo "  PASS"
+
+  # Test 26: LEGACY without removal metadata → FAIL
+  block basisInventoryLegacyMissing:
+    echo "TEST 26: LEGACY missing removalCondition/reviewBy → FAIL"
+    let entries = @[RootEntry(name: "legacy", basis: sbLegacy)]
+    let v = validateBasisInventory(entries, "2026-11-14")
+    var hasCondition = false
+    var hasReview = false
+    for msg in v:
+      if "removalCondition" in msg:
+        hasCondition = true
+      if "reviewBy" in msg:
+        hasReview = true
+    if not (hasCondition and hasReview):
+      echo "  FAIL: expected removalCondition and reviewBy violations, got: " & v.join("; ")
+      inc failures
+    else:
+      echo "  PASS"
+
+  # Test 27: unset basis (omitted field) → FAIL
+  block basisInventoryUnset:
+    echo "TEST 27: omitted basis (sbUnset) → FAIL"
+    let entries = @[RootEntry(name: "unset")]
+    let v = validateBasisInventory(entries, "2026-11-14")
+    if v.len != 1 or "basis missing" notin v[0]:
+      echo "  FAIL: expected basis-missing violation, got: " & v.join("; ")
+      inc failures
+    else:
+      echo "  PASS"
+
+  # Test 28: overdue LEGACY review → FAIL
+  block basisInventoryLegacyOverdue:
+    echo "TEST 28: LEGACY review overdue → FAIL"
+    let entries = @[RootEntry(name: "legacy", basis: sbLegacy,
+                              removalCondition: "done", reviewBy: "2020-01-01")]
+    let v = validateBasisInventory(entries, "2026-11-14")
+    if v.len != 1 or "review overdue" notin v[0]:
+      echo "  FAIL: expected overdue violation, got: " & v.join("; ")
+      inc failures
+    else:
+      echo "  PASS"
+
+  # Test 29: the real EXACT_ALLOWED inventory satisfies the Basis contract
+  block realInventoryClean:
+    echo "TEST 29: real EXACT_ALLOWED inventory → 0 violations"
+    let v = validateBasisInventory(ExactAllowedEntries, "2026-11-14")
+    if v.len != 0:
+      echo "  FAIL: real inventory has violations: " & v.join("; ")
+      inc failures
+    else:
+      echo "  PASS"
 
   echo ""
   if failures > 0:
