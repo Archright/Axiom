@@ -151,6 +151,16 @@ const PatternAllowedEnvs: seq[string] = @[
 # bin/ canonical surface names
 const CanonicalBinNames: seq[string] = @["ax", "run_gate", "axiom-gate"]
 
+# bin/ compatibility placeholders — tracked files whose only job is to make
+# `bin/` exist in a fresh checkout. The org admission-gate pins its callees at
+# immutable SHAs (Archright/.github admission-gate-v2.yml → certificate-mint.yml
+# @c021c338, which installs `$GITHUB_WORKSPACE/bin/ax` with no `-D` and no
+# `mkdir`), so `bin/` must exist for a consumer Axiom cannot edit. Removing the
+# placeholder before that pin moves breaks every merge-queue admission.
+# Exit condition: drop this list and bin/.gitkeep once the DEBT#473 epoch
+# promotion moves that pin past the `mkdir -p "$GITHUB_WORKSPACE/bin"` guard.
+const BinCompatibilityPlaceholders: seq[string] = @[".gitkeep"]
+
 # Forbidden source extensions in bin/
 const ForbiddenBinExtensions: seq[string] = @[".nim", ".nims", ".c", ".py", ".sh"]
 
@@ -297,6 +307,10 @@ proc checkBinContents(rootDir: string): seq[string] =
 
     # (a) Canonical surface names
     if name in CanonicalBinNames:
+      continue
+
+    # (a2) Compatibility placeholders (keep bin/ present for a pinned consumer)
+    if name in BinCompatibilityPlaceholders:
       continue
 
     # (e) Shebang scripts — forbidden

@@ -430,6 +430,44 @@ proc main() =
     else:
       echo "  PASS"
 
+  # Test 33: bin/.gitkeep alone → exit 0 (pinned-consumer compatibility placeholder)
+  block binCompatibilityPlaceholder:
+    echo "TEST 33: bin/.gitkeep present → exit 0"
+    let tmpDir = createTempDir()
+    defer: removeDir(tmpDir)
+    for d in ["src", "tests", "tools", "proofs", "data", "docs", "config"]:
+      createDir(tmpDir / d)
+    createDir(tmpDir / "bin")
+    writeFile(tmpDir / "bin" / ".gitkeep", "")
+    let r = runValidator(tmpDir)
+    if r.exitCode != 0:
+      echo "  FAIL: expected exit 0, got " & $r.exitCode
+      echo "  output: " & r.output
+      inc failures
+    else:
+      echo "  PASS"
+
+  # Test 34: any OTHER dotfile in bin/ → exit 1 (the exemption is one name, not a class)
+  block binOtherDotfileRejected:
+    echo "TEST 34: bin/.keep (different name) → exit 1"
+    let tmpDir = createTempDir()
+    defer: removeDir(tmpDir)
+    for d in ["src", "tests", "tools", "proofs", "data", "docs", "config"]:
+      createDir(tmpDir / d)
+    createDir(tmpDir / "bin")
+    writeFile(tmpDir / "bin" / ".keep", "")
+    let r = runValidator(tmpDir)
+    if r.exitCode != 1:
+      echo "  FAIL: expected exit 1, got " & $r.exitCode
+      echo "  output: " & r.output
+      inc failures
+    elif "unclassified materialization" notin r.output:
+      echo "  FAIL: expected 'unclassified materialization' in output"
+      echo "  output: " & r.output
+      inc failures
+    else:
+      echo "  PASS"
+
   # Test 20: ci/ + experiments/ + _lto_evidence/ (tracked content dirs) → exit 0
   block trackedContentDirs:
     echo "TEST 20: ci/experiments/_lto_evidence present → exit 0"

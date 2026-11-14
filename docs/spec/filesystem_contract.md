@@ -16,6 +16,8 @@ Revision 2026-11-06 (Gate 3 SAL 1.0): `THIRD-PARTY-NOTICES.md` registered as an 
 
 Revision 2026-11-14 (VS-R2 stub generation): the tracked `bin/` Nim stub is deleted — the mutation harness now generates its scanner compile-entry at `build/mutation/axiom_stub_scanner.nim` (gitignored), removing the §7.1 legacy exception and the `.gitignore` re-include. `bin/` contains no Nim sources.
 
+Revision 2026-11-15 (VS-R2a `bin/` compatibility placeholder): `bin/.gitkeep` is now the sole tracked entry under `bin/`. Basis: `Archright/.github`'s `admission-gate-v2.yml` pins its callees at immutable commit SHAs — `certificate-mint.yml@c021c338` runs `install -m 755 "$RUNNER_TEMP/base-artifacts/bin/ax" "$GITHUB_WORKSPACE/bin/ax"` with neither `-D` nor a preceding `mkdir`, so a fresh checkout without `bin/` fails merge-queue admission for every PR. The pin cannot be moved out of that state today: `pin-promotion-gate` (DEBT#473) admits only a pin whose `admission-check.yml` blob equals the promoted epoch blob, and the guard that would make the placeholder unnecessary is not yet on `main` — so the repository must satisfy the pinned consumer rather than the reverse. Exit condition: remove `bin/.gitkeep`, its `.gitignore` re-include, and `BinCompatibilityPlaceholders` in `tools/ci/validate_root_manifest.nim` in the same change that moves that pin past `mkdir -p "$GITHUB_WORKSPACE/bin"`. `bin/` still contains no Nim sources.
+
 Revision 2026-11-04 (VS-1 root-write-closure PR-1): `ci/`·`experiments/`·`_lto_evidence/` registered as EXACT_ALLOWED tracked content directories (§2.4); the `bin/` Nim stub registered as the §7.1 legacy exception; §6 Enforcement Scope added; `logs/` tracked-status git failure now fail-closed in the validator.
 
 ---
@@ -245,12 +247,13 @@ When an OPTIONAL entry is present, its contents are inspected against these rule
 
 **Allowed categories (in priority order):**
 
-1. **Canonical surface names**: `ax`, `run_gate`, `axiom-gate`
-2. **Hash-suffix binaries**: `<base>_<HEX≥8>` — e.g., `all_gateway_runner_30E4111AC69224A015CED3B9CADA98FD66CC383B`
-3. **ELF executables**: Any dynamically linked ELF binary without a forbidden extension
-4. **Other ELF binaries**: Any ELF executable that does not match a forbidden name pattern
+1. **Compatibility placeholder**: `.gitkeep` only (see the 2026-11-15 revision). Its sole function is to make `bin/` exist in a fresh checkout so a SHA-pinned external consumer can install into it; it carries no build or execution semantics. The exemption is one file name — other dotfiles remain unclassified materialization.
+2. **Canonical surface names**: `ax`, `run_gate`, `axiom-gate`
+3. **Hash-suffix binaries**: `<base>_<HEX≥8>` — e.g., `all_gateway_runner_30E4111AC69224A015CED3B9CADA98FD66CC383B`
+4. **ELF executables**: Any dynamically linked ELF binary without a forbidden extension
+5. **Other ELF binaries**: Any ELF executable that does not match a forbidden name pattern
 
-**Unclassified materialization**: any file that is NOT one of the above (not canonical surface, not hash-suffix, not ELF) → FAIL. The `bin/` directory is single-depth: subdirectories → FAIL.
+**Unclassified materialization**: any file that is NOT one of the above (not the placeholder, not canonical surface, not hash-suffix, not ELF) → FAIL. The `bin/` directory is single-depth: subdirectories → FAIL.
 
 **Prohibited:**
 

@@ -27,6 +27,7 @@ tools/ci/.purity_pipeline_state.json
 build/
 dist/
 bin/*
+!bin/.gitkeep
 bin_gateway_test/*
 /tools/baseline_snapshot
 
