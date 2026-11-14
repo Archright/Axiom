@@ -14,8 +14,7 @@
       ],
       "severity": "high",
       "source": "ci_health_checker",
-      "status": "closed",
-      "resolution": "FIXED"
+      "status": "closed"
     },
     {
       "id": "DEBT-CI#002",
