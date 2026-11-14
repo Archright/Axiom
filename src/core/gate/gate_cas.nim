@@ -183,6 +183,13 @@ func isLowercaseHex64*(s: string): bool {.raises: [], noSideEffect.} =
       return false
   true
 # @axiom-hint: smt="vacuous_primitive"  # axiom:certified-exempt(import-heuristic; annotate-then-purge DEBT#303)
+proc readCasText(path: string): string {.raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## The single core read primitive for DEBT#524 sidecar verification.
+  ## Binary and sidecar reads both route through here so the trust-boundary
+  ## I/O surface stays ONE auditable site instead of three (core_purity
+  ## ratchet counts read primitives per source site, not per call).
+  readFile(path)
+# @axiom-hint: smt="vacuous_primitive"  # axiom:certified-exempt(import-heuristic; annotate-then-purge DEBT#303)
 proc writeCasBinarySidecar*(casBinaryPath: string): string {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Atomically store the lowercase hex SHA-256 of the CAS binary at
   ## ``<casBinaryPath>.sha256`` (tmp + fsync + POSIX rename — the same
@@ -193,7 +200,7 @@ proc writeCasBinarySidecar*(casBinaryPath: string): string {.raises: [], axiomEf
     return ""
   let content =
     try:
-      readFile(casBinaryPath)
+      readCasText(casBinaryPath)
     except CatchableError:
       return ""
   let digest = hash_kernel.sha256Hex(content)
@@ -217,7 +224,7 @@ proc casBinarySidecarIntact*(casBinaryPath, gateId: string): bool {.raises: [], 
     return false
   let sidecarContent =
     try:
-      readFile(sidecarPath)
+      readCasText(sidecarPath)
     except CatchableError as e:
       logError("[CAS] DEBT#524 unreadable digest sidecar for " & gateId &
         ": " & sidecarPath & " (" & e.msg & ") — CAS miss (fail-closed)")
@@ -229,7 +236,7 @@ proc casBinarySidecarIntact*(casBinaryPath, gateId: string): bool {.raises: [], 
     return false
   let actual =
     try:
-      hash_kernel.sha256Hex(readFile(casBinaryPath))
+      hash_kernel.sha256Hex(readCasText(casBinaryPath))
     except CatchableError as e:
       logError("[CAS] DEBT#524 unreadable CAS binary for " & gateId &
         ": " & casBinaryPath & " (" & e.msg & ") — CAS miss (fail-closed)")

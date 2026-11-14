@@ -903,12 +903,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:268c37025aa4fa34b980856f97dacef4497411f327cd9f5983e13f5ac3c6a99e",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:6b0c7d472aaea8f23919488aeef435dd59d51dc4852cecdac1bfeb6d2aa6f7e7",
       "count": 1,
       "file": "src/core/gate/gate_cas.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:b7df54527d528bedb1f22a333c34d4bde045f50738bf685e3f5111bdd65af603"
+      "rawContentHash": "sha256:ebb7ad0af6f752e50df2856584b2791943685ac6ff3947fb1c27c469e2a606f2"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
