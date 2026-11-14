@@ -183,6 +183,14 @@ jobs:
           fi
           cp "$RES/changed_server.txt" "$RES/changed.txt"
 
+          # ── 2b) 삭제된 경로 목록 (L1 파싱 면제의 유일 근거) ───────
+          # 삭제는 후보 트리에 YAML이 존재하지 않는 정당한 변경이다.
+          # status의 authority는 서버가 아니라 **후보의 Git 트리**다:
+          # merge-base(B, H) 대비 삭제된 경로만 기록한다. 이 목록에 없는
+          # 경로가 후보 트리에 없으면 기존처럼 fail-closed다.
+          git -C candidate diff --name-only --diff-filter=D "$MB" "$HEAD" 2>/dev/null \
+            | sort -u > "$RES/removed_local.txt"
+
           # ── 3) execution surface 교집합 ───────────────────────────
           # surface = merge_admission.json의 trustSurface(베이스 트리 — Driver의
           #   기준) ∪ .github/workflows/** ∪ .github/actions/** ∪
@@ -325,6 +333,12 @@ jobs:
           fi
           for f in "${WFS[@]}"; do
             if [ ! -f "candidate/$f" ]; then
+              # 삭제는 파싱 대상이 아니다 — removed_local.txt가 유일 근거.
+              # 목록에 없는데 파일이 없다면 잘못된 목록이므로 계속 fail-closed.
+              if grep -Fxq "$f" "$RES/removed_local.txt" 2>/dev/null; then
+                echo "L1: deleted $f (파싱 대상 없음 — 삭제는 YAML_PARSE가 아니다)"
+                continue
+              fi
               echo "REJECTED:YAML_PARSE" > "$RES/L1.result"
               echo "::error::GPA L1 — 변경된 워크플로 파일이 후보 트리에 없다: $f"
               exit 0
