@@ -317,7 +317,7 @@ This mirrors the AOT Precompile Pipeline (§3 ENVIRONMENT) used for gate binarie
 6. **Run the linter** to verify:
 
    ```bash
-   nim c -d:decisionBindingLint bin/axiom.nim
+   nim c -d:decisionBindingLint src/cli/main.nim
    ```
 
 7. **Commit** both the code change and the ADR together.

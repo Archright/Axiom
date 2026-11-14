@@ -151,11 +151,6 @@ const PatternAllowedEnvs: seq[string] = @[
 # bin/ canonical surface names
 const CanonicalBinNames: seq[string] = @["ax", "run_gate", "axiom-gate"]
 
-# bin/ legacy exception: tracked Nim source stubs (NOT ELF), grandfathered
-# under I2 (docs/spec/filesystem_contract.md §7.1) — currently only
-# bin/axiom.nim (compile-time gate stub detection).
-const LegacyBinExceptions: seq[string] = @["axiom.nim"]
-
 # Forbidden source extensions in bin/
 const ForbiddenBinExtensions: seq[string] = @[".nim", ".nims", ".c", ".py", ".sh"]
 
@@ -298,10 +293,6 @@ proc checkBinContents(rootDir: string): seq[string] =
     # (d) Single directory depth only — no subdirectories in bin/
     if dirExists(fullPath):
       result.add "FAIL: bin/" & entry.path & " forbidden (directory in bin/ violates single-depth rule)"
-      continue
-
-    # Legacy exception: tracked Nim source stub, grandfathered under I2 (§7.1)
-    if name in LegacyBinExceptions:
       continue
 
     # (a) Canonical surface names

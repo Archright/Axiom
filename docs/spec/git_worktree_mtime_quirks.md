@@ -93,8 +93,9 @@ after `git checkout`"(`docs/spec/hooks_architecture.md:76`, 재기술 `:137`).
   `docs/spec/hooks_architecture.md:76`가 gate_hook 가드에 대해 이미 기록한
   근원과 같다.
 - 게이트 바이너리 7종(`bin/debt_engine` 등)은 origin/main 기준 git 미추적 빌드
-  산출물이다(2026-11-02 `git ls-tree origin/main -- bin/` = `bin/axiom.nim`만
-  추적). 미추적 상태의 신규 worktree는 stale이 아니라 missing 분기로 FAIL한다.
+  산출물이다(2026-11-02 `git ls-tree origin/main -- bin/` = 당시 유일 추적 항목은
+  Nim 스텁 1건이었고, 그 스텁은 VS-R2에서 삭제되어 현재 `bin/` 추적 항목은 0건).
+  미추적 상태의 신규 worktree는 stale이 아니라 missing 분기로 FAIL한다.
 
 ## Mitigation (fix 전까지)
 
