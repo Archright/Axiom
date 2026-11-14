@@ -176,12 +176,6 @@ suite "buildProofTask — flag conversion":
     check res.isOk()
     check res.get().vaultDir == ""
 
-  test "config budget gas passed through":
-    let flags = AxProveFlags()
-    let res = buildProofTask(flags, configBudgetGas = 200)
-    check res.isOk()
-    check res.get().budgetGas == 200
-
   test "emitJson flag forwarded":
     let flags = AxProveFlags()
     let res = buildProofTask(flags, emitJson = true)
@@ -201,54 +195,25 @@ suite "buildProofTask — flag conversion":
 
   test "all flags combined":
     let flags = AxProveFlags(limit: 100)
-    let res = buildProofTask(flags, configVaultDir = "/v", configBudgetGas = 500, emitJson = true)
+    let res = buildProofTask(flags, configVaultDir = "/v", emitJson = true)
     check res.isOk()
     let task = res.get()
     check task.limit.kind == vbCapped
     check task.limit.capValue == 100.Positive
     check task.vaultDir == "/v"
-    check task.budgetGas == 500
     check task.emitJson == true
     check task.maxRounds == 6
 
-suite "initAxiomEngine — adaptive budget":
-  test "budgetGas > 0 uses explicit gas limit":
-    let engine = initAxiomEngine(startMono = 1_000_000, budgetGas = 200)
-    check engine.budget.gasTotal == 200
+suite "initAxiomEngine — plan-independent engine (canonical_execution_semantics §8.3 #4)":
+  test "clock is the only constructor input":
+    let engine = initAxiomEngine(1_000_000)
+    check engine.startMono == 1_000_000
 
-  test "expectedNodeCount > 0 scales by MaxGasCostPerNode":
-    let nodeCount = 10
-    let engine = initAxiomEngine(startMono = 1_000_000, expectedNodeCount = nodeCount)
-    check engine.budget.gasTotal == nodeCount * MaxGasCostPerNode
-
-  test "both zero falls back to maxTotalSolverInvocations":
-    let engine = initAxiomEngine(startMono = 1_000_000)
-    check engine.budget.gasTotal == maxTotalSolverInvocations
-
-  test "budgetGas takes precedence over expectedNodeCount":
-    let engine = initAxiomEngine(startMono = 1_000_000, budgetGas = 50, expectedNodeCount = 100)
-    check engine.budget.gasTotal == 50
-
-  test "startMono is recorded in budget":
-    let mono = int64(42_000_000)
-    let engine = initAxiomEngine(startMono = mono)
-    check engine.budget.startMono == mono
-
-  test "gasRemaining equals gasTotal at init":
-    let engine = initAxiomEngine(startMono = 0, budgetGas = 30)
-    check engine.budget.gasRemaining == engine.budget.gasTotal
-
-  test "invocations starts at 0":
-    let engine = initAxiomEngine(startMono = 0, budgetGas = 10)
-    check engine.budget.invocations == 0
-
-  test "single node count scales correctly":
-    let engine = initAxiomEngine(startMono = 0, expectedNodeCount = 1)
-    check engine.budget.gasTotal == 1 * MaxGasCostPerNode
-
-  test "large node count scales correctly":
-    let engine = initAxiomEngine(startMono = 0, expectedNodeCount = 1000)
-    check engine.budget.gasTotal == 1000 * MaxGasCostPerNode
+  test "node-count and gas-limit inputs are removed (negative control)":
+    # §8.3 #4: a run-global pool scaled by the target node count must not
+    # exist. Reintroducing either parameter breaks this file's compilation.
+    check not compiles(initAxiomEngine(startMono = 1_000_000, expectedNodeCount = 5))
+    check not compiles(initAxiomEngine(startMono = 1_000_000, budgetGas = 200))
 
 suite "GateReporter — event accumulation":
   test "newGateReporter starts empty":
@@ -406,11 +371,10 @@ suite "persistVsrLedger — IO append":
 suite "ProofTask — field access":
   test "fields accessible after construction":
     let flags = AxProveFlags(limit: 10)
-    let res = buildProofTask(flags, configVaultDir = "/v", configBudgetGas = 50, emitJson = true)
+    let res = buildProofTask(flags, configVaultDir = "/v", emitJson = true)
     let task = res.get()
     # Verify all fields are accessible and correct
     check task.limit.kind == vbCapped
     check task.vaultDir == "/v"
     check task.emitJson == true
     check task.maxRounds == 6
-    check task.budgetGas == 50

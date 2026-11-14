@@ -148,9 +148,9 @@ suite "grounds file SPEC-B36-COUT — committed record validates":
       committedSpec("nim_libp2p_bytesview_slice.json"))
     check res.isOk()
     check res.get().specId == "SPEC-LIBP2P-BV-SLICE"
-    check res.get().subjectCommit == "a130a7f32219909bdcda14b7f1e64d0804fc832c"
+    check res.get().subjectCommit == "d9e8769c3c989fc7dc78182b1358f60c85f14238"
     check res.get().moduleSha256 ==
-      "b205c969ba04f4199d8fd4a121d4b6fccdc82c426e336add0e1e9fd0e961e5ee"
+      "e5c73a4fc4b4f390a74a95078809639f4773510e029673c3fb7884d53f584c85"
     check res.get().requirementSourceStatus == "unrecorded"
 
   test "BYO runtime overlay: repository re-bound to a bare slug still validates":

@@ -773,7 +773,6 @@ proc runBatchUapOrchestration*(
  topologyAnalysis: TopologyAnalysis = TopologyAnalysis();
   maxRounds: int = 6;
   progressSink: BatchUapProgressSink = nil;
-  gasLimit: int = 0;
   stallCount: int = 0;
   preComputedIrResults: seq[IrPipelineResult] = @[];
   sharedIrMemoCache: Table[string, IrPipelineResult] = initTable[string, IrPipelineResult]();
@@ -907,7 +906,7 @@ proc runBatchUapOrchestration*(
   ## above, the IR batch summary, ERROR logs, and report.irPipelineFailures
   ## (wired by the engine from BatchUapReport.irPipelineFailures).
   var collectedRefactorTasks: seq[RefactorTask]
-  var budget = if gasLimit > 0: initProofBudget(gasLimit = gasLimit) else: initProofBudget()
+  var budget = initProofBudget()
   var uapResults = initTable[string, UniversalPipelineResult]()
   let blockThreshold = computeRelaxedThreshold(stallCount)
 

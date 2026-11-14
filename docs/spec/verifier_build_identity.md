@@ -188,6 +188,35 @@ identity (the journal admission pin drops such claims).
 
 ---
 
+## 6a. Binary identity coherence probe (`--check-provenance`)
+
+Every `ci-compile` binary (`ax`, `gate_hook`, `precompile_gates`, `install_ax_cas`) can be
+run with `--check-provenance`. The probe is fail-closed (exit 1) and asserts TWO axes:
+
+1. **Tree axis** — the binary's embedded `BuildSourceHash` equals an uncached recomputation
+   over the live `src/**/*.nim` tree (excluding `/generated/`).
+2. **Identity axis** — the binary's embedded `VerifierBuildId` equals the `VerifierBuildId`
+   line of `src/generated/build_env.nim`, when that file exists.
+
+Axis 2 exists because the two digests cover different input sets (§2): the tree axis cannot
+observe a change to `config.nims`, `config/effects.nims`, `src/gate/config.nims`, `Makefile`,
+`axiom.nimble`, `axiom.lock` or `proofs/lean-toolchain`. Without axis 2, a binary compiled
+before such a change keeps passing while judging under a stale identity — the split-brain the
+`axiom-operational-slice` run-manifest assert catches only late, after a full prove.
+
+**Absence semantics (documented fail-open, runtime-logged).** `src/generated/build_env.nim`
+is gitignored, so a git-materialized tree (B-layer semantic probe, S5 restore gates,
+release-ship verify/assemble) cannot contain it. Absent file, or a file without a parseable
+`VerifierBuildId` line, is "no identity observation" — the probe logs one line to stderr and
+axis 1 still carries the fail-closed verdict. The seed value `"unmeasured"` therefore never
+matches a built identity. The stdout OK line stays byte-identical: the run-manifest assert
+parses it.
+
+Source: `src/core/utils/build_provenance.nim` (`extractBuildEnvField`, the pure parser) +
+`src/infrastructure/provenance_probe.nim` (`requireVerifierIdentity`, the I/O boundary).
+
+---
+
 ## 7. What the identity does NOT claim
 
 - **Not a repo commit.** `VerifierBuildId` is deliberately NOT `BuildEnvGitHash`: a docs-only

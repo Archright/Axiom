@@ -90,6 +90,7 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/verification/test_g6_prove_runtime_vault.nim \
                   tests/verification/test_g6_verify_journal_not_reference.nim \
                   tests/verification/test_g6_runtime_reference_divergence.nim \
+                  tests/unit/test_build_provenance_field.nim \
                   tests/unit/test_counterexample_replay.nim \
                   tests/unit/test_bug_verdict_projection.nim \
                   tests/unit/test_canonical_projection_paths.nim \
@@ -483,13 +484,18 @@ check-toolchain-pin:
 # disjoint from that set; ANY error (git, JSON, python) exits 1 = run the
 # gate — fail-safe direction is always to do the work. check-debt itself and
 # its GATES_FAST/local-ci uses remain UNCONDITIONAL.
-# [skip] effect_violations 해소: pre-push 스냅샷은 현재 Makefile을 복사해 실행하므로
-# (.githooks/pre-push "Ensure snapshot has the current Makefile"), 이 선행조건이
-# 스냅샷 CWD의 bin/에 평가자를 스테이징한다 — 훅의 symlink 목록은 FROZEN이므로
-# 스냅샷 폐쇄는 여기서 닫힌다. check-debt → bin/debt_engine --validate Part D가 사용.
-# bin/nimtry도 동일 폐쇄: debt_engine nimtry_violations 평가자가 bin/nimtry src/를
-# 실행하며, 스냅샷 bin/에 없으면 evaluator error → fail-closed Validation FAILED.
-push-admissibility: bin/effect_contract_projection bin/nimtry ## pre-push push-target OID static admissibility (snapshot CWD)
+# [skip] effect_violations / nimtry_violations 스테이징 폐쇄 (VS-PUSH-1):
+# pre-push 스냅샷은 현재 Makefile을 복사해 실행하므로(.githooks/pre-push
+# "Ensure snapshot has the current Makefile"), RUN 경로의 sub-make 타깃
+# `push-admissibility-debt-prereqs`가 스냅샷 CWD의 bin/에 두 평가자
+# (bin/effect_contract_projection, bin/nimtry)를 조건부 스테이징한 뒤에만
+# `&& bin/debt_engine --validate`를 실행한다 — 훅의 symlink 목록은 FROZEN이므로
+# 스냅샷 폐쇄는 여기서 닫히며, SKIP 경로에서는 두 평가자의 불필요한 스냅숏
+# 재빌드(콜드 ~6.80s, CC 139)가 발생하지 않는다.
+push-admissibility-debt-prereqs: bin/effect_contract_projection bin/nimtry ## check-debt RUN 경로 전용 평가자 스테이징 (SKIP 시 미빌드)
+	@echo "push-admissibility-debt-prereqs: debt evaluators staged (snapshot closure)"
+
+push-admissibility: ## pre-push push-target OID static admissibility (snapshot CWD)
 	@echo "=== push-admissibility: snapshot OID gates ==="
 	@if printf '%s\n' \
 	  'import json, subprocess, sys' \
@@ -525,7 +531,7 @@ push-admissibility: bin/effect_contract_projection bin/nimtry ## pre-push push-t
 	  '    die("exception: " + repr(exc))' \
 	  | python3 -; then :; \
 	else \
-		bin/debt_engine --validate; \
+		$(MAKE) --no-print-directory push-admissibility-debt-prereqs && bin/debt_engine --validate; \
 	fi
 	@bin/check_nim_theater --allowlist tools/ci/nim_theater_allowlist.json src/ tests/ tools/
 	@bin/doc_path_validator
