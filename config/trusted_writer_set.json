@@ -228,7 +228,7 @@
     "src/cli/install_ax_cas.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "fa7fcc06885c66158259a79ff9d953368663070d"
+      "sha": "3b0941e450ac0d84cc05fe021d5013ef75e93e25"
     },
     "src/cli/io_cli.nim": {
       "mode": "100644",
@@ -273,7 +273,7 @@
     "src/cli/precompile_gates.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "67955828a8f9b7c337394aa89195d83860e2d89b"
+      "sha": "79597a7892efcd2e280e076697f97ba84479f089"
     },
     "src/cli/proof_gate.nim": {
       "mode": "100644",
@@ -973,7 +973,7 @@
     "src/core/gate/gate_cas.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "d1b603188e5dcc35aff82eae83a5e950ceca69df"
+      "sha": "8b2df12233853f6f5e1329a8ffcf6c74169297c0"
     },
     "src/core/gate/gate_cas_gc.nim": {
       "mode": "100644",
@@ -2023,7 +2023,7 @@
     "src/core/trusted/architecture_invariants.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "4654fdd9192ac4c2fabfa5a60190153dda0252d1"
+      "sha": "b57fe9cedd471176bfc5782453a9df45cb60baf9"
     },
     "src/core/trusted/asset_collector.nim": {
       "mode": "100644",
