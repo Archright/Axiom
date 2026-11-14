@@ -5357,6 +5357,111 @@
       "lastVerifiedAt": "2026-11-14T11:01:26Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the finding is a routing/ordering property of tools/hermetic_build.nim (early-pass write vs check dispatch), not a src/ code site the axiomDebt marker scan can anchor, and tools/hermetic_build.nim is intentionally untouched by this registration (the fix is a separate policy decision, see resolution); trace: reproduction transcript in description + source=theater_audit + resolution field of this entry; reopen: any change that routes --check-source-hash before generateBuildEnv() or removes the early write must re-run the two-step reproduction to confirm the FAIL branch is reachable, or close this entry via bin/debt_engine --close"
+    },
+    {
+      "id": "DEBT#533",
+      "category": "Theater/Fail-Open",
+      "impact": "high",
+      "severity": "high",
+      "title": "verifyInvariantHash bootstraps the invariant anchor from the very file it is meant to judge, so deleting data/expected_invariant_hash.txt converts the tamper guard into a self-signed PASS",
+      "description": "Machine-observed 2026-11-14 on main (code reading + local execution). tools/hermetic_build.nim verifyInvariantHash: when data/expected_invariant_hash.txt is absent the guard WRITES the current SHA-256 of src/core/trusted/architecture_invariants.nim to that path and returns true ('[bootstrap] cold-start: created ...'). The anchor is therefore regenerable by the same commit that modifies the invariants file. Combined with the admission lane's overlay rule (only src/, tests/golden/ and matrix.tests are taken from the candidate; every other path comes from the base tree) a two-commit sequence is enough: commit 1 deletes the anchor and edits the invariants file, commit 2 (or any later build) re-creates the anchor from the edited file. The guard then compares the file against an anchor derived from itself — a self-signed PASS. Observed: the anchor has not changed once since the public baseline c021c33, which is what keeps the current tree honest; the protection is the file's history, not the guard.",
+      "symbol": "verifyInvariantHash (tools/hermetic_build.nim)",
+      "contentHash": "sha256:d8e3a2ac28de560a9eeff1557c9155861263586a93e3e54b4c497a0b3f22f7a2",
+      "lineRange": "tools/hermetic_build.nim:1080-1096",
+      "files": [
+        "tools/hermetic_build.nim",
+        "data/expected_invariant_hash.txt"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9 (fail-open paths are registered, never quietly patched). Fix direction: make a missing anchor a hard FAIL in CI/landing venues and keep the cold-start bootstrap behind an explicit one-shot flag; the anchor's own update must then be a separate, reviewed commit.",
+      "lastVerifiedAt": "2026-11-14T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is tooling (tools/hermetic_build.nim), outside the src/-only {.axiomDebt.} marker scan; trace: this entry's lineRange/contentHash plus the captured bootstrap branch."
+    },
+    {
+      "id": "DEBT#534",
+      "category": "Theater/Unenforced Claim",
+      "impact": "high",
+      "severity": "medium",
+      "title": "push-admissibility prints all 15 declared gates as PASS while executing 14 — check-merge-admission-cert-mirror is never run on the push path",
+      "description": "Machine-observed 2026-11-14. Makefile push-admissibility ends with 'PASS: $(PUSH_ADMISSIBILITY_GATES) green (snapshot)'. PUSH_ADMISSIBILITY_GATES lists 15 targets, but the recipe body never invokes check-merge-admission-cert-mirror — its only execution point is its own target definition. Measured: a full `make push-admissibility` run (exit 0) contains the string 'check-merge-admission-cert-mirror' exactly once, on the final summary line, and nowhere in the executed recipe trace. The summary therefore certifies a gate set the run did not evaluate, and docs/agents/rules_workflow.md repeats the same claim.",
+      "symbol": "push-admissibility recipe (Makefile)",
+      "contentHash": "sha256:f9b1fe062bab084387211a1b579cff6a8b6a7d9f74b713bdeae8a6e8f12892fc",
+      "lineRange": "Makefile:48-554",
+      "files": [
+        "Makefile",
+        "docs/agents/rules_workflow.md"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9. Fix direction: derive the summary line from the set of recipes actually invoked (single source), or wire the missing target in; a declared-but-unrun gate must never appear in a PASS string.",
+      "lastVerifiedAt": "2026-11-14T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — Makefile is outside the src/-only marker scan; trace: this entry's lineRange/contentHash plus the measured run log."
+    },
+    {
+      "id": "DEBT#535",
+      "category": "CI Enforcement / Work-Unit Execution",
+      "impact": "high",
+      "severity": "medium",
+      "title": "check-push-admissibility-integrity verifies only gate-universe membership and is itself absent from PUSH_ADMISSIBILITY_GATES, so declared-vs-executed drift cannot be detected",
+      "description": "Machine-observed 2026-11-14. The target exists to guard the declaration (PUSH_ADMISSIBILITY_GATES) but its body only asserts that every declared gate is a member of GATES_FAST ∪ GATES_STATIC ∪ GATES_FULL (+4 push-only names). It never compares the declared list against the recipes the push-admissibility body actually invokes, and it is not itself listed in PUSH_ADMISSIBILITY_GATES — so nothing in the push path can detect DEBT#534. The invariant the repository needs is DeclaredGates = ExecutedGates for every enforced gate.",
+      "symbol": "check-push-admissibility-integrity (Makefile)",
+      "contentHash": "sha256:f98064437d1a7a986c27f2faba70859efebc745cf8cb98719719e23e5be0077a",
+      "lineRange": "Makefile:625-629",
+      "files": [
+        "Makefile"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9. Fix direction: make the integrity check derive the executed set from the recipe (or from a machine-readable manifest) and assert set equality, then wire the check into the push path it audits.",
+      "lastVerifiedAt": "2026-11-14T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — Makefile is outside the src/-only marker scan; trace: this entry's lineRange/contentHash."
+    },
+    {
+      "id": "DEBT#536",
+      "category": "CI Enforcement / Work-Unit Execution",
+      "impact": "high",
+      "severity": "high",
+      "title": "Every build hard-FAILs from 2026-12-01 00:00:01 KST when the 249 grandfather waivers (all expires=2026-12-31) cross the 30-day escalation threshold, while config.nims labels the check 'warn only'",
+      "description": "Machine-observed 2026-11-14. config/decision_binding.waiver.json carries 249 grandfather entries, all with expires = 2026-12-31. tools/decision_binding_checker.nim computes daysRemaining = (expiry - now).inDays and exits 1 when daysRemaining < escalationThreshold (30); config.nims:607-615 execs it with --escalation-threshold 30 under the comment 'audit mode - warn only'. Measured today: exit 0, 'WARN: 50 function(s) missing {.axiomDecision.} pragma — escalation threshold 30 days not yet reached'. Because inDays truncates, the FAIL boundary is 2026-12-01T00:00:01+09:00 (2026-11-30T15:00:01Z) — not 2026-12-31. From that instant every local and CI nim invocation that runs the hermetic pre-build exits non-zero unless AXIOM_FAST_BUILD=1, which no workflow sets. The comment and the behaviour disagree, so the schedule is invisible to anyone reading config.nims.",
+      "symbol": "decision-binding escalation block (tools/decision_binding_checker.nim) driven from config.nims",
+      "contentHash": "sha256:b770d372137e3d9180b91411cc4dce58ac58aa18992b65302641e9f79653aeb6",
+      "lineRange": "tools/decision_binding_checker.nim:466-487; config/decision_binding.waiver.json (249 grandfather entries, expires=2026-12-31)",
+      "files": [
+        "tools/decision_binding_checker.nim",
+        "config/decision_binding.waiver.json",
+        "config.nims"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED — requires an owner decision (renew with a justification, remove after a real fix, or amend the policy) before 2026-12-01T00:00:01+09:00. Not a code change: it is a risk-acceptance decision with a hard deadline.",
+      "lastVerifiedAt": "2026-11-14T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the decision surface is the waiver JSON plus tooling, outside the src/-only marker scan; trace: this entry's lineRange plus the measured exit-0/WARN output and the boundary probe."
+    },
+    {
+      "id": "DEBT#537",
+      "category": "Trust / Evidence",
+      "impact": "medium",
+      "severity": "medium",
+      "title": "7 of 8 readiness evidence records expired on 2026-11-12T09:08:36Z and check-readiness-start is not wired into any enforced gate, so a NO-GO readiness state merges silently",
+      "description": "Machine-observed 2026-11-14. data/readiness/evidence/R1,R2,R4,R5,R6,R7,R8.json all carry collection.freshUntil = 2026-11-12T09:08:36Z (already past); only R3 (2026-11-18T17:50:48Z) is fresh. The gate that consumes them, `make check-readiness-start`, is declared in .PHONY and defined, but appears in no gate list (GATES_FAST / GATES_STATIC / GATES_FULL / PUSH_ADMISSIBILITY_GATES) and in no workflow step — so the productization START gate cannot block a merge. The observable consequence is that the repository can be in NO-GO readiness while every required check is green, and nothing reports the contradiction.",
+      "symbol": "data/readiness/evidence/*.json (collection.freshUntil) + check-readiness-start (Makefile)",
+      "contentHash": "sha256:5f57c5d98b6836ef361ef9a37100340fa8745c629f2ffa57222521fabae728b1",
+      "lineRange": "data/readiness/evidence/R1.json (collection.freshUntil); Makefile check-readiness-start",
+      "files": [
+        "data/readiness/evidence/R1.json",
+        "Makefile"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED — two separate decisions: (a) refresh the evidence after the structural changes settle; (b) decide whether readiness freshness is an admission requirement, and if so wire it into an enforced gate rather than leaving the claim unenforced.",
+      "lastVerifiedAt": "2026-11-14T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is a data artifact plus a Makefile target, outside the src/-only marker scan; trace: this entry's contentHash over R1.json and the Makefile wiring audit."
     }
   ]
 }
