@@ -14,7 +14,8 @@
       ],
       "severity": "high",
       "source": "ci_health_checker",
-      "status": "closed"
+      "status": "closed",
+      "resolution": "FIXED"
     },
     {
       "id": "DEBT-CI#002",
@@ -5487,6 +5488,20 @@
       "lastVerifiedAt": "2026-11-14T00:00:00Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the sites are a FROZEN policy JSON and a tools/ Nim guard, both outside the src/-only marker scan; trace: this entry's contentHash over config/repository_surface.json (sha256 758caf91...) plus the measured surface_guard verdict pair (M Makefile PASS vs A src/gate FROZEN FAIL)."
+    },
+    {
+      "id": "DEBT#999",
+      "category": "NEGATIVE CONTROL",
+      "title": "unbound open debt (negative control)",
+      "impact": "low",
+      "severity": "low",
+      "description": "negative control entry — do not merge",
+      "files": [
+        "src/core/utils/repo_root.nim"
+      ],
+      "source": "negative_control",
+      "status": "open",
+      "resolution": "UNRESOLVED"
     }
   ]
 }
