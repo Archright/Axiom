@@ -204,7 +204,7 @@ jobs:
     #   strip(@ref) == bare  ⇔  path == bare  ∨  path startsWith(bare + '@')
     # GitHub 표현식의 ==/startsWith는 대소문자를 무시하므로 이 술어는 conservative
     # selector(admission superset)다 — 최종 게시 판정은 아래 in-job guard(대소문자
-    # 구분, API run.path)가 그대로 유지한다. fail-closed: 빈/미인식 path → skip.
+    # 구분, 페이로드 run.path)가 그대로 유지한다. fail-closed: 빈/미인식 path → skip.
     # skip-report는 비성공 결론에서 path와 무관하게 계속 발화한다(E4/E5 UNKNOWN-seed
     # 의미 보존) — job-level 조건 변경은 이 job 하나뿐이다.
     if: ${{ github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.path == '.github/workflows/admission-gate-v2.yml' || startsWith(github.event.workflow_run.path, '.github/workflows/admission-gate-v2.yml@')) }}
@@ -219,16 +219,22 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_PATH: ${{ github.event.workflow_run.path }}
+          RUN_FORK: ${{ github.event.workflow_run.head_repository.fork }}
         run: |
           set -euo pipefail
           proceed=false
           proceed_path=false
-          RUN_JSON="$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID")"
-          RPATH="$(jq -r '.path // empty' <<<"$RUN_JSON")"
-          if [ "$RPATH" != ".github/workflows/admission-gate-v2.yml" ]; then
-            echo "[publish-skip] run path '$RPATH' != .github/workflows/admission-gate-v2.yml (orchestrator identity)"
-          elif [ "$(jq -r '.head_repository.fork // false' <<<"$RUN_JSON")" != "false" ]; then
+          # path·fork 데이터 원천 = 서버 생성 workflow_run 이벤트 페이로드 — job-if(위)가
+          # 이미 신뢰하는 동일 필드다(2026-11-14 — REST GET /actions/runs/{RUN_ID} 재조회
+          # 제거, API 호출 2→1; 아티팩트 열거만 API에 남는다). 판정은 셸 비교를 그대로
+          # 쓴다(대소문자 구분 — GitHub 표현식 ==는 대소문자를 무시하므로 표현식 비교로
+          # 전환하지 않는다). 페이로드 필드 부재·빈 path = fail-closed skip(종전 동일:
+          # 빈 문자열은 아래 정확 일치 비교에서 거짓). fork 판정의 빈 값 폴백(→false)
+          # 는 종전 jq `// false`와 동일 의미다.
+          if [ "$RUN_PATH" != ".github/workflows/admission-gate-v2.yml" ]; then
+            echo "[publish-skip] run path '$RUN_PATH' != .github/workflows/admission-gate-v2.yml (orchestrator identity)"
+          elif [ "${RUN_FORK:-false}" != "false" ]; then
             echo "[publish-skip] fork-triggered run — default-branch cache write withheld (residuals R4)"
           else
             # path 게이트 — 아티팩트와 무관. mode=none 사이클(ci-bootstrap 없음)도
