@@ -9,7 +9,7 @@ import core/parsers/safe_parsers
 import core/results
 import std/[json, os, osproc, options, strutils, times]
 from core/gate/closure_manifest import genDependProfile, ManifestDirRel
-from core/gate/gate_cas import computeCasKey, resolveCasBinaryPathWithHash, computeTransitiveSourceHash
+from core/gate/gate_cas import computeCasKey, resolveCasBinaryPathWithHash, computeTransitiveSourceHash, writeCasBinarySidecar
 from core/gate/gate_memo import computeBuildEnvHash
 from core/gate/gate_resolver import resolveGateSourcePath
 import core/utils/repo_root as rr
@@ -337,7 +337,16 @@ proc runCompileJobsParallel(jobs: seq[CompileJob]; repoRoot, buildEnvHash: strin
         if exitCode == 0 and fileExists(casTmp):
           try:
             safeMoveFile(casTmp, casBinary)
-            result[jobIdx] = CompileResult(index: jobIdx, gateId: gateId, compiled: true, casPath: casBinary)
+            # DEBT#524: digest sidecar after the binary rename — same
+            # integrity contract as gate_cas.compileGateToCas*. A store
+            # without the sidecar is an incomplete entry (permanent CAS
+            # MISS under resolve verification), so report it as failed.
+            if writeCasBinarySidecar(casBinary).len == 0:
+              logError("precompile_gates", "Digest sidecar write failed for " & gateId &
+                ": entry incomplete (fail-closed, DEBT#524)")
+              result[jobIdx] = CompileResult(index: jobIdx, gateId: gateId, failed: true)
+            else:
+              result[jobIdx] = CompileResult(index: jobIdx, gateId: gateId, compiled: true, casPath: casBinary)
           except CatchableError as e:
             logError("precompile_gates", "Atomic move failed for " & gateId & ": " & e.msg)
             result[jobIdx] = CompileResult(index: jobIdx, gateId: gateId, failed: true)

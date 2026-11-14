@@ -26324,6 +26324,21 @@
     {
       "hasAxiomHint": true,
       "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/core/gate/gate_cas.nim",
+      "name": "casBinarySidecarIntact",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": true,
+      "ignorable": false,
       "leanType": "String",
       "module": "src/core/gate/gate_cas.nim",
       "name": "casContentByHash",
@@ -26476,6 +26491,35 @@
       "typeCategory": "string"
     },
     {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/core/gate/gate_cas.nim",
+      "name": "isLowercaseHex64",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": true,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/core/gate/gate_cas.nim",
+      "name": "readCasText",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
       "hasAxiomHint": true,
       "ignorable": false,
       "leanType": "String",
@@ -26601,6 +26645,20 @@
       "returnType": "bool",
       "smtSort": "Bool",
       "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": true,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/core/gate/gate_cas.nim",
+      "name": "writeCasBinarySidecar",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
     },
     {
       "hasAxiomHint": false,
