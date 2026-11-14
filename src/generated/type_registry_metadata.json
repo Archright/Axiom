@@ -123487,6 +123487,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "Z3IdentityCacheEntry",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "loadZ3IdentityCache",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Z3IdentityCacheEntry",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "AxiomPrintObservation",
       "module": "src/verification/kernel_reexecution.nim",
       "name": "parsePrintAxiomsObservations",
@@ -123497,6 +123511,22 @@
       "returnType": "AxiomPrintObservation",
       "smtSort": "Int",
       "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "readZ3BinaryStable",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
     },
     {
       "hasAxiomHint": false,
@@ -123542,6 +123572,22 @@
     },
     {
       "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "saveZ3IdentityCache",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
       "ignorable": false,
       "leanType": "Bool",
       "module": "src/verification/kernel_reexecution.nim",
@@ -123554,6 +123600,61 @@
       "returnType": "bool",
       "smtSort": "Bool",
       "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "z3BinaryChecksumAcceptedWithStats",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "z3BinaryDigestWithStats",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "z3IdentityCacheFileTrusted",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "z3IdentityNowNs",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int64",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
     },
     {
       "hasAxiomHint": false,

@@ -20,6 +20,7 @@ import std/json
 import std/os
 import std/osproc
 import std/strutils
+import std/times
 import core/axiom_pragmas
 import core/crypto/hash_kernel
 import core/results
@@ -28,8 +29,14 @@ import core/trusted/env_types
 import core/trusted/solver_invocation
 import core/types/z3_solver_config
 import core/utils/repo_root
+import core/trusted/stdlib_shield
 import infrastructure/process_utils
+import infrastructure/source_identity_cache
 import verification/solver/z3_pool
+import verification/verification_subject
+
+when defined(posix):
+  import std/posix
 
 axiomIoBoundary()
 
@@ -222,12 +229,183 @@ proc loadCertJsonForReexecution*(certPath: string): Result[JsonNode, string] {.
 
 # ─── Z3 binary checksum pinning (INV-10) ─────────────────────────────────────
 
-proc z3BinaryChecksumAccepted*(z3Bin: string; projectRoot: string = ""): bool {.
-  raises: [CatchableError], axiomEffect: IOEffect,
-  tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+const
+  z3BinaryIdentitySchema* = "axiom-z3-binary-identity/1"
+    ## Stat-identity cache schema tag — a foreign/stale schema is discarded.
+  z3BinaryIdentityCacheRelPath* = ".axiom/cache/z3_binary_identity.json"
+    ## Z3-binary digest acceleration cache (project-root relative).
+
+type
+  Z3BinaryIdentityStats* = object
+    ## Acceleration observability seam (SourceIdentityStats twin): reused =
+    ## stat-identity cache HIT, rehashed = full read+hash, racy = identity
+    ## matched but the git racy-git rule forced a rehash.
+    reused*, rehashed*, racy*: int
+
+  Z3IdentityCacheEntry = object
+    path: string
+    ident: StatIdentity
+    digest: string
+    writtenAtNs: int64
+
+proc z3IdentityNowNs(): int64 {.raises: [].} =
+  let t = getTime()
+  t.toUnix * 1_000_000_000'i64 + t.nanosecond.int64
+
+when defined(posix):
+  proc z3IdentityCacheFileTrusted(path: string): bool {.raises: [].} =
+    ## source_identity_cache.cacheFileTrusted twin: only a regular file owned
+    ## by the effective user and not group/other-writable is read; anything
+    ## else is treated as absent (recompute).
+    var st: Stat
+    if lstat(path.cstring, st) != 0:
+      return false
+    if (int64(st.st_mode) and int64(S_IFMT)) != int64(S_IFREG):
+      return false
+    if st.st_uid != geteuid():
+      return false
+    if (int64(st.st_mode) and (int64(S_IWGRP) or int64(S_IWOTH))) != 0:
+      return false
+    true
+
+proc loadZ3IdentityCache(path: string): Z3IdentityCacheEntry {.raises: [].} =
+  ## Fail-closed loader: unreadable/invalid/corrupt/untrusted cache or a
+  ## foreign schema → default entry (miss → recompute). Numbers are stored as
+  ## strings so 64-bit fields survive every JSON number precision boundary.
+  when defined(posix):
+    if not fileExists(path) or not z3IdentityCacheFileTrusted(path):
+      return
+    try:
+      let node = parseFile(path)
+      if node{"schema"}.getStr("") != z3BinaryIdentitySchema:
+        return
+      result.writtenAtNs = parseBiggestInt(node{"writtenAtNs"}.getStr("0"))
+      result.path = node{"path"}.getStr("")
+      result.digest = node{"digest"}.getStr("")
+      result.ident = StatIdentity(
+        dev: parseBiggestInt(node{"dev"}.getStr("0")),
+        ino: parseBiggestInt(node{"ino"}.getStr("0")),
+        size: parseBiggestInt(node{"size"}.getStr("0")),
+        mtimeNs: parseBiggestInt(node{"mtimeNs"}.getStr("0")),
+        ctimeNs: parseBiggestInt(node{"ctimeNs"}.getStr("0")),
+        mode: parseBiggestInt(node{"mode"}.getStr("0")),
+        kind: node{"kind"}.getStr(""))
+    except CatchableError:
+      result = Z3IdentityCacheEntry()
+
+proc saveZ3IdentityCache(path: string; entry: Z3IdentityCacheEntry) {.raises: [].} =
+  ## Best-effort atomic write (PID-unique tmp + chmod 0600 + safeMoveFile).
+  ## The tmp file lands in the destination directory, so the move is an
+  ## atomic same-filesystem rename(2) — the atomicWriteFile precedent.
+  ## Failure is ignored — the cache is acceleration ONLY.
+  let tmpPath = path & ".tmp." & $getCurrentProcessId()
+  try:
+    let dir = parentDir(path)
+    if not dirExists(dir):
+      createDir(dir)
+    let body = %*{
+      "schema": z3BinaryIdentitySchema,
+      "writtenAtNs": $entry.writtenAtNs,
+      "path": entry.path,
+      "dev": $entry.ident.dev,
+      "ino": $entry.ident.ino,
+      "size": $entry.ident.size,
+      "mtimeNs": $entry.ident.mtimeNs,
+      "ctimeNs": $entry.ident.ctimeNs,
+      "mode": $entry.ident.mode,
+      "kind": entry.ident.kind,
+      "digest": entry.digest}
+    writeFile(tmpPath, $body)
+    when defined(posix):
+      discard chmod(tmpPath.cstring, 0o600)
+    safeMoveFile(tmpPath, path)
+  except CatchableError: # axiom:best-effort(z3 identity cache write is speed-only; the digest is always recomputable from the live binary)
+    discard tryRemoveFile(tmpPath)
+
+proc readZ3BinaryStable(z3Bin: string; first: StatIdentity):
+    tuple[digest: string, ident: StatIdentity] {.
+    raises: [CatchableError], axiomEffect: IOEffect,
+    tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## Read, then re-stat (source_identity_cache.readAndDigestStable twin): a
+  ## mismatch means the binary changed during the read — retry once, then
+  ## fail closed (never return a digest of an unstable file).
+  var ident = first
+  for _ in 0 .. 1:
+    let content = readFile(z3Bin)
+    let after = statIdentity(z3Bin)
+    if sameIdentity(ident, after):
+      return (sha256Hex(content), after)
+    ident = after
+  raise newException(OSError, "z3 binary changed while hashing: " & z3Bin)
+
+proc z3BinaryDigestWithStats*(z3Bin: string; projectRoot: string;
+                              stats: var Z3BinaryIdentityStats): string {.
+    raises: [CatchableError], axiomEffect: IOEffect,
+    tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## sha256 of the Z3 binary bytes — the INV-10 verdict input, with a
+  ## stat-identity acceleration cache (the source_identity_cache pattern).
+  ## The OS kernel already knows whether the bytes changed
+  ## (dev/ino/size/mtime_ns/ctime_ns/mode), so a cached digest is reused ONLY
+  ## when the entry's path and full stat identity match AND the entry is not
+  ## racily clean (git racy-git rule, second granularity — the
+  ## source_identity_cache.isRacy predicate). Every anomaly — unreadable/
+  ## invalid/corrupt cache, untrusted cache file, non-64-hex cached digest,
+  ## path change, or a non-posix platform without a trustworthy stat identity
+  ## — recomputes from the live bytes; an unreadable binary returns ""
+  ## (fail-closed). The cache is acceleration ONLY: never evidence, never a
+  ## verdict input beyond supplying the digest the live bytes would produce;
+  ## same-UID processes are INSIDE the trust boundary (DEBT#524 — local
+  ## single-writer boundary, no forgery defense claimed; the policy
+  ## comparison below stays fail-closed regardless of the digest source).
+  when not defined(posix):
+    inc stats.rehashed
+    try:
+      return sha256Hex(readFile(z3Bin))
+    except CatchableError:
+      return ""
+  else:
+    let cachePath = projectRoot / z3BinaryIdentityCacheRelPath
+    let cached = loadZ3IdentityCache(cachePath)
+    var first: StatIdentity
+    var statOk = true
+    try:
+      first = statIdentity(z3Bin)
+    except CatchableError:
+      statOk = false
+    if not statOk:
+      # unstatable binary: the plain read below fails -> "" (fail-closed)
+      inc stats.rehashed
+      try:
+        return sha256Hex(readFile(z3Bin))
+      except CatchableError:
+        return ""
+    if cached.path == z3Bin and sameIdentity(cached.ident, first) and
+        isHexOfLen(cached.digest, 64):
+      if not isRacy(cached.ident, cached.writtenAtNs):
+        inc stats.reused
+        return cached.digest
+      inc stats.racy
+    try:
+      let stable = readZ3BinaryStable(z3Bin, first)
+      inc stats.rehashed
+      saveZ3IdentityCache(cachePath, Z3IdentityCacheEntry(
+        path: z3Bin, ident: stable.ident, digest: stable.digest,
+        writtenAtNs: z3IdentityNowNs()))
+      stable.digest
+    except CatchableError:
+      ""
+
+proc z3BinaryChecksumAcceptedWithStats*(z3Bin: string; projectRoot: string;
+                                        stats: var Z3BinaryIdentityStats): bool {.
+    raises: [CatchableError], axiomEffect: IOEffect,
+    tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Runtime pinning: the ACTUAL z3 binary's sha256 must match an entry in
   ## data/policy/z3_binary_checksums.json. Missing policy file, unreadable
-  ## binary, or no matching checksum → false (fail-closed, never pass).
+  ## binary, or no matching checksum → false (fail-closed, never pass). The
+  ## digest comes from z3BinaryDigestWithStats (stat-identity-cached), but the
+  ## pin comparison itself is UNCHANGED — the verdict is bit-identical to the
+  ## full-rehash path and any digest mismatch still returns false; a cache
+  ## anomaly recomputes, it can never manufacture a pass.
   let root = if projectRoot.len > 0: projectRoot else: resolveRepoRoot()
   let policyText =
     try: readFile(root / z3BinaryChecksumsPolicyPath)
@@ -244,15 +422,19 @@ proc z3BinaryChecksumAccepted*(z3Bin: string; projectRoot: string = ""): bool {.
   let versions = policy.getOrDefault("versions")
   if versions.isNil or versions.kind != JObject:
     return false
-  let actual =
-    try: sha256Hex(readFile(z3Bin))
-    except CatchableError: return false
+  let actual = z3BinaryDigestWithStats(z3Bin, root, stats)
   if actual.len == 0:
     return false
   for _, recorded in versions.pairs:
     if recorded.kind == JString and recorded.getStr("") == actual:
       return true
   false
+
+proc z3BinaryChecksumAccepted*(z3Bin: string; projectRoot: string = ""): bool {.
+    raises: [CatchableError], axiomEffect: IOEffect,
+    tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  var stats: Z3BinaryIdentityStats
+  z3BinaryChecksumAcceptedWithStats(z3Bin, projectRoot, stats)
 
 # ─── Lean kernel re-execution ────────────────────────────────────────────────
 

@@ -100,7 +100,8 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/test_binop_unsigned.nim \
                   tests/unit/test_language_ban_gate.nim \
                   tests/unit/test_release_version_gate.nim \
-                  tests/unit/test_rust_guard_attempt.nim
+                  tests/unit/test_rust_guard_attempt.nim \
+                  tests/unit/z3_binary_identity_cache_test.nim
 
 
 .PHONY: test perf-check bench-cost-probe verify-all meta-gate registry-check env-check doc-path-validator check-determinism check-mutation-harness check-decision-binding check-topology-drift check-decision-graph-drift check-git-purity check-manifest-consistency check-scope-consistency check-proof-unit-consistency check-proof-unit-reconcile check-epoch-transaction check-merge-admission-cert-mirror sloc-verify check-quality-gate local-verify-static local-verify-static-full check-toolchain-pin check-build-state-coherence check-binary-liveness local-verify-contract-exact check-mcp check-cert-integrity check-cert-integrity-fast check-readiness-start check-workflow-shell-syntax promote-assets promote-assets-apply test-fast test-fast-one perf-baseline clean-cache clean-test-cache clean-release-cache build verify-contract verify-contract-unit verify-contract-release-e2e ci-compile ci-bootstrap-cheap test-gateway-identity-gate gate-binaries validate-root-layout
