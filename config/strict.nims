@@ -322,6 +322,13 @@ when defined(axiomStrict):
           echo "❌ [axiomStrict] AST Invariant Checker found violations:"
           echo output
           quit(1)
+    elif getCommand() == "c":
+      # Real compile, checker binary missing: fail closed instead of a silent skip.
+      echo "❌ [axiomStrict] AST Invariant Checker binary missing: " & checkerBin
+      echo "   Build it first: nimble buildAstInvariantChecker"
+      quit(1)
+    # `nim check` + missing binary: gorge/exec are silent no-ops under `nim check`
+    # (docs/spec/nim_effect_system_quirks.md §17.6) — defer, do not quit.
 
 # ── Import Encapsulation Gate ────────────────────────────────────────────────
 # MOVED to runtime: src/gate/compile_time_checks.nim (Phase D)
