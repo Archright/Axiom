@@ -5609,6 +5609,29 @@
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is tools/debt_engine.nim, outside the src/-only {.axiomDebt.} marker scan; trace: this entry's contentHash over tools/debt_engine.nim at c1c15cc (sha256 0e064952...) plus the reproduced output pair (before: 3 skips + 'Sync complete.' + exit 0; after: 'Sync INCOMPLETE' + exit 1) and tests/unit/test_debt_engine_sync_budget.nim which pins both branches.",
       "resolvedAt": "2026-11-15",
       "resolvedBy": "Kimi Code CLI agent (user-authorized)"
+    },
+    {
+      "id": "DEBT#544",
+      "category": "Theater/Fail-Open Verdict",
+      "impact": "medium",
+      "severity": "medium",
+      "title": "hashDriftIds recomputed §6 contentHash with a whole-file composite convention no writer uses, flagging byte-identical entries as drift (98/98 at c1c15cc, 0 satisfied) and silently skipping all 40 path:start-end refs",
+      "description": "Machine-observed 2026-11-15 at c1c15cc and re-verified at c2c969a: the drift check in src/cli/debt_cli.nim hashDriftIds recomputed each entry's expected contentHash as a composite digest over whole files (sha256 of the \\x01-join of per-file 'sha256:<filehash>\\x02<path>' strings) — a convention no registry writer writes. Per docs/spec/debt_registry_schema.md §6, entries store sha256 of the exact artifact content or of the line-range content. Result: every in-scope entry was flagged (98/98 at c1c15cc, 0 satisfied) including byte-verified false positives (DEBT#407, DEBT#486, DEBT#499, DEBT#542 — each entry's stored hash was byte-identical to the §6-recomputed digest), and the 40/138 entries whose files refs carry path:start-end suffixes were silently skipped because fileExists never resolved them. The check reported drift/no-drift in neither direction honestly: in-scope entries all read drift (noise), out-of-scope entries read nothing (silence). Fixed in PR #102 (workstream/vs-drift-rebase, commit 0a97e6e, merge c2c969a): hashDriftIds now recomputes the §6 convention like-for-like via contentHashCandidates — exact artifact digest of every referenced path plus exact line/line-range content digest (raw and trimmed) — with suffix-aware reference parsing (path:a-b, path:N, comma sub-ranges, annotations, multi-segment refs). The code fix landed but the registry registration was lost in the rebase (ID DEBT#543 was taken by PR #100's budget entry), which is what this entry closes: the defect's canonical trace now lives in the SSOT as a FIXED record with the re-verified evidence below.",
+      "symbol": "src/cli/debt_cli.nim hashDriftIds + contentHashCandidates",
+      "contentHash": "sha256:489b08de3afacec9adacf0b0200f4f831f7116247a2dac7c372c62c5b2631d39",
+      "lineRange": "src/cli/debt_cli.nim hashDriftIds (pre-fix, at c1c15cc) + contentHashCandidates (post-fix, PR #102 commit 0a97e6e, merge c2c969a) — anchor conventions per docs/spec/debt_registry_schema.md §6",
+      "files": [
+        "src/cli/debt_cli.nim",
+        "tests/unit/test_debt_hash_drift.nim"
+      ],
+      "source": "theater_audit",
+      "status": "closed",
+      "resolution": "FIXED (PR #102, merge c2c969a) — hashDriftIds now compares contentHash like-for-like per docs/spec/debt_registry_schema.md §6: whole-artifact anchor matches when the exact artifact digest equals the stored hash; line/line-range anchors match when the raw or trimmed line content digest equals it; suffix-aware ref parsing (path:a-b, path:N, comma sub-ranges, annotations, multi-segment) resolves the 40 previously-skipped entries. Re-verified at this tree: tests/unit/test_debt_hash_drift.nim 10/10 (5 no-drift anchors, 2 tamper-drift, 1 composite-convention-still-drifts, 2 out-of-scope), bin/debt_engine --validate all checks passed, bin/debt_integrity_gate PASS (28 open debts have code markers), bin/reanchor_pin OK no-drift. This entry restores the registry trace lost in the #102 rebase (AGENTS.md §0.9: discovered theater is never quietly patched).",
+      "lastVerifiedAt": "2026-11-15T12:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is src/cli/debt_cli.nim, a CLI module outside the src/core marker scan scope; struct binding here records the witness for the schema §6 convention fix: this entry's contentHash over src/cli/debt_cli.nim at c2c969a (sha256 489b08de...), PR #102 merge c2c969a, and tests/unit/test_debt_hash_drift.nim which pins both directions (honest no-drift on §6 anchors, drift on tamper and on the old composite convention).",
+      "resolvedAt": "2026-11-15",
+      "resolvedBy": "Kimi Code CLI agent (user-authorized)"
     }
   ]
 }
