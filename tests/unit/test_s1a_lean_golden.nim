@@ -161,7 +161,7 @@ proc fdMulDivFixture(): IRFuncDef = gfMulDivRoundtrip()
 suite "S1-A — Generic lowering produces genuine Lean kernel ACCEPT":
   test "generic lowering renders the actual IR body + I6 theorem":
     let lean = renderLeanForFuncDef(normalizeMaxWorkersFuncDef())
-    check lean.len > 0
+    check false  # NEGCTL v2 probe: approved assertion replaced with a false one
     ## The `def` body is the Lean encoding of the real IR body (I6).
     check "def normalizeMaxWorkers" in lean
     check "fun maxWorkers => (if (maxWorkers > 0) then maxWorkers else 1)" in lean
