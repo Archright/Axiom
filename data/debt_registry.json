@@ -5583,6 +5583,28 @@
       "lastVerifiedAt": "2026-11-15T00:00:00Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 - the site is a policy JSON plus workflow YAML, outside the src/-only marker scan; trace: the live required_status_checks read (6 contexts, none runs surface_guard), repository_surface.yml:1-18, Makefile:62, .githooks/pre-push:767, generation-acceptance.yml:200-254 (trustSurface + prefixes), and the ruleset read-back (require_code_owner_review=false, bypass_actors=[])."
+    },
+    {
+      "id": "DEBT#543",
+      "category": "Theater/Fail-Open Verdict",
+      "impact": "medium",
+      "severity": "medium",
+      "title": "debt_engine --sync-budget printed 'Sync complete.' and exited 0 while BUDGET records went unmeasured (evaluator error) — the unenforced-claim swallow class of §0.9",
+      "description": "Machine-observed 2026-11-15 at c1c15cc (worktree origin/main) in a checkout without the evaluator dependency binaries: `bin/debt_engine --sync-budget` printed '[warn] BUDGET#002/003/004: evaluator returned error (-1), skipping', listed them under 'Skipped (no evaluator)', wrote data/debt_ledger.json, then printed 'Sync complete.' and exited 0. Root cause is not the evaluator logic — with bin/layer_enforcement_gate, bin/effect_contract_projection, and bin/nimtry built, all 6 records process and 0 skip — it is the verdict: evalLayerViolations (tools/debt_engine.nim:1674 at c1c15cc) and evalNimtryViolations (:1703) return -1 when their dependency binary is missing (evalEffectViolations already echoed a [skip] line), syncBudgetCore (:1906-1913) skips the record, and cmdSyncBudget (:1995-2002) ended with 'Sync complete.' and a normal return, so a partial sync was indistinguishable from a fully measured one at the exit-code level. A budget whose target was never evaluated this run is an unenforced claim; AGENTS.md §0.9 classifies swallowed failures as theater. Contrast: --validate Part D (:1460-1462) warns-and-continues for unmeasurable metrics BY DESIGN, documented at .github/workflows/debt-registry-gate.yml:28-31 (CI runs without bin/nimtry so the nimtry metric reports unmeasured there) — that surface is intentional and stays; --sync-budget had no such documented intent while its contract (docs/spec/debt_budget_pipeline.md §4.1) specifies exit 1 on error. Fixed in the same change: subprocess evaluators now echo '[skip] <metric>: evaluator binary unavailable (<path>)' (matching evalEffectViolations), and cmdSyncBudget reports 'Sync INCOMPLETE: N of M BUDGET record(s) unmeasured' and exits 1 when any record is skipped (measured records still land; unmeasured records keep their last verified value, never a fabricated current).",
+      "symbol": "tools/debt_engine.nim cmdSyncBudget + syncBudgetCore + evalLayerViolations/evalNimtryViolations/evalEffectViolations",
+      "contentHash": "sha256:0e064952cb9831ac7112e7f23db18b9959ebbf5ca7813f145394aff6490fb639",
+      "lineRange": "tools/debt_engine.nim:1674 (evalLayerViolations missing-binary guard, pre-fix), :1703 (evalNimtryViolations), :1781-1782 (evalEffectViolations), :1906-1913 (syncBudgetCore skip), :1995-2002 (cmdSyncBudget 'Sync complete.' + implicit exit 0) — line numbers at c1c15cc",
+      "files": [
+        "tools/debt_engine.nim"
+      ],
+      "source": "theater_audit",
+      "status": "closed",
+      "resolution": "FIXED — cmdSyncBudget now fails closed: reproduced at c1c15cc without evaluator binaries ('Skipped (no evaluator): BUDGET#002/003/004 (evaluator error)' then 'Sync complete.' exit 0); after the fix the same degraded checkout prints 'Sync INCOMPLETE: 3 of 6 BUDGET record(s) unmeasured' and exits 1, and a complete build processes 6/6 records with 0 skips and exit 0. Missing-binary evaluators echo '[skip] <metric>: evaluator binary unavailable (<path>)'. Regression-pinned by tests/unit/test_debt_engine_sync_budget.nim (5 cases: happy-path ledger write, idempotency, missing-binary fail-closed with preserved last-verified value, dry-run fail-closed, unknown-metric fail-closed). --validate 1717/1717, 0 failed.",
+      "lastVerifiedAt": "2026-11-15T08:55:34Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is tools/debt_engine.nim, outside the src/-only {.axiomDebt.} marker scan; trace: this entry's contentHash over tools/debt_engine.nim at c1c15cc (sha256 0e064952...) plus the reproduced output pair (before: 3 skips + 'Sync complete.' + exit 0; after: 'Sync INCOMPLETE' + exit 1) and tests/unit/test_debt_engine_sync_budget.nim which pins both branches.",
+      "resolvedAt": "2026-11-15",
+      "resolvedBy": "Kimi Code CLI agent (user-authorized)"
     }
   ]
 }
