@@ -372,6 +372,10 @@ jobs:
           path: /tmp/release_version_gate
           retention-days: 1
           if-no-files-found: error
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
   full-l2:
     needs: [freeze, verify-metadata]
@@ -530,6 +534,10 @@ jobs:
             /tmp/binary-version.txt
           retention-days: 7
           if-no-files-found: warn
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
   # ── assemble-bundle — §1b 바이너리 배포 번들 조립 (Phase 6 S3) ──────────
   # ci-bootstrap-artifacts의 bin/ax(verify-binary가 provenance·manifest
@@ -652,6 +660,10 @@ jobs:
           path: /tmp/release-bundle-assets
           retention-days: 7
           if-no-files-found: error
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
   # ── attest-bundle — §1b attestation bundle 생성 + 오프라인 검증 (S3) ─────
   # bundle tar.gz에 GitHub artifact attestation을 생성하고(actions/
@@ -743,6 +755,10 @@ jobs:
           path: /tmp/release-bundle-assets
           retention-days: 7
           if-no-files-found: error
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
   # ── publish — control confirmation 후 App 토큰으로만 발행 (ADR-0024) ──────
   # environment: release-authority = 명시적 출하 확인 (required reviewer
