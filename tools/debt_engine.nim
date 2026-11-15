@@ -1671,7 +1671,9 @@ proc evalDebtRegistryClosed(): int {.raises: [CatchableError].} =
 proc evalLayerViolations(): int {.raises: [CatchableError].} =
   ## Run bin/layer_enforcement_gate --report-only and parse violation count.
   let gatePath = "bin/layer_enforcement_gate"
-  if not fileExists(gatePath): return -1
+  if not fileExists(gatePath):
+    echo "  [skip] layer_violations: evaluator binary unavailable (" & gatePath & ")"
+    return -1
   let (output, exitCode) = execCmdEx(gatePath & " --report-only 2>&1",
     options = {poUsePath})
   if exitCode != 0 and output.contains("layer violation(s)"):
@@ -1700,7 +1702,9 @@ proc evalNimtryViolations(): int {.raises: [CatchableError].} =
   ## NOTE: data/nimtry_baseline.json is NOT the live measurement — it is an
   ## archived anchor snapshot and must not be used as the metric source.
   let tool = "bin/nimtry"
-  if not fileExists(tool): return -1
+  if not fileExists(tool):
+    echo "  [skip] nimtry_violations: evaluator binary unavailable (" & tool & ")"
+    return -1
   let (outp, code) = execCmdEx(tool & " src/")
   if code == 0: return 0
   var count = 0
@@ -1999,6 +2003,15 @@ proc cmdSyncBudget(dryRun: bool) {.raises: [CatchableError].} =
       echo "  ERROR writing " & LedgerPath & ": " & getCurrentExceptionMsg()
 
   echo ""
+  if res.skipped.len > 0:
+    # Fail-closed (DEBT#543): a skipped record is a budget target that went
+    # unmeasured this run. The ledger keeps its last verified value — never a
+    # fabricated one — and the command must not report "Sync complete.".
+    echo "  Sync INCOMPLETE: " & $res.skipped.len & " of " & $res.recordsProcessed &
+      " BUDGET record(s) unmeasured (evaluator error or no evaluator registered)."
+    echo "  Unmeasured records keep their last verified value; exiting 1 (fail-closed)."
+    echo "  Build the missing evaluator dependencies (see [skip]/[warn] lines above) and re-run."
+    quit(1)
   echo "Sync complete."
 
 # ═══════════════════════════════════════════════════════════════════════════════
