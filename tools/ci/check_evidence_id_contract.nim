@@ -42,8 +42,9 @@ import core/results
 ##   (no args)          --self-check: the embedded fixture battery (positive
 ##                      legacy + strict, and every rejection class: missing
 ##                      field, non-64-hex, double-hash drift, strict context
-##                      mismatch). The lane's `make test-fast-one` invocation
-##                      runs this mode — EXECUTED always, no CAS surface.
+##                      mismatch; plus the verdict-input judgment battery).
+##                      The lane's `make test-fast-one` invocation runs this
+##                      mode — EXECUTED always, no CAS surface.
 ##   --artifact <file>  recompute from one contract artifact JSON.
 ##
 ## Exit: 0 = contract PASS · 1 = contract FAIL · 2 = usage error.
@@ -234,59 +235,109 @@ proc checkArtifactFile*(path: string): Result[string, string] {.raises: [].} =
 # OUTCOME shape, not the assertions that establish it, and repository_surface
 # judges these paths PRODUCT (MODIFY=PASS).
 #
-# This guard closes that. Every tracked file under tests/ that differs from
-# B's blob — modified, deleted, renamed, or newly added — must be pinned HERE
-# by its exact git blob oid and must still carry at least the approved number
-# of assertion sites. The pins live in this B-owned file, and the lane
-# executes B's copy, so a candidate that edits them is invisible to the run
-# that judges it: changing an approved test is a two-step policy landing
-# (pin update first, test change second), never a self-service.
+# This guard closes that with an APPROVAL TABLE read from B. The judgment
+# inputs are exactly the paths the lane executes as M's bytes — the four
+# matrix tests plus the top-level tests/golden/*.nim fixtures (the overlay's
+# non-recursive glob, nothing else). Each path's blob is resolved in BOTH git
+# trees: B = the workspace checkout's HEAD (the overlay mutates only the
+# working tree, HEAD stays B), M = the `_candidate` checkout's HEAD. A path
+# with identical blobs passes; a differing blob passes only when M's blob is
+# in that path's APPROVED blob set; a path only in M (addition) needs its
+# blob approved; a path only in B (deletion) always FAILs — a deletion is a
+# verdict-input change even though the overlay would silently keep B's bytes
+# and run them.
+#
+# The table lives at data/policy/go_critical_input_approvals.json: PRODUCT
+# class (no repository_surface registration needed) and outside the
+# EvidenceKey PolicyDigestInputPaths five-file set, so adding it rotates no
+# pin and no evidence key. It is read from B's HEAD git object — never the
+# working tree, never the candidate tree — and CODEOWNERS routes
+# /data/policy/ to @Archright/architect.
+#
+# Authority structure: the lane executes B's copy of this checker against
+# B's table, so a PR that changes a test AND its approval in one push is
+# judged by the PREVIOUS generation's table and FAILs its own merge-group
+# run — self-approval is structurally impossible. A legitimate change is a
+# staged landing: (A) register the new blob alongside the old → (B) change
+# the test bytes → (C) retire the old blob. Each step passes under the
+# previous generation's table.
 #
 # Deliberately NOT sha256Hex: that primitive is imported from the overlaid
 # candidate src/ (core/crypto/hash_kernel), so the judged tree would supply
 # the judge's hash. Both sides of every comparison here are computed by git.
 
-const VerdictInputRoot* = "tests"
-const VerdictInputDivergedMarker* = "GO_TEST_BYTES_DIVERGED"
-const VerdictInputReducedMarker* = "GO_TEST_OBLIGATIONS_REDUCED"
-const VerdictInputPinMalformedMarker* = "GO_TEST_PIN_MALFORMED"
+const GoCriticalApprovalTablePath* = "data/policy/go_critical_input_approvals.json"
+  ## B-owned approval table (CODEOWNERS /data/policy/ → @Archright/architect).
+  ## Read from B's HEAD git object, never from the candidate or the overlay.
+const GoCriticalApprovalSchema* = "go-critical-input-approvals/v1"
+  ## The exact schema string this checker enforces. Anything else is
+  ## fail-closed: a table revision must rename itself, never silently
+  ## extend under the old schema marker.
+const GoTestHashUnapprovedMarker* = "GO_TEST_HASH_UNAPPROVED"
+  ## The unique failure code for every judgment-input violation: unapproved
+  ## modification, unapproved addition, deletion.
+const GoTestTableMalformedMarker* = "GO_TEST_TABLE_MALFORMED"
+  ## The failure code for a table that cannot serve as an authority at all
+  ## (missing/unparsable/schema drift/out-of-scope entry/bad oid/duplicate
+  ## path) and for unresolvable B/M git state. Fail-closed, never a skip.
+const GoCriticalMatrixTests* = [
+  "tests/unit/test_s1a_lean_golden.nim",
+  "tests/unit/proof_integrity_test.nim",
+  "tests/unit/test_d2_golden.nim",
+  "tests/unit/test_d2_persist.nim"]
+  ## The four GO-critical matrix tests (admission-check.yml `matrix.tests`,
+  ## lane 0 / lane 1) — always in scope, required to exist as blobs in B.
+const GoldenFixtureRoot* = "tests/golden"
+  ## The overlay copies `_candidate/tests/golden/*.nim` — a NON-recursive
+  ## top-level glob. The guard's golden scope is exactly that set.
+const CandidateCheckoutDir* = "_candidate"
+  ## The lane's data-only candidate checkout ("[lane] Checkout candidate =
+  ## M"); its HEAD is the candidate M.
 
-type PinnedVerdictInput* = object
-  ## One approved verdict input: the exact bytes (git blob oid) and the
-  ## weakening floor (assertion sites) that approval covered.
+type ApprovalEntry* = object
+  ## One path's approved blob set: the exact git blob oids the CANDIDATE may
+  ## carry for that judgment input. Multiple oids = the staged-landing window
+  ## (old and new registered side by side). An empty set pins the path to
+  ## B's bytes (any divergence FAILs).
   path*: string
-  blobOid*: string
-  obligations*: int
+  approvedBlobs*: seq[string]
 
-const PinnedVerdictInputs* = [
-  PinnedVerdictInput(path: "tests/unit/test_s1a_lean_golden.nim",
-    blobOid: "377e5c641386218ce2138ed4bcfa7ab11635535d", obligations: 95),
-  PinnedVerdictInput(path: "tests/unit/proof_integrity_test.nim",
-    blobOid: "8a5a7f142134050a7205144c6139672e70c106a3", obligations: 17),
-  PinnedVerdictInput(path: "tests/unit/test_d2_golden.nim",
-    blobOid: "ba294f29118f21d84c2609f3170a538888ce27ac", obligations: 62),
-  PinnedVerdictInput(path: "tests/unit/test_d2_persist.nim",
-    blobOid: "6eba34131d910d052a08b76bc2bd738ce510a9f1", obligations: 8)]
-  ## The four GO-critical matrix tests (admission-check.yml:3429 lane 0,
-  ## :3432 lane 1). `obligations` counts `check …`/`doAssert …` sites in the
-  ## approved bytes.
+type TreeBlob* = object
+  ## One `git ls-tree` blob entry (tree/submodule entries are not judgment
+  ## inputs and never appear here).
+  path*: string
+  oid*: string
 
-func trimmedLeading(line: string): string {.raises: [].} =
-  var i = 0
-  while i < line.len and line[i] in {' ', '\t'}:
-    inc i
-  if i >= line.len: "" else: line[i .. ^1]
+func isHex40*(s: string): bool {.raises: [].} =
+  ## A git blob oid as this table accepts it: 40 lowercase hex.
+  if s.len != 40:
+    return false
+  for ch in s:
+    if ch notin {'0'..'9', 'a'..'f'}:
+      return false
+  true
 
-func obligationCount*(content: string): int {.raises: [].} =
-  ## The weakening floor: `check …` / `doAssert …` sites, counted after
-  ## leading whitespace. A ratchet against silent deletion — never a proof of
-  ## strength. Lowering a pin's count is an explicit operator-merged act.
-  var n = 0
-  for line in content.splitLines():
-    let t = trimmedLeading(line)
-    if t.startsWith("check ") or t.startsWith("doAssert "):
-      inc n
-  n
+func isMatrixTestPath(path: string): bool {.raises: [].} =
+  for t in GoCriticalMatrixTests:
+    if path == t:
+      return true
+  false
+
+func isGoldenFixturePath*(path: string): bool {.raises: [].} =
+  ## `tests/golden/<name>.nim` — top level only (no further '/'), mirroring
+  ## the overlay's non-recursive glob. Subdirectories and non-.nim files are
+  ## not overlaid (B's bytes run for them), so they are out of scope.
+  if not path.startsWith(GoldenFixtureRoot & "/"):
+    return false
+  let name = path[GoldenFixtureRoot.len + 1 .. ^1]
+  if name.len == 0 or name.contains('/'):
+    return false
+  name.endsWith(".nim")
+
+func inApprovalScope*(path: string): bool {.raises: [].} =
+  ## The only paths a table entry may govern: the matrix tests and the
+  ## top-level golden fixtures. Anything else in the table is malformed.
+  isMatrixTestPath(path) or isGoldenFixturePath(path)
 
 proc gitRun(args: openArray[string]): Result[string, string] {.
     raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, ExecIOEffect, RootEffect].} =
@@ -304,63 +355,149 @@ proc gitRun(args: openArray[string]): Result[string, string] {.
   except CatchableError as e:
     err("git " & args[0] & " could not run: " & e.msg)
 
-func divergedPaths*(porcelainZ: string): seq[string] {.raises: [].} =
-  ## `git status --porcelain -z` records are `XY <path>`; rename/copy records
-  ## are followed by the source path record. BOTH paths are surfaced so a
-  ## rename can never hide the deletion it performs.
-  let records = porcelainZ.split('\0')
-  var i = 0
-  while i < records.len:
-    let rec = records[i]
-    inc i
-    if rec.len < 4:
+func parseLsTree*(text: string): Result[seq[TreeBlob], string] {.raises: [].} =
+  ## Parse `git ls-tree` output (`mode SP type SP oid TAB path`, one record
+  ## per line) keeping blob entries in tree order (git emits them sorted —
+  ## the guard's target order is therefore deterministic). Subdirectory
+  ## (tree) entries are skipped — the scope glob is top-level. A record that
+  ## is not well-formed is an err: the guard never guesses at half-readable
+  ## git state (fail-closed).
+  var blobs: seq[TreeBlob] = @[]
+  for line in text.splitLines():
+    if line.len == 0:
       continue
-    let status = rec[0 .. 1]
-    result.add(rec[3 .. ^1])
-    if status[0] in {'R', 'C'} and i < records.len:
-      result.add(records[i])
-      inc i
+    let tab = line.find('\t')
+    if tab < 0:
+      return err("malformed ls-tree record (no TAB): '" &
+        line[0 ..< min(line.len, 60)] & "'")
+    let meta = line[0 ..< tab]
+    let path = line[tab + 1 .. ^1]
+    let parts = meta.splitWhitespace(maxSplit = 2)
+    if parts.len != 3 or parts[0].len == 0:
+      return err("malformed ls-tree record (meta): '" & meta & "'")
+    if parts[1] == "blob":
+      if not isHex40(parts[2]):
+        return err("malformed ls-tree record (oid): '" & parts[2] & "'")
+      blobs.add(TreeBlob(path: path, oid: parts[2]))
+    elif parts[1] == "tree":
+      discard
+    else:
+      return err("malformed ls-tree record (type '" & parts[1] & "')")
+  ok(blobs)
 
-func pinIndex(path: string): int {.raises: [].} =
-  result = -1
-  for i in 0 ..< PinnedVerdictInputs.len:
-    if PinnedVerdictInputs[i].path == path:
-      return i
-
-proc verifyOnePinnedInput(path: string): Result[string, string] {.
-    raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, ExecIOEffect, RootEffect].} =
-  ## One diverged path: deleted / unpinned / wrong bytes / pruned assertions.
-  if not fileExists(path):
-    return err(VerdictInputDivergedMarker & "(" & path &
-      ") deleted — a verdict input was removed; the candidate may not delete " &
-      "the measuring stick (fail-closed)")
-  let idx = pinIndex(path)
-  if idx < 0:
-    return err(VerdictInputDivergedMarker & "(" & path &
-      ") not pinned — the candidate changed a verdict input that carries no " &
-      "approved pin (fail-closed)")
-  let pin = PinnedVerdictInputs[idx]
-  let oid = gitRun(["hash-object", "--no-filters", "--", path])
-  if oid.isErr:
-    return err(oid.error)
-  let measured = oid.get.strip()
-  if measured != pin.blobOid:
-    return err(VerdictInputDivergedMarker & "(" & path & ") bytes=" &
-      measured[0 ..< 12] & "… != approved pin=" & pin.blobOid[0 ..< 12] &
-      "… — the candidate's bytes are not the approved bytes (fail-closed)")
-  var content = ""
+proc parseApprovalTable*(text: string): Result[seq[ApprovalEntry], string] {.
+    raises: [].} =
+  ## Parse and validate the approval table. Fail-closed: a missing key, a
+  ## wrong type, a schema string other than GoCriticalApprovalSchema, an
+  ## out-of-scope path, a non-40-hex oid, a duplicate oid within an entry, or
+  ## a duplicate path across entries is an err — never a partial read, never
+  ## a skip.
+  var node: JsonNode
   try:
-    content = readFile(path)
+    node = parseJson(text)
   except CatchableError as e:
-    return err(VerdictInputDivergedMarker & "(" & path & ") unreadable: " & e.msg)
-  let measuredObligations = obligationCount(content)
-  if measuredObligations < pin.obligations:
-    return err(VerdictInputReducedMarker & "(" & path & ") obligations=" &
-      $measuredObligations & " < approved=" & $pin.obligations &
-      " — the approved bytes were pruned (fail-closed)")
-  ok("")
+    return err("approval table unparsable (fail-closed): " & e.msg)
+  if node.isNil or node.kind != JObject:
+    return err("approval table must be a JSON object (fail-closed)")
+  let schema = node{"schema"}
+  if schema.isNil or schema.kind != JString or
+      schema.getStr != GoCriticalApprovalSchema:
+    return err("approval table schema must be '" & GoCriticalApprovalSchema &
+      "' (fail-closed)")
+  let desc = node{"description"}
+  if desc.isNil or desc.kind != JString or desc.getStr.strip().len == 0:
+    return err("approval table description must be a non-empty string (fail-closed)")
+  let entriesNode = node{"entries"}
+  if entriesNode.isNil or entriesNode.kind != JArray:
+    return err("approval table 'entries' must be an array (fail-closed)")
+  var entries: seq[ApprovalEntry] = @[]
+  for e in entriesNode.elems:
+    if e.isNil or e.kind != JObject:
+      return err("approval table entry must be a JSON object (fail-closed)")
+    let p = e{"path"}
+    if p.isNil or p.kind != JString:
+      return err("approval table entry 'path' must be a string (fail-closed)")
+    if not inApprovalScope(p.getStr):
+      return err("approval table entry path out of scope (matrix tests + " &
+        "top-level " & GoldenFixtureRoot & "/*.nim only, fail-closed): " &
+        p.getStr)
+    let blobsNode = e{"approvedBlobs"}
+    if blobsNode.isNil or blobsNode.kind != JArray:
+      return err("approval table entry '" & p.getStr &
+        "' requires an approvedBlobs array (fail-closed)")
+    var approved: seq[string] = @[]
+    for b in blobsNode.elems:
+      if b.isNil or b.kind != JString or not isHex40(b.getStr):
+        return err("approval table entry '" & p.getStr &
+          "' carries a blob oid that is not 40 lowercase hex (fail-closed)")
+      if b.getStr in approved:
+        return err("approval table entry '" & p.getStr &
+          "' lists a duplicate blob oid (fail-closed)")
+      approved.add(b.getStr)
+    for prior in entries:
+      if prior.path == p.getStr:
+        return err("approval table lists path twice (fail-closed): " & p.getStr)
+    entries.add(ApprovalEntry(path: p.getStr, approvedBlobs: approved))
+  ok(entries)
 
-proc checkVerdictInputs*(): Result[string, string] {.
+func approvalFor*(entries: seq[ApprovalEntry]; path: string): seq[string] {.
+    raises: [].} =
+  ## The approved blob set for one path. An absent entry is an EMPTY
+  ## approval set — divergence then FAILs — never a bypass.
+  for e in entries:
+    if e.path == path:
+      return e.approvedBlobs
+  @[]
+
+func blobAt*(blobs: seq[TreeBlob]; path: string): string {.raises: [].} =
+  ## The oid for one path ("" when absent — an empty oid can never be an
+  ## approved blob, so absence resolves to "unapproved" in the judge).
+  for b in blobs:
+    if b.path == path:
+      return b.oid
+  ""
+
+func goldenTargets(bBlobs, mBlobs: seq[TreeBlob]): seq[string] {.raises: [].} =
+  ## The golden-scope target set: the union of the two trees' top-level
+  ## golden fixtures, B's (git-sorted) order first, then M-only additions.
+  ## Deterministic; an M-only path is the addition case, a B-only path the
+  ## deletion case — the judge sees both.
+  for b in bBlobs:
+    if isGoldenFixturePath(b.path) and b.path notin result:
+      result.add(b.path)
+  for m in mBlobs:
+    if isGoldenFixturePath(m.path) and m.path notin result:
+      result.add(m.path)
+
+func judgeGoCriticalInput*(path, bBlob, mBlob: string;
+    approved: seq[string]): string {.raises: [].} =
+  ## The pure verdict for ONE judgment input. "" = PASS; otherwise the
+  ## rejection reason, always carrying GoTestHashUnapprovedMarker.
+  ##   bBlob / mBlob: the path's git blob oid in B's / M's tree ("" = absent)
+  ## The arm order IS the policy:
+  ##   deletion (M lost a B input) → FAIL; no approved set can permit it
+  ##   identical blobs            → PASS (B's bytes need no approval)
+  ##   M's blob approved          → PASS (the staged-landing window)
+  ##   M-only (addition)          → covered by the approval arm above
+  ##   anything else              → FAIL
+  if mBlob.len == 0:
+    return GoTestHashUnapprovedMarker & "(" & path & ") deleted in M — a " &
+      "deletion is a verdict-input change; the overlay would silently keep " &
+      "B's bytes, and the judgment must not pretend the input still exists " &
+      "(fail-closed)"
+  if mBlob == bBlob:
+    return ""
+  if mBlob in approved:
+    return ""
+  if bBlob.len == 0:
+    return GoTestHashUnapprovedMarker & "(" & path & ") added in M with " &
+      "bytes=" & mBlob[0 ..< 12] & "… — a new judgment input whose blob is " &
+      "not in the approved set (fail-closed)"
+  GoTestHashUnapprovedMarker & "(" & path & ") B=" & bBlob[0 ..< 12] & "… M=" &
+    mBlob[0 ..< 12] & "… — the candidate's judgment-input bytes are not B's " &
+    "and not an approved blob (fail-closed)"
+
+proc checkGoCriticalInputs*(): Result[string, string] {.
     raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, ExecIOEffect, RootEffect].} =
   ## ok("") = inert (not a venue that executes the GO lane);
   ## ok(report) = armed and PASS; err(reason) = fail-closed.
@@ -368,22 +505,90 @@ proc checkVerdictInputs*(): Result[string, string] {.
     return ok("")
   if getEnv("GITHUB_EVENT_NAME") notin ["merge_group", "workflow_call"]:
     return ok("")
-  for pin in PinnedVerdictInputs:
-    if not pin.path.startsWith(VerdictInputRoot & "/") or
-        pin.blobOid.len != 40 or pin.obligations <= 0:
-      return err(VerdictInputPinMalformedMarker & "(" & pin.path &
-        ") malformed pin (fail-closed)")
-  let status = gitRun(["status", "--porcelain", "-z", "--untracked-files=all",
-    "--", VerdictInputRoot])
-  if status.isErr:
-    return err(status.error)
-  let changed = divergedPaths(status.get)
-  for path in changed:
-    let verdict = verifyOnePinnedInput(path)
-    if verdict.isErr:
-      return err(verdict.error)
-  ok("ARMED event=" & getEnv("GITHUB_EVENT_NAME") & " diverged=" &
-    $changed.len & "/" & $PinnedVerdictInputs.len & " pins " & VerdictInputRoot & "/**")
+  # The approval table is read from B's HEAD GIT OBJECT — never the working
+  # tree (which the overlay mutates) and never the candidate tree. B is the
+  # judge; the judge's policy cannot be supplied by the judged.
+  let tableText = gitRun(["show", "HEAD:" & GoCriticalApprovalTablePath])
+  if tableText.isErr:
+    return err(GoTestTableMalformedMarker & " cannot read " &
+      GoCriticalApprovalTablePath & " from B's HEAD (fail-closed): " &
+      tableText.error)
+  let entries = parseApprovalTable(tableText.get)
+  if entries.isErr:
+    return err(GoTestTableMalformedMarker & " " & entries.error)
+  # Resolve the two trees: the workspace (B) and the candidate checkout (M).
+  let rootRun = gitRun(["rev-parse", "--show-toplevel"])
+  if rootRun.isErr:
+    return err(GoTestTableMalformedMarker &
+      " workspace root unresolvable (fail-closed): " & rootRun.error)
+  let root = rootRun.get.strip()
+  let cand = root / CandidateCheckoutDir
+  if not (dirExists(cand / ".git") or fileExists(cand / ".git")):
+    return err(GoTestTableMalformedMarker &
+      " candidate checkout missing (fail-closed): " & cand)
+  let mShaRun = gitRun(["-C", cand, "rev-parse", "HEAD"])
+  if mShaRun.isErr:
+    return err(GoTestTableMalformedMarker &
+      " candidate HEAD unresolvable (fail-closed): " & mShaRun.error)
+  let mSha = mShaRun.get.strip()
+  let bShaRun = gitRun(["rev-parse", "HEAD"])
+  if bShaRun.isErr:
+    return err(GoTestTableMalformedMarker &
+      " B HEAD unresolvable (fail-closed): " & bShaRun.error)
+  let bSha = bShaRun.get.strip()
+  if not isHex40(bSha) or not isHex40(mSha):
+    return err(GoTestTableMalformedMarker &
+      " HEAD oid is not 40-hex (fail-closed): B='" & bSha & "' M='" & mSha & "'")
+  # One ls-tree per side over the exact scope: the matrix tests plus the
+  # golden top-level — the same path set the overlay copies.
+  var pathspecs: seq[string] = @[]
+  for t in GoCriticalMatrixTests:
+    pathspecs.add(t)
+  pathspecs.add(GoldenFixtureRoot & "/")
+  let bTreeRun = gitRun(@["ls-tree", "HEAD", "--"] & pathspecs)
+  if bTreeRun.isErr:
+    return err(GoTestTableMalformedMarker & " B tree unreadable (fail-closed): " &
+      bTreeRun.error)
+  let mTreeRun = gitRun(@["-C", cand, "ls-tree", "HEAD", "--"] & pathspecs)
+  if mTreeRun.isErr:
+    return err(GoTestTableMalformedMarker & " M tree unreadable (fail-closed): " &
+      mTreeRun.error)
+  let bBlobs = parseLsTree(bTreeRun.get)
+  if bBlobs.isErr:
+    return err(GoTestTableMalformedMarker & " " & bBlobs.error)
+  let mBlobs = parseLsTree(mTreeRun.get)
+  if mBlobs.isErr:
+    return err(GoTestTableMalformedMarker & " " & mBlobs.error)
+  # The matrix tests are REQUIRED in B — a B that lost one is a malformed
+  # judge state (the lane could not run the admission contract at all).
+  for t in GoCriticalMatrixTests:
+    if blobAt(bBlobs.get, t).len == 0:
+      return err(GoTestTableMalformedMarker & "(" & t &
+        ") missing from B's tree — the judge lost a matrix test (fail-closed)")
+  # Judge every in-scope path: the matrix tests (fixed order), then the
+  # golden union (B's git order, then M-only additions). Every violation is
+  # reported, then the aggregate fails closed.
+  var targets: seq[string] = @[]
+  for t in GoCriticalMatrixTests:
+    targets.add(t)
+  for g in goldenTargets(bBlobs.get, mBlobs.get):
+    targets.add(g)
+  var violations: seq[string] = @[]
+  var approvedDivergence = 0
+  for t in targets:
+    let bBlob = blobAt(bBlobs.get, t)
+    let mBlob = blobAt(mBlobs.get, t)
+    let verdict = judgeGoCriticalInput(t, bBlob, mBlob, approvalFor(entries.get, t))
+    if verdict.len > 0:
+      violations.add(verdict)
+    elif bBlob != mBlob:
+      inc approvedDivergence
+  if violations.len > 0:
+    return err(violations.join("; "))
+  ok("ARMED event=" & getEnv("GITHUB_EVENT_NAME") & " B=" & bSha[0 ..< 12] &
+    "… M=" & mSha[0 ..< 12] & "… judged=" & $targets.len &
+    " approvedDivergence=" & $approvedDivergence & " entries=" &
+    $entries.get.len & " table=" & GoCriticalApprovalTablePath)
 
 # ---------------------------------------------------------------------------
 # Self-check — the embedded fixture battery (the lane's make test-fast-one run)
@@ -426,7 +631,10 @@ proc strictFixture(digest, contract, claimed: string): EvidenceIdComponents =
 
 proc runSelfCheck*(): int {.raises: [].} =
   ## The embedded battery: positive legacy + strict, and EVERY rejection
-  ## class. Any unexpected outcome fails the battery (exit 1).
+  ## class — plus the verdict-input judgment battery (the approval-table
+  ## guard's pure semantics: identical/approved/unapproved/addition/deletion
+  ## and every malformed-table shape). Any unexpected outcome fails the
+  ## battery (exit 1).
   var failures = 0
   template expectPass(name: string; body: untyped) =
     let v: string = body
@@ -490,6 +698,84 @@ proc runSelfCheck*(): int {.raises: [].} =
   expectFail("missing claimed evidenceId rejected", "missing claimed evidenceId"):
     checkContract(legacyFixture())
 
+  # ── Verdict-input battery — the approval-table guard's judgment semantics
+  # (the armed merge-group path composes these pure functions over the two
+  # git trees; the cases below are the composition's building blocks, the
+  # same four the tests/ci unit suite pins). ────────────────────────────
+  proc tblVerdict(text: string): string {.raises: [].} =
+    let r = parseApprovalTable(text)
+    if r.isErr: r.error else: ""
+  let pGo = "tests/unit/test_d2_golden.nim"
+  let blobB = "ba294f29118f21d84c2609f3170a538888ce27ac"
+  let blobM = "1111111111111111111111111111111111111111"
+  let blobOther = "2222222222222222222222222222222222222222"
+  # (i) identical blob passes — B's own bytes need no approval.
+  expectPass("judge: identical blob passes (no approval needed)"):
+    judgeGoCriticalInput(pGo, blobB, blobB, @[])
+  # (ii) an unapproved change is rejected — empty set AND a wrong-blob set.
+  expectFail("judge: unapproved modification rejected", GoTestHashUnapprovedMarker):
+    judgeGoCriticalInput(pGo, blobB, blobM, @[])
+  expectFail("judge: approving a DIFFERENT blob does not pass", GoTestHashUnapprovedMarker):
+    judgeGoCriticalInput(pGo, blobB, blobM, @[blobOther])
+  # (iii) an approved change passes — the staged-landing window.
+  expectPass("judge: approved modification passes (staged window)"):
+    judgeGoCriticalInput(pGo, blobB, blobM, @[blobB, blobM])
+  # (iv) additions need their blob approved; deletions never pass.
+  expectPass("judge: approved addition passes"):
+    judgeGoCriticalInput(pGo, "", blobM, @[blobM])
+  expectFail("judge: unapproved addition rejected", GoTestHashUnapprovedMarker):
+    judgeGoCriticalInput(pGo, "", blobM, @[])
+  expectFail("judge: deletion always rejected (approval cannot permit it)",
+      GoTestHashUnapprovedMarker):
+    judgeGoCriticalInput(pGo, blobB, "", @[blobB])
+  # Table parsing — every malformed shape is fail-closed, never a skip.
+  let tableOk = """
+{
+  "schema": "go-critical-input-approvals/v1",
+  "description": "battery fixture",
+  "entries": [
+    {"path": "tests/unit/test_d2_golden.nim", "approvedBlobs": ["ba294f29118f21d84c2609f3170a538888ce27ac", "1111111111111111111111111111111111111111"]},
+    {"path": "tests/golden/rem_body.nim", "approvedBlobs": []}
+  ]
+}
+"""
+  let parsedTable = parseApprovalTable(tableOk)
+  expectPass("table: valid fixture parses (2 entries, blobs verbatim)"):
+    if parsedTable.isOk and parsedTable.get.len == 2 and
+        parsedTable.get[0].approvedBlobs.len == 2 and
+        parsedTable.get[0].approvedBlobs[1] == blobM and
+        parsedTable.get[1].approvedBlobs.len == 0:
+      ""
+    else:
+      "valid-table parse mismatch"
+  expectFail("table: wrong schema marker rejected", "schema must be"):
+    tblVerdict(tableOk.replace("go-critical-input-approvals/v1",
+      "go-critical-input-approvals/v0"))
+  expectFail("table: out-of-scope path rejected", "out of scope"):
+    tblVerdict("""{"schema":"go-critical-input-approvals/v1","description":"x","entries":[{"path":"src/main.nim","approvedBlobs":["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]}]}""")
+  expectFail("table: non-hex blob oid rejected", "not 40 lowercase hex"):
+    tblVerdict("""{"schema":"go-critical-input-approvals/v1","description":"x","entries":[{"path":"tests/golden/rem_body.nim","approvedBlobs":["zz"]}]}""")
+  expectFail("table: duplicate path rejected", "lists path twice"):
+    tblVerdict("""{"schema":"go-critical-input-approvals/v1","description":"x","entries":[{"path":"tests/golden/rem_body.nim","approvedBlobs":[]},{"path":"tests/golden/rem_body.nim","approvedBlobs":[]}]}""")
+  expectFail("table: unparsable text rejected", "unparsable"):
+    tblVerdict("{not json")
+  # ls-tree parsing — blobs kept in git order, subdirectories skipped,
+  # malformed records never guessed at.
+  expectPass("ls-tree: blobs kept, tree entries skipped, order preserved"):
+    block:
+      let r = parseLsTree("100644 blob " & blobB & "\ttests/golden/rem_body.nim\n" &
+        "040000 tree 0123456789012345678901234567890123456789\ttests/golden/base36_subject\n" &
+        "100644 blob " & blobM & "\ttests/unit/test_d2_golden.nim\n")
+      if r.isOk and r.get.len == 2 and r.get[0].path == "tests/golden/rem_body.nim" and
+          r.get[1].oid == blobM:
+        ""
+      else:
+        "ls-tree parse mismatch"
+  expectFail("ls-tree: malformed record rejected", "malformed ls-tree record"):
+    block:
+      let r = parseLsTree("garbage-without-tab\n")
+      if r.isErr: r.error else: ""
+
   echo "[evidence-id-contract] self-check " &
     (if failures == 0: "PASSED — " else: "FAILED — ") & "contract " &
     EvidenceIdContractVersion
@@ -509,12 +795,12 @@ proc main(): int {.raises: [CatchableError, OSError, Exception],
   # Verdict-input integrity runs FIRST: before any compile of the candidate
   # chain, and long before the GO-critical tests this checker's caller runs
   # next (the lane's step order is overlay → this check → GO tests).
-  let verdictInputs = checkVerdictInputs()
+  let verdictInputs = checkGoCriticalInputs()
   if verdictInputs.isErr:
-    echo "[verdict-inputs] FAIL — " & verdictInputs.error
+    echo "[go-critical-inputs] FAIL — " & verdictInputs.error
     return 1
   if verdictInputs.get.len > 0:
-    echo "[verdict-inputs] " & verdictInputs.get
+    echo "[go-critical-inputs] " & verdictInputs.get
   var mode = "self-check"
   var artifact = ""
   var p = initOptParser()
