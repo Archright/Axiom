@@ -190,7 +190,7 @@ when isMainModule:
     "valueMs": float(srcHashResult[0]) / 1000.0,
     "valueUs": srcHashResult[0],
     "label": "computeSourceTreeHash over src/",
-    "methodology": "Walks src/ recursively, filters .nim files (excl. /generated/), sorts, concatenates content, SHA-256; called on actual repo source tree."
+    "methodology": "Walks src/ recursively, filters .nim files (excl. /generated/), delegates to hashSourceContents (vs1-tree-hash/1 compositional std/hashes.hash fingerprint — non-cryptographic, not SHA-256); called on actual repo source tree."
   })
 
   echo "[probe] Measuring T_identity: canonicalScopeDigest from lock file ..."
