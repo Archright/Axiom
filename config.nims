@@ -402,31 +402,43 @@ when withDir(thisDir(), system.fileExists("nimble.paths")):
 task enforceEffects, "Hard-fail stapper: scan src/ for proc→func candidates":
   exec "nim c -r --hints:off tools/effect_auto_fixer.nim --check-only --dir src"
 
-# ── Source-tree hash (mirrors computeDeterministicSourceHash in hermetic_build.nim) ──
-# Formula vs1-tree-hash/1 — byte-identical to core/utils/build_provenance.nim
-# (sourceTreeDigest) and the walk in src/infrastructure/source_identity_cache.nim:
-#   fileDigest = $hash(bytes);  tree = "vs1-tree-hash/1:" & $hash(
-#     "vs1-tree-hash/1\n" & Σ relPath & "\0" & fileDigest & "\n")
-# relPath is the path relative to srcDir with '/' separators (paths are bound
-# into the digest, so old concatenation-era values are distinguishable).
-proc computeSourceTreeHash(srcDir: string): string =
-  var files: seq[string] = @[]
-  for f in walkDirRec(srcDir):
-    if f.endsWith(".nim") and not f.contains("/generated/"):
-      files.add(f)
-  files.sort()
-  var stream = "vs1-tree-hash/1" & "\n"
-  for f in files:
-    var rel = f
-    if rel.startsWith(srcDir):
-      rel = rel[srcDir.len .. ^1]
-      while rel.len > 0 and rel[0] == '/':
-        rel = rel[1 .. ^1]
-    stream.add(rel)
-    stream.add("\0")
-    stream.add($hash(readFile(f)))
-    stream.add("\n")
-  result = "vs1-tree-hash/1:" & $hash(stream)
+# ── Source identity — Single Authority: bin/hermetic_build --src-tree-hash ──
+# vs1-tree-hash/1 (formula in tools/hermetic_build.nim, shared with
+# core/utils/build_provenance.nim) is computed by exactly ONE executable.
+# config.nims is an execution ADAPTER; a second implementation here drifts
+# silently (DEBT#532). `nim check` cannot spawn child processes — `exec` and
+# `staticExec` are silent no-ops and `getCommand()` is the only detector —
+# so callers must gate on check mode. The helper writes the digest to a
+# PID-unique temp file (atomic rename), which this adapter validates and
+# removes in every case. A non-zero helper exit raises through `exec`
+# (fail-closed); it must never degrade into a cache MISS.
+proc nativeSourceTreeHash(): string =
+  let hbBin = "bin/hermetic_build"
+  if not fileExists(hbBin):
+    raise newException(OSError, "[src-tree-hash] FAIL: " & hbBin &
+      " missing — cannot compute source identity")
+  let cacheDir = ".axiom/cache"
+  if not dirExists(cacheDir):
+    mkDir(cacheDir)
+  let pid = staticExec("echo $PPID").strip()
+  if pid.len == 0:
+    raise newException(OSError, "[src-tree-hash] FAIL: cannot obtain PID for tmp file")
+  let outTmp = cacheDir & "/src_tree_hash." & pid & ".tmp"
+  try:
+    if fileExists(outTmp):
+      rmFile(outTmp)
+    exec quoteShell(hbBin) & " --src-tree-hash " & quoteShell(outTmp)
+    if not fileExists(outTmp):
+      raise newException(OSError, "[src-tree-hash] FAIL: helper wrote no output")
+    let raw = readFile(outTmp).strip()
+    let parts = raw.split(':')
+    if parts.len != 2 or parts[0] != "vs1-tree-hash/1":
+      raise newException(ValueError, "[src-tree-hash] FAIL: malformed digest: " & raw)
+    discard parseInt(parts[1])
+    result = raw
+  finally:
+    if fileExists(outTmp):
+      rmFile(outTmp)
 
 # ── Hermetic PreBuild Orchestrator (v28) ───────────────────────────────────────
 # Runs before every `nim c` invocation. Generates/updates build_env.nim with
@@ -500,9 +512,24 @@ block hermeticPreBuild:
       manifestPaths.sort()
       for p in manifestPaths:
         envHash &= $hash(readFile(p))
-    # Compute liveSourceHash once per hermeticPreBuild invocation and fold into envHash.
-    let liveSourceHash = computeSourceTreeHash("src")
-    envHash &= liveSourceHash
+    # Source identity is delegated to the single native authority. Under
+    # `nim check` child processes are silent no-ops, so the cache decision is
+    # skipped entirely below and only the final guard runs.
+    let nativeIdentity = getCommand() != "check"
+    var liveSourceHash = ""
+    if nativeIdentity:
+      liveSourceHash = nativeSourceTreeHash()
+      envHash &= liveSourceHash
+      # Toolchain + helper-payload identity: size/mtime of the helper are
+      # invalidation hints only, never proof of what executes. A compiler
+      # version, target ABI (hash() is int-width sensitive), or helper payload
+      # change must miss the cache even when every input file is identical.
+      envHash &= "|" & NimVersion & "|" & $hostOS & "|" & $hostCPU & "|" & $sizeof(int)
+      let hbDigest = staticExec("sha256sum " & quoteShell(hbBin)).strip().split(' ')[0]
+      if hbDigest.len != 64:
+        echo "[hermetic] FAIL: cannot fingerprint " & hbBin & " — refusing cache decision"
+        quit(1)
+      envHash &= "|hb:" & hbDigest
     # Git HEAD resolution via pure .git file reads — NO gorge (§17 quirk: gorge
     # returns empty under `nim check`, so it cannot be used here). Deterministic:
     # identical HEAD → identical SHA.
@@ -556,8 +583,10 @@ block hermeticPreBuild:
       buildEnvValid = hasSourceHash and hasVerifierSourceHash and hasValidVerifierId
       gitHashMatches = envContent.contains("BuildEnvGitHash* = \"" & gitHeadRef & "\"")
 
-    let isHit = (envHash == cachedHash) and buildEnvValid
-    if isHit and gitHashMatches:
+    let isHit = nativeIdentity and (envHash == cachedHash) and buildEnvValid
+    if not nativeIdentity:
+      echo "[hermetic] nim check: source identity route unavailable — cache decision deferred"
+    elif isHit and gitHashMatches:
       # Case A — Full HIT: zero writes to build_env.nim and hermetic_env_hash.txt
       echo "[hermetic] Environment unchanged (HIT)"
     elif isHit and not gitHashMatches and fileExists(bodyPath):
@@ -640,11 +669,20 @@ block sourceHashSeedGuard:
     let shgEmpty = "BuildSourceHash* = \"\""
     let shgPlaceholder = "BuildSourceHash* = \"__AXIOM_BUILD_SOURCE_HASH__\""
     if shgContent.contains(shgEmpty) or shgContent.contains(shgPlaceholder):
-      let shgLive = computeSourceTreeHash("src")
-      shgContent = shgContent.replace(shgEmpty, "BuildSourceHash* = \"" & shgLive & "\"")
-      shgContent = shgContent.replace(shgPlaceholder, "BuildSourceHash* = \"" & shgLive & "\"")
-      writeFile(shgPath, shgContent)
-      echo "[coherence] build_env.nim seed guard: injected live BuildSourceHash " & shgLive
+      # `nim check` cannot spawn children; a cold bootstrap (helper not yet
+      # built) must not recurse into another helper build. Both defer loudly:
+      # the next top-level build materializes through the native authority.
+      let hbPresent = fileExists("bin/hermetic_build")
+      if getCommand() == "check" or not hbPresent:
+        echo "[coherence] build_env.nim seed deferred: " &
+          (if getCommand() == "check": "native route unavailable under `nim check`"
+           else: "bin/hermetic_build not built yet (cold bootstrap)")
+      else:
+        let shgLive = nativeSourceTreeHash()
+        shgContent = shgContent.replace(shgEmpty, "BuildSourceHash* = \"" & shgLive & "\"")
+        shgContent = shgContent.replace(shgPlaceholder, "BuildSourceHash* = \"" & shgLive & "\"")
+        writeFile(shgPath, shgContent)
+        echo "[coherence] build_env.nim seed guard: injected live BuildSourceHash " & shgLive
 
 # ── Tier 3: Runner Pool Canonical Schema (C1) ──────────────────────
 # RunnerPoolSpecDigest & ObservedRunnerPoolDigest share ONE canonical
