@@ -198,7 +198,7 @@
     "src/cli/debt_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "d1eb438b2c3f760dae9667e27565eb5c36f0aa61"
+      "sha": "ee53818c9dd039dd830a927938f4aa61504450f7"
     },
     "src/cli/evidence_cli.nim": {
       "mode": "100644",
