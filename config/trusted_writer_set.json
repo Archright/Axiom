@@ -48,7 +48,7 @@
     "config.nims": {
       "mode": "100644",
       "type": "blob",
-      "sha": "b48f21812453951327575f76c69ea62c405ba7da"
+      "sha": "d10f9885d24a5928cf36dbadd6736d7af4dcc277"
     },
     "config/effects.nims": {
       "mode": "100644",
@@ -2438,7 +2438,7 @@
     "src/core/types/asi_types.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "3eac60f2fba3f4e836fce4e881e57bcd05f6bb77"
+      "sha": "5f94e8e4cdefdc8f043048c96314d3790dccb521"
     },
     "src/core/types/canonical_change_set.nim": {
       "mode": "100644",
@@ -3873,7 +3873,7 @@
     "src/verification/lean_lsp_compiler.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "f8e6d58c17e35e7483583c679d58157b133258ab"
+      "sha": "0fb05452e741d970d3a38ac7c4fff5cb43b30959"
     },
     "src/verification/lean_lsp_feedback.nim": {
       "mode": "100644",
@@ -4473,7 +4473,7 @@
     "tools/hermetic_build.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "3b55fa1071d6bd53eac2f59e7b58e8b63079e528"
+      "sha": "e990f691c681dfe13b7a37104121d723cec98029"
     },
     "tools/safe_move.nim": {
       "mode": "100644",

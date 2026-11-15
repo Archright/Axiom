@@ -77,6 +77,7 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/test_hollow_cas_closure.nim \
                   tests/unit/test_gate_cas_tamper_detection.nim \
                   tests/unit/test_invariant_anchor_fail_closed.nim \
+                  tests/unit/test_decision_binding_ratchet.nim \
                   tests/unit/test_assurance_tier_node_report.nim \
                   tests/unit/test_vkd_determinism.nim \
                   tests/unit/test_certificate_trust_closure.nim \
@@ -289,10 +290,12 @@ check-mutation-harness: bin/gate_self_check ## Mutation harness (wraps tools/mut
 	@echo "=== [check-mutation-harness] mutation harness ==="
 	@./tools/mutation_harness.sh
 
-check-decision-binding: ## Decision binding audit (hermetic_build --check-decision-bindings)
-	@echo "=== [check-decision-binding] decision binding audit ==="
-	@nim c --hints:off -o:bin/hermetic_build tools/hermetic_build.nim
-	@bin/hermetic_build --check-decision-bindings --escalation-threshold 30
+bin/decision_binding_checker: tools/decision_binding_checker.nim tools/decision_binding_judge.nim
+	$(NIM) c $(NIM_TOOL_FLAGS) -o:$@ $<
+
+check-decision-binding: bin/decision_binding_checker ## Decision binding ratchet (count baseline: growth fails, a date never does)
+	@echo "=== [check-decision-binding] decision binding ratchet ==="
+	@bin/decision_binding_checker
 
 check-topology-drift: ## Topology drift guard (regenerates + git diff --exit-code)
 	@echo "=== [check-topology-drift] topology drift guard ==="

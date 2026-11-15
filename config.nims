@@ -637,15 +637,39 @@ block hermeticPreBuild:
     echo "[hermetic] Syncing topology..."
     exec syncBin
 
-    # Decision binding integrity check (audit mode - warn only)
+    # Decision binding ratchet (count baseline). The judgment lives in
+    # tools/decision_binding_judge.nim; this hook only runs it. A calendar
+    # never fails this build — only growth of the measured violation count.
+    #
+    # Stale-binary guard, same shape as sync_topology above and for the same
+    # reason: existence alone is not freshness. A cache-restored or
+    # pre-upgrade bin/decision_binding_checker keeps the OLD rule compiled in,
+    # and because the rule itself changed meaning (date waivers -> count
+    # ratchet) the stale binary rejects the current tree with a message that
+    # no longer describes any policy: measured 2026-11-15 on a worktree whose
+    # bin/ predated the change, `bin/decision_binding_checker` exited 1 with
+    # "253 function(s) missing {.axiomDecision.} pragma — no active waivers"
+    # and every nim invocation in the tree failed through this hook.
     let dbBin = "bin/decision_binding_checker"
     let dbSrc = "tools/decision_binding_checker.nim"
-    if not fileExists(dbBin):
+    let dbSpecSrcs = [dbSrc, "tools/decision_binding_judge.nim"]
+    var dbStale = not fileExists(dbBin)
+    if not dbStale:
+      let dbBinMtime = staticExec("stat -c %Y " & dbBin).strip()
+      if dbBinMtime.len == 0:
+        dbStale = true
+      else:
+        for s in dbSpecSrcs:
+          if fileExists(s):
+            let sMtime = staticExec("stat -c %Y " & s).strip()
+            if sMtime.len > 0 and sMtime > dbBinMtime:
+              dbStale = true
+    if dbStale:
       echo "[hermetic] Building " & dbBin & " from " & dbSrc
       exec "nim c --hints:off -o:" & dbBin & " " & dbSrc
     if getEnv("AXIOM_FAST_BUILD") != "1":
-      echo "[hermetic] Checking decision bindings (audit)..."
-      exec dbBin & " --escalation-threshold 30"
+      echo "[hermetic] Checking decision bindings (ratchet)..."
+      exec dbBin
 
     # Final guard: ensure build_env.nim exists for nim check/c imports.
     if not fileExists(targetPath):

@@ -21,8 +21,8 @@
 #                               현행 repo에서 404 — leg 2는 이제 모니터의
 #                               이름 해석("main")이 판정한다(관측 당시
 #                               id 26702792).
-#   leg 3  policy ↔ producer : 착지 완료된 merge_group run의 head_sha(= main의
-#                               merge commit) check-runs 생산 App 확인 —
+#   leg 3  policy ↔ producer : main에 실제로 착지한 최신 병합 기록(PR merge의
+#                               mergeCommit) check-runs 생산 App 확인 —
 #                               checks:read 필요(작업 GITHUB_TOKEN으로 가능).
 #
 # credential 2단 계약 (fail-closed, 명시적):
@@ -37,7 +37,9 @@
 #     (degraded mode — 조용한 생략 금지). 부분 판정을 전체 GREEN으로
 #     위장하지 않는다.
 #
-# 권한 상한: contents:read / actions:read / checks:read — 최소 상한.
+# 권한 상한: contents:read / actions:read / checks:read / pull-requests:read —
+# 최소 상한(pull-requests:read는 관찰 SHA 선택기의 gh pr list --state merged
+# 조회 전용 — GET 관측, 2026-11-15 재작업).
 # 외부 action은 커밋 SHA 고정(repo 정책 sha_pinning_required).
 
 name: admission-ssot-drift
@@ -57,6 +59,9 @@ permissions:
   contents: read
   actions: read
   checks: read
+  # 관찰 SHA를 merge_group run 메타데이터가 아니라 **실제 병합 기록**에서
+  # 고르기 위해 필요하다(아래 선택기 주석 참조).
+  pull-requests: read
 
 concurrency:
   group: admission-ssot-drift
@@ -146,55 +151,89 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           OBSERVE_SHA: ${{ inputs.observe_sha }}
-          # 정착 창(분) — 관찰 대상 landing이 착지를 마친 뒤 이만큼 경과해야
-          # 관찰한다. 근거는 아래 주석(2026-11-14 실측, run 43591242341).
+          # 정착 창(분) — 관찰 대상 PR 착지(mergedAt) 후 이만큼 경과해야 관찰한다.
+          # 근거는 아래 주석(2026-11-14 실측, run 43591242341).
           SETTLE_MINUTES: '20'
         run: |
           set -euo pipefail
           SUMMARY="$GITHUB_STEP_SUMMARY"
 
-          # ── 관찰 SHA — **착지 완료된** 최신 merge_group head(실제 랜딩 베뉴) ──
+          # ── 관찰 SHA — **실제로 main에 착지한** 병합 커밋 ──────────────────
           # 주의(2026-10-21 실측 정정): 진행 중(in_progress) run의 head_sha를
           # 관찰하면 그 run의 check-run(특히 'admission-check')이 아직 생성되지
           # 않아 producer leg이 'missing != clean'으로 FALSE RED를 낸다
-          # (첫 dispatch run 39603184495가 정확히 그 사례). 따라서 착지가
-          # **완료·성공**한 run만 관찰한다 — 그 head_sha는 main의 merge commit
-          # (= 실제 착지 커밋)이며, 그 커밋의 check-run에는 required 3-context가
-          # 모두 존재한다.
+          # (첫 dispatch run 39603184495가 정확히 그 사례).
           #
           # 정착 창(settle window) — 2026-11-14 실측 정정(run 43591242341,
-          # 이슈 #57): "완료·성공한 run"만으로도 부족하다. merge_group 배치의
-          # 느린 프로듀서(publication-integrity 11:43:26Z, admission-gate
-          # 11:45:58Z — 관찰 시각 11:42:25Z 기준 +61s/+213s에야 check-run을
-          # materialize)가 아직 check-run을 만들지 않은 착지 직후 SHA를
-          # '가장 빨리 끝난 completed run'[0]이 잡아 leg3 4/6 FALSE RED를
-          # 냈다. 이것은 드리프트가 아니라 경쟁(race)이므로, 최신 landing이
-          # 아니라 **정착 창만큼 오래 전에 완료된** 최신 landing을 관찰한다.
-          # 착지 후 경과는 드리프트의 정의가 아니라 관찰 시점 선택이므로
-          # required context 집합·monitor·판정 임계는 불변이다.
-          #   * 앵커가 updated_at인 이유: completed run의 updated_at은 완료
-          #     시각이다. created_at은 merge group **형성** 시각이라 착지보다
-          #     큐 체류만큼 이르다(실측: 4e9c8dfa 형성 11:38:26Z, 착지
-          #     11:46:03Z — created_at을 쓰면 경과를 ~8분 과대평가해 착지
-          #     직후 SHA를 여전히 잡는다).
-          #   * 20분인 이유: 실측 최대 materialize 지연이 그룹 형성 후
-          #     +7.6분(admission-gate 11:45:58Z, 형성 11:38:26Z)이므로
-          #     20분은 약 2.5배 여유다. 폴링/슬립 없이 시간은 이 선택기에서만
-          #     쓴다(잡 내부 대기 금지).
-          #   * jq 변수 주입 금지(2026-11-15 실측, gh 2.102.0): gh api의
-          #     --jq는 jq CLI가 아니다 — `--arg`는 "unknown flag"로 죽고
-          #     `$env`도 "variable not defined"로 죽는다(매 실행 SHA 공백
-          #     → 항시 fail-closed). SETTLE_MINUTES는 셸이 프로그램 텍스트에
-          #     인라인하는 '"$SETTLE_MINUTES"' 스플라이스로만 전달한다
-          #     (정본 등록: docs/spec/gh_run_observation_quirks.md Q20;
-          #     certificate-mint.yml:445의 --arg는 별도 jq CLI 파이프라인).
+          # 이슈 #57): merge_group 배치의 느린 프로듀서(publication-integrity
+          # 11:43:26Z, admission-gate 11:45:58Z — 관찰 시각 11:42:25Z 기준
+          # +61s/+213s에야 check-run을 materialize)가 아직 check-run을 만들지
+          # 않은 착지 직후 SHA를 잡아 leg3 4/6 FALSE RED를 냈다. 드리프트가
+          # 아니라 경쟁(race)이므로 **정착 창만큼 오래 전에 착지한** 커밋을
+          # 관찰한다. 착지 후 경과는 드리프트의 정의가 아니라 관찰 시점
+          # 선택이므로 required context 집합·monitor·판정 임계는 불변이다.
+          #
+          # 앵커가 **merged_at(PR 병합 기록)**인 이유(2026-11-15 정정):
+          #   * `actions/runs`의 `updated_at`은 안정적 시간 앵커가 아니다 —
+          #     run 상태가 바뀔 때마다 이동하고 재실행(re-run)은
+          #     `run_started_at`을 reset한다(공식 스키마: "Resets on re-run").
+          #     재실행 한 번이 정착 창의 기준점을 앞으로 당겨, 이 창이 존재하는
+          #     이유인 경쟁(race)을 재노출한다. mergedAt은 병합이 일어난 불변
+          #     순간이다 — PR은 정확히 한 번 병합되고 어떤 플랫폼 이벤트
+          #     (재실행 포함)도 그 시각을 이동시키지 못한다.
+          #   * merge_group run의 `completed+success`는 **그룹 착지를 뜻하지
+          #     않는다** — 한 워크플로가 끝났을 뿐이고, 실측(4e9c8dfa)에서
+          #     모니터 조회 11:42:25Z는 실제 `merged_at` 11:46:16Z보다 4분
+          #     앞섰다. 실측(2026-11-15 전수): merge_group run 864개의 head
+          #     96개 중 23개는 main에 존재하지 않는다(실패·드롭 배치) — run
+          #     기반 선택기는 착지하지 않은 SHA를 관찰할 수 있다. PR 병합
+          #     기록(mergeCommit.oid = main first-parent 체인의 착지 커밋,
+          #     실측 74/74 일치)을 쓰면 이 클래스가 정의상 사라진다.
+          #   * runs 목록은 완결을 보증하지 않는다: per_page=20은 착지 버스트
+          #     때 필터 결과가 비어 exit 1이 된다(실측: 1분 그리드 3,569 시점
+          #     중 269 = 7.5% 빈 선택). per_page를 늘려도 1,000건 상한(Q16)
+          #     하에서 "조회가 완전하다"는 보증이 되지 않는다. PR 목록
+          #     (limit 100)은 유계하고 그 한계를 fail-closed 메시지에 명시한다
+          #     (실측 최대 20분 착지 버스트 5건 — 20배 여유).
+          #   * 선택식: gh pr list -R "$REPO" --state merged --base main
+          #     --limit 100 --json number,mergedAt,mergeCommit,baseRefName
+          #     → mergeCommit.oid가 있고 baseRefName=="main"이며
+          #     now-mergedAt >= SETTLE_MINUTES*60 인 것 중 **최대 mergedAt**
+          #     (max_by — 목록 정렬 순서에 의존하지 않는다).
+          #
+          # 20분인 이유: 실측 최대 materialize 지연이 그룹 형성 후 +7.6분
+          # (admission-gate 11:45:58Z, 형성 11:38:26Z)이므로 약 2.5배 여유다.
+          # 착지 전수 재생(74 landing 구간, 1분 그리드+실행 시점 3,574)에서 이
+          # 선택식은 빈 선택 0·경쟁(race) 위반 0·미착지 SHA 0이었다. 폴링/슬립
+          # 없이 시간은 이 선택기에서만 쓴다(잡 내부 대기 금지).
+          #
+          # 측정된 경계(정직 기록): 회전 경로 수동 병합(예: PR #76,
+          # 2026-11-14T15:32Z)은 merge queue를 경유하지 않아 merge 커밋에
+          # merge_group 페이즈 check-run이 없다(required 6-context 중 5개가
+          # 그 커밋에 영구 부재). 이 선택기는 [mergedAt+정착창, 다음 큐 착지
+          # +정착창) 동안 그 SHA를 고른다(재생 3,574 그리드 중 8분) — 모니터는
+          # missing context를 정직하게 보고한다(드리프트는 아니지만 관측은
+          # 참이다; 실제 모니터 실행 5회 중 이 창에 든 것은 0회). PR 목록
+          # 필드로 큐 경유 여부를 구별할 수 없다(mergedBy는 큐/수동 동일 —
+          # 실측). 경계는 문서로 남긴다(Q21; 재생 측정:
+          # docs/evidence/vs_c1_merged_at_anchor_replay_2026-11-15.md).
+          #
+          # jq 변수 주입 금지(2026-11-15 실측, gh 2.102.0): gh의 --jq는 jq
+          # CLI가 아니다 — `--arg`는 "unknown flag"로 죽고 `$env`도 "variable
+          # not defined"로 죽는다(매 실행 SHA 공백 → 항시 fail-closed).
+          # SETTLE_MINUTES는 셸이 프로그램 텍스트에 인라인하는
+          # '"$SETTLE_MINUTES"' 스플라이스로만 전달한다(정본 등록:
+          # docs/spec/gh_run_observation_quirks.md Q20;
+          # certificate-mint.yml:445의 --arg는 별도 jq CLI 파이프라인).
+          # gh pr list 실패·jq 평가 실패는 빈 출력으로 아래 fail-closed로
+          # 떨어진다(조용한 통과 방향이 아님).
           SHA="$OBSERVE_SHA"
           if [ -z "$SHA" ]; then
-            SHA=$(gh api "repos/$REPO/actions/runs?event=merge_group&per_page=20" --jq '[.workflow_runs[] | select(.status=="completed" and .conclusion=="success") | select((now - (.updated_at|fromdateiso8601)) >= ('"$SETTLE_MINUTES"'*60))][0].head_sha // ""' 2>/dev/null || true)
+            SHA=$(gh pr list -R "$REPO" --state merged --base main --limit 100 --json number,mergedAt,mergeCommit,baseRefName --jq '[.[] | select(.baseRefName == "main") | select(.mergeCommit.oid != null) | select((now - (.mergedAt|fromdateiso8601)) >= ('"$SETTLE_MINUTES"'*60))] | max_by(.mergedAt).mergeCommit.oid // ""' 2>/dev/null || true)
             SHA="${SHA:-}"
           fi
           if [ -z "$SHA" ]; then
-            echo "::error::admission-ssot-drift: no landed merge_group older than the settle window (${SETTLE_MINUTES}m) to observe (no completed+successful merge_group run with updated_at at least ${SETTLE_MINUTES} minutes in the past) — the producer leg has no evidence (fail-closed: unobserved != clean)"
+            echo "::error::admission-ssot-drift: no PR merged into main older than the settle window (limit 100) — settle window ${SETTLE_MINUTES}m (the gh pr list read or its embedded-jq evaluation may also have failed; both close fail-closed). The producer leg has no evidence (fail-closed: unobserved != clean)"
             exit 1
           fi
           echo "observation SHA: $SHA"

@@ -5443,11 +5443,13 @@
         "config.nims"
       ],
       "source": "theater_audit",
-      "status": "open",
-      "resolution": "UNRESOLVED — requires an owner decision (renew with a justification, remove after a real fix, or amend the policy) before 2026-12-01T00:00:01+09:00. Not a code change: it is a risk-acceptance decision with a hard deadline.",
-      "lastVerifiedAt": "2026-11-14T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-15 (VS-W ratchet, branch workstream/vs-w-ratchet). The date bomb is removed, not postponed: the 249-entry grandfather array is empty and the daysRemaining<30 escalation path is deleted from tools/decision_binding_checker.nim, so no calendar can stop a build. The rule now lives in tools/decision_binding_judge.nim as a pure kernel (growth of the measured count FAILs; a review date only WARNs; an unusable baseline FAILs closed; --update-baseline refuses to raise the count), with data/decision_binding_baseline.json recording 253 files / 679 reasons at 5ae980f4 plus owner, rationale, reviewBy 2027-06-30 and policyHash. Measured: 23/23 kernel tests pass including 2026-12-01/12-31 and 2027-01-01/07-01 at baseline; make check-decision-binding exits 0; debt_engine --validate 1705/1705. Correction to this entry's premise: the 249 waivers were NOT inert - 203 of the 249 files do carry a violation, and the waiver-era report of 50 files/213 reasons understated the debt (unwaived measurement: 253 files/679 reasons). The waived mechanism hid debt and carried a calendar fuse; both are retired. Residual work is tracked separately: DEBT#539 (ratchet in no required check), DEBT#540 (baseline has no authority binding), DEBT#541 (the 679 decision points remain unannotated).",
+      "lastVerifiedAt": "2026-11-15T04:28:49Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the decision surface is the waiver JSON plus tooling, outside the src/-only marker scan; trace: this entry's lineRange plus the measured exit-0/WARN output and the boundary probe."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the decision surface is the waiver JSON plus tooling, outside the src/-only marker scan; trace: this entry's lineRange plus the measured exit-0/WARN output and the boundary probe.",
+      "resolvedAt": "2026-11-15",
+      "resolvedBy": "@Archright/architect"
     },
     {
       "id": "DEBT#537",
@@ -5486,7 +5488,7 @@
       ],
       "source": "theater_audit",
       "status": "open",
-      "resolution": "UNRESOLVED — architect decision required: either remove `Makefile` from classes.CONTROLLED so the FROZEN binding takes effect (a FROZEN-surface policy change and a CI Epoch transition, because the stricter rule changes landing admission), or remove it from classes.FROZEN so the current all-PASS posture is stated honestly. Keeping both registrations is not a third option: the first-match resolver makes one of them a lie.",
+      "resolution": "UNRESOLVED — architect decision required: either remove `Makefile` from classes.CONTROLLED so the FROZEN binding takes effect (a FROZEN-surface policy change and a CI Epoch transition, because the stricter rule changes landing admission), or remove it from classes.FROZEN so the current all-PASS posture is stated honestly. Keeping both registrations is not a third option: the first-match resolver makes one of them a lie. Related: DEBT#542 (the whole surface policy has no admission-time enforcement, so this class/ownership difference binds nothing at merge).",
       "lastVerifiedAt": "2026-11-14T00:00:00Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the sites are a FROZEN policy JSON and a tools/ Nim guard, both outside the src/-only marker scan; trace: this entry's contentHash over config/repository_surface.json (sha256 758caf91...) plus the measured surface_guard verdict pair (M Makefile PASS vs A src/gate FROZEN FAIL)."
@@ -5494,63 +5496,90 @@
     {
       "id": "DEBT#539",
       "category": "Theater/Unenforced Claim",
-      "impact": "medium",
-      "severity": "medium",
-      "title": "golden-master-gate is declared in topology/manifest at svError severity but disabled with no debt ID and no rationale, so no lane reports that a declared gate never runs",
-      "description": "Machine-observed 2026-11-15. config/gates.json:29 projects `golden-master-gate` as `enabled: false`. The projection authority is the GateEnablement table (src/gate/topology_spec.nim:733-740), whose header comment states it exists to record deviations; the only other disabled gate, static-analyzer, carries an inline rationale plus DEBT#426 (src/gate/topology_spec.nim:734-736, marker at src/gate/config_loader.nim:27), while golden-master-gate (src/gate/topology_spec.nim:738) carries neither. The gate is otherwise fully declared — initTopologyEntry (src/gate/topology_spec.nim:271-282, entry src/gate/runners/golden_master_gate, severity svError), config/gates.manifest.toml:105-108, runner source exists — but stages = @[skManual] and the id appears in no execution list (GATES_FAST/GATES_STATIC/GATES_FULL, PUSH_ADMISSIBILITY_GATES at Makefile:62) and in no workflow. A reader of the manifest or topology is told a golden-master gate exists with error severity; nothing records that it is off, why it is off, or who owns enabling it. This is the declare-protection-enforce-nothing shape that AGENTS.md §0.9 prohibits.",
-      "symbol": "golden-master-gate (config/gates.json gates entry / src/gate/topology_spec.nim GateEnablement)",
-      "contentHash": "sha256:d1fee5fc7a644222221664196389c11e266734938a45d2d1afd4df0ed705a783",
-      "lineRange": "config/gates.json:29; src/gate/topology_spec.nim:738 (GateEnablement)",
+      "impact": "high",
+      "severity": "high",
+      "title": "The decision-binding ratchet runs in no required check: check-decision-binding is in GATES_STATIC but not in PUSH_ADMISSIBILITY_GATES and is invoked by no workflow, so a PR that grows the violation count merges green",
+      "description": "Machine-observed 2026-11-15 (VS-W ratchet landing). Makefile:40 lists check-decision-binding in GATES_STATIC; Makefile:62 defines PUSH_ADMISSIBILITY_GATES without it; grep over .github/workflows/*.yml returns no invocation of the target or of bin/decision_binding_checker. Measured required contexts on main (gh api repos/Archright/Axiom/rules/branches/main): admission-check, bsec-integrity, debt-registry-gate, generation-acceptance, axiom-operational-slice, publication-integrity - none of them runs the ratchet. The ratchet therefore executes only in local paths: config.nims's hermetic pre-build (any nim invocation in the repo without --skipProjCfg), .githooks/pre-commit, and an explicit make check-decision-binding. A local hook is bypassable and is not merge authority; the consequence is that the policy this gate exists to enforce (a new {.axiomDecision.} decision point must be annotated) is declared but not enforced at the only place that decides admission. This is the declare-protection-enforce-nothing class of AGENTS.md §0.9. It is not a regression of the waiver replacement - the waived mechanism had the same gap - but the ratchet now makes the claim explicit, so the claim has to be true.",
+      "symbol": "Makefile PUSH_ADMISSIBILITY_GATES (line 62) vs GATES_STATIC (line 40); .github/workflows/debt-registry-gate.yml",
+      "contentHash": "sha256:becd1867ce4ddfbbe03198c67be1ba35630afe3450cf62ae44a3c5444d78d35e",
+      "lineRange": "Makefile:40 (GATES_STATIC), Makefile:62 (PUSH_ADMISSIBILITY_GATES); .github/workflows/debt-registry-gate.yml (required context, no ratchet step)",
       "files": [
-        "config/gates.json"
+        "Makefile",
+        ".github/workflows/debt-registry-gate.yml"
       ],
       "source": "theater_audit",
-      "status": "open",
-      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9. Fix direction (architect-gated, out of this registration slice): record the disablement rationale and owning debt ID inline in the GateEnablement table (static-analyzer/DEBT#426 precedent) or wire the gate into an enforced lane; a declared svError gate that no lane executes and no rationale explains must not persist silently.",
-      "lastVerifiedAt": "2026-11-15T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-15: the ratchet runs inside the required debt-registry-gate context - no seventh context, no ruleset change. Verified in the required check itself, not locally: workflow run 43681301680, job 132712325128, steps 11-13 succeeded on head 6e5f2d9. Step 12 executed bin/decision_binding_checker and printed '253 file(s) / 679 reason(s)' then 'PASS (PASS)'; step 13 ran the contract suite (23 [OK] lines). config.nims now rebuilds the checker when tools/decision_binding_checker.nim or tools/decision_binding_judge.nim are newer than the binary, so a cache-restored binary cannot judge the tree with a retired rule (measured 2026-11-15: pre-ratchet bin/ exited 1 with '253 function(s) missing {.axiomDecision.} pragma - no active waivers' and every nim invocation failed through the hook). The merge_group run of this workflow is the remaining observation; it is a merge-queue precondition, so the merged tree cannot lack it. Residual: the ratchet guards the count, not the correctness of the 679 annotations (DEBT#541).",
+      "lastVerifiedAt": "2026-11-15T05:37:27Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — config/gates.json is an auto-generated projection (tools/sync_topology.nim, DO-NOT-EDIT header) and this slice registers the finding per the AGENTS.md §0.9 mandate without touching src/; trace: this entry's lineRange plus the contentHash over config/gates.json (sha256 d1fee5fc...) and the GateEnablement deviation-table audit (static-analyzer carries DEBT#426; golden-master-gate carries nothing)."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 - the surface is a Makefile variable and a workflow file, outside the src/-only marker scan; trace: the two Makefile lines, the empty workflow grep, and the 6 required contexts read back from the rules API.",
+      "resolvedAt": "2026-11-15",
+      "resolvedBy": "Kimi Code CLI agent (user-authorized)"
     },
     {
       "id": "DEBT#540",
-      "category": "Theater/Unenforced Claim",
+      "category": "Trust / Evidence",
       "impact": "medium",
       "severity": "medium",
-      "title": "unstaged-guard is declared in topology/manifest at svError severity but disabled with no debt ID and no rationale, so unstaged-content commits are blocked nowhere and no lane reports the gap",
-      "description": "Machine-observed 2026-11-15. config/gates.json:60 projects `unstaged-guard` as `enabled: false`. The projection authority is the GateEnablement table (src/gate/topology_spec.nim:733-740); the only other disabled gate, static-analyzer, carries an inline rationale plus DEBT#426 (src/gate/topology_spec.nim:734-736, marker at src/gate/config_loader.nim:27), while unstaged-guard (src/gate/topology_spec.nim:739) carries neither. The gate is otherwise fully declared — initTopologyEntry (src/gate/topology_spec.nim:689-699, layer lkMeta, entry src/gate/runners/unstaged_guard, severity svError), config/gates.manifest.toml:260-262, runner source exists — but stages = @[skManual] and the id appears in no execution list (GATES_FAST/GATES_STATIC/GATES_FULL, PUSH_ADMISSIBILITY_GATES at Makefile:62) and in no workflow. The guard's declared purpose (keeping unstaged changes out of commits) is therefore enforced nowhere, and a reader of the manifest is given no signal that the protection is off. This is the declare-protection-enforce-nothing shape that AGENTS.md §0.9 prohibits.",
-      "symbol": "unstaged-guard (config/gates.json gates entry / src/gate/topology_spec.nim GateEnablement)",
-      "contentHash": "sha256:d1fee5fc7a644222221664196389c11e266734938a45d2d1afd4df0ed705a783",
-      "lineRange": "config/gates.json:60; src/gate/topology_spec.nim:739 (GateEnablement)",
+      "title": "data/decision_binding_baseline.json and tools/decision_binding_checker.nim resolve to PRODUCT with no CODEOWNERS rule, so the artifact that accepts the decision-binding debt and the tool that measures it are unowned",
+      "description": "Machine-observed 2026-11-15. tools/surface_guard.nim resolveClass checks PRODUCT -> CONTROLLED -> FROZEN and falls back to defaultClass=PRODUCT; config/repository_surface.json (policyVersion 98) registers no pattern matching data/decision_binding_baseline.json or tools/decision_binding_checker.nim, so both are PRODUCT and every operation (ADD/MODIFY/DELETE) is PASS. .github/CODEOWNERS (43 rules) has no /data/ rule and no rule for the checker, so no owner is requested either. Effect: after this change the sanctioned way to accept MORE decision-binding debt is a hand edit of the baseline's counts - the tool now refuses to raise them (reanchorProblem in tools/decision_binding_judge.nim) - and that edit needs neither a surface violation nor a code-owner approval. The measurement and the acceptance are the same file, and that file has no authority binding. Pre-existing in shape (the retired config/decision_binding.waiver.json was equally unowned); newly load-bearing because the baseline replaced the waiver list as the single point of acceptance.",
+      "symbol": "data/decision_binding_baseline.json; tools/decision_binding_checker.nim; config/repository_surface.json classes.CONTROLLED/FROZEN",
+      "contentHash": "sha256:4a7f347e8216a63f765915e6264c9b3c93059fe972ef283fd3379d65df93e71c",
+      "lineRange": ".github/CODEOWNERS (43 rules, no data/ or checker rule); config/repository_surface.json classes.CONTROLLED/FROZEN, defaultClass",
       "files": [
-        "config/gates.json"
+        ".github/CODEOWNERS",
+        "config/repository_surface.json"
       ],
       "source": "theater_audit",
       "status": "open",
-      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9. Fix direction (architect-gated, out of this registration slice): record the disablement rationale and owning debt ID inline in the GateEnablement table (static-analyzer/DEBT#426 precedent), or enable and wire the guard into an enforced lane; a declared svError guard that no lane executes and no rationale explains must not persist silently.",
+      "resolution": "UNRESOLVED - architect decision required, and it belongs to the Stage B surface adjudication with DEBT#538: either register data/decision_binding_baseline.json and tools/decision_binding_checker.nim in classes.FROZEN (a policy change and a CI-epoch transition, because it converts an all-PASS surface into a FAIL surface) or keep them PRODUCT and add CODEOWNERS entries so the accepting edit at least requires an owner review. Keeping them unowned is not a third option: the ratchet's whole claim is that the number only falls, and a file nobody owns can raise it silently. Related: DEBT#542 (the whole surface policy has no admission-time enforcement, so this class/ownership difference binds nothing at merge).",
       "lastVerifiedAt": "2026-11-15T00:00:00Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — config/gates.json is an auto-generated projection (tools/sync_topology.nim, DO-NOT-EDIT header) and this slice registers the finding per the AGENTS.md §0.9 mandate without touching src/; trace: this entry's lineRange plus the contentHash over config/gates.json (sha256 d1fee5fc...) and the GateEnablement deviation-table audit (static-analyzer carries DEBT#426; unstaged-guard carries nothing)."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 - the sites are a policy JSON and a CODEOWNERS file, outside the src/-only marker scan; trace: resolveClass order in tools/surface_guard.nim:188-197, defaultClass in config/repository_surface.json, and the 43 CODEOWNERS rules."
     },
     {
       "id": "DEBT#541",
-      "category": "Theater/Unenforced Claim",
+      "category": "CI Enforcement / Work-Unit Execution",
       "impact": "medium",
       "severity": "medium",
-      "title": "config/strict.nims advertises an 'Architecture Invariant Auto-Scan' whose Invariant-17 block silently passes when bin/ast_invariant_checker is absent — and no lane builds the checker or defines axiomStrict",
-      "description": "Machine-observed 2026-11-15. config/strict.nims:29-31 declares 'Architecture Invariant Auto-Scan (axiomStrict)' claiming to auto-scan all of core/ and physically block I/O leaks, isMainModule, and include usage. The Invariant-17 block (config/strict.nims:304-324) runs the native checker via gorgeEx only under `if fileExists(\"bin/ast_invariant_checker\")`; when the binary is absent the entire block is skipped with no message — a silent pass. Measured: bin/ast_invariant_checker does not exist in the repository; its source (tools/ast_invariant_checker.nim, build instruction only in the source header comment at tools/ast_invariant_checker.nim:15) is built by no Makefile target and no workflow, and `-d:axiomStrict` is defined solely by the `strict-build` target (Makefile:1220-1221), which appears in no gate list (GATES_FAST/GATES_STATIC/GATES_FULL, PUSH_ADMISSIBILITY_GATES) and no workflow. The advertised invariant scan therefore never executes in any live lane, and even a manual strict-build silently passes while the checker is missing. A reader of the header believes the architecture invariants are physically enforced; none are. This is the declare-protection-enforce-nothing shape that AGENTS.md §0.9 prohibits.",
-      "symbol": "config/strict.nims Invariant 17 block (bin/ast_invariant_checker existence guard) + Architecture Invariant Auto-Scan header",
-      "contentHash": "sha256:b6a5b34aaf012dd82a09b8c692db3aa4a701cd65f914ab4e90bf055030bdff90",
-      "lineRange": "config/strict.nims:29-31 (Auto-Scan header); config/strict.nims:304-324 (Invariant 17 block)",
+      "title": "679 missing {.axiomDecision.} reasons across 253 src/ files are unannotated decision points, and the number was invisible while 203 of those files were exempt from scanning",
+      "description": "Machine-observed 2026-11-15 at 5ae980f4. bin/decision_binding_checker with the retired grandfather array emptied reports 253 files / 679 reasons: 385 'returns Result/Option without axiomDecision', 205 'multiple returns without axiomDecision', 89 carrying both. With the 249-entry waiver list active the same scan reported 50 files / 213 reasons, and 203 of the 249 listed files do violate - so the published figure described the debt no waiver had reached, not the debt. data/decision_binding_baseline.json records the full count as an accepted risk with owner @Archright/architect and reviewBy 2027-06-30. What remains open is the actual remediation work: adding the pragmas (or removing the decision points) so the count falls. The baseline blocks growth but it does not make the 679 decision points annotated, and the acceptance expires.",
+      "symbol": "data/decision_binding_baseline.json filesWithViolations/totalReasons/perReason",
+      "contentHash": "sha256:642a371ae2605411c2638415e740c184b823cd10cd1b8629fbda1bc5afd4e4bb",
+      "lineRange": "data/decision_binding_baseline.json (baseline accepted 253 files / 679 reasons at 5ae980f4); measured by tools/decision_binding_checker.nim",
       "files": [
-        "config/strict.nims",
-        "tools/ast_invariant_checker.nim"
+        "data/decision_binding_baseline.json"
       ],
       "source": "theater_audit",
       "status": "open",
-      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9. Fix direction (architect-gated, out of this registration slice): build bin/ast_invariant_checker in the lanes that define axiomStrict and fail loudly when the checker is missing (invert the existence guard), or correct the header to state the scan's real scope (manual-only, binary-present-only).",
+      "resolution": "UNRESOLVED - accepted, not fixed. data/decision_binding_baseline.json is the acceptance instrument: owner @Archright/architect, rationale recorded, reviewBy 2027-06-30. Remediation is per-file work measured by the ratchet; the count may only fall, and --update-baseline refuses to raise it. Re-review at or before 2027-06-30, at which point the acceptance is reported stale on every run.",
       "lastVerifiedAt": "2026-11-15T00:00:00Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is a NimScript config surface plus an unbuilt tool, outside the src/-only marker scan, registered per the AGENTS.md §0.9 mandate; trace: this entry's lineRange plus the contentHash over config/strict.nims:304-324 (sha256 b6a5b34a...) and the measured absence of bin/ast_invariant_checker."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 - the artifact is the baseline JSON, and the violations are pre-existing pragma gaps spread over 253 src/ files (a pragmatic per-file marker set would exceed 253 markers and would restate the baseline); trace: the acceptance record itself plus the measured histogram 385/205/89."
+    },
+    {
+      "id": "DEBT#542",
+      "category": "Theater/Unenforced Claim",
+      "impact": "high",
+      "severity": "high",
+      "title": "repository_surface FROZEN/CONTROLLED policy (219 FROZEN + 285 CONTROLLED tracked files, including every src/gate/** gate runner) has no admission-time enforcement: its only workflow executor self-declares advisory, its Makefile target runs only from a bypassable local hook, and the live pull_request rule requests no code-owner review",
+      "description": "Machine-observed 2026-11-15 at eaf1a318. config/repository_surface.json (policyVersion 98) resolves 219 tracked files to FROZEN and 285 to CONTROLLED, evaluated over `git ls-files` (6617 files) with surface_guard's own globMatch/resolveClass semantics. classes.FROZEN declares ADD/MODIFY/DELETE=FAIL for paths that include every gate runner. The three readers of this policy are all non-binding at the merge decision: (1) .github/workflows/repository_surface.yml states in its own header (lines 1-18) that the job is advisory and not a required check; (2) Makefile:62 PUSH_ADMISSIBILITY_GATES lists check-repository-surface, which runs only from .githooks/pre-push:767, a local hook bypassable with --no-verify; (3) .github/CODEOWNERS assigns the paths to @Archright/architect, but the live pull_request rule reports require_code_owner_review=false and required_approving_review_count=0, so no owner approval is requested. The required_status_checks rule read back from `gh api repos/Archright/Axiom/rules/branches/main` lists exactly admission-check, bsec-integrity, debt-registry-gate, generation-acceptance, axiom-operational-slice, publication-integrity - none of them builds or runs surface_guard. generation-acceptance does compute a changed-path intersection, but against config/policy/merge_admission.json trustSurface (33 entries) plus the prefixes .github/workflows/, .github/actions/, config/policy/, dynamic/ (.github/workflows/generation-acceptance.yml:200-254), so Makefile and src/gate/** are outside that list and a PR touching only them takes the fast path. Consequence: FROZEN names an authority that no mechanism exercises at the only point that decides admission, and AGENTS.md §-1's immutability rule for import_encapsulation_gate.nim rests on the same unenforced vocabulary. This is the declare-protection-enforce-nothing class of §0.9. It cannot be repaired by making the existing workflow required: config/repository_surface.json is itself registered FROZEN, and both active branch rulesets (axiom-admission-gate 25218071, main 27097366) report bypass_actors=[], so the file that must change forbids changing it and the ruleset offers no bypass. Promotion therefore needs a policy-amendment authority path defined first. A second measured defect belongs to the same file: 124 tracked files match two classes and the stricter FROZEN is dropped by the first-match resolver (123 CONTROLLED-over-FROZEN, 1 PRODUCT-over-FROZEN; 91 of them under src/gate/**, where 178 files resolve FROZEN and 91 resolve CONTROLLED/PRODUCT despite also matching FROZEN) - DEBT#538 is the Makefile instance.",
+      "symbol": "config/repository_surface.json classes.FROZEN/classes.CONTROLLED + .github/workflows/repository_surface.yml (advisory executor) + Makefile:62 PUSH_ADMISSIBILITY_GATES + .githooks/pre-push",
+      "contentHash": "sha256:758caf918a64685e44665816fc9a18ec74ed2f2c2651e2404813f1657e314cd1",
+      "lineRange": "config/repository_surface.json (policyVersion 98, classResolutionOrder PRODUCT->CONTROLLED->FROZEN); .github/workflows/repository_surface.yml:1-18 (advisory declaration), :85 (surface_guard invocation); Makefile:62,571; .githooks/pre-push:767",
+      "files": [
+        "config/repository_surface.json",
+        ".github/workflows/repository_surface.yml",
+        "Makefile",
+        ".github/CODEOWNERS",
+        ".githooks/pre-push"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED - needs an authority decision before any mechanical fix. (a) Define the policy-amendment path, then make one surface executor admission-enforced (smallest shape: a step inside an already-required workflow, as done for DEBT#539) - blocked today because config/repository_surface.json is itself FROZEN and both branch rulesets have bypass_actors=[], so no existing mechanism can authorize the amendment. (b) Or delete the protection claim: demote FROZEN/CONTROLLED to advisory vocabulary in the policy file and in AGENTS.md §-1 so the documents state what is enforced. Both are architect decisions. Until one lands, reviewers must treat FROZEN as advisory; DEBT#538 (Makefile double class) and DEBT#540 (baseline unowned) are instances of the same gap and cannot be closed by classification alone.",
+      "lastVerifiedAt": "2026-11-15T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 - the site is a policy JSON plus workflow YAML, outside the src/-only marker scan; trace: the live required_status_checks read (6 contexts, none runs surface_guard), repository_surface.yml:1-18, Makefile:62, .githooks/pre-push:767, generation-acceptance.yml:200-254 (trustSurface + prefixes), and the ruleset read-back (require_code_owner_review=false, bypass_actors=[])."
     }
   ]
 }
