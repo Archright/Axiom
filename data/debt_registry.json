@@ -5508,11 +5508,13 @@
         ".github/workflows/debt-registry-gate.yml"
       ],
       "source": "theater_audit",
-      "status": "open",
-      "resolution": "UNRESOLVED - fix is a CI-epoch change (AGENTS.md §2.5): add a `bin/decision_binding_checker` step to the already-required debt-registry-gate workflow so no new required context is created, declare the changed meaning of that check in the same generation, then measure both the PR run and the merge_group run. Belongs to the Stage B gate-truth slice with DEBT#534/#535.",
-      "lastVerifiedAt": "2026-11-15T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-15: the ratchet runs inside the required debt-registry-gate context - no seventh context, no ruleset change. Verified in the required check itself, not locally: workflow run 43681301680, job 132712325128, steps 11-13 succeeded on head 6e5f2d9. Step 12 executed bin/decision_binding_checker and printed '253 file(s) / 679 reason(s)' then 'PASS (PASS)'; step 13 ran the contract suite (23 [OK] lines). config.nims now rebuilds the checker when tools/decision_binding_checker.nim or tools/decision_binding_judge.nim are newer than the binary, so a cache-restored binary cannot judge the tree with a retired rule (measured 2026-11-15: pre-ratchet bin/ exited 1 with '253 function(s) missing {.axiomDecision.} pragma - no active waivers' and every nim invocation failed through the hook). The merge_group run of this workflow is the remaining observation; it is a merge-queue precondition, so the merged tree cannot lack it. Residual: the ratchet guards the count, not the correctness of the 679 annotations (DEBT#541).",
+      "lastVerifiedAt": "2026-11-15T05:37:27Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 - the surface is a Makefile variable and a workflow file, outside the src/-only marker scan; trace: the two Makefile lines, the empty workflow grep, and the 6 required contexts read back from the rules API."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 - the surface is a Makefile variable and a workflow file, outside the src/-only marker scan; trace: the two Makefile lines, the empty workflow grep, and the 6 required contexts read back from the rules API.",
+      "resolvedAt": "2026-11-15",
+      "resolvedBy": "Kimi Code CLI agent (user-authorized)"
     },
     {
       "id": "DEBT#540",
