@@ -540,8 +540,10 @@ bin/layer_enforcement_gate --strict || {
 
 # ── Part 4: Push-Target OID Static Admissibility (Phase 1) ──
 # Mechanism A: worktree-add --detach <OID> → symlink prebuilt bin/ → make -C snapshot push-admissibility.
-# The gate SET is declared exactly once in the Makefile (PUSH_ADMISSIBILITY_GATES —
-# single definition point; the push-admissibility thin target + integrity check consume it).
+# The gate SET lives in the Makefile: PUSH_ADMISSIBILITY_GATES declares it, the
+# recipe's per-invocation `# @pushGate` markers are the execution truth, and
+# check-push-admissibility-integrity (the recipe's first step) enforces set equality —
+# the summary line prints the emitted executed set only (DEBT#534/535).
 # Hooks only call make; the single Makefile-variable exception is NIM_TOOL_FLAGS,
 # resolved by make itself via `make -pn` (make's own database print, not text
 # parsing) for the VS-1 content-identity stamp adjudication below. The hook

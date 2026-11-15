@@ -5404,11 +5404,13 @@
         "docs/agents/rules_workflow.md"
       ],
       "source": "theater_audit",
-      "status": "open",
-      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9. Fix direction: derive the summary line from the set of recipes actually invoked (single source), or wire the missing target in; a declared-but-unrun gate must never appear in a PASS string.",
-      "lastVerifiedAt": "2026-11-14T00:00:00Z",
+      "status": "closed",
+      "resolution": "Fixed: check-merge-admission-cert-mirror wired into the push-admissibility recipe (Makefile, sub-make invocation after the check-epoch-transaction block) and the summary line now derives from the executed set emitted by bin/push_admission_integrity_gate --executed-summary (recipe # @pushGate markers), never from the declaration. Observed: make push-admissibility exit 0 with the mirror gate actually executing (its === and PASS markers present in the run log) and the string check-merge-admission-cert-mirror occurring at invocation + summary, not summary-only; regression test tests/unit/test_push_admission_integrity.nim replays the exact drift (deleting the invocation line) and the gate FAILs closed naming check-merge-admission-cert-mirror.",
+      "lastVerifiedAt": "2026-11-15T11:40:21Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — Makefile is outside the src/-only marker scan; trace: this entry's lineRange/contentHash plus the measured run log."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — Makefile is outside the src/-only marker scan; trace: this entry's lineRange/contentHash plus the measured run log.",
+      "resolvedAt": "2026-11-15",
+      "resolvedBy": "Kimi Code CLI agent (user-authorized)"
     },
     {
       "id": "DEBT#535",
@@ -5424,11 +5426,13 @@
         "Makefile"
       ],
       "source": "theater_audit",
-      "status": "open",
-      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9. Fix direction: make the integrity check derive the executed set from the recipe (or from a machine-readable manifest) and assert set equality, then wire the check into the push path it audits.",
-      "lastVerifiedAt": "2026-11-14T00:00:00Z",
+      "status": "closed",
+      "resolution": "Fixed: check-push-admissibility-integrity upgraded from membership-only to declared-vs-executed SET EQUALITY — tools/ci/push_admission_integrity_gate.nim derives the executed set from the recipe's per-invocation # @pushGate markers, compares it with make-expanded PUSH_ADMISSIBILITY_GATES both directions, cross-checks sub-make targets against markers, flags unaccounted sub-makes, keeps universe membership as a secondary assertion, and requires the auditor itself to be wired into the recipe (wired as the push-admissibility recipe's first step; its invocation plus push-admissibility-debt-prereqs are the only allowlisted non-gate sub-makes). Observed: the DEBT#534 drift state now FAILs closed (mutation tests: declared-without-invocation, invocation-removed, auditor-removed, unaccounted sub-make — all exit 1 with named reasons); 11/11 regression tests in tests/unit/test_push_admission_integrity.nim.",
+      "lastVerifiedAt": "2026-11-15T11:41:14Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — Makefile is outside the src/-only marker scan; trace: this entry's lineRange/contentHash."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — Makefile is outside the src/-only marker scan; trace: this entry's lineRange/contentHash.",
+      "resolvedAt": "2026-11-15",
+      "resolvedBy": "Kimi Code CLI agent (user-authorized)"
     },
     {
       "id": "DEBT#536",
