@@ -231,7 +231,7 @@ for fpath in files:
 | Surface | Rule |
 |------|-------------|
 | pre-commit | `.githooks/pre-commit` — worktree placement/topology assert (fail-closed) → `bin/nim_check_gate incremental` on staged `.nim` → `bin/anti_theater_gate` → `bin/layer_enforcement_gate --strict` → `bin/stale_cert_gate` → `nim check src/cli/main.nim` (staged paths touch `src/`·`config/` only) |
-| pre-push | `.githooks/pre-push` — `bin/gate_tier_integrity --strict` → `bin/anti_theater_gate` → `bin/layer_enforcement_gate --strict` → per push-target OID snapshot(`git worktree add --detach <OID>`) `make push-admissibility` (the `PUSH_ADMISSIBILITY_GATES` set, Makefile:54) |
+| pre-push | `.githooks/pre-push` — `bin/gate_tier_integrity --strict` → `bin/anti_theater_gate` → `bin/layer_enforcement_gate --strict` → per push-target OID snapshot(`git worktree add --detach <OID>`) `make push-admissibility` (선언 `PUSH_ADMISSIBILITY_GATES` == 실행 집합 — 레시피 각 게이트 호출 라인의 `# @pushGate` 마커가 실행 정본; `check-push-admissibility-integrity`가 레시피 첫 단계로 집합 동치를 강제하고 PASS 요약은 실행 집합 사출로만 인쇄한다 — DEBT#534/535) |
 | canonical enforcement | `make verify-contract` (contract preservation §) |
 | hook install authority | authority = canonical value `core.hooksPath = .githooks` · sole writer = `tools/setup_hooks.nim` · enforcement = `.githooks/pre-commit` + `.githooks/pre-push` · install = `make -f ci/checker.mk setup-hooks` — [ADR-0028](../adr/0028-hook-installation-authority.md). Fresh clone: key unset is git's default (EXPECTED-PRE-INSTALL-DEFAULT), not a defect |
 
