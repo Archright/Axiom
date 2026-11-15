@@ -727,7 +727,7 @@ fail-closed로 떨어지는 방향으로 설계한다(우연히 통과하는 방
 (`'"$SETTLE_MINUTES"'*60`). `certificate-mint.yml:445`의 `jq --arg`는 별도 jq
 CLI 파이프라인에 대한 것 — gh api에는 적용되지 않는다.
 
-## Q21 — `GET /repos/{owner}/{repo}/pulls`에 `state=merged`는 없다: 병합 PR은 `closed` + `merged_at != null`이고, `actions/runs.updated_at`은 시간 앵커로 쓸 수 없다 (2026-11-15, vs-c1 merged_at 앵커 수정에서 등록)
+## Q21 — 관찰 SHA의 시간 앵커는 run 메타데이터가 아니라 병합 기록이다: `updated_at`은 이동하고, runs 목록은 완결도 착지도 보증하지 않는다 (2026-11-15, vs-c1 merged_at 앵커 수정에서 등록)
 
 **표면**: `admission-ssot-drift`의 관찰 SHA 선택기. Q20 직후 PR #80(`90980ecb`)이 `updated_at` + `per_page=20`으로
 착지했고, 같은 날 두 결함이 확인돼 `merged_at` 앵커로 대체했다.
@@ -735,18 +735,55 @@ CLI 파이프라인에 대한 것 — gh api에는 적용되지 않는다.
 **(a) REST 상태 열거에 `merged`가 없다.** 공식 문서(`GET /repos/{owner}/{repo}/pulls`)의 `state`는
 `open`·`closed`·`all`뿐이다. 병합된 PR은 `closed`의 부분집합이고 `merged_at != null`로 식별한다.
 `gh pr list --state merged`는 CLI가 클라이언트에서 걸러 주는 것이지 REST 파라미터가 아니다 —
-워크플로에서 `gh api`를 직접 쓰면 `state=closed` + `merged_at` 필터가 정본이다.
+워크플로에서 `gh api`를 직접 쓰면 `state=closed` + `merged_at` 필터가 REST 정본이다. 배포된
+선택기는 `gh pr list --state merged --base main --limit 100 --json number,mergedAt,mergeCommit,baseRefName`
+형태다(유계 조회 — 아래 판정 규칙).
 
 **(b) `updated_at`은 고정 시점이 아니다.** 재실행(re-run)은 run을 새로 만들지 않고 attempt를 올리며,
 공식 스키마가 `run_started_at`을 "Resets on re-run"으로 규정한다. 즉 run 메타데이터 기반 정착 창은
-재실행 한 번에 관찰 대상이 이동할 수 있다. `merged_at`은 병합 시점의 불변 기록이다.
+재실행 한 번에 관찰 대상이 이동할 수 있다. `merged_at`은 병합 시점의 불변 기록이다(PR은 정확히
+한 번 병합된다 — 어떤 플랫폼 이벤트도 그 시각을 이동시키지 못한다).
 
 **(c) merge_group run의 `completed`+`success`는 그룹 착지가 아니다.** `GET /actions/runs?event=merge_group`은
 **워크플로별 run**을 나열하므로 "어느 한 워크플로가 성공"은 "그룹이 병합됐다"를 함의하지 않는다.
 실측(run `43591242341`, 2026-11-14): 모니터 조회 `11:42:25Z` < 실제 `merged_at` `11:46:16Z` — 4분 앞선
 관찰이 leg3 4/6 FALSE RED를 냈다(이슈 #57). PR 병합 기록을 쓰면 이 클래스는 정의상 사라진다.
 
+**실측 — 착지 전수 재생(2026-11-15, 1분 그리드)**: 현 세대 저장소의 착지 전수
+(74 PR 착지 = main first-parent 체인의 merge 74개와 1:1 대응, 전부 `baseRefName=="main"`·
+`mergeCommit.oid` 존재) 구간을 1분 그리드(3,569 시점) + 실제 모니터 실행 5 시점
+(총 3,574, 캡처 2026-11-15T04:42:20Z)으로 재생했다(방법·출력: `docs/evidence/vs_c1_merged_at_anchor_replay_2026-11-15.md`).
+각 시점에서 세 선택기를 비교·판정했다("완료" = 관찰 SHA가 expected 6-context의 check-run을
+GitHub Actions app(id 15368)이 이미 materialize했음 — leg3 판정과 동일 기준):
+
+| 선택기 | 빈 선택(fail-closed 노이즈) | 미완료 관찰(FALSE RED 노출) | 미착지 SHA 관찰 |
+|---|---|---|---|
+| 현행 main `[0]`(정착창 없음) | 0 | 491 (13.7%) | 112 시점(20개 distinct 드롭 그룹) |
+| d653a4e `updated_at`+`per_page=20` | **269 (7.5%)** | 0 | 33 시점(7개 distinct) |
+| `merged_at` 앵커(본 변경) | **0** | **0** | **0** |
+
+- per_page=20의 빈 선택 결함이 재생으로 확정됐다(과제 지적 "시뮬 9.2%"와 동일 클래스, 본
+  그리드에서는 7.5%). merge_group run 864개는 전부 attempt 1(재실행 0)이므로 updated_at 근사가
+  이 구간에서는 정확하다.
+- 결함 시점 재현: 2026-11-14T11:41:46Z(이슈 #57 run)에서 신규 선택식은 PR #51 `1eeaecf62f`
+  (6-context 전부 존재)를 골랐다 — FALSE RED는 발생하지 않았을 것이다.
+- 목록의 `--limit 100`은 측정된 여유 안에 있다: 어떤 20분 창에서도 최대 5건 착지(버스트 실측).
+- **경계(정직 기록)**: 회전 경로 수동 병합(PR #76, 2026-11-14T15:32:33Z — merge queue 미경유,
+  merge_group run 0건)은 merge 커밋에 merge_group 페이즈 check-run이 없다(6-context 중 5개 영구
+  부재). `merged_at` 앵커 선택기는 [mergedAt+정착창, 다음 큐 착지+정착창) = 8분 동안 그 SHA를
+  고른다(3,557 중 8 시점) — 모니터는 missing context를 정직하게 보고한다(드리프트는 아니지만
+  관측은 참이다). 실제 모니터 실행 5회 중 이 창에 든 것은 0회였다. PR 목록 필드로 큐 경유
+  여부를 구별할 수 없다(`mergedBy`는 큐/수동 병합에서 동일 — 실측). 관측 도구는 이 경계를
+  "드리프트"로 판독하지 말고 "비(非)큐 착지"로 기록한다.
+- 보조 관측: check-runs **목록** 응답의 객체에는 `created_at`이 없고 `started_at`이 있다
+  (Q18의 jobs-API 반대 사례 — materialize 시각 관측은 `started_at`으로). 본 재생은 이를 썼다.
+
 **판정 규칙**: 관찰 대상이 "main에 착지한 커밋"이면 **병합 기록**(`merged_at`)에서 고르고,
-run 메타데이터에서 고르지 않는다. 조회는 `per_page` 최대 100이므로 **페이지 상한을 명시**하고
-(`100 × 3 = 최근 updated 300건`), 상한 안에 조건을 만족하는 후보가 없으면 fail-closed한다.
-`check-runs` 응답의 `total_count` 대조 규칙은 Q19를 따른다.
+run 메타데이터에서 고르지 않는다. 조회는 `gh pr list --state merged --base main --limit 100`
+(--json number,mergedAt,mergeCommit,baseRefName)로 **유계 100건**을 명시하고, 조건은
+`mergeCommit.oid != null` + `baseRefName == "main"` + `now - mergedAt >= SETTLE_MINUTES*60`,
+선택은 `max_by(.mergedAt)`(목록 정렬 순서 비의존), 상한 내 후보가 없으면 "no PR merged into
+main older than the settle window (limit 100)"로 fail-closed한다 — 상한을 늘리는 것은 완결
+보증이 아니므로(Q16의 1,000건 상한) 한계를 메시지에 명시하는 것이 정직이다. 비(非)큐 착지
+(회전 경로 수동 병합)에서 leg3 missing-context 판정을 만나면 드리프트가 아니라 비큐 착지
+경계로 판독한다. `check-runs` 응답의 `total_count` 대조 규칙은 Q19를 따른다.
