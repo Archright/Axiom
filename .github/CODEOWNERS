@@ -36,6 +36,12 @@
 /tools/ci/check_evidence_id_contract.nim    @Archright/architect
 /AGENTS.md                                  @Archright/architect
 
+# GO-critical verdict-input approval table (read from B's HEAD by
+# tools/ci/check_evidence_id_contract.nim — the approval authority over the
+# judgment inputs the merge-group lanes execute; PRODUCT class, no surface
+# registration, outside the EvidenceKey policyDigest five-file set)
+/data/policy/                         @Archright/architect
+
 # Tier C — gateway execution closure (ADR-0021 execution authority; 실행 코드
 # 변경 = rotation, subject 변경과 구분 — plan "보호 계층" 목록 그대로)
 /ci/checker.mk                             @Archright/architect

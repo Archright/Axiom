@@ -1,0 +1,54 @@
+{
+  "schema": "go-critical-input-approvals/v1",
+  "description": "GO-critical 판정 입력 승인 테이블 — go-critical-lane이 후보(M) 바이트로 실행하는 판정 입력(matrix.tests 4종 + tests/golden/*.nim 최상위 글롭)의 경로별 승인 blob 집합. 체커(tools/ci/check_evidence_id_contract.nim, checkGoCriticalInputs)는 이 테이블을 B의 HEAD git 객체에서 읽어 B 트리와 _candidate(M) 트리의 blob을 비교한다: 동일 blob 통과, 상이 blob은 이 집합에 있을 때만 통과, M-only 추가는 승인 필요, B-only 삭제는 무조건 FAIL(GO_TEST_HASH_UNAPPROVED). 테이블과 테스트 변경을 한 PR에 넣으면 자기 merge_group 실행에서 FAIL한다(자기승인 불가). 정당한 변경은 3단계 staged landing이다: (A) 새 blob을 기존 blob과 함께 등록 → (B) 테스트 바이트 변경 → (C) 구 blob 폐기. 각 단계는 직전 세대 테이블로 자기 PASS. 승인은 운영자(@Archright/architect, CODEOWNERS /data/policy/) 전용이다.",
+  "entries": [
+    {
+      "path": "tests/unit/test_s1a_lean_golden.nim",
+      "approvedBlobs": [
+        "377e5c641386218ce2138ed4bcfa7ab11635535d"
+      ]
+    },
+    {
+      "path": "tests/unit/proof_integrity_test.nim",
+      "approvedBlobs": [
+        "8a5a7f142134050a7205144c6139672e70c106a3"
+      ]
+    },
+    {
+      "path": "tests/unit/test_d2_golden.nim",
+      "approvedBlobs": [
+        "ba294f29118f21d84c2609f3170a538888ce27ac"
+      ]
+    },
+    {
+      "path": "tests/unit/test_d2_persist.nim",
+      "approvedBlobs": [
+        "6eba34131d910d052a08b76bc2bd738ce510a9f1"
+      ]
+    },
+    {
+      "path": "tests/golden/identity_postcondition.nim",
+      "approvedBlobs": [
+        "12e465c0bde55bf23321170ae335c9657ba03f6c"
+      ]
+    },
+    {
+      "path": "tests/golden/mul_div_body.nim",
+      "approvedBlobs": [
+        "d3171ea7d8fd9fb612589fd98d28b43e9af2c541"
+      ]
+    },
+    {
+      "path": "tests/golden/rem_body.nim",
+      "approvedBlobs": [
+        "2b986b4042d9e978297baa99fb9a00f39ebacb76"
+      ]
+    },
+    {
+      "path": "tests/golden/sub_postcondition.nim",
+      "approvedBlobs": [
+        "7640ee605299cae5afb725763ac42f338c49ab16"
+      ]
+    }
+  ]
+}
