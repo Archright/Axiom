@@ -36,6 +36,12 @@
 /tools/ci/check_evidence_id_contract.nim    @Archright/architect
 /AGENTS.md                                  @Archright/architect
 
+# GO-critical verdict-input approval table (read from B's HEAD by
+# tools/ci/check_evidence_id_contract.nim — the approval authority over the
+# judgment inputs the merge-group lanes execute; PRODUCT class, no surface
+# registration, outside the EvidenceKey policyDigest five-file set)
+/data/policy/                         @Archright/architect
+
 # Tier C — gateway execution closure (ADR-0021 execution authority; 실행 코드
 # 변경 = rotation, subject 변경과 구분 — plan "보호 계층" 목록 그대로)
 /ci/checker.mk                             @Archright/architect
@@ -79,3 +85,15 @@
 /tools/ci/publication_sbom_eval.nim             @Archright/architect
 /tools/ci/publication_provenance_validator.nim  @Archright/architect
 /tools/ci/publication_report.nim                @Archright/architect
+
+# Decision-binding ratchet — the acceptance artifact (baseline counts) and
+# its measurement tool resolve PRODUCT with no owner requested (DEBT#540,
+# theater_audit 2026-11-15 at 1aa8e912: surface policyVersion 98 registers
+# no pattern for either path). Surface-policy registration (FROZEN listing)
+# remains deferred to DEBT#542, which needs an architect amendment path.
+# Per docs.github.com "About code owners": the last matching pattern takes
+# the most precedence, and with the live ruleset's
+# require_code_owner_review=false this binds a review request to
+# @Archright/architect, not a merge precondition.
+/data/decision_binding_baseline.json    @Archright/architect
+/tools/decision_binding_checker.nim     @Archright/architect

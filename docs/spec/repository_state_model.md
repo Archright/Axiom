@@ -127,7 +127,6 @@ Each row specifies `(class, persistence)` for a concrete artifact or well-define
 | `logs/proof_vault/**/*` | EPHEMERAL | IGNORED | Proof vault logs |
 | `.cache/**/*` | EPHEMERAL | IGNORED | Application cache |
 | `.config/**/*` | EPHEMERAL | IGNORED | Runtime configuration cache |
-| `.opencode/**/*` | EPHEMERAL | IGNORED | Editor session state |
 | `.axiom/**/*` | EPHEMERAL | IGNORED | Runtime axiom state |
 | `vendor/z3/**/*` | EXTERNAL / PRODUCT_DEPENDENCY | IGNORED | Z3 binary; fetch+hash verify at provision time. Tree absence permitted. |
 | `~/.elan/**/*` | EXTERNAL / ENVIRONMENT_DEPENDENCY | N/A | Elan installer (user-local) |

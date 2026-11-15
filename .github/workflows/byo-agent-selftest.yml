@@ -96,6 +96,10 @@ jobs:
           name: 'byoa-phase3-selftest-proposals'
           path: '${{ runner.temp }}/byoa/proposals.json'
           if-no-files-found: error
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
       - name: 'Upload proposals artifact — mixed capability fixture (§9)'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -103,6 +107,10 @@ jobs:
           name: 'byoa-phase5-selftest-proposals-mixed'
           path: '${{ runner.temp }}/byoa/mixed-proposals.json'
           if-no-files-found: error
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
       - name: 'Upload proposals artifact — all-INCAPABLE fixture (§9)'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -110,6 +118,10 @@ jobs:
           name: 'byoa-phase5-selftest-proposals-incapable'
           path: '${{ runner.temp }}/byoa/incapable-proposals.json'
           if-no-files-found: error
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
   prove:
     name: 'Job 2 — Axiom prove via reusable byo-agent workflow'

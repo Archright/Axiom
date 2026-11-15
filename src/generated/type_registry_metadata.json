@@ -4898,6 +4898,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "List string",
+      "module": "src/cli/debt_cli.nim",
+      "name": "contentHashCandidates",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "String",
       "module": "src/cli/debt_cli.nim",
       "name": "getGitCommitSha",
@@ -4947,6 +4961,36 @@
       "returnType": "seq[string]",
       "smtSort": "(Seq string)",
       "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/cli/debt_cli.nim",
+      "name": "isDigitStr",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/cli/debt_cli.nim",
+      "name": "isRangeSpec",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
     },
     {
       "hasAxiomHint": false,
@@ -5006,6 +5050,17 @@
     },
     {
       "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/cli/debt_cli.nim",
+      "name": "parseLineNum",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
       "ignorable": true,
       "leanType": "Unit",
       "module": "src/cli/debt_cli.nim",
@@ -5034,6 +5089,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "tuple[path: string, spec: string]",
+      "module": "src/cli/debt_cli.nim",
+      "name": "splitAnchorRef",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "tuple[path: string, spec: string]",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "List string",
       "module": "src/cli/debt_cli.nim",
       "name": "statusDriftIds",
@@ -5044,6 +5113,20 @@
       "returnType": "seq[string]",
       "smtSort": "(Seq string)",
       "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/cli/debt_cli.nim",
+      "name": "stripAnchorAnnotation",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
     },
     {
       "hasAxiomHint": false,

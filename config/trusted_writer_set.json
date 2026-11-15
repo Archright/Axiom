@@ -48,7 +48,7 @@
     "config.nims": {
       "mode": "100644",
       "type": "blob",
-      "sha": "b48f21812453951327575f76c69ea62c405ba7da"
+      "sha": "d10f9885d24a5928cf36dbadd6736d7af4dcc277"
     },
     "config/effects.nims": {
       "mode": "100644",
@@ -198,7 +198,7 @@
     "src/cli/debt_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "d1eb438b2c3f760dae9667e27565eb5c36f0aa61"
+      "sha": "ee53818c9dd039dd830a927938f4aa61504450f7"
     },
     "src/cli/evidence_cli.nim": {
       "mode": "100644",
@@ -2438,7 +2438,7 @@
     "src/core/types/asi_types.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "3eac60f2fba3f4e836fce4e881e57bcd05f6bb77"
+      "sha": "5f94e8e4cdefdc8f043048c96314d3790dccb521"
     },
     "src/core/types/canonical_change_set.nim": {
       "mode": "100644",
@@ -2723,7 +2723,7 @@
     "src/core/utils/build_provenance.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "7c762e125df1a7398875ddb6abb7e4fe67e15e23"
+      "sha": "6fe2450f93f6b9e30a8bb9959f513a7f2ecc35f9"
     },
     "src/core/utils/canonical_projection.nim": {
       "mode": "100644",
@@ -3333,7 +3333,7 @@
     "src/infrastructure/provenance_probe.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "8e81075453f404c3950f69943b8b4bad2a108c78"
+      "sha": "ba2a91606d424fc87171b4426eb3682649feb9f6"
     },
     "src/infrastructure/source_identity_cache.nim": {
       "mode": "100644",
@@ -3873,7 +3873,7 @@
     "src/verification/lean_lsp_compiler.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "f8e6d58c17e35e7483583c679d58157b133258ab"
+      "sha": "0fb05452e741d970d3a38ac7c4fff5cb43b30959"
     },
     "src/verification/lean_lsp_feedback.nim": {
       "mode": "100644",
@@ -4473,7 +4473,7 @@
     "tools/hermetic_build.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "f0d2bc7fca3601e63980f35173716172e52db1b9"
+      "sha": "e990f691c681dfe13b7a37104121d723cec98029"
     },
     "tools/safe_move.nim": {
       "mode": "100644",

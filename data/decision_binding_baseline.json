@@ -1,0 +1,28 @@
+{
+  "baselineVersion": 1,
+  "gate": "decision_binding",
+  "scope": "src",
+  "owner": "@Archright/architect",
+  "rationale": "Measured acceptance of the pre-existing {.axiomDecision.} debt, replacing the 249 file-scoped grandfather waivers (JSON) and 23 (TOML). Measured at 5ae980f4 those waivers did two things at once: they kept 203 of the 253 violating files (466 of 679 reasons) out of the count altogether — the waiver-era report was 50 files / 213 reasons, the unwaived measurement is 253 / 679 — and they shared one 2026-12-31 expiry that floored a daysRemaining<30 test into a hard build FAIL from 2026-12-01. This baseline records the whole count for the first time, with an owner and a review date, and every file it counts is scanned on every run. Growth fails and a tool may not raise it; the count may only fall. Rationale extraction for the 679 decision points remains open work (DEBT#541).",
+  "reviewBy": "2027-06-30",
+  "measuredAt": "2026-11-15T03:56:05Z",
+  "sourceCommit": "5ae980f447f531e0ee8a63ca635aab8846c2d667",
+  "checkerVersion": "2.0.0",
+  "policyHash": "f6b34fe05a90e1110d610ac9d3b9c5ae670bc5209e2a0d1b9f72f82e424455e9",
+  "filesWithViolations": 253,
+  "totalReasons": 679,
+  "perReason": [
+    {
+      "count": 385,
+      "reason": "returns Result/Option without axiomDecision"
+    },
+    {
+      "count": 89,
+      "reason": "returns Result/Option without axiomDecision; multiple returns without axiomDecision"
+    },
+    {
+      "count": 205,
+      "reason": "multiple returns without axiomDecision"
+    }
+  ]
+}

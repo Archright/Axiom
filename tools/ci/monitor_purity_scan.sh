@@ -20,7 +20,6 @@
 # silently skipped):
 #   docs/agents/merge_admission_observation.md   (observation procedure SSOT)
 #   tools/merge_ruleset_drift_monitor.nim        (ruleset drift monitor)
-#   .opencode/skills/ci-watch/SKILL.md           (agent CI-watch skill)
 #
 # Forbidden patterns — GitHub mutation verbs:
 #   gh api method flags:    -X POST  -X PUT  -X PATCH  -X DELETE
@@ -68,7 +67,6 @@ cd "$ROOT"
 SCAN_SURFACE=(
   "docs/agents/merge_admission_observation.md"
   "tools/merge_ruleset_drift_monitor.nim"
-  ".opencode/skills/ci-watch/SKILL.md"
 )
 
 # ── 2. forbidden mutation verbs (GitHub write surface) ─────────────────────

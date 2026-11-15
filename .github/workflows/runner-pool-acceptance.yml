@@ -351,6 +351,10 @@ jobs:
           name: tested-tree-digest
           path: build/tested-tree-digest/testedTreeDigest
           retention-days: 30
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
       # Nim 2.2.10 핀 필수 (결정론) — choosenim 공식 경로. selector/gate는
       # compiler internals를 import하지 않으므로 setup-axiom-toolchain의
@@ -589,6 +593,10 @@ jobs:
             oracle-evidence.json
           if-no-files-found: error
           retention-days: 7
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
       # reconcile verifier도 여기서 B-compile 스텝이 B 전체 트리에서 컴파일한
       # 것을 artifact로 전달 — proof-reconcile job이 GitHub-hosted에서 nim
@@ -600,6 +608,10 @@ jobs:
           path: bin/proof_reconcile_gate
           if-no-files-found: error
           retention-days: 7
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
   # 단일 실행 heavy bootstrap: 컴파일 4종을 1개 VM에서 수행하고 artifact로
   # 전달한다 (8레그 반복 중복 제거). manifest.txt는 레그의 fail-closed 검증
@@ -800,6 +812,10 @@ jobs:
           path: executed-ci-bootstrap.json
           if-no-files-found: error
           retention-days: 7
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
       # ci-bootstrap-artifacts = 퍼블리셔(ci-cache-publisher)의 입력 —
       # B-페이로드 전체(nimcache 등)를 동봉해 소비자 PR 게이트가 재빌드
@@ -827,6 +843,12 @@ jobs:
           # 집합). 경로 목록·키 파생은 무변경 — 이 플래그만 추가.
           if-no-files-found: error
           include-hidden-files: true
+          # overwrite (stable name, NOT an attempt suffix — same form as
+          # admission-check base-artifacts): cache-acceleration payload for the
+          # publisher, not evidence; a re-run's deterministic replace keeps the
+          # run-scoped name lookup exactly-one (Q1: docs/spec/
+          # github_artifact_attempt_quirks.md; DEBT-CI#003).
+          overwrite: true
 
       - name: Record bootstrap artifact history (AXIOM_ARTIFACT_RECORD)
         # Post-expiry history record — GitHub hides expired artifacts from the
@@ -936,6 +958,12 @@ jobs:
             bin/setup-hooks
             manifest.txt
           if-no-files-found: error
+          # overwrite (stable name, NOT an attempt suffix): gateway-shard consumes
+          # this by name in the same run and re-verifies the producer manifest
+          # sha256, so a re-run's deterministic replace is self-consistent — and a
+          # consumer-only re-run (failed jobs) still finds the persisted artifact
+          # (Q1: docs/spec/github_artifact_attempt_quirks.md; DEBT-CI#003).
+          overwrite: true
 
       - name: Record candidate-arm64 artifact history (AXIOM_ARTIFACT_RECORD)
         # Post-expiry history record — see the bootstrap artifact record above.
@@ -1084,6 +1112,10 @@ jobs:
           path: executed-shard-${{ matrix.shard }}.json
           if-no-files-found: error
           retention-days: 7
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
       # Identity set 항등 증명원: 각 shard의 run-suite testcase name(JUnit —
       # build/gateway-junit.xml, Makefile:test-gateway가 --junit-output으로 생성)을
@@ -1098,6 +1130,10 @@ jobs:
           path: build/gateway-junit.xml
           if-no-files-found: warn
           retention-days: 14
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
       - name: Dump gateway test run logs on failure
         if: failure()
@@ -1182,6 +1218,10 @@ jobs:
           path: build/gateway-decision-dir/gateway-na-record.xml
           if-no-files-found: error
           retention-days: 14
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
   # ── A3: proof-reconcile — Decision Record ↔ executed 재확인 (GitHub-hosted) ─
   # GitHub은 SKIPPED를 Success로 취급하므로 "skip 됐다" 자체는 성공이 아니다.

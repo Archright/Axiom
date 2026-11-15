@@ -21,9 +21,10 @@ axiomLayer "domain"
 ## regression, not a boundary.
 ##
 ## SSOT: sourceTreeDigest below is the single runtime composition of the source
-## fingerprint. tools/hermetic_build.nim computeDeterministicSourceHash and the
-## NimScript mirror in config.nims are the build-time twins — all three must
-## stay in lock-step (byte-for-byte identical ordering + separators + digest).
+## fingerprint. tools/hermetic_build.nim computeDeterministicSourceHash is the
+## build-time authority; config.nims delegates to it via --src-tree-hash and
+## owns no local mirror. Build-time and runtime compositions must stay in
+## lock-step (byte-for-byte identical ordering + separators + digest).
 ##
 ## Formula v1 (compositional, path-bound):
 ##
