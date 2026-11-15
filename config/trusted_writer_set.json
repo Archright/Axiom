@@ -48,7 +48,7 @@
     "config.nims": {
       "mode": "100644",
       "type": "blob",
-      "sha": "b48f21812453951327575f76c69ea62c405ba7da"
+      "sha": "b31c87b5375518180d595c7ae5b4d8f9685c0731"
     },
     "config/effects.nims": {
       "mode": "100644",
@@ -4473,7 +4473,7 @@
     "tools/hermetic_build.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "3b55fa1071d6bd53eac2f59e7b58e8b63079e528"
+      "sha": "e990f691c681dfe13b7a37104121d723cec98029"
     },
     "tools/safe_move.nim": {
       "mode": "100644",
