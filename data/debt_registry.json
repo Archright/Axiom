@@ -40,8 +40,11 @@
       ],
       "severity": "medium",
       "source": "storage-retention-workstream-G1-upload-inventory-2026-10-10",
-      "status": "open",
-      "resolution": "UNRESOLVED"
+      "status": "closed",
+      "resolution": "FIXED 2026-11-15 (workstream/vs-artifact-fix, PR #97, head a21f0be). Defect class fixed repo-wide, beyond the two registered sites: audit of all 40 upload-artifact steps in .github/workflows at c1c15cc found 10 already attempt-scoped names, 2 already overwrite:true (admission-check cache carriers), and 29 fixed-name sites without overwrite — including this debt's ci-bootstrap-artifacts and candidate-arm64 (runner-pool-acceptance.yml). All 29 patched with overwrite: true, names unchanged, so every exact-name/pattern consumer contract is preserved (mint exactly-one, publisher run-scoped lookup, shard candidate-arm64 download + manifest sha256 re-verify, executed-* pattern merge, license-scan-shard-* exactly-3, release bundle chain, byoa fixtures). The registration's open choice for candidate-arm64 is resolved as overwrite, not a run_attempt suffix: same-run stable-name consumers plus consumer-only re-runs (re-run failed jobs) rely on the persisted artifact, and an attempt suffix would double-count pattern merges. Evidence: (a) semantic diff origin/main to PR head over a real YAML parse — every with-block differs only by added overwrite:true, path/name values byte-identical; (b) local gates on the PR tree: check-workflow-shell-syntax 244 blocks 0 failures, check-epoch-transaction PASS, check-nim-theater PASS, debt_engine --validate 1711/1711, debt_integrity_gate PASS; (c) PR #97 CI on a21f0be: all ruleset-required checks green incl. publication-integrity (run 43697207766 attempt 1) and axiom-operational-slice (run 43697207816), debt-registry-gate (run 43697207794); (d) live rerun demonstration of the exact debt scenario: publication-integrity run 43697207766 re-run to attempt 2 (conclusion success, all 9 jobs green, gate job 132763494109) — the same fixed names re-uploaded in the same run while attempt-1 artifacts were live: all 9 artifacts were replaced with new ids (exactly-9 holds, no coexistence), the documented overwrite replace behavior.",
+      "resolvedAt": "2026-11-15",
+      "resolvedBy": "Kimi Code CLI agent (user-authorized)",
+      "lastVerifiedAt": "2026-11-15T09:17:15Z"
     },
     {
       "id": "DEBT#264",
