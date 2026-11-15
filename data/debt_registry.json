@@ -5490,6 +5490,67 @@
       "lastVerifiedAt": "2026-11-14T00:00:00Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the sites are a FROZEN policy JSON and a tools/ Nim guard, both outside the src/-only marker scan; trace: this entry's contentHash over config/repository_surface.json (sha256 758caf91...) plus the measured surface_guard verdict pair (M Makefile PASS vs A src/gate FROZEN FAIL)."
+    },
+    {
+      "id": "DEBT#539",
+      "category": "Theater/Unenforced Claim",
+      "impact": "medium",
+      "severity": "medium",
+      "title": "golden-master-gate is declared in topology/manifest at svError severity but disabled with no debt ID and no rationale, so no lane reports that a declared gate never runs",
+      "description": "Machine-observed 2026-11-15. config/gates.json:29 projects `golden-master-gate` as `enabled: false`. The projection authority is the GateEnablement table (src/gate/topology_spec.nim:733-740), whose header comment states it exists to record deviations; the only other disabled gate, static-analyzer, carries an inline rationale plus DEBT#426 (src/gate/topology_spec.nim:734-736, marker at src/gate/config_loader.nim:27), while golden-master-gate (src/gate/topology_spec.nim:738) carries neither. The gate is otherwise fully declared — initTopologyEntry (src/gate/topology_spec.nim:271-282, entry src/gate/runners/golden_master_gate, severity svError), config/gates.manifest.toml:105-108, runner source exists — but stages = @[skManual] and the id appears in no execution list (GATES_FAST/GATES_STATIC/GATES_FULL, PUSH_ADMISSIBILITY_GATES at Makefile:62) and in no workflow. A reader of the manifest or topology is told a golden-master gate exists with error severity; nothing records that it is off, why it is off, or who owns enabling it. This is the declare-protection-enforce-nothing shape that AGENTS.md §0.9 prohibits.",
+      "symbol": "golden-master-gate (config/gates.json gates entry / src/gate/topology_spec.nim GateEnablement)",
+      "contentHash": "sha256:d1fee5fc7a644222221664196389c11e266734938a45d2d1afd4df0ed705a783",
+      "lineRange": "config/gates.json:29; src/gate/topology_spec.nim:738 (GateEnablement)",
+      "files": [
+        "config/gates.json"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9. Fix direction (architect-gated, out of this registration slice): record the disablement rationale and owning debt ID inline in the GateEnablement table (static-analyzer/DEBT#426 precedent) or wire the gate into an enforced lane; a declared svError gate that no lane executes and no rationale explains must not persist silently.",
+      "lastVerifiedAt": "2026-11-15T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — config/gates.json is an auto-generated projection (tools/sync_topology.nim, DO-NOT-EDIT header) and this slice registers the finding per the AGENTS.md §0.9 mandate without touching src/; trace: this entry's lineRange plus the contentHash over config/gates.json (sha256 d1fee5fc...) and the GateEnablement deviation-table audit (static-analyzer carries DEBT#426; golden-master-gate carries nothing)."
+    },
+    {
+      "id": "DEBT#540",
+      "category": "Theater/Unenforced Claim",
+      "impact": "medium",
+      "severity": "medium",
+      "title": "unstaged-guard is declared in topology/manifest at svError severity but disabled with no debt ID and no rationale, so unstaged-content commits are blocked nowhere and no lane reports the gap",
+      "description": "Machine-observed 2026-11-15. config/gates.json:60 projects `unstaged-guard` as `enabled: false`. The projection authority is the GateEnablement table (src/gate/topology_spec.nim:733-740); the only other disabled gate, static-analyzer, carries an inline rationale plus DEBT#426 (src/gate/topology_spec.nim:734-736, marker at src/gate/config_loader.nim:27), while unstaged-guard (src/gate/topology_spec.nim:739) carries neither. The gate is otherwise fully declared — initTopologyEntry (src/gate/topology_spec.nim:689-699, layer lkMeta, entry src/gate/runners/unstaged_guard, severity svError), config/gates.manifest.toml:260-262, runner source exists — but stages = @[skManual] and the id appears in no execution list (GATES_FAST/GATES_STATIC/GATES_FULL, PUSH_ADMISSIBILITY_GATES at Makefile:62) and in no workflow. The guard's declared purpose (keeping unstaged changes out of commits) is therefore enforced nowhere, and a reader of the manifest is given no signal that the protection is off. This is the declare-protection-enforce-nothing shape that AGENTS.md §0.9 prohibits.",
+      "symbol": "unstaged-guard (config/gates.json gates entry / src/gate/topology_spec.nim GateEnablement)",
+      "contentHash": "sha256:d1fee5fc7a644222221664196389c11e266734938a45d2d1afd4df0ed705a783",
+      "lineRange": "config/gates.json:60; src/gate/topology_spec.nim:739 (GateEnablement)",
+      "files": [
+        "config/gates.json"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9. Fix direction (architect-gated, out of this registration slice): record the disablement rationale and owning debt ID inline in the GateEnablement table (static-analyzer/DEBT#426 precedent), or enable and wire the guard into an enforced lane; a declared svError guard that no lane executes and no rationale explains must not persist silently.",
+      "lastVerifiedAt": "2026-11-15T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — config/gates.json is an auto-generated projection (tools/sync_topology.nim, DO-NOT-EDIT header) and this slice registers the finding per the AGENTS.md §0.9 mandate without touching src/; trace: this entry's lineRange plus the contentHash over config/gates.json (sha256 d1fee5fc...) and the GateEnablement deviation-table audit (static-analyzer carries DEBT#426; unstaged-guard carries nothing)."
+    },
+    {
+      "id": "DEBT#541",
+      "category": "Theater/Unenforced Claim",
+      "impact": "medium",
+      "severity": "medium",
+      "title": "config/strict.nims advertises an 'Architecture Invariant Auto-Scan' whose Invariant-17 block silently passes when bin/ast_invariant_checker is absent — and no lane builds the checker or defines axiomStrict",
+      "description": "Machine-observed 2026-11-15. config/strict.nims:29-31 declares 'Architecture Invariant Auto-Scan (axiomStrict)' claiming to auto-scan all of core/ and physically block I/O leaks, isMainModule, and include usage. The Invariant-17 block (config/strict.nims:304-324) runs the native checker via gorgeEx only under `if fileExists(\"bin/ast_invariant_checker\")`; when the binary is absent the entire block is skipped with no message — a silent pass. Measured: bin/ast_invariant_checker does not exist in the repository; its source (tools/ast_invariant_checker.nim, build instruction only in the source header comment at tools/ast_invariant_checker.nim:15) is built by no Makefile target and no workflow, and `-d:axiomStrict` is defined solely by the `strict-build` target (Makefile:1220-1221), which appears in no gate list (GATES_FAST/GATES_STATIC/GATES_FULL, PUSH_ADMISSIBILITY_GATES) and no workflow. The advertised invariant scan therefore never executes in any live lane, and even a manual strict-build silently passes while the checker is missing. A reader of the header believes the architecture invariants are physically enforced; none are. This is the declare-protection-enforce-nothing shape that AGENTS.md §0.9 prohibits.",
+      "symbol": "config/strict.nims Invariant 17 block (bin/ast_invariant_checker existence guard) + Architecture Invariant Auto-Scan header",
+      "contentHash": "sha256:b6a5b34aaf012dd82a09b8c692db3aa4a701cd65f914ab4e90bf055030bdff90",
+      "lineRange": "config/strict.nims:29-31 (Auto-Scan header); config/strict.nims:304-324 (Invariant 17 block)",
+      "files": [
+        "config/strict.nims",
+        "tools/ast_invariant_checker.nim"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9. Fix direction (architect-gated, out of this registration slice): build bin/ast_invariant_checker in the lanes that define axiomStrict and fail loudly when the checker is missing (invert the existence guard), or correct the header to state the scan's real scope (manual-only, binary-present-only).",
+      "lastVerifiedAt": "2026-11-15T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is a NimScript config surface plus an unbuilt tool, outside the src/-only marker scan, registered per the AGENTS.md §0.9 mandate; trace: this entry's lineRange plus the contentHash over config/strict.nims:304-324 (sha256 b6a5b34a...) and the measured absence of bin/ast_invariant_checker."
     }
   ]
 }
