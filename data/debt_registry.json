@@ -5488,7 +5488,7 @@
       ],
       "source": "theater_audit",
       "status": "open",
-      "resolution": "UNRESOLVED — architect decision required: either remove `Makefile` from classes.CONTROLLED so the FROZEN binding takes effect (a FROZEN-surface policy change and a CI Epoch transition, because the stricter rule changes landing admission), or remove it from classes.FROZEN so the current all-PASS posture is stated honestly. Keeping both registrations is not a third option: the first-match resolver makes one of them a lie.",
+      "resolution": "UNRESOLVED — architect decision required: either remove `Makefile` from classes.CONTROLLED so the FROZEN binding takes effect (a FROZEN-surface policy change and a CI Epoch transition, because the stricter rule changes landing admission), or remove it from classes.FROZEN so the current all-PASS posture is stated honestly. Keeping both registrations is not a third option: the first-match resolver makes one of them a lie. Related: DEBT#542 (the whole surface policy has no admission-time enforcement, so this class/ownership difference binds nothing at merge).",
       "lastVerifiedAt": "2026-11-14T00:00:00Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the sites are a FROZEN policy JSON and a tools/ Nim guard, both outside the src/-only marker scan; trace: this entry's contentHash over config/repository_surface.json (sha256 758caf91...) plus the measured surface_guard verdict pair (M Makefile PASS vs A src/gate FROZEN FAIL)."
@@ -5508,11 +5508,13 @@
         ".github/workflows/debt-registry-gate.yml"
       ],
       "source": "theater_audit",
-      "status": "open",
-      "resolution": "UNRESOLVED - fix is a CI-epoch change (AGENTS.md §2.5): add a `bin/decision_binding_checker` step to the already-required debt-registry-gate workflow so no new required context is created, declare the changed meaning of that check in the same generation, then measure both the PR run and the merge_group run. Belongs to the Stage B gate-truth slice with DEBT#534/#535.",
-      "lastVerifiedAt": "2026-11-15T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-15: the ratchet runs inside the required debt-registry-gate context - no seventh context, no ruleset change. Verified in the required check itself, not locally: workflow run 43681301680, job 132712325128, steps 11-13 succeeded on head 6e5f2d9. Step 12 executed bin/decision_binding_checker and printed '253 file(s) / 679 reason(s)' then 'PASS (PASS)'; step 13 ran the contract suite (23 [OK] lines). config.nims now rebuilds the checker when tools/decision_binding_checker.nim or tools/decision_binding_judge.nim are newer than the binary, so a cache-restored binary cannot judge the tree with a retired rule (measured 2026-11-15: pre-ratchet bin/ exited 1 with '253 function(s) missing {.axiomDecision.} pragma - no active waivers' and every nim invocation failed through the hook). The merge_group run of this workflow is the remaining observation; it is a merge-queue precondition, so the merged tree cannot lack it. Residual: the ratchet guards the count, not the correctness of the 679 annotations (DEBT#541).",
+      "lastVerifiedAt": "2026-11-15T05:37:27Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 - the surface is a Makefile variable and a workflow file, outside the src/-only marker scan; trace: the two Makefile lines, the empty workflow grep, and the 6 required contexts read back from the rules API."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 - the surface is a Makefile variable and a workflow file, outside the src/-only marker scan; trace: the two Makefile lines, the empty workflow grep, and the 6 required contexts read back from the rules API.",
+      "resolvedAt": "2026-11-15",
+      "resolvedBy": "Kimi Code CLI agent (user-authorized)"
     },
     {
       "id": "DEBT#540",
@@ -5530,7 +5532,7 @@
       ],
       "source": "theater_audit",
       "status": "open",
-      "resolution": "UNRESOLVED - architect decision required, and it belongs to the Stage B surface adjudication with DEBT#538: either register data/decision_binding_baseline.json and tools/decision_binding_checker.nim in classes.FROZEN (a policy change and a CI-epoch transition, because it converts an all-PASS surface into a FAIL surface) or keep them PRODUCT and add CODEOWNERS entries so the accepting edit at least requires an owner review. Keeping them unowned is not a third option: the ratchet's whole claim is that the number only falls, and a file nobody owns can raise it silently.",
+      "resolution": "UNRESOLVED - architect decision required, and it belongs to the Stage B surface adjudication with DEBT#538: either register data/decision_binding_baseline.json and tools/decision_binding_checker.nim in classes.FROZEN (a policy change and a CI-epoch transition, because it converts an all-PASS surface into a FAIL surface) or keep them PRODUCT and add CODEOWNERS entries so the accepting edit at least requires an owner review. Keeping them unowned is not a third option: the ratchet's whole claim is that the number only falls, and a file nobody owns can raise it silently. Related: DEBT#542 (the whole surface policy has no admission-time enforcement, so this class/ownership difference binds nothing at merge).",
       "lastVerifiedAt": "2026-11-15T00:00:00Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 - the sites are a policy JSON and a CODEOWNERS file, outside the src/-only marker scan; trace: resolveClass order in tools/surface_guard.nim:188-197, defaultClass in config/repository_surface.json, and the 43 CODEOWNERS rules."
@@ -5554,6 +5556,30 @@
       "lastVerifiedAt": "2026-11-15T00:00:00Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 - the artifact is the baseline JSON, and the violations are pre-existing pragma gaps spread over 253 src/ files (a pragmatic per-file marker set would exceed 253 markers and would restate the baseline); trace: the acceptance record itself plus the measured histogram 385/205/89."
+    },
+    {
+      "id": "DEBT#542",
+      "category": "Theater/Unenforced Claim",
+      "impact": "high",
+      "severity": "high",
+      "title": "repository_surface FROZEN/CONTROLLED policy (219 FROZEN + 285 CONTROLLED tracked files, including every src/gate/** gate runner) has no admission-time enforcement: its only workflow executor self-declares advisory, its Makefile target runs only from a bypassable local hook, and the live pull_request rule requests no code-owner review",
+      "description": "Machine-observed 2026-11-15 at eaf1a318. config/repository_surface.json (policyVersion 98) resolves 219 tracked files to FROZEN and 285 to CONTROLLED, evaluated over `git ls-files` (6617 files) with surface_guard's own globMatch/resolveClass semantics. classes.FROZEN declares ADD/MODIFY/DELETE=FAIL for paths that include every gate runner. The three readers of this policy are all non-binding at the merge decision: (1) .github/workflows/repository_surface.yml states in its own header (lines 1-18) that the job is advisory and not a required check; (2) Makefile:62 PUSH_ADMISSIBILITY_GATES lists check-repository-surface, which runs only from .githooks/pre-push:767, a local hook bypassable with --no-verify; (3) .github/CODEOWNERS assigns the paths to @Archright/architect, but the live pull_request rule reports require_code_owner_review=false and required_approving_review_count=0, so no owner approval is requested. The required_status_checks rule read back from `gh api repos/Archright/Axiom/rules/branches/main` lists exactly admission-check, bsec-integrity, debt-registry-gate, generation-acceptance, axiom-operational-slice, publication-integrity - none of them builds or runs surface_guard. generation-acceptance does compute a changed-path intersection, but against config/policy/merge_admission.json trustSurface (33 entries) plus the prefixes .github/workflows/, .github/actions/, config/policy/, dynamic/ (.github/workflows/generation-acceptance.yml:200-254), so Makefile and src/gate/** are outside that list and a PR touching only them takes the fast path. Consequence: FROZEN names an authority that no mechanism exercises at the only point that decides admission, and AGENTS.md §-1's immutability rule for import_encapsulation_gate.nim rests on the same unenforced vocabulary. This is the declare-protection-enforce-nothing class of §0.9. It cannot be repaired by making the existing workflow required: config/repository_surface.json is itself registered FROZEN, and both active branch rulesets (axiom-admission-gate 25218071, main 27097366) report bypass_actors=[], so the file that must change forbids changing it and the ruleset offers no bypass. Promotion therefore needs a policy-amendment authority path defined first. A second measured defect belongs to the same file: 124 tracked files match two classes and the stricter FROZEN is dropped by the first-match resolver (123 CONTROLLED-over-FROZEN, 1 PRODUCT-over-FROZEN; 91 of them under src/gate/**, where 178 files resolve FROZEN and 91 resolve CONTROLLED/PRODUCT despite also matching FROZEN) - DEBT#538 is the Makefile instance.",
+      "symbol": "config/repository_surface.json classes.FROZEN/classes.CONTROLLED + .github/workflows/repository_surface.yml (advisory executor) + Makefile:62 PUSH_ADMISSIBILITY_GATES + .githooks/pre-push",
+      "contentHash": "sha256:758caf918a64685e44665816fc9a18ec74ed2f2c2651e2404813f1657e314cd1",
+      "lineRange": "config/repository_surface.json (policyVersion 98, classResolutionOrder PRODUCT->CONTROLLED->FROZEN); .github/workflows/repository_surface.yml:1-18 (advisory declaration), :85 (surface_guard invocation); Makefile:62,571; .githooks/pre-push:767",
+      "files": [
+        "config/repository_surface.json",
+        ".github/workflows/repository_surface.yml",
+        "Makefile",
+        ".github/CODEOWNERS",
+        ".githooks/pre-push"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED - needs an authority decision before any mechanical fix. (a) Define the policy-amendment path, then make one surface executor admission-enforced (smallest shape: a step inside an already-required workflow, as done for DEBT#539) - blocked today because config/repository_surface.json is itself FROZEN and both branch rulesets have bypass_actors=[], so no existing mechanism can authorize the amendment. (b) Or delete the protection claim: demote FROZEN/CONTROLLED to advisory vocabulary in the policy file and in AGENTS.md §-1 so the documents state what is enforced. Both are architect decisions. Until one lands, reviewers must treat FROZEN as advisory; DEBT#538 (Makefile double class) and DEBT#540 (baseline unowned) are instances of the same gap and cannot be closed by classification alone.",
+      "lastVerifiedAt": "2026-11-15T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 - the site is a policy JSON plus workflow YAML, outside the src/-only marker scan; trace: the live required_status_checks read (6 contexts, none runs surface_guard), repository_surface.yml:1-18, Makefile:62, .githooks/pre-push:767, generation-acceptance.yml:200-254 (trustSurface + prefixes), and the ruleset read-back (require_code_owner_review=false, bypass_actors=[])."
     }
   ]
 }
