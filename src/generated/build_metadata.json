@@ -1,11 +1,11 @@
 {
   "generatorVersion": 2,
-  "generatedAt": "2026-11-03T05:58:58Z",
-  "commitCount": 3867,
-  "gitHash": "171c490",
+  "generatedAt": "2026-11-15T04:10:44Z",
+  "commitCount": 224,
+  "gitHash": "90980ec",
   "hooksPath": ".githooks",
   "z3Version": "4.13.3",
-  "glibcVersion": "ldd (Ubuntu GLIBC 2.39-0ubuntu8.9) 2.39",
+  "glibcVersion": "ldd (Ubuntu GLIBC 2.39-0ubuntu8.12) 2.39",
   "sourceFileList": [
     "api.nim",
     "api/api.nim",
@@ -235,6 +235,7 @@
     "core/gate/architecture_policy.nim",
     "core/gate/artifact_manifest.nim",
     "core/gate/atomic_deploy.nim",
+    "core/gate/closure_manifest.nim",
     "core/gate/content_store.nim",
     "core/gate/deterministic_env.nim",
     "core/gate/env_gate.nim",
@@ -1009,6 +1010,7 @@
     "infrastructure/push_context.nim",
     "infrastructure/shadow_environment.nim",
     "infrastructure/shared_ir_buffer.nim",
+    "infrastructure/source_identity_cache.nim",
     "infrastructure/topology_executor.nim",
     "infrastructure/vfs_intern.nim",
     "mcp/mcp_params.nim",
@@ -1462,8 +1464,8 @@
     "validate_runners.nim",
     "verification_auditor_gate.nim"
   ],
-  "featureManifestMtime": 1793674648,
-  "newestFeatureMtime": 1793674648,
+  "featureManifestMtime": 1794715390,
+  "newestFeatureMtime": 1794715391,
   "nimblePackage": "axiom",
   "nimVersion": "Nim Compiler Version 2.2.10 [Linux: amd64]"
 }
