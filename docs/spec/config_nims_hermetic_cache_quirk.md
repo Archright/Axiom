@@ -392,8 +392,7 @@ FAIL) tree=… embedded=…`로 exit 1한다(상태 파일 미생성).
 재현·복구(2026-11-04, rwc-pr1 worktree):
 1. `src/verification/lean_build_sandbox.nim` 편집 → `make build` →
    `bin/ax prove …` → SourceCoherence FATAL.
-2. 복구: `bin/hermetic_build --check-source-hash`(early pass가 build_env.nim을
-   재생성) → `make build` → coherence PASS(tree==embedded).
+2. 복구: `bin/hermetic_build --generate-build-env`(`build_env.nim` 재생성; `--check-source-hash`는 DEBT#532 복구 이후 읽기 전용 게이트이므로 아무 파일도 쓰지 않음) → `make build` → `bin/hermetic_build --check-source-hash` PASS(tree==embedded).
 
 검출 갭: `check-build-state-coherence`(Makefile:428)는 GATES_FAST·
 PUSH_ADMISSIBILITY 게이트 유니버스 밖이어서 로컬 어드미션 스위트가 이 상태를
