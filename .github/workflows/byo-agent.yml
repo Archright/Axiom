@@ -378,6 +378,10 @@ jobs:
           name: 'byoa-evidence-${{ inputs.proposal-artifact }}'
           path: '${{ env.AXIOM_EVIDENCE_DIR }}'
           if-no-files-found: error
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
       - name: 'Report upstream (dry-run=false only; GH_TOKEN isolated to this step)'
         if: inputs.dry-run == false && steps.prove.outputs.ax_prove_exit != ''

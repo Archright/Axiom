@@ -233,6 +233,10 @@ jobs:
             logs/run-manifest.json
             logs/run-manifest.sha256
             logs/ax_proof_state.json
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
       - name: Upload R3 relocation evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -242,3 +246,7 @@ jobs:
             logs/r3_relocation.json
             logs/r3_relocation.sha256
           retention-days: 30
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true

@@ -1225,6 +1225,11 @@ jobs:
           # verdict --cert). durable 증거는 side-ref ledger(axiom/certificates).
           # 3일 = 실행 상한 120분의 36배.
           retention-days: 3
+          # overwrite: the name is subject-attempt-scoped (inputs.runAttempt —
+          # trusted-name / publish exactly-one anchor), but a re-run of THIS mint
+          # run re-uploads that same name; overwrite replaces it deterministically
+          # instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
   # ─────────────────────────────────────────────────────────────────────
   # STAGE 2 — publish (write tier — the SINGLE contents:write job).

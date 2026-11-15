@@ -167,6 +167,10 @@ jobs:
             ${{ runner.temp }}/report_secret.json
           retention-days: 30
           if-no-files-found: error
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
   # ── dimension: license-scan ──────────────────────────────────────────
   # Internal execution structure (epoch ci-frozen-2026-11-10-pi-shard,
@@ -269,6 +273,10 @@ jobs:
             ${{ runner.temp }}/shard_files.txt
           retention-days: 3
           if-no-files-found: error
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
   license-scan:
     needs: [license-scan-shards]
@@ -398,6 +406,10 @@ jobs:
             ${{ runner.temp }}/scancode.json
           retention-days: 30
           if-no-files-found: error
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
   # ── dimension: dependency-scan ───────────────────────────────────────
   dependency-scan:
@@ -474,6 +486,10 @@ jobs:
             ${{ runner.temp }}/osv.json
           retention-days: 30
           if-no-files-found: error
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
   # ── dimension: provenance ─────────────────────────────────────────────
   provenance:
@@ -519,6 +535,10 @@ jobs:
           path: ${{ runner.temp }}/report_provenance.json
           retention-days: 30
           if-no-files-found: error
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
   # ── dimension: sbom ────────────────────────────────────────────────────
   sbom:
@@ -585,6 +605,10 @@ jobs:
             ${{ runner.temp }}/report_sbom.json
           retention-days: 30
           if-no-files-found: error
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
   # ── the single bound verdict ──────────────────────────────────────────
   publication-integrity:
@@ -694,3 +718,7 @@ jobs:
           path: ${{ runner.temp }}/publication-integrity-report.json
           retention-days: 30
           if-no-files-found: warn
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
