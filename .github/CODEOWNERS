@@ -85,3 +85,15 @@
 /tools/ci/publication_sbom_eval.nim             @Archright/architect
 /tools/ci/publication_provenance_validator.nim  @Archright/architect
 /tools/ci/publication_report.nim                @Archright/architect
+
+# Decision-binding ratchet — the acceptance artifact (baseline counts) and
+# its measurement tool resolve PRODUCT with no owner requested (DEBT#540,
+# theater_audit 2026-11-15 at 1aa8e912: surface policyVersion 98 registers
+# no pattern for either path). Surface-policy registration (FROZEN listing)
+# remains deferred to DEBT#542, which needs an architect amendment path.
+# Per docs.github.com "About code owners": the last matching pattern takes
+# the most precedence, and with the live ruleset's
+# require_code_owner_review=false this binds a review request to
+# @Archright/architect, not a merge precondition.
+/data/decision_binding_baseline.json    @Archright/architect
+/tools/decision_binding_checker.nim     @Archright/architect
