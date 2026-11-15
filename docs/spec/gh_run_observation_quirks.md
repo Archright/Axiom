@@ -682,3 +682,47 @@ Link 헤더 종주 + `total_count` 대조)을 적용한 check-runs 관측, 또�
 착지 후 소멸했다"의 증거가 아니라 **절단 서명**이다(`total_count` > 반환 건수) —
 "착지 후 required check 소멸" 판독으로 착지 무결성을 fail로 닫기 전에 반드시
 절단 여부를 대조한다.
+
+## Q20 — `gh api --jq`는 jq CLI가 아니다: `--arg`·`$env` 변수 주입이 없어 호출 즉시 사망한다 (2026-11-15, vs-c1 drift settle-window 수정에서 등록)
+
+**증상**: `gh api --jq '<program>'`의 프로그램에 셸 변수를 전달하려 두 자연스러운
+경로를 쓰면 둘 다 즉시 죽는다 — (1) `gh api … --arg k v --jq '…$k…'` →
+`unknown flag: --arg` (exit 1, usage 전체 출력), (2) `VAR=x gh api … --jq
+'…$env.VAR…'` → `variable not defined: $env` (exit 1). `2>/dev/null || true`
+가드가 표준오류를 삼키면 커맨드 치환 출력이 **공백**이 되고, fail-closed 설계의
+관측(예: 관찰 SHA 선택기)은 매 실행 "해석 불가"로 빠진다 — 오류가 아니라
+**조용한 상시 fail-closed**로 나타나므로 배포 전 로컬 실측으로만 잡힌다.
+`--jq` 자체의 jq 문법(`now`·`fromdateiso8601`·산술 등)은 정상 동작한다.
+
+**공식 문서 근거(DOCUMENTED / NOT_DOCUMENTED 구분)**:
+- `gh api` 매뉴얼 — `--jq string: Query to select values from the response using
+  jq syntax` (https://cli.github.com/manual/gh_api). `--arg`는 gh api의 플래그가
+  아니라 **jq CLI**의 플래그다(https://jqlang.github.io/jq/manual/#command-line-usage
+  — "–-arg name value … predefine a variable named $name"). gh api의 `--jq`는
+  임베디드 jq 평가기로 프로그램을 실행하지 않는 CLI 변수 전달 경로를 노출하지
+  않는다(매뉴얼 미기술 — NOT_DOCUMENTED, 실측이 유일 근거).
+- jq의 `env`/`$ENV` 내장(jq 1.6+ 문서)은 gh 임베디드 평가기에는 존재하지 않는다
+  (실측 반증 — 아래).
+
+**실측** (2026-11-15, gh 2.102.0, repos/Archright/Axiom 대상):
+- `gh api repos/Archright/Axiom --jq 'now'` → `1794713101.51` (정상 — `now` 지원).
+- `gh api "…/actions/runs?per_page=1" --jq '.workflow_runs[0].updated_at |
+  fromdateiso8601'` → `1794712990` (정상).
+- `SETTLE_TEST=20 gh api repos/Archright/Axiom --jq '($env.SETTLE_TEST|tonumber)*60'`
+  → `variable not defined: $env`, exit 1.
+- `gh api "…/actions/runs?event=merge_group&per_page=20" --arg settle 20 --jq '…'`
+  → `unknown flag: --arg`, exit 1.
+- 등록 계기: admission-ssot-drift settle-window 선택기 초안이 `--arg` 형태로
+  작성돼 "배포될 실제 셸 프래그먼트" 로컬 실행에서만 발각되었다(로컬 jq 평가만으로
+  검증한 표현은 gh 경로의 이 결함을 전혀 담지 못한다 — test_workflow_jq_contracts.sh
+  방어 계열과 동일한 "도구 형태 가정" 결함류).
+
+**판정 규칙**: `gh api --jq` 프로그램에 셸 값을 전달해야 하면 (1) **셸 스플라이스**
+`'…('"$VAR"'…)'`(단일 인용 세그먼트 사이 삽입 — 값이 프로그램 텍스트가 되는
+경로) 또는 (2) 별도 jq CLI 파이프라인(`gh api … | jq --arg …`)을 쓴다. 스플라이스는
+코드 주입면이 프로그램 텍스트 그 자체이므로: (a) 주입 값은 같은 step에 하드코딩된
+신뢰된 리터럴(env:)으로 한정하고, (b) 비정상 값은 jq 구문 오류 → 빈 출력 →
+fail-closed로 떨어지는 방향으로 설계한다(우연히 통과하는 방향이 아니라). 커밋된
+선례: `.github/workflows/admission-ssot-drift.yml` settle-window 선택기
+(`'"$SETTLE_MINUTES"'*60`). `certificate-mint.yml:445`의 `jq --arg`는 별도 jq
+CLI 파이프라인에 대한 것 — gh api에는 적용되지 않는다.
