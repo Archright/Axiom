@@ -42,7 +42,7 @@ type
     removalCondition*: string
     reviewBy*: string
 
-const ExactAllowedEntries*: array[38, RootEntry] = [
+const ExactAllowedEntries*: array[37, RootEntry] = [
   # single files
   RootEntry(name: "AGENTS.md", basis: sbInternal),
   RootEntry(name: "README.md", basis: sbPlatform),
@@ -75,7 +75,6 @@ const ExactAllowedEntries*: array[38, RootEntry] = [
   RootEntry(name: ".githooks", isDir: true, basis: sbPlatform),
   RootEntry(name: ".github", isDir: true, basis: sbPlatform),
   RootEntry(name: ".config", isDir: true, basis: sbInternal),
-  RootEntry(name: ".opencode", isDir: true, basis: sbPlatform),
   # VCS-internal + runtime state dirs
   RootEntry(name: ".git", isDir: true, basis: sbPlatform),
   RootEntry(name: ".axiom", isDir: true, basis: sbInternal),
