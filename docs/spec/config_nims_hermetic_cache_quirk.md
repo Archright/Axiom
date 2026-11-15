@@ -425,9 +425,52 @@ check-arch가 없어 PR-1 검증에서 이 경로가 실행되지 않았고, P5 
 
 ---
 
+## §11. Single-authority delegation (VS-SOURCE-IDENTITY-1 PR-B, 2026-11-15)
+
+`config.nims` no longer computes `vs1-tree-hash/1`. The NimScript kernel
+(`computeSourceTreeHash` — a duplicate of `hashSourceContents` in
+`tools/hermetic_build.nim`) was removed. `nativeSourceTreeHash()` invokes
+`bin/hermetic_build --src-tree-hash <pid-unique-tmp>` and validates the
+`vs1-tree-hash/1:<int>` form (prefix + integer) before use. A non-zero helper
+exit raises through `exec`; a missing or malformed output file raises too, so
+protocol failure is never degraded into a cache MISS. The temp file is
+PID-unique (concurrent `nim c` runs cannot collide) and removed in `finally`.
+
+### 11.1 Mode gating
+
+`exec`/`staticExec` are silent no-ops under `nim check`
+(`nim_effect_system_quirks.md` §17.6). The adapter gates on
+`getCommand() != "check"`: check mode skips the cache decision and the seed
+guard defers loudly; the next real build materializes. During cold bootstrap
+the seed guard also defers while `bin/hermetic_build` does not exist yet —
+otherwise the nested helper compile would recurse into another helper build.
+The existing bootstrap block (`hbStale`) remains the single cold-start
+recipe; no second bootstrap path was introduced.
+
+### 11.2 envHash key additions
+
+`NimVersion`, `hostOS`, `hostCPU`, `sizeof(int)` (std/hashes `hash()` is
+int-width sensitive) and the helper payload SHA-256 (64 hex, else fail-closed)
+join the existing content hashes. Helper size/mtime remain staleness hints
+only — they are never treated as payload identity. One-time consequence: the
+first build after this change is a MISS and rewrites `build_env.nim`.
+
+### 11.3 Evidence (2026-11-15, PR-B worktree)
+
+- Hash-only: VM `4.92/5.02/5.18 s` vs native `0.12–0.13 s` on the same tree.
+- Empty compile unit (config.nims only): warm `7.74–8.12 s` → `3.45–3.83 s`
+  (Δ ≈ 4.3–4.7 s, ≈56% of the warm adapter cost).
+- Equivalence: VM digest == native digest == `BuildSourceHash`
+  (`vs1-tree-hash/1:4937312593693246625`).
+- Cold bootstrap (no `bin/`, no `build_env.nim`): rc=0, helper auto-built,
+  seed guard deferred 3× during nested compiles, final digest identical.
+- `nim check`: rc=0, prints `cache decision deferred`, writes nothing.
+
+---
+
 **Status**: `FIXED` — content-addressed key로 교체(git HEAD + `.git/index` 제거,
 src tree hash 추가, nimcache purge 삭제). §9 관측표는 본 변경과 동일 세션에서 실측.
-| **Last update**: 2026-11-05 (R7 추가 — NIM_TOOL_FLAGS nimcache 리다이렉트)
+| **Last update**: 2026-11-15 (§11 추가 — config.nims 단일 Authority 위임)
 | **Registry**: `data/debt_registry.json` id `DEBT#417`, resolution `WONT_FIX` → `FIXED`,
 status `open` → `closed`
 | **Files**: `config.nims` (`hermeticPreBuild` envHash fold 및 `MISS` 분기 —
