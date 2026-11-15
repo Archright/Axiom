@@ -4473,7 +4473,7 @@
     "tools/hermetic_build.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "e990f691c681dfe13b7a37104121d723cec98029"
+      "sha": "6a666163ad6970dd8bafa7b1bd9f862b8baa4c86"
     },
     "tools/safe_move.nim": {
       "mode": "100644",
