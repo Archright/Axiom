@@ -54,6 +54,18 @@ jobs:
         run: make bin/debt_integrity_gate
       - name: Enforce bidirectional debt registry↔code binding (unconditional)
         run: bin/debt_integrity_gate
+      - name: Build decision-binding ratchet
+        run: make bin/decision_binding_checker
+      - name: Enforce decision-binding ratchet (unconditional)
+        run: bin/decision_binding_checker
+      - name: Decision-binding ratchet contract tests
+        run: |
+          nim c -r --hints:off --skipParentCfg --skipProjCfg \
+            --path:$HOME/.choosenim/toolchains/nim-2.2.10 \
+            --path:. --path:src --path:tools \
+            --nimcache:build/nimcache/test_decision_binding_ratchet \
+            -o:build/test_decision_binding_ratchet \
+            tests/unit/test_decision_binding_ratchet.nim
       - name: Build proof-unit and writer-set consistency gate
         run: make bin/proof_unit_consistency_gate
       - name: Enforce closed-world writer-set consistency (unconditional)
