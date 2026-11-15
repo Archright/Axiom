@@ -5441,11 +5441,13 @@
         "config.nims"
       ],
       "source": "theater_audit",
-      "status": "open",
-      "resolution": "UNRESOLVED — requires an owner decision (renew with a justification, remove after a real fix, or amend the policy) before 2026-12-01T00:00:01+09:00. Not a code change: it is a risk-acceptance decision with a hard deadline.",
-      "lastVerifiedAt": "2026-11-14T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-15 (VS-W ratchet, branch workstream/vs-w-ratchet). The date bomb is removed, not postponed: the 249-entry grandfather array is empty and the daysRemaining<30 escalation path is deleted from tools/decision_binding_checker.nim, so no calendar can stop a build. The rule now lives in tools/decision_binding_judge.nim as a pure kernel (growth of the measured count FAILs; a review date only WARNs; an unusable baseline FAILs closed; --update-baseline refuses to raise the count), with data/decision_binding_baseline.json recording 253 files / 679 reasons at 5ae980f4 plus owner, rationale, reviewBy 2027-06-30 and policyHash. Measured: 23/23 kernel tests pass including 2026-12-01/12-31 and 2027-01-01/07-01 at baseline; make check-decision-binding exits 0; debt_engine --validate 1705/1705. Correction to this entry's premise: the 249 waivers were NOT inert - 203 of the 249 files do carry a violation, and the waiver-era report of 50 files/213 reasons understated the debt (unwaived measurement: 253 files/679 reasons). The waived mechanism hid debt and carried a calendar fuse; both are retired. Residual work is tracked separately: DEBT#539 (ratchet in no required check), DEBT#540 (baseline has no authority binding), DEBT#541 (the 679 decision points remain unannotated).",
+      "lastVerifiedAt": "2026-11-15T04:28:49Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the decision surface is the waiver JSON plus tooling, outside the src/-only marker scan; trace: this entry's lineRange plus the measured exit-0/WARN output and the boundary probe."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the decision surface is the waiver JSON plus tooling, outside the src/-only marker scan; trace: this entry's lineRange plus the measured exit-0/WARN output and the boundary probe.",
+      "resolvedAt": "2026-11-15",
+      "resolvedBy": "@Archright/architect"
     },
     {
       "id": "DEBT#537",
@@ -5488,6 +5490,68 @@
       "lastVerifiedAt": "2026-11-14T00:00:00Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the sites are a FROZEN policy JSON and a tools/ Nim guard, both outside the src/-only marker scan; trace: this entry's contentHash over config/repository_surface.json (sha256 758caf91...) plus the measured surface_guard verdict pair (M Makefile PASS vs A src/gate FROZEN FAIL)."
+    },
+    {
+      "id": "DEBT#539",
+      "category": "Theater/Unenforced Claim",
+      "impact": "high",
+      "severity": "high",
+      "title": "The decision-binding ratchet runs in no required check: check-decision-binding is in GATES_STATIC but not in PUSH_ADMISSIBILITY_GATES and is invoked by no workflow, so a PR that grows the violation count merges green",
+      "description": "Machine-observed 2026-11-15 (VS-W ratchet landing). Makefile:40 lists check-decision-binding in GATES_STATIC; Makefile:62 defines PUSH_ADMISSIBILITY_GATES without it; grep over .github/workflows/*.yml returns no invocation of the target or of bin/decision_binding_checker. Measured required contexts on main (gh api repos/Archright/Axiom/rules/branches/main): admission-check, bsec-integrity, debt-registry-gate, generation-acceptance, axiom-operational-slice, publication-integrity - none of them runs the ratchet. The ratchet therefore executes only in local paths: config.nims's hermetic pre-build (any nim invocation in the repo without --skipProjCfg), .githooks/pre-commit, and an explicit make check-decision-binding. A local hook is bypassable and is not merge authority; the consequence is that the policy this gate exists to enforce (a new {.axiomDecision.} decision point must be annotated) is declared but not enforced at the only place that decides admission. This is the declare-protection-enforce-nothing class of AGENTS.md §0.9. It is not a regression of the waiver replacement - the waived mechanism had the same gap - but the ratchet now makes the claim explicit, so the claim has to be true.",
+      "symbol": "Makefile PUSH_ADMISSIBILITY_GATES (line 62) vs GATES_STATIC (line 40); .github/workflows/debt-registry-gate.yml",
+      "contentHash": "sha256:becd1867ce4ddfbbe03198c67be1ba35630afe3450cf62ae44a3c5444d78d35e",
+      "lineRange": "Makefile:40 (GATES_STATIC), Makefile:62 (PUSH_ADMISSIBILITY_GATES); .github/workflows/debt-registry-gate.yml (required context, no ratchet step)",
+      "files": [
+        "Makefile",
+        ".github/workflows/debt-registry-gate.yml"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED - fix is a CI-epoch change (AGENTS.md §2.5): add a `bin/decision_binding_checker` step to the already-required debt-registry-gate workflow so no new required context is created, declare the changed meaning of that check in the same generation, then measure both the PR run and the merge_group run. Belongs to the Stage B gate-truth slice with DEBT#534/#535.",
+      "lastVerifiedAt": "2026-11-15T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 - the surface is a Makefile variable and a workflow file, outside the src/-only marker scan; trace: the two Makefile lines, the empty workflow grep, and the 6 required contexts read back from the rules API."
+    },
+    {
+      "id": "DEBT#540",
+      "category": "Trust / Evidence",
+      "impact": "medium",
+      "severity": "medium",
+      "title": "data/decision_binding_baseline.json and tools/decision_binding_checker.nim resolve to PRODUCT with no CODEOWNERS rule, so the artifact that accepts the decision-binding debt and the tool that measures it are unowned",
+      "description": "Machine-observed 2026-11-15. tools/surface_guard.nim resolveClass checks PRODUCT -> CONTROLLED -> FROZEN and falls back to defaultClass=PRODUCT; config/repository_surface.json (policyVersion 98) registers no pattern matching data/decision_binding_baseline.json or tools/decision_binding_checker.nim, so both are PRODUCT and every operation (ADD/MODIFY/DELETE) is PASS. .github/CODEOWNERS (43 rules) has no /data/ rule and no rule for the checker, so no owner is requested either. Effect: after this change the sanctioned way to accept MORE decision-binding debt is a hand edit of the baseline's counts - the tool now refuses to raise them (reanchorProblem in tools/decision_binding_judge.nim) - and that edit needs neither a surface violation nor a code-owner approval. The measurement and the acceptance are the same file, and that file has no authority binding. Pre-existing in shape (the retired config/decision_binding.waiver.json was equally unowned); newly load-bearing because the baseline replaced the waiver list as the single point of acceptance.",
+      "symbol": "data/decision_binding_baseline.json; tools/decision_binding_checker.nim; config/repository_surface.json classes.CONTROLLED/FROZEN",
+      "contentHash": "sha256:4a7f347e8216a63f765915e6264c9b3c93059fe972ef283fd3379d65df93e71c",
+      "lineRange": ".github/CODEOWNERS (43 rules, no data/ or checker rule); config/repository_surface.json classes.CONTROLLED/FROZEN, defaultClass",
+      "files": [
+        ".github/CODEOWNERS",
+        "config/repository_surface.json"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED - architect decision required, and it belongs to the Stage B surface adjudication with DEBT#538: either register data/decision_binding_baseline.json and tools/decision_binding_checker.nim in classes.FROZEN (a policy change and a CI-epoch transition, because it converts an all-PASS surface into a FAIL surface) or keep them PRODUCT and add CODEOWNERS entries so the accepting edit at least requires an owner review. Keeping them unowned is not a third option: the ratchet's whole claim is that the number only falls, and a file nobody owns can raise it silently.",
+      "lastVerifiedAt": "2026-11-15T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 - the sites are a policy JSON and a CODEOWNERS file, outside the src/-only marker scan; trace: resolveClass order in tools/surface_guard.nim:188-197, defaultClass in config/repository_surface.json, and the 43 CODEOWNERS rules."
+    },
+    {
+      "id": "DEBT#541",
+      "category": "CI Enforcement / Work-Unit Execution",
+      "impact": "medium",
+      "severity": "medium",
+      "title": "679 missing {.axiomDecision.} reasons across 253 src/ files are unannotated decision points, and the number was invisible while 203 of those files were exempt from scanning",
+      "description": "Machine-observed 2026-11-15 at 5ae980f4. bin/decision_binding_checker with the retired grandfather array emptied reports 253 files / 679 reasons: 385 'returns Result/Option without axiomDecision', 205 'multiple returns without axiomDecision', 89 carrying both. With the 249-entry waiver list active the same scan reported 50 files / 213 reasons, and 203 of the 249 listed files do violate - so the published figure described the debt no waiver had reached, not the debt. data/decision_binding_baseline.json records the full count as an accepted risk with owner @Archright/architect and reviewBy 2027-06-30. What remains open is the actual remediation work: adding the pragmas (or removing the decision points) so the count falls. The baseline blocks growth but it does not make the 679 decision points annotated, and the acceptance expires.",
+      "symbol": "data/decision_binding_baseline.json filesWithViolations/totalReasons/perReason",
+      "contentHash": "sha256:642a371ae2605411c2638415e740c184b823cd10cd1b8629fbda1bc5afd4e4bb",
+      "lineRange": "data/decision_binding_baseline.json (baseline accepted 253 files / 679 reasons at 5ae980f4); measured by tools/decision_binding_checker.nim",
+      "files": [
+        "data/decision_binding_baseline.json"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED - accepted, not fixed. data/decision_binding_baseline.json is the acceptance instrument: owner @Archright/architect, rationale recorded, reviewBy 2027-06-30. Remediation is per-file work measured by the ratchet; the count may only fall, and --update-baseline refuses to raise it. Re-review at or before 2027-06-30, at which point the acceptance is reported stale on every run.",
+      "lastVerifiedAt": "2026-11-15T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 - the artifact is the baseline JSON, and the violations are pre-existing pragma gaps spread over 253 src/ files (a pragmatic per-file marker set would exceed 253 markers and would restate the baseline); trace: the acceptance record itself plus the measured histogram 385/205/89."
     }
   ]
 }
