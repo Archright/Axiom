@@ -2723,7 +2723,7 @@
     "src/core/utils/build_provenance.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "7c762e125df1a7398875ddb6abb7e4fe67e15e23"
+      "sha": "6fe2450f93f6b9e30a8bb9959f513a7f2ecc35f9"
     },
     "src/core/utils/canonical_projection.nim": {
       "mode": "100644",
@@ -3333,7 +3333,7 @@
     "src/infrastructure/provenance_probe.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "8e81075453f404c3950f69943b8b4bad2a108c78"
+      "sha": "ba2a91606d424fc87171b4426eb3682649feb9f6"
     },
     "src/infrastructure/source_identity_cache.nim": {
       "mode": "100644",
