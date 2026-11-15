@@ -137,7 +137,7 @@ The build pipeline writes **only** under `src/generated/`. No `.nim` file outsid
 - `src/infrastructure/source_identity_cache.nim:computeSourceTreeDigestCached` — the runtime bootstrap acceleration path (used by `checkAndSelfBootstrap` only): may reuse per-file digests under an unchanged kernel stat identity, but the tree digest is always recomposed from the live walk and the cache is never evidence (§3.3).
 - The integrated canonical hash's read set is the declared set: `src/**/*.nim` excluding `src/generated/`.
 
-**Read Failures:** Fail-closed in `computeSourceTreeDigestUncached` / `readAndDigestStable` (raises). Read failures in `computeDeterministicSourceHash` (hermetic_build.nim) are warn-and-skip (fail-open for the hermetic build tool itself, but the canonical SourceCoherence check uses the fail-closed path).
+**Read Failures:** Fail-closed in `computeSourceTreeDigestUncached` / `readAndDigestStable` (raises), and fail-closed (exit 2) in `hermetic_build --check-source-hash` and `hermetic_build --src-tree-hash` (`gatherSourceTree.complete == false`). In `generateBuildEnvPair`, an unreadable file still logs a warning on the `BuildSourceHash` gather while `VerifierBuildId` fails closed (`""` / `"unmeasured"`).
 
 **`staticExec`/env/cwd-dependent reads:** Any read that depends on `staticExec`, environment variables, or CWD must be declared in the input set or forbidden. Currently, no such reads exist in the hash computation path.
 

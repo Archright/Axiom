@@ -37,9 +37,10 @@ axiomIoBoundary()
 proc computeSourceTreeHash*(srcDir: string): string {.raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Uncached full re-derivation of the SourceCoherence digest (fail-closed).
   ## The walk/filter/read/digest SSOT is infrastructure/source_identity_cache;
-  ## the build-time twins (tools/hermetic_build.nim, config.nims) must stay
-  ## byte-identical. This path is used by --check-provenance, where the verdict
-  ## must not depend on any persistent cache.
+  ## the build-time authority (tools/hermetic_build.nim) must stay
+  ## byte-identical; config.nims delegates to it and owns no mirror. This path
+  ## is used by --check-provenance, where the verdict must not depend on any
+  ## persistent cache.
   source_identity_cache.computeSourceTreeDigestUncached(srcDir)
 
 proc requireVerifierIdentity(projectRoot, binaryRelPath: string) {.raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =

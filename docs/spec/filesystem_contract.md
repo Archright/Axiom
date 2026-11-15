@@ -18,6 +18,8 @@ Revision 2026-11-14 (VS-R2 stub generation): the tracked `bin/` Nim stub is dele
 
 Revision 2026-11-15 (VS-R2a `bin/` compatibility placeholder): `bin/.gitkeep` is now the sole tracked entry under `bin/`. Basis: `Archright/.github`'s `admission-gate-v2.yml` pins its callees at immutable commit SHAs — `certificate-mint.yml@c021c338` runs `install -m 755 "$RUNNER_TEMP/base-artifacts/bin/ax" "$GITHUB_WORKSPACE/bin/ax"` with neither `-D` nor a preceding `mkdir`, so a fresh checkout without `bin/` fails merge-queue admission for every PR. The pin cannot be moved out of that state today: `pin-promotion-gate` (DEBT#473) admits only a pin whose `admission-check.yml` blob equals the promoted epoch blob, and the guard that would make the placeholder unnecessary is not yet on `main` — so the repository must satisfy the pinned consumer rather than the reverse. Exit condition: remove `bin/.gitkeep`, its `.gitignore` re-include, and `BinCompatibilityPlaceholders` in `tools/ci/validate_root_manifest.nim` in the same change that moves that pin past `mkdir -p "$GITHUB_WORKSPACE/bin"`. `bin/` still contains no Nim sources.
 
+Revision 2026-11-15 (VS-R3c `.opencode/` retirement): `.opencode/` is no longer a root entry. Its only tracked content was `.opencode/skills/ci-watch/SKILL.md`, a project-scope skill for the OpenCode agent. That agent is not installed (`~/.opencode/bin/` absent), the same convention now lives at user scope (`~/.agents/skills/gh-run-watch/SKILL.md`), and nothing in the repository read the file — the sole in-repo reference was its own exemption entry in `tools/ci/monitor_purity_scan.sh`, which made the entry circular. The procedure itself is unaffected: the canonical text is `docs/agents/merge_admission_observation.md`, which the purity gate still scans. `src/verification/semantic_set_derivation.nim` and `src/gate/proof_unit_catalog.nim` keep `.opencode/` in their no-effect path rules — harmless with the directory gone, and `src/gate/**` is FROZEN.
+
 Revision 2026-11-04 (VS-1 root-write-closure PR-1): `ci/`·`experiments/`·`_lto_evidence/` registered as EXACT_ALLOWED tracked content directories (§2.4); the `bin/` Nim stub registered as the §7.1 legacy exception; §6 Enforcement Scope added; `logs/` tracked-status git failure now fail-closed in the validator.
 
 ---
@@ -142,7 +144,6 @@ build path actually resolves at runtime.
 | `.githooks/` | PLATFORM |
 | `.github/` | PLATFORM |
 | `.config/` | INTERNAL |
-| `.opencode/` | PLATFORM |
 
 **VCS / runtime state directories (EXACT_ALLOWED):**
 

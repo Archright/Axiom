@@ -998,6 +998,22 @@ This bypasses the hermetic Z3 check in `config.nims` while preserving all other 
 - **Forbidden**: Bypassing Z3 validation entirely (Z3 is validated separately by `hermetic-test-gate`)
 - **Recommended**: Document the quirk reference in gate runner comments
 
+### 17.6 `exec`/`staticExec`/`gorge` are silent no-ops under `nim check`; `getCommand()` is the detector (2026-11-15)
+
+- **Symptom**: `exec("bin/hermetic_build --src-tree-hash <tmp>")` inside
+  `config.nims` returns normally under `nim check` but creates no output file
+  and raises no error. `staticExec`/`gorge` return `""` in the same mode.
+- **Evidence** (Nim 2.2.10, `/tmp/nsexec` probe): `/bin/echo` via both
+  `staticExec` and `gorge` printed the expected string under `nim c` and
+  empty under `nim check`; `exec` produced the file only under `nim c`.
+  `getCommand()` returned `"check"` vs `"c"` (and `"e"` for `nim e`).
+  `defined(nimcheck)` does not exist (false in both modes).
+- **Consequence**: any child-process dependency in `config.nims` MUST be
+  gated on `getCommand() != "check"`. Check mode must not interpret an empty
+  capture as a cache miss or a valid digest, and must not write cache state
+  derived from it.
+- **See**: `docs/spec/config_nims_hermetic_cache_quirk.md` §11.
+
 ---
 
 ## §18. `supportsCopyMem` vs `supportsCopy` for `string`/`seq` Types

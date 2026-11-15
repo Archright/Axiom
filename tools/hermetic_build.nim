@@ -1583,21 +1583,74 @@ proc materializeBuildEnv(): int =
   discard writeBuildEnvIfChanged(BuildEnvPath, content)
   return 0
 
+proc writeFreshAtomic(path, content: string) =
+  ## Unconditional atomic write: PID-unique temp file → fsync → rename.
+  ## Unlike atomicWriteFile (idempotent for build_env cache preservation),
+  ## IPC output files MUST never short-circuit on pre-existing content so a
+  ## stale file left on disk is never mistaken for a fresh helper write.
+  let dir = parentDir(path)
+  if dir.len > 0 and not dirExists(dir):
+    createDir(dir)
+  let tmpPath = path & ".tmp." & $getCurrentProcessId()
+  writeFile(tmpPath, content)
+  block:
+    let tmpFile = open(tmpPath, fmRead)
+    let tmpFd = cast[cint](getOsFileHandle(tmpFile))
+    if fsync(tmpFd) != 0:
+      stderr.writeLine("[hermetic] WARNING: fsync failed for " & path)
+    close(tmpFile)
+  safeMoveFile(tmpPath, path)
+
+proc srcTreeHashRoute(): int =
+  ## `--src-tree-hash [out-file]` — read-only source-tree identity route.
+  ## Computes the vs1-tree-hash/1 digest of the LIVE src/ tree through the
+  ## shared kernel (hashSourceContents). This is the path config.nims invokes
+  ## on every `nim c`, so it must have zero build side effects: no
+  ## generateBuildEnv, no body-cache write, no Z3 query. A delegated identity
+  ## must never be computed over a partial tree — an unreadable source file is
+  ## exit 2 (fail-closed), distinct from a normal cache miss.
+  let g = gatherSourceTree(projectRoot / "src")
+  if not g.complete:
+    stderr.writeLine("[src-tree-hash] FAIL: unreadable source file(s) under src/ — refusing partial identity")
+    return 2
+  let digest = hashSourceContents(g.files)
+  if paramCount() >= 2:
+    let outPath = paramStr(2)
+    if outPath.len > 0:
+      try:
+        writeFreshAtomic(outPath, digest & "\n")
+      except CatchableError as e:
+        stderr.writeLine("[src-tree-hash] FAIL: cannot write " & outPath & ": " & e.msg)
+        return 2
+  echo digest
+  return 0
+
 proc checkSourceHash(): int =
   ## Verify that the embedded BuildSourceHash in build_env.nim matches
   ## the live computeDeterministicSourceHash of the src/ tree.
-  ## Used to diagnose bootstrap self-rebuild loops.
+  ## Read-only gate (DEBT#532): never generates or rewrites build_env.nim.
+  ## Unreadable source or unreadable build_env exits 2 (fail-closed, no
+  ## stacktrace); build_env absence or embedded!=live drift exits 1.
   let srcDir = projectRoot / "src"
-  let hTree = computeDeterministicSourceHash(srcDir)
+  let g = gatherSourceTree(srcDir)
+  if not g.complete:
+    stderr.writeLine("[build-coherence] FAIL reason=unreadable-source")
+    return 2
+  let hTree = hashSourceContents(g.files)
 
   let buildEnvPath = projectRoot / "src" / "generated" / "build_env.nim"
   let buildEnvDefaultPath = projectRoot / "src" / "generated" / "build_env.nim.default"
 
+  let buildEnvPresent = fileExists(buildEnvPath)
   var buildEnvContent = ""
-  if fileExists(buildEnvPath):
-    buildEnvContent = readFile(buildEnvPath)
-  elif fileExists(buildEnvDefaultPath):
-    buildEnvContent = readFile(buildEnvDefaultPath)
+  try:
+    if buildEnvPresent:
+      buildEnvContent = readFile(buildEnvPath)
+    elif fileExists(buildEnvDefaultPath):
+      buildEnvContent = readFile(buildEnvDefaultPath)
+  except CatchableError as e:
+    stderr.writeLine("[build-coherence] FAIL reason=unreadable-build_env: " & e.msg)
+    return 2
 
   var embeddedHash = ""
   for line in buildEnvContent.splitLines():
@@ -1607,18 +1660,33 @@ proc checkSourceHash(): int =
         embeddedHash = parts[1]
       break
 
+  if not buildEnvPresent:
+    echo "[build-coherence] FAIL reason=build_env-absent embedded=" & embeddedHash &
+         " tree=" & hTree & " (embedded-empty=" & $(embeddedHash == "") & ")"
+    return 1
+
   if embeddedHash == hTree:
     echo "[build-coherence] PASS tree=" & hTree & " embedded=" & embeddedHash
-    quit(0)
+    return 0
   else:
     let embeddedEmpty = embeddedHash == ""
     echo "[build-coherence] FAIL embedded=" & embeddedHash & " tree=" & hTree & " (embedded-empty=" & $embeddedEmpty & ")"
-    quit(1)
+    return 1
 
 # Subcommand dispatch (at end of file to satisfy Nim 2.2.10 forward-decl)
 
-# Early --materialize route: bypass all heavy init below (Z3 lookup + full
-# generateBuildEnv). This MUST run before the WS-P2-B toolchain guard.
+# Early read-only / fast-path routes: bypass Z3 subprocess lookup AND the
+# early generateBuildEnv() write pass.
+#   --materialize       : substitutes placeholders from cached body (~2-5ms)
+#   --src-tree-hash     : pure read-only live tree digest for config.nims
+#   --check-source-hash : Contract A read-only coherence gate (DEBT#532 —
+#                         MUST NEVER call generateBuildEnv() before checking)
+if paramCount() > 0:
+  let earlyCmd = paramStr(1)
+  if earlyCmd == "--src-tree-hash":
+    quit(srcTreeHashRoute())
+  elif earlyCmd == "--check-source-hash":
+    quit(checkSourceHash())
 if commandLineParams().contains("--materialize"):
   quit(materializeBuildEnv())
 
@@ -1673,7 +1741,7 @@ if paramCount() > 0:
          "--prune-stubs|--track-raises|--detect-proc-to-func|" &
          "--generate-debt-ledger|--verify-contracts|" &
          "--generate-build-env|--materialize|" &
-         "--check-source-hash]"
+         "--check-source-hash|--src-tree-hash]"
     quit(1)
 else:
   main()
