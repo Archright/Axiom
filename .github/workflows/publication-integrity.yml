@@ -188,10 +188,22 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (repo sha-pin)
         with:
           persist-credentials: false
+      - name: "[tool] restore pip wheel memo (exact-key only)"
+        id: pip-wheel-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0 (repo sha-pin)
+        with:
+          path: ${{ runner.temp }}/pip-cache
+          key: axiom-a-pip-scancode-32-linux-x64-${{ hashFiles('**/publication-integrity.yml') }}-scancode-32.5.0-pluggy-1.5.0
       - name: "[tool] scancode-toolkit 32.5.0 + pluggy 1.5.0 (venv, pinned)"
         run: |
           set -euo pipefail
           python3 -m venv "$RUNNER_TEMP/scancode-venv"
+          export PIP_CACHE_DIR="$RUNNER_TEMP/pip-cache"
+          if [ "${{ steps.pip-wheel-restore.outputs.cache-hit }}" = "true" ]; then
+            echo "[tool] pip wheel exact-hit — native install from restored wheels"
+          else
+            echo "[tool] pip wheel MISS — native install (cold install allowed)"
+          fi
           "$RUNNER_TEMP/scancode-venv/bin/pip" install --quiet \
             'scancode-toolkit==32.5.0' 'pluggy==1.5.0'
           "$RUNNER_TEMP/scancode-venv/bin/scancode" --version
