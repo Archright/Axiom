@@ -186,7 +186,7 @@ proc compileLeanSource(
   const lintComment = "-- Axiom Kernel Micro-Pass: Linter suppression for LLM-generated artifacts\n"
   const lintOption = "set_option linter.unusedVariables false\n\n"
   ## Lean 4.29: set_option must come AFTER ALL imports; insert lintOption after last import block
-  ## TODO(W1-A integration): removable once renderer emits header-only imports
+  ## W1-A locale: removable once the renderer emits header-only imports
   var postProcessed = lintComment & theoremSource
   let lastImportStart = postProcessed.rfind("import ")
   if lastImportStart >= 0:

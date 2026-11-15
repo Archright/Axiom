@@ -3873,7 +3873,7 @@
     "src/verification/lean_lsp_compiler.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "f8e6d58c17e35e7483583c679d58157b133258ab"
+      "sha": "0fb05452e741d970d3a38ac7c4fff5cb43b30959"
     },
     "src/verification/lean_lsp_feedback.nim": {
       "mode": "100644",
