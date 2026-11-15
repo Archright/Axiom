@@ -9,14 +9,20 @@
 ##   decision_binding_checker --audit-mode                       # Full audit
 ##   decision_binding_checker --staged-only                      # Strict, all staged
 ##
+## The judgment itself is a count ratchet and lives in
+## `tools/decision_binding_judge.nim` — the single policy kernel shared with
+## the build-time hook. There is no expiry threshold here: a calendar must not
+## be able to stop a build.
+##
 ## Exit codes:
-##   0 — Clean (no violations or audit mode)
-##   1 — Violations found (strict mode only), or the canonical waiver set in
-##       config/decision_binding.waiver.json could not be loaded (fail-closed),
-##       or a waiver entry references a file absent from the repository tree
-##       (stale waiver — fail-closed)
+##   0 — Clean, or at or below the ratchet baseline, or audit mode
+##   1 — The ratchet grew, or the baseline is absent/malformed/drifted
+##       (fail-closed), or the canonical waiver set could not be loaded
+##       (fail-closed), or a waiver entry references a file absent from the
+##       repository tree (stale waiver — fail-closed)
 
-import std/[json, os, osproc, strutils, times]
+import std/[algorithm, json, os, osproc, strutils, times]
+import decision_binding_judge
 
 # ── Deterministic Root Resolution ────────────────────────────────────────────
 proc findProjectRoot(): string =
@@ -356,12 +362,108 @@ proc walkSourceFiles(srcDir: string): seq[string] =
     walkRec(srcDir)
   return files
 
+# ── Ratchet Baseline I/O ─────────────────────────────────────────────────────
+
+proc loadBaseline(path: string): tuple[ok: bool, baseline: RatchetBaseline,
+                                       error: string] =
+  result = (false, RatchetBaseline(), "")
+  if not fileExists(path):
+    result.error = "ratchet baseline not found: " & path &
+      " — fail-closed; author it, or re-anchor an existing one with --update-baseline"
+    return
+  var root: JsonNode
+  try:
+    root = parseJson(readFile(path))
+  except CatchableError as e:
+    result.error = "ratchet baseline is not valid JSON: " & path & " (" & e.msg & ")"
+    return
+  if root.kind != JObject:
+    result.error = "ratchet baseline is not a JSON object: " & path
+    return
+  var b = RatchetBaseline()
+  template strField(key: string): string =
+    (if root.hasKey(key) and root[key].kind == JString: root[key].getStr() else: "")
+  template intField(key: string): int =
+    (if root.hasKey(key) and root[key].kind == JInt: root[key].getInt() else: -1)
+  b.baselineVersion = intField("baselineVersion")
+  b.gate = strField("gate")
+  b.scope = strField("scope")
+  b.owner = strField("owner")
+  b.rationale = strField("rationale")
+  b.reviewBy = strField("reviewBy")
+  b.measuredAt = strField("measuredAt")
+  b.sourceCommit = strField("sourceCommit")
+  b.checkerVersion = strField("checkerVersion")
+  b.policyHash = strField("policyHash")
+  b.filesWithViolations = intField("filesWithViolations")
+  b.totalReasons = intField("totalReasons")
+  if root.hasKey("perReason") and root["perReason"].kind == JArray:
+    for item in root["perReason"]:
+      if item.kind == JObject and item.hasKey("reason") and item.hasKey("count") and
+          item["reason"].kind == JString and item["count"].kind == JInt:
+        b.perReason.add(ReasonCount(reason: item["reason"].getStr(),
+                                    count: item["count"].getInt()))
+  result = (true, b, "")
+
+proc reasonHistogram(reasons: seq[string]): seq[ReasonCount] =
+  for r in reasons:
+    var hit = false
+    for i in 0 ..< result.len:
+      if result[i].reason == r:
+        inc result[i].count
+        hit = true
+        break
+    if not hit:
+      result.add(ReasonCount(reason: r, count: 1))
+  result.sort(proc (a, b: ReasonCount): int = cmp(a.reason, b.reason))
+
+proc writeBaseline(path: string, files: int, reasons: seq[string],
+                   measuredAt: string): string =
+  ## Re-anchors the COUNTS only. The review contract (scope/owner/rationale/
+  ## reviewBy) is authored by a human and is never regenerated here — a machine
+  ## may measure the debt, it may not accept the risk.
+  let prior = loadBaseline(path)
+  if not prior.ok:
+    return "cannot re-anchor: " & prior.error
+  let b = prior.baseline
+  let mayAnchor = reanchorProblem(files, reasons.len, b)
+  if mayAnchor.len > 0:
+    return mayAnchor
+  var commit = "unknown"
+  let rev = execCmdEx("git rev-parse HEAD")
+  if rev.exitCode == 0 and rev.output.strip().len == 40:
+    commit = rev.output.strip()
+  var per = newJArray()
+  for rc in reasonHistogram(reasons):
+    per.add(%*{"reason": rc.reason, "count": rc.count})
+  let node = %*{
+    "baselineVersion": JudgeBaselineVersion,
+    "gate": JudgeGateId,
+    "scope": b.scope,
+    "owner": b.owner,
+    "rationale": b.rationale,
+    "reviewBy": b.reviewBy,
+    "measuredAt": measuredAt,
+    "sourceCommit": commit,
+    "checkerVersion": JudgeCheckerVersion,
+    "policyHash": JudgePolicyHash,
+    "filesWithViolations": files,
+    "totalReasons": reasons.len,
+    "perReason": per
+  }
+  try:
+    writeFile(path, pretty(node) & "\n")
+  except CatchableError as e:
+    return "cannot write " & path & ": " & e.msg
+  ""
+
 # ── Main ─────────────────────────────────────────────────────────────────────
 
 var stagedOnly = false
 var auditMode = false
 var scopeFile: string = ""
-var escalationThreshold = 30
+var baselineRel = "data/decision_binding_baseline.json"
+var updateBaseline = false
 
 var i = 1
 while i <= paramCount():
@@ -375,24 +477,23 @@ while i <= paramCount():
     if i + 1 <= paramCount():
       scopeFile = paramStr(i + 1)
       i += 1
-  of "--escalation-threshold":
+  of "--baseline":
     if i + 1 <= paramCount():
-      try:
-        escalationThreshold = parseInt(paramStr(i + 1))
-        i += 1
-      except ValueError:
-        echo "[decision-binding] Invalid escalation threshold: " & paramStr(i + 1)
-        quit(1)
+      baselineRel = paramStr(i + 1)
+      i += 1
     else:
-      echo "[decision-binding] --escalation-threshold requires a value"
+      echo "[decision-binding] --baseline requires a path"
       quit(1)
+  of "--update-baseline":
+    updateBaseline = true
   of "--help", "-h":
     echo "Usage: decision_binding_checker [options]"
     echo ""
     echo "Options:"
     echo "  --staged-only              Only check staged files (requires git)"
     echo "  --audit-mode               Warn only, exit 0 even with violations"
-    echo "  --escalation-threshold N   Escalate to FAIL if waiver expires within N days (default: 30)"
+    echo "  --baseline <path>          Ratchet baseline (default: data/decision_binding_baseline.json)"
+    echo "  --update-baseline          Re-anchor the baseline to the current measurement"
     echo "  --scope <file>             Check a single file"
     echo "  --help, -h                 Show this help"
     quit(0)
@@ -447,40 +548,39 @@ else:
       for v in scanResult.reasons:
         violations.add(v)
 
-# Output results
-echo "[decision-binding] Found " & $violationCount & " violation(s)"
+# Output results — a count of files is a count of files, never of "functions".
+echo "[decision-binding] " & $violationCount & " file(s) / " & $violations.len &
+  " reason(s) carry a missing {.axiomDecision.}"
 for v in violations:
   echo "  " & v
 
-# Exit code
 if auditMode:
   echo "[decision-binding] Audit mode — no failures reported"
   quit(0)
 
-if violationCount == 0:
-  echo "[decision-binding] PASS: All decision-point functions carry pragma"
+let today = utc(now()).format("yyyy-MM-dd")
+let measuredAt = utc(now()).format("yyyy-MM-dd") & "T" &
+                 utc(now()).format("HH:mm:ss") & "Z"
+let baselinePath = projectRoot / baselineRel
+
+if updateBaseline:
+  let err = writeBaseline(baselinePath, violationCount, violations, measuredAt)
+  if err.len > 0:
+    echo "[decision-binding] FAIL: " & err
+    quit(1)
+  echo "[decision-binding] baseline re-anchored: " & baselinePath & " (" &
+    $violationCount & " files / " & $violations.len & " reasons)"
   quit(0)
 
-# Three-state escalation: WARN → FAIL based on waiver expiry proximity
-if waiver.entries.len == 0:
-  echo "[decision-binding] FAIL: " & $violationCount & " function(s) missing {.axiomDecision.} pragma — no active waivers"
+let loaded = loadBaseline(baselinePath)
+if not loaded.ok:
+  echo "[decision-binding] FAIL: " & loaded.error
   quit(1)
 
-var anyExpiringSoon = false
-for entry in waiver.entries:
-  try:
-    let expiresDate = parse(entry.expiresAt, "yyyy-MM-dd")
-    let now = utc(now())
-    let daysRemaining = (expiresDate - now).inDays
-    if daysRemaining < escalationThreshold:
-      anyExpiringSoon = true
-      echo "[decision-binding] WAIVER EXPIRING SOON: " & entry.filePath & " (" & entry.expiresAt & ", " & $daysRemaining & " days remaining)"
-  except ValueError:
-    echo "[decision-binding] WARNING: Could not parse waiver expiry date: " & entry.expiresAt
-
-if anyExpiringSoon:
-  echo "[decision-binding] FAIL: " & $violationCount & " function(s) missing {.axiomDecision.} pragma — waiver(s) expiring within " & $escalationThreshold & " days"
-  quit(1)
-else:
-  echo "[decision-binding] WARN: " & $violationCount & " function(s) missing {.axiomDecision.} pragma — escalation threshold " & $escalationThreshold & " days not yet reached"
-  quit(0)
+let verdict = judgeDecisionBinding(violationCount, violations.len,
+                                   loaded.baseline, today)
+for m in verdict.messages:
+  echo "[decision-binding] " & m
+echo "[decision-binding] " & (if verdict.exitCode == 0: "PASS" else: "FAIL") &
+  " (" & stateTag(verdict.state) & ")"
+quit(verdict.exitCode)
