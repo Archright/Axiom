@@ -13,7 +13,7 @@ import core/contracts/spec_binding_macro
 
 type
   ASIRatio* {.spec("SPEC-T1-ASIRATIO").} = object
-    val: float  # Private field — module-internal only
+    val: float  # Private field — module-internal only; 0.0 ≤ val ≤ 1.0 is enforced by initAsiRatio (tests/unit/metrics_validated_asi_test.nim)
 
 # --- Safe Factory (only way to create ASIRatio) ---
 func initAsiRatio*(raw: float): Option[ASIRatio] =
