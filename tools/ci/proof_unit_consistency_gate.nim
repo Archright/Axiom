@@ -1981,6 +1981,8 @@ const
      artifact: "data/debt_registry.json", role: RoleTestFixture),
     (file: "tests/unit/test_debt_budget_sync.nim", line: 63,
      artifact: "data/debt_registry.json", role: RoleTestFixture),
+    (file: "tests/unit/test_debt_engine_sync_budget.nim", line: 68,
+     artifact: "data/debt_registry.json", role: RoleTestFixture),
     (file: "tests/unit/test_debt_projection_determinism.nim", line: 436,
      artifact: "data/debt_registry.json", role: RoleTestFixture),
     (file: "tests/unit/test_debt_projection_determinism.nim", line: 590,
