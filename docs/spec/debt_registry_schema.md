@@ -117,6 +117,8 @@ For non-procedure artifacts, such as manifest or documentation entries:
 1. Use the exact artifact content, or the exact line/line-range content named by `lineRange`.
 2. Store the resulting digest as `sha256:<hex>`.
 
+The read-only drift check `ax debt sync --check` (DEBT#543) recomputes this section's convention like-for-like: for each entry with `files` + `lineRange`, it digests the exact artifact content of every referenced path (resolving `path:start-end` value forms and stripping parenthesized annotations) plus the exact line/line-range content of each named range, raw and whitespace-trimmed. A stored `contentHash` that matches none of those recomputations drifts. Comma-separated sub-ranges (e.g. `path:22,35-48`) anchor each region independently — no joined or otherwise composite digest is a written convention.
+
 ---
 
 ## 7. `lineRange` rules
