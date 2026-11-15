@@ -637,15 +637,17 @@ block hermeticPreBuild:
     echo "[hermetic] Syncing topology..."
     exec syncBin
 
-    # Decision binding integrity check (audit mode - warn only)
+    # Decision binding ratchet (count baseline). The judgment lives in
+    # tools/decision_binding_judge.nim; this hook only runs it. A calendar
+    # never fails this build — only growth of the measured violation count.
     let dbBin = "bin/decision_binding_checker"
     let dbSrc = "tools/decision_binding_checker.nim"
     if not fileExists(dbBin):
       echo "[hermetic] Building " & dbBin & " from " & dbSrc
       exec "nim c --hints:off -o:" & dbBin & " " & dbSrc
     if getEnv("AXIOM_FAST_BUILD") != "1":
-      echo "[hermetic] Checking decision bindings (audit)..."
-      exec dbBin & " --escalation-threshold 30"
+      echo "[hermetic] Checking decision bindings (ratchet)..."
+      exec dbBin
 
     # Final guard: ensure build_env.nim exists for nim check/c imports.
     if not fileExists(targetPath):
