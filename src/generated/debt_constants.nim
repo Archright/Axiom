@@ -3,12 +3,12 @@
 # Projection contract: P1 v2
 
 const
-  DebtEntryCount* {.intdefine.} = 275
-  DebtRowCount* {.intdefine.} = 275
-  DebtOpenCount* {.intdefine.} = 51
+  DebtEntryCount* {.intdefine.} = 276
+  DebtRowCount* {.intdefine.} = 276
+  DebtOpenCount* {.intdefine.} = 50
   DebtOpenCritical* {.intdefine.} = 0
   DebtOpenHigh* {.intdefine.} = 25
-  DebtOpenMedium* {.intdefine.} = 20
+  DebtOpenMedium* {.intdefine.} = 19
   DebtOpenLow* {.intdefine.} = 6
   DebtCriticalThreshold* {.intdefine.} = 30
   DebtProjectionVersion* = "2"
