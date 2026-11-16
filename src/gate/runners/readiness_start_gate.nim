@@ -21,19 +21,54 @@ axiomLayer "gate"
 ##     but conditions are printed loudly (non-silent; honest state).
 ##   * Verdict "GO"                                                     -> PASS.
 ##
-## Evidence repo identity: the evidence files are a committed snapshot frozen
-## to a specific head/treeDigest (see R*.json repoIdentity). The gate passes
-## the DECLARED identity back to the evaluator (same as the audit repro in
-## docs/audit/productization_readiness_CONDITIONAL-GO_2026-08-17.md), so the
-## validation is deterministic and independent of the ephemeral current HEAD.
-## Evidence files disagreeing on identity = contradictory evidence -> FAIL.
+## Evidence repo identity (local mode): the evidence files are a committed
+## snapshot frozen to a specific head/treeDigest (see R*.json repoIdentity).
+## The gate passes the DECLARED identity back to the evaluator (same as the
+## audit repro in docs/audit/productization_readiness_CONDITIONAL-GO_2026-08-17.md),
+## so the validation is deterministic and independent of the ephemeral current
+## HEAD. Evidence files disagreeing on identity = contradictory evidence -> FAIL.
+##
+## CI identity authority mode (DEBT#537): when BOTH AXIOM_CI_REPO_HEAD and
+## AXIOM_CI_TREE_DIGEST are exported, the environment — not the evidence
+## snapshot — is the identity authority:
+##   * every evidence file must declare repoIdentity.head and
+##     repoIdentity.treeDigest exactly equal to the environment values; a
+##     missing field or mismatch prints the stable stdout marker line
+##       READINESS_IDENTITY_MISMATCH <file> expected=<v> actual=<v> field=<head|treeDigest>
+##     (repo-relative <file>; expected/actual carry the failing axis's
+##     environment vs evidence-declared value, empty when the field is
+##     missing) and exits 1 — fail-closed, distinct from every tool-failure
+##     path; and
+##   * the evaluator is invoked with the environment head/digest
+##     (--repo-head/--tree-digest), closing the self-declared-identity circle
+##     of the local mode.
+## With neither variable set, local behaviour is preserved byte-for-byte. A
+## partially set pair is a wiring error: warned about, then ignored (the
+## local evidence-declared identity remains in force — CI authority mode is
+## never half-active).
+##
+## Machine-readable verdict exposure: whenever the evaluator produced a
+## decision, the finalized verdict is printed to stdout exactly once (GO
+## included) as
+##   READINESS_VERDICT <GO|CONDITIONAL GO|NO-GO|UNKNOWN> CONDITIONS <list>
+## where <list> is the decision.json conditions array joined with ';' (empty
+## string when absent; the literal " CONDITIONS " separator is always
+## present). Verdict/conditions strings are the evaluator's own decision.json
+## output, never re-derived here (decision algebra is the SSOT); UNKNOWN is
+## the fail-closed token for a verdict outside the evaluator's table. When
+## conditions exist, an additional GitHub Actions annotation is printed:
+##   ::warning::readiness <verdict>: conditions: <list>
+## Tool failures (build/parse/infra) emit no READINESS_VERDICT line and keep
+## their pre-existing exit codes — a missing line means "no verdict produced".
 ##
 ## Registration: config/gates.manifest.toml (generated from
 ## src/gate/topology_spec.nim by tools/sync_topology.nim), stage manual
 ## (topology entry "readiness-start-gate": stages = @[skManual]); the sole
 ## invoker is `make check-readiness-start` (Makefile:941, AXIOM_CI=1).
 ##
-## Usage: no arguments.
+## Usage: no arguments. Environment: AXIOM_CI_REPO_HEAD + AXIOM_CI_TREE_DIGEST
+## (both required together) enable CI identity authority mode; registered in
+## docs/spec/environment_inputs.md §2.15.
 
 import std/[os, osproc, strutils, times, json, sequtils, algorithm]
 import infrastructure/logging_facade
@@ -52,6 +87,8 @@ const
   E2ENimcacheDir = "build" / "nimcache" / "readiness_start"
   DecisionOut = "build" / "readiness_start_decision.json"
   RootMarker = ".axiom_root"
+  CiRepoHeadEnv = "AXIOM_CI_REPO_HEAD"
+  CiTreeDigestEnv = "AXIOM_CI_TREE_DIGEST"
 
 proc repoRootOf(): string =
   ## Compile-time anchored root (this file lives in src/gate/runners/).
@@ -187,6 +224,62 @@ proc collectEvidenceIdentity(root: string): tuple[idy: EvidenceIdentity, err: st
         elif idy.toolchainLean != leanV:
           return (EvidenceIdentity(), "contradictory toolchain.lean in " & f)
   (idy, "")
+
+# ---------------------------------------------------------------------------
+# CI identity authority (DEBT#537): environment-supplied repository identity
+# ---------------------------------------------------------------------------
+
+proc relToRoot(root: string; p: string): string =
+  ## Repo-relative form of a path inside the repo — marker lines must not
+  ## embed machine-local checkout paths.
+  if p.startsWith(root & DirSep):
+    p[(root.len + 1) .. ^1]
+  else:
+    p
+
+proc identityMismatchLine(root: string; f: string; field: string;
+                          expected: string; actual: string): string =
+  ## Stable stdout marker for a CI identity violation. The line always starts
+  ## READINESS_IDENTITY_MISMATCH <file> expected=<v> actual=<v>; the trailing
+  ## field names which identity axis failed (expected/actual carry that
+  ## axis's environment vs evidence-declared value, empty when the field is
+  ## missing). Machine surface contract: DEBT#537 CI wiring consumers match
+  ## the marker prefix + exit 1 to distinguish identity failure from every
+  ## other fail-closed reason.
+  "READINESS_IDENTITY_MISMATCH " & relToRoot(root, f) &
+    " expected=" & expected & " actual=" & actual & " field=" & field
+
+proc ciIdentityMismatch(root: string; ciHead: string;
+                        ciTree: string): tuple[marker: string, err: string] =
+  ## CI authority check: every evidence file must declare repoIdentity.head
+  ## and repoIdentity.treeDigest exactly equal to the environment values
+  ## (missing field = mismatch, fail-closed). Files are walked in sorted
+  ## order so the reported violation is deterministic. An unparsable file is
+  ## a tool failure (err), NOT an identity mismatch — the failure categories
+  ## stay distinguishable.
+  let dir = root / EvidenceDir
+  if not dirExists(dir):
+    return ("", "evidence directory does not exist: " & dir)
+  var files: seq[string] = @[]
+  for f in walkFiles(dir / "*.json"):
+    files.add(f)
+  files.sort(cmp[string])
+  for f in files:
+    var node: JsonNode
+    try:
+      node = parseFile(f)
+    except CatchableError as e:
+      return ("", "unparsable evidence file " & f & ": " & e.msg)
+    if node == nil or node.kind != JObject:
+      return (identityMismatchLine(root, f, "head", ciHead, ""), "")
+    let ri = node{"repoIdentity"}
+    let actHead = if ri != nil and ri.kind == JObject: ri{"head"}.getStr("") else: ""
+    let actTree = if ri != nil and ri.kind == JObject: ri{"treeDigest"}.getStr("") else: ""
+    if actHead != ciHead:
+      return (identityMismatchLine(root, f, "head", ciHead, actHead), "")
+    if actTree != ciTree:
+      return (identityMismatchLine(root, f, "treeDigest", ciTree, actTree), "")
+  ("", "")
 
 proc compileEvaluator(root: string): bool =
   ## Build bin/readiness_evaluator from tools/readiness_evaluator.nim if
@@ -359,10 +452,38 @@ when isMainModule:
     quit(1)
 
   # ── (b) Readiness evaluator over the latest evidence ───────────────────
-  let (idy, idyErr) = collectEvidenceIdentity(root)
+  var (idy, idyErr) = collectEvidenceIdentity(root)
   if idyErr != "":
     logError("readiness_start_gate", "evidence identity error: " & idyErr)
     quit(1)
+
+  # ── (b0) CI identity authority mode (both env vars set) ────────────────
+  # The environment is the identity authority: the evidence snapshot must
+  # describe exactly the CI commit, and the evaluator validates against the
+  # environment values (never the evidence's self-declaration).
+  let ciHead = getEnv(CiRepoHeadEnv)
+  let ciTree = getEnv(CiTreeDigestEnv)
+  if (ciHead.len > 0) xor (ciTree.len > 0):
+    logWarn("readiness_start_gate",
+            CiRepoHeadEnv & " and " & CiTreeDigestEnv & " must be set " &
+            "together; partial CI identity ignored — using the local " &
+            "evidence-declared identity (check the CI exporter wiring).")
+  if ciHead.len > 0 and ciTree.len > 0:
+    logInfo("readiness_start_gate",
+            "CI identity authority mode: head=" & ciHead &
+            " treeDigest=" & ciTree)
+    let (marker, ciErr) = ciIdentityMismatch(root, ciHead, ciTree)
+    if ciErr != "":
+      logError("readiness_start_gate", "evidence identity error: " & ciErr)
+      quit(1)
+    if marker != "":
+      echo marker
+      logError("readiness_start_gate",
+               "CI identity mismatch — the evidence snapshot does not " &
+               "describe the CI commit; gate FAILS (fail-closed).")
+      quit(1)
+    idy.head = ciHead
+    idy.treeDigest = ciTree
   if not compileEvaluator(root):
     quit(1)
   let evalTime = utc(now()).format("yyyy-MM-dd'T'HH:mm:ss'Z'")
@@ -392,6 +513,21 @@ when isMainModule:
     for inv in res.invariantStates.keys:
       let st = res.invariantStates[inv].getStr("")
       echo "  " & inv & " = " & st
+
+  # Machine-readable verdict line (stdout, exactly once, GO included). The
+  # verdict/conditions strings come verbatim from the evaluator's
+  # decision.json; UNKNOWN is the fail-closed token for a verdict outside
+  # the evaluator's table. Conditions are semicolon-joined; an empty list
+  # leaves the trailing " CONDITIONS " separator with an empty tail.
+  var verdictToken = res.verdict
+  if verdictToken != "GO" and verdictToken != "CONDITIONAL GO" and
+     verdictToken != "NO-GO":
+    verdictToken = "UNKNOWN"
+  let conditionsLine = join(res.conditions, ";")
+  echo "READINESS_VERDICT " & verdictToken & " CONDITIONS " & conditionsLine
+  if res.conditions.len > 0:
+    echo "::warning::readiness " & verdictToken & ": conditions: " & conditionsLine
+
   case res.verdict
   of "NO-GO":
     logError("readiness_start_gate",
