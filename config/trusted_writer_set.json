@@ -3958,7 +3958,7 @@
     "src/verification/obligation/canonical_verification.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "e1ebec92c723692f5be71ec6a7b633d4dbd51831"
+      "sha": "446172443cdd1ef313b1ae6b3145cb3437c19acf"
     },
     "src/verification/obligation/golden_fixture_ir.nim": {
       "mode": "100644",
@@ -3988,7 +3988,7 @@
     "src/verification/obligation/measured_digests.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "8f59a0ec67de946113176e4b76152aefa4d9e93b"
+      "sha": "765d2b5c7ee13ee55286606d6010dc73005531c8"
     },
     "src/verification/obligation/metrics.nim": {
       "mode": "100644",
