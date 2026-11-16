@@ -899,6 +899,17 @@ when declared(BugVerdictSubjectIdentity):
       let rawOpt = loadRegistryEntryRaw(coutSpecRelPath)
       check rawOpt.isSome
       let probe = probeSubjectIdentity(tmp, rawOpt.get)
+      # Premise promotion (C): probe.blob IS sha256Hex of the copied A1 fixture
+      # bytes (axiom_engine.nim probeSubjectIdentity) — these checks bind
+      # A1 bytes ≡ BOTH committed pins, previously documentation-only:
+      # config/spec/nim_stew_base36_cout_spec.json subject.blobSha256 and
+      # config/spec/nim_stew_base36_sidecar.json adoption.subject.blobSha256.
+      let pinnedCoutBlob =
+        committedSpec(coutSpecRelPath){"subject"}{"blobSha256"}.getStr()
+      let pinnedSidecarBlob = committedSpec(
+        "nim_stew_base36_sidecar.json"){"adoption"}{"subject"}{"blobSha256"}.getStr()
+      check probe.blob == pinnedCoutBlob
+      check probe.blob == pinnedSidecarBlob
       check probe.probeOk.not          # no .git → the exact-commit binding is unverifiable
       let crr = scopedRunResult(newJObject())
       let entryOpt = findEntry(coutSpecRelPath)
