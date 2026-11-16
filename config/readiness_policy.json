@@ -214,7 +214,8 @@
   "r1": {
     "contractCommands": [
       "ax prove",
-      "ax report"
+      "ax report",
+      "definitely-nonexistent-cmd-probe2a"
     ],
     "surfaceCommandObservationScope": "surface",
     "trustBoundaryLanes": {
