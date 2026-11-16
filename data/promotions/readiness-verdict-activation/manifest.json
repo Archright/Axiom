@@ -1,0 +1,180 @@
+{
+  "schema": "axiom.promotion-manifest.v1",
+  "schemaVersion": 1,
+  "repository": "Archright/Axiom",
+  "promotionId": "readiness-verdict-activation",
+  "promotion": "readiness-verdict-activation",
+  "phase": "1-bootstrap",
+  "recordedAt": "2026-11-16T17:28:00Z",
+  "authority": {
+    "mergeAuthority": "GitHub (ruleset 27097366 merge queue; activation candidate landed via MUST-T2a rotation delegation — operator bypass PUT + native REST MERGE + restore PUT, delegation record docs/evidence/readiness_required_check_activation/must_t2a_rotation_landing.md)",
+    "activationAuthority": "operator ruleset PUT (wintrover, org admin, authenticated gh)",
+    "policySSOT": "config/policy/merge_admission.json v1.23.0 (7 contexts, double-bound with src/cli/merge_cli.nim in PR #121)"
+  },
+  "candidateSha": "8170dacccffee8fd8394cae529c9f5581c049415",
+  "candidatePr": 121,
+  "mergeSha": "e3ec8ae1f475b7cb47cc175fb3694a7babc269f5",
+  "candidate": {
+    "pr": 121,
+    "branch": "feat/readiness-verdict-wiring",
+    "headSha": "8170dacccffee8fd8394cae529c9f5581c049415",
+    "mergeCommit": "e3ec8ae1f475b7cb47cc175fb3694a7babc269f5",
+    "mergedAt": "2026-11-16T16:50:39Z",
+    "mergedBy": "wintrover",
+    "mergeMethod": "native 2-parent MERGE via REST PUT /repos/Archright/Axiom/pulls/121/merge (merge_method=merge, sha=8170dac) — bypass window 42s (16:50:13Z bypass PUT → 16:50:55Z restore PUT)",
+    "selfRunPullRequest": {
+      "id": 43909803169,
+      "workflow": "axiom-operational-slice",
+      "event": "pull_request",
+      "conclusion": "success",
+      "headSha": "8170dacccffee8fd8394cae529c9f5581c049415",
+      "readinessJobId": 133451394125,
+      "note": "PR-venue self-run green: evidence download -> collector R1-R8 -> gate -> exit 0; verdict CONDITIONAL GO (R7=FAIL), decisionDigest 0bcb25bd79286b356ee382278acf55a60f9eac9f381883a6e61a0ec318f1377b"
+    },
+    "selfRunMergeGroup": {
+      "absent": true,
+      "note": "STRUCTURAL GAP, HONESTLY RECORDED — the activation candidate is a policy-mirror single-PR (v1.23.0, 7 contexts) which cannot qualify for merge queue admission under either ordering (measured: PUT-first -> GPA run 43882659122 REJECTED:RULESET_UNAVAILABLE, name resolution 0/1; PUT-absent -> ADDED=readiness-verdict fails the generation-acceptance-only PROMOTION_PENDING hardcode c021c33, REJECTED:POLICY_RULESET_MISMATCH; VS-I / PR #45 precedent category). Landing path: rotation (3-step, delegation record §2.1-§2.2). Therefore rel_1 (event==merge_group) of tools/promotion/validate_manifest.sh cannot be satisfied by this manifest — the validator FAILS at rel_1 and that failure is recorded, not silently passed. The first merge-group execution of readiness-verdict in steady state is observed post-activation (queue-integrated PR, recorded in E6)."
+    }
+  },
+  "acceptanceRun": {
+    "id": 43909803169,
+    "workflow": "axiom-operational-slice",
+    "event": "pull_request",
+    "conclusion": "success",
+    "headSha": "8170dacccffee8fd8394cae529c9f5581c049415",
+    "note": "PR-venue self-run stands in for the acceptance run; merge_group run is structurally absent (see candidate.selfRunMergeGroup) — honest rel_1 failure"
+  },
+  "rulesetReadback": {
+    "provenance": "operator-promotion-adapter",
+    "fetchedAt": "2026-11-16T17:27:18Z",
+    "expected": [
+      "admission-check",
+      "axiom-operational-slice",
+      "bsec-integrity",
+      "debt-registry-gate",
+      "generation-acceptance",
+      "publication-integrity",
+      "readiness-verdict"
+    ],
+    "actual": [
+      "admission-check",
+      "axiom-operational-slice",
+      "bsec-integrity",
+      "debt-registry-gate",
+      "generation-acceptance",
+      "publication-integrity",
+      "readiness-verdict"
+    ],
+    "equal": true,
+    "provenanceNote": "org admin gh readback — job GITHUB_TOKEN cannot read org ruleset (MUST#8); all 7 contexts integration_id 15368; enforcement active; bypass_actors empty"
+  },
+  "productionRun": {
+    "id": 43911956696,
+    "workflow": "axiom-operational-slice",
+    "event": "push",
+    "conclusion": "success",
+    "headSha": "e3ec8ae1f475b7cb47cc175fb3694a7babc269f5",
+    "readinessJobId": 133458781756,
+    "note": "first production execution on the merge commit (head_sha == mergeCommit, run started 16:50:41Z); readiness-verdict job success; verdict CONDITIONAL GO, conditions [R7=FAIL], decisionDigest 0bcb25bd79286b356ee382278acf55a60f9eac9f381883a6e61a0ec318f1377b — identical to the PR self-run digest (deterministic projection across venues)"
+  },
+  "probe": {
+    "pr": 124,
+    "closedWithoutMerge": true,
+    "mutation": "config/readiness_policy.json r1.contractCommands += 'definitely-nonexistent-cmd-probe2a' (nonexistent contract command -> collector commandExists=false)",
+    "run": {
+      "id": 43914508144,
+      "event": "pull_request",
+      "conclusion": "failure",
+      "headSha": "7d7000f60c834d13b96578b2d0727465d48203e9",
+      "readinessJobId": 133468585538
+    },
+    "enforcementEvidence": {
+      "isRequired": true,
+      "mergeStateStatus": "BLOCKED",
+      "mergeableState": "blocked",
+      "causalChain": "commandExists=false -> R1=FAIL + R5=FAIL (critical) -> verdict NO-GO (failureCategory CONTRACT_FAIL) -> gate exit 1 -> readiness-verdict check-run FAILURE",
+      "soleBlocker": "readiness-verdict is the only failing reported check (axiom-operational-slice, bsec-integrity, debt-registry-gate, generation-acceptance, publication-integrity all green; admission-check structurally unreported in PR venue — identical to PR #121); 0 merges",
+      "verdictText": "verdict: NO-GO; R1 = FAIL; R5 = FAIL; READINESS_VERDICT NO-GO CONDITIONS; failureCategory: CONTRACT_FAIL"
+    },
+    "additionalNegativeControls": [
+      {
+        "probe": "PR-2b (E2E-failure propagation, PR #125, closed without merge)",
+        "mutation": "tests/gateway/deterministic_parallel_proof_test.nim:294 EXIT PIN serial==1 -> serial==0",
+        "observation": "axiom-operational-slice required check FAILURE (4m43s) -> mergeable_state=blocked, 0 merges; readiness-verdict independently CONDITIONAL GO (R1-R6,R8 PASS, R7=FAIL baseline) — the verdict consumes R1-R8 evidence only; the E2E ratchet lane is enforced by its own required check (authority-per-fact, no double authority)"
+      },
+      {
+        "probe": "PR-2c (cancellation semantics, PR #126, closed without merge)",
+        "mutation": "empty commit (zero diff); workflow run 43916918843 cancelled via gh run cancel while readiness-verdict in_progress (job started 17:23:15Z)",
+        "observation": "readiness-verdict check-run conclusion=cancelled (NOT success, 19s) -> mergeable_state=blocked, 0 merges — cancellation follows fail-closed; a cancelled required check never reports success"
+      }
+    ]
+  },
+  "thirdPartyReplay": {
+    "procedure": "docs/spec/readiness_verdict_check.md §6 (cold lane)",
+    "lane": "cold — detached worktree at e3ec8ae, purged caches (build/nimcache, .axiom/cache, proofs/.lake, proofs/build, B-layer fingerprint, 4 binaries), make ci-compile -j4",
+    "head": "e3ec8ae1f475b7cb47cc175fb3694a7babc269f5",
+    "treeDigest": "08ea33e414b670fcab0eed3d45899c3902485a8ec27facda1750f11e0f8e2b79",
+    "supplyVerify": "AXIOM_PROVENANCE: OK — embedded BuildSourceHash == live src tree (vs1-tree-hash/1:5894238184686856199) == run-manifest .sourceTree.buildSourceHash (semantic binding; per-TREE, never per-byte per the setup-axiom-toolchain action contract)",
+    "dirtyCheck": "pre-build working-tree deltas limited to the 8 restored evidence files (data/readiness/evidence/R*.json) — all inside the gate's §4.6 declared-derived exclusion set; HEAD == AXIOM_CI_REPO_HEAD",
+    "gateExit": 0,
+    "verdict": "CONDITIONAL GO",
+    "conditions": ["R7=FAIL"],
+    "decisionDigest": "0bcb25bd79286b356ee382278acf55a60f9eac9f381883a6e61a0ec318f1377b",
+    "digestMatch": true,
+    "fullDecisionFileIdenticalExceptEvaluationTime": true,
+    "result": "REPLAY_OK — same evidence + same tree -> same verdict, same decisionDigest, decision file byte-identical except evaluationTime (freshUntil 2026-12-16, replay within validity)"
+  },
+  "uniqueness": {
+    "workflowId": 415675102,
+    "workflowPath": ".github/workflows/axiom-operational-slice.yml",
+    "registryState": "active",
+    "verifiedAt": "2026-11-16T17:27:18Z",
+    "evidence": "job id readiness-verdict (no job-level name: key) is the check-run context; exactly 1 check-run named readiness-verdict per head SHA (observed on 8170dac, e3ec8ae, 7d7000f, 71f6641, b8b612f); platform workflow id 415675102 (live API observation, state active)"
+  },
+  "activation": {
+    "rulesetId": 27097366,
+    "method": "PUT /repos/Archright/Axiom/rulesets/27097366",
+    "executedAt": {
+      "prePut": "2026-11-16T14:19:58Z (ruleset version 58006001; 2026-11-16T23:19:58+09:00) — readiness-verdict added as the 7th required context BEFORE the workflow landed on main (order reversal vs spec §7.1->§7.2, honestly recorded)",
+      "bypassPut": "2026-11-16T16:50:13Z (version 58030608) — temporary OrganizationAdmin pull_request bypass for the rotation merge (body: live 7-context + 5-rule original + bypass_actors)",
+      "restMerge": "2026-11-16T16:50:37Z — native 2-parent MERGE commit e3ec8ae (PR #121, sha-pinned)",
+      "restorePut": "2026-11-16T16:50:55Z (version 58030755) — bypass removed; 7 contexts + all 5 rules intact; RESTORE_IDENTICAL verified via readback + /rules/branches/main projection"
+    },
+    "expectedChecks": [
+      "admission-check",
+      "axiom-operational-slice",
+      "bsec-integrity",
+      "debt-registry-gate",
+      "generation-acceptance",
+      "publication-integrity",
+      "readiness-verdict"
+    ],
+    "readback": {
+      "provenance": "operator-promotion-adapter (org admin gh readback — job GITHUB_TOKEN cannot read this: MUST#8)",
+      "fetchedAt": "2026-11-16T17:27:18Z",
+      "actualChecks": [
+        "admission-check",
+        "axiom-operational-slice",
+        "bsec-integrity",
+        "debt-registry-gate",
+        "generation-acceptance",
+        "publication-integrity",
+        "readiness-verdict"
+      ],
+      "integrationIds": {
+        "admission-check": 15368,
+        "axiom-operational-slice": 15368,
+        "bsec-integrity": 15368,
+        "debt-registry-gate": 15368,
+        "generation-acceptance": 15368,
+        "publication-integrity": 15368,
+        "readiness-verdict": 15368
+      },
+      "enforcement": "active",
+      "otherRulesPreserved": ["deletion", "non_fast_forward", "pull_request", "required_status_checks", "merge_queue"],
+      "bypassActors": [],
+      "equal": true
+    }
+  },
+  "bootstrapClause": "Activation of readiness-verdict (7th required context, ruleset 27097366) closed DEBT#537's declared-but-unenforced gap. Honest deviations, recorded not erased: (1) ORDER REVERSAL — spec §7.1->§7.2 and policy v1.23.0 clause (3) declare PR-A-landing-first, operator-PUT-second; the operator PUT ran FIRST (2026-11-16T14:19:58Z, version 58006001) while the workflow was not yet on main. Consequence: a fail-closed window of 2h31m in which queue admission was impossible for every PR (name resolution RULESET_UNAVAILABLE) — zero merges occurred in that window (queue empty, observed). The rotation landing itself (16:50:13Z bypass -> 16:50:37Z REST merge -> 16:50:55Z restore) closed the window; bypass window 42s; ruleset integrity restored (RESTORE_IDENTICAL). (2) §7.3 DRIFT WINDOW — pre-PUT 14:19:58Z -> policy-mirror landing 16:50:39Z / restore 16:50:55Z closes WITHIN the same UTC day (2026-11-16), so §7.3 as written ('같은 UTC 일 내 폐쇄') is satisfied; the MUST-T2a delegation record's conservative '이미 위반' wording compared KST-local dates (2026-11-16 PUT vs 2026-11-17 KST landing) and is corrected by this manifest and E6 — the delegation record itself stays immutable as a pre-merge point-in-time record. (3) VALIDATOR rel_1 — tools/promotion/validate_manifest.sh requires an acceptanceRun with event==merge_group; a rotation landing has none (structural, see candidate.selfRunMergeGroup). The validator FAILS at rel_1 and PASSES rel_2/rel_3/rel_4/rel_5 (candidateSha==PR head, rulesetReadback expected==actual with operator provenance, productionRun head==mergeSha, mergeSha==PR mergeCommit — all API-verified). The failure is recorded verbatim in E6; a silent pass is never declared (AGENTS.md §0.9; VS-I precedent: publication-integrity activation shipped documentation instead). (4) GPA TRANSIENT — the activation candidate's own GPA run 43882659122 was REJECTED:RULESET_UNAVAILABLE during the reversed window; predicted in the delegation record §2.1 and resolved by landing (steady state: policy mirror v1.23.0 == live ruleset, 7==7). (5) STEADY-STATE QUEUE OBSERVATION — the first merge_group execution of readiness-verdict occurs post-activation through a queue-integrated PR (this activation's follow-up closure PR), recorded in E6 as the positive control."
+}
