@@ -3,6 +3,12 @@
 ## rename/copy/typechange semantics, determinism, fail-closed behavior, glob
 ## semantics, resolution order, and checkClosure.
 ##
+## v2 additions: structural validation (unknown keys in classes/rules/op
+## rules, defaultClass domain, resolutionOrder exactness, selfAmendment
+## shape, exact double registration), two-sided rename judgment (old path
+## judged with op DELETE), and the selfAmendment exception contract
+## (conditions a-d, one miss leaves the FAIL standing).
+##
 ## Run from repo root:
 ##   nim c -r --hints:off --nimcache:/tmp/nimc_guard tests/unit/test_surface_guard.nim
 
@@ -86,7 +92,7 @@ suite "Renames":
     check v["changeCount"].getInt() == 1
     check v["violations"].len == 0
     check v["summary"]["rename"].getInt() == 1
-    echo "  [rename] old FROZEN path ignored (implicit DELETE), new PRODUCT path PASS"
+    echo "  [rename] old FROZEN path judged as DELETE (rule PASS here), new PRODUCT path PASS"
 
   test "rename into FROZEN -> FAIL (new path judged with op ADD)":
     let recs = @[ChangeRecord(status: 'R', path: "src/lib/a.nim",
@@ -321,3 +327,325 @@ suite "checkClosure":
     check v["uncovered"].len == 2
     check v["policyVersion"].kind == JNull
     echo "  [closure] invalid policy -> FAIL, all uncovered"
+
+suite "Structural validation (v2)":
+  test "exact double registration -> POLICY_INVALID":
+    let p = parseJson("""
+      {"schemaVersion": 1, "policyVersion": 20,
+       "classes": {"PRODUCT": ["src/**"], "CONTROLLED": ["Makefile"],
+                   "FROZEN": ["Makefile", "AGENTS.md"]},
+       "defaultClass": "PRODUCT",
+       "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}}}
+    """)
+    let v = classify(p, @[ChangeRecord(status: 'A', path: "src/a.nim")])
+    check v["verdict"].getStr() == "FAIL"
+    check v["reasonCode"].getStr() == "POLICY_INVALID"
+    check v["policyVersion"].kind == JNull
+    echo "  [v2] exact path in two classes -> POLICY_INVALID"
+
+  test "duplicate exact entry within ONE class is not double registration":
+    let p = parseJson("""
+      {"schemaVersion": 1, "policyVersion": 20,
+       "classes": {"PRODUCT": ["src/**"], "CONTROLLED": ["Makefile", "Makefile"],
+                   "FROZEN": ["AGENTS.md"]},
+       "defaultClass": "PRODUCT",
+       "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}}}
+    """)
+    let v = classify(p, @[ChangeRecord(status: 'A', path: "src/a.nim")])
+    check v["verdict"].getStr() == "PASS"
+    echo "  [v2] same-class duplicate exact entry stays valid"
+
+  test "unknown key in classes -> POLICY_INVALID":
+    let p = parseJson("""
+      {"schemaVersion": 1, "policyVersion": 20,
+       "classes": {"PRODUCT": ["src/**"], "CONTROLLED": [], "FROZEN": ["AGENTS.md"], "EXTRA": []},
+       "defaultClass": "PRODUCT",
+       "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}}}
+    """)
+    let v = classify(p, @[ChangeRecord(status: 'A', path: "src/a.nim")])
+    check v["verdict"].getStr() == "FAIL"
+    check v["reasonCode"].getStr() == "POLICY_INVALID"
+
+  test "unknown key in rules -> POLICY_INVALID":
+    let p = parseJson("""
+      {"schemaVersion": 1, "policyVersion": 20,
+       "classes": {"PRODUCT": ["src/**"], "CONTROLLED": [], "FROZEN": ["AGENTS.md"]},
+       "defaultClass": "PRODUCT",
+       "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"},
+                 "EXTRA": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"}}}
+    """)
+    let v = classify(p, @[ChangeRecord(status: 'A', path: "src/a.nim")])
+    check v["verdict"].getStr() == "FAIL"
+    check v["reasonCode"].getStr() == "POLICY_INVALID"
+    echo "  [v2] unknown rules key rejected"
+
+  test "unknown op key in a class rule -> POLICY_INVALID":
+    let p = parseJson("""
+      {"schemaVersion": 1, "policyVersion": 20,
+       "classes": {"PRODUCT": ["src/**"], "CONTROLLED": [], "FROZEN": ["AGENTS.md"]},
+       "defaultClass": "PRODUCT",
+       "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL", "PUSH": "FAIL"}}}
+    """)
+    let v = classify(p, @[ChangeRecord(status: 'A', path: "src/a.nim")])
+    check v["verdict"].getStr() == "FAIL"
+    check v["reasonCode"].getStr() == "POLICY_INVALID"
+    echo "  [v2] unknown op key rejected"
+
+  test "defaultClass outside the three classes -> POLICY_INVALID":
+    let p = parseJson("""
+      {"schemaVersion": 1, "policyVersion": 20,
+       "classes": {"PRODUCT": ["src/**"], "CONTROLLED": [], "FROZEN": ["AGENTS.md"]},
+       "defaultClass": "FREE",
+       "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}}}
+    """)
+    let v = classify(p, @[ChangeRecord(status: 'A', path: "nowhere/x.nim")])
+    check v["verdict"].getStr() == "FAIL"
+    check v["reasonCode"].getStr() == "POLICY_INVALID"
+    echo "  [v2] defaultClass domain enforced"
+
+  test "resolutionOrder not exactly PRODUCT,CONTROLLED,FROZEN -> POLICY_INVALID":
+    for ro in @["""["FROZEN", "CONTROLLED", "PRODUCT"]""",
+                """["PRODUCT", "CONTROLLED"]""",
+                """["PRODUCT", "PRODUCT", "FROZEN"]"""]:
+      let p = parseJson("""
+        {"schemaVersion": 1, "policyVersion": 20,
+         "classes": {"PRODUCT": ["src/**"], "CONTROLLED": [], "FROZEN": ["AGENTS.md"]},
+         "defaultClass": "PRODUCT",
+         "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                   "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                   "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}},
+         "resolutionOrder": """ & ro & "}")
+      let v = classify(p, @[ChangeRecord(status: 'A', path: "src/a.nim")])
+      check v["verdict"].getStr() == "FAIL"
+      check v["reasonCode"].getStr() == "POLICY_INVALID"
+    echo "  [v2] resolutionOrder must declare the hardcoded order"
+
+  test "resolutionOrder exactly PRODUCT,CONTROLLED,FROZEN -> valid":
+    let p = parseJson("""
+      {"schemaVersion": 1, "policyVersion": 20,
+       "classes": {"PRODUCT": ["src/**"], "CONTROLLED": [], "FROZEN": ["AGENTS.md"]},
+       "defaultClass": "PRODUCT",
+       "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}},
+       "resolutionOrder": ["PRODUCT", "CONTROLLED", "FROZEN"]}
+    """)
+    let v = classify(p, @[ChangeRecord(status: 'A', path: "src/a.nim")])
+    check v["verdict"].getStr() == "PASS"
+    echo "  [v2] exact resolutionOrder accepted"
+
+  test "selfAmendment with an extra key -> POLICY_INVALID":
+    let p = parseJson("""
+      {"schemaVersion": 1, "policyVersion": 20,
+       "classes": {"PRODUCT": ["src/**"], "CONTROLLED": [], "FROZEN": ["AGENTS.md"]},
+       "defaultClass": "PRODUCT",
+       "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}},
+       "selfAmendment": {"allowedPaths": ["AGENTS.md"], "owner": "architect"}}
+    """)
+    let v = classify(p, @[ChangeRecord(status: 'A', path: "src/a.nim")])
+    check v["verdict"].getStr() == "FAIL"
+    check v["reasonCode"].getStr() == "POLICY_INVALID"
+    echo "  [v2] selfAmendment carries only allowedPaths"
+
+  test "selfAmendment allowedPaths with a non-string entry -> POLICY_INVALID":
+    let p = parseJson("""
+      {"schemaVersion": 1, "policyVersion": 20,
+       "classes": {"PRODUCT": ["src/**"], "CONTROLLED": [], "FROZEN": ["AGENTS.md"]},
+       "defaultClass": "PRODUCT",
+       "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}},
+       "selfAmendment": {"allowedPaths": ["AGENTS.md", 3]}}
+    """)
+    let v = classify(p, @[ChangeRecord(status: 'A', path: "src/a.nim")])
+    check v["verdict"].getStr() == "FAIL"
+    check v["reasonCode"].getStr() == "POLICY_INVALID"
+
+  test "legacy classResolutionOrder is ignored without penalty":
+    let p = parseJson("""
+      {"schemaVersion": 1, "policyVersion": 20,
+       "classes": {"PRODUCT": ["src/**"], "CONTROLLED": [], "FROZEN": ["AGENTS.md"]},
+       "defaultClass": "PRODUCT",
+       "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}},
+       "classResolutionOrder": ["FROZEN", "PRODUCT", "CONTROLLED"]}
+    """)
+    let v = classify(p, @[ChangeRecord(status: 'A', path: "src/a.nim")])
+    check v["verdict"].getStr() == "PASS"
+    echo "  [v2] legacy classResolutionOrder ignored"
+
+suite "Rename two-sided judgment (v2)":
+  let twoSided = parseJson("""
+    {"schemaVersion": 1, "policyVersion": 21,
+     "classes": {"PRODUCT": ["src/**"], "CONTROLLED": [], "FROZEN": ["data/**"]},
+     "defaultClass": "PRODUCT",
+     "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+               "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+               "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}}}
+  """)
+  test "rename OUT of FROZEN -> old path judged with op DELETE":
+    let v = classify(twoSided, @[ChangeRecord(status: 'R', path: "data/old.json",
+                                            newPath: "src/lib/new.nim")])
+    check v["verdict"].getStr() == "FAIL"
+    check v["reasonCode"].getStr() == "SURFACE_FORBIDDEN"
+    check v["violations"].len == 1
+    check v["violations"][0]["path"].getStr() == "data/old.json"
+    check v["violations"][0]["op"].getStr() == "DELETE"
+    check v["violations"][0]["changeClass"].getStr() == "FROZEN"
+    check v["violations"][0]["status"].getStr() == "R"
+    echo "  [rename] old FROZEN path DELETE now judged (v1 blind spot closed)"
+
+  test "rename INTO FROZEN -> new path ADD FAIL, old PRODUCT side PASS":
+    let v = classify(twoSided, @[ChangeRecord(status: 'R', path: "src/lib/a.nim",
+                                            newPath: "data/new.json")])
+    check v["verdict"].getStr() == "FAIL"
+    check v["violations"].len == 1
+    check v["violations"][0]["path"].getStr() == "data/new.json"
+    check v["violations"][0]["op"].getStr() == "ADD"
+    echo "  [rename] new FROZEN path ADD blocked (v1 behavior kept)"
+
+  test "rename within FROZEN -> both sides FAIL":
+    let v = classify(twoSided, @[ChangeRecord(status: 'R', path: "data/a.json",
+                                            newPath: "data/b.json")])
+    check v["verdict"].getStr() == "FAIL"
+    check v["violations"].len == 2
+    check v["summary"]["rename"].getInt() == 1
+    echo "  [rename] both sides of a FROZEN rename judged"
+
+  test "rename within PRODUCT -> PASS":
+    let v = classify(twoSided, @[ChangeRecord(status: 'R', path: "src/a.nim",
+                                            newPath: "src/b.nim")])
+    check v["verdict"].getStr() == "PASS"
+    check v["violations"].len == 0
+
+suite "selfAmendment exception (v2)":
+  let saBase = parseJson("""
+    {"schemaVersion": 1, "policyVersion": 10,
+     "classes": {"PRODUCT": ["src/**"], "CONTROLLED": ["tools/**"],
+                 "FROZEN": ["config/policy.json", "config/guard.nim"]},
+     "defaultClass": "PRODUCT",
+     "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+               "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+               "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}},
+     "selfAmendment": {"allowedPaths": ["config/policy.json"]}}
+  """)
+  let saHead = parseJson("""
+    {"schemaVersion": 1, "policyVersion": 11,
+     "classes": {"PRODUCT": ["src/**"], "CONTROLLED": ["tools/**"],
+                 "FROZEN": ["config/policy.json", "config/guard.nim"]},
+     "defaultClass": "PRODUCT",
+     "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+               "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+               "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}},
+     "selfAmendment": {"allowedPaths": ["config/policy.json"]}}
+  """)
+  test "armed exception -> PASS with AMENDED and amendments array":
+    let v = classify(saBase, @[ChangeRecord(status: 'M', path: "config/policy.json")], saHead)
+    check v["verdict"].getStr() == "PASS"
+    check v["reasonCode"].getStr() == "AMENDED"
+    check v["violations"].len == 0
+    check v["amendments"].len == 1
+    check v["amendments"][0]["path"].getStr() == "config/policy.json"
+    check v["amendments"][0]["changeClass"].getStr() == "FROZEN"
+    check v["amendments"][0]["op"].getStr() == "MODIFY"
+    check v["policyVersion"].getInt() == 10
+    echo "  [selfAmendment] legal self-evolution path -> AMENDED"
+
+  test "violation path outside allowedPaths -> FAIL stands":
+    let v = classify(saBase, @[ChangeRecord(status: 'M', path: "config/guard.nim")], saHead)
+    check v["verdict"].getStr() == "FAIL"
+    check v["reasonCode"].getStr() == "SURFACE_FORBIDDEN"
+    check v["amendments"].len == 0
+    check v["violations"].len == 1
+    echo "  [selfAmendment] allowedPaths is an exact allow-list"
+
+  test "head policyVersion not newer -> FAIL stands":
+    let headSameV = parseJson("""
+      {"schemaVersion": 1, "policyVersion": 10,
+       "classes": {"PRODUCT": ["src/**"], "CONTROLLED": ["tools/**"],
+                   "FROZEN": ["config/policy.json", "config/guard.nim"]},
+       "defaultClass": "PRODUCT",
+       "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}},
+       "selfAmendment": {"allowedPaths": ["config/policy.json"]}}
+    """)
+    let v = classify(saBase, @[ChangeRecord(status: 'M', path: "config/policy.json")], headSameV)
+    check v["verdict"].getStr() == "FAIL"
+    check v["reasonCode"].getStr() == "SURFACE_FORBIDDEN"
+    check v["amendments"].len == 0
+    echo "  [selfAmendment] version monotonicity enforced"
+
+  test "base policy without selfAmendment -> FAIL stands":
+    let baseNoSA = parseJson("""
+      {"schemaVersion": 1, "policyVersion": 10,
+       "classes": {"PRODUCT": ["src/**"], "CONTROLLED": ["tools/**"],
+                   "FROZEN": ["config/policy.json", "config/guard.nim"]},
+       "defaultClass": "PRODUCT",
+       "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}}}
+    """)
+    let v = classify(baseNoSA, @[ChangeRecord(status: 'M', path: "config/policy.json")], saHead)
+    check v["verdict"].getStr() == "FAIL"
+    check v["reasonCode"].getStr() == "SURFACE_FORBIDDEN"
+    check v["amendments"].len == 0
+    echo "  [selfAmendment] the BASE policy must arm its own exception"
+
+  test "head policy structurally invalid -> FAIL stands":
+    let brokenHead = parseJson("""{"schemaVersion": 1, "policyVersion": 11}""")
+    let v = classify(saBase, @[ChangeRecord(status: 'M', path: "config/policy.json")], brokenHead)
+    check v["verdict"].getStr() == "FAIL"
+    check v["reasonCode"].getStr() == "SURFACE_FORBIDDEN"
+    check v["amendments"].len == 0
+    echo "  [selfAmendment] invalid head policy leaves the exception unarmed"
+
+  test "no head policy (default param) -> FAIL stands":
+    let v = classify(saBase, @[ChangeRecord(status: 'M', path: "config/policy.json")])
+    check v["verdict"].getStr() == "FAIL"
+    check v["reasonCode"].getStr() == "SURFACE_FORBIDDEN"
+    check v["amendments"].len == 0
+
+  test "non-FROZEN SURFACE_FORBIDDEN is never amended":
+    let base2 = parseJson("""
+      {"schemaVersion": 1, "policyVersion": 10,
+       "classes": {"PRODUCT": ["src/**"], "CONTROLLED": ["tools/**"],
+                   "FROZEN": ["config/policy.json"]},
+       "defaultClass": "PRODUCT",
+       "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "CONTROLLED": {"ADD": "FAIL", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}},
+       "selfAmendment": {"allowedPaths": ["config/policy.json"]}}
+    """)
+    let recs = @[ChangeRecord(status: 'M', path: "config/policy.json"),
+                 ChangeRecord(status: 'A', path: "tools/new.nim")]
+    let v = classify(base2, recs, saHead)
+    check v["verdict"].getStr() == "FAIL"
+    check v["reasonCode"].getStr() == "SURFACE_FORBIDDEN"
+    check v["amendments"].len == 1
+    check v["amendments"][0]["path"].getStr() == "config/policy.json"
+    check v["violations"].len == 1
+    check v["violations"][0]["path"].getStr() == "tools/new.nim"
+    echo "  [selfAmendment] exception scoped to FROZEN only"
+
+  test "determinism with the head policy":
+    let recs = @[ChangeRecord(status: 'M', path: "config/policy.json")]
+    let j1 = classify(saBase, recs, saHead).pretty(2)
+    let j2 = classify(saBase, recs, saHead).pretty(2)
+    check j1 == j2
+    echo "  [selfAmendment] byte-identical verdict JSON"
