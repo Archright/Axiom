@@ -97886,6 +97886,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "tuple[marker: string, err: string]",
+      "module": "src/gate/runners/readiness_start_gate.nim",
+      "name": "ciIdentityMismatch",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "tuple[marker: string, err: string]",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "tuple[idy: EvidenceIdentity, err: string]",
       "module": "src/gate/runners/readiness_start_gate.nim",
       "name": "collectEvidenceIdentity",
@@ -97955,6 +97969,34 @@
       "returnType": "seq[string]",
       "smtSort": "(Seq string)",
       "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/gate/runners/readiness_start_gate.nim",
+      "name": "identityMismatchLine",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/gate/runners/readiness_start_gate.nim",
+      "name": "relToRoot",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
     },
     {
       "hasAxiomHint": false,
