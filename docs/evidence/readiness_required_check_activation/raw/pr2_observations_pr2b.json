@@ -1,0 +1,355 @@
+{
+  "step": "pr2b",
+  "observedAt": "2026-11-16T17:19:47Z",
+  "subject": {
+    "repo": "Archright/Axiom",
+    "prNumber": 125,
+    "headSha": "71f6641c5cefa35742dd31940850ff5751afa90e"
+  },
+  "ruleset": {
+    "id": 27097366,
+    "summary": {
+      "id": 27097366,
+      "name": "main",
+      "enforcement": "active",
+      "target": "branch",
+      "requiredContexts": [
+        "admission-check",
+        "axiom-operational-slice",
+        "bsec-integrity",
+        "debt-registry-gate",
+        "generation-acceptance",
+        "publication-integrity",
+        "readiness-verdict"
+      ]
+    },
+    "requiredContexts": [
+      "admission-check",
+      "axiom-operational-slice",
+      "bsec-integrity",
+      "debt-registry-gate",
+      "generation-acceptance",
+      "publication-integrity",
+      "readiness-verdict"
+    ],
+    "readinessVerdictRegistered": true
+  },
+  "prChecksRaw": "axiom-operational-slice\tfail\t4m43s\thttps://github.com/Archright/Axiom/actions/runs/43914887490/job/133466259712\t\nAnalyze (actions)\tpass\t1m7s\thttps://github.com/Archright/Axiom/actions/runs/43914877866/job/133466226162\t\nCodeQL\tpass\t5s\thttps://github.com/Archright/Axiom/runs/133466860569\t\nbsec-integrity\tpass\t1m18s\thttps://github.com/Archright/Axiom/actions/runs/43914887334/job/133466258521\t\ndebt-registry-gate\tpass\t1m9s\thttps://github.com/Archright/Axiom/actions/runs/43914887357/job/133466256453\t\ndependency-scan\tpass\t17s\thttps://github.com/Archright/Axiom/actions/runs/43914887601/job/133466258854\t\ngeneration-acceptance\tpass\t9s\thttps://github.com/Archright/Axiom/actions/runs/43914887347/job/133466258842\t\nlicense-scan\tpass\t16s\thttps://github.com/Archright/Axiom/actions/runs/43914887601/job/133469369106\t\nlicense-scan-shards (0)\tpass\t3m14s\thttps://github.com/Archright/Axiom/actions/runs/43914887601/job/133466260169\t\nlicense-scan-shards (1)\tpass\t3m41s\thttps://github.com/Archright/Axiom/actions/runs/43914887601/job/133466259338\t\nlicense-scan-shards (2)\tpass\t3m32s\thttps://github.com/Archright/Axiom/actions/runs/43914887601/job/133466259083\t\nobserve\tpass\t2m48s\thttps://github.com/Archright/Axiom/actions/runs/43914887341/job/133466260269\t\nprovenance\tpass\t1m11s\thttps://github.com/Archright/Axiom/actions/runs/43914887601/job/133466259046\t\npublication-integrity\tpass\t25s\thttps://github.com/Archright/Axiom/actions/runs/43914887601/job/133469560629\t\nrepository-surface\tpass\t26s\thttps://github.com/Archright/Axiom/actions/runs/43914887586/job/133466260375\t\ntests-ci-unit-diagnostic\tpass\t1m15s\thttps://github.com/Archright/Axiom/actions/runs/43914887468/job/133466264116\t\ndependabot-arm\tskipping\t0\thttps://github.com/Archright/Axiom/actions/runs/43914887614/job/133466345284\t\nreadiness-verdict\tpass\t6m15s\thttps://github.com/Archright/Axiom/actions/runs/43914887490/job/133469521384\t\nsbom\tpass\t1m4s\thttps://github.com/Archright/Axiom/actions/runs/43914887601/job/133466258470\t\nsecret-scan\tpass\t35s\thttps://github.com/Archright/Axiom/actions/runs/43914887601/job/133466260181\t\nverify-trusted-writer-set\tpass\t7s\thttps://github.com/Archright/Axiom/actions/runs/43914887493/job/133466260158\t",
+  "prState": {
+    "mergeable": true,
+    "mergeable_state": "blocked"
+  },
+  "readinessCheckRuns": [
+    {
+      "name": "readiness-verdict",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-16T17:11:59Z",
+      "completed_at": "2026-11-16T17:18:14Z",
+      "details_url": "https://github.com/Archright/Axiom/actions/runs/43914887490/job/133469521384"
+    }
+  ],
+  "allCheckRuns": [
+    {
+      "name": "publication-integrity",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "readiness-verdict",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "license-scan",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "CodeQL",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "dependabot-arm",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "tests-ci-unit-diagnostic",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "repository-surface",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "observe",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "secret-scan",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "license-scan-shards (0)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "verify-trusted-writer-set",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "axiom-operational-slice",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "license-scan-shards (1)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "license-scan-shards (2)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "provenance",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "dependency-scan",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "generation-acceptance",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "bsec-integrity",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "sbom",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "debt-registry-gate",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Analyze (actions)",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "requiredContextCrossCheck": {
+    "requiredChecks": [
+      {
+        "context": "admission-check",
+        "check": {
+          "name": "admission-check",
+          "status": "NO_CHECK_RUN",
+          "conclusion": null
+        }
+      },
+      {
+        "context": "axiom-operational-slice",
+        "check": {
+          "name": "axiom-operational-slice",
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      },
+      {
+        "context": "bsec-integrity",
+        "check": {
+          "name": "bsec-integrity",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      },
+      {
+        "context": "debt-registry-gate",
+        "check": {
+          "name": "debt-registry-gate",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      },
+      {
+        "context": "generation-acceptance",
+        "check": {
+          "name": "generation-acceptance",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      },
+      {
+        "context": "publication-integrity",
+        "check": {
+          "name": "publication-integrity",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      },
+      {
+        "context": "readiness-verdict",
+        "check": {
+          "name": "readiness-verdict",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      }
+    ],
+    "allCheckRunsRequired": [
+      {
+        "name": "publication-integrity",
+        "status": "completed",
+        "conclusion": "success",
+        "required": true
+      },
+      {
+        "name": "readiness-verdict",
+        "status": "completed",
+        "conclusion": "success",
+        "required": true
+      },
+      {
+        "name": "license-scan",
+        "status": "completed",
+        "conclusion": "success",
+        "required": false
+      },
+      {
+        "name": "CodeQL",
+        "status": "completed",
+        "conclusion": "success",
+        "required": false
+      },
+      {
+        "name": "dependabot-arm",
+        "status": "completed",
+        "conclusion": "skipped",
+        "required": false
+      },
+      {
+        "name": "tests-ci-unit-diagnostic",
+        "status": "completed",
+        "conclusion": "success",
+        "required": false
+      },
+      {
+        "name": "repository-surface",
+        "status": "completed",
+        "conclusion": "success",
+        "required": false
+      },
+      {
+        "name": "observe",
+        "status": "completed",
+        "conclusion": "success",
+        "required": false
+      },
+      {
+        "name": "secret-scan",
+        "status": "completed",
+        "conclusion": "success",
+        "required": false
+      },
+      {
+        "name": "license-scan-shards (0)",
+        "status": "completed",
+        "conclusion": "success",
+        "required": false
+      },
+      {
+        "name": "verify-trusted-writer-set",
+        "status": "completed",
+        "conclusion": "success",
+        "required": false
+      },
+      {
+        "name": "axiom-operational-slice",
+        "status": "completed",
+        "conclusion": "failure",
+        "required": true
+      },
+      {
+        "name": "license-scan-shards (1)",
+        "status": "completed",
+        "conclusion": "success",
+        "required": false
+      },
+      {
+        "name": "license-scan-shards (2)",
+        "status": "completed",
+        "conclusion": "success",
+        "required": false
+      },
+      {
+        "name": "provenance",
+        "status": "completed",
+        "conclusion": "success",
+        "required": false
+      },
+      {
+        "name": "dependency-scan",
+        "status": "completed",
+        "conclusion": "success",
+        "required": false
+      },
+      {
+        "name": "generation-acceptance",
+        "status": "completed",
+        "conclusion": "success",
+        "required": true
+      },
+      {
+        "name": "bsec-integrity",
+        "status": "completed",
+        "conclusion": "success",
+        "required": true
+      },
+      {
+        "name": "sbom",
+        "status": "completed",
+        "conclusion": "success",
+        "required": false
+      },
+      {
+        "name": "debt-registry-gate",
+        "status": "completed",
+        "conclusion": "success",
+        "required": true
+      },
+      {
+        "name": "Analyze (actions)",
+        "status": "completed",
+        "conclusion": "success",
+        "required": false
+      }
+    ]
+  },
+  "soleBlocker": {
+    "nonGreenRequiredContexts": [
+      "admission-check",
+      "axiom-operational-slice"
+    ],
+    "readinessVerdictConclusion": "success"
+  },
+  "pr2c": null
+}
