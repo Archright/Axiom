@@ -3030,6 +3030,856 @@ func cloneIRExpr(e: IRExpr): IRExpr {.raises: [].} =
   var splices = 0
   substituteParamUse(e, "\x00no-splice", nil, splices)
 
+# ---------------------------------------------------------------------------
+# jrpc-errclass lane (experiments/jrpc-errcode-slice-e2e/FREEZE.md — the
+# json_rpc/errors.nim error-code classification slice): a NEW capability lane
+# in the capConstructedGate family. The subject body is NEVER materialized
+# (template `err`, obj-constr, `move`, `in`-ranges are all outside the
+# certified subset — FREEZE §2, Axiom #118/#119); the ADOPTED MODEL is the
+# overlay mapping's irIf chain (FREEZE §5: a priority table, first match in
+# tag order wins; total, deterministic, exhaustive — the effective regions
+# are exclusive under the tag priority) and the ORIGINAL connection is
+# the stamped replay harness's `of`-matrix observation ONLY (FREEZE §8,
+# method A). One carrier per pinned boundary instance (FREEZE §6 — INSTANCE
+# obligations, the sidecar §7 precedent): pre `code == <c>`, post
+# `result == <tag>` β-spliced onto the model. The 5 fail-closed conditions
+# (FREEZE §8): ① base discriminant false / ③ leaf-0 ∧ base-false — the base
+# check statically folds CondTrue over `new`'s return type (P1-GATE gate 1
+# records the folding; the base's role is the domain precondition, the
+# rejected single-discriminant design is FREEZE §8), ② leafCount ≥ 2 →
+# harness `quit 1` (abnormal exit ⇒ replay unavailable), ⑤ expected class
+# outside the closed 8-class codomain → load-time rejection, ④ observed ≠
+# expected → post violation → the rvAgree disproof path, never UNKNOWN.
+# ---------------------------------------------------------------------------
+
+const JrpcErrclassOverlayFile* = "json_rpc_errcode_class.json"
+  ## Axiom-owned overlay document name (Zero-Footprint; runtime root
+  ## resolution via `runtimeSpecOverlayPath`).
+
+const JrpcErrclassGrammarV1* = "nim-jrpc-errclass-v1"
+  ## The ONLY grammar version this lane accepts in adoption.grammarVersion —
+  ## the sidecar family's closed expression grammar PLUS negative integer
+  ## literals (the error codes are negative — the single extension over
+  ## nim-sidecar-expr-v1, FREEZE §7). A document pinned to another grammar
+  ## names a different contract and is rejected fail-closed.
+
+const JrpcErrclassBaseClass* = "RpcResponseError"
+  ## The of-matrix base discriminant (FREEZE §8): `new`'s return type, the
+  ## classification's ancestor — the template body's constructor call form
+  ## and the mapping entry this lane requires as the base tag's class.
+
+const JrpcErrclassCodomain* = [
+  "RpcParseError", "RpcInvalidRequestError", "RpcMethodNotFoundError",
+  "RpcInvalidParamsError", "RpcInternalError", "RpcServerError",
+  "RpcResponseError", "RpcApplicationError"]
+  ## The closed 8-class codomain (FREEZE §7 — load-time rejection of any
+  ## class outside it; ancestors, deprecated aliases and `new`-unreachable
+  ## types are all outside). Tag order (FREEZE §5).
+
+const JrpcErrclassReplayTemplateId* = "errors-class-v1"
+  ## The lane's replay harness key in the closed template registry (VS-2
+  ## §1.5): the template BODY lives only in external_subject_registry.nim;
+  ## spec text never travels in JSON. `<module>` is fixed by the overlay pin
+  ## and `<tags>` by the adopted mapping at synthesis (single source);
+  ## `<lit>` renders the model's pinned code at replay time.
+
+const JrpcErrclassModelRule = "jrpc-errclass-model-v1"
+  ## The derivation-digest rule identity for the parse-bound components
+  ## (the d2/bv lane's model-v1 naming shape).
+
+type
+  JrpcErrclassRegionKind* = enum
+    jrkSingleton = "singleton"
+    jrkRange = "range"
+    jrkRemainder = "remainder"
+
+  JrpcErrclassRegion* = object
+    ## One mapping region: the singleton `{code}`, the closed range
+    ## `[low, high]`, or the remainder (the complement of the concrete
+    ## regions — the source's final else, FREEZE §5).
+    case kind*: JrpcErrclassRegionKind
+    of jrkSingleton:
+      code*: int64
+    of jrkRange:
+      rangeLow*: int64
+      rangeHigh*: int64
+    of jrkRemainder:
+      discard
+
+  JrpcErrclassMappingEntry* = object
+    ## One adopted classification row: (tag, concrete class, region).
+    tag*: int
+    className*: string
+    region*: JrpcErrclassRegion
+
+  JrpcErrclassInstance* = object
+    ## One pinned boundary instance (FREEZE §6): the code and the adopted
+    ## expected class/tag; preText/postText are the DERIVED closed-grammar
+    ## clause texts and pre/post their parsed IR.
+    code*: int64
+    expectedClass*: string
+    expectedTag*: int
+    preText*: string
+    postText*: string
+    pre*: IRExpr
+    post*: IRExpr
+
+  JrpcErrclassDomain* = object
+    ## The synthesis-relevant projection of the overlay: the governed
+    ## module+symbol key, the mapping table, the pinned instances, and the
+    ## hash-bound adoption record (the sidecar's record type — the lane's
+    ## own grammar version string is the only difference). Everything is
+    ## parsed mechanically from the document — no subject names are
+    ## hardcoded in the engine.
+    modulePath*: string
+    symbol*: string
+    ruleId*: string
+    importModule*: string
+    mapping*: seq[JrpcErrclassMappingEntry]
+    instances*: seq[JrpcErrclassInstance]
+    adoption*: SidecarAdoptionRecord
+
+func errclassCarrierName*(domain: JrpcErrclassDomain; index: int): string {.
+    raises: [].} =
+  ## The synthesized carrier's kernel name for one pinned instance — derived
+  ## from the governed symbol; never a symbol the subject declares. Document
+  ## instance 1 is the defect member (wave-facing); instances 2.. are
+  ## controls under their own names, two-digit padded (census dedupe key
+  ## stability up to 99 instances).
+  if index == 0:
+    domain.symbol & "_errclass_defect"
+  else:
+    domain.symbol & "_errclass_control_" & align($(index + 1), 2, '0')
+
+func overlayDeclaresJrpcErrclassSubject*(domain: JrpcErrclassDomain; fnName,
+    modulePath: string): bool {.raises: [].} =
+  ## D4 membership for the errclass overlay: the gate hit is the governed
+  ## symbol or one of the 13 constructed carrier names (a canonical
+  ## --target naming a carrier routes to the same synthesis a gate hit on
+  ## the governed symbol uses — the d2 lane's carrier-included membership).
+  ## The module-path gate keeps the binding inert for every other subject
+  ## tree.
+  if modulePath != domain.modulePath:
+    return false
+  if fnName == domain.symbol:
+    return true
+  for i in 0 ..< domain.instances.len:
+    if fnName == errclassCarrierName(domain, i):
+      return true
+  false
+
+type
+  JrpcErrclassParseResult* = object
+    ## The closed-grammar parse outcome (the sidecar family's
+    ## SidecarParseResult shape, errclass-owned so rejections name the
+    ## errclass clause and grammar version).
+    ok*: bool
+    expr*: IRExpr
+    reason*: string
+
+proc errclassPrimary(s: string; pos: var int; clause: string):
+    JrpcErrclassParseResult {.raises: [].}
+proc errclassAdditive(s: string; pos: var int; clause: string):
+    JrpcErrclassParseResult {.raises: [].}
+
+proc errclassPrimary(s: string; pos: var int; clause: string):
+    JrpcErrclassParseResult {.raises: [].} =
+  ## primary := ident | INT | "(" additive ")"
+  ## The grammar is CLOSED (nim-jrpc-errclass-v1): idents are exactly
+  ## "result" | "code" (the lane's sole value parameter); INT adds the
+  ## negative form over the sidecar family's non-negative grammar (FREEZE
+  ## §7's single extension — the error codes are negative). Overflow-checked
+  ## end to end; anything else is an explicit not-ok naming the clause and
+  ## the grammar version.
+  while pos < s.len and s[pos] in {' ', '\t'}: inc pos
+  if pos >= s.len:
+    return JrpcErrclassParseResult(ok: false, reason:
+      "jrpc-errclass " & clause & " ended where a term was expected (grammar " &
+      JrpcErrclassGrammarV1 & ")")
+  let c = s[pos]
+  if c == '(':
+    inc pos
+    let inner = errclassAdditive(s, pos, clause)
+    if not inner.ok:
+      return inner
+    while pos < s.len and s[pos] in {' ', '\t'}: inc pos
+    if pos >= s.len or s[pos] != ')':
+      return JrpcErrclassParseResult(ok: false, reason:
+        "jrpc-errclass " & clause & " expected ')' — outside the closed grammar " &
+        JrpcErrclassGrammarV1)
+    inc pos
+    return inner
+  if c == '-' or c in {'0'..'9'}:
+    let negative = c == '-'
+    if negative: inc pos
+    if pos >= s.len or s[pos] notin {'0'..'9'}:
+      return JrpcErrclassParseResult(ok: false, reason:
+        "jrpc-errclass " & clause & " '-' must be followed by digits — outside " &
+        "the closed grammar " & JrpcErrclassGrammarV1)
+    let start = pos
+    while pos < s.len and s[pos] in {'0'..'9'}: inc pos
+    # Magnitude bound 2^63: the negative arm reaches int64.low exactly, the
+    # positive arm reaches int64.high (both BV64-representable); anything
+    # beyond is outside the grammar (fail-closed, no wraparound).
+    const magLimit = 9223372036854775808'u64
+    var magnitude: uint64 = 0
+    for i in start ..< pos:
+      let digit = uint64(s[i].ord - '0'.ord)
+      if magnitude > (magLimit - digit) div 10:
+        return JrpcErrclassParseResult(ok: false, reason:
+          "jrpc-errclass " & clause & " integer literal overflow — outside the " &
+          "closed grammar " & JrpcErrclassGrammarV1)
+      magnitude = magnitude * 10 + digit
+    if not negative and magnitude > uint64(int64.high):
+      return JrpcErrclassParseResult(ok: false, reason:
+        "jrpc-errclass " & clause & " integer literal overflow — outside the " &
+        "closed grammar " & JrpcErrclassGrammarV1)
+    let value = if negative: cast[int64]((not magnitude) + 1'u64)
+                else: cast[int64](magnitude)
+    return JrpcErrclassParseResult(ok: true, expr: irLit(value))
+  if c in {'a'..'z', '_'}:
+    let start = pos
+    inc pos
+    while pos < s.len and s[pos] in {'a'..'z', '0'..'9', '_'}: inc pos
+    let name = s[start ..< pos]
+    if name == "result" or name == "code":
+      return JrpcErrclassParseResult(ok: true,
+        expr: irVar(name, irTypeBitVec64()))
+    return JrpcErrclassParseResult(ok: false, reason:
+      "jrpc-errclass " & clause & " references identifier '" & name &
+      "' — the closed grammar admits only 'result' and 'code' (fail-closed)")
+  JrpcErrclassParseResult(ok: false, reason:
+    "jrpc-errclass " & clause & " character '" & c & "' is outside the closed " &
+    "grammar " & JrpcErrclassGrammarV1 & " (identifiers, integer literals, '+', " &
+    "'==', parentheses)")
+
+proc errclassAdditive(s: string; pos: var int; clause: string):
+    JrpcErrclassParseResult {.raises: [].} =
+  ## additive := primary ("+" primary)*
+  let first = errclassPrimary(s, pos, clause)
+  if not first.ok:
+    return first
+  result = first
+  while true:
+    while pos < s.len and s[pos] in {' ', '\t'}: inc pos
+    if pos < s.len and s[pos] == '+':
+      inc pos
+      let rhs = errclassPrimary(s, pos, clause)
+      if not rhs.ok:
+        return rhs
+      result = JrpcErrclassParseResult(ok: true, expr: irAdd(result.expr, rhs.expr))
+    else:
+      return
+
+proc parseErrclassClosedExpr*(text: string; clause: string):
+    JrpcErrclassParseResult {.raises: [].} =
+  ## The CLOSED errclass proposition parser (grammar nim-jrpc-errclass-v1):
+  ## `additive ( "==" additive )?` over idents {result, code} and integer
+  ## literals (negative included). The sidecar family's
+  ## parseSidecarClosedExpr clone — errclass-owned so the rejections name the
+  ## errclass clause and grammar version. proc, not func — the mutually
+  ## recursive descent defeats the effect inference (the sidecar precedent);
+  ## raises: [] still holds.
+  var pos = 0
+  let lhs = errclassAdditive(text, pos, clause)
+  if not lhs.ok:
+    return lhs
+  while pos < text.len and text[pos] in {' ', '\t'}: inc pos
+  if pos < text.len and text[pos] == '=':
+    if pos + 1 >= text.len or text[pos + 1] != '=':
+      return JrpcErrclassParseResult(ok: false, reason:
+        "jrpc-errclass " & clause & " single '=' is outside the closed grammar " &
+        JrpcErrclassGrammarV1 & " (only '==')")
+    pos += 2
+    let rhs = errclassAdditive(text, pos, clause)
+    if not rhs.ok:
+      return rhs
+    while pos < text.len and text[pos] in {' ', '\t'}: inc pos
+    if pos != text.len:
+      return JrpcErrclassParseResult(ok: false, reason:
+        "jrpc-errclass " & clause & " has trailing input after the equality — " &
+        "outside the closed grammar " & JrpcErrclassGrammarV1)
+    return JrpcErrclassParseResult(ok: true, expr: irEq(lhs.expr, rhs.expr))
+  if pos != text.len:
+    return JrpcErrclassParseResult(ok: false, reason:
+      "jrpc-errclass " & clause & " has unexpected trailing input — outside the " &
+      "closed grammar " & JrpcErrclassGrammarV1)
+  lhs
+
+func errclassRegionFromNode(node: JsonNode): Result[JrpcErrclassRegion, string] {.
+    raises: [].} =
+  ## One mapping region from its JSON node — singleton / range / remainder,
+  ## fail-closed on any other shape (FREEZE §7: 문법 밖 입력은 반드시 거부).
+  let regionNode = node{"region"}
+  if regionNode.isNil or regionNode.kind != JObject:
+    return err("spec jrpc-errclass: mapping entry requires a region object")
+  let kindText = regionNode{"kind"}.getStr("")
+  case kindText
+  of "singleton":
+    let codeNode = regionNode{"code"}
+    if codeNode.isNil or codeNode.kind != JInt:
+      return err("spec jrpc-errclass: singleton region requires an integer code")
+    ok(JrpcErrclassRegion(kind: jrkSingleton, code: codeNode.getInt()))
+  of "range":
+    let lowNode = regionNode{"low"}
+    let highNode = regionNode{"high"}
+    if lowNode.isNil or lowNode.kind != JInt or
+        highNode.isNil or highNode.kind != JInt:
+      return err("spec jrpc-errclass: range region requires integer low and high")
+    let low = lowNode.getInt()
+    let high = highNode.getInt()
+    if low > high:
+      return err("spec jrpc-errclass: range region requires low <= high, got " &
+        $low & " > " & $high)
+    ok(JrpcErrclassRegion(kind: jrkRange, rangeLow: low, rangeHigh: high))
+  of "remainder":
+    ok(JrpcErrclassRegion(kind: jrkRemainder))
+  else:
+    err("spec jrpc-errclass: region kind must be singleton | range | " &
+      "remainder, got \"" & kindText & "\"")
+
+func errclassRegionMember(region: JrpcErrclassRegion; code: int64): bool {.
+    raises: [].} =
+  case region.kind
+  of jrkSingleton: region.code == code
+  of jrkRange: region.rangeLow <= code and code <= region.rangeHigh
+  of jrkRemainder: true
+
+func errclassRegionDesc(region: JrpcErrclassRegion): string {.raises: [].} =
+  case region.kind
+  of jrkSingleton: "code == " & $region.code
+  of jrkRange: "(" & $region.rangeLow & " <= code) and (code <= " &
+    $region.rangeHigh & ")"
+  of jrkRemainder: "remainder"
+
+func errclassCanonicalSpecClauses*(mapping: seq[JrpcErrclassMappingEntry];
+    instances: seq[JrpcErrclassInstance]): seq[string] {.raises: [].} =
+  ## The derived clause list — the identity carrier: 8 mapping clauses in
+  ## TAG order (`classify == <tag> | <class> | <regionDesc>`) + the
+  ## per-instance pre/post texts in DOCUMENT order. The loader recomputes
+  ## this and compares byte-exactly with the document's canonicalSpecIR —
+  ## the document cannot state the proposition twice (no second semantic
+  ## source).
+  var sorted = mapping
+  sorted.sort(proc (x, y: JrpcErrclassMappingEntry): int = cmp(x.tag, y.tag))
+  result = @[]
+  for m in sorted:
+    result.add("classify == " & $m.tag & " | " & m.className & " | " &
+      errclassRegionDesc(m.region))
+  for inst in instances:
+    result.add(inst.preText)
+    result.add(inst.postText)
+
+func validateJrpcErrclassAdoption(node: JsonNode): Result[SidecarAdoptionRecord,
+    string] {.raises: [].} =
+  ## Fail-closed adoption record (the sidecar's validateSidecarAdoption
+  ## shape, the record TYPE reused; the grammar pin is this lane's own
+  ## version): the hash, the adoption-act fields, the grammar pin, and the
+  ## subject pin (40-hex commit, 64-hex blob) must all be present and
+  ## well-formed.
+  let adoption = node{"adoption"}
+  if adoption.isNil or adoption.kind != JObject:
+    return err("spec jrpc-errclass: adoption object required (hash-bound adoption record)")
+  for field in ["adoptedSpecHash", "adopter", "adoptedAt", "basis",
+                "grammarVersion", "provenance"]:
+    if adoption{field}.getStr("").len == 0:
+      return err("spec jrpc-errclass: adoption." & field & " is required " &
+        "(hash-bound adoption record)")
+  let adoptedHash = adoption{"adoptedSpecHash"}.getStr("")
+  if adoptedHash.len != 64 or not adoptedHash.allCharsInSet(
+      {'0'..'9', 'a'..'f', 'A'..'F'}):
+    return err("spec jrpc-errclass: adoption.adoptedSpecHash must be a 64-hex digest")
+  if adoption{"grammarVersion"}.getStr("") != JrpcErrclassGrammarV1:
+    return err("spec jrpc-errclass: adoption.grammarVersion must be " &
+      JrpcErrclassGrammarV1 & " (this engine refuses propositions pinned to " &
+      "any other grammar)")
+  let subject = adoption{"subject"}
+  if subject.isNil or subject.kind != JObject:
+    return err("spec jrpc-errclass: adoption.subject object required (subject pin)")
+  for field in ["source", "module", "symbol"]:
+    if subject{field}.getStr("").len == 0:
+      return err("spec jrpc-errclass: adoption.subject." & field &
+        " is required (subject pin)")
+  let commit = subject{"commit"}.getStr("")
+  if commit.len != 40 or not commit.allCharsInSet({'0'..'9', 'a'..'f'}):
+    return err("spec jrpc-errclass: adoption.subject.commit must be a 40-hex commit")
+  let blob = subject{"blobSha256"}.getStr("")
+  if blob.len != 64 or not blob.allCharsInSet({'0'..'9', 'a'..'f', 'A'..'F'}):
+    return err("spec jrpc-errclass: adoption.subject.blobSha256 must be a 64-hex digest")
+  ok(SidecarAdoptionRecord(
+    adoptedSpecHash: adoptedHash,
+    adopter: adoption{"adopter"}.getStr(""),
+    adoptedAt: adoption{"adoptedAt"}.getStr(""),
+    basis: adoption{"basis"}.getStr(""),
+    grammarVersion: adoption{"grammarVersion"}.getStr(""),
+    subject: SidecarSubjectPin(
+      source: subject{"source"}.getStr(""),
+      module: subject{"module"}.getStr(""),
+      symbol: subject{"symbol"}.getStr(""),
+      commit: commit,
+      blobSha256: blob),
+    provenance: adoption{"provenance"}.getStr("")))
+
+proc validateJrpcErrclassOverlayNode*(node: JsonNode): Result[JrpcErrclassDomain, string] {.
+    raises: [], axiomDecision.} =
+  ## The pure validation core of the errclass loader — the TWO-STAGE
+  ## hash-bound adoption check (FREEZE §7). Stage (i): authority + shape +
+  ## the closed grammar nim-jrpc-errclass-v1 + the 8-class codomain closure
+  ## + the mapping partition (FREEZE §5) + the derived pre/post texts.
+  ## Stage (ii): the spec identity recomputed from the loaded content vs
+  ## adoption.adoptedSpecHash, byte-exact. Model<->instance CONSISTENCY is
+  ## deliberately NOT validated — a mutated document must LOAD so its
+  ## disproof can be replayed (FREEZE §10; the observation, not the loader,
+  ## decides).
+  # ── STAGE (i): authority + shape + closed grammar + partition ──
+  let specRes = explicitSpecFromOverlay(node)
+  if specRes.isErr():
+    return err("spec jrpc-errclass rejected: " & specRes.error)
+  if node{"description"}.getStr("").len == 0:
+    return err("spec jrpc-errclass: description is required (the claim's prose)")
+  for field in ["semanticCaveats", "nonClaims"]:
+    let arr = node{field}
+    if arr.isNil or arr.kind != JArray or arr.len < 1:
+      return err("spec jrpc-errclass: " & field & " must be a non-empty array")
+    for e in arr:
+      if e.kind != JString or e.getStr("").len == 0:
+        return err("spec jrpc-errclass: " & field &
+          " entries must be non-empty strings")
+  let adoptionRes = validateJrpcErrclassAdoption(node)
+  if adoptionRes.isErr():
+    return err(adoptionRes.error)
+  # The mapping: exactly the 8-tag partition over the closed codomain.
+  let mappingNode = node{"mapping"}
+  if mappingNode.isNil or mappingNode.kind != JArray or mappingNode.len != 8:
+    return err("spec jrpc-errclass: mapping must be an array of exactly 8 " &
+      "entries (the 8-region partition)")
+  var mapping: seq[JrpcErrclassMappingEntry] = @[]
+  var seenTags: array[8, bool]
+  var remainderCount = 0
+  var baseCount = 0
+  var classes: seq[string] = @[]
+  for m in mappingNode:
+    if m.isNil or m.kind != JObject:
+      return err("spec jrpc-errclass: mapping entries must be objects")
+    let tagNode = m{"tag"}
+    if tagNode.isNil or tagNode.kind != JInt:
+      return err("spec jrpc-errclass: mapping entry tag must be an integer")
+    let tag = tagNode.getInt()
+    if tag < 0 or tag > 7:
+      return err("spec jrpc-errclass: mapping tag must be in 0..7, got " & $tag)
+    if seenTags[tag]:
+      return err("spec jrpc-errclass: duplicate mapping tag " & $tag)
+    seenTags[tag] = true
+    let className = m{"class"}.getStr("")
+    if className.len == 0:
+      return err("spec jrpc-errclass: mapping entry class is required")
+    var inCodomain = false
+    for c in JrpcErrclassCodomain:
+      if c == className: inCodomain = true
+    if not inCodomain:
+      return err("spec jrpc-errclass: mapping class \"" & className &
+        "\" is outside the closed 8-class codomain (fail-closed)")
+    for other in classes:
+      if other == className:
+        return err("spec jrpc-errclass: duplicate mapping class " & className)
+    classes.add(className)
+    if className == JrpcErrclassBaseClass: inc baseCount
+    let regionRes = errclassRegionFromNode(m)
+    if regionRes.isErr():
+      return err(regionRes.error)
+    if regionRes.get.kind == jrkRemainder: inc remainderCount
+    mapping.add(JrpcErrclassMappingEntry(tag: tag, className: className,
+      region: regionRes.get))
+  if remainderCount != 1:
+    return err("spec jrpc-errclass: mapping must declare exactly one " &
+      "remainder region, got " & $remainderCount)
+  if baseCount != 1:
+    return err("spec jrpc-errclass: mapping must declare the base class " &
+      JrpcErrclassBaseClass & " exactly once (the of-matrix base), got " &
+      $baseCount)
+  # NOTE (deliberate): no raw pairwise-disjointness check here. The mapping
+  # is a PRIORITY table — first match in TAG order wins (the source's
+  # case-then-else chain, errors.nim:105-122) — and the FROZEN table's five
+  # singleton codes lie INSIDE the reserved band [-32768, -32100] by design
+  # (FREEZE §5). Set-theoretic overlap is the honest encoding of that
+  # priority; the EFFECTIVE partition is exclusive, and a wrong priority is
+  # DETECTED by the verification itself (SAT + replay), not by the loader —
+  # the load gate stays exactly what FREEZE §7 pins: shape + codomain.
+  # The instances: >=1 pinned boundary pairs, distinct codes, expected class
+  # inside the codomain (fail-closed condition ⑤). Model<->instance
+  # consistency is deliberately NOT validated (FREEZE §10 — the mutation
+  # must load).
+  let instancesNode = node{"instances"}
+  if instancesNode.isNil or instancesNode.kind != JArray or instancesNode.len < 1:
+    return err("spec jrpc-errclass: instances must be a non-empty array")
+  var instances: seq[JrpcErrclassInstance] = @[]
+  var seenCodes: seq[int64] = @[]
+  for inst in instancesNode:
+    if inst.isNil or inst.kind != JObject:
+      return err("spec jrpc-errclass: instance entries must be objects")
+    let codeNode = inst{"code"}
+    if codeNode.isNil or codeNode.kind != JInt:
+      return err("spec jrpc-errclass: instance code must be an integer")
+    let code = codeNode.getInt()
+    for prev in seenCodes:
+      if prev == code:
+        return err("spec jrpc-errclass: duplicate instance code " & $code)
+    seenCodes.add(code)
+    let expectedClass = inst{"expectedClass"}.getStr("")
+    var expectedTag = -1
+    var inCodomain = false
+    for m in mapping:
+      if m.className == expectedClass:
+        expectedTag = m.tag
+        inCodomain = true
+    if not inCodomain:
+      return err("spec jrpc-errclass: instance expectedClass \"" & expectedClass &
+        "\" is outside the closed 8-class codomain (fail-closed)")
+    # The derived pre/post texts — the closed grammar must accept them.
+    let preText = "code == " & $code
+    let postText = "result == " & $expectedTag
+    let ordinal = "instance " & $(instances.len + 1)
+    let preRes = parseErrclassClosedExpr(preText, ordinal & " pre")
+    if not preRes.ok:
+      return err(preRes.reason)
+    let postRes = parseErrclassClosedExpr(postText, ordinal & " post")
+    if not postRes.ok:
+      return err(postRes.reason)
+    instances.add(JrpcErrclassInstance(code: code, expectedClass: expectedClass,
+      expectedTag: expectedTag, preText: preText, postText: postText,
+      pre: preRes.expr, post: postRes.expr))
+  # One proposition content, one statement: the recomputed clause list must
+  # byte-equal the document's canonicalSpecIR (no second semantic source).
+  let recomputed = errclassCanonicalSpecClauses(mapping, instances)
+  if specRes.value.canonicalSpecIR != recomputed:
+    return err("spec jrpc-errclass: canonicalSpecIR must equal the derived " &
+      "clause list (8 mapping clauses in tag order + the per-instance pre/" &
+      "post in document order) — the document cannot state the proposition twice")
+  # ── STAGE (ii): HASH-BOUND ADOPTION ──
+  # Recompute the spec identity from the LOADED proposition content and
+  # compare byte-exactly with the adoption record. Any post-adoption
+  # mutation of a clause, the ruleId, or the ruleVersion changes the
+  # identity and mechanically invalidates the adoption.
+  let computed = specRes.value.specIdentity
+  if computed != adoptionRes.get.adoptedSpecHash:
+    return err("spec jrpc-errclass: adoption does not bind the current " &
+      "proposition content (spec identity mismatch): the adoption record " &
+      "pins " & adoptionRes.get.adoptedSpecHash & ", the loaded proposition " &
+      "computes " & computed)
+  # The replay import derivation (path-minus-extension — the registry
+  # envelope cross-checks the declared replay.importModule against the same
+  # rule over the same subject pin; the pure validator derives its own copy
+  # from the pin, one source: the module path).
+  let modulePath = adoptionRes.get.subject.module
+  let parts = splitFile(modulePath)
+  if parts.name.len == 0:
+    return err("spec jrpc-errclass: adoption.subject.module must name a Nim " &
+      "module file: " & modulePath)
+  let importModule = if parts.dir.len == 0 or parts.dir == ".":
+      parts.name else: parts.dir / parts.name
+  ok(JrpcErrclassDomain(
+    modulePath: modulePath,
+    symbol: adoptionRes.get.subject.symbol,
+    ruleId: specRes.value.ruleId,
+    importModule: importModule,
+    mapping: mapping,
+    instances: instances,
+    adoption: adoptionRes.get))
+
+proc loadJrpcErrclassOverlayDomain*(): Result[JrpcErrclassDomain, string] {.
+    raises: [], axiomDecision, axiomEffect: IOEffect,
+    tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## D1 for the errclass lane: read + validate via the same
+  ## `explicitSpecFromOverlay` authority path as the predecessor overlays.
+  ## Absence is handled at the call site (presence-optional landing
+  ## discipline); here an unreadable/present-but-invalid document is an
+  ## error.
+  var node: JsonNode
+  let pathRes = runtimeSpecOverlayPath(JrpcErrclassOverlayFile)
+  if pathRes.isErr():
+    return err("cannot resolve the spec overlay directory (fail-closed): " &
+      pathRes.error)
+  let overlayPath = pathRes.get
+  let nodeOpt = readJsonFile(overlayPath)
+  if nodeOpt.isNone:
+    return err("cannot read jrpc-errclass overlay " & overlayPath &
+      " (unreadable or not valid JSON)")
+  validateJrpcErrclassOverlayNode(nodeOpt.get)
+
+func errclassClassifyModel*(domain: JrpcErrclassDomain): IRExpr {.raises: [].} =
+  ## The ADOPTED MODEL as constructed IR (FREEZE §5): the mapping's irIf
+  ## chain over the lane's sole value parameter `code`, first-match-wins in
+  ## TAG order — the source's case-then-else priority shape
+  ## (errors.nim:105-122): the five singleton arms (tags 0..4) precede the
+  ## reserved band (tag 6) that contains them, exactly as the `case` arms
+  ## precede the `else` chain. The remainder tag is the innermost else.
+  ## Total by construction (the remainder catches everything); the EFFECTIVE
+  ## regions are exclusive under the tag priority.
+  var sorted = domain.mapping
+  sorted.sort(proc (x, y: JrpcErrclassMappingEntry): int = cmp(x.tag, y.tag))
+  var remainderLit: IRExpr = nil
+  for m in sorted:
+    if m.region.kind == jrkRemainder:
+      remainderLit = irLit(int64(m.tag))
+  if remainderLit == nil:
+    # Unreachable post-validation (exactly one remainder); the guard keeps
+    # the constructor total under direct test construction.
+    remainderLit = irLit(int64(0))
+  result = remainderLit
+  for i in countdown(sorted.len - 1, 0):
+    let m = sorted[i]
+    var cond: IRExpr = nil
+    case m.region.kind
+    of jrkSingleton:
+      cond = irEq(irVar("code", irTypeBitVec64()), irLit(m.region.code))
+    of jrkRange:
+      let codeVar = irVar("code", irTypeBitVec64())
+      cond = irAnd(irLe(irLit(m.region.rangeLow), codeVar),
+                   irLe(codeVar, irLit(m.region.rangeHigh)))
+    of jrkRemainder:
+      continue
+    result = irIf(cond, irLit(int64(m.tag)), result)
+
+func errclassTagMatrixBlock*(domain: JrpcErrclassDomain): string {.raises: [].} =
+  ## The `<tags>` stamp source (FREEZE §8, method A): the 8-discriminant
+  ## `of`-matrix as harness source text, from the ADOPTED mapping (single
+  ## source — the engine hardcodes no class assignment). Leaf lines in TAG
+  ## order, the base tag excluded; the base discriminant folds CondTrue over
+  ## `new`'s return type (P1-GATE gate 1 — the domain precondition); the
+  ## runtime safety nets are fail-closed condition ② (leafCount > 1 —
+  ## external subclassing / harness defect) with ①③'s base arm
+  ## (`not base`), both → `quit 1` (abnormal exit ⇒ replay unavailable);
+  ## leafCount == 0 ⇒ observed falls back to the base tag.
+  var baseTag = -1
+  var sorted = domain.mapping
+  sorted.sort(proc (x, y: JrpcErrclassMappingEntry): int = cmp(x.tag, y.tag))
+  for m in sorted:
+    if m.className == JrpcErrclassBaseClass:
+      baseTag = m.tag
+  if baseTag < 0:
+    # Unreachable post-validation (exactly one base entry).
+    return ""
+  var lines: seq[string] = @[]
+  for m in sorted:
+    if m.tag == baseTag:
+      continue
+    lines.add("if r of " & m.className & ": inc leafCount; observed = " & $m.tag)
+  lines.add("let base = r of " & JrpcErrclassBaseClass)
+  lines.add("if not base or leafCount > 1:")
+  lines.add("  quit 1")
+  lines.add("if leafCount == 0:")
+  lines.add("  observed = " & $baseTag)
+  lines.join("\n")
+
+func jrpcErrclassCarrierTargetRouting*(target: string;
+    domain: JrpcErrclassDomain): tuple[routed: bool; fnName, modulePath: string] {.
+    raises: [].} =
+  ## Canonical-target routing for the errclass carriers (the d2 shape): a
+  ## canonical ``module::fn`` target naming an overlay-governed symbol (the
+  ## governed symbol or any of the 13 carriers, via
+  ## `overlayDeclaresJrpcErrclassSubject`) routes to the carrier
+  ## synthesizer when frontier resolution found no node — the carriers are
+  ## constructed IR with no subject-parse presence. Non-canonical targets
+  ## and non-governed hits never route (routed=false).
+  let colonPos = target.find("::")
+  if colonPos <= 0 or colonPos + 2 > target.len - 1:
+    return
+  let targetModule = target[0 ..< colonPos]
+  let targetFn = target[colonPos + 2 .. ^1]
+  if overlayDeclaresJrpcErrclassSubject(domain, targetFn, targetModule):
+    (true, targetFn, targetModule)
+  else:
+    (false, "", "")
+
+proc synthesizeJrpcErrclassCandidates*(examinedFn, modulePath: string;
+    resolver: ModuleContentResolver; domain: JrpcErrclassDomain;
+    census: ExternalCandidateCensus; subjectRepoRoot: string = ""): Result[bool, string] {.
+    raises: [], axiomEffect: IOEffect,
+    tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## D2/D3/D4 for the jrpc-errclass overlay
+  ## (docs/spec/jrpc_errcode_class_binding_contract.md): ONE carrier per
+  ## pinned boundary instance (FREEZE §6) over the ADOPTED MODEL irIf chain.
+  ## The carrier body IS the model (constructed IR — the subject body is
+  ## never materialized, FREEZE §2); pre = `code == <c>`, post =
+  ## `result == <tag>` β-spliced onto the model exactly once. The replay
+  ## binding stamps the CLOSED template registry's errors-class-v1 body with
+  ## the module pin and the `<tags>` of-matrix block (single source: the
+  ## mapping) — post-stamp validation is fail-closed.
+  ##
+  ## ok(true)  → the defect carrier (document instance 1) recorded and
+  ##             census-eligible (the gate may pass; the control carriers
+  ##             ride under their own names);
+  ## ok(false) → carriers recorded and excluded (honest census outcome);
+  ## err       → no carriers could be produced, so the examined symbol falls
+  ##             back to its own census record.
+  # One carrier set per subject module per run: a second gate hit (no
+  # --target) or a routed carrier target must not duplicate the carriers.
+  var carrierNames: seq[string] = @[]
+  for i in 0 ..< domain.instances.len:
+    carrierNames.add(errclassCarrierName(domain, i))
+  for existing in census.records:
+    if existing.modulePath == modulePath and existing.functionName in carrierNames:
+      logInfo("axiom_engine",
+        "json-rpc errclass carriers already recorded — dedupe skip: " &
+        examinedFn & " in " & modulePath)
+      return ok(false)
+  # The subject module bytes ride on the entries (§2.1a binding inputs); the
+  # carriers themselves are constructed IR and never materialize subject
+  # symbols.
+  let moduleBytesOpt = resolver(modulePath)
+  if moduleBytesOpt.isNone or moduleBytesOpt.get.len == 0:
+    return err("overlay subject module bytes unavailable: " & modulePath)
+  let moduleBytes = moduleBytesOpt.get
+  # The closed-template-registry body (VS-2 §1.5 — fail-closed on an unknown
+  # id; the lane's id is engine-owned, so an err here is an engine defect,
+  # never spec text).
+  let harnessTemplate = replayTemplate(JrpcErrclassReplayTemplateId)
+  if harnessTemplate.isErr:
+    return err(harnessTemplate.error)
+  # Stamp the module pin and the of-matrix block (the adopted mapping is
+  # the single source of the discriminants); post-stamp fail-closed checks:
+  # no unstamped placeholder may survive (<lit> stays — the renderer owns
+  # it and stamps the model's pinned code at replay time).
+  let tagsBlock = errclassTagMatrixBlock(domain)
+  if tagsBlock.len == 0:
+    return err("errclass tag matrix block unavailable (no base class entry)")
+  let stamped = harnessTemplate.get
+    .replace(ReplayModulePlaceholder, domain.importModule)
+    .replace(ReplayTagMatrixPlaceholder, tagsBlock)
+  if stamped.contains(ReplayModulePlaceholder) or
+      stamped.contains(ReplayTagMatrixPlaceholder):
+    return err("errclass replay template stamping left a placeholder unresolved")
+  if stamped.count(ReplayValuePlaceholder) != 1:
+    return err("errclass replay template must carry exactly one " &
+      ReplayValuePlaceholder & " slot after stamping")
+  let model = errclassClassifyModel(domain)
+
+  proc makeCarrier(carrierName: string; inst: JrpcErrclassInstance;
+      derivationRule: string): Result[ExternalIrEntry, string] {.raises: [].} =
+    ## One carrier: the adopted model body, the instance pre, the
+    ## expected-tag claim β-spliced to the `result` slot exactly once. The
+    ## provenance stamp is honest by construction: the carrier is a
+    ## constructed IR ADOPTED MODEL (never an extraction — the EA legs stay
+    ## empty and the canonical seal declines, the BMC lane decides the
+    ## model), plus the deterministic derivation digest, plus the stamped
+    ## replay harness template that observes the ORIGINAL constructor.
+    var composite = IRFuncDef(
+      name: carrierName,
+      params: @[IRFuncParam(name: "code", ty: irTypeBitVec64())],
+      retType: irTypeBitVec64(),
+      body: cloneIRExpr(model))
+    composite.preConditions = @[cloneIRExpr(inst.pre)]
+    # THE ADOPTED INSTANCE OBLIGATION (FREEZE §6):
+    #   code == <c> -> model[code := body] == <expected tag>
+    # The result slot receives a β-spliced clone of the model — exactly one
+    # splice, fail-closed — so the proposition's free variables are exactly
+    # the value parameter (the C_out composite's result-splice pattern).
+    var rSplices = 0
+    let claim = substituteParamUse(cloneIRExpr(inst.post), "result",
+      composite.body, rSplices)
+    if rSplices != 1:
+      return err("β-splice: the " & carrierName &
+        " claim's result slot did not splice exactly once (" & $rSplices & ")")
+    # Fail-closed free-variable guard: the spliced proposition must
+    # reference nothing beyond the value parameter.
+    var claimFree = initHashSet[string]()
+    claimFree.incl("code")
+    let unbound = collectFreeNames(claim, claimFree)
+    if unbound.len > 0:
+      return err("errclass claim references unbound name(s): " &
+        unbound.join(", "))
+    composite.postConditions = @[claim]
+    # Constructed-IR completeness bits: nothing was translated — the carrier
+    # is built directly in IR from the adopted mapping, so every region it
+    # carries is fully spelled by construction. The renderers and the
+    # solver re-decide downstream, fail-closed, exactly as for the
+    # predecessor overlays' spliced claims.
+    composite.translationLossFree = true
+    composite.bindingUniverseComplete = true
+    composite.propositionRegionLossFree = true
+    composite.lossOutsideBindingRegions = false
+    # WP4-j.4 pattern: the completeness evidence artifact is keyed by the
+    # same digest scheme the runner cache hashes (serializeIRFuncDef of the
+    # delivered funcDef), so the pipeline's evidence lookup finds this
+    # carrier the same way it finds materialized singles.
+    let irDigest = computeDeterministicCasKey(serializeIRFuncDef(composite))
+    let completenessEvidence = CompletenessEvidence(
+      translationLossFree: composite.translationLossFree,
+      bindingUniverseComplete: composite.bindingUniverseComplete,
+      opaqueExpansionStatus: "none",
+      sourceBindingCount: composite.params.len,
+      irBindingCount: collectLetNames(composite.body).len + composite.params.len)
+    saveEvidenceArtifact(irDigest, completenessEvidence)
+    # Phase 1A dual-write: authenticated strict sibling at the same anchor
+    # (fail-closed — an unmeasured capture keeps the legacy-only generation).
+    discard saveCompletenessEvidenceDual(irDigest, composite,
+      measureCompletenessSourceCapture(subjectRepoRoot, modulePath, moduleBytes),
+      completenessEvidence)
+    let symRef = SubjectSymbolRef(relativeModulePath: modulePath,
+      functionName: carrierName)
+    var entry = synthesizeExternalEntry(symRef, composite, moduleBytes)
+    # The overlay DECLARES an obligation (pre AND post are present): the
+    # no-obligation scope contract treats expectedObligation=true with zero
+    # derived obligations as a scope mismatch (fail), never a silent no-op.
+    entry.expectedObligation = true
+    # §2.1a single-origin claim-carrier measurement: the carrier name never
+    # appears in the subject source, so name correspondence cannot apply;
+    # the derivation digest folds the rule identity and the instance
+    # ordinal, and the parse-bound components carry the stamped replay
+    # harness template (SubjectParseBoundComponents.replayHarnessTemplate —
+    # the only field the replay path consumes).
+    var parseBound = measureClaimCarrierParseBoundComponents(
+      moduleBytes, domain.symbol, derivationRule)
+    parseBound.replayHarnessTemplate = stamped
+    ok(ExternalIrEntry(entry: entry, funcDef: composite, parseBound: parseBound))
+
+  var records: seq[CandidateCensusRecord] = @[]
+  var entries: seq[ExternalIrEntry] = @[]
+  for i, inst in domain.instances:
+    let derivationRule = JrpcErrclassModelRule & "|rule=" & domain.ruleId &
+      "|inst=" & $(i + 1)
+    let carrierRes = makeCarrier(errclassCarrierName(domain, i), inst,
+      derivationRule)
+    if carrierRes.isErr:
+      return err(carrierRes.error)
+    let record = classifyCandidateForCensus(carrierRes.get.entry,
+      carrierRes.get.funcDef)
+    census.records.add(record)
+    records.add(record)
+    entries.add(carrierRes.get)
+  # Instance order is the wave order: document instance 1 is the DEFECT
+  # member (WAVE-FACING — the pipeline attributes results to the node's
+  # bare function name, so RuntimeAxiomEntry.name is the EXAMINED symbol);
+  # instances 2.. are CONTROL carriers riding under their own names.
+  var eligibleCount = 0
+  for i in 0 ..< records.len:
+    if not records[i].censusEligible:
+      continue
+    inc eligibleCount
+    if i == 0:
+      var waveEntry = entries[i].entry
+      waveEntry.name = examinedFn
+      census.eligible.add(ExternalIrEntry(entry: waveEntry,
+        funcDef: entries[i].funcDef, parseBound: entries[i].parseBound))
+    else:
+      census.eligible.add(entries[i])
+  logInfo("axiom_engine", "json-rpc errclass carriers synthesized (hash-bound " &
+    "adoption " & domain.adoption.adoptedSpecHash[0 ..< 12] & "…): " &
+    $domain.instances.len & " carriers (" & carrierNames[0] & " + " &
+    $(domain.instances.len - 1) & " controls) over " & domain.symbol &
+    " obligations=" & $records[0].generatedObligationCount &
+    "/" & $records[records.len - 1].generatedObligationCount &
+    " eligible=" & $eligibleCount & "/" & $records.len &
+    " source=" & modulePath)
+  for i in 0 ..< records.len:
+    if not records[i].censusEligible:
+      logInfo("axiom_engine", "json-rpc errclass carrier excluded: " &
+        carrierNames[i] &
+        " eligibility=" & $records[i].eligibility &
+        " rejection=" & rejectionToken(records[i].rejection) &
+        " source=" & modulePath)
+  ok(records.len > 0 and records[0].censusEligible)
+
 proc synthesizeTomlD2AgentCandidate*(examinedFn, modulePath: string;
     resolver: ModuleContentResolver; domain: TomlD2AgentOverlayDomain;
     census: ExternalCandidateCensus; subjectRepoRoot: string = ""): Result[bool, string] {.
@@ -4336,6 +5186,7 @@ type
       sidecar*: SidecarDomain
     of capTermSplice: rem*: Base32RemOverlayDomain
     of capBetaComposition: sizing*: Base36OverlayDomain
+    of capJrpcErrclass: jrpc*: JrpcErrclassDomain
 
   CapabilityAdapter* = object
     ## The per-capability head the registry dispatch loop drives (§2.7).
@@ -4575,6 +5426,51 @@ let sizingCapabilityAdapter* = CapabilityAdapter(
   routeTarget: sizingAdapterRouteTarget,
   synthesize: sizingAdapterSynthesize)
 
+proc jrpcErrclassAdapterValidate(node: JsonNode): Result[CapabilityPayload, string] {.
+    raises: [].} =
+  ## jrpc-errclass validate leg: the lane's TWO-STAGE pure validator —
+  ## stage (i) adoption shape + the closed grammar nim-jrpc-errclass-v1 +
+  ## the 8-class codomain closure + the mapping partition, stage (ii) the
+  ## SpecID recomputed from the loaded content vs adoption.adoptedSpecHash,
+  ## byte-exact. Model<->instance consistency is deliberately absent (the
+  ## mutation must load — FREEZE §10).
+  let domainRes = validateJrpcErrclassOverlayNode(node)
+  if domainRes.isErr:
+    err(domainRes.error)
+  else:
+    ok(CapabilityPayload(kind: capJrpcErrclass, jrpc: domainRes.get))
+
+func jrpcErrclassAdapterDeclares(payload: CapabilityPayload; fnName,
+    modulePath: string): bool {.raises: [].} =
+  ## jrpc-errclass membership leg: the lane's predicate — the governed
+  ## module+symbol key, the 13 carrier names included (the d2 lane's
+  ## carrier-included membership).
+  overlayDeclaresJrpcErrclassSubject(payload.jrpc, fnName, modulePath)
+
+func jrpcErrclassAdapterRouteTarget(payload: CapabilityPayload; target: string):
+    tuple[routed: bool; fnName, modulePath: string] {.raises: [].} =
+  ## jrpc-errclass routing leg: the lane's canonical `module::fn` routing
+  ## (the d2 shape), verbatim.
+  jrpcErrclassCarrierTargetRouting(target, payload.jrpc)
+
+proc jrpcErrclassAdapterSynthesize(fnName, modulePath: string;
+    payload: CapabilityPayload; resolver: ModuleContentResolver;
+    census: ExternalCandidateCensus; subjectRepoRoot: string): Result[bool, string] {.
+    raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## jrpc-errclass synthesize leg: the lane synthesizer — one carrier per
+  ## pinned boundary instance over the adopted model irIf chain, the
+  ## errors-class-v1 harness stamped with the module pin and the mapping's
+  ## of-matrix block.
+  synthesizeJrpcErrclassCandidates(fnName, modulePath, resolver,
+    payload.jrpc, census, subjectRepoRoot)
+
+let jrpcErrclassCapabilityAdapter* = CapabilityAdapter(
+  capability: capJrpcErrclass,
+  validate: jrpcErrclassAdapterValidate,
+  declares: jrpcErrclassAdapterDeclares,
+  routeTarget: jrpcErrclassAdapterRouteTarget,
+  synthesize: jrpcErrclassAdapterSynthesize)
+
 const sidecarRegistryEntryRelPath* = "nim_stew_base36_sidecar.json"
   ## The sidecar member's registry identity (REGISTRY_SPEC §5 PR-3): the
   ## flip gate is per ENTRY, discriminated on the normalized specRelPath,
@@ -4583,15 +5479,23 @@ const sidecarRegistryEntryRelPath* = "nim_stew_base36_sidecar.json"
   ## (coutRegistryEntryRelPath, presence-mandatory) flips in PR-4 with the
   ## same per-entry discrimination.
 
+const jrpcErrclassRegistryEntryRelPath* = "json_rpc_errcode_class.json"
+  ## The jrpc-errclass lane's registry identity (the FREEZE §7 single-source
+  ## adoption document): shipped flipped from birth, presence-optional — an
+  ## absent document is an explicitly-logged inert binding, a present-but-
+  ## invalid one blocks the run fail-closed.
+
 const flippedLaneSpecRelPaths* = [
   "nim_libp2p_bytesview_slice.json",
   "toml_d2_agent_spec.json",
-  sidecarRegistryEntryRelPath]
+  sidecarRegistryEntryRelPath,
+  jrpcErrclassRegistryEntryRelPath]
   ## The flipped OPTIONAL lanes' document identities, in flip order (PR-1,
-  ## PR-2, PR-3): the absent-document inert log is checked per flipped
-  ## DOCUMENT — an optional lane whose file is missing has no registry entry
-  ## to loop over (§1.3). PR-4 note: C_out is deliberately NOT listed — it
-  ## is presence-MANDATORY, so its document's absence blocks the run
+  ## PR-2, PR-3; the jrpc-errclass lane ships flipped from birth): the
+  ## absent-document inert log is checked per flipped DOCUMENT — an optional
+  ## lane whose file is missing has no registry entry to loop over (§1.3).
+  ## PR-4 note: C_out is deliberately NOT listed — it is
+  ## presence-MANDATORY, so its document's absence blocks the run
   ## fail-closed (the mandatory-presence check in prepareProofRun), never
   ## an inert log.
 
@@ -4613,14 +5517,17 @@ func entryPinWording(entry: RegistryEntry): SubjectPinMismatchWording {.
   ## overlay terms. `lane` (the specRelPath prefix) is the call site's.
   if entry.specRelPath == sidecarRegistryEntryRelPath:
     spwAdoptionRecord
+  elif entry.specRelPath == jrpcErrclassRegistryEntryRelPath:
+    spwAdoptionRecord
   else:
     spwOverlayPins
 
 proc capabilityAdapterFor*(entry: RegistryEntry): Option[CapabilityAdapter] {.
     raises: [].} =
   ## The installed adapter per registry ENTRY (REGISTRY_SPEC §5 flip
-  ## schedule): all six lanes flipped (PR-1..PR-6). Every entry resolves to
-  ## its adapter; none() = no adapter (varint seam — not flipped).
+  ## schedule): all six lanes flipped (PR-1..PR-6), plus the jrpc-errclass
+  ## lane shipped flipped from birth. Every entry resolves to its adapter;
+  ## none() = no adapter (varint seam — not flipped).
   case entry.capability
   of capArithmeticLaw: some(bvCapabilityAdapter)
   of capConstructedGate: some(d2CapabilityAdapter)
@@ -4633,6 +5540,7 @@ proc capabilityAdapterFor*(entry: RegistryEntry): Option[CapabilityAdapter] {.
       none(CapabilityAdapter)
   of capTermSplice: some(remCapabilityAdapter)
   of capBetaComposition: some(sizingCapabilityAdapter)
+  of capJrpcErrclass: some(jrpcErrclassCapabilityAdapter)
 
 proc laneDispatchEquipped*(entry: RegistryEntry): bool {.raises: [].} =
   ## Whether a prove run dispatches through this registry ENTRY — the
@@ -4724,6 +5632,15 @@ func flippedLaneDiagnostics(specRelPath: string):
        "docs/spec/nim_stew_base36_sidecar_contract.md)",
      "sidecar candidate synthesis unavailable: ",
      "")
+  of jrpcErrclassRegistryEntryRelPath:
+    ("json-rpc errclass subject pin rejected (fail-closed): ",
+     "json-rpc errclass governed module not present under this subject " &
+       "root — binding inert: ",
+     "json-rpc errclass overlay unavailable (fail-closed): ",
+     "json-rpc errclass overlay absent — binding inert (presence-optional; " &
+       "see docs/spec/jrpc_errcode_class_binding_contract.md)",
+     "json-rpc errclass carrier synthesis unavailable: ",
+     "json-rpc errclass carrier-target synthesis unavailable")
   of coutRegistryEntryRelPath, base32RemRegistryEntryRelPath,
       base36RelationalRegistryEntryRelPath:
     mandatoryLaneDiagnostics(specRelPath)

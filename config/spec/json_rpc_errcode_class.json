@@ -1,0 +1,110 @@
+{
+  "specId": "JRPC-ERRCLASS",
+  "specOrigin": "soExplicit",
+  "ruleId": "external:json-rpc/errors/class-adoption",
+  "ruleVersion": "1.0.0",
+  "contract": "docs/spec/jrpc_errcode_class_binding_contract.md",
+  "capability": "jrpc-errclass",
+  "presencePolicy": "optional",
+  "precedence": 70,
+  "description": "Axiom-owned out-of-tree explicit spec (jrpc-errclass lane) for the error-code classification of nim-json-rpc's json_rpc/errors.nim::new: the constructor's case/if/else chain (errors.nim:105-122) maps every int error code to exactly one of eight concrete classes, and this adoption pins that mapping as a PRIORITY TABLE — first match in tag order wins (the five singleton codes from JSON-RPC 2.0 §5.1 take precedence over the reserved band [-32768, -32100] that contains them, exactly as the source's case arms precede the else chain), followed by the server band [-32099, -32000] and the application remainder, with class tags 0..7; the EFFECTIVE partition (accounting for priority) is exclusive and exhaustive. The ADOPTED MODEL is constructed IR (the mapping's irIf chain) — the subject body is deliberately NOT materialized (template err, obj-constr, move, and in-range membership are outside the certified extraction subset; the subject is never modified, Zero-Footprint). Thirteen INSTANCE obligations pin the boundary values (each: pre code == <c>, post result == <expected tag>); a confirmed counterexample is replayed against the ORIGINAL constructor through a stamped of-matrix harness that imports json_rpc/errors and observes the dynamic class as an int tag between the replay markers. The adoption record is HASH-BOUND: the loader recomputes the specification artifact's spec identity (SpecID = H(sorted canonicalSpecIR | origin | ruleVersion)) from the loaded proposition content and fails closed unless it byte-equals adoption.adoptedSpecHash, and adoption.subject.blobSha256 is verified against the actual module bytes under the run's subject root.",
+  "replay": {
+    "templateId": "errors-class-v1",
+    "importModule": "json_rpc/errors",
+    "observation": {
+      "kind": "single-call-int",
+      "slots": ["<module>", "<lit>"]
+    }
+  },
+  "mapping": [
+    {"tag": 0, "class": "RpcParseError", "region": {"kind": "singleton", "code": -32700}},
+    {"tag": 1, "class": "RpcInvalidRequestError", "region": {"kind": "singleton", "code": -32600}},
+    {"tag": 2, "class": "RpcMethodNotFoundError", "region": {"kind": "singleton", "code": -32601}},
+    {"tag": 3, "class": "RpcInvalidParamsError", "region": {"kind": "singleton", "code": -32602}},
+    {"tag": 4, "class": "RpcInternalError", "region": {"kind": "singleton", "code": -32603}},
+    {"tag": 5, "class": "RpcServerError", "region": {"kind": "range", "low": -32099, "high": -32000}},
+    {"tag": 6, "class": "RpcResponseError", "region": {"kind": "range", "low": -32768, "high": -32100}},
+    {"tag": 7, "class": "RpcApplicationError", "region": {"kind": "remainder"}}
+  ],
+  "instances": [
+    {"code": -32769, "expectedClass": "RpcApplicationError"},
+    {"code": -32768, "expectedClass": "RpcResponseError"},
+    {"code": -32700, "expectedClass": "RpcParseError"},
+    {"code": -32600, "expectedClass": "RpcInvalidRequestError"},
+    {"code": -32601, "expectedClass": "RpcMethodNotFoundError"},
+    {"code": -32602, "expectedClass": "RpcInvalidParamsError"},
+    {"code": -32603, "expectedClass": "RpcInternalError"},
+    {"code": -32100, "expectedClass": "RpcResponseError"},
+    {"code": -32099, "expectedClass": "RpcServerError"},
+    {"code": -32000, "expectedClass": "RpcServerError"},
+    {"code": -31999, "expectedClass": "RpcApplicationError"},
+    {"code": 0, "expectedClass": "RpcApplicationError"},
+    {"code": 1, "expectedClass": "RpcApplicationError"}
+  ],
+  "canonicalSpecIR": [
+    "classify == 0 | RpcParseError | code == -32700",
+    "classify == 1 | RpcInvalidRequestError | code == -32600",
+    "classify == 2 | RpcMethodNotFoundError | code == -32601",
+    "classify == 3 | RpcInvalidParamsError | code == -32602",
+    "classify == 4 | RpcInternalError | code == -32603",
+    "classify == 5 | RpcServerError | (-32099 <= code) and (code <= -32000)",
+    "classify == 6 | RpcResponseError | (-32768 <= code) and (code <= -32100)",
+    "classify == 7 | RpcApplicationError | remainder",
+    "code == -32769",
+    "result == 7",
+    "code == -32768",
+    "result == 6",
+    "code == -32700",
+    "result == 0",
+    "code == -32600",
+    "result == 1",
+    "code == -32601",
+    "result == 2",
+    "code == -32602",
+    "result == 3",
+    "code == -32603",
+    "result == 4",
+    "code == -32100",
+    "result == 6",
+    "code == -32099",
+    "result == 5",
+    "code == -32000",
+    "result == 5",
+    "code == -31999",
+    "result == 7",
+    "code == 0",
+    "result == 7",
+    "code == 1",
+    "result == 7"
+  ],
+  "adoption": {
+    "adoptedSpecHash": "c6ddc32edce17ed6e0d43646049fe522aa822608946664dd9d9c353c2ebe82df",
+    "adopter": "axiom (workstream/jrpc-errcode-map P2 slice, user-approved mission)",
+    "adoptedAt": "2026-11-16",
+    "basis": "adopted from the frozen soundness contract experiments/jrpc-errcode-slice-e2e/FREEZE.md (P0) and its P1 gate record (all three gates PASS — of-matrix observation 13/13, loader applicability, engine attachment points)",
+    "grammarVersion": "nim-jrpc-errclass-v1",
+    "subject": {
+      "source": "status-im/nim-json-rpc (READ-ONLY checkout; pinned commit debf33cabf7be009a2e905d4c7921b85eb7ca6dd)",
+      "module": "json_rpc/errors.nim",
+      "symbol": "new",
+      "commit": "debf33cabf7be009a2e905d4c7921b85eb7ca6dd",
+      "blobSha256": "9c060ed7df574956dc0c8f05cf0e1c33db418b659a3a6e75aade7cbb557b0762"
+    },
+    "provenance": "The mapping CONTENT (8 regions, 13 boundary instances, tag assignment) was authored from the JSON-RPC 2.0 Specification §5.1 text and a line-cited reading of json_rpc/errors.nim:105-122 at the pinned commit, cross-checked instance-by-instance against the actual constructor behavior by the P1 probe (13/13 observed == expected; experiments/jrpc-errcode-slice-e2e/P1-GATE.md). No human authored this file's byte content; the AUTHORITY for verifying against it is the explicit adoption act — this committed Axiom-owned overlay whose adoption record hash-binds the exact proposition content and the subject module bytes. Content authorship confers NO authority. Any post-adoption content, ruleVersion, or subject-byte change mechanically invalidates the adoption (loader fail-closed)."
+  },
+  "semanticCaveats": [
+    "The mapping is an ADOPTED MODEL in constructed IR (the irIf chain over one BitVec64 parameter), not an extraction of the subject body: the solver verifies the model, and the stamped replay harness observes the ORIGINAL constructor — the model-to-subject correspondence is evidence-backed (P1 of-matrix probe 13/13), not formally extracted.",
+    "The replay observation is the int tag of the observed dynamic class, produced by the harness's of-matrix (7 leaf discriminants + the base discriminant): the base check folds CondTrue over new's return type (the domain precondition — P1-GATE); leafCount > 1 or a failed base check quits the harness (abnormal exit => replay unavailable); leafCount == 0 resolves to the base tag.",
+    "The 13 instances are INSTANCE obligations over pinned boundary inputs (the sidecar contract's instance-obligation precedent), not a universal theorem over the input space; the -32100/-32099 pair pins the generic/server band boundary and -32000 pins the spec's dual boundary (the table's explicit definition wins over the reserved-range reading).",
+    "Nim int is pointer-width signed; all pinned codes and both range endpoints are far from any overflow boundary, and the model's signed comparisons lower to bvsle over two's-complement literals consistently on both the SMT and the concrete-evaluation sides.",
+    "The class names are nim-json-rpc's INTERNAL implementation choice (the spec defines code semantics, not class hierarchy); mapping undefined reserved codes to the generic base (tag 6) is the implementation's choice, recorded here as adopted fact, not spec norm."
+  ],
+  "nonClaims": [
+    "NOT a claim about the subject's field values, message text, or data payloads — obj-constr and field semantics are outside the certified subset; the tag projection says nothing about them",
+    "NOT a claim that the classification holds for any input outside the 13 pinned instances (INSTANCE obligations; the mapping table itself is solver-checked as the carrier body over the pinned pre)",
+    "NOT a claim that the subject body was extracted, translated, or verified (the carrier is constructed IR from this document's mapping; the subject connection is the stamped replay observation only)",
+    "NOT a claim that nim-json-rpc was modified or annotated in-tree (Zero-Footprint)",
+    "NOT a re-derivation of the JSON-RPC 2.0 specification text — the mapping's spec grounding (the five named codes, the server band, the reserved band, the application remainder) is the spec's own statement, adopted here by the explicit hash-bound act",
+    "NOT a general detection proof for wrong mappings — the negative control is the specific mutation scenario of the frozen experiment (instance 4 expected distorted; detection evidence is produced by the mutation test, not claimed universally)"
+  ]
+}

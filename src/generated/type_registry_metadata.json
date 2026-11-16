@@ -1336,6 +1336,170 @@
     },
     {
       "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "errclassAdditive",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "errclassAdditive",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List string",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "errclassCanonicalSpecClauses",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "errclassCarrierName",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "IRExpr",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "errclassClassifyModel",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "IRExpr",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "errclassPrimary",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "errclassPrimary",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "errclassRegionDesc",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[JrpcErrclassRegion, string]",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "errclassRegionFromNode",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[JrpcErrclassRegion, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "errclassRegionMember",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "errclassTagMatrixBlock",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
       "ignorable": false,
       "leanType": "VerificationOutcome",
       "module": "src/cli/axiom_engine.nim",
@@ -1504,6 +1668,81 @@
       "ignorable": false,
       "leanType": "Bool",
       "module": "src/cli/axiom_engine.nim",
+      "name": "jrpcErrclassAdapterDeclares",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "jrpcErrclassAdapterRouteTarget",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[bool, string]",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "jrpcErrclassAdapterSynthesize",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[bool, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[CapabilityPayload, string]",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "jrpcErrclassAdapterValidate",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[CapabilityPayload, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "tuple[routed: bool; fnName, modulePath: string]",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "jrpcErrclassCarrierTargetRouting",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "tuple[routed: bool; fnName, modulePath: string]",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/cli/axiom_engine.nim",
       "name": "laneDispatchEquipped",
       "negativeConstraints": [
         "result >= 0 is invalid — Bool is not numeric",
@@ -1570,6 +1809,21 @@
       ],
       "resultConstraintTemplate": "",
       "returnType": "Result[Base36OverlayDomain, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[JrpcErrclassDomain, string]",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "loadJrpcErrclassOverlayDomain",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[JrpcErrclassDomain, string]",
       "smtSort": "Int",
       "typeCategory": "result"
     },
@@ -1696,6 +1950,21 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "Result[ExternalIrEntry, string]",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "makeCarrier",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[ExternalIrEntry, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "ModuleContentResolver",
       "module": "src/cli/axiom_engine.nim",
       "name": "makeSubjectResolver",
@@ -1787,6 +2056,21 @@
       "leanType": "Bool",
       "module": "src/cli/axiom_engine.nim",
       "name": "overlayDeclaresD2AgentSubject",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "overlayDeclaresJrpcErrclassSubject",
       "negativeConstraints": [
         "result >= 0 is invalid — Bool is not numeric",
         "Use '(= result true) or (= result false)' instead"
@@ -1960,6 +2244,22 @@
       "returnType": "Option[(string, string, seq[int64])]",
       "smtSort": "(Option (string, string, seq[int64]))",
       "typeCategory": "option"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "parseErrclassClosedExpr",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
     },
     {
       "hasAxiomHint": false,
@@ -2841,6 +3141,21 @@
       "ignorable": false,
       "leanType": "Result[bool, string]",
       "module": "src/cli/axiom_engine.nim",
+      "name": "synthesizeJrpcErrclassCandidates",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[bool, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[bool, string]",
+      "module": "src/cli/axiom_engine.nim",
       "name": "synthesizeNimLibp2pBytesviewSliceCandidate",
       "negativeConstraints": [
         "result >= 0 is invalid — Result is not numeric",
@@ -2953,6 +3268,36 @@
       ],
       "resultConstraintTemplate": "",
       "returnType": "Result[Base36CoutOverlayDomain, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[SidecarAdoptionRecord,",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "validateJrpcErrclassAdoption",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[SidecarAdoptionRecord,",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[JrpcErrclassDomain, string]",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "validateJrpcErrclassOverlayNode",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[JrpcErrclassDomain, string]",
       "smtSort": "Int",
       "typeCategory": "result"
     },

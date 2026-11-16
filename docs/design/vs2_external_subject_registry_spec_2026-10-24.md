@@ -86,7 +86,7 @@ One envelope per spec document under `config/spec/*.json`. Design constraint tha
 }
 ```
 
-### 1.2 `capability` — the discriminator (5 kinds, closed)
+### 1.2 `capability` — the discriminator (6 kinds, closed)
 
 | value | lane today | what it owns |
 |---|---|---|
@@ -95,6 +95,7 @@ One envelope per spec document under `config/spec/*.json`. Design constraint tha
 | `body-carry` | base36 C_out, nim sidecar | materialized ORIGINAL body carried into a synthesized carrier; single-origin claim-carrier parse-bound; result-slot β-splice |
 | `term-splice` | base32 rem | claim bound onto the body's own `<param> mod <divisor>` term; exactly-3 positional clauses (1121-1123) |
 | `beta-composition` | base36 sizing | β-composition of two materialized bodies into one relational composite; exactly the three sizing clauses (998-1000); pinned overflow goals (§6) |
+| `jrpc-errclass` | json-rpc errors class adoption | constructed-IR ADOPTED-MODEL carriers (the mapping's first-match-wins irIf chain — the subject body is never materialized); one carrier per pinned boundary instance; the stamped errors-class-v1 replay observes the ORIGINAL constructor's dynamic class through the of-matrix (contract: docs/spec/jrpc_errcode_class_binding_contract.md) |
 
 An unknown `capability` value is a load error (§2.3) — it names a claim this engine version cannot state, the same fail-closed posture as `SidecarGrammarV1` (`axiom_engine.nim:2336-2340`).
 

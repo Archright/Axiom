@@ -144,6 +144,7 @@ type
     capBodyCarry       = "body-carry"
     capTermSplice      = "term-splice"
     capBetaComposition = "beta-composition"
+    capJrpcErrclass    = "jrpc-errclass"
 
   PresencePolicy* = enum
     ppMandatory = "mandatory"
@@ -222,6 +223,26 @@ const replayTemplateSingleCallBoolV1* = "import " & ReplayModulePlaceholder & "\
   ## coupling). v2 declares the kind for the P0-1 test overlay only — no
   ## production lane uses it yet (REGISTRY_SPEC §1.5).
 
+const replayTemplateErrorsClassV1* = "import " & ReplayModulePlaceholder & "\n" &
+  "let r = RpcResponseError.new(" & ReplayValuePlaceholder & ", \"m\")\n" &
+  "var leafCount = 0\n" &
+  "var observed = -1\n" &
+  ReplayTagMatrixPlaceholder & "\n" &
+  "echo \"" & ReplayBeginMarker & "\"\n" &
+  "echo $observed\n" &
+  "echo \"" & ReplayEndMarker & "\"\n"
+  ## single-call-int (jrpc-errclass): calls the subject constructor ONCE with
+  ## the pinned error code, then the stamped `<tags>` block — the adopted
+  ## class→tag matrix, engine-stamped from the overlay's mapping at carrier
+  ## synthesis (single source) — discriminates the dynamic type through the
+  ## `of` matrix (leaf tags 0..7 excluding the base tag, mutually exclusive
+  ## siblings), counts matches, and fails closed: no base-class hit or >= 2
+  ## leaf hits → `quit 1` (abnormal exit ⇒ replay unavailable); 0 leaf hits
+  ## ⇒ observed falls back to the base tag. The echoed int between the
+  ## markers is the observation the postcondition `result == <tag>` is
+  ## evaluated on (parseConcreteLiteral handles int, no marker-grammar
+  ## extension).
+
 proc replayTemplate*(templateId: string): Result[string, string] {.
     raises: [], axiomDecision.} =
   ## The closed template registry. Unknown id → explicit UNKNOWN error —
@@ -230,6 +251,7 @@ proc replayTemplate*(templateId: string): Result[string, string] {.
   of "d2-gate-reject-v1": ok(replayTemplateD2GateRejectV1)
   of "bv-slice-len-v1": ok(replayTemplateBvSliceLenV1)
   of "single-call-bool-v1": ok(replayTemplateSingleCallBoolV1)
+  of "errors-class-v1": ok(replayTemplateErrorsClassV1)
   else:
     err("UNKNOWN replay templateId \"" & templateId &
       "\" — the closed registry has no such template (fail-closed)")
@@ -446,6 +468,7 @@ func parseCapabilityTag(s: string): Option[ExternalSubjectCapability] {.raises: 
   of $capBodyCarry: some(capBodyCarry)
   of $capTermSplice: some(capTermSplice)
   of $capBetaComposition: some(capBetaComposition)
+  of $capJrpcErrclass: some(capJrpcErrclass)
   else: none(ExternalSubjectCapability)
 
 func parsePresenceTag(s: string): Option[PresencePolicy] {.raises: [].} =
@@ -479,6 +502,18 @@ func derivedReplayImportModule(capability: ExternalSubjectCapability;
     else:
       ok(dir.lastPathPart())
   of capArithmeticLaw:
+    let parts = splitFile(modulePath)
+    if parts.name.len == 0:
+      err("subject.module must name a Nim module file (replay import derivation): " &
+        modulePath)
+    elif parts.dir.len == 0 or parts.dir == ".":
+      ok(parts.name)
+    else:
+      ok(parts.dir / parts.name)
+  of capJrpcErrclass:
+    # The errclass subject module IS the public API surface (json_rpc/errors.nim
+    # exports `new` directly), so the harness imports the module itself — the
+    # path-minus-extension derivation, same shape as arithmetic-law.
     let parts = splitFile(modulePath)
     if parts.name.len == 0:
       err("subject.module must name a Nim module file (replay import derivation): " &
@@ -641,8 +676,9 @@ func envelopeEntryForNode(specRelPath: string; raw: JsonNode): Result[RegistryEn
     let capParsed = parseCapabilityTag(capabilityNode.getStr(""))
     if capParsed.isNone:
       return err("UNKNOWN capability \"" & capabilityNode.getStr("") &
-        "\" — the closed discriminator has 5 kinds (constructed-gate, " &
-        "arithmetic-law, body-carry, term-splice, beta-composition)")
+        "\" — the closed discriminator has 6 kinds (constructed-gate, " &
+        "arithmetic-law, body-carry, term-splice, beta-composition, " &
+        "jrpc-errclass)")
     capability = capParsed.get
     let presenceNode = raw{"presencePolicy"}
     if presenceNode.isNil or presenceNode.kind != JString:
@@ -671,7 +707,7 @@ func envelopeEntryForNode(specRelPath: string; raw: JsonNode): Result[RegistryEn
   var replayOpt = none(ReplaySpec)
   let replayNode = raw{"replay"}
   if not replayNode.isNil and replayNode.kind == JObject:
-    if capability notin {capConstructedGate, capArithmeticLaw}:
+    if capability notin {capConstructedGate, capArithmeticLaw, capJrpcErrclass}:
       return err("replay declared for capability " & $capability &
         " which stamps no replay harness in v2")
     let templateId = replayNode{"templateId"}.getStr("")
@@ -722,7 +758,7 @@ func envelopeEntryForNode(specRelPath: string; raw: JsonNode): Result[RegistryEn
   var constructedOpt = none(ConstructedTargets)
   let constructedNode = raw{"constructedIrTargets"}
   if not constructedNode.isNil and constructedNode.kind == JObject:
-    if capability notin {capConstructedGate, capArithmeticLaw}:
+    if capability notin {capConstructedGate, capArithmeticLaw, capJrpcErrclass}:
       return err("constructedIrTargets declared for capability " & $capability &
         " which synthesizes no constructed carriers in v2")
     let symbolsNode = constructedNode{"symbols"}
