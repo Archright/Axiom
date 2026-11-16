@@ -11,7 +11,8 @@
 # 바이너리를 BASE 트리(worktree @BASE_SHA)에서 컴파일한다(후보 PR 트리가 판정기를
 # 공급하지 못한다 — admission-check SL-20과 동일 계약, 결정 #21). diff는
 # -c core.quotepath=false로 비-ASCII 경로의 git 인용 변형을 차단하고, HEAD에 정책이
-# 존재하면 selfAmendment 판정을 위해 --head-policy로 전달한다(guard v2).
+# 존재하며 BASE 컴파일 가드가 v99+(selfAmendment 지원)일 때만 --head-policy로
+# 전달한다(guard v2 — 전이 창의 v1 base 가드는 base 세대 판정을 그대로 낸다).
 #
 # PR 자동 관측이 복원되었다(2026-09-22): pull_request(main) 트리거로 발화된
 # repository-surface 판정이 관측된다. 이 job은 조언적 관측(advvisory)이며 required
@@ -104,7 +105,15 @@ jobs:
       - name: Classify PR diff (BASE_SHA...HEAD)
         run: |
           git -c core.quotepath=false diff --name-status "$BASE_SHA...HEAD" | tee /tmp/changes.name-status
-          if [ -n "${HEAD_POLICY:-}" ]; then
+          # Gate A: the adjudicator is BASE-compiled — pass --head-policy only
+          # when the BASE generation's guard supports it (v99+). A v1 base
+          # guard has no selfAmendment contract; its verdict is the base
+          # generation's honest judgment of this diff. (Feature probe is
+          # content-derived from the compiled binary's own usage surface —
+          # no version parsing. SL-20 needs no probe: its scope gate is
+          # manifest-coupled, so a base manifest that includes SL-20 implies
+          # a base tree with the v2 guard.)
+          if build/surface_guard 2>&1 | grep -q -- --head-policy && [ -n "${HEAD_POLICY:-}" ]; then
             build/surface_guard --policy /tmp/base_policy.json --head-policy "$HEAD_POLICY" --diff /tmp/changes.name-status
           else
             build/surface_guard --policy /tmp/base_policy.json --diff /tmp/changes.name-status
