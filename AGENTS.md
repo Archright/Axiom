@@ -202,3 +202,5 @@ Legislator 페르소나의 불변식은 **Leanstral API로만** 작성한다 —
 | docs/evidence/ | 실행 증거(관측·검증 기록) |
 
 **규칙**: 측정, 역사적 결론, 생성 데이터를 AGENTS.md에 절대 배치하지 않는다. 정본 계산이 존재할 때, AGENTS.md는 그 현재 값을 중복해서는 안 된다.
+
+<!-- SL-20 negative surface probe (exact-FROZEN path) 20261116 -->
