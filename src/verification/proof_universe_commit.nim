@@ -8,6 +8,7 @@ import std/strutils
 import std/options
 import std/tables
 import std/json
+import std/monotimes
 import core/json/std_redirect
 
 import core/symbolic/global_symbol_graph_types
@@ -16,6 +17,7 @@ import core/proof/proof_universe_lock
 import core/results
 import core/reasoning_recorder
 import verification/integrity_ledger
+import verification/unified_trajectory
 import core/provenance_guard
 import core/json/json_utils
 import core/telemetry/metrics
@@ -87,7 +89,9 @@ proc rebuildUniverseMerkleLockFile*(
     reason = "Merkle lock computed+validated on every run but only persisted on canonical runs (ax vkd sync / --update-lock); updateLock=false skips the atomic write",
     adr = "docs/adr/0012-ax-vkd-sync.md",
     introduced = "v32"), axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  let lockComputeStartMs = getMonoTime().ticks
   let lockOpt = computeProofUniverseLock(repoRoot, proof_universe_lock.defaultCertDir, vkdFixed4, source = asiComputed)
+  logStage(skReport, "", "lock-recompute completed", elapsedMs=int((getMonoTime().ticks - lockComputeStartMs) div 1_000_000))
   if lockOpt.isErr():
     return err("[AXIOM DEFECT] proof_universe.lock compute failed: " & lockOpt.error)
   let lock = lockOpt.get
@@ -282,7 +286,9 @@ proc commitUniverseIntegrityAndLock*(
     if not graphOk:
       return err("[AXIOM DEFECT] proof_universe.lock: failed to write global symbol graph snapshot")
     block:
+      let graphMerkleStartMs = getMonoTime().ticks
       let h = computeGraphMerkleHash(graphPath)
+      logStage(skReport, "", "graph-merkle-hash completed", elapsedMs=int((getMonoTime().ticks - graphMerkleStartMs) div 1_000_000))
       if h.isErr:
         return err("[AXIOM DEFECT] proof_universe.lock: global symbol graph Merkle hash rejected")
   # --- I3 unconditional side effects (never skipped when materialization is reused) ---
