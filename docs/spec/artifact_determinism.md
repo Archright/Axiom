@@ -77,6 +77,8 @@ func toLogical*(pp: PhysicalPath; root: string): LogicalPath {.raises: []} =
 
 The following trusted-layer const-context sites **cannot** be wrapped in `LogicalPath` because `currentSourcePath()` and `instantiationInfo(-1, true).filename` return `string` in const/macro/template expansion contexts, and wrapping them would break const evaluation, macro expansion, and cascade into widely-imported public APIs. These are documented as known PhysicalPath-leak locations per plan §2's ownership list.
 
+Full quirk documentation — symptom (observed compiler output), root cause with official Nim manual/system references, minimal reproductions, allowed contract, and the regression test that detects quirk dissolution on toolchain upgrade: [nim_const_context_path_type_quirk.md](nim_const_context_path_type_quirk.md) (DEBT#453/#454/#455).
+
 | File | Line(s) | Site | Reason for Deferral |
 |---|---|---|---|
 | `src/core/trusted/layer_enforcement.nim` | 27 | `const srcPath = currentSourcePath()` | Const context — `currentSourcePath()` returns `string`, cannot be wrapped in distinct type at compile time |
