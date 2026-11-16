@@ -126,6 +126,19 @@ proc runCollector(repoRoot, artifactsDir, outDir: string;
 
 proc runGate(extraEnv: openArray[(string, string)] = @[]):
     tuple[output: string, exit: int] =
+  # The gate writes its decision record (build/readiness_start_decision.json)
+  # on EVERY invocation; restore it byte-exact after the invocation so this
+  # test's gate runs can never leave a synthetic verdict where the workflow's
+  # step summary and readiness-verdict-evidence upload expect this run's real
+  # gate verdict.
+  let decisionPath = Root / "build" / "readiness_start_decision.json"
+  let decisionExisted = fileExists(decisionPath)
+  let decisionBackup = (if decisionExisted: readFile(decisionPath) else: "")
+  defer:
+    if decisionExisted:
+      writeFile(decisionPath, decisionBackup)
+    elif fileExists(decisionPath):
+      removeFile(decisionPath)
   var env = @[("AXIOM_START_GATE_AX_BIN", ProbeAx)]
   for (k, v) in extraEnv:
     env.add((k, v))

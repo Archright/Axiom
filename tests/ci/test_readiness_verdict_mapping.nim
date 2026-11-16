@@ -32,7 +32,11 @@
 ## committed snapshot (backup → install fixtures → run gate → restore →
 ## byte-exact verify). Restoration runs in a defer so an assertion failure
 ## cannot leak fixtures, and the final case re-verifies the committed snapshot
-## against the copy taken at process start.
+## against the copy taken at process start. The gate's decision record
+## (build/readiness_start_decision.json) is restored the same way after every
+## gate invocation (runGate defer): the workflow's step summary and evidence
+## upload read it after this suite, so a fixture verdict must never overwrite
+## this run's real gate verdict.
 ##
 ## C1 wiring gate: the READINESS_VERDICT line, the AXIOM_CI_REPO_HEAD identity
 ## binding and the READINESS_IDENTITY_MISMATCH marker are implemented by the
@@ -109,6 +113,20 @@ proc runBin(bin: string; args: openArray[string] = [];
 
 proc runGate(extraEnv: openArray[(string, string)] = @[];
              logName = ""): tuple[output: string, exit: int] =
+  # The gate writes its decision record (build/readiness_start_decision.json)
+  # on EVERY invocation. Under this suite's no-leak restoration contract the
+  # record must return byte-exact to its pre-invocation content: the workflow
+  # reads it AFTER this test runs (step summary + readiness-verdict-evidence
+  # upload), so a fixture verdict left here would overwrite this run's real
+  # gate verdict in the evidence artifact.
+  let decisionPath = Root / "build" / "readiness_start_decision.json"
+  let decisionExisted = fileExists(decisionPath)
+  let decisionBackup = (if decisionExisted: readFile(decisionPath) else: "")
+  defer:
+    if decisionExisted:
+      writeFile(decisionPath, decisionBackup)
+    elif fileExists(decisionPath):
+      removeFile(decisionPath)
   var env = @[("AXIOM_START_GATE_AX_BIN", ProbeAx)]
   for (k, v) in extraEnv:
     env.add((k, v))
