@@ -16,8 +16,18 @@ axiomLayer "infrastructure"
 ##     last-4096 byte probe for multi-megabyte binaries (`lake`, `lean`).
 ##   - Read-then-restat stability (`stat -> readFile -> stat`, up to 2 attempts),
 ##     failing closed (`""`, uncached) if the file mutates while being read.
+##   - Platform hash delegation for multi-megabyte binaries (size >
+##     `MaxInlineProbeBytes`): the content sha256 is computed by GNU coreutils
+##     `sha256sum` (SHA-NI-accelerated; separate process, argv list — never a
+##     shell string; no linking or bundling, so no GPL obligation for the
+##     caller). Measured on the 119 MiB ircheck worker (VS-PERF-ATTR
+##     2026-11-16): 0.09 s platform vs 0.62 s in-process release / ~45 s
+##     debug pure-Nim. Tool unavailability or subprocess failure falls back
+##     to the in-process read path — the SAME sha256 value either way
+##     (byte-identical; asserted on the delegated path by
+##     tests/unit/test_capture_toolchain_fingerprint.nim scenario 1).
 
-import std/[os, times, hashes]
+import std/[os, osproc, streams, times, hashes]
 import core/axiom_pragmas
 import core/crypto/hash_kernel
 
@@ -103,25 +113,76 @@ proc captureStatIdentity(path: string): MeasuredFileStat {.
     except CatchableError:
       result = MeasuredFileStat(valid: false)
 
+proc delegatedFileDigest(path: string; digest: var string): bool {.
+  raises: [], axiomEffect: IOEffect,
+  tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## Content sha256 of `path` computed by the platform hash authority
+  ## (GNU coreutils `sha256sum`). Returns false and leaves `digest` "" when
+  ## the tool is unavailable or the subprocess fails — the caller then falls
+  ## back to the in-process read path, so the fail-closed shape ("" on
+  ## unmeasurable) is unchanged. Only the first 64 hex chars followed by a
+  ## space are parsed — the filename field is never interpreted.
+  result = false
+  digest = ""
+  var tool = ""
+  try:
+    tool = findExe("sha256sum")
+  except CatchableError:
+    tool = ""
+  if tool.len == 0:
+    return
+  var p: Process = nil
+  try:
+    p = startProcess(tool, args = @[path], options = {poUsePath, poStdErrToStdOut})
+    let output = p.outputStream.readAll()
+    if p.waitForExit() == 0 and output.len >= 66 and output[64] == ' ':
+      var hexOk = true
+      for i in 0 ..< 64:
+        if output[i] notin {'0'..'9', 'a'..'f'}:
+          hexOk = false
+          break
+      if hexOk:
+        digest = output[0 ..< 64]
+        result = true
+  except CatchableError:
+    discard # axiom:best-effort("subprocess failure — digest unmeasurable; the caller falls back to the in-process path (fail-closed shape unchanged)")
+  finally:
+    if p != nil:
+      try: p.close()
+      except CatchableError: discard # axiom:best-effort("process reaping after exit code collection — a failed close cannot change the digest verdict")
+
 proc readStableAndStoreMemo(path, cwd, normPath: string;
                             firstIdent: MeasuredFileStat): string {.
   raises: [], axiomEffect: IOEffect,
   tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   var ident = firstIdent
   for _ in 0 .. 1:
-    var content = ""
-    var readOk = false
-    try:
-      content = readFile(path)
-      readOk = true
-    except CatchableError:
-      readOk = false
-    if not readOk:
-      break
+    var digest = ""
+    var contentLen = -1'i64
+    var fastH = Hash(0)
+    var measured = false
+    if ident.valid and ident.size > MaxInlineProbeBytes:
+      var delegated = ""
+      if delegatedFileDigest(path, delegated):
+        digest = delegated
+        measured = true
+    if not measured:
+      var content = ""
+      var readOk = false
+      try:
+        content = readFile(path)
+        readOk = true
+      except CatchableError:
+        readOk = false
+      if not readOk:
+        break
+      digest = sha256Hex(content)
+      contentLen = int64(content.len)
+      if contentLen <= MaxInlineProbeBytes:
+        fastH = hash(content)
     let afterIdent = captureStatIdentity(path)
-    if afterIdent.valid and afterIdent == ident and int64(content.len) == afterIdent.size:
-      let digest = sha256Hex(content)
-      let fastH = if afterIdent.size <= MaxInlineProbeBytes: hash(content) else: Hash(0)
+    if afterIdent.valid and afterIdent == ident and
+        (contentLen < 0 or contentLen == afterIdent.size):
       inc digestMemoMisses
       var updated = false
       for i in 0 ..< binaryDigestMemo.len:

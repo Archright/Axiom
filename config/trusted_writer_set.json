@@ -98,7 +98,7 @@
     "src/cli/axiom_engine.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "bbf69b2ab9bc972b7840fc7235d354423c4342ec"
+      "sha": "4b68f6e67a99d9bdfb1bc4cdb5b93bf8c21bbb38"
     },
     "src/cli/axiom_status.nim": {
       "mode": "100644",
@@ -3958,7 +3958,7 @@
     "src/verification/obligation/canonical_verification.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "e1ebec92c723692f5be71ec6a7b633d4dbd51831"
+      "sha": "446172443cdd1ef313b1ae6b3145cb3437c19acf"
     },
     "src/verification/obligation/golden_fixture_ir.nim": {
       "mode": "100644",
@@ -3988,7 +3988,7 @@
     "src/verification/obligation/measured_digests.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "8f59a0ec67de946113176e4b76152aefa4d9e93b"
+      "sha": "765d2b5c7ee13ee55286606d6010dc73005531c8"
     },
     "src/verification/obligation/metrics.nim": {
       "mode": "100644",
@@ -4228,7 +4228,7 @@
     "src/verification/proof_universe_commit.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "7a542b025b334a758139fe9ed8e8372195541220"
+      "sha": "94853c85ad1072bdb061f3069bd0ad8bf71fd9a8"
     },
     "src/verification/report_engine.nim": {
       "mode": "100644",
