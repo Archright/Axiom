@@ -13,7 +13,7 @@ normally, really violates the claimed specification.
 
 | Fixture | What it pins |
 |---|---|
-| `tests/negative/base36_mutant_subject/stew/base36.nim` | The seeded mutation (removing the `+ 1` rounding increment, `:19-20`) stays IN-SUBSET — mul/div arithmetic only. The mutant lives inside this repo while the real upstream tree stays read-only (`:13-16`), and "the same pipeline that proves the golden pair … must DISPROVE this subject" (`:10-12`). |
+| `tests/unit/test_bug_verdict_projection.nim` — inline `MutantSubjectProj` const (`:172`) | The seeded mutation (removing the `+ 1` rounding increment) stays IN-SUBSET — mul/div arithmetic only. The mutant bytes are an inline VERBATIM const in the suite — a VERBATIM transcription of `stew/base36.nim:52-60` (nim-stew v0.5.2) plus the one seeded mutation (`:173-175`) — materialized per run into a `getTempDir()` fixture tree via `git init` + commit (`makeSubjectTreeProj` `:196-212`) so the mutant's git identity anchor is measured, not labeled (`:184-186`), while the real upstream tree stays a READ-ONLY clone outside this repo; "the same pipeline that proves the golden pair … must DISPROVE this subject" (`:180-183`). |
 | `tests/negative/false_post.nim` | Body identical to the positive subject (`x`, `:14`); ONLY the postcondition is false (`result + 1 == x`, `:12`) and the Lean kernel genuinely rejects it (`:5-7`). The falsity is a real input-level contradiction, not an unsupported construct. |
 | `tests/negative/rem_body.nim` | An OUT-OF-DOMAIN claim (negative-dividend `mod` range, `:9-11`) is a SEPARATE fail-closed category — `lean_kernel_rejected`, never `Verified` (`:11-12`). It is an honesty fixture, not a counterexample fixture. |
 
@@ -77,8 +77,10 @@ itself; any disagreement or unavailability is fail-closed demotion.
 
 ## References
 
-- `tests/negative/base36_mutant_subject/stew/base36.nim:10-16,:19-20` — in-subset mutation
-  precedent
+- `tests/unit/test_bug_verdict_projection.nim:172-186,:196-212` — in-subset mutation
+  precedent: the inline `MutantSubjectProj` VERBATIM const (`stew/base36.nim:52-60`,
+  nim-stew v0.5.2, `+ 1` removal) materialized into a git-init temp fixture tree —
+  supersedes the tracked mutant fixture removed in the 2026-11 third-party cleanup
 - `tests/negative/false_post.nim:5-7,:12,:14` — identical body, false post (recommended shape)
 - `tests/negative/rem_body.nim:9-12` — out-of-domain claim as a separate fail-closed category
 - `src/core/trusted/private/ir_to_smt_chunk3.nim:33-34,:51` — signed 64-bit

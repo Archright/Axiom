@@ -351,6 +351,22 @@ a numeric conversion is meant (use `.int64` / `int()` conversion syntax).
   `src/verification/kernel_reexecution.nim:521-522`; precondition documentation:
   `docs/agents/operations.md` Trap 4.
 
+---
+
+### Q-014: `unittest.check` rewriting breaks `expr == @[]` — the empty-seq literal loses type inference (2026-11-16, VS-2 lane-dispatch flip-gate slice; docs-only entry, no DEBT row — workaround applied in the same slice)
+
+**Symptom**:
+```
+Error: cannot infer the type of the sequence
+```
+`check diverged == @[]` (with `diverged: seq[string]`) fails to compile; the error points at the `@[]` operand. Reproduced standalone on nim 2.2.10: the same expression in plain code (`if diverged == @[]`) compiles fine — only the `check` macro context fails.
+
+**Root cause**: the `unittest.check` template rewrites the expression AST for lazy failure reporting (operand extraction); the rewritten comparison is re-analyzed outside the `==`(seq[T], seq[T]) overload-resolution context, so the bare `@[]` node's element type cannot be inferred.
+
+**Resolution / workaround**: assert emptiness by length — `check diverged.len == 0` (intent-preserving, deterministic). Explicitly typing the literal also works but is noisier.
+
+**Affected files**: `tests/unit/test_lane_dispatch_equipped.nim` (VS-2 lane dispatch flip-gate divergence assertion, workaround in effect).
+
 ## Cross-Reference to AGENTS.md
 
 - §0.5b: Quirk Documentation Mandate — this file is the SSOT

@@ -57,7 +57,5 @@ The probe confirms the subject file has valid non-empty content (21870 bytes). H
 ## Artifacts
 
 - `probe/corpus_probe.nim` — the probe source
-- `canonical/signature_corpus.json` — latest JSON output
-- `canonical/signature_corpus_run1.json` — run 1 output
-- `canonical/signature_corpus_run2.json` — run 2 output
 - `canonical/corpus_README.md` — this file
+- The three corpus JSON outputs this README previously listed under `canonical/` (latest + run1 + run2) were removed from the repository in the 2026-11 third-party cleanup (Nim stdlib `bitops.nim` excerpts — SAL publication licensing); re-running the probe (Build & Run above) regenerates them.

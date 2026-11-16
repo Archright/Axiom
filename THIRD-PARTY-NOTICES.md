@@ -21,15 +21,14 @@ Where a dual license "Apache License 2.0 OR MIT" is indicated, you may use, repr
 - License: **MIT** (declared in `ed25519.nimble` as `license = "MIT"`; the upstream package does not ship a license text file) — text in `LICENSES/MIT.txt` (<https://opensource.org/license/mit>)
 - Modifications: wrapper body is identical to upstream master; `ed25519.nimble` version field changed (`0.1.1` → `1.0.0`) locally.
 
-## 3. nim-stew — verbatim files, subject fixtures, and signature corpus (Apache-2.0 OR MIT)
+## 3. nim-stew — verbatim pinned subject (Apache-2.0 OR MIT)
 
 - Files:
-  - `tests/fixtures/bug_verdict_scope/base36_pinned_subject.nim` — verbatim copy of `stew/base36.nim` from nim-stew **v0.5.0** (byte-identical `diff` 0), with its original license header.
-  - `tests/golden/base36_subject/stew/base36.nim` — partial excerpt of `stew/base36.nim` from nim-stew **v0.5.2** (sizing functions, 6 lines), marked "VERBATIM transcription".
-  - `tests/negative/base36_mutant_subject/stew/base36.nim` — the same excerpt with an intentional seeded mutation (test fixture).
+  - `tests/fixtures/bug_verdict_scope/base36_pinned_subject.nim` — verbatim copy of `stew/base36.nim` from nim-stew **v0.5.2 (byte-identical to v0.5.0 and @1853f20b)** (byte-identical `diff` 0), with its original license header.
+  - `tests/golden/base32_subject/stew/base32.nim` — verbatim `decodedLength` excerpt (`stew/base32.nim:55-60`) from nim-stew **v0.5.2**.
+  - `tests/unit/test_sidecar_binding.nim`, `tests/unit/test_base36_cout_binding.nim`, `tests/unit/test_bug_verdict_projection.nim`, `tests/cli/test_base36_composite_golden.nim` — Axiom-authored tests embedding the `stew/base36.nim:52-60` sizing functions (nim-stew **v0.5.2**) verbatim as string constants (`GoldenSubject` / `GoldenSubjectProj` / `GoldenSubjectComposite`; `MutantSubjectProj` is a one-token mutant of the same excerpt for the BUG_FOUND S6 fixture); each transcription replaces the stew license header with an Axiom description comment.
   - `experiments/act2-wp4d-symbol-identity/wp4d-definition-inventory-nim-stew-RAW.txt` — extracted definition signatures from nim-stew.
-  - `experiments/act2-r0-atom-getbitsbe/subjects/stew/` — subject verification scope reference (`stew/endians2.nim` / `getBitsBE`).
-- Upstream: <https://github.com/status-im/nim-stew> — Copyright (c) 2018-2025 Status Research & Development GmbH
+- Upstream: <https://github.com/status-im/nim-stew> — Copyright (c) 2025 Status Research & Development GmbH
 - License: **Apache-2.0 OR MIT** — header text preserved in `tests/fixtures/bug_verdict_scope/base36_pinned_subject.nim:1-7`; full texts in `LICENSES/Apache-2.0.txt` (<https://www.apache.org/licenses/LICENSE-2.0.txt>) and `LICENSES/MIT.txt` (<https://opensource.org/license/mit>).
 
 ## 4. nim-libp2p — embedded bytesview copy (Apache-2.0 OR MIT)
@@ -53,51 +52,22 @@ Where a dual license "Apache License 2.0 OR MIT" is indicated, you may use, repr
 
 - Files:
   - `experiments/serde-json-escape-slice-2026-11/` (`inputs/Cargo.lock`, `ACCEPTANCE.md`, and run artifacts for `serde_json::read::is_escape`)
-  - `experiments/act2-r0-reanchor/subjects/serde_json/`
-  - `tests/fixtures/rust/axiom_escape_probe/src/lib.rs` (bool-expression slice modeled on `serde_json::read::is_escape`)
 - Upstream: <https://github.com/serde-rs/json> — Copyright (c) Erick Tryzelaar, David Tolnay, and serde-rs contributors
 - License: **Apache-2.0 OR MIT** — full texts in `LICENSES/Apache-2.0.txt` and `LICENSES/MIT.txt`.
 
-## 7. Nim standard library reference patterns and signature corpus (MIT)
+## 7. Build-time dependencies — nimcrypto, malebolgia, checksums, fusion (MIT)
 
-- Files:
-  - `experiments/act2-wpi-structural-ingress/canonical/signature_corpus.json`
-  - `experiments/act2-wpi-structural-ingress/canonical/signature_corpus_run1.json`
-  - `experiments/act2-wpi-structural-ingress/canonical/signature_corpus_run2.json`
-- Upstream: <https://github.com/nim-lang/Nim> (`lib/pure/bitops.nim` head/tail excerpts and Nim stdlib reference patterns) — Copyright (c) 2006-2024 Andreas Rumpf and Nim Contributors; Copyright (c) 2019 Status Research & Development GmbH
-- License: **MIT** — text in `LICENSES/MIT.txt`.
-
-## 8. nimcrypto — build-time dependency (MIT)
-
-- Package: `nimcrypto` 0.7.3 (Copyright (c) 2018 Eugene Kabanov) — <https://github.com/cheatfate/nimcrypto>
+- Packages: `malebolgia` 1.3.2 (<https://github.com/Araq/malebolgia>) — MIT Copyright (c) 2023 Andreas Rumpf; `checksums` 0.2.2 (<https://github.com/nim-lang/checksums>) — MIT Copyright (c) 2023 Nim Contributors; `fusion` 1.2 (<https://github.com/nim-lang/fusion>) — MIT; `nimcrypto` 0.7.3 (<https://github.com/cheatfate/nimcrypto>) — MIT Copyright (c) 2018 Eugene Kabanov.
 - License: **MIT** — text in `LICENSES/MIT.txt`
-- Distribution note: `nimcrypto` is not vendored in this repository; it is resolved and fetched by the Nim package manager at build time (pinned in the lock file).
+- Distribution note: resolved and fetched by the Nim package manager at build time (pinned), not vendored in this repository.
 
-## 9. Springer open-access volume PDF — SVF-SVC (CC-BY 4.0)
+## 8. Springer open-access volume PDF — SVF-SVC (CC-BY 4.0)
 
 - File: `docs/spec/SVF-SVC_Software_Verification_Using_SVF.pdf`
 - Source: **Gurfinkel & Heule (eds.), "Software Verification Using SVF (SVF-SVC)", TACAS 2025 Part III, LNCS 15698**, Springer, 2025 — <https://doi.org/10.1007/978-3-031-90660-2> (open access); SVF upstream <https://github.com/SVF-tools/SVF>.
 - Relevant chapter: McGowan, Richards, Sui (UNSW), "Software Verification Using SVF", pp. 254–259 — <https://doi.org/10.1007/978-3-031-90660-2_21>.
 - License: **Creative Commons Attribution 4.0 International (CC-BY-4.0)** — text in `LICENSES/CC-BY-4.0.txt` (<https://creativecommons.org/licenses/by/4.0/legalcode>)
 - Changes: none — unmodified copy of the open-access volume PDF.
-
-## 10. Removed third-party documents (citation references)
-
-Other third-party papers that previously existed as PDF files under `docs/spec/` were removed from this repository for redistribution-right reasons. Bibliographic references (DOI / arXiv / official links) for those papers are recorded in `docs/spec/PDF_REFERENCES.md`. Nothing in that file is licensed under the Axiom Source-Available License; it merely cites publicly identified works.
-
-## 11. Build-time dependencies — malebolgia, checksums, fusion (MIT)
-
-- Packages: `malebolgia` 1.3.2 (<https://github.com/Araq/malebolgia>) — MIT Copyright (c) 2023 Andreas Rumpf; `checksums` 0.2.2 (<https://github.com/nim-lang/checksums>) — MIT Copyright (c) 2023 Nim Contributors; `fusion` 1.2 (<https://github.com/nim-lang/fusion>) — MIT.
-- License: **MIT** — text in `LICENSES/MIT.txt`
-- Distribution note: resolved and fetched by the Nim package manager at build time (pinned), not vendored.
-
-## 12. External verification toolchain components (not vendored)
-
-Axiom invokes external formal verification tools at runtime or in CI (none of these are vendored in this repository):
-
-- **Lean 4** (<https://github.com/leanprover/lean4>) — Apache-2.0
-- **Z3 Theorem Prover** (<https://github.com/Z3Prover/z3>) — MIT
-- **Charon** (<https://github.com/AeneasVerif/charon>) and **Aeneas** (<https://github.com/AeneasVerif/aeneas>) — Apache-2.0
 
 ---
 

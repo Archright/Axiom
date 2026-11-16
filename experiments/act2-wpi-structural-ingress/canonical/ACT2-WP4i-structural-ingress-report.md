@@ -102,7 +102,7 @@ promotion, contract injection, Lean/KAA/Trust rework, Track B.
 
 ## Evidence
 
-- `canonical/signature_corpus.json` (+ run1/run2, corpus_README.md, probe).
+- `canonical/corpus_README.md` (+ probe) — the corpus JSON outputs (run1/run2 included) were removed from the repository in the 2026-11 third-party cleanup; the README records the runs.
 - `canonical/phase_c_implementation.md` — diff summary, audit, tests, zero-drift.
 - `runs/prove_getBitsBE_postfix_run1.log`, `runs/README.md` (delta table).
 - Pre-fix comparison: `../act2-wp4h3-proofir/runs/prove_getBitsBE_run1.log`.

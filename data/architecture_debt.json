@@ -48,12 +48,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:f04ce57217c6d9e91ea8fc75f1d15cd88cbc92e69d714ef7839e56baa5d900fc",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:be56401ec3c1d8321b1a5609978f12b697c7ac5f09480e03df02e44bf61a0c48",
       "count": 1,
       "file": "src/cli/axiom_engine.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:3c03cbbc373479a7c558237b32d4b3d8938b4b00e8da8d84c0d371e0ca901180"
+      "rawContentHash": "sha256:3766f371ae9d7be8f9065738e5a99c7f4dbcf541485d5280d12275064be48b94"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
@@ -3787,7 +3787,7 @@
       "file": "src/verification/lean_lsp_compiler.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:fdf90942eeeda41713672c5479a3b623656cd804d410a77c15b9fd4125192bd0"
+      "rawContentHash": "sha256:16a12e21527b586ab9f02101f1095deefa9abf7ee4e6472d672acb53ec71dd8a"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",

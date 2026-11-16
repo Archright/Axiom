@@ -33,11 +33,11 @@ allowedLicenses:
   - id: "MIT"
     name: "MIT License"
     noticeFile: "LICENSES/MIT.txt"
-    source: "THIRD-PARTY-NOTICES.md §2,§6,§7,§9"
+    source: "THIRD-PARTY-NOTICES.md §2,§7"
   - id: "Apache-2.0"
     name: "Apache License 2.0"
     noticeFile: "LICENSES/Apache-2.0.txt"
-    source: "THIRD-PARTY-NOTICES.md §3,§4,§5"
+    source: "THIRD-PARTY-NOTICES.md §3,§4,§5,§6"
   - id: "Zlib"
     name: "zlib License"
     noticeFile: "LICENSES/Zlib.txt"
@@ -45,7 +45,7 @@ allowedLicenses:
   - id: "CC-BY-4.0"
     name: "Creative Commons Attribution 4.0 International"
     noticeFile: "LICENSES/CC-BY-4.0.txt"
-    source: "THIRD-PARTY-NOTICES.md §7"
+    source: "THIRD-PARTY-NOTICES.md §8"
 
 # Dual-license "Apache-2.0 OR MIT" (the Status ecosystem choice model) is
 # represented by its two SPDX disjuncts; a detected `Apache-2.0 OR MIT`

@@ -40,7 +40,7 @@
 ##
 ## The four expensive fixtures (two syntheses + two full pipelines incl. the
 ## Lean kernel lane) are measured ONCE at module init and shared by the suites.
-import std/[json, os, options, strutils, tables, sequtils, unittest]
+import std/[json, os, osproc, options, strutils, tables, sequtils, unittest]
 
 import ../../src/core/results
 import ../../src/core/crypto/hash_kernel
@@ -153,9 +153,70 @@ proc runVerdictFor(status: string): RunOutcome =
 
 putEnv("AXIOM_STATE_DIR", getTempDir() / "ax_s6_test_state")
 
-let testsRoot = currentSourcePath().parentDir().parentDir()
-let goldenRoot = testsRoot / "golden" / "base36_subject"
-let mutantRoot = testsRoot / "negative" / "base36_mutant_subject"
+const GoldenSubjectProj = """## §2.1a synthesis fixture — VERBATIM transcription of the sizing functions
+## (stew/base36.nim:52-60, status-im/nim-stew v0.5.2, byte-identical to
+## tests/golden/base36_subject/stew/base36.nim before inline migration).
+## The real subject tree is a READ-ONLY clone outside this repo
+## (Zero-Footprint); this fixture carries the same two bodies so the
+## composite synthesis and its rendered Lean golden are locked without
+## touching the subject clone.
+type Base36Types* = object
+
+func encodedLength*(btype: typedesc[Base36Types], length: int): int =
+  return (length * 277) div 179 + 1
+
+func decodedLength*(btype: typedesc[Base36Types], length: int): int =
+  return (length * 179) div 277
+"""
+
+const MutantSubjectProj = """## BUG_FOUND mutant fixture — S6 of the nim-stew BUG_FOUND/NO_BUG_PROVED
+## operational-verdict milestone. VERBATIM transcription of the sizing
+## functions (stew/base36.nim:52-60, status-im/nim-stew v0.5.2) with ONE
+## seeded mutation: the `+ 1` rounding increment in `encodedLength` is
+## REMOVED. Under the committed P_rel overlay
+## (config/spec/base36_sizing_relational_spec.json) the mutation breaks the
+## roundtrip equality at n=1: encodedLength(1) = (1*277) div 179 = 1 (the
+## sound subject yields 2), decodedLength(1) = (1*179) div 277 = 0, so
+## decodedLength(encodedLength(1)) = 0 != 1 (PR #579 evidence). The same
+## pipeline that proves the golden pair
+## (inline GoldenSubjectProj above) must DISPROVE this subject:
+## Lean kernel reject → BMC SAT → cvConfirmed promotion → replay agreement →
+## PROPOSITION_DISPROVED payload. The real subject tree (nim-stew) stays READ-ONLY —
+## Zero-Footprint; the mutant's git identity anchor is the temp fixture repo
+## commit (measured, not labeled).
+type Base36Types* = object
+
+func encodedLength*(btype: typedesc[Base36Types], length: int): int =
+  return (length * 277) div 179
+
+func decodedLength*(btype: typedesc[Base36Types], length: int): int =
+  return (length * 179) div 277
+"""
+
+proc makeSubjectTreeProj(dirName: string; moduleSource: string): string =
+  let root = getTempDir() / dirName
+  removeDir(root)
+  createDir(root)
+  createDir(root / "stew")
+  writeFile(root / "stew" / "base36.nim", moduleSource)
+  discard execCmdEx("git -C \"" & root & "\" init -q",
+                    options = {poStdErrToStdOut, poUsePath})
+  discard execCmdEx("git -C \"" & root & "\" add -A",
+                    options = {poStdErrToStdOut, poUsePath})
+  discard execCmdEx("git -C \"" & root & "\" -c user.name=ax -c user.email=ax@test commit -q -m init",
+                    options = {poStdErrToStdOut, poUsePath})
+  root
+
+# The make test-fast / test-fast-one recipes link the test binary under
+# /tmp/opencode, where the runtime root walk (findRepoRoot from the
+# binary's own dir) cannot reach the .axiom_root anchor and the overlay
+# load fails closed. AXIOM_ROOT is findRepoRoot's first resolution input
+# and is consumed as the root DIRECTLY (no anchor walk), so the pin must
+# be the repo root the compile-time walk measured — repoRootConst() —
+# keeping the suite green from any binary location.
+putEnv("AXIOM_ROOT", repoRootConst())
+let goldenRoot = makeSubjectTreeProj("ax_s6_golden_subject", GoldenSubjectProj)
+let mutantRoot = makeSubjectTreeProj("ax_s6_mutant_subject", MutantSubjectProj)
 
 let goldenSynth = synthFor(goldenRoot)
 let mutantSynth = synthFor(mutantRoot)
