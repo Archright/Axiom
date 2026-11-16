@@ -98,7 +98,7 @@
     "src/cli/axiom_engine.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "d436509d64db42be8b208003a4bf4e546c980538"
+      "sha": "efc24e32e092fa5d8ce4a8f62f8ade6c204cbacc"
     },
     "src/cli/axiom_status.nim": {
       "mode": "100644",
@@ -4228,7 +4228,7 @@
     "src/verification/proof_universe_commit.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "7a542b025b334a758139fe9ed8e8372195541220"
+      "sha": "94853c85ad1072bdb061f3069bd0ad8bf71fd9a8"
     },
     "src/verification/report_engine.nim": {
       "mode": "100644",
