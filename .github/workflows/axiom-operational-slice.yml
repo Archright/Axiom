@@ -250,3 +250,238 @@ jobs:
           # a re-run re-uploads this fixed name — overwrite replaces it
           # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
           overwrite: true
+
+  # readiness-verdict — DEBT#537 closure: the R1–R8 evidence → evaluator →
+  # verdict → exit chain as a merge-admission check (the 7th required
+  # context; the ruleset PUT is the operator's POST-landing step — ADR-0037
+  # operator-PUT-first ordering). Contract: docs/spec/readiness_verdict_check.md.
+  # The job id IS the check-run context — no job-level `name:` key (it would
+  # rename the context and break required-check registration; same rule as the
+  # job above). Designed to become a required check, so it must NEVER be
+  # conditionally skipped — a skipped required check reports success: the only
+  # job-level `if:` is `!cancelled()` (the job runs even when the producer job
+  # failed — fail-closed: the verdict is still computed over whatever evidence
+  # the producer's `if: always()` uploads preserved; an absent artifact fails
+  # this job red, never green), and no step may gain a conditional `if:`
+  # except the upload's `always()`. Triggers are the workflow's `on:` header —
+  # no path filter.
+  # Coherent generation (AGENTS.md §2.5, the DEBT#508 step pattern above):
+  # single atomic job addition to this workflow — the existing check identity
+  # (job id `axiom-operational-slice`) is unchanged, and this PR's own run of
+  # that check self-validates the new job.
+  readiness-verdict:
+    needs: [axiom-operational-slice]
+    if: ${{ !cancelled() }}
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-axiom-toolchain
+        # Same key inputs as the producer job: cache-build-source = the run's
+        # SHA (the merge-group synthetic commit for merge_group, the PR
+        # merge-ref commit for pull_request). There is NO same-run B-layer
+        # handoff to consume — the producer never writes B (one-writer rule:
+        # the sole writer is ci-cache-publisher on workflow_run, ADR-0025
+        # Amendment B), so this job restores whatever a PREVIOUS run
+        # published for this tree's input-closure key. Exact HIT → the
+        # restored bin/ax bytes are the published bytes, which the producer
+        # job also ran whenever its S5 gate was eligible (recompile skipped)
+        # — the run-manifest .binary.sha256 comparison in the supply step
+        # below holds on that lane. MISS → cold fallback compiles this job's
+        # own supply (`make ci-compile`, the release compile authority, the
+        # producer's own cold path); byte identity with the producer's build
+        # is NOT a guarantee the build system makes (action contract:
+        # per-TREE, never per-byte — same-tree rebuilds differ), so the cold
+        # lane binds to the evidence run semantically (--check-provenance +
+        # the manifest's buildSourceHash). Cold fallback is normal
+        # operation, not a degraded lane.
+        with:
+          cache-build-source: ${{ github.sha }}
+      - name: Restore the operational-slice evidence artifacts (same run, needs-scoped)
+        # The producer's uploads (above) carry logs/* files — upload-artifact
+        # strips the least-common ancestor `logs/`, so each artifact root
+        # holds the files themselves; a named download into `path: logs`
+        # reconstructs the producer's layout (logs/run-manifest.json,
+        # logs/r3_relocation.json, …). Fail-closed: if the producer died
+        # before its `if: always()` uploads (runner death), the download
+        # fails and THIS job is red — missing evidence is UNKNOWN, never a
+        # silent green.
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: axiom-operational-slice-evidence
+          path: logs
+      - name: Restore the R3 relocation evidence artifact (same run, needs-scoped)
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: axiom-operational-slice-r3
+          path: logs
+      - name: "Supply verification: bin/ax provenance + run-manifest binary binding"
+        # The verdict this job computes consumes artifacts produced by the
+        # producer job's verifier binary; run-manifest.json is that binary's
+        # attestation (.binary.sha256, .sourceTree.buildSourceHash). This
+        # step first re-verifies the manifest's own digest files (a corrupted
+        # download must fail before any judgment reads it), then proves
+        # (a) the verifier at hand is built from THIS tree (--check-provenance,
+        # fail-closed) and (b) the binding to the evidence run — byte-level
+        # on the restored-supply lane, tree-closure-level on the cold lane
+        # (see the setup comment for why an independent rebuild is not
+        # byte-comparable). bin/ax is also the precondition tests/config.nims
+        # asserts before any tests/ compile.
+        run: |
+          set -euo pipefail
+          fail() { echo "SUPPLY VERIFY FAIL: $1" >&2; exit 1; }
+          [ -f logs/run-manifest.json ] || fail "logs/run-manifest.json missing (evidence artifact incomplete)"
+          [ -f logs/run-manifest.sha256 ] || fail "logs/run-manifest.sha256 missing (evidence artifact incomplete)"
+          EXPECTED_MANIFEST_SHA="$(cat logs/run-manifest.sha256)"
+          ACTUAL_MANIFEST_SHA="$(sha256sum logs/run-manifest.json | cut -d' ' -f1)"
+          [ "$EXPECTED_MANIFEST_SHA" = "$ACTUAL_MANIFEST_SHA" ] || fail "run-manifest.json digest $ACTUAL_MANIFEST_SHA != run-manifest.sha256 $EXPECTED_MANIFEST_SHA (evidence corrupted in transit)"
+          [ -f logs/r3_relocation.json ] || fail "logs/r3_relocation.json missing (R3 evidence artifact incomplete)"
+          [ -f logs/r3_relocation.sha256 ] || fail "logs/r3_relocation.sha256 missing (R3 evidence artifact incomplete)"
+          EXPECTED_R3_SHA="$(cat logs/r3_relocation.sha256)"
+          ACTUAL_R3_SHA="$(sha256sum logs/r3_relocation.json | cut -d' ' -f1)"
+          [ "$EXPECTED_R3_SHA" = "$ACTUAL_R3_SHA" ] || fail "r3_relocation.json digest $ACTUAL_R3_SHA != r3_relocation.sha256 $EXPECTED_R3_SHA (evidence corrupted in transit)"
+          MANIFEST_BIN_SHA="$(jq -r '.binary.sha256 // empty' logs/run-manifest.json)"
+          [ -n "$MANIFEST_BIN_SHA" ] || fail "run-manifest.json has no .binary.sha256"
+          if [ -x bin/ax ]; then
+            # Restored-supply lane (B-layer exact HIT the producer also
+            # reused): provenance + byte identity with the evidence run's
+            # verifier binary.
+            AXIOM_ROOT= bin/ax --check-provenance || fail "restored bin/ax --check-provenance rejected (SourceCoherence FATAL — supply not built from this tree)"
+            ACTUAL_BIN_SHA="$(sha256sum bin/ax | cut -d' ' -f1)"
+            [ "$ACTUAL_BIN_SHA" = "$MANIFEST_BIN_SHA" ] || fail "restored bin/ax sha256 $ACTUAL_BIN_SHA != run-manifest .binary.sha256 $MANIFEST_BIN_SHA (byte binding to the evidence run broken)"
+            echo "SUPPLY VERIFY: OK (restored lane) — provenance + byte binding to the evidence run's verifier binary"
+          else
+            # Cold fallback (B-layer MISS / discarded payload): purge residual
+            # B-cache paths (a prefix-matched non-exact restore may have left
+            # files) and compile through the release compile authority — the
+            # producer job's own cold path, verbatim.
+            rm -rf build/nimcache .axiom/cache proofs/.lake proofs/build
+            rm -f build/.axiom-b-fingerprint.json bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas
+            make ci-compile -j4
+            PROV_OUT="$(AXIOM_ROOT= bin/ax --check-provenance)" || fail "cold-compiled bin/ax --check-provenance rejected (SourceCoherence FATAL — compiled supply does not match this tree)"
+            MANIFEST_BSH="$(jq -r '.sourceTree.buildSourceHash // empty' logs/run-manifest.json)"
+            [ -n "$MANIFEST_BSH" ] || fail "run-manifest.json has no .sourceTree.buildSourceHash"
+            ACTUAL_BSH="$(printf '%s\n' "$PROV_OUT" | sed -n 's/.*live src tree (\(.*\))$/\1/p')"
+            [ -n "$ACTUAL_BSH" ] || fail "unparseable provenance verdict: $PROV_OUT"
+            [ "$ACTUAL_BSH" = "$MANIFEST_BSH" ] || fail "cold-compiled bin/ax live tree hash $ACTUAL_BSH != run-manifest .sourceTree.buildSourceHash $MANIFEST_BSH (semantic binding to the evidence run broken)"
+            echo "SUPPLY VERIFY: OK (cold lane) — provenance + tree-closure binding to the evidence run (byte binding N/A for an independent rebuild: per-TREE, never per-byte)"
+          fi
+      - name: "Identity chain: HEAD==GITHUB_SHA + verdict-input tree invariance"
+        # GITHUB_SHA is the identity authority (merge_group: the merge-group
+        # synthetic commit; pull_request: the PR merge-ref commit; push main:
+        # the pushed commit). The verdict must be computed over exactly this
+        # tree: outside the declared derived-output paths (data/readiness/
+        # evidence, logs, build, bin, .axiom, proofs, src/generated) the
+        # working tree must be byte-identical to HEAD. The treeDigest the
+        # gate consumes is `git ls-tree -r HEAD` — the COMMITTED tree,
+        # immune to derived-path writes.
+        run: |
+          set -euo pipefail
+          fail() { echo "IDENTITY CHAIN FAIL: $1" >&2; exit 1; }
+          HEAD_SHA="$(git rev-parse HEAD)"
+          [ "$HEAD_SHA" = "$GITHUB_SHA" ] || fail "HEAD $HEAD_SHA != GITHUB_SHA $GITHUB_SHA (checkout is not the identity authority's tree)"
+          DIRTY="$(git status --porcelain -- . ':(exclude)data/readiness/evidence' ':(exclude)logs' ':(exclude)build' ':(exclude)bin' ':(exclude).axiom' ':(exclude)proofs' ':(exclude)src/generated')"
+          [ -z "$DIRTY" ] || fail "verdict-input tree dirty vs HEAD outside the declared derived paths: $DIRTY"
+          echo "IDENTITY CHAIN: OK — HEAD=$GITHUB_SHA; tree invariant outside derived paths"
+      - name: "Collect R1–R8 evidence from the operational-slice artifacts"
+        # Collector: tools/ci/readiness_collect_ci (interface contract:
+        # --repo-root/--artifacts/--out; exit 0 = evidence written, exit 2 =
+        # tool broken). Both nonzero codes fail this job — absence of
+        # evidence is UNKNOWN, never a green.
+        # The R8 §10.6 cargo sequence runs in a TEMP COPY of the Rust probe
+        # crate, never in the tracked fixture directory: cargo writes
+        # target/ build output that is not gitignored, which would mutate
+        # the verdict-input tree AFTER the identity-chain assertion above —
+        # the tree at verdict time must stay byte-identical to HEAD outside
+        # the declared derived paths for the whole job, not just until the
+        # collector starts. $RUNNER_TEMP is runner-scoped scratch (CI);
+        # locally the fallback mktemp dir keeps the same property.
+        run: |
+          set -euo pipefail
+          AXIOM_HERMETIC_BUILDING=1 nim c --path:src -d:release --hints:off --nimcache:build/nimcache/readiness_collect -o:bin/readiness_collect_ci tools/ci/readiness_collect_ci.nim
+          PROBE_ROOT="${RUNNER_TEMP:-$(mktemp -d)}"
+          PROBE_DIR="$PROBE_ROOT/axiom_rust_probe"
+          rm -rf "$PROBE_DIR"
+          cp -r tests/fixtures/rust/axiom_rust_probe "$PROBE_DIR"
+          rm -rf "$PROBE_DIR/target"
+          cargo --version
+          export AXIOM_CI_REPO_HEAD="$GITHUB_SHA"
+          export AXIOM_CI_TREE_DIGEST="$(printf '%s' "$(git ls-tree -r HEAD)" | sha256sum | cut -d' ' -f1)"
+          set +e
+          bin/readiness_collect_ci --repo-root . --artifacts logs --out data/readiness/evidence --rust-probe-dir "$PROBE_DIR"
+          rc=$?
+          set -e
+          case "$rc" in
+            0) echo "COLLECT: OK — R1–R8 evidence written to data/readiness/evidence" ;;
+            2) echo "COLLECT: FAIL — collector tool broken (exit 2); fail-closed" >&2; exit 1 ;;
+            *) echo "COLLECT: FAIL — collector exit $rc (outside the 0|2 contract); fail-closed" >&2; exit 1 ;;
+          esac
+      - name: "Run the readiness gate (verdict → exit)"
+        # The gate is the decision authority's projection: productization E2E
+        # leg + evaluator over the collected evidence, `READINESS_VERDICT
+        # <GO|CONDITIONAL GO|NO-GO|UNKNOWN> CONDITIONS <...>` on stdout, exit
+        # 0 for GO / CONDITIONAL GO and 1 for NO-GO / UNKNOWN / any identity
+        # mismatch (READINESS_IDENTITY_MISMATCH: the evidence's repoIdentity
+        # must equal the env-declared AXIOM_CI_REPO_HEAD / AXIOM_CI_TREE_DIGEST
+        # below, derived from the same committed tree both jobs checked out).
+        # The gate's exit code IS this job's verdict — no post-processing.
+        run: |
+          set -euo pipefail
+          AXIOM_HERMETIC_BUILDING=1 nim c --hints:off --nimcache:build/nimcache/readiness_gate -o:bin/readiness_start_gate src/gate/runners/readiness_start_gate.nim
+          AXIOM_CI=1 AXIOM_CI_PRESERVE_CACHE=1 AXIOM_CI_REPO_HEAD="$GITHUB_SHA" \
+            AXIOM_CI_TREE_DIGEST="$(printf '%s' "$(git ls-tree -r HEAD)" | sha256sum | cut -d' ' -f1)" \
+            ./bin/readiness_start_gate
+      - name: "Readiness decision test suite (3^8 property + golden + verdict mapping + collector independence)"
+        # Each test compiled and run separately (the DEBT#508 / L4 step
+        # pattern above — unique nimcache, -o:build/…): the 3^8 property
+        # sweep + golden fixture (readiness_policy_test), the R8
+        # prepare-order machine check, the observed-state vs outcome
+        # classification (decision algebra), and the two contract tests
+        # (verdict→exit mapping, collector independence). tests/config.nims
+        # asserts bin/ax exists before any tests/ compile — satisfied by the
+        # supply step above.
+        run: |
+          set -euo pipefail
+          AXIOM_HERMETIC_BUILDING=1 nim c --hints:off --nimcache:build/nimcache/readiness_verdict_mapping -o:build/readiness_verdict_mapping tests/ci/test_readiness_verdict_mapping.nim
+          ./build/readiness_verdict_mapping
+          AXIOM_HERMETIC_BUILDING=1 nim c --hints:off --nimcache:build/nimcache/readiness_collect_independence -o:build/readiness_collect_independence tests/ci/test_readiness_collect_independence.nim
+          ./build/readiness_collect_independence
+          AXIOM_HERMETIC_BUILDING=1 nim c --hints:off --nimcache:build/nimcache/readiness_policy_test -o:build/readiness_policy_test tests/readiness/readiness_policy_test.nim
+          ./build/readiness_policy_test
+          AXIOM_HERMETIC_BUILDING=1 nim c --hints:off --nimcache:build/nimcache/readiness_r8_sequence_test -o:build/readiness_r8_sequence_test tests/readiness/readiness_r8_sequence_test.nim
+          ./build/readiness_r8_sequence_test
+          AXIOM_HERMETIC_BUILDING=1 nim c --hints:off --nimcache:build/nimcache/readiness_outcome_test -o:build/readiness_outcome_test tests/unit/test_readiness_outcome_test.nim
+          ./build/readiness_outcome_test
+      - name: "Step summary: the readiness decision record"
+        # Visible verdict/conditions record on the check run — the same JSON
+        # artifact uploaded below.
+        run: |
+          set -euo pipefail
+          {
+            echo "## Readiness verdict (build/readiness_start_decision.json)"
+            echo ""
+            echo '```json'
+            cat build/readiness_start_decision.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat build/readiness_start_decision.json
+      - name: Upload readiness-verdict evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: readiness-verdict-evidence
+          path: |
+            data/readiness/evidence/*.json
+            build/readiness_start_decision.json
+            logs/run-manifest.json
+            logs/r3_relocation.json
+            logs/r3_relocation.sha256
+          retention-days: 30
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true

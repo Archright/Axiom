@@ -1058,6 +1058,13 @@ when isMainModule:
   let bundle = bundleRes.get
   let decision = evaluateReadiness(policy, bundle)
   let outJson = decisionJson(decision)
+  # Replay contract (docs/spec/readiness_verdict_check.md §6): the decision
+  # record carries the evaluation time it was computed at so a third party can
+  # re-run with --eval-time <same instant> and compare verdict/decisionDigest
+  # before the evidence's freshUntil window closes. Additive field — the
+  # decisionDigest preimage ({verdict, conditions, invariantStates}) is
+  # unaffected.
+  outJson["evaluationTime"] = %evalTime
 
   stderr.writeLine("bundle files: " & $raws.len &
                    " valid: " & $valid.len &

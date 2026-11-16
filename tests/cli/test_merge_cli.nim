@@ -2059,7 +2059,7 @@ suite "checker↔predicate equivalence — checker exit==0 ⇔ check.newAnchorOk
 # ---------------------------------------------------------------------------
 suite "RequiredWorkflowIds — the v1.19.0 path-identity mirror":
   test "every binding is a (job, workflowPath) pair with a workflow file path":
-    check RequiredWorkflowIds.len == 4
+    check RequiredWorkflowIds.len == 6
     for b in RequiredWorkflowIds:
       check b.jobName.len > 0
       check b.workflowPath.startsWith(".github/workflows/")
@@ -2070,7 +2070,8 @@ suite "RequiredWorkflowIds — the v1.19.0 path-identity mirror":
       jobs.add(b.jobName)
     jobs.sort()
     check jobs == @["axiom-operational-slice", "bsec-integrity",
-                    "debt-registry-gate", "generation-acceptance"]
+                    "debt-registry-gate", "generation-acceptance",
+                    "publication-integrity", "readiness-verdict"]
   test "no numeric workflow id remains as a binding (ids are observed-at records)":
     for b in RequiredWorkflowIds:
       check b.workflowPath != "381835906"
