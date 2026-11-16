@@ -180,17 +180,21 @@ suite "registry load — generic loader over fixtureDir and config/spec":
     check entry.replay.get.observation == obsSingleCallBool
     check entry.replay.get.slots == @["<module>", "<lit>"]
 
-  test "the six production lanes parse into schema v2 without touching the files":
+  test "the production lane catalog parses into schema v2 without touching the files":
     let regRes = loadExternalSubjectRegistry(
       repoRootConst() / "config" / "spec")
     check regRes.isOk()
     let reg = regRes.get()
-    check reg.entries.len == 6
+    check reg.entries.len == 7
     # (precedence, specRelPath, specId, capability, presence) — the
     # audit-verified lane table (REGISTRY_SPEC §1.2-§1.4), reproduced by
-    # the PR-0 compat mapping over the lane-shaped documents.
+    # the PR-0 compat mapping over the lane-shaped documents. The varint
+    # adoption document (no lane dispatches it — the seam lane) classifies
+    # through the same compat mapping: adoption object → body-carry,
+    # optional, precedence 10, ordered before the sidecar by specRelPath.
     let expected: seq[tuple[prec: int; rel, sid: string; cap: ExternalSubjectCapability;
         pres: PresencePolicy]] = @[
+      (10, "nim_libp2p_varint_roundtrip.json", "SPEC-LIBP2P-VARINT-RT", capBodyCarry, ppOptional),
       (10, "nim_stew_base36_sidecar.json", "SPEC-B36-SIDECAR", capBodyCarry, ppOptional),
       (20, "nim_stew_base36_cout_spec.json", "SPEC-B36-COUT", capBodyCarry, ppMandatory),
       (30, "base36_sizing_relational_spec.json", "SPEC-B36-RELATIONAL", capBetaComposition, ppMandatory),
@@ -209,11 +213,13 @@ suite "registry load — generic loader over fixtureDir and config/spec":
       let b = reg.entries[i]
       check (a.precedence, a.specRelPath) < (b.precedence, b.specRelPath)
     # governed sets, envelope-derived
-    check reg.entries[0].governedModule == "stew/base36.nim"
-    check reg.entries[0].governedSymbols == @["decodedLength"]
-    check reg.entries[3].governedModule == "stew/base32.nim"
-    check reg.entries[4].governedModule == "toml_serialization/lexer.nim"
-    check reg.entries[5].governedModule == "libp2p/utils/bytesview.nim"
+    check reg.entries[0].governedModule == "libp2p/varint.nim"
+    check reg.entries[0].governedSymbols == @["putUVarint", "getUVarint"]
+    check reg.entries[1].governedModule == "stew/base36.nim"
+    check reg.entries[1].governedSymbols == @["decodedLength"]
+    check reg.entries[4].governedModule == "stew/base32.nim"
+    check reg.entries[5].governedModule == "toml_serialization/lexer.nim"
+    check reg.entries[6].governedModule == "libp2p/utils/bytesview.nim"
 
   test "VS-2 PR-3: the sidecar SpecID is byte-stable across the lane flip":
     # REGISTRY_SPEC §6.1 / §5 PR-3: the flip moves the two-stage validator
@@ -558,7 +564,7 @@ suite "determinism — two loads, identical projections and ordering":
     let a = registryProjection(loadExternalSubjectRegistry(specDir).get)
     let b = registryProjection(loadExternalSubjectRegistry(specDir).get)
     check a == b
-    check a.len == 6
+    check a.len == 7
 
 # ---------------------------------------------------------------------------
 # Group 8 — NOT-an-adoption guard

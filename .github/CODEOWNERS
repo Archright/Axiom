@@ -97,3 +97,13 @@
 # @Archright/architect, not a merge precondition.
 /data/decision_binding_baseline.json    @Archright/architect
 /tools/decision_binding_checker.nim     @Archright/architect
+
+# readiness-verdict 판정 표면 (merge_admission.json v1.23.0 trustSurface
+# 확장 — v1.12.0 bsec / v1.20.0 publication / v1.22.0 evidence-id 선례와 같은
+# 커버리지 클로저: trustSurface 열거와 소유자 결속은 같은 커밋에 착지한다.
+# config/readiness_policy.json은 config/ 루트에 있어 /config/policy/ 규칙이
+# 덮지 않는다 — 정확 경로 규칙으로 등재한다.
+# src/gate/runners/readiness_start_gate.nim은 /src/gate/ 규칙이 이미 덮는다.)
+/tools/readiness_evaluator.nim       @Archright/architect
+/tools/ci/readiness_collect_ci.nim   @Archright/architect
+/config/readiness_policy.json        @Archright/architect

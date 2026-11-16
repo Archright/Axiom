@@ -1,6 +1,7 @@
 # B1 — Third-Party Materials Inventory (SAL 1.0 Publication Readiness, Gate 1-R2)
 
 **기준**: 로컬 클론 HEAD `73e1a792e`(2026-11-04 스냅샷) + `git fetch --tags origin` 후 원격 `201ac6c54` 관측(2026-11-05). 조사는 READ-ONLY(저장소 무변경).
+**갱신(2026-11-16)**: 제3자 정리(work/third-party-cleanup) 반영 — §1-B의 base36 golden/negative 추적 픽스처 2행과 §1-E의 act2-wpi corpus JSON 발췌 불릿 제거, §1-B에 base32 발췌 행 및 테스트 내 임베디드 stew/base36.nim:52-60 VERBATIM 4파일 행 추가(`THIRD-PARTY-NOTICES.md` §3·`compliance/provenance/source-origin.yml`과 1:1), base36_pinned 버전 라벨을 v0.5.2(v0.5.0·@1853f20b와 바이트 동일)로 정정.
 **방법**: 트랙된 파일 전수 `git grep`(저작권 `©|copyright`, 외부 라이선스 문구, SPDX, 외부 패키지 마커) + 후보 파일 직접 열람 + upstream 원본 diff(ed25519 2종, nim-libp2p 1종은 GitHub raw fetch 바이트 대조) + `.gitmodules`/git 이력/바이너리 확장자 스캔. PDF 권리 판정: PDF 내부 텍스트·메타데이터(`pdftotext`·`pdfinfo`·`pdffonts`·`pdfimages`) + arXiv API·Crossref REST API·OSTI API·Wayback CDX·저자 홈페이지 교차 검증.
 **UNKNOWN 상태**: 판정 관련 UNKNOWN **0건**(R2a 해소 완료). 마이너 세부 UNKNOWN은 §6 참조(판정 무영향).
 
@@ -12,7 +13,7 @@
 
 | 파일 | 출처 | 라이선스 | 수정 여부 |
 |---|---|---|---|
-| `vendor/ed25519/ed25519/src/*.{c,h}`, `test.c` (13파일) | [orlp/ed25519](https://github.com/orlp/ed25519) (Orson Peters) | **zlib** — `ed25519/license.txt:1` "Copyright (c) 2015 Orson Peters" | niv 패키지 동봉본과 바이트 동일; orlp master 대비 `ge.c:349`·`precomp_data.h:1,46` const 한정자 2곳 차이(업스트림 드리프트 추정) |
+| `vendor/ed25519/ed25519/src/*.{c,h}`, `test.c` (18파일; src/ 17 = .c 10 + .h 7, test.c 1 — 2026-11-15 실측 `git ls-files vendor/ed25519/ed25519 \| wc -l`) | [orlp/ed25519](https://github.com/orlp/ed25519) (Orson Peters) | **zlib** — `ed25519/license.txt:1` "Copyright (c) 2015 Orson Peters" | niv 패키지 동봉본과 바이트 동일; orlp master 대비 `ge.c:349`·`precomp_data.h:1,46` const 한정자 2곳 차이(업스트림 드리프트 추정) |
 | `vendor/ed25519/ed25519.nim`, `README.md`, `ed25519.nimble` | [niv/ed25519.nim](https://github.com/niv/ed25519.nim) | **MIT** — `ed25519.nimble:4,6` "author = \"niv\"", "license = \"MIT\"" | 래퍼 본체 upstream master 동일; nimble version 0.1.1→1.0.0 로컬 변경(lock 핀과 불일치 — 부록 4) |
 
 - 사용처(제품 바이너리에 링크): `src/core/trusted/bypass_verify.nim:19`, `src/core/trusted/ratchet_authority.nim:21`, `src/infrastructure/certificate_attestation.nim:11`.
@@ -22,10 +23,10 @@
 
 | 파일 | 범위 | 원본 | 수정 |
 |---|---|---|---|
-| `tests/fixtures/bug_verdict_scope/base36_pinned_subject.nim` (223줄) | 파일 전체 verbatim — stew-0.5.0/stew/base36.nim과 `diff` 0 | [status-im/nim-stew](https://github.com/status-im/nim-stew) v0.5.0 | 없음 |
-| `tests/golden/base36_subject/stew/base36.nim` | 부분 발췌 — base36.nim:52-60(사이징 함수 2개, 6줄), "VERBATIM transcription" 주석 명시 | nim-stew v0.5.2 | 라이선스 헤더가 Axiom 설명 주석으로 대체됨 |
-| `tests/negative/base36_mutant_subject/stew/base36.nim` | 동일 발췌 + `+ 1` 제거 변이("seeded mutation" 명시) | 〃 | 의도적 변이(BUG_FOUND 픽스처) |
-| `tests/unit/test_libp2p_bytesview_binding.nim:53-75` | `BvSubjectModuleBytes` 상수에 bytesview.nim 전체(22줄, 613 bytes) 임베디드 — sha256 재계산 일치, [status-im/nim-libp2p@a130a7f3](https://raw.githubusercontent.com/status-im/nim-libp2p/a130a7f32219909bdcda14b7f1e64d0804fc832c/libp2p/utils/bytesview.nim) raw fetch 바이트 동일 | nim-libp2p (핀: `config/spec/nim_libp2p_bytesview_slice.json`) | 없음(바이트 정확). 임베디드 문자열 자체가 제3자 코드 |
+| `tests/fixtures/bug_verdict_scope/base36_pinned_subject.nim` (223줄) | 파일 전체 verbatim — stew v0.5.2의 base36.nim과 `diff` 0 (v0.5.0·@1853f20b와도 바이트 동일) | [status-im/nim-stew](https://github.com/status-im/nim-stew) v0.5.2 (v0.5.0과 바이트 동일) | 없음 |
+| `tests/golden/base32_subject/stew/base32.nim` | 부분 발췌 — base32.nim:55-60(decodedLength), "VERBATIM transcription" 주석 명시; base32 rem lane 검증 입력(고지: `THIRD-PARTY-NOTICES.md` §3) | nim-stew v0.5.2 | 라이선스 헤더가 Axiom 설명 주석으로 대체됨 |
+| `tests/unit/test_libp2p_bytesview_binding.nim:56-78` | `BvSubjectModuleBytes` 상수에 bytesview.nim 전체(22줄, 613 bytes) 임베디드 — sha256 재계산 일치, [status-im/nim-libp2p@a130a7f3](https://raw.githubusercontent.com/status-im/nim-libp2p/a130a7f32219909bdcda14b7f1e64d0804fc832c/libp2p/utils/bytesview.nim) raw fetch 바이트 동일 | nim-libp2p (핀: `config/spec/nim_libp2p_bytesview_slice.json`) | 없음(바이트 정확). 임베디드 문자열 자체가 제3자 코드 |
+| `tests/unit/test_sidecar_binding.nim`·`tests/unit/test_base36_cout_binding.nim`·`tests/unit/test_bug_verdict_projection.nim`·`tests/cli/test_base36_composite_golden.nim` | 각 suite의 `GoldenSubject`/`GoldenSubjectProj`/`GoldenSubjectComposite` 문자열 상수에 stew/base36.nim:52-60 사이징 2함수(v0.5.2) VERBATIM 임베디드 — 2026-11-16 인라인 마이그레이션으로 base36 golden/negative 픽스처 복제본 대체(고지: `THIRD-PARTY-NOTICES.md` §3·`source-origin.yml`과 1:1) | nim-stew v0.5.2 | 헤더가 Axiom 설명 주석으로 대체됨; `MutantSubjectProj`는 동일 발췌의 1토큰 변이(BUG_FOUND S6 fixture) |
 
 헤더 전문(`base36_pinned_subject.nim:1-7` 등): "Copyright (c) 2025 Status Research & Development GmbH / Licensed under either of * Apache License, version 2.0 * MIT license".
 **라이선스 갭**: 헤더가 참조하는 `LICENSE-APACHE`/`LICENSE-MIT` 파일이 저장소에 존재하지 않음 → L2에서 `LICENSES/`로 해소.
@@ -75,10 +76,9 @@ Per-PDF 권리 판정표(R2b, 2026-11-05 확정):
 - `docs/spec/nim_libp2p_bytesview_slice_contract.md:18-20,55-63` — 템플릿 2줄 + noise.nim 호출부 인용
 - `docs/evidence/nim_libp2p_bytesview_slice_2026-10-22.md`, `docs/evidence/bug_verdict_contract_slice_2026-10-08.md:56-58` — 코드 줄·docstring 참조 인용
 - `docs/spec/base36_sizing_binding_contract.md:18-23` — stew 사이징 함수 2개 인용(라인 출처 표기)
-- `experiments/act2-wpi-structural-ingress/canonical/signature_corpus{,_run1,_run2}.json` — Nim 표준 라이브러리 `lib/pure/bitops.nim`(MIT, "Nim Authors 2017 + Status Research 2019") head200/tail200 400자 발췌
 - `experiments/act2-wp4d-symbol-identity/wp4d-definition-inventory-nim-stew-RAW.txt`(193KB) 외 2종 — nim-stew 정의 시그니처 1390건 추출물
 
-→ L2에서 발췌 귀속 표기로 정리(golden/negative stew 발췌 포함).
+→ L2에서 발췌 귀속 표기로 정리(base32 발췌·pinned subject 포함). 2026-11-16 제3자 정리: base36 golden/negative 추적 픽스처 삭제 — 발췌 바이트는 테스트 suite 내 inline VERBATIM const로 이동(§1-B 표에 등재 — `compliance/provenance/source-origin.yml`·`THIRD-PARTY-NOTICES.md` §3 선언과 1:1).
 
 ### 1-F. 외부 빌드 의존성 (in-tree 코드 없음 — nimble.lock 핀; SAL 고지 대상)
 

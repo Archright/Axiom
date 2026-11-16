@@ -44,7 +44,22 @@ import ../../src/core/trusted/verification_result_types as vrt
 putEnv("AXIOM_STATE_DIR", getTempDir() / "ax_b36_cout_test_state")
 
 let testsRoot = currentSourcePath().parentDir().parentDir()
-let goldenRoot = testsRoot / "golden" / "base36_subject"
+
+const GoldenSubject = """## §2.1a synthesis fixture — VERBATIM transcription of the sizing functions
+## (stew/base36.nim:52-60, status-im/nim-stew v0.5.2, byte-identical to
+## tests/golden/base36_subject/stew/base36.nim before inline migration).
+## The real subject tree is a READ-ONLY clone outside this repo
+## (Zero-Footprint); this fixture carries the same two bodies so the
+## composite synthesis and its rendered Lean golden are locked without
+## touching the subject clone.
+type Base36Types* = object
+
+func encodedLength*(btype: typedesc[Base36Types], length: int): int =
+  return (length * 277) div 179 + 1
+
+func decodedLength*(btype: typedesc[Base36Types], length: int): int =
+  return (length * 179) div 277
+"""
 
 proc fixtureResolver(root: string): ModuleContentResolver =
   result = proc(modulePath: string): Option[string] {.raises: [].} =
@@ -52,6 +67,22 @@ proc fixtureResolver(root: string): ModuleContentResolver =
       some(readFile(root / modulePath))
     except CatchableError:
       none(string)
+
+proc makeSubjectTree(dirName: string; moduleSource: string): string =
+  let root = getTempDir() / dirName
+  removeDir(root)
+  createDir(root)
+  createDir(root / "stew")
+  writeFile(root / "stew" / "base36.nim", moduleSource)
+  discard execCmdEx("git -C \"" & root & "\" init -q",
+                    options = {poStdErrToStdOut, poUsePath})
+  discard execCmdEx("git -C \"" & root & "\" add -A",
+                    options = {poStdErrToStdOut, poUsePath})
+  discard execCmdEx("git -C \"" & root & "\" -c user.name=ax -c user.email=ax@test commit -q -m init",
+                    options = {poStdErrToStdOut, poUsePath})
+  root
+
+let goldenRoot = makeSubjectTree("ax_b36_cout_golden", GoldenSubject)
 
 proc committedOverlayNode(): JsonNode =
   parseJson(readFile(repoRootConst() / "config" / "spec" /

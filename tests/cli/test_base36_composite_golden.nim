@@ -9,8 +9,8 @@ import ../../src/infrastructure/external_ir_materializer
 
 ## base36 sizing composite — end-to-end synthesis golden.
 ##
-## Pins the deterministic vertical slice over the external fixture
-## tests/golden/base36_subject/stew/base36.nim:
+## Pins the deterministic vertical slice over the VERBATIM subject fixture
+## `GoldenSubjectComposite` (stew/base36.nim:52-60, synthesized in a tempdir):
 ##   overlay domain load → two-leg external materialization (real Nim
 ##   extractor + real Lean reference extractor, byte-equal IR required on
 ##   BOTH legs) → β-composition synthesis → census eligibility → golden
@@ -20,17 +20,47 @@ import ../../src/infrastructure/external_ir_materializer
 ## census record — obligations belong to the obligation layer's own golden
 ## tests; this file pins the SUBJECT-binding slice (domain, EA legs, render).
 
-proc fixtureSubjectRoot(): string =
-  ## The fixture subject tree root — `tests/golden/base36_subject` — anchored
-  ## to THIS test source file, not to the process CWD or the binary location
-  ## (root resolution via getAppDir is undefined for a /tmp test binary; the
-  ## §2.1a binding must measure the same subject bytes from any invocation
-  ## directory). Mirrors the production threading: the engine passes the
-  ## `--project` root (the subject repo root) into
-  ## executeCanonicalVerification; here the miniature subject repo is the
-  ## fixture tree itself (`stew/base36.nim` at its root), and its git
-  ## identity anchor is the repo commit that versions the fixture.
-  currentSourcePath().parentDir().parentDir() / "golden" / "base36_subject"
+import std/[osproc]
+
+const GoldenSubjectComposite = """## §2.1a synthesis fixture — VERBATIM transcription of the sizing functions
+## (stew/base36.nim:52-60, status-im/nim-stew v0.5.2, byte-identical to
+## tests/golden/base36_subject/stew/base36.nim before inline migration).
+## The real subject tree is a READ-ONLY clone outside this repo
+## (Zero-Footprint); this fixture carries the same two bodies so the
+## composite synthesis and its rendered Lean golden are locked without
+## touching the subject clone.
+type Base36Types* = object
+
+func encodedLength*(btype: typedesc[Base36Types], length: int): int =
+  return (length * 277) div 179 + 1
+
+func decodedLength*(btype: typedesc[Base36Types], length: int): int =
+  return (length * 179) div 277
+"""
+
+proc makeSubjectTree(): string =
+  ## The fixture subject tree root — synthesized in a tempdir from
+  ## `GoldenSubjectComposite` (VERBATIM bytes) with `git init` so replay's
+  ## subject-git-identity measurement has a clean repo, mirroring the
+  ## production threading where the engine passes the `--project` root.
+  ## Built ONCE per process: the composite synthesis's §2.1a capture and
+  ## the canonical verification's reader must measure the SAME repo (a
+  ## fresh repo per call would mint a different git identity each time and
+  ## the strict CompletenessBinding equality would fail closed).
+  let root = getTempDir() / "ax_b36_composite_golden_subject"
+  removeDir(root)
+  createDir(root)
+  createDir(root / "stew")
+  writeFile(root / "stew" / "base36.nim", GoldenSubjectComposite)
+  discard execCmdEx("git -C \"" & root & "\" init -q",
+                    options = {poStdErrToStdOut, poUsePath})
+  discard execCmdEx("git -C \"" & root & "\" add -A",
+                    options = {poStdErrToStdOut, poUsePath})
+  discard execCmdEx("git -C \"" & root & "\" -c user.name=ax -c user.email=ax@test commit -q -m init",
+                    options = {poStdErrToStdOut, poUsePath})
+  root
+
+let goldenSubjectRoot = makeSubjectTree()
 
 const GoldenRender = """def roundtrip_dec_enc : Int → Int → Int :=
   fun btype length => (((((length * 277) / 179) + 1) * 179) / 277)
@@ -69,8 +99,8 @@ proc synthesizeEligibleParseBound(census: var ExternalCandidateCensus): SubjectP
     return SubjectParseBoundComponents()
   let synth = synthesizeBase36RelationalCandidate(
     "encodedLength", domainRes.get().modulePath,
-    fixtureResolver(fixtureSubjectRoot()),
-    domainRes.get(), census)
+    fixtureResolver(goldenSubjectRoot),
+    domainRes.get(), census, goldenSubjectRoot)
   if synth.isErr:
     echo "synthesis error: " & synth.error
     return SubjectParseBoundComponents()
@@ -137,7 +167,7 @@ suite "base36 sizing composite — canonical kernel acceptance":
       let ve = census.eligible[0]
       let res = executeCanonicalVerification(
         ve.funcDef, ve.entry.sourcePath, ve.entry.name, ve.entry.sourceContent,
-        subjectRepoRoot = fixtureSubjectRoot(),
+        subjectRepoRoot = goldenSubjectRoot,
         preSynthesisIrDigest = "",
         parseBound = ve.parseBound)
       ## Genuine kernel ACCEPT is the only route to vdVerified (§0.9b).

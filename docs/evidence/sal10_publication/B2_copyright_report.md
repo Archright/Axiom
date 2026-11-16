@@ -2,6 +2,7 @@
 
 **기준**: 로컬 클론 HEAD `73e1a792e`(2026-11-04), tracked 파일 전수. 조사 중 원격 진행 관측(origin/main → `201ac6c54`, PR #1281) — 수치는 측정 시점·기준 ref 고정. READ-ONLY(저장소 무변경).
 **갱신(2026-11-05)**: fetch 후 `rev-list --all` 13,572→13,595(+23: 인간+4·AI+7·CI+12, 신규 identity 없음). 본 보고서 수치는 `73e1a792e` 기준 고정값.
+**갱신(2026-11-16)**: 제3자 정리(work/third-party-cleanup)로 §1 표의 act2-wpi corpus JSON 3종 행 삭제(파일 삭제됨 — `73e1a792e` 측정 시점에는 존재). 나머지 수치는 고정값 그대로.
 
 ## 1. 저작권 표기 전수 목록
 
@@ -26,7 +27,6 @@
 | `tests/fixtures/bug_verdict_scope/base36_pinned_subject.nim:1-7` | Status Research & Development GmbH 2025, Apache-2.0 OR MIT |
 | `tests/unit/test_libp2p_bytesview_binding.nim:55` | Status Research 헤더 리터럴(기대 헤더 검증용) |
 | `experiments/nim-libp2p-bytesview-slice-e2e/discovery/04_c2_fact_reverification.md:7,95` | Status Research 헤더 인용 |
-| `experiments/act2-wpi-structural-ingress/canonical/signature_corpus{,_run1,_run2}.json:1` | "Nim Authors 2017 / Status Research 2019" 헤더 스니펫 |
 | `experiments/.../canonical/corpus_README.md:31` | "Nim copyright header" 기술 언급 |
 | `experiments/act2-wp-toml-b1-input-integrity/env/toolchain.md:12`, `observations/raw/env.txt:14` | Andreas Rumpf "2006-2026"(Nim 툴체인 배너 캡처) |
 | `docs/spec/*.pdf` 21종 | 제3자 논문(판정은 B1 §1-D) |

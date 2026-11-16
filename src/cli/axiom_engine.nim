@@ -4502,6 +4502,72 @@ let coutCapabilityAdapter* = CapabilityAdapter(
   routeTarget: coutAdapterRouteTarget,
   synthesize: coutAdapterSynthesize)
 
+proc remAdapterValidate(node: JsonNode): Result[CapabilityPayload, string] {.
+    raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## term-splice (rem) validate leg: the lane's loader is the validator
+  ## (rem validation is inlined in loadBase32RemOverlayDomain — no separate
+  ## validateRemOverlayNode exists). The loader is invoked via the runtime
+  ## overlay path resolver; on failure the error propagates.
+  let domainRes = loadBase32RemOverlayDomain()
+  if domainRes.isErr:
+    err(domainRes.error)
+  else:
+    ok(CapabilityPayload(kind: capTermSplice, rem: domainRes.get))
+
+func remAdapterDeclares(payload: CapabilityPayload; fnName,
+    modulePath: string): bool {.raises: [].} =
+  overlayDeclaresRemSubject(payload.rem, fnName, modulePath)
+
+func remAdapterRouteTarget(payload: CapabilityPayload; target: string):
+    tuple[routed: bool; fnName, modulePath: string] {.raises: [].} =
+  (false, "", "")
+
+proc remAdapterSynthesize(fnName, modulePath: string;
+    payload: CapabilityPayload; resolver: ModuleContentResolver;
+    census: ExternalCandidateCensus; subjectRepoRoot: string): Result[bool, string] {.
+    raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  synthesizeBase32RemRangeCandidate(fnName, modulePath, resolver,
+    payload.rem, census, subjectRepoRoot)
+
+let remCapabilityAdapter* = CapabilityAdapter(
+  capability: capTermSplice,
+  validate: remAdapterValidate,
+  declares: remAdapterDeclares,
+  routeTarget: remAdapterRouteTarget,
+  synthesize: remAdapterSynthesize)
+
+proc sizingAdapterValidate(node: JsonNode): Result[CapabilityPayload, string] {.
+    raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## beta-composition (sizing) validate leg: rem validation is inlined in the
+  ## loader (loadBase36OverlayDomain). Loader is invoked via runtime path.
+  let domainRes = loadBase36OverlayDomain()
+  if domainRes.isErr:
+    err(domainRes.error)
+  else:
+    ok(CapabilityPayload(kind: capBetaComposition, sizing: domainRes.get))
+
+func sizingAdapterDeclares(payload: CapabilityPayload; fnName,
+    modulePath: string): bool {.raises: [].} =
+  overlayDeclaresSubject(payload.sizing, fnName, modulePath)
+
+func sizingAdapterRouteTarget(payload: CapabilityPayload; target: string):
+    tuple[routed: bool; fnName, modulePath: string] {.raises: [].} =
+  (false, "", "")
+
+proc sizingAdapterSynthesize(fnName, modulePath: string;
+    payload: CapabilityPayload; resolver: ModuleContentResolver;
+    census: ExternalCandidateCensus; subjectRepoRoot: string): Result[bool, string] {.
+    raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  synthesizeBase36RelationalCandidate(fnName, modulePath, resolver,
+    payload.sizing, census, subjectRepoRoot)
+
+let sizingCapabilityAdapter* = CapabilityAdapter(
+  capability: capBetaComposition,
+  validate: sizingAdapterValidate,
+  declares: sizingAdapterDeclares,
+  routeTarget: sizingAdapterRouteTarget,
+  synthesize: sizingAdapterSynthesize)
+
 const sidecarRegistryEntryRelPath* = "nim_stew_base36_sidecar.json"
   ## The sidecar member's registry identity (REGISTRY_SPEC §5 PR-3): the
   ## flip gate is per ENTRY, discriminated on the normalized specRelPath,
@@ -4523,16 +4589,14 @@ const flippedLaneSpecRelPaths* = [
   ## an inert log.
 
 const base36RelationalRegistryEntryRelPath* = "base36_sizing_relational_spec.json"
-  ## The beta-composition lane's registry identity: dispatched through its
-  ## legacy chain arm (the sizing overlay cascade in prepareProofRun) —
-  ## unflipped, but equipped (laneDispatchEquipped), because that arm is
-  ## dispatch truth (REGISTRY_SPEC §5 flip schedule).
+  ## The beta-composition lane's registry identity (REGISTRY_SPEC §5 PR-6):
+  ## flipped — dispatched through sizingCapabilityAdapter
+  ## (capabilityAdapterFor), presence-mandatory (§1.3).
 
 const base32RemRegistryEntryRelPath* = "nim_stew_base32_rem_spec.json"
-  ## The term-splice lane's registry identity: dispatched through its legacy
-  ## chain arm (the rem overlay cascade in prepareProofRun) — unflipped, but
-  ## equipped (laneDispatchEquipped), because that arm is dispatch truth
-  ## (REGISTRY_SPEC §5 flip schedule).
+  ## The term-splice lane's registry identity (REGISTRY_SPEC §5 PR-5):
+  ## flipped — dispatched through remCapabilityAdapter
+  ## (capabilityAdapterFor), presence-mandatory (§1.3).
 
 func entryPinWording(entry: RegistryEntry): SubjectPinMismatchWording {.
     raises: [].} =
@@ -4548,11 +4612,8 @@ func entryPinWording(entry: RegistryEntry): SubjectPinMismatchWording {.
 proc capabilityAdapterFor*(entry: RegistryEntry): Option[CapabilityAdapter] {.
     raises: [].} =
   ## The installed adapter per registry ENTRY (REGISTRY_SPEC §5 flip
-  ## schedule): none() = the lane has not flipped yet — its legacy chain arm
-  ## stays the authoritative dispatch. PR-1 installs arithmetic-law; PR-2
-  ## constructed-gate; PR-3 the sidecar member of body-carry (per entry —
-  ## the capability's members flip in different PRs); PR-4 the C_out member
-  ## of body-carry.
+  ## schedule): all six lanes flipped (PR-1..PR-6). Every entry resolves to
+  ## its adapter; none() = no adapter (varint seam — not flipped).
   case entry.capability
   of capArithmeticLaw: some(bvCapabilityAdapter)
   of capConstructedGate: some(d2CapabilityAdapter)
@@ -4563,19 +4624,58 @@ proc capabilityAdapterFor*(entry: RegistryEntry): Option[CapabilityAdapter] {.
       some(sidecarCapabilityAdapter)
     else:
       none(CapabilityAdapter)
-  else: none(CapabilityAdapter)
+  of capTermSplice: some(remCapabilityAdapter)
+  of capBetaComposition: some(sizingCapabilityAdapter)
 
 proc laneDispatchEquipped*(entry: RegistryEntry): bool {.raises: [].} =
   ## Whether a prove run dispatches through this registry ENTRY — the
   ## capability-disclosure truth (`ax capability`) and the proposition
-  ## rollup's equipped-side predicate. Two dispatch paths are both truth:
-  ## the flipped adapter path (capabilityAdapterFor) and the still-
-  ## authoritative legacy chain arm (the sizing/rem overlay cascades,
-  ## keyed on the entry's specRelPath — REGISTRY_SPEC §5 flip schedule).
+  ## rollup's equipped-side predicate. Post-flip (PR-1..PR-6) dispatch is
+  ## adapter-only: the legacy sizing/rem cascades are retired, so an entry
+  ## is equipped exactly when capabilityAdapterFor resolves its adapter.
+  ## The specRelPath arms below are the retired lanes' identity keys —
+  ## never decisive post-flip (both entries resolve adapters) — kept from
+  ## the flip schedule's original per-entry discrimination (REGISTRY_SPEC
+  ## §5).
   ## The engine is the SSOT; consumers project this, never re-derive it.
   capabilityAdapterFor(entry).isSome or
     entry.specRelPath == base36RelationalRegistryEntryRelPath or
     entry.specRelPath == base32RemRegistryEntryRelPath
+
+func mandatoryLaneDiagnostics(specRelPath: string):
+    tuple[pinRejected, inertModule, docInvalid, docAbsent, synthUnavailable,
+      carrierTarget: string] {.raises: [].} =
+  ## The presence-mandatory lanes' rows (C_out PR-4, base32 rem PR-5, base36
+  ## sizing PR-6): the lane runs NO pin (§2.4 — mandatory lanes never had
+  ## one) and never routes as a target (routeTarget is false), so the
+  ## pin-rejected, inert-module and carrier-target rows are never spoken. An
+  ## absent DOCUMENT is not an inert log either: the mandatory-presence
+  ## check blocks the run with the retired load block's exact fail-closed
+  ## line (docAbsent stays empty here).
+  case specRelPath
+  of coutRegistryEntryRelPath:
+    ("",
+     "",
+     "base36 C_out binding overlay unavailable (fail-closed): ",
+     "",
+     "base36 C_out overlay candidate synthesis unavailable: ",
+     "")
+  of base32RemRegistryEntryRelPath:
+    ("",
+     "",
+     "base32 rem binding overlay unavailable (fail-closed): ",
+     "",
+     "base32 rem overlay candidate synthesis unavailable: ",
+     "")
+  of base36RelationalRegistryEntryRelPath:
+    ("",
+     "",
+     "base36 sizing binding overlay unavailable (fail-closed): ",
+     "",
+     "base36 overlay composite synthesis unavailable: ",
+     "")
+  else:
+    ("", "", "", "", "", "")
 
 func flippedLaneDiagnostics(specRelPath: string):
     tuple[pinRejected, inertModule, docInvalid, docAbsent, synthUnavailable,
@@ -4584,6 +4684,8 @@ func flippedLaneDiagnostics(specRelPath: string):
   ## the flip must not change a single logged line (REGISTRY_SPEC §6.2).
   ## One row per flipped lane, keyed off the entry's specRelPath (the
   ## flip gate's own key — body-carry's two members carry different rows).
+  ## The three presence-mandatory lanes share one row shape and live in
+  ## mandatoryLaneDiagnostics.
   case specRelPath
   of "nim_libp2p_bytesview_slice.json":
     ("nim-libp2p bytesview slice subject pin rejected (fail-closed): ",
@@ -4615,18 +4717,9 @@ func flippedLaneDiagnostics(specRelPath: string):
        "docs/spec/nim_stew_base36_sidecar_contract.md)",
      "sidecar candidate synthesis unavailable: ",
      "")
-  of coutRegistryEntryRelPath:
-    # PR-4 (C_out, presence-mandatory): the lane runs NO pin (§2.4 —
-    # mandatory lanes never had one), so the pin-rejected and inert-module
-    # rows are never spoken. An absent DOCUMENT is not an inert log either:
-    # the mandatory-presence check blocks the run with the legacy load
-    # block's exact fail-closed line (docAbsent stays empty here).
-    ("",
-     "",
-     "base36 C_out binding overlay unavailable (fail-closed): ",
-     "",
-     "base36 C_out overlay candidate synthesis unavailable: ",
-     "")
+  of coutRegistryEntryRelPath, base32RemRegistryEntryRelPath,
+      base36RelationalRegistryEntryRelPath:
+    mandatoryLaneDiagnostics(specRelPath)
   else:
     ("", "", "", "", "", "")
 
@@ -5051,19 +5144,11 @@ type
     frontier*: seq[SorterNodeId]
     preEligibilityFrontier*: seq[SorterNodeId]
     census*: ExternalCandidateCensus
-    overlay*: Option[Base36OverlayDomain]
-      ## D1: the validated explicit-spec overlay; every gate hit it governs
-      ## synthesizes the relational candidate instead of a single symbol.
-    remOverlay*: Option[Base32RemOverlayDomain]
-      ## D1: the validated rem-range overlay (base32 subject); its governed
-      ## symbol synthesizes the remainder-range candidate.
     subjectRegistry*: ExternalSubjectRegistry
-      ## VS-2 PR-1: the external-subject registry, loaded ONCE per run
-      ## (REGISTRY_SPEC §2.3) — the authoritative dispatch input for the
-      ## flipped lanes (arithmetic-law in PR-1, constructed-gate in PR-2,
-      ## body-carry's sidecar member in PR-3, body-carry's C_out member in
-      ## PR-4) and the parity shadow's registry leg for the two unflipped
-      ## lanes (sizing, rem).
+      ## VS-2 PR-6: the external-subject registry, loaded ONCE per run
+      ## (REGISTRY_SPEC §2.3) — the authoritative dispatch input for ALL
+      ## six lanes (arithmetic-law PR-1, constructed-gate PR-2, body-carry
+      ## PR-3/PR-4, term-splice PR-5, beta-composition PR-6).
     registryPayloads*: seq[tuple[specRelPath: string, payload: CapabilityPayload]]
       ## Pre-validated adapter payloads for the flipped, PIN-ACTIVE entries
       ## (§2.3 rule 3, §2.4): an entry absent from here (absent document, or
@@ -5304,27 +5389,11 @@ proc prepareProofRun(task: ProofTask; sourceRoot: string;
   ## Topology scan → vault hydration → frontier selection → pre-loop persist.
   ## Everything the wave loop needs, resolved before any wave runs.
   var prepared: PreparedRun
-  # D1: the out-of-tree explicit spec overlay authorizes the relational
-  # binding this product makes over the read-only subject tree. Fail closed:
-  # absence, a parse failure, or a rejected origin blocks the run outright.
-  let overlayRes = loadBase36OverlayDomain()
-  if overlayRes.isErr():
-    return err("base36 sizing binding overlay unavailable (fail-closed): " &
-      overlayRes.error)
-  prepared.overlay = some(overlayRes.value)
-  let remOverlayRes = loadBase32RemOverlayDomain()
-  if remOverlayRes.isErr():
-    return err("base32 rem binding overlay unavailable (fail-closed): " &
-      remOverlayRes.error)
-  prepared.remOverlay = some(remOverlayRes.value)
-  # ── VS-2 PR-1: external-subject registry — the AUTHORITATIVE load (§2.3) ──
-  # The registry is loaded ONCE per run, here. The flipped lanes
-  # (arithmetic-law, PR-1; constructed-gate, PR-2; body-carry's sidecar
-  # member, PR-3; body-carry's C_out member, PR-4) dispatch through their
-  # installed adapters below; the two unflipped lanes (sizing, rem) keep
-  # their legacy loads above as the sole inputs of their chain arms
-  # (REGISTRY_SPEC §5 flip schedule). A load rejection (any document) blocks
-  # the run fail-closed.
+  # ── VS-2 PR-6: external-subject registry — the AUTHORITATIVE load (§2.3) ──
+  # All six lanes flipped (PR-1..PR-6): the registry is loaded ONCE per run,
+  # here. The legacy chain arms (sizing, rem) were retired in PR-6; the
+  # parity shadow is gone. A load rejection (any document) blocks the run
+  # fail-closed.
   # BYOA specDir seam: the runtime proposition overlay ($AXIOM_STATE_DIR/specs,
   # installed by the --proposals intake) shadow-merges over the committed
   # catalog when present — same specRelPath wins by the overlay document;
@@ -5378,11 +5447,30 @@ proc prepareProofRun(task: ProofTask; sourceRoot: string;
           break
       if not present:
         logInfo("axiom_engine", flippedLaneDiagnostics(lanePath).docAbsent)
-    # PR-4: C_out is presence-MANDATORY (§1.3) — its document's absence has
-    # no entry to loop over (the loader cannot classify absence, the PR-0
-    # note), so the consumer enforces the policy here: the run blocks
-    # fail-closed with the retired load block's exact error line. Never an
-    # inert log — the JSON cannot invent a third behavior.
+    # PR-5/PR-6: sizing and rem are presence-MANDATORY (§1.3) — their
+    # documents' absence blocks the run fail-closed with the retired load
+    # blocks' exact error lines. Never inert logs.
+    block mandatoryPresenceChecks:
+      for (lanePath, errPrefix, blockName) in [
+          (base36RelationalRegistryEntryRelPath,
+            "base36 sizing binding overlay unavailable (fail-closed): ",
+            "sizing"),
+          (base32RemRegistryEntryRelPath,
+            "base32 rem binding overlay unavailable (fail-closed): ",
+            "rem")]:
+        var present = false
+        for entry in prepared.subjectRegistry.entries:
+          if entry.specRelPath == lanePath:
+            present = true
+            break
+        if not present:
+          let dirRes = resolveExternalSubjectSpecDir()
+          if dirRes.isErr():
+            return err(errPrefix & dirRes.error)
+          return err(errPrefix &
+            "cannot read spec overlay " & dirRes.get / lanePath &
+            " (missing, unreadable, or not valid JSON)")
+    # coutMandatoryPresence check retained for exact backward compatibility
     block coutMandatoryPresence:
       var coutPresent = false
       for entry in prepared.subjectRegistry.entries:
@@ -5390,10 +5478,6 @@ proc prepareProofRun(task: ProofTask; sourceRoot: string;
           coutPresent = true
           break
       if not coutPresent:
-        # The registry above already resolved the catalog root (a miss
-        # failed the run at its load), so the seam here re-resolves only to
-        # render the same path the retired load block quoted — an err is
-        # reported verbatim rather than joined (Q-013).
         let coutDirRes = resolveExternalSubjectSpecDir()
         if coutDirRes.isErr():
           return err("base36 C_out binding overlay unavailable (fail-closed): " &
@@ -5402,106 +5486,6 @@ proc prepareProofRun(task: ProofTask; sourceRoot: string;
           "cannot read spec overlay " & coutDirRes.get /
           coutRegistryEntryRelPath &
           " (missing, unreadable, or not valid JSON)")
-  # ── VS-2 external-subject registry parity shadow (observability-only) ──
-  # PR-0 ran the registry beside the six legacy loads; PR-1 promoted the
-  # load above to the authoritative one. The shadow keeps comparing each
-  # entry's registry activation against the chain: for the two unflipped
-  # lanes (sizing, rem) the chain leg reads the legacy overlay fields;
-  # for the flipped lanes (arithmetic-law PR-1, constructed-gate PR-2,
-  # body-carry's sidecar member PR-3, body-carry's C_out member PR-4) the
-  # chain arms are RETIRED, so the shadow computes what the retired chain
-  # path WOULD have decided — the legacy loader + lane pin, observability-
-  # only. The comparison stays cross-path (registry envelope + shared pin
-  # vs legacy file read + lane validator + lane pin); a disagreement is an
-  # explicit log line — never a behavior change.
-  block registryParityShadow:
-    let reg = prepared.subjectRegistry
-    var specIdList: seq[string]
-    var parityMismatches = 0
-    for entry in reg.entries:
-      specIdList.add(entry.specId)
-      # Registry activation: an envelope-valid entry is active unless an
-      # optional lane's governed module is absent under this run's subject
-      # root (the shared pin check, §2.4). Mandatory lanes run no pin.
-      var registryActive = true
-      var pinNote = ""
-      if entry.presence == ppOptional and entry.governedBlobSha256.len > 0:
-        let pin = verifySubjectBlobPin(entry.specRelPath, entry.governedModule,
-          entry.governedBlobSha256, sourceRoot, entryPinWording(entry))
-        if pin.isErr():
-          # The chain leg already failed the run for a present-but-mismatched
-          # pin; reaching this line means the shared proc disagreed with the
-          # lane path — parity finding, log it.
-          inc parityMismatches
-          pinNote = " pin=err(" & pin.error & ")"
-        elif pin.get:
-          pinNote = " pin=verified"
-        else:
-          registryActive = false
-          pinNote = " pin=inert(" & entry.governedModule &
-            " not present under this subject root)"
-      # Chain activation. The (capability, presence) pair is unique across
-      # the six lanes; the two body-carry members split on presence
-      # (sidecar optional / cout mandatory).
-      let chainActive = block:
-        var active = false
-        case entry.capability
-        of capConstructedGate:
-          # PR-2: the chain arm is retired — the counterfactual chain
-          # decision is the legacy load+pin path (observability-only).
-          let legacy = loadTomlD2AgentOverlayDomain()
-          if legacy.isErr:
-            active = false
-          else:
-            let legacyPin = verifyTomlD2AgentSubjectPin(legacy.get, sourceRoot)
-            active = legacyPin.isOk and legacyPin.get
-        of capArithmeticLaw:
-          # PR-1: the chain arm is retired — the counterfactual chain
-          # decision is the legacy load+pin path (observability-only).
-          let legacy = loadNimLibp2pBytesviewSliceOverlayDomain()
-          if legacy.isErr:
-            active = false
-          else:
-            let legacyPin = verifyLibp2pBytesviewSubjectPin(legacy.get, sourceRoot)
-            active = legacyPin.isOk and legacyPin.get
-        of capTermSplice:
-          active = prepared.remOverlay.isSome
-        of capBetaComposition:
-          active = prepared.overlay.isSome
-        of capBodyCarry:
-          if entry.presence == ppMandatory:
-            # PR-4: the C_out chain arm is retired — the counterfactual
-            # chain decision is the legacy load path (observability-only).
-            # Mandatory lanes run no pin (§2.4): the fail-closed loader was
-            # the whole gate.
-            let legacy = loadBase36CoutOverlayDomain()
-            active = legacy.isOk
-          else:
-            # PR-3: the sidecar chain arm is retired — the counterfactual
-            # chain decision is the legacy load+pin path (observability-only).
-            let legacy = loadNimSidecarOverlayDomain()
-            if legacy.isErr:
-              active = false
-            else:
-              let legacyPin = verifySidecarSubjectPin(legacy.get, sourceRoot)
-              active = legacyPin.isOk and legacyPin.get
-        active
-      let parityLine = "external subject registry parity: " & entry.specRelPath &
-        " capability=" & $entry.capability &
-        " precedence=" & $entry.precedence &
-        " presence=" & $entry.presence &
-        " specId=" & entry.specId & pinNote
-      if registryActive == chainActive:
-        logInfo("axiom_engine", parityLine &
-          " registry-decision == chain-decision")
-      else:
-        inc parityMismatches
-        logWarn("axiom_engine", parityLine &
-          " registry-decision != chain-decision (parity finding, " &
-          "reported as-is)")
-    logInfo("axiom_engine", "external subject registry parity summary: entries=" &
-      $reg.entries.len & " specIds=[" & specIdList.join(", ") &
-      "] mismatches=" & $parityMismatches)
   let effectiveQueueLimit = task.limit.resolve()
   let analysisRes = analyzeSubjectSource(sourceRoot, effectiveQueueLimit, not task.limit.isUnlimited())
   if analysisRes.isErr(): return err(analysisRes.error)
@@ -5547,14 +5531,15 @@ proc prepareProofRun(task: ProofTask; sourceRoot: string;
     # FLIPPED lanes — ascending (precedence, specRelPath) order, the
     # capability's adapter decides, and the chain's return protocol is
     # preserved verbatim: ok(true) and ok(false) BOTH return; err falls
-    # through to the examined symbol's own census record. PR-3/PR-4 note:
-    # the loop sits ABOVE the still-unflipped chain arms because the
-    # body-carry members (sidecar 10, C_out 20) share the governed
-    # stew/base36.nim::decodedLength symbol with the sizing arm (30) —
+    # through to the examined symbol's own census record. Post-flip note
+    # (PR-5/PR-6 retired the last chain arms — this loop is the sole
+    # dispatch site): the iteration order stays load-bearing for the
+    # governed stew/base36.nim::decodedLength symbol the body-carry members
+    # (sidecar 10, C_out 20) share with the sizing composite (30) —
     # precedence §1.4 requires the HASH-BOUND adoption to decide first and
     # the C_out carrier before the sizing composite (the retired arms sat
     # in exactly that order); bv (60) and d2 (50) are module-disjoint from
-    # every unflipped lane, so the loop's position is immaterial for them.
+    # the base36 stew lanes.
     # An entry without a pre-validated payload is inert on this tree
     # (absent document or pin-inert — logged at prep).
     block registryDispatch:
@@ -5578,44 +5563,6 @@ proc prepareProofRun(task: ProofTask; sourceRoot: string;
             flippedLaneDiagnostics(entry.specRelPath).synthUnavailable &
             synth.error &
             " — examined symbol falls back to its own census record")
-    # The still-unflipped chain arms (REGISTRY_SPEC §5 flip schedule):
-    # sizing and rem, in their pre-flip cascade order — the loop above has
-    # already given the flipped body-carry members (10, 20) their
-    # precedence over the sizing composite (30).
-    if prepared.overlay.isSome and
-        overlayDeclaresSubject(prepared.overlay.get, fnName, modulePath):
-      let synth = synthesizeBase36RelationalCandidate(fnName, modulePath,
-        subjectResolver, prepared.overlay.get, prepared.census, sourceRoot)
-      if synth.isOk():
-        # Display v3: record the legacy chain arm's adopted overlay identity
-        # for this unit (the dispatch decision already made — the arm is the
-        # lane's authoritative pre-flip dispatch, laneDispatchEquipped).
-        for entry in prepared.subjectRegistry.entries:
-          if entry.specRelPath == base36RelationalRegistryEntryRelPath:
-            prepared.adoptedSpecRefs.add((modulePath & "::" & fnName,
-              entry.specRelPath, entry.specId))
-            break
-        return synth.value
-      logWarn("axiom_engine",
-        "base36 overlay composite synthesis unavailable: " & synth.error &
-        " — examined symbol falls back to its own census record")
-    if prepared.remOverlay.isSome and
-        overlayDeclaresRemSubject(prepared.remOverlay.get, fnName, modulePath):
-      let synth = synthesizeBase32RemRangeCandidate(fnName, modulePath,
-        subjectResolver, prepared.remOverlay.get, prepared.census, sourceRoot)
-      if synth.isOk():
-        # Display v3: record the legacy chain arm's adopted overlay identity
-        # for this unit (the dispatch decision already made — the arm is the
-        # lane's authoritative pre-flip dispatch, laneDispatchEquipped).
-        for entry in prepared.subjectRegistry.entries:
-          if entry.specRelPath == base32RemRegistryEntryRelPath:
-            prepared.adoptedSpecRefs.add((modulePath & "::" & fnName,
-              entry.specRelPath, entry.specId))
-            break
-        return synth.value
-      logWarn("axiom_engine",
-        "base32 rem overlay candidate synthesis unavailable: " & synth.error &
-        " — examined symbol falls back to its own census record")
     classifyExternalCandidate(fnName, modulePath, subjectResolver, prepared.census,
       sourceRoot)
 

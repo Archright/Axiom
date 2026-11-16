@@ -98,7 +98,7 @@
     "src/cli/axiom_engine.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "efc24e32e092fa5d8ce4a8f62f8ade6c204cbacc"
+      "sha": "4b68f6e67a99d9bdfb1bc4cdb5b93bf8c21bbb38"
     },
     "src/cli/axiom_status.nim": {
       "mode": "100644",
@@ -263,7 +263,7 @@
     "src/cli/merge_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "6b397eed81fa11572df753d4cfce590040c46feb"
+      "sha": "0f6f3d8646d5c209808e19ae9eb68f728469fcd2"
     },
     "src/cli/payload_bridge.nim": {
       "mode": "100644",

@@ -48,13 +48,13 @@ PR#20 배치: 총 498s = admission 484s(최장) + gap 14s; 차점 레그 pub-int
 
 | Tier | 후보 | 계약 상태 | 예상 절감 (admission 레그) | 산출 근거 |
 |---|---|---|---|---|
-| **1 — 계약 보존 (CI 토폴로지 변경, Epoch Cutover 범위)** | C3: toolchain 스코프 축소 — attest/admission-check 잡(사전빌드 ax 소비, mint류의 runtime 범위 선례: 7-11s vs 풀 스코프 28s) | 보존(단 경로 의존적 — §7) | ~15-20s | a-restore 14.8s/잡 실측·mint 대조 |
+| **1 — 계약 보존 (CI 토폴로지 변경, Epoch Cutover 범위)** | C3: toolchain 스코프 축소 — attest/admission-check 잡 — **NO-GO(2026-11-16 반증, §9)**: 집계 잡은 witness 커널 재실행의 주체라 nim 스코프에서 필수 Lean 도구체인이 소실 | 반증 — 착지 불가(§9) | 0s | §9 + `docs/evidence/vs_c3_toolchain_scope_nogo_2026-11-16.md` |
 | | C6: deriver 중복 컴파일 통합 | 보존 | ~1-4s | closure-deriver 4s + build-base 1s(동일 B deriver) |
 | | C7: 적색 경로 단축(verdict 실패 후 mint-publish 계속) | 보존 | 그린 SLO 0s(실패 PR당 ~15s) | run 43399756546 관측 |
 | **2 — 바인딩 사전등록 개정 (아키텍트 승인 필수)** | C1-rev: lane 분할 개정 — evidenceId 배터리를 lane 밖 병렬 잡으로 재배치(+ s1a lane은 1/1 계약 유지) | **개정**: prereg §1·G-A 의도 재정의 + per-lane 독립성 약화 승인 | **~99s** (Tier 1 합산 시 ~115s) — critical: build-base 54 + max(lane-0≈195, 배터리잡≈144, lane-1≈184) + admission-check 55 + mint 60 + 간극 ≈21 ≈ **~385s** (Tier 1+2 ≈ **~369s**) | §2.1·§2.2 분해 산술 |
 | | (대안) s1a 단독 완화 | **개정**: 1/1 GO-critical 계약(:4126) 수정 | 유사 규모, 계약 위반이 더 직접적 — 권고하지 않음 | — |
 | **3 — 제품/도구 코드 (CI 토폴로지 밖, 별도 슬라이스)** | C5: s1a 테스트 실행 150s | 보존(GO-critical 의미론 불변) | lane(0) 비례 절감 | duration_ms=150148 실측 |
-| | 배터리 최적화: evidenceId self-check 2건 실행 99s/77s | 보존 | lane 비례 | 스텝 타임라인 |
+| | 배터리 최적화: evidenceId self-check 2건 실행 99s/77s | 보존(단 §10 — 중복 부재 확정, 절감 레버는 별도 검토 전제) | lane 비례 | 스텝 타임라인 + §10 프로파일링 |
 | **명시적 배제** | C2: evidenceId 배터리 dedup(양 lane 공유 1회) | **§0.9 인접 위반** — "EXECUTED always" per-lane 독립 계약 파기 | ~99s | 채택 금지 권고 |
 
 Tier 1 단독: admission ≈ 460-468s → 배치 ≈ 474-482s(480s SLO 경계). Tier 1+2: admission ≈ 369s → **pub-int(381s) 포화점 도달, 배치 ≈ 395s, SLO 여유 ~85s**. Tier 3은 추가 이득이나 별도 제품 슬라이스다.
@@ -105,8 +105,49 @@ Tier 1 단독: admission ≈ 460-468s → 배치 ≈ 474-482s(480s SLO 경계). 
 
 ## 8. 승인 요청 사항 (판정 지점 — 본 문서 MERGE와 별개)
 
-- **[승인-1] Tier 1(C3·C6·C7) 착지 개시**: 계약 보존, 절감 ~16-24s. script_hash 경로 확인 후 진행.
+- **[승인-1] Tier 1(C6·C7 — C3는 2026-11-16 반증으로 제외, §9) 착지 개시**: 계약 보존, 잔여 그린 경로 절감 ~1-4s. script_hash 경로 확인 후 진행.
 - **[승인-2] Tier 2(C1-rev lane 분할 개정) 승인 여부**: prereg §1 개정 + per-lane evidenceId 독립성 약화 + G-A 의도 재정의 — 절감 ~99s(Tier 1 합산 시 ~115s). **아키텍트 판정 전제.**
 - **[승인-3] Epoch Cutover 개시**: 위 승인 범위 확정 후 §5 절차 실행.
 
 본 문서의 MERGE는 [승인-1/2/3] 중 어느 것도 의미하지 않는다.
+
+## 9. 갱신 — 2026-11-16: C3 반증 (NO-GO)
+
+구현 전 반박 검증(Context7 공식 문서 + 병렬 서브에이전트 — production artifact 실물 실험 포함)의
+결과 C3를 폐기한다. 근거 전문: `docs/evidence/vs_c3_toolchain_scope_nogo_2026-11-16.md`.
+
+- **전제 반증**: §3 C3의 "집계 잡 = 사전빌드 ax 소비"는 코드와 실물 실험으로 반증됐다. admission-check
+  잡의 witness 스텝(attest+landing 발화, admission-check.yml:1449)은 `ax cert attest --witness-only`
+  를 실행하고, 체인 stage (c)는 인증서의 `leanSource`를 **Lean 컴파일러로 재실행**한다
+  (`kernel_reexecution.nim:467-472` — leanExe 미구성 시 폴백 `"lake env lean"`; 워크플로우는
+  `LEAN_SYSROOT`·`AXIOM_LEAN_CMD`를 설정하지 않는다). stage (b)의 사전빌드 ircheck 역시 런타임에
+  Lean 툴체인 파일(Init olean)을 요구한다 — production 바이너리 실물 실험: env-i(lean 부재)에서
+  valid 입력 exit 1, `LEAN_SYSROOT` 제공 시 판정이 일반 환경과 byte-identical.
+- **nim 스코프는 ~/.elan을 복원·설치하지 않는다**(`.github/actions/setup-axiom-toolchain/action.yml`)
+  → witness가 항상 red → required check red → merge queue 영구 블록. fail-closed이므로 무결성
+  위반은 아니나 CI 정지다.
+- **영향**: [승인-1]의 잔여 범위는 C6·C7로 축소된다(그린 경로 절감 ~1-4s — Tier 1은 사실상
+  소멸, §3의 Tier 1 산술은 무효). 유효 최적화 경로는 Tier 3(배터리·s1a 제품 코드, 계약
+  보존, 별도 슬라이스)와 Tier 2(C1-rev, [승인-2])뿐이다.
+- 관측 기준: 원격 main `605f9ba`(admission-check.yml blob `9fa3903`; 코드 인용 4종 블롭 일치 확인).
+
+## 10. 갱신 — 2026-11-16: Tier 3 배터리 프로파일링 — 중복 계산 부재 (honest-close)
+
+배터리 99s의 구현 전 프로파일링 결과(근거 전문:
+`docs/evidence/vs_t3_evidenceid_battery_profile_2026-11-16.md`):
+
+- **분해**: hermetic 사전빌드 2회 42.9s(43%) · 컴파일(nimcache warm) 10.0s(10%) · probe 실행
+  46.0s(47%). probe 실행의 실체는 **debug 빌드 sha256 1회**(119,585,096B ircheck 전문,
+  ~44s@2.6MB/s — release 빌드 시 0.68s@114MB/s, digest 동일) + 잔여 ~2s. lane 간 편차는
+  러너 인스턴스 변동.
+- **C4-동형 중복 계산 부재**: EA digest는 프로세스당 정확히 1회다(PR #59 착지 후에도 probe
+  실행 34.2s 불변 관측 확증). 잔여 in-process 2중 계산은 μs급 — memo 도입은 극장. 따라서
+  §3 Tier 3의 "배터리 최적화"는 무상 적용 가능한 memoization 슬라이스로 성립하지 않는다
+  (honest-close).
+- **잔여 레버(전부 별도 슬라이스 — 계약 검토 전제, 본 설계의 승인 없이 착지하지 않는다)**:
+  (a) 테스트 레인 release 빌드 — probe·s1a 각 프로세스당 ~44s, 단 debug assertion·오버플로
+  검사 부재화 = 판정 정체성 검토 선행 필수; (b) 프로세스 간 영속 digest 캐시 — 판정 재계산
+  계약과의 충돌 검토; (c) hermetic 중복 제거(~7-13s/레인) — `nim c`별 fail-closed 신선도
+  검증 의미 변경; (d) ircheck 크기 축소.
+- 관측: run 43399299637(기준선)·43849381963(최신) 원격 로그 분해 + /tmp 격리 마이크로
+  벤치마크(debug/release sha256 교차 검증).
