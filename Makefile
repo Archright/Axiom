@@ -115,7 +115,7 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/test_push_admission_integrity.nim
 
 
-.PHONY: check-push-admissibility-integrity test perf-check bench-cost-probe verify-all meta-gate registry-check env-check doc-path-validator check-determinism check-mutation-harness check-decision-binding check-topology-drift check-decision-graph-drift check-git-purity check-manifest-consistency check-scope-consistency check-proof-unit-consistency check-proof-unit-reconcile check-epoch-transaction check-merge-admission-cert-mirror sloc-verify check-quality-gate local-verify-static local-verify-static-full check-toolchain-pin check-build-state-coherence check-binary-liveness local-verify-contract-exact check-mcp check-cert-integrity check-cert-integrity-fast check-readiness-start check-workflow-shell-syntax promote-assets promote-assets-apply test-fast test-fast-one perf-baseline clean-cache clean-test-cache clean-release-cache build verify-contract verify-contract-unit verify-contract-release-e2e ci-compile ci-bootstrap-cheap test-gateway-identity-gate gate-binaries validate-root-layout
+.PHONY: check-push-admissibility-integrity test perf-check bench-cost-probe verify-all meta-gate registry-check env-check doc-path-validator check-determinism check-mutation-harness check-decision-binding check-topology-drift check-decision-graph-drift check-git-purity check-manifest-consistency check-scope-consistency check-proof-unit-consistency check-proof-unit-reconcile check-epoch-transaction check-merge-admission-cert-mirror sloc-verify check-quality-gate local-verify-static local-verify-static-full check-toolchain-pin check-build-state-coherence check-binary-liveness local-verify-contract-exact check-mcp check-cert-integrity check-cert-integrity-fast check-readiness-start readiness-collect check-workflow-shell-syntax promote-assets promote-assets-apply test-fast test-fast-one perf-baseline clean-cache clean-test-cache clean-release-cache build verify-contract verify-contract-unit verify-contract-release-e2e ci-compile ci-bootstrap-cheap test-gateway-identity-gate gate-binaries validate-root-layout
 
 # ── Φ1: Build Metadata Prerequisite ──────────────────────────────────────────
 # build_metadata.json must exist before config.nims can staticRead it.
@@ -999,6 +999,32 @@ bin/readiness_start_gate: src/gate/runners/readiness_start_gate.nim
 
 check-readiness-start: bin/readiness_start_gate ## productization START gate: E2E vertical slice + readiness evaluator
 	AXIOM_CI=1 AXIOM_CI_PRESERVE_CACHE=1 ./bin/readiness_start_gate
+
+# DEBT#537 slice: CI evidence collector — mints R1–R8 evidence envelopes from
+# the operational-slice E2E artifacts (logs/) by machine measurement only; the
+# readiness verdict itself belongs to bin/readiness_start_gate + the evaluator.
+# wp5 compile pattern (hermetic, --path:src); dedicated nimcache so parallel
+# compiles in the same checkout never share cache state.
+bin/readiness_collect_ci: tools/ci/readiness_collect_ci.nim
+	AXIOM_HERMETIC_BUILDING=1 $(NIM) c --path:src -d:release --hints:off --nimcache:build/nimcache/c2_collector -o:$@ $<
+
+# The collector's R8 §10.6 cargo sequence must not run in the tracked fixture
+# tests/fixtures/rust/axiom_rust_probe: cargo writes target/ build output that
+# .gitignore does not cover, which pollutes the working tree on local runs.
+# Run it in a throwaway mktemp copy instead — the local twin of the temp-copy
+# step in .github/workflows/axiom-operational-slice.yml (plain mktemp here, no
+# RUNNER_TEMP fallback, so the EXIT trap only ever removes a directory this
+# recipe created). Backslash continuations keep the sequence in ONE shell:
+# PROBE_ROOT/PROBE_DIR and the trap share scope, and the collector's exit code
+# stays the recipe's exit code.
+readiness-collect: bin/readiness_collect_ci ## Collect R1–R8 readiness evidence from E2E logs (measurements only; exit 0 = 8 envelopes written)
+	set -euo pipefail; \
+	PROBE_ROOT="$$(mktemp -d)"; \
+	PROBE_DIR="$$PROBE_ROOT/axiom_rust_probe"; \
+	trap 'rm -rf "$$PROBE_ROOT"' EXIT; \
+	cp -r tests/fixtures/rust/axiom_rust_probe "$$PROBE_DIR"; \
+	rm -rf "$$PROBE_DIR/target"; \
+	./bin/readiness_collect_ci --repo-root . --artifacts logs --out data/readiness/evidence --rust-probe-dir "$$PROBE_DIR"
 
 build: $(METADATA) ## 전체 CLI 빌드 (nim check)
 	@echo "=== [3/4] Full Build ==="

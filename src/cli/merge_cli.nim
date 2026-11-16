@@ -113,11 +113,14 @@ import core/trusted/layer_rules
 import core/trusted/layer_enforcement
 # ---------------------------------------------------------------------------
 # Required validation — policy SSOT mirror (config/policy/merge_admission.json
-# v1.19.0, ADR-0035 + ADR-0036 + hybrid authority rotation): the required
-# check contexts are the live five ('admission-check', 'bsec-integrity',
-# 'debt-registry-gate', 'generation-acceptance', 'axiom-operational-slice' —
-# the resolved "main" ruleset's required_status_checks, all integration_id
-# 15368 = the GitHub Actions app — the app-level producer control).
+# v1.23.0, ADR-0035 + ADR-0036 + hybrid authority rotation): the required
+# check contexts are the declared seven ('admission-check', 'bsec-integrity',
+# 'debt-registry-gate', 'generation-acceptance', 'axiom-operational-slice',
+# 'publication-integrity', 'readiness-verdict' — the resolved "main"
+# ruleset's required_status_checks, all integration_id 15368 = the GitHub
+# Actions app — the app-level producer control; readiness-verdict registers
+# as the 7th context by the operator ruleset PUT after PR-A lands — the
+# v1.23.0 activation order, DEBT#537).
 # Check-evidence evaluation is GitHub's ruleset authority at merge time (P12
 # delegation) — these constants are retained as the canonical identity
 # declaration, NOT as a merge-time re-verification. proof_unit_
@@ -136,6 +139,7 @@ const
     "generation-acceptance",
     "axiom-operational-slice",
     "publication-integrity",
+    "readiness-verdict",
   ]
   ## Repo-native producer identities — the Axiom-side identity mirror of the
   ## platform's app-level control (integration_id 15368). NOT a merge-time
@@ -170,6 +174,12 @@ const
     # is a post-push readback record in the policy SSOT; the PATH is the
     # primary binding (hybrid authority rotation, v1.19.0).
     ("publication-integrity", ".github/workflows/publication-integrity.yml"),
+    # v1.23.0 (2026-11-16, DEBT#537): readiness-verdict — the productization
+    # START readiness verdict, the SECOND job of the SAME workflow file as
+    # axiom-operational-slice (the policy SSOT carries the same
+    # workflowIdObservation value for both; the PATH is the primary binding
+    # — hybrid authority rotation, v1.19.0).
+    ("readiness-verdict", ".github/workflows/axiom-operational-slice.yml"),
   ]
   DefaultRepo*: string = "Archright/Axiom"
   ## Certified-admission policy key (certification-continuity Phase 5, INV-1):
