@@ -44,10 +44,14 @@ GATES_STATIC  := check-arch check-mcp doc-path-validator check-decision-binding 
                  check-merge-admission-cert-mirror \
                  check-layer-enforcement check-layer-negative
 GATES_FULL    := check-lean-vacuity check-vacuity-simple
-# ── Pre-push static admissibility subset (단일 정의점) ─────────────────────
-# push 대상 OID snapshot에서 실행되는 정적 게이트. push-admissibility: 레시피가
-# 이 변수를 실행 소비(단, thin target은 prebuilt symlink를 직접 사용)하므로,
-# 변수 갱신 시 레시피 실행 순서와 check-push-admissibility-integrity를 함께 맞춘다.
+# ── Pre-push static admissibility subset (선언; 실행 정본은 레시피 마커) ─────
+# push 대상 OID snapshot에서 실행되는 정적 게이트 선언. 실행의 정본은
+# push-admissibility 레시피의 각 게이트 호출 라인에 붙은 `# @pushGate <이름>`
+# 마커다 — 마커가 호출 라인 자체에 기술되므로 호출을 넣거나 빼면 마커가
+# 함께 이동한다. check-push-admissibility-integrity(레시피 첫 단계로 배선)가
+# 선언 == 마커 집합을 양방향 집합 비교로 강제하고, 요약 PASS 라인은
+# --executed-summary 사출(마커 집합)만 인쇄한다 — 선언만 되고 실행되지 않는
+# 게이트가 PASS 문자열에 등장할 수 없다(DEBT#534/535).
 # check-repository-surface는 push-context 전용 게이트(origin/main merge-base 필요,
 # d6520d04c 2026-09-21 도입)라 GATES_FAST/STATIC/FULL 유니버스 밖에 있으며
 # integrity check가 명시적으로 수용한다.
@@ -71,6 +75,7 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/test_axiom_ir.nim tests/test_best_effort_pragma.nim \
                   tests/test_gate_macro.nim tests/test_profiler.nim tests/test_state_ledger.nim \
                   tests/unit/test_debt_budget_sync.nim \
+                  tests/unit/test_debt_engine_sync_budget.nim \
                   tests/unit/test_debt_projection_determinism.nim \
                   tests/unit/test_theater_allowlist_structure.nim \
                   tests/unit/test_lane_module_resolution.nim \
@@ -106,10 +111,11 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/test_rust_guard_attempt.nim \
                   tests/unit/z3_binary_identity_cache_test.nim \
                   tests/unit/hermetic_source_hash_gate_test.nim \
-                  tests/unit/config_nims_source_identity_test.nim
+                  tests/unit/config_nims_source_identity_test.nim \
+                  tests/unit/test_push_admission_integrity.nim
 
 
-.PHONY: test perf-check bench-cost-probe verify-all meta-gate registry-check env-check doc-path-validator check-determinism check-mutation-harness check-decision-binding check-topology-drift check-decision-graph-drift check-git-purity check-manifest-consistency check-scope-consistency check-proof-unit-consistency check-proof-unit-reconcile check-epoch-transaction check-merge-admission-cert-mirror sloc-verify check-quality-gate local-verify-static local-verify-static-full check-toolchain-pin check-build-state-coherence check-binary-liveness local-verify-contract-exact check-mcp check-cert-integrity check-cert-integrity-fast check-readiness-start check-workflow-shell-syntax promote-assets promote-assets-apply test-fast test-fast-one perf-baseline clean-cache clean-test-cache clean-release-cache build verify-contract verify-contract-unit verify-contract-release-e2e ci-compile ci-bootstrap-cheap test-gateway-identity-gate gate-binaries validate-root-layout
+.PHONY: check-push-admissibility-integrity test perf-check bench-cost-probe verify-all meta-gate registry-check env-check doc-path-validator check-determinism check-mutation-harness check-decision-binding check-topology-drift check-decision-graph-drift check-git-purity check-manifest-consistency check-scope-consistency check-proof-unit-consistency check-proof-unit-reconcile check-epoch-transaction check-merge-admission-cert-mirror sloc-verify check-quality-gate local-verify-static local-verify-static-full check-toolchain-pin check-build-state-coherence check-binary-liveness local-verify-contract-exact check-mcp check-cert-integrity check-cert-integrity-fast check-readiness-start check-workflow-shell-syntax promote-assets promote-assets-apply test-fast test-fast-one perf-baseline clean-cache clean-test-cache clean-release-cache build verify-contract verify-contract-unit verify-contract-release-e2e ci-compile ci-bootstrap-cheap test-gateway-identity-gate gate-binaries validate-root-layout
 
 # ── Φ1: Build Metadata Prerequisite ──────────────────────────────────────────
 # build_metadata.json must exist before config.nims can staticRead it.
@@ -380,6 +386,9 @@ bin/epoch_transaction_gate: tools/ci/epoch_transaction_gate.nim src/gate/slice_c
 bin/merge_admission_cert_mirror_gate: tools/ci/merge_admission_cert_mirror_gate.nim
 	$(NIM) c $(NIM_TOOL_FLAGS) -o:$@ $<
 
+bin/push_admission_integrity_gate: tools/ci/push_admission_integrity_gate.nim
+	$(NIM) c $(NIM_TOOL_FLAGS) -o:$@ $<
+
 check-merge-admission-cert-mirror: bin/merge_admission_cert_mirror_gate ## certRequired + vaultCertRequired mirror consistency gate (policy SSOT ↔ merge_cli.nim compile-time constants; fail-closed)
 	@echo "=== [check-merge-admission-cert-mirror] certRequired/vaultCertRequired policy↔predicate mirrors ==="
 	@bin/merge_admission_cert_mirror_gate
@@ -478,8 +487,14 @@ check-toolchain-pin:
 
 # ── Phase 1: push-admissibility thin target + integrity ───────────────────
 # Thin target executed in snapshot CWD (make -C <snapshot> push-admissibility).
-# Uses prebuilt symlinks directly — no per-gate recompilation (Phase 0 measurement basis).
-# PUSH_ADMISSIBILITY_GATES is the single definition point; thin target and integrity check consume it.
+# Uses prebuilt symlinks where the pre-push hook stages them (Phase 0 measurement
+# basis); un-staged sub-make gates (check-repository-surface, validate-root-layout,
+# check-merge-admission-cert-mirror, check-push-admissibility-integrity) compile
+# snapshot-locally from the pushed OID's own sources — fail-safe closure that never
+# depends on the hook's frozen symlink list (VS-PUSH-1 pattern).
+# PUSH_ADMISSIBILITY_GATES는 선언이고 실행의 정본은 레시피의 `# @pushGate` 마커다:
+# 첫 단계로 배선된 check-push-admissibility-integrity가 선언 == 실행 집합을 양방향
+# 강제하고, 요약 라인은 --executed-summary 사출(마커 집합)만 인쇄한다(DEBT#534/535).
 #
 # check-debt skip predicate (sound input-set scoping): the debt engine's
 # verdict-relevant input set is exactly (a) every `file` in
@@ -505,6 +520,7 @@ push-admissibility-debt-prereqs: bin/effect_contract_projection bin/nimtry ## ch
 
 push-admissibility: ## pre-push push-target OID static admissibility (snapshot CWD)
 	@echo "=== push-admissibility: snapshot OID gates ==="
+	@$(MAKE) --no-print-directory check-push-admissibility-integrity
 	@if printf '%s\n' \
 	  'import json, subprocess, sys' \
 	  'def die(msg):' \
@@ -540,25 +556,27 @@ push-admissibility: ## pre-push push-target OID static admissibility (snapshot C
 	  | python3 -; then :; \
 	else \
 		$(MAKE) --no-print-directory push-admissibility-debt-prereqs && bin/debt_engine --validate; \
-	fi
-	@bin/check_nim_theater --allowlist tools/ci/nim_theater_allowlist.json src/ tests/ tools/
-	@bin/doc_path_validator
-	@bin/proof_unit_consistency_gate
-	@bin/proof_reconcile_gate
+	fi  # @pushGate check-debt
+	@bin/check_nim_theater --allowlist tools/ci/nim_theater_allowlist.json src/ tests/ tools/  # @pushGate check-nim-theater
+	@bin/doc_path_validator  # @pushGate doc-path-validator
+	@bin/proof_unit_consistency_gate  # @pushGate check-proof-unit-consistency
+	@bin/proof_reconcile_gate  # @pushGate check-proof-unit-reconcile
 	@if [ -f config/policy/epoch_manifest.json ]; then \
 		bin/epoch_transaction_gate --diff "$$(git merge-base origin/main HEAD)" HEAD; \
 	else \
 		echo "[check-epoch-transaction] SKIP (loud): epoch manifest absent from this OID — pre-introduction snapshot; the 4-way binding invariant applies from its introducing commit onward"; \
-	fi
-	@$(MAKE) --no-print-directory check-determinism
-	@$(MAKE) --no-print-directory check-repository-surface
-	@$(MAKE) --no-print-directory check-git-access
-	@$(MAKE) --no-print-directory check-monitor-purity
-	@$(MAKE) --no-print-directory check-workflow-shell-syntax
-	@$(MAKE) --no-print-directory check-layer-enforcement
-	@$(MAKE) --no-print-directory check-layer-negative
-	@$(MAKE) --no-print-directory validate-root-layout
-	@echo "PASS: $(PUSH_ADMISSIBILITY_GATES) green (snapshot)"
+	fi  # @pushGate check-epoch-transaction
+	@$(MAKE) --no-print-directory check-merge-admission-cert-mirror  # @pushGate check-merge-admission-cert-mirror
+	@$(MAKE) --no-print-directory check-determinism  # @pushGate check-determinism
+	@$(MAKE) --no-print-directory check-repository-surface  # @pushGate check-repository-surface
+	@$(MAKE) --no-print-directory check-git-access  # @pushGate check-git-access
+	@$(MAKE) --no-print-directory check-monitor-purity  # @pushGate check-monitor-purity
+	@$(MAKE) --no-print-directory check-workflow-shell-syntax  # @pushGate check-workflow-shell-syntax
+	@$(MAKE) --no-print-directory check-layer-enforcement  # @pushGate check-layer-enforcement
+	@$(MAKE) --no-print-directory check-layer-negative  # @pushGate check-layer-negative
+	@$(MAKE) --no-print-directory validate-root-layout  # @pushGate validate-root-layout
+	@gates=$$(bin/push_admission_integrity_gate --executed-summary) || { echo "[push-admissibility FAIL] executed-set emission failed — PASS summary suppressed (fail-closed)"; exit 1; }; \
+	echo "PASS: $$gates green (snapshot)"
 
 # ── Repository Surface ratchet (advisory adjudication layer) ──────────────
 # merge authority는 GitHub다(CODEOWNERS + ruleset required check + merge queue) —
@@ -568,13 +586,21 @@ push-admissibility: ## pre-push push-target OID static admissibility (snapshot C
 # base에 정책이 없으면(계약 이전 main에서 떨어진 브랜치) FAIL — ax git sync로 계약
 # 이후 main에 재단골 후 push. 미분류 경로는 PRODUCT(defaultClass, v51 · 전 op PASS),
 # FROZEN은 열거된 경계에서 ADD/MODIFY/DELETE = FAIL.
+# v99 (2026-11-16, 결정 #21): diff는 -c core.quotepath=false로 비-ASCII 경로의 git
+# 인용 변형을 차단하고, HEAD에 정책이 존재하면 selfAmendment 판정에 참여시킨다
+# (guard v2 — 없으면 base-only 판정). 판정기 바이너리는 CI(Gate A)와 달리 작업
+# 트리에서 컴파일한다: 이 타깃은 우회 가능한 개발자 피드백 장치다.
 check-repository-surface: bin/surface_guard ## Advisory surface report: base policy × branch diff
 	@mkdir -p .axiom; \
 	mb=$$(git merge-base origin/main HEAD); \
 	git show "$$mb:config/repository_surface.json" > .axiom/surface_base_policy.json \
 	  || { echo "[surface-gate FAIL] base $$mb 에 정책이 없다 — ax git sync 후 push"; exit 1; }; \
-	git diff --name-status "$$mb" HEAD > .axiom/surface_changes.name-status; \
-	bin/surface_guard --policy .axiom/surface_base_policy.json --diff .axiom/surface_changes.name-status
+	git -c core.quotepath=false diff --name-status "$$mb" HEAD > .axiom/surface_changes.name-status; \
+	if git show "HEAD:config/repository_surface.json" > .axiom/surface_head_policy.json 2>/dev/null; then \
+	  bin/surface_guard --policy .axiom/surface_base_policy.json --head-policy .axiom/surface_head_policy.json --diff .axiom/surface_changes.name-status; \
+	else \
+	  bin/surface_guard --policy .axiom/surface_base_policy.json --diff .axiom/surface_changes.name-status; \
+	fi
 
 bin/surface_guard: tools/surface_guard.nim
 	nim c --hints:off -d:release -o:$@ $<
@@ -629,11 +655,11 @@ check-workflow-shell-syntax: ## workflow run: 블록 전수 bash -n 문법 게�
 	  echo "[check-workflow-shell-syntax] SKIP (loud): tools/ci/validate_workflow_shell.sh absent from this OID — pre-introduction snapshot; the run-block syntax invariant applies from its introducing commit onward"; \
 	fi
 
-check-push-admissibility-integrity: ## subset ⊆ GATES_FAST∪GATES_STATIC∪GATES_FULL + check-repository-surface/check-git-access/check-monitor-purity/check-workflow-shell-syntax (push-only)
-	@ok=1; for g in $(PUSH_ADMISSIBILITY_GATES); do \
-	  case " $(GATES_FAST) $(GATES_STATIC) $(GATES_FULL) check-repository-surface check-git-access check-monitor-purity check-workflow-shell-syntax " in *" $$g "*) ;; *) \
-	    echo "ERROR: $$g 이(가) 게이트 유니버스(GATES_FAST/STATIC/FULL 또는 push-only surface/git-access/monitor-purity/workflow-shell-syntax)에 없습니다"; ok=0;; esac; \
-	done; [ $$ok -eq 1 ] && echo "✅ push-admissibility subset is within the known gate universe (+ push-only surface/git-access/monitor-purity/workflow-shell-syntax)" || exit 1
+check-push-admissibility-integrity: bin/push_admission_integrity_gate ## Declared == executed set equality (recipe @pushGate markers) + universe membership — fail-closed (DEBT#534/535)
+	@echo "=== [check-push-admissibility-integrity] declared == executed (recipe markers) ==="
+	@bin/push_admission_integrity_gate --declared "$(PUSH_ADMISSIBILITY_GATES)" \
+	  --universe "$(GATES_FAST) $(GATES_STATIC) $(GATES_FULL) check-repository-surface check-git-access check-monitor-purity check-workflow-shell-syntax"
+	@echo "✅ push-admission-integrity PASS — declared set == executed set + universe membership"
 
 # ── Productization Contract Preservation (verify-contract canonical gate) ─────
 # Phase 0.5 (plan SSOT): make verify-contract = 유일한 canonical local entrypoint

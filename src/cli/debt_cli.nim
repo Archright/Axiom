@@ -483,20 +483,106 @@ func statusDriftIds(entries: JsonNode): seq[string] =
        entry.getOrDefaultStr("resolution", "").len > 0:
       result.add(entry.getOrDefaultStr("id", "?"))
 
-proc hashDriftIds(entries: JsonNode): seq[string] {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
-  ## Entries whose stored contentHash no longer matches the files they reference.
+func stripAnchorAnnotation(raw: string): string {.raises: [].} =
+  ## Drop a trailing parenthesized annotation, e.g. "src/a.nim:5-7 (REMOVED)".
+  let cut = raw.find(" (")
+  if cut >= 0: raw[0 ..< cut].strip() else: raw.strip()
+
+func isDigitStr(s: string): bool {.raises: [].} =
+  if s.len == 0: return false
+  for ch in s:
+    if ch < '0' or ch > '9': return false
+  true
+
+func isRangeSpec(spec: string): bool {.raises: [].} =
+  ## True for line specs as written by the registry: "22-27", "129", "22-27, 87-89".
+  if spec.strip().len == 0: return false
+  for seg in spec.split(','):
+    let s = seg.strip()
+    if s.len == 0: return false
+    let dash = s.find('-')
+    if dash < 0:
+      if not isDigitStr(s): return false
+    else:
+      if s.rfind('-') != dash: return false
+      if not (isDigitStr(s[0 ..< dash]) and isDigitStr(s[dash+1 .. ^1])): return false
+  true
+
+func parseLineNum(s: string): int {.raises: [].} =
+  ## Digits-only string → non-negative int; -1 on anything else.
+  if not isDigitStr(s) or s.len > 9: return -1
+  result = 0
+  for ch in s:
+    result = result * 10 + (ord(ch) - ord('0'))
+
+func splitAnchorRef(raw: string): tuple[path: string, spec: string] {.raises: [].} =
+  ## Split a registry reference into (path, line-spec):
+  ## "src/a.nim:46-69" → ("src/a.nim", "46-69"); "src/a.nim" → ("src/a.nim", "").
+  ## Annotations in parentheses are dropped first.
+  let s = stripAnchorAnnotation(raw)
+  let colon = s.rfind(':')
+  if colon > 0:
+    let spec = s[colon+1 .. ^1]
+    if isRangeSpec(spec):
+      return (s[0 ..< colon].strip(), spec)
+  (s, "")
+
+proc contentHashCandidates*(entry: JsonNode): seq[string] {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## Schema-§6 digests (docs/spec/debt_registry_schema.md §6) recomputable from
+  ## the current tree for one registry entry: the exact artifact content of every
+  ## referenced path, plus the exact line/line-range content (raw and
+  ## whitespace-trimmed) named by the entry. References are collected from
+  ## `files` (schema §3 allows "path:start-end" values) and from `lineRange`
+  ## segments separated by ";".
+  var refs: seq[string] = @[]
+  if entry.hasKey("files") and entry{"files"}.kind == JArray:
+    for f in entry{"files"}:
+      refs.add(f.getStr())
+  for part in entry.getOrDefaultStr("lineRange", "").split(';'):
+    refs.add(part)
+  var paths: seq[string] = @[]
+  var ranges: seq[tuple[path: string, a: int, b: int]] = @[]
+  for r in refs:
+    let (path, spec) = splitAnchorRef(r)
+    if path.len == 0: continue
+    paths.add(path)
+    for seg in spec.split(','):
+      let s = seg.strip()
+      if s.len == 0: continue
+      let dash = s.find('-')
+      if dash < 0:
+        let n = parseLineNum(s)
+        if n >= 1: ranges.add((path, n, n))
+      else:
+        let a = parseLineNum(s[0 ..< dash])
+        let b = parseLineNum(s[dash+1 .. ^1])
+        if a >= 1 and b >= a: ranges.add((path, a, b))
+  for path in paths.deduplicate():
+    if fileExists(path):
+      result.add("sha256:" & $Sha_256.secureHash(readFile(path)))
+  for r in ranges:
+    if not fileExists(r.path): continue
+    let lines = readFile(r.path).splitLines()
+    if r.a > lines.len: continue
+    let last = min(r.b, lines.len)
+    let raw = lines[r.a - 1 .. last - 1].join("\n")
+    result.add("sha256:" & $Sha_256.secureHash(raw))
+    result.add("sha256:" & $Sha_256.secureHash(raw.strip()))
+
+proc hashDriftIds*(entries: JsonNode): seq[string] {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## Entries whose stored contentHash no longer matches the content the entry
+  ## anchors. The stored digest is compared like-for-like against the §6 digests
+  ## recomputable from the current tree (contentHashCandidates). Entries whose
+  ## references resolve to nothing on disk are outside this check (missing files
+  ## are --prune's domain); an entry with resolvable references whose stored
+  ## digest matches none of them drifts.
   for entry in entries:
     if not (entry.hasKey("files") and entry.hasKey("lineRange")): continue
     if entry{"files"}.kind != JArray: continue
-    var fileHashes: seq[string] = @[]
-    for f in entry{"files"}:
-      let filePath = f.getStr()
-      if fileExists(filePath):
-        fileHashes.add("sha256:" & $Sha_256.secureHash(readFile(filePath)) & "\x02" & filePath)
-    if fileHashes.len > 0:
-      let computed = "sha256:" & $Sha_256.secureHash(fileHashes.join("\x01"))
-      if entry.getOrDefaultStr("contentHash", "") != computed:
-        result.add(entry.getOrDefaultStr("id", "?"))
+    let candidates = contentHashCandidates(entry)
+    if candidates.len == 0: continue
+    if entry.getOrDefaultStr("contentHash", "") notin candidates:
+      result.add(entry.getOrDefaultStr("id", "?"))
 
 proc reportDriftIds(label: string, ids: seq[string]) {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   echo label, " — ", ids.len, " entry(ies):"

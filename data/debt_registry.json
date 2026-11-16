@@ -40,8 +40,11 @@
       ],
       "severity": "medium",
       "source": "storage-retention-workstream-G1-upload-inventory-2026-10-10",
-      "status": "open",
-      "resolution": "UNRESOLVED"
+      "status": "closed",
+      "resolution": "FIXED 2026-11-15 (workstream/vs-artifact-fix, PR #97, head a21f0be). Defect class fixed repo-wide, beyond the two registered sites: audit of all 40 upload-artifact steps in .github/workflows at c1c15cc found 10 already attempt-scoped names, 2 already overwrite:true (admission-check cache carriers), and 29 fixed-name sites without overwrite — including this debt's ci-bootstrap-artifacts and candidate-arm64 (runner-pool-acceptance.yml). All 29 patched with overwrite: true, names unchanged, so every exact-name/pattern consumer contract is preserved (mint exactly-one, publisher run-scoped lookup, shard candidate-arm64 download + manifest sha256 re-verify, executed-* pattern merge, license-scan-shard-* exactly-3, release bundle chain, byoa fixtures). The registration's open choice for candidate-arm64 is resolved as overwrite, not a run_attempt suffix: same-run stable-name consumers plus consumer-only re-runs (re-run failed jobs) rely on the persisted artifact, and an attempt suffix would double-count pattern merges. Evidence: (a) semantic diff origin/main to PR head over a real YAML parse — every with-block differs only by added overwrite:true, path/name values byte-identical; (b) local gates on the PR tree: check-workflow-shell-syntax 244 blocks 0 failures, check-epoch-transaction PASS, check-nim-theater PASS, debt_engine --validate 1711/1711, debt_integrity_gate PASS; (c) PR #97 CI on a21f0be: all ruleset-required checks green incl. publication-integrity (run 43697207766 attempt 1) and axiom-operational-slice (run 43697207816), debt-registry-gate (run 43697207794); (d) live rerun demonstration of the exact debt scenario: publication-integrity run 43697207766 re-run to attempt 2 (conclusion success, all 9 jobs green, gate job 132763494109) — the same fixed names re-uploaded in the same run while attempt-1 artifacts were live: all 9 artifacts were replaced with new ids (exactly-9 holds, no coexistence), the documented overwrite replace behavior.",
+      "resolvedAt": "2026-11-15",
+      "resolvedBy": "Kimi Code CLI agent (user-authorized)",
+      "lastVerifiedAt": "2026-11-15T09:17:15Z"
     },
     {
       "id": "DEBT#264",
@@ -5401,11 +5404,13 @@
         "docs/agents/rules_workflow.md"
       ],
       "source": "theater_audit",
-      "status": "open",
-      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9. Fix direction: derive the summary line from the set of recipes actually invoked (single source), or wire the missing target in; a declared-but-unrun gate must never appear in a PASS string.",
-      "lastVerifiedAt": "2026-11-14T00:00:00Z",
+      "status": "closed",
+      "resolution": "Fixed: check-merge-admission-cert-mirror wired into the push-admissibility recipe (Makefile, sub-make invocation after the check-epoch-transaction block) and the summary line now derives from the executed set emitted by bin/push_admission_integrity_gate --executed-summary (recipe # @pushGate markers), never from the declaration. Observed: make push-admissibility exit 0 with the mirror gate actually executing (its === and PASS markers present in the run log) and the string check-merge-admission-cert-mirror occurring at invocation + summary, not summary-only; regression test tests/unit/test_push_admission_integrity.nim replays the exact drift (deleting the invocation line) and the gate FAILs closed naming check-merge-admission-cert-mirror.",
+      "lastVerifiedAt": "2026-11-15T11:40:21Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — Makefile is outside the src/-only marker scan; trace: this entry's lineRange/contentHash plus the measured run log."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — Makefile is outside the src/-only marker scan; trace: this entry's lineRange/contentHash plus the measured run log.",
+      "resolvedAt": "2026-11-15",
+      "resolvedBy": "Kimi Code CLI agent (user-authorized)"
     },
     {
       "id": "DEBT#535",
@@ -5421,11 +5426,13 @@
         "Makefile"
       ],
       "source": "theater_audit",
-      "status": "open",
-      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9. Fix direction: make the integrity check derive the executed set from the recipe (or from a machine-readable manifest) and assert set equality, then wire the check into the push path it audits.",
-      "lastVerifiedAt": "2026-11-14T00:00:00Z",
+      "status": "closed",
+      "resolution": "Fixed: check-push-admissibility-integrity upgraded from membership-only to declared-vs-executed SET EQUALITY — tools/ci/push_admission_integrity_gate.nim derives the executed set from the recipe's per-invocation # @pushGate markers, compares it with make-expanded PUSH_ADMISSIBILITY_GATES both directions, cross-checks sub-make targets against markers, flags unaccounted sub-makes, keeps universe membership as a secondary assertion, and requires the auditor itself to be wired into the recipe (wired as the push-admissibility recipe's first step; its invocation plus push-admissibility-debt-prereqs are the only allowlisted non-gate sub-makes). Observed: the DEBT#534 drift state now FAILs closed (mutation tests: declared-without-invocation, invocation-removed, auditor-removed, unaccounted sub-make — all exit 1 with named reasons); 11/11 regression tests in tests/unit/test_push_admission_integrity.nim.",
+      "lastVerifiedAt": "2026-11-15T11:41:14Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — Makefile is outside the src/-only marker scan; trace: this entry's lineRange/contentHash."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — Makefile is outside the src/-only marker scan; trace: this entry's lineRange/contentHash.",
+      "resolvedAt": "2026-11-15",
+      "resolvedBy": "Kimi Code CLI agent (user-authorized)"
     },
     {
       "id": "DEBT#536",
@@ -5487,11 +5494,14 @@
         "tools/surface_guard.nim"
       ],
       "source": "theater_audit",
-      "status": "open",
-      "resolution": "UNRESOLVED — architect decision required: either remove `Makefile` from classes.CONTROLLED so the FROZEN binding takes effect (a FROZEN-surface policy change and a CI Epoch transition, because the stricter rule changes landing admission), or remove it from classes.FROZEN so the current all-PASS posture is stated honestly. Keeping both registrations is not a third option: the first-match resolver makes one of them a lie. Related: DEBT#542 (the whole surface policy has no admission-time enforcement, so this class/ownership difference binds nothing at merge).",
-      "lastVerifiedAt": "2026-11-14T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-16 (PR #107, native merge 35b453c0): policy v99 normalizes the dual registration — Makefile and ci/checker.mk are single-registered CONTROLLED exact (removed from classes.FROZEN), so the first-match resolver no longer silently drops a stricter rule: there is no second registration to drop. Measured at main 35b453c0: guard verdict on 'M\\tMakefile' = PASS/OK (policyVersion 99, binding base) — the CONTROLLED posture, now honestly stated as the single intended grade per decision #21; classes.FROZEN contains neither path (measured empty). A future stricter posture is now an explicit selfAmendment policy amendment (guard v2 conditions a-d) through an approved policy PR, not a silent resolver artifact. Residual: 126 other glob-vs-exact dual registrations survive in v99 (this entry's generalization) — tracked as DEBT#545, probe-observed instance .githooks/pre-push (PR #110).",
+      "lastVerifiedAt": "2026-11-16T06:53:57Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the sites are a FROZEN policy JSON and a tools/ Nim guard, both outside the src/-only marker scan; trace: this entry's contentHash over config/repository_surface.json (sha256 758caf91...) plus the measured surface_guard verdict pair (M Makefile PASS vs A src/gate FROZEN FAIL)."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the sites are a FROZEN policy JSON and a tools/ Nim guard, both outside the src/-only marker scan; trace: this entry's contentHash over config/repository_surface.json (sha256 758caf91...) plus the measured surface_guard verdict pair (M Makefile PASS vs A src/gate FROZEN FAIL).",
+      "resolvedAt": "2026-11-16",
+      "resolvedBy": "Kimi Code CLI agent (user-authorized, MUST-T2a 2026-11-16)",
+      "resolutionNote": "Resolution evidence chain: v99 policy (PR #107 epoch commit 598b8e2), local measurement 'M Makefile' PASS + FROZEN list empty, DEBT#545 registered for the 126-conflict residual."
     },
     {
       "id": "DEBT#539",
@@ -5532,7 +5542,7 @@
       ],
       "source": "theater_audit",
       "status": "open",
-      "resolution": "UNRESOLVED - architect decision required, and it belongs to the Stage B surface adjudication with DEBT#538: either register data/decision_binding_baseline.json and tools/decision_binding_checker.nim in classes.FROZEN (a policy change and a CI-epoch transition, because it converts an all-PASS surface into a FAIL surface) or keep them PRODUCT and add CODEOWNERS entries so the accepting edit at least requires an owner review. Keeping them unowned is not a third option: the ratchet's whole claim is that the number only falls, and a file nobody owns can raise it silently. Related: DEBT#542 (the whole surface policy has no admission-time enforcement, so this class/ownership difference binds nothing at merge).",
+      "resolution": "CODEOWNERS side fixed 2026-11-15: exact-path rules for /data/decision_binding_baseline.json and /tools/decision_binding_checker.nim added to .github/CODEOWNERS, both assigning @Archright/architect (measured pre-edit at main c1c15cc: 44 rules, no fnmatch/prefix match for either path; post-edit both covered). Fix-commit local gates: bin/debt_engine --validate 1711/1711, bin/debt_integrity_gate PASS, make check-nim-theater PASS, make check-repository-surface 0 violations (policyVersion 98, binding base, changeCount 1). The org-hosted landing-integrity job trust-surface-codeowners (ruleset 23943917, pinned 6b91c6e7) adjudicates only base-tree trustSurface coverage, which added rules cannot reduce, and was observed passing on PR #90 (run 43682084387, job 132714677817, 2026-11-15). Still open: config/repository_surface.json (policyVersion 98) registers no pattern for the two paths, so they still resolve PRODUCT with every operation PASS, and nothing binds the ownership at merge - the live ruleset reports require_code_owner_review=false and required_approving_review_count=0, so per docs.github.com (about-code-owners, available-rules-for-rulesets) the rule requests @Archright/architect review rather than gating merge. Surface-policy registration is deferred to DEBT#542, which requires an architect amendment path (the policy file is itself FROZEN and both active branch rulesets report bypass_actors=[]).",
       "lastVerifiedAt": "2026-11-15T00:00:00Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 - the sites are a policy JSON and a CODEOWNERS file, outside the src/-only marker scan; trace: resolveClass order in tools/surface_guard.nim:188-197, defaultClass in config/repository_surface.json, and the 43 CODEOWNERS rules."
@@ -5575,11 +5585,99 @@
         ".githooks/pre-push"
       ],
       "source": "theater_audit",
-      "status": "open",
-      "resolution": "UNRESOLVED - needs an authority decision before any mechanical fix. (a) Define the policy-amendment path, then make one surface executor admission-enforced (smallest shape: a step inside an already-required workflow, as done for DEBT#539) - blocked today because config/repository_surface.json is itself FROZEN and both branch rulesets have bypass_actors=[], so no existing mechanism can authorize the amendment. (b) Or delete the protection claim: demote FROZEN/CONTROLLED to advisory vocabulary in the policy file and in AGENTS.md §-1 so the documents state what is enforced. Both are architect decisions. Until one lands, reviewers must treat FROZEN as advisory; DEBT#538 (Makefile double class) and DEBT#540 (baseline unowned) are instances of the same gap and cannot be closed by classification alone.",
-      "lastVerifiedAt": "2026-11-15T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-16 — option (a) of this entry's own resolution field, landed and operationally proven. (1) Policy-amendment authority path exists: guard v2 selfAmendment contract (conditions a-d, policyVersion increment, allowedPaths) + decision #21; exercised by PR #107 itself (native merge 35b453c0 via merge queue). (2) Surface admission is now enforced inside the already-required check, the DEBT#539 shape — no seventh context, no ruleset change: SL-20 'repository surface admission' step wired into admission-check.yml :998-1110, fired by slice-engine scope from the BASE epoch manifest (epoch N+9, implementedSlices includes SL-20 — 'Slice absent from manifest = NO-FIRE', so rotation is structural). Gate-pair integrity: guard compiled from the BASE tree (Gate A), base policy read by object at B, head policy only via the selfAmendment contract. (3) Org callee pin rotated c021c338 -> 35b453c0 (Archright/.github PR #276, native merge ac49853f; landing run 43812822151 had referenced the old pin c021c338 = the E1 transition-window observation, exactly as predicted) and org rulesets 25218071/23943917 workflow-rule SHAs re-pinned 6b91c6e7 -> ac49853f with GET readback byte-consistency (id-only server field diff). (4) Operational proof, all four observed: NEGATIVE probe PR #111 (AGENTS.md exact-FROZEN modify) — SL-20 FAIL/SURFACE_FORBIDDEN path AGENTS.md, required check admission-check FAILURE, mergeStateStatus BLOCKED, and the local pre-push push-admissibility hook independently blocked the same push (verdict FAIL/SURFACE_FORBIDDEN, documented --no-verify risk path used only to reach the server observation, per v96 precedent); POSITIVE probe PR #112 (CONTROLLED docs/adr/0017 modify) — SL-20 PASS/OK policyVersion 99, admission-check green, normal local push; DEFECT-FINDING probe PR #110 (.githooks/pre-push modify) — SL-20 fired and honestly judged the path CONTROLLED PASS, exposing that the residual glob-vs-exact override disarms the FROZEN glob — registered as DEBT#545 (the 126-conflict residual this entry's description called the 'second measured defect'); main re-verification — check-repository-surface PASS at 35b453c0, TWS pin pairing blob==tws==69d110b9, epoch N+9 SL-20 in manifest. Residual not covered by this close: the 126 glob-vs-exact dual registrations (DEBT#545) and the CODEOWNERS non-enforcement observation (require_code_owner_review=false) — both explicitly out of this close and separately tracked.",
+      "lastVerifiedAt": "2026-11-16T06:55:45Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 - the site is a policy JSON plus workflow YAML, outside the src/-only marker scan; trace: the live required_status_checks read (6 contexts, none runs surface_guard), repository_surface.yml:1-18, Makefile:62, .githooks/pre-push:767, generation-acceptance.yml:200-254 (trustSurface + prefixes), and the ruleset read-back (require_code_owner_review=false, bypass_actors=[])."
-    }
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 - the site is a policy JSON plus workflow YAML, outside the src/-only marker scan; trace: the live required_status_checks read (6 contexts, none runs surface_guard), repository_surface.yml:1-18, Makefile:62, .githooks/pre-push:767, generation-acceptance.yml:200-254 (trustSurface + prefixes), and the ruleset read-back (require_code_owner_review=false, bypass_actors=[]).",
+      "resolvedAt": "2026-11-16",
+      "resolvedBy": "Kimi Code CLI agent (user-authorized, MUST-T2a 2026-11-16)",
+      "resolutionNote": "Evidence: PR #107 merge 35b453c0 (SL-20 wiring, v99); org Archright/.github #276 merge ac49853f (pin rotation) + ruleset re-pins 25218071/23943917 readback; probe runs 43815736467 (PR #110), 43817361436 (PR #111 negative, BLOCKED), 43818348543 (PR #112 positive); pre-push block log OID c939ecc; DEBT#545 registered for the residual."
+    },
+    {
+      "id": "DEBT#543",
+      "category": "Theater/Fail-Open Verdict",
+      "impact": "medium",
+      "severity": "medium",
+      "title": "debt_engine --sync-budget printed 'Sync complete.' and exited 0 while BUDGET records went unmeasured (evaluator error) — the unenforced-claim swallow class of §0.9",
+      "description": "Machine-observed 2026-11-15 at c1c15cc (worktree origin/main) in a checkout without the evaluator dependency binaries: `bin/debt_engine --sync-budget` printed '[warn] BUDGET#002/003/004: evaluator returned error (-1), skipping', listed them under 'Skipped (no evaluator)', wrote data/debt_ledger.json, then printed 'Sync complete.' and exited 0. Root cause is not the evaluator logic — with bin/layer_enforcement_gate, bin/effect_contract_projection, and bin/nimtry built, all 6 records process and 0 skip — it is the verdict: evalLayerViolations (tools/debt_engine.nim:1674 at c1c15cc) and evalNimtryViolations (:1703) return -1 when their dependency binary is missing (evalEffectViolations already echoed a [skip] line), syncBudgetCore (:1906-1913) skips the record, and cmdSyncBudget (:1995-2002) ended with 'Sync complete.' and a normal return, so a partial sync was indistinguishable from a fully measured one at the exit-code level. A budget whose target was never evaluated this run is an unenforced claim; AGENTS.md §0.9 classifies swallowed failures as theater. Contrast: --validate Part D (:1460-1462) warns-and-continues for unmeasurable metrics BY DESIGN, documented at .github/workflows/debt-registry-gate.yml:28-31 (CI runs without bin/nimtry so the nimtry metric reports unmeasured there) — that surface is intentional and stays; --sync-budget had no such documented intent while its contract (docs/spec/debt_budget_pipeline.md §4.1) specifies exit 1 on error. Fixed in the same change: subprocess evaluators now echo '[skip] <metric>: evaluator binary unavailable (<path>)' (matching evalEffectViolations), and cmdSyncBudget reports 'Sync INCOMPLETE: N of M BUDGET record(s) unmeasured' and exits 1 when any record is skipped (measured records still land; unmeasured records keep their last verified value, never a fabricated current).",
+      "symbol": "tools/debt_engine.nim cmdSyncBudget + syncBudgetCore + evalLayerViolations/evalNimtryViolations/evalEffectViolations",
+      "contentHash": "sha256:0e064952cb9831ac7112e7f23db18b9959ebbf5ca7813f145394aff6490fb639",
+      "lineRange": "tools/debt_engine.nim:1674 (evalLayerViolations missing-binary guard, pre-fix), :1703 (evalNimtryViolations), :1781-1782 (evalEffectViolations), :1906-1913 (syncBudgetCore skip), :1995-2002 (cmdSyncBudget 'Sync complete.' + implicit exit 0) — line numbers at c1c15cc",
+      "files": [
+        "tools/debt_engine.nim"
+      ],
+      "source": "theater_audit",
+      "status": "closed",
+      "resolution": "FIXED — cmdSyncBudget now fails closed: reproduced at c1c15cc without evaluator binaries ('Skipped (no evaluator): BUDGET#002/003/004 (evaluator error)' then 'Sync complete.' exit 0); after the fix the same degraded checkout prints 'Sync INCOMPLETE: 3 of 6 BUDGET record(s) unmeasured' and exits 1, and a complete build processes 6/6 records with 0 skips and exit 0. Missing-binary evaluators echo '[skip] <metric>: evaluator binary unavailable (<path>)'. Regression-pinned by tests/unit/test_debt_engine_sync_budget.nim (5 cases: happy-path ledger write, idempotency, missing-binary fail-closed with preserved last-verified value, dry-run fail-closed, unknown-metric fail-closed). --validate 1717/1717, 0 failed.",
+      "lastVerifiedAt": "2026-11-15T08:55:34Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is tools/debt_engine.nim, outside the src/-only {.axiomDebt.} marker scan; trace: this entry's contentHash over tools/debt_engine.nim at c1c15cc (sha256 0e064952...) plus the reproduced output pair (before: 3 skips + 'Sync complete.' + exit 0; after: 'Sync INCOMPLETE' + exit 1) and tests/unit/test_debt_engine_sync_budget.nim which pins both branches.",
+      "resolvedAt": "2026-11-15",
+      "resolvedBy": "Kimi Code CLI agent (user-authorized)"
+    },
+    {
+      "id": "DEBT#544",
+      "category": "Theater/Fail-Open Verdict",
+      "impact": "medium",
+      "severity": "medium",
+      "title": "hashDriftIds recomputed §6 contentHash with a whole-file composite convention no writer uses, flagging byte-identical entries as drift (98/98 at c1c15cc, 0 satisfied) and silently skipping all 40 path:start-end refs",
+      "description": "Machine-observed 2026-11-15 at c1c15cc and re-verified at c2c969a: the drift check in src/cli/debt_cli.nim hashDriftIds recomputed each entry's expected contentHash as a composite digest over whole files (sha256 of the \\x01-join of per-file 'sha256:<filehash>\\x02<path>' strings) — a convention no registry writer writes. Per docs/spec/debt_registry_schema.md §6, entries store sha256 of the exact artifact content or of the line-range content. Result: every in-scope entry was flagged (98/98 at c1c15cc, 0 satisfied) including byte-verified false positives (DEBT#407, DEBT#486, DEBT#499, DEBT#542 — each entry's stored hash was byte-identical to the §6-recomputed digest), and the 40/138 entries whose files refs carry path:start-end suffixes were silently skipped because fileExists never resolved them. The check reported drift/no-drift in neither direction honestly: in-scope entries all read drift (noise), out-of-scope entries read nothing (silence). Fixed in PR #102 (workstream/vs-drift-rebase, commit 0a97e6e, merge c2c969a): hashDriftIds now recomputes the §6 convention like-for-like via contentHashCandidates — exact artifact digest of every referenced path plus exact line/line-range content digest (raw and trimmed) — with suffix-aware reference parsing (path:a-b, path:N, comma sub-ranges, annotations, multi-segment refs). The code fix landed but the registry registration was lost in the rebase (ID DEBT#543 was taken by PR #100's budget entry), which is what this entry closes: the defect's canonical trace now lives in the SSOT as a FIXED record with the re-verified evidence below.",
+      "symbol": "src/cli/debt_cli.nim hashDriftIds + contentHashCandidates",
+      "contentHash": "sha256:489b08de3afacec9adacf0b0200f4f831f7116247a2dac7c372c62c5b2631d39",
+      "lineRange": "src/cli/debt_cli.nim hashDriftIds (pre-fix, at c1c15cc) + contentHashCandidates (post-fix, PR #102 commit 0a97e6e, merge c2c969a) — anchor conventions per docs/spec/debt_registry_schema.md §6",
+      "files": [
+        "src/cli/debt_cli.nim",
+        "tests/unit/test_debt_hash_drift.nim"
+      ],
+      "source": "theater_audit",
+      "status": "closed",
+      "resolution": "FIXED (PR #102, merge c2c969a) — hashDriftIds now compares contentHash like-for-like per docs/spec/debt_registry_schema.md §6: whole-artifact anchor matches when the exact artifact digest equals the stored hash; line/line-range anchors match when the raw or trimmed line content digest equals it; suffix-aware ref parsing (path:a-b, path:N, comma sub-ranges, annotations, multi-segment) resolves the 40 previously-skipped entries. Re-verified at this tree: tests/unit/test_debt_hash_drift.nim 10/10 (5 no-drift anchors, 2 tamper-drift, 1 composite-convention-still-drifts, 2 out-of-scope), bin/debt_engine --validate all checks passed, bin/debt_integrity_gate PASS (28 open debts have code markers), bin/reanchor_pin OK no-drift. This entry restores the registry trace lost in the #102 rebase (AGENTS.md §0.9: discovered theater is never quietly patched).",
+      "lastVerifiedAt": "2026-11-15T12:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is src/cli/debt_cli.nim, a CLI module outside the src/core marker scan scope; struct binding here records the witness for the schema §6 convention fix: this entry's contentHash over src/cli/debt_cli.nim at c2c969a (sha256 489b08de...), PR #102 merge c2c969a, and tests/unit/test_debt_hash_drift.nim which pins both directions (honest no-drift on §6 anchors, drift on tamper and on the old composite convention).",
+      "resolvedAt": "2026-11-15",
+      "resolvedBy": "Kimi Code CLI agent (user-authorized)"
+    },
+    {
+      "id": "DEBT#545",
+      "category": "Theater/Unenforced Claim",
+      "impact": "high",
+      "severity": "high",
+      "title": "126 glob-vs-exact dual registrations remain in repository_surface policy v99: CONTROLLED/PRODUCT exact entries override FROZEN globs via the first-match resolver, and the probe-observed instance is .githooks/pre-push — the pre-push admissibility hook itself — judged PASS for MODIFY",
+      "description": "Probe-observed 2026-11-16 (negative probe PR #110, admission-gate run 43815736467, job 133127762521, closed unmerged). The PR modified .githooks/pre-push (an admission control surface); SL-20 fired correctly (changed files: 1, PR_NUMBER=110, callee admission-check.yml@35b453c0) and the guard returned verdict PASS / reasonCode OK / binding base / policyVersion 99 — because classes.CONTROLLED lists .githooks/pre-push and .githooks/pre-commit as exact entries (:180-181) while classes.FROZEN simultaneously declares the glob .githooks/**, and resolveClass (PRODUCT -> CONTROLLED -> FROZEN, tools/surface_guard.nim) returns the CONTROLLED match first, so the FROZEN glob never binds. This is the same defect class as DEBT#538 (Makefile) surviving the v99 normalization, which only regularized the two exact-exact instances (Makefile, ci/checker.mk). Full audit the same day (globMatch semantics re-implemented off guard v2 and run over all 274 CONTROLLED entries against the 6 FROZEN globs): 126 conflicts remain — ~40 under .github/**, ~70 under src/gate/**, 3 under config/policy/**, 2 under .githooks/** (tools/hooks/** and vendor/** contribute none). High-risk instances where the intended grade is in doubt: .githocks/pre-push and .githooks/pre-commit (the local admission hooks themselves — the FROZEN glob is the protection intent and the CONTROLLED exact silently disarms it), config/policy/epoch_manifest.json + observation_gates.json + merge_admission.json (policy SSOT under a FROZEN glob, carved out to CONTROLLED), src/gate/runners/import_encapsulation_gate.nim (AGENTS.md §-1 ABSOLUTE-rule file, currently CONTROLLED-exact over the src/gate/** FROZEN glob), and src/gate/static_gate_scanner.nim (TCB per §0.9b). The declared FROZEN protection for these paths is inert theater under §0.9: a reader of classes.FROZEN is told the path is frozen while admission permits every edit. Also observed during the audit: docs/agents/kimi_hooks.md is CONTROLLED-registered but does not exist at main (ghost registration, no security impact — CONTROLLED ADD is PASS — but a registry hygiene defect).",
+      "symbol": "config/repository_surface.json classes.CONTROLLED exact entries overriding classes.FROZEN globs + tools/surface_guard.nim resolveClass",
+      "contentHash": "sha256:1f565eb2817e4c685b15614ad9ab796edbc8afde07548615e4a328df403a3f2c",
+      "lineRange": "config/repository_surface.json classes.CONTROLLED (:180-181 .githooks entries among 274), classes.FROZEN (6 globs: config/policy/**, .github/**, .githooks/**, tools/hooks/**, src/gate/**, vendor/**); tools/surface_guard.nim resolveClass :245-256",
+      "files": [
+        "config/repository_surface.json",
+        "tools/surface_guard.nim"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED — v100 policy normalization required: each path must be registered to exactly one intended class (per-path intended-grade adjudication; the audit list of 126 conflicts is the worklist). This is an architect decision per slice policy (VS-1 decision #21: current-resolver outcome does not automatically justify the class — intended policy is the SSOT). The .githooks/pre-push, .githooks/pre-commit, config/policy/*.json (3), import_encapsulation_gate.nim, and static_gate_scanner.nim instances are the priority adjudications; the ~110 .github/** and src/gate/** CI/gate-infra instances may be confirmed as intended CONTROLLED carve-outs (v95/v96 precedent) and then normalized by REMOVING the redundant FROZEN glob overlap or documenting the carve-out contract explicitly. The change path is the selfAmendment contract (guard v2 conditions a-d, policyVersion increment) — now proven operationally by PR #107. Ghost registration docs/agents/kimi_hooks.md should be pruned in the same v100 pass.",
+      "lastVerifiedAt": "2026-11-16T06:50:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is a FROZEN policy JSON plus a tools/ guard, both outside the src/-only marker scan; trace: this entry contentHash over config/repository_surface.json at v99 (sha256 1f565eb2...), the probe run chain (PR #110 run 43815736467 job 133127762521: SL-20 fired, verdict PASS/OK/binding base), and the 126-conflict audit reproducing guard globMatch semantics."},
+    {
+      "id": "DEBT#546",
+      "category": "Theater/Vacuous Check",
+      "impact": "high",
+      "severity": "high",
+      "title": "Merkle root guard (SA-γ3) never hashes guarded file contents — sha256sum receives bare filenames, all 4 guarded files ENOENT, and the verdict binds to the sha256sum diagnostic prefix, so content tampering always passes",
+      "description": "Machine-observed 2026-11-16 at 38c9197: the static Merkle block (Guard the Guard: Merkle Root Integrity, SA-γ3) in config/integrity.nims calls gorge(\"sha256sum \" & fullPath.extractFilename()) — the bare filename, not the project-rooted path — so sha256sum fails ENOENT for every guarded file; gorge() returns the failure output (stderr merged per Nim 2.0+ poStdErrToStdOut) and split(\" \")[0] harvests the 'sha256sum:' diagnostic prefix. Three measured facts: (1) the pinned expected root in data/expected_merkle_root.txt, 62f0c2f4f71ca83ab8e3688f4bde2b0edea9c9ff1f241b9b78979d6c61f1507b, equals sha256(\"sha256sum:sha256sum:sha256sum:sha256sum:\") — the digest of the 4 concatenated diagnostic prefixes, i.e. the broken guard's own output captured as truth; (2) the real merkle root recomputed over the 4 guarded files (src/core/trusted/architecture_invariants.nim, src/core/trusted/axiom_pragmas.nim, src/core/trusted/effect_types.nim, src/core/trusted/effect_bridge.nim — full paths, per-file digest concat) is 6f77cf2b8a9d092bc0965f5cd572cafbe1deb32ebda9f2b207617bad7bc5fc0e, and it is not what the guard compares; (3) birth-dead theater: the block is byte-identical since baseline c021c33, zero modifications across the full history. The check is content-unbound — the verdict binds to the sha256sum diagnostic format, not to guarded file content, so in the current environment tampering of any guarded file passes (measured). Locale variation of the diagnostic is harmless because only the invariant 'sha256sum:' prefix participates (measured, busybox identical); failure is possible only as an environment-coupled misfire (sha256sum absent or diagnostic format change), never as detection. The 4 guarded src files are the unprotected surface but are intentionally not listed in files — they carry no defect; the defect site is the guard itself plus its pinned expected value. Remediation direction: VS-MERKLE-RESTORE-1 — pass absolute paths (the NimScript VM cannot use std/sha1/sha256, so host sha256sum delegation stays), fail closed on missing files or empty digests (the actualMerkle.len > 0 clause at config/integrity.nims:70 currently swallows empty output), then measure tamper->FAIL / intact->PASS / missing->FAIL and re-establish the official expected-root generation path. This entry is public registration only — registration is not remediation; the guard stays broken until VS-MERKLE-RESTORE-1 lands, and only an independently verified restore may close this debt via the --close path.",
+      "symbol": "Guard the Guard: Merkle Root Integrity (SA-γ3) static block (config/integrity.nims)",
+      "contentHash": "sha256:6394939d571e8f15efca2ac2f5ed05286601083ce0b68e7de63563d08bab663a",
+      "lineRange": "config/integrity.nims:28-78",
+      "files": [
+        "config/integrity.nims",
+        "data/expected_merkle_root.txt"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED",
+      "lastVerifiedAt": "2026-11-16T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is the NimScript include config/integrity.nims, outside the src/-only {.axiomDebt.} marker scan; trace: this entry's resolution (UNRESOLVED) and source (theater_audit), the reproduction pair (sha256 of the 4 'sha256sum:' diagnostic prefixes = the pinned expected root 62f0c2f4...; full-path recomputed root 6f77cf2b...), and the remediation slice VS-MERKLE-RESTORE-1 recorded in description."    }
   ]
 }

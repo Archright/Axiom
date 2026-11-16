@@ -32,6 +32,12 @@
 - 해석 순서: PRODUCT → CONTROLLED → FROZEN, **먼저 맞은 것이 이긴다.** FROZEN glob에
   겹치는 CONTROLLED 항목이 남아 있으면 PASS로 판정되어 FROZEN 규칙이 무력화된다 —
   FROZEN에 넣는 경로는 CONTROLLED에서 함께 제거해야 실제로 동결된다 (v51).
+- **v99 (guard v2)**: `*` 없는 exact 경로가 둘 이상의 서로 다른 클래스에 등재되면
+  해석 순서를 적용하지 않고 **POLICY_INVALID**(fail-closed)로 판정한다 — 모호한
+  정책이 first-match로 조용히 통과하는 것을 구조 검증이 차단한다. glob 흡수는
+  여전히 해석 순서의 관례를 따르므로, FROZEN exact 등재는 겹치는 CONTROLLED
+  glob(`tools/**` 등)의 제거와 함께만 실효적이다(v99: `tools/surface_guard.nim`
+  FROZEN 승격 수반).
 - CONTROLLED는 강제 경계가 아니라 **검토 대상 목록(inventory)** 이다. 의미는 "이 경로는
   정책에 등록되어 있어 봤다"이며, 규칙 자체는 전 op PASS다.
 - 디렉터리 glob은 FROZEN에서만, 그리고 "그 디렉터리 전체가 하나의 권위 표면"인 곳에만
@@ -61,8 +67,6 @@ FROZEN 열거 대상과 근거:
 |---|---|
 | `AGENTS.md` | 헌법 SSOT (AGENTS.md §-1 아키텍트 동결) |
 | `config.nims` | 빌드 입력 주입 (§-1 importEncapsulation 동결) |
-| `Makefile` | 실행 게이트 집합의 단일 정의점 (`PUSH_ADMISSIBILITY_GATES` + 모든 레시피). 이를 감시하는 `check-push-admissibility-integrity`도 Makefile 타깃이며 `push-admissibility`에 배선되어 있지 않아 독립 방어가 없다 — 판정 루트의 단일 실패점 |
-| `ci/checker.mk` | gateway/부트스트랩 실행 코드의 단일 정의점 (자체 헤더가 변경 금지 원칙 대상으로 명시) |
 | `config/repository_surface.json` | 본 정책 자신 |
 | `config/trusted_writer_set.json` | `contents: write` 를 가질 수 있는 workflow 집합 (ADR-0022) |
 | `config/executor_authority.json` | mint-domain TrustedExecutorSet (ADR-0021 D7) |
@@ -72,7 +76,15 @@ FROZEN 열거 대상과 근거:
 | `.github/**` | Owner 결정 #12의 trusted CI 정의(`.github/workflows/**`, `.github/actions/**`) + CODEOWNERS + Dependabot 위임 갱신 권위(#13(5)) |
 | `.githooks/**`, `tools/hooks/**` | 로컬 집행 훅의 설치 위치와 구현 |
 | `src/gate/**` | 검증 엔진 TCB (게이트 러너·gateway·contract) |
+| `tools/surface_guard.nim` | 본 판정기 자신 — verdict 계산 TCB (§0.9b Triple-Closure의 인간 감사 대상 스캐너와 동일 계층: 판정기를 임의 수정하면 모든 FROZEN 보호가 무의미해진다. v99 승격, 수반: CONTROLLED `tools/**` glob 제거로 흡수 해소) |
 | `vendor/**` | ed25519 서명 검증 코드 |
+
+**v99 FROZEN 이관**: `Makefile`·`ci/checker.mk`는 CONTROLLED로 이관한다 — v51의
+"판정 루트의 단일 실패점" 근거는 이들이 FROZEN이어서가 아니라 **판정기·정책·집행이
+같은 통제장치를 공유했기 때문**이며, VS-1의 4-way 핀 바인딩(admission-check.yml blob
+= TWS pin = manifest pin — guard가 B 트리에서 컴파일되는 SL-20 배선)이 그 실패점을
+분리했다. Makefile 레시피·checker.mk 헤더의 변경은 여전히 Owner 결정 #18(c)의
+수용 리스크 경로와 CODEOWNERS(`Makefile` @Archright/architect) 아래에 있다.
 
 ## DELETE 규칙 변경 근거 (v51)
 
@@ -100,18 +112,31 @@ PR이 `config/repository_surface.json`을 수정해도 그 diff에는 적용되�
 정책 변경은 main에 착지한 뒤 비로소 효력을 갖는다. 이로써 "자기 자신을 허용하도록
 정책을 바꾸는" 루프홀을 차단한다.
 
+**v99 selfAmendment (문서화된 정책 개정 경로)**: 위 원칙의 목적은 정책 진화의
+불가능성이 아니라 **무단 자기 승인의 차단**이다. 정책은 `selfAmendment.allowedPaths`
+(정책·판정기·판정기 테스트·본 계약 문서)에 나열된 경로의 FROZEN 편집에 한해,
+head 정책이 다음 4조건을 모두 충족할 때만 예외로 재분류된다(verdict `AMENDED`):
+(a) head 정책이 제공되고 구조적으로 유효할 것, (b) base 정책의 `allowedPaths`가
+비어 있지 않을 것, (c) 재분류 대상 FROZEN 위반 경로가 `allowedPaths`에 포함될 것,
+(d) head `policyVersion` > base `policyVersion`일 것. 하나라도 미충족 시 FAIL이
+유지되며, 비-FROZEN 위반은 어떤 경우에도 재분류되지 않는다. 이는 포괄적 우회권이
+아니라 경로·버전·구조가 명시된 최소 개정 계약이다.
+
 ## 판정 계층 (adjudication layer)
 
 **merge authority는 GitHub다** — CODEOWNERS(`.github/**`·`Makefile`·`AGENTS.md`·
 `config/repository_surface.json`·`/config.nims`·`src/gate/**` 등 @Archright/architect) +
 main ruleset 20303214(required check `admission-check` strict + `update`/`creation` 규칙으로
-직접 push 차단 + merge queue) + merge 방식 제한(AGENTS.md §2.3). 판정 계층의 FAIL은 그
+직접 push 차단 + merge queue) + merge 방식 제한(AGENTS.md §2.3). 층 1~3의 FAIL은 그
 자체로 merge를 막지 않는다 — GitHub은 이 판정을 required check로 소비하지
 않는다(`config/policy/merge_admission.json` `requiredValidations`는 `admission-check`
-단독이며 repository-surface는 필수가 아니다).
+단독이며 repository-surface는 필수가 아니다). **층 4(v99, SL-20)는 예외다** — 판정이
+`admission-check` required check 내부(attest 스테이지)에서 실행되므로 FAIL은 곧 required
+check 실패이고 merge queue가 병합을 차단한다. 이것이 결정 #20(b)가 예고한 "required는
+1개 불변이므로 강제는 `admission-check` 안으로 들어간다"의 정착지다.
 
-판정은 아래 세 층에서 같은 규약으로 반복 계산된다. 어느 층도 merge 권한을 부여하거나
-거부하지 않는다.
+판정은 아래 네 층에서 같은 규약으로 반복 계산된다. 층 1~3은 어느 것도 merge 권한을
+부여하거나 거부하지 않는다. 층 4만이 병합 결합을 가진다.
 
 1. **로컬 pre-push preflight** — `make push-admissibility` →
    `check-repository-surface`(Makefile)가 merge-base(origin/main, HEAD)의 정책 ×
@@ -122,6 +147,13 @@ main ruleset 20303214(required check `admission-check` strict + `update`/`creati
    아니다). required check가 아니며, FAIL 관측은 PR에 남지만 merge를 닫지 않는다.
 3. **`tools/surface_guard.nim`** — 순수 verdict 계산기. authority가 아니다
    (`Authority ≠ Adapter`).
+4. **CI `admission-check` SL-20 스템(v99)** — Base 커밋 트리에서 판정기를 컴파일해
+   실행한다(Gate A — 후보의 컴파일러·소스가 판정 자체를 공급하지 않는다). 입력은
+   base 정책(`git show $B:config/repository_surface.json`) × 변경 경로: PR venue에서는
+   files API 전수 페이지(30페이지·3,000파일 상한 초과 시 fail-closed)로, merge_group
+   venue에서는 B-vs-G diff(`-c core.quotepath=false`)로 산출하고 **두 venue가 같은 정책
+   SSOT·같은 판정기**를 쓴다(판정 동등성). 활성 세대 전환(이중 NO-FIRE → 핀 로테이션)은
+   결정 #21(f) 참조.
 
 ## 결정론 보장
 
@@ -148,14 +180,19 @@ main ruleset 20303214(required check `admission-check` strict + `update`/`creati
 - **v51**: `data/debt_registry.json`·`data/debt_ledger.json`·`data/architecture_debt.json`·
   `data/feature_manifest.json`는 CONTROLLED(검토 대상, 전 op PASS)이며 부채 원장 변조는
   이 게이트의 범위 밖이다.
-- **v51**: rename은 새 경로에 대한 ADD로, 이전 경로는 항상 PASS인 암묵적 DELETE로
-  판정된다(`surface_guard.nim`의 동결 규칙) — `rules.FROZEN.DELETE`와 무관하게 이전
-  경로 삭제는 막히지 않는다.
+- **v51 → v99 폐쇄**: rename은 **양단 모두**를 판정한다 — 새 경로는 자기 클래스의
+  ADD로, 이전 경로는 자기 클래스의 DELETE로(`surface_guard.nim` v2, `R100`/`R090`
+  status 정규화 포함). 이전 경로가 FROZEN이면 `rules.FROZEN.DELETE`가 그대로 적용된다.
+  잔여는 실행자 계약이다: diff 산출 측(Makefile 레시피·`repository_surface.yml`)은
+  `-c core.quotepath=false`로 비-ASCII 경로의 git 인용 변형을 차단해야 판정기가
+  실제 경로를 보게 된다.
 
 ## 범위 한계
 
-이 문서는 **판정 계층만** 정의한다. 판정 결과를 merge에 결합(required check 등)하는
-강제는 별도 계약의 몫이며, 이 계약의 범위 밖이다.
+이 문서는 **판정 계층과 그 병합 결합(v99, 층 4)**을 정의한다. 층 1~3은 여전히 advisory
+이다. 층 4(SL-20)의 병합 결합은 이 계약 + 결정 #21 + epoch 매니페스트
+(`config/policy/epoch_manifest.json`)·TWS(`config/trusted_writer_set.json`)의 핀
+원자쌍이 함께 규정하며, 핀 로테이션(활성 세대 전환)은 Owner 권한이다.
 
 ## Owner 결정 기록 (2026-09-21)
 
@@ -522,6 +559,53 @@ main ruleset 20303214(required check `admission-check` strict + `update`/`creati
     (e) **효력 개시 = 관측 워크플로(β2) 착지 후 첫 머지부터** — β2 자기 런은 B에
     파일이 없어 계수에서 제외된다(손실 1건). 감시 주체 = (c)의 집계 명령을 실행·
     기록하는 자(승격 판단 시 Owner 필수).
+
+21. **Surface Truth Epoch — 판정 계층의 required-check 결합(SL-20) + 정책 v99 확정
+    (2026-11-16, workstream/vs-surface-truth-epoch)** — "선언 = 판정 = 집행"의 일치를
+    착지시킨다(§판정 계층 층 4 신설). 위임 원문: "권한이 필요한 부분은 전면 승인한다"
+    (2026-11-16, MUST-T2a — PR 본문에 merge 전 삽입).
+    (a) **정책 v98 → v99(DEBT#538)**: v98 관측 — exact 이중등재 2건(`Makefile`·
+    `ci/checker.mk`; resolver first-match로 실실행 판정이 CONTROLLED였으므로 FROZEN
+    선언은 실효성 없음) + wildcard 겹침 126건(합법 관례 유지 — exact 등재가 이후
+    클래스 glob을 흡수). 2건은 **경로별 의도 등급 확인 후** CONTROLLED로 정규화했다
+    (v55 재승인 + v52/v76 FROZEN→CONTROLLED 재등록 선례 — resolver 관측치를 의도로
+    승격한 것이 아니다). `classResolutionOrder`(legacy)를 제거하고
+    `resolutionOrder ['PRODUCT','CONTROLLED','FROZEN']`를 명시 선언한다(guard v2가
+    하드코딩 판정 순서와의 정확 일치를 검증 — 선언과 의미론의 일치 계약). exact
+    이중등재는 어떤 우선순위로도 통과하지 못하고 `POLICY_INVALID`다.
+    `.github/CODEOWNERS` 동일 클래스 중복 엔트리 1건을 제거했다(판정 불변 —
+    인벤토리 정합).
+    (b) **selfAmendment(정책 자기진화)**: `allowedPaths` = 정책 정본·판정기·단위
+    테스트·계약 문서 4경로. head 정책 구조적 유효 + base `allowedPaths` 비빈 +
+    전 FROZEN 위반 경로 ∈ `allowedPaths` + policyVersion(head) > policyVersion(base)
+    — 4조건 전부 충족 시에만 해당 위반을 AMENDED로 재분류한다. 포괄적 우회권이
+    아니며, 4경로 외 FROZEN 경로·비-FROZEN 클래스에는 결코 적용되지 않는다.
+    (c) **판정기 TCB 승격(DEBT#542 근원)**: `tools/surface_guard.nim`을 CONTROLLED
+    exact 등재에서 FROZEN exact 등재로 이관한다(§0.9b Triple-Closure 판정기 —
+    판정기가 무단 수정되면 모든 보호 선언이 무의미해진다). 단일 실패점 우려는
+    4-way 핀과 B-tree 컴파일(Gate A)로 분산한다.
+    (d) **guard v2**: rename 양단 판정(v51 blind spot 폐쇄 — 이전 경로를 자기
+    클래스의 DELETE로 판정), 정책 구조 검증, fail-closed(미지 status·해석 불능은
+    FAIL), 단위 테스트 50건.
+    (e) **SL-20 배선 + 4-way 핀**: `admission-check.yml` attest 스테이지에 surface
+    admission 스텝을 배선한다(PR·merge_group 양 venue가 같은 판정기·같은 정책 SSOT
+    사용). 같은 커밋에서 manifest `productionExecutionPin` = TWS
+    `trustedAdmissionWorkflowSha` = workflow blob SHA(`69d110b9…`)로 고정한다(G2a).
+    (f) **효력 개시 = 이중 NO-FIRE → Phase 2 핀 로테이션**: 착지 시점에 base
+    매니페스트(N+8)는 SL-20을 포함하지 않고 org callee 핀은 구 blob(`c021c338…`)을
+    가리키므로, 착지 PR 자신은 SL-20 발화 없이 통과한다 — bootstrap SHA 하드코딩
+    예외가 코드에 남지 않는다(예외 조건이 아니라 세대 부재). Phase 2에서 Owner가
+    org 측 핀을 착지 blob으로 회전하면 SL-20은 활성 세대가 된다(회전 = Owner 권한).
+    **DEBT#538/#542의 레지스트리 종결은 Phase 3 probe 실증 이후에만 허용된다** —
+    FROZEN 위반 PR의 필수 검사 FAIL·병합 차단 관측(negative probe)과 CONTROLLED
+    변경 PR의 SL-20 PASS 관측(positive probe)이 종결 근거다. 미래의 증거를 완료로
+    기록하지 않는다.
+    (g) **수용 리스크**: 착지 PR은 base v98(구조적으로 `POLICY_INVALID` — exact
+    이중등재)·base 무 selfAmendment 상태에서 FROZEN 표면을 수정하므로 로컬
+    pre-push 판정은 FAIL이다. `git push --no-verify`(결정 #1/#18(c)의 문서화된
+    우회)로 push하고 PR 본문에 근거와 우회 사실을 기록한다(이 클론은
+    `core.hooksPath=.githooks` 활성). 서버 측 required checks·ruleset·merge queue는
+    우회되지 않는다. CI `repository-surface`(advisory)의 FAIL 관측은 PR에 남는다.
 
 ## 외부 근거 (AGENTS.md §0.5)
 

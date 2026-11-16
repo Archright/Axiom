@@ -1562,9 +1562,13 @@ proc materializeBuildEnv(): int =
         echo "[hermetic] COHERENCE FAIL: body cache has stale BuildSourceHash " &
              hashValue & " — refusing to materialize stale body"
         return 1
-  # Replace BuildSourceHash placeholder with live source-tree hash
+  # Single gather path: gatherSourceTree walks src/ once; source hash and
+  # VerifierBuildId are both derived from the same gathered files (mirrors
+  # generateBuildEnvPair's single-pass structure). The verbatim
+  # gather-walk cost is paid exactly once per materialize invocation.
   let srcDir = projectRoot / "src"
-  let liveSourceHash = computeDeterministicSourceHash(srcDir)
+  let srcTree = gatherSourceTree(srcDir)
+  let liveSourceHash = hashSourceContents(srcTree.files)
   content = content.replace("BuildSourceHash* = \"" & BuildSourceHashPlaceholder & "\"",
                             "BuildSourceHash* = \"" & liveSourceHash & "\"")
   content = content.replace("VerifierBuildSourceHash* = \"" & BuildSourceHashPlaceholder & "\"",
@@ -1573,7 +1577,7 @@ proc materializeBuildEnv(): int =
   # Fail-closed: an empty identity means the manifest was unmeasurable — keep
   # the placeholder out of the generated file by refusing to materialize a
   # blank engine identity ("unmeasured" never matches a pin).
-  let liveBuildId = measuredVerifierBuildId()
+  let liveBuildId = measuredVerifierBuildId(srcTree.files, srcTree.complete)
   if liveBuildId.len == 0:
     echo "[hermetic] COHERENCE FAIL: verifier build manifest unmeasurable — refusing to materialize an empty VerifierBuildId"
     return 1

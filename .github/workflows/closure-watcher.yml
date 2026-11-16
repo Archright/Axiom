@@ -353,6 +353,10 @@ jobs:
           name: closure-drift-findings
           path: /tmp/drift_findings.txt
           if-no-files-found: ignore
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
   report:
     # 절차적 알림 보강 — cron 실패 메일 수신자(마지막 cron 수정자) 1인 고정의 완화책.

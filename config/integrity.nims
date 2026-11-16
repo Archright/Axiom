@@ -1,6 +1,6 @@
 # config/integrity.nims — Immutable Verification, Merkle Root, Build Constraints
 # Extracted from config.nims lines 280-379
-# Provides: immutable policy verification, merkle root, build constraint, bin/ax check, hooks, manifest bootstrap
+# Provides: immutable policy verification, merkle root (vacuous — DEBT#546), build constraint, bin/ax check, hooks, manifest bootstrap
 
 when (NimMajor, NimMinor) >= (2, 0):
   const projectRoot = thisDir()
@@ -25,9 +25,13 @@ static:
 # Now executes only during pre-commit/pre-push gate runs.
 # See: src/gate/compile_time_checks.nim → checkGuardTheGuard()
 
-# ── Guard the Guard: Merkle Root Integrity (SA-γ3) ──
-# Hashes multiple critical trusted files and combines into a single Merkle root.
-# Any tampering with any guarded file = compile error.
+# ── Guard the Guard: Merkle Root Integrity (SA-γ3) — THEATER (DEBT#546, open) ──
+# Does NOT hash guarded file contents: sha256sum is invoked on bare filenames
+# (extractFilename), so all 4 guarded files hit ENOENT and the verdict binds to
+# the sha256sum diagnostic prefix ("sha256sum:" x4) hashed as if it were content —
+# it always equals the expected root, so content tampering always passes.
+# Registration: DEBT#546 (Theater/Vacuous Check). Restore: VS-MERKLE-RESTORE-1
+# (absolute paths, fail-closed on missing/empty digests).
 when not defined(AXIOM_GATE_BOND):
   static:
     # ── Gorge Self-Test: detect if gorge() is functional ──
@@ -41,11 +45,12 @@ when not defined(AXIOM_GATE_BOND):
       const expectedMerkle = staticRead(expectedMerklePath).strip()
       when expectedMerkle.len > 0:
         if gorgeAvailable:
-          # SHA-256 merkle root of guarded files, computed via host sha256sum.
-          # Implementation: hash each file individually, concatenate lowercase
-          # hex digests, then hash that concatenation. Matches original algorithm
-          # from tools/merkle_hash.nim (checksums/sha2 → std sha1 not available in
-          # NimScript), but avoids the missing `checksums` nimble package block.
+          # Intended: per-file SHA-256 via host sha256sum, digests concatenated,
+          # concatenation hashed (tools/merkle_hash.nim lineage; std sha1/sha256
+          # are unavailable in the NimScript VM). Actual (DEBT#546): each call
+          # passes the bare filename, sha256sum fails with ENOENT, gorge() returns
+          # the failure output, and split(" ")[0] harvests the "sha256sum:"
+          # diagnostic prefix — no guarded file content participates in the hash.
           block:
             let guardedList = [
               "src/core/trusted/architecture_invariants.nim",

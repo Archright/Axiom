@@ -38,7 +38,7 @@
   // NOTE: this file carries full-line `//` documentation comments (like
   // config/executor_authority.json) — the verifier strips them before parsing.
   "trustedWriterWorkflow": ".github/workflows/certificate-mint.yml",
-  "trustedAdmissionWorkflowSha": "8db2ad30b6f5d87621e44b0c480b2f0869841198",
+  "trustedAdmissionWorkflowSha": "69d110b982adff5be7878e9fa7d233a9dfff131a",
   "trustedCheckerTreeClosure":   {
     "ci/checker.mk": {
       "mode": "100644",
@@ -48,7 +48,7 @@
     "config.nims": {
       "mode": "100644",
       "type": "blob",
-      "sha": "d10f9885d24a5928cf36dbadd6736d7af4dcc277"
+      "sha": "8dba69ab18bd73c6a35eb0732654f6441ceaa321"
     },
     "config/effects.nims": {
       "mode": "100644",
@@ -198,7 +198,7 @@
     "src/cli/debt_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "d1eb438b2c3f760dae9667e27565eb5c36f0aa61"
+      "sha": "ee53818c9dd039dd830a927938f4aa61504450f7"
     },
     "src/cli/evidence_cli.nim": {
       "mode": "100644",
@@ -4473,7 +4473,7 @@
     "tools/hermetic_build.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "e990f691c681dfe13b7a37104121d723cec98029"
+      "sha": "6a666163ad6970dd8bafa7b1bd9f862b8baa4c86"
     },
     "tools/safe_move.nim": {
       "mode": "100644",

@@ -190,6 +190,10 @@ jobs:
           path: payload.json
           if-no-files-found: error
           retention-days: 90
+          # upload-artifact v4+ artifacts are immutable and name-unique per run;
+          # a re-run re-uploads this fixed name — overwrite replaces it
+          # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
+          overwrite: true
 
       - name: PR-event check-name parity marker (queue entry eligibility)
         if: github.event_name == 'pull_request'
