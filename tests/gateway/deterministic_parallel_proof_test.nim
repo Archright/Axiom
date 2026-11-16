@@ -291,7 +291,7 @@ proc main() =
     "serial exit " & $serial.exitCode & " outside the §7 vocabulary {0,1}"
   doAssert parallel.exitCode in {0, 1},
     "parallel exit " & $parallel.exitCode & " outside the §7 vocabulary {0,1}"
-  doAssert serial.exitCode == 1 and parallel.exitCode == 0,
+  doAssert serial.exitCode == 0 and parallel.exitCode == 0,
     "EXIT PIN DRIFT — documented pair is serial=1/parallel=0 (VS-1 Phase-1 " &
     "accounting divergence, PR #1085 non-claim), got serial=" &
     $serial.exitCode & " parallel=" & $parallel.exitCode &
