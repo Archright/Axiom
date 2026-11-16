@@ -586,13 +586,21 @@ push-admissibility: ## pre-push push-target OID static admissibility (snapshot C
 # base에 정책이 없으면(계약 이전 main에서 떨어진 브랜치) FAIL — ax git sync로 계약
 # 이후 main에 재단골 후 push. 미분류 경로는 PRODUCT(defaultClass, v51 · 전 op PASS),
 # FROZEN은 열거된 경계에서 ADD/MODIFY/DELETE = FAIL.
+# v99 (2026-11-16, 결정 #21): diff는 -c core.quotepath=false로 비-ASCII 경로의 git
+# 인용 변형을 차단하고, HEAD에 정책이 존재하면 selfAmendment 판정에 참여시킨다
+# (guard v2 — 없으면 base-only 판정). 판정기 바이너리는 CI(Gate A)와 달리 작업
+# 트리에서 컴파일한다: 이 타깃은 우회 가능한 개발자 피드백 장치다.
 check-repository-surface: bin/surface_guard ## Advisory surface report: base policy × branch diff
 	@mkdir -p .axiom; \
 	mb=$$(git merge-base origin/main HEAD); \
 	git show "$$mb:config/repository_surface.json" > .axiom/surface_base_policy.json \
 	  || { echo "[surface-gate FAIL] base $$mb 에 정책이 없다 — ax git sync 후 push"; exit 1; }; \
-	git diff --name-status "$$mb" HEAD > .axiom/surface_changes.name-status; \
-	bin/surface_guard --policy .axiom/surface_base_policy.json --diff .axiom/surface_changes.name-status
+	git -c core.quotepath=false diff --name-status "$$mb" HEAD > .axiom/surface_changes.name-status; \
+	if git show "HEAD:config/repository_surface.json" > .axiom/surface_head_policy.json 2>/dev/null; then \
+	  bin/surface_guard --policy .axiom/surface_base_policy.json --head-policy .axiom/surface_head_policy.json --diff .axiom/surface_changes.name-status; \
+	else \
+	  bin/surface_guard --policy .axiom/surface_base_policy.json --diff .axiom/surface_changes.name-status; \
+	fi
 
 bin/surface_guard: tools/surface_guard.nim
 	nim c --hints:off -d:release -o:$@ $<

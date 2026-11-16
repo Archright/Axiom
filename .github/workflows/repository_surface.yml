@@ -7,6 +7,12 @@
 # PATH에 주입(호스트 시스템 PATH에 없음 — 16샤드 관례와 동일한 공급 경로).
 # 버전 단언은 grep이 마지막 명령이라 nim 부재 시 반드시 실패한다(fail-closed).
 # authority-first Phase6 probe: trusted definition change path
+# v99 (2026-11-16, SL-20 / VS-1 Surface Truth Epoch): Gate A 정합 — 판정기
+# 바이너리를 BASE 트리(worktree @BASE_SHA)에서 컴파일한다(후보 PR 트리가 판정기를
+# 공급하지 못한다 — admission-check SL-20과 동일 계약, 결정 #21). diff는
+# -c core.quotepath=false로 비-ASCII 경로의 git 인용 변형을 차단하고, HEAD에 정책이
+# 존재하며 BASE 컴파일 가드가 v99+(selfAmendment 지원)일 때만 --head-policy로
+# 전달한다(guard v2 — 전이 창의 v1 base 가드는 base 세대 판정을 그대로 낸다).
 #
 # PR 자동 관측이 복원되었다(2026-09-22): pull_request(main) 트리거로 발화된
 # repository-surface 판정이 관측된다. 이 job은 조언적 관측(advvisory)이며 required
@@ -63,23 +69,52 @@ jobs:
       - name: Extract base policy (base-policy binding)
         run: git show "$BASE_SHA:config/repository_surface.json" > /tmp/base_policy.json
 
-      - name: Build surface guard
+      - name: Build surface guard from BASE tree (Gate A)
         # Full hermetic flag set: --skipProjCfg prevents config.nims /
         # config/integrity.nims from firing, whose manifest bootstrap compiled
         # tools/feature_manifest_generator.nim (and needed checksums) on every
         # `nim c`. surface_guard imports std/* only, so no path/package is
         # required — the flags narrow the compile to exactly its declared
         # dependencies. Measured cold: 2.55s (was ~11s through the bootstrap).
+        # v99 Gate A (decision #21): the verifier binary compiles from the
+        # BASE tree (detached worktree at BASE_SHA) — never from the PR tree;
+        # --path flags point at /tmp/btree so candidate-tree imports cannot
+        # supply the adjudicator.
         run: |
           set -euo pipefail
+          git worktree add --detach /tmp/btree "$BASE_SHA" \
+            || { echo "worktree add @BASE_SHA failed (Gate A: verifier from base)"; exit 1; }
           mkdir -p build
           nim c --hints:off -d:release \
             --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath \
-            --path:. --path:src \
+            --path:/tmp/btree --path:/tmp/btree/src \
             --nimcache:.nimcache_surface_guard \
-            -o:build/surface_guard tools/surface_guard.nim
+            -o:build/surface_guard /tmp/btree/tools/surface_guard.nim
+
+      - name: Extract head policy (selfAmendment, if present)
+        # v99: head policy participates only when present at HEAD (guard v2
+        # selfAmendment contract); an absent/deleted policy degrades to
+        # base-only judgment.
+        run: |
+          if git show "HEAD:config/repository_surface.json" > /tmp/head_policy.json 2>/dev/null; then
+            echo "HEAD_POLICY=/tmp/head_policy.json" >> "$GITHUB_ENV"
+          else
+            echo "HEAD_POLICY=" >> "$GITHUB_ENV"
+          fi
 
       - name: Classify PR diff (BASE_SHA...HEAD)
         run: |
-          git diff --name-status "$BASE_SHA...HEAD" | tee /tmp/changes.name-status
-          build/surface_guard --policy /tmp/base_policy.json --diff /tmp/changes.name-status
+          git -c core.quotepath=false diff --name-status "$BASE_SHA...HEAD" | tee /tmp/changes.name-status
+          # Gate A: the adjudicator is BASE-compiled — pass --head-policy only
+          # when the BASE generation's guard supports it (v99+). A v1 base
+          # guard has no selfAmendment contract; its verdict is the base
+          # generation's honest judgment of this diff. (Feature probe is
+          # content-derived from the compiled binary's own usage surface —
+          # no version parsing. SL-20 needs no probe: its scope gate is
+          # manifest-coupled, so a base manifest that includes SL-20 implies
+          # a base tree with the v2 guard.)
+          if build/surface_guard 2>&1 | grep -q -- --head-policy && [ -n "${HEAD_POLICY:-}" ]; then
+            build/surface_guard --policy /tmp/base_policy.json --head-policy "$HEAD_POLICY" --diff /tmp/changes.name-status
+          else
+            build/surface_guard --policy /tmp/base_policy.json --diff /tmp/changes.name-status
+          fi
