@@ -188,6 +188,16 @@ $ git status --porcelain   # 관측 실행 후
 - 2026-11-17 01:0x경 `/tmp/vs-perf-attr/` 하위 원시 아티파트 대량 소실(ci-scope·hash-bench·ab·drift-forensics·before-report.json 포함; 원인 미확정 — 타 세션의 /tmp 정리 후보). 잔존 phase-e·context7-landing은 `~/.vs-perf-attr-backup/`에 백업 완료.
 - **수치는 본 문서 §4-§7·세션 wire.jsonl에 기록 보존**; 원시 바이트 재현 불가. 재측정 프로토콜: §3 계약(동일 커밋·툴체인·캐시 조건, 5회 median)으로 before/after 재구축 가능 — 병합 트리에서의 재측정은 §9 계약에 따라 PR 코멘트에 영속.
 
+### §10.3. origin/main 병합 후 재검증 (2026-11-17 02:2x-02:3x, merge `7cf3d83`)
+
+- **병합 범위**: origin/main 17커밋(PR #121 readiness 7th required check·#117 T3·#116 C3·#115 VS-3·#114 subject-excision 포함). 충돌 2건: `config/trusted_writer_set.json`(axiom_engine 핀 — 병합 union blob `4b68f6e6…`로 재앵커, merge_cli 핀은 main 값 취득; **890핀 전수 대조 후 전부 일치**)·`data/architecture_debt.json`(`--regen-arch`로 axiom_engine+merge_cli 재계산). 공식 검증: `bin/reanchor_pin --ref HEAD` = **OK no-drift**.
+- **GO-CRITICAL(병합 트리) 4/4 PASS**: s1a·proof_integrity·d2_golden·d2_persist 전부 exit=0.
+- **ut44 재판정: exit=0** — main의 subject-excision 재작성(`959b70b`)이 base 선존 실패를 해소. §10.1의 "병합 후 재판정" 완결: 사전 귀속(선존) 유지 + main에서 수리 확인.
+- **ut52 재판정: exit=2** — 신규 tri suite 2단언 실패(L376 `not rec.attempted`·L379)+`/tmp/opencode/ax-one` 외부 프로그램 실행 실패(타 세션 소유 바이너리 — 비-허메틱 /tmp 의존). base 선존(6실패)과 동일 계열·admission 세트 외·본 슬라이스 변경 무관(measured_digests/canonical_verification은 rust guard 경로 무관).
+- **부수 관측**: `test_sidecar_binding`(main이 병합에서 수정, 6 단언 실패 — sidecar 로딩 `loaded.isOk()`)·ut28(DEBT#550, 웜 journal 상태) — required checks admission 세트 외. 정직 기록으로 남기고 수정하지 않음(발견≠권한).
+- **debt 게이트(병합 트리) PASS**: codegen P1=complete·sync-budget 0 updates·validate 전건·debt_integrity_gate 38 open 전체 마커 바인딩.
+- **A/B 재측정(병합 트리, §3 계약 — CI 정본 레시피 재빌드 `ci/checker.mk` ci-compile-ax)**: warmup 5.88s 버림 → 5회 **5.13/5.14/5.17/5.22/5.16s, median 5.17s** · exit 0×5 · `git status --porcelain` 비어 있음×5 · digest `3a57e7b5…`×5 동일. vs baseline 6.16s = **-0.99s(-16.1%)** — 개선은 병합 트리에서 유지. pre-merge after(5.08s) 대비 +0.09s·digest `449b27bc…`→`3a57e7b5…` 이동은 main 병합분의 소스 정체성 이동(axiom_engine 등 재작성)으로 귀속 — §4·§7.5와 동일 구조(digest는 소스 정체성 추적). release에서 debug 인플레이션 레인은 본 재측정 범위 외(§7.5 참조).
+
 ## 부록 A — 측정 사건 기록 (방법론 교훈)
 
 - **드리프트(판정 무효화)**: 최초 계측 시도가 EA 재측정을 트리거해 웜 상태 파괴 → 5회 전부 exit 1 — **실패 실행은 측정 증거로 무효**, 전량 폐기·포렌식 보존(`/tmp/vs-perf-attr/drift-forensics/`).
