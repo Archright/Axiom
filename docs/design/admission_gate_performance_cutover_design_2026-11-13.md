@@ -54,7 +54,7 @@ PR#20 배치: 총 498s = admission 484s(최장) + gap 14s; 차점 레그 pub-int
 | **2 — 바인딩 사전등록 개정 (아키텍트 승인 필수)** | C1-rev: lane 분할 개정 — evidenceId 배터리를 lane 밖 병렬 잡으로 재배치(+ s1a lane은 1/1 계약 유지) | **개정**: prereg §1·G-A 의도 재정의 + per-lane 독립성 약화 승인 | **~99s** (Tier 1 합산 시 ~115s) — critical: build-base 54 + max(lane-0≈195, 배터리잡≈144, lane-1≈184) + admission-check 55 + mint 60 + 간극 ≈21 ≈ **~385s** (Tier 1+2 ≈ **~369s**) | §2.1·§2.2 분해 산술 |
 | | (대안) s1a 단독 완화 | **개정**: 1/1 GO-critical 계약(:4126) 수정 | 유사 규모, 계약 위반이 더 직접적 — 권고하지 않음 | — |
 | **3 — 제품/도구 코드 (CI 토폴로지 밖, 별도 슬라이스)** | C5: s1a 테스트 실행 150s | 보존(GO-critical 의미론 불변) | lane(0) 비례 절감 | duration_ms=150148 실측 |
-| | 배터리 최적화: evidenceId self-check 2건 실행 99s/77s | 보존 | lane 비례 | 스텝 타임라인 |
+| | 배터리 최적화: evidenceId self-check 2건 실행 99s/77s | 보존(단 §10 — 중복 부재 확정, 절감 레버는 별도 검토 전제) | lane 비례 | 스텝 타임라인 + §10 프로파일링 |
 | **명시적 배제** | C2: evidenceId 배터리 dedup(양 lane 공유 1회) | **§0.9 인접 위반** — "EXECUTED always" per-lane 독립 계약 파기 | ~99s | 채택 금지 권고 |
 
 Tier 1 단독: admission ≈ 460-468s → 배치 ≈ 474-482s(480s SLO 경계). Tier 1+2: admission ≈ 369s → **pub-int(381s) 포화점 도달, 배치 ≈ 395s, SLO 여유 ~85s**. Tier 3은 추가 이득이나 별도 제품 슬라이스다.
@@ -130,3 +130,24 @@ Tier 1 단독: admission ≈ 460-468s → 배치 ≈ 474-482s(480s SLO 경계). 
   소멸, §3의 Tier 1 산술은 무효). 유효 최적화 경로는 Tier 3(배터리·s1a 제품 코드, 계약
   보존, 별도 슬라이스)와 Tier 2(C1-rev, [승인-2])뿐이다.
 - 관측 기준: 원격 main `605f9ba`(admission-check.yml blob `9fa3903`; 코드 인용 4종 블롭 일치 확인).
+
+## 10. 갱신 — 2026-11-16: Tier 3 배터리 프로파일링 — 중복 계산 부재 (honest-close)
+
+배터리 99s의 구현 전 프로파일링 결과(근거 전문:
+`docs/evidence/vs_t3_evidenceid_battery_profile_2026-11-16.md`):
+
+- **분해**: hermetic 사전빌드 2회 42.9s(43%) · 컴파일(nimcache warm) 10.0s(10%) · probe 실행
+  46.0s(47%). probe 실행의 실체는 **debug 빌드 sha256 1회**(119,585,096B ircheck 전문,
+  ~44s@2.6MB/s — release 빌드 시 0.68s@114MB/s, digest 동일) + 잔여 ~2s. lane 간 편차는
+  러너 인스턴스 변동.
+- **C4-동형 중복 계산 부재**: EA digest는 프로세스당 정확히 1회다(PR #59 착지 후에도 probe
+  실행 34.2s 불변 관측 확증). 잔여 in-process 2중 계산은 μs급 — memo 도입은 극장. 따라서
+  §3 Tier 3의 "배터리 최적화"는 무상 적용 가능한 memoization 슬라이스로 성립하지 않는다
+  (honest-close).
+- **잔여 레버(전부 별도 슬라이스 — 계약 검토 전제, 본 설계의 승인 없이 착지하지 않는다)**:
+  (a) 테스트 레인 release 빌드 — probe·s1a 각 프로세스당 ~44s, 단 debug assertion·오버플로
+  검사 부재화 = 판정 정체성 검토 선행 필수; (b) 프로세스 간 영속 digest 캐시 — 판정 재계산
+  계약과의 충돌 검토; (c) hermetic 중복 제거(~7-13s/레인) — `nim c`별 fail-closed 신선도
+  검증 의미 변경; (d) ircheck 크기 축소.
+- 관측: run 43399299637(기준선)·43849381963(최신) 원격 로그 분해 + /tmp 격리 마이크로
+  벤치마크(debug/release sha256 교차 검증).
