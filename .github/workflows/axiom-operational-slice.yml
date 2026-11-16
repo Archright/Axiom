@@ -221,6 +221,36 @@ jobs:
           set -euo pipefail
           AXIOM_HERMETIC_BUILDING=1 nim c --hints:off --nimcache:build/nimcache/landing_observe_contract -o:build/landing_observe_contract tests/ci/test_landing_observe_acceptance.nim
           ./build/landing_observe_contract
+      - name: "Expose this run's certificate to the evidence artifact (fixed alias)"
+        # The certificate lives in this workspace at the vault path recorded in
+        # logs/verify_contract_e2e_cert_path.txt, but the evidence artifact
+        # below carried only logs/* files — the readiness job's collector never
+        # saw the cert and measured R2/R3/R4 fail-closed (null/false) even
+        # though this E2E had produced and kernel-replayed it (PR #121 run
+        # 43870500798). Fix: copy the declared certificate to the fixed alias
+        # logs/e2e_certificate.json so it rides the SAME artifact — the layout
+        # stays single-rooted (no flip when the cert is absent) and the
+        # collector resolves the alias as its 4th candidate. Content binding is
+        # enforced by the R4 joins (manifest.certificate.identityDigest and
+        # manifest.certificate.sha256 vs the resolved file) — a foreign file
+        # fails R4, never a silent pass. Absence stays honest: no cert -> no
+        # alias file -> the upload warns for the missing listed path and the
+        # collector measures null (fail-closed verdict, not an infra failure).
+        if: always()
+        run: |
+          set -eu
+          CERT_PATH=logs/verify_contract_e2e_cert_path.txt
+          if [ -s "$CERT_PATH" ]; then
+            CERT="$(cat "$CERT_PATH")"
+            if [ -n "$CERT" ] && [ -f "$CERT" ]; then
+              cp "$CERT" logs/e2e_certificate.json
+              echo "certificate alias: logs/e2e_certificate.json <- $CERT"
+            else
+              echo "declared certificate '$CERT' not on disk — honest absence (collector measures null, fail-closed)"
+            fi
+          else
+            echo "no $CERT_PATH (E2E did not reach certificate emission) — honest absence (collector measures null, fail-closed)"
+          fi
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
@@ -233,6 +263,7 @@ jobs:
             logs/run-manifest.json
             logs/run-manifest.sha256
             logs/ax_proof_state.json
+            logs/e2e_certificate.json
           # upload-artifact v4+ artifacts are immutable and name-unique per run;
           # a re-run re-uploads this fixed name — overwrite replaces it
           # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).

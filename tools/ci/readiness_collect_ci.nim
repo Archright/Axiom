@@ -115,7 +115,11 @@
 ##                             git status (tracked mutations) before any write
 ##   R5 commandExists/helpSurface
 ##                             live help probes (same run as R1)
-##     successExitCode        `ax <cmd> --help` exit (0)
+##     successExitCode        `ax <cmd> --help` exit (0); subject == the
+##                             contract command — the evaluator's R5 join key
+##                             (every exit-code bucket of a command shares
+##                             one subject; provenance rides in the scope
+##                             field, "observed" vs "contract")
 ##     verificationFailureExitCode
 ##                             report exit artifact when it actuates 1, else
 ##                             policy r5.exitCodeContract (scope "contract")
@@ -617,10 +621,16 @@ when isMainModule:
       # Resolution chain: the path recorded by the E2E job is repo-root
       # relative; when the certificate was not restored into this checkout it
       # may ride alongside the downloaded artifacts under its basename (or
-      # under its declared relative path inside the artifact dir).
+      # under its declared relative path inside the artifact dir). The fourth
+      # candidate is the fixed transport alias: the producer job copies the
+      # declared certificate to <artifacts>/e2e_certificate.json so the
+      # evidence artifact stays single-rooted — the alias carries no path
+      # identity of its own; its binding to this run is enforced by the R4
+      # joins (manifest.certificate.identityDigest/sha256 == cert values).
       for cand in [repoRoot / art.certPathDeclared,
                    artifactsDir / art.certPathDeclared.splitPath().tail,
-                   artifactsDir / art.certPathDeclared]:
+                   artifactsDir / art.certPathDeclared,
+                   artifactsDir / "e2e_certificate.json"]:
         if fileExists(cand):
           art.certPath = cand
           break
@@ -1201,6 +1211,13 @@ when isMainModule:
         joins.add(("manifest.certificate.identityDigest == cert.identityDigest",
                    jStr(jObj(art.manifest, "certificate"), "identityDigest") ==
                    jStr(art.cert, "identityDigest")))
+        # File-level digest: binds the RESOLVED cert file (which may arrive
+        # under the fixed transport alias e2e_certificate.json, carrying no
+        # path identity of its own) to the manifest's recorded sha256 — a
+        # wrong or foreign file fails this join and R4 goes red.
+        joins.add(("manifest.certificate.sha256 == sha256(resolved cert file)",
+                   jStr(jObj(art.manifest, "certificate"), "sha256") ==
+                   shaFile(art.certPath)))
       if art.manifest != nil and art.state != nil:
         joins.add(("manifest.toolchain.executionBundleFingerprint == state.executionIdentity",
                    jStr(jObj(art.manifest, "toolchain"), "executionBundleFingerprint") ==
@@ -1289,27 +1306,29 @@ when isMainModule:
       obs.add(obsBool("commandExists", exists, "surface", cmd))
       obs.add(obsBool("helpSurface", pr.axPresent and dedicated.exitCode == 0,
                       "surface", cmd))
-      # Exit-code observations, subject-scoped per contract command. Buckets
-      # actuated by this collection are recorded at scope "observed" with the
-      # measured code; buckets not actuated (no safe probe exists) record the
-      # policy contract value at scope "contract" — the scope field declares
-      # the value's provenance, and the actuation reality rides in incidents.
+      # Exit-code observations, subject-scoped per contract command. The
+      # subject is the evaluator's join key: ruleR5 groups a command's
+      # success/failure exit codes by identical subject (pinned by
+      # tests/ci/test_readiness_verdict_mapping.nim and
+      # tests/readiness/fixtures/synthetic_bundle.json — every bucket for a
+      # command carries subject == cmd, never a free-form description; a
+      # descriptive subject breaks the join and FAILs R5). Buckets actuated
+      # by this collection are recorded at scope "observed" with the measured
+      # code; buckets not actuated (no safe probe exists) record the policy
+      # contract value at scope "contract" — the scope field declares the
+      # value's provenance, and the actuation reality rides in incidents.
       if pr.axPresent and dedicated.exitCode == 0:
-        obs.add(obsInt("successExitCode", dedicated.exitCode, "observed",
-                       cmd & " --help (success-path actuation)"))
+        obs.add(obsInt("successExitCode", dedicated.exitCode, "observed", cmd))
       # invalid input: actuated only for the prove subject via the live probe.
       if sub == "prove" and pr.axPresent:
-        obs.add(obsInt("invalidInputExitCode", pr.unknownOption.exitCode, "observed",
-                       cmd & " --definitely-unknown-option-xyz -> exit " &
-                       $pr.unknownOption.exitCode))
+        obs.add(obsInt("invalidInputExitCode", pr.unknownOption.exitCode,
+                       "observed", cmd))
         inc.add(incident(
           "R5-EXIT-001", (if pr.unknownOption.exitCode == invalidCode: "info" else: "warning"),
           "invalid-input probe for '" & cmd & "' exited " & $pr.unknownOption.exitCode &
           " (policy INVALID_INPUT=" & $invalidCode & ")"))
       else:
-        obs.add(obsInt("invalidInputExitCode", invalidCode, "contract",
-                       cmd & " — policy exitCodeContract value; no invalid-input " &
-                       "actuation for this subject in this collection"))
+        obs.add(obsInt("invalidInputExitCode", invalidCode, "contract", cmd))
         if pr.axPresent and sub == "report":
           inc.add(incident(
             "R5-EXIT-002", "info",
@@ -1320,16 +1339,11 @@ when isMainModule:
       # verification failure: actuated only when the E2E report exit was 1.
       if art.reportExitOk and art.reportExit == verifFailCode:
         obs.add(obsInt("verificationFailureExitCode", art.reportExit, "observed",
-                       cmd & " — report exit artifact actuated " & $verifFailCode))
+                       cmd))
       else:
         obs.add(obsInt("verificationFailureExitCode", verifFailCode, "contract",
-                       cmd & " — policy exitCodeContract value; not actuated in this " &
-                       "collection" &
-                       (if art.reportExitOk:
-                          " (reportExit=" & $art.reportExit & ")" else: "")))
-      obs.add(obsInt("internalErrorExitCode", internalCode, "contract",
-                     cmd & " — policy exitCodeContract value; internal error not " &
-                     "safely inducible in this collection"))
+                       cmd))
+      obs.add(obsInt("internalErrorExitCode", internalCode, "contract", cmd))
     if not pr.axPresent:
       inc.add(incident("R5-OBS-001", "warning",
                        "bin/ax absent — no exit-code actuation for any subject; " &
