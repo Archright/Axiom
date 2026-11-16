@@ -129897,6 +129897,21 @@
       "ignorable": false,
       "leanType": "Bool",
       "module": "src/verification/obligation/measured_digests.nim",
+      "name": "delegatedFileDigest",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/obligation/measured_digests.nim",
       "name": "isRacyStat",
       "negativeConstraints": [
         "result >= 0 is invalid — Bool is not numeric",
