@@ -258,3 +258,5 @@ provenRequired(Δ) := { U | affected(U, Δ) == provably true } ∪ L0-baseline
 ---
 
 *작성일: 2026-08-28. P2 증분 검증 엔진 ADR. P1 관찰 보고서에 기반. 모든 Work Unit, 소요시간, 종속성은 P1 보고서에서 유도되었으며 UNKNOWN 항목은 정직하게 미기재됨.*
+
+<!-- SL-20 positive surface probe (CONTROLLED path) 20261116 -->
