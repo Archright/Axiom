@@ -50,6 +50,10 @@
 #   SL-02 closure           → job2 derived-closure load
 #   SL-03 evidence validity → job2 D9 staging + subject register + witness
 #   SL-05 verdict           → job2 admission predicate evaluation (dry-run)
+#   SL-20 surface admission → job2 [SL-20] repository surface admission
+#     (attest stage: B-built tools/surface_guard, base policy @B x changed
+#     paths — Surface Truth Epoch VS-1; PR files-API census on the PR
+#     venue, exact two-commit tree diff B-vs-G on the merge_group venue)
 # Non-slice steps (checkouts, toolchain, download/upload)
 # stay ungated — provisioning/observation, not verification slices.
 # NOTE: when implementedSlices ⊉ all five, the artifact contract
@@ -929,10 +933,13 @@ jobs:
           #   SL-05 verdict     → predicate evaluation (dry-run)
           #   SL-15 cas-reuse   → evidence-record emission + CAS env arming
           #                       (attest stage only)
+          #   SL-20 surface     → [SL-20] repository surface admission
+          #                       (attest stage only — B-built guard v2,
+          #                       PR/MG equal verdict)
           # NOTE: id regex allows SL-NN and SL-NNNN — SL-0713 is a SINGLE
           # catalog entry (SL-07 + SL-13 merged); 4-digit ids are valid.
           RPT="[slice-engine] epoch=$EPOCH implemented=$IMPL"
-          for spec in "sl08=SL-08" "sl01=SL-01" "sl02=SL-02" "sl03=SL-03" "sl05=SL-05" "sl15=SL-15"; do
+          for spec in "sl08=SL-08" "sl01=SL-01" "sl02=SL-02" "sl03=SL-03" "sl05=SL-05" "sl15=SL-15" "sl20=SL-20"; do
             key="${spec%%=*}"
             slice="${spec##*=}"
             if printf '%s' "$parsed" | jq -e --arg s "$slice" '.implementedSlices | index($s) != null' >/dev/null 2>&1; then
@@ -987,6 +994,120 @@ jobs:
           clean: true
           fetch-depth: 1
           persist-credentials: false
+
+      # ────────────────────────────────────────────────────────────────
+      # [SL-20] Repository surface admission (Surface Truth Epoch, VS-1).
+      # One judge, one policy SSOT, equal verdict on both venues: the SAME
+      # guard binary and the SAME base policy @B judge the PR census
+      # (pull_request venue: GitHub files API, fully paged, head-pinned to
+      # the exact H) and the landing delta (merge_group venue: exact
+      # two-commit tree diff B-vs-G after a depth-1 object-sha-bounded
+      # fetch of G — the same object-set shape as the identity step's
+      # merge-candidate object fetch, inventoried, breakers: 0). GATE A:
+      # the guard compiles from the B tree (workspace root, the executor
+      # checkout) — never from _candidate (H is data only). Head policy
+      # participates only when present at H (guard v2 selfAmendment:
+      # allowedPaths + version increase); a deleted or absent policy
+      # degrades to base-only judgment and the D change on a FROZEN path
+      # fails on its own. Census completeness is fail-closed: 30-page cap
+      # (3000 files), and unknown file statuses are emitted as '?<status>'
+      # lines the guard fails closed on. Fires ONLY in the called attest
+      # stage (direct pull_request events carry no workflow_call inputs).
+      # ────────────────────────────────────────────────────────────────
+      - name: "[check] [SL-20] Repository surface admission (B-built guard, base policy x changed paths)"
+        if: inputs.stage == 'attest' && steps.slice-engine.outputs.scope_sl20 == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number || '0' }}
+        run: |
+          set -euo pipefail
+          fail() { echo "[SL-20] FAIL — $1 (fail-closed)" >&2; exit 1; }
+          B="${{ inputs.baseSha || github.event.pull_request.base.sha || github.event.merge_group.base_sha }}"
+          H="${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}"
+          printf '%s' "$B" | grep -qE '^[0-9a-f]{40}$' || fail "B='$B' not a 40-hex OID"
+          printf '%s' "$H" | grep -qE '^[0-9a-f]{40}$' || fail "H='$H' not a 40-hex OID"
+          mkdir -p .axiom/sl20 bin
+          # Gate A: verifier from BASE — the guard binary is compiled from
+          # the B tree (workspace root, the executor checkout), never from
+          # _candidate.
+          nim c --skipParentCfg --skipProjCfg --hints:off \
+            --path:. --path:tools --nimcache:.axiom/sl20/nimcache \
+            -o:bin/surface_guard tools/surface_guard.nim \
+            || fail "surface_guard compile from B tree failed (Gate A: verifier from base)"
+          # Base policy — read BY OBJECT at B (the root checkout is at B).
+          git -C "$GITHUB_WORKSPACE" show "$B:config/repository_surface.json" \
+            > .axiom/sl20/base_policy.json \
+            || fail "config/repository_surface.json unreadable at B=$B"
+          # Head policy — only when it exists at H (selfAmendment contract,
+          # guard v2); absent/deleted policy degrades to base-only judgment.
+          if git -C "$GITHUB_WORKSPACE/_candidate" show "$H:config/repository_surface.json" \
+              > .axiom/sl20/head_policy.json 2>/dev/null; then
+            HEADPOL_FILE=".axiom/sl20/head_policy.json"
+          else
+            HEADPOL_FILE=""
+          fi
+          if [ "$PR_NUMBER" = "0" ]; then
+            # merge_group venue: H == G (the queue commit that lands).
+            # Bounded object-sha fetch of G into the root repo, then the
+            # exact two-commit tree diff B-vs-G — the landing delta itself.
+            G="$H"
+            git -C "$GITHUB_WORKSPACE" fetch --depth=1 --no-tags --force origin "$G" \
+              || fail "cannot fetch merge-group head $G (fail-closed)"
+            git -C "$GITHUB_WORKSPACE" -c core.quotepath=false diff --name-status "$B" "$G" \
+              > .axiom/sl20/changes.name-status \
+              || fail "two-commit tree diff B-vs-G failed"
+          else
+            # pull_request venue: census = GitHub files API, fully paged,
+            # re-pinned to the exact H (a force-push mid-run fails). Census
+            # cap: 30 pages x 100 = 3000 files; beyond it completeness is
+            # unprovable, so FAIL closed.
+            page=1
+            total=0
+            : > .axiom/sl20/changes.name-status
+            while :; do
+              files_json="$(curl -fsSL --retry 3 --retry-all-errors \
+                -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files?per_page=100&page=$page")" \
+                || fail "GET files page=$page failed"
+              n="$(printf '%s' "$files_json" | jq 'length')"
+              printf '%s' "$files_json" | jq -r '.[] |
+                if .status == "added" then "A\t" + .filename
+                elif .status == "removed" then "D\t" + .filename
+                elif .status == "modified" or .status == "changed" then "M\t" + .filename
+                elif .status == "renamed" then "R100\t" + .previous_filename + "\t" + .filename
+                elif .status == "copied" then "C100\t" + .previous_filename + "\t" + .filename
+                else "?" + .status + "\t" + .filename
+                end' >> .axiom/sl20/changes.name-status
+              total=$((total + n))
+              if [ "$total" -ge 3000 ]; then fail "census completeness unprovable at/above 3000 changed files"; fi
+              if [ "$page" -ge 31 ]; then fail "PR file list exceeds 30 pages"; fi
+              if [ "$n" -lt 100 ]; then break; fi
+              page=$((page + 1))
+            done
+            # Stale-census guard: re-get the PR object, pin head.sha to H.
+            pr_head="$(curl -fsSL --retry 3 --retry-all-errors \
+              -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" \
+              | jq -r '.head.sha')" \
+              || fail "GET pulls/$PR_NUMBER failed"
+            [ "$pr_head" = "$H" ] || fail "PR head.sha $pr_head != H $H (census stale — re-run needed)"
+          fi
+          echo "[SL-20] changed files: $(wc -l < .axiom/sl20/changes.name-status) (PR_NUMBER=$PR_NUMBER)"
+          # Unknown file statuses are emitted as '?<status>' lines —
+          # parseNameStatus keeps them and classify() fails closed on them
+          # (never silently skipped).
+          if [ -n "$HEADPOL_FILE" ]; then
+            bin/surface_guard --policy .axiom/sl20/base_policy.json \
+              --head-policy "$HEADPOL_FILE" --diff .axiom/sl20/changes.name-status \
+              || { echo "[SL-20] surface verdict: FAIL"; exit 1; }
+          else
+            bin/surface_guard --policy .axiom/sl20/base_policy.json \
+              --diff .axiom/sl20/changes.name-status \
+              || { echo "[SL-20] surface verdict: FAIL"; exit 1; }
+          fi
+          echo "[SL-20] repository surface verdict: PASS"
 
       - name: "[check] Download base-built artifacts (B bin/ax + ircheck)"
         if: steps.slice-engine.outputs.scope_sl08 == 'true' && steps.venue.outputs.venue == 'landing'

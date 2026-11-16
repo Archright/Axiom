@@ -118,7 +118,7 @@ include "config/vendors.nims"    # Hermetic build, Z3 FFI, source scanner
 proc computeSourceHash(path: string): string =
   ## SHA-256 digests of the target file's content PLUS the shared gate-infrastructure
   ## set, flat-concatenated per slot in fixed order — NOT a merkle root and NOT the
-  ## config/integrity.nims chain (per DEBT#545 that chain hashes no file content:
+  ## config/integrity.nims chain (per DEBT#546 that chain hashes no file content:
   ## its sha256sum calls receive bare filenames, ENOENT, and the verdict binds to
   ## the "sha256sum:" diagnostic prefix — the src/core/trusted set is unhashed).
   ## 단일 sha256sum 호출로 전체 파일 목록을 한 번에 계산 (fork 절감).
