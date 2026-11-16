@@ -1,10 +1,10 @@
 # Third-Party Notices
 
-This file identifies the third-party materials included in, referenced by, or distributed with this repository and the licenses that continue to govern them.
+This file identifies the third-party materials included in or distributed with this repository and the licenses that continue to govern them.
 
 The **Axiom Source-Available License 1.0** (`LicenseRef-Axiom-SAL-1.0`) applies to the original portions of the Covered Work. It does not relicense, and does not apply to, the third-party materials listed below; each such material remains governed by its own license as stated here and as reproduced under `LICENSES/`.
 
-Where a dual license "Apache License 2.0 OR MIT" is indicated, you may use, reproduce, and distribute the material under either the Apache License 2.0 or the MIT license, at your option (the choice model used by the Status and Rust ecosystems).
+Where a dual license "Apache License 2.0 OR MIT" is indicated, you may use, reproduce, and distribute the material under either the Apache License 2.0 or the MIT license, at your option.
 
 ## 1. ed25519 — C implementation (Zlib)
 
@@ -40,10 +40,7 @@ Where a dual license "Apache License 2.0 OR MIT" is indicated, you may use, repr
 ## 5. Vendored build dependencies archive (Apache-2.0 OR MIT)
 
 - File: `experiments/act2-wp-toml-b1-input-integrity/bsec/offline/deps.tar.gz`
-- Contents: complete sources of three Status ecosystem packages, renamed to `.nim.vendored` (per-package file counts in the repackaged archive, including `nimblemeta.json` and the two license texts):
-  - `faststreams` 0.5.2 (16 files, including `faststreams-0.5.2/LICENSE-APACHE` and `faststreams-0.5.2/LICENSE-MIT`)
-  - `serialization` 0.5.4 (12 files, including `serialization-0.5.4/LICENSE-APACHE` and `serialization-0.5.4/LICENSE-MIT`)
-  - `stew` 0.5.0 (56 files, including `stew-0.5.0/LICENSE-APACHE` and `stew-0.5.0/LICENSE-MIT`)
+- Contents: complete sources of three Status ecosystem packages — `faststreams` 0.5.2, `serialization` 0.5.4, `stew` 0.5.0 — renamed to `.nim.vendored`; each package directory in the archive carries `LICENSE-APACHE` and `LICENSE-MIT`.
 - Upstream: <https://github.com/status-im/faststreams>, <https://github.com/status-im/nim-serialization> (<https://github.com/status-im/serialization>), <https://github.com/status-im/nim-stew> — Copyright (c) 2018-2024 Status Research & Development GmbH
 - License: **Apache-2.0 OR MIT** — the repackaged archive ships `LICENSE-APACHE` and `LICENSE-MIT` inside each package directory in the archive; full texts are also reproduced in `LICENSES/Apache-2.0.txt` and `LICENSES/MIT.txt`.
 - Naming note: the inserted Apache-2.0 text is named `LICENSE-APACHE` (resolving the in-file header references), while the upstream repositories name this file `LICENSE-APACHEv2`; the contents are byte-identical to the pinned upstream commits.
