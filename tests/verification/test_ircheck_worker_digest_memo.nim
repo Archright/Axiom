@@ -7,8 +7,10 @@ import verification/obligation/canonical_verification
 ## ircheckWorkerBinaryDigest memoization — performance fix (2026-11-14).
 ##
 ## measureExtractionAgreement seals the ircheck worker binary's sha256 into
-## every SubjectParseBoundComponents. The binary is ~119 MB; one debug-mode
-## digest costs ~60 s, and the s1a golden lane measures it once per golden
+## every SubjectParseBoundComponents. The binary is ~119 MB (an in-process
+## pure-Nim digest costs ~0.62 s release / ~45 s debug; the
+## platform-delegated sha256sum path hashes it in ~0.09 s — VS-PERF-ATTR
+## 2026-11-16), and the s1a golden lane measures it once per golden
 ## subject in the SAME process (three times per run). The digest now flows
 ## through `ircheckWorkerBinaryDigest` → `measuredBinaryDigest` (stat-identity
 ## memo: path + size + mtimeNs/ctimeNs + dev/ino), so repeat measurements in
