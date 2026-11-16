@@ -25,7 +25,8 @@ C3의 전제(설계 §3): "집계 잡 = 사전빌드 ax 소비, mint류의 runti
    `:867` `attestWitnessChainCas(…, defaultAttestationOptions(), …)` →
    `src/verification/attestation_orchestrator.nim:224-235` — `leanExe: ""`, `z3Path: ""`,
    `ircheckExe: ""`.
-3. **Stage (c)는 Lean 컴파일러를 직접 호출한다.** `attestation_orchestrator.nim:690-708`
+3. **Stage (c)는 인증서의 `leanSource` 재실행을 위해 컴파일러(Lean)를 직접 호출한다.**
+   `attestation_orchestrator.nim:690-708`
    (attestKernelStage) — "fresh kernel re-execution … lean first, fail-closed" — `:698`
    `reexecuteLean(certLike, options.leanExe, …)`. `src/verification/kernel_reexecution.nim:467-472`:
    leanExe가 비어 있으면 `AXIOM_LEAN_CMD` env, 그마저 없으면 **폴백 `"lake env lean"`**.
