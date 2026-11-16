@@ -48,12 +48,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:f04ce57217c6d9e91ea8fc75f1d15cd88cbc92e69d714ef7839e56baa5d900fc",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:bbe4fee2500de6812b95dfde3cd381e57ec5848498fe83289681f3edfc07675b",
       "count": 1,
       "file": "src/cli/axiom_engine.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:3c03cbbc373479a7c558237b32d4b3d8938b4b00e8da8d84c0d371e0ca901180"
+      "rawContentHash": "sha256:db8af65688f0003fed9a5a0fc8a8beb8723a28affe89cb3f7933fbf3bc1c1cbb"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
@@ -3787,7 +3787,7 @@
       "file": "src/verification/lean_lsp_compiler.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:fdf90942eeeda41713672c5479a3b623656cd804d410a77c15b9fd4125192bd0"
+      "rawContentHash": "sha256:16a12e21527b586ab9f02101f1095deefa9abf7ee4e6472d672acb53ec71dd8a"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
@@ -4220,12 +4220,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:91813cc77f3878157d3311e6c1a852910b8c184159bfe06d7a09b63aaad46f08",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:f5c82033b2166aea016e2e77bb4749f873135f52cd1cc241dd283486c65581c2",
       "count": 1,
       "file": "src/verification/proof_universe_commit.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:2cae7c755af32d18981eba8647e8af3b1c055376dc84e8e8b7ba4abee925a2a8"
+      "rawContentHash": "sha256:aed51310eb9ed260cad91b2cc8c632e100bffdebd5ee32819c5fa3b8cc08bc18"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
