@@ -67,7 +67,7 @@ suite "findRepoRoot contract (DEBT#550)":
       try:
         setCurrentDir(previous)
       except CatchableError:
-        discard
+        discard  # axiom:best-effort(test cwd restore)
     var cwdSwitched = true
     try:
       setCurrentDir(base / "bin")
