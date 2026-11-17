@@ -70,6 +70,23 @@ TCB로 수용한 뒤 남는 잔여 위협과, `workflow_run` 단일 씨딩 write
   layering": "Never describe both as the same boundary"), 1:1 형상 강제는
   merge_group 이벤트 부모 관계·PR identity·후보 트리 동등성(구조 층)으로
   이루어진다.
+
+  **갱신 (2026-11-17 — Free 실측이 만든 두 정정)**:
+  (i) **org ruleset 부재는 잔여가 아니다** — `gh api orgs/Archright/rulesets` →
+  HTTP 403("Upgrade to GitHub Team")은 유료 플랜 기능의 부재이지 Axiom의 미완
+  위협이 아니다. org ruleset이 담당하던 집행 목적(§1의 위임 목록)은 repository
+  ruleset `27097366` + 독립 App `5795152`가 수행하며, `admission-check`의
+  expected source가 App으로 결속되므로 R1의 "남는 방어선은 expected-source
+  결속"은 org ruleset 없이도 성립한다. R2의 "설정은 언제든 다시 꺼질 수 있고
+  탐지는 운영 감사로만 가능"도 그대로 유효하다 — org ruleset이 살아 있다고
+  읽히는 서술은 이 날짜로 종료되고, 잔여 번호는 재배열하지 않는다(추가·삭제
+  0건).
+  (ii) **`max_entries_to_build`는 2로 유지되며 위 표의 분류 그대로 스로틀이다**
+  (ADR-0027 §P5 · ADR-0041 §1). 그룹 크기 보장이 아니며, 그 보장을 이 파라미터에
+  귀속시키지 않는다. 다중 PR 그룹(`G`의 부모 3개 이상)의 판정은 **fail-closed**다
+  — 단일 PR 불변식 `parents(G).length == 2`가 `G`를 거부하므로, 스로틀이 형상
+  강제를 대신하지 않고 형상 강제도 스로틀을 대신하지 않는다(위 "설정 감시 ≠ 형상
+  강제"의 같은 경계). 불변식 정본: [docs/evidence/free_authority_migration_phase0_proof.md](../evidence/free_authority_migration_phase0_proof.md) §3.
 - **R3 — `workflow_run` + `cache-mode: write` cache-poisoning**. 공식 경고(GitHub 문서 원문):
   > "Explicitly declaring `cache-mode: write` or `cache-mode: write-only` reintroduces the
   > risk of cache-poisoning that the default untrusted-trigger read-only permissions are
@@ -232,6 +249,8 @@ TCB로 수용한 뒤 남는 잔여 위협과, `workflow_run` 단일 씨딩 write
 발화하지 않으면(E7 실증 판정) publisher는 `runner-pool-acceptance.yml`의 push@main
 재발행 잡으로 회귀한다 — **컴파일 0의 초 단위 I/O**이므로 계산 중복 0은 유지되나 머지
 워크플로 실행 0은 달성 불가(플랫폼 제약). 회귀 결정 권한: ADR-0025 Amendment B §4.
+
+**(2026-11-17 갱신 — Free)**: org rulesets가 Free에서 HTTP 403이므로 org required workflow `admission-gate`는 더 이상 발화하지 않는다 — 위 실패 모드의 전제(`workflow_run`이 org 워크플로 완료에 붙는가)는 현행 평면에서 발생하지 않으며, 이 절은 역사 기록으로 보존한다. 현행 merge_group 런은 in-repo `.github/workflows/admission-gate-v2.yml`이 만들고, 판정 producer는 App `5795152`다.
 
 ## 4. 운영 실증 (2026-09-29 — 실제 운영 상태 관측)
 

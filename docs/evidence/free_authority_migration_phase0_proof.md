@@ -381,4 +381,96 @@ merge queue 경로로 착지시켰다 — §10.3의 break-glass가 아닌 정상
   확인한다. 반대로 trust-surface 파일 변경은 여전히 fail-closed다(§10.5.2).
 - `admission-gate-v2.yml`의 `mint-publish` 래퍼가 `contents: write`를 요청하는 경로는
   PR이 수정 가능한 caller에 존재한다(§1.2) — 이 잔여 위험은 해소되지 않았으며 계획
-  대상이다.
+  대상이다.## 12. GitHub-native enforcement hardening (2026-11-17)
+
+### 12.1 Repository Actions 설정 전환 (실측)
+
+`GET /repos/Archright/Axiom/actions/permissions`와
+`GET /repos/Archright/Axiom/actions/permissions/fork-pr-contributor-approval`의
+전/후 값이다.
+
+| 설정 | before (`2026-11-17T10:11:23Z`) | after (`2026-11-17T10:11:25Z`) |
+|---|---|---|
+| Actions permissions | `{"enabled":true,"allowed_actions":"all","sha_pinning_required":false}` | `{"enabled":true,"allowed_actions":"all","sha_pinning_required":true}` |
+| Fork PR contributor approval | `{"approval_policy":"first_time_contributors"}` | `{"approval_policy":"all_external_contributors"}` |
+
+적용 명령(실행한 그대로):
+
+```bash
+gh api -X PUT repos/Archright/Axiom/actions/permissions \
+  -F enabled=true -f allowed_actions=all -F sha_pinning_required=true
+gh api -X PUT repos/Archright/Axiom/actions/permissions/fork-pr-contributor-approval \
+  -f approval_policy=all_external_contributors
+```
+
+롤백은 같은 엔드포인트에 전 값을 되돌려 쓰는 것이다:
+
+```bash
+gh api -X PUT repos/Archright/Axiom/actions/permissions \
+  -F enabled=true -f allowed_actions=all -F sha_pinning_required=false
+gh api -X PUT repos/Archright/Axiom/actions/permissions/fork-pr-contributor-approval \
+  -f approval_policy=first_time_contributors
+```
+
+근거 (Context7 `/github/docs`):
+
+- "Require actions to be pinned to a full-length commit SHA"는 GitHub가 저작한
+  액션을 포함한 **모든 액션**에 적용된다 — 소유자 구분 없이 전체 길이 커밋 SHA
+  핀이 강제된다.
+- fork PR 승인 문서는 `first_time_contributors`가 **최초 1회만** 승인을 요구하므로,
+  공격자가 무해한 커밋을 먼저 병합시켜 승인 게이트를 소진한 뒤 쓰기 권한 PR을
+  올릴 수 있음을 경고한다. `all_external_contributors`가 그 우회를 닫는
+  fail-closed 선택이다.
+
+이 설정은 **새 정책의 도입이 아니라 기존 정책의 플랫폼 집행**이다. `.github/`
+아래 실제 외부 `uses:` 참조는 전수 40-hex 커밋 SHA로 고정되어 있다(113/113,
+`grep -rhoE "^\s*uses:\s*[A-Za-z0-9_.\/-]+@[A-Za-z0-9_.-]+" .github`로 실측).
+따라서 `sha_pinning_required=true`는 저장소가 이미 선언한 핀 정책에 GitHub의
+거부권을 붙인다 — 통과하던 참조가 새로 거부되는 경우는 없다.
+
+### 12.2 왜 이것이 계획(plan) 항목이 아닌가
+
+- **플랫폼 네이티브 집행**: 핀 요구의 집행자는 GitHub Actions다. Axiom 코드·
+  게이트·워크플로 변경은 0건이다.
+- **trust-surface 파일 0건**: `config/policy/trust_surface_manifest.json`의
+  15경로 어디에도 이 설정은 파일로 존재하지 않는다.
+- **ruleset 변경 0건**: ruleset `27097366`의 rules·required contexts·
+  `bypass_actors`는 불변이다(§12.3 readback).
+- **가역적**: 위 롤백 2줄로 전 상태로 복귀한다. 새 권한·새 시크릿·새 App은 없다.
+
+이 항목은 §10.5/§11.4가 남긴 잔여를 **닫지 않으며 닫는 척하지도 않는다**
+(§0.9). 설정 평면의 강화일 뿐이다.
+
+### 12.3 PR #141 정상 경로 수용 (bypass 없음)
+
+| 항목 | 관측 |
+|---|---|
+| PR | #141 (`docs/free-authority-truth-alignment`, docs-only) |
+| 경로 | 정상 merge queue — 감사 bypass 0회 |
+| `mergedAt` | `2026-11-17T09:58:05Z` |
+| merge commit | `6ba3145c3e34a9fce1193e9f4a531844825dd990` |
+| App `admission-check` (id `133956311742`) | **success** |
+| App summary | `trust_surface=PASS — 15 paths match base 4979983` / `ledger=PASS — 1 entry bound to (base, pr_head)` / `run=44059194582 attempt=1 conclusion=success` |
+| main push run `44060418643` (`trusted-writer-set`) | success |
+| main push run `44060418742` (`axiom-operational-slice`) | success |
+| ruleset readback | `bypass_actors: []`, 7 required contexts 불변 |
+
+판정: §11의 positive control이 재현되었다. App이 `B_mg` 기준 15경로를 비교하고
+`(base, pr_head)` 원장 항목을 결속한 뒤에만 GitHub가 native MERGE를 수행했다.
+§12.1의 설정 전환은 이 수용의 **전제가 아니라 병행**이다 — ruleset도 프로듀서
+계약도 바뀌지 않았다.
+
+### 12.4 잔여 (불변)
+
+두 잔여는 §12.1의 설정으로 닫히지 않는다:
+
+1. **같은 저장소 PR의 쓰기 잡 추가**: `sha_pinning_required`는 액션 **참조**를
+   제약하지 워크플로 `permissions:` 선언을 제약하지 않는다. PR이 수정 가능한
+   caller에 `contents: write` 잡을 추가하는 경로는 §1.2/§11.4 그대로 남는다.
+2. **6 required context의 producer가 Actions 15368**: `bsec-integrity`,
+   `debt-registry-gate`, `generation-acceptance`, `axiom-operational-slice`,
+   `publication-integrity`, `readiness-verdict`는 여전히 앱 단위 결속이며,
+   동명 체크 위조 표면은 §10.5.1 그대로다.
+
+fork 승인 정책은 **외부 기여자 경로만** 닫는다 — 저장소 쓰기 권한을 가진
+내부자 경로는 이 설정의 대상이 아니다.
