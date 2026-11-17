@@ -52,6 +52,7 @@ run=<RUN_ID> attempt=<N> conclusion=success
   - <https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue> — "Choose how long the queue should wait for a response from CI before assuming that checks have failed"
 - 따라서 App이 죽었거나 권한이 회수되면 120분 뒤 엔트리는 **탈큐**된다. 성공으로 기본값 처리되는 경로는 없다.
 - App 내부 실패(서명 검증 실패, API 오류, 중복 런, 타임아웃)도 `failure` 발행으로 끝난다. `neutral`·미발행으로 통과시키지 않는다.
+- **head 이동 시 `run_head_mismatch`(2026-11-17 PR #142 실측)**: App은 `workflow_run` 완료 시점의 **현재 PR head**와 그 run의 `head_sha`를 비교한다. run이 완료되기 전에 head가 이동하면, 완료된 run은 현재 head와 불일치하므로 App은 **현재 head에 `failure`를 발행**한다(`reasons=run_head_mismatch`). 이는 fail-closed로서 올바르다. 다만 이동 후의 head에서 새 run이 성공해도 **이전 failure 체크를 자동으로 대체하지 않는다** — 새 run의 완료가 별도 체크로 발행되지 않는 한 required check는 failure로 남는다. 운영 규칙: (i) admission run이 in-flight인 동안 head를 이동시키지 않는다; (ii) 이동이 발생하면 새 head에서 run을 완료시켜 새 체크 발행을 받는다; (iii) 어떤 경우에도 bypass로 통과시키지 않는다.
 
 ## 5. 관측 명령
 
