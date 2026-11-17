@@ -5767,11 +5767,13 @@
         "docs/evidence/vs_perf_attr_acceptance_2026-11-16.md"
       ],
       "source": "vs_perf_attr_2026-11-17",
-      "status": "open",
-      "resolution": "UNRESOLVED — registration only (this slice does not modify repo_root.nim). Remediation: fix the empty-string return path (explicit failure sentinel or CWD-resolved root; the documented \"Fallback: one level up from startDir (legacy compat)\" is unreachable when the \"\"-iteration matches CWD-relatively) and pin it with an out-of-repo-binary regression test. Discovered while landing VS-PERF-ATTR; the local test-fast failure it produces was fully attributed before this PR (Phase E bisect + in-process probes).",
-      "lastVerifiedAt": "2026-11-17T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-17 (PR #130): findRepoRoot() walk-exhaustion no longer returns an empty string as a CWD-relative root — the Q-013 guard (parentDir of / is empty) stops the walk before probing an empty path and on exhaustion resolves the root explicitly (a CWD carrying .axiom_root IS that root; else the documented one-level-up legacy fallback; empty only as explicit not-found). Pinned by tests/unit/test_repo_root_fail_closed.nim (4 tests: red-before 2 FAILED -> green-after 4 OK) wired into TESTS_FAST_UNIT; test_vkd_determinism passes; make test-fast clean except the pre-existing unrelated test_rust_guard_attempt tri failure (reproduced on pristine origin/main; registered as DEBT#551). Rotation pin reanchored (repo_root.nim blob 2fd2b9a, commit 116b6ed).",
+      "lastVerifiedAt": "2026-11-17T14:54:49Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registration-only finding; repo_root.nim is a load-bearing core utility this slice does not modify, and the fix requires a path-semantics decision (empty-string sentinel vs explicit failure) plus a new out-of-repo binary regression test, decided by a follow-up slice. Trace: this entry's resolution (UNRESOLVED) and source (vs_perf_attr_2026-11-17); external: docs/evidence/vs_perf_attr_acceptance_2026-11-16.md §10 (attribution record); tests/unit/test_vkd_determinism.nim (the failing surface)."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registration-only finding; repo_root.nim is a load-bearing core utility this slice does not modify, and the fix requires a path-semantics decision (empty-string sentinel vs explicit failure) plus a new out-of-repo binary regression test, decided by a follow-up slice. Trace: this entry's resolution (UNRESOLVED) and source (vs_perf_attr_2026-11-17); external: docs/evidence/vs_perf_attr_acceptance_2026-11-16.md §10 (attribution record); tests/unit/test_vkd_determinism.nim (the failing surface).",
+      "resolvedAt": "2026-11-17",
+      "resolvedBy": "debt_engine --close"
     },
     {
       "id": "DEBT#551",

@@ -2773,7 +2773,7 @@
     "src/core/utils/repo_root.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "bc7d0744063848291099c2dbfc2a8f70257e4f46"
+      "sha": "2fd2b9acc546095a10f68c31a629a839b4a6b65c"
     },
     "src/core/utils/shadow_digests.nim": {
       "mode": "100644",
