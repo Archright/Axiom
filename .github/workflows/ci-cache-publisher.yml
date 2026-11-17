@@ -151,9 +151,11 @@ name: ci-cache-publisher
 #   발화였다(31일 실측 — ci_epoch_record_2026-10-25-publisher-job-if.md 부록
 #   A; B2 §2.1 후보 (a)). 발화 우주를 게이트 완료로 한정한다:
 #     workflows: ['admission-gate', 'admission-gate-v2']
-#   이름 근거(라이브 판독, 2026-11-02): org ruleset 주입 게이트의 완료 run은
-#   GitHub 기록 name='admission-gate' · path='.github/workflows/admission-gate-v2.yml'
-#   (run 39893960477). 이름 매칭의 현재 유효성 실측: 같은 날 router run
+#   이름 근거(라이브 판독, 2026-11-02; 2026-11-17 갱신): repository-native
+#   오케스트레이터 게이트의 완료 run은 GitHub 기록 name='admission-gate' ·
+#   path='.github/workflows/admission-gate-v2.yml' (당시 run 39893960477,
+#   현행 workflow id 420946486 — 'org ruleset 주입'은 구 메커니즘 서술,
+#   ADR-0041). 이름 매칭의 현재 유효성 실측: 같은 날 router run
 #   41404148309의 guard가 게이트 런 41403237625 완료의 workflow_run 이벤트를
 #   수신했다 — ci-provider-router.yml이 동일 이름 화이트리스트를 failover
 #   권위로 상용 중이므로 두 소비자가 같은 플랫폼 사실에 의존한다.

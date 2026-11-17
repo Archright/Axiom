@@ -119,8 +119,10 @@ set -euo pipefail
 
 OWNER="Archright"
 REPO="Axiom"
-# Admission-gate registration paths: Lever-B (2026-10-16) renamed the org workflow
-# admission-gate.yml → admission-gate-v2.yml (docs/evidence/g1_leverB_path_rename_2026-10-16.md).
+# Admission-gate registration paths: (historical) Lever-B (2026-10-16) renamed
+# the org workflow admission-gate.yml → admission-gate-v2.yml
+# (docs/evidence/g1_leverB_path_rename_2026-10-16.md; the orchestrator is
+# repository-native since PR #134 — ADR-0041).
 # Both generations measure the SAME gate; anything else is refused (fail-closed).
 # One regex serves both matchers: `[.]` avoids `\.` (rejected inside jq string
 # literals) and `^(.*/)?` lets the same anchor match the full registration path

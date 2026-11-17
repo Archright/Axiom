@@ -33,7 +33,9 @@ axiomLayer "presentation"
 ##   6. journal               — landing audit record (.axiom/gate_history).
 ##
 ## Token/actuator identity (A1): the actuation uses GITHUB_TOKEN (env) —
-## the Landing App installation token is NOT used. The invariant
+## the Landing App installation token is NOT used (the Landing App,
+## axiom-ci-elastic 4879411, is uninstalled and its CAS lane is retired —
+## ADR-0041; the statement stays true for that dead lane). The invariant
 ## `landing actuator identity ∉ effective bypass actors` is enforced by the
 ## ruleset bypass-actors list (live-observed empty on the production main
 ## ruleset, canonical_run_graph.md D1); this CLI documents and pre-flights
@@ -346,6 +348,10 @@ proc runLandingCli*(args: seq[string]): int
     {.raises: [CatchableError, OSError, Exception], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   let token = getEnv("GITHUB_TOKEN")
   if token.len == 0:
+    # NO_TOKEN message wording: "not the Landing App installation token" —
+    # the Landing App (axiom-ci-elastic, 4879411) is uninstalled and the CAS
+    # lane is retired (ADR-0041), so the identity statement stays true for a
+    # dead lane.
     stderr.writeLine("LANDING_FAIL {\"reasonCode\":\"NO_TOKEN\",\"reason\":\"GITHUB_TOKEN not set (ruleset-applying actuator identity; not the Landing App installation token) — fail-closed\"}")
     return 1
 

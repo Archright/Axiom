@@ -148,7 +148,7 @@ func axCommandHelpEntries*(): seq[CommandHelpEntry] =
     CommandHelpEntry(
       name: "ax merge",
       usage: "<PR-number> [--dry-run] [--apply] [--json]",
-      description: "Merge-admission controller: evaluate a PR's CI evidence and execute the Landing App CAS landing with --apply (Phase B+C; the legacy native-merge act is superseded)."
+      description: "Merge-admission controller: evaluate a PR's CI evidence (Phase B+C); the live landing path is GitHub-native MERGE via the merge queue — the Landing App CAS lane is retired/uninstalled (ADR-0041)."
     ),
     CommandHelpEntry(
       name: "ax landing",

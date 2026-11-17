@@ -8,7 +8,9 @@
 # axiom/certificates side-ref ledger. This is the certRequired mint path
 # (config/policy/merge_admission.json v1.6.0, certRequired: true) — the
 # plan's prerequisite: a signed certificate(B,H) is the admission evidence
-# the Landing App consumes.
+# (consumed by the verdict predicate and recorded in the ledger; the Landing
+# App consumer is retired — that App, axiom-ci-elastic 4879411, is
+# uninstalled, ADR-0041).
 #
 # 2-STAGE STRUCTURE (approved plan rev.7, Phase 2 item 7 — 산출물별 생성
 # authority 단일화):
@@ -30,23 +32,27 @@
 #     N+5 slice split: (P1)/(P2)/(P4) = SL-04 (scope_sl04 게이트 — 발화),
 #     (P0)/(P5)/(P6)/(P7) = SL-0713 (scope_sl0713 게이트 — 미정착 NO-FIRE),
 #     (P3) = [X]4 bin/ax 원천 (무게이트).
-#   Caller contract: org admission-gate calls this workflow ONCE per stage
+#   Caller contract: the repository-native admission orchestrator
+#   (.github/workflows/admission-gate-v2.yml) calls this workflow ONCE per stage
 #   (`stage: prepare` / `stage: publish`; publish call gated on
 #   prepare+gateway completion — plan DAG). Any other stage value skips BOTH
 #   jobs (no run) — the caller verdict converts skipped → FAILURE
 #   (fail-closed, [F]). The stage job guards below are that sole validation
 #   (GitHub enforces the required input at call time).
 #   Caller-edge note (2026-10-07): the publish call's gateway-completion
-#   precondition is carried by the CALLER's needs graph — org admission-gate
+#   precondition is carried by the CALLER's needs graph — the admission
+#   orchestrator's
 #   `mint-publish: needs: [mint-prepare, gateway]` (restored in
-#   Archright/.github PR #62, merge 3a0ae4cc). The N+5 re-registration had
+#   Archright/.github PR #62, merge 3a0ae4cc — historical org-era change). The N+5 re-registration had
 #   dropped the edge — harmless while (P5)/(P6) were NO-FIRE, but after the
 #   N+6 gateway revival + SL-0713 promotion this callee evaluates the lane
 #   ((P5) tested-tree-digest, (P6) jobs-API conclusions), so a caller
 #   without the edge races the lane: measured run 37569755722 att.1 —
 #   publish evaluated 04:10:10Z, gateway/ci-bootstrap completed 04:11:18Z,
 #   in-progress counted as "abnormal conclusion" (MINT_PUB_JOBS FAIL).
-#   Editing the caller graph is an org-repo change; this file's own contract
+#   Editing the caller graph is an orchestrator-file change (repository-native
+#   since PR #134 — the org-repo era ended with the org ruleset retirement,
+#   2026-11-17, ADR-0041); this file's own contract
 #   surface stays fail-closed either way.
 #
 # GHEC adaptations (deviations from the original, all intentional):
@@ -60,15 +66,17 @@
 #    acceleration, never evidence; mint는 B-layer cache writer가 아니다).
 #    A-layer save is allowed from any run (A rarely changes -> first save
 #    wins).
-#  * trigger: Cutover 이후 workflow_call 단일 (org orchestrator
-#    admission-gate @SHA — org ruleset이 SHA 고정). 레거시 workflow_run
+#  * trigger: Cutover 이후 workflow_call 단일 (repository-native 오케스트레이터
+#    admission-gate — 'org ruleset이 SHA 고정'은 구 서술: org ruleset
+#    25218071·23943917은 2026-11-17 폐기, ADR-0041). 레거시 workflow_run
 #    트리거는 전환 PR에서 제거 — mint 발화 권한 = 게이트 DAG만.
 #  * M (the PR merge commit) NO LONGER PRE-EXISTS at mint time: the approved
-#    flow lands ONLY AFTER minting (signed certificate(B,H) -> Landing App
-#    CAS landing). The original step (1) derived M via pulls/{N}
+#    flow lands ONLY AFTER minting (signed certificate(B,H) -> landing).
+#    Landing is now GitHub-native MERGE via the merge queue (ADR-0041 — the
+#    Landing App CAS lane, src/cli/landing_cli.nim CreateCommit + updateRefs,
+#    is retired/uninstalled). The original step (1) derived M via pulls/{N}
 #    merge_commit_sha and validated the merge shape — that derivation is
-#    REMOVED; M is created post-mint by the Landing App
-#    (src/cli/landing_cli.nim, CreateCommit + updateRefs). The certificate
+#    REMOVED; M is created post-mint by the native merge. The certificate
 #    binds (B, H) only — it never binds M, so minting works pre-landing by
 #    design (INV-1 certTree conjunct 추가 — C1 기계 검증 4-conjunct 불변).
 #  * the witness's provenance `mergeSha` field is the check run's event
@@ -101,7 +109,7 @@
 # (d) the witness manifest. All verification of the witness is executed by
 # the B-built trusted bin/ax (`cert attest --sign`).
 #
-# Trigger: workflow_call 단일 (Cutover) — org orchestrator admission-gate가
+# Trigger: workflow_call 단일 (Cutover) — repository-native 오케스트레이터 admission-gate가
 # runId/runAttempt/headSha/baseSha/prNumber/stage를 공급하며 활성화 가드가 모든
 # 공급 사실을 GitHub API로 재검증한다: run object(자기 run 결속
 # runId==GITHUB_RUN_ID · gate path · attempt) + PR API(head/base identity,
@@ -748,8 +756,10 @@ jobs:
       #              checkout step from config/trusted_writer_set.json
       #              (NOT the current main — the anchor is B)
       #   actual   = (workflow_id, path) — call: orchestrator gate run의 path
-      #              vs admission-gate-v2.yml (workflow_id는 org 등록 네임스페이스
-      #              가 달라 실측 교차검증 불가 — 호출본 주석의 id 실측값 참조).
+      #              vs admission-gate-v2.yml (workflow_id는 과거 org 등록
+      #              네임스페이스 분리로 실측 교차검증 불가였음 — 현행
+      #              repo-native 오케스트레이터는 단일 id 420946486; 판정은
+      #              path 기준).
       #              불일치 → fail-closed (admission-workflow tamper or
       #              same-named impostor workflow).
       #   NOTE (GHEC): the blob sha of the admission workflow file at M no
@@ -843,10 +853,11 @@ jobs:
           rm -f "$blob_tmp"
           [ "$blob_sha" = "$TRUSTED_ADM_SHA" ] || fail "admission workflow blob@B $blob_sha != trustedAdmissionWorkflowSha $TRUSTED_ADM_SHA@B (admission workflow tamper?)"
           # call — orchestrator run identity (path). workflow_id는 org 등록
-          # 네임스페이스가 달라 교차검증 불가(.github 정의 id 367694978 ≠
-          # ruleset 실행 id 367727531 — 2026-09-26 실측): identity 담보 =
-          # path(server 할당, 위조 불가) + step (0)의 self-binding +
-          # ruleset SHA pin(platform).
+          # 네임스페이스가 달라 교차검증 불가였다(.github 정의 id 367694978 ≠
+          # ruleset 실행 id 367727531 — 2026-09-26 실측, 역사적; 현행
+          # repo-native 오케스트레이터는 단일 id 420946486): identity 담보 =
+          # path(server 할당, 위조 불가) + step (0)의 self-binding (구
+          # ruleset SHA pin은 org ruleset 폐기로 소멸 — 2026-11-17, ADR-0041).
           # G1 Lever-B (2026-10-16): controller workflow path renamed
           # admission-gate.yml → admission-gate-v2.yml (registration-surface
           # lever — ruleset binding key = repository_id + path); the
@@ -1028,8 +1039,8 @@ jobs:
       #   certTree == witness.mergeTreeDigest == testedTreeDigest == mergeTree.
       #   The mint RE-DERIVES the merge-candidate tree from the witness's OWN
       #   provenance mergeSha via the Git Data API (`/git/commits/{sha}` →
-      #   commit.tree.sha — object identity resolution; the exact tree the org
-      #   gate's tree-identity job computes as tree(github.sha)). This makes
+      #   commit.tree.sha — object identity resolution; the exact tree the
+      #   admission orchestrator's tree-identity job computes as tree(github.sha)). This makes
       #   the witness's mergeSha a GATE input (was provenance-only): any
       #   missing/malformed/mismatched digest → fail-closed red, and no cert
       #   may be signed before witness.mergeTreeDigest == tree(mergeSha)
@@ -1051,7 +1062,7 @@ jobs:
           [ -n "$w_tree" ] || fail "witness provenance mergeTreeDigest missing — the merge-candidate tree was not recorded (identity chain)"
           printf '%s' "$w_tree" | grep -qE '^[0-9a-f]{40}$' || fail "witness provenance mergeTreeDigest '$w_tree' not a 40-hex tree OID"
           # Re-derive the merge commit's tree BY OBJECT (equivalent to
-          # `git rev-parse ${mergeSha}^{tree}` — the org gate's tree-identity
+          # `git rev-parse ${mergeSha}^{tree}` — the admission orchestrator's tree-identity
           # resolution; the object is read, never the mutable refs/pull/N/merge).
           # DEBT#474 — bounded transport retry (P3 FINAL site-group): 4
           # attempts, fixed backoff 5/10/20s; transient = curl transport
@@ -1287,8 +1298,8 @@ jobs:
           esac
       # ────────────────────────────────────────────────────────────────
       # B checkout — publish의 유일한 checkout (원형 복원: freeze era
-      # mint-publish도 B checkout + setup-axiom-toolchain 조합 — org PR
-      # #11 "mint-publish tier B checkout"). 용도: 로컬 액션 해석
+      # mint-publish도 B checkout + setup-axiom-toolchain 조합 — historical
+      # org-era org PR #11 "mint-publish tier B checkout"). 용도: 로컬 액션 해석
       # (./.github/actions/...) + B-pinned system-deps/cache 정합.
       # NO H checkout, NO build — publish는 prepare가 업로드한 B-built
       # bin/ax만 소비한다 (소비자 재생성 0, [B1]).
@@ -1869,8 +1880,8 @@ jobs:
           [ "${#w_evidence}" = "64" ] || fail "witness semantic evidenceDigest malformed"
           printf '%s' "$w_merge" | grep -qE '^[0-9a-f]{40}$' || fail "witness provenance mergeSha malformed"
           [ "$w_tool" = "$B" ] || fail "witness provenance toolCommit '${w_tool:0:12}' != B '${B:0:12}'"
-          # tree(mergeSha) 재유도 — Git Data API by-object (org gate의
-          # tree-identity job과 동일한 해석; mutable ref 미사용).
+          # tree(mergeSha) 재유도 — Git Data API by-object (admission
+          # orchestrator의 tree-identity job과 동일한 해석; mutable ref 미사용).
           commit_f="$RUNNER_TEMP/mint_p4_merge_commit.json"
           fetch_bounded \
             "https://api.github.com/repos/$GITHUB_REPOSITORY/git/commits/$w_merge" \
@@ -1897,7 +1908,8 @@ jobs:
       #      (plan rev.7 위험 ⑤ gate — 실물 확인 완료): gateway lane의
       #      canonical tree identity = runner-pool-acceptance select job이
       #      발행하는 `tested-tree-digest` artifact (git rev-parse
-      #      HEAD^{tree}, 40-hex tree OID) — org gate의 tree-identity job이
+      #      HEAD^{tree}, 40-hex tree OID) — admission orchestrator의
+      #      tree-identity job이
       #      mergeTree = tree(github.sha)와 대조하는 그 값과 동일 도메인
       #      (canonical merge-tree SHA). publish는 3중 등가를 검증한다:
       #      testedTreeDigest == tree(github.sha) == cert.certTree.
@@ -1972,8 +1984,8 @@ jobs:
           TESTED_TREE="$(cat "$RUNNER_TEMP/treedigest/testedTreeDigest")"
           printf '%s' "$TESTED_TREE" | grep -qE '^[0-9a-f]{40}$' || fail "testedTreeDigest '$TESTED_TREE' not a 40-hex tree OID (fail-closed)"
           # tree(github.sha) — pull_request gate run의 github.sha = merge ref
-          # (callee context는 caller 상속); by-object 해석은 org gate의
-          # tree-identity job과 동일한 canonical identity다.
+          # (callee context는 caller 상속); by-object 해석은 admission
+          # orchestrator의 tree-identity job과 동일한 canonical identity다.
           git_sha="${GITHUB_SHA:?GITHUB_SHA not set}"
           printf '%s' "$git_sha" | grep -qE '^[0-9a-f]{40}$' || fail "GITHUB_SHA '$git_sha' not a 40-hex OID"
           commit_f="$RUNNER_TEMP/mint_p5_github_sha_commit.json"
@@ -2016,6 +2028,8 @@ jobs:
       #      간선 부재 상태에서의 실측 레이스: run 37569755722 att.1 —
       #      평가 04:10:10Z < ci-bootstrap 완료 04:11:18Z, in-progress를
       #      "abnormal conclusion"으로 fail-closed (MINT_PUB_JOBS FAIL).
+      #      (Archright/.github PR #62 참조는 org 시대 역사 기록이다 —
+      #      현행 caller는 repository-native admission-gate-v2.yml, ADR-0041.)
       #      SL-0713 scope — [B2] (c).
       # ────────────────────────────────────────────────────────────────
       - name: "(P6) [B2] (c) gateway lane conclusion == success + 시간 인과 (jobs API)"

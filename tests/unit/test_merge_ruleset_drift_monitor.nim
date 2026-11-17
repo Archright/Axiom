@@ -33,8 +33,9 @@ import ../../tools/merge_ruleset_drift_monitor
 ## v1.19.0 (hybrid authority rotation): workflowPath is the PRIMARY
 ## identifier; the numeric workflow id survives only as workflowIdObservation
 ## {value, observedAt} — an observed-at record, never a binding. Two
-## repo-native requiredValidations + the org-injected producer recorded in
-## requiredWorkflowDetection (the callee admission-check.yml is NOT a
+## repo-native requiredValidations + the admission-check producer recorded in
+## requiredWorkflowDetection (org-injected in this v1.19.0-era fixture record —
+## repository-native since PR #134; the callee admission-check.yml is NOT a
 ## requiredValidations entry — it never emits a check-run named
 ## 'admission-check').
 let POLICY = parseJson("""
@@ -167,7 +168,7 @@ suite "expectedStatusContexts — the expected set is DERIVED from the policy SS
   test "the org producer is carried by requiredWorkflowDetection, not requiredValidations":
     # The Axiom callee admission-check.yml (365692388) never emits a check-run
     # named 'admission-check' — it emits 'verdict / admission-check' inside the
-    # org gate's own run. The derivation must therefore pick the context up
+    # admission orchestrator's own run. The derivation must therefore pick the context up
     # from requiredWorkflowDetection only.
     let ctx = expectedStatusContexts(POLICY)
     check "admission-check" in ctx
@@ -601,7 +602,11 @@ const
 # resolveMainRuleset — the v1.19.0 name resolution (hybrid authority rotation)
 # ---------------------------------------------------------------------------
 ## The seven contract cases, as literals (deterministic — no network). The
-## fixtures mirror the live shapes measured 2026-11-07: the --slurp list
+## fixtures are HISTORICAL org-ruleset-era shapes (measured 2026-11-07 — the
+## org entries 25218071/23943917 are retained deliberately: they exercise the
+## source-level EXCLUSION semantics of resolution; the org rulesets are
+## retired since 2026-11-17, ADR-0041, so the live API would no longer return
+## them): the --slurp list
 ## (array of pages), the ruleset detail, and the rules/branches/main merged
 ## rule list (array of rule objects each carrying ruleset_id). The
 ## resolution semantics are identical in the GPA workflow (YAML) and

@@ -33,7 +33,7 @@
 # Structural guards (fail-closed, exit 2):
 #   - AXIOM_DIAG_TOKEN must be set. The drill NEVER reads `gh auth` / keyring /
 #     GITHUB_TOKEN — a canary is only meaningful with the credential under test.
-#   - Production ruleset id 26702792 is refused as a PUT target. TRUST ANCHOR
+#   - Production ruleset id 27097366 is refused as a PUT target. TRUST ANCHOR
 #     (policy v1.19.0 hybrid authority rotation, 2026-11-07): the live
 #     fetchers resolve the admission ruleset BY NAME, but this guard keeps a
 #     numeric constant — a canary must never discover its own protection

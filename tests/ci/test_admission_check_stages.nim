@@ -1,6 +1,7 @@
 ## test_admission_check_stages.nim — admission-check stage-dispatch contract
 ##
-## The callee is invoked TWICE by the org gate (attest then verdict, ordered by
+## The callee is invoked TWICE by the admission orchestrator
+## (admission-gate-v2; attest then verdict, ordered by
 ## the caller's `needs:`). Both invocations run the SAME pinned file, so nothing
 ## outside this file distinguishes the two halves except the `stage` input and
 ## the step-level `if:` conjuncts. Those conjuncts are the contract:

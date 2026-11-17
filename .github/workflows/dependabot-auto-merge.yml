@@ -9,7 +9,8 @@ name: dependabot-auto-merge
 # required contexts (admission-check / bsec-integrity / debt-registry-gate /
 # generation-acceptance / axiom-operational-slice / publication-integrity).
 # Merge authority stays with GitHub (ruleset 20303214 + merge queue; [2026-11-07
-# 매핑 — v1.19.0] 20303214은 구 저장소 id, 현행은 26702792, 이름 해석으로 식별);
+# 매핑 — v1.19.0] 20303214은 구 저장소 id, 현행은 27097366 (2026-11-17 기준;
+# 26702792·26996019·24233738·25218071·23943917 도 모두 역사적 id), 이름 해석으로 식별);
 # this workflow only ENABLES auto-merge on Dependabot-authored PRs that pass
 # every required check — it decides nothing.
 #

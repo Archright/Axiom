@@ -106,8 +106,9 @@
 ##          checkout) == TWS == blob @HEAD (3-way): "the new state this PR
 ##          ships is self-consistent" — the same 3-party equality the static
 ##          mode enforces.
-##      INTERPRETATION RULE (org ruleset pin is outside the repo and cannot
-##      be queried from here): the repo-observable record of the
+##      INTERPRETATION RULE (the org ruleset pin is retired and an out-of-repo
+##      pin is not queryable from here in any case): the repo-observable
+##      record of the
 ##      productionExecutionPin is config/trusted_writer_set.json field
 ##      trustedAdmissionWorkflowSha (content-addressed git blob sha of
 ##      admission-check.yml, ADR-0022 §5 — the ATOMICITY pair): the TWS value

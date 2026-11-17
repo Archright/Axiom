@@ -33,7 +33,8 @@ name: runner-pool-acceptance
 # writer는 외부 퍼블리셔 ci-cache-publisher.yml (workflow_run — 게이트
 # 아티팩트를 tree-OID 검증해 default-branch 스코프로 재발행,
 # cache-mode: write, J3 "캐시는 증거 아님" 유지).
-# PR 실행은 org required workflow (admission-gate)의 workflow_call 경유 —
+# PR 실행은 repository-native 오케스트레이터 (admission-gate,
+# .github/workflows/admission-gate-v2.yml)의 workflow_call 경유 —
 # 직접 pull_request 트리거 없음 (L4 결정 존치): caller context가
 # workflow_call로 전파되므로 select의 Δ 판정은 PR base/head SHA를 사용한다.
 # workflow_call(force_full=true) 시 select는 스킵 → L2 진행 (ADR-0017
@@ -1266,11 +1267,11 @@ jobs:
           name: ci-select-verifier
           path: verifier
 
-      # derived-closure(derived-H.txt)는 org gate closure job의 same-run artifact —
+      # derived-closure(derived-H.txt)는 admission orchestrator closure job의 same-run artifact —
       # admission-check.yml:797-803과 동일 소비 선례 (pre-gate/부재 epoch 대비
       # continue-on-error soft 다운로드: artifact가 없어도 이 잡은 죽지 않는다.
       # 부재 판정은 게이트가 fail-closed로 담당 — 워크플로가 0 미선언하지 않음).
-      - name: Load derived-closure sets (org gate artifact, soft)
+      - name: Load derived-closure sets (orchestrator artifact, soft)
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         continue-on-error: true
         with:
@@ -1291,8 +1292,8 @@ jobs:
           path: executed-dir
           merge-multiple: true
 
-      # 오라클 증거(ci-select-decision artifact에 동봉)와 derived-H(org gate
-      # closure artifact)는 게이트에 경로로 전달 — 해석·부재 판정은 게이트의
+      # 오라클 증거(ci-select-decision artifact에 동봉)와 derived-H(admission
+      # orchestrator closure artifact)는 게이트에 경로로 전달 — 해석·부재 판정은 게이트의
       # fail-closed 도메인 (있으면 결속 검증, 없으면 게이트가 판정).
       - name: Run reconcile gate (executed == selected, fail-closed)
         run: |
