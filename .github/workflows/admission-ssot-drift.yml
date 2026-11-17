@@ -19,8 +19,9 @@
 #                               [2026-11-07 매핑 — v1.19.0 hybrid authority
 #                               rotation] 20303214은 구 저장소 소속 id로
 #                               현행 repo에서 404 — leg 2는 이제 모니터의
-#                               이름 해석("main")이 판정한다(관측 당시
-#                               id 26702792).
+#                               이름 해석("main")이 판정한다(2026-11-17 관측
+#                               id 27097366; 26702792·26996019·24233738은
+#                               역사적 id).
 #   leg 3  policy ↔ producer : main에 실제로 착지한 최신 병합 기록(PR merge의
 #                               mergeCommit) check-runs 생산 App 확인 —
 #                               checks:read 필요(작업 GITHUB_TOKEN으로 가능).

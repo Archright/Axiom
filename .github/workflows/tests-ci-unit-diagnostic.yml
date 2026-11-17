@@ -6,8 +6,9 @@
 #   * required checks are the merge contract (ruleset 20303214, main, active:
 #     admission-check, bsec-integrity, debt-registry-gate,
 #     generation-acceptance, axiom-operational-slice as of 2026-10-30;
-#     [2026-11-07 매핑 — v1.19.0] 20303214은 구 저장소 id — 현행은 26702792,
-#     이름 해석("main")으로 식별) —
+#     [2026-11-07 매핑 — v1.19.0] 20303214은 구 저장소 id — 현행은 27097366
+#     (2026-11-17 기준; 26702792·26996019·24233738·25218071·23943917 은
+#     모두 역사적 id), 이름 해석("main")으로 식별) —
 #     adding a test step to any of those jobs propagates its failures into
 #     merge admission;
 #   * required-check promotion is a human/policy action

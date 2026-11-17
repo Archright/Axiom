@@ -41,8 +41,10 @@
 #   repo ruleset 읽기는 워크플로 `permissions:` 키에 administration 항목이
 #   없음에도 job의 GITHUB_TOKEN으로 성립한다(실측 2026-10-21, drift run
 #   39603184495 — ruleset drift 4/4 PASS). 거기에 머뭄이 아니라
-#   org ruleset·bypass actor는 Administration org write가 필요해 GPA의
-#   조회 범위 밖이다 → operator-adapter 티어(ADR-0036 §4).
+#   [2026-11-17 — ADR-0041] 현행 강제는 repository ruleset 27097366("main",
+#   bypass_actors [])이다 — repo 범위 관리라 org write가 불필요하다(Free
+#   플랜). org ruleset·bypass actor 관리는 Administration org write가
+#   필요해 GPA의 조회 범위 밖이다 → operator-adapter 티어(ADR-0036 §4).
 #
 # 외부 action은 커밋 SHA 고정(repo 정책 sha_pinning_required).
 
@@ -419,6 +421,13 @@ jobs:
           BASE_EXPECTED="$(jq -r '[.requiredValidations[]?.job, .requiredWorkflowDetection.verdictJob]
                                  | map(select(type == "string" and length > 0))
                                  | unique | sort | join(",")' config/policy/merge_admission.json)"
+          # Per-context expected producing App (policy v1.24.0
+          # requiredCheckSources). The BASE policy defines the selection
+          # condition — a candidate cannot redefine which App is trusted
+          # until it lands and becomes the base.
+          BASE_SOURCES="$(jq -c '{default: (.requiredCheckSources.default // 15368),
+                                  byContext: (.requiredCheckSources.byContext // {})}' \
+                                 config/policy/merge_admission.json)"
           mapfile -t CANDS < <(jq -r --arg repo "$REPO" '
                 flatten | map(select((.name? == "main") and (.enforcement? == "active")
                                      and (.target? == "branch") and (.source? == $repo)))
@@ -439,11 +448,11 @@ jobs:
             COND_OK="$(jq -r '([.conditions.ref_name.include[]?]
                               | (index("~DEFAULT_BRANCH") != null) or (index("refs/heads/main") != null))' \
                         "$RES/cand_$cid.json" 2>/dev/null)" || COND_OK="false"
-            CHECKS_OK="$(jq -r --arg exp "$BASE_EXPECTED" '
+            CHECKS_OK="$(jq -r --arg exp "$BASE_EXPECTED" --argjson src "$BASE_SOURCES" '
                 ([.rules[]? | select(.type == "required_status_checks")
                   | .parameters.required_status_checks[]?] as $entries
                  | (($entries | map(.context) | unique | sort | join(",")) == $exp)
-                   and ($entries | all(.integration_id? == 15368)))' \
+                   and ($entries | all(.integration_id? == ($src.byContext[.context] // $src.default))))' \
                         "$RES/cand_$cid.json" 2>/dev/null)" || CHECKS_OK="false"
             if [ "$COND_OK" = "true" ] && [ "$CHECKS_OK" = "true" ]; then
               MATCHED="$cid"
@@ -606,14 +615,19 @@ jobs:
 
           # known-good 기준선: 베이스 정책의 기대 집합을 그대로 담은 합성 ruleset.
           # (실제 live ruleset이 아니라 **판정 로직 자체**를 시험하기 위한
-          #  결정론적 fixture다 — live 상태는 L2의 몫이다.)
-          jq -n --args '{
+          #  결정론적 fixture다 — live 상태는 L2의 몫이다.) 기대 producing
+          # App도 베이스 정책의 requiredCheckSources에서 유도한다 — 후보가
+          # source 맵을 바꿔도 자기 시험의 기준은 Driver(base)다.
+          BASE_SOURCES="$(jq -c '{default: (.requiredCheckSources.default // 15368),
+                                  byContext: (.requiredCheckSources.byContext // {})}' \
+                                 config/policy/merge_admission.json)"
+          jq -n --argjson src "$BASE_SOURCES" --args '{
             rules: [
               {type: "merge_queue",
                parameters: {merge_method: "MERGE", grouping_strategy: "ALLGREEN"}},
               {type: "required_status_checks",
                parameters: {required_status_checks:
-                 [$ARGS.positional[] | {context: ., integration_id: 15368}]}},
+                 [$ARGS.positional[] | {context: ., integration_id: ($src.byContext[.] // $src.default)}]}},
               {type: "pull_request",
                parameters: {required_approving_review_count: 0}}
             ] }' $(cat "$RES/ctx_base.txt") > "$RES/synthetic_ruleset.json"

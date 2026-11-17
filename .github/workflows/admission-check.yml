@@ -24,10 +24,15 @@
 #     `ref = pr.base.sha` (B) ONLY. Job 2 never rebuilds from the PR tree.
 #   * Job admission-check executes ONLY the base-built binaries / the base
 #     tree. The PR head lives at `_candidate/` and is consumed as DATA.
-#   * Post-cutover the workflow FILE executes from the org ruleset's SHA pin
-#     (admission-gate calls this file @<EXACT SHA> — a PR cannot influence
-#     the definition). Gate A still pins every verifier construction to
-#     `pr.base.sha` INSIDE this file; defense-in-depth: `.github/` is
+#   * Post-cutover the workflow FILE is invoked by the repository-native
+#     orchestrator (.github/workflows/admission-gate-v2.yml, workflow_call)
+#     at the merge-group/PR commit — the org-ruleset SHA-pin era is retired
+#     (org rulesets 25218071/23943917 deleted 2026-11-17, ADR-0041). Trust
+#     in the definition is NOT carried by an org SHA pin: the App
+#     (axiom-admission-verifier, 5795152) compares the 15-path trust surface
+#     against B and the ledger records provenance; Gate A still pins every
+#     verifier construction to `pr.base.sha` INSIDE this file;
+#     defense-in-depth: `.github/` is
 #     CODEOWNERS-protected at @Archright/architect (a PR tampering with this
 #     file is TrustSurface-modified → merge_cli.nim Pass 2.8 manual-merge
 #     path).
@@ -62,9 +67,9 @@
 # | github.sha; the run_attempt suffix mirrors the certificate artifact's
 # `subject-certificate-<run_attempt>` — attempts of one run share run_id, so an
 # unsuffixed name collides across re-runs and the exactly-one check sees N>1)
-# holds only the files the fired slices produced — the org gate verdict job
-# fail-closes on the absent ones, which is the intended migration-mode
-# fail-closed path.
+# holds only the files the fired slices produced — the admission
+# orchestrator's verdict job fail-closes on the absent ones, which is the
+# intended migration-mode fail-closed path.
 #
 # CHECK NAMES vs RequiredChecks (merge_cli.nim:60–67):
 #   This DRAFT emits ONE observation check, `admission-check`. It maps to NONE
@@ -79,11 +84,13 @@
 #   itself B-pinned (subject-path tooling — see TODO list in the report).
 #
 # Queue-event support (ADR-0027): merge-queue candidates are admitted by the
-# org gate on the `merge_group` event (delegation of the legacy queue-event
-# trigger — no native queue-event trigger here; the sole execution path stays
-# the org ruleset's workflow_call@SHA, ADR-0023 updateRefs landing actuator
-# unchanged). On merge_group the org gate supplies prNumber=0 (P1 — no PR
-# object; verification_subject.nim: "0 = no PR context"):
+# admission orchestrator on the `merge_group` event (delegation of the legacy
+# queue-event trigger — no native queue-event trigger here; the sole execution
+# path is the repository-native orchestrator's workflow_call
+# (.github/workflows/admission-gate-v2.yml — the org ruleset's workflow_call
+# @SHA pin is retired, 2026-11-17, ADR-0041; ADR-0023 updateRefs landing
+# actuator unchanged). On merge_group the orchestrator supplies prNumber=0
+# (P1 — no PR object; verification_subject.nim: "0 = no PR context"):
 #   P1  never parse a PR number from head_ref; prNumber := 0 on merge_group
 #   P2  artifact identity = admission-check-<candidate head>-<run_attempt>
 #       (candidate head = pull_request.head.sha | merge_group.head_sha |
@@ -107,12 +114,14 @@
 name: admission-check
 
 on:
-  # Cutover: 레거시 native pull_request 트리거 제거 — 유일 실행 경로는 조직
-  # 필수 워크플로(admission-gate)의 workflow_call@SHA. caller는 pull_request
-  # 이벤트를 받으며 callee github context가 caller를 상속하므로
+  # Cutover: 레거시 native pull_request 트리거 제거 — 유일 실행 경로는
+  # repository-native 오케스트레이터(admission-gate,
+  # .github/workflows/admission-gate-v2.yml)의 workflow_call. caller는
+  # pull_request 이벤트를 받으며 callee github context가 caller를 상속하므로
   # event_name/pull_request 페이로드가 그대로 전파되어 아래 모든 B/H/PR 유도가
   # 동일하게 해석된다. 오케스트레이션은 여기에 없다 — gateway 호출·DAG·verdict는
-  # 게이트(org ruleset SHA pin) 소관.
+  # 게이트 오케스트레이터(레포지토리 ruleset 27097366의 required context 생산)
+  # 소관. (구 org ruleset SHA pin 서술은 2026-11-17 폐기 — ADR-0041.)
   #
   # ADR-0025 Amendment A2 동반 (2026-09-27): 회전 allowlist 개정(PR-α)과
   # 원자 페어 — tws의 trustedAdmissionWorkflowSha는 이 파일 blob sha와
@@ -123,7 +132,8 @@ on:
   # job uploads `admission-check-<candidate head>-<run_attempt>` (candidate head
   # = pull_request.head.sha | merge_group.head_sha | github.sha — ADR-0027 P2;
   # run_attempt = github.run_attempt, which for a called workflow is the CALLER
-  # run's attempt — the org gate passes the identical value as runAttempt;
+  # run's attempt — the admission orchestrator passes the identical value as
+# runAttempt;
   # witness.json + witness.sha256 + admission-verdict.log +
   # admission-gate-history.txt, retention 30d). The mint consumes exactly that
   # artifact name via run-scoped API (its want_name mirrors the same candidate
@@ -179,8 +189,9 @@ on:
 # 36487512164 gateway/select·proof-reconcile cancelled — "higher priority
 # waiting request", 및 동일 구성에서 select PASS 46s — 비결정적 레이스).
 # 같은 PR 재실행 취소(archived producer pattern)는 cutover #287 이후 네이티브
-# pull_request 트리거가 제거되어 죽은 경로 — 유일 실행 경로는 org 게이트의
-# workflow_call이며, 그 컨텍스트에서 이 블록은 아무 권한도 만들지 않고
+# pull_request 트리거가 제거되어 죽은 경로 — 유일 실행 경로는
+# repository-native 오케스트레이터의 workflow_call이며, 그 컨텍스트에서 이
+# 블록은 아무 권한도 만들지 않고
 # B3 킬러만 만든다. 따라서 제거한다 (runner-pool-acceptance.yml은 push@main
 # 네이티브 실행의 동일-SHA 재실행 취소를 위해 유지 — 그룹 키에 event_name
 # 스코프 추가로 게이트 컨텍스트 충돌 원천 차단).
@@ -1687,7 +1698,8 @@ jobs:
       # captured here as the check record.
       # ────────────────────────────────────────────────────────────────
       # Gate-era rotation closure inputs arrive as the SAME-RUN artifact
-      # `derived-closure` (uploaded by the org gate's closure job) — the
+      # `derived-closure` (uploaded by the admission orchestrator's closure
+      # job — admission-gate-v2 closure-deriver) — the
       # only cross-runner channel; a repo var cannot carry per-run data
       # (wiring contract fix vs the pre-activation vars draft, 2026-09-26).
       # Pre-gate: artifact absent → rotation Pass skipped → qualification
@@ -1698,10 +1710,10 @@ jobs:
       # (tree-bound, unforgeable). The deriver BINARY itself is normally
       # supplied as a base-artifact member (job1, compiled from B —
       # toolchain-handoff 2026-10-12); the derivation execution always runs
-      # in this step. The artifact branch above is the retired org-gate
+      # in this step. The artifact branch above is the retired org-gate-era
       # channel (L1 proves provenance only — content binding is a named
       # follow-up before any revival).
-      - name: "[check] Load derived-closure sets (org gate artifact, pre-gate optional)"
+      - name: "[check] Load derived-closure sets (orchestrator artifact, pre-gate optional)"
         # VERDICT stage — the closure sets are the rotation Pass' ONLY input
         # (exported as AXIOM_DERIVED_* below, consumed by `ax merge`). Running
         # this download in the attest stage would fetch an artifact no attest
@@ -1720,7 +1732,7 @@ jobs:
       # `ax merge --dry-run --cert <path>` binds the verdict to the
       # attestation tier's artifact instead of the side-ref ledger scan,
       # removing the circular dependency (admission ← ledger ←
-      # attest-append). The org DAG runs `admission` with NO `needs:`, so on
+      # attest-append). The orchestrator DAG runs `admission` with NO `needs:`, so on
       # a fresh run mint-prepare/mint-publish have NOT published yet and the
       # artifact is legitimately absent — ADR-0022 §D5-3: "`--cert`가 있으면
       # artifact가, 없으면 side-ref ledger가 source다 (bootstrap/recovery)".
@@ -1776,7 +1788,8 @@ jobs:
           echo "PREFLIGHT PASS — verdict leg: policy SSOT + stage-dispatch structure contrast (venue=pull_request; preflight success ≠ landing evidence — the canonical verdict is the merge_group verdict, ADR-0032 (a),(f))"
 
       # ────────────────────────────────────────────────────────────────
-      # [preflight] VS-1 rotation-pin INPUT — org gate `derived-closure`
+      # [preflight] VS-1 rotation-pin INPUT — admission orchestrator
+      # `derived-closure`
       # artifact download, PR venue only (verdict stage). Preflight
       # counterpart of the landing download below: the PR-venue producer
       # contract is the 4-FILE set (derived-H.txt, derived-B.txt,
@@ -1794,7 +1807,7 @@ jobs:
       # landing-scoped and stays landing-scoped — VS-1 contract,
       # docs/evidence/rotation_preflight_prereg_2026-10-20.md).
       # ────────────────────────────────────────────────────────────────
-      - name: "[check] Download derived-closure (VS-1 preflight rotation-pin input — org gate artifact)"
+      - name: "[check] Download derived-closure (VS-1 preflight rotation-pin input — orchestrator artifact)"
         if: inputs.stage == 'verdict' && steps.venue.outputs.venue == 'preflight'
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         continue-on-error: true
@@ -2145,7 +2158,7 @@ jobs:
           H_EVT="$H_SHA"
           if [ -z "${DERIVED_SETS_DIR:-}" ]; then
             # In-place closure derivation (2026-10-09 queue ROT_UNSPECIFIED
-            # fix): the org gate's closure-deriver job was retired with the
+            # fix; historical org-gate-era note): the org gate's closure-deriver job was retired with the
             # old 5-job DAG, so the `derived-closure` artifact can no longer
             # exist and every verdict fail-closed on UNSPECIFIED. The
             # derivation authority is IN-REPO (ADR C2:
@@ -2236,7 +2249,7 @@ jobs:
             #      (content-addressed blob oid of the pin AT the derivation
             #      ref — the producer cannot alias another tree's pin)
             #   ④ runAttempt == github.run_attempt (the caller's attempt the
-            #      org gate forwards — same-number binding, ADR-0027 P2)
+            #      admission orchestrator forwards — same-number binding, ADR-0027 P2)
             # Mismatch/missing/format error = run-level err (fail-closed).
             # pin@B is NOT carried in identity.json by contract — the
             # consumer reads the B workspace pin directly (single path, no
@@ -2547,8 +2560,8 @@ jobs:
         with:
           # ADR-0027 (P2): artifact identity = admission-check-<candidate
           # head>-<run_attempt> (pull_request.head.sha | merge_group.head_sha |
-          # github.sha) — the mint's want_name mirrors inputs.headSha, the org
-          # gate passes the same expression, so upload and lookup stay equal on
+          # github.sha) — the mint's want_name mirrors inputs.headSha, the
+          # admission orchestrator passes the same expression, so upload and lookup stay equal on
           # BOTH events. The run_attempt suffix is the certificate artifact's
           # `subject-certificate-<run_attempt>` convention: attempts of one run
           # share run_id, so an unsuffixed name makes every re-run publish a
@@ -2556,8 +2569,9 @@ jobs:
           # exactly-one check fails closed with found 2 (evidence:
           # docs/evidence/org_gate_handoff_2026-10-04.md §5).
           # github.run_attempt here is the CALLER run's attempt (called
-          # workflow context), which is the value the org gate forwards as
-          # runAttempt — both sides of the equality are the same number.
+          # workflow context), which is the value the admission orchestrator
+          # forwards as runAttempt — both sides of the equality are the same
+          # number.
           name: admission-check-${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }}-${{ github.run_attempt }}
           path: |
             witness.json
@@ -2864,7 +2878,7 @@ jobs:
       #   policy = B's data/core_purity_baseline.json (grandfather anchors)
       #   payload= `_candidate/` (H) — read as DATA ONLY, never executed
       # Attest stage only: the H checkout exists solely in this stage. A
-      # non-zero exit fails this job → the org gate's `attest` reusable
+      # non-zero exit fails this job → the orchestrator's `attest` reusable
       # workflow call result != 'success' → aggregate `admission-check`
       # exits 1 → required check FAIL → merge blocked (fail-closed).
       # B without the judge is a FAIL, never a head build: a PR must never
@@ -2955,7 +2969,8 @@ jobs:
       # anchor source. H tree OID is re-derived from `_candidate/` locally
       # (never trusted from any artifact). The MERGE-candidate tree OID is
       # derived from the merge ref OBJECT (`tree(github.sha)` — github.sha IS
-      # the test merge commit for pull_request events) mirroring the org gate's
+      # the test merge commit for pull_request events) mirroring the admission
+      # orchestrator's
       # tree-identity job by-object resolution, then recorded in the witness
       # provenance (`mergeTreeDigest`) so the mint can fail-closed cross-check
       # `witness.mergeTreeDigest == tree(mergeSha)` before certTree is signed
@@ -3068,8 +3083,9 @@ jobs:
             || fail "malformed H tree OID: $HEAD_TREE_OID"
           # Merge-candidate tree (identity chain, ADR-0025 §11): github.sha for
           # pull_request events IS the test merge ref (B⊕H) — the exact landing
-          # candidate tree. Mirror of the org gate's tree-identity job
-          # (Archright/.github admission-gate.yml): mergeTree = tree(github.sha)
+          # candidate tree. Mirror of the orchestrator's tree-identity job
+          # (historically Archright/.github admission-gate.yml, now the
+          # repository-native .github/workflows/admission-gate-v2.yml): mergeTree = tree(github.sha)
           # resolved BY OBJECT (`git rev-parse $SHA^{tree}`) — never by re-reading
           # the mutable refs/pull/N/merge. The depth-1 B/H checkouts do not
           # contain the merge commit object, so it is fetched depth-1-BOUNDED by
@@ -3573,7 +3589,7 @@ jobs:
       #                   venue expression and the head resolution can
       #                   never drift apart).
       #   workflow_call → M := GITHUB_SHA (the caller-pinned landing sha —
-      #                   the org orchestrator dispatches with the same
+      #                   the admission orchestrator dispatches with the same
       #                   identity the merge_group queue recorded).
       # Anything unresolvable or self-inconsistent = exit 1 (fail-closed),
       # never a fallback to B (a B-only lane is exactly the gap this split

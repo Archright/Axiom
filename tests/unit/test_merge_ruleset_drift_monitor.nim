@@ -33,8 +33,9 @@ import ../../tools/merge_ruleset_drift_monitor
 ## v1.19.0 (hybrid authority rotation): workflowPath is the PRIMARY
 ## identifier; the numeric workflow id survives only as workflowIdObservation
 ## {value, observedAt} — an observed-at record, never a binding. Two
-## repo-native requiredValidations + the org-injected producer recorded in
-## requiredWorkflowDetection (the callee admission-check.yml is NOT a
+## repo-native requiredValidations + the admission-check producer recorded in
+## requiredWorkflowDetection (org-injected in this v1.19.0-era fixture record —
+## repository-native since PR #134; the callee admission-check.yml is NOT a
 ## requiredValidations entry — it never emits a check-run named
 ## 'admission-check').
 let POLICY = parseJson("""
@@ -73,6 +74,16 @@ const
     ("debt-registry-gate", ".github/workflows/debt-registry-gate.yml"),
   ]
 """
+
+## v1.24.0 free-authority migration fixture: the policy declares the
+## per-context producing App. `admission-check` is published by the
+## independent verifier App 5795152; every other context keeps the
+## policy-wide default (the Actions app 15368).
+let POLICY_APP = block:
+  var p = copy(POLICY)
+  p["requiredCheckSources"] = parseJson(
+    """{"default": 15368, "byContext": {"admission-check": 5795152}}""")
+  p
 
 let HEALTHY = parseJson("""
 {
@@ -133,6 +144,22 @@ proc setRuleParam(base: JsonNode; ruleType, param: string; value: JsonNode): Jso
     if r["type"].getStr() == ruleType:
       r["parameters"][param] = value
 
+proc withAdmissionApp(base: JsonNode; appId: int): JsonNode =
+  ## Deep-copy fixture whose admission-check entry is produced by `appId`.
+  result = copy(base)
+  for r in result["rules"].items:
+    if r["type"].getStr() == "required_status_checks":
+      for e in r["parameters"]["required_status_checks"].items:
+        if e["context"].getStr() == "admission-check":
+          e["integration_id"] = %appId
+
+proc withCheckRunApp(base: JsonNode; context: string; appId: int): JsonNode =
+  ## Deep-copy check-runs fixture whose `context` run carries `appId`.
+  result = copy(base)
+  for cr in result["check_runs"].items:
+    if cr["name"].getStr() == context:
+      cr["app"]["id"] = %appId
+
 suite "expectedStatusContexts — the expected set is DERIVED from the policy SSOT":
   test "requiredValidations[].job ∪ requiredWorkflowDetection.verdictJob":
     let ctx = expectedStatusContexts(POLICY)
@@ -141,7 +168,7 @@ suite "expectedStatusContexts — the expected set is DERIVED from the policy SS
   test "the org producer is carried by requiredWorkflowDetection, not requiredValidations":
     # The Axiom callee admission-check.yml (365692388) never emits a check-run
     # named 'admission-check' — it emits 'verdict / admission-check' inside the
-    # org gate's own run. The derivation must therefore pick the context up
+    # admission orchestrator's own run. The derivation must therefore pick the context up
     # from requiredWorkflowDetection only.
     let ctx = expectedStatusContexts(POLICY)
     check "admission-check" in ctx
@@ -161,6 +188,45 @@ suite "expectedStatusContexts — the expected set is DERIVED from the policy SS
     """)
     let ctx = expectedStatusContexts(partial)
     check ctx == @["bsec-integrity", "debt-registry-gate"]
+
+suite "requiredCheckSources — per-context expected producing App (v1.24.0)":
+  test "a policy without the map keeps the legacy Actions app on every context":
+    check expectedCheckSourceId(POLICY, "admission-check") == 15368
+    check expectedCheckSourceId(POLICY, "bsec-integrity") == 15368
+
+  test "an explicit override applies only to the named context":
+    check expectedCheckSourceId(POLICY_APP, "admission-check") == 5795152
+    check expectedCheckSourceId(POLICY_APP, "bsec-integrity") == 15368
+
+  test "the ruleset judgment reads the per-context source, not a hardcoded app":
+    let contexts = expectedStatusContexts(POLICY_APP)
+    let sources = expectedCheckSources(POLICY_APP, contexts)
+    check judgeRulesetDrift(withAdmissionApp(HEALTHY, 5795152),
+                            contexts, sources).ok
+    let vActions = judgeRulesetDrift(withAdmissionApp(HEALTHY, 15368),
+                                     contexts, sources)
+    check not vActions.ok
+    check vActions.lines.anyIt(it.contains(
+      "admission-check (expected=5795152, live=15368)"))
+
+  test "the same ruleset drifts under the legacy policy (shape is judged as declared)":
+    let v = judgeRulesetDrift(withAdmissionApp(HEALTHY, 5795152),
+                              expectedStatusContexts(POLICY))
+    check not v.ok
+    check v.lines.anyIt(it.contains(
+      "admission-check (expected=15368, live=5795152)"))
+
+  test "the producer observation reads the per-context source":
+    let contexts = expectedStatusContexts(POLICY_APP)
+    let sources = expectedCheckSources(POLICY_APP, contexts)
+    check judgeProducerObservation(
+      withCheckRunApp(CHECK_RUNS, "admission-check", 5795152),
+      contexts, sources).ok
+    let v = judgeProducerObservation(
+      withCheckRunApp(CHECK_RUNS, "admission-check", 15368),
+      contexts, sources)
+    check not v.ok
+    check v.lines.anyIt(it.contains("expected app id 5795152"))
 
 suite "judgeRulesetDrift":
   test "healthy fixture PASS (all four expectations hold)":
@@ -253,8 +319,9 @@ suite "judgeRulesetDrift":
     check "lint" in drift[0]
 
   test "wrong producing App FAIL (app-level producer control)":
-    # integration_id != the GitHub Actions app id = the context is NOT bound to
-    # the Actions app — the platform's app-level producer control is absent.
+    # integration_id != the policy-declared producer = the context is NOT
+    # bound to the expected App — the platform's app-level producer control
+    # is absent for that context.
     let v = judgeRulesetDrift(
       setRuleParam(HEALTHY, "required_status_checks", "required_status_checks",
                    %* [{"context": "admission-check", "integration_id": 15368},
@@ -265,7 +332,8 @@ suite "judgeRulesetDrift":
     let drift = v.lines.filterIt(it.startsWith("DRIFT required_status_checks"))
     check drift.len == 1
     check "bsec-integrity" in drift[0]
-    check "integration_id" in drift[0]
+    check "expected=15368" in drift[0]
+    check "live=4242" in drift[0]
 
   test "an empty expectation set FAILs closed (never vacuously PASS)":
     let v = judgeRulesetDrift(HEALTHY, @[])
@@ -534,7 +602,11 @@ const
 # resolveMainRuleset — the v1.19.0 name resolution (hybrid authority rotation)
 # ---------------------------------------------------------------------------
 ## The seven contract cases, as literals (deterministic — no network). The
-## fixtures mirror the live shapes measured 2026-11-07: the --slurp list
+## fixtures are HISTORICAL org-ruleset-era shapes (measured 2026-11-07 — the
+## org entries 25218071/23943917 are retained deliberately: they exercise the
+## source-level EXCLUSION semantics of resolution; the org rulesets are
+## retired since 2026-11-17, ADR-0041, so the live API would no longer return
+## them): the --slurp list
 ## (array of pages), the ruleset detail, and the rules/branches/main merged
 ## rule list (array of rule objects each carrying ruleset_id). The
 ## resolution semantics are identical in the GPA workflow (YAML) and

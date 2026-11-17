@@ -70,7 +70,8 @@
 ##      lockfileDigest must equal sha256(nimble.lock) at the working directory
 ##      (repo root in CI).
 ##   d. executionClosure.digest must equal sha256 of the byte-sorted lines of
-##      --derived-h, the org gate closure job artifact (admission-check.yml
+##      --derived-h, the admission orchestrator closure job artifact
+##      (admission-check.yml
 ##      consumes the same derived-closure/derived-H.txt; AXIOM_DERIVED_H_PATH
 ##      precedent).
 ## Canonical JSON escaping is minimal (jq-compatible): `"` `\` and C controls
@@ -782,8 +783,9 @@ proc printHelp() =
   echo "  --executed-dir       directory containing executed-*.json (execution facts)"
   echo "  --oracle-evidence    oracle-evidence.json from the B-trusted oracle"
   echo "                       (Phase 2c re-verification; reconcile-mode only)"
-  echo "  --derived-h          derived-H.txt from the org gate derived-closure"
-  echo "                       artifact (must be given together with --oracle-evidence)"
+  echo "  --derived-h          derived-H.txt from the admission orchestrator"
+  echo "                       derived-closure artifact (must be given together"
+  echo "                       with --oracle-evidence)"
   echo ""
   echo "Exit: 0 = consistent, 1 = drift (fail-closed), 2 = usage error."
 
