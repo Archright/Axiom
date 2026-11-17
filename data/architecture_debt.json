@@ -4550,6 +4550,15 @@
       "firstSeen": "",
       "lastSeen": "",
       "rawContentHash": "sha256:83b27d0e91cd55e536ba2495bce522c4cf7f4b4a0d8ac39ccc2c3ef25812fa0c"
+    },
+    {
+      "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:8f4777e3a8d2483708bfa3fb647c53f787af4723950a92804d1513841fcd5e12",
+      "count": 1,
+      "file": "src/verification/ledger_side_ref.nim",
+      "firstSeen": "",
+      "lastSeen": "",
+      "rawContentHash": "sha256:e1dcd99458fd87ae2dfd1e1a486a9ca7217c25b8be1f000a41fba3d5f1e300e2"
     }
   ]
 }
