@@ -206,8 +206,10 @@ The `--no-verify` prohibition, rebase/merge rules, and version-tag synchronizati
   없으면 fail-closed(sentinel -2)로 끝나고 `eaAgreed` 계약이 환경적으로 깨진다 — 엔진
   판정이 아니다. 정식 호출은 스위트 실행 전 `(cd proofs && lake build ircheck)`이고,
   Lean leg를 공유하는 대안은 `AXIOM_IRCHECK_CMD=<repo>/proofs/.lake/build/bin/ircheck`
-  override다. 저장소 밖에 놓인 바이너리는 `findRepoRoot`가 CWD-상대 `""` 루트로 탈출해
-  ircheck 조인이 CWD 앵커가 된다
+  override다. 저장소 밖에 놓인 바이너리는 `findRepoRoot`가 절대 CWD에서 앵커를 상향
+  탐색해 저장소 루트를 해석한다 — 결과는 항상 절대 경로이고 CWD-상대 `""` 루트는
+  반환되지 않는다(DEBT#550, Q-013; 2026-11-17 수리, PR #130). CWD가 저장소 밖이면
+  여전히 앵커 미스(레거시 one-level-up fallback)이므로
   ([nim_2_2_10_stdlib_quirks.md](../spec/nim_2_2_10_stdlib_quirks.md) Q-013) — 스위트는
   바이너리가 소스 옆에 놓이는 `nim r tests/unit/<suite>.nim` 형태로 실행한다.
 
