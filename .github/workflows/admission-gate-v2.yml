@@ -26,6 +26,12 @@
 # 실패 → merge 차단. 소비자는 전부 동일 run 내부(mint publish P1/P3,
 # verdict --cert)이며 실행 상한 120분의 36배 여유. epoch 기록:
 # Axiom docs/evidence/epoch_record_mint_retention_2026-10-29.md.
+# Epoch N+10 rotation (2026-11-18, PR-R): callee pin rotation — admission-check
+# 와 certificate-mint 양쪽 @9b3d87c3a (Axiom main, PR #144 착지 merge). Callee
+# diff: SL-21 producer closure (admission-check.yml — required-context producer
+# identity, skip 탐지) + SL-22 artifact execution closure (certificate-mint.yml —
+# prepare data-only artifact, publish trusted B supply, artifact 바이트 비실행).
+# productionExecutionPin 13bd4e55 = TWS trustedAdmissionWorkflowSha = blob.
 # FORWARD (2026-09-29, 복구 D3): 수리 PR #331/#332/#333/#334 착지 —
 # K를 N+5 shape로 복귀 (양쪽 래퍼 @c55f0482e — ircheck 소비 + P3 mkdir
 # + libpcre3 패리티 prepare·publish). N+5는 복구 E의 acceptance green
@@ -440,7 +446,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    uses: Archright/Axiom/.github/workflows/admission-check.yml@35b453c0ead4d86ddde780786285677a749906da
+    uses: Archright/Axiom/.github/workflows/admission-check.yml@9b3d87c3a3252286eb15be985c7df6131bd1f1c6
     with:
       stage: attest
       baseSha: ${{ needs.anchor-resolve.outputs.B_STAR || github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.sha }}
@@ -492,7 +498,7 @@ jobs:
       contents: write
       actions: read
       pull-requests: read
-    uses: Archright/Axiom/.github/workflows/certificate-mint.yml@c021c33801455a481e05b75c396d95c84bbdc45d
+    uses: Archright/Axiom/.github/workflows/certificate-mint.yml@9b3d87c3a3252286eb15be985c7df6131bd1f1c6
     with:
       stage: prepare
       runId: ${{ github.run_id }}
@@ -549,7 +555,7 @@ jobs:
       contents: write
       actions: read
       pull-requests: read
-    uses: Archright/Axiom/.github/workflows/certificate-mint.yml@c021c33801455a481e05b75c396d95c84bbdc45d
+    uses: Archright/Axiom/.github/workflows/certificate-mint.yml@9b3d87c3a3252286eb15be985c7df6131bd1f1c6
     with:
       stage: publish
       runId: ${{ github.run_id }}
@@ -667,7 +673,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    uses: Archright/Axiom/.github/workflows/admission-check.yml@35b453c0ead4d86ddde780786285677a749906da
+    uses: Archright/Axiom/.github/workflows/admission-check.yml@9b3d87c3a3252286eb15be985c7df6131bd1f1c6
     with:
       stage: verdict
       baseSha: ${{ needs.anchor-resolve.outputs.B_STAR || github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.sha }}
