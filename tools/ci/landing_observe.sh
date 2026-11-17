@@ -408,7 +408,13 @@ else
   EXPECTED_CTX="$(jq -r '[.requiredValidations[]?.job, .requiredWorkflowDetection.verdictJob]
                         | map(select(type == "string" and length > 0))
                         | unique | sort | join(",")' "$POLICY_SSOT" 2>/dev/null)" || EXPECTED_CTX=""
-  if [ -z "$EXPECTED_CTX" ]; then
+  # Per-context expected producing App (policy v1.24.0 requiredCheckSources):
+  # absent map = the legacy Actions app on every context — judged on the
+  # policy's own shape, never silently upgraded.
+  EXPECTED_SRC="$(jq -c '{default: (.requiredCheckSources.default // 15368),
+                          byContext: (.requiredCheckSources.byContext // {})}' \
+                        "$POLICY_SSOT" 2>/dev/null)" || EXPECTED_SRC=""
+  if [ -z "$EXPECTED_CTX" ] || [ -z "$EXPECTED_SRC" ]; then
     resolve_ruleset_undetermined "정책 기대 문맥 집합 유도 실패"
   elif ! PAGES_JSON="$(api_get --paginate --slurp \
       "/repos/$OWNER/$REPO/rulesets?includes_parents=true&per_page=100" 2>/dev/null)"; then
@@ -425,11 +431,11 @@ else
       COND_OK="$(jq -r '([.conditions.ref_name.include[]?]
                         | (index("~DEFAULT_BRANCH") != null) or (index("refs/heads/main") != null))' \
                     <<<"$DETAIL_JSON" 2>/dev/null || echo false)"
-      CHECKS_OK="$(jq -r --arg exp "$EXPECTED_CTX" '
+      CHECKS_OK="$(jq -r --arg exp "$EXPECTED_CTX" --argjson src "$EXPECTED_SRC" '
           ([.rules[]? | select(.type == "required_status_checks")
             | .parameters.required_status_checks[]?] as $entries
            | (($entries | map(.context) | unique | sort | join(",")) == $exp)
-             and ($entries | all(.integration_id? == 15368)))' \
+             and ($entries | all(.integration_id? == ($src.byContext[.context] // $src.default))))' \
                     <<<"$DETAIL_JSON" 2>/dev/null || echo false)"
       if [ "$COND_OK" = "true" ] && [ "$CHECKS_OK" = "true" ]; then
         MATCHED_ID="$cid"
