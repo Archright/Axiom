@@ -429,9 +429,15 @@ gh api -X PUT repos/Archright/Axiom/actions/permissions/fork-pr-contributor-appr
 ```bash
 gh api -X PUT repos/Archright/Axiom/actions/permissions \
   -f enabled=true -f allowed_actions=selected -F sha_pinning_required=true
-gh api -X PUT repos/Archright/Axiom/actions/permissions/selected-actions \
-  -F github_owned_allowed=true -F verified_allowed=false \
-  -f 'patterns_allowed[]=dependabot/fetch-metadata@*'
+gh api -X PUT repos/Archright/Axiom/actions/permissions/selected-actions --input - <<'J'
+{"github_owned_allowed":true,"verified_allowed":false,"patterns_allowed":[
+  "dependabot/fetch-metadata@*",
+  "Archright/Axiom/.github/actions/setup-axiom-toolchain@*",
+  "Archright/Axiom/.github/workflows/admission-check.yml@*",
+  "Archright/Axiom/.github/workflows/certificate-mint.yml@*",
+  "Archright/Axiom/.github/workflows/runner-pool-acceptance.yml@*"
+]}
+J
 ```
 
 롤백은 `allowed_actions=all`로 되돌리는 한 줄이다:
@@ -444,7 +450,9 @@ gh api -X PUT repos/Archright/Axiom/actions/permissions \
 근거 (Context7 `/github/docs`): "Allow actions created by GitHub"는 `actions`와
 `github` 조직만 포함하며 `dependabot` 조직은 포함하지 않는다. 따라서
 `dependabot/fetch-metadata@*`를 명시 패턴으로 허용하지 않으면 Dependabot 자동
-머지 워크플로가 차단된다. 현재 저장소의 `uses:` 전수는 `actions/*`(105),
+머지 워크플로가 차단된다. 또한 allowlist가 로컬 예외로 보장하는 것은 `./`와
+`$/` 접두사뿐이므로, `Archright/Axiom/...@sha` 형태의 동일 저장소 참조 4종도
+명시 패턴으로 허용한다. 현재 저장소의 `uses:` 전수는 `actions/*`(105),
 동일 저장소 `Archright/Axiom`(6), `dependabot/fetch-metadata`(1)뿐이므로 이
 allowlist는 기능 파손 없이 나머지 제3자 action을 fail-closed로 만든다.
 
@@ -459,7 +467,7 @@ allowlist는 기능 파손 없이 나머지 제3자 action을 fail-closed로 만
   fail-closed 선택이다.
 
 이 설정은 **새 정책의 도입이 아니라 기존 정책의 플랫폼 집행**이다. `.github/`
-아래 실제 외부 `uses:` 참조는 전수 40-hex 커밋 SHA로 고정되어 있다(113/113,
+아래 `.github/`의 `uses:` 참조는 전수 40-hex 커밋 SHA로 고정되어 있다(113/113,
 `grep -rhoE "^\s*uses:\s*[A-Za-z0-9_.\/-]+@[A-Za-z0-9_.-]+" .github`로 실측).
 따라서 `sha_pinning_required=true`는 저장소가 이미 선언한 핀 정책에 GitHub의
 거부권을 붙인다 — 통과하던 참조가 새로 거부되는 경우는 없다.
