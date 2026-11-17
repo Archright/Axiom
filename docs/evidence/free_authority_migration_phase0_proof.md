@@ -159,3 +159,101 @@ negative-control PR #135(run `44032936628`)에서 GPA가
 정책과 live ruleset은 교정 착지 시점에 이미 일치한다(§8.1의 readback). 따라서
 PR-A-then-PUT 창은 “정책이 15368을 선언하던 동안 live가 5795152였던 구간”이며,
 교정 PR이 그 창을 닫는다. 후속 §9가 착지 후 GPA·App·queue 관측을 기록한다.
+## 9. 착지 후 운영 관측 (2026-11-17)
+
+### 9.1 GPA 교정 착지 — PR #136 (감사 bypass, bootstrap 1회)
+
+교정 PR #136 head `87edffe` → main `916a9bd`.
+
+merge queue가 `main`의 merge 방법을 소유하므로 `gh pr merge --merge`는
+`The merge strategy for main is set by the merge queue`로 거부됐다(REST merge로 실행).
+bypass 창은 두 번 열렸고, 두 번째에서만 착지했다.
+
+| 단계 | 시각 (UTC) | 관측 |
+|---|---|---|
+| 활성 1차 | `07:08:54Z` | `bypass_actors=[{actor_id:53123826,actor_type:"User",bypass_mode:"always"}]` |
+| 복원 1차 | `07:09:04Z` | `gh pr merge` 거부 — merge 없음, `bypass_actors=[]` |
+| 활성 2차 | `07:09:48Z` | 동일 actor |
+| MERGE | `07:09:50Z` | `PUT /repos/Archright/Axiom/pulls/136/merge` → `916a9bdb7334170bb3d2822b120df7a16f1f229b` |
+| 복원 2차 | `07:09:52Z` | `bypass_actors=[]` readback |
+
+복원 readback(같은 조회):
+
+```text
+bypass_actors: []
+enforcement:   active
+required:      admission-check→5795152, bsec-integrity→15368,
+               debt-registry-gate→15368, generation-acceptance→15368,
+               axiom-operational-slice→15368, publication-integrity→15368,
+               readiness-verdict→15368
+merge_queue:   MERGE / ALLGREEN / max_entries_to_build 2
+```
+
+bypass가 불가피했던 이유: GPA의 판정 도구와 정책 해석은 **driver(=base) 트리**에서
+온다. base `c955dfc`의 monitor는 `requiredCheckSources`를 모르므로 live ruleset
+(`admission-check`→5795152)에 대한 이름 해석이 0건이 되어
+`REJECTED:RULESET_UNAVAILABLE`로 fail-closed한다. 교정 코드가 main에 없는 한
+어떤 PR도 L2를 통과할 수 없다 — 이 PR 1건에 한정된 부트스트랩이다.
+
+착지 후 main `config/policy/merge_admission.json`:
+
+```json
+"requiredCheckSources": {"default":15368,"byContext":{"admission-check":5795152}}
+```
+
+### 9.2 Negative control 재검증 — PR #135 (미병합, closed)
+
+base를 `916a9bd`로 갱신한 head `15cbf221`. 변조 대상은
+`.github/workflows/admission-gate-v2.yml`(주석 1줄) + `.github/workflows/zz-negative-control.yml`
+(job 이름 `admission-check` = Actions 15368 success).
+
+| 관측 | 값 |
+|---|---|
+| GPA run `44036622734` | **success** (교정 전 run `44032936628`은 `REJECTED:RULESET_UNAVAILABLE`) |
+| admission-gate run `44036622808` | failure |
+| 실패 지점 | `[SL-20] Repository surface admission` — `[SL-20] changed files: 2 (PR_NUMBER=135)` → `surface verdict: FAIL` |
+| mint jobs | `mint-prepare/*`, `mint-publish/*` 전부 skipped (인증서 미발급) |
+| Actions 15368 `admission-check` (PR이 심은 가짜) | success |
+| Actions 15368 `admission-check` (실제 실행) | failure |
+| **App 5795152 `admission-check`** | **failure** — `trust_surface=FAIL — mismatch:.github/workflows/admission-gate-v2.yml (total 1)` |
+
+enqueue 시도(GraphQL `enqueuePullRequest`) 거부 문구:
+
+```text
+Pull request has failing required statuses and
+Pull request Required status check "admission-check" is failing.
+```
+
+나머지 6개 required check와 위조 Actions 체크가 모두 success인 상태에서도,
+required source가 5795152인 `admission-check`가 실패하면 GitHub는 enqueue를 거부한다.
+PR은 merge 없이 closed, branch 삭제.
+
+### 9.3 2차 운영 수용 — PR #123
+
+#123은 `data/debt_registry.json` + `docs/DEBT_REGISTRY.md`만 변경한다(신뢰 표면 15경로 밖).
+base 갱신 후 head `36f6ea20`.
+
+- PR venue App check `133882962106` = success: `trust_surface=PASS — 15 paths match base 916a9bd`, `reasons=none`
+- enqueue `2026-11-17T07:22:19Z` → merge group `G=7a94150e80b756d7f05be9bf86b94f9db1b005bc`
+- G 부모: `[916a9bdb (main), 36f6ea20 (PR head)]`
+- merge_group admission-gate run `44038223325` = success
+- App check `133886177371` = success:
+
+```text
+trust_surface=PASS — 15 paths match base 916a9bd
+ledger=PASS — 1 entry bound to (base, pr_head)
+reasons=none
+```
+
+- native MERGE `2026-11-17T07:30:34Z`; `main` tip == G.
+
+### 9.4 수용 판정
+
+- merge_group 운영 수용 2회: #131 `06:39:09Z`, #123 `07:30:34Z`.
+- 두 수용 모두 App 5795152가 `admission-check`를 생성했고, required source 설정에 의해
+  GitHub가 그 체크 없이는 병합하지 않았다.
+- `bypass_actors: []` 유지. org ruleset 없이 repository ruleset + merge queue만으로
+  판정 강제가 성립한다.
+- 신뢰 표면을 변경하는 PR은 정의상 App PR-venue 판정이 failure다. 그런 PR의 착지는
+  §9.1의 감사 bypass 경로(활성·MERGE·복원 시각 기록 + readback)로만 가능하며,
+  이는 상시 경로가 아니라 계약 개정 시의 break-glass다.
