@@ -257,3 +257,79 @@ reasons=none
 - 신뢰 표면을 변경하는 PR은 정의상 App PR-venue 판정이 failure다. 그런 PR의 착지는
   §9.1의 감사 bypass 경로(활성·MERGE·복원 시각 기록 + readback)로만 가능하며,
   이는 상시 경로가 아니라 계약 개정 시의 break-glass다.
+
+## 10. Free Authority truth sweep 착지 (#139, 2026-11-17)
+
+ADR-0041 이후에도 live 파일에는 org 게이트를 현재 실행 권한으로 서술하는
+주석·스텝 이름·메타데이터 문자열이 남아 있었다. #139는 이를 정리한다
+(29 files, 240+/146-). 실행 로직·트리거·정책 임계값 변경은 0이다.
+
+### 10.1 검증 (로컬, PR 전)
+
+| 검사 | 결과 |
+|---|---|
+| 변경 workflow 11개 YAML 파싱 | 11/11 OK |
+| `validate_workflow_shell.sh --scan-dir .github/workflows` | PASS — 259 run blocks, 0 failures |
+| `build_all_gates --release` | 84 total · 82 pass · 2 accepted-dead · 0 fail |
+| `debt_engine --validate` / `debt_integrity_gate` | PASS / PASS (39 open debts, marker-bound) |
+| `reanchor_pin --ref HEAD` | `OK no-drift` |
+| `verify_trusted_writer_set.sh` | PASS — trustedAdmissionWorkflowSha = `d27feaee…` |
+| `epoch_transaction_gate --diff 48501d82 HEAD` | EXIT 0 — 2 implemented-scope repair NOTEs |
+
+`admission-check.yml` 변경에 따라 ADR-0022 §5 원자성 쌍을 함께 갱신했다:
+`trustedAdmissionWorkflowSha` = `epoch_manifest.productionExecutionPin` =
+`d27feaeee51ae2c8ecc6ee1b151ec1ab5ed1d456`.
+
+### 10.2 App 음성 통제 (의도된 failure)
+
+PR head `e77c4544b52279b987ed3764fde7c650c1914fe2`, base `48501d82`.
+
+- in-repo `verdict / admission-check` = **pass** (B-pinned 검증은 통과)
+- App `5795152` `admission-check` = **failure**:
+  `trust_surface=FAIL — mismatch:` 9 paths
+  (`admission-gate-v2.yml`, `admission-check.yml`, `bsec-integrity.yml`,
+  `certificate-mint.yml`, `generation-acceptance.yml`,
+  `runner-pool-acceptance.yml`, `epoch_manifest.json`,
+  `merge_admission.json`, + `trusted_writer_set.json`)
+- 나머지 required 6 context = pass (33 pass / 1 fail / 13 skip)
+
+신뢰 표면을 바꾸는 PR은 App이 거부한다 — 의도된 동작이다.
+
+### 10.3 감사 bypass (MUST-T2a)
+
+ruleset `27097366` 전체 JSON을 백업한 뒤 bypass 1건을 추가하고,
+활성 중에만 native MERGE를 수행한 뒤 즉시 복원했다.
+
+| 시각 (UTC) | 동작 | 관측 |
+|---|---|---|
+| `09:08:00` | bypass 활성 (`53123826`, always) | rules 5개 baseline과 동일 |
+| `09:08:10` | `PUT /pulls/139/merge` sha=`e77c4544…` | `merged:true`, merge `88406c61…` |
+| `09:08:13` | bypass 복원 | `bypass_actors: []`, rules 5개 불변 |
+
+window = 13초. readback: 7 required context·integration_id 불변,
+`updated_at` `2026-11-17T18:08:14.310+09:00`, `origin/main` ==
+`88406c61e748ce9262925a5c7b5d2d212cfb9535`.
+
+### 10.4 canonical main 실행
+
+| run | workflow | 결론 |
+|---|---|---|
+| `44052777692` | trusted-writer-set (push) | success |
+| `44052777503` | Push on main (dynamic) | success |
+| `44052777662` | axiom-operational-slice (push) | success |
+
+세 run 모두 `head_sha=88406c61…`에서 완료됐다.
+
+### 10.5 관측된 잔여 위험 (계획 필요)
+
+1. **6 required context의 producer가 Actions 15368**: `bsec-integrity`,
+   `debt-registry-gate`, `generation-acceptance`, `axiom-operational-slice`,
+   `publication-integrity`, `readiness-verdict`. PR이 `merge_group` 트리거
+   워크플로를 추가해 같은 job 이름을 만들면 15368 명의 check가 required를
+   만족할 수 있다(공식 문서상 expected source는 앱 단위). 문서화된 Free 폐쇄는
+   7개 컨텍스트 전부를 App 5795152가 발행하는 것뿐이다.
+2. **App trust-surface ≠ policy SSOT**: 정책 `trustSurface`는 37경로인데
+   App은 15경로를 비교한다(§9.2/§9.3의 `15 paths` 및 #139 mismatch 목록).
+   App은 정책에 없는 `admission-gate-v2.yml`·`epoch_manifest.json`을 비교하고,
+   정책에 있는 `src/cli/merge_cli.nim` 변경은 mismatch로 보고하지 않았다.
+   집행 표면과 선언 표면의 불일치는 계약 개정·App 재배포로 닫아야 한다.
