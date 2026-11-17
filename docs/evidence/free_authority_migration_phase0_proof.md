@@ -333,3 +333,52 @@ window = 13초. readback: 7 required context·integration_id 불변,
    App은 정책에 없는 `admission-gate-v2.yml`·`epoch_manifest.json`을 비교하고,
    정책에 있는 `src/cli/merge_cli.nim` 변경은 mismatch로 보고하지 않았다.
    집행 표면과 선언 표면의 불일치는 계약 개정·App 재배포로 닫아야 한다.
+
+---
+
+## 11. PR #140 정상 경로 수용 (2026-11-17)
+
+PR #140(`docs/free-authority-acceptance-10`, docs-only)을 **감사 bypass 없이** 정상
+merge queue 경로로 착지시켰다 — §10.3의 break-glass가 아닌 정상 경로가 Free 평면에서
+성립함을 실증하는 positive control이다.
+
+### 11.1 PR-head 판정
+
+| 항목 | 관측 |
+|---|---|
+| required contexts | 7/7 SUCCESS (App `admission-check` 포함) |
+| `mergeStateStatus` | `CLEAN` (enqueue 전) |
+| App `admission-check` | success, integration_id `5795152` |
+| enqueue 결과 | `position: 1, state: QUEUED` |
+
+### 11.2 merge_group 판정 (G)
+
+| 항목 | 관측 |
+|---|---|
+| queue branch | `gh-readonly-queue/main/pr-140-88406c61…` |
+| G | `49799837b4bbca4f107848f8a728db5dfa893819` |
+| G parents | `88406c61…` (base) + `9c58df4f…` (PR head) |
+| App `admission-check` (id `133943979872`) | **success** |
+| App summary | `trust_surface=PASS — 15 paths match base 88406c6` / `ledger=PASS — 1 entry bound to (base, pr_head)` / `run=44055590724 attempt=1 conclusion=success` |
+
+### 11.3 native MERGE + canonical main
+
+| 항목 | 관측 |
+|---|---|
+| `mergedAt` | `2026-11-17T09:34:21Z` |
+| merge commit | `49799837b4bbca4f107848f8a728db5dfa893819` |
+| `origin/main` | `49799837…` (일치) |
+| ruleset readback | `bypass_actors: []`, 7 contexts/integration_id 불변, `merge_queue` 파라미터 불변 |
+| main push run (`trusted-writer-set`) | `44056784654` success |
+| main push run (`axiom-operational-slice`) | `44056784641` success |
+
+### 11.4 판정
+
+- 정상 경로에서 App `admission-check`가 **G에 대해** success를 발행했고, 그 check가
+  required로 소비되어 GitHub가 native MERGE를 수행했다. §10.3의 bypass는 정상 경로의
+  대체가 아니라 예외였다.
+- `trust_surface=PASS — 15 paths`는 docs-only 변경이 App의 15경로 밖임을 실행 증거로
+  확인한다. 반대로 trust-surface 파일 변경은 여전히 fail-closed다(§10.5.2).
+- `admission-gate-v2.yml`의 `mint-publish` 래퍼가 `contents: write`를 요청하는 경로는
+  PR이 수정 가능한 caller에 존재한다(§1.2) — 이 잔여 위험은 해소되지 않았으며 계획
+  대상이다.

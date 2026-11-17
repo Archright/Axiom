@@ -108,6 +108,8 @@ MCP server selection rules and Allowlist Gate requirements are enforced by `src/
 
 **주석 (2026-11-15 — ruleset ID 회전)**: 저장소 재생성으로 라이브 main ruleset의 ID가 회전되어 위 2026-10-04/10-11 실측들의 `20303214`는 현재 HTTP 404다 — 당시 실측 사실은 역사 기록으로 보존한다. 현행 라이브 `main` ruleset ID는 `27097366`이다(2026-11-15 실측, `enforcement: active`). 정본 조회는 ID 직접 경로가 아니라 `gh api repos/Archright/Axiom/rulesets`에서 `name == "main"` 이름 해석을 사용한다(`config/policy/merge_admission.json` v1.19.0 이후 — ID는 저장소 재생성마다 회전한다).
 
+**갱신 (2026-11-17 — org required workflow 종료, Free 평면 확정)**: `gh api /orgs/Archright --jq .plan` → `name: free`; `gh api orgs/Archright/rulesets` → **HTTP 403** ("Upgrade to GitHub Team"). 따라서 위 배너들의 **org required workflow `admission-gate`(Archright/.github — ruleset 24233738)** 경로는 더 이상 발화하지 않는다. 현행 원격 PR 판정 경로는 in-repo `.github/workflows/admission-gate-v2.yml`(`pull_request` + `merge_group`) + repo ruleset `27097366`(`enforcement: active`, `bypass_actors: []`, 7 required contexts — `admission-check`만 integration_id `5795152`, 나머지 6개 `15368`) + merge queue(`ALLGREEN`, `max_entries_to_build: 2`, `check_response_timeout_minutes: 120`)다. 2026-11-17 실측: PR #140이 **감사 bypass 없이** 정상 merge queue 경로로 native MERGE 착지(`49799837b4bb…`; App `admission-check` success, `trust_surface=PASS — 15 paths match base 88406c6`). 위 역사 기록은 대체하지 않는다.
+
 **Rule (HARD)**: With `intent = merge_to_main`, a branch push MUST be followed by **immediate PR creation/update**. **Merge eligibility remains governed by the repository's current review/check policy** — this protocol fixes PR creation timing only.
 
 **Semantic layers**:

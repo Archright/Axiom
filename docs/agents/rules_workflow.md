@@ -226,7 +226,9 @@ for fpath in files:
 
 ### 2.13 Verification Surface (정정 2026-10-15 — "CI=0 cutover/부분 복구 2개 잔존" 서술 폐기, SSOT 이관)
 
-원격 실행 경계는 존재한다: in-repo 워크플로 16개 + org 필수 워크플로 `admission-gate`(Archright/.github — ruleset 24233738)가 원격 PR admission 경로다. "원격 PR admission/verify 파이프라인은 존재하지 않으며 admission evidence의 권위는 로컬이다"라는 서술과 "2개 잔존" 프레임은 [operations.md](operations.md) 2026-10-04 배너가 폐기했다 — Verification surface의 정본 SSOT는 operations.md §Merge-Boundary Protocol이며, 이 절은 그 내용을 중복하지 않는다. 로컬 게이트(git hooks + orchestrator_hook)는 원격 경계와 병행하는 로컬 표면이다:
+원격 실행 경계는 존재한다: in-repo 워크플로 16개 + org 필수 워크플로 `admission-gate`(Archright/.github — ruleset 24233738)가 원격 PR admission 경로다. "원격 PR admission/verify 파이프라인은 존재하지 않으며 admission evidence의 권위는 로컬이다"라는 서술과 "2개 잔존" 프레임은 [operations.md](operations.md) 2026-10-04 배너가 폐기했다 — Verification surface의 정본 SSOT는 operations.md §Merge-Boundary Protocol이며, 이 절은 그 내용을 중복하지 않는다.
+
+**(2026-11-17 갱신 — Free)**: 위 "org 필수 워크플로 `admission-gate`(ruleset 24233738)" 서술은 superseded다 — 조직 플랜은 `free`이고 `gh api orgs/Archright/rulesets`는 HTTP 403이다. 현행 원격 PR 판정 경로는 in-repo `.github/workflows/admission-gate-v2.yml` + repo ruleset `27097366`(active, `bypass_actors: []`, 7 contexts) + merge queue이며, PR #140이 정상 경로로 착지했다(`49799837b4bb…`). 로컬 게이트(git hooks + orchestrator_hook)는 원격 경계와 병행하는 로컬 표면이다:
 
 | Surface | Rule |
 |------|-------------|
