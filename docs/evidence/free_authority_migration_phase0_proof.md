@@ -382,3 +382,184 @@ merge queue 경로로 착지시켰다 — §10.3의 break-glass가 아닌 정상
 - `admission-gate-v2.yml`의 `mint-publish` 래퍼가 `contents: write`를 요청하는 경로는
   PR이 수정 가능한 caller에 존재한다(§1.2) — 이 잔여 위험은 해소되지 않았으며 계획
   대상이다.
+
+## 12. GitHub-native enforcement hardening (2026-11-17)
+
+### 12.1 Repository Actions 설정 전환 (실측)
+
+`GET /repos/Archright/Axiom/actions/permissions`와
+`GET /repos/Archright/Axiom/actions/permissions/fork-pr-contributor-approval`의
+전/후 값이다.
+
+| 설정 | before (`2026-11-17T10:11:23Z`) | after (`2026-11-17T10:11:25Z`) |
+|---|---|---|
+| Actions permissions | `{"enabled":true,"allowed_actions":"all","sha_pinning_required":false}` | `{"enabled":true,"allowed_actions":"all","sha_pinning_required":true}` |
+| Fork PR contributor approval | `{"approval_policy":"first_time_contributors"}` | `{"approval_policy":"all_external_contributors"}` |
+
+적용 명령(실행한 그대로):
+
+```bash
+gh api -X PUT repos/Archright/Axiom/actions/permissions \
+  -F enabled=true -f allowed_actions=all -F sha_pinning_required=true
+gh api -X PUT repos/Archright/Axiom/actions/permissions/fork-pr-contributor-approval \
+  -f approval_policy=all_external_contributors
+```
+
+롤백은 같은 엔드포인트에 전 값을 되돌려 쓰는 것이다:
+
+```bash
+gh api -X PUT repos/Archright/Axiom/actions/permissions \
+  -F enabled=true -f allowed_actions=all -F sha_pinning_required=false
+gh api -X PUT repos/Archright/Axiom/actions/permissions/fork-pr-contributor-approval \
+  -f approval_policy=first_time_contributors
+```
+
+**추가 전환 (`2026-11-17T10:23:11Z`) — allowlist 축소**: 제3자 action 표면을
+닫기 위해 `allowed_actions`를 `all → selected`로 좁혔다.
+
+| 설정 | before | after |
+|---|---|---|
+| Actions permissions | `{"enabled":true,"allowed_actions":"all","sha_pinning_required":true}` | `{"enabled":true,"allowed_actions":"selected","sha_pinning_required":true}` |
+| Selected actions | (해당 없음 — 전체 허용) | `github_owned_allowed=true`, `verified_allowed=false`, `patterns_allowed`=아래 6패턴 |
+
+적용 순서가 중요하다: `allowed_actions: all` 상태에서 `selected-actions`를 먼저
+쓰면 HTTP 409(`All actions and workflows are allowed on this repository`)다.
+`selected`로 전환한 뒤 패턴을 쓴다.
+
+```bash
+gh api -X PUT repos/Archright/Axiom/actions/permissions \
+  -f enabled=true -f allowed_actions=selected -F sha_pinning_required=true
+gh api -X PUT repos/Archright/Axiom/actions/permissions/selected-actions --input - <<'J'
+{"github_owned_allowed":true,"verified_allowed":false,"patterns_allowed":[
+  "dependabot/fetch-metadata@*",
+  "Archright/Axiom/.github/actions/setup-axiom-toolchain@*",
+  "Archright/Axiom/.github/workflows/admission-check.yml@*",
+  "Archright/Axiom/.github/workflows/certificate-mint.yml@*",
+  "Archright/Axiom/.github/workflows/runner-pool-acceptance.yml@*",
+  "Archright/Axiom/**@*"
+]}
+J
+```
+
+롤백은 `allowed_actions=all`로 되돌리는 한 줄이다:
+
+```bash
+gh api -X PUT repos/Archright/Axiom/actions/permissions \
+  -f enabled=true -f allowed_actions=all -F sha_pinning_required=true
+```
+
+근거 (Context7 `/github/docs`): "Allow actions created by GitHub"는 `actions`와
+`github` 조직만 포함하며 `dependabot` 조직은 포함하지 않는다. 따라서
+`dependabot/fetch-metadata@*`를 명시 패턴으로 허용하지 않으면 Dependabot 자동
+머지 워크플로가 차단된다. 또한 allowlist가 로컬 예외로 보장하는 것은 `./`와
+`$/` 접두사뿐이므로, `Archright/Axiom/...@sha` 형태의 동일 저장소 참조 4종을
+명시 패턴으로 허용하고 경로 깊이 변화에 대비해 `Archright/Axiom/**@*`를
+안전망으로 함께 둔다. 현재 저장소의 `uses:` 전수는 `actions/*`(106),
+동일 저장소 `Archright/Axiom`(6), `dependabot/fetch-metadata`(1)뿐이므로 이
+allowlist는 기능 파손 없이 나머지 제3자 action을 fail-closed로 만든다.
+
+근거 (Context7 `/github/docs`):
+
+- "Require actions to be pinned to a full-length commit SHA"는 GitHub가 저작한
+  액션을 포함한 **모든 액션**에 적용된다 — 소유자 구분 없이 전체 길이 커밋 SHA
+  핀이 강제된다.
+- fork PR 승인 문서는 `first_time_contributors`가 **최초 1회만** 승인을 요구하므로,
+  공격자가 무해한 커밋을 먼저 병합시켜 승인 게이트를 소진한 뒤 쓰기 권한 PR을
+  올릴 수 있음을 경고한다. `all_external_contributors`가 그 우회를 닫는
+  fail-closed 선택이다.
+
+이 설정은 **새 정책의 도입이 아니라 기존 정책의 플랫폼 집행**이다. `.github/`
+아래의 `uses:` 참조는 전수 40-hex 커밋 SHA로 고정되어 있다(113/113,
+`grep -rhoE "^\s*uses:\s*[A-Za-z0-9_.\/-]+@[A-Za-z0-9_.-]+" .github`로 실측).
+따라서 `sha_pinning_required=true`는 저장소가 이미 선언한 핀 정책에 GitHub의
+거부권을 붙인다 — 통과하던 참조가 새로 거부되는 경우는 없다.
+
+### 12.2 왜 이것이 계획(plan) 항목이 아닌가
+
+- **플랫폼 네이티브 집행**: 핀 요구의 집행자는 GitHub Actions다. Axiom 코드·
+  게이트·워크플로 변경은 0건이다.
+- **trust-surface 파일 0건**: `config/policy/trust_surface_manifest.json`의
+  15경로 어디에도 이 설정은 파일로 존재하지 않는다.
+- **ruleset 변경 0건**: ruleset `27097366`의 rules·required contexts·
+  `bypass_actors`는 불변이다(§12.3 readback).
+- **가역적**: 위 롤백 명령으로 전 상태로 복귀한다. 새 권한·새 시크릿·새 App은 없다.
+
+이 항목은 §10.5/§11.4가 남긴 잔여를 **닫지 않으며 닫는 척하지도 않는다**
+(§0.9). 설정 평면의 강화일 뿐이다.
+
+### 12.3 PR #141 정상 경로 수용 (bypass 없음)
+
+| 항목 | 관측 |
+|---|---|
+| PR | #141 (`docs/free-authority-truth-alignment`, docs-only) |
+| 경로 | 정상 merge queue — 감사 bypass 0회 |
+| `mergedAt` | `2026-11-17T09:58:05Z` |
+| merge commit | `6ba3145c3e34a9fce1193e9f4a531844825dd990` |
+| App `admission-check` (id `133956311742`) | **success** |
+| App summary | `trust_surface=PASS — 15 paths match base 4979983` / `ledger=PASS — 1 entry bound to (base, pr_head)` / `run=44059194582 attempt=1 conclusion=success` |
+| main push run `44060418643` (`trusted-writer-set`) | success |
+| main push run `44060418742` (`axiom-operational-slice`) | success |
+| ruleset readback | `bypass_actors: []`, 7 required contexts 불변 |
+
+판정: §11의 positive control이 재현되었다. App이 `B_mg` 기준 15경로를 비교하고
+`(base, pr_head)` 원장 항목을 결속한 뒤에만 GitHub가 native MERGE를 수행했다.
+§12.1의 설정 전환은 이 수용의 **전제가 아니라 병행**이다 — ruleset도 프로듀서
+계약도 바뀌지 않았다.
+
+### 12.4 잔여 (불변)
+
+두 잔여는 §12.1의 설정으로 닫히지 않는다:
+
+1. **같은 저장소 PR의 쓰기 잡 추가**: `sha_pinning_required`는 액션 **참조**를
+   제약하지 워크플로 `permissions:` 선언을 제약하지 않는다. PR이 수정 가능한
+   caller에 `contents: write` 잡을 추가하는 경로는 §1.2/§11.4 그대로 남는다.
+2. **6 required context의 producer가 Actions 15368**: `bsec-integrity`,
+   `debt-registry-gate`, `generation-acceptance`, `axiom-operational-slice`,
+   `publication-integrity`, `readiness-verdict`는 여전히 앱 단위 결속이며,
+   동명 체크 위조 표면은 §10.5.1 그대로다.
+
+fork 승인 정책은 **외부 기여자 경로만** 닫는다 — 저장소 쓰기 권한을 가진
+내부자 경로는 이 설정의 대상이 아니다.
+
+**동명 체크의 실측(2026-11-17)**: main merge commit `6ba3145c…`에는
+`admission-check` check-run이 **두 개** 존재한다 — 하나는 Actions 앱 `15368`,
+다른 하나는 App `5795152`이며 둘 다 `success`다. required check가
+`integration_id: 5795152`로 결속되어 있으므로 Actions가 발행한 동명 체크는
+판정을 만족하지 못한다. 즉 expected-source 결속은 문서상의 장식이 아니라
+동명 위조 표면을 실제로 배제하는 방어선이며, 이 결속이 풀리면 동명 체크가
+곧바로 판정 권한이 된다. 현재 ruleset readback에서 `admission-check`의
+integration_id는 `5795152`다.
+
+### 12.5 저장소 보안 설정 (가역, 2026-11-17)
+
+`gh api` readback으로 확인한 전/후 값이다.
+
+| 설정 | before | after | 적용 명령 |
+|---|---|---|---|
+| Dependabot security updates | `disabled` | `enabled` | `PUT /repos/Archright/Axiom/automated-security-fixes` |
+| Immutable releases | `disabled` | `enabled` | `PUT /repos/Archright/Axiom/immutable-releases` |
+| Web commit signoff | `false` | `true` | `PATCH /repos/Archright/Axiom -F web_commit_signoff_required=true` |
+| Wiki | `true` | `false` | `PATCH /repos/Archright/Axiom -F has_wiki=false` |
+
+롤백:
+
+```bash
+gh api -X DELETE repos/Archright/Axiom/automated-security-fixes
+gh api -X DELETE repos/Archright/Axiom/immutable-releases
+gh api -X PATCH repos/Archright/Axiom \
+  -F web_commit_signoff_required=false -F has_wiki=true
+```
+
+주의:
+
+- **immutable releases는 향후 릴리스에만 적용된다**(공식 문서: "immutability
+  will only apply to future releases"). 기존 `v0.6.4`는 소급 잠금되지 않으며,
+  활성화 이후 발행되는 릴리스에는 release attestation이 생성된다.
+- **secret scanning non-provider patterns·validity checks는 적용되지 않았다.**
+  `PATCH /repos/Archright/Axiom`이 HTTP 200을 반환했지만 readback 값은
+  `disabled` 그대로였다. 공식 gated-features 문서상 generic pattern 탐지는
+  Team + GitHub Secret Protection 전용이므로 Free에서 사용할 수 없다 —
+  변경 0건이며 롤백 대상도 아니다.
+- **organization 2FA requirement, org-level Actions 기본값, App 설치 권한**은
+  조직·App 소유자 authority이므로 이 저장소 설정 변경에 포함하지 않는다.
+  별도 계획 항목이다.
