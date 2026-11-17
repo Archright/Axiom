@@ -435,7 +435,8 @@ gh api -X PUT repos/Archright/Axiom/actions/permissions/selected-actions --input
   "Archright/Axiom/.github/actions/setup-axiom-toolchain@*",
   "Archright/Axiom/.github/workflows/admission-check.yml@*",
   "Archright/Axiom/.github/workflows/certificate-mint.yml@*",
-  "Archright/Axiom/.github/workflows/runner-pool-acceptance.yml@*"
+  "Archright/Axiom/.github/workflows/runner-pool-acceptance.yml@*",
+  "Archright/Axiom/**@*"
 ]}
 J
 ```
@@ -451,8 +452,9 @@ gh api -X PUT repos/Archright/Axiom/actions/permissions \
 `github` 조직만 포함하며 `dependabot` 조직은 포함하지 않는다. 따라서
 `dependabot/fetch-metadata@*`를 명시 패턴으로 허용하지 않으면 Dependabot 자동
 머지 워크플로가 차단된다. 또한 allowlist가 로컬 예외로 보장하는 것은 `./`와
-`$/` 접두사뿐이므로, `Archright/Axiom/...@sha` 형태의 동일 저장소 참조 4종도
-명시 패턴으로 허용한다. 현재 저장소의 `uses:` 전수는 `actions/*`(105),
+`$/` 접두사뿐이므로, `Archright/Axiom/...@sha` 형태의 동일 저장소 참조 4종을
+명시 패턴으로 허용하고 경로 깊이 변화에 대비해 `Archright/Axiom/**@*`를
+안전망으로 함께 둔다. 현재 저장소의 `uses:` 전수는 `actions/*`(105),
 동일 저장소 `Archright/Axiom`(6), `dependabot/fetch-metadata`(1)뿐이므로 이
 allowlist는 기능 파손 없이 나머지 제3자 action을 fail-closed로 만든다.
 
