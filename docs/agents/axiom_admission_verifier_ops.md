@@ -28,12 +28,12 @@
 - `metadata: read` — 저장소 identity
 - `statuses: write` — commit status 채널
 
-`contents: write`가 있는 이유는 쓰기 경계 분리다: `merge_group` 실행 영역을 `contents: read`로 격리하고 원장 기록을 독립 App으로 이전했다 — 근거와 실측은 [docs/evidence/free_authority_migration_phase0_proof.md](../evidence/free_authority_migration_phase0_proof.md) §1.2, §4다.
+`contents: write`의 실제 상태(2026-11-18 실측): **원장 writer는 아직 `github-actions[bot]`이다** — 원장 head `8c42fcb`의 `author=github-actions[bot]`, `committer=GitHub`, `verified=true`. App은 `contents: write`를 보유하지만 원장에 쓴 기록이 없다. 따라서 "원장 기록을 독립 App으로 이전했다"는 서술은 **철회**한다. 현재 원장 쓰기는 `certificate-mint.yml`의 `publish` 잡(이 워크플로의 유일한 job-level `contents: write`)이 수행하고, `prepare`는 `contents: read`다. writer 이전은 App 소스 확장 이후의 계획 항목이며, 그때까지 이 문서는 "App이 원장을 쓴다"고 주장하지 않는다.
 
 ## 3. 판정 입력과 발행
 
 1. **manifest는 `B_mg`에서 읽는다 — `G`에서는 절대 읽지 않는다.** `config/policy/trust_surface_manifest.json`의 `readFrom` 필드가 이 불변식을 선언한다(`B_mg (merge_group.base_sha), never from G`). 목적은 PR이 검증 목록 자체를 축소하지 못하게 하는 것이다.
-2. **15개 blob 경로를 비교한다**: 각 경로에 대해 `blob(G) == blob(B_mg)`. 불일치는 경로명과 개수를 사유로 보고한다.
+2. **manifest의 모든 blob 경로를 비교한다** (2026-11-18 기준 17개: actions 1 · workflows 9 · config 6 · tools 1): 각 경로에 대해 `blob(G) == blob(B_mg)`. 정본은 `config/policy/trust_surface_manifest.json`의 `paths`이며 **개수를 하드코딩하지 않는다** — 경로 추가·삭제는 manifest diff로만 일어나고, 그 자체가 trust surface다. 불일치는 경로명과 개수를 사유로 보고한다.
 3. **원장 결속을 확인한다**: subject-continuity 원장이 `(base, pr_head)`에 결속된 항목을 정확히 1개 얻었는지 본다.
 4. **`admission-check`를 PR head와 `G` 양쪽에 발행한다** — PR-venue는 preflight, `G`는 merge-admission 판정이다. 판정 조건(워크플로 path, 이벤트 venue, `head_sha`, `conclusion`)은 ADR-0041 §1의 네 조건을 그대로 따른다.
 
@@ -73,4 +73,9 @@ run=<RUN_ID> attempt=<N> conclusion=success
 ## 7. 잔여 (계획 항목)
 
 - **App은 외부 서비스다**: 가용성, 권한 변경, 웹훅 전달, 설치 상태는 이 저장소 밖이다. 이 저장소가 보장하는 것은 "결론이 없으면 병합되지 않는다"(§4)뿐이며, 그 보장의 대가는 최대 120분의 지연이다.
+- **Free에는 원장 쓰기 행위자를 귀속시키는 권위 기록이 없다**: org audit-log API는 Free에서 404(Enterprise Cloud 전용)이고, `git.push` 이벤트는 7일 보존·export 전용이며 `ref`·`integration_id` 필드가 없다. commit author/committer는 호출자가 지정하는 문자열이다. 따라서 writer 보장은 "App이 썼다"가 아니라 "ruleset이 수정되지 않은 한 App만 쓸 수 있다"로만 성립한다.
+- **ruleset 편집 권한은 예방이 아니라 탐지 대상이다**: repo admin은 `Administration: write`로 ruleset `27097366`을 편집·비활성화할 수 있다. 이 계약은 그 사실을 숨기지 않는다.
+- **원장 append 멱등성 결함 2건**: `appendCertificate`(`src/verification/ledger_side_ref.nim:508`)는 **첫 시도에 중복 검사를 하지 않고**(재시도 경로만 `ledgerHasCertAtTip` `:493` 사용), 워크플로는 `bin/ax cert ledger-list` 실패를 "부재"로 간주하고 append로 넘어간다(`.github/workflows/certificate-mint.yml:2263`). `run_attempt`는 원장 키가 아니다(키 = `subjectId`).
+- **`ax cert ledger-append` 경로에 서명 검증이 없다**: `src/verification/ledger_side_ref.nim` 전체에 ed25519/서명 검증 호출이 존재하지 않는다(2026-11-18 grep). 첫 발급 시 forged `certificate.json`이 원장에 들어갈 수 있으며, 원장의 신뢰는 전적으로 writer identity에 의존한다.
+- **`prepare`는 여전히 artifact 바이너리를 실행한다**: `admission-check-base-artifacts`의 `bin/ax`·`ircheck`를 워크스페이스에 설치해 `cert attest --sign`에 사용한다. 해당 잡은 `contents: read`라 write 탈취는 아니지만, SL-22가 닫은 것과 같은 공급 계열의 결함이다(별도 debt).
 - 이 App 계약은 다음 잔여를 닫지 않는다: 같은 저장소 PR이 쓰기 잡을 추가하는 경로(§1.2/§11.4), 나머지 6 contexts의 producer가 Actions `15368`인 표면([docs/evidence/free_authority_migration_phase0_proof.md](../evidence/free_authority_migration_phase0_proof.md) §12.4). 둘 다 계획 항목이다.
