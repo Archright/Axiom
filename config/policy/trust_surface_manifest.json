@@ -1,0 +1,23 @@
+{
+  "schema": "axiom.trust-surface-manifest.v1",
+  "purpose": "Execution surface that must be byte-identical between a merge-group commit G and its base B_mg. A PR that alters any listed path cannot receive the independent verifier's admission-check; such changes require the audited break-glass lane and an explicit epoch rotation.",
+  "comparison": "blob-based: every path's Git blob SHA at G must equal its blob SHA at B_mg",
+  "readFrom": "B_mg (merge_group.base_sha), never from G",
+  "paths": [
+    ".github/actions/setup-axiom-toolchain/action.yml",
+    ".github/workflows/admission-gate-v2.yml",
+    ".github/workflows/admission-check.yml",
+    ".github/workflows/axiom-operational-slice.yml",
+    ".github/workflows/bsec-integrity.yml",
+    ".github/workflows/certificate-mint.yml",
+    ".github/workflows/debt-registry-gate.yml",
+    ".github/workflows/generation-acceptance.yml",
+    ".github/workflows/publication-integrity.yml",
+    ".github/workflows/runner-pool-acceptance.yml",
+    "config/app_landing_binding.json",
+    "config/policy/epoch_manifest.json",
+    "config/policy/merge_admission.json",
+    "config/policy/trust_surface_manifest.json",
+    "config/trusted_writer_set.json"
+  ]
+}
