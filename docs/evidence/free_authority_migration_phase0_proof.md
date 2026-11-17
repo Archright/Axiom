@@ -381,7 +381,9 @@ merge queue 경로로 착지시켰다 — §10.3의 break-glass가 아닌 정상
   확인한다. 반대로 trust-surface 파일 변경은 여전히 fail-closed다(§10.5.2).
 - `admission-gate-v2.yml`의 `mint-publish` 래퍼가 `contents: write`를 요청하는 경로는
   PR이 수정 가능한 caller에 존재한다(§1.2) — 이 잔여 위험은 해소되지 않았으며 계획
-  대상이다.## 12. GitHub-native enforcement hardening (2026-11-17)
+  대상이다.
+
+## 12. GitHub-native enforcement hardening (2026-11-17)
 
 ### 12.1 Repository Actions 설정 전환 (실측)
 
@@ -474,3 +476,12 @@ gh api -X PUT repos/Archright/Axiom/actions/permissions/fork-pr-contributor-appr
 
 fork 승인 정책은 **외부 기여자 경로만** 닫는다 — 저장소 쓰기 권한을 가진
 내부자 경로는 이 설정의 대상이 아니다.
+
+**동명 체크의 실측(2026-11-17)**: main merge commit `6ba3145c…`에는
+`admission-check` check-run이 **두 개** 존재한다 — 하나는 Actions 앱 `15368`,
+다른 하나는 App `5795152`이며 둘 다 `success`다. required check가
+`integration_id: 5795152`로 결속되어 있으므로 Actions가 발행한 동명 체크는
+판정을 만족하지 못한다. 즉 expected-source 결속은 문서상의 장식이 아니라
+동명 위조 표면을 실제로 배제하는 방어선이며, 이 결속이 풀리면 동명 체크가
+곧바로 판정 권한이 된다. 현재 ruleset readback에서 `admission-check`의
+integration_id는 `5795152`다.
