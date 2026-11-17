@@ -78,7 +78,7 @@
     "src/cli/action_plan_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "1e6a9b41fef0c37554d7134331bef9c2fe895d37"
+      "sha": "49f05c84196d8af5d8a48aa34d7f8e8b1a257f4c"
     },
     "src/cli/admission_cli.nim": {
       "mode": "100644",
@@ -238,7 +238,7 @@
     "src/cli/landing_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "9883645dcee2ee9e30bf85ae0a1898da0f5c6a4c"
+      "sha": "a20fe6a93c4d6d8e5314d81774c282c7e390e9ad"
     },
     "src/cli/lean_verify_cmd.nim": {
       "mode": "100644",
@@ -263,7 +263,7 @@
     "src/cli/merge_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "0f6f3d8646d5c209808e19ae9eb68f728469fcd2"
+      "sha": "7250057ca52fb9f4d199d4020659e5780767f298"
     },
     "src/cli/payload_bridge.nim": {
       "mode": "100644",
@@ -4468,7 +4468,7 @@
     "tools/ci/proof_reconcile_gate.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "a56746435536e102074a86031e9edd9af624026d"
+      "sha": "f28edbd6d67d78dadf31e2e859de76b8d3925484"
     },
     "tools/hermetic_build.nim": {
       "mode": "100644",
