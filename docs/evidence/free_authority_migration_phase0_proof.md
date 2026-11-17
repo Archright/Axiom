@@ -414,6 +414,40 @@ gh api -X PUT repos/Archright/Axiom/actions/permissions/fork-pr-contributor-appr
   -f approval_policy=first_time_contributors
 ```
 
+**추가 전환 (`2026-11-17T10:23:11Z`) — allowlist 축소**: 제3자 action 표면을
+닫기 위해 `allowed_actions`를 `all → selected`로 좁혔다.
+
+| 설정 | before | after |
+|---|---|---|
+| Actions permissions | `{"enabled":true,"allowed_actions":"all","sha_pinning_required":true}` | `{"enabled":true,"allowed_actions":"selected","sha_pinning_required":true}` |
+| Selected actions | (해당 없음 — 전체 허용) | `{"github_owned_allowed":true,"verified_allowed":false,"patterns_allowed":["dependabot/fetch-metadata@*"]}` |
+
+적용 순서가 중요하다: `allowed_actions: all` 상태에서 `selected-actions`를 먼저
+쓰면 HTTP 409(`All actions and workflows are allowed on this repository`)다.
+`selected`로 전환한 뒤 패턴을 쓴다.
+
+```bash
+gh api -X PUT repos/Archright/Axiom/actions/permissions \
+  -f enabled=true -f allowed_actions=selected -F sha_pinning_required=true
+gh api -X PUT repos/Archright/Axiom/actions/permissions/selected-actions \
+  -F github_owned_allowed=true -F verified_allowed=false \
+  -f 'patterns_allowed[]=dependabot/fetch-metadata@*'
+```
+
+롤백은 `allowed_actions=all`로 되돌리는 한 줄이다:
+
+```bash
+gh api -X PUT repos/Archright/Axiom/actions/permissions \
+  -f enabled=true -f allowed_actions=all -F sha_pinning_required=true
+```
+
+근거 (Context7 `/github/docs`): "Allow actions created by GitHub"는 `actions`와
+`github` 조직만 포함하며 `dependabot` 조직은 포함하지 않는다. 따라서
+`dependabot/fetch-metadata@*`를 명시 패턴으로 허용하지 않으면 Dependabot 자동
+머지 워크플로가 차단된다. 현재 저장소의 `uses:` 전수는 `actions/*`(105),
+동일 저장소 `Archright/Axiom`(6), `dependabot/fetch-metadata`(1)뿐이므로 이
+allowlist는 기능 파손 없이 나머지 제3자 action을 fail-closed로 만든다.
+
 근거 (Context7 `/github/docs`):
 
 - "Require actions to be pinned to a full-length commit SHA"는 GitHub가 저작한
