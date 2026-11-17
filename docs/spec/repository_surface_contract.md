@@ -612,3 +612,28 @@ check 실패이고 merge queue가 병합을 차단한다. 이것이 결정 #20(b
 - https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets
 - https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks
 - https://git-scm.com/docs/git-diff
+
+## 부록 — v100 개정 (2026-11-17, Free Authority Migration bootstrap)
+
+**배경**: Organization ruleset 상실로 `admission-check` required context의 생산자가
+사라졌다. 신뢰된 오케스트레이터(`Archright/.github/.github/workflows/admission-gate-v2.yml`,
+blob `ab526119…`)를 Axiom 저장소로 이관해야 하나, `.github/**`는 FROZEN이므로
+base policy v99에서는 ADD가 `SURFACE_FORBIDDEN`이다.
+
+**개정 내용** (`policyVersion` 99 → 100, selfAmendment 조건 (a)–(d) 충족):
+
+| 경로 | 클래스 | 근거 |
+|---|---|---|
+| `.github/workflows/admission-gate-v2.yml` | CONTROLLED | required context `admission-check`의 실행 오케스트레이터. callee는 Axiom 커밋 SHA로 핀된다. |
+| `config/policy/trust_surface_manifest.json` | CONTROLLED | 독립 검증자 App이 `blob(G) == blob(B_mg)`로 비교하는 실행 표면 목록. 목록 자체를 B_mg에서 읽으므로 PR이 축소할 수 없다. |
+
+**자기승인 차단 유지**: 두 경로 모두 `MODIFY`도 `CONTROLLED` 규칙을 따르되, 실제
+병합 판정은 GitHub ruleset과 독립 App 검증자가 담당한다. App의 비교 기준은
+B_mg이며, 위 두 경로가 manifest에 포함되므로 PR이 이들을 바꾸면 App이
+`admission-check`를 발급하지 않는다(fail-closed). 즉 표면 개정의 실질 권한은
+여전히 운영자 break-glass 경로에 남는다.
+
+**이 PR 자신**: `config/repository_surface.json`(FROZEN, allowedPaths 포함)과
+이 문서(문서 경로)만 수정하며 `policyVersion`을 단조 증가시킨다 — selfAmendment
+예외의 정확한 형태다. 이 개정이 착지한 뒤에야 후속 bootstrap PR이
+`CONTROLLED ADD=PASS`로 판정된다.
