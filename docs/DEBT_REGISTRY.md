@@ -3,8 +3,8 @@
 > Auto-generated from `data/debt_registry.json`
 > Projection: P1 v2
 > Total entries: 281
-> Open: 54 | Closed: 227
-> Critical: 10 (open: 0) | High: 104 (open: 27) | Medium: 111 (open: 21) | Low: 55 (open: 6) | Low-medium: 1 (open: 0)
+> Open: 53 | Closed: 228
+> Critical: 10 (open: 0) | High: 104 (open: 27) | Medium: 111 (open: 20) | Low: 55 (open: 6) | Low-medium: 1 (open: 0)
 
 ## Schema
 
