@@ -1,0 +1,9 @@
+name: zz-negative-control
+on:
+  pull_request:
+jobs:
+  admission-check:
+    name: admission-check
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "fake admission-check success from Actions app"

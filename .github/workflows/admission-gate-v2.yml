@@ -711,3 +711,4 @@ jobs:
           [ "$RESULT_GATEWAY" = "success" ] \
             || fail "needed job 'gateway' result='$RESULT_GATEWAY' (expected 'success' — skipped/cancelled/failed must block, never green)"
           echo "[verdict] OK — anchor-resolve ∧ closure-deriver ∧ attest ∧ mint-prepare ∧ mint-publish ∧ verdict ∧ gateway callee succeeded"
+# negative-control: verifier tamper probe
