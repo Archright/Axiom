@@ -336,6 +336,17 @@ a numeric conversion is meant (use `.int64` / `int()` conversion syntax).
   `repo_root.nim:30-36`), or use the per-consumer override (e.g. `AXIOM_IRCHECK_CMD` for the
   attest chain — `docs/agents/operations.md` Trap 4). No code change in this slice; the
   `/` edge is stdlib-following, not a stdlib defect.
+- **Resolution addendum (2026-11-17, DEBT#550 fix)**: `findRepoRoot`
+  (`src/core/utils/repo_root.nim`) no longer exposes the quirk's consequence — the walk
+  probes absolute paths only (relative/empty start heads are resolved against the absolute
+  current directory; the loop stops when `parentDir` yields `""`, the guard this entry
+  measured as never firing), a startDir-walk miss falls through to an explicit upward walk
+  from the absolute current directory (an out-of-repo binary with a repository CWD resolves
+  the repository root), and the legacy one-level-up fallback is absolute-only — the `""`
+  return is unreachable by contract and pinned by `tests/unit/test_repo_root.nim`
+  (out-of-repo binary location, repository CWD, no-anchor fallback, empty start). The
+  stdlib edge itself (`parentDir("/") == ""`, `"" / x == x`) is unchanged and stays
+  documented here; `findRepoRootStrict` keeps its own pre-existing guard.
 - **Official documentation basis** (Context7 → `nim-lang.github.io/Nim`, `ospaths2.html` /
   `paths.html`): `parentDir` "Returns the parent directory of the given path... handles
   edge cases like empty paths and trailing separators, preserving absolute/relative

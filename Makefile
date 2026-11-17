@@ -85,6 +85,7 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/test_decision_binding_ratchet.nim \
                   tests/unit/test_assurance_tier_node_report.nim \
                   tests/unit/test_vkd_determinism.nim \
+                  tests/unit/test_repo_root.nim \
                   tests/unit/test_certificate_trust_closure.nim \
                   tests/unit/wf_runners_exit_code_test.nim \
                   tests/unit/resolve_node_outcome_test.nim \
