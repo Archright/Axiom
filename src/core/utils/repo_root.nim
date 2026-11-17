@@ -25,6 +25,12 @@ proc findRepoRoot*(startDir: string = getAppDir()): string {.raises: [], axiomEf
   ## Falls back to walking up from `startDir` to find `.axiom_root` anchor.
   ## Deterministic: returns the unique ancestor directory with the anchor.
   ## Fallback: one level up from startDir (legacy compat).
+  ## Fail-closed exhaustion (DEBT#550, Q-013): `parentDir("/")` is `""` and
+  ## `"" / anchor` probes the CWD, so the walk stops at the filesystem root
+  ## without ever probing an empty path. On exhaustion a CWD carrying the
+  ## anchor IS that root (a tree-external binary run from inside the repo
+  ## resolves the repo), else the legacy fallback — "" is returned only when
+  ## even the fallback is empty, never as a CWD-relative "root".
   let envRoot = getAxiomEnv(evRoot)
   if envRoot.len > 0:
     # Normalize: strip trailing separators
@@ -32,18 +38,27 @@ proc findRepoRoot*(startDir: string = getAppDir()): string {.raises: [], axiomEf
     while result.len > 1 and result[^1] == '/':
       result = result[0 .. ^2]
     return result
-  result = startDir
+  var current = startDir
   for _ in 0..10:
+    if current.len == 0:
+      break  # Q-013: an empty current would probe the CWD relatively
     try:
-      if fileExists(result / axiomRoot):
-        return result
+      if fileExists(current / axiomRoot):
+        return current
     except CatchableError:
       discard  # axiom:best-effort(ioboundary catch)
-    let parent = parentDir(result)
-    if parent == result:
+    let parent = parentDir(current)
+    if parent.len == 0 or parent == current:
       break
-    result = parent
-  # Fallback: one level up (legacy compat for bin/ layout)
+    current = parent
+  # Walk exhausted (DEBT#550): resolve the root explicitly — CWD anchor
+  # first, then the documented one-level-up fallback for bin/ layout.
+  try:
+    let cwd = getCurrentDir()
+    if cwd.len > 0 and fileExists(cwd / axiomRoot):
+      return cwd
+  except CatchableError:
+    discard  # axiom:best-effort(ioboundary catch)
   result = parentDir(startDir)
 # @axiom-hint: smt="vacuous_primitive"  # axiom:certified-exempt(import-heuristic; annotate-then-purge DEBT#303)
 proc axiomConfigPath*(startDir: string = ""): string {.raises: [], axiomEffect: IOEffect.} =
