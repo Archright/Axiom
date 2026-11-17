@@ -179,9 +179,10 @@ jobs:
           fi
 
       # ── canary deny training — 같은 토큰으로 merge-affecting WRITE 시도 → 거부 캡처 ──
-      # TEST 대상만. 운영 main 병합·운영 ruleset(20303214) PUT은 스크립트가 거부한다.
+      # TEST 대상만. 운영 main 병합·운영 ruleset(현행 27097366) PUT은 스크립트가 거부한다.
       # [2026-11-07 매핑 — v1.19.0] 20303214은 구 저장소 id — 현행 Trust Anchor는
-      # 26702792(동적 발견 없이 상수, drills 전 가드 검증 포함: m7_canary_drill.sh).
+      # 27097366(동적 발견 없이 상수, drills 전 가드 검증 포함: m7_canary_drill.sh
+      # PROD_RULESET_ID="27097366"; 26702792·26996019·24233738은 역사적 id).
       - name: "[canary] Deny drill — merge-affecting writes MUST be denied (TEST targets only)"
         if: ${{ inputs.run_canary == 'true' }}
         env:

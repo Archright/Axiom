@@ -58,11 +58,12 @@
 # 슬라이스 검증이 epoch의 semantics다.
 #
 # required check context = admission-check (JOB NAME) 불변 — 이 파일의
-# 존재 조건. org ruleset 24233738(axiom-admission-gate)이 이 파일을
-# ref: main(가변)으로 참조하며, 불변 SHA pin은 Archright/Axiom
-# docs/spec/admission-generation.md의 promotion 절차로 적용한다.
-# Axiom repo ruleset 20303214의
-# required_status_checks == ["admission-check"]가 verdict를 소비한다.
+# 존재 조건. 본 파일은 repository-native 오케스트레이터다 (PR #134 반입 —
+# org-injected가 아니며 org ruleset이 이 파일을 참조·고정하지 않는다:
+# org ruleset 25218071(axiom-admission-gate)·23943917(landing-integrity)은
+# 2026-11-17 폐기, ADR-0041). repository ruleset 27097366("main", active)의
+# required_status_checks 7개 context가 admission-check를 포함해 verdict를
+# 소비한다 (구 id 20303214·24233738·26702792·26996019 는 모두 역사적).
 # required check 이름·bypass_actors·enforcement 공백은 전부 불변.
 #
 # 구 엔진(5-job DAG: closure-deriver / gateway / tree-identity /
@@ -167,11 +168,13 @@ jobs:
   #     old-anchor sanity(derived(B)==pin@B)도 재도입하지 않는다. 판정은
   #     callee verdict의 소관(closureEqual 3중 등식 + L1/L2)이며, 여기서는
   #     사실(B/H/pin@H/도출 결과)을 결정론적으로 게시만 한다.
-  #   운영 참고: 본 워크플로는 org ruleset(axiom-admission-gate)의 required
-  #     workflow로 Axiom 저장소의 PR/MG 이벤트에서 실행된다. .github 저장소
-  #     자체 PR에서는 이벤트 B/H가 org 커밋이라 B 트리에 Axiom 경로가 없어
-  #     본 job이 fail-closed red — self-PR 런은 기존에도 전부 failure였던
-  #     상태와 동일(필수 체크는 pin-promotion-gate가 별도)이다.
+  #   운영 참고: 본 워크플로는 repository ruleset 27097366("main", active)의
+  #     required context를 생산하는 repository-native 오케스트레이터로 Axiom
+  #     저장소의 PR/MG 이벤트에서 실행된다(org ruleset(axiom-admission-gate)
+  #     required workflow 시절의 서술은 2026-11-17 폐기(ADR-0041) 이전
+  #     역사 — .github 저장소 self-PR에서 이벤트 B/H가 org 커밋이라 B
+  #     트리에 Axiom 경로가 없어 본 job이 fail-closed red였다는 관찰도 그
+  #     시절 기록이다. 필수 체크는 pin-promotion-gate가 별도).
   # ──────────────────────────────────────────────────────────────
   # anchor-resolve — DAG-head job (Stage 2 단일 앵커 B*, PR venue 전용).
   # PR venue에서만 실행되며, dispatch 시점의 live main ref tip을 딱 한 번
@@ -588,7 +591,8 @@ jobs:
 
   # ──────────────────────────────────────────────────────────────
   # admission-check — verdict. name = required check context
-  # (repo ruleset 20303214 required_status_checks == ["admission-check"]),
+  # (repo ruleset 27097366 "main" required_status_checks — 7 contexts,
+  # admission-check 포함; 구 id 20303214은 역사적),
   # 절대 불변.
   # callee result 단일 판정: success만 GREEN, 그 외(skipped/cancelled/
   # failed)는 exit 1 fail-closed "never green" — 구 verdict 1단계 패턴

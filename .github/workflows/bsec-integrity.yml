@@ -34,7 +34,8 @@
 #     admission-check.yml CHECK NAMES vs RequiredChecks comment).
 #   * NO concurrency block (B3 precedent, admission-check.yml:162-167): a
 #     cancelled required check reports no conclusion; run-level orchestration
-#     belongs to the org gate, not to this file.
+#     belongs to the admission orchestrator (repository-native
+#     .github/workflows/admission-gate-v2.yml), not to this file.
 #
 # Least privilege / supply-chain hardening:
 #   * `permissions: contents: read` ONLY — no secrets access, no write token.

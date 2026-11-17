@@ -41,8 +41,10 @@
 #   repo ruleset 읽기는 워크플로 `permissions:` 키에 administration 항목이
 #   없음에도 job의 GITHUB_TOKEN으로 성립한다(실측 2026-10-21, drift run
 #   39603184495 — ruleset drift 4/4 PASS). 거기에 머뭄이 아니라
-#   org ruleset·bypass actor는 Administration org write가 필요해 GPA의
-#   조회 범위 밖이다 → operator-adapter 티어(ADR-0036 §4).
+#   [2026-11-17 — ADR-0041] 현행 강제는 repository ruleset 27097366("main",
+#   bypass_actors [])이다 — repo 범위 관리라 org write가 불필요하다(Free
+#   플랜). org ruleset·bypass actor 관리는 Administration org write가
+#   필요해 GPA의 조회 범위 밖이다 → operator-adapter 티어(ADR-0036 §4).
 #
 # 외부 action은 커밋 SHA 고정(repo 정책 sha_pinning_required).
 

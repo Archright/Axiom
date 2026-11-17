@@ -38,7 +38,10 @@ axiomLayer "presentation"
 ##   base while the PR snapshot lags behind it, so a live anchor made every
 ##   landing PR invalidate every other open PR (STALE_BASE false deny).
 ## * **Rotation/closure adjudication (Phase 4, ADR-0025 §7/§13 + Amendment F
-##   2026-10-12)**: when the org gate supplies derived closure line-files
+##   2026-10-12)**: when the admission orchestrator (the repository-native
+##   .github/workflows/admission-gate-v2.yml, moved into this repository by
+##   PR #134 — historically the org gate, whose org rulesets were retired
+##   2026-11-17; see ADR-0041) supplies derived closure line-files
 ##   (AXIOM_DERIVED_H_PATH / AXIOM_DERIVED_B_PATH / AXIOM_DERIVED_M_PATH —
 ##   deriver format; M = the candidate tree merge-tree(B, H) whose equality
 ##   with the tested landing candidate the gate verified) + the H-side pin
@@ -117,8 +120,11 @@ import core/trusted/layer_enforcement
 # check contexts are the declared seven ('admission-check', 'bsec-integrity',
 # 'debt-registry-gate', 'generation-acceptance', 'axiom-operational-slice',
 # 'publication-integrity', 'readiness-verdict' — the resolved "main"
-# ruleset's required_status_checks, all integration_id 15368 = the GitHub
-# Actions app — the app-level producer control; readiness-verdict registers
+# ruleset's required_status_checks: six contexts produced by
+# integration_id 15368 = the GitHub Actions app, 'admission-check' by the
+# independent GitHub App axiom-admission-verifier (app id 5795152 — the
+# policy SSOT's requiredCheckSources.byContext; ADR-0041) — the app-level
+# producer control; readiness-verdict registers
 # as the 7th context by the operator ruleset PUT after PR-A lands — the
 # v1.23.0 activation order, DEBT#537).
 # Check-evidence evaluation is GitHub's ruleset authority at merge time (P12
@@ -129,7 +135,9 @@ import core/trusted/layer_enforcement
 # identified by NAME resolution ("main") since the hybrid authority
 # rotation — the numeric ruleset id 20303214 belonged to the OLD repository
 # (preserved as <legacy-repo>) and 404s under the recreated one
-# (observed: 26702792, 2026-11-07).
+# (observed: 26702792, 2026-11-07; current repository ruleset 27097366,
+# name "main", active — 2026-11-17, ADR-0041: the merge authority, merge
+# queue MERGE/ALLGREEN).
 # ---------------------------------------------------------------------------
 const
   RequiredChecks*: seq[string] = @[
@@ -145,11 +153,16 @@ const
   ## platform's app-level control (integration_id 15368). NOT a merge-time
   ## re-verification: the predicate deliberately does not collect check-runs
   ## nor re-verify producer identity (ADR-0025 Amendment B / P12; ADR-0035 §1).
-  ## admission-check's CONTEXT producer is the ORG-INJECTED workflow
-  ## Archright/.github admission-gate-v2.yml (repository_id 1182157951,
-  ## sha-pinned by org ruleset 25218071) — it is not expressible as a repo
-  ## workflow and is recorded in the policy SSOT's
-  ## requiredWorkflowDetection.
+  ## admission-check's CONTEXT producer is the independent GitHub App
+  ## axiom-admission-verifier (app id 5795152, ADR-0041): the App verifies
+  ## the orchestrator run and publishes the check, so a PR defining its own
+  ## same-named job cannot satisfy the context. The orchestrator is the
+  ## REPOSITORY-NATIVE .github/workflows/admission-gate-v2.yml
+  ## (repository_id 1454952493, moved into this repository by PR #134),
+  ## recorded in the policy SSOT's requiredWorkflowDetection. Historically
+  ## the workflow was ORG-INJECTED at Archright/.github (repository_id
+  ## 1182157951, sha-pinned by org ruleset 25218071) — the org rulesets
+  ## are retired (2026-11-17, ADR-0041: 403 under the free org plan).
   ## HYBRID AUTHORITY ROTATION (policy v1.19.0, 2026-11-07): the binding
   ## identity is the workflow PATH — a repository-scoped numeric workflow id
   ## is reassigned whenever the repository is recreated (clean-origin
@@ -195,8 +208,10 @@ const
   ## — update together (the mirror gate enforces the pair).
   VaultCertRequired*: bool = true
   ## Rotation/closure adjudication (ADR-0025 §7/§13, plan Phase 4) — env-gated
-  ## inputs. The org gate supplies the deriver's closure line-files plus the
-  ## H-side pin; env absent = qualification UNSPECIFIED → the verdict
+  ## inputs. The admission orchestrator (the repository-native
+  ## .github/workflows/admission-gate-v2.yml — historically the org gate,
+  ## retired 2026-11-17, ADR-0041) supplies the deriver's closure line-files
+  ## plus the H-side pin; env absent = qualification UNSPECIFIED → the verdict
   ## fail-closes (ROT_UNSPECIFIED). Mirrors the gate's derived-sets contract —
   ## config/policy/merge_admission.json has no field for this (B-built code
   ## only, no new authority).
@@ -796,7 +811,9 @@ func parseTrustSurfaceJson*(node: JsonNode): Result[seq[string], string] {.raise
 # ---------------------------------------------------------------------------
 # Rotation/closure adjudication (ADR-0025 §7/§13 + Amendment F) — pure core
 # ---------------------------------------------------------------------------
-# Env-gated Pass: when the org gate supplies the deriver's closure line-files
+# Env-gated Pass: when the admission orchestrator (the repository-native
+# .github/workflows/admission-gate-v2.yml — historically the org gate,
+# retired 2026-11-17, ADR-0041) supplies the deriver's closure line-files
 # (AXIOM_DERIVED_H_PATH / AXIOM_DERIVED_B_PATH / AXIOM_DERIVED_M_PATH —
 # `<mode> <type> <sha>\t<path>` linetext, byte-sorted; the M file is the
 # derived closure OF the candidate tree merge-tree(B, H), supplied only after
@@ -2056,8 +2073,11 @@ proc collectAdmissionFacts*(prNumber: int; token: string; eventBaseSha: string; 
       hits.add(hit.get)
 
   # (5b) Rotation/closure adjudication (ADR-0025 §7/§13 + Amendment F) —
-  # env-gated: the org gate supplies derived closure line-files (H / B / the
-  # candidate-delta M leg) + the H-side pin via env. Env absent → ok(none) →
+  # env-gated: the admission orchestrator (the repository-native
+  # admission-gate-v2.yml, whose admission-check.yml verdict stage downloads
+  # the derived-closure artifact and exports these env vars) supplies
+  # derived closure line-files (H / B / the candidate-delta M leg) + the
+  # H-side pin via env. Env absent → ok(none) →
   # qualification UNSPECIFIED → the VERDICT fail-closes (Pass 2.97
   # ROT_UNSPECIFIED). Run-level input failures (partial supply, unreadable
   # derived file, pin@B parse failure, incomplete listing) RAISE —

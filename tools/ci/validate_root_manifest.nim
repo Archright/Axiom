@@ -151,10 +151,13 @@ const PatternAllowedEnvs: seq[string] = @[
 const CanonicalBinNames: seq[string] = @["ax", "run_gate", "axiom-gate"]
 
 # bin/ compatibility placeholders — tracked files whose only job is to make
-# `bin/` exist in a fresh checkout. The org admission-gate pins its callees at
-# immutable SHAs (Archright/.github admission-gate-v2.yml → certificate-mint.yml
+# `bin/` exist in a fresh checkout. The repository-native admission
+# orchestrator (.github/workflows/admission-gate-v2.yml — repo-native since
+# PR #134; the org-injected Archright/.github era is retired, ADR-0041)
+# pins its callees at immutable SHAs (→ certificate-mint.yml
 # @c021c338, which installs `$GITHUB_WORKSPACE/bin/ax` with no `-D` and no
-# `mkdir`), so `bin/` must exist for a consumer Axiom cannot edit. Removing the
+# `mkdir`), so `bin/` must exist for a consumer the repo cannot edit without
+# a pin rotation (trust-surface change, App-verified). Removing the
 # placeholder before that pin moves breaks every merge-queue admission.
 # Exit condition: drop this list and bin/.gitkeep once the DEBT#473 epoch
 # promotion moves that pin past the `mkdir -p "$GITHUB_WORKSPACE/bin"` guard.

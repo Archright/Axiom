@@ -32,7 +32,7 @@
 ##     labelled, distinct from a zero-match REJECTED).
 ## The m7 canary guard (tools/ci/m7_canary_drill.sh) is deliberately
 ## EXEMPT from this dynamic resolution: its PROD_RULESET_ID is a Trust
-## Anchor constant (26702792) — a canary must never discover its own
+## Anchor constant (27097366) — a canary must never discover its own
 ## protection target at runtime.
 ##
 ## EXPECTED ruleset semantics (binding): the ruleset is the merge-admission
@@ -44,13 +44,18 @@
 ##   - merge_queue                with parameters.merge_method == "MERGE"
 ##                                (the automatic landing path);
 ##   - required_status_checks     EXACTLY the policy-derived context set —
-##                                the LIVE three (ADR-0035, 2026-10-21):
+##                                (ADR-0035 recorded the LIVE three,
+##                                2026-10-21; the 2026-11-17 ruleset
+##                                27097366 carries 7 contexts — the set is
+##                                policy-derived, never hardcoded here):
 ##                                  "admission-check"     = merge eligibility
 ##                                    / trust-boundary verdict (produced by
-##                                    the ORG-INJECTED workflow
-##                                    Archright/.github admission-gate-v2.yml —
-##                                    workflow_id 386419787, repository_id
-##                                    1182157951 — see the policy SSOT's
+##                                    the repository-native orchestrator
+##                                    .github/workflows/admission-gate-v2.yml —
+##                                    requiredWorkflowDetection.repositoryId
+##                                    1454952493, expected source App
+##                                    5795152 (axiom-admission-verifier) — see
+##                                    the policy SSOT's
 ##                                    requiredWorkflowDetection);
 ##                                  "bsec-integrity"      = record integrity
 ##                                    of the D2 verdict protocol
@@ -120,8 +125,9 @@
 ##
 ## DRIFT DETECTION IS NOT MERGE-TIME ENFORCEMENT: this monitor is post-hoc
 ## monitoring (ADR-0035 §4). Merge-time enforcement stays with the platform
-## (the ruleset's required status checks + the org ruleset's sha-pinned
-## workflows rule). The monitor never blocks a merge and never mutates any
+## (the repository ruleset's required status checks; the org ruleset's
+## sha-pinned workflows rule is retired with the org rulesets — deleted
+## 2026-11-17, ADR-0041). The monitor never blocks a merge and never mutates any
 ## GitHub state — it only GETs and judges.
 ##
 ## NOT expectations (semantics fix 2026-10-12 — parameter-role table in
@@ -207,9 +213,9 @@ const
   ## rotation, policy v1.19.0, 2026-11-07). The pre-rotation numeric constant
   ## 20303214 belonged to the OLD repository (preserved as
   ## <legacy-repo>) and 404s under the recreated repository; the
-  ## live id is discovered per run by resolveMainRuleset (26702792 as
-  ## measured 2026-11-07 — the observed-at record lives in the policy SSOT,
-  ## not in this code).
+  ## live id is discovered per run by resolveMainRuleset (27097366 as
+  ## measured 2026-11-17 — the observed-at record lives in the policy SSOT,
+  ## not in this code; 26702792·26996019·24233738 are historical ids).
   DefaultRulesetName* = "main"
   ## The default branch whose rules the resolved ruleset must target
   ## (cross-validation endpoint: repos/<repo>/rules/branches/main).
@@ -390,7 +396,8 @@ func expectedStatusContexts*(policy: JsonNode): seq[string] {.raises: [].} =
   ##   requiredValidations[].job  UNION  requiredWorkflowDetection.verdictJob
   ## The union is the point: the repo-native producers are recorded as
   ## requiredValidations entries (path + workflowId + job), while the
-  ## org-injected producer of the 'admission-check' context is recorded as
+  ## repository-native orchestrator (the 'admission-check' context
+  ## producer, repository id 1454952493) is recorded as
   ## requiredWorkflowDetection (repository id + path + verdictJob) — the
   ## callee admission-check.yml (workflowId 365692388) never emits a
   ## check-run named 'admission-check', so it is not (and must not be) a

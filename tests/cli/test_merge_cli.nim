@@ -14,7 +14,8 @@
 ## deliberately does NOT collect check-runs, does NOT re-derive required
 ## status checks and does NOT re-verify producer identity. That is the
 ## platform's merge-time authority (repository ruleset required status
-## checks + the org ruleset's sha-pinned required workflow); re-implementing
+## checks + the App-published admission-check context; the org ruleset's
+## sha-pinned required workflow is retired, ADR-0041); re-implementing
 ## it here would be a duplicate of a platform guarantee — and, per ADR-0025
 ## Amendment B, was removed on 2026-09-29 for exactly that reason. The four
 ## walls against re-introducing it are recorded in ADR-0035 §1.
