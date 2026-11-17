@@ -1,7 +1,8 @@
 ## fetch_z3.nim — Download and restore Z3 4.13.3 pre-built binaries for Linux/macOS/Windows
-## vendor/z3/ contains LFS-tracked binaries that are not available on the remote.
-## This script fetches the official Z3 release from GitHub and restores the
-## expected files into vendor/z3/ (bin/z3, lib/libz3.so*, include/z3.h).
+## vendor/z3/ is untracked local content (gitignored via `vendor/*`, not
+## LFS-tracked). This script materializes it from the official Z3 release
+## on GitHub after SHA-256 verification, restoring the expected files into
+## vendor/z3/ (bin/z3, lib/libz3.so*, include/z3.h).
 ##
 ## Usage: nim c -r tools/fetch_z3.nim [--sha256=<hex>] [--force]
 ## axe:v2 (artifact identity manifest)
