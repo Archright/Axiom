@@ -1,9 +1,22 @@
 # Z3 Static Linking Architecture
 
-## Overview
-Axiom uses Z3 SMT solver via C API FFI bindings. The build system supports both shared (libz3.so) and static (libz3.a) linking.
+> **STATUS: REMOVED (v30)**
+> Z3 FFI — including both the shared (`libz3.so`) and static (`libz3.a`) linking
+> described in this document — was completely removed on 2026-07-02 (see
+> `docs/spec/z3_ffi_architecture.md` §10). All Z3 solver interactions now use
+> the CLI subprocess path via `src/verification/solver/z3_pool.nim`
+> (`startProcess("z3", ["-smt2", "-in"])`). Z3 is an external binary pin
+> (4.13.3, declared in `src/core/config/toolchain_config.nim`, resolved at
+> runtime by `resolveZ3Path()` in `src/core/types/z3_solver_config.nim`) and is
+> not linked into `bin/ax`. `vendor/z3/` is untracked local content (gitignored
+> via `vendor/*`); `tools/fetch_z3.nim` materializes it from the upstream Z3
+> release after SHA-256 verification.
+> **Historical reference only** — the linking paths below are no longer active.
 
-## Current State (Bridge Phase)
+## Overview
+Axiom **used to** access the Z3 SMT solver via C API FFI bindings. The build system **supported** both shared (libz3.so) and static (libz3.a) linking.
+
+## Historical State (Bridge Phase)
 - **Default**: Shared library (`libz3.so`) with `$ORIGIN` rpath
 - **Library location**: `vendor/z3/lib/libz3.so`
 - **Runtime dependency**: `libz3.so` must be findable via rpath or `LD_LIBRARY_PATH`
