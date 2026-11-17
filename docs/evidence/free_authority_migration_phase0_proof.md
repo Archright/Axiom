@@ -420,7 +420,7 @@ gh api -X PUT repos/Archright/Axiom/actions/permissions/fork-pr-contributor-appr
 | 설정 | before | after |
 |---|---|---|
 | Actions permissions | `{"enabled":true,"allowed_actions":"all","sha_pinning_required":true}` | `{"enabled":true,"allowed_actions":"selected","sha_pinning_required":true}` |
-| Selected actions | (해당 없음 — 전체 허용) | `{"github_owned_allowed":true,"verified_allowed":false,"patterns_allowed":["dependabot/fetch-metadata@*"]}` |
+| Selected actions | (해당 없음 — 전체 허용) | `github_owned_allowed=true`, `verified_allowed=false`, `patterns_allowed`=아래 6패턴 |
 
 적용 순서가 중요하다: `allowed_actions: all` 상태에서 `selected-actions`를 먼저
 쓰면 HTTP 409(`All actions and workflows are allowed on this repository`)다.
@@ -469,7 +469,7 @@ allowlist는 기능 파손 없이 나머지 제3자 action을 fail-closed로 만
   fail-closed 선택이다.
 
 이 설정은 **새 정책의 도입이 아니라 기존 정책의 플랫폼 집행**이다. `.github/`
-아래 `.github/`의 `uses:` 참조는 전수 40-hex 커밋 SHA로 고정되어 있다(113/113,
+아래의 `uses:` 참조는 전수 40-hex 커밋 SHA로 고정되어 있다(113/113,
 `grep -rhoE "^\s*uses:\s*[A-Za-z0-9_.\/-]+@[A-Za-z0-9_.-]+" .github`로 실측).
 따라서 `sha_pinning_required=true`는 저장소가 이미 선언한 핀 정책에 GitHub의
 거부권을 붙인다 — 통과하던 참조가 새로 거부되는 경우는 없다.
