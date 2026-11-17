@@ -5473,11 +5473,14 @@
         "Makefile"
       ],
       "source": "theater_audit",
-      "status": "open",
-      "resolution": "UNRESOLVED — two separate decisions: (a) refresh the evidence after the structural changes settle; (b) decide whether readiness freshness is an admission requirement, and if so wire it into an enforced gate rather than leaving the claim unenforced.",
-      "lastVerifiedAt": "2026-11-14T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-16 (PR #121 rotation landing merge e3ec8ae + operator ruleset PUT activation): readiness verdict is wired into an enforced gate — the readiness-verdict job (.github/workflows/axiom-operational-slice.yml) is registered as the 7th required context on ruleset 27097366, with the policy mirror (config/policy/merge_admission.json v1.23.0) and src/cli/merge_cli.nim double-bound in the same PR (ADR-0037 §6 pattern). Evidence freshness is maintained per-run by the collector (tools/ci/readiness_collect_ci.nim -> R1-R8 with collection.freshUntil). Enforcement is machine-observed, not declared: NO-GO -> sole-blocker FAILURE -> BLOCKED (PR #124), cancelled != success -> BLOCKED (PR #126), E2E-lane failure blocks via its own required check (PR #125, authority separation).",
+      "lastVerifiedAt": "2026-11-16T17:31:23Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is a data artifact plus a Makefile target, outside the src/-only marker scan; trace: this entry's contentHash over R1.json and the Makefile wiring audit."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is a data artifact plus a Makefile target, outside the src/-only marker scan; trace: this entry's contentHash over R1.json and the Makefile wiring audit.",
+      "resolvedAt": "2026-11-17",
+      "resolvedBy": "Kimi Code CLI agent (user-authorized, MUST-T2a 2026-11-16)",
+      "resolutionNote": "Resolution evidence chain: production run 43911956696 green on merge commit e3ec8ae (CONDITIONAL GO, R7=FAIL, decisionDigest 0bcb25bd79286b356ee382278acf55a60f9eac9f381883a6e61a0ec318f1377b identical to the PR self-run digest); third-party cold-lane replay (spec §6) reproduced verdict and decisionDigest byte-identically except evaluationTime; activation manifest data/promotions/readiness-verdict-activation/manifest.json (validate_manifest rel_1 merge_group absence honestly recorded — rotation landing); full evidence E1-E6 under docs/evidence/readiness_required_check_activation/."
     },
     {
       "id": "DEBT#538",
