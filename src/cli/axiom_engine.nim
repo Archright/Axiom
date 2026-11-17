@@ -63,6 +63,7 @@ import verification/obligation/candidate_eligibility
 import verification/obligation/verification_decision_authority
 import verification/obligation/identity
 import verification/obligation/lean_kernel_boundary
+import verification/obligation/kernel_acceptance_authority
 import verification/obligation/canonical_verification
 import verification/counterexample_replay
 import core/trusted/env_access
@@ -637,6 +638,14 @@ proc runBatchVerification*(
   # Reference COPY of already-decided records (no new authority); the wave
   # loop merges these into the run's unitEvidence map and nothing here is
   # persisted beyond the display block the builder derives from it.
+  # DEBT#531 closure: the §2.1 vdVerified conjunct rides the SAME projection —
+  # `r.evidence` is the sealed CanonicalLeanEvidence the IR pipeline sets
+  # exclusively on the canonical-success branch (VDA evaluate → vdVerified ∧
+  # subject-bound seal; ir_pipeline_runner.nim), so its presence IS the
+  # VDA-decided verified state (the loop_driver verified=true precedent). The
+  # spelling is written only here, from the typed carrier — never from a
+  # certificate-status string (certLeanVerified can never mint it) — and the
+  # sealed evidence's identity digests ride beside it as the audit binding.
   block unitEvidenceProjection:
     var unitEvidence = newJObject()
     for r in irResults:
@@ -651,6 +660,15 @@ proc runBatchVerification*(
         node["evidenceId"] = %c.evidenceId
         node["obligationId"] = %c.obligationId
         node["specificationId"] = %c.specificationId
+      if r.evidence.isSome:
+        let ev = r.evidence.get()
+        node["verificationDecision"] = %verificationDecisionVerifiedSpelling
+        node["canonicalEvidence"] = %*{
+          "obligationId": ev.cleObligationId(),
+          "propositionHash": ev.clePropositionHash(),
+          "leanSourceHash": ev.cleLeanSourceHash(),
+          "kaaDigest": ev.cleKaaDigest(),
+          "toolchainFingerprint": ev.cleToolchainFingerprint()}
       if r.counterExample.len > 0:
         node["counterExample"] = %r.counterExample
       if node.len > 0:
@@ -2724,7 +2742,7 @@ proc collectDisplayGrounds(specId: string; overlay: JsonNode):
 proc collectUnitQuartet(runResult: CanonicalRunResult; unitEvidence: JsonNode;
     targetSymbol: string): tuple[rowStatus: string; claimOutcome: string;
     quartetComplete: bool; quartetPayloadDigest: string;
-    quartetLines: seq[string]] {.
+    quartetLines: seq[string]; verificationDecision: string] {.
     raises: [CatchableError], axiomEffect: IOEffect,
     tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## ── §2.4d unit-scoped conjunction — the governed unit's own records ──
@@ -2734,17 +2752,21 @@ proc collectUnitQuartet(runResult: CanonicalRunResult; unitEvidence: JsonNode;
   ## missing element never completes the premise. The digest binds the raw
   ## quartet payload; `quartetLines` carries the verbatim payload lines as
   ## the persistence carrier (findingEvidence) — one producer, no
-  ## re-derivation elsewhere.
+  ## re-derivation elsewhere. `verificationDecision` is the unit's serialized
+  ## §2.1 vdVerified conjunct observation (the CanonicalLeanEvidence-backed
+  ## spelling — DEBT#531): consumed verbatim, never re-derived here.
   var rowStatus = ""
   for row in runResult.executionEvidence.observedRows:
     if row{"nodeId"}.getStr("") == targetSymbol:
       rowStatus = row{"status"}.getStr("")
       break
   var claimOutcome = ""
+  var verificationDecision = ""
   var quartetLines: seq[string] = @[]
   let unitNode = unitEvidence{targetSymbol}
   if not unitNode.isNil and unitNode.kind == JObject:
     claimOutcome = unitNode{"claimOutcome"}.getStr("")
+    verificationDecision = unitNode{"verificationDecision"}.getStr("")
     let ceNode = unitNode{"counterExample"}
     if not ceNode.isNil and ceNode.kind == JArray:
       for line in ceNode:
@@ -2765,11 +2787,13 @@ proc collectUnitQuartet(runResult: CanonicalRunResult; unitEvidence: JsonNode;
   let quartetComplete = g1.len > 0 and g2.len > 0 and g3.len > 0 and g4.len > 0
   let quartetPayloadDigest =
     if quartetLines.len > 0: sha256Hex(quartetLines.join("\n")) else: ""
-  (rowStatus, claimOutcome, quartetComplete, quartetPayloadDigest, quartetLines)
+  (rowStatus, claimOutcome, quartetComplete, quartetPayloadDigest, quartetLines,
+    verificationDecision)
 
 func machineEstablishedOf(unitLeg: tuple[rowStatus: string; claimOutcome: string;
     quartetComplete: bool; quartetPayloadDigest: string;
-    quartetLines: seq[string]]): bool {.raises: [].} =
+    quartetLines: seq[string]; verificationDecision: string]): bool {.
+    raises: [].} =
   ## The §2.4d unit-scoped machine conjunction — ONE definition shared by
   ## buildDisplayInput (RULE-axis premise) and the findingEvidence
   ## persistence (appendDisplayAndPersist). rowStatus is a RULE-axis premise
@@ -2785,7 +2809,7 @@ proc buildDisplayInput(runResult: CanonicalRunResult;
       assessment: GroundsAssessment];
     unitLeg: tuple[rowStatus: string; claimOutcome: string;
       quartetComplete: bool; quartetPayloadDigest: string;
-      quartetLines: seq[string]]):
+      quartetLines: seq[string]; verificationDecision: string]):
     BugVerdictDisplayInput {.
     raises: [CatchableError], axiomEffect: IOEffect,
     tags: [AxiomIOEffect, IOEffect, RootEffect].} =
@@ -2800,6 +2824,10 @@ proc buildDisplayInput(runResult: CanonicalRunResult;
   ## unit's quartet observation rides the carrier (quartetComplete feeds
   ## propositionVerdictOf's §2.2 conjunct; quartetLines is the persistence
   ## carrier, never a digest input — quartetPayloadDigest binds the payload).
+  ## The unit's serialized verification decision (§2.1's vdVerified conjunct,
+  ## DEBT#531) rides the machineTuple beside the run verdict — digest-bound
+  ## and co-displayed, consumed by propositionVerdictOf's positive
+  ## conjunction, never re-derived here.
   let verdictSpelling = $runResult.runOutcome.verdict
   let recordComplete = runResult.runOutcome.planComplete and
     runResult.runOutcome.executionComplete and
@@ -2807,7 +2835,8 @@ proc buildDisplayInput(runResult: CanonicalRunResult;
   let machineTuple = %*{
     "verdict": verdictSpelling,
     "basis": $runResult.runOutcome.basis,
-    "recordComplete": recordComplete}
+    "recordComplete": recordComplete,
+    "verificationDecision": unitLeg.verificationDecision}
   BugVerdictDisplayInput(
     machineEstablished: machineEstablishedOf(unitLeg),
     machineTuple: machineTuple,
@@ -6725,7 +6754,8 @@ proc appendDisplayAndPersist(prepared: PreparedRun; proofReport: var ProofReport
         continue
       # Attempted: the verdict projects from the SAME inputs the unit block
       # consumed (collectUnitQuartet + the run verdict) via the exported
-      # propositionVerdictOf — no second decision path.
+      # propositionVerdictOf — no second decision path. The 4th conjunct is
+      # the unit's serialized §2.1 vdVerified observation (DEBT#531).
       let unitLeg = collectUnitQuartet(runResult, waves.unitEvidence,
         winner.get.unitKey)
       propositionRollup.add(PropositionRollupDisplay(
@@ -6734,7 +6764,8 @@ proc appendDisplayAndPersist(prepared: PreparedRun; proofReport: var ProofReport
         capabilityReason: "",
         attempted: true,
         verdict: propositionVerdictOf(unitLeg.claimOutcome,
-          $runResult.runOutcome.verdict, unitLeg.quartetComplete)))
+          $runResult.runOutcome.verdict, unitLeg.quartetComplete,
+          unitLeg.verificationDecision)))
   let displayContainer = if unitBlocks.len > 0 or propositionRollup.len > 0:
     displayContainerJson(unitBlocks, propositionRollup)
   else:
