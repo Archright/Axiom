@@ -79,16 +79,20 @@
 ##                                certification subject partial).
 ##
 ## APP-LEVEL PRODUCER CONTROL (part of expectation 2): every required-status-
-## checks entry must carry integration_id == 15368 (the GitHub Actions App).
-## That is the platform's app-level producer control — only a check-run
-## produced by the Actions app can satisfy such a context. It does NOT close
-## the within-Actions same-name residual (a PR-side workflow may define a job
-## with the same name); that residual is closed on the Axiom side by the
-## policy SSOT's recorded workflow-identity bindings (requiredValidations
-## path + workflowId + job) — a RECORDED mirror for judgment reference, NOT a
-## merge-time re-verification (P12 delegation retained: the admission
-## predicate deliberately does not collect check-runs nor re-verify producer
-## identity — ADR-0025 Amendment B / ADR-0035 §1).
+## checks entry must carry the App id the policy declares for THAT context —
+## requiredCheckSources.byContext[context], else requiredCheckSources.default,
+## else the legacy GitHub Actions App id 15368. Policy v1.24.0 (free-authority
+## migration) assigns `admission-check` to the independent verifier App
+## 5795152 while the remaining contexts stay on the Actions app. The control
+## is the platform's app-level producer gate — only a check-run produced by
+## the expected App can satisfy such a context. It does NOT close the
+## within-Actions same-name residual for the remaining contexts (a PR-side
+## workflow may define a job with the same name); that residual is closed on
+## the Axiom side by the policy SSOT's recorded workflow-identity bindings
+## (requiredValidations path + job) — a RECORDED mirror for judgment
+## reference, NOT a merge-time re-verification (P12 delegation retained: the
+## admission predicate deliberately does not collect check-runs nor re-verify
+## producer identity — ADR-0025 Amendment B / ADR-0035 §1).
 ##
 ## THREE LEGS (ADR-0035 §3 — three copies of one fact are not an SSOT; the
 ## monitor is the three-way checker):
@@ -215,11 +219,16 @@ const
   ## The compiled-in constant mirror the policy is compared against
   ## (src/cli/merge_cli.nim RequiredChecks / RequiredWorkflowIds).
   DefaultMergeCliSource* = "src/cli/merge_cli.nim"
-  ## The GitHub Actions App id — the app-level producer control carried by
-  ## every required_status_checks entry of the live ruleset (measured
-  ## 2026-10-21: integration_id 15368 on all three contexts). Platform
-  ## constant, NOT a policy value: it identifies the PRODUCING APP, not a
-  ## repository-owned rule.
+  ## The GitHub Actions App id — the DEFAULT app-level producer control
+  ## carried by required_status_checks entries of the live ruleset
+  ## (measured 2026-10-21: integration_id 15368 on all three contexts). It is
+  ## NOT a policy value: it identifies the PRODUCING APP, not a
+  ## repository-owned rule. Since policy v1.24.0 the policy SSOT MAY override
+  ## the expected producer per context (requiredCheckSources.byContext) — the
+  ## independent verifier App owns the `admission-check` context after the
+  ## free-authority migration. An absent map keeps the legacy expectation
+  ## (every context from the Actions app), so older policies are judged on
+  ## their own shape rather than misread.
   ExpectedActionsAppId* = 15368
   ## Actionable guidance printed whenever any expectation drifts: until the
   ## ruleset matches EXPECTED, trust-surface PRs must not ride the
@@ -411,6 +420,54 @@ func expectedStatusContexts*(policy: JsonNode): seq[string] {.raises: [].} =
   contexts.sort()
   contexts
 
+type
+  CheckSource* = tuple[context: string, appId: int]
+    ## The expected PRODUCING APP of one required-check context. The policy
+    ## SSOT carries the authority (requiredCheckSources); this is the
+    ## compiled/parsed projection the judgments consume.
+
+func expectedCheckSourceId*(policy: JsonNode; context: string): int {.raises: [].} =
+  ## Pure: the expected producing App id for one context.
+  ##   requiredCheckSources.byContext[context]  (explicit override)
+  ##   requiredCheckSources.default             (policy-wide default)
+  ##   ExpectedActionsAppId                     (legacy policy shape, 15368)
+  ## The fallback is deliberate and bounded: a policy that predates v1.24.0
+  ## carries no map and is judged on ITS OWN shape (all contexts from the
+  ## Actions app) — never silently reinterpreted as the new authority. Once
+  ## the map exists, a missing per-context override means the DEFAULT, not
+  ## the platform constant.
+  let rcs = child(policy, "requiredCheckSources")
+  if not rcs.isNil and rcs.kind == JObject:
+    let byCtx = child(rcs, "byContext")
+    if not byCtx.isNil and byCtx.kind == JObject:
+      let v = child(byCtx, context)
+      if not v.isNil and v.kind == JInt:
+        return v.getInt()
+    let dflt = child(rcs, "default")
+    if not dflt.isNil and dflt.kind == JInt:
+      return dflt.getInt()
+  ExpectedActionsAppId
+
+func expectedCheckSources*(policy: JsonNode;
+                           contexts: seq[string]): seq[CheckSource] {.raises: [].} =
+  ## Pure: the per-context expected producer list of the policy-derived
+  ## expectation set. Always the same length/order as `contexts`; the
+  ## judgments consume this instead of hardcoding the Actions app.
+  for c in contexts:
+    result.add((context: c, appId: expectedCheckSourceId(policy, c)))
+
+func sourceFor*(sources: seq[CheckSource]; context: string;
+                fallback: int = ExpectedActionsAppId): int {.raises: [].} =
+  ## Pure: the expected producer for `context` in a projected source list.
+  ## An EMPTY list is the legacy shape (all contexts from the Actions app);
+  ## a non-empty list that lacks the context is a caller defect, and the
+  ## fail-closed fallback is the platform constant — never an assumption
+  ## that the context is unconstrained.
+  for s in sources:
+    if s.context == context:
+      return s.appId
+  fallback
+
 func contextList(contexts: seq[string]): string {.raises: [].} =
   ## Pure: render an expectation set for a message.
   if contexts.len == 0:
@@ -496,11 +553,13 @@ func conditionsTargetMain*(detail: JsonNode): bool {.raises: [].} =
   false
 
 func requiredChecksMatchPolicy*(detail: JsonNode;
-                                expectedContexts: seq[string]): bool {.raises: [].} =
+                                expectedContexts: seq[string];
+                                sources: seq[CheckSource] = @[]): bool {.raises: [].} =
   ## Pure: does the ruleset DETAIL's required_status_checks configuration
   ## match the policy-derived expectation — the exact context set AND the
-  ## app-level producer control (integration_id == the Actions App) on
-  ## every entry? This is the same judgment expectation 2 of
+  ## app-level producer control on every entry (the per-context expected
+  ## source when the policy carries requiredCheckSources, else the legacy
+  ## Actions app)? This is the same judgment expectation 2 of
   ## judgeRulesetDrift makes; the resolution runs it as a SELECTION
   ## condition (the resolved ruleset is THE admission surface, so a drifted
   ## configuration is a failed selection, judged below as DRIFT).
@@ -517,7 +576,7 @@ func requiredChecksMatchPolicy*(detail: JsonNode;
   for e in entries:
     if e.context notin expectedContexts:
       return false
-    if e.integrationId != ExpectedActionsAppId:
+    if e.integrationId != sourceFor(sources, e.context):
       return false
     seen.incl(e.context)
   seen.len == expectedContexts.len
@@ -541,7 +600,8 @@ func resolveMainRuleset*(pages: JsonNode; complete: bool;
                          details: seq[RulesetDetailFetch];
                          branchRules: JsonNode;
                          expectedContexts: seq[string];
-                         repoFullName: string): RulesetResolution {.raises: [].} =
+                         repoFullName: string;
+                         sources: seq[CheckSource] = @[]): RulesetResolution {.raises: [].} =
   ## Pure: the name-resolution verdict (RULESET IDENTITY semantics above).
   ## Deterministic stage order — incomplete pagination -> unparsable list ->
   ## list-level candidates -> per-candidate detail availability -> full
@@ -606,7 +666,7 @@ func resolveMainRuleset*(pages: JsonNode; complete: bool;
       if not conditionsTargetMain(d.body):
         result.lines.add("candidate " & $cid & ": conditions do not target " &
           "refs/heads/main — excluded")
-      elif not requiredChecksMatchPolicy(d.body, expectedContexts):
+      elif not requiredChecksMatchPolicy(d.body, expectedContexts, sources):
         result.lines.add("candidate " & $cid & ": required_status_checks " &
           "!= policy expectation " & contextList(expectedContexts) &
           " — excluded (drift; judged in detail by the ruleset leg)")
@@ -946,7 +1006,8 @@ func liveString(jn: JsonNode): string {.raises: [].} =
   else:
     "<unexpected>"
 
-func judgeRulesetDrift*(ruleset: JsonNode; expectedContexts: seq[string]):
+func judgeRulesetDrift*(ruleset: JsonNode; expectedContexts: seq[string];
+                        sources: seq[CheckSource] = @[]):
     DriftResult {.raises: [].} =
   ## Pure: judge one ruleset JSON against EXPECTED. Deterministic judgment
   ## order: merge_queue (merge_method) -> required_status_checks (exact
@@ -990,11 +1051,12 @@ func judgeRulesetDrift*(ruleset: JsonNode; expectedContexts: seq[string]):
         liveString(mm) & ")")
 
   # 2. required_status_checks: exactly the policy-derived context set, and
-  #    every entry carries the app-level producer control
-  #    (integration_id == the GitHub Actions App id). Fail-closed on the
-  #    ABSENCE of any expected context (the merge-eligibility verdict and the
-  #    two integrity gates), on any unexpected extra context, and on an
-  #    entry whose producing App differs.
+  #    every entry carries the policy-declared app-level producer control
+  #    (requiredCheckSources per context; the legacy Actions app id when the
+  #    policy predates the map). Fail-closed on the ABSENCE of any expected
+  #    context (the merge-eligibility verdict and the two integrity gates),
+  #    on any unexpected extra context, and on an entry whose producing App
+  #    differs from the expected one for THAT context.
   inc total
   let expectedText = contextList(expectedContexts)
   let rsc = ruleOfType(ruleset, "required_status_checks")
@@ -1012,12 +1074,14 @@ func judgeRulesetDrift*(ruleset: JsonNode; expectedContexts: seq[string]):
     var seen = initHashSet[string]()
     for c in expectedContexts:
       var found = false
+      let want = sourceFor(sources, c)
       for e in entries:
         if e.context == c:
           found = true
-          if e.integrationId != ExpectedActionsAppId and c notin seen:
+          if e.integrationId != want and c notin seen:
             seen.incl(c)
-            appMismatch.add(c & " (integration_id=" & $e.integrationId & ")")
+            appMismatch.add(c & " (expected=" & $want &
+              ", live=" & $e.integrationId & ")")
       if not found:
         missing.add(c)
     for e in entries:
@@ -1025,8 +1089,7 @@ func judgeRulesetDrift*(ruleset: JsonNode; expectedContexts: seq[string]):
         extras.add(e.context)
     if missing.len == 0 and extras.len == 0 and appMismatch.len == 0:
       result.lines.add("OK    required_status_checks: exactly " & expectedText &
-        " (app-level producer control: integration_id " &
-        $ExpectedActionsAppId & " on every entry)")
+        " (app-level producer control: policy-declared per-context source on every entry)")
       inc holds
     else:
       var why: seq[string] = @[]
@@ -1035,8 +1098,7 @@ func judgeRulesetDrift*(ruleset: JsonNode; expectedContexts: seq[string]):
       if extras.len > 0:
         why.add("unexpected extra context(s): " & extras.join(", "))
       if appMismatch.len > 0:
-        why.add("wrong producing App (expected integration_id " &
-          $ExpectedActionsAppId & "): " & appMismatch.join(", "))
+        why.add("wrong producing App: " & appMismatch.join(", "))
       result.lines.add("DRIFT required_status_checks: expected exactly " & expectedText &
         " — " & why.join("; ") & " (live: " & liveString(child(child(rsc,
         "parameters"), "required_status_checks")) & ")")
@@ -1079,7 +1141,8 @@ func judgeRulesetDrift*(ruleset: JsonNode; expectedContexts: seq[string]):
     result.ok = false
     result.suggestion = SuggestionText
 
-func judgeProducerObservation*(checkRuns: JsonNode; expectedContexts: seq[string]):
+func judgeProducerObservation*(checkRuns: JsonNode; expectedContexts: seq[string];
+                               sources: seq[CheckSource] = @[]):
     DriftResult {.raises: [].} =
   ## Pure: the ADDITIVE producer observation (not one of the four normative
   ## expectations). Reads the check-runs of an observed SHA and reports the
@@ -1108,6 +1171,7 @@ func judgeProducerObservation*(checkRuns: JsonNode; expectedContexts: seq[string
     var found = false
     var appId = -1
     var slug = ""
+    let want = sourceFor(sources, c)
     for cr in arr.items:
       if cr.isNil or cr.kind != JObject:
         continue
@@ -1127,13 +1191,13 @@ func judgeProducerObservation*(checkRuns: JsonNode; expectedContexts: seq[string
     if not found:
       result.lines.add("DRIFT producer observation: no check-run named \"" & c &
         "\" at the observed SHA (fail-closed — missing != clean)")
-    elif appId != ExpectedActionsAppId:
+    elif appId != want:
       var slugText = ""
       if slug.len > 0:
         slugText = " (" & slug & ")"
       result.lines.add("DRIFT producer observation: context \"" & c &
         "\" was produced by app id " & $appId & slugText &
-        " — expected the GitHub Actions app (id " & $ExpectedActionsAppId & ")")
+        " — expected app id " & $want & " for this context")
     else:
       result.lines.add("OK    producer observation: context \"" & c &
         "\" produced by app id " & $appId & " (" & slug & ")")
@@ -1303,9 +1367,12 @@ proc main() {.axiomEffect: IoEffect.} =
     stderr.writeLine("merge_ruleset_drift_monitor: FAIL — policy SSOT yields NO expected " &
       "required-check context (fail closed): " & policyFile)
     quit(1)
+  let sources = expectedCheckSources(policy, expected)
 
   echo "merge_ruleset_drift_monitor: policy SSOT " & policyFile &
     " — expected required-check contexts: " & contextList(expected)
+  for s in sources:
+    echo "  expected source: " & s.context & " <- app id " & $s.appId
 
   # ── leg 1: policy <-> constants (static; no credential, always performed) ──
   var mergeCliText = ""
@@ -1401,7 +1468,7 @@ proc main() {.axiomEffect: IoEffect.} =
         except JsonParsingError:
           branchRules = nil
       let resolution = resolveMainRuleset(pages, true, details, branchRules,
-        expected, repo)
+        expected, repo, sources)
       for line in resolution.lines:
         echo "  " & line
       case resolution.status
@@ -1426,7 +1493,7 @@ proc main() {.axiomEffect: IoEffect.} =
         echo "  " & SuggestionText
 
   if rulesetPerformed:
-    let verdict = judgeRulesetDrift(ruleset, expected)
+    let verdict = judgeRulesetDrift(ruleset, expected, sources)
     echo "merge_ruleset_drift_monitor: " & rulesetSource
     for line in verdict.lines:
       echo "  " & line
@@ -1449,7 +1516,7 @@ proc main() {.axiomEffect: IoEffect.} =
         echo "  DRIFT producer observation: unparsable check-runs JSON (fail closed)"
         ok = false
       if not checkRuns.isNil:
-        let obs = judgeProducerObservation(checkRuns, expected)
+        let obs = judgeProducerObservation(checkRuns, expected, sources)
         for line in obs.lines:
           echo "  " & line
         if not obs.ok:

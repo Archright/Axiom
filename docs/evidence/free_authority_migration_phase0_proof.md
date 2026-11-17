@@ -96,3 +96,66 @@ App 검증자의 `G` vs `B_mg` 비교로 성립한다:
 - `config/policy/trust_surface_manifest.json`의 모든 경로에서 `blob(G) == blob(B_mg)`
 - `B_mg`는 `refs/heads/main`의 조상이어야 함(`/compare/{B_mg}...main` ∈ {ahead, identical})
 - `B_mg`에서 manifest를 읽는다 — PR이 목록을 축소할 수 없다
+
+---
+
+## 8. Cutover 및 GPA 소비자 교정 (2026-11-17)
+
+### 8.1 Repository ruleset 전환 (실측)
+
+조직 ruleset 없이 repository ruleset만으로 `admission-check`의 생산자를 독립 App으로 고정했다.
+
+```text
+$ gh api repos/Archright/Axiom/rulesets/27097366 \
+    --jq '.rules[]|select(.type=="required_status_checks")|.parameters.required_status_checks'
+admission-check            5795152
+bsec-integrity             15368
+debt-registry-gate         15368
+generation-acceptance      15368
+axiom-operational-slice    15368
+publication-integrity      15368
+readiness-verdict          15368
+```
+
+`bypass_actors: []`, `enforcement: active`, merge queue `MERGE/ALLGREEN` 유지.
+
+### 8.2 1차 운영 수용 — PR #131
+
+- enqueue `2026-11-17T06:30:57Z` → merge group G=`c955dfce2cf0b74fd983e58d29b656427ccacbd5`
+- G 부모: `[e768b35c (main), 2bb53484 (PR head)]`
+- App check-run `133865295549`:
+
+```text
+trust_surface=PASS — 15 paths match base e768b35
+ledger=PASS — 1 entry bound to (base, pr_head)
+reasons=none
+```
+
+- native MERGE `2026-11-17T06:39:09Z`; `main` tip == G.
+
+### 8.3 발견 — GPA의 하드코딩된 15368
+
+negative-control PR #135(run `44032936628`)에서 GPA가
+`REJECTED:RULESET_UNAVAILABLE — L2 단계가 거부했다`로 실패했다. 원인은
+`.github/workflows/generation-acceptance.yml:446`의
+`$entries | all(.integration_id? == 15368)`이다. live ruleset의
+`admission-check`가 5795152가 되자 이름 해석 후보가 0건이 되어 fail-closed했다.
+이는 안전 측 실패(병합 차단)지만, 생성 표면 PR의 합법적 병합까지 막는 교착이다.
+
+### 8.4 교정 — policy v1.24.0 + 소비자 일반화
+
+`config/policy/merge_admission.json` v1.24.0:
+
+- `requiredCheckSources.default = 15368`, `byContext.admission-check = 5795152`
+- `requiredWorkflowDetection.repositoryId`: `1182157951` → `1454952493`
+- `verdictCheckSource`: App `5795152` / slug `axiom-admission-verifier`
+
+소비자 교정(모두 base 정책에서 유도, 후보가 자기 기준을 정의하지 못함):
+
+- GPA L2 이름 해석 + L4 합성 ruleset: `($src.byContext[.context] // $src.default)`
+- `tools/merge_ruleset_drift_monitor.nim`: leg 2/3가 `expectedCheckSourceId` 사용
+- `tools/ci/landing_observe.sh`: 동일 source map
+
+정책과 live ruleset은 교정 착지 시점에 이미 일치한다(§8.1의 readback). 따라서
+PR-A-then-PUT 창은 “정책이 15368을 선언하던 동안 live가 5795152였던 구간”이며,
+교정 PR이 그 창을 닫는다. 후속 §9가 착지 후 GPA·App·queue 관측을 기록한다.
