@@ -947,10 +947,13 @@ jobs:
           #   SL-20 surface     → [SL-20] repository surface admission
           #                       (attest stage only — B-built guard v2,
           #                       PR/MG equal verdict)
+          #   SL-21 producers   → [SL-21] producer closure admission
+          #                       (attest stage only — policy @B x G
+          #                       producer tuples, landing venue only)
           # NOTE: id regex allows SL-NN and SL-NNNN — SL-0713 is a SINGLE
           # catalog entry (SL-07 + SL-13 merged); 4-digit ids are valid.
           RPT="[slice-engine] epoch=$EPOCH implemented=$IMPL"
-          for spec in "sl08=SL-08" "sl01=SL-01" "sl02=SL-02" "sl03=SL-03" "sl05=SL-05" "sl15=SL-15" "sl20=SL-20"; do
+          for spec in "sl08=SL-08" "sl01=SL-01" "sl02=SL-02" "sl03=SL-03" "sl05=SL-05" "sl15=SL-15" "sl20=SL-20" "sl21=SL-21"; do
             key="${spec%%=*}"
             slice="${spec##*=}"
             if printf '%s' "$parsed" | jq -e --arg s "$slice" '.implementedSlices | index($s) != null' >/dev/null 2>&1; then
@@ -1119,6 +1122,414 @@ jobs:
               || { echo "[SL-20] surface verdict: FAIL"; exit 1; }
           fi
           echo "[SL-20] repository surface verdict: PASS"
+
+      # ────────────────────────────────────────────────────────────────
+      # [SL-21] Producer closure admission (attest, landing venue only).
+      # Contract: every context the policy at B binds (requiredValidations[]
+      # and requiredWorkflowDetection.verdictJob — 7 today) MUST be produced
+      # in G by exactly the (workflowPath, job) tuple the policy names, by a
+      # job that no dependency outcome can skip, from a workflow whose
+      # on.merge_group matches the queue event. G = _candidate (merge_group
+      # head); the policy is read from B by git object (Gate A direction,
+      # same as SL-20): a candidate cannot widen its own expected set.
+      # A `workflow_call`-only workflow publishes `<caller job> / <callee
+      # job>`, never a top-level context of its own name (measured pair:
+      # attest / admission-check != the required context admission-check),
+      # so callee jobs are outside the producer set. The non-skippable form
+      # is exactly `always()` or `!cancelled()` — the two dependency-failure
+      # safe forms; any other term can be false and would make the required
+      # check skippable.
+      # Stable reason codes: PRODUCER_POLICY_UNPARSABLE, ENUM_INCOMPLETE
+      # (PyYAML/file/duplicate-key/caps), PRODUCER_MISSING,
+      # PRODUCER_UNEXPECTED, PRODUCER_AMBIGUOUS, PRODUCER_SKIPPABLE,
+      # PRODUCER_TRIGGER_MISSING. No witness/attest payload member is
+      # emitted (payload shapes are pinned) — the signal is this step's exit
+      # code plus the PASS line.
+      # ────────────────────────────────────────────────────────────────
+      - name: "[check] [SL-21] Producer closure admission (B policy x G producer tuples)"
+        if: inputs.stage == 'attest' && steps.slice-engine.outputs.scope_sl21 == 'true'
+        run: |
+          set -euo pipefail
+          fail() { echo "[SL-21] FAIL — $1 (fail-closed)" >&2; exit 1; }
+          B="${{ inputs.baseSha || github.event.pull_request.base.sha || github.event.merge_group.base_sha }}"
+          printf '%s' "$B" | grep -qE '^[0-9a-f]{40}$' || fail "B='$B' not a 40-hex OID"
+          VENUE="${{ steps.venue.outputs.venue }}"
+          if [ -z "$VENUE" ]; then
+            case "${{ github.event_name }}" in
+              merge_group|workflow_call) VENUE=landing ;;
+              pull_request) VENUE=preflight ;;
+              *) fail "event_name '${{ github.event_name }}' — venue undeterminable" ;;
+            esac
+          fi
+          if [ "$VENUE" != "landing" ]; then
+            echo "[SL-21] advisory: PR venue — gate runs on merge_group only (ADR-0032)"
+            exit 0
+          fi
+          mkdir -p .axiom/sl21
+          git -C "$GITHUB_WORKSPACE" show "$B:config/policy/merge_admission.json" \
+            > .axiom/sl21/merge_admission.json \
+            || fail "PRODUCER_POLICY_UNPARSABLE — config/policy/merge_admission.json unreadable at B=$B"
+          [ -s .axiom/sl21/merge_admission.json ] \
+            || fail "PRODUCER_POLICY_UNPARSABLE — empty policy at B=$B"
+          CAND="$GITHUB_WORKSPACE/_candidate"
+          command -v python3 >/dev/null 2>&1 \
+            || fail "ENUM_INCOMPLETE — python3 not on PATH (enumeration cannot complete)"
+          python3 -c 'import yaml' 2>/dev/null \
+            || fail "ENUM_INCOMPLETE — PyYAML unavailable (enumeration cannot complete)"
+          if ! out="$(python3 - "$CAND/.github/workflows" .axiom/sl21/merge_admission.json \
+              .axiom/sl21/producers.tsv <<'PYEOF'
+          import fnmatch
+          import glob
+          import json
+          import os
+          import sys
+
+          MAX_FILES = 200
+          MAX_BYTES = 1048576
+
+          try:
+              import yaml
+          except Exception:
+              yaml = None
+
+          codes = []
+          reasons = []
+
+
+          def report_and_exit():
+              seen = []
+              for c in codes:
+                  if c not in seen:
+                      seen.append(c)
+              for r in reasons:
+                  sys.stdout.write("SL21_REASON " + r + "\n")
+              sys.stdout.write("SL21_FAIL_CODES " + " ".join(seen) + "\n")
+              sys.exit(1)
+
+
+          def bad(code, detail):
+              codes.append(code)
+              reasons.append(code + " " + detail)
+
+
+          def triggers_of(doc):
+              raw = doc.get("on", doc.get(True))
+              if isinstance(raw, dict):
+                  return raw
+              if isinstance(raw, list):
+                  return dict((k, None) for k in raw if isinstance(k, str))
+              if isinstance(raw, str):
+                  return {raw: None}
+              return {}
+
+
+          class DupKey(Exception):
+              pass
+
+
+          def load_strict(raw):
+              class StrictLoader(yaml.SafeLoader):
+                  pass
+
+              def construct_mapping(loader, node, deep=False):
+                  loader.flatten_mapping(node)
+                  seen = set()
+                  for key_node, _ in node.value:
+                      key = loader.construct_object(key_node, deep=deep)
+                      try:
+                          hash(key)
+                          marker = (type(key).__name__, key)
+                      except TypeError:
+                          marker = ("unhashable", repr(key))
+                      if marker in seen:
+                          raise DupKey("duplicate mapping key %r" % (key,))
+                      seen.add(marker)
+                  return yaml.SafeLoader.construct_mapping(
+                      loader, node, deep=deep)
+
+              StrictLoader.add_constructor(
+                  yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+                  construct_mapping)
+              return yaml.load(raw, Loader=StrictLoader)
+
+
+          def skip_safe(cond):
+              c = cond.strip()
+              if c.startswith("$" "{{") and c.endswith("}}"):
+                  c = c[3:-2].strip()
+              if len(c) >= 2 and c[0] == c[-1] and c[0] in "\"'":
+                  c = c[1:-1].strip()
+              return c in ("always()", "!cancelled()")
+
+
+          def merge_group_ok(trig):
+              if "merge_group" not in trig:
+                  return (False, "on.merge_group absent")
+              spec = trig["merge_group"]
+              if spec is None:
+                  return (True, "")
+              if not isinstance(spec, dict):
+                  return (False, "on.merge_group is not a mapping")
+              if "branches-ignore" in spec:
+                  return (False, "on.merge_group.branches-ignore cannot yield a positive match")
+              branches = spec.get("branches")
+              if branches is not None:
+                  pats = branches if isinstance(branches, list) else [branches]
+                  hit = False
+                  for p in pats:
+                      if not isinstance(p, str) or p.startswith("!"):
+                          continue
+                      if fnmatch.fnmatchcase("main", p) or \
+                              fnmatch.fnmatchcase("refs/heads/main", p):
+                          hit = True
+                  if not hit:
+                      return (False, "on.merge_group.branches excludes main")
+              types = spec.get("types")
+              if types is not None:
+                  tys = types if isinstance(types, list) else [types]
+                  if "checks_requested" not in tys:
+                      return (False, "on.merge_group.types excludes checks_requested")
+              return (True, "")
+
+
+          def main():
+              wf_dir, policy_file = sys.argv[1], sys.argv[2]
+              table_path = sys.argv[3] if len(sys.argv) > 3 else ""
+
+              try:
+                  with open(policy_file, encoding="utf-8") as fh:
+                      policy = json.load(fh)
+                  if not isinstance(policy, dict):
+                      raise ValueError("policy root is not an object")
+                  validations = policy.get("requiredValidations")
+                  detection = policy.get("requiredWorkflowDetection")
+                  if not isinstance(validations, list) or not validations:
+                      raise ValueError("requiredValidations missing/empty")
+                  if not isinstance(detection, dict):
+                      raise ValueError("requiredWorkflowDetection missing")
+                  expected = []
+                  for ent in validations:
+                      if not isinstance(ent, dict):
+                          raise ValueError("requiredValidations entry is not an object")
+                      wp, jb = ent.get("workflowPath"), ent.get("job")
+                      if not (isinstance(wp, str) and wp and
+                              isinstance(jb, str) and jb):
+                          raise ValueError("requiredValidations entry lacks workflowPath/job")
+                      expected.append((wp, jb))
+                  dwp = detection.get("workflowPath")
+                  djb = detection.get("verdictJob")
+                  if not (isinstance(dwp, str) and dwp and
+                          isinstance(djb, str) and djb):
+                      raise ValueError("requiredWorkflowDetection lacks workflowPath/verdictJob")
+                  expected.append((dwp, djb))
+              except Exception as exc:
+                  bad("PRODUCER_POLICY_UNPARSABLE",
+                      "policy unreadable/unparsable/empty expectation set at %s: %s"
+                      % (policy_file, exc))
+                  report_and_exit()
+
+              if yaml is None:
+                  bad("ENUM_INCOMPLETE",
+                      "PyYAML unavailable (python3 -c 'import yaml' failed)")
+                  report_and_exit()
+
+              if not os.path.isdir(wf_dir):
+                  bad("ENUM_INCOMPLETE", "workflow directory missing: " + wf_dir)
+                  report_and_exit()
+              files = sorted(glob.glob(os.path.join(wf_dir, "*.yml")) +
+                             glob.glob(os.path.join(wf_dir, "*.yaml")))
+              if not files:
+                  bad("ENUM_INCOMPLETE", "no workflow files under " + wf_dir)
+                  report_and_exit()
+              if len(files) > MAX_FILES:
+                  bad("ENUM_INCOMPLETE",
+                      "workflow count %d exceeds cap %d" % (len(files), MAX_FILES))
+                  report_and_exit()
+
+              repo_root = os.path.dirname(os.path.dirname(os.path.abspath(wf_dir)))
+              workflows = {}
+              records = []
+              for path in files:
+                  rel = os.path.relpath(os.path.abspath(path), repo_root)
+                  rel = rel.replace(os.sep, "/")
+                  try:
+                      size = os.path.getsize(path)
+                  except OSError as exc:
+                      bad("ENUM_INCOMPLETE", "%s unreadable: %s" % (rel, exc))
+                      continue
+                  if size > MAX_BYTES:
+                      bad("ENUM_INCOMPLETE",
+                          "%s exceeds per-file byte cap %d (%d bytes)"
+                          % (rel, MAX_BYTES, size))
+                      continue
+                  try:
+                      with open(path, "rb") as fh:
+                          raw = fh.read()
+                      doc = load_strict(raw)
+                  except DupKey as exc:
+                      bad("ENUM_INCOMPLETE",
+                          "%s duplicate mapping keys: %s" % (rel, exc))
+                      continue
+                  except Exception as exc:
+                      bad("ENUM_INCOMPLETE", "%s unparsable: %s" % (rel, exc))
+                      continue
+                  if not isinstance(doc, dict):
+                      bad("ENUM_INCOMPLETE", "%s root is not a mapping" % rel)
+                      continue
+                  jobs = doc.get("jobs")
+                  if not isinstance(jobs, dict):
+                      bad("ENUM_INCOMPLETE", "%s jobs missing/not a mapping" % rel)
+                      continue
+                  trig = triggers_of(doc)
+                  workflows[rel] = {
+                      "triggers": trig,
+                      "callee": set(trig.keys()) == {"workflow_call"},
+                  }
+                  for job_id, job in jobs.items():
+                      if not isinstance(job, dict):
+                          bad("ENUM_INCOMPLETE",
+                              "%s job %r is not a mapping" % (rel, job_id))
+                          continue
+                      name = job.get("name", job_id)
+                      if not isinstance(name, str) or not name:
+                          bad("ENUM_INCOMPLETE",
+                              "%s job %r name is not a string" % (rel, job_id))
+                          continue
+                      cond = job.get("if")
+                      if cond is not None and not isinstance(cond, str):
+                          bad("ENUM_INCOMPLETE",
+                              "%s job %r if is not a string" % (rel, job_id))
+                          continue
+                      needs_raw = job.get("needs")
+                      if needs_raw is None:
+                          needs = []
+                      elif isinstance(needs_raw, str):
+                          needs = [needs_raw]
+                      elif isinstance(needs_raw, list) and \
+                              all(isinstance(n, str) for n in needs_raw):
+                          needs = list(needs_raw)
+                      else:
+                          bad("ENUM_INCOMPLETE",
+                              "%s job %r needs is not a string/list" % (rel, job_id))
+                          continue
+                      records.append({
+                          "wf": rel,
+                          "job": job_id,
+                          "check": name,
+                          "cond": cond if isinstance(cond, str) else "",
+                          "needs": needs,
+                      })
+
+              if codes:
+                  report_and_exit()
+
+              rows = []
+              for r in records:
+                  rows.append("\t".join([
+                      r["wf"], r["job"], r["check"],
+                      "true" if r["cond"] else "false",
+                      ",".join(r["needs"]),
+                  ]))
+              if table_path:
+                  try:
+                      os.makedirs(os.path.dirname(table_path), exist_ok=True)
+                      with open(table_path, "w", encoding="utf-8") as fh:
+                          fh.write("\n".join(rows) + ("\n" if rows else ""))
+                  except OSError as exc:
+                      bad("ENUM_INCOMPLETE",
+                          "cannot write producer table %s: %s" % (table_path, exc))
+                      report_and_exit()
+
+              contexts = set(jb for _, jb in expected)
+              expected_set = set(expected)
+              found = {}
+              for wp, jb in expected:
+                  rec = None
+                  for r in records:
+                      if r["wf"] == wp and r["job"] == jb:
+                          rec = r
+                          break
+                  if rec is None:
+                      bad("PRODUCER_MISSING",
+                          "%s:%s — expected producer tuple absent from G" % (wp, jb))
+                      continue
+                  found[(wp, jb)] = rec
+                  if workflows[wp]["callee"]:
+                      bad("PRODUCER_MISSING",
+                          "%s:%s — workflow_call-only workflow publishes no top-level context"
+                          % (wp, jb))
+                  elif rec["check"] != jb:
+                      bad("PRODUCER_MISSING",
+                          "%s:%s — job-level name %r is the published context, the required context %r is unproduced"
+                          % (wp, jb, rec["check"], jb))
+
+              producers = {}
+              for r in records:
+                  if workflows[r["wf"]]["callee"]:
+                      continue
+                  if r["check"] in contexts:
+                      producers.setdefault(r["check"], []).append(r)
+              for ctx in sorted(producers):
+                  lst = producers[ctx]
+                  if len(lst) > 1:
+                      bad("PRODUCER_AMBIGUOUS",
+                          "%s produced by %d tuples: %s" % (
+                              ctx, len(lst),
+                              ", ".join("%s:%s" % (r["wf"], r["job"]) for r in lst)))
+                  for r in lst:
+                      if (r["wf"], r["job"]) not in expected_set:
+                          bad("PRODUCER_UNEXPECTED",
+                              "%s:%s publishes required context %r outside the policy tuple"
+                              % (r["wf"], r["job"], ctx))
+
+              for wp, jb in expected:
+                  rec = found.get((wp, jb))
+                  if rec is None:
+                      continue
+                  if rec["cond"]:
+                      if not skip_safe(rec["cond"]):
+                          bad("PRODUCER_SKIPPABLE",
+                              "%s:%s job-level if %r is not an always()/!cancelled() form"
+                              % (wp, jb, rec["cond"]))
+                  elif rec["needs"]:
+                      bad("PRODUCER_SKIPPABLE",
+                          "%s:%s has needs=%s without an always()/!cancelled() guard"
+                          % (wp, jb, ",".join(rec["needs"])))
+
+              for wp in sorted(set(wp for wp, _ in expected)):
+                  if wp not in workflows:
+                      continue
+                  ok, why = merge_group_ok(workflows[wp]["triggers"])
+                  if not ok:
+                      bad("PRODUCER_TRIGGER_MISSING",
+                          "%s cannot match the queue event: %s" % (wp, why))
+
+              if codes:
+                  report_and_exit()
+
+              sys.stdout.write("SL21_TABLE tuples=%d workflows=%d expected=%d\n"
+                               % (len(records), len(files), len(expected)))
+              for wp, jb in expected:
+                  rec = found[(wp, jb)]
+                  sys.stdout.write("SL21_PRODUCER %s\t%s\t%s\tif=%s\tneeds=%s\n" % (
+                      wp, jb, rec["check"],
+                      rec["cond"] if rec["cond"] else "none",
+                      ",".join(rec["needs"]) if rec["needs"] else "none"))
+              sys.exit(0)
+
+
+          main()
+          PYEOF
+          )"; then
+            printf '%s\n' "$out" >&2
+            codes="$(printf '%s\n' "$out" | sed -n 's/^SL21_FAIL_CODES //p' | tail -n 1)"
+            [ -n "$codes" ] || codes="ENUM_INCOMPLETE"
+            fail "producer closure violated — ${codes} (reasons above)"
+          fi
+          printf '%s\n' "$out"
+          TUPLE_COUNT="$(printf '%s\n' "$out" | sed -n 's/^SL21_TABLE .*expected=\([0-9][0-9]*\)$/\1/p' | tail -n 1)"
+          [ -n "$TUPLE_COUNT" ] || fail "ENUM_INCOMPLETE — enumerator produced no tuple count"
+          echo "[SL-21] producer closure: ${TUPLE_COUNT}/${TUPLE_COUNT} tuples, 0 unexpected, 0 skippable"
 
       - name: "[check] Download base-built artifacts (B bin/ax + ircheck)"
         if: steps.slice-engine.outputs.scope_sl08 == 'true' && steps.venue.outputs.venue == 'landing'

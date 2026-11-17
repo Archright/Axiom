@@ -38,7 +38,7 @@
   // NOTE: this file carries full-line `//` documentation comments (like
   // config/executor_authority.json) — the verifier strips them before parsing.
   "trustedWriterWorkflow": ".github/workflows/certificate-mint.yml",
-  "trustedAdmissionWorkflowSha": "d27feaeee51ae2c8ecc6ee1b151ec1ab5ed1d456",
+  "trustedAdmissionWorkflowSha": "13bd4e55e9bf8a531d9d608c13d3fc2657478998",
   "trustedCheckerTreeClosure":   {
     "ci/checker.mk": {
       "mode": "100644",

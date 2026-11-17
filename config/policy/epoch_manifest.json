@@ -13,7 +13,8 @@
     "SL-15",
     "SL-18",
     "SL-19",
-    "SL-20"
+    "SL-20",
+    "SL-21"
   ],
   "notYetImplementedSlices": [
     "SL-06",
@@ -23,6 +24,6 @@
     "SL-16",
     "SL-17"
   ],
-  "productionExecutionPin": "d27feaeee51ae2c8ecc6ee1b151ec1ab5ed1d456",
+  "productionExecutionPin": "13bd4e55e9bf8a531d9d608c13d3fc2657478998",
   "mode": "ci-migration"
 }

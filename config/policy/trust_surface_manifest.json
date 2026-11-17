@@ -18,6 +18,8 @@
     "config/policy/epoch_manifest.json",
     "config/policy/merge_admission.json",
     "config/policy/trust_surface_manifest.json",
-    "config/trusted_writer_set.json"
+    "config/repository_surface.json",
+    "config/trusted_writer_set.json",
+    "tools/surface_guard.nim"
   ]
 }
