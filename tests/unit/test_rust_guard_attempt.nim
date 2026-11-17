@@ -64,6 +64,13 @@
 ##
 ## Environment gates (explicit skip, not failure): lake absent → the
 ## kernel-bearing suites skip; z3 absent → the attempt + SMT suites skip.
+## Hermeticity amendment (2026-11-17): the attempt lane additionally needs
+## the Lean project BUILT (the differential worker runs `lake env lean
+## --run IR/RustReferenceExtractor.lean`, which resolves IR.olean from
+## proofs/.lake) and the replay-confirmed attempts need rustc — every
+## tool-dependent suite probes its own inputs and skips loudly when one is
+## absent, so the verdict is a function of the environment class, never of
+## neighboring sessions' build state.
 
 import std/[json, options, os, osproc, strutils, unittest]
 
@@ -95,11 +102,23 @@ let
 let lakePresent = findExe("lake").len > 0
 let z3Present = findExe("z3").len > 0 or
     fileExists(getHomeDir() / ".local" / "bin" / "z3")
+let rustcPresent = findExe("rustc").len > 0
+let leanProjectBuilt = fileExists(RepoRoot / "proofs" / ".lake" / "build" /
+    "lib" / "lean" / "IR" / "AxiomIRExpr.olean")
+  ## The differential worker (`lake env lean --run
+  ## IR/RustReferenceExtractor.lean`) resolves its imports from the built
+  ## proofs/.lake library — the presence probe mirrors the
+  ## test_extraction_agreement workerAvailable convention.
+let attemptLaneRunnable = lakePresent and leanProjectBuilt and z3Present
 
 if not lakePresent:
   echo "SKIP: lake not on PATH — kernel-bearing suites skip (explicit skip, not a failure)"
+if lakePresent and not leanProjectBuilt:
+  echo "SKIP: proofs/.lake library not built (run `lake build` in proofs/) — attempt lane skips (explicit skip, not a failure)"
 if not z3Present:
   echo "SKIP: z3 not found — attempt/SMT suites skip (explicit skip, not a failure)"
+if not rustcPresent:
+  echo "SKIP: rustc not found — replay-confirmed attempt tests skip (explicit skip, not a failure)"
 
 let probeText = readFile(GuardProbePath)
 let parsed = parseLlbcFile(GuardProbePath)
@@ -290,104 +309,105 @@ suite "rust guard attempt — renderRustGuardObligationLean (theater guard)":
 
 # ─── Suite 3: rustGuardObligationAttempt — the declaration-free attempt ─────
 
-suite "rust guard attempt — rustGuardObligationAttempt (kernel + z3 + replay confirmation)":
+if attemptLaneRunnable and rustcPresent:
+  suite "rust guard attempt — rustGuardObligationAttempt (kernel + z3 + replay confirmation)":
 
-  test "bump0: attempted, the guard goal is PROVED, discharged reason":
-    let rec = rustGuardObligationAttempt(probeText, "bump0",
+    test "bump0: attempted, the guard goal is PROVED, discharged reason":
+      let rec = rustGuardObligationAttempt(probeText, "bump0",
+                                           projectRoot = RepoRoot)
+      check rec.attempted
+      check rec.goalCount == 1
+      check rec.goalOutcomes.len == 1
+      check rec.goalOutcomes[0].proved
+      check not rec.goalOutcomes[0].declinedByKernel
+      check rec.goalOutcomes[0].goalText.len > 0
+      check rec.reason.contains("guard obligation discharged")
+      check rec.reason.contains("sorry-free")
+
+    test "offset: DECLINED by kernel, z3 SAT, counterexample CONFIRMED by " &
+        "replay (git-bound subject) — the deterministic confirmed reason " &
+        "carries the model script digest":
+      let rec = rustGuardObligationAttempt(probeText, "offset",
+                                           projectRoot = RepoRoot,
+                                           subjectRoot = GuardGitSubject,
+                                           subjectModulePath =
+                                             GuardGitSubject / "src" / "lib.rs")
+      check rec.attempted
+      check rec.goalCount == 1
+      let g = rec.goalOutcomes[0]
+      check not g.proved
+      check g.declinedByKernel
+      check g.z3Sat
+      check g.z3ScriptDigest.len == 64
+      check g.confirmed
+      # the record-level reason aggregates under the goal-count prefix; the
+      # GOAL outcome carries the verbatim contract format
+      check g.reason.startsWith("guard goal '")
+      check rec.reason.contains("guard goal '")
+      check rec.reason.contains("declined by kernel")
+      check rec.reason.contains("VIOLATED")
+      check rec.reason.contains("counterexample confirmed by replay")
+      check rec.reason.contains("model script digest")
+      check rec.reason.contains("not a declared-spec failure")
+      # No raw model values in the reason (deterministic by contract).
+      check not rec.reason.contains("define-fun")
+      # The panic observation is LOG-ONLY evidence — never reason text — and
+      # the confirmed class retires the fallback wording entirely.
+      check not rec.reason.contains("attempt to add with overflow")
+      check not rec.reason.contains("confirmation unavailable")
+
+    test "offset FALLBACK: non-git subject — the unconfirmed declined reason " &
+        "stays live (confirmation unavailable, overflow-discretion class)":
+      let rec = rustGuardObligationAttempt(probeText, "offset",
+                                           projectRoot = RepoRoot,
+                                           subjectModulePath =
+                                             GuardNonGitSubject / "src" / "lib.rs")
+      check rec.attempted
+      check rec.goalCount == 1
+      let g = rec.goalOutcomes[0]
+      check not g.proved
+      check g.declinedByKernel
+      check g.z3Sat
+      check g.z3ScriptDigest.len == 64
+      check not g.confirmed
+      check g.reason.startsWith("guard goal '")
+      check rec.reason.contains("guard goal '")
+      check rec.reason.contains("declined by kernel")
+      check rec.reason.contains("Z3 confirms a refuting candidate exists")
+      check rec.reason.contains("script digest")
+      check rec.reason.contains("confirmation unavailable")
+      # No raw model values in the reason (deterministic by contract).
+      check not rec.reason.contains("define-fun")
+
+    test "echo: attempted with ZERO mechanical goals — the exact zero-goals " &
+        "reason (the attempt ran; nothing was skipped)":
+      let rec = rustGuardObligationAttempt(probeText, "echo",
+                                           projectRoot = RepoRoot)
+      check rec.attempted
+      check rec.goalCount == 0
+      check rec.goalOutcomes.len == 0
+      check rec.reason ==
+        "no derivable guard obligation (attempt ran; zero mechanical goals)"
+
+    test "tri: the producer rejects the grammar — the attempt NEVER runs " &
+        "(fail-closed out-of-subset, not an internal error)":
+      let rec = rustGuardObligationAttempt(probeText, "tri",
+                                           projectRoot = RepoRoot)
+      check not rec.attempted
+      check rec.goalCount == 0
+      check rec.goalOutcomes.len == 0
+      check outcomeOutOfScopeUnknown(rec.outcome)
+
+    test "determinism: the offset attempt is identical across two runs " &
+        "(reason strings + z3ScriptDigest)":
+      let a = rustGuardObligationAttempt(probeText, "offset",
                                          projectRoot = RepoRoot)
-    check rec.attempted
-    check rec.goalCount == 1
-    check rec.goalOutcomes.len == 1
-    check rec.goalOutcomes[0].proved
-    check not rec.goalOutcomes[0].declinedByKernel
-    check rec.goalOutcomes[0].goalText.len > 0
-    check rec.reason.contains("guard obligation discharged")
-    check rec.reason.contains("sorry-free")
-
-  test "offset: DECLINED by kernel, z3 SAT, counterexample CONFIRMED by " &
-      "replay (git-bound subject) — the deterministic confirmed reason " &
-      "carries the model script digest":
-    let rec = rustGuardObligationAttempt(probeText, "offset",
-                                         projectRoot = RepoRoot,
-                                         subjectRoot = GuardGitSubject,
-                                         subjectModulePath =
-                                           GuardGitSubject / "src" / "lib.rs")
-    check rec.attempted
-    check rec.goalCount == 1
-    let g = rec.goalOutcomes[0]
-    check not g.proved
-    check g.declinedByKernel
-    check g.z3Sat
-    check g.z3ScriptDigest.len == 64
-    check g.confirmed
-    # the record-level reason aggregates under the goal-count prefix; the
-    # GOAL outcome carries the verbatim contract format
-    check g.reason.startsWith("guard goal '")
-    check rec.reason.contains("guard goal '")
-    check rec.reason.contains("declined by kernel")
-    check rec.reason.contains("VIOLATED")
-    check rec.reason.contains("counterexample confirmed by replay")
-    check rec.reason.contains("model script digest")
-    check rec.reason.contains("not a declared-spec failure")
-    # No raw model values in the reason (deterministic by contract).
-    check not rec.reason.contains("define-fun")
-    # The panic observation is LOG-ONLY evidence — never reason text — and
-    # the confirmed class retires the fallback wording entirely.
-    check not rec.reason.contains("attempt to add with overflow")
-    check not rec.reason.contains("confirmation unavailable")
-
-  test "offset FALLBACK: non-git subject — the unconfirmed declined reason " &
-      "stays live (confirmation unavailable, overflow-discretion class)":
-    let rec = rustGuardObligationAttempt(probeText, "offset",
-                                         projectRoot = RepoRoot,
-                                         subjectModulePath =
-                                           GuardNonGitSubject / "src" / "lib.rs")
-    check rec.attempted
-    check rec.goalCount == 1
-    let g = rec.goalOutcomes[0]
-    check not g.proved
-    check g.declinedByKernel
-    check g.z3Sat
-    check g.z3ScriptDigest.len == 64
-    check not g.confirmed
-    check g.reason.startsWith("guard goal '")
-    check rec.reason.contains("guard goal '")
-    check rec.reason.contains("declined by kernel")
-    check rec.reason.contains("Z3 confirms a refuting candidate exists")
-    check rec.reason.contains("script digest")
-    check rec.reason.contains("confirmation unavailable")
-    # No raw model values in the reason (deterministic by contract).
-    check not rec.reason.contains("define-fun")
-
-  test "echo: attempted with ZERO mechanical goals — the exact zero-goals " &
-      "reason (the attempt ran; nothing was skipped)":
-    let rec = rustGuardObligationAttempt(probeText, "echo",
+      let b = rustGuardObligationAttempt(probeText, "offset",
                                          projectRoot = RepoRoot)
-    check rec.attempted
-    check rec.goalCount == 0
-    check rec.goalOutcomes.len == 0
-    check rec.reason ==
-      "no derivable guard obligation (attempt ran; zero mechanical goals)"
-
-  test "tri: the producer rejects the grammar — the attempt NEVER runs " &
-      "(fail-closed out-of-subset, not an internal error)":
-    let rec = rustGuardObligationAttempt(probeText, "tri",
-                                         projectRoot = RepoRoot)
-    check not rec.attempted
-    check rec.goalCount == 0
-    check rec.goalOutcomes.len == 0
-    check outcomeOutOfScopeUnknown(rec.outcome)
-
-  test "determinism: the offset attempt is identical across two runs " &
-      "(reason strings + z3ScriptDigest)":
-    let a = rustGuardObligationAttempt(probeText, "offset",
-                                       projectRoot = RepoRoot)
-    let b = rustGuardObligationAttempt(probeText, "offset",
-                                       projectRoot = RepoRoot)
-    check a.attempted == b.attempted
-    check a.reason == b.reason
-    check a.goalOutcomes[0].reason == b.goalOutcomes[0].reason
-    check a.goalOutcomes[0].z3ScriptDigest == b.goalOutcomes[0].z3ScriptDigest
+      check a.attempted == b.attempted
+      check a.reason == b.reason
+      check a.goalOutcomes[0].reason == b.goalOutcomes[0].reason
+      check a.goalOutcomes[0].z3ScriptDigest == b.goalOutcomes[0].z3ScriptDigest
 
 # ─── Suite 4: SMT semantics — the goal refutes mathematically (real z3) ─────
 
@@ -409,13 +429,15 @@ suite "rust guard attempt — SMT semantics via rustCanonicalToIrFuncDef (z3)":
 
   test "z3: the offset goal (a+b<256) is SAT under the u8 ranges — refuted " &
       "mathematically (200+56=256 class), NOT via 64-bit wrap":
-    let outp = runZ3WithModel(scriptOffset)
-    check outp.startsWith("sat")
+    if z3Present:
+      let outp = runZ3WithModel(scriptOffset)
+      check outp.startsWith("sat")
 
   test "z3: the bump0 goal (a+0<256) is UNSAT under the u8 ranges — no " &
       "refuting candidate exists (255+0<256 holds)":
-    let outp = runZ3WithModel(scriptBump0)
-    check outp.startsWith("unsat")
+    if z3Present:
+      let outp = runZ3WithModel(scriptBump0)
+      check outp.startsWith("unsat")
 
 # ─── Suite 5: two-add attribution — add_u8_mutant (the constrained query) ───
 
@@ -472,38 +494,40 @@ suite "rust guard attempt — two-add attribution (add_u8_mutant, committed rust
       "constrained query (outer sibling asserted via preExtra) is UNSAT — " &
       "a goal whose only counterexamples violate a sibling is never " &
       "confirmable":
-    let f = rustCanonicalToIrFuncDef(MutantCanonical, MutantGoals[1],
-                                     @[MutantGoals[0]])
-    check f.name == "add_u8_mutant"
-    # 2 type ranges + the outer sibling = the full constraint set.
-    check f.preConditions.len == 3
-    let script = irToSmtScript(f, includeOverflowDefines = false)
-    check script.contains("(check-sat)")
-    # a+b ≥ 256 contradicts the asserted sibling (a+b)+1 < 256 — UNSAT.
-    let outp = runZ3WithModel(script)
-    check outp.startsWith("unsat")
+    if z3Present:
+      let f = rustCanonicalToIrFuncDef(MutantCanonical, MutantGoals[1],
+                                       @[MutantGoals[0]])
+      check f.name == "add_u8_mutant"
+      # 2 type ranges + the outer sibling = the full constraint set.
+      check f.preConditions.len == 3
+      let script = irToSmtScript(f, includeOverflowDefines = false)
+      check script.contains("(check-sat)")
+      # a+b ≥ 256 contradicts the asserted sibling (a+b)+1 < 256 — UNSAT.
+      let outp = runZ3WithModel(script)
+      check outp.startsWith("unsat")
 
   test "QUERY-LEVEL POSITIVE: the outer goal's constrained query (inner " &
       "sibling asserted) is SAT — the model sits on the a+b = 255 boundary " &
       "and SATISFIES the inner goal":
-    let f = rustCanonicalToIrFuncDef(MutantCanonical, MutantGoals[0],
-                                     @[MutantGoals[1]])
-    check f.name == "add_u8_mutant"
-    check f.preConditions.len == 3
-    let script = irToSmtScript(f, includeOverflowDefines = false)
-    check script.contains("(check-sat)")
-    let outp = runZ3WithModel(script)
-    check outp.startsWith("sat")
-    # The refuting model satisfies the inner sibling exactly on the boundary:
-    # a+b = 255 → inner 255 < 256 holds, outer (a+b)+1 = 256 ≥ 256 refuted.
-    let bindings = parseModelBindings(outp)
-    let va = bvValue(bindings, "a")
-    let vb = bvValue(bindings, "b")
-    check va.isSome and vb.isSome
-    if va.isSome and vb.isSome:
-      check va.get() >= 0 and va.get() < 256 and vb.get() >= 0 and
-        vb.get() < 256
-      check va.get() + vb.get() == 255
+    if z3Present:
+      let f = rustCanonicalToIrFuncDef(MutantCanonical, MutantGoals[0],
+                                       @[MutantGoals[1]])
+      check f.name == "add_u8_mutant"
+      check f.preConditions.len == 3
+      let script = irToSmtScript(f, includeOverflowDefines = false)
+      check script.contains("(check-sat)")
+      let outp = runZ3WithModel(script)
+      check outp.startsWith("sat")
+      # The refuting model satisfies the inner sibling exactly on the boundary:
+      # a+b = 255 → inner 255 < 256 holds, outer (a+b)+1 = 256 ≥ 256 refuted.
+      let bindings = parseModelBindings(outp)
+      let va = bvValue(bindings, "a")
+      let vb = bvValue(bindings, "b")
+      check va.isSome and vb.isSome
+      if va.isSome and vb.isSome:
+        check va.get() >= 0 and va.get() < 256 and vb.get() >= 0 and
+          vb.get() < 256
+        check va.get() + vb.get() == 255
 
 suite "rust guard attempt — guardModelAttributionSafe (model-vs-sibling units)":
 

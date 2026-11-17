@@ -46,6 +46,18 @@ import ../../src/core/trusted/verification_result_types as vrt
 
 putEnv("AXIOM_STATE_DIR", getTempDir() / "ax_sidecar_test_state")
 
+# The make test-fast / test-fast-one recipes link the test binary under
+# /tmp/opencode, where the strict runtime root walk (findRepoRootStrict from
+# the binary's own dir) cannot reach the .axiom_root anchor and the sidecar
+# overlay load fails closed (loadNimSidecarOverlayDomain → runtimeSpec-
+# OverlayPath); the parse-bound differential's ircheck worker resolution
+# (measureExtractionAgreement → resolveRepoRoot) misses the same walk. AXIOM_
+# ROOT is both resolvers' first resolution input and is consumed as the root
+# DIRECTLY (no anchor walk), so the pin must be the repo root the compile-
+# time walk measured — repoRootConst() — keeping the suite green from any
+# binary location (the test_bug_verdict_projection pin, same recipe hazard).
+putEnv("AXIOM_ROOT", repoRootConst())
+
 let testsRoot = currentSourcePath().parentDir().parentDir()
 
 const GoldenSubject = """## §2.1a synthesis fixture — VERBATIM transcription of the sizing functions

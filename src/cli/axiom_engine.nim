@@ -323,6 +323,7 @@ proc runBatchVerification*(
   ## external flow. `targetVkd` is the §13.1-frozen VKD baseline — read once at
   ## prepare, never re-read mid-run.
   logStage(skCliEntry, "", "ax prove started: " & $requests.len & " requests")
+  let waveStartMs = getMonoTime().ticks
   let reporter = newGateReporter()
 
   # Gate 1: Pre-commit — quick syntax/structural validation
@@ -359,6 +360,7 @@ proc runBatchVerification*(
   irCtx.entries = irEntries
   irCtx.subjectRoot = subjectRepoRoot
   var irThread: Thread[ptr ParallelIrContext]
+  let irThreadStartMs = getMonoTime().ticks
   createThread(irThread, irPipelineWorker, irCtx)
 
   # ── Phase 10: Sync IR Background Thread ───────────────────────────
@@ -367,6 +369,7 @@ proc runBatchVerification*(
   # loop runs. Join the IR thread first so preComputedIrResults is fully
   # populated before runBatchUapOrchestration consumes it.
   joinThread(irThread)
+  logStage(skSwat, "", "ir-thread window completed", elapsedMs=int((getMonoTime().ticks - irThreadStartMs) div 1_000_000))
   let irResults = irCtx.result
   # Same-run CAS-keyed IR memo cache (populated by the background worker via
   # `runIrPipelinesFor(entries, ctx.memoCache)`). Extracted by value BEFORE
@@ -658,7 +661,7 @@ proc runBatchVerification*(
   # rate over |Kernel|=40 (netVerifiedFunctions / totalSourceFunctions), NOT
   # canonical VKD (|VKS ∩ certGreen| / |VKS| = 23, reported in metrics.vkd).
   logInfo("axiom_engine", "done: verifiedRatio=" & asString(canonicalState.vkd) & ", verified=" & $canonicalState.netVerifiedFunctions & "/" & $canonicalState.totalFunctions)
-  logStage(skReport, "", "pipeline completed", extra=reportJson)
+  logStage(skReport, "", "pipeline completed", elapsedMs=int((getMonoTime().ticks - waveStartMs) div 1_000_000), extra=reportJson)
   try:
     # WP2-a: VSR ledger routes to stateRoot when set.
     persistVsrLedger(stateJoin("logs", "audit", "vsr_ledger.jsonl"), ledgerEvent)
@@ -4824,8 +4827,10 @@ proc runOneWave(inputs: WaveInputs; engine: var AxiomEngine; frontier: seq[Sorte
   var state = payloadRes.get().state
   let requests = payloadRes.get().requests
 
+  let vaultLoadStartMs = getMonoTime().ticks
   let verifiedAxioms = loadVerifiedAxiomsFromProofVault(
     inputs.certDir, inputs.contentResolver, inputs.analysis)
+  logStage(skCertificate, "", "vault-load-axioms completed", elapsedMs=int((getMonoTime().ticks - vaultLoadStartMs) div 1_000_000))
   promoteVerifiedDependencies(state, verifiedSet, inputs.internSnapshot, verifiedAxioms)
 
   # §13.1 start-snapshot unification: the IR selection basis is the frozen
@@ -4849,14 +4854,18 @@ proc runOneWave(inputs: WaveInputs; engine: var AxiomEngine; frontier: seq[Sorte
     dispatchedIds.add(dispatchedId)
   dispatchedIds.sort()
 
+  let rehydrateStartMs = getMonoTime().ticks
+  let rehydratedSet = hydrateVerifiedSetFromProofVault(inputs.certDir, inputs.internSnapshot,
+    inputs.analysis, inputs.contentResolver, inputs.kernelScope)
+  logStage(skCertificate, "", "vault-rehydrate completed", elapsedMs=int((getMonoTime().ticks - rehydrateStartMs) div 1_000_000))
+
   WaveStepOutcome(
     ok: true,
     report: verifyRes.get(),
     requestCount: requests.len,
     dispatchedIds: dispatchedIds,
     # RE-HYDRATE verifiedSet: pick up newly written vault certs from this wave
-    verifiedSet: hydrateVerifiedSetFromProofVault(inputs.certDir, inputs.internSnapshot,
-      inputs.analysis, inputs.contentResolver, inputs.kernelScope))
+    verifiedSet: rehydratedSet)
 
 proc claimWaveNodes(frontier: seq[SorterNodeId]; attempted: var HashSet[string]): HashSet[string] =
   ## Mark every node in this wave attempted and return the per-wave dispatched
@@ -5226,6 +5235,7 @@ proc buildCanonicalRunOutcome(eligibilityObj: JsonNode; waves: WaveOutcome;
   ## artifact content re-verification on every read feed the reducer; the
   ## run-level verdict is decided by VerificationDecisionAuthority ONLY
   ## (run_accounting preserves raw state and never derives a gate verdict).
+  let runAccountingStartMs = getMonoTime().ticks
   let reuseContext = captureRunReuseContext()
   verifyReuseArtifacts(waves.waveReports)
   result = buildCanonicalRunResult(waves.waveReports, eligibilityObj,
@@ -5249,7 +5259,7 @@ proc buildCanonicalRunOutcome(eligibilityObj: JsonNode; waves: WaveOutcome;
   # Trajectory reference record — ONE record post-reducer (skRunAccounting).
   # Existing streaming records stay untouched (nightly verify_trajectory keeps
   # passing: it asserts skSwat/skReport presence only).
-  logStage(skRunAccounting, "", "canonical run accounting", extra = %*{
+  logStage(skRunAccounting, "", "canonical run accounting", elapsedMs=int((getMonoTime().ticks - runAccountingStartMs) div 1_000_000), extra = %*{
     "event": %*{"type": "run_result"},
     "canonicalRunDigest": canonicalDigest,
     "runAccountingDigest": sha256Hex($result.runAccounting.toJson()),
@@ -5358,8 +5368,10 @@ proc hydrateRunVault(prepared: var PreparedRun; bundle: TopologyCliAnalysisBundl
   let sourceCache = bundle.sourceContentCache
   prepared.contentResolver = buildCacheResolver(sourceCache)
   prepared.kernelScope = loadKernelScope(resolveScopeLockPath(), failClosed = true)
+  let vaultHydrateStartMs = getMonoTime().ticks
   prepared.verifiedSet = hydrateVerifiedSetFromProofVault(prepared.certDir,
     prepared.internSnapshot, bundle.analysis, prepared.contentResolver, prepared.kernelScope)
+  logStage(skCertificate, "", "vault-hydrate completed", elapsedMs=int((getMonoTime().ticks - vaultHydrateStartMs) div 1_000_000))
   # I-F: capture universe digest at pipeline start for freshness guard.
   # Re-derive at closure-evaluation time; if they differ → closureComplete=false.
   prepared.universeDigestStart = sha256Hex(prepared.kernelScope.kernelSymbols.sorted(cmp).join("|"))
@@ -5806,17 +5818,21 @@ proc runProofPipeline*(
 ): Result[ProofReport, string] {.raises: [Exception, IOEffect], axiomEffect: IOEffect, tags: [TimeEffect, RootEffect, AxiomIOEffect, IOEffect].} =
   ## Topology scan → adaptive budget calculation → batch UAP pipeline.
   let sourceRoot = if cwdOverride.len > 0: cwdOverride else: getCurrentDir()
+  let prepareStartMs = getMonoTime().ticks
   let preparedRes = prepareProofRun(task, sourceRoot, shortcutStatePathOverride)
   if preparedRes.isErr():
     return err(preparedRes.error)
+  logStage(skCliEntry, "", "prepare completed", elapsedMs=int((getMonoTime().ticks - prepareStartMs) div 1_000_000))
   var prepared = preparedRes.get()
   var verifiedSet = prepared.verifiedSet
   var frontier = prepared.frontier
 
   let waveInputs = makeWaveInputs(prepared, task, planPath)
+  let wavesStartMs = getMonoTime().ticks
   let waves = runVerificationWaves(waveInputs, prepared.engine, frontier, verifiedSet)
   if not waves.ok:
     return err(waves.errMsg)
+  logStage(skSwat, "", "waves completed", elapsedMs=int((getMonoTime().ticks - wavesStartMs) div 1_000_000))
   var proofReport = waves.report
   verifiedSet = waves.verifiedSet
   frontier = waves.frontier
@@ -5857,12 +5873,14 @@ proc runProofPipeline*(
   prepared.reportJson = renderLegacyReport(runResult, prepared.preRun, projections)
   # T3 display + persist — the §2.8 registry-raw projection and the state
   # file write, one cohesive tail (see appendDisplayAndPersist).
+  let persistStartMs = getMonoTime().ticks
   let repersisted = appendDisplayAndPersist(prepared, proofReport, runResult,
     waves, projections, sourceRoot)
   if repersisted.isErr():
     return err(repersisted.error)
 
   recordSelectionOutcome(prepared.selState, prepared.cacheDir, prepared.reportJson, frontier)
+  logStage(skReport, "", "persist completed", elapsedMs=int((getMonoTime().ticks - persistStartMs) div 1_000_000))
   ok(proofReport)
 
 proc runAxiomEngineCli*(
@@ -6043,12 +6061,16 @@ proc runAxiomEngineCli*(
   # full .nim/.lean walk + hash. `graphReused` tells the commit step that the
   # on-disk snapshot is already current, so it can skip redundant re-materialization
   # while keeping I3 unconditional side effects. Any doubt -> full rebuild (fail-closed).
+  let graphHydrationStartMs = getMonoTime().ticks
   let (graph, graphReused) = loadOrBuildGlobalSymbolGraph(cwd)
+  logStage(skTopology, "", "graph hydration completed", elapsedMs=int((getMonoTime().ticks - graphHydrationStartMs) div 1_000_000))
   # X1 canonical boundary: TrustCommit reads the CANONICAL projection
   # (UniverseIntegrityProjection from the merged rows) instead of the
   # last-wave report — wave-1 verified units now reach the TrustCommit
   # (natural consequence of the canonical boundary migration).
+  let commitStartMs = getMonoTime().ticks
   let commitRes = commitUniverseIntegrityAndLock(cwd, graph, vkdFixed4, caller = AuthorizedLockCaller, updateLock = updateLock or flags.updateLock, graphReused = graphReused, nodeReports = UniverseIntegrityProjection(proofReport.canonicalRunResult))
+  logStage(skReport, "", "commit completed", elapsedMs=int((getMonoTime().ticks - commitStartMs) div 1_000_000))
   if commitRes.isErr():
     return err(CliError(kind: CliOutcome.INTERNAL_ERROR, msg: commitRes.error))
 

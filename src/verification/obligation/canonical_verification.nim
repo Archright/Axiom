@@ -1023,8 +1023,11 @@ proc ircheckWorkerBinaryDigest*(worker: string): string {.
     raises: [], axiomEffect: IOEffect,
     tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## sha256 of the ircheck worker binary, memoized per process/thread: the
-  ## binary is ~119 MB, one debug-mode digest costs ~60 s, and the golden
-  ## lanes measure it once per golden subject in the SAME process. The memo
+  ## binary is ~119 MB (an in-process pure-Nim digest costs ~0.62 s in a
+  ## release build and ~45 s in a debug build; the platform-delegated
+  ## sha256sum path hashes it in ~0.09 s — measured_digests.nim,
+  ## VS-PERF-ATTR 2026-11-16), and the golden lanes measure it once per
+  ## golden subject in the SAME process. The memo
   ## authority is `measuredBinaryDigest` (measured_digests.nim) — its key
   ## carries the worker path plus stat identity (size, mtimeNs, ctimeNs,
   ## dev/ino) precisely so a REBUILD can never reuse a stale digest: a
