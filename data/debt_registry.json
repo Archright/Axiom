@@ -5817,6 +5817,87 @@
       "lastVerifiedAt": "2026-11-17T00:00:00Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registration-only finding; the recipe's output path is bound to an immutable CI workflow consumer, so any change is a CI boundary cutover (AGENTS.md §2.5 coherent-generation rule) requiring workflow edits this agent cannot make. Trace: this entry's resolution (UNRESOLVED) and source (vs_test_herm_2026-11-17); external: in-session machine observations ('Text file busy' at the slot; foreign-binary execution with cross-worktree stack traces)."
+    },
+    {
+      "id": "DEBT#553",
+      "category": "Trust / Evidence",
+      "impact": "medium",
+      "severity": "medium",
+      "title": "appendCertificate re-checks subject uniqueness only on retry attempts — the first append can write a second entry for a subjectId already present at the ledger tip",
+      "description": "Machine-observed 2026-11-17 (VS-AUTHORITY-SEPARATION, main ed014de). src/verification/ledger_side_ref.nim:552-582 runs the tip-read → object-build → FF-CAS pipeline in a bounded loop; the duplicate check ledgerHasCertAtTip is gated by `if attempt > 1:` (:575-579), so the FIRST attempt appends without asking whether <certId>.json already exists in the tip tree. The only first-attempt guard is the caller-side workflow predicate at .github/workflows/certificate-mint.yml:2263, which runs in a different process before the CLI call — a TOCTOU window remains. The FF-CAS retry itself is correct (re-read tip, re-check, rebuild, force=false); the gap is the unguarded first attempt. Consequence: a transient divergence between the workflow read and the append tip, or a caller that omits the pre-check, produces a duplicate subject entry. The ledger ref is non-fast-forward-only (ruleset 27466866), so a duplicate cannot be removed; the App's exactly-one binding then fails and the PR cannot land. Remediation: run ledgerHasCertAtTip on every attempt including attempt 1 (the tip is already read there, so the extra tree read is the only cost), or reject a tip tree that already contains the subject before building objects; keep the existing conflict-only retry semantics.",
+      "symbol": "appendCertificate (src/verification/ledger_side_ref.nim:508-601); ledgerHasCertAtTip (:493-506)",
+      "contentHash": "sha256:e1dcd99458fd87ae2dfd1e1a486a9ca7217c25b8be1f000a41fba3d5f1e300e2",
+      "lineRange": "src/verification/ledger_side_ref.nim:552-582",
+      "files": [
+        "src/verification/ledger_side_ref.nim",
+        ".github/workflows/certificate-mint.yml"
+      ],
+      "source": "vs_authority_separation_2026-11-17",
+      "status": "open",
+      "resolution": "UNRESOLVED — registration only (a writer-side fix changes the exactly-once contract consumed by certificate-mint's D6 predicate and must be validated against the live merge_group path; this registration slice does not modify the ledger writer). Remediation as described; verification must cover (a) first-attempt duplicate rejection at a tip that already contains the subject, and (b) unchanged FF-CAS behaviour under a concurrent move.",
+      "lastVerifiedAt": "2026-11-17T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registration-only finding; the append path is the ledger writer, so changing when uniqueness is checked alters a trust-boundary contract (AGENTS.md §2.6) and needs its own slice plus live acceptance. Trace: this entry's resolution (UNRESOLVED) and source (vs_authority_separation_2026-11-17); external: src/verification/ledger_side_ref.nim:575-582 and .github/workflows/certificate-mint.yml:2263-2274."
+    },
+    {
+      "id": "DEBT#554",
+      "category": "CI/Pipeline Health",
+      "impact": "medium",
+      "severity": "medium",
+      "title": "certificate-mint treats any ledger-list failure as subject absence (stderr discarded) and falls through to ledger-append, so a transient read failure can create a duplicate permanent entry",
+      "description": "Machine-observed 2026-11-17 (VS-AUTHORITY-SEPARATION, main ed014de). .github/workflows/certificate-mint.yml:2263 decides idempotency with a pipeline of the form `bin/ax cert ledger-list 2>/dev/null | grep -qx \"$SUBJECT_ID\"`. The pipeline status is the status of grep, not of ledger-list: a transport/auth/5xx failure is discarded by 2>/dev/null, grep sees empty input and exits 1, and the else branch at :2270 calls `bin/ax cert ledger-append`. A read failure is therefore indistinguishable from a genuinely absent subject. Because appendCertificate does not re-check uniqueness on its first attempt (DEBT#553) and the ledger ref rejects non-fast-forward updates, the duplicate entry is permanent. Remediation: run ledger-list without discarding stderr, require exit 0 before interpreting output (bounded retry on transient failure, fail-closed on exhaustion), and distinguish unreadable from absent in the branch condition.",
+      "symbol": "D6 idempotency predicate (certificate-mint.yml:2263-2274)",
+      "contentHash": "sha256:a64c25c9856dab39231ea9501807b9553ae505dccf311824c9f78ad92dec38bc",
+      "lineRange": ".github/workflows/certificate-mint.yml:2263-2274",
+      "files": [
+        ".github/workflows/certificate-mint.yml"
+      ],
+      "source": "vs_authority_separation_2026-11-17",
+      "status": "open",
+      "resolution": "UNRESOLVED — registration only (the workflow is a trust-surface path and any change needs its own gate run plus index refresh; this slice only registers the finding). Remediation as described; acceptance must show a failing ledger-list aborts the mint instead of appending, and a genuinely absent subject still appends exactly once.",
+      "lastVerifiedAt": "2026-11-17T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registration-only finding; certificate-mint.yml is in config/policy/trust_surface_manifest.json, so changing the D6 predicate is a trust-surface edit requiring its own PR and App re-verification. Trace: this entry's resolution (UNRESOLVED) and source (vs_authority_separation_2026-11-17); external: .github/workflows/certificate-mint.yml:2263-2274."
+    },
+    {
+      "id": "DEBT#555",
+      "category": "Trust / Evidence",
+      "impact": "high",
+      "severity": "high",
+      "title": "ax cert ledger-append writes the certificate without verifying its Ed25519 attestation — an invalid signature can be appended permanently and is only caught by a later ledger-verify",
+      "description": "Machine-observed 2026-11-17 (VS-AUTHORITY-SEPARATION, main ed014de). appendCertificate parses the certificate JSON and derives certId (src/verification/ledger_side_ref.nim:541-550) but never verifies the attestation block before creating the blob/tree/commit and patching the ref (:583-599). Ed25519 verification exists on the read side (src/verification/certificate_verifier.nim:255; src/verification/continuity_check.nim:94 — the ledger-verify command), and the workflow calls ledger-verify only on the idempotent/reconciliation paths (.github/workflows/certificate-mint.yml:2265, :2278), never after a successful append. Therefore a certificate with a well-formed subjectId and an invalid or missing signature is accepted by ledger-append; the entry becomes permanent under the non-fast-forward ruleset and only a later ledger-verify (or the App) detects the inconsistency. The ledger's integrity thus depends entirely on writer identity (capability), not on the certificate's own cryptographic binding. Remediation: verify the Ed25519 attestation and the deterministic payload binding inside appendCertificate before the object pipeline, failing closed on invalid/missing signature; keep ledger-verify as the independent read-side check.",
+      "symbol": "appendCertificate signature-verification gap (src/verification/ledger_side_ref.nim:508-601)",
+      "contentHash": "sha256:85cbef39d8cf314c440e5665bdfc40c5a7e62bc34f632f985d008f6aada804df",
+      "lineRange": "src/verification/ledger_side_ref.nim:508-601",
+      "files": [
+        "src/verification/ledger_side_ref.nim"
+      ],
+      "source": "vs_authority_separation_2026-11-17",
+      "status": "open",
+      "resolution": "UNRESOLVED — registration only (adding verification to the writer changes the ledger's acceptance contract and must be validated against every existing entry in the three axiom refs before landing; this slice does not modify the writer). Remediation as described; acceptance must show an invalid-signature certificate is rejected before any ref write, and every existing ledger entry still verifies.",
+      "lastVerifiedAt": "2026-11-17T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registration-only finding; the ledger writer is the object under audit, so a self-fix in the same slice would remove the finding's own evidence path (AGENTS.md §2.2 discovery is registered, never quietly patched). Trace: this entry's resolution (UNRESOLVED) and source (vs_authority_separation_2026-11-17); external: src/verification/ledger_side_ref.nim:508-601, src/verification/certificate_verifier.nim:255, src/verification/continuity_check.nim:94."
+    },
+    {
+      "id": "DEBT#556",
+      "category": "Trust / Evidence",
+      "impact": "high",
+      "severity": "high",
+      "title": "mint prepare executes bin/ax and ircheck installed from a self-attested same-run artifact — the B-binding manifest travels inside the artifact, so artifact-name uniqueness is the only cross-check",
+      "description": "Machine-observed 2026-11-17 (VS-AUTHORITY-SEPARATION, main ed014de). The prepare job (.github/workflows/certificate-mint.yml:199, job permissions contents:read at :206-209) lists the same run's artifacts, requires exactly one named admission-check-base-artifacts (:729-731), downloads it, verifies manifest.txt build_sha == B and each file's sha256 against that same manifest (:741-751), installs bin/ax (:756) and ircheck (:761), and executes them (bin/ax cert attest --sign at :1149-1152) to produce the certificate that the write-tier publish job later appends. Because the manifest is a member of the artifact it authenticates, the check is self-referential; a PR-controlled job in the same run that wins the artifact-name race (uploads use overwrite:true for rerun safety) can substitute bytes and forge matching digests. The prepared certificate is not independently bound to the producing job's identity (run id, job name, attempt, uploader workflow SHA) before it feeds the ledger writer. The job's read-only token limits repo writes, but the forged bin/ax controls the certificate predicates that publish (contents:write) appends. Remediation: bind the artifact to the producing run and job identity via the API (job name, run id, attempt, workflow path/SHA) rather than a self-provided manifest, and/or derive the toolchain from the B checkout; do not execute artifact-supplied bytes in a job whose output feeds the ledger writer.",
+      "symbol": "BASEART consumption (certificate-mint.yml:729-762); attest --sign (:1149-1152)",
+      "contentHash": "sha256:a64c25c9856dab39231ea9501807b9553ae505dccf311824c9f78ad92dec38bc",
+      "lineRange": ".github/workflows/certificate-mint.yml:739-762",
+      "files": [
+        ".github/workflows/certificate-mint.yml"
+      ],
+      "source": "vs_authority_separation_2026-11-17",
+      "status": "open",
+      "resolution": "UNRESOLVED — registration only (the fix changes the artifact trust contract shared with admission-check's build-base-artifacts job and needs its own trust-surface PR plus live merge_group acceptance; this slice does not modify the workflow). Remediation as described; acceptance must show substituted artifact bytes are rejected before execution and the normal B-built path still mints.",
+      "lastVerifiedAt": "2026-11-17T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registration-only finding; certificate-mint.yml and the base-artifact producer are trust-surface paths, so any change requires its own PR, App trust-surface re-verification, and a live merge_group proof. Trace: this entry's resolution (UNRESOLVED) and source (vs_authority_separation_2026-11-17); external: .github/workflows/certificate-mint.yml:729-762 and :1149-1152; docs/adr/0041-free-authority-migration.md."
     }
   ]
 }
