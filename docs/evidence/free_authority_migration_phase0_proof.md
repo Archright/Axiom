@@ -370,7 +370,7 @@ merge queue 경로로 착지시켰다 — §10.3의 break-glass가 아닌 정상
 | `origin/main` | `49799837…` (일치) |
 | ruleset readback | `bypass_actors: []`, 7 contexts/integration_id 불변, `merge_queue` 파라미터 불변 |
 | main push run (`trusted-writer-set`) | `44056784654` success |
-| main push run (`axiom-operational-slice`) | `44056784641` — 기록 시점 `in_progress` |
+| main push run (`axiom-operational-slice`) | `44056784641` success |
 
 ### 11.4 판정
 
