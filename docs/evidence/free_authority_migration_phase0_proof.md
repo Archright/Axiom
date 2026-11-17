@@ -454,7 +454,7 @@ gh api -X PUT repos/Archright/Axiom/actions/permissions \
 머지 워크플로가 차단된다. 또한 allowlist가 로컬 예외로 보장하는 것은 `./`와
 `$/` 접두사뿐이므로, `Archright/Axiom/...@sha` 형태의 동일 저장소 참조 4종을
 명시 패턴으로 허용하고 경로 깊이 변화에 대비해 `Archright/Axiom/**@*`를
-안전망으로 함께 둔다. 현재 저장소의 `uses:` 전수는 `actions/*`(105),
+안전망으로 함께 둔다. 현재 저장소의 `uses:` 전수는 `actions/*`(106),
 동일 저장소 `Archright/Axiom`(6), `dependabot/fetch-metadata`(1)뿐이므로 이
 allowlist는 기능 파손 없이 나머지 제3자 action을 fail-closed로 만든다.
 
@@ -482,7 +482,7 @@ allowlist는 기능 파손 없이 나머지 제3자 action을 fail-closed로 만
   15경로 어디에도 이 설정은 파일로 존재하지 않는다.
 - **ruleset 변경 0건**: ruleset `27097366`의 rules·required contexts·
   `bypass_actors`는 불변이다(§12.3 readback).
-- **가역적**: 위 롤백 2줄로 전 상태로 복귀한다. 새 권한·새 시크릿·새 App은 없다.
+- **가역적**: 위 롤백 명령으로 전 상태로 복귀한다. 새 권한·새 시크릿·새 App은 없다.
 
 이 항목은 §10.5/§11.4가 남긴 잔여를 **닫지 않으며 닫는 척하지도 않는다**
 (§0.9). 설정 평면의 강화일 뿐이다.
@@ -529,3 +529,37 @@ fork 승인 정책은 **외부 기여자 경로만** 닫는다 — 저장소 쓰
 동명 위조 표면을 실제로 배제하는 방어선이며, 이 결속이 풀리면 동명 체크가
 곧바로 판정 권한이 된다. 현재 ruleset readback에서 `admission-check`의
 integration_id는 `5795152`다.
+
+### 12.5 저장소 보안 설정 (가역, 2026-11-17)
+
+`gh api` readback으로 확인한 전/후 값이다.
+
+| 설정 | before | after | 적용 명령 |
+|---|---|---|---|
+| Dependabot security updates | `disabled` | `enabled` | `PUT /repos/Archright/Axiom/automated-security-fixes` |
+| Immutable releases | `disabled` | `enabled` | `PUT /repos/Archright/Axiom/immutable-releases` |
+| Web commit signoff | `false` | `true` | `PATCH /repos/Archright/Axiom -F web_commit_signoff_required=true` |
+| Wiki | `true` | `false` | `PATCH /repos/Archright/Axiom -F has_wiki=false` |
+
+롤백:
+
+```bash
+gh api -X DELETE repos/Archright/Axiom/automated-security-fixes
+gh api -X DELETE repos/Archright/Axiom/immutable-releases
+gh api -X PATCH repos/Archright/Axiom \
+  -F web_commit_signoff_required=false -F has_wiki=true
+```
+
+주의:
+
+- **immutable releases는 향후 릴리스에만 적용된다**(공식 문서: "immutability
+  will only apply to future releases"). 기존 `v0.6.4`는 소급 잠금되지 않으며,
+  활성화 이후 발행되는 릴리스에는 release attestation이 생성된다.
+- **secret scanning non-provider patterns·validity checks는 적용되지 않았다.**
+  `PATCH /repos/Archright/Axiom`이 HTTP 200을 반환했지만 readback 값은
+  `disabled` 그대로였다. 공식 gated-features 문서상 generic pattern 탐지는
+  Team + GitHub Secret Protection 전용이므로 Free에서 사용할 수 없다 —
+  변경 0건이며 롤백 대상도 아니다.
+- **organization 2FA requirement, org-level Actions 기본값, App 설치 권한**은
+  조직·App 소유자 authority이므로 이 저장소 설정 변경에 포함하지 않는다.
+  별도 계획 항목이다.
