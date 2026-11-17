@@ -1,5 +1,5 @@
 {
-  "ciEpochId": "N+9",
+  "ciEpochId": "N+10",
   "implementedSlices": [
     "SL-08",
     "SL-01",
@@ -13,7 +13,8 @@
     "SL-15",
     "SL-18",
     "SL-19",
-    "SL-20"
+    "SL-20",
+    "SL-22"
   ],
   "notYetImplementedSlices": [
     "SL-06",
