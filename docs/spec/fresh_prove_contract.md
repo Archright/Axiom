@@ -3,8 +3,11 @@
 Status: ACTIVE (2026-11-18, `workstream/vs-auth-fresh`).
 Judgment SSOT: `tools/ci/fresh_prove_verdict.nim`.
 Observation surface: `.github/workflows/fresh-prove-observation.yml`.
-`--fresh` wiring: `src/cli/axiom_engine.nim`, `src/verification/batch_uap/loop_driver.nim`,
-`src/verification/batch_uap/certificate_hydration_runner.nim`, `src/core/orchestrator/orchestrator_vault.nim`.
+`--fresh` wiring: `src/cli/axiom_engine.nim` (vault verified-set hydration),
+`src/verification/batch_uap/loop_driver.nim` (priming skip + summary-cache clear),
+`src/verification/batch_uap/certificate_hydration_runner.nim` (pre-pass).
+`orchestrator_vault.nim` stays untouched: the priming call is skipped at the caller, so
+the certificate-bearing module is not modified.
 
 ## 1. Purpose
 
