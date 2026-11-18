@@ -31,6 +31,13 @@ Where a dual license "Apache License 2.0 OR MIT" is indicated, you may use, repr
 - Upstream: <https://github.com/status-im/nim-stew> — Copyright (c) 2025 Status Research & Development GmbH
 - License: **Apache-2.0 OR MIT** — header text preserved in `tests/fixtures/bug_verdict_scope/base36_pinned_subject.nim:1-7`; full texts in `LICENSES/Apache-2.0.txt` (<https://www.apache.org/licenses/LICENSE-2.0.txt>) and `LICENSES/MIT.txt` (<https://opensource.org/license/mit>).
 
+## 3a. nim-json-rpc — verbatim golden subject (Apache-2.0 OR MIT)
+
+- Files:
+  - `tests/unit/test_jrpc_errclass_binding.nim` — Axiom-authored test embedding `json_rpc/errors.nim` from nim-json-rpc **@debf33cabf7be009a2e905d4c7921b85eb7ca6dd** (subject tree `d6d3209ede4d1d1ecce90005ff8d5b2eb9b46da4`) verbatim, module header included, as the `GoldenSubject` fixture.
+- Upstream: <https://github.com/status-im/nim-json-rpc @ debf33cabf7be009a2e905d4c7921b85eb7ca6dd> — Copyright (c) 2019-2025 Status Research & Development GmbH
+- License: **Apache-2.0 OR MIT** — header text preserved in the fixture; full texts in `LICENSES/Apache-2.0.txt` (<https://www.apache.org/licenses/LICENSE-2.0.txt>) and `LICENSES/MIT.txt` (<https://opensource.org/license/mit>).
+
 ## 4. nim-libp2p — embedded bytesview copy (Apache-2.0 OR MIT)
 
 - File: `tests/unit/test_libp2p_bytesview_binding.nim` (the `BvSubjectModuleBytes` constant embeds the complete 22-line `libp2p/utils/bytesview.nim`, byte-identical, sha256-verified)

@@ -323,8 +323,7 @@ func lowerPostconditionToLean*(
       of boMul: result = "(" & lhs & " * " & rhs & ")"
       of boDiv: result = "(" & lhs & " / " & rhs & ")"
       of boRem: result = "(" & lhs & " % " & rhs & ")"
-      of boLt:  result = "(" & lhs & " < " & rhs & ")"
-      of boLtU: result = "(" & lhs & " < " & rhs & ")"
+      of boLt, boLtU: result = "(" & lhs & " < " & rhs & ")"
       of boLe:  result = "(" & lhs & " ≤ " & rhs & ")"
       of boGt:  result = "(" & lhs & " > " & rhs & ")"
       of boGe:  result = "(" & lhs & " ≥ " & rhs & ")"
@@ -530,9 +529,12 @@ func renderLeanForFuncDef*(
 
   # Render one I6 theorem per postcondition (explicit + synthesized), using
   # the same order/source the obligation generator uses.
+  let renderPosts =
+    if funcDef.leanPostConditions.len > 0: funcDef.leanPostConditions
+    else: funcDef.postConditions
   var seen: seq[string] = @[]
   var postExprs: seq[IRExpr] = @[]
-  for post in funcDef.postConditions:
+  for post in renderPosts:
     if post != nil:
       let canon = canonicalizePredicate(post)
       if canon notin seen:
@@ -1119,7 +1121,28 @@ type SubjectParseBoundComponents* = object
   synthesisDerivationDigest*: string = ""
     ## Digest of the recorded deterministic β-splice derivation rule (rule
     ## identity + ordered original symbols). Part of the composite binding
-    ## (§2.1a-2); empty in single-symbol mode.
+    ## (§2.1a-2); empty in single-symbol mode. Constructed-model mode also
+    ## folds it (rule identity + instance ordinal).
+  constructedModel*: bool = false
+    ## §2.1a-4 constructed-model mode: the subject AST is outside the
+    ## certified extraction subset, so NO EA leg exists — the model is built
+    ## from a committed, hash-bound adoption. The EA slots must stay EMPTY
+    ## (a filled one is a fabricated measurement, refused at the binding
+    ## site); the identity is carried by the three digests below.
+  constructedModelSourceDigest*: string = ""
+    ## Canonical spec identity (SpecID) of the adopted proposition content —
+    ## recomputed at load and byte-equal to `adoption.adoptedSpecHash`.
+  constructedModelGeneratorDigest*: string = ""
+    ## sha256 of the canonical generator record (ruleId + ruleVersion +
+    ## closed grammar / constructor identity).
+  constructedModelAdoptionDigest*: string = ""
+    ## sha256 of the canonical adoption-record projection (spec id, adopter,
+    ## adoptedAt, basis, grammar version, subject pin, provenance).
+  constructedModelBodyDigest*: string = ""
+    ## sha256 of the synthesized carrier funcDef serialization measured at
+    ## the synthesis site. The binding site recomputes the digest of the
+    ## funcDef it is about to seal and refuses a mismatch — the verified
+    ## carrier must be byte-identical to the constructed model.
   ea2NimDigest*: string = ""
   ea2LeanDigest*: string = ""
   ea2IrcheckBinaryDigest*: string = ""
@@ -1143,7 +1166,31 @@ type SubjectParseBoundComponents* = object
     ## symbols directly, so the composite call shape is bypassed. Empty for
     ## every other binding (zero-diff).
 
+func isCanonicalDigest(s: string): bool {.raises: [].} =
+  ## Canonical sha256 hex form (lowercase, 64 chars). A private predicate —
+  ## the same shape obligation_types enforces for the bound-identity
+  ## components; constructed-model digests must satisfy it before they enter
+  ## an identity.
+  if s.len != 64:
+    return false
+  for ch in s:
+    if ch notin {'0'..'9', 'a'..'f'}:
+      return false
+  true
+
 func parseComponentsMeasured*(c: SubjectParseBoundComponents): bool {.raises: [].} =
+  if c.constructedModel:
+    ## §2.1a-4: the constructed model has NO EA leg by construction. What
+    ## must be present is the module AST identity, the governed symbol the
+    ## model classifies, the three adoption digests, and the body digest of
+    ## the carrier that will be sealed. EA slots are validated empty at the
+    ## correspondence gate.
+    return c.pnodeCanonicalV2Digest.len > 0 and
+      c.measuredForFuncName.len > 0 and
+      isCanonicalDigest(c.constructedModelSourceDigest) and
+      isCanonicalDigest(c.constructedModelGeneratorDigest) and
+      isCanonicalDigest(c.constructedModelAdoptionDigest) and
+      isCanonicalDigest(c.constructedModelBodyDigest)
   if c.claimCarrierSingleOrigin:
     ## Single-origin claim carrier: ONE original leg plus the recorded
     ## derivation rule must be present. No second leg exists to measure —
@@ -1173,6 +1220,7 @@ func parseBoundCarried*(c: SubjectParseBoundComponents): bool {.raises: [].} =
   ## per-name re-measurement that cannot succeed for a name absent from the
   ## subject source.
   c.synthesizedComposite or c.claimCarrierSingleOrigin or
+  c.constructedModel or
   c.replayHarnessTemplate.len > 0 or
   c.measuredForFuncName.len > 0 or
   c.pnodeCanonicalV2Digest.len > 0 or c.eaDetail.len > 0
@@ -1334,6 +1382,42 @@ proc measureClaimCarrierParseBoundComponents*(moduleSource: string;
   result.compositeCarrierTypename =
     measureCompositeCarrierTypename(moduleSource, symbol)
 
+proc measureConstructedModelParseBoundComponents*(moduleSource, governedSymbol,
+    sourceDigest, generatorDigest, adoptionDigest, derivationRule: string
+): SubjectParseBoundComponents {.
+    raises: [], axiomEffect: IOEffect,
+    tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## §2.1a-4 measurement for a CONSTRUCTED model (jrpc-errclass lane): no
+  ## extraction agreement is measured — the subject AST is outside the
+  ## certified extraction subset and the model is built from the adopted
+  ## mapping, not extracted. The set therefore carries the module AST
+  ## identity (the same pnodeV2 measurement every subject uses), the governed
+  ## symbol, and the three adoption digests; the carrier body digest and the
+  ## replay harness template are stamped by the synthesis site. NOT gcsafe
+  ## (parses subject source) — main-thread callers only, like the other
+  ## measurement procs above.
+  result = SubjectParseBoundComponents(
+    constructedModel: true,
+    measuredForFuncName: governedSymbol,
+    constructedModelSourceDigest: sourceDigest,
+    constructedModelGeneratorDigest: generatorDigest,
+    constructedModelAdoptionDigest: adoptionDigest,
+    synthesisDerivationDigest:
+      sha256Hex(derivationRule & "|symbol=" & governedSymbol))
+  if moduleSource.len == 0:
+    result.eaDetail = "module source bytes unavailable"
+    return
+  if governedSymbol.len == 0 or derivationRule.len == 0:
+    result.eaDetail = "constructed model needs a non-empty governed symbol " &
+      "and derivation rule (symbol=\"" & governedSymbol & "\", rule=\"" &
+      derivationRule & "\")"
+    return
+  let pnodeRes = computeCanonicalAstHash(moduleSource)
+  if pnodeRes.isErr:
+    result.eaDetail = "pnodeCanonicalV2Digest unmeasurable (" & pnodeRes.error & ")"
+  else:
+    result.pnodeCanonicalV2Digest = pnodeRes.get()
+
 proc measureCompletenessRecordDigest*(funcDef: IRFuncDef;
                                       preSynthesisIrDigest: string;
                                       currentSourceIdentity,
@@ -1460,11 +1544,50 @@ func validateSingleSymbolLegs(funcDef: IRFuncDef;
     return err("subject binding: extraction agreement mismatch (" & parseBound.eaDetail & ")")
   Result[void, string](ok: true)
 
+func validateConstructedModelLegs(funcDef: IRFuncDef;
+    parseBound: SubjectParseBoundComponents): Result[void, string] {.raises: [].} =
+  ## §2.1a-4 constructed-model correspondence. There is no extraction
+  ## agreement to check — the model is constructed from the hash-bound
+  ## adoption, not extracted — so the honest gate is:
+  ##   * every EA slot EMPTY (a filled leg would be a fabricated measurement),
+  ##   * the governed subject symbol named and distinct from the carrier,
+  ##   * canonical digests for source/generator/adoption,
+  ##   * the body digest re-measured from THIS funcDef equals the digest the
+  ##     synthesis recorded (the verified carrier is byte-identical to the
+  ##     constructed model, not a downstream mutation of it).
+  if parseBound.eaNimDigest.len > 0 or parseBound.eaLeanDigest.len > 0 or
+      parseBound.eaIrcheckBinaryDigest.len > 0 or parseBound.eaAgreed or
+      parseBound.ea2NimDigest.len > 0 or parseBound.ea2LeanDigest.len > 0 or
+      parseBound.ea2IrcheckBinaryDigest.len > 0 or parseBound.ea2Agreed or
+      parseBound.ea2MeasuredForFuncName.len > 0:
+    return err("subject binding: constructed-model mode carries an EA leg " &
+      "(a constructed model has no extraction measurement; a filled leg is " &
+      "a fabricated measurement)")
+  if parseBound.measuredForFuncName.len == 0:
+    return err("subject binding: constructed-model mode must name the " &
+      "governed subject symbol")
+  if parseBound.measuredForFuncName == funcDef.name:
+    return err("subject binding: constructed-model carrier \"" & funcDef.name &
+      "\" is not a subject symbol — the governed symbol must be named")
+  if not isCanonicalDigest(parseBound.constructedModelSourceDigest) or
+      not isCanonicalDigest(parseBound.constructedModelGeneratorDigest) or
+      not isCanonicalDigest(parseBound.constructedModelAdoptionDigest):
+    return err("subject binding: constructed-model adoption digests are not " &
+      "canonical sha256 hex")
+  let measuredBody = sha256Hex(serializeIRFuncDef(funcDef))
+  if parseBound.constructedModelBodyDigest != measuredBody:
+    return err("subject binding: constructed-model body digest mismatch — " &
+      "the funcDef about to be sealed is not the synthesized model (recorded " &
+      parseBound.constructedModelBodyDigest & ", measured " & measuredBody & ")")
+  Result[void, string](ok: true)
+
 func validateParseBoundCorrespondence(funcDef: IRFuncDef;
     parseBound: SubjectParseBoundComponents): Result[void, string] {.raises: [].} =
   ## §2.1a per-mode correspondence gates for the pre-measured parse-bound legs.
   ## Pure and raises-free — the binding site calls this after the presence
   ## gate and fails closed on its error.
+  if parseBound.constructedModel:
+    return validateConstructedModelLegs(funcDef, parseBound)
   if parseBound.synthesizedComposite and parseBound.claimCarrierSingleOrigin:
     return validateClaimCarrierLegs(funcDef, parseBound)
   elif parseBound.synthesizedComposite:
@@ -1497,6 +1620,10 @@ func assembleSubjectBinding(firstObl: VerificationObligation;
     toolchainFingerprint: "",
     synthesisDerivationDigest: parseBound.synthesisDerivationDigest,
     claimCarrierSingleOrigin: parseBound.claimCarrierSingleOrigin,
+    constructedModel: parseBound.constructedModel,
+    constructedModelSourceDigest: parseBound.constructedModelSourceDigest,
+    constructedModelGeneratorDigest: parseBound.constructedModelGeneratorDigest,
+    constructedModelAdoptionDigest: parseBound.constructedModelAdoptionDigest,
     ea2NimDigest: parseBound.ea2NimDigest,
     ea2LeanDigest: parseBound.ea2LeanDigest,
     ea2IrcheckBinaryDigest: parseBound.ea2IrcheckBinaryDigest,
