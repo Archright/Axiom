@@ -548,6 +548,7 @@ proc makeCasFixtureRoot(name: string; withIrcheck: bool): string =
               "config/policy/epoch_manifest.json",
               "config/policy/landing_required_gateway_tests.json",
               "config/policy/merge_admission.json",
+              "config/trusted_checker_closure.json",
               "config/trusted_writer_set.json"]:
     let p = root / rel
     let dir = p.parentDir

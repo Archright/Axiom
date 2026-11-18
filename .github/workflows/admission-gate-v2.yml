@@ -366,6 +366,33 @@ jobs:
           printf '%s' "$PIN_HEAD_BLOB_SHA" | grep -qE '^[0-9a-f]{40}$' \
             || fail "pinHeadBlobSha='$PIN_HEAD_BLOB_SHA' not a 40-hex blob OID"
 
+          # ADR-0042 split layout: the committed writer set carries only the
+          # anchors (incl. pathSetDigest); the execution closure records live in
+          # config/trusted_checker_closure.json. The pin-H artifact is the
+          # rotation new-anchor subject consumed by the B-pinned checker, so its
+          # line-set must be the COMPOSITE of the two documents. The identity's
+          # pinHeadBlobSha stays the ORIGINAL trusted_writer_set.json blob.
+          if git cat-file -e "$HEAD_SHA:config/trusted_checker_closure.json" 2>/dev/null; then
+            git show "$HEAD_SHA:config/trusted_checker_closure.json" > /tmp/closure-H.json \
+              || fail "config/trusted_checker_closure.json unreadable at H=$HEAD_SHA"
+            sed -E 's|^[[:space:]]*//.*$||' /tmp/pin-H.json > /tmp/pin-H.stripped.json \
+              || fail "pin-H JSONC strip failed"
+            jq -e . /tmp/pin-H.stripped.json >/dev/null \
+              || fail "pin-H is not JSON after comment strip (fail-closed)"
+            jq -e 'has("pathSetDigest") and (has("trustedCheckerTreeClosure") | not)' \
+              /tmp/pin-H.stripped.json >/dev/null \
+              || fail "split writer set must carry pathSetDigest and NOT trustedCheckerTreeClosure (ambiguous layout — fail-closed)"
+            jq -e '.schemaVersion == "axiom.trusted-checker-closure.v1" and
+                   (.trustedCheckerTreeClosure | type) == "object" and
+                   (.trustedCheckerTreeClosure | length) > 0' \
+              /tmp/closure-H.json >/dev/null \
+              || fail "config/trusted_checker_closure.json schema invalid at H=$HEAD_SHA (fail-closed)"
+            jq -s '.[0] * {trustedCheckerTreeClosure: .[1].trustedCheckerTreeClosure}' \
+              /tmp/pin-H.stripped.json /tmp/closure-H.json > /tmp/pin-H.composite.json \
+              || fail "pin-H composite emission failed (fail-closed)"
+            mv /tmp/pin-H.composite.json /tmp/pin-H.json
+          fi
+
           mkdir -p /tmp/derived-closure
           jq -n --arg schema "axiom/derived-closure-identity/v1" \
                 --arg ch "$HEAD_SHA" --arg bs "$BASE_SHA" \

@@ -4,8 +4,8 @@ axiomLayer "tools"
 ## reanchor_pin.nim — rotation pin 재앵커 writer + 로컬 H2 preflight.
 ##
 ## 판정은 여기서 재구현하지 않는다. 파싱·비교 술어의 SSOT는 공유 leaf 모듈
-## core/policy/rotation_closure_facts (parseDerivedSet / pinClosureLineSet /
-## newAnchorVerdict)이며, merge_cli(landing Pass 2.75)와
+## core/policy/rotation_closure_facts (parseDerivedSet / resolvePinClosure /
+## newAnchorVerdict / pathSetDigest)이며, merge_cli(landing Pass 2.75)와
 ## rotation_pin_anchor_check(preflight)가 소비하는 **동일 컴파일 구현**이다.
 ## 이 도구는 CLI 표면 + 트리 I/O + 텍스트 재작성만 소유한다
 ## (rotation_pin_anchor_check.nim / derive_checker_closure.nim과 같은 venue
@@ -16,12 +16,19 @@ axiomLayer "tools"
 ##     로컬에서 차단한다. `.githooks/pre-push`가 OID별로 호출한다.
 ##   - writer: drift가 값 변화뿐일 때 pin 문서를 제자리에서 재앵커한다.
 ##
+## Layout (ADR-0042 / DEBT#558):
+##   legacy — closure records live in config/trusted_writer_set.json under
+##            trustedCheckerTreeClosure; --write rewrites those values in place.
+##   split  — anchors (incl. pathSetDigest) stay in trusted_writer_set.json;
+##            records live in config/trusted_checker_closure.json; --write
+##            regenerates the closure document deterministically and verifies
+##            the path-set digest against the immutable anchor.
+##
 ## Usage:
 ##   reanchor_pin --ref <git-ref> [--repo <dir>] [--derived <file>] [--write]
 ##
 ##     --ref <git-ref>   H. pin은 **그 ref의 트리**에서 읽는다
-##                       (`git show <ref>:config/trusted_writer_set.json`) —
-##                       워킹 트리를 읽으면 커밋되지 않은 편집이 판정에 섞인다.
+##                       (`git show <ref>:config/trusted_writer_set.json`).
 ##     --repo <dir>      git 저장소 루트 (기본: cwd에서 .git 탐색)
 ##     --derived <file>  이미 유도된 closure linetext (CI 아티팩트 재사용).
 ##                       생략 시 bin/derive_checker_closure를 같은 ref로 실행.
@@ -37,22 +44,27 @@ axiomLayer "tools"
 ## stderr: 입력 계약 진단.
 ## exit: 0 = pin@ref가 derived(ref)를 앵커함 (또는 --write 성공)
 ##       1 = dry-run에서 drift 검출 (판정 — fail-closed 아님)
-##       2 = 입력 계약 위반 (ref/파일/JSON(C) 파싱 — fail-closed, 판정 없음)
+##       2 = 입력 계약 위반 (ref/파일/JSON(C) 파싱/digest — fail-closed, 판정 없음)
 ##       3 = 멤버십 변경 (자동 재앵커 거부, 파일 무변경)
 ##
-## 재작성은 전체 재직렬화가 아니라 **표적 치환**이다: pin 문서는 수백 줄의
-## JSONC 주석을 담고 있어 재직렬화는 리뷰 불가능한 diff를 만든다. 치환 후
-## 결과를 다시 파싱해 line-set == derived를 자기검증하고, 불일치면 쓰지 않는다.
+## 재작성은 전체 재직렬화가 아니라 **표적 치환**이다(legacy): pin 문서는 수백
+## 줄의 JSONC 주석을 담고 있어 재직렬화는 리뷰 불가능한 diff를 만든다. split
+## 레이아웃의 closure 문서는 주석이 없는 기계 생성물이므로 결정론적 직렬화가
+## 정본이다. 어느 쪽이든 치환 후 결과를 다시 파싱해 line-set == derived와
+## pathSetDigest 일치를 자기검증하고, 불일치면 쓰지 않는다.
 
 import std/[algorithm, json, options, os, osproc, parseopt, sets, strutils]
 import core/results
 import core/policy/rotation_closure_facts
 import core/trusted/stdlib_shield  # safeMoveFile: moveFile 예외 격리의 기존 shim 재사용
+import core/trusted/axiom_pragmas_lite
 
 const
   ToolName* = "reanchor_pin"
   ## rotation pin 문서의 트리 상대 경로 (B/H 공통 identity).
   PinPath* = RotationPinBPath
+  ## split 레이아웃의 derived closure 문서 경로.
+  ClosurePath* = RotationClosurePath
   ## H closure 유도자 — 단일 derivation authority (ADR C2).
   DeriverBin* = "bin/derive_checker_closure"
 
@@ -78,8 +90,12 @@ type
     ## stdout 본문 (exit 0/1/3) 또는 stderr 진단 (exit 2).
     text*: string
     drift*: seq[DriftEntry]
-    ## --write 성공 시 재작성된 pin 전문 (I/O 계층이 원자적으로 교체한다).
+    ## legacy --write 성공 시 재작성된 pin 전문.
     newPinText*: Option[string]
+    ## split --write 성공 시 재작성된 closure 문서 전문.
+    newClosureText*: Option[string]
+    ## --write가 실제로 쓰는 트리 상대 경로 (PinPath | ClosurePath).
+    writeTarget*: string
 
 # ---------------------------------------------------------------------------
 # Pure core — drift 계산 (공유 모듈 술어 위에서만 동작)
@@ -265,13 +281,54 @@ proc applyWrite*(pinText: string; derivedH: HashSet[string];
     return err("self-check failed: rewritten pin line-set != derived(H) — refusing to write")
   ok(outText)
 
+proc buildClosureDoc*(derivedH: HashSet[string]; pinNode: JsonNode):
+    Result[string, string] {.raises: [], axiomDecision(
+  id = "DECISION-0829",
+  reason = "DEBT#558 trust-epoch split: deterministic closure-document serialization; the written bytes must reparse to the derived set and match the immutable pathSetDigest",
+  adr = "docs/adr/0042-trust-epoch-closure-split.md",
+  introduced = "v104"
+).} =
+  ## Deterministic closure document: schemaVersion + path-sorted records.
+  ## Self-checks (never writes on failure): the serialized text reparses to the
+  ## derived line-set and the declared pathSetDigest equals digest(derived).
+  let entries = sortedPathLines(derivedH)
+  if entries.len == 0:
+    return err("derived closure is empty — refusing to write an empty document")
+  var closure = newJObject()
+  for e in entries:
+    let
+      mode = headField(e.line, 0)
+      typ = headField(e.line, 1)
+      sha = shaOf(e.line)
+    if mode.len == 0 or typ.len == 0 or sha.len == 0:
+      return err("malformed derived line for '" & e.path & "'")
+    closure[e.path] = %*{"mode": mode, "type": typ, "sha": sha}
+  var root = newJObject()
+  root["schemaVersion"] = %RotationClosureSchemaVersion
+  root[RotationPinKey] = closure
+  let text = root.pretty & "\n"
+  let reparsed = parsePinNode(text)
+  if reparsed.isErr:
+    return err("closure self-check: serialized document does not parse: " & reparsed.err)
+  let resolved = resolvePinClosure(pinNode, reparsed.get)
+  if resolved.isErr:
+    return err("closure self-check: " & resolved.err)
+  if resolved.get.isNone or resolved.get.get != derivedH:
+    return err("closure self-check: written closure line-set != derived(H) — refusing to write")
+  let dv = pathSetDigestVerdict(pinNode, resolved.get)
+  if dv.isErr:
+    return err("closure self-check: " & dv.err)
+  if not dv.get:
+    return err("closure self-check: pathSetDigest does not match derived(H) — refusing to write")
+  ok(text)
+
 # ---------------------------------------------------------------------------
 # Pure core — 판정 (텍스트 → Outcome). I/O 없음.
 # ---------------------------------------------------------------------------
 
-proc evaluateTexts*(derivedText, pinText, refName: string; write: bool):
-    Outcome {.raises: [].} =
-  ## 세 텍스트 → 종료코드 + 본문. 입력 계약 위반은 판정 **이전에** exit 2로
+proc evaluateTexts*(derivedText, pinText, closureText, refName: string;
+                    write: bool): Outcome {.raises: [].} =
+  ## 네 텍스트 → 종료코드 + 본문. 입력 계약 위반은 판정 **이전에** exit 2로
   ## 끝난다 (malformed 입력은 run-level 실패이지 H2 verdict가 아니다).
   let derived = parseDerivedSet(derivedText)
   if derived.isErr:
@@ -281,12 +338,34 @@ proc evaluateTexts*(derivedText, pinText, refName: string; write: bool):
   if pinNode.isErr:
     return Outcome(exitCode: ExitInputViolation,
                    text: "input contract violation: pin: " & pinNode.err)
-  let pinSet = pinClosureLineSet(pinNode.get)
+  var closureNode: JsonNode = nil
+  if closureText.strip().len > 0:
+    let parsedClosure = parsePinNode(closureText)
+    if parsedClosure.isErr:
+      return Outcome(exitCode: ExitInputViolation,
+                     text: "input contract violation: closure: " & parsedClosure.err)
+    closureNode = parsedClosure.get
+    let schema = closureDocSchemaOk(closureNode)
+    if schema.isErr:
+      return Outcome(exitCode: ExitInputViolation,
+                     text: "input contract violation: " & schema.err)
+  let pinSet = resolvePinClosure(pinNode.get, closureNode)
   if pinSet.isErr:
     return Outcome(exitCode: ExitInputViolation,
                    text: "input contract violation: pin: " & pinSet.err)
   let drift = computeDrift(derived.get, pinSet.get)
+
   if drift.len == 0:
+    # The anchor and the closure are coherent — but a stale digest is still a
+    # broken anchor: report it instead of a clean no-drift.
+    let dv = pathSetDigestVerdict(pinNode.get, pinSet.get)
+    if dv.isErr:
+      return Outcome(exitCode: ExitInputViolation,
+                     text: "input contract violation: " & dv.err)
+    if not dv.get:
+      return Outcome(exitCode: ExitInputViolation,
+                     text: "input contract violation: " & RotationPathSetDigestKey &
+                       " does not match the closure path set (fail-closed)")
     return Outcome(exitCode: ExitOk,
                    text: "OK no-drift — pin@" & refName & " anchors derived(" & refName & ")")
 
@@ -316,7 +395,29 @@ proc evaluateTexts*(derivedText, pinText, refName: string; write: bool):
                      " decision (ADR-0025 §7), not a value update. No file written.",
                    drift: drift)
 
+  # Value-only drift: paths are unchanged, so the declared digest must still
+  # match. A mismatch here is a broken anchor, not a re-anchorable value drift.
+  let dv = pathSetDigestVerdict(pinNode.get, pinSet.get)
+  if dv.isErr:
+    return Outcome(exitCode: ExitInputViolation,
+                   text: "input contract violation: " & dv.err)
+  if not dv.get:
+    return Outcome(exitCode: ExitInputViolation,
+                   text: "input contract violation: " & RotationPathSetDigestKey &
+                     " does not match the closure path set (fail-closed)",
+                   drift: drift)
+
   if write:
+    if pinNode.get.isSplitLayout:
+      let built = buildClosureDoc(derived.get, pinNode.get)
+      if built.isErr:
+        return Outcome(exitCode: ExitInputViolation,
+                       text: "write refused: " & built.err, drift: drift)
+      return Outcome(exitCode: ExitOk,
+                     text: body & summary & "\nWROTE " & ClosurePath &
+                       " — commit the updated closure document, then re-run without --write.",
+                     drift: drift, newClosureText: some(built.get),
+                     writeTarget: ClosurePath)
     let rewritten = applyWrite(pinText, derived.get, drift)
     if rewritten.isErr:
       return Outcome(exitCode: ExitInputViolation,
@@ -324,11 +425,17 @@ proc evaluateTexts*(derivedText, pinText, refName: string; write: bool):
     return Outcome(exitCode: ExitOk,
                    text: body & summary & "\nWROTE " & PinPath &
                      " — commit the updated pin, then re-run without --write.",
-                   drift: drift, newPinText: some(rewritten.get))
+                   drift: drift, newPinText: some(rewritten.get),
+                   writeTarget: PinPath)
 
   Outcome(exitCode: ExitDrift,
           text: body & summary & "\nrun: reanchor_pin --ref " & refName & " --write",
           drift: drift)
+
+proc evaluateTexts*(derivedText, pinText, refName: string; write: bool): Outcome {.
+    raises: [].} =
+  ## Legacy-layout overload (no closure document supplied).
+  evaluateTexts(derivedText, pinText, "", refName, write)
 
 # ---------------------------------------------------------------------------
 # I/O boundary — git(트리 전용) / deriver / 파일
@@ -388,9 +495,18 @@ proc readPinAt*(repoRoot, refName: string): Result[string, string] {.raises: [].
       $r.code & "): " & r.outp.strip())
   ok(r.outp)
 
-proc writePinAtomically*(repoRoot, text: string): Result[string, string] {.
+proc readClosureAt*(repoRoot, refName: string): Result[string, string] {.
     raises: [].} =
-  let target = repoRoot / PinPath
+  ## closure@ref — absent is NOT an error here: the shared resolver decides
+  ## whether the layout requires it (split + digest present → fail-closed).
+  let r = runGit(repoRoot, "show " & quoteShell(refName & ":" & ClosurePath))
+  if r.code != 0:
+    return ok("")
+  ok(r.outp)
+
+proc writeTextAtomically*(repoRoot, relPath, text: string): Result[string, string] {.
+    raises: [].} =
+  let target = repoRoot / relPath
   let tmp = target & ".reanchor.tmp"
   try:
     writeFile(tmp, text)
@@ -405,6 +521,11 @@ proc writePinAtomically*(repoRoot, text: string): Result[string, string] {.
       discard
     return err("cannot replace '" & target & "': " & e.msg)
   ok(target)
+
+proc writePinAtomically*(repoRoot, text: string): Result[string, string] {.
+    raises: [].} =
+  ## Legacy alias retained for existing callers/tests.
+  writeTextAtomically(repoRoot, PinPath, text)
 
 # ---------------------------------------------------------------------------
 # CLI surface
@@ -506,9 +627,19 @@ proc runReanchor*(args: seq[string]): int {.raises: [].} =
   if pinText.isErr:
     emitDiagnostic("input contract violation: " & pinText.err)
     return ExitInputViolation
-  let outcome = evaluateTexts(derived.get, pinText.get, a.refName, a.write)
-  if outcome.newPinText.isSome:
-    let w = writePinAtomically(repoRoot, outcome.newPinText.get)
+  let closureText = readClosureAt(repoRoot, a.refName)
+  if closureText.isErr:
+    emitDiagnostic("input contract violation: " & closureText.err)
+    return ExitInputViolation
+  let outcome = evaluateTexts(derived.get, pinText.get, closureText.get,
+                              a.refName, a.write)
+  if outcome.newClosureText.isSome:
+    let w = writeTextAtomically(repoRoot, outcome.writeTarget, outcome.newClosureText.get)
+    if w.isErr:
+      emitDiagnostic(w.err)
+      return ExitInputViolation
+  elif outcome.newPinText.isSome:
+    let w = writeTextAtomically(repoRoot, outcome.writeTarget, outcome.newPinText.get)
     if w.isErr:
       emitDiagnostic(w.err)
       return ExitInputViolation

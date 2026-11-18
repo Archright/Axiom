@@ -13,7 +13,7 @@
 ## Fixtures live in an isolated temp dir — the working repository is never
 ## touched (same policy as test_derive_checker_closure.nim).
 
-import std/[json, os, strutils, unittest]
+import std/[json, os, sets, strutils, unittest]
 
 import ci/rotation_pin_anchor_check
 import core/policy/rotation_closure_facts
@@ -48,6 +48,21 @@ proc pinDocText(entries: seq[tuple[path, mode, sha: string]];
   if jsonc:
     text = "// trusted writer set (JSONC comment)\n" & text & " // trailing inline\n"
   text
+
+proc digestOf(lines: openArray[string]): string =
+  var s = initHashSet[string]()
+  for ln in lines:
+    s.incl ln
+  pathSetDigest(s).get
+
+proc splitPinText(digest: string): string =
+  $ %*{"schema": 1, "pathSetDigest": digest}
+
+proc closureText(entries: seq[tuple[path, mode, sha: string]]): string =
+  var obj = newJObject()
+  for e in entries:
+    obj[e.path] = %*{"mode": e.mode, "type": "blob", "sha": e.sha}
+  $ %*{"schemaVersion": RotationClosureSchemaVersion, RotationPinKey: obj}
 
 suite "rotation_pin_anchor_check — CLI contract (golden verdicts, fail-closed inputs)":
   setup:
@@ -149,3 +164,41 @@ suite "rotation_pin_anchor_check — CLI contract (golden verdicts, fail-closed 
         ExitPass
     finally:
       setCurrentDir(cwd)
+
+suite "rotation_pin_anchor_check — split layout (ADR-0042 / DEBT#558)":
+
+  test "split pin-B + closure doc at H and B → PASS":
+    let d = LineA & "\n" & LineB
+    let pin = splitPinText(digestOf(@[LineA, LineB]))
+    let closure = closureText(@[EntryA, EntryB])
+    let o = evaluatePinAnchorTexts(d, pin, pin, closure, closure)
+    check o.exitCode == ExitPass
+    check o.line == "H2 PASS code=OK"
+
+  test "composite pin-H (records inline) → PASS (the workflow artifact shape)":
+    let d = LineA & "\n" & LineB
+    let pinB = splitPinText(digestOf(@[LineA, LineB]))
+    let composite = closureText(@[EntryA, EntryB])
+    let o = evaluatePinAnchorTexts(d, composite, pinB, "", composite)
+    check o.exitCode == ExitPass
+
+  test "tampered closure value → ROT_NEW_PIN (derived is the authority)":
+    let d = LineA & "\n" & LineB
+    let pin = splitPinText(digestOf(@[LineA, LineB]))
+    let closure = closureText(@[EntryA, EntryBZZ])
+    let o = evaluatePinAnchorTexts(d, pin, pin, closure, closure)
+    check o.exitCode == ExitH2Fail
+    check o.line.startsWith("H2 FAIL code=ROT_NEW_PIN")
+
+  test "pathSetDigest mismatch → H2 FAIL with the digest reason":
+    let d = LineA & "\n" & LineB
+    let pin = splitPinText(RotationPathSetDigestDomain & ":" & "0".repeat(64))
+    let closure = closureText(@[EntryA, EntryB])
+    let o = evaluatePinAnchorTexts(d, pin, pin, closure, closure)
+    check o.exitCode == ExitH2Fail
+    check o.line.contains(RotationPathSetDigestKey)
+
+  test "split pin with no closure source fails closed (exit 2)":
+    let pin = splitPinText(digestOf(@[LineA]))
+    let o = evaluatePinAnchorTexts(LineA, pin, pin, "", "")
+    check o.exitCode == ExitInputViolation

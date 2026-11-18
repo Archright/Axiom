@@ -156,6 +156,11 @@ suite "derive_checker_closure fail-closed 계약":
       check r.code == 0
       check "ci/checker.mk" in r.outp
       check "nimble.lock" in r.outp
+      # ADR-0042 self-reference exclusion: the derived closure document is
+      # metadata about the derivation, never a member of it. The deriver is
+      # positive-only, so this pin fails the moment a seed/walk change would
+      # pull the document into its own closure.
+      check "config/trusted_checker_closure.json" notin r.outp
     else:
       # 커밋 전 상태 — 시드 부재가 UNRESOLVED로 거부되어야 한다 (조용한 축소 금지)
       check r.code != 0

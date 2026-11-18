@@ -13,7 +13,7 @@
 ## Fixture는 isolated temp dir에서만 만든다 — 실제 저장소는 건드리지 않는다
 ## (test_rotation_pin_anchor_check.nim / test_derive_checker_closure.nim과 같은 정책).
 
-import std/[options, os, osproc, strutils, unittest]
+import std/[options, os, osproc, sets, strutils, unittest]
 
 import ci/reanchor_pin
 import core/policy/rotation_closure_facts
@@ -51,6 +51,27 @@ proc writeFixture(name, content: string): string =
   createDir(FixtureDir)
   result = FixtureDir / name
   writeFile(result, content)
+
+proc digestOf(lines: openArray[string]): string =
+  var s = initHashSet[string]()
+  for ln in lines:
+    s.incl ln
+  pathSetDigest(s).get
+
+proc splitPinDocText(digest: string): string =
+  result = "{\n  \"schemaVersion\": \"axiom.trusted-writer-set.v1\",\n" &
+    "  \"trustedWriterWorkflow\": \".github/workflows/certificate-mint.yml\",\n" &
+    "  \"trustedAdmissionWorkflowSha\": \"13bd4e55e9bf8a531d9d608c13d3fc2657478998\",\n" &
+    "  \"pathSetDigest\": \"" & digest & "\"\n}\n"
+
+proc closureDocText(entries: seq[tuple[path, sha: string]]): string =
+  result = "{\n  \"schemaVersion\": \"" & RotationClosureSchemaVersion & "\",\n" &
+    "  \"trustedCheckerTreeClosure\": {\n"
+  for i, e in entries:
+    result.add "    \"" & e.path & "\": {\"mode\": \"100644\", " &
+      "\"type\": \"blob\", \"sha\": \"" & e.sha & "\"}"
+    result.add(if i == entries.high: "\n" else: ",\n")
+  result.add "  }\n}\n"
 
 proc gitIn(dir: string; args: string): int =
   execCmdEx("git -C " & quoteShell(dir) & " " & args)[1]
@@ -224,3 +245,36 @@ suite "reanchor_pin — pin@ref는 트리에서 읽는다":
     check runReanchor(@["--ref", "HEAD", "--repo", repo, "--derived", derived,
                          "--write"]) == ExitMembershipChange
     check readFile(repo / "config" / "trusted_writer_set.json") == before
+
+suite "reanchor_pin — split layout (ADR-0042 / DEBT#558)":
+
+  test "split no-drift, value reanchor writes only the closure document, idempotent":
+    let pin = splitPinDocText(digestOf(@[LineA, LineB]))
+    let closure = closureDocText(@[(path: PathA, sha: "a1"), (path: PathB, sha: "b2")])
+    check evaluateTexts(LineA & "\n" & LineB, pin, closure, "HEAD", false).exitCode == ExitOk
+    let w = evaluateTexts(LineA9 & "\n" & LineB8, pin, closure, "HEAD", true)
+    check w.exitCode == ExitOk
+    check w.newPinText.isNone
+    check w.newClosureText.isSome
+    check w.writeTarget == ClosurePath
+    check evaluateTexts(LineA9 & "\n" & LineB8, pin,
+                        w.newClosureText.get, "HEAD", false).exitCode == ExitOk
+
+  test "digest mismatch is an input violation, never a writable drift":
+    let pin = splitPinDocText(RotationPathSetDigestDomain & ":" & "0".repeat(64))
+    let closure = closureDocText(@[(path: PathA, sha: "a1"), (path: PathB, sha: "b2")])
+    let o = evaluateTexts(LineA9 & "\n" & LineB8, pin, closure, "HEAD", true)
+    check o.exitCode == ExitInputViolation
+    check o.newClosureText.isNone
+    check o.text.contains(RotationPathSetDigestKey & " does not match")
+
+  test "split membership change is refused before the digest is considered":
+    let pin = splitPinDocText(digestOf(@[LineA]))
+    let closure = closureDocText(@[(path: PathA, sha: "a1")])
+    let o = evaluateTexts(LineA & "\n" & LineB, pin, closure, "HEAD", true)
+    check o.exitCode == ExitMembershipChange
+    check o.newClosureText.isNone
+
+  test "split pin with a missing closure document fails closed":
+    let pin = splitPinDocText(digestOf(@[LineA]))
+    check evaluateTexts(LineA, pin, "", "HEAD", false).exitCode == ExitInputViolation

@@ -93,16 +93,19 @@ const
     ## (.github/actions/setup-axiom-toolchain/action.yml "Build-script
     ## identity": Makefile, config.nims, config/effects.nims,
     ## src/gate/config.nims chained sha256).
-  PolicyDigestInputPaths*: array[5, string] = [
+  PolicyDigestInputPaths*: array[6, string] = [
     "config/decision_binding.waiver.json",
     "config/policy/epoch_manifest.json",
     "config/policy/landing_required_gateway_tests.json",
     "config/policy/merge_admission.json",
+    "config/trusted_checker_closure.json",
     "config/trusted_writer_set.json"]
     ## The runtime-read policy file set, fixed sorted order. Sources: the
     ## merge predicate reads config/policy/merge_admission.json (policy SSOT,
-    ## merge_cli.nim currentPolicyDigest) and config/trusted_writer_set.json
-    ## (pin@B rotation closure, merge_cli.nim RotationPinBPath); the required-
+    ## merge_cli.nim currentPolicyDigest), config/trusted_writer_set.json
+    ## (pin@B rotation closure, merge_cli.nim RotationPinBPath), and — in the
+    ## ADR-0042 split layout — config/trusted_checker_closure.json (the
+    ## resolved execution closure records); the required-
     ## validations policy config/policy/landing_required_gateway_tests.json
     ## is a rotation companion of the same predicate (merge_cli.nim A2
     ## amendment); the engine execution scope comes from
