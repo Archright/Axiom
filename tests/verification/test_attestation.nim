@@ -1862,6 +1862,46 @@ let p17OkList = listLedgerCertIds(p17OkTransport, "owner/repo")
 checkTrue("truncated=false consumes normally (regression guard)",
   p17OkList.isOk and p17OkList.get == @[hex64(1701)])
 
+# ---------------------------------------------------------------------------
+# P19 — ledger-append attestation gate (DEBT#555). appendCertificate is the
+# single append choke point: a present-but-invalid Ed25519 attestation must be
+# refused before any ledger object is created; an absent block (legacy cert)
+# and a valid block must both be accepted.
+# ---------------------------------------------------------------------------
+echo "=== P19: ledger-append attestation gate (DEBT#555) ==="
+let p19Ledger = RetryLedger(tip: "", entries: initTable[string, seq[string]]())
+let p19Transport = retryTransport(p19Ledger)
+let p19ValidPath = d6Mint.get.path
+checkTrue("fixture valid attestation verifies",
+  verifyCertificateAttestation(parseJson(readFile(p19ValidPath))).isOk)
+let p19ValidAppend = appendCertificate(p19Transport, "owner/repo", p19ValidPath)
+checkTrue("valid attestation → append accepted", p19ValidAppend.isOk)
+checkTrue("valid attestation → ledger tip advanced", p19Ledger.tip.len == 40)
+let p19AbsentPath = tmpBase / "p19_absent_attestation.json"
+writeFile(p19AbsentPath, canonicalJsonString(%*{
+  "kind": "subject-continuity",
+  "subjectId": hex64(1801),
+  "status": "certGreen",
+  "schemaVersion": "axiom.certificate.v3"
+}))
+checkTrue("fixture absent attestation passes the verifier",
+  verifyCertificateAttestation(parseJson(readFile(p19AbsentPath))).isOk)
+let p19AbsentAppend = appendCertificate(p19Transport, "owner/repo", p19AbsentPath)
+checkTrue("absent attestation (legacy cert) → append accepted", p19AbsentAppend.isOk)
+var p19InvalidNode = parseJson(readFile(p19ValidPath))
+p19InvalidNode["createdAt"] = %"2020-01-01T00:00:00Z"
+let p19InvalidPath = tmpBase / "p19_invalid_attestation.json"
+writeFile(p19InvalidPath, $p19InvalidNode)
+checkTrue("fixture invalid attestation rejected by the verifier",
+  verifyCertificateAttestation(p19InvalidNode).isErr)
+let p19PatchesBefore = p19Ledger.patchCalls
+let p19InvalidAppend = appendCertificate(p19Transport, "owner/repo", p19InvalidPath)
+checkTrue("present-but-invalid attestation → append rejected (fail-closed)",
+  p19InvalidAppend.isErr)
+checkTrue("rejection names the attestation", p19InvalidAppend.error.contains("attestation"))
+checkTrue("rejection precedes any ledger write (0 new PATCH attempts)",
+  p19Ledger.patchCalls == p19PatchesBefore)
+
 try: removeDir(tmpBase) except CatchableError: discard
 try: removeDir(w16Base) except CatchableError: discard
 try: removeDir(w17Base) except CatchableError: discard
