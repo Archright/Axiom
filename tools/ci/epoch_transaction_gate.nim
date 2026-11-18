@@ -480,9 +480,11 @@ proc manifestFieldState(base, head: string): tuple[sliceFieldsChanged,
     jsonStrArray(bN, "notYetImplementedSlices") != jsonStrArray(hN, "notYetImplementedSlices")
   result.pinFieldChanged = jsonStr(bN, "productionExecutionPin") != jsonStr(hN, "productionExecutionPin")
 
-proc twsFieldSnapshot(oid: string): tuple[pin, digest, closure: string, ok: bool] {.axiomEffect: IoEffect.} =
+proc twsFieldSnapshot(oid: string): tuple[pin, writer, digest, closure: string, ok: bool] {.axiomEffect: IoEffect.} =
   ## Canonical TWS field snapshots at a git revision under BOTH layouts:
   ##   * pin VALUE        — trustedAdmissionWorkflowSha
+  ##   * writer identity  — trustedWriterWorkflow (the declared contents:write
+  ##                        holder; a change re-binds WHO may pair for mint)
   ##   * path-set anchor  — pathSetDigest (split layout; "" in legacy)
   ##   * closure identity — sorted "mode sha path" lines resolved by the
   ##                        shared resolvePinClosure (legacy field inside the
@@ -500,6 +502,7 @@ proc twsFieldSnapshot(oid: string): tuple[pin, digest, closure: string, ok: bool
   if tws == nil or tws.kind != JObject:
     return
   result.pin = jsonStr(tws, ProductionPinRecordField)
+  result.writer = jsonStr(tws, "trustedWriterWorkflow")
   result.digest = jsonStr(tws, RotationPathSetDigestKey)
   let companionPath = closureCompanionPath(ProductionPinRecordPath)
   let (closureBytes, closureCode) = gitShowFile(oid, companionPath)
@@ -537,27 +540,30 @@ proc twsFieldState(base, head: string): tuple[pinValueChanged,
                                               layoutMigration: bool] {.axiomEffect: IoEffect.} =
   ## Field-level classification of a TWS change between base and head git
   ## OIDs — the manifestFieldState principle applied to the pin record's
-  ## independently-bound fields (see header "TWS field split"). The pin VALUE
-  ## and the path-set anchor (pathSetDigest) are both epoch-authority changes;
-  ## a closure re-anchor with BOTH unchanged is a closure re-anchor, not a pin
-  ## change. The ONE exception is the legacy→split layout migration: the
-  ## digest APPEARS while the pin value AND the closure line-set stay identical
-  ## (the records merely moved documents) — that is a trust-surface transition
-  ## judged by the App/rotation lane, not an engine-pin change. Fail-closed:
-  ## unreadable, unparsable, or schema-incomplete TWS at either revision →
-  ## ALL fields reported changed (the strictest classification — every pairing
+  ## independently-bound fields (see header "TWS field split"). The pin VALUE,
+  ## the writer identity, and the path-set anchor (pathSetDigest) are all
+  ## epoch-authority changes; a closure re-anchor with ALL of them unchanged is
+  ## a closure re-anchor, not a pin change. The ONE exception is the
+  ## legacy→split layout migration: the digest APPEARS while the pin value,
+  ## writer identity AND the closure line-set stay identical (the records
+  ## merely moved documents) — that is a trust-surface transition judged by the
+  ## App/rotation lane, not an engine-pin change. Fail-closed: unreadable,
+  ## unparsable, or schema-incomplete TWS at either revision → ALL fields
+  ## reported changed (the strictest classification — every pairing
   ## requirement then applies and the partial-update judgment fails).
   let b = twsFieldSnapshot(base)
   let h = twsFieldSnapshot(head)
   if not b.ok or not h.ok:
     return (true, true, false)
+  let writerChanged = b.writer != h.writer
   let layoutMigration =
     b.digest.len == 0 and h.digest.len > 0 and
-    b.pin == h.pin and
+    b.pin == h.pin and not writerChanged and
     b.closure.len > 0 and h.closure.len > 0 and
     closurePathSet(b.closure) == closurePathSet(h.closure) and
     closurePathSet(h.closure).len > 0
-  result = (b.pin != h.pin or (b.digest != h.digest and not layoutMigration),
+  result = ((b.pin != h.pin or writerChanged or
+             (b.digest != h.digest and not layoutMigration)),
             b.closure != h.closure,
             layoutMigration)
 

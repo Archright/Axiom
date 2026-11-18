@@ -78,6 +78,32 @@ paths, `ci/checker.mk`, transitive imports, artifact aliases), so the
 document is structurally excluded; the invariant is pinned by test, not by a
 new exclusion list.
 
+### CI bootstrap: composite pin-H artifact (no dormant blob pin)
+
+The admission orchestrator (`admission-gate-v2.yml`) runs from the PR/merge-group
+commit, but its callee is pinned to `admission-check.yml@9b3d87c3a`. The
+transition therefore does **not** edit `admission-check.yml` (editing it would
+re-pin `trustedAdmissionWorkflowSha` + `manifest.productionExecutionPin` to a
+blob that the pinned callee does not execute — a dormant pin).
+
+Instead, the orchestrator's closure-deriver composes the `pin-H.json` artifact:
+when `config/trusted_checker_closure.json` exists at H, it strips the JSONC
+comments from the writer set, requires `pathSetDigest` present and
+`trustedCheckerTreeClosure` absent, validates the closure-document schema, and
+injects the closure records. `identity.pinHeadBlobSha` remains the original
+writer-set blob. The B-pinned checker then consumes the split layout through its
+existing line-set interface. The in-place fallback in the old callee has no
+composite step, so an absent artifact fails closed rather than passing.
+
+### Transition and acceptance
+
+The transition rewrites the App-protected writer set, so it is exactly one
+break-glass PR with a documented ruleset snapshot/restore. Acceptance: an
+ordinary source-change PR (one existing closure member + the derived closure
+document) lands through the normal Merge Queue with the App PASS and no
+break-glass; independent negative controls (value-only vs path-set vs anchor
+changes) are denied by their own authorities.
+
 ## Consequences
 
 - Membership change (adding/removing a closure path) changes `pathSetDigest`,
@@ -87,8 +113,18 @@ new exclusion list.
   (`PolicyDigestInputPaths`), so certificates bound to the previous policy
   digest must be re-minted. The transition evidence records this.
 - The transition itself cannot use the normal lane: it rewrites the
-  App-protected writer set. Exactly one break-glass PR performs the split,
-  updates the 3-way pin atomically, and restores the ruleset immediately.
+  App-protected writer set. Exactly one break-glass PR performs the split and
+  restores the ruleset immediately. No admission-workflow blob pin moves.
+- `epoch_transaction_gate` classifies a legacy→split migration (digest appears
+  with the same path set) as a trust-surface transition, not an engine-pin
+  change; after the migration, a digest-only edit is again a pin change and
+  requires G2a pairing.
+- `epoch_transaction_gate` also treats a `trustedWriterWorkflow` change as a
+  pin-value change: the writer identity is part of the same authority record,
+  so a local preflight cannot silently re-bind the writer while the App still
+  guards the blob.
+- The scheduled `closure-watcher` consumes the split document when the writer
+  set omits the inline key; a missing split document fails closed.
 - After the transition, an ordinary source change rewrites only the closure
   document; the writer set stays byte-identical and the App passes without
   any exception.

@@ -1963,6 +1963,53 @@ proc loadPinBClosure(): Result[Option[HashSet[string]], string]
   except CatchableError as e:
     return err("pin@B parse failure (" & RotationPinBPath & "): " & e.msg & " (fail-closed)")
 
+proc resolvePinHInput(pinHPath: string):
+    tuple[pinH: Option[HashSet[string]], digestOk: bool, digestReason: string]
+    {.raises: [CatchableError, OSError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## pin@H — the H candidate root's copy of trusted_writer_set.json (the NEW
+  ## anchor). Missing/unreadable → none → condition ④ fails (verdict-level).
+  ## The path-set digest verdict rides alongside: a present pin whose digest
+  ## does not match the resolved closure path set is a deny, never a pass.
+  result = (none(HashSet[string]), true, "")
+  if pinHPath.len == 0:
+    return
+  if not fileExists(pinHPath):
+    logWarn("merge_cli", EnvPinHPath & " file missing: " & pinHPath &
+      " — rotation new-anchor condition will fail (fail-closed)")
+    return
+  try:
+    let pinHNode = parseJson(stripJsoncComments(readFile(pinHPath)))
+    var closureNode: JsonNode = nil
+    let companion = closureCompanionPath(pinHPath)
+    if fileExists(companion):
+      closureNode = parseJson(stripJsoncComments(readFile(companion)))
+      let schema = closureDocSchemaOk(closureNode)
+      if schema.isErr:
+        logWarn("merge_cli", "closure@H invalid (" & companion & "): " & schema.error &
+          " — rotation new-anchor condition will fail (fail-closed)")
+        closureNode = nil
+    let resolved = resolvePinClosure(pinHNode, closureNode)
+    if resolved.isErr:
+      result.digestOk = false
+      result.digestReason = "pin@H closure resolution failed: " & resolved.error & " (fail-closed)"
+      logWarn("merge_cli", "pin@H uninterpretable (" & pinHPath & "): " & resolved.error &
+        " — rotation new-anchor condition will fail (fail-closed)")
+      return
+    let resolvedSet = resolved.get
+    result.pinH = resolvedSet
+    let dv = pathSetDigestVerdict(pinHNode, resolvedSet)
+    if dv.isErr:
+      result.digestOk = false
+      result.digestReason = "pin path-set digest contract violation: " & dv.error &
+        " (fail-closed)"
+    elif not dv.get:
+      result.digestOk = false
+      result.digestReason = "pin path-set digest mismatch: " & RotationPathSetDigestKey &
+        " does not match the canonical digest of the resolved closure path set (fail-closed)"
+  except CatchableError as e:
+    logWarn("merge_cli", "pin@H unreadable (" & pinHPath & "): " & e.msg &
+      " — rotation new-anchor condition will fail (fail-closed)")
+
 proc collectRotationInputs*(derivedHPath, derivedBPath, derivedMPath, pinHPath: string;
                             changed: seq[string];
                             listingComplete: bool): Result[Option[RotationAdjudication], string]
@@ -2007,52 +2054,11 @@ proc collectRotationInputs*(derivedHPath, derivedBPath, derivedMPath, pinHPath: 
   let pinBRes = loadPinBClosure()
   if pinBRes.isErr:
     return err(pinBRes.error)
-  # pin@H — the H candidate root's copy of trusted_writer_set.json (the NEW
-  # anchor). Missing/unreadable → none → condition ④ fails (verdict-level).
-  var
-    pinH: Option[HashSet[string]] = none(HashSet[string])
-    digestOk = true
-    digestReason = ""
-  if pinHPath.len > 0:
-    if fileExists(pinHPath):
-      try:
-        let pinHNode = parseJson(stripJsoncComments(readFile(pinHPath)))
-        var closureNode: JsonNode = nil
-        let companion = closureCompanionPath(pinHPath)
-        if fileExists(companion):
-          closureNode = parseJson(stripJsoncComments(readFile(companion)))
-          let schema = closureDocSchemaOk(closureNode)
-          if schema.isErr:
-            logWarn("merge_cli", "closure@H invalid (" & companion & "): " & schema.error &
-              " — rotation new-anchor condition will fail (fail-closed)")
-            closureNode = nil
-        let resolved = resolvePinClosure(pinHNode, closureNode)
-        if resolved.isErr:
-          digestOk = false
-          digestReason = "pin@H closure resolution failed: " & resolved.error & " (fail-closed)"
-          logWarn("merge_cli", "pin@H uninterpretable (" & pinHPath & "): " & resolved.error &
-            " — rotation new-anchor condition will fail (fail-closed)")
-        else:
-          pinH = resolved.get
-          let dv = pathSetDigestVerdict(pinHNode, pinH)
-          if dv.isErr:
-            digestOk = false
-            digestReason = "pin path-set digest contract violation: " & dv.error &
-              " (fail-closed)"
-          elif not dv.get:
-            digestOk = false
-            digestReason = "pin path-set digest mismatch: " & RotationPathSetDigestKey &
-              " does not match the canonical digest of the resolved closure path set (fail-closed)"
-      except CatchableError as e:
-        logWarn("merge_cli", "pin@H unreadable (" & pinHPath & "): " & e.msg &
-          " — rotation new-anchor condition will fail (fail-closed)")
-    else:
-      logWarn("merge_cli", EnvPinHPath & " file missing: " & pinHPath &
-        " — rotation new-anchor condition will fail (fail-closed)")
+  let pinHRes = resolvePinHInput(pinHPath)
   if not listingComplete:
     return err("PR files listing incomplete — rotation allowlist cannot be proven (fail-closed)")
-  ok(some(adjudicateRotation(hRes.get, bRes.get, mRes.get, pinBRes.get, pinH, changed,
-                             digestOk, digestReason)))
+  ok(some(adjudicateRotation(hRes.get, bRes.get, mRes.get, pinBRes.get, pinHRes.pinH, changed,
+                             pinHRes.digestOk, pinHRes.digestReason)))
 
 proc collectCertificateContinuityFacts*(headSha: string; token: string; repo: string = DefaultRepo): Result[Option[CertificateContinuityFacts], string]
     {.raises: [CatchableError, OSError, Exception], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].}
