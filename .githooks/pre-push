@@ -818,3 +818,5 @@ if [ "$fails" -ne 0 ]; then
 fi
 
 echo "[PASS] Pre-push checks passed"
+
+# DEBT#545 negative probe A (2026-11-18): identifies a FROZEN path; must be blocked.
