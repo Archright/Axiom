@@ -1,0 +1,190 @@
+{
+  "captured_at": "2026-11-18T05:50:00Z",
+  "probe_rulesets": {
+    "probe-A-immutable": {
+      "id": 27523561,
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "include": [
+            "refs/heads/probe/base"
+          ],
+          "exclude": []
+        }
+      },
+      "rules": [
+        "required_status_checks(probe-green)",
+        "merge_queue(MERGE,ALLGREEN,1,1,1,0,60)"
+      ],
+      "bypass_actors": []
+    },
+    "probe-B-bypassable": {
+      "id": 27523562,
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "include": [
+            "refs/heads/probe/base"
+          ],
+          "exclude": []
+        }
+      },
+      "rules": [
+        "required_status_checks(probe-red)"
+      ],
+      "bypass_actors_variants": [
+        {
+          "actor_id": 53123826,
+          "actor_type": "User",
+          "bypass_mode": "pull_request",
+          "observed_via": "POST /rulesets 2026-11-18T05:33Z"
+        },
+        {
+          "actor_id": 53123826,
+          "actor_type": "User",
+          "bypass_mode": "always",
+          "observed_via": "PUT /rulesets/27523562 2026-11-18T05:46Z"
+        }
+      ]
+    }
+  },
+  "tests": [
+    {
+      "id": "T2-1",
+      "venue": "native",
+      "pr": 171,
+      "head": "126f4435b315ba198bd8cd4567c67a31618a049b",
+      "head_statuses": [
+        {
+          "context": "probe-red",
+          "state": "failure",
+          "created_at": "2026-11-18T05:37:42Z"
+        }
+      ],
+      "absent_context": "probe-green",
+      "call": "PUT /repos/Archright/Axiom/pulls/171/merge",
+      "result": "405 Repository rule violations: Required status check \"probe-green\" is expected",
+      "interpretation": "B bypass does not cross to A; A blocks"
+    },
+    {
+      "id": "T2-2",
+      "venue": "native",
+      "pr": 169,
+      "head": "f5d227c844528ec7e7ddf162e0ee67f22d25a8ef",
+      "head_statuses": [
+        {
+          "context": "probe-red",
+          "state": "failure",
+          "created_at": "2026-11-18T05:31:14Z"
+        },
+        {
+          "context": "probe-green",
+          "state": "success",
+          "created_at": "2026-11-18T05:31:28Z"
+        }
+      ],
+      "call": "PUT /repos/Archright/Axiom/pulls/169/merge",
+      "result": "200 merged 3f870f6106444f4d420da62f4eb90889cfb60be3 at 05:31:49Z",
+      "client_note": "gh pr merge refused first: 'the base branch policy prohibits the merge' (client-side pre-check)",
+      "interpretation": "User/pull_request bypass works for the server-side REST merge"
+    },
+    {
+      "id": "T2-3a",
+      "venue": "merge_queue",
+      "pr": 173,
+      "bypass_mode": "pull_request",
+      "head_statuses": [
+        {
+          "context": "probe-green",
+          "state": "success",
+          "created_at": "2026-11-18T05:41:59Z"
+        },
+        {
+          "context": "probe-red",
+          "state": "success",
+          "created_at": "2026-11-18T05:42:01Z"
+        }
+      ],
+      "merge_group": "677682be0d1290aa403e4c279e876a3c18bf5713",
+      "merge_group_statuses": [
+        {
+          "context": "probe-green",
+          "state": "success"
+        },
+        {
+          "context": "probe-red",
+          "state": "failure"
+        }
+      ],
+      "timeline": [
+        "added 05:42:03Z",
+        "removed 05:42:52Z"
+      ],
+      "result": "removed_by_github_merge_queue_bot",
+      "interpretation": "bypass not applied in queue venue"
+    },
+    {
+      "id": "T2-3b_control",
+      "venue": "merge_queue",
+      "pr": 173,
+      "bypass_mode": "pull_request",
+      "merge_group": "3f0e0d217996af6a9244fb3cb76adb8211b2e311",
+      "merge_group_statuses": [
+        {
+          "context": "probe-green",
+          "state": "success"
+        },
+        {
+          "context": "probe-red",
+          "state": "success"
+        }
+      ],
+      "timeline": [
+        "added 05:43:58Z",
+        "merged 05:44:48Z"
+      ],
+      "result": "merged",
+      "interpretation": "queue mechanics and manual statuses are honored; removal in T2-3a is attributable to the failing required check"
+    },
+    {
+      "id": "T2-4",
+      "venue": "merge_queue",
+      "pr": 174,
+      "bypass_mode": "always",
+      "head_statuses": [
+        {
+          "context": "probe-green",
+          "state": "success",
+          "created_at": "2026-11-18T05:47:10Z"
+        },
+        {
+          "context": "probe-red",
+          "state": "success",
+          "created_at": "2026-11-18T05:47:11Z"
+        }
+      ],
+      "merge_group": "0e7edbf59055baa7aa5934614d53141173bcc2c0",
+      "merge_group_statuses": [
+        {
+          "context": "probe-green",
+          "state": "success"
+        },
+        {
+          "context": "probe-red",
+          "state": "failure"
+        }
+      ],
+      "timeline": [
+        "added 05:47:13Z",
+        "removed 05:48:03Z"
+      ],
+      "result": "removed_by_github_merge_queue_bot",
+      "interpretation": "bypass not applied in queue venue even with always"
+    }
+  ],
+  "side_findings": [
+    "ruleset required_status_checks apply to direct pushes as well: pushing probe/pr2 was declined until conditions were narrowed from refs/heads/probe/* to refs/heads/probe/base",
+    "PUT /repos/{o}/{r}/pulls/2/merge on an already-merged PR returned {merged:true, sha:<historical>} rather than an error; merge responses must be validated against the requested PR number and head SHA",
+    "merge queue works on a non-default branch (probe/base) when a merge_queue rule targets it"
+  ]
+}
