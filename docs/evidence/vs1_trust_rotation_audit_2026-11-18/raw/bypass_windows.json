@@ -1,0 +1,704 @@
+[
+ {
+  "open": {
+   "version_id": 58030608,
+   "updated_at": "2026-11-17T01:50:14.095+09:00",
+   "actor": 53123826,
+   "bypass": [
+    {
+     "actor_id": null,
+     "actor_type": "OrganizationAdmin",
+     "bypass_mode": "pull_request"
+    }
+   ],
+   "can_bypass": "pull_requests_only",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  },
+  "close": {
+   "version_id": 58030755,
+   "updated_at": "2026-11-17T01:50:56.626+09:00",
+   "actor": 53123826,
+   "bypass": [],
+   "can_bypass": "never",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  }
+ },
+ {
+  "open": {
+   "version_id": 58043542,
+   "updated_at": "2026-11-17T03:16:30.900+09:00",
+   "actor": 53123826,
+   "bypass": [
+    {
+     "actor_id": null,
+     "actor_type": "OrganizationAdmin",
+     "bypass_mode": "pull_request"
+    }
+   ],
+   "can_bypass": "pull_requests_only",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  },
+  "close": {
+   "version_id": 58043550,
+   "updated_at": "2026-11-17T03:16:35.312+09:00",
+   "actor": 53123826,
+   "bypass": [],
+   "can_bypass": "never",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  }
+ },
+ {
+  "open": {
+   "version_id": 58053443,
+   "updated_at": "2026-11-17T04:06:36.394+09:00",
+   "actor": 53123826,
+   "bypass": [
+    {
+     "actor_id": null,
+     "actor_type": "OrganizationAdmin",
+     "bypass_mode": "pull_request"
+    }
+   ],
+   "can_bypass": "pull_requests_only",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  },
+  "close": {
+   "version_id": 58053484,
+   "updated_at": "2026-11-17T04:06:53.673+09:00",
+   "actor": 53123826,
+   "bypass": [],
+   "can_bypass": "never",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  }
+ },
+ {
+  "open": {
+   "version_id": 58121984,
+   "updated_at": "2026-11-17T14:20:24.620+09:00",
+   "actor": 53123826,
+   "bypass": [
+    {
+     "actor_id": null,
+     "actor_type": "OrganizationAdmin",
+     "bypass_mode": "always"
+    }
+   ],
+   "can_bypass": "always",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  },
+  "close": {
+   "version_id": 58121996,
+   "updated_at": "2026-11-17T14:20:29.142+09:00",
+   "actor": 53123826,
+   "bypass": [],
+   "can_bypass": "never",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  }
+ },
+ {
+  "open": {
+   "version_id": 58130640,
+   "updated_at": "2026-11-17T16:08:54.615+09:00",
+   "actor": 53123826,
+   "bypass": [
+    {
+     "actor_id": 53123826,
+     "actor_type": "User",
+     "bypass_mode": "always"
+    }
+   ],
+   "can_bypass": "always",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  },
+  "close": {
+   "version_id": 58130653,
+   "updated_at": "2026-11-17T16:09:05.219+09:00",
+   "actor": 53123826,
+   "bypass": [],
+   "can_bypass": "never",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  }
+ },
+ {
+  "open": {
+   "version_id": 58130708,
+   "updated_at": "2026-11-17T16:09:48.456+09:00",
+   "actor": 53123826,
+   "bypass": [
+    {
+     "actor_id": 53123826,
+     "actor_type": "User",
+     "bypass_mode": "always"
+    }
+   ],
+   "can_bypass": "always",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  },
+  "close": {
+   "version_id": 58130717,
+   "updated_at": "2026-11-17T16:09:53.184+09:00",
+   "actor": 53123826,
+   "bypass": [],
+   "can_bypass": "never",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  }
+ },
+ {
+  "open": {
+   "version_id": 58144103,
+   "updated_at": "2026-11-17T18:08:00.778+09:00",
+   "actor": 53123826,
+   "bypass": [
+    {
+     "actor_id": 53123826,
+     "actor_type": "User",
+     "bypass_mode": "always"
+    }
+   ],
+   "can_bypass": "always",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  },
+  "close": {
+   "version_id": 58144129,
+   "updated_at": "2026-11-17T18:08:14.535+09:00",
+   "actor": 53123826,
+   "bypass": [],
+   "can_bypass": "never",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  }
+ },
+ {
+  "open": {
+   "version_id": 58200591,
+   "updated_at": "2026-11-18T00:14:49.963+09:00",
+   "actor": 53123826,
+   "bypass": [
+    {
+     "actor_id": null,
+     "actor_type": "OrganizationAdmin",
+     "bypass_mode": "pull_request"
+    }
+   ],
+   "can_bypass": "pull_requests_only",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  },
+  "close": {
+   "version_id": 58200678,
+   "updated_at": "2026-11-18T00:15:10.076+09:00",
+   "actor": 53123826,
+   "bypass": [],
+   "can_bypass": "never",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  }
+ },
+ {
+  "open": {
+   "version_id": 58213324,
+   "updated_at": "2026-11-18T01:18:48.198+09:00",
+   "actor": 53123826,
+   "bypass": [
+    {
+     "actor_id": 53123826,
+     "actor_type": "User",
+     "bypass_mode": "always"
+    }
+   ],
+   "can_bypass": "always",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  },
+  "close": {
+   "version_id": 58213340,
+   "updated_at": "2026-11-18T01:18:54.266+09:00",
+   "actor": 53123826,
+   "bypass": [],
+   "can_bypass": "never",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  }
+ },
+ {
+  "open": {
+   "version_id": 58214455,
+   "updated_at": "2026-11-18T01:24:27.816+09:00",
+   "actor": 53123826,
+   "bypass": [
+    {
+     "actor_id": 53123826,
+     "actor_type": "User",
+     "bypass_mode": "always"
+    }
+   ],
+   "can_bypass": "always",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  },
+  "close": {
+   "version_id": 58214470,
+   "updated_at": "2026-11-18T01:24:33.292+09:00",
+   "actor": 53123826,
+   "bypass": [],
+   "can_bypass": "never",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  }
+ },
+ {
+  "open": {
+   "version_id": 58294264,
+   "updated_at": "2026-11-18T10:14:23.557+09:00",
+   "actor": 53123826,
+   "bypass": [
+    {
+     "actor_id": 53123826,
+     "actor_type": "User",
+     "bypass_mode": "always"
+    }
+   ],
+   "can_bypass": "always",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  },
+  "close": {
+   "version_id": 58294288,
+   "updated_at": "2026-11-18T10:14:28.263+09:00",
+   "actor": 53123826,
+   "bypass": [],
+   "can_bypass": "never",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  }
+ },
+ {
+  "open": {
+   "version_id": 58299317,
+   "updated_at": "2026-11-18T10:56:42.956+09:00",
+   "actor": 53123826,
+   "bypass": [
+    {
+     "actor_id": null,
+     "actor_type": "OrganizationAdmin",
+     "bypass_mode": "pull_request"
+    }
+   ],
+   "can_bypass": "pull_requests_only",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  },
+  "close": {
+   "version_id": 58299321,
+   "updated_at": "2026-11-18T10:56:47.151+09:00",
+   "actor": 53123826,
+   "bypass": [],
+   "can_bypass": "never",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  }
+ },
+ {
+  "open": {
+   "version_id": 58302871,
+   "updated_at": "2026-11-18T11:29:10.243+09:00",
+   "actor": 53123826,
+   "bypass": [
+    {
+     "actor_id": null,
+     "actor_type": "OrganizationAdmin",
+     "bypass_mode": "pull_request"
+    }
+   ],
+   "can_bypass": "pull_requests_only",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  },
+  "close": {
+   "version_id": 58302886,
+   "updated_at": "2026-11-18T11:29:14.618+09:00",
+   "actor": 53123826,
+   "bypass": [],
+   "can_bypass": "never",
+   "rules": [
+    "deletion",
+    "non_fast_forward",
+    "pull_request",
+    "required_status_checks",
+    "merge_queue"
+   ],
+   "required_contexts": [
+    "admission-check",
+    "bsec-integrity",
+    "debt-registry-gate",
+    "generation-acceptance",
+    "axiom-operational-slice",
+    "publication-integrity",
+    "readiness-verdict"
+   ]
+  }
+ }
+]
