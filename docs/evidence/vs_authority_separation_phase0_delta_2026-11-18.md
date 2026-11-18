@@ -321,3 +321,33 @@ mint-prepare / prepare:
 `#151` head를 `2e17d9a`로 갱신(origin/main `53a64c6f` 병합). 병합 트리에서
 TWS `trustedCheckerTreeClosure` **890개 전부**가 해당 경로의 blob SHA와 일치(`bad=0`)함을 확인.
 `PR.base.sha == B_STAR == 53a64c6f`가 성립하므로 A0 guard가 통과 가능하다.
+
+### 수용 시험 3 — merge queue를 통한 실제 착지 (DEBT#558 종결)
+
+`#151`을 `gh pr merge --merge`로 enqueue한 뒤 관측한 전체 사슬이다.
+
+| 단계 | 관측값 |
+|---|---|
+| merge group | `G=9c8f172fee43a78f11801f84a7afc66f1658f09b` |
+| base (G.parent[0]) | `53a64c6f81a6ad6f92423bdc71a1cec6b9d21b20` |
+| PR head (G.parent[1]) | `2e17d9a5ac6086f6ebadfc275ea632fc3c5abce3` |
+| merge_group gate run | `44236148853` attempt 1, **conclusion=success** |
+| App trust_surface | **PASS** — `venue=merge_group manifest_ref=53a64c6 touched=17 closure_reanchored=1 reasons=none` |
+| App ledger | **PASS** — `1 entry bound to (base, pr_head)`, baseline `005ca1f2` |
+| App check on G | `admission-check` @5795152 **success** |
+| GitHub merge | **MERGED** at `2026-11-18T04:24:59Z`, merge commit = `9c8f172f…` = G |
+| canonical main | `9c8f172f…` |
+| ledger | `005ca1f2…` → `2bff7b9e…`, **126 → 127 entries**, 추가 파일 정확히 1개 |
+| 신규 entry | `69bc646a…json`, `kind=subject-continuity`, `base=53a64c6f…`, `head=2e17d9a…` |
+| 신규 entry 검증 | `ax cert ledger-verify` → `OK — record for subjectId 69bc646a… consistent (D6 (A) HOLDS, append count 0)` |
+| main의 TWS | `trustedCheckerTreeClosure` **890/890** blob 일치, `ledger_side_ref.nim` = `3d356878…` |
+
+이로써 다음이 **실제 운영에서** 성립한다.
+
+1. TWS closure re-anchor를 포함한 PR이 App의 field-aware 판정을 통과했다.
+2. merge_group venue에서도 동일한 계약이 적용되어 `closure_reanchored=1`이 수용됐다.
+3. App이 merge candidate G에 대해 독립적으로 ledger entry를 확인하고 success를 발행했다.
+4. GitHub가 App success 없이는 병합하지 않았고, 실제 MERGE가 일어났다.
+5. 원장은 정확히 1개 entry만 증가했고, 그 entry는 검증 가능하다.
+
+**DEBT#558의 교착은 종결됐다.** 남은 것은 이 slice의 다른 축(단일 writer, Rule A, negative control)이다.
