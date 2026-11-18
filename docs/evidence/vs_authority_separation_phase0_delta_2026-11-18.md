@@ -136,4 +136,115 @@ git ls-tree -r --name-only origin/axiom/certificates | wc -l
 gh api 'repos/Archright/Axiom/actions/runs?event=merge_group&status=in_progress'
 gh api repos/Archright/Axiom/environments --jq '.environments[]|"\(.name)\t\(.protection_rules|tostring)"'
 sha256sum ~/.config/axiom-verifier-app/worker/src/index.js
+```## §13. Live drift observed during Phase 0 (2026-11-18, after §1–§12)
+
+§1–§12는 freeze 시점의 스냅샷이다. 같은 날 후속 실측에서 다음이 관측됐다.
+
+| ref | freeze 시점 | live (관측 시점) | delta |
+|---|---|---|---|
+| `axiom/certificates` | `7b1b4771…`, 125 | `005ca1f20ebf47c95b28ccb2f23cc518bf6e25b5`, **126** | +1 (`4d20ff6b…json`) |
+| `axiom/evidence-cas` | `9f1793a2…`, 541 | `cf1512956ffc45939894d23096b456875241211d`, **542** | +1 |
+| `axiom/attestations` | `f16bd508…` | `f16bd508…` | 0 |
+
+- 새 certificate `4d20ff6b788b2c48cd6ec2cdf1f877c1a9af58ae15e114abf8e24c5fbc6570c2.json`
+  (blob `82fb6f97…`)의 subjectId 재유도와 Ed25519 검증은 통과한다.
+- **로컬 fetch는 live보다 1 append 뒤진다.** 모든 원장 스캔은 `git fetch origin axiom/certificates`
+  이후에 수행해야 하며, N은 고정값이 아니다.
+
+### `bin/ax` SourceCoherence 실측 FAIL (하드 블로커)
+
 ```
+[FATAL] Engine source/source mismatch (SourceCoherence FAIL)
+  binary=bin/ax tree=vs1-tree-hash/1:-3557499504198086533
+  embedded=vs1-tree-hash/1:6647716839626536744
+EXIT=1
+```
+
+`src/*.nim` 8개가 바이너리보다 최신이며, `src/generated/build_env.nim`은 빌드 시 재생성되는
+비추적 파일이다. 이 상태에서 `ax cert ...`는 dispatch 전에 exit 1이므로 **원장 검증 전에 재빌드가 필수**다.
+재빌드는 `make build`를 쓴다 — `make ci-bootstrap`은 `bin/ax`를 symlink로 바꿔 SourceCoherence를
+건너뛰는 Trap 3 경로다.
+
+### DEBT#555 의미 한계
+
+`ledger-verify`는 파일과 원장 entry의 `subjectId/baseSha/headSha/certTree`/서명을 비교한다.
+원장에서 export한 파일을 검증하면 **내부 일관성**만 증명되며 provenance 증명이 아니다.
+`ax cert verify`는 journal 교집합 0으로 전부 `JOURNAL_REQUIRED`다. 따라서 DEBT#555 종결 문구는
+"N/N internal consistency at tip T"로 한정한다. `certTree`(68/125는 base가 ancestor 아님)와
+`evidence-cas` 542건은 residual/out-of-scope로 명시한다.
+
+## §14. `bin/ax` 재빌드 + 원장 126/126 내부 일관성 스캔 (2026-11-18T03:40Z–03:44Z)
+
+### 재빌드 (블로커 해소)
+
+```bash
+make build            # nim c --hints:off -d:allowMissingZ3 -o:bin/ax src/cli/main.nim
+./bin/ax --check-provenance
+```
+
+관측:
+
+```
+AXIOM_PROVENANCE: OK — embedded BuildSourceHash == live src tree (vs1-tree-hash/1:-3557499504198086533)
+EXIT=0
+```
+
+직전 FAIL 값(`embedded=vs1-tree-hash/1:6647716839626536744`)은 더 이상 존재하지 않는다.
+`bin/ax`는 regular file(`-rwxrwxr-x`, 28,733,880 bytes)이며 symlink가 아니다.
+
+### 원장 스캔
+
+```bash
+export GITHUB_TOKEN="$(gh auth token)"
+git fetch -q origin axiom/certificates
+mkdir -p /tmp/ledger-certs && git archive origin/axiom/certificates | tar -x -C /tmp/ledger-certs
+for f in /tmp/ledger-certs/*.json; do ./bin/ax cert ledger-verify "$f" >/dev/null || echo "FAIL $f"; done
+```
+
+관측:
+
+| 항목 | 값 |
+|---|---|
+| ref | `axiom/certificates` |
+| tip | `005ca1f20ebf47c95b28ccb2f23cc518bf6e25b5` |
+| 파일 수 | 126 |
+| PASS | **126** |
+| FAIL | **0** |
+| 소요 | ~190s (파일당 4회 Git Data API GET, 총 ~504 GET) |
+| 결과 파일 | `/tmp/ledger-verify-20261118T034041Z.tsv` |
+
+개별 성공 형태: `[cert] Ledger verify: OK — record for subjectId <16-hex> consistent
+(D6 (A) HOLDS — reconciliation PASS, append count 0)`.
+
+### 이 스캔이 증명하는 것 / 증명하지 않는 것
+
+- 증명: 각 파일의 `subjectId` 재유도, `baseSha/headSha/certTree`의 원장 entry 일치,
+  entry 부재/불일치 없음(D6 reconciliation append count 0). **tip `005ca1f2`에서 126/126.**
+- 증명하지 않음: provenance(그 코드가 실제로 그 커밋에서 실행되었다는 사실), `certTree`의
+  git object 재계산(현재 어떤 CLI도 하지 않음), `evidence-cas` 542건의 동등 검증.
+- 따라서 DEBT#555의 종결 문구는 **"126/126 internal consistency at tip `005ca1f2`"**로 한정한다.
+- 스캔 중 원장이 전진하면 결과는 tip에 결속되지 않는다. 재현 시 `git fetch` 후 tip을 다시 기록해야 한다.
+
+### `(base, head)`는 유일키가 아니다 — `subjectId`가 유일키다
+
+126건 중 `headSha=a2228604dbc78978bad1bbf9a22f01a11bb7bf5a`가 **2건**이다.
+
+```
+subj=7cd0c36cc0686c4a base=a2286003eaf0 head=a2228604dbc7 kind=subject-continuity
+subj=eef79163fcc25bde base=983e8360f876 head=a2228604dbc7 kind=subject-continuity
+```
+
+동일 head에 대해 base가 전진했기 때문이며, 이는 base-move 계약이 실제로 발생함을 보여주는
+실측 증거다. 원장의 항목 이름은 `subjectId`(6필드 해시)이고 `(base, head)`는 lookup index일 뿐이므로,
+멱등성 키를 `(base, head)`로 고정하면 서로 다른 정당한 subject를 하나로 collapse한다.
+
+### evidence-cas의 신뢰 위치 (계약 확정용 실측)
+
+- CAS 경로는 `<evidenceKey>.json`이고 **파일명은 content hash가 아니다**(실측: 4건 중 3건 불일치).
+- 레코드는 `{evidenceKey, payload, payloadSha256, evidenceDigest, verifierArtifactDigests, storedAtUtc}`이며
+  `payloadSha256 == sha256(payload)`를 검증기가 재계산한다(`src/verification/evidence_ledger.nim:168-178`).
+- `evidenceDigest`는 producer가 전달하는 **binding digest**이며 payload에서 재유도되지 않는다.
+- 따라서 CAS는 그 자체로 판정 권위가 아니다. 판정 권위는 `certificates`(App-only writer 예정)이고,
+  CAS는 "증거 생산물 저장소"다. App이 CAS를 소비할 경우 `payloadSha256` 재계산 +
+  `certificate.evidenceDigest == record.evidenceDigest` + `entry name == evidenceKey`를 확인해야 한다.
+  이 계약을 지키는 한, Actions의 CAS write는 PR이 스스로 합격을 만드는 경로가 아니다.
