@@ -637,3 +637,48 @@ B_mg이며, 위 두 경로가 manifest에 포함되므로 PR이 이들을 바꾸
 이 문서(문서 경로)만 수정하며 `policyVersion`을 단조 증가시킨다 — selfAmendment
 예외의 정확한 형태다. 이 개정이 착지한 뒤에야 후속 bootstrap PR이
 `CONTROLLED ADD=PASS`로 판정된다.
+
+## 부록 — v102 개정 (2026-11-18, DEBT#545, workstream/debt-545-policy-v102)
+
+**배경**: v101의 FROZEN 선언 중 일부는 first-match 해석 순서
+(`PRODUCT → CONTROLLED → FROZEN`)에서 exact PRODUCT/CONTROLLED 등재에 흡수되어
+**실효성 없는 선언**이었다. v101 실측: exact PRODUCT/CONTROLLED 128건 중 109건이
+FROZEN glob과 교차하며, 그 경로들의 `ADD`/`MODIFY`/`DELETE` 판정은 FROZEN 의도와
+무관하게 PRODUCT/CONTROLLED 규칙을 따랐다(선언과 집행의 괴리 = DEBT#545).
+
+**adjudication은 이진 결정이다**: PRODUCT와 CONTROLLED는 `rules`상 `ADD`를
+제외한 모든 op에서 동일하게 동작하므로, 각 경로에 필요한 결정은
+"FROZEN인가, 아닌가" 하나뿐이다. 등급 명칭 변경은 의미 변경이 아니다.
+
+**개정 내용** (`policyVersion` 101 → 102):
+
+| 구분 | 건수 | 처리 |
+|---|---|---|
+| FROZEN 의도 확정 | 19 | 클래스에서 CONTROLLED 등재 제거(또는 신규 FROZEN 유지) — Tier 1 판정기·훅·계약 8건, Tier 2 App trust surface 정합 11건 |
+| 비-FROZEN 확정 | 109 | CONTROLLED/PRODUCT 유지 + `frozenExceptions.paths`에 exact 경로 등록 |
+
+- `frozenExceptions` 스키마(`axiom.repository-surface-frozen-exceptions.v1`):
+  정확히 `schema`/`groups`/`paths` 3키. 각 그룹은 비어 있지 않은 `rationale`과
+  `approvedBy`를 가진다. 그룹 3종: `generated-manifest`(52, `src/gate/manifest.d/**`),
+  `gate-infra`(38), `ci-infra`(19).
+- **wildcard 예외 금지**: 등록 키는 exact 경로만 허용한다. 광범위 예외는 동일한
+  극장을 재무장하므로 `POLICY_INVALID`다.
+- **정책이 authority, 표는 projection**: 128행 adjudication 표는
+  `config/repository_surface.json`에서 기계 생성한 투영이며 PR 본문에 게시한다.
+  별도 표 파일을 정본으로 두지 않는다(AGENTS.md §1 중복 의미 상태 금지).
+- **guard v3**: ① 미등록 교차 → `POLICY_INVALID` ② dead exception(교차하지 않는
+  등록) → `POLICY_INVALID` ③ 그룹 attribution 누락 → `POLICY_INVALID`
+  ④ `frozenExceptionPaths` export로 소비자(테스트·감사)가 목록을 읽는다.
+  단위 테스트 10건 추가(총 60건).
+
+**효력 개시와 one-generation lag**: 병합 판정은 base-pinned guard v2가 수행한다
+(`admission-check.yml`, `repository_surface.yml` 모두 base worktree에서 판정기와
+정책을 로드). 따라서 이 PR 자신은 v2 + v101로 판정되고, v3 + v102의 효력은
+착지 이후 세대부터 발생한다. base v2가 이 PR을 통과시키는 범위는
+selfAmendment `allowedPaths` 4경로로 한정된다 — v2는 `frozenExceptions` 키를
+모르지만, selfAmendment 계약(4경로·버전 단조 증가·FROZEN 위반 전부 allowedPaths)은
+v101에서도 동일하게 성립한다.
+
+**v3의 비자기증명**: v3는 자신의 정확성을 스스로 승인하지 않는다. 승인 근거는
+① base v2가 허용한 정확한 변경 범위, ② 인간 아키텍트의 adjudication 승인(PR 본문),
+③ v3 자체의 구조적·부정적 단위 테스트, ④ shipped 정책의 liveness 테스트다.
