@@ -401,6 +401,63 @@ docs.github.com 실페치]:
   만들지 않는다. 문서화 트리거("push a new commit, update your branch")와 일치한다.
 - `added` 카운트만으로 성공 판정 금지 — 그 1건은 그룹 동료(#183)의 항목일 수 있다.
 
+## Q11 — post-mint eject 후 같은 `(base, head)` 재큐는 `no_new_ledger_commit`으로 영구 거부된다 — mint의 exactly-once subjectId가 tip 전진을 만들지 않는다
+
+**Symptom**: merge_group 런은 모든 잡이 success인데 App(integration 5795152)의
+`admission-check`가 **failure**를 발행한다. summary는 `trust_surface=PASS` +
+`ledger=FAIL — no_new_ledger_commit`이고, `ledger_baseline`은 현재 원장 tip과
+**같은 값**이다. Q10(`added=1 none bound to base/pr_head`)과 달리 `added` 항목
+자체가 0건이다. 같은 PR을 재큐하면 매번 동일하게 실패한다.
+
+**Mechanism (source-verified, 2026-11-19)** — Q10에서 "저장소 밖이라 미확인"으로
+남긴 App predicate를 소스로 확정했다:
+
+1. App은 merge_group 이벤트 수신 시 `ledgerBase = ledgerTip()`을 check-run의
+   `external_id`에 기록한다 (`worker/src/index.js:95,107`). 이후 모든 attempt는
+   이 baseline을 재사용한다.
+2. 런 완료 시 `checkLedger`는 현재 tip을 다시 읽어 `now === baseline`이면
+   **즉시** `no_new_ledger_commit`으로 거부한다 (`worker/src/index.js:650-652`).
+   이 검사는 "이 attempt가 원장에 판정을 남겼다"는 liveness cross-check다.
+3. mint의 D6는 `ax cert ledger-list`에 `subjectId`가 이미 있으면 append 없이
+   idempotent no-op으로 성공한다 (`certificate-mint.yml:2263-2269`,
+   `MINT_D6: OK — idempotent re-run ... append exactly-once: 0`).
+4. `subjectId = sha256(scheme + "\n" + baseSha + headSha + headTreeDigest +
+   policyDigest + scopeDigest + evidenceDigest)`이며 `run_id`/`run_attempt`는
+   포함되지 않는다 (`src/verification/verification_subject.nim:120-132`).
+
+따라서 한 번 성공한 mint는 그 `(base, head)` 조합의 subject를 원장에 영구히
+고정한다. 그 attempt가 **mint 이후의 다른 게이트**에서 실패해 eject되면, 같은
+base/head의 다음 merge_group은 baseline에 이미 subject cert를 포함한 tip을
+잡으므로 mint가 append하지 않고, App은 영구히 거부한다. **mint 성공 = 이후
+모든 재시도의 admission 자격 상실**이라는 자기참조 데드락이다.
+
+**Measured evidence (2026-11-19, PR #191)**:
+
+| 시각/식별자 | 관측 |
+|---|---|
+| 2차 merge_group attempt | mint append — 원장 tip `6eface33…`, `run_id=44392664919`, `B=90ca291d`, `H=22ac615`, `cert_sha256=5b735a70…`, `field_binding=ok` |
+| 같은 attempt | `readiness-verdict` failure → 큐 eject (mint는 이미 성공) |
+| 3차 merge_group `9d31af23…` / run `44395898459` attempt 1 | 잡 전부 success, mint 로그 `MINT_D6: OK — idempotent re-run: ledger record consistent (append exactly-once: 0)` |
+| 3차 App summary | `ledger_baseline=6eface336734…`, `ledger=FAIL — no_new_ledger_commit`, `reasons=ledger:no_new_ledger_commit` |
+
+**Q10과의 구분**: Q10은 판정 구간에 tip이 전진했지만 추가 항목이 다른
+`(base, pr_head)` 쌍(#183)이었던 경우다. Q11은 tip이 **전진하지 않은** 경우로,
+원인은 "결속 항목 부재"가 아니라 "같은 subject의 재발행 금지"다. 두 경우 모두
+App은 fail-closed로 거부하며, 이는 **검증 실패를 성공으로 승격하는 결함이 아니라
+liveness 결함**이다.
+
+**운영 규범**:
+
+- `ledger=FAIL — no_new_ledger_commit`은 "mint가 실행되지 않았다"는 뜻이 아니다.
+  mint 로그의 `MINT_D6`/`MINT_APPEND_COUNT`를 먼저 확인한다 — append 0 +
+  idempotent re-run이면 데드락이다.
+- 회복은 **subjectId를 바꾸는 것**뿐이다: `head`를 새로 만들거나(rebase/update-
+  branch, Q10 선례) 다른 변경을 먼저 착지시켜 `base`를 전진시킨다. 같은
+  `(base, head)`의 재큐·재arm은 무효다.
+- App predicate를 `now === baseline → PASS`로 완화하지 말 것. exactly-once는
+  의도된 계약이고, tip 전진 검사는 "이 attempt가 판정을 원장에 남겼다"는
+  교차 확인이다. 영구 수정은 verifier 프로토콜 개정(거버넌스 결정)이다.
+
 ## 운영 규범 요약 (이 저장소 한정)
 
 - 큐 진입한 PR의 착지 확인: `gh pr checks --watch`에 의존하지 말고 단발
@@ -410,3 +467,6 @@ docs.github.com 실페치]:
 - base 진행으로 재빌드된 큐 엔트리는 런 green만으로 admission 통과가 아니다 — App
   summary `ledger=FAIL — added=1 none bound to base/pr_head`면 같은 head 재큐는
   무효이고 fresh head로만 회복된다(Q10).
+- post-mint eject 후 같은 base/head 재큐는 `ledger=FAIL — no_new_ledger_commit`으로
+  영구 거부된다 — mint는 subjectId 기준 exactly-once라 tip이 다시 전진하지 않는다.
+  회복은 base 또는 head 변경뿐이다(Q11).
