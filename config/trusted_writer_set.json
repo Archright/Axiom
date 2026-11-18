@@ -98,7 +98,7 @@
     "src/cli/axiom_engine.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "8946a0e4c4615e0e27b051d9964b48d05643e2c1"
+      "sha": "02debd6c36a60caea8f20c285a728bbf623e180e"
     },
     "src/cli/axiom_status.nim": {
       "mode": "100644",
@@ -153,7 +153,7 @@
     "src/cli/cli_surface_generated.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "1f1a69e269a9149e35027b3b4a509ace4472e755"
+      "sha": "83ab8850bfcfc89585807019df71a7998ba8e040"
     },
     "src/cli/cli_types.nim": {
       "mode": "100644",
@@ -3958,7 +3958,7 @@
     "src/verification/obligation/canonical_verification.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "6a99517828b0cf9d47745c66b068c20b03359b41"
+      "sha": "042a03dbc773e19cce96c5a752e6a641122a1a30"
     },
     "src/verification/obligation/golden_fixture_ir.nim": {
       "mode": "100644",
@@ -4013,7 +4013,7 @@
     "src/verification/obligation/obligation_types.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "0b8255aca0c78cf73e7b9478fd8300b3613170ce"
+      "sha": "98a952fc00bd0e602507d18e77cb36e9845825f7"
     },
     "src/verification/obligation/post_satisfaction.nim": {
       "mode": "100644",
