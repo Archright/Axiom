@@ -136,7 +136,9 @@ axiomLayer "tools"
 import core/trusted/axiom_pragmas_lite
 
 import gate/slice_catalog
-import std/[os, osproc, strutils, sequtils, sets, json, parseopt, algorithm]
+import core/policy/rotation_closure_facts
+import core/results
+import std/[os, osproc, strutils, sequtils, sets, json, parseopt, algorithm, options]
 
 {.push raises: [].}
 
@@ -478,11 +480,15 @@ proc manifestFieldState(base, head: string): tuple[sliceFieldsChanged,
     jsonStrArray(bN, "notYetImplementedSlices") != jsonStrArray(hN, "notYetImplementedSlices")
   result.pinFieldChanged = jsonStr(bN, "productionExecutionPin") != jsonStr(hN, "productionExecutionPin")
 
-proc twsFieldSnapshot(oid: string): tuple[pin, closure: string, ok: bool] {.axiomEffect: IoEffect.} =
-  ## Canonical TWS field snapshots at a git revision: the pin VALUE
-  ## (trustedAdmissionWorkflowSha) and the closure identity (sorted
-  ## "mode sha path" lines of trustedCheckerTreeClosure — the same member
-  ## identity the derived closure carries). ok=false → fail-closed.
+proc twsFieldSnapshot(oid: string): tuple[pin, digest, closure: string, ok: bool] {.axiomEffect: IoEffect.} =
+  ## Canonical TWS field snapshots at a git revision under BOTH layouts:
+  ##   * pin VALUE        — trustedAdmissionWorkflowSha
+  ##   * path-set anchor  — pathSetDigest (split layout; "" in legacy)
+  ##   * closure identity — sorted "mode sha path" lines resolved by the
+  ##                        shared resolvePinClosure (legacy field inside the
+  ##                        pin document, or the split companion document).
+  ## ok=false → fail-closed (missing split companion, ambiguous layouts,
+  ## malformed records, schema-invalid companion).
   let (twsBytes, twsCode) = gitShowFile(oid, ProductionPinRecordPath)
   if twsCode != 0:
     return
@@ -494,37 +500,43 @@ proc twsFieldSnapshot(oid: string): tuple[pin, closure: string, ok: bool] {.axio
   if tws == nil or tws.kind != JObject:
     return
   result.pin = jsonStr(tws, ProductionPinRecordField)
-  let cl = tws{"trustedCheckerTreeClosure"}
-  if cl == nil or cl.kind != JObject:
+  result.digest = jsonStr(tws, RotationPathSetDigestKey)
+  let companionPath = closureCompanionPath(ProductionPinRecordPath)
+  let (closureBytes, closureCode) = gitShowFile(oid, companionPath)
+  var closureDoc: JsonNode
+  if closureCode == 0:
+    try:
+      closureDoc = parseJson(stripJsonc(closureBytes))
+    except CatchableError:
+      return
+    let schema = closureDocSchemaOk(closureDoc)
+    if schema.isErr or not schema.get:
+      return
+  let resolved = resolvePinClosure(tws, closureDoc)
+  if resolved.isErr:
     return
-  var lines: seq[string]
-  for path, entry in cl:
-    if entry == nil or entry.kind != JObject:
-      return
-    let mode = jsonStr(entry, "mode")
-    let sha = jsonStr(entry, "sha")
-    if mode.len == 0 or sha.len == 0:
-      return
-    lines.add(mode & " " & sha & " " & path)
-  lines.sort()
-  result.closure = lines.join("\n")
+  if resolved.get.isSome:
+    var lines = toSeq(resolved.get.get)
+    lines.sort()
+    result.closure = lines.join("\n")
   result.ok = true
 
 proc twsFieldState(base, head: string): tuple[pinValueChanged,
                                               closureChanged: bool] {.axiomEffect: IoEffect.} =
   ## Field-level classification of a TWS change between base and head git
   ## OIDs — the manifestFieldState principle applied to the pin record's
-  ## TWO independently-bound fields (see header "TWS field split"). A
-  ## trustedCheckerTreeClosure re-anchor with the pin VALUE unchanged is a
-  ## closure re-anchor, not a pin change. Fail-closed: unreadable,
-  ## unparsable, or schema-incomplete TWS at either revision → BOTH fields
-  ## reported changed (the strictest classification — every pairing
-  ## requirement then applies and the partial-update judgment fails).
+  ## independently-bound fields (see header "TWS field split"). The pin VALUE
+  ## and the path-set anchor (pathSetDigest) are both epoch-authority changes;
+  ## a closure re-anchor with BOTH unchanged is a closure re-anchor, not a pin
+  ## change. Fail-closed: unreadable, unparsable, or schema-incomplete TWS at
+  ## either revision → BOTH fields reported changed (the strictest
+  ## classification — every pairing requirement then applies and the
+  ## partial-update judgment fails).
   let b = twsFieldSnapshot(base)
   let h = twsFieldSnapshot(head)
   if not b.ok or not h.ok:
     return (true, true)
-  result = (b.pin != h.pin, b.closure != h.closure)
+  result = (b.pin != h.pin or b.digest != h.digest, b.closure != h.closure)
 
 proc engineFileClaimedByPromotion(engineFile, base, head: string): bool {.axiomEffect: IoEffect.} =
   ## G2b — is a NON-pinned engine mapping change claimed by a slice promotion
@@ -670,8 +682,14 @@ proc diffFailures(base, head: string): seq[string] {.axiomEffect: IoEffect.} =
 
   let sliceStateChanged = catalogChanged or sliceFieldsChanged
   let enginePinChanged = engineChanged or twsPinValueChanged or pinFieldChanged
+  let closurePathChanged = (RotationClosurePath in changed)
   if not sliceStateChanged and not enginePinChanged and not closureReanchor:
-    echo "  NOTE  (diff) no epoch binding target changed between " & base & " and " & head
+    if closurePathChanged:
+      echo "  NOTE  (diff) derived closure value re-anchor only (" &
+           RotationClosurePath & " changed; trust anchors unchanged — " &
+           "path-set/digest authority is the base-built H2 checker)"
+    else:
+      echo "  NOTE  (diff) no epoch binding target changed between " & base & " and " & head
     return
   if closureReanchor and not enginePinChanged and not sliceStateChanged:
     echo "  NOTE  (diff) TWS trustedCheckerTreeClosure re-anchor only (pin value " &

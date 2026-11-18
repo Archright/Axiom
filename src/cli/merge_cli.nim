@@ -851,11 +851,19 @@ func rotationAllowlistOk*(path: string; pinB: Option[HashSet[string]]): bool {.r
   for extra in RotationAllowlistExtra:
     if extra == path:
       return true
-  path == RotationPinBPath or pathMatchesGlob(path, RotationAdrGlob)
+  path == RotationPinBPath or path == RotationClosurePath or
+    pathMatchesGlob(path, RotationAdrGlob)
 
 func annotateNewAnchor(r: var RotationAdjudication;
                        derivedH: HashSet[string];
-                       pinH, pinB: Option[HashSet[string]]) {.raises: [].} =
+                       pinH, pinB: Option[HashSet[string]];
+                       digestOk: bool = true;
+                       digestReason: string = "") {.raises: [], axiomDecision(
+  id = "DECISION-0829",
+  reason = "DEBT#558 trust-epoch split: the ④ new-anchor fact also carries the immutable pathSetDigest check; a digest mismatch is the same deny class as a line-set mismatch",
+  adr = "docs/adr/0042-trust-epoch-closure-split.md",
+  introduced = "v104"
+).} =
   ## ④ (pin anchor) FACT annotation only — evaluated on EVERY path (NORMAL
   ## included) and NEVER denies. The single ④ policy deny site is Pass 2.75 (H2)
   ## in MergeAdmissible; this records WHY ④ failed. The judgment itself is the
@@ -865,9 +873,17 @@ func annotateNewAnchor(r: var RotationAdjudication;
   ## overwrites it first — Amendment F ladder step 2 before step 3; the ①
   ## allowlist is step 5, BELOW ④, so it never overwrites), so the recorded
   ## reason is always the ladder-selected one.
+  ## The split layout adds pathSetDigest: the pin anchors H only when the
+  ## declared immutable digest equals digest(line-set(pin@H)) — a PR that
+  ## changes the path set and compensates only in the closure document is
+  ## denied HERE even before the App blob comparison.
   let v = newAnchorVerdict(derivedH, pinH, pinB)
-  r.check.newAnchorOk = v.ok
-  if v.ok:
+  r.check.newAnchorOk = v.ok and digestOk
+  if r.check.newAnchorOk:
+    return
+  if not digestOk:
+    r.reasonCode = "ROT_NEW_PIN"
+    r.reason = digestReason
     return
   r.reasonCode = v.code
   r.reason = v.reason
@@ -875,7 +891,10 @@ func annotateNewAnchor(r: var RotationAdjudication;
 func adjudicateRotation*(derivedH, derivedB, derivedM: HashSet[string];
                          pinB: Option[HashSet[string]];
                          pinH: Option[HashSet[string]];
-                         changed: seq[string]): RotationAdjudication {.raises: [].} =
+                         changed: seq[string];
+                         pinHDigestOk: bool = true;
+                         pinHDigestReason: string = ""): RotationAdjudication {.
+    raises: [].} =
   ## Pure rotation/closure adjudication (ADR-0025 §7/§13 + Amendment F,
   ## 2026-10-12): the SUBJECT CLASS is the PR's OWN candidate delta —
   ##   closureChange = (derived(M) != derived(B))
@@ -914,7 +933,7 @@ func adjudicateRotation*(derivedH, derivedB, derivedM: HashSet[string];
   # ③④ — classification-independent facts, computed on EVERY path (ladder
   # steps 2-3 precede the classification at step 4).
   result.check.oldAnchorOk = result.check.genesis or (pinB.isSome and pinB.get == derivedB)
-  annotateNewAnchor(result, derivedH, pinH, pinB)
+  annotateNewAnchor(result, derivedH, pinH, pinB, pinHDigestOk, pinHDigestReason)
   if not result.check.oldAnchorOk:
     result.qualification = rqNone
     result.reasonCode = "ROT_OLD_PIN"
@@ -956,6 +975,7 @@ func adjudicateRotation*(derivedH, derivedB, derivedM: HashSet[string];
       result.reasonCode = "ROT_ALLOWLIST"
       result.reason = "closure changed by the candidate delta requires ROTATION but changed path(s) fall outside the " &
         "allowlist (closure pin@B keys ∪ " & RotationAdrGlob & " ∪ " & RotationPinBPath &
+        " ∪ " & RotationClosurePath &
         " ∪ A2 companions: " & join(RotationAllowlistExtra, " · ") &
         " — ADR-0025 A2) — subject Δ != 0 (fail-closed)"
     return
@@ -1919,14 +1939,27 @@ proc loadTrustSurface*(policyPath: string = TrustSurfacePolicyPath): Result[seq[
 
 proc loadPinBClosure(): Result[Option[HashSet[string]], string]
     {.raises: [CatchableError, OSError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
-  ## pin@B — the B checkout's trusted_writer_set.json (workspace cwd).
+  ## pin@B — the B checkout's trusted_writer_set.json (workspace cwd). In the
+  ## split layout (ADR-0042) the derived records live in the sibling
+  ## config/trusted_checker_closure.json; both are resolved through the same
+  ## shared predicate the preflight checker uses. A split layout whose closure
+  ## document is missing is an error, never genesis.
   if not fileExists(RotationPinBPath):
     return err("pin@B missing: " & RotationPinBPath & " not found in workspace cwd (fail-closed)")
   try:
-    let pinBRes = pinClosureLineSet(parseJson(stripJsoncComments(readFile(RotationPinBPath))))
-    if pinBRes.isErr:
-      return err("pin@B invalid (" & RotationPinBPath & "): " & pinBRes.error & " (fail-closed)")
-    ok(pinBRes.get)
+    let pinNode = parseJson(stripJsoncComments(readFile(RotationPinBPath)))
+    var closureNode: JsonNode = nil
+    if fileExists(RotationClosurePath):
+      closureNode = parseJson(stripJsoncComments(readFile(RotationClosurePath)))
+      let schema = closureDocSchemaOk(closureNode)
+      if schema.isErr:
+        return err("closure@B invalid (" & RotationClosurePath & "): " &
+          schema.error & " (fail-closed)")
+    let resolved = resolvePinClosure(pinNode, closureNode)
+    if resolved.isErr:
+      return err("pin@B invalid (" & RotationPinBPath & "): " &
+        resolved.error & " (fail-closed)")
+    ok(resolved.get)
   except CatchableError as e:
     return err("pin@B parse failure (" & RotationPinBPath & "): " & e.msg & " (fail-closed)")
 
@@ -1976,16 +2009,40 @@ proc collectRotationInputs*(derivedHPath, derivedBPath, derivedMPath, pinHPath: 
     return err(pinBRes.error)
   # pin@H — the H candidate root's copy of trusted_writer_set.json (the NEW
   # anchor). Missing/unreadable → none → condition ④ fails (verdict-level).
-  var pinH: Option[HashSet[string]] = none(HashSet[string])
+  var
+    pinH: Option[HashSet[string]] = none(HashSet[string])
+    digestOk = true
+    digestReason = ""
   if pinHPath.len > 0:
     if fileExists(pinHPath):
       try:
-        let pinHRes = pinClosureLineSet(parseJson(stripJsoncComments(readFile(pinHPath))))
-        if pinHRes.isErr:
-          logWarn("merge_cli", "pin@H uninterpretable (" & pinHPath & "): " & pinHRes.error &
+        let pinHNode = parseJson(stripJsoncComments(readFile(pinHPath)))
+        var closureNode: JsonNode = nil
+        let companion = closureCompanionPath(pinHPath)
+        if fileExists(companion):
+          closureNode = parseJson(stripJsoncComments(readFile(companion)))
+          let schema = closureDocSchemaOk(closureNode)
+          if schema.isErr:
+            logWarn("merge_cli", "closure@H invalid (" & companion & "): " & schema.error &
+              " — rotation new-anchor condition will fail (fail-closed)")
+            closureNode = nil
+        let resolved = resolvePinClosure(pinHNode, closureNode)
+        if resolved.isErr:
+          digestOk = false
+          digestReason = "pin@H closure resolution failed: " & resolved.error & " (fail-closed)"
+          logWarn("merge_cli", "pin@H uninterpretable (" & pinHPath & "): " & resolved.error &
             " — rotation new-anchor condition will fail (fail-closed)")
         else:
-          pinH = pinHRes.get
+          pinH = resolved.get
+          let dv = pathSetDigestVerdict(pinHNode, pinH)
+          if dv.isErr:
+            digestOk = false
+            digestReason = "pin path-set digest contract violation: " & dv.error &
+              " (fail-closed)"
+          elif not dv.get:
+            digestOk = false
+            digestReason = "pin path-set digest mismatch: " & RotationPathSetDigestKey &
+              " does not match the canonical digest of the resolved closure path set (fail-closed)"
       except CatchableError as e:
         logWarn("merge_cli", "pin@H unreadable (" & pinHPath & "): " & e.msg &
           " — rotation new-anchor condition will fail (fail-closed)")
@@ -1994,7 +2051,8 @@ proc collectRotationInputs*(derivedHPath, derivedBPath, derivedMPath, pinHPath: 
         " — rotation new-anchor condition will fail (fail-closed)")
   if not listingComplete:
     return err("PR files listing incomplete — rotation allowlist cannot be proven (fail-closed)")
-  ok(some(adjudicateRotation(hRes.get, bRes.get, mRes.get, pinBRes.get, pinH, changed)))
+  ok(some(adjudicateRotation(hRes.get, bRes.get, mRes.get, pinBRes.get, pinH, changed,
+                             digestOk, digestReason)))
 
 proc collectCertificateContinuityFacts*(headSha: string; token: string; repo: string = DefaultRepo): Result[Option[CertificateContinuityFacts], string]
     {.raises: [CatchableError, OSError, Exception], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].}

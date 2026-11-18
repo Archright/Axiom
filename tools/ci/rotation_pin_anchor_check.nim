@@ -6,19 +6,34 @@ axiomLayer "tools"
 ## the SAME compiled implementation as the landing predicate.
 ##
 ## The judgment itself lives in the shared leaf module
-## core/policy/rotation_closure_facts (newAnchorVerdict + the parsing
-## primitives) — the exact funcs `src/cli/merge_cli.nim` consumes, so the
-## preflight verdict and the landing verdict cannot drift. This tool owns
-## only the CLI surface + file I/O (seconds-class build: no cli/merge_cli
-## import — see derive_checker_closure.nim for the same venue split).
+## core/policy/rotation_closure_facts (newAnchorVerdict + resolvePinClosure +
+## pathSetDigestVerdict + the parsing primitives) — the exact funcs
+## `src/cli/merge_cli.nim` consumes, so the preflight verdict and the landing
+## verdict cannot drift. This tool owns only the CLI surface + file I/O
+## (seconds-class build: no cli/merge_cli import — see
+## derive_checker_closure.nim for the same venue split).
+##
+## Layout (ADR-0042 / DEBT#558):
+##   legacy — closure records in the pin document itself;
+##   split  — anchors + pathSetDigest in the pin document, records in
+##            config/trusted_checker_closure.json. The B-side companion is
+##            resolved next to --pin-B; the H-side document may be supplied
+##            explicitly or embedded in a composite pin-H document.
 ##
 ## Usage:
-##   rotation_pin_anchor_check --derived-H <file> --pin-H <file> [--pin-B <path>]
+##   rotation_pin_anchor_check --derived-H <file> --pin-H <file>
+##                             [--closure-H <file>] [--pin-B <path>]
 ##
 ##     --derived-H <file>  deriver-format closure linetext of H (required)
-##     --pin-H <file>      trusted_writer_set.json @ H (required)
+##     --pin-H <file>      trusted_writer_set.json @ H (required; may be a
+##                         composite carrying trustedCheckerTreeClosure)
+##     --closure-H <file>  trusted_checker_closure.json @ H (optional — the
+##                         split H-side document; embedded key wins only when
+##                         the line-sets are equal)
 ##     --pin-B <path>      trusted_writer_set.json @ B
-##                         (default: config/trusted_writer_set.json in cwd)
+##                         (default: config/trusted_writer_set.json in cwd;
+##                         its sibling trusted_checker_closure.json is read
+##                         when present)
 ##
 ## stdout: exactly one line —
 ##   H2 PASS code=OK
@@ -29,11 +44,13 @@ axiomLayer "tools"
 ## stderr: input contract diagnostics.
 ## exit: 0 = H2 holds; 1 = H2 fails; 2 = input contract violation
 ## (missing/unreadable file, malformed JSON(C), malformed derived line,
-## malformed pin entry — fail-closed, never a verdict).
+## malformed pin entry, malformed/unknown pathSetDigest, missing split-layout
+## closure document — fail-closed, never a verdict).
 
 import std/[algorithm, json, options, os, parseopt, sets, strutils]
 import core/results
 import core/policy/rotation_closure_facts
+import core/trusted/axiom_pragmas_lite
 
 const
   ToolName* = "rotation_pin_anchor_check"
@@ -58,11 +75,35 @@ proc parseJsoncNode(text: string): Result[JsonNode, string] {.raises: [].} =
   except CatchableError as e:
     err("malformed JSON(C): " & e.msg)
 
-proc parsePinDocument(text: string): Result[Option[HashSet[string]], string] {.raises: [].} =
+proc parsePinDocument(text: string): Result[Option[HashSet[string]], string] {.
+    raises: [].} =
   let parsed = parseJsoncNode(text)
   if parsed.isErr:
     return err(parsed.err)
   pinClosureLineSet(parsed.get)
+
+proc resolveDoc(derivedText, pinText, closureText: string; label: string):
+    Result[Option[HashSet[string]], string] {.raises: [], axiomDecision(
+  id = "DECISION-0829",
+  reason = "DEBT#558 trust-epoch split: preflight and landing resolve the closure source through the same shared predicate; a split layout with a missing closure document is an input violation, never a verdict",
+  adr = "docs/adr/0042-trust-epoch-closure-split.md",
+  introduced = "v104"
+).} =
+  ## side = "H" | "B": parse the pin document + optional closure document and
+  ## resolve through the shared precedence (legacy < split < composite).
+  let pinNode = parseJsoncNode(pinText)
+  if pinNode.isErr:
+    return err(label & " pin: " & pinNode.err)
+  var closureNode: JsonNode = nil
+  if closureText.strip().len > 0:
+    let c = parseJsoncNode(closureText)
+    if c.isErr:
+      return err(label & " closure: " & c.err)
+    closureNode = c.get
+    let schema = closureDocSchemaOk(closureNode)
+    if schema.isErr:
+      return err(label & " closure: " & schema.err)
+  resolvePinClosure(pinNode.get, closureNode)
 
 proc differingPaths(derivedH: HashSet[string]; pinH: Option[HashSet[string]]):
     tuple[missingFromPin, pinOnly: string] {.raises: [].} =
@@ -82,27 +123,48 @@ proc differingPaths(derivedH: HashSet[string]; pinH: Option[HashSet[string]]):
   result.missingFromPin = if missing.len == 0: "-" else: missing.join(",")
   result.pinOnly = if only.len == 0: "-" else: only.join(",")
 
-proc evaluatePinAnchorTexts*(derivedHText, pinHText, pinBText: string): CheckOutcome {.
+proc evaluatePinAnchorTexts*(derivedHText, pinHText, pinBText: string;
+                             closureHText: string = "";
+                             closureBText: string = ""): CheckOutcome {.
     raises: [].} =
-  ## Text-level core: the three file CONTENTS → verdict line + exit code.
+  ## Text-level core: the file CONTENTS → verdict line + exit code.
   ## Input contract violations fail closed (exit 2) BEFORE any judgment —
   ## a malformed input is a run-level failure, never an H2 verdict.
   let derived = parseDerivedSet(derivedHText)
   if derived.isErr:
     return CheckOutcome(exitCode: ExitInputViolation,
                         line: "input contract violation: derived-H: " & derived.err)
-  let pinH = parsePinDocument(pinHText)
+  let pinH = resolveDoc(derivedHText, pinHText, closureHText, "H")
   if pinH.isErr:
     return CheckOutcome(exitCode: ExitInputViolation,
-                        line: "input contract violation: pin-H: " & pinH.err)
-  let pinB = parsePinDocument(pinBText)
+                        line: "input contract violation: " & pinH.err)
+  let pinB = resolveDoc(derivedHText, pinBText, closureBText, "B")
   if pinB.isErr:
     return CheckOutcome(exitCode: ExitInputViolation,
-                        line: "input contract violation: pin-B: " & pinB.err)
+                        line: "input contract violation: " & pinB.err)
+  # Split-layout digest: the declared path-set digest must equal the canonical
+  # digest of the resolved H closure. A mismatch means the pin does not anchor
+  # H — the same deny class as a line-set mismatch (ROT_NEW_PIN).
+  let pinHNode = parseJsoncNode(pinHText)
+  if pinHNode.isErr:
+    return CheckOutcome(exitCode: ExitInputViolation,
+                        line: "input contract violation: H pin: " & pinHNode.err)
+  let dv = pathSetDigestVerdict(pinHNode.get, pinH.get)
+  if dv.isErr:
+    return CheckOutcome(exitCode: ExitInputViolation,
+                        line: "input contract violation: H pin: " & dv.err)
   let v = newAnchorVerdict(derived.get, pinH.get, pinB.get)
-  if v.ok:
+  if v.ok and dv.get:
     return CheckOutcome(exitCode: ExitPass, line: "H2 PASS code=OK")
   let (missingFromPin, pinOnly) = differingPaths(derived.get, pinH.get)
+  if not dv.get:
+    let reason = "pin anchor invalid: " & RotationPathSetDigestKey &
+      " does not match the canonical digest of the resolved closure path set" &
+      " (fail-closed)"
+    return CheckOutcome(exitCode: ExitH2Fail,
+                        line: "H2 FAIL code=ROT_NEW_PIN reason=" & reason &
+                          " | missing-from-pin=" & missingFromPin &
+                          " | pin-only=" & pinOnly)
   CheckOutcome(exitCode: ExitH2Fail,
                line: "H2 FAIL code=" & v.code & " reason=" & v.reason &
                  " | missing-from-pin=" & missingFromPin &
@@ -114,12 +176,15 @@ proc readCheckFile(path: string): Result[string, string] {.raises: [].} =
   except CatchableError as e:
     err("cannot read '" & path & "' (fail-closed): " & e.msg)
 
-proc evaluatePinAnchorFiles*(derivedHPath, pinHPath, pinBPath: string): CheckOutcome {.
+proc evaluatePinAnchorFiles*(derivedHPath, pinHPath, pinBPath: string;
+                             closureHPath: string = ""): CheckOutcome {.
     raises: [].} =
-  ## File-level core: read the three inputs, then judge. A missing or
-  ## unreadable input is an input contract violation (exit 2) — in the
-  ## preflight venue the gate supplies these files; absence is never read
-  ## as a clean or failing verdict.
+  ## File-level core: read the inputs, then judge. A missing or unreadable
+  ## input is an input contract violation (exit 2) — in the preflight venue
+  ## the gate supplies these files; absence is never read as a clean or
+  ## failing verdict. The B-side closure document is resolved as the sibling
+  ## of --pin-B when it exists (absent is left to the shared resolver, which
+  ## fails closed only when the split layout requires it).
   let d = readCheckFile(derivedHPath)
   if d.isErr:
     return CheckOutcome(exitCode: ExitInputViolation,
@@ -132,19 +197,40 @@ proc evaluatePinAnchorFiles*(derivedHPath, pinHPath, pinBPath: string): CheckOut
   if b.isErr:
     return CheckOutcome(exitCode: ExitInputViolation,
                         line: "input contract violation: " & b.err)
-  evaluatePinAnchorTexts(d.get, h.get, b.get)
+  var closureH = ""
+  if closureHPath.len > 0:
+    let ch = readCheckFile(closureHPath)
+    if ch.isErr:
+      return CheckOutcome(exitCode: ExitInputViolation,
+                          line: "input contract violation: " & ch.err)
+    closureH = ch.get
+  var closureB = ""
+  let companionB = closureCompanionPath(pinBPath)
+  if fileExists(companionB):
+    let cb = readCheckFile(companionB)
+    if cb.isErr:
+      return CheckOutcome(exitCode: ExitInputViolation,
+                          line: "input contract violation: " & cb.err)
+    closureB = cb.get
+  evaluatePinAnchorTexts(d.get, h.get, b.get, closureH, closureB)
 
 # ---------------------------------------------------------------------------
 # CLI surface
 # ---------------------------------------------------------------------------
 
-proc parseCheckArgs*(args: seq[string]):
-    Result[tuple[derivedHPath, pinHPath, pinBPath: string], string] {.raises: [].} =
+type
+  CheckArgs* = object
+    derivedHPath*: string
+    pinHPath*: string
+    pinBPath*: string
+    closureHPath*: string
+
+proc parseCheckArgs*(args: seq[string]): Result[CheckArgs, string] {.raises: [].} =
   ## `--derived-H <file>` (required), `--pin-H <file>` (required),
-  ## `--pin-B <path>` (optional — default RotationPinBPath in the cwd).
-  ## Anything else is an input contract violation.
+  ## `--closure-H <file>` (optional), `--pin-B <path>` (optional — default
+  ## RotationPinBPath in the cwd). Anything else is an input contract violation.
   var
-    derivedH, pinH, pinB: string
+    derivedH, pinH, pinB, closureH: string
     seenDerived, seenPinH = false
   var p = initOptParser(args)
   while true:
@@ -167,6 +253,8 @@ proc parseCheckArgs*(args: seq[string]):
       of "pin-H":
         pinH = val
         seenPinH = true
+      of "closure-H":
+        closureH = val
       of "pin-B":
         pinB = val
       else:
@@ -179,7 +267,8 @@ proc parseCheckArgs*(args: seq[string]):
     return err("missing required --pin-H <file>")
   if pinB.len == 0:
     pinB = RotationPinBPath
-  ok((derivedH, pinH, pinB))
+  ok(CheckArgs(derivedHPath: derivedH, pinHPath: pinH, pinBPath: pinB,
+               closureHPath: closureH))
 
 proc runCheck*(args: seq[string]): int {.raises: [].} =
   ## CLI entry: arg parse → files → verdict. stdout carries exactly one H2
@@ -194,7 +283,8 @@ proc runCheck*(args: seq[string]): int {.raises: [].} =
     return ExitInputViolation
   let outcome = evaluatePinAnchorFiles(parsed.get.derivedHPath,
                                        parsed.get.pinHPath,
-                                       parsed.get.pinBPath)
+                                       parsed.get.pinBPath,
+                                       parsed.get.closureHPath)
   try:
     if outcome.exitCode == ExitInputViolation:
       stderr.writeLine(ToolName & ": " & outcome.line)
