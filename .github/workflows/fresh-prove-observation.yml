@@ -140,8 +140,15 @@ jobs:
           vexit=$?
           set -e
           if [ -f "$EVID/fresh-verdict.json" ]; then
-            jq '{verdict, reasons, counts, coverage, closureComplete,
-                 subjectSha, canonicalEvidenceDigest, checkConclusion}' \
+            jq '{verdict, exitCode, reasons, counts,
+                 coverage: {accounted: .coverage.accountedCount,
+                            scope: .coverage.scopeSymbolCount,
+                            complete: .coverage.complete},
+                 closureComplete: .closure.closureComplete,
+                 subjectSha: .canonicalEvidence.subject.sha,
+                 fresh: .freshness.fresh,
+                 authoritative: .freshness.authoritative,
+                 canonicalEvidenceDigest, checkConclusion}' \
               "$EVID/fresh-verdict.json" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "verdict artifact missing (projection exit $vexit)" \
