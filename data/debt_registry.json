@@ -5969,6 +5969,26 @@
       "lastVerifiedAt": "2026-11-18T00:00:00Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the evaluator is the audited subject and the finding is registration-only, so a self-fix in the same slice would remove its own evidence path (AGENTS.md §2.2 discovery is registered, never quietly patched). Trace: this entry's resolution (UNRESOLVED) and source (theater_audit); external: tools/readiness_evaluator.nim:486-514, :611-620, :753-770, :836-857; config/readiness_policy.json invariants.R2/R6/R8 and observationKeys."
+    },
+    {
+      "id": "DEBT#560",
+      "category": "Audit/Bypass-Window",
+      "impact": "high",
+      "severity": "high",
+      "title": "Ruleset bypass rotation windows are not per-window auditable — 5 of 13 windows have no execution record and queue-venue bypass semantics are unmeasured",
+      "description": "Machine-observed 2026-11-18 (main cc63569). All 39 versions of ruleset 27097366 (main) were retrieved via rulesets/27097366/history and each version detail was fetched individually because the list API omits bypass_actors. Reconstructed 13 bypass windows (12 closes, 1 window with no merge): docs/evidence/vs1_trust_rotation_audit_2026-11-18/README.md. Findings: (1) all 12 merges landed via native merge; every merge_group run count for those 12 PRs is 0, while the repository has 1378 merge_group runs overall — queue-venue bypass is therefore UNKNOWN, not absent; (2) per-window execution records (activation PUT, readback, restore, timestamps) exist for only 6 of 13 windows (58030608/#121, 58130640+58130708/#136, 58294264/#153, 58299317/#155, 58302871/#159); 2 windows (#127, #139) are described narratively without version IDs or timestamps; 5 windows (58053443/#128, 58121984/#133, 58200591/#130, 58213324/#144, 58214455/#146) have no record in docs/evidence; (3) the platform audit surface is limited: GET /repos/{owner}/{repo}/rule-suites returns 404, GET /orgs/{org}/audit-log returns 404, GET /orgs/{org}/rulesets returns 403 on the free plan, so ruleset history is the only API-visible authority for bypass windows; (4) window 5 (58130640) opened and closed with no merge and no record. The defect is not that bypasses happened — they were architect-authorized — but that authorization cannot be reconstructed per window from committed evidence, and the enforcement semantics of bypass under merge_queue are not established.",
+      "symbol": "ruleset 27097366 bypass window audit coverage (docs/evidence/vs1_trust_rotation_audit_2026-11-18/README.md)",
+      "contentHash": "sha256:848a3de12dc5dc0b4fdac2cd0f7dcd7a3d8fa2d578bebdb7459140668a563a87",
+      "lineRange": "docs/evidence/vs1_trust_rotation_audit_2026-11-18/README.md:1-152",
+      "files": [
+        "docs/evidence/vs1_trust_rotation_audit_2026-11-18/README.md"
+      ],
+      "source": "audit_gap",
+      "status": "open",
+      "resolution": "UNRESOLVED — registration only. Acceptance for the closing slice: (1) every future bypass rotation writes a per-window record before activation and after restore containing open/close version_id, actor_type+actor_id+bypass_mode, pre/post ruleset snapshot, expected merge SHA, queue occupancy check, and post-restore readback with bypass_actors=[]; (2) the 5 unrecorded historical windows are either reconstructed from an authority other than repo memory or explicitly accepted as unreconstructible by the human architect in writing; (3) queue-venue bypass semantics are measured by the T2 probe matrix (User/53123826, pull_request and always, with a FAILING or unreported check, merged through merge_queue) and the result is recorded as fact; (4) #130 window 58200591 gets a reconstructed record or an explicit accepted-gap decision; (5) the evidence README digest is refreshed whenever the underlying raw snapshots change.",
+      "lastVerifiedAt": "2026-11-18T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — this entry registers an audit-coverage gap in platform evidence; the subject is the ruleset history, not a source symbol, so a {.axiomDebt.} marker would bind a nonexistent code location. §10.2 satisfied: trace = docs/evidence/vs1_trust_rotation_audit_2026-11-18/README.md (raw snapshots with sha256), rulesets/27097366/history versions 58030608..58302886, and the 12 merge commits listed in raw/window_merges.json."
     }
   ]
 }
