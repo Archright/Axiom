@@ -114,9 +114,11 @@
 ##          normative expectations above.
 ##   leg 3  policy <-> live producer (--observe-sha <sha>; checks:read): the
 ##          check-runs of an observed SHA must carry every expected context,
-##          each produced by the expected App (id/slug). A context produced by
-##          a DIFFERENT app is a same-name spoof signal -> DRIFT; a context
-##          with NO check-run at the observed SHA -> DRIFT (missing != clean).
+##          each produced by the expected App (id/slug). A context with NO
+##          check-run produced by the expected app -> DRIFT; same-name runs
+##          from other apps are ignored (identity, not array order). A
+##          context with no check-run of that name at the observed SHA ->
+##          DRIFT (missing != clean).
 ## A leg that could not be performed is reported as NOT PERFORMED with its
 ## reason — explicitly, never silently skipped. By default an unperformable
 ## leg 2 is a FAIL (fail-closed); --allow-unavailable-ruleset downgrades it
@@ -1153,10 +1155,15 @@ func judgeProducerObservation*(checkRuns: JsonNode; expectedContexts: seq[string
     DriftResult {.raises: [].} =
   ## Pure: the ADDITIVE producer observation (not one of the four normative
   ## expectations). Reads the check-runs of an observed SHA and reports the
-  ## producing App per expected context. A context whose check-run was
-  ## produced by a DIFFERENT app than the expected one is a same-name spoof
-  ## signal -> DRIFT. A context with NO check-run at the observed SHA ->
-  ## DRIFT (the context was never produced; missing != clean).
+  ## producing App per expected context. GitHub publishes same-named check
+  ## runs from several apps (the Actions copy and the App copy), so the
+  ## predicate is EXISTENTIAL over the array: a context holds iff SOME
+  ## check-run named c was produced by the expected app. A context with NO
+  ## check-run produced by the expected app -> DRIFT; same-name runs from
+  ## other apps are ignored (identity, not array order). A context with no
+  ## check-run named c at all -> DRIFT (the context was never produced;
+  ## missing != clean). `conclusion` and `head_sha` are deliberately NOT
+  ## read — this leg observes producer IDENTITY, not the verdict.
   let arr = child(checkRuns, "check_runs")
   if arr.isNil or arr.kind != JArray:
     result.ok = false
@@ -1175,7 +1182,9 @@ func judgeProducerObservation*(checkRuns: JsonNode; expectedContexts: seq[string
     return
   var holds = 0
   for c in expectedContexts:
-    var found = false
+    var named = false          # some run carries the context name at all
+    var matched = false        # some run's app.id == the expected producer
+    var mismatched = false     # the first mismatching app identity is recorded
     var appId = -1
     var slug = ""
     let want = sourceFor(sources, c)
@@ -1185,20 +1194,30 @@ func judgeProducerObservation*(checkRuns: JsonNode; expectedContexts: seq[string
       let name = child(cr, "name")
       if name.isNil or name.kind != JString or name.getStr() != c:
         continue
+      named = true
       let app = child(cr, "app")
-      if not app.isNil and app.kind == JObject:
-        let id = child(app, "id")
-        if not id.isNil and id.kind == JInt:
-          appId = id.getInt()
-        let sl = child(app, "slug")
-        if not sl.isNil and sl.kind == JString:
-          slug = sl.getStr()
-      found = true
-      break
-    if not found:
+      if app.isNil or app.kind != JObject:
+        continue
+      let id = child(app, "id")
+      if id.isNil or id.kind != JInt:
+        continue
+      let sl = child(app, "slug")
+      var runSlug = ""
+      if not sl.isNil and sl.kind == JString:
+        runSlug = sl.getStr()
+      if id.getInt() == want:
+        appId = id.getInt()
+        slug = runSlug
+        matched = true
+        break
+      elif not mismatched:
+        mismatched = true
+        appId = id.getInt()
+        slug = runSlug
+    if not named:
       result.lines.add("DRIFT producer observation: no check-run named \"" & c &
         "\" at the observed SHA (fail-closed — missing != clean)")
-    elif appId != want:
+    elif not matched:
       var slugText = ""
       if slug.len > 0:
         slugText = " (" & slug & ")"
