@@ -58,9 +58,6 @@ jobs:
       # Determinism: one worker (AXIOM_PROVE_WORKERS=1 is the current
       # determinism policy; lifting it is a J4 decision, not this workflow's).
       AXIOM_PROVE_WORKERS: "1"
-      # State lives OUTSIDE the subject tree ($RUNNER_TEMP), so the prove
-      # cannot write into the checkout's tracked paths.
-      AXIOM_STATE_DIR: ${{ runner.temp }}/axiom-fresh-observation
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -88,6 +85,10 @@ jobs:
         # `ax prove` exits 1 when the canonical run outcome is FAIL (today:
         # DEBT#547 unsupported IR). The exit code is captured as observation
         # data; the verdict projection below owns the state semantics.
+        env:
+          # State lives OUTSIDE the subject tree ($RUNNER_TEMP). The runner
+          # context is valid at step level only — not in job-level env.
+          AXIOM_STATE_DIR: ${{ runner.temp }}/axiom-fresh-observation
         run: |
           set -euo pipefail
           # The state root carries the Axiom identity inputs, not a subject
@@ -103,6 +104,8 @@ jobs:
           printf '%s\n' "$prove_exit" > "$AXIOM_STATE_DIR/prove_exit.txt"
           echo "prove_exit=$prove_exit"
       - name: Emit the report JSON
+        env:
+          AXIOM_STATE_DIR: ${{ runner.temp }}/axiom-fresh-observation
         run: |
           set -uo pipefail
           set +e
@@ -121,6 +124,8 @@ jobs:
         # UNKNOWN/OUT_OF_SCOPE -> green with a warning annotation; a projection
         # failure (missing state / usage error) -> red (observation pipeline
         # failure, distinguishable from a proof verdict in the log/artifact).
+        env:
+          AXIOM_STATE_DIR: ${{ runner.temp }}/axiom-fresh-observation
         run: |
           set -uo pipefail
           EVID="$AXIOM_STATE_DIR/evidence"
