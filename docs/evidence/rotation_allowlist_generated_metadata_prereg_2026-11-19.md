@@ -83,9 +83,9 @@ paths allowed`, `:1347-1357`)가 `RotationAllowlistExtra` 전건을 순회하므
 
 ## 6. MUST-T2a 위임 기록 (merge 명령 전 기입)
 
-- 대상 PR: `#TBD` (본 문서 갱신 커밋에서 확정)
+- 대상 PR: `#192` (fix(admission): allow the generated type-registry metadata companion in rotation)
 - 위임 원문(사용자): "권한이 필요한 부분은 전면 승인한다" (2026-11-19, 이 세션)
-- 실행 명령: `gh pr merge #TBD --merge` (1회, `--auto` 금지 — MUST-T1)
+- 실행 명령: `gh pr merge 192 --merge` (1회, `--auto` 금지 — MUST-T1)
 - 실행자: agent under explicit per-PR delegation from wintrover (기록자 ≠ 승인자)
 - 착지 경로: `TRUST_SURFACE_MODIFIED` → dryRunExit 0 → 수동 병합 1회
   (MUST-T2 / MUST-T2a (3) manual lane only)
