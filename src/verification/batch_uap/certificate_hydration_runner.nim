@@ -28,11 +28,17 @@ proc runCertificateHydrationPrePass*(
   plan: SorterPlan;
   requests: seq[OrchestrationProofRequest];
   report: var OrchestrationReport;
-  progressSink: BatchUapProgressSink = nil
+  progressSink: BatchUapProgressSink = nil;
+  fresh: bool = false
 ) {.raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Scans existing certificates and hydrates verified nodes in topological
   ## order. Mutates ``report`` with hydrated node reports and updates the
   ## cache-hit counter. Skips nodes already verified by earlier phases.
+  ## Fresh mode: no certificate from any vault (including the reference vault
+  ## under src/verification/certificates) may hydrate a node — every candidate
+  ## must earn its verdict in this invocation.
+  if fresh:
+    return
   let certDir = joinPath(getCurrentDir(), "src", "verification", "certificates")
   let certs = scanCertificateDir(certDir)
   if certs.len == 0:

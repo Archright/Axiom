@@ -122,6 +122,7 @@ type
     emitJson*: bool
     maxRounds*: int
     target*: string
+    fresh*: bool                    ## --fresh — no prior verification result may satisfy a unit
     planPath*: string               ## --plan <path> — consume an ExecutionPlan JSON
     propositionIntake*: PropositionIntake = PropositionIntake()
       ## BYOA 5.1: the accepted propositions intake (empty = no --proposals
@@ -266,7 +267,8 @@ proc buildProofTask*(
     vaultDir: configVaultDir,
     emitJson: emitJson,
     maxRounds: 6,
-    target: flags.target
+    target: flags.target,
+    fresh: flags.fresh
   ))
 func initAxiomEngine*(startMono: int64): AxiomEngine {.raises: [].} =
   ## Pure constructor — inject the monotonic clock at the boundary.
@@ -391,7 +393,8 @@ proc runBatchVerification*(
     preComputedIrResults = irResults,
     skipIrPipeline = false,
     kernelTotal = kernelScope.kernelTotal,
-    targetVkd = targetVkd
+    targetVkd = targetVkd,
+    fresh = task.fresh
   )
 
   # R8 persist leg: accumulate canonical-vault promotion failures from every
@@ -538,7 +541,8 @@ proc runBatchVerification*(
         # would drop IR results for functions absent from the first selection.
         sharedIrMemoCache = sharedIrCache,
         kernelTotal = kernelScope.kernelTotal,
-        targetVkd = targetVkd
+        targetVkd = targetVkd,
+        fresh = task.fresh
       )
       persistFailures &= batchReport.persistFailures
       irPipelineFailures &= batchReport.irPipelineFailures
@@ -722,7 +726,8 @@ proc renderPersist*(
   preRun: JsonNode;
   projections: JsonNode;
   display: JsonNode = nil;
-  findingEvidence: JsonNode = nil
+  findingEvidence: JsonNode = nil;
+  freshness: JsonNode = nil
 ): Result[string, string] {.raises: [CatchableError].} =
   ## State-file projection: the post-loop persist writes
   ## projection(RunResult, PreRunContext) — the last-wave document is never
@@ -739,6 +744,8 @@ proc renderPersist*(
     reportJson["display"] = display
   if not findingEvidence.isNil:
     reportJson["findingEvidence"] = findingEvidence
+  if not freshness.isNil:
+    reportJson["freshness"] = freshness
   persistAxProofState(statePath, reportJson)
 
 # DEBT#458 marker removed — canonical boundary installed (Phase X1): the wave
@@ -5172,6 +5179,11 @@ type
     reportJson*: JsonNode
     preRun*: JsonNode
     statePath*: string
+    fresh*: bool
+      ## --fresh intent as persisted, NON-AUTHORITATIVE marker: it records the
+      ## invocation's reuse-bypass request. It never contributes to a verdict;
+      ## the verdict tool derives freshness from runAccounting (satisfiedByReused)
+      ## and treats this marker only as a declaration cross-check.
     targetVkd*: string
       ## §13.1 start-snapshot unification: the VKD baseline is read ONCE at
       ## prepare; the IR selection consumes the frozen value, never a re-read.
@@ -5359,18 +5371,25 @@ proc buildPostLoopProjections(closureJson, crossValidationJson,
   result["scopeObservability"] = scopeObservability
 
 proc hydrateRunVault(prepared: var PreparedRun; bundle: TopologyCliAnalysisBundle;
-                      sourceRoot: string) {.raises: [Exception], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+                      sourceRoot: string; fresh: bool = false) {.raises: [Exception], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Resolve the vault identity, freeze the intern snapshot, load kernel scope
   ## and hydrate the verified set — everything the frontier and the wave loop
   ## read on every iteration.
+  ## Fresh mode: the verified set starts EMPTY. A certificate from a previous
+  ## run may neither shrink the frontier nor satisfy a unit; every candidate is
+  ## re-executed in this invocation.
   prepared.certDir = resolveCertificate(cvRuntimeCanonical)
   prepared.internSnapshot = buildInternSnapshot(bundle)
   let sourceCache = bundle.sourceContentCache
   prepared.contentResolver = buildCacheResolver(sourceCache)
   prepared.kernelScope = loadKernelScope(resolveScopeLockPath(), failClosed = true)
   let vaultHydrateStartMs = getMonoTime().ticks
-  prepared.verifiedSet = hydrateVerifiedSetFromProofVault(prepared.certDir,
-    prepared.internSnapshot, bundle.analysis, prepared.contentResolver, prepared.kernelScope)
+  if fresh:
+    prepared.verifiedSet = initVerifiedSet(bundle.analysis.verificationQueue.len)
+    logInfo("axiom_engine", "[fresh] vault verified-set hydration bypassed — frontier is the full scope")
+  else:
+    prepared.verifiedSet = hydrateVerifiedSetFromProofVault(prepared.certDir,
+      prepared.internSnapshot, bundle.analysis, prepared.contentResolver, prepared.kernelScope)
   logStage(skCertificate, "", "vault-hydrate completed", elapsedMs=int((getMonoTime().ticks - vaultHydrateStartMs) div 1_000_000))
   # I-F: capture universe digest at pipeline start for freshness guard.
   # Re-derive at closure-evaluation time; if they differ → closureComplete=false.
@@ -5389,6 +5408,7 @@ proc prepareProofRun(task: ProofTask; sourceRoot: string;
   ## Topology scan → vault hydration → frontier selection → pre-loop persist.
   ## Everything the wave loop needs, resolved before any wave runs.
   var prepared: PreparedRun
+  prepared.fresh = task.fresh
   # ── VS-2 PR-6: external-subject registry — the AUTHORITATIVE load (§2.3) ──
   # All six lanes flipped (PR-1..PR-6): the registry is loaded ONCE per run,
   # here. The legacy chain arms (sizing, rem) were retired in PR-6; the
@@ -5497,7 +5517,7 @@ proc prepareProofRun(task: ProofTask; sourceRoot: string;
   # Vault resolves to the RUNTIME canonical store (data/trusted/certificates/)
   # for reading — the current-product-truth source. Reference/engineering readers
   # (src/verification/certificates/) are separate and used only by maintenance tools.
-  hydrateRunVault(prepared, bundle, sourceRoot)
+  hydrateRunVault(prepared, bundle, sourceRoot, fresh = task.fresh)
   let subjectResolver = makeSubjectResolver(sourceRoot, bundle.sourceContentCache)
   let frontierLimit = if task.limit.isUnlimited(): 0 else: effectiveQueueLimit
   # F1: when an explicit --target is present, compute the UNRESTRICTED frontier so
@@ -5806,9 +5826,19 @@ proc appendDisplayAndPersist(prepared: PreparedRun; proofReport: var ProofReport
     prepared.reportJson["display"] = displayContainer
   proofReport.outputJson = renderJsonMultiline(prepared.reportJson)
   proofReport.canonicalRunResult = runResult
+  let freshnessMarker = %*{
+    "contract": "axiom.fresh-prove.v1",
+    "fresh": prepared.fresh,
+    "reuseBypass": (if prepared.fresh:
+      %*["vault-verified-set", "vault-spec-priming",
+          "certificate-hydration", "summary-cache"]
+    else:
+      newJArray()),
+    "authoritative": false}
   renderPersist(prepared.statePath, runResult, prepared.preRun, projections,
     displayContainer,
-    (if findingEvidence.len > 0: findingEvidence else: nil))
+    (if findingEvidence.len > 0: findingEvidence else: nil),
+    freshnessMarker)
 
 proc runProofPipeline*(
   task: ProofTask;
