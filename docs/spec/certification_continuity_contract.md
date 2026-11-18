@@ -54,6 +54,8 @@ nightly full L2가 backstop으로 잔존, §7).
 | **Kernel re-execution** | trusted 계층이 pinned Lean kernel / Z3로 evidence를 재실행해 verdict를 독립 재확인하는 행위 — certificate의 유일한 unforgeable 근거 계열(§5 INV-6). |
 | **Side-ref ledger** | main tree 밖 `refs/heads/axiom/certificates`의 FF-only append-only 인증서 원장(§4.3). Git object는 content-addressed로 불변(gitglossary) — tamper-evident. |
 
+Per-construct direct-proof status (what each Nim construct's status is, and why "not directly provable ≠ refuted"): [direct_proof_boundary.md](direct_proof_boundary.md).
+
 ## 2. 인증 스코프 선언 (HARD)
 
 Certificate가 증명하는 문장(스냅샷 계약 — INV-9가 과잉 주장을 차단한다):

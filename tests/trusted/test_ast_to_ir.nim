@@ -103,9 +103,49 @@ proc main() =
       doAssert irDef.body.kind == irBinOp,
         "Test 6: axiomBody body mismatch"
 
+    # -- Test 7: for-loop `0 ..< n` → irLoop with cond boLt, loss-free ------
+    block:
+      let funcNode = quote do:
+        func sumTo*(n: int): int =
+          result = 0
+          for i in 0 ..< n:
+            result = result + i
+      let irDef = convertFuncDef(funcNode)
+
+      doAssert irDef.name == "sumTo",
+        "Test 7: expected name 'sumTo'"
+      var e = irDef.body
+      while e.kind == irLet: e = e.letVal
+      doAssert e.kind == irLoop,
+        "Test 7: expected an irLoop in the let-chain, got " & $e.kind
+      doAssert e.loopCond.kind == irBinOp,
+        "Test 7: expected loop cond irBinOp"
+      doAssert e.loopCond.binOp == boLt,
+        "Test 7: expected cond op boLt for `..<`, got " & $e.loopCond.binOp
+      doAssert irDef.translationLossFree,
+        "Test 7: `..<` is a supported range — translation must stay loss-free"
+
+    # -- Test 8: for-loop `0 .. n` → inclusive bound boLe, loss-free --------
+    block:
+      let funcNode = quote do:
+        func sumToInclusive*(n: int): int =
+          result = 0
+          for i in 0 .. n:
+            result = result + i
+      let irDef = convertFuncDef(funcNode)
+
+      var e = irDef.body
+      while e.kind == irLet: e = e.letVal
+      doAssert e.kind == irLoop,
+        "Test 8: expected an irLoop in the let-chain, got " & $e.kind
+      doAssert e.loopCond.binOp == boLe,
+        "Test 8: expected cond op boLe for `..`, got " & $e.loopCond.binOp
+      doAssert irDef.translationLossFree,
+        "Test 8: `..` inclusive range must stay loss-free"
+
     result = newStmtList()
     result.add quote do:
-      echo "  All 6 conversion tests passed (compile-time)."
+      echo "  All 8 conversion tests passed (compile-time)."
 
   runConversionTests()
   echo "=== Done ==="

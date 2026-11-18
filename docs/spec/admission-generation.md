@@ -5,6 +5,8 @@
 **Related**: AGENTS.md §2.3(merge-admission 관측 계약), §2.5(CI Self-Bootstrap Bottleneck), [docs/agents/ci_epoch_cutover.md](../agents/ci_epoch_cutover.md), [docs/spec/github_ruleset_api_quirks.md](github_ruleset_api_quirks.md), [docs/spec/merge_admission_controller.md](merge_admission_controller.md), [docs/agents/merge_admission_observation.md](../agents/merge_admission_observation.md), [docs/spec/merge_authority_integrity.md](merge_authority_integrity.md), `config/policy/merge_admission.json`(trustSurface SSOT), [docs/evidence/admission_generation_freeze_2026-10-15.md](../evidence/admission_generation_freeze_2026-10-15.md)(동결 기록), DEBT#473
 **동결 기록**: H₀/H₁ 자격 증거·핀 스냅샷·채널 실측의 시점 기록은 [docs/evidence/admission_generation_freeze_2026-10-15.md](../evidence/admission_generation_freeze_2026-10-15.md)가 담는다. 본 문서는 그 위의 **규범**만 담는다.
 
+> **2026-11-17 권위 이전 (ADR-0041 — 본 문서의 org ruleset 절차 폐기)**: GitHub Organization plan이 `free`이므로 org ruleset `25218071`·`23943917`은 `GET /orgs/Archright/rulesets` → `403 Upgrade to GitHub Team`이며 enforcement chain에 존재하지 않는다. 현행 merge authority는 repository ruleset **27097366**(`main`, active, `bypass_actors: []`, 7 required contexts, merge queue `MERGE/ALLGREEN`)이고, required context의 producer는 `admission-check` = App **5795152**(`axiom-admission-verifier`), 나머지 6개 = Actions app **15368**이다([ADR-0041](../adr/0041-free-authority-migration.md):5,9,28; `config/policy/merge_admission.json` v1.24.0 `requiredCheckSources`). 본 문서의 org ruleset PUT·재핀 절차(§4.3, §5)는 **역사 기록으로만** 유효하며 현재 실행 절차가 아니다.
+
 ---
 
 ## 1. 목적 / 범위
@@ -13,7 +15,7 @@
 
 이 문서는 Archright/Axiom의 merge-admission **실행 경계 세대(admission generation)**의 정의·동결·승격 절차에 대한 **단일 SSOT**다.
 
-- **권위 선언**: merge-admission의 enforcement authority는 GitHub다(AGENTS.md §2.3 — org ruleset 2종 + required status check + merge queue). 본 문서는 그 권위를 재구현하지 않으며, org ruleset **25218071(axiom-admission-gate)**·**23943917(landing-integrity)**이 강제하는 required workflow — 조직 저장소 `Archright/.github`의 `.github/workflows/admission-gate-v2.yml`·`landing-integrity.yml` — 의 **세대 경계**(무엇이 불변이고, 무엇이 승격 가능하며, 어떤 절차로 승격되는가)를 규정한다.
+- **권위 선언 (2026-11-17 갱신)**: merge-admission의 enforcement authority는 GitHub다(AGENTS.md §2.3 — required status check + merge queue). 본 문서는 그 권위를 재구현하지 않는다. **현행** 강제 표면은 repository ruleset **27097366**(`main`, active, `bypass_actors: []`, 7 required contexts, merge queue `MERGE/ALLGREEN`)이고, required context의 producer는 `admission-check` = App **5795152**(`axiom-admission-verifier`), 나머지 6개 = Actions app **15368**이다([ADR-0041](../adr/0041-free-authority-migration.md):5,9,28; `config/policy/merge_admission.json` v1.24.0). org ruleset **25218071(axiom-admission-gate)**·**23943917(landing-integrity)**이 강제하던 required workflow — 조직 저장소 `Archright/.github`의 `.github/workflows/admission-gate-v2.yml`·`landing-integrity.yml` — 의 **세대 경계**(§3–§5)는 이제 **역사 기록**이며, 두 ruleset의 PUT·재핀·readback 절차(§4.3, §5.3–5.5)는 현재 실행되지 않는다.
 - **단방향 구조**: 본 문서가 세대 경계를 정의하고, 컨트롤러 저장소 `Archright/.github/.github/workflows/admission-gate-v2.yml` 헤더 주석(H₁ 기준)이 본 문서를 참조한다. 본 문서는 컨트롤러 파일 내용을 복제하지 않는다.
 - **참조 전용 계층**(중복 서술 금지 — 발견 시 각 정본이 자기 계약을 유지한다): epoch cutover 일반 절차는 [ci_epoch_cutover.md](../agents/ci_epoch_cutover.md)(AGENTS.md §2.5 실행 프로토콜), ruleset 쓰기 API의 관측 행동·HARD RULE은 [github_ruleset_api_quirks.md](github_ruleset_api_quirks.md), admission 술어 계약은 [merge_admission_controller.md](merge_admission_controller.md), 런 관측 계약은 [merge_admission_observation.md](../agents/merge_admission_observation.md)가 각각 담는다.
 - **범위 밖**: §9 Out of Scope. 잔여 가변 표면의 제거 작업, admission 술어·관측 계약의 개정, S4 실행 자체는 본 문서의 범위가 아니다.
@@ -107,15 +109,19 @@ Axiom callee 변경이 Axiom main에 착지한 후, 컨트롤러 저장소의 PR
 
 추가 선례: 2026-10-20 24초 evaluate 창(PR #965 착지) — repo ruleset `20303214`의 `enforcement`만 `active→disabled`→`active`로 이동했고 복원은 관측되었으나, **감사 기록이 약 1일 뒤에야 생성**되었다(창 종료 시점에 기록해야 한다는 기한 조항이 그때는 없었다). 기록·미이행 공백의 복구: [incident_emergency_disable_window_2026-10-20.md](../evidence/incident_emergency_disable_window_2026-10-20.md).
 
-### 4.3 사후 ruleset 재핀 의무 (HARD RULE)
+### 4.3 사후 ruleset 재핀 의무 (HARD RULE — 2026-11-17 폐기, 역사 기록)
+
+> **2026-11-17 폐기 (ADR-0041)**: 이 절의 재핀 의무는 org ruleset `25218071`·`23943917`이 enforcement chain에 존재하던 동안의 계약이다. 두 ruleset은 free plan에서 `403 Upgrade to GitHub Team`으로 사용 불가하며([ADR-0041](../adr/0041-free-authority-migration.md):5,9), 현행 강제 표면은 repository ruleset **27097366**이다. 따라서 아래 본문의 `PUT /orgs/Archright/rulesets/25218071`·`23943917` 절차는 **실행 절차가 아니라 역사 기록**이다. 현행 규칙셋의 변경 감지는 `tools/merge_ruleset_drift_monitor.nim`의 readback 경로가 담당한다.
 
 > **2026-10-17 갱신**: 규칙셋 ID 상수 갱신 — 24233738 → **25218071**(2026-10-16T04:51Z 교체). 재핀 의무 본문은 불변.
 
-S4 전환(§5) 이후, org ruleset의 workflow 규칙은 **컨트롤러 조립자 커밋의 SHA**를 가리킨다. 컨트롤러 main의 HEAD가 전진하는 모든 착지(경로 (a)의 핀 회전 PR 포함)은 **같은 논리적 단위에서** 양 ruleset(25218071·23943917)의 `sha`를 새 컨트롤러 HEAD로 재핀하고 readback으로 검증해야 한다(쓰기 경로·readback 절차는 §5.3–5.5와 동일). 재핀 없이 남은 세대 전환은 불완전 cutover다 — §2.5의 "일부만 갱신된 상태를 허용하지 않는다"의 이 세계에서의 적용이다.
+**역사 기록 (2026-10-15–2026-11-17):** S4 전환(§5) 이후, org ruleset의 workflow 규칙은 **컨트롤러 조립자 커밋의 SHA**를 가리킨다. 컨트롤러 main의 HEAD가 전진하는 모든 착지(경로 (a)의 핀 회전 PR 포함)은 **같은 논리적 단위에서** 양 ruleset(25218071·23943917)의 `sha`를 새 컨트롤러 HEAD로 재핀하고 readback으로 검증해야 한다(쓰기 경로·readback 절차는 §5.3–5.5와 동일). 재핀 없이 남은 세대 전환은 불완전 cutover다 — §2.5의 "일부만 갱신된 상태를 허용하지 않는다"의 이 세계에서의 적용이다.
 
 ---
 
-## 5. S4 전환 통제 절차 (일회성 cutover — 2026-10-15 수행 예정)
+## 5. S4 전환 통제 절차 (역사 기록 — 2026-10-15 수행, 2026-11-17 폐기)
+
+> **2026-11-17 폐기 (ADR-0041)**: 이 절의 절차(특히 §5.3–5.5의 org ruleset `25218071`/`23943917` PUT·재핀·readback과 §5.7의 양 ruleset 롤백)는 2026-10-15 S4 수행 시점의 **역사 기록**이다. 두 org ruleset은 free plan에서 `403 Upgrade to GitHub Team`으로 사용 불가하며([ADR-0041](../adr/0041-free-authority-migration.md):5,9), 현행 강제 표면은 repository ruleset **27097366** — `admission-check` = App **5795152**, 나머지 6개 = Actions app **15368** — 이다(ADR-0041:28). 이 절의 단계·롤백 행렬은 현재 실행하지 않는다; 현행 규칙셋 관측은 `tools/merge_ruleset_drift_monitor.nim`이 담당한다.
 
 > 본 절은 절차의 **순서·판정·롤백**만 규정한다. ruleset 쓰기 API의 관측 행동(PATCH 404, GraphQL 표면)과 비상 창 HARD RULE은 [github_ruleset_api_quirks.md](github_ruleset_api_quirks.md)가 정본이다. 본 전환은 [ci_epoch_cutover.md](../agents/ci_epoch_cutover.md) §2.5의 **coherent generation 전환**이다 — 활성 경계의 in-place 부분 수정이 아니다.
 
