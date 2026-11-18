@@ -42,4 +42,6 @@ func `!=`*(a, b: ASIRatio): bool {.inline.} = a.val != b.val
 func `>`*(a, b: ASIRatio): bool {.inline.} = a.val > b.val
 func `>=`*(a, b: ASIRatio): bool {.inline.} = a.val >= b.val
 
+# Acceptance probe (DEBT#558): ordinary source value change, closure-only re-anchor.
+
 {.pop.}
