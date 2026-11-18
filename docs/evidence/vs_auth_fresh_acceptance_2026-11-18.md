@@ -119,7 +119,87 @@ M7(진단 순수성) 정직 기록: 본 세션의 동일 identity가 ruleset을 
   actor attribution = 운영자(`wintrover`), executor = agent under explicit per-PR delegation.
 - **착지 후**: main tip = `ad96ed2`, `config/repository_surface.json` policyVersion `103`.
 
-### §5.2–§5.3 (PR-B 및 canonical main 관측)
+### §5.2 PR-B (#159) break-glass 착지 — 관측값
 
-PR-B 착지 값과 canonical main `fresh-prove-observation` run/artifact/digest는 후속
-docs 전용 커밋(PR-C)에서 append한다 — 선언과 관측을 분리하되 동일 문서 계보를 유지한다.
+- **PR**: `#159` (https://github.com/Archright/Axiom/pull/159), head
+  `705f3080fc504110d05c25695dac8e0c01731119`, base `ad96ed2aacda2674543c408573e7687ccf8a7cd9`.
+- **정상 경로 기계 관측 (App `admission-check`, `axiom-admission-verifier` 5795152)**:
+  `failure` (started 02:11:33Z, completed 02:14:27Z), output summary 원문:
+  `venue=pull_request` / `evaluated_commit=705f308…` /
+  `run=44220703054 attempt=1 conclusion=failure` /
+  `trust_surface=FAIL — mismatch:config/trusted_writer_set.json (total 1)` /
+  `reasons=run_head_mismatch | conclusion=failure |
+  trust_surface:mismatch:config/trusted_writer_set.json (total 1)` /
+  `ledger=not-required(preflight venue)`.
+  — rotation pin 갱신을 포함한 trust-surface PR이므로 설계상 예상된 거부다(§2.3 예측 일치).
+- **required Actions contexts 6개**: 전량 `pass`. 전체 rollup: `pass 34 / skipping 13 /
+  fail 1`(fail 1 = 위 App check).
+- **PR-venue 관측 run** `44221416590` (event `pull_request`, conclusion `success`):
+  artifact `fresh-prove-observation` — verdict `UNKNOWN`, `exitCode=3`,
+  `checkConclusion=neutral`, subject `705f308…`(tree `1fc5a4c9…`),
+  `canonicalEvidenceDigest=234ed29ba440936250ebfd427da06f0a85bd5db928688ea88eabd4e945c51df5`,
+  counts `{units 5, required 5, proved 2, refuted 0, unknown 3, outOfScope 0}`,
+  coverage `17/40`, `closureComplete=false`,
+  reasons `pending-contested, unsatisfied-without-refutation-witness, closure-incomplete,
+  vda-not-pass, scope-coverage-incomplete`, `prove_exit=1`, `report_exit=1`,
+  `fresh=true`, `authoritative=false`, reuseBypass 4경로
+  (`vault-verified-set, vault-spec-priming, certificate-hydration, summary-cache`).
+- **merge queue 관측 (M2)**: 착지 전 `#157 AWAITING_CHECKS` + `#160 UNMERGEABLE` 2건 →
+  02:27:45Z `#157` merged(`223339b`), `#160` `merge_conflict`로 제거 → entry 0 확인 후 착지.
+- **첫 착지 시도 거부(정직 기록)**: 02:27:59Z `REFUSE: PR not MERGEABLE` —
+  `#157` 병합으로 base가 `ad96ed2`→`223339b`로 이동한 직후의 mergeability 재계산 창.
+  **bypass는 활성화되지 않았다**(trap 이전 단계, exit 13).
+- **Pre-snapshot**: raw SHA-256
+  `60198954222c6f1a55c54bc862c6387c569db58e71a5b19547a5e07676c2032b`
+  (`bypass_actors: []`, rules 5, contexts 7). §5.1 복원 후 raw SHA와 동일 — 창 사이 무변경.
+- **bypass 활성화**: `OrganizationAdmin` / `pull_request`, `2026-11-18T02:29:09.658Z`.
+  readback: `bypass_actors` length 1.
+- **native merge**: `PUT /repos/Archright/Axiom/pulls/159/merge` (`merge_method=merge`,
+  `sha=705f308…`) → `merged=true`, merge commit
+  `b41b56840a1c88683f7264d1de541a1553fb36dd`, `mergedAt=2026-11-18T02:29:12Z`.
+- **복원**: `2026-11-18T02:29:14.780Z`, `RESTORE_IDENTICAL=YES`, post readback
+  `bypass_actors=[]`, contexts 7. raw post SHA-256 `5554c6a6…`는 `updated_at` 등
+  휘발 필드로 상이(§5.1과 동일한 정직 기록). 창 길이 **약 5.1s**.
+- **M7 정직 기록**: 동일 identity의 ruleset GET/PUT Mutator 창. actor attribution =
+  운영자(`wintrover`), executor = agent under explicit per-PR delegation (MUST-T2a (4)).
+- **착지 후**: main tip = `b41b56840a1c88683f7264d1de541a1553fb36dd`,
+  `config/repository_surface.json` policyVersion `103` 유지.
+
+### §5.3 canonical main 관측 (`fresh-prove-observation`, event `push:main`) — 관측값
+
+- **run**: `44223601864` (https://github.com/Archright/Axiom/actions/runs/44223601864),
+  event `push`, branch `main`, head `b41b56840a1c88683f7264d1de541a1553fb36dd`,
+  conclusion `success` (created 02:29:15Z, updated 02:32:17Z).
+- **artifact** `fresh-prove-observation` → `fresh-verdict.json`:
+  - verdict **`UNKNOWN`**, `checkConclusion=neutral`, `exitCode=3`,
+    `fresh=true`, `authoritative=false`, `satisfiedByReused=0`.
+  - subject.sha `b41b56840a1c88683f7264d1de541a1553fb36dd` — **PR #159 merge commit과 일치**.
+    subject.tree `736bc9e18ead4d14f02c1fadbeea70210a3e53a6`.
+  - `canonicalEvidenceDigest=28f21741b6bf14ef3d5e8be864fb015ff1dfcc3e5ba1ed072294b152381869e5`.
+  - `scope.lockDigest=140fd7004e088aeda054801ab797ef0d036d4901f33c51adb3cf36c348012788`
+    — PR-venue(`705f308`)와 동일. scope lock은 subject 간 안정적이다.
+  - counts `{units 5, required 5, proved 2, refuted 0, unknown 3, outOfScope 0}`,
+    coverage `17/40`, `closureComplete=false` (4/23).
+  - provenance `{runId 44223601864, attempt 1, runUrl …, runner "GitHub Actions 1000005899",
+    generatedAt 02:32:13Z}` — canonicalEvidence에는 포함되지 않는다(§5.3 검증 항목).
+  - `prove_exit.txt=1`, `report_exit.txt=1`.
+  - reuseBypass 4경로 전량: `vault-verified-set, vault-spec-priming,
+    certificate-hydration, summary-cache`.
+- **관측 검증 스크립트 12개 항목 전부 PASS**: verdict / exitCode / checkConclusion /
+  fresh 선언·실행 / authoritative=false / satisfiedByReused=0 / subject SHA 결속 /
+  provenance runId / contract / reuseBypass 4경로 / canonicalEvidence 내 실행 provenance 부재.
+- **정직 기록 (green ≠ proof success)**: 이 run의 `conclusion=success`는 "관측이 수행되고
+  정직하게 보고되었다"는 뜻이며 **증명 성공이 아니다**. verdict가 `UNKNOWN`인 이유는
+  DEBT#547(ckIfStmt 미지원)·closure 미완(4/23)·coverage 17/40이다. UNKNOWN/neutral을
+  green 성공으로 과장하지 않는다.
+- **canonical digest 비비교(정직 기록)**: main digest `28f21741…`와 PR-venue digest
+  `234ed29b…`는 subject tree가 다르므로 동일해야 하는 대상이 아니다(#159 head tree
+  `1fc5a4c9…` → #157 병합 후 `736bc9e1…`). 동일 입력 2회 실행의 digest 동일성은 로컬
+  unit test(`tests/unit/test_fresh_prove_verdict.nim` — digest A/B·순열 불변 13 cases)로
+  검증되었으나, CI 상시 강제는 phase_x10 follow-up이다.
+- **동일 commit push:main 부수 run**: `trusted-writer-set` `success`,
+  `dynamic Push on main` `success`,
+  `axiom-operational-slice` `44223601879`(`readiness-verdict` 포함) `success`.
+- **acceptance 판정**: `구현 → 검증 → PR → merge → canonical main 실행 → 관측`의 전 구간이
+  실제 run/artifact 값으로 종결되었다. 기존 병합 권한(ruleset `27097366`, contexts 7,
+  `bypass_actors=[]`)은 착지 후 readback으로 동일하게 복원되었다(§5.2).
