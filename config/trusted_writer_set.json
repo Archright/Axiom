@@ -45,5 +45,5 @@
   // protected path). pathSetDigest anchors their PATH SET here. A value re-
   // anchor inside the anchored set keeps this digest unchanged; adding or
   // removing a path is a trust-surface change and requires an epoch rotation.
-  "pathSetDigest": "axiom.trusted-checker-closure.path-set.v1:affaefbd3bf253f14e482e32fd3f89c574be2fd01446247f0bcd06ec2bb2c796"
+  "pathSetDigest": "axiom.trusted-checker-closure.path-set.v1:c0f9705754b829bf35366f4f960edcac46e538c8fb4cc24c4e05ed334f59a7e7"
 }
