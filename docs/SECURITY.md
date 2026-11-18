@@ -6,12 +6,13 @@ Security updates are applied to the latest release and the `main` branch of the 
 
 | Version | Supported |
 | ------- | --------- |
-| `main` / 1.x | Yes |
-| < 1.0 | No |
+| `main` | Yes |
+| Latest release | Yes |
+| Older releases | No |
 
 ## Reporting a Vulnerability
 
-Please **do not** report security vulnerabilities through public GitHub issues, discussions, or pull requests.
+Please **do not** report security vulnerabilities through public GitHub issues or pull requests.
 
 Instead, report vulnerabilities privately through one of the following channels:
 
@@ -23,9 +24,3 @@ Instead, report vulnerabilities privately through one of the following channels:
 - A description of the vulnerability and its potential impact (e.g., soundness bypass, sandbox escape, command injection, or credential exposure).
 - Minimal reproduction steps, proof-of-concept inputs, or configuration details.
 - The affected commit SHA or release version.
-
-### Response Timeline
-
-- **Acknowledgment**: Within 72 hours of receipt.
-- **Triage & Assessment**: Within 7 business days.
-- **Remediation & Coordinated Disclosure**: Once a fix is verified and released, we will coordinate disclosure and credit reporters (unless anonymity is requested).
