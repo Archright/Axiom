@@ -43,7 +43,7 @@
     "ci/checker.mk": {
       "mode": "100644",
       "type": "blob",
-      "sha": "0d8aed6fd153f634f9b7402a75cdaf62100f313c"
+      "sha": "ae9bfa8e3a6853a69bbc6ff9eb9586bd2405f2e1"
     },
     "config.nims": {
       "mode": "100644",

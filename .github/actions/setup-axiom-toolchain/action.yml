@@ -20,9 +20,12 @@ description: >
   stale content) — including an aux-binary-only swap with bin/ax left
   genuine — is detected -> discarded -> cold fallback (J3 §3.3
   non-circular anchor). HIT = verified computation (program warmth) SUPPLY
-  REUSE — verdicts are always recomputed (the 4 ci-compile binaries are
-  recompiled even on a HIT today; census 2026-09-30) — cache is acceleration,
-  never evidence. Functional probes
+  REUSE — verdicts are always recomputed (a verified HIT now skips the
+  4 ci-compile recompile in the S5-wired lanes — admission-check
+  build-base-artifacts, axiom-operational-slice, runner-pool-acceptance: the
+  restored binaries are the supply, each re-asserted via --check-provenance
+  fail-closed; ci/checker.mk:471. The census 2026-09-30 recompile-on-HIT
+  observation predates S5) — cache is acceleration, never evidence. Functional probes
   (compiler/ast.nim presence, Lake import probe) catch version-matching-but-
   broken toolchains (Lake.olean incidents 35678120915, 35681814055). On ANY
   verify/probe FAIL: discard the cache and install/build natively, then
