@@ -572,7 +572,7 @@ ci-bootstrap: ## Build tools -> init hooks -> baseline (prerequisites for all st
 # R1-fast (Slice 3a-L B): feedback-latency lane — the highest-signal gateway
 # correctness test (run_gate_feature_test) as the FIRST verification surface of
 # verify-integration-r1, so the same failure CI previously surfaced only after
-# ~43m (39m preamble + 15m43s full gateway compile queue) is detected in
+# ~54m43s (39m preamble + 15m43s full gateway compile queue) is detected in
 # minutes. T= selects the single test (same positional-filter mechanism the
 # runner already supports). This target is a strict SUBSET of the landing lane:
 # its three compiles are the first/second/eighth lines of gateway-binaries
