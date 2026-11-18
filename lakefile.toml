@@ -1,5 +1,5 @@
 name = "axiom_enterprise"
-version = "0.7.0"
+version = "0.6.5"
 defaultTargets = ["AxiomVerification", "AxiomSemanticProofs"]
 
 [[lean_lib]]
