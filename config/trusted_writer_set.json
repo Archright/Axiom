@@ -3923,7 +3923,7 @@
     "src/verification/ledger_side_ref.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "4b9ebab747ae2e802ebe8c297a3dfdf8b706974c"
+      "sha": "3d3568788ec70c20648fb285d62922dd120d2f5d"
     },
     "src/verification/llbc_to_canonical.nim": {
       "mode": "100644",

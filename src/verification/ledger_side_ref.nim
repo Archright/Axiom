@@ -25,6 +25,7 @@ import std/[algorithm, json, os, strutils, httpclient, times]
 import core/axiom_pragmas
 import core/results
 import verification/canonical_json
+from infrastructure/certificate_attestation import verifyCertificateAttestation
 import infrastructure/logging_facade
 
 axiomIoBoundary()
@@ -543,6 +544,10 @@ proc appendCertificate*(transport: LedgerTransport; repo, certPath: string;
     node = parseJson(text)
   except CatchableError as e:
     return err("ledger_side_ref.appendCertificate: malformed certificate JSON: " & e.msg)
+  let attestation = verifyCertificateAttestation(node)
+  if attestation.isErr:
+    return err("ledger_side_ref.appendCertificate: attestation verification failed (fail-closed): " &
+      attestation.error)
   let certId = ledgerCertId(node)
   if certId.isErr:
     return err("ledger_side_ref.appendCertificate: " & certId.error)
