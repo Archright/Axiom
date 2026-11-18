@@ -778,7 +778,8 @@ proc runBatchUapOrchestration*(
   sharedIrMemoCache: Table[string, IrPipelineResult] = initTable[string, IrPipelineResult]();
   skipIrPipeline: bool = false;
   kernelTotal: int = 0;
-  targetVkd: string = ""
+  targetVkd: string = "";
+  fresh: bool = false
 ): BatchUapReport {.raises: [CatchableError, IOEffect], axiomEffect: IOEffect, tags: [RootEffect, TimeEffect, AxiomIOEffect, IOEffect].} =
   if not verifyInfrastructure():
     logError("loop_driver", "Pre-flight check failed. Set AXIOM_SKIP_SOLVER_CHECK=1 to bypass.")
@@ -949,11 +950,18 @@ proc runBatchUapOrchestration*(
   z3EnsurePersistentPool(workerCount)
 
   # Step 1: Incremental verification — skip already-proven nodes
-  logInfo("loop_driver", "priming fingerprint cache (" & $requests.len & " nodes)...")
-  ## R7 determinism: the "ready" line carries no wall-clock timing; priming
-  ## duration is captured in executionStats/JSON only.
-  primeTransitiveFingerprintCache(state, report, requests, vaultDir, nil)
-  logInfo("loop_driver", "fingerprint cache ready")
+  if fresh:
+    ## Fresh mode: no earlier proof result may satisfy a candidate. The global
+    ## memo is process-scoped (clear it), and vault fingerprint priming is
+    ## skipped entirely — no stored vault record is hydrated into the cache.
+    summaryCache.clear()
+    logInfo("loop_driver", "[fresh] global summary cache cleared; vault fingerprint priming skipped — stored results cannot satisfy a unit")
+  else:
+    logInfo("loop_driver", "priming fingerprint cache (" & $requests.len & " nodes)...")
+    ## R7 determinism: the "ready" line carries no wall-clock timing; priming
+    ## duration is captured in executionStats/JSON only.
+    primeTransitiveFingerprintCache(state, report, requests, vaultDir, nil)
+    logInfo("loop_driver", "fingerprint cache ready")
 
   # Step 2: Build work plan from topological sort
   let plan = buildSorterPlan(state)
@@ -961,7 +969,7 @@ proc runBatchUapOrchestration*(
   # Step 2b: Content-Addressed Certificate Hydration Pre-Pass
   # Delegated to certificate_hydration_runner to keep this module under the
   # 500-line limit.
-  runCertificateHydrationPrePass(state, plan, requests, report, progressSink)
+  runCertificateHydrationPrePass(state, plan, requests, report, progressSink, fresh)
 
   # Step 3: Process by dependency depth (topological order)
   let effectiveNodeLimit = requests.len

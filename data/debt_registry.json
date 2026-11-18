@@ -5657,11 +5657,14 @@
         "tools/surface_guard.nim"
       ],
       "source": "theater_audit",
-      "status": "open",
-      "resolution": "UNRESOLVED — v100 policy normalization required: each path must be registered to exactly one intended class (per-path intended-grade adjudication; the audit list of 126 conflicts is the worklist). This is an architect decision per slice policy (VS-1 decision #21: current-resolver outcome does not automatically justify the class — intended policy is the SSOT). The .githooks/pre-push, .githooks/pre-commit, config/policy/*.json (3), import_encapsulation_gate.nim, and static_gate_scanner.nim instances are the priority adjudications; the ~110 .github/** and src/gate/** CI/gate-infra instances may be confirmed as intended CONTROLLED carve-outs (v95/v96 precedent) and then normalized by REMOVING the redundant FROZEN glob overlap or documenting the carve-out contract explicitly. The change path is the selfAmendment contract (guard v2 conditions a-d, policyVersion increment) — now proven operationally by PR #107. Ghost registration docs/agents/kimi_hooks.md should be pruned in the same v100 pass.",
-      "lastVerifiedAt": "2026-11-16T06:50:00Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-18 (PR #153, merge 983e8360): policy v102 adjudicates all 128 exact/FROZEN conflicts — 19 paths restored to FROZEN, 109 registered as exact frozenExceptions (3 attributed groups, no wildcards); guard v3 rejects unregistered/dead/wildcard exceptions as POLICY_INVALID; negative probes PR #154 (SL-20 SURFACE_FORBIDDEN → App FAILURE → BLOCKED) and PR #156 (App trust-surface mismatch alone blocks while all Actions checks pass) closed unmerged; main push run 44214255926 success.",
+      "lastVerifiedAt": "2026-11-18T01:34:24Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is a FROZEN policy JSON plus a tools/ guard, both outside the src/-only marker scan; trace: this entry contentHash over config/repository_surface.json at v99 (sha256 1f565eb2...), the probe run chain (PR #110 run 43815736467 job 133127762521: SL-20 fired, verdict PASS/OK/binding base), and the 126-conflict audit reproducing guard globMatch semantics."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is a FROZEN policy JSON plus a tools/ guard, both outside the src/-only marker scan; trace: this entry contentHash over config/repository_surface.json at v99 (sha256 1f565eb2...), the probe run chain (PR #110 run 43815736467 job 133127762521: SL-20 fired, verdict PASS/OK/binding base), and the 126-conflict audit reproducing guard globMatch semantics.",
+      "resolvedAt": "2026-11-18",
+      "resolvedBy": "wintrover (agent-executed per-PR delegation)",
+      "resolutionNote": "Evidence: docs/evidence/debt545_policy_v102_landing.md; contract: docs/spec/repository_surface_contract.md v102 appendix; tests: tests/unit/test_surface_guard.nim (60)."
     },
     {
       "id": "DEBT#546",
@@ -5918,6 +5921,47 @@
       "lastVerifiedAt": "2026-11-17T00:00:00Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the finding is a non-Nim shell gate with no {.axiomDebt.} pragma site, so the registry entry itself is the binding medium. Trace: this entry's resolution (UNRESOLVED) and source (theater_audit); external: tools/ci/verify_trusted_writer_set.sh:100-115 and the measured job-level grants in .github/workflows/admission-gate-v2.yml, release-ship.yml, dependabot-auto-merge.yml."
+    },
+    {
+      "id": "DEBT#558",
+"category": "Trust / Evidence",
+      "impact": "high",
+      "severity": "high",
+      "title": "Trust-surface manifest includes the rotation pin, so every source change re-anchors a protected path and the App denies admission-check — source PRs cannot land while bypass_actors is empty",
+      "description": "Machine-observed 2026-11-18 (PR #151, App 5795152 admission-check failure, delivery 95c6c620-e2eb-11f1-97dd-43dda54ed4e0). config/policy/trust_surface_manifest.json lists 17 paths whose blobs must be byte-identical between G and B_mg, and config/trusted_writer_set.json is one of them (:22). That file carries trustedCheckerTreeClosure — the pin over 890 code files — and .githooks/pre-push fails any push whose target OID the pin does not anchor (measured: ebc9886 FAIL 'rotation pin does not anchor pushed commit 29354d1'), so every source change must re-anchor the pin inside the same PR. The App compares all 17 blobs (worker/src/index.js:309-338) and any mismatch forces conclusion=failure (:180-185). Measured on PR #151: 17 paths compared, exactly 1 mismatch (config/trusted_writer_set.json ef040a7d→52005fde), App summary 'trust_surface=FAIL — mismatch:config/trusted_writer_set.json (total 1)', while the Actions-app check also named admission-check (15368) reported success. Ruleset 27097366 requires admission-check from integration 5795152 with bypass_actors [] (readback 2026-11-18), so a failed App check blocks merge with no bypass path, including the MUST-T2a manual lane. Consequence: since the expected-source switch (ruleset updated_at 2026-11-17T16:24:33Z) no source PR can land; the last trust-surface PR (#144) landed 6 minutes before the switch. Remediation options: (a) make the App compare the writer-set file field-wise, mirroring the epoch gate's documented split — a trustedCheckerTreeClosure re-anchor with the pin VALUE unchanged is NOT a pin change (tools/ci/epoch_transaction_gate.nim:662-680) — accepting only closure hash changes while the path set and trustedWriterWorkflow/trustedAdmissionWorkflowSha stay identical; or (b) remove the pin record from the byte-identical manifest and protect it by the epoch gate alone. Both are trust-contract changes requiring an explicit decision; a temporary bypass only moves the deadlock to the next source PR.",
+      "symbol": "checkTrustSurface × trustedCheckerTreeClosure self-reference (config/policy/trust_surface_manifest.json:22; out-of-tree worker/src/index.js:309-338)",
+      "contentHash": "sha256:319e38200004de4b4ba4c9bb0f28848a1f70c3e94ca5a9e8ef12b3da6c34c53d",
+      "lineRange": "config/policy/trust_surface_manifest.json:6-24",
+      "files": [
+        "config/policy/trust_surface_manifest.json"
+      ],
+      "source": "vs_authority_separation_2026-11-18",
+      "status": "open",
+      "resolution": "UNRESOLVED — registration only (the fix changes the verifier's acceptance class or the manifest contract; both are trust-boundary decisions with an explicit approval/epoch requirement, and a bypass-only landing leaves the next source PR blocked). Acceptance: a source-only PR that re-anchors the closure receives App admission-check=success while the writer-set pin VALUE and path set are unchanged, and a PR that changes trustedWriterWorkflow, trustedAdmissionWorkflowSha, or the pinned path set is still denied.",
+      "lastVerifiedAt": "2026-11-18T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the finding spans a policy manifest, an out-of-tree verifier (Worker), and the pre-push rotation-pin adjudication, so no single {.axiomDebt.} pragma site exists; the registry entry itself is the binding medium. Trace: this entry's resolution (UNRESOLVED) and source (vs_authority_separation_2026-11-18); external: config/policy/trust_surface_manifest.json:22, worker/src/index.js:309-338 (out-of-tree), .githooks/pre-push rotation-pin adjudication, PR #151 App check delivery 95c6c620-e2eb-11f1-97dd-43dda54ed4e0."
+    },
+    {
+      "id": "DEBT#559",
+      "category": "Theater/Fail-open Observation",
+      "impact": "high",
+      "severity": "high",
+      "title": "Readiness evaluator fails open across declared-key absences — R2/R6/R8 PASS on one unrelated key, and R1/R3/R4/R5/R7 skip individual declared keys",
+      "description": "Machine-observed 2026-11-18 (main ad96ed2; evaluator and policy bytes are identical at main 295bb02, where the independent probe was reproduced). Root cause: validateEvidence (tools/readiness_evaluator.nim:283-287) requires only >=1 observation and >=1 source and never checks observation-key membership against policy.observationKeys; rawStateOf (:836-855) dispatches the list to rules written as 'if present and bad -> FAIL', so absence falls through to stPass. Whole-rule fail-open on a non-empty unrelated list: R2 (:486-514, all 5 keys), R6 (:611-620, both keys), R8 observation keys (:753-766; the separate r8SequenceViolations commands gate at :703-751 still fails closed). Independent probe (/tmp/debt558-probe/report.md, 2026-11-18): the real CLI rebuilt from source is byte-identical to shipped bin/readiness_evaluator (sha256 d49de6a65174d08e9312a6018655d095b36200ed787fb9a1e98085e8dda70f5e); an 8-envelope bundle whose R2/R6/R8 observations are [{\"key\":\"unrelated\",\"value\":true}] is accepted 8/8 valid and returns verdict GO with R2=R6=R8=PASS; the observations=[] control returns UNKNOWN/NO-GO via the API (CLI: NOT_RUN/NO-GO, rejected by validateEvidence). Broader partial fail-open (removing one declared key leaves PASS/GO): R1 documentedCommand; R3 canonicalProjectionHashEqual, environmentControlled; R4 provenanceReconstructible; R5 helpSurface, jsonSchemaVersion, stdoutStderrSplit, per-subject successExitCode; R7 verifiedEmitterScope (non-critical; absence disables scope-overclaim promotion). Declared but never read by the evaluator: R1 promiseOutputExists, R4 subjectTreeImmutableAcrossRun, R8 axiomOwnedColdSetDeletedBeforeRun — collectors record them and the evaluator ignores them, so a measured violation can still yield PASS. Earlier focused probe at ad96ed2: three valid envelopes containing only the undeclared key `unrelatedProbe` yielded R2=PASS, R6=PASS, R8=PASS; negative control certGreenDualEvidenceRequired=false yielded R2=FAIL. Intended direction: missing required observation key => UNKNOWN (fail-closed).",
+      "symbol": "ruleR2 / ruleR6 / ruleR8 fail-open (tools/readiness_evaluator.nim:486-514, :611-620, :753-770)",
+      "contentHash": "sha256:82b788876e3b69c0865406c0dee5e51481c2eac0444fc630a056dc70f074428c",
+      "lineRange": "tools/readiness_evaluator.nim:486-514; tools/readiness_evaluator.nim:611-620; tools/readiness_evaluator.nim:753-770",
+      "files": [
+        "tools/readiness_evaluator.nim",
+        "config/readiness_policy.json"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED — registration only. The fix (missing required observation key => UNKNOWN, fail-closed) is deliberately deferred to a separate approved slice: flipping critical invariants to UNKNOWN can change live verdicts and requires positive/negative probes plus updated evidence. Acceptance for that slice: (1) every policy-declared observationKeys entry for critical invariants (R1-R6, R8; R7 is contract-decided separately) is present or the invariant evaluates to UNKNOWN; (2) declared-but-never-read keys R1 promiseOutputExists, R4 subjectTreeImmutableAcrossRun, R8 axiomOwnedColdSetDeletedBeforeRun are either enforced or removed from config/readiness_policy.json — no collector-only keys remain; (3) the R7 verifiedEmitterScope absence behavior is decided by the product contract, not by fall-through; (4) the negative control with certGreenDualEvidenceRequired=false still evaluates to FAIL; (5) the then-current decision evidence is regenerated.",
+      "lastVerifiedAt": "2026-11-18T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the evaluator is the audited subject and the finding is registration-only, so a self-fix in the same slice would remove its own evidence path (AGENTS.md §2.2 discovery is registered, never quietly patched). Trace: this entry's resolution (UNRESOLVED) and source (theater_audit); external: tools/readiness_evaluator.nim:486-514, :611-620, :753-770, :836-857; config/readiness_policy.json invariants.R2/R6/R8 and observationKeys."
     }
   ]
 }

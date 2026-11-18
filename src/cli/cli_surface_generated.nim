@@ -67,6 +67,9 @@ proc parseAxProveFlags*(args: seq[string]): Result[AxProveFlags, string] {.raise
       if i + 1 >= args.len: return Result[AxProveFlags, string](ok: false, err: "missing value: --proposals")
       result.value.proposals = args[i + 1]
       i += 2
+    of apFresh:
+      result.value.fresh = true
+      inc i
     # No else — Nim compiler enforces exhaustiveness for enum case
 
 proc validateAxProveFlags*(flags: AxProveFlags): Result[void, string] {.raises: [].} =
@@ -84,6 +87,7 @@ proc axProveFlagsHelp*(): string {.raises: [].} =
   result &= "  --project                string parameter\n"
   result &= "  --plan                   string parameter\n"
   result &= "  --proposals              string parameter\n"
+  result &= "  --fresh                  bool parameter\n"
 
 # ---------------------------------------------------------------------------
 # AxReportFlags
