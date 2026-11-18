@@ -268,6 +268,20 @@ proc selfAmendmentPaths*(policy: JsonNode): seq[string] {.raises: [].} =
     if p.kind == JString:
       result.add(p.getStr())
 
+const FROZEN_EXCEPTION_SCHEMA* = "axiom.repository-surface-frozen-exceptions.v1"
+
+proc frozenExceptionPaths*(policy: JsonNode): seq[string] {.raises: [].} =
+  ## Pure: the exact paths registered as intentional FROZEN-glob overrides
+  ## (frozenExceptions.paths), in declaration order. Empty when the block is
+  ## absent or malformed — validity itself is isValidPolicy's job.
+  let fe = child(policy, "frozenExceptions")
+  if fe.isNil or fe.kind != JObject:
+    return @[]
+  let paths = child(fe, "paths")
+  if paths.isNil or paths.kind != JObject:
+    return @[]
+  result = jsonKeys(paths)
+
 proc exactPatternClasses(policy: JsonNode): seq[tuple[pattern: string,
                                                       classes: seq[string]]] {.raises: [].} =
   ## Pure: exact (no-wildcard) patterns listed in two or more DIFFERENT
@@ -310,8 +324,12 @@ proc isValidPolicy(policy: JsonNode): bool {.raises: [].} =
   ## declare exactly the hardcoded PRODUCT -> CONTROLLED -> FROZEN order;
   ## `selfAmendment` (optional) may carry only `allowedPaths` (string array);
   ## an exact (no-wildcard) pattern registered in two or more classes is
-  ## rejected (DEBT#538). The legacy `classResolutionOrder` field is ignored
-  ## without penalty.
+  ## rejected (DEBT#538); `frozenExceptions` (optional) must carry exactly
+  ## `schema`/`groups`/`paths`, every group must state `rationale` and
+  ## `approvedBy`, every exact PRODUCT/CONTROLLED pattern matching a FROZEN
+  ## pattern must be registered there by exact path, and every registered path
+  ## must be such a conflict (dead exceptions are rejected — DEBT#545).
+  ## The legacy `classResolutionOrder` field is ignored without penalty.
   if policy.isNil or policy.kind != JObject:
     return false
   let sv = child(policy, "schemaVersion")
@@ -374,6 +392,78 @@ proc isValidPolicy(policy: JsonNode): bool {.raises: [].} =
     for p in ap.items:
       if p.isNil or p.kind != JString:
         return false
+  # v3 (DEBT#545): an exact PRODUCT/CONTROLLED registration that also matches
+  # a FROZEN pattern resolves to PRODUCT/CONTROLLED under first-match, so the
+  # declared FROZEN protection would be inert. Every such conflict must be
+  # registered by exact path in frozenExceptions — wildcards are rejected,
+  # because a broad exception would re-arm the same theater. Unregistered
+  # conflicts and dead exceptions are POLICY_INVALID.
+  let fe = child(policy, "frozenExceptions")
+  var excPaths: seq[string] = @[]
+  if not fe.isNil:
+    if fe.kind != JObject:
+      return false
+    let feKeys = jsonKeys(fe)
+    if feKeys.len != 3:
+      return false
+    for k in feKeys:
+      if k notin ["schema", "groups", "paths"]:
+        return false
+    let sch = child(fe, "schema")
+    if sch.isNil or sch.kind != JString or
+        sch.getStr() != FROZEN_EXCEPTION_SCHEMA:
+      return false
+    let groups = child(fe, "groups")
+    if groups.isNil or groups.kind != JObject:
+      return false
+    for gk in jsonKeys(groups):
+      let g = child(groups, gk)
+      if g.isNil or g.kind != JObject:
+        return false
+      let gKeys = jsonKeys(g)
+      if gKeys.len != 2:
+        return false
+      for x in gKeys:
+        if x notin ["rationale", "approvedBy"]:
+          return false
+      let ra = child(g, "rationale")
+      let ab = child(g, "approvedBy")
+      if ra.isNil or ra.kind != JString or ra.getStr().len == 0:
+        return false
+      if ab.isNil or ab.kind != JString or ab.getStr().len == 0:
+        return false
+    let paths = child(fe, "paths")
+    if paths.isNil or paths.kind != JObject:
+      return false
+    for pk in jsonKeys(paths):
+      let gid = child(paths, pk)
+      if gid.isNil or gid.kind != JString:
+        return false
+      if child(groups, gid.getStr()).isNil:
+        return false
+      excPaths.add(pk)
+  let frozenArr = child(classes, "FROZEN")
+  var conflicts: seq[string] = @[]
+  for cls in ["PRODUCT", "CONTROLLED"]:
+    let arr = child(classes, cls)
+    if arr.isNil or arr.kind != JArray:
+      continue
+    for pat in arr.items:
+      if pat.isNil or pat.kind != JString:
+        continue
+      let p = pat.getStr()
+      if '*' in p:
+        continue
+      for fp in frozenArr.items:
+        if fp.kind == JString and globMatch(fp.getStr(), p):
+          conflicts.add(p)
+          break
+  for c in conflicts:
+    if c notin excPaths:
+      return false
+  for e in excPaths:
+    if e notin conflicts:
+      return false
   if exactPatternClasses(policy).len() > 0:
     return false
   true

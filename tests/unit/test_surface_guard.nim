@@ -9,6 +9,12 @@
 ## judged with op DELETE), and the selfAmendment exception contract
 ## (conditions a-d, one miss leaves the FAIL standing).
 ##
+## v3 additions (DEBT#545): frozenExceptions must register every exact
+## PRODUCT/CONTROLLED pattern that a FROZEN pattern also matches, reject
+## unregistered conflicts, dead exceptions, wildcard registrations, and
+## groups without rationale/approvedBy; the shipped policy must stay valid
+## and keep its FROZEN intent.
+##
 ## Run from repo root:
 ##   nim c -r --hints:off --nimcache:/tmp/nimc_guard tests/unit/test_surface_guard.nim
 
@@ -29,6 +35,11 @@ let POLICY = parseJson("""
     "PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
     "CONTROLLED": {"ADD": "FAIL", "MODIFY": "PASS", "DELETE": "PASS"},
     "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "PASS"}
+  },
+  "frozenExceptions": {
+    "schema": "axiom.repository-surface-frozen-exceptions.v1",
+    "groups": {"fixture": {"rationale": "PRODUCT carve-out under the FROZEN catch-all", "approvedBy": "unit-test"}},
+    "paths": {"Makefile": "fixture"}
   }
 }
 """)
@@ -649,3 +660,139 @@ suite "selfAmendment exception (v2)":
     let j2 = classify(saBase, recs, saHead).pretty(2)
     check j1 == j2
     echo "  [selfAmendment] byte-identical verdict JSON"
+
+# ---------------------------------------------------------------------------
+# v3 (DEBT#545): frozenExceptions contract.
+# ---------------------------------------------------------------------------
+
+const V3_BASE = """
+{
+  "schemaVersion": 1,
+  "policyVersion": 12,
+  "classes": {
+    "PRODUCT": ["src/**"],
+    "CONTROLLED": ["tools/**", "config/policy.json"],
+    "FROZEN": ["config/**"]
+  },
+  "defaultClass": "FROZEN",
+  "rules": {
+    "PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+    "CONTROLLED": {"ADD": "FAIL", "MODIFY": "PASS", "DELETE": "PASS"},
+    "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "PASS"}
+  }
+}
+"""
+
+proc v3Clone(): JsonNode = parseJson(V3_BASE)
+
+proc v3WithExceptions(groups, paths: JsonNode): JsonNode =
+  result = v3Clone()
+  var fe = newJObject()
+  fe["schema"] = %FROZEN_EXCEPTION_SCHEMA
+  fe["groups"] = groups
+  fe["paths"] = paths
+  result["frozenExceptions"] = fe
+
+proc okGroups(): JsonNode =
+  %* {"generated-manifest": {"rationale": "generated", "approvedBy": "architect"}}
+
+suite "v3 frozenExceptions (DEBT#545)":
+  test "unregistered exact/FROZEN conflict -> POLICY_INVALID":
+    let v = classify(v3Clone(), @[ChangeRecord(status: 'M', path: "config/policy.json")])
+    check v["verdict"].getStr() == "FAIL"
+    check v["reasonCode"].getStr() == "POLICY_INVALID"
+    echo "  [v3] unregistered conflict is rejected"
+
+  test "registered exception keeps the declared class and verdict":
+    let p = v3WithExceptions(okGroups(), %* {"config/policy.json": "generated-manifest"})
+    let ok = classify(p, @[ChangeRecord(status: 'M', path: "config/policy.json")])
+    check ok["verdict"].getStr() == "PASS"
+    check ok["reasonCode"].getStr() == "OK"
+    let bad = classify(p, @[ChangeRecord(status: 'A', path: "config/policy.json")])
+    check bad["verdict"].getStr() == "FAIL"
+    check bad["reasonCode"].getStr() == "SURFACE_FORBIDDEN"
+    check bad["violations"][0]["changeClass"].getStr() == "CONTROLLED"
+    echo "  [v3] exception preserves CONTROLLED semantics"
+
+  test "dead exception -> POLICY_INVALID":
+    let p = v3WithExceptions(okGroups(),
+      %* {"config/policy.json": "generated-manifest",
+          "config/never.nim": "generated-manifest"})
+    let v = classify(p, @[ChangeRecord(status: 'M', path: "config/policy.json")])
+    check v["reasonCode"].getStr() == "POLICY_INVALID"
+    echo "  [v3] dead exceptions are rejected"
+
+  test "group without rationale or approvedBy -> POLICY_INVALID":
+    let noRationale = %* {"g": {"approvedBy": "architect"}}
+    let v1 = classify(v3WithExceptions(noRationale,
+      %* {"config/policy.json": "g"}), @[])
+    check v1["reasonCode"].getStr() == "POLICY_INVALID"
+    let noApprover = %* {"g": {"rationale": "generated"}}
+    let v2 = classify(v3WithExceptions(noApprover,
+      %* {"config/policy.json": "g"}), @[])
+    check v2["reasonCode"].getStr() == "POLICY_INVALID"
+    let extraKey = %* {"g": {"rationale": "r", "approvedBy": "a", "extra": "x"}}
+    let v3 = classify(v3WithExceptions(extraKey,
+      %* {"config/policy.json": "g"}), @[])
+    check v3["reasonCode"].getStr() == "POLICY_INVALID"
+    echo "  [v3] group attribution is mandatory and exact"
+
+  test "wildcard registration -> POLICY_INVALID":
+    let p = v3WithExceptions(okGroups(),
+      %* {"config/policy.json": "generated-manifest",
+          "config/*": "generated-manifest"})
+    let v = classify(p, @[ChangeRecord(status: 'M', path: "config/policy.json")])
+    check v["reasonCode"].getStr() == "POLICY_INVALID"
+    echo "  [v3] wildcard exceptions are rejected"
+
+  test "path pointing at an unknown group -> POLICY_INVALID":
+    let p = v3WithExceptions(okGroups(),
+      %* {"config/policy.json": "no-such-group"})
+    let v = classify(p, @[])
+    check v["reasonCode"].getStr() == "POLICY_INVALID"
+    echo "  [v3] dangling group references are rejected"
+
+  test "wrong exception schema -> POLICY_INVALID":
+    var p = v3WithExceptions(okGroups(), %* {"config/policy.json": "generated-manifest"})
+    p["frozenExceptions"]["schema"] = %"axiom.repository-surface-frozen-exceptions.v2"
+    let v = classify(p, @[])
+    check v["reasonCode"].getStr() == "POLICY_INVALID"
+    echo "  [v3] schema string is pinned"
+
+  test "shipped policy v102 is valid and registers 109 exceptions":
+    let loaded = loadPolicy("config/repository_surface.json")
+    check loaded.ok
+    check not loaded.invalidContent
+    check frozenExceptionPaths(loaded.node).len == 109
+    let v = classify(loaded.node, @[])
+    check v["verdict"].getStr() == "PASS"
+    check v["policyVersion"].getInt() == 102
+    echo "  [v3] shipped v102 is valid"
+
+  test "shipped policy: dropping one exception is caught (liveness)":
+    let loaded = loadPolicy("config/repository_surface.json")
+    check loaded.ok
+    var p = loaded.node
+    let paths = p["frozenExceptions"]["paths"]
+    var victim = ""
+    for k in paths.keys:
+      victim = k
+      break
+    check victim.len > 0
+    paths.delete(victim)
+    let v = classify(p, @[ChangeRecord(status: 'M', path: victim)])
+    check v["reasonCode"].getStr() == "POLICY_INVALID"
+    echo "  [v3] every shipped exception is load-bearing"
+
+  test "shipped policy: FROZEN intent enforced, docs untouched":
+    let loaded = loadPolicy("config/repository_surface.json")
+    check loaded.ok
+    let frozen = classify(loaded.node,
+      @[ChangeRecord(status: 'M', path: ".githooks/pre-push")])
+    check frozen["verdict"].getStr() == "FAIL"
+    check frozen["reasonCode"].getStr() == "SURFACE_FORBIDDEN"
+    check frozen["violations"][0]["changeClass"].getStr() == "FROZEN"
+    let docs = classify(loaded.node,
+      @[ChangeRecord(status: 'M', path: "docs/agents/operations.md")])
+    check docs["verdict"].getStr() == "PASS"
+    echo "  [v3] shipped policy enforces FROZEN and spares docs"
