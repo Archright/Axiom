@@ -1,0 +1,141 @@
+{
+  "contract": "axiom.proof-ratchet-baseline.v1",
+  "semantics": "exact-inventory-lock",
+  "inventoryDigest": "9c38bb4601e925508119967a6d8ab793d564f024791fb3e6979f11af5b3bebd3",
+  "inventory": {
+    "contract": "axiom.proof-ratchet-baseline.v1",
+    "semantics": "exact-inventory-lock",
+    "subject": {
+      "sha": "db20f176f8df98ea141a0c62763c2985fbaaf79a",
+      "tree": "cbd35afceb7b9877d8ad4e79b7da653078eba045"
+    },
+    "scope": {
+      "lockDigest": "140fd7004e088aeda054801ab797ef0d036d4901f33c51adb3cf36c348012788",
+      "lockSchemaVersion": 3,
+      "declaredSymbolCount": 40,
+      "accountedCount": 17,
+      "missingCount": 23,
+      "complete": false,
+      "missing": [
+        "src/core/json/json_scan_skip.nim::skipJsonValue",
+        "src/core/orchestrator/orchestrator_api.nim::addPlanReproofNodes",
+        "src/core/orchestrator/orchestrator_api.nim::enqueueParallelWorkItem",
+        "src/core/orchestrator/orchestrator_api.nim::prepareParallelInputs",
+        "src/core/orchestrator/orchestrator_topology_worker.nim::blockBranch",
+        "src/core/orchestrator/orchestrator_topology_worker.nim::registerTimeoutImpact",
+        "src/core/orchestrator/orchestrator_vault.nim::addDepthExecutionStat",
+        "src/core/orchestrator/orchestrator_vault.nim::finalizeExecutionStats",
+        "src/core/orchestrator/orchestrator_vault.nim::stateCollectDependencyAxioms",
+        "src/core/orchestrator/orchestrator_vault.nim::stateHasVaultEntry",
+        "src/core/orchestrator/orchestrator_vault.nim::stateLookupVaultAxiom",
+        "src/core/sorter/sorter_core_index_table.nim::hasVaultEntry",
+        "src/core/topology/topology_engine.nim::findTopologyNodeContext",
+        "src/gate/gate_rules_architecture.nim::applyCallDepthCheck",
+        "src/gate/gate_rules_architecture.nim::applyWriteOwnershipCheck",
+        "src/gate/gate_rules_module_classifier.nim::buildModulePathMap",
+        "src/gate/gate_rules_module_classifier.nim::buildQualifiedCallGraph",
+        "src/gate/gate_rules_module_classifier.nim::computeMaxCallDepth",
+        "src/verification/analyzer/analyzer_shared_cert.nim::collectKnownFunctions",
+        "src/verification/analyzer/analyzer_shared_cert.nim::cumulativeDefectSum",
+        "src/verification/analyzer/analyzer_shared_json.nim::mergeStringEvidence",
+        "src/verification/pipeline_lean_spec_inference_part1.nim::inferBranchDepth",
+        "src/verification/pipeline_lean_spec_inference_part1.nim::inferLoopDepth"
+      ]
+    },
+    "counts": {
+      "requiredCount": 5,
+      "notRequiredCount": 0,
+      "unresolvedDecisionCount": 0,
+      "satisfiedCount": 2,
+      "unsatisfiedCount": 1,
+      "pendingCount": 2,
+      "contestedCount": 2,
+      "satisfiedByFresh": 2,
+      "satisfiedByReused": 0,
+      "preSievedCount": 0,
+      "attemptedCount": 5,
+      "notAttemptedCount": 0,
+      "freshExecutionCount": 3,
+      "executedCount": 5,
+      "proofFailedCount": 1,
+      "timeoutUnsatCount": 0,
+      "reuseEligibleRowCount": 0,
+      "reuseRejectedRowCount": 0
+    },
+    "runOutcome": {
+      "planComplete": true,
+      "executionComplete": true,
+      "verificationComplete": false,
+      "verdict": "FAIL"
+    },
+    "units": [
+      {
+        "unitId": "src/core/orchestrator/orchestrator_api.nim::normalizeMaxWorkers",
+        "requirementDecision": "REQUIRED",
+        "verificationOutcome": "SATISFIED",
+        "consistency": "CONSISTENT",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "FRESH"
+      },
+      {
+        "unitId": "src/core/orchestrator/orchestrator_topology_worker.nim::calcDynamicTimeoutCore",
+        "requirementDecision": "REQUIRED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONTESTED",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      },
+      {
+        "unitId": "src/core/orchestrator/orchestrator_vault.nim::safeSpeedupRatioCore",
+        "requirementDecision": "REQUIRED",
+        "verificationOutcome": "UNSATISFIED",
+        "consistency": "CONSISTENT",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      },
+      {
+        "unitId": "src/core/topology/topology_dependency.nim::proximityScore",
+        "requirementDecision": "REQUIRED",
+        "verificationOutcome": "SATISFIED",
+        "consistency": "CONSISTENT",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "FRESH"
+      },
+      {
+        "unitId": "src/verification/analyzer/analyzer_shared_json.nim::firstBoolCore",
+        "requirementDecision": "REQUIRED",
+        "verificationOutcome": "PENDING",
+        "consistency": "CONTESTED",
+        "executionEvidence": "ATTEMPTED",
+        "satisfactionSource": "NONE"
+      }
+    ]
+  },
+  "provenance": {
+    "workflow": "fresh-prove-observation",
+    "runId": "44248226884",
+    "runUrl": "https://github.com/Archright/Axiom/actions/runs/44248226884"
+  },
+  "normalization": {
+    "unitFields": [
+      "unitId",
+      "requirementDecision",
+      "verificationOutcome",
+      "consistency",
+      "executionEvidence",
+      "satisfactionSource"
+    ],
+    "ordering": "unitId:utf8-asc",
+    "excludedStatePaths": [
+      "runtimeMeta",
+      "executionStats",
+      "executionIdentity",
+      "gates[].timestamp",
+      "nodeReports[].vaultPath",
+      "canonicalRunDigest",
+      "schemaVersion",
+      "evidenceLogJson",
+      "closure"
+    ]
+  }
+}

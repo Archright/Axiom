@@ -21363,6 +21363,39 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "Int",
+      "module": "src/core/crypto/hash_kernel.nim",
+      "name": "bsig0",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "uint32",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/core/crypto/hash_kernel.nim",
+      "name": "bsig1",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "uint32",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/core/crypto/hash_kernel.nim",
+      "name": "ch32",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "uint32",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "String",
       "module": "src/core/crypto/hash_kernel.nim",
       "name": "computeContentHash",
@@ -21421,6 +21454,17 @@
       "ignorable": false,
       "leanType": "Int",
       "module": "src/core/crypto/hash_kernel.nim",
+      "name": "hexNibble",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "uint32",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/core/crypto/hash_kernel.nim",
       "name": "hexVal",
       "resultConstraintTemplate": "(>= result 0)",
       "returnType": "uint8",
@@ -21459,6 +21503,28 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "Int",
+      "module": "src/core/crypto/hash_kernel.nim",
+      "name": "maj32",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "uint32",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/core/crypto/hash_kernel.nim",
+      "name": "rotr32",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "uint32",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "array[20, byte]",
       "module": "src/core/crypto/hash_kernel.nim",
       "name": "sha1HexToBytes",
@@ -21469,6 +21535,36 @@
       "returnType": "array[20, byte]",
       "smtSort": "Int",
       "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/core/crypto/hash_kernel.nim",
+      "name": "sha256Compress",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/core/crypto/hash_kernel.nim",
+      "name": "sha256DigestHex",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
     },
     {
       "hasAxiomHint": false,
@@ -21489,7 +21585,7 @@
       "ignorable": false,
       "leanType": "Int",
       "module": "src/core/crypto/hash_kernel.nim",
-      "name": "stableHash32",
+      "name": "ssig0",
       "resultConstraintTemplate": "(>= result 0)",
       "returnType": "uint32",
       "smtSort": "Int",
@@ -21498,16 +21594,24 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
-      "leanType": "String",
+      "leanType": "Int",
       "module": "src/core/crypto/hash_kernel.nim",
-      "name": "vmSafeSha256Hex",
-      "negativeConstraints": [
-        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
-      ],
-      "resultConstraintTemplate": "(>= (str.len result) 0)",
-      "returnType": "string",
-      "smtSort": "String",
-      "typeCategory": "string"
+      "name": "ssig1",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "uint32",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/core/crypto/hash_kernel.nim",
+      "name": "stableHash32",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "uint32",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
     },
     {
       "hasAxiomHint": false,
