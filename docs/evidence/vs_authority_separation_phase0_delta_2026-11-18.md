@@ -248,3 +248,76 @@ subj=eef79163fcc25bde base=983e8360f876 head=a2228604dbc7 kind=subject-continuit
   CAS는 "증거 생산물 저장소"다. App이 CAS를 소비할 경우 `payloadSha256` 재계산 +
   `certificate.evidenceDigest == record.evidenceDigest` + `entry name == evidenceKey`를 확인해야 한다.
   이 계약을 지키는 한, Actions의 CAS write는 PR이 스스로 합격을 만드는 경로가 아니다.
+## §15. Worker v2 배포 기록 (2026-11-18T03:51Z)
+
+### 이전 / 이후
+
+| 항목 | 값 |
+|---|---|
+| 이전 버전 | `3ee49b00-4bcf-4dad-b4c5-fab87fe3f572` (2026-11-17T23:46:28Z) |
+| 이전 소스 sha256 | `d613896c6a6a2d1255b804280f245ae32c763126d9e35e41c6d2a79338ddee57` |
+| 신규 버전 | `5050d518-0464-44e5-b3a2-199ccc5dafc5` |
+| 신규 소스 sha256 | `4f393d946c784488282e635b62a03e21180ae786dc8c2a900a63441da68376d8` |
+| 배포 명령 | `npx wrangler@latest deploy` (`~/.config/axiom-verifier-app/worker`) |
+| `/health` rev | `2026-11-18.3-jsonc-field-aware-venue` |
+| 롤백 명령 | `npx wrangler@latest rollback 3ee49b00-4bcf-4dad-b4c5-fab87fe3f572` |
+
+### 로컬 회귀 (배포 전)
+
+`node test/run.mjs` → **PASS 24/24**. 포함된 계약:
+- JSONC(`//`, `/* */`, trailing comma) 파싱, 깨진 JSON/중복 key는 null(fail-closed)
+- TWS: closure sha가 subject tree blob과 일치할 때만 수용, 불일치/보호 필드 변경/신규 필드/누락/타입 변경 거부
+- PR venue: 3-dot touched-path, merge-base를 diff base로 사용( stale `pr.base.sha` 미사용 ), 300-file/페이지 상한 초과 시 fail-closed
+- merge_group: 비-TWS 16경로 byte-equal 유지 + TWS는 G tree에 결속된 field-aware
+- merge-base 부재, tree truncated, compare diverged → fail-closed
+
+### 배포 후 관측
+
+```
+GET https://axiom-admission-verifier.wintrover.workers.dev/health
+{"ok":true,"check":"admission-check","workflow":".github/workflows/admission-gate-v2.yml",
+ "mode":"base-anchored","rev":"2026-11-18.3-jsonc-field-aware-venue","app_id":"5795152"}
+```
+
+### 수용 시험
+
+`#151` head `666d1d72`의 `admission-gate` run `44211806914`을 attempt 2로 rerun.
+기대: App `admission-check` = success (field-aware가 closure re-anchor 1건을 수용).
+
+### 수용 시험 1 — App field-aware PASS, 그러나 mint A0 guard FAIL
+
+run `44211806914` attempt 2 (head `666d1d72`, run 시점 main `53a64c6f`)의 관측:
+
+```
+App admission-check (5795152):
+  trust_surface=PASS — venue=pull_request manifest_ref=53a64c6 touched=4
+                       manifest_touched=1 closure_reanchored=1 reasons=none
+  reasons=conclusion=failure
+  → App 판정 실패 사유는 워크플로 자체의 conclusion=failure 하나뿐이다.
+```
+
+즉 **DEBT#558의 교착은 실제로 해소됐다**. 실패는 App이 아니라 다음 job에서 발생했다.
+
+```
+mint-prepare / prepare:
+  MINT_A0_ACTIVATION: FAIL — PR #151 base.sha 'a2286003eaf0' != baseSha input '53a64c6f81a6' (fail-closed)
+```
+
+### 새로 발견한 in-repo base-move 결함 (MUST 후보)
+
+`admission-gate-v2.yml:236`은 `BASE_SHA = needs.anchor-resolve.outputs.B_STAR || github.event.pull_request.base.sha`다.
+`anchor-resolve`는 **현재 main tip**(`53a64c6f`)을 B*로 해석한다. 반면 mint의 A0 guard는
+`GET /pulls/151`의 `base.sha`(`a2286003`, PR이 마지막으로 갱신될 때의 base)와 **문자열 동일**을 요구한다.
+
+- 두 계약이 서로 다른 시점의 base를 가리키므로, **main이 전진한 뒤에는 어떤 PR도 mint될 수 없다**.
+- 이는 사용자가 지적한 base-move 문제의 in-repo 판본이며, "PR branch update 강제" 정책을
+  사실상 강제하는 구조다. 즉 merge-aware anchoring(B*)을 도입했지만 A0 guard가 따라오지 않았다.
+- 단기 회피는 branch update(merge main → base.sha 갱신)이고, 근본 수정은 A0 guard를
+  `PR.base.sha ∈ ancestors(B*)` + `B* ∈ main`으로 바꾸는 **trust-surface 변경**이다.
+  후자는 `certificate-mint.yml`(manifest 17경로) 수정이므로 별도 계획·승인이 필요하다.
+
+### 수용 시험 2 — branch update 후
+
+`#151` head를 `2e17d9a`로 갱신(origin/main `53a64c6f` 병합). 병합 트리에서
+TWS `trustedCheckerTreeClosure` **890개 전부**가 해당 경로의 blob SHA와 일치(`bad=0`)함을 확인.
+`PR.base.sha == B_STAR == 53a64c6f`가 성립하므로 A0 guard가 통과 가능하다.
