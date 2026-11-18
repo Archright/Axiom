@@ -1,0 +1,526 @@
+{
+ "commit": "983e8360f876acb058dd0ff78e6f50c2f0c60ffa",
+ "ax_version": "v0.6.4",
+ "nim_version": "Nim Compiler Version 2.2.10 [Linux: amd64]",
+ "measured_at_utc": "2026-11-18T01:50:08Z",
+ "measurements": [
+  {
+   "verification_scope": "full-scope",
+   "freshness": "fresh",
+   "command": "AXIOM_STATE_DIR=/tmp/stage2-state-full bin/ax prove",
+   "state_dir": "/tmp/stage2-state-full",
+   "exit_status": 1,
+   "actual_result": "FAIL",
+   "gate_verdict": "FAIL",
+   "unsatisfied_count": 1,
+   "failed_symbols": [
+    "safeSpeedupRatioCore",
+    "calcDynamicTimeoutCore",
+    "firstBoolCore"
+   ],
+   "failure_causes": [
+    "UNSUPPORTED: EA_UNSUPPORTED unsupported AST node (ckIfStmt) outside the certified-subset wire set (safeSpeedupRatioCore; full_fresh.log:28)",
+    "CONTESTED: calcDynamicTimeoutCore — canonical OGR marks the unit REQUIRED but runtime reported no_obligation (orchestrationNoObligation); IR pipeline also psFail with canonical-declined evidence=inconclusive and 'invariant does not imply postcondition' (full_fresh.log:24,26,38,54-55)",
+    "CONTESTED: firstBoolCore — canonical OGR marks the unit REQUIRED but runtime reported certNoObligation/orchestrationNoObligation (full_fresh.log:59-60)",
+    "ELIGIBILITY-EXCLUDED: firstIntCore rejection=semantic.unresolved-fact, not attempted (full_fresh.log:15)"
+   ],
+   "log_sha256": "519607caba5d55d04ec030c9da358777eccb7492a50c8511b0cf5fc1e5f85483",
+   "state_files": [
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/0c6d9b56f5262877a462c3541bc6b890a5b8c0a896d57234ead9d239aeebf6fe.binding.json",
+     "sha256": "3f443beba1916209fed6f7691c6ff92809516c1eef1f2664b5f49874b709b070"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/0c6d9b56f5262877a462c3541bc6b890a5b8c0a896d57234ead9d239aeebf6fe.json",
+     "sha256": "138a0db2a5f98372b924cfc42d6c428d16bf0401336bcd5f234c49f518a36f0f"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/0c6d9b56f5262877a462c3541bc6b890a5b8c0a896d57234ead9d239aeebf6fe.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/1919ede22a2e20ecdf3fb4aaeaf0145b620e71d846125949bb24e53c7e494453.binding.json",
+     "sha256": "e849ea4b87e3e7e724525fe1956f02777a460a48909d071adb57ee6975372843"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/1919ede22a2e20ecdf3fb4aaeaf0145b620e71d846125949bb24e53c7e494453.json",
+     "sha256": "36e84b0b6c427b4e2f37c407bab10962419b667498b0fbd17b9883484f5cbe77"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/1919ede22a2e20ecdf3fb4aaeaf0145b620e71d846125949bb24e53c7e494453.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/1c175bd5bd496f5489ff665f138a4898df6a5b32bcd6ecd12bb60749ff4b0ac7.binding.json",
+     "sha256": "e4f71bda401dcf9b884bcee8159b72ef38e522411e33ce3cce908864be799a21"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/1c175bd5bd496f5489ff665f138a4898df6a5b32bcd6ecd12bb60749ff4b0ac7.json",
+     "sha256": "f6b54b18b8a2fd5a88a5ec135174ae1ebedf46b22f0a8f40801115ce95c191d6"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/1c175bd5bd496f5489ff665f138a4898df6a5b32bcd6ecd12bb60749ff4b0ac7.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/30d6ad3072b204dfa6fb0b2a187ffbd52b0c2e1ee94c931d21207618ec6e5849.binding.json",
+     "sha256": "e814363b726f47aa748c97a9c31d0f5bdf16283fe5c0e2aabde7aec77b0a8011"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/30d6ad3072b204dfa6fb0b2a187ffbd52b0c2e1ee94c931d21207618ec6e5849.json",
+     "sha256": "bad6aed12b5768a16536d7b6c0642949c3abf595729d04d079753a60dbc3fb87"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/30d6ad3072b204dfa6fb0b2a187ffbd52b0c2e1ee94c931d21207618ec6e5849.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/3545c4d4f062b0f326dd386e79ddc842cffacc4cde4f68afbc81185729e1773b.binding.json",
+     "sha256": "419958390cd0eae6f7a22bdf7a3aa5dffc03f12798aaecc35f1fddbda6086ca6"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/3545c4d4f062b0f326dd386e79ddc842cffacc4cde4f68afbc81185729e1773b.json",
+     "sha256": "fab09210c88b99318de2d27ec8bfeeeb198742ce8203ab399478e0e29b20497e"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/3545c4d4f062b0f326dd386e79ddc842cffacc4cde4f68afbc81185729e1773b.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/4c0b525bcce36ba8806dbdd9dc73293f591e657fde5850c3ac63266da7d30561.binding.json",
+     "sha256": "ed39d130b59859a23b0206638052e19affc6ce1c9625ee9434386edb1aa627c7"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/4c0b525bcce36ba8806dbdd9dc73293f591e657fde5850c3ac63266da7d30561.json",
+     "sha256": "230fda3fd9af05ae729ab16e843d154451031fc36f164f91fe1a31b6e4da717c"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/4c0b525bcce36ba8806dbdd9dc73293f591e657fde5850c3ac63266da7d30561.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/55c98caaa431d5b2c6c4a16aa8c1f9f29d91def83b522f062b31fe59ab461465.binding.json",
+     "sha256": "d0dcb72bcbc18e25da003780236e9d2eb4d501e40d74de5f72b8629c072b37b0"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/55c98caaa431d5b2c6c4a16aa8c1f9f29d91def83b522f062b31fe59ab461465.json",
+     "sha256": "949d05ea41328007c07921349df6ba74f6b8761b67c3921e748b2eaff8de900a"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/55c98caaa431d5b2c6c4a16aa8c1f9f29d91def83b522f062b31fe59ab461465.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/616586db4a80b8d7ad6e4059d1598f1715c338498f43d0391961a83ffcffce12.binding.json",
+     "sha256": "0d22a0c30858e0d7135fdd4b2b3980ce5350a0387bf7bac39f369598f748446d"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/616586db4a80b8d7ad6e4059d1598f1715c338498f43d0391961a83ffcffce12.json",
+     "sha256": "bad6aed12b5768a16536d7b6c0642949c3abf595729d04d079753a60dbc3fb87"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/616586db4a80b8d7ad6e4059d1598f1715c338498f43d0391961a83ffcffce12.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/6f5c6d5f8758443e5055fcb450858ff12141b0471244d28a401fa19b230897fa.binding.json",
+     "sha256": "257685f061c531d5be0e7b12d02a8728fcb0f1392d61fc7832982bb83a85ff83"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/6f5c6d5f8758443e5055fcb450858ff12141b0471244d28a401fa19b230897fa.json",
+     "sha256": "5d4c0268e791992d6194607fb0c1e8f40717199cd54d136cc9d39cff7d15de9c"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/6f5c6d5f8758443e5055fcb450858ff12141b0471244d28a401fa19b230897fa.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/7b6b9e7b8dcc74aa3199ee09b91ea0911ca06bd444e3e80aee8a63b0f505f1a9.binding.json",
+     "sha256": "94083db2ea332c2ddf6eaac8b5db73d28e8e5ff58cc8de8b7d13c555235e2f1f"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/7b6b9e7b8dcc74aa3199ee09b91ea0911ca06bd444e3e80aee8a63b0f505f1a9.json",
+     "sha256": "138a0db2a5f98372b924cfc42d6c428d16bf0401336bcd5f234c49f518a36f0f"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/7b6b9e7b8dcc74aa3199ee09b91ea0911ca06bd444e3e80aee8a63b0f505f1a9.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/88eff803f15f97cfeec1fa0c3b739b85b3710a226edcb91e7970468d8d51fc1e.binding.json",
+     "sha256": "0e12e4c0384f4b1baaeeb7766ffce0416a3c28479f17b26ea8657a3aff7941ba"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/88eff803f15f97cfeec1fa0c3b739b85b3710a226edcb91e7970468d8d51fc1e.json",
+     "sha256": "f6b54b18b8a2fd5a88a5ec135174ae1ebedf46b22f0a8f40801115ce95c191d6"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/88eff803f15f97cfeec1fa0c3b739b85b3710a226edcb91e7970468d8d51fc1e.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/9594ec2b93abf7b00793e822e8a545aab60cace0ad566dffaa14de1884c80457.binding.json",
+     "sha256": "9d3354658cc6b191de9fa946687b3bc9917f08d936a991403cc11cb923261e96"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/9594ec2b93abf7b00793e822e8a545aab60cace0ad566dffaa14de1884c80457.json",
+     "sha256": "bdcbaffa687f426e3fb9f68c4f0998cb1a8de3f53d013c24026e799cf3ba1a98"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/9594ec2b93abf7b00793e822e8a545aab60cace0ad566dffaa14de1884c80457.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/cf31f28b294448305a119625c5b335eb83cde9a2cab337caf7869821d26424f2.binding.json",
+     "sha256": "e493ce76991cf7d0a27c30930b1f18c09cf365d5bcab285c0e5ea4d0ff6389a8"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/cf31f28b294448305a119625c5b335eb83cde9a2cab337caf7869821d26424f2.json",
+     "sha256": "f6b54b18b8a2fd5a88a5ec135174ae1ebedf46b22f0a8f40801115ce95c191d6"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/cf31f28b294448305a119625c5b335eb83cde9a2cab337caf7869821d26424f2.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/d61ecfebbc387ce8a3d00259466987c976d480a99291f8f6edf2763e7dddb7f2.binding.json",
+     "sha256": "ed4cc712a34add8af753013d65031ce8b24b56886f871b138f020ca553089345"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/d61ecfebbc387ce8a3d00259466987c976d480a99291f8f6edf2763e7dddb7f2.json",
+     "sha256": "230fda3fd9af05ae729ab16e843d154451031fc36f164f91fe1a31b6e4da717c"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/d61ecfebbc387ce8a3d00259466987c976d480a99291f8f6edf2763e7dddb7f2.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/e8997cddd885c92eb8f3f60432da0f68e9de6f3fc00a5cbe69801f097c920000.binding.json",
+     "sha256": "d565a31bc5355f3d1c702da09de252a7c7c7ec25bd71ddd5147c29683c38ca83"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/e8997cddd885c92eb8f3f60432da0f68e9de6f3fc00a5cbe69801f097c920000.json",
+     "sha256": "949d05ea41328007c07921349df6ba74f6b8761b67c3921e748b2eaff8de900a"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/evidence/e8997cddd885c92eb8f3f60432da0f68e9de6f3fc00a5cbe69801f097c920000.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/node_selection_state.json",
+     "sha256": "f4fd16553a60d1e1b53011ffe2e5bd8dcdd5ae08db45496daed88a231a2d5f4e"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/topology_analysis_cache.json",
+     "sha256": "f654cad50f9437012e5193e63776600da328b65ad7077086a82ed3ba08d3e0f7"
+    },
+    {
+     "path": "/tmp/stage2-state-full/.axiom/cache/topology_merkle.json",
+     "sha256": "2791f22a3dac0ec8c70f8f6e7d14a3fc8c226f1794fb825481dbaebd43043db0"
+    },
+    {
+     "path": "/tmp/stage2-state-full/build/certificates/7fe53565b0e774a2ea20bf2980c20bfa98f21093b68d578ddd8220d226211114.json",
+     "sha256": "abcc3953c99310eaee3d1a3b21ac9003ed542fa40ed596dce37f1c6f9a95c380"
+    },
+    {
+     "path": "/tmp/stage2-state-full/build/certificates/89b0a232bd4bc34aa6bb4af955e286a5bc9f0704cdcabe665db28cd25c471a10.json",
+     "sha256": "08ce3c07caff1fb25d8847dd227567bd76a9cc278cc48e147268ba480bb2bfdc"
+    },
+    {
+     "path": "/tmp/stage2-state-full/build/certificates/93079fe23d613d467a95b3950f3100b89c4bf3806f3bc8ce56bad978d50acf0e.json",
+     "sha256": "4f13aea47ad8de00a14109a819a80afc9a4f81db50f3db850e39a135a147248e"
+    },
+    {
+     "path": "/tmp/stage2-state-full/build/certificates/data/trusted/journal/0fc2567c4c1f58cafefcb4cda99ad426d0c182457a18ef0e18079788b56345e1.json",
+     "sha256": "5f1174cfbfbf7ce627e37b8da2feda0dd7faec182cf34f484b596165394e37cb"
+    },
+    {
+     "path": "/tmp/stage2-state-full/build/certificates/data/trusted/journal/4ade62131067524b15bd7c8241f51ad669995e950ec2b815338150f3925635ae.json",
+     "sha256": "e8a19361ccca0278f7b62130a2015c158aefcc0008473b6dd697b9faa61b853b"
+    },
+    {
+     "path": "/tmp/stage2-state-full/build/certificates/data/trusted/journal/a0480f1d0d07e864ccc050de83ffbdc928f88fbada630f2df789b887e90fc7fb.json",
+     "sha256": "4fe522083ae28fa4332a84639bb97cb94807a91aa8474e8a02a4d8aba5dd3265"
+    },
+    {
+     "path": "/tmp/stage2-state-full/build/certificates/data/trusted/journal/b44efb1227f2849dcb9b82a9c0427a1ff0463fe3158ab22766769ba5716a9d67.json",
+     "sha256": "5cd3638699bb4174a222537cbae78401dcea2be6834a4fde20317d9de0ce1bf3"
+    },
+    {
+     "path": "/tmp/stage2-state-full/build/certificates/e57ee9394d16b8dcb8a859eb205f59a55dc3926227dc2250a21448c8d5ebf200.json",
+     "sha256": "bae2e26c5a740dab7e31076a3048f4825d37f56b87608d00d8fdfb608a384a41"
+    },
+    {
+     "path": "/tmp/stage2-state-full/build/certificates/manifest.json",
+     "sha256": "dbd692882260a6fa36e3f73a01c7c549c44714180c984d6750e3a3703b096699"
+    },
+    {
+     "path": "/tmp/stage2-state-full/data/baseline.json",
+     "sha256": "085caf2cc17f2b6cbadc9c567bc25477529898d0089cd5491011bbe44362933a"
+    },
+    {
+     "path": "/tmp/stage2-state-full/data/trusted/journal/4462dcd958ff059ffb769f469038287b8095e0519ed49693957190c6234f1c88.json",
+     "sha256": "5a66291e42752be469147319e99a6af65ae5b2a98438bc20e80e406a13d28bed"
+    },
+    {
+     "path": "/tmp/stage2-state-full/data/trusted/journal/76d4d1ecf2394e8a26cb5e74b1bdeca85e6d6719420e5247638ebbc3eee23365.json",
+     "sha256": "5ca40986991d259685626ec42526a328d9981665eebb2e15075b745de978f5d8"
+    },
+    {
+     "path": "/tmp/stage2-state-full/data/trusted/journal/81c866c483f49e0faa08a3b8881c782935f1be961a134532afefb1c55caefa91.json",
+     "sha256": "b1bcfb315b15acffa32cac8bc74726ee9df1eef9fae2a2acfd2a0286d902a806"
+    },
+    {
+     "path": "/tmp/stage2-state-full/data/trusted/journal/90abb984bb4221a6e1f7e0847e253f26d483eeeb82a1ea3f059e0237d5fc1703.json",
+     "sha256": "faf3b793f4072dcadcbd3cd67cda9db35be39edcfccd09c69414c22695f643d1"
+    },
+    {
+     "path": "/tmp/stage2-state-full/data/trusted/journal/b23ad5a991cc46e6996ad948acb77ceb064af9bde556fc4c439f743bf9c153ee.json",
+     "sha256": "f8db99af9ca671ee387e3539ddfce929d25b8fee891dc948b5a02464d79aba9f"
+    },
+    {
+     "path": "/tmp/stage2-state-full/data/trusted/journal/cfad0d746f8d25771742299d2f20652527919108855ddada16ba88da3da5fadb.json",
+     "sha256": "24ecafe68bb5bca9c4549d00338a212381279edded56c94595cfe0fd3f534bad"
+    },
+    {
+     "path": "/tmp/stage2-state-full/data/verification_scope.lock",
+     "sha256": "140fd7004e088aeda054801ab797ef0d036d4901f33c51adb3cf36c348012788"
+    },
+    {
+     "path": "/tmp/stage2-state-full/logs/audit/vsr_ledger.jsonl",
+     "sha256": "4062539ff79dde1e441a07d8a6495e893d0c728563e171e68b629c1877a38df6"
+    },
+    {
+     "path": "/tmp/stage2-state-full/logs/ax_proof_state.json",
+     "sha256": "5d894db400259008670b3fcdfaa0dd84b33b53f6c6accd5dd20dcf63bf71ad6f"
+    },
+    {
+     "path": "/tmp/stage2-state-full/logs/ax_prove_trajectory.jsonl",
+     "sha256": "e2b36adb3617458560372dd63247f2e307d503d07c4c97d6ba1ceceb75fe0690"
+    },
+    {
+     "path": "/tmp/stage2-state-full/logs/global_symbol_graph.130729e04d078b79ea4fd316c1db986a32b8a97ed0d9985f9ab546c15a0e94eb.cache.json",
+     "sha256": "a20920e1eb880ca1b321ffb8efcd544f64138cafccedeba93fc1b01397876859"
+    },
+    {
+     "path": "/tmp/stage2-state-full/logs/global_symbol_graph.json",
+     "sha256": "ce6a4c3a074d14b1cabaf784555e921a37069c953b66eebcb167b880f32482ab"
+    },
+    {
+     "path": "/tmp/stage2-state-full/logs/z3_telemetry.jsonl",
+     "sha256": "ff7dedffb0a7b27259d1be4c9757189aee564a73b0ad3696bb00a2d8fba26b0c"
+    }
+   ]
+  },
+  {
+   "verification_scope": "ci-scope",
+   "freshness": "fresh",
+   "command": "AXIOM_STATE_DIR=/tmp/stage2-state-ci bin/ax prove --target normalizeMaxWorkers",
+   "state_dir": "/tmp/stage2-state-ci",
+   "exit_status": 0,
+   "actual_result": "PASS",
+   "gate_verdict": "PASS",
+   "unsatisfied_count": 0,
+   "failed_symbols": [],
+   "failure_causes": [],
+   "log_sha256": "cbb79a600406e36ae23f9ad8d34e083da9445c390e54d185995d6df7a304905f",
+   "state_files": [
+    {
+     "path": "/tmp/stage2-state-ci/.axiom/cache/evidence/1919ede22a2e20ecdf3fb4aaeaf0145b620e71d846125949bb24e53c7e494453.binding.json",
+     "sha256": "e849ea4b87e3e7e724525fe1956f02777a460a48909d071adb57ee6975372843"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/.axiom/cache/evidence/1919ede22a2e20ecdf3fb4aaeaf0145b620e71d846125949bb24e53c7e494453.json",
+     "sha256": "36e84b0b6c427b4e2f37c407bab10962419b667498b0fbd17b9883484f5cbe77"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/.axiom/cache/evidence/1919ede22a2e20ecdf3fb4aaeaf0145b620e71d846125949bb24e53c7e494453.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/.axiom/cache/evidence/4c0b525bcce36ba8806dbdd9dc73293f591e657fde5850c3ac63266da7d30561.binding.json",
+     "sha256": "ed39d130b59859a23b0206638052e19affc6ce1c9625ee9434386edb1aa627c7"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/.axiom/cache/evidence/4c0b525bcce36ba8806dbdd9dc73293f591e657fde5850c3ac63266da7d30561.json",
+     "sha256": "230fda3fd9af05ae729ab16e843d154451031fc36f164f91fe1a31b6e4da717c"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/.axiom/cache/evidence/4c0b525bcce36ba8806dbdd9dc73293f591e657fde5850c3ac63266da7d30561.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/.axiom/cache/node_selection_state.json",
+     "sha256": "f3b5f31663bf809c6174763a846b695b157ad43aad4822d69e27819a80247818"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/.axiom/cache/topology_analysis_cache.json",
+     "sha256": "f654cad50f9437012e5193e63776600da328b65ad7077086a82ed3ba08d3e0f7"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/.axiom/cache/topology_merkle.json",
+     "sha256": "a911adaae22fa3f10797d4d3892ec38a0d67464e6d3bbdde89257fcd23cb2ccd"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/build/certificates/data/trusted/journal/a0480f1d0d07e864ccc050de83ffbdc928f88fbada630f2df789b887e90fc7fb.json",
+     "sha256": "4fe522083ae28fa4332a84639bb97cb94807a91aa8474e8a02a4d8aba5dd3265"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/build/certificates/e57ee9394d16b8dcb8a859eb205f59a55dc3926227dc2250a21448c8d5ebf200.json",
+     "sha256": "bae2e26c5a740dab7e31076a3048f4825d37f56b87608d00d8fdfb608a384a41"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/build/certificates/manifest.json",
+     "sha256": "6dca3b398765fd7c75673f3571798046d0a29d63d2a6da708809c90ddccafef4"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/data/baseline.json",
+     "sha256": "085caf2cc17f2b6cbadc9c567bc25477529898d0089cd5491011bbe44362933a"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/data/trusted/journal/81c866c483f49e0faa08a3b8881c782935f1be961a134532afefb1c55caefa91.json",
+     "sha256": "b1bcfb315b15acffa32cac8bc74726ee9df1eef9fae2a2acfd2a0286d902a806"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/data/verification_scope.lock",
+     "sha256": "140fd7004e088aeda054801ab797ef0d036d4901f33c51adb3cf36c348012788"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/logs/audit/vsr_ledger.jsonl",
+     "sha256": "d37045915a1dc84e6dd7ff7997b03286f131399f0293734eed6d9fce3ad29878"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/logs/ax_proof_state.json",
+     "sha256": "aca7e5b045717a1ebc90bce65ff9f191097c8a82b02ab7f2f1fa60e42fc6399b"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/logs/ax_prove_trajectory.jsonl",
+     "sha256": "c138602ef5060a156c963600a6e6eeae017fa18abb72fa26bda7c92d74363898"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/logs/global_symbol_graph.130729e04d078b79ea4fd316c1db986a32b8a97ed0d9985f9ab546c15a0e94eb.cache.json",
+     "sha256": "744b0659584dd3dce58b23b9f87deaed7c58de12c16cdaa6c42476cc663b2538"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/logs/global_symbol_graph.json",
+     "sha256": "cc39a4ed467dddc58bd6658a393436bd4dff052f446c36d9f75f31c1ec29d871"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/logs/z3_telemetry.jsonl",
+     "sha256": "e64c523065c4526243f6cb4d3ab037c2e063f9caa971a4ac6f4a8ca19c419ba1"
+    }
+   ]
+  },
+  {
+   "verification_scope": "ci-scope",
+   "freshness": "warm",
+   "command": "AXIOM_STATE_DIR=/tmp/stage2-state-ci bin/ax prove --target normalizeMaxWorkers",
+   "state_dir": "/tmp/stage2-state-ci",
+   "exit_status": 0,
+   "actual_result": "PASS",
+   "gate_verdict": "PASS",
+   "unsatisfied_count": 0,
+   "failed_symbols": [],
+   "failure_causes": [],
+   "log_sha256": "96484f772144d4d808d5485f4726a8b740df2f20c30ea5ba501a698a6946f6d6",
+   "state_files": [
+    {
+     "path": "/tmp/stage2-state-ci/.axiom/cache/evidence/1919ede22a2e20ecdf3fb4aaeaf0145b620e71d846125949bb24e53c7e494453.binding.json",
+     "sha256": "e849ea4b87e3e7e724525fe1956f02777a460a48909d071adb57ee6975372843"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/.axiom/cache/evidence/1919ede22a2e20ecdf3fb4aaeaf0145b620e71d846125949bb24e53c7e494453.json",
+     "sha256": "36e84b0b6c427b4e2f37c407bab10962419b667498b0fbd17b9883484f5cbe77"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/.axiom/cache/evidence/1919ede22a2e20ecdf3fb4aaeaf0145b620e71d846125949bb24e53c7e494453.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/.axiom/cache/evidence/4c0b525bcce36ba8806dbdd9dc73293f591e657fde5850c3ac63266da7d30561.binding.json",
+     "sha256": "ed39d130b59859a23b0206638052e19affc6ce1c9625ee9434386edb1aa627c7"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/.axiom/cache/evidence/4c0b525bcce36ba8806dbdd9dc73293f591e657fde5850c3ac63266da7d30561.json",
+     "sha256": "230fda3fd9af05ae729ab16e843d154451031fc36f164f91fe1a31b6e4da717c"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/.axiom/cache/evidence/4c0b525bcce36ba8806dbdd9dc73293f591e657fde5850c3ac63266da7d30561.strict-gen",
+     "sha256": "7b8539c69c233e720b1e0d181c73c8eba104789ae6ca7208f86821611fda379d"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/.axiom/cache/node_selection_state.json",
+     "sha256": "3194897c65d4f87822eaae67868d012744697570684d53b84d03f2766b27a529"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/.axiom/cache/topology_analysis_cache.json",
+     "sha256": "f654cad50f9437012e5193e63776600da328b65ad7077086a82ed3ba08d3e0f7"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/.axiom/cache/topology_merkle.json",
+     "sha256": "2791f22a3dac0ec8c70f8f6e7d14a3fc8c226f1794fb825481dbaebd43043db0"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/build/certificates/data/trusted/journal/a0480f1d0d07e864ccc050de83ffbdc928f88fbada630f2df789b887e90fc7fb.json",
+     "sha256": "4fe522083ae28fa4332a84639bb97cb94807a91aa8474e8a02a4d8aba5dd3265"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/build/certificates/e57ee9394d16b8dcb8a859eb205f59a55dc3926227dc2250a21448c8d5ebf200.json",
+     "sha256": "bae2e26c5a740dab7e31076a3048f4825d37f56b87608d00d8fdfb608a384a41"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/build/certificates/manifest.json",
+     "sha256": "1ebfbf26feddd57f45645271aa17fbcf03ba5e3cbacf2e4e2fc6b776f34f02af"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/data/baseline.json",
+     "sha256": "085caf2cc17f2b6cbadc9c567bc25477529898d0089cd5491011bbe44362933a"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/data/trusted/journal/81c866c483f49e0faa08a3b8881c782935f1be961a134532afefb1c55caefa91.json",
+     "sha256": "b1bcfb315b15acffa32cac8bc74726ee9df1eef9fae2a2acfd2a0286d902a806"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/data/verification_scope.lock",
+     "sha256": "140fd7004e088aeda054801ab797ef0d036d4901f33c51adb3cf36c348012788"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/logs/audit/vsr_ledger.jsonl",
+     "sha256": "7826b373a3fdc7b06377157f4e68aef84a524a8ed0a4d37f678e04bd1a1f4a28"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/logs/ax_proof_state.json",
+     "sha256": "eaeac7e7d0808e56bf74453955d76cfe38c59160b6c93417dcb7fcc7662463f3"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/logs/ax_prove_trajectory.jsonl",
+     "sha256": "3e07da247a65114854af093aefe77441057633d61b1d5b81b5f682cb4a19b426"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/logs/global_symbol_graph.130729e04d078b79ea4fd316c1db986a32b8a97ed0d9985f9ab546c15a0e94eb.cache.json",
+     "sha256": "744b0659584dd3dce58b23b9f87deaed7c58de12c16cdaa6c42476cc663b2538"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/logs/global_symbol_graph.json",
+     "sha256": "cc39a4ed467dddc58bd6658a393436bd4dff052f446c36d9f75f31c1ec29d871"
+    },
+    {
+     "path": "/tmp/stage2-state-ci/logs/z3_telemetry.jsonl",
+     "sha256": "0cbdf1a428ed66ad9cc3eeebc98b29dd4e91ab17667e4cc2651549a390452103"
+    }
+   ]
+  }
+ ],
+ "limitations": [
+  "failed_symbols lists every unit whose verificationOutcome was not SATISFIED (1 UNSATISFIED + 2 PENDING/CONTESTED); unsatisfied_count counts only UNSATISFIED rows. CONTESTED means canonical OGR REQUIRED but runtime reported no obligation (src/verification/accounting/run_accounting.nim:725-729).",
+  "An AXIOM_STATE_DIR that contains nothing but directories fails closed: `bin/ax prove` exits 2 with `loadKernelScope fail-closed: lock file missing at '/tmp/stage2-state-full/data/verification_scope.lock'` (preserved as full_fresh_empty_state_attempt.log, sha256 5ce05704e2ef3c3838421d2db25d542ed4de4f7cffac7389748d46c94e1e9c4c). Both fresh state dirs were therefore seeded with only the immutable contract inputs data/verification_scope.lock and data/baseline.json, copied byte-identically from commit 983e836, exactly as .github/workflows/byo-agent.yml:217-226 does; these two seeded inputs appear in state_files.",
+  "The CLI printed no JSON verdict/state on stdout for these in-repo runs; evidence was read from $AXIOM_STATE_DIR/logs/ax_proof_state.json (outputJson is populated only in external-subject mode, src/cli/axiom_engine.nim:6086-6088).",
+  "Warm CI-scope did NOT reuse certificates: runAccounting.satisfiedByReused=0, reuseEligibleRowCount=0, summary.solverInvocationCount=1, and the cert was rewritten (identical bytes, sha256 bae2e26c5a740dab7e31076a3048f4825d37f56b87608d00d8fdfb608a384a41). The read vault is repo-relative data/trusted/certificates while writes go to $AXIOM_STATE_DIR/build/certificates (src/verification/cert_vault_role.nim:21-29, axiom_engine.nim:5366). Warm speedup (70s -> 28s) came from topology/graph caches: topology log line 5 changed from '2562 changed' to '570 changed'.",
+  "Full-scope (no --target) is not 'all 40 kernel symbols': the eligibility gate admitted 5 proof candidates out of 16163 topology candidates / |Kernel|=40, excluding 12 non-proof-candidate symbols (full_fresh.log:19); firstIntCore was excluded with semantics.unresolved-fact (full_fresh.log:15).",
+  "The full-scope log's IR pipeline 'Proof Summary: Total 4 / Pass 2 / Fail 2' (full_fresh.log:40-43) counts IR-extracted entries, not the 5 canonical run-accounting units.",
+  "make build regenerated the tracked file src/generated/build_metadata.json inside the detached worktree (git status: ' M src/generated/build_metadata.json'); no hand edits, commits, resets, or checkouts were performed. The worktree is disposable.",
+  "Wall-clock timings (full 56s, CI fresh 70s, CI warm 28s) are single-host observations, not performance evidence.",
+  "z3 4.13.3, Nim 2.2.10, Lean 4.33.0 (elan) matched the repo pins; lake build ircheck succeeded in 6.8s, so the Lean reference extractor was available to prove.",
+  "The fresh CI-scope state snapshot is point-in-time: the warm rerun reused the same /tmp/stage2-state-ci, so 7 of the 21 recorded fresh-state hashes (logs/ax_proof_state.json, logs/ax_prove_trajectory.jsonl, logs/z3_telemetry.jsonl, logs/audit/vsr_ledger.jsonl, .axiom/cache/topology_merkle.json, .axiom/cache/node_selection_state.json, build/certificates/manifest.json) no longer match the live directory afterwards. The warm entry's 21 hashes all match the current directory."
+ ]
+}

@@ -5924,7 +5924,7 @@
     },
     {
       "id": "DEBT#558",
-      "category": "Trust / Evidence",
+"category": "Trust / Evidence",
       "impact": "high",
       "severity": "high",
       "title": "Trust-surface manifest includes the rotation pin, so every source change re-anchors a protected path and the App denies admission-check — source PRs cannot land while bypass_actors is empty",
@@ -5941,6 +5941,27 @@
       "lastVerifiedAt": "2026-11-18T00:00:00Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the finding spans a policy manifest, an out-of-tree verifier (Worker), and the pre-push rotation-pin adjudication, so no single {.axiomDebt.} pragma site exists; the registry entry itself is the binding medium. Trace: this entry's resolution (UNRESOLVED) and source (vs_authority_separation_2026-11-18); external: config/policy/trust_surface_manifest.json:22, worker/src/index.js:309-338 (out-of-tree), .githooks/pre-push rotation-pin adjudication, PR #151 App check delivery 95c6c620-e2eb-11f1-97dd-43dda54ed4e0."
+    },
+    {
+      "id": "DEBT#559",
+      "category": "Theater/Fail-open Observation",
+      "impact": "high",
+      "severity": "high",
+      "title": "Readiness evaluator returns PASS for critical R2/R6/R8 when their required observation keys are absent",
+      "description": "Machine-observed 2026-11-18 (main ad96ed2). tools/readiness_evaluator.nim ruleR2 (:486-514) returns stPass after scanning only optional keys; ruleR6 (:611-620) returns stPass when failureConvertsToSuccess/exceptionSwallowed are absent; ruleR8 (:753-770) returns stPass when none of its observation keys are present and the command sequence is well-formed; those rules return stUnknown only when observations.len == 0 (rawStateOf :836 additionally returns UNKNOWN for a missing or contradictory invariant node). evaluateReadiness/rawStateOf (:836-857) never enforces config/readiness_policy.json observationKeys presence — observationKeys is not read anywhere in the evaluator. The policy declares R2/R6/R8 criticality: critical and lists observationKeys for each, so a non-empty bundle carrying unrelated keys yields PASS on critical invariants. Probe on binaries built from ad96ed2: three valid envelopes containing only the undeclared key `unrelatedProbe` yielded R2=PASS, R6=PASS, R8=PASS; a negative control with certGreenDualEvidenceRequired=false yielded R2=FAIL, so present keys are honored. Intended direction: missing required observation key => UNKNOWN (fail-closed).",
+      "symbol": "ruleR2 / ruleR6 / ruleR8 fail-open (tools/readiness_evaluator.nim:486-514, :611-620, :753-770)",
+      "contentHash": "sha256:82b788876e3b69c0865406c0dee5e51481c2eac0444fc630a056dc70f074428c",
+      "lineRange": "tools/readiness_evaluator.nim:486-514; tools/readiness_evaluator.nim:611-620; tools/readiness_evaluator.nim:753-770",
+      "files": [
+        "tools/readiness_evaluator.nim",
+        "config/readiness_policy.json"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED — registration only. The fix (missing required observation key => UNKNOWN, fail-closed) is deliberately deferred to a separate approved slice: flipping critical invariants to UNKNOWN can change live verdicts and requires positive/negative probes plus updated evidence. Acceptance for that slice: an envelope missing any policy-declared observationKeys entry for R2/R6/R8 evaluates to UNKNOWN, the negative control with certGreenDualEvidenceRequired=false still evaluates to FAIL, and the then-current decision evidence is regenerated.",
+      "lastVerifiedAt": "2026-11-18T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the evaluator is the audited subject and the finding is registration-only, so a self-fix in the same slice would remove its own evidence path (AGENTS.md §2.2 discovery is registered, never quietly patched). Trace: this entry's resolution (UNRESOLVED) and source (theater_audit); external: tools/readiness_evaluator.nim:486-514, :611-620, :753-770, :836-857; config/readiness_policy.json invariants.R2/R6/R8 and observationKeys."
     }
   ]
 }
