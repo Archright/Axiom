@@ -2079,3 +2079,25 @@ suite "RequiredWorkflowIds — the v1.19.0 path-identity mirror":
       check b.workflowPath != "389486255"
       check b.workflowPath != "392117427"
       check b.workflowPath != "392498537"
+
+# ---------------------------------------------------------------------------
+# ADR-0042 split layout — the digest is part of the ④ new-anchor fact and the
+# derived closure document is an allowlisted rotation companion.
+# ---------------------------------------------------------------------------
+
+suite "adjudicateRotation — split pathSetDigest (ADR-0042)":
+  test "digest mismatch → ROT_NEW_PIN annotation, newAnchorOk=false":
+    let b = lineSet("100644 blob a1\tci/checker.mk")
+    let adj = adjudicateRotation(b, b, b, some(b), some(b), @[],
+                                 pinHDigestOk = false,
+                                 pinHDigestReason = "pathSetDigest does not match the closure path set")
+    check adj.qualification == rqNormal
+    check adj.reasonCode == "ROT_NEW_PIN"
+    check not adj.check.newAnchorOk
+    check adj.reason.contains("pathSetDigest")
+
+  test "config/trusted_checker_closure.json is an allowlisted rotation path":
+    let b = lineSet("100644 blob a1\tci/checker.mk")
+    check rotationAllowlistOk(RotationClosurePath, some(b))
+    check rotationAllowlistOk(RotationPinBPath, some(b))
+    check not rotationAllowlistOk("src/cli/merge_cli.nim", some(b))

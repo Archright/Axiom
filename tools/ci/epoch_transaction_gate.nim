@@ -521,22 +521,45 @@ proc twsFieldSnapshot(oid: string): tuple[pin, digest, closure: string, ok: bool
     result.closure = lines.join("\n")
   result.ok = true
 
+func closurePathSet(closure: string): HashSet[string] =
+  ## Path projection of a resolved closure line-set (`mode type sha\tpath`).
+  ## Empty on a malformed line — callers treat empty as fail-closed.
+  if closure.len == 0:
+    return
+  for ln in closure.split('\n'):
+    let t = ln.find('\t')
+    if t < 0:
+      return initHashSet[string]()
+    result.incl(ln[t + 1 .. ^1])
+
 proc twsFieldState(base, head: string): tuple[pinValueChanged,
-                                              closureChanged: bool] {.axiomEffect: IoEffect.} =
+                                              closureChanged,
+                                              layoutMigration: bool] {.axiomEffect: IoEffect.} =
   ## Field-level classification of a TWS change between base and head git
   ## OIDs — the manifestFieldState principle applied to the pin record's
   ## independently-bound fields (see header "TWS field split"). The pin VALUE
   ## and the path-set anchor (pathSetDigest) are both epoch-authority changes;
   ## a closure re-anchor with BOTH unchanged is a closure re-anchor, not a pin
-  ## change. Fail-closed: unreadable, unparsable, or schema-incomplete TWS at
-  ## either revision → BOTH fields reported changed (the strictest
-  ## classification — every pairing requirement then applies and the
-  ## partial-update judgment fails).
+  ## change. The ONE exception is the legacy→split layout migration: the
+  ## digest APPEARS while the pin value AND the closure line-set stay identical
+  ## (the records merely moved documents) — that is a trust-surface transition
+  ## judged by the App/rotation lane, not an engine-pin change. Fail-closed:
+  ## unreadable, unparsable, or schema-incomplete TWS at either revision →
+  ## ALL fields reported changed (the strictest classification — every pairing
+  ## requirement then applies and the partial-update judgment fails).
   let b = twsFieldSnapshot(base)
   let h = twsFieldSnapshot(head)
   if not b.ok or not h.ok:
-    return (true, true)
-  result = (b.pin != h.pin or b.digest != h.digest, b.closure != h.closure)
+    return (true, true, false)
+  let layoutMigration =
+    b.digest.len == 0 and h.digest.len > 0 and
+    b.pin == h.pin and
+    b.closure.len > 0 and h.closure.len > 0 and
+    closurePathSet(b.closure) == closurePathSet(h.closure) and
+    closurePathSet(h.closure).len > 0
+  result = (b.pin != h.pin or (b.digest != h.digest and not layoutMigration),
+            b.closure != h.closure,
+            layoutMigration)
 
 proc engineFileClaimedByPromotion(engineFile, base, head: string): bool {.axiomEffect: IoEffect.} =
   ## G2b — is a NON-pinned engine mapping change claimed by a slice promotion
@@ -676,9 +699,13 @@ proc diffFailures(base, head: string): seq[string] {.axiomEffect: IoEffect.} =
   # Field-level TWS classification — the manifestFieldState principle
   # applied to the pin record: a trustedCheckerTreeClosure re-anchor with
   # the pin VALUE unchanged is NOT a pin change (header "TWS field split").
-  let (twsPinValueChanged, twsClosureChanged) =
-    if pinChanged: twsFieldState(base, head) else: (false, false)
+  let (twsPinValueChanged, twsClosureChanged, twsLayoutMigration) =
+    if pinChanged: twsFieldState(base, head) else: (false, false, false)
   let closureReanchor = twsClosureChanged and not twsPinValueChanged
+  if twsLayoutMigration:
+    echo "  NOTE  (diff) split-layout migration: pathSetDigest introduced with an " &
+         "unchanged closure line-set (records moved to " & RotationClosurePath &
+         " — trust-surface transition, not an engine-pin change)"
 
   let sliceStateChanged = catalogChanged or sliceFieldsChanged
   let enginePinChanged = engineChanged or twsPinValueChanged or pinFieldChanged
@@ -691,7 +718,7 @@ proc diffFailures(base, head: string): seq[string] {.axiomEffect: IoEffect.} =
     else:
       echo "  NOTE  (diff) no epoch binding target changed between " & base & " and " & head
     return
-  if closureReanchor and not enginePinChanged and not sliceStateChanged:
+  if closureReanchor and not twsLayoutMigration and not enginePinChanged and not sliceStateChanged:
     echo "  NOTE  (diff) TWS trustedCheckerTreeClosure re-anchor only (pin value " &
          ProductionPinRecordField & " unchanged — not a pin change; layers 2/3 " &
          "verify the record at HEAD, closure content equality is the " &
