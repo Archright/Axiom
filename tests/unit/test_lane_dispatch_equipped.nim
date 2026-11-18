@@ -3,9 +3,9 @@
 ##
 ## Measured here (the committed config/spec catalog is the fixture — the
 ## engine is the SSOT, the CLI only projects):
-##   1. Distribution: exactly 6 EQUIPPED entries + SPEC-LIBP2P-VARINT-RT as
+##   1. Distribution: exactly 7 EQUIPPED entries + SPEC-LIBP2P-VARINT-RT as
 ##      the sole NOT_EQUIPPED entry.
-##   2. All 6 equipped lanes are flipped adapter arms: the beta-composition
+##   2. All 7 equipped lanes are flipped adapter arms: the beta-composition
 ##      (base36 sizing relational, capBetaComposition) and term-splice
 ##      (base32 rem, capTermSplice) entries have flipped adapters
 ##      (capabilityAdapterFor some) and ARE equipped through them
@@ -27,7 +27,7 @@ proc committedCatalog(): ExternalSubjectRegistry =
   regRes.get()
 
 suite "lane dispatch equipped disclosure — flipped adapters are dispatch truth":
-  test "committed catalog: 6 EQUIPPED + SPEC-LIBP2P-VARINT-RT sole NOT_EQUIPPED":
+  test "committed catalog: 7 EQUIPPED + SPEC-LIBP2P-VARINT-RT sole NOT_EQUIPPED":
     let reg = committedCatalog()
     var equipped = 0
     var notEquipped: seq[string] = @[]
@@ -36,7 +36,7 @@ suite "lane dispatch equipped disclosure — flipped adapters are dispatch truth
         inc equipped
       else:
         notEquipped.add(entry.specId)
-    check equipped == 6
+    check equipped == 7
     check notEquipped == @["SPEC-LIBP2P-VARINT-RT"]
 
   test "flipped adapter arms: adapter some, laneDispatchEquipped true":

@@ -277,6 +277,8 @@ gh api /repos/Archright/Axiom/rulesets/20303214 --jq '{
 >   workflows:[.rules[]|select(.type=="workflows")|.parameters.required_workflows[]|{path,repository_id,sha}]}'
 > ```
 > 기대 출력: `enforcement: active`, `workflows[0].sha` = `7fffee318b9fada32d13dd9c88d74869e343f9cc` (관측 기준시각). **조회 결과를 "검증됨"으로 기록할 때 provenance를 명시**한다 — §4.2의 자격은 여기서 끝난다.
+>
+> **(2026-11-17 갱신 — Free)**: `gh api orgs/Archright/rulesets`는 이제 **HTTP 403**("Upgrade to GitHub Team")이다 — 위 org ruleset 조회는 Free에서 불가능하다. 현행 readback 정본은 repo ruleset `27097366`(`gh api repos/Archright/Axiom/rulesets`에서 `name == "main"` 해석) + App `admission-check`(5795152) + merge queue다. 2026-11-17 실측 PR #140: 7 required contexts SUCCESS → native MERGE `49799837b4bb…`.
 
 ### 단계 6 — 종결 관측
 

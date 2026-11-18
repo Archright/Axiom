@@ -7,8 +7,10 @@
 # 별도 정책 PR 불요. 신설(ADD)이 아니므로 v52~v72의 2단 선등록 절차 대상이 아니다.
 #
 # 목적: main HEAD의 실측 검증기 closure(derive_checker_closure --ref HEAD)을
-# 핀(config/trusted_writer_set.json의 trustedCheckerTreeClosure)과 6시간마다
-# 재대조한다. 불일치 = (a) 핀 진부, (b) 트리 드리프트, (c) 정규 구멍 S1-C/D
+# 핀과 6시간마다 재대조한다. 핀은 ADR-0042 split 레이아웃에서
+# config/trusted_writer_set.json(anchors) + config/trusted_checker_closure.json
+# (execution closure)의 합성이며, split 문서가 없으면 인라인
+# trustedCheckerTreeClosure를 그대로 읽는다. 불일치 = (a) 핀 진부, (b) 트리 드리프트, (c) 정규 구멍 S1-C/D
 # (재감사 문서 §6 — pin 내용만 변조한 PR이 NORMAL로 착지하는 벡터)에 의한 핀
 # 변조. 세 경우 모두 동일 시그널이며, 본 워크플로는 fail-closed(exit 1)로
 # 적색이 되고 추적 이슈를 생성한다. 수선 회전 PR(§5-1)이 착지하기 전까지 이
@@ -235,6 +237,15 @@ jobs:
           }
           # 핀도 HEAD 객체에서 읽는다 (clean checkout이지만 동일 근거 유지)
           git show "${HEAD_SHA}:config/trusted_writer_set.json" > /tmp/pin.json
+          # ADR-0042 split layout: the committed writer set carries anchors only;
+          # the execution closure lives in config/trusted_checker_closure.json.
+          # The comparison input is the composite of both documents (same
+          # projection the admission orchestrator's pin-H producer applies).
+          # Absent split document = legacy in-place layout, unchanged.
+          if git -C . cat-file -e "${HEAD_SHA}:config/trusted_checker_closure.json" 2>/dev/null; then
+            git show "${HEAD_SHA}:config/trusted_checker_closure.json" > /tmp/closure.json
+            echo "CLOSURE_FILE=/tmp/closure.json" >> "$GITHUB_ENV"
+          fi
 
       - name: Inject synthetic drift fixture (controlled drift test)
         if: env.DRIFT_TEST == 'true'
@@ -250,6 +261,8 @@ jobs:
           # 경로 파라미터 주입 — /tmp 복사도, config/ 접촉도 없다 (합성 입력 전용)
           echo "PIN_FILE=${PIN}" >> "$GITHUB_ENV"
           echo "DERIVED_FILE=${DER}" >> "$GITHUB_ENV"
+          # fixture 핀은 자체 closure 키를 가진다 — 실측 split 문서 합성 금지
+          echo "CLOSURE_FILE=" >> "$GITHUB_ENV"
           # 방향 증거: fixture는 의도적 불일치(derived-only 1건)를 닫지 않고 연다
           echo "fixture: derived has $(grep -c . "${DER}") lines (drift expected)"
 
@@ -259,7 +272,8 @@ jobs:
           PIN_FILE="${PIN_FILE:-/tmp/pin.json}"
           DERIVED_FILE="${DERIVED_FILE:-/tmp/derived.txt}"
           FINDINGS_FILE="${FINDINGS_FILE:-/tmp/drift_findings.txt}"
-          export PIN_FILE DERIVED_FILE FINDINGS_FILE
+          CLOSURE_FILE="${CLOSURE_FILE:-/tmp/closure.json}"
+          export PIN_FILE DERIVED_FILE FINDINGS_FILE CLOSURE_FILE
           python3 - <<'PYEOF'
           import json
           import os
@@ -302,6 +316,15 @@ jobs:
 
           pin = json.loads(strip_jsonc(open(pin_path, encoding='utf-8').read()))
           key = pin.get('trustedCheckerTreeClosure')
+          # ADR-0042 split layout: the writer set carries anchors only. When the
+          # closure key is absent, the execution closure is the sibling document
+          # named by CLOSURE_FILE (absent/unset → fail-closed below).
+          if key is None:
+              closure_path = os.environ.get('CLOSURE_FILE') or ''
+              if closure_path and os.path.isfile(closure_path):
+                  closure = json.loads(
+                      strip_jsonc(open(closure_path, encoding='utf-8').read()))
+                  key = closure.get('trustedCheckerTreeClosure')
           if not isinstance(key, dict):
               print('FAIL: trustedCheckerTreeClosure absent or malformed — fail-closed',
                     file=sys.stderr)
@@ -453,7 +476,7 @@ jobs:
             echo "- HEAD: ${HEAD_SHA}"
             echo "- run: ${RUN_URL}"
             echo "- 유도 authority: tools/ci/derive_checker_closure (in-place 컴파일, --ref HEAD)"
-            echo "- 대조 대상: config/trusted_writer_set.json 의 trustedCheckerTreeClosure"
+            echo "- 대조 대상: config/trusted_writer_set.json + config/trusted_checker_closure.json (ADR-0042 split; in-place layout이면 writer set 단독)"
             echo
             if [ -f findings/drift_findings.txt ]; then
               echo "## 차집합 (pin-only / derived-only)"

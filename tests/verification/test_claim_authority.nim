@@ -67,14 +67,31 @@ proc main() =
   # 8. MALFORMED vs INCONCLUSIVE boundary:
   #    missing solver identity -> UNKNOWN (incomplete); corrupt spec identity -> INVALID_EVIDENCE
   block:
-    let bNoSolver = makeBundle(makeSpec(soCanonicalDerived), solverIdentity = "")
+    let bNoSolver = makeBundle(makeSpec(soCanonicalDerived),
+      solverIdentity = "", smtHash = "")
     doAssert deriveClaim(ctx(bNoSolver, makeSpec(soCanonicalDerived), psUnsat), apV1).outcome == clUnknown
     let bCorruptSpec = makeBundle(makeSpec(soCanonicalDerived, corrupt = true))
     doAssert deriveClaim(ctx(bCorruptSpec, corruptSpec, psUnsat), apV1).outcome == clInvalidEvidence
+
+  # 9. KERNEL ACCEPTANCE — clProved via psKernelAccepted, kernelChecking=true,
+  #    and NOT solver evidence (a Lean KAA is not an SMT unsat). The assurance
+  #    axis is part of claimId, so the kernel claim is a distinct identity.
+  block:
+    let b = makeBundle(makeSpec(soCanonicalDerived))
+    let kernelClaim = deriveClaim(
+      ctx(b, makeSpec(soCanonicalDerived), psKernelAccepted), apV1)
+    doAssert kernelClaim.outcome == clProved
+    doAssert kernelClaim.assurance.kernelChecking
+    doAssert not kernelClaim.assurance.solverEvidence
+    let solverClaim = deriveClaim(
+      ctx(b, makeSpec(soCanonicalDerived), psUnsat), apV1)
+    doAssert kernelClaim.claimId != solverClaim.claimId
 
   # Invariant: exactly one well-defined outcome per context + claimId distinct across outcomes
   block:
     let a = deriveClaim(ctx(makeBundle(makeSpec(soCanonicalDerived)), makeSpec(soCanonicalDerived), psUnsat), apV1)
     let b = deriveClaim(ctx(makeBundle(makeSpec(soCanonicalDerived)), makeSpec(soCanonicalDerived), psCounterexample), apV1)
     doAssert a.claimId != b.claimId
-  echo "=== Phase-3 Claim Authority OK (8 conditions) ==="
+  echo "=== Phase-3 Claim Authority OK (9 conditions) ==="
+
+main()

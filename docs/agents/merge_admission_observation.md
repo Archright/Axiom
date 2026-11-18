@@ -147,7 +147,7 @@ adapter 출력과 플랫폼 상태가 어긋날 의심이 있을 때(#14253 클�
 
 #### adapter 한계 각주 (정직 기록)
 
-- **① cli/cli #9228(OPEN)**: 조직 ruleset으로 정의된 workflow의 run은 `gh run list`·`gh run view`/watch가 404 — 조직 규칙 기반 실행은 PR 체크 롤업·REST로 관측한다.
+- **① cli/cli #9228(OPEN)**: 조직 ruleset으로 정의된 workflow의 run은 `gh run list`·`gh run view`/watch가 404 — 조직 규칙 기반 실행은 PR 체크 롤업·REST로 관측한다. **(2026-11-17 갱신)**: org rulesets는 Free에서 HTTP 403이므로 이 한계는 org-run에만 해당한다 — 현행 merge_group 런은 in-repo 워크플로이므로 run-id/REST로 정상 관측된다(PR #140: `44055590724`).
 - **② cli/cli #7401(CLOSED)**: "no checks" race(checks 등장 전 `gh pr checks --watch` 동작 이슈) — 위 0 checks adapter 관측 사실이 대응하며, 판정 의미는 **정본: AGENTS.md §2.3**.
 - **③ cli/cli #14253(CLOSED)**: REST↔CLI check-rollup 불일치(실패 체크 누락·statusCheckRollup SUCCESS 오보고) — REST 교차검증 층이 대응한다.
 - **④ gh 2.45.0 실측**: `gh pr checks`는 `--json` 미지원(`unknown flag`) — JSON 기계 판정은 REST 층이 담당한다.
@@ -235,7 +235,7 @@ gh api "/repos/Archright/Axiom/actions/runs?event=merge_group&head_sha=<group-co
 
 **(c) 고아 루프 금지 + 세션 재개 점검 프로토콜** — 세션(agent·백그라운드 태스크)은 executor일 뿐 owner가 아니다(AGENTS.md §2.7 — 소유권 프로토콜 부재가 정책). 세션 재개 시: (i) 잔여 백그라운드 태스크 점검, (ii) 원격 브랜치 head가 마지막 관측과 불일치하거나 미지원 커밋이 발견되면 정지·보고 — 절대 자동 rebase/force 경로 금지. 동기: 2026-10-12 외부 행위자(재부팅 후 이전 세션 권한 승계 추정)가 대상 브랜치를 rebase+push하여 raw rebase 금지(HARD RULE)를 위반했다. 기계적 backstop은 GitHub ruleset뿐(로컬 deny는 kimi -p 모드에서 작동하지 않음 — operations.md 실측)이므로, 이 점검은 운영 계약으로서 시행한다.
 
-**(d) org-ruleset 런 관측 경로 재확인** — org required workflow 런은 run-id 폴링 불가(cli/cli#9228: gh run view 404). 정식 경로는 기존 (a) 어댑터와 동일(`landing_observe.sh` + REST `actions/runs?event=merge_group` 필터) — 본 사건 조사에서도 재확인되었다.
+**(d) org-ruleset 런 관측 경로 재확인** — org required workflow 런은 run-id 폴링 불가(cli/cli#9228: gh run view 404). 정식 경로는 기존 (a) 어댑터와 동일(`landing_observe.sh` + REST `actions/runs?event=merge_group` 필터) — 본 사건 조사에서도 재확인되었다. **(2026-11-17 갱신)**: org rulesets가 Free에서 403이므로 org required workflow 자체가 더 이상 발화하지 않는다 — 이 경로는 역사 기록이며, 현행 merge_group 런은 in-repo 워크플로로 run-id 조회가 가능하다(PR #140: `44055590724`).
 
 **(e) 실전 재arm 사이클 (2026-10-13 #805)** — 위 (a)의 문서화된 치유 사이클이 전투(combat) 실행에서 발동된 실측 기록. Stage 2 cutover의 첫 수용 merge_group 런이 조직 게이트 측 회귀(PR 내용 아님 — `docs/spec/gh_run_observation_quirks.md` Q10: gateway transitive-skip → mint-publish MINT_PUB_TREE, run 38359095521)로 실패하자 github-merge-queue[bot]이 자동 dequeue했고 auto-merge는 소멸했다(위 (b)의 미문서 동작 재실측). org 수정 착지(Archright/.github #197, `4a81d18a`, 07:16:42Z) 후 operator가 단계 ④만 수행했다:
 

@@ -14,7 +14,8 @@
 ## deliberately does NOT collect check-runs, does NOT re-derive required
 ## status checks and does NOT re-verify producer identity. That is the
 ## platform's merge-time authority (repository ruleset required status
-## checks + the org ruleset's sha-pinned required workflow); re-implementing
+## checks + the App-published admission-check context; the org ruleset's
+## sha-pinned required workflow is retired, ADR-0041); re-implementing
 ## it here would be a duplicate of a platform guarantee — and, per ADR-0025
 ## Amendment B, was removed on 2026-09-29 for exactly that reason. The four
 ## walls against re-introducing it are recorded in ADR-0035 §1.
@@ -2078,3 +2079,48 @@ suite "RequiredWorkflowIds — the v1.19.0 path-identity mirror":
       check b.workflowPath != "389486255"
       check b.workflowPath != "392117427"
       check b.workflowPath != "392498537"
+
+# ---------------------------------------------------------------------------
+# ADR-0042 split layout — the digest is part of the ④ new-anchor fact and the
+# derived closure document is an allowlisted rotation companion.
+# ---------------------------------------------------------------------------
+
+suite "adjudicateRotation — split pathSetDigest (ADR-0042)":
+  test "digest mismatch → ROT_NEW_PIN annotation, newAnchorOk=false":
+    let b = lineSet("100644 blob a1\tci/checker.mk")
+    let adj = adjudicateRotation(b, b, b, some(b), some(b), @[],
+                                 pinHDigestOk = false,
+                                 pinHDigestReason = "pathSetDigest does not match the closure path set")
+    check adj.qualification == rqNormal
+    check adj.reasonCode == "ROT_NEW_PIN"
+    check not adj.check.newAnchorOk
+    check adj.reason.contains("pathSetDigest")
+
+  test "config/trusted_checker_closure.json is an allowlisted rotation path":
+    let b = lineSet("100644 blob a1\tci/checker.mk")
+    check rotationAllowlistOk(RotationClosurePath, some(b))
+    check rotationAllowlistOk(RotationPinBPath, some(b))
+    check not rotationAllowlistOk("src/cli/merge_cli.nim", some(b))
+
+  test "validClosurePath rejects control characters (tab line-format boundary)":
+    check validClosurePath("src/cli/merge_cli.nim")
+    check validClosurePath("tools/ci/derive_checker_closure.nim")
+    check not validClosurePath("src/tab\tname.nim")
+    check not validClosurePath("src/newline\nname.nim")
+    check not validClosurePath("src/cr\rname.nim")
+    check not validClosurePath("/absolute.nim")
+    check not validClosurePath("../escape.nim")
+    check not validClosurePath("a//b.nim")
+
+  test "split layout declared without closure records fails closed (never genesis)":
+    let pin = parseJson("{\"pathSetDigest\":\"" & RotationPathSetDigestDomain &
+      ":" & repeat('a', 64) & "\"}")
+    let resolved = resolvePinClosure(pin, nil)
+    check resolved.isErr
+    check resolved.error.contains("closure records are absent")
+
+  test "closure document schemaVersion is required and known":
+    check closureDocSchemaOk(parseJson(
+      "{\"schemaVersion\":\"" & RotationClosureSchemaVersion & "\"}")).isOk
+    check closureDocSchemaOk(parseJson("{\"schemaVersion\":\"v0\"}")).isErr
+    check closureDocSchemaOk(parseJson("{}")).isErr

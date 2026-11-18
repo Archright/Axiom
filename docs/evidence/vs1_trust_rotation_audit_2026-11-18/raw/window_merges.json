@@ -1,0 +1,317 @@
+[
+ {
+  "open_version": 58030608,
+  "open_at": "2026-11-17T01:50:14.095+09:00",
+  "close_version": 58030755,
+  "close_at": "2026-11-17T01:50:56.626+09:00",
+  "actor": 53123826,
+  "bypass": [
+   {
+    "actor_id": null,
+    "actor_type": "OrganizationAdmin",
+    "bypass_mode": "pull_request"
+   }
+  ],
+  "merged": [
+   {
+    "number": 121,
+    "title": "feat(readiness): wire the readiness verdict as the 7th required check \u2014 DEBT#537",
+    "merged_at": "2026-11-16T16:50:39Z",
+    "merge_commit": "e3ec8ae1f475b7cb47cc175fb3694a7babc269f5",
+    "head": "8170dacccffee8fd8394cae529c9f5581c049415",
+    "base": "0d924abb435864cd39ac3571d7586f0af47c29fa",
+    "merge_group_run": null
+   }
+  ]
+ },
+ {
+  "open_version": 58043542,
+  "open_at": "2026-11-17T03:16:30.900+09:00",
+  "close_version": 58043550,
+  "close_at": "2026-11-17T03:16:35.312+09:00",
+  "actor": 53123826,
+  "bypass": [
+   {
+    "actor_id": null,
+    "actor_type": "OrganizationAdmin",
+    "bypass_mode": "pull_request"
+   }
+  ],
+  "merged": [
+   {
+    "number": 127,
+    "title": "perf(verification): delegate large-file digests to platform sha256sum (VS-PERF-A",
+    "merged_at": "2026-11-16T18:16:33Z",
+    "merge_commit": "aba60b3f60dd9d0866b100a117ed095907595f8a",
+    "head": "c20423415c5473a5383499eb5867524d1913f4da",
+    "base": "e3ec8ae1f475b7cb47cc175fb3694a7babc269f5",
+    "merge_group_run": null
+   }
+  ]
+ },
+ {
+  "open_version": 58053443,
+  "open_at": "2026-11-17T04:06:36.394+09:00",
+  "close_version": 58053484,
+  "close_at": "2026-11-17T04:06:53.673+09:00",
+  "actor": 53123826,
+  "bypass": [
+   {
+    "actor_id": null,
+    "actor_type": "OrganizationAdmin",
+    "bypass_mode": "pull_request"
+   }
+  ],
+  "merged": [
+   {
+    "number": 128,
+    "title": "feat(readiness): close DEBT#537 \u2014 activation manifest + E1\u2013E6 machine-observed e",
+    "merged_at": "2026-11-16T19:06:44Z",
+    "merge_commit": "e88962e3994db2eeb200723fe3ec8e219c0f16e0",
+    "head": "d3a82f7cec0418f8795751b05ea969d84d86b316",
+    "base": "aba60b3f60dd9d0866b100a117ed095907595f8a",
+    "merge_group_run": null
+   }
+  ]
+ },
+ {
+  "open_version": 58121984,
+  "open_at": "2026-11-17T14:20:24.620+09:00",
+  "close_version": 58121996,
+  "close_at": "2026-11-17T14:20:29.142+09:00",
+  "actor": 53123826,
+  "bypass": [
+   {
+    "actor_id": null,
+    "actor_type": "OrganizationAdmin",
+    "bypass_mode": "always"
+   }
+  ],
+  "merged": [
+   {
+    "number": 133,
+    "title": "policy(surface): v100 \u2014 register admission orchestrator + trust manifest",
+    "merged_at": "2026-11-17T05:20:26Z",
+    "merge_commit": "e07a648e3b0262115be9921d44d4f38814487251",
+    "head": "f207581235519dce6816cc2dc0e79afd458c456e",
+    "base": "e88962e3994db2eeb200723fe3ec8e219c0f16e0",
+    "merge_group_run": null
+   }
+  ]
+ },
+ {
+  "open_version": 58130640,
+  "open_at": "2026-11-17T16:08:54.615+09:00",
+  "close_version": 58130653,
+  "close_at": "2026-11-17T16:09:05.219+09:00",
+  "actor": 53123826,
+  "bypass": [
+   {
+    "actor_id": 53123826,
+    "actor_type": "User",
+    "bypass_mode": "always"
+   }
+  ],
+  "merged": []
+ },
+ {
+  "open_version": 58130708,
+  "open_at": "2026-11-17T16:09:48.456+09:00",
+  "close_version": 58130717,
+  "close_at": "2026-11-17T16:09:53.184+09:00",
+  "actor": 53123826,
+  "bypass": [
+   {
+    "actor_id": 53123826,
+    "actor_type": "User",
+    "bypass_mode": "always"
+   }
+  ],
+  "merged": [
+   {
+    "number": 136,
+    "title": "fix(ci): policy-driven required-check sources for free authority",
+    "merged_at": "2026-11-17T07:09:50Z",
+    "merge_commit": "916a9bdb7334170bb3d2822b120df7a16f1f229b",
+    "head": "87edffed11e34958765fe4474052e7304ef67fb3",
+    "base": "c955dfce2cf0b74fd983e58d29b656427ccacbd5",
+    "merge_group_run": null
+   }
+  ]
+ },
+ {
+  "open_version": 58144103,
+  "open_at": "2026-11-17T18:08:00.778+09:00",
+  "close_version": 58144129,
+  "close_at": "2026-11-17T18:08:14.535+09:00",
+  "actor": 53123826,
+  "bypass": [
+   {
+    "actor_id": 53123826,
+    "actor_type": "User",
+    "bypass_mode": "always"
+   }
+  ],
+  "merged": [
+   {
+    "number": 139,
+    "title": "docs(truth): align live commentary with repository-native admission authority",
+    "merged_at": "2026-11-17T09:08:12Z",
+    "merge_commit": "88406c61e748ce9262925a5c7b5d2d212cfb9535",
+    "head": "e77c4544b52279b987ed3764fde7c650c1914fe2",
+    "base": "48501d82a1b58806b51cce2ebfb82b6784528358",
+    "merge_group_run": null
+   }
+  ]
+ },
+ {
+  "open_version": 58200591,
+  "open_at": "2026-11-18T00:14:49.963+09:00",
+  "close_version": 58200678,
+  "close_at": "2026-11-18T00:15:10.076+09:00",
+  "actor": 53123826,
+  "bypass": [
+   {
+    "actor_id": null,
+    "actor_type": "OrganizationAdmin",
+    "bypass_mode": "pull_request"
+   }
+  ],
+  "merged": [
+   {
+    "number": 130,
+    "title": "fix(core): close DEBT#550 \u2014 findRepoRoot() fail-closed exhaustion, no silent \"\" ",
+    "merged_at": "2026-11-17T15:15:00Z",
+    "merge_commit": "b075690044d8396678a187aebace6c0ed001a745",
+    "head": "b00edae8e37313486a6b2a8e147485efac63f21b",
+    "base": "188dd7118bd1778b468c6a1559deb6907b072e21",
+    "merge_group_run": null
+   }
+  ]
+ },
+ {
+  "open_version": 58213324,
+  "open_at": "2026-11-18T01:18:48.198+09:00",
+  "close_version": 58213340,
+  "close_at": "2026-11-18T01:18:54.266+09:00",
+  "actor": 53123826,
+  "bypass": [
+   {
+    "actor_id": 53123826,
+    "actor_type": "User",
+    "bypass_mode": "always"
+   }
+  ],
+  "merged": [
+   {
+    "number": 144,
+    "title": "feat(gate): producer closure (SL-21) + artifact execution closure (SL-22)",
+    "merged_at": "2026-11-17T16:18:51Z",
+    "merge_commit": "9b3d87c3a3252286eb15be985c7df6131bd1f1c6",
+    "head": "d3b13a79594698a2fde517bdd86b6d04e6d458fa",
+    "base": "b075690044d8396678a187aebace6c0ed001a745",
+    "merge_group_run": null
+   }
+  ]
+ },
+ {
+  "open_version": 58214455,
+  "open_at": "2026-11-18T01:24:27.816+09:00",
+  "close_version": 58214470,
+  "close_at": "2026-11-18T01:24:33.292+09:00",
+  "actor": 53123826,
+  "bypass": [
+   {
+    "actor_id": 53123826,
+    "actor_type": "User",
+    "bypass_mode": "always"
+   }
+  ],
+  "merged": [
+   {
+    "number": 146,
+    "title": "chore(pin): rotate admission-gate callees to 9b3d87c (epoch N+10)",
+    "merged_at": "2026-11-17T16:24:31Z",
+    "merge_commit": "ed014de81e5494f4203a736eeaf8d7394036c8b4",
+    "head": "a5443496af0d9cfcea9dfd836945a0d2f3bcb63a",
+    "base": "9b3d87c3a3252286eb15be985c7df6131bd1f1c6",
+    "merge_group_run": null
+   }
+  ]
+ },
+ {
+  "open_version": 58294264,
+  "open_at": "2026-11-18T10:14:23.557+09:00",
+  "close_version": 58294288,
+  "close_at": "2026-11-18T10:14:28.263+09:00",
+  "actor": 53123826,
+  "bypass": [
+   {
+    "actor_id": 53123826,
+    "actor_type": "User",
+    "bypass_mode": "always"
+   }
+  ],
+  "merged": [
+   {
+    "number": 153,
+    "title": "fix(surface): adjudicate FROZEN intent \u2014 policy v102 + guard v3 (DEBT#545)",
+    "merged_at": "2026-11-18T01:14:26Z",
+    "merge_commit": "983e8360f876acb058dd0ff78e6f50c2f0c60ffa",
+    "head": "5882d34033c1a9ed186e623d8edc393bc0d866fd",
+    "base": "a2286003eaf0c42be2a74741590ddd3fd8040cdf",
+    "merge_group_run": null
+   }
+  ]
+ },
+ {
+  "open_version": 58299317,
+  "open_at": "2026-11-18T10:56:42.956+09:00",
+  "close_version": 58299321,
+  "close_at": "2026-11-18T10:56:47.151+09:00",
+  "actor": 53123826,
+  "bypass": [
+   {
+    "actor_id": null,
+    "actor_type": "OrganizationAdmin",
+    "bypass_mode": "pull_request"
+   }
+  ],
+  "merged": [
+   {
+    "number": 155,
+    "title": "policy(surface): register fresh-prove-observation workflow (v103)",
+    "merged_at": "2026-11-18T01:56:45Z",
+    "merge_commit": "ad96ed2aacda2674543c408573e7687ccf8a7cd9",
+    "head": "e38b198266fc74fc12607297386697ae5238a066",
+    "base": "983e8360f876acb058dd0ff78e6f50c2f0c60ffa",
+    "merge_group_run": null
+   }
+  ]
+ },
+ {
+  "open_version": 58302871,
+  "open_at": "2026-11-18T11:29:10.243+09:00",
+  "close_version": 58302886,
+  "close_at": "2026-11-18T11:29:14.618+09:00",
+  "actor": 53123826,
+  "bypass": [
+   {
+    "actor_id": null,
+    "actor_type": "OrganizationAdmin",
+    "bypass_mode": "pull_request"
+   }
+  ],
+  "merged": [
+   {
+    "number": 159,
+    "title": "feat(ci): fresh full-scope prove observation (non-authoritative)",
+    "merged_at": "2026-11-18T02:29:12Z",
+    "merge_commit": "b41b56840a1c88683f7264d1de541a1553fb36dd",
+    "head": "705f3080fc504110d05c25695dac8e0c01731119",
+    "base": "ad96ed2aacda2674543c408573e7687ccf8a7cd9",
+    "merge_group_run": null
+   }
+  ]
+ }
+]

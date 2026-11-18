@@ -18,6 +18,16 @@ proc parseAxProveFlag*(arg: string): Result[AxProveFlag, string] {.raises: [].} 
   Result[AxProveFlag, string](ok: false, err: "unknown option: " & arg)
 
 
+func takeIntFlag(args: seq[string]; i: int; name: string):
+    Result[int, string] {.raises: [].} =
+  if i + 1 >= args.len:
+    return Result[int, string](ok: false, err: "missing value: --" & name)
+  let parsed = safeParseInt(args[i + 1])
+  if parsed.isErr:
+    return Result[int, string](ok: false, err:
+      "invalid integer for --" & name & ": " & args[i + 1])
+  Result[int, string](ok: true, value: parsed.get)
+
 proc parseAxProveFlags*(args: seq[string]): Result[AxProveFlags, string] {.raises: [].} =
   result = Result[AxProveFlags, string](ok: true, value: AxProveFlags())
   var i = 0
@@ -28,25 +38,22 @@ proc parseAxProveFlags*(args: seq[string]): Result[AxProveFlags, string] {.raise
     let flag = flagRes.value
     case flag
     of apLimit:
-      if i + 1 >= args.len: return Result[AxProveFlags, string](ok: false, err: "missing value: --limit")
-      let limitRes = safeParseInt(args[i + 1])
-      if limitRes.isErr: return Result[AxProveFlags, string](ok: false, err: "invalid integer for --limit: " & args[i + 1])
-      result.value.limit = limitRes.get
+      let value = takeIntFlag(args, i, "limit")
+      if value.isErr: return Result[AxProveFlags, string](ok: false, err: value.err)
+      result.value.limit = value.get
       i += 2
     of apLegacyUap:
       result.value.legacyUap = true
       inc i
     of apWorkers:
-      if i + 1 >= args.len: return Result[AxProveFlags, string](ok: false, err: "missing value: --workers")
-      let workersRes = safeParseInt(args[i + 1])
-      if workersRes.isErr: return Result[AxProveFlags, string](ok: false, err: "invalid integer for --workers: " & args[i + 1])
-      result.value.workers = workersRes.get
+      let value = takeIntFlag(args, i, "workers")
+      if value.isErr: return Result[AxProveFlags, string](ok: false, err: value.err)
+      result.value.workers = value.get
       i += 2
     of apSmtTimeout:
-      if i + 1 >= args.len: return Result[AxProveFlags, string](ok: false, err: "missing value: --smt-timeout")
-      let smtTimeoutRes = safeParseInt(args[i + 1])
-      if smtTimeoutRes.isErr: return Result[AxProveFlags, string](ok: false, err: "invalid integer for --smt-timeout: " & args[i + 1])
-      result.value.smtTimeout = smtTimeoutRes.get
+      let value = takeIntFlag(args, i, "smt-timeout")
+      if value.isErr: return Result[AxProveFlags, string](ok: false, err: value.err)
+      result.value.smtTimeout = value.get
       i += 2
     of apUpdateLock:
       result.value.updateLock = true
@@ -67,6 +74,9 @@ proc parseAxProveFlags*(args: seq[string]): Result[AxProveFlags, string] {.raise
       if i + 1 >= args.len: return Result[AxProveFlags, string](ok: false, err: "missing value: --proposals")
       result.value.proposals = args[i + 1]
       i += 2
+    of apFresh:
+      result.value.fresh = true
+      inc i
     # No else — Nim compiler enforces exhaustiveness for enum case
 
 proc validateAxProveFlags*(flags: AxProveFlags): Result[void, string] {.raises: [].} =
@@ -84,6 +94,7 @@ proc axProveFlagsHelp*(): string {.raises: [].} =
   result &= "  --project                string parameter\n"
   result &= "  --plan                   string parameter\n"
   result &= "  --proposals              string parameter\n"
+  result &= "  --fresh                  bool parameter\n"
 
 # ---------------------------------------------------------------------------
 # AxReportFlags

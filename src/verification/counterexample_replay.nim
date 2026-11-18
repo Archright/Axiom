@@ -171,6 +171,17 @@ const ReplayValuePlaceholder* = "<lit>"
   ## is the ORIGINAL decoder's reject decision on a document embedding
   ## chr(<lit>)).
 
+const ReplayTagMatrixPlaceholder* = "<tags>"
+  ## The jrpc-errclass harness template's discriminator-matrix slot — the
+  ## engine stamps the adopted mapping's per-class `of`-discriminator block
+  ## (class name → tag, plus the base check and the leafCount==0 fallback)
+  ## at SYNTHESIS time, from the SAME parsed adoption content that builds
+  ## the model carriers (single source; expected values are never hardcoded
+  ## in the template). Unlike `<module>`/`<lit>` this is a block placeholder:
+  ## multi-line statement text, stamped once, never re-rendered at replay
+  ## time. Only `errors-class-v1` carries it; every other template is
+  ## byte-identical (zero-diff).
+
 const D2AgentSubjectDepPackages*: seq[string] = @["serialization",
     "faststreams", "stew", "results"]
   ## The arnetheduck/status-im dependency stack the d2-agent subject

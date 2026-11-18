@@ -1,4 +1,4 @@
-version       = "0.6.4"
+version       = "0.6.5"
 author        = "Suhyok Yoon"
 description   = "Archright Axiom Enterprise integrity engine"
 license       = "LicenseRef-Axiom-SAL-1.0"

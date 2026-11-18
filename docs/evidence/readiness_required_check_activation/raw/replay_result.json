@@ -1,0 +1,16 @@
+{
+  "head": "e3ec8ae1f475b7cb47cc175fb3694a7babc269f5",
+  "treeDigest": "08ea33e414b670fcab0eed3d45899c3902485a8ec27facda1750f11e0f8e2b79",
+  "manifestBuildSourceHash": "vs1-tree-hash/1:5894238184686856199",
+  "actualLiveTreeHash": "vs1-tree-hash/1:5894238184686856199",
+  "gateExit": 0,
+  "verdict": "CONDITIONAL GO",
+  "conditions": [
+    "R7=FAIL"
+  ],
+  "newDecisionDigest": "0bcb25bd79286b356ee382278acf55a60f9eac9f381883a6e61a0ec318f1377b",
+  "expectedDecisionDigest": "0bcb25bd79286b356ee382278acf55a60f9eac9f381883a6e61a0ec318f1377b",
+  "digestMatch": true,
+  "fullDecisionFileIdenticalExceptEvaluationTime": true,
+  "replayOk": true
+}

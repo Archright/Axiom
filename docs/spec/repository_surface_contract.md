@@ -612,3 +612,73 @@ check 실패이고 merge queue가 병합을 차단한다. 이것이 결정 #20(b
 - https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets
 - https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks
 - https://git-scm.com/docs/git-diff
+
+## 부록 — v100 개정 (2026-11-17, Free Authority Migration bootstrap)
+
+**배경**: Organization ruleset 상실로 `admission-check` required context의 생산자가
+사라졌다. 신뢰된 오케스트레이터(`Archright/.github/.github/workflows/admission-gate-v2.yml`,
+blob `ab526119…`)를 Axiom 저장소로 이관해야 하나, `.github/**`는 FROZEN이므로
+base policy v99에서는 ADD가 `SURFACE_FORBIDDEN`이다.
+
+**개정 내용** (`policyVersion` 99 → 100, selfAmendment 조건 (a)–(d) 충족):
+
+| 경로 | 클래스 | 근거 |
+|---|---|---|
+| `.github/workflows/admission-gate-v2.yml` | CONTROLLED | required context `admission-check`의 실행 오케스트레이터. callee는 Axiom 커밋 SHA로 핀된다. |
+| `config/policy/trust_surface_manifest.json` | CONTROLLED | 독립 검증자 App이 `blob(G) == blob(B_mg)`로 비교하는 실행 표면 목록. 목록 자체를 B_mg에서 읽으므로 PR이 축소할 수 없다. |
+
+**자기승인 차단 유지**: 두 경로 모두 `MODIFY`도 `CONTROLLED` 규칙을 따르되, 실제
+병합 판정은 GitHub ruleset과 독립 App 검증자가 담당한다. App의 비교 기준은
+B_mg이며, 위 두 경로가 manifest에 포함되므로 PR이 이들을 바꾸면 App이
+`admission-check`를 발급하지 않는다(fail-closed). 즉 표면 개정의 실질 권한은
+여전히 운영자 break-glass 경로에 남는다.
+
+**이 PR 자신**: `config/repository_surface.json`(FROZEN, allowedPaths 포함)과
+이 문서(문서 경로)만 수정하며 `policyVersion`을 단조 증가시킨다 — selfAmendment
+예외의 정확한 형태다. 이 개정이 착지한 뒤에야 후속 bootstrap PR이
+`CONTROLLED ADD=PASS`로 판정된다.
+
+## 부록 — v102 개정 (2026-11-18, DEBT#545, workstream/debt-545-policy-v102)
+
+**배경**: v101의 FROZEN 선언 중 일부는 first-match 해석 순서
+(`PRODUCT → CONTROLLED → FROZEN`)에서 exact PRODUCT/CONTROLLED 등재에 흡수되어
+**실효성 없는 선언**이었다. v101 실측: exact PRODUCT/CONTROLLED 128건 중 109건이
+FROZEN glob과 교차하며, 그 경로들의 `ADD`/`MODIFY`/`DELETE` 판정은 FROZEN 의도와
+무관하게 PRODUCT/CONTROLLED 규칙을 따랐다(선언과 집행의 괴리 = DEBT#545).
+
+**adjudication은 이진 결정이다**: PRODUCT와 CONTROLLED는 `rules`상 `ADD`를
+제외한 모든 op에서 동일하게 동작하므로, 각 경로에 필요한 결정은
+"FROZEN인가, 아닌가" 하나뿐이다. 등급 명칭 변경은 의미 변경이 아니다.
+
+**개정 내용** (`policyVersion` 101 → 102):
+
+| 구분 | 건수 | 처리 |
+|---|---|---|
+| FROZEN 의도 확정 | 19 | 클래스에서 CONTROLLED 등재 제거(또는 신규 FROZEN 유지) — Tier 1 판정기·훅·계약 8건, Tier 2 App trust surface 정합 11건 |
+| 비-FROZEN 확정 | 109 | CONTROLLED/PRODUCT 유지 + `frozenExceptions.paths`에 exact 경로 등록 |
+
+- `frozenExceptions` 스키마(`axiom.repository-surface-frozen-exceptions.v1`):
+  정확히 `schema`/`groups`/`paths` 3키. 각 그룹은 비어 있지 않은 `rationale`과
+  `approvedBy`를 가진다. 그룹 3종: `generated-manifest`(52, `src/gate/manifest.d/**`),
+  `gate-infra`(38), `ci-infra`(19).
+- **wildcard 예외 금지**: 등록 키는 exact 경로만 허용한다. 광범위 예외는 동일한
+  극장을 재무장하므로 `POLICY_INVALID`다.
+- **정책이 authority, 표는 projection**: 128행 adjudication 표는
+  `config/repository_surface.json`에서 기계 생성한 투영이며 PR 본문에 게시한다.
+  별도 표 파일을 정본으로 두지 않는다(AGENTS.md §1 중복 의미 상태 금지).
+- **guard v3**: ① 미등록 교차 → `POLICY_INVALID` ② dead exception(교차하지 않는
+  등록) → `POLICY_INVALID` ③ 그룹 attribution 누락 → `POLICY_INVALID`
+  ④ `frozenExceptionPaths` export로 소비자(테스트·감사)가 목록을 읽는다.
+  단위 테스트 10건 추가(총 60건).
+
+**효력 개시와 one-generation lag**: 병합 판정은 base-pinned guard v2가 수행한다
+(`admission-check.yml`, `repository_surface.yml` 모두 base worktree에서 판정기와
+정책을 로드). 따라서 이 PR 자신은 v2 + v101로 판정되고, v3 + v102의 효력은
+착지 이후 세대부터 발생한다. base v2가 이 PR을 통과시키는 범위는
+selfAmendment `allowedPaths` 4경로로 한정된다 — v2는 `frozenExceptions` 키를
+모르지만, selfAmendment 계약(4경로·버전 단조 증가·FROZEN 위반 전부 allowedPaths)은
+v101에서도 동일하게 성립한다.
+
+**v3의 비자기증명**: v3는 자신의 정확성을 스스로 승인하지 않는다. 승인 근거는
+① base v2가 허용한 정확한 변경 범위, ② 인간 아키텍트의 adjudication 승인(PR 본문),
+③ v3 자체의 구조적·부정적 단위 테스트, ④ shipped 정책의 liveness 테스트다.

@@ -185,13 +185,15 @@ suite "registry load — generic loader over fixtureDir and config/spec":
       repoRootConst() / "config" / "spec")
     check regRes.isOk()
     let reg = regRes.get()
-    check reg.entries.len == 7
+    check reg.entries.len == 8
     # (precedence, specRelPath, specId, capability, presence) — the
     # audit-verified lane table (REGISTRY_SPEC §1.2-§1.4), reproduced by
     # the PR-0 compat mapping over the lane-shaped documents. The varint
     # adoption document (no lane dispatches it — the seam lane) classifies
     # through the same compat mapping: adoption object → body-carry,
     # optional, precedence 10, ordered before the sidecar by specRelPath.
+    # The jrpc-errclass lane (the error-code classification slice) ships
+    # flipped from birth: v2 envelope keys, precedence 70, presence-optional.
     let expected: seq[tuple[prec: int; rel, sid: string; cap: ExternalSubjectCapability;
         pres: PresencePolicy]] = @[
       (10, "nim_libp2p_varint_roundtrip.json", "SPEC-LIBP2P-VARINT-RT", capBodyCarry, ppOptional),
@@ -200,7 +202,8 @@ suite "registry load — generic loader over fixtureDir and config/spec":
       (30, "base36_sizing_relational_spec.json", "SPEC-B36-RELATIONAL", capBetaComposition, ppMandatory),
       (40, "nim_stew_base32_rem_spec.json", "SPEC-B32-REM-RANGE", capTermSplice, ppMandatory),
       (50, "toml_d2_agent_spec.json", "SPEC-TOML-D2-AGENT", capConstructedGate, ppOptional),
-      (60, "nim_libp2p_bytesview_slice.json", "SPEC-LIBP2P-BV-SLICE", capArithmeticLaw, ppOptional)]
+      (60, "nim_libp2p_bytesview_slice.json", "SPEC-LIBP2P-BV-SLICE", capArithmeticLaw, ppOptional),
+      (70, "json_rpc_errcode_class.json", "JRPC-ERRCLASS", capJrpcErrclass, ppOptional)]
     for i, want in expected:
       check reg.entries[i].precedence == want.prec
       check reg.entries[i].specRelPath == want.rel
@@ -220,6 +223,8 @@ suite "registry load — generic loader over fixtureDir and config/spec":
     check reg.entries[4].governedModule == "stew/base32.nim"
     check reg.entries[5].governedModule == "toml_serialization/lexer.nim"
     check reg.entries[6].governedModule == "libp2p/utils/bytesview.nim"
+    check reg.entries[7].governedModule == "json_rpc/errors.nim"
+    check reg.entries[7].governedSymbols == @["new"]
 
   test "VS-2 PR-3: the sidecar SpecID is byte-stable across the lane flip":
     # REGISTRY_SPEC §6.1 / §5 PR-3: the flip moves the two-stage validator
@@ -564,7 +569,7 @@ suite "determinism — two loads, identical projections and ordering":
     let a = registryProjection(loadExternalSubjectRegistry(specDir).get)
     let b = registryProjection(loadExternalSubjectRegistry(specDir).get)
     check a == b
-    check a.len == 7
+    check a.len == 8
 
 # ---------------------------------------------------------------------------
 # Group 8 — NOT-an-adoption guard

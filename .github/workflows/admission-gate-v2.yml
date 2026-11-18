@@ -1,0 +1,750 @@
+# ────────────────────────────────────────────────────────────────
+# admission-gate — Control Kernel (K). N+1 activation
+# (CI Quantization prefix construction — Bootstrap Authority 창의 ③,
+# 새 I-chain 형성). Epoch N+4 extension: mint-prepare 래퍼 신설
+# (SL-12 certificate mint prepare — certificate-mint.yml@N+4 main sha,
+# needs [admission]) + verdict needs [admission, mint-prepare] — verdict
+# = callee result 단일 판정의 확장 (둘 다 success만 GREEN, fail-closed).
+# Epoch N+5 extension: mint-publish 래퍼 신설 (SL-04 certificate
+# validity — certificate-mint.yml@N+5 main sha, stage=publish,
+# needs [mint-prepare]) + verdict needs [admission, mint-prepare,
+# mint-publish] — SL-04 [X]1~3 검증 발화를 verdict에 결속 (셋 다
+# success만 GREEN). C5/C1 계약 개정 반영: callee prepare는 N+5 main부터
+# build-base-artifacts 소비 (자체빌드 폐기).
+# Epoch N+6 extension: gateway 래퍼 신설 (SL-10 gateway decision
+# identity — runner-pool-acceptance.yml@N+6 main sha, needs 없음:
+# callee select는 GITHUB_SHA만 소비) + verdict needs [admission,
+# mint-prepare, mint-publish, gateway] — SL-10 decision envelope
+# 발화 + gateway lane 결과를 verdict에 결속 (넷 다 success만 GREEN).
+# Epoch N+7 promotion (2026-10-29): callee pin rotation — 양쪽 mint 래퍼
+# @d117ae8e2 (Axiom main, PR #1117). Callee diff @9aaee76f..@d117ae8e2 =
+# subject-certificate 전송 아티팩트 `retention-days: 30 → 3` (+ comment)
+# 단 하나 — 증거 본문·입력 계약·writer·required check 무변경 (정본 증거는
+# axiom/certificates side-ref ledger). 동기: subject-certificate가 live
+# Actions storage의 51%(3,379.5 MB / 7.13 GB)를 점유했고, 30일 보존이 월
+# 50 GB-월 포함량(37,200 GB-h)을 소진시켜 upload 하드블록 → admission-check
+# 실패 → merge 차단. 소비자는 전부 동일 run 내부(mint publish P1/P3,
+# verdict --cert)이며 실행 상한 120분의 36배 여유. epoch 기록:
+# Axiom docs/evidence/epoch_record_mint_retention_2026-10-29.md.
+# Epoch N+10 rotation (2026-11-18, PR-R): callee pin rotation — admission-check
+# 와 certificate-mint 양쪽 @9b3d87c3a (Axiom main, PR #144 착지 merge). Callee
+# diff: SL-21 producer closure (admission-check.yml — required-context producer
+# identity, skip 탐지) + SL-22 artifact execution closure (certificate-mint.yml —
+# prepare data-only artifact, publish trusted B supply, artifact 바이트 비실행).
+# productionExecutionPin 13bd4e55 = TWS trustedAdmissionWorkflowSha = blob.
+# FORWARD (2026-09-29, 복구 D3): 수리 PR #331/#332/#333/#334 착지 —
+# K를 N+5 shape로 복귀 (양쪽 래퍼 @c55f0482e — ircheck 소비 + P3 mkdir
+# + libpcre3 패리티 prepare·publish). N+5는 복구 E의 acceptance green
+# 까지 미완·전이 상태.
+# STAGE-SPLIT cutover: 단일 `admission` job이 witness 산출과 MergeAdmissible
+# 판정을 겸하던 것을 두 stage 호출로 분리한다 —
+#   attest(stage: attest) ─> mint-prepare ────────────────┐
+#   gateway(독립 레인) ───────────────────────────────────┴─> mint-publish ─> verdict(stage: verdict)
+#     (mint-publish needs [mint-prepare, gateway] — gateway lane이
+#      terminal이 된 뒤 publish가 평가한다. 2026-10-07 run
+#      37569755722 att.1 레이스 복원 — 아래 mint-publish 주석)
+#   closure-deriver(needs-free 생산자 레인) ──> gateway · verdict
+#     (SL-02 Phase 1-a 복구 — derived-closure 게시 완료가 모든
+#      H 코드 실행 job 시작에 선행: V-H 아티팩트 레이스 차단.
+#      [S2, 2026-10-13] 아티팩트는 5파일(merge_group/landing — 제3 도출 각
+#      derived-M.txt 포함)·4파일(pull_request) — 아래 closure-deriver 주석)
+#   └─────────────── 여섯 job 모두 success ───────────────> admission-check (aggregate)
+# 분리 근거: `admission`이 predicate까지 수행하면 predicate가 cert를 읽는
+# 시점이 mint-publish보다 앞서서 attempt 1이 NO_CERT로 닫히고 무조건 2차
+# attempt가 필요했다(2026-10-04 run 37199503612 실측, Axiom#466이 callee를
+# 두 stage로 분할). MUST 체인은 4중 → 5중으로 강화될 뿐 제거된 MUST는 없다.
+#
+# K = "GitHub가 이 epoch을 실행하게 하는 최소 제어 장치" (핸들만 —
+# semantic 엔진 코드 잔존 금지). semantic 실행 범위는 callee
+# (admission-check.yml@B / certificate-mint.yml@B) 내부의 Slice Engine
+# 게이트가 운전한다: manifest(config/policy/epoch_manifest.json @B)
+# implementedSlices에서 구현 slice 단계만 발화하고, 미정착 slice 단계는
+# 실행 목록에서 제외되어 NO-FIRE (I-3 — skip이 아니라 미발화). verdict는
+# callee result 단일 판정 — callee 내부의 fail-closed manifest 파싱 +
+# 슬라이스 검증이 epoch의 semantics다.
+#
+# required check context = admission-check (JOB NAME) 불변 — 이 파일의
+# 존재 조건. 본 파일은 repository-native 오케스트레이터다 (PR #134 반입 —
+# org-injected가 아니며 org ruleset이 이 파일을 참조·고정하지 않는다:
+# org ruleset 25218071(axiom-admission-gate)·23943917(landing-integrity)은
+# 2026-11-17 폐기, ADR-0041). repository ruleset 27097366("main", active)의
+# required_status_checks 7개 context가 admission-check를 포함해 verdict를
+# 소비한다 (구 id 20303214·24233738·26702792·26996019 는 모두 역사적).
+# required check 이름·bypass_actors·enforcement 공백은 전부 불변.
+#
+# 구 엔진(5-job DAG: closure-deriver / gateway / tree-identity /
+# admission / mint-prepare / mint-publish — 마지막 상태 freeze tag
+# 94a6f0864, old-ci-freeze-20260928)에서 K가 제거한 것 (I-3 미정착
+# slice — 무엇이 빠지는지 대조용 참조만, 복사 아님):
+#   closure-deriver — SL-02 deriver 컴파일·실행 + closure 등식
+#                     (callee 내부 derived-closure load도 scope_sl02
+#                      게이트로 NO-FIRE)
+#                     [SL-02 Phase 1-a 복구, 2026-10-10] 생산자만 재창설 —
+#                     아래 closure-deriver job이 derived-closure를 게시한다
+#                     (merge_group 5파일·pull_request 4파일 — S2, 2026-10-13).
+#                     closure 등식 판정(3중 등식·fail-closed)은
+#                     callee 소관이며 소비자 측은 별도 계약으로 착지한다 —
+#                     본 파일은 게시(determinism·순서·권한)만 고정한다.
+#   gateway         — runner-pool-acceptance H-code 전면 실행; epoch N+6
+#                     (SL-10)에서 부활 (아래 gateway 래퍼) — callee 내부
+#                     [slice-engine] scope_sl10 게이트로 decision
+#                     envelope 발화 제한 (첫 runner-pool 증분)
+#   tree-identity   — testedTree==mergeTree 등식 (callee가 mergeTree
+#                     재유도 = 순수 중복)
+#   mint-prepare    — epoch N+4 (SL-12)에서 부활 (아래 mint-prepare
+#                     래퍼) — certificate-mint prepare read tier
+#   mint-publish    — epoch N+5 (SL-04)에서 부활 (아래 mint-publish
+#                     래퍼) — certificate-mint publish write tier;
+#                     publish 내부 P0/P5/P6/P7은 scope_sl0713 게이트로
+#                     NO-FIRE (SL-0713 미정착 — D6/[B2] 대기)
+# verdict 다단계(identity+qualification+certificate predicate)도 축소 —
+# K verdict = callee result 단일 판정 (fail-closed, "never green").
+#
+# Bootstrap Bridge(org PR #16, a7668c898)는 R0 선언 시점에 조기 퇴역 —
+# 본 파일이 그 자리에 새 I-chain을 처음 형성한다 (B10 창의 ③,
+# I-12 1회성).
+# ────────────────────────────────────────────────────────────────
+name: admission-gate
+
+on:
+  pull_request:
+  merge_group:
+    types:
+      - checks_requested
+
+permissions:
+  contents: read
+
+jobs:
+  # ──────────────────────────────────────────────────────────────
+  # closure-deriver — SL-02 Phase 1-a 생산자 복원 (구 엔진 freeze tag
+  # 94a6f0864 = old-ci-freeze-20260928의 동명 job 재작성 — 복사가 아니라
+  # 확정 계약에 따른 재작성).
+  #   산출 = same-run artifact `derived-closure`, all-or-none
+  #   5파일(merge_group/landing)·4파일(pull_request — derived-M.txt 미생성):
+  #     derived-H.txt / derived-B.txt — deriver 포맷 `<mode> <type> <sha>\t<path>`
+  #       (git ls-tree 포맷 그대로), LC_ALL=C 정렬. deriver 실행은
+  #       --ref H / --ref B 각 1회, 출력을 파일로 (런 내 재실행 0 —
+  #       소비자 L2의 deriver-재실행 digest 등식이 같은 산출을 재현한다).
+  #     derived-M.txt — [S2, 2026-10-13] merge_group(landing) 전용 제3 도출 각
+  #       (ADR-0025 Amendment F). M := `git merge-tree --write-tree B H`
+  #       (H = 위 rebind된 주제 헤드; rc-first — 충돌(rc=1)/기타 오류
+  #       fail-closed) 후 등식 단언 M == tree(GITHUB_SHA): merge queue의
+  #       배치 그룹(선행 PR 포함 진입)에서는 G가 batch trial-merge라 이
+  #       등식이 의도적으로 깨진다 — fail-closed가 올바른 동작이며, 운영상
+  #       canary는 큐가 빈 상태에서 단독 진입시킨다. 유도는 소비자
+  #       (admission-check.yml verdict stage의 in-run 재유도)와 정확히 동일
+  #       인자·정규화: `deriver --tree "$M" --repo "$GITHUB_WORKSPACE"`
+  #       (stdout은 이미 LC_ALL=C 정렬 — `| LC_ALL=C sort`는 멱등, H/B와
+  #       동일 파이프 형태; sha256 대조는 양측 모두 정렬+개행 정규화로
+  #       비교되므로 바이트 동등이 성립). pull_request에서는 M을 만들지
+  #       않는다 — 충돌 PR을 preflight red로 만들지 않기 위함이며 소비는
+  #       landing 전용(admission-check.yml의 derived-closure 다운로드는
+  #       venue==landing 가드). 소비자의 5파일 all-or-none 로더는 부분
+  #       공급(1..4)을 fail-closed로 처리하므로, PR 이벤트에서 이 아티팩트를
+  #       소비하는 경로는 존재하지 않는다.
+  #     pin-H.json — git show H:config/trusted_writer_set.json 원문(JSONC).
+  #     identity.json — {schema:"axiom/derived-closure-identity/v1",
+  #       candidateHeadSha(파생 ref H — 주제 헤드: PR head sha, MG에서는 G의 parent2=PR 헤드 — ADR-0033 §C, 2026-10-10 정합),
+  #       baseSha(B), pinHeadBlobSha(blob of trusted_writer_set.json@H),
+  #       runAttempt} — 전부 40-hex/정수 검증 후 업로드.
+  #     pin@B는 담지 않는다 — 소비자가 B 워크스페이스에서 직접 읽는 현행
+  #     단일 경로 유지(이중 경로 금지). MG head 이중성(G vs G²=parents[1])
+  #     의 주체(G²) 연결도 소비자 측 parent2 재유도가 담당 — 이 job은
+  #     G를 그대로 기록한다(이벤트 중립 입력의 사실 그대로).
+  #   도출 = B-고정 hermetic (C2 — PR(H)의 deriver가 아니라 B의 deriver):
+  #     git worktree add --detach /tmp/btree B → 그 트리 안에서만 컴파일.
+  #     import closure는 프로젝트 4파일 정확히(derive_checker_closure.nim +
+  #     core/trusted/{layer_declaration,axiom_pragmas_lite,effect_bridge}.nim —
+  #     모두 B 트리 소속, nimble 의존 0)이며 컴파일 플래그는
+  #     --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath --path:src
+  #     (구 엔진 대비 잔여 정직화: 사용자 cfg·NimblePath 역유입 차단).
+  #     툴체인은 setup-axiom-toolchain composite 액션(Axiom, 커밋 SHA 핀 —
+  #     nim 2.2.10 핀 + 지문(a-key) + 프로브 3층)으로 통일 — 구 엔진의
+  #     인라인 `curl … choosenim` 설치(unpinned 원격 스크립트)는 폐기.
+  #   DAG 고정 (V-H 레이스 차단): needs-free(타 job 산출물 0 — B/H git
+  #     사실만 소비)로 그래프 head에 배치하고, gateway·verdict가 본 job을
+  #     needs로 요구한다 — 모든 잠재 경쟁 게시자(H 코드 실행 job)는 생산자
+  #     게시 완료 후에만 시작된다. 업로드는 overwrite 없음 +
+  #     if-no-files-found: error — 이름 `derived-closure` 선점 실패 또는
+  #     파일 결손 = 생산자 red = aggregate red (fail-closed, never green).
+  #   권한: job-level permissions 선언 없음 → 상위 contents: read 상속.
+  #     actions: write 없음 — 아티팩트 삭제 경로 부존재 유지.
+  #   극장 방지 명시: 이 job은 closure 등식을 판정하지 않는다 — 구 엔진의
+  #     old-anchor sanity(derived(B)==pin@B)도 재도입하지 않는다. 판정은
+  #     callee verdict의 소관(closureEqual 3중 등식 + L1/L2)이며, 여기서는
+  #     사실(B/H/pin@H/도출 결과)을 결정론적으로 게시만 한다.
+  #   운영 참고: 본 워크플로는 repository ruleset 27097366("main", active)의
+  #     required context를 생산하는 repository-native 오케스트레이터로 Axiom
+  #     저장소의 PR/MG 이벤트에서 실행된다(org ruleset(axiom-admission-gate)
+  #     required workflow 시절의 서술은 2026-11-17 폐기(ADR-0041) 이전
+  #     역사 — .github 저장소 self-PR에서 이벤트 B/H가 org 커밋이라 B
+  #     트리에 Axiom 경로가 없어 본 job이 fail-closed red였다는 관찰도 그
+  #     시절 기록이다. 필수 체크는 pin-promotion-gate가 별도).
+  # ──────────────────────────────────────────────────────────────
+  # anchor-resolve — DAG-head job (Stage 2 단일 앵커 B*, PR venue 전용).
+  # PR venue에서만 실행되며, dispatch 시점의 live main ref tip을 딱 한 번
+  # 해석해 job output `B_STAR`로 게시한다 — 이후 모든 PR-venue 소비자는
+  # 이 값을 소비한다(실행별 run-scoped 단일 확정 앵커; ADR-0027 Amendment
+  # B). merge_group에서는 skip되고(조건식 false), 소비자 표현식은
+  # `needs.anchor-resolve.outputs.B_STAR ||` 선항이 빈 문자열(falsy)로
+  # 수렴하여 기존 이벤트 동결 표현식과 평가 결과가 동일하다 — MG 경로
+  # 불변. 해석 실패/비 40-hex는 fail-closed red (aggregate가 블록).
+  # 판정 아님: B*는 candidate 준비 전용이며 착지 신선도 계약은 GitHub
+  # strict check + queue invalidation에 그대로 위임된다.
+  # skip 전파 주의: 본 job이 MG에서 skip되므로, needs로 본 job을 요구하는
+  # 무조건 실행 job은 `if: !cancelled()`(본 파일 기존 관례 — skipped
+  # needed job에도 계속 실행)를 갖거나 aggregate의 skip-허용 판정을
+  # 거쳐야 한다.
+  # ──────────────────────────────────────────────────────────────
+  anchor-resolve:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 5
+    outputs:
+      B_STAR: ${{ steps.resolve.outputs.B_STAR }}
+    permissions:
+      contents: read
+    steps:
+      - name: "[anchor] Resolve run-scoped B* (live main ref tip, once per run)"
+        id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          fail() { echo "[anchor] FAIL — $1 (fail-closed)" >&2; exit 1; }
+          B_STAR="$(gh api repos/Archright/Axiom/git/ref/heads/main --jq .object.sha)" \
+            || fail "GET git/ref/heads/main failed — run-scoped anchor unresolvable"
+          printf '%s' "$B_STAR" | grep -qE '^[0-9a-f]{40}$' \
+            || fail "B_STAR='$B_STAR' not a 40-hex OID"
+          echo "B_STAR=$B_STAR" >> "$GITHUB_OUTPUT"
+          echo "[anchor] B*=$B_STAR (run-scoped single-resolved main tip — candidate preparation only)"
+
+  # ──────────────────────────────────────────────────────────────
+  # closure-deriver — 기존 DAG-head 역할은 anchor-resolve에 이양되고
+  # needs 간선으로 게시 순서만 보장받는다. Stage 2: PR venue의 BASE_SHA는
+  # 실행별 단일 확정 B*(anchor-resolve output)를 최우선 소비 — MG 표현식
+  # 불변(빈 B* → 기존 항 수렴). if: !cancelled() — MG에서 anchor-resolve가
+  # skip되어도 본 job은 계속 실행된다(기존 MG 동작 불변).
+  # ──────────────────────────────────────────────────────────────
+  closure-deriver:
+    needs: [anchor-resolve]
+    if: ${{ !cancelled() }}
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 30
+    env:
+      BASE_SHA: ${{ needs.anchor-resolve.outputs.B_STAR || github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
+      RUN_ATTEMPT: ${{ github.run_attempt }}
+    steps:
+      # Full checkout — deriver는 임의 ref의 git 객체를 걷는다(+아래 명시
+      # fetch가 belt-and-braces). 체크아웃 대상 = 이벤트 소유 저장소
+      # (required-workflow 경로 = Archright/Axiom).
+      - name: "[closure] Checkout event repo (full history)"
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: "[closure] Event-neutral B/H inputs — 40-hex fail-closed + explicit fetch"
+        run: |
+          set -euo pipefail
+          fail() { echo "CLOSURE: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          printf '%s' "$BASE_SHA" | grep -qE '^[0-9a-f]{40}$' \
+            || fail "base(B)='$BASE_SHA' not a 40-hex OID (event-neutral input empty — unsupported event shape?)"
+          printf '%s' "$HEAD_SHA" | grep -qE '^[0-9a-f]{40}$' \
+            || fail "head(H)='$HEAD_SHA' not a 40-hex OID (event-neutral input empty — unsupported event shape?)"
+          git fetch --no-tags --force origin "$BASE_SHA" "$HEAD_SHA"
+
+      # C2 rule: B-executed, NOT H's copy — the definition of the closure
+      # derivation itself comes from the base object, so a candidate cannot
+      # influence WHAT is derived, only WHICH H is derived (data).
+      - name: "[closure] B worktree — derivation executes from the B tree only"
+        run: |
+          set -euo pipefail
+          fail() { echo "CLOSURE: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          git worktree add --detach /tmp/btree "$BASE_SHA" \
+            || fail "git worktree add --detach /tmp/btree at B=$BASE_SHA failed"
+          test -s /tmp/btree/tools/ci/derive_checker_closure.nim \
+            || fail "tools/ci/derive_checker_closure.nim missing at B=$BASE_SHA"
+          for member in layer_declaration axiom_pragmas_lite effect_bridge; do
+            test -s "/tmp/btree/src/core/trusted/$member.nim" \
+              || fail "src/core/trusted/$member.nim missing at B=$BASE_SHA (deriver import closure incomplete at B)"
+          done
+
+      - name: "[closure] Pinned toolchain (setup-axiom-toolchain — nim 2.2.10, no inline choosenim)"
+        uses: Archright/Axiom/.github/actions/setup-axiom-toolchain@c021c33801455a481e05b75c396d95c84bbdc45d
+        with:
+          cache-save-enabled: 'false'
+          cache-build-source: ${{ env.BASE_SHA }}
+
+      # cwd = /tmp/btree : nimc의 cwd-우선 규칙 + --path:src(B 트리 상대)로
+      # 프로젝트 import의 워킹 트리(H) 역유입이 구조적으로 부재.
+      - name: "[closure] Compile deriver inside the B tree (hermetic flags)"
+        run: |
+          set -euo pipefail
+          fail() { echo "CLOSURE: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          cd /tmp/btree
+          nim c --hints:off --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath --path:src \
+            -o:/tmp/deriver tools/ci/derive_checker_closure.nim \
+            || fail "deriver compile from the B tree failed (import closure must be exactly: deriver + core/trusted/{layer_declaration,axiom_pragmas_lite,effect_bridge}.nim, nimble deps 0)"
+          test -x /tmp/deriver || fail "deriver binary missing after nim c"
+
+      - name: "[closure] Derive closure(H) + closure(B) + pin@H + identity.json (fail-closed)"
+        run: |
+          set -euo pipefail
+          fail() { echo "CLOSURE: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          printf '%s' "$BASE_SHA" | grep -qE '^[0-9a-f]{40}$' || fail "base(B) malformed"
+          printf '%s' "$HEAD_SHA" | grep -qE '^[0-9a-f]{40}$' || fail "head(H) malformed"
+
+          # H := SUBJECT head (ADR-0033 §C merge re-anchor, 2026-10-10 정합).
+          # 생산자(identity.json/derived-H/pin-H)와 소비자(admission-check.yml
+          # L1/L2)는 반드시 같은 파생 ref를 말해야 한다: pull_request는 head
+          # sha, merge_group은 run head의 parent2(PR 헤드 — head_ref 파싱 없음).
+          # G의 trial-merge 트리는 PR이 closure 멤버를 건드리면 set(H)도
+          # set(B)도 아니므로 G에서 파생하면 회전 앵커가 오염된다(실측
+          # 2026-10-10, runs 38025440784/38026805440 — L1이 주제 헤드와 G를
+          # 비교해 wrong-run으로 deny). G는 parent2 조회 키로만 남는다.
+          if [ -z "${SL02_PR_HEAD:-}" ] && [ "${GITHUB_EVENT_NAME:-}" = "merge_group" ]; then
+            SUBJ="$(git rev-parse "${HEAD_SHA}^2" 2>/dev/null || true)"
+            printf '%s' "$SUBJ" | grep -qE '^[0-9a-f]{40}$' \
+              || fail "cannot resolve subject head (parent2 of $HEAD_SHA)"
+            HEAD_SHA="$SUBJ"
+            echo "[closure] merge_group: H re-bound to subject head(parent2)=$HEAD_SHA"
+          fi
+
+          # 제3 도출 각(ADR-0025 Amendment F) — merge_group(landing) 전용.
+          # M := merge-tree(B, 주제 헤드) — 소비자(admission-check.yml verdict
+          # stage)의 in-run 재유도와 동일 레시피(rc-first merge-tree → 40-hex →
+          # deriver --tree). 등식 단언: M == tree(GITHUB_SHA) — merge queue의
+          # 배치 그룹(선행 PR 포함 진입)에서는 G가 batch trial-merge라 이
+          # 등식이 의도적으로 깨진다 — fail-closed가 올바른 동작이며, 운영상
+          # canary는 큐가 빈 상태에서 단독 진입시킨다. pull_request에서는 M을
+          # 만들지 않는다 — 충돌 PR을 preflight red로 만들지 않기 위함이며
+          # 소비는 landing 전용(소비자 derived-closure 다운로드는
+          # venue==landing 가드, 5파일 all-or-none 로더가 부분 공급 1..4를
+          # fail-closed 처리).
+          HAS_M=0
+          if [ "${GITHUB_EVENT_NAME:-}" = "merge_group" ]; then
+            M_RC=0
+            M="$(git merge-tree --write-tree "$BASE_SHA" "$HEAD_SHA" 2>/dev/null)" || M_RC=$?
+            [ "$M_RC" -eq 0 ] \
+              || fail "merge-tree(B=$BASE_SHA, H=$HEAD_SHA) rc=$M_RC (conflict/merge error — rc-first contract, candidate-delta leg fail-closed)"
+            printf '%s' "$M" | grep -qE '^[0-9a-f]{40}$' \
+              || fail "merge-tree output '$M' not a 40-hex tree OID (candidate-delta leg fail-closed)"
+            G_TREE="$(git rev-parse "${GITHUB_SHA}^{tree}")" \
+              || fail "cannot resolve tree(GITHUB_SHA) — queue identity G=$GITHUB_SHA (candidate-delta leg fail-closed)"
+            [ "$M" = "$G_TREE" ] \
+              || fail "queue identity broken: merge-tree(B,H)=$M != tree(G)=$G_TREE (batched merge-group entry — fail-closed by design; canary enters solo on an empty queue)"
+            /tmp/deriver --tree "$M" --repo "$GITHUB_WORKSPACE" | LC_ALL=C sort > /tmp/derived-M.txt \
+              || fail "deriver --tree M=$M failed (UNRESOLVED members — fail-closed)"
+            test -s /tmp/derived-M.txt || fail "derived-M.txt empty"
+            BAD_M="$(awk -F'\t' 'NF!=2 || $1 !~ /^[0-9]+ [a-z]+ [0-9a-f]{40}$/{c++} END{print c+0}' /tmp/derived-M.txt)"
+            [ "$BAD_M" = "0" ] \
+              || fail "/tmp/derived-M.txt: $BAD_M lines deviate from the deriver format"
+            HAS_M=1
+            echo "[closure] merge_group: M=$M == tree(G) verified — derived-M=$(wc -l < /tmp/derived-M.txt) entries (5-file set)"
+          fi
+
+          /tmp/deriver --ref "$HEAD_SHA" | LC_ALL=C sort > /tmp/derived-H.txt \
+            || fail "deriver --ref H failed (UNRESOLVED members — fail-closed)"
+          /tmp/deriver --ref "$BASE_SHA" | LC_ALL=C sort > /tmp/derived-B.txt \
+            || fail "deriver --ref B failed (UNRESOLVED members — fail-closed)"
+          test -s /tmp/derived-H.txt || fail "derived-H.txt empty"
+          test -s /tmp/derived-B.txt || fail "derived-B.txt empty"
+          # deriver 포맷 `<mode> <type> <sha><TAB><path>` — 줄 전수 대조.
+          for f in /tmp/derived-H.txt /tmp/derived-B.txt; do
+            LINES="$(wc -l < "$f")"
+            BAD="$(awk -F'\t' 'NF!=2 || $1 !~ /^[0-9]+ [a-z]+ [0-9a-f]{40}$/{c++} END{print c+0}' "$f")"
+            [ "$BAD" = "0" ] || fail "$f: $BAD of $LINES lines deviate from the deriver format"
+          done
+
+          git show "$HEAD_SHA":config/trusted_writer_set.json > /tmp/pin-H.json \
+            || fail "config/trusted_writer_set.json missing at H=$HEAD_SHA"
+          test -s /tmp/pin-H.json || fail "pin-H.json empty"
+          PIN_HEAD_BLOB_SHA="$(git rev-parse "$HEAD_SHA:config/trusted_writer_set.json")" \
+            || fail "cannot resolve the blob OID of trusted_writer_set.json at H=$HEAD_SHA"
+          printf '%s' "$PIN_HEAD_BLOB_SHA" | grep -qE '^[0-9a-f]{40}$' \
+            || fail "pinHeadBlobSha='$PIN_HEAD_BLOB_SHA' not a 40-hex blob OID"
+
+          # ADR-0042 split layout: the committed writer set carries only the
+          # anchors (incl. pathSetDigest); the execution closure records live in
+          # config/trusted_checker_closure.json. The pin-H artifact is the
+          # rotation new-anchor subject consumed by the B-pinned checker, so its
+          # line-set must be the COMPOSITE of the two documents. The identity's
+          # pinHeadBlobSha stays the ORIGINAL trusted_writer_set.json blob.
+          if git cat-file -e "$HEAD_SHA:config/trusted_checker_closure.json" 2>/dev/null; then
+            git show "$HEAD_SHA:config/trusted_checker_closure.json" > /tmp/closure-H.json \
+              || fail "config/trusted_checker_closure.json unreadable at H=$HEAD_SHA"
+            sed -E 's|^[[:space:]]*//.*$||' /tmp/pin-H.json > /tmp/pin-H.stripped.json \
+              || fail "pin-H JSONC strip failed"
+            jq -e . /tmp/pin-H.stripped.json >/dev/null \
+              || fail "pin-H is not JSON after comment strip (fail-closed)"
+            jq -e 'has("pathSetDigest") and (has("trustedCheckerTreeClosure") | not)' \
+              /tmp/pin-H.stripped.json >/dev/null \
+              || fail "split writer set must carry pathSetDigest and NOT trustedCheckerTreeClosure (ambiguous layout — fail-closed)"
+            jq -e '.schemaVersion == "axiom.trusted-checker-closure.v1" and
+                   (.trustedCheckerTreeClosure | type) == "object" and
+                   (.trustedCheckerTreeClosure | length) > 0' \
+              /tmp/closure-H.json >/dev/null \
+              || fail "config/trusted_checker_closure.json schema invalid at H=$HEAD_SHA (fail-closed)"
+            jq -s '.[0] * {trustedCheckerTreeClosure: .[1].trustedCheckerTreeClosure}' \
+              /tmp/pin-H.stripped.json /tmp/closure-H.json > /tmp/pin-H.composite.json \
+              || fail "pin-H composite emission failed (fail-closed)"
+            mv /tmp/pin-H.composite.json /tmp/pin-H.json
+          fi
+
+          mkdir -p /tmp/derived-closure
+          jq -n --arg schema "axiom/derived-closure-identity/v1" \
+                --arg ch "$HEAD_SHA" --arg bs "$BASE_SHA" \
+                --arg ph "$PIN_HEAD_BLOB_SHA" --arg ra "$RUN_ATTEMPT" \
+            '{schema:$schema, candidateHeadSha:$ch, baseSha:$bs, pinHeadBlobSha:$ph, runAttempt:($ra|tonumber)}' \
+            > /tmp/derived-closure/identity.json
+          # identity.json 전부 검증 후 업로드 (40-hex/정수/스키마/키 집합).
+          jq -e '(keys|sort) == (["baseSha","candidateHeadSha","pinHeadBlobSha","runAttempt","schema"]|sort)' \
+            /tmp/derived-closure/identity.json >/dev/null \
+            || fail "identity.json key set deviates from axiom/derived-closure-identity/v1"
+          jq -e '.schema == "axiom/derived-closure-identity/v1"' \
+            /tmp/derived-closure/identity.json >/dev/null \
+            || fail "identity.json schema mismatch"
+          for field in candidateHeadSha baseSha pinHeadBlobSha; do
+            jq -r --arg f "$field" '.[$f]' /tmp/derived-closure/identity.json | grep -qE '^[0-9a-f]{40}$' \
+              || fail "identity.json field '$field' is not 40-hex"
+          done
+          jq -e '.runAttempt | type == "number"' /tmp/derived-closure/identity.json >/dev/null \
+            || fail "identity.json runAttempt is not an integer"
+          [ "$(jq -r '.runAttempt' /tmp/derived-closure/identity.json)" = "$RUN_ATTEMPT" ] \
+            || fail "identity.json runAttempt != github.run_attempt"
+          [ "$(jq -r '.candidateHeadSha' /tmp/derived-closure/identity.json)" = "$HEAD_SHA" ] \
+            || fail "identity.json candidateHeadSha != H"
+          [ "$(jq -r '.baseSha' /tmp/derived-closure/identity.json)" = "$BASE_SHA" ] \
+            || fail "identity.json baseSha != B"
+          [ "$(jq -r '.pinHeadBlobSha' /tmp/derived-closure/identity.json)" = "$PIN_HEAD_BLOB_SHA" ] \
+            || fail "identity.json pinHeadBlobSha != blob(H:config/trusted_writer_set.json)"
+          cp /tmp/derived-H.txt /tmp/derived-B.txt /tmp/pin-H.json /tmp/derived-closure/
+          if [ "$HAS_M" -eq 1 ]; then
+            cp /tmp/derived-M.txt /tmp/derived-closure/
+          fi
+
+          echo "CLOSURE: OK — derived(H)=$(wc -l < /tmp/derived-H.txt) entries, derived(B)=$(wc -l < /tmp/derived-B.txt) entries, derived(M)=$( if [ "$HAS_M" -eq 1 ]; then wc -l < /tmp/derived-M.txt; else echo absent-pull_request; fi ), pinHeadBlobSha=$PIN_HEAD_BLOB_SHA, runAttempt=$RUN_ATTEMPT (identity schema axiom/derived-closure-identity/v1; pin@B not carried — consumer reads the B workspace directly)"
+
+      - name: "[closure] Upload derived-closure (all-or-none: merge_group 5 files / pull_request 4 files — no overwrite)"
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: derived-closure
+          path: |
+            /tmp/derived-closure/derived-H.txt
+            /tmp/derived-closure/derived-B.txt
+            /tmp/derived-closure/derived-M.txt
+            /tmp/derived-closure/pin-H.json
+            /tmp/derived-closure/identity.json
+          if-no-files-found: error
+          retention-days: 7
+        # derived-M.txt는 pull_request에서 생성되지 않으므로 목록에는 상시
+        # 기재되지만 실제 업로드는 존재하는 파일만(조건부 게시). v4는
+        # 미일치 경로를 조용히 건너뛰고 if-no-files-found는 전체 0건일 때만
+        # 발동한다 — 파일 결손(생산자 red) 계약은 유지된다.
+
+  # ──────────────────────────────────────────────────────────────
+  # attest — callee 래퍼 stage 1/2 (witness 산출 authority).
+  # admission-check.yml을 `stage: attest`로 호출한다. callee는 B에서만
+  # 빌드하고 witness bundle
+  # (admission-check-<candidate head>-<run_attempt>)을 올린다 — 이부는
+  # ADR-0022의 attestation tier만. MergeAdmissible 판정은 이 job이
+  # 하지 않는다 (verdict job의 소관).
+  # 분리 이유(순환 제거): 단일 `admission` job이 attest+predicate를
+  # 겸하면 predicate가 cert를 읽는 시점이 mint-publish 이전이라
+  # attempt 1이 NO_CERT로 닫히고 재실행이 필요했다
+  # (2026-10-04 run 37199503612 실측). producer(attest)와 consumer(verdict)를
+  # 별도 job으로 갈라 DAG에서
+  #   attest ─> mint-prepare ─> mint-publish ─> verdict
+  # 순서를 만들면 attempt 1에서 predicate가 이미 퍼블리시된
+  # cert를 읽는다. needs: 없음 — DAG head.
+  # job-level permissions = callee(admission-check.yml) top-level 선언과
+  # 정확히 일치 (grant < callee 선언이면 호출 그래프 전체가 계획 단계에서
+  # 거부되어 0-job startup_failure — 2026-09-26 첫 런 실증).
+  # ──────────────────────────────────────────────────────────────
+  attest:
+    # Stage 2: needs [anchor-resolve] — PR venue에서 B* 해석 완료 후 callee
+    # 호출(baseSha 전달). MG에서 anchor-resolve는 skip되지만 if:
+    # !cancelled()(본 파일 기존 관례)로 본 호출은 계속 실행된다 — MG
+    # 동작 불변(기존 needs 없음 = 무조건 실행과 등가).
+    needs: [anchor-resolve]
+    if: ${{ !cancelled() }}
+    permissions:
+      contents: read
+      pull-requests: read
+    uses: Archright/Axiom/.github/workflows/admission-check.yml@9b3d87c3a3252286eb15be985c7df6131bd1f1c6
+    with:
+      stage: attest
+      baseSha: ${{ needs.anchor-resolve.outputs.B_STAR || github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.sha }}
+
+  # ──────────────────────────────────────────────────────────────
+  # mint-prepare — certificate-mint callee 래퍼 (SL-12, epoch N+4 승격).
+  # callee pin 현행: @d117ae8e2 (epoch N+7 — 아래 uses:). 역사: @4b7719e153
+  # (callee ssh fix chain: #340 G2a 페어 + #341 event_name — B3 해소)
+  # (PR #329 feat/epoch-n5-sl04 — N+5 main merge sha, C5/C1 계약 개정:
+  # prepare build-base-artifacts 소비) stage=prepare
+  # (read tier — callee prepare job-level contents: read; publish는 N+4 K
+  # 에서 미호출 — SL-0713 미정착).
+  # needs: [attest] — callee prepare step (3)이 같은 run의
+  # admission-check-<candidate head>-<run_attempt> witness artifact를 run-scoped API로 사용
+  # (SL-03→SL-12 데이터 인과; 그 DAG 94a6f0864 freeze tag mint-prepare
+  # needs:[admission] 실측 재확인). job-level permissions = callee
+  # workflow_call top-level 선언과 정확히 일치 (grant < callee 선언 =
+  # 호출 그래프 전체 0-job startup_failure, 2026-09-26 실증):
+  # contents: write + actions: read + pull-requests: read. callee 내부
+  # [slice-engine] 게이트가 manifest@B implementedSlices로 (4)/(5)/(5b)
+  # 발화를 제한 (scope_sl12 — N+4 main: sl12=fire; 미정착 main =
+  # NO-FIRE, verdict fail-closed).
+  # ──────────────────────────────────────────────────────────────
+  mint-prepare:
+    needs: [attest, anchor-resolve]
+    # Tolerate an upstream attest FAILURE, never survive cancellation.
+    # `needs:` is kept because this callee genuinely consumes two artifacts the
+    # `attest` call produces — `admission-check-base-artifacts` and the
+    # `admission-check-<candidate head>-<run_attempt>` witness — fetched over the run-scoped
+    # REST API with no poll/retry, so dropping the edge would race the producers and fail-closed
+    # nondeterministically. What is wrong is the failure-propagation half: certificate
+    # minting is an evidence authority (`signWitness(witness)` — the witness is its sole
+    # input), so requiring attest to have SUCCEEDED inverts the causality and starves the
+    # very certificate the verdict predicate demands (NO_CERT).
+    # fail-closed is preserved: the aggregate job requires all five jobs to be `success`,
+    # and it still runs `if: always()`.
+    # and fail-closed nondeterministically. `needs:` also supplies the ordering
+    # guarantee those single-shot fetches rely on. What is wrong is the
+    # failure-propagation half: certificate minting is an evidence authority
+    # (`signWitness(witness)` — the witness is its sole input, and the witness is
+    # produced *before* the admission predicate and uploaded with `if: always()`),
+    # so requiring admission to have SUCCEEDED inverts the causality and starves
+    # the very certificate the predicate demands (NO_CERT).
+    # fail-closed is preserved: the verdict job still requires all four jobs to be
+    # `success`, and it still runs `if: always()`. Convergence is two-pass —
+    # this run mints and publishes, the next run's predicate finds the ledger cert.
+    if: ${{ !cancelled() }}
+    permissions:
+      contents: write
+      actions: read
+      pull-requests: read
+    uses: Archright/Axiom/.github/workflows/certificate-mint.yml@9b3d87c3a3252286eb15be985c7df6131bd1f1c6
+    with:
+      stage: prepare
+      runId: ${{ github.run_id }}
+      runAttempt: ${{ github.run_attempt }}
+      headSha: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }}
+      baseSha: ${{ needs.anchor-resolve.outputs.B_STAR || github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.sha }}
+      prNumber: ${{ github.event.pull_request.number || '0' }}
+
+  # ──────────────────────────────────────────────────────────────
+  # mint-publish — certificate-mint callee 래퍼 (SL-04, epoch N+5 승격).
+  # callee pin 현행: @d117ae8e2 (epoch N+7 — 아래 uses:). 역사: @6edfd7a50
+  # (PR #329 feat/epoch-n5-sl04 — N+5 main merge sha) stage=publish (write tier — THE single
+  # contents: write grant in the gate; callee publish job-level
+  # contents: write).
+  # needs: [mint-prepare, gateway] — publish는 같은 run의
+  # subject-certificate-<run_attempt> artifact를 run-scoped API로 소비하고
+  # (SL-12→SL-04 데이터 인과), SL-0713 승격 이후 gateway lane의 결론을
+  # 직접 평가한다 — callee (P5) tested-tree-digest artifact 소비 + (P6)
+  # jobs API lane conclusion 집계. needs는 선행 job(호출 job 포함 — 호출
+  # job은 callee workflow 완료에 완료)의 완료를 보장하므로(GitHub Actions
+  # 공식: jobs.<job_id>.needs = "any jobs that must complete successfully
+  # before this job will run"), "평가 대상 lane이 terminal 상태가 된 뒤에
+  # 평가"가 그래프로 선언된다 — 타이밍/폴링 회피가 아닌 의존관계 선언.
+  # gateway 간선 복원 배경(실측 run 37569755722 attempt 1, 2026-10-07):
+  # 구 DAG 94a6f0864 freeze tag mint-publish
+  # needs:[mint-prepare, gateway, tree-identity]에서 N+5 재등록 때
+  # gateway/tree-identity가 제외되었으나 — 당시에는 P5/P6가 NO-FIRE라
+  # 무해 — N+6 gateway 래퍼 부활 + SL-0713 승격으로 P5/P6가 발화하면서
+  # 간선 부재가 레이스가 되었다: mint-publish가 gateway/ci-bootstrap
+  # 완료(04:11:18Z) 전에 jobs API 평가(04:10:10Z)를 수행, in-progress
+  # job을 "abnormal conclusion"으로 fail-closed (MINT_PUB_JOBS FAIL) →
+  # 오검증 red → 런 전체 재실행에서만 green. [admission] 에지는 계속
+  # 불필요 — publish callee는 admission artifact를 소비하지 않고 DAG
+  # 폐쇄는 mint-prepare가 보장. gateway 실패/스킵 시에도 본 job은
+  # if: !cancelled()로 실행을 계속한다(needed job 실패·스킵 시 조건식이
+  # 있는 job은 계속 실행 — 공식 "unless the jobs use a conditional
+  # expression that causes the job to continue") → callee (P6)가 lane의
+  # 실제 결론을 fail-closed로 보고하고, 최종 admission-check aggregate가
+  # RESULT_GATEWAY로 독립 차단한다(never green).
+  # job-level permissions = callee workflow_call top-level 선언과 정확히
+  # 일치 (contents: write + actions: read + pull-requests: read —
+  # mint-prepare 래퍼와 동일 셋). callee 내부 [slice-engine] 게이트가
+  # manifest@B implementedSlices로 publish step 발화를 제한
+  # (scope_sl04 — N+5 main: sl04=fire · sl0713=NO-FIRE — P0/P5/P6/P7
+  # skip 실측은 acceptance 기록).
+  # ──────────────────────────────────────────────────────────────
+  mint-publish:
+    needs: [mint-prepare, gateway, anchor-resolve]
+    # Same rationale as mint-prepare: the certificate must reach the ledger even
+    # when this run's attest stage denied, otherwise the verdict predicate still
+    # sees NO_CERT. Without this the chain stops at prepare and never converges.
+    if: ${{ !cancelled() }}
+    permissions:
+      contents: write
+      actions: read
+      pull-requests: read
+    uses: Archright/Axiom/.github/workflows/certificate-mint.yml@9b3d87c3a3252286eb15be985c7df6131bd1f1c6
+    with:
+      stage: publish
+      runId: ${{ github.run_id }}
+      runAttempt: ${{ github.run_attempt }}
+      headSha: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }}
+      baseSha: ${{ needs.anchor-resolve.outputs.B_STAR || github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.sha }}
+      prNumber: ${{ github.event.pull_request.number || '0' }}
+
+  # ──────────────────────────────────────────────────────────────
+# gateway — runner-pool-acceptance callee 래퍼 (SL-10, epoch N+6
+# 승격 — 첫 runner-pool(gateway lane) 증분). callee
+# @<N+6 MAIN SHA> (PR #337 feat/epoch-n6-sl10 merge sha).
+# needs: [closure-deriver] — SL-02 Phase 1-a 간선 복원 (구 DAG
+# needs [closure-deriver]와 동일 배선). callee select 자체는 GITHUB_SHA/
+# 이벤트 컨텍스트만 소비(타 job 산출물 0)하지만, gateway lane은 H 코드를
+# 실행하는 잠재 경쟁 게시자이므로 생산자의 derived-closure 게시 완료
+# 이후에만 시작해야 한다 (V-H 아티팩트 레이스 차단 — DAG 고정 계약).
+# job-level permissions = callee workflow_call
+# top-level 선언(contents: read)과 정확히 일치 (grant < callee
+# 선언 = 호출 그래프 전체 0-job startup_failure 실증). callee
+# 내부 [slice-engine] 게이트가 manifest@B implementedSlices로
+# select의 decision envelope 발화를 제한 (scope_sl10 — N+6 main:
+# sl10=fire).
+# ──────────────────────────────────────────────────────────────
+  gateway:
+    needs: [closure-deriver]
+    # 2026-10-13: anchor-resolve is PR-only (skipped in merge_group); its skip
+    # propagated transitively through the needs rollup and skipped this job
+    # (default success()) even though closure-deriver succeeded — measured in
+    # run 38359095521 (mint-publish MINT_PUB_TREE fail-closed, tested-tree-digest 0).
+    # Explicit condition restores the original semantics: run iff closure-deriver succeeded.
+    if: ${{ !cancelled() && needs.closure-deriver.result == 'success' }}
+    permissions:
+      contents: read
+    uses: Archright/Axiom/.github/workflows/runner-pool-acceptance.yml@c021c33801455a481e05b75c396d95c84bbdc45d
+    with:
+      target_sha: ${{ github.sha }}
+      force_full: false
+
+  # ──────────────────────────────────────────────────────────────
+  # admission-check — verdict. name = required check context
+  # (repo ruleset 27097366 "main" required_status_checks — 7 contexts,
+  # admission-check 포함; 구 id 20303214은 역사적),
+  # 절대 불변.
+  # callee result 단일 판정: success만 GREEN, 그 외(skipped/cancelled/
+  # failed)는 exit 1 fail-closed "never green" — 구 verdict 1단계 패턴
+  # 재사용 (나머지 다단계 predicate는 미정착 slice 소관으로 제거).
+  # epoch N+4: verdict = admission ∧ mint-prepare (둘 다 success만
+  # GREEN — SL-12 mint prepare 발화를 verdict에 결속; mint-prepare가
+  # skipped/cancelled/failed면 required check red, fail-closed).
+  # epoch N+5: verdict = admission ∧ mint-prepare ∧ mint-publish (셋 다
+  # success만 GREEN — SL-04 [X]1~3 검증 발화를 verdict에 결속;
+  # mint-publish가 skipped/cancelled/failed면 required check red,
+  # fail-closed).
+  # epoch N+6: verdict = admission ∧ mint-prepare ∧ mint-publish ∧
+  # gateway (넷 다 success만 GREEN — SL-10 decision envelope 발화 +
+  # gateway lane 결과를 verdict에 결속; gateway가 skipped/cancelled/
+  # failed면 required check red, fail-closed).
+  # stage-split cutover: verdict = attest ∧ mint-prepare ∧ mint-publish ∧
+  # verdict ∧ gateway (난 대 success만 GREEN). 이전 4중에서 5중으로
+  # 강화 — 언어마 MUST가 제거되지 않는다. 삭제된
+  # `admission` job은 동일한 callee의 attest/verdict 두 stage 호출로
+  # 대장되언고, 담당 해당로는 그대로의 MergeAdmissible
+  # predicate authority 이상지는 그대로의 verdict stage가 기능한다.
+  # 성가 요건(GREEN): certificate 발행이 여전히 필요 —
+  # mint-prepare ∧ mint-publish 둘 MUST은 그대로다.
+  # SL-02 Phase 1-a (2026-10-10): closure-deriver 생산자 복원으로
+  # 6중 ∧로 강화 — closure-deriver(red/skipped/cancelled)는 required
+  # check를 직접 차단하고, gateway·verdict의 needs 간선은 생산자 게시
+  # 완료 순서를 보장한다 (V-H 아티팩트 레이스 차단). MUST는 강화될 뿐
+  # 제거된 MUST는 없다.
+  # merge_group 바인딩 (ADR-0027 queue-delegation, P1 — ADR-0026 인용 정정):
+  # 래퍼는 headSha/baseSha를 merge_group.head_sha/base_sha로 전파하고
+  # prNumber=0 (명시적 honest "no PR context" 값 — head_ref 파싱 금지)을
+  # 전달한다. pull_request 경로는 기존 표현식과 byte 동일 (PR-path
+  # neutral). stage-split 이후 attest·verdict 래퍼도 동일한
+  # 표hj식을 전달한다.
+  # ──────────────────────────────────────────────────────────────
+  # ──────────────────────────────────────────────────────────────
+  # verdict — callee 래퍼 stage 2/2 (MergeAdmissible 판정).
+  # `attest`와 동일 SHA의 admission-check.yml을 `stage: verdict`로 한 번 더
+  # 호출한다. callee는 이 단계에서 비로소 MergeAdmissible predicate를
+  # 평가하고 그 exit code가 check conclusion에 투영된다 (SL-05).
+  # needs: [mint-prepare, closure-deriver] — predicate의 certificate source는 같은 run의
+  # subject-certificate-<run_attempt> artifact (ADR-0022 §D5-3 `--cert`)이며 그 artifact는
+  # mint-prepare가 업로드한다 — mint-publish는 원장 append(P7)만 수행하므로 verdict에 줄
+  # 입력이 없다 (publish→verdict는 스케줄링 산물 — Axiom 사전등록
+  # serial_chain_dag_prereg_2026-10-17 §2). cert exists before predicate는 그대로 —
+  # 인증서는 prepare 뒤 즉시 존재한다. publish 성공 요구는 폐지되지 않는다 — 아래
+  # admission-check 롤업(7-fold needs)이 mint-publish를 직접 요구하며 required check
+  # 게이트로 남는다.
+  # closure-deriver 간선: verdict stage는 derived-closure 아티팩트의 소비자 —
+  # 생산자 게시 완료 이후에만 판정한다 (V-H 아티팩트 레이스 차단,
+  # SL-02 Phase 1-a DAG 고정). closure-deriver 실패 시에도 본 job은
+  # if: !cancelled()로 실행을 계속한다(조건식 job은 needed job 실패·스킵에도
+  # 계속 — 공식) → callee가 부재/불완전 아티팩트를 fail-closed로 보고하고,
+  # aggregate의 6중 ∧가 독립 차단한다(never green).
+  #   attest ─> mint-prepare ─────────────────┬─> verdict   (mint-publish ∥ verdict — 원장 append만)
+  #   closure-deriver ────────────────────────┘ (needs 간선 — 게시 순서만)
+  # 이 경로에 역방향 엣지가 없으므로 사이클이 없다. cycle은 GitHub가
+  # 계획 단계에서 job 0개로 전체 거부한다
+  # (docs/evidence/org_gate_handoff_2026-10-04.md §4).
+  # if: !cancelled() — mint 실패 때도 판정 관측을 남긴다 (진단 가치).
+  # GREEN은 아래 aggregate의 6중 ∧가 결정하므로 이 job의 성공/실패가
+  # 관측 가능성을 바꾸지 않는다 (실패해도 aggregate는 항상 실패로 닫힌다).
+  # job-level permissions = callee(admission-check.yml) top-level 선언과
+  # 정확히 일치 (grant < callee 선언이면 호출 그래프 전체가 계획 단계에서
+  # 거부되어 0-job startup_failure).
+  # ──────────────────────────────────────────────────────────────
+  verdict:
+    # Stage 2: needs에 anchor-resolve 추가(baseSha 컨텍스트 참조 요구) —
+    # if: !cancelled() 기존 관례로 MG skip 전파로부터 안전.
+    needs: [mint-prepare, closure-deriver, anchor-resolve]
+    if: ${{ !cancelled() }}
+    permissions:
+      contents: read
+      pull-requests: read
+    uses: Archright/Axiom/.github/workflows/admission-check.yml@9b3d87c3a3252286eb15be985c7df6131bd1f1c6
+    with:
+      stage: verdict
+      baseSha: ${{ needs.anchor-resolve.outputs.B_STAR || github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.sha }}
+
+  admission-check:
+    name: admission-check
+    needs: [anchor-resolve, closure-deriver, attest, mint-prepare, mint-publish, verdict, gateway]
+    if: ${{ always() }}
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 5
+    steps:
+      - name: "[verdict] Every needed job must be success (skipped -> FAILURE, never green)"
+        env:
+          RESULT_ANCHOR_RESOLVE: ${{ needs.anchor-resolve.result }}
+          EVENT_NAME: ${{ github.event_name }}
+          RESULT_CLOSURE_DERIVER: ${{ needs.closure-deriver.result }}
+          RESULT_ATTEST: ${{ needs.attest.result }}
+          RESULT_MINT_PREPARE: ${{ needs.mint-prepare.result }}
+          RESULT_MINT_PUBLISH: ${{ needs.mint-publish.result }}
+          RESULT_VERDICT: ${{ needs.verdict.result }}
+          RESULT_GATEWAY: ${{ needs.gateway.result }}
+        run: |
+          set -euo pipefail
+          fail() { echo "ADMISSION_GATE: FAIL — $1 (fail-closed)" >&2; exit 1; }
+          # Stage 2: anchor-resolve는 PR venue 전용 — PR에서는 success만
+          # 허용되고, MG(비 PR)에서만 skip이 허용된다(실행 자체가 없는
+          # 정상 상태). 그 외의 result는 fail-closed.
+          if [ "$RESULT_ANCHOR_RESOLVE" = "success" ]; then
+            :
+          elif [ "$RESULT_ANCHOR_RESOLVE" = "skipped" ] && [ "$EVENT_NAME" != "pull_request" ]; then
+            :
+          else
+            fail "needed job 'anchor-resolve' result='$RESULT_ANCHOR_RESOLVE' (event=$EVENT_NAME — expected 'success' on pull_request, 'skipped' only off-PR)"
+          fi
+          [ "$RESULT_CLOSURE_DERIVER" = "success" ] \
+            || fail "needed job 'closure-deriver' result='$RESULT_CLOSURE_DERIVER' (expected 'success' — skipped/cancelled/failed must block, never green)"
+          [ "$RESULT_ATTEST" = "success" ] \
+            || fail "needed job 'attest' result='$RESULT_ATTEST' (expected 'success' — skipped/cancelled/failed must block, never green)"
+          [ "$RESULT_MINT_PREPARE" = "success" ] \
+            || fail "needed job 'mint-prepare' result='$RESULT_MINT_PREPARE' (expected 'success' — skipped/cancelled/failed must block, never green)"
+          [ "$RESULT_MINT_PUBLISH" = "success" ] \
+            || fail "needed job 'mint-publish' result='$RESULT_MINT_PUBLISH' (expected 'success' — skipped/cancelled/failed must block, never green)"
+          [ "$RESULT_VERDICT" = "success" ] \
+            || fail "needed job 'verdict' result='$RESULT_VERDICT' (expected 'success' — skipped/cancelled/failed must block, never green)"
+          [ "$RESULT_GATEWAY" = "success" ] \
+            || fail "needed job 'gateway' result='$RESULT_GATEWAY' (expected 'success' — skipped/cancelled/failed must block, never green)"
+          echo "[verdict] OK — anchor-resolve ∧ closure-deriver ∧ attest ∧ mint-prepare ∧ mint-publish ∧ verdict ∧ gateway callee succeeded"

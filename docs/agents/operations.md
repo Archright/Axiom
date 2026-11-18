@@ -108,6 +108,21 @@ MCP server selection rules and Allowlist Gate requirements are enforced by `src/
 
 **주석 (2026-11-15 — ruleset ID 회전)**: 저장소 재생성으로 라이브 main ruleset의 ID가 회전되어 위 2026-10-04/10-11 실측들의 `20303214`는 현재 HTTP 404다 — 당시 실측 사실은 역사 기록으로 보존한다. 현행 라이브 `main` ruleset ID는 `27097366`이다(2026-11-15 실측, `enforcement: active`). 정본 조회는 ID 직접 경로가 아니라 `gh api repos/Archright/Axiom/rulesets`에서 `name == "main"` 이름 해석을 사용한다(`config/policy/merge_admission.json` v1.19.0 이후 — ID는 저장소 재생성마다 회전한다).
 
+**갱신 (2026-11-17 — org required workflow 종료, Free 평면 확정)**: `gh api /orgs/Archright --jq .plan` → `name: free`; `gh api orgs/Archright/rulesets` → **HTTP 403** ("Upgrade to GitHub Team"). 따라서 위 배너들의 **org required workflow `admission-gate`(Archright/.github — ruleset 24233738)** 경로는 더 이상 발화하지 않는다. 현행 원격 PR 판정 경로는 in-repo `.github/workflows/admission-gate-v2.yml`(`pull_request` + `merge_group`) + repo ruleset `27097366`(`enforcement: active`, `bypass_actors: []`, 7 required contexts — `admission-check`만 integration_id `5795152`, 나머지 6개 `15368`) + merge queue(`ALLGREEN`, `max_entries_to_build: 2`, `check_response_timeout_minutes: 120`)다. 2026-11-17 실측: PR #140이 **감사 bypass 없이** 정상 merge queue 경로로 native MERGE 착지(`49799837b4bb…`; App `admission-check` success, `trust_surface=PASS — 15 paths match base 88406c6`). 위 역사 기록은 대체하지 않는다.
+
+**갱신 (2026-11-17 — 플랫폼 집행 강화)**: 같은 날 `10:11:23Z→10:11:25Z`에 저장소 Actions 설정이 `sha_pinning_required=false→true`, fork PR 승인 정책이 `first_time_contributors→all_external_contributors`로 전환됐고, `10:23:11Z`에 `allowed_actions`가 `all→selected`로 좁혀져 `github_owned_allowed=true` + `patterns_allowed`(dependabot `fetch-metadata` + 동일 저장소 `Archright/Axiom/**` 참조)만 허용된다(`gh api -X PUT repos/Archright/Axiom/actions/permissions` / `.../selected-actions` / `.../fork-pr-contributor-approval`; 롤백은 같은 엔드포인트에 전 값). 이는 `.github/`의 기존 40-hex 핀 정책(`uses:` 113/113)을 플랫폼이 집행하게 만든 것이며 **required-check 계약을 바꾸지 않는다** — ruleset `27097366`의 7 contexts·producer·`bypass_actors: []`는 불변이고, PR #141이 같은 날 `09:58:05Z`에 정상 merge queue 경로로 착지(`6ba3145c3e34…`, App `admission-check` success, `trust_surface=PASS — 15 paths match base 4979983`)해 그 불변을 실측으로 확인했다. 설정 전환의 범위·근거·롤백과 남는 잔여(같은 저장소 PR의 쓰기 잡, 6 contexts의 Actions 15368 producer)는 [docs/evidence/free_authority_migration_phase0_proof.md](../evidence/free_authority_migration_phase0_proof.md) §12에 있다.
+
+**갱신 (2026-11-17 — App `admission-check` 재판정 계약 확정)**: App(integration `5795152`)의 check run은 **head SHA당 하나**이며, `workflow_run` 완료 이벤트는 새 체크를 만들지 않고 같은 check run을 재판정해 PATCH한다. 계약:
+- **attempt가 identity의 일부다** — external_id는 `v1p|<repo_id>|<head>|<base>|run=<id>#<attempt>`(PR venue), `v1|<repo_id>|<G>|<base>|<ledger_baseline>`(merge_group venue). 같은 run의 attempt는 서로 다른 증거다.
+- **단조 증가만 재판정한다** — 도착한 `run_attempt`가 기록된 attempt보다 **클 때만** 재판정하고, 작거나 같으면 무시한다(늦은 이전 attempt가 최신 판정을 덮지 못한다 — exactly-once가 아니라 attempt-ordered idempotency).
+- **PR venue fallback** — `workflow_run.pull_requests`가 비어 있으면(merged/force-pushed head) 기존 체크의 external_id에서 `head`/`base`를 복원한다.
+- **재판정 입력** — path·event·head_repository·run head SHA·run conclusion·trust surface(`config/policy/trust_surface_manifest.json`의 blob 대조)·merge_group 원장 entry를 다시 검사하고, 실패 사유를 포함해 단일 check run을 PATCH한다. 원장 기록 여부는 판정 근거가 아니다.
+- **완료된 check run도 PATCH 가능** — GitHub REST `PATCH /repos/{owner}/{repo}/check-runs/{id}`는 `status`/`conclusion`/`completed_at`/`output` 갱신을 허용하며 완료 상태 금지 조항이 없다(GitHub 공식 문서, 2026-11-17 확인).
+- **실측 2026-11-17** — run `44126352000`을 attempt 1→5로 rerun했을 때, 체크 `134191531023`이 `23:52:02Z`에 재-PATCH되어 summary가 `run=44126352000 attempt=5 conclusion=failure` + `trust_surface=PASS — 17 paths match base ed014de`로 갱신됐다(수정 전에는 attempt 1 판정이 고정됐다). attempt 5의 실제 실패는 venue가 아니라 `##[error]ADM_IDENTITY FAIL — PR head.sha c822556… != H f406166… (PR API trusted source)`(`.github/workflows/admission-check.yml:3473`, `23:48:31Z`)이며, 재판정 경로 자체는 fail-closed로 동작했다.
+- **rerun은 head 이동 후 결정론적으로 실패한다** — rerun은 최초 실행의 이벤트 페이로드를 재생하는데, PR venue의 identity 판정은 live PR head를 다시 조회한다(`admission-check.yml:3473`). head가 이동한 뒤의 모든 attempt는 `ADM_IDENTITY FAIL`로 실패하며, attempt-ordered 계약상 그 실패 attempt가 이전 attempt의 성공 판정을 **덮어쓴다**. `unrecognized event_name 'pull_request' — venue undeterminable`은 attempt 1 로그에도 출력되는 스크립트 에코이며 원인이 아니다.
+- **복구 원칙** — head/main 이동 후의 rerun은 최신 attempt를 실패로 확정하므로 복구 수단이 아니다. 복구는 **새 이벤트로 새 run**이다(실측: run `44139760001` on `c822556` attempt 1 success). merge_group venue rerun은 anchor-resolve가 `pull_request` 게이트이고 `PR_NUMBER='0'`이라 이 결함을 타지 않지만, 증거 SHA가 낡으므로 같은 원칙을 적용한다.
+- **merge_group 원장 predicate** — App은 merge_group 이벤트 시점의 ledger tip을 baseline으로 고정하고, 그보다 **새로운** commit에서 `(base_sha, pr_head)`에 결속된 entry를 요구한다(worker `checkLedger`). mint는 `subjectId` 기준 멱등이므로(`certificate-mint.yml:2263`) 같은 `(B, H)`로 큐에 재진입하면 append가 0건이고 predicate가 실패한다. `subjectId`는 `baseSha`·`headSha`·`headTreeDigest`·`policyDigest`·`scopeDigest`·`evidenceDigest` 6필드 wire이며 `createdAt`/run id는 포함하지 않는다(`src/verification/verification_subject.nim:19-26`). 따라서 **동일 head로 재큐잉하지 않는다** — 재큐잉이 필요하면 head를 갱신해 새 subject를 만든다.
+
 **Rule (HARD)**: With `intent = merge_to_main`, a branch push MUST be followed by **immediate PR creation/update**. **Merge eligibility remains governed by the repository's current review/check policy** — this protocol fixes PR creation timing only.
 
 **Semantic layers**:
@@ -202,8 +217,10 @@ The `--no-verify` prohibition, rebase/merge rules, and version-tag synchronizati
   없으면 fail-closed(sentinel -2)로 끝나고 `eaAgreed` 계약이 환경적으로 깨진다 — 엔진
   판정이 아니다. 정식 호출은 스위트 실행 전 `(cd proofs && lake build ircheck)`이고,
   Lean leg를 공유하는 대안은 `AXIOM_IRCHECK_CMD=<repo>/proofs/.lake/build/bin/ircheck`
-  override다. 저장소 밖에 놓인 바이너리는 `findRepoRoot`가 CWD-상대 `""` 루트로 탈출해
-  ircheck 조인이 CWD 앵커가 된다
+  override다. 저장소 밖에 놓인 바이너리는 `findRepoRoot`가 절대 CWD에서 앵커를 상향
+  탐색해 저장소 루트를 해석한다 — 결과는 항상 절대 경로이고 CWD-상대 `""` 루트는
+  반환되지 않는다(DEBT#550, Q-013; 2026-11-17 수리, PR #130). CWD가 저장소 밖이면
+  여전히 앵커 미스(레거시 one-level-up fallback)이므로
   ([nim_2_2_10_stdlib_quirks.md](../spec/nim_2_2_10_stdlib_quirks.md) Q-013) — 스위트는
   바이너리가 소스 옆에 놓이는 `nim r tests/unit/<suite>.nim` 형태로 실행한다.
 

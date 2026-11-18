@@ -94,7 +94,9 @@ WINDOW_START="2026-10-11T02:52:14Z"
 WINDOW_END="2026-11-10T02:52:14Z"
 INTERVENTION_MERGE_OID="2ea11a3a5c155503d87e30efd87b7f1f2e74b7ac"
 INTERVENTION_MERGE_AT="2026-10-10T22:39:36Z"
-# 게이트 path 세대: 2026-10-16 rename(admission-gate.yml → admission-gate-v2.yml)이
+# 게이트 path 세대: (historical) 2026-10-16 rename(admission-gate.yml →
+# admission-gate-v2.yml — org workflow era; 현행은 repo-native 오케스트레이터,
+# ADR-0041)이
 # 수집 창(2026-10-11T02:52:14Z ~ 2026-11-10T02:52:14Z) 내부에 있다. 한 세대만
 # 스캔하면 창의 한쪽이 구조적으로 누락된다 — 양 세대를 동일 게이트로 함께 스캔한다
 # (선례: tools/ci/merge_latency_audit.sh의 gate path regex, 그 외는 fail-closed).

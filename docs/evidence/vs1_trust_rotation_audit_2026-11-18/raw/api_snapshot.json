@@ -1,0 +1,866 @@
+{
+ "repo": {
+  "id": 1454952493,
+  "node_id": "R_kgDOVrjQLQ",
+  "name": "Axiom",
+  "full_name": "Archright/Axiom",
+  "private": false,
+  "owner": {
+   "login": "Archright",
+   "id": 268288440,
+   "node_id": "O_kgDOD_3BuA",
+   "avatar_url": "https://avatars.githubusercontent.com/u/268288440?v=4",
+   "gravatar_id": "",
+   "url": "https://api.github.com/users/Archright",
+   "html_url": "https://github.com/Archright",
+   "followers_url": "https://api.github.com/users/Archright/followers",
+   "following_url": "https://api.github.com/users/Archright/following{/other_user}",
+   "gists_url": "https://api.github.com/users/Archright/gists{/gist_id}",
+   "starred_url": "https://api.github.com/users/Archright/starred{/owner}{/repo}",
+   "subscriptions_url": "https://api.github.com/users/Archright/subscriptions",
+   "organizations_url": "https://api.github.com/users/Archright/orgs",
+   "repos_url": "https://api.github.com/users/Archright/repos",
+   "events_url": "https://api.github.com/users/Archright/events{/privacy}",
+   "received_events_url": "https://api.github.com/users/Archright/received_events",
+   "type": "Organization",
+   "user_view_type": "public",
+   "site_admin": false
+  },
+  "html_url": "https://github.com/Archright/Axiom",
+  "description": null,
+  "fork": false,
+  "url": "https://api.github.com/repos/Archright/Axiom",
+  "forks_url": "https://api.github.com/repos/Archright/Axiom/forks",
+  "keys_url": "https://api.github.com/repos/Archright/Axiom/keys{/key_id}",
+  "collaborators_url": "https://api.github.com/repos/Archright/Axiom/collaborators{/collaborator}",
+  "teams_url": "https://api.github.com/repos/Archright/Axiom/teams",
+  "hooks_url": "https://api.github.com/repos/Archright/Axiom/hooks",
+  "issue_events_url": "https://api.github.com/repos/Archright/Axiom/issues/events{/number}",
+  "events_url": "https://api.github.com/repos/Archright/Axiom/events",
+  "assignees_url": "https://api.github.com/repos/Archright/Axiom/assignees{/user}",
+  "branches_url": "https://api.github.com/repos/Archright/Axiom/branches{/branch}",
+  "tags_url": "https://api.github.com/repos/Archright/Axiom/tags",
+  "blobs_url": "https://api.github.com/repos/Archright/Axiom/git/blobs{/sha}",
+  "git_tags_url": "https://api.github.com/repos/Archright/Axiom/git/tags{/sha}",
+  "git_refs_url": "https://api.github.com/repos/Archright/Axiom/git/refs{/sha}",
+  "trees_url": "https://api.github.com/repos/Archright/Axiom/git/trees{/sha}",
+  "statuses_url": "https://api.github.com/repos/Archright/Axiom/statuses/{sha}",
+  "languages_url": "https://api.github.com/repos/Archright/Axiom/languages",
+  "stargazers_url": "https://api.github.com/repos/Archright/Axiom/stargazers",
+  "contributors_url": "https://api.github.com/repos/Archright/Axiom/contributors",
+  "subscribers_url": "https://api.github.com/repos/Archright/Axiom/subscribers",
+  "subscription_url": "https://api.github.com/repos/Archright/Axiom/subscription",
+  "commits_url": "https://api.github.com/repos/Archright/Axiom/commits{/sha}",
+  "git_commits_url": "https://api.github.com/repos/Archright/Axiom/git/commits{/sha}",
+  "comments_url": "https://api.github.com/repos/Archright/Axiom/comments{/number}",
+  "issue_comment_url": "https://api.github.com/repos/Archright/Axiom/issues/comments{/number}",
+  "contents_url": "https://api.github.com/repos/Archright/Axiom/contents/{+path}",
+  "compare_url": "https://api.github.com/repos/Archright/Axiom/compare/{base}...{head}",
+  "merges_url": "https://api.github.com/repos/Archright/Axiom/merges",
+  "archive_url": "https://api.github.com/repos/Archright/Axiom/{archive_format}{/ref}",
+  "downloads_url": "https://api.github.com/repos/Archright/Axiom/downloads",
+  "issues_url": "https://api.github.com/repos/Archright/Axiom/issues{/number}",
+  "pulls_url": "https://api.github.com/repos/Archright/Axiom/pulls{/number}",
+  "milestones_url": "https://api.github.com/repos/Archright/Axiom/milestones{/number}",
+  "notifications_url": "https://api.github.com/repos/Archright/Axiom/notifications{?since,all,participating}",
+  "labels_url": "https://api.github.com/repos/Archright/Axiom/labels{/name}",
+  "releases_url": "https://api.github.com/repos/Archright/Axiom/releases{/id}",
+  "deployments_url": "https://api.github.com/repos/Archright/Axiom/deployments",
+  "created_at": "2026-11-12T07:09:21Z",
+  "updated_at": "2026-11-17T10:16:32Z",
+  "pushed_at": "2026-11-18T04:57:31Z",
+  "git_url": "git://github.com/Archright/Axiom.git",
+  "ssh_url": "git@github.com:Archright/Axiom.git",
+  "clone_url": "https://github.com/Archright/Axiom.git",
+  "svn_url": "https://github.com/Archright/Axiom",
+  "homepage": null,
+  "size": 22347,
+  "stargazers_count": 0,
+  "watchers_count": 0,
+  "language": "Nim",
+  "has_issues": true,
+  "has_projects": false,
+  "has_downloads": false,
+  "has_wiki": false,
+  "has_pages": false,
+  "has_discussions": false,
+  "forks_count": 0,
+  "mirror_url": null,
+  "archived": false,
+  "disabled": false,
+  "open_issues_count": 8,
+  "license": {
+   "key": "other",
+   "name": "Other",
+   "spdx_id": "NOASSERTION",
+   "url": null,
+   "node_id": "MDc6TGljZW5zZTA="
+  },
+  "allow_forking": true,
+  "is_template": false,
+  "web_commit_signoff_required": true,
+  "has_pull_requests": true,
+  "pull_request_creation_policy": "all",
+  "topics": [],
+  "visibility": "public",
+  "forks": 0,
+  "open_issues": 8,
+  "watchers": 0,
+  "default_branch": "main",
+  "permissions": {
+   "admin": true,
+   "maintain": true,
+   "push": true,
+   "triage": true,
+   "pull": true
+  },
+  "temp_clone_token": "",
+  "allow_squash_merge": false,
+  "allow_merge_commit": true,
+  "allow_rebase_merge": false,
+  "allow_auto_merge": true,
+  "delete_branch_on_merge": true,
+  "allow_update_branch": false,
+  "use_squash_pr_title_as_default": false,
+  "squash_merge_commit_message": "COMMIT_MESSAGES",
+  "squash_merge_commit_title": "COMMIT_OR_PR_TITLE",
+  "merge_commit_message": "PR_TITLE",
+  "merge_commit_title": "MERGE_MESSAGE",
+  "custom_properties": {},
+  "organization": {
+   "login": "Archright",
+   "id": 268288440,
+   "node_id": "O_kgDOD_3BuA",
+   "avatar_url": "https://avatars.githubusercontent.com/u/268288440?v=4",
+   "gravatar_id": "",
+   "url": "https://api.github.com/users/Archright",
+   "html_url": "https://github.com/Archright",
+   "followers_url": "https://api.github.com/users/Archright/followers",
+   "following_url": "https://api.github.com/users/Archright/following{/other_user}",
+   "gists_url": "https://api.github.com/users/Archright/gists{/gist_id}",
+   "starred_url": "https://api.github.com/users/Archright/starred{/owner}{/repo}",
+   "subscriptions_url": "https://api.github.com/users/Archright/subscriptions",
+   "organizations_url": "https://api.github.com/users/Archright/orgs",
+   "repos_url": "https://api.github.com/users/Archright/repos",
+   "events_url": "https://api.github.com/users/Archright/events{/privacy}",
+   "received_events_url": "https://api.github.com/users/Archright/received_events",
+   "type": "Organization",
+   "user_view_type": "public",
+   "site_admin": false
+  },
+  "security_and_analysis": {
+   "secret_scanning": {
+    "status": "enabled"
+   },
+   "secret_scanning_push_protection": {
+    "status": "enabled"
+   },
+   "dependabot_security_updates": {
+    "status": "enabled"
+   },
+   "secret_scanning_non_provider_patterns": {
+    "status": "disabled"
+   },
+   "secret_scanning_validity_checks": {
+    "status": "disabled"
+   }
+  },
+  "network_count": 0,
+  "subscribers_count": 0
+ },
+ "rulesets_all": [
+  {
+   "id": 27097391,
+   "name": "artifact-hygiene",
+   "target": "push",
+   "source_type": "Repository",
+   "source": "Archright/Axiom",
+   "enforcement": "disabled",
+   "node_id": "RRS_lACqUmVwb3NpdG9yec5WuNAtzgGdeS8",
+   "_links": {
+    "self": {
+     "href": "https://api.github.com/repos/Archright/Axiom/rulesets/27097391"
+    },
+    "html": {
+     "href": "https://github.com/Archright/Axiom/rules/27097391"
+    }
+   },
+   "created_at": "2026-11-12T16:10:30.393+09:00",
+   "updated_at": "2026-11-12T18:16:26.333+09:00"
+  },
+  {
+   "id": 27097369,
+   "name": "cas-probe-scratch",
+   "target": "branch",
+   "source_type": "Repository",
+   "source": "Archright/Axiom",
+   "enforcement": "active",
+   "node_id": "RRS_lACqUmVwb3NpdG9yec5WuNAtzgGdeRk",
+   "_links": {
+    "self": {
+     "href": "https://api.github.com/repos/Archright/Axiom/rulesets/27097369"
+    },
+    "html": {
+     "href": "https://github.com/Archright/Axiom/rules/27097369"
+    }
+   },
+   "created_at": "2026-11-12T16:10:01.459+09:00",
+   "updated_at": "2026-11-17T17:13:56.898+09:00"
+  },
+  {
+   "id": 27097390,
+   "name": "execution-surface-create",
+   "target": "push",
+   "source_type": "Repository",
+   "source": "Archright/Axiom",
+   "enforcement": "disabled",
+   "node_id": "RRS_lACqUmVwb3NpdG9yec5WuNAtzgGdeS4",
+   "_links": {
+    "self": {
+     "href": "https://api.github.com/repos/Archright/Axiom/rulesets/27097390"
+    },
+    "html": {
+     "href": "https://github.com/Archright/Axiom/rules/27097390"
+    }
+   },
+   "created_at": "2026-11-12T16:10:29.286+09:00",
+   "updated_at": "2026-11-12T18:16:26.534+09:00"
+  },
+  {
+   "id": 27466866,
+   "name": "ledger-no-destroy",
+   "target": "branch",
+   "source_type": "Repository",
+   "source": "Archright/Axiom",
+   "enforcement": "active",
+   "node_id": "RRS_lACqUmVwb3NpdG9yec5WuNAtzgGjHHI",
+   "_links": {
+    "self": {
+     "href": "https://api.github.com/repos/Archright/Axiom/rulesets/27466866"
+    },
+    "html": {
+     "href": "https://github.com/Archright/Axiom/rules/27466866"
+    }
+   },
+   "created_at": "2026-11-17T23:50:25.799+09:00",
+   "updated_at": "2026-11-17T23:59:40.715+09:00"
+  },
+  {
+   "id": 27097366,
+   "name": "main",
+   "target": "branch",
+   "source_type": "Repository",
+   "source": "Archright/Axiom",
+   "enforcement": "active",
+   "node_id": "RRS_lACqUmVwb3NpdG9yec5WuNAtzgGdeRY",
+   "_links": {
+    "self": {
+     "href": "https://api.github.com/repos/Archright/Axiom/rulesets/27097366"
+    },
+    "html": {
+     "href": "https://github.com/Archright/Axiom/rules/27097366"
+    }
+   },
+   "created_at": "2026-11-12T16:10:00.467+09:00",
+   "updated_at": "2026-11-18T11:29:14.359+09:00"
+  }
+ ],
+ "ruleset_main": {
+  "id": 27097366,
+  "name": "main",
+  "target": "branch",
+  "source_type": "Repository",
+  "source": "Archright/Axiom",
+  "enforcement": "active",
+  "conditions": {
+   "ref_name": {
+    "exclude": [],
+    "include": [
+     "~DEFAULT_BRANCH"
+    ]
+   }
+  },
+  "rules": [
+   {
+    "type": "deletion"
+   },
+   {
+    "type": "non_fast_forward"
+   },
+   {
+    "type": "pull_request",
+    "parameters": {
+     "required_approving_review_count": 0,
+     "dismiss_stale_reviews_on_push": false,
+     "required_reviewers": [],
+     "require_code_owner_review": false,
+     "dismissal_restriction": {
+      "enabled": false,
+      "allowed_actors": []
+     },
+     "require_last_push_approval": false,
+     "required_review_thread_resolution": false,
+     "require_extra_approval_for_unattributed_changes": true,
+     "allowed_merge_methods": [
+      "merge"
+     ]
+    }
+   },
+   {
+    "type": "required_status_checks",
+    "parameters": {
+     "strict_required_status_checks_policy": false,
+     "do_not_enforce_on_create": false,
+     "required_status_checks": [
+      {
+       "context": "admission-check",
+       "integration_id": 5795152
+      },
+      {
+       "context": "bsec-integrity",
+       "integration_id": 15368
+      },
+      {
+       "context": "debt-registry-gate",
+       "integration_id": 15368
+      },
+      {
+       "context": "generation-acceptance",
+       "integration_id": 15368
+      },
+      {
+       "context": "axiom-operational-slice",
+       "integration_id": 15368
+      },
+      {
+       "context": "publication-integrity",
+       "integration_id": 15368
+      },
+      {
+       "context": "readiness-verdict",
+       "integration_id": 15368
+      }
+     ]
+    }
+   },
+   {
+    "type": "merge_queue",
+    "parameters": {
+     "merge_method": "MERGE",
+     "max_entries_to_build": 2,
+     "min_entries_to_merge": 1,
+     "max_entries_to_merge": 1,
+     "min_entries_to_merge_wait_minutes": 0,
+     "grouping_strategy": "ALLGREEN",
+     "check_response_timeout_minutes": 120
+    }
+   }
+  ],
+  "node_id": "RRS_lACqUmVwb3NpdG9yec5WuNAtzgGdeRY",
+  "created_at": "2026-11-12T16:10:00.467+09:00",
+  "updated_at": "2026-11-18T11:29:14.359+09:00",
+  "bypass_actors": [],
+  "current_user_can_bypass": "never",
+  "_links": {
+   "self": {
+    "href": "https://api.github.com/repos/Archright/Axiom/rulesets/27097366"
+   },
+   "html": {
+    "href": "https://github.com/Archright/Axiom/rules/27097366"
+   }
+  }
+ },
+ "rules_branch_main": [
+  {
+   "type": "deletion",
+   "ruleset_source_type": "Repository",
+   "ruleset_source": "Archright/Axiom",
+   "ruleset_id": 27097366
+  },
+  {
+   "type": "non_fast_forward",
+   "ruleset_source_type": "Repository",
+   "ruleset_source": "Archright/Axiom",
+   "ruleset_id": 27097366
+  },
+  {
+   "type": "pull_request",
+   "parameters": {
+    "required_approving_review_count": 0,
+    "dismiss_stale_reviews_on_push": false,
+    "required_reviewers": [],
+    "require_code_owner_review": false,
+    "dismissal_restriction": {
+     "enabled": false,
+     "allowed_actors": []
+    },
+    "require_last_push_approval": false,
+    "required_review_thread_resolution": false,
+    "require_extra_approval_for_unattributed_changes": true,
+    "allowed_merge_methods": [
+     "merge"
+    ]
+   },
+   "ruleset_source_type": "Repository",
+   "ruleset_source": "Archright/Axiom",
+   "ruleset_id": 27097366
+  },
+  {
+   "type": "required_status_checks",
+   "parameters": {
+    "strict_required_status_checks_policy": false,
+    "do_not_enforce_on_create": false,
+    "required_status_checks": [
+     {
+      "context": "admission-check",
+      "integration_id": 5795152
+     },
+     {
+      "context": "bsec-integrity",
+      "integration_id": 15368
+     },
+     {
+      "context": "debt-registry-gate",
+      "integration_id": 15368
+     },
+     {
+      "context": "generation-acceptance",
+      "integration_id": 15368
+     },
+     {
+      "context": "axiom-operational-slice",
+      "integration_id": 15368
+     },
+     {
+      "context": "publication-integrity",
+      "integration_id": 15368
+     },
+     {
+      "context": "readiness-verdict",
+      "integration_id": 15368
+     }
+    ]
+   },
+   "ruleset_source_type": "Repository",
+   "ruleset_source": "Archright/Axiom",
+   "ruleset_id": 27097366
+  },
+  {
+   "type": "merge_queue",
+   "parameters": {
+    "merge_method": "MERGE",
+    "max_entries_to_build": 2,
+    "min_entries_to_merge": 1,
+    "max_entries_to_merge": 1,
+    "min_entries_to_merge_wait_minutes": 0,
+    "grouping_strategy": "ALLGREEN",
+    "check_response_timeout_minutes": 120
+   },
+   "ruleset_source_type": "Repository",
+   "ruleset_source": "Archright/Axiom",
+   "ruleset_id": 27097366
+  }
+ ],
+ "protection": {
+  "__error__": "gh: Branch not protected (HTTP 404)",
+  "__code__": 1
+ },
+ "history": [
+  {
+   "version_id": 58302886,
+   "updated_at": "2026-11-18T11:29:14.618+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58302871,
+   "updated_at": "2026-11-18T11:29:10.243+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58299321,
+   "updated_at": "2026-11-18T10:56:47.151+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58299317,
+   "updated_at": "2026-11-18T10:56:42.956+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58294288,
+   "updated_at": "2026-11-18T10:14:28.263+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58294264,
+   "updated_at": "2026-11-18T10:14:23.557+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58214470,
+   "updated_at": "2026-11-18T01:24:33.292+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58214455,
+   "updated_at": "2026-11-18T01:24:27.816+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58213340,
+   "updated_at": "2026-11-18T01:18:54.266+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58213324,
+   "updated_at": "2026-11-18T01:18:48.198+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58200678,
+   "updated_at": "2026-11-18T00:15:10.076+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58200591,
+   "updated_at": "2026-11-18T00:14:49.963+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58144129,
+   "updated_at": "2026-11-17T18:08:14.535+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58144103,
+   "updated_at": "2026-11-17T18:08:00.778+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58130717,
+   "updated_at": "2026-11-17T16:09:53.184+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58130708,
+   "updated_at": "2026-11-17T16:09:48.456+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58130653,
+   "updated_at": "2026-11-17T16:09:05.219+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58130640,
+   "updated_at": "2026-11-17T16:08:54.615+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58127353,
+   "updated_at": "2026-11-17T15:30:49.186+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58121996,
+   "updated_at": "2026-11-17T14:20:29.142+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58121984,
+   "updated_at": "2026-11-17T14:20:24.620+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58053484,
+   "updated_at": "2026-11-17T04:06:53.673+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58053443,
+   "updated_at": "2026-11-17T04:06:36.394+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58043550,
+   "updated_at": "2026-11-17T03:16:35.312+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58043542,
+   "updated_at": "2026-11-17T03:16:30.900+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58030755,
+   "updated_at": "2026-11-17T01:50:56.626+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58030608,
+   "updated_at": "2026-11-17T01:50:14.095+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 58006001,
+   "updated_at": "2026-11-16T23:19:58.078+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 57785863,
+   "updated_at": "2026-11-15T00:32:35.673+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 57785857,
+   "updated_at": "2026-11-15T00:32:27.395+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 57452553,
+   "updated_at": "2026-11-12T19:20:26.769+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 57452531,
+   "updated_at": "2026-11-12T19:20:17.953+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 57450386,
+   "updated_at": "2026-11-12T19:06:11.866+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 57450353,
+   "updated_at": "2026-11-12T19:06:01.613+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 57436918,
+   "updated_at": "2026-11-12T17:25:58.881+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 57436890,
+   "updated_at": "2026-11-12T17:25:48.465+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 57434348,
+   "updated_at": "2026-11-12T17:03:40.551+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 57434265,
+   "updated_at": "2026-11-12T17:02:55.038+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  },
+  {
+   "version_id": 57429526,
+   "updated_at": "2026-11-12T16:10:00.876+09:00",
+   "actor": {
+    "id": 53123826,
+    "type": "User"
+   }
+  }
+ ],
+ "rule_suites": {
+  "__error__": "gh: Not Found (HTTP 404)",
+  "__code__": 1
+ },
+ "org": {
+  "login": "Archright",
+  "id": 268288440,
+  "node_id": "O_kgDOD_3BuA",
+  "url": "https://api.github.com/orgs/Archright",
+  "repos_url": "https://api.github.com/orgs/Archright/repos",
+  "events_url": "https://api.github.com/orgs/Archright/events",
+  "hooks_url": "https://api.github.com/orgs/Archright/hooks",
+  "issues_url": "https://api.github.com/orgs/Archright/issues",
+  "members_url": "https://api.github.com/orgs/Archright/members{/member}",
+  "public_members_url": "https://api.github.com/orgs/Archright/public_members{/member}",
+  "avatar_url": "https://avatars.githubusercontent.com/u/268288440?v=4",
+  "description": "Don't Code, Vibe and Verify.",
+  "name": "Archright",
+  "company": null,
+  "blog": "wintrover.github.io",
+  "location": null,
+  "email": "wintrover@gmail.com",
+  "twitter_username": null,
+  "is_verified": false,
+  "has_organization_projects": true,
+  "has_repository_projects": true,
+  "public_repos": 4,
+  "public_gists": 0,
+  "followers": 1,
+  "following": 0,
+  "html_url": "https://github.com/Archright",
+  "created_at": "2026-03-15T03:14:00Z",
+  "updated_at": "2026-11-16T12:06:52Z",
+  "archived_at": null,
+  "type": "Organization",
+  "total_private_repos": 2,
+  "owned_private_repos": 2,
+  "private_gists": 0,
+  "disk_usage": 103958,
+  "collaborators": 0,
+  "billing_email": "wintrover@gmail.com",
+  "default_repository_permission": "read",
+  "members_can_create_repositories": true,
+  "two_factor_requirement_enabled": true,
+  "members_allowed_repository_creation_type": "all",
+  "members_can_create_public_repositories": true,
+  "members_can_create_private_repositories": true,
+  "members_can_create_internal_repositories": false,
+  "members_can_create_pages": true,
+  "members_can_fork_private_repositories": false,
+  "web_commit_signoff_required": false,
+  "deploy_keys_enabled_for_repositories": false,
+  "members_can_delete_repositories": true,
+  "members_can_change_repo_visibility": true,
+  "members_can_invite_outside_collaborators": true,
+  "members_can_delete_issues": false,
+  "display_commenter_full_name_setting_enabled": false,
+  "readers_can_create_discussions": true,
+  "members_can_create_teams": true,
+  "members_can_view_dependency_insights": true,
+  "default_repository_branch": "main",
+  "members_can_create_public_pages": true,
+  "members_can_create_private_pages": true,
+  "plan": {
+   "name": "free",
+   "space": 976562499,
+   "private_repos": 10000,
+   "filled_seats": 1,
+   "seats": 0
+  },
+  "advanced_security_enabled_for_new_repositories": false,
+  "dependabot_alerts_enabled_for_new_repositories": false,
+  "dependabot_security_updates_enabled_for_new_repositories": false,
+  "dependency_graph_enabled_for_new_repositories": false,
+  "secret_scanning_enabled_for_new_repositories": false,
+  "secret_scanning_push_protection_enabled_for_new_repositories": false,
+  "secret_scanning_push_protection_custom_link_enabled": false,
+  "secret_scanning_push_protection_custom_link": null,
+  "secret_scanning_validity_checks_enabled": false
+ },
+ "org_rulesets": {
+  "__error__": "gh: Upgrade to GitHub Team to enable this feature. (HTTP 403)",
+  "__code__": 1
+ }
+}

@@ -179,7 +179,7 @@ const
                   evidence: ".github/workflows/certificate-mint.yml:591"),
         SliceStep(stepNamePattern: "(5) Cert artifact digest + manifest + upload",
                   evidence: ".github/workflows/certificate-mint.yml:639")],
-      produces: @["certificate.json + cert-manifest.txt + B-built bin/ax (subject-certificate-<run_attempt> artifact)"],
+      produces: @["certificate.json + cert-manifest.txt (DATA-ONLY subject-certificate-<run_attempt> artifact — 실행 바이너리 미포함; publish의 trusted bin/ax는 SL-22가 artifact 바깥에서 독립 해결)"],
       requiresPolicies: @["config/trusted_writer_set.json (TrustedWriterSet@B, step 2a)"],
       inputProducers: @["admission-check-<PR> artifact (witness, run-scoped)",
                         "PR API B/H (pre-landing mint — no M)"],
@@ -330,7 +330,36 @@ const
                         "base policy @B (workspace-root executor checkout, read by git object sha)"],
       executorJobs: @["admission-check"],
       implemented: true,
-      note: "Surface Truth Epoch VS-1 (Owner 결정 #21, 2026-11-16 — '권한이 필요한 부분은 전면 승인한다' 위임): 선언(FROZEN/CONTROLLED 정책) = 판정(surface_guard v2) = 집행(required check 내 FAIL)의 3층 일치를 실제 병합 경로에 연결. guard v2 계약: 경로당 정확히 하나의 등재(정책 내 exact 이중등재 → POLICY_INVALID, classResolutionOrder legacy는 무시) · rename 양단 판정(R → new ADD + old DELETE) · selfAmendment 4조건(head 제공·base allowedPaths 비빈·위반 경로 ∈ allowedPaths·head version > base version — 전 충족 시에만 AMENDED 재분류). 정착 후 기저(base) v98 legacy 이중등재는 구조적으로 POLICY_INVALID — Phase 1 PR 자체에 대한 repository_surface.yml(비-required 관측)의 FAIL은 수용된 전환 비용(v86/v89/v90/v96/v98 선례; 착지 후 base=v99로 정상 판정). 4-way binding: admission-check.yml blob 69d110b9 = TWS trustedAdmissionWorkflowSha = manifest productionExecutionPin 동일 diff (G2a) + 본 엔트리 G1 (engineFiles). 이중 NO-FIRE 근거: (1) 본 PR의 base(main) manifest는 N+8 구세대 — scope_sl20=false로 스텝 미발화; (2) org 게이트 callee 핀 c021c338이 구 blob을 실행 — Phase 2 핀 로테이션이 착지 SHA로 회전해야 비로소 SL-20이 활성 세대가 된다. 미발화 = executed record 부재 = 어떠한 surface 주장도 성립하지 않음 (I-5 fail-closed — 위장 green 아님). 운영 실증은 Phase 3 negative/positive probe: FROZEN 경로 위반 PR의 required check FAIL·merge 차단 관측 + CONTROLLED 변경 PR의 SL-20 PASS 관측 후에만 DEBT#538/#542 종결.")
+      note: "Surface Truth Epoch VS-1 (Owner 결정 #21, 2026-11-16 — '권한이 필요한 부분은 전면 승인한다' 위임): 선언(FROZEN/CONTROLLED 정책) = 판정(surface_guard v2) = 집행(required check 내 FAIL)의 3층 일치를 실제 병합 경로에 연결. guard v2 계약: 경로당 정확히 하나의 등재(정책 내 exact 이중등재 → POLICY_INVALID, classResolutionOrder legacy는 무시) · rename 양단 판정(R → new ADD + old DELETE) · selfAmendment 4조건(head 제공·base allowedPaths 비빈·위반 경로 ∈ allowedPaths·head version > base version — 전 충족 시에만 AMENDED 재분류). 정착 후 기저(base) v98 legacy 이중등재는 구조적으로 POLICY_INVALID — Phase 1 PR 자체에 대한 repository_surface.yml(비-required 관측)의 FAIL은 수용된 전환 비용(v86/v89/v90/v96/v98 선례; 착지 후 base=v99로 정상 판정). 4-way binding: admission-check.yml blob 69d110b9 = TWS trustedAdmissionWorkflowSha = manifest productionExecutionPin 동일 diff (G2a) + 본 엔트리 G1 (engineFiles). 이중 NO-FIRE 근거: (1) 본 PR의 base(main) manifest는 N+8 구세대 — scope_sl20=false로 스텝 미발화; (2) org 게이트 callee 핀 c021c338이 구 blob을 실행 — Phase 2 핀 로테이션이 착지 SHA로 회전해야 비로소 SL-20이 활성 세대가 된다. 미발화 = executed record 부재 = 어떠한 surface 주장도 성립하지 않음 (I-5 fail-closed — 위장 green 아님). 운영 실증은 Phase 3 negative/positive probe: FROZEN 경로 위반 PR의 required check FAIL·merge 차단 관측 + CONTROLLED 변경 PR의 SL-20 PASS 관측 후에만 DEBT#538/#542 종결."),
+EpochSlice(id: "SL-21", name: "producer closure admission (required-context producer identity — policy @B x G producer tuples)",
+      engineFiles: @["admission-check.yml"],
+      verificationSteps: @[
+        SliceStep(stepNamePattern: "[SL-21] Producer closure admission",
+                  evidence: ".github/workflows/admission-check.yml:1149-1533 (attest job2 — [check] [SL-21] step; scope list wiring :956 sl21=SL-21; policy read by object @B (requiredValidations[] + requiredWorkflowDetection.verdictJob = 7 expected tuples) x G enumeration (python3+PyYAML, duplicate-key-strict, 200-file / 1MiB caps) — landing venue only)")],
+      produces: @["admission-check required-check verdict contribution (producer closure FAIL fails the required check — merge blocked; no separate artifact: the verdict IS the gate)"],
+      requiresPolicies: @["config/policy/merge_admission.json (requiredValidations[] + requiredWorkflowDetection — the expected producer tuples; consumed by object @B, no schema change)"],
+      inputProducers: @["epoch manifest implementedSlices → slice-engine scope_sl21 (SL-08's engine authority)",
+                        "merge_group head G (_candidate checkout — the enumerable producer set)",
+                        "base policy @B (workspace-root executor checkout, read by git object sha)"],
+      executorJobs: @["admission-check"],
+      implemented: true,
+      note: "Producer closure (VS-Authority separation, 2026-11-18): 정책이 B에서 결속한 7개 required context를 G가 정확히 그 (workflowPath, job) 튜플로 생산하는지, 그 잡이 의존성 결과로 스킵될 수 없는지(always()/!cancelled() 정확 일치 + needs 단독 금지), on.merge_group이 큐 이벤트(main, checks_requested)와 매칭되는지를 판정한다. callee(workflow_call 전용) 잡은 최상위 컨텍스트를 발행하지 않는다 — attest / admission-check ≠ admission-check (docs/evidence/ci_runner_bootstrap_disable_updates_2026-10-27.md:380). reason code: PRODUCER_POLICY_UNPARSABLE · ENUM_INCOMPLETE · PRODUCER_MISSING · PRODUCER_UNEXPECTED · PRODUCER_AMBIGUOUS · PRODUCER_SKIPPABLE · PRODUCER_TRIGGER_MISSING. 4-way binding: admission-check.yml blob 13bd4e55 = TWS trustedAdmissionWorkflowSha = manifest productionExecutionPin 동일 diff (G2a) + 본 엔트리 G1 (engineFiles). 부팅 순서: base(main) manifest N+9는 SL-21 미포함 → scope_sl21=false로 미발화(핀 35b453c0도 구 blob 실행) — 후속 PR의 callee 핀 로테이션 후 활성."),
+    EpochSlice(id: "SL-22", name: "artifact-binary isolation (publish trusted B supply; data-only subject-certificate artifact)",
+      engineFiles: @["certificate-mint.yml"],
+      verificationSteps: @[
+        SliceStep(stepNamePattern: "(P1) [X]1 artifact identity",
+                  evidence: ".github/workflows/certificate-mint.yml:1618-1693 (DATA-ONLY extraction — exactly certificate.json + cert-manifest.txt; a pre-uploaded bin/ax member is never extracted and never a command path)"),
+        SliceStep(stepNamePattern: "(P3) Bin/ax 준비",
+                  evidence: ".github/workflows/certificate-mint.yml:1745-1775 (trusted supply resolution — scope_sl22 게이트: ① setup-axiom-toolchain B-layer exact hit + --check-provenance, ② else B-checkout `make -f ci/checker.mk ci-compile-ax` + re-verify; artifact 디렉터리는 실행 입력이 아니다)")],
+      produces: @["data-only subject-certificate-<run_attempt> artifact (certificate.json + cert-manifest.txt — no executable member)",
+                  "trusted bin/ax resolution at publish (B-layer exact hit + provenance | B-checkout ci-compile-ax build; B-anchored provenance re-derived before use)"],
+      requiresPolicies: @[],
+      inputProducers: @["setup-axiom-toolchain (B-layer cache restore — acceleration only, never evidence)",
+                        "B checkout (cold-fallback build authority; workspace HEAD == B asserted before the build)",
+                        "subject-certificate-<run_attempt> artifact (DATA ONLY — consumed as data, never executed)"],
+      executorJobs: @["certificate-mint (publish stage)"],
+      implemented: true,
+      note: "VS artifact closure (2026-11-18): 사전 업로드된 `subject-certificate-<attempt>`의 bin/ax가 contents:write publish의 명령 경로가 되는 결함을 구조적으로 폐쇄. prepare (5b) 업로드 목록에서 bin/ax를 제거해 artifact는 데이터 전용 (certificate.json + cert-manifest.txt); publish (P1)은 선언된 두 데이터 구성원만 추출하고, (P3)는 trusted B supply를 artifact 바깥에서 독립 해결한다 — ① setup-axiom-toolchain B-layer exact hit(b-cache-hit=true) + --check-provenance 통과, ② 그 외에는 B checkout(HEAD==B)에서 make -f ci/checker.mk ci-compile-ax 빌드 후 재검증. 어느 분기도 artifact 바이트를 실행하지 않는다 (cache = acceleration, never evidence — 수용 판정은 provenance 재유도). Epoch N+10 승격 slice로 IMPLEMENTED 전환 (2026-11-18, epoch_transaction_gate layer-1 closure G1+G2b path 1 — 카탈로그+매니페스트 원자 페어 + 비핀 엔진 certificate-mint.yml 변경 청구; productionExecutionPin 무변경 — admission-check.yml 무터치). Engine mapping 실측: publish '[slice-engine] Load epoch manifest implementedSlices' scope list에 sl22=SL-22 추가 + (P3)가 scope_sl22 게이트로 발화 제한.")
   ]
 
 # ═══════════════════════════════════════════════════════════════════════════
