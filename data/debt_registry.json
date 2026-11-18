@@ -5657,11 +5657,14 @@
         "tools/surface_guard.nim"
       ],
       "source": "theater_audit",
-      "status": "open",
-      "resolution": "UNRESOLVED — v100 policy normalization required: each path must be registered to exactly one intended class (per-path intended-grade adjudication; the audit list of 126 conflicts is the worklist). This is an architect decision per slice policy (VS-1 decision #21: current-resolver outcome does not automatically justify the class — intended policy is the SSOT). The .githooks/pre-push, .githooks/pre-commit, config/policy/*.json (3), import_encapsulation_gate.nim, and static_gate_scanner.nim instances are the priority adjudications; the ~110 .github/** and src/gate/** CI/gate-infra instances may be confirmed as intended CONTROLLED carve-outs (v95/v96 precedent) and then normalized by REMOVING the redundant FROZEN glob overlap or documenting the carve-out contract explicitly. The change path is the selfAmendment contract (guard v2 conditions a-d, policyVersion increment) — now proven operationally by PR #107. Ghost registration docs/agents/kimi_hooks.md should be pruned in the same v100 pass.",
-      "lastVerifiedAt": "2026-11-16T06:50:00Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-18 (PR #153, merge 983e8360): policy v102 adjudicates all 128 exact/FROZEN conflicts — 19 paths restored to FROZEN, 109 registered as exact frozenExceptions (3 attributed groups, no wildcards); guard v3 rejects unregistered/dead/wildcard exceptions as POLICY_INVALID; negative probes PR #154 (SL-20 SURFACE_FORBIDDEN → App FAILURE → BLOCKED) and PR #156 (App trust-surface mismatch alone blocks while all Actions checks pass) closed unmerged; main push run 44214255926 success.",
+      "lastVerifiedAt": "2026-11-18T01:34:24Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is a FROZEN policy JSON plus a tools/ guard, both outside the src/-only marker scan; trace: this entry contentHash over config/repository_surface.json at v99 (sha256 1f565eb2...), the probe run chain (PR #110 run 43815736467 job 133127762521: SL-20 fired, verdict PASS/OK/binding base), and the 126-conflict audit reproducing guard globMatch semantics."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is a FROZEN policy JSON plus a tools/ guard, both outside the src/-only marker scan; trace: this entry contentHash over config/repository_surface.json at v99 (sha256 1f565eb2...), the probe run chain (PR #110 run 43815736467 job 133127762521: SL-20 fired, verdict PASS/OK/binding base), and the 126-conflict audit reproducing guard globMatch semantics.",
+      "resolvedAt": "2026-11-18",
+      "resolvedBy": "wintrover (agent-executed per-PR delegation)",
+      "resolutionNote": "Evidence: docs/evidence/debt545_policy_v102_landing.md; contract: docs/spec/repository_surface_contract.md v102 appendix; tests: tests/unit/test_surface_guard.nim (60)."
     },
     {
       "id": "DEBT#546",
