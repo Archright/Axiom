@@ -5898,6 +5898,26 @@
       "lastVerifiedAt": "2026-11-17T00:00:00Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registration-only finding; certificate-mint.yml and the base-artifact producer are trust-surface paths, so any change requires its own PR, App trust-surface re-verification, and a live merge_group proof. Trace: this entry's resolution (UNRESOLVED) and source (vs_authority_separation_2026-11-17); external: .github/workflows/certificate-mint.yml:729-762 and :1149-1152; docs/adr/0041-free-authority-migration.md."
+    },
+    {
+      "id": "DEBT#557",
+      "category": "Theater/Trusted-Writer-Set",
+      "impact": "high",
+      "severity": "high",
+      "title": "TrustedWriterSet equality gate parses only the top-level permissions block, so job-level contents: write grants are invisible while the gate reports exact set equality",
+      "description": "Machine-observed 2026-11-17 (main 0da7c49). tools/ci/verify_trusted_writer_set.sh declares the invariant 'ALL workflows with contents:write ⊆ TrustedWriterSet' and asserts exact set equality (header :11-18); its parser comment at :108-110 states that only the top-level permissions block counts. The current tree contradicts the invariant: .github/workflows/admission-gate-v2.yml declares `contents: write` at six job-level sites (mint-prepare, mint-publish and neighbours) while its top-level block is `contents: read`; release-ship.yml has two job-level grants; dependabot-auto-merge.yml has one. Running the gate on this tree prints PASS and reports the observed set as {certificate-mint.yml} only. That is a masking claim: the gate cannot observe the grants that the G threat depends on. Consequence: the mechanical 'single writer' claim cited when justifying the ledger ruleset does not cover job-level grants in PR-modifiable workflows, so PR-controlled code obtaining contents:write on a merge_group run is neither detected nor counted as a regression. Remediation: compute the observed set over every job-scoped permissions block (not just column-0), classify each holder explicitly, and fail closed on any undeclared holder. Until then the gate's equality output must not be cited as evidence of single-writer authority.",
+      "symbol": "observed-set scan (top-level permissions block only)",
+      "contentHash": "sha256:a307ed37903312229f3fc3a74b79a06f61a8dc007894ea9951d565ec6cb287c4",
+      "lineRange": "tools/ci/verify_trusted_writer_set.sh:100-115",
+      "files": [
+        "tools/ci/verify_trusted_writer_set.sh"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED — registration only (the fix changes a CI gate's semantics and must re-derive the declared TrustedWriterSet; it belongs to the writer-handoff plan, not a local patch). Acceptance: the gate FAILs on a fixture workflow whose job-level contents: write is undeclared, and PASSes on the corrected tree with every job-level grant enumerated.",
+      "lastVerifiedAt": "2026-11-17T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the finding is a non-Nim shell gate with no {.axiomDebt.} pragma site, so the registry entry itself is the binding medium. Trace: this entry's resolution (UNRESOLVED) and source (theater_audit); external: tools/ci/verify_trusted_writer_set.sh:100-115 and the measured job-level grants in .github/workflows/admission-gate-v2.yml, release-ship.yml, dependabot-auto-merge.yml."
     }
   ]
 }
