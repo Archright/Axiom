@@ -39,6 +39,8 @@ type
     psCounterexample
     psUnknown
     psNotEncodable
+    psKernelAccepted  ## Lean kernel accepted the sealed obligation (KAA).
+                      ## Distinct from psUnsat: no SMT solver produced it.
 
   ClaimContext* = object
     subjectId*: string
@@ -79,7 +81,7 @@ func deriveAssurance*(ctx: ClaimContext): AssuranceProfile {.raises: [].} =
     translationTrust: ctx.supported,
     solverEvidence: ctx.proofSignal in {psUnsat, psCounterexample},
     replayability: false,        # T0/Replay is Phase 6
-    kernelChecking: false        # T2/kernel is a later phase
+    kernelChecking: ctx.proofSignal == psKernelAccepted
   )
 
 func deriveClaim*(ctx: ClaimContext; policy: AssurancePolicy): VerifiedClaim {.raises: [].} =
@@ -102,7 +104,7 @@ func deriveClaim*(ctx: ClaimContext; policy: AssurancePolicy): VerifiedClaim {.r
     result.outcome = clUnknown               # valid-but-insufficient -> inconclusive
   else:
     case ctx.proofSignal
-    of psUnsat:
+    of psUnsat, psKernelAccepted:
       result.outcome = clProved
     of psCounterexample:
       result.outcome = clDisproved

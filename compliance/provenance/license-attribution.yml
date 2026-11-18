@@ -148,6 +148,7 @@ attributions:
     evidence: "this file IS the attribution record — it quotes the detected license atoms and copyright strings it accounts for, so the scanner detects the quoted strings in the file itself (self-referential by construction; the quoted set is exactly the entry set)"
     licenses:
       - "Apache-2.0"
+      - "BSD-3-Clause"
       - "CC-BY-4.0"
       - "CC-BY-NC-4.0"
       - "CC-BY-NC-ND-3.0"
@@ -162,6 +163,7 @@ attributions:
     copyrights:
       - "Copyright in Third-Party Materials"
       - "Copyright (c) 2017 Nim Authors"
+      - "Copyright (c) 2019-2025 Status Research & Development GmbH"
       - "concurrency group - YAML"
       - "INCLUDE SIDE-EFFECT"
       - "Trade-offs Slight"
@@ -677,3 +679,12 @@ attributions:
     evidence: "ref10-heritage public-domain disclaimer inside the orlp/ed25519 tree (B1 §1-A: src/*.{c,h} zlib; sha512.c carries the ref10 notice)"
     licenses:
       - "LicenseRef-scancode-public-domain-disclaimer"
+  - file: "tests/unit/test_jrpc_errclass_binding.nim"
+    classification: "upstream-header"
+    evidence: "verbatim json_rpc/errors.nim module header embedded inside the THIRD_PARTY-declared GoldenSubject fixture (subject @debf33c, MIT OR Apache-2.0); the bsd-3-clause atom is the scanner's decomposition of the same Apache-2.0 header phrasing"
+    licenses:
+      - "BSD-3-Clause"
+      - "Apache-2.0"
+      - "MIT"
+    copyrights:
+      - "Copyright (c) 2019-2025 Status Research & Development GmbH"

@@ -29,10 +29,11 @@
 ##      fail-closed): DISPROVED ⟺ machineVerdict=="FAIL" (the machine
 ##      tuple's run verdict $-spelling — the §2.2 vrFail observation point)
 ##      ∧ clDisproved ∧ quartetComplete (the ce-replay counterexample
-##      quartet lines); every other combination → UNKNOWN. NOT_DISPROVED is
-##      UNREACHABLE — §2.1's vdVerified conjunct is never serialized into
-##      wave/runResult/unitEvidence, so a bare clProved can never project a
-##      positive proposition state (fail-closed UNKNOWN).
+##      quartet lines); NOT_DISPROVED ⟸ vrPass ∧ clProved ∧ the serialized
+##      §2.1 vdVerified conjunct (verificationDecision=="vdVerified" — the
+##      engine writes the spelling only from the sealed CanonicalLeanEvidence
+##      carrier, DEBT#531 closure); every other combination → UNKNOWN
+##      (fail-closed — a bare clProved never projects a positive state).
 ##   5. Per-unit schema: the report display block is the v3 container
 ##      (schemaVersion + units array), rendered one line per unit; the unit
 ##      block binds targetSymbol + adoptedSpecRef{specId, specRelPath}.
@@ -93,6 +94,7 @@ proc mkInput(
   groundsRawDigest: string = "absent";
   validationReason: string = "";
   claimOutcome: string = "";
+  verificationDecision: string = "";
   targetSymbol: string = "";
   specId: string = "";
   specRelPath: string = ""
@@ -100,8 +102,12 @@ proc mkInput(
   # machineVerdict = the machine tuple's run verdict $-spelling — the §2.2
   # vrFail observation point ("FAIL", run_accounting.nim); quartetComplete =
   # the unit's observed ce-replay quartet record (the structured
-  # icCounterexample conjunct). Both feed propositionVerdictOf.
-  let machineTuple = %*{"verdict": machineVerdict, "recordComplete": true}
+  # icCounterexample conjunct); verificationDecision = the machine tuple's
+  # unit-level decision spelling (§2.1's vdVerified conjunct — the engine
+  # serializes it only from the sealed CanonicalLeanEvidence carrier). All
+  # three feed propositionVerdictOf.
+  let machineTuple = %*{"verdict": machineVerdict, "recordComplete": true,
+    "verificationDecision": verificationDecision}
   for i in 0 ..< machineStates.len:
     machineTuple["m" & $i] = %machineStates[i]
   BugVerdictDisplayInput(
@@ -320,35 +326,67 @@ suite "E1-only confirmation — BUG_FOUND > BUG_SUSPECTED > Unknown":
                 check d.uncertaintyKinds.len >= 1
                 check d.uncertaintyKinds == @["upstream-spec"]
 
-  test "propositionVerdictOf — the §2.2 conjunction, fail-closed (vdVerified never serialized)":
+  test "propositionVerdictOf — the §2.2 conjunction, fail-closed (3-conjunct positive + negative)":
     # DISPROVED ⟺ machineVerdict=="FAIL" (the machine tuple's run verdict
     # $-spelling — the §2.2 observation point) ∧ claimOutcome=="clDisproved"
     # ∧ quartetComplete (the ce-replay counterexample quartet lines)
-    check propositionVerdictOf("clDisproved", "FAIL", true) == "DISPROVED"
-    # NOT_DISPROVED is unreachable in the display layer: §2.1's vdVerified
-    # conjunct is never serialized into wave/runResult/unitEvidence, so
-    # clProved can never project a positive proposition state — with the
-    # machine half (even PASS) or bare it stays fail-closed UNKNOWN until
-    # the serialization gap closes (glossary §2.2 note; follow-up)
-    check propositionVerdictOf("clProved", "PASS", true) == "UNKNOWN"
-    check propositionVerdictOf("clProved", "FAIL", true) == "UNKNOWN"
+    check propositionVerdictOf("clDisproved", "FAIL", true, "") == "DISPROVED"
+    # NOT_DISPROVED ⟺ vrPass ("PASS") ∧ clProved ∧ verificationDecision ==
+    # "vdVerified" (the §2.1 conjunct, DEBT#531 — the engine serializes the
+    # spelling only from the sealed CanonicalLeanEvidence carrier; the
+    # display consumes it, never re-derives it). quartetComplete is NOT a
+    # positive conjunct (glossary §2.1: negative-only requirement).
+    check propositionVerdictOf("clProved", "PASS", true,
+      "vdVerified") == "NOT_DISPROVED"
+    check propositionVerdictOf("clProved", "PASS", false,
+      "vdVerified") == "NOT_DISPROVED"
+    # each conjunct false alone → UNKNOWN (fail-closed, never a positive):
+    # vdVerified absent (the pre-closure state — a bare clProved never
+    # projects a positive state)
+    check propositionVerdictOf("clProved", "PASS", true, "") == "UNKNOWN"
+    # a non-verified decision spelling (vdCandidate / vdPolicyRejected)
+    check propositionVerdictOf("clProved", "PASS", true, "vdCandidate") == "UNKNOWN"
+    check propositionVerdictOf("clProved", "PASS", true, "vdPolicyRejected") == "UNKNOWN"
+    # run verdict not vrPass (even a disprover's FAIL)
+    check propositionVerdictOf("clProved", "FAIL", true, "vdVerified") == "UNKNOWN"
+    # claim not clProved
+    check propositionVerdictOf("clDisproved", "PASS", true, "vdVerified") == "UNKNOWN"
+    check propositionVerdictOf("", "PASS", true, "vdVerified") == "UNKNOWN"
+    # an unrecognized decision spelling never completes the conjunction
+    check propositionVerdictOf("clProved", "PASS", true, "vdVerifieD") == "UNKNOWN"
+    check propositionVerdictOf("clProved", "PASS", true, "certLeanVerified") == "UNKNOWN"
+    # a certificate-status string can NEVER mint the conjunct (§2.1)
+    # clProved without the machine half (any run verdict) stays fail-closed
+    check propositionVerdictOf("clProved", "FAIL", true, "") == "UNKNOWN"
     # quartet missing → the structured icCounterexample record is absent →
     # UNKNOWN even with vrFail ∧ clDisproved
-    check propositionVerdictOf("clDisproved", "FAIL", false) == "UNKNOWN"
+    check propositionVerdictOf("clDisproved", "FAIL", false, "") == "UNKNOWN"
     # machine verdict inconclusive or absent → UNKNOWN
-    check propositionVerdictOf("clDisproved", "INCONCLUSIVE", true) == "UNKNOWN"
-    check propositionVerdictOf("clDisproved", "", true) == "UNKNOWN"
+    check propositionVerdictOf("clDisproved", "INCONCLUSIVE", true, "") == "UNKNOWN"
+    check propositionVerdictOf("clDisproved", "", true, "") == "UNKNOWN"
     # absent/unrecognized claim outcomes never project a positive state
-    check propositionVerdictOf("", "FAIL", true) == "UNKNOWN"
+    check propositionVerdictOf("", "FAIL", true, "") == "UNKNOWN"
     for claim in ["clUnknown", "clUnsupported", "clNoSpecification",
                   "clInvalidEvidence", "clDependencyBlocked",
                   "clTotallyUnrecognized", "DISPROVED", "clDisproveD"]:
-      check propositionVerdictOf(claim, "FAIL", true) == "UNKNOWN"
+      check propositionVerdictOf(claim, "FAIL", true, "") == "UNKNOWN"
     let unknownD = displayOf(mkInput(aValid = true,
       status = "recordedDisclaiming", claimOutcome = "clUnknown",
       machineEstablished = true, quartetComplete = true))
     check unknownD.propositionVerdict == "UNKNOWN"
     check unknownD.bugAttribution == "Unknown"
+    # the full display path: all three conjuncts through displayBugVerdict
+    # (machineTuple-carried decision spelling) → NOT_DISPROVED
+    let notDisprovedD = displayOf(mkInput(aValid = true,
+      status = "recordedBinding", claimOutcome = "clProved",
+      machineVerdict = "PASS", quartetComplete = true,
+      verificationDecision = "vdVerified"))
+    check notDisprovedD.propositionVerdict == "NOT_DISPROVED"
+    # the positive proposition state still grants no bug attribution (only
+    # DISPROVED can — §2.4/§2.4a) and no canonical rule label (the §2.4d
+    # machine half is the violation conjunction, not the positive one)
+    check notDisprovedD.bugAttribution == "Unknown"
+    check notDisprovedD.ruleJudgment == ""
 
   test "degrade — a status outside the closed set never suspects":
     let d = displayOf(mkInput(aValid = true, status = "someUnknownStatus",
@@ -1115,7 +1153,7 @@ suite "golden — SPEC-LIBP2P-BV-SLICE live display projection":
     check unit0{"displayInputDigestPurpose"}.getStr() ==
       "provenance-trace-only — not a verdict legitimacy proof"
 
-  test "the bv unit with a clProved claim → block with UNKNOWN / Unknown (NOT_DISPROVED unobservable)":
+  test "the bv unit with a clProved claim but no serialized decision → UNKNOWN (fail-closed)":
     let entryOpt = findEntry(bvSpecRelPath)
     check entryOpt.isSome
     var unitEvidence = bvUnitEvidence()
@@ -1125,14 +1163,58 @@ suite "golden — SPEC-LIBP2P-BV-SLICE live display projection":
       pinnedProbe(bvSpecRelPath), entryOpt.get())
     check node.isNil.not
     let unit0 = node{"units"}[0]
-    # NOT_DISPROVED is unreachable in the display layer: §2.1's vdVerified
-    # conjunct is never serialized into wave/runResult/unitEvidence, so a
-    # bare clProved can never complete the NOT_DISPROVED conjunction —
-    # fail-closed UNKNOWN (glossary §2.2 note; the serialization gap is a
-    # follow-up)
+    # clProved alone never completes the NOT_DISPROVED conjunction: the §2.1
+    # vdVerified conjunct must be SERIALIZED into unitEvidence (the sealed
+    # CanonicalLeanEvidence-backed spelling) AND the run must be vrPass —
+    # here the run is vrFail and no decision spelling is present, so the
+    # projection stays fail-closed UNKNOWN (glossary §2.2)
     check unit0{"propositionVerdict"}.getStr() == "UNKNOWN"
     check unit0{"bugAttribution"}.getStr() == "Unknown"
     check unit0{"ruleJudgment"}.getStr() == ""
+
+  proc bvPassRunResult(): CanonicalRunResult =
+    ## A vrPass run result for the bv unit — the row verified fresh under a
+    ## REQUIRED classification (VDA evaluateRunOutcome then decides PASS).
+    let wave = %*{"nodeReports": @[
+      %*{"nodeId": bvUnitKey, "status": "verified", "cacheHit": false,
+         "dependencyDepth": 0}]}
+    let elig = %*{bvUnitKey: "elProofCandidate"}
+    var crr = buildCanonicalRunResult(@[wave], elig, @[@[bvUnitKey]])
+    crr.runOutcome = evaluateRunOutcome(crr.runAccounting,
+      NoObligationProvenance(universeEnumerated: true,
+                             source: "canonical_ogr_eligibility"),
+      false)
+    crr
+
+  test "the bv unit with clProved + the serialized vdVerified conjunct → NOT_DISPROVED (DEBT#531 closure)":
+    let entryOpt = findEntry(bvSpecRelPath)
+    check entryOpt.isSome
+    var unitEvidence = bvUnitEvidence()
+    unitEvidence[bvUnitKey]["claimOutcome"] = %"clProved"
+    unitEvidence[bvUnitKey]["verificationDecision"] = %"vdVerified"
+    let crr = bvPassRunResult()
+    check crr.runOutcome.verdict == vrPass
+    let node = buildBugVerdictDisplayJson(crr, unitEvidence,
+      pinnedProbe(bvSpecRelPath), entryOpt.get())
+    check node.isNil.not
+    let unit0 = node{"units"}[0]
+    # the full §2.1 conjunction observed end-to-end through the per-unit
+    # builder: vrPass ($vrPass "PASS") ∧ clProved ∧ the serialized vdVerified
+    # conjunct → the positive proposition state is REACHABLE (the
+    # serialization gap closed — the engine projects the sealed CLE carrier
+    # into unitEvidence/machineTuple/rollup; this display never re-derives it)
+    check unit0{"propositionVerdict"}.getStr() == "NOT_DISPROVED"
+    # the positive state still grants no bug attribution (only a DISPROVED
+    # proposition can attribute — §2.4/§2.4a) and no canonical rule label
+    # (the §2.4d machine half is the violation conjunction)
+    check unit0{"bugAttribution"}.getStr() == "Unknown"
+    check unit0{"ruleJudgment"}.getStr() == ""
+    # the consumed decision spelling rides the co-displayed machine states
+    var decisionCoDisplayed = false
+    for s in unit0{"machineStates"}.elems:
+      if s.getStr("") == "vdVerified":
+        decisionCoDisplayed = true
+    check decisionCoDisplayed
 
   # -------------------------------------------------------------------------
   # WP-B — the findingEvidence state-document root evidence carrier
@@ -1296,11 +1378,11 @@ suite "proposition capability rollup — two-axis display projection":
       PropositionRollupDisplay(id: "p4",
         capabilityStatus: propositionCapabilityCapableSpelling,
         capabilityReason: "", attempted: true,
-        verdict: propositionVerdictOf("clProved", "PASS", true)),
+        verdict: propositionVerdictOf("clProved", "PASS", true, "vdVerified")),
       PropositionRollupDisplay(id: "p5",
         capabilityStatus: propositionCapabilityCapableSpelling,
         capabilityReason: "", attempted: true,
-        verdict: propositionVerdictOf("clDisproved", "FAIL", true))]
+        verdict: propositionVerdictOf("clDisproved", "FAIL", true, ""))]
     for entry in propositionsToJson(rollup):
       check entry{"verification"}{"verdict"}.getStr("") in [
         propositionDisprovedSpelling, propositionNotDisprovedSpelling,

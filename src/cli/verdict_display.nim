@@ -91,6 +91,15 @@ const
   propositionNotDisprovedSpelling* = "NOT_DISPROVED"
   propositionUnknownSpelling* = "UNKNOWN"
 
+  ## The §2.1 vdVerified conjunct's serialized spelling — the unit-level
+  ## verification decision the engine serializes into unitEvidence ONLY from
+  ## the sealed CanonicalLeanEvidence carrier (which the IR pipeline sets
+  ## exclusively on the VDA-evaluated vdVerified ∧ sealed success branch).
+  ## CONSUMPTION ONLY: this layer compares the observed spelling; it never
+  ## mints one (a certificate-status string such as certLeanVerified can
+  ## never yield this value here) — glossary §2.1, DEBT#531 closure.
+  verificationDecisionVerifiedSpelling* = "vdVerified"
+
   ## Per-proposition capability rollup spellings (byo_agent_proposition_contract
   ## §3 two-axis state model). The rollup entries are DISPLAY STRINGS projected
   ## from decisions already made at intake/dispatch — this module never decides
@@ -136,7 +145,7 @@ type
     ## machine spellings arrive as parameters (verdict enums are never named
     ## here), the ownership block and grounds record arrive as parsed JSON.
     machineEstablished*: bool    ## §2.4d unit-scoped conjunction result (display builder) — RULE-axis premise only
-    machineTuple*: JsonNode      ## machine spellings actually consumed (e.g. verdict/basis/recordComplete) — digest input
+    machineTuple*: JsonNode      ## machine spellings actually consumed (verdict/basis/recordComplete + the unit-level verificationDecision — §2.1's vdVerified conjunct) — digest input
     ruleId*: string              ## spec overlay ruleId (non-canonical descriptive text)
     ownership*: JsonNode         ## parsed claimOwnership object, or {"owner":"unrecorded"} on parse failure
     groundsRefs*: seq[string]    ## "ref#recordDigest" entries rendered by the caller
@@ -201,7 +210,8 @@ func groundsRefEntries*(grounds: JsonNode): seq[string] =
         result.add(r.getStr() & "#" & digest)
 
 func propositionVerdictOf*(claimOutcome: string; machineVerdict: string;
-    quartetComplete: bool): string {.raises: [].} =
+    quartetComplete: bool; verificationDecision: string): string {.
+    raises: [].} =
   ## The display-layer proposition verdict — the §2.2 conjunction observed at
   ## its operational points, projected CONSERVATIVELY (fail-closed):
   ## DISPROVED ⟺ machineVerdict == "FAIL" (the machine tuple's run verdict
@@ -210,19 +220,28 @@ func propositionVerdictOf*(claimOutcome: string; machineVerdict: string;
   ## structured icCounterexample record). Every other combination yields
   ## UNKNOWN — never a positive state.
   ##
-  ## NOT_DISPROVED is UNREACHABLE here (fail-closed): §2.1's vdVerified
-  ## conjunct is never serialized into wave/runResult/unitEvidence, so the
-  ## display layer can never observe it — a bare clProved (with or without
-  ## the machine half) must not project a positive proposition state. Every
-  ## non-conjunction input — the §2.3 remaining states, an absent outcome,
-  ## and any unrecognized spelling — degrades to UNKNOWN. The serialization
-  ## gap is a follow-up; until it closes, NOT_DISPROVED stays an
-  ## unobservable state (glossary §2.2 note). rowStatus is NEVER a fallback
-  ## for any conjunct (§2.4d RULE-axis premise only — the equivalence does
-  ## not hold in either direction).
+  ## NOT_DISPROVED ⟺ machineVerdict == "PASS" ($vrPass) ∧ claimOutcome ==
+  ## "clProved" ∧ verificationDecision == "vdVerified" — the §2.1 positive
+  ## conjunction (NO_BUG_PROVED = vrPass ∧ vdVerified ∧ clProved, glossary
+  ## §2.1/§2.2): the vdVerified conjunct arrives as the unit's SERIALIZED
+  ## verification-decision spelling (unitEvidence["verificationDecision"],
+  ## written by the engine only from the sealed CanonicalLeanEvidence carrier
+  ## — the VDA single-producer decision's serialization). The quartet is NOT
+  ## a positive conjunct (glossary §2.1: quartetComplete is a negative-only
+  ## requirement). All three conjuncts are CONSUMED spellings here — this
+  ## pure projection never re-derives a verdict, and a bare clProved (any
+  ## missing conjunct — an absent decision, vdCandidate/vdPolicyRejected, a
+  ## non-PASS run, an unrecognized spelling) stays fail-closed UNKNOWN. The
+  ## §2.3 remaining states, an absent outcome, and any unrecognized spelling
+  ## degrade to UNKNOWN. rowStatus is NEVER a fallback for any conjunct
+  ## (§2.4d RULE-axis premise only — the equivalence does not hold in either
+  ## direction).
   if machineVerdict == "FAIL" and claimOutcome == "clDisproved" and
       quartetComplete:
     propositionDisprovedSpelling
+  elif machineVerdict == "PASS" and claimOutcome == "clProved" and
+      verificationDecision == verificationDecisionVerifiedSpelling:
+    propositionNotDisprovedSpelling
   else:
     propositionUnknownSpelling
 
@@ -370,12 +389,18 @@ func displayBugVerdict*(input: BugVerdictDisplayInput): BugVerdictDisplay {.rais
   # ── proposition + source status (display layer) ──
   # machineVerdict is the machine tuple's run verdict spelling ($vr* — the
   # §2.2 vrFail observation point); quartetComplete rides the input's
-  # observed ce-replay quartet record.
+  # observed ce-replay quartet record; verificationDecision is the machine
+  # tuple's unit-level decision spelling (§2.1's vdVerified conjunct — the
+  # serialized CanonicalLeanEvidence-backed decision, the vrPass observation's
+  # unit-level sibling).
   let machineVerdict =
     if input.machineTuple.isNil: ""
     else: input.machineTuple{"verdict"}.getStr("")
+  let verificationDecision =
+    if input.machineTuple.isNil: ""
+    else: input.machineTuple{"verificationDecision"}.getStr("")
   let propositionVerdict = propositionVerdictOf(input.claimOutcome,
-    machineVerdict, input.quartetComplete)
+    machineVerdict, input.quartetComplete, verificationDecision)
   let sourceStatus =
     if input.assessment.requirementSourceStatus.len > 0:
       input.assessment.requirementSourceStatus

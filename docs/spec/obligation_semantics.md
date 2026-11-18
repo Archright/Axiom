@@ -3,6 +3,7 @@
 > **Status**: Normative SSOT — P0 규범 문서  
 > **Created**: 2026-08-18  
 > **Phase**: P0 (규범 정의, 코드 미구현)  
+> **Axiom v5.1 (2026-11-18)**: §2.1b — VDA receipt 9-field contract + protected-ref trust boundary (C 개정).
 > **Related**: [VKD — Verified Kernel Density](./verification_density.md), [Two-Phase Verification Pipeline](./two_phase_verification.md), [Query No-Obligation Debt Analysis](./query_no_obligations_debt.md), [Certificate / Asset Lifecycle Contracts](./cert_lifecycle_contracts.md)  
 > **AGENTS.md 참조**: §0.1 (프로젝트 목적), §0.9 (Theater 금지), §0.12 (Product Contract), §4 (Guardian)
 
@@ -95,7 +96,7 @@ ObligationId(bound) = SHA-256(
 - **게이트 (약화 없음)**: 캐리어 모드에서 `buildSubjectBinding`은 (1) EA leg가 캐리어 이름이 아닌 원본 심볼로 측정되고 (2) `eaAgree`이며 (3) `ea2` 슬롯이 비어 있음을 강제한다. 이 모드는 도입 전에는 항상 `""`(합성 2-leg 게이트가 기각)였으므로 페이로드 구성의 추가는 기존에 봉인된 어떤 정체성도 무효화하지 않는다.
 - **모드 비혼용**: `synthesisDerivationDigest`가 비어 있지 않은데 `claimCarrierSingleOrigin`이 거짓이면 합성 2-leg 모드로 해석된다 — 빈 `ea2`는 `""`(fail-closed). 반대로 `claimCarrierSingleOrigin = true`에서 채워진 `ea2*` 슬롯도 `""`다. 세 모드(단일 심볼·합성·단일-오리진)는 동일 성분이라도 서로 다른 정체성을 가진다(`tests/unit/obligation_subject_binding_test.nim` Suite 7).
 - **웨이브 면 귀속명**: `census.eligible`의 `RuntimeAxiomEntry.name`은 **피검사 심볼**(규칙 S의 적용 대상 노드명)로 설정된다 — loop_driver stage2가 IR 파이프라인 결과를 노드의 bare function name으로 귀속하기 때문이다 (`loop_driver.nim` stage2). 청구 정체성은 다른 모든 곳에서 합성물명을 유지한다: census 레코드명(중복 제거·선택), `funcDef.name`(def/theorem/obligation id), 그리고 봉인된 `CanonicalLeanEvidence`의 `obligationId`. 인증서의 `functionName` 필드는 노드 선택 인덱스이며, 실제 청구 주체는 인증서에 바운드된 `leanProposition`(합성물 정리 전문)과 `obligationId`로 식별된다 — §8의 "decodedLength 단독 후조건 아님" 비청구는 인증서 열람으로 검증 가능하다.
-- **result-free 후조건 렌더**: 합성물의 후조건은 β-splice로 result-free이므로 목표에 def 적용이 나타나지 않는다. 렌더러는 proposition이 def 이름을 식별자 토큰으로 참조할 때만 `unfold`를 출력한다 (`containsIdentToken`) — 목표에 없는 상수의 `unfold`는 전술 실패(커널 REJECT)이기 때문이다. 정리 명제 자체는 불변이며, def는 아티팩트에 동일하게 렌더된다.
+- **Lean 후조건 렌더 (v5.1)**: SMT/의무 후조건은 β-splice로 result-free이지만, canonical Lean 정리는 `leanPostConditions`(un-spliced `result` 형태)를 우선 사용해 `<def> <params>` 적용을 방출한다. 렌더러는 proposition이 def 이름을 식별자 토큰으로 참조할 때 `unfold`를 출력하고, 그 뒤 `omega`가 분기를 계산한다. 두 형태는 `unfold`가 증명하는 definitional equality로 동일하며, Lean 소스의 identity는 `leanSourceHash`로 별도 결속된다. Phase 0.5 실측: β-spliced 인라인 형태는 `omega`가 opaque atom으로 추상화해 13/13 실패(`sorryAx`), def 적용 형태는 13/13 성공(`{propext, Classical.choice, Quot.sound}`).
 
 **구성 요소별 측정 지점**:
 
@@ -116,6 +117,71 @@ ObligationId(bound) = SHA-256(
 **평가 구현 바인딩**: `toolchain` fingerprint(`computeBundleDigest`)는 lowering 구현 — `pnode_to_canon.nim`, `ast_to_ir.nim`, IR→Lean 렌더러, `proofs/IR/Denotation.lean` — 의 콘텐츠 digest(`evaluationImplementationDigest`, `identity.nim`)를 반드시 포함한다. 이는 의미론을 조용히 넓히는 "수정"이 이전 증거를 재사용할 수 없게 한다. 실행 id는 `computeSemanticBundleFingerprintBound`을 통해 동일한 digest를 소화한다. subject의 checks/div 의미 프로파일은 별도 라벨이 아니라 이 의미-정의 모듈들의 콘텐츠 digest로 바인딩된다.
 
 **섀도 모델 부착 거부**: `newCanonicalLeanEvidenceBound`는 (1) `binding.irDigest`를 실제 funcDef로부터 재측정하고, (2) id를 바인딩으로부터 재계산하여 일치를 강제하며, (3) `binding.leanSourceHash`가 실제 증거 소스와, (4) `binding.toolchainFingerprint`가 실제 측정 fingerprint와 일치함을 요구한다. 임의 단계의 불일치는 err이고 KAA는 존재하지 않는 것과 같다. 손으로 쓴 Lean 정의·stdlib 대체물·LLM 생성 정의는 렌더링된 소스와 다른 `leanSource` 해시를 가지므로, 주어진 bound id 아래 봉인될 수 없다.
+
+#### 2.1a-4 Constructed-model binding mode (`bbmConstructedModel`, Axiom v5.1)
+
+피검험체 AST가 인증 추출 부분집합 밖이면(예: `ckCommand` 템플릿 확장) EA leg를 측정할 수 없다. 이 경우 허용되는 유일한 대안은 **커밋된 매핑에서 구성한 모델(constructed model)** 이며, 이는 추출(extraction)이 아니다 — 추출로 표현해서는 안 된다.
+
+**bound identity 추가 성분** (additive; 기존에 봉인된 어떤 id도 변경하지 않는다):
+
+| 필드 | 정의 |
+|---|---|
+| `constructedModelSourceDigest` | 채택된 스펙 내용의 canonical identity(**SpecID**) — 로드 시 `canonicalSpecIR`에서 재계산되어 `adoption.adoptedSpecHash`와 byte-equal인 값. 파일 바이트가 아니라 canonical 내용 identity이므로 로더 경로와 capability-adapter 경로가 같은 값을 본다 |
+| `constructedModelGeneratorDigest` | canonical generator record(`ruleId`, `ruleVersion`, generator build identity)의 sha256 |
+| `constructedModelAdoptionDigest` | 채택 레코드(`specId`, `adoptedSpecHash`, 채택 commit, 승인자)의 sha256 |
+| model body | 기존 `irDigest` = `sha256Hex(serializeIRFuncDef(funcDef))` — binding 시 재측정 |
+| `synthesisDerivationDigest` | 인스턴스 derivation rule(rule id + instance ordinal) |
+
+**모드 규칙 (전부 `""`로 fail-closed)**:
+
+- `constructedModel == true`: 세 신규 digest + `synthesisDerivationDigest`가 canonical이어야 한다. EA 슬롯(`eaNimDigest`, `eaLeanDigest`, `eaIrcheckBinaryDigest`, `ea2*`)은 **반드시 비어 있어야** 한다 — 채워진 EA leg는 조작된 측정이며 거부한다.
+- `constructedModel == false`: 모든 constructed 필드가 비어 있어야 한다. 하나라도 채워져 있으면 malformed다.
+- 이 모드의 base component set은 EA를 요구하지 않는다. tuple/treeMerkle/module/git/pnode/ir/completeness/leanSource/toolchain을 요구한다.
+- binding 시점에 `sha256Hex(serializeIRFuncDef(funcDef))`를 재측정해 `constructedModelBodyDigest`와 비교한다. 불일치 → `""`. 이 비교는 seal 대상이 synthesis가 구성한 모델과 byte-identical함을 보장한다. **채택 스펙에서 모델을 재유도하는 독립 검증은 VDA/P7의 몫**이며, binding site가 스펙 해석을 두 번째로 구현하지 않는다(단일 근원).
+- Lean 정리는 un-spliced `result` 형태(`leanPostConditions`)로 렌더링해 `unfold`를 방출한다. 의무 claim은 β-spliced로 유지된다. `unfold`는 두 형태의 definitional equality를 증명하며, `leanSourceHash`가 정리 바이트를 결속한다.
+
+**Non-claim**: constructed model ⊨ spec 증명은 모델이 피검험체의 충실한 번역임을 주장하지 않는다. 그 주장은 별도의 유한 관찰 명제 `∀x∈I13, Observe(Source,x)=Expected(Model,x)`다(§1.1).
+
+### 2.1b VDA receipt contract — nine confirmation fields (Axiom v5.1)
+
+`verification_decision_authority`(VDA)가 `vdVerified`를 생산하려면 receipt가 다음 **9개 필드를 수용된 산출물에서 측정·확인**해야 한다. 생산자의 주장을 그대로 복사하는 것은 확인이 아니다.
+
+| # | 필드 | 확인 내용 |
+|---|---|---|
+| 1 | subject identity | repository·commit·대상 module·module blob sha256 (주체 신원) |
+| 2 | model canonical digest | 채택 모델의 canonical digest / 채택된 명제 내용의 digest |
+| 3 | generator + adoption digest | 모델 생성기 identity·version + 채택 레코드 digest |
+| 4 | theorem identity | 정리 이름 + 정리 명제의 canonical digest |
+| 5 | Lean source hash | 커널에 제출된 정확한 Lean 소스의 sha256 |
+| 6 | toolchain | `lean-toolchain` 파일 hash **및** Lean version (둘 다) |
+| 7 | dependency manifest | `lake-manifest.json`의 hash |
+| 8 | transitive axiom set | `#print axioms`로 측정한 전이 공리 폐포의 정확한 집합 |
+| 9 | receipt identity | 위 1–8을 digest로 결속하는 receipt id |
+
+**규칙 (fail-closed)**:
+
+- 어느 하나라도 결측·형식 위반·불일치면 `vdVerified`는 생산되지 않는다.
+- `receipt identity`는 1–8을 digest로 결속해야 한다 — 결속하지 않는 레코드는 receipt가 아니다.
+- transitive axiom set은 **실측 폐포**다. allowlist 일치는 실측 집합을 대체하지 않는다.
+- toolchain은 `lean-toolchain` hash와 version을 별도로 확인한다 — version 문자열만으로는 pin이 아니다.
+- dependency manifest는 `lake-manifest.json` hash로 확인한다 — 이름·버전 라벨만으로는 부족하다.
+
+**Trust boundary (HARD RULE)**: 이 9개 필드를 검사하는 **VDA·`deriveClaim`·`evaluateRunOutcome` 코드의 소스·빌드 identity는 보호된 ref**(canonical main / protected default branch)에서 해석되어야 하며, **PR head에서 온 코드여서는 안 된다**. PR head의 코드는 자신의 receipt를 승인할 수 없다 — PR은 스스로를 approve할 수 없다. 보호된 ref identity가 확립되지 않으면 `vdVerified`는 생산되지 않는다.
+
+**Hash identity ≠ theorem truth**: receipt identity의 일치는 receipt 바이트의 동일성만 말한다. theorem identity·Lean source hash·toolchain·axiom set이 결속되지 않은 receipt identity는 정리를 증명하지 않는다.
+
+**구현 매핑 (확정)**: `KernelAcceptanceAttestation`은 커널 수용의 유일 권위로 유지하며 필드를 추가하지 않는다. VDA receipt는 KAA + certificate `axiomsUsed` + binding을 결속하는 **투영 레코드**다.
+
+- `inputIdentity` ← canonical `subject{repo,commit,module,blobSha256}|claim{specId,adoptedSpecHash}|irDigest`
+- `artifactIdentity` ← canonical `leanSourceHash|modelDigest`
+- `executionContract` ← canonical `generatorDigest|adoptionDigest|contractId`
+- `toolchainFingerprint` ← canonical `leanToolchainHash|leanVersion|leanBinaryDigest|lakeManifestHash`
+- `theoremIdentity` ← canonical `theoremName|propositionDigest`
+- axiom set ← certificate `axiomsUsed` (실측 transitive 폐포)
+- `observedAt` ← KAA
+- `receipt identity` ← 1–8의 canonical projection에 대한 sha256
+
+**보호 ref 강제 지점**: VDA 진입점은 run의 `executionIdentity.verifierBuildId`를 canonical main에서 유도한 build id와 비교하고, 불일치면 `vdVerified`를 생산하지 않는다. PR head build id는 자기 receipt를 승인할 수 없다.
 
 ### 2.2 Semantic Target
 

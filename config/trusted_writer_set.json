@@ -98,7 +98,7 @@
     "src/cli/axiom_engine.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "9d900b77a5acdc230f9c3ff0a920aa6b123d5071"
+      "sha": "02debd6c36a60caea8f20c285a728bbf623e180e"
     },
     "src/cli/axiom_status.nim": {
       "mode": "100644",
@@ -153,7 +153,7 @@
     "src/cli/cli_surface_generated.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "1f1a69e269a9149e35027b3b4a509ace4472e755"
+      "sha": "83ab8850bfcfc89585807019df71a7998ba8e040"
     },
     "src/cli/cli_types.nim": {
       "mode": "100644",
@@ -208,7 +208,7 @@
     "src/cli/external_subject_registry.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "fad801b61be6f58f89c40a9c4838572e5bb31a21"
+      "sha": "c86730c5a97dac1098a66d1ce2ece04833d5e908"
     },
     "src/cli/frontier_selection.nim": {
       "mode": "100644",
@@ -368,7 +368,7 @@
     "src/cli/verdict_display.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "87bd1428a2facd3cd1068caf22e0fa29391fad5c"
+      "sha": "e6ba9aad9513f3893ef717674b3d49bf1e39b7cd"
     },
     "src/cli/verify_cli.nim": {
       "mode": "100644",
@@ -2048,7 +2048,7 @@
     "src/core/trusted/axiom_ir.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "9a7fb77f4c51b6bffba0c682057521880f2086b5"
+      "sha": "1edc17b93438359c4981557a98a0a3312440aa1a"
     },
     "src/core/trusted/axiom_ir_helpers.nim": {
       "mode": "100644",
@@ -2128,7 +2128,7 @@
     "src/core/trusted/claim_authority.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "57f4348fd2a12d701efa6b9f22198aa130b305b4"
+      "sha": "f57d92da9a427fac20ad0474563291816c38c374"
     },
     "src/core/trusted/claim_projection.nim": {
       "mode": "100644",
@@ -3598,7 +3598,7 @@
     "src/verification/batch_uap/ir_pipeline_runner.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "3bea0654b76eaf6a16c5c5d2af1ae8991ce8c7d8"
+      "sha": "89d563845d3f1c3e636e35157507ffc39852137d"
     },
     "src/verification/batch_uap/loop_depth_scheduler.nim": {
       "mode": "100644",
@@ -3758,7 +3758,7 @@
     "src/verification/counterexample_replay.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "c0fb434db403dc99f76900e544d2a3c6261f35e5"
+      "sha": "6a8bae91a92962edb29d6cb4f14a1dfa226f86a5"
     },
     "src/verification/counterexample_validator.nim": {
       "mode": "100644",
@@ -3923,7 +3923,7 @@
     "src/verification/ledger_side_ref.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "4b9ebab747ae2e802ebe8c297a3dfdf8b706974c"
+      "sha": "3d3568788ec70c20648fb285d62922dd120d2f5d"
     },
     "src/verification/llbc_to_canonical.nim": {
       "mode": "100644",
@@ -3958,7 +3958,7 @@
     "src/verification/obligation/canonical_verification.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "446172443cdd1ef313b1ae6b3145cb3437c19acf"
+      "sha": "042a03dbc773e19cce96c5a752e6a641122a1a30"
     },
     "src/verification/obligation/golden_fixture_ir.nim": {
       "mode": "100644",
@@ -4013,7 +4013,7 @@
     "src/verification/obligation/obligation_types.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "1efb60e299030d92591e09bfd05b506ca9f829ae"
+      "sha": "98a952fc00bd0e602507d18e77cb36e9845825f7"
     },
     "src/verification/obligation/post_satisfaction.nim": {
       "mode": "100644",
