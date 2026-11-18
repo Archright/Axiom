@@ -5879,11 +5879,13 @@
         "src/verification/ledger_side_ref.nim"
       ],
       "source": "vs_authority_separation_2026-11-17",
-      "status": "open",
-      "resolution": "UNRESOLVED — registration only (adding verification to the writer changes the ledger's acceptance contract and must be validated against every existing entry in the three axiom refs before landing; this slice does not modify the writer). Remediation as described; acceptance must show an invalid-signature certificate is rejected before any ref write, and every existing ledger entry still verifies.",
-      "lastVerifiedAt": "2026-11-17T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-18 (commit 29354d1, tests/verification/test_attestation.nim P19): appendCertificate now verifies verifyCertificateAttestation before the blob/tree/commit pipeline and fails closed with 'attestation verification failed' - a present-but-invalid attestation is rejected before any ref PATCH (0 ledger writes), while valid and legacy absent-attestation certificates are still accepted. Acceptance measured 2026-11-18: bin/ax rebuilt (provenance OK); ledger entries at axiom/certificates tip 9b75126b verify 129/129 (0 FAIL), and the post-fix entries added by merge groups (#166 f7ef37f, #167 be46fc7) verify with D6 (A) HOLDS / append count 0.",
+      "lastVerifiedAt": "2026-11-18T05:31:55Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registration-only finding; the ledger writer is the object under audit, so a self-fix in the same slice would remove the finding's own evidence path (AGENTS.md §2.2 discovery is registered, never quietly patched). Trace: this entry's resolution (UNRESOLVED) and source (vs_authority_separation_2026-11-17); external: src/verification/ledger_side_ref.nim:508-601, src/verification/certificate_verifier.nim:255, src/verification/continuity_check.nim:94."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registration-only finding; the ledger writer is the object under audit, so a self-fix in the same slice would remove the finding's own evidence path (AGENTS.md §2.2 discovery is registered, never quietly patched). Trace: this entry's resolution (UNRESOLVED) and source (vs_authority_separation_2026-11-17); external: src/verification/ledger_side_ref.nim:508-601, src/verification/certificate_verifier.nim:255, src/verification/continuity_check.nim:94.",
+      "resolvedAt": "2026-11-18",
+      "resolvedBy": "wintrover (agent-executed per-PR delegation)"
     },
     {
       "id": "DEBT#556",
@@ -5927,7 +5929,7 @@
     },
     {
       "id": "DEBT#558",
-"category": "Trust / Evidence",
+      "category": "Trust / Evidence",
       "impact": "high",
       "severity": "high",
       "title": "Trust-surface manifest includes the rotation pin, so every source change re-anchors a protected path and the App denies admission-check — source PRs cannot land while bypass_actors is empty",
@@ -5939,11 +5941,13 @@
         "config/policy/trust_surface_manifest.json"
       ],
       "source": "vs_authority_separation_2026-11-18",
-      "status": "open",
-      "resolution": "UNRESOLVED — registration only (the fix changes the verifier's acceptance class or the manifest contract; both are trust-boundary decisions with an explicit approval/epoch requirement, and a bypass-only landing leaves the next source PR blocked). Acceptance: a source-only PR that re-anchors the closure receives App admission-check=success while the writer-set pin VALUE and path set are unchanged, and a PR that changes trustedWriterWorkflow, trustedAdmissionWorkflowSha, or the pinned path set is still denied.",
-      "lastVerifiedAt": "2026-11-18T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-18 (App 5795152 verifier Worker v3 version 27ae5311-23a8-47a3-936e-95733448dcd8, source sha256 2efb2abe..., regression 28/28): the trusted-writer-set comparator is field-aware - protected fields (trustedWriterWorkflow, trustedAdmissionWorkflowSha, closure path set) must match exactly, rotation-pin closure values are re-anchored to the subject tree (closure_reanchored), and the pull_request venue binds to the current main tip with a merge-base diff. Acceptance measured on canonical main: source-only #151 (G=9c8f172, closure_reanchored=1) and #162 (G=cc63569, closure_reanchored=10) received App admission-check=success in merge_group with ledger PASS and MERGED; #165 preflight PASS (touched=1, manifest_touched=0). Protected-field change, path-set add/remove, unknown-field, and type-change cases remain rejected (28-case suite).",
+      "lastVerifiedAt": "2026-11-18T05:33:34Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the finding spans a policy manifest, an out-of-tree verifier (Worker), and the pre-push rotation-pin adjudication, so no single {.axiomDebt.} pragma site exists; the registry entry itself is the binding medium. Trace: this entry's resolution (UNRESOLVED) and source (vs_authority_separation_2026-11-18); external: config/policy/trust_surface_manifest.json:22, worker/src/index.js:309-338 (out-of-tree), .githooks/pre-push rotation-pin adjudication, PR #151 App check delivery 95c6c620-e2eb-11f1-97dd-43dda54ed4e0."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the finding spans a policy manifest, an out-of-tree verifier (Worker), and the pre-push rotation-pin adjudication, so no single {.axiomDebt.} pragma site exists; the registry entry itself is the binding medium. Trace: this entry's resolution (UNRESOLVED) and source (vs_authority_separation_2026-11-18); external: config/policy/trust_surface_manifest.json:22, worker/src/index.js:309-338 (out-of-tree), .githooks/pre-push rotation-pin adjudication, PR #151 App check delivery 95c6c620-e2eb-11f1-97dd-43dda54ed4e0.",
+      "resolvedAt": "2026-11-18",
+      "resolvedBy": "wintrover (agent-executed per-PR delegation)"
     },
     {
       "id": "DEBT#559",
