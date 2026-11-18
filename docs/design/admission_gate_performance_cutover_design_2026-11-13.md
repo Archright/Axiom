@@ -144,9 +144,16 @@ Tier 1 단독: admission ≈ 460-468s → 배치 ≈ 474-482s(480s SLO 경계). 
   실행 34.2s 불변 관측 확증). 잔여 in-process 2중 계산은 μs급 — memo 도입은 극장. 따라서
   §3 Tier 3의 "배터리 최적화"는 무상 적용 가능한 memoization 슬라이스로 성립하지 않는다
   (honest-close).
-- **잔여 레버(전부 별도 슬라이스 — 계약 검토 전제, 본 설계의 승인 없이 착지하지 않는다)**:
-  (a) 테스트 레인 release 빌드 — probe·s1a 각 프로세스당 ~44s, 단 debug assertion·오버플로
-  검사 부재화 = 판정 정체성 검토 선행 필수; (b) 프로세스 간 영속 digest 캐시 — 판정 재계산
+- **잔여 레버(전부 별개 슬라이스 — 계약 검토 전제, 본 설계의 승인 없이 착지하지 않는다)**:
+  (a) 테스트 빌드 모드 — probe·s1a 각 프로세스당 ~44s. 정체성 검토 수행
+  (docs/evidence/vs_t3a_build_mode_passc_o2_2026-11-16.md): `-d:release`는 이 저장소
+  특이 3요인(config.nims release 정의의 `--panics:on`, gateway_main.nim:192,233의
+  release 분기 전환, stacktrace off로 인한 진단 표면 변화)으로 정체성 담보 불가 —
+  기각. 대안 `--passC:-O2`(C 컴파일만, 코드젠·검사 무변경)은 정체성 불변을 클로저
+  전수 스윕 + A/B 출력 동일성으로 실증 — Makefile 1토큰으로 착지(판정·evidence key
+  무변경, lane(0) −62s 방향성 추정, 착지 후 2회 MG 관측 대기). 원 전제 "release 시
+  debug 검사 부재화"는 공식 문서상 부정확(검사는 유지, danger만 해제) — 정정.
+  (b) 프로세스 간 영속 digest 캐시 — 판정 재계산
   계약과의 충돌 검토; (c) hermetic 중복 제거(~7-13s/레인) — `nim c`별 fail-closed 신선도
   검증 의미 변경; (d) ircheck 크기 축소.
 - 관측: run 43399299637(기준선)·43849381963(최신) 원격 로그 분해 + /tmp 격리 마이크로
