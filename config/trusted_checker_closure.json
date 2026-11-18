@@ -1,6 +1,11 @@
 {
   "schemaVersion": "axiom.trusted-checker-closure.v1",
   "trustedCheckerTreeClosure": {
+    "src/__neg_probe__.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0000000000000000000000000000000000000000"
+    },
     "ci/checker.mk": {
       "mode": "100644",
       "type": "blob",
