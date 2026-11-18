@@ -1,15 +1,25 @@
 # FREEZE — jrpc-errcode Vertical Slice Soundness Contract (P0)
 
 > **상태**: P0 동결 — 본 문서는 엔진 코드 작성 전에 동결된 제품 계약이다 (AGENTS.md §0.12).
-> **변경 규칙**: 동결 후 개정은 재동결(re-freeze) 요구 — 수정 시 본 문서의 해시·채택 레코드 전부 재계산되어야 하며, 게이트 불일치는 fail-closed된다.
+> **변경 규칙**: 동결 후 개정은 재동결(re-freeze) 요구 — 수정 시 본 문서의 해시·채택 레코드 중 **변경 입력의 의존성 폐포에 도달하는 항목만** 재계산하며, 폐포 밖 항목은 재기록하지 않는다(§14). 도달 가능한 항목의 재계산 누락·게이트 불일치는 fail-closed된다.
 > **작성 근거**: JSON-RPC 2.0 Specification §5.1 (jsonrpc.org/specification, Updated 2013-01-04, 직접 fetch — 1차 소스 단일 인용으로 기록), status-im/nim-json-rpc 원문, Axiom bytesview/sidecar/d2 계약 3종.
 > **관련 이슈**: Archright/Axiom #118 (fail-open 갭 bug), #119 (인증 subset 한계 공식화 — 본 슬라이스가 그 한계의 현실적 사례).
+> **Axiom v5.1 개정 (2026-11-18)**: 정밀화 A~E (A §1.1 · B §7.1 · C `obligation_semantics.md` §2.1b · D §11.1 · E §14). 본 개정은 주장 범위를 넓히지 않고 분해·결속한다. 상세 정본은 `docs/spec/jrpc_errcode_class_binding_contract.md` §1.1(두 주장)·§2.1(채택 권한)·§5.1(D3 결합)·§10(출하 순서)이며, 본 문서는 동결 레코드에 필요한 귀결만 기록한다. 재동결 시 재계산 범위는 §14를 따른다.
 
 ---
 
 ## 1. 정체·명명
 
 본 슬라이스의 산출물은 **"Hash-bound 모델의 정형증명 + 핀된 원본 구현의 유한 입력 관찰 결속"**이며, 원본 구현 전체의 정형검증이 아니다. 이 명명은 강등이 아니라 구분이다: 무엇을 증명했고(채택 모델의 Lean 커널 증명), 무엇을 관찰했고(핀된 13개 입력에서의 원본 `new` 실행), 무엇을 증명하지 못했는지(§9 non-claims)가 기계적으로 구분된다.
+
+### 1.1 v5.1 — 두 주장의 분리 (source–model correspondence)
+
+본 계약은 하나의 명제가 아니라 **두 개의 독립 주장**을 동결한다. 두 주장은 같은 subject·claim·input set에 결속되며, 하나의 canonical manifest가 그 결속을 소유한다 (정본 필드: `docs/spec/jrpc_errcode_class_binding_contract.md` §1.1).
+
+1. **`Model ⊨ Specification_subset`** — 채택 모델이 §4의 8영역 테이블과 §5의 분류 계약을 만족한다는 모델 정합성 주장. Lean 커널이 증명하는 대상은 이 명제이며, 원본 구현의 실행 의미가 아니다.
+2. **`∀x ∈ I13, Observe(Source, x) = Expected(Model, x)`** — 핀된 원본 `new`를 `I13`(§6의 13개 경계값)에서 실행한 관찰이 모델의 기대 태그와 일치한다는 관찰 결속 주장. 이는 유한 13-인스턴스 관찰이지 전칭 정리가 아니다.
+
+두 주장은 동일한 `subject`(§3), 동일한 `claim`(`C = P1 ∧ … ∧ P13`), 동일한 `inputSet`(§6)을 참조해야 한다. **Hash identity ≠ model correctness ≠ theorem truth**: `adoptedSpecHash`·`blobSha256`·`SpecID`의 byte-exact 일치는 콘텐츠 동일성만 말하며, 모델이 스펙을 만족한다는 것도, 모델이 원본과 대응한다는 것도, Lean 정리가 참이라는 것도 아니다. 세 명제는 각각 별도의 증명·관찰·커널 수용을 요구한다.
 
 ## 2. 인증 형상 (bytesview 계약 정렬)
 
@@ -136,6 +146,24 @@ errors.nim:105-122의 실제 분기 (라인 인용):
 - **문법 밖 입력은 반드시 거부** — 별도 문자열 해석·추측 복구 금지 (fail-closed).
 - **expected_class 스키마 검증**: 8개 구체 codomain {RpcParseError, RpcInvalidRequestError, RpcMethodNotFoundError, RpcInvalidParamsError, RpcInternalError, RpcServerError, RpcResponseError, RpcApplicationError} 밖이면 로드 단계 즉시 실패 (조상 `JsonRpcError`/`CatchableError`, deprecated `ApplicationError`/`InvalidRequest`, `new`가 생성 불가한 타입 전부 거부).
 
+### 7.1 v5.1 — 채택 권한과 PR admission 계약 채택 레코드
+
+- **모델 채택 승인자**: **Axiom 인간 아키텍트(저장소 소유자)**. 에이전트·CI·PR head는 채택 권한이 없다. 현재 채택 레코드의 `adopter`(`axiom (workstream/jrpc-errcode-map P2 slice, user-approved mission)`)는 승인 행위의 기록이다.
+- **Hash pinning ≠ adoption legitimacy**: `adoptedSpecHash`/`SpecID`의 byte-exact 일치는 콘텐츠 동일성만 증명한다. 채택의 정당성은 인간 승인자·승인 근거·승인 시점이 기록된 채택 행위에서 나온다. 해시 일치만으로 채택을 주장하거나, 승인 기록 없이 해시를 채택으로 취급하는 것은 금지된다.
+- **PR head 금지**: PR head가 adoption 레코드나 해시를 바꾸는 경로는 채택이 아니다 — 채택은 보호된 ref에 커밋된 레코드로만 성립한다.
+
+**`PR_ADMISSION_CONTRACT.md` v1.1.0 채택 레코드** (정본 표: jrpc 계약 §2.1):
+
+| 항목 | 값 |
+|---|---|
+| 문서 | `Archright/.github` `.github/axiom-admission/PR_ADMISSION_CONTRACT.md` |
+| 대상 | `Archright/nim-libp2p` PR admission (캠페인 계약 아님) |
+| 버전·일자 | v1.1.0 (2026-11-14) |
+| commit | `a6fd6cbe8e8328160cac961a59cc37af828c2c92` |
+| 문서 sha256 | `a3ad1b342d69c81bc5b40beadfb15e455264ce5f658c2fc403a232d346f5efbd` |
+| 승인자 | Axiom 인간 아키텍트(저장소 소유자); 커밋 기록 `wintrover` (2026-11-14) |
+| 구분 | `external_verification_campaign_contract.md`와 **별개** — PR admission은 PR 단위 7 불변식+판정 매핑, 캠페인 계약은 5가드+11클래스. 상호 대체·개정 없음. |
+
 ## 8. 관찰 채널 (of-매트릭스 — 방식 A, 동결)
 
 **Nim `of` 의미 (Nim 2.2.10 공식 문서 확증)**: `x of T`는 x의 동적 타입이 T **또는 T의 하위타입**이면 참 (system.nim:850, manual §Objects: "similar to `instanceof` in Java"). 실패 시 false (무예외·noSideEffect). nil ref는 안전하게 false. 무관 타입과의 `of`는 컴파일 거부.
@@ -177,6 +205,23 @@ errors.nim:105-122의 실제 분기 (라인 인용):
 - **부정**: `vrFail ∧ clDisproved ∧ icCounterexample` (quartet) = DISPROVED. quartetComplete는 부정 전용 요건이다 — 긍정 요건이 아니다.
 - **그 밖의 전부**: UNKNOWN (fail-closed). Z3-만 통과는 긍정으로 승격하지 않는다.
 
+### 11.1 v5.1 — D3 결합 의미론과 DEBT#529/#530 폐쇄 순서
+
+**Governed claim**: `C = P1 ∧ … ∧ P13`. 각 `Pi`는 §6의 ordinal `i`에 대응하는 INSTANCE obligation이며, 모든 `Pi`는 동일한 핀된 subject와 동일한 입력 `xi`를 참조한다.
+
+| 조건 | `claimOutcome` |
+|---|---|
+| 13개 `Pi` 전부 증명됨 (각 `Pi`의 solver proof status = `psUnsat` → `clProved`) | `clProved` |
+| ≥1 `Pi`에 유효한 반례 (동일 subject·동일 입력·quartet 완비·`rvAgree`·구체적 property 위반) | `clDisproved` |
+| 그 밖의 전부 | `UNKNOWN` |
+
+- **계층 분리**: `clProved`는 governed claim `C`의 claim-level 판정이다. `clProved` 자체는 theorem truth가 아니며, 긍정 `NO_BUG_PROVED`의 `vdVerified`는 별도로 VDA receipt 9-field 확인을 통과해야 한다 (§11, `obligation_semantics.md` §2.1b).
+- **Quartet 4필드**(§11 부정 경로의 기록 요건, `bug_verdict_glossary.md` §2.2 공용 4요소와 동일): ① exact subject commit+blob ② exact input `xi` ③ 위반 conjunct `Pi`와 predicate/domain ④ 관측 출력+재생 명령+toolchain/host 폴드+`replayVerdict`. 네 필드는 **동일 subject·동일 input**을 참조해야 하며 replay는 `rvAgree`여야 한다.
+- **Manifest binding**: 각 `Pi`·quartet은 §1.1의 canonical manifest에 `adoptedSpecHash`, `instanceOrdinal`(1..13), `derivationRule`(`jrpc-errclass-model-v1|rule=<ruleId>|inst=<n>`), `carrierIdentity`(`new_errclass_defect`/`new_errclass_control_NN`)를 결속해야 한다. 결측 시 그 `Pi`는 어느 판정에도 기여하지 못한다.
+- **단일 신호 승격 금지**: `psFail` 단독은 승격하지 않는다(solver-level proof 실패 표시 — replay-agreed quartet 없이는 claim-level 반례로 승격되지 않는다). `rvDisagree` 단독도 승격하지 않는다(모델과 모순 → fail-closed `UNKNOWN`). solver SAT 단독·exit code 단독도 승격하지 않는다.
+- **VDA receipt 결속**: 긍정 판정의 `vdVerified`는 `obligation_semantics.md` §2.1b의 9개 필드 확인과 보호된 ref trust boundary를 따른다. PR head 코드는 자기 receipt를 승인할 수 없다.
+- **DEBT#529/#530 폐쇄 순서**: 두 부채의 폐쇄는 **Phase 4 증거 이후**로 이동한다. 본 개정은 어느 쪽도 폐쇄하지 않으며, P4 증거 이전의 폐쇄 기록은 계약 위반이다.
+
 ## 12. 결정론 통제 (6항 — 동결)
 
 1. Nim 2.2.10·Lean(elan 핀)·Axiom bundle·의존성(nim-serialization 등 5종)의 정확한 버전·해시 고정 (replay-dep-pins 40-hex).
@@ -199,3 +244,15 @@ P1 실증이 다음을 관측하지 못하면 **구현을 중단하고 본 계�
 3. 엔진 추가점 실존: closed registry(external_subject_registry.nim:225-235)·d2 형상 post 생성기(counterexample_replay.nim:1407-1422)·stamped 브랜치(:1475-1496)·typedesc 캐리어 토큰.
 
 *본 문서의 채택 레코드(adoptedSpecHash 등)는 구현 시 신뢰 경로(specIdentity)로 재계산되며 수동 해싱되지 않는다.*
+
+## 14. 출하 순서와 재동결 범위 (v5.1 — 동결)
+
+허용되는 출하 순서는 하나뿐이다:
+
+```
+PR → MERGE → P4 re-verification on canonical main → P6 → P7 acceptance → v0.7.0 publish
+```
+
+- **P4 re-verification은 MERGE 이후 canonical main에서 수행한다.** PR head의 green은 출하 게이트가 아니며, PR head 증거를 publish 근거로 재사용하지 않는다.
+- **v0.7.0 publish는 P7 acceptance 이후에만** 수행한다. P6(워크플로/어드미션)과 P7(acceptance 재생)은 post-merge 증거를 소비한다.
+- **재동결(re-freeze) 범위**: 변경된 입력의 **의존성 폐포(dependency-reachable set)에 도달하는 항목만** 재생성한다. 폐포 밖의 기존 항목은 재계산·재기록하지 않는다. 변경된 입력에 도달 가능한 항목의 재생성은 생략할 수 없다 — 이는 면제가 아니다.

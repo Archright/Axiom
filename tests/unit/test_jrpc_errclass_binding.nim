@@ -50,10 +50,17 @@ import ../../src/core/trusted/axiom_pragmas
 import ../../src/core/trusted/axiom_ir
 import ../../src/core/trusted/axiom_ir_helpers
 import ../../src/core/trusted/ir_to_smt
+import ../../src/core/trusted/claim_authority
+import ../../src/core/trusted/assurance_profile
+import ../../src/core/trusted/evidence_calculus
+import ../../src/core/trusted/evidence_capture
+import ../../src/core/trusted/semantic_profile
+import ../../src/core/trusted/verification_result_types as vrt
 import ../../src/infrastructure/external_ir_materializer
 import ../../src/cli/axiom_engine
 import ../../src/cli/external_subject_registry
 import ../../src/verification/obligation/canonical_verification
+import ../../src/verification/batch_uap/ir_pipeline_runner
 import ../../src/verification/counterexample_replay
 
 putEnv("AXIOM_STATE_DIR", getTempDir() / "ax_jrpc_errclass_test_state")
@@ -628,13 +635,18 @@ suite "jrpc-errclass synthesis — 13 carriers over the adopted model":
       check e.funcDef.propositionRegionLossFree
       check not e.funcDef.lossOutsideBindingRegions
 
-  test "the parse bound is single-origin, measured on the governed symbol new":
+  test "the parse bound is a constructed-model binding on the governed symbol new":
     for e in census.eligible:
-      check e.parseBound.synthesizedComposite
-      check e.parseBound.claimCarrierSingleOrigin
+      check e.parseBound.constructedModel
+      check not e.parseBound.synthesizedComposite
+      check not e.parseBound.claimCarrierSingleOrigin
       check e.parseBound.measuredForFuncName == "new"
       check e.parseBound.ea2MeasuredForFuncName.len == 0
-      check e.parseBound.synthesisDerivationDigest.len > 0
+      check e.parseBound.synthesisDerivationDigest.len == 64
+      check e.parseBound.constructedModelBodyDigest.len == 64
+      # an EA leg on a constructed model would be a fabricated measurement
+      check not e.parseBound.eaAgreed
+      check e.parseBound.eaNimDigest.len == 0
 
   test "the stamped replay harness carries the module pin and the of-matrix":
     for e in census.eligible:
@@ -731,29 +743,33 @@ suite "jrpc-errclass registry — template + envelope":
         check adapter.get().capability == capJrpcErrclass
 
 # ---------------------------------------------------------------------------
+# Shared fixture — the FREEZE §10 false adoption document
+# ---------------------------------------------------------------------------
+
+proc falseAdoptionNode(): JsonNode =
+  ## The FREEZE §10 false adoption: instance 4 (-32600) distorted to tag 0
+  ## (RpcParseError), stated self-consistently (instance block AND
+  ## canonicalSpecIR agree) and hash-bound to ITS OWN content — an
+  ## independent document with an independent adoption hash. The loader
+  ## accepts it (model<->instance consistency is deliberately unvalidated);
+  ## the replay observation is what exposes it.
+  var node = committedOverlayNode()
+  node["instances"][3]["expectedClass"] = %"RpcParseError"
+  var clauses: seq[string] = @[]
+  for c in node["canonicalSpecIR"]:
+    clauses.add(c.getStr())
+  clauses[8 + 2 * 3 + 1] = "result == 0"
+  node["canonicalSpecIR"] = %clauses
+  let specRes = explicitSpecFromOverlay(node)
+  doAssert specRes.isOk()
+  node["adoption"]["adoptedSpecHash"] = %(specRes.get().specIdentity)
+  node
+
+# ---------------------------------------------------------------------------
 # Suite 6 — the FREEZE §10 mutation contrast, end-to-end with the toolchain
 # ---------------------------------------------------------------------------
 
 suite "jrpc-errclass mutation replay — the observation, not the model, decides":
-
-  proc falseAdoptionNode(): JsonNode =
-    ## The FREEZE §10 false adoption: instance 4 (-32600) distorted to tag 0
-    ## (RpcParseError), stated self-consistently (instance block AND
-    ## canonicalSpecIR agree) and hash-bound to ITS OWN content — an
-    ## independent document with an independent adoption hash. The loader
-    ## accepts it (model<->instance consistency is deliberately unvalidated);
-    ## the replay observation is what exposes it.
-    var node = committedOverlayNode()
-    node["instances"][3]["expectedClass"] = %"RpcParseError"
-    var clauses: seq[string] = @[]
-    for c in node["canonicalSpecIR"]:
-      clauses.add(c.getStr())
-    clauses[8 + 2 * 3 + 1] = "result == 0"
-    node["canonicalSpecIR"] = %clauses
-    let specRes = explicitSpecFromOverlay(node)
-    doAssert specRes.isOk()
-    node["adoption"]["adoptedSpecHash"] = %(specRes.get().specIdentity)
-    node
 
   let fixtureRoot = makeSubjectTree("ax_jrpc_errclass_replay")
   let modelRaw = "sat\n(define-fun code () (_ BitVec 64) #x" &
@@ -824,3 +840,132 @@ suite "jrpc-errclass mutation replay — the observation, not the model, decides
     check not replay.agreed
     check replay.diagnostics.startsWith("rvDisagree")
     delEnv(ReplayDepPathsEnvVar)
+# ---------------------------------------------------------------------------
+# Suite 6 — governed claim conjunction C = P1 ∧ … ∧ P13 (contract §5.1)
+# ---------------------------------------------------------------------------
+
+suite "jrpc-errclass governed conjunction — C = P1 ∧ … ∧ P13":
+
+  proc resultWith(name: string; signal: ClaimSignal;
+      status: vrt.VerificationStatus): IrPipelineResult =
+    ## One carrier's pipeline result carrying the deriveClaim record the
+    ## conjunction reads (never a certificate label).
+    let funcDef = IRFuncDef(
+      name: name,
+      params: @[IRFuncParam(name: "code", ty: irTypeBitVec64())],
+      retType: irTypeBitVec64(),
+      body: irLit(0),
+      postConditions: @[irEq(irVar("result", irTypeBitVec64()), irLit(0))])
+    let bundle = captureEvidence(funcDef, soCanonicalDerived, "v1")
+    let ctx = ClaimContext(
+      subjectId: name,
+      sourceIdentity: "",
+      specification: bundle.specificationArtifact,
+      semanticProfileId: SemanticProfileV1Hash,
+      obligationGenerated: true,
+      supported: true,
+      dependenciesSatisfied: true,
+      proofSignal: signal,
+      evidenceBundle: bundle,
+      policyId: "apV1")
+    IrPipelineResult(
+      funcName: name,
+      modulePath: "json_rpc/errors.nim",
+      success: status == vrt.vsProved,
+      verification: vrt.deriveVerdict(status, vrt.rkNone),
+      verifiedClaim: some(deriveClaim(ctx, apV1)))
+
+  proc quartetFor(inst: JrpcErrclassInstance): seq[string] =
+    ## A complete §5.1 quartet for this instance's exact input.
+    @[
+      "input.code=" & $inst.code,
+      "propertyViolated=(= result #x" & toHex(inst.expectedTag, 16) & ")",
+      "replay.verdict=rvAgree",
+      "replay.subjectGitRef=" & repeat('a', 40),
+      "replay.treeMerkle=" & repeat('b', 40),
+      "replay.moduleSha256=" & repeat('c', 64),
+      "replay.exitCode=0"]
+
+  proc family(domain: JrpcErrclassDomain;
+      disproofOrdinal: int): seq[IrPipelineResult] =
+    ## 13 carrier results; `disproofOrdinal` (1-based) carries the
+    ## replay-agreed witness, the rest are proved.
+    for i in 0 ..< domain.instances.len:
+      let name = if i == 0: domain.symbol
+                 else: errclassCarrierName(domain, i)
+      if i == disproofOrdinal - 1:
+        var r = resultWith(name, psCounterexample, vrt.vsDisproved)
+        r.counterExample = quartetFor(domain.instances[i])
+        result.add(r)
+      else:
+        result.add(resultWith(name, psUnsat, vrt.vsProved))
+
+  let falseDomain = validateJrpcErrclassOverlayNode(
+      falseAdoptionNode()).get()
+
+  test "all 13 proved ⇒ C = clProved and no unit is rewritten":
+    let results = family(falseDomain, 0)
+    let c = deriveJrpcErrclassConjunction(falseDomain, results)
+    check c.outcome == "clProved"
+    check c.boundCount == 13
+    check c.disproofOrdinal == 0
+    let promoted = promoteJrpcErrclassConjunction(falseDomain, results)
+    check promoted.conjunction.outcome == "clProved"
+    for i in 0 ..< results.len:
+      check promoted.results[i].success == results[i].success
+      check promoted.results[i].counterExample.len == 0
+    check promoted.results[0].verifiedClaim.get().outcome == clProved
+
+  test "one replay-agreed witness ⇒ C = clDisproved, projected onto the governed unit":
+    let results = family(falseDomain, 4)
+    let c = deriveJrpcErrclassConjunction(falseDomain, results)
+    check c.outcome == "clDisproved"
+    check c.boundCount == 13
+    check c.disproofOrdinal == 4
+    check c.disproofCarrier == "new_errclass_control_04"
+    check c.quartet.len == 7
+    let promoted = promoteJrpcErrclassConjunction(falseDomain, results)
+    check promoted.conjunction.outcome == "clDisproved"
+    # The governed unit carries the refuted claim (same authority path).
+    check not promoted.results[0].success
+    check promoted.results[0].verification.status == vrt.vsDisproved
+    check promoted.results[0].verifiedClaim.get().outcome == clDisproved
+    check promoted.results[0].counterExample == c.quartet
+    check promoted.results[0].evidence.isNone
+    # The other 12 carriers keep their own proof results (no rewriting).
+    for i in 1 ..< results.len:
+      check promoted.results[i].success == results[i].success
+      check promoted.results[i].counterExample == results[i].counterExample
+
+  test "fail-closed: rvDisagree is not a witness — C stays UNKNOWN":
+    var results = family(falseDomain, 4)
+    for i in 0 ..< results[3].counterExample.len:
+      if results[3].counterExample[i] == "replay.verdict=rvAgree":
+        results[3].counterExample[i] = "replay.verdict=rvDisagree"
+    let c = deriveJrpcErrclassConjunction(falseDomain, results)
+    check c.outcome == ""
+    check c.disproofOrdinal == 0
+    check promoteJrpcErrclassConjunction(falseDomain, results).results[0].success
+
+  test "fail-closed: a quartet for another input is not this Pi's witness":
+    var results = family(falseDomain, 4)
+    for i in 0 ..< results[3].counterExample.len:
+      if results[3].counterExample[i].startsWith("input.code="):
+        results[3].counterExample[i] = "input.code=-32601"
+    check deriveJrpcErrclassConjunction(falseDomain, results).outcome == ""
+
+  test "fail-closed: a missing Pi leaves C UNKNOWN":
+    var results = family(falseDomain, 4)
+    results.setLen(results.len - 1)
+    let c = deriveJrpcErrclassConjunction(falseDomain, results)
+    check c.outcome == ""
+    check c.boundCount < 13
+
+  test "deterministic: identical inputs ⇒ identical conjunction":
+    let results = family(falseDomain, 4)
+    let a = deriveJrpcErrclassConjunction(falseDomain, results)
+    let b = deriveJrpcErrclassConjunction(falseDomain, results)
+    check a.outcome == b.outcome
+    check a.disproofOrdinal == b.disproofOrdinal
+    check a.disproofCarrier == b.disproofCarrier
+    check a.quartet == b.quartet

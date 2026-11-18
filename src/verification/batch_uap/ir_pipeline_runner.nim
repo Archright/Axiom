@@ -521,6 +521,26 @@ func derivePipelineClaim(funcDef: IRFuncDef; solverStatus: coreSolverTypes.Solve
   )
   deriveClaim(ctx, apV1)
 
+func deriveKernelClaim(funcDef: IRFuncDef): VerifiedClaim {.raises: [].} =
+  ## Evidence->Claim for a genuine Lean kernel acceptance. The proof signal is
+  ## psKernelAccepted (assurance.kernelChecking=true), NEVER psUnsat: no SMT
+  ## solver produced this acceptance, and projecting it as solver evidence would
+  ## overstate the assurance axes. The claim is re-derived through the single
+  ## authority (deriveClaim); downstream is projection-only.
+  let bundle = captureEvidence(funcDef, soCanonicalDerived, "v1")
+  let ctx = ClaimContext(
+    subjectId: funcDef.name, sourceIdentity: "",
+    specification: bundle.specificationArtifact,
+    semanticProfileId: SemanticProfileV1Hash,
+    obligationGenerated: funcDef.postConditions.len > 0,
+    supported: true,
+    dependenciesSatisfied: true,
+    proofSignal: psKernelAccepted,
+    evidenceBundle: bundle,
+    policyId: "apV1"
+  )
+  deriveClaim(ctx, apV1)
+
 proc runIrPipeline*(ve: ValidatedIrEntry,
                      lspClient: LeanLspClient = nil,
                      policy: BackendPolicy = bpRequire,
@@ -718,6 +738,7 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
             kind: ogrGenerated,
             reason: "canonicalVerified",
             obligationCount: generatedObligationCount),
+          verifiedClaim: some(deriveKernelClaim(funcDef)),
           evidence: canonicalResult.canonicalEvidence)
       # §0.9 (no silent discard): the canonical path DECLINED for this funcDef.
       # The declined result carries the exact refusal point (sealError — the

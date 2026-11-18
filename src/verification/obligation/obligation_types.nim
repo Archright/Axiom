@@ -440,6 +440,15 @@ type
     ea2LeanDigest*: string             ## second original's EA leanDigest
     ea2IrcheckBinaryDigest*: string    ## second original's EA ircheck binary digest
     ea2Agreed*: bool                   ## second original's ExtractionAgreement verdict
+    # Constructed-model mode (§2.1a-4 of obligation_semantics.md): the subject
+    # AST is outside the certified extraction subset, so no EA leg exists.
+    # The model is built from a committed, hash-bound adoption; the model body
+    # identity is the existing irDigest. All EA slots MUST be empty — a filled
+    # one is a fabricated measurement (fail-closed).
+    constructedModel*: bool            ## constructed-model mode marker
+    constructedModelSourceDigest*: string   ## canonical spec identity (SpecID, sha256)
+    constructedModelGeneratorDigest*: string ## ruleId|ruleVersion|grammarVersion (sha256)
+    constructedModelAdoptionDigest*: string  ## adoption record digest (sha256)
 
 func isSha256Hex(s: string): bool {.raises: [].} =
   if s.len != 64:
@@ -465,10 +474,13 @@ type
     bbmSingleSymbol                 ## plain single-symbol subject (no derivation rule)
     bbmComposite                    ## two-leg synthesized composite (base36 §2.1a)
     bbmClaimCarrierSingleOrigin     ## one-leg claim carrier (base32 rem §3 D2)
+    bbmConstructedModel             ## EA-free constructed model (jrpc-errclass §2.1a-4)
 
 func boundBindingMode(binding: ObligationSubjectBinding): BoundBindingMode {.
   raises: [].} =
-  if binding.claimCarrierSingleOrigin:
+  if binding.constructedModel:
+    bbmConstructedModel
+  elif binding.claimCarrierSingleOrigin:
     bbmClaimCarrierSingleOrigin
   elif binding.synthesisDerivationDigest.len > 0:
     bbmComposite
@@ -480,27 +492,55 @@ func bindingModeComponents(binding: ObligationSubjectBinding;
   ## Mode-specific canonical-form checks appended to the base component set:
   ## composite mode requires a canonical SECOND leg; single-origin mode
   ## requires a canonical derivation digest and an EMPTY ea2 slot; plain
-  ## single-symbol mode requires the ea2 slot to be empty.
+  ## single-symbol mode requires the ea2 slot to be empty. Constructed-model
+  ## mode (§2.1a-4) requires the three adoption digests + derivation rule and
+  ## an EMPTY EA set in both slots — an EA leg on a constructed model is a
+  ## fabricated measurement. Every non-constructed mode requires the
+  ## constructed fields to be empty (the two generations are never conflated).
   case mode
+  of bbmConstructedModel:
+    @[
+      isSha256Hex(binding.constructedModelSourceDigest),
+      isSha256Hex(binding.constructedModelGeneratorDigest),
+      isSha256Hex(binding.constructedModelAdoptionDigest),
+      isSha256Hex(binding.synthesisDerivationDigest),
+      not binding.eaAgreed,
+      binding.eaNimDigest.len == 0,
+      binding.eaLeanDigest.len == 0,
+      binding.eaIrcheckBinaryDigest.len == 0,
+      not binding.ea2Agreed,
+      binding.ea2NimDigest.len == 0,
+      binding.ea2LeanDigest.len == 0,
+      binding.ea2IrcheckBinaryDigest.len == 0
+    ]
   of bbmComposite:
     @[
       isSha256Hex(binding.synthesisDerivationDigest),
       isSha256Hex(binding.ea2NimDigest),
       isSha256Hex(binding.ea2LeanDigest),
-      isSha256Hex(binding.ea2IrcheckBinaryDigest)
+      isSha256Hex(binding.ea2IrcheckBinaryDigest),
+      binding.constructedModelSourceDigest.len == 0,
+      binding.constructedModelGeneratorDigest.len == 0,
+      binding.constructedModelAdoptionDigest.len == 0
     ]
   of bbmClaimCarrierSingleOrigin:
     @[
       isSha256Hex(binding.synthesisDerivationDigest),
       binding.ea2NimDigest.len == 0,
       binding.ea2LeanDigest.len == 0,
-      binding.ea2IrcheckBinaryDigest.len == 0
+      binding.ea2IrcheckBinaryDigest.len == 0,
+      binding.constructedModelSourceDigest.len == 0,
+      binding.constructedModelGeneratorDigest.len == 0,
+      binding.constructedModelAdoptionDigest.len == 0
     ]
   of bbmSingleSymbol:
     @[
       binding.ea2NimDigest.len == 0,
       binding.ea2LeanDigest.len == 0,
-      binding.ea2IrcheckBinaryDigest.len == 0
+      binding.ea2IrcheckBinaryDigest.len == 0,
+      binding.constructedModelSourceDigest.len == 0,
+      binding.constructedModelGeneratorDigest.len == 0,
+      binding.constructedModelAdoptionDigest.len == 0
     ]
 
 func computeBoundObligationId*(binding: ObligationSubjectBinding): string {.
@@ -530,20 +570,38 @@ func computeBoundObligationId*(binding: ObligationSubjectBinding): string {.
   ## so its payload composition is additive: no previously sealed identity is
   ## affected.
   let mode = boundBindingMode(binding)
-  var components: seq[bool] = @[
-    isSha256Hex(binding.obligationTupleId),
-    isSha256Hex(binding.subjectTreeMerkleRoot),
-    isSha256Hex(binding.subjectModuleSha256),
-    isGitRef(binding.subjectGitRef),
-    binding.pnodeCanonicalV2Digest.len > 0,
-    isSha256Hex(binding.irDigest),
-    isSha256Hex(binding.eaNimDigest),
-    isSha256Hex(binding.eaLeanDigest),
-    isSha256Hex(binding.eaIrcheckBinaryDigest),
-    binding.completenessRecordDigest.len > 0,
-    isSha256Hex(binding.leanSourceHash),
-    isSha256Hex(binding.toolchainFingerprint)
-  ]
+  # §2.1a-4: a constructed model has NO extraction measurement, so the EA
+  # legs are not part of its base component set (requiring them would force
+  # their fabrication). Every other mode keeps the twelve-component set
+  # byte-for-byte, so no previously sealed identity changes.
+  var components: seq[bool] =
+    if mode == bbmConstructedModel:
+      @[
+        isSha256Hex(binding.obligationTupleId),
+        isSha256Hex(binding.subjectTreeMerkleRoot),
+        isSha256Hex(binding.subjectModuleSha256),
+        isGitRef(binding.subjectGitRef),
+        binding.pnodeCanonicalV2Digest.len > 0,
+        isSha256Hex(binding.irDigest),
+        binding.completenessRecordDigest.len > 0,
+        isSha256Hex(binding.leanSourceHash),
+        isSha256Hex(binding.toolchainFingerprint)
+      ]
+    else:
+      @[
+        isSha256Hex(binding.obligationTupleId),
+        isSha256Hex(binding.subjectTreeMerkleRoot),
+        isSha256Hex(binding.subjectModuleSha256),
+        isGitRef(binding.subjectGitRef),
+        binding.pnodeCanonicalV2Digest.len > 0,
+        isSha256Hex(binding.irDigest),
+        isSha256Hex(binding.eaNimDigest),
+        isSha256Hex(binding.eaLeanDigest),
+        isSha256Hex(binding.eaIrcheckBinaryDigest),
+        binding.completenessRecordDigest.len > 0,
+        isSha256Hex(binding.leanSourceHash),
+        isSha256Hex(binding.toolchainFingerprint)
+      ]
   components &= bindingModeComponents(binding, mode)
   for ok in components:
     if not ok:
@@ -555,11 +613,19 @@ func computeBoundObligationId*(binding: ObligationSubjectBinding): string {.
     "|module=" & binding.subjectModuleSha256 &
     "|git=" & binding.subjectGitRef &
     "|pnodeV2=" & binding.pnodeCanonicalV2Digest &
-    "|ir=" & binding.irDigest &
-    "|ea=" & (if binding.eaAgreed: "agree:" else: "disagree:") &
-      binding.eaNimDigest & "," & binding.eaLeanDigest & "," &
-      binding.eaIrcheckBinaryDigest
+    "|ir=" & binding.irDigest
+  if mode != bbmConstructedModel:
+    payload &=
+      "|ea=" & (if binding.eaAgreed: "agree:" else: "disagree:") &
+        binding.eaNimDigest & "," & binding.eaLeanDigest & "," &
+        binding.eaIrcheckBinaryDigest
   case mode
+  of bbmConstructedModel:
+    payload &=
+      "|constructed=" & binding.constructedModelSourceDigest & "," &
+        binding.constructedModelGeneratorDigest & "," &
+        binding.constructedModelAdoptionDigest &
+      "|derivation=" & binding.synthesisDerivationDigest
   of bbmComposite:
     payload &=
       "|derivation=" & binding.synthesisDerivationDigest &

@@ -41,6 +41,9 @@ import core/trusted/axiom_ir
 import core/trusted/axiom_ir_helpers
 import core/trusted/semantic_fact_types
 import core/trusted/specification_artifact
+import core/trusted/claim_authority
+import core/trusted/assurance_profile
+import core/trusted/verification_result_types as vrt
 import core/deterministic_cas_key
 import core/trusted/fingerprint_generator
 import gate/semantic_alias_mapper
@@ -305,6 +308,256 @@ proc collectVerifiedFuncNames*(verified: VerifiedSet; pool: InternPoolSnapshot; 
         funcName = funcName[0..^2]
       result.incl(funcName)
   
+# ---------------------------------------------------------------------------
+# jrpc-errclass governed claim (C = P1 ∧ … ∧ P13) — declared before the wave
+# pipeline: runBatchVerification threads the adoption and projects C onto the
+# governed unit. The lane's synthesis/validation surface follows further down;
+# this is the same domain value, not a second definition.
+# ---------------------------------------------------------------------------
+
+type
+  SidecarSubjectPin* = object
+    ## The subject pin the adoption record binds: repository identity plus
+    ## module bytes at the recorded path under the subject root.
+    source*: string
+    module*: string
+    symbol*: string
+    commit*: string
+    blobSha256*: string
+
+  SidecarAdoptionRecord* = object
+    ## The hash-bound adoption record. adoptedSpecHash is the SpecID
+    ## (specIdentity) of the exact proposition content — recomputed at load
+    ## time and compared byte-exactly. provenance preserves the content's
+    ## authorship chain; authorship confers NO authority — the adoption act
+    ## (this committed, hash-bound record) is the authority.
+    adoptedSpecHash*: string
+    adopter*: string
+    adoptedAt*: string
+    basis*: string
+    grammarVersion*: string
+    subject*: SidecarSubjectPin
+    provenance*: string
+
+type
+  JrpcErrclassRegionKind* = enum
+    jrkSingleton = "singleton"
+    jrkRange = "range"
+    jrkRemainder = "remainder"
+
+  JrpcErrclassRegion* = object
+    ## One mapping region: the singleton `{code}`, the closed range
+    ## `[low, high]`, or the remainder (the complement of the concrete
+    ## regions — the source's final else, FREEZE §5).
+    case kind*: JrpcErrclassRegionKind
+    of jrkSingleton:
+      code*: int64
+    of jrkRange:
+      rangeLow*: int64
+      rangeHigh*: int64
+    of jrkRemainder:
+      discard
+
+  JrpcErrclassMappingEntry* = object
+    ## One adopted classification row: (tag, concrete class, region).
+    tag*: int
+    className*: string
+    region*: JrpcErrclassRegion
+
+  JrpcErrclassInstance* = object
+    ## One pinned boundary instance (FREEZE §6): the code and the adopted
+    ## expected class/tag; preText/postText are the DERIVED closed-grammar
+    ## clause texts and pre/post their parsed IR.
+    code*: int64
+    expectedClass*: string
+    expectedTag*: int
+    preText*: string
+    postText*: string
+    pre*: IRExpr
+    post*: IRExpr
+
+  JrpcErrclassDomain* = object
+    ## The synthesis-relevant projection of the overlay: the governed
+    ## module+symbol key, the mapping table, the pinned instances, and the
+    ## hash-bound adoption record (the sidecar's record type — the lane's
+    ## own grammar version string is the only difference). Everything is
+    ## parsed mechanically from the document — no subject names are
+    ## hardcoded in the engine.
+    modulePath*: string
+    symbol*: string
+    ruleId*: string
+    importModule*: string
+    mapping*: seq[JrpcErrclassMappingEntry]
+    instances*: seq[JrpcErrclassInstance]
+    adoption*: SidecarAdoptionRecord
+    sourceDigest*: string
+      ## sha256 of the exact adopted spec file bytes (§2.1a-4). Filled by the
+      ## loader — the pure validator never sees the bytes.
+    generatorDigest*: string
+      ## sha256 of the canonical generator record (ruleId + ruleVersion +
+      ## closed grammar identity), computed by the pure validator.
+    adoptionDigest*: string
+      ## sha256 of the canonical adoption-record projection, computed by the
+      ## pure validator.
+
+func errclassCarrierName*(domain: JrpcErrclassDomain; index: int): string {.
+    raises: [].} =
+  ## The synthesized carrier's kernel name for one pinned instance — derived
+  ## from the governed symbol; never a symbol the subject declares. Document
+  ## instance 1 is the defect member (wave-facing); instances 2.. are
+  ## controls under their own names, two-digit padded (census dedupe key
+  ## stability up to 99 instances).
+  if index == 0:
+    domain.symbol & "_errclass_defect"
+  else:
+    domain.symbol & "_errclass_control_" & align($(index + 1), 2, '0')
+
+type
+  JrpcErrclassConjunction* = object
+    ## C = P1 ∧ … ∧ P13 (binding contract §5.1). `outcome` is the contract's
+    ## claim-level spelling — "clProved" (all 13), "clDisproved" (at least one
+    ## replay-agreed witness), or "" for UNKNOWN (fail-closed). `claim` is the
+    ## violated Pi's already-derived claim record; the quartet payload lines
+    ## ride verbatim from the carrier that observed the disproof.
+    outcome*: string
+    boundCount*: int
+    disproofOrdinal*: int
+    disproofCarrier*: string
+    quartet*: seq[string]
+    claim*: Option[VerifiedClaim]
+
+func errclassQuartetAgreed(lines: seq[string]): bool {.raises: [].} =
+  ## The §5.1 replay conjunct: only the exact rvAgree spelling completes a
+  ## counterexample; every other verdict (rvDisagree/rvUnavailable) fails
+  ## closed (single-signal promotion is forbidden — contract §5.1).
+  for line in lines:
+    if line == "replay.verdict=rvAgree":
+      return true
+  false
+
+func errclassQuartetBindsInstance(lines: seq[string];
+    instance: JrpcErrclassInstance): bool {.raises: [].} =
+  ## The §5.1 quartet definition, checked against THIS instance: subject
+  ## identity (commit + module sha256 + tree merkle, all three), the exact
+  ## input `code == <c>`, the violated predicate carrying the instance's
+  ## expected tag, and replay agreement. Any missing element makes the
+  ## record an invalid witness — it cannot contribute to clDisproved.
+  var subjectFields = 0
+  var hasExactInput = false
+  var hasViolation = false
+  let tagLiteral = "#x" & toHex(instance.expectedTag, 16)
+  for line in lines:
+    if line.startsWith("replay.subjectGitRef=") or
+        line.startsWith("replay.moduleSha256=") or
+        line.startsWith("replay.treeMerkle="):
+      inc subjectFields
+    elif line.startsWith("input."):
+      if line == "input.code=" & $instance.code:
+        hasExactInput = true
+    elif line.startsWith("propertyViolated="):
+      if line.contains(tagLiteral):
+        hasViolation = true
+  subjectFields >= 3 and hasExactInput and hasViolation and
+    errclassQuartetAgreed(lines)
+
+func deriveJrpcErrclassConjunction*(domain: JrpcErrclassDomain;
+    results: seq[IrPipelineResult]): JrpcErrclassConjunction {.raises: [].} =
+  ## Claim-level outcome of C = P1 ∧ … ∧ P13. Pi is read from the result's
+  ## deriveClaim record and its pipeline verdict — never from a certificate
+  ## label. The failure direction is UNKNOWN: a missing/duplicate observation,
+  ## a clProved claim on a failed unit, or a partial quartet promotes nothing.
+  ## Every fail-closed path returns a FRESH record (never a partially filled
+  ## one): a witness seen before a later defect cannot survive as clDisproved.
+  result = JrpcErrclassConjunction(outcome: "", boundCount: 0)
+  if domain.instances.len == 0 or results.len == 0:
+    return
+  var byKey = initTable[string, int]()
+  for i, r in results:
+    if r.modulePath != domain.modulePath or r.funcName.len == 0:
+      continue
+    let key = r.modulePath & "::" & r.funcName
+    if byKey.hasKey(key):
+      return  # duplicate observation — ambiguous, never promote
+    byKey[key] = i
+  var proved = 0
+  var bound = 0
+  var witnessOrdinal = 0
+  var witnessCarrier = ""
+  var witnessQuartet: seq[string] = @[]
+  var witnessClaim: Option[VerifiedClaim] = none(VerifiedClaim)
+  for i, inst in domain.instances:
+    var key = domain.modulePath & "::"
+    key.add(if i == 0: domain.symbol else: errclassCarrierName(domain, i))
+    var idx = byKey.getOrDefault(key, -1)
+    if idx < 0 and i == 0:
+      key = domain.modulePath & "::" & errclassCarrierName(domain, 0)
+      idx = byKey.getOrDefault(key, -1)
+    if idx < 0:
+      return JrpcErrclassConjunction(outcome: "", boundCount: bound)
+    inc bound
+    let r = results[idx]
+    if r.verifiedClaim.isNone:
+      return JrpcErrclassConjunction(outcome: "", boundCount: bound)
+    let claim = r.verifiedClaim.get()
+    if claim.outcome == clProved:
+      if not r.success:
+        return JrpcErrclassConjunction(outcome: "", boundCount: bound)
+      inc proved
+    elif claim.outcome == clDisproved:
+      if r.verification.status != vrt.vsDisproved or
+          r.counterExample.len == 0 or
+          not errclassQuartetBindsInstance(r.counterExample, inst):
+        return JrpcErrclassConjunction(outcome: "", boundCount: bound)
+      if witnessOrdinal == 0:
+        witnessOrdinal = i + 1
+        witnessCarrier = errclassCarrierName(domain, i)
+        witnessQuartet = r.counterExample
+        witnessClaim = r.verifiedClaim
+    else:
+      return JrpcErrclassConjunction(outcome: "", boundCount: bound)
+      # clUnknown/clNoSpecification/... → C is not decidable
+  if witnessOrdinal > 0:
+    result = JrpcErrclassConjunction(outcome: "clDisproved", boundCount: bound,
+      disproofOrdinal: witnessOrdinal, disproofCarrier: witnessCarrier,
+      quartet: witnessQuartet, claim: witnessClaim)
+    return
+  if proved == domain.instances.len:
+    result = JrpcErrclassConjunction(outcome: "clProved", boundCount: bound)
+
+func promoteJrpcErrclassConjunction*(domain: JrpcErrclassDomain;
+    results: seq[IrPipelineResult]):
+    tuple[results: seq[IrPipelineResult];
+          conjunction: JrpcErrclassConjunction] {.raises: [].} =
+  ## Projects C onto the run's precomputed IR results. C = clDisproved ⇒ the
+  ## governed unit's result BECOMES the refuted governed claim: the witness is
+  ## the violated Pi's own replay-agreed quartet and already-derived claim,
+  ## projected onto the governed symbol so the single accounting/VDA path
+  ## decides vrFail (no second verdict producer is introduced). C = clProved
+  ## and UNKNOWN leave every result byte-identical — a pass is never
+  ## synthesized from the conjunction, and a non-witness never fails a unit.
+  result.conjunction = deriveJrpcErrclassConjunction(domain, results)
+  result.results = results
+  if result.conjunction.outcome != "clDisproved":
+    return
+  let ordinal = result.conjunction.disproofOrdinal
+  if ordinal < 1 or ordinal > domain.instances.len:
+    return
+  for i in 0 ..< result.results.len:
+    if result.results[i].funcName != domain.symbol or
+        result.results[i].modulePath != domain.modulePath:
+      continue
+    var r = result.results[i]
+    r.success = false
+    r.z3Sat = false
+    r.evidence = none(CanonicalLeanEvidence)
+    r.provenance = vpNone
+    r.verification = vrt.deriveVerdict(vrt.vsDisproved,
+      vrt.rkCandidateCounterexample, solverMethod = vrt.smBMC)
+    r.counterExample = result.conjunction.quartet
+    r.verifiedClaim = result.conjunction.claim
+    result.results[i] = r
+    return
+
 proc runBatchVerification*(
   engine: var AxiomEngine;
   task: ProofTask;
@@ -316,6 +569,7 @@ proc runBatchVerification*(
   verifiedFuncs: HashSet[string] = initHashSet[string]();
   kernelScope: KernelScopeInfo = KernelScopeInfo();
   externalCandidates: seq[ExternalIrEntry] = @[];
+  jrpcErrclassDomain: Option[JrpcErrclassDomain] = none(JrpcErrclassDomain);
   subjectRepoRoot: string = "";
   targetVkd: string = ""
 ): Result[ProofReport, string] {.raises: [Exception, IOEffect], axiomEffect: IOEffect, tags: [TimeEffect, RootEffect, AxiomIOEffect, IOEffect].} =
@@ -373,7 +627,7 @@ proc runBatchVerification*(
   # populated before runBatchUapOrchestration consumes it.
   joinThread(irThread)
   logStage(skSwat, "", "ir-thread window completed", elapsedMs=int((getMonoTime().ticks - irThreadStartMs) div 1_000_000))
-  let irResults = irCtx.result
+  var irResults = irCtx.result
   # Same-run CAS-keyed IR memo cache (populated by the background worker via
   # `runIrPipelinesFor(entries, ctx.memoCache)`). Extracted by value BEFORE
   # `dealloc(irCtx)` so the GC-backed Table buffer survives the struct free —
@@ -382,6 +636,31 @@ proc runBatchVerification*(
   # (same-run deterministic-derivation memo only; never cross-invocation).
   let sharedIrCache = irCtx.memoCache
   dealloc(irCtx)
+
+  # ── jrpc-errclass governed claim (C = P1 ∧ … ∧ P13, contract §5.1) ──
+  # C is decided from the 13 carriers' own deriveClaim records + replay-agreed
+  # quartets — never from certificate labels. A disconfirmed C projects the
+  # violated Pi's witness onto the governed symbol, so the ONE accounting/VDA
+  # path decides vrFail; clProved/UNKNOWN leave the results untouched (no
+  # pass is synthesized, no non-witness fails a unit).
+  if jrpcErrclassDomain.isSome:
+    let promoted = promoteJrpcErrclassConjunction(jrpcErrclassDomain.get,
+      irResults)
+    let c = promoted.conjunction
+    case c.outcome
+    of "clDisproved":
+      logWarn("axiom_engine", "jrpc-errclass C = clDisproved: P" &
+        $c.disproofOrdinal & " (" & c.disproofCarrier & ") — governed unit " &
+        jrpcErrclassDomain.get.symbol & " carries the replay-agreed witness")
+    of "clProved":
+      logInfo("axiom_engine", "jrpc-errclass C = clProved (" &
+        $c.boundCount & "/" & $jrpcErrclassDomain.get.instances.len &
+        " instances bound)")
+    else:
+      logInfo("axiom_engine", "jrpc-errclass C = UNKNOWN (" & $c.boundCount &
+        "/" & $jrpcErrclassDomain.get.instances.len &
+        " instances bound; no promotion)")
+    irResults = promoted.results
 
   var currentRequests = requests
   var batchReport = runBatchUapOrchestration(
@@ -443,10 +722,19 @@ proc runBatchVerification*(
 
     let manifestPath = vaultDir / "manifest.json"
     var manifest = loadManifest(manifestPath)
-    for cert in irBatch.certificates:
+    for i, cert in irBatch.certificates:
       if cert.irHash.len > 0:
         let modulePath = scopeRelativeModulePath(cert.sourceFile)
-        let status = if cert.status == psPass: tierToStatusString(tierFromEvidence(CertificateEvidence(z3Passed: true, leanVerified: false)))
+        # Status is a PURE projection of this run's stored evidence
+        # (DECISION-0630): a psPass certificate may be Lean-only, dual, or
+        # Z3-only. Hardcoding z3-only here demoted every canonical Lean/dual
+        # acceptance to certZ3Candidate in the manifest while the emitted
+        # certificate carried the true tier.
+        let status = if cert.status == psPass:
+                       let leanVerified =
+                         i < irResults.len and irResults[i].evidence.isSome
+                       let z3Passed = i < irResults.len and irResults[i].z3Sat
+                       tierToStatusString(tierFromResults(z3Passed, leanVerified))
                      elif cert.status == psNoObligation: "certNoObligation"
                      elif cert.status == psFail: "certRed"
                      else: "certYellow"
@@ -2311,31 +2599,6 @@ const SidecarGrammarV1* = "nim-sidecar-expr-v1"
   ## a new grammar must ship with a new engine version).
 
 type
-  SidecarSubjectPin* = object
-    ## The adoption record's subject pin: which exact bytes of which module
-    ## symbol the adopted proposition is about. Every field is required and
-    ## format-checked; the blob digest is additionally VERIFIED against the
-    ## module bytes at the recorded path under the subject root.
-    source*: string
-    module*: string
-    symbol*: string
-    commit*: string
-    blobSha256*: string
-
-  SidecarAdoptionRecord* = object
-    ## The hash-bound adoption record. adoptedSpecHash is the SpecID
-    ## (specIdentity) of the exact proposition content — recomputed at load
-    ## time and compared byte-exactly. provenance preserves the content's
-    ## authorship chain; authorship confers NO authority — the adoption act
-    ## (this committed, hash-bound record) is the authority.
-    adoptedSpecHash*: string
-    adopter*: string
-    adoptedAt*: string
-    basis*: string
-    grammarVersion*: string
-    subject*: SidecarSubjectPin
-    provenance*: string
-
   SidecarProposition* = object
     ## One adopted proposition instance: defect (expected SAT — the
     ## counterexample witness) or control (expected UNSAT — the injection
@@ -3116,70 +3379,6 @@ const JrpcErrclassModelRule = "jrpc-errclass-model-v1"
   ## The derivation-digest rule identity for the parse-bound components
   ## (the d2/bv lane's model-v1 naming shape).
 
-type
-  JrpcErrclassRegionKind* = enum
-    jrkSingleton = "singleton"
-    jrkRange = "range"
-    jrkRemainder = "remainder"
-
-  JrpcErrclassRegion* = object
-    ## One mapping region: the singleton `{code}`, the closed range
-    ## `[low, high]`, or the remainder (the complement of the concrete
-    ## regions — the source's final else, FREEZE §5).
-    case kind*: JrpcErrclassRegionKind
-    of jrkSingleton:
-      code*: int64
-    of jrkRange:
-      rangeLow*: int64
-      rangeHigh*: int64
-    of jrkRemainder:
-      discard
-
-  JrpcErrclassMappingEntry* = object
-    ## One adopted classification row: (tag, concrete class, region).
-    tag*: int
-    className*: string
-    region*: JrpcErrclassRegion
-
-  JrpcErrclassInstance* = object
-    ## One pinned boundary instance (FREEZE §6): the code and the adopted
-    ## expected class/tag; preText/postText are the DERIVED closed-grammar
-    ## clause texts and pre/post their parsed IR.
-    code*: int64
-    expectedClass*: string
-    expectedTag*: int
-    preText*: string
-    postText*: string
-    pre*: IRExpr
-    post*: IRExpr
-
-  JrpcErrclassDomain* = object
-    ## The synthesis-relevant projection of the overlay: the governed
-    ## module+symbol key, the mapping table, the pinned instances, and the
-    ## hash-bound adoption record (the sidecar's record type — the lane's
-    ## own grammar version string is the only difference). Everything is
-    ## parsed mechanically from the document — no subject names are
-    ## hardcoded in the engine.
-    modulePath*: string
-    symbol*: string
-    ruleId*: string
-    importModule*: string
-    mapping*: seq[JrpcErrclassMappingEntry]
-    instances*: seq[JrpcErrclassInstance]
-    adoption*: SidecarAdoptionRecord
-
-func errclassCarrierName*(domain: JrpcErrclassDomain; index: int): string {.
-    raises: [].} =
-  ## The synthesized carrier's kernel name for one pinned instance — derived
-  ## from the governed symbol; never a symbol the subject declares. Document
-  ## instance 1 is the defect member (wave-facing); instances 2.. are
-  ## controls under their own names, two-digit padded (census dedupe key
-  ## stability up to 99 instances).
-  if index == 0:
-    domain.symbol & "_errclass_defect"
-  else:
-    domain.symbol & "_errclass_control_" & align($(index + 1), 2, '0')
-
 func overlayDeclaresJrpcErrclassSubject*(domain: JrpcErrclassDomain; fnName,
     modulePath: string): bool {.raises: [].} =
   ## D4 membership for the errclass overlay: the gate hit is the governed
@@ -3449,6 +3648,24 @@ func validateJrpcErrclassAdoption(node: JsonNode): Result[SidecarAdoptionRecord,
       blobSha256: blob),
     provenance: adoption{"provenance"}.getStr("")))
 
+func jrpcErrclassAdoptionDigest(a: SidecarAdoptionRecord): string {.
+    raises: [].} =
+  ## Canonical projection of the adoption record (§2.1a-4). The digest binds
+  ## what was adopted, by whom, on which subject pin, under which grammar —
+  ## approval provenance is part of the identity, not decoration.
+  sha256Hex("jrpc-errclass-adoption-v1" &
+    "|spec=" & a.adoptedSpecHash &
+    "|adopter=" & a.adopter &
+    "|adoptedAt=" & a.adoptedAt &
+    "|basis=" & a.basis &
+    "|grammar=" & a.grammarVersion &
+    "|source=" & a.subject.source &
+    "|module=" & a.subject.module &
+    "|symbol=" & a.subject.symbol &
+    "|commit=" & a.subject.commit &
+    "|blob=" & a.subject.blobSha256 &
+    "|provenance=" & a.provenance)
+
 proc validateJrpcErrclassOverlayNode*(node: JsonNode): Result[JrpcErrclassDomain, string] {.
     raises: [], axiomDecision.} =
   ## The pure validation core of the errclass loader — the TWO-STAGE
@@ -3606,6 +3823,16 @@ proc validateJrpcErrclassOverlayNode*(node: JsonNode): Result[JrpcErrclassDomain
       "module file: " & modulePath)
   let importModule = if parts.dir.len == 0 or parts.dir == ".":
       parts.name else: parts.dir / parts.name
+  let generatorDigest = sha256Hex("jrpc-errclass-model-generator-v1" &
+    "|ruleId=" & specRes.value.ruleId &
+    "|ruleVersion=" & specRes.value.ruleVersion &
+    "|grammar=" & JrpcErrclassGrammarV1)
+  let adoptionDigest = jrpcErrclassAdoptionDigest(adoptionRes.get)
+  # §2.1a-4 source identity: the CANONICAL spec identity recomputed from the
+  # loaded proposition content (already byte-compared with the adoption
+  # above). It is the same value the loader path and the capability-adapter
+  # path can both see — the pure validator is the single source, so the two
+  # entry points can never disagree about which spec content was adopted.
   ok(JrpcErrclassDomain(
     modulePath: modulePath,
     symbol: adoptionRes.get.subject.symbol,
@@ -3613,7 +3840,10 @@ proc validateJrpcErrclassOverlayNode*(node: JsonNode): Result[JrpcErrclassDomain
     importModule: importModule,
     mapping: mapping,
     instances: instances,
-    adoption: adoptionRes.get))
+    adoption: adoptionRes.get,
+    sourceDigest: computed,
+    generatorDigest: generatorDigest,
+    adoptionDigest: adoptionDigest))
 
 proc loadJrpcErrclassOverlayDomain*(): Result[JrpcErrclassDomain, string] {.
     raises: [], axiomDecision, axiomEffect: IOEffect,
@@ -3633,6 +3863,8 @@ proc loadJrpcErrclassOverlayDomain*(): Result[JrpcErrclassDomain, string] {.
   if nodeOpt.isNone:
     return err("cannot read jrpc-errclass overlay " & overlayPath &
       " (unreadable or not valid JSON)")
+  # The domain's three §2.1a-4 digests are computed by the PURE validator from
+  # the loaded content — this loader adds no second identity path.
   validateJrpcErrclassOverlayNode(nodeOpt.get)
 
 func errclassClassifyModel*(domain: JrpcErrclassDomain): IRExpr {.raises: [].} =
@@ -3789,8 +4021,8 @@ proc synthesizeJrpcErrclassCandidates*(examinedFn, modulePath: string;
     ## expected-tag claim β-spliced to the `result` slot exactly once. The
     ## provenance stamp is honest by construction: the carrier is a
     ## constructed IR ADOPTED MODEL (never an extraction — the EA legs stay
-    ## empty and the canonical seal declines, the BMC lane decides the
-    ## model), plus the deterministic derivation digest, plus the stamped
+    ## empty and the canonical binding uses the constructed-model mode
+    ## §2.1a-4), plus the deterministic derivation digest, plus the stamped
     ## replay harness template that observes the ORIGINAL constructor.
     var composite = IRFuncDef(
       name: carrierName,
@@ -3818,6 +4050,13 @@ proc synthesizeJrpcErrclassCandidates*(examinedFn, modulePath: string;
       return err("errclass claim references unbound name(s): " &
         unbound.join(", "))
     composite.postConditions = @[claim]
+    # Lean renders the def-application form, not the β-spliced body: the
+    # theorem then references the carrier constant, so renderLeanForFuncDef
+    # emits `unfold <carrier>; omega` instead of treating the inline if-chain
+    # as an opaque atom. Measured in Phase 0.5: spliced form fails 13/13 with
+    # sorryAx; def-application form closes 13/13 within the axiom allowlist.
+    # postConditions stays the β-spliced claim (SMT/obligation identity).
+    composite.leanPostConditions = @[cloneIRExpr(inst.post)]
     # Constructed-IR completeness bits: nothing was translated — the carrier
     # is built directly in IR from the adopted mapping, so every region it
     # carries is fully spelled by construction. The renderers and the
@@ -3857,8 +4096,16 @@ proc synthesizeJrpcErrclassCandidates*(examinedFn, modulePath: string;
     # ordinal, and the parse-bound components carry the stamped replay
     # harness template (SubjectParseBoundComponents.replayHarnessTemplate —
     # the only field the replay path consumes).
-    var parseBound = measureClaimCarrierParseBoundComponents(
-      moduleBytes, domain.symbol, derivationRule)
+    # §2.1a-4 constructed-model binding: the carrier is NOT an extraction —
+    # the model was built from the adopted mapping, so the parse-bound set
+    # records the three adoption digests (source/generator/adoption) and the
+    # digest of THIS carrier. The binding site re-measures the body digest and
+    # refuses a mismatch: only the byte-identical constructed model is sealed.
+    var parseBound = measureConstructedModelParseBoundComponents(
+      moduleBytes, domain.symbol, domain.sourceDigest, domain.generatorDigest,
+      domain.adoptionDigest, derivationRule)
+    parseBound.constructedModelBodyDigest =
+      sha256Hex(serializeIRFuncDef(composite))
     parseBound.replayHarnessTemplate = stamped
     ok(ExternalIrEntry(entry: entry, funcDef: composite, parseBound: parseBound))
 
@@ -5690,6 +5937,10 @@ type
     kernelScope*: KernelScopeInfo
     computeLimit*: int
     externalCandidates*: seq[ExternalIrEntry]
+    jrpcErrclassDomain*: Option[JrpcErrclassDomain]
+      ## The already-validated jrpc-errclass adoption (registry dispatch
+      ## payload) — the SAME parse that synthesized the carriers, threaded to
+      ## the conjunction so C is never re-read from a second spec parse.
     targetVkd*: string
     verifiedFuncsInitial*: HashSet[string]
     excludedUnits*: HashSet[string]
@@ -5797,6 +6048,7 @@ proc runOneWave(inputs: WaveInputs; engine: var AxiomEngine; frontier: seq[Sorte
     verifiedFuncs = inputs.verifiedFuncsInitial,
     kernelScope = inputs.kernelScope,
     externalCandidates = inputs.externalCandidates,
+    jrpcErrclassDomain = inputs.jrpcErrclassDomain,
     subjectRepoRoot = inputs.sourceRoot,
     targetVkd = inputs.targetVkd)
   if verifyRes.isErr():
@@ -6282,6 +6534,18 @@ proc loadRankedSelectionState(): tuple[state: NodeSelectionState, cacheDir: stri
   let cacheDir = stateJoin(".axiom", "cache")
   (loadSelectionState(cacheDir), cacheDir)
 
+func jrpcErrclassPayloadOf(prepared: PreparedRun): Option[JrpcErrclassDomain] {.
+    raises: [].} =
+  ## The registry's already-validated jrpc-errclass adoption payload — the
+  ## SAME parse that synthesized the carrier fleet. Threading this value (not
+  ## re-reading the overlay) keeps the conjunction and the model on one
+  ## hash-bound source for the whole run.
+  for entry in prepared.registryPayloads:
+    if entry.specRelPath == jrpcErrclassRegistryEntryRelPath and
+        entry.payload.kind == capJrpcErrclass:
+      return some(entry.payload.jrpc)
+  none(JrpcErrclassDomain)
+
 func makeWaveInputs(prepared: PreparedRun; task: ProofTask; planPath: string): WaveInputs {.raises: [].} =
   ## Everything the wave loop reads, in one value. §13.1: the frozen start
   ## snapshot fields ride along — the loop never re-derives them.
@@ -6296,6 +6560,7 @@ func makeWaveInputs(prepared: PreparedRun; task: ProofTask; planPath: string): W
     kernelScope: prepared.kernelScope,
     computeLimit: prepared.computeLimit,
     externalCandidates: prepared.census.eligible,
+    jrpcErrclassDomain: jrpcErrclassPayloadOf(prepared),
     targetVkd: prepared.targetVkd,
     verifiedFuncsInitial: prepared.verifiedFuncsInitial,
     excludedUnits: prepared.excludedUnits,

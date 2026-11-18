@@ -203,6 +203,15 @@ type
       ## The bindings and guards are then faithful while the obligation SET may
       ## not be complete: the lost statement can hide another guard. This is a
       ## coverage statement, never a rejection reason.
+    leanPostConditions*: seq[IRExpr] = @[]
+      ## LEAN-RENDERING-ONLY view of the postconditions. Excluded from
+      ## serializeIRFuncDef (hence from computeIrDigest); the rendered theorem's
+      ## identity is bound separately by leanSourceHash (§2.1a). A constructed
+      ## model carrier keeps the β-spliced claim in postConditions (SMT /
+      ## obligation identity) and the un-spliced `result` form here, so the
+      ## Lean theorem references the def and `unfold` is emitted. Measured in
+      ## Phase 0.5: omega alone treats the inline if-chain as an opaque atom
+      ## and fails 13/13; with `unfold` it closes 13/13.
 
   IRFuncDecl* = object
     ## 외부 함수 선언 — SMT (declare-fun ...)의 메타데이터
@@ -523,6 +532,9 @@ func canonicalizeIR*(f: IRFuncDef): IRFuncDef {.raises: [].} =
   result.postConditions = @[]
   for pc in f.postConditions:
     result.postConditions.add(canonicalizeExpr(pc, renameMap, counter))
+  result.leanPostConditions = @[]
+  for pc in f.leanPostConditions:
+    result.leanPostConditions.add(canonicalizeExpr(pc, renameMap, counter))
 
 # ---------------------------------------------------------------------------
 # IR digest (deterministic SHA-256 for audit trail)
