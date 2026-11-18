@@ -89,8 +89,13 @@ jobs:
         # DEBT#547 unsupported IR). The exit code is captured as observation
         # data; the verdict projection below owns the state semantics.
         run: |
-          set -uo pipefail
-          mkdir -p "$AXIOM_STATE_DIR"
+          set -euo pipefail
+          # The state root carries the Axiom identity inputs, not a subject
+          # copy: with AXIOM_STATE_DIR set, the scope lock + baseline resolve
+          # under <state>/data (resolveScopeLockPath; same seeding discipline
+          # as byo-agent.yml). They are tracked inputs, not measurements.
+          mkdir -p "$AXIOM_STATE_DIR/data" "$AXIOM_STATE_DIR/logs"
+          cp data/verification_scope.lock data/baseline.json "$AXIOM_STATE_DIR/data/"
           set +e
           ./bin/ax prove --fresh
           prove_exit=$?
