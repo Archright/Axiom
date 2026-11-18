@@ -1120,7 +1120,7 @@ test-fast: ## L1: 빠른 증분 developer verify (캐시 보존, no LTO, 병렬 
 test-fast-one: ## test-fast <FILE|TARGET> — 단일 대상만 증분 검증 /usage: make test-fast-one T=testFilePath/name
 	@if [ -z "$(T)" ]; then echo "usage: make test-fast-one T=tests/unit/axiom_ir_test.nim"; exit 1; fi
 	@export AXIOM_CI_PRESERVE_CACHE=1; \
-	AXIOM_CI_PRESERVE_CACHE=1 $(NIM) c -r --hints:off --nimcache:build/nimcache/test -o:/tmp/opencode/ax-one "$(T)"
+	AXIOM_CI_PRESERVE_CACHE=1 $(NIM) c -r --hints:off --passC:-O2 --nimcache:build/nimcache/test -o:/tmp/opencode/ax-one "$(T)"
 
 test-all: ## 전체 테스트: 단위 + gateway 순차 실행
 	@$(MAKE) test-unit
