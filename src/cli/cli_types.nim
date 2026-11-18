@@ -165,6 +165,7 @@ type
     apProject = "--project"
     apPlan = "--plan"
     apProposals = "--proposals"
+    apFresh = "--fresh"
 
   AxProveFlags* = object
     ## ax prove — scan the subject source, prove frontier targets in waves
@@ -177,6 +178,7 @@ type
     project*: string = ""              ## --project <dir> — explicit subject root (fail-closed w/o AXIOM_STATE_DIR)
     plan*: string = ""                 ## --plan <path> — consume an ExecutionPlan JSON (fail-closed: parse error or tampered plan rejects)
     proposals*: string = ""            ## --proposals <path> — BYO-Agent propositions intake JSON (fail-closed: schema/reason exit 3)
+    fresh*: bool = false               ## --fresh — no prior verification result may satisfy a unit: vault verified-set hydration, vault spec priming, certificate hydration and the summary cache are all bypassed; every frontier candidate is executed in this invocation
 
   AxReportFlag* = enum
     arJson = "--json"
