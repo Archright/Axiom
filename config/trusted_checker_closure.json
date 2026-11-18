@@ -1489,7 +1489,7 @@
     "src/core/policy/rotation_closure_facts.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "0f7f2944d673f5fd46395172a69371d1f8fac251"
+      "sha": "e416f5ebddce0466b625f0867e766de8f090ba03"
     },
     "src/core/policy/section_parsers.nim": {
       "mode": "100644",
