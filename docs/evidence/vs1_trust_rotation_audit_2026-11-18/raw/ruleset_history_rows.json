@@ -1,0 +1,314 @@
+[
+ {
+  "version_id": 58302886,
+  "updated_at": "2026-11-18T11:29:14.618+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58302871,
+  "updated_at": "2026-11-18T11:29:10.243+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58299321,
+  "updated_at": "2026-11-18T10:56:47.151+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58299317,
+  "updated_at": "2026-11-18T10:56:42.956+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58294288,
+  "updated_at": "2026-11-18T10:14:28.263+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58294264,
+  "updated_at": "2026-11-18T10:14:23.557+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58214470,
+  "updated_at": "2026-11-18T01:24:33.292+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58214455,
+  "updated_at": "2026-11-18T01:24:27.816+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58213340,
+  "updated_at": "2026-11-18T01:18:54.266+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58213324,
+  "updated_at": "2026-11-18T01:18:48.198+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58200678,
+  "updated_at": "2026-11-18T00:15:10.076+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58200591,
+  "updated_at": "2026-11-18T00:14:49.963+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58144129,
+  "updated_at": "2026-11-17T18:08:14.535+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58144103,
+  "updated_at": "2026-11-17T18:08:00.778+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58130717,
+  "updated_at": "2026-11-17T16:09:53.184+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58130708,
+  "updated_at": "2026-11-17T16:09:48.456+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58130653,
+  "updated_at": "2026-11-17T16:09:05.219+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58130640,
+  "updated_at": "2026-11-17T16:08:54.615+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58127353,
+  "updated_at": "2026-11-17T15:30:49.186+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58121996,
+  "updated_at": "2026-11-17T14:20:29.142+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58121984,
+  "updated_at": "2026-11-17T14:20:24.620+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58053484,
+  "updated_at": "2026-11-17T04:06:53.673+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58053443,
+  "updated_at": "2026-11-17T04:06:36.394+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58043550,
+  "updated_at": "2026-11-17T03:16:35.312+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58043542,
+  "updated_at": "2026-11-17T03:16:30.900+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58030755,
+  "updated_at": "2026-11-17T01:50:56.626+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58030608,
+  "updated_at": "2026-11-17T01:50:14.095+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 58006001,
+  "updated_at": "2026-11-16T23:19:58.078+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 57785863,
+  "updated_at": "2026-11-15T00:32:35.673+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 57785857,
+  "updated_at": "2026-11-15T00:32:27.395+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 57452553,
+  "updated_at": "2026-11-12T19:20:26.769+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 57452531,
+  "updated_at": "2026-11-12T19:20:17.953+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 57450386,
+  "updated_at": "2026-11-12T19:06:11.866+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 57450353,
+  "updated_at": "2026-11-12T19:06:01.613+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 57436918,
+  "updated_at": "2026-11-12T17:25:58.881+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 57436890,
+  "updated_at": "2026-11-12T17:25:48.465+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 57434348,
+  "updated_at": "2026-11-12T17:03:40.551+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 57434265,
+  "updated_at": "2026-11-12T17:02:55.038+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ },
+ {
+  "version_id": 57429526,
+  "updated_at": "2026-11-12T16:10:00.876+09:00",
+  "actor": 53123826,
+  "bypass": null,
+  "can_bypass": null,
+  "rules": []
+ }
+]
