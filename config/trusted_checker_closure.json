@@ -224,7 +224,7 @@
     "src/cli/merge_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "7250057ca52fb9f4d199d4020659e5780767f298"
+      "sha": "e682fcafa2dc719236dbd851295caac917db2908"
     },
     "src/cli/payload_bridge.nim": {
       "mode": "100644",
@@ -1489,7 +1489,7 @@
     "src/core/policy/rotation_closure_facts.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "72006bd5e0aa80a4e2d46e5c1ec3773c334884be"
+      "sha": "0f7f2944d673f5fd46395172a69371d1f8fac251"
     },
     "src/core/policy/section_parsers.nim": {
       "mode": "100644",
@@ -3739,7 +3739,7 @@
     "src/verification/evidence_cas.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "007f4dade6c561c29a96677014b6f564ccd075cf"
+      "sha": "37bea109ee1dbf6d7912fac242d0c4fc2a049795"
     },
     "src/verification/evidence_ledger.nim": {
       "mode": "100644",
