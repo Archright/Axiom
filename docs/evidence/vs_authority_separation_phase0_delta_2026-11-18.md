@@ -351,3 +351,77 @@ TWS `trustedCheckerTreeClosure` **890개 전부**가 해당 경로의 blob SHA�
 5. 원장은 정확히 1개 entry만 증가했고, 그 entry는 검증 가능하다.
 
 **DEBT#558의 교착은 종결됐다.** 남은 것은 이 slice의 다른 축(단일 writer, Rule A, negative control)이다.
+---
+
+## §17. PR #165 수용 — preflight 앵커 결함과 두 번째 merge-queue 착지
+
+측정 시각: 2026-11-18 UTC. 대상: PR #165 (docs-only, base `cc63569`, head `35bf76c`).
+
+### 17.1 차단 결함: preflight가 event base에 고정되어 있었다
+
+| 단계 | 관측값 |
+|---|---|
+| 최초 preflight run | `44237708024` attempt 1 — App `admission-check` **failure** |
+| App 사유 | `trust_surface=FAIL — venue=pull_request manifest_ref=cc63569 touched=0 reasons=compare_status:diverged` |
+| 원인 | Worker v2가 `event_base...head` 비교에서 status `ahead`/`identical`만 수용. PR branch가 main 뒤에 있으면 `diverged`로 거부 |
+| 그 사이 main 이동 | `9c8f172` → `cc63569` (#162 착지) |
+| 재실행 | attempt 2도 **failure** — in-repo `mint-prepare`의 exact `base.sha` 가드 (#151 A0와 동일 계열) |
+
+수정:
+
+- Worker v3 `27ae5311-23a8-47a3-936e-95733448dcd8`, rev `2026-11-18.4-preflight-main-anchor`,
+  source sha256 `2efb2abe081257004fc7553a3b469a160feaf9f5ad28fdadc740c18a6ecfe84b`.
+- pull_request venue는 **현재 main tip..head**를 비교하고 `ahead`/`identical`/`behind`/`diverged`를
+  merge-base diff로 평가한다. 판정 detail에는 `diff_base`를 기록한다.
+- 회귀 `node test/run.mjs` → **28/28 PASS**.
+- 롤백 체인: `3ee49b00` (v1) → `5050d518` (v2) → `27ae5311` (v3, current).
+
+정정: **preflight는 원장에 쓰지 않는다.** attempt 1의 `mint-publish/publish`는 success였으나
+`certificate-mint.yml`의 venue 분리(ADR-0032 — preflight는 static contrast only)에 따라
+원장 tip에 entry가 추가되지 않았다. 원장 entry의 `run_id`에 `44237708024`는 없다.
+
+### 17.2 preflight PASS
+
+| 단계 | 관측값 |
+|---|---|
+| branch update | `667d91b` + merge `origin/main` → `35bf76c` |
+| preflight run | `44240001691` attempt 1 — **success** |
+| App check | `success` — `trust_surface=PASS — venue=pull_request manifest_ref=cc63569 touched=1 manifest_touched=0` |
+| required checks | 전부 success, `mergeStateStatus=CLEAN` |
+
+### 17.3 merge queue 수용
+
+| 단계 | 관측값 |
+|---|---|
+| enqueue | position 1, `AWAITING_CHECKS` |
+| merge group | `G=4a3aaaa1df7c031dcca979b165d484ce0ea24fad` |
+| base (G.parent[0]) | `cc635690a3151165470668b7e7cb45ce77d6ad4b` |
+| PR head (G.parent[1]) | `35bf76cabbd17e50abf76252df6ef5fae5f3e83d` |
+| merge_group run | `44240863626` attempt 1 — **success** |
+| App trust_surface | **PASS** — `venue=merge_group manifest_ref=cc63569 touched=17 reasons=none` |
+| App ledger | **PASS** — `1 entry bound to (base, pr_head)`, baseline `a34fef06` |
+| App check on G | `admission-check` @5795152 **success** (suite `119759499104`) |
+| GitHub merge | **MERGED** at `2026-11-18T05:04:21Z`, merge commit = `4a3aaaa1…` = G |
+| canonical main | `4a3aaaa1…` |
+| ledger | `a34fef06…` → `9b75126b…`, **128 → 129 entries**, 추가 파일 정확히 1개 |
+| 신규 entry | `b5503361…json`, `base=cc63569…`, `head=35bf76c…`, `run_id=44240863626`, `field_binding=ok` |
+| 신규 entry 검증 | `ax cert ledger-verify` → `OK — record for subjectId b55033615c7b consistent (D6 (A) HOLDS, append count 0)` |
+| 재빌드 | `make build` 후 provenance `vs1-tree-hash/1:-6467526186532383651` |
+
+### 17.4 field-aware comparator의 양방향 실측
+
+| PR | venue | 결과 |
+|---|---|---|
+| #151 | merge_group | `touched=17 closure_reanchored=1` — 허용된 TWS 변경 수용 |
+| #162 | merge_group | `touched=17 closure_reanchored=10` — rotation pin reanchor 수용 |
+| #165 | pull_request | `touched=1 manifest_touched=0` — 비신뢰 표면 변경 무시 |
+| (회귀) | unit | 보호 필드 변경·필드 추가/삭제·타입 변경·closure 불일치 **거부** |
+
+즉 DEBT#558은 "거부"뿐 아니라 "정상 변경 수용" 측면에서도 실측으로 성립한다.
+
+### 17.5 이 수용이 확립하지 않은 것
+
+- App writer는 아직 구현되지 않았다 (Worker는 read-only + check 발행만).
+- Actions `GITHUB_TOKEN`의 원장 쓰기는 여전히 **차단되지 않았다** (Rule A 미적용).
+- job-level writer 전수 탐지(DEBT#557)와 과거 원장 129건 전체 재검증(DEBT#555)은 별도 단계다.
+- fork PR admission, release tag immutability는 이 slice의 계약이 아니다.
