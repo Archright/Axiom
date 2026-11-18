@@ -5921,6 +5921,26 @@
       "lastVerifiedAt": "2026-11-17T00:00:00Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the finding is a non-Nim shell gate with no {.axiomDebt.} pragma site, so the registry entry itself is the binding medium. Trace: this entry's resolution (UNRESOLVED) and source (theater_audit); external: tools/ci/verify_trusted_writer_set.sh:100-115 and the measured job-level grants in .github/workflows/admission-gate-v2.yml, release-ship.yml, dependabot-auto-merge.yml."
+    },
+    {
+      "id": "DEBT#558",
+      "category": "Trust / Evidence",
+      "impact": "high",
+      "severity": "high",
+      "title": "Trust-surface manifest includes the rotation pin, so every source change re-anchors a protected path and the App denies admission-check — source PRs cannot land while bypass_actors is empty",
+      "description": "Machine-observed 2026-11-18 (PR #151, App 5795152 admission-check failure, delivery 95c6c620-e2eb-11f1-97dd-43dda54ed4e0). config/policy/trust_surface_manifest.json lists 17 paths whose blobs must be byte-identical between G and B_mg, and config/trusted_writer_set.json is one of them (:22). That file carries trustedCheckerTreeClosure — the pin over 890 code files — and .githooks/pre-push fails any push whose target OID the pin does not anchor (measured: ebc9886 FAIL 'rotation pin does not anchor pushed commit 29354d1'), so every source change must re-anchor the pin inside the same PR. The App compares all 17 blobs (worker/src/index.js:309-338) and any mismatch forces conclusion=failure (:180-185). Measured on PR #151: 17 paths compared, exactly 1 mismatch (config/trusted_writer_set.json ef040a7d→52005fde), App summary 'trust_surface=FAIL — mismatch:config/trusted_writer_set.json (total 1)', while the Actions-app check also named admission-check (15368) reported success. Ruleset 27097366 requires admission-check from integration 5795152 with bypass_actors [] (readback 2026-11-18), so a failed App check blocks merge with no bypass path, including the MUST-T2a manual lane. Consequence: since the expected-source switch (ruleset updated_at 2026-11-17T16:24:33Z) no source PR can land; the last trust-surface PR (#144) landed 6 minutes before the switch. Remediation options: (a) make the App compare the writer-set file field-wise, mirroring the epoch gate's documented split — a trustedCheckerTreeClosure re-anchor with the pin VALUE unchanged is NOT a pin change (tools/ci/epoch_transaction_gate.nim:662-680) — accepting only closure hash changes while the path set and trustedWriterWorkflow/trustedAdmissionWorkflowSha stay identical; or (b) remove the pin record from the byte-identical manifest and protect it by the epoch gate alone. Both are trust-contract changes requiring an explicit decision; a temporary bypass only moves the deadlock to the next source PR.",
+      "symbol": "checkTrustSurface × trustedCheckerTreeClosure self-reference (config/policy/trust_surface_manifest.json:22; out-of-tree worker/src/index.js:309-338)",
+      "contentHash": "sha256:319e38200004de4b4ba4c9bb0f28848a1f70c3e94ca5a9e8ef12b3da6c34c53d",
+      "lineRange": "config/policy/trust_surface_manifest.json:6-24",
+      "files": [
+        "config/policy/trust_surface_manifest.json"
+      ],
+      "source": "vs_authority_separation_2026-11-18",
+      "status": "open",
+      "resolution": "UNRESOLVED — registration only (the fix changes the verifier's acceptance class or the manifest contract; both are trust-boundary decisions with an explicit approval/epoch requirement, and a bypass-only landing leaves the next source PR blocked). Acceptance: a source-only PR that re-anchors the closure receives App admission-check=success while the writer-set pin VALUE and path set are unchanged, and a PR that changes trustedWriterWorkflow, trustedAdmissionWorkflowSha, or the pinned path set is still denied.",
+      "lastVerifiedAt": "2026-11-18T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the finding spans a policy manifest, an out-of-tree verifier (Worker), and the pre-push rotation-pin adjudication, so no single {.axiomDebt.} pragma site exists; the registry entry itself is the binding medium. Trace: this entry's resolution (UNRESOLVED) and source (vs_authority_separation_2026-11-18); external: config/policy/trust_surface_manifest.json:22, worker/src/index.js:309-338 (out-of-tree), .githooks/pre-push rotation-pin adjudication, PR #151 App check delivery 95c6c620-e2eb-11f1-97dd-43dda54ed4e0."
     }
   ]
 }
