@@ -4553,12 +4553,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:8f4777e3a8d2483708bfa3fb647c53f787af4723950a92804d1513841fcd5e12",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:d2ea4107bdc4b2650694e52f049f2f9854d4ed98a21b370cc56539c364dfaee6",
       "count": 1,
       "file": "src/verification/ledger_side_ref.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:e1dcd99458fd87ae2dfd1e1a486a9ca7217c25b8be1f000a41fba3d5f1e300e2"
+      "rawContentHash": "sha256:c6b90be6273bd7c6445fb70311eb930ecbc8ed6baab2ea303e65d03e7be69a23"
     }
   ]
 }
