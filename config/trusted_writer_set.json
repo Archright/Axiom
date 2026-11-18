@@ -98,7 +98,7 @@
     "src/cli/axiom_engine.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "4b68f6e67a99d9bdfb1bc4cdb5b93bf8c21bbb38"
+      "sha": "9d900b77a5acdc230f9c3ff0a920aa6b123d5071"
     },
     "src/cli/axiom_status.nim": {
       "mode": "100644",
@@ -153,12 +153,12 @@
     "src/cli/cli_surface_generated.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "d58980bb73f1558375ccd4baf02c42ea1a1f616f"
+      "sha": "1f1a69e269a9149e35027b3b4a509ace4472e755"
     },
     "src/cli/cli_types.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "5cf615629f07ead2dd5beeb3ffd14954d5434b21"
+      "sha": "c4308208b133aea0d2927f7584748697c0272052"
     },
     "src/cli/commands/command_registry.nim": {
       "mode": "100644",
@@ -3588,7 +3588,7 @@
     "src/verification/batch_uap/certificate_hydration_runner.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "3084f17e2a2bd3b5864a5a8920e6348ac211a1d3"
+      "sha": "8a9134b998590292fc343a2cf3d46419745ff99d"
     },
     "src/verification/batch_uap/instrumentation.nim": {
       "mode": "100644",
@@ -3608,7 +3608,7 @@
     "src/verification/batch_uap/loop_driver.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "11bff3fa0f8863dbf84a2955611a56ac7df2212b"
+      "sha": "a734d15b4eaac74e6d75dfa3d65bc12d7f29ddc4"
     },
     "src/verification/batch_uap/loop_topology.nim": {
       "mode": "100644",
