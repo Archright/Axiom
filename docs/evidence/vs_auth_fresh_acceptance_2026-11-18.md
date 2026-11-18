@@ -38,6 +38,19 @@ blanket 무효 조항과 충돌하지 않도록, 본 세션 작업 = "VS-AUTH-FR
 - 실행자: agent under explicit per-PR delegation from wintrover. 운영자의 인증된 `gh auth`
   세션에서 실행되며 actor attribution은 운영자다(MUST-T2a (2)).
 
+**§2.3. PR-B (#159) 위임 — trust-surface rotation pin 포함**
+
+- 대상: PR #159 (branch `vs/auth-fresh`). `config/trusted_writer_set.json`의
+  `trustedCheckerTreeClosure`(rotation pin) 갱신을 포함하므로 **trust-surface PR**이다 —
+  리베이스로 이동한 checker closure blob 5건을 H2(`rotation_pin_anchor_check`)가 요구한다.
+- 승인: §2.1의 동일 원문(2026-11-18, per-PR·시점명시)이 본 PR의 착지에도 적용된다.
+  기록자 ≠ 승인자, agent는 실행자다.
+- 정상 경로 예측: App `admission-check`는 `mismatch:config/trusted_writer_set.json`으로
+  거부될 것으로 예측된다(관측값은 §5.2에 기록). 예측은 승인을 대체하지 않는다.
+- 레인: 동일 3단계 break-glass. `--auto` 없음(MUST-T1), queue 0 확인 후 실행(M2),
+  복원 후 RESTORE_IDENTICAL readback. 실행 전 신규 헤드에서 required Actions contexts를
+  관측한다.
+
 ## §3. 정상 경로 폐쇄의 기계 관측 (trust-surface PR)
 
 - live ruleset `27097366`(`main`, active, `bypass_actors: []`)의 required contexts 7개 중
