@@ -184,13 +184,16 @@ func validClosurePath*(path: string): bool {.raises: [], axiomDecision(
   adr = "docs/adr/0042-trust-epoch-closure-split.md",
   introduced = "v104"
 ).} =
-  ## Repo-relative POSIX path: non-empty, not absolute, no NUL, no empty /
-  ## "." / ".." segments. A path that fails this is a contract violation
-  ## (fail-closed) — it can never be a git tree path.
+  ## Repo-relative POSIX path: non-empty, not absolute, no control characters
+  ## (the tab-delimited line grammar cannot represent them — closurePathFromLine
+  ## splits on the last tab, so a tab inside a path would truncate it), no
+  ## empty / "." / ".." segments. A path that fails this is a contract
+  ## violation (fail-closed) — it can never be a git tree path.
   if path.len == 0 or path[0] == '/':
     return false
-  if path.contains('\0'):
-    return false
+  for c in path:
+    if ord(c) < 0x20 or ord(c) == 0x7f:
+      return false
   for seg in path.split('/'):
     if seg.len == 0 or seg == "." or seg == "..":
       return false

@@ -2101,3 +2101,26 @@ suite "adjudicateRotation — split pathSetDigest (ADR-0042)":
     check rotationAllowlistOk(RotationClosurePath, some(b))
     check rotationAllowlistOk(RotationPinBPath, some(b))
     check not rotationAllowlistOk("src/cli/merge_cli.nim", some(b))
+
+  test "validClosurePath rejects control characters (tab line-format boundary)":
+    check validClosurePath("src/cli/merge_cli.nim")
+    check validClosurePath("tools/ci/derive_checker_closure.nim")
+    check not validClosurePath("src/tab\tname.nim")
+    check not validClosurePath("src/newline\nname.nim")
+    check not validClosurePath("src/cr\rname.nim")
+    check not validClosurePath("/absolute.nim")
+    check not validClosurePath("../escape.nim")
+    check not validClosurePath("a//b.nim")
+
+  test "split layout declared without closure records fails closed (never genesis)":
+    let pin = parseJson("{\"pathSetDigest\":\"" & RotationPathSetDigestDomain &
+      ":" & repeat('a', 64) & "\"}")
+    let resolved = resolvePinClosure(pin, nil)
+    check resolved.isErr
+    check resolved.error.contains("closure records are absent")
+
+  test "closure document schemaVersion is required and known":
+    check closureDocSchemaOk(parseJson(
+      "{\"schemaVersion\":\"" & RotationClosureSchemaVersion & "\"}")).isOk
+    check closureDocSchemaOk(parseJson("{\"schemaVersion\":\"v0\"}")).isErr
+    check closureDocSchemaOk(parseJson("{}")).isErr
