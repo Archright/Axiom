@@ -1427,6 +1427,37 @@
       "ignorable": true,
       "leanType": "Unit",
       "module": "src/cli/axiom_engine.nim",
+      "name": "errclassIntLiteral",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Option Table[string, int]",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "errclassObservationIndex",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Option is not numeric",
+        "Use 'isSome(result) or isNone(result)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result none) (exists ((v T)) (= result (some v))))",
+      "returnType": "Option[Table[string, int]]",
+      "smtSort": "(Option Table[string, int])",
+      "typeCategory": "option"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/cli/axiom_engine.nim",
       "name": "errclassPrimary",
       "negativeConstraints": [
         "result does not exist in this function's scope",
@@ -1527,6 +1558,20 @@
       "returnType": "bool",
       "smtSort": "Bool",
       "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "errclassResultKey",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
     },
     {
       "hasAxiomHint": false,
@@ -4727,6 +4772,22 @@
       "returnType": "Result[AxReportFlags, string]",
       "smtSort": "Int",
       "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/cli/cli_surface_generated.nim",
+      "name": "takeIntFlag",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
     },
     {
       "hasAxiomHint": false,
@@ -130981,6 +131042,20 @@
       "leanType": "List bool",
       "module": "src/verification/obligation/obligation_types.nim",
       "name": "bindingModeComponents",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[bool]",
+      "smtSort": "(Seq bool)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List bool",
+      "module": "src/verification/obligation/obligation_types.nim",
+      "name": "boundBaseComponents",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
       ],

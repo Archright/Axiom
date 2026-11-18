@@ -543,6 +543,39 @@ func bindingModeComponents(binding: ObligationSubjectBinding;
       binding.constructedModelAdoptionDigest.len == 0
     ]
 
+func boundBaseComponents(binding: ObligationSubjectBinding): seq[bool] {.
+  raises: [].} =
+  # §2.1a-4: a constructed model has NO extraction measurement, so the EA
+  # legs are not part of its base component set (requiring them would force
+  # their fabrication). Every other mode keeps the twelve-component set
+  # byte-for-byte, so no previously sealed identity changes.
+  if boundBindingMode(binding) == bbmConstructedModel:
+    return @[
+      isSha256Hex(binding.obligationTupleId),
+      isSha256Hex(binding.subjectTreeMerkleRoot),
+      isSha256Hex(binding.subjectModuleSha256),
+      isGitRef(binding.subjectGitRef),
+      binding.pnodeCanonicalV2Digest.len > 0,
+      isSha256Hex(binding.irDigest),
+      binding.completenessRecordDigest.len > 0,
+      isSha256Hex(binding.leanSourceHash),
+      isSha256Hex(binding.toolchainFingerprint)
+    ]
+  @[
+    isSha256Hex(binding.obligationTupleId),
+    isSha256Hex(binding.subjectTreeMerkleRoot),
+    isSha256Hex(binding.subjectModuleSha256),
+    isGitRef(binding.subjectGitRef),
+    binding.pnodeCanonicalV2Digest.len > 0,
+    isSha256Hex(binding.irDigest),
+    isSha256Hex(binding.eaNimDigest),
+    isSha256Hex(binding.eaLeanDigest),
+    isSha256Hex(binding.eaIrcheckBinaryDigest),
+    binding.completenessRecordDigest.len > 0,
+    isSha256Hex(binding.leanSourceHash),
+    isSha256Hex(binding.toolchainFingerprint)
+  ]
+
 func computeBoundObligationId*(binding: ObligationSubjectBinding): string {.
   raises: [].} =
   ## SHA-256 over the labeled minimum binding set. Fail-closed: any absent or
@@ -570,38 +603,7 @@ func computeBoundObligationId*(binding: ObligationSubjectBinding): string {.
   ## so its payload composition is additive: no previously sealed identity is
   ## affected.
   let mode = boundBindingMode(binding)
-  # §2.1a-4: a constructed model has NO extraction measurement, so the EA
-  # legs are not part of its base component set (requiring them would force
-  # their fabrication). Every other mode keeps the twelve-component set
-  # byte-for-byte, so no previously sealed identity changes.
-  var components: seq[bool] =
-    if mode == bbmConstructedModel:
-      @[
-        isSha256Hex(binding.obligationTupleId),
-        isSha256Hex(binding.subjectTreeMerkleRoot),
-        isSha256Hex(binding.subjectModuleSha256),
-        isGitRef(binding.subjectGitRef),
-        binding.pnodeCanonicalV2Digest.len > 0,
-        isSha256Hex(binding.irDigest),
-        binding.completenessRecordDigest.len > 0,
-        isSha256Hex(binding.leanSourceHash),
-        isSha256Hex(binding.toolchainFingerprint)
-      ]
-    else:
-      @[
-        isSha256Hex(binding.obligationTupleId),
-        isSha256Hex(binding.subjectTreeMerkleRoot),
-        isSha256Hex(binding.subjectModuleSha256),
-        isGitRef(binding.subjectGitRef),
-        binding.pnodeCanonicalV2Digest.len > 0,
-        isSha256Hex(binding.irDigest),
-        isSha256Hex(binding.eaNimDigest),
-        isSha256Hex(binding.eaLeanDigest),
-        isSha256Hex(binding.eaIrcheckBinaryDigest),
-        binding.completenessRecordDigest.len > 0,
-        isSha256Hex(binding.leanSourceHash),
-        isSha256Hex(binding.toolchainFingerprint)
-      ]
+  var components = boundBaseComponents(binding)
   components &= bindingModeComponents(binding, mode)
   for ok in components:
     if not ok:

@@ -460,6 +460,22 @@ func errclassQuartetBindsInstance(lines: seq[string];
   subjectFields >= 3 and hasExactInput and hasViolation and
     errclassQuartetAgreed(lines)
 
+func errclassObservationIndex(domain: JrpcErrclassDomain;
+    results: seq[IrPipelineResult]): Option[Table[string, int]] {.raises: [].} =
+  var byKey = initTable[string, int]()
+  for i, r in results:
+    if r.modulePath != domain.modulePath or r.funcName.len == 0:
+      continue
+    let key = r.modulePath & "::" & r.funcName
+    if byKey.hasKey(key):
+      return none(Table[string, int])
+    byKey[key] = i
+  some(byKey)
+
+func errclassResultKey(domain: JrpcErrclassDomain; i: int): string {.raises: [].} =
+  result = domain.modulePath & "::"
+  result.add(if i == 0: domain.symbol else: errclassCarrierName(domain, i))
+
 func deriveJrpcErrclassConjunction*(domain: JrpcErrclassDomain;
     results: seq[IrPipelineResult]): JrpcErrclassConjunction {.raises: [].} =
   ## Claim-level outcome of C = P1 ∧ … ∧ P13. Pi is read from the result's
@@ -468,29 +484,22 @@ func deriveJrpcErrclassConjunction*(domain: JrpcErrclassDomain;
   ## a clProved claim on a failed unit, or a partial quartet promotes nothing.
   ## Every fail-closed path returns a FRESH record (never a partially filled
   ## one): a witness seen before a later defect cannot survive as clDisproved.
-  result = JrpcErrclassConjunction(outcome: "", boundCount: 0)
   if domain.instances.len == 0 or results.len == 0:
     return
-  var byKey = initTable[string, int]()
-  for i, r in results:
-    if r.modulePath != domain.modulePath or r.funcName.len == 0:
-      continue
-    let key = r.modulePath & "::" & r.funcName
-    if byKey.hasKey(key):
-      return  # duplicate observation — ambiguous, never promote
-    byKey[key] = i
-  var proved = 0
-  var bound = 0
+  let index = errclassObservationIndex(domain, results)
+  if index.isNone:
+    return  # duplicate observation — ambiguous, never promote
+  let byKey = index.get()
+  var proved, bound = 0
   var witnessOrdinal = 0
   var witnessCarrier = ""
   var witnessQuartet: seq[string] = @[]
   var witnessClaim: Option[VerifiedClaim] = none(VerifiedClaim)
   for i, inst in domain.instances:
-    var key = domain.modulePath & "::"
-    key.add(if i == 0: domain.symbol else: errclassCarrierName(domain, i))
+    var key = errclassResultKey(domain, i)
     var idx = byKey.getOrDefault(key, -1)
     if idx < 0 and i == 0:
-      key = domain.modulePath & "::" & errclassCarrierName(domain, 0)
+      key = errclassResultKey(domain, 0)
       idx = byKey.getOrDefault(key, -1)
     if idx < 0:
       return JrpcErrclassConjunction(outcome: "", boundCount: bound)
@@ -517,12 +526,11 @@ func deriveJrpcErrclassConjunction*(domain: JrpcErrclassDomain;
       return JrpcErrclassConjunction(outcome: "", boundCount: bound)
       # clUnknown/clNoSpecification/... → C is not decidable
   if witnessOrdinal > 0:
-    result = JrpcErrclassConjunction(outcome: "clDisproved", boundCount: bound,
+    return JrpcErrclassConjunction(outcome: "clDisproved", boundCount: bound,
       disproofOrdinal: witnessOrdinal, disproofCarrier: witnessCarrier,
       quartet: witnessQuartet, claim: witnessClaim)
-    return
   if proved == domain.instances.len:
-    result = JrpcErrclassConjunction(outcome: "clProved", boundCount: bound)
+    return JrpcErrclassConjunction(outcome: "clProved", boundCount: bound)
 
 func promoteJrpcErrclassConjunction*(domain: JrpcErrclassDomain;
     results: seq[IrPipelineResult]):
@@ -1349,7 +1357,7 @@ proc loadBase36OverlayDomain*(): Result[Base36OverlayDomain, string] {.
     outerSymbol: outerSym, innerSymbol: innerSym,
     domainVar: rtVar, domainLower: lower, domainBound: bound))
 
-proc overlayDeclaresSubject*(domain: Base36OverlayDomain; fnName,
+func overlayDeclaresSubject*(domain: Base36OverlayDomain; fnName,
     modulePath: string): bool {.raises: [].} =
   ## D4 membership: the gate hit is a subject the overlay governs.
   modulePath == domain.modulePath and fnName in domain.symbols
@@ -3410,6 +3418,36 @@ proc errclassPrimary(s: string; pos: var int; clause: string):
 proc errclassAdditive(s: string; pos: var int; clause: string):
     JrpcErrclassParseResult {.raises: [].}
 
+func errclassIntLiteral(s: string; pos: var int; clause: string):
+    JrpcErrclassParseResult {.raises: [].} =
+  ## INT with the lane's single negative extension. Magnitude bound 2^63: the
+  ## negative arm reaches int64.low exactly, the positive arm reaches
+  ## int64.high; anything beyond is outside the grammar (fail-closed).
+  let negative = s[pos] == '-'
+  if negative: inc pos
+  if pos >= s.len or s[pos] notin {'0'..'9'}:
+    return JrpcErrclassParseResult(ok: false, reason:
+      "jrpc-errclass " & clause & " '-' must be followed by digits — outside " &
+      "the closed grammar " & JrpcErrclassGrammarV1)
+  let start = pos
+  while pos < s.len and s[pos] in {'0'..'9'}: inc pos
+  const magLimit = 9223372036854775808'u64
+  var magnitude: uint64 = 0
+  for i in start ..< pos:
+    let digit = uint64(s[i].ord - '0'.ord)
+    if magnitude > (magLimit - digit) div 10:
+      return JrpcErrclassParseResult(ok: false, reason:
+        "jrpc-errclass " & clause & " integer literal overflow — outside the " &
+        "closed grammar " & JrpcErrclassGrammarV1)
+    magnitude = magnitude * 10 + digit
+  if not negative and magnitude > uint64(int64.high):
+    return JrpcErrclassParseResult(ok: false, reason:
+      "jrpc-errclass " & clause & " integer literal overflow — outside the " &
+      "closed grammar " & JrpcErrclassGrammarV1)
+  let value = if negative: cast[int64]((not magnitude) + 1'u64)
+              else: cast[int64](magnitude)
+  JrpcErrclassParseResult(ok: true, expr: irLit(value))
+
 proc errclassPrimary(s: string; pos: var int; clause: string):
     JrpcErrclassParseResult {.raises: [].} =
   ## primary := ident | INT | "(" additive ")"
@@ -3438,33 +3476,7 @@ proc errclassPrimary(s: string; pos: var int; clause: string):
     inc pos
     return inner
   if c == '-' or c in {'0'..'9'}:
-    let negative = c == '-'
-    if negative: inc pos
-    if pos >= s.len or s[pos] notin {'0'..'9'}:
-      return JrpcErrclassParseResult(ok: false, reason:
-        "jrpc-errclass " & clause & " '-' must be followed by digits — outside " &
-        "the closed grammar " & JrpcErrclassGrammarV1)
-    let start = pos
-    while pos < s.len and s[pos] in {'0'..'9'}: inc pos
-    # Magnitude bound 2^63: the negative arm reaches int64.low exactly, the
-    # positive arm reaches int64.high (both BV64-representable); anything
-    # beyond is outside the grammar (fail-closed, no wraparound).
-    const magLimit = 9223372036854775808'u64
-    var magnitude: uint64 = 0
-    for i in start ..< pos:
-      let digit = uint64(s[i].ord - '0'.ord)
-      if magnitude > (magLimit - digit) div 10:
-        return JrpcErrclassParseResult(ok: false, reason:
-          "jrpc-errclass " & clause & " integer literal overflow — outside the " &
-          "closed grammar " & JrpcErrclassGrammarV1)
-      magnitude = magnitude * 10 + digit
-    if not negative and magnitude > uint64(int64.high):
-      return JrpcErrclassParseResult(ok: false, reason:
-        "jrpc-errclass " & clause & " integer literal overflow — outside the " &
-        "closed grammar " & JrpcErrclassGrammarV1)
-    let value = if negative: cast[int64]((not magnitude) + 1'u64)
-                else: cast[int64](magnitude)
-    return JrpcErrclassParseResult(ok: true, expr: irLit(value))
+    return errclassIntLiteral(s, pos, clause)
   if c in {'a'..'z', '_'}:
     let start = pos
     inc pos
