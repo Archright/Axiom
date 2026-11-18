@@ -754,7 +754,7 @@
     "src/core/crypto/hash_kernel.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "6b9e4f9e40979ae7c0259d90ea6947f1f7c55b32"
+      "sha": "1b82009496d98c98f4848d0325efdcf016cf4e97"
     },
     "src/core/debt/debt_audit.nim": {
       "mode": "100644",
