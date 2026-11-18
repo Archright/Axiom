@@ -4,6 +4,8 @@
 
 Integrity proof engine for AI-generated software logic.
 
+> **Development status**: Axiom is incomplete and under heavy development. The official version is **v1.0.0**; all pre-1.0 releases are development snapshots, not official versions.
+
 
 
 ## What is Axiom?
