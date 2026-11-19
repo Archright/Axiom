@@ -59,7 +59,7 @@
     "src/cli/axiom_engine.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "02debd6c36a60caea8f20c285a728bbf623e180e"
+      "sha": "737723f8dd858d834f56baa0f4b04c9691294ada"
     },
     "src/cli/axiom_status.nim": {
       "mode": "100644",
@@ -3484,7 +3484,7 @@
     "src/verification/accounting/run_accounting.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "fb83f8b0742ccfc372cc0c10717f18142e423389"
+      "sha": "ac47122ed011e2a4aba5a74d5f47673042b92483"
     },
     "src/verification/admissibility.nim": {
       "mode": "100644",
