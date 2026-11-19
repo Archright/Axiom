@@ -23,16 +23,25 @@
 ##                        subject-pin-or-document refusal (INVALID_INPUT exit 3)
 ##   internal_defect      subtype soundness_failure > identity_divergence >
 ##                        failure_projection (see §4.3 of the contract)
+##   external_dependency  subtype external_supply_unavailable: an OS package
+##                        supply outage (apt/dpkg). Root cause only (§4.8).
 ##   unclassified         everything else, including missing artifact AND log,
 ##                        API error, unparsable identity/timestamp
 ##   cancelled_superseded only with a same-PR same-base replacement run
 ##
+## Root cause vs control outcome: `classification` names what failed;
+## `control_outcome` names Axiom's response (external_dependency => fail_closed).
+## The two fields are never collapsed. `incorrect_green` is reserved: no code
+## path emits it in v3.
+##
 ## Acceptance: observed_n == N AND unexpected_internal_defects == 0 AND
-## unclassified == 0 AND observation_complete over the N post-boundary entries.
-## legitimate_policy is reported, never failed. Fewer than N => INCOMPLETE with
-## shortfall and exit 2. Fail-closed: any observation gap makes the entry
-## unclassified and the collector exit 2. Exit 0 ACCEPTED, 1 FAILED,
-## 2 INCOMPLETE.
+## unclassified == 0 AND external_dependency_blocked == 0 AND
+## observation_complete over the N post-boundary entries. An outage the entry
+## recovered from (later success or legitimate_policy) is counted as
+## recovered_degradation and does not block acceptance. legitimate_policy is
+## reported, never failed. Fewer than N => INCOMPLETE with shortfall and exit 2.
+## Fail-closed: any observation gap makes the entry unclassified and the
+## collector exit 2. Exit 0 ACCEPTED, 1 FAILED, 2 INCOMPLETE.
 ##
 ## Authority: every measured entry needs an `admission-check` check-run from App
 ## 5795152 (axiom-admission-verifier); a same-name check from another App is
@@ -68,7 +77,7 @@ axiomLayer "tools"
 const
   ToolName* = "ci_acceptance_collect"
   ContractPath* = "docs/spec/ci_acceptance_contract.md"
-  SchemaVersion* = "axiom.ci_acceptance.v2"
+  SchemaVersion* = "axiom.ci_acceptance.v3"
   DefaultRepo* = "Archright/Axiom"
   DefaultWindow* = 20
   BaselineWindow* = 40
@@ -91,6 +100,7 @@ type
     ckLegitimatePolicy = "legitimate_policy"
     ckInternalDefect = "internal_defect"
     ckUnclassified = "unclassified"
+    ckExternalDependency = "external_dependency"
     ckCancelledSuperseded = "cancelled_superseded"
 
   DefectSubtype* = enum
@@ -99,6 +109,16 @@ type
     dsIdentityDivergence = "identity_divergence"
     dsSoundnessFailure = "soundness_failure"
     dsAuthoritySubstitution = "authority_substitution"
+    dsExternalSupply = "external_supply_unavailable"
+
+  ControlOutcome* = enum
+    ## Orthogonal to ClassificationKind: the root cause names what failed, the
+    ## control outcome names Axiom's response. `coIncorrectGreen` is reserved
+    ## for a future detector — no code path emits it in v3.
+    coFailClosed = "fail_closed"
+    coAccepted = "accepted"
+    coIncorrectGreen = "incorrect_green"
+    coUnknown = "unknown"
 
   WindowMode* = enum
     wmInitial = "initial"
@@ -179,6 +199,7 @@ type
     gap*: bool
     gapReason*: string
     detail*: string
+    controlOutcome*: ControlOutcome
 
   EntryClass* = object
     kind*: ClassificationKind
@@ -188,6 +209,17 @@ type
     gap*: bool
     gapReason*: string
     detail*: string
+    controlOutcome*: ControlOutcome
+    recovered*: bool
+
+  AttemptReport* = object
+    runId*: string
+    attemptNumber*: int
+    classification*: ClassificationKind
+    subtype*: DefectSubtype
+    subtypeDetail*: string
+    controlOutcome*: ControlOutcome
+    recovered*: bool
 
   EntryReport* = object
     runId*: string
@@ -201,6 +233,8 @@ type
     subtype*: DefectSubtype
     subtypeDetail*: string
     evidence*: string
+    controlOutcome*: ControlOutcome
+    recoveredDegradation*: bool
     wallSeconds*: int
     wallObserved*: bool
     legacyWallSeconds*: int
@@ -212,6 +246,7 @@ type
     gapReason*: string
     postBoundary*: bool
     details*: seq[string]
+    attemptDetails*: seq[AttemptReport]
 
   Acceptance* = object
     mode*: WindowMode
@@ -223,6 +258,8 @@ type
     legitimatePolicy*: int
     internalDefect*: int
     unclassified*: int
+    externalDependencyBlocked*: int
+    recoveredDegradation*: int
     cancelledSuperseded*: int
     identityDivergence*: int
     soundnessFailure*: int
@@ -505,6 +542,23 @@ const
     "refusal class lost",
     "refusal-class lost"]
 
+  ExternalSupplySignatures* = [
+    "Failed to fetch",
+    "Service Unavailable",
+    "Could not get lock /var/lib/dpkg/lock-frontend",
+    "ETIMEDOUT",
+    "Connection timed out",
+    "Temporary failure resolving"]
+
+  PackageContextMarkers* = [
+    "apt-get",
+    "libpcre3",
+    ".deb",
+    "www.ubuntu.com",
+    "archive.ubuntu.com",
+    "security.ubuntu.com",
+    "apt-mirrors.txt"]
+
   LegitSignatures* = [
     "TRUST_SURFACE_MODIFIED",
     "ROT_ALLOWLIST"]
@@ -572,10 +626,27 @@ func projectionLostAsInternal*(text: string): bool {.raises: [].} =
                       "document invalid", "document absent", "c_out",
                       "carrier", "sizing"])
 
+func hasProjectionSignature*(text: string): bool {.raises: [].} =
+  ## Explicit (pre-registered or line-anchored) projection markers outrank any
+  ## infra signature: a real internal defect must never be masked by an apt
+  ## failure.
+  result = containsAny(text, ProjectionSignatures) or emptyCanonicalDigest(text)
+
+func hasProjectionFallback*(text: string): bool {.raises: [].} =
+  ## Heuristic INTERNAL_ERROR + refusal-word rule. Ranked after
+  ## external_dependency: an apt outage skips the admission predicate and the
+  ## skip is projected into the log (run 44519217624).
+  result = projectionLostAsInternal(text)
+
 func hasFailureProjection*(text: string): bool {.raises: [].} =
-  result = containsAny(text, ProjectionSignatures) or
-    emptyCanonicalDigest(text) or
-    projectionLostAsInternal(text)
+  result = hasProjectionSignature(text) or hasProjectionFallback(text)
+
+func hasExternalSupplySignature*(text: string): bool {.raises: [].} =
+  ## Root-cause signature for an OS package supply outage. Both a supply
+  ## signature AND a package-manager context marker are required; a bare `503`
+  ## never qualifies.
+  result = containsAny(text, ExternalSupplySignatures) and
+    containsAny(text, PackageContextMarkers)
 
 func legitimatePolicyRefusal*(text: string): bool {.raises: [].} =
   ## Policy refusals that are accepted-by-policy: TRUST_SURFACE_MODIFIED and
@@ -672,6 +743,8 @@ func signatureNeedles*(subtype: DefectSubtype): seq[string] {.raises: [].} =
                                 "INTERNAL_ERROR"]
     of dsAuthoritySubstitution:
       @[]
+    of dsExternalSupply:
+      @ExternalSupplySignatures
     of dsNone:
       @[]
 
@@ -697,8 +770,8 @@ func attemptText*(a: ObservedAttempt): string {.raises: [].} =
     result.add f.text
     result.add "\n"
 
-func classifyAttempt*(a: ObservedAttempt, replacementExists,
-                      replacementObserved: bool): AttemptClass {.raises: [].} =
+func classifyAttemptCore(a: ObservedAttempt, replacementExists,
+                         replacementObserved: bool): AttemptClass {.raises: [].} =
   let evPtr = "run:" & a.runId & "/attempt:" & $a.attemptNumber
   if a.attemptListGap:
     return AttemptClass(kind: ckUnclassified, evidence: evPtr & "/attempts:missing",
@@ -738,10 +811,18 @@ func classifyAttempt*(a: ObservedAttempt, replacementExists,
     return AttemptClass(kind: ckInternalDefect, subtype: dsIdentityDivergence,
                         evidence: findEvidence(a, signatureNeedles(dsIdentityDivergence)),
                         detail: "identity_divergence signature observed")
-  if hasFailureProjection(text):
+  if hasProjectionSignature(text):
     return AttemptClass(kind: ckInternalDefect, subtype: dsFailureProjection,
                         evidence: findEvidence(a, signatureNeedles(dsFailureProjection)),
                         detail: "failure_projection signature observed")
+  if hasExternalSupplySignature(text):
+    return AttemptClass(kind: ckExternalDependency, subtype: dsExternalSupply,
+                        evidence: findEvidence(a, @ExternalSupplySignatures),
+                        detail: "external package supply unavailable")
+  if hasProjectionFallback(text):
+    return AttemptClass(kind: ckInternalDefect, subtype: dsFailureProjection,
+                        evidence: findEvidence(a, signatureNeedles(dsFailureProjection)),
+                        detail: "failure_projection fallback signature observed")
   if certificateRefusalCode(text).len > 0:
     return certificateRefusalClass(a)
   if legitimatePolicyRefusal(text):
@@ -754,19 +835,35 @@ func classifyAttempt*(a: ObservedAttempt, replacementExists,
 
 func kindRank(k: ClassificationKind): int {.raises: [].} =
   result = case k
-    of ckInternalDefect: 4
-    of ckUnclassified: 3
+    of ckInternalDefect: 5
+    of ckUnclassified: 4
+    of ckExternalDependency: 3
     of ckLegitimatePolicy: 2
     of ckSuccess: 1
     of ckCancelledSuperseded: 0
 
 func subtypeRank(s: DefectSubtype): int {.raises: [].} =
   result = case s
-    of dsAuthoritySubstitution: 4
-    of dsSoundnessFailure: 3
-    of dsIdentityDivergence: 2
-    of dsFailureProjection: 1
+    of dsAuthoritySubstitution: 5
+    of dsSoundnessFailure: 4
+    of dsIdentityDivergence: 3
+    of dsFailureProjection: 2
+    of dsExternalSupply: 1
     of dsNone: 0
+
+func controlOutcomeOf(kind: ClassificationKind): ControlOutcome {.raises: [].} =
+  ## `coIncorrectGreen` is deliberately absent: v3 has no detector that could
+  ## prove a green admission was incorrect.
+  result = case kind
+    of ckSuccess: coAccepted
+    of ckExternalDependency: coFailClosed
+    of ckInternalDefect, ckUnclassified, ckLegitimatePolicy,
+       ckCancelledSuperseded: coUnknown
+
+func classifyAttempt*(a: ObservedAttempt, replacementExists,
+                      replacementObserved: bool): AttemptClass {.raises: [].} =
+  result = classifyAttemptCore(a, replacementExists, replacementObserved)
+  result.controlOutcome = controlOutcomeOf(result.kind)
 
 func appIdsText(ids: seq[int]): string {.raises: [].} =
   var parts: seq[string]
@@ -774,11 +871,12 @@ func appIdsText(ids: seq[int]): string {.raises: [].} =
     parts.add $id
   parts.join(",")
 
-func classifyEntry*(e: ObservedEntry): EntryClass {.raises: [].} =
+func classifyEntryCore(e: ObservedEntry): EntryClass {.raises: [].} =
   ## Worst-of across attempts. Retries never erase an incident. Verifier
   ## identity is an entry-level precondition: admission-check must come from
   ## the required App (5795152), not merely from an Actions check with the
-  ## same name.
+  ## same name. An external supply failure the entry recovered from is the one
+  ## exception: it is recorded as recovered degradation, not as an incident.
   if not e.authorityObserved:
     return EntryClass(kind: ckUnclassified,
                       evidence: "entry:" & e.headSha & "/admission-check:unobservable",
@@ -803,8 +901,12 @@ func classifyEntry*(e: ObservedEntry): EntryClass {.raises: [].} =
     anyGap = false
     gapReasons: seq[string]
     allCancelled = true
-  for a in e.attempts:
+    terminalIdx = terminalAttemptIndex(e)
+    terminalClass = AttemptClass(kind: ckUnclassified)
+  for i, a in e.attempts:
     let ac = classifyAttempt(a, e.replacementExists, e.replacementObserved)
+    if i == terminalIdx:
+      terminalClass = ac
     if ac.kind != ckCancelledSuperseded:
       allCancelled = false
     if ac.gap:
@@ -822,10 +924,23 @@ func classifyEntry*(e: ObservedEntry): EntryClass {.raises: [].} =
   if allCancelled:
     best = EntryClass(kind: ckCancelledSuperseded,
                       evidence: "entry:" & e.headSha & "/cancelled:superseded")
+  if best.kind == ckExternalDependency and
+      terminalClass.kind in {ckSuccess, ckLegitimatePolicy}:
+    best = EntryClass(kind: terminalClass.kind,
+                      subtype: terminalClass.subtype,
+                      subtypeDetail: terminalClass.subtypeDetail,
+                      evidence: terminalClass.evidence,
+                      detail: "recovered: external supply unavailable in an " &
+                              "earlier attempt",
+                      recovered: true)
   best.gap = anyGap
   if anyGap:
     best.gapReason = gapReasons.join("; ")
   result = best
+
+func classifyEntry*(e: ObservedEntry): EntryClass {.raises: [].} =
+  result = classifyEntryCore(e)
+  result.controlOutcome = controlOutcomeOf(result.kind)
 
 # ═══════════════════════════════════════════════════════════════════════════
 # §5. Pure core — entry construction, window selection, acceptance report
@@ -944,6 +1059,8 @@ func entryReportOf(e: ObservedEntry): EntryReport {.raises: [].} =
     subtype: ec.subtype,
     subtypeDetail: ec.subtypeDetail,
     evidence: ec.evidence,
+    controlOutcome: ec.controlOutcome,
+    recoveredDegradation: ec.recovered,
     wallSeconds: wall.seconds,
     wallObserved: wall.observed,
     legacyWallSeconds: legacy.seconds,
@@ -961,12 +1078,23 @@ func entryReportOf(e: ObservedEntry): EntryReport {.raises: [].} =
                        "=" & $ac.kind &
                        (if ac.subtype != dsNone: "/" & $ac.subtype else: "") &
                        (if ac.subtypeDetail.len > 0:
-                          "[" & ac.subtypeDetail & "]" else: ""))
+                          "[" & ac.subtypeDetail & "]" else: "") &
+                       " control=" & $ac.controlOutcome)
+    result.attemptDetails.add AttemptReport(
+      runId: a.runId,
+      attemptNumber: a.attemptNumber,
+      classification: ac.kind,
+      subtype: ac.subtype,
+      subtypeDetail: ac.subtypeDetail,
+      controlOutcome: ac.controlOutcome,
+      recovered: ec.recovered and ac.kind == ckExternalDependency)
   if not e.ancestryObserved:
     result.classification = ckUnclassified
     result.subtype = dsNone
     result.subtypeDetail = ""
     result.evidence = "entry:" & e.headSha & "/ancestry:unobservable"
+    result.controlOutcome = controlOutcomeOf(ckUnclassified)
+    result.recoveredDegradation = false
     result.gap = true
     result.gapReason = "boundary ancestry unobservable"
   if not wall.observed:
@@ -1020,9 +1148,12 @@ func buildReport*(entries: seq[ObservedEntry], repo, boundary, generatedAt: stri
       of dsSoundnessFailure: inc result.acceptance.soundnessFailure
       of dsFailureProjection: inc result.acceptance.failureProjection
       of dsAuthoritySubstitution: inc result.acceptance.authoritySubstitution
-      of dsNone: discard
+      of dsExternalSupply, dsNone: discard
     of ckUnclassified: inc result.acceptance.unclassified
+    of ckExternalDependency: inc result.acceptance.externalDependencyBlocked
     of ckCancelledSuperseded: inc result.acceptance.cancelledSuperseded
+    if er.recoveredDegradation:
+      inc result.acceptance.recoveredDegradation
   result.acceptance.mode = mode
   result.acceptance.requestedWindow = window
   result.acceptance.observedEntries = selected.len
@@ -1033,7 +1164,8 @@ func buildReport*(entries: seq[ObservedEntry], repo, boundary, generatedAt: stri
   result.acceptance.predicateHolds =
     result.acceptance.shortfall == 0 and
     result.acceptance.unexpectedInternalDefects == 0 and
-    result.acceptance.unclassified == 0
+    result.acceptance.unclassified == 0 and
+    result.acceptance.externalDependencyBlocked == 0
   result.acceptance.accepted =
     result.acceptance.predicateHolds and result.acceptance.observationComplete
   if result.acceptance.accepted:
@@ -1068,6 +1200,21 @@ func intArray(items: seq[int]): JsonNode {.raises: [].} =
   for it in items:
     result.add %it
 
+func attemptJson(a: AttemptReport): JsonNode {.raises: [].} =
+  result = %*{
+    "run_id": a.runId,
+    "attempt_number": a.attemptNumber,
+    "classification": $a.classification,
+    "subtype": $a.subtype,
+    "subtype_detail": a.subtypeDetail,
+    "control_outcome": $a.controlOutcome,
+    "recovered": a.recovered}
+
+func attemptDetailsJson(details: seq[AttemptReport]): JsonNode {.raises: [].} =
+  result = newJArray()
+  for d in details:
+    result.add attemptJson(d)
+
 func entryJson(e: EntryReport): JsonNode {.raises: [].} =
   result = %*{
     "run_id": e.runId,
@@ -1081,6 +1228,8 @@ func entryJson(e: EntryReport): JsonNode {.raises: [].} =
     "subtype": $e.subtype,
     "subtype_detail": e.subtypeDetail,
     "evidence": e.evidence,
+    "control_outcome": $e.controlOutcome,
+    "recovered_degradation": e.recoveredDegradation,
     "wall_seconds": e.wallSeconds,
     "wall_observed": e.wallObserved,
     "legacy_wall_seconds":
@@ -1092,7 +1241,8 @@ func entryJson(e: EntryReport): JsonNode {.raises: [].} =
     "gap": e.gap,
     "gap_reason": e.gapReason,
     "post_boundary": e.postBoundary,
-    "attempts": strArray(e.details)}
+    "attempts": strArray(e.details),
+    "attempt_details": attemptDetailsJson(e.attemptDetails)}
 
 func reportJson*(r: AcceptanceReport): JsonNode {.raises: [].} =
   var entries = newJArray()
@@ -1111,6 +1261,8 @@ func reportJson*(r: AcceptanceReport): JsonNode {.raises: [].} =
       "legitimate_policy": r.acceptance.legitimatePolicy,
       "internal_defect": r.acceptance.internalDefect,
       "unclassified": r.acceptance.unclassified,
+      "external_dependency": r.acceptance.externalDependencyBlocked,
+      "recovered_degradation": r.acceptance.recoveredDegradation,
       "cancelled_superseded": r.acceptance.cancelledSuperseded,
       "internal_defect_subtypes": {
         "identity_divergence": r.acceptance.identityDivergence,
@@ -1125,6 +1277,8 @@ func reportJson*(r: AcceptanceReport): JsonNode {.raises: [].} =
       "shortfall": r.acceptance.shortfall,
       "unexpected_internal_defects": r.acceptance.unexpectedInternalDefects,
       "unclassified": r.acceptance.unclassified,
+      "external_dependency_blocked": r.acceptance.externalDependencyBlocked,
+      "recovered_degradation": r.acceptance.recoveredDegradation,
       "predicate_holds": r.acceptance.predicateHolds,
       "observation_complete": r.acceptance.observationComplete,
       "accepted": r.acceptance.accepted,
@@ -1147,6 +1301,7 @@ func renderMarkdown*(r: AcceptanceReport): string {.raises: [].} =
   result.add "- repo: `" & r.repo & "`\n"
   result.add "- boundary: `" & r.boundary & "`\n"
   result.add "- generated_at: `" & r.generatedAt & "`\n"
+  result.add "- schema: `" & r.schemaVersion & "`\n"
   result.add "- mode: `" & $r.acceptance.mode & "`\n"
   result.add "- status: **" & $r.acceptance.status & "**\n"
   result.add "- window: " & $r.acceptance.mode & " " &
@@ -1179,6 +1334,10 @@ func renderMarkdown*(r: AcceptanceReport): string {.raises: [].} =
   result.add "| unexpected_internal_defects | " &
              $r.acceptance.unexpectedInternalDefects & " |\n"
   result.add "| unclassified | " & $r.acceptance.unclassified & " |\n"
+  result.add "| external_dependency_blocked | " &
+             $r.acceptance.externalDependencyBlocked & " |\n"
+  result.add "| recovered_degradation (reported, not failed) | " &
+             $r.acceptance.recoveredDegradation & " |\n"
   result.add "| legitimate_policy (reported, not failed) | " &
              $r.acceptance.legitimatePolicy & " |\n"
   result.add "| success | " & $r.acceptance.success & " |\n"
@@ -1191,8 +1350,8 @@ func renderMarkdown*(r: AcceptanceReport): string {.raises: [].} =
   result.add "| failure_projection | " & $r.acceptance.failureProjection & " |\n"
   result.add "| authority_substitution | " & $r.acceptance.authoritySubstitution & " |\n\n"
   result.add "## Entries\n\n"
-  result.add "| run_id | head_sha | base_sha | PR | conclusion | classification | subtype | detail | wall_s | legacy_s | admission_app_ids | evidence | gap |\n"
-  result.add "|---|---|---|---:|---|---|---|---|---:|---:|---|---|---|\n"
+  result.add "| run_id | head_sha | base_sha | PR | conclusion | classification | control_outcome | subtype | detail | wall_s | legacy_s | admission_app_ids | evidence | gap |\n"
+  result.add "|---|---|---|---:|---|---|---|---|---|---:|---:|---|---|---|\n"
   for e in r.entries:
     var appIds: seq[string]
     for id in e.admissionAppIds:
@@ -1200,7 +1359,8 @@ func renderMarkdown*(r: AcceptanceReport): string {.raises: [].} =
     result.add "| " & e.runId & " | `" & e.headSha[0 ..< min(12, e.headSha.len)] &
                "` | `" & e.baseSha[0 ..< min(12, e.baseSha.len)] & "` | " &
                $e.prNumber & " | " & e.conclusion & " | " & $e.classification &
-               " | " & $e.subtype & " | " & e.subtypeDetail & " | " &
+               " | " & $e.controlOutcome & " | " & $e.subtype & " | " &
+               e.subtypeDetail & " | " &
                (if e.wallObserved: $e.wallSeconds else: "—") & " | " &
                (if e.legacyWallObserved: $e.legacyWallSeconds else: "—") &
                " | " & appIds.join(",") & " | `" &
@@ -2457,6 +2617,10 @@ when isMainModule:
        " projection=" & $finalReport.acceptance.failureProjection &
        " authority=" & $finalReport.acceptance.authoritySubstitution & ")" &
        " unclassified=" & $finalReport.acceptance.unclassified &
+       " external_dependency_blocked=" &
+       $finalReport.acceptance.externalDependencyBlocked &
+       " recovered_degradation=" &
+       $finalReport.acceptance.recoveredDegradation &
        " cancelled_superseded=" & $finalReport.acceptance.cancelledSuperseded
   echo "[" & ToolName & "] latency canonical n=" &
        $finalReport.acceptance.latencyN & " p50=" &

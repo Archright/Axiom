@@ -1,4 +1,4 @@
-# CI Acceptance Contract v2 — merge_group admission acceptance
+# CI Acceptance Contract v3 — merge_group admission acceptance
 
 **Status**: pre-registered 2026-11-19 (this document is the contract; the collector
 `tools/ci/ci_acceptance_collect.nim` is its only implementation).
@@ -6,6 +6,9 @@
 full-window acceptance with `INCOMPLETE`/shortfall, the certificate rule for
 `NO_CERT`/`SUBJECT_MISMATCH`, `run_head_mismatch`, `admission-check` App
 authority (`5795152`), and the artifact download allowlist.
+**Revision 2026-11-19c (v3)**: `external_dependency` root-cause class
+(`external_supply_unavailable`), the `control_outcome` field, and
+`recovered_degradation`; schema `axiom.ci_acceptance.v3`.
 **Authority**: REPORTER ONLY. This contract and its collector have **no merge
 authority**, do not modify policy, do not add or remove required checks, and do
 not re-run workflows. They observe `admission-gate` `merge_group` runs with
@@ -107,7 +110,11 @@ projection failure observed in any attempt keeps the entry in that class even
 when a later attempt succeeds.
 
 Severity order (highest first): `internal_defect` > `unclassified` >
-`legitimate_policy` > `success` > `cancelled_superseded`.
+`external_dependency` > `legitimate_policy` > `success` > `cancelled_superseded`.
+An external dependency failure is a root cause, not an Axiom defect; it ranks
+above `legitimate_policy` because an unrecovered supply outage blocks the
+candidate, and below `unclassified` because an observation gap must stay
+visible (§4.4).
 
 ### §4.1 `success`
 
@@ -145,6 +152,12 @@ whose `admission-check` authority is substituted. Subtypes and their precedence
 | `soundness_failure` | `SOUNDNESS_FAILURE`; `false clProved`; `missing dependency supply`; `dependency supply missing` | #145 class (false `clProved` / missing subject-declared dependency supply). Normally proven by its own regression test, not by admission artifacts; the collector matches only explicit evidence and never infers soundness from absence. |
 | `failure_projection` | `FAILURE_PROJECTION`; `refusal class lost` (also spelled `refusal-class lost`); an empty `canonical_digest` value (`canonical_digest=`, `canonical_digest: ""`, `"canonicalRunDigest": ""`); `INTERNAL_ERROR` together with a refusal marker | #186 class (a prepare-phase refusal projected as exit 2 / empty canonical digest instead of `INVALID_INPUT` exit 3). |
 
+The `FAILURE_PROJECTION`, `refusal class lost`, and empty-canonical-digest
+signatures are explicit and outrank `external_dependency`. The `INTERNAL_ERROR`
++ refusal-marker rule is the projection **fallback**: it ranks below
+`external_dependency`, because a skipped predicate is projected into the same
+log as the apt outage that caused the skip (run `44519217624`, §4.8).
+
 **Certificate rule (`NO_CERT` / `SUBJECT_MISMATCH`)** — neither code is a
 signature by itself. For a failed attempt whose verdict `reasonCode` is
 `NO_CERT` or `SUBJECT_MISMATCH`, inspect the **same attempt's** jobs (job names
@@ -166,13 +179,16 @@ window counts what was recorded.
 `unexpected_internal_defects` counts every `internal_defect` in the window. v2
 has **no waiver mechanism**: all internal defects are unexpected. A future
 waiver would require a new contract version and may not be applied
-retroactively.
+retroactively. v3 keeps this rule unchanged; `external_dependency` is a separate
+class and is never counted as an internal defect.
 
 ### §4.4 `unclassified`
 
 Everything else, including:
 
 - a failed attempt whose evidence carries no pre-registered signature;
+- a failure whose only supply signal is a bare `503` — no supply signature or no
+  package-manager context marker (§4.8);
 - a failed attempt with no artifact and no log (observation gap);
 - an attempt that is not terminal (`status != completed`);
 - `NO_CERT` / `SUBJECT_MISMATCH` whose mint/certificate jobs did not all
@@ -258,6 +274,72 @@ only the first 30 and the App run was absent. The collector therefore requests
 observation gap, never an absence verdict: an unread page must not be
 classified as `authority_substitution`.
 
+### §4.8 `external_dependency` (root cause) and `control_outcome`
+
+An attempt is `external_dependency` / `external_supply_unavailable` only when
+its evidence carries **both** a supply signature and a package-manager context
+marker. A bare `503` never qualifies.
+
+| Supply signature (any one) | Package context marker (any one) |
+|---|---|
+| `Failed to fetch` | `apt-get` |
+| `Service Unavailable` | `libpcre3` |
+| `Could not get lock /var/lib/dpkg/lock-frontend` | `.deb` |
+| `ETIMEDOUT` | `www.ubuntu.com` |
+| `Connection timed out` | `archive.ubuntu.com` |
+| `Temporary failure resolving` | `security.ubuntu.com` |
+| | `apt-mirrors.txt` |
+
+Observed 2026-11-19, Ubuntu package-mirror outage (both merge-group heads):
+
+```
+run 44519217624 (head 2ff9f58a)
+E: Failed to fetch https://security.ubuntu.com/ubuntu/pool/universe/p/pcre3/libpcre3_8.39-15build1_amd64.deb  503  Service Unavailable [IP: 52.15.107.13 80]
+E: Unable to fetch some archives, maybe run apt-get update or try with --fix-missing?
+W: Failed to fetch mirror+file:/etc/apt/apt-mirrors.txt/dists/noble/InRelease  503  Service Unavailable [IP: 52.15.159.198 80]
+[check] FAIL: the admission predicate (MergeAdmissible) was SKIPPED on the landing venue (scope flags not true?) — a skipped step reports Success and would vacuously green the required check (fail-closed, 4-class contract upper boundary).
+
+run 44521587339 (head 807f38d9), setup-axiom-toolchain in the attest/mint lanes
+E: Failed to fetch https://security.ubuntu.com/ubuntu/pool/universe/p/pcre3/libpcre3_8.39-15build1_amd64.deb  503  Service Unavailable [IP: 3.129.149.36 80]
+E: Failed to fetch https://security.ubuntu.com/ubuntu/pool/universe/p/pcre3/libpcre3_8.39-15build1_amd64.deb  Could not connect to azure.archive.ubuntu.com:80 (52.252.75.106), connection timed out
+##[error]Process completed with exit code 100.
+```
+
+Neither is an Axiom logic defect: `apt-get install libpcre3` could not fetch its
+`.deb`. Run `44519217624`'s failing job then emitted the skipped-predicate guard
+line; that guard's fail-closed response is correct and is preserved.
+
+**Precedence.** `soundness_failure` → `identity_divergence` → explicit
+`failure_projection` (a pre-registered `FAILURE_PROJECTION` / `refusal class
+lost` marker, or an empty canonical digest) → `external_dependency` → the
+heuristic `failure_projection` fallback (`INTERNAL_ERROR` together with a
+refusal word) → certificate rule → `legitimate_policy` → `unclassified`.
+An explicit internal signature is never masked by an infra signature. The
+heuristic projection fallback ranks below `external_dependency` because a
+skipped predicate is projected into the same log as the apt outage that caused
+it (run `44519217624`).
+
+**Recovered degradation.** An attempt that carries a supply signature but whose
+entry ends in a terminal `success` or `legitimate_policy` is recorded as
+`recovered_degradation` (entry-level, schema v3). It is never counted as
+`external_dependency_blocked`, and it does not block acceptance.
+
+**Root cause vs control outcome.** `classification=external_dependency` names
+the **root cause**: the OS package supply failed. `control_outcome=fail_closed`
+names Axiom's **correct response**: the admission predicate did not run and the
+check failed closed instead of reporting a vacuous success. These are orthogonal
+axes and must never be collapsed into one field:
+
+| `classification` | `control_outcome` |
+|---|---|
+| `success` | `accepted` |
+| `external_dependency` | `fail_closed` |
+| `internal_defect`, `unclassified`, `legitimate_policy`, `cancelled_superseded` | `unknown` |
+
+`control_outcome=incorrect_green` is a reserved constant: v3 has no detector
+that could prove a green admission was incorrect, so no code path emits it.
+Introducing such a detector requires a new contract revision.
+
 ---
 
 ## §5. Acceptance predicate
@@ -269,14 +351,21 @@ terminal `run_started_at` ascending:
 - `--mode rolling` — the **last** N candidates.
 
 ```
-accepted  ⇔  observed_n                 == window
-         ∧   unexpected_internal_defects == 0
-         ∧   unclassified               == 0
+accepted  ⇔  observed_n                  == window
+         ∧   unexpected_internal_defects  == 0
+         ∧   unclassified                == 0
+         ∧   external_dependency_blocked == 0
          ∧   observation_complete
 ```
 
 - `legitimate_policy` is counted and reported but does not fail acceptance.
 - `success` and `cancelled_superseded` do not fail acceptance.
+- `external_dependency_blocked` counts entries whose terminal outcome is an
+  unrecovered external supply failure. It fails acceptance; the outage is not
+  an Axiom defect but the candidate did not land.
+- `recovered_degradation` counts entries that hit a supply failure in an earlier
+  attempt and still ended in `success` or `legitimate_policy`. It is reported
+  and **does not block acceptance**.
 - Each `internal_defect` subtype is reported separately.
 - `observation_complete` is the fail-closed precondition: any gap anywhere in
   the window means the predicate cannot be satisfied, even if a defect was also
@@ -358,16 +447,21 @@ The collector writes two files under `--out` (default `build/ci_acceptance/`):
 
 Required per-entry fields: `run_id` (terminal run), `run_ids`, `attempt_ids`,
 `head_sha`, `base_sha`, `pr_number`, `conclusion` (terminal), `classification`,
-`subtype`, `subtype_detail` (e.g. `certificate_present_but_unbound`,
-`mint_failed_unattributed`), `evidence` (pointer), `wall_seconds`,
-`wall_observed`, `legacy_wall_seconds` (null when unobserved),
-`legacy_wall_observed`, `admission_app_ids`, `admission_app_required`,
-`admission_app_success`, `gap`, `gap_reason`, `post_boundary`.
+`control_outcome`, `recovered_degradation`, `subtype`, `subtype_detail` (e.g.
+`certificate_present_but_unbound`, `mint_failed_unattributed`), `evidence`
+(pointer), `wall_seconds`, `wall_observed`, `legacy_wall_seconds` (null when
+unobserved), `legacy_wall_observed`, `admission_app_ids`,
+`admission_app_required`, `admission_app_success`, `gap`, `gap_reason`,
+`post_boundary`, and `attempt_details` — one object per attempt with `run_id`,
+`attempt_number`, `classification`, `subtype`, `subtype_detail`,
+`control_outcome`, and `recovered`.
 
-Report-level fields: contract/schema version, generated-at, repo, boundary,
+Report-level fields: contract/schema version (v3), generated-at, repo, boundary,
 `mode`, `status` (`ACCEPTED` / `INCOMPLETE` / `FAILED`), requested window,
-observed `n`, `shortfall`, counts per class, per-subtype counts (including
-`authority_substitution`), `unexpected_internal_defects`, `unclassified`,
+observed `n`, `shortfall`, counts per class (including
+`external_dependency` and `recovered_degradation`), per-subtype counts
+(including `authority_substitution`), `unexpected_internal_defects`,
+`unclassified`, `external_dependency_blocked`, `recovered_degradation`,
 `predicate_holds`, `accepted`, `observation_complete`, gaps, and
 `latency {n, p50_seconds, mean_seconds, min_seconds, max_seconds, legacy_n,
 legacy_p50_seconds, legacy_mean_seconds, formula, legacy_formula}`.
@@ -385,8 +479,12 @@ the same prefix. The report is deterministic for identical inputs except
 | Exit | Status | Meaning |
 |---|---|---|
 | `0` | `ACCEPTED` | Report written; full N window observed and the predicate holds. |
-| `1` | `FAILED` | Report written; full window observed but an internal defect or unclassified outcome fails the predicate. |
+| `1` | `FAILED` | Report written; full window observed but an internal defect, an unclassified outcome, or an unrecovered `external_dependency` fails the predicate. |
 | `2` | `INCOMPLETE` | Observation incomplete or input invalid: shortfall (`observed_n < window`), missing/invalid `--boundary`, API error, missing artifact *and* log, missing jobs/check-runs, unparsable identity/timestamp, truncated run list. The report is still written so the gap is visible. |
+
+Exit codes are unchanged in v3. An unrecovered `external_dependency` over a full
+window is `FAILED` (exit 1), not `INCOMPLETE`: observation was complete and the
+predicate failed. `recovered_degradation` never changes the exit status.
 
 `--help` exits 0. `--baseline-live` and `--recompute-baseline` exit 0 when every
 row has an observed canonical job span and p50 is defined, 2 otherwise.
