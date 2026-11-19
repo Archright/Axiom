@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "created": "2026-11-19T10:12:35+09:00",
+  "created": "2026-11-19T10:47:48+09:00",
   "total_violations": 4272,
   "by_severity": {
     "warning": 3898,
@@ -431,42 +431,42 @@
       "id": "0c5bf0464591dbe046b25799753a927e2c6b130f5841328d5abdf26868ab40d5",
       "rule": "SOLID",
       "file": "src/cli/merge_cli.nim",
-      "detail": "[soc-surface-area] src/cli/merge_cli.nim:1192 function buildDryRunJson spans 65 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/merge_cli.nim:1195 function buildDryRunJson spans 65 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "e4ca3c0702acfc4e086b07baad788b133afe066c0882276d46c772b8fd255db1",
       "rule": "SOLID",
       "file": "src/cli/merge_cli.nim",
-      "detail": "[soc-surface-area] src/cli/merge_cli.nim:1303 function MergeAdmissible spans 183 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/merge_cli.nim:1306 function MergeAdmissible spans 183 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "17ddc9a5787b9a8f7467d02a0e5097abf0ce6ae7f20a5c0ce93bdca7c0172f45",
       "rule": "SOLID",
       "file": "src/cli/merge_cli.nim",
-      "detail": "[soc-surface-area] src/cli/merge_cli.nim:2087 function collectAdmissionFacts spans 84 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/merge_cli.nim:2090 function collectAdmissionFacts spans 84 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "4a51bd1f888fc80a57efdf5f6eb2338e222aad1602a5a98a598e6880404590b1",
       "rule": "SOLID",
       "file": "src/cli/merge_cli.nim",
-      "detail": "[soc-surface-area] src/cli/merge_cli.nim:2888 function collectVaultCertFactsCore spans 79 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/merge_cli.nim:2891 function collectVaultCertFactsCore spans 79 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "f1ec63db9241e7af6e8acf7ab2d98a05046ab93ae78ccfbf5e77430b1dd8f8e1",
       "rule": "SOLID",
       "file": "src/cli/merge_cli.nim",
-      "detail": "[soc-surface-area] src/cli/merge_cli.nim:3013 function runMergeCli spans 78 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/merge_cli.nim:3016 function runMergeCli spans 78 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "0eac8ea82b2c013eb3b9d5cdb18ae05f4a44bcfea2025c38a9819a5e3d9e9195",
       "rule": "SOLID",
       "file": "src/cli/merge_cli.nim",
-      "detail": "[soc-surface-area] src/cli/merge_cli.nim:3165 function runMergeActuatorCli spans 100 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/merge_cli.nim:3168 function runMergeActuatorCli spans 100 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
