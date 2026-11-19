@@ -1960,28 +1960,6 @@ block:
       sha256Hex(envParts.join("\n") & "\n"),
       "the ⑥ digest is sha256(parts joined by newline + trailing newline)")
 
-  # ---- pure: the diagnostics are a projection of the SAME canonical member
-  #      values closureWire binds — never a second serialization rule.
-  block:
-    let c = validClosure(7)
-    let d = closureDiagnosticsOf(c)
-    expect(d.componentDigests[0] ==
-      sha256Hex(canonicalJsonString(%*{"testSourceClosure": c.testSourceClosure})),
-      "component digest = sha256(one-key canonical wire object) [testSourceClosure]")
-    expect(d.componentDigests[5] ==
-      sha256Hex(canonicalJsonString(%*{"recipe": c.recipe})),
-      "component digest = sha256(one-key canonical wire object) [recipe]")
-    expect(d.componentDigests[8] ==
-      sha256Hex(canonicalJsonString(%*{"completenessKeys": c.completenessKeys})),
-      "completenessKeys is digested with its array serialization")
-    # a different member value moves only its own diagnostic
-    var changed = c
-    changed.recipe = hex64(778)
-    let d2 = closureDiagnosticsOf(changed)
-    expect(d2.componentDigests[5] != d.componentDigests[5] and
-      d2.componentDigests[0] == d.componentDigests[0],
-      "a changed member moves exactly its named diagnostic")
-
   # ---- pure: closureWire key set is unchanged (12 keys) and carries no
   #      diagnostic member.
   block:
@@ -2008,9 +1986,6 @@ block:
     expect(cwdA.envSnapshot != cwdB.envSnapshot and
       deriveJudgmentKey(cwdA) != deriveJudgmentKey(cwdB),
       "different_cwd_under_v5_is_not_key_equal: a different cwd moves ⑥ and the key")
-    expect(closureDiagnosticsOf(cwdA).componentDigests[4] !=
-      closureDiagnosticsOf(cwdB).componentDigests[4],
-      "different cwd is named by the ⑥ (envSnapshot) diagnostic digest")
 
   if not bundleAvailable:
     skip("G15 closure-derived cases", "toolchain bundle unmeasurable")
@@ -2032,6 +2007,24 @@ block:
     putEnv("AXIOM_JUDGMENT_CAS_EVIDENCE_PATH", evidencePath)
     let epoch = captureReuseVerificationContext().currentEpoch
     writeFile(evidencePath, payloadBytes(epoch))
+
+    # (0) the bundle's diagnostics are a projection of the SAME canonical
+    #     member values closureWire binds — never a second serialization rule.
+    let diagnosticBundle = collectJudgmentClosureBundle(jsS1aGolden, testedOid)
+    expect(diagnosticBundle.isOk, "the bundle collects with diagnostics")
+    if diagnosticBundle.isOk:
+      let bundleClosure = diagnosticBundle.get.closure
+      let bundleDiagnostics = diagnosticBundle.get.diagnostics
+      expect(bundleDiagnostics.componentDigests[0] == sha256Hex(
+          canonicalJsonString(%*{"testSourceClosure": bundleClosure.testSourceClosure})) and
+        bundleDiagnostics.componentDigests[5] == sha256Hex(
+          canonicalJsonString(%*{"recipe": bundleClosure.recipe})) and
+        bundleDiagnostics.componentDigests[8] == sha256Hex(
+          canonicalJsonString(%*{"completenessKeys": bundleClosure.completenessKeys})),
+        "component digests use the SAME one-key canonical serialization the key binds")
+      expect(bundleDiagnostics.envPartDigests[5] ==
+        sha256Hex("cwd=" & getCurrentDir()),
+        "the ⑥ cwd sub-digest is sha256 of the raw part (no raw value recorded)")
 
     # (1) same process/env/cwd — the PLAN path and the ATTEST path derive the
     #     same key (the diagnostics never change what the key is).

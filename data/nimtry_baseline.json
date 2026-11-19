@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "created": "2026-11-19T10:47:48+09:00",
+  "created": "2026-11-19T13:53:56+09:00",
   "total_violations": 4272,
   "by_severity": {
     "warning": 3898,
@@ -3396,38 +3396,38 @@
       "severity": "warning"
     },
     {
-      "id": "2e9b2caf3b2925af4f02bc53a7070d429532d64abb3b52aac7b25ed6ad283364",
+      "id": "e5d3d7e538916f74d2bac3a4eb607c24629daa124a08519db119bdac7910cb31",
       "rule": "SOLID",
       "file": "src/verification/judgment_cas.nim",
-      "detail": "[soc-surface-area] src/verification/judgment_cas.nim has 73 exported functions (layer verification max 20)",
+      "detail": "[soc-surface-area] src/verification/judgment_cas.nim has 74 exported functions (layer verification max 20)",
       "severity": "warning"
     },
     {
       "id": "0fe030ba78ada84657356f04fd23c819063f72751709cf2772371ecedf8396d3",
       "rule": "SOLID",
       "file": "src/verification/judgment_cas.nim",
-      "detail": "[soc-surface-area] src/verification/judgment_cas.nim:944 function validateS1aJudgmentPayloadNode spans 100 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/verification/judgment_cas.nim:1046 function validateS1aJudgmentPayloadNode spans 100 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "7e9b0df51aac40d7d44f6655e0c189946b8a8f6259540af332ec250b5fd569ec",
       "rule": "SOLID",
       "file": "src/verification/judgment_cas.nim",
-      "detail": "[soc-surface-area] src/verification/judgment_cas.nim:1122 function validateD2GoldenPayloadNode spans 54 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/verification/judgment_cas.nim:1224 function validateD2GoldenPayloadNode spans 54 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
-      "id": "55224fd872de2662775472e7efc74314c654b69dfd57d06f8df7a29e191d90c5",
+      "id": "3c1dc01ec6ce506b6f6449de755cbacbccbf450ba402b6e5d15fdee47e8af4d1",
       "rule": "SOLID",
       "file": "src/verification/judgment_cas.nim",
-      "detail": "[soc-surface-area] src/verification/judgment_cas.nim:1564 function planJudgmentCasForSubjectWithTransport spans 85 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/verification/judgment_cas.nim:1673 function planJudgmentCasForSubjectWithTransport spans 88 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
-      "id": "bd466c50c47e0e2e158b8ddc28521e161610edf5ec2570ca8a2d35f641bdfabe",
+      "id": "74c79fda84e5565e413645fd2f4353d9325e4b6eaf3b352be0055a33b47a748a",
       "rule": "SOLID",
       "file": "src/verification/judgment_cas.nim",
-      "detail": "[soc-surface-area] src/verification/judgment_cas.nim:1954 function runJudgmentAttestBranchForSubject spans 145 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/verification/judgment_cas.nim:2137 function runJudgmentAttestBranchForSubject spans 144 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -10035,21 +10035,21 @@
       "id": "9b32a69fc3acd8c5844f97a1b600f9860a823a0eb4c11d9834a8a293de94066b",
       "rule": "SAFETY-proc-purity",
       "file": "src/verification/judgment_cas.nim",
-      "detail": "[safety-proc-purity] judgmentRecordingPathsExist (src/verification/judgment_cas.nim:548) is proc but has no transitive I/O calls. Convert to func.",
+      "detail": "[safety-proc-purity] judgmentRecordingPathsExist (src/verification/judgment_cas.nim:641) is proc but has no transitive I/O calls. Convert to func.",
       "severity": "warning"
     },
     {
       "id": "b93481e52f320f588223da1cc0789f7ac37239b02c2f385c49cb2740821fae8c",
       "rule": "SAFETY-proc-purity",
       "file": "src/verification/judgment_cas.nim",
-      "detail": "[safety-proc-purity] subjectFixturePaths (src/verification/judgment_cas.nim:551) is proc but has no transitive I/O calls. Convert to func.",
+      "detail": "[safety-proc-purity] subjectFixturePaths (src/verification/judgment_cas.nim:644) is proc but has no transitive I/O calls. Convert to func.",
       "severity": "warning"
     },
     {
       "id": "92c9b11898b9c3ad52490fd807536dd69df401733166ddbc6dee9def63576d35",
       "rule": "SAFETY-proc-purity",
       "file": "src/verification/judgment_cas.nim",
-      "detail": "[safety-proc-purity] judgmentWitnessPaths (src/verification/judgment_cas.nim:724) is proc but has no transitive I/O calls. Convert to func.",
+      "detail": "[safety-proc-purity] judgmentWitnessPaths (src/verification/judgment_cas.nim:817) is proc but has no transitive I/O calls. Convert to func.",
       "severity": "warning"
     },
     {

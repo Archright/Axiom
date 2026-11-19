@@ -123246,6 +123246,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "List JudgmentClosureComponent",
+      "module": "src/verification/judgment_cas.nim",
+      "name": "closureComponentsOf",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[JudgmentClosureComponent]",
+      "smtSort": "(Seq JudgmentClosureComponent)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "JudgmentClosureDiagnostics",
       "module": "src/verification/judgment_cas.nim",
       "name": "closureDiagnosticsOf",
@@ -123625,6 +123639,20 @@
       "leanType": "String",
       "module": "src/verification/judgment_cas.nim",
       "name": "judgmentDecisionBasis",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/judgment_cas.nim",
+      "name": "judgmentDecisionKeyError",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (str.len result) 0)"
       ],

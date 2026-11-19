@@ -477,7 +477,14 @@ type
       ## STATE_DIR/cwd). The raw values stay out of the decision file; only
       ## their digests are recorded.
 
-func closureComponentDigest*(c: JudgmentClosure; name: string): string {.raises: [].} =
+  JudgmentClosureComponent* = object
+    ## One named component diagnostic carried on the plan into the decision
+    ## file ({name, digest}). OUT-OF-KEY: it never enters closureWire — it
+    ## only lets a later key mismatch name the diverging input.
+    name*: string
+    digest*: string
+
+func closureComponentDigest(c: JudgmentClosure; name: string): string {.raises: [].} =
   ## The one-key canonical serialization of ONE closure member — the same
   ## canonicalJsonString grammar closureWire uses for that member, so the
   ## digest names exactly the bytes the key commits to.
@@ -502,7 +509,7 @@ func closureComponentDigest*(c: JudgmentClosure; name: string): string {.raises:
   else:
     ""
 
-func closureDiagnosticsOf*(c: JudgmentClosure): JudgmentClosureDiagnostics {.raises: [].} =
+func closureDiagnosticsOf(c: JudgmentClosure): JudgmentClosureDiagnostics {.raises: [].} =
   ## Project the already-built closure into its per-component diagnostics.
   ## Pure — the values are the ones the closure was constructed with, so the
   ## diagnostics cannot drift from the key inputs.
@@ -510,6 +517,14 @@ func closureDiagnosticsOf*(c: JudgmentClosure): JudgmentClosureDiagnostics {.rai
   for i, name in JudgmentClosureComponentNames:
     d.componentDigests[i] = closureComponentDigest(c, name)
   d
+
+func closureComponentsOf(d: JudgmentClosureDiagnostics): seq[JudgmentClosureComponent] {.
+    raises: [].} =
+  ## The plan's wire form of the diagnostics: one {name, digest} per component,
+  ## in closureWire order. Out-of-key — carried to the decision file only.
+  result = @[]
+  for i, name in JudgmentClosureComponentNames:
+    result.add(JudgmentClosureComponent(name: name, digest: d.componentDigests[i]))
 
 func closureWire*(c: JudgmentClosure): string {.raises: [].} =
   ## Canonical closure serialization — fixed member set, RFC 8785 key order,
@@ -1583,13 +1598,6 @@ type
     jReused    ## ledger record fully re-verified — the sanctioned skip
     jExecuted  ## no verifiable record — the original s1a execution must run
 
-  JudgmentClosureComponent* = object
-    ## One named component diagnostic carried on the plan into the decision
-    ## file ({name, digest}). OUT-OF-KEY: it never enters closureWire — it
-    ## only lets a later key mismatch name the diverging input.
-    name*: string
-    digest*: string
-
   JudgmentPlan* = object
     mode*: JudgmentPlanMode
     reason*: string            ## the honest why (populated on every mode)
@@ -1709,9 +1717,7 @@ proc planJudgmentCasForSubjectWithTransport*(s: JudgmentSubject;
     # The collected diagnostics travel to the decision file OUT-OF-KEY: the
     # attest can later name the component that diverged without changing any
     # key input or verdict.
-    for i, name in JudgmentClosureComponentNames:
-      closureComponents.add(JudgmentClosureComponent(name: name,
-        digest: collected.get.diagnostics.componentDigests[i]))
+    closureComponents = closureComponentsOf(collected.get.diagnostics)
   except CatchableError as exc:
     return JudgmentPlan(mode: jExecuted, reason: "closure collection raised: " & exc.msg,
       subject: subjectTag)
@@ -2093,6 +2099,26 @@ func judgmentClosureComponentMismatch(components: JsonNode;
         planDigests[i][0 ..< 12] & " attest=" & fresh.componentDigests[i][0 ..< 12]
   ""
 
+func judgmentDecisionKeyError(decision: JsonNode; freshKey: string;
+    fresh: JudgmentClosureDiagnostics): string {.raises: [].} =
+  ## "" = the decision's evidenceKey equals the freshly derived key. Otherwise
+  ## the landed fail-closed message, plus (when the field is present and
+  ## well-formed) the first diverging component by name. The key comparison
+  ## itself is unchanged — this helper only renders its failure.
+  let decisionKey = decision{"evidenceKey"}
+  if not decisionKey.isNil and decisionKey.kind == JString and
+      decisionKey.getStr() == freshKey:
+    return ""
+  let shownKey =
+    if decisionKey.isNil or decisionKey.kind != JString: "<missing>"
+    else: decisionKey.getStr()[0 ..< 12]
+  let componentMismatch =
+    judgmentClosureComponentMismatch(decision{"closureComponents"}, fresh)
+  "judgment_cas: decision file key " & shownKey &
+    " != freshly re-derived " & freshKey[0 ..< 12] &
+    " — the plan and the attest saw different closures (fail-closed)" &
+    (if componentMismatch.len > 0: "; " & componentMismatch else: "")
+
 # ---------------------------------------------------------------------------
 # Attest-stage judgment branch (ax cert attest --witness-only)
 # ---------------------------------------------------------------------------
@@ -2197,18 +2223,11 @@ proc runJudgmentAttestBranchForSubject*(s: JudgmentSubject): Result[JudgmentAtte
   except CatchableError as exc:
     return err("judgment_cas: closure re-derivation raised (fail-closed): " & exc.msg)
   let freshKey = deriveJudgmentKey(closure)
-  let decisionKey = decision{"evidenceKey"}
-  if decisionKey.isNil or decisionKey.kind != JString or decisionKey.getStr() != freshKey:
-    # The key comparison above is UNCHANGED and already failed; the
-    # components only explain WHICH input diverged. Absent/malformed →
-    # the historical message verbatim.
-    let componentMismatch =
-      judgmentClosureComponentMismatch(decision{"closureComponents"}, diagnostics)
-    return err("judgment_cas: decision file key " &
-      (if decisionKey.isNil or decisionKey.kind != JString: "<missing>" else: decisionKey.getStr()[0 ..< 12]) &
-      " != freshly re-derived " & freshKey[0 ..< 12] &
-      " — the plan and the attest saw different closures (fail-closed)" &
-      (if componentMismatch.len > 0: "; " & componentMismatch else: ""))
+  # The full key comparison is UNCHANGED; a mismatch is refused here exactly
+  # as before. The components only explain WHICH input diverged.
+  let keyError = judgmentDecisionKeyError(decision, freshKey, diagnostics)
+  if keyError.len > 0:
+    return err(keyError)
   var payload = ""
   if basis == JudgmentWitnessBasisExecuted:
     let evidencePathEnv = subjectEvidencePathEnv(s)
