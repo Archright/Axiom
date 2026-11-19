@@ -62,10 +62,15 @@ filter excludes it like any other pre-boundary entry.
    `(run_started_at, run_attempt, run_id)` among the entry's attempts. The
    entry's reported `conclusion` and `run_id` are the terminal attempt's; the
    entry's wall clock is measured from the terminal attempt (§6).
-5. Fetch every run's attempts with
-   `GET /repos/{repo}/actions/runs/{run_id}/attempts`. If that call fails, the
-   entry keeps the run-row attempt but carries an observation gap; a successful
-   latest attempt must **never** hide an earlier failed attempt.
+5. Fetch every attempt of a run with the documented per-attempt endpoint
+   `GET /repos/{repo}/actions/runs/{run_id}/attempts/{attempt_number}` for
+   `attempt_number` in `1 .. run_attempt`. The attempts **list** endpoint
+   (`/actions/runs/{run_id}/attempts`, no index) returns 404 (measured
+   2026-11-19 on this repository and on a public control repository), so the
+   index carried by the run object is the observation surface. If any attempt
+   call fails, the entry keeps the run-row attempt but carries an observation
+   gap only when the entry is inside the measured window; a successful latest
+   attempt must **never** hide an earlier failed attempt.
 6. Fetch the terminal attempt's jobs with
    `GET /repos/{repo}/actions/runs/{run_id}/jobs?per_page=100&filter=latest`.
    The jobs are the canonical wall input (§6). A failed jobs call leaves the
