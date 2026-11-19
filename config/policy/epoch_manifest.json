@@ -25,6 +25,6 @@
     "SL-16",
     "SL-17"
   ],
-  "productionExecutionPin": "13bd4e55e9bf8a531d9d608c13d3fc2657478998",
+  "productionExecutionPin": "3ac383b66b20ae84b07ff439c4da3fff22dc6003",
   "mode": "ci-migration"
 }
