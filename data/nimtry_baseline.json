@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "created": "2026-11-18T12:18:34+09:00",
-  "total_violations": 4275,
+  "created": "2026-11-19T10:12:35+09:00",
+  "total_violations": 4272,
   "by_severity": {
-    "warning": 3900,
-    "error": 375
+    "warning": 3898,
+    "error": 374
   },
   "violations": [
     {
@@ -431,42 +431,42 @@
       "id": "0c5bf0464591dbe046b25799753a927e2c6b130f5841328d5abdf26868ab40d5",
       "rule": "SOLID",
       "file": "src/cli/merge_cli.nim",
-      "detail": "[soc-surface-area] src/cli/merge_cli.nim:1158 function buildDryRunJson spans 65 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/merge_cli.nim:1192 function buildDryRunJson spans 65 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "e4ca3c0702acfc4e086b07baad788b133afe066c0882276d46c772b8fd255db1",
       "rule": "SOLID",
       "file": "src/cli/merge_cli.nim",
-      "detail": "[soc-surface-area] src/cli/merge_cli.nim:1269 function MergeAdmissible spans 183 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/merge_cli.nim:1303 function MergeAdmissible spans 183 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "17ddc9a5787b9a8f7467d02a0e5097abf0ce6ae7f20a5c0ce93bdca7c0172f45",
       "rule": "SOLID",
       "file": "src/cli/merge_cli.nim",
-      "detail": "[soc-surface-area] src/cli/merge_cli.nim:2009 function collectAdmissionFacts spans 84 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/merge_cli.nim:2087 function collectAdmissionFacts spans 84 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "4a51bd1f888fc80a57efdf5f6eb2338e222aad1602a5a98a598e6880404590b1",
       "rule": "SOLID",
       "file": "src/cli/merge_cli.nim",
-      "detail": "[soc-surface-area] src/cli/merge_cli.nim:2810 function collectVaultCertFactsCore spans 79 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/merge_cli.nim:2888 function collectVaultCertFactsCore spans 79 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "f1ec63db9241e7af6e8acf7ab2d98a05046ab93ae78ccfbf5e77430b1dd8f8e1",
       "rule": "SOLID",
       "file": "src/cli/merge_cli.nim",
-      "detail": "[soc-surface-area] src/cli/merge_cli.nim:2935 function runMergeCli spans 78 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/merge_cli.nim:3013 function runMergeCli spans 78 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "0eac8ea82b2c013eb3b9d5cdb18ae05f4a44bcfea2025c38a9819a5e3d9e9195",
       "rule": "SOLID",
       "file": "src/cli/merge_cli.nim",
-      "detail": "[soc-surface-area] src/cli/merge_cli.nim:3087 function runMergeActuatorCli spans 100 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/merge_cli.nim:3165 function runMergeActuatorCli spans 100 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -1593,49 +1593,49 @@
       "id": "d68e75041398d27dc367980ea8e3dfc00b9af9f46568781d1e92df66823e6744",
       "rule": "SOLID",
       "file": "src/core/trusted/ast_to_ir.nim",
-      "detail": "[soc-surface-area] src/core/trusted/ast_to_ir.nim:173 function convertTypeCanon spans 61 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/core/trusted/ast_to_ir.nim:180 function convertTypeCanon spans 61 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "f5eefd1ad3a4980232308fe4c21a5aac17db5198581c763a06a7ebdbff522bf0",
       "rule": "SOLID",
       "file": "src/core/trusted/ast_to_ir.nim",
-      "detail": "[soc-surface-area] src/core/trusted/ast_to_ir.nim:237 function convertType spans 52 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/core/trusted/ast_to_ir.nim:244 function convertType spans 52 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "ec4ce5e171b7fa5efbbec93097debac124eb775e236ff39afe43d94d367862b3",
       "rule": "SOLID",
       "file": "src/core/trusted/ast_to_ir.nim",
-      "detail": "[soc-surface-area] src/core/trusted/ast_to_ir.nim:721 function convertBodyFrom spans 316 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/core/trusted/ast_to_ir.nim:728 function convertBodyFrom spans 316 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "bb8bbf3220b335bbb1670f27cc9ae584aefc9b93e869204dc08bf7c0d5ac0b8d",
       "rule": "SOLID",
       "file": "src/core/trusted/ast_to_ir.nim",
-      "detail": "[soc-surface-area] src/core/trusted/ast_to_ir.nim:1113 function convertExprCanon spans 68 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/core/trusted/ast_to_ir.nim:1120 function convertExprCanon spans 68 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "cd4660c5dcd4a8904f7bd3aa6c48a34f72272e0dafa1ffdb7935b75d448ac74a",
       "rule": "SOLID",
       "file": "src/core/trusted/ast_to_ir.nim",
-      "detail": "[soc-surface-area] src/core/trusted/ast_to_ir.nim:1270 function convertBodyFromCanon spans 91 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/core/trusted/ast_to_ir.nim:1277 function convertBodyFromCanon spans 91 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "9385b253b9fab328743f2307554201928368d4850bca4207afbe80d70a61b1ed",
       "rule": "SOLID",
       "file": "src/core/trusted/ast_to_ir.nim",
-      "detail": "[soc-surface-area] src/core/trusted/ast_to_ir.nim:1484 function collectExternalCalls spans 51 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/core/trusted/ast_to_ir.nim:1491 function collectExternalCalls spans 51 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "ff18758a70070897f43c90f98b059a9a415270375881b58d60f3942056419eb3",
       "rule": "SOLID",
       "file": "src/core/trusted/ast_to_ir.nim",
-      "detail": "[soc-surface-area] src/core/trusted/ast_to_ir.nim:1606 function convertFuncDefCanon spans 51 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/core/trusted/ast_to_ir.nim:1613 function convertFuncDefCanon spans 51 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -3536,10 +3536,10 @@
       "severity": "warning"
     },
     {
-      "id": "253010ffd4bc89d83ffc1128e56c629806539072708384617741067e9282622b",
+      "id": "69f9559c8498a8e4387b8a1fcfe4c405ce57d3ec40f9ccd646367f8a4b7249c7",
       "rule": "SOLID",
       "file": "src/verification/ledger_side_ref.nim",
-      "detail": "[soc-surface-area] src/verification/ledger_side_ref.nim:508 function appendCertificate spans 73 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/verification/ledger_side_ref.nim:509 function appendCertificate spans 77 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -4726,10 +4726,10 @@
       "severity": "warning"
     },
     {
-      "id": "68e6503b73cc7658c21a61a8c93a68ff6ffe0aea53e5187d047530ccf63a00be",
+      "id": "5ac146862bd9e778c120665b37b17367704d4ba0234b84331d81d11a3ea47691",
       "rule": "SOLID",
       "file": "src/core/crypto/hash_kernel.nim",
-      "detail": "[solid-ocp] src/core/crypto/hash_kernel.nim has 6 case branches but 0 calls to registry functions [register, registerImpl]; consider using registry/dispatch pattern for OCP compliance",
+      "detail": "[solid-ocp] src/core/crypto/hash_kernel.nim has 8 case branches but 0 calls to registry functions [register, registerImpl]; consider using registry/dispatch pattern for OCP compliance",
       "severity": "warning"
     },
     {
@@ -7897,13 +7897,6 @@
       "severity": "warning"
     },
     {
-      "id": "e4ff76c22ba2ce30bd91ad3834372cea9ab8f420864580fc081ef093e476d7c9",
-      "rule": "SAFETY-proc-purity",
-      "file": "src/core/crypto/hash_kernel.nim",
-      "detail": "[safety-proc-purity] vmSafeSha256Hex (src/core/crypto/hash_kernel.nim:46) is proc but has no transitive I/O calls. Convert to func.",
-      "severity": "warning"
-    },
-    {
       "id": "474e512436ba8eea046f4eefde306e2f7b965f8e7ce0ddf144880db07bab3e3a",
       "rule": "SAFETY-proc-purity",
       "file": "src/core/debt/debt_events.nim",
@@ -10133,7 +10126,7 @@
       "id": "4faa5c473a2c2ed7be259436a738b6f3eeb5ff25e359365dd998900e01294657",
       "rule": "SAFETY-proc-purity",
       "file": "src/verification/ledger_side_ref.nim",
-      "detail": "[safety-proc-purity] isRefConflictError (src/verification/ledger_side_ref.nim:484) is proc but has no transitive I/O calls. Convert to func.",
+      "detail": "[safety-proc-purity] isRefConflictError (src/verification/ledger_side_ref.nim:485) is proc but has no transitive I/O calls. Convert to func.",
       "severity": "warning"
     },
     {
@@ -11023,13 +11016,6 @@
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/core/contracts/spec_runtime.nim",
       "detail": "[purity-new-code-must-be-func] src/core/contracts/spec_runtime.nim:22 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
-      "severity": "warning"
-    },
-    {
-      "id": "2b41bf64718efd0ee1a4371b54d0a6f0fb0174c4cc68f45c913a998ab150f1a6",
-      "rule": "PURITY-new-code-must-be-func",
-      "file": "src/core/crypto/hash_kernel.nim",
-      "detail": "[purity-new-code-must-be-func] src/core/crypto/hash_kernel.nim:46 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
@@ -18036,35 +18022,35 @@
       "id": "f67d16ca07e0c8badda940a6ff3d49270732133096ad1c667a24d92568aa6b7b",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/infrastructure/external_ir_materializer.nim",
-      "detail": "[purity-new-code-must-be-func] src/infrastructure/external_ir_materializer.nim:353 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/infrastructure/external_ir_materializer.nim:357 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "f67d16ca07e0c8badda940a6ff3d49270732133096ad1c667a24d92568aa6b7b",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/infrastructure/external_ir_materializer.nim",
-      "detail": "[purity-new-code-must-be-func] src/infrastructure/external_ir_materializer.nim:381 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/infrastructure/external_ir_materializer.nim:385 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "f67d16ca07e0c8badda940a6ff3d49270732133096ad1c667a24d92568aa6b7b",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/infrastructure/external_ir_materializer.nim",
-      "detail": "[purity-new-code-must-be-func] src/infrastructure/external_ir_materializer.nim:408 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/infrastructure/external_ir_materializer.nim:412 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "f67d16ca07e0c8badda940a6ff3d49270732133096ad1c667a24d92568aa6b7b",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/infrastructure/external_ir_materializer.nim",
-      "detail": "[purity-new-code-must-be-func] src/infrastructure/external_ir_materializer.nim:433 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/infrastructure/external_ir_materializer.nim:437 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "f67d16ca07e0c8badda940a6ff3d49270732133096ad1c667a24d92568aa6b7b",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/infrastructure/external_ir_materializer.nim",
-      "detail": "[purity-new-code-must-be-func] src/infrastructure/external_ir_materializer.nim:603 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/infrastructure/external_ir_materializer.nim:663 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
@@ -27942,13 +27928,6 @@
       "rule": "EFFECT-enforce-proc-purity",
       "file": "src/core/contracts/z3_extraction.nim",
       "detail": "[enforce-proc-purity] proofStatusToVerificationStatus is proc but not in impure_procedures_whitelist and not marked {.raises: [].}",
-      "severity": "error"
-    },
-    {
-      "id": "4d05d501caf3eaf88ccf11679970e257b5b1162d99428463ae78565b87b03536",
-      "rule": "EFFECT-enforce-proc-purity",
-      "file": "src/core/crypto/hash_kernel.nim",
-      "detail": "[enforce-proc-purity] vmSafeSha256Hex is proc but not in impure_procedures_whitelist and not marked {.raises: [].}",
       "severity": "error"
     },
     {
