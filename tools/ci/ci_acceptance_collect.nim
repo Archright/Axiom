@@ -1798,40 +1798,59 @@ proc fetchAdmissionRuns(repo, boundaryDate: string):
   (result.runs, false,
    "run list truncated at " & $MaxRunPages & " pages — cannot prove the window")
 
-proc fetchAttempts(repo: string, r: var ObservedRun): string {.axiomEffect: IoEffect.} =
-  let path = "repos/" & repo & "/actions/runs/" & r.runId &
-             "/attempts?per_page=100"
-  let res = ghApiGet(path)
-  if not res.ok:
-    return res.err
-  let parsed = safeParseJson(res.body)
+func attemptIndexes*(runAttempt: int): seq[int] {.raises: [].} =
+  ## The attempts *list* endpoint (`/actions/runs/{id}/attempts`) returns 404
+  ## (measured 2026-11-19 on this repository and on a public control), while the
+  ## documented per-attempt endpoint works. The collector therefore walks every
+  ## attempt index carried by the run object.
+  for n in 1 .. max(1, runAttempt):
+    result.add n
+
+proc parseAttemptObject*(runId, body: string):
+    tuple[attempt: ObservedAttempt, ok: bool, err: string] {.raises: [].} =
+  let parsed = safeParseJson(body)
   if parsed.err.len > 0:
-    return "attempt list is not JSON: " & parsed.err
-  let raw = jsonArr(parsed.node, "workflow_runs")
-  if raw == nil:
-    return "attempt list lacks workflow_runs"
-  let total = jsonInt(parsed.node, "total_count", raw.len)
-  if total > 100:
-    return "attempt list exceeds 100 entries (paginated observation unsupported)"
+    return (ObservedAttempt(), false, "attempt object is not JSON: " & parsed.err)
+  var attempt = ObservedAttempt(
+    runId: runId,
+    attemptNumber: jsonInt(parsed.node, "run_attempt", 1),
+    status: jsonStr(parsed.node, "status"),
+    conclusion: jsonStr(parsed.node, "conclusion"),
+    runStartedAt: jsonStr(parsed.node, "run_started_at"),
+    updatedAt: jsonStr(parsed.node, "updated_at"),
+    evidenceFetched: false)
+  if attempt.runStartedAt.len == 0:
+    # run_started_at is the ordering key; an absent value is an observation
+    # gap, not a timestamp to guess.
+    attempt.attemptListGap = true
+    attempt.evidenceError = "attempt lacks run_started_at"
+  (attempt, true, "")
+
+func windowAttemptGaps*(entries: seq[ObservedEntry]): seq[string] {.raises: [].} =
+  ## Only post-boundary entries belong to the measured population. A historical
+  ## run whose attempts cannot be observed is reported through its entry (when
+  ## it is inside the window) and never as a window-wide gap.
+  for e in entries:
+    if not e.postBoundary:
+      continue
+    for a in e.attempts:
+      if a.attemptListGap:
+        let detail =
+          if a.evidenceError.len > 0: a.evidenceError
+          else: "attempt unobservable"
+        result.add "run " & a.runId & " attempt " & $a.attemptNumber & ": " & detail
+
+proc fetchAttempts(repo: string, r: var ObservedRun): string {.axiomEffect: IoEffect.} =
   var attempts: seq[ObservedAttempt]
-  for item in raw.items:
-    let attempt = ObservedAttempt(
-      runId: r.runId,
-      attemptNumber: jsonInt(item, "run_attempt", 1),
-      status: jsonStr(item, "status"),
-      conclusion: jsonStr(item, "conclusion"),
-      runStartedAt: jsonStr(item, "run_started_at"),
-      updatedAt: jsonStr(item, "updated_at"),
-      evidenceFetched: false)
-    if attempt.runStartedAt.len == 0:
-      # The attempts endpoint always carries run_started_at; an absent value is
-      # an observation gap, not a timestamp to guess.
-      var broken = attempt
-      broken.attemptListGap = true
-      broken.evidenceError = "attempt lacks run_started_at"
-      attempts.add broken
-    else:
-      attempts.add attempt
+  for n in attemptIndexes(r.runAttempt):
+    let res = ghApiGet("repos/" & repo & "/actions/runs/" & r.runId &
+                       "/attempts/" & $n)
+    if not res.ok:
+      return "attempt " & $n & " unobservable: " & res.err
+    let parsed = parseAttemptObject(r.runId, res.body)
+    if not parsed.ok:
+      return "attempt " & $n & ": " & parsed.err
+    attempts.add parsed.attempt
   attempts.sort(cmpAttempt)
   r.attempts = attempts
   ""
@@ -2394,9 +2413,10 @@ when isMainModule:
     die(reason)
 
   var runs = runsRes.runs
-  let attemptGaps = attachAttempts(runs, repo)
+  discard attachAttempts(runs, repo)
   var entries = buildEntries(runs)
   let boundaryGaps = applyBoundary(entries, repo, boundary)
+  let attemptGaps = windowAttemptGaps(entries)
   let authorityGaps = fetchCheckRunsForEntries(entries, repo)
   let replacementGaps = markReplacementContext(entries, repo)
   let evidenceGaps = fetchEvidenceForEntries(entries, repo)

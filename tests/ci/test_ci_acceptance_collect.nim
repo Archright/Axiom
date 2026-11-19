@@ -1002,4 +1002,52 @@ suite "fail-closed invariants":
     let e = entry(attempts = @[])
     let ec = classifyEntry(e)
     check ec.kind == ckUnclassified
-    check ec.gap
+    check ec.gap# ---------------------------------------------------------------------------
+# 10. Attempt observation surface
+# ---------------------------------------------------------------------------
+
+suite "attempt observation surface":
+
+  test "every attempt index of a run is observed, and at least one":
+    check attemptIndexes(0) == @[1]
+    check attemptIndexes(1) == @[1]
+    check attemptIndexes(3) == @[1, 2, 3]
+
+  test "a documented attempt object is parsed, not guessed":
+    let body = """{"run_attempt":2,"status":"completed","conclusion":"failure",
+      "run_started_at":"2026-11-19T09:00:00Z","updated_at":"2026-11-19T09:10:00Z"}"""
+    let p = parseAttemptObject("42", body)
+    check p.ok
+    check p.attempt.attemptNumber == 2
+    check p.attempt.runStartedAt == "2026-11-19T09:00:00Z"
+    check not p.attempt.attemptListGap
+
+  test "an attempt without run_started_at is a gap, never an invented timestamp":
+    let body = """{"run_attempt":1,"status":"completed","conclusion":"success"}"""
+    let p = parseAttemptObject("42", body)
+    check p.ok
+    check p.attempt.attemptListGap
+    check p.attempt.evidenceError == "attempt lacks run_started_at"
+
+  test "a non-JSON attempt body is unobservable":
+    let p = parseAttemptObject("42", "not json")
+    check not p.ok
+    check p.attempt.runId.len == 0
+
+  test "pre-boundary attempt gaps never make the measured window incomplete":
+    let pre = ObservedEntry(headSha: Head1, baseSha: BaseSha,
+                            postBoundary: false,
+                            attempts: @[ObservedAttempt(runId: "1",
+                                                        attemptNumber: 1,
+                                                        attemptListGap: true,
+                                                        evidenceError: "http 500")])
+    check windowAttemptGaps(@[pre]).len == 0
+
+  test "in-window attempt gaps are reported with the run identity":
+    let post = ObservedEntry(headSha: Head2, baseSha: BaseSha2,
+                             postBoundary: true,
+                             attempts: @[ObservedAttempt(runId: "7",
+                                                         attemptNumber: 2,
+                                                         attemptListGap: true,
+                                                         evidenceError: "http 500")])
+    check windowAttemptGaps(@[post]) == @["run 7 attempt 2: http 500"]
