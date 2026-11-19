@@ -120002,6 +120002,20 @@
     },
     {
       "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List string",
+      "module": "src/verification/counterexample_replay.nim",
+      "name": "composeReplayDepPaths",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
       "ignorable": true,
       "leanType": "Unit",
       "module": "src/verification/counterexample_replay.nim",

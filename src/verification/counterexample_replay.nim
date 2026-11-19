@@ -1026,7 +1026,7 @@ func nimbleRequiresNames*(nimbleFileContent: string): seq[string] {.raises: [].}
 
 proc subjectRepoDepSearchPaths*(repoRoot, nimExe: string): seq[string] {.
     raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect].} =
-  ## Extra `--path:` entries a plain harness compile needs to resolve a
+  ## Extra `--path:` entries every harness compile needs to resolve a
   ## self-repo subject's import closure WITHOUT any config file evaluation
   ## (Q1/Q3 skip them by design, so the repo's own injections are lost):
   ##   1. the Nim toolchain root ( `<nimExe>/../../` when it carries the
@@ -1036,9 +1036,14 @@ proc subjectRepoDepSearchPaths*(repoRoot, nimExe: string): seq[string] {.
   ##      best-effort: an unresolved name is skipped here and the harness
   ##      compile's own "cannot open file" error remains the fail-closed
   ##      diagnostic (never guessed, never defaulted).
-  ## Appended AFTER the subject paths (subject tree keeps search priority).
-  ## The d2-agent stamped-template path never calls this (its dep roots have
-  ## their own resolution design) — its compile command stays byte-identical.
+  ## Appended AFTER the subject paths and AFTER cfg.depSearchPaths (subject
+  ## tree and config-supplied roots keep search priority). Stamped harnesses
+  ## (d2-agent, jrpc-errclass) call this too: the d2-agent binding's fixed
+  ## stack is resolved first through resolveD2AgentDepSearchPaths and the
+  ## subject-derived roots deduplicate against it, so an unchanged subject
+  ## keeps a byte-identical command — while a subject whose nimble declares
+  ## packages outside that fixed stack (jrpc-errclass → json_serialization)
+  ## no longer loses them.
   result = @[]
   if nimExe.len > 0:
     let toolchainRoot = nimExe.parentDir().parentDir()
@@ -1066,6 +1071,19 @@ proc subjectRepoDepSearchPaths*(repoRoot, nimExe: string): seq[string] {.
     return  # axiom:best-effort(unreadable nimble file → no dep signal; the compile's error stays the diagnostic)
   let resolved = resolveNimblePackageRoots(nimbleRequiresNames(content))
   for p in resolved.paths:
+    if p notin result:
+      result.add(p)
+
+func composeReplayDepPaths*(cfgDepSearchPaths, subjectRepoRoots: seq[string]): seq[string] {.
+    raises: [].} =
+  ## The replay compile's effective `--path:` set: `cfg.depSearchPaths`
+  ## (config-supplied roots, e.g. the d2-agent binding's resolved stack or
+  ## the AXIOM_REPLAY_DEP_PATHS override) keep search priority; the
+  ## subject-derived roots (the subject repo's own nimble `requires` roots +
+  ## the measured toolchain root) are appended AFTER and deduplicated — the
+  ## subject tree and the explicit config always win over a derived guess.
+  result = cfgDepSearchPaths
+  for p in subjectRepoRoots:
     if p notin result:
       result.add(p)
 
@@ -1111,8 +1129,8 @@ func buildHarnessCmd*(nimExe, moduleDir, repoRoot, harnessDir, harnessPath: stri
   ## The replay compile command (pure — unit-tested). The subject module is
   ## imported via compile-time `--path:` flags only; `depSearchPaths` ride as
   ## additional `--path:` entries appended AFTER the subject paths (subject
-  ## tree keeps search priority) and are empty for every non-d2-agent replay
-  ## path.
+  ## tree keeps search priority): config-supplied roots first,
+  ## subject-derived roots after (composeReplayDepPaths).
   # Config isolation (replay_harness_config_quirks.md Q1+Q3 resolution): the
   # harness project file lives under the state tmp tree inside the repo tree,
   # so Nim's config resolution would walk its parent chain and evaluate the
@@ -1177,17 +1195,15 @@ proc synthesizeAndRunHarness(cfg: ReplayConfig; record: var ReplayRecord; repoRo
   except CatchableError as e:
     return ("", "cannot write harness: " & e.msg)
   let moduleDir = cfg.subjectModulePath.parentDir()
-  # Q5: a plain harness (renderReplayHarness render — never the d2-agent
-  # stamped template) compiles with all config files skipped, so the subject
-  # repo's own path injections (nimble requires roots, Nim toolchain root for
-  # `compiler/*` imports) must ride as explicit `--path:` entries. Appended
-  # AFTER cfg.depSearchPaths (d2-agent roots, empty here) — the subject tree
-  # keeps search priority in every case.
-  var depPaths = cfg.depSearchPaths
-  if cfg.harnessSource.len == 0:
-    for p in subjectRepoDepSearchPaths(repoRoot, toolchain.nimExe):
-      if p notin depPaths:
-        depPaths.add(p)
+  # Q5: every harness compile skips all config files, so the subject repo's
+  # own path injections (nimble requires roots, Nim toolchain root for
+  # `compiler/*` imports) must ride as explicit `--path:` entries. Stamped
+  # harnesses (d2-agent / jrpc-errclass templates) are no exception: their
+  # dependency supply is derived from the SAME subject repo, never from a
+  # longer hardcoded list — the d2 binding's cfg.depSearchPaths still wins
+  # first, and the subject-derived roots append after it, deduplicated.
+  let depPaths = composeReplayDepPaths(cfg.depSearchPaths,
+    subjectRepoDepSearchPaths(repoRoot, toolchain.nimExe))
   let cmd = buildHarnessCmd(toolchain.nimExe, moduleDir, repoRoot, harnessDir,
                             harnessPath, depPaths)
   try:

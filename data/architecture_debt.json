@@ -4535,12 +4535,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:9ad09a01bead6443c556fbd25a74516a94ba00a35f49d50c89f5654caa5cd4a1",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:9f0bfacc906f6dff75b0aa1345745944299ffd98e580617c948d194583022ea7",
       "count": 1,
       "file": "src/verification/counterexample_replay.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:21c8cac8ddbc614162a9a763cf49677483e0bff9a9b8721f92253ed930dc2af4"
+      "rawContentHash": "sha256:20107724bd0994d49694c5d1fb484baaa7059c49e0fda0d3610d1532d4309828"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
