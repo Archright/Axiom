@@ -849,6 +849,49 @@ suite "artifact allowlist":
     check not allowedArtifactName("")
     check selectArtifactNames(@[]).len == 0
 
+  test "the 17 published names of merge_group run 44506268193 select 7":
+    # The artifact surface actually published on the merge_group admission run
+    # of head 5cee92e1 (2026-11-19). Seven are evidence; the other ten are
+    # caches, build trees, and verifier inputs and must never be downloaded.
+    let sha = "5cee92e18034061d671add9fac99da6dd4ce9f82"
+    let names = @[
+      "admission-check-" & sha & "-1",
+      "admission-check-base-artifacts",
+      "admission-check-base-nimcache",
+      "admission-independents-" & sha & "-1",
+      "admission-verdict-" & sha & "-1",
+      "ci-bootstrap-artifacts",
+      "ci-select-decision",
+      "ci-select-verifier",
+      "derived-closure",
+      "evidence-record-" & sha & "-1",
+      "go-judgment-lane-0-" & sha & "-1",
+      "go-judgment-lane-1-" & sha & "-1",
+      "go-nimcache-lane-0-" & sha & "-1",
+      "go-nimcache-lane-1-" & sha & "-1",
+      "judgment-record-" & sha & "-1",
+      "subject-certificate-1",
+      "tested-tree-digest"]
+    check names.len == 17
+    check selectArtifactNames(names) == @[
+      "admission-check-" & sha & "-1",
+      "admission-verdict-" & sha & "-1",
+      "ci-select-decision",
+      "derived-closure",
+      "evidence-record-" & sha & "-1",
+      "judgment-record-" & sha & "-1",
+      "subject-certificate-1"]
+    # Excluded by the deny rules, not by an unrelated prefix mismatch.
+    check deniedArtifactName("admission-check-base-artifacts")
+    check deniedArtifactName("admission-check-base-nimcache")
+    check deniedArtifactName("ci-bootstrap-artifacts")
+    check deniedArtifactName("tested-tree-digest")
+    for lane in 0 .. 1:
+      check deniedArtifactName("go-judgment-lane-" & $lane & "-" & sha & "-1")
+      check deniedArtifactName("go-nimcache-lane-" & $lane & "-" & sha & "-1")
+    check not allowedArtifactName("admission-independents-" & sha & "-1")
+    check not allowedArtifactName("ci-select-verifier")
+
 # ---------------------------------------------------------------------------
 # 9. --recompute-baseline (pure core)
 # ---------------------------------------------------------------------------
