@@ -16,7 +16,11 @@
 ##   * canonical wall = terminal-attempt job span; legacy = run timestamps;
 ##   * p50 over integer seconds (even n = mean of the two middle values);
 ##   * acceptance = full N window AND 0 unexpected internal defects AND
-##     0 unclassified AND observation complete; shortfall = INCOMPLETE;
+##     0 unclassified AND 0 external_dependency_blocked AND observation
+##     complete; shortfall = INCOMPLETE; recovered_degradation does not block;
+##   * external_dependency requires a supply signature AND a package marker,
+##     and its control_outcome is fail_closed (§4.8);
+##   * incorrect_green is a reserved constant emitted by no code path;
 ##   * initial = first N, rolling = last N by terminal run_started_at;
 ##   * artifact download allowlist excludes cache/build artifacts;
 ##   * missing artifact/log => unclassified + observation gap (fail-closed);
@@ -456,6 +460,144 @@ suite "classification hierarchy":
       failure("1", 1, "ROT_ALLOWLIST"),
       failure("1", 2, "unknown failure")])
     check classifyEntry(e).kind == ckUnclassified
+
+# ---------------------------------------------------------------------------
+# 3b. External dependency: root cause vs control outcome (§4.8)
+# ---------------------------------------------------------------------------
+
+suite "external dependency classification":
+
+  const
+    Observed44519217624 = """E: Failed to fetch https://security.ubuntu.com/ubuntu/pool/universe/p/pcre3/libpcre3_8.39-15build1_amd64.deb  503  Service Unavailable [IP: 52.15.107.13 80]
+E: Unable to fetch some archives, maybe run apt-get update or try with --fix-missing?
+W: Failed to fetch mirror+file:/etc/apt/apt-mirrors.txt/dists/noble/InRelease  503  Service Unavailable [IP: 52.15.159.198 80]
+[check] FAIL: the admission predicate (MergeAdmissible) was SKIPPED on the landing venue (scope flags not true?) — a skipped step reports Success and would vacuously green the required check (fail-closed, 4-class contract upper boundary)."""
+
+    Observed44521587339 = """E: Failed to fetch https://security.ubuntu.com/ubuntu/pool/universe/p/pcre3/libpcre3_8.39-15build1_amd64.deb  503  Service Unavailable [IP: 3.129.149.36 80]
+E: Failed to fetch https://security.ubuntu.com/ubuntu/pool/universe/p/pcre3/libpcre3_8.39-15build1_amd64.deb  Could not connect to azure.archive.ubuntu.com:80 (52.252.75.106), connection timed out
+W: Failed to fetch mirror+file:/etc/apt/apt-mirrors.txt/dists/noble/InRelease  503  Service Unavailable [IP: 52.15.158.54 80]
+##[error]Process completed with exit code 100."""
+
+  test "run 44519217624: apt 503 plus a SKIPPED guard is external_dependency":
+    let ac = classifyAttempt(failure("44519217624", text = Observed44519217624),
+                             false, true)
+    check ac.kind == ckExternalDependency
+    check ac.subtype == dsExternalSupply
+    check ac.controlOutcome == coFailClosed
+    check not ac.gap
+    let e = entry(attempts = @[
+      failure("44519217624", text = Observed44519217624)])
+    let ec = classifyEntry(e)
+    check ec.kind == ckExternalDependency
+    check ec.controlOutcome == coFailClosed
+    check not ec.recovered
+    let item = reportJson(reportFor(@[e])){"entries"}[0]
+    check item{"classification"}.getStr == "external_dependency"
+    check item{"subtype"}.getStr == "external_supply_unavailable"
+    check item{"control_outcome"}.getStr == "fail_closed"
+    check item{"attempt_details"}[0]{"control_outcome"}.getStr == "fail_closed"
+
+  test "the projection fallback does not mask a supply outage":
+    let text = Observed44519217624 & "\n" &
+               "# `unknown namespace 'Lake'` -> INTERNAL_ERROR(2) across all 16 legs\n" &
+               "the refusal class check requires the predicate to run"
+    let ac = classifyAttempt(failure("1", text = text), false, true)
+    check ac.kind == ckExternalDependency
+    check ac.subtype == dsExternalSupply
+
+  test "an explicit FAILURE_PROJECTION marker still outranks an infra signature":
+    let text = "FAILURE_PROJECTION: refusal class lost\n" & Observed44519217624
+    let ac = classifyAttempt(failure("1", text = text), false, true)
+    check ac.kind == ckInternalDefect
+    check ac.subtype == dsFailureProjection
+
+  test "a bare 503 is never external_dependency":
+    let ac = classifyAttempt(failure("1", text =
+      "HTTP 503 Service Unavailable\nsomething unexpected broke"), false, true)
+    check ac.kind == ckUnclassified
+
+  test "run 44521587339: supply failure text is external_dependency":
+    let ac = classifyAttempt(failure("44521587339",
+                                     text = Observed44521587339), false, true)
+    check ac.kind == ckExternalDependency
+    check ac.subtype == dsExternalSupply
+    check ac.controlOutcome == coFailClosed
+    let bare = classifyAttempt(failure("44521587339", text =
+      "##[error]Process completed with exit code 100."), false, true)
+    check bare.kind == ckUnclassified
+    check not bare.gap
+    let missing = classifyAttempt(failure("44521587339", text = ""), false, true)
+    check missing.kind == ckUnclassified
+    check missing.gap
+
+  test "a supply failure recovered by a later success is recovered_degradation":
+    let e = entry(Head2, attempts = @[
+      failure("2", 1, Observed44519217624,
+              "2026-11-19T00:05:00Z", "2026-11-19T00:06:00Z"),
+      succeed("2", 2, "2026-11-19T00:10:00Z", "2026-11-19T00:11:00Z")])
+    let ec = classifyEntry(e)
+    check ec.kind == ckSuccess
+    check ec.recovered
+    check ec.controlOutcome == coAccepted
+    let r = reportFor(@[
+      entry(Head1, attempts = @[succeed("1", 1,
+        "2026-11-19T00:00:00Z", "2026-11-19T00:01:00Z")]),
+      e])
+    check r.acceptance.recoveredDegradation == 1
+    check r.acceptance.externalDependencyBlocked == 0
+    check r.acceptance.internalDefect == 0
+    check r.acceptance.unclassified == 0
+    check r.acceptance.accepted
+    let item = reportJson(r){"entries"}[1]
+    check item{"classification"}.getStr == "success"
+    check item{"recovered_degradation"}.getBool
+    check item{"attempt_details"}[0]{"classification"}.getStr ==
+      "external_dependency"
+    check item{"attempt_details"}[0]{"recovered"}.getBool
+
+  test "a supply failure recovered by legitimate_policy is recovered_degradation":
+    let e = entry(attempts = @[
+      failure("1", 1, Observed44519217624,
+              "2026-11-19T00:00:00Z", "2026-11-19T00:01:00Z"),
+      failure("1", 2, "ROT_ALLOWLIST",
+              "2026-11-19T00:05:00Z", "2026-11-19T00:06:00Z")])
+    let ec = classifyEntry(e)
+    check ec.kind == ckLegitimatePolicy
+    check ec.recovered
+
+  test "external_dependency_blocked fails acceptance with no internal defect":
+    let r = reportFor(@[
+      entry(Head1, attempts = @[succeed("1")]),
+      entry(Head2, attempts = @[failure("2", text = Observed44519217624)])])
+    check r.acceptance.internalDefect == 0
+    check r.acceptance.unclassified == 0
+    check r.acceptance.unexpectedInternalDefects == 0
+    check r.acceptance.externalDependencyBlocked == 1
+    check r.acceptance.recoveredDegradation == 0
+    check not r.acceptance.predicateHolds
+    check not r.acceptance.accepted
+    check r.acceptance.status == asFailed
+    let node = reportJson(r)
+    check node{"counts"}{"external_dependency"}.getInt == 1
+    check node{"acceptance"}{"external_dependency_blocked"}.getInt == 1
+    check node{"acceptance"}{"recovered_degradation"}.getInt == 0
+
+  test "control_outcome separates root cause from the control response":
+    check classifyAttempt(succeed("1"), false, true).controlOutcome == coAccepted
+    check classifyAttempt(failure("1", text = "unknown failure"),
+                          false, true).controlOutcome == coUnknown
+
+  test "incorrect_green is reserved and emitted by no path":
+    check $coIncorrectGreen == "incorrect_green"
+    let r = reportFor(@[
+      entry(Head1, attempts = @[succeed("1")]),
+      entry(Head2, attempts = @[failure("2", text = Observed44519217624)]),
+      entry(Head3, attempts = @[failure("3", text = "unknown failure")])])
+    let node = reportJson(r)
+    for item in node{"entries"}.items:
+      check item{"control_outcome"}.getStr != "incorrect_green"
+      for a in item{"attempt_details"}.items:
+        check a{"control_outcome"}.getStr != "incorrect_green"
 
 # ---------------------------------------------------------------------------
 # 4. Authority: admission-check must come from App 5795152
