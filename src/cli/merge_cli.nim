@@ -357,6 +357,9 @@ const
     "docs/evidence/rotation_allowlist_replay_evidence_prereg_2026-10-19.md",
     "docs/agents/report-guardrails.md",
     "tests/unit/test_vkd_ssot_invariant.nim",
+    # #187: summaryProjection(클로저 멤버)의 단위 계약 테스트 — 회전 동반 경로
+    # (test_judgment_cas·test_vkd_ssot_invariant와 동일한 회전 멤버 계약 클래스).
+    "tests/unit/phase_x10_accounting_test.nim",
     "docs/evidence/rotation_allowlist_post_vkd_prereg_2026-10-19.md",
     "src/core/policy/rotation_closure_facts.nim",
     "tools/ci/rotation_pin_anchor_check.nim",

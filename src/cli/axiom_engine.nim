@@ -893,7 +893,7 @@ proc runBatchVerification*(
   reportJson["summary"]["verifiedRatio"] = %(safeParseFloat(asString(canonicalState.vkd)).getOrDefault(0.0))
   reportJson["summary"]["vsr"] = %canonicalState.vsr
   reportJson["summary"]["completionRate"] = %canonicalState.completionRate
-  reportJson["summary"]["verified"] = %canonicalState.netVerifiedFunctions
+  # verified = per-unit count (summaryProjection); netVerifiedFunctions = cumulative kernel scope (§11).
   reportJson["summary"]["netVerifiedFunctions"] = %canonicalState.netVerifiedFunctions
   reportJson["summary"]["vacuousDemotions"] = %canonicalState.vacuousDemotions
   reportJson["summary"]["tautologyDemotions"] = %canonicalState.tautologyDemotions
