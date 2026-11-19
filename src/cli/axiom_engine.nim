@@ -151,6 +151,14 @@ type
     orchestrationNodeReports*: seq[OrchestrationNodeReport]
     canonicalRunResult*: CanonicalRunResult  ## X1 canonical boundary — authoritative execution source
 
+  PrepareFailure* = object
+    ## Prepare/pipeline refusal with its CLI outcome class preserved across
+    ## the Result boundary (r7 CLI outcome contract): a document/input refusal
+    ## is INVALID_INPUT (exit 3); an analysis/persistence/engine failure is
+    ## INTERNAL_ERROR (exit 2). The class is fixed where the refusal is
+    ## produced and projected — never re-derived at the CLI boundary.
+    kind*: CliOutcome
+    msg*: string
 
   AxiomEngine* = object
     startMono*: int64
@@ -180,6 +188,19 @@ type
     memoCache: Table[string, IrPipelineResult]
     subjectRoot: string  ## §2.1a: subject repo root for the canonical bound seal
                          ## (empty = internal-only path, binding fails closed)
+
+func documentRefusal*(msg: string): PrepareFailure {.raises: [].} =
+  ## A preparable input was refused: registry/pin/document/overlay/carrier/
+  ## target. Document-level rejection is INVALID_INPUT (exit 3).
+  PrepareFailure(kind: CliOutcome.INVALID_INPUT, msg: msg)
+
+func internalFailure*(msg: string): PrepareFailure {.raises: [].} =
+  ## The engine could not complete analysis, persistence, or a wave.
+  PrepareFailure(kind: CliOutcome.INTERNAL_ERROR, msg: msg)
+
+func toCliError*(e: PrepareFailure): CliError {.raises: [].} =
+  ## Boundary projection: the carried class becomes the process exit class.
+  CliError(kind: e.kind, msg: e.msg)
 
 proc irPipelineWorker*(ctx: ptr ParallelIrContext) {.thread, axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ctx.result = runIrPipelinesFor(ctx.entries, ctx.memoCache, subjectRepoRoot = ctx.subjectRoot)
@@ -6625,7 +6646,7 @@ proc computeInitialFrontier(prepared: PreparedRun; bundle: TopologyCliAnalysisBu
     computeLimit, prepared.kernelScope, subjectMode = externalSubjectMode)
 
 proc prepareProofRun(task: ProofTask; sourceRoot: string;
-                     shortcutStatePathOverride: string): Result[PreparedRun, string] {.
+                     shortcutStatePathOverride: string): Result[PreparedRun, PrepareFailure] {.
   raises: [Exception], axiomEffect: IOEffect,
   tags: [TimeEffect, RootEffect, AxiomIOEffect, IOEffect].} =
   ## Topology scan → vault hydration → frontier selection → pre-loop persist.
@@ -6644,8 +6665,9 @@ proc prepareProofRun(task: ProofTask; sourceRoot: string;
   let subjectRegistryRes = loadExternalSubjectRegistry(
     overlayDir = runtimeOverlaySpecDir())
   if subjectRegistryRes.isErr():
-    return err("external subject registry unavailable (fail-closed): " &
-      subjectRegistryRes.error)
+    return err(documentRefusal(
+      "external subject registry unavailable (fail-closed): " &
+      subjectRegistryRes.error))
   prepared.subjectRegistry = subjectRegistryRes.get
   prepared.propositionIntake = task.propositionIntake
   # Flipped-lane presence + pin + payload (§2.3 rule 3, §2.4): an entry with
@@ -6668,13 +6690,13 @@ proc prepareProofRun(task: ProofTask; sourceRoot: string;
           entry.governedBlobSha256, sourceRoot,
           entryPinWording(entry))
         if pin.isErr():
-          return err(diag.pinRejected & pin.error)
+          return err(documentRefusal(diag.pinRejected & pin.error))
         if not pin.get:
           logInfo("axiom_engine", diag.inertModule & entry.governedModule)
           continue
       let payloadRes = adapterOpt.get.validate(entry.raw)
       if payloadRes.isErr():
-        return err(diag.docInvalid & payloadRes.error)
+        return err(documentRefusal(diag.docInvalid & payloadRes.error))
       prepared.registryPayloads.add((entry.specRelPath, payloadRes.get))
     # A flipped OPTIONAL lane whose DOCUMENT is absent has no entry to loop
     # over: the absence is an explicitly-logged inert binding (§1.3), the
@@ -6709,10 +6731,10 @@ proc prepareProofRun(task: ProofTask; sourceRoot: string;
         if not present:
           let dirRes = resolveExternalSubjectSpecDir()
           if dirRes.isErr():
-            return err(errPrefix & dirRes.error)
-          return err(errPrefix &
+            return err(documentRefusal(errPrefix & dirRes.error))
+          return err(documentRefusal(errPrefix &
             "cannot read spec overlay " & dirRes.get / lanePath &
-            " (missing, unreadable, or not valid JSON)")
+            " (missing, unreadable, or not valid JSON)"))
     # coutMandatoryPresence check retained for exact backward compatibility
     block coutMandatoryPresence:
       var coutPresent = false
@@ -6723,15 +6745,17 @@ proc prepareProofRun(task: ProofTask; sourceRoot: string;
       if not coutPresent:
         let coutDirRes = resolveExternalSubjectSpecDir()
         if coutDirRes.isErr():
-          return err("base36 C_out binding overlay unavailable (fail-closed): " &
-            coutDirRes.error)
-        return err("base36 C_out binding overlay unavailable (fail-closed): " &
+          return err(documentRefusal(
+            "base36 C_out binding overlay unavailable (fail-closed): " &
+            coutDirRes.error))
+        return err(documentRefusal(
+          "base36 C_out binding overlay unavailable (fail-closed): " &
           "cannot read spec overlay " & coutDirRes.get /
           coutRegistryEntryRelPath &
-          " (missing, unreadable, or not valid JSON)")
+          " (missing, unreadable, or not valid JSON)"))
   let effectiveQueueLimit = task.limit.resolve()
   let analysisRes = analyzeSubjectSource(sourceRoot, effectiveQueueLimit, not task.limit.isUnlimited())
-  if analysisRes.isErr(): return err(analysisRes.error)
+  if analysisRes.isErr(): return err(internalFailure(analysisRes.error))
   let bundle = analysisRes.get()
   prepared.analysis = bundle.analysis
   prepared.sourceRoot = bundle.sourceRoot
@@ -6873,8 +6897,9 @@ proc prepareProofRun(task: ProofTask; sourceRoot: string;
         let synth = adapterOpt.get.synthesize(routed.fnName, routed.modulePath,
           payloadOpt.get, subjectResolver, prepared.census, sourceRoot)
         if synth.isErr:
-          return err(flippedLaneDiagnostics(entry.specRelPath).carrierTarget &
-            " (fail-closed): " & synth.error)
+          return err(documentRefusal(
+            flippedLaneDiagnostics(entry.specRelPath).carrierTarget &
+            " (fail-closed): " & synth.error))
         # Display v3: record the bare-routing winner's adopted overlay
         # identity for the routed unit (the decision dispatch already made).
         prepared.adoptedSpecRefs.add((routed.modulePath & "::" & routed.fnName,
@@ -6890,7 +6915,7 @@ proc prepareProofRun(task: ProofTask; sourceRoot: string;
         " — propositions-introduced target: degrading to per-proposition " &
         "INCAPABLE{" & $pcrLaneNotEquipped & "} (byo_agent_proposition_contract §3); run continues")
     else:
-      return err(refusal)
+      return err(documentRefusal(refusal))
 
   logSelectionSummary(task.target, prepared.preEligibilityFrontier, preSelectLen, postSelectLen)
 
@@ -6929,7 +6954,7 @@ proc prepareProofRun(task: ProofTask; sourceRoot: string;
   prepared.preRun = buildPreRunContext(prepared.reportJson)
   prepared.statePath = resolveAxStatePath(shortcutStatePathOverride)
   let persisted = persistAxProofState(prepared.statePath, prepared.reportJson)
-  if persisted.isErr(): return err(persisted.error)
+  if persisted.isErr(): return err(internalFailure(persisted.error))
   ok(prepared)
 
 proc appendDisplayAndPersist(prepared: PreparedRun; proofReport: var ProofReport;
@@ -7070,8 +7095,10 @@ proc runProofPipeline*(
   cwdOverride: string;
   shortcutStatePathOverride: string;
   planPath: string = ""
-): Result[ProofReport, string] {.raises: [Exception, IOEffect], axiomEffect: IOEffect, tags: [TimeEffect, RootEffect, AxiomIOEffect, IOEffect].} =
+): Result[ProofReport, PrepareFailure] {.raises: [Exception, IOEffect], axiomEffect: IOEffect, tags: [TimeEffect, RootEffect, AxiomIOEffect, IOEffect].} =
   ## Topology scan → adaptive budget calculation → batch UAP pipeline.
+  ## Refusals keep their class across the boundary: prepare-phase document
+  ## refusals stay INVALID_INPUT; wave/engine failures become INTERNAL_ERROR.
   let sourceRoot = if cwdOverride.len > 0: cwdOverride else: getCurrentDir()
   let prepareStartMs = getMonoTime().ticks
   let preparedRes = prepareProofRun(task, sourceRoot, shortcutStatePathOverride)
@@ -7086,7 +7113,7 @@ proc runProofPipeline*(
   let wavesStartMs = getMonoTime().ticks
   let waves = runVerificationWaves(waveInputs, prepared.engine, frontier, verifiedSet)
   if not waves.ok:
-    return err(waves.errMsg)
+    return err(internalFailure(waves.errMsg))
   logStage(skSwat, "", "waves completed", elapsedMs=int((getMonoTime().ticks - wavesStartMs) div 1_000_000))
   var proofReport = waves.report
   verifiedSet = waves.verifiedSet
@@ -7113,7 +7140,7 @@ proc runProofPipeline*(
   if not externalSubjectMode:
     let (lvJson, lvErr) = runLeanVerifyBlock()
     if lvErr.len > 0:
-      return err(lvErr)
+      return err(internalFailure(lvErr))
     leanVerifyJson = lvJson
 
   let runResult = buildCanonicalRunOutcome(prepared.reportJson{"eligibility"}, waves,
@@ -7132,7 +7159,7 @@ proc runProofPipeline*(
   let repersisted = appendDisplayAndPersist(prepared, proofReport, runResult,
     waves, projections, sourceRoot)
   if repersisted.isErr():
-    return err(repersisted.error)
+    return err(internalFailure(repersisted.error))
 
   recordSelectionOutcome(prepared.selState, prepared.cacheDir, prepared.reportJson, frontier)
   logStage(skReport, "", "persist completed", elapsedMs=int((getMonoTime().ticks - persistStartMs) div 1_000_000))
@@ -7301,7 +7328,7 @@ proc runAxiomEngineCli*(
 
   let pipelineRes = runProofPipeline(task, effectiveCwdOverride, shortcutStatePathOverride, flags.plan)
   if pipelineRes.isErr():
-    return err(CliError(kind: CliOutcome.INTERNAL_ERROR, msg: pipelineRes.error))
+    return err(toCliError(pipelineRes.error))
   var proofReport = pipelineRes.get()
 
   let cwd = if effectiveCwdOverride.len > 0: effectiveCwdOverride else: getCurrentDir()

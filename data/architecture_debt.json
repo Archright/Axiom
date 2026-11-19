@@ -48,12 +48,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:b3ce0446b89cea81a9e9d3e721d5d0536d9d889db6cf2f5b0f8cfbb4922c5e68",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:81f06ead8a8a03cb97cb301095c55c9e70568d3acaa56c2994436a431613b520",
       "count": 1,
       "file": "src/cli/axiom_engine.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:8e5c2b73d0e87d691f3fe5e3d3e177beb30a9f9d5d8d7841931ddda2babc5d4e"
+      "rawContentHash": "sha256:5a7ce28d4c6cbab11bf6d7c7dcb4bb24454fb9f40e0e5e3080cc117c92684238"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",

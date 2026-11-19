@@ -9,13 +9,16 @@
 ##   newGateReporter + report — pure gate event accumulation
 ##   persistVsrLedger         — IO: append-only ledger write (temp dir)
 ##   LedgerEvent fields       — pure type construction and access
+##   PrepareFailure           — prepare/pipeline refusal → CliOutcome projection
 ##
 ## NOT TESTED (requires full pipeline infrastructure — tested via BDD in tests/gateway/):
 ##   computeGateAssessment    — depends on BatchUapReport (deep nested types)
 ##   executePipeline          — full UAP pipeline execution
 ##   runBatchVerification     — not exported; orchestrates 4-layer pipeline
-##   runProofPipeline         — not exported; topology scan + verification
-##   runAxiomEngineCli        — not exported; top-level CLI entry point
+##   runProofPipeline         — exported; full topology scan + verification run
+##   runAxiomEngineCli        — exported; top-level CLI entry point (its prepare
+##                              refusals are covered by the PrepareFailure
+##                              boundary projection below + CI end-to-end runs)
 
 import std/json
 import std/os
@@ -24,6 +27,7 @@ import std/tables
 import std/unittest
 
 import cli/axiom_engine
+import cli/cli_outcome
 import cli/cli_types
 import cli/queue_limit
 import core/proof/proof_budget
@@ -378,3 +382,46 @@ suite "ProofTask — field access":
     check task.vaultDir == "/v"
     check task.emitJson == true
     check task.maxRounds == 6
+
+suite "PrepareFailure — r7 CLI outcome projection (issue #186)":
+  test "every document/input refusal projects to INVALID_INPUT (exit 3)":
+    let refusals = [
+      "external subject registry unavailable (fail-closed): missing catalog",
+      "sidecar subject pin rejected: governed blob mismatch",
+      "C_out binding document invalid: missing governed symbol",
+      "base36 sizing binding overlay unavailable (fail-closed): missing document",
+      "base32 rem binding overlay unavailable (fail-closed): missing document",
+      "base36 C_out binding overlay unavailable (fail-closed): missing document",
+      "constructed carrier (fail-closed): cannot synthesize",
+      "explicitly requested target is not an admissible candidate"]
+    for msg in refusals:
+      let projected = toCliError(documentRefusal(msg))
+      check projected.kind == CliOutcome.INVALID_INPUT
+      check exitCode(projected.kind) == 3
+      check projected.msg == msg
+
+  test "analysis/persistence/engine failures project to INTERNAL_ERROR (exit 2)":
+    let failures = [
+      "subject analysis failed",
+      "pre-loop proof state persist failed",
+      "verification wave failed",
+      "lean verify block failed",
+      "report persist failed"]
+    for msg in failures:
+      let projected = toCliError(internalFailure(msg))
+      check projected.kind == CliOutcome.INTERNAL_ERROR
+      check exitCode(projected.kind) == 2
+      check projected.msg == msg
+
+  test "compile-level: runProofPipeline carries PrepareFailure to the boundary":
+    type PipelineResult = typeof(runProofPipeline(default(ProofTask), "", ""))
+    check (PipelineResult is Result[ProofReport, PrepareFailure])
+    # The exact boundary expression in runAxiomEngineCli receives this error
+    # channel; a pipeline document refusal must keep its class there.
+    let failed = Result[ProofReport, PrepareFailure](
+      ok: false, err: documentRefusal("subject pin rejected (fail-closed)"))
+    check failed.isErr()
+    let boundary = toCliError(failed.error)
+    check boundary.kind == CliOutcome.INVALID_INPUT
+    check exitCode(boundary.kind) == 3
+    check boundary.msg == "subject pin rejected (fail-closed)"
