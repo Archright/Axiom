@@ -1337,6 +1337,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "PrepareFailure",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "documentRefusal",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "PrepareFailure",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "SubjectPinMismatchWording",
       "module": "src/cli/axiom_engine.nim",
       "name": "entryPinWording",
@@ -1658,6 +1672,20 @@
       ],
       "resultConstraintTemplate": "",
       "returnType": "AxiomEngine",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "PrepareFailure",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "internalFailure",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "PrepareFailure",
       "smtSort": "Int",
       "typeCategory": "object"
     },
@@ -2502,7 +2530,7 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
-      "leanType": "Result[PreparedRun, string]",
+      "leanType": "Result[PreparedRun, PrepareFailure]",
       "module": "src/cli/axiom_engine.nim",
       "name": "prepareProofRun",
       "negativeConstraints": [
@@ -2510,7 +2538,7 @@
         "Use 'result.isOk or result.isErr' instead"
       ],
       "resultConstraintTemplate": "",
-      "returnType": "Result[PreparedRun, string]",
+      "returnType": "Result[PreparedRun, PrepareFailure]",
       "smtSort": "Int",
       "typeCategory": "result"
     },
@@ -2922,7 +2950,7 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
-      "leanType": "Result[ProofReport, string]",
+      "leanType": "Result[ProofReport, PrepareFailure]",
       "module": "src/cli/axiom_engine.nim",
       "name": "runProofPipeline",
       "negativeConstraints": [
@@ -2930,7 +2958,7 @@
         "Use 'result.isOk or result.isErr' instead"
       ],
       "resultConstraintTemplate": "",
-      "returnType": "Result[ProofReport, string]",
+      "returnType": "Result[ProofReport, PrepareFailure]",
       "smtSort": "Int",
       "typeCategory": "result"
     },
@@ -3329,6 +3357,20 @@
       "returnType": "Result[bool, string]",
       "smtSort": "Int",
       "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "CliError",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "toCliError",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "CliError",
+      "smtSort": "Int",
+      "typeCategory": "object"
     },
     {
       "hasAxiomHint": false,
