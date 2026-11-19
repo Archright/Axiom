@@ -59,7 +59,7 @@
     "src/cli/axiom_engine.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "737723f8dd858d834f56baa0f4b04c9691294ada"
+      "sha": "6e70c69189ede7bec7ca92acd2c18fb077937b24"
     },
     "src/cli/axiom_status.nim": {
       "mode": "100644",
