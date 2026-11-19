@@ -417,6 +417,58 @@ $ gh api "repos/Archright/Axiom/actions/runs?event=merge_group&per_page=100" \
 
 본 절은 정책·워크플로 변경을 제안하지 않는다. 탐지 레시피는 관측 절차이며, 자동화 도입은 별도 결정이다.
 
+### §7.6 App preflight의 head-이동 레이스 — 실측 타임라인
+
+`docs/agents/axiom_admission_verifier_ops.md:55`는 "run 완료 시점의 현재 PR head와 run의 `head_sha`가 다르면 현재 head에 `failure`를 발행하며, 이후 새 run이 성공해도 그 failure를 자동 대체하지 않는다"고 서술한다. 본 절은 그 서술이 실제로 어떤 타임라인으로 발생하는지 기록한다. 판정 규칙을 바꾸자는 것이 아니라, **어느 check-run이 권위인지**를 고정하는 것이 목적이다.
+
+#### 실패 사례 — PR #207 (`b6ccfa22`)
+
+```console
+$ gh api repos/Archright/Axiom/check-runs/135454855178 \
+    --jq '{status,conclusion,started:.started_at,completed:.completed_at,ext:.external_id,title:.output.title}'
+{"status":"completed","conclusion":"failure","started":"2026-11-19T09:07:32Z",
+ "completed":"2026-11-19T09:13:00Z",
+ "ext":"v1p|1454952493|b6ccfa2…|7b1c0c3…|run=44493523068#1",
+ "title":"Preflight verification rejected"}
+```
+
+`output.summary`의 판정 근거는 현재 head의 run이 아니다:
+
+```
+run=44493263557 attempt=1 conclusion=failure
+reasons=run_head_mismatch | conclusion=failure
+```
+
+타임라인은 네 사건으로 닫힌다:
+
+| 시각 (UTC) | 사건 |
+|---|---|
+| `09:05:48` | 이전 head `4388039`의 admission run `44493263557` 시작 |
+| `09:07:30` | head가 `b6ccfa2`로 이동 (이전 run은 아직 in-flight) |
+| `09:12:56` | 이전 run `44493263557` 완료(`failure`) |
+| `09:13:00` | App이 **현재 head** `b6ccfa2`에 `failure` 발행 (`run_head_mismatch`) |
+| `09:14:16` | 새 head 자신의 run `44493523068` 완료(`success`) — check-run은 이미 terminal, 대체되지 않음 |
+
+#### 대조 사례 — PR #206 (`db4f6827`), head 이동 없음
+
+```console
+$ gh api repos/Archright/Axiom/check-runs/135462308826 \
+    --jq '{conclusion,started:.started_at,completed:.completed_at,title:.output.title}'
+{"conclusion":"success","started":"2026-11-19T09:21:57Z",
+ "completed":"2026-11-19T09:28:58Z","title":"Preflight verification verified"}
+```
+
+run `44495727356`가 `09:28:51Z`에 완료된 뒤 7초 후 같은 check-run이 `success`로 확정됐다. in-flight 중 head가 움직이지 않으면 App은 pending으로 대기하다 자기 run의 완료로 판정한다 — 실패 사례는 **stale run의 늦은 완료**가 방아쇠였다.
+
+#### 운영 규칙 (관측된 것만)
+
+1. admission run이 in-flight인 동안 PR head를 이동시키지 않는다.
+2. 이동이 발생해 failure가 발행되면, **새 head를 만들고 그 run을 완료시켜 새 check-run을 받는다.** 같은 head의 run 재실행은 기존 terminal check-run을 대체하지 않는다.
+3. 어떤 경우에도 bypass로 통과시키지 않는다.
+4. 수용 측정에서 권위는 **PR rollup의 집계가 아니라 해당 head에 결속된 App `5795152`의 check-run**이다. `external_id`의 `run=<id>#<attempt>`는 그 check-run이 어느 attempt에 결속됐는지를 보존한다.
+
+이 규칙은 `axiom-admission-verifier` 앱의 동작이며 Axiom 저장소 코드가 아니다. 따라서 본 절은 수정 제안이 아니라 **측정 시 어떤 체크를 읽어야 하는지**에 대한 관측 계약이다.
+
 ## §8. 잔여 org-의존 코드 경로 — 현재 의미는 inert/legacy
 
 아래 경로들은 조직 ruleset 시대의 흔적을 담고 있다. 본 문서는 이들을 **삭제 대상이라고 주장하지 않는다** — 현재 의미가 무엇인지만 기록한다.
