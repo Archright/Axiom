@@ -4,7 +4,7 @@
 > **Created**: 2026-11-19
 > **Measured at**: 2026-11-19T08:18Z (UTC). `gh` 2.102.0.
 > **Base**: `7b1c0c35351be04416066fbdf35a1f517de4151e` (origin/main)
-> **동반 문서**: `docs/evidence/github_free_parity_2026-11-19.md` (같은 시점의 ruleset·run 실측)
+> **동반 문서**: `docs/evidence/github_free_parity_2026-11-19.md` (같은 시점의 ruleset·run 실측). merge queue 게이팅 서술의 문서-실측 격차와 승인 위임 경계는 그 문서 §7.5·§9.2에 있다.
 
 ## §0. 분류 결론
 

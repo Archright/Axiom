@@ -336,6 +336,87 @@ App `5795152`가 발행한 check-run의 부가 필드:
 
 15368 쪽 `admission-check`는 게이트 run 내부의 동명 job이며 5초 만에 끝난다. 규칙이 요구하는 context는 `integration_id 5795152`이므로, **동명 job이 존재해도 판정 권위는 앱 id로 갈린다** — 이름이 아니라 신원이 판별자라는 것이 실측으로 드러난다.
 
+### §7.5 공식 문서 vs 라이브 플랫폼 — merge queue 게이팅 서술의 격차
+
+§4.3과 §7.1–§7.4는 라이브 API와 관측된 착지로 merge queue 강제를 입증했다. 본 절은 같은 사실을 **공식 문서가 어떻게 서술하는지** 대조하고, 문서와 실측이 갈리는 지점을 기록한다. 문서 오류를 주장하지 않는다 — 어느 페이지가 무엇을 말하는지, 이 저장소에서 실제로 무엇이 강제되는지를 분리한다.
+
+#### 문서측 관측 (2026-11-19 조회)
+
+| URL | merge queue 관련 서술 |
+|---|---|
+| <https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets> | `Require merge queue` 절 **없음** — 규칙 목록에 merge queue 미등재 |
+| <https://docs.github.com/en/enterprise-cloud@latest/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets> | `Require merge queue` 절 존재. "Note: This rule is not available for rulesets created at the organization level." |
+| <https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue> | "Pull request merge queues are available in any public repository owned by an organization, or in private repositories owned by organizations using GitHub Enterprise Cloud." |
+| <https://docs.github.com/en/rest/repos/rules> | `merge_queue` 오브젝트를 플랜 조건 없이 문서화 ("Merges must be performed via a merge queue.") |
+
+```console
+$ for v in "" "enterprise-cloud@latest/"; do
+    url="https://docs.github.com/en/${v}repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets"
+    echo "$url -> $(curl -sSL "$url" | grep -oE 'id="require[a-z-]*"' | sort -u | grep -c 'require-merge-queue')"
+  done
+https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets -> 0
+https://docs.github.com/en/enterprise-cloud@latest/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets -> 1
+```
+
+#### 전제 검증 — 플랜 게이팅 문장과 `repo-rules-merge-queue` 플래그
+
+위 네 페이지 어디에도 `repo-rules-merge-queue` 문자열은 없다.
+
+```console
+$ for u in \
+    "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets" \
+    "https://docs.github.com/en/enterprise-cloud@latest/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets" \
+    "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue" \
+    "https://docs.github.com/en/rest/repos/rules"; do
+    printf '%s  %s\n' "$(curl -sSL "$u" | grep -c 'repo-rules-merge-queue')" "$u"
+  done
+0  .../managing-rulesets/available-rules-for-rulesets
+0  .../enterprise-cloud@latest/.../available-rules-for-rulesets
+0  .../configuring-pull-request-merges/managing-a-merge-queue
+0  .../rest/repos/rules
+```
+
+즉 **"merge_queue는 Enterprise Cloud/Server 전용이며 feature flag `repo-rules-merge-queue`로 게이팅된다"는 서술은 위 공식 문서로 확립되지 않는다.** 본 문서는 그 플래그의 존재를 주장하지 않는다. 문서에서 확인되는 것은 (a) Free 버전 규칙 페이지의 침묵, (b) GHEC 버전 페이지의 등재 + org-level ruleset 제약, (c) 같은 트리 merge queue 페이지의 "public repo owned by an organization이면 사용 가능" 서술, (d) REST 스키마의 무조건 문서화다. (a)의 침묵이 플랜 게이팅인지 편집 지연인지는 본 문서가 판정하지 않는다.
+
+#### 라이브측 관측 (재확인)
+
+```console
+$ gh api repos/Archright/Axiom/rulesets/27097366 --jq '[.rules[] | select(.type=="merge_queue")] | length'
+1
+```
+
+`source_type: Repository`, `enforcement: active`, `bypass_actors: []`이며 파라미터는 §4.3과 동일하다. 문서가 명시한 유일한 제약(org-level ruleset 불가)은 이 저장소에 적용되지 않는다 — 규칙은 repository-level ruleset에 있다. PR #204의 큐 착지(§7.1–§7.2)는 문서 서술과 라이브 상태가 갈릴 때 어느 쪽이 권위인지를 보여준다.
+
+#### 결론 — 이 저장소의 현재 상태에서 권위
+
+이 저장소의 현재 상태에서 **merge queue 강제의 권위는 라이브 API + 관측된 착지**다. 플랜 서술 문구가 아니라 `rulesets/27097366`의 활성 `merge_queue` 규칙과, 그 큐를 실제로 거쳐 착지한 PR #204가 판별자다. 문서는 플랜 범위를 서술하지만, 이 저장소의 실측 상태를 뒤집는 증거는 아니다.
+
+#### 재현성 리스크 — 플랫폼이 조용히 강제를 끄는 경우
+
+merge queue 강제는 Axiom 코드가 아니라 플랫폼 기능이다. 플랫폼이 이 기능을 조용히 제거·비활성화하면 **Axiom 변경 없이 강제가 사라진다.** 이때 ruleset에 남은 `merge_queue` 규칙은 *선언*일 뿐 강제 증거가 아니다 — §7.2에서 run 발화를 별도로 확인한 것과 같은 이유다.
+
+탐지 레시피는 두 신호를 **같은 수용 창**에서 함께 확인한다:
+
+(a) 규칙 선언이 유지되는가
+
+```console
+$ gh api repos/Archright/Axiom/rulesets/27097366 --jq '[.rules[] | select(.type=="merge_queue")] | length'
+1
+```
+
+(b) 그 창에서 큐를 거쳐 착지한 PR이 실제로 있었는가
+
+```console
+$ sha=$(gh api repos/Archright/Axiom/pulls/204 --jq .merge_commit_sha)
+$ gh api "repos/Archright/Axiom/actions/runs?event=merge_group&per_page=100" \
+    --jq "[.workflow_runs[] | select(.head_sha==\"$sha\" and .path==\".github/workflows/admission-gate-v2.yml\" and .conclusion==\"success\")] | length"
+1
+```
+
+**(a) 단독으로는 불충분하다.** 규칙이 선언되어 있어도 플랫폼 회귀가 발생하면 큐를 거치지 않는 merge가 가능해질 수 있고, 그때도 (a)는 `1`을 반환한다. 반대로 **(b) 단독으로도 불충분하다** — 과거 run은 정책 변경 이전일 수 있으므로 수용 창을 정해야 한다. 본 문서 시점의 수용 창은 PR #204의 큐 구간(2026-11-19T07:40:59Z–07:53:18Z)이다. 두 신호가 모두 성립할 때만 "이 창에서 강제가 살아 있었다"고 말할 수 있다.
+
+본 절은 정책·워크플로 변경을 제안하지 않는다. 탐지 레시피는 관측 절차이며, 자동화 도입은 별도 결정이다.
+
 ## §8. 잔여 org-의존 코드 경로 — 현재 의미는 inert/legacy
 
 아래 경로들은 조직 ruleset 시대의 흔적을 담고 있다. 본 문서는 이들을 **삭제 대상이라고 주장하지 않는다** — 현재 의미가 무엇인지만 기록한다.
@@ -419,6 +500,58 @@ App `5795152`가 발행한 check-run의 부가 필드:
 
 참고 관측: 두 ruleset 응답의 `current_user_can_bypass`는 `never`다. 이는 **현재 인증 주체에 대한 응답 필드**일 뿐이며, 관리자 override 가능성에 대한 증명이 아니다. 우회 시도를 실제로 수행하는 것은 파괴적이므로 본 관측 범위 밖이다.
 
+### §9.2 승인 위임 — 플랫폼이 강제하는 것과 강제하지 않는 것
+
+로테이션 사다리 ⑤는 "approval delegated to GitHub CODEOWNERS"다(`src/cli/merge_cli.nim:52-54`). §7.3의 verdict 아티팩트도 `rotationCheck.delegatedToPlatform: true`를 기록한다. 본 절은 그 위임이 **플랫폼에서 무엇으로 실현되는지**를 실측한다.
+
+#### 측정
+
+| 항목 | 실측값 | 명령 |
+|---|---|---|
+| `required_approving_review_count` | `0` | `gh api repos/Archright/Axiom/rulesets/27097366 --jq '.rules[] \| select(.type=="pull_request") \| .parameters'` |
+| `require_code_owner_review` | `false` | 동일 |
+| `dismiss_stale_reviews_on_push` | `false` | 동일 |
+| `require_last_push_approval` | `false` | 동일 |
+| `required_reviewers` | `[]` | 동일 |
+| merged PR #191/#196/#198/#204 리뷰 수 | `0` / `0` / `0` / `0` | `gh api repos/Archright/Axiom/pulls/<n>/reviews --paginate --jq 'length'` |
+| collaborators | `["wintrover"]` | `gh api repos/Archright/Axiom/collaborators --jq '[.[].login]'` |
+| org members | `["wintrover"]` | `gh api orgs/Archright/members --jq '[.[].login]'` |
+| `branches/main/protection` | 404 `Branch not protected` | `gh api repos/Archright/Axiom/branches/main/protection` |
+
+```console
+$ gh api repos/Archright/Axiom/rulesets/27097366 --jq '.rules[] | select(.type=="pull_request") | .parameters | {required_approving_review_count, require_code_owner_review, dismiss_stale_reviews_on_push, require_last_push_approval, required_reviewers}'
+{"dismiss_stale_reviews_on_push":false,"require_code_owner_review":false,"require_last_push_approval":false,"required_approving_review_count":0,"required_reviewers":[]}
+$ for n in 191 196 198 204; do
+    echo "PR #$n merged_at=$(gh api repos/Archright/Axiom/pulls/$n --jq .merged_at) reviews=$(gh api repos/Archright/Axiom/pulls/$n/reviews --paginate --jq 'length')"
+  done
+PR #191 merged_at=2026-11-19T00:50:50Z reviews=0
+PR #196 merged_at=2026-11-19T02:15:23Z reviews=0
+PR #198 merged_at=2026-11-19T05:24:22Z reviews=0
+PR #204 merged_at=2026-11-19T07:53:18Z reviews=0
+$ gh api repos/Archright/Axiom/collaborators --jq '[.[].login]'
+["wintrover"]
+$ gh api orgs/Archright/members --jq '[.[].login]'
+["wintrover"]
+$ gh api repos/Archright/Axiom/branches/main/protection
+gh: Branch not protected (HTTP 404)
+```
+
+리뷰 수는 `COMMENTED`를 포함한 **전체** 리뷰 레코드 수다. 따라서 0건은 비-COMMENTED 승인 0건을 함의한다.
+
+#### 해석 — ⑤가 실제로 강제하는 것
+
+⑤의 "delegated to GitHub"는 사실이다 — 승인 판단을 Axiom이 아니라 플랫폼에 맡긴다. 그러나 현 설정에서 플랫폼이 요구하는 승인은 **0건**이며 CODEOWNERS 리뷰도 요구하지 않는다. 따라서 ⑤가 실제로 강제하는 것은 **write 권한 보유자의 merge 행위 그 자체**다.
+
+이는 로테이션 검사가 고장났다는 주장이 아니다. `rotationCheck.delegatedToPlatform: true`는 위임 사실의 기록이고, 플랫폼측 강제 파라미터는 `0`이다. 두 값은 모순이 아니라 **위임의 내용이 빈약함**을 보여준다. 위임 선언("delegated to GitHub")과 플랫폼 강제(승인 0건)는 서로 다른 층이며, 여기서는 후자가 write actor의 merge 행위 하나로 수렴한다.
+
+`require_extra_approval_for_unattributed_changes: true`는 켜져 있으나, 측정한 4개 PR에서 리뷰가 0건이었으므로 이 조건은 발화하지 않았다. 트리거 조건 자체는 본 문서에서 별도 검증하지 않았다.
+
+#### 잔여 리스크와 경계
+
+- **단일 human write actor**: 측정된 collaborator·org member는 `wintrover` 1명이다. 그 계정의 자격 증명이 탈취되면 trust root를 바꿀 수 있다. 이는 ruleset을 편집할 수 있는 admin에게도 동일하게 참인 성질이며(§9.1 C9), 본 문서는 이를 구조적으로 차단한다고 주장하지 않는다. App `5795152`의 `contents: write`(§4.2)는 기계 신원이며 승인 주체가 아니다.
+- **승인 요구를 켜는 것은 대안이 아니다**: 구성원이 1명뿐이므로 승인 가능한 제2 주체가 없고, 승인 요구를 켜면 모든 PR이 정지한다. 본 문서는 정책 변경을 제안하지 않는다.
+- **경계**: 본 문서는 separation-of-duties가 성립한다고 주장하지 않는다. 승인은 플랫폼에 위임되어 있고, 플랫폼은 write actor 1명의 merge 행위 외에 아무것도 요구하지 않는다. 이 사실은 §9.1 C9와 같은 등급의 **알려진 한계**로 기록한다.
+
 ## §10. 재현 명령
 
 ```console
@@ -440,4 +573,18 @@ gh api repos/Archright/Axiom/actions/artifacts/14509082548/zip
 gh api repos/Archright/Axiom/commits/7b1c0c35351be04416066fbdf35a1f517de4151e
 gh api "repos/Archright/Axiom/commits/7b1c0c35351be04416066fbdf35a1f517de4151e/check-runs?per_page=100"
 gh api "repos/Archright/Axiom/actions/runs?event=merge_group&per_page=100"
+# §7.5 — 문서 vs 라이브 격차 (merge queue 게이팅 서술)
+for v in "" "enterprise-cloud@latest/"; do
+  url="https://docs.github.com/en/${v}repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets"
+  curl -sSL "$url" | grep -oE 'id="require[a-z-]*"' | sort -u | grep -c 'require-merge-queue'
+done
+gh api repos/Archright/Axiom/rulesets/27097366 --jq '[.rules[] | select(.type=="merge_queue")] | length'
+sha=$(gh api repos/Archright/Axiom/pulls/204 --jq .merge_commit_sha)
+gh api "repos/Archright/Axiom/actions/runs?event=merge_group&per_page=100" --jq "[.workflow_runs[] | select(.head_sha==\"$sha\" and .path==\".github/workflows/admission-gate-v2.yml\" and .conclusion==\"success\")] | length"
+# §9.2 — 승인 위임 표면
+gh api repos/Archright/Axiom/rulesets/27097366 --jq '.rules[] | select(.type=="pull_request") | .parameters'
+gh api repos/Archright/Axiom/pulls/204/reviews --paginate --jq 'length'
+gh api repos/Archright/Axiom/collaborators --jq '[.[].login]'
+gh api orgs/Archright/members --jq '[.[].login]'
+gh api repos/Archright/Axiom/branches/main/protection   # 404 "Branch not protected"
 ```
