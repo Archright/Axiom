@@ -385,7 +385,7 @@ $ gh api repos/Archright/Axiom/rulesets/27097366 --jq '[.rules[] | select(.type=
 1
 ```
 
-`source_type: Repository`, `enforcement: active`, `bypass_actors: []`이며 파라미터는 §4.3과 동일하다. 문서가 명시한 유일한 제약(org-level ruleset 불가)은 이 저장소에 적용되지 않는다 — 규칙은 repository-level ruleset에 있다. PR #204의 큐 착지(§7.1–§7.2)는 문서 서술과 라이브 상태가 갈릴 때 어느 쪽이 권위인지를 보여준다.
+`source_type: Repository`, `enforcement: active`, `bypass_actors: []`이며 파라미터는 §4.3과 동일하다. 문서가 명시한 org-level ruleset 제약은 이 저장소에 적용되지 않는다 — 규칙은 repository-level ruleset에 있다. PR #204의 큐 착지(§7.1–§7.2)는 문서 서술과 라이브 상태가 갈릴 때 어느 쪽이 권위인지를 보여준다.
 
 #### 결론 — 이 저장소의 현재 상태에서 권위
 
