@@ -337,8 +337,8 @@ Required per-entry fields: `run_id` (terminal run), `run_ids`, `attempt_ids`,
 `subtype`, `subtype_detail` (e.g. `certificate_present_but_unbound`,
 `mint_failed_unattributed`), `evidence` (pointer), `wall_seconds`,
 `wall_observed`, `legacy_wall_seconds` (null when unobserved),
-`legacy_wall_observed`, `admission_app_ids`, `gap`, `gap_reason`,
-`post_boundary`.
+`legacy_wall_observed`, `admission_app_ids`, `admission_app_required`,
+`admission_app_success`, `gap`, `gap_reason`, `post_boundary`.
 
 Report-level fields: contract/schema version, generated-at, repo, boundary,
 `mode`, `status` (`ACCEPTED` / `INCOMPLETE` / `FAILED`), requested window,

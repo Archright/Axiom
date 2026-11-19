@@ -206,6 +206,8 @@ type
     legacyWallSeconds*: int
     legacyWallObserved*: bool
     admissionAppIds*: seq[int]
+    admissionAppRequired*: bool
+    admissionAppSuccess*: bool
     gap*: bool
     gapReason*: string
     postBoundary*: bool
@@ -947,6 +949,8 @@ func entryReportOf(e: ObservedEntry): EntryReport {.raises: [].} =
     legacyWallSeconds: legacy.seconds,
     legacyWallObserved: legacy.observed,
     admissionAppIds: e.admissionAppIds,
+    admissionAppRequired: e.admissionAppHasRequired,
+    admissionAppSuccess: e.admissionAppHasSuccess,
     gap: ec.gap,
     gapReason: ec.gapReason,
     postBoundary: e.postBoundary)
@@ -1083,6 +1087,8 @@ func entryJson(e: EntryReport): JsonNode {.raises: [].} =
       (if e.legacyWallObserved: %e.legacyWallSeconds else: newJNull()),
     "legacy_wall_observed": e.legacyWallObserved,
     "admission_app_ids": intArray(e.admissionAppIds),
+    "admission_app_required": e.admissionAppRequired,
+    "admission_app_success": e.admissionAppSuccess,
     "gap": e.gap,
     "gap_reason": e.gapReason,
     "post_boundary": e.postBoundary,

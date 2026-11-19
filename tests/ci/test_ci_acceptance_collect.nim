@@ -713,7 +713,9 @@ suite "report rendering":
                 "conclusion", "classification", "subtype", "subtype_detail",
                 "evidence", "wall_seconds", "wall_observed",
                 "legacy_wall_seconds", "legacy_wall_observed",
-                "admission_app_ids", "gap", "gap_reason", "post_boundary"]:
+                "admission_app_ids", "admission_app_required",
+                "admission_app_success", "gap", "gap_reason",
+                "post_boundary"]:
       check item.hasKey(key)
     check item{"run_id"}.getStr == "77"
     check item{"attempt_ids"}[0].getStr == "77:3"
@@ -723,6 +725,8 @@ suite "report rendering":
     check item{"wall_seconds"}.getInt == 60
     check item{"legacy_wall_seconds"}.getInt == 60
     check item{"admission_app_ids"}[0].getInt == RequiredAdmissionAppId
+    check item{"admission_app_required"}.getBool
+    check item{"admission_app_success"}.getBool
     check node{"counts"}{"internal_defect"}.getInt == 1
     check node{"counts"}{"internal_defect_subtypes"}{"identity_divergence"}.getInt == 1
     check node{"counts"}{"internal_defect_subtypes"}{"authority_substitution"}.getInt == 0
@@ -741,6 +745,15 @@ suite "report rendering":
     let item = reportJson(r){"entries"}[0]
     check not item{"legacy_wall_observed"}.getBool
     check item{"legacy_wall_seconds"}.kind == JNull
+
+  test "JSON records App presence and App success separately":
+    let e = entry(attempts = @[succeed("1")],
+                  admissionAppHasRequired = true,
+                  admissionAppHasSuccess = false)
+    check classifyEntry(e).kind == ckSuccess
+    let item = reportJson(reportFor(@[e])){"entries"}[0]
+    check item{"admission_app_required"}.getBool
+    check not item{"admission_app_success"}.getBool
 
   test "JSON records certificate detail and both App ids":
     let jobs = @[job("mint-publish / publish", "2026-11-19T00:00:00Z",
