@@ -1999,7 +1999,7 @@
     "src/core/trusted/ast_to_ir.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "ee405af13c4a4766ecf4718e94bbd47158fce0d1"
+      "sha": "7ec0edfdb8664349de5513c59194dc305108bd5c"
     },
     "src/core/trusted/authoritative_hydration.nim": {
       "mode": "100644",
@@ -3259,7 +3259,7 @@
     "src/infrastructure/external_ir_materializer.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "da9eb1c6ffdf08fd9e26962801fddb3a82082f47"
+      "sha": "a099b6afb8d9ac42bce24a9f67afed9d9688acb8"
     },
     "src/infrastructure/git_config.nim": {
       "mode": "100644",

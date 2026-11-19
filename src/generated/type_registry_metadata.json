@@ -58573,6 +58573,20 @@
     },
     {
       "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "BinOpKind",
+      "module": "src/core/trusted/ast_to_ir.nim",
+      "name": "checkedBinOp",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "BinOpKind",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
       "ignorable": true,
       "leanType": "Unit",
       "module": "src/core/trusted/ast_to_ir.nim",
@@ -105322,6 +105336,21 @@
       "ignorable": false,
       "leanType": "Bool",
       "module": "src/infrastructure/external_ir_materializer.nim",
+      "name": "containsUnsupportedBinOp",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/infrastructure/external_ir_materializer.nim",
       "name": "correspondenceHolds",
       "negativeConstraints": [
         "result >= 0 is invalid — Bool is not numeric",
@@ -105444,6 +105473,21 @@
       "returnType": "seq[string]",
       "smtSort": "(Seq string)",
       "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/infrastructure/external_ir_materializer.nim",
+      "name": "lossFreeTranslationContradictsBody",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
     },
     {
       "hasAxiomHint": false,
