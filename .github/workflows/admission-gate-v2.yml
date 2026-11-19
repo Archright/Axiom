@@ -31,7 +31,11 @@
 # diff: SL-21 producer closure (admission-check.yml — required-context producer
 # identity, skip 탐지) + SL-22 artifact execution closure (certificate-mint.yml —
 # prepare data-only artifact, publish trusted B supply, artifact 바이트 비실행).
-# productionExecutionPin 13bd4e55 = TWS trustedAdmissionWorkflowSha = blob.
+# Executor env pin (2026-11-19): admission-check callee @1eaede8 — the commit
+# that pins PATH/TMPDIR/AXIOM_* in its three closure-bearing run blocks, so the
+# judgment key stops depending on the runner image generation. certificate-mint
+# stays @9b3d87c3a (not part of that change).
+# productionExecutionPin 3ac383b6 = TWS trustedAdmissionWorkflowSha = blob.
 # FORWARD (2026-09-29, 복구 D3): 수리 PR #331/#332/#333/#334 착지 —
 # K를 N+5 shape로 복귀 (양쪽 래퍼 @c55f0482e — ircheck 소비 + P3 mkdir
 # + libpcre3 패리티 prepare·publish). N+5는 복구 E의 acceptance green
@@ -473,7 +477,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    uses: Archright/Axiom/.github/workflows/admission-check.yml@9b3d87c3a3252286eb15be985c7df6131bd1f1c6
+    uses: Archright/Axiom/.github/workflows/admission-check.yml@1eaede8cd811fe512b1dacab635abe8cc8ebd6e8
     with:
       stage: attest
       baseSha: ${{ needs.anchor-resolve.outputs.B_STAR || github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.sha }}
@@ -700,7 +704,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    uses: Archright/Axiom/.github/workflows/admission-check.yml@9b3d87c3a3252286eb15be985c7df6131bd1f1c6
+    uses: Archright/Axiom/.github/workflows/admission-check.yml@1eaede8cd811fe512b1dacab635abe8cc8ebd6e8
     with:
       stage: verdict
       baseSha: ${{ needs.anchor-resolve.outputs.B_STAR || github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.sha }}
