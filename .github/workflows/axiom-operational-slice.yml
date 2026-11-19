@@ -377,16 +377,32 @@ jobs:
           [ "$EXPECTED_R3_SHA" = "$ACTUAL_R3_SHA" ] || fail "r3_relocation.json digest $ACTUAL_R3_SHA != r3_relocation.sha256 $EXPECTED_R3_SHA (evidence corrupted in transit)"
           MANIFEST_BIN_SHA="$(jq -r '.binary.sha256 // empty' logs/run-manifest.json)"
           [ -n "$MANIFEST_BIN_SHA" ] || fail "run-manifest.json has no .binary.sha256"
-          if [ -x bin/ax ]; then
-            # Restored-supply lane (B-layer exact HIT the producer also
-            # reused): provenance + byte identity with the evidence run's
-            # verifier binary.
+          # Lane selection is decided by PAYLOAD IDENTITY, never by the mere
+          # presence of a restored binary. The B-layer key binds the executor's
+          # toolchain fingerprint (action.yml: b_key = closure+recipe+a_fp), and
+          # two jobs of one run can land on different runner image generations.
+          # When they do, the consumer's exact cache hit is a CORRECT binary of
+          # this tree built by the consumer's toolchain — it is simply not the
+          # producer's binary, and the action contract says byte identity across
+          # toolchains is not a guarantee ("per-TREE, never per-byte").
+          # So: equal bytes prove "same binary" (strongest binding, keep it);
+          # different bytes prove "not the same binary" (byte binding does not
+          # apply) and the documented cold lane re-derives the supply from this
+          # tree. A tampered payload is neutralised either way, because the cold
+          # lane trusts nothing it did not compile and re-verify.
+          ACTUAL_BIN_SHA=""
+          if [ -x bin/ax ]; then ACTUAL_BIN_SHA="$(sha256sum bin/ax | cut -d' ' -f1)"; fi
+          if [ -n "$ACTUAL_BIN_SHA" ] && [ "$ACTUAL_BIN_SHA" = "$MANIFEST_BIN_SHA" ]; then
+            # Restored-supply lane (the restored payload IS the evidence run's
+            # verifier binary): provenance + byte identity.
             AXIOM_ROOT= bin/ax --check-provenance || fail "restored bin/ax --check-provenance rejected (SourceCoherence FATAL — supply not built from this tree)"
-            ACTUAL_BIN_SHA="$(sha256sum bin/ax | cut -d' ' -f1)"
-            [ "$ACTUAL_BIN_SHA" = "$MANIFEST_BIN_SHA" ] || fail "restored bin/ax sha256 $ACTUAL_BIN_SHA != run-manifest .binary.sha256 $MANIFEST_BIN_SHA (byte binding to the evidence run broken)"
             echo "SUPPLY VERIFY: OK (restored lane) — provenance + byte binding to the evidence run's verifier binary"
           else
-            # Cold fallback (B-layer MISS / discarded payload): purge residual
+            if [ -n "$ACTUAL_BIN_SHA" ]; then
+              echo "SUPPLY VERIFY: restored bin/ax sha256 $ACTUAL_BIN_SHA differs from the evidence run's $MANIFEST_BIN_SHA — a different executor toolchain generation produced this payload (the B-layer key binds the toolchain fingerprint), so byte binding is inapplicable; cold lane re-derives the supply from this tree"
+            fi
+            # Cold fallback (B-layer MISS / discarded payload / different
+            # toolchain generation): purge residual
             # B-cache paths (a prefix-matched non-exact restore may have left
             # files) and compile through the release compile authority — the
             # producer job's own cold path, verbatim.
