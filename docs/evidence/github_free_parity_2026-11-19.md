@@ -469,6 +469,43 @@ run `44495727356`가 `09:28:51Z`에 완료된 뒤 7초 후 같은 check-run이 `
 
 이 규칙은 `axiom-admission-verifier` 앱의 동작이며 Axiom 저장소 코드가 아니다. 따라서 본 절은 수정 제안이 아니라 **측정 시 어떤 체크를 읽어야 하는지**에 대한 관측 계약이다.
 
+### §7.7 PR-venue admission의 base 신선도 계약 — `pulls/{n}.base.sha`는 merge-base다
+
+PR-venue(`pull_request` 이벤트) admission은 `certificate-mint`의 A0 activation guard에서 **`BASE_SHA`(anchor-resolve의 `B_STAR`)와 GitHub PR API의 `.base.sha`를 비교**하고, 불일치면 fail-closed한다.
+
+#### 실측 실패 — PR #207 (`d490c9d`), run `44497283525`
+
+```console
+$ gh run view --repo Archright/Axiom --job 135471198481 --log | grep MINT_A0
+MINT_A0_ACTIVATION: FAIL — PR #207 base.sha '7b1c0c35351b' != baseSha input '082e7245d288' (fail-closed)
+```
+
+| 항목 | 값 | 출처 |
+|---|---|---|
+| `BASE_SHA` (`B_STAR`) | `082e7245` — run 시작 시점의 main tip | `admission-gate-v2.yml:240`, `anchor-resolve` |
+| `pulls/207.base.sha` | `7b1c0c35` — PR 브랜치의 **merge-base** | PR API |
+| 결과 | mint prepare·publish 실패 → verdict `conclusion=failure` → App `failure` (`reasons=conclusion=failure`) | run `44497283525` |
+
+#### 의미 — `.base.sha`는 base 브랜치 tip이 아니다
+
+`pulls/{n}.base.sha`는 **PR이 갈라져 나온 base 커밋**, 즉 merge-base다. base 브랜치가 전진해도 PR 브랜치를 rebase하거나 base를 merge하지 않는 한 값이 움직이지 않는다. 본 저장소의 실측이 이를 뒷받침한다:
+
+| PR | 브랜치 분기점 | `base.sha` | main tip (run 시점) | 결과 |
+|---|---|---|---|---|
+| #206 | `082e7245` (#205 merge 후 재구성) | `082e7245` | `082e7245` | A0 PASS → merge `c0eeeaf1` |
+| #209 | `082e7245` | `082e7245` | `082e7245` | A0 PASS |
+| #207 | `7b1c0c3` (#204 시점, rebase 없음) | `7b1c0c3` | `082e7245` | **A0 FAIL** |
+| #207 (이전 head `b6ccfa2`) | `7b1c0c3` | `7b1c0c3` | `7b1c0c3` (당시) | A0 PASS |
+
+같은 `base.sha`(`7b1c0c3`)가 main tip이 `7b1c0c3`이던 시점에는 통과했고, main이 `082e7245`로 전진한 뒤에는 실패했다. 즉 판정 변수는 PR 내용이 아니라 **main tip과 merge-base의 일치 여부**다.
+
+#### 운영 규칙
+
+1. main이 전진한 뒤에는 **PR 브랜치를 최신 main tip으로 rebase(또는 main merge)한 후 push**한다. 그래야 merge-base가 현재 tip과 같아진다.
+2. 하나의 PR이 queue를 통과하는 동안 다른 PR을 merge하지 않는다 — main tip이 움직이면 in-flight PR의 `B_STAR`가 바뀌어 A0가 실패한다.
+3. A0 실패는 fail-closed이며 정상 동작이다. bypass하지 않고 rebase 후 새 head로 재실행한다.
+4. 이 계약 때문에 다중 PR 착지는 **직렬**이어야 한다. `max_entries_to_build=2`의 batch 후보도 동일한 `B_STAR` 일치 조건을 만족할 때만 통과한다.
+
 ## §8. 잔여 org-의존 코드 경로 — 현재 의미는 inert/legacy
 
 아래 경로들은 조직 ruleset 시대의 흔적을 담고 있다. 본 문서는 이들을 **삭제 대상이라고 주장하지 않는다** — 현재 의미가 무엇인지만 기록한다.
