@@ -10,10 +10,12 @@
 ##   run. Re-runs and new checks_requested runs for the same head_sha are
 ##   attempts of that entry, never new entries (one candidate exercises ~8
 ##   workflows, so workflow-run counting is not entry counting).
-##   The acceptance window is the latest N post-boundary entries (default 20);
-##   the boundary is REQUIRED (`--boundary <sha>`) and is the canonical main
-##   merge commit after #145, #186, and the contract have landed. There is no
-##   default and no compiled-in SHA.
+##   The acceptance window is exactly N post-boundary entries (default 20),
+##   --mode initial (first N, default) or rolling (last N). Fewer than N is
+##   INCOMPLETE (shortfall), never a smaller window. The boundary is REQUIRED
+##   (`--boundary <sha>`) and is the canonical main merge commit after #145,
+##   #186, and the contract have landed. There is no default and no compiled-in
+##   SHA.
 ##
 ## Classification (worst-of across attempts; retries never erase an incident)
 ##   success
@@ -25,27 +27,37 @@
 ##                        API error, unparsable identity/timestamp
 ##   cancelled_superseded only with a same-PR same-base replacement run
 ##
-## Acceptance: unexpected_internal_defects == 0 AND unclassified == 0 over the
-## latest N post-boundary entries. legitimate_policy is reported, never failed.
-## Fail-closed: any observation gap makes the entry unclassified and the
-## collector exit 2 (observation incomplete). Exit 0 accepted, 1 not accepted.
+## Acceptance: observed_n == N AND unexpected_internal_defects == 0 AND
+## unclassified == 0 AND observation_complete over the N post-boundary entries.
+## legitimate_policy is reported, never failed. Fewer than N => INCOMPLETE with
+## shortfall and exit 2. Fail-closed: any observation gap makes the entry
+## unclassified and the collector exit 2. Exit 0 ACCEPTED, 1 FAILED,
+## 2 INCOMPLETE.
 ##
-## Latency: per-entry wall = run_started_at -> updated_at of the terminal
-## attempt, integer seconds, reported with n. `--recompute-baseline <run-list>`
-## recomputes p50 over a supplied run list with the SAME terminal-attempt rule
-## and the SAME p50 formula (even n = mean of the two middle values, so .5 is
-## preserved). Historical 546/560/574.5 numbers are inadmissible unless
-## re-derived by that command.
+## Authority: every measured entry needs an `admission-check` check-run from App
+## 5795152 (axiom-admission-verifier); a same-name check from another App is
+## authority_substitution, never a substitute success.
+##
+## Latency (canonical): wall = max(job.completed_at) - min(job.started_at) over
+## the terminal attempt's jobs (filter=latest) that carry both timestamps.
+## Legacy wall = terminal attempt updated_at - run_started_at, reported as
+## non-canonical continuity only. `--recompute-baseline <run-list>` recomputes
+## the canonical p50 over a supplied run list; `--baseline-live` recomputes it
+## over the newest N completed admission-gate merge_group runs (optionally
+## pinned by --baseline-until). Historical 546/560/574.5 numbers are
+## inadmissible unless re-derived by one of those commands.
 ##
 ## I/O boundary: `gh api` GET only; artifact/log downloads go to a temp dir;
-## missing artifact/log => unclassified. Every I/O proc carries
+## only allowlisted evidence artifacts are downloaded (never caches/build
+## trees); missing artifact/log => unclassified. Every I/O proc carries
 ## {.axiomEffect: IoEffect.}.
 ##
 ## Build:
 ##   nim c -d:release --hints:off --path:src \
 ##     -o:bin/ci_acceptance_collect tools/ci/ci_acceptance_collect.nim
 ##
-## Exit: 0 accepted; 1 not accepted; 2 observation incomplete / input invalid.
+## Exit: 0 ACCEPTED; 1 FAILED; 2 INCOMPLETE / observation incomplete /
+## input invalid.
 
 import std/[algorithm, json, os, osproc, strutils, times]
 
@@ -59,8 +71,13 @@ const
   SchemaVersion* = "axiom.ci_acceptance.v2"
   DefaultRepo* = "Archright/Axiom"
   DefaultWindow* = 20
+  BaselineWindow* = 40
+  RequiredAdmissionAppId* = 5795152
+  ActionsAppId* = 15368
   DefaultOutDir* = "build" / "ci_acceptance"
   MaxRunPages* = 10
+  MaxCheckRunPages* = 10
+  MaxJobPages* = 10
   MaxArtifactBytes* = 4_000_000
   MaxLogBytes* = 4_000_000
 
@@ -81,10 +98,27 @@ type
     dsFailureProjection = "failure_projection"
     dsIdentityDivergence = "identity_divergence"
     dsSoundnessFailure = "soundness_failure"
+    dsAuthoritySubstitution = "authority_substitution"
+
+  WindowMode* = enum
+    wmInitial = "initial"
+    wmRolling = "rolling"
+
+  AcceptanceStatus* = enum
+    asAccepted = "ACCEPTED"
+    asIncomplete = "INCOMPLETE"
+    asFailed = "FAILED"
 
   EvidenceText* = object
     name*: string
     text*: string
+
+  ObservedJob* = object
+    name*: string
+    status*: string
+    conclusion*: string
+    startedAt*: string
+    completedAt*: string
 
   ObservedAttempt* = object
     runId*: string
@@ -95,6 +129,9 @@ type
     updatedAt*: string
     artifacts*: seq[EvidenceText]
     logs*: seq[EvidenceText]
+    jobs*: seq[ObservedJob]
+    jobsObserved*: bool
+    jobsError*: string
     evidenceFetched*: bool
     evidenceError*: string
     attemptListGap*: bool
@@ -110,6 +147,7 @@ type
     runAttempt*: int
     startedAt*: string
     updatedAt*: string
+    createdAt*: string
     status*: string
     conclusion*: string
     attempts*: seq[ObservedAttempt]
@@ -127,10 +165,16 @@ type
     replacementExists*: bool
     replacementObserved*: bool
     boundaryGap*: string
+    admissionAppIds*: seq[int]
+    admissionAppHasRequired*: bool
+    admissionAppHasSuccess*: bool
+    authorityObserved*: bool
+    authorityGap*: string
 
   AttemptClass* = object
     kind*: ClassificationKind
     subtype*: DefectSubtype
+    subtypeDetail*: string
     evidence*: string
     gap*: bool
     gapReason*: string
@@ -139,6 +183,7 @@ type
   EntryClass* = object
     kind*: ClassificationKind
     subtype*: DefectSubtype
+    subtypeDetail*: string
     evidence*: string
     gap*: bool
     gapReason*: string
@@ -154,17 +199,24 @@ type
     conclusion*: string
     classification*: ClassificationKind
     subtype*: DefectSubtype
+    subtypeDetail*: string
     evidence*: string
     wallSeconds*: int
     wallObserved*: bool
+    legacyWallSeconds*: int
+    legacyWallObserved*: bool
+    admissionAppIds*: seq[int]
     gap*: bool
     gapReason*: string
     postBoundary*: bool
     details*: seq[string]
 
   Acceptance* = object
+    mode*: WindowMode
+    status*: AcceptanceStatus
     requestedWindow*: int
     observedEntries*: int
+    shortfall*: int
     success*: int
     legitimatePolicy*: int
     internalDefect*: int
@@ -173,6 +225,7 @@ type
     identityDivergence*: int
     soundnessFailure*: int
     failureProjection*: int
+    authoritySubstitution*: int
     unexpectedInternalDefects*: int
     predicateHolds*: bool
     observationComplete*: bool
@@ -180,6 +233,12 @@ type
     gaps*: seq[string]
     latencyN*: int
     latencyP50*: float
+    latencyMean*: float
+    latencyMin*: int
+    latencyMax*: int
+    legacyLatencyN*: int
+    legacyLatencyP50*: float
+    legacyLatencyMean*: float
 
   AcceptanceReport* = object
     schemaVersion*: string
@@ -195,7 +254,16 @@ type
     runId*: string
     seconds*: int
     observed*: bool
+    legacySeconds*: int
+    legacyObserved*: bool
     gapReason*: string
+
+  LatencyStats* = object
+    n*: int
+    p50*: float
+    mean*: float
+    minSeconds*: int
+    maxSeconds*: int
 
 # ═══════════════════════════════════════════════════════════════════════════
 # §2. Pure core — timestamp and scalar parsing (no std/times, no exceptions)
@@ -312,9 +380,48 @@ func terminalAttempt*(e: ObservedEntry): ObservedAttempt {.raises: [].} =
   if idx >= 0:
     result = e.attempts[idx]
 
-func entryWallSeconds*(e: ObservedEntry):
+func jobSpanSeconds*(jobs: seq[ObservedJob]):
     tuple[seconds: int, observed: bool, reason: string] {.raises: [].} =
-  ## run_started_at -> updated_at of the terminal attempt, integer seconds.
+  ## Canonical wall: max(completed_at) - min(started_at) over jobs whose two
+  ## timestamps are both present. No such job means the wall is unobservable.
+  if jobs.len == 0:
+    return (0, false, "no jobs observed for the terminal attempt")
+  var
+    minStart = high(int64)
+    maxDone = low(int64)
+    paired = 0
+  for j in jobs:
+    let (s, okStart) = parseIsoUtc(j.startedAt)
+    let (d, okDone) = parseIsoUtc(j.completedAt)
+    if okStart and okDone:
+      if s < minStart:
+        minStart = s
+      if d > maxDone:
+        maxDone = d
+      inc paired
+  if paired == 0:
+    return (0, false, "no job carries both started_at and completed_at")
+  if maxDone < minStart:
+    return (0, false, "max job completed_at precedes min job started_at")
+  (int(maxDone - minStart), true, "")
+
+func entryCanonicalWallSeconds*(e: ObservedEntry):
+    tuple[seconds: int, observed: bool, reason: string] {.raises: [].} =
+  ## Canonical per-entry wall: the terminal attempt's jobs.
+  let idx = terminalAttemptIndex(e)
+  if idx < 0:
+    return (0, false, "entry has no observed attempts")
+  let a = e.attempts[idx]
+  if not a.jobsObserved:
+    return (0, false,
+            (if a.jobsError.len > 0: a.jobsError
+             else: "terminal attempt jobs unobservable"))
+  result = jobSpanSeconds(a.jobs)
+
+func entryLegacyWallSeconds*(e: ObservedEntry):
+    tuple[seconds: int, observed: bool, reason: string] {.raises: [].} =
+  ## Non-canonical: run_started_at -> updated_at of the terminal attempt. Kept
+  ## for continuity only; GitHub does not document a per-attempt run wall.
   let idx = terminalAttemptIndex(e)
   if idx < 0:
     return (0, false, "entry has no observed attempts")
@@ -346,6 +453,30 @@ func formatNumber*(x: float): string {.raises: [].} =
   else:
     $x
 
+func formatOneDecimal*(x: float): string {.raises: [].} =
+  let scaled = int(x * 10.0 + 0.5)
+  $(scaled div 10) & "." & $(scaled mod 10)
+
+func meanSeconds*(values: seq[int]): float {.raises: [].} =
+  if values.len == 0:
+    return 0.0
+  var total = 0.0
+  for v in values:
+    total += float(v)
+  total / float(values.len)
+
+func latencyStats*(values: seq[int]): LatencyStats {.raises: [].} =
+  if values.len == 0:
+    return LatencyStats()
+  var sorted = values
+  sorted.sort()
+  result = LatencyStats(
+    n: sorted.len,
+    p50: p50Seconds(sorted),
+    mean: meanSeconds(values),
+    minSeconds: sorted[0],
+    maxSeconds: sorted[^1])
+
 # ═══════════════════════════════════════════════════════════════════════════
 # §4. Pure core — classification (§4 of the contract)
 # ═══════════════════════════════════════════════════════════════════════════
@@ -355,10 +486,11 @@ const
 
   IdentitySignatures* = [
     "PLAN_COMPONENT_MISMATCH",
-    "SUBJECT_MISMATCH",
-    "NO_CERT",
     "EVIDENCE_SUBJECT_DIVERGENCE",
-    "MINT_IDENTITY_DIVERGENCE"]
+    "MINT_IDENTITY_DIVERGENCE",
+    "run_head_mismatch"]
+
+  CertificateRefusalCodes* = ["NO_CERT", "SUBJECT_MISMATCH"]
 
   SoundnessSignatures* = [
     "SOUNDNESS_FAILURE",
@@ -460,6 +592,73 @@ func legitimatePolicyRefusal*(text: string): bool {.raises: [].} =
                                "document invalid", "document absent", "refusal",
                                "carrier", "sizing", "c_out"])
 
+func reasonCodeValue*(text: string): string {.raises: [].} =
+  ## Extract the value of a verdict `reasonCode` field (reasonCode=CODE,
+  ## reasonCode: CODE, "reasonCode": "CODE"). Empty when absent.
+  var i = 0
+  while i < text.len:
+    let at = text.find("reasonCode", i)
+    if at < 0:
+      break
+    var j = at + "reasonCode".len
+    while j < text.len and text[j] in {' ', '\t'}:
+      inc j
+    if j < text.len and (text[j] == '=' or text[j] == ':'):
+      inc j
+      while j < text.len and text[j] in {' ', '\t', '"', '\''}:
+        inc j
+      let start = j
+      while j < text.len and
+          text[j] in {'a' .. 'z', 'A' .. 'Z', '0' .. '9', '_', '-'}:
+        inc j
+      if j > start:
+        return text[start ..< j]
+    i = at + "reasonCode".len
+  result = ""
+
+func certificateRefusalCode*(text: string): string {.raises: [].} =
+  let code = reasonCodeValue(text)
+  result = if code in CertificateRefusalCodes: code else: ""
+
+func isMintJob*(name: string): bool {.raises: [].} =
+  let lower = name.toLowerAscii()
+  result = lower.startsWith("mint") or "certificate" in lower
+
+func mintJobs*(a: ObservedAttempt): seq[ObservedJob] {.raises: [].} =
+  for j in a.jobs:
+    if isMintJob(j.name):
+      result.add j
+
+func certificateRefusalClass*(a: ObservedAttempt): AttemptClass {.raises: [].} =
+  ## NO_CERT / SUBJECT_MISMATCH is never guessed from the text alone. The same
+  ## attempt's mint/certificate jobs decide: all success => the verifier refused
+  ## a certificate the attempt produced; otherwise unclassified.
+  let evPtr = "run:" & a.runId & "/attempt:" & $a.attemptNumber
+  if not a.jobsObserved:
+    return AttemptClass(kind: ckUnclassified,
+                        subtypeDetail: "mint_failed_unattributed",
+                        evidence: evPtr & "/jobs:missing",
+                        gap: true,
+                        gapReason: (if a.jobsError.len > 0: a.jobsError
+                                    else: "jobs unobservable"))
+  let mint = mintJobs(a)
+  if mint.len == 0:
+    return AttemptClass(kind: ckUnclassified,
+                        subtypeDetail: "mint_failed_unattributed",
+                        evidence: evPtr & "/jobs:mint-absent",
+                        detail: "no mint/certificate job observable")
+  for j in mint:
+    if j.status != "completed" or j.conclusion != "success":
+      return AttemptClass(kind: ckUnclassified,
+                          subtypeDetail: "mint_failed_unattributed",
+                          evidence: evPtr & "/jobs:mint-failed:" & j.name,
+                          detail: "mint/certificate job did not succeed")
+  AttemptClass(kind: ckInternalDefect,
+               subtype: dsIdentityDivergence,
+               subtypeDetail: "certificate_present_but_unbound",
+               evidence: evPtr & "/jobs:mint-success",
+               detail: "verifier refused a certificate the same attempt produced")
+
 func signatureNeedles*(subtype: DefectSubtype): seq[string] {.raises: [].} =
   result = case subtype
     of dsSoundnessFailure:
@@ -469,6 +668,8 @@ func signatureNeedles*(subtype: DefectSubtype): seq[string] {.raises: [].} =
     of dsFailureProjection:
       @ProjectionSignatures & @["canonical_digest", "canonicalRunDigest",
                                 "INTERNAL_ERROR"]
+    of dsAuthoritySubstitution:
+      @[]
     of dsNone:
       @[]
 
@@ -539,6 +740,8 @@ func classifyAttempt*(a: ObservedAttempt, replacementExists,
     return AttemptClass(kind: ckInternalDefect, subtype: dsFailureProjection,
                         evidence: findEvidence(a, signatureNeedles(dsFailureProjection)),
                         detail: "failure_projection signature observed")
+  if certificateRefusalCode(text).len > 0:
+    return certificateRefusalClass(a)
   if legitimatePolicyRefusal(text):
     return AttemptClass(kind: ckLegitimatePolicy,
                         evidence: findEvidence(a, @LegitSignatures & @["INVALID_INPUT"]),
@@ -557,13 +760,37 @@ func kindRank(k: ClassificationKind): int {.raises: [].} =
 
 func subtypeRank(s: DefectSubtype): int {.raises: [].} =
   result = case s
+    of dsAuthoritySubstitution: 4
     of dsSoundnessFailure: 3
     of dsIdentityDivergence: 2
     of dsFailureProjection: 1
     of dsNone: 0
 
+func appIdsText(ids: seq[int]): string {.raises: [].} =
+  var parts: seq[string]
+  for id in ids:
+    parts.add $id
+  parts.join(",")
+
 func classifyEntry*(e: ObservedEntry): EntryClass {.raises: [].} =
-  ## Worst-of across attempts. Retries never erase an incident.
+  ## Worst-of across attempts. Retries never erase an incident. Verifier
+  ## identity is an entry-level precondition: admission-check must come from
+  ## the required App (5795152), not merely from an Actions check with the
+  ## same name.
+  if not e.authorityObserved:
+    return EntryClass(kind: ckUnclassified,
+                      evidence: "entry:" & e.headSha & "/admission-check:unobservable",
+                      gap: true,
+                      gapReason: (if e.authorityGap.len > 0: e.authorityGap
+                                  else: "check-runs unobservable"))
+  if not e.admissionAppHasRequired:
+    return EntryClass(kind: ckInternalDefect,
+                      subtype: dsAuthoritySubstitution,
+                      evidence: "entry:" & e.headSha & "/admission-check:apps=" &
+                                appIdsText(e.admissionAppIds),
+                      detail: "required verifier app " &
+                              $RequiredAdmissionAppId &
+                              " did not produce admission-check")
   if e.attempts.len == 0:
     return EntryClass(kind: ckUnclassified,
                       evidence: "entry:" & e.headSha & "/attempts:missing",
@@ -587,6 +814,7 @@ func classifyEntry*(e: ObservedEntry): EntryClass {.raises: [].} =
         (r == bestRank and subtypeRank(ac.subtype) > subtypeRank(best.subtype)):
       bestRank = r
       best = EntryClass(kind: ac.kind, subtype: ac.subtype,
+                        subtypeDetail: ac.subtypeDetail,
                         evidence: ac.evidence, detail: ac.detail,
                         gap: false)
   if allCancelled:
@@ -670,11 +898,12 @@ func cmpEntryByStart(a, b: ObservedEntry): int {.raises: [].} =
     return cmp(ka.start, kb.start)
   result = cmp(a.headSha, b.headSha)
 
-func selectWindow*(entries: seq[ObservedEntry], window: int):
-    seq[ObservedEntry] {.raises: [].} =
-  ## Post-boundary entries, latest by terminal run_started_at. Entries whose
-  ## ancestry is unobservable stay in the window as unclassified gaps —
-  ## fail-closed, never silently dropped. Pre-boundary entries are excluded.
+func selectWindow*(entries: seq[ObservedEntry], window: int,
+                   mode = wmInitial): seq[ObservedEntry] {.raises: [].} =
+  ## Post-boundary entries ordered by terminal run_started_at ascending.
+  ## initial = the FIRST `window`; rolling = the LAST `window`. Unknown
+  ## ancestry stays in the candidate set as an unclassified gap. A short
+  ## window is returned short; the report marks it INCOMPLETE.
   var candidates: seq[ObservedEntry]
   for e in entries:
     if e.postBoundary or not e.ancestryObserved:
@@ -682,22 +911,26 @@ func selectWindow*(entries: seq[ObservedEntry], window: int):
   candidates.sort(cmpEntryByStart)
   if window <= 0:
     return @[]
-  result = if candidates.len <= window:
-             candidates
-           else:
-             candidates[candidates.len - window .. ^1]
+  let n = min(window, candidates.len)
+  result = case mode
+    of wmInitial: candidates[0 ..< n]
+    of wmRolling: candidates[candidates.len - n .. ^1]
 
 func gapOf(e: ObservedEntry): seq[string] {.raises: [].} =
   if not e.ancestryObserved:
     result.add "boundary ancestry unobservable for " & e.headSha
   if e.boundaryGap.len > 0:
     result.add e.boundaryGap
+  if not e.authorityObserved:
+    result.add (if e.authorityGap.len > 0: e.authorityGap
+                else: "admission-check check-runs unobservable for " & e.headSha)
   if e.attempts.len == 0:
     result.add "entry " & e.headSha & " has no observed attempts"
 
 func entryReportOf(e: ObservedEntry): EntryReport {.raises: [].} =
   let ec = classifyEntry(e)
-  let wall = entryWallSeconds(e)
+  let wall = entryCanonicalWallSeconds(e)
+  let legacy = entryLegacyWallSeconds(e)
   result = EntryReport(
     runId: terminalAttempt(e).runId,
     runIds: e.runIds,
@@ -707,9 +940,13 @@ func entryReportOf(e: ObservedEntry): EntryReport {.raises: [].} =
     conclusion: terminalAttempt(e).conclusion,
     classification: ec.kind,
     subtype: ec.subtype,
+    subtypeDetail: ec.subtypeDetail,
     evidence: ec.evidence,
     wallSeconds: wall.seconds,
     wallObserved: wall.observed,
+    legacyWallSeconds: legacy.seconds,
+    legacyWallObserved: legacy.observed,
+    admissionAppIds: e.admissionAppIds,
     gap: ec.gap,
     gapReason: ec.gapReason,
     postBoundary: e.postBoundary)
@@ -718,10 +955,13 @@ func entryReportOf(e: ObservedEntry): EntryReport {.raises: [].} =
     let ac = classifyAttempt(a, e.replacementExists, e.replacementObserved)
     result.details.add("run:" & a.runId & "/attempt:" & $a.attemptNumber &
                        "=" & $ac.kind &
-                       (if ac.subtype != dsNone: "/" & $ac.subtype else: ""))
+                       (if ac.subtype != dsNone: "/" & $ac.subtype else: "") &
+                       (if ac.subtypeDetail.len > 0:
+                          "[" & ac.subtypeDetail & "]" else: ""))
   if not e.ancestryObserved:
     result.classification = ckUnclassified
     result.subtype = dsNone
+    result.subtypeDetail = ""
     result.evidence = "entry:" & e.headSha & "/ancestry:unobservable"
     result.gap = true
     result.gapReason = "boundary ancestry unobservable"
@@ -735,8 +975,8 @@ func entryReportOf(e: ObservedEntry): EntryReport {.raises: [].} =
       result.gapReason.add "; " & wall.reason
 
 func buildReport*(entries: seq[ObservedEntry], repo, boundary, generatedAt: string,
-                  window: int): AcceptanceReport {.raises: [].} =
-  let selected = selectWindow(entries, window)
+                  window: int, mode = wmInitial): AcceptanceReport {.raises: [].} =
+  let selected = selectWindow(entries, window, mode)
   result = AcceptanceReport(
     schemaVersion: SchemaVersion,
     contract: ContractPath,
@@ -751,6 +991,7 @@ func buildReport*(entries: seq[ObservedEntry], repo, boundary, generatedAt: stri
       n)
   var gapList: seq[string]
   var wallValues: seq[int]
+  var legacyValues: seq[int]
   for e in selected:
     let er = entryReportOf(e)
     result.entries.add er
@@ -763,6 +1004,8 @@ func buildReport*(entries: seq[ObservedEntry], repo, boundary, generatedAt: stri
           gapList.add g
     if er.wallObserved:
       wallValues.add er.wallSeconds
+    if er.legacyWallObserved:
+      legacyValues.add er.legacyWallSeconds
     case er.classification
     of ckSuccess: inc result.acceptance.success
     of ckLegitimatePolicy: inc result.acceptance.legitimatePolicy
@@ -772,27 +1015,51 @@ func buildReport*(entries: seq[ObservedEntry], repo, boundary, generatedAt: stri
       of dsIdentityDivergence: inc result.acceptance.identityDivergence
       of dsSoundnessFailure: inc result.acceptance.soundnessFailure
       of dsFailureProjection: inc result.acceptance.failureProjection
+      of dsAuthoritySubstitution: inc result.acceptance.authoritySubstitution
       of dsNone: discard
     of ckUnclassified: inc result.acceptance.unclassified
     of ckCancelledSuperseded: inc result.acceptance.cancelledSuperseded
+  result.acceptance.mode = mode
   result.acceptance.requestedWindow = window
   result.acceptance.observedEntries = selected.len
+  result.acceptance.shortfall = max(0, window - selected.len)
   result.acceptance.unexpectedInternalDefects = result.acceptance.internalDefect
   result.acceptance.gaps = gapList
   result.acceptance.observationComplete = gapList.len == 0 and selected.len > 0
   result.acceptance.predicateHolds =
+    result.acceptance.shortfall == 0 and
     result.acceptance.unexpectedInternalDefects == 0 and
     result.acceptance.unclassified == 0
   result.acceptance.accepted =
     result.acceptance.predicateHolds and result.acceptance.observationComplete
-  result.acceptance.latencyN = wallValues.len
-  result.acceptance.latencyP50 = p50Seconds(wallValues)
+  if result.acceptance.accepted:
+    result.acceptance.status = asAccepted
+  elif result.acceptance.shortfall > 0 or
+       not result.acceptance.observationComplete:
+    result.acceptance.status = asIncomplete
+  else:
+    result.acceptance.status = asFailed
+  let canonical = latencyStats(wallValues)
+  result.acceptance.latencyN = canonical.n
+  result.acceptance.latencyP50 = canonical.p50
+  result.acceptance.latencyMean = canonical.mean
+  result.acceptance.latencyMin = canonical.minSeconds
+  result.acceptance.latencyMax = canonical.maxSeconds
+  let legacy = latencyStats(legacyValues)
+  result.acceptance.legacyLatencyN = legacy.n
+  result.acceptance.legacyLatencyP50 = legacy.p50
+  result.acceptance.legacyLatencyMean = legacy.mean
 
 # ═══════════════════════════════════════════════════════════════════════════
 # §6. Pure core — JSON / Markdown report rendering
 # ═══════════════════════════════════════════════════════════════════════════
 
 func strArray(items: seq[string]): JsonNode {.raises: [].} =
+  result = newJArray()
+  for it in items:
+    result.add %it
+
+func intArray(items: seq[int]): JsonNode {.raises: [].} =
   result = newJArray()
   for it in items:
     result.add %it
@@ -808,9 +1075,14 @@ func entryJson(e: EntryReport): JsonNode {.raises: [].} =
     "conclusion": e.conclusion,
     "classification": $e.classification,
     "subtype": $e.subtype,
+    "subtype_detail": e.subtypeDetail,
     "evidence": e.evidence,
     "wall_seconds": e.wallSeconds,
     "wall_observed": e.wallObserved,
+    "legacy_wall_seconds":
+      (if e.legacyWallObserved: %e.legacyWallSeconds else: newJNull()),
+    "legacy_wall_observed": e.legacyWallObserved,
+    "admission_app_ids": intArray(e.admissionAppIds),
     "gap": e.gap,
     "gap_reason": e.gapReason,
     "post_boundary": e.postBoundary,
@@ -837,10 +1109,14 @@ func reportJson*(r: AcceptanceReport): JsonNode {.raises: [].} =
       "internal_defect_subtypes": {
         "identity_divergence": r.acceptance.identityDivergence,
         "soundness_failure": r.acceptance.soundnessFailure,
-        "failure_projection": r.acceptance.failureProjection}},
+        "failure_projection": r.acceptance.failureProjection,
+        "authority_substitution": r.acceptance.authoritySubstitution}},
     "acceptance": {
+      "mode": $r.acceptance.mode,
+      "status": $r.acceptance.status,
       "requested_window": r.acceptance.requestedWindow,
       "observed_entries": r.acceptance.observedEntries,
+      "shortfall": r.acceptance.shortfall,
       "unexpected_internal_defects": r.acceptance.unexpectedInternalDefects,
       "unclassified": r.acceptance.unclassified,
       "predicate_holds": r.acceptance.predicateHolds,
@@ -850,7 +1126,14 @@ func reportJson*(r: AcceptanceReport): JsonNode {.raises: [].} =
     "latency": {
       "n": r.acceptance.latencyN,
       "p50_seconds": r.acceptance.latencyP50,
-      "formula": "terminal attempt updated_at - run_started_at; sorted integer seconds; even n = mean of the two middle values"}}
+      "mean_seconds": r.acceptance.latencyMean,
+      "min_seconds": r.acceptance.latencyMin,
+      "max_seconds": r.acceptance.latencyMax,
+      "legacy_n": r.acceptance.legacyLatencyN,
+      "legacy_p50_seconds": r.acceptance.legacyLatencyP50,
+      "legacy_mean_seconds": r.acceptance.legacyLatencyMean,
+      "formula": "max(job.completed_at) - min(job.started_at) over the terminal attempt's jobs with both timestamps; sorted integer seconds; even n = mean of the two middle values",
+      "legacy_formula": "terminal attempt updated_at - run_started_at; non-canonical, continuity only"}}
 
 func renderMarkdown*(r: AcceptanceReport): string {.raises: [].} =
   result = "# CI Acceptance Contract v2 — report\n\n"
@@ -858,18 +1141,35 @@ func renderMarkdown*(r: AcceptanceReport): string {.raises: [].} =
   result.add "- repo: `" & r.repo & "`\n"
   result.add "- boundary: `" & r.boundary & "`\n"
   result.add "- generated_at: `" & r.generatedAt & "`\n"
-  result.add "- window: latest " & $r.acceptance.requestedWindow &
+  result.add "- mode: `" & $r.acceptance.mode & "`\n"
+  result.add "- status: **" & $r.acceptance.status & "**\n"
+  result.add "- window: " & $r.acceptance.mode & " " &
+             $r.acceptance.requestedWindow &
              " post-boundary entries (observed n=" &
-             $r.acceptance.observedEntries & ", excluded " &
+             $r.acceptance.observedEntries & ", shortfall=" &
+             $r.acceptance.shortfall & ", excluded " &
              $r.excludedBeforeBoundary & " pre-boundary)\n"
-  result.add "- latency: n=" & $r.acceptance.latencyN & ", p50=" &
-             formatNumber(r.acceptance.latencyP50) & "s\n\n"
+  result.add "- latency (canonical, terminal-attempt job span): n=" &
+             $r.acceptance.latencyN & ", p50=" &
+             formatOneDecimal(r.acceptance.latencyP50) & "s, mean=" &
+             formatOneDecimal(r.acceptance.latencyMean) & "s, min=" &
+             $r.acceptance.latencyMin & "s, max=" &
+             $r.acceptance.latencyMax & "s\n"
+  result.add "- latency (legacy, non-canonical updated_at - run_started_at): n=" &
+             $r.acceptance.legacyLatencyN & ", p50=" &
+             formatOneDecimal(r.acceptance.legacyLatencyP50) & "s, mean=" &
+             formatOneDecimal(r.acceptance.legacyLatencyMean) & "s\n\n"
   result.add "## Verdict\n\n"
   result.add "| field | value |\n|---|---|\n"
+  result.add "| mode | " & $r.acceptance.mode & " |\n"
+  result.add "| status | " & $r.acceptance.status & " |\n"
   result.add "| accepted | " & $r.acceptance.accepted & " |\n"
   result.add "| predicate_holds | " & $r.acceptance.predicateHolds & " |\n"
   result.add "| observation_complete | " &
              $r.acceptance.observationComplete & " |\n"
+  result.add "| requested_window | " & $r.acceptance.requestedWindow & " |\n"
+  result.add "| observed_entries | " & $r.acceptance.observedEntries & " |\n"
+  result.add "| shortfall | " & $r.acceptance.shortfall & " |\n"
   result.add "| unexpected_internal_defects | " &
              $r.acceptance.unexpectedInternalDefects & " |\n"
   result.add "| unclassified | " & $r.acceptance.unclassified & " |\n"
@@ -882,16 +1182,22 @@ func renderMarkdown*(r: AcceptanceReport): string {.raises: [].} =
   result.add "| subtype | count |\n|---|---:|\n"
   result.add "| identity_divergence | " & $r.acceptance.identityDivergence & " |\n"
   result.add "| soundness_failure | " & $r.acceptance.soundnessFailure & " |\n"
-  result.add "| failure_projection | " & $r.acceptance.failureProjection & " |\n\n"
+  result.add "| failure_projection | " & $r.acceptance.failureProjection & " |\n"
+  result.add "| authority_substitution | " & $r.acceptance.authoritySubstitution & " |\n\n"
   result.add "## Entries\n\n"
-  result.add "| run_id | head_sha | base_sha | PR | conclusion | classification | subtype | wall_s | evidence | gap |\n"
-  result.add "|---|---|---|---:|---|---|---|---:|---|---|\n"
+  result.add "| run_id | head_sha | base_sha | PR | conclusion | classification | subtype | detail | wall_s | legacy_s | admission_app_ids | evidence | gap |\n"
+  result.add "|---|---|---|---:|---|---|---|---|---:|---:|---|---|---|\n"
   for e in r.entries:
+    var appIds: seq[string]
+    for id in e.admissionAppIds:
+      appIds.add $id
     result.add "| " & e.runId & " | `" & e.headSha[0 ..< min(12, e.headSha.len)] &
                "` | `" & e.baseSha[0 ..< min(12, e.baseSha.len)] & "` | " &
                $e.prNumber & " | " & e.conclusion & " | " & $e.classification &
-               " | " & $e.subtype & " | " &
-               (if e.wallObserved: $e.wallSeconds else: "—") & " | `" &
+               " | " & $e.subtype & " | " & e.subtypeDetail & " | " &
+               (if e.wallObserved: $e.wallSeconds else: "—") & " | " &
+               (if e.legacyWallObserved: $e.legacyWallSeconds else: "—") &
+               " | " & appIds.join(",") & " | `" &
                e.evidence & "` | " & (if e.gap: "YES" else: "no") & " |\n"
   result.add "\n## Attempts per entry\n\n"
   for e in r.entries:
@@ -935,20 +1241,38 @@ func jsonInt(node: JsonNode, key: string, default = 0): int {.raises: [].} =
       return v.getInt()
   result = default
 
-func attemptDuration(a: JsonNode): RunDuration {.raises: [].} =
-  let started = jsonStr(a, "run_started_at")
-  let updated = jsonStr(a, "updated_at")
-  let (s, okStart) = parseIsoUtc(started)
-  let (u, okUpdated) = parseIsoUtc(updated)
-  if not okStart or not okUpdated:
-    return RunDuration(runId: jsonStr(a, "run_id"),
-                       observed: false,
-                       gapReason: "unparsable run_started_at/updated_at")
-  if u < s:
-    return RunDuration(runId: jsonStr(a, "run_id"), observed: false,
-                       gapReason: "updated_at precedes run_started_at")
-  result = RunDuration(runId: jsonStr(a, "run_id"), seconds: int(u - s),
-                       observed: true)
+func jobsFromJson(node: JsonNode): seq[ObservedJob] {.raises: [].} =
+  let arr = jsonArr(node, "jobs")
+  if arr == nil:
+    return @[]
+  for item in arr.items:
+    if item == nil or item.kind != JObject:
+      continue
+    result.add ObservedJob(
+      name: jsonStr(item, "name"),
+      status: jsonStr(item, "status"),
+      conclusion: jsonStr(item, "conclusion"),
+      startedAt: jsonStr(item, "started_at"),
+      completedAt: jsonStr(item, "completed_at"))
+
+func durationFromNode(node: JsonNode, fallback: JsonNode): RunDuration {.raises: [].} =
+  ## Canonical wall = job span of the row (or its terminal attempt); legacy wall
+  ## = run_started_at -> updated_at. The two observations are independent:
+  ## absent jobs never invent a canonical wall.
+  var jobs = jobsFromJson(node)
+  if jobs.len == 0 and fallback != nil:
+    jobs = jobsFromJson(fallback)
+  let canonical = jobSpanSeconds(jobs)
+  result = RunDuration(
+    runId: jsonStr(node, "run_id"),
+    seconds: canonical.seconds,
+    observed: canonical.observed,
+    gapReason: canonical.reason)
+  let (s, okStart) = parseIsoUtc(jsonStr(node, "run_started_at"))
+  let (u, okUpdated) = parseIsoUtc(jsonStr(node, "updated_at"))
+  if okStart and okUpdated and u >= s:
+    result.legacySeconds = int(u - s)
+    result.legacyObserved = true
 
 func terminalListAttempt(attempts: JsonNode): JsonNode {.raises: [].} =
   ## Highest run_attempt; ties broken by the later run_started_at.
@@ -989,50 +1313,67 @@ func durationsFromRunList*(root: JsonNode): seq[RunDuration] {.raises: [].} =
       continue
     let attempts = jsonArr(row, "attempts")
     var source = row
+    var jobFallback: JsonNode = nil
     if attempts != nil and attempts.len > 0:
       let term = terminalListAttempt(attempts)
       if term != nil:
         source = term
-    var d = attemptDuration(source)
+        jobFallback = row
+    var d = durationFromNode(source, jobFallback)
     if d.runId.len == 0:
       d.runId = jsonStr(row, "run_id")
     if d.runId.len == 0:
       d.runId = jsonStr(row, "id")
     result.add d
 
-func baselineJson*(durations: seq[RunDuration]): JsonNode {.raises: [].} =
-  var values: seq[int]
+func baselineJson*(durations: seq[RunDuration],
+                   mode = "recompute-baseline"): JsonNode {.raises: [].} =
+  var values, legacyValues: seq[int]
   var rows = newJArray()
   var gaps: seq[string]
   for d in durations:
     let secondsNode = (if d.observed: %d.seconds else: newJNull())
+    let legacyNode = (if d.legacyObserved: %d.legacySeconds else: newJNull())
     rows.add %*{"run_id": d.runId,
                 "seconds": secondsNode,
                 "observed": d.observed,
+                "legacy_seconds": legacyNode,
+                "legacy_observed": d.legacyObserved,
                 "gap_reason": d.gapReason}
     if d.observed:
       values.add d.seconds
     else:
       gaps.add((if d.runId.len > 0: d.runId else: "<unknown>") & ": " &
                d.gapReason)
-  var sortedValues = values
-  sortedValues.sort()
+    if d.legacyObserved:
+      legacyValues.add d.legacySeconds
+  let canonical = latencyStats(values)
+  let legacy = latencyStats(legacyValues)
   var sortedDisplay: seq[string]
-  for v in sortedValues:
+  for v in values:
     sortedDisplay.add $v
+  sortedDisplay.sort()
   result = %*{
     "schema_version": SchemaVersion,
-    "mode": "recompute-baseline",
-    "formula": "terminal attempt updated_at - run_started_at; sorted integer seconds; even n = mean of the two middle values",
-    "n": values.len,
-    "excluded": durations.len - values.len,
-    "p50_seconds": p50Seconds(values),
-    "p50_display": formatNumber(p50Seconds(values)),
+    "mode": mode,
+    "formula": "max(job.completed_at) - min(job.started_at) over jobs with both timestamps; sorted integer seconds; even n = mean of the two middle values",
+    "legacy_formula": "updated_at - run_started_at; non-canonical, continuity only",
+    "n": canonical.n,
+    "excluded": durations.len - canonical.n,
+    "p50_seconds": canonical.p50,
+    "p50_display": formatNumber(canonical.p50),
+    "mean_seconds": canonical.mean,
+    "min_seconds": canonical.minSeconds,
+    "max_seconds": canonical.maxSeconds,
+    "legacy_n": legacy.n,
+    "legacy_p50_seconds": legacy.p50,
+    "legacy_mean_seconds": legacy.mean,
     "values_sorted": strArray(sortedDisplay),
     "gaps": strArray(gaps),
     "runs": rows}
 
 func baselineComplete*(durations: seq[RunDuration]): bool {.raises: [].} =
+  ## Completeness is canonical: every row must carry an observed job span.
   var observed = 0
   for d in durations:
     if not d.observed:
@@ -1149,6 +1490,66 @@ func isTextEvidence(name: string): bool {.raises: [].} =
     lower.endsWith(".out") or lower.endsWith(".md") or
     lower.endsWith(".yml") or lower.endsWith(".yaml")
 
+const
+  AllowedArtifactPrefixes* = ["admission-verdict-", "admission-check-",
+                              "judgment-record-", "evidence-record-",
+                              "subject-certificate-"]
+  AllowedArtifactExact* = ["derived-closure", "ci-select-decision"]
+
+func deniedArtifactName*(name: string): bool {.raises: [].} =
+  ## Caches and build trees are never evidence. Denying them by name keeps the
+  ## allowlist from ever widening onto a cache artifact whose name happens to
+  ## share a prefix.
+  let lower = name.toLowerAscii()
+  result = lower.contains("nimcache") or
+    lower == "base-artifacts" or lower.endsWith("-base-artifacts") or
+    lower == "bootstrap-artifacts" or lower.endsWith("-bootstrap-artifacts") or
+    lower.startsWith("go-") or
+    lower == "tested-tree-digest" or lower.endsWith("-tested-tree-digest")
+
+func allowedArtifactName*(name: string): bool {.raises: [].} =
+  ## Only text evidence artifacts named by §4.6 of the contract are downloaded.
+  if name.len == 0 or deniedArtifactName(name):
+    return false
+  for prefix in AllowedArtifactPrefixes:
+    if name.startsWith(prefix):
+      return true
+  for exact in AllowedArtifactExact:
+    if name == exact:
+      return true
+  result = false
+
+func selectArtifactNames*(names: seq[string]): seq[string] {.raises: [].} =
+  ## Order-preserving, de-duplicated selection. Excluded names are never
+  ## downloaded, so a cache artifact cannot reach the evidence extractor.
+  for name in names:
+    if allowedArtifactName(name) and name notin result:
+      result.add name
+
+func admissionCheckSummary*(checkRuns: JsonNode):
+    tuple[appIds: seq[int], requiredPresent: bool,
+          requiredSuccess: bool] {.raises: [].} =
+  ## Identity invariant: the `admission-check` context must be produced by the
+  ## required verifier App. A same-name check from another App is an authority
+  ## substitution, never a substitute success.
+  if checkRuns == nil or checkRuns.kind != JArray:
+    return
+  for item in checkRuns.items:
+    if item == nil or item.kind != JObject:
+      continue
+    if jsonStr(item, "name") != "admission-check":
+      continue
+    var appId = 0
+    let app = item{"app"}
+    if app != nil and app.kind == JObject:
+      appId = jsonInt(app, "id", 0)
+    if appId notin result.appIds:
+      result.appIds.add appId
+    if appId == RequiredAdmissionAppId:
+      result.requiredPresent = true
+      if jsonStr(item, "conclusion") == "success":
+        result.requiredSuccess = true
+
 proc extractEvidence(zip, prefix: string, maxBytes: int):
     seq[EvidenceText] {.axiomEffect: IoEffect.} =
   ## Text files only, bounded in count and bytes. Evidence stays in memory
@@ -1223,13 +1624,7 @@ proc fetchAttemptEvidence(repo: string, a: var ObservedAttempt):
         if used >= 16:
           break
         let name = jsonStr(art, "name")
-        if name.len == 0:
-          continue
-        if not (name.startsWith("admission-verdict-") or
-                name.startsWith("admission-check-") or
-                name.startsWith("judgment-record-") or
-                name.startsWith("evidence-record-") or
-                name.startsWith("subject-certificate-")):
+        if not allowedArtifactName(name):
           continue
         let expired = art{"expired"}
         if expired != nil and expired.kind == JBool and expired.getBool():
@@ -1288,6 +1683,53 @@ proc fetchAttemptEvidence(repo: string, a: var ObservedAttempt):
                       parts.join("; ") & ")"
   a.evidenceFetched
 
+proc fetchAttemptJobs(repo: string, a: var ObservedAttempt, latest: bool):
+    bool {.axiomEffect: IoEffect.} =
+  ## Canonical wall input. The terminal attempt uses `filter=latest`; a
+  ## non-terminal certificate-refusal attempt uses `filter=all` plus an exact
+  ## `run_attempt` match. Failure leaves jobsObserved=false (observation gap).
+  var jobs: seq[ObservedJob]
+  var page = 1
+  while page <= MaxJobPages:
+    let path = "repos/" & repo & "/actions/runs/" & a.runId &
+               "/jobs?per_page=100&page=" & $page &
+               (if latest: "&filter=latest" else: "&filter=all")
+    let res = ghApiGet(path)
+    if not res.ok:
+      a.jobsObserved = false
+      a.jobsError = res.err
+      return false
+    let parsed = safeParseJson(res.body)
+    if parsed.err.len > 0:
+      a.jobsObserved = false
+      a.jobsError = "job list is not JSON: " & parsed.err
+      return false
+    let raw = jsonArr(parsed.node, "jobs")
+    if raw == nil:
+      a.jobsObserved = false
+      a.jobsError = "job list lacks jobs"
+      return false
+    for item in raw.items:
+      if item == nil or item.kind != JObject:
+        continue
+      if not latest and jsonInt(item, "run_attempt", 0) != a.attemptNumber:
+        continue
+      jobs.add ObservedJob(
+        name: jsonStr(item, "name"),
+        status: jsonStr(item, "status"),
+        conclusion: jsonStr(item, "conclusion"),
+        startedAt: jsonStr(item, "started_at"),
+        completedAt: jsonStr(item, "completed_at"))
+    if raw.len < 100:
+      a.jobs = jobs
+      a.jobsObserved = true
+      a.jobsError = ""
+      return true
+    inc page
+  a.jobsObserved = false
+  a.jobsError = "job list truncated at " & $MaxJobPages & " pages"
+  false
+
 proc runFromJson(node: JsonNode): ObservedRun {.raises: [].} =
   let headBranch = jsonStr(node, "head_branch")
   result = ObservedRun(
@@ -1301,6 +1743,7 @@ proc runFromJson(node: JsonNode): ObservedRun {.raises: [].} =
     runAttempt: jsonInt(node, "run_attempt", 1),
     startedAt: jsonStr(node, "run_started_at"),
     updatedAt: jsonStr(node, "updated_at"),
+    createdAt: jsonStr(node, "created_at"),
     status: jsonStr(node, "status"),
     conclusion: jsonStr(node, "conclusion"),
     attemptsObserved: false)
@@ -1398,6 +1841,76 @@ proc attachAttempts(runs: var seq[ObservedRun], repo: string):
     else:
       r.attemptsObserved = true
 
+proc fetchBaselineDurations(repo: string, window: int, until = ""):
+    tuple[durations: seq[RunDuration], complete: bool,
+          err: string] {.axiomEffect: IoEffect.} =
+  ## Live reference set: the newest `window` completed admission-gate
+  ## merge_group runs created at or before `until` (empty = no pin), GitHub
+  ## order. Canonical per run = job span of the latest attempt; legacy =
+  ## run_started_at -> updated_at. The pin makes a recorded snapshot
+  ## reproducible as the live queue advances.
+  var runs: seq[ObservedRun]
+  var page = 1
+  while runs.len < window and page <= MaxRunPages:
+    let path = "repos/" & repo & "/actions/runs?event=merge_group" &
+               "&status=completed&per_page=100&page=" & $page
+    let res = ghApiGet(path)
+    if not res.ok:
+      return (@[], false, res.err)
+    let parsed = safeParseJson(res.body)
+    if parsed.err.len > 0:
+      return (@[], false, "run list is not JSON: " & parsed.err)
+    let raw = jsonArr(parsed.node, "workflow_runs")
+    if raw == nil:
+      return (@[], false, "run list lacks workflow_runs")
+    for item in raw.items:
+      if runs.len >= window:
+        break
+      let r = runFromJson(item)
+      if not isAdmissionRun(r):
+        continue
+      if until.len > 0:
+        let (created, okCreated) = parseIsoUtc(r.createdAt)
+        let (cutoff, okCutoff) = parseIsoUtc(until)
+        if not okCreated or not okCutoff:
+          return (@[], false, "baseline-until pin is unparsable or run lacks created_at")
+        if created > cutoff:
+          continue
+      runs.add r
+    if raw.len < 100:
+      break
+    inc page
+  if runs.len < window:
+    return (@[], false, "observed only " & $runs.len & " completed " &
+            "admission-gate merge_group runs; window is " & $window)
+  var unobserved: seq[string]
+  for r in runs:
+    var a = ObservedAttempt(
+      runId: r.runId,
+      attemptNumber: (if r.runAttempt > 0: r.runAttempt else: 1),
+      status: r.status,
+      conclusion: r.conclusion,
+      runStartedAt: r.startedAt,
+      updatedAt: r.updatedAt)
+    discard fetchAttemptJobs(repo, a, true)
+    let canonical = jobSpanSeconds(a.jobs)
+    var d = RunDuration(runId: r.runId,
+                        seconds: canonical.seconds,
+                        observed: canonical.observed,
+                        gapReason: canonical.reason)
+    let (s, okStart) = parseIsoUtc(r.startedAt)
+    let (u, okUpdated) = parseIsoUtc(r.updatedAt)
+    if okStart and okUpdated and u >= s:
+      d.legacySeconds = int(u - s)
+      d.legacyObserved = true
+    if not d.observed:
+      unobserved.add r.runId & ": " & d.gapReason
+    result.durations.add d
+  result.complete = unobserved.len == 0
+  if not result.complete:
+    result.err = "canonical wall unobservable for " & $unobserved.len &
+                 " run(s): " & unobserved.join("; ")
+
 proc fetchBoundary(repo, boundary: string):
     tuple[ok: bool, date: string, err: string] {.axiomEffect: IoEffect.} =
   let res = ghApiGet("repos/" & repo & "/commits/" & boundary)
@@ -1465,6 +1978,66 @@ proc applyBoundary(entries: var seq[ObservedEntry], repo, boundary: string):
       e.boundaryGap = anc.err
       result.add anc.err
 
+proc fetchCheckRunsForEntries(entries: var seq[ObservedEntry], repo: string):
+    seq[string] {.axiomEffect: IoEffect.} =
+  ## Every measured entry needs an `admission-check` check-run from the required
+  ## verifier App (5795152). Absence or a same-name check from another App is
+  ## recorded here and classified as authority_substitution (or a gap when the
+  ## check-run list itself is unobservable).
+  for e in entries.mitems:
+    if not (e.postBoundary or not e.ancestryObserved):
+      continue
+    e.admissionAppIds = @[]
+    e.admissionAppHasRequired = false
+    e.admissionAppHasSuccess = false
+    e.authorityObserved = false
+    if not isHex40(e.headSha):
+      e.authorityGap = "head_sha is not 40-hex: '" & e.headSha & "'"
+      result.add e.authorityGap
+      continue
+    var
+      ids: seq[int]
+      present = false
+      success = false
+      page = 1
+      err = ""
+      done = false
+    while page <= MaxCheckRunPages:
+      let res = ghApiGet("repos/" & repo & "/commits/" & e.headSha &
+                         "/check-runs?per_page=100&page=" & $page)
+      if not res.ok:
+        err = res.err
+        break
+      let parsed = safeParseJson(res.body)
+      if parsed.err.len > 0:
+        err = "check-run list is not JSON: " & parsed.err
+        break
+      let raw = jsonArr(parsed.node, "check_runs")
+      if raw == nil:
+        err = "check-run list lacks check_runs"
+        break
+      let summary = admissionCheckSummary(raw)
+      for id in summary.appIds:
+        if id notin ids:
+          ids.add id
+      present = present or summary.requiredPresent
+      success = success or summary.requiredSuccess
+      if raw.len < 100:
+        done = true
+        break
+      inc page
+    if done:
+      e.authorityObserved = true
+      e.admissionAppIds = ids
+      e.admissionAppHasRequired = present
+      e.admissionAppHasSuccess = success
+    else:
+      if err.len == 0:
+        err = "check-run list truncated at " & $MaxCheckRunPages & " pages"
+      e.authorityGap = "admission-check check-runs unobservable for " &
+                       e.headSha & ": " & err
+      result.add e.authorityGap
+
 proc markReplacementContext(entries: var seq[ObservedEntry]) {.raises: [].} =
   ## cancelled_superseded requires a same-PR, same-base entry with a later
   ## terminal run_started_at. Missing PR/base identity leaves the context
@@ -1497,16 +2070,44 @@ proc markReplacementContext(entries: var seq[ObservedEntry]) {.raises: [].} =
 
 proc fetchEvidenceForEntries(entries: var seq[ObservedEntry], repo: string):
     seq[string] {.axiomEffect: IoEffect.} =
+  ## Evidence for failed attempts; jobs for the terminal attempt (canonical
+  ## wall) and for every failed attempt whose verdict reasonCode is NO_CERT or
+  ## SUBJECT_MISMATCH (the certificate rule needs that attempt's mint jobs).
   for e in entries.mitems:
     if not e.postBoundary:
       continue
-    for a in e.attempts.mitems:
-      if a.conclusion in ["success", "cancelled"] or a.attemptListGap:
-        continue
-      discard fetchAttemptEvidence(repo, a)
-      if not a.evidenceFetched and a.evidenceError.len > 0:
-        result.add "run " & a.runId & "/attempt " & $a.attemptNumber &
-                   ": " & a.evidenceError
+    let terminalIdx = terminalAttemptIndex(e)
+    for i in 0 ..< e.attempts.len:
+      let isTerminal = i == terminalIdx
+      if isTerminal:
+        discard fetchAttemptJobs(repo, e.attempts[i], true)
+      var needsCertJobs = false
+      if not isTerminal:
+        if e.attempts[i].conclusion in ["success", "cancelled"] or
+            e.attempts[i].attemptListGap:
+          continue
+        discard fetchAttemptEvidence(repo, e.attempts[i])
+        if not e.attempts[i].evidenceFetched and
+            e.attempts[i].evidenceError.len > 0:
+          result.add "run " & e.attempts[i].runId & "/attempt " &
+                     $e.attempts[i].attemptNumber & ": " &
+                     e.attempts[i].evidenceError
+        needsCertJobs =
+          certificateRefusalCode(attemptText(e.attempts[i])).len > 0
+      else:
+        if e.attempts[i].conclusion notin ["success", "cancelled"]:
+          discard fetchAttemptEvidence(repo, e.attempts[i])
+          if not e.attempts[i].evidenceFetched and
+              e.attempts[i].evidenceError.len > 0:
+            result.add "run " & e.attempts[i].runId & "/attempt " &
+                       $e.attempts[i].attemptNumber & ": " &
+                       e.attempts[i].evidenceError
+          # The terminal attempt already has `filter=latest` jobs, which is
+          # exactly the same attempt; no second fetch is needed.
+      if needsCertJobs:
+        discard fetchAttemptJobs(repo, e.attempts[i], false)
+    if e.attempts.len == 0:
+      result.add "entry " & e.headSha & " has no observed attempts"
 
 # ═══════════════════════════════════════════════════════════════════════════
 # §10. I/O — report writing and CLI
@@ -1537,26 +2138,36 @@ proc writeGapReport(outDir, repo, boundary, reason: string):
   gapped.acceptance.accepted = false
   result = writeReportFiles(outDir, gapped)
 
-proc writeBaselineFiles(outDir: string, durations: seq[RunDuration]):
+proc writeBaselineFiles(outDir: string, durations: seq[RunDuration],
+                        mode = "recompute-baseline"):
     tuple[jsonPath, mdPath: string] {.axiomEffect: IoEffect.} =
   try:
     createDir(outDir)
   except CatchableError as e:
     die("cannot create output directory " & outDir & ": " & e.msg)
-  let node = baselineJson(durations)
+  let node = baselineJson(durations, mode)
   result.jsonPath = outDir / "ci_acceptance_baseline.json"
   result.mdPath = outDir / "ci_acceptance_baseline.md"
-  var md = "# CI Acceptance v2 — baseline recomputation\n\n"
-  md.add "- n=" & $node{"n"}.getInt & ", excluded=" &
+  var md = "# CI Acceptance v2 — baseline (" & node{"mode"}.getStr & ")\n\n"
+  md.add "- canonical n=" & $node{"n"}.getInt & ", excluded=" &
          $node{"excluded"}.getInt & "\n"
-  md.add "- p50=" & node{"p50_display"}.getStr & "s\n"
-  md.add "- formula: " & node{"formula"}.getStr & "\n\n"
-  md.add "| run_id | seconds | observed | gap |\n|---|---:|---|---|\n"
+  md.add "- canonical p50=" & node{"p50_display"}.getStr & "s, mean=" &
+         formatOneDecimal(node{"mean_seconds"}.getFloat) & "s, min=" &
+         $node{"min_seconds"}.getInt & "s, max=" &
+         $node{"max_seconds"}.getInt & "s\n"
+  md.add "- legacy n=" & $node{"legacy_n"}.getInt & ", p50=" &
+         formatOneDecimal(node{"legacy_p50_seconds"}.getFloat) & "s, mean=" &
+         formatOneDecimal(node{"legacy_mean_seconds"}.getFloat) & "s\n"
+  md.add "- formula: " & node{"formula"}.getStr & "\n"
+  md.add "- legacy formula: " & node{"legacy_formula"}.getStr & "\n\n"
+  md.add "| run_id | seconds | observed | legacy_s | gap |\n|---|---:|---|---:|---|\n"
   for r in node{"runs"}.items:
     md.add "| " & r{"run_id"}.getStr & " | " &
            (if r{"seconds"}.kind == JNull: "—" else: $r{"seconds"}.getInt) &
            " | " & $r{"observed"}.getBool & " | " &
-           r{"gap_reason"}.getStr & " |\n"
+           (if r{"legacy_seconds"}.kind == JNull: "—"
+            else: $r{"legacy_seconds"}.getInt) &
+           " | " & r{"gap_reason"}.getStr & " |\n"
   try:
     writeFile(result.jsonPath, node.pretty() & "\n")
     writeFile(result.mdPath, md)
@@ -1565,20 +2176,32 @@ proc writeBaselineFiles(outDir: string, durations: seq[RunDuration]):
 
 proc usage(): string {.raises: [].} =
   "usage:\n" &
-  "  " & ToolName & " --boundary <sha> [--repo owner/name] [--window N] [--out DIR]\n" &
+  "  " & ToolName & " --boundary <sha> [--repo owner/name] [--window N]\n" &
+  "      [--mode initial|rolling] [--out DIR]\n" &
+  "  " & ToolName & " --baseline-live [--repo owner/name] [--window N]\n" &
+  "      [--baseline-until ISO8601] [--out DIR]\n" &
   "  " & ToolName & " --recompute-baseline <run-list.json> [--out DIR]\n" &
   "  " & ToolName & " --help\n\n" &
-  "--boundary is REQUIRED: the canonical main merge commit after #145, #186,\n" &
-  "and docs/spec/ci_acceptance_contract.md have all landed. There is no default.\n" &
-  "Exit: 0 accepted; 1 not accepted; 2 observation incomplete / input invalid.\n"
+  "--boundary is REQUIRED for acceptance: the canonical main merge commit after\n" &
+  "#145, #186, and docs/spec/ci_acceptance_contract.md have all landed. There is\n" &
+  "no default. --mode initial = the FIRST N post-boundary entries by terminal\n" &
+  "run_started_at (default); --mode rolling = the LAST N.\n" &
+  "--baseline-live recomputes the reference latency over the newest N completed\n" &
+  "admission-gate merge_group runs (default N=" & $BaselineWindow & ").\n" &
+  "Exit: 0 ACCEPTED; 1 FAILED; 2 INCOMPLETE / observation incomplete /\n" &
+  "input invalid.\n"
 
 when isMainModule:
   var
     repo = getEnv("GITHUB_REPOSITORY").strip()
     boundary = ""
     window = DefaultWindow
+    windowSet = false
     outDir = DefaultOutDir
     recomputePath = ""
+    baselineLive = false
+    baselineUntil = ""
+    mode = wmInitial
   let cliArgs = commandLineParams()
   var i = 0
   proc needValue(flag: string): string =
@@ -1597,8 +2220,17 @@ when isMainModule:
       if not parsed.ok or parsed.value <= 0 or parsed.value > 10_000:
         die("--window must be a positive integer (got '" & v & "')")
       window = int(parsed.value)
+      windowSet = true
+    of "--mode":
+      let v = needValue(a)
+      case v
+      of "initial": mode = wmInitial
+      of "rolling": mode = wmRolling
+      else: die("--mode must be initial or rolling (got '" & v & "')")
     of "--out": outDir = needValue(a)
     of "--recompute-baseline": recomputePath = needValue(a)
+    of "--baseline-live": baselineLive = true
+    of "--baseline-until": baselineUntil = needValue(a)
     of "--help", "-h":
       echo usage()
       quit(0)
@@ -1608,6 +2240,41 @@ when isMainModule:
 
   if repo.len == 0:
     repo = DefaultRepo
+
+  if baselineUntil.len > 0 and not baselineLive:
+    die("--baseline-until is only valid with --baseline-live")
+
+  if baselineLive:
+    if boundary.len > 0:
+      die("--baseline-live and --boundary are mutually exclusive")
+    if recomputePath.len > 0:
+      die("--baseline-live and --recompute-baseline are mutually exclusive")
+    let bWindow = (if windowSet: window else: BaselineWindow)
+    let live = fetchBaselineDurations(repo, bWindow, baselineUntil)
+    if live.durations.len == 0:
+      die("baseline-live observation incomplete: " & live.err)
+    let paths = writeBaselineFiles(outDir, live.durations, "baseline-live")
+    var values, legacyValues: seq[int]
+    for d in live.durations:
+      if d.observed:
+        values.add d.seconds
+      if d.legacyObserved:
+        legacyValues.add d.legacySeconds
+    let canonical = latencyStats(values)
+    let legacy = latencyStats(legacyValues)
+    echo "[" & ToolName & "] baseline-live canonical: n=" & $canonical.n &
+         " p50=" & formatOneDecimal(canonical.p50) & "s mean=" &
+         formatOneDecimal(canonical.mean) & "s min=" & $canonical.minSeconds &
+         "s max=" & $canonical.maxSeconds & "s"
+    echo "[" & ToolName & "] baseline-live legacy: n=" & $legacy.n &
+         " p50=" & formatOneDecimal(legacy.p50) & "s mean=" &
+         formatOneDecimal(legacy.mean) & "s"
+    echo "[" & ToolName & "] wrote " & paths.jsonPath & " and " & paths.mdPath
+    if live.complete:
+      quit(0)
+    else:
+      stderr.writeLine("[" & ToolName & "] observation incomplete: " & live.err)
+      quit(2)
 
   if recomputePath.len > 0:
     if boundary.len > 0:
@@ -1624,21 +2291,27 @@ when isMainModule:
     if durations.len == 0:
       die("run list carries no rows (expected an array or {runs: [...]})")
     let paths = writeBaselineFiles(outDir, durations)
-    var observedN = 0
-    var values: seq[int]
+    var values, legacyValues: seq[int]
     for d in durations:
       if d.observed:
-        inc observedN
         values.add d.seconds
-    let p50 = p50Seconds(values)
-    echo "[" & ToolName & "] baseline n=" & $observedN &
-         " p50=" & formatNumber(p50) & "s"
+      if d.legacyObserved:
+        legacyValues.add d.legacySeconds
+    let canonical = latencyStats(values)
+    let legacy = latencyStats(legacyValues)
+    echo "[" & ToolName & "] baseline canonical: n=" & $canonical.n &
+         " p50=" & formatOneDecimal(canonical.p50) & "s mean=" &
+         formatOneDecimal(canonical.mean) & "s min=" & $canonical.minSeconds &
+         "s max=" & $canonical.maxSeconds & "s"
+    echo "[" & ToolName & "] baseline legacy: n=" & $legacy.n &
+         " p50=" & formatOneDecimal(legacy.p50) & "s mean=" &
+         formatOneDecimal(legacy.mean) & "s"
     echo "[" & ToolName & "] wrote " & paths.jsonPath & " and " & paths.mdPath
     if baselineComplete(durations):
       quit(0)
     else:
       stderr.writeLine("[" & ToolName & "] observation incomplete: run list " &
-                       "contains unobserved or zero rows")
+                       "contains runs without an observed canonical job span")
       quit(2)
 
   if boundary.len == 0:
@@ -1664,12 +2337,13 @@ when isMainModule:
   let attemptGaps = attachAttempts(runs, repo)
   var entries = buildEntries(runs)
   let boundaryGaps = applyBoundary(entries, repo, boundary)
+  let authorityGaps = fetchCheckRunsForEntries(entries, repo)
   markReplacementContext(entries)
   let evidenceGaps = fetchEvidenceForEntries(entries, repo)
 
-  let report = buildReport(entries, repo, boundary, isoNow(), window)
+  let report = buildReport(entries, repo, boundary, isoNow(), window, mode)
   var allGaps = report.acceptance.gaps
-  for g in attemptGaps & boundaryGaps & evidenceGaps:
+  for g in attemptGaps & boundaryGaps & authorityGaps & evidenceGaps:
     if g.len > 0 and g notin allGaps:
       allGaps.add g
   var finalReport = report
@@ -1679,30 +2353,47 @@ when isMainModule:
   finalReport.acceptance.accepted =
     finalReport.acceptance.predicateHolds and
     finalReport.acceptance.observationComplete
+  if finalReport.acceptance.accepted:
+    finalReport.acceptance.status = asAccepted
+  elif finalReport.acceptance.shortfall > 0 or
+      not finalReport.acceptance.observationComplete:
+    finalReport.acceptance.status = asIncomplete
+  else:
+    finalReport.acceptance.status = asFailed
 
   let paths = writeReportFiles(outDir, finalReport)
   echo "[" & ToolName & "] boundary=" & boundary
-  echo "[" & ToolName & "] window=" & $finalReport.acceptance.requestedWindow &
-       " observed=" & $finalReport.acceptance.observedEntries &
+  echo "[" & ToolName & "] mode=" & $finalReport.acceptance.mode &
+       " status=" & $finalReport.acceptance.status &
+       " window=" & $finalReport.acceptance.observedEntries & "/" &
+       $finalReport.acceptance.requestedWindow &
+       " shortfall=" & $finalReport.acceptance.shortfall &
        " excluded_before_boundary=" & $finalReport.excludedBeforeBoundary
   echo "[" & ToolName & "] counts: success=" & $finalReport.acceptance.success &
        " legitimate_policy=" & $finalReport.acceptance.legitimatePolicy &
        " internal_defect=" & $finalReport.acceptance.internalDefect &
        " (identity=" & $finalReport.acceptance.identityDivergence &
        " soundness=" & $finalReport.acceptance.soundnessFailure &
-       " projection=" & $finalReport.acceptance.failureProjection & ")" &
+       " projection=" & $finalReport.acceptance.failureProjection &
+       " authority=" & $finalReport.acceptance.authoritySubstitution & ")" &
        " unclassified=" & $finalReport.acceptance.unclassified &
        " cancelled_superseded=" & $finalReport.acceptance.cancelledSuperseded
-  echo "[" & ToolName & "] latency n=" & $finalReport.acceptance.latencyN &
-       " p50=" & formatNumber(finalReport.acceptance.latencyP50) & "s"
+  echo "[" & ToolName & "] latency canonical n=" &
+       $finalReport.acceptance.latencyN & " p50=" &
+       formatOneDecimal(finalReport.acceptance.latencyP50) & "s mean=" &
+       formatOneDecimal(finalReport.acceptance.latencyMean) & "s min=" &
+       $finalReport.acceptance.latencyMin & "s max=" &
+       $finalReport.acceptance.latencyMax & "s"
+  echo "[" & ToolName & "] latency legacy n=" &
+       $finalReport.acceptance.legacyLatencyN & " p50=" &
+       formatOneDecimal(finalReport.acceptance.legacyLatencyP50) & "s mean=" &
+       formatOneDecimal(finalReport.acceptance.legacyLatencyMean) & "s"
   echo "[" & ToolName & "] accepted=" & $finalReport.acceptance.accepted &
        " predicate_holds=" & $finalReport.acceptance.predicateHolds &
        " observation_complete=" & $finalReport.acceptance.observationComplete
   echo "[" & ToolName & "] wrote " & paths.jsonPath & " and " & paths.mdPath
 
-  if not finalReport.acceptance.observationComplete:
-    quit(2)
-  elif finalReport.acceptance.accepted:
-    quit(0)
-  else:
-    quit(1)
+  case finalReport.acceptance.status
+  of asAccepted: quit(0)
+  of asFailed: quit(1)
+  of asIncomplete: quit(2)

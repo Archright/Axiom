@@ -2,6 +2,10 @@
 
 **Status**: pre-registered 2026-11-19 (this document is the contract; the collector
 `tools/ci/ci_acceptance_collect.nim` is its only implementation).
+**Revision 2026-11-19b**: canonical job-span latency with labeled legacy clock,
+full-window acceptance with `INCOMPLETE`/shortfall, the certificate rule for
+`NO_CERT`/`SUBJECT_MISMATCH`, `run_head_mismatch`, `admission-check` App
+authority (`5795152`), and the artifact download allowlist.
 **Authority**: REPORTER ONLY. This contract and its collector have **no merge
 authority**, do not modify policy, do not add or remove required checks, and do
 not re-run workflows. They observe `admission-gate` `merge_group` runs with
@@ -27,7 +31,12 @@ exercises roughly eight workflows, so a run count is not an entry count.
 - **Observation gap** — any condition under which the collector cannot see the
   complete evidence for an entry (API error, missing artifact *and* log,
   unparsable timestamp, unknown ancestry, missing base/PR identity, truncated
-  run list). A gap is always `unclassified` and always exit 2.
+  run list, missing terminal-attempt jobs, unobservable check-runs, missing
+  canonical wall). A gap is always `unclassified` and always exit 2.
+- **Admission App (authority)** — the check-run producer of the
+  `admission-check` context: app id `5795152` (`axiom-admission-verifier`).
+  GitHub Actions (app id `15368`) can publish a check with the same name; that
+  check is **not** admission authority.
 
 The historical run `44481531363` is the first observed entry and is recorded as
 an observation only. It is outside the acceptance window because it predates
@@ -57,6 +66,15 @@ filter excludes it like any other pre-boundary entry.
    `GET /repos/{repo}/actions/runs/{run_id}/attempts`. If that call fails, the
    entry keeps the run-row attempt but carries an observation gap; a successful
    latest attempt must **never** hide an earlier failed attempt.
+6. Fetch the terminal attempt's jobs with
+   `GET /repos/{repo}/actions/runs/{run_id}/jobs?per_page=100&filter=latest`.
+   The jobs are the canonical wall input (§6). A failed jobs call leaves the
+   canonical wall unobservable (observation gap), never a guessed duration.
+7. Fetch the entry's check-runs with
+   `GET /repos/{repo}/commits/{head_sha}/check-runs` (paginated) and record
+   every `admission-check` producer app id. The required App `5795152` must be
+   among them (§4.7). This is an identity observation, not a re-run of
+   admission.
 
 ---
 
@@ -105,18 +123,40 @@ A failed attempt whose evidence carries one of:
 `legitimate_policy` is accepted-by-policy behavior: it is counted and reported
 but does not fail acceptance. If the same evidence also carries an
 identity-divergence signature, the identity classification wins (§4.3).
+`NO_CERT` and `SUBJECT_MISMATCH` are **not** legitimate policy refusals; they are
+adjudicated by the certificate rule in §4.3 and never by this table.
 
 ### §4.3 `internal_defect`
 
-A failed attempt whose evidence carries a pre-registered internal signature.
-Subtypes and their precedence (highest first:
-`soundness_failure` > `identity_divergence` > `failure_projection`):
+A failed attempt whose evidence carries a pre-registered internal signature, or
+whose `admission-check` authority is substituted. Subtypes and their precedence
+(highest first: `authority_substitution` > `soundness_failure` >
+`identity_divergence` > `failure_projection`):
 
 | Subtype | Pre-registered signatures | Class origin |
 |---|---|---|
-| `identity_divergence` | `PLAN_COMPONENT_MISMATCH`; `judgment_cas: decision file key` together with `freshly re-derived`; `SUBJECT_MISMATCH`; `NO_CERT`; `EVIDENCE_SUBJECT_DIVERGENCE`; `MINT_IDENTITY_DIVERGENCE` | 2026-11-18/19 audit of 40 `merge_group` admission runs — 7 of 14 failures were plan/attest closure divergence on an unchanged subject. |
+| `authority_substitution` | The entry's check-runs carry `admission-check` but no check from App `5795152` (§4.7) | Observed 2026-11-19: GitHub Actions (app `15368`) also publishes an `admission-check` context; a same-name check is not admission authority. |
+| `identity_divergence` | `PLAN_COMPONENT_MISMATCH`; `judgment_cas: decision file key` together with `freshly re-derived`; `EVIDENCE_SUBJECT_DIVERGENCE`; `MINT_IDENTITY_DIVERGENCE`; `run_head_mismatch` | 2026-11-18/19 audit of 40 `merge_group` admission runs — 7 of 14 failures were plan/attest closure divergence on an unchanged subject. `run_head_mismatch` observed 2026-11-19 on PR #208 (run `44490143040` head `e4fafea` vs PR head `e9ee0f3`); transient and re-adjudicated later, but counted when recorded. |
 | `soundness_failure` | `SOUNDNESS_FAILURE`; `false clProved`; `missing dependency supply`; `dependency supply missing` | #145 class (false `clProved` / missing subject-declared dependency supply). Normally proven by its own regression test, not by admission artifacts; the collector matches only explicit evidence and never infers soundness from absence. |
 | `failure_projection` | `FAILURE_PROJECTION`; `refusal class lost` (also spelled `refusal-class lost`); an empty `canonical_digest` value (`canonical_digest=`, `canonical_digest: ""`, `"canonicalRunDigest": ""`); `INTERNAL_ERROR` together with a refusal marker | #186 class (a prepare-phase refusal projected as exit 2 / empty canonical digest instead of `INVALID_INPUT` exit 3). |
+
+**Certificate rule (`NO_CERT` / `SUBJECT_MISMATCH`)** — neither code is a
+signature by itself. For a failed attempt whose verdict `reasonCode` is
+`NO_CERT` or `SUBJECT_MISMATCH`, inspect the **same attempt's** jobs (job names
+starting with `mint` or containing `certificate`):
+
+- all such jobs completed `success` → `internal_defect` /
+  `identity_divergence` with subtype detail
+  `certificate_present_but_unbound` (the verifier refused a certificate the
+  attempt produced);
+- any such job failed, none is observable, or the attempt's jobs are
+  unobservable → `unclassified` with subtype detail
+  `mint_failed_unattributed`, never a guessed internal defect (jobs
+  unobservable is also an observation gap).
+
+`run_head_mismatch` is recorded whenever observed, including when the same head
+is later re-adjudicated successfully: retries may explain an incident, but the
+window counts what was recorded.
 
 `unexpected_internal_defects` counts every `internal_defect` in the window. v2
 has **no waiver mechanism**: all internal defects are unexpected. A future
@@ -130,7 +170,10 @@ Everything else, including:
 - a failed attempt whose evidence carries no pre-registered signature;
 - a failed attempt with no artifact and no log (observation gap);
 - an attempt that is not terminal (`status != completed`);
-- missing ancestry, missing base/PR identity, unparsable timestamps, API errors;
+- `NO_CERT` / `SUBJECT_MISMATCH` whose mint/certificate jobs did not all
+  succeed or are unobservable (§4.3 certificate rule);
+- missing ancestry, missing base/PR identity, missing terminal-attempt jobs,
+  unobservable check-runs, unparsable timestamps, API errors;
 - a cancelled attempt that is not proven superseded.
 
 `unclassified` fails acceptance and, when caused by an observation gap, makes
@@ -149,21 +192,61 @@ unobservable). `cancelled_superseded` does not count as failure.
 ### §4.6 Evidence policy
 
 Attempt evidence is the concatenated text of the attempt's downloaded artifacts
-(`admission-verdict-*`, `admission-check-*`, `judgment-record-*`,
-`evidence-record-*`, `subject-certificate-*`) and, when artifacts are absent,
-the attempt's downloaded log archive. Artifacts are fetched before logs. If
-neither yields text for a failed attempt, the attempt is `unclassified` with an
-observation gap — never a guessed class.
+and, when no allowed artifact yields text, the attempt's downloaded log archive.
+Artifacts are fetched before logs. Only text artifacts named by this allowlist
+are downloaded:
+
+| Selected | Name |
+|---|---|
+| prefix | `admission-verdict-` |
+| prefix | `admission-check-` |
+| prefix | `judgment-record-` |
+| prefix | `evidence-record-` |
+| prefix | `subject-certificate-` |
+| exact | `derived-closure` |
+| exact | `ci-select-decision` |
+
+Every other artifact is **never** downloaded and never reaches the evidence
+extractor — in particular `*nimcache*`, `*base-artifacts*`,
+`*bootstrap-artifacts*`, `go-*`, and `tested-tree-digest`. The deny rules apply
+before the allowlist, so a cache artifact that happens to share an allowed
+prefix is still excluded. If neither the allowlist nor the log archive yields
+text for a failed attempt, the attempt is `unclassified` with an observation gap
+— never a guessed class.
+
+### §4.7 `admission-check` authority
+
+For every measured entry the collector observes the check-runs of the entry's
+`head_sha` and records every app id that produced a check named **exactly**
+`admission-check`. The required verifier App is `5795152`
+(`axiom-admission-verifier`).
+
+- Required App present → the entry has admission authority; classification
+  proceeds from its attempts.
+- Check-runs observable, but no `admission-check` from the required App (for
+  example only a same-name check from GitHub Actions `15368`) →
+  `internal_defect` / `authority_substitution`.
+- Check-runs unobservable → `unclassified` with an observation gap.
+
+The per-entry `admission_app_ids` array records every producer app id (unique,
+deterministic). When both apps publish the context, both ids are recorded and
+the required App satisfies the authority precondition. This is an identity
+invariant: the collector does not re-run admission and never treats a same-name
+Actions check as a substitute success.
 
 ---
 
 ## §5. Acceptance predicate
 
-Over the **latest N post-boundary entries** (default `N = 20`, ordered by
-terminal `run_started_at` ascending and taking the last N):
+The window is exactly `N` post-boundary entries (default `N = 20`) ordered by
+terminal `run_started_at` ascending:
+
+- `--mode initial` (default) — the **first** N candidates in that order;
+- `--mode rolling` — the **last** N candidates.
 
 ```
-accepted  ⇔  unexpected_internal_defects == 0
+accepted  ⇔  observed_n                 == window
+         ∧   unexpected_internal_defects == 0
          ∧   unclassified               == 0
          ∧   observation_complete
 ```
@@ -173,31 +256,72 @@ accepted  ⇔  unexpected_internal_defects == 0
 - Each `internal_defect` subtype is reported separately.
 - `observation_complete` is the fail-closed precondition: any gap anywhere in
   the window means the predicate cannot be satisfied, even if a defect was also
-  found. The report exposes `predicate_holds` (the two-count predicate alone)
-  and `accepted` (predicate + complete observation) separately.
+  found. The report exposes `predicate_holds` (the count/coverage predicate
+  alone) and `accepted` (predicate + complete observation) separately.
 
-The observed `n` is reported. If fewer than N post-boundary entries exist, the
-predicate is evaluated over the observed entries; `n = 0` is an observation gap
-and exit 2.
+**Full window only.** Fewer than N post-boundary candidates is never evaluated
+as a smaller window. When `observed_n < window` the report sets
+`status = INCOMPLETE`, `accepted = false`, records `shortfall = window -
+observed_n`, and the collector exits 2. When the window is full, the status is
+`ACCEPTED` when the predicate holds and `FAILED` otherwise. `mode` and `status`
+are always reported.
 
 ---
 
 ## §6. Latency
 
-- **Per-entry wall** = `run_started_at → updated_at` of the **terminal attempt**,
-  in integer seconds. The report includes the value and the number `n` of entries
-  with an observed wall.
-- **p50** = sort the observed integer seconds; odd `n` → the middle value; even
-  `n` → the arithmetic mean of the two middle values (so `.5` is preserved).
-- `--recompute-baseline <run-list.json>` computes p50 from a supplied run list
-  with the **same** terminal-attempt rule and the **same** p50 formula. Accepted
-  input: a top-level array, or an object with `runs` (or `workflow_runs`) as an
-  array. Each row uses `run_started_at`/`updated_at`, or its terminal attempt's
-  fields when an `attempts` array is present.
-- The historical `546`, `560`, and `574.5` seconds are **inadmissible** unless
-  re-derived by this command. No historical number is compiled into the tool.
-- A negative or unparsable wall is an observation gap; the row is excluded from
-  p50 and the collector exits 2 in recompute mode.
+**Canonical per-entry wall (the only acceptance latency).** For the terminal
+attempt, fetch its jobs with
+`GET /repos/{repo}/actions/runs/{run_id}/jobs?per_page=100&filter=latest` and
+compute
+
+```
+wall_seconds = max(job.completed_at) − min(job.started_at)
+```
+
+over jobs whose `started_at` and `completed_at` are both non-null. A job with
+only one timestamp contributes nothing. If no job carries both timestamps, the
+canonical wall is unobservable → observation gap. The report includes the value
+and the number `n` of entries with an observed canonical wall.
+
+**Legacy wall (non-canonical).** `run_started_at → updated_at` of the terminal
+attempt, in integer seconds. GitHub does not document a per-attempt run wall, so
+this clock is reported as `legacy_wall_seconds` / legacy p50 for continuity only;
+it never decides acceptance and never substitutes for a missing canonical wall.
+
+**p50** = sort the observed integer seconds; odd `n` → the middle value; even
+`n` → the arithmetic mean of the two middle values (so `.5` is preserved). Both
+canonical and legacy p50/mean are reported.
+
+`--recompute-baseline <run-list.json>` computes the **same** canonical job-span
+p50 from a supplied run list, plus legacy statistics. Accepted input: a top-level
+array, or an object with `runs` (or `workflow_runs`) as an array. Each row uses
+its own `jobs` array, or its terminal attempt's `jobs` when an `attempts` array
+is present; a row without jobs is excluded from canonical p50 and makes the
+baseline incomplete.
+
+`--baseline-live [--window N] [--baseline-until <ISO8601>]` fetches the newest
+`N` completed `admission-gate` `merge_group` runs (default `N = 40`) and prints
+the canonical and legacy statistics. `--baseline-until` pins the reference set
+to runs created at or before the timestamp, so a recorded snapshot stays
+reproducible as the live queue advances.
+
+Recorded reference (2026-11-19, set ending at run `44481531363`):
+
+```
+$ bin/ci_acceptance_collect --baseline-live --window 40 \
+    --baseline-until 2026-11-19T08:00:00Z
+[ci_acceptance_collect] baseline-live canonical: n=40 p50=558.0s mean=708.4s min=378s max=2848s
+[ci_acceptance_collect] baseline-live legacy: n=40 p50=560.5s mean=711.2s
+```
+
+The historical `546`, `560`, and `574.5` seconds are **inadmissible** unless
+re-derived by this command. No historical number is compiled into the tool; the
+numbers above are contract records, produced by the documented command.
+
+A negative or unparsable legacy wall is a legacy gap only. A missing or
+unparsable canonical wall is an observation gap; the row is excluded from p50 and
+the collector exits 2 in baseline modes.
 
 ---
 
@@ -209,13 +333,20 @@ The collector writes two files under `--out` (default `build/ci_acceptance/`):
 - `ci_acceptance_report.md`
 
 Required per-entry fields: `run_id` (terminal run), `run_ids`, `attempt_ids`,
-`head_sha`, `base_sha`, `conclusion` (terminal), `classification`, `subtype`,
-`evidence` (pointer), `wall_seconds`, `gap`, `gap_reason`, `post_boundary`.
+`head_sha`, `base_sha`, `pr_number`, `conclusion` (terminal), `classification`,
+`subtype`, `subtype_detail` (e.g. `certificate_present_but_unbound`,
+`mint_failed_unattributed`), `evidence` (pointer), `wall_seconds`,
+`wall_observed`, `legacy_wall_seconds` (null when unobserved),
+`legacy_wall_observed`, `admission_app_ids`, `gap`, `gap_reason`,
+`post_boundary`.
 
 Report-level fields: contract/schema version, generated-at, repo, boundary,
-requested window, observed `n`, counts per class, per-subtype counts,
-`unexpected_internal_defects`, `unclassified`, `predicate_holds`, `accepted`,
-`observation_complete`, gaps, and latency `{n, p50_seconds}`.
+`mode`, `status` (`ACCEPTED` / `INCOMPLETE` / `FAILED`), requested window,
+observed `n`, `shortfall`, counts per class, per-subtype counts (including
+`authority_substitution`), `unexpected_internal_defects`, `unclassified`,
+`predicate_holds`, `accepted`, `observation_complete`, gaps, and
+`latency {n, p50_seconds, mean_seconds, min_seconds, max_seconds, legacy_n,
+legacy_p50_seconds, legacy_mean_seconds, formula, legacy_formula}`.
 
 Evidence pointers are stable strings of the shape
 `run:<run_id>/attempt:<n>/artifact:<artifact-name>` or
@@ -227,14 +358,14 @@ the same prefix. The report is deterministic for identical inputs except
 
 ## §8. Exit codes (fail-closed)
 
-| Exit | Meaning |
-|---|---|
-| `0` | Report written; acceptance predicate holds over a complete observation. |
-| `1` | Report written; acceptance predicate does not hold (internal defect or unclassified outcome). |
-| `2` | Observation incomplete or input invalid: missing/invalid `--boundary`, API error, missing artifact *and* log, unparsable identity/timestamp, truncated run list, empty window. The report is still written so the gap is visible. |
+| Exit | Status | Meaning |
+|---|---|---|
+| `0` | `ACCEPTED` | Report written; full N window observed and the predicate holds. |
+| `1` | `FAILED` | Report written; full window observed but an internal defect or unclassified outcome fails the predicate. |
+| `2` | `INCOMPLETE` | Observation incomplete or input invalid: shortfall (`observed_n < window`), missing/invalid `--boundary`, API error, missing artifact *and* log, missing jobs/check-runs, unparsable identity/timestamp, truncated run list. The report is still written so the gap is visible. |
 
-`--help` exits 0. `--recompute-baseline` exits 0 when every supplied row is
-observed and p50 is defined, 2 otherwise.
+`--help` exits 0. `--baseline-live` and `--recompute-baseline` exit 0 when every
+row has an observed canonical job span and p50 is defined, 2 otherwise.
 
 ---
 
