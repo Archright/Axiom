@@ -182,12 +182,22 @@ the collector exit 2.
 ### §4.5 `cancelled_superseded`
 
 A `cancelled` attempt is `cancelled_superseded` **only** when a replacement run
-for the same PR exists in the same queue window. The queue window is defined as
-the same `base_sha`; a replacement is another entry with the same `pr_number`,
-the same `base_sha`, a different `head_sha`, and a later terminal
-`run_started_at`. Without that proof — including when the PR identity is
-unavailable — the attempt is `unclassified` (gap when the replacement context is
-unobservable). `cancelled_superseded` does not count as failure.
+for the same PR exists in the same queue window. PR identity comes from the
+queue branch `gh-readonly-queue/main/pr-<N>-<stack-base>`; the REST
+`pull_requests` array of a `merge_group` run is empty and cannot be used.
+
+A replacement is another entry with the same `pr_number`, a different
+`head_sha`, a later terminal `run_started_at`, and a `base_sha` that is the
+**same or a descendant** of the cancelled candidate's `base_sha` (the queue only
+moves forward; a rebuild changes the speculative stack base, so exact equality
+must not be required). Descent is observed with
+`GET /repos/{repo}/compare/{old_base}...{new_base}` and accepted when `status`
+is `ahead` or `identical`.
+
+Without that proof — including when the PR identity is unavailable, or when the
+ancestry relation is unobservable — the attempt is `unclassified` (a gap when
+the replacement context is unobservable). `cancelled_superseded` does not count
+as failure.
 
 ### §4.6 Evidence policy
 
@@ -233,6 +243,15 @@ deterministic). When both apps publish the context, both ids are recorded and
 the required App satisfies the authority precondition. This is an identity
 invariant: the collector does not re-run admission and never treats a same-name
 Actions check as a substitute success.
+
+The check-run list is paginated and its default page is smaller than the
+observed population. On `907eba34` (measured 2026-11-19) the App's
+`admission-check` was one of 48 check-runs; `GET
+/repos/{repo}/commits/{sha}/check-runs` without an explicit `per_page` returned
+only the first 30 and the App run was absent. The collector therefore requests
+`per_page=100` and pages until the list is exhausted. A truncated list is an
+observation gap, never an absence verdict: an unread page must not be
+classified as `authority_substitution`.
 
 ---
 

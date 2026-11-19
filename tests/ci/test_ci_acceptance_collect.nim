@@ -11,7 +11,8 @@
 ##   * NO_CERT/SUBJECT_MISMATCH decided by the same attempt's mint/certificate
 ##     jobs, never guessed from the verdict text;
 ##   * admission-check must come from App 5795152 (identity, not re-admission);
-##   * cancelled_superseded only with a same-PR same-base replacement;
+##   * cancelled_superseded only with a same-PR replacement whose queue base is
+##     equal to or a descendant of the cancelled candidate's base;
 ##   * canonical wall = terminal-attempt job span; legacy = run timestamps;
 ##   * p50 over integer seconds (even n = mean of the two middle values);
 ##   * acceptance = full N window AND 0 unexpected internal defects AND
@@ -564,6 +565,28 @@ suite "cancelled_superseded":
     let e = entry(attempts = @[cancelled("1"), succeed("2")],
                   replacementObserved = true, replacementExists = true)
     check classifyEntry(e).kind == ckSuccess
+
+suite "replacement queue base relation":
+
+  test "same base is accepted without an ancestry observation":
+    let d = replacementBaseAccepted(true, false, false)
+    check d.observed
+    check d.accepted
+
+  test "descendant base is accepted when the relation is observed":
+    let d = replacementBaseAccepted(false, true, true)
+    check d.observed
+    check d.accepted
+
+  test "diverged or behind base is rejected, not ignored":
+    let d = replacementBaseAccepted(false, false, true)
+    check d.observed
+    check not d.accepted
+
+  test "unobservable ancestry is a gap, never an acceptance or rejection":
+    let d = replacementBaseAccepted(false, false, false)
+    check not d.observed
+    check not d.accepted
 
 # ---------------------------------------------------------------------------
 # 6. Acceptance predicate and window

@@ -2044,10 +2044,44 @@ proc fetchCheckRunsForEntries(entries: var seq[ObservedEntry], repo: string):
                        e.headSha & ": " & err
       result.add e.authorityGap
 
-proc markReplacementContext(entries: var seq[ObservedEntry]) {.raises: [].} =
-  ## cancelled_superseded requires a same-PR, same-base entry with a later
-  ## terminal run_started_at. Missing PR/base identity leaves the context
-  ## unobservable (unclassified + gap), never guessed.
+func replacementBaseAccepted*(sameBase, descends, relationObserved: bool):
+    tuple[observed: bool, accepted: bool] {.raises: [].} =
+  ## A replacement candidate may be rebuilt on a moving queue stack base
+  ## (`gh-readonly-queue/main/pr-<N>-<base>`), so equality is not required.
+  ## The queue only moves forward: accept equality or descent. A missing
+  ## ancestry observation is a gap, never a guess.
+  if sameBase:
+    return (true, true)
+  if not relationObserved:
+    return (false, false)
+  (true, descends)
+
+proc queueBaseContains(repo, ancestor, descendant: string):
+    tuple[ok, contains: bool, err: string] {.axiomEffect: IoEffect.} =
+  if not isHex40(ancestor) or not isHex40(descendant):
+    return (false, false, "queue base is missing or not 40-hex")
+  if ancestor == descendant:
+    return (true, true, "")
+  let res = ghApiGet("repos/" & repo & "/compare/" & ancestor & "..." & descendant)
+  if not res.ok:
+    return (false, false, res.err)
+  let parsed = safeParseJson(res.body)
+  if parsed.err.len > 0:
+    return (false, false, "compare is not JSON: " & parsed.err)
+  let status = jsonStr(parsed.node, "status")
+  case status
+  of "ahead", "identical": (true, true, "")
+  of "behind", "diverged": (true, false, "")
+  else: (false, false, "compare returned unknown status: '" & status & "'")
+
+proc markReplacementContext(entries: var seq[ObservedEntry], repo: string):
+    seq[string] {.axiomEffect: IoEffect.} =
+  ## cancelled_superseded requires a same-PR entry with a later terminal
+  ## run_started_at whose queue base is the same or a descendant of the
+  ## cancelled candidate's base. Missing PR/base identity, or an unobservable
+  ## ancestry relation, leaves the context unobservable (unclassified + gap),
+  ## never guessed.
+  var cache: seq[tuple[a, b: string, ok, contains: bool, err: string]]
   for i in 0 ..< entries.len:
     if not entries[i].postBoundary:
       continue
@@ -2067,10 +2101,30 @@ proc markReplacementContext(entries: var seq[ObservedEntry]) {.raises: [].} =
       if i == j or not entries[j].postBoundary:
         continue
       if entries[j].prNumber != entries[i].prNumber or
-          entries[j].baseSha != entries[i].baseSha or
-          entries[j].headSha == entries[i].headSha:
+          entries[j].headSha == entries[i].headSha or
+          entries[j].baseSha.len == 0:
         continue
-      if entrySortKey(entries[j]).start > startI:
+      if entrySortKey(entries[j]).start <= startI:
+        continue
+      var rel = (a: "", b: "", ok: true, contains: false, err: "")
+      for c in cache:
+        if c.a == entries[i].baseSha and c.b == entries[j].baseSha:
+          rel = c
+          break
+      if rel.a.len == 0:
+        let observedRel = queueBaseContains(repo, entries[i].baseSha,
+                                            entries[j].baseSha)
+        rel = (entries[i].baseSha, entries[j].baseSha, observedRel.ok,
+               observedRel.contains, observedRel.err)
+        cache.add rel
+      let decision = replacementBaseAccepted(
+        entries[i].baseSha == entries[j].baseSha, rel.contains, rel.ok)
+      if not decision.observed:
+        entries[i].replacementObserved = false
+        result.add "queue base ancestry unobservable for " & entries[i].headSha &
+                   ": " & rel.err
+        break
+      if decision.accepted:
         entries[i].replacementExists = true
         break
 
@@ -2344,12 +2398,12 @@ when isMainModule:
   var entries = buildEntries(runs)
   let boundaryGaps = applyBoundary(entries, repo, boundary)
   let authorityGaps = fetchCheckRunsForEntries(entries, repo)
-  markReplacementContext(entries)
+  let replacementGaps = markReplacementContext(entries, repo)
   let evidenceGaps = fetchEvidenceForEntries(entries, repo)
 
   let report = buildReport(entries, repo, boundary, isoNow(), window, mode)
   var allGaps = report.acceptance.gaps
-  for g in attemptGaps & boundaryGaps & authorityGaps & evidenceGaps:
+  for g in attemptGaps & boundaryGaps & authorityGaps & replacementGaps & evidenceGaps:
     if g.len > 0 and g notin allGaps:
       allGaps.add g
   var finalReport = report
