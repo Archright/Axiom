@@ -123234,6 +123234,34 @@
       "ignorable": false,
       "leanType": "String",
       "module": "src/verification/judgment_cas.nim",
+      "name": "closureComponentDigest",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JudgmentClosureDiagnostics",
+      "module": "src/verification/judgment_cas.nim",
+      "name": "closureDiagnosticsOf",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JudgmentClosureDiagnostics",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/judgment_cas.nim",
       "name": "closureWire",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (str.len result) 0)"
@@ -123483,6 +123511,34 @@
       "ignorable": false,
       "leanType": "String",
       "module": "src/verification/judgment_cas.nim",
+      "name": "envSnapshotDigestFromParts",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "array[6, string]",
+      "module": "src/verification/judgment_cas.nim",
+      "name": "envSnapshotParts",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "array[6, string]",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/judgment_cas.nim",
       "name": "exactFieldSet",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (str.len result) 0)"
@@ -123548,6 +123604,20 @@
       "returnType": "Result[string, string]",
       "smtSort": "Int",
       "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/judgment_cas.nim",
+      "name": "judgmentClosureComponentMismatch",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
     },
     {
       "hasAxiomHint": false,

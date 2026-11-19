@@ -1917,6 +1917,221 @@ block:
           "a changed closure member moves the ① digest (the changed closure " &
           "can never be reused)")
 
+# ---------------------------------------------------------------------------
+# G15 — plan/attest executor-identity diagnostics (out-of-key closureComponents)
+# ---------------------------------------------------------------------------
+# The plan and the attest run on different runner IMAGE generations can see a
+# different ⑥ envSnapshot / ⑨ executionConfig while sharing ①③④⑤⑦⑧ — the key
+# mismatch is real, and the observation must NAME the diverging component
+# instead of only reporting two 12-hex key prefixes. The diagnostics are a
+# BY-PRODUCT of the ONE collection path (collectJudgmentClosureBundle), are
+# never a key input, and only explain an already-failed key comparison.
+
+echo "G15 — plan/attest executor-identity diagnostics (closureComponents)"
+block:
+  # ---- pure: the ⑥ refactor is byte-identical to the pre-refactor formula
+  proc legacyEnvSnapshotDigest(path: string; tmpdir, leanCmd, ircheckCmd,
+      stateDir, cwd: string): string =
+    ## The PRE-REFACTOR concatenation, reproduced verbatim — the refactor's
+    ## byte-identity oracle (never called by production code).
+    sha256Hex(
+      "PATH=" & path & "\n" &
+      "TMPDIR=" & tmpdir & "\n" &
+      "AXIOM_LEAN_CMD=" & leanCmd & "\n" &
+      "AXIOM_IRCHECK_CMD=" & ircheckCmd & "\n" &
+      "AXIOM_STATE_DIR=" & stateDir & "\n" &
+      "cwd=" & cwd & "\n")
+  for (path, tmpdir, leanCmd, ircheckCmd, stateDir, cwd) in [
+      ("/usr/bin:/bin", "/tmp", "lake env lean", "", "/state", "/work"),
+      ("", "", "", "", "", ""),
+      ("/opt/lean/bin:/usr/bin", "/var/tmp", "/opt/elan/bin/lean",
+        "/opt/ircheck", "/tmp/state", "/repo with space")]:
+    expect(envSnapshotDigest(path, tmpdir, leanCmd, ircheckCmd, stateDir, cwd) ==
+      legacyEnvSnapshotDigest(path, tmpdir, leanCmd, ircheckCmd, stateDir, cwd),
+      "env_snapshot_digest_is_unchanged_by_refactor: digest equals the pre-refactor formula [" &
+      (if cwd.len == 0: "empty" else: cwd) & "]")
+    let envParts = envSnapshotParts(path, tmpdir, leanCmd, ircheckCmd, stateDir, cwd)
+    expect(envParts.len == 6 and envParts[0] == "PATH=" & path and
+      envParts[1] == "TMPDIR=" & tmpdir and envParts[2] == "AXIOM_LEAN_CMD=" & leanCmd and
+      envParts[3] == "AXIOM_IRCHECK_CMD=" & ircheckCmd and
+      envParts[4] == "AXIOM_STATE_DIR=" & stateDir and envParts[5] == "cwd=" & cwd,
+      "envSnapshotParts returns the six raw wire parts in order")
+    expect(envSnapshotDigest(path, tmpdir, leanCmd, ircheckCmd, stateDir, cwd) ==
+      sha256Hex(envParts.join("\n") & "\n"),
+      "the ⑥ digest is sha256(parts joined by newline + trailing newline)")
+
+  # ---- pure: the diagnostics are a projection of the SAME canonical member
+  #      values closureWire binds — never a second serialization rule.
+  block:
+    let c = validClosure(7)
+    let d = closureDiagnosticsOf(c)
+    expect(d.componentDigests[0] ==
+      sha256Hex(canonicalJsonString(%*{"testSourceClosure": c.testSourceClosure})),
+      "component digest = sha256(one-key canonical wire object) [testSourceClosure]")
+    expect(d.componentDigests[5] ==
+      sha256Hex(canonicalJsonString(%*{"recipe": c.recipe})),
+      "component digest = sha256(one-key canonical wire object) [recipe]")
+    expect(d.componentDigests[8] ==
+      sha256Hex(canonicalJsonString(%*{"completenessKeys": c.completenessKeys})),
+      "completenessKeys is digested with its array serialization")
+    # a different member value moves only its own diagnostic
+    var changed = c
+    changed.recipe = hex64(778)
+    let d2 = closureDiagnosticsOf(changed)
+    expect(d2.componentDigests[5] != d.componentDigests[5] and
+      d2.componentDigests[0] == d.componentDigests[0],
+      "a changed member moves exactly its named diagnostic")
+
+  # ---- pure: closureWire key set is unchanged (12 keys) and carries no
+  #      diagnostic member.
+  block:
+    let wireNode = parseJson(closureWire(validClosure(8)))
+    var wireKeys: seq[string] = @[]
+    for k in wireNode.keys: wireKeys.add(k)
+    wireKeys.sort()
+    expect(wireKeys == @["compilerPins", "completenessKeys", "envSnapshot",
+        "executionConfig", "goldenFixtures", "pinIdentity", "recipe", "schema",
+        "schemaVersion", "semanticSetDigest", "testSourceClosure", "toolchainBundle"],
+      "closure_wire_key_set_unchanged: closureWire has exactly the landed 12 keys")
+    expect(wireNode{"closureComponents"}.isNil and
+      not closureWire(validClosure(8)).contains("closureComponents"),
+      "closure_wire_key_set_unchanged: diagnostics never enter the key wire")
+
+  # ---- pure: a different cwd under v5 is NOT key-equal (⑥ moves the key;
+  #      the two jobs' runner images diverge exactly here).
+  block:
+    let base = validClosure(9)
+    var cwdA = base
+    var cwdB = base
+    cwdA.envSnapshot = envSnapshotDigest("/usr/bin", "/tmp", "", "", "", "/repo/a")
+    cwdB.envSnapshot = envSnapshotDigest("/usr/bin", "/tmp", "", "", "", "/repo/b")
+    expect(cwdA.envSnapshot != cwdB.envSnapshot and
+      deriveJudgmentKey(cwdA) != deriveJudgmentKey(cwdB),
+      "different_cwd_under_v5_is_not_key_equal: a different cwd moves ⑥ and the key")
+    expect(closureDiagnosticsOf(cwdA).componentDigests[4] !=
+      closureDiagnosticsOf(cwdB).componentDigests[4],
+      "different cwd is named by the ⑥ (envSnapshot) diagnostic digest")
+
+  if not bundleAvailable:
+    skip("G15 closure-derived cases", "toolchain bundle unmeasurable")
+  elif not treesAvailable:
+    skip("G15 closure-derived cases",
+      "no resolvable tested tree in this workspace (git object store unavailable)")
+  else:
+    clearJudgmentEnv()
+    let testedOid = realTestedTree
+    let tmpDir = getTempDir() / ("jcas-g15-" & $getCurrentProcessId())
+    createDir(tmpDir)
+    let recordPath = tmpDir / "s1a-record.json"
+    let decisionPath = tmpDir / "s1a-decision.json"
+    let evidencePath = tmpDir / "s1a-evidence.json"
+    putEnv(JudgmentEnabledEnv, "1")
+    putEnv(JudgmentTestedTreeOidEnv, testedOid)
+    putEnv(JudgmentRecordPathEnv, recordPath)
+    putEnv(JudgmentDecisionPathEnv, decisionPath)
+    putEnv("AXIOM_JUDGMENT_CAS_EVIDENCE_PATH", evidencePath)
+    let epoch = captureReuseVerificationContext().currentEpoch
+    writeFile(evidencePath, payloadBytes(epoch))
+
+    # (1) same process/env/cwd — the PLAN path and the ATTEST path derive the
+    #     same key (the diagnostics never change what the key is).
+    let plan = planJudgmentCasForSubjectWithTransport(jsS1aGolden,
+      makeTransport(freshBackend()))
+    expect(plan.mode == jExecuted and plan.evidenceKey.len == 64,
+      "the plan derives a key for the current executor identity (got " & plan.reason & ")")
+    expect(plan.closureComponents.len == 9,
+      "the plan carries all 9 component diagnostics (out-of-key)")
+    let written = writeJudgmentDecisionFile(plan, decisionPath)
+    expect(written.isOk, "the plan decision file writes with closureComponents")
+    let attest = runJudgmentAttestBranchForSubject(jsS1aGolden)
+    expect(attest.isOk and attest.get.armed and
+      attest.get.evidenceKey == plan.evidenceKey,
+      "same_subject_same_executor_identity_same_key: plan and attest derive the same key")
+
+    if not written.isOk:
+      inc failures
+      echo "  FAIL: G15 decision write: " & written.error
+    else:
+      let decisionNode = parseJson(written.get)
+      let components = decisionNode{"closureComponents"}
+      expect(components.kind == JArray and components.len == 9,
+        "the decision carries all 9 closureComponents entries")
+      var namesOk = true
+      var digestsOk = true
+      for i in 0 ..< components.len:
+        let item = components[i]
+        if item{"name"}.isNil or item{"name"}.getStr() != JudgmentClosureComponentNames[i]:
+          namesOk = false
+        if item{"digest"}.isNil or not isHexLen(item{"digest"}.getStr(), 64):
+          digestsOk = false
+      expect(namesOk, "closureComponents names are the 9 key members in wire order")
+      expect(digestsOk, "closureComponents digests are 64-hex")
+
+      # (2) the components area can never be read as a basis claim (the
+      #     workflow's raw grep spoof guard must not see a second basis).
+      var spoofFree = true
+      for i in 0 ..< components.len:
+        let item = components[i]
+        if item.len != 2 or not item{"basis"}.isNil:
+          spoofFree = false
+        for key, value in item.pairs:
+          if key == "basis" or (value.kind == JString and
+              (value.getStr() == "EXECUTED" or value.getStr() == "REUSED")):
+            spoofFree = false
+      let componentsText = canonicalJsonString(components)
+      expect(spoofFree and not componentsText.contains("\"basis\"") and
+        not componentsText.contains("EXECUTED") and
+        not componentsText.contains("REUSED"),
+        "decision_components_do_not_spoof_basis: no basis key or basis value inside closureComponents")
+
+      # (3) a diverging component is NAMED after the (unchanged) key check
+      #     fails: tamper the decision key + one component digest.
+      var namedDecision = parseJson(written.get)
+      namedDecision["evidenceKey"] = %hex64(4242)
+      let namedComponents = namedDecision["closureComponents"]
+      for i in 0 ..< namedComponents.len:
+        if namedComponents[i]{"name"}.getStr() == "recipe":
+          namedComponents[i]["digest"] = %hex64(4243)
+      writeFile(decisionPath, canonicalJsonString(namedDecision))
+      let named = runJudgmentAttestBranchForSubject(jsS1aGolden)
+      let planRecipeDigest = plan.closureComponents[5].digest
+      expect(named.isErr and named.error.contains("different closures") and
+        named.error.contains("PLAN_COMPONENT_MISMATCH: recipe — plan=" &
+          hex64(4243)[0 ..< 12] & " attest=" & planRecipeDigest[0 ..< 12]),
+        "component_mismatch_names_the_component: recipe and both 12-hex digests are named" &
+        (if named.isErr: " (got: " & named.error & ")" else: ""))
+
+      # (4) a decision WITHOUT the field keeps the historical fail-closed
+      #     message verbatim — absence is never green.
+      writeFile(decisionPath, canonicalJsonString(%*{
+        "basis": "EXECUTED", "evidenceKey": hex64(4244), "reason": "test"}))
+      let missing = runJudgmentAttestBranchForSubject(jsS1aGolden)
+      expect(missing.isErr and missing.error.contains("different closures") and
+        not missing.error.contains("PLAN_COMPONENT_MISMATCH"),
+        "missing_component_is_not_green: absent closureComponents keeps the landed message")
+
+      # (5) a malformed field is equally silent — and equally fail-closed.
+      writeFile(decisionPath, canonicalJsonString(%*{
+        "basis": "EXECUTED", "evidenceKey": hex64(4245), "reason": "test",
+        "closureComponents": "not-an-array"}))
+      let malformed = runJudgmentAttestBranchForSubject(jsS1aGolden)
+      expect(malformed.isErr and malformed.error.contains("different closures") and
+        not malformed.error.contains("PLAN_COMPONENT_MISMATCH"),
+        "a malformed closureComponents field keeps the landed fail-closed message")
+
+      # (6) matching diagnostics NEVER authorize a mismatching key: every
+      #     component equal, decision key wrong → still refused.
+      writeFile(decisionPath, canonicalJsonString(%*{
+        "basis": "EXECUTED", "evidenceKey": hex64(4246), "reason": "test",
+        "closureComponents": components}))
+      let keyOnly = runJudgmentAttestBranchForSubject(jsS1aGolden)
+      expect(keyOnly.isErr and keyOnly.error.contains("different closures") and
+        not keyOnly.error.contains("PLAN_COMPONENT_MISMATCH"),
+        "diagnostic agreement never relaxes the full key check (key mismatch still refused)")
+
+    clearJudgmentEnv()
+    removeDir(tmpDir)
+
 # leave the process env as we found it
 clearJudgmentEnv()
 delEnv("GITHUB_TOKEN")

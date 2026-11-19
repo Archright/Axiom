@@ -446,6 +446,71 @@ type
                                     ## with or without this member. Narrowing-only:
                                     ## it can only turn a REUSED into an EXECUTED.
 
+const
+  JudgmentClosureComponentNames*: array[9, string] = [
+    "testSourceClosure",
+    "goldenFixtures",
+    "toolchainBundle",
+    "semanticSetDigest",
+    "envSnapshot",
+    "recipe",
+    "compilerPins",
+    "executionConfig",
+    "completenessKeys"]
+    ## The key-participating members in closureWire order — the diagnostic
+    ## names. A diagnostic digest is a pure projection of the SAME canonical
+    ## value the key binds, never a second identity input.
+
+type
+  JudgmentClosureDiagnostics* = object
+    ## Out-of-key diagnostics of ONE collected closure — the per-component
+    ## projection that lets the attest NAME the component which diverged when
+    ## the full keys already mismatch. It is derived from the values the
+    ## closure was built with (never re-measured) and it NEVER enters
+    ## closureWire: it explains a key mismatch, it cannot relax one.
+    componentDigests*: array[9, string]
+      ## sha256 of each component's one-key canonical wire object (the
+      ## completenessKeys member uses the array serialization) — the exact
+      ## canonical value the key binds, hashed on its own.
+    envPartDigests*: array[6, string]
+      ## sha256 of each raw env snapshot part (PATH/TMPDIR/LEAN/IRCHECK/
+      ## STATE_DIR/cwd). The raw values stay out of the decision file; only
+      ## their digests are recorded.
+
+func closureComponentDigest*(c: JudgmentClosure; name: string): string {.raises: [].} =
+  ## The one-key canonical serialization of ONE closure member — the same
+  ## canonicalJsonString grammar closureWire uses for that member, so the
+  ## digest names exactly the bytes the key commits to.
+  if name == "testSourceClosure":
+    sha256Hex(canonicalJsonString(%*{"testSourceClosure": c.testSourceClosure}))
+  elif name == "goldenFixtures":
+    sha256Hex(canonicalJsonString(%*{"goldenFixtures": c.goldenFixtures}))
+  elif name == "toolchainBundle":
+    sha256Hex(canonicalJsonString(%*{"toolchainBundle": c.toolchainBundle}))
+  elif name == "semanticSetDigest":
+    sha256Hex(canonicalJsonString(%*{"semanticSetDigest": c.semanticSetDigest}))
+  elif name == "envSnapshot":
+    sha256Hex(canonicalJsonString(%*{"envSnapshot": c.envSnapshot}))
+  elif name == "recipe":
+    sha256Hex(canonicalJsonString(%*{"recipe": c.recipe}))
+  elif name == "compilerPins":
+    sha256Hex(canonicalJsonString(%*{"compilerPins": c.compilerPins}))
+  elif name == "executionConfig":
+    sha256Hex(canonicalJsonString(%*{"executionConfig": c.executionConfig}))
+  elif name == "completenessKeys":
+    sha256Hex(canonicalJsonString(%*{"completenessKeys": c.completenessKeys}))
+  else:
+    ""
+
+func closureDiagnosticsOf*(c: JudgmentClosure): JudgmentClosureDiagnostics {.raises: [].} =
+  ## Project the already-built closure into its per-component diagnostics.
+  ## Pure — the values are the ones the closure was constructed with, so the
+  ## diagnostics cannot drift from the key inputs.
+  var d = JudgmentClosureDiagnostics()
+  for i, name in JudgmentClosureComponentNames:
+    d.componentDigests[i] = closureComponentDigest(c, name)
+  d
+
 func closureWire*(c: JudgmentClosure): string {.raises: [].} =
   ## Canonical closure serialization — fixed member set, RFC 8785 key order,
   ## explicit separators, UTF-8 bytes.
@@ -494,20 +559,33 @@ func validateJudgmentClosure*(c: JudgmentClosure): string {.raises: [].} =
       return "judgment_cas: closure pinIdentity carries a whitespace character (fail-closed)"
   ""
 
+func envSnapshotParts*(path, tmpdir, leanCmd, ircheckCmd, stateDir,
+                       cwd: string): array[6, string] {.raises: [].} =
+  ## Closure component ⑥'s six RAW parts, in wire order. The original text of
+  ## each variable, no canonicalization; an unset variable contributes its
+  ## empty string. Exposed so the bundled diagnostics can digest the SAME
+  ## values the snapshot was built from (never a second env read).
+  ["PATH=" & path,
+   "TMPDIR=" & tmpdir,
+   "AXIOM_LEAN_CMD=" & leanCmd,
+   "AXIOM_IRCHECK_CMD=" & ircheckCmd,
+   "AXIOM_STATE_DIR=" & stateDir,
+   "cwd=" & cwd]
+
+func envSnapshotDigestFromParts(parts: array[6, string]): string {.raises: [].} =
+  ## The one ⑥ formula: the parts joined by "\n" plus the trailing newline.
+  sha256Hex(parts.join("\n") & "\n")
+
 func envSnapshotDigest*(path: string; tmpdir, leanCmd, ircheckCmd, stateDir: string;
                         cwd: string): string {.raises: [].} =
   ## Closure component ⑥ — the RAW env snapshot the kernel receipts digest
   ## ("receipt가 원문 소화"): the original text of each variable, one per
   ## line, no canonicalization. An unset variable contributes its empty
   ## string — the snapshot is over the OBSERVED environment, and any change
-  ## (even whitespace) moves the key.
-  sha256Hex(
-    "PATH=" & path & "\n" &
-    "TMPDIR=" & tmpdir & "\n" &
-    "AXIOM_LEAN_CMD=" & leanCmd & "\n" &
-    "AXIOM_IRCHECK_CMD=" & ircheckCmd & "\n" &
-    "AXIOM_STATE_DIR=" & stateDir & "\n" &
-    "cwd=" & cwd & "\n")
+  ## (even whitespace) moves the key. Byte-identical to the pre-refactor
+  ## concatenation (pinned by tests/unit/test_judgment_cas.nim).
+  envSnapshotDigestFromParts(envSnapshotParts(path, tmpdir, leanCmd, ircheckCmd,
+    stateDir, cwd))
 
 # ---------------------------------------------------------------------------
 # I/O boundary — fail-closed closure collection
@@ -749,6 +827,10 @@ type
     ## recorded, never silently skipped.
     closure*: JudgmentClosure
     notes*: seq[string]
+    diagnostics*: JudgmentClosureDiagnostics
+      ## The same collection's per-component projection. A BY-PRODUCT of the
+      ## values the closure was built with (no member is re-measured), for
+      ## naming a diverging component at the armed attest.
 
 proc collectJudgmentClosureBundle*(s: JudgmentSubject;
     probeTreeOid: string): Result[JudgmentClosureBundle, string] {.
@@ -794,14 +876,19 @@ proc collectJudgmentClosureBundle*(s: JudgmentSubject;
   c.compilerPins = pins.get
   c.executionConfig = executionContractDigest(
     canonicalExecutionContractForRun(getCurrentDir()))
-  c.envSnapshot = envSnapshotDigest(
+  let envParts = envSnapshotParts(
     getEnv("PATH", ""), getEnv("TMPDIR", ""), getEnv("AXIOM_LEAN_CMD", ""),
     getEnv("AXIOM_IRCHECK_CMD", ""), getEnv("AXIOM_STATE_DIR", ""),
     getCurrentDir())
+  c.envSnapshot = envSnapshotDigestFromParts(envParts)
   let problem = validateJudgmentClosure(c)
   if problem.len > 0:
     return err(problem)
-  ok(JudgmentClosureBundle(closure: c, notes: treeClosure.get.notes))
+  var diagnostics = closureDiagnosticsOf(c)
+  for i in 0 ..< envParts.len:
+    diagnostics.envPartDigests[i] = sha256Hex(envParts[i])
+  ok(JudgmentClosureBundle(closure: c, notes: treeClosure.get.notes,
+    diagnostics: diagnostics))
 
 proc collectJudgmentClosure*(probeTreeOid: string): Result[JudgmentClosure, string] {.
   raises: [CatchableError, OSError, Exception], axiomEffect: IOEffect,
@@ -1496,6 +1583,13 @@ type
     jReused    ## ledger record fully re-verified — the sanctioned skip
     jExecuted  ## no verifiable record — the original s1a execution must run
 
+  JudgmentClosureComponent* = object
+    ## One named component diagnostic carried on the plan into the decision
+    ## file ({name, digest}). OUT-OF-KEY: it never enters closureWire — it
+    ## only lets a later key mismatch name the diverging input.
+    name*: string
+    digest*: string
+
   JudgmentPlan* = object
     mode*: JudgmentPlanMode
     reason*: string            ## the honest why (populated on every mode)
@@ -1525,6 +1619,13 @@ type
                                      ## external / build-generated /
                                      ## unresolved), recorded in the decision
                                      ## file. Never silently skipped.
+    closureComponents*: seq[JudgmentClosureComponent] = @[]
+                                     ## the collected closure's per-component
+                                     ## digests (the SAME values the key binds)
+                                     ## — decision-file provenance only, never
+                                     ## a key input. Absent on plans that never
+                                     ## collected a closure (jOff, pre-validation
+                                     ## fallbacks).
 
 func judgmentDisabled*(value: string): bool {.raises: [].} =
   ## The env-off contract: unset ("") or explicit "0" — anything else must be
@@ -1597,6 +1698,7 @@ proc planJudgmentCasForSubjectWithTransport*(s: JudgmentSubject;
       subject: subjectTag)
   var closure: JudgmentClosure
   var closureNotes: seq[string] = @[]
+  var closureComponents: seq[JudgmentClosureComponent] = @[]
   try:
     let collected = collectJudgmentClosureBundle(s, testedTreeOid)
     if collected.isErr:
@@ -1604,6 +1706,12 @@ proc planJudgmentCasForSubjectWithTransport*(s: JudgmentSubject;
         subject: subjectTag)
     closure = collected.get.closure
     closureNotes = collected.get.notes
+    # The collected diagnostics travel to the decision file OUT-OF-KEY: the
+    # attest can later name the component that diverged without changing any
+    # key input or verdict.
+    for i, name in JudgmentClosureComponentNames:
+      closureComponents.add(JudgmentClosureComponent(name: name,
+        digest: collected.get.diagnostics.componentDigests[i]))
   except CatchableError as exc:
     return JudgmentPlan(mode: jExecuted, reason: "closure collection raised: " & exc.msg,
       subject: subjectTag)
@@ -1617,7 +1725,8 @@ proc planJudgmentCasForSubjectWithTransport*(s: JudgmentSubject;
     refName: EvidenceCasRefName,
     subject: subjectTag,
     probeTreeOid: testedTreeOid,
-    closureNotes: closureNotes)
+    closureNotes: closureNotes,
+    closureComponents: closureComponents)
   # Landing-venue marker (redecision 2026-10-18): merge_group is RECORDED on
   # the plan — a venue marker for the decision file, never a consult block.
   # The read-only ledger consult below runs on EVERY venue: an eligible REUSED
@@ -1893,6 +2002,14 @@ proc writeJudgmentDecisionFile*(plan: JudgmentPlan; path: string): Result[string
     for n in plan.closureNotes:
       notesNode.add(%n)
     wireNode["closureNotes"] = notesNode
+  # Per-component diagnostics (out-of-key) — {name, digest} only. Deliberately
+  # NOT closureWire members and deliberately free of any basis/verdict token:
+  # the workflow's raw grep spoof guards must never see a second "basis" key.
+  if plan.closureComponents.len > 0:
+    var componentsNode = newJArray()
+    for component in plan.closureComponents:
+      componentsNode.add(%*{"name": component.name, "digest": component.digest})
+    wireNode["closureComponents"] = componentsNode
   let wire = canonicalJsonString(wireNode)
   try:
     writeFile(path, wire)
@@ -1935,6 +2052,46 @@ proc verifyJudgmentReuse*(record: EvidenceCasRecord; requestedKey: string): Judg
     return JudgmentReuseCheck(ok: false,
       reason: "executionEpoch mismatch (§15.3(e) staleness) — the original s1a execution runs")
   JudgmentReuseCheck(ok: true, reason: "reuse re-verified", payload: record.payload)
+
+func judgmentClosureComponentMismatch(components: JsonNode;
+    fresh: JudgmentClosureDiagnostics): string {.raises: [].} =
+  ## Explain a key mismatch by NAME: "" = the decision carries no (or no
+  ## well-formed, complete) closureComponents field — the caller keeps its
+  ## existing message verbatim; otherwise the first diverging component in
+  ## closureWire order as
+  ## `PLAN_COMPONENT_MISMATCH: <name> — plan=<12hex> attest=<12hex>`.
+  ## EXPLANATION ONLY: every branch here runs after the full key comparison
+  ## already failed, and none of them changes the fail-closed verdict.
+  if components.isNil or components.kind != JArray:
+    return ""
+  var planDigests: array[9, string]
+  var seen: array[9, bool]
+  for i in 0 ..< components.len:
+    let item = components[i]
+    if item.isNil or item.kind != JObject or item.len != 2:
+      return ""
+    let nameNode = item{"name"}
+    let digestNode = item{"digest"}
+    if nameNode.isNil or nameNode.kind != JString or
+        digestNode.isNil or digestNode.kind != JString or
+        not isHexOfLen(digestNode.getStr(), 64):
+      return ""
+    var matched = -1
+    for j, known in JudgmentClosureComponentNames:
+      if nameNode.getStr() == known:
+        matched = j
+        break
+    if matched < 0 or seen[matched]:
+      return ""
+    seen[matched] = true
+    planDigests[matched] = digestNode.getStr()
+  for i, name in JudgmentClosureComponentNames:
+    if not seen[i]:
+      return ""
+    if planDigests[i] != fresh.componentDigests[i]:
+      return "PLAN_COMPONENT_MISMATCH: " & name & " — plan=" &
+        planDigests[i][0 ..< 12] & " attest=" & fresh.componentDigests[i][0 ..< 12]
+  ""
 
 # ---------------------------------------------------------------------------
 # Attest-stage judgment branch (ax cert attest --witness-only)
@@ -2027,20 +2184,31 @@ proc runJudgmentAttestBranchForSubject*(s: JudgmentSubject): Result[JudgmentAtte
         testedTreeOid[0 ..< 12] &
         " — the plan and the attest saw different trees (fail-closed)")
   var closure: JudgmentClosure
+  var diagnostics: JudgmentClosureDiagnostics
   try:
-    let collected = collectJudgmentClosureFor(s, testedTreeOid)
+    # The SAME single collection path the plan uses — the bundle's closure
+    # drives the key, its diagnostics are the by-product that can name a
+    # diverging component if the key check below fails.
+    let collected = collectJudgmentClosureBundle(s, testedTreeOid)
     if collected.isErr:
       return err("judgment_cas: closure re-derivation failed (fail-closed): " & collected.error)
-    closure = collected.get
+    closure = collected.get.closure
+    diagnostics = collected.get.diagnostics
   except CatchableError as exc:
     return err("judgment_cas: closure re-derivation raised (fail-closed): " & exc.msg)
   let freshKey = deriveJudgmentKey(closure)
   let decisionKey = decision{"evidenceKey"}
   if decisionKey.isNil or decisionKey.kind != JString or decisionKey.getStr() != freshKey:
+    # The key comparison above is UNCHANGED and already failed; the
+    # components only explain WHICH input diverged. Absent/malformed →
+    # the historical message verbatim.
+    let componentMismatch =
+      judgmentClosureComponentMismatch(decision{"closureComponents"}, diagnostics)
     return err("judgment_cas: decision file key " &
       (if decisionKey.isNil or decisionKey.kind != JString: "<missing>" else: decisionKey.getStr()[0 ..< 12]) &
       " != freshly re-derived " & freshKey[0 ..< 12] &
-      " — the plan and the attest saw different closures (fail-closed)")
+      " — the plan and the attest saw different closures (fail-closed)" &
+      (if componentMismatch.len > 0: "; " & componentMismatch else: ""))
   var payload = ""
   if basis == JudgmentWitnessBasisExecuted:
     let evidencePathEnv = subjectEvidencePathEnv(s)
