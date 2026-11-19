@@ -36,13 +36,13 @@ import core/trusted/pnode_to_canon
 proc findProcDef(root: PNode; name: string): PNode =
   ## First `proc`/`func` named `name`, including the `*` export postfix form.
   if root.isNil: return nil
-  if root.kind == nkProcDef and root.len > 0:
+  if root.kind == nkProcDef and root.safeLen > 0:
     let head = root[0]
     if head.kind == nkIdent and head.ident.s == name: return root
     if head.kind == nkPostfix and head.len > 1 and head[1].kind == nkIdent and
        head[1].ident.s == name:
       return root
-  for i in 0 ..< root.len:
+  for i in 0 ..< root.safeLen:
     let found = findProcDef(root[i], name)
     if not found.isNil: return found
   nil
@@ -114,6 +114,37 @@ proc probeGuard(y: int): int =
 proc probeControl(y: int): int =
   let x = y
   result = x div y
+"""
+
+  # Bin-ops this IR cannot spell as a semantic primitive. The translator keeps
+  # the operand shape but must record the loss (fail-closed), so no caller can
+  # read such a function as directly provable.
+  UnsupportedBinOpSources = """
+proc gIn(a: int; b: int): bool =
+  result = a in b
+proc gOf(x: int): bool =
+  result = x of int
+proc gShl(a: int): int =
+  result = a shl 1
+proc gShr(a: int): int =
+  result = a shr 1
+proc gXor(a, b: int): int =
+  result = a xor b
+"""
+
+  SupportedBinOpSource = """
+proc gAdd(a, b: int): int =
+  result = a + b
+"""
+
+  # A `for` statement has no Canon conversion arm: on the external-subject
+  # pipeline the loop is a region drop, so the honest answer is "not loss-free"
+  # even though the NimNode path translates the same source faithfully.
+  CanonLoopSource = """
+proc gLoop(n: int): int =
+  result = 0
+  for i in 0 ..< n:
+    result = result + i
 """
 
 proc main() =
@@ -221,6 +252,19 @@ proc main() =
     check "and does not claim its regions were certified",
       not hand.propositionRegionLossFree
     check "and does not claim incomplete coverage", not hand.lossOutsideBindingRegions
+
+  echo ""
+  echo "=== 8. unsupported bin-ops and untranslatable statements are not loss-free ==="
+  block:
+    for name in ["gIn", "gOf", "gShl", "gShr", "gXor"]:
+      check name & " is recorded as a translation loss",
+        not irOf(name, UnsupportedBinOpSources).translationLossFree
+    check "the sentinel bin-op survives into the canonical serialization",
+      serializeIRFuncDef(irOf("gIn", UnsupportedBinOpSources)).contains("boUnsupported")
+    check "a supported arithmetic bin-op stays loss-free",
+      irOf("gAdd", SupportedBinOpSource).translationLossFree
+    check "a Canon-path for-loop is a region drop, not a silent pass",
+      not irOf("gLoop", CanonLoopSource).translationLossFree
 
   echo ""
   echo "=== Results: " & $passed & " passed, " & $failed & " failed ==="

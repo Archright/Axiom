@@ -447,6 +447,8 @@ Expected observations (each is a regression-failure mode, not a suggestion):
   widen the extraction-agreement subset, and it does not extend the Rust/LLBC attestation
   binding (`llbcDigest` / `rustToolchainIdentity` in `axiom.attestation.evidence.v2`) beyond
   its own all-or-nothing rule.
+
+Per-construct direct-proof status: [direct_proof_boundary.md](direct_proof_boundary.md).
 - **No cache authority.** The binding, legacy evidence and marker files under
   `$AXIOM_STATE_DIR/.axiom/cache/evidence/` are cache artifacts: IO failure is silently
   ignored at the boundary and never interrupts verification, and every admission re-verifies
