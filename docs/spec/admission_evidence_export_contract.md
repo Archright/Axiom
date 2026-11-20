@@ -242,8 +242,8 @@ reasonCode/journal strings(새 enum 아님 — 기존 `reasonCode: string` 관�
 
 | code | 조건 | 결과 |
 |---|---|---|
-| `CERT_BODY_MISSING` | verified-status entry의 `certificateFile`이 null이거나 파일 부재 | `CERTIFICATE_EVIDENCE=FAIL` |
-| `CERT_INVENTORY_MISMATCH` | inventory ≠ export set | FAIL |
+| `CERT_BODY_MISSING` | verified-status entry의 `certificateFile`이 **null**(본문 미참조). 참조된 본문 파일이 실제로 없는 경우는 우선순위 1의 `CERT_INVENTORY_MISMATCH`다(§3.1) | `CERTIFICATE_EVIDENCE=FAIL` |
+| `CERT_INVENTORY_MISMATCH` | inventory ≠ export set, 또는 manifest가 참조하는 body 파일 부재·중복 참조·미참조 body 존재·비정규 파일 | FAIL |
 | `CERT_DIGEST_MISMATCH` | 파일 SHA-256 ≠ `certificateSha256` | FAIL |
 | `CERT_STATUS_MISMATCH` | `recomputedStatus` ≠ `status` | FAIL |
 | `CERT_SCOPE_MISMATCH` | 소비자가 아는 선언 target 집합 ≠ bundle `scope.targets`, 또는 bundle에 `scope`가 없음, 또는 선언 target이 entry로 존재하지 않음(§2.2b) | FAIL |
@@ -269,7 +269,7 @@ Negative control이 "무언가 실패했다"가 아니라 **의도한 안전장�
 | 6 | Lean-dependent verified entry `axiomObservation.status == "observed"` 및 `names` projection 일치 | `AXIOM_OBSERVATION_MISSING` / `CERT_PROJECTION_MISMATCH` |
 | 7 | `certificateSetDigest` 존재 및 재계산 일치 | `CERT_SET_DIGEST_ABSENT` / `CERT_SET_DIGEST_MISMATCH` |
 
-- **선행 조건**: 1–3은 서로 다른 계층이다. 본문을 삭제한 negative control은 "inventory를 계약에 맞게 갱신"한 상태에서 수행해야 2번(`CERT_BODY_MISSING`)이 관측된다. inventory를 갱신하지 않으면 1번이 먼저 발화한다 — 이는 결함이 아니라 우선순위 계약이다.
+- **선행 조건**: 1–3은 서로 다른 계층이다. 본문 누락 negative control은 (i) body 파일과 `vault-certificates.txt`의 해당 행을 제거하고, (ii) entry의 `certificateFile`·`certificateSha256`·`recomputedStatus`·`theoremIdentity`를 null로 만들고 `axiomObservation`을 `not-applicable`로 두며, (iii) `certificateSetDigest`를 재계산해야 2번(`CERT_BODY_MISSING`)이 관측된다. entry가 빠진 body를 **계속 참조**하면 1번(`CERT_INVENTORY_MISMATCH`)이 먼저 발화한다 — 이는 결함이 아니라 우선순위 계약이다(2026-11-20 G0 실측).
 - **digest 계층 분리**: axiom observation 제거 negative control은 관측 필드를 제거한 뒤 **manifest의 하위 digest(entry `sha256`, `certificateSetDigest`)를 재계산**해야 6번이 관측된다. 그렇게 하지 않으면 3/7번이 먼저 발화한다.
 - **closure 계층**: `CERT_INTEGRITY_FAILED`는 producer job에서 `verify-export --closure`(journal 존재)가 수행한 결과다. 소비자/제3자는 journal이 없으므로 closure를 재실행하지 않고, 결과의 결속만 검사한다(§2.6-6).
 - verifier는 모든 실패 코드를 `codes[]`에 수집할 수 있으나, `reasonCode`(단일)는 위 우선순위의 첫 항목이다. `CERTIFICATE_EVIDENCE=FAIL`은 코드 목록 유무와 무관하게 성립한다.
@@ -350,7 +350,7 @@ Negative control이 "무언가 실패했다"가 아니라 **의도한 안전장�
 4. `evidence_tier=verified` + `acceptance_class=proof`가 `certificateSetDigest` 없이 선언될 수 없다.
 5. 동일 export set → 동일 `certificateSetDigest`(exporter determinism test).
 6. **Targeted negative controls**: 각 조작은 **검증하려는 속성 하나만** 깨뜨리고 나머지 무결성 계층은 일관되게 유지한다. 각 테스트는 exit 1 + **정확한 reasonCode**(§3.1 우선순위)를 단언한다:
-   - 본문 누락: manifest 참조는 유지하고 파일만 제거 → `CERT_BODY_MISSING`.
+   - 본문 누락: body 파일·inventory 행 제거 + entry `certificateFile` null + 하위 digest 재계산 → `CERT_BODY_MISSING`. (참조를 유지한 채 파일만 제거하면 `CERT_INVENTORY_MISMATCH` — 우선순위 1.)
    - inventory 불일치: manifest에 없는 파일 추가(또는 목록 변조) → `CERT_INVENTORY_MISMATCH`.
    - status 변조: body의 status만 변경하고 entry `sha256`·`certificateSetDigest` 재계산 → `CERT_STATUS_MISMATCH`.
    - digest 변조: `certificateSetDigest`만 변경 → `CERT_SET_DIGEST_MISMATCH`.

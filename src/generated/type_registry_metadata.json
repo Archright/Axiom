@@ -6048,6 +6048,82 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/cli/evidence_bundle_cli.nim",
+      "name": "hasHelpFlag",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/cli/evidence_bundle_cli.nim",
+      "name": "requireValue",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/cli/evidence_bundle_cli.nim",
+      "name": "runBundleExportCli",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/cli/evidence_bundle_cli.nim",
+      "name": "runBundleVerifyCli",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/cli/evidence_bundle_cli.nim",
+      "name": "runEvidenceBundleCli",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/cli/evidence_bundle_cli.nim",
+      "name": "workflowPathFromRef",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "String",
       "module": "src/cli/evidence_cli.nim",
       "name": "evidenceRepo",
@@ -121921,6 +121997,1352 @@
       "returnType": "tuple[ok: bool; reason: string]",
       "smtSort": "Int",
       "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/evidence_bundle/bundle_export.nim",
+      "name": "certEntryFor",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[BundleExportOutcome, string]",
+      "module": "src/verification/evidence_bundle/bundle_export.nim",
+      "name": "exportEvidenceBundle",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[BundleExportOutcome, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List VaultCert",
+      "module": "src/verification/evidence_bundle/bundle_export.nim",
+      "name": "findVaultCert",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[VaultCert]",
+      "smtSort": "(Seq VaultCert)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[JsonNode, string]",
+      "module": "src/verification/evidence_bundle/bundle_export.nim",
+      "name": "loadProofState",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[JsonNode, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[Table[string, string], string]",
+      "module": "src/verification/evidence_bundle/bundle_export.nim",
+      "name": "loadPropositions",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[Table[string, string], string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[JsonNode, string]",
+      "module": "src/verification/evidence_bundle/bundle_export.nim",
+      "name": "loadStrictFile",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[JsonNode, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[seq[VaultCert], string]",
+      "module": "src/verification/evidence_bundle/bundle_export.nim",
+      "name": "loadVaultCerts",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[seq[VaultCert], string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[tuple[treeOid: string,",
+      "module": "src/verification/evidence_bundle/bundle_export.nim",
+      "name": "parseTreeEntries",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[tuple[treeOid: string,",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "tuple[ok: bool; output: string]",
+      "module": "src/verification/evidence_bundle/bundle_export.nim",
+      "name": "runGit",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "tuple[ok: bool; output: string]",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "tuple[modulePath, functionName: string]",
+      "module": "src/verification/evidence_bundle/bundle_export.nim",
+      "name": "splitUnitKey",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "tuple[modulePath, functionName: string]",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List string",
+      "module": "src/verification/evidence_bundle/bundle_export.nim",
+      "name": "validateRunEnvelope",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[void, string]",
+      "module": "src/verification/evidence_bundle/bundle_export.nim",
+      "name": "validateSelectedCert",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[void, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[string, string]",
+      "module": "src/verification/evidence_bundle/bundle_paths.nim",
+      "name": "ensureDirectoryUnder",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[string, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/evidence_bundle/bundle_paths.nim",
+      "name": "isSafeRelativePath",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/bundle_paths.nim",
+      "name": "joinSafe",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[seq[string], string]",
+      "module": "src/verification/evidence_bundle/bundle_paths.nim",
+      "name": "listRegularFiles",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[seq[string], string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[string, string]",
+      "module": "src/verification/evidence_bundle/bundle_paths.nim",
+      "name": "resolveRegularFileUnder",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[string, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "StatKind",
+      "module": "src/verification/evidence_bundle/bundle_paths.nim",
+      "name": "statKind",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "StatKind",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "StatKind",
+      "module": "src/verification/evidence_bundle/bundle_paths.nim",
+      "name": "statKind",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "StatKind",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/verification/evidence_bundle/bundle_paths.nim",
+      "name": "statSize",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int64",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/verification/evidence_bundle/bundle_paths.nim",
+      "name": "statSize",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int64",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "arrayOf",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "axiomAllowed",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "axiomsAllowlisted",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "bundleDigestFor",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "canonicalKaaArtifactIdentity",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[seq[string], string]",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "canonicalKaaObservedAxioms",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[seq[string], string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "canonicalManifestText",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "evidenceDigestFor",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "evidenceIdFromCert",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "evidenceIdFromFields",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "hasKeys",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "intOf",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "isGitOid",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "isHexOfLen",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "isSha256Hex",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List string",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "missingKeys",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "objOf",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "provenanceDigestFor",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[seq[string], string]",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "sortedAxioms",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[seq[string], string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "sourceIndexProjectionDigest",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "strOf",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "subjectIdFor",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "treeDigestFor",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List string",
+      "module": "src/verification/evidence_bundle/bundle_schema.nim",
+      "name": "unknownKeys",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[JsonNode, string]",
+      "module": "src/verification/evidence_bundle/bundle_toolchain.nim",
+      "name": "buildPolicy",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[JsonNode, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[JsonNode, string]",
+      "module": "src/verification/evidence_bundle/bundle_toolchain.nim",
+      "name": "buildToolchain",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[JsonNode, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/bundle_toolchain.nim",
+      "name": "leanCheckerPath",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/bundle_toolchain.nim",
+      "name": "measuredVerifierBuildId",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/bundle_toolchain.nim",
+      "name": "parseLeanVersion",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/bundle_toolchain.nim",
+      "name": "probeLeanVersion",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[string, string]",
+      "module": "src/verification/evidence_bundle/bundle_toolchain.nim",
+      "name": "readAppSha256",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[string, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/bundle_toolchain.nim",
+      "name": "resolveLeanCommand",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "addLeg",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[seq[string], string]",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "checkAttestation",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[seq[string], string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[seq[string], string]",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "checkCheckRuns",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[seq[string], string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "checkClosed",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[seq[string], string]",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "checkRuleset",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[seq[string], string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "checkedSection",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "BundleLeg",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "kernelLegSkipped",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "BundleLeg",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "legStatusText",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[BundleContents, string]",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "loadBundle",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[BundleContents, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[JsonNode, string]",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "loadStrictPath",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[JsonNode, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[string, string]",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "readBytesUnder",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[string, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "requireGitOid",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "requireNonEmpty",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "requireNumeric",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "requireSha",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[seq[string], string]",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "scanBundleFiles",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[seq[string], string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "validateCertDoc",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "validateCertEntry",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List string",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "validateCertEvidence",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "validateManifest",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "validateSourceIndex",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List string",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "validateSubjectBinding",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "BundleVerifyOutcome",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "verifyEvidenceBundle",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "BundleVerifyOutcome",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "BundleLeg",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "verifyKernel",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "BundleLeg",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/evidence_bundle/bundle_verify.nim",
+      "name": "verifyOutcomeJson",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/evidence_bundle/lean_replay.nim",
+      "name": "reexecuteLeanObserved",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/evidence_bundle/strict_json.nim",
+      "name": "addUtf8",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/evidence_bundle/strict_json.nim",
+      "name": "atEnd",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/evidence_bundle/strict_json.nim",
+      "name": "fail",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/verification/evidence_bundle/strict_json.nim",
+      "name": "hexVal",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/evidence_bundle/strict_json.nim",
+      "name": "parseArray",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/evidence_bundle/strict_json.nim",
+      "name": "parseNumber",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/evidence_bundle/strict_json.nim",
+      "name": "parseObject",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[JsonNode, string]",
+      "module": "src/verification/evidence_bundle/strict_json.nim",
+      "name": "parseStrictJson",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[JsonNode, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/evidence_bundle/strict_json.nim",
+      "name": "parseString",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/evidence_bundle/strict_json.nim",
+      "name": "parseValue",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/evidence_bundle/strict_json.nim",
+      "name": "parseValue",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "char",
+      "module": "src/verification/evidence_bundle/strict_json.nim",
+      "name": "peek",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "char",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/verification/evidence_bundle/strict_json.nim",
+      "name": "readHex4",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/evidence_bundle/strict_json.nim",
+      "name": "skipWs",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
     },
     {
       "hasAxiomHint": false,
