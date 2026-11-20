@@ -84,7 +84,7 @@
     "src/cli/cert_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "fcdbae2516508d1d2b633782cd21f16d1aec7124"
+      "sha": "c9d9bf12ee7ede6a45568cd0c357af9fda3911d5"
     },
     "src/cli/check_cli.nim": {
       "mode": "100644",
@@ -3625,6 +3625,11 @@
       "mode": "100644",
       "type": "blob",
       "sha": "3b492e189ca242eb01c26ea35174075e98d7fe0e"
+    },
+    "src/verification/cert_export.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d72dda653eaf537e6f93e169ca5bdc755ed77729"
     },
     "src/verification/cert_promotion.nim": {
       "mode": "100644",
