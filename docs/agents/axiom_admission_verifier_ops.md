@@ -33,7 +33,7 @@
 ## 3. 판정 입력과 발행
 
 1. **manifest는 `B_mg`에서 읽는다 — `G`에서는 절대 읽지 않는다.** `config/policy/trust_surface_manifest.json`의 `readFrom` 필드가 이 불변식을 선언한다(`B_mg (merge_group.base_sha), never from G`). 목적은 PR이 검증 목록 자체를 축소하지 못하게 하는 것이다.
-2. **manifest의 모든 blob 경로를 비교한다** (2026-11-18 기준 17개: actions 1 · workflows 9 · config 6 · tools 1): 각 경로에 대해 `blob(G) == blob(B_mg)`. 정본은 `config/policy/trust_surface_manifest.json`의 `paths`이며 **개수를 하드코딩하지 않는다** — 경로 추가·삭제는 manifest diff로만 일어나고, 그 자체가 trust surface다. 불일치는 경로명과 개수를 사유로 보고한다.
+2. **manifest의 모든 blob 경로를 비교한다** (2026-11-20 기준 18개: actions 1 · workflows 9 · config 6 · tests 1 · tools 1): 각 경로에 대해 `blob(G) == blob(B_mg)`. 정본은 `config/policy/trust_surface_manifest.json`의 `paths`이며 **개수를 하드코딩하지 않는다** — 경로 추가·삭제는 manifest diff로만 일어나고, 그 자체가 trust surface다. 불일치는 경로명과 개수를 사유로 보고한다.
 3. **원장 결속을 확인한다**: subject-continuity 원장이 `(base, pr_head)`에 결속된 항목을 정확히 1개 얻었는지 본다.
 4. **`admission-check`를 PR head와 `G` 양쪽에 발행한다** — PR-venue는 preflight, `G`는 merge-admission 판정이다. 판정 조건(워크플로 path, 이벤트 venue, `head_sha`, `conclusion`)은 ADR-0041 §1의 네 조건을 그대로 따른다.
 
