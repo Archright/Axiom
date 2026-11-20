@@ -40,8 +40,11 @@ proc configShow*(): int {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect,
 proc configValidate*(): int {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   let tomlPath = axiomConfigPath()
   if tomlPath.len == 0:
-    echo "[config] No axiom.toml found — nothing to validate."
-    return 0
+    # A validation command that reports success without reading a file is a
+    # false attestation: the operator asked "is my config valid?" and no
+    # config existed to answer for (missing ≠ valid empty).
+    echo "[config] FAIL: no axiom.toml found — nothing to validate."
+    return 1
   let config = loadTomlConfig(tomlPath)
   var errors = 0
   # Basic structural validation

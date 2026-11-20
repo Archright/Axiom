@@ -1033,6 +1033,13 @@ proc rustSubjectIssuance*(llbcText: string; funcName: string; specPost: IRExpr;
     rustCanonicalDigest: result.irHash,
     obligationDigest: rendered.obligationDigest,
     extractorIdentity: rustExtractorIdentityDigest(rcheckExe))
+  # Certificate identity is subject-relative (cert_lifecycle_contracts.md §5).
+  # The armed lane passes `subjectRoot`; unarmed callers still derive the
+  # module's crate root so an absolute filesystem path never reaches the cert.
+  let certSubjectRoot =
+    if subjectRoot.len > 0: subjectRoot
+    elif isAbsolute(modulePath): subjectProjectRootFor(modulePath, "")
+    else: ""
   var logLines: seq[string] = @[]
   let wrote = writeCertificateFromUapResult(
     certDir, modulePath, funcName, sourceCode,
@@ -1046,7 +1053,8 @@ proc rustSubjectIssuance*(llbcText: string; funcName: string; specPost: IRExpr;
     kaa = some(kaa),
     evidence = some(cleResult.get()),
     rustBoundedClaim = some(claim),
-    axiomVersion = axiomVersion)
+    axiomVersion = axiomVersion,
+    subjectRoot = certSubjectRoot)
   if not wrote:
     var detail = ""
     for line in logLines:

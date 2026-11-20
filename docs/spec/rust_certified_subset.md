@@ -221,6 +221,13 @@ land a minimal coherent slice; inclusion is a follow-up extension, not an open i
    `buildRustScopeJson`; `src/cli/scope_cli.nim`):
    - every `rust_targets` entry must be present and well-formed; a missing `specRef`,
      malformed `commit`/`signatureHash`, or a duplicate `(module, symbol)` pair fails closed;
+   - `signatureHash` FORMAT is not the binding (#223): before issuance the Rust lane
+     (`src/cli/rust_lane_cli.nim` `verifySignatureHash`) recomputes sha256 over the exact
+     one-line source signature — the declaration text starting at its first qualifier
+     (leading indentation is layout, not signature), with trailing whitespace and the
+     trailing ` {` removed, `pub` included — and an absent, ambiguous, multiline, or
+     differing declaration is an `error` entry that never reaches `rustSubjectIssuance`
+     (pre-issuance gate only; certificate identity fields are unchanged);
    - the DECLARED `vksRust` integer is cross-checked against the count derived from the
      entries themselves (two independently derived values — not a tautology); a mismatch
      fails closed (lock regeneration refused, consistency check FAIL);
@@ -494,3 +501,23 @@ classifies the failed-on-confirmed-counterexample projection as SEMANTIC (`Clean
   (three-question separation; G1 conditions + attribution rule + marker-as-signal rule;
   G2 wording rule; `pinnedChannel` decision; INV-10 determinism-vs-validity separation;
   no-new-surface) (§4)
+## §7 Execution success and claim admission are separate axes
+
+The Rust lane report carries both axes explicitly:
+
+- `execution: "completed"` — the run reached its end. It is NOT a proof claim.
+- `proofs: {proved, refuted, unknown, no_spec, error}` — what the run established.
+- `source_assurance: "ir-refinement-assumed"` — the Rust→LLBC→canonical link is a
+  disclosed trust assumption, not a verified refinement.
+- `required_claims_satisfied` — the admission decision, computed from a committed
+  policy (`AXIOM_CLAIMS_POLICY`), never from exit 0 and never from a CLI flag.
+
+When `AXIOM_CLAIMS_POLICY` is absent, `required_claims_satisfied` is `null` and the exit
+code remains the execution contract. When it is present, every required claim must have
+a `verified` target and a certificate whose verifier-judged assurance meets the declared
+`minAssurance`; otherwise the report still says `execution: completed` but the exit code
+is `VERIFICATION_FAILURE`. An unreadable or malformed policy is fail-closed.
+
+A binary whose Charon identity does not match the pin reports
+`capability.status = "UNSUPPORTED CAPABILITY"` (and the same prefix on every target
+reason). It never falls through to another scanner and never reports `proved`.

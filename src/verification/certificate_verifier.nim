@@ -26,18 +26,33 @@ const leanCertBuiltinAxiomAllowlist*: array[4, string] =
   ["Classical.choice", "Quot.sound", "propext", "funext"]
 
 proc certSourceHashMatchesSource*(cert: JsonNode; projectRoot: string): bool {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
-  ## Fail-closed source-staleness check: the cert's `sourceHash` must equal
-  ## computeStableSourceFingerprint of the CURRENT module file. Any missing,
-  ## unreadable, or mismatched source → false (stale cert, §0.9).
+  ## Fail-closed source-staleness check: the cert's `modulePath` must be a
+  ## subject-relative POSIX identity (cert_lifecycle_contracts.md §5) and its
+  ## `sourceHash` must equal computeStableSourceFingerprint of the CURRENT
+  ## module file under `projectRoot`. Absolute paths, `..` escapes, symlink
+  ## escapes, and missing/unreadable/mismatched sources → false (stale cert,
+  ## §0.9). The cert never names an arbitrary filesystem location.
   let certSourceHash = cert.getOrDefault("sourceHash").getStr("")
   if certSourceHash == "":
     return false
   let certModulePath = cert.getOrDefault("modulePath").getStr("")
-  if certModulePath.len == 0:
+  let relModulePath = canonicalSubjectRelativeModulePath(certModulePath, "")
+  if relModulePath.len == 0:
     return false
   let repo = if projectRoot.len > 0: projectRoot else: resolveRepoRoot()
-  let sourcePath = repo / certModulePath
-  let sourceContent = try: readFileSafe(sourcePath) except CatchableError: ""
+  if repo.len == 0:
+    return false
+  let sourcePath = repo / relModulePath
+  # A relative path can still leave the subject root through a symlink.
+  # Resolve both sides (realpath) and require containment before reading.
+  let repoReal = try: expandFilename(repo) except CatchableError: ""
+  let sourceReal = try: expandFilename(sourcePath) except CatchableError: ""
+  if repoReal.len == 0 or sourceReal.len == 0:
+    return false
+  let repoPrefix = if repoReal.endsWith("/"): repoReal else: repoReal & "/"
+  if sourceReal != repoReal and not sourceReal.startsWith(repoPrefix):
+    return false
+  let sourceContent = try: readFileSafe(sourceReal) except CatchableError: ""
   if sourceContent.len == 0:
     return false
   computeStableSourceFingerprint(sourceContent) == certSourceHash
@@ -191,6 +206,10 @@ func certSemanticProjection(node: JsonNode): string {.raises: [].} =
     node.getOrDefault("policyId").getStr(""),
     node.getOrDefault("modulePath").getStr(""),
     node.getOrDefault("functionName").getStr(""),
+    node.getOrDefault("leanProposition").getStr(""),
+    node.getOrDefault("propositionHash").getStr(""),
+    node.getOrDefault("leanSource").getStr(""),
+    node.getOrDefault("leanSourceHash").getStr(""),
     solverMetaProjection(node)
   ]
   sha256Hex(fields.join("|"))
@@ -201,7 +220,8 @@ func sameReplayInputs(certNode, journalClaim: JsonNode): bool {.raises: [].} =
   ## certificate and the journal claim it points at. A mismatch means the cert
   ## was re-bound to a foreign journal (cert A + journal B) or the journal was
   ## replayed with different inputs.
-  for key in ["sourceHash", "irHash", "solverStatus", "policyId"]:
+  for key in ["sourceHash", "irHash", "solverStatus", "policyId",
+              "propositionHash", "leanSourceHash"]:
     if certNode.getOrDefault(key).getStr("") != journalClaim.getOrDefault(key).getStr(""):
       return false
   true
@@ -232,9 +252,18 @@ proc verifyCertificateClosureNode*(
     # Artifact is structurally valid (fingerprint, identityDigest, attestation
     # all pass) but the cert is not current product truth — different
     # toolchain / execution-contract lineage.  This is NOT a failure;
-    # it is a compatibility classification.
+    # it is a compatibility classification. A non-relative modulePath is
+    # called out explicitly: it has no subject-relative identity at all.
+    let rawModulePath = certNode.getOrDefault("modulePath").getStr("")
+    let pathReason =
+      if canonicalSubjectRelativeModulePath(rawModulePath, "").len == 0:
+        " (modulePath is not a subject-relative POSIX path: '" &
+          rawModulePath & "')"
+      else:
+        ""
     return CertClosureResult(status: ccsNotCurrent,
-      detail: "artifact is valid but not current product truth (toolchain/lineage mismatch): " & $dv)
+      detail: "artifact is valid but not current product truth (toolchain/lineage mismatch): " &
+        $dv & pathReason)
   if dv != dvcSuccess:
     return CertClosureResult(status: ccsNotDeepVerified, detail: "deep verification failed: " & $dv)
 

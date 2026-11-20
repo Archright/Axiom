@@ -3,6 +3,8 @@ axiomLayer "infrastructure"
 {.push raises: [].}
 
 import std/json
+import std/os
+import std/strutils
 import core/trusted/fingerprint_generator
 
 ## v3 certificate identity — single source of truth shared by writer and verifier
@@ -11,6 +13,53 @@ import core/trusted/fingerprint_generator
 ## — and project it through the SAME canonical function. Because the field set and
 ## order live in exactly one place, the two sides cannot drift apart (e.g. a future
 ## "12 vs 13 field" mismatch is structurally impossible).
+
+func normalizeModulePathSegments(path: string): string {.raises: [].} =
+  ## Canonical POSIX segment form: duplicate separators and "." segments are
+  ## folded, interior ".." is resolved. A ".." that would climb above the
+  ## subject root is an escape and yields "" (fail-closed).
+  var parts: seq[string]
+  for segment in path.split('/'):
+    if segment.len == 0 or segment == ".":
+      continue
+    if segment == "..":
+      if parts.len == 0:
+        return ""
+      parts.setLen(parts.len - 1)
+    else:
+      parts.add(segment)
+  parts.join("/")
+
+func canonicalSubjectRelativeModulePath*(modulePath, subjectRoot: string): string {.raises: [].} =
+  ## THE certificate modulePath contract (cert_lifecycle_contracts.md §5):
+  ## a subject-relative POSIX path, e.g. "src/read.rs". An absolute input is
+  ## rebound under `subjectRoot` (the writer path); a relative input is
+  ## normalized as-is (the verifier path, `subjectRoot == ""`). "" means the
+  ## input has no subject-relative identity — absolute without a root, a
+  ## ".." escape, drive/UNC syntax, or an empty path — and callers fail
+  ## closed. The result is always canonical: no leading "/", no "."/".."/
+  ## empty segments.
+  var p = modulePath.strip().replace('\\', '/')
+  if p.len == 0 or p.contains('\0'):
+    return ""
+  if p.len >= 2 and p[1] == ':':
+    return ""  # Windows drive syntax is not a POSIX subject-relative path
+  if isAbsolute(p):
+    var root = subjectRoot.strip().replace('\\', '/')
+    while root.len > 1 and root[^1] == '/':
+      root.setLen(root.len - 1)
+    if root.len == 0 or not isAbsolute(root):
+      return ""
+    if root == "/":
+      if p.len <= 1 or p[0] != '/':
+        return ""
+      p = p[1 .. ^1]
+    else:
+      if p.len <= root.len or p[0 ..< root.len] != root or
+          p[root.len] != '/':
+        return ""  # outside the subject root
+      p = p[root.len + 1 .. ^1]
+  normalizeModulePathSegments(p)
 
 type V3IdentityState* = object
   schemaVersion*: string

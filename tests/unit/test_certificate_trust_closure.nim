@@ -3,8 +3,10 @@ import ../../src/core/types/verification_tier
 import ../../src/core/trusted/fingerprint_generator
 import ../../src/core/trusted/trust_commit
 import ../../src/core/proof/source_fingerprint
+import ../../src/core/crypto/hash_kernel
 import ../../src/verification/certificate_verifier
 import ../../src/verification/certificate_identity
+import ../../src/cli/cert_cli
 
 suite "Phase 2 — Certificate trust closure (R4, v1 local replay-bound contract)":
 
@@ -111,6 +113,32 @@ suite "Phase 2 — Certificate trust closure (R4, v1 local replay-bound contract
     finally:
       removeDir(tmpDir)
 
+  test "tampered Lean proposition/source -> FAIL (journal binds theorem identity)":
+    let tmpDir = getTempDir() / "ax_p2_theorem_tamper_" & $getCurrentProcessId()
+    createDir(tmpDir)
+    try:
+      withHermeticJournalRoot(tmpDir):
+        let (certPath, cert, _) = makeFixtureCert(tmpDir)
+        let irHash = cert["irHash"].getStr()
+        # Replace the theorem with a trivially true one while keeping the
+        # function/IR/source identity intact, then re-derive every hash the
+        # certificate can self-check (fingerprint + identityDigest). Only the
+        # journal replay projection can still detect the substitution.
+        let fakeProp = "True"
+        let fakeSource = "theorem probe_post : True := by trivial"
+        cert["leanProposition"] = newJString(fakeProp)
+        cert["propositionHash"] = newJString(sha256Hex(fakeProp))
+        cert["leanSource"] = newJString(fakeSource)
+        cert["leanSourceHash"] = newJString(sha256Hex(fakeSource))
+        cert["fingerprint"] = newJString(computeVerificationFingerprint(irHash, fakeProp))
+        cert["identityDigest"] = newJString(v3IdentityFromJson(cert))
+        writeFile(certPath, $cert)
+        let res = verifyCertificateClosure(certPath, tmpDir)
+        check res.status == ccsReplayInputMismatch or
+              res.status == ccsReplayMismatch
+    finally:
+      removeDir(tmpDir)
+
   test "journal missing -> JOURNAL_REQUIRED":
     let tmpDir = getTempDir() / "ax_p2_journal_missing_" & $getCurrentProcessId()
     createDir(tmpDir)
@@ -140,3 +168,147 @@ suite "Phase 2 — Certificate trust closure (R4, v1 local replay-bound contract
         check res.status == ccsJournalBindingAbsent
     finally:
       removeDir(tmpDir)
+
+  # ── #218: modulePath is a subject-relative identity, not a filesystem path ──
+  test "relative modulePath under projectRoot -> source staleness PASS":
+    let tmpDir = getTempDir() / "ax_p2_relpath_" & $getCurrentProcessId()
+    createDir(tmpDir / "src")
+    let sourceContent = "pub fn read() -> u8 { 0 }"
+    writeFile(tmpDir / "src" / "read.rs", sourceContent)
+    try:
+      let cert = %*{
+        "modulePath": "src/read.rs",
+        "sourceHash": computeStableSourceFingerprint(sourceContent)
+      }
+      check certSourceHashMatchesSource(cert, tmpDir)
+      # normalization: "." and duplicate separators fold to the same identity
+      var normalized = cert
+      normalized["modulePath"] = newJString("./src//read.rs")
+      check certSourceHashMatchesSource(normalized, tmpDir)
+    finally:
+      removeDir(tmpDir)
+
+  test "absolute modulePath -> source staleness FAIL (never read as absolute)":
+    let tmpDir = getTempDir() / "ax_p2_abspath_" & $getCurrentProcessId()
+    createDir(tmpDir / "src")
+    let sourceContent = "pub fn read() -> u8 { 0 }"
+    let moduleAbs = tmpDir / "src" / "read.rs"
+    writeFile(moduleAbs, sourceContent)
+    try:
+      let cert = %*{
+        "modulePath": moduleAbs,
+        "sourceHash": computeStableSourceFingerprint(sourceContent)
+      }
+      # the file is readable and the hash matches; the absolute identity is
+      # still rejected (the bug #218 regression guard).
+      check not certSourceHashMatchesSource(cert, tmpDir)
+    finally:
+      removeDir(tmpDir)
+
+  test "modulePath '..' escape -> source staleness FAIL":
+    let tmpDir = getTempDir() / "ax_p2_escape_" & $getCurrentProcessId()
+    createDir(tmpDir)
+    let outside = tmpDir.parentDir /
+      ("ax_p2_outside_" & $getCurrentProcessId() & ".rs")
+    let sourceContent = "pub fn read() -> u8 { 0 }"
+    writeFile(outside, sourceContent)
+    try:
+      let cert = %*{
+        "modulePath": "../" & splitFile(outside).name,
+        "sourceHash": computeStableSourceFingerprint(sourceContent)
+      }
+      check not certSourceHashMatchesSource(cert, tmpDir)
+    finally:
+      removeFile(outside)
+      removeDir(tmpDir)
+
+  test "missing module file -> source staleness FAIL":
+    let tmpDir = getTempDir() / "ax_p2_missing_" & $getCurrentProcessId()
+    createDir(tmpDir)
+    try:
+      let cert = %*{
+        "modulePath": "src/missing.rs",
+        "sourceHash": computeStableSourceFingerprint("anything")
+      }
+      check not certSourceHashMatchesSource(cert, tmpDir)
+    finally:
+      removeDir(tmpDir)
+
+  test "symlink escaping projectRoot -> source staleness FAIL":
+    let tmpDir = getTempDir() / "ax_p2_symlink_" & $getCurrentProcessId()
+    createDir(tmpDir / "src")
+    let outside = tmpDir.parentDir /
+      ("ax_p2_symlink_target_" & $getCurrentProcessId() & ".rs")
+    let sourceContent = "pub fn read() -> u8 { 0 }"
+    writeFile(outside, sourceContent)
+    let linkPath = tmpDir / "src" / "read.rs"
+    var linked = false
+    try:
+      createSymlink(outside, linkPath)
+      linked = true
+    except CatchableError:
+      discard  # filesystem without symlink support — the other confinement tests still cover the contract
+    try:
+      if linked:
+        let cert = %*{
+          "modulePath": "src/read.rs",
+          "sourceHash": computeStableSourceFingerprint(sourceContent)
+        }
+        check not certSourceHashMatchesSource(cert, tmpDir)
+    finally:
+      if linked: removeFile(linkPath)
+      removeFile(outside)
+      removeDir(tmpDir)
+
+  test "closure: absolute modulePath is NOT CURRENT, never PASS":
+    let tmpDir = getTempDir() / "ax_p2_absclosure_" & $getCurrentProcessId()
+    createDir(tmpDir)
+    try:
+      withHermeticJournalRoot(tmpDir):
+        let (certPath, cert, _) = makeFixtureCert(tmpDir)
+        # the source bytes and hash still match; only the identity is absolute
+        cert["modulePath"] = newJString(tmpDir / "module_target.nim")
+        writeFile(certPath, $cert)
+        let res = verifyCertificateClosure(certPath, tmpDir)
+        check res.status == ccsNotCurrent
+    finally:
+      removeDir(tmpDir)
+
+suite "Phase 2 — declared assurance tier vs carried artifacts":
+
+  proc baseCert(): JsonNode =
+    %*{
+      "verificationTier": "dual-verified",
+      "leanSource": "theorem t_post : True := by trivial\n",
+      "axiomsUsed": ["propext", "Classical.choice", "Quot.sound"],
+      "canonicalKaa": "{\"receiptTheoremIdentity\":\"t_post\"}",
+      "smtlib2": "(check-sat)\n"
+    }
+
+  test "dual-verified with Lean + KAA + solver artifacts is supported":
+    check declaredAssuranceSupported(baseCert())
+
+  test "dual-verified without a solver artifact is an overclaim":
+    var cert = baseCert()
+    cert["smtlib2"] = newJString("")
+    check not declaredAssuranceSupported(cert)
+
+  test "dual-verified without a Lean artifact is an overclaim":
+    var cert = baseCert()
+    cert["leanSource"] = newJString("")
+    check not declaredAssuranceSupported(cert)
+
+  test "dual-verified without canonicalKaa is an overclaim":
+    var cert = baseCert()
+    cert["canonicalKaa"] = newJString("")
+    check not declaredAssuranceSupported(cert)
+
+  test "dual-verified with a disallowed axiom is an overclaim":
+    var cert = baseCert()
+    cert["axiomsUsed"] = %*["sorryAx"]
+    check not declaredAssuranceSupported(cert)
+
+  test "unknown/forged tier is fail-closed":
+    var cert = baseCert()
+    cert["verificationTier"] = newJString("kernel-verified-forever")
+    check not declaredAssuranceSupported(cert)

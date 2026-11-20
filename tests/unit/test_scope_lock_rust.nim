@@ -13,6 +13,10 @@
 ##   (e) `AssumptionOrigin` is a real identity discriminator
 ##   (f) `withConditionalGuarantee` reports without altering the verdict
 ##   (g) `buildRustScopeJson` canonical emission is key-order independent
+##   (h) #223 — `signatureHash` binds to the ACTUAL source signature (the
+##       documented sha256 convention), not merely to 64-hex format: correct
+##       hash accepted, the `aaaa…` placeholder rejected, a mutant signature
+##       rejected, and missing/ambiguous/multiline declarations fail closed
 ##
 ## checkScopeLockConsistency itself is module-private; the checker's Rust leg
 ## is asserted through the same validateRustScopeSection it calls.
@@ -21,9 +25,11 @@
 ##        tests/unit/test_scope_lock_rust.nim
 
 import std/[json, options, os, strutils]
+import core/results
 import core/trusted/axiom_pragmas
 import verification/obligation/obligation_types
 import verification/obligation/obligation_ir
+import cli/rust_lane_cli  # extractSignatureLine/signatureHashFor/verifySignatureHash (#223)
 import cli/scope_cli
 
 proc main() =
@@ -311,6 +317,145 @@ proc main() =
     assert "\"vksRust\":1" in bytes1
     # field order is canonical: commit first, conditions last
     assert bytes1.find("{\"commit\":") < bytes1.find("\"conditions\":[")
+
+  # -----------------------------------------------------------------------
+  # (h) #223 — signatureHash binds to the actual source signature
+  # -----------------------------------------------------------------------
+  echo "=== (h) signatureHash source binding (#223) ==="
+
+  const
+    IsEscapeSig =
+      "fn is_escape(ch: u8, including_control_characters: bool) -> bool"
+    IsEscapeHash =
+      "839892a32bef5dd6124ffa75e46c6d18bc3089c7aa440b75a13d6c0e7140972c"
+    U64AddHash =
+      "717a7d0fa33e1537a5dc5dc59ab439ce85b711e894f03658f34255b16bceec67"
+
+  let isEscapeSource = """
+fn is_escape(ch: u8, including_control_characters: bool) -> bool {
+    ch == b'"' || ch == b'\\' || (including_control_characters && ch < 0x20)
+}
+"""
+
+  check "documented is_escape line hashes to the certified vector":
+    let extracted = extractSignatureLine(isEscapeSource,
+                                         "serde_json::read::is_escape")
+    assert extracted.isOk, extracted.error
+    assertEq(extracted.get(), IsEscapeSig)
+    let hashed = signatureHashFor(isEscapeSource,
+                                  "serde_json::read::is_escape")
+    assert hashed.isOk, hashed.error
+    assertEq(hashed.get(), IsEscapeHash)
+
+  check "verifySignatureHash accepts the correct hash":
+    let v = verifySignatureHash(isEscapeSource,
+                                "serde_json::read::is_escape", IsEscapeHash)
+    assert v.isOk, v.error
+    assertEq(v.get(), IsEscapeHash)
+
+  check "the aaaa… placeholder is rejected (the #223 bug)":
+    let v = verifySignatureHash(isEscapeSource,
+                                "serde_json::read::is_escape", Sig1)
+    assert v.isErr, "placeholder must fail the binding"
+    assert "signatureHash mismatch" in v.error, v.error
+    assert IsEscapeHash in v.error, "reason must carry the measured hash: " & v.error
+
+  check "a mutant signature is rejected":
+    let mutantSource = isEscapeSource.replace(IsEscapeSig,
+      "fn is_escape(ch: u8, including_control_characters: bool) -> u32")
+    let mutantHash = signatureHashFor(mutantSource,
+                                      "serde_json::read::is_escape")
+    assert mutantHash.isOk, mutantHash.error
+    assert mutantHash.get() != IsEscapeHash
+    let v = verifySignatureHash(mutantSource,
+                                "serde_json::read::is_escape", IsEscapeHash)
+    assert v.isErr, "mutant must fail the binding"
+    assert "signatureHash mismatch" in v.error, v.error
+
+  check "a missing declaration fails closed":
+    let src = "pub fn other(x: u8) -> u8 {\n    x\n}\n"
+    let v = verifySignatureHash(src, "crate::f", U64AddHash)
+    assert v.isErr
+    assert "signatureHash unavailable" in v.error, v.error
+    assert "no declaration" in v.error, v.error
+
+  check "a longer name or a call site is not the declaration":
+    let src = """
+fn is_escape_mutant(ch: u8, including_control_characters: bool) -> bool {
+    true
+}
+let x = is_escape(0, true);
+"""
+    let v = verifySignatureHash(src, "serde_json::read::is_escape",
+                                IsEscapeHash)
+    assert v.isErr
+    assert "no declaration" in v.error, v.error
+
+  check "ambiguous declarations fail closed":
+    let src = """
+fn dup(x: u8) -> u8 {
+    x
+}
+
+fn dup(x: u8) -> u8 {
+    x
+}
+"""
+    let v = verifySignatureHash(src, "crate::dup", U64AddHash)
+    assert v.isErr
+    assert "ambiguous" in v.error, v.error
+
+  check "a multiline signature fails closed":
+    let src = """
+fn is_escape(
+    ch: u8,
+    including_control_characters: bool,
+) -> bool {
+    ch == b'"'
+}
+"""
+    let v = verifySignatureHash(src, "serde_json::read::is_escape",
+                                IsEscapeHash)
+    assert v.isErr
+    assert "spans lines" in v.error, v.error
+
+  check "accepted qualifiers extract the exact one-line signature":
+    let src = """
+pub(crate) fn h1(a: u8) -> bool {
+    a == 0
+}
+async fn h2(a: u8) -> u8 {
+    a
+}
+unsafe fn h3(a: u8) -> u8 {
+    a
+}
+pub async unsafe fn h4(a: u8) -> u8 {
+    a
+}
+pub(super) fn h5(a: u8) -> u8 {
+    a
+}
+"""
+    assertEq(extractSignatureLine(src, "m::h1").get(),
+             "pub(crate) fn h1(a: u8) -> bool")
+    assertEq(extractSignatureLine(src, "m::h2").get(),
+             "async fn h2(a: u8) -> u8")
+    assertEq(extractSignatureLine(src, "m::h3").get(),
+             "unsafe fn h3(a: u8) -> u8")
+    assertEq(extractSignatureLine(src, "m::h4").get(),
+             "pub async unsafe fn h4(a: u8) -> u8")
+    assertEq(extractSignatureLine(src, "m::h5").get(),
+             "pub(super) fn h5(a: u8) -> u8")
+    assertEq(signatureHashFor(
+      "pub(crate) fn helper(a: u8) -> bool {\n    0\n}\n", "m::helper").get(),
+      "2f1fd49cbf987b0f23b866d46750a3c96b80ac839bfdd22efa209783784f2e3c")
+
+  check "trailing whitespace and CRLF do not perturb the hash":
+    let src = "pub fn u64_add(a: u64, b: u64) -> u64 {   \r\n    a + b\r\n}\r\n"
+    let hashed = signatureHashFor(src, "axiom_u64_probe::u64_add")
+    assert hashed.isOk, hashed.error
+    assertEq(hashed.get(), U64AddHash)
 
   # -----------------------------------------------------------------------
   # Summary

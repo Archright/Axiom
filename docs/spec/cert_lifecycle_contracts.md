@@ -131,6 +131,13 @@ Canonical C  +  Staging S  +  PromotionIntent I
   `ax cert verify --project <subjectRoot> <path>`가 공식 진입점). 저널 leg
   (`trustCommitId` 해석)는 항상 AXIOM 제품 repo root의 `data/trusted/journal/`에서
   해석한다 — 저널은 제품의 소유 산출물이고 subject 모듈 바이트와 root를 공유하지 않는다.
+- **`modulePath` = subject-relative POSIX identity**: 인증서의 `modulePath`는 subject
+  root 기준 상대 POSIX 경로다(예: `src/read.rs`). writer는 absolute 입력을 subject root
+  아래로 rebind하여 기록하며 absolute filesystem 경로를 인증서에 남기지 않는다.
+  `certSourceHashMatchesSource`는 canonical relative 경로만 받아 `projectRoot`
+  아래에서 해석하고, absolute 경로·`..` traversal·symlink escape·누락 파일은
+  `dvcNotCurrent`로 fail-closed 처리한다. 이 규칙 이전에 absolute `modulePath`로
+  발급된 인증서는 **재발급(reissue)** 대상이다 — 스키마 버전 변경은 없다.
 
 ## 6. Metadata: semantic / audit 분리
 
@@ -385,3 +392,29 @@ SelectionPolicy = RejectMultiple   # variants.size > 1 → AMBIGUOUS
 **--cert 스코핑**: `--cert`는 on-disk 파일명 prefix(또는 content irHash prefix)와 매치한다. 매치하는 tracked reference cert가 0개이면 `CERT_NOT_FOUND` 반환코드 2.
 
 **trackedCertName replace-in-place semantics**: tracked reference cert 파일명은 안정적 identity이다. 재물질화(reconciliation)는 content만 교체한다 — 파일명은 변경되지 않는다. content 교체 후 irHash는 새 evidence의 irHash(`891b6daee9...`)로 갱신된다.
+#### 7.10.13 Verifier-judged assurance and machine-readable replay receipts
+
+`ax cert verify` reports what THIS run established, never what the certificate says
+about itself:
+
+| Field | Authority |
+|---|---|
+| `assurance.judged` | the verifier, from the artifacts + this run's kernel outcome |
+| `assurance.declared` | the certificate's `verificationTier` — echoed, never used as a verdict |
+| `assurance.sourceAssurance` | `ir-refinement-assumed`: the source→IR link is not mechanically verified |
+| `kernel.lean` / `kernel.z3` / `kernel.leanchecker` | this run's re-execution states |
+
+The judged ladder is `unverified` < `proof-artifact-unbound` < `proof-artifact-present`
+(or `solver-artifact-present`) < `lean-kernel-replayed`. `lean-kernel-replayed` is only
+reported when `--kernel` re-executed the embedded `leanSource` and the observed axiom set
+passed the builtin allowlist. A declared tier that its artifacts do not support (for
+example `lean-verified` without `leanSource` + allowlisted `axiomsUsed` + `canonicalKaa`,
+or an unknown tier vocabulary) fails closed as `ASSURANCE_OVERCLAIM`.
+
+`--json` emits `axiom.cert-verify.v1`; `--receipt-out <path>` writes the same document
+ONLY on a passing verdict. A failed run never leaves a receipt that a later admission
+step could mistake for evidence.
+
+Environment preflight (`--kernel`): a missing Lean toolchain is `ENVIRONMENT_ERROR`; an
+artifact with `import` lines requires `proofs/.lake/build/lib` and otherwise fails with
+the `cd proofs && lake build` instruction. Verification never auto-builds.

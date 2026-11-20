@@ -254,9 +254,18 @@ proc writeCertificateFromUapResult*(
   obligationVerdict: Option[ObligationGenerationResultKind] = none(ObligationGenerationResultKind);
   kaa: Option[KernelAcceptanceAttestation] = none(KernelAcceptanceAttestation);
   evidence: Option[CanonicalLeanEvidence] = none(CanonicalLeanEvidence);
-  rustBoundedClaim: Option[RustBoundedClaim] = none(RustBoundedClaim)
+  rustBoundedClaim: Option[RustBoundedClaim] = none(RustBoundedClaim);
+  subjectRoot: string = ""
 ): bool {.axiomDecision(id = "DECISION-0628", reason = "Write guard for canonical path enforced before UAP certificate writing", adr = "docs/adr/0001-fail-closed-result-type.md", introduced = "v32"), raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, TimeEffect, RootEffect], axiomDebt: "DEBT#447".} =
   doAssert irHash.len > 0, "CAVA Integrity Violation: irHash cannot be empty"
+  # Certificate identity is subject-relative (cert_lifecycle_contracts.md §5):
+  # an absolute filesystem modulePath is rebound under `subjectRoot` and never
+  # persisted. No subject-relative form → refuse the write (fail-closed).
+  let certModulePath = canonicalSubjectRelativeModulePath(modulePath, subjectRoot)
+  if certModulePath.len == 0:
+    raise newException(CatchableError,
+      "certificate modulePath has no subject-relative form (fail-closed): '" &
+      modulePath & "' (subjectRoot='" & subjectRoot & "')")
   let canonicalDir = resolveCertificate(cvCanonicalRead)
   let runtimeCanonicalDir = resolveCertificate(cvRuntimeCanonical)
   if (certDir.startsWith(canonicalDir) or certDir.startsWith(runtimeCanonicalDir)) and not promotionActive:
@@ -320,7 +329,7 @@ proc writeCertificateFromUapResult*(
     if not dirExists(certDir):
       discard existsOrCreateDirOpt(certDir)
     var certJson = newJObject()
-    certJson["modulePath"] = newJString(modulePath)
+    certJson["modulePath"] = newJString(certModulePath)
     certJson["functionName"] = newJString(functionName)
     certJson["fingerprint"] = newJString(computeVerificationFingerprint(irHash, leanProposition))
     certJson["sourceHash"] = newJString(computeStableSourceFingerprint(canonicalInputSource(modulePath, sourceCode)))
@@ -491,19 +500,19 @@ proc writeCertificateFromUapResult*(
     certJson["claim"] = %*{
       "type": "verification",
       "status": tierToStatusString(tier),
-      "modulePath": modulePath,
+      "modulePath": certModulePath,
       "functionName": functionName
     }
     # claimJsonStr: canonical (RFC 8785) JSON string for claimDigest computation
     let claimJsonStr = canonical_json.canonicalJsonString(%*{
       "type": "verification",
       "status": tierToStatusString(tier),
-      "modulePath": modulePath,
+      "modulePath": certModulePath,
       "functionName": functionName
     })
     # inputHash: strictly TO ed string concatenation of key-value pairs
     let inputHashRaw = join([
-      "modulePath", modulePath,
+      "modulePath", certModulePath,
       "functionName", functionName,
       "sourceHash", sourceHash,
       "irHash", irHash
@@ -579,7 +588,7 @@ proc writeCertificateFromUapResult*(
     let v3SolverResultDigestVal = "sha256:" & hash_kernel.sha256Hex(solverResultDigestRaw)
     certJson["identityDigest"] = newJString(compV3Identity(V3IdentityState(
       schemaVersion: CertificateV3SchemaVersion,
-      modulePath: modulePath,
+      modulePath: certModulePath,
       functionName: functionName,
       sourceHash: sourceHashVal,
       irHash: irHash,
@@ -595,7 +604,7 @@ proc writeCertificateFromUapResult*(
       completenessEvidenceKey: certJson{"completenessEvidenceKey"}.getStr(""),
       completenessBindingDigest: certJson{"completenessBindingDigest"}.getStr("")
     )))
-    let commitRes = commitCertificateVerification(certDir, certJson, modulePath, functionName, solverStatus, irHash, effectiveLeanProposition, semanticProfileId)
+    let commitRes = commitCertificateVerification(certDir, certJson, certModulePath, functionName, solverStatus, irHash, effectiveLeanProposition, semanticProfileId)
     if commitRes.isOk:
       # R4 trust closure: bind this certificate to the authoritative TrustCommit
       # journal record. trustCommitId is the ONLY new certificate field in v1 —
@@ -638,18 +647,18 @@ proc writeCertificateFromUapResult*(
 
     if verifiedClaim.isSome:
       if not commitTrustCommitRecord(logLines, certDir, z3outTrustCommit(
-          modulePath, functionName, solverStatus, effectiveLeanProposition, semanticProfileId,
+          certModulePath, functionName, solverStatus, effectiveLeanProposition, semanticProfileId,
           effectiveLeanKernelVerified, negativeTestResult, vacuityProven, smtlib2, irHash)):
         result = false
         return
 
       if not commitTrustCommitRecord(logLines, certDir,
-          v2VerifiedTrustCommit(verifiedClaim.get(), semanticProfileId, modulePath, functionName, solverStatus, irHash)):
+          v2VerifiedTrustCommit(verifiedClaim.get(), semanticProfileId, certModulePath, functionName, solverStatus, irHash)):
         result = false
         return
     else:
       if not commitTrustCommitRecord(logLines, certDir, z3outTrustCommit(
-          modulePath, functionName, solverStatus, effectiveLeanProposition, semanticProfileId,
+          certModulePath, functionName, solverStatus, effectiveLeanProposition, semanticProfileId,
           effectiveLeanKernelVerified, negativeTestResult, vacuityProven, smtlib2, irHash)):
         result = false
         return

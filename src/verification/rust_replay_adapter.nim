@@ -541,11 +541,12 @@ proc subjectRepoRootFor(modulePath: string): string {.raises: [], axiomEffect: I
   let dir = if dirExists(modulePath): modulePath else: modulePath.parentDir()
   gitCapture("-C \"" & dir & "\" rev-parse --show-toplevel")
 
-proc subjectProjectRootFor(modulePath, repoRoot: string): string {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect].} =
-  ## The subject project root for the (b) inputs digest: the first ancestor
-  ## directory of the module (walking UP from the module's directory toward
-  ## the repo root, repo root included) that carries a `Cargo.toml` — the
-  ## crate boundary the subject belongs to. Fallback when no manifest is
+proc subjectProjectRootFor*(modulePath, repoRoot: string): string {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect].} =
+  ## The subject project root for the (b) inputs digest and for certificate
+  ## modulePath identity: the first ancestor directory of the module (walking
+  ## UP from the module's directory toward the repo root, repo root included)
+  ## that carries a `Cargo.toml` — the crate boundary the subject belongs to.
+  ## Fallback when no manifest is
   ## found: the module's parent directory (bare-subject materializations).
   var dir = if dirExists(modulePath): modulePath else: modulePath.parentDir()
   let fallback = dir
