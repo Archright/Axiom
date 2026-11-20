@@ -370,6 +370,7 @@ const CloseRegistryFixture = """{
       "id": "DEBT#900",
       "severity": "medium",
       "status": "open",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "source": "manual",
       "category": "test",
       "description": "Fixture debt for --close atomic mutation tests",

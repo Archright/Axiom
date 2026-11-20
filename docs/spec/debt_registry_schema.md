@@ -52,6 +52,7 @@ Each entry is a JSON object.
 | `file` | string | Optional | Single-file alias used by theater skip matching. |
 | `source` | string | Yes | Origin of the debt entry. |
 | `status` | string | Yes | Lifecycle status, e.g. `open`, `closed`, `accepted`, `deferred`, `in_progress`. |
+| `productTruthImpact` | string | Conditional | Required when `status` is `open`, `deferred`, or `in_progress`; optional once closed/accepted. One of `PRODUCT_TRUTH` (can make a product verdict, guarantee, or claim wrong or unobservable), `PRODUCT_SUPPORT` (degrades reproducibility, diagnostics, or operator workflow without falsifying a verdict), `NON_PRODUCT` (administrative or bookkeeping only), `STALE` (condition already fixed or no longer exists), `UNKNOWN` (not yet classified). Enforced by `data/debt_schema.json` Draft 2020-12 `if`/`then`. |
 | `symbol` | string | Theater required | Exact procedure/function/macro signature or artifact symbol. |
 | `contentHash` | string | Theater required | `sha256:` digest of the canonical body or exact artifact content. |
 | `lineRange` | string | Theater required | Human-readable line range hint. |

@@ -178,6 +178,11 @@
           "minLength": 1,
           "description": "Lifecycle status; prefer canonical values from statusEnum but freeform annotations are allowed."
         },
+        "productTruthImpact": {
+          "type": "string",
+          "enum": ["PRODUCT_TRUTH", "PRODUCT_SUPPORT", "NON_PRODUCT", "STALE", "UNKNOWN"],
+          "description": "Impact on product truth. PRODUCT_TRUTH: the debt can make a product verification verdict, guarantee, or claim wrong or unobservable. PRODUCT_SUPPORT: it degrades reproducibility, diagnostics, or operator workflow without directly falsifying a verdict. NON_PRODUCT: administrative, governance, or tooling bookkeeping with no product-facing effect. STALE: the underlying condition is already fixed or no longer exists but the entry remains open. UNKNOWN: not yet classified; must be resolved before the entry is treated as product-relevant. Required when status is open, deferred, or in_progress; optional for closed/accepted entries."
+        },
         "title": {
           "type": "string",
           "description": "Short human-readable title."
@@ -270,6 +275,17 @@
               "resolution": {"type": "string", "minLength": 1},
               "lastVerifiedAt": {"$ref": "#/definitions/iso8601String"}
             }
+          }
+        },
+        {
+          "if": {
+            "required": ["status"],
+            "properties": {
+              "status": {"enum": ["open", "deferred", "in_progress"]}
+            }
+          },
+          "then": {
+            "required": ["productTruthImpact"]
           }
         }
       ]
