@@ -1164,12 +1164,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:4e1347f0f361731b2a363e887486e1ffd859f4ee230fea08571b7557dcc4d0ff",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:1f543115754e87ec0529dfb3181dbfa72a33dd09cefc25fa6e2bcf7777be5185",
       "count": 1,
       "file": "src/core/judge/lean_replay.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:c6b8d7adfbdd3ec1c96a581a237c57fddda556d2cfdff4fc09b2e495c81a0c6d"
+      "rawContentHash": "sha256:e3f2edff48be5d9326b7ee79240a98d681646ac2287bb85213c3a94582a5513b"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
@@ -3584,12 +3584,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:9ea42566546bb3af9caa0ccff7c6edd47bb08ac32a482377e1b600ced646199e",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:1a9078bc051ce3775da1ce1a794bb02d14b999407c5985f014036b5100cec037",
       "count": 1,
       "file": "src/verification/certificate_verifier.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:9a80628d84a3ee7bd8f228a76921d06df7ae54d821bf0ebbb0256d9fb8116217"
+      "rawContentHash": "sha256:f0e6e9da4217b9a8c79320e99288c02118c4c44f998380733f073ff3a3bc0b64"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
@@ -3809,12 +3809,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:56fdd5df3e90dc7635b58837eb7f6ff50c721048c806070314d851b616d58c78",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:f34d3e71ae3a7ee88fec6af5bc90704d312cf04f93875232cf2b5305a22e7cf0",
       "count": 1,
       "file": "src/verification/lean_lsp_protocol.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:cec5ddceafaeebf3940cffdba6ead83a2c757751628faa06d9389701aeacdf45"
+      "rawContentHash": "sha256:d984fb397d80ba3d234b392af0925f231a81fbbfbb3f5dff21321f3ffbce3091"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
