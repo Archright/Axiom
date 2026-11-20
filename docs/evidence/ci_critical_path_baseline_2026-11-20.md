@@ -38,11 +38,18 @@ done
 
 ## §2. p50 불일치의 원인과 화해
 
-이전 기록의 canonical p50은 wall 574s / runner-seconds 979s였다. 동일 5-run·동일 정의로 다시 계산하면 **wall 555s / runner 931s**다.
+이전 기준선(`docs/evidence/ci_performance_baseline_2026-11-19.md`)은 wall p50 574s / runner-seconds p50 979s를 기록했다. 이 값들의 cohort A는 5번째 run이 `44519217624`이고, 본 baseline(cohort B)은 `44561019095`다. 네 개 run은 겹친다.
 
-원인은 runner-seconds 합산 방식이다. skipped job은 `completed_at < started_at`인 음수 span을 가질 수 있고(최대 1초), raw 합은 이를 그대로 더해 run당 4–6초를 깎는다. 본 baseline은 job별 span을 0으로 clamp한다. 이 표본에서 clamp 정의는 "skipped 제외"와 같은 값을 낸다(931/991/854/824/1286).
+| cohort | 5번째 run | wall p50 | runner p50 |
+|---|---|---|---|
+| A (2026-11-19) | 44519217624 | 574s | 979s |
+| B (본 문서) | 44561019095 | **555s** | **931s** |
 
-wall은 정의가 동일하며 두 계산이 일치한다. 따라서 574/979는 **다른 표본 또는 clamp 없는 합산**에서 나온 값으로 판정하고, 이후 권위 값은 §1의 run ID 집합과 `docs/spec/ci_critical_path_metric.md` 정의로 고정한다.
+따라서 p50 차이는 공식 차이가 아니라 **표본 차이**다. 두 값 모두 각 cohort에서 유효하다.
+
+별도의 작은 차이: runner-seconds의 run별 값은 raw 합과 0-clamp 합에서 4–6초 다르다. 예를 들어 run `44521587339`는 raw 1,282s, clamp 1,286s다. skipped job의 `completed_at < started_at`인 음수 span을 raw 합이 그대로 더하기 때문이다. 본 baseline은 0-clamp를 쓴다(이 표본에서 "skipped 제외"와 동일한 값: 931/991/854/824/1286).
+
+canonical wall의 정본 정의는 `docs/spec/ci_acceptance_contract.md` §6이다. 이후 비교는 하나의 cohort와 하나의 정의만 사용한다.
 
 ## §3. 귀속 — 어디에 시간이 쓰이는가
 

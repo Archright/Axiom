@@ -217,15 +217,32 @@
     "zeroInvocations": 6
   },
   "reconciliation": {
-    "previouslyQuoted": {
+    "priorBaseline": "docs/evidence/ci_performance_baseline_2026-11-19.md",
+    "priorCohort": {
+      "runIds": [
+        44519217624,
+        44521587339,
+        44542633420,
+        44548437642,
+        44553449785
+      ],
       "wallP50": 574,
       "runnerP50": 979
     },
     "thisCohort": {
-      "wallP50": 555.0,
-      "runnerP50": 931.0
+      "runIds": [
+        44521587339,
+        44542633420,
+        44548437642,
+        44553449785,
+        44561019095
+      ],
+      "wallP50": 555,
+      "runnerP50": 931
     },
-    "cause": "runner-seconds previously summed raw job spans (skipped jobs carry negative spans); this baseline clamps each job span at 0 and fixes the 5 run IDs"
+    "cause": "different fifth sample (44519217624 vs 44561019095), not a formula difference; both p50 values are valid for their own cohort",
+    "runnerSecondsNuance": "per-run runner-seconds differ by 4-6s between the prior raw sum and this 0-clamped sum (e.g. run 44521587339: 1282 vs 1286) because skipped jobs carry negative spans",
+    "authority": "canonical wall is owned by docs/spec/ci_acceptance_contract.md §6; runner-seconds definition is owned by the 2026-11-19 baseline §1 and clamped here explicitly"
   },
   "limits": [
     "n=5, p95 not estimable",

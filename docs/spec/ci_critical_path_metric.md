@@ -35,6 +35,7 @@ wallSeconds = max(completed_at) - min(started_at)
 
 terminal attempt의 **모든 job**(skipped 포함, 두 timestamp가 모두 있는 job)에 대해 계산한다.
 
+- 이 정의의 정본은 `docs/spec/ci_acceptance_contract.md` §6이다. 이 문서는 이를 재정의하지 않는다.
 - 이 값은 runner 대기·큐 대기·job 실행을 모두 포함한 **관측 구간**이다.
 - `created_at`은 사용하지 않는다(workflow 생성 시각은 job 시작 전 지연을 별도로 포함).
 
@@ -46,7 +47,7 @@ runnerSeconds = Σ max(0, completed_at - started_at)   (job별)
 
 - `max(0, …)` clamp는 skipped job의 비정상 음수 span(예: `completed_at < started_at` 1초)을 0으로 만든다.
 - 이 정의는 이 표본에서 "skipped 제외"와 동일한 값을 낸다(측정 §3.2). clamp는 향후 표본에서도 정의를 고정하기 위한 것이다.
-- **주의**: clamp 없이 raw 합을 내면 skipped job의 음수 span이 합계를 깎아 run당 4–6초 낮게 나온다. 이전에 인용된 값과의 차이는 이 정의 차이에서 발생했다(§4).
+- **주의**: clamp 없이 raw 합을 내면 skipped job의 음수 span이 합계를 깎아 run당 4–6초 낮게 나온다. 2026-11-19 문서의 run별 값은 raw 합이므로 이 문서의 값과 4–6초 다르다(§4).
 
 ### §2.3 `queuedSeconds` — runner 배정 대기
 
@@ -81,18 +82,22 @@ stepSeconds(stepName) = Σ max(0, step.completed_at - step.started_at)
 
 ## §4. 이전 인용값과의 화해 (필수)
 
-2026-11-20 이전 기록에는 canonical p50이 **wall 574s / runner-seconds 979s**로 적혀 있었다. 이는 서로 다른 표본(또는 서로 다른 clamp 규약)에서 나온 값이며, 본 문서의 cohort(5 run ID 고정)와 같은 정의로 재계산하면 다음과 같다.
+2026-11-19 기준선(`docs/evidence/ci_performance_baseline_2026-11-19.md`)은 **wall p50 574s / runner-seconds p50 979s**를 기록했다. 이 값들은 **다른 5-run cohort A**에서 나왔다. 두 cohort는 4개 run이 겹치고 5번째가 다르다.
 
-| 지표 | 동일 5-run 재계산 | 이전 기록값 |
-|---|---|---|
-| wall p50 | **555s** | 574s |
-| runner-seconds p50 | **931s** | 979s |
+| cohort | run IDs | wall p50 | runner p50 |
+|---|---|---|---|
+| A (2026-11-19) | 44519217624, 44521587339, 44542633420, 44548437642, 44553449785 | 574s | 979s |
+| B (이 문서, 2026-11-20) | 44521587339, 44542633420, 44548437642, 44553449785, 44561019095 | 555s | 931s |
+
+따라서 p50 차이는 **표본 차이**이지 공식 차이가 아니다. 두 값 모두 각 cohort에서 유효하며, 서로 대체하지 않는다.
+
+별도의 작은 차이: runner-seconds의 run별 값은 raw 합(2026-11-19 문서)과 clamp 합(이 문서)에서 4–6초 다르다(예: run 44521587339의 1282 vs 1286). skipped job의 비정상 음수 span(`completed_at < started_at`)을 raw 합이 그대로 더하기 때문이다.
 
 규칙:
 
-- **본 문서 §1–§2 정의로 계산한 값이 권위다.**
-- 이전 값은 삭제하지 않고 "정의 미상의 과거 관측"으로 기록한다.
-- 최적화 전후 비교에는 **고정된 run ID 집합**과 **동일 정의**를 사용한다. 다른 표본의 값을 섞어 비율을 만들지 않는다.
+- **canonical wall의 정본 정의는 `docs/spec/ci_acceptance_contract.md` §6이다.** 이 문서는 이를 재정의하지 않고 인용한다.
+- runner-seconds의 정본 정의는 `docs/evidence/ci_performance_baseline_2026-11-19.md` §1이며, 이 문서는 job별 0-clamp를 명시해 고정한다.
+- 전후 비교에는 **하나의 cohort와 하나의 정의**만 사용한다. 서로 다른 cohort의 p50을 섞어 비율을 만들지 않는다.
 
 ## §5. 전후 비교 프로토콜
 
