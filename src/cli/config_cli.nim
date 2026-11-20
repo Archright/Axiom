@@ -37,30 +37,42 @@ proc configShow*(): int {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect,
     echo ""
   return 0
 
-proc configValidate*(): int {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+proc configValidate*(strict: bool = false): int {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## Default mode keeps the historical warning-only behavior for missing
+  ## sections. `--strict` promotes absent config and absent required sections
+  ## to errors — absence is not validation success (§0.9).
   let tomlPath = axiomConfigPath()
   if tomlPath.len == 0:
+    if strict:
+      echo "[config] Error: no axiom.toml found — cannot validate."
+      return 1
     echo "[config] No axiom.toml found — nothing to validate."
     return 0
   let config = loadTomlConfig(tomlPath)
   var errors = 0
   # Basic structural validation
   if len(config) == 0:
-    echo "[config] Warning: axiom.toml parsed to empty configuration."
+    echo "[config] Error: axiom.toml parsed to empty configuration."
     inc(errors)
   # Check for known required sections
   let requiredSections = ["project", "engine"]
   for section in requiredSections:
     if section notin config:
-      echo "[config] Warning: missing recommended section [" & section & "]"
+      if strict:
+        echo "[config] Error: missing required section [" & section & "]"
+        inc(errors)
+      else:
+        echo "[config] Warning: missing recommended section [" & section & "]"
   if errors == 0:
     echo "[config] Validation passed."
-  return errors
+    return 0
+  echo "[config] Validation failed with " & $errors & " error(s)."
+  return 1
 
 proc runConfigCli*(args: seq[string]): int {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   if args.len == 0:
     logInfo("config_cli", "Usage: ax config <command>")
-    logInfo("config_cli", "Commands: show, validate")
+    logInfo("config_cli", "Commands: show, validate [--strict]")
     return 1
 
   let cmd = args[0]
@@ -68,9 +80,17 @@ proc runConfigCli*(args: seq[string]): int {.axiomEffect: IOEffect, tags: [Axiom
   of "show":
     return configShow()
   of "validate":
-    return configValidate()
+    var strict = false
+    for arg in args[1 .. ^1]:
+      if arg == "--strict":
+        strict = true
+      else:
+        logInfo("config_cli", "Unknown validate option: " & arg)
+        logInfo("config_cli", "Usage: ax config validate [--strict]")
+        return 1
+    return configValidate(strict)
   else:
     logInfo("config_cli", "Unknown config subcommand: " & cmd)
-    logInfo("config_cli", "Commands: show, validate")
+    logInfo("config_cli", "Commands: show, validate [--strict]")
     return 1
 {.pop.}

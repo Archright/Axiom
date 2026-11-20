@@ -15,10 +15,17 @@ Feature: Axiom Status — Gate Pipeline Observability Dashboard
     Then stdout shows the pipeline run timestamp and overall result
     And each gate's pass/fail status is listed
 
-  Scenario: ax gate status with no history shows empty state
+  Scenario: ax gate status with no history shows empty state and fails closed
     Given gate_history.jsonl does not exist or is empty
     When "ax gate status" is invoked
     Then stdout indicates no pipeline runs have been recorded
+    And the command exits non-zero
+
+  Scenario: ax gate status with no history and explicit opt-in succeeds
+    Given gate_history.jsonl does not exist or is empty
+    When "ax gate status --allow-missing" is invoked
+    Then stdout indicates no pipeline runs have been recorded
+    And the command exits zero
 
   # ── JSON output mode ─────────────────────────────────────────────
 
@@ -27,6 +34,12 @@ Feature: Axiom Status — Gate Pipeline Observability Dashboard
     When "ax gate status --json" is invoked
     Then stdout is valid JSON
     And the JSON contains a "gates" array with gate results
+
+  Scenario: ax gate status --json with no history emits an explicit absence document
+    Given gate_history.jsonl does not exist or is empty
+    When "ax gate status --json" is invoked
+    Then stdout is valid JSON with status "no-history"
+    And the command exits non-zero
 
   # ── History trend ────────────────────────────────────────────────
 
