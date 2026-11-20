@@ -160,6 +160,27 @@ proc withCheckRunApp(base: JsonNode; context: string; appId: int): JsonNode =
     if cr["name"].getStr() == context:
       cr["app"]["id"] = %appId
 
+proc admissionRun(base: JsonNode): JsonNode =
+  ## The admission-check entry of a check-runs fixture (a fresh object; the
+  ## shared literals are never mutated).
+  for cr in base["check_runs"].items:
+    if cr["name"].getStr() == "admission-check":
+      return copy(cr)
+  raise newException(ValueError, "fixture carries no admission-check run")
+
+proc withAdmissionRuns(base: JsonNode; runs: varargs[JsonNode]): JsonNode =
+  ## Deep-copy check-runs fixture whose admission-check runs are exactly
+  ## `runs`, with total_count consistent (unless a test overrides it).
+  result = copy(base)
+  var kept = newJArray()
+  for cr in result["check_runs"].items:
+    if cr["name"].getStr() != "admission-check":
+      kept.add(cr)
+  for r in runs:
+    kept.add(r)
+  result["check_runs"] = kept
+  result["total_count"] = %kept.len
+
 suite "expectedStatusContexts — the expected set is DERIVED from the policy SSOT":
   test "requiredValidations[].job ∪ requiredWorkflowDetection.verdictJob":
     let ctx = expectedStatusContexts(POLICY)
@@ -507,6 +528,61 @@ suite "judgeProducerObservation — the policy ↔ live producer leg":
     let drift = v.lines.filterIt(it.startsWith("DRIFT producer observation"))
     check drift.len == 2
     check drift.allIt("incomplete" notin it)
+
+  # Existential producer predicate (2026-11-18): GitHub publishes same-named
+  # check runs from several apps, so the observation is over the whole array —
+  # never its first name match (measured at SHA 389e59c: admission-check index0
+  # app 15368 success, index1 app 5795152 success).
+  let contextsApp = expectedStatusContexts(POLICY_APP)
+  let sourcesApp = expectedCheckSources(POLICY_APP, contextsApp)
+  let actionsRun = admissionRun(CHECK_RUNS)
+  let appRun = admissionRun(withCheckRunApp(CHECK_RUNS, "admission-check", 5795152))
+
+  test "same-named runs from two apps PASS in the measured order (Actions 15368 before App 5795152)":
+    let v = judgeProducerObservation(
+      withAdmissionRuns(CHECK_RUNS, actionsRun, appRun), contextsApp, sourcesApp)
+    check v.ok
+    check v.summary == "producer observation: 3/3 contexts observed"
+
+  test "the same two runs PASS in the reverse order (identity is not array order)":
+    check judgeProducerObservation(
+      withAdmissionRuns(CHECK_RUNS, appRun, actionsRun), contextsApp, sourcesApp).ok
+
+  test "only the Actions copy FAILs and names the expected App 5795152":
+    let v = judgeProducerObservation(
+      withAdmissionRuns(CHECK_RUNS, actionsRun), contextsApp, sourcesApp)
+    check not v.ok
+    let drift = v.lines.filterIt(it.startsWith("DRIFT producer observation"))
+    check drift.len == 1
+    check "produced by app id 15368" in drift[0]
+    check "expected app id 5795152" in drift[0]
+
+  test "an App run with conclusion 'failure' PASSes (producer identity only — the verdict is not read)":
+    var failed = copy(appRun)
+    failed["conclusion"] = %"failure"
+    check judgeProducerObservation(
+      withAdmissionRuns(CHECK_RUNS, failed), contextsApp, sourcesApp).ok
+
+  test "two expected-App runs (success and failure) PASS":
+    var failed = copy(appRun)
+    failed["conclusion"] = %"failure"
+    check judgeProducerObservation(
+      withAdmissionRuns(CHECK_RUNS, appRun, failed), contextsApp, sourcesApp).ok
+
+  test "an app-less same-name run before the App run does not shadow it":
+    let appLess = %* {"name": "admission-check", "conclusion": "success"}
+    check judgeProducerObservation(
+      withAdmissionRuns(CHECK_RUNS, appLess, appRun), contextsApp, sourcesApp).ok
+
+  test "a truncated read FAILs closed even when the expected App run is present":
+    var truncated = withAdmissionRuns(CHECK_RUNS, actionsRun, appRun)
+    truncated["total_count"] = %(truncated["check_runs"].len + 1)
+    let v = judgeProducerObservation(truncated, contextsApp, sourcesApp)
+    check not v.ok
+    let drift = v.lines.filterIt(it.startsWith("DRIFT producer observation"))
+    check drift.len == 1
+    check "incomplete" in drift[0]
+    check "missing" notin drift[0]
 
 suite "ruleOfType / hasStatusContext":
   test "rule lookup by type":

@@ -59,7 +59,7 @@
     "src/cli/axiom_engine.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "02debd6c36a60caea8f20c285a728bbf623e180e"
+      "sha": "6e70c69189ede7bec7ca92acd2c18fb077937b24"
     },
     "src/cli/axiom_status.nim": {
       "mode": "100644",
@@ -84,7 +84,7 @@
     "src/cli/cert_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "fcdbae2516508d1d2b633782cd21f16d1aec7124"
+      "sha": "c9d9bf12ee7ede6a45568cd0c357af9fda3911d5"
     },
     "src/cli/check_cli.nim": {
       "mode": "100644",
@@ -224,7 +224,7 @@
     "src/cli/merge_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "28766ba480c2f2551a31b821cae89f7302164a13"
+      "sha": "3c510e52ae76a6549f07063adaa618280887e98c"
     },
     "src/cli/payload_bridge.nim": {
       "mode": "100644",
@@ -1774,7 +1774,7 @@
     "src/core/symbol_graph/global_symbol_graph_builder_part2.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "9cb22f58cae4756f2586d2488bcd1d878fb9d52c"
+      "sha": "2e77a89318f50f6378c6ac53e29e8c4ef995b849"
     },
     "src/core/symbol_graph/global_symbol_graph_query.nim": {
       "mode": "100644",
@@ -1999,7 +1999,7 @@
     "src/core/trusted/ast_to_ir.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "ee405af13c4a4766ecf4718e94bbd47158fce0d1"
+      "sha": "7ec0edfdb8664349de5513c59194dc305108bd5c"
     },
     "src/core/trusted/authoritative_hydration.nim": {
       "mode": "100644",
@@ -3259,7 +3259,7 @@
     "src/infrastructure/external_ir_materializer.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "da9eb1c6ffdf08fd9e26962801fddb3a82082f47"
+      "sha": "a099b6afb8d9ac42bce24a9f67afed9d9688acb8"
     },
     "src/infrastructure/git_config.nim": {
       "mode": "100644",
@@ -3484,7 +3484,7 @@
     "src/verification/accounting/run_accounting.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "fb83f8b0742ccfc372cc0c10717f18142e423389"
+      "sha": "ac47122ed011e2a4aba5a74d5f47673042b92483"
     },
     "src/verification/admissibility.nim": {
       "mode": "100644",
@@ -3626,6 +3626,11 @@
       "type": "blob",
       "sha": "3b492e189ca242eb01c26ea35174075e98d7fe0e"
     },
+    "src/verification/cert_export.nim": {
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5175b365db630284f69e20f36dbf1a0b570bacea"
+    },
     "src/verification/cert_promotion.nim": {
       "mode": "100644",
       "type": "blob",
@@ -3719,7 +3724,7 @@
     "src/verification/counterexample_replay.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "6a8bae91a92962edb29d6cb4f14a1dfa226f86a5"
+      "sha": "8f43ad56b4e5a6db43faa16886a5904428b2075e"
     },
     "src/verification/counterexample_validator.nim": {
       "mode": "100644",
@@ -3799,7 +3804,7 @@
     "src/verification/judgment_cas.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "bc4458bbcefe32c1d76286dc54b0f0fa84039d66"
+      "sha": "e4ce415d0a7366bfff5a7e3edc52a03bfbe019d6"
     },
     "src/verification/kernel_reexecution.nim": {
       "mode": "100644",

@@ -669,22 +669,111 @@ runs:
       # first against the fresh GH-hosted image index; the update+install
       # fallback runs only when the direct install fails (fail-closed either
       # way — a failed fallback aborts before the ldconfig assertion).
+      #
+      # Supply ladder (2026-11-19: merge-group runs 44519217624 / 44521587339
+      # lost security.ubuntu.com to HTTP 503 → apt exit 100 → the admission
+      # predicate could not run on 8 jobs at once). A mirror is a supply
+      # source, not an authority: every tier must end with the exact pinned
+      # identity installed, and a tier that cannot obtain it aborts instead of
+      # reporting success.
+      #   tier 0  already present (ldconfig hit)
+      #   tier 1  apt default sources — version-pinned, fully signed
+      #   tier 2  pinned release asset — immutable release, digest-checked
+      #   tier 3  ordered official mirrors — isolated apt view, still signed
+      #   tier 4  explicit external_dependency failure (never a silent success)
       if: inputs.keygen-only != 'true'
+      env:
+        AXIOM_PCRE_VERSION: "2:8.39-15build1"
+        AXIOM_PCRE_SHA256: 62b2ea8d178a59495df00b777660377e0fb8d716be3fc552439796f77f515d43
+        AXIOM_PCRE_ASSET: https://github.com/Archright/Axiom/releases/download/supply-pins-libpcre3-8.39-15build1/libpcre3_8.39-15build1_amd64.deb
+        AXIOM_PCRE_MIRRORS: >-
+          http://de.archive.ubuntu.com/ubuntu
+          http://fr.archive.ubuntu.com/ubuntu
+          http://us.archive.ubuntu.com/ubuntu
       run: |
-        set -e
+        set -euo pipefail
         if ldconfig -p 2>/dev/null | grep -q 'libpcre\.so'; then
           echo "libpcre present — skip install"
+          ldconfig -p | grep 'libpcre\.so\.3'
+          exit 0
+        fi
+
+        work=$(mktemp -d)
+        trap 'rm -rf "$work"' EXIT
+
+        # The pin is the trust anchor: bytes and package identity must both
+        # match before anything outside apt's signed view is installed.
+        verify_pinned_deb() {
+          local deb=$1 actual pkg ver arch
+          actual=$(sha256sum "$deb" | cut -d' ' -f1)
+          [ "$actual" = "$AXIOM_PCRE_SHA256" ] || {
+            echo "external_dependency: libpcre3 sha256 mismatch (got $actual)"; return 1; }
+          pkg=$(dpkg-deb -f "$deb" Package)
+          ver=$(dpkg-deb -f "$deb" Version)
+          arch=$(dpkg-deb -f "$deb" Architecture)
+          [ "$pkg" = libpcre3 ] && [ "$ver" = "$AXIOM_PCRE_VERSION" ] && [ "$arch" = amd64 ] || {
+            echo "external_dependency: libpcre3 identity mismatch ($pkg $ver $arch)"; return 1; }
+        }
+
+        install_pinned_deb() {
+          sudo apt-get -o DPkg::Lock::Timeout=300 install -y -qq "$1"
+        }
+
+        supply_asset() {
+          curl -fsSL --max-time 60 -o "$work/asset.deb" "$AXIOM_PCRE_ASSET" || return 1
+          verify_pinned_deb "$work/asset.deb" || return 1
+          install_pinned_deb "$work/asset.deb"
+        }
+
+        # Each mirror attempt uses an isolated apt list/cache view so a dead
+        # mirror cannot poison the next one. apt still verifies
+        # InRelease → Packages → .deb; the digest then pins the exact bytes.
+        # dpkg writes the epoch as %3a in the downloaded filename.
+        supply_mirrors() {
+          local mirror deb
+          for mirror in $AXIOM_PCRE_MIRRORS; do
+            echo "supply tier 3: trying $mirror"
+            printf 'deb %s noble main universe\n' "$mirror" > "$work/sources.list"
+            rm -rf "$work/lists" "$work/cache"
+            mkdir -p "$work/lists/partial" "$work/cache/archives/partial"
+            rm -f "$work"/libpcre3_*.deb
+            if apt-get -o Dir::State::lists="$work/lists" \
+                       -o Dir::Cache="$work/cache" \
+                       -o Dir::Etc::sourcelist="$work/sources.list" \
+                       -o Dir::Etc::sourceparts=- \
+                       -o APT::Get::List-Cleanup=0 update -qq 2>/dev/null \
+               && (cd "$work" && apt-get -o Dir::State::lists="$work/lists" \
+                       -o Dir::Cache="$work/cache" \
+                       -o Dir::Etc::sourcelist="$work/sources.list" \
+                       -o Dir::Etc::sourceparts=- \
+                       download "libpcre3=$AXIOM_PCRE_VERSION" 2>/dev/null); then
+              deb=$(find "$work" -maxdepth 1 -name 'libpcre3_*.deb' -print -quit)
+              if [ -n "$deb" ] && verify_pinned_deb "$deb"; then
+                install_pinned_deb "$deb"
+                return 0
+              fi
+            fi
+          done
+          return 1
+        }
+
+        # tier 1 — GH-hosted image indexes are fresh enough for a direct
+        # install; `apt-get update` (~14s, measured run 36614815220) only when
+        # install fails. DPkg::Lock::Timeout — unattended-upgrades가
+        # lock-frontend를 잡고 있는 동안 즉시 exit 100으로 죽지 않고 최대 300초
+        # 대기한다(관측: run 2026-10-27 `E: Could not get lock /var/lib/dpkg/lock-frontend`).
+        if sudo apt-get -o DPkg::Lock::Timeout=300 install -y -qq "libpcre3=$AXIOM_PCRE_VERSION"; then
+          :
+        elif sudo apt-get -o DPkg::Lock::Timeout=300 update -qq \
+          && sudo apt-get -o DPkg::Lock::Timeout=300 install -y -qq "libpcre3=$AXIOM_PCRE_VERSION"; then
+          :
+        elif supply_asset; then
+          echo "supply tier 2: installed the pinned release asset"
+        elif supply_mirrors; then
+          echo "supply tier 3: installed from an approved official mirror"
         else
-          # apt fast-path: GH-hosted image indexes are fresh enough for a direct
-          # install; `apt-get update` (~14s, measured run 36614815220) only when
-          # install fails. The || chain keeps the step fail-closed: an update or
-          # reinstall failure propagates and aborts before the ldconfig line.
-          # DPkg::Lock::Timeout — unattended-upgrades가 lock-frontend를 잡고 있는
-          # 동안 즉시 exit 100으로 죽지 않고 최대 300초 대기한다(관측: run 2026-10-27
-          # `E: Could not get lock /var/lib/dpkg/lock-frontend. It is held by process 3606`).
-          sudo apt-get -o DPkg::Lock::Timeout=300 install -y -qq libpcre3 \
-            || { sudo apt-get -o DPkg::Lock::Timeout=300 update -qq \
-                 && sudo apt-get -o DPkg::Lock::Timeout=300 install -y -qq libpcre3; }
+          echo "external_dependency: libpcre3 unavailable (tier 1 apt, tier 2 asset, tier 3 mirrors all failed)"
+          exit 1
         fi
         ldconfig -p | grep 'libpcre\.so\.3'
       shell: bash

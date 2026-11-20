@@ -114,6 +114,13 @@ func markGuardLoss(ctx: var IrContext) {.raises: [].} =
   markLoss(ctx)
   inc ctx.guardLoss
 
+func checkedBinOp(ctx: var IrContext; op: BinOpKind): BinOpKind {.raises: [].} =
+  ## A sentinel op (`boUnsupported`/`boShl`/`boShr`) has no denotation, so it
+  ## is a translation loss and never rides a loss-free region. The op is
+  ## returned unchanged: the IR keeps its honest spelling.
+  if op in {boUnsupported, boShl, boShr}: markLoss(ctx)
+  op
+
 func markRegionDrop(ctx: var IrContext) {.raises: [].} =
   ## No translation arm for this statement form. The bindings below it are not
   ## recorded as lossy — they are absent, and their absence is not evidence.
@@ -524,7 +531,7 @@ func convertExpr*(n: NimNode, ctx: var IrContext): IRExpr =
     let op = opStrVal(n[0])
     let lhs = convertExpr(n[1], ctx)
     let rhs = convertExpr(n[2], ctx)
-    irBinOp(convertBinOpUnsigned(op, n[1], n[2], ctx), lhs, rhs)
+    irBinOp(checkedBinOp(ctx, convertBinOpUnsigned(op, n[1], n[2], ctx)), lhs, rhs)
   of nnkPrefix:
     convertPrefix(n, ctx)
   of nnkCall:
@@ -789,15 +796,14 @@ func convertBodyFrom(stmts: NimNode, idx: int, ctx: var IrContext): IRExpr =
       # child[1] = iterable (range expression or collection)
       # child[2] = body (nnkStmtList)
 
-      # Detect range-based loop: for i in 0..<N or for i in a..b
-      let isRange = child[1].kind == nnkInfix and
-                    child[1].len >= 3 and
-                    (child[1][0].strVal == "<..<" or child[1][0].strVal == "..")
+      # Range spellings measured 2026-11-19: "..", "..<", "<..<" (no rewrite).
+      let rangeOp = if child[1].kind == nnkInfix and child[1].len >= 3: opStrVal(child[1][0]) else: ""
+      let isRange = rangeOp in ["..", "..<", "<..<"]
 
       if isRange:
         # Range-based loop: for i in 0..<N: body
         # child[0] = loop variable (nnkIdent)
-        # child[1] = range expression (nnkInfix "<..<" or "..")
+        # child[1] = range expression (nnkInfix "..", "..<", or "<..<")
         # child[2] = body (nnkStmtList)
         let loopVarName = child[0].strVal
         # Collect mutable state variables in the loop body
@@ -840,11 +846,12 @@ func convertBodyFrom(stmts: NimNode, idx: int, ctx: var IrContext): IRExpr =
               if found: break
             if not found:
               inits.add(IRExpr(typ: irTypeBitVec64(), kind: irLit, litVal: 0))
-        # Build loopCond
+        # Build loopCond (`..` is inclusive → boLe; exclusive spellings → boLt).
         ctx.openGuard()
         let endExpr = convertExpr(child[1][2], ctx)  # end of range
         ctx.closeGuard()
-        var cond: IRExpr = IRExpr(typ: irTypeBool(), kind: irBinOp, binOp: boLt,
+        let condOp = if rangeOp == "..": boLe else: boLt
+        var cond: IRExpr = IRExpr(typ: irTypeBool(), kind: irBinOp, binOp: condOp,
           binLhs: IRExpr(typ: irTypeBitVec64(), kind: irVar, varName: loopVarName, varType: irTypeBitVec64()),
           binRhs: endExpr)
         if hasReturn:
@@ -1132,8 +1139,8 @@ func convertExprCanon*(n: CanonNode, ctx: var IrContext): IRExpr =
     let op = n.children[0].name
     let lhs = convertExprCanon(n.children[1], ctx)
     let rhs = convertExprCanon(n.children[2], ctx)
-    irBinOp(convertBinOpCanonUnsigned(op, n.children[1], n.children[2], ctx),
-            lhs, rhs)
+    irBinOp(checkedBinOp(ctx,
+      convertBinOpCanonUnsigned(op, n.children[1], n.children[2], ctx)), lhs, rhs)
   of ckPrefix:
     convertPrefixCanon(n, ctx)
   of ckCall:

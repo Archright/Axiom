@@ -1001,4 +1001,18 @@ observation)과의 성격 구분은 §11 원문 그대로다 — 착지 후 관�
 
 5. **코드 동반 변경**: `src/cli/merge_cli.nim` `RotationAllowlistExtra` 갱신(본 개정과 동일 PR 착지 — trust surface, MUST-T2 수동 arm 대상), `data/architecture_debt.json` contentHash 재계산, 회전의 정식 `trustedCheckerTreeClosure` 재앵커(④ 일치 — ADR-0025 §7).
 
-**승인 기록(슬롯)**: 본 Amendment A5는 A2 (i)를 유한 개정하므로 A3/A4의 "PR 착지 = 승인" 관행과 달리 명시 승인을 요구한다. 승인자: wintrover (소유자) · 승인 일시: 2026-10-14 · 승인 근거: 사전 승인 대화(세션 명시 승인 — "승인·전체 진행") + 결속 dry-run 증거(exit 0, mergeGo/GO, ROTATION, allowlistOk·anchorOk·judge 결속).
+**승인 기록(슬롯)**: 본 Amendment A5는 A2 (i)를 유한 개정하므로 A3/A4의 "PR 착지 = 승인" 관행과 달리 명시 승인을 요구한다. 승인자: wintrover (소유자) · 승인 일시: 2026-10-14 · 승인 근거: 사전 승인 대화(세션 명시 승인 — "승인·전체 진행") + 결속 dry-run 증거(exit 0, mergeGo/GO, ROTATION, allowlistOk·anchorOk·judge 결속).## Amendment A6 (2026-11-19) — A2 회전 동반 집합 확장: 생성 데이터 산출물 클래스 1경로 + 사전등록 증거 1경로 (A2 (i) 유한 개정, 결정 바인딩)
+
+> 근거: 사전등록 `docs/evidence/rotation_allowlist_generated_metadata_prereg_2026-11-19.md` + 회전 실측(PR #191 = DEBT#118 loss-marking 회전, head `ccf4fab`). 해당 회전의 verdict `rotationCheck.changed`는 5경로였고, 그중 4경로(`config/trusted_checker_closure.json` · `data/architecture_debt.json` · `src/core/trusted/ast_to_ir.nim` · `src/infrastructure/external_ir_materializer.nim`)는 기존 허용 집합 안이었으며 **`src/generated/type_registry_metadata.json` 1경로만** `allowlistOk=false`의 원인이었다. A2(2026-09-27)·A3(2026-10-12)·A4(2026-10-13)·A5(2026-10-14)가 확정한 "회전의 필수 동반을 allowlist가 배제하면 회전 자체가 착지 불가" 원칙과 A2 (iii)의 개정 경로(동일 스타일)를 따른다. 본문을 다시 쓰지 않으며, append로만 남는다.
+
+1. **개정 (A2 (i) 유한 개정 — 기존 "회전 동반 데이터" 클래스의 명시적 경계 확정)**: `src/` 아래에 있으나 **컴파일 대상이 아니고 빌드가 결정론적으로 재생성하는 데이터 산출물**을 "생성 데이터 산출물(generated data artifact)" 클래스로 정의한다. 이 클래스는 (α) SSOT writer가 도구 체인에 존재하고(`tools/hermetic_build.nim` — idempotent write), (β) 산출물 계약이 문서화되어 있으며(`docs/spec/artifact_determinism.md`), (γ) 회전 대상 코드 변경이 이 파일의 항목 추가를 **필연 동반**하는 경우에 한해, A2 (i)의 "NON-member production `src/`"에서 제외한다. A2 (i)의 의도는 손으로 쓰는 production 코드가 회전에 편승하는 것을 막는 것이며, 빌드 재생성 데이터는 그 대상이 아니다.
+
+2. **수록 경로 (2경로)**: `src/generated/type_registry_metadata.json`(생성 데이터 산출물 — (α)–(γ) 충족: writer `tools/hermetic_build.nim` `:751,:1281` idempotent, 계약 `docs/spec/artifact_determinism.md:123`, 신규 심볼 3건 `checkedBinOp`/`containsUnsupportedBinOp`/`lossFreeTranslationContradictsBody`의 항목 44줄 추가가 PR #191에서 실측됨), `docs/evidence/rotation_allowlist_generated_metadata_prereg_2026-11-19.md`(사전등록 증거 — A5 `rotation_allowlist_a5_prereg` 선례와 동일 클래스).
+
+3. **비확장 논증**: ① allowlist는 `closureChange=true`인 ROTATION 경로에서만 평가된다(A2 (ii)) — 본 등재는 NORMAL 경로의 이 파일 취급을 **전혀 바꾸지 않는다**. 즉 회전 승인 범위만 최소 확장하며, 비회전 PR의 자유도는 불변이다. 열거형만 — glob 없음(A4 규율): `src/generated/**` 접두 확장은 없다.
+
+4. **잔여 사실 (후속 판정 대상, 본 개정의 범위 밖)**: 이 파일이 `trustedCheckerTreeClosure`(890 멤버)의 멤버가 **아니라는 사실**(실측: 0건)은 본 개정으로 변하지 않는다. 이는 (i) NORMAL 경로에서의 이 파일 변경 취급과 (ii) 이 파일이 증명 런타임 입력으로 소비되는지(`src/core/encoding/type_logic_registry.nim:3`)에 대한 별도 신뢰 경계 판정이며, 본 amendment는 그 판정을 선취하지 않는다 — allowlist 등재는 "회전이 이 파일을 동반할 수 있다"만 승인한다.
+
+5. **코드 동반 변경**: `src/cli/merge_cli.nim` `RotationAllowlistExtra` 갱신(본 개정과 동일 PR 착지 — trustSurface 멤버이므로 `TRUST_SURFACE_MODIFIED` → MUST-T2 수동 병합 경로), `data/architecture_debt.json` canonical hash 재계산(`--regen-arch`), 회전의 정식 `trustedCheckerTreeClosure` 재앵커(④ 일치 — ADR-0025 §7).
+
+**승인 기록(슬롯)**: 본 Amendment A6는 A2 (i)를 유한 개정하므로 A5와 동일하게 명시 승인을 요구한다. 승인자: wintrover (소유자) · 승인 일시: 2026-11-19 · 승인 근거: 세션 명시 승인("권한이 필요한 부분은 전면 승인한다", 2026-11-19) + PR #191 verdict 실측(ROT_ALLOWLIST, changed 5경로 중 차단 1경로).

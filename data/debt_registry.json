@@ -5989,6 +5989,26 @@
       "lastVerifiedAt": "2026-11-18T00:00:00Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — this entry registers an audit-coverage gap in platform evidence; the subject is the ruleset history, not a source symbol, so a {.axiomDebt.} marker would bind a nonexistent code location. §10.2 satisfied: trace = docs/evidence/vs1_trust_rotation_audit_2026-11-18/README.md (raw snapshots with sha256), rulesets/27097366/history versions 58030608..58302886, and the 12 merge commits listed in raw/window_merges.json."
+    },
+    {
+      "id": "DEBT#561",
+      "category": "Theater/Dead-Cache",
+      "impact": "low",
+      "severity": "low",
+      "title": "topology_analysis_cache.json is write-only — a derived-analysis cache with zero readers",
+      "description": "Machine-observed 2026-11-20 on the main clone. analyzeTopologySourceRoot persists .axiom/cache/topology_analysis_cache.json (src/cli/topology_cli.nim:386-398: cacheDir parentDir + writeFile) but no code path reads it: a search over src/, tools/, .github/, Makefile and config.nims for topology_analysis_cache / topologyAnalysisCachePath returns only the constant definition (:348) and the write site (:386, :398). The only incremental mechanism actually consumed is the Merkle cache .axiom/cache/topology_merkle.json (loadCache at :373). The analysis cache is therefore dead persistence: it claims cache semantics, yet changes no computation, no output and no verdict, while silently rewriting a file on every analyze call. Registered per AGENTS.md §0.9 (a discovered theater is registered, never quietly patched); deletion is deliberately deferred so the writer and its write-only surface are removed in a separately approved slice carrying a determinism check.",
+      "symbol": "proc analyzeTopologySourceRoot*(sourceRoot: string; queueLimit: int = 200; ...): Result[TopologyCliAnalysisBundle, string]",
+      "contentHash": "sha256:f9c172f84f3398748c9ea81d6dbe1722861ad7858e4924fa495182506c06520c",
+      "lineRange": "src/cli/topology_cli.nim:386-398",
+      "files": [
+        "src/cli/topology_cli.nim"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "resolution": "UNRESOLVED — registration only. Closing-slice acceptance: (1) either the write-only persistence block (:386-398) is removed and `ax topology analyze` output is byte-identical before/after on a fixed subject root, or a reader is added with an explicit invalidation contract keyed on the Merkle root and its hit path is exercised by a test; (2) no new file under .axiom/cache/ is written without a cited reader; (3) the change lands through the standard pin/debt re-anchor path.",
+      "lastVerifiedAt": "2026-11-20T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the subject is a cache artifact with no dedicated symbol, so a {.axiomDebt.} marker would bind the whole analyze proc and mask unrelated code. §10.2 trace: this entry's resolution (UNRESOLVED) and source (theater_audit); external evidence: src/cli/topology_cli.nim:348 (constant), :373 (Merkle cache load), :386-398 (write-only block); reader search over src/, tools/, .github/, Makefile, config.nims returns the definition and write site only."
     }
   ]
 }

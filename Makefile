@@ -87,6 +87,7 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/test_vkd_determinism.nim \
                   tests/unit/test_repo_root_fail_closed.nim \
                   tests/unit/test_certificate_trust_closure.nim \
+                  tests/unit/test_cert_export.nim \
                   tests/unit/wf_runners_exit_code_test.nim \
                   tests/unit/resolve_node_outcome_test.nim \
                   tests/unit/evidence_propagation_test.nim \
@@ -113,7 +114,9 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/z3_binary_identity_cache_test.nim \
                   tests/unit/hermetic_source_hash_gate_test.nim \
                   tests/unit/config_nims_source_identity_test.nim \
-                  tests/unit/test_push_admission_integrity.nim
+                  tests/unit/test_push_admission_integrity.nim \
+                  tests/unit/test_source_merkle_delegation.nim \
+                  tests/unit/test_merge_ruleset_drift_monitor.nim
 
 
 .PHONY: check-push-admissibility-integrity test perf-check bench-cost-probe verify-all meta-gate registry-check env-check doc-path-validator check-determinism check-mutation-harness check-decision-binding check-topology-drift check-decision-graph-drift check-git-purity check-manifest-consistency check-scope-consistency check-proof-unit-consistency check-proof-unit-reconcile check-epoch-transaction check-merge-admission-cert-mirror sloc-verify check-quality-gate local-verify-static local-verify-static-full check-toolchain-pin check-build-state-coherence check-binary-liveness local-verify-contract-exact check-mcp check-cert-integrity check-cert-integrity-fast check-readiness-start readiness-collect check-workflow-shell-syntax promote-assets promote-assets-apply test-fast test-fast-one perf-baseline clean-cache clean-test-cache clean-release-cache build verify-contract verify-contract-unit verify-contract-release-e2e ci-compile ci-bootstrap-cheap test-gateway-identity-gate gate-binaries validate-root-layout
@@ -1033,6 +1036,12 @@ build: $(METADATA) ## 전체 CLI 빌드 (nim check)
 	@echo "✅ Build successful"
 	@echo ""
 
+evidence-verify: ## Evidence Bundle v2 exporter/verifier (standalone — NOT part of the Tier C ax closure)
+	@echo "=== Evidence Bundle v2 standalone verifier ==="
+	$(NIM) c --hints:off -d:allowMissingZ3 -o:bin/evidence-verify src/bin/evidence_verify.nim
+	@echo "✅ evidence-verify built"
+	@echo ""
+
 GATE_RUNNERS := bin/validate-runners
 
 bin/validate-runners: src/gate/runners/validate_runners.nim
@@ -1173,8 +1182,10 @@ test-unit:
 	@nim c -r tests/ci/test_sl02_consumer_binding.nim
 	@nim c -r tests/ci/test_landing_observe_acceptance.nim
 	@nim c -r tests/ci/test_l3_guard_fail_closed.nim
+	@nim c -r tests/ci/test_vs0_admission_aggregate_fail_closed.nim
 	@nim c -r tests/cli/test_merge_cli.nim
 	@nim c -r tests/cli/test_report_cli.nim
+	@nim c -r tests/cli/test_evidence_bundle_v2.nim
 	@nim c -r tests/unit/test_judgment_set_derivation.nim
 
 # ── oracle-evidence mode=none floor 회귀 픽스처 (Phase 2d, 계획 CE #13) ────

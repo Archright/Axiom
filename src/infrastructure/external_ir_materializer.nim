@@ -30,6 +30,10 @@ import verification/obligation/canonical_verification
 import verification/obligation/lean_kernel_boundary
 import verification/obligation/toolchain_capture
 
+const LossFreeContradictionReason =
+  "loss-free IR contains a bin-op sentinel with no denotation " &
+  "(boUnsupported/boShl/boShr); translation evidence and body disagree"
+
 # ---------------------------------------------------------------------------
 # SubjectSymbolRef — minimal lookup identity
 # ---------------------------------------------------------------------------
@@ -484,6 +488,62 @@ func ingestExplicitSpec(irFuncDef: var IRFuncDef; spec: ExternalAxiomSpec): bool
     irFuncDef.postConditions.add(convertExprCanon(pnodeToCanon(p), specCtx))
   specCtx.lossySeen
 
+func containsUnsupportedBinOp(e: IRExpr): bool =
+  ## Recursive observation: a sentinel bin-op (`boUnsupported`/`boShl`/`boShr`)
+  ## has no denotation, so its presence contradicts a loss-free claim.
+  if e.isNil: return false
+  case e.kind
+  of irLit, irFloatLit, irVar, irStringLit:
+    false
+  of irLet:
+    containsUnsupportedBinOp(e.letVal) or containsUnsupportedBinOp(e.letBody)
+  of irIf:
+    containsUnsupportedBinOp(e.ifCond) or containsUnsupportedBinOp(e.ifThen) or
+      containsUnsupportedBinOp(e.ifElse)
+  of irCase:
+    if containsUnsupportedBinOp(e.caseScrutinee): return true
+    for br in e.caseBranches:
+      if containsUnsupportedBinOp(br.body): return true
+    containsUnsupportedBinOp(e.caseDefault)
+  of irCall:
+    for a in e.callArgs:
+      if containsUnsupportedBinOp(a): return true
+    false
+  of irBinOp:
+    e.binOp in {boUnsupported, boShl, boShr} or
+      containsUnsupportedBinOp(e.binLhs) or containsUnsupportedBinOp(e.binRhs)
+  of irUnaryOp:
+    containsUnsupportedBinOp(e.unaryArg)
+  of irRecCall:
+    for a in e.recArgs:
+      if containsUnsupportedBinOp(a): return true
+    false
+  of irLoop:
+    for a in e.loopInits:
+      if containsUnsupportedBinOp(a): return true
+    if containsUnsupportedBinOp(e.loopCond) or
+        containsUnsupportedBinOp(e.loopStep) or
+        containsUnsupportedBinOp(e.loopBody): return true
+    for a in e.loopInvariants:
+      if containsUnsupportedBinOp(a): return true
+    containsUnsupportedBinOp(e.loopVariant)
+  of irCast:
+    containsUnsupportedBinOp(e.castExpr)
+
+func lossFreeTranslationContradictsBody*(funcDef: IRFuncDef): bool =
+  ## The translator marks loss when it emits a sentinel bin-op, so a definition
+  ## claiming loss-free translation must not contain one. Exported as a pure
+  ## observation so the invariant is unit-testable without I/O.
+  if not funcDef.translationLossFree: return false
+  if containsUnsupportedBinOp(funcDef.body): return true
+  for b in funcDef.recordedBindings:
+    if containsUnsupportedBinOp(b.value): return true
+  for p in funcDef.preConditions:
+    if containsUnsupportedBinOp(p): return true
+  for p in funcDef.postConditions:
+    if containsUnsupportedBinOp(p): return true
+  false
+
 func materializeExternalIRCore(symRef: SubjectSymbolRef; ast: PNode; source: string;
     extractors: Table[TNodeKind, DefHeadNameExtract];
     handlers: Table[string, AxiomSpecTagApply]): MaterializationCore {.raises: [].} =
@@ -649,6 +709,11 @@ proc materializeExternalIR*(symRef: SubjectSymbolRef; resolver: ModuleContentRes
 
     # --- artifact persistence (I/O half of the split) ---
     if core.outcome == moMaterialized:
+      # A loss-free claim contradicted by a sentinel bin-op in the body is
+      # not materializable: refuse before any evidence lands (fail-closed).
+      if lossFreeTranslationContradictsBody(core.entry.funcDef):
+        return (outcome: moUnsupportedDeclKind,
+                entry: ExternalIrEntry(unsupportedReason: LossFreeContradictionReason))
       saveEvidenceArtifact(core.irDigest, core.evidence)
       # Phase 1A dual-write: the authenticated strict sibling at the SAME
       # anchor. Fail-closed on any unmeasured capture component — the legacy

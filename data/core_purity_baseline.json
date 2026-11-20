@@ -3,11 +3,11 @@
   "rule_version": 1,
   "gate": "core_purity",
   "scanned_root": "src/core",
-  "total_violations": 253,
-  "unique_fingerprints": 132,
+  "total_violations": 254,
+  "unique_fingerprints": 133,
   "by_rule": {
     "forbidden_effect": 36,
-    "io_primitive": 201,
+    "io_primitive": 202,
     "escape_hatch": 11,
     "importc_bypass": 5
   },
@@ -338,6 +338,10 @@
     },
     {
       "fingerprint": "99191b742e09364f9a64033f37be76b4698d41fd9f7867c052752cefba6d0c28",
+      "count": 1
+    },
+    {
+      "fingerprint": "9affb04276a7c06e7544b76fda13f3afab64c599a39f0699c7265547eca6596f",
       "count": 1
     },
     {

@@ -38,12 +38,12 @@
   // NOTE: this file carries full-line `//` documentation comments (like
   // config/executor_authority.json) — the verifier strips them before parsing.
   "trustedWriterWorkflow": ".github/workflows/certificate-mint.yml",
-  "trustedAdmissionWorkflowSha": "13bd4e55e9bf8a531d9d608c13d3fc2657478998",
+  "trustedAdmissionWorkflowSha": "433be3c34c51cfc3fc6f8741009135cfa5906a03",
   //
   // DEBT#558 / ADR-0042 split layout: the execution closure records live in
   // config/trusted_checker_closure.json (derived, mutable values; NOT an App-
   // protected path). pathSetDigest anchors their PATH SET here. A value re-
   // anchor inside the anchored set keeps this digest unchanged; adding or
   // removing a path is a trust-surface change and requires an epoch rotation.
-  "pathSetDigest": "axiom.trusted-checker-closure.path-set.v1:affaefbd3bf253f14e482e32fd3f89c574be2fd01446247f0bcd06ec2bb2c796"
+  "pathSetDigest": "axiom.trusted-checker-closure.path-set.v1:757310d4a25aa4b2a07320465992892badca9856543656e7722cb3f17e819820"
 }

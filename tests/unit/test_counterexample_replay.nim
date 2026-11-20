@@ -625,3 +625,158 @@ suite "counterexample_replay — self-kernel collateral resolution (Q5/Q6)":
     check record.moduleSha256 == sha256Hex("func hiddenShift(x: int): int = x * 2 + 1\n")
     check record.worktreeStable
     check record.diagnostics.contains("replay disagrees with solver model")
+
+# ─── Suite 9: stamped-harness subject-declared dep roots (issue #145) ───────
+
+proc makeIssue145Store(home: string): string =
+  ## Synthetic nimble store under a fake HOME: `json_serialization` is
+  ## resolvable ONLY through the subject's own `requires` line.
+  let pkg = home / ".nimble" / "pkgs2" / "json_serialization-0.4.2-cafebabe"
+  removeDir(home)
+  createDir(pkg)
+  writeFile(pkg / "json_serialization.nim",
+            "proc jsonSerMarker*(): int = 7\n")
+  pkg
+
+proc makeIssue145Subject(dirName, moduleSource, nimbleRequires: string): string =
+  ## Synthetic subject repo carrying its OWN nimble `requires` contract.
+  let root = getTempDir() / dirName
+  removeDir(root)
+  createDir(root)
+  writeFile(root / "subject_mod.nim", moduleSource)
+  writeFile(root / "subject.nimble", nimbleRequires)
+  discard execCmdEx("git -C \"" & root & "\" init -q",
+                    options = {poStdErrToStdOut, poUsePath})
+  discard execCmdEx("git -C \"" & root & "\" add -A",
+                    options = {poStdErrToStdOut, poUsePath})
+  discard execCmdEx("git -C \"" & root & "\" -c user.name=ax -c user.email=ax@test commit -q -m init",
+                    options = {poStdErrToStdOut, poUsePath})
+  root
+
+suite "counterexample_replay — stamped harness subject-declared deps (#145)":
+
+  test "stamped ReplayConfig: subject requires supply json_serialization after cfg roots":
+    putEnv("AXIOM_STATE_DIR", getTempDir() / "ax_ce_145_state")
+    let fakeHome = getTempDir() / "ax_ce_145_home"
+    let pkgRoot = makeIssue145Store(fakeHome)
+    let repo = getTempDir() / "ax_ce_145_pure_subject"
+    removeDir(repo)
+    createDir(repo)
+    writeFile(repo / "subject.nimble",
+              "requires \"json_serialization >= 0.4.2\"\n")
+    let savedHome = getEnv("HOME", "")
+    putEnv("HOME", fakeHome)
+    try:
+      let subjectRoots = subjectRepoDepSearchPaths(repo, getCurrentCompilerExe())
+      var jsonSerRoot = ""
+      for p in subjectRoots:
+        let parsed = parseNimblePkgDirName(splitFile(p).name)
+        if parsed.isSome and parsed.get[0] == "json_serialization":
+          jsonSerRoot = p
+      check jsonSerRoot == pkgRoot
+      # The stamped-harness config shape (harnessSource non-empty) — the
+      # jrpc-errclass lane. Its `--path:` set must contain the subject-derived
+      # json_serialization root, with cfg.depSearchPaths still first.
+      let cfg = ReplayConfig(
+        subjectRepoRoot: repo,
+        subjectModulePath: repo / "subject_mod.nim",
+        harnessSource: "import subject_mod\n",
+        depSearchPaths: @[getTempDir() / "ax_ce_145_cfg_root"])
+      check cfg.harnessSource.len > 0
+      let depPaths = composeReplayDepPaths(cfg.depSearchPaths, subjectRoots)
+      check depPaths[0] == cfg.depSearchPaths[0]
+      check depPaths.find(jsonSerRoot) > 0
+      check depPaths.count(jsonSerRoot) == 1
+    finally:
+      if savedHome.len > 0: putEnv("HOME", savedHome)
+      else: delEnv("HOME")
+
+  test "non-stamped config: subject-derived dep-path behaviour stays unchanged":
+    putEnv("AXIOM_STATE_DIR", getTempDir() / "ax_ce_145_state")
+    let fakeHome = getTempDir() / "ax_ce_145_home"
+    let pkgRoot = makeIssue145Store(fakeHome)
+    let repo = getTempDir() / "ax_ce_145_plain_subject"
+    removeDir(repo)
+    createDir(repo)
+    writeFile(repo / "subject.nimble",
+              "requires \"json_serialization >= 0.4.2\"\n")
+    let savedHome = getEnv("HOME", "")
+    putEnv("HOME", fakeHome)
+    try:
+      let subjectRoots = subjectRepoDepSearchPaths(repo, getCurrentCompilerExe())
+      check subjectRoots.find(pkgRoot) >= 0
+      let cfg = ReplayConfig(
+        subjectRepoRoot: repo,
+        subjectModulePath: repo / "subject_mod.nim")
+      check cfg.harnessSource.len == 0
+      # Empty cfg roots → exactly the subject-derived roots (the pre-#145
+      # non-stamped sequence); explicit cfg roots still precede them.
+      check composeReplayDepPaths(cfg.depSearchPaths, subjectRoots) == subjectRoots
+      check composeReplayDepPaths(@["/cfg/root"], subjectRoots) ==
+        @["/cfg/root"] & subjectRoots
+    finally:
+      if savedHome.len > 0: putEnv("HOME", savedHome)
+      else: delEnv("HOME")
+
+  test "end-to-end: stamped harness resolves json_serialization from subject requires":
+    putEnv("AXIOM_STATE_DIR", getTempDir() / "ax_ce_145_state")
+    let fakeHome = getTempDir() / "ax_ce_145_home"
+    discard makeIssue145Store(fakeHome)  # axiom:best-effort(synthetic fixture creation; a failed store surfaces as an unresolved dep in the assertions below)
+    let repo = makeIssue145Subject(
+      "ax_ce_145_stamped_repo",
+      "import json_serialization\n" &
+      "func probe*(x: int): int = x + jsonSerMarker()\n",
+      "requires \"json_serialization >= 0.4.2\"\n")
+    let savedHome = getEnv("HOME", "")
+    putEnv("HOME", fakeHome)
+    try:
+      let stampedHarness =
+        "import subject_mod\n" &
+        "echo \"" & ReplayBeginMarker & "\"\n" &
+        "echo $probe(1)\n" &
+        "echo \"" & ReplayEndMarker & "\"\n"
+      let cfg = ReplayConfig(
+        subjectRepoRoot: repo,
+        subjectModulePath: repo / "subject_mod.nim",
+        funcName: "probe",
+        paramNames: @["x"],
+        inputLiterals: @["1"],
+        postconditions: @[irEq(irLit(5), irVar("result", bv64))],
+        harnessSource: stampedHarness)
+      check cfg.depSearchPaths.len == 0
+      let record = runCounterexampleReplay(cfg)
+      # Pre-#145 this was rvUnavailable ("cannot open file json_serialization"):
+      # the stamped branch skipped the subject's own nimble requires.
+      check record.verdict == rvAgree
+      check record.exitCode == 0
+      check record.observedOutput.contains("8")
+      check record.diagnostics.len == 0
+    finally:
+      if savedHome.len > 0: putEnv("HOME", savedHome)
+      else: delEnv("HOME")
+
+  test "end-to-end: non-stamped harness keeps subject-requires resolution":
+    putEnv("AXIOM_STATE_DIR", getTempDir() / "ax_ce_145_state")
+    let fakeHome = getTempDir() / "ax_ce_145_home"
+    discard makeIssue145Store(fakeHome)  # axiom:best-effort(synthetic fixture creation; a failed store surfaces as an unresolved dep in the assertions below)
+    let repo = makeIssue145Subject(
+      "ax_ce_145_plain_repo",
+      "import json_serialization\n" &
+      "func probe*(x: int): int = x + jsonSerMarker()\n",
+      "requires \"json_serialization >= 0.4.2\"\n")
+    let savedHome = getEnv("HOME", "")
+    putEnv("HOME", fakeHome)
+    try:
+      let record = runCounterexampleReplay(ReplayConfig(
+        subjectRepoRoot: repo,
+        subjectModulePath: repo / "subject_mod.nim",
+        funcName: "probe",
+        paramNames: @["x"],
+        inputLiterals: @["1"],
+        postconditions: @[irEq(irLit(5), irVar("result", bv64))]))
+      check record.verdict == rvAgree
+      check record.exitCode == 0
+      check record.observedOutput.contains("8")
+    finally:
+      if savedHome.len > 0: putEnv("HOME", savedHome)
+      else: delEnv("HOME")
