@@ -4847,8 +4847,8 @@
       "symbol": "projectRunOutcome*(reportNode: JsonNode): string",
       "contentHash": "sha256:a2f977f366c4c35a1ced152e7525e1fb3c6f983266e53307bf696cb10c7c0c16",
       "lineRange": "src/core/utils/decision_algebra.nim:188-228",
-      "resolution": "UNRESOLVED",
-      "lastVerifiedAt": "2026-10-23T01:45:55Z",
+      "resolution": "FIXED 2026-11-20 (PR #233, merge 268e31a): projectRunOutcome now derives the run exit only from the canonical runOutcome.verdict block (gateVerdict consistency checked); summary counts are telemetry and are never read, and ax report read-path re-decides restored states in verification_decision_authority; evidence: ./bin/ax report --json --state-file <bound INCONCLUSIVE state> exit 1 (verified=0/failedCount=0/timeoutCount=0), summary-only legacy state exit 1, bound PASS state exit 0 (docs/evidence/exit_authority_debt_507_530_2026-11-20.md)",
+      "lastVerifiedAt": "2026-11-20T14:12:03Z",
       "files": [
         "src/core/utils/decision_algebra.nim:188-228",
         "src/cli/wf_runners.nim:195-197",
@@ -4856,7 +4856,10 @@
       ],
       "source": "theater_audit_2026-10-23",
       "productTruthImpact": "STALE",
-      "status": "open"
+      "status": "closed",
+      "resolvedAt": "2026-11-20",
+      "resolvedBy": "debt_engine --close",
+      "resolutionNote": "Verified on worktree branch workstream/debt-close-507-530 at base f895944 with bin/ax rebuilt from this tree; full command/exit transcript in docs/evidence/exit_authority_debt_507_530_2026-11-20.md"
     },
     {
       "id": "DEBT#508",
@@ -5359,11 +5362,14 @@
       ],
       "source": "theater_audit",
       "productTruthImpact": "STALE",
-      "status": "open",
-      "resolution": "UNRESOLVED — registered per AGENTS.md §0.9 (theater is registered, never quietly patched); explicitly NOT a contract violation (docs/spec/byo_agent_proposition_contract.md:112,119 — exit 0 is 런 완료, never 전명제 검증); candidate remediations requiring owner authority: a distinct exit or mandatory-state-inspection contract for no-obligation runs, or adapter-side classification on engine state (DEBT#528); no patch applied by this registration",
-      "lastVerifiedAt": "2026-11-14T03:11:09Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-20 (PR #233, merge 268e31a): the empty (no-obligation) proposal run no longer collapses to OutcomeContinue — verification_decision_authority.evaluateRunOutcome yields INCONCLUSIVE for an empty universe and axProofShortcutExitCode projects it to exit 1; evidence: AXIOM_STATE_DIR=<tmp> ./bin/ax prove --proposals <empty-target doc> --limit 1 exit 1, runOutcome.verdict=INCONCLUSIVE/gateVerdict=FAIL, summary.verified=0, runAccounting.requiredCount=0, units=[]; ax report on the same state exit 1 (docs/evidence/exit_authority_debt_507_530_2026-11-20.md)",
+      "lastVerifiedAt": "2026-11-20T22:55:59Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registered per the AGENTS.md §0.9 registration discipline without modifying src/ (the audited code carries no {.axiomDebt.} marker; adding one is a separate code change outside this registration); trace: this entry's resolution/source fields, docs/spec/byo_agent_proposition_contract.md:112,119 (the contract that keeps the exit honest and records the misreading precedent)"
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registered per the AGENTS.md §0.9 registration discipline without modifying src/ (the audited code carries no {.axiomDebt.} marker; adding one is a separate code change outside this registration); trace: this entry's resolution/source fields, docs/spec/byo_agent_proposition_contract.md:112,119 (the contract that keeps the exit honest and records the misreading precedent)",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "debt_engine --close",
+      "resolutionNote": "Verified on worktree branch workstream/debt-close-507-530 at base f895944 with bin/ax and bin/debt_engine rebuilt from this tree; full command/exit transcript in docs/evidence/exit_authority_debt_507_530_2026-11-20.md"
     },
     {
       "id": "DEBT#531",
