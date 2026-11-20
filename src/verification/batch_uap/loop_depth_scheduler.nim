@@ -24,6 +24,7 @@ import core/proof/proof_budget
 import core/sorter/sorter_core
 import core/topology/topology_engine
 import core/types/refactor_task_types
+import core/utils/repo_root
 import sieve/sieve_types
 import sieve/sieve_refactor_bridge
 import std/json
@@ -653,7 +654,7 @@ proc runParallelDepthBatchUap*(
         vaultDir, ci.modulePath, ci.functionName, ci.sourceCode,
         ci.kernelVerified, ci.smtlib2, ci.solverStatus, certLogLines,
         irHash = ci.irHash, vacuityProven = ci.vacuityProven,
-        negativeTestResult = false)
+        negativeTestResult = false, subjectRoot = resolveRepoRoot())
       if wroteOk:
         reclassifyCertNoObligation(results[idx].nodeReport, vaultDir, ci.irHash)
 

@@ -267,7 +267,7 @@ suite "Phase 2 — Certificate v3 writer (cert_writer.nim)":
       # the writer must refuse, never persist the absolute path.
       expect CatchableError:
         var refusedLog: seq[string] = @[]
-        discard writeCertificateFromUapResult(
+        discard writeCertificateFromUapResult( # axiom:best-effort(expected CatchableError: absolute path without subject root must be refused; returned cert is never consumed)
           tmpDir, moduleAbs, "read", sourceCode,
           leanKernelVerified = false,
           smtlib2 = "",

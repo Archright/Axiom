@@ -21,6 +21,7 @@ import core/trusted/verification_result_types
 import core/types/refactor_task_types
 import core/types/solver_types
 import core/utils/constants
+import core/utils/repo_root
 import core/crypto/hash_kernel
 import infrastructure/process_utils
 import sieve/sieve_refactor_bridge
@@ -1285,7 +1286,8 @@ proc runBatchUapOrchestration*(
               leanProposition = proven.certInput.leanProposition,
               negativeTestResult = false,
               obligationVerdict = proven.certInput.obligationVerdict,
-              evidence = proven.certInput.evidence
+              evidence = proven.certInput.evidence,
+              subjectRoot = resolveRepoRoot()
             )
             if not wroteOk:
               # R8 persist leg: the verified node produced NO durable certificate
