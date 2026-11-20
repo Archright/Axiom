@@ -335,7 +335,10 @@ jobs:
             _mg_br="${{ github.event.merge_group.base_ref }}"; _mg_br="${_mg_br#refs/heads/}"
             [ "$_mg_br" = "main" ] || fail "merge_group.base_ref '$_mg_br' != main (base moved — new admission needed)"
           else
-            # head/base identity — PR API (trusted source) vs supplied inputs.
+            # head/base.ref identity — PR API (trusted source) vs supplied
+            # inputs. B is the workflow_call baseSha anchor (B*); the PR-API
+            # base.sha is a creation-time snapshot — journal-only, never an
+            # equality input (ADR-0027 Amendment B).
             pr_obj_f="$RUNNER_TEMP/mint_a0_pr_obj.json"
             fetch_bounded \
               "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" \
@@ -346,7 +349,7 @@ jobs:
             p_base="$(printf '%s' "$pr_obj" | jq -r '.base.sha')"
             p_ref="$(printf '%s' "$pr_obj" | jq -r '.base.ref')"
             [ "$p_head" = "$HEAD_SHA" ] || fail "PR #$PR_NUMBER head.sha '${p_head:0:12}' != headSha input '${HEAD_SHA:0:12}'"
-            [ "$p_base" = "$BASE_SHA" ] || fail "PR #$PR_NUMBER base.sha '${p_base:0:12}' != baseSha input '${BASE_SHA:0:12}'"
+            echo "MINT_A0_JOURNAL: pr_base='${p_base:0:12}' anchor='${BASE_SHA:0:12}' (pr.base.sha non-input — ADR-0027 Amd B)"
             [ "$p_ref" = "main" ] || fail "PR #$PR_NUMBER base.ref '$p_ref' != main (base moved — new admission needed)"
           fi
           echo "MINT_A0_ACTIVATION: OK — workflow_call supplied facts re-verified via API (runId=$RUN_ID pr=#$PR_NUMBER event=$r_event path=$r_path)"
@@ -381,8 +384,10 @@ jobs:
       #         (0건 허용) ∧ conclusion 미검증(게이트 needs+verdict가 대체 —
       #         step (0) 주석의 self-reference 논증)
       #     N = inputs.prNumber (call)
-      #     pr = GET /pulls/$N → H = pr.head.sha, B = pr.base.sha, and
-      #       pr.base.ref == "main" (base moved → fail-closed)
+      #     pr = GET /pulls/$N → H = pr.head.sha, BR = pr.base.ref == "main"
+      #       (base moved → fail-closed). B = inputs.baseSha (anchor, B*);
+      #       pr.base.sha is a creation-time snapshot — journal-only, no
+      #       equality (ADR-0027 Amendment B).
       #     ADR-0027 (P1 + α; probe: docs/evidence/merge_queue_probe_2026-09-29.md):
       #       merge_group 경로(N=0) — PR 객체 없음; RUN_HEAD = runObj.head_sha
       #       (== merge-group commit G), B/base.ref = merge_group 페이로드, 입력
@@ -512,7 +517,9 @@ jobs:
               found="$(printf '%s' "$run_obj" | jq --arg n "$PR_NUMBER" '[.pull_requests[] | select(.number == ($n|tonumber))] | length')"
               [ "$found" = "1" ] || fail "run $RUN_ID pull_requests do not contain PR #$PR_NUMBER (input cross-check)"
             fi
-            # PR object — trusted source for B (base) / H (head).
+            # PR object — trusted source for H (head) / BR (base.ref). B is the
+            # workflow_call baseSha anchor (ADR-0027 Amendment B — pr.base.sha
+            # is a creation-time snapshot; journal-only, never a B input).
             pr_f="$RUNNER_TEMP/mint_mbh_pr_obj.json"
             fetch_bounded \
               "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$N" \
@@ -520,7 +527,7 @@ jobs:
               || fail "GET pulls/$N failed (bounded retry exhausted or permanent failure — DEBT#474 transport policy)"
             pr="$(cat "$pr_f")"
             H="$(printf '%s' "$pr" | jq -r '.head.sha')"
-            B="$(printf '%s' "$pr" | jq -r '.base.sha')"
+            B="${{ inputs.baseSha }}"
             BR="$(printf '%s' "$pr" | jq -r '.base.ref')"
           fi
           printf '%s' "$H" | grep -qE '^[0-9a-f]{40}$' || fail "H='$H' is not a 40-hex OID"
@@ -919,7 +926,7 @@ jobs:
             base_sha="$(printf '%s' "$pr_obj" | jq -r '.base.sha')"
             base_ref="$(printf '%s' "$pr_obj" | jq -r '.base.ref')"
             [ "$head_sha" = "$H" ] || fail "PR head.sha $head_sha != H $H (PR API trusted source)"
-            [ "$base_sha" = "$B" ] || fail "PR base.sha $base_sha != B $B (base moved during admission? fail-closed)"
+            echo "MINT_ID_JOURNAL: pr_base='${base_sha:0:12}' anchor='${B:0:12}' (pr.base.sha non-input — ADR-0027 Amd B)"
             [ "$base_ref" = "main" ] || fail "PR base.ref '$base_ref' != main (base moved — new admission needed)"
           fi
 
@@ -1440,7 +1447,9 @@ jobs:
       #      authority step이므로 공급 사실 전량을 API로 재검증한다:
       #      runId == GITHUB_RUN_ID (orchestrator 자기 run),
       #      runObj.path == admission-gate-v2.yml (gate run identity),
-      #      event == pull_request ∧ runObj.head_sha == H — [B2] (a):
+      #      event ∈ {pull_request, merge_group} — PR venue: PR API head == H
+      #      and base.ref == main (base.sha journal-only); merge_group venue:
+      #      event payload base/head identity + G^1 == B — then [B2] (a):
       #      gateway run.headSha == cert.headSha (gate run IS this run —
       #      reusable-workflow jobs share the caller run id; the cert's
       #      headSha is re-read from the artifact in step (P4) and compared
@@ -1542,7 +1551,7 @@ jobs:
             p_base="$(printf '%s' "$pr_obj" | jq -r '.base.sha')"
             p_ref="$(printf '%s' "$pr_obj" | jq -r '.base.ref')"
             [ "$p_head" = "$H" ] || fail "PR #$PR_NUMBER head.sha '${p_head:0:12}' != headSha input '${H:0:12}'"
-            [ "$p_base" = "$B" ] || fail "PR #$PR_NUMBER base.sha '${p_base:0:12}' != baseSha input '${B:0:12}'"
+            echo "MINT_PUB_JOURNAL: pr_base='${p_base:0:12}' anchor='${B:0:12}' (pr.base.sha non-input — ADR-0027 Amd B)"
             [ "$p_ref" = "main" ] || fail "PR #$PR_NUMBER base.ref '$p_ref' != main (base moved — new admission needed)"
           fi
           echo "MINT_PUB_A0: OK — self-bound run $RUN_ID/$RUN_ATTEMPT, gate identity, PR identity, head_sha==H (a)"

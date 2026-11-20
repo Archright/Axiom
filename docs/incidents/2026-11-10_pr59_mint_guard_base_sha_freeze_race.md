@@ -80,4 +80,5 @@
 ## 7. 변경 필요 여부
 
 - **in-repo 수정 불필요** — 가드는 설계 계약(fail-closed base 결속)을 정확히 집행했고 회복은 운영 절차만으로 완결됐다(§5). mint-prepare A0 활성 가드 구현은 org `Archright/.github` 측 소관이며 본 저장소의 수정 대상이 아니다.
+- **2026-11-20 readback — org 소관 서술 폐기**: ADR-0041 §2.4의 orchestrator repo-native 이관 이후 `certificate-mint.yml`은 이 저장소가 소유한다. PR venue A0/MINT_ID/P0의 PR-API `base.sha == B` 등식을 제거하고 `B = inputs.baseSha`(anchor, B*)로 고정했다(ADR-0027 Amendment B 집행). 이후 `base.sha`는 저널로만 기록되며 §5의 reopen 회복 절차는 이 변종에 필요하지 않다.
 - 대응은 §5의 절차(진단 → conflict 해소 → 조용한 창 reopen → push → OK 원문 관측)로 충분하다. 본 문서가 base 동결 변종의 표준 회복 근거 기록이다.

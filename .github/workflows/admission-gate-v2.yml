@@ -35,7 +35,13 @@
 # that pins PATH/TMPDIR/AXIOM_* in its three closure-bearing run blocks, so the
 # judgment key stops depending on the runner image generation. certificate-mint
 # stays @9b3d87c3a (not part of that change).
-# productionExecutionPin 3ac383b6 = TWS trustedAdmissionWorkflowSha = blob.
+# Epoch N+12 rotation (2026-11-20): certificate-mint callee @a60deb1 — ADR-0027
+# Amendment B enforcement (PR-venue B = workflow_call baseSha anchor; PR-API
+# base.sha is a journal-only creation-time snapshot). admission-check callee
+# @7f3424c — execution pin re-aligned to the declared TWS
+# trustedAdmissionWorkflowSha 433be3c3 (comment-only delta vs @1eaede8c; D2
+# readback). productionExecutionPin 433be3c3 = TWS trustedAdmissionWorkflowSha
+# = blob@7f3424c.
 # FORWARD (2026-09-29, 복구 D3): 수리 PR #331/#332/#333/#334 착지 —
 # K를 N+5 shape로 복귀 (양쪽 래퍼 @c55f0482e — ircheck 소비 + P3 mkdir
 # + libpcre3 패리티 prepare·publish). N+5는 복구 E의 acceptance green
@@ -477,7 +483,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    uses: Archright/Axiom/.github/workflows/admission-check.yml@1eaede8cd811fe512b1dacab635abe8cc8ebd6e8
+    uses: Archright/Axiom/.github/workflows/admission-check.yml@7f3424cca91f343aa55354b3084af97e30bf65d4
     with:
       stage: attest
       baseSha: ${{ needs.anchor-resolve.outputs.B_STAR || github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.sha }}
@@ -529,7 +535,7 @@ jobs:
       contents: write
       actions: read
       pull-requests: read
-    uses: Archright/Axiom/.github/workflows/certificate-mint.yml@9b3d87c3a3252286eb15be985c7df6131bd1f1c6
+    uses: Archright/Axiom/.github/workflows/certificate-mint.yml@a60deb1c4a92987c463d02bb9d87b05cf874bdc8
     with:
       stage: prepare
       runId: ${{ github.run_id }}
@@ -586,7 +592,7 @@ jobs:
       contents: write
       actions: read
       pull-requests: read
-    uses: Archright/Axiom/.github/workflows/certificate-mint.yml@9b3d87c3a3252286eb15be985c7df6131bd1f1c6
+    uses: Archright/Axiom/.github/workflows/certificate-mint.yml@a60deb1c4a92987c463d02bb9d87b05cf874bdc8
     with:
       stage: publish
       runId: ${{ github.run_id }}
@@ -704,7 +710,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    uses: Archright/Axiom/.github/workflows/admission-check.yml@1eaede8cd811fe512b1dacab635abe8cc8ebd6e8
+    uses: Archright/Axiom/.github/workflows/admission-check.yml@7f3424cca91f343aa55354b3084af97e30bf65d4
     with:
       stage: verdict
       baseSha: ${{ needs.anchor-resolve.outputs.B_STAR || github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.sha }}
