@@ -116153,6 +116153,20 @@
       "ignorable": false,
       "leanType": "IrPipelineResult",
       "module": "src/verification/batch_uap/ir_pipeline_runner.nim",
+      "name": "runIrPipelineCore",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "IrPipelineResult",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "IrPipelineResult",
+      "module": "src/verification/batch_uap/ir_pipeline_runner.nim",
       "name": "runIrPipelineWithCas",
       "negativeConstraints": [
         "result >= 0 is invalid — object types are not numeric"
