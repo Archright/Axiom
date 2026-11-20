@@ -3,7 +3,7 @@
 > **Status**: Committed product contract — the adopted agent-spec slice (`followup/d2-agent-vertical`)
 > **Created**: 2026-10-17
 > **AGENTS.md reference**: §0.12 (product contract precedes), §0.9 (theater prohibition), §0.3 (trust boundary), §0.2a (legislator LLM-only — not engaged here: the spec content is the p0d2g agent chain's adopted work product, not a legislator invariant), §4 (GUARDIAN)
-> **Related**: [nim_stew_base32_rem_binding_contract.md](./nim_stew_base32_rem_binding_contract.md) (overlay/identity/carrier precedent), [nim_stew_base36_cout_contract.md](./nim_stew_base36_cout_contract.md) (C_out authority precedent), [authority_contract.md](./authority_contract.md), [obligation_semantics.md](./obligation_semantics.md)
+> **Related**: [nim_stew_base32_rem_binding_contract.md](./nim_stew_base32_rem_binding_contract.md) (overlay/identity/carrier precedent), [nim_stew_base36_cout_contract.md](./nim_stew_base36_cout_contract.md) (C_out authority precedent), [authority_contract.md](./authority_contract.md), [obligation_semantics.md](./obligation_semantics.md), [adopted_model_observation_contract.md](./adopted_model_observation_contract.md) (lane-neutral adopted-model + stamped-observation contract)
 > **Spec registry**: `SPEC-TOML-D2-AGENT` — binding overlay `config/spec/toml_d2_agent_spec.json` (soExplicit); adopted spec content `experiments/act2-wp-toml-b1-input-integrity/p0d2g/AGENT_SPEC.md`
 
 ---

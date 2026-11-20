@@ -140,7 +140,7 @@ ObligationId(bound) = SHA-256(
 - binding 시점에 `sha256Hex(serializeIRFuncDef(funcDef))`를 재측정해 `constructedModelBodyDigest`와 비교한다. 불일치 → `""`. 이 비교는 seal 대상이 synthesis가 구성한 모델과 byte-identical함을 보장한다. **채택 스펙에서 모델을 재유도하는 독립 검증은 VDA/P7의 몫**이며, binding site가 스펙 해석을 두 번째로 구현하지 않는다(단일 근원).
 - Lean 정리는 un-spliced `result` 형태(`leanPostConditions`)로 렌더링해 `unfold`를 방출한다. 의무 claim은 β-spliced로 유지된다. `unfold`는 두 형태의 definitional equality를 증명하며, `leanSourceHash`가 정리 바이트를 결속한다.
 
-**Non-claim**: constructed model ⊨ spec 증명은 모델이 피검험체의 충실한 번역임을 주장하지 않는다. 그 주장은 별도의 유한 관찰 명제 `∀x∈I13, Observe(Source,x)=Expected(Model,x)`다(§1.1).
+**Non-claim**: constructed model ⊨ spec 증명은 모델이 피검험체의 충실한 번역임을 주장하지 않는다. 그 주장은 별도의 유한 관찰 명제 `∀x∈I13, Observe(Source,x)=Expected(Model,x)`다([jrpc_errcode_class_binding_contract.md](jrpc_errcode_class_binding_contract.md) §1.1; 일반 형상 [adopted_model_observation_contract.md](adopted_model_observation_contract.md) §3).
 
 ### 2.1b VDA receipt contract — nine confirmation fields (Axiom v5.1)
 
