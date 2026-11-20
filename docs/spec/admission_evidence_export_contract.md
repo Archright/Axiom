@@ -105,7 +105,7 @@ Evidence artifact에서 vault export set은 **`vault/` 하위 디렉터리**로 
 - `vault-certificates.txt`는 export set의 모든 basename을 **정렬된** 1줄 1파일로 나열한다.
 - `vault-certificates.txt`의 행 집합 == export set의 basename 집합(exact match, 중복 없음).
 - inventory는 **destination에 복사된 뒤** 생성한다 — source vault listing을 복사하지 않는다.
-- `vault-manifest.json`도 export set의 멤버이므로 inventory에 포함된다. release `manifest.json`은 포함되지 않는다.
+- `vault-manifest.json`도 export set의 멤버이므로 inventory에 포함된다. `vault-certificates.txt` 자신도 export set의 멤버이므로 자기 basename을 나열한다. release `manifest.json`은 포함되지 않는다.
 - 실패 시 `CERT_INVENTORY_MISMATCH`(§3).
 
 ### 2.4 E3 — Manifest export projection
@@ -227,6 +227,7 @@ reasonCode/journal strings(새 enum 아님 — 기존 `reasonCode: string` 관�
 | `CERT_INVENTORY_MISMATCH` | inventory ≠ export set | FAIL |
 | `CERT_DIGEST_MISMATCH` | 파일 SHA-256 ≠ `certificateSha256` | FAIL |
 | `CERT_STATUS_MISMATCH` | `recomputedStatus` ≠ `status` | FAIL |
+| `CERT_PROJECTION_MISMATCH` | 기록된 projection 필드(`theoremIdentity`·`axiomObservation.names`)가 본문에서 재계산한 값과 다르거나, `certificateFile == null`인 entry가 body projection(`certificateSha256`/`recomputedStatus`)을 주장 | FAIL |
 | `AXIOM_OBSERVATION_MISSING` | Lean-dependent verified entry의 `axiomObservation.status` ≠ `observed` | FAIL |
 | `CERT_SET_DIGEST_ABSENT` | 정본 manifest 또는 verdict/record에 `certificateSetDigest` 없음 | FAIL |
 | `CERT_SET_DIGEST_MISMATCH` | 재계산 `certificateSetDigest` ≠ manifest/verdict/record 기록값 | FAIL |
@@ -242,8 +243,9 @@ Negative control이 "무언가 실패했다"가 아니라 **의도한 안전장�
 | 2 | verified-status entry의 본문 존재 여부 | `CERT_BODY_MISSING` |
 | 3 | 본문 bytes SHA-256 == `certificateSha256` | `CERT_DIGEST_MISMATCH` |
 | 4 | `tierToCertStatus(tierFromEvidence(certificateEvidenceFromJson(body)))` == `recomputedStatus` == manifest `status` | `CERT_STATUS_MISMATCH` |
+| 4a | `theoremIdentity`·`axiomObservation` projection이 본문 재계산과 일치(무body entry는 body projection을 주장할 수 없다) | `CERT_PROJECTION_MISMATCH` |
 | 5 | verified entry의 engine closure 결과(`CERTIFICATE_INTEGRITY`)가 PASS로 결속 | `CERT_INTEGRITY_FAILED` |
-| 6 | Lean-dependent verified entry `axiomObservation.status == "observed"` | `AXIOM_OBSERVATION_MISSING` |
+| 6 | Lean-dependent verified entry `axiomObservation.status == "observed"` 및 `names` projection 일치 | `AXIOM_OBSERVATION_MISSING` / `CERT_PROJECTION_MISMATCH` |
 | 7 | `certificateSetDigest` 존재 및 재계산 일치 | `CERT_SET_DIGEST_ABSENT` / `CERT_SET_DIGEST_MISMATCH` |
 
 - **선행 조건**: 1–3은 서로 다른 계층이다. 본문을 삭제한 negative control은 "inventory를 계약에 맞게 갱신"한 상태에서 수행해야 2번(`CERT_BODY_MISSING`)이 관측된다. inventory를 갱신하지 않으면 1번이 먼저 발화한다 — 이는 결함이 아니라 우선순위 계약이다.
@@ -284,11 +286,11 @@ Negative control이 "무언가 실패했다"가 아니라 **의도한 안전장�
 
 | 항목 | 상태 |
 |---|---|
-| E1 certificate 본문 export | 미구현 — 소비자 워크플로가 manifest만 복사 |
-| E2 inventory exact match | 미구현 — source listing 사용 |
-| E3 manifest projection | 미구현 — 6필드 |
-| E4 certificateSetDigest | 미구현 |
-| E5 verdict/record 결속 | 미구현 — `evidence_tier=verified`가 결속 없이 선언됨 |
+| E1 certificate 본문 export | **엔진 구현 완료** — `ax cert export`(`src/verification/cert_export.nim`); 소비자 어댑터 연결은 별도 PR |
+| E2 inventory exact match | **엔진 구현 완료** — export 시 destination 기준 생성, verify 시 exact match |
+| E3 manifest projection | **엔진 구현 완료** — schema v3 + 5필드 추가 |
+| E4 certificateSetDigest | **엔진 구현 완료** — canonical JSON SHA-256(§2.5) |
+| E5 verdict/record 결속 | 미구현 — 소비자 admission PR에서 연결 |
 | kernel observation 보존 | 미구현 — `reexecuteLean`이 `AxiomPrintObservation`을 버리고 `KernelVerdict`만 반환(`src/verification/kernel_reexecution.nim:448-494`) |
 | witness wire | 불변(open decision) |
 
