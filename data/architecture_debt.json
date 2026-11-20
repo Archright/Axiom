@@ -66,12 +66,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:c69a7f5fdcc3584781af857e94e5f5695ac5f864050d2c25fce303c097b5bb19",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:016346578cfc99944ae19f849278e8f8cdd9a89df82054e09606b087afc680e4",
       "count": 1,
       "file": "src/cli/cert_cli.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:3106fc6e8389d8b4551643ebb1adc39a4db1f30b4bca8986da6edf02266f5a6f"
+      "rawContentHash": "sha256:75cbf39301f57aef8d5d5f8e4df5c68cd9f2655962e087b77268b9a019298e89"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
