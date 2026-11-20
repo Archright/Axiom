@@ -2,7 +2,9 @@ import std/[algorithm, base64, json, os, osproc, strutils, tables]
 import cli/cert_cli
 import cli/merge_cli
 import core/crypto/hash_kernel
+import core/proof/proof_budget
 import core/results
+import core/trusted/solver_invocation
 from infrastructure/certificate_attestation import verifyCertificateAttestation
 import verification/ledger_side_ref
 import verification/attestation_orchestrator
@@ -206,6 +208,33 @@ proc makeEvidence(subject: VerificationSubject; seed: int;
   inputs.policyDigest = sha256Hex(readFile(repoRoot / "config" / "policy" / "merge_admission.json"))
   inputs.scopeDigest = sha256Hex(readFile(repoRoot / "data" / "verification_scope.lock"))
   inputs
+
+proc syntheticObservation(leanSource, smtlib2, theoremName: string): KernelObservation =
+  ## A self-consistent dual-kernel pass bound to the given sources. It records
+  ## the facts a fresh run would have observed and is used ONLY on surfaces
+  ## that never execute kernels (witness assembly, subject-cert write, ledger
+  ## predicate); the writer/sign/parser re-validate every binding.
+  KernelObservation(
+    lean: LeanObservation(
+      observed: true,
+      theoremName: theoremName,
+      axiomSet: @[],
+      verdict: krPassed,
+      leanSourceDigest: sha256Hex(leanSource),
+      outputDigest: sha256Hex("test-lean-output"),
+      toolchainIdentity: "lean:test;checker:sha256:" & sha256Hex("test-checker"),
+      skippedChecks: @[]),
+    z3: Z3Observation(
+      observed: true,
+      queryDigest: sha256Hex(smtlib2),
+      outputDigest: sha256Hex("test-z3-output"),
+      verdict: krPassed,
+      optionsDigest: deterministicSolverOptionsDigest(),
+      binaryDigest: sha256Hex("test-z3-binary"),
+      randomSeed: Z3PinnedRandomSeed,
+      rlimit: z3DeterministicBudget,
+      timeoutMs: z3SafetyNetMs),
+    verificationMode: "lean+z3")
 
 # ---------------------------------------------------------------------------
 # P1 — pure semantics (always runs)
@@ -1345,7 +1374,8 @@ let w16Prov = WitnessProvenance(
   runAttempt: "1",
   artifact: "witness-1")
 let w16BundleRes = createWitnessBundle(w16Subject, w16Ev, w16IrHash,
-  "2026-09-18T09:00:00Z", w16Prov)
+  "2026-09-18T09:00:00Z", w16Prov,
+  observation = kernelObservationJson(w16Chain.observation))
 checkTrue("witness bundle assembled", w16BundleRes.isOk)
 let w16BundleText = witnessBundleJson(w16BundleRes.get)
 let w16Node = parseJson(w16BundleText)
@@ -1379,7 +1409,8 @@ let w16Prov2 = WitnessProvenance(
   runId: "4100000001", runAttempt: "1", artifact: "witness-1")
 let w16Bundle2 = createWitnessBundle(w16Subject, w16Ev,
   (if w16Agree2.nimDigest.len > 0: w16Agree2.nimDigest else: evidenceBundleDigest(w16Ev)),
-  "2026-09-18T09:00:01Z", w16Prov2)
+  "2026-09-18T09:00:01Z", w16Prov2,
+  observation = kernelObservationJson(w16Chain2.observation))
 checkTrue("second witness bundle assembled", w16Bundle2.isOk)
 # witness-only must never write into the journal: validate via parse + write to
 # the bundle OUT path, then confirm the journal snapshot is byte-identical.
@@ -1461,7 +1492,8 @@ if leanAvailable and z3Available and workerAvailable:
     runId: "4200000000",
     runAttempt: "2",
     artifact: "witness-2")
-  let w17BundleRes = createWitnessBundle(w17Subject, w17Ev, w17IrHash, w17CreatedAt, w17Prov)
+  let w17BundleRes = createWitnessBundle(w17Subject, w17Ev, w17IrHash, w17CreatedAt, w17Prov,
+    observation = kernelObservationJson(w17Chain.observation))
   checkTrue("witness bundle assembled from the same semantic inputs", w17BundleRes.isOk)
   let w17WitnessPath = w17Base / "witness.json"
   writeFile(w17WitnessPath, witnessBundleJson(w17BundleRes.get))
@@ -1472,16 +1504,33 @@ if leanAvailable and z3Available and workerAvailable:
   # write the canonical cert bytes the writer produced
   let certB = parseJson(readFile(w17SignedA.get.path))
   checkTrue("witness→sign cert journal-bound", certB.getOrDefault("trustCommitId").getStr("").len > 0)
-  # representation equality: identical semantic inputs → identical bytes
+  # representation equality: identical SEMANTIC inputs → identical semantic
+  # core. Provenance is a separate axis (VS-188 three-axis split): leg (a) is
+  # a chain-local mint, leg (b) carries the GitHub run anchor, so the signed
+  # bytes legitimately differ. Proof validity must never be confused with
+  # provenance authenticity.
   let certAAtt = certA.getOrDefault("attestation")
   let certBAtt = certB.getOrDefault("attestation")
   checkTrue("cert (a) carries Ed25519 signature", certAAtt.getOrDefault("signature").getStr("").len == 128)
-  checkEq("cert (b) signature == cert (a) signature (same semantic → same bytes)",
-    certBAtt.getOrDefault("signature").getStr(""), certAAtt.getOrDefault("signature").getStr(""))
-  checkEq("cert (b) trustCommitId == cert (a) trustCommitId",
-    certB.getOrDefault("trustCommitId").getStr(""), certA.getOrDefault("trustCommitId").getStr(""))
-  checkEq("full attest cert JSON == witness→sign cert JSON (diff empty)",
-    readFile(w17SignedA.get.path), readFile(rA.certPath))
+  checkTrue("cert (b) carries Ed25519 signature", certBAtt.getOrDefault("signature").getStr("").len == 128)
+  checkEq("semantic claim digest equal (same claim)",
+    certBAtt.getOrDefault("claimDigest").getStr(""), certAAtt.getOrDefault("claimDigest").getStr(""))
+  checkEq("identityDigest equal (same semantic identity)",
+    certB.getOrDefault("identityDigest").getStr(""), certA.getOrDefault("identityDigest").getStr(""))
+  checkEq("observationDigest equal (same observed evidence)",
+    certB.getOrDefault("observationDigest").getStr(""), certA.getOrDefault("observationDigest").getStr(""))
+  proc semanticCore(n: JsonNode): string =
+    var stripped = newJObject()
+    for k, v in n.pairs:
+      if k notin ["attestation", "provenance", "trustCommitId", "provenanceAnchor"]:
+        stripped[k] = v
+    canonicalJsonString(stripped)
+  checkEq("semantic core identical (provenance excluded)",
+    semanticCore(certB), semanticCore(certA))
+  checkEq("leg (a) anchor is chain-local",
+    certA{"provenanceAnchor"}{"source"}.getStr(""), "merge_admission")
+  checkEq("leg (b) anchor carries the GitHub run id",
+    certB{"provenanceAnchor"}{"runId"}.getStr(""), "4200000000")
   # identity separation: the certificate representation carries NO execution
   # provenance — runId/runAttempt/M are absent (removing them breaks nothing
   # because they were never there).
@@ -1518,7 +1567,9 @@ let w18Prov = WitnessProvenance(
   prHeadSha: w18Subject.headSha, prNumber: w18Ev.prNumber,
   runId: "4300000000", runAttempt: "1", artifact: "witness-1")
 let w18Bundle = createWitnessBundle(w18Subject, w18Ev, hex64(703),
-  "2026-09-18T09:00:00Z", w18Prov)
+  "2026-09-18T09:00:00Z", w18Prov,
+  observation = kernelObservationJson(
+    syntheticObservation(w18Ev.leanSource, w18Ev.smtlib2, "axiom_attest_prop")))
 checkTrue("tamper fixture witness assembled", w18Bundle.isOk)
 let w18Text = witnessBundleJson(w18Bundle.get)
 checkTrue("pristine witness parses cleanly (control)", parseWitnessBundleText(w18Text).isOk)
@@ -1565,6 +1616,39 @@ if fileExists(repoRoot / "bin" / "ax"):
     outp.contains("WITNESS") or outp.contains("witness"))
 else:
   skip("CLI --sign tamper rejection", "bin/ax not built")
+# (f) observation removal: a pre-VS-188 witness (no observation block) is never
+# signable — the sign surface cannot invent kernel facts.
+var tampered5 = parseJson(w18Text)
+tampered5["semantic"].delete("observation")
+let rT5 = parseWitnessBundleText($tampered5)
+checkTrue("observation block removal → fail-closed", rT5.isErr)
+checkTrue("missing observation reason carries WITNESS_OBSERVATION",
+  rT5.error.contains("WITNESS_OBSERVATION"))
+# (g) axiom tamper: sorryAx is outside the three primitive axioms, even with a
+# stale digest (the observation gate runs before the digest comparison).
+var tampered6 = parseJson(w18Text)
+tampered6["semantic"]["observation"]["lean"]["axiomSet"] = %*["sorryAx"]
+let rT6 = parseWitnessBundleText($tampered6)
+checkTrue("sorryAx in the observed axiom set → fail-closed", rT6.isErr)
+checkTrue("axiom rejection names the INV-6 allowlist", rT6.error.contains("allowlist"))
+# (h) funext is a THEOREM of Quot.sound in Lean 4.33.0, not a primitive axiom:
+# an observed set naming it is rejected exactly like any non-allowlisted name.
+var tampered7 = parseJson(w18Text)
+tampered7["semantic"]["observation"]["lean"]["axiomSet"] = %*["funext"]
+let rT7 = parseWitnessBundleText($tampered7)
+checkTrue("funext is not an allowlisted primitive axiom", rT7.isErr)
+# (i) direct sign surface: even a bundle built in memory without an
+# observation must be refused by `signWitness` itself (the parser is not the
+# only gate).
+let w18RawBundle = WitnessBundle(schema: WitnessScheme,
+  semantic: WitnessSemantic(evidence: w18Ev, subject: w18Subject,
+    evidenceDigest: evidenceBundleDigest(w18Ev), irHash: hex64(703),
+    createdAt: "2026-09-18T09:00:00Z"),
+  provenance: w18Prov)
+let w18RawSign = signWitness(w18RawBundle, w18Base / "raw-vault")
+checkTrue("signWitness refuses an observation-less bundle", w18RawSign.isErr)
+checkTrue("sign refusal names WITNESS_OBSERVATION",
+  w18RawSign.error.contains("WITNESS_OBSERVATION"))
 
 # ---------------------------------------------------------------------------
 # D6 + CAS 3분기 contract (approved plan Phase 1 item 5 — plan D6 섹션).
@@ -1582,6 +1666,7 @@ createDir(d6Dir)
 let d6W = makeWitnessFixture(910)
 let d6Ev = makeEvidence(d6W.subject, 921, funcPath = "tmp/ax_d6_ev_" & runId & ".nim")
 let d6Tree = hex40a(922)
+let d6Obs = syntheticObservation(d6Ev.leanSource, d6Ev.smtlib2, "axiom_attest_prop")
 let d6Input = SubjectCertificateInput(
   subject: d6W.subject,
   modulePath: d6Ev.funcPath,
@@ -1600,7 +1685,11 @@ let d6Input = SubjectCertificateInput(
   irHash: evidenceBundleDigest(d6Ev),
   createdAt: "2026-09-27T09:00:00Z",
   certTree: d6Tree,
-  axiomVersion: "v0.3.7")
+  axiomVersion: "v0.3.7",
+  observation: d6Obs.lean,
+  z3Observation: d6Obs.z3,
+  verificationMode: d6Obs.verificationMode,
+  provenanceAnchor: %*{"source": "test-fixture", "scheme": "axiom.subject-cert.v1"})
 let d6Mint = writeSubjectContinuityCertificate(d6Dir, d6Input)
 checkTrue("D6 fixture: real Ed25519-signed cert minted", d6Mint.isOk)
 let d6CertNode = parseJson(readFile(d6Mint.get.path))

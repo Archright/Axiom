@@ -131,14 +131,56 @@ func extractHypotheses*(leanSource: string): seq[string] =
       else:
         pos += 1
 
-## Builtin axiom allowlist — the only axioms a replay may legitimately depend on.
-## Any other named axiom (notably `sorryAx` / `Lean.sorryAx`) triggers fail-closed
-## rejection of the replay verdict. Mirrors ax_vacuity_check.lean (see
-## docs/spec/lean_sorry_gate.md, DEBT#296 precedent).
-## INV-6 primitive set: `funext` is a theorem alias whose `#print axioms`
-## dependency is `Quot.sound`; it is not a primitive axiom and is rejected here.
-const leanBuiltinAxiomAllowlist*: array[3, string] =
-  ["Classical.choice", "Quot.sound", "propext"]
+## Canonical Lean kernel axiom allowlist (INV-6) — THE single definition.
+## Any other named axiom (notably `sorryAx` / `Lean.sorryAx`) triggers
+## fail-closed rejection of the replay verdict.
+##
+## Lean 4.33.0 exposes exactly three primitive axioms:
+##
+##   #print axioms funext  →  'funext' depends on axioms: [Quot.sound]
+##
+## so `propext`, `Classical.choice` and `Quot.sound` are the complete
+## primitive set. `funext` is a THEOREM derived from `Quot.sound`, not a
+## primitive axiom; it is deliberately absent here. A proof whose observed
+## `#print axioms` set mentions `funext` directly is not produced by the
+## pinned toolchain. Should a future toolchain ever report it, exact
+## membership fails closed rather than silently widening the trust base.
+##
+## Compatibility note: pre-VS-188 allowlists carried a fourth `funext`
+## entry. That entry was an over-approximation of the kernel, not a
+## primitive axiom; removing it changes no passing proof (`funext`'s own
+## printed axioms are already allowed) and narrows every observed set to
+## the actual kernel TCB.
+##
+## SSOT location: this module is core (`axiomLayer "domain"`), so both
+## `src/verification/kernel_reexecution.nim` and `certificate_verifier.nim`
+## may consume it without a forbidden core→verification import; it is also a
+## trusted-checker-closure member, so consolidating here adds no closure node.
+## Mirrors ax_vacuity_check.lean (see docs/spec/lean_sorry_gate.md, DEBT#296
+## precedent).
+## Declaration order is part of the public contract: `axiomAllowlist()`
+## preserves it, the INV-6 unit contract asserts it, and
+## docs/spec/lean_sorry_gate.md projects it as
+## `{propext, Classical.choice, Quot.sound}`. Membership is the guarantee;
+## the sequence is never iterated for a decision.
+const canonicalAxiomAllowlist*: array[3, string] =
+  ["propext", "Classical.choice", "Quot.sound"]
+
+## Replay-local alias of the canonical set.
+const leanBuiltinAxiomAllowlist* = canonicalAxiomAllowlist
+
+func isCanonicalAxiom*(name: string): bool {.raises: [],
+    axiomDecision(id = "DECISION-VS188-01",
+      reason = "Exact-membership gate over the three primitive Lean 4.33.0 axioms; empty and lookalike names never pass, so an observed set can never widen the kernel TCB silently",
+      adr = "docs/spec/certification_continuity_contract.md",
+      introduced = "v34-vs188").} =
+  ## Exact-membership gate over the primitive-axiom set. Empty names never pass.
+  if name.len == 0:
+    return false
+  for allowed in canonicalAxiomAllowlist:
+    if name == allowed:
+      return true
+  false
 
 ## Parse `#print axioms <thm>` output into a (sectionPresent, axiomNames) pair.
 ## Lean 4.29 renders the named command as either

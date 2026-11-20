@@ -35516,6 +35516,21 @@
       "typeCategory": "string"
     },
     {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/core/judge/lean_replay.nim",
+      "name": "isCanonicalAxiom",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
       "hasAxiomHint": true,
       "ignorable": false,
       "leanType": "Bool",
@@ -114245,6 +114260,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/attestation_orchestrator.nim",
+      "name": "chainProvenanceAnchor",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "String",
       "module": "src/verification/attestation_orchestrator.nim",
       "name": "currentUtcTimestamp",
@@ -114539,6 +114568,21 @@
       ],
       "resultConstraintTemplate": "",
       "returnType": "Result[VerificationSubject, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[ReusedEvidence, string]",
+      "module": "src/verification/attestation_orchestrator.nim",
+      "name": "reuseEvidenceFromPayload",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[ReusedEvidence, string]",
       "smtSort": "Int",
       "typeCategory": "result"
     },
@@ -114856,6 +114900,21 @@
       ],
       "resultConstraintTemplate": "",
       "returnType": "Result[string, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[KernelObservation, string]",
+      "module": "src/verification/attestation_witness.nim",
+      "name": "witnessObservation",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[KernelObservation, string]",
       "smtSort": "Int",
       "typeCategory": "result"
     },
@@ -119996,6 +120055,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/certificate_verifier.nim",
+      "name": "observationProjection",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "Bool",
       "module": "src/verification/certificate_verifier.nim",
       "name": "sameReplayInputs",
@@ -120014,6 +120087,20 @@
       "leanType": "String",
       "module": "src/verification/certificate_verifier.nim",
       "name": "solverMetaProjection",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/certificate_verifier.nim",
+      "name": "subjectObservationProblem",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (str.len result) 0)"
       ],
@@ -126365,6 +126452,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "List string",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "declaredTheorems",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "KernelVerdict",
       "module": "src/verification/kernel_reexecution.nim",
       "name": "evaluateObservedAxioms",
@@ -126375,6 +126476,20 @@
       "returnType": "KernelVerdict",
       "smtSort": "Int",
       "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "explicitAxiomPrintTarget",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
     },
     {
       "hasAxiomHint": false,
@@ -126404,6 +126519,63 @@
       "returnType": "bool",
       "smtSort": "Bool",
       "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "isPassingKernelObservation",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "kernelObservationDigest",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "kernelObservationJson",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "kernelObservationValidationError",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
     },
     {
       "hasAxiomHint": false,
@@ -126464,6 +126636,62 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "leanObservationJson",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "tuple[target: string, problem: string]",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "leanObservationTarget",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "tuple[target: string, problem: string]",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List string",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "leanSourceHazards",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "leanToolchainIdentity",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "Result[JsonNode, string]",
       "module": "src/verification/kernel_reexecution.nim",
       "name": "loadCertJsonForReexecution",
@@ -126493,6 +126721,139 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "List string",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "normalizeAxiomSet",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[bool, string]",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "observationJsonBool",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[bool, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[int, string]",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "observationJsonInt",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[int, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[string, string]",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "observationJsonString",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[string, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[seq[string], string]",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "observationJsonStringSeq",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[seq[string], string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "observationVerificationMode",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[KernelObservation, string]",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "parseKernelObservation",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[KernelObservation, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[KernelVerdict, string]",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "parseKernelVerdictName",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[KernelVerdict, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[LeanObservation, string]",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "parseLeanObservation",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[LeanObservation, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "AxiomPrintObservation",
       "module": "src/verification/kernel_reexecution.nim",
       "name": "parsePrintAxiomsObservations",
@@ -126503,6 +126864,21 @@
       "returnType": "AxiomPrintObservation",
       "smtSort": "Int",
       "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[Z3Observation, string]",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "parseZ3Observation",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[Z3Observation, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
     },
     {
       "hasAxiomHint": false,
@@ -126537,6 +126913,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "LeanObservation",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "reexecuteLeanObservedKernel",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "LeanObservation",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "KernelVerdict",
       "module": "src/verification/kernel_reexecution.nim",
       "name": "reexecuteZ3",
@@ -126545,6 +126935,20 @@
       ],
       "resultConstraintTemplate": "",
       "returnType": "KernelVerdict",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Z3Observation",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "reexecuteZ3Observed",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Z3Observation",
       "smtSort": "Int",
       "typeCategory": "object"
     },
@@ -126577,6 +126981,20 @@
       "returnType": "void",
       "smtSort": "Unit",
       "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List string",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "stripLeanComments",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
     },
     {
       "hasAxiomHint": false,
@@ -126647,6 +127065,20 @@
       "returnType": "int64",
       "smtSort": "Int",
       "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "z3ObservationJson",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
     },
     {
       "hasAxiomHint": false,
@@ -146573,6 +147005,64 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/subject_continuity_writer.nim",
+      "name": "subjectCertKernel",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "KernelObservation",
+      "module": "src/verification/subject_continuity_writer.nim",
+      "name": "subjectCertObservation",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "KernelObservation",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/subject_continuity_writer.nim",
+      "name": "subjectCertProvenancePresent",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/subject_continuity_writer.nim",
+      "name": "subjectCertReason",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "Result[void, string]",
       "module": "src/verification/subject_continuity_writer.nim",
       "name": "subjectCertSignAndWrite",
@@ -146590,7 +147080,64 @@
       "ignorable": false,
       "leanType": "String",
       "module": "src/verification/subject_continuity_writer.nim",
+      "name": "subjectCertSolverStatus",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/subject_continuity_writer.nim",
+      "name": "subjectCertStatus",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/subject_continuity_writer.nim",
       "name": "subjectCertValidate",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/subject_continuity_writer.nim",
+      "name": "subjectCertVerified",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/subject_continuity_writer.nim",
+      "name": "subjectCertWinningStrategy",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (str.len result) 0)"
       ],

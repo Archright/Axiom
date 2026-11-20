@@ -70,9 +70,12 @@ axiomIoBoundary()
 # ---------------------------------------------------------------------------
 
 const
-  EvidenceKeyScheme* = "axiom.evidence.cas.key.v1"
+  EvidenceKeyScheme* = "axiom.evidence.cas.key.v2"
     ## Domain separator for the EvidenceKey wire — keys of different eras can
-    ## never collide across scheme revisions.
+    ## never collide across scheme revisions. v1→v2 is the VS-188 Phase 1
+    ## coherent cutover: the stored record now carries the fresh kernel
+    ## observation, so a pre-observation (v1) entry MISSes and the evidence is
+    ## produced again with its observation instead of being silently reused.
   LeanToolchainPinPath* = "proofs/lean-toolchain"
     ## The Lean pin SSOT — the digest comes from this file's CONTENT, never a
     ## version literal duplicated from another module.
@@ -151,6 +154,10 @@ type
     extractionVerdict*: ExtractionAgreementVerdict
     leanVerdict*: KernelVerdict
     z3Verdict*: KernelVerdict
+    observation*: KernelObservation          ## VS-188 Phase 1 — the fresh kernel
+                                             ## observation the verdicts above
+                                             ## restate. A record without one is
+                                             ## never reusable.
 
 export extraction_agreement.ExtractionAgreementVerdict
 export kernel_reexecution.KernelVerdict
@@ -168,7 +175,8 @@ func normalizedEvidenceWire*(e: NormalizedEvidence): string {.raises: [].} =
     "irHash": e.irHash,
     "extractionVerdict": $e.extractionVerdict,
     "leanVerdict": $e.leanVerdict,
-    "z3Verdict": $e.z3Verdict})
+    "z3Verdict": $e.z3Verdict,
+    "observation": kernelObservationJson(e.observation)})
 
 func normalizedEvidenceDigest*(e: NormalizedEvidence): string {.raises: [].} =
   ## sha256 over normalizedEvidenceWire — the content address of the record.
@@ -176,7 +184,11 @@ func normalizedEvidenceDigest*(e: NormalizedEvidence): string {.raises: [].} =
 
 func validateNormalizedEvidence*(e: NormalizedEvidence): string {.raises: [].} =
   ## "" = well-formed; otherwise the rejection reason. Bundle fields are
-  ## non-empty (fail-closed) and irHash is a 64-hex digest.
+  ## non-empty (fail-closed) and irHash is a 64-hex digest. VS-188 Phase 1:
+  ## the recorded observation must be self-consistent against the bound
+  ## leanSource/smtlib2, must AGREE with the typed verdict members, and must
+  ## be a dual-kernel pass — a record cannot restate facts its own observation
+  ## denies.
   for (label, value) in [("funcSource", e.funcSource), ("funcName", e.funcName),
                          ("leanSource", e.leanSource), ("smtlib2", e.smtlib2),
                          ("irHash", e.irHash)]:
@@ -184,15 +196,25 @@ func validateNormalizedEvidence*(e: NormalizedEvidence): string {.raises: [].} =
       return "evidence_cas: empty normalized-evidence field '" & label & "' (fail-closed)"
   if not isHexOfLen(e.irHash, 64):
     return "evidence_cas: irHash must be 64 lowercase hex chars (fail-closed)"
+  let observationProblem = kernelObservationValidationError(
+    e.observation, e.leanSource, e.smtlib2)
+  if observationProblem.len > 0:
+    return "evidence_cas: " & observationProblem
+  if e.leanVerdict != e.observation.lean.verdict:
+    return "evidence_cas: leanVerdict contradicts the recorded observation (fail-closed)"
+  if e.z3Verdict != e.observation.z3.verdict:
+    return "evidence_cas: z3Verdict contradicts the recorded observation (fail-closed)"
   ""
 
 func isReusableOutcome*(e: NormalizedEvidence): bool {.raises: [].} =
   ## Only an ALL-PASS run is evidence worth storing: extraction agreement,
-  ## Lean kernel pass, Z3 kernel pass. Any other outcome is not a reusable
-  ## fact — caching it would let a failure travel as evidence.
+  ## Lean kernel pass, Z3 kernel pass, and a recorded observation that is
+  ## itself a dual-kernel pass bound to the same sources. Any other outcome is
+  ## not a reusable fact — caching it would let a failure travel as evidence.
   e.extractionVerdict == eaAgree and
   e.leanVerdict == krPassed and
-  e.z3Verdict == krPassed
+  e.z3Verdict == krPassed and
+  isPassingKernelObservation(e.observation, e.leanSource, e.smtlib2)
 
 # ---------------------------------------------------------------------------
 # Verifier identity (pure composition)

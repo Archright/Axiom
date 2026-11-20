@@ -108,6 +108,11 @@ type
     reason*: string
     certPath*: string        ## populated iff verdict == atPassed
     commitId*: string        ## journal commit of the minted certificate
+    observation*: KernelObservation  ## VS-188 Phase 1 — the fresh observation
+                             ## the chain produced (stage-c on casOff/casMiss;
+                             ## the re-validated stored observation on casHit).
+                             ## The witness-only surface embeds THIS block; it
+                             ## never re-runs the kernel to reconstruct it.
 
   AttestationOptions* = object
     subjectsDir*: string
@@ -559,8 +564,17 @@ proc planEvidenceCas*(repoRoot: string): EvidenceCasPlan
       reason: "GITHUB_TOKEN not set — evidence ledger read refused (fail-closed)")
   planEvidenceCasWithTransport(repoRoot, liveLedgerTransport(token, EvidenceCasRefName))
 
-proc reuseIrHashFromPayload*(payload: string; evidence: AttestationInputs): Result[string, string]
-    {.raises: [CatchableError, OSError, Exception], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+type
+  ReusedEvidence* = object
+    irHash*: string
+    observation*: KernelObservation
+
+proc reuseEvidenceFromPayload*(payload: string; evidence: AttestationInputs): Result[ReusedEvidence, string]
+    {.raises: [CatchableError, OSError, Exception], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect],
+     axiomDecision(id = "DECISION-VS188-04",
+       reason = "CAS HIT reuse is legal only after the stored observation is re-parsed and re-validated against THIS run's exact leanSource/smtlib2; a pre-observation record or any divergence fails closed instead of degrading to an unobserved mint",
+       adr = "docs/spec/certification_continuity_contract.md",
+       introduced = "v34-vs188").} =
   ## HIT re-verification against THIS run's evidence record: the stored
   ## canonical evidence payload must (1) parse, (2) carry an ALL-PASS outcome
   ## (a stored non-pass record is corruption — never reusable), (3) carry a
@@ -568,6 +582,12 @@ proc reuseIrHashFromPayload*(payload: string; evidence: AttestationInputs): Resu
   ## local evidence record (a divergence means the key inputs under-determined
   ## the evidence — an identity anomaly, fail-closed). Returns the reused
   ## irHash — the extraction-agreement identity stage (b) would have produced.
+  ##
+  ## VS-188 Phase 1: the stored record must also carry the fresh kernel
+  ## observation that produced those verdicts. It is RE-VALIDATED against
+  ## THIS run's exact leanSource/smtlib2 (digest binding, allowlist, dual
+  ## pass) — a HIT never invents an observation and never degrades into a
+  ## MISS, and a pre-observation record is never reusable.
   var node: JsonNode
   try:
     node = parseJson(payload)
@@ -596,15 +616,41 @@ proc reuseIrHashFromPayload*(payload: string; evidence: AttestationInputs): Resu
                                  ("smtlib2", need("smtlib2"), evidence.smtlib2)]:
     if stored != local:
       return err("stored evidence payload field '" & label & "' diverges from this run's evidence record (identity anomaly, fail-closed)")
-  ok(irHash)
+  let observationNode = node{"observation"}
+  if observationNode.isNil or observationNode.kind != JObject:
+    return err("stored evidence payload carries no observation — a pre-VS-188 record is never reusable (fail-closed)")
+  let parsedObservation = parseKernelObservation(observationNode)
+  if parsedObservation.isErr:
+    return err("stored evidence payload observation: " & parsedObservation.error)
+  let observation = parsedObservation.get
+  let observationProblem = kernelObservationValidationError(
+    observation, evidence.leanSource, evidence.smtlib2)
+  if observationProblem.len > 0:
+    return err("stored evidence payload observation: " & observationProblem)
+  if not isPassingKernelObservation(observation, evidence.leanSource, evidence.smtlib2):
+    return err("stored evidence payload observation is not a dual-kernel pass — never reusable (fail-closed)")
+  ok(ReusedEvidence(irHash: irHash, observation: observation))
+
+proc reuseIrHashFromPayload*(payload: string; evidence: AttestationInputs): Result[string, string]
+    {.raises: [CatchableError, OSError, Exception], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## Legacy projection of `reuseEvidenceFromPayload` — every re-verification
+  ## still runs in full (including the observation gate); only the irHash is
+  ## returned to callers that do not need the observation.
+  let reused = reuseEvidenceFromPayload(payload, evidence)
+  if reused.isErr:
+    return err(reused.error)
+  ok(reused.get.irHash)
 
 proc normalizedEvidenceForRun*(evidence: AttestationInputs;
-                               agreement: ExtractionAgreementResult): Result[NormalizedEvidence, string] {.raises: [].} =
+                               agreement: ExtractionAgreementResult;
+                               observation: KernelObservation): Result[NormalizedEvidence, string] {.raises: [].} =
   ## The MISS record's semantic kernel record from THIS run's fresh outcome.
   ## Only legal after attestWitnessChainCas returned atPassed on a casMiss
   ## plan: stage (b) proved extraction agreement (eaAgree) and stage (c)
   ## proved BOTH kernels krPassed — the verdicts here restate that proven
-  ## outcome, they do not assert it.
+  ## outcome, they do not assert it. `observation` is stage (c)'s actual
+  ## observation; it is validated against the evidence here so a caller cannot
+  ## pair a passing verdict with an unrelated block.
   if agreement.verdict != eaAgree:
     return err("extraction verdict " & $agreement.verdict & " is not a reusable outcome (fail-closed)")
   let irHash = if agreement.nimDigest.len > 0: agreement.nimDigest
@@ -617,7 +663,8 @@ proc normalizedEvidenceForRun*(evidence: AttestationInputs;
     irHash: irHash,
     extractionVerdict: eaAgree,
     leanVerdict: krPassed,
-    z3Verdict: krPassed)
+    z3Verdict: krPassed,
+    observation: observation)
   let problem = validateNormalizedEvidence(ne)
   if problem.len > 0:
     return err(problem)
@@ -692,20 +739,34 @@ proc attestKernelStage(evidence: AttestationInputs; options: AttestationOptions)
   ## Stage (c): fresh kernel re-execution of the RECORDED evidence — Lean
   ## typecheck + INV-6 axiom allowlist, then Z3 fresh unsat under the INV-10
   ## checksum pin. Only krPassed continues; order: lean first, fail-closed.
+  ## VS-188 Phase 1: the OBSERVED variants run the same checks and return the
+  ## complete observation, which flows to the witness and the certificate —
+  ## stage (c) is the only place a kernel fact is produced.
   var certLike = newJObject()
   certLike["leanSource"] = %(evidence.leanSource)
   certLike["smtlib2"] = %(evidence.smtlib2)
-  let leanVerdict = reexecuteLean(certLike, options.leanExe, options.leanTimeoutMs)
-  let leanStage = kernelLeanVerdictFor(leanVerdict)
+  let leanObservation = reexecuteLeanObservedKernel(certLike, options.leanExe, options.leanTimeoutMs)
+  let leanStage = kernelLeanVerdictFor(leanObservation.verdict)
   if leanStage != atPassed:
     return AttestationResult(verdict: leanStage,
-      reason: "stage-c lean re-execution: " & kernelVerdictReason(leanVerdict))
-  let z3Verdict = reexecuteZ3(certLike, options.z3Path, options.z3TimeoutMs)
-  let z3Stage = kernelZ3VerdictFor(z3Verdict)
+      reason: "stage-c lean re-execution: " & kernelVerdictReason(leanObservation.verdict))
+  let z3Observation = reexecuteZ3Observed(certLike, options.z3Path, options.z3TimeoutMs)
+  let z3Stage = kernelZ3VerdictFor(z3Observation.verdict)
   if z3Stage != atPassed:
     return AttestationResult(verdict: z3Stage,
-      reason: "stage-c z3 re-execution: " & kernelVerdictReason(z3Verdict))
-  AttestationResult(verdict: atPassed)
+      reason: "stage-c z3 re-execution: " & kernelVerdictReason(z3Observation.verdict))
+  let observation = KernelObservation(
+    lean: leanObservation,
+    z3: z3Observation,
+    verificationMode: observationVerificationMode(
+      leanObservation.observed, z3Observation.observed))
+  if kernelObservationValidationError(observation,
+      evidence.leanSource, evidence.smtlib2).len > 0:
+    return AttestationResult(verdict: atInternalError,
+      reason: "stage-c observation self-consistency failed: " &
+        kernelObservationValidationError(observation,
+          evidence.leanSource, evidence.smtlib2))
+  AttestationResult(verdict: atPassed, observation: observation)
 
 proc attestPolicyStage(evidence: AttestationInputs; options: AttestationOptions): AttestationResult
     {.raises: [CatchableError, OSError, Exception], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
@@ -742,9 +803,23 @@ proc attestPolicyStage(evidence: AttestationInputs; options: AttestationOptions)
       " != sha256(scope lock) " & scopeActual.get[0 ..< 12])
   AttestationResult(verdict: atPassed)
 
+func chainProvenanceAnchor(subject: VerificationSubject): JsonNode {.raises: [].} =
+  ## The chain's presence-only provenance anchor for the full-attest surface
+  ## (the witness→sign surface anchors on the witness provenance block). It
+  ## records that the mint had provenance to bind; it is NOT producer
+  ## authenticity — the Ed25519 signature is integrity-only.
+  %*{
+    "source": subject.provenance.source,
+    "scheme": subject.provenance.scheme,
+    "subjectId": subject.subjectId,
+    "evidenceDigest": subject.evidenceDigest
+  }
+
 proc attestMintStage(subject: VerificationSubject; evidence: AttestationInputs;
                      certDir: string; agreement: ExtractionAgreementResult;
-                     createdAt: string; mergeTreeDigest: string = ""): AttestationResult
+                     createdAt: string; observation: KernelObservation;
+                     provenanceAnchor: JsonNode;
+                     mergeTreeDigest: string = ""): AttestationResult
     {.raises: [CatchableError, OSError, Exception], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Stage (g): ALL PASS → mint through the v3 writer extension (journal-bound,
   ## Ed25519-attested). Certificate fields bind the subject identity, the chain
@@ -756,6 +831,8 @@ proc attestMintStage(subject: VerificationSubject; evidence: AttestationInputs;
   ## certificate's certTree binding field — the legacy full-attest surface may
   ## leave it empty (no merge context); the witness→sign surface always carries
   ## it (provenance.mergeTreeDigest, validated 40-hex).
+  ## `observation` is the ONLY source of the certificate's kernel/status
+  ## claims; the writer refuses the mint when it is absent or non-passing.
   let evidenceDigest = evidenceBundleDigest(evidence)
   let certInput = SubjectCertificateInput(
     subject: subject,
@@ -764,7 +841,7 @@ proc attestMintStage(subject: VerificationSubject; evidence: AttestationInputs;
     funcName: evidence.funcName,
     leanSource: evidence.leanSource,
     smtlib2: evidence.smtlib2,
-    leanProposition: firstDeclaredName(evidence.leanSource),
+    leanProposition: observation.lean.theoremName,
     prHeadSha: evidence.prHeadSha,
     prNumber: evidence.prNumber,
     envDigest: evidence.envDigest,
@@ -775,7 +852,11 @@ proc attestMintStage(subject: VerificationSubject; evidence: AttestationInputs;
     irHash: (if agreement.nimDigest.len > 0: agreement.nimDigest else: evidenceDigest),
     createdAt: createdAt,
     certTree: mergeTreeDigest,
-    axiomVersion: axiomVersionWithPrefix)
+    axiomVersion: axiomVersionWithPrefix,
+    observation: observation.lean,
+    z3Observation: observation.z3,
+    verificationMode: observation.verificationMode,
+    provenanceAnchor: provenanceAnchor)
   let minted = writeSubjectContinuityCertificate(certDir, certInput)
   if minted.isErr:
     return AttestationResult(verdict: atInternalError,
@@ -800,7 +881,7 @@ proc attestChain*(subject: VerificationSubject; evidence: AttestationInputs;
   if stageC.verdict != atPassed: return stageC
   let stageDF = attestPolicyStage(evidence, options)
   if stageDF.verdict != atPassed: return stageDF
-  AttestationResult(verdict: atPassed)
+  AttestationResult(verdict: atPassed, observation: stageC.observation)
 
 proc attestWitnessChainCas*(subject: VerificationSubject; evidence: AttestationInputs;
                             options: AttestationOptions; agreement: var ExtractionAgreementResult;
@@ -824,24 +905,30 @@ proc attestWitnessChainCas*(subject: VerificationSubject; evidence: AttestationI
   ##     degrades into a chain run, and a corrupt ledger record never PASSes.
   let stageA = attestSubjectStage(subject, evidence, options)
   if stageA.verdict != atPassed: return stageA
+  ## The observation the downstream witness/mint must carry: produced fresh by
+  ## stage-c on casOff/casMiss; re-validated from the stored record on casHit
+  ## (the sanctioned §15.3 skip never re-runs a kernel and never invents one).
+  var observation: KernelObservation
   case cas.mode
   of casError:
     return AttestationResult(verdict: atInternalError,
       reason: "evidence CAS enabled: " & cas.reason)
   of casHit:
-    let reuse = reuseIrHashFromPayload(cas.payload, evidence)
+    let reuse = reuseEvidenceFromPayload(cas.payload, evidence)
     if reuse.isErr:
       return AttestationResult(verdict: atInternalError,
         reason: "evidence CAS HIT re-verification: " & reuse.error)
-    reusedIrHash = reuse.get
+    reusedIrHash = reuse.get.irHash
+    observation = reuse.get.observation
   of casOff, casMiss:
     let stageB = attestExtractionStage(evidence, options, agreement)
     if stageB.verdict != atPassed: return stageB
     let stageC = attestKernelStage(evidence, options)
     if stageC.verdict != atPassed: return stageC
+    observation = stageC.observation
   let stageDF = attestPolicyStage(evidence, options)
   if stageDF.verdict != atPassed: return stageDF
-  AttestationResult(verdict: atPassed)
+  AttestationResult(verdict: atPassed, observation: observation)
 
 proc attest*(subject: VerificationSubject; evidence: AttestationInputs;
              options: AttestationOptions = defaultAttestationOptions();
@@ -857,6 +944,7 @@ proc attest*(subject: VerificationSubject; evidence: AttestationInputs;
   var agreement: ExtractionAgreementResult
   let chain = attestChain(subject, evidence, options, agreement)
   if chain.verdict != atPassed: return chain
-  attestMintStage(subject, evidence, options.certDir, agreement, currentUtcTimestamp(), mergeTreeDigest)
+  attestMintStage(subject, evidence, options.certDir, agreement, currentUtcTimestamp(),
+    chain.observation, chainProvenanceAnchor(subject), mergeTreeDigest)
 
 {.pop.}

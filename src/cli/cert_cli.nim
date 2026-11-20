@@ -874,7 +874,8 @@ proc runWitnessOnlyCli(parsed: AttestCliArgs): int {.raises: [CatchableError], a
   if cas.mode != casOff:
     var payload = cas.payload
     if cas.mode == casMiss:
-      let neRes = normalizedEvidenceForRun(loaded.evidence, agreement)
+      let neRes = normalizedEvidenceForRun(loaded.evidence, agreement,
+        attestOutcome.observation)
       if neRes.isErr:
         logError("cert_cli", "attest --witness-only: evidence CAS record: " & neRes.error)
         return 1
@@ -952,7 +953,8 @@ proc runWitnessOnlyCli(parsed: AttestCliArgs): int {.raises: [CatchableError], a
   try:
     let bundleRes = createWitnessBundle(loaded.subject, loaded.evidence, irHash,
       currentUtcTimestamp(), provenance, judgment = judgmentNode,
-      judgments = (if judgmentsNode.len > 0: judgmentsNode else: nil))
+      judgments = (if judgmentsNode.len > 0: judgmentsNode else: nil),
+      observation = kernelObservationJson(attestOutcome.observation))
     if bundleRes.isErr:
       logError("cert_cli", "attest --witness-only: " & bundleRes.error)
       return 1
