@@ -203,7 +203,7 @@ W: Failed to fetch mirror+file:/etc/apt/apt-mirrors.txt/dists/noble/InRelease  5
 
 payload는 40회 합 40.16 GB, 복원당 1,004 MB, 실측 처리량 **144 MB/s**다. 즉 복원 비용의 3분의 2는 압축 해제이며, 대역폭을 늘리거나 payload를 캐시에서 빼는 것으로 얻을 수 있는 상한은 278.6초(전체의 10.9%)다.
 
-hit은 36/40이고, miss 4건은 전부 `mint-prepare / prepare`가 **런타임 스코프 키**(`axiom-a-rt-*`)를 요청한 경우다(로그: `Cache not found for input keys: axiom-a-rt-…`). 그 4회에서만 `Install Z3`·`Install jq`가 실행된다(각 1.5–1.7초, 0.1–0.3초). miss의 원인이 키 네임스페이스인지 save 이력인지는 이 측정 범위 밖이며, 판정하려면 해당 키의 save 로그가 필요하다.
+hit은 36/40이고, miss 4건은 전부 `mint-prepare / prepare`가 **런타임 스코프 키**(`axiom-a-rt-*`)를 요청한 경우다(로그: `Cache not found for input keys: axiom-a-rt-…`). 그 4회에서만 `Install Z3`(1.5–1.7초)와 `Install jq`(0.1–0.3초)가 실행된다. miss의 원인이 키 네임스페이스인지 save 이력인지는 이 측정 범위 밖이며, 판정하려면 해당 키의 save 로그가 필요하다.
 
 `B-layer restore`는 59.4초(median 1.4초)로 사실상 무시 가능하다.
 
@@ -214,7 +214,7 @@ hit은 36/40이고, miss 4건은 전부 `mint-prepare / prepare`가 **런타임 
 | composite harness 경계 | 21.3s (0.83%) | 22개 step 경계 마커 880개의 오버헤드. 실행당 ~0.5s. 더 쪼갤 대상이 아니다 |
 | 0초 호출 지점 6건 | 0s | `skipped` step. 실행 자체가 없으므로 귀속할 시간이 없다 |
 | apt fetch/install 경계 | — | `apt-get -qq`가 `Get:` 행을 출력하지 않아, 경계는 dpkg의 첫 출력(`Preparing to unpack`/`Reading database`)이다. fetch 구간에는 인덱스 해석 시간이 섞여 있다 |
-| remote-ref 실행 5건 | 255s 중 해당분 | `[closure] Pinned toolchain`은 `@c021c338`의 액션을 실행한다. 22개 step 이름은 트리 사본과 동일함을 diff로 확인했으나 blob은 다르다(`adee6223` vs `d01432f6`) |
+| remote-ref 실행 5건 | 5건 255s 전체 | `[closure] Pinned toolchain`은 `@c021c338`의 액션을 실행한다. 22개 step 이름은 트리 사본과 동일함을 diff로 확인했으나 blob은 다르다(`adee6223` vs `d01432f6`) |
 
 이 표의 잔여를 제외하면 composite span 안에 설명되지 않는 시간은 없다.
 
@@ -223,7 +223,7 @@ hit은 36/40이고, miss 4건은 전부 `mint-prepare / prepare`가 **런타임 
 **지지한다**
 
 - composite span은 22개 step으로 **완전히** 설명된다(99.2%). "어딘가에 숨은 지연"은 없다.
-- 정상 구간의 최대 비용은 **cache restore의 tar 추출**(769.5초 중 67.4%)이다.
+- 정상 구간의 최대 비용은 **cache restore**(769.5초)이고, 그 비용의 대부분은 A-layer 복원의 tar 추출(67.4%)이다.
 - `Install Nim`/`Lean`/`nimble`은 40회 전부 skipped다 — 네이티브 설치 경로는 이미 정상 구간에서 발화하지 않는다.
 - provisioning 비용은 **안정적이지 않다**: run별 304 ~ 1,077초. 단일 run의 공급 사고가 cohort 합계의 34%(884.8/2,574)를 만든다.
 - `libpcre3` apt 설치는 **job마다** 실행된다(40/40). GitHub-hosted runner는 job마다 새 VM을 할당하므로 이미지에 없는 패키지는 매번 설치된다.
