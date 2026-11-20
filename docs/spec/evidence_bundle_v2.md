@@ -200,7 +200,10 @@ propositionHash  = H(canonicalProposition)
   이고 `statusConsistentWithEvidence`를 만족해야 한다.
   `certGreen`은 Z3 unsat + Lean verified 증거를 요구한다.
 - `axiomsUsed`는 KAA `observedAxiomSet`과 집합으로 같아야 하고
-  allowlist `{propext, Classical.choice, Quot.sound, funext}` 안에 있어야 한다.
+  INV-6 primitive allowlist `{propext, Classical.choice, Quot.sound}` 안에 있어야 한다.
+  `funext`는 `Quot.sound`에 의존하는 theorem alias이지 primitive axiom이 아니므로
+  allowlist 구성원이 아니다 (`#print axioms funext` → `[Quot.sound]`,
+  [lean_sorry_gate.md](lean_sorry_gate.md) §4).
   `sorry`/`trustCompiler`/`native_decide` 표기는 거부된다.
 - `sourceHash`는 `sources/`의 실제 blob에 대한
   `computeStableSourceFingerprint`와 같아야 한다 (`subjectBinding` leg).
