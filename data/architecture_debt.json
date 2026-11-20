@@ -66,12 +66,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:c69a7f5fdcc3584781af857e94e5f5695ac5f864050d2c25fce303c097b5bb19",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:016346578cfc99944ae19f849278e8f8cdd9a89df82054e09606b087afc680e4",
       "count": 1,
       "file": "src/cli/cert_cli.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:3106fc6e8389d8b4551643ebb1adc39a4db1f30b4bca8986da6edf02266f5a6f"
+      "rawContentHash": "sha256:75cbf39301f57aef8d5d5f8e4df5c68cd9f2655962e087b77268b9a019298e89"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
@@ -1794,12 +1794,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:911fc432f84657757a5e30d98163e18941a88f763a4caa99ace2321573dd4175",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:85f14380a6deaf107d091a8ce70e9802cfc374b3e5510b574958cfafc3b718f0",
       "count": 1,
       "file": "src/core/symbol_graph/global_symbol_graph_builder_part2.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:e1fb36e3bf2d99b2ab9dc51d01538cc463066a9d13a82477de2692c5f76aa44f"
+      "rawContentHash": "sha256:35fda65c5dfe922b1189c6ed4c97e6ea534b47b60c9b766fb0ab8dcb898c9f23"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",

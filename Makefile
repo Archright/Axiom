@@ -87,6 +87,7 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/test_vkd_determinism.nim \
                   tests/unit/test_repo_root_fail_closed.nim \
                   tests/unit/test_certificate_trust_closure.nim \
+                  tests/unit/test_cert_export.nim \
                   tests/unit/wf_runners_exit_code_test.nim \
                   tests/unit/resolve_node_outcome_test.nim \
                   tests/unit/evidence_propagation_test.nim \
@@ -114,6 +115,7 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/hermetic_source_hash_gate_test.nim \
                   tests/unit/config_nims_source_identity_test.nim \
                   tests/unit/test_push_admission_integrity.nim \
+                  tests/unit/test_source_merkle_delegation.nim \
                   tests/unit/test_merge_ruleset_drift_monitor.nim
 
 
@@ -753,6 +755,7 @@ VERIFY_CONTRACT_NIMCACHE_ROOT ?= build/nimcache-verify-contract
 VC_NIMCACHE_g2 := $(VERIFY_CONTRACT_NIMCACHE_ROOT)/g2-verify-contract-unit
 VC_NIMCACHE_g6g4 := $(VERIFY_CONTRACT_NIMCACHE_ROOT)/g6g4-verify-scenario-oracles
 VC_NIMCACHE_g7 := $(VERIFY_CONTRACT_NIMCACHE_ROOT)/g7-verify-contract-release-e2e
+VC_NIMCACHE_pb := $(VERIFY_CONTRACT_NIMCACHE_ROOT)/pb-direct-proof-boundary
 
 # $(call contract_fanout,<log-tag>,<sub-make-target>,<env-prefix>)
 # One backgrounded sub-make per member, writing its own log + exit-status file.
@@ -931,6 +934,15 @@ verify-contract-release-e2e-consume: ## G7 — release product E2E consuming the
 	echo "  -- ax status --json (product state)"; bin/ax status --json || exit 1
 	@echo "✅ verify-contract-release-e2e-consume PASSED"
 
+# §3 direct proof boundary conformance (docs/spec/direct_proof_boundary.md).
+# Turns the normative per-construct statuses into executable assertions, and is
+# a prerequisite of verify-contract-release-e2e-full — the target the required
+# `axiom-operational-slice` check runs — so doc/code divergence fails CI there.
+verify-proof-boundary: ## §3 direct proof boundary conformance (docs/spec/direct_proof_boundary.md)
+	@echo "=== [verify-proof-boundary] direct proof boundary conformance ==="
+	@$(NIM) c -r --hints:off --nimcache:$(VC_NIMCACHE_pb) tests/trusted/test_direct_proof_boundary.nim || exit 1
+	@echo "✅ verify-proof-boundary PASSED"
+
 # G7-full — CI release E2E. Canonical product-outcome assertion.
 # 정확한 정의: "certificate storage-layout independent + canonical persisted-state projection consistency".
 #  - certificate(data/trusted/certificates 등) 저장구조에는 비의존한다(스캔/열거 없음).
@@ -942,7 +954,7 @@ verify-contract-release-e2e-consume: ## G7 — release product E2E consuming the
 # 따라서 이 target은 PASS∧PASS를 요구하고, V/F/TO는 PASS와 모순되지 않는지
 # 독립적으로 확인한다 — count가 판정을 대체하지 않는다.
 # status·tier는 보고된 값 그대로 소비만 — 둘 사이 관계(status→tier/tier→status)를 CI가 새로 해석하지 않음(금지).
-verify-contract-release-e2e-full: ## G7-full — CI release E2E (canonical product-outcome assertion, §계획 v7)
+verify-contract-release-e2e-full: verify-proof-boundary ## G7-full — CI release E2E (canonical product-outcome assertion, §계획 v7)
 	@set -eu; \
 	NODE="src/core/orchestrator/orchestrator_api.nim::normalizeMaxWorkers"; \
 	bin/ax --check-provenance || exit 1; \
@@ -1036,6 +1048,12 @@ build: $(METADATA) ## 전체 CLI 빌드 (nim check)
 	@echo "=== [3/4] Full Build ==="
 	$(NIM) c --hints:off -d:allowMissingZ3 -o:bin/ax src/cli/main.nim
 	@echo "✅ Build successful"
+	@echo ""
+
+evidence-verify: ## Evidence Bundle v2 exporter/verifier (standalone — NOT part of the Tier C ax closure)
+	@echo "=== Evidence Bundle v2 standalone verifier ==="
+	$(NIM) c --hints:off -d:allowMissingZ3 -o:bin/evidence-verify src/bin/evidence_verify.nim
+	@echo "✅ evidence-verify built"
 	@echo ""
 
 GATE_RUNNERS := bin/validate-runners
@@ -1181,6 +1199,7 @@ test-unit:
 	@nim c -r tests/ci/test_vs0_admission_aggregate_fail_closed.nim
 	@nim c -r tests/cli/test_merge_cli.nim
 	@nim c -r tests/cli/test_report_cli.nim
+	@nim c -r tests/cli/test_evidence_bundle_v2.nim
 	@nim c -r tests/unit/test_judgment_set_derivation.nim
 
 # ── oracle-evidence mode=none floor 회귀 픽스처 (Phase 2d, 계획 CE #13) ────
