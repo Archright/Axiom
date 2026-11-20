@@ -201,12 +201,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:5047c3a6faef47d8d7da401435f18f9afd215fded1d987e9836a5561f886a324",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:d782aacf1d062248687e89defbd284ebd6cda5c9c42dceba20d77afa5d82a6e5",
       "count": 1,
       "file": "src/cli/merge_cli.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:f784e4a85212ab76b175fc90bc55cb1de6bc1f8aaca1933aa167ab35c9ffaf2f"
+      "rawContentHash": "sha256:74a2dc2963b0604a515304ef539872679d3d8440d901be155bbef274aaa65fb6"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
