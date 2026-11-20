@@ -8,6 +8,8 @@ import ../../src/core/release/version_derive
 import ../../src/core/types/verification_tier
 import ../../src/verification/cert_vault_role
 import ../../src/verification/cert_promotion
+import ../../src/verification/certificate_verifier
+import ../../src/verification/certificate_identity
 
 suite "Phase 2 — Certificate v3 writer (cert_writer.nim)":
 
@@ -220,4 +222,59 @@ suite "Phase 2 — Certificate v3 writer (cert_writer.nim)":
       let certJson = readEmittedCert(tmpDir, irHash)
       check not certJson.hasKey("proofDigest")
     finally:
+      removeDir(tmpDir)
+
+  test "absolute modulePath is emitted subject-relative (never absolute)":
+    let tmpDir = getTempDir() / "ax_v3_relpath_" & $getCurrentProcessId()
+    createDir(tmpDir / "src")
+    let moduleAbs = tmpDir / "src" / "read.rs"
+    let sourceCode = "pub fn read() -> u8 { 0 }"
+    writeFile(moduleAbs, sourceCode)
+    let irHash = "ir-hash-relpath-001"
+    let origStateDir = getEnv("AXIOM_STATE_DIR", "")
+    putEnv("AXIOM_STATE_DIR", tmpDir)
+    try:
+      var logLines: seq[string] = @[]
+      let ok = writeCertificateFromUapResult(
+        tmpDir, moduleAbs, "read", sourceCode,
+        leanKernelVerified = false,
+        smtlib2 = "",
+        solverStatus = "unknown",
+        logLines = logLines,
+        irHash = irHash,
+        subjectRoot = tmpDir)
+      check ok
+
+      let certJson = readEmittedCert(tmpDir, irHash)
+      check certJson["modulePath"].getStr() == "src/read.rs"
+      check certJson["claim"]["modulePath"].getStr() == "src/read.rs"
+      check not isAbsolute(certJson["modulePath"].getStr())
+      # the stored digest is self-consistent with the emitted relative identity
+      check certJson["identityDigest"].getStr() == v3IdentityFromJson(certJson)
+
+      let expectedInputHashRaw = join([
+        "modulePath", "src/read.rs",
+        "functionName", "read",
+        "sourceHash", computeStableSourceFingerprint(sourceCode),
+        "irHash", irHash
+      ], "\x1f")
+      check certJson["inputHash"].getStr() ==
+            "sha256:" & hash_kernel.sha256Hex(expectedInputHashRaw)
+      # writer → verifier closure on the emitted relative path
+      check certSourceHashMatchesSource(certJson, tmpDir)
+
+      # an absolute path without a subject root has no relative identity —
+      # the writer must refuse, never persist the absolute path.
+      expect CatchableError:
+        var refusedLog: seq[string] = @[]
+        discard writeCertificateFromUapResult(
+          tmpDir, moduleAbs, "read", sourceCode,
+          leanKernelVerified = false,
+          smtlib2 = "",
+          solverStatus = "unknown",
+          logLines = refusedLog,
+          irHash = "ir-hash-relpath-refused")
+    finally:
+      if origStateDir.len > 0: putEnv("AXIOM_STATE_DIR", origStateDir)
+      else: delEnv("AXIOM_STATE_DIR")
       removeDir(tmpDir)

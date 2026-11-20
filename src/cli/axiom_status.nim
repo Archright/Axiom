@@ -476,8 +476,16 @@ proc runStatusCli*(args: seq[string]): int {.axiomEffect: IOEffect, raises: [Cat
     let noHistMsg = "No gate history found. Run a pipeline first."
     let noHistDetail = "  (Expected file: " & HistoryPath & ")"
     if jsonMode:
-      stderr.writeLine noHistMsg
-      stderr.writeLine noHistDetail
+      # Machine-readable absence: a `--json` run always emits a JSON document.
+      # Empty stdout with exit 0 is indistinguishable from a crash and cannot
+      # be consumed by an admission/CI step (missing ≠ valid empty).
+      var absence = newJObject()
+      absence["schema"] = newJString("axiom.status.v1")
+      absence["state"] = newJString("no-history")
+      absence["historyPath"] = newJString(HistoryPath)
+      absence["runs"] = newJArray()
+      absence["message"] = newJString(noHistMsg & noHistDetail)
+      stdout.write $absence & "\n"
     else:
       echo noHistMsg
       echo noHistDetail

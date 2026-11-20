@@ -392,6 +392,123 @@ proc parseClosedSpecPost*(text: string; env: seq[SpecTypeEnvEntry];
   r
 
 # ---------------------------------------------------------------------------
+# Pure helpers (scope-lock signature binding — #223)
+# ---------------------------------------------------------------------------
+
+func rustIdentAt(s: string; i: var int): string {.raises: [].} =
+  ## The identifier starting at `i` (empty when `s[i]` cannot start one),
+  ## advancing `i` past it.
+  if i >= s.len or s[i] notin {'a'..'z', 'A'..'Z', '_'}:
+    return ""
+  let start = i
+  inc i
+  while i < s.len and s[i] in {'a'..'z', 'A'..'Z', '0'..'9', '_'}: inc i
+  s[start ..< i]
+
+func skipRustSpaces(s: string; i: var int) {.raises: [].} =
+  while i < s.len and s[i] in {' ', '\t'}: inc i
+
+func isRustFnDeclaration(line, fnName: string): bool {.raises: [].} =
+  ## Strict single-line recognition of a Rust function declaration whose name
+  ## is exactly `fnName`: optional visibility (`pub`, `pub(crate)`,
+  ## `pub(super)`), then any combination of `async`/`unsafe`, then `fn`, the
+  ## name, and `(` or `<`. Any other prefix (attribute, comment, `const fn`,
+  ## a call site, a longer name) is not a match — the closed vocabulary is the
+  ## fail-closed boundary, never an approximation.
+  var i = 0
+  skipRustSpaces(line, i)
+  var tok = rustIdentAt(line, i)
+  if tok == "pub":
+    skipRustSpaces(line, i)
+    if i < line.len and line[i] == '(':
+      inc i
+      skipRustSpaces(line, i)
+      let scope = rustIdentAt(line, i)
+      if scope notin ["crate", "super"]:
+        return false
+      skipRustSpaces(line, i)
+      if i >= line.len or line[i] != ')':
+        return false
+      inc i
+    skipRustSpaces(line, i)
+    tok = rustIdentAt(line, i)
+  elif tok.len == 0:
+    return false
+  while tok == "async" or tok == "unsafe":
+    skipRustSpaces(line, i)
+    tok = rustIdentAt(line, i)
+  if tok != "fn":
+    return false
+  # Rust requires whitespace between the `fn` keyword and the name.
+  if i >= line.len or line[i] notin {' ', '\t'}:
+    return false
+  skipRustSpaces(line, i)
+  if rustIdentAt(line, i) != fnName:
+    return false
+  skipRustSpaces(line, i)
+  i < line.len and line[i] in {'(', '<'}
+
+func rustSymbolLeafName(symbol: string): string {.raises: [].} =
+  ## The function-name leaf of the declared symbol (`a::b::c` → `c`).
+  let sep = symbol.rfind("::")
+  if sep < 0: symbol else: symbol[(sep + 2) ..< symbol.len]
+
+func extractSignatureLine*(sourceCode, symbol: string):
+    Result[string, string] {.raises: [].} =
+  ## The exact one-line source signature of `symbol`'s leaf name, under the
+  ## documented convention (docs/spec/rust_certified_subset.md §2, fixture
+  ## README): the signature text starting at its first qualifier (leading
+  ## indentation is layout, not signature), with trailing whitespace and the
+  ## trailing `{` (plus the space before it) removed. Fail-closed `err` when
+  ## the leaf is empty, no declaration matches, more than one matches
+  ## (ambiguity), or the matched signature continues on another line (no `{`
+  ## on the same line — the convention's line terminator).
+  let leaf = rustSymbolLeafName(symbol)
+  if leaf.len == 0:
+    return err("symbol '" & symbol & "' has no function-name leaf")
+  var matched = ""
+  var matches = 0
+  for rawLine in sourceCode.splitLines():
+    let line = rawLine.strip()
+    if isRustFnDeclaration(line, leaf):
+      inc matches
+      if matches > 1:
+        return err("ambiguous — more than one declaration line for '" & leaf & "'")
+      matched = line
+  if matches == 0:
+    return err("no declaration line for '" & leaf & "' in the subject module")
+  if not matched.endsWith("{"):
+    return err("signature for '" & leaf & "' spans lines (no trailing '{' " &
+               "on the declaration line)")
+  var sig = matched[0 ..< matched.len - 1]
+  sig = sig.strip(trailing = true, leading = false)
+  ok(sig)
+
+func signatureHashFor*(sourceCode, symbol: string):
+    Result[string, string] {.raises: [].} =
+  ## sha256 hex of the exact one-line signature — the scope-lock
+  ## `signatureHash` convention. Unavailable signatures stay `err`.
+  let sig = extractSignatureLine(sourceCode, symbol)
+  if sig.isErr:
+    return err(sig.error)
+  ok(sha256Hex(sig.get()))
+
+func verifySignatureHash*(sourceCode, symbol, declaredHash: string):
+    Result[string, string] {.raises: [].} =
+  ## #223 — bind the scope-lock `signatureHash` to the ACTUAL source
+  ## signature. `ok(measured)` only on exact equality; every unavailability
+  ## or mismatch is an explicit `err` so the lane fails closed BEFORE
+  ## `rustSubjectIssuance` (the pre-issuance gate; certificate identity is
+  ## untouched).
+  let measured = signatureHashFor(sourceCode, symbol)
+  if measured.isErr:
+    return err("signatureHash unavailable (fail-closed): " & measured.error)
+  if measured.get() != declaredHash:
+    return err("signatureHash mismatch (fail-closed): declared '" & declaredHash &
+               "', measured '" & measured.get() & "'")
+  ok(measured.get())
+
+# ---------------------------------------------------------------------------
 # I/O boundary
 # ---------------------------------------------------------------------------
 
@@ -702,6 +819,89 @@ proc classifyIssuanceBlock(rec: RustIssuanceRecord): tuple[status: string; reaso
   else:
     ("unknown", rec.blockStage & ": " & rec.blockReason)
 
+const ClaimPolicyEnv = "AXIOM_CLAIMS_POLICY"
+  ## Committed claim policy for this run (#220/#225). ABSENT = a discovery run:
+  ## exit semantics stay the execution contract and `required_claims_satisfied`
+  ## is null. PRESENT = an admission run: every required claim must have a
+  ## VERIFIED target and a certificate whose verifier-judged assurance meets
+  ## the declared minimum; otherwise the run exits VERIFICATION_FAILURE even
+  ## though `execution` completed.
+
+func assuranceMeets(judged, required: string): bool {.raises: [].} =
+  ## The only assurance values a policy may require. `proof-artifact-present`
+  ## accepts a kernel replay too (strictly stronger); `lean-kernel-replayed`
+  ## is never satisfied by an un-replayed artifact.
+  if required.len == 0 or required == "proof-artifact-present":
+    return judged in ["proof-artifact-present", "lean-kernel-replayed"]
+  if required == "lean-kernel-replayed":
+    return judged == "lean-kernel-replayed"
+  if required == "solver-artifact-present":
+    return judged == "solver-artifact-present"
+  false
+
+proc evaluateClaimsPolicy*(report: JsonNode; vaultDir: string): JsonNode {.
+    raises: [CatchableError], axiomEffect: IOEffect,
+    tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## Reads AXIOM_CLAIMS_POLICY and judges each required claim against THIS
+  ## run's targets + the certificate's verifier-judged assurance. Returns the
+  ## report fields to attach; a missing/malformed policy is fail-closed
+  ## (satisfied=false, never "no policy means pass").
+  let policyPath = getEnv(ClaimPolicyEnv, "").strip()
+  if policyPath.len == 0:
+    return newJNull()
+  var missing = newJArray()
+  var errorText = ""
+  var policy: JsonNode
+  try:
+    policy = parseJson(readFile(policyPath))
+  except CatchableError as e:
+    errorText = "claims policy unreadable/malformed: " & e.msg
+  var required = newJArray()
+  if errorText.len == 0:
+    required = policy{"requiredClaims"}
+    if required.isNil or required.kind != JArray:
+      errorText = "claims policy has no requiredClaims array"
+      required = newJArray()
+  var byName = initTable[string, JsonNode]()
+  let targetsNode = report{"targets"}
+  if not targetsNode.isNil and targetsNode.kind == JArray:
+    for t in targetsNode.elems:
+      byName[t{"name"}.getStr("")] = t
+  if errorText.len == 0:
+    for claim in required.elems:
+      let symbol = claim{"symbol"}.getStr("")
+      let minAssurance = claim{"minAssurance"}.getStr("")
+      if symbol.len == 0:
+        missing.add(%"<empty-symbol>")
+        continue
+      let t = byName.getOrDefault(symbol)
+      if t.isNil or t{"status"}.getStr("") != "verified":
+        missing.add(%(symbol & ":not-verified"))
+        continue
+      let rawCertPath = t{"certPath"}.getStr("")
+      let certPath =
+        if rawCertPath.len > 0 and not isAbsolute(rawCertPath):
+          vaultDir / rawCertPath
+        else:
+          rawCertPath
+      var cert = newJObject()
+      try:
+        cert = parseJson(readFile(certPath))
+      except CatchableError:
+        missing.add(%(symbol & ":cert-unreadable"))
+        continue
+      let judged = judgeCertAssurance(cert, false)
+      if not assuranceMeets(judged, minAssurance):
+        missing.add(%(symbol & ":assurance=" & judged & "<" & minAssurance))
+  var doc = newJObject()
+  doc["configured"] = newJBool(true)
+  doc["satisfied"] = newJBool(errorText.len == 0 and missing.len == 0)
+  doc["policyPath"] = newJString(policyPath)
+  doc["missing"] = missing
+  if errorText.len > 0:
+    doc["error"] = newJString(errorText)
+  doc
+
 proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
     Result[RustLaneCliReport, CliError] {.
     raises: [CatchableError, OSError, Exception], axiomEffect: IOEffect,
@@ -792,8 +992,39 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
       if not report{"identityBundleDigest"}.isNil:
         report.delete("identityBundleDigest")
       log.add("[AXIOM][rust-lane] §6c identity sidecar failed (gap): " & e.msg)
-    let exitCode = axProofShortcutExitCode(report,
+    # #220/#225 — execution vs verification policy. `execution` says what the
+    # run did; `proofs` says what it established; `required_claims_satisfied`
+    # is the admission decision and is NEVER implied by exit 0. The policy is
+    # committed state (AXIOM_CLAIMS_POLICY), not a CLI flag.
+    var proved, refuted, unknownCount, noSpec, errored = 0
+    let finishTargets = report{"targets"}
+    if not finishTargets.isNil and finishTargets.kind == JArray:
+      for t in finishTargets.elems:
+        case t{"status"}.getStr("")
+        of "verified": inc proved
+        of "failed": inc refuted
+        of "no_spec": inc noSpec
+        of "error": inc errored
+        else: inc unknownCount
+    report["execution"] = %"completed"
+    report["proofs"] = %*{
+      "proved": %proved, "refuted": %refuted,
+      "unknown": %unknownCount, "no_spec": %noSpec, "error": %errored
+    }
+    report["source_assurance"] = %"ir-refinement-assumed"
+    let claimsPolicy = evaluateClaimsPolicy(report, vaultDir)
+    if claimsPolicy.kind == JNull:
+      report["required_claims_satisfied"] = newJNull()
+    else:
+      report["required_claims_satisfied"] = claimsPolicy{"satisfied"}
+      report["claims_policy"] = claimsPolicy
+    var runExit = axProofShortcutExitCode(report,
       requirePerfectAsi = getAxiomEnv(evRequirePerfectAsi) == "1")
+    if claimsPolicy.kind == JObject and
+        not claimsPolicy{"satisfied"}.getBool(false):
+      # Admission denied while the execution itself completed: the report says
+      # both, and the exit axis takes the policy verdict.
+      runExit = exitCode(CliOutcome.VERIFICATION_FAILURE)
     # The report document's durable observable: the SAME trajectory sink the
     # engine's report stage writes (logStage(skReport, extra) →
     # <state>/logs/ax_prove_trajectory.jsonl, state-root routed). The stdout
@@ -801,20 +1032,63 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
     # for prove) — the lane changes neither.
     logStage(skReport, "", "rust subject lane completed", extra = report)
     RustLaneCliReport(outputJson: renderJsonMultiline(report),
-                      logLines: log, exitCode: exitCode)
+                      logLines: log, exitCode: runExit)
 
   proc entryFor(name: string; status: string; reason: string): JsonNode {.
       raises: [].} =
     %*{"name": %name, "status": %status, "reason": %reason}
 
+  # Environment preflight (#221): the reference extractor is a Lean module. If
+  # `proofs/.lake/build` is absent, extraction degrades into a per-target
+  # "unknown" carrying a raw "unknown module prefix IR" — a silent success
+  # shape. Fail closed BEFORE any extraction with the remedy.
+  let irExtractorOlean = repoRoot / "proofs/.lake/build/lib/lean/IR/RustReferenceExtractor.olean"
+  if not fileExists(irExtractorOlean):
+    var entries = newJArray()
+    var declCount = 0
+    for entry in lockData{"rust_targets"}.elems:
+      entries.add(entryFor(entry{"symbol"}.getStr(), "error",
+        "ENVIRONMENT ERROR: Lean project build missing (" & irExtractorOlean &
+        "); run 'cd proofs && lake build' before ax prove"))
+      inc declCount
+    report["targets"] = entries
+    report["capability"] = %*{
+      "status": "ENVIRONMENT ERROR",
+      "reason": "Lean project build missing (" & irExtractorOlean &
+                "); run 'cd proofs && lake build'"
+    }
+    report["summary"] = %*{
+      "verified": %0, "failedCount": %0, "timeoutCount": %0,
+      "verifiedRatio": %0.0,
+      "statusCounts": %*{"verified": %0, "failed": %0, "unknown": %0, "error": %declCount},
+      "blockingFailure": %true
+    }
+    log.add("[AXIOM][rust-lane] environment preflight failed: " & irExtractorOlean &
+            " missing — run 'cd proofs && lake build'")
+    return ok(finish(report))
+
   if not run.ok:
     # PENDING family — every declared target unverified; NEVER a certificate,
     # NEVER success-by-default claims: the summary says so honestly.
+    # #222: a binary whose extractor identity does not match the pin has NO
+    # Rust capability. That is stated as a capability fact, not left to look
+    # like an ordinary "unknown" verification outcome, and it never falls
+    # through to another scanner.
+    var capability = newJObject()
+    let capStatus =
+      if run.error == crPinMismatch: "UNSUPPORTED CAPABILITY"
+      elif run.error == crNotFound: "MISSING EXTRACTOR"
+      else: "EXTRACTION UNAVAILABLE"
+    capability["status"] = %capStatus
+    capability["reason"] = %run.reason
+    capability["pinnedCharon"] = %pinnedCharonIdentity()
+    capability["measuredCharon"] = %run.versionLine
+    report["capability"] = capability
     var entries = newJArray()
     var declCount = 0
     for entry in lockData{"rust_targets"}.elems:
       entries.add(entryFor(entry{"symbol"}.getStr(), "unknown",
-        "pinned charon extraction unavailable (" & $run.error & "): " & run.reason))
+        capStatus & ": pinned charon extraction unavailable (" & $run.error & "): " & run.reason))
       inc declCount
     report["targets"] = entries
     report["summary"] = %*{
@@ -1044,6 +1318,20 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
         "subject module unreadable (fail-closed): " & modulePath & ": " & e.msg))
       inc errorCount
       continue
+
+    # #223 — bind the declared signatureHash to the ACTUAL source signature
+    # (the exact one-line declaration, sha256 per the documented convention).
+    # Pre-issuance and fail-closed: an unavailable or mismatched declaration
+    # never reaches rustSubjectIssuance. Certificate identity is untouched.
+    let signatureCheck = verifySignatureHash(sourceCode, name,
+      declared[name]{"signatureHash"}.getStr())
+    if signatureCheck.isErr:
+      entries.add(entryFor(name, "error", signatureCheck.error))
+      inc errorCount
+      log.add("[AXIOM][rust-lane] " & name & " → error: " & signatureCheck.error)
+      continue
+    log.add("[AXIOM][rust-lane] signatureHash bound: " & name & " = " &
+            signatureCheck.get())
 
     let rec = rustSubjectIssuance(
       llbcText, name, parsed.expr,

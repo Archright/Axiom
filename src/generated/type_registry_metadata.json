@@ -4023,6 +4023,35 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/cli/cert_cli.nim",
+      "name": "buildCertVerifyDoc",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/cli/cert_cli.nim",
+      "name": "certAxiomsAllowlisted",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "String",
       "module": "src/cli/cert_cli.nim",
       "name": "certGateHistoryPath",
@@ -4039,6 +4068,34 @@
       "ignorable": false,
       "leanType": "String",
       "module": "src/cli/cert_cli.nim",
+      "name": "certStatusName",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List string",
+      "module": "src/cli/cert_cli.nim",
+      "name": "certTrustAssumptions",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/cli/cert_cli.nim",
       "name": "cleanHexOpt",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (str.len result) 0)"
@@ -4047,6 +4104,21 @@
       "returnType": "string",
       "smtSort": "String",
       "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/cli/cert_cli.nim",
+      "name": "declaredAssuranceSupported",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
     },
     {
       "hasAxiomHint": false,
@@ -4088,6 +4160,49 @@
       "returnType": "bool",
       "smtSort": "Bool",
       "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/cli/cert_cli.nim",
+      "name": "judgeCertAssurance",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/cli/cert_cli.nim",
+      "name": "leanSourceNeedsProjectBuild",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/cli/cert_cli.nim",
+      "name": "leanToolchainProblem",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
     },
     {
       "hasAxiomHint": false,
@@ -4208,14 +4323,14 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
-      "leanType": "tuple[certPath, projectRoot: string; kernelMode: bool; err: string]",
+      "leanType": "tuple[certPath, projectRoot, receiptOut: string; kernelMode, jsonOut: bool; err: string]",
       "module": "src/cli/cert_cli.nim",
       "name": "parseCertVerifyArgs",
       "negativeConstraints": [
         "result >= 0 is invalid — object types are not numeric"
       ],
       "resultConstraintTemplate": "",
-      "returnType": "tuple[certPath, projectRoot: string; kernelMode: bool; err: string]",
+      "returnType": "tuple[certPath, projectRoot, receiptOut: string; kernelMode, jsonOut: bool; err: string]",
       "smtSort": "Int",
       "typeCategory": "object"
     },
@@ -4447,6 +4562,20 @@
       "ignorable": false,
       "leanType": "String",
       "module": "src/cli/cert_cli.nim",
+      "name": "sourceAssuranceFor",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/cli/cert_cli.nim",
       "name": "validateAttestArgs",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (str.len result) 0)"
@@ -4470,13 +4599,16 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
-      "leanType": "Int",
+      "leanType": "KernelReexecOutcome",
       "module": "src/cli/cert_cli.nim",
       "name": "verifyKernelReexecution",
-      "resultConstraintTemplate": "(>= result 0)",
-      "returnType": "int",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "KernelReexecOutcome",
       "smtSort": "Int",
-      "typeCategory": "numeric"
+      "typeCategory": "object"
     },
     {
       "hasAxiomHint": false,
@@ -10144,6 +10276,21 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/cli/rust_lane_cli.nim",
+      "name": "assuranceMeets",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "tuple[status: string; reason: string]",
       "module": "src/cli/rust_lane_cli.nim",
       "name": "classifyIssuanceBlock",
@@ -10172,6 +10319,36 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/cli/rust_lane_cli.nim",
+      "name": "evaluateClaimsPolicy",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/cli/rust_lane_cli.nim",
+      "name": "extractSignatureLine",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "String",
       "module": "src/cli/rust_lane_cli.nim",
       "name": "findDepInfo",
@@ -10196,6 +10373,21 @@
       "returnType": "RustLaneCliReport",
       "smtSort": "Int",
       "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/cli/rust_lane_cli.nim",
+      "name": "isRustFnDeclaration",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
     },
     {
       "hasAxiomHint": false,
@@ -10333,6 +10525,66 @@
       "leanType": "Unit",
       "module": "src/cli/rust_lane_cli.nim",
       "name": "runRustLaneCli",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/cli/rust_lane_cli.nim",
+      "name": "rustIdentAt",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/cli/rust_lane_cli.nim",
+      "name": "rustSymbolLeafName",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/cli/rust_lane_cli.nim",
+      "name": "signatureHashFor",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/cli/rust_lane_cli.nim",
+      "name": "skipRustSpaces",
       "negativeConstraints": [
         "result does not exist in this function's scope",
         "SMT: (>= result 0) is a SORT ERROR — result has no type",
@@ -10539,6 +10791,22 @@
       "returnType": "string",
       "smtSort": "String",
       "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/cli/rust_lane_cli.nim",
+      "name": "verifySignatureHash",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
     },
     {
       "hasAxiomHint": false,
@@ -119285,7 +119553,35 @@
       "ignorable": false,
       "leanType": "String",
       "module": "src/verification/certificate_identity.nim",
+      "name": "canonicalSubjectRelativeModulePath",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/certificate_identity.nim",
       "name": "compV3Identity",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/certificate_identity.nim",
+      "name": "normalizeModulePathSegments",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (str.len result) 0)"
       ],

@@ -51,8 +51,10 @@ else:
 proc showCerts*(): int  {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   let proofVault = ".axiom/vault"
   if not dirExists(proofVault):
-    echo "[cert] No proof vault found at .axiom/vault/"
-    return 0
+    # A "show" that reports success without a vault is a false attestation:
+    # the operator asked to inspect evidence and none existed to inspect.
+    echo "[cert] FAIL: no proof vault found at .axiom/vault/"
+    return 1
   var count = 0
   for kind, path in walkDir(proofVault):
     if kind == pcFile and path.endsWith(".json"):
@@ -60,12 +62,109 @@ proc showCerts*(): int  {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect,
       let name = extractFilename(path)
       echo "  " & name
   if count == 0:
-    echo "[cert] No certificates found in proof vault."
-  else:
-    echo "[cert] " & $count & " certificate(s) found."
+    echo "[cert] FAIL: no certificates found in proof vault."
+    return 1
+  echo "[cert] " & $count & " certificate(s) found."
   return 0
 
-proc verifyKernelReexecution(node: JsonNode): int {.
+type
+  KernelReexecOutcome* = object
+    exitCode*: int
+    passed*: bool
+    leanState*: string
+    z3State*: string
+    checkerState*: string
+    detail*: string
+
+func certAxiomsAllowlisted(cert: JsonNode): bool =
+  ## Verifier-side read of the observed axiom set. A certificate may only
+  ## claim builtin axioms the kernel allowlist admits; missing/malformed is a
+  ## failure-fact, never "empty is fine".
+  let axioms = cert.getOrDefault("axiomsUsed")
+  if axioms.isNil or axioms.kind != JArray:
+    return false
+  for a in axioms.elems:
+    if a.kind != JString or a.getStr("") notin leanCertBuiltinAxiomAllowlist:
+      return false
+  true
+
+func judgeCertAssurance*(cert: JsonNode; kernelReplayed: bool): string =
+  ## THE verifier-judged assurance ladder (docs/spec/cert_lifecycle_contracts.md):
+  ## the certificate's own `verificationTier` is ECHOED as `declared` but never
+  ## used as the verdict. Levels, strongest last:
+  ##   unverified             — no proof/solver artifact to judge
+  ##   proof-artifact-unbound — leanSource present, axiom set missing/disallowed
+  ##   proof-artifact-present — leanSource + allowlisted axiom set recorded
+  ##   solver-artifact-present— smtlib2 present (no Lean artifact)
+  ##   lean-kernel-replayed   — THIS run re-executed the artifact on the kernel
+  let leanSource = cert.getOrDefault("leanSource").getStr("")
+  if leanSource.len == 0:
+    return (if cert.getOrDefault("smtlib2").getStr("").len > 0:
+              "solver-artifact-present" else: "unverified")
+  if not certAxiomsAllowlisted(cert):
+    return "proof-artifact-unbound"
+  if kernelReplayed:
+    return "lean-kernel-replayed"
+  "proof-artifact-present"
+
+func sourceAssuranceFor*(cert: JsonNode): string =
+  ## The source→IR refinement is never verified by this CLI. The certificate
+  ## binds the source BYTES (sourceHash), not the meaning: a Rust claim is an
+  ## IR-level theorem whose rustc→LLBC→canonical link is assumed.
+  let modulePath = cert.getOrDefault("modulePath").getStr("")
+  if modulePath.endsWith(".rs"):
+    return "ir-refinement-assumed"
+  "source-hash-bound-refinement-assumed"
+
+func certTrustAssumptions*(cert: JsonNode): seq[string] =
+  result = @[
+    "sourceHash binds the certificate to the current module bytes; the " &
+      "source->IR refinement is not mechanically verified",
+  ]
+  if certAxiomsAllowlisted(cert):
+    result.add("Lean accepts only the pinned builtin axiom allowlist")
+  else:
+    result.add("axiom set missing or outside the pinned allowlist")
+  if cert.getOrDefault("modulePath").getStr("").endsWith(".rs"):
+    result.add("rustc->Charon LLBC extraction and LLBC->canonical IR translation are trusted")
+
+func declaredAssuranceSupported(cert: JsonNode): bool =
+  ## The certificate's own tier may not exceed the artifacts it carries. A
+  ## forged/unknown tier is fail-closed: it can never ride through as a pass.
+  let tier = cert.getOrDefault("verificationTier").getStr("")
+  case tier
+  of "", "unverified":
+    true
+  of "lean-verified":
+    cert.getOrDefault("leanSource").getStr("").len > 0 and
+      certAxiomsAllowlisted(cert) and
+      cert.getOrDefault("canonicalKaa").getStr("").len > 0
+  of "z3-verified":
+    cert.getOrDefault("smtlib2").getStr("").len > 0
+  else:
+    false
+
+func leanSourceNeedsProjectBuild(leanSource: string): bool {.raises: [CatchableError].} =
+  for line in leanSource.splitLines:
+    if line.startsWith("import "):
+      return true
+  false
+
+proc leanToolchainProblem(leanSource: string): string {.raises: [CatchableError].} =
+  ## Environment preflight (no auto-build): a missing toolchain or missing
+  ## project build is an ENVIRONMENT error — never a pass, and never a silent
+  ## `lake build` during verification (#221).
+  if getEnv("AXIOM_LEAN_CMD", "").strip().len == 0:
+    if findExe("lake").len == 0 and findExe("lean").len == 0:
+      return "Lean toolchain not found (lake/lean absent from PATH); " &
+             "install the pinned Lean and run 'cd proofs && lake build'"
+  if leanSourceNeedsProjectBuild(leanSource) and
+      not dirExists("proofs/.lake/build/lib"):
+    return "Lean project build missing (proofs/.lake/build/lib); " &
+           "run 'cd proofs && lake build' before verification"
+  ""
+
+proc verifyKernelReexecution(node: JsonNode; quiet: bool): KernelReexecOutcome {.
   axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## --kernel body (extracted so verifyCert stays within the surface budget):
   ## after the structural checks pass, the certificate's attestation basis
@@ -87,21 +186,92 @@ proc verifyKernelReexecution(node: JsonNode): int {.
   let checkerVerdict =
     if leanPresent: checkLeanWithLeanChecker(node, "", "")
     else: lcSkipped
+  result = KernelReexecOutcome(
+    leanState: (if not leanPresent: "absent"
+                elif leanVerdict == krPassed: "re-executed" else: "failed"),
+    z3State: (if not z3Present: "absent"
+              elif z3Verdict == krPassed: "unsat" else: "failed"),
+    checkerState: (if not leanPresent: "absent"
+                   elif checkerVerdict == lcPassed: "passed"
+                   else: "SKIPPED (additive deep check)"))
   if checkerVerdict == lcMismatch:
-    echo "[cert] Verify: KERNEL_REEXECUTION_FAILED — " & leanCheckerVerdictReason(checkerVerdict)
-    return 1
+    result.exitCode = 1
+    result.detail = leanCheckerVerdictReason(checkerVerdict)
+    if not quiet:
+      echo "[cert] Verify: KERNEL_REEXECUTION_FAILED — " & result.detail
+    return
   let verdict = composeKernelVerdict(leanVerdict, z3Verdict, leanPresent, z3Present)
   if verdict == krPassed:
-    echo "[cert] Verify: PASS (kernel re-execution — lean=" &
-      (if leanPresent: "re-executed" else: "absent") &
-      ", z3=" & (if z3Present: "unsat" else: "absent") &
-      ", leanchecker=" &
-      (if checkerVerdict == lcPassed: "passed" else: "SKIPPED (additive deep check)" ) & ")"
-    return 0
-  echo "[cert] Verify: KERNEL_REEXECUTION_FAILED — " & kernelVerdictReason(verdict)
-  return 1
+    result.exitCode = 0
+    result.passed = true
+    if not quiet:
+      echo "[cert] Verify: PASS (kernel re-execution — lean=" &
+        result.leanState & ", z3=" & result.z3State &
+        ", leanchecker=" & result.checkerState & ")"
+    return
+  result.exitCode = 1
+  result.detail = kernelVerdictReason(verdict)
+  if not quiet:
+    echo "[cert] Verify: KERNEL_REEXECUTION_FAILED — " & result.detail
 
-proc verifyCert*(path: string; kernelMode: bool = false; projectRoot: string = ""): int {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+func certStatusName(status: CertClosureStatus): string =
+  case status
+  of ccsPass: "PASS"
+  of ccsNotCurrent: "NOT_CURRENT"
+  of ccsJournalBindingAbsent, ccsJournalRequired: "JOURNAL_REQUIRED"
+  else: "FAIL"
+
+proc buildCertVerifyDoc(path: string; res: CertClosureResult; cert: JsonNode;
+                        kernel: KernelReexecOutcome; kernelMode, envFailed, overclaim: bool): JsonNode =
+  ## Machine-readable verification receipt (`--json` / `--receipt-out`). The
+  ## `assurance.judged` value is computed HERE from the artifacts and this
+  ## run's kernel outcome; `assurance.declared` is only what the certificate
+  ## says about itself.
+  let passed = res.status == ccsPass and (not kernelMode or kernel.passed) and
+               not envFailed and not overclaim
+  let judged =
+    if not passed: "unverified"
+    else: judgeCertAssurance(cert, kernelMode and kernel.passed)
+  result = %*{
+    "schema": "axiom.cert-verify.v1",
+    "certificate": path,
+    "modulePath": cert.getOrDefault("modulePath").getStr(""),
+    "functionName": cert.getOrDefault("functionName").getStr(""),
+    "verdict": (if passed: "PASS"
+                elif overclaim: "ASSURANCE_OVERCLAIM"
+                elif envFailed: "ENVIRONMENT_ERROR"
+                elif res.status != ccsPass: certStatusName(res.status)
+                else: "KERNEL_REEXECUTION_FAILED"),
+    "replayMatched": res.replayMatched,
+    "semanticHash": res.semanticHash,
+    "hashes": %*{
+      "sourceHash": cert.getOrDefault("sourceHash").getStr(""),
+      "irHash": cert.getOrDefault("irHash").getStr(""),
+      "propositionHash": cert.getOrDefault("propositionHash").getStr(""),
+      "leanSourceHash": cert.getOrDefault("leanSourceHash").getStr(""),
+      "identityDigest": cert.getOrDefault("identityDigest").getStr("")
+    },
+    "assurance": %*{
+      "judged": judged,
+      "declared": cert.getOrDefault("verificationTier").getStr(""),
+      "sourceAssurance": sourceAssuranceFor(cert),
+      "trustAssumptions": %certTrustAssumptions(cert)
+    },
+    "kernel": %*{
+      "requested": kernelMode,
+      "lean": kernel.leanState,
+      "z3": kernel.z3State,
+      "leanchecker": kernel.checkerState,
+      "detail": kernel.detail
+    },
+    "verifier": %*{
+      "binary": getAppFilename(),
+      "sourceCommit": BuildEnvGitHash
+    }
+  }
+
+proc verifyCert*(path: string; kernelMode: bool = false; projectRoot: string = "";
+                 jsonOut: bool = false; receiptOut: string = ""): int {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## v1 certificate verification — delegates to the R4 trust-closure pipeline
   ## (deep verification + identityDigest recompute + journal binding + replay
   ## input consistency + replay equality). Fail-closed: any missing/mismatched
@@ -116,30 +286,80 @@ proc verifyCert*(path: string; kernelMode: bool = false; projectRoot: string = "
   ## the pinned kernels on the embedded inputs (verifyKernelReexecution —
   ## Lean/Z3 + Phase 6 leanchecker deep check). Without --kernel the behavior
   ## is unchanged (backward-compatible).
+  ##
+  ## --json / --receipt-out: machine-readable receipt. The receipt is written
+  ## ONLY on a passing verdict; a failed run never leaves an artifact that a
+  ## later admission step could mistake for evidence.
   if not fileExists(path):
-    logInfo("cert_cli", "[cert] File not found: " & path)
+    if jsonOut:
+      var doc = newJObject()
+      doc["schema"] = newJString("axiom.cert-verify.v1")
+      doc["certificate"] = newJString(path)
+      doc["verdict"] = newJString("FAIL")
+      doc["replayMatched"] = newJBool(false)
+      doc["detail"] = newJString("certificate file not found")
+      echo $doc
+    else:
+      logInfo("cert_cli", "[cert] File not found: " & path)
     return 1
   let res = verifyCertificateClosure(path, projectRoot)
+  let certLoad = loadCertJsonForReexecution(path)
+  var cert = newJObject()
+  if certLoad.isOk(): cert = certLoad.get
+  var kernel = KernelReexecOutcome(leanState: "absent", z3State: "absent",
+                                   checkerState: "absent")
+  var envFailed = false
+  var overclaim = false
+  var code = 0
   case res.status
   of ccsPass:
-    if not kernelMode:
-      echo "[cert] Verify: PASS (replayMatched=true, semanticHash=" & res.semanticHash & ")"
-      return 0
-    # ── Kernel re-execution deep verify ─────────────────────────────────
-    let certLoad = loadCertJsonForReexecution(path)
-    if certLoad.isErr():
-      echo "[cert] Verify: KERNEL_REEXECUTION_FAILED — " & certLoad.error
-      return 1
-    return verifyKernelReexecution(certLoad.get)
+    if not declaredAssuranceSupported(cert):
+      overclaim = true
+      code = 1
+      if not jsonOut:
+        echo "[cert] Verify: ASSURANCE_OVERCLAIM — the declared tier '" &
+          cert.getOrDefault("verificationTier").getStr("") &
+          "' is not supported by the certificate's artifacts"
+    elif not kernelMode:
+      if not jsonOut:
+        echo "[cert] Verify: PASS (replayMatched=true, semanticHash=" & res.semanticHash & ")"
+    else:
+      let envProblem = leanToolchainProblem(cert.getOrDefault("leanSource").getStr(""))
+      if envProblem.len > 0:
+        envFailed = true
+        kernel = KernelReexecOutcome(exitCode: 1, leanState: "unavailable",
+                                     detail: envProblem)
+        if not jsonOut:
+          echo "[cert] Verify: ENVIRONMENT_ERROR — " & envProblem
+        code = 1
+      else:
+        kernel = verifyKernelReexecution(cert, quiet = jsonOut)
+        code = kernel.exitCode
   of ccsNotCurrent:
-    echo "[cert] NOT CURRENT — artifact is valid but not current product truth: " & res.detail
-    return 4
+    if not jsonOut:
+      echo "[cert] NOT CURRENT — artifact is valid but not current product truth: " & res.detail
+    code = 4
   of ccsJournalBindingAbsent, ccsJournalRequired:
-    echo "[cert] Verify: JOURNAL_REQUIRED — " & res.detail
-    return 2
+    if not jsonOut:
+      echo "[cert] Verify: JOURNAL_REQUIRED — " & res.detail
+    code = 2
   else:
-    echo "[cert] Verify: FAIL — " & res.detail
-    return 1
+    if not jsonOut:
+      echo "[cert] Verify: FAIL — " & res.detail
+    code = 1
+  if jsonOut or receiptOut.len > 0:
+    let doc = buildCertVerifyDoc(path, res, cert, kernel, kernelMode, envFailed, overclaim)
+    let text = $doc
+    if jsonOut:
+      stdout.write text & "\n"
+    if receiptOut.len > 0 and code == 0:
+      try:
+        writeFile(receiptOut, text & "\n")
+      except CatchableError as e:
+        if not jsonOut:
+          echo "[cert] Verify: receipt write failed — " & e.msg
+        code = 1
+  code
 
 proc exportCerts*(args: seq[string]): int =
   var asJson = false
@@ -1479,26 +1699,33 @@ proc runAttestationSubCli(cmd: string; args: seq[string]): int {.raises: [Catcha
   else:
     runLedgerListCli(args)
 
-func parseCertVerifyArgs(args: seq[string]): tuple[certPath, projectRoot: string; kernelMode: bool; err: string] =
-  ## `ax cert verify [--kernel] [--project <dir>] <path>` argument parser —
-  ## pure; the caller owns logging and exit codes.
-  const usage = "Usage: ax cert verify [--kernel] [--project <dir>] <path>"
-  result = ("", "", false, "")
+func parseCertVerifyArgs(args: seq[string]): tuple[certPath, projectRoot, receiptOut: string; kernelMode, jsonOut: bool; err: string] =
+  ## `ax cert verify [--kernel] [--json] [--receipt-out <path>] [--project <dir>] <path>`
+  ## argument parser — pure; the caller owns logging and exit codes.
+  const usage = "Usage: ax cert verify [--kernel] [--json] [--receipt-out <path>] [--project <dir>] <path>"
+  result = ("", "", "", false, false, "")
   var i = 1
   while i < args.len:
     if args[i] == "--kernel":
       result.kernelMode = true
+    elif args[i] == "--json":
+      result.jsonOut = true
+    elif args[i] == "--receipt-out":
+      if i + 1 >= args.len:
+        return ("", "", "", false, false, usage)
+      inc i
+      result.receiptOut = args[i]
     elif args[i] == "--project":
       if i + 1 >= args.len:
-        return ("", "", false, usage)
+        return ("", "", "", false, false, usage)
       inc i
       result.projectRoot = args[i]
     elif args[i].len > 0 and args[i][0] == '-':
-      return ("", "", false, "Unknown flag: " & args[i])
+      return ("", "", "", false, false, "Unknown flag: " & args[i])
     elif result.certPath.len == 0:
       result.certPath = args[i]
     else:
-      return ("", "", false, usage)
+      return ("", "", "", false, false, usage)
     inc i
   if result.certPath.len == 0:
     result.err = usage
@@ -1522,7 +1749,7 @@ proc runCertCli*(args: seq[string]): int =
     if parsed.err.len > 0:
       logInfo("cert_cli", parsed.err)
       return 1
-    return verifyCert(parsed.certPath, parsed.kernelMode, parsed.projectRoot)
+    return verifyCert(parsed.certPath, parsed.kernelMode, parsed.projectRoot, parsed.jsonOut, parsed.receiptOut)
   of "export":
     return exportCerts(args[1 .. ^1])
   of "reissue-reference":
