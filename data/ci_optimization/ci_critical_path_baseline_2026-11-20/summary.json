@@ -1,0 +1,236 @@
+{
+  "slice": "VS-1a CI critical-path attribution",
+  "date": "2026-11-20",
+  "collectedAt": "2026-11-20T04:42:48Z",
+  "definitions": "docs/spec/ci_critical_path_metric.md",
+  "source": "GitHub REST /repos/Archright/Axiom/actions/runs/{id}/jobs (terminal attempt); raw copies held at /tmp/jobs_<id>.json during collection, not committed",
+  "cohort": {
+    "event": "merge_group",
+    "workflow": "admission-gate",
+    "workflowPath": ".github/workflows/admission-gate-v2.yml",
+    "n": 5,
+    "note": "one run concluded failure; retained as a natural terminal attempt"
+  },
+  "runs": [
+    {
+      "runId": 44521587339,
+      "event": "merge_group",
+      "conclusion": "failure",
+      "headSha": "807f38d9fec0",
+      "createdAt": "2026-11-19T12:11:32Z",
+      "jobs": 26,
+      "wallSeconds": 763.0,
+      "runnerSeconds": 1286.0,
+      "queuedSeconds": 27.0,
+      "stepSeconds": 1242.0,
+      "provisioningFamilySeconds": 1080.0,
+      "provisioningFamilyInvocations": 9,
+      "criticalPathSeconds": 762.0,
+      "criticalPathShare": 0.9987,
+      "chain": [
+        "attest",
+        "mint-prepare",
+        "mint-publish",
+        "admission-check"
+      ]
+    },
+    {
+      "runId": 44542633420,
+      "event": "merge_group",
+      "conclusion": "success",
+      "headSha": "69d2dce090c9",
+      "createdAt": "2026-11-19T14:20:17Z",
+      "jobs": 26,
+      "wallSeconds": 430.0,
+      "runnerSeconds": 824.0,
+      "queuedSeconds": 27.0,
+      "stepSeconds": 779.0,
+      "provisioningFamilySeconds": 389.0,
+      "provisioningFamilyInvocations": 9,
+      "criticalPathSeconds": 430.0,
+      "criticalPathShare": 1.0,
+      "chain": [
+        "anchor-resolve",
+        "attest",
+        "mint-prepare",
+        "mint-publish",
+        "admission-check"
+      ]
+    },
+    {
+      "runId": 44548437642,
+      "event": "merge_group",
+      "conclusion": "success",
+      "headSha": "dd8502f629f7",
+      "createdAt": "2026-11-19T14:52:16Z",
+      "jobs": 26,
+      "wallSeconds": 519.0,
+      "runnerSeconds": 854.0,
+      "queuedSeconds": 161.0,
+      "stepSeconds": 805.0,
+      "provisioningFamilySeconds": 367.0,
+      "provisioningFamilyInvocations": 9,
+      "criticalPathSeconds": 519.0,
+      "criticalPathShare": 1.0,
+      "chain": [
+        "anchor-resolve",
+        "attest",
+        "mint-prepare",
+        "mint-publish",
+        "admission-check"
+      ]
+    },
+    {
+      "runId": 44553449785,
+      "event": "merge_group",
+      "conclusion": "success",
+      "headSha": "a2a863634dd0",
+      "createdAt": "2026-11-19T15:19:16Z",
+      "jobs": 26,
+      "wallSeconds": 574.0,
+      "runnerSeconds": 991.0,
+      "queuedSeconds": 277.0,
+      "stepSeconds": 951.0,
+      "provisioningFamilySeconds": 429.0,
+      "provisioningFamilyInvocations": 10,
+      "criticalPathSeconds": 574.0,
+      "criticalPathShare": 1.0,
+      "chain": [
+        "attest",
+        "mint-prepare",
+        "mint-publish",
+        "admission-check"
+      ]
+    },
+    {
+      "runId": 44561019095,
+      "event": "merge_group",
+      "conclusion": "success",
+      "headSha": "8bbb035a7aca",
+      "createdAt": "2026-11-19T15:59:37Z",
+      "jobs": 26,
+      "wallSeconds": 555.0,
+      "runnerSeconds": 931.0,
+      "queuedSeconds": 44.0,
+      "stepSeconds": 892.0,
+      "provisioningFamilySeconds": 309.0,
+      "provisioningFamilyInvocations": 9,
+      "criticalPathSeconds": 554.0,
+      "criticalPathShare": 0.9982,
+      "chain": [
+        "attest",
+        "mint-prepare",
+        "mint-publish",
+        "admission-check"
+      ]
+    }
+  ],
+  "aggregates": {
+    "wallSeconds": {
+      "median": 555.0,
+      "min": 430.0,
+      "max": 763.0,
+      "n": 5
+    },
+    "runnerSeconds": {
+      "median": 931.0,
+      "sum": 4886.0,
+      "min": 824.0,
+      "max": 1286.0
+    },
+    "parallelism": 1.72,
+    "criticalPathShareMean": 0.9994,
+    "criticalPathSecondsMean": 567.8,
+    "queuedSecondsMedian": 44.0,
+    "stepSecondsTotal": 4669.0,
+    "provisioningFamilySecondsTotal": 2574.0,
+    "provisioningFamilyShareOfStepSeconds": 0.5513
+  },
+  "topSteps": [
+    {
+      "step": "Run ./.github/actions/setup-axiom-toolchain",
+      "seconds": 1878.0,
+      "invocations": 36
+    },
+    {
+      "step": "Restore trusted B supply (setup-axiom-toolchain — exact-key B layer)",
+      "seconds": 441.0,
+      "invocations": 5
+    },
+    {
+      "step": "[lane] evidenceId contract check (B-owned checker — self-check battery, EXECUTED always)",
+      "seconds": 346.0,
+      "invocations": 10
+    },
+    {
+      "step": "[closure] Pinned toolchain (setup-axiom-toolchain — nim 2.2.10, no inline choosenim)",
+      "seconds": 255.0,
+      "invocations": 5
+    },
+    {
+      "step": "[check] Install libpcre3 (bin/ax dlopen dependency — landing verdict)",
+      "seconds": 117.0,
+      "invocations": 10
+    },
+    {
+      "step": "Set up job",
+      "seconds": 114.0,
+      "invocations": 71
+    },
+    {
+      "step": "[build] Build bin/ax + harness from B",
+      "seconds": 108.0,
+      "invocations": 5
+    },
+    {
+      "step": "[check] Root layout gate (B-built judge + H payload — Filesystem Contract V2)",
+      "seconds": 102.0,
+      "invocations": 5
+    },
+    {
+      "step": "(P3) Bin/ax 준비 — trusted B supply (cache exact-hit + provenance | B-checkout build)",
+      "seconds": 87.0,
+      "invocations": 5
+    },
+    {
+      "step": "Install Nim 2.2.10 (choosenim, pinned)",
+      "seconds": 78.0,
+      "invocations": 5
+    },
+    {
+      "step": "Compile oracle + reconcile gate from B (full trusted tree)",
+      "seconds": 70.0,
+      "invocations": 5
+    },
+    {
+      "step": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+      "seconds": 65.0,
+      "invocations": 11
+    }
+  ],
+  "setupStepDistribution": {
+    "invocations": 36,
+    "median": 39.5,
+    "p75": 56.0,
+    "max": 253.0,
+    "sum": 1878.0,
+    "zeroInvocations": 6
+  },
+  "reconciliation": {
+    "previouslyQuoted": {
+      "wallP50": 574,
+      "runnerP50": 979
+    },
+    "thisCohort": {
+      "wallP50": 555.0,
+      "runnerP50": 931.0
+    },
+    "cause": "runner-seconds previously summed raw job spans (skipped jobs carry negative spans); this baseline clamps each job span at 0 and fixes the 5 run IDs"
+  },
+  "limits": [
+    "n=5, p95 not estimable",
+    "one run concluded failure and is retained as a natural terminal attempt",
+    "critical path is reconstructed post hoc from declared needs edges, not exported by GitHub",
+    "raw API copies are not committed; run IDs allow re-collection"
+  ]
+}
