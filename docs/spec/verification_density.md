@@ -16,7 +16,9 @@ No new pragmas required. Derived from existing compile-time metadata.
 **Rust 병렬 절 (placeholder)**: 위 Kernel 술어는 Nim 프라그마(`{.axiom.}` / `{.axiomEffect: Pure.}`)에
 특화되어 있다. Rust subject의 커널 술어는 `docs/spec/rust_certified_subset.md`에 별도로 선언하며,
 fail-closed codec boundary + `vks_rust` scope lock으로 강제한다. 이 문서의 VKD 수식과 분자 규칙
-(`isVkdAdmissible`, certGreen-only)은 변경되지 않는다.
+(`isVkdAdmissible`, certGreen-only)은 변경되지 않는다. admission evidence bundle에서 certificate
+본문·inventory·tier 결속이 요구되는 방식은
+[admission_evidence_export_contract.md](admission_evidence_export_contract.md)가 정의한다.
 
 ### Shell
 

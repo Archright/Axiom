@@ -10,6 +10,8 @@
 > (admission architecture — Pass numbering, fact model, verdict vocabulary),
 > [certification_continuity_contract.md](certification_continuity_contract.md)
 > (subject-continuity certificate — Pass 2.96, INV-1/INV-3),
+> [admission_evidence_export_contract.md](admission_evidence_export_contract.md)
+> (admission evidence bundle의 certificate 본문·inventory·tier 결속),
 > [merge_authority_integrity.md](merge_authority_integrity.md),
 > `config/policy/merge_admission.json` (policy SSOT),
 > `data/verification_scope.lock` (verification scope lock),
