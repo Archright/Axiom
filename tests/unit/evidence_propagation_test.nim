@@ -32,7 +32,7 @@ suite "Evidence Propagation Consistency — Phase C P0":
   # -----------------------------------------------------------------------
 
   test "consistent propagation returns true when all three paths agree":
-    let axioms = @["propext", "Quot.sound", "funext"]
+    let axioms = @["propext", "Quot.sound", "Classical.choice"]
     check evidencePropagationConsistent(
       axioms, axioms, axioms,
       kernelAccepted = true, hasKaa = true
@@ -44,7 +44,7 @@ suite "Evidence Propagation Consistency — Phase C P0":
 
   test "mismatched receipt vs cert observed set returns false":
     let receiptAxioms = @["propext", "Quot.sound"]
-    let certAxioms = @["propext", "funext"]
+    let certAxioms = @["propext", "Classical.choice"]
     check evidencePropagationConsistent(
       receiptAxioms, receiptAxioms, certAxioms,
       kernelAccepted = true, hasKaa = true
@@ -66,9 +66,9 @@ suite "Evidence Propagation Consistency — Phase C P0":
   # -----------------------------------------------------------------------
 
   test "different order and duplicates normalize to same canonical form":
-    let receiptRaw = @["funext", "propext", "Quot.sound", "propext"]
-    let kaaRaw = @["Quot.sound", "funext", "propext"]
-    let certRaw = @["propext", "Quot.sound", "funext", "funext"]
+    let receiptRaw = @["Classical.choice", "propext", "Quot.sound", "propext"]
+    let kaaRaw = @["Quot.sound", "Classical.choice", "propext"]
+    let certRaw = @["propext", "Quot.sound", "Classical.choice", "Classical.choice"]
     check evidencePropagationConsistent(
       receiptRaw, kaaRaw, certRaw,
       kernelAccepted = true, hasKaa = true
