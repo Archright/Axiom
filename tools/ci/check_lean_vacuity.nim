@@ -7,9 +7,11 @@
 ##
 ## Custom axiom detection (Layer 2): any `axiom <name>` in `#print axioms`
 ## output that is NOT a known-good core axiom (Classical.choice, propext,
-## Quot.sound, Quot.lift, funext, Classical.decEq, etc.) is flagged as
+## Quot.sound, Quot.lift, Classical.decEq, etc.) is flagged as
 ## a vkCustomAxiom violation. This catches project-defined axioms like
 ## `hash_injective`, `external_io_isolated`, etc. that bypass proof obligations.
+## `funext` is not an axiom (theorem alias, `#print axioms funext` → `[Quot.sound]`),
+## so it is absent from the known-good axiom set.
 ##
 ## Usage:
 ##   bin/check_lean_vacuity [--allowlist <path>] <file_or_dir>...
@@ -104,7 +106,7 @@ proc isAllowlisted(entry: VacuumEntry, allowlist: seq[AllowlistEntry]): bool =
 proc isKnownGoodAxiom(name: string): bool =
   case name
   of "Classical.choice", "propext", "Quot.sound", "Quot.lift",
-     "funext", "Classical.decEq", "Classical.indefFunc", "Classical.em":
+     "Classical.decEq", "Classical.indefFunc", "Classical.em":
     true
   else:
     false
