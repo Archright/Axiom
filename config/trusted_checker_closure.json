@@ -59,7 +59,7 @@
     "src/cli/axiom_engine.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "79e4d42ada7d5cabefd14dea2101135e4478d840"
+      "sha": "75a650ee0b83259c6ba2f1f83689ee5440f62155"
     },
     "src/cli/axiom_status.nim": {
       "mode": "100644",
@@ -2689,7 +2689,7 @@
     "src/core/utils/canonical_projection.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "2ac3ab5d918e105306a2174a98f0af7b41a9ec33"
+      "sha": "6e80ad006cf7d7be1d72d28112dd68cf661104b3"
     },
     "src/core/utils/constants.nim": {
       "mode": "100644",
