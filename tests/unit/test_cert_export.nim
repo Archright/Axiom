@@ -427,6 +427,103 @@ suite "admission evidence export — ax cert export / verify-export":
     check ver.reasonCode == "CERT_INTEGRITY_FAILED"
     check ver.closure == "executed"
 
+  test "scoped export: declared target only; non-declared verified row disclosed, never claimed":
+    let src = tmpRoot / "vault-src"
+    createDir(src)
+    discard writeBody(src, uapCert(KeyA, "src/x.nim", "f", "certGreen",
+      "fixture_theorem", %["propext"]))
+    writeRuntimeManifest(src, @[
+      manifestEntry("src/x.nim", "f", "certGreen", KeyB),
+      manifestEntry("json_rpc/errors.nim", "new_errclass_control_02",
+        "certGreen", KeyC)
+    ])
+    let exp = exportToDir(src, tmpRoot / "out", @["src/x.nim::f"])
+    check exp.ok
+    check exp.certCount == 1
+    let bundle = tmpRoot / "out" / "vault"
+    let man = loadManifest(bundle)
+    check man["scope"]["targets"].len == 1
+    check man["scope"]["targets"][0].getStr == "src/x.nim::f"
+    check man["outOfScope"].len == 1
+    check man["outOfScope"][0]["modulePath"].getStr == "json_rpc/errors.nim"
+    check man["outOfScope"][0]["functionName"].getStr == "new_errclass_control_02"
+    check man["outOfScope"][0]["reason"].getStr == "not-declared"
+    check man["outOfScope"][0]["certificateFile"].kind == JNull
+    let ver = verifyBundle(bundle, declaredTargets = @["src/x.nim::f"])
+    check ver.ok
+    # Determinism: identical scope + inputs → identical digest and bytes.
+    let exp2 = exportToDir(src, tmpRoot / "out2", @["src/x.nim::f"])
+    check exp2.ok
+    check exp2.digest == exp.digest
+
+  test "scoped export: declared target absent from the vault → CERT_INVENTORY_MISMATCH":
+    let src = makeGoldenVault(tmpRoot)
+    let exp = exportToDir(src, tmpRoot / "out", @["src/x.nim::missing"])
+    check not exp.ok
+    check "CERT_INVENTORY_MISMATCH" in exp.codes
+
+  test "scoped verify: bundle scope != declared set → CERT_SCOPE_MISMATCH":
+    let src = tmpRoot / "vault-src"
+    createDir(src)
+    discard writeBody(src, uapCert(KeyA, "src/x.nim", "f", "certGreen",
+      "fixture_theorem", %["propext"]))
+    writeRuntimeManifest(src, @[manifestEntry("src/x.nim", "f", "certGreen", KeyB)])
+    let exp = exportToDir(src, tmpRoot / "out", @["src/x.nim::f"])
+    check exp.ok
+    let ver = verifyBundle(tmpRoot / "out" / "vault",
+      declaredTargets = @["src/x.nim::other"])
+    check not ver.ok
+    check ver.reasonCode == "CERT_SCOPE_MISMATCH"
+
+  test "scoped verify: declared target not a verified claim → CERT_STATUS_MISMATCH":
+    let src = makeGoldenVault(tmpRoot)
+    let exp = exportToDir(src, tmpRoot / "out", @["src/x.nim::g"])
+    check exp.ok
+    let ver = verifyBundle(tmpRoot / "out" / "vault",
+      declaredTargets = @["src/x.nim::g"])
+    check not ver.ok
+    check ver.reasonCode == "CERT_STATUS_MISMATCH"
+
+  test "scoped verify: declared body removed with consistent inventory → CERT_BODY_MISSING":
+    let src = tmpRoot / "vault-src"
+    createDir(src)
+    discard writeBody(src, uapCert(KeyA, "src/x.nim", "f", "certGreen",
+      "fixture_theorem", %["propext"]))
+    writeRuntimeManifest(src, @[manifestEntry("src/x.nim", "f", "certGreen", KeyB)])
+    let exp = exportToDir(src, tmpRoot / "out", @["src/x.nim::f"])
+    check exp.ok
+    let bundle = tmpRoot / "out" / "vault"
+    removeFile(bundle / (KeyA & ".json"))
+    removeInventoryLine(bundle, KeyA & ".json")
+    var man = loadManifest(bundle)
+    let e = man["entries"][0]
+    e["certificateFile"] = newJNull()
+    e["certificateSha256"] = newJNull()
+    e["recomputedStatus"] = newJNull()
+    e["theoremIdentity"] = newJNull()
+    e["axiomObservation"]["status"] = %"not-applicable"
+    e["axiomObservation"]["names"] = newJNull()
+    saveManifest(bundle, man)
+    let ver = verifyBundle(bundle, declaredTargets = @["src/x.nim::f"])
+    check not ver.ok
+    check ver.reasonCode == "CERT_BODY_MISSING"
+
+  test "CLI: --proposals drives scope; malformed proposals exits 2":
+    let src = tmpRoot / "vault-src"
+    createDir(src)
+    discard writeBody(src, uapCert(KeyA, "src/x.nim", "f", "certGreen",
+      "fixture_theorem", %["propext"]))
+    writeRuntimeManifest(src, @[manifestEntry("src/x.nim", "f", "certGreen", KeyB)])
+    let props = tmpRoot / "proposals.json"
+    writeFile(props, """{"schema_version":2,"propositions":[{"target":"src/x.nim::f"}]}""")
+    check runCertExportCli(@["--vault", src, "--out", tmpRoot / "out",
+      "--proposals", props, "--json"]) == 0
+    check runCertVerifyExportCli(@["--bundle", tmpRoot / "out" / "vault",
+      "--proposals", props, "--json"]) == 0
+    writeFile(props, """{"schema_version":2,"propositions":[]}""")
+    check runCertExportCli(@["--vault", src, "--out", tmpRoot / "out2",
+      "--proposals", props, "--json"]) == 2
+
   test "CLI: export exits 0 on PASS; usage error exits 2":
     let src = makeGoldenVault(tmpRoot)
     check runCertExportCli(@["--vault", src, "--out", tmpRoot / "out",

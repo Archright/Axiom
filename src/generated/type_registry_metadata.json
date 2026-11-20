@@ -118161,6 +118161,20 @@
     },
     {
       "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/cert_export.nim",
+      "name": "loadProposalTargets",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
       "ignorable": true,
       "leanType": "Unit",
       "module": "src/verification/cert_export.nim",

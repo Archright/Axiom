@@ -220,9 +220,18 @@ proc scanBodies(vaultDir: string; outcome: var ExportOutcome): seq[BodyRef] {.
 
 # ─── E1–E4 export ───────────────────────────────────────────────────────
 
-proc exportToDir*(vaultDir, outRoot: string): ExportOutcome {.
+proc exportToDir*(vaultDir, outRoot: string;
+                  declaredTargets: seq[string] = @[]): ExportOutcome {.
     raises: [CatchableError], axiomEffect: IOEffect.} =
   ## E1–E4 export. Writes `<outRoot>/vault/` only when every check passes.
+  ##
+  ## `declaredTargets` (contract §2.2b) is the admission claim set: the
+  ## `modulePath::functionName` targets of the propositions the run declared.
+  ## When supplied, only those manifest entries are part of the exported
+  ## certificate set; every other verified row is disclosed under
+  ## `outOfScope` but is NOT a claim of this bundle (it is engine-internal
+  ## model evidence without a canonical certificate body). Without targets
+  ## the whole manifest is exported (legacy unscoped behaviour).
   result = ExportOutcome(ok: false, codes: @[], detail: "", digest: "",
     certCount: 0, bodyCount: 0)
   let vaultOut = outRoot / "vault"
@@ -257,12 +266,70 @@ proc exportToDir*(vaultDir, outRoot: string): ExportOutcome {.
     if mp.len == 0 or fn.len == 0: continue
     index.mgetOrPut(mp & "\x1f" & fn, @[]).add i
 
+  # ─── claim scope (contract §2.2b) ──────────────────────────────────────
+  # A declared target that the vault does not contain, or that maps to more
+  # than one body, is a claim the engine cannot substantiate: fail closed
+  # before any file is written. Non-declared verified rows are disclosed,
+  # never counted.
+  var scopeNode = newJNull()
+  var selected = entries
+  var outOfScope: seq[JsonNode] = @[]
+  if declaredTargets.len > 0:
+    var targets: seq[string] = @[]
+    for t in declaredTargets:
+      let trimmed = t.strip()
+      if trimmed.len == 0 or trimmed.find("::") <= 0:
+        result.codes.add("CERT_INVENTORY_MISMATCH")
+        result.detail = "declared target is not <modulePath>::<functionName>: " & t
+        return
+      if trimmed notin targets: targets.add trimmed
+    targets.sort(proc(a, b: string): int = cmp(a, b))
+    var selectedEntries: seq[ManifestEntryV3] = @[]
+    for t in targets:
+      let sep = t.rfind("::")
+      let mp = t[0 ..< sep]
+      let fn = t[sep + 2 .. ^1]
+      var found = false
+      for e in entries:
+        if e.modulePath == mp and e.functionName == fn:
+          selectedEntries.add e
+          found = true
+          break
+      if not found:
+        result.codes.add("CERT_INVENTORY_MISMATCH")
+        result.detail = "declared target is absent from the vault manifest: " & t
+        return
+    let targetSet = targets.toHashSet()
+    for e in entries:
+      if (e.modulePath & "::" & e.functionName) in targetSet: continue
+      if not isVerifiedCertificateStatus(e.status): continue
+      var row = newJObject()
+      row["modulePath"] = %e.modulePath
+      row["functionName"] = %e.functionName
+      row["status"] = %e.status
+      let cands = index.getOrDefault(e.modulePath & "\x1f" & e.functionName, @[])
+      row["certificateFile"] =
+        if cands.len == 1: %bodies[cands[0]].file else: newJNull()
+      row["reason"] = %"not-declared"
+      outOfScope.add row
+    outOfScope.sort(proc(a, b: JsonNode): int =
+      let ka = safeStr(a, "modulePath") & "\x1f" & safeStr(a, "functionName")
+      let kb = safeStr(b, "modulePath") & "\x1f" & safeStr(b, "functionName")
+      cmp(ka, kb))
+    selected = selectedEntries
+    var targetsArr = newJArray()
+    for t in targets: targetsArr.add(%t)
+    scopeNode = %*{
+      "schema": "axiom.admission.cert-scope.v1",
+      "targets": targetsArr
+    }
+
   var usedFiles = initHashSet[string]()
   var projections: seq[JsonNode] = @[]
   var digestFiles: seq[string] = @[]
   var digestNodes = initTable[string, JsonNode]()
 
-  for e in entries:
+  for e in selected:
     var entryOut = newJObject()
     entryOut["modulePath"] = %e.modulePath
     entryOut["functionName"] = %e.functionName
@@ -365,17 +432,25 @@ proc exportToDir*(vaultDir, outRoot: string): ExportOutcome {.
     digestArr.add digestNodes[f]
   var digestInput = newJObject()
   digestInput["schema"] = %ExportSetSchema
+  if scopeNode.kind == JObject:
+    digestInput["scope"] = scopeNode
   digestInput["certificates"] = digestArr
   let digest = sha256Hex(canonicalJsonString(digestInput))
 
   var manifestNode = newJObject()
   manifestNode["schema"] = %ExportSchema
   manifestNode["version"] = %3
+  if scopeNode.kind == JObject:
+    manifestNode["scope"] = scopeNode
   manifestNode["certificateSetDigest"] = %digest
   var entriesArr = newJArray()
   for p in projections:
     entriesArr.add p
   manifestNode["entries"] = entriesArr
+  if outOfScope.len > 0:
+    var outArr = newJArray()
+    for row in outOfScope: outArr.add row
+    manifestNode["outOfScope"] = outArr
 
   # Write only after all checks passed.
   try:
@@ -404,6 +479,7 @@ proc exportToDir*(vaultDir, outRoot: string): ExportOutcome {.
 type ParsedExport = object
   digest: string
   entries: seq[JsonNode]
+  scopeNode: JsonNode  ## nil when the bundle carries no scope (legacy whole-vault export)
 
 proc parseExportManifest(bundleDir: string; outcome: var VerifyOutcome): ParsedExport {.
     raises: [CatchableError], axiomEffect: IOEffect.} =
@@ -429,6 +505,16 @@ proc parseExportManifest(bundleDir: string; outcome: var VerifyOutcome): ParsedE
     outcome.detail = "export manifest schema mismatch (expected " & ExportSchema & ")"
     return
   result.digest = safeStr(root, "certificateSetDigest")
+  let scope = root.getOrDefault("scope")
+  if not scope.isNil:
+    if scope.kind != JObject or scope.getOrDefault("schema").kind != JString or
+        scope["schema"].getStr("") != "axiom.admission.cert-scope.v1" or
+        arrayField(scope, "targets").isNil:
+      outcome.codes.add("CERT_INVENTORY_MISMATCH")
+      outcome.reasonCode = "CERT_INVENTORY_MISMATCH"
+      outcome.detail = "export manifest scope block is malformed"
+      return
+    result.scopeNode = scope
   for e in entriesNode:
     if e.kind != JObject:
       outcome.codes.add("CERT_INVENTORY_MISMATCH")
@@ -485,7 +571,8 @@ proc readInventory(bundleDir: string; outcome: var VerifyOutcome): seq[string] {
     prev = line
 
 proc verifyBundle*(bundleDir: string; closureMode: bool = false;
-                   projectRoot: string = ""): VerifyOutcome {.
+                   projectRoot: string = "";
+                   declaredTargets: seq[string] = @[]): VerifyOutcome {.
     raises: [CatchableError], axiomEffect: IOEffect.} =
   ## Contract §3.1 priority order. The first failing pass is the reasonCode;
   ## later passes are not evaluated (targeted negative controls need a
@@ -539,6 +626,57 @@ proc verifyBundle*(bundleDir: string; closureMode: bool = false;
       result.reasonCode = "CERT_INVENTORY_MISMATCH"
       result.detail = "body is not referenced by the manifest: " & name
       return
+
+  # Pass 1a — claim scope (contract §2.2b). When the consumer knows the
+  # declared proposition set, the bundle must claim exactly that set; a
+  # bundle that silently narrows or widens the claim fails closed. Every
+  # declared target must resolve to a body-backed verified entry.
+  var effectiveScope: seq[string] = @[]
+  if not parsed.scopeNode.isNil:
+    for t in arrayField(parsed.scopeNode, "targets"):
+      if t.kind != JString or t.getStr("").len == 0:
+        result.codes.add("CERT_INVENTORY_MISMATCH")
+        result.reasonCode = "CERT_INVENTORY_MISMATCH"
+        result.detail = "scope target is not a non-empty string"
+        return
+      effectiveScope.add t.getStr("")
+  if declaredTargets.len > 0:
+    var expected: seq[string] = @[]
+    for t in declaredTargets:
+      let trimmed = t.strip()
+      if trimmed.len == 0 or trimmed.find("::") <= 0:
+        result.codes.add("CERT_INVENTORY_MISMATCH")
+        result.reasonCode = "CERT_INVENTORY_MISMATCH"
+        result.detail = "declared target is not <modulePath>::<functionName>: " & t
+        return
+      if trimmed notin expected: expected.add trimmed
+    expected.sort(proc(a, b: string): int = cmp(a, b))
+    var actual = effectiveScope
+    actual.sort(proc(a, b: string): int = cmp(a, b))
+    if actual != expected:
+      result.codes.add("CERT_SCOPE_MISMATCH")
+      result.reasonCode = "CERT_SCOPE_MISMATCH"
+      result.detail = "bundle scope does not equal the declared target set"
+      return
+    for t in expected:
+      let sep = t.rfind("::")
+      let mp = t[0 ..< sep]
+      let fn = t[sep + 2 .. ^1]
+      var entry: JsonNode = nil
+      for e in parsed.entries:
+        if safeStr(e, "modulePath") == mp and safeStr(e, "functionName") == fn:
+          entry = e
+          break
+      if entry.isNil:
+        result.codes.add("CERT_SCOPE_MISMATCH")
+        result.reasonCode = "CERT_SCOPE_MISMATCH"
+        result.detail = "declared target is absent from the bundle: " & t
+        return
+      if not isVerifiedCertificateStatus(safeStr(entry, "status")):
+        result.codes.add("CERT_STATUS_MISMATCH")
+        result.reasonCode = "CERT_STATUS_MISMATCH"
+        result.detail = "declared target is not a verified claim: " & t
+        return
 
   var verifiedEntries: seq[JsonNode] = @[]
 
@@ -709,6 +847,8 @@ proc verifyBundle*(bundleDir: string; closureMode: bool = false;
   for f in digestFiles: digestArr.add digestNodes[f]
   var digestInput = newJObject()
   digestInput["schema"] = %ExportSetSchema
+  if not parsed.scopeNode.isNil:
+    digestInput["scope"] = parsed.scopeNode
   digestInput["certificates"] = digestArr
   let recomputedDigest = sha256Hex(canonicalJsonString(digestInput))
   if recomputedDigest != result.digest:
@@ -723,6 +863,33 @@ proc verifyBundle*(bundleDir: string; closureMode: bool = false;
 
 # ─── CLI surfaces ───────────────────────────────────────────────────────
 
+proc loadProposalTargets(path: string; targets: var seq[string]): string {.
+    raises: [CatchableError].} =
+  ## Reads the admission proposals artifact and returns its declared
+  ## `propositions[].target` set (`modulePath::functionName`). Fail-closed:
+  ## an unreadable file, a non-array propositions field, or an empty target
+  ## set is an error the caller must report (never a silent unscoped export).
+  if not fileExists(path):
+    return "proposals file not found: " & path
+  var root: JsonNode
+  try:
+    root = parseJson(readFile(path))
+  except CatchableError as e:
+    return "proposals file unreadable: " & e.msg
+  let props = arrayField(root, "propositions")
+  if props.isNil:
+    return "proposals file has no propositions[] array"
+  for p in props:
+    if p.kind != JObject: continue
+    let t = safeStr(p, "target")
+    if t.len == 0: continue
+    if t.find("::") <= 0:
+      return "proposals target is not <modulePath>::<functionName>: " & t
+    if t notin targets: targets.add t
+  if targets.len == 0:
+    return "proposals file declares no targets"
+  ""
+
 func defaultVaultDir(): string {.raises: [].} =
   let state = getEnv("AXIOM_STATE_DIR", "")
   if state.len > 0: state / "build" / "certificates"
@@ -734,6 +901,7 @@ proc runCertExportCli*(args: seq[string]): int {.
   var vaultDir = ""
   var outRoot = ""
   var asJson = false
+  var targets: seq[string] = @[]
   var i = 0
   while i < args.len:
     if args[i] == "--vault" and i + 1 < args.len:
@@ -742,18 +910,31 @@ proc runCertExportCli*(args: seq[string]): int {.
     elif args[i] == "--out" and i + 1 < args.len:
       outRoot = args[i + 1]
       inc i
+    elif args[i] == "--proposals" and i + 1 < args.len:
+      let err = loadProposalTargets(args[i + 1], targets)
+      if err.len > 0:
+        echo "[cert] Export: FAIL — CERT_INVENTORY_MISMATCH: " & err
+        return 2
+      inc i
+    elif args[i] == "--target" and i + 1 < args.len:
+      let t = args[i + 1].strip()
+      if t.len == 0 or t.find("::") <= 0:
+        echo "[cert] Export: FAIL — CERT_INVENTORY_MISMATCH: declared target is not <modulePath>::<functionName>: " & args[i + 1]
+        return 2
+      if t notin targets: targets.add t
+      inc i
     elif args[i] == "--json":
       asJson = true
     else:
-      echo "Usage: ax cert export [--vault <dir>] --out <artifact-root> [--json]"
+      echo "Usage: ax cert export [--vault <dir>] --out <artifact-root> [--proposals <file> | --target <module::function> ...] [--json]"
       return 2
     inc i
   if outRoot.len == 0:
-    echo "Usage: ax cert export [--vault <dir>] --out <artifact-root> [--json]"
+    echo "Usage: ax cert export [--vault <dir>] --out <artifact-root> [--proposals <file> | --target <module::function> ...] [--json]"
     return 2
   if vaultDir.len == 0: vaultDir = defaultVaultDir()
 
-  let outcome = exportToDir(vaultDir, outRoot)
+  let outcome = exportToDir(vaultDir, outRoot, targets)
   if asJson:
     var j = newJObject()
     j["schema"] = %"axiom.cert-export.v1"
@@ -778,6 +959,7 @@ proc runCertVerifyExportCli*(args: seq[string]): int {.
   var projectRoot = ""
   var closureMode = false
   var asJson = false
+  var targets: seq[string] = @[]
   var i = 0
   while i < args.len:
     if args[i] == "--bundle" and i + 1 < args.len:
@@ -786,19 +968,32 @@ proc runCertVerifyExportCli*(args: seq[string]): int {.
     elif args[i] == "--project" and i + 1 < args.len:
       projectRoot = args[i + 1]
       inc i
+    elif args[i] == "--proposals" and i + 1 < args.len:
+      let err = loadProposalTargets(args[i + 1], targets)
+      if err.len > 0:
+        echo "[cert] Verify-export: FAIL — CERT_INVENTORY_MISMATCH: " & err
+        return 2
+      inc i
+    elif args[i] == "--target" and i + 1 < args.len:
+      let t = args[i + 1].strip()
+      if t.len == 0 or t.find("::") <= 0:
+        echo "[cert] Verify-export: FAIL — CERT_INVENTORY_MISMATCH: declared target is not <modulePath>::<functionName>: " & args[i + 1]
+        return 2
+      if t notin targets: targets.add t
+      inc i
     elif args[i] == "--closure":
       closureMode = true
     elif args[i] == "--json":
       asJson = true
     else:
-      echo "Usage: ax cert verify-export --bundle <dir> [--closure --project <dir>] [--json]"
+      echo "Usage: ax cert verify-export --bundle <dir> [--closure --project <dir>] [--proposals <file> | --target <module::function> ...] [--json]"
       return 2
     inc i
   if bundleDir.len == 0:
-    echo "Usage: ax cert verify-export --bundle <dir> [--closure --project <dir>] [--json]"
+    echo "Usage: ax cert verify-export --bundle <dir> [--closure --project <dir>] [--proposals <file> | --target <module::function> ...] [--json]"
     return 2
 
-  let outcome = verifyBundle(bundleDir, closureMode, projectRoot)
+  let outcome = verifyBundle(bundleDir, closureMode, projectRoot, targets)
   if asJson:
     var j = newJObject()
     j["schema"] = %ExportVerifySchema
