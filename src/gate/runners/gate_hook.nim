@@ -25,6 +25,7 @@ import gate/gate_registry
 import core/gate/gate_cas
 import core/gate/gate_memo
 import core/gate/gate_cas_gc
+import core/gate/gate_resolver
 import infrastructure/provenance_probe
 import generated/build_env
 import gate/runners/fail_secure_state
@@ -71,6 +72,34 @@ proc isDuplicateAuditEntry(auditPath: string, currentTs: int): bool {.axiomEffec
   except CatchableError:
     discard  # axiom:best-effort(ioboundary catch)
   return false
+
+type
+  AotPreflightEntry* = object
+    id*: string
+    entry*: string
+    sourcePath*: string  ## repoRoot-relative source file; "" when skipped/unresolved.
+
+  AotPreflightReport* = object
+    resolved*: seq[AotPreflightEntry]    ## entry resolved to an on-disk source file
+    skipped*: seq[AotPreflightEntry]     ## empty entry — declared non-file gate
+    unresolved*: seq[AotPreflightEntry]  ## non-empty entry with no source file
+
+proc auditAotPreflightEntries*(gates: seq[GateConfig], repoRoot: string): AotPreflightReport {.raises: [].} =
+  ## Resolve every gate entry through the SSOT resolver (core/gate/gate_resolver),
+  ## the same mapping precompile_gates uses. An empty entry is the manifest's
+  ## declared non-file gate and is recorded, never silently dropped. A non-empty
+  ## entry that resolves to nothing is unresolved — the caller fails closed.
+  for g in gates:
+    let item = AotPreflightEntry(id: g.id, entry: g.entry)
+    if g.entry.len == 0:
+      result.skipped.add(item)
+      continue
+    var resolved = item
+    resolved.sourcePath = resolveGateSourcePath(g.entry, repoRoot)
+    if resolved.sourcePath.len == 0:
+      result.unresolved.add(resolved)
+    else:
+      result.resolved.add(resolved)
 
 # ---------------------------------------------------------------------------
 # Executable entry point (used by CI, setup-hooks, and direct invocation)
@@ -388,19 +417,30 @@ when isMainModule:
     quit(if singleResult.get: 0 else: 1)
 
   # ── CI pre-flight: guarantee AOT precompile (no JIT nim c) ──
+  # Every manifest gate entry is resolved, not only stage-dispatched ones:
+  # precompile_gates compiles the full manifest, so the CAS-miss probe must
+  # cover the same set (DEBT#520). Empty entries are declared non-file gates
+  # and are recorded as skips; an unresolvable non-empty entry fails closed.
   if stage == "ci":
     putEnv("AXIOM_FAST_BUILD", "1")
     block ciAotGuard:
       try:
-        let gates = allGates()
+        let report = auditAotPreflightEntries(allGates(), repoRoot)
+        for skipped in report.skipped:
+          logInfo("gate_hook", "[GATE] CI: AOT skip " & skipped.id &
+            " — manifest entry is empty (declared non-file gate)")
+        if report.unresolved.len > 0:
+          for unresolved in report.unresolved:
+            logError("gate_hook", "[GATE] CI: AOT unresolved gate entry: id=" & unresolved.id &
+              " entry=\"" & unresolved.entry & "\" — no matching source file; fail-closed")
+          quit(1)
+        logInfo("gate_hook", "[GATE] CI: AOT pre-flight resolved " & $report.resolved.len &
+          " gate source entries (" & $report.skipped.len & " declared non-file skips)")
         var needsPrecompile = false
-        for g in gates:
-          if gsPreCommit in g.stages or gsPrePush in g.stages or gsCI in g.stages:
-            let srcPath = repoRoot / g.entry
-            if fileExists(srcPath):
-              if gate_cas.resolveCasBinaryPath(g.id, srcPath, repoRoot).len == 0:
-                needsPrecompile = true
-                break
+        for resolved in report.resolved:
+          if gate_cas.resolveCasBinaryPath(resolved.id, repoRoot / resolved.sourcePath, repoRoot).len == 0:
+            needsPrecompile = true
+            break
         if needsPrecompile and fileExists(repoRoot / "bin" / "precompile_gates"):
           logInfo("gate_hook", "[GATE] CI: CAS miss detected — running bin/precompile_gates")
           let (outp, code) = execCmdEx("bin/precompile_gates")
@@ -408,8 +448,9 @@ when isMainModule:
             logError("gate_hook", "[GATE] CI: precompile_gates failed: " & outp)
             quit(1)
           logInfo("gate_hook", "[GATE] CI: precompile_gates done")
-      except CatchableError:
-        discard  # fail-open: proceed without precompile  # axiom:best-effort(ioboundary catch)
+      except CatchableError as e:
+        logWarn("gate_hook", "[GATE] CI: AOT pre-flight error: " & e.msg &
+          " — proceeding without precompile")
     orch.runCi(cacheEpoch, updateBaseline = rebaselineMode)
   elif stage == "pre-commit" or stage == "pre-merge-commit":
     orch.runPreCommit(cacheEpoch, updateBaseline = rebaselineMode)
