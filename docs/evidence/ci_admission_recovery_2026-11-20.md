@@ -82,9 +82,23 @@ App 판정은 `failure`로 보존되며 `success`로 재분류하지 않는다. 
 
 ### §5.3 복구 실증 — 새 이벤트(이벤트 base = anchor)
 
-본 기록을 갱신한 새 커밋으로 `pull_request` 이벤트를 새로 발생시킨다(이벤트 `base.sha = 20fc6d4` = anchor → 후보 동일성 성립). 새 head의 run이 성공하고 App `admission-check`가 success가 되면 정상 merge queue로 착지한다.
+본 기록을 갱신한 새 커밋(head `33921987930862f361e4cba275dd8ff1a8a357e4`)으로 새 `pull_request` 이벤트를 발생시켰다. 새 이벤트는 `refs/pull/N/merge`를 현재 main 기준으로 새로 계산하므로, 테스트된 후보와 anchor 후보가 일치한다.
 
-<!-- FILL:recovery -->
+관측 (run `44738506989`, attempt 1):
+
+- `anchor-resolve`: `B* = 20fc6d44fcdd…`
+- `MINT_A0_JOURNAL: pr_base='8439632facab' anchor='20fc6d44fcdd'` — attempt 2와 동일한 발산이지만 **run 전체 success**
+- `mint-prepare / prepare`·`mint-publish / publish`·`attest / admission-independents` success
+- App `admission-check`: check-run `136295880865` **success** — `run=44738506989 attempt=1 conclusion=success`, `trust_surface=PASS`, `evaluated_commit=3392198…`
+
+대조:
+
+| 실행 | 이벤트 | 테스트된 후보(GITHUB_SHA merge tree) | anchor | 결과 |
+|---|---|---|---|---|
+| run `44733678104` attempt 2 | 기존 run의 rerun | attempt 1 시점 트리 `0fc63b33`(동결) | `20fc6d44` | `CANDIDATE_TREE_MISMATCH` fail-closed |
+| run `44738506989` attempt 1 | 새 `pull_request` 이벤트 | 현재 main 기준 신선한 merge tree | `20fc6d44` | success + App success |
+
+결론: base 이동 후 복구는 rerun이 아니라 **새 이벤트**다. mint는 더 이상 `pr.base.sha` 발산에서 죽지 않고, 후보 동일성 가드는 "실제로 테스트된 후보 = landing 후보"를 계속 강제한다. 이 head는 정상 merge queue 경로의 착지 대상이다(merge commit은 최종 운영 보고에 기록).
 
 ## §6. 이 기록이 주장하지 않는 것
 
