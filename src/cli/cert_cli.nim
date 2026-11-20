@@ -129,19 +129,26 @@ func certTrustAssumptions*(cert: JsonNode): seq[string] =
   if cert.getOrDefault("modulePath").getStr("").endsWith(".rs"):
     result.add("rustc->Charon LLBC extraction and LLBC->canonical IR translation are trusted")
 
-func declaredAssuranceSupported(cert: JsonNode): bool =
+func declaredAssuranceSupported*(cert: JsonNode): bool =
   ## The certificate's own tier may not exceed the artifacts it carries. A
   ## forged/unknown tier is fail-closed: it can never ride through as a pass.
+  ## `dual-verified` is the evidence-derived tier for a certificate that
+  ## carries BOTH a kernel-accepted Lean artifact and a solver artifact
+  ## (tierFromEvidence -> vtDual); it must not be rejected as an overclaim.
   let tier = cert.getOrDefault("verificationTier").getStr("")
+  let hasLean = cert.getOrDefault("leanSource").getStr("").len > 0 and
+    certAxiomsAllowlisted(cert) and
+    cert.getOrDefault("canonicalKaa").getStr("").len > 0
+  let hasSolver = cert.getOrDefault("smtlib2").getStr("").len > 0
   case tier
   of "", "unverified":
     true
   of "lean-verified":
-    cert.getOrDefault("leanSource").getStr("").len > 0 and
-      certAxiomsAllowlisted(cert) and
-      cert.getOrDefault("canonicalKaa").getStr("").len > 0
+    hasLean
   of "z3-verified":
-    cert.getOrDefault("smtlib2").getStr("").len > 0
+    hasSolver
+  of "dual-verified":
+    hasLean and hasSolver
   else:
     false
 

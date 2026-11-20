@@ -6,6 +6,7 @@ import ../../src/core/proof/source_fingerprint
 import ../../src/core/crypto/hash_kernel
 import ../../src/verification/certificate_verifier
 import ../../src/verification/certificate_identity
+import ../../src/cli/cert_cli
 
 suite "Phase 2 — Certificate trust closure (R4, v1 local replay-bound contract)":
 
@@ -272,3 +273,42 @@ suite "Phase 2 — Certificate trust closure (R4, v1 local replay-bound contract
         check res.status == ccsNotCurrent
     finally:
       removeDir(tmpDir)
+
+suite "Phase 2 — declared assurance tier vs carried artifacts":
+
+  proc baseCert(): JsonNode =
+    %*{
+      "verificationTier": "dual-verified",
+      "leanSource": "theorem t_post : True := by trivial\n",
+      "axiomsUsed": ["propext", "Classical.choice", "Quot.sound"],
+      "canonicalKaa": "{\"receiptTheoremIdentity\":\"t_post\"}",
+      "smtlib2": "(check-sat)\n"
+    }
+
+  test "dual-verified with Lean + KAA + solver artifacts is supported":
+    check declaredAssuranceSupported(baseCert())
+
+  test "dual-verified without a solver artifact is an overclaim":
+    var cert = baseCert()
+    cert["smtlib2"] = newJString("")
+    check not declaredAssuranceSupported(cert)
+
+  test "dual-verified without a Lean artifact is an overclaim":
+    var cert = baseCert()
+    cert["leanSource"] = newJString("")
+    check not declaredAssuranceSupported(cert)
+
+  test "dual-verified without canonicalKaa is an overclaim":
+    var cert = baseCert()
+    cert["canonicalKaa"] = newJString("")
+    check not declaredAssuranceSupported(cert)
+
+  test "dual-verified with a disallowed axiom is an overclaim":
+    var cert = baseCert()
+    cert["axiomsUsed"] = %*["sorryAx"]
+    check not declaredAssuranceSupported(cert)
+
+  test "unknown/forged tier is fail-closed":
+    var cert = baseCert()
+    cert["verificationTier"] = newJString("kernel-verified-forever")
+    check not declaredAssuranceSupported(cert)
