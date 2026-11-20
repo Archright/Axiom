@@ -314,7 +314,7 @@
     "src/cli/topology_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "46f727f3a7dd7d7ae8be46dace785254b68500ac"
+      "sha": "73b1341907cf0c7ebe021ec83983fff9d0f44638"
     },
     "src/cli/upstream_report_cli.nim": {
       "mode": "100644",

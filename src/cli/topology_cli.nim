@@ -343,9 +343,8 @@ let loadSourceSlice* = proc (filePath: string; startLine: int; endLine: int): st
 
 const
   # WP2-a: resolved at use-sites against AXIOM_STATE_DIR when set (subject
-  # immutability); raw constants kept for the legacy self-run zero-diff path.
+  # immutability); raw constant kept for the legacy self-run zero-diff path.
   topologyMerkleCachePath* = ".axiom/cache/topology_merkle.json"
-  topologyAnalysisCachePath* = ".axiom/cache/topology_analysis_cache.json"
 
 proc stateAwareCachePath*(raw: string): string =
   ## Routes ".axiom/..." cache paths under AXIOM_STATE_DIR when set.
@@ -379,27 +378,16 @@ proc analyzeTopologySourceRoot*(
   logInfo("topology_cli", "topology: " & $resultData.sourceFileCount & " files, " &
     $resultData.changedFileCount & " changed, sourceRoot=" & sourceRoot)
   # Always rebuild analysis from pre-parsed symbols (Merkle cache handles incremental scan)
-  let currentMerkleRoot = engine.merkleRoot
   let analysis = buildTopologyAnalysis(resultData.symbols)
-  # Save analysis cache keyed on Merkle root
-  try:
-    let cacheDir = stateAwareCachePath(topologyAnalysisCachePath).parentDir()
-    if not dirExists(cacheDir):
-      createDir(cacheDir)
-    let effectiveDepth =
-      if diagnosisDepthExplicit: diagnosisDepth
-      else: max(1, min(3, analysis.structuralBottlenecks.len))
-    let cacheJson = %*{
-      "merkleRoot": currentMerkleRoot,
-      "sourceFileCount": resultData.sourceFileCount,
-      "totalSourceFunctions": runtimeAxiomRegistry.len,
-      "effectiveDiagnosisDepth": effectiveDepth
-    }
-    writeFile(stateAwareCachePath(topologyAnalysisCachePath), $cacheJson)
-  except CatchableError:
-    discard  # best-effort cache persistence  # axiom:best-effort(ioboundary catch)
   # Save updated Merkle cache to disk
-  let saveRes = saveCache(engine, stateAwareCachePath(topologyMerkleCachePath))
+  let merkleCachePath = stateAwareCachePath(topologyMerkleCachePath)
+  let merkleCacheDir = merkleCachePath.parentDir()
+  if not dirExists(merkleCacheDir):
+    try:
+      createDir(merkleCacheDir)
+    except CatchableError:
+      discard  # best-effort cache persistence  # axiom:best-effort(ioboundary catch)
+  let saveRes = saveCache(engine, merkleCachePath)
   if saveRes.isErr:
     logError("topology_cli", "saveCache: " & saveRes.error.message)
   let effectiveDepth =
