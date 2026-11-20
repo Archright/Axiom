@@ -2494,6 +2494,7 @@
       ],
       "severity": "medium",
       "source": "Tier 4 classification 2026-08-10",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "status": "open",
       "resolution": "UNRESOLVED",
       "note": "2026-08-11 verification run: drove pipeline via repeated `ax prove --limit 1/100/300` invocations + `--target` probes across the 35 unverified kernel symbols. Result: verified count UNCHANGED at 5/40 (VKD 0.1250) — expected 18~25/40 improvement NOT realized. Evidence: (1) CHC/Spacer path (`[loop-chc-vm]`) declines ALL 35 kernel symbols with not-applicable:cnaNoObligations (no obligations → anti-theater vacuity skip, not a capability gap) — loopSimpleFor unary relaxation + CHC-first routing produce zero genuine inductive-loop proofs; (2) IR pipeline phase-10 summary per run: Total 35, Pass 0, Skip 35; (3) manifest.json ground truth (40 entries) = 5 certGreen, unchanged. The UAP/BMC fallback cannot reach these symbols in bounded iterations: kernel symbols are absent from the depth-0 verification frontier (6/6 `--target` probes returned `priming fingerprint cache (300 nodes)` fallback; first ~300 frontier nodes are non-kernel; `parseJson` non-kernel cert is excluded by the SSOT kernel filter so it re-occupies frontier slot 1 every run). Therefore not marked FIXED; resolution stays UNRESOLVED. Still unverified (35): axiomSpecToJsonNode, cumulativeDefectSum, collectKnownFunctions, normalizedEntries, initModuleClassificationCache, buildModulePathMap, buildQualifiedCallGraph, computeMaxCallDepth, applyCallDepthCheck, applyWriteOwnershipCheck, mergeStringEvidence, firstBoolCore, firstIntCore, hasVaultEntry, findTopologyMetricIndex, findTopologySymbolIndex, findTopologyNodeContext, timeoutDiagnosisForNode, blockBranch, registerTimeoutImpact, addNodeExecutionStat, stateHasVaultEntry, stateLookupVaultAxiom, stateCollectDependencyAxioms, addDepthExecutionStat, finalizeExecutionStats, addNodeReport, addPlanReproofNodes, enqueueParallelWorkItem, prepareParallelInputs, inferLoopDepth, inferBranchDepth, skipJsonValue, generateOverflowDefines, generateOverflowAssertions. [P1.2 2026-08-11] ROOT CAUSE FIX APPLIED & CONFIRMED: obligation propagation restored — ContractInfo{preConditions,postConditions} now flows into VMSemantic.property (loop_transition_lowering), cnaNoObligations split into rkNoObligation+makeNoObligation; IR batch prove result improved Total 35, Pass 0, Skip 35 (pre-P1.2) → Total 35, Pass 17, Fail 2, Skip 16 (post-P1.2). 2 Fails=firstBoolCore/firstIntCore (non-QF_BV-representable string/array params, analyzer_shared_json.nim:96,139). New regression suite tests/unit/test_chc_obligation_invariant.nim 5/5 PASS. VKD numerator intentionally UNCHANGED at 5/40 per policy (only genuine kernel PASS counts; full kernel-mcc run pending P2+). [P1.2-errata] NOTE CORRECTION (post-audit): firstBoolCore/firstIntCore are NOT non-QF_BV-representable. Their seq[T] params map to (Array (_ BitVec 64) elemSort) — QF_AUFBV-encodable, and buildChcFromLoop returns cbSuccess. The 2 psFail come from Spacer failing to discharge the obligation under bpRequire (heirs to makeInconclusive(rkEvidenceRejected), ir_pipeline_runner.nim:428-448), NOT from encodability. Honest unproved, not theater; a fix needs a design plan (BMC fallback / policy / contract), not a mechanical patch."
@@ -2669,6 +2670,7 @@
       ],
       "severity": "high",
       "source": "dir_doc_debt_audit_2026-08-17",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "open"
     },
     {
@@ -3096,6 +3098,7 @@
       ],
       "severity": "medium",
       "source": "dir_doc_debt_audit_2026-08-17",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "open"
     },
     {
@@ -3107,6 +3110,7 @@
       ],
       "severity": "high",
       "source": "P7 obligation_semantics audit",
+      "productTruthImpact": "STALE",
       "status": "open",
       "resolution": "Migrate all rkNoObligation callers to explicit ObligationSkipReason mapping; remove coerce path."
     },
@@ -3120,6 +3124,7 @@
       ],
       "severity": "medium",
       "source": "P7 obligation_semantics audit",
+      "productTruthImpact": "STALE",
       "status": "open",
       "resolution": "Unify skipReason enum across ir_pipeline_runner and loop_driver; deprecate string-literal mapping."
     },
@@ -3132,6 +3137,7 @@
       ],
       "severity": "high",
       "source": "P7 obligation_semantics audit",
+      "productTruthImpact": "STALE",
       "status": "open",
       "resolution": "Refactor TheaterGuard to preserve obligation counting even on early-return paths; record theater-detected targets with proper skipReason."
     },
@@ -3191,6 +3197,7 @@
       ],
       "severity": "high",
       "source": "gate_topology_audit",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "open"
     },
     {
@@ -3230,6 +3237,7 @@
       ],
       "severity": "high",
       "source": "productization_contract_preservation_audit_2026-08-23",
+      "productTruthImpact": "PRODUCT_SUPPORT",
       "status": "open"
     },
     {
@@ -3251,6 +3259,7 @@
       ],
       "severity": "high",
       "source": "productization_contract_preservation_audit_2026-08-23",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "status": "open"
     },
     {
@@ -3272,6 +3281,7 @@
       ],
       "severity": "medium",
       "source": "productization_contract_preservation_audit_2026-08-23",
+      "productTruthImpact": "STALE",
       "status": "open"
     },
     {
@@ -3316,6 +3326,7 @@
       ],
       "severity": "high",
       "source": "productization_contract_preservation_audit_2026-08-23",
+      "productTruthImpact": "STALE",
       "status": "open"
     },
     {
@@ -3337,6 +3348,7 @@
       ],
       "severity": "high",
       "source": "productization_contract_preservation_audit_2026-08-23",
+      "productTruthImpact": "STALE",
       "status": "open"
     },
     {
@@ -3355,6 +3367,7 @@
       ],
       "severity": "medium",
       "source": "productization_contract_preservation_audit_2026-08-23",
+      "productTruthImpact": "STALE",
       "status": "open"
     },
     {
@@ -3371,6 +3384,7 @@
       ],
       "source": "ci_migration_audit",
       "resolution": "OPEN deferred 2026-08-31 (explicit policy decision, PR #18 gate-compatible state restoration): UNRESOLVED backlog/plan item - no implementation site exists in src/, so the open=>source-marker contract is not applicable. Marker deferred until implementation. This is NOT a satisfied debt.",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "deferred",
       "lastVerifiedAt": "2026-08-26T18:00:00Z"
     },
@@ -3457,6 +3471,7 @@
         "docs/reports/ci_critical_path_2026-08-25.md"
       ],
       "source": "theater_audit",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "deferred"
     },
     {
@@ -3476,6 +3491,7 @@
         "src/cli/cert_cli.nim"
       ],
       "source": "WP4-g.2",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "deferred"
     },
     {
@@ -3495,6 +3511,7 @@
         "docs/spec/cert_lifecycle_contracts.md"
       ],
       "source": "WP4-g.2",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "status": "deferred"
     },
     {
@@ -3513,6 +3530,7 @@
         "src/verification/cert_reconcile.nim"
       ],
       "source": "WP4-g.2",
+      "productTruthImpact": "PRODUCT_SUPPORT",
       "status": "deferred"
     },
     {
@@ -3532,6 +3550,7 @@
         "src/verification/certificates/"
       ],
       "source": "WP4-g.2",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "status": "deferred"
     },
     {
@@ -3551,6 +3570,7 @@
         "src/verification/cert_reconcile.nim"
       ],
       "source": "WP4-g.2",
+      "productTruthImpact": "STALE",
       "status": "deferred"
     },
     {
@@ -3569,6 +3589,7 @@
       ],
       "source": "act2-wp3b/wp3c evidence",
       "resolution": "OPEN deferred 2026-08-31 (explicit policy decision, PR #18 gate-compatible state restoration): UNRESOLVED backlog/plan item - no implementation site exists in src/, so the open=>source-marker contract is not applicable. Marker deferred until implementation. This is NOT a satisfied debt.",
+      "productTruthImpact": "PRODUCT_SUPPORT",
       "status": "deferred",
       "lastVerifiedAt": "2026-08-28T01:51:56Z",
       "historicalFiles": [
@@ -3592,6 +3613,7 @@
         "src/verification/certificates/"
       ],
       "source": "WP4-g.1",
+      "productTruthImpact": "PRODUCT_SUPPORT",
       "status": "open"
     },
     {
@@ -3633,6 +3655,7 @@
         "src/verification/cert_builder.nim"
       ],
       "source": "WP4-g.2",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "open"
     },
     {
@@ -3688,6 +3711,7 @@
       "contentHash": "sha256:4d97bba62cdf745ce5c8d6c558f4fec0a67741a71a473d05626ef7a1b7aabf5b",
       "lineRange": "src/gate/daemon/gate_daemon_server.nim:68-77; src/gate/daemon/gate_daemon_client.nim:82-88",
       "source": "verification-dag-contract P1",
+      "productTruthImpact": "STALE",
       "status": "open",
       "resolution": "OPEN",
       "lastVerifiedAt": "2026-08-31T00:00:00Z"
@@ -3721,6 +3745,7 @@
       "contentHash": "sha256:c63c528f6f51a73c20f76add87d47b06e32f6a39f85613c36d8ffdeea71ce64c",
       "lineRange": "src/core/trusted/layer_enforcement.nim:27,158,176,193,199",
       "source": "physical_path_boundary_audit",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "open",
       "resolution": "DEFERRED — const-context sites cannot be wrapped in LogicalPath without compiler quirk; see docs/spec/artifact_determinism.md §2.4"
     },
@@ -3735,6 +3760,7 @@
       "contentHash": "sha256:9b42cfb63dcb9cfea2ef208882bef488f8b8c345e3ff3d4d41aedf315acc9fde",
       "lineRange": "src/core/trusted/architecture_invariants.nim:34,173",
       "source": "physical_path_boundary_audit",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "open",
       "resolution": "DEFERRED — const-context sites cannot be wrapped in LogicalPath without compiler quirk; see docs/spec/artifact_determinism.md §2.4"
     },
@@ -3749,6 +3775,7 @@
       "contentHash": "sha256:ef79915b6019bfc967b45690b10b72ad9c99714bc9d1dae4dc97be5336eec2d0",
       "lineRange": "src/core/trusted/axiom_pragmas_macros.nim:280,345,365,371,419,592,595,597",
       "source": "physical_path_boundary_audit",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "open",
       "resolution": "DEFERRED — macro/template sites cannot be wrapped in LogicalPath without compiler quirk; see docs/spec/artifact_determinism.md §2.4"
     },
@@ -3947,6 +3974,7 @@
         ".github/workflows/runner-pool-acceptance.yml"
       ],
       "source": "act2-a1-l2-contract-revision 2026-09-23",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "deferred",
       "resolution": "UNRESOLVED deferred 2026-09-23 (explicit user decision, ADR-0017 Amendment A1): release full L2는 현행 CI 9-job 운영 재정의로 유지하고(ADR-0024 결정 #15 전환 후에도 release-ship → runner-pool force_full 위임), 미실행 격자 W1·W3–W7·W9–W11 실행은 미래 CI 플랫폼 채택 시 해소(설계 계약 유지). Implementation site가 src/ 밖(설계 계약·CI 워크플로)이라 open=>source-marker contract는 적용 불가 — marker deferred. NOT satisfied, NOT resolved — 열린 정책 항목. (b+ 2026-09-30: Known-branch witness 관점 추가 — 격자 프로젝션 밖 W4 클래스 미실현 명시, DEBT#469와 연동. 상태·결정 무변경.)",
       "lastVerifiedAt": "2026-09-30T00:00:00Z"
@@ -3963,6 +3991,7 @@
         "config/trusted_writer_set.json"
       ],
       "source": "epoch-cutover-oracle-select-pr-b 2026-09-30",
+      "productTruthImpact": "PRODUCT_SUPPORT",
       "status": "deferred",
       "resolution": "UNRESOLVED deferred 2026-09-30 (PR-B epoch cutover 문서 트랙 — 3-PR 계획 명시적 범위 밖): selector B-pin(오라클·게이트 바이너리 B-tree 컴파일)은 후속 PR 소관. Implementation site가 tools/(런타임 빌드)이라 open=>source-marker contract는 적용 불가 — marker deferred. NOT satisfied, NOT resolved — 열린 정책 항목.",
       "lastVerifiedAt": "2026-09-30T00:00:00Z"
@@ -3978,6 +4007,7 @@
         "docs/spec/canonical_execution_semantics.md"
       ],
       "source": "epoch-cutover-oracle-select-pr-b 2026-09-30",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "deferred",
       "resolution": "UNRESOLVED deferred 2026-09-30 (PR-B epoch cutover 문서 트랙 — 정직한 축 열거 개정으로 사실 기록): ② 앵커 회복·③ 축 구현은 후속 PR 소관. Implementation site가 src/ 밖(스펙·후보 오라클 구현)이라 open=>source-marker contract는 적용 불가 — marker deferred. NOT satisfied, NOT resolved — 열린 정책 항목.",
       "lastVerifiedAt": "2026-09-30T00:00:00Z"
@@ -3994,6 +4024,7 @@
         "docs/adr/0019-verification-tiers-scheduling.md"
       ],
       "source": "epoch-cutover-oracle-select-pr-b 2026-09-30",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "deferred",
       "resolution": "UNRESOLVED deferred 2026-09-30 (DEBT#466과 동일 근거 — 격자 실행은 미래 CI 플랫폼의 설계 계약으로 유지): L0 격자 실행 미실현이 계약 문장과 병존함을 기록만. Implementation site가 src/ 밖(설계 계약·CI 워크플로)이라 open=>source-marker contract는 적용 불가 — marker deferred. NOT satisfied, NOT resolved — 열린 정책 항목.",
       "lastVerifiedAt": "2026-09-30T00:00:00Z"
@@ -4011,6 +4042,7 @@
         "docs/evidence/epoch_record_oracle_select_2026-09-30.md"
       ],
       "source": "epoch-cutover-oracle-select-pr-b 2026-09-30",
+      "productTruthImpact": "STALE",
       "status": "deferred",
       "resolution": "UNRESOLVED deferred 2026-09-30 (PR-B epoch cutover 문서 트랙 — SL-09 승격 전 선행 조건으로 명기): 두 표면의 정합(EMPTY 의미 단일화 + floor 면제 서술)은 SL-09 승격 PR 소관. Implementation site가 .github/·ci/(워크플로·makefile)이라 open=>source-marker contract는 적용 불가 — marker deferred. NOT satisfied, NOT resolved — 열린 정책 항목.",
       "lastVerifiedAt": "2026-09-30T00:00:00Z"
@@ -4057,6 +4089,7 @@
         ".github/workflows/certificate-mint.yml"
       ],
       "source": "n7_runtime_investigation 2026-10-01",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "status": "open",
       "resolution": "UNRESOLVED open 2026-10-01 (사용자 확정 follow-up only — 조사 terminal, 코드·워크플로우 수정 없음): SL-09 승격 PR에서 skip 집합 identity(구성·n_skip·사유 귀속) 검증 도입 시 재점검. Implementation site가 .github/(워크플로)이라 open=>source-marker contract는 적용 불가 — marker deferred (DEBT#466-470 사유 동일). NOT satisfied, NOT resolved — 열린 정책 항목. REVERIFY 2026-10-07 (debt-truth reconciliation, LIVE): .github/workflows/certificate-mint.yml 실존 확인(1624행, blob 갱신으로 행 이동) — MINT_PUB_JOBS skip-reason-only 검증 유지(:48 주석, :1375 부근), SL-09 승격 미발생으로 재점검 트리거 미충족 — open 유지.",
       "lastVerifiedAt": "2026-10-07T00:00:00Z"
@@ -4297,6 +4330,7 @@
         "src/gate/runners/quality_gate_runner.nim"
       ],
       "source": "theater_audit",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "deferred",
       "resolution": "DEFERRED_PENDING_ARCHITECT_DECISION",
       "lastVerifiedAt": "2026-10-08T00:00:00Z",
@@ -4322,6 +4356,7 @@
         "tools/ci/verify_executor_membership.sh"
       ],
       "source": "theater_audit",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "status": "deferred",
       "symbol": "P15 TrustedExecutorSet membership suite",
       "contentHash": "sha256:5baae380bc2b90efb3b583a47d6384c97fcf8cc2ef090c7eda7affdf9487550c"
@@ -4359,6 +4394,7 @@
         "src/gate/runners/debt_scan_gate.nim"
       ],
       "source": "theater_audit",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "deferred",
       "symbol": "loadExemptionText / isExempted",
       "contentHash": "sha256:447377208b202cdf85c4786df7e0c3a1c93866b143b6422cd73a55d4a4f38bac"
@@ -4377,6 +4413,7 @@
         "tools/hotspot_ranker.nim"
       ],
       "source": "theater_audit",
+      "productTruthImpact": "STALE",
       "status": "deferred",
       "symbol": "parseDebtRegistry",
       "contentHash": "sha256:95df8cd9fb86e98be5e97a0f9b3344d94c79b387000861d8c729667466049766"
@@ -4563,6 +4600,7 @@
         "src/verification/batch_uap/ir_pipeline_runner.nim"
       ],
       "source": "void-discard investigation 2026-10-08 (background worktree chore/void-discard-investigation)",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "status": "open",
       "resolution": "UNRESOLVED",
       "lastVerifiedAt": "2026-10-08T00:00:00Z"
@@ -4767,6 +4805,7 @@
         "src/verification/rust_replay_adapter.nim"
       ],
       "source": "nimtry dry-duplicates anchoring — feat/rust-subject-v1 push-admissibility DRIFT resolution 2026-10-13",
+      "productTruthImpact": "STALE",
       "status": "open",
       "resolution": "UNRESOLVED deferred 2026-10-13 (deliberate Rust/Nim replay-lane partition copy; anchoring + registration is the disposition, generic skeleton extraction is the follow-up)",
       "lastVerifiedAt": "2026-10-13T00:00:00Z"
@@ -4816,6 +4855,7 @@
         "Makefile:880-935"
       ],
       "source": "theater_audit_2026-10-23",
+      "productTruthImpact": "STALE",
       "status": "open"
     },
     {
@@ -4853,6 +4893,7 @@
       "lastVerifiedAt": "2026-10-27T07:35:02Z",
       "resolution": "OPEN",
       "source": "theater_audit",
+      "productTruthImpact": "PRODUCT_SUPPORT",
       "status": "open",
       "files": [
         "ci/checker.mk:16-17",
@@ -4922,6 +4963,7 @@
       "lastVerifiedAt": "2026-11-01T23:52:00Z",
       "resolution": "UNRESOLVED",
       "source": "audit",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "open",
       "files": [
         "src/gate/runners/debt_integrity_gate.nim:60-62",
@@ -5094,6 +5136,7 @@
         "src/gate/runners/gate_hook.nim"
       ],
       "source": "vst_dependency_authority_handoff_2026-11-08",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "status": "open",
       "resolution": "UNRESOLVED — registered as follow-up; deliberately not fixed in the VS-T slice (frozen-file scope discipline: src/gate/** untouched)",
       "binding": "registry_disposition",
@@ -5293,6 +5336,7 @@
         "docs/spec/nim_libp2p_bytesview_slice_contract.md"
       ],
       "source": "theater_audit",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "status": "open",
       "resolution": "UNRESOLVED — registered per AGENTS.md §0.9 (theater is registered, never quietly patched); corrected 2026-11-14 in place: the original premise (carrier silently dropped at the phase-10 IR extraction budget — no classify, no solver, no vault record) was falsified by the vault manifest's toOpenArray entry and the census state; the carrier executed and reached certZ3Candidate; fix path: carry carrier identity in the evidence surface — record the carrier name (or an explicit carrier-to-examined-symbol binding) in the vault manifest entry and run state so census-keyed consumers can verify carrier coverage in-band, and log one identity per entry across [classify]/[ir-cas]; no patch applied by this registration",
       "lastVerifiedAt": "2026-11-14T03:27:02Z",
@@ -5314,6 +5358,7 @@
         "src/cli/wf_runners.nim:46"
       ],
       "source": "theater_audit",
+      "productTruthImpact": "STALE",
       "status": "open",
       "resolution": "UNRESOLVED — registered per AGENTS.md §0.9 (theater is registered, never quietly patched); explicitly NOT a contract violation (docs/spec/byo_agent_proposition_contract.md:112,119 — exit 0 is 런 완료, never 전명제 검증); candidate remediations requiring owner authority: a distinct exit or mandatory-state-inspection contract for no-obligation runs, or adapter-side classification on engine state (DEBT#528); no patch applied by this registration",
       "lastVerifiedAt": "2026-11-14T03:11:09Z",
@@ -5547,6 +5592,7 @@
         "config/repository_surface.json"
       ],
       "source": "theater_audit",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "open",
       "resolution": "CODEOWNERS side fixed 2026-11-15: exact-path rules for /data/decision_binding_baseline.json and /tools/decision_binding_checker.nim added to .github/CODEOWNERS, both assigning @Archright/architect (measured pre-edit at main c1c15cc: 44 rules, no fnmatch/prefix match for either path; post-edit both covered). Fix-commit local gates: bin/debt_engine --validate 1711/1711, bin/debt_integrity_gate PASS, make check-nim-theater PASS, make check-repository-surface 0 violations (policyVersion 98, binding base, changeCount 1). The org-hosted landing-integrity job trust-surface-codeowners (ruleset 23943917, pinned 6b91c6e7) adjudicates only base-tree trustSurface coverage, which added rules cannot reduce, and was observed passing on PR #90 (run 43682084387, job 132714677817, 2026-11-15). Still open: config/repository_surface.json (policyVersion 98) registers no pattern for the two paths, so they still resolve PRODUCT with every operation PASS, and nothing binds the ownership at merge - the live ruleset reports require_code_owner_review=false and required_approving_review_count=0, so per docs.github.com (about-code-owners, available-rules-for-rulesets) the rule requests @Archright/architect review rather than gating merge. Surface-policy registration is deferred to DEBT#542, which requires an architect amendment path (the policy file is itself FROZEN and both active branch rulesets report bypass_actors=[]).",
       "lastVerifiedAt": "2026-11-15T00:00:00Z",
@@ -5567,6 +5613,7 @@
         "data/decision_binding_baseline.json"
       ],
       "source": "theater_audit",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "open",
       "resolution": "UNRESOLVED - accepted, not fixed. data/decision_binding_baseline.json is the acceptance instrument: owner @Archright/architect, rationale recorded, reviewBy 2027-06-30. Remediation is per-file work measured by the ratchet; the count may only fall, and --update-baseline refuses to raise it. Re-review at or before 2027-06-30, at which point the acceptance is reported stale on every run.",
       "lastVerifiedAt": "2026-11-15T00:00:00Z",
@@ -5684,6 +5731,7 @@
         "data/expected_merkle_root.txt"
       ],
       "source": "theater_audit",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "status": "open",
       "resolution": "UNRESOLVED",
       "lastVerifiedAt": "2026-11-16T00:00:00Z",
@@ -5706,6 +5754,7 @@
         "docs/evidence/vs_vkd1_current_engine_recovery_campaign_2026-11-13.md"
       ],
       "source": "vs_perf_attr_2026-11-16",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "status": "open",
       "resolution": "UNRESOLVED — deterministic fresh full-scope exit 1 is the honest fail-closed state until the certified-subset wire set is extended to ckIfStmt (Lean reference-extractor recertification per AGENTS.md §0.9b) or safeSpeedupRatioCore is explicitly re-classified extractor-out-of-scope; both are future slices per campaign §2.3, not this registration.",
       "lastVerifiedAt": "2026-11-16T00:00:00Z",
@@ -5730,6 +5779,7 @@
         "docs/evidence/vs_vkd1_current_engine_recovery_campaign_2026-11-13.md"
       ],
       "source": "vs_perf_attr_2026-11-16",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "status": "open",
       "resolution": "UNRESOLVED — no self-recovery contract for runtime-cache invalidation exists; the documented recovery is the manual re-campaign (2026-11-13 evidence §4). Remediation direction: automated re-measure/re-prove/re-admit on invalidation, or a declared degradation path; decided by the verification workstream owner, not this registration.",
       "lastVerifiedAt": "2026-11-16T00:00:00Z",
@@ -5752,6 +5802,7 @@
         "docs/evidence/vs_vkd1_current_engine_recovery_campaign_2026-11-13.md"
       ],
       "source": "vs_perf_attr_2026-11-16",
+      "productTruthImpact": "PRODUCT_SUPPORT",
       "status": "open",
       "resolution": "UNRESOLVED — no required check observes the fresh full-scope prove outcome; remediation is a full-scope fresh-state prove assertion in a required check, with the expected outcome ratcheted (exit 1 fail-closed today per DEBT#547; exit 0 after the wire-set extension lands).",
       "lastVerifiedAt": "2026-11-16T00:00:00Z",
@@ -5797,6 +5848,7 @@
         "tests/fixtures/rust/axiom_guard_probe/src/lib.rs"
       ],
       "source": "vs_test_herm_2026-11-17",
+      "productTruthImpact": "UNKNOWN",
       "status": "open",
       "resolution": "UNRESOLVED — registration only (this slice does not modify the closed-grammar boundary on either side). Remediation: owner ruling on (a) vs (b) — (a) update the tri test/fixture docs to the v1.3 value-ite reality and add a genuinely out-of-grammar fixture case to keep the rejection class covered, or (b) restrict the collapse to boolean-result ites (fail closed on value-ites) and keep tri as the rejection fixture. The 'tri' assertion stays red and unmasked until then (make test-fast-one T=tests/unit/test_rust_guard_attempt.nim exits non-zero on a fully provisioned environment; hermeticity repairs in this slice make every other outcome deterministic per environment class).",
       "lastVerifiedAt": "2026-11-17T00:00:00Z",
@@ -5818,6 +5870,7 @@
         ".github/workflows/admission-check.yml"
       ],
       "source": "vs_test_herm_2026-11-17",
+      "productTruthImpact": "NON_PRODUCT",
       "status": "open",
       "resolution": "UNRESOLVED — registration only (.github/workflows/** is agent-immutable and the slot path is consumed by admission-check.yml:4045, so repointing the recipe output requires a coordinated Makefile+workflow generation cutover outside this slice's authority). Remediation: introduce a unique per-invocation output (worktree-scoped or mktemp) in the same change that updates the workflow's slot consumption (read the binary path from a make-emitted variable or a stable per-checker name), landing as one coherent generation; until then, local multi-session use should serialize access to the lane or use distinct output paths manually.",
       "lastVerifiedAt": "2026-11-17T00:00:00Z",
@@ -5839,6 +5892,7 @@
         ".github/workflows/certificate-mint.yml"
       ],
       "source": "vs_authority_separation_2026-11-17",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "status": "open",
       "resolution": "UNRESOLVED — registration only (a writer-side fix changes the exactly-once contract consumed by certificate-mint's D6 predicate and must be validated against the live merge_group path; this registration slice does not modify the ledger writer). Remediation as described; verification must cover (a) first-attempt duplicate rejection at a tip that already contains the subject, and (b) unchanged FF-CAS behaviour under a concurrent move.",
       "lastVerifiedAt": "2026-11-17T00:00:00Z",
@@ -5859,6 +5913,7 @@
         ".github/workflows/certificate-mint.yml"
       ],
       "source": "vs_authority_separation_2026-11-17",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "status": "open",
       "resolution": "UNRESOLVED — registration only (the workflow is a trust-surface path and any change needs its own gate run plus index refresh; this slice only registers the finding). Remediation as described; acceptance must show a failing ledger-list aborts the mint instead of appending, and a genuinely absent subject still appends exactly once.",
       "lastVerifiedAt": "2026-11-17T00:00:00Z",
@@ -5901,6 +5956,7 @@
         ".github/workflows/certificate-mint.yml"
       ],
       "source": "vs_authority_separation_2026-11-17",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "status": "open",
       "resolution": "UNRESOLVED — registration only (the fix changes the artifact trust contract shared with admission-check's build-base-artifacts job and needs its own trust-surface PR plus live merge_group acceptance; this slice does not modify the workflow). Remediation as described; acceptance must show substituted artifact bytes are rejected before execution and the normal B-built path still mints.",
       "lastVerifiedAt": "2026-11-17T00:00:00Z",
@@ -5921,6 +5977,7 @@
         "tools/ci/verify_trusted_writer_set.sh"
       ],
       "source": "theater_audit",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "status": "open",
       "resolution": "UNRESOLVED — registration only (the fix changes a CI gate's semantics and must re-derive the declared TrustedWriterSet; it belongs to the writer-handoff plan, not a local patch). Acceptance: the gate FAILs on a fixture workflow whose job-level contents: write is undeclared, and PASSes on the corrected tree with every job-level grant enumerated.",
       "lastVerifiedAt": "2026-11-17T00:00:00Z",
@@ -5964,6 +6021,7 @@
         "config/readiness_policy.json"
       ],
       "source": "theater_audit",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "status": "open",
       "resolution": "UNRESOLVED — registration only. The fix (missing required observation key => UNKNOWN, fail-closed) is deliberately deferred to a separate approved slice: flipping critical invariants to UNKNOWN can change live verdicts and requires positive/negative probes plus updated evidence. Acceptance for that slice: (1) every policy-declared observationKeys entry for critical invariants (R1-R6, R8; R7 is contract-decided separately) is present or the invariant evaluates to UNKNOWN; (2) declared-but-never-read keys R1 promiseOutputExists, R4 subjectTreeImmutableAcrossRun, R8 axiomOwnedColdSetDeletedBeforeRun are either enforced or removed from config/readiness_policy.json — no collector-only keys remain; (3) the R7 verifiedEmitterScope absence behavior is decided by the product contract, not by fall-through; (4) the negative control with certGreenDualEvidenceRequired=false still evaluates to FAIL; (5) the then-current decision evidence is regenerated.",
       "lastVerifiedAt": "2026-11-18T00:00:00Z",
@@ -5984,6 +6042,7 @@
         "docs/evidence/vs1_trust_rotation_audit_2026-11-18/README.md"
       ],
       "source": "audit_gap",
+      "productTruthImpact": "PRODUCT_SUPPORT",
       "status": "open",
       "resolution": "UNRESOLVED — registration only. Acceptance for the closing slice: (1) every future bypass rotation writes a per-window record before activation and after restore containing open/close version_id, actor_type+actor_id+bypass_mode, pre/post ruleset snapshot, expected merge SHA, queue occupancy check, and post-restore readback with bypass_actors=[]; (2) the 5 unrecorded historical windows are either reconstructed from an authority other than repo memory or explicitly accepted as unreconstructible by the human architect in writing; (3) queue-venue bypass semantics are measured by the T2 probe matrix (User/53123826, pull_request and always, with a FAILING or unreported check, merged through merge_queue) and the result is recorded as fact; (4) #130 window 58200591 gets a reconstructed record or an explicit accepted-gap decision; (5) the evidence README digest is refreshed whenever the underlying raw snapshots change.",
       "lastVerifiedAt": "2026-11-18T00:00:00Z",
@@ -6004,6 +6063,7 @@
         "src/cli/topology_cli.nim"
       ],
       "source": "theater_audit",
+      "productTruthImpact": "UNKNOWN",
       "status": "open",
       "resolution": "UNRESOLVED — registration only. Closing-slice acceptance: (1) either the write-only persistence block (:386-398) is removed and `ax topology analyze` output is byte-identical before/after on a fixed subject root, or a reader is added with an explicit invalidation contract keyed on the Merkle root and its hit path is exercised by a test; (2) no new file under .axiom/cache/ is written without a cited reader; (3) the change lands through the standard pin/debt re-anchor path.",
       "lastVerifiedAt": "2026-11-20T00:00:00Z",

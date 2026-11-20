@@ -198,6 +198,9 @@ const
   DebtRegistryFieldsOutOfContract*: seq[string] = @[
     # deprecated severity alias — see the DEPRECATED note above
     "impact",
+    # product-truth impact classification (data/debt_schema.json) — metadata
+    # only, deliberately not a rendered column
+    "productTruthImpact",
     # deprecated title alias, superseded by `description`
     "title",
     "declName",
