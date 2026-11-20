@@ -63,14 +63,28 @@ App 판정은 `failure`로 보존되며 `success`로 재분류하지 않는다. 
 |---|---|---|
 | `44732764939` | Push on main | success |
 | `44732764710` | trusted-writer-set | success |
-| `44732765172` | axiom-operational-slice | <!-- FILL:c1 --> |
-| `44732764882` | fresh-prove-observation | <!-- FILL:c2 --> |
+| `44732765172` | axiom-operational-slice (`readiness-verdict` 포함) | success |
+| `44732764882` | fresh-prove-observation | success |
 
-### §5.2 stale-base PR-venue 재실행 실증
+### §5.2 stale-base PR-venue 재실행 실증 — 관측과 판정
 
-방법: main `8439632`에서 문서 PR을 만들고(이벤트 `base.sha = 8439632`), 별도 문서 PR을 먼저 착지시켜 main을 전진시킨 뒤, 첫 PR의 `admission-gate` run을 **rerun**한다. rerun은 원본 이벤트 payload(`base.sha = 8439632`)를 재사용하지만 `anchor-resolve`는 live main tip을 새로 해석하므로 `pr_base != anchor` 조건이 성립한다.
+방법: main `8439632`에서 문서 PR #262(head `18b2d6be`)를 만들고(이벤트 `base.sha = 8439632`), #261을 **정상 merge queue**로 착지시켜 main을 `20fc6d44`로 전진시킨 뒤, #262의 `admission-gate` run `44733678104`를 rerun(attempt 2, `2026-11-20T12:34Z`경)했다.
 
-<!-- FILL:demo -->
+관측 (attempt 2):
+
+- `anchor-resolve`: `B* = 20fc6d44fcddd4e6634cf89e53e85271a4f80473` (live main)
+- `MINT_A0_JOURNAL: pr_base='8439632facab' anchor='20fc6d44fcdd' (pr.base.sha non-input — ADR-0027 Amd B)` — 등식 제거 확인, mint 성공
+- `MINT_ID_JOURNAL: pr_base='8439632facab' anchor='20fc6d44fcdd'` — 동일
+- `mint-prepare / prepare` success, `mint-publish / publish` success
+- `attest / admission-independents` **failure**: `CANDIDATE_TREE_MISMATCH: merge-tree(20fc6d44, 18b2d6b) tree 9c20056f != tested landing candidate tree 0fc63b33` (fail-closed)
+
+판정: mint의 stale-base 결함은 제거됐다. 동시에 이 실험은 **기존의 fail-closed 후보 동일성 계약**을 드러냈다 — PR-venue verdict는 "실제로 테스트된 후보"(이벤트 시점 `github.sha`의 merge tree)와 "현재 anchor의 merge tree"가 일치할 때만 성립한다. base가 이벤트 생성 후 전진하면 두 후보는 필연적으로 다르며, 거부는 **정직한 fail-closed**다(테스트되지 않은 후보를 통과시키지 않는다). 따라서 base 이동 후의 rerun은 재심사가 아니고, 복구 경로는 **새 이벤트**(새 head push·reopen 등)로 새 후보를 테스트하는 것이다.
+
+### §5.3 복구 실증 — 새 이벤트(이벤트 base = anchor)
+
+본 기록을 갱신한 새 커밋으로 `pull_request` 이벤트를 새로 발생시킨다(이벤트 `base.sha = 20fc6d4` = anchor → 후보 동일성 성립). 새 head의 run이 성공하고 App `admission-check`가 success가 되면 정상 merge queue로 착지한다.
+
+<!-- FILL:recovery -->
 
 ## §6. 이 기록이 주장하지 않는 것
 
