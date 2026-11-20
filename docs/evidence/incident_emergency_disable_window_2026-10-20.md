@@ -1,7 +1,7 @@
 # 인시던트 기록: 2026-10-20 긴급 ruleset 비활성 창 (24초) — PR #965 착지
 
 > **분류**: 실행 증거 (incidence/operational record) — **사후 복구 기록**. 사고 발생 당시의 감사 기록이 존재하지 않았고, 본 문서가 그 기록을 처음으로 제공한다(§6.2-1).
-> **선례 절차**: [incident_pinned_callee_deadlock_bypass_2026-10-09.md](incident_pinned_callee_deadlock_bypass_2026-10-09.md) (ruleset 순간 bypass → 즉시 복원) · [github_ruleset_api_quirks.md](../../spec/github_ruleset_api_quirks.md) §"비상 창 절차 사용 시 의무 (HARD RULE)" · [admission-generation.md](../../spec/admission-generation.md) §4.2 (긴급 evaluate 창 → 사후 감사 문서를 `docs/evidence/`에 남긴다)
+> **선례 절차**: [incident_pinned_callee_deadlock_bypass_2026-10-09.md](incident_pinned_callee_deadlock_bypass_2026-10-09.md) (ruleset 순간 bypass → 즉시 복원) · [github_ruleset_api_quirks.md](../spec/github_ruleset_api_quirks.md) §"비상 창 절차 사용 시 의무 (HARD RULE)" · [admission-generation.md](../spec/admission-generation.md) §4.2 (긴급 evaluate 창 → 사후 감사 문서를 `docs/evidence/`에 남긴다)
 > **작업 주체**: `wintrover` (repo admin, id 53123826; `GitHub CLI 2.102.0`, OAuth access token, `token_scopes: admin:enterprise,admin:org,gist,repo,workflow`) · 세션 `session_ab97dc56-2c99-4826-b794-e4927e2ce969` (세션 export `kimi-export-session_-20261021-033254.md`, 38,478행)
 > **결과**: 창 **24.0초** (`09:15:26.483Z` → `09:15:50.416Z`) — 비활성화된 ruleset은 **1개**(`main`, id `20303214`)뿐이고, 그 창 안에 PR #965가 착지했다(merge commit `748262327af38184d6473aa6f83e19360f7f52f2`). 복원은 **관측되었다**(in-session GET + 본문 diff `RESTORED_BYTE_IDENTICAL`, GitHub 감사 로그 `disabled → enabled`, ruleset history `version_id 53933497`). **그러나 감사 기록 의무는 사고 당시에 이행되지 않았고, 약 1일 뒤인 2026-10-21에 본 문서로 소급 충족되었다**(§6.2-1).
 
@@ -324,7 +324,7 @@ RESTORED_BYTE_IDENTICAL
 ### 6.2 검증되지 않은 것 — 미이행 의무와 관측 공백
 
 **(1) 🔴 감사 기록 의무 — 사고 당시에 이행되지 않음 (최대 공백).**
-HARD RULE([github_ruleset_api_quirks.md](../../spec/github_ruleset_api_quirks.md) §"비상 창 절차 사용 시 의무")은 비활성·복원 각각에 대해 *수행 시각·ruleset id·node_id·변경 전후 enforcement·수행 사유*를 **`docs/evidence/`에 기록**하고 GitHub 자체 감사 추적(ruleset history)을 함께 확인할 것을 요구한다. **2026-10-20T09:15Z ~ 2026-10-21에 이르도록 그러한 `docs/evidence/` 파일은 존재하지 않았다.** 실측: 2026-10-20 산출 증거 파일은 총 **7건** — `go_critical_recovery_2026-10-20.md`, `lane_activation_observation_2026-10-20.md`, `pr_to_main_attribution` 계열 **3건**(`pr_to_main_attribution_2026-10-20.md` / `_decision_` / `_remaining_issues_`), VS-1 사전등록 2건 — 뿐이며, 이 창을 다루는 것은 **0건**이다.
+HARD RULE([github_ruleset_api_quirks.md](../spec/github_ruleset_api_quirks.md) §"비상 창 절차 사용 시 의무")은 비활성·복원 각각에 대해 *수행 시각·ruleset id·node_id·변경 전후 enforcement·수행 사유*를 **`docs/evidence/`에 기록**하고 GitHub 자체 감사 추적(ruleset history)을 함께 확인할 것을 요구한다. **2026-10-20T09:15Z ~ 2026-10-21에 이르도록 그러한 `docs/evidence/` 파일은 존재하지 않았다.** 실측: 2026-10-20 산출 증거 파일은 총 **7건** — `go_critical_recovery_2026-10-20.md`, `lane_activation_observation_2026-10-20.md`, `pr_to_main_attribution` 계열 **3건**(`pr_to_main_attribution_2026-10-20.md` / `_decision_` / `_remaining_issues_`), VS-1 사전등록 2건 — 뿐이며, 이 창을 다루는 것은 **0건**이다.
 → **의무는 "기한 내에" 이행되지 않았고, 본 문서가 소급 충족한다.** 소급 충족은 이행이 아니다 — §9에 후속 절차로 기록한다.
 
 **(2) 🟠 복원 검증의 독립성 — 사고 당시는 단일 출처.**
@@ -364,7 +364,7 @@ HARD RULE([github_ruleset_api_quirks.md](../../spec/github_ruleset_api_quirks.md
 
 ## 7. 선례 · 절차 준수 매핑
 
-| HARD RULE 항목 ([github_ruleset_api_quirks.md](../../spec/github_ruleset_api_quirks.md)) | 상태 | 근거 |
+| HARD RULE 항목 ([github_ruleset_api_quirks.md](../spec/github_ruleset_api_quirks.md)) | 상태 | 근거 |
 |---|---|---|
 | **감사 기록 의무** — 수행 시각·ruleset id·node_id·전후 enforcement·사유를 `docs/evidence/`에 | 🔴 **당시 미이행** → 본 문서로 소급 충족 | §6.2-(1) |
 | **GitHub 자체 감사 추적(ruleset history) 확인** | 🟡 사고 당시 미확인 → 2026-10-21에 확인 | §5.5 (`version_id 53933458` / `53933497`) |
@@ -372,7 +372,7 @@ HARD RULE([github_ruleset_api_quirks.md](../../spec/github_ruleset_api_quirks.md
 | **모든 ruleset을 원래 enforcement로 복원** | 🟢 **이행** (비활성화된 ruleset이 1개뿐이고 그 1개가 복원됨) | §2, §5.5 |
 | **창 최소화** — 병합에 필요한 최소 시간, 대상 외 미접촉 | 🟢 **이행** (23.933 s, 1개 ruleset, 본문 미변경) | §2, §3 |
 
-[admission-generation.md](../../spec/admission-generation.md) §4.2는 이 경로를 *"긴급 evaluate 창"*으로 열거하고 **"사후 감사 문서를 `docs/evidence/`에 남긴다"** 고 요구한다. 본 문서가 그 사후 감사 문서다. **단, §4.2는 이 창이 비상 경로임을 전제하며, §1.4의 자기정정에 따라 본 사고에서 정당한 경로(REUSED skip)가 이미 존재했음이 확인되었다 — 즉 본 창은 필요한 비상 경로가 아니라, 불필요하게 촉발된 비상 창이었다.**
+[admission-generation.md](../spec/admission-generation.md) §4.2는 이 경로를 *"긴급 evaluate 창"*으로 열거하고 **"사후 감사 문서를 `docs/evidence/`에 남긴다"** 고 요구한다. 본 문서가 그 사후 감사 문서다. **단, §4.2는 이 창이 비상 경로임을 전제하며, §1.4의 자기정정에 따라 본 사고에서 정당한 경로(REUSED skip)가 이미 존재했음이 확인되었다 — 즉 본 창은 필요한 비상 경로가 아니라, 불필요하게 촉발된 비상 창이었다.**
 
 ---
 

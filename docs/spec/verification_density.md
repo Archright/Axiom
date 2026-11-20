@@ -131,7 +131,7 @@ Contract rules:
    **Phase 3 실측 (2026-08-17, HEAD 6c05ff6d9 이후 변경 트리): 0/23 = 0.0%**
    — `isVkdAdmissible`(certGreen-only gate)에 현재 admit 되는 커널 cert가 0건이기 때문.
    실측 포화 시 이 문서는 잠정 기록이며, 판정 수치는 항상 `metrics.vkd`를 따른다.
-3. **`rawKernelCoverage` = `verifiedFunctions / kernel_total`** (`5/40`) is a **legacy CI-threshold view**
+3. **`rawKernelCoverage` = `verifiedFunctions / kernel_total`** (measured 2026-11-20: `0/40` — `data/baseline.json` `verifiedFunctions=0`, `kernelTotal=40`) is a **legacy CI-threshold view**
    (schematically `vkdFixed4`): "how much of the FULL kernel scope is verified?" — diagnostic.
 4. kernel scope / verified count / progress must be judged as SEPARATE signals:
    - kernel scope change (`kernel_total`, `kernel_exempt_symbols`) → scope mutation

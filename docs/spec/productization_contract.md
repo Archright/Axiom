@@ -239,7 +239,7 @@ NO-GO         ⟺ ∃ critical ∈ {FAIL, UNKNOWN}
 ```
 
 - Pure core = `validateEvidence / normalizeBundle / evaluateReadiness` — `{.raises: [].}`
-- IO(`loadEvidenceFiles`)는 loader에만. `evaluateReadiness(policy, bundle, context)`가 순수 시그니처.
+- IO(`loadEvidenceFiles`)는 loader에만. `evaluateReadiness(policy, bundle)`가 순수 시그니처 — `context`는 `validateEvidence` 단계에만 쓰인다(구현: `tools/readiness_evaluator.nim:857`).
 - repository identity: `repoHead`(commit) ≠ `treeDigest`(실제 source state, `sha256(git ls-tree -r HEAD)`). 모두 context/evidence에서 항상 2개가 불일치하면 evidence invalid.
 - toolchain identity 불일치 → invalid.
 
@@ -437,19 +437,23 @@ v1 contract scope: `ax prove` / `ax report --json` are **Primary**; `ax status` 
 - **Policy(data)**: criticality / observation key 스키마 / thresholds / freshness / requiredFields / R5 각 항목의 정의된 exit code 집합 — **파라미터만**. rule 언어 금지.
 - **Evaluator(code)**: PASS/FAIL/UNKNOWN 대수, criticality 의미, 승격 규칙(R7 promotion), 결정표, 정규화·digest·fail-closed — 전부 고정 코드.
 - **주의**: "LLM-generated evidence is transitional and not itself the canonical enforcement mechanism." — 장기적으로 evidence는 `collectR1..collectR8` 같은 **deterministic collector 도구**가 생산해야 하며, subagent 조사는 전환기 방법(method=`manual`)이다.
-- 이번 단계 범위: standalone evaluator + golden tests + 실제 evidence 8건. **gate/topology 등록은 다음 단계** (`오늘 evaluateReadiness(policy,bundle,context)` 연결만 하면 됨).
+- 이번 단계 범위: standalone evaluator + golden tests + 실제 evidence 8건. **gate/topology 등록은 다음 단계** (`오늘 evaluateReadiness(policy,bundle)` 연결만 하면 됨).
 
 ---
 
 ## 9. Evaluator Interface (구현 사양)
 
 ```nim
-# tools/readiness_evaluator.nim
-proc loadEvidenceFiles(dir: string): Result[seq[JsonNode], string]                  # IO (유일)
-proc validateEvidence(raw: JsonNode, ctx: EvaluationContext): Result[ValidatedEvidence, string]  # pure
-proc normalizeBundle(validated: seq[ValidatedEvidence], policy: JsonNode): Result[CanonicalBundle, string]  # pure
-proc evaluateReadiness(policy: JsonNode, bundle: CanonicalBundle): ReadinessDecision # pure (context는 validation에만)
+# tools/readiness_evaluator.nim (구현 정본, 2026-11-20 측정)
+proc loadEvidenceFiles(dir: string): Result[seq[JsonNode], string]                  # IO (유일); :925
+proc validateEvidence(raw: JsonNode, ctx: EvaluationContext,
+                      policy: JsonNode = newJObject()): Result[ValidatedEvidence, string]  # pure; :234
+proc normalizeBundle(evidences: seq[JsonNode],
+                     policy: JsonNode = newJObject()): Result[JsonNode, string]  # pure; :304
+proc evaluateReadiness(policy: JsonNode, bundle: JsonNode): ReadinessDecision # pure (context는 validation에만); :857
 ```
+
+`CanonicalBundle`은 초기 설계 표기였고, 구현 타입은 `JsonNode`다. `evaluateReadiness`는 2-인자(`policy`, `bundle`)이며 `context`를 받지 않는다 — `context`는 `validateEvidence`에서만 사용된다.
 
 CLI:
 ```

@@ -88,7 +88,7 @@ VerificationResult
 - `genuineKernel` = `axiom ∧ pure ∧ status==Proved ∧ proofScope==Unbounded`.
 - CHC → Proved+Unbounded → **count**.
 - BMC → Proved+Bounded → **don't count**.
-- 결과: `baseline.json`의 `vkdFixed4` = `5/40` **유지**.
+- 측정값(2026-11-20): `baseline.json`의 `vkdFixed4` = `0/40` (`"0.0000"`; `verifiedFunctions=0`, `kernelTotal=40`) — canonical `metrics.vkd`도 `0/23` (`vksTotal=23`).
 
 ## 3. Construction & Deserialization 경계
 

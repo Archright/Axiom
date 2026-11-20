@@ -286,7 +286,7 @@ This is a hard prohibition aligned with the constitution's theater prevention ru
 
 ### Command Surface Enumeration
 
-From `action_plan_cli.nim:153-214` (`parseAxSubcommandKind`), the full list of recognized subcommands:
+From `action_plan_cli.nim:174-245` (`parseAxSubcommandKind`), the full list of recognized subcommands:
 
 | # | Subcommand | Type |
 |---|---|---|
@@ -305,29 +305,34 @@ From `action_plan_cli.nim:153-214` (`parseAxSubcommandKind`), the full list of r
 | 13 | dag | Dependency graph |
 | 14 | cache | Cache management |
 | 15 | check | Validation |
-| 16 | infra | Infrastructure |
-| 17 | shape | Shape analysis |
-| 18 | git | Git integration |
-| 19 | cst | CST parsing |
-| 20 | scope | Scope management |
-| 21 | release | Release management |
-| 22 | observability | Telemetry |
-| 23 | check-spec | Spec validation |
-| 24 | baseline | Baseline management |
-| 25 | invariants | Invariant checking |
-| 26 | vkd | VKD lifecycle |
-| 27 | verify | Verification utility |
-| 28 | budget | Budget management |
-| 29 | debt | Debt tracking |
+| 16 | shape | Shape analysis |
+| 17 | git | Git integration |
+| 18 | cst | CST parsing |
+| 19 | scope | Scope management |
+| 20 | release | Release management |
+| 21 | observability | Telemetry |
+| 22 | check-spec | Spec validation |
+| 23 | baseline | Baseline management |
+| 24 | invariants | Invariant checking |
+| 25 | vkd | VKD lifecycle |
+| 26 | verify | Verification utility |
+| 27 | status | Status |
+| 28 | debt | Debt tracking |
+| 29 | budget | Budget management |
+| 30 | merge | Merge-admission controller |
+| 31 | admission | Admission operations |
+| 32 | landing | Landing actuator |
+| 33 | evidence | Evidence operations |
+| 34 | capability | Capability disclosure |
 
-**Total: 29 subcommands** (including `help` which is a built-in alias).
+**Total: 34 subcommands** (measured 2026-11-20: 34 `of` cases in `parseAxSubcommandKind` and 34 `AxSubcommandKind` enum members; including `help` which is a built-in alias). The `ax help` table (`axCommandHelpEntries`, `action_plan_cli.nim:21`) covers only 28 of them.
 
 ### Phased Adoption
 
 | Phase | Commands | Rationale |
 |---|---|---|
 | **Phase 3 (this design)** | `prove`, `report` | Primary product surface per `productization_contract.md:23`. These are the only commands with a defined exit-state contract. |
-| **Phase 4** | `topology`, `scaffold`, `gate`, `lint`, `cert`, `shadow`, `config`, `version`, `io`, `dag`, `cache`, `check`, `infra`, `shape`, `git`, `cst`, `scope`, `release`, `observability`, `check-spec`, `baseline`, `invariants`, `vkd`, `verify`, `budget`, `debt` | Remaining 26 commands adopt the shared `CliOutcome` mapping. Each command's existing `int` return value is wrapped as `CliOutcome` via the canonical mapping. |
+| **Phase 4** | `topology`, `scaffold`, `gate`, `lint`, `cert`, `shadow`, `config`, `version`, `io`, `dag`, `cache`, `check`, `shape`, `git`, `cst`, `scope`, `release`, `observability`, `check-spec`, `baseline`, `invariants`, `vkd`, `verify`, `status`, `debt`, `budget`, `merge`, `admission`, `landing`, `evidence`, `capability` | Remaining 31 commands adopt the shared `CliOutcome` mapping. Each command's existing `int` return value is wrapped as `CliOutcome` via the canonical mapping. |
 | **Permanent** | `help` | Always exits 0. Trivially maps to `SUCCESS`. |
 
 ### Why Prove/Report First
@@ -414,10 +419,10 @@ No gaps, no overlaps. Exit codes outside {0,1,2,3,4} are either signal-derived (
 
 | Claim | Source | Lines |
 |---|---|---|
-| 29 subcommands in `parseAxSubcommandKind` | `src/cli/action_plan_cli.nim` | 153-214 |
+| 34 subcommands in `parseAxSubcommandKind` | `src/cli/action_plan_cli.nim` | 174-245 |
 | `CliActionKind` enum with `cliQuit` | `src/cli/cli_types.nim` | 42-48 |
-| `CliCommandKind` enum (28 commands) | `src/cli/cli_types.nim` | 50-78 |
-| `AxSubcommandKind` enum (29 subcommands) | `src/cli/cli_types.nim` | 79-108 |
+| `CliCommandKind` enum (32 commands) | `src/cli/cli_types.nim` | 50-82 |
+| `AxSubcommandKind` enum (34 subcommands) | `src/cli/cli_types.nim` | 84-118 |
 | `CliAction` type with `exitCode` field | `src/cli/cli_types.nim` | 118-124 |
 | `interpretCliActions` dispatch loop | `src/cli/action_interpreter_cli.nim` | 61-204 |
 | ~28 `quit(exitCode)` guards per command | `src/cli/action_interpreter_cli.nim` | 72-204 |

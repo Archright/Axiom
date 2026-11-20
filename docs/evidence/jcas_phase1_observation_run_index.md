@@ -48,7 +48,7 @@ venue-split(#625, ADR-0032) 착지로 B가 `cbb8c0db` → `faae54125`로 전진�
 | run | event | 주제 | 결과 |
 |---|---|---|---|
 | 37881146122 | pull_request | PR #629 재실행 (base 전진 후) | RED — `ADM_IDENTITY: FAIL — PR base.sha faae54125 != B cbb8c0db (base moved during admission? fail-closed)` |
-| 37881090661 | pull_request | PR #633 | RED — mint-prepare preflight `trusted cert-artifact naming convention missing` ([gh_run_observation_quirks Q4](../../spec/gh_run_observation_quirks.md) grep 패턴 붕괴) |
+| 37881090661 | pull_request | PR #633 | RED — mint-prepare preflight `trusted cert-artifact naming convention missing` ([gh_run_observation_quirks Q4](../spec/gh_run_observation_quirks.md) grep 패턴 붕괴) |
 | 37884232157 / 37884770529 | push(main) / pull_request | 49fdf 세대 전반 | startup_failure — jobs 0개 (Q4a: run 블록 주석 내 미종결 표현식 토큰) |
 | 37880739976 | merge_group | PR #629 landing (B=faae) | SUCCESS — 4/4 EXECUTED (29.5 / 165.8 / 79.8 / 17.9 s) |
 

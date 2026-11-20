@@ -164,12 +164,12 @@ The recorded digest therefore varies by machine and checkout path: relocating th
 
 ## 7. JSON Schemas — So That `JCS(schema)` Is Defined
 
-Three draft-07 schemas (none exists today; only `config/policy/contract_layer.schema.json`, `config/policy/policy_layer.schema.json`, and `src/gate/gate_manifest.schema.json` are present):
+Three draft-07 schemas — none of the three planned paths exists today (verified 2026-11-20: `ls data/readiness/*.schema.json` lists only `closure_state.schema.json`); the policy DOM the policy schema would validate is the existing `data/readiness/independent_policy.json`:
 
 | Schema | Planned location | Role in identity |
 |---|---|---|
 | evidence | `data/readiness/evidence_manifest.schema.json` | REQUIRED / OPTIONAL-with-default (§2.3), null-vs-absent semantics, obs `key`/`value`/`scope`/`subject` shapes |
-| policy | `data/readiness/policy.schema.json` | mirrors `independent_policy.json` keys: `policyId`, `invariants[].criticality`, `observationKeys`, `r1`/`r4`/`r5`/`r7`/`r8`, `freshness`, `tierCountsContract`, `semanticMapping` |
+| policy | `data/readiness/policy.schema.json` (planned; absent) | mirrors the existing `data/readiness/independent_policy.json` (measured top-level keys, 2026-11-20: `schemaVersion`, `independentPolicyId`, `ratifiedAt`, `ratifiedBeforeCollection`, `supersedes`, `productContract`, `stateSemantics`, `blockingPolicy`, `preRatifiedNotApplicable`, `invariants`; each `invariants.R*` carries `name`, `criticality`, `observationKeys`) |
 | decision | `data/readiness/decision.schema.json` | v2 record: `schemaVersion: 2`, `decisionId` (64 hex), `evaluationInputIdentity`, identity components, `invariantResults`, `finalVerdict`, `outcome`, `provenance`; `additionalProperties: false` |
 
 ```

@@ -168,7 +168,7 @@ Before adding or editing a theater entry, agents MUST verify:
 
 | Fact | Authority (단일) | Notes |
 |---|---|---|
-| debt 의도 — open/closed/deferred, severity, resolution 결정 | `data/debt_registry.json` (SSOT) | 권위 선언 및 sink 집합: [adr/0029-debt-projection-writer-authority.md](adr/0029-debt-projection-writer-authority.md). 정본 mutation device = `tools/debt_engine.nim`. |
+| debt 의도 — open/closed/deferred, severity, resolution 결정 | `data/debt_registry.json` (SSOT) | 권위 선언 및 sink 집합: [adr/0029-debt-projection-writer-authority.md](../adr/0029-debt-projection-writer-authority.md). 정본 mutation device = `tools/debt_engine.nim`. |
 | registry 구조 — field shapes/types/allowlist | `data/debt_schema.json` | enforced by `debt_engine --validate` |
 | 측정값 — budget metric current/target/baseline | `data/debt_ledger.json` | owner: `tools/sync_budget.nim` (`LedgerPath`; baseline은 observations로부터 reconcile) |
 | 관측 이력 — metric observation event trace | `data/debt/metric_observations.journal` | owner: `tools/sync_budget.nim` (`ObservationsJournalPath`, append-only) |
