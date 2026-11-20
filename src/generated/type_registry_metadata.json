@@ -51072,6 +51072,20 @@
       "typeCategory": "option"
     },
     {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List string",
+      "module": "src/core/symbol_graph/global_symbol_graph_builder_part2.nim",
+      "name": "parseDelegatedDigests",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
       "hasAxiomHint": true,
       "ignorable": false,
       "leanType": "String",
