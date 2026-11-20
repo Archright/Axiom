@@ -755,6 +755,7 @@ VERIFY_CONTRACT_NIMCACHE_ROOT ?= build/nimcache-verify-contract
 VC_NIMCACHE_g2 := $(VERIFY_CONTRACT_NIMCACHE_ROOT)/g2-verify-contract-unit
 VC_NIMCACHE_g6g4 := $(VERIFY_CONTRACT_NIMCACHE_ROOT)/g6g4-verify-scenario-oracles
 VC_NIMCACHE_g7 := $(VERIFY_CONTRACT_NIMCACHE_ROOT)/g7-verify-contract-release-e2e
+VC_NIMCACHE_pb := $(VERIFY_CONTRACT_NIMCACHE_ROOT)/pb-direct-proof-boundary
 
 # $(call contract_fanout,<log-tag>,<sub-make-target>,<env-prefix>)
 # One backgrounded sub-make per member, writing its own log + exit-status file.
@@ -933,6 +934,15 @@ verify-contract-release-e2e-consume: ## G7 — release product E2E consuming the
 	echo "  -- ax status --json (product state)"; bin/ax status --json || exit 1
 	@echo "✅ verify-contract-release-e2e-consume PASSED"
 
+# §3 direct proof boundary conformance (docs/spec/direct_proof_boundary.md).
+# Turns the normative per-construct statuses into executable assertions, and is
+# a prerequisite of verify-contract-release-e2e-full — the target the required
+# `axiom-operational-slice` check runs — so doc/code divergence fails CI there.
+verify-proof-boundary: ## §3 direct proof boundary conformance (docs/spec/direct_proof_boundary.md)
+	@echo "=== [verify-proof-boundary] direct proof boundary conformance ==="
+	@$(NIM) c -r --hints:off --nimcache:$(VC_NIMCACHE_pb) tests/trusted/test_direct_proof_boundary.nim || exit 1
+	@echo "✅ verify-proof-boundary PASSED"
+
 # G7-full — CI release E2E. Canonical product-outcome assertion.
 # 정확한 정의: "certificate storage-layout independent + canonical persisted-state projection consistency".
 #  - certificate(data/trusted/certificates 등) 저장구조에는 비의존한다(스캔/열거 없음).
@@ -943,7 +953,7 @@ verify-contract-release-e2e-consume: ## G7 — release product E2E consuming the
 # (제품 exit code 자체의 fail-open 수정은 pinned-file rotation follow-up이다;
 #  이 target은 verdict를 직접 assert해 CI에서 fail-closed로 동작한다.)
 # status·tier는 보고된 값 그대로 소비만 — 둘 사이 관계(status→tier/tier→status)를 CI가 새로 해석하지 않음(금지).
-verify-contract-release-e2e-full: ## G7-full — CI release E2E (canonical product-outcome assertion, §계획 v7)
+verify-contract-release-e2e-full: verify-proof-boundary ## G7-full — CI release E2E (canonical product-outcome assertion, §계획 v7)
 	@set -eu; \
 	NODE="src/core/orchestrator/orchestrator_api.nim::normalizeMaxWorkers"; \
 	bin/ax --check-provenance || exit 1; \
