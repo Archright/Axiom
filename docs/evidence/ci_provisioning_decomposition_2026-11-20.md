@@ -1,246 +1,254 @@
-# CI provisioning 정본화 — cohort B/C, composite 분해, 상한 (2026-11-20)
+# CI provisioning 구성요소 분해 — `setup-axiom-toolchain` (2026-11-20)
 
-> **Status**: 측정 완료. 코드·워크플로·정책 변경 없음(읽기 전용). 산출물은 본 문서뿐이다.
+> **Status**: 측정 완료. 워크플로·액션·정책 변경 없음(읽기 전용). 산출물은 본 문서 + `summary.json`뿐이다.
 > **Metric contract**: `docs/spec/ci_critical_path_metric.md`
-> **Canonical wall**: `docs/spec/ci_acceptance_contract.md` §6
-> **Baseline**: `docs/evidence/ci_critical_path_baseline_2026-11-20.md` (errata 포함)
-> **VS-1a 분해 데이터**: `data/ci_optimization/ci_provisioning_decomposition_2026-11-20/summary.json`
+> **선행 baseline**: `docs/evidence/ci_critical_path_baseline_2026-11-20.md` (동일 cohort, 동일 정의)
+> **Data**: `data/ci_optimization/ci_provisioning_decomposition_2026-11-20/summary.json`
 > **Collected**: 2026-11-20, `gh` 2.102.0
 
 ## §0. 결론
 
+baseline은 provisioning family 2,574초를 "단일 최대 기여"로 지목하면서, 그 안의 `다운로드 vs 설치 vs 복원` 분해가 없다는 이유로 캐시 변경을 보류했다. 본 측정이 그 분해를 수행했다.
+
 | 항목 | 값 | 해석 |
 |---|---|---|
-| cohort B wall p50 | **555s** (430–763) | 표본 5건. p95는 n<20이라 선언 불가 |
-| cohort B runner-seconds p50 (clamp) | **931s** (합 4,886) | raw 합은 4,874; skipped 음수 span 4–6건 |
-| cohort C wall p50 | **445s** (425–659) | 복구 후 merge_group 5건. p95 UNKNOWN |
-| cohort C runner-seconds p50 | **967s** (합 4,997) | wall은 개선, runner는 악화 |
-| 574/979와의 화해 | cohort A + raw 합 | cohort A clamp p50은 **991**; 표본 + 정의 두 요인 |
-| composite 최대 항목 (run 44743215085) | `Install system deps (libpcre3)` **219.8s (51.8%)** | 8/8 job, 회당 8.2–41.9s |
-| A-layer restore | **171.2s (40.4%)** | hit 7 / miss 1; 네트워크 56.0s, tar 110.8s |
-| intra-run 반복 | run당 **8–9 job**이 동일 composite 실행 | run 간은 별개 VM이므로 중복이 아니라 반복 |
-| runner-seconds 산술 상한 | cohort B **411s/run**, cohort C **323s/run** | **달성 가능값 아님** |
-| wall 산술 상한 | median **164s/run**, 비율 median **36.0%** | **달성 가능값 아님** |
+| composite 호출 지점 | **46** (실행 40, 0초 6) | 이름 매칭 3종 모두 composite 호출이다 |
+| composite outer span 합 | **2,574.0s** | baseline의 provisioning family와 정확히 일치 |
+| 내부 22개 step 합 | **2,552.7s** | outer의 99.2% |
+| 미귀속 | **21.3s (0.83%)** | composite harness 오버헤드. 남는 시간 없음 |
+| 최대 phase (cohort) | **install/extract 1,549.1s (60.7%)** | 그중 884.8s가 **단일 공급 사고** |
+| 최대 phase (사고 제외) | **cache restore 769.5s (52.1%)** | 그중 67.4%가 **tar 추출**, 네트워크는 32.6% |
+| verification/provenance | 64.7s (2.5%) | 고정비. phase 순위와 무관 |
 
-## §1. 정본 정의
+핵심 판정 두 가지:
+
+1. **cohort 최대치는 사고가 만든 값이다.** `Install system deps` 1,542.1초 중 884.8초는 run `44521587339`의 Ubuntu archive HTTP 503 구간이다(느린 상위 5건이 모두 이 run — 4건 실패, 1건은 92초 재시도 후 성공). 이 5건을 빼면 같은 step은 657.3초/35회 = 평균 18.8초다.
+2. **정상 구간의 최대 phase는 cache restore이고, 그 비용은 대역폭이 아니라 추출이다.** A-layer restore 874.5초 중 네트워크 278.6초, tar 추출 574.7초(67.4%)다. 실측 처리량은 144 MB/s, 복원당 payload는 1,004 MB다.
+
+## §1. Cohort와 수집 명령
+
+baseline과 동일한 5개 `merge_group` run, terminal attempt, `admission-gate`(`.github/workflows/admission-gate-v2.yml`)다. run `44521587339`는 결론이 `failure`지만 자연 발생한 terminal attempt이므로 유지한다.
 
 ```
-wallSeconds   = max(completed_at) − min(started_at)
-                terminal attempt의 모든 job 중 started_at·completed_at이
-                모두 있는 job만 사용 (skipped 포함)
+# 1) step span (초 정밀도)
+for id in 44521587339 44542633420 44548437642 44553449785 44561019095; do
+  gh api "repos/Archright/Axiom/actions/runs/$id/jobs?per_page=100" > /tmp/prov-data/jobs_$id.json
+done
 
-runnerSeconds = Σ_jobs max(0, completed_at − started_at)
-                skipped job의 음수 span(completed_at < started_at)을
-                0으로 clamp하는 것이 필수
+# 2) composite 내부 step span (ms 정밀도) — job 로그
+for id in 44521587339 44542633420 44548437642 44553449785 44561019095; do
+  gh run view $id --log --repo Archright/Axiom > /tmp/prov-data/runlog_$id.txt
+done
+
+# 3) trust surface (읽기 전용)
+git show origin/main:.github/actions/setup-axiom-toolchain/action.yml > /tmp/prov-data/action.yml
 ```
 
-- **정본 소유**: wall은 `docs/spec/ci_acceptance_contract.md` §6, runner-seconds는 `docs/evidence/ci_performance_baseline_2026-11-19.md` §1, clamp 고정은 `docs/spec/ci_critical_path_metric.md` §2.2다.
-- **`run_duration_ms`는 비정본**이다. 이 값은 `updated_at − run_started_at`이며, cohort B에서 431/521/556/577/765초로 canonical wall(430/519/555/574/763)보다 1–4초 크다. 수용 판정·전후 비교에 쓰지 않는다.
-- `created_at`은 사용하지 않는다. workflow 생성 시각은 job 시작 전 지연을 별도로 포함한다.
-- **provisioning family** = 이름에 `setup-axiom-toolchain`을 포함하는 step의 0-clamp 합. 이 이름을 가진 step은 3종이며 모두 composite 호출 지점이다.
+| run | event | conclusion | head | wall | runner | critical path | 호출 지점 | 실행 | 0s | composite outer | runner 대비 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 44521587339 | merge_group | failure | `807f38d9fe` | 763 | 1,286 | 762 | 9 | 7 | 2 | 1,080 | 84.0% |
+| 44542633420 | merge_group | success | `69d2dce0` | 430 | 824 | 430 | 9 | 8 | 1 | 389 | 47.2% |
+| 44548437642 | merge_group | success | `dd8502f6` | 519 | 854 | 519 | 9 | 8 | 1 | 367 | 43.0% |
+| 44553449785 | merge_group | success | `a2a86363` | 574 | 991 | 574 | 10 | 9 | 1 | 429 | 43.3% |
+| 44561019095 | merge_group | success | `8bbb035a` | 555 | 931 | 554 | 9 | 8 | 1 | 309 | 33.2% |
 
-Cohort 규약: `merge_group` 이벤트, workflow `admission-gate`(`.github/workflows/admission-gate-v2.yml`), 각 run의 terminal attempt만. `workflow_dispatch`·수동 재실행은 제외한다.
+`wall`·`runner`·`critical path`는 baseline 값을 같은 정의로 재계산해 일치를 확인했다(`wallSeconds` = max(completed) − min(started), `runnerSeconds` = Σ max(0, …)). "runner 대비"는 composite outer 합 ÷ `runnerSeconds`다 — composite가 여러 job에서 **병렬로** 돌기 때문에 `wall` 대비 비율은 의미가 없다(44521587339는 141.6%가 나온다).
 
-## §2. Cohort B — 기존 기준선 재현
+## §2. 방법 — composite 내부 step은 jobs API에 없다
 
-| run | event | conclusion | head | wall | runner raw | runner clamp | family |
-|---|---|---|---:|---:|---:|---:|---:|
-| 44521587339 | merge_group | failure | `807f38d9` | 763 | 1,282 | **1,286** | 1,080 |
-| 44542633420 | merge_group | success | `69d2dce0` | 430 | 818 | **824** | 389 |
-| 44548437642 | merge_group | success | `dd8502f6` | 519 | 854 | **854** | 367 |
-| 44553449785 | merge_group | success | `a2a86363` | 574 | 979 | **991** | 429 |
-| 44561019095 | merge_group | success | `8bbb035a` | 555 | 925 | **931** | 309 |
+`docs/spec/ci_critical_path_metric.md` §2.4는 "composite action의 중첩 step은 GitHub가 별도 step으로 노출하지 않는다"고 이미 고정했다. 이 cohort에서 그 사실을 직접 확인했다. 이름에 `setup-axiom-toolchain`을 포함하는 step은 **3종뿐**이다.
 
-- raw 합 4,874 / clamp 합 **4,886**. clamp는 run당 +4~+12초를 더한다(음수 span 4–6건).
-- **wall p50 555s, runner-seconds(clamp) p50 931s**. p95는 n=5<20이므로 **UNKNOWN**이다(계약 §5).
-- run 44521587339는 conclusion이 failure지만 자연 발생한 terminal attempt이므로 제외하지 않았다. 제외하면 "성공한 실행만"으로 편향된다.
+| step 이름 | 호출 | 실행 | 0초 | 초 |
+|---|---|---|---|---|
+| `Run ./.github/actions/setup-axiom-toolchain` | 36 | 30 | 6 | 1,878 |
+| `Restore trusted B supply (setup-axiom-toolchain — exact-key B layer)` | 5 | 5 | 0 | 441 |
+| `[closure] Pinned toolchain (setup-axiom-toolchain — nim 2.2.10, no inline choosenim)` | 5 | 5 | 0 | 255 |
+| **합** | **46** | **40** | **6** | **2,574** |
 
-## §3. 574/979와의 화해 — 표본 + 정의
+`action.yml`의 22개 내부 step(`Compute A/B cache identities`, `A-layer restore`, `Install Nim`, `Verify toolchain pins` …)은 jobs API에 **하나도** 나타나지 않는다. 세 이름 모두 실제로는 composite 호출이다 — `Restore trusted B supply`는 `certificate-mint.yml:1334`의 `uses: ./.github/actions/setup-axiom-toolchain`, `[closure] Pinned toolchain`은 `admission-gate-v2.yml:278`의 `uses: Archright/Axiom/...@c021c338`이다.
 
-기존 문서(`docs/evidence/ci_critical_path_baseline_2026-11-20.md` §2, `docs/spec/ci_critical_path_metric.md` §4)는 574/979와 555/931의 차이를 **표본 차이**로만 설명한다. 이는 절반만 맞다. 574/979는 **cohort A + raw 합**의 조합이고, 555/931은 **cohort B + clamp 합**의 조합이다.
-
-| 정의 | cohort A (5번째 run `44519217624`) | cohort B (5번째 run `44561019095`) |
-|---|---:|---:|
-| wall p50 | **574** | **555** |
-| runner p50 (raw) | **979** ← 기존 문서 인용값 | 925 |
-| runner p50 (clamp) | **991** | **931** ← 본 문서 정본 |
-
-- cohort A 원자료: run `44519217624`는 wall 708 / raw 1,366 / **clamp 1,372**다. cohort A clamp runner 값은 1,372/1,286/824/854/991이고 p50은 **991**이다.
-- **정의 효과**: 같은 cohort A에서 raw 979 → clamp 991, **+12초**.
-- **표본 효과**: cohort A clamp 991 → cohort B clamp 931, **−60초**.
-- **순효과**: 979 → 931, **−48초**. 즉 차이는 표본과 정의 두 요인의 합이며, "표본 차이"만으로는 12초를 설명하지 못한다.
-
-이 정정은 본 문서에서만 수행한다. `docs/spec/ci_critical_path_metric.md`의 정의 자체는 유효하며, 수정하지 않는다(범위 밖).
-
-## §4. Cohort C — 복구 후 merge_group 5건
-
-| run | event | conclusion | head | wall | runner | family | 호출/실행 |
-|---|---|---|---:|---:|---:|---:|---:|
-| 44743215085 | merge_group | success | `f8959445` | 445 | 844 | 424 | 9 / 8 |
-| 44741298189 | merge_group | success | `b0967e55` | 428 | 813 | 358 | 9 / 8 |
-| 44735026078 | merge_group | success | `20fc6d44` | 425 | 967 | 418 | 10 / 9 |
-| 44724689422 | merge_group | failure | `79536817` | 602 | 1,192 | 399 | 10 / 9 |
-| 44723151115 | merge_group | success | `467e02f4` | 659 | 1,181 | 375 | 10 / 9 |
-
-| 지표 | cohort B | cohort C | Δ |
-|---|---:|---:|---:|
-| wall p50 | 555 | **445** | −110 |
-| runner-seconds p50 | 931 | **967** | +36 |
-| family 합 | 2,574 | **1,974** | −600 |
-| wall max | 763 | 659 | −104 |
-
-wall은 개선됐지만 runner-seconds는 악화됐다. 표본 5건이며 p95는 **UNKNOWN**이다. run 44724689422는 failure지만 자연 발생한 terminal attempt이므로 유지한다.
-
-## §5. Composite 분해 — run 44743215085
-
-### §5.1 방법
-
-composite 내부 step은 jobs API에 노출되지 않는다(`docs/spec/ci_critical_path_metric.md` §2.4). 액션이 job 로그에 출력하는 마커로 분해했다:
+분해는 **job 로그의 composite 경계 마커**로 수행했다. 액션은 각 내부 step마다 아래를 출력한다:
 
 ```
 ##[start-action display=<step 이름>;id=<action>.<step id>]
-##[end-action id=<action>.<step id>;outcome=<...>;conclusion=<...>;duration_ms=<n>]
+##[end-action id=<action>.<step id>;outcome=<success|failure|skipped>;conclusion=<…>;duration_ms=<n>]
 ```
 
-`gh run view 44743215085 --log`에서 **176 레코드 = 8 실행 × 22 step**을 파싱했다. 내부 step 값은 전부 `duration_ms`(ms 정밀도)이고, 바깥 span 검증에는 jobs API의 초 정밀도 step span을 썼다.
+`duration_ms`는 ms 정밀도이고, 액션이 직접 계산한 값이다. 본 문서의 내부 step 값은 전부 이 값이며, jobs API의 초 단위 step span은 **바깥 span 검증에만** 썼다. 파싱 결과는 실행당 정확히 22개 레코드, 5-run 합계 880 레코드(40 실행 × 22)다.
 
-| 항목 | 초 | 비고 |
-|---|---:|---|
-| composite outer span 합 (8 호출) | **424** | jobs API step span: 298 + 49 + 77 |
-| 내부 22 step 합 | **420.4** | outer의 99.2% |
-| 미귀속(경계 오버헤드) | **3.6** | 0.8% |
+외부 span과 내부 합의 정합(실행별):
 
-### §5.2 구성요소
+| run | outer | internal | 차이 |
+|---|---|---|---|
+| 44521587339 | 1,080 | 1,076.6 | 3.4 |
+| 44542633420 | 389 | 385.1 | 3.9 |
+| 44548437642 | 367 | 363.1 | 3.9 |
+| 44553449785 | 429 | 423.6 | 5.4 |
+| 44561019095 | 309 | 304.3 | 4.7 |
+| **합** | **2,574** | **2,552.7** | **21.3** |
 
-비율의 분모는 **424초**(composite outer 합)다.
+실행당 0.5초 남짓이며 실행 수에 비례한다(40 실행 × 22 경계 ≈ 880 마커). 값이 음수인 step span은 없었고, 0초 호출 지점 6건은 `started_at == completed_at`인 `skipped` step이다 — **clamp가 필요한 음수 span은 step 수준에서 0건**이다(음수 span은 baseline이 지적한 job 수준 현상이다).
 
-| 구성요소 | 초 | outer 대비 | 실행 | 비고 |
-|---|---:|---:|---:|---|
-| `Install system deps (libpcre3)` | **219.8** | **51.8%** | 8/8 | 회당 8.2–41.9s, apt 재실행 |
-| `A-layer restore` (1,078 MB) | **171.2** | **40.4%** | 8/8 | hit 7 / miss 1 |
-| └ 네트워크 | 56.0 | 33.6%¹ | 7 hit | `Cache hit` → `Cache Size` |
-| └ tar 추출 | **110.8** | **66.4%**¹ | 7 hit | `Cache Size` → `restored` |
-| `B-layer restore` (51 MB) | **13.7** | **3.2%** | 8/8 | |
-| `Compute A/B cache identities` | **4.8** | **1.1%** | 8/8 | keygen |
-| verification/probe 계열 | **7.2** | **1.7%** | | 지문 검증·provenance/기능 probe·핀 검증·restore 관측 |
-| 기타 (Z3·jq 설치, A-layer save, export/discard) | 3.8 | 0.9% | | |
-| harness 경계 | 3.6 | 0.8% | | 내부 합과 outer의 차이 |
-| **합** | **424.0** (반올림) | **100%** | | 내부 합 420.4 + 경계 3.6 |
+### §2.1 phase 매핑
 
-¹ A-layer 내부 비율. 네트워크+tar = 166.8s이고, A-layer 전체 171.2s와의 차이 4.4s는 캐시 액션의 조회·경계 오버헤드다.
+| phase | 내부 step |
+|---|---|
+| `cache_restore` | `A-layer restore`, `A-layer restore observation`, `A-layer non-exact discard`, `B-layer restore`, `B-layer restore observation` |
+| `install_extract` | `Install system deps (libpcre3)`, `Install Nim (choosenim)`, `Install Nim dependencies`, `Install Lean`, `Install Z3`, `Install jq` |
+| `verification` | `Compute A/B cache identities`, `A-layer fingerprint verify`, `B-layer fingerprint verify`, `B-layer provenance probe`, `Toolchain functional probes`, `Verify toolchain pins`, `Nim-scope verification stamp`, `A-layer lock-completeness check`, `A-layer save authority`, `A-layer save` |
+| `other` | `Export toolchain PATH` |
 
-`Install system deps`는 **8/8 job 전부** 실행됐고, 로그에 apt fetch/install이 매번 다시 나온다. `libpcre3`는 캐시 restore 대상이 아니라 **job마다 apt를 재실행**하는 구조다.
+`A-layer save`는 phase 이름상 `cache_restore`가 아니라 `verification`에 두었다 — payload를 쓰는 단계이고 40회 중 36회가 skipped이므로 순위에 영향이 없다.
 
-### §5.3 캐시 관측
+## §3. 내부 step별 집계 (40 실행)
 
-- 로그에 `Cache hit for: axiom-a-…` / `Cache not found for input keys: axiom-a-rt-…` / `Cache restored from key: …`가 그대로 남는다. 이 run은 **A-layer hit 7 / miss 1**이다.
-- miss 1건은 `mint-prepare / prepare`(13:24:22Z)다. cohort B 문서 §6.2가 지목한 런타임 스코프 키(`axiom-a-rt-*`) 요청과 같은 지점이다.
-- hit/miss는 로그로 판정 가능하지만, miss의 원인이 키 네임스페이스인지 save 이력인지는 이 측정 범위 밖이다.
+`median`/`p75`는 **실행된 회차만** 대상으로 계산했다(0초 skipped 제외). `sum`은 0-clamp 합이다.
 
-### §5.4 job별 provisioning 비중
+| 내부 step | phase | 실행 | skipped | sum | median | p75 | max |
+|---|---|---|---|---|---|---|---|
+| Install system deps (libpcre3) | install_extract | 40 | 0 | 1,542.1 | 21.2 | 32.2 | 230.2 |
+| A-layer restore | cache_restore | 40 | 0 | 874.5 | 22.0 | 29.9 | 32.7 |
+| B-layer restore | cache_restore | 40 | 0 | 59.4 | 1.4 | 2.5 | 3.0 |
+| keygen (Compute A/B cache identities) | verification | 40 | 0 | 24.8 | 0.6 | 0.7 | 0.9 |
+| Toolchain functional probes | verification | 40 | 4 | 10.7 | 0.3 | 0.4 | 0.5 |
+| B-layer provenance probe | verification | 40 | 16 | 8.6 | 0.4 | 0.4 | 0.5 |
+| B-layer fingerprint verify | verification | 40 | 12 | 6.9 | 0.2 | 0.3 | 0.4 |
+| A-layer save | verification | 40 | 36 | 6.8 | 1.8 | 2.2 | 2.3 |
+| Install Z3 4.13.3 | install_extract | 40 | 36 | 6.4 | 1.6 | 1.6 | 1.7 |
+| A-layer fingerprint verify | verification | 40 | 4 | 3.6 | 0.1 | 0.1 | 0.3 |
+| Verify toolchain pins | verification | 40 | 4 | 2.8 | 0.1 | 0.1 | 0.1 |
+| B-layer restore obs | cache_restore | 40 | 0 | 2.3 | 0.0 | 0.1 | 0.2 |
+| A-layer restore obs | cache_restore | 40 | 0 | 2.2 | 0.0 | 0.1 | 0.3 |
+| Install jq 1.7.1 | install_extract | 40 | 36 | 0.7 | 0.1 | 0.2 | 0.3 |
+| Export toolchain PATH | other | 40 | 4 | 0.4 | 0.0 | 0.0 | 0.0 |
+| A-layer lock-completeness check | verification | 40 | 4 | 0.4 | 0.0 | 0.0 | 0.0 |
+| A-layer non-exact discard | cache_restore | 40 | 36 | 0.1 | 0.0 | 0.0 | 0.0 |
+| A-layer save authority | verification | 40 | 36 | 0.0 | 0.0 | 0.0 | 0.0 |
+| Install Nim (choosenim) | install_extract | 40 | 40 | 0.0 | — | — | 0.0 |
+| Install Nim dependencies | install_extract | 40 | 40 | 0.0 | — | — | 0.0 |
+| Install Lean 4.33.0 | install_extract | 40 | 40 | 0.0 | — | — | 0.0 |
+| Nim-scope verification stamp | verification | 40 | 40 | 0.0 | — | — | 0.0 |
+| **합** | | | | **2,552.7** | | | |
 
-| job | job 초 | setup 초 | 비중 |
-|---|---:|---:|---:|
-| closure-deriver | 103 | 77 | 74% |
-| mint-publish / publish | 72 | 49 | 68% |
-| attest / build-base-artifacts | 77 | 51 | 66% |
-| attest / admission-check | 107 | 63 | 58% |
-| mint-prepare / prepare | 51 | 20 | 39% |
+`Install Nim`·`Install Nim dependencies`·`Install Lean`은 **40회 전부 skipped**다 — A-layer가 36/40 hit이므로 네이티브 설치 경로가 거의 발화하지 않는다. `Install Z3`·`Install jq`는 정확히 **4회** 실행됐고, 그 4회는 A-layer miss 4건과 **같은 실행**이다(`mint-prepare / prepare`, 전부 `axiom-a-rt-*` 런타임 스코프 키 요청, 로그: `Cache not found for input keys`). 즉 "다운로드해서 설치하는" 경로는 정상 구간에서 이미 거의 꺼져 있고, 켜지는 지점은 구조적으로 결정된다.
 
-작은 job일수록 provisioning 비중이 크다. composite는 이 job들에서 **병렬로** 실행되므로, setup 합을 runner-seconds나 wall에 그대로 더하면 안 된다.
+## §4. phase별 분해
 
-## §6. Intra-run 반복 — 중복의 성격
+### §4.1 run별
 
-- run 44743215085에서 동일 composite가 **8개 job**에서 실행됐다: `closure-deriver`, `attest / build-base-artifacts`, `attest / go-critical-lane (0)`, `(1)`, `attest / admission-independents`, `attest / admission-check`, `mint-prepare / prepare`, `mint-publish / publish`. `verdict / admission-check` 1건은 `skipped` 0초다.
-- cohort C는 48 호출 중 43 실행 / 5 skipped, cohort B는 46 호출 중 40 실행 / 6 skipped다. run당 **8–9 job이 실제 실행**한다.
-- **run 간은 중복이 아니라 반복**이다. GitHub-hosted runner는 job마다 새 VM을 할당하고 job 종료 후 폐기한다. 따라서 run 사이에는 공유 상태가 없고, 공유 수단은 캐시뿐이다.
-- 최적화 대상은 **동일 run 안의 8–9회 반복**이다. run 간 값을 "중복 제거"로 합산하지 않는다.
+| run | cache_restore | install_extract | verification | other | 합 |
+|---|---|---|---|---|---|
+| 44521587339 | 169.0 | **899.5** | 8.1 | 0.0 | 1,076.6 |
+| 44542633420 | 190.7 | 179.3 | 15.0 | 0.1 | 385.1 |
+| 44548437642 | 194.4 | 153.6 | 15.0 | 0.1 | 363.1 |
+| 44553449785 | **232.0** | 175.0 | 16.5 | 0.1 | 423.6 |
+| 44561019095 | 152.3 | 141.8 | 10.1 | 0.1 | 304.3 |
+| **cohort** | **938.5** | **1,549.1** | **64.7** | **0.4** | **2,552.7** |
 
-## §7. 산술 상한 — 달성 가능값 아님
+run별 편차가 크다: 304.3 ~ 1,076.6 (3.5배). 44521587339를 제외하면 304.3 ~ 423.6으로 1.4배 안에 들어온다.
 
-### §7.1 runner-seconds 상한
+### §4.2 cohort vs 사고 제외
 
-정의: run별 `Σ(family) − max(단일 composite 호출)`. run당 provisioning을 1회만 남긴다는 가정이며, 공유 비용을 0으로 둔 값이다.
+| phase | cohort 합 | share | 실행당 | 사고 제외 합 | share | 실행당 |
+|---|---|---|---|---|---|---|
+| cache_restore | 938.5 | 36.8% | 23.5 | **769.5** | **52.1%** | 23.3 |
+| install_extract | **1,549.1** | **60.7%** | 38.7 | 649.6 | 44.0% | 19.7 |
+| verification | 64.7 | 2.5% | 1.6 | 56.6 | 3.8% | 1.7 |
+| other | 0.4 | 0.0% | 0.0 | 0.4 | 0.0% | 0.0 |
+| 합 | 2,552.7 | 100% | 63.8 | 1,476.0 | 100% | 44.7 |
 
-| cohort | run별 상한 | 합 | 평균 |
-|---|---|---:|---:|
-| B | 827 / 327 / 291 / 355 / 255 | 2,055 | **411 s/run** |
-| C | 347 / 283 / 338 / 337 / 312 | 1,617 | **323 s/run** |
+"사고 제외"는 run `44521587339`를 뺀 4 run / 33 실행이다. **어느 쪽을 최대 phase로 부르느냐가 결론을 바꾼다** — 그래서 둘 다 보고한다. cohort 값은 baseline과 같은 표본이라 비교 가능하고, 사고 제외 값은 재현 가능한 정상 상태를 나타낸다.
 
-### §7.2 wall 상한
+## §5. 2,574초로의 화해
 
-정의: critical-path job들의 setup 합(`attest / build-base-artifacts` + `attest / admission-check` + `mint-prepare / prepare` + `mint-publish / publish`). 그 job들에서 provisioning을 완전히 없앨 수 있다는 가정이다.
+baseline의 2,574초는 `이름에 setup-axiom-toolchain을 포함하는 step`의 0-clamp 합이다. 본 측정은 같은 규칙으로 **2,574초를 그대로 재현**했고(차이 0), 그것이 실제로 3개 호출 지점 × composite 실행 40건과 일치함을 확인했다.
 
-| run | chainSetup | wall | 비중 |
-|---|---:|---:|---:|
-| 44743215085 | 183 | 445 | 41.1% |
-| 44741298189 | 164 | 428 | 38.3% |
-| 44735026078 | 153 | 425 | 36.0% |
-| 44724689422 | 177 | 602 | 29.4% |
-| 44723151115 | 141 | 659 | 21.4% |
+| 항목 | 값 | 비고 |
+|---|---|---|
+| baseline 합계 | 2,574 | `Run ./.` 1,878 + `Restore trusted B supply` 441 + `[closure] Pinned toolchain` 255 |
+| 재현 합계 | 2,574 | 차이 **0** |
+| clamp로 달라진 값 | 0 | step 수준 음수 span 0건 |
+| skipped 호출 지점 | 6 | 전부 `verdict / admission-check`(5) + `attest / admission-check`(1), 0초 |
+| step 이름 변경 | 없음 | 5 run 모두 동일한 3개 이름, 내부 22개 이름도 동일 |
+| 내부 미귀속 | 21.3 (0.83%) | composite harness 경계 오버헤드 |
 
-**중앙값 164 s/run (36.0%)**. 여기서 164s는 절대값의 중앙값(run 44741298189), 36.0%는 비율의 중앙값(run 44735026078)이며, 같은 run에서 나온 한 쌍이 아니다.
+**문서 간 불일치 1건(발견)**: `docs/evidence/ci_critical_path_baseline_2026-11-20.md` §1의 run별 `setup family` 열은 821/284/249/306/218이고 합이 **1,878**이다 — `Run ./.` 부분집합만 센 값이다. 같은 문서 §0·§3.2의 총계 2,574와 맞지 않는다. `data/ci_optimization/ci_critical_path_baseline_2026-11-20/summary.json`의 `provisioningFamilySeconds`는 1080/389/367/429/309로 **2,574와 정합**하며, 본 측정값과도 일치한다. 즉 오류는 baseline 마크다운 표에만 있다. 본 문서는 그 표를 정정 대상으로 기록하되, baseline 파일은 수정하지 않는다(범위 밖).
 
-### §7.3 왜 달성 가능값이 아닌가
+## §6. 최대 phase 내부
 
-- 8개 job이 각각 1,078 MB를 복원하는 것을 1회로 줄이려면 나머지 7개 job이 그 payload를 **다른 경로로** 받아야 한다. artifact 다운로드도 약 1 GB이고, A-layer restore의 회당 비용은 약 21초(171.2/8)다.
-- `Install system deps`는 캐시 대상이 아니므로, provisioning을 1회로 줄여도 apt 재실행 비용은 남는다.
-- 따라서 위 값은 **산술 상한**이며, 실제 절감은 after cohort 없이는 **UNKNOWN**이다.
+### §6.1 `Install system deps (libpcre3)` — 1,542.1s / 40회
 
-## §8. 한계
+| 구간 | 초 | 비중 |
+|---|---|---|
+| fetch + resolve (step 시작 ~ dpkg 최초 출력) | 1,217.3 | 78.9% |
+| unpack + configure (dpkg ~ step 끝) | 324.8 | 21.1% |
 
-- cohort B/C 모두 n=5다. **p95는 n<20이라 선언 불가(UNKNOWN)**. 중앙값·최대값만 보고한다.
-- critical path는 GitHub가 export하는 값이 아니라 `needs`와 관측 span으로 사후 재구성한 것이다(`docs/spec/ci_critical_path_metric.md` §2.5). 2초 tolerance에 의존한다.
-- composite 내부 step은 **액션 로그 마커**로만 분해된다. 마커를 출력하지 않는 개정에서는 같은 방법을 쓸 수 없다.
-- `duration_ms`는 액션이 보고한 값이다. cohort B 880 레코드 전수 확인에서 `start-action`/`end-action` 타임스탬프 차이와 0.000–0.003초 안에서 일치했다(부록 A).
-- apt의 fetch/install 경계는 `apt-get -qq` 때문에 근사다. fetch 구간에 인덱스 해석 시간이 섞인다.
-- cohort C의 closure 5건은 `@c021c338` remote-ref 사본이다. step 이름은 같지만 blob이 다르므로, 내부 시간을 트리 사본의 성능으로 일반화하지 않는다.
-- 원시 로그·JSON은 커밋하지 않았다. run ID와 §9의 명령으로 재수집 가능하다.
-- after cohort(변경 커밋 이후 새 merge_group 실행)가 없으므로 실제 절감은 **UNKNOWN**이다.
+40회 중 느린 5건이 **884.8초**이고 전부 run `44521587339`다(4건 failure, 1건은 92초 fetch 후 성공). 나머지 35회 합은 657.3초, 평균 18.8초다.
 
-## §9. 재현 명령
+사고의 정체는 로그에 그대로 남아 있다:
 
-```bash
-# run 메타데이터
-gh api repos/Archright/Axiom/actions/runs/<id> \
-  --jq '{id,name,event,head_sha,created_at,run_started_at,updated_at,conclusion,run_attempt}'
-
-# job/step span (wall·runner·family)
-gh api "repos/Archright/Axiom/actions/runs/<id>/jobs?per_page=100" > jobs_<id>.json
-
-# composite 내부 마커 (run 44743215085)
-gh run view 44743215085 --log --repo Archright/Axiom > runlog_44743215085.txt
-# start-action/end-action 쌍을 파싱해 duration_ms를 step별로 합산
+```
+E: Failed to fetch https://security.ubuntu.com/ubuntu/pool/universe/p/pcre3/libpcre3_8.39-15build1_amd64.deb  503  Service Unavailable
+W: Failed to fetch mirror+file:/etc/apt/apt-mirrors.txt/dists/noble/InRelease  503  Service Unavailable
 ```
 
-wall/runner 계산은 §1의 정의를 그대로 적용한다. `skipped` job의 음수 span은 반드시 `max(0, …)`로 clamp한다.
+이 step은 `action.yml`의 5단 supply ladder(tier 0 이미 존재 → tier 1 apt → tier 2 pinned release asset → tier 3 공식 미러 → tier 4 explicit failure)를 타므로, 503은 재시도 창 전체가 fetch 구간에 계상된다. **fail-closed 자체는 정상 동작**이며(4건이 실제로 실패로 끝났다), 이 값은 "provisioning이 느리다"가 아니라 "공급원이 죽으면 job이 죽는다"는 관측이다.
+
+### §6.2 `A-layer restore` — 874.5s / 40회 (36 hit)
+
+| 구간 | 초 | 비중 |
+|---|---|---|
+| 네트워크 (`Cache hit for:` → `Cache Size:`) | 278.6 | 32.6% |
+| tar 추출 (`tar -xf` → `Cache restored successfully`) | **574.7** | **67.4%** |
+
+payload는 40회 합 40.16 GB, 복원당 1,004 MB, 실측 처리량 **144 MB/s**다. 즉 복원 비용의 3분의 2는 압축 해제이며, 대역폭을 늘리거나 payload를 캐시에서 빼는 것으로 얻을 수 있는 상한은 278.6초(전체의 10.9%)다.
+
+hit은 36/40이고, miss 4건은 전부 `mint-prepare / prepare`가 **런타임 스코프 키**(`axiom-a-rt-*`)를 요청한 경우다(로그: `Cache not found for input keys: axiom-a-rt-…`). 그 4회에서만 `Install Z3`(1.5–1.7초)와 `Install jq`(0.1–0.3초)가 실행된다. miss의 원인이 키 네임스페이스인지 save 이력인지는 이 측정 범위 밖이며, 판정하려면 해당 키의 save 로그가 필요하다.
+
+`B-layer restore`는 59.4초(median 1.4초)로 사실상 무시 가능하다.
+
+## §7. 무엇이 귀속되지 않는가
+
+| 잔여 | 크기 | 성격 |
+|---|---|---|
+| composite harness 경계 | 21.3s (0.83%) | 22개 step 경계 마커 880개의 오버헤드. 실행당 ~0.5s. 더 쪼갤 대상이 아니다 |
+| 0초 호출 지점 6건 | 0s | `skipped` step. 실행 자체가 없으므로 귀속할 시간이 없다 |
+| apt fetch/install 경계 | — | `apt-get -qq`가 `Get:` 행을 출력하지 않아, 경계는 dpkg의 첫 출력(`Preparing to unpack`/`Reading database`)이다. fetch 구간에는 인덱스 해석 시간이 섞여 있다 |
+| remote-ref 실행 5건 | 5건 255s 전체 | `[closure] Pinned toolchain`은 `@c021c338`의 액션을 실행한다. 22개 step 이름은 트리 사본과 동일함을 diff로 확인했으나 blob은 다르다(`adee6223` vs `d01432f6`) |
+
+이 표의 잔여를 제외하면 composite span 안에 설명되지 않는 시간은 없다.
+
+## §8. 분해가 지지하는 것 / 지지하지 않는 것
+
+**지지한다**
+
+- composite span은 22개 step으로 **완전히** 설명된다(99.2%). "어딘가에 숨은 지연"은 없다.
+- 정상 구간의 최대 비용은 **cache restore**(769.5초)이고, 그 비용의 대부분은 A-layer 복원의 tar 추출(67.4%)이다.
+- `Install Nim`/`Lean`/`nimble`은 40회 전부 skipped다 — 네이티브 설치 경로는 이미 정상 구간에서 발화하지 않는다.
+- provisioning 비용은 **안정적이지 않다**: run별 304 ~ 1,077초. 단일 run의 공급 사고가 cohort 합계의 34%(884.8/2,574)를 만든다.
+- `libpcre3` apt 설치는 **job마다** 실행된다(40/40). GitHub-hosted runner는 job마다 새 VM을 할당하므로 이미지에 없는 패키지는 매번 설치된다.
+
+**지지하지 않는다**
+
+- **캐시를 바꿔야 한다는 결론.** 복원 비용의 2/3가 추출이고, 네트워크 상한은 278.6초(전체 10.9%)다. 캐시 payload 축소·압축 변경·캐시 제거 중 무엇이 이득인지는 이 측정으로 판정할 수 없다. 캐시를 없애면 현재 skipped인 설치 경로(0초)가 되살아나므로, 비교는 **별도 after cohort**가 필요하다.
+- **apt 설치를 캐시해야 한다는 결론.** 40회 중 35회가 18.8초이고, 캐시 도입은 restore 비용을 새로 만든다. 순이득은 측정되지 않았다.
+- **"provisioning이 critical path의 55.1%"라는 재사용.** 이 비율은 `stepSeconds` 분모에 대한 값이고, composite는 여러 job에서 병렬로 실행된다. runner-seconds 대비로는 33.2 ~ 84.0%다(§1). 어느 쪽도 wall 단축량을 직접 의미하지 않는다.
+- **run 44521587339의 값을 대표값으로 쓰는 것.** 이 run은 공급 사고를 포함한다. 정상 상태 대표값은 사고 제외 열이다.
+- **composite 밖 비용.** `bin/ax` 빌드·게이트·artifact 업로드는 이 span 밖이며 본 문서가 다루지 않는다.
+
+## §9. 한계
+
+- n=5. p95를 선언하지 않는다. `median`/`p75`는 **실행 40건** 기준이지 run 기준이 아니다.
+- 내부 step 경계는 GitHub API 객체가 아니라 **액션 로그 마커**다. 마커를 출력하지 않는 개정에서는 같은 방법으로 분해할 수 없다.
+- `duration_ms`는 액션이 보고한 값이며, 같은 step의 `start-action`/`end-action` 마커 타임스탬프 차이와 **0.000–0.003초** 안에서 일치한다(880 레코드 전수 확인, 중앙값 0.001초).
+- apt의 fetch/install 경계는 `-qq` 때문에 근사다(§7).
+- 5회 실행은 `@c021c338` remote-ref 사본이다. step 이름은 동일하지만 blob이 다르므로, 그 5건의 내부 시간을 트리 사본의 성능으로 일반화하지 않는다.
+- 원시 로그·JSON은 커밋하지 않았다. run ID로 재수집 가능하다(§1 명령).
 
 ## §10. 참조
 
-- 정본 정의: `docs/spec/ci_critical_path_metric.md` §2.1–§2.5, `docs/spec/ci_acceptance_contract.md` §6
-- cohort A 원자료: `docs/evidence/ci_performance_baseline_2026-11-19.md` §2
-- cohort B baseline: `docs/evidence/ci_critical_path_baseline_2026-11-20.md`
-- VS-1a 분해 데이터: `data/ci_optimization/ci_provisioning_decomposition_2026-11-20/summary.json`
-- composite 정의: `.github/actions/setup-axiom-toolchain/action.yml`
-- GitHub jobs API: <https://docs.github.com/en/rest/actions/workflow-jobs> — `steps[].started_at`/`completed_at`의 의미.
-- 캐시 hit/복원 의미: <https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching>
-- hosted runner 수명: <https://docs.github.com/en/actions/how-tos/manage-runners/github-hosted-runners/use-github-hosted-runners> — "When the job begins, GitHub automatically provisions a new VM for that job."
-
-## 부록 A. cohort B composite 내부 분해 (VS-1a, 40 실행)
-
-이 부록은 이전 VS-1a 측정의 결론을 보존한다. 수치는 cohort B(5 run, composite 40 실행)이고, §5의 run 44743215085(cohort C, 8 실행)와 **다른 표본**이다.
-
-| 항목 | 값 |
-|---|---|
-| composite outer span 합 | **2,574.0s** |
-| 내부 22 step 합 | **2,552.7s** (99.2%) |
-| 미귀속 | **21.3s (0.83%)** |
-| 최대 phase (cohort) | install/extract **1,549.1s (60.7%)** |
-| 최대 phase (사고 제외) | cache restore **769.5s (52.1%)** |
-| verification | 64.7s (2.5%) |
-
-- run 44521587339의 Ubuntu archive HTTP 503 구간이 `Install system deps` 1,542.1초 중 **884.8초**를 만들었다. 이 5건을 빼면 같은 step은 657.3초/35회 = 평균 18.8초다.
-- `A-layer restore` 874.5초 중 네트워크 278.6초, tar 추출 574.7초(67.4%)다. payload는 복원당 1,004 MB, 실측 처리량 144 MB/s다.
-- `Install Nim`/`Install Nim dependencies`/`Install Lean`은 **40회 전부 skipped**다. A-layer hit 36/40, miss 4건에서만 `Install Z3`/`Install jq`가 실행됐다.
-- `duration_ms`와 마커 타임스탬프 차이는 880 레코드 전수에서 0.000–0.003초(중앙값 0.001초)다.
-- 22개 step 전체 표와 run별 phase 표는 `data/ci_optimization/ci_provisioning_decomposition_2026-11-20/summary.json`에 있다.
+- jobs/steps 필드 의미: <https://docs.github.com/en/rest/actions/workflow-jobs> — `steps`는 "Steps in this job."이고, step의 `started_at`은 "The time that the step started, in ISO 8601 format.", `completed_at`은 "The time that the job finished, in ISO 8601 format."(원문 그대로 — GitHub 스키마가 step 항목에도 job 문구를 쓴다)이다. 본 문서의 outer span은 이 두 필드의 차이다.
+- 캐시 한도·퇴거: <https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching> — "GitHub will remove any cache entries that have not been accessed in over 7 days. There is no limit on the number of caches you can store, but the total size of all caches in a repository is limited. By default, the limit is 10 GB per repository". A-layer payload가 복원당 1,004 MB이므로 키 1개가 한도의 10%를 쓴다.
+- 캐시 hit/복원 의미: 같은 문서 — "When key exactly matches an existing cache, it's called a cache hit, and the action restores the cached files to the path directory." 및 "The cache action first searches for cache hits for key and the cache version in the branch containing the workflow run. If there is no hit, it searches for prefix-matches for key" — 액션이 비-exact 복원을 폐기하는 이유(부분 일치는 hit로 보고되지 않는다)와 일치한다.
+- hosted runner 수명: <https://docs.github.com/en/actions/how-tos/manage-runners/github-hosted-runners/use-github-hosted-runners> — "When the job begins, GitHub automatically provisions a new VM for that job. All steps in the job execute on the VM … When the job has finished, the VM is automatically decommissioned." — `libpcre3`가 job마다 설치되는 이유다.
+- 측정 정의: `docs/spec/ci_critical_path_metric.md` §2.4(provisioning family, composite 중첩 step 비노출).
