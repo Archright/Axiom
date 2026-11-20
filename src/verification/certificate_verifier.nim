@@ -206,6 +206,10 @@ func certSemanticProjection(node: JsonNode): string {.raises: [].} =
     node.getOrDefault("policyId").getStr(""),
     node.getOrDefault("modulePath").getStr(""),
     node.getOrDefault("functionName").getStr(""),
+    node.getOrDefault("leanProposition").getStr(""),
+    node.getOrDefault("propositionHash").getStr(""),
+    node.getOrDefault("leanSource").getStr(""),
+    node.getOrDefault("leanSourceHash").getStr(""),
     solverMetaProjection(node)
   ]
   sha256Hex(fields.join("|"))
@@ -216,7 +220,8 @@ func sameReplayInputs(certNode, journalClaim: JsonNode): bool {.raises: [].} =
   ## certificate and the journal claim it points at. A mismatch means the cert
   ## was re-bound to a foreign journal (cert A + journal B) or the journal was
   ## replayed with different inputs.
-  for key in ["sourceHash", "irHash", "solverStatus", "policyId"]:
+  for key in ["sourceHash", "irHash", "solverStatus", "policyId",
+              "propositionHash", "leanSourceHash"]:
     if certNode.getOrDefault(key).getStr("") != journalClaim.getOrDefault(key).getStr(""):
       return false
   true

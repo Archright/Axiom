@@ -3,6 +3,7 @@ import ../../src/core/types/verification_tier
 import ../../src/core/trusted/fingerprint_generator
 import ../../src/core/trusted/trust_commit
 import ../../src/core/proof/source_fingerprint
+import ../../src/core/crypto/hash_kernel
 import ../../src/verification/certificate_verifier
 import ../../src/verification/certificate_identity
 
@@ -108,6 +109,32 @@ suite "Phase 2 — Certificate trust closure (R4, v1 local replay-bound contract
         writeFile(certPath, $cert)
         let res = verifyCertificateClosure(certPath, tmpDir)
         check res.status == ccsReplayMismatch
+    finally:
+      removeDir(tmpDir)
+
+  test "tampered Lean proposition/source -> FAIL (journal binds theorem identity)":
+    let tmpDir = getTempDir() / "ax_p2_theorem_tamper_" & $getCurrentProcessId()
+    createDir(tmpDir)
+    try:
+      withHermeticJournalRoot(tmpDir):
+        let (certPath, cert, _) = makeFixtureCert(tmpDir)
+        let irHash = cert["irHash"].getStr()
+        # Replace the theorem with a trivially true one while keeping the
+        # function/IR/source identity intact, then re-derive every hash the
+        # certificate can self-check (fingerprint + identityDigest). Only the
+        # journal replay projection can still detect the substitution.
+        let fakeProp = "True"
+        let fakeSource = "theorem probe_post : True := by trivial"
+        cert["leanProposition"] = newJString(fakeProp)
+        cert["propositionHash"] = newJString(sha256Hex(fakeProp))
+        cert["leanSource"] = newJString(fakeSource)
+        cert["leanSourceHash"] = newJString(sha256Hex(fakeSource))
+        cert["fingerprint"] = newJString(computeVerificationFingerprint(irHash, fakeProp))
+        cert["identityDigest"] = newJString(v3IdentityFromJson(cert))
+        writeFile(certPath, $cert)
+        let res = verifyCertificateClosure(certPath, tmpDir)
+        check res.status == ccsReplayInputMismatch or
+              res.status == ccsReplayMismatch
     finally:
       removeDir(tmpDir)
 
