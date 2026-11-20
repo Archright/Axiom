@@ -1015,4 +1015,22 @@ observation)과의 성격 구분은 §11 원문 그대로다 — 착지 후 관�
 
 5. **코드 동반 변경**: `src/cli/merge_cli.nim` `RotationAllowlistExtra` 갱신(본 개정과 동일 PR 착지 — trustSurface 멤버이므로 `TRUST_SURFACE_MODIFIED` → MUST-T2 수동 병합 경로), `data/architecture_debt.json` canonical hash 재계산(`--regen-arch`), 회전의 정식 `trustedCheckerTreeClosure` 재앵커(④ 일치 — ADR-0025 §7).
 
-**승인 기록(슬롯)**: 본 Amendment A6는 A2 (i)를 유한 개정하므로 A5와 동일하게 명시 승인을 요구한다. 승인자: wintrover (소유자) · 승인 일시: 2026-11-19 · 승인 근거: 세션 명시 승인("권한이 필요한 부분은 전면 승인한다", 2026-11-19) + PR #191 verdict 실측(ROT_ALLOWLIST, changed 5경로 중 차단 1경로).
+**승인 기록(슬롯)**: 본 Amendment A6는 A2 (i)를 유한 개정하므로 A5와 동일하게 명시 승인을 요구한다. 승인자: wintrover (소유자) · 승인 일시: 2026-11-19 · 승인 근거: 세션 명시 승인("권한이 필요한 부분은 전면 승인한다", 2026-11-19) + PR #191 verdict 실측(ROT_ALLOWLIST, changed 5경로 중 차단 1경로).## Amendment A7 (2026-11-20) — A2 회전 동반 집합 확장: 종료 authority 회전 동반 9경로 (A2 (i) 유한 개정, 결정 바인딩)
+
+> 근거: PR #233 merge_group landing verdict 실측(run `44675885492`, 2026-11-20T04:47Z) — `ROT_ALLOWLIST`, `rotationCheck.changed` 18경로 중 9경로가 기존 허용 집합 밖이었다. 해당 회전은 종료 authority 단일화(제품 계약 §7 — canonical `runOutcome.verdict`만 검증 성공/실패를 결정하고 `summary`는 텔레메트리)로, 클로저 멤버 4개(`src/core/utils/decision_algebra.nim`, `src/cli/axiom_engine.nim`·`rust_lane_cli.nim`·`wf_runners.nim`)를 변경한다. A2(2026-09-27)·A3(2026-10-12)·A4(2026-10-13)·A5(2026-10-14)·A6(2026-11-19)가 확정한 "회전의 필수 동반을 allowlist가 배제하면 회전 자체가 착지 불가" 원칙과 A2 (iii)의 개정 경로(동일 스타일)를 따른다. 본문을 다시 쓰지 않으며, append로만 남는다.
+
+1. **개정 (A2 (i) 유한 개정 — 기존 클래스의 명시적 열거)**: `RotationAllowlistExtra`에 다음 9경로를 수록한다. 전부 "회전 대상 클로저 멤버의 계약/증거 동반" 클래스이며 production `src/`가 아니다:
+   - 테스트 6종 — 변경된 클로저 멤버의 단위/gateway 계약: `tests/unit/wf_runners_exit_code_test.nim`, `tests/unit/wf_runners_test.nim`, `tests/unit/report_engine_test.nim`, `tests/unit/test_readiness_outcome_test.nim`, `tests/gateway/deterministic_parallel_proof_test.nim`, `tests/gateway/productization_start_vertical_slice_feature_test.nim`. 구 테스트는 제거된 summary 추론을 단언하므로 동반 없이는 회전이 구조적으로 불가능하다(A2 ① 자기모순 해소 — `test_judgment_cas.nim`·`rust_lane_cli_acceptance_test.nim`과 동일 fix class).
+   - `docs/spec/productization_contract.md` — 본 회전이 구현하는 §7 종료 계약 개정(`certification_continuity_contract.md`·`rust_certified_subset.md`와 동일 클래스).
+   - `data/benchmarks/promotion_a_report_v2.json` — 승격 보고서의 exit_codes 서술(소비자 없음 — 데이터 동반 클래스).
+   - `.github/workflows/byo-agent-selftest.yml` — `ax prove` 종료 계약을 판정 단언으로 고정하는 push-트리거 selftest(required check producer 아님; 구 단언은 exit 0을 기대하므로 동반 없이는 적색).
+
+2. **범위 한정**: A2 (i)는 유지된다 — 위 9경로 밖의 NON-member production `src/`는 여전히 allowlist 밖이다. 열거형만 — glob 없음(A4 규율): `tests/**`·`docs/spec/**`·`data/benchmarks/**`·`.github/workflows/**` 접두 확장은 없다.
+
+3. **비확장 논증**: ① allowlist는 `closureChange=true`인 ROTATION 경로에서만 평가된다(A2 (ii)) — 본 등재는 NORMAL 경로의 이 9경로 취급을 전혀 바꾸지 않는다. 즉 회전 승인 범위만 최소 확장하며, 비회전 PR의 자유도는 불변이다.
+
+4. **코드 동반 변경**: `src/cli/merge_cli.nim` `RotationAllowlistExtra` 갱신(본 개정과 동일 PR 착지 — trustSurface 멤버이므로 `TRUST_SURFACE_MODIFIED` → MUST-T2 수동 병합 경로), `data/architecture_debt.json` canonical hash 재계산(`--regen-arch`), `data/nimtry_baseline.json` 재생성(라인 시프트), 회전의 정식 `trustedCheckerTreeClosure` 재앵커(④ 일치 — ADR-0025 §7).
+
+5. **잔여 사실**: 본 등재는 #233의 착지 가능성만 복원하며, #233의 제품 판정(FAIL→exit 1, PASS→exit 0)은 별도 acceptance 대상이다. 확장 PR 자신은 trustSurface 변경이므로 merge queue가 아니라 MUST-T2a 수동 병합 lane을 탄다(선례: `docs/evidence/breakglass_trust_surface_landing_2026-11-19.md`).
+
+**승인 기록(슬롯)**: 본 Amendment A7은 A2 (i)를 유한 개정하므로 A5/A6와 동일하게 명시 승인을 요구한다. 승인자: wintrover (소유자) · 승인 일시: 2026-11-20 · 승인 근거: 세션 명시 승인("권한이 필요한 부분은 전면 허가한다", 2026-11-20) + PR #233 merge_group verdict 실측(ROT_ALLOWLIST, changed 18경로 중 차단 9경로).

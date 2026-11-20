@@ -431,7 +431,42 @@ const
     # 없음(A4 규율). 사전등록/근거:
     # docs/evidence/rotation_allowlist_generated_metadata_prereg_2026-11-19.md
     "src/generated/type_registry_metadata.json",
-    "docs/evidence/rotation_allowlist_generated_metadata_prereg_2026-11-19.md"]
+    "docs/evidence/rotation_allowlist_generated_metadata_prereg_2026-11-19.md",
+    # Amendment A7 회전 동반 (2026-11-20, PR #233 ROT_ALLOWLIST 실측):
+    # 종료 authority 회전 — 클로저 멤버 4개(src/core/utils/decision_algebra.nim,
+    # src/cli/axiom_engine.nim·rust_lane_cli.nim·wf_runners.nim)의 ④ 재앵커 +
+    # 동반 9경로. 동반 경로는 모두 "회전 대상 클로저 멤버의 계약/증거 동반"
+    # 클래스로, 프로덕션 src/가 아니다(A2 (i)의 NON-member production src/
+    # 금지 클래스와 무관):
+    # - 테스트 6종은 변경된 클로저 멤버의 단위/gateway 계약이다
+    #   (test_judgment_cas·rust_lane_cli_acceptance_test와 동일 클래스):
+    #   tests/unit/wf_runners_exit_code_test.nim, tests/unit/wf_runners_test.nim,
+    #   tests/unit/report_engine_test.nim, tests/unit/test_readiness_outcome_test.nim,
+    #   tests/gateway/deterministic_parallel_proof_test.nim,
+    #   tests/gateway/productization_start_vertical_slice_feature_test.nim.
+    #   구 테스트는 제거된 summary 추론을 단언하므로 동반 없이는 회전이 구조적으로
+    #   불가능하다(A2 ① 자기모순 해소 — A3/A4/A5/A6와 동일 fix class).
+    # - docs/spec/productization_contract.md §7은 본 회전이 구현하는 종료 계약
+    #   개정이다(certification_continuity_contract.md·rust_certified_subset.md와
+    #   동일 클래스).
+    # - data/benchmarks/promotion_a_report_v2.json은 승격 보고서의 exit_codes
+    #   서술(소비자 없음 — 데이터 동반 클래스).
+    # - .github/workflows/byo-agent-selftest.yml은 ax prove의 종료 계약을
+    #   판정 단언으로 고정하는 push-트리거 selftest다(required check producer가
+    #   아니며, 구 단언은 종료 0을 기대하므로 동반 없이는 적색이 된다).
+    # 비확장 근거: ①은 ROTATION 경로에서만 평가되므로(A2 (ii)) NORMAL 경로의
+    # 이 9경로 취급은 불변이며, 본 등재는 회전 승인 범위를 넓히지 않는다.
+    # 열거형만 — glob 없음(A4 규율). 근거: docs/adr/0025-gateway-landing-authority.md
+    # (Amendment A7).
+    "tests/unit/wf_runners_exit_code_test.nim",
+    "tests/unit/wf_runners_test.nim",
+    "tests/unit/report_engine_test.nim",
+    "tests/unit/test_readiness_outcome_test.nim",
+    "tests/gateway/deterministic_parallel_proof_test.nim",
+    "tests/gateway/productization_start_vertical_slice_feature_test.nim",
+    "docs/spec/productization_contract.md",
+    "data/benchmarks/promotion_a_report_v2.json",
+    ".github/workflows/byo-agent-selftest.yml"]
   ## VS-1 회전핀 프리플라이트 (2026-10-20): H2(④) 판정을 리프 모듈
   ## core/policy/rotation_closure_facts로 추출해 착지 predicate와 PR-head
   ## 오라클(tools/ci/rotation_pin_anchor_check.nim)이 **하나의 컴파일 구현**을
