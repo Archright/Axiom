@@ -140571,6 +140571,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/rust_extraction_agreement.nim",
+      "name": "leanOleanPreflightReason",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "RustIrDerivation",
       "module": "src/verification/rust_extraction_agreement.nim",
       "name": "okIr",

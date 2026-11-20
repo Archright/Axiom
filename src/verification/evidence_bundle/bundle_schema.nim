@@ -57,7 +57,13 @@ const
 
   VerifiedStatuses* = ["certGreen", "certLeanVerified", "certDualVerified",
                        "certVerifiedAxiom"]
-  AxiomAllowlist* = ["propext", "Classical.choice", "Quot.sound", "funext"]
+  ## INV-6 primitive set. `funext` is a theorem alias (`#print axioms funext`
+  ## → `[Quot.sound]`), not a primitive axiom, so it is not an allowlist member.
+  ## Literal mirror of `core/judge/lean_replay.leanBuiltinAxiomAllowlist`;
+  ## equality is enforced by tests/unit/test_axiom_allowlist_ssot.nim (importing
+  ## lean_replay here would pull the Lean compiler subprocess stack into a pure
+  ## schema module).
+  AxiomAllowlist* = ["propext", "Classical.choice", "Quot.sound"]
 
   MaxCerts* = 4096
   MaxSourceFiles* = 20000
