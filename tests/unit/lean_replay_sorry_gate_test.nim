@@ -39,7 +39,6 @@ suite "Lean replay sorry gate (fail-closed)":
     check sorryGateValid(true, @[]) == true                # present, no axioms -> valid
     check sorryGateValid(true, @["propext", "Quot.sound"]) == true
     check sorryGateValid(true, @["Classical.choice"]) == true
-    check sorryGateValid(true, @["funext"]) == true
     check sorryGateValid(true, @["sorryAx"]) == false
     check sorryGateValid(true, @["Lean.sorryAx"]) == false
     check sorryGateValid(true, @["Some.Other.axiom"]) == false

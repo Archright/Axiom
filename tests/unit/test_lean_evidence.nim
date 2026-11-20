@@ -75,7 +75,7 @@ suite "axiomProfile parsing and allowlist (pure)":
 
   test "validateAxiomProfile accepts empty and fully allow-listed profiles":
     check validateAxiomProfile(@[]).isOk
-    check validateAxiomProfile(@["propext", "Classical.choice", "Quot.sound", "funext"]).isOk
+    check validateAxiomProfile(@["propext", "Classical.choice", "Quot.sound"]).isOk
 
   test "validateAxiomProfile rejects sorry-based and foreign axioms":
     check validateAxiomProfile(@["sorryAx"]).isErr
