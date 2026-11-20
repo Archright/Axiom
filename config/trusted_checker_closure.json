@@ -3629,7 +3629,7 @@
     "src/verification/cert_export.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "d72dda653eaf537e6f93e169ca5bdc755ed77729"
+      "sha": "5175b365db630284f69e20f36dbf1a0b570bacea"
     },
     "src/verification/cert_promotion.nim": {
       "mode": "100644",
