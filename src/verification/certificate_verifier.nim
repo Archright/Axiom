@@ -38,7 +38,12 @@ proc certSourceHashMatchesSource*(cert: JsonNode; projectRoot: string): bool {.r
   if certModulePath.len == 0:
     return false
   let repo = if projectRoot.len > 0: projectRoot else: resolveRepoRoot()
-  let sourcePath = repo / certModulePath
+  # Nim's `/` (joinPath) does not discard the head for an absolute tail — it
+  # concatenates ("usr/" / "/lib" == "usr/lib"). An absolute cert modulePath
+  # already identifies the subject's module bytes and must not be re-rooted.
+  let sourcePath =
+    if isAbsolute(certModulePath): certModulePath
+    else: repo / certModulePath
   let sourceContent = try: readFileSafe(sourcePath) except CatchableError: ""
   if sourceContent.len == 0:
     return false
