@@ -40,6 +40,22 @@ jobs:
         id: setup-tc
         with:
           cache-build-source: ${{ github.sha }}
+      - name: VS-0 admission aggregate fail-closed contract
+        # G2 판정 생산자(admission-gate-v2.yml aggregate)의 실제 허용 집합을
+        # 고정한다: 7개 전부 success, 또는 merge_group에서 anchor-resolve만
+        # skipped + 나머지 6 success + EVENT_NAME set·≠pull_request. 구조 계약
+        # + 56조합 행동 matrix + mutation 15종. 테스트 파일은 trust surface
+        # (config/policy/trust_surface_manifest.json)에 등록되어 후보가
+        # 약화할 수 없다. 이 step은 required check의 일부이므로 `if:` /
+        # `continue-on-error`로 건너뛰거나 삼킬 수 없다 (파일 헤더 계약).
+        run: |
+          set -euo pipefail
+          python3 -c 'import yaml'
+          mkdir -p build/vs0_contract
+          nim c -r --hints:off --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath \
+            --nimcache:build/nimcache/vs0_contract \
+            -o:build/vs0_contract/test_vs0 \
+            tests/ci/test_vs0_admission_aggregate_fail_closed.nim
       - name: "S5 gate: B-verified supply-reuse eligibility (5-member SHA-256 + 4x SourceCoherence)"
         id: s5-gate
         if: steps.setup-tc.outputs.b-cache-hit == 'true'

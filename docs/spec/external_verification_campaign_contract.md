@@ -136,7 +136,7 @@ exit 축과 캠페인 클래스 축은 다르다: exit `1`(VERIFICATION_FAILURE)
 
 **인터페이스 — outputs**: `prove-exit` · `canonical-digest` · `engine-build-id` · `verdict-summary` · `zero-footprint-ok` · `runner-image`(§1 실행 메타데이터의 관측치 투영 — ImageOS·ImageVersion·도구체인 버전 관측 포함).
 
-**증거 산출물**: artifact명 = `ax-verify-evidence-<proposals-artifact>-<run-label>`. 내용물은 원본 증거(로그·state·report JSON)와 **기계 판독용 `verify-record.json`**(§1 매니페스트 식별자 7 + 실행 메타데이터 + §2 분류에 필요한 관측: exit·digest·verdict 행·claim 행 요약·engineBuildId·Zero-Footprint 관측·환경 관측치 전부)이다.
+**증거 산출물**: artifact명 = `ax-verify-evidence-<proposals-artifact>-<run-label>`. 내용물은 원본 증거(로그·state·report JSON)와 **기계 판독용 `verify-record.json`**(§1 매니페스트 식별자 7 + 실행 메타데이터 + §2 분류에 필요한 관측: exit·digest·verdict 행·claim 행 요약·engineBuildId·Zero-Footprint 관측·환경 관측치 전부)이다. vault certificate 본문·inventory exact match·tier 결속 요건은 [admission_evidence_export_contract.md](./admission_evidence_export_contract.md)가 정의한다.
 
 **caller 계약 (HARD RULE)**:
 

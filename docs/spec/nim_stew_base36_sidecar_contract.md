@@ -3,7 +3,7 @@
 > **Status**: Committed product contract — the generic sidecar adapter slice (`followup/sidecar-adoption-binding`); **amended 2026-10-19** by the adoption evolution — blind agent A1's inferred law as the defect proposition, superseding the first adoption's instance (§8; `followup/sidecar-adopt-agent-proposition`)
 > **Created**: 2026-10-19
 > **AGENTS.md reference**: §0.12 (product contract precedes), §0.9 (theater prohibition), §0.3 (trust boundary), §0.2a (legislator LLM-only — not engaged here: the proposition content is the workstream's adopted instance pin, not a legislator invariant), §4 (GUARDIAN)
-> **Related**: [nim_stew_base36_cout_contract.md](./nim_stew_base36_cout_contract.md) (C_out authority + attach precedent), [toml_d2_agent_binding_contract.md](./toml_d2_agent_binding_contract.md) (adoption provenance precedent + its audited gap), [authority_contract.md](./authority_contract.md), [obligation_semantics.md](./obligation_semantics.md)
+> **Related**: [nim_stew_base36_cout_contract.md](./nim_stew_base36_cout_contract.md) (C_out authority + attach precedent), [toml_d2_agent_binding_contract.md](./toml_d2_agent_binding_contract.md) (adoption provenance precedent + its audited gap), [authority_contract.md](./authority_contract.md), [obligation_semantics.md](./obligation_semantics.md), [adopted_model_observation_contract.md](./adopted_model_observation_contract.md) (lane-neutral adopted-model + stamped-observation contract)
 > **Spec registry**: `SPEC-B36-SIDECAR` — sidecar `config/spec/nim_stew_base36_sidecar.json` (soExplicit)
 
 ---
