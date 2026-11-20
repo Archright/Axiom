@@ -1,0 +1,582 @@
+{
+  "slice": "VS-1a CI provisioning component decomposition (setup-axiom-toolchain)",
+  "date": "2026-11-20",
+  "collectedAt": "2026-11-20T06:43:49Z",
+  "definitions": "docs/spec/ci_critical_path_metric.md",
+  "evidence": "docs/evidence/ci_provisioning_decomposition_2026-11-20.md",
+  "baseline": "docs/evidence/ci_critical_path_baseline_2026-11-20.md",
+  "source": "GitHub REST /repos/Archright/Axiom/actions/runs/{id}/jobs (step spans) + job logs (`gh run view <id> --log`) for the composite-internal `##[start-action display=<step>;id=<id>]` / `##[end-action id=<id>;outcome=<o>;conclusion=<c>;duration_ms=<n>]` markers; raw copies held at /tmp/prov-data during collection, not committed",
+  "cohort": {
+    "event": "merge_group",
+    "workflow": "admission-gate",
+    "workflowPath": ".github/workflows/admission-gate-v2.yml",
+    "n": 5,
+    "note": "same cohort as the 2026-11-20 baseline; one run concluded failure and is retained"
+  },
+  "method": {
+    "composite": ".github/actions/setup-axiom-toolchain (22 internal steps)",
+    "internalStepCount": 22,
+    "durationSource": "##[end-action duration_ms] (ms precision)",
+    "outerSpanSource": "jobs API step started_at/completed_at (second precision, max(0, end-start))",
+    "phaseMap": {
+      "install_extract": [
+        "Install system deps (libpcre3)",
+        "Install Z3 4.13.3",
+        "Install jq 1.7.1",
+        "Install Nim (choosenim)",
+        "Install Nim dependencies",
+        "Install Lean 4.33.0"
+      ],
+      "cache_restore": [
+        "A-layer restore",
+        "B-layer restore",
+        "B-layer restore obs",
+        "A-layer restore obs",
+        "A-layer non-exact discard"
+      ],
+      "verification": [
+        "keygen",
+        "Toolchain functional probes",
+        "B-layer provenance probe",
+        "B-layer fingerprint verify",
+        "A-layer save",
+        "A-layer fingerprint verify",
+        "Verify toolchain pins",
+        "A-layer lock-completeness check",
+        "Nim-scope verification stamp",
+        "A-layer save authority"
+      ],
+      "other": [
+        "Export toolchain PATH"
+      ]
+    },
+    "compositeStepsExposedByJobsApi": false,
+    "compositeStepsExposedNote": "the jobs API exposes only the enclosing workflow step for a composite action; internal steps appear in the job log as start-action/end-action markers"
+  },
+  "runs": [
+    {
+      "runId": 44521587339,
+      "conclusion": "failure",
+      "headSha": "807f38d9fe",
+      "wallSeconds": 763,
+      "runnerSeconds": 1286,
+      "provisioningFamilySeconds": 1080,
+      "compositeCallSites": 9,
+      "compositeExecutions": 7,
+      "compositeZeroCallSites": 2,
+      "compositeOuterSeconds": 1080.0,
+      "compositeInternalSeconds": 1076.6,
+      "phases": {
+        "verification": 8.1,
+        "cache_restore": 169.0,
+        "install_extract": 899.5,
+        "other": 0.0
+      },
+      "criticalPathSeconds": 762.0,
+      "compositeShareOfRunnerSeconds": 0.8398
+    },
+    {
+      "runId": 44542633420,
+      "conclusion": "success",
+      "headSha": "69d2dce090",
+      "wallSeconds": 430,
+      "runnerSeconds": 824,
+      "provisioningFamilySeconds": 389,
+      "compositeCallSites": 9,
+      "compositeExecutions": 8,
+      "compositeZeroCallSites": 1,
+      "compositeOuterSeconds": 389.0,
+      "compositeInternalSeconds": 385.1,
+      "phases": {
+        "verification": 15.0,
+        "cache_restore": 190.7,
+        "install_extract": 179.3,
+        "other": 0.1
+      },
+      "criticalPathSeconds": 430.0,
+      "compositeShareOfRunnerSeconds": 0.4721
+    },
+    {
+      "runId": 44548437642,
+      "conclusion": "success",
+      "headSha": "dd8502f629",
+      "wallSeconds": 519,
+      "runnerSeconds": 854,
+      "provisioningFamilySeconds": 367,
+      "compositeCallSites": 9,
+      "compositeExecutions": 8,
+      "compositeZeroCallSites": 1,
+      "compositeOuterSeconds": 367.0,
+      "compositeInternalSeconds": 363.1,
+      "phases": {
+        "verification": 15.0,
+        "cache_restore": 194.4,
+        "install_extract": 153.6,
+        "other": 0.1
+      },
+      "criticalPathSeconds": 519.0,
+      "compositeShareOfRunnerSeconds": 0.4297
+    },
+    {
+      "runId": 44553449785,
+      "conclusion": "success",
+      "headSha": "a2a863634d",
+      "wallSeconds": 574,
+      "runnerSeconds": 991,
+      "provisioningFamilySeconds": 429,
+      "compositeCallSites": 10,
+      "compositeExecutions": 9,
+      "compositeZeroCallSites": 1,
+      "compositeOuterSeconds": 429.0,
+      "compositeInternalSeconds": 423.6,
+      "phases": {
+        "verification": 16.5,
+        "cache_restore": 232.0,
+        "install_extract": 175.0,
+        "other": 0.1
+      },
+      "criticalPathSeconds": 574.0,
+      "compositeShareOfRunnerSeconds": 0.4329
+    },
+    {
+      "runId": 44561019095,
+      "conclusion": "success",
+      "headSha": "8bbb035a7a",
+      "wallSeconds": 555,
+      "runnerSeconds": 931,
+      "provisioningFamilySeconds": 309,
+      "compositeCallSites": 9,
+      "compositeExecutions": 8,
+      "compositeZeroCallSites": 1,
+      "compositeOuterSeconds": 309.0,
+      "compositeInternalSeconds": 304.3,
+      "phases": {
+        "verification": 10.1,
+        "cache_restore": 152.3,
+        "install_extract": 141.8,
+        "other": 0.1
+      },
+      "criticalPathSeconds": 554.0,
+      "compositeShareOfRunnerSeconds": 0.3319
+    }
+  ],
+  "aggregates": {
+    "compositeCallSites": 46,
+    "compositeExecutions": 40,
+    "compositeZeroCallSites": 6,
+    "compositeOuterSeconds": 2574.0,
+    "compositeInternalSeconds": 2552.7,
+    "unattributedSeconds": 21.3,
+    "unattributedShare": 0.0083,
+    "provisioningFamilySeconds": 2574,
+    "phases": [
+      {
+        "phase": "install_extract",
+        "label": "install/extract (apt libpcre3 + toolchain installs)",
+        "seconds": 1549.1,
+        "share": 0.6069,
+        "secondsPerExecution": 38.7
+      },
+      {
+        "phase": "cache_restore",
+        "label": "cache restore (A-layer + B-layer)",
+        "seconds": 938.5,
+        "share": 0.3676,
+        "secondsPerExecution": 23.5
+      },
+      {
+        "phase": "verification",
+        "label": "verification/provenance (+ A-layer save)",
+        "seconds": 64.7,
+        "share": 0.0253,
+        "secondsPerExecution": 1.6
+      },
+      {
+        "phase": "other",
+        "label": "other (PATH export)",
+        "seconds": 0.4,
+        "share": 0.0002,
+        "secondsPerExecution": 0.0
+      }
+    ],
+    "steadyState": {
+      "excludesRunIds": [
+        44521587339
+      ],
+      "reason": "4 of this run's 7 composite executions failed at Install system deps (Ubuntu archive HTTP 503); the 5 slowest apt executions in the cohort are all in this run",
+      "compositeExecutions": 33,
+      "compositeInternalSeconds": 1476.0,
+      "phases": [
+        {
+          "phase": "cache_restore",
+          "label": "cache restore (A-layer + B-layer)",
+          "seconds": 769.5,
+          "share": 0.5213,
+          "secondsPerExecution": 23.3
+        },
+        {
+          "phase": "install_extract",
+          "label": "install/extract (apt libpcre3 + toolchain installs)",
+          "seconds": 649.6,
+          "share": 0.4401,
+          "secondsPerExecution": 19.7
+        },
+        {
+          "phase": "verification",
+          "label": "verification/provenance (+ A-layer save)",
+          "seconds": 56.6,
+          "share": 0.0383,
+          "secondsPerExecution": 1.7
+        },
+        {
+          "phase": "other",
+          "label": "other (PATH export)",
+          "seconds": 0.4,
+          "share": 0.0003,
+          "secondsPerExecution": 0.0
+        }
+      ]
+    },
+    "installSystemDeps": {
+      "seconds": 1542.1,
+      "executions": 40,
+      "fetchResolveSeconds": 1217.3,
+      "unpackConfigureSeconds": 324.8,
+      "medianSeconds": 21.2,
+      "maxSeconds": 230.2,
+      "fiveLargestSeconds": 884.8,
+      "fiveLargestNote": "all five are in run 44521587339 (4 failures + 1 retry that succeeded after 92s of fetching)",
+      "excludingFiveLargestSeconds": 657.3,
+      "excludingFiveLargestExecutions": 35
+    },
+    "aLayerRestore": {
+      "seconds": 874.5,
+      "executions": 40,
+      "cacheHits": 36,
+      "networkSeconds": 278.6,
+      "extractSeconds": 574.7,
+      "extractShare": 0.6735,
+      "extractSharePercent": 67.4,
+      "networkSharePercent": 32.6,
+      "payloadBytes": 40160197906,
+      "payloadMegabytesPerRestore": 1004,
+      "throughputMegabytesPerSecond": 144,
+      "misses": [
+        {
+          "runId": 44542633420,
+          "job": "mint-prepare / prepare",
+          "key": "axiom-a-rt-* (runtime scope)"
+        },
+        {
+          "runId": 44548437642,
+          "job": "mint-prepare / prepare",
+          "key": "axiom-a-rt-* (runtime scope)"
+        },
+        {
+          "runId": 44553449785,
+          "job": "mint-prepare / prepare",
+          "key": "axiom-a-rt-* (runtime scope)"
+        },
+        {
+          "runId": 44561019095,
+          "job": "mint-prepare / prepare",
+          "key": "axiom-a-rt-* (runtime scope)"
+        }
+      ],
+      "missNote": "all 4 misses are mint-prepare / prepare requesting the runtime-scope key axiom-a-rt-*; the log says \"Cache not found for input keys\", so the native Z3/jq install path fires in exactly those executions"
+    },
+    "bLayerRestore": {
+      "seconds": 59.4,
+      "executions": 40
+    }
+  },
+  "callSites": [
+    {
+      "step": "Run ./.github/actions/setup-axiom-toolchain",
+      "invocations": 36,
+      "executed": 30,
+      "zeroSeconds": 6,
+      "seconds": 1878
+    },
+    {
+      "step": "Restore trusted B supply (setup-axiom-toolchain — exact-key B layer)",
+      "invocations": 5,
+      "executed": 5,
+      "zeroSeconds": 0,
+      "seconds": 441
+    },
+    {
+      "step": "[closure] Pinned toolchain (setup-axiom-toolchain — nim 2.2.10, no inline choosenim)",
+      "invocations": 5,
+      "executed": 5,
+      "zeroSeconds": 0,
+      "seconds": 255
+    }
+  ],
+  "steps": [
+    {
+      "step": "Install system deps (libpcre3)",
+      "phase": "install_extract",
+      "invocations": 40,
+      "skipped": 0,
+      "sumSeconds": 1542.1,
+      "medianSeconds": 21.2,
+      "p75Seconds": 32.2,
+      "maxSeconds": 230.2,
+      "displayName": "Install system deps (canonical system_deps parity — libpcre3)"
+    },
+    {
+      "step": "A-layer restore",
+      "phase": "cache_restore",
+      "invocations": 40,
+      "skipped": 0,
+      "sumSeconds": 874.5,
+      "medianSeconds": 22.0,
+      "p75Seconds": 29.9,
+      "maxSeconds": 32.7,
+      "displayName": "A-layer restore (toolchain — exact key only, no restore-keys)"
+    },
+    {
+      "step": "B-layer restore",
+      "phase": "cache_restore",
+      "invocations": 40,
+      "skipped": 0,
+      "sumSeconds": 59.4,
+      "medianSeconds": 1.4,
+      "p75Seconds": 2.5,
+      "maxSeconds": 3.0,
+      "displayName": "B-layer restore (per-base build artifact — exact key only, no restore-keys)"
+    },
+    {
+      "step": "keygen",
+      "phase": "verification",
+      "invocations": 40,
+      "skipped": 0,
+      "sumSeconds": 24.8,
+      "medianSeconds": 0.6,
+      "p75Seconds": 0.7,
+      "maxSeconds": 0.9,
+      "displayName": "Compute A/B cache identities (key inputs)"
+    },
+    {
+      "step": "Toolchain functional probes",
+      "phase": "verification",
+      "invocations": 40,
+      "skipped": 4,
+      "sumSeconds": 10.7,
+      "medianSeconds": 0.3,
+      "p75Seconds": 0.4,
+      "maxSeconds": 0.5,
+      "displayName": "Toolchain functional probes (fail-closed — catch version-matching-but-broken)"
+    },
+    {
+      "step": "B-layer provenance probe",
+      "phase": "verification",
+      "invocations": 40,
+      "skipped": 16,
+      "sumSeconds": 8.6,
+      "medianSeconds": 0.4,
+      "p75Seconds": 0.4,
+      "maxSeconds": 0.5,
+      "displayName": "B-layer semantic provenance probe (restored ci-compile binaries vs trusted tree — J3 §3.3 non-circular anchor)"
+    },
+    {
+      "step": "B-layer fingerprint verify",
+      "phase": "verification",
+      "invocations": 40,
+      "skipped": 12,
+      "sumSeconds": 6.9,
+      "medianSeconds": 0.2,
+      "p75Seconds": 0.3,
+      "maxSeconds": 0.4,
+      "displayName": "B-layer fingerprint verify (restored digest vs save-time manifest — identity re-derived from trusted inputs)"
+    },
+    {
+      "step": "A-layer save",
+      "phase": "verification",
+      "invocations": 40,
+      "skipped": 36,
+      "sumSeconds": 6.8,
+      "medianSeconds": 1.8,
+      "p75Seconds": 2.2,
+      "maxSeconds": 2.3,
+      "displayName": "A-layer save (any run%3B first save wins%3B verified payload only)"
+    },
+    {
+      "step": "Install Z3 4.13.3",
+      "phase": "install_extract",
+      "invocations": 40,
+      "skipped": 36,
+      "sumSeconds": 6.4,
+      "medianSeconds": 1.6,
+      "p75Seconds": 1.6,
+      "maxSeconds": 1.7,
+      "displayName": "Install Z3 4.13.3 (pinned release binary)"
+    },
+    {
+      "step": "A-layer fingerprint verify",
+      "phase": "verification",
+      "invocations": 40,
+      "skipped": 4,
+      "sumSeconds": 3.6,
+      "medianSeconds": 0.1,
+      "p75Seconds": 0.1,
+      "maxSeconds": 0.3,
+      "displayName": "A-layer fingerprint verify (restored version strings + OS fingerprints vs key-derived expectations)"
+    },
+    {
+      "step": "Verify toolchain pins",
+      "phase": "verification",
+      "invocations": 40,
+      "skipped": 4,
+      "sumSeconds": 2.8,
+      "medianSeconds": 0.1,
+      "p75Seconds": 0.1,
+      "maxSeconds": 0.1,
+      "displayName": "Verify toolchain pins"
+    },
+    {
+      "step": "B-layer restore obs",
+      "phase": "cache_restore",
+      "invocations": 40,
+      "skipped": 0,
+      "sumSeconds": 2.3,
+      "medianSeconds": 0.0,
+      "p75Seconds": 0.1,
+      "maxSeconds": 0.2,
+      "displayName": "B-layer restore observation (restored key + exact-hit flag)"
+    },
+    {
+      "step": "A-layer restore obs",
+      "phase": "cache_restore",
+      "invocations": 40,
+      "skipped": 0,
+      "sumSeconds": 2.2,
+      "medianSeconds": 0.0,
+      "p75Seconds": 0.1,
+      "maxSeconds": 0.3,
+      "displayName": "A-layer restore observation (requested / primary / matched key)"
+    },
+    {
+      "step": "Install jq 1.7.1",
+      "phase": "install_extract",
+      "invocations": 40,
+      "skipped": 36,
+      "sumSeconds": 0.7,
+      "medianSeconds": 0.1,
+      "p75Seconds": 0.2,
+      "maxSeconds": 0.3,
+      "displayName": "Install jq 1.7.1 (pinned static binary)"
+    },
+    {
+      "step": "Export toolchain PATH",
+      "phase": "other",
+      "invocations": 40,
+      "skipped": 4,
+      "sumSeconds": 0.4,
+      "medianSeconds": 0.0,
+      "p75Seconds": 0.0,
+      "maxSeconds": 0.0,
+      "displayName": "Export toolchain PATH (scope-aware%3B runs even when installs are skipped)"
+    },
+    {
+      "step": "A-layer lock-completeness check",
+      "phase": "verification",
+      "invocations": 40,
+      "skipped": 4,
+      "sumSeconds": 0.4,
+      "medianSeconds": 0.0,
+      "p75Seconds": 0.0,
+      "maxSeconds": 0.0,
+      "displayName": "A-layer lock-completeness check (save guard)"
+    },
+    {
+      "step": "A-layer non-exact discard",
+      "phase": "cache_restore",
+      "invocations": 40,
+      "skipped": 36,
+      "sumSeconds": 0.1,
+      "medianSeconds": 0.0,
+      "p75Seconds": 0.0,
+      "maxSeconds": 0.0,
+      "displayName": "A-layer non-exact discard (partial/miss payload is never consumed)"
+    },
+    {
+      "step": "Install Nim (choosenim)",
+      "phase": "install_extract",
+      "invocations": 40,
+      "skipped": 40,
+      "sumSeconds": 0.0,
+      "medianSeconds": 0.0,
+      "p75Seconds": 0.0,
+      "maxSeconds": 0.0,
+      "displayName": "Install Nim (choosenim, version = inputs.nim-version)"
+    },
+    {
+      "step": "Install Nim dependencies",
+      "phase": "install_extract",
+      "invocations": 40,
+      "skipped": 40,
+      "sumSeconds": 0.0,
+      "medianSeconds": 0.0,
+      "p75Seconds": 0.0,
+      "maxSeconds": 0.0,
+      "displayName": "Install project Nim dependencies"
+    },
+    {
+      "step": "Install Lean 4.33.0",
+      "phase": "install_extract",
+      "invocations": 40,
+      "skipped": 40,
+      "sumSeconds": 0.0,
+      "medianSeconds": 0.0,
+      "p75Seconds": 0.0,
+      "maxSeconds": 0.0,
+      "displayName": "Install Lean 4.33.0 (elan)"
+    },
+    {
+      "step": "Nim-scope verification stamp",
+      "phase": "verification",
+      "invocations": 40,
+      "skipped": 40,
+      "sumSeconds": 0.0,
+      "medianSeconds": 0.0,
+      "p75Seconds": 0.0,
+      "maxSeconds": 0.0,
+      "displayName": "Nim-scope verification stamp (save authority — verified toolchain only)"
+    },
+    {
+      "step": "A-layer save authority",
+      "phase": "verification",
+      "invocations": 40,
+      "skipped": 36,
+      "sumSeconds": 0.0,
+      "medianSeconds": 0.0,
+      "p75Seconds": 0.0,
+      "maxSeconds": 0.0,
+      "displayName": "A-layer save authority (verified payload only)"
+    }
+  ],
+  "reconciliation": {
+    "baselineSeconds": 2574,
+    "baselineComposition": {
+      "Run ./.github/actions/setup-axiom-toolchain": 1878,
+      "[closure] Pinned toolchain (… remote ref @c021c33)": 255,
+      "Restore trusted B supply (… setup-axiom-toolchain)": 441
+    },
+    "reproducedSeconds": 2574,
+    "differenceSeconds": 0,
+    "clampedSteps": 0,
+    "negativeStepSpans": 0,
+    "skippedCallSites": 6,
+    "stepNameChanges": [],
+    "baselineDocInconsistency": "docs/evidence/ci_critical_path_baseline_2026-11-20.md §1 lists per-run setup-family values 821/284/249/306/218 (sum 1,878 = the `Run ./.` subset only) while its §0/§3.2 total 2,574 includes the other two call sites; data/ci_optimization/ci_critical_path_baseline_2026-11-20/summary.json carries the correct per-run values 1080/389/367/429/309"
+  },
+  "limits": [
+    "n=5; no p95 claim. medians/p75 are per-execution over 40 executions, not per-run.",
+    "the composite-internal boundary is the action log marker, not a GitHub API object; a marker-less revision of the action would not be decomposable this way.",
+    "apt fetch vs install is separated at the first dpkg output line (apt runs with -qq, so `Get:` lines are absent).",
+    "5 of 40 executions run the remote-ref action @c021c338; its 22 step names are identical to origin/main (verified by diff) but its action.yml blob differs (adee6223 vs d01432f6).",
+    "the decomposition says nothing about cost outside the composite span (bin/ax build, gates, uploads)."
+  ]
+}
