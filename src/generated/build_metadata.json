@@ -1,8 +1,8 @@
 {
   "generatorVersion": 2,
-  "generatedAt": "2026-11-17T15:34:35Z",
-  "commitCount": 378,
-  "gitHash": "ad7f2ae",
+  "generatedAt": "2026-11-20T03:44:42Z",
+  "commitCount": 564,
+  "gitHash": "1f03439",
   "hooksPath": ".githooks",
   "z3Version": "4.13.3",
   "glibcVersion": "ldd (Ubuntu GLIBC 2.39-0ubuntu8.12) 2.39",
@@ -1121,6 +1121,7 @@
     "verification/cegar_bmc_bridge.nim",
     "verification/cegar_engine.nim",
     "verification/cert_builder.nim",
+    "verification/cert_export.nim",
     "verification/cert_fingerprinter.nim",
     "verification/cert_promotion.nim",
     "verification/cert_reconcile.nim",
@@ -1464,8 +1465,8 @@
     "validate_runners.nim",
     "verification_auditor_gate.nim"
   ],
-  "featureManifestMtime": 1794832174,
-  "newestFeatureMtime": 1794832174,
+  "featureManifestMtime": 1794630843,
+  "newestFeatureMtime": 1794484038,
   "nimblePackage": "axiom",
   "nimVersion": "Nim Compiler Version 2.2.10 [Linux: amd64]"
 }
