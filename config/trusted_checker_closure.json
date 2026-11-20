@@ -84,7 +84,7 @@
     "src/cli/cert_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "33230ea90db237bd790df6094c680dc6d7b984e5"
+      "sha": "1ad789a6854d50fff6c862312098f01d398e13e7"
     },
     "src/cli/check_cli.nim": {
       "mode": "100644",
