@@ -335,3 +335,29 @@ GitHub `GET /repos/{owner}/{repo}/commits/{ref}/check-runs` 응답 형태:
 - 선택: run state에 없는 unit, SATISFIED 아님, REUSED(미허용), vault match
   0/2+ → export 거부.
 - 커널: 전제조건 부재 → SKIPPED(3); 재실행 실패/axiom 불일치 → FAIL(1).
+
+## 11. 다른 증거 계약과의 관계 (중복 방지)
+
+이 계약은 main에 이미 착지한 두 문서와 **같은 저장소에 공존**한다. 세 문서의 역할을 명시적으로 분리한다.
+
+| 문서 | 역할 | 상태 |
+|---|---|---|
+| `docs/spec/admission_evidence_export_contract.md` | canonical certificate-set producer(`ax cert export`, `vault-manifest.v3`, `certificateSetDigest`) 계약 | **Proposed** — 구현 없음 |
+| `docs/spec/evidence_capsule_contract.md` | portable replay tier. 축: `proofValidity` / `reproducibility` / `provenanceAuthenticity`. canonical export를 소비 | Normative v1 |
+| 이 문서 | run-scoped **envelope**: 한 실행이 선택한 cert body + subject tree + run 봉투 + 외부 authority 관측 | 구현됨 (`evidence-verify`) |
+
+### 11.1 새 권위를 만들지 않는다
+
+번들 leg(`bundleContent`/`certEvidence`/`subjectBinding`/`kernel`/`provenance`/`mergeAuthority`)는 **소비자 측 평가**다. admission verdict·gate·App 판정을 대체하지 않는다. `PASS`는 "요청된 leg가 통과했다"만 뜻하며, capsule의 `proofValidity`/`provenanceAuthenticity` `PASS`를 함의하지 않는다.
+
+### 11.2 이행 규칙 (binding)
+
+`ax cert export`/`vault-manifest.v3`가 구현되는 시점에:
+
+1. `evidence-verify export`는 vault를 직접 읽지 않고 **canonical export의 certificate set을 소비**해야 한다. §3의 vault 선택 절차는 그때 제거된다.
+2. bundle manifest의 cert identity(`identityDigest`, `propositionHash`, `leanSourceHash`, `kaaDigest`, `toolchainFingerprint`)는 canonical export의 필드와 동일 의미를 유지한다.
+3. 이행 전까지 이 exporter는 **유일하게 구현된 cert-body exporter**이며, 그 지위는 transitional이다. 새 certificate-set producer를 영구히 두 번째로 유지하지 않는다.
+
+### 11.3 형식 통합은 계약 개정이다
+
+bundle v2와 capsule v1의 형식 통합·분리는 구현 변경이 아니라 계약 개정으로만 이뤄진다. 어느 한쪽의 `PASS` 의미가 바뀌면 이 표와 양 문서를 함께 개정해야 한다.
