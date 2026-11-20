@@ -63,7 +63,9 @@ const
 
 func axiomAllowlist*(): seq[string] {.raises: [].} =
   ## INV-6 allowlist — the ONLY axiom names a kernel-verified proof may depend on.
-  @["propext", "Classical.choice", "Quot.sound", "funext"]
+  ## `funext` is a theorem alias (`#print axioms funext` → `[Quot.sound]`), not a
+  ## primitive axiom, so it is not an allowlist member.
+  @["propext", "Classical.choice", "Quot.sound"]
 
 func isAxiomAllowed*(axiomName: string): bool {.raises: [].} =
   ## Deny-first: any name containing a sorry/trustCompiler/native_decide marker
@@ -85,7 +87,7 @@ func isAxiomAllowed*(axiomName: string): bool {.raises: [].} =
 
 const verdictReasons: array[KernelVerdict, string] = [
   "kernel re-execution passed",
-  "observed proof depends on an axiom outside the allowlist {propext, Classical.choice, Quot.sound, funext}",
+  "observed proof depends on an axiom outside the allowlist {propext, Classical.choice, Quot.sound}",
   "observed proof depends on sorry (sorryAx family) — kernel soundness violation",
   "lean artifact failed kernel typecheck",
   "kernel re-execution timed out and was killed",

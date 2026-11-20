@@ -423,9 +423,11 @@ proc checkLeanSource*(client: LeanLspClient; uri, source: string; maxWaitCycles:
 ## contains `sorryAx` (or any axiom outside the allowlist), the definition is
 ## treated as NOT-verified so the Stage 1.5 type-level router falls back to
 ## Z3 BMC (fail-open by design).
+## INV-6 primitive set: `funext` is a theorem alias whose `#print axioms`
+## dependency is `Quot.sound`; it is not a primitive axiom and is rejected here.
 
 const LeanAxiomAllowlist* = [
-  "Classical.choice", "Quot.sound", "propext", "funext"
+  "Classical.choice", "Quot.sound", "propext"
 ]
 
 func isLeanAxiomAllowed*(axiom: string): bool {.raises: [].} =

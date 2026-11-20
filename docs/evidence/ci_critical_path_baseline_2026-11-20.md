@@ -5,6 +5,10 @@
 > **Baseline data**: `data/ci_optimization/ci_critical_path_baseline_2026-11-20/summary.json`
 > **Collected**: 2026-11-20T04:42:48Z (UTC), `gh` 2.102.0
 
+> **Errata (2026-11-20, VS-1 후속 측정)**: 아래 원 수치·표는 수정하지 않는다. 두 항목의 범위만 정정한다.
+> 1. §1 표의 `setup family` 열(821/284/249/306/218, 합 1,878)은 실제로 `Run ./.github/actions/setup-axiom-toolchain` **outer step만** 센 값이다. family 전체는 **2,574s**(`+ Restore trusted B supply 441 + [closure] Pinned toolchain 255`)다. **정정: `docs/evidence/ci_provisioning_decomposition_2026-11-20.md` §5 + `docs/evidence/ci_performance_canonicalization_2026-11-20.md` §2 참조.**
+> 2. §3.2의 "libpcre3 설치는 run당 2회, 평균 11.7s"는 composite **외부** `[check]` step만 센 값이다. composite 내부에서는 **job마다 실행**된다(단일 run 8/8, cohort B 40/40). **정정: `docs/evidence/ci_provisioning_decomposition_2026-11-20.md` §6.1 + `docs/evidence/ci_performance_canonicalization_2026-11-20.md` §5·§6 참조.**
+
 ## §0. 결론
 
 | 지표 | 값 | 해석 |
