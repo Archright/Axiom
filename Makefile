@@ -949,9 +949,10 @@ verify-proof-boundary: ## §3 direct proof boundary conformance (docs/spec/direc
 #  - 반면 로그/데이터의 canonical persisted state logs/ax_proof_state.json 투영 일관성은 **의존**하고 검증한다.
 # 리포트 stdout은 exit code와 독립적으로 취득하고, 제품의 report verdict
 # (runOutcome.verdict/gateVerdict + summary)를 재구성이 아니라 "일관성 검증"으로 소비한다.
-# verified==0은 G7 FAIL이다 — 아무것도 확립하지 못한 run은 성공이 아니다.
-# (제품 exit code 자체의 fail-open 수정은 pinned-file rotation follow-up이다;
-#  이 target은 verdict를 직접 assert해 CI에서 fail-closed로 동작한다.)
+# runOutcome.verdict가 유일한 판정 authority다(contract §7): report exit code는
+# verdict에만 결속되고, summary는 telemetry로서 verdict와 "일관성 검증"만 받는다.
+# 따라서 이 target은 PASS∧PASS를 요구하고, V/F/TO는 PASS와 모순되지 않는지
+# 독립적으로 확인한다 — count가 판정을 대체하지 않는다.
 # status·tier는 보고된 값 그대로 소비만 — 둘 사이 관계(status→tier/tier→status)를 CI가 새로 해석하지 않음(금지).
 verify-contract-release-e2e-full: verify-proof-boundary ## G7-full — CI release E2E (canonical product-outcome assertion, §계획 v7)
 	@set -eu; \
@@ -976,9 +977,12 @@ verify-contract-release-e2e-full: verify-proof-boundary ## G7-full — CI releas
 	TO=$$(printf '%s' "$$REPORT" | jq -r '.summary.timeoutCount // 0'); \
 	VERDICT="$$(printf '%s' "$$REPORT" | jq -r '.runOutcome.verdict // "MISSING"')"; \
 	GATE="$$(printf '%s' "$$REPORT" | jq -r '.runOutcome.gateVerdict // "MISSING"')"; \
-	EXPECTED_EXIT=0; { [ "$$VERDICT" = "PASS" ] && [ "$$GATE" = "PASS" ] && [ "$$F" -eq 0 ] && [ "$$TO" -eq 0 ] && [ "$$V" -gt 0 ]; } || EXPECTED_EXIT=1; \
-	[ "$$REPORT_EXIT" -eq "$$EXPECTED_EXIT" ] || \
-	  { echo "FAIL: report exit $$REPORT_EXIT inconsistent with verdict (verdict=$$VERDICT gate=$$GATE v=$$V f=$$F to=$$TO, expect $$EXPECTED_EXIT)"; exit 1; }; \
+	[ "$$VERDICT" = "PASS" ] && [ "$$GATE" = "PASS" ] || \
+	  { echo "FAIL: canonical verdict is not PASS (verdict=$$VERDICT gate=$$GATE)"; exit 1; }; \
+	[ "$$F" -eq 0 ] && [ "$$TO" -eq 0 ] && [ "$$V" -gt 0 ] || \
+	  { echo "FAIL: summary contradicts PASS verdict (v=$$V f=$$F to=$$TO)"; exit 1; }; \
+	[ "$$REPORT_EXIT" -eq 0 ] || \
+	  { echo "FAIL: report exit $$REPORT_EXIT contradicts PASS verdict"; exit 1; }; \
 	STATE=logs/ax_proof_state.json; [ -f "$$STATE" ] || { echo "FAIL: no state SSOT"; exit 1; }; \
 	MODULE="src/core/orchestrator/orchestrator_api.nim"; FN="normalizeMaxWorkers"; \
 	VAULT=data/trusted/certificates; \

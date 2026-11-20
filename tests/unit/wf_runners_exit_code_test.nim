@@ -5,83 +5,102 @@ import core/utils/constants
 import core/utils/decision_algebra
 
 ## Every case below is re-derived from the ONE run-exit rule
-## (core/utils/decision_algebra.projectRunOutcome). A timeout is a hang-guard
-## node abort, not a verification verdict, but the exit axis is fail-closed
-## about it: incomplete verification is "claims not established" -> 1.
+## (core/utils/decision_algebra.projectRunOutcome). The rule consumes only the
+## canonical `runOutcome.verdict` authority block; `summary` is telemetry and
+## can never establish success. A document without a readable verdict is
+## UNRESOLVED and exits non-zero.
+
+proc canonical(verdict: string; gate: string): JsonNode =
+  %*{"runOutcome": {"verdict": verdict, "gateVerdict": gate},
+     "summary": {"verified": 2, "failedCount": 0, "timeoutCount": 0}}
 
 suite "v1 exit-state contract (productization_contract.md §7)":
 
-  test "topology-only preview (no verified key) preserves legacy behavior -> 0":
-    let reportNode = %*{"summary": {"topologyScanComplete": true, "symbolCount": 4}}
-    check axProofShortcutExitCode(reportNode) == 0
+  test "canonical PASS verdict -> success (0)":
+    let reportNode = canonical("PASS", "PASS")
     check projectRunOutcome(reportNode) == OutcomeContinue
+    check axProofShortcutExitCode(reportNode) == 0
 
-  test "verification ran, verified>0, failed=0, timeout=0 -> success (0)":
+  test "canonical FAIL verdict -> verification-failure (1)":
+    let reportNode = canonical("FAIL", "FAIL")
+    check projectRunOutcome(reportNode) == OutcomeBlock
+    check axProofShortcutExitCode(reportNode) == 1
+
+  test "INCONCLUSIVE verdict -> UNRESOLVED, exit 1":
+    let reportNode = canonical("INCONCLUSIVE", "FAIL")
+    check projectRunOutcome(reportNode) == OutcomeUnresolved
+    check axProofShortcutExitCode(reportNode) == 1
+
+  test "BLOCKED verdict -> UNRESOLVED, exit 1":
+    let reportNode = canonical("BLOCKED", "FAIL")
+    check projectRunOutcome(reportNode) == OutcomeUnresolved
+    check axProofShortcutExitCode(reportNode) == 1
+
+  test "unknown verdict vocabulary -> UNRESOLVED, exit 1":
+    let reportNode = canonical("PROBABLY_FINE", "PASS")
+    check projectRunOutcome(reportNode) == OutcomeUnresolved
+    check axProofShortcutExitCode(reportNode) == 1
+
+  test "verdict/gateVerdict contradiction -> UNRESOLVED, exit 1":
+    ## A PASS verdict whose serialized projection says FAIL is an UNKNOWN
+    ## document, never a PASS.
+    check projectRunOutcome(canonical("PASS", "FAIL")) == OutcomeUnresolved
+    check axProofShortcutExitCode(canonical("PASS", "FAIL")) == 1
+    check projectRunOutcome(canonical("FAIL", "PASS")) == OutcomeUnresolved
+    check axProofShortcutExitCode(canonical("FAIL", "PASS")) == 1
+
+  test "absent gateVerdict leaves the verdict authoritative":
+    let reportNode = %*{"runOutcome": {"verdict": "PASS"}, "summary": {"verified": 1}}
+    check projectRunOutcome(reportNode) == OutcomeContinue
+    check axProofShortcutExitCode(reportNode) == 0
+
+  test "summary-only document is telemetry, never success (1)":
+    ## The closed hole: verified>0 with zero recorded failures used to exit 0
+    ## even when no canonical verdict existed.
     let reportNode = %*{"summary": {"verified": 2, "failedCount": 0, "timeoutCount": 0}}
-    check axProofShortcutExitCode(reportNode) == 0
-    check projectRunOutcome(reportNode) == OutcomeContinue
-
-  test "verification ran, verified=0, failed=1 -> verification-failure (1)":
-    let reportNode = %*{"summary": {"verified": 0, "failedCount": 1, "timeoutCount": 0}}
-    check axProofShortcutExitCode(reportNode) == 1
-    check projectRunOutcome(reportNode) == OutcomeBlock
-
-  test "verification ran, verified=2, failed=1 -> verification-failure (1)":
-    let reportNode = %*{"summary": {"verified": 2, "failedCount": 1, "timeoutCount": 0}}
-    check axProofShortcutExitCode(reportNode) == 1
-    check projectRunOutcome(reportNode) == OutcomeBlock
-
-  test "verification ran, verified=0, failed=0, timeout=1 -> verification-failure (1)":
-    ## Nothing was established and the run was aborted: BLOCK on the exit axis.
-    let reportNode = %*{"summary": {"verified": 0, "failedCount": 0, "timeoutCount": 1}}
-    check axProofShortcutExitCode(reportNode) == 1
-    check projectRunOutcome(reportNode) == OutcomeBlock
-
-  test "verification ran, verified=2, failed=0, timeout=1 -> UNRESOLVED, exit 1":
-    ## The hole this unification closes: a timeout-only run used to exit 0
-    ## whenever verified>0. Incomplete verification is not success.
-    let reportNode = %*{"summary": {"verified": 2, "failedCount": 0, "timeoutCount": 1}}
-    check axProofShortcutExitCode(reportNode) == 1
     check projectRunOutcome(reportNode) == OutcomeUnresolved
-
-  test "verification ran, verified>0, failed=1, timeout=2 -> BLOCK, exit 1":
-    let reportNode = %*{"summary": {"verified": 3, "failedCount": 1, "timeoutCount": 2}}
     check axProofShortcutExitCode(reportNode) == 1
-    check projectRunOutcome(reportNode) == OutcomeBlock
 
-  test "verification ran, verified=0, failed=0 (empty run) -> success (0)":
-    ## §7 requires a failed or timed-out node to make `verified == 0` a
-    ## failure; an empty (no-obligation) run establishes nothing to fail.
-    let reportNode = %*{"summary": {"verified": 0, "failedCount": 0, "timeoutCount": 0}}
-    check axProofShortcutExitCode(reportNode) == 0
-    check projectRunOutcome(reportNode) == OutcomeContinue
-
-  test "counts absent alongside verified -> UNRESOLVED, fail-closed exit 1":
-    ## "No failures recorded" is a claim that must be readable to be believed.
-    let reportNode = %*{"summary": {"verified": 4}}
-    check axProofShortcutExitCode(reportNode) == 1
+  test "summary-only with blocked obligations is not success (1)":
+    let reportNode = %*{"summary": {"verified": 1, "failedCount": 0, "timeoutCount": 0,
+                                    "blockedCount": 1}}
     check projectRunOutcome(reportNode) == OutcomeUnresolved
-
-  test "missing summary -> UNRESOLVED, fail-closed exit 1":
-    let reportNode = %*{"notSummary": {}}
     check axProofShortcutExitCode(reportNode) == 1
+
+  test "topology-scan summary without verdict is UNRESOLVED, exit 1":
+    ## Preview is a separate execution path, not an inference from a boolean
+    ## inside a verification document.
+    let reportNode = %*{"summary": {"topologyScanComplete": true, "symbolCount": 4}}
     check projectRunOutcome(reportNode) == OutcomeUnresolved
-
-  test "existing fail-closed signals still return 1":
-    let reportNode = %*{"summary": {"verified": 1, "failedCount": 0, "fatalErrors": 1}}
     check axProofShortcutExitCode(reportNode) == 1
 
-  test "blockingFailure without continue-on-error is fail-closed (1)":
-    let reportNode = %*{"summary": {"verified": 1, "failedCount": 0, "blockingFailure": true}}
+  test "malformed runOutcome block is UNRESOLVED, exit 1":
+    check projectRunOutcome(%*{"runOutcome": "PASS"}) == OutcomeUnresolved
+    check projectRunOutcome(%*{"runOutcome": {"verdict": 1}}) == OutcomeUnresolved
+    check projectRunOutcome(%*{"runOutcome": {"verdict": "PASS", "gateVerdict": 1}}) ==
+      OutcomeUnresolved
+    check axProofShortcutExitCode(%*{"runOutcome": "PASS"}) == 1
+
+  test "missing summary is a fail-closed input constraint (1)":
+    let reportNode = %*{"runOutcome": {"verdict": "PASS", "gateVerdict": "PASS"}}
     check axProofShortcutExitCode(reportNode) == 1
 
-  test "strict guards are parameters, not ambient environment":
-    ## The decision function reads no environment: the same document with
-    ## different parameters is a different, explicit decision.
-    let imperfect = %*{"summary": {"verified": 2, "failedCount": 0, "timeoutCount": 0,
-                                   "verifiedRatio": 0.9}}
+  test "requirePerfectAsi can only demote, never promote":
+    var imperfect = canonical("PASS", "PASS")
+    imperfect["summary"]["verifiedRatio"] = %0.9
     check axProofShortcutExitCode(imperfect) == 0
     check axProofShortcutExitCode(imperfect, requirePerfectAsi = true) == 1
+
+  test "blockingFailure is a fail-closed guard":
+    var reportNode = canonical("PASS", "PASS")
+    reportNode["summary"]["blockingFailure"] = %true
+    check axProofShortcutExitCode(reportNode) == 1
+    check axProofShortcutExitCode(reportNode, continueOnError = true) == 0
+
+  test "fatalErrors is a fail-closed guard":
+    var reportNode = canonical("PASS", "PASS")
+    reportNode["summary"]["fatalErrors"] = %1
+    check axProofShortcutExitCode(reportNode) == 1
 
   test "report schemaVersion const is stable contract identity":
     check axiomReportSchemaVersion == "axiom.report.v1"

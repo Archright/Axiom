@@ -4,7 +4,7 @@
 ## against its own isolated vault under ONE base temp dir, must agree on:
 ##   1. zero timeout verdicts (checked on the RAW output, before any
 ##      normalization — a timeout line can never be normalized away),
-##   2. the documented exit pair serial=1 / parallel=0 (see EXIT PIN below),
+##   2. the documented exit pair serial=1 / parallel=1 (see EXIT PIN below),
 ##   3. the vault certificate substance digest (functionName+status+irHash
 ##      multiset from the vault manifest — SHA-256),
 ##   4. the normalized stderr digest (SHA-256).
@@ -35,24 +35,20 @@
 ##     vault manifests carry the same 4 entries with the same statuses and
 ##     irHashes (measured pre- and post-VS-1: cert digest e885d5d0… unchanged)
 ##     — so the presentation segment is normalized to one token while the
-##     substance is ratcheted independently by assertion 3. The serial-only
-##     accounting FAIL (exit 1) is part of the same documented divergence and
-##     is PINNED, not hidden: any drift fails loudly and forces a conscious
-##     re-pin.
+##     substance is ratcheted independently by assertion 3. The accounting
+##     FAIL (exit 1 on both legs under the verdict-only exit authority) is
+##     part of the same documented divergence and is PINNED, not hidden: any
+##     drift fails loudly and forces a conscious re-pin.
 ##
 ## EXIT PIN: docs/spec/productization_contract.md §7 vocabulary is
-## success=0 / verification-failure=1. On canonical main ade15ff92 the serial
-## leg's run accounting FAILs the gate on the 2 IR-pipeline-failed nodes
-## (calcDynamicTimeoutCore, safeSpeedupRatioCore — deterministic, TO=0), the
-## parallel leg's accounting passes → serial=1, parallel=0. Re-measured on
-## post-VS-1 main bb8eca2ee (2026-10-24): the pair is UNCHANGED — serial raw
-## renders `canonical run accounting: contestedCount=2 ∨ unsatisfiedCount=1 ⇒
-## GateVerdict=FAIL` and exits 1; parallel now ALSO renders
-## `contestedCount=5 ∨ unsatisfiedCount=0 ⇒ GateVerdict=FAIL` yet exits 0
-## (the parallel driver's exit path does not consume the accounting verdict —
-## observed, pinned). Anything outside {0,1} is a contract violation and
-## fails; any drift from the pinned pair fails with a message requiring an
-## explicit, documented re-pin.
+## success=0 / verification-failure=1. Both legs render GateVerdict=FAIL on
+## this corpus — serial `contestedCount=2 ∨ unsatisfiedCount=1`, parallel
+## `contestedCount=5 ∨ unsatisfiedCount=0` — so both must exit 1. Before the
+## verdict-only exit authority (Phase 1, PR #233), the parallel driver's exit
+## path did not consume its own accounting verdict and exited 0; that was the
+## defect, not an invariant. The pair is now serial=1 / parallel=1. Anything
+## outside {0,1} is a contract violation and fails; any drift from the pinned
+## pair fails with a message requiring an explicit, documented re-pin.
 
 import checksums/sha2
 import std/[algorithm, json, os, osproc, sequtils, streams, strutils, tempfiles]
@@ -291,11 +287,11 @@ proc main() =
     "serial exit " & $serial.exitCode & " outside the §7 vocabulary {0,1}"
   doAssert parallel.exitCode in {0, 1},
     "parallel exit " & $parallel.exitCode & " outside the §7 vocabulary {0,1}"
-  doAssert serial.exitCode == 1 and parallel.exitCode == 0,
-    "EXIT PIN DRIFT — documented pair is serial=1/parallel=0 (VS-1 Phase-1 " &
-    "accounting divergence, PR #1085 non-claim), got serial=" &
+  doAssert serial.exitCode == 1 and parallel.exitCode == 1,
+    "EXIT PIN DRIFT — documented pair is serial=1/parallel=1 (both legs " &
+    "render GateVerdict=FAIL; verdict-only exit authority, contract §7), got serial=" &
     $serial.exitCode & " parallel=" & $parallel.exitCode &
-    " — if the divergence layer converged or the corpus changed, re-pin with " &
+    " — if a leg's verdict changed or the corpus changed, re-pin with " &
     "fresh evidence"
 
   # Substance ratchet — persisted proof artifacts must be identical.
@@ -310,7 +306,7 @@ proc main() =
 
   echo "Determinism ratchet PASSED: digest=" & serial.digest &
     " vaultCertDigest=" & serial.certDigest &
-    " (exit serial=1 parallel=0, timeouts=0)"
+    " (exit serial=1 parallel=1, timeouts=0)"
 
 
 main()
