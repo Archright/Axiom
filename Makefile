@@ -1062,7 +1062,7 @@ build: $(METADATA) ## 전체 CLI 빌드 (release)
 
 evidence-verify: ## Evidence Bundle v2 exporter/verifier (standalone — NOT part of the Tier C ax closure)
 	@echo "=== Evidence Bundle v2 standalone verifier ==="
-	$(NIM) c --hints:off -d:allowMissingZ3 -o:bin/evidence-verify src/bin/evidence_verify.nim
+	$(NIM) c --hints:off -d:allowMissingZ3 -o:bin/evidence-verify src/cli/evidence_verify.nim
 	@echo "✅ evidence-verify built"
 	@echo ""
 
@@ -1210,6 +1210,7 @@ test-unit:
 	@nim c -r tests/cli/test_merge_cli.nim
 	@nim c -r tests/cli/test_report_cli.nim
 	@nim c -r tests/cli/test_evidence_bundle_v2.nim
+	@nim c -r tests/verification/test_strict_json_number_semantics.nim
 	@nim c -r tests/unit/test_judgment_set_derivation.nim
 
 # ── oracle-evidence mode=none floor 회귀 픽스처 (Phase 2d, 계획 CE #13) ────
