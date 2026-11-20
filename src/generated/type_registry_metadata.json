@@ -1348,6 +1348,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "PrepareFailure",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "documentRefusal",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "PrepareFailure",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "SubjectPinMismatchWording",
       "module": "src/cli/axiom_engine.nim",
       "name": "entryPinWording",
@@ -1669,6 +1683,20 @@
       ],
       "resultConstraintTemplate": "",
       "returnType": "AxiomEngine",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "PrepareFailure",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "internalFailure",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "PrepareFailure",
       "smtSort": "Int",
       "typeCategory": "object"
     },
@@ -2513,7 +2541,7 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
-      "leanType": "Result[PreparedRun, string]",
+      "leanType": "Result[PreparedRun, PrepareFailure]",
       "module": "src/cli/axiom_engine.nim",
       "name": "prepareProofRun",
       "negativeConstraints": [
@@ -2521,7 +2549,7 @@
         "Use 'result.isOk or result.isErr' instead"
       ],
       "resultConstraintTemplate": "",
-      "returnType": "Result[PreparedRun, string]",
+      "returnType": "Result[PreparedRun, PrepareFailure]",
       "smtSort": "Int",
       "typeCategory": "result"
     },
@@ -2933,7 +2961,7 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
-      "leanType": "Result[ProofReport, string]",
+      "leanType": "Result[ProofReport, PrepareFailure]",
       "module": "src/cli/axiom_engine.nim",
       "name": "runProofPipeline",
       "negativeConstraints": [
@@ -2941,14 +2969,14 @@
         "Use 'result.isOk or result.isErr' instead"
       ],
       "resultConstraintTemplate": "",
-      "returnType": "Result[ProofReport, string]",
+      "returnType": "Result[ProofReport, PrepareFailure]",
       "smtSort": "Int",
       "typeCategory": "result"
     },
     {
       "hasAxiomHint": false,
       "ignorable": false,
-      "leanType": "Result[ProofReport, string]",
+      "leanType": "Result[ProofReport, PrepareFailure]",
       "module": "src/cli/axiom_engine.nim",
       "name": "runProofPipelineWithExit",
       "negativeConstraints": [
@@ -2956,7 +2984,7 @@
         "Use 'result.isOk or result.isErr' instead"
       ],
       "resultConstraintTemplate": "",
-      "returnType": "Result[ProofReport, string]",
+      "returnType": "Result[ProofReport, PrepareFailure]",
       "smtSort": "Int",
       "typeCategory": "result"
     },
@@ -3355,6 +3383,20 @@
       "returnType": "Result[bool, string]",
       "smtSort": "Int",
       "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "CliError",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "toCliError",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "CliError",
+      "smtSort": "Int",
+      "typeCategory": "object"
     },
     {
       "hasAxiomHint": false,
@@ -21400,6 +21442,39 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "Int",
+      "module": "src/core/crypto/hash_kernel.nim",
+      "name": "bsig0",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "uint32",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/core/crypto/hash_kernel.nim",
+      "name": "bsig1",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "uint32",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/core/crypto/hash_kernel.nim",
+      "name": "ch32",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "uint32",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "String",
       "module": "src/core/crypto/hash_kernel.nim",
       "name": "computeContentHash",
@@ -21458,6 +21533,17 @@
       "ignorable": false,
       "leanType": "Int",
       "module": "src/core/crypto/hash_kernel.nim",
+      "name": "hexNibble",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "uint32",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/core/crypto/hash_kernel.nim",
       "name": "hexVal",
       "resultConstraintTemplate": "(>= result 0)",
       "returnType": "uint8",
@@ -21496,6 +21582,28 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "Int",
+      "module": "src/core/crypto/hash_kernel.nim",
+      "name": "maj32",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "uint32",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/core/crypto/hash_kernel.nim",
+      "name": "rotr32",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "uint32",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "array[20, byte]",
       "module": "src/core/crypto/hash_kernel.nim",
       "name": "sha1HexToBytes",
@@ -21506,6 +21614,36 @@
       "returnType": "array[20, byte]",
       "smtSort": "Int",
       "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/core/crypto/hash_kernel.nim",
+      "name": "sha256Compress",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/core/crypto/hash_kernel.nim",
+      "name": "sha256DigestHex",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
     },
     {
       "hasAxiomHint": false,
@@ -21526,7 +21664,7 @@
       "ignorable": false,
       "leanType": "Int",
       "module": "src/core/crypto/hash_kernel.nim",
-      "name": "stableHash32",
+      "name": "ssig0",
       "resultConstraintTemplate": "(>= result 0)",
       "returnType": "uint32",
       "smtSort": "Int",
@@ -21535,16 +21673,24 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
-      "leanType": "String",
+      "leanType": "Int",
       "module": "src/core/crypto/hash_kernel.nim",
-      "name": "vmSafeSha256Hex",
-      "negativeConstraints": [
-        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
-      ],
-      "resultConstraintTemplate": "(>= (str.len result) 0)",
-      "returnType": "string",
-      "smtSort": "String",
-      "typeCategory": "string"
+      "name": "ssig1",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "uint32",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/core/crypto/hash_kernel.nim",
+      "name": "stableHash32",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "uint32",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
     },
     {
       "hasAxiomHint": false,
@@ -58503,6 +58649,20 @@
       "returnType": "bool",
       "smtSort": "Bool",
       "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "BinOpKind",
+      "module": "src/core/trusted/ast_to_ir.nim",
+      "name": "checkedBinOp",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "BinOpKind",
+      "smtSort": "Int",
+      "typeCategory": "object"
     },
     {
       "hasAxiomHint": false,
@@ -105244,6 +105404,21 @@
       "ignorable": false,
       "leanType": "Bool",
       "module": "src/infrastructure/external_ir_materializer.nim",
+      "name": "containsUnsupportedBinOp",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/infrastructure/external_ir_materializer.nim",
       "name": "correspondenceHolds",
       "negativeConstraints": [
         "result >= 0 is invalid — Bool is not numeric",
@@ -105366,6 +105541,21 @@
       "returnType": "seq[string]",
       "smtSort": "(Seq string)",
       "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/infrastructure/external_ir_materializer.nim",
+      "name": "lossFreeTranslationContradictsBody",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
     },
     {
       "hasAxiomHint": false,
@@ -119880,6 +120070,20 @@
     },
     {
       "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List string",
+      "module": "src/verification/counterexample_replay.nim",
+      "name": "composeReplayDepPaths",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
       "ignorable": true,
       "leanType": "Unit",
       "module": "src/verification/counterexample_replay.nim",
@@ -123112,6 +123316,48 @@
       "ignorable": false,
       "leanType": "String",
       "module": "src/verification/judgment_cas.nim",
+      "name": "closureComponentDigest",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List JudgmentClosureComponent",
+      "module": "src/verification/judgment_cas.nim",
+      "name": "closureComponentsOf",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[JudgmentClosureComponent]",
+      "smtSort": "(Seq JudgmentClosureComponent)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JudgmentClosureDiagnostics",
+      "module": "src/verification/judgment_cas.nim",
+      "name": "closureDiagnosticsOf",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JudgmentClosureDiagnostics",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/judgment_cas.nim",
       "name": "closureWire",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (str.len result) 0)"
@@ -123361,6 +123607,34 @@
       "ignorable": false,
       "leanType": "String",
       "module": "src/verification/judgment_cas.nim",
+      "name": "envSnapshotDigestFromParts",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "array[6, string]",
+      "module": "src/verification/judgment_cas.nim",
+      "name": "envSnapshotParts",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "array[6, string]",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/judgment_cas.nim",
       "name": "exactFieldSet",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (str.len result) 0)"
@@ -123432,7 +123706,35 @@
       "ignorable": false,
       "leanType": "String",
       "module": "src/verification/judgment_cas.nim",
+      "name": "judgmentClosureComponentMismatch",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/judgment_cas.nim",
       "name": "judgmentDecisionBasis",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/judgment_cas.nim",
+      "name": "judgmentDecisionKeyError",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (str.len result) 0)"
       ],

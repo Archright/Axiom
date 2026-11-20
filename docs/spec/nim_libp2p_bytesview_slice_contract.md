@@ -3,7 +3,7 @@
 > **Status**: Committed product contract — the external-subject spec overlay slice (`followup/libp2p-bytesview-slice`)
 > **Created**: 2026-10-22 (v1.0.0) — **Re-adopted**: 2026-11-14 (v1.1.0 — law conformance over the FIXED tree)
 > **AGENTS.md reference**: §0.12 (product contract precedes), §0.9 (theater prohibition), §0.3 (trust boundary), §0.2a (legislator LLM-only — not engaged here: the spec content is the investigation agent chain's adopted work product, not a legislator invariant), §4 (GUARDIAN)
-> **Related**: [toml_d2_agent_binding_contract.md](./toml_d2_agent_binding_contract.md) (overlay / constructed-carrier / adoption-provenance precedent), [nim_stew_base36_sidecar_contract.md](./nim_stew_base36_sidecar_contract.md) (adoption + non-claims precedent), [authority_contract.md](./authority_contract.md), [obligation_semantics.md](./obligation_semantics.md), [counterexample_replay_adapter.md](./counterexample_replay_adapter.md)
+> **Related**: [toml_d2_agent_binding_contract.md](./toml_d2_agent_binding_contract.md) (overlay / constructed-carrier / adoption-provenance precedent), [nim_stew_base36_sidecar_contract.md](./nim_stew_base36_sidecar_contract.md) (adoption + non-claims precedent), [authority_contract.md](./authority_contract.md), [obligation_semantics.md](./obligation_semantics.md), [counterexample_replay_adapter.md](./counterexample_replay_adapter.md), [adopted_model_observation_contract.md](./adopted_model_observation_contract.md) (lane-neutral adopted-model + stamped-observation contract)
 > **Spec registry**: `SPEC-LIBP2P-BV-SLICE` — binding overlay `config/spec/nim_libp2p_bytesview_slice.json` (soExplicit), rule `external:libp2p/bytesview/slice-length-law` v`1.1.0`
 
 ---

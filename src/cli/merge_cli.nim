@@ -357,6 +357,9 @@ const
     "docs/evidence/rotation_allowlist_replay_evidence_prereg_2026-10-19.md",
     "docs/agents/report-guardrails.md",
     "tests/unit/test_vkd_ssot_invariant.nim",
+    # #187: summaryProjection(클로저 멤버)의 단위 계약 테스트 — 회전 동반 경로
+    # (test_judgment_cas·test_vkd_ssot_invariant와 동일한 회전 멤버 계약 클래스).
+    "tests/unit/phase_x10_accounting_test.nim",
     "docs/evidence/rotation_allowlist_post_vkd_prereg_2026-10-19.md",
     "src/core/policy/rotation_closure_facts.nim",
     "tools/ci/rotation_pin_anchor_check.nim",
@@ -414,7 +417,21 @@ const
     # 정책/거울 회전이다. ADR 문서는 RotationAdrGlob(docs/adr/**)으로 허용.
     # 핀 파일(config/trusted_writer_set.json)은 RotationPinBPath로 이미 허용.
     # 열거형만 — glob 없음(A4 규율); 비멤버 production src/는 계속 밖(A2 (i)).
-    "data/promotions/axiom-operational-slice-activation/manifest.json"]
+    "data/promotions/axiom-operational-slice-activation/manifest.json",
+    # Amendment A6 회전 동반 (2026-11-19, PR #191 ROT_ALLOWLIST 실측 — 원인
+    # 경로는 changed 5경로 중 이 파일 1개뿐이었다). 생성 데이터 동반 클래스:
+    # `src/generated/type_registry_metadata.json`은 손으로 쓰는 production
+    # src/가 아니라 빌드가 결정론적으로 재생성하는 **데이터 산출물**이다
+    # (SSOT writer: tools/hermetic_build.nim — idempotent; 계약:
+    # docs/spec/artifact_determinism.md). 신규 심볼 추가는 이 파일의 항목
+    # 추가를 필연 동반하므로, 배제하면 회전이 구조적으로 불가능해진다
+    # (A2 ① 자기모순 해소 — A3/A4/A5와 동일 fix class). 비확장 근거: ①은
+    # ROTATION 경로에서만 평가되므로(A2 (ii)) NORMAL 경로의 이 파일 취급은
+    # 불변이며, 본 등재는 회전 승인 범위를 넓히지 않는다. 열거형만 — glob
+    # 없음(A4 규율). 사전등록/근거:
+    # docs/evidence/rotation_allowlist_generated_metadata_prereg_2026-11-19.md
+    "src/generated/type_registry_metadata.json",
+    "docs/evidence/rotation_allowlist_generated_metadata_prereg_2026-11-19.md"]
   ## VS-1 회전핀 프리플라이트 (2026-10-20): H2(④) 판정을 리프 모듈
   ## core/policy/rotation_closure_facts로 추출해 착지 predicate와 PR-head
   ## 오라클(tools/ci/rotation_pin_anchor_check.nim)이 **하나의 컴파일 구현**을

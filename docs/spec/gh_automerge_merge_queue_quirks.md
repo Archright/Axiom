@@ -296,9 +296,177 @@ docs.github.com 실페치]:
   재arm 시도로 덮어쓰지 말 것 — PR-head run이 규칙 미충족인 동안 재arm은
   기계적으로 실패한다.
 
+## Q10 — base 진행 후 큐 재빌드는 같은 `pr_head`로 새 `(base, pr_head)` 원장 항목을 만들지 않는다 — 런은 green, App은 `ledger:added=1 none bound to base/pr_head`로 거부
+
+**Symptom**: 큐 엔트리가 선행 PR 병합으로 base가 진행된 뒤 재빌드되면, merge_group
+런은 `attempt=1 conclusion=success`인데 trusted verifier App(integration 5795152)의
+`admission-check`가 **failure**를 발행한다. summary는 `trust_surface=PASS` +
+`ledger=FAIL — added=1 none bound to base/pr_head`다. 재빌드는 `pr_head`를 그대로
+재사용하므로, App이 요구하는 "정확히 1개, `(base, pr_head)` 결속" 항목이 그 런의
+판정 구간에 새로 생기지 않는다. GitHub 쪽 동작은 정상이다 — 결함은 이 저장소의
+원장 결속 술어와 GitHub의 "최신 base로 재테스트" 동작의 **경계면**에 있다.
+
+**Measured evidence (2026-11-18, PR #179 착지 창)**:
+
+| 시각(UTC) | 관측 |
+|---|---|
+| 11:59:09Z | 1차 빌드 배치: 브랜치 `gh-readonly-queue/main/pr-179-5f45c813…`, 후보 `d3ee446c…`, 워크플로 run 8개 |
+| 12:05:17Z / 12:06:55Z | 1차 배치의 subject-certificate append — 원장 commit `bf82738`: `B=5f45c813… H=9dd8283a… run_id=44299613605 gateway_headSha=d3ee446c…` |
+| 12:07:56Z | App이 본 원장 baseline `21926ff9…` |
+| 12:10:20Z / 12:10:26Z | main 진행: PR #183 merge `b4f2c1d` → PR #120 merge `ab5e3a9d` (직전 base `5f45c81`은 PR #122의 merge commit) |
+| 12:10:35Z | 재빌드 배치: **브랜치명·base 접미사 불변**(`pr-179-5f45c813…`), 후보만 `098174ee…`로 교체, `pr_head`는 `9dd8283` 그대로 |
+| 12:18:24Z | 재빌드 구간의 append 1건은 **#183 엔트리**의 것 — `B=098174ee… H=8d84def5… run_id=44301418175`, 브랜치 `pr-183-098174ee…`(후보 위 스페큘레이티브 적층) |
+| 12:18:58Z | run `44301419741` attempt=1 conclusion=success (잡 전부 success/skipped) |
+| 12:19:03Z | App `admission-check` = **failure** — 아래 summary 원문 |
+| 12:40:39Z–12:53:24Z | 회복: rebase로 fresh head `5638ee2`(부모 `01fd17e`, 조부모 `ab5e3a9d`) → 재큐 → run `44306201127`(브랜치 `pr-179-ab5e3a9d…`, 후보 `389e59c4…`) success → App `ledger=PASS — 1 entry bound to (base, pr_head)`(base `ab5e3a9d`·pr_head `5638ee2`·baseline `b4a20b61`) → 12:53:43Z #179 MERGED(`389e59c4`) |
+
+App이 G=`098174e`에 발행한 failure check-run summary 전문:
+
+```text
+G=098174eedff7472824edd7315a381d410cacc394
+base=5f45c813ef9ad8a89c040d49d2495a22a5e6fab0
+pr_head=9dd8283adaa8e79065148063222e50978ae44670
+ledger_baseline=21926ff993f66bb9941f4d9de677bc9c2d4424c5
+run=44301419741 attempt=1 conclusion=success
+trust_surface=PASS — venue=merge_group manifest_ref=5f45c81 touched=17 reasons=none
+ledger=FAIL — added=1 none bound to base/pr_head
+reasons=ledger:added=1 none bound to base/pr_head
+delivery=3b58dac0-e34a-11f1-8bcf-d3265f620ad1
+```
+
+회복 런의 summary는 같은 형식으로 `base=ab5e3a9d6f… / pr_head=5638ee2332… /
+ledger=PASS — 1 entry bound to (base, pr_head)`다.
+
+**두 층의 분리** (혼동 금지):
+
+1. **GitHub 문서화 동작 — base 진행 → 최신 base로 재테스트**: 큐 그룹은 항상 최신
+   `base_branch`를 포함해 만들어지고, 그룹 구성이 바뀌면 임시 브랜치가 재생성되며
+   `merge_group` `checks_requested`가 다시 발화한다(인용은 아래 문서 근거 1–3).
+   이 저장소 실측에서도 1차 배치 후보 `d3ee446c…`가 재빌드에서 `098174ee…`로
+   교체됐다 — 재빌드가 실제로 일어났다는 증거다.
+2. **Axiom 고유 동작 — 원장 결속 술어** (GitHub 문서에 없음):
+   `docs/agents/axiom_admission_verifier_ops.md:37`이 "subject-continuity 원장이
+   `(base, pr_head)`에 결속된 항목을 정확히 1개 얻었는지 본다"로 술어를 정의하고,
+   ADR-0041 §1이 merge-group venue의 조건으로 같은 결속을 요구한다. App summary의
+   `ledger=`·`reasons=ledger:`·`ledger_baseline=` 필드는 GitHub 산출물이 아니라 이
+   App의 발행물이다. 실측 메커니즘:
+   (a) `(5f45c81, 9dd8283)` 결속 항목은 **1차 배치**가 12:06:55Z에 이미 append했고
+   그 원장 commit `bf82738`은 App baseline `21926ff`(12:07:56Z) **이전**이다.
+   (b) 재빌드 구간의 append 1건은 `B=098174ee H=8d84def5`(#183의 항목)로,
+   `(base, pr_head)` 쌍이 아니다. (c) 따라서 판정 구간에서 `added=1`이면서 결속은
+   0건이다 — 같은 `pr_head`의 재빌드는 원장 항목을 **재발행하지 않는다**.
+   (d) 회복 런은 새 `pr_head=5638ee2`로 12:50:20Z에 `(ab5e3a9d, 5638ee2)` 결속
+   항목을 새로 얻어 PASS했다. App predicate의 정확한 구현(구간 평가 여부)은 이
+   저장소 밖(`worker/src/index.js`)이라 소스로 확인하지 않았다 — (a)~(c)는
+   check-run·원장 관측으로부터의 판정이다.
+
+**Official documentation basis** [fetched 2026-11-19, Context7 `/github/docs` +
+docs.github.com 실페치]:
+
+1. **Managing a merge queue** — *"When a pull request is added to the merge queue, the
+   changes in the pull request are grouped into a `merge_group` with the latest
+   version of the `base_branch` as well as changes from pull requests ahead of it in
+   the queue."* → 그룹은 최신 base를 포함해 구성된다.
+   (<https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue>)
+2. 같은 페이지 **Failing CI** — 선행 엔트리 실패 시 *"The merge queue recreates the
+   temporary branch with the prefix of `main/pr-2` to only contain changes from the
+   target branch and pull request #2."* 이고, 각 단계마다 *"A `merge_group` webhook
+   event of type `checks_requested` is dispatched"* → 그룹 구성이 바뀌면 임시
+   브랜치를 **재생성**하고 체크를 다시 요청한다.
+3. 같은 페이지 **Jumping to the top of the queue** note — *"jumping to the top of a
+   merge queue will cause a full rebuild of all in-progress pull requests, as the
+   reordering of the queue introduces a break in the commit graph."* → 큐 순서/커밋
+   그래프가 바뀌면 in-progress 엔트리 전체가 full rebuild된다.
+4. **merge-queue overview**(reusable `data/reusables/pull_requests/merge-queue-overview.md`)
+   — *"The merge queue will ensure the pull request's changes pass all required status
+   checks when applied to the latest version of the target branch and any pull
+   requests already in the queue."*
+5. **문서의 한계(명시)**: 위 문장들은 "최신 base로 그룹을 만든다 / 구성이 바뀌면
+   브랜치를 재생성한다 / 재정렬은 full rebuild한다"를 서술하지만, **base 진행 시
+   같은 `pr_head`의 체크가 어떻게 재실행되는지**를 "re-run"이라는 단어로 서술하지
+   않는다. 후보 교체(`d3ee446c…`→`098174ee…`)는 이 저장소 관측치다. `(base, pr_head)`
+   원장 결속과 `ledger=`·`ledger_baseline=`은 문서에 없다 — 저장소/App 고유다.
+
+**운영 규범**:
+
+- base 진행 후 재빌드에서 "런 green"을 "admission 통과"로 읽지 말 것. 판정
+  authority는 App check-run summary다: `gh api
+  repos/Archright/Axiom/commits/<G>/check-runs`에서 integration_id 5795152의
+  `admission-check`를 골라 `ledger=`·`reasons=`를 읽는다.
+- `ledger=FAIL — added=1 none bound to base/pr_head`는 "원장이 비었다"가 아니라
+  "이 런의 판정 구간에 결속 항목이 없다"는 뜻이다. 같은 쌍의 항목이
+  `ledger_baseline` 이전에 존재해도 판정은 바뀌지 않는다(실측).
+- 회복은 fresh head뿐이다: rebase 또는 `gh pr update-branch`로 새 `pr_head`를
+  만들고 재큐한다. 같은 `pr_head`의 재arm·재큐는 `(base, pr_head)` 항목을 다시
+  만들지 않는다. 문서화 트리거("push a new commit, update your branch")와 일치한다.
+- `added` 카운트만으로 성공 판정 금지 — 그 1건은 그룹 동료(#183)의 항목일 수 있다.
+
+## Q11 — post-mint eject 후 같은 `(base, head)` 재큐는 `no_new_ledger_commit`으로 영구 거부된다 — mint의 exactly-once subjectId가 tip 전진을 만들지 않는다
+
+**Symptom**: merge_group 런은 모든 잡이 success인데 App(integration 5795152)의
+`admission-check`가 **failure**를 발행한다. summary는 `trust_surface=PASS` +
+`ledger=FAIL — no_new_ledger_commit`이고, `ledger_baseline`은 현재 원장 tip과
+**같은 값**이다. Q10(`added=1 none bound to base/pr_head`)과 달리 `added` 항목
+자체가 0건이다. 같은 PR을 재큐하면 매번 동일하게 실패한다.
+
+**Mechanism (source-verified, 2026-11-19)** — Q10에서 "저장소 밖이라 미확인"으로
+남긴 App predicate를 소스로 확정했다:
+
+1. App은 merge_group 이벤트 수신 시 `ledgerBase = ledgerTip()`을 check-run의
+   `external_id`에 기록한다 (`worker/src/index.js:95,107`). 이후 모든 attempt는
+   이 baseline을 재사용한다.
+2. 런 완료 시 `checkLedger`는 현재 tip을 다시 읽어 `now === baseline`이면
+   **즉시** `no_new_ledger_commit`으로 거부한다 (`worker/src/index.js:650-652`).
+   이 검사는 "이 attempt가 원장에 판정을 남겼다"는 liveness cross-check다.
+3. mint의 D6는 `ax cert ledger-list`에 `subjectId`가 이미 있으면 append 없이
+   idempotent no-op으로 성공한다 (`certificate-mint.yml:2263-2269`,
+   `MINT_D6: OK — idempotent re-run ... append exactly-once: 0`).
+4. `subjectId = sha256(scheme + "\n" + baseSha + headSha + headTreeDigest +
+   policyDigest + scopeDigest + evidenceDigest)`이며 `run_id`/`run_attempt`는
+   포함되지 않는다 (`src/verification/verification_subject.nim:120-132`).
+
+따라서 한 번 성공한 mint는 그 `(base, head)` 조합의 subject를 원장에 영구히
+고정한다. 그 attempt가 **mint 이후의 다른 게이트**에서 실패해 eject되면, 같은
+base/head의 다음 merge_group은 baseline에 이미 subject cert를 포함한 tip을
+잡으므로 mint가 append하지 않고, App은 영구히 거부한다. **mint 성공 = 이후
+모든 재시도의 admission 자격 상실**이라는 자기참조 데드락이다.
+
+**Measured evidence (2026-11-19, PR #191)**:
+
+| 시각/식별자 | 관측 |
+|---|---|
+| 2차 merge_group attempt | mint append — 원장 tip `6eface33…`, `run_id=44392664919`, `B=90ca291d`, `H=22ac615`, `cert_sha256=5b735a70…`, `field_binding=ok` |
+| 같은 attempt | `readiness-verdict` failure → 큐 eject (mint는 이미 성공) |
+| 3차 merge_group `9d31af23…` / run `44395898459` attempt 1 | 잡 전부 success, mint 로그 `MINT_D6: OK — idempotent re-run: ledger record consistent (append exactly-once: 0)` |
+| 3차 App summary | `ledger_baseline=6eface336734…`, `ledger=FAIL — no_new_ledger_commit`, `reasons=ledger:no_new_ledger_commit` |
+
+**Q10과의 구분**: Q10은 판정 구간에 tip이 전진했지만 추가 항목이 다른
+`(base, pr_head)` 쌍(#183)이었던 경우다. Q11은 tip이 **전진하지 않은** 경우로,
+원인은 "결속 항목 부재"가 아니라 "같은 subject의 재발행 금지"다. 두 경우 모두
+App은 fail-closed로 거부하며, 이는 **검증 실패를 성공으로 승격하는 결함이 아니라
+liveness 결함**이다.
+
+**운영 규범**:
+
+- `ledger=FAIL — no_new_ledger_commit`은 "mint가 실행되지 않았다"는 뜻이 아니다.
+  mint 로그의 `MINT_D6`/`MINT_APPEND_COUNT`를 먼저 확인한다 — append 0 +
+  idempotent re-run이면 데드락이다.
+- 회복은 **subjectId를 바꾸는 것**뿐이다: `head`를 새로 만들거나(rebase/update-
+  branch, Q10 선례) 다른 변경을 먼저 착지시켜 `base`를 전진시킨다. 같은
+  `(base, head)`의 재큐·재arm은 무효다.
+- App predicate를 `now === baseline → PASS`로 완화하지 말 것. exactly-once는
+  의도된 계약이고, tip 전진 검사는 "이 attempt가 판정을 원장에 남겼다"는
+  교차 확인이다. 영구 수정은 verifier 프로토콜 개정(거버넌스 결정)이다.
+
 ## 운영 규범 요약 (이 저장소 한정)
 
 - 큐 진입한 PR의 착지 확인: `gh pr checks --watch`에 의존하지 말고 단발
   `gh pr view <n> --json state,mergedAt` + 5분 상한 슬립 반복.
 - arm 상태 확인: timeline `AutoMergeEnabledEvent`(`autoMergeRequest` 아님).
 - arm→enqueue 지연(최장 required check 소요 + α)은 정상 — 실패로 판정 금지.
+- base 진행으로 재빌드된 큐 엔트리는 런 green만으로 admission 통과가 아니다 — App
+  summary `ledger=FAIL — added=1 none bound to base/pr_head`면 같은 head 재큐는
+  무효이고 fresh head로만 회복된다(Q10).
+- post-mint eject 후 같은 base/head 재큐는 `ledger=FAIL — no_new_ledger_commit`으로
+  영구 거부된다 — mint는 subjectId 기준 exactly-once라 tip이 다시 전진하지 않는다.
+  회복은 base 또는 head 변경뿐이다(Q11).

@@ -38,7 +38,7 @@ The technical cutover was executed at 2026-11-17T06:29Z. It exposed a hardcoded 
 - **Residual (documented, not erased)**: the within-Actions same-name residual remains for the six Actions-owned contexts. Their recorded `requiredValidations` workflow-identity bindings are judgment-reference records, not merge-time re-verification (P12 delegation retained).
 - **Follow-ups** (outside this ADR's scope, recorded for the debt lane):
   - `config/app_landing_binding.json` still carries the stale Landing App id `4879411`.
-  - Ruleset `27097369` (`refs/heads/cas-probe/*`) still lists the uninstalled App `4879411` as a bypass actor.
+  - Ruleset `27097369` (`refs/heads/cas-probe/*`) still lists the uninstalled App `4879411` as a bypass actor. **Readback correction (2026-11-19)**: live `GET /repos/Archright/Axiom/rulesets/27097369` returns `bypass_actors: []`, `current_user_can_bypass: "never"`, `updated_at: "2026-11-17T17:13:56.898+09:00"` (name `cas-probe-scratch`, enforcement `active`). The bypass actor is no longer present; the sentence above is retained as the observation that motivated the follow-up. This follow-up item is satisfied by the readback; the other follow-ups in this list are unchanged.
   - The narrative comment block in `src/cli/merge_cli.nim` still describes the org-injected producer; it is non-normative and will be re-anchored with its canonical hash in a follow-up.
 
 ## 4. Acceptance

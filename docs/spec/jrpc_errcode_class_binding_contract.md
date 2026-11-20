@@ -6,6 +6,7 @@
 > **피검험체**: status-im/nim-json-rpc @ `debf33cabf7be009a2e905d4c7921b85eb7ca6dd`, `json_rpc/errors.nim` blob sha256 `9c060ed7…7b0762`, 심볼 `new`
 > **정체·명명**: 본 슬라이스의 산출물은 "Hash-bound 모델의 정형증명 + 핀된 원본 구현의 유한 입력 관찰 결속"이며 원본 구현 전체의 정형검증이 아니다 (FREEZE §1).
 > **계약 버전**: **Axiom v5.1** (2026-11-18) — 정밀화 개정 A~E (A §1.1 · B §2.1 · C `obligation_semantics.md` §2.1b · D §5.1 · E §10). 이 개정은 새 판정 생산자·enum·게이트를 만들지 않으며, §1.1·§2.1·§5.1·§10이 §1~§9의 주장 범위를 명시적으로 분해한다.
+> **General shape**: [adopted_model_observation_contract.md](./adopted_model_observation_contract.md) — the lane-neutral two-claim + stamped-observation contract this lane specializes.
 
 ## 1. Scope and spec identity
 

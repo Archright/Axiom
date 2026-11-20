@@ -1291,6 +1291,9 @@ func summaryProjection(runResult: CanonicalRunResult; preRun: JsonNode): JsonNod
                     else: status
     statusCounts[statusKey] = statusCounts.getOrDefault(statusKey) + 1
   let verifiedCount = int(computeVerified(rawVerified, inductiveValid, vacuous))
+  # Per-unit count over the merged rows (the same population as statusCounts);
+  # the cumulative kernel-scope scalar keeps its own key, netVerifiedFunctions.
+  result["verified"] = %verifiedCount
   result["failedCount"] = %failed
   result["reusedCount"] = %reused
   result["vacuousCount"] = %vacuous
@@ -1311,9 +1314,8 @@ func summaryProjection(runResult: CanonicalRunResult; preRun: JsonNode): JsonNod
   result["reproofCount"] = %runResult.executionEvidence.reproofNodes.len
   # verificationSuccessRate — from the merged counts.
   let denom = verifiedCount + failed + vacuous + timeout + blocked
-  result["verificationSuccessRate"] = if denom > 0:
-      %(initAsiRatio(verifiedCount.float / float(denom)).get(defaultAsiRatio()).toFloat)
-    else: %0.0
+  result["verificationSuccessRate"] =
+    if denom > 0: %(initAsiRatio(verifiedCount.float / float(denom)).get(defaultAsiRatio()).toFloat) else: %0.0
   var tc = newJObject()
   for k in ["z3-verified", "dual-verified", "lean-verified", "none", "k-induction", "uf-abstract", "unknown"]:
     tc[k] = %tierCounts.getOrDefault(k, 0)
@@ -1325,7 +1327,7 @@ func summaryProjection(runResult: CanonicalRunResult; preRun: JsonNode): JsonNod
   result["statusCounts"] = sc
   # Run-wide cumulative scalars (runResult.runScalars — doc-level metadata).
   if not runResult.executionEvidence.runScalars.isNil:
-    for key in ["verified", "verifiedRatio", "vsr", "completionRate", "netVerifiedFunctions",
+    for key in ["verifiedRatio", "vsr", "completionRate", "netVerifiedFunctions",
                 "vacuousDemotions", "tautologyDemotions", "refactorRepaired", "asi"]:
       let v = runResult.executionEvidence.runScalars{key}
       if not v.isNil: result[key] = v

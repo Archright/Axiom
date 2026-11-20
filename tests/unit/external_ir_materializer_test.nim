@@ -365,3 +365,20 @@ suite "External IR Materializer — regression tests":
     # keeps only modA::fnA, so exactly 1 remains.
     check result3.len == 1
     check sorterNodeIdString(result3[0]) == "modA::fnA"
+
+  # ===================================================================
+  # Test 10: a loss-free claim contradicted by a sentinel bin-op is refused
+  # ===================================================================
+  test "T10: loss-free claim contradicted by a sentinel bin-op is refused":
+    let bad = irFuncDef("bad", @[], irTypeBitVec64(),
+                        irBinOp(boUnsupported, irLit(1), irLit(2)))
+    check bad.translationLossFree
+    check lossFreeTranslationContradictsBody(bad)
+
+    var consistent = bad
+    consistent.translationLossFree = false
+    check not lossFreeTranslationContradictsBody(consistent)
+
+    let good = irFuncDef("good", @[], irTypeBitVec64(),
+                         irBinOp(boAdd, irLit(1), irLit(2)))
+    check not lossFreeTranslationContradictsBody(good)

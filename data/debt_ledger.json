@@ -59,11 +59,11 @@
       "metric": "nimtry_violations",
       "baseline": 704,
       "target": 0,
-      "current": 2,
+      "current": 0,
       "severity": "low",
       "source": "debt_budgets.json",
-      "status": "open",
-      "resolution": "WONT_FIX",
+      "status": "closed",
+      "resolution": "FIXED",
       "lastVerifiedAt": "2026-11-14T08:31:42+09:00"
     },
     {

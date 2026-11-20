@@ -1877,6 +1877,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+          # Executor identity pin — the judgment closure's environment inputs
+          # (component 6: raw PATH/TMPDIR/AXIOM_*/cwd; component 9: canonical
+          # AXIOM_LEAN_CMD/PATH/TMPDIR) must be a deterministic function of the
+          # subject, never of the runner image generation. The three $HOME dirs
+          # are the ones setup-axiom-toolchain exports; the rest is FHS.
+          export PATH="$HOME/.local/bin:$HOME/.elan/bin:$HOME/.nimble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+          export TMPDIR=""
+          unset AXIOM_LEAN_CMD AXIOM_IRCHECK_CMD AXIOM_STATE_DIR
           BIN_AX="$GITHUB_WORKSPACE/bin/ax"
           [ -x "$BIN_AX" ] || { echo "[check] bin/ax missing — B build failed" >&2; exit 1; }
           : "${SUBJECT_ID:?SUBJECT_ID not set}"
@@ -4274,6 +4282,14 @@ jobs:
           AXIOM_JUDGMENT_CAS_FORCE_EXECUTED: ${{ github.event_name == 'merge_group' && '1' || '' }}
         run: |
           set -euo pipefail
+          # Executor identity pin — the judgment closure's environment inputs
+          # (component 6: raw PATH/TMPDIR/AXIOM_*/cwd; component 9: canonical
+          # AXIOM_LEAN_CMD/PATH/TMPDIR) must be a deterministic function of the
+          # subject, never of the runner image generation. The three $HOME dirs
+          # are the ones setup-axiom-toolchain exports; the rest is FHS.
+          export PATH="$HOME/.local/bin:$HOME/.elan/bin:$HOME/.nimble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+          export TMPDIR=""
+          unset AXIOM_LEAN_CMD AXIOM_IRCHECK_CMD AXIOM_STATE_DIR
           BIN_AX="$GITHUB_WORKSPACE/bin/ax"
           [ -x "$BIN_AX" ] || { echo "[lane] bin/ax missing — B build failed" >&2; exit 1; }
           # B/M split: the TESTED tree is the CANDIDATE's (M^{tree}) — the
@@ -4496,6 +4512,13 @@ jobs:
       - name: "[lane] GO-critical admission tests (DEBT#432 — lane ${{ matrix.lane }}, fail-closed)"
         run: |
           set -euo pipefail
+          # Executor identity pin — must match the plan/attest blocks BYTE FOR
+          # BYTE: the evidence executionEpoch (and thus Judgment CAS reuse) is
+          # computed in THIS test process, so a different environment here
+          # would make every record stale against its own plan.
+          export PATH="$HOME/.local/bin:$HOME/.elan/bin:$HOME/.nimble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+          export TMPDIR=""
+          unset AXIOM_LEAN_CMD AXIOM_IRCHECK_CMD AXIOM_STATE_DIR
           fail() { echo "[admission-tests] FAIL — $1 (fail-closed)" >&2; exit 1; }
           # test-fast-one writes its binary to -o:/tmp/opencode/ax-one; the
           # parent directory is not guaranteed to exist on a fresh runner.

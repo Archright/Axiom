@@ -20,6 +20,7 @@
     "config/policy/trust_surface_manifest.json",
     "config/repository_surface.json",
     "config/trusted_writer_set.json",
+    "tests/ci/test_vs0_admission_aggregate_fail_closed.nim",
     "tools/surface_guard.nim"
   ]
 }

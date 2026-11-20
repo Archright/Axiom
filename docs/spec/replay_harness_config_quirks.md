@@ -376,8 +376,18 @@ Q1/Q3 해소로 이 평가를 **의도적으로** 스킵하므로, 셀프커널 
 
 미해석 이름은 여기서 스킵(best-effort)된다 — 하니스 컴파일 자체의
 `cannot open file` 오류가 관찰된 사실 그대로의 fail-closed 진단으로 남는다
-(기본값 채움 = 극장). d2-agent 스탬프 템플릿 경로는 이 분기를 타지 않아
-컴파일 명령이 바이트 동일하게 유지된다.
+(기본값 채움 = 극장).
+
+**2026-11-19 (#145)**: 이 공급은 plain 렌더 경로에 한정되지 않는다.
+스탬프 하니스(d2-agent, jrpc-errclass)도 같은 subject 저장소에서 파생된
+경로를 받는다 — dep 공급은 subject의 nimble `requires`에서 유도되지,
+템플릿별 고정 목록에서 오지 않는다. d2-agent 바인딩의 `cfg.depSearchPaths`가
+먼저 오고 subject 파생 루트는 그 뒤에 중복 제거되어 붙으므로, 고정 d2
+스택과 해석 결과가 같은 subject는 컴파일 명령이 바이트 동일하게 유지된다.
+jrpc-errclass subject(`json_rpc.nimble`의 `json_serialization >= 0.4.2`)는
+이 경로로 자기 의존성을 공급받아 `rvUnavailable` 없이 재생된다. 판정 승격
+계약(carrier `psFail` → run verdict/exit)은 이 수정의 범위가 아니다
+(issue #145 결정 2).
 
 ## Q6 — 커널 콜래트럴 심볼이 비공개라 `import` 하니스가 도달할 수 없다 (2026-10-19 추가)
 

@@ -26,6 +26,13 @@ on:
 permissions:
   contents: read
 
+# DEBT#557 (2026-11-18): 상단 top-level 스캔만으로는 job-level
+# `permissions: contents: write`가 보이지 않는다(실측: certificate-mint.yml#publish
+# + admission-gate-v2.yml#mint-prepare/#mint-publish 3개). 같은 job에서
+# tools/ci/trusted_writer_set_gate.nim을 빌드해 R1(top-level 동일성)·R2(base 대비
+# job-level write delta)·R4(unprovable workflow 신규)·R5(admission blob)를
+# 판정한다. 기존 스크립트 스텝은 parity 관측을 위해 한 세대 유지한다.
+
 concurrency:
   group: trusted-writer-set-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
@@ -37,9 +44,49 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # PR 판정은 merge base 트리와 비교한다(delta). 베이스 트리는 후보 PR이
+      # 공급할 수 없다 — checkout이 직접 fetch한다(workflow_dispatch/push에는
+      # 베이스가 없으므로 delta는 생략되고 절대 관측만 남는다).
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: github.event_name == 'pull_request'
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: .tws-base
+
       # jq는 러너 프리인스톨이다 — 스크립트의 유일 비-git 의존.
       - name: "Verify TrustedWriterSet equality (tools/ci/verify_trusted_writer_set.sh)"
         run: |
           set -euo pipefail
           command -v jq >/dev/null 2>&1 || { echo "jq missing on runner (fail-closed)" >&2; exit 2; }
           bash tools/ci/verify_trusted_writer_set.sh
+
+      # Nim 게이트(DEBT#557) — job별 유효 contents 권한까지 관측한다.
+      # stdlib 전용이므로 --skipProjCfg로 프로젝트 부트스트랩을 우회한다.
+      - uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          provision-scope: nim
+          skip-nimble-install: 'false'
+          cache-save-enabled: 'false'
+          cache-build-source: ${{ github.sha }}
+
+      - name: Verify pinned Nim 2.2.10 (fail-closed)
+        run: nim --version | grep -F '2.2.10'
+
+      - name: Build TrustedWriterSet gate (job-level effective permissions)
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          nim c --hints:off -d:release \
+            --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath \
+            -o:build/trusted_writer_set_gate tools/ci/trusted_writer_set_gate.nim
+
+      - name: Judge job-level writers (DEBT#557 — R1/R2/R4/R5)
+        run: |
+          set -euo pipefail
+          ADM_BLOB=$(git rev-parse HEAD:.github/workflows/admission-check.yml)
+          BASE_ARGS=()
+          if [ -d .tws-base ]; then
+            BASE_ARGS=(--base .tws-base)
+          fi
+          ./build/trusted_writer_set_gate --root . "${BASE_ARGS[@]}" \
+            --admission-blob "$ADM_BLOB"

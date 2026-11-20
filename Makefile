@@ -113,7 +113,8 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/z3_binary_identity_cache_test.nim \
                   tests/unit/hermetic_source_hash_gate_test.nim \
                   tests/unit/config_nims_source_identity_test.nim \
-                  tests/unit/test_push_admission_integrity.nim
+                  tests/unit/test_push_admission_integrity.nim \
+                  tests/unit/test_merge_ruleset_drift_monitor.nim
 
 
 .PHONY: check-push-admissibility-integrity test perf-check bench-cost-probe verify-all meta-gate registry-check env-check doc-path-validator check-determinism check-mutation-harness check-decision-binding check-topology-drift check-decision-graph-drift check-git-purity check-manifest-consistency check-scope-consistency check-proof-unit-consistency check-proof-unit-reconcile check-epoch-transaction check-merge-admission-cert-mirror sloc-verify check-quality-gate local-verify-static local-verify-static-full check-toolchain-pin check-build-state-coherence check-binary-liveness local-verify-contract-exact check-mcp check-cert-integrity check-cert-integrity-fast check-readiness-start readiness-collect check-workflow-shell-syntax promote-assets promote-assets-apply test-fast test-fast-one perf-baseline clean-cache clean-test-cache clean-release-cache build verify-contract verify-contract-unit verify-contract-release-e2e ci-compile ci-bootstrap-cheap test-gateway-identity-gate gate-binaries validate-root-layout
@@ -1124,7 +1125,7 @@ test-fast: ## L1: 빠른 증분 developer verify (캐시 보존, no LTO, 병렬 
 test-fast-one: ## test-fast <FILE|TARGET> — 단일 대상만 증분 검증 /usage: make test-fast-one T=testFilePath/name
 	@if [ -z "$(T)" ]; then echo "usage: make test-fast-one T=tests/unit/axiom_ir_test.nim"; exit 1; fi
 	@export AXIOM_CI_PRESERVE_CACHE=1; \
-	AXIOM_CI_PRESERVE_CACHE=1 $(NIM) c -r --hints:off --nimcache:build/nimcache/test -o:/tmp/opencode/ax-one "$(T)"
+	AXIOM_CI_PRESERVE_CACHE=1 $(NIM) c -r --hints:off --passC:-O2 --nimcache:build/nimcache/test -o:/tmp/opencode/ax-one "$(T)"
 
 test-all: ## 전체 테스트: 단위 + gateway 순차 실행
 	@$(MAKE) test-unit
@@ -1177,6 +1178,7 @@ test-unit:
 	@nim c -r tests/ci/test_sl02_consumer_binding.nim
 	@nim c -r tests/ci/test_landing_observe_acceptance.nim
 	@nim c -r tests/ci/test_l3_guard_fail_closed.nim
+	@nim c -r tests/ci/test_vs0_admission_aggregate_fail_closed.nim
 	@nim c -r tests/cli/test_merge_cli.nim
 	@nim c -r tests/cli/test_report_cli.nim
 	@nim c -r tests/unit/test_judgment_set_derivation.nim

@@ -1156,6 +1156,26 @@ suite "DEBT#459 cache-hit evidence attribution (REUSED basis)":
     check failingSummary["failedCount"].getInt() == 1
     check failingSummary["reusedCount"].getInt() == 0
 
+  test "summaryProjection — verified is the per-unit count, not the kernel-scope cumulative scalar":
+    # Issue #187: a green run whose only verified unit is outside the kernel
+    # scope carries runScalars.verified = 0 (the cumulative kernel numerator)
+    # while the merged rows hold one verified node. summary.verified must stay
+    # the per-unit count (same population as statusCounts.verified); the
+    # cumulative value keeps its own key (netVerifiedFunctions).
+    var wave = makeFullWave(@[makeNodeReport(UnitA, "verified")])
+    wave["summary"]["verified"] = %0
+    wave["summary"]["netVerifiedFunctions"] = %0
+    let runResult = buildCanonicalRunResult(@[wave],
+      makeEligibility([(UnitA, ProofCandidate)]), @[@[UnitA]])
+    let summary = renderLegacyReport(runResult, makePreRun(), makeProjections(true))["summary"]
+    check summary["verified"].getInt() == 1
+    check summary["statusCounts"]["verified"].getInt() == 1
+    check summary["netVerifiedFunctions"].getInt() == 0
+    check summary["verified"].getInt() ==
+      max(0, summary["statusCounts"]["verified"].getInt() +
+             summary["statusCounts"]["inductive_valid"].getInt() -
+             summary["vacuousCount"].getInt())
+
   test "warm reuse — REUSED conditional: eligible record → PASS(REUSED); count-only → no PASS":
     # Plan 1 redefinition of the old warm-reuse semantics (:739-740): reuse
     # may contribute a PASS ONLY when the 5-condition basis is established.
