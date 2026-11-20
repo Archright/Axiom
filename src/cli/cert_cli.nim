@@ -25,6 +25,7 @@ import core/interfaces/git_operations
 import core/results
 import core/crypto/hash_kernel
 import core/parsers/safe_parsers
+import verification/cert_export
 import verification/certificate_verifier
 import verification/cert_promotion
 import verification/cert_reconcile
@@ -361,16 +362,10 @@ proc verifyCert*(path: string; kernelMode: bool = false; projectRoot: string = "
         code = 1
   code
 
-proc exportCerts*(args: seq[string]): int =
-  var asJson = false
-  for arg in args:
-    if arg == "--json":
-      asJson = true
-  if asJson:
-    echo "{\"certificates\": [], \"count\": 0}"
-  else:
-    echo "[cert] Export: no certificates to export."
-  return 0
+proc exportCerts*(args: seq[string]): int {.
+    axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## Stub replaced: the engine is the export authority (contract §5.2-1).
+  return runCertExportCli(args)
 
 proc reconcileCerts*(args: seq[string]): int {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   var checkMode = true
@@ -1733,10 +1728,16 @@ func parseCertVerifyArgs(args: seq[string]): tuple[certPath, projectRoot, receip
 proc runCertCli*(args: seq[string]): int =
   if args.len == 0:
     logInfo("cert_cli", "Usage: ax cert <command> [args]")
-    logInfo("cert_cli", "Commands: show, verify [--kernel] <path>, export [--json], reissue-reference <path>, reconcile [--check|--apply] [--staged] [--cert <id|filename>], attest, subject-register, ledger-append, ledger-list, ledger-verify, continuity")
+    logInfo("cert_cli", "Commands: show, verify [--kernel] <path>, export [--vault <dir>] --out <root> [--json], verify-export --bundle <dir> [--closure] [--json], reissue-reference <path>, reconcile [--check|--apply] [--staged] [--cert <id|filename>], attest, subject-register, ledger-append, ledger-list, ledger-verify, continuity")
     return 1
 
   let cmd = args[0]
+  # Admission evidence export/verify live OUTSIDE the case dispatch (if/elif)
+  # so the case-branch OCP surface stays at its anchored baseline.
+  if cmd == "verify-export":
+    return runCertVerifyExportCli(args[1 .. ^1])
+  if cmd == "export":
+    return exportCerts(args[1 .. ^1])
   # Certification-continuity subcommands live OUTSIDE the case dispatch
   # (if/elif) so the case-branch OCP surface stays at its anchored baseline.
   if cmd == "attest" or cmd == "subject-register" or cmd == "ledger-append" or cmd == "ledger-list" or cmd == "ledger-verify" or cmd == "continuity" or cmd == "judgment-plan" or cmd == "judgment-subjects":
@@ -1750,8 +1751,6 @@ proc runCertCli*(args: seq[string]): int =
       logInfo("cert_cli", parsed.err)
       return 1
     return verifyCert(parsed.certPath, parsed.kernelMode, parsed.projectRoot, parsed.jsonOut, parsed.receiptOut)
-  of "export":
-    return exportCerts(args[1 .. ^1])
   of "reissue-reference":
     if args.len < 2:
       logInfo("cert_cli", "Usage: ax cert reissue-reference <path>")
@@ -1765,6 +1764,6 @@ proc runCertCli*(args: seq[string]): int =
     return reconcileCerts(args[1 .. ^1])
   else:
     logInfo("cert_cli", "Unknown cert subcommand: " & cmd)
-    logInfo("cert_cli", "Commands: show, verify [--kernel] <path>, export [--json], reissue-reference <path>, reconcile [--check|--apply] [--staged] [--cert <id|filename>], attest, subject-register, ledger-append, ledger-list, ledger-verify, continuity")
+    logInfo("cert_cli", "Commands: show, verify [--kernel] <path>, export [--vault <dir>] --out <root> [--json], verify-export --bundle <dir> [--closure] [--json], reissue-reference <path>, reconcile [--check|--apply] [--staged] [--cert <id|filename>], attest, subject-register, ledger-append, ledger-list, ledger-verify, continuity")
     return 1
 {.pop.}

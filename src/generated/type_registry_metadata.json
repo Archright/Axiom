@@ -51340,6 +51340,20 @@
       "typeCategory": "option"
     },
     {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List string",
+      "module": "src/core/symbol_graph/global_symbol_graph_builder_part2.nim",
+      "name": "parseDelegatedDigests",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
       "hasAxiomHint": true,
       "ignorable": false,
       "leanType": "String",
@@ -118255,6 +118269,341 @@
       "returnType": "void",
       "smtSort": "Unit",
       "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/cert_export.nim",
+      "name": "arrayField",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List string",
+      "module": "src/verification/cert_export.nim",
+      "name": "axiomObservationNames",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/cert_export.nim",
+      "name": "axiomObservationStatus",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/cert_export.nim",
+      "name": "certCasKey",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/cert_export.nim",
+      "name": "defaultVaultDir",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "ExportOutcome",
+      "module": "src/verification/cert_export.nim",
+      "name": "exportToDir",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "ExportOutcome",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/cert_export.nim",
+      "name": "fieldOrNull",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/cert_export.nim",
+      "name": "hasString",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/cert_export.nim",
+      "name": "isLowerHex64",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/cert_export.nim",
+      "name": "leanEvidencePresent",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "HashSet[string]",
+      "module": "src/verification/cert_export.nim",
+      "name": "listBundleFiles",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "HashSet[string]",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/cert_export.nim",
+      "name": "loadProposalTargets",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/cert_export.nim",
+      "name": "loadRuntimeManifest",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/cert_export.nim",
+      "name": "objectField",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "ParsedExport",
+      "module": "src/verification/cert_export.nim",
+      "name": "parseExportManifest",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "ParsedExport",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List string",
+      "module": "src/verification/cert_export.nim",
+      "name": "readInventory",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/cert_export.nim",
+      "name": "recomputedStatusOf",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/verification/cert_export.nim",
+      "name": "runCertExportCli",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/verification/cert_export.nim",
+      "name": "runCertVerifyExportCli",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/cert_export.nim",
+      "name": "safeStr",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List BodyRef",
+      "module": "src/verification/cert_export.nim",
+      "name": "scanBodies",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[BodyRef]",
+      "smtSort": "(Seq BodyRef)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/cert_export.nim",
+      "name": "stringOrNull",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/cert_export.nim",
+      "name": "theoremIdentityOf",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "VerifyOutcome",
+      "module": "src/verification/cert_export.nim",
+      "name": "verifyBundle",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "VerifyOutcome",
+      "smtSort": "Int",
+      "typeCategory": "object"
     },
     {
       "hasAxiomHint": false,
