@@ -71,9 +71,12 @@ proc makeCert(leanSource: string; smtlib2: string = ""): JsonNode =
 # P1 — allowlist + deny-first semantics (pure, always runs)
 # ---------------------------------------------------------------------------
 echo "=== P1: allowlist ==="
+checkEq("allowlist = INV-6 set", axiomAllowlist().join(","), "propext,Classical.choice,Quot.sound")
+checkEq("allowlist has 3 entries", $axiomAllowlist().len, "3")
 checkTrue("propext allowed", isAxiomAllowed("propext"))
 checkTrue("Classical.choice allowed", isAxiomAllowed("Classical.choice"))
 checkTrue("Quot.sound allowed", isAxiomAllowed("Quot.sound"))
+checkTrue("funext denied (theorem alias, not a primitive axiom)", not isAxiomAllowed("funext"))
 checkTrue("empty name NEVER allowed", not isAxiomAllowed(""))
 checkTrue("sorryAx denied", not isAxiomAllowed("sorryAx"))
 checkTrue("Lean.sorryAx denied", not isAxiomAllowed("Lean.sorryAx"))
@@ -122,6 +125,9 @@ checkVerdict("kernel-pure empty set → PASS",
 checkVerdict("full primitive set → PASS",
   evaluateObservedAxioms(AxiomPrintObservation(
     names: @["propext", "Classical.choice", "Quot.sound"], observedAny: true)), krPassed)
+checkVerdict("funext (theorem alias, not primitive) → krAxiomViolation",
+  evaluateObservedAxioms(AxiomPrintObservation(
+    names: @["propext", "Classical.choice", "Quot.sound", "funext"], observedAny: true)), krAxiomViolation)
 checkVerdict("sorryAx → krSorry",
   evaluateObservedAxioms(AxiomPrintObservation(names: @["sorryAx"], observedAny: true)), krSorry)
 checkVerdict("Lean.sorryAx → krSorry",

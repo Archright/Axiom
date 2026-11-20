@@ -131,15 +131,15 @@ The primitive allowlist is intended to be mirrored in:
 - `certificate_verifier.nim` → `leanCertBuiltinAxiomAllowlist`
 - `ax_vacuity_check.lean` → `builtinAxiomAllowlist` (the Lean-side linter)
 
-**Implementation status (docs-only amendment, 2026-11-20)**: the current code mirrors still
-carry a four-element array whose fourth entry is `funext`
-(`lean_replay.nim:138-139`, `certificate_verifier.nim:25-26`,
-`ax_vacuity_check.lean:35-40`). That is a legacy classification: under this contract `funext`
-is a theorem alias, not a primitive axiom, and the primitive-axiom check is the three-element
-set above. Aligning the code mirrors is a separate code-change phase; this document does not
-claim the code has already been changed. Until then, the presence of `funext` in an allowlist
-is redundant at best (a theorem's printed dependency is `Quot.sound`) and must not be cited as
-evidence for accepting `funext` as a primitive axiom.
+**Implementation status (code aligned, 2026-11-20)**: the code mirrors now carry the
+three-element primitive set above (`lean_replay.nim`, `certificate_verifier.nim`,
+`ax_vacuity_check.lean`; `funext` entries removed). Before this alignment the mirrors
+carried a four-element array whose fourth entry was `funext` — a legacy classification:
+under this contract `funext` is a theorem alias, not a primitive axiom, and the
+primitive-axiom check is the three-element set above. The presence of `funext` in a
+producer-side allowlist remains redundant at best (a theorem's printed dependency is
+`Quot.sound`) and must never be cited as evidence for accepting `funext` as a primitive
+axiom.
 
 ## 5. Enforcement Points
 

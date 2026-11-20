@@ -76,6 +76,8 @@ suite "axiomProfile parsing and allowlist (pure)":
   test "validateAxiomProfile accepts empty and fully allow-listed profiles":
     check validateAxiomProfile(@[]).isOk
     check validateAxiomProfile(@["propext", "Classical.choice", "Quot.sound"]).isOk
+    # `funext` is a theorem alias (`Quot.sound` dependency), not a primitive axiom.
+    check validateAxiomProfile(@["propext", "Classical.choice", "Quot.sound", "funext"]).isErr
 
   test "validateAxiomProfile rejects sorry-based and foreign axioms":
     check validateAxiomProfile(@["sorryAx"]).isErr
