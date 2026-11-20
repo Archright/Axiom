@@ -135,8 +135,10 @@ func extractHypotheses*(leanSource: string): seq[string] =
 ## Any other named axiom (notably `sorryAx` / `Lean.sorryAx`) triggers fail-closed
 ## rejection of the replay verdict. Mirrors ax_vacuity_check.lean (see
 ## docs/spec/lean_sorry_gate.md, DEBT#296 precedent).
-const leanBuiltinAxiomAllowlist*: array[4, string] =
-  ["Classical.choice", "Quot.sound", "propext", "funext"]
+## INV-6 primitive set: `funext` is a theorem alias whose `#print axioms`
+## dependency is `Quot.sound`; it is not a primitive axiom and is rejected here.
+const leanBuiltinAxiomAllowlist*: array[3, string] =
+  ["Classical.choice", "Quot.sound", "propext"]
 
 ## Parse `#print axioms <thm>` output into a (sectionPresent, axiomNames) pair.
 ## Lean 4.29 renders the named command as either
