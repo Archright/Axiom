@@ -98794,7 +98794,7 @@
       "ignorable": false,
       "leanType": "tuple[idy: EvidenceIdentity, err: string]",
       "module": "src/gate/runners/readiness_start_gate.nim",
-      "name": "collectEvidenceIdentity",
+      "name": "collectDeclaredEvidenceIdentity",
       "negativeConstraints": [
         "result >= 0 is invalid — object types are not numeric"
       ],
@@ -98867,6 +98867,20 @@
       "ignorable": false,
       "leanType": "String",
       "module": "src/gate/runners/readiness_start_gate.nim",
+      "name": "firstLineOf",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/gate/runners/readiness_start_gate.nim",
       "name": "identityMismatchLine",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (str.len result) 0)"
@@ -98875,6 +98889,20 @@
       "returnType": "string",
       "smtSort": "String",
       "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "tuple[idy: EvidenceIdentity, err: string]",
+      "module": "src/gate/runners/readiness_start_gate.nim",
+      "name": "measureGitIdentity",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "tuple[idy: EvidenceIdentity, err: string]",
+      "smtSort": "Int",
+      "typeCategory": "object"
     },
     {
       "hasAxiomHint": false,
