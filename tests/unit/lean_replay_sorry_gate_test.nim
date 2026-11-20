@@ -6,7 +6,9 @@ import ../../src/core/judge/lean_replay
 ##
 ## The replay now parses the collected `#print axioms` section and rejects the
 ## verdict (isValid=false) when it lists `sorryAx`/`Lean.sorryAx` or any axiom
-## outside the builtin allowlist {Classical.choice, Quot.sound, propext, funext}.
+## outside the builtin primitive allowlist
+## {Classical.choice, Quot.sound, propext}. `funext` is a theorem alias
+## (`#print axioms funext` → `[Quot.sound]`), not a primitive axiom.
 
 let hasLean = (execCmdEx("which lean 2>/dev/null").exitCode == 0)
 
@@ -39,6 +41,9 @@ suite "Lean replay sorry gate (fail-closed)":
     check sorryGateValid(true, @[]) == true                # present, no axioms -> valid
     check sorryGateValid(true, @["propext", "Quot.sound"]) == true
     check sorryGateValid(true, @["Classical.choice"]) == true
+    # `funext` is a theorem alias (`#print axioms funext` → `[Quot.sound]`),
+    # not an INV-6 primitive axiom — it must be rejected.
+    check sorryGateValid(true, @["funext"]) == false
     check sorryGateValid(true, @["sorryAx"]) == false
     check sorryGateValid(true, @["Lean.sorryAx"]) == false
     check sorryGateValid(true, @["Some.Other.axiom"]) == false
