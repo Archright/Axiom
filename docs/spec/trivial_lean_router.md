@@ -201,11 +201,19 @@ The entire LSP interaction is wrapped in `try/except CatchableError`. If **any**
 1. **Source-substring gate** (`routeToTypeLevel`, `src/sieve/trivial_lean_router.nim`): before any LSP interaction, reject (`tlComplex`) if the generated Lean source text contains `"sorry"` or `"sorryAx"`. Cheap, deterministic, and runs even when the LSP is unavailable.
 2. **LSP `#print axioms` round-trip** (`checkLeanSourceWithAxioms`, `src/verification/lean_lsp_protocol.nim`): after the standard EOF-barrier compile check passes, a fresh virtual doc is opened containing the source plus `#print axioms <defName>`. The same EOF-hover barrier is used to force elaboration, then the Info(3) `publishDiagnostics` notification carrying the axiom report (`'<name>' depends on axioms: [a, b]`) is captured and parsed.
 
-**Axiom validation policy**:
+**Axiom validation policy** (current code mirror, `src/verification/lean_lsp_protocol.nim:427-429`):
 
 ```nim
-LeanAxiomAllowlist = {Classical.choice, Quot.sound, propext, funext}
+LeanAxiomAllowlist = {Classical.choice, Quot.sound, propext, funext}   # current code
 ```
+
+**Primitive-axiom policy (Lean 4.33.0)**: the canonical primitive set is the three kernel
+primitives `{propext, Classical.choice, Quot.sound}`. `funext` is not a primitive axiom — it is
+a theorem whose own `#print axioms` dependency is `Quot.sound`, so a proof using functional
+extensionality is admitted through `Quot.sound`. The current code mirror still carries a fourth
+`funext` entry; under this contract that entry is a redundant **theorem alias**, not evidence
+that `funext` is a primitive axiom, and the capsule path does not accept it as one. Aligning
+the mirror is an engine-side change. See [lean_sorry_gate.md](lean_sorry_gate.md) §4.
 
 `compiled = false` (→ fall through to Z3 BMC) if **any** of the following hold:
 

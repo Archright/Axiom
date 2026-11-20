@@ -14,11 +14,11 @@
 |---|---|
 | Primary user | AI-generated code의 무결성을 검증하려는 로컬 개발자 (subject scope: Nim 커널 범위 + 선언된 Rust certified subset [docs/spec/rust_certified_subset.md] — 전체 Rust 지원 아님) |
 | Primary surface | 로컬 CLI: `ax prove` / `ax report` (`ax status`는 Candidate — §7 v1 Contract Scope) |
-| **Distribution (v1)** | **Dual-surface**: (i) **Developer-source install** (prereqs: Nim 2.2.10+, Lean 4.29+, Z3 4.13+; README 문서 준수) + (ii) **Public binary distribution** — `Archright/axiom-cli` 공개 릴리즈(immutable releases)의 검증 번들(`ax` + 카탈로그 + 시드 + grounds, Linux x86_64 단일 타깃) — §1b 참조. |
+| **Distribution (v1)** | **Dual-surface**: (i) **Developer-source install** (prereqs: Nim 2.2.10+, Lean 4.33+, Z3 4.13+; README 문서 준수) + (ii) **Public binary distribution** — `Archright/axiom-cli` 공개 릴리즈(immutable releases)의 검증 번들(`ax` + 카탈로그 + 시드 + grounds, Linux x86_64 단일 타깃) — §1b 참조. |
 | Primary output | 기계판독 가능한 verification result(JSON) + **local replay-bound verification artifact**(per-function certificate) |
 | **Core promise** | 동일한 **canonical input** + 동일한 **execution contract**(toolchain·solver·config·cache policy)에 대해 **재현 가능한(canonical semantic 동일) verification result**를 제공한다 |
 | Verification semantics | 출력의 `verified` 계열 상태는 **확정된 규칙으로만 산출**되며, Z3-only 경로와 dual-assurance 경로가 식별 가능해야 한다 (R2) |
-| Non-goals (v1) | CI platform 자체가 핵심 surface / enterprise orchestration / **broad AI-code verification guarantee** / **portable self-contained certification** / **mission-critical assurance** / **Race-Memory-Logic 전면 증명 (마케팅 표현 금지)** / 법적·규제적 보증 서비스. certificate는 출력 artifact로 존재하되 promise는 **"local replay-bound verification artifact"**로 제한됨. **Portable evidence artifact = NO (v1 non-goal)** — v1 artifact는 `(cert + trusted journal + claims/solver + source repo)` 의 합으로 정의되는 **local replay-bound** 이다. "provenance-bearing" 같은 표현은 v1에서 local replay-bound 로 재명한다. README? 에 대한 수정은 Phase 4 담당. **[ADR-0020 carve-out]**: "CI platform 자체"는 CI **실행·오케스트레이션 플랫폼**을 지칭한다. CI **출력을 소비하는** verification/admission 계층(merge admission, speculative candidate queue semantics — `docs/adr/0020-axiom-queue-semantics-and-executor-boundary.md`)은 이 non-goal에 포함되지 않으며, 이미 커밋된 merge admission 계약(`docs/spec/merge_admission_controller.md`)의 확장으로 취급된다. |
+| Non-goals (v1) | CI platform 자체가 핵심 surface / enterprise orchestration / **broad AI-code verification guarantee** / **portable self-contained certification** / **mission-critical assurance** / **Race-Memory-Logic 전면 증명 (마케팅 표현 금지)** / 법적·규제적 보증 서비스. certificate는 출력 artifact로 존재하되 promise는 **"local replay-bound verification artifact"**로 제한됨. **Portable evidence artifact = CONDITIONAL (v1 default: local replay-bound; §1c)** — 기본 v1 artifact는 `(cert + trusted journal + claims/solver + source repo)` 의 합으로 정의되는 **local replay-bound** 이다. "provenance-bearing" 같은 표현은 v1에서 local replay-bound 로 재명한다. 조건부 예외로 **portable evidence capsule**을 허용한다 — 공개·digest-addressed toolchain 입력만으로 리플레이 가능하고 producer의 local state·vault·journal을 요구하지 않는 경우에 한한다 (§1c, [evidence_capsule_contract.md](./evidence_capsule_contract.md)). 이는 **portable self-contained certification**(인증서만으로 성립하는 자기완결 인증) non-goal의 철회가 아니며, capsule은 새 verdict/gate/authority를 만들지 않는다. README? 에 대한 수정은 Phase 4 담당. **[ADR-0020 carve-out]**: "CI platform 자체"는 CI **실행·오케스트레이션 플랫폼**을 지칭한다. CI **출력을 소비하는** verification/admission 계층(merge admission, speculative candidate queue semantics — `docs/adr/0020-axiom-queue-semantics-and-executor-boundary.md`)은 이 non-goal에 포함되지 않으며, 이미 커밋된 merge admission 계약(`docs/spec/merge_admission_controller.md`)의 확장으로 취급된다. |
 
 **Documented commands (v1 contract surface)**: `ax prove`, `ax report` (각각 help surface 필수). `ax status`는 Candidate surface — §7 v1 Contract Scope 참조.
 
@@ -27,7 +27,7 @@
 ## §1b. Binary Distribution Contract (Phase 6)
 
 > Status: Ratified 2026-11-08 (Phase 6). 소스 공개 전환과 독립적으로 유효(소스가 공개돼도 본 경로 유효).
-> **Non-goal 무변경**: §1b는 배포 경로 계약이지 portable evidence 약속이 아니다 — §1 "Non-goals (v1)"의 local replay-bound non-goal은 본 경로에서도 그대로 유지된다.
+> **Non-goal 조건부 개정**: §1b는 배포 경로 계약이지 portable evidence 약속이 아니다 — §1 "Non-goals (v1)"의 local replay-bound **기본** promise는 본 경로에서도 그대로 유지된다. §1c의 portable evidence capsule만 조건부로 허용되며, 이는 portable self-contained certification non-goal의 철회가 아니다.
 
 **배포 자산**(Archright/axiom-cli, immutable releases 활성):
 
@@ -48,6 +48,28 @@
 **신뢰 모델**: 고객측 = sha256 + attestation 오프라인 bundle 검증(고객 자기 GITHUB_TOKEN만 — Archright 접근 0). provenance 게이트(`--check-provenance`)는 릴리즈 빌드 측 전용.
 
 **라이선스 준수(SAL 1.0)**: §5.1(사용·재현·상업 목적 허가)·§6.1(재배포 시 LICENSE·LICENSES/·THIRD-PARTY-NOTICES.md 동반) — axiom-cli 배포소가 동반. 공개 소스 검증은 §1.1 무료, 비공개 소스 검증은 §1.2 상업 계약 필요.
+
+## §1c. Portable Evidence Capsule — Conditional Tier (v1, 2026-11-20)
+
+> Status: Ratified contract amendment (Phase 0, #188). Normative SSOT: [evidence_capsule_contract.md](./evidence_capsule_contract.md).
+> **조건부 허용**: capsule은 **공개·digest-addressed toolchain 입력**만으로 리플레이 가능하고 producer의 local state·vault·journal을 요구하지 않을 때만 유효하다. capsule은 새 verdict·gate·authority를 만들지 않는다 — `proofValidity`/`reproducibility`/`provenanceAuthenticity`는 기존 `PASS | FAIL | UNKNOWN` 어휘의 평가 축이며, 판정 권한은 기존 authority에 그대로 남는다.
+
+**D_capsule — capsule replay input set (전 항목 필수)**:
+
+| # | D-input | 내용 |
+|---|---|---|
+| DC1 | Subject identity | subject commit + tree OID, source file set digest (경로·파일 sha256의 D1 canonical set; 물리경로 비포함 — §10.1 D3) |
+| DC2 | Proposition / model / spec identity | proposal digest, adopted proposition digest, adopted model digest, spec-subset digest, `modelBinding` (adopted-model 계약의 명제와 exact match) |
+| DC3 | Certificate-set identity | certificate body 집합의 `identityDigest` 정렬 목록 + `certificateSetDigest` (중복 identity 거부) |
+| DC4 | Policy / scope contents | policy·scope 파일의 **내용** digest (ID 참조가 아니라 바이트 결속) |
+| DC5 | Toolchain identity | Lean·lake·leanchecker·Z3 바이너리 sha256 + version; 공개 출처와 digest-addressed 획득 경로 |
+| DC6 | Replay inputs | 정확한 command/option/seed/rlimit, 입력 corpus, observation harness, replay dependency pin (공개 repo SHA), expected output |
+| DC7 | Non-claims | capsule이 주장하지 않는 것의 명시 목록 ([evidence_capsule_contract.md](./evidence_capsule_contract.md) §7) |
+
+- **완결 조건**: DC1–DC7 중 하나라도 없거나 digest mismatch/미측정이면 capsule은 invalid이며 해당 claim은 **UNKNOWN/FAIL**이다 — 조용한 PASS는 없다.
+- **비캡슐 흐름 불변**: §1의 local replay-bound promise — `(cert + trusted journal + claims/solver + source repo)` — 는 capsule을 선택하지 않은 기존 흐름에서 그대로 유지된다. capsule은 그 promise를 대체하지 않고, 동일 산출물에 대한 **추가 packaging tier**다.
+- **비내장 toolchain**: DC5의 바이너리는 capsule에 내장되지 않아도 된다 — 공개 출처에서 digest로 획득·검증되면 된다. 획득 불가·digest 불일치는 `proofValidity`/`reproducibility`를 `UNKNOWN`/`FAIL`로 만든다.
+- **금지**: capsule을 "self-contained certification"·"producer authentication"·"durable audit ledger"로 표기하는 것. authenticity는 capsule 외부 anchor(GitHub run/artifact identity + pinned release/policy)로만 성립한다 ([evidence_capsule_contract.md](./evidence_capsule_contract.md) §5).
 
 ---
 
@@ -102,7 +124,7 @@
 
 ### R4. Artifact / Provenance Integrity (critical)
 
-> 결과 artifact만으로 **local replay-bound** 로 정의되는 천(claim→evidence→toolchain→solver→input chain) 복원 가능하다. replay 범위 = `(cert + trusted journal + claims/solver + source repo)` 의 합 (§1, §7a). **Portable evidence artifact는 v1 non-goal** — R4의 복원 대상은 portable artifact가 아니라 local replay-bound artifact 이다.
+> 결과 artifact만으로 **local replay-bound** 로 정의되는 천(claim→evidence→toolchain→solver→input chain) 복원 가능하다. replay 범위 = `(cert + trusted journal + claims/solver + source repo)` 의 합 (§1, §7a). **R4의 기본 복원 대상은 local replay-bound artifact**이며, portable evidence capsule(§1c)은 D_capsule 전 항목을 갖춘 조건부 tier에 한해 별도 계약([evidence_capsule_contract.md](./evidence_capsule_contract.md))으로 평가한다 — capsule은 R4의 기본 promise를 완화하지 않는다.
 
 | key | 필수 | 의미 |
 |---|---|---|
@@ -497,7 +519,8 @@ D3 "물리경로 비포함" 위반이다.
 ### §10.3 Workspace 격리
 - immutable subject / ephemeral execution workspace / state root. state 기본치는 Axiom repo 내;
   `AXIOM_STATE_DIR` 로 재배치 가능. trust journal은 로컬 잔존(Axiom repo `data/trusted/**`) —
-  portable evidence non-goal(§1) 불변.
+  비캡슐 흐름의 portable evidence non-goal(§1)은 유지되며, §1c capsule은 journal entries를
+  포함하되 external anchor 없이는 authenticity를 주장하지 않는다.
 - "`--project` 지정 시에는 `AXIOM_STATE_DIR` 설정이 필요하다. 누락된 실행은 상태 기록 없이 즉시 실패한다(fail-closed)."
 
 ### §10.4 범위 선언
