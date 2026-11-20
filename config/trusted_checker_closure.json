@@ -1774,7 +1774,7 @@
     "src/core/symbol_graph/global_symbol_graph_builder_part2.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "9cb22f58cae4756f2586d2488bcd1d878fb9d52c"
+      "sha": "2e77a89318f50f6378c6ac53e29e8c4ef995b849"
     },
     "src/core/symbol_graph/global_symbol_graph_query.nim": {
       "mode": "100644",

@@ -17,10 +17,11 @@ import core/utils/file_utils
 import core/utils/io_utils
 import compiler/ast
 import std/algorithm
-import std/hashes
 import std/options
 import std/os
+import std/osproc
 import std/sequtils
+import std/streams
 import std/strutils
 import std/tables
 import core/interfaces/logging_hub
@@ -343,13 +344,58 @@ proc buildGlobalSymbolGraph*(repoRoot: string; freezeGraphCache: bool = false): 
   if not freezeGraphCache:
     saveIncrementalGraphCache(incCachePath, newCache)
 
+const MaxDelegatedArgvBytes = 1_048_576
+
+func parseDelegatedDigests(output: string; paths: openArray[string]): seq[string] =
+  ## Parse GNU `sha256sum --zero` output into one digest per `paths` entry.
+  ## A record is `<64 lowercase hex><SP><flag><name>` NUL-terminated, where
+  ## `flag` is `' '` (text mode) or `'*'` (binary mode); `--zero` disables
+  ## filename escaping, so `name` must match the requested path byte-exactly.
+  ## Returns an empty seq unless the output is exactly one well-formed record
+  ## per path, in input order, with a trailing NUL — anything less is
+  ## "not usable" and the caller falls back to the in-process hash.
+  result = @[]
+  if paths.len == 0 or output.len == 0 or output[^1] != '\0':
+    return
+  var pos = 0
+  var idx = 0
+  while pos < output.len:
+    let nul = output.find('\0', pos)
+    if nul < 0:
+      return @[]
+    if nul - pos < 66:
+      return @[]
+    for i in pos ..< pos + 64:
+      if output[i] notin {'0' .. '9', 'a' .. 'f'}:
+        return @[]
+    if output[pos + 64] != ' ' or output[pos + 65] notin {' ', '*'}:
+      return @[]
+    if idx >= paths.len:
+      return @[]
+    if output[pos + 66 ..< nul] != paths[idx]:
+      return @[]
+    result.add output[pos ..< pos + 64]
+    inc idx
+    pos = nul + 1
+  if idx != paths.len:
+    result = @[]
+
 # @axiom-hint: lean="graph_edges.size ≥ 0 ∧ cachePath.length ≥ 0 ∧ maxSourceMtime ≥ -9223372036854775808 ∧ maxSourceMtime ≤ 9223372036854775807 ∧ external_io_isolated" smt="(assert (and (>= (seq.len graph_edges) 0) (>= (str.len cachePath) 0) (and (>= maxSourceMtime -9223372036854775808) (<= maxSourceMtime 9223372036854775807)) external_io_isolated))"
 # @axiom-hint: smt="vacuous_primitive"  # axiom:certified-exempt(import-heuristic; annotate-then-purge DEBT#303)
 proc computeSourceMerkleRoot*(srcRoot: string): string {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Compute a deterministic Merkle root over all .nim files in srcRoot.
   ## Files are processed in alphabetical order to eliminate OS-specific
-  ## filesystem layout non-determinism. Content hash uses Phase 12's
-  ## computeFileHash (MD5-based; total overhead < 100ms for 200+ files).
+  ## filesystem layout non-determinism. The per-file content hash is
+  ## `computeFileHash` (SHA-256 of the file bytes).
+  ##
+  ## That SHA-256 is delegated in ONE batch to the platform hash authority
+  ## (GNU coreutils `sha256sum --zero`, argv list — never a shell string)
+  ## when the tool resolves, the whole argument vector fits one exec, and
+  ## every record parses back to the exact requested path. Any doubt —
+  ## tool absent, exec failure, non-zero exit, malformed/misaligned output —
+  ## discards the whole batch and re-hashes in-process. Both paths compute
+  ## sha256 of the same bytes, so the accumulated records and the root are
+  ## byte-identical either way; a partial batch is never adopted.
   var paths: seq[string] = @[]
   try:
     for path in walkDirRec(srcRoot):
@@ -358,11 +404,39 @@ proc computeSourceMerkleRoot*(srcRoot: string): string {.raises: [], axiomEffect
   except CatchableError:
     discard  # axiom:best-effort(ioboundary catch)
   paths.sort(cmp)
+  var digests: seq[string] = @[]
+  if paths.len > 0:
+    var argvBytes = 8 * (paths.len + 3)
+    for path in paths:
+      argvBytes += path.len + 1
+    var tool = ""
+    try:
+      tool = findExe("sha256sum")
+    except CatchableError:
+      tool = ""
+    if tool.len > 0 and argvBytes <= MaxDelegatedArgvBytes:
+      var p: Process = nil
+      try:
+        p = startProcess(tool, args = @["--zero", "--"] & paths,
+                         options = {poUsePath, poStdErrToStdOut})
+        let output = p.outputStream.readAll()
+        if p.waitForExit() == 0:
+          digests = parseDelegatedDigests(output, paths)
+      except CatchableError:
+        digests = @[]
+      finally:
+        if p != nil:
+          try: p.close()
+          except CatchableError: discard # axiom:best-effort("process reaping after exit-code collection")
   var acc = ""
-  for path in paths:
-    let h = computeFileHash(path)
-    if h.len > 0:
-      acc = acc & path & ":" & h & "\n"
+  if paths.len > 0 and digests.len == paths.len:
+    for i in 0 ..< paths.len:
+      acc.add paths[i] & ":" & digests[i] & "\n"
+  else:
+    for path in paths:
+      let h = computeFileHash(path)
+      if h.len > 0:
+        acc = acc & path & ":" & h & "\n"
   result = gripOr(hash_kernel.sha256Hex(acc), "")
 # @axiom-hint: smt="vacuous_primitive"  # axiom:certified-exempt(import-heuristic; annotate-then-purge DEBT#303)
 proc saveGlobalSymbolGraphCache*(graph: GlobalSymbolGraph; cachePath: string; sourceMerkleRoot: string) {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
