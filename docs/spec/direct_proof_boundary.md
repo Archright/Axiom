@@ -2,7 +2,7 @@
 
 **Status**: Normative boundary declaration (v1, 2026-11-19; revised after the translation-loss closure, #118)
 **Created**: 2026-11-19
-**Related**: [certification_continuity_contract.md](certification_continuity_contract.md) §2, [authority_contract.md](authority_contract.md) §1, [strict_completeness_binding.md](strict_completeness_binding.md) §9, [verification_density.md](verification_density.md), [productization_contract.md](productization_contract.md) §1
+**Related**: [certification_continuity_contract.md](certification_continuity_contract.md) §2, [authority_contract.md](authority_contract.md) §1, [strict_completeness_binding.md](strict_completeness_binding.md) §9, [verification_density.md](verification_density.md), [productization_contract.md](productization_contract.md) §1, [adopted_model_observation_contract.md](adopted_model_observation_contract.md) (the adopted-model + stamped-observation shape for subjects outside this boundary)
 **Scope**: the canonical Nim → IR → Lean direct-proof path. Rust/LLBC subjects are governed by [rust_certified_subset.md](rust_certified_subset.md) and are not widened here. This document does not classify SMT/CHC search outcomes; it classifies whether a direct Lean proof can exist.
 
 ## 1. Why this document exists
@@ -63,6 +63,8 @@ Not refuted: the zero is a marked placeholder, never the source value, and no ev
 `hasAxiomPragma` accepts `nnkTemplateDef` (`src/core/trusted/axiom_pragmas_macros.nim:13-24`), so a template can carry the `{.axiom.}` annotation. IR translation accepts only `nkProcDef` and `nkFuncDef` (`IrTranslatableDefKinds`, `src/infrastructure/external_ir_materializer.nim:92`); any other discovered declaration is reported as `moUnsupportedDeclKind` with a reason, never silently absent (`:208-221`).
 
 A template call is expanded by the pinned frontend before extraction. The expansion can be directly provable if it stays inside the bounded subset; the definition itself has no IR, denotation, or theorem. Coverage is therefore partial: **incomplete**. If the expansion contains another construct from this table, that construct's row governs.
+
+A template definition nested inside a body is not traversed as an expression (`traversesSubtreeAsExpression`, `src/core/trusted/ast_to_ir.nim:146-161`); the generic statement fallback records a region drop (`markRegionDrop`, `:1349-1362`; NimNode mirror `:1035-1040`) instead of a translation.
 
 ### 3.3 move
 
