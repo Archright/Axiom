@@ -131,60 +131,63 @@ suite "decision algebra — single authority (core/utils/decision_algebra)":
 
 ## The run-exit rule — one function, two thin consumers (`axProofShortcutExitCode`
 ## in cli/wf_runners.nim, `computeReportExitCode` in verification/report_engine).
-## A timeout is a hang-guard node abort, not a verification verdict; the decision
-## is fail-closed about it anyway, and the exit axis is coarser still.
+## The rule consumes ONLY the canonical `runOutcome.verdict` block. Summary
+## counts are telemetry; a document without a readable verdict is UNRESOLVED.
 
-func runReport(summary: JsonNode): JsonNode = %*{"summary": summary}
+func runReport(verdict, gate: string): JsonNode =
+  %*{"runOutcome": {"verdict": verdict, "gateVerdict": gate},
+     "summary": {"verified": 5, "failedCount": 0, "timeoutCount": 0}}
 
 suite "run-exit rule — single projection (decision_algebra.projectRunOutcome)":
 
-  test "CONTINUE — verified>0 and no failed, no timed-out node":
-    check projectRunOutcome(runReport(%*{"verified": 5, "failedCount": 0, "timeoutCount": 0})) ==
-      OutcomeContinue
+  test "CONTINUE — canonical PASS verdict":
+    check projectRunOutcome(runReport("PASS", "PASS")) == OutcomeContinue
 
-  test "CONTINUE — empty (no-obligation) run establishes nothing to fail":
-    ## §7 makes `verified == 0` a failure only together with a failed or
-    ## timed-out node; with neither, the run is CONTINUE.
-    check projectRunOutcome(runReport(%*{"verified": 0, "failedCount": 0, "timeoutCount": 0})) ==
-      OutcomeContinue
+  test "CONTINUE — canonical no-obligation PASS with zero counts":
+    ## A no-obligation universe is expressed as a canonical PASS by its
+    ## producer; it is never inferred from `verified == 0`.
+    let n = %*{"runOutcome": {"verdict": "PASS", "gateVerdict": "PASS"},
+               "summary": {"verified": 0, "failedCount": 0, "timeoutCount": 0}}
+    check projectRunOutcome(n) == OutcomeContinue
 
-  test "CONTINUE — topology-only preview (no verified key) is outside the rule":
-    check projectRunOutcome(runReport(%*{"topologyScanComplete": true, "symbolCount": 4})) ==
-      OutcomeContinue
+  test "BLOCK — canonical FAIL verdict":
+    check projectRunOutcome(runReport("FAIL", "FAIL")) == OutcomeBlock
 
-  test "BLOCK — at least one failed node, whatever else was verified":
-    check projectRunOutcome(runReport(%*{"verified": 7, "failedCount": 1, "timeoutCount": 0})) ==
-      OutcomeBlock
-    check projectRunOutcome(runReport(%*{"verified": 0, "failedCount": 3, "timeoutCount": 0})) ==
-      OutcomeBlock
+  test "UNRESOLVED — BLOCKED and INCONCLUSIVE verdicts":
+    check projectRunOutcome(runReport("BLOCKED", "FAIL")) == OutcomeUnresolved
+    check projectRunOutcome(runReport("INCONCLUSIVE", "FAIL")) == OutcomeUnresolved
 
-  test "BLOCK — nothing verified and the run was aborted":
-    check projectRunOutcome(runReport(%*{"verified": 0, "failedCount": 0, "timeoutCount": 1})) ==
-      OutcomeBlock
+  test "UNRESOLVED — unknown verdict vocabulary":
+    check projectRunOutcome(runReport("PROBABLY_FINE", "PASS")) == OutcomeUnresolved
 
-  test "UNRESOLVED — timeout-only run: incomplete, not a confirmed failure":
-    ## The hole the unification closes: this used to exit 0 on the prove path.
-    check projectRunOutcome(runReport(%*{"verified": 2, "failedCount": 0, "timeoutCount": 1})) ==
+  test "UNRESOLVED — verdict contradicted by its gateVerdict projection":
+    ## A PASS whose serialized projection says FAIL is an UNKNOWN document.
+    check projectRunOutcome(runReport("PASS", "FAIL")) == OutcomeUnresolved
+    check projectRunOutcome(runReport("FAIL", "PASS")) == OutcomeUnresolved
+
+  test "UNRESOLVED — summary-only document, whatever its counts":
+    ## The hole this rule closes: verified>0 with no recorded failure used to
+    ## exit 0 without any canonical verdict.
+    check projectRunOutcome(%*{"summary": {"verified": 5, "failedCount": 0,
+                                          "timeoutCount": 0}}) == OutcomeUnresolved
+    check projectRunOutcome(%*{"summary": {"topologyScanComplete": true}}) ==
       OutcomeUnresolved
-    check projectRunOutcome(runReport(%*{"verified": 9, "failedCount": 0, "timeoutCount": 4})) ==
-      OutcomeUnresolved
 
-  test "UNRESOLVED — a summary that cannot be read (fail-closed)":
-    check projectRunOutcome(%*{}) == OutcomeUnresolved            # no summary
-    check projectRunOutcome(newJNull()) == OutcomeUnresolved      # nil document
-    check projectRunOutcome(runReport(%*{"verified": 4})) == OutcomeUnresolved  # counts absent
-    check projectRunOutcome(runReport(%*{"verified": "4", "failedCount": 0,
-                                         "timeoutCount": 0})) == OutcomeUnresolved
-    check projectRunOutcome(runReport(%*{"verified": 4, "failedCount": "0",
-                                         "timeoutCount": 0})) == OutcomeUnresolved
+  test "UNRESOLVED — missing or malformed runOutcome block":
+    check projectRunOutcome(%*{}) == OutcomeUnresolved
+    check projectRunOutcome(newJNull()) == OutcomeUnresolved
+    check projectRunOutcome(%*{"runOutcome": "PASS"}) == OutcomeUnresolved
+    check projectRunOutcome(%*{"runOutcome": {"verdict": 4}}) == OutcomeUnresolved
+    check projectRunOutcome(%*{"runOutcome": {"verdict": "PASS",
+                                             "gateVerdict": 1}}) == OutcomeUnresolved
 
   test "pure — the same document always yields the same outcome":
-    let n = runReport(%*{"verified": 2, "failedCount": 0, "timeoutCount": 1})
+    let n = runReport("PASS", "PASS")
     check projectRunOutcome(n) == projectRunOutcome(n)
 
   test "one rule, two consumers — decision axis is finer than the exit axis":
     ## The decision keeps BLOCK vs UNRESOLVED; both project to exit 1.
-    let failedRun = projectRunOutcome(runReport(%*{"verified": 0, "failedCount": 1, "timeoutCount": 0}))
-    let abortedRun = projectRunOutcome(runReport(%*{"verified": 2, "failedCount": 0, "timeoutCount": 1}))
+    let failedRun = projectRunOutcome(runReport("FAIL", "FAIL"))
+    let abortedRun = projectRunOutcome(runReport("INCONCLUSIVE", "FAIL"))
     check failedRun != abortedRun
     check failedRun == OutcomeBlock and abortedRun == OutcomeUnresolved

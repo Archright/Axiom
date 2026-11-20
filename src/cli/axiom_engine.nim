@@ -7065,6 +7065,16 @@ proc appendDisplayAndPersist(prepared: PreparedRun; proofReport: var ProofReport
     (if findingEvidence.len > 0: findingEvidence else: nil),
     freshnessMarker)
 
+proc canonicalProofExitCode(priorExit: int; reportJson: JsonNode): int {.
+    raises: [Exception, IOEffect], axiomEffect: IOEffect,
+    tags: [TimeEffect, RootEffect, AxiomIOEffect, IOEffect],
+    axiomDecision(id = "DECISION-0832", reason = "Canonical prove exit projection: a persist failure (INTERNAL_ERROR=2) stays an I/O outcome, every other exit is reprojected from the finalized canonical report's runOutcome.verdict through the single adapter. Environment levers are read once at this I/O boundary and can only demote", adr = "docs/adr/0001-fail-closed-result-type.md", introduced = "v34").} =
+  if priorExit == CliOutcome.INTERNAL_ERROR.exitCode():
+    return priorExit
+  axProofShortcutExitCode(reportJson,
+    requirePerfectAsi = getAxiomEnv(evRequirePerfectAsi) == "1",
+    continueOnError = getAxiomEnv(evContinueOnError) == "1")
+
 proc runProofPipeline*(
   task: ProofTask;
   cwdOverride: string;
@@ -7137,6 +7147,20 @@ proc runProofPipeline*(
   recordSelectionOutcome(prepared.selState, prepared.cacheDir, prepared.reportJson, frontier)
   logStage(skReport, "", "persist completed", elapsedMs=int((getMonoTime().ticks - persistStartMs) div 1_000_000))
   ok(proofReport)
+
+proc runProofPipelineWithExit(task: ProofTask; cwdOverride: string;
+    shortcutStatePathOverride: string; planPath = ""): Result[ProofReport, string] {.
+    raises: [Exception, IOEffect], axiomEffect: IOEffect,
+    tags: [TimeEffect, RootEffect, AxiomIOEffect, IOEffect],
+    axiomDecision(id = "DECISION-0833", reason = "Exit fact collapse boundary: runs the proof pipeline once and projects its canonical runOutcome.verdict onto the process exit. The pipeline's own pre-canonical (last-wave) exit is superseded; persist failures (INTERNAL_ERROR=2) pass through untouched", adr = "docs/adr/0001-fail-closed-result-type.md", introduced = "v34").} =
+  ## `runProofPipeline` returns the canonical document; its exit is projected
+  ## here, once, so no surface re-derives it from a different document.
+  result = runProofPipeline(task, cwdOverride, shortcutStatePathOverride, planPath)
+  if result.isOk():
+    var proofReport = result.get()
+    proofReport.exitCode = canonicalProofExitCode(proofReport.exitCode,
+      json.parseJson(proofReport.outputJson))
+    result = ok(proofReport)
 
 proc runAxiomEngineCli*(
   args: seq[string];
@@ -7299,13 +7323,17 @@ proc runAxiomEngineCli*(
   # §10 source-root precedence: --project-abs-path > cwdOverride > getCurrentDir()
   let effectiveCwdOverride = if projectAbs.len > 0: projectAbs else: cwdOverride
 
-  let pipelineRes = runProofPipeline(task, effectiveCwdOverride, shortcutStatePathOverride, flags.plan)
+  let pipelineRes = runProofPipelineWithExit(task, effectiveCwdOverride, shortcutStatePathOverride, flags.plan)
   if pipelineRes.isErr():
     return err(CliError(kind: CliOutcome.INTERNAL_ERROR, msg: pipelineRes.error))
   var proofReport = pipelineRes.get()
 
   let cwd = if effectiveCwdOverride.len > 0: effectiveCwdOverride else: getCurrentDir()
   let reportJson = json.parseJson(proofReport.outputJson)
+  # ── EXIT FACT COLLAPSE (productization_contract §7) ─────────────────────
+  # The pipeline returned its canonical tail; the exit is projected once from
+  # `runOutcome.verdict` at the I/O boundary (see runProofPipelineWithExit).
+  # The I/O axis stays distinct: a persist failure keeps its exit 2.
   # LEGACY-LABEL read: summary.vkd was renamed to verifiedRatio (Phase 3 label
   # cleanup). This is the cumulative full-function success rate over |Kernel|=40,
   # NOT canonical VKD (which lives in metrics.vkd, wired in report_cli.nim).

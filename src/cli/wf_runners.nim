@@ -164,17 +164,15 @@ let runAxVerifyShortcutCli* = proc (
   else:
     discard
 
-  let exitCode = axProofShortcutExitCode(reportJson,
-    requirePerfectAsi = getAxiomEnv(evRequirePerfectAsi) == "1",
-    continueOnError = getAxiomEnv(evContinueOnError) == "1")
-  let statePath = resolveAxStatePath(shortcutStatePathOverride)
-  let persisted = persistAxProofState(statePath, reportJson)
-  if persisted.isErr():
-    return err(persisted.error)
+  # Preview execution contract: a topology scan is not a verification run.
+  # Exit 0 means "the scan completed" — never "verification passed". This path
+  # does not call projectRunOutcome (a scan has no run verdict) and does not
+  # write the proof-state authority: a preview must never plant a document
+  # where `ax report` reads its verification result.
   ok(AxCommandCliResult(
     outputJson: renderJsonMultiline(reportJson),
-    logLines: renderVerifyTopologySummaryLines(bundle.analysis, bundle.diagnoses) & @["stateFile=" & statePath],
-    exitCode: exitCode
+    logLines: renderVerifyTopologySummaryLines(bundle.analysis, bundle.diagnoses),
+    exitCode: 0
   ))
 
 

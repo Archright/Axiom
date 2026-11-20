@@ -18,6 +18,7 @@
 
 import std/[json, strutils]
 import core/crypto/hash_kernel
+import core/trusted/axiom_pragmas_lite
 import core/utils/constants
 
 {.push raises: [].}
@@ -176,56 +177,57 @@ func decideTokens*(statuses: seq[StatusToken]): DecisionAggregate =
 # ---------------------------------------------------------------------------
 
 const
-  unsetCount = -1  ## sentinel: a count that is absent or not an integer
+  runOutcomeKey = "runOutcome"
+  runVerdictKey = "verdict"
+  runGateVerdictKey = "gateVerdict"
+  verdictPass = "PASS"
+  verdictFail = "FAIL"
 
-func countOrUnset(summary: JsonNode, key: string): int =
-  ## Fail-closed count read: a key that is absent or is not an integer yields
-  ## `unsetCount`, never a silent 0. "No failures recorded" is a claim that must
-  ## be readable to be believed.
-  let v = summary.getOrDefault(key)
-  if v.isNil or v.kind != JInt: unsetCount else: v.getInt(0)
-
-func projectRunOutcome*(reportNode: JsonNode): string =
+func projectRunOutcome*(reportNode: JsonNode): string {.
+    axiomDecision(id = "DECISION-0831", reason = "The single run-exit rule: maps the canonical runOutcome verdict block to CONTINUE/BLOCK/UNRESOLVED and never reads summary counts. Missing, malformed, or projection-contradicting documents are UNRESOLVED, so no adapter can infer success from telemetry", adr = "docs/adr/0001-fail-closed-result-type.md", introduced = "v34").} =
   ## THE single run-exit rule. `ax prove` and `ax report` derive their exit code
   ## from this one function; no surface re-derives it (productization_contract
-  ## §7 — verification-failure / exit 1).
+  ## §7).
   ##
-  ## The rule reads the run summary only:
-  ##   BLOCK      — verification claims not established by a failure:
-  ##                failedCount > 0, or verified == 0 with a hang-guard abort.
-  ##   UNRESOLVED — claims not established because verification is incomplete:
-  ##                verified > 0 with a hang-guard abort (timeoutCount > 0), or
-  ##                a summary that cannot be read (missing / malformed / counts
-  ##                absent).
-  ##   CONTINUE   — failedCount == 0 ∧ timeoutCount == 0, and either
-  ##                verified > 0 or an empty (no-obligation) run.
+  ## The rule consumes ONLY the canonical authority block written by
+  ## verification_decision_authority.evaluateRunOutcome / the read-path
+  ## re-decision:
+  ##   CONTINUE   — verdict == PASS
+  ##   BLOCK      — verdict == FAIL
+  ##   UNRESOLVED — verdict == BLOCKED / INCONCLUSIVE, or the block is missing,
+  ##                malformed, or contradicts its gateVerdict projection.
   ##
-  ## Axis separation: a wall-clock timeout is a hang-guard node abort, not a
-  ## verification verdict (the verdict axis never reads timeoutCount), but the
-  ## exit axis is fail-closed about incomplete verification.
-  let summary = reportNode.getOrDefault("summary")
-  if summary.isNil or summary.kind != JObject:
+  ## `summary` is telemetry. It is never read here: a count cannot establish a
+  ## verification claim, and an absent count cannot be treated as zero success.
+  ## A document without `runOutcome` (pre-loop skeleton, legacy/checkpoint
+  ## state, topology scan) is UNRESOLVED — never an inferred success.
+  ##
+  ## `gateVerdict` is a serialization projection of `verdict` (PASS iff
+  ## verdict == PASS). A contradiction between the two is an UNKNOWN document,
+  ## never a PASS.
+  if reportNode.isNil or reportNode.kind != JObject:
     return OutcomeUnresolved
-  if not summary.hasKey(verifiedKey):
-    # topology-only preview (no `verified` key — the shortcut scan path): not
-    # covered by the rule, legacy behaviour preserved (contract §7 note).
+  let runOutcome = reportNode.getOrDefault(runOutcomeKey)
+  if runOutcome.isNil or runOutcome.kind != JObject:
+    return OutcomeUnresolved
+  let verdictNode = runOutcome.getOrDefault(runVerdictKey)
+  if verdictNode.isNil or verdictNode.kind != JString:
+    return OutcomeUnresolved
+  let verdict = verdictNode.getStr()
+  let gateNode = runOutcome.getOrDefault(runGateVerdictKey)
+  if not gateNode.isNil and gateNode.kind != JNull:
+    if gateNode.kind != JString:
+      return OutcomeUnresolved
+    let expectedGate = if verdict == verdictPass: verdictPass else: verdictFail
+    if gateNode.getStr() != expectedGate:
+      return OutcomeUnresolved
+  if verdict == verdictPass:
     return OutcomeContinue
-  let verified = countOrUnset(summary, verifiedKey)
-  let failedCount = countOrUnset(summary, "failedCount")
-  let timeoutCount = countOrUnset(summary, "timeoutCount")
-  if verified == unsetCount or failedCount == unsetCount or
-     timeoutCount == unsetCount:
-    return OutcomeUnresolved
-  if failedCount > 0:
+  if verdict == verdictFail:
     return OutcomeBlock
-  if verified == 0 and timeoutCount > 0:
-    return OutcomeBlock
-  if timeoutCount > 0:
-    return OutcomeUnresolved
-  # failedCount == 0 ∧ timeoutCount == 0: verified > 0 (success) or verified == 0
-  # (empty / no-obligation run — §7 requires a failed or timed-out node to make
-  # `verified == 0` a failure).
-  return OutcomeContinue
+  # BLOCKED / INCONCLUSIVE / unknown vocabulary all collapse to the same
+  # fail-closed axis.
+  OutcomeUnresolved
 
 # ---------------------------------------------------------------------------
 # Canonical JSON + digest (single implementation, shared by every projection)

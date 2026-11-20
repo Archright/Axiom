@@ -928,6 +928,17 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "Int",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "canonicalProofExitCode",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "String",
       "module": "src/cli/axiom_engine.nim",
       "name": "canonicalTargetRefusal",
@@ -2925,6 +2936,21 @@
       "leanType": "Result[ProofReport, string]",
       "module": "src/cli/axiom_engine.nim",
       "name": "runProofPipeline",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[ProofReport, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[ProofReport, string]",
+      "module": "src/cli/axiom_engine.nim",
+      "name": "runProofPipelineWithExit",
       "negativeConstraints": [
         "result >= 0 is invalid — Result is not numeric",
         "Use 'result.isOk or result.isErr' instead"
@@ -10300,6 +10326,17 @@
       "returnType": "void",
       "smtSort": "Unit",
       "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/cli/rust_lane_cli.nim",
+      "name": "rustLaneExitCode",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
     },
     {
       "hasAxiomHint": false,
@@ -76166,17 +76203,6 @@
       "returnType": "string",
       "smtSort": "String",
       "typeCategory": "string"
-    },
-    {
-      "hasAxiomHint": false,
-      "ignorable": false,
-      "leanType": "Int",
-      "module": "src/core/utils/decision_algebra.nim",
-      "name": "countOrUnset",
-      "resultConstraintTemplate": "(>= result 0)",
-      "returnType": "int",
-      "smtSort": "Int",
-      "typeCategory": "numeric"
     },
     {
       "hasAxiomHint": false,

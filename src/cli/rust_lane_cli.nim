@@ -702,6 +702,68 @@ proc classifyIssuanceBlock(rec: RustIssuanceRecord): tuple[status: string; reaso
   else:
     ("unknown", rec.blockStage & ": " & rec.blockReason)
 
+const rustLaneExitContract* = "axiom.rust-lane.exit.v1"
+
+func rustLaneExitCode*(report: JsonNode; requirePerfectAsi: bool = false): int {.
+    raises: [], axiomDecision(id = "DECISION-0830", reason = "Rust lane exit projection consumes the lane's own summary as its declared contract (axiom.rust-lane.exit.v1); unknown/error/blocking are unresolved and fail closed. This lane does not emit canonical runOutcome, so it must not route through projectRunOutcome", adr = "docs/adr/0001-fail-closed-result-type.md", introduced = "v34").} =
+  ## Explicit, versioned exit contract for the rust subject lane
+  ## (`axiom.rust-lane.exit.v1`). This lane produces extraction/issuance
+  ## observations, not canonical run accounting, so it does NOT route through
+  ## projectRunOutcome — a summary inside the shared run rule would be a second
+  ## verdict authority.
+  ##
+  ## Fail-closed: success requires that every declared target either satisfied
+  ## its claim or produced no unresolved claim (`unknown`/`error` are
+  ## unresolved, never success), that no failure/timeout/blocking failure was
+  ## recorded, and that at least one target was verified (or the lane had no
+  ## targets at all). Undeclared guard-probe targets are non-claiming and land
+  ## in `unknown` today — this contract keeps them fail-closed until the lane
+  ## emits a `NOT_REQUIRED` decision for zero-goal probes.
+  let summary = report.getOrDefault("summary")
+  if summary.isNil or summary.kind != JObject:
+    return 1
+  let verifiedNode = summary.getOrDefault("verified")
+  let failedNode = summary.getOrDefault("failedCount")
+  let timeoutNode = summary.getOrDefault("timeoutCount")
+  let statusCounts = summary.getOrDefault("statusCounts")
+  if verifiedNode.isNil or verifiedNode.kind != JInt or
+     failedNode.isNil or failedNode.kind != JInt or
+     timeoutNode.isNil or timeoutNode.kind != JInt or
+     statusCounts.isNil or statusCounts.kind != JObject:
+    return 1
+  let verified = verifiedNode.getInt()
+  let failed = failedNode.getInt()
+  let timeouts = timeoutNode.getInt()
+  let unknownNode = statusCounts.getOrDefault("unknown")
+  let errorNode = statusCounts.getOrDefault("error")
+  if unknownNode.isNil or unknownNode.kind != JInt or
+     errorNode.isNil or errorNode.kind != JInt:
+    return 1
+  let unknown = unknownNode.getInt()
+  let errors = errorNode.getInt()
+  if verified < 0 or failed < 0 or timeouts < 0 or unknown < 0 or errors < 0:
+    return 1
+  if failed > 0 or timeouts > 0 or errors > 0:
+    return 1
+  let blocking = summary.getOrDefault("blockingFailure")
+  if not blocking.isNil and blocking.kind == JBool and blocking.getBool():
+    return 1
+  if requirePerfectAsi:
+    let ratio = summary.getOrDefault("verifiedRatio")
+    let ratioValue =
+      if ratio.isNil: 0.0
+      elif ratio.kind == JFloat: ratio.getFloat()
+      elif ratio.kind == JInt: toFloat(ratio.getInt())
+      else: 0.0
+    if ratioValue < 1.0:
+      return 1
+  if unknown > 0:
+    return 1
+  # verified > 0 with no unresolved/error/failed target is the only
+  # claim-establishing success. verified == 0 with nothing unresolved is the
+  # empty (no declared target) run — nothing was claimed, so nothing failed.
+  0
+
 proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
     Result[RustLaneCliReport, CliError] {.
     raises: [CatchableError, OSError, Exception], axiomEffect: IOEffect,
@@ -792,7 +854,7 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
       if not report{"identityBundleDigest"}.isNil:
         report.delete("identityBundleDigest")
       log.add("[AXIOM][rust-lane] §6c identity sidecar failed (gap): " & e.msg)
-    let exitCode = axProofShortcutExitCode(report,
+    let exitCode = rustLaneExitCode(report,
       requirePerfectAsi = getAxiomEnv(evRequirePerfectAsi) == "1")
     # The report document's durable observable: the SAME trajectory sink the
     # engine's report stage writes (logStage(skReport, extra) →

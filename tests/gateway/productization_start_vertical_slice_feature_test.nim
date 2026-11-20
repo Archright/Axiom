@@ -300,7 +300,11 @@ suite "productization vertical slice — START-A closure + START-B deterministic
            $(outLines.len - tailStart) & " of " & $outLines.len & " lines ====="
       echo tailText
       echo "===== END PROVE_FAIL ====="
-    check v1.v.reportExit in [0, 1]
+    # The state fixture carries no canonical `runOutcome` verdict block, so
+    # the report exits fail-closed (1): telemetry alone never establishes a
+    # verification claim. The chain still closes — stdout is a full
+    # axiom.report.v1 document (checked above).
+    check v1.v.reportExit == 1
     check v1.v.schemaVersion == "axiom.report.v1"
     check v1.v.reportProjection.len == 64     # sha256
 

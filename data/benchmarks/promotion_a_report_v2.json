@@ -36,7 +36,7 @@
   "r8c_eight_cases": "PASS — r8c_adversarial_evidence.json (committed, real observed)",
   "uncertainty_to_full": "PASS — selection_engine umFull on fallback",
   "integrity_to_reject": "PASS — verifyPlanDigest fail → reject before execution; partial=0 (rollback test)",
-  "exit_codes": "g7 aligned — computeReportExitCode now follows product contract (no_obligation+no-fail → exit 0) per 811a3dbfa"
+  "exit_codes": "verdict-only (v1 contract §7) — computeReportExitCode follows the canonical runOutcome.verdict; summary counts are telemetry and a summary-only no-failure document is UNRESOLVED (exit 1). Superseded 811a3dbfa's count-based no-obligation inference"
  },
  "c3b_economics": "r9_c3b_n20.json — N=20 paired counterbalanced median speedup 1.186x (20/20>1); re-measure under closure-complete Full deferred until projection gate closes (architect-consistent)",
  "blocker": {

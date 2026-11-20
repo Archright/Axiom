@@ -68,30 +68,30 @@
 ##                      verification run on an unresolved target." (exit 3,
 ##                      CliError INVALID_INPUT — the engine's channel)
 ##
-## EXIT-RULE DERIVATION (suite 5): the lane's exit is the single existing rule
-## (axProofShortcutExitCode → decision_algebra.projectRunOutcome →
-## cli_outcome.runExitCode). The charon-absent report is unknown-only with
-## failedCount==0 ∧ timeoutCount==0 ∧ verified==0 → OutcomeContinue
-## ("§7 requires a failed or timed-out node to make verified==0 a failure")
-## → CliOutcome.SUCCESS → exit 0. The fail-closed property asserted there is
-## therefore the ABSENCE of a verified claim — every declared target unknown
-## with the crNotFound reason, zero certificates, no "verified" anywhere —
-## not a nonzero exit code. Suite 1's base-run exit follows the SAME RULE
-## through the mutant's confirmation shape: a CONFIRMED kernel decline
-## (status "failed" → failedCount ≥ 1 → VERIFICATION_FAILURE → exit 1).
-## Since the seal's predicate-v2 restoration (2026-11-03 — `worktreeStable`,
-## docs/spec/replay_evidence_policy.md §4) the CONFIRMED shape no longer
-## depends on the enclosing worktree's PRE-EXISTING state: dirt that was
-## there before the run (a stale build stamp, untracked files) sits on BOTH
-## sides of the seal's relative pre/post comparison and can never break it,
-## so the CONFIRMED shape is asserted UNCONDITIONALLY and a deliberate
-## pre-existing-noise case (fresh untracked file around a full lane run)
-## asserts it under noise. The seal's negative control is no longer
+## EXIT-RULE DERIVATION (suite 5): the lane's exit is its own versioned
+## contract, `axiom.rust-lane.exit.v1` (rustLaneExitCode): success requires a
+## verified claim and NO unresolved target. An unknown-only report (charon
+## absent, guard probes, out-of-subset targets) is UNRESOLVED and exits 1.
+## The lane emits no canonical runOutcome, so it must not borrow the run-exit
+## rule's verdict axis — and "nothing failed" is not success while obligations
+## remain unresolved. The fail-closed property asserted here is therefore both
+## the ABSENCE of a verified claim (zero certificates, no "verified" anywhere)
+## and the nonzero exit. Suite 1's base-run exit is the same contract through
+## the mutant's confirmation shape: a CONFIRMED kernel decline (status
+## "failed") exits 1. Since the seal's predicate-v2 restoration (2026-11-03 —
+## `worktreeStable`, docs/spec/replay_evidence_policy.md §4) the CONFIRMED
+## shape no longer depends on the enclosing worktree's PRE-EXISTING state:
+## dirt that was there before the run (a stale build stamp, untracked files)
+## sits on BOTH sides of the seal's relative pre/post comparison and can never
+## break it, so the CONFIRMED shape is asserted UNCONDITIONALLY and a
+## deliberate pre-existing-noise case (fresh untracked file around a full lane
+## run) asserts it under noise. The seal's negative control is no longer
 ## "dirty vs clean" but RUN-MADE drift: tests/gateway/rust_drift_probe_test.nim
 ## (subjects that write files DURING the replay land rvUnavailable). The
-## guard-probe scenario (suite 6) stays exit 0 either way: every target is
-## unknown (discharged attempts are non-claiming, undeclared),
-## failedCount==0 ∧ verified==0 → CONTINUE.
+## guard-probe scenario (suite 6) exits 1 either way: every target is unknown
+## (discharged attempts are non-claiming, undeclared) and an unresolved
+## target is not a success. Zero-goal probes become NOT_REQUIRED only when
+## the producer emits that decision explicitly (Phase 1b), never by count.
 ##
 ## Environment gates (explicit skip — echo SKIP + quit(0), repo pattern):
 ##   - bin/ax absent after ensureAxBinary (the suite NEVER builds ax);
@@ -605,8 +605,9 @@ suite "rust lane product-CLI — out-of-scope: --target is_zero":
   if extractionReady:
     let r = runLane(Repo, AxBin, extraArgs = @["--target", "is_zero"])
 
-    test "exit 0; zero certificates minted":
-      check r.exitCode == 0
+    test "exit 1 (unknown is unresolved under axiom.rust-lane.exit.v1); " &
+        "zero certificates minted":
+      check r.exitCode == 1
       check r.stdOut.len == 0
       check vaultCertCount(r.vaultDir) == 0
 
@@ -668,15 +669,15 @@ suite "rust lane product-CLI — perfect-ASI lever (AXIOM_REQUIRE_PERFECT_ASI=1)
 suite "rust lane product-CLI — charon absent: fail-closed extraction":
   let r = runLane(Repo, AxBin, charonBin = "/nonexistent-charon")
 
-  test "exit 0 is RULE-DERIVED (unknown-only = no-obligation CONTINUE run); " &
+  test "exit 1 (every target unresolved under axiom.rust-lane.exit.v1); " &
       "zero certificates; no verified claim anywhere":
-    # exit 0 derivation (see the module header): the lane's exit is the single
-    # rule axProofShortcutExitCode → decision_algebra.projectRunOutcome →
-    # cli_outcome.runExitCode. The unknown-only report has failedCount==0 ∧
-    # timeoutCount==0 ∧ verified==0 → OutcomeContinue → SUCCESS → 0 ("§7
-    # requires a failed or timed-out node to make verified==0 a failure").
-    # Fail-closed here means: NO verified claim, NO certificate.
-    check r.exitCode == 0
+    # exit 1 derivation (see the module header): the lane's exit is its own
+    # versioned contract rustLaneExitCode (axiom.rust-lane.exit.v1). The
+    # unknown-only report has failedCount==0 ∧ timeoutCount==0 ∧ verified==0,
+    # but `unknown` counts are UNRESOLVED, never success: a run that
+    # established no claim cannot exit 0. Fail-closed here means both: NO
+    # verified claim, NO certificate, and a nonzero exit.
+    check r.exitCode == 1
     check r.stdOut.len == 0
     check vaultCertCount(r.vaultDir) == 0
 
@@ -719,9 +720,11 @@ suite "rust lane product-CLI — charon absent: fail-closed extraction":
 #   echo   — no arithmetic → zero mechanical goals (the attempt still ran)
 #   tri    — bool Switch collapsed to ite → zero mechanical goals (the
 #            is_zero shape, now in-subset)
-# The run is unknown-only with failedCount==0 ∧ verified==0 → CONTINUE →
-# exit 0, zero certificates, and the four reason strings are deterministic
-# by contract (N=3 equality below).
+# The run is unknown-only with failedCount==0 ∧ verified==0. Under
+# axiom.rust-lane.exit.v1 an unresolved target is not a success, so the run
+# exits 1 — the declaration-free attempts established no claim. Zero
+# certificates, and the four reason strings are deterministic by contract
+# (N=3 equality below).
 #
 # Project resolution (measured, not assumed): the committed in-repo fixture
 # when git tracks it (the --project argument of record), else — before the
@@ -735,10 +738,10 @@ suite "rust lane product-CLI — guard probe: declaration-free attempts (N=3 det
     let g2 = runLane(Repo, AxBin, project = GuardProject)
     let g3 = runLane(Repo, AxBin, project = GuardProject)
 
-    test "×3 runs: exit 0 everywhere (unknown-only = CONTINUE); stdout " &
+    test "×3 runs: exit 1 everywhere (unknown-only is unresolved); stdout " &
         "empty; the pinned-charon log line":
       for r in @[g1, g2, g3]:
-        check r.exitCode == 0
+        check r.exitCode == 1
         check r.stdOut.len == 0
         check r.stdErr.contains("[AXIOM][rust-lane] charon pinned='" &
           PinnedCharonIdentity & "'")
@@ -838,15 +841,17 @@ suite "rust lane product-CLI — guard probe: declaration-free attempts (N=3 det
 #   speak / add_u8 (bare)  → exit 3, the Ambiguous refusal on stderr, NO
 #                            report document (a resolution refusal never
 #                            reaches finish() — measured: no trajectory file)
-#   m1::Dog::speak (exact) → exit 0, ONE unknown target whose name IS the
+#   m1::Dog::speak (exact) → exit 1, ONE unknown target whose name IS the
 #                            requested structured full name; the honest
 #                            out-of-subset reason (an &self method's
 #                            anonymous region generic fails the monomorphic
-#                            gate before param decoding names the Ref type)
+#                            gate before param decoding names the Ref type).
+#                            The target resolves but establishes no claim, so
+#                            the lane exits fail-closed
 #   m2::Cat::speak (exact) → the same shape on m2 — the selection is
 #                            identity-driven, not first-match (Dog and Cat
 #                            are distinct decls with distinct modules)
-#   m1::add_u8 (exact)     → exit 0, ONE unknown target on the declaration-
+#   m1::add_u8 (exact)     → exit 1, ONE unknown target on the declaration-
 #                            free guard-attempt path (kernel-declined + Z3
 #                            SAT, unconfirmed — the replay binds only
 #                            src/lib.rs and add_u8 lives in m1, so the
@@ -897,11 +902,11 @@ suite "rust lane product-CLI — impl identity: DEBT#510 ambiguity + structured 
         "match.")
       check bareAdd.report.isNil
 
-    test "(B) exact 'axiom_impl_probe::m1::Dog::speak' → exit 0; ONE unknown " &
+    test "(B) exact 'axiom_impl_probe::m1::Dog::speak' → exit 1; ONE unknown " &
         "target whose NAME is the structured full name (the impl method is " &
         "ADDRESSABLE); honest out-of-subset reason (region generic); zero " &
         "certificates":
-      check dogSpeak.exitCode == 0
+      check dogSpeak.exitCode == 1
       check dogSpeak.stdOut.len == 0
       check vaultCertCount(dogSpeak.vaultDir) == 0
       let rep = dogSpeak.report
@@ -919,7 +924,7 @@ suite "rust lane product-CLI — impl identity: DEBT#510 ambiguity + structured 
     test "(C) exact 'axiom_impl_probe::m2::Cat::speak' → the SAME shape on " &
         "m2 — the selection is identity-driven (Dog and Cat are DISTINCT " &
         "decls, not a first document-order match)":
-      check catSpeak.exitCode == 0
+      check catSpeak.exitCode == 1
       check catSpeak.stdOut.len == 0
       check vaultCertCount(catSpeak.vaultDir) == 0
       let rep = catSpeak.report
@@ -933,12 +938,12 @@ suite "rust lane product-CLI — impl identity: DEBT#510 ambiguity + structured 
       check reason.contains("generic parameter 'regions'")
       check rep{"summary"}{"statusCounts"}{"unknown"}.getInt() == 1
 
-    test "(E) exact 'axiom_impl_probe::m1::add_u8' → exit 0; the undeclared " &
+    test "(E) exact 'axiom_impl_probe::m1::add_u8' → exit 1; the undeclared " &
         "guard-attempt reason (kernel-declined + Z3 SAT, UNCONFIRMED — the " &
         "replay binds only src/lib.rs; add_u8 lives in m1); deterministic " &
         "reason across runs":
       for r in @[m1AddA, m1AddB]:
-        check r.exitCode == 0
+        check r.exitCode == 1
         check r.stdOut.len == 0
         check vaultCertCount(r.vaultDir) == 0
         let rep = r.report
@@ -1060,9 +1065,10 @@ suite "rust lane product-CLI — u64 boundary: echo verified, mutant " &
       check rep{"summary"}{"statusCounts"}{"verified"}.getInt() == 1
 
     test "(D) u64_seven (undeclared, spec exists but not declared) → " &
-        "exit 0; the declaration-free guard attempt with ZERO mechanical " &
-        "goals (the constant body has no guard obligation); no certificate":
-      check sevenRun.exitCode == 0
+        "exit 1; the declaration-free guard attempt with ZERO mechanical " &
+        "goals (the constant body has no guard obligation); no certificate. " &
+        "Unknown is unresolved: the run established no claim":
+      check sevenRun.exitCode == 1
       check sevenRun.stdOut.len == 0
       check vaultCertCount(sevenRun.vaultDir) == 0
       let rep = sevenRun.report

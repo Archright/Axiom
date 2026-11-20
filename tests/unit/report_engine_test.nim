@@ -34,8 +34,8 @@ import verification/obligation/verification_decision_authority
 # Helper: build a minimal proof-state JSON with a summary
 # ---------------------------------------------------------------------------
 
-func makeState*(summary: JsonNode): JsonNode =
-  %*{"summary": summary}
+func makeState*(verdict, gate: string; summary: JsonNode): JsonNode =
+  %*{"runOutcome": {"verdict": verdict, "gateVerdict": gate}, "summary": summary}
 
 # ---------------------------------------------------------------------------
 # Suite: computeReportExitCode
@@ -43,61 +43,73 @@ func makeState*(summary: JsonNode): JsonNode =
 
 suite "computeReportExitCode":
 
-  test "all-no-obligation (verified=0, failedCount=0, timeoutCount=0) → exit 0":
-    let state = makeState(%*{
+  test "canonical no-obligation PASS (verified=0) → exit 0":
+    ## A no-obligation universe is a canonical PASS produced by its authority;
+    ## it is never inferred from a zero count.
+    let state = makeState("PASS", "PASS", %*{
       "verified": 0,
       "failedCount": 0,
       "timeoutCount": 0})
     check computeReportExitCode(state) == 0
 
-  test "verified nodes with no failures → exit 0":
-    let state = makeState(%*{
+  test "canonical PASS with verified nodes → exit 0":
+    let state = makeState("PASS", "PASS", %*{
       "verified": 5,
       "failedCount": 0,
       "timeoutCount": 0})
     check computeReportExitCode(state) == 0
 
-  test "a failure present (failedCount>0) → nonzero":
-    let state = makeState(%*{
+  test "canonical FAIL → exit 1":
+    let state = makeState("FAIL", "FAIL", %*{
       "verified": 0,
       "failedCount": 2,
       "timeoutCount": 0})
-    check computeReportExitCode(state) != 0
+    check computeReportExitCode(state) == 1
 
-  test "a timeout present (timeoutCount>0) → nonzero":
-    let state = makeState(%*{
+  test "timeout-aborted run (INCONCLUSIVE) → exit 1":
+    let state = makeState("INCONCLUSIVE", "FAIL", %*{
       "verified": 0,
       "failedCount": 0,
       "timeoutCount": 1})
-    check computeReportExitCode(state) != 0
+    check computeReportExitCode(state) == 1
 
-  test "timeout-only run (verified>0) → nonzero — one rule with prove":
-    ## The hang-guard abort is not a verification verdict, but incomplete
-    ## verification is fail-closed on the exit axis (same rule as
-    ## decision_algebra.projectRunOutcome, which axProofShortcutExitCode uses).
-    let state = makeState(%*{
+  test "timeout-only run with verified>0 (INCONCLUSIVE) → exit 1":
+    let state = makeState("INCONCLUSIVE", "FAIL", %*{
       "verified": 5,
       "failedCount": 0,
       "timeoutCount": 1})
     check computeReportExitCode(state) == 1
 
-  test "both failure and timeout → nonzero":
-    let state = makeState(%*{
+  test "both failure and timeout (FAIL) → exit 1":
+    let state = makeState("FAIL", "FAIL", %*{
       "verified": 0,
       "failedCount": 1,
       "timeoutCount": 1})
-    check computeReportExitCode(state) != 0
-
-  test "missing summary → fail-closed (exit 1)":
-    let state = %*{}
     check computeReportExitCode(state) == 1
 
-  test "nil summary → fail-closed (exit 1)":
+  test "missing summary does not override a canonical verdict":
+    ## Summary is telemetry: its absence cannot promote or demote the verdict.
+    let passState = %*{"runOutcome": {"verdict": "PASS", "gateVerdict": "PASS"}}
+    check computeReportExitCode(passState) == 0
+    let bareState = %*{}
+    check computeReportExitCode(bareState) == 1
+
+  test "nil document → fail-closed (exit 1)":
     let state = newJNull()
     check computeReportExitCode(state) == 1
 
-  test "absent failedCount and timeoutCount → fail-closed (exit 1)":
-    let state = makeState(%*{"verified": 0})
+  test "summary-only document with zero failures → exit 1":
+    ## Telemetry cannot establish a verification claim; the verdict is absent.
+    let state = %*{"summary": {"verified": 5, "failedCount": 0, "timeoutCount": 0}}
+    check computeReportExitCode(state) == 1
+
+  test "verdict contradicted by gateVerdict → exit 1":
+    let state = makeState("PASS", "FAIL", %*{"verified": 5, "failedCount": 0})
+    check computeReportExitCode(state) == 1
+
+  test "malformed verdict block → exit 1":
+    let state = %*{"runOutcome": {"verdict": 4},
+                   "summary": {"verified": 5, "failedCount": 0}}
     check computeReportExitCode(state) == 1
 
 # ---------------------------------------------------------------------------
