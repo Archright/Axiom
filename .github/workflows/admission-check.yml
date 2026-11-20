@@ -1,5 +1,10 @@
 # =============================================================================
 # pin-generation-marker: dependabot-probe-2026-10-07
+# epoch N+11 (2026-11-20, ADR-0025 §7): src/verification/cert_export.nim joins
+# the trusted checker closure (admission evidence export/verify judgment). This
+# file's blob sha is the epoch's productionExecutionPin binding target — the
+# TWS trustedAdmissionWorkflowSha + epoch_manifest productionExecutionPin pair
+# advance in the same commit (epoch transaction, S0-c).
 # admission-check — B-pinned check producer (GATE A)  [Phase B draft]
 #
 # GATE A: verifier program is built from BASE; PR tree is data only.
