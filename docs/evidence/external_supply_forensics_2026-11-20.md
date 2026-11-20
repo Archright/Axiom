@@ -164,9 +164,10 @@ Every run has `event=merge_group`, `run_attempt=1`, and
 **Note on the evidence pointer.** `findEvidence`
 (`tools/ci/ci_acceptance_collect.nim:751-763`) returns the first artifact/log
 file that contains a signature substring. It is not necessarily the file of the
-job that failed. In the five non-apt cases the pointer is an unrelated job's
-log (§3.3–§3.7), and in `44521587339` it is a downstream cascade job, not the
-first failing setup step.
+step that failed. In the five non-apt cases the pointer is an auxiliary job's
+log or a downstream job's log; the supply signature comes from the echoed
+script, not the failing step. In `44521587339` the pointer is a downstream
+cascade job, not the first failing setup step.
 
 ## §3. Per-entry failing job, step, and exact line
 
@@ -225,7 +226,7 @@ sudo apt-get install -y -qq libpcre3 \
 ```
 
 - The script echoed in **this run's** log is the older two-line form, not the
-  current four-tier ladder:
+  current tiered supply ladder (tier 0–4):
 
 ```text
 sudo apt-get -o DPkg::Lock::Timeout=300 install -y -qq libpcre3 \
