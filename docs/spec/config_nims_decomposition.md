@@ -12,7 +12,7 @@ The canonical include order in `config.nims`:
 2. `config/lint.nims` — Import boundary lint
 3. `config/effects.nims` — Compilation flags, warnings, effect system config
 4. `config/strict.nims` — Strict mode, architecture invariants
-5. `config/integrity.nims` — Immutable verification, merkle root (vacuous — DEBT#546), constraints
+5. `config/integrity.nims` — Immutable verification, content-bound merkle root (DEBT#546 restored), constraints
 6. `config/vendors.nims` — Hermetic build, Z3 FFI, source scanner
 
 ## Task Structure
@@ -31,9 +31,11 @@ config.nims defines the following tasks via `task name, "description":`:
 The `config/integrity.nims` include (loaded via `include "config/integrity.nims"`) is referred to as the "hermeticPreBuild" block in architectural discussions. It handles:
 
 - Immutable AGENTS.md/documentation integrity verification
-- Merkle root computation at compile time — vacuous (DEBT#546): the sha256sum calls
-  receive bare filenames, all 4 guarded files hit ENOENT, and the verdict binds to
-  the "sha256sum:" diagnostic prefix; no guarded file content is hashed
+- Merkle root computation at compile time — content-bound (DEBT#546 restored):
+  project-rooted guarded-file paths, per-file SHA-256 digests concatenated in
+  canonical lexicographic order, fail-closed on missing files/empty digests.
+  Regeneration authority: `tools/merkle_hash.nim` (see the comment next to the
+  block in `config/integrity.nims` for the exact command).
 - Build environment fingerprinting
 - Constraint validation against `docs/agents/core_rules.md`
 
