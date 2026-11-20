@@ -342,7 +342,7 @@ GitHub `GET /repos/{owner}/{repo}/commits/{ref}/check-runs` 응답 형태:
 
 | 문서 | 역할 | 상태 |
 |---|---|---|
-| `docs/spec/admission_evidence_export_contract.md` | canonical certificate-set producer(`ax cert export`, `vault-manifest.v3`, `certificateSetDigest`) 계약 | **Proposed** — 구현 없음 |
+| `docs/spec/admission_evidence_export_contract.md` | canonical certificate-set producer(`ax cert export`, `vault-manifest.v3`, `certificateSetDigest`) 계약 | **Proposed** — engine 구현 착지(`src/verification/cert_export.nim`, `ax cert export`/`ax cert verify-export`); run artifact 배선 미착지 |
 | `docs/spec/evidence_capsule_contract.md` | portable replay tier. 축: `proofValidity` / `reproducibility` / `provenanceAuthenticity`. canonical export를 소비 | Normative v1 |
 | 이 문서 | run-scoped **envelope**: 한 실행이 선택한 cert body + subject tree + run 봉투 + 외부 authority 관측 | 구현됨 (`evidence-verify`) |
 
@@ -352,11 +352,12 @@ GitHub `GET /repos/{owner}/{repo}/commits/{ref}/check-runs` 응답 형태:
 
 ### 11.2 이행 규칙 (binding)
 
-`ax cert export`/`vault-manifest.v3`가 구현되는 시점에:
+engine 구현은 main `f8b3561`(`src/verification/cert_export.nim`, `ax cert export`/`ax cert verify-export`, PR #237)에 착지했다. 그러나 그 export set을 admission run artifact로 업로드하는 workflow 배선은 아직 없다 — 이 계약의 이행 trigger는 **canonical export artifact가 run에서 생산되는 시점**이다.
 
-1. `evidence-verify export`는 vault를 직접 읽지 않고 **canonical export의 certificate set을 소비**해야 한다. §3의 vault 선택 절차는 그때 제거된다.
+1. 그 시점에 `evidence-verify export`는 vault를 직접 읽지 않고 **canonical export의 certificate set을 소비**해야 한다. §3의 vault 선택 절차는 그때 제거된다.
 2. bundle manifest의 cert identity(`identityDigest`, `propositionHash`, `leanSourceHash`, `kaaDigest`, `toolchainFingerprint`)는 canonical export의 필드와 동일 의미를 유지한다.
-3. 이행 전까지 이 exporter는 **유일하게 구현된 cert-body exporter**이며, 그 지위는 transitional이다. 새 certificate-set producer를 영구히 두 번째로 유지하지 않는다.
+3. 이행 전까지 이 exporter는 **유일하게 구현된 run-scoped cert-body exporter**이며, 그 지위는 transitional이다. 새 certificate-set producer를 영구히 두 번째로 유지하지 않는다.
+4. 검증자 역할은 겹치지 않는다: `ax cert verify-export`는 canonical export set의 검증자이고, `evidence-verify`는 run-scoped evidence seam의 검증자다. 어느 쪽도 다른 쪽의 `PASS`를 대체하거나 함의하지 않는다.
 
 ### 11.3 형식 통합은 계약 개정이다
 
