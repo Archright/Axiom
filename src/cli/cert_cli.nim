@@ -49,11 +49,17 @@ when fileExists("src/generated/build_env.nim"):
 else:
   const BuildEnvGitHash = ""
 
-proc showCerts*(): int  {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+proc showCerts*(allowMissing: bool = false): int  {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## List certificates in the proof vault. Absence is failure (exit 1) unless
+  ## the caller explicitly opts in with `--allow-missing` — an empty listing
+  ## must not be mistaken for "the vault is empty and that is success".
   let proofVault = ".axiom/vault"
   if not dirExists(proofVault):
     echo "[cert] No proof vault found at .axiom/vault/"
-    return 0
+    if allowMissing:
+      return 0
+    echo "[cert] (pass --allow-missing to treat absence as success)"
+    return 1
   var count = 0
   for kind, path in walkDir(proofVault):
     if kind == pcFile and path.endsWith(".json"):
@@ -62,6 +68,9 @@ proc showCerts*(): int  {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect,
       echo "  " & name
   if count == 0:
     echo "[cert] No certificates found in proof vault."
+    if not allowMissing:
+      echo "[cert] (pass --allow-missing to treat absence as success)"
+      return 1
   else:
     echo "[cert] " & $count & " certificate(s) found."
   return 0
@@ -1519,7 +1528,18 @@ proc runCertCli*(args: seq[string]): int =
     return runAttestationSubCli(cmd, args[1 .. ^1])
   case cmd
   of "show":
-    return showCerts()
+    # `show` lists the vault; it has no certificate-id lookup. Reject any
+    # extra argument instead of silently listing everything (INVALID_INPUT=3,
+    # docs/design/r7_cli_outcome_contract.md §Canonical States).
+    var allowMissing = false
+    for arg in args[1 .. ^1]:
+      if arg == "--allow-missing":
+        allowMissing = true
+      else:
+        logInfo("cert_cli", "[cert] Unknown argument for show: " & arg)
+        logInfo("cert_cli", "Usage: ax cert show [--allow-missing]")
+        return 3
+    return showCerts(allowMissing)
   of "verify":
     let parsed = parseCertVerifyArgs(args)
     if parsed.err.len > 0:

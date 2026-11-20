@@ -64,7 +64,7 @@
     "src/cli/axiom_status.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "6a0992d4affa0ec7089ce29f9a5cc1704b9c1c9c"
+      "sha": "5b4e260b43cddc71f48559543d8b50312ed03a45"
     },
     "src/cli/baseline_cli.nim": {
       "mode": "100644",
@@ -84,7 +84,7 @@
     "src/cli/cert_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "06caa3226fd1df08abd95f78edbda6445e98f698"
+      "sha": "e8fcf9e741c33476e713f0814273f92ae2405d36"
     },
     "src/cli/check_cli.nim": {
       "mode": "100644",
@@ -139,7 +139,7 @@
     "src/cli/config_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "fdf4ab92d294149cc6634d861b5077a7f9a41e76"
+      "sha": "6c92df979a9f9416dd3bd5b9d912e835e1c6392b"
     },
     "src/cli/config_loader.nim": {
       "mode": "100644",

@@ -3832,6 +3832,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/cli/axiom_status.nim",
+      "name": "noHistoryJson",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "DateTime",
       "module": "src/cli/axiom_status.nim",
       "name": "parseTimestamp",
