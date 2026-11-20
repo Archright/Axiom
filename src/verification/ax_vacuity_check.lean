@@ -13,7 +13,7 @@
 -- Policy:
 --   - sorryAx 사용 → 즉시 거부 (vacuity 방어)
 --   - 허용 목록 외 axiom 사용 → 거부
---   - 허용 axiom: Classical.choice, Quot.sound, propext, funext
+--   - 허용 axiom: Classical.choice, Quot.sound, propext (INV-6 primitive set)
 --   - Deterministic: 동일 입력 → 동일 출력, I/O 없음
 --
 -- Guardrails:
@@ -32,12 +32,13 @@ set_option linter.unusedVariables false
 -- ═══════════════════════════════════════
 -- Lean 4에서 transitive dependency로 나타나는 built-in axiom만 허용.
 -- project-defined axiom은 모두 거부.
+-- INV-6 primitive set — `funext`는 `Quot.sound`에 의존하는 theorem alias이므로
+-- primitive axiom이 아니다 (`#print axioms funext` → `[Quot.sound]`).
 private def builtinAxiomAllowlist : NameSet :=
   let s : NameSet := {}
   let s := s.insert ``Classical.choice
   let s := s.insert ``Quot.sound
   let s := s.insert ``propext
-  let s := s.insert ``funext
   s
 
 -- ═══════════════════════════════════════
