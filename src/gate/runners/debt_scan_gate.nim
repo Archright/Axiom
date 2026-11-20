@@ -5,19 +5,23 @@ axiomLayer "gate"
 ## debt_scan_gate.nim — Architecture Debt Scan Gate
 ##
 ## Scans staged changes for architecture debt violations.
-## The gate PASSES when no NEW debt is introduced beyond the established baseline.
+## The gate PASSES when no debt indicator is found in the scanned files.
 ##
 ## Debt indicators checked:
 ##   1. Bare `except:` clause (no exception type specified)
 ##   2. Deprecated `tree_sitter_bridge` import
 ##   3. `check true` always-pass stub pattern
 ##
-## Approved exemptions in docs/DEBT_REGISTRY.md are honored:
-##   Lines matching `### [Exemption APPROVED] <path>` exclude the file.
+## Exemptions are NOT supported: this gate has no per-file exemption mechanism
+## and does not read docs/DEBT_REGISTRY.md. The former scan for
+## `### [Exemption APPROVED]` matched a marker the projection generator never
+## emits, so it honoured zero exemptions (DEBT#486); it was removed rather than
+## left as dead code. A debt entry's `status` classifies that entry; it does not
+## exempt a file.
 ##
-## Baseline: open debt entries count from data/debt_registry.json.
-##   New debt = any violation in staged files not covered by an exemption.
-##   If new debt found AND baseline open count would increase → FAIL.
+## Baseline: open debt entries are counted from data/debt_registry.json but do
+##   not suppress findings. New debt = any violation in a scanned file; any new
+##   debt → FAIL.
 ##
 ## Thread safety: each gate writes ONLY to its own GateResult — no shared mutable state.
 ##
@@ -67,39 +71,6 @@ func containsAlwaysPassStub*(content: string): bool {.raises: [].} =
     if trimmed == "check true":
       return true
   return false
-
-func relativizePath*(path, base: string): string {.raises: [].} =
-  ## Convert an absolute walkDir path into a repo-relative path (`src/...`)
-  ## matching the notation used in docs/DEBT_REGISTRY.md exemptions.
-  ## Returns the normalized path unchanged when it is not under `base`.
-  if path.len > base.len and path.startsWith(base):
-    var rel = path[base.len .. ^1]
-    if rel.startsWith("/") or rel.startsWith("\\"):
-      rel = rel[1 .. ^1]
-    return rel
-  return path
-
-# ─── Exemption Checking ───────────────────────────────────────────────────
-
-proc loadExemptionText*(repoRoot: string): string {.raises: [CatchableError].} =
-  ## Load docs/DEBT_REGISTRY.md content for exemption scanning.
-  ## Returns empty string if file is missing (conservative: no exemptions).
-  let path = repoRoot / "docs" / "DEBT_REGISTRY.md"
-  try:
-    result = readFile(path)
-  except CatchableError:
-    result = ""
-
-func isExempted*(filePath: string, exemptionText: string): bool {.raises: [].} =
-  ## Check if a file is listed as an approved exemption in DEBT_REGISTRY.md.
-  ## Matches lines like: `### [Exemption APPROVED] src/gate/foo.nim`
-  if exemptionText.len == 0:
-    return false
-  # Normalize path separators so both absolute and relative paths match the
-  # repo-relative notation used in DEBT_REGISTRY.md (`src/...`).
-  let normalized = filePath.replace('\\', '/')
-  let marker = "### [Exemption APPROVED] " & normalized
-  return exemptionText.contains(marker)
 
 # ─── Baseline Loading ─────────────────────────────────────────────────────
 
@@ -153,7 +124,6 @@ proc runDebtScan*(repoRoot: string, files: seq[string]): bool {.raises: [Catchab
   ##
   ## When files is empty, scans all .nim files under repoRoot/src/.
   ## Otherwise scans only the provided file paths.
-  let exemptionText = loadExemptionText(repoRoot)
   discard countOpenDebtEntries(repoRoot)
   var filesToScan: seq[string]
 
@@ -181,9 +151,6 @@ proc runDebtScan*(repoRoot: string, files: seq[string]): bool {.raises: [Catchab
     if f in seenFiles:
       continue
     seenFiles.add(f)
-    let relPath = relativizePath(f, repoRoot)
-    if isExempted(relPath, exemptionText):
-      continue
     let scanResult = if fileExists(f): scanFileForDebt(f) else: (false, @[])
     if scanResult.hasDebt:
       newDebtCount += 1
@@ -213,7 +180,6 @@ proc run*(gate: GateConfig, ctx: InProcessGateContext): GateResult {.raises: [Ca
       stderr: "",
       duration: initDuration())
   else:
-    let exemptionText = loadExemptionText(repoRoot)
     var violationDetails: seq[string] = @[]
     var filesToScan = if stagedFiles.len > 0: stagedFiles else: @[]
     if filesToScan.len == 0:
@@ -227,9 +193,6 @@ proc run*(gate: GateConfig, ctx: InProcessGateContext): GateResult {.raises: [Ca
               walkRec(path)
         walkRec(srcDir)
     for f in filesToScan:
-      let relPath = relativizePath(f, repoRoot)
-      if isExempted(relPath, exemptionText):
-        continue
       let scanResult = if fileExists(f): scanFileForDebt(f) else: (false, @[])
       if scanResult.hasDebt:
         violationDetails.add(f & ": " & scanResult.reasons.join(", "))

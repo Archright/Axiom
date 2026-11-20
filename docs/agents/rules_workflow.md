@@ -86,11 +86,11 @@ Gate implementations receiving `files: seq[string]` MUST NOT append additional f
 
 ### 2.6a Exemption Check (HARD RULE)
 
-Before reporting any file as technical debt, check docs/DEBT_REGISTRY.md for existing [Exemption APPROVED] entries. Exempted files are NOT debt.
+There is no per-file exemption mechanism. `data/debt_registry.json` is the canonical debt SSOT; a debt entry's `status` classifies that entry and does NOT exempt a file from the debt scan gate. The former `[Exemption APPROVED]` marker in `docs/DEBT_REGISTRY.md` was never emitted by the projection generator (DEBT#486) and the gate no longer scans for it.
 
-**Enforcement**: Use the debt scan gate (`nim c -r src/gate/runners/debt_scan_gate.nim`) which auto-filters exempted files.
+**Enforcement**: `nim c -r src/gate/runners/debt_scan_gate.nim` scans every selected `.nim` file; any detected indicator fails the gate.
 
-**Violation**: Reporting an exempted file as new debt = false positive waste.
+**Violation**: Claiming a file is exempt without a canonical registry mechanism = false negative.
 
 ### 2.7 Gherkin Tag Schema for Spec↔Test Binding
 

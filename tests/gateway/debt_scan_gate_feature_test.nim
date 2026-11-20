@@ -5,7 +5,9 @@
 ##   - Module compiles and exports runDebtScan
 ##   - Clean files pass the scan (no debt detected)
 ##   - Bare except: clauses cause a FAIL
-##   - Approved exemptions in DEBT_REGISTRY.md are honored
+##   - A hand-written `### [Exemption APPROVED]` marker does NOT suppress a
+##     finding: the projection generator never emits that marker (DEBT#486),
+##     and the gate no longer scans for it.
 
 import std/[unittest, os, strutils, times]
 import gate/runners/debt_scan_gate
@@ -33,16 +35,28 @@ suite "Debt Scan Gate":
     writeFile(tmpDir / "src" / "bad.nim", badCode)
     check runDebtScan(tmpDir, @[]) == false
 
-  test "runDebtScan passes when bad file has approved exemption":
-    ## Given a .nim file with bare except listed in DEBT_REGISTRY.md as approved
+  test "runDebtScan ignores a hand-written markdown exemption marker":
+    ## Given a .nim file with bare except and a DEBT_REGISTRY.md containing the
+    ## former `### [Exemption APPROVED] <path>` marker
     ## When runDebtScan is invoked
-    ## Then it returns true — exemption is honored
+    ## Then it still returns false — the gate has no markdown exemption path
+    ##      (the projection generator never emits that marker; DEBT#486)
     let badCode = "try:\n  discard\nexcept:\n  discard\n"
     writeFile(tmpDir / "src" / "exempted.nim", badCode)
     createDir(tmpDir / "docs")
     writeFile(tmpDir / "docs" / "DEBT_REGISTRY.md",
       "### [Exemption APPROVED] src/exempted.nim\n" &
       "| **Reason** | legacy code being ported |\n")
+    check runDebtScan(tmpDir, @[]) == false
+
+  test "runDebtScan still passes a clean file when the marker file is present":
+    ## Given a clean .nim file and a DEBT_REGISTRY.md carrying the former marker
+    ## When runDebtScan is invoked
+    ## Then it returns true — unrelated markdown text does not create findings
+    writeFile(tmpDir / "src" / "clean.nim", "echo \"hello world\"\n")
+    createDir(tmpDir / "docs")
+    writeFile(tmpDir / "docs" / "DEBT_REGISTRY.md",
+      "### [Exemption APPROVED] src/clean.nim\n")
     check runDebtScan(tmpDir, @[]) == true
 
   test "runDebtScan passes on empty file list with no src directory":

@@ -93882,35 +93882,6 @@
     },
     {
       "hasAxiomHint": false,
-      "ignorable": false,
-      "leanType": "Bool",
-      "module": "src/gate/runners/debt_scan_gate.nim",
-      "name": "isExempted",
-      "negativeConstraints": [
-        "result >= 0 is invalid — Bool is not numeric",
-        "Use '(= result true) or (= result false)' instead"
-      ],
-      "resultConstraintTemplate": "(or (= result true) (= result false))",
-      "returnType": "bool",
-      "smtSort": "Bool",
-      "typeCategory": "bool"
-    },
-    {
-      "hasAxiomHint": false,
-      "ignorable": false,
-      "leanType": "String",
-      "module": "src/gate/runners/debt_scan_gate.nim",
-      "name": "loadExemptionText",
-      "negativeConstraints": [
-        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
-      ],
-      "resultConstraintTemplate": "(>= (str.len result) 0)",
-      "returnType": "string",
-      "smtSort": "String",
-      "typeCategory": "string"
-    },
-    {
-      "hasAxiomHint": false,
       "ignorable": true,
       "leanType": "Unit",
       "module": "src/gate/runners/debt_scan_gate.nim",
@@ -93924,20 +93895,6 @@
       "returnType": "void",
       "smtSort": "Unit",
       "typeCategory": "void"
-    },
-    {
-      "hasAxiomHint": false,
-      "ignorable": false,
-      "leanType": "String",
-      "module": "src/gate/runners/debt_scan_gate.nim",
-      "name": "relativizePath",
-      "negativeConstraints": [
-        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
-      ],
-      "resultConstraintTemplate": "(>= (str.len result) 0)",
-      "returnType": "string",
-      "smtSort": "String",
-      "typeCategory": "string"
     },
     {
       "hasAxiomHint": false,
