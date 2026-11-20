@@ -1,0 +1,974 @@
+{
+  "schema_version": "axiom.ci_acceptance.v3",
+  "contract": "docs/spec/ci_acceptance_contract.md",
+  "generated_at": "2026-11-20T06:27:07Z",
+  "repo": "Archright/Axiom",
+  "boundary": "aa0f78a8d2a6a070d1ff42ee3ead7d062c85d356",
+  "excluded_before_boundary": 16,
+  "entries": [
+    {
+      "run_id": "44519217624",
+      "run_ids": [
+        "44519217624"
+      ],
+      "attempt_ids": [
+        "44519217624:1"
+      ],
+      "head_sha": "2ff9f58a8c9d97eeb8bcd25b1333dd9ec4f7fa34",
+      "base_sha": "aa0f78a8d2a6a070d1ff42ee3ead7d062c85d356",
+      "pr_number": 211,
+      "conclusion": "failure",
+      "classification": "external_dependency",
+      "subtype": "external_supply_unavailable",
+      "subtype_detail": "",
+      "evidence": "run:44519217624/attempt:1/log:logs/10_attest _ admission-check.txt",
+      "control_outcome": "fail_closed",
+      "recovered_degradation": false,
+      "wall_seconds": 708,
+      "wall_observed": true,
+      "legacy_wall_seconds": 710,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": false,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44519217624/attempt:1=external_dependency/external_supply_unavailable control=fail_closed"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44519217624",
+          "attempt_number": 1,
+          "classification": "external_dependency",
+          "subtype": "external_supply_unavailable",
+          "subtype_detail": "",
+          "control_outcome": "fail_closed",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44521587339",
+      "run_ids": [
+        "44521587339"
+      ],
+      "attempt_ids": [
+        "44521587339:1"
+      ],
+      "head_sha": "807f38d9fec0e9747a53a5d8de7db843935e97ca",
+      "base_sha": "aa0f78a8d2a6a070d1ff42ee3ead7d062c85d356",
+      "pr_number": 211,
+      "conclusion": "failure",
+      "classification": "external_dependency",
+      "subtype": "external_supply_unavailable",
+      "subtype_detail": "",
+      "evidence": "run:44521587339/attempt:1/log:logs/12_attest _ go-critical-lane (1).txt",
+      "control_outcome": "fail_closed",
+      "recovered_degradation": false,
+      "wall_seconds": 763,
+      "wall_observed": true,
+      "legacy_wall_seconds": 765,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": false,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44521587339/attempt:1=external_dependency/external_supply_unavailable control=fail_closed"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44521587339",
+          "attempt_number": 1,
+          "classification": "external_dependency",
+          "subtype": "external_supply_unavailable",
+          "subtype_detail": "",
+          "control_outcome": "fail_closed",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44542633420",
+      "run_ids": [
+        "44542633420"
+      ],
+      "attempt_ids": [
+        "44542633420:1"
+      ],
+      "head_sha": "69d2dce090c95eef683c16bfecc5bfa388bc8704",
+      "base_sha": "aa0f78a8d2a6a070d1ff42ee3ead7d062c85d356",
+      "pr_number": 211,
+      "conclusion": "success",
+      "classification": "success",
+      "subtype": "none",
+      "subtype_detail": "",
+      "evidence": "run:44542633420/attempt:1/conclusion:success",
+      "control_outcome": "accepted",
+      "recovered_degradation": false,
+      "wall_seconds": 430,
+      "wall_observed": true,
+      "legacy_wall_seconds": 432,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": true,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44542633420/attempt:1=success control=accepted"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44542633420",
+          "attempt_number": 1,
+          "classification": "success",
+          "subtype": "none",
+          "subtype_detail": "",
+          "control_outcome": "accepted",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44548437642",
+      "run_ids": [
+        "44548437642"
+      ],
+      "attempt_ids": [
+        "44548437642:1"
+      ],
+      "head_sha": "dd8502f629f74dbe70d2cebd81c1dd43a513b846",
+      "base_sha": "69d2dce090c95eef683c16bfecc5bfa388bc8704",
+      "pr_number": 212,
+      "conclusion": "success",
+      "classification": "success",
+      "subtype": "none",
+      "subtype_detail": "",
+      "evidence": "run:44548437642/attempt:1/conclusion:success",
+      "control_outcome": "accepted",
+      "recovered_degradation": false,
+      "wall_seconds": 519,
+      "wall_observed": true,
+      "legacy_wall_seconds": 521,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": true,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44548437642/attempt:1=success control=accepted"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44548437642",
+          "attempt_number": 1,
+          "classification": "success",
+          "subtype": "none",
+          "subtype_detail": "",
+          "control_outcome": "accepted",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44553449785",
+      "run_ids": [
+        "44553449785"
+      ],
+      "attempt_ids": [
+        "44553449785:1"
+      ],
+      "head_sha": "a2a863634dd07bc0a05786a4bc990910c0d1341d",
+      "base_sha": "f943c424e6e027ab2c66307cfe5cb130643b81c8",
+      "pr_number": 213,
+      "conclusion": "success",
+      "classification": "success",
+      "subtype": "none",
+      "subtype_detail": "",
+      "evidence": "run:44553449785/attempt:1/conclusion:success",
+      "control_outcome": "accepted",
+      "recovered_degradation": false,
+      "wall_seconds": 574,
+      "wall_observed": true,
+      "legacy_wall_seconds": 578,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": true,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44553449785/attempt:1=success control=accepted"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44553449785",
+          "attempt_number": 1,
+          "classification": "success",
+          "subtype": "none",
+          "subtype_detail": "",
+          "control_outcome": "accepted",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44561019095",
+      "run_ids": [
+        "44561019095"
+      ],
+      "attempt_ids": [
+        "44561019095:1"
+      ],
+      "head_sha": "8bbb035a7aca8ce70f980808fa0c8c609fe94d4c",
+      "base_sha": "64d0fe2e62308400b96f1c1750b4b216c0663bf4",
+      "pr_number": 216,
+      "conclusion": "success",
+      "classification": "success",
+      "subtype": "none",
+      "subtype_detail": "",
+      "evidence": "run:44561019095/attempt:1/conclusion:success",
+      "control_outcome": "accepted",
+      "recovered_degradation": false,
+      "wall_seconds": 555,
+      "wall_observed": true,
+      "legacy_wall_seconds": 556,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": true,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44561019095/attempt:1=success control=accepted"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44561019095",
+          "attempt_number": 1,
+          "classification": "success",
+          "subtype": "none",
+          "subtype_detail": "",
+          "control_outcome": "accepted",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44656823351",
+      "run_ids": [
+        "44656823351"
+      ],
+      "attempt_ids": [
+        "44656823351:1"
+      ],
+      "head_sha": "cd7b1deadad11d5e619bcc8b1d0e7a90b7ffd2fa",
+      "base_sha": "8bbb035a7aca8ce70f980808fa0c8c609fe94d4c",
+      "pr_number": 217,
+      "conclusion": "success",
+      "classification": "success",
+      "subtype": "none",
+      "subtype_detail": "",
+      "evidence": "run:44656823351/attempt:1/conclusion:success",
+      "control_outcome": "accepted",
+      "recovered_degradation": false,
+      "wall_seconds": 545,
+      "wall_observed": true,
+      "legacy_wall_seconds": 547,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": true,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44656823351/attempt:1=success control=accepted"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44656823351",
+          "attempt_number": 1,
+          "classification": "success",
+          "subtype": "none",
+          "subtype_detail": "",
+          "control_outcome": "accepted",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44662615542",
+      "run_ids": [
+        "44662615542"
+      ],
+      "attempt_ids": [
+        "44662615542:1"
+      ],
+      "head_sha": "e1a06f5ddc7891044905929e28ef3cffa3b65d97",
+      "base_sha": "cd7b1deadad11d5e619bcc8b1d0e7a90b7ffd2fa",
+      "pr_number": 227,
+      "conclusion": "failure",
+      "classification": "external_dependency",
+      "subtype": "external_supply_unavailable",
+      "subtype_detail": "",
+      "evidence": "run:44662615542/attempt:1/log:logs/11_mint-prepare _ prepare.txt",
+      "control_outcome": "fail_closed",
+      "recovered_degradation": false,
+      "wall_seconds": 387,
+      "wall_observed": true,
+      "legacy_wall_seconds": 389,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": false,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44662615542/attempt:1=external_dependency/external_supply_unavailable control=fail_closed"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44662615542",
+          "attempt_number": 1,
+          "classification": "external_dependency",
+          "subtype": "external_supply_unavailable",
+          "subtype_detail": "",
+          "control_outcome": "fail_closed",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44663622984",
+      "run_ids": [
+        "44663622984"
+      ],
+      "attempt_ids": [
+        "44663622984:1"
+      ],
+      "head_sha": "d49e955895d83290976958189979167053e1956b",
+      "base_sha": "cd7b1deadad11d5e619bcc8b1d0e7a90b7ffd2fa",
+      "pr_number": 227,
+      "conclusion": "failure",
+      "classification": "external_dependency",
+      "subtype": "external_supply_unavailable",
+      "subtype_detail": "",
+      "evidence": "run:44663622984/attempt:1/log:logs/10_mint-prepare _ prepare.txt",
+      "control_outcome": "fail_closed",
+      "recovered_degradation": false,
+      "wall_seconds": 551,
+      "wall_observed": true,
+      "legacy_wall_seconds": 553,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": false,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44663622984/attempt:1=external_dependency/external_supply_unavailable control=fail_closed"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44663622984",
+          "attempt_number": 1,
+          "classification": "external_dependency",
+          "subtype": "external_supply_unavailable",
+          "subtype_detail": "",
+          "control_outcome": "fail_closed",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44665694626",
+      "run_ids": [
+        "44665694626"
+      ],
+      "attempt_ids": [
+        "44665694626:1"
+      ],
+      "head_sha": "4f36457e3675013230ad2bb1de96a14ee3786f61",
+      "base_sha": "0697e4b1602fe245158048fb940eb2f58355def1",
+      "pr_number": 231,
+      "conclusion": "success",
+      "classification": "success",
+      "subtype": "none",
+      "subtype_detail": "",
+      "evidence": "run:44665694626/attempt:1/conclusion:success",
+      "control_outcome": "accepted",
+      "recovered_degradation": false,
+      "wall_seconds": 613,
+      "wall_observed": true,
+      "legacy_wall_seconds": 615,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": true,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44665694626/attempt:1=success control=accepted"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44665694626",
+          "attempt_number": 1,
+          "classification": "success",
+          "subtype": "none",
+          "subtype_detail": "",
+          "control_outcome": "accepted",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44667069510",
+      "run_ids": [
+        "44667069510"
+      ],
+      "attempt_ids": [
+        "44667069510:1"
+      ],
+      "head_sha": "abcc12c6f72b8320e170410888913de0d5142e9c",
+      "base_sha": "4f36457e3675013230ad2bb1de96a14ee3786f61",
+      "pr_number": 232,
+      "conclusion": "success",
+      "classification": "success",
+      "subtype": "none",
+      "subtype_detail": "",
+      "evidence": "run:44667069510/attempt:1/conclusion:success",
+      "control_outcome": "accepted",
+      "recovered_degradation": false,
+      "wall_seconds": 558,
+      "wall_observed": true,
+      "legacy_wall_seconds": 562,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": true,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44667069510/attempt:1=success control=accepted"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44667069510",
+          "attempt_number": 1,
+          "classification": "success",
+          "subtype": "none",
+          "subtype_detail": "",
+          "control_outcome": "accepted",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44668581737",
+      "run_ids": [
+        "44668581737"
+      ],
+      "attempt_ids": [
+        "44668581737:1"
+      ],
+      "head_sha": "4673ba558b8bad43b47dd5fb2a1d4df2ea39aef9",
+      "base_sha": "abcc12c6f72b8320e170410888913de0d5142e9c",
+      "pr_number": 227,
+      "conclusion": "failure",
+      "classification": "external_dependency",
+      "subtype": "external_supply_unavailable",
+      "subtype_detail": "",
+      "evidence": "run:44668581737/attempt:1/log:logs/11_attest _ admission-check.txt",
+      "control_outcome": "fail_closed",
+      "recovered_degradation": false,
+      "wall_seconds": 648,
+      "wall_observed": true,
+      "legacy_wall_seconds": 650,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": false,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44668581737/attempt:1=external_dependency/external_supply_unavailable control=fail_closed"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44668581737",
+          "attempt_number": 1,
+          "classification": "external_dependency",
+          "subtype": "external_supply_unavailable",
+          "subtype_detail": "",
+          "control_outcome": "fail_closed",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44669070505",
+      "run_ids": [
+        "44669070505"
+      ],
+      "attempt_ids": [
+        "44669070505:1"
+      ],
+      "head_sha": "aba55ca12b84e1add3069bc99339734195a9c1fd",
+      "base_sha": "4673ba558b8bad43b47dd5fb2a1d4df2ea39aef9",
+      "pr_number": 234,
+      "conclusion": "failure",
+      "classification": "external_dependency",
+      "subtype": "external_supply_unavailable",
+      "subtype_detail": "",
+      "evidence": "run:44669070505/attempt:1/log:logs/10_attest _ admission-check.txt",
+      "control_outcome": "fail_closed",
+      "recovered_degradation": false,
+      "wall_seconds": 702,
+      "wall_observed": true,
+      "legacy_wall_seconds": 704,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": false,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44669070505/attempt:1=external_dependency/external_supply_unavailable control=fail_closed"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44669070505",
+          "attempt_number": 1,
+          "classification": "external_dependency",
+          "subtype": "external_supply_unavailable",
+          "subtype_detail": "",
+          "control_outcome": "fail_closed",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44669827441",
+      "run_ids": [
+        "44669827441"
+      ],
+      "attempt_ids": [
+        "44669827441:1"
+      ],
+      "head_sha": "f7d73fd8053f92a445348e8218ea35ef2198a93d",
+      "base_sha": "abcc12c6f72b8320e170410888913de0d5142e9c",
+      "pr_number": 234,
+      "conclusion": "success",
+      "classification": "success",
+      "subtype": "none",
+      "subtype_detail": "",
+      "evidence": "run:44669827441/attempt:1/conclusion:success",
+      "control_outcome": "accepted",
+      "recovered_degradation": false,
+      "wall_seconds": 642,
+      "wall_observed": true,
+      "legacy_wall_seconds": 644,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": true,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44669827441/attempt:1=success control=accepted"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44669827441",
+          "attempt_number": 1,
+          "classification": "success",
+          "subtype": "none",
+          "subtype_detail": "",
+          "control_outcome": "accepted",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44672272126",
+      "run_ids": [
+        "44672272126"
+      ],
+      "attempt_ids": [
+        "44672272126:1"
+      ],
+      "head_sha": "e65efa3583410b9136cc292554f15447a0d3d181",
+      "base_sha": "f7d73fd8053f92a445348e8218ea35ef2198a93d",
+      "pr_number": 235,
+      "conclusion": "success",
+      "classification": "success",
+      "subtype": "none",
+      "subtype_detail": "",
+      "evidence": "run:44672272126/attempt:1/conclusion:success",
+      "control_outcome": "accepted",
+      "recovered_degradation": false,
+      "wall_seconds": 478,
+      "wall_observed": true,
+      "legacy_wall_seconds": 482,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": true,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44672272126/attempt:1=success control=accepted"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44672272126",
+          "attempt_number": 1,
+          "classification": "success",
+          "subtype": "none",
+          "subtype_detail": "",
+          "control_outcome": "accepted",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44674123967",
+      "run_ids": [
+        "44674123967"
+      ],
+      "attempt_ids": [
+        "44674123967:1"
+      ],
+      "head_sha": "e36677804b5ccb70ce6da7f3b88777878bafeebb",
+      "base_sha": "e65efa3583410b9136cc292554f15447a0d3d181",
+      "pr_number": 227,
+      "conclusion": "success",
+      "classification": "success",
+      "subtype": "none",
+      "subtype_detail": "",
+      "evidence": "run:44674123967/attempt:1/conclusion:success",
+      "control_outcome": "accepted",
+      "recovered_degradation": false,
+      "wall_seconds": 448,
+      "wall_observed": true,
+      "legacy_wall_seconds": 450,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": true,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44674123967/attempt:1=success control=accepted"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44674123967",
+          "attempt_number": 1,
+          "classification": "success",
+          "subtype": "none",
+          "subtype_detail": "",
+          "control_outcome": "accepted",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44675885492",
+      "run_ids": [
+        "44675885492"
+      ],
+      "attempt_ids": [
+        "44675885492:1"
+      ],
+      "head_sha": "c8bd3c54ceeeffc7c44a853186f47ead9b58c4a6",
+      "base_sha": "cbd87b4a5e014bf7c93660b85537d6b562a2ac19",
+      "pr_number": 233,
+      "conclusion": "failure",
+      "classification": "external_dependency",
+      "subtype": "external_supply_unavailable",
+      "subtype_detail": "",
+      "evidence": "run:44675885492/attempt:1/log:logs/12_attest _ admission-check.txt",
+      "control_outcome": "fail_closed",
+      "recovered_degradation": false,
+      "wall_seconds": 607,
+      "wall_observed": true,
+      "legacy_wall_seconds": 609,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": false,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44675885492/attempt:1=external_dependency/external_supply_unavailable control=fail_closed"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44675885492",
+          "attempt_number": 1,
+          "classification": "external_dependency",
+          "subtype": "external_supply_unavailable",
+          "subtype_detail": "",
+          "control_outcome": "fail_closed",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44678603060",
+      "run_ids": [
+        "44678603060"
+      ],
+      "attempt_ids": [
+        "44678603060:1"
+      ],
+      "head_sha": "39f0100ed54ff5216de54c9deed11f614038c662",
+      "base_sha": "f8b35619dc5fafb2ab99dd7726745d9c8114e736",
+      "pr_number": 242,
+      "conclusion": "success",
+      "classification": "success",
+      "subtype": "none",
+      "subtype_detail": "",
+      "evidence": "run:44678603060/attempt:1/conclusion:success",
+      "control_outcome": "accepted",
+      "recovered_degradation": false,
+      "wall_seconds": 704,
+      "wall_observed": true,
+      "legacy_wall_seconds": 706,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": true,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44678603060/attempt:1=success control=accepted"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44678603060",
+          "attempt_number": 1,
+          "classification": "success",
+          "subtype": "none",
+          "subtype_detail": "",
+          "control_outcome": "accepted",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44680326991",
+      "run_ids": [
+        "44680326991"
+      ],
+      "attempt_ids": [
+        "44680326991:1"
+      ],
+      "head_sha": "0fc1f7fe53cf765ff0f2b334db7494dcfda3dae7",
+      "base_sha": "39f0100ed54ff5216de54c9deed11f614038c662",
+      "pr_number": 243,
+      "conclusion": "success",
+      "classification": "success",
+      "subtype": "none",
+      "subtype_detail": "",
+      "evidence": "run:44680326991/attempt:1/conclusion:success",
+      "control_outcome": "accepted",
+      "recovered_degradation": false,
+      "wall_seconds": 941,
+      "wall_observed": true,
+      "legacy_wall_seconds": 948,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": true,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44680326991/attempt:1=success control=accepted"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44680326991",
+          "attempt_number": 1,
+          "classification": "success",
+          "subtype": "none",
+          "subtype_detail": "",
+          "control_outcome": "accepted",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "run_id": "44680330023",
+      "run_ids": [
+        "44680330023"
+      ],
+      "attempt_ids": [
+        "44680330023:1"
+      ],
+      "head_sha": "2f0ddbc33979ecd5253727de7c08f2ca9c9134a9",
+      "base_sha": "0fc1f7fe53cf765ff0f2b334db7494dcfda3dae7",
+      "pr_number": 244,
+      "conclusion": "success",
+      "classification": "success",
+      "subtype": "none",
+      "subtype_detail": "",
+      "evidence": "run:44680330023/attempt:1/conclusion:success",
+      "control_outcome": "accepted",
+      "recovered_degradation": false,
+      "wall_seconds": 814,
+      "wall_observed": true,
+      "legacy_wall_seconds": 819,
+      "legacy_wall_observed": true,
+      "admission_app_ids": [
+        15368,
+        5795152
+      ],
+      "admission_app_required": true,
+      "admission_app_success": false,
+      "gap": false,
+      "gap_reason": "",
+      "post_boundary": true,
+      "attempts": [
+        "run:44680330023/attempt:1=success control=accepted"
+      ],
+      "attempt_details": [
+        {
+          "run_id": "44680330023",
+          "attempt_number": 1,
+          "classification": "success",
+          "subtype": "none",
+          "subtype_detail": "",
+          "control_outcome": "accepted",
+          "recovered": false
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "success": 13,
+    "legitimate_policy": 0,
+    "internal_defect": 0,
+    "unclassified": 0,
+    "external_dependency": 7,
+    "recovered_degradation": 0,
+    "cancelled_superseded": 0,
+    "internal_defect_subtypes": {
+      "identity_divergence": 0,
+      "soundness_failure": 0,
+      "failure_projection": 0,
+      "authority_substitution": 0
+    }
+  },
+  "acceptance": {
+    "mode": "initial",
+    "status": "INCOMPLETE",
+    "requested_window": 20,
+    "observed_entries": 20,
+    "shortfall": 0,
+    "unexpected_internal_defects": 0,
+    "unclassified": 0,
+    "external_dependency_blocked": 7,
+    "recovered_degradation": 0,
+    "predicate_holds": false,
+    "observation_complete": false,
+    "accepted": false,
+    "gaps": [
+      "run 44687078141/attempt 1: no artifact/log evidence available (artifacts: gh api repos/Archright/Axiom/actions/runs/44687078141/attempts/1/artifacts?per_page=100 exited 1: {; logs: gh api download repos/Archright/Axiom/actions/runs/44687078141/attempts/1/logs exited 1)"
+    ]
+  },
+  "latency": {
+    "n": 20,
+    "p50_seconds": 590.5,
+    "mean_seconds": 609.35,
+    "min_seconds": 387,
+    "max_seconds": 941,
+    "legacy_n": 20,
+    "legacy_p50_seconds": 593.5,
+    "legacy_mean_seconds": 612.0,
+    "formula": "max(job.completed_at) - min(job.started_at) over the terminal attempt's jobs with both timestamps; sorted integer seconds; even n = mean of the two middle values",
+    "legacy_formula": "terminal attempt updated_at - run_started_at; non-canonical, continuity only"
+  }
+}
