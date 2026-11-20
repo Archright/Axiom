@@ -22,8 +22,10 @@ import infrastructure/certificate_attestation
 ## Builtin axiom allowlist for pure-Lean kernel cert deep verification. Any
 ## recorded axiom outside this set (notably sorryAx/Lean.sorryAx) → fail-closed.
 ## Mirrors ax_vacuity_check.lean / lean_replay.nim. docs/spec/lean_sorry_gate.md.
-const leanCertBuiltinAxiomAllowlist*: array[4, string] =
-  ["Classical.choice", "Quot.sound", "propext", "funext"]
+## INV-6 primitive set: `funext` is a theorem alias whose `#print axioms`
+## dependency is `Quot.sound`; it is not a primitive axiom and is rejected here.
+const leanCertBuiltinAxiomAllowlist*: array[3, string] =
+  ["Classical.choice", "Quot.sound", "propext"]
 
 proc certSourceHashMatchesSource*(cert: JsonNode; projectRoot: string): bool {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Fail-closed source-staleness check: the cert's `sourceHash` must equal

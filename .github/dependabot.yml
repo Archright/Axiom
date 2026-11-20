@@ -1,4 +1,12 @@
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates
+# AUTHORITY: this exclude-paths list is a projection of
+# config/policy/trust_surface_manifest.json — that manifest is the SSOT for the
+# trust-surface path set. Add a workflow here in the same change that adds it to
+# the manifest; a missing entry makes Dependabot propose a pin bump that can
+# never obtain admission-check (blob(G)==blob(B_mg)), burning required-check
+# cycles (measured: PR #201/#202, issue #250).
+# v87 (2026-11-20, issue #250): add the three drift-missing workflows —
+# admission-gate-v2.yml, axiom-operational-slice.yml, publication-integrity.yml.
 # v86 (2026-10-22, PR #1045 + this slice): exclude-paths keeps Dependabot from
 # proposing updates to trustSurface workflow files — the org
 # trusted-writer-set-pairing gate structurally blocks that class (measured
@@ -18,10 +26,13 @@ updates:
     exclude-paths:
       - ".github/actions/setup-axiom-toolchain/**"
       - ".github/workflows/admission-check.yml"
+      - ".github/workflows/admission-gate-v2.yml"
+      - ".github/workflows/axiom-operational-slice.yml"
       - ".github/workflows/certificate-mint.yml"
       - ".github/workflows/runner-pool-acceptance.yml"
       - ".github/workflows/repository_surface.yml"
       - ".github/workflows/bsec-integrity.yml"
       - ".github/workflows/debt-registry-gate.yml"
       - ".github/workflows/generation-acceptance.yml"
+      - ".github/workflows/publication-integrity.yml"
       - ".github/workflows/dependabot-auto-merge.yml"

@@ -28,7 +28,8 @@ axiomLayer "infrastructure"
 ##   eaUnsupported    — the wire codec rejected a canonical node outside the
 ##                      closed 11-kind grammar (fail-closed, never skip), or
 ##                      the reference extractor rejected the wire (exit 1)
-##   eaReferenceError — Lean worker unavailable (exit -2), worker IO failure
+##   eaReferenceError — Lean worker unavailable (exit -2), Lean project oleans
+##                      unbuilt (preflight -3, issue #221), worker IO failure
 ##                      (exit 2), or no output file
 ##   eaInternalError  — invalid canonical, wire round-trip failure, Nim-leg
 ##                      derivation failure, or worker timeout/start failure
@@ -441,6 +442,21 @@ func bytesToStr(bytes: openArray[byte]): string {.raises: [].} =
   for i in 0 ..< bytes.len:
     result[i] = char(bytes[i])
 
+proc leanOleanPreflightReason*(proofsDir: string): string {.raises: [].} =
+  ## Preflight for the Lean-source worker path (issue #221). The extractor is
+  ## launched as `lake env lean --run IR/RustReferenceExtractor.lean` from
+  ## proofs/ and imports `IR.AxiomIRExpr`, so Lean must resolve the BUILT
+  ## project olean from `.lake/build/lib/lean/`. Without it Lean reports
+  ## `unknown module prefix 'IR'` — an environment deficiency that the
+  ## differential would otherwise misread as an extractor rejection.
+  ## "" = the olean is present; otherwise an actionable reason naming the
+  ## missing artifact and the command that produces it. Read-only.
+  let artifact = proofsDir & "/.lake/build/lib/lean/IR/AxiomIRExpr.olean"
+  if fileExists(artifact):
+    return ""
+  result = "Lean oleans not built: missing " & artifact &
+    " — run `lake build` in proofs/ before `ax prove`"
+
 proc runRustReferenceExtractorOnWire*(
   wireBytes: seq[byte];
   rcheckExe: string = "";
@@ -452,7 +468,8 @@ proc runRustReferenceExtractorOnWire*(
   ## (c) Reference-extractor leg: write the rust wire to a temp FILE, invoke
   ## the Lean reference extractor (`--ast <file> --out <file>`; temp-FILE
   ## channel for BOTH payloads — QUIRK(quirk#runGitEx-argv-flattening)), read
-  ## the IR output. exitCode: -2 = worker unavailable, -1 = timeout / failed
+  ## the IR output. exitCode: -3 = Lean project oleans unbuilt (environment
+  ## preflight, issue #221), -2 = worker unavailable, -1 = timeout / failed
   ## to start, 0 = OK, 1 = extraction failure (unsupported/malformed),
   ## 2 = worker IO failure. outBytes empty on any non-zero exit.
   result = (exitCode: -1, output: "", outBytes: @[])
@@ -468,6 +485,14 @@ proc runRustReferenceExtractorOnWire*(
       # Sentinel -2: worker unavailable (distinct from timeout -1).
       result.exitCode = -2
       result.output = "RustReferenceExtractor.lean not found: " & leanSource
+      return
+    # The source-run path consumes the project library: without the built
+    # olean the toolchain never reaches the extractor (fail-closed, but a
+    # DISTINCT environment reason instead of "rejected the wire").
+    let oleanReason = leanOleanPreflightReason(root / "proofs")
+    if oleanReason.len > 0:
+      result.exitCode = -3
+      result.output = oleanReason
       return
     # Run by the pinned toolchain from the proofs/ project root (lake needs
     # its lakefile directory to resolve IR/*.olean; the .lean path is
@@ -553,6 +578,13 @@ proc runRustExtractionAgreement*(
   result.nimDigest = sha256Hex(bytesToStr(nimBytes))
   let lean = runRustReferenceExtractorOnWire(wire.bytes, rcheckExe,
                                              projectRoot, timeoutMs)
+  if lean.exitCode == -3:
+    # Environment deficiency (issue #221): the Lean project oleans are not
+    # built. Fail closed with a DISTINCT classification — never the
+    # "rejected the wire" reason class.
+    result.verdict = eaReferenceError
+    result.reason = "leanOleanMissing: " & lean.output
+    return
   if lean.exitCode == -2:
     result.verdict = eaReferenceError
     result.reason = "reference extractor unavailable: " & lean.output

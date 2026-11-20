@@ -81,6 +81,7 @@ import core/trusted/axiom_ir_helpers
 import core/trusted/ir_to_smt
 import core/trusted/rust_canonical
 import core/types/obligation_evidence  ## ModelBinding (attribution-guard units)
+import verification/extraction_agreement
 import verification/llbc_to_canonical
 import verification/obligation/canonical_verification
 import verification/obligation/lean_kernel_boundary
@@ -617,5 +618,71 @@ suite "rust guard attempt — guardObservationAdmitted (the G1 admission predica
     check not guardObservationAdmitted(rroAgree, addPanic)
     check not guardObservationAdmitted(rroDisagree, addPanic)
     check not guardObservationAdmitted(rroUnavailable, addPanic)
+
+suite "lean olean preflight (#221 — source-run readiness)":
+  ## Issue #221 regression: the Rust reference-extractor SOURCE path must fail
+  ## with an actionable "run `lake build` in proofs/" reason when the Lean
+  ## project oleans are unbuilt — a DISTINCT environment classification,
+  ## never "reference extractor rejected the wire". Deterministic: the third
+  ## assertion reaches the real call site (runRustExtractionAgreement), but
+  ## the preflight returns before any lake/Lean process is spawned, so no
+  ## toolchain is required.
+
+  proc oleanPreflightCanonical(): RustCanonical =
+    ## Minimal in-grammar straight-line canonical (`_0 = a; return`).
+    RustCanonical(
+      modulePath: "axiom_issue221::probe",
+      sourceIdentity: "issue221-preflight-fixture",
+      funcName: "identity",
+      returnPlace: "_0",
+      failureMode: rfmNoneObserved,
+      params: @[RustParam(name: "a", ty: rustU8Type())],
+      retType: rustU8Type(),
+      body: @[
+        RustStmt(kind: rskAssign, dest: "_0",
+                 rvalue: RustRvalue(kind: rrvUse,
+                   operand: RustOperand(kind: ropCopy, place: "a"))),
+        RustStmt(kind: rskReturn)
+      ])
+
+  test "missing oleans yield the distinct actionable reason, never the " &
+      "extractor-rejection class":
+    let tmp = getTempDir() / ("axiom_olean_preflight_" & $getCurrentProcessId())
+    removeDir(tmp)
+    let proofs = tmp / "proofs"
+    createDir(proofs / "IR")
+    writeFile(proofs / "IR" / "RustReferenceExtractor.lean", "-- fixture\n")
+    defer:
+      removeDir(tmp)
+
+    # 1. Missing .lake/build → actionable reason naming artifact + command.
+    let reason = leanOleanPreflightReason(proofs)
+    check reason.len > 0
+    check "lake build" in reason
+    check "IR/AxiomIRExpr.olean" in reason
+    check "rejected the wire" notin reason
+
+    # 2. Present IR/AxiomIRExpr.olean → empty reason (preflight passes).
+    let oleanDir = proofs / ".lake" / "build" / "lib" / "lean" / "IR"
+    createDir(oleanDir)
+    writeFile(oleanDir / "AxiomIRExpr.olean", "fixture")
+    check leanOleanPreflightReason(proofs).len == 0
+
+    # 3. Real call site: the differential maps the preflight to a DISTINCT
+    #    classification, never the "rejected the wire" reason class. The
+    #    prebuilt-worker override is cleared so the source-run path is taken.
+    removeDir(proofs / ".lake")
+    let hadOverride = existsEnv("AXIOM_RUSTCHECK_CMD")
+    let prior = getEnv("AXIOM_RUSTCHECK_CMD", "")
+    delEnv("AXIOM_RUSTCHECK_CMD")
+    defer:
+      if hadOverride:
+        putEnv("AXIOM_RUSTCHECK_CMD", prior)
+    let r = runRustExtractionAgreement(oleanPreflightCanonical(),
+                                       rcheckExe = "", projectRoot = tmp)
+    check r.verdict == eaReferenceError
+    check "leanOleanMissing" in r.reason
+    check "lake build" in r.reason
+    check "rejected the wire" notin r.reason
 
 echo ""
