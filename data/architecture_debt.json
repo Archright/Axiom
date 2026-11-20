@@ -1794,12 +1794,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:911fc432f84657757a5e30d98163e18941a88f763a4caa99ace2321573dd4175",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:85f14380a6deaf107d091a8ce70e9802cfc374b3e5510b574958cfafc3b718f0",
       "count": 1,
       "file": "src/core/symbol_graph/global_symbol_graph_builder_part2.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:e1fb36e3bf2d99b2ab9dc51d01538cc463066a9d13a82477de2692c5f76aa44f"
+      "rawContentHash": "sha256:35fda65c5dfe922b1189c6ed4c97e6ea534b47b60c9b766fb0ab8dcb898c9f23"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
