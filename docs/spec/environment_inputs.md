@@ -204,8 +204,10 @@ These variables are consumed via direct `getEnv()` calls but are established pro
 | `AXIOM_PRECOMPILE_WORKERS` | `src/cli/precompile_gates.nim:230` | Build | Precompile worker count |
 | `AXIOM_VFS_ROOT_HASH` | `src/gate/orchestrator/hook/executor.nim:642` | Gate | VFS root hash |
 | `AXIOM_PUSH_REFS` | `src/gate/runners/release_version_gate.nim:31` | Gate | Push refs for release |
-| `AXIOM_CI_REPO_HEAD` | `src/gate/runners/readiness_start_gate.nim:464` | Gate | CI identity authority: commit head the readiness evidence must declare |
-| `AXIOM_CI_TREE_DIGEST` | `src/gate/runners/readiness_start_gate.nim:465` | Gate | CI identity authority: tree digest the readiness evidence must declare (both vars required together) |
+| `AXIOM_CI_REPO_HEAD` | `src/gate/runners/readiness_start_gate.nim:567` | Gate | CI identity authority: commit head the readiness evidence must declare |
+| `AXIOM_CI_TREE_DIGEST` | `src/gate/runners/readiness_start_gate.nim:568` | Gate | CI identity authority: tree digest the readiness evidence must declare (both vars required together) |
+| `AXIOM_READINESS_REPLAY` | `src/gate/runners/readiness_start_gate.nim:535` | Gate | `1` = explicit replay: evidence-DECLARED identity becomes the evaluator context (frozen-snapshot audit reproduction); CI identity env ignored |
+| `AXIOM_READINESS_EVAL_TIME` | `src/gate/runners/readiness_start_gate.nim:609` | Gate | Replay-only evaluation instant (`yyyy-MM-ddTHH:mm:ssZ`); pins the validity axis for historical re-judgement |
 | `AXIOM_Z3_INCREMENTAL` | `src/verification/solver/z3_pool.nim:338,670,681` | Runtime | Incremental Z3 mode |
 | `AXIOM_SKIP_SOLVER_CHECK` | `src/verification/batch_uap/loop_driver.nim:456` | Test | Skip solver availability check |
 | `AXIOM_FAST_BUILD` | `config.nims:484,499`, `tools/hermetic_build.nim:1338,1368,1390,1402` | Build | Fast build shortcut |

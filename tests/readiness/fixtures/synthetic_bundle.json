@@ -26,6 +26,24 @@
         "value": true,
         "scope": "surface",
         "subject": "ax report"
+      },
+      {
+        "key": "promiseOutputExists",
+        "value": true,
+        "scope": "artifact",
+        "subject": "json-report"
+      },
+      {
+        "key": "promiseOutputExists",
+        "value": true,
+        "scope": "artifact",
+        "subject": "certificate"
+      },
+      {
+        "key": "subjectLane",
+        "value": [],
+        "scope": "trust-boundary",
+        "subject": ""
       }
     ],
     "sources": [
@@ -48,6 +66,24 @@
       "freshUntil": "2027-08-01T00:00:00Z"
     },
     "observations": [
+      {
+        "key": "certGreenDualEvidenceRequired",
+        "value": true,
+        "scope": "canonical-promotion",
+        "subject": ""
+      },
+      {
+        "key": "z3OnlyCanProduceCertGreen",
+        "value": false,
+        "scope": "canonical-promotion",
+        "subject": ""
+      },
+      {
+        "key": "summaryVerifiedIncludesVacuous",
+        "value": false,
+        "scope": "summary",
+        "subject": ""
+      },
       {
         "key": "z3VsDualDistinguishable",
         "value": true,
@@ -209,6 +245,12 @@
         "value": true,
         "scope": "",
         "subject": ""
+      },
+      {
+        "key": "subjectTreeImmutableAcrossRun",
+        "value": true,
+        "scope": "git",
+        "subject": ""
       }
     ],
     "sources": [
@@ -240,7 +282,7 @@
       {
         "key": "helpSurface",
         "value": true,
-        "scope": "",
+        "scope": "surface",
         "subject": "ax prove"
       },
       {
@@ -276,7 +318,7 @@
       {
         "key": "helpSurface",
         "value": true,
-        "scope": "",
+        "scope": "surface",
         "subject": "ax report"
       },
       {
@@ -302,6 +344,18 @@
         "value": 2,
         "scope": "",
         "subject": "ax report"
+      },
+      {
+        "key": "jsonSchemaVersion",
+        "value": "axiom.report.v1",
+        "scope": "surface",
+        "subject": ""
+      },
+      {
+        "key": "stdoutStderrSplit",
+        "value": true,
+        "scope": "surface",
+        "subject": ""
       }
     ],
     "sources": [
@@ -371,8 +425,8 @@
       },
       {
         "key": "measuredCoverage",
-        "value": 0.1,
-        "scope": "",
+        "value": 0.8,
+        "scope": "vkd",
         "subject": "vkd"
       }
     ],

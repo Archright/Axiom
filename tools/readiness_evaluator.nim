@@ -18,7 +18,7 @@
 ## All digests are SHA-256 via core/utils/decision_algebra's canonical JSON over
 ## core/crypto/hash_kernel — byte-identical to tools/sha256_native.nim.
 
-import std/[json, tables, algorithm, sequtils, options, os]
+import std/[json, tables, algorithm, sequtils, options, os, strutils]
 import ../src/core/utils/decision_algebra as decision_algebra
 from ../src/core/utils/decision_algebra import
   InvariantState, InvariantStatus, DecisionCandidate, DecisionEvidence,
@@ -111,6 +111,49 @@ const
   InvariantIds* = ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"]
   CleanTreeRequiredInvariants = ["R1", "R3", "R8"]
   DefaultPolicyHash = "axiom-readiness-v1"
+  DeclaredObservationScopes = ["contract"]
+    ## scope values that declare a policy echo. A `declared` observation is a
+    ## parameter/contract restatement, never evidence that the fact holds.
+  KeyTypes = ["bool", "bool-or-null", "int", "float", "float-or-null",
+              "string", "string-or-null", "stringlist"]
+  ConditionTokens = ["claim:subjectLane", "successor:successExitCode"]
+  ConditionPolicyPrefix = "policy:"
+
+type
+  KeyPresence* = enum
+    kpRequired = "required"
+    kpConditional = "conditional"
+    kpVocabulary = "vocabulary"
+
+  KeyState* = enum
+    ksPresent = "present"
+    ksPresentFalse = "present-false"
+    ksAbsent = "absent"
+    ksNull = "null"
+    ksWrongType = "wrong-type"
+    ksConditionUnmet = "condition-unmet"
+
+  KeyDisposition* = object
+    ## One policy-declared observation key: what must be observed, for whom,
+    ## and what absence/null/false mean. Parsed only from
+    ## policy.observationKeys.
+    key*: string
+    scope*: string
+    typ*: string
+    presence*: KeyPresence
+    condition*: string
+    perSubject*: string
+    onNull*: string
+    onAbsent*: string
+    onFalse*: string
+    observedScope*: string
+
+  KeyStatus* = object
+    key*: string
+    state*: KeyState
+    onNull*: string
+    onAbsent*: string
+    onFalse*: string
 
 # ---------------------------------------------------------------------------
 # Canonical JSON / digest helpers: single implementation lives in
@@ -222,10 +265,347 @@ proc findObs(obs: seq[JsonNode], key: string, scope = "", subject = ""): Option[
     return some(obsValue(o))
   none(JsonNode)
 
+proc findObserved(obs: seq[JsonNode], key: string, scope = "",
+                  subject = ""): Option[JsonNode] =
+  ## Like findObs, but a declared (policy echo, scope=contract) value is never
+  ## evidence that the fact holds.
+  for o in obs:
+    if obsKey(o) != key: continue
+    if obsScope(o) in DeclaredObservationScopes: continue
+    if scope != "" and obsScope(o) != scope: continue
+    if subject != "" and obsSubject(o) != subject: continue
+    return some(obsValue(o))
+  none(JsonNode)
+
 proc allValues(obs: seq[JsonNode], key: string): seq[JsonNode] =
   for o in obs:
     if obsKey(o) == key:
       result.add(obsValue(o))
+
+# ---------------------------------------------------------------------------
+# Observation-key contract (policy.observationKeys)
+#
+# The policy declares, per invariant, exactly which observation keys the rule
+# consumes and what each key state means. Key presence is NOT semantic truth:
+# an unrelated key never satisfies a rule, and a required key that is absent,
+# null, or of the wrong JSON type is UNKNOWN (fail-closed). A `declared`
+# observation (a policy echo recorded at scope=contract) is never evidence
+# that the fact holds.
+# ---------------------------------------------------------------------------
+
+proc keyDispositions*(policy: JsonNode, invId: string): seq[KeyDisposition]
+
+proc validKeyType(typ: string): bool = typ in KeyTypes
+
+proc typeMatches(typ: string, v: JsonNode): bool =
+  if v == nil: return false
+  case typ
+  of "bool": v.kind == JBool
+  of "bool-or-null": v.kind == JBool or v.kind == JNull
+  of "int": v.kind == JInt
+  of "float": v.kind == JInt or v.kind == JFloat
+  of "float-or-null": v.kind == JInt or v.kind == JFloat or v.kind == JNull
+  of "string": v.kind == JString
+  of "string-or-null": v.kind == JString or v.kind == JNull
+  of "stringlist":
+    if v.kind != JArray: return false
+    for it in v.items:
+      if it.kind != JString: return false
+    true
+  else: false
+
+proc stringArrayAt(policy: JsonNode, path: string): seq[string] =
+  ## Resolve a dotted policy path to a non-empty string array ([] when absent).
+  result = @[]
+  if policy == nil or policy.kind != JObject or path == "": return
+  var node = policy
+  for part in path.split('.'):
+    if node == nil or node.kind != JObject or not node.hasKey(part):
+      return @[]
+    node = node[part]
+  if node == nil or node.kind != JArray: return @[]
+  for it in node.items:
+    if it.kind == JString and it.getStr() != "":
+      result.add(it.getStr())
+
+proc policyPathResolves(policy: JsonNode, path: string): bool =
+  stringArrayAt(policy, path).len > 0
+
+proc validCondition(policy: JsonNode, condition: string): bool =
+  if condition in ConditionTokens: return true
+  if condition.startsWith(ConditionPolicyPrefix):
+    return policyPathResolves(policy, condition[ConditionPolicyPrefix.len .. ^1])
+  false
+
+proc validatePolicyShape*(policy: JsonNode): Result[bool, string] =
+  ## Structural validation of the readiness policy. Any malformed shape is a
+  ## hard error (the CLI exits 1) — no silent defaults invent criticality,
+  ## commands, subjects, or key semantics.
+  if policy == nil or policy.kind != JObject:
+    return err("policy is not a JSON object")
+  if not policy.hasKey("schemaVersion") or policy["schemaVersion"].kind != JInt or
+     policy["schemaVersion"].getInt() != 1:
+    return err("policy.schemaVersion != 1")
+  if stringValue(policy{"policyId"}) == "":
+    return err("policy.policyId is missing or empty")
+  let unknownKeys = stringValue(policy{"unknownKeys"})
+  if unknownKeys notin ["ignore", "reject"]:
+    return err("policy.unknownKeys must be 'ignore' or 'reject'")
+
+  let invs = policy{"invariants"}
+  if invs == nil or invs.kind != JObject:
+    return err("policy.invariants is missing")
+  let keys = policy{"observationKeys"}
+  if keys == nil or keys.kind != JObject:
+    return err("policy.observationKeys is missing")
+  for invId in InvariantIds:
+    if not invs.hasKey(invId) or invs[invId].kind != JObject:
+      return err("policy.invariants." & invId & " is missing")
+    let cr = stringValue(invs[invId]{"criticality"})
+    if cr notin ["critical", "non-critical"]:
+      return err("policy.invariants." & invId & ".criticality must be critical|non-critical")
+    if not keys.hasKey(invId) or keys[invId].kind != JArray or keys[invId].len == 0:
+      return err("policy.observationKeys." & invId & " must be a non-empty array")
+    var seen = initTable[string, bool]()
+    for entry in keys[invId].items:
+      if entry.kind != JObject:
+        return err("policy.observationKeys." & invId & " entry is not an object")
+      let key = stringValue(entry{"key"})
+      if key == "":
+        return err("policy.observationKeys." & invId & " entry has no key")
+      if seen.hasKey(key):
+        return err("policy.observationKeys." & invId & " declares key '" & key & "' twice")
+      seen[key] = true
+      let typ = stringValue(entry{"type"})
+      if not validKeyType(typ):
+        return err("policy.observationKeys." & invId & "." & key & ".type is invalid")
+      let presence = stringValue(entry{"presence"})
+      if presence notin ["required", "conditional", "vocabulary"]:
+        return err("policy.observationKeys." & invId & "." & key & ".presence is invalid")
+      let observedScope = stringValue(entry{"observedScope"})
+      if observedScope notin ["observed", "declared"]:
+        return err("policy.observationKeys." & invId & "." & key & ".observedScope is invalid")
+      let onNull = stringValue(entry{"onNull"})
+      if onNull notin ["unknown", "fail"]:
+        return err("policy.observationKeys." & invId & "." & key & ".onNull is invalid")
+      let onAbsent = stringValue(entry{"onAbsent"})
+      if onAbsent notin ["unknown", "fail"]:
+        return err("policy.observationKeys." & invId & "." & key & ".onAbsent is invalid")
+      let onFalse = stringValue(entry{"onFalse"})
+      if onFalse notin ["fail", "pass", "unknown"]:
+        return err("policy.observationKeys." & invId & "." & key & ".onFalse is invalid")
+      let perSubject = stringValue(entry{"perSubject"})
+      if perSubject == "":
+        return err("policy.observationKeys." & invId & "." & key & ".perSubject is missing")
+      if perSubject != "single":
+        if not perSubject.startsWith(ConditionPolicyPrefix):
+          return err("policy.observationKeys." & invId & "." & key & ".perSubject is invalid")
+        if not policyPathResolves(policy, perSubject[ConditionPolicyPrefix.len .. ^1]):
+          return err("policy.observationKeys." & invId & "." & key &
+                     ".perSubject does not resolve to a non-empty string array")
+      if presence == "conditional":
+        let condition = stringValue(entry{"condition"})
+        if not validCondition(policy, condition):
+          return err("policy.observationKeys." & invId & "." & key & ".condition is invalid")
+      elif entry.hasKey("condition"):
+        return err("policy.observationKeys." & invId & "." & key &
+                   " sets condition on a non-conditional key")
+
+  if stringArrayAt(policy, "r1.contractCommands").len == 0:
+    return err("policy.r1.contractCommands must be a non-empty string array")
+  if stringArrayAt(policy, "r5.contractCommands").len == 0:
+    return err("policy.r5.contractCommands must be a non-empty string array")
+  if stringArrayAt(policy, "r4.requiredFields").len == 0:
+    return err("policy.r4.requiredFields must be a non-empty string array")
+  if stringArrayAt(policy, "r8.prepareSequenceCommands").len == 0:
+    return err("policy.r8.prepareSequenceCommands must be a non-empty string array")
+  # Per-subject promises are policy parameters; a key that names them must have
+  # the list it promises to observe.
+  if policyPathResolves(policy, "r1.promiseOutputs") == false:
+    for d in keyDispositions(policy, "R1"):
+      if d.perSubject == "policy:r1.promiseOutputs":
+        return err("policy.r1.promiseOutputs is required by an observation key but missing")
+  if not policy.hasKey("r5") or policy["r5"].kind != JObject or
+     not policy["r5"].hasKey("successExitCode") or
+     policy["r5"]["successExitCode"].kind != JInt:
+    return err("policy.r5.successExitCode must be an integer")
+  ok(true)
+
+proc keyDispositions*(policy: JsonNode, invId: string): seq[KeyDisposition] =
+  ## Parse policy.observationKeys[invId]. This is the only place the
+  ## observation-key contract is interpreted.
+  result = @[]
+  if policy == nil or policy.kind != JObject: return
+  let entries = policy{"observationKeys"}{invId}
+  if entries == nil or entries.kind != JArray: return
+  for e in entries.items:
+    if e.kind != JObject: continue
+    var d = KeyDisposition(
+      key: stringValue(e{"key"}),
+      scope: stringValue(e{"scope"}),
+      typ: stringValue(e{"type"}),
+      condition: stringValue(e{"condition"}),
+      perSubject: stringValue(e{"perSubject"}),
+      onNull: stringValue(e{"onNull"}),
+      onAbsent: stringValue(e{"onAbsent"}),
+      onFalse: stringValue(e{"onFalse"}),
+      observedScope: stringValue(e{"observedScope"}))
+    case stringValue(e{"presence"})
+    of "required": d.presence = kpRequired
+    of "conditional": d.presence = kpConditional
+    of "vocabulary": d.presence = kpVocabulary
+    else: d.presence = kpVocabulary  # unreachable after validatePolicyShape
+    if d.key != "":
+      result.add(d)
+
+proc isDeclaredObservation(d: KeyDisposition, o: JsonNode): bool =
+  d.observedScope == "observed" and obsScope(o) in DeclaredObservationScopes
+
+proc keyMatches(d: KeyDisposition, o: JsonNode, subject: string): bool =
+  if obsKey(o) != d.key: return false
+  if d.scope != "" and obsScope(o) != d.scope: return false
+  if isDeclaredObservation(d, o): return false
+  if subject != "" and obsSubject(o) != subject: return false
+  true
+
+proc stateOfValue(d: KeyDisposition, v: JsonNode): KeyState =
+  if v == nil or v.kind == JNull: return ksNull
+  if d.typ in ["string", "string-or-null"] and v.kind == JString and
+     v.getStr() == "":
+    return ksAbsent
+  if not typeMatches(d.typ, v): return ksWrongType
+  if v.kind == JBool and not v.getBool(): return ksPresentFalse
+  ksPresent
+
+proc subjectState(d: KeyDisposition, obs: seq[JsonNode], subject: string): KeyState =
+  var
+    matched = false
+    sawNull = false
+    sawWrong = false
+    sawFalse = false
+  for o in obs:
+    if not keyMatches(d, o, subject): continue
+    matched = true
+    case stateOfValue(d, obsValue(o))
+    of ksNull: sawNull = true
+    of ksWrongType: sawWrong = true
+    of ksPresentFalse: sawFalse = true
+    else: discard
+  if not matched: return ksAbsent
+  if sawWrong: return ksWrongType
+  if sawNull: return ksNull
+  if sawFalse: return ksPresentFalse
+  ksPresent
+
+proc subjectsOf(policy: JsonNode, d: KeyDisposition): seq[string] =
+  if d.perSubject == "single": return @[""]
+  if d.perSubject.startsWith(ConditionPolicyPrefix):
+    return stringArrayAt(policy, d.perSubject[ConditionPolicyPrefix.len .. ^1])
+  @[]
+
+proc successExitSubjectsOf(policy: JsonNode, d: KeyDisposition,
+                           obs: seq[JsonNode]): seq[string] =
+  ## Conditional successor: required only for each subject where the
+  ## successor observation is present and well-typed.
+  var succ = KeyDisposition(key: "successExitCode", typ: "int",
+                            observedScope: "observed")
+  if d.perSubject != "single" and d.perSubject.startsWith(ConditionPolicyPrefix):
+    discard  # subjects come from this key's own policy list
+  for subj in subjectsOf(policy, d):
+    if subjectState(succ, obs, subj) in {ksPresent, ksPresentFalse}:
+      result.add(subj)
+
+proc requiredSubjectStates(policy: JsonNode, d: KeyDisposition,
+                           obs: seq[JsonNode]): seq[tuple[subject: string, state: KeyState]] =
+  result = @[]
+  if d.presence == kpVocabulary:
+    return
+  var subjects = subjectsOf(policy, d)
+  if d.presence == kpConditional:
+    case d.condition
+    of "successor:successExitCode":
+      subjects = successExitSubjectsOf(policy, d, obs)
+    of "claim:subjectLane":
+      var claimed = false
+      for v in allValues(obs, "subjectLane"):
+        if stringListValue(v).len > 0:
+          claimed = true
+          break
+      if not claimed:
+        return
+    else:
+      if d.condition.startsWith(ConditionPolicyPrefix):
+        subjects = stringArrayAt(policy, d.condition[ConditionPolicyPrefix.len .. ^1])
+      else:
+        return
+  for subj in subjects:
+    result.add((subj, subjectState(d, obs, subj)))
+
+proc requiredKeyStatus*(policy: JsonNode, invId: string,
+                        obs: seq[JsonNode]): seq[KeyStatus] =
+  ## One status per declared non-vocabulary key (required, or conditional with
+  ## its condition met). A multi-subject key aggregates conservatively.
+  result = @[]
+  for d in keyDispositions(policy, invId):
+    let states = requiredSubjectStates(policy, d, obs)
+    if states.len == 0:
+      if d.presence == kpConditional:
+        result.add(KeyStatus(key: d.key, state: ksConditionUnmet,
+                             onNull: d.onNull, onAbsent: d.onAbsent,
+                             onFalse: d.onFalse))
+      continue
+    var agg = ksPresent
+    for (_, st) in states:
+      case st
+      of ksWrongType:
+        agg = ksWrongType
+        break
+      of ksNull:
+        if agg notin [ksWrongType]: agg = ksNull
+      of ksAbsent:
+        if agg notin [ksWrongType, ksNull]: agg = ksAbsent
+      of ksPresentFalse:
+        if agg == ksPresent: agg = ksPresentFalse
+      else: discard
+    result.add(KeyStatus(key: d.key, state: agg, onNull: d.onNull,
+                         onAbsent: d.onAbsent, onFalse: d.onFalse))
+
+proc closureState*(policy: JsonNode, invId: string,
+                   obs: seq[JsonNode]): InvState =
+  ## The key-closure gate for one invariant. Missing/null/wrong-type required
+  ## observations are UNKNOWN; onAbsent/onNull="fail" and a present false with
+  ## onFalse="fail" are FAIL. A `declared` observation never satisfies closure.
+  if validatePolicyShape(policy).isErr:
+    return stUnknown
+  var unknown = false
+  for d in keyDispositions(policy, invId):
+    for (_, st) in requiredSubjectStates(policy, d, obs):
+      case st
+      of ksPresent, ksConditionUnmet: discard
+      of ksPresentFalse:
+        case d.onFalse
+        of "fail": return stFail
+        of "unknown": unknown = true
+        else: discard
+      of ksNull:
+        if d.onNull == "fail": return stFail
+        unknown = true
+      of ksAbsent:
+        if d.onAbsent == "fail": return stFail
+        unknown = true
+      of ksWrongType:
+        unknown = true
+  if stringValue(policy{"unknownKeys"}) == "reject":
+    let declared = keyDispositions(policy, invId)
+    for o in obs:
+      var known = false
+      for d in declared:
+        if d.key == obsKey(o):
+          known = true
+          break
+      if not known:
+        return stUnknown
+  if unknown: stUnknown else: stPass
 
 # ---------------------------------------------------------------------------
 # Validation (pure) — any doubt -> err -> invariant UNKNOWN at evaluation.
@@ -382,15 +762,19 @@ proc normalizeBundle*(evidences: seq[JsonNode], policy: JsonNode = newJObject())
 # ---------------------------------------------------------------------------
 
 proc policyCriticality(policy: JsonNode, invId: string): string =
-  ## criticality from policy data; unknown policy entry -> non-critical.
+  ## criticality from policy data. An unknown entry returns "" — callers treat
+  ## anything that is not the explicit non-critical token as critical
+  ## (fail-closed). validatePolicyShape rejects missing entries in the CLI.
   if policy != nil and policy.kind == JObject and policy.hasKey("invariants"):
     let invs = policy["invariants"]
     if invs.kind == JObject and invs.hasKey(invId) and invs[invId].kind == JObject:
-      let cr = stringValue(invs[invId]{"criticality"})
-      if cr != "": return cr
-  "non-critical"
+      return stringValue(invs[invId]{"criticality"})
+  ""
 
 proc contractCommandsOf(policy: JsonNode): seq[string] =
+  ## Union of the policy-declared contract commands (r1 + r5). No fallback:
+  ## validatePolicyShape requires both lists, and an undeclared command is
+  ## never invented here.
   result = @[]
   if policy != nil and policy.kind == JObject:
     for section in ["r1", "r5"]:
@@ -401,8 +785,6 @@ proc contractCommandsOf(policy: JsonNode): seq[string] =
           for it in a.items:
             if it.kind == JString and it.getStr() != "" and it.getStr() notin result:
               result.add(it.getStr())
-  if result.len == 0:
-    result = @["ax prove", "ax report", "ax status"]
 
 # ---------------------------------------------------------------------------
 # U1 — trust-boundary register as an observation key (ADR-0030 Residual U1)
@@ -464,6 +846,9 @@ proc ruleR1(obs: seq[JsonNode], policy: JsonNode): InvState =
   ## claimed subject-language lane whose register boundaries are not all
   ## exists:true cannot PASS (U1) — readiness cannot GO a lane the register
   ## says does not exist.
+  let closure = closureState(policy, "R1", obs)
+  if closure == stFail: return stFail
+  if closure == stUnknown: return stUnknown
   var documented: seq[string] = @[]
   for v in allValues(obs, "documentedCommand"):
     for s in stringListValue(v):
@@ -475,26 +860,26 @@ proc ruleR1(obs: seq[JsonNode], policy: JsonNode): InvState =
       required.add(c)
   if trustLaneViolations(obs, policy, AxiomTrustBoundary).len > 0:
     return stFail
-  if required.len == 0:
-    return stUnknown
   for cmd in required:
-    let exists = findObs(obs, "commandExists", scope = "surface", subject = cmd)
+    let exists = findObserved(obs, "commandExists", scope = "surface", subject = cmd)
     if exists.isNone or not boolValue(exists.get, false):
       return stFail
   stPass
 
-proc ruleR2(obs: seq[JsonNode]): InvState =
-  if obs.len == 0:
-    return stUnknown
-  let dual = findObs(obs, "certGreenDualEvidenceRequired")
+proc ruleR2(obs: seq[JsonNode], policy: JsonNode): InvState =
+  let closure = closureState(policy, "R2", obs)
+  if closure == stFail: return stFail
+  if closure == stUnknown: return stUnknown
+  let dual = findObserved(obs, "certGreenDualEvidenceRequired")
   if dual.isSome and not boolValue(dual.get, true):
     return stFail
   for o in obs:
+    if obsScope(o) in DeclaredObservationScopes: continue
     if obsKey(o) == "z3OnlyCanProduceCertGreen":
       let sc = obsScope(o)
       if (sc == "" or sc == "canonical") and boolValue(obsValue(o), true):
         return stFail
-  let vac = findObs(obs, "summaryVerifiedIncludesVacuous")
+  let vac = findObserved(obs, "summaryVerifiedIncludesVacuous")
   if vac.isSome and boolValue(vac.get, true):
     return stFail
   # Z3-only vs dual must be distinguishable in the output
@@ -502,26 +887,28 @@ proc ruleR2(obs: seq[JsonNode]): InvState =
   var distAll = true
   var distSeen = false
   for o in obs:
+    if obsScope(o) in DeclaredObservationScopes: continue
     if obsKey(o) == "z3VsDualDistinguishable":
       distSeen = true
       if not boolValue(obsValue(o), true):
         distAll = false
   if distSeen and not distAll:
     return stFail
-  let doc = findObs(obs, "verifiedSemanticsDocumented")
+  let doc = findObserved(obs, "verifiedSemanticsDocumented")
   if doc.isSome and not boolValue(doc.get, true):
     return stFail
   stPass
 
-proc ruleR3(obs: seq[JsonNode]): InvState =
-  if obs.len == 0:
-    return stUnknown
-  let eq = findObs(obs, "canonicalProjectionHashEqual")
+proc ruleR3(obs: seq[JsonNode], policy: JsonNode): InvState =
+  let closure = closureState(policy, "R3", obs)
+  if closure == stFail: return stFail
+  if closure == stUnknown: return stUnknown
+  let eq = findObserved(obs, "canonicalProjectionHashEqual")
   if eq.isSome and not boolValue(eq.get, true):
     return stFail
   for key in ["canonicalInputHash", "configHash", "solverIdentity",
               "cachePolicy", "canonicalExecutionFingerprint"]:
-    let v = findObs(obs, key)
+    let v = findObserved(obs, key)
     if v.isNone or stringValue(v.get) == "":
       return stUnknown
   # Relocation/cross-path determinism (policy observationKeys.R3): only an
@@ -529,21 +916,22 @@ proc ruleR3(obs: seq[JsonNode]): InvState =
   # silent PASS); a confirmed false -> FAIL.
   var relocationMeasured = true
   for key in ["subjectRunProjectionHashEqual", "pathIndependentProjectionEqual"]:
-    let rel = findObs(obs, key)
+    let rel = findObserved(obs, key)
     if rel.isNone or rel.get.kind != JBool:
       relocationMeasured = false
     elif not rel.get.getBool():
       return stFail
   if not relocationMeasured:
     return stUnknown
-  let envC = findObs(obs, "environmentControlled")
+  let envC = findObserved(obs, "environmentControlled")
   if envC.isSome and not boolValue(envC.get, true):
     return stFail
   stPass
 
 proc ruleR4(obs: seq[JsonNode], policy: JsonNode): InvState =
-  if obs.len == 0:
-    return stUnknown
+  let closure = closureState(policy, "R4", obs)
+  if closure == stFail: return stFail
+  if closure == stUnknown: return stUnknown
   var required: seq[string] = @[]
   if policy != nil and policy.kind == JObject and policy.hasKey("r4") and
      policy["r4"].kind == JObject:
@@ -553,11 +941,11 @@ proc ruleR4(obs: seq[JsonNode], policy: JsonNode): InvState =
         if it.kind == JString and it.getStr() != "":
           required.add(it.getStr())
   if required.len == 0:
-    required = @["claim", "attestation", "inputHash", "provenance",
-                 "toolchainIdentity", "proofDigest"]
+    return stUnknown
   for f in required:
     var present = false
     for o in obs:
+      if obsScope(o) in DeclaredObservationScopes: continue
       if obsKey(o) == "certFieldPresent" and obsSubject(o) == f:
         if boolValue(obsValue(o), false):
           present = true
@@ -565,53 +953,53 @@ proc ruleR4(obs: seq[JsonNode], policy: JsonNode): InvState =
           return stFail
     if not present:
       return stFail
-  let recon = findObs(obs, "provenanceReconstructible")
+  let recon = findObserved(obs, "provenanceReconstructible")
   if recon.isSome and not boolValue(recon.get, true):
     return stFail
   stPass
 
 proc ruleR5(obs: seq[JsonNode], policy: JsonNode): InvState =
-  if obs.len == 0:
-    return stUnknown
-  var anyExitCodeObs = false
+  let closure = closureState(policy, "R5", obs)
+  if closure == stFail: return stFail
+  if closure == stUnknown: return stUnknown
   var failure = false
   for cmd in contractCommandsOf(policy):
-    let exists = findObs(obs, "commandExists", scope = "surface", subject = cmd)
+    let exists = findObserved(obs, "commandExists", scope = "surface", subject = cmd)
     if exists.isNone or not boolValue(exists.get, false):
       failure = true
-    let help = findObs(obs, "helpSurface", subject = cmd)
+    let help = findObserved(obs, "helpSurface", scope = "surface", subject = cmd)
     if help.isSome and not boolValue(help.get, true):
       failure = true
   for o in obs:
+    if obsScope(o) in DeclaredObservationScopes: continue
     if obsKey(o) == "successExitCode" and isNumber(obsValue(o)):
-      anyExitCodeObs = true
       let subject = obsSubject(o)
       let success = int(floatValue(obsValue(o), 0.0))
       for need in ["verificationFailureExitCode", "internalErrorExitCode",
                    "invalidInputExitCode"]:
-        let nv = findObs(obs, need, subject = subject)
+        let nv = findObserved(obs, need, subject = subject)
         if nv.isNone:
           failure = true
         elif isNumber(nv.get):
           let code = int(floatValue(nv.get, 0.0))
           if code == success:
             failure = true
-  let ver = findObs(obs, "jsonSchemaVersion")
+  let ver = findObserved(obs, "jsonSchemaVersion")
   if ver.isSome and (not isString(ver.get) or stringValue(ver.get) == ""):
     failure = true
-  let split = findObs(obs, "stdoutStderrSplit")
+  let split = findObserved(obs, "stdoutStderrSplit")
   if split.isSome and not boolValue(split.get, true):
     failure = true
-  if not anyExitCodeObs:
-    return stUnknown
   if failure:
     return stFail
   stPass
 
-proc ruleR6(obs: seq[JsonNode]): InvState =
-  if obs.len == 0:
-    return stUnknown
+proc ruleR6(obs: seq[JsonNode], policy: JsonNode): InvState =
+  let closure = closureState(policy, "R6", obs)
+  if closure == stFail: return stFail
+  if closure == stUnknown: return stUnknown
   for o in obs:
+    if obsScope(o) in DeclaredObservationScopes: continue
     let k = obsKey(o)
     if k == "failureConvertsToSuccess" and boolValue(obsValue(o), false):
       return stFail
@@ -623,20 +1011,22 @@ proc ruleR7(obs: seq[JsonNode], policy: JsonNode): tuple[state: InvState, promot
   ## R7 is non-critical for low coverage, but scope overclaim PROMOTES to
   ## R1/R2 FAIL (fixed evaluator rule, not policy data).
   result = (stUnknown, false)
-  if obs.len == 0:
-    return
   var claimed: seq[string] = @[]
   var emitted: seq[string] = @[]
   var coverages: seq[float] = @[]
   for o in obs:
     case obsKey(o)
     of "claimedScope":
+      # claimedScope is a policy echo (declared); it is the claim side of the
+      # comparison, not evidence that coverage was measured.
       for s in stringListValue(obsValue(o)):
         if s notin claimed: claimed.add(s)
     of "verifiedEmitterScope":
+      if obsScope(o) in DeclaredObservationScopes: continue
       for s in stringListValue(obsValue(o)):
         if s notin emitted: emitted.add(s)
     of "measuredCoverage":
+      if obsScope(o) in DeclaredObservationScopes: continue
       if isNumber(obsValue(o)):
         coverages.add(floatValue(obsValue(o), 0.0))
     else: discard
@@ -645,10 +1035,16 @@ proc ruleR7(obs: seq[JsonNode], policy: JsonNode): tuple[state: InvState, promot
       if tok notin claimed:
         result.promote = true
         break
+  let closure = closureState(policy, "R7", obs)
+  if closure == stFail:
+    result.state = stFail
+    return
+  if closure == stUnknown:
+    return  # UNKNOWN: the basis is absent/null/wrong-type; R7 cannot PASS
   if coverages.len == 0:
     if claimed.len == 0:
       result.state = stFail
-    return  # UNKNOWN if no measurement
+    return
   if claimed.len == 0:
     result.state = stFail
     return
@@ -684,9 +1080,8 @@ proc ruleR7(obs: seq[JsonNode], policy: JsonNode): tuple[state: InvState, promot
 
 proc r8PrepareSequenceOf(policy: JsonNode): seq[string] =
   ## policy.r8.prepareSequenceCommands — the contract-fixed prepare order as
-  ## policy data (same pattern as r1/r5 contractCommands); a missing or empty
-  ## policy entry falls back to the §10.6 strings so the gate never loses its
-  ## anchor.
+  ## policy data. No fallback: validatePolicyShape requires the list, so an
+  ## undeclared sequence is never invented here.
   result = @[]
   if policy != nil and policy.kind == JObject and policy.hasKey("r8") and
      policy["r8"].kind == JObject:
@@ -695,10 +1090,6 @@ proc r8PrepareSequenceOf(policy: JsonNode): seq[string] =
       for it in a.items:
         if it.kind == JString and it.getStr() != "" and it.getStr() notin result:
           result.add(it.getStr())
-  if result.len == 0:
-    result = @["cargo fetch --locked",
-               "cargo metadata --format-version=1 --locked",
-               "cargo build --frozen"]
 
 proc r8SequenceViolations*(commands: JsonNode, policy: JsonNode): seq[string] =
   ## Violation reasons for the R8 prepare sequence, derived only from the
@@ -709,6 +1100,11 @@ proc r8SequenceViolations*(commands: JsonNode, policy: JsonNode): seq[string] =
   ## reasons verbatim; the vocabulary stays inside the evaluator.
   result = @[]
   let required = r8PrepareSequenceOf(policy)
+  if required.len == 0:
+    # No fallback sequence: a policy without r8.prepareSequenceCommands cannot
+    # anchor the gate, so it fails closed instead of vacuously passing.
+    result.add("prepare sequence: policy r8.prepareSequenceCommands is empty (no GO)")
+    return
   if commands == nil or commands.kind != JArray or commands.len == 0:
     result.add("prepare sequence: no commands recorded in R8 evidence (no GO)")
     return
@@ -751,9 +1147,11 @@ proc r8SequenceViolations*(commands: JsonNode, policy: JsonNode): seq[string] =
                    ", exit 0 required (no GO)")
 
 proc ruleR8(obs: seq[JsonNode], commands: JsonNode, policy: JsonNode): InvState =
-  if obs.len == 0:
-    return stUnknown
+  let closure = closureState(policy, "R8", obs)
+  if closure == stFail: return stFail
+  if closure == stUnknown: return stUnknown
   for o in obs:
+    if obsScope(o) in DeclaredObservationScopes: continue
     case obsKey(o)
     of "installFollowed":
       if not boolValue(obsValue(o), true): return stFail
@@ -794,7 +1192,7 @@ proc toStatusTokens*[T: enum](
   ## invariant's failure domain — onto the closed inputs Decide consumes.
   for (invId, st) in states:
     result.add((id: invId,
-                critical: policyCriticality(policy, invId) == "critical",
+                critical: policyCriticality(policy, invId) != "non-critical",
                 token: $st,
                 failureDomain: failureCategoryOf(invId)))
 
@@ -842,11 +1240,11 @@ proc rawStateOf(policy: JsonNode, invId: string, invNode: JsonNode): tuple[state
   let obs = obsListOf(invNode)
   case invId
   of "R1": result.state = ruleR1(obs, policy)
-  of "R2": result.state = ruleR2(obs)
-  of "R3": result.state = ruleR3(obs)
+  of "R2": result.state = ruleR2(obs, policy)
+  of "R3": result.state = ruleR3(obs, policy)
   of "R4": result.state = ruleR4(obs, policy)
   of "R5": result.state = ruleR5(obs, policy)
-  of "R6": result.state = ruleR6(obs)
+  of "R6": result.state = ruleR6(obs, policy)
   of "R7":
     let (st, promo) = ruleR7(obs, policy)
     result.state = st
@@ -882,7 +1280,7 @@ proc evaluateReadiness*(policy: JsonNode, bundle: JsonNode): ReadinessDecision =
     candidate.invariants.add(InvariantStatus(
       id: invId,
       state: states[invId],
-      critical: policyCriticality(policy, invId) == "critical",
+      critical: policyCriticality(policy, invId) != "non-critical",
       failureDomain: failureCategoryOf(invId)))
 
   let policyHash = canonicalSha256(policy)
@@ -1016,6 +1414,10 @@ when isMainModule:
     policy = parseFile(policyPath)
   except CatchableError as e:
     stderr.writeLine("cannot load policy: " & e.msg)
+    quit(1)
+  let shape = validatePolicyShape(policy)
+  if shape.isErr:
+    stderr.writeLine("invalid policy shape: " & shape.error)
     quit(1)
 
   let ctx = makeContext(repoHead = repoHead, repoBranch = branch,

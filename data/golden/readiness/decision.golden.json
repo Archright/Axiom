@@ -1,8 +1,6 @@
 {
-  "verdict": "CONDITIONAL GO",
-  "conditions": [
-    "R7=FAIL"
-  ],
+  "verdict": "GO",
+  "conditions": [],
   "invariantStates": {
     "R1": "PASS",
     "R2": "PASS",
@@ -10,9 +8,9 @@
     "R4": "PASS",
     "R5": "PASS",
     "R6": "PASS",
-    "R7": "FAIL",
+    "R7": "PASS",
     "R8": "PASS"
   },
-  "decisionDigest": "0bcb25bd79286b356ee382278acf55a60f9eac9f381883a6e61a0ec318f1377b",
-  "regeneratedBy": "tools/readiness_evaluator.nim (evaluator smoke run, 2026-08-17)"
+  "decisionDigest": "2450f1a283a21d97ccdd4432076d921be6dc5aae9c759d348cc31b7237c70dea",
+  "regeneratedBy": "tools/readiness_evaluator.nim (evaluator run, 2026-11-20; DEBT#559 key contract)"
 }

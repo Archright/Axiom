@@ -21,16 +21,25 @@ axiomLayer "gate"
 ##     but conditions are printed loudly (non-silent; honest state).
 ##   * Verdict "GO"                                                     -> PASS.
 ##
-## Evidence repo identity (local mode): the evidence files are a committed
-## snapshot frozen to a specific head/treeDigest (see R*.json repoIdentity).
-## The gate passes the DECLARED identity back to the evaluator (same as the
-## audit repro in docs/audit/productization_readiness_CONDITIONAL-GO_2026-08-17.md),
-## so the validation is deterministic and independent of the ephemeral current
-## HEAD. Evidence files disagreeing on identity = contradictory evidence -> FAIL.
+## Evidence repo identity (normal modes): the evidence snapshot's declared
+## identity is NEVER the authority. The gate measures the checkout itself:
+##   git rev-parse HEAD / --abbrev-ref HEAD,
+##   sha256(git ls-tree -r HEAD)                       (treeDigest),
+##   git status --porcelain --untracked-files=no over the verdict-input tree
+##   (derived-output paths excluded, mirroring the CI identity-chain step:
+##    data/readiness/evidence, logs, build, bin, .axiom, proofs,
+##    src/generated).
+## The evaluator is invoked with these measured values; evidence whose
+## declared repoIdentity disagrees is dropped by the evaluator (UNKNOWN ->
+## NO-GO), never trusted as a substitute.
 ##
 ## CI identity authority mode (DEBT#537): when BOTH AXIOM_CI_REPO_HEAD and
-## AXIOM_CI_TREE_DIGEST are exported, the environment — not the evidence
-## snapshot — is the identity authority:
+## AXIOM_CI_TREE_DIGEST are exported, the environment is the identity
+## authority AND the measured git identity must agree with it:
+##   * git HEAD/treeDigest disagreeing with the environment prints
+##       READINESS_GIT_IDENTITY_MISMATCH <head|treeDigest> expected=<env> actual=<git>
+##     and exits 1 (the checkout is not the CI commit — distinct from an
+##     evidence mismatch);
 ##   * every evidence file must declare repoIdentity.head and
 ##     repoIdentity.treeDigest exactly equal to the environment values; a
 ##     missing field or mismatch prints the stable stdout marker line
@@ -40,12 +49,18 @@ axiomLayer "gate"
 ##     missing) and exits 1 — fail-closed, distinct from every tool-failure
 ##     path; and
 ##   * the evaluator is invoked with the environment head/digest
-##     (--repo-head/--tree-digest), closing the self-declared-identity circle
-##     of the local mode.
-## With neither variable set, local behaviour is preserved byte-for-byte. A
-## partially set pair is a wiring error: warned about, then ignored (the
-## local evidence-declared identity remains in force — CI authority mode is
-## never half-active).
+##     (--repo-head/--tree-digest).
+## A partially set CI pair is a wiring error: warned about, then ignored
+## (CI authority mode is never half-active; the measured git identity stays
+## in force).
+##
+## Replay mode (explicit audit reproduction): AXIOM_READINESS_REPLAY=1 makes
+## the evidence-DECLARED identity the evaluator context (the audit repro in
+## docs/audit/productization_readiness_CONDITIONAL-GO_2026-08-17.md) and
+## allows AXIOM_READINESS_EVAL_TIME to pin the evaluation instant. The gate
+## logs both loudly: this mode validates a frozen historical snapshot, not
+## the current checkout. CI identity variables are ignored in replay mode;
+## without the replay flag the gate never trusts a self-declared identity.
 ##
 ## Machine-readable verdict exposure: whenever the evaluator produced a
 ## decision, the finalized verdict is printed to stdout exactly once (GO
@@ -67,8 +82,10 @@ axiomLayer "gate"
 ## invoker is `make check-readiness-start` (Makefile:941, AXIOM_CI=1).
 ##
 ## Usage: no arguments. Environment: AXIOM_CI_REPO_HEAD + AXIOM_CI_TREE_DIGEST
-## (both required together) enable CI identity authority mode; registered in
-## docs/spec/environment_inputs.md §2.15.
+## (both required together) enable CI identity authority mode;
+## AXIOM_READINESS_REPLAY=1 enables the explicit replay (evidence-declared
+## identity) mode and AXIOM_READINESS_EVAL_TIME pins its evaluation instant;
+## registered in docs/spec/environment_inputs.md §2.15.
 
 import std/[os, osproc, strutils, times, json, sequtils, algorithm]
 import infrastructure/logging_facade
@@ -89,6 +106,12 @@ const
   RootMarker = ".axiom_root"
   CiRepoHeadEnv = "AXIOM_CI_REPO_HEAD"
   CiTreeDigestEnv = "AXIOM_CI_TREE_DIGEST"
+  ReplayEnv = "AXIOM_READINESS_REPLAY"
+  EvalTimeEnv = "AXIOM_READINESS_EVAL_TIME"
+  VerdictInputExcludes =
+    "':(exclude)data/readiness/evidence' ':(exclude)logs' " &
+    "':(exclude)build' ':(exclude)bin' ':(exclude).axiom' " &
+    "':(exclude)proofs' ':(exclude)src/generated'"
 
 proc repoRootOf(): string =
   ## Compile-time anchored root (this file lives in src/gate/runners/).
@@ -164,12 +187,14 @@ type
     toolchainZ3: string
     toolchainLean: string
 
-proc collectEvidenceIdentity(root: string): tuple[idy: EvidenceIdentity, err: string] =
-  ## Merge the repoIdentity/toolchain declared by the evidence files. Any
-  ## disagreement across files is a contradiction -> err (the evaluator would
-  ## also drop such evidence as INVALID; this is an earlier, clearer failure).
-  ## Missing identity declarations are allowed (evaluator skips those checks
-  ## "when declared" only) — then no --repo-head is passed.
+proc collectDeclaredEvidenceIdentity(root: string): tuple[idy: EvidenceIdentity, err: string] =
+  ## REPLAY-ONLY: merge the repoIdentity/toolchain declared by the evidence
+  ## files (explicit AXIOM_READINESS_REPLAY=1). Normal modes never call this —
+  ## a self-declared identity is not authority. Any disagreement across files
+  ## is a contradiction -> err (the evaluator would also drop such evidence as
+  ## INVALID; this is an earlier, clearer failure). Missing identity
+  ## declarations are allowed (evaluator skips those checks "when declared"
+  ## only) — then no --repo-head is passed.
   let dir = root / EvidenceDir
   if not dirExists(dir):
     return (EvidenceIdentity(), "evidence directory does not exist: " & dir)
@@ -223,6 +248,61 @@ proc collectEvidenceIdentity(root: string): tuple[idy: EvidenceIdentity, err: st
         if idy.toolchainLean == "": idy.toolchainLean = leanV
         elif idy.toolchainLean != leanV:
           return (EvidenceIdentity(), "contradictory toolchain.lean in " & f)
+  (idy, "")
+
+proc firstLineOf(s: string): string =
+  for line in s.splitLines():
+    let t = line.strip()
+    if t.len > 0:
+      return t
+  ""
+
+proc measureGitIdentity(root: string): tuple[idy: EvidenceIdentity, err: string] =
+  ## Independent measurement of the checkout (the evidence snapshot is never
+  ## the authority outside replay mode). `clean` covers the verdict-input tree
+  ## only: derived-output paths are excluded exactly as in the CI
+  ## identity-chain step, so collector/evaluator outputs cannot make the
+  ## source tree read dirty.
+  var idy = EvidenceIdentity()
+  let (headOut, headCode) = runCmd("git rev-parse HEAD", root)
+  if headCode != 0:
+    return (idy, "git rev-parse HEAD failed: " & headOut.strip())
+  idy.head = headOut.strip()
+  if idy.head.len == 0:
+    return (idy, "git rev-parse HEAD produced no commit id")
+  let (branchOut, branchCode) = runCmd("git rev-parse --abbrev-ref HEAD", root)
+  if branchCode != 0:
+    return (idy, "git rev-parse --abbrev-ref HEAD failed: " & branchOut.strip())
+  idy.branch = branchOut.strip()
+  # Same formula as the CI env export and the collector: command substitution
+  # strips the trailing newline, printf re-emits the exact bytes.
+  let (treeOut, treeCode) = runCmd(
+    "printf '%s' \"$(git ls-tree -r HEAD)\" | sha256sum", root)
+  if treeCode != 0:
+    return (idy, "git ls-tree -r HEAD failed: " & treeOut.strip())
+  let parts = treeOut.strip().splitWhitespace()
+  if parts.len == 0 or parts[0].len != 64:
+    return (idy, "git ls-tree -r HEAD digest unmeasurable: " & treeOut.strip())
+  idy.treeDigest = parts[0]
+  let (statusOut, statusCode) = runCmd(
+    "git status --porcelain --untracked-files=no -- . " & VerdictInputExcludes,
+    root)
+  if statusCode != 0:
+    return (idy, "git status failed: " & statusOut.strip())
+  idy.workingTreeClean = statusOut.strip() == ""
+  idy.workingTreeCleanDeclared = true
+  # Toolchain observables: the same first lines the collector records. A
+  # missing tool leaves its field empty, so the evaluator skips that declared
+  # check instead of comparing against a failure message.
+  let (nimOut, nimCode) = runCmd("nim --version", root)
+  if nimCode == 0:
+    idy.toolchainNim = firstLineOf(nimOut)
+  let (z3Out, z3Code) = runCmd("z3 --version", root)
+  if z3Code == 0:
+    idy.toolchainZ3 = firstLineOf(z3Out)
+  let (leanOut, leanCode) = runCmd("lean --version", root)
+  if leanCode == 0:
+    idy.toolchainLean = firstLineOf(leanOut)
   (idy, "")
 
 # ---------------------------------------------------------------------------
@@ -451,42 +531,84 @@ when isMainModule:
              "productization E2E FAILED — see output above.")
     quit(1)
 
-  # ── (b) Readiness evaluator over the latest evidence ───────────────────
-  var (idy, idyErr) = collectEvidenceIdentity(root)
-  if idyErr != "":
-    logError("readiness_start_gate", "evidence identity error: " & idyErr)
-    quit(1)
+  # ── (b) Identity: measured from git, never declared by the evidence ─────
+  let replay = getEnv(ReplayEnv) == "1"
+  var idy: EvidenceIdentity
+  var idyErr = ""
+  if replay:
+    logWarn("readiness_start_gate",
+            "REPLAY mode (" & ReplayEnv & "=1): the evidence-DECLARED identity " &
+            "is the evaluator context — this validates a frozen snapshot, not " &
+            "the current checkout.")
+    (idy, idyErr) = collectDeclaredEvidenceIdentity(root)
+    if idyErr != "":
+      logError("readiness_start_gate", "evidence identity error: " & idyErr)
+      quit(1)
+    logInfo("readiness_start_gate",
+            "replay identity: head=" & idy.head & " treeDigest=" & idy.treeDigest &
+            " branch=" & idy.branch &
+            " workingTreeClean=" & $idy.workingTreeClean)
+  else:
+    (idy, idyErr) = measureGitIdentity(root)
+    if idyErr != "":
+      logError("readiness_start_gate",
+               "independent git identity measurement failed: " & idyErr)
+      quit(1)
+    logInfo("readiness_start_gate",
+            "measured git identity: head=" & idy.head & " treeDigest=" &
+            idy.treeDigest & " branch=" & idy.branch &
+            " verdictInputClean=" & $idy.workingTreeClean)
 
   # ── (b0) CI identity authority mode (both env vars set) ────────────────
-  # The environment is the identity authority: the evidence snapshot must
-  # describe exactly the CI commit, and the evaluator validates against the
-  # environment values (never the evidence's self-declaration).
+  # The environment is the identity authority: the checkout AND the evidence
+  # snapshot must describe exactly the CI commit. The checkout check is
+  # independent of the evidence (git measurement above); the evidence check
+  # keeps the stable READINESS_IDENTITY_MISMATCH marker.
   let ciHead = getEnv(CiRepoHeadEnv)
   let ciTree = getEnv(CiTreeDigestEnv)
-  if (ciHead.len > 0) xor (ciTree.len > 0):
-    logWarn("readiness_start_gate",
-            CiRepoHeadEnv & " and " & CiTreeDigestEnv & " must be set " &
-            "together; partial CI identity ignored — using the local " &
-            "evidence-declared identity (check the CI exporter wiring).")
-  if ciHead.len > 0 and ciTree.len > 0:
-    logInfo("readiness_start_gate",
-            "CI identity authority mode: head=" & ciHead &
-            " treeDigest=" & ciTree)
-    let (marker, ciErr) = ciIdentityMismatch(root, ciHead, ciTree)
-    if ciErr != "":
-      logError("readiness_start_gate", "evidence identity error: " & ciErr)
-      quit(1)
-    if marker != "":
-      echo marker
-      logError("readiness_start_gate",
-               "CI identity mismatch — the evidence snapshot does not " &
-               "describe the CI commit; gate FAILS (fail-closed).")
-      quit(1)
-    idy.head = ciHead
-    idy.treeDigest = ciTree
+  if replay:
+    if ciHead.len > 0 or ciTree.len > 0:
+      logWarn("readiness_start_gate",
+              "CI identity variables ignored in replay mode (" & ReplayEnv & "=1).")
+  else:
+    if (ciHead.len > 0) xor (ciTree.len > 0):
+      logWarn("readiness_start_gate",
+              CiRepoHeadEnv & " and " & CiTreeDigestEnv & " must be set " &
+              "together; partial CI identity ignored — using the measured git " &
+              "identity (check the CI exporter wiring).")
+    if ciHead.len > 0 and ciTree.len > 0:
+      logInfo("readiness_start_gate",
+              "CI identity authority mode: head=" & ciHead &
+              " treeDigest=" & ciTree)
+      if idy.head != ciHead:
+        echo "READINESS_GIT_IDENTITY_MISMATCH head expected=" & ciHead &
+             " actual=" & idy.head
+        logError("readiness_start_gate",
+                 "checkout HEAD is not the CI commit — gate FAILS (fail-closed).")
+        quit(1)
+      if idy.treeDigest != ciTree:
+        echo "READINESS_GIT_IDENTITY_MISMATCH treeDigest expected=" & ciTree &
+             " actual=" & idy.treeDigest
+        logError("readiness_start_gate",
+                 "checkout treeDigest is not the CI commit's tree — gate FAILS " &
+                 "(fail-closed).")
+        quit(1)
+      let (marker, ciErr) = ciIdentityMismatch(root, ciHead, ciTree)
+      if ciErr != "":
+        logError("readiness_start_gate", "evidence identity error: " & ciErr)
+        quit(1)
+      if marker != "":
+        echo marker
+        logError("readiness_start_gate",
+                 "CI identity mismatch — the evidence snapshot does not " &
+                 "describe the CI commit; gate FAILS (fail-closed).")
+        quit(1)
   if not compileEvaluator(root):
     quit(1)
-  let evalTime = utc(now()).format("yyyy-MM-dd'T'HH:mm:ss'Z'")
+  var evalTime = utc(now()).format("yyyy-MM-dd'T'HH:mm:ss'Z'")
+  if replay and getEnv(EvalTimeEnv).len > 0:
+    evalTime = getEnv(EvalTimeEnv)
+    logInfo("readiness_start_gate", "replay eval time pinned: " & evalTime)
   logInfo("readiness_start_gate",
           "evaluating evidence " & root / EvidenceDir & " @ " & evalTime)
   let res = runEvaluator(root, idy, evalTime)

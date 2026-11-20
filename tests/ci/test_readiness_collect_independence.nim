@@ -387,14 +387,14 @@ suite "readiness collector independence (DEBT#537)":
       copyFile(Root / "config" / "readiness_policy.json",
                tmpRoot / "config" / "readiness_policy.json")
       writeFile(tmpRoot / ".axiom_root", "")
-      # The collector's R2 source-structure entry reads this file through an
+      # The collector's R2 source entry reads verification_tier.nim through an
       # unguarded shaFile; a checkout without it crashes the collector with
       # an unhandled IOError (exit 1, partial evidence — reported as a
       # robustness contract difference). A real checkout-without-bin/ax has
       # the source tree, so the fixture carries it.
       createDir(tmpRoot / "src" / "core" / "types")
-      copyFile(Root / "src" / "core" / "types" / "certificate_types.nim",
-               tmpRoot / "src" / "core" / "types" / "certificate_types.nim")
+      copyFile(Root / "src" / "core" / "types" / "verification_tier.nim",
+               tmpRoot / "src" / "core" / "types" / "verification_tier.nim")
       # No bin/ and no bin/ax: the CLI surface the R1/R5/R6 rules read is
       # deliberately absent — unmeasurable, so it must not become PASS.
       # The CI identity env pair is exported as in the workflow: the temp root
