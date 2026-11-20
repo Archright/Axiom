@@ -8,6 +8,7 @@ axiomLayer "tools"
 
 import std/[os, strutils, algorithm, tables]
 import shared_types/analysis_bridge
+import core/debt/debt_registry_projection
 
 type
   RankedModule = object
@@ -15,29 +16,44 @@ type
     metrics: ModuleMetrics
     score: float
 
+func declaredColumn(registryKey: string): int =
+  ## Column position of a declared projection field. The reader never assumes a
+  ## position: it resolves every cell through `DebtRowFields`, the projection's
+  ## own declaration table.
+  for i, decl in DebtRowFields:
+    if decl.registryKey == registryKey: return i
+  -1
+
+const
+  StatusColumn = declaredColumn("status")
+  FilesColumn = declaredColumn("files")
+  SeverityColumn = declaredColumn("severity")
+
+static:
+  doAssert StatusColumn >= 0 and FilesColumn >= 0 and SeverityColumn >= 0,
+    "debt projection contract no longer declares status/files/severity"
+
 proc parseDebtRegistry(path: string): seq[(string, float)] =
   ## DEBT_REGISTRY.md에서 Open 항목의 모듈명과 위험도 추출
-  ## 실제 P1 v2 projection 스키마(6컬럼): | ID | Severity | Category | Title | Files | Status |
+  ## P1 projection read-back: `parseMarkdownRows` is the projection's declared
+  ## inverse (escaped pipes, cell padding, row identification), and the cells
+  ## are addressed through `DebtRowFields` — no positional schema assumption.
   result = @[]
   if not fileExists(path): return
   var raw: string
   try: raw = readFile(path)
   except IOError: return
-  let lines = raw.splitLines
-  for line in lines:
-    # Title 셀의 마크다운 이스케이프 파이프(\|)를 치환해 컬럼 위치를 고정
-    let sanitized = line.replace("\\|", "\x1f")
-    let parts = sanitized.split("|")
-    if parts.len < 7: continue
-    let status = parts[6].strip
-    if not ("Open" in status): continue
-    let severity = parts[2].strip.toLowerAscii
+  for row in parseMarkdownRows(raw):
+    if row.cells.len != DebtRowFields.len: continue
+    let status = row.cells[StatusColumn]
+    if not isOpen(status): continue
+    let severity = row.cells[SeverityColumn].toLowerAscii
     var weight = 1.0
     if "critical" in severity: weight = 3.0
     elif "high" in severity: weight = 2.0
     elif "medium" in severity: weight = 1.5
     # Files 컬럼에서 .nim 경로 추출 (<br> 및 쉼표 구분 다중 파일 지원)
-    let fileField = parts[5].strip
+    let fileField = row.cells[FilesColumn]
     for token in fileField.split("<br>"):
       for sub in token.split(","):
         let f = sub.strip
