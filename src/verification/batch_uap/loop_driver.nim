@@ -134,6 +134,33 @@ type
     complexity*: float  ## Cyclomatic complexity from IR pipeline
     certInput*: FinalReportCertInput
 
+func normalizeScopeModulePathAt(rawPath, cwd: string): string {.
+    raises: [], tags: [].} =
+  ## Pure core of `normalizeScopeModulePath` — the repo root is an explicit
+  ## input instead of an ambient process property, so callers that must be
+  ## side-effect free (the execution-scope slice) can reuse the exact same
+  ## rule. `relativePath` is not usable here (RootEffect); for the canonical
+  ## absolute line-info filenames Nim produces, a lexical cwd-prefix strip is
+  ## equivalent: a path outside the repo yields "" (fail-closed attribution).
+  var modulePath = rawPath
+  if modulePath.startsWith("src/"):
+    discard
+  elif modulePath.startsWith("/"):
+    let prefix = if cwd.len == 0: ""
+                 elif cwd.endsWith("/"): cwd
+                 else: cwd & "/"
+    if prefix.len > 0 and modulePath.startsWith(prefix):
+      let rel = modulePath[prefix.len .. ^1]
+      modulePath = if rel.startsWith("src/"): rel else: ""
+    else:
+      modulePath = ""
+  elif modulePath.find('/') >= 0:
+    discard
+  else:
+    if not modulePath.endsWith(".nim"):
+      modulePath = ""
+  modulePath
+
 proc normalizeScopeModulePath*(rawPath: string): string {.
     raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Repo-relative module-path normalization for IR-result attribution —
@@ -147,21 +174,39 @@ proc normalizeScopeModulePath*(rawPath: string): string {.
   ## materializer records exactly that sourcePath, so it passes through —
   ## attribution still requires the normalized path to equal the node's
   ## module, so a foreign non-module string keeps failing to attach.
-  var modulePath = rawPath
-  if modulePath.startsWith("src/"):
-    discard
-  elif modulePath.startsWith("/"):
-    try:
-      let rel = relativePath(modulePath, getCurrentDir(), '/')
-      modulePath = if rel.startsWith("src/"): rel else: ""
-    except CatchableError:
-      modulePath = ""
-  elif modulePath.find('/') >= 0:
-    discard
-  else:
-    if not modulePath.endsWith(".nim"):
-      modulePath = ""
-  modulePath
+  var cwd = ""
+  try:
+    cwd = getCurrentDir()
+  except CatchableError:
+    cwd = ""
+  normalizeScopeModulePathAt(rawPath, cwd)
+
+func scopeIrEntriesToRequiredKeys*(entries: seq[ValidatedIrEntry];
+    requiredKeys: HashSet[string]; cwd: string): seq[ValidatedIrEntry] {.
+    raises: [], tags: [].} =
+  ## Execution-scoping slice (admissible_candidate_selection §5: `--limit` is
+  ## the proof-attempt budget; the VKD ratchet widens only the FETCH).
+  ## Preserves the pool's deterministic order and drops nothing else: an entry
+  ## is kept iff its (module, name) identity is a required precompute key.
+  ##
+  ## Both spellings are accepted because the two downstream attribution rules
+  ## differ by construction — `scopedIrResultForNode` compares the NORMALIZED
+  ## repo-relative module path against the node's module, while
+  ## `errclassObservationIndex` compares the raw `sourcePath` against the
+  ## domain's raw module path. Accepting both keeps the executed set a strict
+  ## superset of what either consumer can attribute: a candidate that would
+  ## attach downstream is never dropped here.
+  ##
+  ## `cwd` is the same repo root the downstream normalizer uses; it is an
+  ## explicit input so this slice stays a pure function (see
+  ## `normalizeScopeModulePathAt`).
+  for ve in entries:
+    if ve.entry.sourcePath & "::" & ve.entry.name in requiredKeys:
+      result.add(ve)
+      continue
+    let normalized = normalizeScopeModulePathAt(ve.entry.sourcePath, cwd)
+    if normalized.len > 0 and normalized & "::" & ve.entry.name in requiredKeys:
+      result.add(ve)
 
 proc scopedIrResultForNode(
     irResultMap: Table[string, IrPipelineResult];
@@ -775,6 +820,7 @@ proc runBatchUapOrchestration*(
   progressSink: BatchUapProgressSink = nil;
   stallCount: int = 0;
   preComputedIrResults: seq[IrPipelineResult] = @[];
+  preComputedIrProvided: bool = false;
   sharedIrMemoCache: Table[string, IrPipelineResult] = initTable[string, IrPipelineResult]();
   skipIrPipeline: bool = false;
   kernelTotal: int = 0;
@@ -803,7 +849,13 @@ proc runBatchUapOrchestration*(
   if not useLegacyUap:
     if skipIrPipeline:
       logInfo("loop_driver", "batch-uap: IR pipeline skipped (parallel background path)")
-    elif preComputedIrResults.len > 0:
+    elif preComputedIrProvided or preComputedIrResults.len > 0:
+      ## Provided-state branch. `preComputedIrProvided` distinguishes "scope
+      ## supplied and empty" (Some(@[]) → execute zero units, terminal) from
+      ## "no scope supplied" (None → wide selection below); a non-empty seq
+      ## from a legacy caller implies supplied. Falling through on an empty
+      ## supplied scope would re-run the entire pool the upper layer sliced
+      ## away.
       logInfo("loop_driver", "batch-uap: IR pipeline — using " & $preComputedIrResults.len &
         " pre-computed results (parallel path)")
       let irResults = preComputedIrResults

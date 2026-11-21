@@ -638,9 +638,33 @@ proc runBatchVerification*(
   # are the frozen prepared values (parameters) — no mid-run scope-lock or
   # baseline re-read (execution_accounting_contract.md §13.1).
   let irLimit = requests.len
-  let irEntries = selectProofCandidates(irLimit, kernelScope.kernelTotal, targetVkd, verifiedFuncs, externalCandidates, subjectRepoRoot)
-  logInfo("axiom_engine", "phase-10: IR extraction — " & $irEntries.len &
-    "/" & $runtimeAxiomRegistry.len & " entries (limit=" & $irLimit & ")")
+  let irPool = selectProofCandidates(irLimit, kernelScope.kernelTotal, targetVkd, verifiedFuncs, externalCandidates, subjectRepoRoot)
+  # Execution slice (admissible_candidate_selection §5 / execution_accounting
+  # §13.1): the VKD ratchet widens the FETCH scope only — `--limit` is the
+  # proof-attempt budget. The pool stays authoritative for fetch, eligibility
+  # and order; the executor receives the upper layer's slice of it
+  # (ir_pipeline_integration.md: the executor contains no limit — it processes
+  # exactly what it is handed). Required keys are the request identities plus,
+  # when the JRPC errclass lane is active, its P1..P13 carrier identities (the
+  # conjunction is decided from all of them; the slice may not drop any).
+  var requiredIrKeys = initHashSet[string]()
+  for r in requests:
+    let nodeStr = sorterNodeIdString(r.nodeId)
+    let sep = nodeStr.find("::")
+    if sep >= 0:
+      let modulePath = nodeStr[0 ..< sep]
+      let fnName = nodeStr[sep + 2 .. ^1]
+      if modulePath.len > 0 and fnName.len > 0:
+        requiredIrKeys.incl(modulePath & "::" & fnName)
+  if jrpcErrclassDomain.isSome:
+    let domain = jrpcErrclassDomain.get
+    for i in 0 ..< domain.instances.len:
+      requiredIrKeys.incl(errclassResultKey(domain, i))
+  let irEntries = scopeIrEntriesToRequiredKeys(irPool, requiredIrKeys, getCurrentDir())
+  logInfo("axiom_engine", "phase-10: IR extraction — pool=" & $irPool.len &
+    "/" & $runtimeAxiomRegistry.len & " requests=" & $requests.len &
+    " required=" & $requiredIrKeys.len & " executed=" & $irEntries.len &
+    " (limit=" & $irLimit & ")")
 
   let irCtx = create(ParallelIrContext)
   irCtx.entries = irEntries
@@ -700,6 +724,7 @@ proc runBatchVerification*(
     maxRounds = task.maxRounds,
     stallCount = stallCount,
     preComputedIrResults = irResults,
+    preComputedIrProvided = true,
     skipIrPipeline = false,
     kernelTotal = kernelScope.kernelTotal,
     targetVkd = targetVkd,

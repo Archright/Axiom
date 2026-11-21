@@ -116411,6 +116411,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/batch_uap/loop_driver.nim",
+      "name": "normalizeScopeModulePathAt",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "BatchUapReport",
       "module": "src/verification/batch_uap/loop_driver.nim",
       "name": "runBatchUapOrchestration",
@@ -116436,6 +116450,20 @@
       "returnType": "bool",
       "smtSort": "Bool",
       "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List ValidatedIrEntry",
+      "module": "src/verification/batch_uap/loop_driver.nim",
+      "name": "scopeIrEntriesToRequiredKeys",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[ValidatedIrEntry]",
+      "smtSort": "(Seq ValidatedIrEntry)",
+      "typeCategory": "seq"
     },
     {
       "hasAxiomHint": false,
