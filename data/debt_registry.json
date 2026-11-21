@@ -4963,15 +4963,17 @@
       "symbol": "matchesStatus (src/gate/runners/debt_integrity_gate.nim:60-62) / statusEnum (data/debt_schema.json:12-16)",
       "contentHash": "sha256:6ad7558fadeb774b00c6f1d5910cbf5fd3a550784b080973eac2d3c42e901ed8",
       "lineRange": "src/gate/runners/debt_integrity_gate.nim:60-62; data/debt_schema.json:12-16",
-      "lastVerifiedAt": "2026-11-01T23:52:00Z",
-      "resolution": "UNRESOLVED",
+      "lastVerifiedAt": "2026-11-21T03:38:31Z",
+      "resolution": "FIXED 2026-11-21 (PR #274, merge ed18841): the gate dropped its second literal vocabulary — statusVocabulary (src/gate/runners/debt_integrity_gate.nim:61) now reads data/debt_schema.json definitions.statusEnum.enum as the single authority and matchesStatus (src/gate/runners/debt_integrity_gate.nim:71) validates against it, failing closed when the authority is unavailable; evidence: make test-fast-one T=tests/unit/test_debt_status_vocabulary.nim -> 5/5 [OK] (schema statusEnum is the canonical lifecycle set; every schema value is accepted by the gate predicate; non-schema values are rejected; gate vocabulary is loaded from the schema, not a second literal; pre-fix dual vocabulary diverges in both directions) and a direct validateDebtRegistryImpl probe -> gateErrors=@[] for status=accepted and status=in_progress, @[\"entry[0].status: invalid\"] for status=resolved, while the pre-fix vocabulary [open,closed,deferred,resolved] accepts resolved and rejects accepted/in_progress",
       "source": "audit",
       "productTruthImpact": "NON_PRODUCT",
-      "status": "open",
+      "status": "closed",
       "files": [
         "src/gate/runners/debt_integrity_gate.nim:60-62",
         "data/debt_schema.json:12-16"
-      ]
+      ],
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "debt_engine --close"
     },
     {
       "id": "DEBT#513",
@@ -6072,11 +6074,13 @@
       ],
       "source": "theater_audit",
       "productTruthImpact": "UNKNOWN",
-      "status": "open",
-      "resolution": "UNRESOLVED — registration only. Closing-slice acceptance: (1) either the write-only persistence block (:386-398) is removed and `ax topology analyze` output is byte-identical before/after on a fixed subject root, or a reader is added with an explicit invalidation contract keyed on the Merkle root and its hit path is exercised by a test; (2) no new file under .axiom/cache/ is written without a cited reader; (3) the change lands through the standard pin/debt re-anchor path.",
-      "lastVerifiedAt": "2026-11-20T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-21 (PR #279, merge 75dd326): the write-only persistence block was deleted from analyzeTopologySourceRoot (src/cli/topology_cli.nim) so the only cache still written is the one that is read — the Merkle cache .axiom/cache/topology_merkle.json (loadCache/saveCache at the same call site), and no topology_analysis_cache identifier survives in the tree; evidence: git grep -n \"topology_analysis_cache\" origin/main -- src/ tools/ config/ tests/ -> no output (exit 1) and make test-fast-one T=tests/cli/test_topology_cli.nim -> all suites [OK], including analyzeTopologySourceRoot (non-existent directory returns error; empty directory returns error; directory with .nim files succeeds; diagnosisDepthExplicit/queueLimitExplicit pass through; sourceContentCache is populated)",
+      "lastVerifiedAt": "2026-11-21T03:38:56Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the subject is a cache artifact with no dedicated symbol, so a {.axiomDebt.} marker would bind the whole analyze proc and mask unrelated code. §10.2 trace: this entry's resolution (UNRESOLVED) and source (theater_audit); external evidence: src/cli/topology_cli.nim:348 (constant), :373 (Merkle cache load), :386-398 (write-only block); reader search over src/, tools/, .github/, Makefile, config.nims returns the definition and write site only."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the subject is a cache artifact with no dedicated symbol, so a {.axiomDebt.} marker would bind the whole analyze proc and mask unrelated code. §10.2 trace: this entry's resolution (UNRESOLVED) and source (theater_audit); external evidence: src/cli/topology_cli.nim:348 (constant), :373 (Merkle cache load), :386-398 (write-only block); reader search over src/, tools/, .github/, Makefile, config.nims returns the definition and write site only.",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "debt_engine --close"
     }
   ]
 }
