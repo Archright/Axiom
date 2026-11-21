@@ -3,7 +3,7 @@
   "kind": "ci_optimization.merge_queue_concurrency",
   "date": "2026-11-21",
   "issue": 282,
-  "status": "APPLIED_AFTER_ARM_INCOMPLETE",
+  "status": "APPLIED_AFTER_ARM_PARTIAL_N3",
   "purpose": "검증 완전성·증거 유효성·병합 판정 권위를 유지한 채 merge queue의 검증 후보 공급 상한을 제거하고, 그 효과를 실측한다.",
   "change": {
     "authority": "GitHub repository ruleset (merge authority는 GitHub에 위임)",
@@ -46,13 +46,26 @@
     "siblingRuleset": { "id": 27525972, "name": "main-admission", "enforcement": "active", "bypassActors": 0, "required": [{ "context": "admission-check", "integration_id": 5795152 }], "changed": false },
     "issuerScopeNote": "check-runs를 이름만으로 조회하면 app 15368(Actions)과 app 5795152(App)의 동명 `admission-check`가 섞인다. 권위 판정은 반드시 integration_id/app.id로 스코프해야 한다. main HEAD 1c9cdc11 실측에서 두 발행 주체의 동명 check가 동시에 존재했다.",
     "landedValidation": {
-      "pr": 300,
-      "headSha": "0655127d627668d76486912ad476512f98141b2e",
-      "mergeGroupHeadSha": "1c9cdc1117816e49543270dc5b95e9e9800e204c",
-      "enqueuedAt": "2026-11-21T05:12:32Z",
-      "mergeGroupRunCompletedAt": "2026-11-21T05:20:06Z",
-      "mergedAt": "2026-11-21T05:20:18Z",
-      "note": "이 run은 apply 시점(05:13:00Z) 이전에 dispatch되어 after arm에 포함되지 않는다. 다만 100 적용 직후 실제 merge queue 착지가 성공했음을 보여준다."
+      "correction": "이전 판본은 `enqueuedAt: 2026-11-21T05:12:32Z`로 적었으나, 그 값은 큐 진입 시각이 아니라 결과 merge commit(1c9cdc11)의 committer.date다. 큐 진입 시각은 관측하지 못했으므로 해당 필드를 제거하고, 관측된 타임스탬프만 남긴다.",
+      "dispatchedBeforeApply": {
+        "pr": 300,
+        "headSha": "0655127d627668d76486912ad476512f98141b2e",
+        "mergeGroupHeadSha": "1c9cdc1117816e49543270dc5b95e9e9800e204c",
+        "mergeCommitCommitterDate": "2026-11-21T05:12:32Z",
+        "mergeGroupRunCompletedAt": "2026-11-21T05:20:06Z",
+        "mergedAt": "2026-11-21T05:20:18Z",
+        "note": "이 merge group은 apply(05:13:00Z) 이전에 dispatch되어 after arm에 포함되지 않는다. 다만 새 ruleset 값이 적용된 상태에서 merge 자체는 성공했다(dispatch 결정은 c=1 시점)."
+      },
+      "afterApply": {
+        "pr": 302,
+        "headSha": "9a56b2d0fcb5582229f0e78868bda2a98b80a183",
+        "mergeGroupHeadSha": "f68ca0f68cdadf5cc3d0585f7104ffb2733a0411",
+        "createdAt": "2026-11-21T05:37:02Z",
+        "admissionGateCompletedAt": "2026-11-21T05:43:27Z",
+        "mergedAt": "2026-11-21T05:43:41Z",
+        "conclusion": "success",
+        "note": "dispatch와 착지가 모두 apply 이후다. max_entries_to_build=100 구간에서 merge queue가 8개 워크플로(7개 필수 컨텍스트 포함)를 실행하고 착지까지 완료했다."
+      }
     }
   },
   "authorityPreflight": {
@@ -185,9 +198,63 @@
     "c100": {
       "max_entries_to_build": 100,
       "window": "2026-11-21T05:13:00Z ~ (open)",
-      "n": 0,
-      "status": "INCOMPLETE",
-      "reason": "apply 이후 자연 발생한 merge_group admission-gate entry가 아직 없다. merge queue는 apply 시점에 비어 있었고(entries.totalCount=0), 마지막 dispatch는 apply 10초 전(05:12:50Z)이다."
+      "n": 3,
+      "status": "PARTIAL",
+      "wallSecondsDefinition": "run.created_at -> run.updated_at (admission-gate workflow run). job-level span과 maxPerJobQueueWaitSeconds를 함께 기록한다.",
+      "entries": [
+        {
+          "mergeGroupHeadSha": "f68ca0f68cdadf5cc3d0585f7104ffb2733a0411",
+          "pr": 302,
+          "createdAt": "2026-11-21T05:37:02Z",
+          "admissionGateCompletedAt": "2026-11-21T05:43:27Z",
+          "wallSeconds": 385.0,
+          "jobSpanSeconds": 384.0,
+          "maxPerJobQueueWaitSeconds": 14.0,
+          "jobs": 26,
+          "conclusion": "success",
+          "mergedAt": "2026-11-21T05:43:41Z"
+        },
+        {
+          "mergeGroupHeadSha": "52da049978c6fb81171735a96f80557ba1bcf646",
+          "pr": 299,
+          "createdAt": "2026-11-21T05:42:38Z",
+          "admissionGateCompletedAt": "2026-11-21T05:50:20Z",
+          "wallSeconds": 462.0,
+          "jobSpanSeconds": 453.0,
+          "maxPerJobQueueWaitSeconds": 49.0,
+          "jobs": 26,
+          "conclusion": "success",
+          "mergedAt": "2026-11-21T05:50:45Z"
+        },
+        {
+          "mergeGroupHeadSha": "6a9ef54a2aaab62b26978185a6aaeb4b2580e6d8",
+          "pr": 303,
+          "createdAt": "2026-11-21T05:51:01Z",
+          "admissionGateCompletedAt": "2026-11-21T05:58:19Z",
+          "wallSeconds": 438.0,
+          "jobSpanSeconds": 436.0,
+          "maxPerJobQueueWaitSeconds": 16.0,
+          "jobs": 26,
+          "conclusion": "success",
+          "mergedAt": "2026-11-21T05:58:43Z"
+        }
+      ],
+      "overlapObservation": {
+        "from": "2026-11-21T05:42:38Z",
+        "to": "2026-11-21T05:43:27Z",
+        "seconds": 49,
+        "evidence": "PR #299는 05:42:20Z 큐 진입 후 18초 뒤 dispatch됐고, 그 시점에 #302의 admission-gate가 아직 실행 중이었다. c=1이면 #302 완료(05:43:27Z) 전 dispatch가 불가능하다.",
+        "meaning": "스로틀 해제가 실제 동시 dispatch로 이어졌다는 직접 관측이다."
+      },
+      "throughputCeilingTest": {
+        "claim": "c=100 arm의 착지 간격이 c=1의 직렬화 상한을 넘었다",
+        "landingGapsSeconds": [424, 478],
+        "c1WallP50Seconds": 496.0,
+        "argument": "c=1에서는 merge group이 한 번에 하나만 검증되므로 연속 착지 간격의 하한이 wall time이다. 관측된 두 간격 424s, 478s는 모두 c=1 wall p50 496.0s보다 짧다. 즉 두 번 모두 c=1에서 구조적으로 불가능한 속도로 착지했다.",
+        "burstRate": { "merges": 3, "spanSeconds": 902, "mergesPerHour": 11.97, "c1CeilingPerHour": 7.258 },
+        "caveat": "3건은 이미 PR 검사를 통과해 큐에 몰려 있던 backlog가 빠져나간 구간이다. 지속 처리량으로 일반화하지 않는다. 다만 '간격 < c1 wall'이라는 부등식은 표본 크기와 무관하게 성립하는 구조적 반증이다."
+      },
+      "reason": "apply 직후 merge queue가 비어 있었으나(entries.totalCount=0) 이후 자연 발생 PR #302, #299, #303이 잇달아 큐에 들어와 표본이 생겼다. n=3 < 5이므로 p50/p95를 선언하지 않고, 개별 값과 부등식만 보고한다."
     }
   },
   "saturationAndEviction": {
@@ -203,7 +270,16 @@
     "maxConcurrentAdmissionGateRunsC2": 4,
     "note": "build concurrency=2 구간에서도 admission-gate run 4개가 동시에 관측됐다(2026-11-20T05:48:38Z). dispatch 상한은 '동시에 살아있는 run 수'를 직접 제한하지 않는다. 따라서 목표 지표를 'live overlap'으로 정의하면 설정과 1:1 대응하지 않는다.",
     "queueStateAtApply": { "totalCount": 0 },
-    "openPrSupply": { "openPrs": 10, "clean": 2, "dirtyOrUnknown": 8 }
+    "openPrSupply": { "openPrs": 10, "clean": 2, "dirtyOrUnknown": 8 },
+    "afterArm": {
+      "observedAt": "2026-11-21T05:52:00Z",
+      "queueDepthAtObservation": 1,
+      "dispatches": [
+        { "pr": 302, "enqueuedAt": null, "mergeGroupCreatedAt": "2026-11-21T05:37:02Z" },
+        { "pr": 299, "enqueuedAt": "2026-11-21T05:42:20Z", "mergeGroupCreatedAt": "2026-11-21T05:42:38Z", "dispatchLatencySeconds": 18 }
+      ],
+      "note": "#299의 큐 진입 시각은 GraphQL mergeQueue.entries.enqueuedAt에서, dispatch 시각은 merge_group run.created_at에서 읽었다. 18초 지연은 dispatch 상한이 걸리지 않았다는 직접 관측이다."
+    }
   },
   "prToMain": {
     "observedAt": "2026-11-21T05:30:00Z",
@@ -262,12 +338,25 @@
     {
       "claim": "peak 동시 실행을 build concurrency 값으로 상한 지을 수 있다",
       "verdict": "REFUTED",
-      "evidence": "build concurrency=2 구간에서 admission-gate run 4개 동시 관측(2026-11-20T05:48:38Z). dispatch 상한과 live run 수는 다른量이다."
+      "evidence": "build concurrency=2 구간에서 admission-gate run 4개 동시 관측(2026-11-20T05:48:38Z). dispatch 상한과 live run 수는 다른 양이다."
     }
   ],
   "planVerdict": {
     "decision": "STAY_FREE_PENDING_AFTER_ARM",
     "evidenceForUpgrade": "none",
+    "afterArmObservation": {
+      "n": 3,
+      "observedAt": "2026-11-21T06:00:00Z",
+      "facts": [
+        "PR #302: merge group 05:37:02Z -> admission-gate 05:43:27Z(wall 385.0s) -> 05:43:41Z 착지. apply 이후 dispatch·착지 모두 완료된 첫 표본이다.",
+        "PR #299: 05:42:20Z 큐 진입 -> 05:42:38Z dispatch(18초). #302의 admission-gate와 49초 중첩됐다. wall 462.0s.",
+        "PR #303: 05:51:01Z -> 05:58:19Z(wall 438.0s) -> 05:58:43Z 착지. 최대 job 큐 대기 16.0s.",
+        "세 표본의 최대 job 큐 대기는 14.0s / 49.0s / 16.0s로, c1 arm queued p50 64.0s보다 낮다."
+      ],
+      "statisticalStatus": "n=3 < 5이므로 p50/p95를 계산하지 않는다. 개별 값과 부등식만 보고한다.",
+      "throughputCeilingTest": "연속 착지 간격 424s와 478s는 c1 wall p50 496.0s보다 짧다. c=1에서는 merge group이 직렬화되므로 간격의 하한이 wall time이다. 따라서 두 간격 모두 c=1에서 구조적으로 불가능하며, 이 부등식은 표본 크기와 무관하게 성립한다.",
+      "whatItDoesEstablish": "스로틀 해제가 실제 동시 dispatch로 이어지고, 그 상태에서도 7개 필수 컨텍스트를 포함한 착지가 성공한다는 것. 또한 c=1의 직렬화가 실제 처리량 상한이었다는 것."
+    },
     "reasoning": [
       "실측 merge rate 2.417/h는 c1에서도 가능한 상한 7.26/h의 33% 수준이다. 즉 요구 처리량이 플랜 용량을 초과한다는 증거가 없다.",
       "runner 대기로 인한 45분 폐기 0건, 2700초 초과 job 0건.",
@@ -281,7 +370,7 @@
     ]
   },
   "openItems": [
-    "after arm(c=100) n>=20 표본 수집 후 wall/queued/runner 및 merges/hour 재판정 (현재 n=0, INCOMPLETE)",
+    "after arm(c=100) n>=20 표본 수집 후 wall/queued/runner 및 merges/hour 재판정 (현재 n=3, PARTIAL — p50/p95 미산출)",
     "Admission App 5795152의 PR venue 계약 확인 (PR 13 job 축소 가능성 — agent 권한 밖)",
     "#238 ROT_ALLOWLIST 결함 분리 해결 (MG 실패 23/50의 원인)",
     "main push 사후 검사 제거는 tree(merge_group head)==tree(main landed) 등가 입증 후에만 검토"
