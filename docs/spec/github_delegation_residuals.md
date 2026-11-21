@@ -90,7 +90,11 @@ TCB로 수용한 뒤 남는 잔여 위협과, `workflow_run` 단일 씨딩 write
   **갱신 (2026-11-21 — 위 (ii)의 `max_entries_to_build` 상태 단언을 대체)**:
   현행 라이브 값은 **100**이다(`gh api repos/Archright/Axiom/rulesets/27097366`
   실측 — `max_entries_to_merge 1` · `grouping_strategy ALLGREEN` · `merge_method
-  MERGE` · `check_response_timeout_minutes 120` · `bypass_actors []`). 출처는
+  MERGE` · `check_response_timeout_minutes 120` · `bypass_actors []` — 이 `bypass`
+  값은 **2026-11-21T05:13:00Z readback 시점**의 것이며 불변 조건이 아니다; 같은 날
+  09:36:23Z에 ruleset version `58918694`가 `bypass_actors`를 다시 비어 있지 않게
+  만들었고, bypass **사용**은 `rulesets/rule-suites`에서 result=`bypass` 5건
+  (`actor_name=wintrover`)으로 직접 관측된다. 설정값은 시점 기록으로만 읽는다). 출처는
   ruleset 버전 `58904727`(2026-11-21T05:13:00Z, `PUT
   /repos/Archright/Axiom/rulesets/27097366`로 1 → 100 적용)이고, 그 적용·readback
   기록은 `data/ci_optimization/merge_queue_concurrency_2026-11-21/summary.json`
