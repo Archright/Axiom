@@ -41,14 +41,15 @@ const RankerProjectionFixture = """{
 suite "DEBT#487: hotspot_ranker reads the declared P1 projection":
 
   test "non-empty ranking from a representative projection input":
-    let projectionPath = getTempDir() / "ax_hotspot_ranker_debt487_projection.md"
-    defer: removeFile(projectionPath)
+    let projectionDir = getTempDir() / "ax_hotspot_ranker_debt487"
+    createDir(projectionDir)
+    defer: removeDir(projectionDir)
 
     let md = generateProjections(RankerProjectionFixture).md
     check "| ID | Severity | Category | Title | Files | Status |" in md
-    writeFile(projectionPath, md)
+    writeFile(projectionDir / "DEBT_REGISTRY.md", md)
 
-    let ranked = rankModules(projectionPath)
+    let ranked = rankModules(projectionDir / "DEBT_REGISTRY.md")
 
     # Two open references resolve to existing repo modules; the closed entry
     # contributes none. A positional reader yields 0 here.
@@ -57,8 +58,8 @@ suite "DEBT#487: hotspot_ranker reads the declared P1 projection":
   test "the checked-in projection yields a non-empty ranking":
     ## The live artifact is the representative production input, so the
     ## contract test is not satisfied only by a synthetic fixture.
-    let projectionPath = "docs/DEBT_REGISTRY.md"
-    if fileExists(projectionPath):
-      check rankModules(projectionPath).len > 0
+    let liveProjectionPath = "docs/DEBT_REGISTRY.md"
+    if fileExists(liveProjectionPath):
+      check rankModules(liveProjectionPath).len > 0
     else:
       skip()
