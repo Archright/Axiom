@@ -1,0 +1,359 @@
+{
+  "schemaVersion": 1,
+  "kind": "ci_optimization.verdict_attribution",
+  "date": "2026-11-21",
+  "issues": [256, 305],
+  "status": "REPOSITORY_SIDE_COMPLETE_EXTERNAL_APP_DEFECT_OPEN",
+  "purpose": "어떤 커밋에 대한 검증 결과도 다른 커밋의 판정으로 둔갑하지 않게 하고, 그 결함이 실제로 존재함을 재현 가능한 detector와 원본 payload로 고정한다.",
+  "ultimatePurpose": "Verdict(repo, venue, SHA)는 해당 저장소·검증 경로·SHA와 정확히 일치하는 실행 결과만으로 결정한다.",
+  "contractBasis": [
+    {
+      "path": "docs/adr/0041-free-authority-migration.md",
+      "section": "§1",
+      "fact": "admission-check 발행 권위는 App 5795152이며, 판정 조건은 워크플로 path·이벤트 venue·head_sha·conclusion의 네 조건이다."
+    },
+    {
+      "path": "docs/spec/merge_admission_controller.md",
+      "line": 55,
+      "fact": "Invariant (snapshot consistency): every PR-derived fact remains bound to H even if the PR moves mid-evaluation."
+    },
+    {
+      "path": "docs/spec/merge_admission_controller.md",
+      "line": 150,
+      "fact": "Stale evaluation: Evaluation(H)는 H에만 적용 가능하며, 평가 종료 시 현재 PR head != H이면 STALE_EVALUATION deny."
+    },
+    {
+      "path": ".github/workflows/certificate-mint.yml",
+      "line": 1553,
+      "fact": "A0 PR-identity leg: PR API의 head.sha가 headSha 입력과 다르면 fail-closed. 이 거부는 정당하며 유지한다."
+    },
+    {
+      "path": "docs/agents/axiom_admission_verifier_ops.md",
+      "section": "§3.1, §4, §5, §7",
+      "note": "이 슬라이스에서 판정 대상 결속 계약을 신설하고, '현재 head에 failure 발행은 올바르다'는 모순 문장을 교체했다."
+    }
+  ],
+  "definitions": {
+    "executionIdentity": ["repository_id", "workflow_id", "run_id", "run_attempt", "venue", "head_sha"],
+    "externalId": "특정 run·attempt를 가리키는 상관관계 식별자. 실행 신원 전체가 아니며(workflow_id·venue 미포함), GitHub는 external_id와 실제 Actions Run의 일치를 보증하지 않는다.",
+    "authoritySources": {
+      "runFacts": "GET /repos/{owner}/{repo}/actions/runs/{run_id} (+ /attempts/{n})",
+      "verdictRecords": "GET /repos/{owner}/{repo}/commits/{sha}/check-runs",
+      "consistencyOnly": "check-run output.summary — 권위가 아니라 위 기록과의 일관성 검증 자료"
+    },
+    "venue": {
+      "pull_request": "external_id prefix v1p|",
+      "merge_group": "external_id prefix v1|"
+    }
+  },
+  "detector": {
+    "path": "tools/ci/verdict_attribution_check.sh",
+    "readOnly": true,
+    "selfTest": {
+      "command": "bash tools/ci/verdict_attribution_check.sh --self-test",
+      "exit": 0,
+      "stdout": "SELF-TEST PASS"
+    },
+    "modes": [
+      "--self-test (network 없음, fixture 3종: INCIDENT/CLEAN/EMPTY)",
+      "live: --repo OWNER/REPO --sha SHA...",
+      "--stdin: {repo_id, runs[], check_runs[]} (오프라인 재현)"
+    ],
+    "exitCodes": {
+      "0": "모든 검사 통과 + 적격 대상 >= 1",
+      "1": "위반 >= 1",
+      "2": "검증 불가(도구·API·페이지네이션·run 해소 실패, 적격 0건)"
+    },
+    "eligibleScope": {
+      "runs": "path=.github/workflows/admission-gate-v2.yml AND event=pull_request AND status=completed AND head_sha in --sha set",
+      "checkRuns": "app.id=5795152 AND name=admission-check AND external_id venue=pull_request",
+      "excluded": "external_id venue=merge_group(`v1|`)는 out-of-scope로 별도 카운트하며 절대 위반으로 판정하지 않는다."
+    },
+    "invariants": {
+      "V1": "check_run.head_sha == external_id head_sha",
+      "V2": "external_id의 run 신원을 Actions Run API와 교차 대조: id, run_attempt(필요 시 /attempts/{n}), repo id, head_sha, workflow path, event venue",
+      "V3": "적격 run마다 external_id가 그 run을 지목하는 PR-venue check-run이 정확히 1개(대응 관계의 완전성)",
+      "V4": "0 <= t(check completed) - t(run completed) <= max_lag. 미완료가 max_lag 초과면 PENDING, run 완료 전 완료되면 PREMATURE",
+      "V5": "summary의 run/attempt/evaluated_commit은 일관성 검증용. A: summary run != external_id run, B: evaluated_commit != run head_sha, C: attempt 불일치"
+    }
+  },
+  "thresholds": {
+    "max_lag_seconds": 600,
+    "authority": "OPERATIONAL_SLO",
+    "notClaimed": "GitHub가 규정한 사실이 아니다. GitHub는 check-run 완료 기한을 규정하지 않으며, 14일 경과 시 GitHub가 conclusion=stale을 부여한다.",
+    "appliedBy": "detector 기본값 및 이 실행의 --max-lag-seconds 생략 값"
+  },
+  "observations": {
+    "repo": "Archright/Axiom",
+    "repoId": 1454952493,
+    "admissionGateWorkflowId": 420946486,
+    "admissionGatePath": ".github/workflows/admission-gate-v2.yml",
+    "pullRequestVenueEvent": "pull_request",
+    "appId": 5795152,
+    "appCheckName": "admission-check",
+    "observedAt": "2026-11-21T07:31:37Z"
+  },
+  "incidents": [
+    {
+      "id": "pr-305",
+      "pr": 305,
+      "date": "2026-11-21",
+      "summary": "head A 실행의 failure가 새 head B의 check-run에 기록됐고, B 자신의 run success는 발행되지 않았다.",
+      "staleRun": {
+        "id": 44873857358,
+        "run_attempt": 1,
+        "head_sha": "2f2135b848320dc0e0120752d787dd3a3f3f0b1a",
+        "conclusion": "failure",
+        "updated_at": "2026-11-21T06:11:54Z"
+      },
+      "newRun": {
+        "id": 44874261646,
+        "run_attempt": 1,
+        "head_sha": "434d4ce9e5b44bc211cd22295c656ee120baa28b",
+        "conclusion": "success",
+        "updated_at": "2026-11-21T06:16:18Z"
+      },
+      "checkRuns": [
+        {
+          "id": 136754110365,
+          "head_sha": "2f2135b848320dc0e0120752d787dd3a3f3f0b1a",
+          "status": "in_progress",
+          "conclusion": null,
+          "started_at": "2026-11-21T06:05:08Z",
+          "completed_at": null,
+          "external_id": "v1p|1454952493|2f2135b848320dc0e0120752d787dd3a3f3f0b1a|6a9ef54a2aaab62b26978185a6aaeb4b2580e6d8|run=44873857358#1",
+          "summary_run": "44873857358",
+          "note": "자기 run을 정당하게 지목했지만 run 완료 후에도 종료되지 않았다(V4-PENDING). summary에 attempt/venue/evaluated_commit 줄이 없다."
+        },
+        {
+          "id": 136755374873,
+          "head_sha": "434d4ce9e5b44bc211cd22295c656ee120baa28b",
+          "status": "completed",
+          "conclusion": "failure",
+          "started_at": "2026-11-21T06:10:16Z",
+          "completed_at": "2026-11-21T06:11:56Z",
+          "external_id": "v1p|1454952493|434d4ce9e5b44bc211cd22295c656ee120baa28b|6a9ef54a2aaab62b26978185a6aaeb4b2580e6d8|run=44874261646#1",
+          "summary_run": "44873857358",
+          "summary_attempt": "1",
+          "evaluated_commit": "434d4ce9e5b44bc211cd22295c656ee120baa28b",
+          "note": "external_id는 run B를, summary는 run A를 지목한다(V5A). 자기 run B 완료 262초 전에 failure로 종료됐다(V4-PREMATURE). run B의 success는 이 SHA에 발행된 check-run이 없다."
+        }
+      ]
+    },
+    {
+      "id": "pr-256-case-a",
+      "pr": 256,
+      "date": "2026-11-20",
+      "summary": "이전 head의 run failure가 새 head check-run에 기록됐다.",
+      "staleRun": {
+        "id": 44683280133,
+        "run_attempt": 1,
+        "head_sha": "b644590d484334000d50786c44e95339bf4047e0",
+        "conclusion": "failure",
+        "updated_at": "2026-11-20T06:00:55Z"
+      },
+      "newRun": {
+        "id": 44684631302,
+        "run_attempt": 1,
+        "head_sha": "9316113eb8966369320383c2623a25d56d202ccd",
+        "conclusion": "success",
+        "updated_at": "2026-11-20T06:05:53Z",
+        "note": "동일 run의 attempt 2는 failure(06:21:56Z)다. attempt별 조회 없이는 attempt 1의 성공을 볼 수 없다."
+      },
+      "checkRuns": [
+        {
+          "id": 136111517614,
+          "head_sha": "b644590d484334000d50786c44e95339bf4047e0",
+          "status": "in_progress",
+          "conclusion": null,
+          "started_at": "2026-11-20T05:46:48Z",
+          "completed_at": null,
+          "external_id": "v1p|1454952493|b644590d484334000d50786c44e95339bf4047e0|39f0100ed54ff5216de54c9deed11f614038c662|run=44683280133#1",
+          "summary_run": "44683280133",
+          "note": "자기 run을 지목했으나 완료되지 않았다(V4-PENDING)."
+        },
+        {
+          "id": 136115947774,
+          "head_sha": "9316113eb8966369320383c2623a25d56d202ccd",
+          "status": "completed",
+          "conclusion": "failure",
+          "started_at": "2026-11-20T05:59:21Z",
+          "completed_at": "2026-11-20T06:00:59Z",
+          "external_id": "v1p|1454952493|9316113eb8966369320383c2623a25d56d202ccd|bfc8539a35cfdae3009fb714dc9c6d648118b1dd|run=44684631302#1",
+          "summary_run": "44683280133",
+          "summary_attempt": "1",
+          "evaluated_commit": "9316113eb8966369320383c2623a25d56d202ccd",
+          "note": "summary는 run 44683280133(b644590d)을 지목한다(V5A). 자기 run attempt 1 완료 294초 전에 failure로 종료됐다(V4-PREMATURE)."
+        }
+      ]
+    },
+    {
+      "id": "pr-256-case-b",
+      "pr": 256,
+      "date": "2026-11-20",
+      "summary": "이전 run attempt 2의 failure가 새 head check-run에 기록됐다.",
+      "staleRun": {
+        "id": 44684631302,
+        "run_attempt": 2,
+        "head_sha": "9316113eb8966369320383c2623a25d56d202ccd",
+        "conclusion": "failure",
+        "updated_at": "2026-11-20T06:21:56Z"
+      },
+      "newRun": {
+        "id": 44686846266,
+        "run_attempt": 1,
+        "head_sha": "6ab5513cecbea3e27e6d44ba25d561a306f099f3",
+        "conclusion": "success",
+        "updated_at": "2026-11-20T06:27:27Z"
+      },
+      "checkRuns": [
+        {
+          "id": 136123106900,
+          "head_sha": "6ab5513cecbea3e27e6d44ba25d561a306f099f3",
+          "status": "completed",
+          "conclusion": "failure",
+          "started_at": "2026-11-20T06:18:18Z",
+          "completed_at": "2026-11-20T06:22:00Z",
+          "external_id": "v1p|1454952493|6ab5513cecbea3e27e6d44ba25d561a306f099f3|ed1ce3ef657eb190ac0930d7a8ce29bba2ce5634|run=44686846266#1",
+          "summary_run": "44684631302",
+          "summary_attempt": "2",
+          "evaluated_commit": "6ab5513cecbea3e27e6d44ba25d561a306f099f3",
+          "note": "summary는 run attempt 2를 지목한다(V5A, V5C). 자기 run 완료 327초 전에 failure로 종료됐다(V4-PREMATURE). 이후 대체 check-run이 없다."
+        }
+      ]
+    }
+  ],
+  "control": {
+    "id": "healthy-pr-head",
+    "head_sha": "930e99e543514d3236ab89776f6dea9ca2db21ac",
+    "run": {
+      "id": 44875293873,
+      "run_attempt": 1,
+      "conclusion": "success",
+      "updated_at": "2026-11-21T06:28:21Z"
+    },
+    "checkRun": {
+      "id": 136758555232,
+      "status": "completed",
+      "conclusion": "success",
+      "completed_at": "2026-11-21T06:28:25Z",
+      "external_id": "v1p|1454952493|930e99e543514d3236ab89776f6dea9ca2db21ac|6a9ef54a2aaab62b26978185a6aaeb4b2580e6d8|run=44875293873#1",
+      "summary_run": "44875293873",
+      "summary_attempt": "1",
+      "evaluated_commit": "930e99e543514d3236ab89776f6dea9ca2db21ac",
+      "lag_seconds": 4
+    }
+  },
+  "liveChecks": [
+    {
+      "name": "incidents",
+      "command": "bash tools/ci/verdict_attribution_check.sh --repo Archright/Axiom --sha 2f2135b8... --sha 434d4ce9... --sha 9316113e... --sha b644590d... --sha 6ab5513c...",
+      "exit": 1,
+      "observed": {
+        "eligible_runs": 5,
+        "in_scope_check_runs": 5,
+        "excluded_merge_group_check_runs": 0,
+        "violations": 12,
+        "codes": {
+          "V4-PENDING": 2,
+          "V4-PREMATURE": 3,
+          "V5A-SUMMARY-RUN-MISMATCH": 3,
+          "V5B-EVALUATED-COMMIT-MISMATCH": 3,
+          "V5C-SUMMARY-ATTEMPT-MISMATCH": 1,
+          "V3-MISSING": 0,
+          "V3-DUPLICATE": 0
+        }
+      }
+    },
+    {
+      "name": "control",
+      "command": "bash tools/ci/verdict_attribution_check.sh --repo Archright/Axiom --sha 930e99e5...",
+      "exit": 0,
+      "observed": {
+        "eligible_runs": 1,
+        "in_scope_check_runs": 1,
+        "violations": 0,
+        "result": "PASS"
+      }
+    },
+    {
+      "name": "main-head",
+      "command": "bash tools/ci/verdict_attribution_check.sh --repo Archright/Axiom --sha ebfc56ff72a69f5f0b3a012ed55ea1c92512f222",
+      "exit": 2,
+      "observed": {
+        "eligible_runs": 0,
+        "in_scope_check_runs": 0,
+        "excluded_check_runs": {"merge_group": 1},
+        "violations": 0,
+        "note": "적격 PR-venue run이 없으므로 정상(0)이 아니라 검증 불가(2)다. merge_group check-run은 범위 밖으로 제외됐다."
+      }
+    },
+    {
+      "name": "stdin-offline",
+      "command": "jq -n ... | bash tools/ci/verdict_attribution_check.sh --stdin --sha 930e99e5...",
+      "exit": 0,
+      "observed": {
+        "eligible_runs": 1,
+        "violations": 0
+      }
+    }
+  ],
+  "determination": {
+    "creationBinding": "CORRECT — 3사건의 external_id는 모두 자기 실행(run·attempt)을 정확히 지목했다. V1/V2 위반은 0건이다.",
+    "completionBinding": "VIOLATED — 3사건 모두 check-run의 summary가 다른 run을 지목하고(V5A), 그 check-run은 자기 run 완료 전에 terminal failure가 됐다(V4-PREMATURE).",
+    "correspondence": "CONFIRMED — 적격 run 5개에 대해 V3-MISSING/DUPLICATE는 0건이다. 결함은 '대응 없음'이 아니라 '완료 시점의 오귀속'이다.",
+    "headMoveGuard": "UPHELD — A0 PR-identity leg는 head 이동 시 인증서 발급을 거부했다(certificate-mint.yml:1553). 이 거부는 수정 대상이 아니다.",
+    "residualDefect": "Admission App 5795152가 run 완료 시점의 현재 PR head로 check-run 대상을 해소한다. 이 저장소는 App 소스·설치 토큰이 없어 수리할 수 없다(GET /repos/Archright/Axiom/installation → 401)."
+  },
+  "unknowns": [
+    "App 내부가 first-writer-wins를 구현했는지 UNKNOWN",
+    "동일 run attempt의 중복 webhook/retry에서도 재현되는지 UNKNOWN",
+    "merge_group venue에서 같은 완료 오귀속이 발생하는지 UNOBSERVED (venue 스코프 밖)",
+    "App이 superseded 실행의 check-run을 어떤 시점에 cancelled로 종결하는지 UNKNOWN"
+  ],
+  "limits": [
+    "detector는 저장소 측 관측 도구다. App을 수리하지 않으며, 오귀속된 check-run을 자동 복구하지 않는다.",
+    "detector는 CI gate에 연결하지 않았다. 연결하면 App 수리 전까지 모든 PR이 RED가 되므로, 이 슬라이스는 관측·증거·handoff까지만 담당한다.",
+    "600초 임계값은 운영 SLO다. GitHub 규정이 아니며 summary.json에 적용값으로 기록했다."
+  ],
+  "expectedLiveResult": "RED until Admission App 5795152 fixes verdict-subject binding (completion-time check-run selection must use the execution's immutable head_sha, not the current PR head)",
+  "invariantsHeld": {
+    "requiredStatusChecks": 7,
+    "issuerScoped": true,
+    "bypassActors": 0,
+    "rulesetEnforcement": "active",
+    "a0Guard": "unchanged",
+    "certificateMintSha256": "f4a04825c8f0cf12fa91dc32021c50a2621653dfe6eef0dbda11d49ea5c0a389",
+    "certificateMintUnchanged": "sha256 equals origin/main version; this slice does not touch .github/workflows/certificate-mint.yml"
+  },
+  "authorityPreflight": {
+    "githubMergeAuthority": "GitHub repository ruleset 27097366 (main) — active, bypass 0",
+    "requiredChecks": [
+      {"context": "admission-check", "integration_id": 5795152},
+      {"context": "bsec-integrity", "integration_id": 15368},
+      {"context": "debt-registry-gate", "integration_id": 15368},
+      {"context": "generation-acceptance", "integration_id": 15368},
+      {"context": "axiom-operational-slice", "integration_id": 15368},
+      {"context": "publication-integrity", "integration_id": 15368},
+      {"context": "readiness-verdict", "integration_id": 15368}
+    ],
+    "mergeQueue": {
+      "rulesetId": 27097366,
+      "max_entries_to_build": 100,
+      "max_entries_to_merge": 1,
+      "min_entries_to_merge": 1,
+      "grouping_strategy": "ALLGREEN",
+      "merge_method": "MERGE",
+      "check_response_timeout_minutes": 120
+    },
+    "externalAuthorityOutOfReach": [
+      "Admission App 5795152 소스·설치 토큰 (401)",
+      "GitHub Ruleset 판정 자체 (위임 대상이며 재구현하지 않는다)"
+    ]
+  },
+  "payloads": {
+    "directory": "data/ci_optimization/app_verdict_attribution_2026-11-21/payloads",
+    "repo": "repo.json",
+    "perSha": "payloads/<sha>/check-runs.json, payloads/<sha>/runs.json (gh api --paginate --slurp 원본)"
+  }
+}
