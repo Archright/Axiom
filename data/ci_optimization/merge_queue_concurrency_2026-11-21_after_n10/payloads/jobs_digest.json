@@ -1,0 +1,6805 @@
+{
+ "legend": {
+  "n": "job name",
+  "c": "conclusion",
+  "cr": "created_at",
+  "st": "started_at",
+  "co": "completed_at",
+  "statisticsEligible": "true iff status==completed AND runUpdatedAt <= 2026-11-21T09:40:00Z; ONLY eligible runs feed summary.statistics",
+  "exclusionReason": "IN_FLIGHT_AT_CUTOFF | COMPLETED_AFTER_CUTOFF | null",
+  "wallSeconds": "max(co) - min(st) over jobs with both timestamps (null when not eligible)",
+  "runnerSeconds": "sum(max(0, co - st))",
+  "queuedSeconds": "sum(max(0, st - cr)) for jobs with st",
+  "worstJobQueuedSeconds": "max over jobs of max(0, st - cr)",
+  "admissionGateEntryQueuedSeconds": "max(0, st - cr) of the workflow entry job named closure-deriver",
+  "literalAdmissionCheckQueuedSeconds": "max(0, st - cr) of the rollup job named admission-check (NOT a queue-latency proxy)"
+ },
+ "source": "GET /repos/Archright/Axiom/actions/runs/{run_id}/jobs?per_page=100&filter=latest",
+ "runs": [
+  {
+   "runId": 44871714191,
+   "sha": "f68ca0f68cdadf5cc3d0585f7104ffb2733a0411",
+   "createdAt": "2026-11-21T05:37:02Z",
+   "runUpdatedAt": "2026-11-21T05:43:27Z",
+   "status": "completed",
+   "conclusion": "success",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 384.0,
+   "runnerSeconds": 747.0,
+   "queuedSeconds": 54.0,
+   "worstJobQueuedSeconds": 14.0,
+   "admissionGateEntryQueuedSeconds": 14.0,
+   "literalAdmissionCheckQueuedSeconds": 3.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T05:37:03Z",
+     "st": "2026-11-21T05:37:17Z",
+     "co": "2026-11-21T05:38:26Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T05:37:03Z",
+     "st": "2026-11-21T05:37:17Z",
+     "co": "2026-11-21T05:38:32Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T05:37:03Z",
+     "st": "2026-11-21T05:37:03Z",
+     "co": "2026-11-21T05:37:03Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T05:38:27Z",
+     "st": "2026-11-21T05:38:30Z",
+     "co": "2026-11-21T05:39:18Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T05:38:27Z",
+     "st": "2026-11-21T05:38:29Z",
+     "co": "2026-11-21T05:38:36Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T05:38:32Z",
+     "st": "2026-11-21T05:38:34Z",
+     "co": "2026-11-21T05:40:18Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T05:38:32Z",
+     "st": "2026-11-21T05:38:34Z",
+     "co": "2026-11-21T05:40:10Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T05:38:32Z",
+     "st": "2026-11-21T05:38:34Z",
+     "co": "2026-11-21T05:40:26Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T05:39:18Z",
+     "st": "2026-11-21T05:39:20Z",
+     "co": "2026-11-21T05:39:23Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T05:39:18Z",
+     "st": "2026-11-21T05:39:18Z",
+     "co": "2026-11-21T05:39:18Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "skipped",
+     "cr": "2026-11-21T05:39:18Z",
+     "st": "2026-11-21T05:39:18Z",
+     "co": "2026-11-21T05:39:18Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T05:39:18Z",
+     "st": "2026-11-21T05:39:18Z",
+     "co": "2026-11-21T05:39:18Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T05:39:18Z",
+     "st": "2026-11-21T05:39:18Z",
+     "co": "2026-11-21T05:39:18Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T05:39:18Z",
+     "st": "2026-11-21T05:39:18Z",
+     "co": "2026-11-21T05:39:18Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T05:40:26Z",
+     "st": "2026-11-21T05:40:28Z",
+     "co": "2026-11-21T05:40:31Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T05:40:26Z",
+     "st": "2026-11-21T05:40:28Z",
+     "co": "2026-11-21T05:41:21Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T05:41:21Z",
+     "st": "2026-11-21T05:41:23Z",
+     "co": "2026-11-21T05:41:49Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T05:41:21Z",
+     "st": "2026-11-21T05:41:21Z",
+     "co": "2026-11-21T05:41:21Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T05:41:49Z",
+     "st": "2026-11-21T05:41:51Z",
+     "co": "2026-11-21T05:43:19Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T05:41:49Z",
+     "st": "2026-11-21T05:41:51Z",
+     "co": "2026-11-21T05:42:49Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T05:41:49Z",
+     "st": "2026-11-21T05:41:49Z",
+     "co": "2026-11-21T05:41:49Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T05:41:49Z",
+     "st": "2026-11-21T05:41:49Z",
+     "co": "2026-11-21T05:41:49Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T05:41:49Z",
+     "st": "2026-11-21T05:41:49Z",
+     "co": "2026-11-21T05:41:49Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T05:41:49Z",
+     "st": "2026-11-21T05:41:49Z",
+     "co": "2026-11-21T05:41:49Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T05:41:49Z",
+     "st": "2026-11-21T05:41:49Z",
+     "co": "2026-11-21T05:41:49Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "success",
+     "cr": "2026-11-21T05:43:19Z",
+     "st": "2026-11-21T05:43:22Z",
+     "co": "2026-11-21T05:43:27Z"
+    }
+   ]
+  },
+  {
+   "runId": 44872137279,
+   "sha": "52da049978c6fb81171735a96f80557ba1bcf646",
+   "createdAt": "2026-11-21T05:42:38Z",
+   "runUpdatedAt": "2026-11-21T05:50:20Z",
+   "status": "completed",
+   "conclusion": "success",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 453.0,
+   "runnerSeconds": 852.0,
+   "queuedSeconds": 111.0,
+   "worstJobQueuedSeconds": 49.0,
+   "admissionGateEntryQueuedSeconds": 1.0,
+   "literalAdmissionCheckQueuedSeconds": 2.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T05:42:39Z",
+     "st": "2026-11-21T05:42:40Z",
+     "co": "2026-11-21T05:43:26Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T05:42:39Z",
+     "st": "2026-11-21T05:42:40Z",
+     "co": "2026-11-21T05:43:57Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T05:42:39Z",
+     "st": "2026-11-21T05:42:39Z",
+     "co": "2026-11-21T05:42:38Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T05:43:26Z",
+     "st": "2026-11-21T05:43:28Z",
+     "co": "2026-11-21T05:43:34Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T05:43:26Z",
+     "st": "2026-11-21T05:43:28Z",
+     "co": "2026-11-21T05:44:12Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T05:43:57Z",
+     "st": "2026-11-21T05:43:59Z",
+     "co": "2026-11-21T05:45:23Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T05:43:57Z",
+     "st": "2026-11-21T05:43:59Z",
+     "co": "2026-11-21T05:46:05Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T05:43:57Z",
+     "st": "2026-11-21T05:44:00Z",
+     "co": "2026-11-21T05:46:22Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T05:44:12Z",
+     "st": "2026-11-21T05:45:01Z",
+     "co": "2026-11-21T05:46:10Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T05:44:12Z",
+     "st": "2026-11-21T05:44:12Z",
+     "co": "2026-11-21T05:44:12Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T05:44:13Z",
+     "st": "2026-11-21T05:44:13Z",
+     "co": "2026-11-21T05:44:12Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T05:44:13Z",
+     "st": "2026-11-21T05:44:13Z",
+     "co": "2026-11-21T05:44:12Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T05:46:11Z",
+     "st": "2026-11-21T05:46:28Z",
+     "co": "2026-11-21T05:46:32Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T05:46:11Z",
+     "st": "2026-11-21T05:46:11Z",
+     "co": "2026-11-21T05:46:11Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T05:46:22Z",
+     "st": "2026-11-21T05:46:33Z",
+     "co": "2026-11-21T05:46:37Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T05:46:22Z",
+     "st": "2026-11-21T05:46:36Z",
+     "co": "2026-11-21T05:48:16Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T05:48:16Z",
+     "st": "2026-11-21T05:48:17Z",
+     "co": "2026-11-21T05:48:39Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T05:48:16Z",
+     "st": "2026-11-21T05:48:16Z",
+     "co": "2026-11-21T05:48:16Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T05:48:39Z",
+     "st": "2026-11-21T05:48:41Z",
+     "co": "2026-11-21T05:50:05Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T05:48:39Z",
+     "st": "2026-11-21T05:48:41Z",
+     "co": "2026-11-21T05:49:21Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T05:48:39Z",
+     "st": "2026-11-21T05:48:39Z",
+     "co": "2026-11-21T05:48:39Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T05:48:39Z",
+     "st": "2026-11-21T05:48:39Z",
+     "co": "2026-11-21T05:48:39Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T05:48:39Z",
+     "st": "2026-11-21T05:48:39Z",
+     "co": "2026-11-21T05:48:39Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T05:48:39Z",
+     "st": "2026-11-21T05:48:39Z",
+     "co": "2026-11-21T05:48:39Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T05:48:40Z",
+     "st": "2026-11-21T05:48:40Z",
+     "co": "2026-11-21T05:48:39Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "success",
+     "cr": "2026-11-21T05:50:06Z",
+     "st": "2026-11-21T05:50:08Z",
+     "co": "2026-11-21T05:50:12Z"
+    }
+   ]
+  },
+  {
+   "runId": 44872777013,
+   "sha": "6a9ef54a2aaab62b26978185a6aaeb4b2580e6d8",
+   "createdAt": "2026-11-21T05:51:01Z",
+   "runUpdatedAt": "2026-11-21T05:58:19Z",
+   "status": "completed",
+   "conclusion": "success",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 436.0,
+   "runnerSeconds": 906.0,
+   "queuedSeconds": 59.0,
+   "worstJobQueuedSeconds": 16.0,
+   "admissionGateEntryQueuedSeconds": 13.0,
+   "literalAdmissionCheckQueuedSeconds": 3.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T05:51:02Z",
+     "st": "2026-11-21T05:51:15Z",
+     "co": "2026-11-21T05:52:02Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T05:51:02Z",
+     "st": "2026-11-21T05:51:18Z",
+     "co": "2026-11-21T05:52:32Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T05:51:02Z",
+     "st": "2026-11-21T05:51:02Z",
+     "co": "2026-11-21T05:51:02Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T05:52:02Z",
+     "st": "2026-11-21T05:52:06Z",
+     "co": "2026-11-21T05:53:14Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T05:52:02Z",
+     "st": "2026-11-21T05:52:04Z",
+     "co": "2026-11-21T05:52:11Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T05:52:32Z",
+     "st": "2026-11-21T05:52:35Z",
+     "co": "2026-11-21T05:54:19Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T05:52:32Z",
+     "st": "2026-11-21T05:52:34Z",
+     "co": "2026-11-21T05:55:19Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T05:52:32Z",
+     "st": "2026-11-21T05:52:35Z",
+     "co": "2026-11-21T05:55:00Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T05:53:14Z",
+     "st": "2026-11-21T05:53:16Z",
+     "co": "2026-11-21T05:54:33Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T05:53:14Z",
+     "st": "2026-11-21T05:53:14Z",
+     "co": "2026-11-21T05:53:14Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T05:53:14Z",
+     "st": "2026-11-21T05:53:14Z",
+     "co": "2026-11-21T05:53:14Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T05:53:14Z",
+     "st": "2026-11-21T05:53:14Z",
+     "co": "2026-11-21T05:53:14Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T05:54:33Z",
+     "st": "2026-11-21T05:54:35Z",
+     "co": "2026-11-21T05:54:38Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T05:54:33Z",
+     "st": "2026-11-21T05:54:33Z",
+     "co": "2026-11-21T05:54:33Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T05:55:19Z",
+     "st": "2026-11-21T05:55:20Z",
+     "co": "2026-11-21T05:55:23Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T05:55:19Z",
+     "st": "2026-11-21T05:55:21Z",
+     "co": "2026-11-21T05:56:24Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T05:56:25Z",
+     "st": "2026-11-21T05:56:27Z",
+     "co": "2026-11-21T05:56:56Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T05:56:25Z",
+     "st": "2026-11-21T05:56:25Z",
+     "co": "2026-11-21T05:56:25Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T05:56:56Z",
+     "st": "2026-11-21T05:56:58Z",
+     "co": "2026-11-21T05:58:11Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T05:56:56Z",
+     "st": "2026-11-21T05:56:58Z",
+     "co": "2026-11-21T05:57:42Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T05:56:57Z",
+     "st": "2026-11-21T05:56:57Z",
+     "co": "2026-11-21T05:56:56Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T05:56:57Z",
+     "st": "2026-11-21T05:56:57Z",
+     "co": "2026-11-21T05:56:56Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T05:56:57Z",
+     "st": "2026-11-21T05:56:57Z",
+     "co": "2026-11-21T05:56:56Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T05:56:57Z",
+     "st": "2026-11-21T05:56:57Z",
+     "co": "2026-11-21T05:56:56Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T05:56:57Z",
+     "st": "2026-11-21T05:56:57Z",
+     "co": "2026-11-21T05:56:56Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "success",
+     "cr": "2026-11-21T05:58:11Z",
+     "st": "2026-11-21T05:58:14Z",
+     "co": "2026-11-21T05:58:18Z"
+    }
+   ]
+  },
+  {
+   "runId": 44874067378,
+   "sha": "1eec4352cc3febf5cfcd0a8766755f8753c64f39",
+   "createdAt": "2026-11-21T06:07:45Z",
+   "runUpdatedAt": "2026-11-21T06:15:54Z",
+   "status": "completed",
+   "conclusion": "success",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 487.0,
+   "runnerSeconds": 1005.0,
+   "queuedSeconds": 79.0,
+   "worstJobQueuedSeconds": 40.0,
+   "admissionGateEntryQueuedSeconds": 2.0,
+   "literalAdmissionCheckQueuedSeconds": 3.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T06:07:46Z",
+     "st": "2026-11-21T06:07:48Z",
+     "co": "2026-11-21T06:09:03Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T06:07:46Z",
+     "st": "2026-11-21T06:07:48Z",
+     "co": "2026-11-21T06:09:22Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T06:07:46Z",
+     "st": "2026-11-21T06:07:46Z",
+     "co": "2026-11-21T06:07:46Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T06:09:03Z",
+     "st": "2026-11-21T06:09:11Z",
+     "co": "2026-11-21T06:09:38Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T06:09:03Z",
+     "st": "2026-11-21T06:09:05Z",
+     "co": "2026-11-21T06:10:12Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T06:09:22Z",
+     "st": "2026-11-21T06:09:25Z",
+     "co": "2026-11-21T06:12:03Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T06:09:22Z",
+     "st": "2026-11-21T06:09:25Z",
+     "co": "2026-11-21T06:12:08Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T06:09:22Z",
+     "st": "2026-11-21T06:09:25Z",
+     "co": "2026-11-21T06:11:23Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T06:10:12Z",
+     "st": "2026-11-21T06:10:14Z",
+     "co": "2026-11-21T06:11:11Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T06:10:12Z",
+     "st": "2026-11-21T06:10:12Z",
+     "co": "2026-11-21T06:10:12Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T06:10:12Z",
+     "st": "2026-11-21T06:10:12Z",
+     "co": "2026-11-21T06:10:12Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T06:10:12Z",
+     "st": "2026-11-21T06:10:12Z",
+     "co": "2026-11-21T06:10:12Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T06:11:11Z",
+     "st": "2026-11-21T06:11:51Z",
+     "co": "2026-11-21T06:11:54Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T06:11:11Z",
+     "st": "2026-11-21T06:11:11Z",
+     "co": "2026-11-21T06:11:11Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T06:12:08Z",
+     "st": "2026-11-21T06:12:11Z",
+     "co": "2026-11-21T06:13:28Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T06:12:08Z",
+     "st": "2026-11-21T06:12:10Z",
+     "co": "2026-11-21T06:12:15Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T06:13:28Z",
+     "st": "2026-11-21T06:13:30Z",
+     "co": "2026-11-21T06:14:22Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T06:13:29Z",
+     "st": "2026-11-21T06:13:29Z",
+     "co": "2026-11-21T06:13:28Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T06:14:22Z",
+     "st": "2026-11-21T06:14:24Z",
+     "co": "2026-11-21T06:15:46Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T06:14:22Z",
+     "st": "2026-11-21T06:14:24Z",
+     "co": "2026-11-21T06:14:47Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T06:14:22Z",
+     "st": "2026-11-21T06:14:22Z",
+     "co": "2026-11-21T06:14:22Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T06:14:23Z",
+     "st": "2026-11-21T06:14:23Z",
+     "co": "2026-11-21T06:14:22Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T06:14:23Z",
+     "st": "2026-11-21T06:14:23Z",
+     "co": "2026-11-21T06:14:22Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T06:14:23Z",
+     "st": "2026-11-21T06:14:23Z",
+     "co": "2026-11-21T06:14:22Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T06:14:23Z",
+     "st": "2026-11-21T06:14:23Z",
+     "co": "2026-11-21T06:14:22Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "success",
+     "cr": "2026-11-21T06:15:46Z",
+     "st": "2026-11-21T06:15:49Z",
+     "co": "2026-11-21T06:15:53Z"
+    }
+   ]
+  },
+  {
+   "runId": 44875815676,
+   "sha": "db0e977f6219d33dcfc91be1f9e238a72f2dd53b",
+   "createdAt": "2026-11-21T06:29:58Z",
+   "runUpdatedAt": "2026-11-21T06:37:55Z",
+   "status": "completed",
+   "conclusion": "success",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 474.0,
+   "runnerSeconds": 901.0,
+   "queuedSeconds": 30.0,
+   "worstJobQueuedSeconds": 3.0,
+   "admissionGateEntryQueuedSeconds": 2.0,
+   "literalAdmissionCheckQueuedSeconds": 2.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T06:29:59Z",
+     "st": "2026-11-21T06:30:01Z",
+     "co": "2026-11-21T06:30:54Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T06:29:59Z",
+     "st": "2026-11-21T06:30:01Z",
+     "co": "2026-11-21T06:31:00Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T06:30:00Z",
+     "st": "2026-11-21T06:30:00Z",
+     "co": "2026-11-21T06:29:59Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T06:30:54Z",
+     "st": "2026-11-21T06:30:57Z",
+     "co": "2026-11-21T06:31:04Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T06:30:55Z",
+     "st": "2026-11-21T06:30:56Z",
+     "co": "2026-11-21T06:31:42Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T06:31:00Z",
+     "st": "2026-11-21T06:31:02Z",
+     "co": "2026-11-21T06:32:33Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T06:31:00Z",
+     "st": "2026-11-21T06:31:02Z",
+     "co": "2026-11-21T06:33:35Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T06:31:00Z",
+     "st": "2026-11-21T06:31:02Z",
+     "co": "2026-11-21T06:33:15Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T06:31:42Z",
+     "st": "2026-11-21T06:31:44Z",
+     "co": "2026-11-21T06:32:29Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T06:31:42Z",
+     "st": "2026-11-21T06:31:42Z",
+     "co": "2026-11-21T06:31:42Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T06:31:42Z",
+     "st": "2026-11-21T06:31:42Z",
+     "co": "2026-11-21T06:31:42Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T06:31:43Z",
+     "st": "2026-11-21T06:31:43Z",
+     "co": "2026-11-21T06:31:42Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T06:32:29Z",
+     "st": "2026-11-21T06:32:31Z",
+     "co": "2026-11-21T06:32:35Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T06:32:29Z",
+     "st": "2026-11-21T06:32:29Z",
+     "co": "2026-11-21T06:32:29Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T06:33:36Z",
+     "st": "2026-11-21T06:33:38Z",
+     "co": "2026-11-21T06:34:53Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T06:33:36Z",
+     "st": "2026-11-21T06:33:38Z",
+     "co": "2026-11-21T06:33:41Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T06:34:53Z",
+     "st": "2026-11-21T06:34:55Z",
+     "co": "2026-11-21T06:35:53Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T06:34:53Z",
+     "st": "2026-11-21T06:34:53Z",
+     "co": "2026-11-21T06:34:53Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T06:35:54Z",
+     "st": "2026-11-21T06:35:56Z",
+     "co": "2026-11-21T06:37:50Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T06:35:54Z",
+     "st": "2026-11-21T06:35:56Z",
+     "co": "2026-11-21T06:36:54Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T06:35:54Z",
+     "st": "2026-11-21T06:35:54Z",
+     "co": "2026-11-21T06:35:54Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T06:35:54Z",
+     "st": "2026-11-21T06:35:54Z",
+     "co": "2026-11-21T06:35:54Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T06:35:54Z",
+     "st": "2026-11-21T06:35:54Z",
+     "co": "2026-11-21T06:35:54Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T06:35:54Z",
+     "st": "2026-11-21T06:35:54Z",
+     "co": "2026-11-21T06:35:54Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T06:35:54Z",
+     "st": "2026-11-21T06:35:54Z",
+     "co": "2026-11-21T06:35:54Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "success",
+     "cr": "2026-11-21T06:37:50Z",
+     "st": "2026-11-21T06:37:52Z",
+     "co": "2026-11-21T06:37:54Z"
+    }
+   ]
+  },
+  {
+   "runId": 44877825490,
+   "sha": "ebfc56ff72a69f5f0b3a012ed55ea1c92512f222",
+   "createdAt": "2026-11-21T06:55:37Z",
+   "runUpdatedAt": "2026-11-21T07:02:26Z",
+   "status": "completed",
+   "conclusion": "success",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 407.0,
+   "runnerSeconds": 861.0,
+   "queuedSeconds": 51.0,
+   "worstJobQueuedSeconds": 9.0,
+   "admissionGateEntryQueuedSeconds": 2.0,
+   "literalAdmissionCheckQueuedSeconds": 2.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T06:55:38Z",
+     "st": "2026-11-21T06:55:40Z",
+     "co": "2026-11-21T06:57:02Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T06:55:38Z",
+     "st": "2026-11-21T06:55:39Z",
+     "co": "2026-11-21T06:56:40Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T06:55:38Z",
+     "st": "2026-11-21T06:55:38Z",
+     "co": "2026-11-21T06:55:37Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T06:56:40Z",
+     "st": "2026-11-21T06:56:49Z",
+     "co": "2026-11-21T06:58:54Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T06:56:40Z",
+     "st": "2026-11-21T06:56:49Z",
+     "co": "2026-11-21T06:59:32Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T06:56:40Z",
+     "st": "2026-11-21T06:56:49Z",
+     "co": "2026-11-21T06:58:18Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T06:57:02Z",
+     "st": "2026-11-21T06:57:05Z",
+     "co": "2026-11-21T06:57:14Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T06:57:02Z",
+     "st": "2026-11-21T06:57:05Z",
+     "co": "2026-11-21T06:57:47Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T06:57:47Z",
+     "st": "2026-11-21T06:57:49Z",
+     "co": "2026-11-21T06:59:00Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T06:57:47Z",
+     "st": "2026-11-21T06:57:47Z",
+     "co": "2026-11-21T06:57:47Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T06:57:47Z",
+     "st": "2026-11-21T06:57:47Z",
+     "co": "2026-11-21T06:57:47Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T06:57:47Z",
+     "st": "2026-11-21T06:57:47Z",
+     "co": "2026-11-21T06:57:47Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T06:59:00Z",
+     "st": "2026-11-21T06:59:02Z",
+     "co": "2026-11-21T06:59:05Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T06:59:00Z",
+     "st": "2026-11-21T06:59:00Z",
+     "co": "2026-11-21T06:59:00Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T06:59:32Z",
+     "st": "2026-11-21T06:59:33Z",
+     "co": "2026-11-21T06:59:36Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T06:59:32Z",
+     "st": "2026-11-21T06:59:34Z",
+     "co": "2026-11-21T07:00:41Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T07:00:41Z",
+     "st": "2026-11-21T07:00:43Z",
+     "co": "2026-11-21T07:01:04Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T07:00:41Z",
+     "st": "2026-11-21T07:00:41Z",
+     "co": "2026-11-21T07:00:41Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T07:01:04Z",
+     "st": "2026-11-21T07:01:06Z",
+     "co": "2026-11-21T07:02:21Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T07:01:04Z",
+     "st": "2026-11-21T07:01:06Z",
+     "co": "2026-11-21T07:01:54Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T07:01:04Z",
+     "st": "2026-11-21T07:01:04Z",
+     "co": "2026-11-21T07:01:04Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T07:01:04Z",
+     "st": "2026-11-21T07:01:04Z",
+     "co": "2026-11-21T07:01:04Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T07:01:04Z",
+     "st": "2026-11-21T07:01:04Z",
+     "co": "2026-11-21T07:01:04Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T07:01:04Z",
+     "st": "2026-11-21T07:01:04Z",
+     "co": "2026-11-21T07:01:04Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T07:01:04Z",
+     "st": "2026-11-21T07:01:04Z",
+     "co": "2026-11-21T07:01:04Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "success",
+     "cr": "2026-11-21T07:02:21Z",
+     "st": "2026-11-21T07:02:23Z",
+     "co": "2026-11-21T07:02:25Z"
+    }
+   ]
+  },
+  {
+   "runId": 44879970973,
+   "sha": "6716521d3136f9504c94dba328a9a207ca5b00dc",
+   "createdAt": "2026-11-21T07:22:43Z",
+   "runUpdatedAt": "2026-11-21T07:29:39Z",
+   "status": "completed",
+   "conclusion": "success",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 415.0,
+   "runnerSeconds": 855.0,
+   "queuedSeconds": 31.0,
+   "worstJobQueuedSeconds": 6.0,
+   "admissionGateEntryQueuedSeconds": 2.0,
+   "literalAdmissionCheckQueuedSeconds": 2.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T07:22:44Z",
+     "st": "2026-11-21T07:22:46Z",
+     "co": "2026-11-21T07:23:49Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T07:22:44Z",
+     "st": "2026-11-21T07:22:46Z",
+     "co": "2026-11-21T07:23:49Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T07:22:44Z",
+     "st": "2026-11-21T07:22:44Z",
+     "co": "2026-11-21T07:22:44Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T07:23:49Z",
+     "st": "2026-11-21T07:23:52Z",
+     "co": "2026-11-21T07:25:30Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T07:23:49Z",
+     "st": "2026-11-21T07:23:51Z",
+     "co": "2026-11-21T07:26:27Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T07:23:49Z",
+     "st": "2026-11-21T07:23:52Z",
+     "co": "2026-11-21T07:26:18Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T07:23:50Z",
+     "st": "2026-11-21T07:23:51Z",
+     "co": "2026-11-21T07:24:30Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T07:23:50Z",
+     "st": "2026-11-21T07:23:52Z",
+     "co": "2026-11-21T07:24:00Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T07:24:30Z",
+     "st": "2026-11-21T07:24:31Z",
+     "co": "2026-11-21T07:25:35Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T07:24:30Z",
+     "st": "2026-11-21T07:24:30Z",
+     "co": "2026-11-21T07:24:30Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T07:24:30Z",
+     "st": "2026-11-21T07:24:30Z",
+     "co": "2026-11-21T07:24:30Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T07:24:30Z",
+     "st": "2026-11-21T07:24:30Z",
+     "co": "2026-11-21T07:24:30Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T07:25:35Z",
+     "st": "2026-11-21T07:25:41Z",
+     "co": "2026-11-21T07:25:45Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T07:25:36Z",
+     "st": "2026-11-21T07:25:36Z",
+     "co": "2026-11-21T07:25:35Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T07:26:28Z",
+     "st": "2026-11-21T07:26:29Z",
+     "co": "2026-11-21T07:27:32Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T07:26:28Z",
+     "st": "2026-11-21T07:26:29Z",
+     "co": "2026-11-21T07:26:33Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T07:27:32Z",
+     "st": "2026-11-21T07:27:34Z",
+     "co": "2026-11-21T07:28:08Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T07:27:33Z",
+     "st": "2026-11-21T07:27:33Z",
+     "co": "2026-11-21T07:27:32Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T07:28:08Z",
+     "st": "2026-11-21T07:28:10Z",
+     "co": "2026-11-21T07:29:33Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T07:28:09Z",
+     "st": "2026-11-21T07:28:09Z",
+     "co": "2026-11-21T07:28:08Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T07:28:09Z",
+     "st": "2026-11-21T07:28:10Z",
+     "co": "2026-11-21T07:28:36Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T07:28:09Z",
+     "st": "2026-11-21T07:28:09Z",
+     "co": "2026-11-21T07:28:08Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T07:28:09Z",
+     "st": "2026-11-21T07:28:09Z",
+     "co": "2026-11-21T07:28:08Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T07:28:09Z",
+     "st": "2026-11-21T07:28:09Z",
+     "co": "2026-11-21T07:28:08Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T07:28:09Z",
+     "st": "2026-11-21T07:28:09Z",
+     "co": "2026-11-21T07:28:09Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "success",
+     "cr": "2026-11-21T07:29:33Z",
+     "st": "2026-11-21T07:29:35Z",
+     "co": "2026-11-21T07:29:39Z"
+    }
+   ]
+  },
+  {
+   "runId": 44880688993,
+   "sha": "2cf69e18c3dece8d26da78df83553c8480a217a9",
+   "createdAt": "2026-11-21T07:32:04Z",
+   "runUpdatedAt": "2026-11-21T07:37:40Z",
+   "status": "completed",
+   "conclusion": "failure",
+   "njobs": 19,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 335.0,
+   "runnerSeconds": 647.0,
+   "queuedSeconds": 22.0,
+   "worstJobQueuedSeconds": 2.0,
+   "admissionGateEntryQueuedSeconds": 2.0,
+   "literalAdmissionCheckQueuedSeconds": 2.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "failure",
+     "cr": "2026-11-21T07:32:05Z",
+     "st": "2026-11-21T07:32:07Z",
+     "co": "2026-11-21T07:33:16Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T07:32:05Z",
+     "st": "2026-11-21T07:32:07Z",
+     "co": "2026-11-21T07:32:59Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T07:32:05Z",
+     "st": "2026-11-21T07:32:05Z",
+     "co": "2026-11-21T07:32:05Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "failure",
+     "cr": "2026-11-21T07:32:59Z",
+     "st": "2026-11-21T07:33:01Z",
+     "co": "2026-11-21T07:34:22Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T07:32:59Z",
+     "st": "2026-11-21T07:33:01Z",
+     "co": "2026-11-21T07:35:22Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T07:32:59Z",
+     "st": "2026-11-21T07:33:01Z",
+     "co": "2026-11-21T07:35:08Z"
+    },
+    {
+     "n": "gateway",
+     "c": "skipped",
+     "cr": "2026-11-21T07:33:16Z",
+     "st": "2026-11-21T07:33:16Z",
+     "co": "2026-11-21T07:33:16Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T07:35:22Z",
+     "st": "2026-11-21T07:35:24Z",
+     "co": "2026-11-21T07:35:34Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T07:35:22Z",
+     "st": "2026-11-21T07:35:24Z",
+     "co": "2026-11-21T07:35:26Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "failure",
+     "cr": "2026-11-21T07:35:35Z",
+     "st": "2026-11-21T07:35:37Z",
+     "co": "2026-11-21T07:36:33Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T07:35:35Z",
+     "st": "2026-11-21T07:35:35Z",
+     "co": "2026-11-21T07:35:35Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "failure",
+     "cr": "2026-11-21T07:36:34Z",
+     "st": "2026-11-21T07:36:36Z",
+     "co": "2026-11-21T07:37:23Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T07:36:34Z",
+     "st": "2026-11-21T07:36:36Z",
+     "co": "2026-11-21T07:37:33Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T07:36:34Z",
+     "st": "2026-11-21T07:36:34Z",
+     "co": "2026-11-21T07:36:34Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T07:36:34Z",
+     "st": "2026-11-21T07:36:34Z",
+     "co": "2026-11-21T07:36:34Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T07:36:34Z",
+     "st": "2026-11-21T07:36:34Z",
+     "co": "2026-11-21T07:36:34Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T07:36:34Z",
+     "st": "2026-11-21T07:36:34Z",
+     "co": "2026-11-21T07:36:34Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T07:36:34Z",
+     "st": "2026-11-21T07:36:34Z",
+     "co": "2026-11-21T07:36:34Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T07:37:33Z",
+     "st": "2026-11-21T07:37:35Z",
+     "co": "2026-11-21T07:37:40Z"
+    }
+   ]
+  },
+  {
+   "runId": 44881773724,
+   "sha": "61261568292f8b8b424abb459c900945338d1ddc",
+   "createdAt": "2026-11-21T07:46:14Z",
+   "runUpdatedAt": "2026-11-21T07:53:40Z",
+   "status": "completed",
+   "conclusion": "success",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 441.0,
+   "runnerSeconds": 933.0,
+   "queuedSeconds": 118.0,
+   "worstJobQueuedSeconds": 36.0,
+   "admissionGateEntryQueuedSeconds": 4.0,
+   "literalAdmissionCheckQueuedSeconds": 9.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T07:46:15Z",
+     "st": "2026-11-21T07:46:19Z",
+     "co": "2026-11-21T07:47:38Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T07:46:15Z",
+     "st": "2026-11-21T07:46:22Z",
+     "co": "2026-11-21T07:47:26Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T07:46:23Z",
+     "st": "2026-11-21T07:46:23Z",
+     "co": "2026-11-21T07:46:15Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T07:47:26Z",
+     "st": "2026-11-21T07:47:28Z",
+     "co": "2026-11-21T07:49:55Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T07:47:26Z",
+     "st": "2026-11-21T07:47:29Z",
+     "co": "2026-11-21T07:50:11Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T07:47:26Z",
+     "st": "2026-11-21T07:47:29Z",
+     "co": "2026-11-21T07:49:13Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T07:47:38Z",
+     "st": "2026-11-21T07:48:14Z",
+     "co": "2026-11-21T07:48:21Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T07:47:38Z",
+     "st": "2026-11-21T07:47:58Z",
+     "co": "2026-11-21T07:48:46Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T07:48:46Z",
+     "st": "2026-11-21T07:48:48Z",
+     "co": "2026-11-21T07:50:13Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T07:48:46Z",
+     "st": "2026-11-21T07:48:46Z",
+     "co": "2026-11-21T07:48:46Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T07:48:46Z",
+     "st": "2026-11-21T07:48:46Z",
+     "co": "2026-11-21T07:48:46Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T07:48:46Z",
+     "st": "2026-11-21T07:48:46Z",
+     "co": "2026-11-21T07:48:46Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T07:50:11Z",
+     "st": "2026-11-21T07:50:13Z",
+     "co": "2026-11-21T07:50:15Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T07:50:11Z",
+     "st": "2026-11-21T07:50:13Z",
+     "co": "2026-11-21T07:51:28Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T07:50:13Z",
+     "st": "2026-11-21T07:50:15Z",
+     "co": "2026-11-21T07:50:18Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T07:50:13Z",
+     "st": "2026-11-21T07:50:13Z",
+     "co": "2026-11-21T07:50:13Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T07:51:28Z",
+     "st": "2026-11-21T07:51:30Z",
+     "co": "2026-11-21T07:52:08Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T07:51:28Z",
+     "st": "2026-11-21T07:51:28Z",
+     "co": "2026-11-21T07:51:28Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T07:52:08Z",
+     "st": "2026-11-21T07:52:12Z",
+     "co": "2026-11-21T07:53:08Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T07:52:08Z",
+     "st": "2026-11-21T07:52:28Z",
+     "co": "2026-11-21T07:53:28Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T07:52:08Z",
+     "st": "2026-11-21T07:52:08Z",
+     "co": "2026-11-21T07:52:08Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T07:52:09Z",
+     "st": "2026-11-21T07:52:09Z",
+     "co": "2026-11-21T07:52:08Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T07:52:09Z",
+     "st": "2026-11-21T07:52:09Z",
+     "co": "2026-11-21T07:52:08Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T07:52:09Z",
+     "st": "2026-11-21T07:52:09Z",
+     "co": "2026-11-21T07:52:08Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T07:52:09Z",
+     "st": "2026-11-21T07:52:09Z",
+     "co": "2026-11-21T07:52:08Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "success",
+     "cr": "2026-11-21T07:53:28Z",
+     "st": "2026-11-21T07:53:37Z",
+     "co": "2026-11-21T07:53:40Z"
+    }
+   ]
+  },
+  {
+   "runId": 44882180736,
+   "sha": "a0b3584f74d27c160f0e36b3c4484be60b298716",
+   "createdAt": "2026-11-21T07:51:42Z",
+   "runUpdatedAt": "2026-11-21T08:00:26Z",
+   "status": "completed",
+   "conclusion": "success",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 522.0,
+   "runnerSeconds": 871.0,
+   "queuedSeconds": 277.0,
+   "worstJobQueuedSeconds": 100.0,
+   "admissionGateEntryQueuedSeconds": 5.0,
+   "literalAdmissionCheckQueuedSeconds": 4.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T07:51:43Z",
+     "st": "2026-11-21T07:51:48Z",
+     "co": "2026-11-21T07:52:39Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T07:51:43Z",
+     "st": "2026-11-21T07:51:58Z",
+     "co": "2026-11-21T07:53:19Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T07:51:43Z",
+     "st": "2026-11-21T07:51:43Z",
+     "co": "2026-11-21T07:51:43Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T07:52:39Z",
+     "st": "2026-11-21T07:53:23Z",
+     "co": "2026-11-21T07:53:29Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T07:52:39Z",
+     "st": "2026-11-21T07:52:54Z",
+     "co": "2026-11-21T07:53:36Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T07:53:19Z",
+     "st": "2026-11-21T07:53:38Z",
+     "co": "2026-11-21T07:55:36Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T07:53:19Z",
+     "st": "2026-11-21T07:53:41Z",
+     "co": "2026-11-21T07:55:21Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T07:53:19Z",
+     "st": "2026-11-21T07:54:02Z",
+     "co": "2026-11-21T07:56:43Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T07:53:36Z",
+     "st": "2026-11-21T07:55:16Z",
+     "co": "2026-11-21T07:56:00Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T07:53:37Z",
+     "st": "2026-11-21T07:53:37Z",
+     "co": "2026-11-21T07:53:36Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T07:53:37Z",
+     "st": "2026-11-21T07:53:37Z",
+     "co": "2026-11-21T07:53:36Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T07:53:37Z",
+     "st": "2026-11-21T07:53:37Z",
+     "co": "2026-11-21T07:53:36Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T07:56:01Z",
+     "st": "2026-11-21T07:56:02Z",
+     "co": "2026-11-21T07:56:05Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T07:56:01Z",
+     "st": "2026-11-21T07:56:01Z",
+     "co": "2026-11-21T07:56:01Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T07:56:43Z",
+     "st": "2026-11-21T07:56:45Z",
+     "co": "2026-11-21T07:57:41Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T07:56:43Z",
+     "st": "2026-11-21T07:56:45Z",
+     "co": "2026-11-21T07:56:48Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T07:57:42Z",
+     "st": "2026-11-21T07:57:44Z",
+     "co": "2026-11-21T07:58:37Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T07:57:42Z",
+     "st": "2026-11-21T07:57:42Z",
+     "co": "2026-11-21T07:57:42Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T07:58:38Z",
+     "st": "2026-11-21T07:58:40Z",
+     "co": "2026-11-21T08:00:18Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T07:58:38Z",
+     "st": "2026-11-21T07:58:39Z",
+     "co": "2026-11-21T07:59:31Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T07:58:38Z",
+     "st": "2026-11-21T07:58:38Z",
+     "co": "2026-11-21T07:58:37Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T07:58:38Z",
+     "st": "2026-11-21T07:58:38Z",
+     "co": "2026-11-21T07:58:37Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T07:58:38Z",
+     "st": "2026-11-21T07:58:38Z",
+     "co": "2026-11-21T07:58:38Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T07:58:38Z",
+     "st": "2026-11-21T07:58:38Z",
+     "co": "2026-11-21T07:58:38Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T07:58:38Z",
+     "st": "2026-11-21T07:58:38Z",
+     "co": "2026-11-21T07:58:38Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:00:18Z",
+     "st": "2026-11-21T08:00:22Z",
+     "co": "2026-11-21T08:00:25Z"
+    }
+   ]
+  },
+  {
+   "runId": 44882652763,
+   "sha": "e3f2aea3246015950992a3c39b6337e9e1f3ff8f",
+   "createdAt": "2026-11-21T07:58:11Z",
+   "runUpdatedAt": "2026-11-21T08:07:24Z",
+   "status": "completed",
+   "conclusion": "failure",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 551.0,
+   "runnerSeconds": 907.0,
+   "queuedSeconds": 325.0,
+   "worstJobQueuedSeconds": 73.0,
+   "admissionGateEntryQueuedSeconds": 13.0,
+   "literalAdmissionCheckQueuedSeconds": 2.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T07:58:12Z",
+     "st": "2026-11-21T07:58:25Z",
+     "co": "2026-11-21T07:59:25Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T07:58:12Z",
+     "st": "2026-11-21T07:58:29Z",
+     "co": "2026-11-21T07:59:37Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T07:58:12Z",
+     "st": "2026-11-21T07:58:12Z",
+     "co": "2026-11-21T07:58:12Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T07:59:25Z",
+     "st": "2026-11-21T08:00:22Z",
+     "co": "2026-11-21T08:01:09Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T07:59:25Z",
+     "st": "2026-11-21T08:00:22Z",
+     "co": "2026-11-21T08:00:33Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T07:59:37Z",
+     "st": "2026-11-21T07:59:39Z",
+     "co": "2026-11-21T08:00:55Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T07:59:37Z",
+     "st": "2026-11-21T08:00:46Z",
+     "co": "2026-11-21T08:03:20Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T07:59:37Z",
+     "st": "2026-11-21T08:00:50Z",
+     "co": "2026-11-21T08:02:51Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T08:01:09Z",
+     "st": "2026-11-21T08:01:31Z",
+     "co": "2026-11-21T08:02:46Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T08:01:10Z",
+     "st": "2026-11-21T08:01:10Z",
+     "co": "2026-11-21T08:01:09Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T08:01:10Z",
+     "st": "2026-11-21T08:01:10Z",
+     "co": "2026-11-21T08:01:09Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T08:01:10Z",
+     "st": "2026-11-21T08:01:10Z",
+     "co": "2026-11-21T08:01:09Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T08:02:46Z",
+     "st": "2026-11-21T08:02:49Z",
+     "co": "2026-11-21T08:02:53Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T08:02:46Z",
+     "st": "2026-11-21T08:02:46Z",
+     "co": "2026-11-21T08:02:46Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:03:21Z",
+     "st": "2026-11-21T08:03:23Z",
+     "co": "2026-11-21T08:05:16Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T08:03:21Z",
+     "st": "2026-11-21T08:03:23Z",
+     "co": "2026-11-21T08:03:28Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T08:05:17Z",
+     "st": "2026-11-21T08:05:19Z",
+     "co": "2026-11-21T08:06:12Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T08:05:17Z",
+     "st": "2026-11-21T08:05:17Z",
+     "co": "2026-11-21T08:05:17Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T08:06:12Z",
+     "st": "2026-11-21T08:06:14Z",
+     "co": "2026-11-21T08:07:08Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:06:12Z",
+     "st": "2026-11-21T08:06:14Z",
+     "co": "2026-11-21T08:07:15Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T08:06:12Z",
+     "st": "2026-11-21T08:06:12Z",
+     "co": "2026-11-21T08:06:12Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T08:06:12Z",
+     "st": "2026-11-21T08:06:12Z",
+     "co": "2026-11-21T08:06:12Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T08:06:12Z",
+     "st": "2026-11-21T08:06:12Z",
+     "co": "2026-11-21T08:06:12Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T08:06:13Z",
+     "st": "2026-11-21T08:06:13Z",
+     "co": "2026-11-21T08:06:12Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T08:06:13Z",
+     "st": "2026-11-21T08:06:13Z",
+     "co": "2026-11-21T08:06:12Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:07:16Z",
+     "st": "2026-11-21T08:07:18Z",
+     "co": "2026-11-21T08:07:23Z"
+    }
+   ]
+  },
+  {
+   "runId": 44882710554,
+   "sha": "0ea9cfb61531de648d0288dade114040ec3a5814",
+   "createdAt": "2026-11-21T07:59:01Z",
+   "runUpdatedAt": "2026-11-21T08:07:12Z",
+   "status": "completed",
+   "conclusion": "failure",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 489.0,
+   "runnerSeconds": 884.0,
+   "queuedSeconds": 261.0,
+   "worstJobQueuedSeconds": 57.0,
+   "admissionGateEntryQueuedSeconds": 37.0,
+   "literalAdmissionCheckQueuedSeconds": 1.0,
+   "jobs": [
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T07:59:02Z",
+     "st": "2026-11-21T07:59:17Z",
+     "co": "2026-11-21T08:00:20Z"
+    },
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T07:59:02Z",
+     "st": "2026-11-21T07:59:39Z",
+     "co": "2026-11-21T08:00:33Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T07:59:02Z",
+     "st": "2026-11-21T07:59:02Z",
+     "co": "2026-11-21T07:59:02Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T08:00:20Z",
+     "st": "2026-11-21T08:01:17Z",
+     "co": "2026-11-21T08:03:07Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T08:00:20Z",
+     "st": "2026-11-21T08:01:11Z",
+     "co": "2026-11-21T08:03:13Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T08:00:20Z",
+     "st": "2026-11-21T08:01:13Z",
+     "co": "2026-11-21T08:03:43Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T08:00:34Z",
+     "st": "2026-11-21T08:00:43Z",
+     "co": "2026-11-21T08:00:50Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T08:00:34Z",
+     "st": "2026-11-21T08:00:58Z",
+     "co": "2026-11-21T08:02:03Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T08:02:03Z",
+     "st": "2026-11-21T08:02:05Z",
+     "co": "2026-11-21T08:02:55Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T08:02:03Z",
+     "st": "2026-11-21T08:02:03Z",
+     "co": "2026-11-21T08:02:03Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T08:02:03Z",
+     "st": "2026-11-21T08:02:03Z",
+     "co": "2026-11-21T08:02:03Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T08:02:03Z",
+     "st": "2026-11-21T08:02:03Z",
+     "co": "2026-11-21T08:02:03Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T08:02:55Z",
+     "st": "2026-11-21T08:02:57Z",
+     "co": "2026-11-21T08:03:01Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T08:02:55Z",
+     "st": "2026-11-21T08:02:55Z",
+     "co": "2026-11-21T08:02:55Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:03:43Z",
+     "st": "2026-11-21T08:03:45Z",
+     "co": "2026-11-21T08:04:59Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T08:03:43Z",
+     "st": "2026-11-21T08:03:45Z",
+     "co": "2026-11-21T08:03:48Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T08:04:59Z",
+     "st": "2026-11-21T08:05:01Z",
+     "co": "2026-11-21T08:05:57Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T08:04:59Z",
+     "st": "2026-11-21T08:04:59Z",
+     "co": "2026-11-21T08:04:59Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T08:05:57Z",
+     "st": "2026-11-21T08:05:59Z",
+     "co": "2026-11-21T08:06:55Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:05:57Z",
+     "st": "2026-11-21T08:05:59Z",
+     "co": "2026-11-21T08:07:07Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T08:05:57Z",
+     "st": "2026-11-21T08:05:57Z",
+     "co": "2026-11-21T08:05:57Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T08:05:57Z",
+     "st": "2026-11-21T08:05:57Z",
+     "co": "2026-11-21T08:05:57Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T08:05:57Z",
+     "st": "2026-11-21T08:05:57Z",
+     "co": "2026-11-21T08:05:57Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T08:05:57Z",
+     "st": "2026-11-21T08:05:57Z",
+     "co": "2026-11-21T08:05:57Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T08:05:57Z",
+     "st": "2026-11-21T08:05:57Z",
+     "co": "2026-11-21T08:05:57Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:07:08Z",
+     "st": "2026-11-21T08:07:09Z",
+     "co": "2026-11-21T08:07:11Z"
+    }
+   ]
+  },
+  {
+   "runId": 44883641559,
+   "sha": "32008aabc556352f1c6ca68d208ffa94a95891f9",
+   "createdAt": "2026-11-21T08:10:45Z",
+   "runUpdatedAt": "2026-11-21T08:21:57Z",
+   "status": "completed",
+   "conclusion": "failure",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 670.0,
+   "runnerSeconds": 866.0,
+   "queuedSeconds": 714.0,
+   "worstJobQueuedSeconds": 160.0,
+   "admissionGateEntryQueuedSeconds": 17.0,
+   "literalAdmissionCheckQueuedSeconds": 35.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T08:10:46Z",
+     "st": "2026-11-21T08:11:03Z",
+     "co": "2026-11-21T08:12:41Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T08:10:46Z",
+     "st": "2026-11-21T08:11:13Z",
+     "co": "2026-11-21T08:12:07Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T08:10:46Z",
+     "st": "2026-11-21T08:10:46Z",
+     "co": "2026-11-21T08:10:46Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T08:12:07Z",
+     "st": "2026-11-21T08:12:08Z",
+     "co": "2026-11-21T08:14:20Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T08:12:07Z",
+     "st": "2026-11-21T08:12:09Z",
+     "co": "2026-11-21T08:13:51Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T08:12:07Z",
+     "st": "2026-11-21T08:12:09Z",
+     "co": "2026-11-21T08:13:58Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T08:12:41Z",
+     "st": "2026-11-21T08:13:11Z",
+     "co": "2026-11-21T08:13:31Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T08:12:41Z",
+     "st": "2026-11-21T08:13:30Z",
+     "co": "2026-11-21T08:14:17Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T08:14:17Z",
+     "st": "2026-11-21T08:15:23Z",
+     "co": "2026-11-21T08:16:50Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T08:14:17Z",
+     "st": "2026-11-21T08:14:17Z",
+     "co": "2026-11-21T08:14:17Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T08:14:17Z",
+     "st": "2026-11-21T08:14:17Z",
+     "co": "2026-11-21T08:14:17Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T08:14:17Z",
+     "st": "2026-11-21T08:14:17Z",
+     "co": "2026-11-21T08:14:17Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T08:14:20Z",
+     "st": "2026-11-21T08:16:38Z",
+     "co": "2026-11-21T08:16:43Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:14:20Z",
+     "st": "2026-11-21T08:17:00Z",
+     "co": "2026-11-21T08:18:02Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T08:16:50Z",
+     "st": "2026-11-21T08:17:40Z",
+     "co": "2026-11-21T08:17:43Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T08:16:50Z",
+     "st": "2026-11-21T08:16:50Z",
+     "co": "2026-11-21T08:16:50Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T08:18:02Z",
+     "st": "2026-11-21T08:18:38Z",
+     "co": "2026-11-21T08:19:42Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T08:18:02Z",
+     "st": "2026-11-21T08:18:02Z",
+     "co": "2026-11-21T08:18:02Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T08:19:42Z",
+     "st": "2026-11-21T08:20:12Z",
+     "co": "2026-11-21T08:21:07Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:19:42Z",
+     "st": "2026-11-21T08:20:53Z",
+     "co": "2026-11-21T08:21:17Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T08:19:42Z",
+     "st": "2026-11-21T08:19:42Z",
+     "co": "2026-11-21T08:19:42Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T08:19:43Z",
+     "st": "2026-11-21T08:19:43Z",
+     "co": "2026-11-21T08:19:42Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T08:19:43Z",
+     "st": "2026-11-21T08:19:43Z",
+     "co": "2026-11-21T08:19:42Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T08:19:43Z",
+     "st": "2026-11-21T08:19:43Z",
+     "co": "2026-11-21T08:19:42Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T08:19:43Z",
+     "st": "2026-11-21T08:19:43Z",
+     "co": "2026-11-21T08:19:42Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:21:17Z",
+     "st": "2026-11-21T08:21:52Z",
+     "co": "2026-11-21T08:21:56Z"
+    }
+   ]
+  },
+  {
+   "runId": 44884094411,
+   "sha": "b43712104f413ed28dc3a682556f3215ef5cbcb1",
+   "createdAt": "2026-11-21T08:16:23Z",
+   "runUpdatedAt": "2026-11-21T08:26:31Z",
+   "status": "completed",
+   "conclusion": "failure",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 606.0,
+   "runnerSeconds": 902.0,
+   "queuedSeconds": 335.0,
+   "worstJobQueuedSeconds": 69.0,
+   "admissionGateEntryQueuedSeconds": 42.0,
+   "literalAdmissionCheckQueuedSeconds": 2.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T08:16:24Z",
+     "st": "2026-11-21T08:17:06Z",
+     "co": "2026-11-21T08:18:19Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T08:16:24Z",
+     "st": "2026-11-21T08:17:33Z",
+     "co": "2026-11-21T08:18:56Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T08:16:25Z",
+     "st": "2026-11-21T08:16:25Z",
+     "co": "2026-11-21T08:16:24Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T08:18:19Z",
+     "st": "2026-11-21T08:18:40Z",
+     "co": "2026-11-21T08:18:47Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T08:18:19Z",
+     "st": "2026-11-21T08:18:49Z",
+     "co": "2026-11-21T08:19:36Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T08:18:56Z",
+     "st": "2026-11-21T08:18:58Z",
+     "co": "2026-11-21T08:21:29Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T08:18:56Z",
+     "st": "2026-11-21T08:18:58Z",
+     "co": "2026-11-21T08:21:30Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T08:18:56Z",
+     "st": "2026-11-21T08:18:58Z",
+     "co": "2026-11-21T08:20:27Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T08:19:36Z",
+     "st": "2026-11-21T08:20:11Z",
+     "co": "2026-11-21T08:20:54Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T08:19:37Z",
+     "st": "2026-11-21T08:19:37Z",
+     "co": "2026-11-21T08:19:36Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T08:19:37Z",
+     "st": "2026-11-21T08:19:37Z",
+     "co": "2026-11-21T08:19:36Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T08:19:37Z",
+     "st": "2026-11-21T08:19:37Z",
+     "co": "2026-11-21T08:19:36Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T08:20:55Z",
+     "st": "2026-11-21T08:21:19Z",
+     "co": "2026-11-21T08:21:23Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T08:20:55Z",
+     "st": "2026-11-21T08:20:55Z",
+     "co": "2026-11-21T08:20:55Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T08:21:30Z",
+     "st": "2026-11-21T08:21:58Z",
+     "co": "2026-11-21T08:22:02Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:21:30Z",
+     "st": "2026-11-21T08:22:04Z",
+     "co": "2026-11-21T08:23:39Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T08:23:39Z",
+     "st": "2026-11-21T08:24:19Z",
+     "co": "2026-11-21T08:24:46Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T08:23:39Z",
+     "st": "2026-11-21T08:23:39Z",
+     "co": "2026-11-21T08:23:39Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T08:24:46Z",
+     "st": "2026-11-21T08:24:49Z",
+     "co": "2026-11-21T08:26:24Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:24:47Z",
+     "st": "2026-11-21T08:24:48Z",
+     "co": "2026-11-21T08:25:15Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T08:24:47Z",
+     "st": "2026-11-21T08:24:47Z",
+     "co": "2026-11-21T08:24:46Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T08:24:47Z",
+     "st": "2026-11-21T08:24:47Z",
+     "co": "2026-11-21T08:24:47Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T08:24:47Z",
+     "st": "2026-11-21T08:24:47Z",
+     "co": "2026-11-21T08:24:46Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T08:24:47Z",
+     "st": "2026-11-21T08:24:47Z",
+     "co": "2026-11-21T08:24:46Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T08:24:47Z",
+     "st": "2026-11-21T08:24:47Z",
+     "co": "2026-11-21T08:24:46Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:26:24Z",
+     "st": "2026-11-21T08:26:26Z",
+     "co": "2026-11-21T08:26:31Z"
+    }
+   ]
+  },
+  {
+   "runId": 44884313215,
+   "sha": "0dc0c1edd84ae6765ef629be743ee7e54eb004da",
+   "createdAt": "2026-11-21T08:19:10Z",
+   "runUpdatedAt": "2026-11-21T08:29:43Z",
+   "status": "completed",
+   "conclusion": "failure",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 631.0,
+   "runnerSeconds": 995.0,
+   "queuedSeconds": 439.0,
+   "worstJobQueuedSeconds": 59.0,
+   "admissionGateEntryQueuedSeconds": 17.0,
+   "literalAdmissionCheckQueuedSeconds": 18.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T08:19:11Z",
+     "st": "2026-11-21T08:19:28Z",
+     "co": "2026-11-21T08:20:20Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T08:19:11Z",
+     "st": "2026-11-21T08:20:10Z",
+     "co": "2026-11-21T08:20:52Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T08:19:11Z",
+     "st": "2026-11-21T08:19:11Z",
+     "co": "2026-11-21T08:19:11Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T08:20:21Z",
+     "st": "2026-11-21T08:20:26Z",
+     "co": "2026-11-21T08:20:35Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T08:20:21Z",
+     "st": "2026-11-21T08:20:59Z",
+     "co": "2026-11-21T08:23:47Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T08:20:52Z",
+     "st": "2026-11-21T08:21:32Z",
+     "co": "2026-11-21T08:24:02Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "failure",
+     "cr": "2026-11-21T08:20:52Z",
+     "st": "2026-11-21T08:21:42Z",
+     "co": "2026-11-21T08:23:22Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T08:20:52Z",
+     "st": "2026-11-21T08:21:25Z",
+     "co": "2026-11-21T08:24:09Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T08:23:47Z",
+     "st": "2026-11-21T08:24:17Z",
+     "co": "2026-11-21T08:26:46Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T08:23:48Z",
+     "st": "2026-11-21T08:23:48Z",
+     "co": "2026-11-21T08:23:47Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T08:23:48Z",
+     "st": "2026-11-21T08:23:48Z",
+     "co": "2026-11-21T08:23:47Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T08:23:48Z",
+     "st": "2026-11-21T08:23:48Z",
+     "co": "2026-11-21T08:23:47Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T08:24:09Z",
+     "st": "2026-11-21T08:24:36Z",
+     "co": "2026-11-21T08:24:40Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:24:09Z",
+     "st": "2026-11-21T08:24:37Z",
+     "co": "2026-11-21T08:24:42Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "failure",
+     "cr": "2026-11-21T08:24:43Z",
+     "st": "2026-11-21T08:24:44Z",
+     "co": "2026-11-21T08:25:05Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T08:24:43Z",
+     "st": "2026-11-21T08:24:43Z",
+     "co": "2026-11-21T08:24:43Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:25:05Z",
+     "st": "2026-11-21T08:25:08Z",
+     "co": "2026-11-21T08:26:11Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T08:25:05Z",
+     "st": "2026-11-21T08:25:05Z",
+     "co": "2026-11-21T08:25:05Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T08:25:05Z",
+     "st": "2026-11-21T08:25:05Z",
+     "co": "2026-11-21T08:25:05Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T08:25:05Z",
+     "st": "2026-11-21T08:25:05Z",
+     "co": "2026-11-21T08:25:05Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T08:25:06Z",
+     "st": "2026-11-21T08:25:06Z",
+     "co": "2026-11-21T08:25:05Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T08:26:46Z",
+     "st": "2026-11-21T08:27:17Z",
+     "co": "2026-11-21T08:27:20Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T08:26:47Z",
+     "st": "2026-11-21T08:26:47Z",
+     "co": "2026-11-21T08:26:46Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "failure",
+     "cr": "2026-11-21T08:27:20Z",
+     "st": "2026-11-21T08:28:19Z",
+     "co": "2026-11-21T08:29:20Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T08:27:21Z",
+     "st": "2026-11-21T08:27:21Z",
+     "co": "2026-11-21T08:27:20Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:29:20Z",
+     "st": "2026-11-21T08:29:38Z",
+     "co": "2026-11-21T08:29:42Z"
+    }
+   ]
+  },
+  {
+   "runId": 44884566650,
+   "sha": "f339d1fca0f2021052c843abe0a203c9de9068cf",
+   "createdAt": "2026-11-21T08:22:16Z",
+   "runUpdatedAt": "2026-11-21T08:35:37Z",
+   "status": "completed",
+   "conclusion": "failure",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 799.0,
+   "runnerSeconds": 938.0,
+   "queuedSeconds": 636.0,
+   "worstJobQueuedSeconds": 187.0,
+   "admissionGateEntryQueuedSeconds": 38.0,
+   "literalAdmissionCheckQueuedSeconds": 8.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T08:22:17Z",
+     "st": "2026-11-21T08:22:55Z",
+     "co": "2026-11-21T08:23:58Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T08:22:17Z",
+     "st": "2026-11-21T08:23:37Z",
+     "co": "2026-11-21T08:24:48Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T08:22:17Z",
+     "st": "2026-11-21T08:22:17Z",
+     "co": "2026-11-21T08:22:17Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T08:23:59Z",
+     "st": "2026-11-21T08:24:38Z",
+     "co": "2026-11-21T08:25:31Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T08:23:59Z",
+     "st": "2026-11-21T08:24:35Z",
+     "co": "2026-11-21T08:24:41Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T08:24:48Z",
+     "st": "2026-11-21T08:24:49Z",
+     "co": "2026-11-21T08:27:03Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T08:24:48Z",
+     "st": "2026-11-21T08:24:50Z",
+     "co": "2026-11-21T08:26:21Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T08:24:48Z",
+     "st": "2026-11-21T08:24:55Z",
+     "co": "2026-11-21T08:27:38Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T08:25:31Z",
+     "st": "2026-11-21T08:25:32Z",
+     "co": "2026-11-21T08:26:38Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T08:25:31Z",
+     "st": "2026-11-21T08:25:31Z",
+     "co": "2026-11-21T08:25:31Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T08:25:31Z",
+     "st": "2026-11-21T08:25:31Z",
+     "co": "2026-11-21T08:25:31Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T08:25:31Z",
+     "st": "2026-11-21T08:25:31Z",
+     "co": "2026-11-21T08:25:31Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T08:26:38Z",
+     "st": "2026-11-21T08:26:40Z",
+     "co": "2026-11-21T08:26:43Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T08:26:38Z",
+     "st": "2026-11-21T08:26:38Z",
+     "co": "2026-11-21T08:26:38Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T08:27:39Z",
+     "st": "2026-11-21T08:30:46Z",
+     "co": "2026-11-21T08:30:48Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:27:39Z",
+     "st": "2026-11-21T08:30:30Z",
+     "co": "2026-11-21T08:32:02Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T08:32:03Z",
+     "st": "2026-11-21T08:33:02Z",
+     "co": "2026-11-21T08:33:58Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T08:32:03Z",
+     "st": "2026-11-21T08:32:03Z",
+     "co": "2026-11-21T08:32:03Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T08:33:58Z",
+     "st": "2026-11-21T08:34:00Z",
+     "co": "2026-11-21T08:35:23Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:33:58Z",
+     "st": "2026-11-21T08:34:01Z",
+     "co": "2026-11-21T08:34:51Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T08:33:59Z",
+     "st": "2026-11-21T08:33:59Z",
+     "co": "2026-11-21T08:33:58Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T08:33:59Z",
+     "st": "2026-11-21T08:33:59Z",
+     "co": "2026-11-21T08:33:58Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T08:33:59Z",
+     "st": "2026-11-21T08:33:59Z",
+     "co": "2026-11-21T08:33:58Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T08:33:59Z",
+     "st": "2026-11-21T08:33:59Z",
+     "co": "2026-11-21T08:33:58Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T08:33:59Z",
+     "st": "2026-11-21T08:33:59Z",
+     "co": "2026-11-21T08:33:58Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:35:23Z",
+     "st": "2026-11-21T08:35:31Z",
+     "co": "2026-11-21T08:35:36Z"
+    }
+   ]
+  },
+  {
+   "runId": 44884909037,
+   "sha": "4a455bacae94670e3b0f7c91357ca1a8d0338b21",
+   "createdAt": "2026-11-21T08:26:40Z",
+   "runUpdatedAt": "2026-11-21T08:44:11Z",
+   "status": "completed",
+   "conclusion": "failure",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 1044.0,
+   "runnerSeconds": 996.0,
+   "queuedSeconds": 1038.0,
+   "worstJobQueuedSeconds": 194.0,
+   "admissionGateEntryQueuedSeconds": 40.0,
+   "literalAdmissionCheckQueuedSeconds": 3.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T08:26:41Z",
+     "st": "2026-11-21T08:27:21Z",
+     "co": "2026-11-21T08:28:21Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T08:26:41Z",
+     "st": "2026-11-21T08:28:16Z",
+     "co": "2026-11-21T08:29:31Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T08:26:47Z",
+     "st": "2026-11-21T08:26:47Z",
+     "co": "2026-11-21T08:26:41Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T08:28:21Z",
+     "st": "2026-11-21T08:28:56Z",
+     "co": "2026-11-21T08:29:04Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T08:28:21Z",
+     "st": "2026-11-21T08:29:40Z",
+     "co": "2026-11-21T08:31:26Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T08:29:31Z",
+     "st": "2026-11-21T08:31:25Z",
+     "co": "2026-11-21T08:33:03Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T08:29:31Z",
+     "st": "2026-11-21T08:31:37Z",
+     "co": "2026-11-21T08:34:11Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T08:29:31Z",
+     "st": "2026-11-21T08:31:28Z",
+     "co": "2026-11-21T08:34:17Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T08:31:27Z",
+     "st": "2026-11-21T08:31:46Z",
+     "co": "2026-11-21T08:31:49Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T08:31:27Z",
+     "st": "2026-11-21T08:31:27Z",
+     "co": "2026-11-21T08:31:27Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T08:31:27Z",
+     "st": "2026-11-21T08:31:27Z",
+     "co": "2026-11-21T08:31:27Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "skipped",
+     "cr": "2026-11-21T08:31:27Z",
+     "st": "2026-11-21T08:31:27Z",
+     "co": "2026-11-21T08:31:27Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T08:31:27Z",
+     "st": "2026-11-21T08:31:27Z",
+     "co": "2026-11-21T08:31:27Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T08:31:27Z",
+     "st": "2026-11-21T08:31:27Z",
+     "co": "2026-11-21T08:31:27Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:34:17Z",
+     "st": "2026-11-21T08:34:22Z",
+     "co": "2026-11-21T08:36:10Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T08:34:17Z",
+     "st": "2026-11-21T08:34:19Z",
+     "co": "2026-11-21T08:34:22Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T08:36:10Z",
+     "st": "2026-11-21T08:39:02Z",
+     "co": "2026-11-21T08:39:54Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T08:36:11Z",
+     "st": "2026-11-21T08:36:11Z",
+     "co": "2026-11-21T08:36:10Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T08:39:54Z",
+     "st": "2026-11-21T08:40:31Z",
+     "co": "2026-11-21T08:42:11Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:39:54Z",
+     "st": "2026-11-21T08:43:08Z",
+     "co": "2026-11-21T08:44:03Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T08:39:55Z",
+     "st": "2026-11-21T08:39:55Z",
+     "co": "2026-11-21T08:39:54Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T08:39:55Z",
+     "st": "2026-11-21T08:39:55Z",
+     "co": "2026-11-21T08:39:54Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T08:39:55Z",
+     "st": "2026-11-21T08:39:55Z",
+     "co": "2026-11-21T08:39:54Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T08:39:55Z",
+     "st": "2026-11-21T08:39:55Z",
+     "co": "2026-11-21T08:39:54Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T08:39:55Z",
+     "st": "2026-11-21T08:39:55Z",
+     "co": "2026-11-21T08:39:54Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:44:03Z",
+     "st": "2026-11-21T08:44:06Z",
+     "co": "2026-11-21T08:44:11Z"
+    }
+   ]
+  },
+  {
+   "runId": 44884910058,
+   "sha": "942cf7b77316e207bca54bc2d1920fcfbbb952c0",
+   "createdAt": "2026-11-21T08:26:41Z",
+   "runUpdatedAt": "2026-11-21T08:41:25Z",
+   "status": "completed",
+   "conclusion": "failure",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 882.0,
+   "runnerSeconds": 934.0,
+   "queuedSeconds": 958.0,
+   "worstJobQueuedSeconds": 175.0,
+   "admissionGateEntryQueuedSeconds": 47.0,
+   "literalAdmissionCheckQueuedSeconds": 81.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T08:26:42Z",
+     "st": "2026-11-21T08:27:29Z",
+     "co": "2026-11-21T08:28:44Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T08:26:42Z",
+     "st": "2026-11-21T08:28:29Z",
+     "co": "2026-11-21T08:29:22Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T08:26:42Z",
+     "st": "2026-11-21T08:26:42Z",
+     "co": "2026-11-21T08:26:42Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T08:28:44Z",
+     "st": "2026-11-21T08:29:44Z",
+     "co": "2026-11-21T08:30:26Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T08:28:44Z",
+     "st": "2026-11-21T08:30:11Z",
+     "co": "2026-11-21T08:30:16Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T08:29:23Z",
+     "st": "2026-11-21T08:31:00Z",
+     "co": "2026-11-21T08:32:27Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T08:29:23Z",
+     "st": "2026-11-21T08:30:50Z",
+     "co": "2026-11-21T08:33:05Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T08:29:23Z",
+     "st": "2026-11-21T08:30:50Z",
+     "co": "2026-11-21T08:33:23Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T08:30:26Z",
+     "st": "2026-11-21T08:31:11Z",
+     "co": "2026-11-21T08:32:35Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T08:30:27Z",
+     "st": "2026-11-21T08:30:27Z",
+     "co": "2026-11-21T08:30:26Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T08:30:27Z",
+     "st": "2026-11-21T08:30:27Z",
+     "co": "2026-11-21T08:30:26Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T08:30:27Z",
+     "st": "2026-11-21T08:30:27Z",
+     "co": "2026-11-21T08:30:27Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T08:32:36Z",
+     "st": "2026-11-21T08:32:57Z",
+     "co": "2026-11-21T08:33:00Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T08:32:36Z",
+     "st": "2026-11-21T08:32:36Z",
+     "co": "2026-11-21T08:32:35Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:33:24Z",
+     "st": "2026-11-21T08:33:26Z",
+     "co": "2026-11-21T08:35:15Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T08:33:24Z",
+     "st": "2026-11-21T08:33:25Z",
+     "co": "2026-11-21T08:33:28Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T08:35:15Z",
+     "st": "2026-11-21T08:35:17Z",
+     "co": "2026-11-21T08:36:08Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T08:35:16Z",
+     "st": "2026-11-21T08:35:16Z",
+     "co": "2026-11-21T08:35:15Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T08:36:08Z",
+     "st": "2026-11-21T08:37:07Z",
+     "co": "2026-11-21T08:38:23Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:36:09Z",
+     "st": "2026-11-21T08:39:04Z",
+     "co": "2026-11-21T08:40:00Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T08:36:09Z",
+     "st": "2026-11-21T08:36:09Z",
+     "co": "2026-11-21T08:36:08Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T08:36:09Z",
+     "st": "2026-11-21T08:36:09Z",
+     "co": "2026-11-21T08:36:09Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T08:36:09Z",
+     "st": "2026-11-21T08:36:09Z",
+     "co": "2026-11-21T08:36:08Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T08:36:09Z",
+     "st": "2026-11-21T08:36:09Z",
+     "co": "2026-11-21T08:36:09Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T08:36:09Z",
+     "st": "2026-11-21T08:36:09Z",
+     "co": "2026-11-21T08:36:09Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:40:01Z",
+     "st": "2026-11-21T08:41:22Z",
+     "co": "2026-11-21T08:41:24Z"
+    }
+   ]
+  },
+  {
+   "runId": 44884910785,
+   "sha": "ec6650e9fa48f8c837b4b40986fa9760004be2e2",
+   "createdAt": "2026-11-21T08:26:41Z",
+   "runUpdatedAt": "2026-11-21T08:43:44Z",
+   "status": "completed",
+   "conclusion": "failure",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 1020.0,
+   "runnerSeconds": 829.0,
+   "queuedSeconds": 1033.0,
+   "worstJobQueuedSeconds": 248.0,
+   "admissionGateEntryQueuedSeconds": 143.0,
+   "literalAdmissionCheckQueuedSeconds": 4.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T08:26:42Z",
+     "st": "2026-11-21T08:29:05Z",
+     "co": "2026-11-21T08:30:24Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T08:26:42Z",
+     "st": "2026-11-21T08:29:39Z",
+     "co": "2026-11-21T08:30:49Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T08:26:43Z",
+     "st": "2026-11-21T08:26:43Z",
+     "co": "2026-11-21T08:26:42Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T08:30:24Z",
+     "st": "2026-11-21T08:30:41Z",
+     "co": "2026-11-21T08:30:48Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T08:30:24Z",
+     "st": "2026-11-21T08:30:36Z",
+     "co": "2026-11-21T08:31:43Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T08:30:49Z",
+     "st": "2026-11-21T08:32:29Z",
+     "co": "2026-11-21T08:34:05Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T08:30:49Z",
+     "st": "2026-11-21T08:32:36Z",
+     "co": "2026-11-21T08:34:43Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T08:30:49Z",
+     "st": "2026-11-21T08:32:23Z",
+     "co": "2026-11-21T08:34:59Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T08:31:44Z",
+     "st": "2026-11-21T08:31:51Z",
+     "co": "2026-11-21T08:31:53Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T08:31:44Z",
+     "st": "2026-11-21T08:31:44Z",
+     "co": "2026-11-21T08:31:43Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T08:31:44Z",
+     "st": "2026-11-21T08:31:44Z",
+     "co": "2026-11-21T08:31:43Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "skipped",
+     "cr": "2026-11-21T08:31:44Z",
+     "st": "2026-11-21T08:31:44Z",
+     "co": "2026-11-21T08:31:43Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T08:31:44Z",
+     "st": "2026-11-21T08:31:44Z",
+     "co": "2026-11-21T08:31:43Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T08:31:44Z",
+     "st": "2026-11-21T08:31:44Z",
+     "co": "2026-11-21T08:31:43Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T08:34:59Z",
+     "st": "2026-11-21T08:35:01Z",
+     "co": "2026-11-21T08:35:04Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:34:59Z",
+     "st": "2026-11-21T08:35:00Z",
+     "co": "2026-11-21T08:36:08Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T08:36:09Z",
+     "st": "2026-11-21T08:38:02Z",
+     "co": "2026-11-21T08:38:55Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T08:36:09Z",
+     "st": "2026-11-21T08:36:09Z",
+     "co": "2026-11-21T08:36:09Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T08:38:55Z",
+     "st": "2026-11-21T08:39:03Z",
+     "co": "2026-11-21T08:40:09Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:38:55Z",
+     "st": "2026-11-21T08:43:03Z",
+     "co": "2026-11-21T08:43:34Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T08:38:56Z",
+     "st": "2026-11-21T08:38:56Z",
+     "co": "2026-11-21T08:38:55Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T08:38:56Z",
+     "st": "2026-11-21T08:38:56Z",
+     "co": "2026-11-21T08:38:55Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T08:38:56Z",
+     "st": "2026-11-21T08:38:56Z",
+     "co": "2026-11-21T08:38:55Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T08:38:56Z",
+     "st": "2026-11-21T08:38:56Z",
+     "co": "2026-11-21T08:38:55Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T08:38:56Z",
+     "st": "2026-11-21T08:38:56Z",
+     "co": "2026-11-21T08:38:55Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:43:35Z",
+     "st": "2026-11-21T08:43:39Z",
+     "co": "2026-11-21T08:43:43Z"
+    }
+   ]
+  },
+  {
+   "runId": 44885635581,
+   "sha": "d9d9d14b7a1da1cf395e1e274c19baaf291c1d7e",
+   "createdAt": "2026-11-21T08:35:57Z",
+   "runUpdatedAt": "2026-11-21T08:48:59Z",
+   "status": "completed",
+   "conclusion": "success",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 780.0,
+   "runnerSeconds": 845.0,
+   "queuedSeconds": 998.0,
+   "worstJobQueuedSeconds": 192.0,
+   "admissionGateEntryQueuedSeconds": 47.0,
+   "literalAdmissionCheckQueuedSeconds": 31.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T08:35:58Z",
+     "st": "2026-11-21T08:36:45Z",
+     "co": "2026-11-21T08:37:43Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T08:35:58Z",
+     "st": "2026-11-21T08:36:11Z",
+     "co": "2026-11-21T08:37:19Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T08:35:58Z",
+     "st": "2026-11-21T08:35:58Z",
+     "co": "2026-11-21T08:35:58Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T08:37:19Z",
+     "st": "2026-11-21T08:39:48Z",
+     "co": "2026-11-21T08:41:20Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T08:37:19Z",
+     "st": "2026-11-21T08:40:31Z",
+     "co": "2026-11-21T08:43:07Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T08:37:19Z",
+     "st": "2026-11-21T08:40:11Z",
+     "co": "2026-11-21T08:42:20Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T08:37:44Z",
+     "st": "2026-11-21T08:38:59Z",
+     "co": "2026-11-21T08:40:38Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T08:37:44Z",
+     "st": "2026-11-21T08:38:58Z",
+     "co": "2026-11-21T08:39:05Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T08:40:39Z",
+     "st": "2026-11-21T08:41:45Z",
+     "co": "2026-11-21T08:41:48Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T08:40:39Z",
+     "st": "2026-11-21T08:40:39Z",
+     "co": "2026-11-21T08:40:38Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T08:40:39Z",
+     "st": "2026-11-21T08:40:39Z",
+     "co": "2026-11-21T08:40:39Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "skipped",
+     "cr": "2026-11-21T08:40:39Z",
+     "st": "2026-11-21T08:40:39Z",
+     "co": "2026-11-21T08:40:38Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T08:40:39Z",
+     "st": "2026-11-21T08:40:39Z",
+     "co": "2026-11-21T08:40:39Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T08:40:39Z",
+     "st": "2026-11-21T08:40:39Z",
+     "co": "2026-11-21T08:40:39Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T08:43:07Z",
+     "st": "2026-11-21T08:43:19Z",
+     "co": "2026-11-21T08:43:23Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:43:07Z",
+     "st": "2026-11-21T08:43:27Z",
+     "co": "2026-11-21T08:45:07Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T08:45:07Z",
+     "st": "2026-11-21T08:46:11Z",
+     "co": "2026-11-21T08:46:32Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T08:45:08Z",
+     "st": "2026-11-21T08:45:08Z",
+     "co": "2026-11-21T08:45:07Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T08:46:33Z",
+     "st": "2026-11-21T08:47:05Z",
+     "co": "2026-11-21T08:48:25Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:46:33Z",
+     "st": "2026-11-21T08:47:24Z",
+     "co": "2026-11-21T08:47:50Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T08:46:33Z",
+     "st": "2026-11-21T08:46:33Z",
+     "co": "2026-11-21T08:46:32Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T08:46:33Z",
+     "st": "2026-11-21T08:46:33Z",
+     "co": "2026-11-21T08:46:33Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T08:46:33Z",
+     "st": "2026-11-21T08:46:33Z",
+     "co": "2026-11-21T08:46:33Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T08:46:33Z",
+     "st": "2026-11-21T08:46:33Z",
+     "co": "2026-11-21T08:46:33Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T08:46:33Z",
+     "st": "2026-11-21T08:46:33Z",
+     "co": "2026-11-21T08:46:33Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:48:25Z",
+     "st": "2026-11-21T08:48:56Z",
+     "co": "2026-11-21T08:48:58Z"
+    }
+   ]
+  },
+  {
+   "runId": 44885637053,
+   "sha": "00519f656b10d499abcca6f9a456ea5b3fb760e7",
+   "createdAt": "2026-11-21T08:35:58Z",
+   "runUpdatedAt": "2026-11-21T08:49:38Z",
+   "status": "completed",
+   "conclusion": "failure",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 818.0,
+   "runnerSeconds": 827.0,
+   "queuedSeconds": 1097.0,
+   "worstJobQueuedSeconds": 212.0,
+   "admissionGateEntryQueuedSeconds": 48.0,
+   "literalAdmissionCheckQueuedSeconds": 30.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T08:35:59Z",
+     "st": "2026-11-21T08:36:47Z",
+     "co": "2026-11-21T08:37:31Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T08:35:59Z",
+     "st": "2026-11-21T08:37:09Z",
+     "co": "2026-11-21T08:38:22Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T08:35:59Z",
+     "st": "2026-11-21T08:35:59Z",
+     "co": "2026-11-21T08:35:59Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T08:37:31Z",
+     "st": "2026-11-21T08:38:21Z",
+     "co": "2026-11-21T08:39:07Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T08:37:31Z",
+     "st": "2026-11-21T08:37:56Z",
+     "co": "2026-11-21T08:38:04Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T08:38:22Z",
+     "st": "2026-11-21T08:41:22Z",
+     "co": "2026-11-21T08:43:01Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T08:38:22Z",
+     "st": "2026-11-21T08:41:25Z",
+     "co": "2026-11-21T08:43:49Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T08:38:22Z",
+     "st": "2026-11-21T08:41:54Z",
+     "co": "2026-11-21T08:43:47Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T08:39:07Z",
+     "st": "2026-11-21T08:40:35Z",
+     "co": "2026-11-21T08:41:29Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T08:39:08Z",
+     "st": "2026-11-21T08:39:08Z",
+     "co": "2026-11-21T08:39:07Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T08:39:08Z",
+     "st": "2026-11-21T08:39:08Z",
+     "co": "2026-11-21T08:39:07Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T08:39:08Z",
+     "st": "2026-11-21T08:39:08Z",
+     "co": "2026-11-21T08:39:07Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T08:41:29Z",
+     "st": "2026-11-21T08:42:37Z",
+     "co": "2026-11-21T08:42:41Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T08:41:29Z",
+     "st": "2026-11-21T08:41:29Z",
+     "co": "2026-11-21T08:41:29Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:43:50Z",
+     "st": "2026-11-21T08:43:52Z",
+     "co": "2026-11-21T08:45:30Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T08:43:50Z",
+     "st": "2026-11-21T08:43:51Z",
+     "co": "2026-11-21T08:43:54Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T08:45:30Z",
+     "st": "2026-11-21T08:46:39Z",
+     "co": "2026-11-21T08:47:16Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T08:45:30Z",
+     "st": "2026-11-21T08:45:30Z",
+     "co": "2026-11-21T08:45:30Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T08:47:17Z",
+     "st": "2026-11-21T08:47:52Z",
+     "co": "2026-11-21T08:49:04Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:47:17Z",
+     "st": "2026-11-21T08:47:53Z",
+     "co": "2026-11-21T08:48:22Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T08:47:17Z",
+     "st": "2026-11-21T08:47:17Z",
+     "co": "2026-11-21T08:47:16Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T08:47:17Z",
+     "st": "2026-11-21T08:47:17Z",
+     "co": "2026-11-21T08:47:16Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T08:47:17Z",
+     "st": "2026-11-21T08:47:17Z",
+     "co": "2026-11-21T08:47:17Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T08:47:17Z",
+     "st": "2026-11-21T08:47:17Z",
+     "co": "2026-11-21T08:47:17Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T08:47:17Z",
+     "st": "2026-11-21T08:47:17Z",
+     "co": "2026-11-21T08:47:17Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:49:04Z",
+     "st": "2026-11-21T08:49:34Z",
+     "co": "2026-11-21T08:49:37Z"
+    }
+   ]
+  },
+  {
+   "runId": 44885637738,
+   "sha": "a686a9eca711dd6aca79c60692074382c56f0b9d",
+   "createdAt": "2026-11-21T08:35:59Z",
+   "runUpdatedAt": "2026-11-21T08:50:28Z",
+   "status": "completed",
+   "conclusion": "failure",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 867.0,
+   "runnerSeconds": 922.0,
+   "queuedSeconds": 1348.0,
+   "worstJobQueuedSeconds": 210.0,
+   "admissionGateEntryQueuedSeconds": 125.0,
+   "literalAdmissionCheckQueuedSeconds": 17.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T08:36:00Z",
+     "st": "2026-11-21T08:38:05Z",
+     "co": "2026-11-21T08:39:12Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T08:36:00Z",
+     "st": "2026-11-21T08:37:33Z",
+     "co": "2026-11-21T08:38:55Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T08:36:00Z",
+     "st": "2026-11-21T08:36:00Z",
+     "co": "2026-11-21T08:35:59Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T08:38:55Z",
+     "st": "2026-11-21T08:42:22Z",
+     "co": "2026-11-21T08:44:14Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T08:38:55Z",
+     "st": "2026-11-21T08:42:25Z",
+     "co": "2026-11-21T08:45:05Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T08:38:55Z",
+     "st": "2026-11-21T08:42:18Z",
+     "co": "2026-11-21T08:44:38Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T08:39:12Z",
+     "st": "2026-11-21T08:39:44Z",
+     "co": "2026-11-21T08:41:30Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T08:39:12Z",
+     "st": "2026-11-21T08:41:12Z",
+     "co": "2026-11-21T08:41:20Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T08:41:30Z",
+     "st": "2026-11-21T08:41:30Z",
+     "co": "2026-11-21T08:41:30Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T08:41:30Z",
+     "st": "2026-11-21T08:43:25Z",
+     "co": "2026-11-21T08:43:29Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T08:41:30Z",
+     "st": "2026-11-21T08:41:30Z",
+     "co": "2026-11-21T08:41:30Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T08:41:30Z",
+     "st": "2026-11-21T08:41:30Z",
+     "co": "2026-11-21T08:41:30Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "skipped",
+     "cr": "2026-11-21T08:41:30Z",
+     "st": "2026-11-21T08:41:30Z",
+     "co": "2026-11-21T08:41:30Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T08:41:30Z",
+     "st": "2026-11-21T08:41:30Z",
+     "co": "2026-11-21T08:41:30Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:45:05Z",
+     "st": "2026-11-21T08:46:16Z",
+     "co": "2026-11-21T08:47:46Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T08:45:05Z",
+     "st": "2026-11-21T08:46:35Z",
+     "co": "2026-11-21T08:46:37Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T08:47:46Z",
+     "st": "2026-11-21T08:48:07Z",
+     "co": "2026-11-21T08:48:28Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T08:47:46Z",
+     "st": "2026-11-21T08:47:46Z",
+     "co": "2026-11-21T08:47:46Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T08:48:28Z",
+     "st": "2026-11-21T08:48:34Z",
+     "co": "2026-11-21T08:49:40Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:48:28Z",
+     "st": "2026-11-21T08:49:06Z",
+     "co": "2026-11-21T08:50:07Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T08:48:29Z",
+     "st": "2026-11-21T08:48:29Z",
+     "co": "2026-11-21T08:48:28Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T08:48:29Z",
+     "st": "2026-11-21T08:48:29Z",
+     "co": "2026-11-21T08:48:28Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T08:48:29Z",
+     "st": "2026-11-21T08:48:29Z",
+     "co": "2026-11-21T08:48:28Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T08:48:29Z",
+     "st": "2026-11-21T08:48:29Z",
+     "co": "2026-11-21T08:48:28Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T08:48:29Z",
+     "st": "2026-11-21T08:48:29Z",
+     "co": "2026-11-21T08:48:28Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:50:07Z",
+     "st": "2026-11-21T08:50:24Z",
+     "co": "2026-11-21T08:50:27Z"
+    }
+   ]
+  },
+  {
+   "runId": 44886279954,
+   "sha": "17542649aea4015119b6e6dfb51a86b7ed299cc5",
+   "createdAt": "2026-11-21T08:44:27Z",
+   "runUpdatedAt": "2026-11-21T08:55:01Z",
+   "status": "completed",
+   "conclusion": "success",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 633.0,
+   "runnerSeconds": 826.0,
+   "queuedSeconds": 515.0,
+   "worstJobQueuedSeconds": 105.0,
+   "admissionGateEntryQueuedSeconds": 63.0,
+   "literalAdmissionCheckQueuedSeconds": 2.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T08:44:28Z",
+     "st": "2026-11-21T08:45:31Z",
+     "co": "2026-11-21T08:46:18Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T08:44:28Z",
+     "st": "2026-11-21T08:45:31Z",
+     "co": "2026-11-21T08:46:31Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T08:44:28Z",
+     "st": "2026-11-21T08:44:28Z",
+     "co": "2026-11-21T08:44:28Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T08:46:18Z",
+     "st": "2026-11-21T08:46:31Z",
+     "co": "2026-11-21T08:47:12Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T08:46:18Z",
+     "st": "2026-11-21T08:46:33Z",
+     "co": "2026-11-21T08:46:42Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T08:46:31Z",
+     "st": "2026-11-21T08:47:07Z",
+     "co": "2026-11-21T08:48:35Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T08:46:31Z",
+     "st": "2026-11-21T08:47:13Z",
+     "co": "2026-11-21T08:49:27Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T08:46:31Z",
+     "st": "2026-11-21T08:47:18Z",
+     "co": "2026-11-21T08:49:52Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T08:47:12Z",
+     "st": "2026-11-21T08:47:17Z",
+     "co": "2026-11-21T08:48:06Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T08:47:12Z",
+     "st": "2026-11-21T08:47:12Z",
+     "co": "2026-11-21T08:47:12Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T08:47:12Z",
+     "st": "2026-11-21T08:47:12Z",
+     "co": "2026-11-21T08:47:12Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T08:47:12Z",
+     "st": "2026-11-21T08:47:12Z",
+     "co": "2026-11-21T08:47:12Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T08:48:06Z",
+     "st": "2026-11-21T08:48:16Z",
+     "co": "2026-11-21T08:48:19Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T08:48:06Z",
+     "st": "2026-11-21T08:48:06Z",
+     "co": "2026-11-21T08:48:06Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:49:53Z",
+     "st": "2026-11-21T08:50:08Z",
+     "co": "2026-11-21T08:51:41Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T08:49:53Z",
+     "st": "2026-11-21T08:50:14Z",
+     "co": "2026-11-21T08:50:17Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T08:51:41Z",
+     "st": "2026-11-21T08:51:42Z",
+     "co": "2026-11-21T08:52:12Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T08:51:41Z",
+     "st": "2026-11-21T08:51:41Z",
+     "co": "2026-11-21T08:51:41Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T08:52:12Z",
+     "st": "2026-11-21T08:53:57Z",
+     "co": "2026-11-21T08:54:56Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:52:12Z",
+     "st": "2026-11-21T08:53:29Z",
+     "co": "2026-11-21T08:54:22Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T08:52:12Z",
+     "st": "2026-11-21T08:52:12Z",
+     "co": "2026-11-21T08:52:12Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T08:52:12Z",
+     "st": "2026-11-21T08:52:12Z",
+     "co": "2026-11-21T08:52:12Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T08:52:12Z",
+     "st": "2026-11-21T08:52:12Z",
+     "co": "2026-11-21T08:52:12Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T08:52:12Z",
+     "st": "2026-11-21T08:52:12Z",
+     "co": "2026-11-21T08:52:12Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T08:52:12Z",
+     "st": "2026-11-21T08:52:12Z",
+     "co": "2026-11-21T08:52:12Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:54:56Z",
+     "st": "2026-11-21T08:54:58Z",
+     "co": "2026-11-21T08:55:01Z"
+    }
+   ]
+  },
+  {
+   "runId": 44886280827,
+   "sha": "9779e93f3903dc5fe0e66fb7810b8434fb9e78fd",
+   "createdAt": "2026-11-21T08:44:28Z",
+   "runUpdatedAt": "2026-11-21T08:54:51Z",
+   "status": "completed",
+   "conclusion": "failure",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 621.0,
+   "runnerSeconds": 802.0,
+   "queuedSeconds": 472.0,
+   "worstJobQueuedSeconds": 73.0,
+   "admissionGateEntryQueuedSeconds": 12.0,
+   "literalAdmissionCheckQueuedSeconds": 44.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T08:44:29Z",
+     "st": "2026-11-21T08:44:41Z",
+     "co": "2026-11-21T08:45:29Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T08:44:29Z",
+     "st": "2026-11-21T08:45:42Z",
+     "co": "2026-11-21T08:46:48Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T08:44:29Z",
+     "st": "2026-11-21T08:44:29Z",
+     "co": "2026-11-21T08:44:29Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T08:45:29Z",
+     "st": "2026-11-21T08:45:34Z",
+     "co": "2026-11-21T08:45:44Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T08:45:29Z",
+     "st": "2026-11-21T08:46:24Z",
+     "co": "2026-11-21T08:47:27Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T08:46:48Z",
+     "st": "2026-11-21T08:47:29Z",
+     "co": "2026-11-21T08:50:02Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T08:46:48Z",
+     "st": "2026-11-21T08:47:33Z",
+     "co": "2026-11-21T08:48:55Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T08:46:48Z",
+     "st": "2026-11-21T08:47:43Z",
+     "co": "2026-11-21T08:50:06Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T08:47:27Z",
+     "st": "2026-11-21T08:47:27Z",
+     "co": "2026-11-21T08:47:27Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T08:47:27Z",
+     "st": "2026-11-21T08:47:46Z",
+     "co": "2026-11-21T08:47:49Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "skipped",
+     "cr": "2026-11-21T08:47:27Z",
+     "st": "2026-11-21T08:47:27Z",
+     "co": "2026-11-21T08:47:27Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T08:47:28Z",
+     "st": "2026-11-21T08:47:28Z",
+     "co": "2026-11-21T08:47:27Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T08:47:28Z",
+     "st": "2026-11-21T08:47:28Z",
+     "co": "2026-11-21T08:47:27Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T08:47:28Z",
+     "st": "2026-11-21T08:47:28Z",
+     "co": "2026-11-21T08:47:27Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:50:06Z",
+     "st": "2026-11-21T08:50:18Z",
+     "co": "2026-11-21T08:51:41Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T08:50:06Z",
+     "st": "2026-11-21T08:50:19Z",
+     "co": "2026-11-21T08:50:23Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T08:51:41Z",
+     "st": "2026-11-21T08:51:42Z",
+     "co": "2026-11-21T08:52:03Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T08:51:41Z",
+     "st": "2026-11-21T08:51:41Z",
+     "co": "2026-11-21T08:51:41Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T08:52:03Z",
+     "st": "2026-11-21T08:53:00Z",
+     "co": "2026-11-21T08:54:01Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:52:03Z",
+     "st": "2026-11-21T08:52:43Z",
+     "co": "2026-11-21T08:53:43Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T08:52:04Z",
+     "st": "2026-11-21T08:52:04Z",
+     "co": "2026-11-21T08:52:03Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T08:52:04Z",
+     "st": "2026-11-21T08:52:04Z",
+     "co": "2026-11-21T08:52:03Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T08:52:04Z",
+     "st": "2026-11-21T08:52:04Z",
+     "co": "2026-11-21T08:52:03Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T08:52:04Z",
+     "st": "2026-11-21T08:52:04Z",
+     "co": "2026-11-21T08:52:03Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T08:52:04Z",
+     "st": "2026-11-21T08:52:04Z",
+     "co": "2026-11-21T08:52:03Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:54:01Z",
+     "st": "2026-11-21T08:54:45Z",
+     "co": "2026-11-21T08:54:50Z"
+    }
+   ]
+  },
+  {
+   "runId": 44886584334,
+   "sha": "139133c2bc760bcb2d399a85e6714509211e21a4",
+   "createdAt": "2026-11-21T08:48:18Z",
+   "runUpdatedAt": "2026-11-21T08:58:04Z",
+   "status": "completed",
+   "conclusion": "failure",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 585.0,
+   "runnerSeconds": 919.0,
+   "queuedSeconds": 377.0,
+   "worstJobQueuedSeconds": 101.0,
+   "admissionGateEntryQueuedSeconds": 4.0,
+   "literalAdmissionCheckQueuedSeconds": 2.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T08:48:19Z",
+     "st": "2026-11-21T08:48:23Z",
+     "co": "2026-11-21T08:49:38Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T08:48:19Z",
+     "st": "2026-11-21T08:48:31Z",
+     "co": "2026-11-21T08:49:17Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T08:48:19Z",
+     "st": "2026-11-21T08:48:19Z",
+     "co": "2026-11-21T08:48:18Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T08:49:17Z",
+     "st": "2026-11-21T08:49:54Z",
+     "co": "2026-11-21T08:52:06Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T08:49:17Z",
+     "st": "2026-11-21T08:49:58Z",
+     "co": "2026-11-21T08:51:44Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T08:49:17Z",
+     "st": "2026-11-21T08:49:39Z",
+     "co": "2026-11-21T08:52:24Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T08:49:38Z",
+     "st": "2026-11-21T08:50:04Z",
+     "co": "2026-11-21T08:50:16Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T08:49:38Z",
+     "st": "2026-11-21T08:50:06Z",
+     "co": "2026-11-21T08:50:45Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T08:50:46Z",
+     "st": "2026-11-21T08:50:47Z",
+     "co": "2026-11-21T08:51:37Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T08:50:46Z",
+     "st": "2026-11-21T08:50:46Z",
+     "co": "2026-11-21T08:50:45Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T08:50:46Z",
+     "st": "2026-11-21T08:50:46Z",
+     "co": "2026-11-21T08:50:46Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T08:50:46Z",
+     "st": "2026-11-21T08:50:46Z",
+     "co": "2026-11-21T08:50:46Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T08:51:37Z",
+     "st": "2026-11-21T08:51:40Z",
+     "co": "2026-11-21T08:51:42Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T08:51:38Z",
+     "st": "2026-11-21T08:51:38Z",
+     "co": "2026-11-21T08:51:37Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T08:52:24Z",
+     "st": "2026-11-21T08:54:05Z",
+     "co": "2026-11-21T08:54:07Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:52:25Z",
+     "st": "2026-11-21T08:54:01Z",
+     "co": "2026-11-21T08:55:32Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T08:55:32Z",
+     "st": "2026-11-21T08:55:34Z",
+     "co": "2026-11-21T08:56:36Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T08:55:33Z",
+     "st": "2026-11-21T08:55:33Z",
+     "co": "2026-11-21T08:55:32Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T08:56:36Z",
+     "st": "2026-11-21T08:56:37Z",
+     "co": "2026-11-21T08:57:57Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:56:36Z",
+     "st": "2026-11-21T08:56:37Z",
+     "co": "2026-11-21T08:57:29Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T08:56:36Z",
+     "st": "2026-11-21T08:56:36Z",
+     "co": "2026-11-21T08:56:36Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T08:56:36Z",
+     "st": "2026-11-21T08:56:36Z",
+     "co": "2026-11-21T08:56:36Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T08:56:36Z",
+     "st": "2026-11-21T08:56:36Z",
+     "co": "2026-11-21T08:56:36Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T08:56:36Z",
+     "st": "2026-11-21T08:56:36Z",
+     "co": "2026-11-21T08:56:36Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T08:56:36Z",
+     "st": "2026-11-21T08:56:36Z",
+     "co": "2026-11-21T08:56:36Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:57:57Z",
+     "st": "2026-11-21T08:57:59Z",
+     "co": "2026-11-21T08:58:04Z"
+    }
+   ]
+  },
+  {
+   "runId": 44886843833,
+   "sha": "f9cb21be006eefccef7ea3d532d3293e7663fe85",
+   "createdAt": "2026-11-21T08:51:43Z",
+   "runUpdatedAt": "2026-11-21T08:59:54Z",
+   "status": "completed",
+   "conclusion": "success",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 490.0,
+   "runnerSeconds": 728.0,
+   "queuedSeconds": 351.0,
+   "worstJobQueuedSeconds": 71.0,
+   "admissionGateEntryQueuedSeconds": 56.0,
+   "literalAdmissionCheckQueuedSeconds": 2.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T08:51:43Z",
+     "st": "2026-11-21T08:52:39Z",
+     "co": "2026-11-21T08:53:45Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T08:51:43Z",
+     "st": "2026-11-21T08:52:17Z",
+     "co": "2026-11-21T08:53:01Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T08:51:44Z",
+     "st": "2026-11-21T08:51:44Z",
+     "co": "2026-11-21T08:51:43Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T08:53:01Z",
+     "st": "2026-11-21T08:54:07Z",
+     "co": "2026-11-21T08:55:33Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T08:53:01Z",
+     "st": "2026-11-21T08:54:12Z",
+     "co": "2026-11-21T08:55:55Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T08:53:01Z",
+     "st": "2026-11-21T08:54:09Z",
+     "co": "2026-11-21T08:56:09Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T08:53:45Z",
+     "st": "2026-11-21T08:54:06Z",
+     "co": "2026-11-21T08:54:14Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T08:53:45Z",
+     "st": "2026-11-21T08:54:03Z",
+     "co": "2026-11-21T08:54:47Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T08:54:48Z",
+     "st": "2026-11-21T08:54:52Z",
+     "co": "2026-11-21T08:54:56Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "skipped",
+     "cr": "2026-11-21T08:54:48Z",
+     "st": "2026-11-21T08:54:48Z",
+     "co": "2026-11-21T08:54:47Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T08:54:48Z",
+     "st": "2026-11-21T08:54:48Z",
+     "co": "2026-11-21T08:54:47Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T08:54:48Z",
+     "st": "2026-11-21T08:54:48Z",
+     "co": "2026-11-21T08:54:47Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T08:54:48Z",
+     "st": "2026-11-21T08:54:48Z",
+     "co": "2026-11-21T08:54:48Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T08:54:48Z",
+     "st": "2026-11-21T08:54:48Z",
+     "co": "2026-11-21T08:54:48Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:56:09Z",
+     "st": "2026-11-21T08:56:11Z",
+     "co": "2026-11-21T08:57:43Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T08:56:09Z",
+     "st": "2026-11-21T08:56:11Z",
+     "co": "2026-11-21T08:56:16Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T08:57:45Z",
+     "st": "2026-11-21T08:57:45Z",
+     "co": "2026-11-21T08:57:44Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T08:57:45Z",
+     "st": "2026-11-21T08:57:48Z",
+     "co": "2026-11-21T08:58:43Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T08:58:43Z",
+     "st": "2026-11-21T08:58:45Z",
+     "co": "2026-11-21T08:59:46Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:58:43Z",
+     "st": "2026-11-21T08:58:45Z",
+     "co": "2026-11-21T08:59:20Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T08:58:43Z",
+     "st": "2026-11-21T08:58:43Z",
+     "co": "2026-11-21T08:58:43Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T08:58:43Z",
+     "st": "2026-11-21T08:58:43Z",
+     "co": "2026-11-21T08:58:43Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T08:58:43Z",
+     "st": "2026-11-21T08:58:43Z",
+     "co": "2026-11-21T08:58:43Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T08:58:44Z",
+     "st": "2026-11-21T08:58:44Z",
+     "co": "2026-11-21T08:58:43Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T08:58:44Z",
+     "st": "2026-11-21T08:58:44Z",
+     "co": "2026-11-21T08:58:43Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:59:47Z",
+     "st": "2026-11-21T08:59:49Z",
+     "co": "2026-11-21T08:59:54Z"
+    }
+   ]
+  },
+  {
+   "runId": 44886844588,
+   "sha": "5183258d47a2ba74b4b6b5338b7173e004a99207",
+   "createdAt": "2026-11-21T08:51:43Z",
+   "runUpdatedAt": "2026-11-21T09:01:01Z",
+   "status": "completed",
+   "conclusion": "failure",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 556.0,
+   "runnerSeconds": 919.0,
+   "queuedSeconds": 305.0,
+   "worstJobQueuedSeconds": 92.0,
+   "admissionGateEntryQueuedSeconds": 92.0,
+   "literalAdmissionCheckQueuedSeconds": 4.0,
+   "jobs": [
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T08:51:44Z",
+     "st": "2026-11-21T08:52:27Z",
+     "co": "2026-11-21T08:53:53Z"
+    },
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T08:51:44Z",
+     "st": "2026-11-21T08:53:16Z",
+     "co": "2026-11-21T08:54:30Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T08:51:44Z",
+     "st": "2026-11-21T08:51:44Z",
+     "co": "2026-11-21T08:51:44Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T08:53:53Z",
+     "st": "2026-11-21T08:54:15Z",
+     "co": "2026-11-21T08:56:17Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T08:53:53Z",
+     "st": "2026-11-21T08:54:22Z",
+     "co": "2026-11-21T08:55:49Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T08:53:53Z",
+     "st": "2026-11-21T08:54:31Z",
+     "co": "2026-11-21T08:57:21Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T08:54:30Z",
+     "st": "2026-11-21T08:54:51Z",
+     "co": "2026-11-21T08:55:45Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T08:54:30Z",
+     "st": "2026-11-21T08:54:49Z",
+     "co": "2026-11-21T08:54:58Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T08:55:45Z",
+     "st": "2026-11-21T08:55:47Z",
+     "co": "2026-11-21T08:56:59Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T08:55:46Z",
+     "st": "2026-11-21T08:55:46Z",
+     "co": "2026-11-21T08:55:45Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T08:55:46Z",
+     "st": "2026-11-21T08:55:46Z",
+     "co": "2026-11-21T08:55:45Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T08:55:46Z",
+     "st": "2026-11-21T08:55:46Z",
+     "co": "2026-11-21T08:55:45Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T08:56:59Z",
+     "st": "2026-11-21T08:57:04Z",
+     "co": "2026-11-21T08:57:09Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T08:56:59Z",
+     "st": "2026-11-21T08:56:59Z",
+     "co": "2026-11-21T08:56:59Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T08:57:21Z",
+     "st": "2026-11-21T08:57:24Z",
+     "co": "2026-11-21T08:57:28Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T08:57:21Z",
+     "st": "2026-11-21T08:57:23Z",
+     "co": "2026-11-21T08:58:25Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T08:58:25Z",
+     "st": "2026-11-21T08:58:27Z",
+     "co": "2026-11-21T08:59:18Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T08:58:25Z",
+     "st": "2026-11-21T08:58:25Z",
+     "co": "2026-11-21T08:58:25Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T08:59:18Z",
+     "st": "2026-11-21T08:59:22Z",
+     "co": "2026-11-21T09:00:53Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T08:59:18Z",
+     "st": "2026-11-21T08:59:37Z",
+     "co": "2026-11-21T09:00:06Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T08:59:19Z",
+     "st": "2026-11-21T08:59:19Z",
+     "co": "2026-11-21T08:59:18Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T08:59:19Z",
+     "st": "2026-11-21T08:59:19Z",
+     "co": "2026-11-21T08:59:18Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T08:59:19Z",
+     "st": "2026-11-21T08:59:19Z",
+     "co": "2026-11-21T08:59:18Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T08:59:19Z",
+     "st": "2026-11-21T08:59:19Z",
+     "co": "2026-11-21T08:59:18Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T08:59:19Z",
+     "st": "2026-11-21T08:59:19Z",
+     "co": "2026-11-21T08:59:18Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T09:00:53Z",
+     "st": "2026-11-21T09:00:57Z",
+     "co": "2026-11-21T09:01:00Z"
+    }
+   ]
+  },
+  {
+   "runId": 44887401118,
+   "sha": "974f4afdc83e2742ebb758c904340af830416579",
+   "createdAt": "2026-11-21T08:59:17Z",
+   "runUpdatedAt": "2026-11-21T09:07:14Z",
+   "status": "completed",
+   "conclusion": "success",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 476.0,
+   "runnerSeconds": 816.0,
+   "queuedSeconds": 102.0,
+   "worstJobQueuedSeconds": 33.0,
+   "admissionGateEntryQueuedSeconds": 1.0,
+   "literalAdmissionCheckQueuedSeconds": 1.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T08:59:18Z",
+     "st": "2026-11-21T08:59:19Z",
+     "co": "2026-11-21T09:00:03Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T08:59:18Z",
+     "st": "2026-11-21T08:59:20Z",
+     "co": "2026-11-21T09:00:52Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T08:59:18Z",
+     "st": "2026-11-21T08:59:18Z",
+     "co": "2026-11-21T08:59:18Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T09:00:03Z",
+     "st": "2026-11-21T09:00:06Z",
+     "co": "2026-11-21T09:00:51Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T09:00:03Z",
+     "st": "2026-11-21T09:00:06Z",
+     "co": "2026-11-21T09:00:14Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T09:00:51Z",
+     "st": "2026-11-21T09:00:52Z",
+     "co": "2026-11-21T09:01:36Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T09:00:51Z",
+     "st": "2026-11-21T09:00:51Z",
+     "co": "2026-11-21T09:00:51Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T09:00:51Z",
+     "st": "2026-11-21T09:00:51Z",
+     "co": "2026-11-21T09:00:51Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T09:00:51Z",
+     "st": "2026-11-21T09:00:51Z",
+     "co": "2026-11-21T09:00:51Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T09:00:52Z",
+     "st": "2026-11-21T09:00:54Z",
+     "co": "2026-11-21T09:02:27Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T09:00:52Z",
+     "st": "2026-11-21T09:00:54Z",
+     "co": "2026-11-21T09:02:50Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T09:00:52Z",
+     "st": "2026-11-21T09:00:55Z",
+     "co": "2026-11-21T09:02:36Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T09:01:36Z",
+     "st": "2026-11-21T09:01:50Z",
+     "co": "2026-11-21T09:01:57Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T09:01:36Z",
+     "st": "2026-11-21T09:01:36Z",
+     "co": "2026-11-21T09:01:36Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T09:02:50Z",
+     "st": "2026-11-21T09:03:15Z",
+     "co": "2026-11-21T09:03:18Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:02:50Z",
+     "st": "2026-11-21T09:03:23Z",
+     "co": "2026-11-21T09:04:47Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T09:04:47Z",
+     "st": "2026-11-21T09:04:55Z",
+     "co": "2026-11-21T09:05:45Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T09:04:47Z",
+     "st": "2026-11-21T09:04:47Z",
+     "co": "2026-11-21T09:04:47Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T09:05:45Z",
+     "st": "2026-11-21T09:05:48Z",
+     "co": "2026-11-21T09:07:08Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:05:46Z",
+     "st": "2026-11-21T09:05:47Z",
+     "co": "2026-11-21T09:06:32Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T09:05:46Z",
+     "st": "2026-11-21T09:05:46Z",
+     "co": "2026-11-21T09:05:45Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T09:05:46Z",
+     "st": "2026-11-21T09:05:46Z",
+     "co": "2026-11-21T09:05:45Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T09:05:46Z",
+     "st": "2026-11-21T09:05:46Z",
+     "co": "2026-11-21T09:05:45Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T09:05:46Z",
+     "st": "2026-11-21T09:05:46Z",
+     "co": "2026-11-21T09:05:45Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T09:05:46Z",
+     "st": "2026-11-21T09:05:46Z",
+     "co": "2026-11-21T09:05:46Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:07:09Z",
+     "st": "2026-11-21T09:07:10Z",
+     "co": "2026-11-21T09:07:14Z"
+    }
+   ]
+  },
+  {
+   "runId": 44887625769,
+   "sha": "075bc10274787ab51f8a5ed6d6085aee6074f787",
+   "createdAt": "2026-11-21T09:01:58Z",
+   "runUpdatedAt": "2026-11-21T09:10:03Z",
+   "status": "completed",
+   "conclusion": "success",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 483.0,
+   "runnerSeconds": 785.0,
+   "queuedSeconds": 202.0,
+   "worstJobQueuedSeconds": 81.0,
+   "admissionGateEntryQueuedSeconds": 81.0,
+   "literalAdmissionCheckQueuedSeconds": 2.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T09:01:59Z",
+     "st": "2026-11-21T09:03:20Z",
+     "co": "2026-11-21T09:04:24Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T09:01:59Z",
+     "st": "2026-11-21T09:03:12Z",
+     "co": "2026-11-21T09:04:40Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T09:01:59Z",
+     "st": "2026-11-21T09:01:59Z",
+     "co": "2026-11-21T09:01:59Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T09:04:24Z",
+     "st": "2026-11-21T09:04:32Z",
+     "co": "2026-11-21T09:05:20Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T09:04:24Z",
+     "st": "2026-11-21T09:04:38Z",
+     "co": "2026-11-21T09:04:58Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T09:04:40Z",
+     "st": "2026-11-21T09:04:42Z",
+     "co": "2026-11-21T09:06:03Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T09:04:40Z",
+     "st": "2026-11-21T09:04:42Z",
+     "co": "2026-11-21T09:06:33Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T09:04:40Z",
+     "st": "2026-11-21T09:04:49Z",
+     "co": "2026-11-21T09:06:52Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T09:05:21Z",
+     "st": "2026-11-21T09:05:21Z",
+     "co": "2026-11-21T09:05:20Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T09:05:21Z",
+     "st": "2026-11-21T09:05:23Z",
+     "co": "2026-11-21T09:05:26Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "skipped",
+     "cr": "2026-11-21T09:05:21Z",
+     "st": "2026-11-21T09:05:21Z",
+     "co": "2026-11-21T09:05:20Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T09:05:21Z",
+     "st": "2026-11-21T09:05:21Z",
+     "co": "2026-11-21T09:05:20Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T09:05:21Z",
+     "st": "2026-11-21T09:05:21Z",
+     "co": "2026-11-21T09:05:20Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T09:05:21Z",
+     "st": "2026-11-21T09:05:21Z",
+     "co": "2026-11-21T09:05:20Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T09:06:52Z",
+     "st": "2026-11-21T09:06:54Z",
+     "co": "2026-11-21T09:06:59Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:06:52Z",
+     "st": "2026-11-21T09:06:53Z",
+     "co": "2026-11-21T09:07:55Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T09:07:55Z",
+     "st": "2026-11-21T09:07:57Z",
+     "co": "2026-11-21T09:08:50Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T09:07:55Z",
+     "st": "2026-11-21T09:07:55Z",
+     "co": "2026-11-21T09:07:55Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T09:08:51Z",
+     "st": "2026-11-21T09:08:53Z",
+     "co": "2026-11-21T09:09:53Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:08:51Z",
+     "st": "2026-11-21T09:08:53Z",
+     "co": "2026-11-21T09:09:57Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T09:08:51Z",
+     "st": "2026-11-21T09:08:51Z",
+     "co": "2026-11-21T09:08:50Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T09:08:51Z",
+     "st": "2026-11-21T09:08:51Z",
+     "co": "2026-11-21T09:08:51Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T09:08:51Z",
+     "st": "2026-11-21T09:08:51Z",
+     "co": "2026-11-21T09:08:51Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T09:08:51Z",
+     "st": "2026-11-21T09:08:51Z",
+     "co": "2026-11-21T09:08:50Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T09:08:51Z",
+     "st": "2026-11-21T09:08:51Z",
+     "co": "2026-11-21T09:08:51Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:09:57Z",
+     "st": "2026-11-21T09:09:59Z",
+     "co": "2026-11-21T09:10:02Z"
+    }
+   ]
+  },
+  {
+   "runId": 44888332612,
+   "sha": "e7ebdd390326c8652c87f9b3dd9e996848275ef5",
+   "createdAt": "2026-11-21T09:10:45Z",
+   "runUpdatedAt": "2026-11-21T09:18:58Z",
+   "status": "completed",
+   "conclusion": "success",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 491.0,
+   "runnerSeconds": 902.0,
+   "queuedSeconds": 178.0,
+   "worstJobQueuedSeconds": 34.0,
+   "admissionGateEntryQueuedSeconds": 22.0,
+   "literalAdmissionCheckQueuedSeconds": 11.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T09:10:45Z",
+     "st": "2026-11-21T09:11:07Z",
+     "co": "2026-11-21T09:11:59Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T09:10:46Z",
+     "st": "2026-11-21T09:11:00Z",
+     "co": "2026-11-21T09:11:45Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T09:10:46Z",
+     "st": "2026-11-21T09:10:46Z",
+     "co": "2026-11-21T09:10:45Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T09:11:45Z",
+     "st": "2026-11-21T09:12:10Z",
+     "co": "2026-11-21T09:13:42Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T09:11:45Z",
+     "st": "2026-11-21T09:12:09Z",
+     "co": "2026-11-21T09:14:42Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T09:11:45Z",
+     "st": "2026-11-21T09:12:10Z",
+     "co": "2026-11-21T09:14:11Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T09:11:59Z",
+     "st": "2026-11-21T09:12:04Z",
+     "co": "2026-11-21T09:12:45Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T09:11:59Z",
+     "st": "2026-11-21T09:12:33Z",
+     "co": "2026-11-21T09:12:41Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T09:12:45Z",
+     "st": "2026-11-21T09:12:50Z",
+     "co": "2026-11-21T09:14:11Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T09:12:45Z",
+     "st": "2026-11-21T09:12:45Z",
+     "co": "2026-11-21T09:12:45Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T09:12:45Z",
+     "st": "2026-11-21T09:12:45Z",
+     "co": "2026-11-21T09:12:45Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T09:12:46Z",
+     "st": "2026-11-21T09:12:46Z",
+     "co": "2026-11-21T09:12:45Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T09:14:12Z",
+     "st": "2026-11-21T09:14:13Z",
+     "co": "2026-11-21T09:14:16Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T09:14:12Z",
+     "st": "2026-11-21T09:14:12Z",
+     "co": "2026-11-21T09:14:12Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T09:14:42Z",
+     "st": "2026-11-21T09:14:44Z",
+     "co": "2026-11-21T09:14:46Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:14:42Z",
+     "st": "2026-11-21T09:14:45Z",
+     "co": "2026-11-21T09:16:26Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T09:16:26Z",
+     "st": "2026-11-21T09:16:28Z",
+     "co": "2026-11-21T09:17:19Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T09:16:26Z",
+     "st": "2026-11-21T09:16:26Z",
+     "co": "2026-11-21T09:16:26Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T09:17:19Z",
+     "st": "2026-11-21T09:17:21Z",
+     "co": "2026-11-21T09:18:43Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:17:19Z",
+     "st": "2026-11-21T09:17:22Z",
+     "co": "2026-11-21T09:18:29Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T09:17:20Z",
+     "st": "2026-11-21T09:17:20Z",
+     "co": "2026-11-21T09:17:19Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T09:17:20Z",
+     "st": "2026-11-21T09:17:20Z",
+     "co": "2026-11-21T09:17:19Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T09:17:20Z",
+     "st": "2026-11-21T09:17:20Z",
+     "co": "2026-11-21T09:17:19Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T09:17:20Z",
+     "st": "2026-11-21T09:17:20Z",
+     "co": "2026-11-21T09:17:19Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T09:17:20Z",
+     "st": "2026-11-21T09:17:20Z",
+     "co": "2026-11-21T09:17:19Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:18:43Z",
+     "st": "2026-11-21T09:18:54Z",
+     "co": "2026-11-21T09:18:57Z"
+    }
+   ]
+  },
+  {
+   "runId": 44888804413,
+   "sha": "6d83a1d33ec515b53a550b643871af3f2050171e",
+   "createdAt": "2026-11-21T09:16:36Z",
+   "runUpdatedAt": "2026-11-21T09:26:07Z",
+   "status": "completed",
+   "conclusion": "failure",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 569.0,
+   "runnerSeconds": 974.0,
+   "queuedSeconds": 237.0,
+   "worstJobQueuedSeconds": 34.0,
+   "admissionGateEntryQueuedSeconds": 21.0,
+   "literalAdmissionCheckQueuedSeconds": 32.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T09:16:37Z",
+     "st": "2026-11-21T09:16:58Z",
+     "co": "2026-11-21T09:17:54Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T09:16:37Z",
+     "st": "2026-11-21T09:17:03Z",
+     "co": "2026-11-21T09:17:57Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T09:16:37Z",
+     "st": "2026-11-21T09:16:37Z",
+     "co": "2026-11-21T09:16:37Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T09:17:54Z",
+     "st": "2026-11-21T09:18:14Z",
+     "co": "2026-11-21T09:18:53Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T09:17:54Z",
+     "st": "2026-11-21T09:18:16Z",
+     "co": "2026-11-21T09:18:22Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T09:17:57Z",
+     "st": "2026-11-21T09:18:29Z",
+     "co": "2026-11-21T09:21:11Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T09:17:57Z",
+     "st": "2026-11-21T09:18:31Z",
+     "co": "2026-11-21T09:20:52Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T09:17:57Z",
+     "st": "2026-11-21T09:18:29Z",
+     "co": "2026-11-21T09:20:20Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T09:18:53Z",
+     "st": "2026-11-21T09:18:56Z",
+     "co": "2026-11-21T09:19:45Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T09:18:53Z",
+     "st": "2026-11-21T09:18:53Z",
+     "co": "2026-11-21T09:18:53Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T09:18:53Z",
+     "st": "2026-11-21T09:18:53Z",
+     "co": "2026-11-21T09:18:53Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T09:18:53Z",
+     "st": "2026-11-21T09:18:53Z",
+     "co": "2026-11-21T09:18:53Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T09:19:45Z",
+     "st": "2026-11-21T09:19:48Z",
+     "co": "2026-11-21T09:19:52Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T09:19:45Z",
+     "st": "2026-11-21T09:19:45Z",
+     "co": "2026-11-21T09:19:45Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:21:12Z",
+     "st": "2026-11-21T09:21:14Z",
+     "co": "2026-11-21T09:22:54Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T09:21:12Z",
+     "st": "2026-11-21T09:21:14Z",
+     "co": "2026-11-21T09:21:17Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T09:22:54Z",
+     "st": "2026-11-21T09:22:56Z",
+     "co": "2026-11-21T09:23:46Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T09:22:55Z",
+     "st": "2026-11-21T09:22:55Z",
+     "co": "2026-11-21T09:22:54Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T09:23:46Z",
+     "st": "2026-11-21T09:23:49Z",
+     "co": "2026-11-21T09:25:23Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T09:23:46Z",
+     "st": "2026-11-21T09:23:49Z",
+     "co": "2026-11-21T09:25:30Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T09:23:46Z",
+     "st": "2026-11-21T09:23:46Z",
+     "co": "2026-11-21T09:23:46Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T09:23:46Z",
+     "st": "2026-11-21T09:23:46Z",
+     "co": "2026-11-21T09:23:46Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T09:23:46Z",
+     "st": "2026-11-21T09:23:46Z",
+     "co": "2026-11-21T09:23:46Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T09:23:47Z",
+     "st": "2026-11-21T09:23:47Z",
+     "co": "2026-11-21T09:23:46Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T09:23:47Z",
+     "st": "2026-11-21T09:23:47Z",
+     "co": "2026-11-21T09:23:46Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "failure",
+     "cr": "2026-11-21T09:25:30Z",
+     "st": "2026-11-21T09:26:02Z",
+     "co": "2026-11-21T09:26:06Z"
+    }
+   ]
+  },
+  {
+   "runId": 44889215777,
+   "sha": "4ea334d4d60ef90bd69d3fa663ea7f2e99b8e260",
+   "createdAt": "2026-11-21T09:21:44Z",
+   "runUpdatedAt": "2026-11-21T09:30:08Z",
+   "status": "completed",
+   "conclusion": "success",
+   "njobs": 26,
+   "statisticsEligible": true,
+   "exclusionReason": null,
+   "wallSeconds": 502.0,
+   "runnerSeconds": 949.0,
+   "queuedSeconds": 124.0,
+   "worstJobQueuedSeconds": 42.0,
+   "admissionGateEntryQueuedSeconds": 18.0,
+   "literalAdmissionCheckQueuedSeconds": 2.0,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T09:21:44Z",
+     "st": "2026-11-21T09:22:02Z",
+     "co": "2026-11-21T09:23:06Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T09:21:44Z",
+     "st": "2026-11-21T09:22:03Z",
+     "co": "2026-11-21T09:23:33Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T09:21:45Z",
+     "st": "2026-11-21T09:21:45Z",
+     "co": "2026-11-21T09:21:44Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T09:23:06Z",
+     "st": "2026-11-21T09:23:08Z",
+     "co": "2026-11-21T09:23:16Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T09:23:07Z",
+     "st": "2026-11-21T09:23:12Z",
+     "co": "2026-11-21T09:24:15Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T09:23:33Z",
+     "st": "2026-11-21T09:23:35Z",
+     "co": "2026-11-21T09:26:04Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T09:23:33Z",
+     "st": "2026-11-21T09:23:34Z",
+     "co": "2026-11-21T09:24:52Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T09:23:33Z",
+     "st": "2026-11-21T09:23:35Z",
+     "co": "2026-11-21T09:26:10Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T09:24:16Z",
+     "st": "2026-11-21T09:24:58Z",
+     "co": "2026-11-21T09:26:18Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T09:24:16Z",
+     "st": "2026-11-21T09:24:16Z",
+     "co": "2026-11-21T09:24:15Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T09:24:16Z",
+     "st": "2026-11-21T09:24:16Z",
+     "co": "2026-11-21T09:24:16Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T09:24:16Z",
+     "st": "2026-11-21T09:24:16Z",
+     "co": "2026-11-21T09:24:15Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T09:26:10Z",
+     "st": "2026-11-21T09:26:17Z",
+     "co": "2026-11-21T09:26:22Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:26:10Z",
+     "st": "2026-11-21T09:26:22Z",
+     "co": "2026-11-21T09:27:35Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T09:26:18Z",
+     "st": "2026-11-21T09:26:24Z",
+     "co": "2026-11-21T09:26:28Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T09:26:19Z",
+     "st": "2026-11-21T09:26:19Z",
+     "co": "2026-11-21T09:26:18Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T09:27:36Z",
+     "st": "2026-11-21T09:27:38Z",
+     "co": "2026-11-21T09:28:25Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T09:27:36Z",
+     "st": "2026-11-21T09:27:36Z",
+     "co": "2026-11-21T09:27:36Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T09:28:25Z",
+     "st": "2026-11-21T09:28:28Z",
+     "co": "2026-11-21T09:30:01Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:28:26Z",
+     "st": "2026-11-21T09:28:27Z",
+     "co": "2026-11-21T09:29:03Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T09:28:26Z",
+     "st": "2026-11-21T09:28:26Z",
+     "co": "2026-11-21T09:28:25Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T09:28:26Z",
+     "st": "2026-11-21T09:28:26Z",
+     "co": "2026-11-21T09:28:25Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T09:28:26Z",
+     "st": "2026-11-21T09:28:26Z",
+     "co": "2026-11-21T09:28:25Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T09:28:26Z",
+     "st": "2026-11-21T09:28:26Z",
+     "co": "2026-11-21T09:28:25Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T09:28:26Z",
+     "st": "2026-11-21T09:28:26Z",
+     "co": "2026-11-21T09:28:26Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:30:01Z",
+     "st": "2026-11-21T09:30:03Z",
+     "co": "2026-11-21T09:30:07Z"
+    }
+   ]
+  },
+  {
+   "runId": 44890062520,
+   "sha": "647e83c32a98275bc38ff4ae4ad7c80167b293db",
+   "createdAt": "2026-11-21T09:32:28Z",
+   "runUpdatedAt": "2026-11-21T09:42:33Z",
+   "status": "completed",
+   "conclusion": "success",
+   "njobs": 26,
+   "statisticsEligible": false,
+   "exclusionReason": "COMPLETED_AFTER_CUTOFF",
+   "wallSeconds": null,
+   "runnerSeconds": null,
+   "queuedSeconds": null,
+   "worstJobQueuedSeconds": null,
+   "admissionGateEntryQueuedSeconds": null,
+   "literalAdmissionCheckQueuedSeconds": null,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T09:32:29Z",
+     "st": "2026-11-21T09:32:31Z",
+     "co": "2026-11-21T09:33:54Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T09:32:29Z",
+     "st": "2026-11-21T09:32:31Z",
+     "co": "2026-11-21T09:34:02Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T09:32:29Z",
+     "st": "2026-11-21T09:32:29Z",
+     "co": "2026-11-21T09:32:28Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T09:33:55Z",
+     "st": "2026-11-21T09:33:57Z",
+     "co": "2026-11-21T09:34:03Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T09:33:55Z",
+     "st": "2026-11-21T09:33:57Z",
+     "co": "2026-11-21T09:34:41Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T09:34:02Z",
+     "st": "2026-11-21T09:34:04Z",
+     "co": "2026-11-21T09:35:38Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T09:34:02Z",
+     "st": "2026-11-21T09:34:05Z",
+     "co": "2026-11-21T09:36:46Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T09:34:02Z",
+     "st": "2026-11-21T09:34:05Z",
+     "co": "2026-11-21T09:36:25Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T09:34:41Z",
+     "st": "2026-11-21T09:34:43Z",
+     "co": "2026-11-21T09:35:36Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T09:34:42Z",
+     "st": "2026-11-21T09:34:42Z",
+     "co": "2026-11-21T09:34:41Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T09:34:42Z",
+     "st": "2026-11-21T09:34:42Z",
+     "co": "2026-11-21T09:34:42Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T09:34:42Z",
+     "st": "2026-11-21T09:34:42Z",
+     "co": "2026-11-21T09:34:41Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T09:35:36Z",
+     "st": "2026-11-21T09:35:38Z",
+     "co": "2026-11-21T09:35:41Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T09:35:37Z",
+     "st": "2026-11-21T09:35:37Z",
+     "co": "2026-11-21T09:35:36Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T09:36:46Z",
+     "st": "2026-11-21T09:37:25Z",
+     "co": "2026-11-21T09:37:29Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:36:46Z",
+     "st": "2026-11-21T09:37:24Z",
+     "co": "2026-11-21T09:39:07Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T09:39:08Z",
+     "st": "2026-11-21T09:39:51Z",
+     "co": "2026-11-21T09:40:42Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T09:39:08Z",
+     "st": "2026-11-21T09:39:08Z",
+     "co": "2026-11-21T09:39:07Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T09:40:43Z",
+     "st": "2026-11-21T09:40:45Z",
+     "co": "2026-11-21T09:42:19Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:40:43Z",
+     "st": "2026-11-21T09:40:44Z",
+     "co": "2026-11-21T09:41:13Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T09:40:43Z",
+     "st": "2026-11-21T09:40:43Z",
+     "co": "2026-11-21T09:40:43Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T09:40:43Z",
+     "st": "2026-11-21T09:40:43Z",
+     "co": "2026-11-21T09:40:43Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T09:40:43Z",
+     "st": "2026-11-21T09:40:43Z",
+     "co": "2026-11-21T09:40:43Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T09:40:43Z",
+     "st": "2026-11-21T09:40:43Z",
+     "co": "2026-11-21T09:40:43Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T09:40:43Z",
+     "st": "2026-11-21T09:40:43Z",
+     "co": "2026-11-21T09:40:43Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:42:19Z",
+     "st": "2026-11-21T09:42:28Z",
+     "co": "2026-11-21T09:42:33Z"
+    }
+   ]
+  },
+  {
+   "runId": 44890395238,
+   "sha": "446f55f5ed317bebb85ad874075f9b6166097613",
+   "createdAt": "2026-11-21T09:36:37Z",
+   "runUpdatedAt": "2026-11-21T09:43:22Z",
+   "status": "in_progress",
+   "conclusion": null,
+   "njobs": 26,
+   "statisticsEligible": false,
+   "exclusionReason": "IN_FLIGHT_AT_CUTOFF",
+   "wallSeconds": null,
+   "runnerSeconds": null,
+   "queuedSeconds": null,
+   "worstJobQueuedSeconds": null,
+   "admissionGateEntryQueuedSeconds": null,
+   "literalAdmissionCheckQueuedSeconds": null,
+   "jobs": [
+    {
+     "n": "closure-deriver",
+     "c": "success",
+     "cr": "2026-11-21T09:36:38Z",
+     "st": "2026-11-21T09:37:13Z",
+     "co": "2026-11-21T09:38:09Z"
+    },
+    {
+     "n": "attest / build-base-artifacts",
+     "c": "success",
+     "cr": "2026-11-21T09:36:38Z",
+     "st": "2026-11-21T09:36:48Z",
+     "co": "2026-11-21T09:38:06Z"
+    },
+    {
+     "n": "anchor-resolve",
+     "c": "skipped",
+     "cr": "2026-11-21T09:36:38Z",
+     "st": "2026-11-21T09:36:38Z",
+     "co": "2026-11-21T09:36:37Z"
+    },
+    {
+     "n": "attest / admission-independents",
+     "c": "success",
+     "cr": "2026-11-21T09:38:07Z",
+     "st": "2026-11-21T09:38:34Z",
+     "co": "2026-11-21T09:40:36Z"
+    },
+    {
+     "n": "attest / go-critical-lane (0)",
+     "c": "success",
+     "cr": "2026-11-21T09:38:07Z",
+     "st": "2026-11-21T09:38:10Z",
+     "co": "2026-11-21T09:40:24Z"
+    },
+    {
+     "n": "attest / go-critical-lane (1)",
+     "c": "success",
+     "cr": "2026-11-21T09:38:07Z",
+     "st": "2026-11-21T09:38:16Z",
+     "co": "2026-11-21T09:40:40Z"
+    },
+    {
+     "n": "gateway / select",
+     "c": "success",
+     "cr": "2026-11-21T09:38:09Z",
+     "st": "2026-11-21T09:38:42Z",
+     "co": "2026-11-21T09:39:21Z"
+    },
+    {
+     "n": "gateway / sl09-scope",
+     "c": "success",
+     "cr": "2026-11-21T09:38:09Z",
+     "st": "2026-11-21T09:39:03Z",
+     "co": "2026-11-21T09:39:10Z"
+    },
+    {
+     "n": "gateway / ci-bootstrap",
+     "c": "success",
+     "cr": "2026-11-21T09:39:22Z",
+     "st": "2026-11-21T09:39:59Z",
+     "co": "2026-11-21T09:42:47Z"
+    },
+    {
+     "n": "gateway / candidate-build-arm",
+     "c": "skipped",
+     "cr": "2026-11-21T09:39:22Z",
+     "st": "2026-11-21T09:39:22Z",
+     "co": "2026-11-21T09:39:22Z"
+    },
+    {
+     "n": "gateway / gateway-shard",
+     "c": "skipped",
+     "cr": "2026-11-21T09:39:22Z",
+     "st": "2026-11-21T09:39:22Z",
+     "co": "2026-11-21T09:39:22Z"
+    },
+    {
+     "n": "gateway / gateway-identity-gate",
+     "c": "skipped",
+     "cr": "2026-11-21T09:39:22Z",
+     "st": "2026-11-21T09:39:22Z",
+     "co": "2026-11-21T09:39:22Z"
+    },
+    {
+     "n": "attest / go-critical-rollup",
+     "c": "success",
+     "cr": "2026-11-21T09:40:40Z",
+     "st": "2026-11-21T09:40:42Z",
+     "co": "2026-11-21T09:40:47Z"
+    },
+    {
+     "n": "attest / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:40:40Z",
+     "st": "2026-11-21T09:40:41Z",
+     "co": "2026-11-21T09:42:03Z"
+    },
+    {
+     "n": "mint-prepare / prepare",
+     "c": "success",
+     "cr": "2026-11-21T09:42:04Z",
+     "st": "2026-11-21T09:42:06Z",
+     "co": "2026-11-21T09:42:26Z"
+    },
+    {
+     "n": "mint-prepare / publish",
+     "c": "skipped",
+     "cr": "2026-11-21T09:42:04Z",
+     "st": "2026-11-21T09:42:04Z",
+     "co": "2026-11-21T09:42:04Z"
+    },
+    {
+     "n": "verdict / admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:42:26Z",
+     "st": "2026-11-21T09:42:32Z",
+     "co": "2026-11-21T09:43:05Z"
+    },
+    {
+     "n": "verdict / build-base-artifacts",
+     "c": "skipped",
+     "cr": "2026-11-21T09:42:26Z",
+     "st": "2026-11-21T09:42:26Z",
+     "co": "2026-11-21T09:42:26Z"
+    },
+    {
+     "n": "verdict / go-critical-lane",
+     "c": "skipped",
+     "cr": "2026-11-21T09:42:26Z",
+     "st": "2026-11-21T09:42:26Z",
+     "co": "2026-11-21T09:42:26Z"
+    },
+    {
+     "n": "verdict / admission-independents",
+     "c": "skipped",
+     "cr": "2026-11-21T09:42:26Z",
+     "st": "2026-11-21T09:42:26Z",
+     "co": "2026-11-21T09:42:26Z"
+    },
+    {
+     "n": "verdict / go-critical-rollup",
+     "c": "skipped",
+     "cr": "2026-11-21T09:42:27Z",
+     "st": "2026-11-21T09:42:27Z",
+     "co": "2026-11-21T09:42:26Z"
+    },
+    {
+     "n": "gateway / executed-jobs",
+     "c": "success",
+     "cr": "2026-11-21T09:42:48Z",
+     "st": "2026-11-21T09:43:08Z",
+     "co": "2026-11-21T09:43:12Z"
+    },
+    {
+     "n": "gateway / proof-reconcile",
+     "c": "skipped",
+     "cr": "2026-11-21T09:42:48Z",
+     "st": "2026-11-21T09:42:48Z",
+     "co": "2026-11-21T09:42:47Z"
+    },
+    {
+     "n": "mint-publish / publish",
+     "c": "success",
+     "cr": "2026-11-21T09:43:12Z",
+     "st": "2026-11-21T09:43:22Z",
+     "co": "2026-11-21T09:45:06Z"
+    },
+    {
+     "n": "mint-publish / prepare",
+     "c": "skipped",
+     "cr": "2026-11-21T09:43:12Z",
+     "st": "2026-11-21T09:43:12Z",
+     "co": "2026-11-21T09:43:12Z"
+    },
+    {
+     "n": "admission-check",
+     "c": "success",
+     "cr": "2026-11-21T09:45:06Z",
+     "st": "2026-11-21T09:45:27Z",
+     "co": "2026-11-21T09:45:31Z"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,13 @@
+647e83c32a98275bc38ff4ae4ad7c80167b293db 2026-11-21T09:32:09+00:00 Merge pull request #319 from Archright/evidence-script-scan-acceptance
+4ea334d4d60ef90bd69d3fa663ea7f2e99b8e260 2026-11-21T09:21:30+00:00 Merge pull request #306 from Archright/perf/ir-precompute-scope
+075bc10274787ab51f8a5ed6d6085aee6074f787 2026-11-21T09:01:39+00:00 Merge pull request #315 from Archright/canary-script-scan-clean
+974f4afdc83e2742ebb758c904340af830416579 2026-11-21T08:48:07+00:00 Merge pull request #316 from Archright/chore/debt-reduction-baseline-4381
+858710ae6f590d7dae06646142e79851dda10721 2026-11-21T16:58:46+09:00 Merge pull request #309 from Archright/workstream/script-scan-admission
+61261568292f8b8b424abb459c900945338d1ddc 2026-11-21T07:45:56+00:00 Merge pull request #308 from Archright/workstream/256-verdict-attribution
+6716521d3136f9504c94dba328a9a207ca5b00dc 2026-11-21T07:22:26+00:00 Merge pull request #273 from Archright/workstream/readiness-key-closure
+ebfc56ff72a69f5f0b3a012ed55ea1c92512f222 2026-11-21T06:55:19+00:00 Merge pull request #304 from Archright/workstream/stale-debt-close
+db0e977f6219d33dcfc91be1f9e238a72f2dd53b 2026-11-21T06:29:40+00:00 Merge pull request #305 from Archright/workstream/282-after-arm-record
+1eec4352cc3febf5cfcd0a8766755f8753c64f39 2026-11-21T06:07:27+00:00 Merge pull request #290 from Archright/workstream/debt-563-ratchet-truth
+6a9ef54a2aaab62b26978185a6aaeb4b2580e6d8 2026-11-21T05:50:49+00:00 Merge pull request #303 from Archright/workstream/282-merge-queue-concurrency
+52da049978c6fb81171735a96f80557ba1bcf646 2026-11-21T05:42:20+00:00 Merge pull request #299 from Archright/workstream/debt-close-512-561
+f68ca0f68cdadf5cc3d0585f7104ffb2733a0411 2026-11-21T05:36:44+00:00 Merge pull request #302 from Archright/docs/topology-cache-fastpath-evidence

@@ -1,0 +1,309 @@
+{
+  "schema_version": "axiom.ci_acceptance.v3",
+  "mode": "baseline-live",
+  "formula": "max(job.completed_at) - min(job.started_at) over jobs with both timestamps; sorted integer seconds; even n = mean of the two middle values",
+  "legacy_formula": "updated_at - run_started_at; non-canonical, continuity only",
+  "n": 32,
+  "excluded": 0,
+  "p50_seconds": 536.5,
+  "p50_display": "536.5",
+  "mean_seconds": 591.15625,
+  "min_seconds": 335,
+  "max_seconds": 1044,
+  "legacy_n": 32,
+  "legacy_p50_seconds": 538.5,
+  "legacy_mean_seconds": 593.46875,
+  "values_sorted": [
+    "1020",
+    "1044",
+    "335",
+    "384",
+    "407",
+    "415",
+    "436",
+    "441",
+    "453",
+    "474",
+    "476",
+    "483",
+    "487",
+    "489",
+    "490",
+    "491",
+    "502",
+    "522",
+    "551",
+    "556",
+    "569",
+    "585",
+    "606",
+    "621",
+    "631",
+    "633",
+    "670",
+    "780",
+    "799",
+    "818",
+    "867",
+    "882"
+  ],
+  "gaps": [],
+  "runs": [
+    {
+      "run_id": "44889215777",
+      "seconds": 502,
+      "observed": true,
+      "legacy_seconds": 504,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44888804413",
+      "seconds": 569,
+      "observed": true,
+      "legacy_seconds": 571,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44888332612",
+      "seconds": 491,
+      "observed": true,
+      "legacy_seconds": 493,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44887625769",
+      "seconds": 483,
+      "observed": true,
+      "legacy_seconds": 485,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44887401118",
+      "seconds": 476,
+      "observed": true,
+      "legacy_seconds": 477,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44886843833",
+      "seconds": 490,
+      "observed": true,
+      "legacy_seconds": 491,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44886844588",
+      "seconds": 556,
+      "observed": true,
+      "legacy_seconds": 558,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44886584334",
+      "seconds": 585,
+      "observed": true,
+      "legacy_seconds": 586,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44886280827",
+      "seconds": 621,
+      "observed": true,
+      "legacy_seconds": 623,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44886279954",
+      "seconds": 633,
+      "observed": true,
+      "legacy_seconds": 634,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44885637738",
+      "seconds": 867,
+      "observed": true,
+      "legacy_seconds": 869,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44885637053",
+      "seconds": 818,
+      "observed": true,
+      "legacy_seconds": 820,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44885635581",
+      "seconds": 780,
+      "observed": true,
+      "legacy_seconds": 782,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44884910058",
+      "seconds": 882,
+      "observed": true,
+      "legacy_seconds": 884,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44884910785",
+      "seconds": 1020,
+      "observed": true,
+      "legacy_seconds": 1023,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44884909037",
+      "seconds": 1044,
+      "observed": true,
+      "legacy_seconds": 1051,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44884566650",
+      "seconds": 799,
+      "observed": true,
+      "legacy_seconds": 801,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44884313215",
+      "seconds": 631,
+      "observed": true,
+      "legacy_seconds": 633,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44884094411",
+      "seconds": 606,
+      "observed": true,
+      "legacy_seconds": 608,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44883641559",
+      "seconds": 670,
+      "observed": true,
+      "legacy_seconds": 672,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44882710554",
+      "seconds": 489,
+      "observed": true,
+      "legacy_seconds": 491,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44882652763",
+      "seconds": 551,
+      "observed": true,
+      "legacy_seconds": 553,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44882180736",
+      "seconds": 522,
+      "observed": true,
+      "legacy_seconds": 524,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44881773724",
+      "seconds": 441,
+      "observed": true,
+      "legacy_seconds": 446,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44880688993",
+      "seconds": 335,
+      "observed": true,
+      "legacy_seconds": 336,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44879970973",
+      "seconds": 415,
+      "observed": true,
+      "legacy_seconds": 416,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44877825490",
+      "seconds": 407,
+      "observed": true,
+      "legacy_seconds": 409,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44875815676",
+      "seconds": 474,
+      "observed": true,
+      "legacy_seconds": 477,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44874067378",
+      "seconds": 487,
+      "observed": true,
+      "legacy_seconds": 489,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44872777013",
+      "seconds": 436,
+      "observed": true,
+      "legacy_seconds": 438,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44872137279",
+      "seconds": 453,
+      "observed": true,
+      "legacy_seconds": 462,
+      "legacy_observed": true,
+      "gap_reason": ""
+    },
+    {
+      "run_id": "44871714191",
+      "seconds": 384,
+      "observed": true,
+      "legacy_seconds": 385,
+      "legacy_observed": true,
+      "gap_reason": ""
+    }
+  ]
+}
