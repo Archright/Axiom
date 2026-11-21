@@ -437,19 +437,19 @@ this document — the authority on what is in contract.
 > It makes **NO claim** about `projection → downstream consumer`. Producing a projection that is
 > field-complete says nothing about whether any consumer reads it correctly.
 
-Three downstream consumers are known to be broken. They are recorded here so they are not forgotten,
-and they are **explicitly not** closed by this contract:
+Two downstream consumers remain known to be broken; a third was corrected (DEBT#486). They are
+recorded here so they are not forgotten, and they are **explicitly not** closed by this contract:
 
 | Consumer | Measured breakage |
 |---|---|
 | (deleted 2026-10-04 — zero importers, never compiled; see DEBT#487) | Parses Markdown rows assuming **≥ 9** columns (`:122`: `if cols.len < 9:` → drop the row) and reads status at `cols[7]` (`:130`) and a due date at `cols[9]` (`:131`). The P1 Markdown is a **6**-column table, in both v1 and v2 — the v2 `Files` column joins references with `<br>` (`tools/debt_engine.nim:318`), which contains no pipe, so the column count is unchanged. Measured against the checked-in artifact: **210 of 213 rows are dropped** by the length filter. The remaining 3 survive only because their Title contains a backslash-escaped pipe (`\|`) that `split("|")` does not honour, yielding 10 fields — and those 3 are **mis-parsed**: `cols[7]` returns a Files value (`DEBT#295` → `.circleci/continue.yml`, `DEBT#436` → `Makefile`, `DEBT#431` → `Makefile`) instead of a status. |
-| `src/gate/runners/debt_scan_gate.nim` | `isExempted` searches the Markdown for the marker `"### [Exemption APPROVED] "` (`:101`). `genMarkdown` **never emits any line of that form** — it emits severity headings and table rows only. Every `isExempted` lookup therefore returns `false`, so no exemption is ever honoured, silently. |
+| `src/gate/runners/debt_scan_gate.nim` | **FIXED 2026-11-21 (DEBT#486).** Formerly `isExempted` searched the Markdown for the marker `"### [Exemption APPROVED] "` (`:101`). `genMarkdown` **never emits any line of that form** — it emits severity headings and table rows only, and `statusLabel` collapses every status to `**Open**`/`Closed`. Every `isExempted` lookup therefore returned `false`, so no exemption was ever honoured, silently. The phantom scan (and `loadExemptionText`/`relativizePath`) was deleted; the gate no longer reads this projection and has no per-file exemption mechanism. |
 | `tools/hotspot_ranker.nim` | Reads the Status cell at `parts[7]` (`:30`) against a documented schema of `\| ID \| Severity \| Category \| Title \| File \| Line \| Status \| ...` (`:20`). The P1 Markdown has 6 columns, so `split("|")` yields **8** fields — `parts[7]` is the trailing empty field, not the status. The guard `if parts.len < 8: continue` (`:29`) therefore does **not** reject these rows; instead `("Open" in "")` is false at `:31` and **every row is skipped**, yielding an empty ranking. |
 
-These are downstream-consumer defects. Fixing them is follow-up work outside this contract's scope;
-listing them here is what keeps them from being lost when the projection side is signed off. Note
-that the v1→v2 regeneration does **not** fix any of the three: the column count and the set of
-emitted line shapes are unchanged in the ways these consumers depend on.
+These remaining defects are follow-up work outside this contract's scope; listing them here is what
+keeps them from being lost when the projection side is signed off. Note that the v1→v2 regeneration
+does **not** fix either of the two remaining consumers: the column count and the set of emitted line
+shapes are unchanged in the ways they depend on.
 
 > **Scope discipline.** Adding a column to satisfy a broken consumer is *not* the remedy, and this
 > contract does not license it. A consumer with a wrong expectation must be corrected to read the
