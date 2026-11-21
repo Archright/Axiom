@@ -13,7 +13,7 @@
 ## VENUE CONTRACT (ADR-0032 (a),(b) extended to the job layer):
 ##
 ##   pull_request                              → preflight → {secret-scan}
-##   merge_group | schedule | workflow_dispatch → landing   → all 5 dimensions
+##   merge_group | schedule | workflow_dispatch → landing   → all 6 dimensions
 ##   anything else                             → FAIL (no venue → no verdict)
 ##
 ## The landing venue is the SOLE canonical verdict. The preflight venue is an
@@ -56,7 +56,7 @@ const
   ExitUnknown = 2
   ## The full dimension set — every dimension the gate can ever judge.
   Dimensions = ["secret-scan", "license-scan", "dependency-scan",
-                "provenance", "sbom"]
+                "provenance", "sbom", "script-scan"]
   ## The closed venue→required-set enum. Adding a venue or moving a dimension
   ## between venues is a CONTRACT change (docs/spec/publication_integrity_gate.md
   ## §3), never a local edit.
@@ -136,6 +136,16 @@ proc fileSha256(path: string): string =
   except CatchableError:
     ""
 
+proc reportBoundCommit(node: JsonNode): string =
+  ## The commit a dimension report adjudicated. The script-scan evaluator
+  ## binds it as `binding.headSha`; `binding.commitSha` is accepted too so
+  ## the aggregator reads the same field name it writes.
+  let b = node{"binding"}
+  if b == nil or b.kind != JObject:
+    return ""
+  let c = b{"commitSha"}.getStr("")
+  if c.len > 0: c else: b{"headSha"}.getStr("")
+
 proc main() {.raises: [].} =
   let inputsRes = parseArgs()
   if inputsRes.isErr:
@@ -196,6 +206,25 @@ proc main() {.raises: [].} =
     except CatchableError as e:
       unknowns.add("dimension " & d & " report unreadable: " & e.msg)
       continue
+    let reportedDimension = node{"dimension"}.getStr("")
+    if reportedDimension.len == 0:
+      unknowns.add("dimension " & d & " report has no dimension field")
+      continue
+    if reportedDimension != d:
+      unknowns.add("dimension " & d & " report claims dimension '" &
+        reportedDimension & "' — identity mismatch")
+      continue
+    if d == "script-scan":
+      # script-scan is the only dimension whose evaluator binds the commit it
+      # adjudicated. A report for another commit is not this gate's verdict.
+      let bound = reportBoundCommit(node)
+      if bound.len == 0:
+        unknowns.add("dimension script-scan report has no binding commit sha")
+        continue
+      if bound != inputs.headSha:
+        blockers.add("dimension script-scan report binds commit " & bound &
+          " but the gate head is " & inputs.headSha)
+        continue
     let v = node{"verdict"}.getStr("")
     if v.len == 0:
       unknowns.add("dimension " & d & " report has no verdict field")
@@ -211,7 +240,7 @@ proc main() {.raises: [].} =
   # would let a stale/renamed dimension ride along unobserved.
   #
   # The signal is the REPORT FILE EXISTING, not the argument being present:
-  # the workflow passes all five `--report` paths as one static argument list
+  # the workflow passes all six `--report` paths as one static argument list
   # on every venue (measured run 44857335107 job 136702863663 — arguing on the
   # argument made a correctly-gated preflight read as drift). A skipped
   # dimension uploads no artifact, so its path resolves to nothing; a
@@ -250,7 +279,7 @@ proc main() {.raises: [].} =
     },
     "venueSemantics": {
       "preflight": "only the preflight set is required; PASS here is NOT a landing credential",
-      "landing": "all five dimensions are required; this is the canonical landing verdict"
+      "landing": "all six dimensions are required; this is the canonical landing verdict"
     },
     "binding": {
       "commitSha": inputs.headSha,

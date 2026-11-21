@@ -1,0 +1,63 @@
+# script-scan-policy — the Unicode Script allowlist for the script-scan
+# dimension of the publication-integrity gate.
+#
+# EXACT CLAIM: a landing diff may add no Unicode code point whose Unicode
+# Script property is outside {ASCII range, Latin, Greek, Common, Inherited},
+# except exact-path product i18n exemptions.
+#
+# NOT THE CLAIM: "English-only". Latin-script non-English prose, Greek prose,
+# Common/Inherited punctuation, HTML entities, Unicode escapes, images, and
+# GitHub conversation text are outside this stage's detection. The full
+# limitation list is declaredLimitations below.
+#
+# Enforced by tools/ci/publication_script_eval.nim and consumed by the
+# publication-integrity aggregator (tools/ci/publication_report.nim) as the
+# sixth landing dimension. The GitHub ruleset required context and the
+# workflow path are unchanged (ADR-0044).
+#
+# Format contract: restricted YAML subset consumed by
+# tools/ci/publication_yaml.nim (flat mappings, quoted strings, `- ` lists,
+# 2-space indent). Do not use anchors, multi-line scalars, or flow style.
+
+schemaVersion: "1"
+policyId: "axiom-script-scan-policy-v1"
+dimension: "script-scan"
+stage: "1"
+scope: "added-lines"
+baselineCommit: "db0e977f6219d33dcfc91be1f9e238a72f2dd53b"
+
+toolContract:
+  ripgrepVersion: "14.1.0"
+  gitMinVersion: "2.40.0"
+
+allowedScripts:
+  - "Latin"
+  - "Greek"
+  - "Common"
+  - "Inherited"
+
+exemptPaths:
+  - path: "data/i18n/ko.json"
+    reason: "product i18n resource: Korean locale catalog"
+
+documentExtensions:
+  - "pdf"
+  - "docx"
+  - "xlsx"
+  - "pptx"
+  - "odt"
+  - "ods"
+  - "odp"
+  - "epub"
+
+claim: "the landing diff introduces no Unicode code point whose Script property is outside {ASCII range, Latin, Greek, Common, Inherited}, except exact-path product i18n exemptions"
+
+declaredLimitations:
+  - "Latin-script non-English prose (French, Spanish, German) is not detected"
+  - "Greek prose is not detected (Greek is allowed for mathematical notation)"
+  - "Common/Inherited punctuation is allowed (U+3002, U+3001, U+30FC, emoji, symbols)"
+  - "HTML numeric entities and Unicode escapes are ASCII and are not detected"
+  - "Images and binary files outside documentExtensions are not inspected"
+  - "PR titles, bodies, issues, reviews, and commit messages are not scanned"
+  - "Code points are judged by Unicode Script (default ripgrep engine, Unicode 15.0)"
+  - "Non-UTF-8 text is UNKNOWN (blocked), never silently passed"

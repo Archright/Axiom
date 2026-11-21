@@ -1,7 +1,7 @@
 ## test_publication_gate_tools.nim — publication-integrity 평가기 실패-경로 계약
 ##
 ## 대상: tools/ci/publication_{provenance_validator,license_eval,secret_eval,
-## dependency_eval,sbom_eval,report}.nim — 게이트의 FAIL/UNKNOWN 경로.
+## dependency_eval,sbom_eval,script_eval,report}.nim — the gate's FAIL/UNKNOWN paths.
 ##
 ## WHY (§0.8/§0.9 — 죽은 게이트·극장 금지): 정상 트리에서의 PASS는 실제
 ## 워크플로가 매 PR 입증한다. 이 테스트가 입증하는 것은 "게이트가 거부할 수
@@ -15,6 +15,9 @@
 ##   dependency : exit 100 FAIL / 미매핑 exit UNKNOWN / exit 128 PASS(선언 한계)
 ##   sbom       : 공허·결측 SPDX FAIL / 정상 PASS
 ##   report     : sub-job failure FAIL / skipped UNKNOWN / 보고서 누락 UNKNOWN / 전부 성공 PASS
+##   script-scan: Korean added line FAIL / English-only PASS / invalid UTF-8
+##                UNKNOWN / policy parse error UNKNOWN / pure rename PASS /
+##                exempt-path change PASS
 ##
 ## 평가기는 프로덕션 경로 그대로 빌드해(osproc nim c, 워크플로와 동일 플래그)
 ## fixture 입력으로 실행한다 — 재구현 아님.
@@ -27,6 +30,10 @@ const
     for _ in 0 ..< 3:
       r = r.parentDir()
     r
+  ScriptPolicy = RepoRoot / "compliance/policy/script-scan-policy.yml"
+  ## UTF-8 bytes of the Korean fixture word (Hangul syllables). Written as
+  ## escapes so this source file itself stays inside the script allowlist.
+  KoreanFixture = "\xEC\x95\x88\xEB\x85\x95\xED\x95\x98\xEC\x84\xB8\xEC\x9A\x94"
   Tools = [
     ("vsi_provenance", "tools/ci/publication_provenance_validator.nim"),
     ("vsi_license_eval", "tools/ci/publication_license_eval.nim"),
@@ -35,13 +42,14 @@ const
     ("vsi_sbom_eval", "tools/ci/publication_sbom_eval.nim"),
     ("vsi_report", "tools/ci/publication_report.nim"),
     ("vsi_attestor", "tools/ci/publication_attestor.nim"),
+    ("vsi_script_eval", "tools/ci/publication_script_eval.nim"),
   ]
 
 var bins: array[Tools.len, string]
 
 proc buildAll() =
-  ## 프로덕션 빌드 경로(워크플로와 동일 플래그·nimcache)로 7개 평가기를
-  ## 컴파일한다. 빌드 실패는 테스트 실패(fail-closed — skip 아님).
+  ## Production build path (the workflow's exact flags and nimcache) for the
+  ## eight evaluators. A build failure is a test failure (fail-closed, not skip).
   putEnv("AXIOM_HERMETIC_BUILDING", "1")
   for i, t in Tools:
     let outp = RepoRoot / "build" / t[0]
@@ -461,24 +469,30 @@ suite "sbom — vacuous or malformed SPDX never passes":
 
 suite "report — venue gate, skipped is UNKNOWN, failure is FAIL, missing report is UNKNOWN":
 
-  const Dims5 = ["secret-scan", "license-scan", "dependency-scan", "provenance", "sbom"]
+  const
+    Dims6 = ["secret-scan", "license-scan", "dependency-scan", "provenance",
+             "sbom", "script-scan"]
+    TestHead = "ffff0000ffff0000ffff0000ffff0000ffff0000"
 
   proc writeDimensions(d: string) =
-    for dim in Dims5:
-      writeFile(d / (dim & ".json"),
-        $(%*{"dimension": dim, "verdict": "PASS", "tool": "fixture"}))
+    for dim in Dims6:
+      var node = %*{"dimension": dim, "verdict": "PASS", "tool": "fixture"}
+      if dim == "script-scan":
+        node["binding"] = %*{"headSha": TestHead}
+      writeFile(d / (dim & ".json"), $(node))
 
   test "landing venue fail-closed matrix":
     let d = fixtureDir("rep_landing")
     writeDimensions(d)
     let common = @["--venue", "merge_group",
                    "--out", d / "gate.json",
-                   "--head-sha", "ffff0000ffff0000ffff0000ffff0000ffff0000",
+                   "--head-sha", TestHead,
                    "--tree-sha", "0000ffff0000ffff0000ffff0000ffff0000ffff",
-                   "--policy-file", RepoRoot / "compliance/policy/license-policy.yml"] &
-      (Dims5.mapIt("--report" & "=" & it & "=" & (d / it & ".json")))
+                   "--policy-file", RepoRoot / "compliance/policy/license-policy.yml",
+                   "--policy-file", ScriptPolicy] &
+      (Dims6.mapIt("--report" & "=" & it & "=" & (d / it & ".json")))
     var allOk: seq[string] = @[]
-    for dim in Dims5:
+    for dim in Dims6:
       allOk.add("--job" & "=" & dim & "=success")
     # 1) everything success → PASS
     check run(bins[5], common & allOk).code == 0
@@ -491,18 +505,45 @@ suite "report — venue gate, skipped is UNKNOWN, failure is FAIL, missing repor
     # 4) a dimension report file missing → UNKNOWN
     removeFile(d / "sbom.json")
     check run(bins[5], common & allOk).code == 2
+    # 5) a script-scan FAIL report is authoritative even when the sub-job
+    #    result is success
+    writeDimensions(d)
+    writeFile(d / "script-scan.json",
+      $(%*{"dimension": "script-scan", "verdict": "FAIL",
+           "binding": {"headSha": TestHead}}))
+    check run(bins[5], common & allOk).code == 1
+    # 6) a script-scan report bound to another commit is not this gate's verdict
+    writeFile(d / "script-scan.json",
+      $(%*{"dimension": "script-scan", "verdict": "PASS",
+           "binding": {"headSha": "0000000000000000000000000000000000000000"}}))
+    check run(bins[5], common & allOk).code == 1
+    # 7) a script-scan report with no commit binding → UNKNOWN
+    writeFile(d / "script-scan.json",
+      $(%*{"dimension": "script-scan", "verdict": "PASS"}))
+    check run(bins[5], common & allOk).code == 2
+    # 8) a report whose dimension identity contradicts its slot → UNKNOWN
+    writeFile(d / "script-scan.json",
+      $(%*{"dimension": "sbom", "verdict": "PASS",
+           "binding": {"headSha": TestHead}}))
+    check run(bins[5], common & allOk).code == 2
+    # 9) the same binding expressed as commitSha is accepted
+    writeFile(d / "script-scan.json",
+      $(%*{"dimension": "script-scan", "verdict": "PASS",
+           "binding": {"commitSha": TestHead}}))
+    check run(bins[5], common & allOk).code == 0
 
   test "preflight venue requires exactly {secret-scan}":
     let d = fixtureDir("rep_preflight")
     writeDimensions(d)
     let preJobs = @["--job=secret-scan=success", "--job=license-scan=skipped",
                     "--job=dependency-scan=skipped", "--job=provenance=skipped",
-                    "--job=sbom=skipped"]
+                    "--job=sbom=skipped", "--job=script-scan=skipped"]
     let preBase = @["--venue", "pull_request",
                  "--out", d / "gate.json",
-                 "--head-sha", "ffff0000ffff0000ffff0000ffff0000ffff0000",
+                 "--head-sha", TestHead,
                  "--tree-sha", "0000ffff0000ffff0000ffff0000ffff0000ffff",
                  "--policy-file", RepoRoot / "compliance/policy/license-policy.yml",
+                 "--policy-file", ScriptPolicy,
                  "--report", "secret-scan=" & (d / "secret-scan.json")]
     # 1) the declared preflight set, all success → PASS
     check run(bins[5], preBase & preJobs).code == 0
@@ -514,7 +555,7 @@ suite "report — venue gate, skipped is UNKNOWN, failure is FAIL, missing repor
       if it.endsWith("license-scan=skipped"): "--job=license-scan=success" else: it)).code == 1
     # 4) an out-of-venue report that was ACTUALLY PRODUCED is gating drift →
     #    UNKNOWN, never silently ignored. The signal is the file existing: the
-    #    workflow passes all five --report paths as one static list on every
+    #    workflow passes all six --report paths as one static list on every
     #    venue, so argument presence alone is not drift (measured run
     #    44857335107 job 136702863663).
     check run(bins[5], preBase & preJobs &
@@ -527,22 +568,176 @@ suite "report — venue gate, skipped is UNKNOWN, failure is FAIL, missing repor
     check fileExists(absent / "dependency-scan.json") == false
     check fileExists(absent / "provenance.json") == false
     check fileExists(absent / "sbom.json") == false
+    check fileExists(absent / "script-scan.json") == false
     check run(bins[5], preBase & preJobs &
       @["--report", "license-scan=" & (absent / "license-scan.json"),
         "--report", "dependency-scan=" & (absent / "dependency-scan.json"),
         "--report", "provenance=" & (absent / "provenance.json"),
-        "--report", "sbom=" & (absent / "sbom.json")]).code == 0
+        "--report", "sbom=" & (absent / "sbom.json"),
+        "--report", "script-scan=" & (absent / "script-scan.json")]).code == 0
+    # 6) script-scan is NOT in the preflight set either
+    check run(bins[5], preBase & preJobs.mapIt(
+      if it.endsWith("script-scan=skipped"): "--job=script-scan=success" else: it)).code == 1
 
   test "venue is required and closed":
     let d = fixtureDir("rep_venue")
     writeDimensions(d)
     let base = @["--out", d / "gate.json",
-                 "--head-sha", "ffff0000ffff0000ffff0000ffff0000ffff0000",
+                 "--head-sha", TestHead,
                  "--tree-sha", "0000ffff0000ffff0000ffff0000ffff0000ffff"]
     # no --venue → rejected input (UNKNOWN), never a pass
     check run(bins[5], base).code == 2
     # an event this workflow does not run on → FAIL (no venue, no verdict)
     check run(bins[5], @["--venue", "push"] & base).code == 1
+
+suite "script-scan — added-line Unicode Script allowlist is fail-closed":
+  ## Scratch git repos, no network: the evaluator runs against real diffs.
+  ## The production policy pins ripgrep 14.1.0; an unavailable rg is a suite
+  ## FAILURE, never a silent skip.
+
+  let rgBin = findExe("rg")
+
+  block:
+    if rgBin.len == 0:
+      echo "FATAL: ripgrep not found on PATH — the script-scan suite refuses to skip"
+      quit(1)
+
+  proc gitIn(repo: string, args: seq[string]) =
+    var cmd = "git -c user.email=fixture@example.com -c user.name=Fixture " &
+      "-c commit.gpgsign=false"
+    for a in args:
+      cmd.add(" " & quoteShell(a))
+    let r = execCmdEx(cmd, workingDir = repo)
+    if r.exitCode != 0:
+      echo "FIXTURE GIT FAIL: " & cmd & "\n" & r.output
+      quit(1)
+
+  proc revParse(repo, rev: string): string =
+    let r = execCmdEx("git rev-parse " & rev, workingDir = repo)
+    if r.exitCode != 0:
+      echo "FIXTURE GIT FAIL: git rev-parse " & rev & "\n" & r.output
+      quit(1)
+    r.output.strip()
+
+  proc commitAll(repo, msg: string) =
+    gitIn(repo, @["add", "-A"])
+    gitIn(repo, @["commit", "-q", "-m", msg])
+
+  proc seedRepo(name: string): tuple[repo, base: string] =
+    ## The base commit tracks the policy's exact exempt path: the evaluator's
+    ## exempt-path liveness check is itself fail-closed.
+    let d = fixtureDir("script_" & name)
+    let repo = d / "repo"
+    createDir(repo / "data/i18n")
+    writeFile(repo / "data/i18n/ko.json", "{\"greeting\": \"hello\"}\n")
+    writeFile(repo / "src.txt", "english baseline\n")
+    gitIn(repo, @["init", "-q"])
+    commitAll(repo, "base")
+    (repo, revParse(repo, "HEAD"))
+
+  proc runScript(repo, base, head, policy, outPath: string):
+      tuple[code: int, output: string] =
+    run(bins[7], @["--policy", policy,
+                   "--rg", rgBin,
+                   "--head", head,
+                   "--base", base,
+                   "--repo-root", repo,
+                   "--out", outPath])
+
+  test "Korean added line FAILS and reports the offending code point":
+    let (repo, base) = seedRepo("ko")
+    writeFile(repo / "korean.txt", "hello\n" & KoreanFixture & "\n")
+    commitAll(repo, "add korean")
+    let head = revParse(repo, "HEAD")
+    let outPath = repo.parentDir / "report.json"
+    let r = runScript(repo, base, head, ScriptPolicy, outPath)
+    if r.code != 1:
+      echo "script-scan expected FAIL, got " & $r.code & ":\n" & r.output
+    check r.code == 1
+    check "FAIL" in r.output
+    let rep = parseJson(readFile(outPath))
+    check rep{"dimension"}.getStr() == "script-scan"
+    check rep{"verdict"}.getStr() == "FAIL"
+    let binding = rep{"binding"}
+    check binding != nil
+    check binding{"headSha"}.getStr() == head
+    let codePoints = rep{"violations"}.getElems().mapIt(it{"codePoint"}.getStr())
+    check "U+C548" in codePoints
+    check "U+B155" in codePoints
+    check "U+D558" in codePoints
+
+  test "English-only added lines PASS":
+    let (repo, base) = seedRepo("en")
+    writeFile(repo / "english.txt", "plain ASCII text\nsecond line\n")
+    commitAll(repo, "add english")
+    let head = revParse(repo, "HEAD")
+    let outPath = repo.parentDir / "report.json"
+    let r = runScript(repo, base, head, ScriptPolicy, outPath)
+    if r.code != 0:
+      echo "script-scan expected PASS, got " & $r.code & ":\n" & r.output
+    check r.code == 0
+    let rep = parseJson(readFile(outPath))
+    check rep{"verdict"}.getStr() == "PASS"
+    check rep{"violations"}.getElems().len == 0
+
+  test "invalid UTF-8 added line is UNKNOWN, never a pass":
+    let (repo, base) = seedRepo("utf8")
+    writeFile(repo / "broken.txt", "bad \xFF byte\n")
+    commitAll(repo, "add invalid utf8")
+    let head = revParse(repo, "HEAD")
+    let outPath = repo.parentDir / "report.json"
+    let r = runScript(repo, base, head, ScriptPolicy, outPath)
+    if r.code != 2:
+      echo "script-scan expected UNKNOWN, got " & $r.code & ":\n" & r.output
+    check r.code == 2
+    let rep = parseJson(readFile(outPath))
+    check rep{"verdict"}.getStr() == "UNKNOWN"
+    check rep{"unknowns"}.getElems().len > 0
+
+  test "policy parse error is UNKNOWN and writes no report":
+    let (repo, base) = seedRepo("policy")
+    writeFile(repo / "english.txt", "plain ASCII text\n")
+    commitAll(repo, "add english")
+    let head = revParse(repo, "HEAD")
+    let badPolicy = repo.parentDir / "bad-policy.yml"
+    writeFile(badPolicy,
+      "schemaVersion: \"1\"\n" &
+      "dimension: script-scan\n")
+    let outPath = repo.parentDir / "report.json"
+    let r = runScript(repo, base, head, badPolicy, outPath)
+    check r.code == 2
+    check "POLICY ERROR" in r.output
+    check fileExists(outPath) == false
+
+  test "pure rename PASSES (debt stays in place)":
+    let (repo, base) = seedRepo("rename")
+    gitIn(repo, @["mv", "src.txt", "renamed.txt"])
+    commitAll(repo, "rename")
+    let head = revParse(repo, "HEAD")
+    let outPath = repo.parentDir / "report.json"
+    let r = runScript(repo, base, head, ScriptPolicy, outPath)
+    if r.code != 0:
+      echo "script-scan expected PASS on rename, got " & $r.code & ":\n" & r.output
+    check r.code == 0
+    let rep = parseJson(readFile(outPath))
+    check rep{"verdict"}.getStr() == "PASS"
+    check rep{"renamedPaths"}.getElems().mapIt(it.getStr()).anyIt(
+      "src.txt -> renamed.txt" in it)
+
+  test "exempt-path change PASSES":
+    let (repo, base) = seedRepo("exempt")
+    writeFile(repo / "data/i18n/ko.json", "{\"greeting\": \"" & KoreanFixture & "\"}\n")
+    commitAll(repo, "i18n")
+    let head = revParse(repo, "HEAD")
+    let outPath = repo.parentDir / "report.json"
+    let r = runScript(repo, base, head, ScriptPolicy, outPath)
+    if r.code != 0:
+      echo "script-scan expected PASS on exempt path, got " & $r.code & ":\n" & r.output
+    check r.code == 0
+    let rep = parseJson(readFile(outPath))
+    check rep{"verdict"}.getStr() == "PASS"
+    check "data/i18n/ko.json" in
+      rep{"exemptedChangedPaths"}.getElems().mapIt(it.getStr())
 
 suite "attestor — out-of-tree SHA-bound attestation rejects stale commit/tree SHAs":
 
