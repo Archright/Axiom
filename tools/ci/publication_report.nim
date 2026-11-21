@@ -209,9 +209,17 @@ proc main() {.raises: [].} =
   # an out-of-venue dimension report is gating drift: the workflow and the
   # venue contract disagree about what this venue runs. Ignoring it silently
   # would let a stale/renamed dimension ride along unobserved.
+  #
+  # The signal is the REPORT FILE EXISTING, not the argument being present:
+  # the workflow passes all five `--report` paths as one static argument list
+  # on every venue (measured run 44857335107 job 136702863663 — arguing on the
+  # argument made a correctly-gated preflight read as drift). A skipped
+  # dimension uploads no artifact, so its path resolves to nothing; a
+  # dimension that actually RAN and produced a report outside its venue's
+  # set is the drift this check exists to catch.
   for r in inputs.reports:
-    if r.dimension notin required:
-      unknowns.add("report supplied for '" & r.dimension &
+    if r.dimension notin required and fileExists(r.path):
+      unknowns.add("report PRESENT for '" & r.dimension &
         "' which venue '" & inputs.venue & "' does not require (gating drift)")
 
   # policy revisions

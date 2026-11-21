@@ -512,9 +512,26 @@ suite "report — venue gate, skipped is UNKNOWN, failure is FAIL, missing repor
     # 3) a NON-required dimension reporting success may never contribute credit → FAIL
     check run(bins[5], preBase & preJobs.mapIt(
       if it.endsWith("license-scan=skipped"): "--job=license-scan=success" else: it)).code == 1
-    # 4) an out-of-venue report is gating drift → UNKNOWN, never silently ignored
+    # 4) an out-of-venue report that was ACTUALLY PRODUCED is gating drift →
+    #    UNKNOWN, never silently ignored. The signal is the file existing: the
+    #    workflow passes all five --report paths as one static list on every
+    #    venue, so argument presence alone is not drift (measured run
+    #    44857335107 job 136702863663).
     check run(bins[5], preBase & preJobs &
       @["--report", "license-scan=" & (d / "license-scan.json")]).code == 2
+    # 5) the SAME argument pointing at a path that was never produced (a
+    #    skipped dimension uploads no artifact) is NOT drift → PASS. This is
+    #    the measured live shape of a correctly gated preflight.
+    let absent = d / "never-produced"
+    check fileExists(absent / "license-scan.json") == false
+    check fileExists(absent / "dependency-scan.json") == false
+    check fileExists(absent / "provenance.json") == false
+    check fileExists(absent / "sbom.json") == false
+    check run(bins[5], preBase & preJobs &
+      @["--report", "license-scan=" & (absent / "license-scan.json"),
+        "--report", "dependency-scan=" & (absent / "dependency-scan.json"),
+        "--report", "provenance=" & (absent / "provenance.json"),
+        "--report", "sbom=" & (absent / "sbom.json")]).code == 0
 
   test "venue is required and closed":
     let d = fixtureDir("rep_venue")
