@@ -13,15 +13,16 @@ include ci/checker.mk
 include ci/test_fast_one_slot.mk
 NIMBLE := $(HOME)/.nimble/bin/nimble
 
-NIMBLE_PKGS := $(HOME)/.nimble/pkgs2
-CHECKSUMS_PATH := $(wildcard $(NIMBLE_PKGS)/checksums-*)
-FUSION_PATH := $(wildcard $(NIMBLE_PKGS)/fusion-*)
+# NIMBLE_PKGS / CHECKSUMS_PATH / FUSION_PATH are NOT redefined here: the only
+# definition is ci/checker.mk:15-27 (DEBT#509), so the two consumers of
+# NIM_TOOL_FLAGS cannot drift apart.
 # Resolve the toolchain ROOT (must contain compiler/*.nim for kernel builds
 # importing compiler/[ast, idents]). `which nim` can point at the choosenim
 # shim in ~/.nimble/bin whose parent has no compiler/ — observed on the CX23
 # ephemeral runner — so prefer the canonical choosenim toolchain when present.
 NIM_TOOLCHAIN_ROOT := $(if $(wildcard $(HOME)/.choosenim/toolchains/nim-2.2.10/compiler/ast.nim),$(HOME)/.choosenim/toolchains/nim-2.2.10,$(patsubst %/bin/nim,%,$(shell which nim 2>/dev/null || echo $(HOME)/.choosenim/toolchains/nim-2.2.10/bin/nim)))
-NIM_TOOL_FLAGS := --hints:off --skipParentCfg --skipProjCfg --nimcache:build/nimcache/tools --path:$(NIM_TOOLCHAIN_ROOT) --path:. --path:src --path:tools --path:$(CHECKSUMS_PATH) --path:$(FUSION_PATH)
+# Tool builds use the checker.mk flag set verbatim plus their own nimcache.
+NIM_TOOL_FLAGS += --nimcache:build/nimcache/tools
 
 # CI 환경 변수 자동 감지 ($$CI 이스케이프)
 IS_CI := $(shell if [ "$$CI" = "true" ]; then echo "true"; else echo "false"; fi)
@@ -1267,6 +1268,7 @@ test-unit:
 	@nim c -r tests/ci/test_landing_observe_acceptance.nim
 	@nim c -r tests/ci/test_l3_guard_fail_closed.nim
 	@nim c -r tests/ci/test_vs0_admission_aggregate_fail_closed.nim
+	@nim c -r tests/ci/test_nimble_pkg_path_failclosed.nim
 	@nim c -r tests/cli/test_merge_cli.nim
 	@nim c -r tests/cli/test_report_cli.nim
 	@nim c -r tests/cli/test_evidence_bundle_v2.nim

@@ -13,12 +13,22 @@ SHELL := /bin/bash
 
 NIM ?= nim
 NIMBLE_PKGS := $(HOME)/.nimble/pkgs2
-CHECKSUMS_PATH := $(wildcard $(NIMBLE_PKGS)/checksums-*)
-FUSION_PATH := $(wildcard $(NIMBLE_PKGS)/fusion-*)
+# DEBT#509: a missing Nimble package must break the build instead of becoming
+# an empty --path: argument. `wildcard` yields the empty string when the
+# directory is absent and an empty --path: is a silent no-op for Nim, so the
+# compile failed later with a misleading "cannot open file: checksums/sha2".
+# First match only: several matches used to be interpolated space-separated,
+# which emitted a bare directory token instead of a --path: argument.
+# Recursive (=) on purpose: $(error) fires when a recipe consuming the value is
+# expanded, so targets that never compile still work on a host without the
+# nimble closure while no empty path can ever reach the compiler.
+AXIOM_NIMBLE_PKG = $(or $(firstword $(wildcard $(NIMBLE_PKGS)/$(1)-*)),$(error [DEBT#509] Nimble package '$(1)' is missing: no $(NIMBLE_PKGS)/$(1)-* directory. Install it with: nimble install $(1)))
+CHECKSUMS_PATH = $(call AXIOM_NIMBLE_PKG,checksums)
+FUSION_PATH = $(call AXIOM_NIMBLE_PKG,fusion)
 # Resolve the toolchain ROOT (must contain compiler/*.nim for kernel builds
 # importing compiler/[ast, idents]).
 NIM_TOOLCHAIN_ROOT := $(if $(wildcard $(HOME)/.choosenim/toolchains/nim-2.2.10/compiler/ast.nim),$(HOME)/.choosenim/toolchains/nim-2.2.10,$(patsubst %/bin/nim,%,$(shell which nim 2>/dev/null || echo $(HOME)/.choosenim/toolchains/nim-2.2.10/bin/nim)))
-NIM_TOOL_FLAGS := --hints:off --skipParentCfg --skipProjCfg --path:$(NIM_TOOLCHAIN_ROOT) --path:. --path:src --path:tools --path:$(CHECKSUMS_PATH) --path:$(FUSION_PATH)
+NIM_TOOL_FLAGS = --hints:off --skipParentCfg --skipProjCfg --path:$(NIM_TOOLCHAIN_ROOT) --path:. --path:src --path:tools --path:$(CHECKSUMS_PATH) --path:$(FUSION_PATH)
 
 # ci-compile per-product nimcache (DEBT#481 isolation, see ci-compile).
 # Stays INSIDE build/nimcache/ so the ci-bootstrap-artifacts B-cache payload
