@@ -99,6 +99,16 @@ PR #287의 merge_group verdict에서 관측된 `rotationCheck`:
 
 A6가 `src/generated/type_registry_metadata.json`을 수록한 것과 **동일 fix class**이며, production `src/`가 아니다(generated data). 열거형만 — glob 없음(A4).
 
+## §5d. 네 번째 회전 — gate_hook 게이트웨이 테스트 동반 (#285, A8 (iv))
+
+PR #285(DEBT#520, head `03dc481`)의 diff 실측(origin/main 대비 5경로)에서 허용 집합 밖 1경로가 확인됐다:
+
+| 경로 | 클래스 | 근거 |
+|---|---|---|
+| `tests/gateway/gate_hook_feature_test.nim` | 회전 멤버 gateway 계약 테스트 | 회전 대상 `src/gate/runners/gate_hook.nim`(클로저 멤버)의 AOT pre-flight manifest `.nim` 해석을 단언. A8 (ii)의 `axiom_status_feature_test.nim`과 동일 클래스. |
+
+나머지 4경로는 이미 허용: `src/gate/runners/gate_hook.nim`(클로저 멤버), `config/trusted_checker_closure.json`(pin), `data/architecture_debt.json`·`src/generated/type_registry_metadata.json`(allowlist extra).
+
 ## §6. 승인 기록
 
 | 항목 | 값 |

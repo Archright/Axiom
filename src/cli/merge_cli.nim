@@ -525,7 +525,18 @@ const
     "tests/cli/test_config_cli.nim",
     "tests/features/axiom_status.feature",
     "tests/gateway/axiom_status_feature_test.nim",
-    "data/feature_manifest.json"]
+    "data/feature_manifest.json",
+    # Amendment A8 (iv) gate_hook 회전 동반 (2026-11-21, PR #285 diff 실측 —
+    # changed 5경로 중 차단 1경로). 회전 대상: 클로저 멤버
+    # src/gate/runners/gate_hook.nim (DEBT#520 — AOT pre-flight manifest
+    # entry의 .nim 해석 40/54 누락 수정). 동반 경로는 "회전 대상 멤버의 계약
+    # 동반" 클래스이며 production src/가 아니다(A2 (i) 무관):
+    # - tests/gateway/gate_hook_feature_test.nim: 변경된 멤버의 gateway 계약
+    #   테스트(A8 (ii)의 axiom_status_feature_test와 동일 클래스).
+    # 비확장 근거: ①은 ROTATION 경로에서만 평가되므로(A2 (ii)) NORMAL 경로의
+    # 이 경로 취급은 불변이며, 본 등재는 회전 승인 범위를 넓히지 않는다.
+    # 열거형만 — glob 없음(A4 규율). 근거: ADR-0025 Amendment A8 (iv).
+    "tests/gateway/gate_hook_feature_test.nim"]
   ## VS-1 회전핀 프리플라이트 (2026-10-20): H2(④) 판정을 리프 모듈
   ## core/policy/rotation_closure_facts로 추출해 착지 predicate와 PR-head
   ## 오라클(tools/ci/rotation_pin_anchor_check.nim)이 **하나의 컴파일 구현**을
