@@ -1,12 +1,11 @@
 {
   "slice": "vs-282 publication venue split",
   "date": "2026-11-21",
-  "status": "BEFORE_RECORDED_AFTER_PENDING",
+  "status": "AFTER_RECORDED",
   "definitions": "docs/spec/ci_critical_path_metric.md",
   "decision": "docs/adr/0043-publication-venue-split.md",
   "issue": 282,
   "purpose": "Free 조직의 20 동시 job 한도에서 merge queue가 지속 운영되도록, 검증의 완전성과 판정 권위를 유지한 채 PR 단계의 중복 실행만 제거한다.",
-
   "authorityMap": {
     "mergeAuthority": "GitHub repository ruleset 27097366 (and 27525972) — Axiom does not reimplement merge admission",
     "requiredContexts": 7,
@@ -26,7 +25,6 @@
       "merge": "human-gated: trust-surface changes bypass the auto-merge queue (ADR-0041 §2.6); audited MUST-T2 break-glass lane"
     }
   },
-
   "rulesetState": {
     "rulesetId": 27097366,
     "change": "merge_queue.parameters.max_entries_to_build: 2 -> 1",
@@ -35,7 +33,6 @@
     "rollback": "PUT the before-JSON with max_entries_to_build=2; the same readback procedure verifies the restoration.",
     "secondRulesetObserved": "27525972 (main-admission) requires admission-check:5795152 alone, active, bypass_actors=[]. Not modified by this slice."
   },
-
   "before": {
     "note": "Natural observations, not synthetic benchmarks. Executed job count = jobs with status=completed and conclusion!=skipped at the terminal attempt.",
     "prPush": {
@@ -56,21 +53,61 @@
         "observer-manifest-consistency": 1,
         "dependabot-auto-merge": 0
       },
-      "runIds": [44855583247, 44855583441, 44855583317, 44855583520, 44855583358, 44855583283, 44855583387, 44855583406, 44855583357, 44855583374, 44855583475, 44855583398]
+      "runIds": [
+        44855583247,
+        44855583441,
+        44855583317,
+        44855583520,
+        44855583358,
+        44855583283,
+        44855583387,
+        44855583406,
+        44855583357,
+        44855583374,
+        44855583475,
+        44855583398
+      ]
     },
     "publicationPrRun": {
       "runId": 44853943828,
       "executedJobs": 9,
       "jobStartedCompleted": {
-        "sbom": ["02:05:57", "02:06:50"],
-        "dependency-scan": ["02:06:02", "02:06:38"],
-        "secret-scan": ["02:06:31", "02:07:37"],
-        "license-scan-shards (0)": ["02:07:11", "02:11:51"],
-        "license-scan-shards (1)": ["02:07:28", "02:11:14"],
-        "license-scan-shards (2)": ["02:06:52", "02:12:28"],
-        "provenance": ["02:07:39", "02:08:30"],
-        "license-scan": ["02:12:30", "02:12:55"],
-        "publication-integrity": ["02:12:58", "02:13:54"]
+        "sbom": [
+          "02:05:57",
+          "02:06:50"
+        ],
+        "dependency-scan": [
+          "02:06:02",
+          "02:06:38"
+        ],
+        "secret-scan": [
+          "02:06:31",
+          "02:07:37"
+        ],
+        "license-scan-shards (0)": [
+          "02:07:11",
+          "02:11:51"
+        ],
+        "license-scan-shards (1)": [
+          "02:07:28",
+          "02:11:14"
+        ],
+        "license-scan-shards (2)": [
+          "02:06:52",
+          "02:12:28"
+        ],
+        "provenance": [
+          "02:07:39",
+          "02:08:30"
+        ],
+        "license-scan": [
+          "02:12:30",
+          "02:12:55"
+        ],
+        "publication-integrity": [
+          "02:12:58",
+          "02:13:54"
+        ]
       }
     },
     "publicationMgRun": {
@@ -88,14 +125,24 @@
       "queuedSecondsMedian": 44.0
     }
   },
-
   "expectedDelta": {
-    "prPublicationExecutedJobs": { "before": 9, "after": 2, "delta": -7 },
-    "prPushExecutedJobs": { "before": 32, "after": 25, "delta": -7 },
-    "landingPublicationExecutedJobs": { "before": 9, "after": 9, "delta": 0 },
+    "prPublicationExecutedJobs": {
+      "before": 9,
+      "after": 2,
+      "delta": -7
+    },
+    "prPushExecutedJobs": {
+      "before": 32,
+      "after": 25,
+      "delta": -7
+    },
+    "landingPublicationExecutedJobs": {
+      "before": 9,
+      "after": 9,
+      "delta": 0
+    },
     "honestLimit": "25 > 20. A single PR push still exceeds the Free organization's concurrent-job limit after this slice. The venue split reduces saturation but does not remove it; the remaining dominant term is admission-gate's 13 executed PR jobs."
   },
-
   "judgments": {
     "J1_semanticParity": {
       "verdict": "PASS",
@@ -117,7 +164,6 @@
       "evidence": "AXIOM_PROVE_WORKERS occurrences in .github/workflows/publication-integrity.yml: 0"
     }
   },
-
   "invariantsHeld": {
     "requiredContextName": "publication-integrity (unchanged)",
     "jobId": "publication-integrity (unchanged)",
@@ -130,14 +176,152 @@
     "trustSurfaceManifestModified": false,
     "bypassActorsDuringNormalOperation": []
   },
-
-  "after": null,
-
+  "after": {
+    "note": "Same counting rule as before: executed job = status=completed and conclusion!=skipped at the terminal attempt, queried per PR-event workflow run at the PR head.",
+    "prPush": {
+      "headSha": "b238a07ebf0f7f995d3ccf3db29eab1b3fdde61a",
+      "prRuns": 12,
+      "executedJobsTotal": 25,
+      "byWorkflow": {
+        "admission-gate": 13,
+        "publication-integrity": 2,
+        "axiom-operational-slice": 2,
+        "bsec-integrity": 1,
+        "debt-registry-gate": 1,
+        "generation-acceptance": 1,
+        "repository-surface": 1,
+        "trusted-writer-set": 1,
+        "tests-ci-unit-diagnostic": 1,
+        "fresh-prove-observation": 1,
+        "observer-manifest-consistency": 1,
+        "dependabot-auto-merge": 0
+      },
+      "runIds": [
+        44858413583,
+        44858413413,
+        44858413451,
+        44858413488,
+        44858413495,
+        44858413505,
+        44858413418,
+        44858413621,
+        44858413585,
+        44858413634,
+        44858413712,
+        44858413447
+      ],
+      "observedDelta": "publication-integrity 9 -> 2 executed jobs; every other workflow unchanged; total 32 -> 25."
+    },
+    "publicationPrRun": {
+      "runId": 44858413418,
+      "conclusion": "success",
+      "executedJobs": 2,
+      "jobStartedCompleted": {
+        "secret-scan": [
+          "02:54:58",
+          "02:55:42"
+        ],
+        "publication-integrity": [
+          "02:55:44",
+          "02:56:26"
+        ]
+      },
+      "skippedJobs": [
+        "sbom",
+        "dependency-scan",
+        "license-scan-shards",
+        "provenance",
+        "license-scan"
+      ],
+      "observation": "The preflight venue ran exactly the enumerated required dimension (secret-scan) plus the never-skipped aggregator, and the landing-only dimensions were skipped rather than reported green."
+    },
+    "landingAcceptanceOnCanonicalMain": {
+      "trigger": "gh workflow run publication-integrity.yml --ref main",
+      "runId": 44859126568,
+      "headSha": "1ce9ac26d70ede9fcb1ba70c6fcdf47e81e463a5",
+      "purpose": "Prove the landing venue still runs all five dimensions on the landed canonical main SHA after the split.",
+      "conclusion": "success",
+      "createdAt": "2026-11-21T03:03:28Z",
+      "updatedAt": "2026-11-21T03:11:45Z",
+      "executedJobs": 9,
+      "jobs": {
+        "sbom": [
+          "03:03:43",
+          "03:04:08"
+        ],
+        "secret-scan": [
+          "03:03:54",
+          "03:04:31"
+        ],
+        "provenance": [
+          "03:04:29",
+          "03:04:50"
+        ],
+        "license-scan-shards (2)": [
+          "03:05:01",
+          "03:09:11"
+        ],
+        "dependency-scan": [
+          "03:05:12",
+          "03:06:09"
+        ],
+        "license-scan-shards (0)": [
+          "03:05:12",
+          "03:09:22"
+        ],
+        "license-scan-shards (1)": [
+          "03:05:15",
+          "03:10:40"
+        ],
+        "license-scan": [
+          "03:10:42",
+          "03:11:14"
+        ],
+        "publication-integrity": [
+          "03:11:16",
+          "03:11:45"
+        ]
+      },
+      "result": "PASS — the landing venue executed all five dimensions (9 jobs) on the landed canonical main SHA and the aggregator reported success. The venue split removed zero landing coverage; it only removed PR-venue duplication.",
+      "semantics": "workflow_dispatch is a landing-venue event by the closed enum, so this proves the landing branch of the venue selector against real main content, not a PR merge commit."
+    },
+    "mergePath": {
+      "pr": 291,
+      "mergeCommit": "1ce9ac26d70ede9fcb1ba70c6fcdf47e81e463a5",
+      "mergedAt": "2026-11-21T03:02:10Z",
+      "lane": "audited MUST-T2 break-glass: trust-surface PR, so the Admission App refused its own verdict (trust_surface=FAIL mismatch:.github/workflows/publication-integrity.yml) and the PR could not enter the auto-merge queue.",
+      "windowOpenedAt": "2026-11-21T03:02:04Z",
+      "windowClosedAt": "2026-11-21T03:02:14Z",
+      "windowSeconds": 10,
+      "restorationReadback": {
+        "27097366": {
+          "bypass_actors": 0,
+          "current_user_can_bypass": "never",
+          "enforcement": "active",
+          "requiredContexts": 7,
+          "max_entries_to_build": 1
+        },
+        "27525972": {
+          "bypass_actors": 0,
+          "current_user_can_bypass": "never",
+          "enforcement": "active",
+          "requiredContexts": 1
+        }
+      }
+    },
+    "liveDefectFoundAndFixedByThisSlice": {
+      "signal": "run 44857335107 job 136702863663 — this PR's own preflight reported 'PREFLIGHT UNKNOWN — gating drift: report supplied for license-scan'",
+      "cause": "The workflow passes all five --report paths as one static argument list on every venue, so 'argument present' carried no information about whether the dimension ran. The evaluator read presence as drift.",
+      "fix": "Drift signal is now the REPORT FILE EXISTING (a skipped dimension uploads no artifact). Pinned in both directions by tests: case 4 (produced file -> UNKNOWN) and case 5 (same arguments, never-produced paths -> PASS).",
+      "commit": "b238a07ebf0f7f995d3ccf3db29eab1b3fdde61a"
+    }
+  },
   "limits": [
     "The PR-venue job-count metric is auxiliary: the canonical cohort in ci_critical_path_metric.md §1 is merge_group x admission-gate, which this change does not touch.",
-    "A single PR push remains above the 20-job limit (25 vs 20) after this slice.",
-    "peak<=16 is a hypothesis, not an outcome. Verifying it requires a natural burst of >=3 concurrent PR pushes; the canonical wall/runner percentiles require n>=20 merge_group samples.",
-    "No SLO is claimed from n<20.",
-    "24h without a defect is operational evidence, not a structural impossibility proof."
+    "A single PR push remains above the 20-job limit (25 vs 20) after this slice. The remaining dominant term is admission-gate's 13 executed PR jobs, produced under the external Admission App's contract.",
+    "peak<=16 is still a hypothesis, not an outcome. Verifying it requires a natural burst of >=3 concurrent PR pushes; the canonical wall/runner percentiles require n>=20 merge_group samples.",
+    "No SLO is claimed from n<20, and no claim is made that a single required-verifier outage cannot block merges.",
+    "24h without a defect is operational evidence, not a structural impossibility proof.",
+    "The landed merge used the audited break-glass lane because the change is a trust-surface change; the bypass window existed for 10 seconds and was restored with a readback in the same script invocation."
   ]
 }
