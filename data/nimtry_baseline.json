@@ -1,9 +1,9 @@
 {
   "version": 2,
-  "created": "2026-11-21T09:08:53+09:00",
-  "total_violations": 4374,
+  "created": "2026-11-21T17:36:20+09:00",
+  "total_violations": 4381,
   "by_severity": {
-    "warning": 4000,
+    "warning": 4007,
     "error": 374
   },
   "violations": [
@@ -64,164 +64,164 @@
       "severity": "warning"
     },
     {
-      "id": "bf856e8f27d7840f544a6ac366c14eca70d0e52da684490a28c94c81f200327c",
+      "id": "c35f7534a6853596cd08b5f87679ce2409223449b25505479c5cabfcd838b9a7",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:590 function runBatchVerification spans 328 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:590 function runBatchVerification spans 354 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "80a96172c053a47b1f69f784bb891c6f9d85752fd66566853a6785088f24ed22",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:1314 function loadBase36OverlayDomain spans 63 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:1355 function loadBase36OverlayDomain spans 63 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "a25793452eac0841ab288bbc3a1f581ef71162308c2c8cb6aea3b3b2c6d40441",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:1463 function loadBase32RemOverlayDomain spans 61 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:1504 function loadBase32RemOverlayDomain spans 61 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "ee1dd821873b72e36cc6b5eba8f9cdc3803fab0d2c3eef07f3504e16e7da0113",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:1631 function validateCoutOverlayNode spans 65 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:1672 function validateCoutOverlayNode spans 65 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "d45afc0564969851a7201888d3da982561d183b4d0bd03cbb642e62005ea8419",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:1935 function validateTomlD2AgentOverlayNode spans 98 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:1976 function validateTomlD2AgentOverlayNode spans 98 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "406c7ddf57a37198c08d0c7310aea5b253a44445c5e8b2725e31aebb91baeb00",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:2416 function validateNimLibp2pBytesviewSliceOverlayNode spans 88 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:2457 function validateNimLibp2pBytesviewSliceOverlayNode spans 88 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "b404fab962dbe843c4970374248593b1bfead561bd825879274e433fc5b747be",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:2868 function validateSidecarOverlayNode spans 71 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:2909 function validateSidecarOverlayNode spans 71 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "31303824c513a84ff3f5ec33f6ad8d6902054fe836b394ce87aa7c3cd1a17de0",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:3275 function substituteParamUse spans 66 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:3316 function substituteParamUse spans 66 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "4186b58f52180ebd94dc20151fca06a364f796bb86d8a8937058114992b49b80",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:3702 function validateJrpcErrclassOverlayNode spans 141 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:3743 function validateJrpcErrclassOverlayNode spans 141 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "4fcfd5b0cd2c935796128aff758d0dc316e567319a484c6c410c5e72d6a6821e",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:3988 function synthesizeJrpcErrclassCandidates spans 125 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:4029 function synthesizeJrpcErrclassCandidates spans 125 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "f79f881fad2162fde1301f81b45bada0245566c72c682cc4fb0b39f74ce2ca78",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:4192 function synthesizeTomlD2AgentCandidate spans 122 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:4233 function synthesizeTomlD2AgentCandidate spans 122 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "bf506c4b719aecfa9ba38ae8df9dfc81a9ac66378e3695f5cc6d5a6896d09399",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:4375 function synthesizeNimLibp2pBytesviewSliceCandidate spans 121 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:4416 function synthesizeNimLibp2pBytesviewSliceCandidate spans 121 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "51722c9e3aa69f190b516315efafe540420314e6ef03770859784489e363c584",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:4562 function synthesizeNimSidecarCandidates spans 192 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:4603 function synthesizeNimSidecarCandidates spans 192 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "4c9bda5768ea5ce1f90d532efe0e74473757accbbb536f51c84212efae4f6458",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:4779 function synthesizeBase36RelationalCandidate spans 144 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:4820 function synthesizeBase36RelationalCandidate spans 144 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "d8e734565445b1764098926501a478d31629d0b877b497fae8dbabf3164078ff",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:4967 function synthesizeBase32RemRangeCandidate spans 168 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:5008 function synthesizeBase32RemRangeCandidate spans 168 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "4a57c68ac9429521e5d8768d939e167720fa70ce06bc4e8b8f88e5edde3610ce",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:5020 function findRemTerm spans 55 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:5061 function findRemTerm spans 55 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "d72ae8dd60e478125c61fce5494574b5166984b6481b8105ea24801f232b574e",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:5191 function synthesizeBase36CoutCandidate spans 119 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:5232 function synthesizeBase36CoutCandidate spans 119 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "8f74c2349eeda0c8c8d690397ec9e3276ca707206809bf76d9108b1c2adba7f5",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:5401 function publishExternalCandidate spans 52 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:5442 function publishExternalCandidate spans 52 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "cb0ae314c6abb2f8425305a6a9d672fd3328f742875c5ad85aa0a00bb587e53a",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:6133 function runVerificationWaves spans 79 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:6174 function runVerificationWaves spans 79 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "23fcc011f268f0a75c14c48ad43e76bc0c22596ec4bc80435878641ffe5bb82a",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:6648 function prepareProofRun spans 240 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:6689 function prepareProofRun spans 240 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
-      "id": "a5a1d693c76ae98dfd76efd696901f277de8482583df0ccdaf6bfecf46454fc7",
+      "id": "a3fc4361c3d1a29b4f8206c908d88fdd111e29afd14ab66bc974ba8cb9cff192",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:6960 function appendDisplayAndPersist spans 118 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:7001 function appendDisplayAndPersist spans 122 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "9a25fa23ae9cdc0a3e0ae6f54b460b697884ad591912809bb6d153a1c6406b8a",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:7103 function runProofPipeline spans 52 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:7148 function runProofPipeline spans 52 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "9d157af42d3928f82a3342e6fd864ee86038f11efbd5188344bd60cba2862753",
       "rule": "SOLID",
       "file": "src/cli/axiom_engine.nim",
-      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:7192 function runAxiomEngineCli spans 163 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/axiom_engine.nim:7237 function runAxiomEngineCli spans 163 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -253,10 +253,10 @@
       "severity": "warning"
     },
     {
-      "id": "2740112b12951f2486ef113e761ebc61e30c50e6eb332397f2b28c34568c7a75",
+      "id": "d263ad673bcb703d125e27175f12774b2c8f89605e6bbbc0a1b03c2401bce8a8",
       "rule": "SOLID",
       "file": "src/cli/cert_cli.nim",
-      "detail": "[soc-surface-area] src/cli/cert_cli.nim:828 function runWitnessOnlyCli spans 117 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/cli/cert_cli.nim:828 function runWitnessOnlyCli spans 119 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -565,13 +565,6 @@
       "rule": "SOLID",
       "file": "src/cli/subagent_orchestrator.nim",
       "detail": "[soc-surface-area] src/cli/subagent_orchestrator.nim:174 function cmdSelfTest spans 70 effective SLOC (max 50)",
-      "severity": "warning"
-    },
-    {
-      "id": "36d4f0fff495ace06e0d74dceea9f4ab73c2488c22f73becce796859ca930b82",
-      "rule": "SOLID",
-      "file": "src/cli/topology_cli.nim",
-      "detail": "[soc-surface-area] src/cli/topology_cli.nim:359 function analyzeTopologySourceRoot spans 52 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -1047,7 +1040,7 @@
       "id": "dbba137d9ace052e0ad2723df7d1ab290073a0363a4726de83861a90b1ba27ec",
       "rule": "SOLID",
       "file": "src/core/judge/lean_replay.nim",
-      "detail": "[soc-surface-area] src/core/judge/lean_replay.nim:226 function runLeanReplay spans 107 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/core/judge/lean_replay.nim:268 function runLeanReplay spans 107 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -1457,10 +1450,10 @@
       "severity": "warning"
     },
     {
-      "id": "0ebf39abaaf78740f88fd19308efe601d17b9d2611029b180271639998ba32af",
+      "id": "cb4f709d8bfd82c8b8a9677fe61ed04547414fdc2fc789a0b553dd3f91990bdb",
       "rule": "SOLID",
       "file": "src/core/topology/merkle_cache.nim",
-      "detail": "[soc-surface-area] src/core/topology/merkle_cache.nim:179 function jsonToEntry spans 85 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/core/topology/merkle_cache.nim:180 function jsonToEntry spans 91 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -1506,10 +1499,10 @@
       "severity": "warning"
     },
     {
-      "id": "4bcc83534d062af341fa204b7a480f0f9688fb7f8d44db21749c1dbf86c4480c",
+      "id": "c88ebcf0d00787d2e3eeb26d02108021f8d408f38ae10d716a837d41c35b15ac",
       "rule": "SOLID",
       "file": "src/core/topology/topology_engine.nim",
-      "detail": "[soc-surface-area] src/core/topology/topology_engine.nim:333 function analyzeTopologySourceRootIncremental spans 124 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/core/topology/topology_engine.nim:334 function analyzeTopologySourceRootIncremental spans 131 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -2444,10 +2437,10 @@
       "severity": "warning"
     },
     {
-      "id": "c9af0760dc8a9f0839113b857d55b75253e26219ccf9a1c022efc85b78b33db6",
+      "id": "fca16b6ef85560ee006bae51d47e68669785bcea536aa040b68945542c5e7227",
       "rule": "SOLID",
       "file": "src/gate/runners/debt_integrity_gate.nim",
-      "detail": "[soc-surface-area] src/gate/runners/debt_integrity_gate.nim:269 function run spans 94 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/gate/runners/debt_integrity_gate.nim:303 function run spans 98 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -2598,17 +2591,17 @@
       "severity": "warning"
     },
     {
-      "id": "8c4ce09572e87558936ff3b1056b98b1b58a4cb52d38d264823ba8f28d89eddc",
+      "id": "bd944b526cfce7c921987fa1af87df8a5b59c25879b6a36d1e52cf7e6a0b4e43",
       "rule": "SOLID",
       "file": "src/gate/runners/readiness_start_gate.nim",
-      "detail": "[soc-surface-area] src/gate/runners/readiness_start_gate.nim:167 function collectEvidenceIdentity spans 56 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/gate/runners/readiness_start_gate.nim:190 function collectDeclaredEvidenceIdentity spans 56 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "d752dea34384fe08d9ae44a91bd228faeaac3afa3bd209bcb559d101064b9010",
       "rule": "SOLID",
       "file": "src/gate/runners/readiness_start_gate.nim",
-      "detail": "[soc-surface-area] src/gate/runners/readiness_start_gate.nim:370 function runEvaluator spans 52 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/gate/runners/readiness_start_gate.nim:450 function runEvaluator spans 52 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -3046,24 +3039,24 @@
       "severity": "warning"
     },
     {
-      "id": "d1236b13367aaa3fac5dee84ed05666f80347ed07b10d95ad293bb00780ca7a0",
+      "id": "d79c159c7a63238129315b0fdce5baed3e674b782f775ab025f207ff73783c5c",
       "rule": "SOLID",
       "file": "src/verification/attestation_orchestrator.nim",
-      "detail": "[soc-surface-area] src/verification/attestation_orchestrator.nim has 25 exported functions (layer verification max 20)",
+      "detail": "[soc-surface-area] src/verification/attestation_orchestrator.nim has 26 exported functions (layer verification max 20)",
       "severity": "warning"
     },
     {
       "id": "44e5044b24ebacf9c71c84e152f73a6af558052858d6dfb23c4d1a1ef22ca927",
       "rule": "SOLID",
       "file": "src/verification/attestation_orchestrator.nim",
-      "detail": "[soc-surface-area] src/verification/attestation_orchestrator.nim:489 function planEvidenceCasWithTransport spans 51 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/verification/attestation_orchestrator.nim:494 function planEvidenceCasWithTransport spans 51 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
-      "id": "dcb8e3944c3b26a1e38d46b45c1727f613737eaa2d180a40246499b3c2be128b",
+      "id": "a46655d120c925c2ad2ec8491a1eeeacb0ef5605ee44228620319a12fd108f36",
       "rule": "SOLID",
       "file": "src/verification/attestation_witness.nim",
-      "detail": "[soc-surface-area] src/verification/attestation_witness.nim:308 function decodeWitnessSemantic spans 59 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/verification/attestation_witness.nim:347 function decodeWitnessSemantic spans 63 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -3140,21 +3133,21 @@
       "id": "cceb59254e42331c66b34393d833035f50ef71029f853e4e4e6561b26348dc0c",
       "rule": "SOLID",
       "file": "src/verification/batch_uap/loop_driver.nim",
-      "detail": "[soc-surface-area] src/verification/batch_uap/loop_driver.nim:189 function stage1CacheCheck spans 118 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/verification/batch_uap/loop_driver.nim:234 function stage1CacheCheck spans 118 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "3e33ac4c41581ff3c592a43c642ba9c1055fb61c3f05c2b5e0d0eef73e00404e",
       "rule": "SOLID",
       "file": "src/verification/batch_uap/loop_driver.nim",
-      "detail": "[soc-surface-area] src/verification/batch_uap/loop_driver.nim:391 function stage2Budget spans 272 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/verification/batch_uap/loop_driver.nim:436 function stage2Budget spans 272 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
-      "id": "0a8c5ea23d6f9404bf31a01bd56b53d35406bea6c300d0a78a16e8adef76970e",
+      "id": "b6802aa80503571831c8fe201a48137d51b0536a75aab604cf77c3d14acbe1ca",
       "rule": "SOLID",
       "file": "src/verification/batch_uap/loop_driver.nim",
-      "detail": "[soc-surface-area] src/verification/batch_uap/loop_driver.nim:769 function runBatchUapOrchestration spans 624 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/verification/batch_uap/loop_driver.nim:814 function runBatchUapOrchestration spans 631 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -3326,17 +3319,24 @@
       "severity": "warning"
     },
     {
-      "id": "4341a59af5e156efe81bf5ff41a25ca18dab08ce9e198c47c3a49e37322d0712",
+      "id": "c047b19f5fe462cd00c5cc53e553ed3e65a19a344ad5d0835c05ac4604960562",
       "rule": "SOLID",
       "file": "src/verification/certificate_verifier.nim",
-      "detail": "[soc-surface-area] src/verification/certificate_verifier.nim:54 function isDeepVerified spans 56 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/verification/certificate_verifier.nim:58 function isDeepVerified spans 67 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
-      "id": "8fc0b0b2c8b29db1cd1563db87731f0bc2b01f1936b1026acf980cd752364205",
+      "id": "0b54a33e7bacf36c42e01488d9ffffd4a975c2621107f9d37a5a69c306d6b9e7",
       "rule": "SOLID",
       "file": "src/verification/certificate_verifier.nim",
-      "detail": "[soc-surface-area] src/verification/certificate_verifier.nim:216 function verifyCertificateClosureNode spans 64 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/verification/certificate_verifier.nim:253 function subjectObservationProblem spans 95 effective SLOC (max 50)",
+      "severity": "warning"
+    },
+    {
+      "id": "e002abaf17f363b94c5b77474ea810505bf7ec782904a4ecf2c94d91fcdff94e",
+      "rule": "SOLID",
+      "file": "src/verification/certificate_verifier.nim",
+      "detail": "[soc-surface-area] src/verification/certificate_verifier.nim:366 function verifyCertificateClosureNode spans 69 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -3529,6 +3529,41 @@
       "severity": "warning"
     },
     {
+      "id": "05162a428e03c5870b45133d54d2cfa5522589626ba8ca991357b829bf0f38db",
+      "rule": "SOLID",
+      "file": "src/verification/kernel_reexecution.nim",
+      "detail": "[soc-surface-area] src/verification/kernel_reexecution.nim has 35 exported functions (layer verification max 20)",
+      "severity": "warning"
+    },
+    {
+      "id": "c7111aa5a321280af1b78aa93ed53de75b2ab0104e9d520ee8e81bc8ea34c65e",
+      "rule": "SOLID",
+      "file": "src/verification/kernel_reexecution.nim",
+      "detail": "[soc-surface-area] src/verification/kernel_reexecution.nim:235 function declaredTheorems spans 53 effective SLOC (max 50)",
+      "severity": "warning"
+    },
+    {
+      "id": "3a42ebada72cc6a50f555c5e352dd8e1e717915c20478c50be53885de0364370",
+      "rule": "SOLID",
+      "file": "src/verification/kernel_reexecution.nim",
+      "detail": "[soc-surface-area] src/verification/kernel_reexecution.nim:606 function kernelObservationValidationError spans 51 effective SLOC (max 50)",
+      "severity": "warning"
+    },
+    {
+      "id": "83024a08c84bd7fde093af7fb1bf1e916f3363f2bac6b159134e5f646f18b414",
+      "rule": "SOLID",
+      "file": "src/verification/kernel_reexecution.nim",
+      "detail": "[soc-surface-area] src/verification/kernel_reexecution.nim:1064 function checkLeanWithLeanChecker spans 51 effective SLOC (max 50)",
+      "severity": "warning"
+    },
+    {
+      "id": "dd1caa102d1954334feba02e3fee36a090d1fbf90c7ac13c025b19f0634dd925",
+      "rule": "SOLID",
+      "file": "src/verification/kernel_reexecution.nim",
+      "detail": "[soc-surface-area] src/verification/kernel_reexecution.nim:1161 function reexecuteLeanObservedKernel spans 86 effective SLOC (max 50)",
+      "severity": "warning"
+    },
+    {
       "id": "0c73286bb396eb1ebddeddeabeab03ae3256058b9bc8da03b74e166eb5c386a1",
       "rule": "SOLID",
       "file": "src/verification/lean_lsp_compiler.nim",
@@ -3634,10 +3669,10 @@
       "severity": "warning"
     },
     {
-      "id": "69f9559c8498a8e4387b8a1fcfe4c405ce57d3ec40f9ccd646367f8a4b7249c7",
+      "id": "7b795d5d44086ed8edb42576ac07b30a631c3fe74db723e755079a8c6d65f289",
       "rule": "SOLID",
       "file": "src/verification/ledger_side_ref.nim",
-      "detail": "[soc-surface-area] src/verification/ledger_side_ref.nim:509 function appendCertificate spans 77 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/verification/ledger_side_ref.nim:511 function appendCertificate spans 79 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -4170,6 +4205,13 @@
       "rule": "SOLID",
       "file": "src/verification/state_persistence.nim",
       "detail": "[soc-surface-area] src/verification/state_persistence.nim:37 function reconstructProofStateFromCertificates spans 111 effective SLOC (max 50)",
+      "severity": "warning"
+    },
+    {
+      "id": "a6e2ad4ead84bac9175ebb30eea2f4e1372b0f70672f30d3eb7757a7d49364d1",
+      "rule": "SOLID",
+      "file": "src/verification/subject_continuity_writer.nim",
+      "detail": "[soc-surface-area] src/verification/subject_continuity_writer.nim:209 function subjectCertCoreFields spans 68 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -5724,6 +5766,13 @@
       "rule": "SOLID",
       "file": "src/verification/judgment_cas.nim",
       "detail": "[solid-ocp] src/verification/judgment_cas.nim has 72 case branches but 0 calls to registry functions [register, registerImpl]; consider using registry/dispatch pattern for OCP compliance",
+      "severity": "warning"
+    },
+    {
+      "id": "83ab1c2e7f15c135a1dcfc39694492c9020cb64420ed01c37703b92c43e13cf3",
+      "rule": "SOLID",
+      "file": "src/verification/kernel_reexecution.nim",
+      "detail": "[solid-ocp] src/verification/kernel_reexecution.nim has 15 case branches but 0 calls to registry functions [register, registerImpl]; consider using registry/dispatch pattern for OCP compliance",
       "severity": "warning"
     },
     {
@@ -9206,13 +9255,6 @@
       "severity": "warning"
     },
     {
-      "id": "167cd229093fcaffed87a8e14781493106f803cb0b5b2f8ccd014f4f944e4d74",
-      "rule": "SAFETY-proc-purity",
-      "file": "src/gate/runners/debt_scan_gate.nim",
-      "detail": "[safety-proc-purity] loadExemptionText (src/gate/runners/debt_scan_gate.nim:84) is proc but has no transitive I/O calls. Convert to func.",
-      "severity": "warning"
-    },
-    {
       "id": "2438b4cbda045bee44ce9c3df05177158478fc520690513dd34f5190927469d9",
       "rule": "SAFETY-proc-purity",
       "file": "src/gate/runners/decision_binding_gate.nim",
@@ -9349,7 +9391,7 @@
       "id": "9b0d23ff3691af4c91f90f3a2881516da255a80b5dec18e0145b3c35fa9ed98a",
       "rule": "SAFETY-proc-purity",
       "file": "src/gate/runners/readiness_start_gate.nim",
-      "detail": "[safety-proc-purity] writeInfraFailRecord (src/gate/runners/readiness_start_gate.nim:351) is proc but has no transitive I/O calls. Convert to func.",
+      "detail": "[safety-proc-purity] writeInfraFailRecord (src/gate/runners/readiness_start_gate.nim:431) is proc but has no transitive I/O calls. Convert to func.",
       "severity": "warning"
     },
     {
@@ -10259,7 +10301,7 @@
       "id": "4faa5c473a2c2ed7be259436a738b6f3eeb5ff25e359365dd998900e01294657",
       "rule": "SAFETY-proc-purity",
       "file": "src/verification/ledger_side_ref.nim",
-      "detail": "[safety-proc-purity] isRefConflictError (src/verification/ledger_side_ref.nim:485) is proc but has no transitive I/O calls. Convert to func.",
+      "detail": "[safety-proc-purity] isRefConflictError (src/verification/ledger_side_ref.nim:487) is proc but has no transitive I/O calls. Convert to func.",
       "severity": "warning"
     },
     {
@@ -13556,21 +13598,21 @@
       "id": "1856a5241785b6d9c6220f0c5e29fde33c40122cfe66db7e32f6fd768c32a08f",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/core/topology/merkle_cache.nim",
-      "detail": "[purity-new-code-must-be-func] src/core/topology/merkle_cache.nim:179 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/core/topology/merkle_cache.nim:180 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "1856a5241785b6d9c6220f0c5e29fde33c40122cfe66db7e32f6fd768c32a08f",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/core/topology/merkle_cache.nim",
-      "detail": "[purity-new-code-must-be-func] src/core/topology/merkle_cache.nim:277 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/core/topology/merkle_cache.nim:285 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "1856a5241785b6d9c6220f0c5e29fde33c40122cfe66db7e32f6fd768c32a08f",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/core/topology/merkle_cache.nim",
-      "detail": "[purity-new-code-must-be-func] src/core/topology/merkle_cache.nim:320 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/core/topology/merkle_cache.nim:328 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
@@ -13619,21 +13661,21 @@
       "id": "d4837ccd3b78150e8ede408fa8d63ef873bb5ecbcf2f0e9bffdf96806a0afb87",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/core/topology/topology_engine.nim",
-      "detail": "[purity-new-code-must-be-func] src/core/topology/topology_engine.nim:333 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/core/topology/topology_engine.nim:334 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "d4837ccd3b78150e8ede408fa8d63ef873bb5ecbcf2f0e9bffdf96806a0afb87",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/core/topology/topology_engine.nim",
-      "detail": "[purity-new-code-must-be-func] src/core/topology/topology_engine.nim:470 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/core/topology/topology_engine.nim:478 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "d4837ccd3b78150e8ede408fa8d63ef873bb5ecbcf2f0e9bffdf96806a0afb87",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/core/topology/topology_engine.nim",
-      "detail": "[purity-new-code-must-be-func] src/core/topology/topology_engine.nim:484 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/core/topology/topology_engine.nim:492 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
@@ -19065,56 +19107,56 @@
       "id": "8f520cbfd4df5a2ee7e335b49cfeafdaf4b5b7860a0d8ae884926bea437acfd7",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/loop_driver.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/loop_driver.nim:137 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/loop_driver.nim:164 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "8f520cbfd4df5a2ee7e335b49cfeafdaf4b5b7860a0d8ae884926bea437acfd7",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/loop_driver.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/loop_driver.nim:166 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/loop_driver.nim:211 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "8f520cbfd4df5a2ee7e335b49cfeafdaf4b5b7860a0d8ae884926bea437acfd7",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/loop_driver.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/loop_driver.nim:189 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/loop_driver.nim:234 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "8f520cbfd4df5a2ee7e335b49cfeafdaf4b5b7860a0d8ae884926bea437acfd7",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/loop_driver.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/loop_driver.nim:341 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/loop_driver.nim:386 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "8f520cbfd4df5a2ee7e335b49cfeafdaf4b5b7860a0d8ae884926bea437acfd7",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/loop_driver.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/loop_driver.nim:391 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/loop_driver.nim:436 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "8f520cbfd4df5a2ee7e335b49cfeafdaf4b5b7860a0d8ae884926bea437acfd7",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/loop_driver.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/loop_driver.nim:688 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/loop_driver.nim:733 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "8f520cbfd4df5a2ee7e335b49cfeafdaf4b5b7860a0d8ae884926bea437acfd7",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/loop_driver.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/loop_driver.nim:739 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/loop_driver.nim:784 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "8f520cbfd4df5a2ee7e335b49cfeafdaf4b5b7860a0d8ae884926bea437acfd7",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/loop_driver.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/loop_driver.nim:769 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/loop_driver.nim:814 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
@@ -19737,28 +19779,28 @@
       "id": "fb7fb5440870cac7b24b44292a5804aa9ae2b7e55325947087632c635aa3ca8d",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/certificate_verifier.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/certificate_verifier.nim:30 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/verification/certificate_verifier.nim:34 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "fb7fb5440870cac7b24b44292a5804aa9ae2b7e55325947087632c635aa3ca8d",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/certificate_verifier.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/certificate_verifier.nim:54 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/verification/certificate_verifier.nim:58 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "fb7fb5440870cac7b24b44292a5804aa9ae2b7e55325947087632c635aa3ca8d",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/certificate_verifier.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/certificate_verifier.nim:216 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/verification/certificate_verifier.nim:366 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "fb7fb5440870cac7b24b44292a5804aa9ae2b7e55325947087632c635aa3ca8d",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/certificate_verifier.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/certificate_verifier.nim:312 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/verification/certificate_verifier.nim:471 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
@@ -25670,17 +25712,17 @@
       "severity": "warning"
     },
     {
+      "id": "c83ffb09da4774fc11dc78d22fbee3743e62726eaf51f8abaffedc21cfa54c97",
+      "rule": "EFFECT-transitive-io",
+      "file": "src/gate/runners/debt_integrity_gate.nim",
+      "detail": "[effect-transitive-io] loadCanonicalStatuses transitively reaches I/O but lacks {.raises: [].}",
+      "severity": "warning"
+    },
+    {
       "id": "a0cd55b9acb7f322612935779583a11e39c3c519a031262240101bf9108fdb05",
       "rule": "EFFECT-transitive-io",
       "file": "src/gate/runners/debt_integrity_gate.nim",
       "detail": "[effect-transitive-io] run transitively reaches I/O but lacks {.raises: [].}",
-      "severity": "warning"
-    },
-    {
-      "id": "eb30a4d443c6d5ea2cb73c9af3271b88ddcb460cc1baa6721e3b2a8bb853c202",
-      "rule": "EFFECT-transitive-io",
-      "file": "src/gate/runners/debt_scan_gate.nim",
-      "detail": "[effect-transitive-io] loadExemptionText transitively reaches I/O but lacks {.raises: [].}",
       "severity": "warning"
     },
     {
@@ -26293,10 +26335,10 @@
       "severity": "warning"
     },
     {
-      "id": "7569a0cf45879838dc287e41d973a83113c9dd5730ce8e66dfe53b7cdb82b42c",
+      "id": "c7ae52b8614b4a1b1f3119ebb3a613c4a7e3664b6fa8d81e88940b8e12db4d97",
       "rule": "EFFECT-transitive-io",
       "file": "src/gate/runners/readiness_start_gate.nim",
-      "detail": "[effect-transitive-io] collectEvidenceIdentity transitively reaches I/O but lacks {.raises: [].}",
+      "detail": "[effect-transitive-io] collectDeclaredEvidenceIdentity transitively reaches I/O but lacks {.raises: [].}",
       "severity": "warning"
     },
     {
@@ -27767,6 +27809,13 @@
       "rule": "EFFECT-transitive-io",
       "file": "src/verification/kernel_reexecution.nim",
       "detail": "[effect-transitive-io] saveZ3IdentityCache transitively reaches I/O but lacks {.raises: [].}",
+      "severity": "warning"
+    },
+    {
+      "id": "9dfc4754f6a430bd5858c6cf34f5799d3914320e7c19092ec5740832e01322c5",
+      "rule": "EFFECT-transitive-io",
+      "file": "src/verification/kernel_reexecution.nim",
+      "detail": "[effect-transitive-io] leanToolchainIdentity transitively reaches I/O but lacks {.raises: [].}",
       "severity": "warning"
     },
     {
