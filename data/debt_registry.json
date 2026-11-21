@@ -5877,11 +5877,13 @@
       ],
       "source": "vs_test_herm_2026-11-17",
       "productTruthImpact": "NON_PRODUCT",
-      "status": "open",
-      "resolution": "UNRESOLVED — registration only (.github/workflows/** is agent-immutable and the slot path is consumed by admission-check.yml:4045, so repointing the recipe output requires a coordinated Makefile+workflow generation cutover outside this slice's authority). Remediation: introduce a unique per-invocation output (worktree-scoped or mktemp) in the same change that updates the workflow's slot consumption (read the binary path from a make-emitted variable or a stable per-checker name), landing as one coherent generation; until then, local multi-session use should serialize access to the lane or use distinct output paths manually.",
-      "lastVerifiedAt": "2026-11-17T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-21 (workstream/debt-552-test-slot): local multi-session lane contamination removed — test-fast-one compiles every non-CI invocation to a private mktemp directory removed on EXIT (per-invocation unique output), with TEST_FAST_ONE_OUT as the explicit consumer override. The frozen GitHub Actions callee slot is retained only for the pinned admission-check.yml consumer (ci/test_fast_one_slot.mk; admission-gate-v2 pin @7f3424c executes the binary directly), so no local session shares a binary. T= contract, -r execution, and AXIOM_CI_PRESERVE_CACHE=1 are unchanged. Evidence: make test-fast-one T=tests/unit/resolve_node_outcome_test.nim exit 0; two concurrent invocations produced two distinct output paths and both exited 0; no private temp dir remained; the pre-existing /tmp/opencode/ax-one was untouched by the runs and removed. Follow-up: retire the CI slot with the callee pin rotation.",
+      "lastVerifiedAt": "2026-11-21T03:07:57Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registration-only finding; the recipe's output path is bound to an immutable CI workflow consumer, so any change is a CI boundary cutover (AGENTS.md §2.5 coherent-generation rule) requiring workflow edits this agent cannot make. Trace: this entry's resolution (UNRESOLVED) and source (vs_test_herm_2026-11-17); external: in-session machine observations ('Text file busy' at the slot; foreign-binary execution with cross-worktree stack traces)."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registration-only finding; the recipe's output path is bound to an immutable CI workflow consumer, so any change is a CI boundary cutover (AGENTS.md §2.5 coherent-generation rule) requiring workflow edits this agent cannot make. Trace: this entry's resolution (UNRESOLVED) and source (vs_test_herm_2026-11-17); external: in-session machine observations ('Text file busy' at the slot; foreign-binary execution with cross-worktree stack traces).",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "workstream/debt-552-test-slot"
     },
     {
       "id": "DEBT#553",

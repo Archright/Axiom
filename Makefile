@@ -9,6 +9,8 @@ NIM ?= nim
 # 정의점이다 — runner-pool-acceptance.yml이 H에서 실행하는 make 타깃과 동일
 # 정의를 로컬도 사용한다 (self-contained: make -f ci/checker.mk <target>).
 include ci/checker.mk
+# Frozen admission-callee output slot (DEBT#552) — CI-only; see the file header.
+include ci/test_fast_one_slot.mk
 NIMBLE := $(HOME)/.nimble/bin/nimble
 
 NIMBLE_PKGS := $(HOME)/.nimble/pkgs2
@@ -1146,10 +1148,27 @@ test-fast: ## L1: 빠른 증분 developer verify (캐시 보존, no LTO, 병렬 
 	echo "✅ test-fast PASSED — $$i cheap deterministic unit tests green (incremental, no LTO)"
 
 # ── 명시적 단일 테스트 타겟 (자동 affected-test selection 대신 수동 선택) ──────
+# 출력 슬롯: 비-CI 호출은 호출별 private mktemp 디렉토리를 쓰고 EXIT trap으로
+# 정리한다 — 동시 세션 간 출력 바이너리를 공유하지 않는다. TEST_FAST_ONE_OUT=...
+# 은 소비자(워크플로/픽스처)용 명시 슬롯이며 정리 책임도 소비자에게 있다.
+# GitHub Actions에서만 ci/test_fast_one_slot.mk의 frozen callee 슬롯을 쓴다
+# (고정 핀이 --self-check로 직접 실행하는 계약).
 test-fast-one: ## test-fast <FILE|TARGET> — 단일 대상만 증분 검증 /usage: make test-fast-one T=testFilePath/name
 	@if [ -z "$(T)" ]; then echo "usage: make test-fast-one T=tests/unit/axiom_ir_test.nim"; exit 1; fi
 	@export AXIOM_CI_PRESERVE_CACHE=1; \
-	AXIOM_CI_PRESERVE_CACHE=1 $(NIM) c -r --hints:off --passC:-O2 --nimcache:build/nimcache/test -o:/tmp/opencode/ax-one "$(T)"
+	set -eu; \
+	if [ -n "$(TEST_FAST_ONE_OUT)" ]; then \
+	  out="$(TEST_FAST_ONE_OUT)"; \
+	elif [ "$(GITHUB_ACTIONS)" = "true" ]; then \
+	  out="$(TEST_FAST_ONE_CI_SLOT)"; \
+	else \
+	  out="$$(mktemp -d "$${TMPDIR:-/tmp}/axiom-test-fast-one.XXXXXX")/ax-one"; \
+	  slot="$$(dirname "$$out")"; \
+	  trap 'rc=$$?; rm -rf "$$slot"; exit $$rc' EXIT; \
+	  trap 'exit 130' HUP INT TERM; \
+	fi; \
+	mkdir -p "$$(dirname "$$out")"; \
+	AXIOM_CI_PRESERVE_CACHE=1 $(NIM) c -r --hints:off --passC:-O2 --nimcache:build/nimcache/test -o:"$$out" "$(T)"
 
 test-all: ## 전체 테스트: 단위 + gateway 순차 실행
 	@$(MAKE) test-unit
