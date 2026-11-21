@@ -5,11 +5,11 @@
 const
   DebtEntryCount* {.intdefine.} = 293
   DebtRowCount* {.intdefine.} = 293
-  DebtOpenCount* {.intdefine.} = 49
+  DebtOpenCount* {.intdefine.} = 44
   DebtOpenCritical* {.intdefine.} = 0
-  DebtOpenHigh* {.intdefine.} = 26
+  DebtOpenHigh* {.intdefine.} = 25
   DebtOpenMedium* {.intdefine.} = 17
-  DebtOpenLow* {.intdefine.} = 6
+  DebtOpenLow* {.intdefine.} = 2
   DebtCriticalThreshold* {.intdefine.} = 30
   DebtProjectionVersion* = "2"
 

@@ -3345,8 +3345,8 @@
       "symbol": "proof_hydration.nim StableVaultDir / product readers (verify_cli, report_cli, axiom_status, axiom_engine)",
       "contentHash": "sha256:unbound-placeholder-runtime-reference-g6",
       "lineRange": "src/cli/shared/proof_hydration.nim:22,178 / src/cli/verify_cli.nim:46-101 / src/cli/report_cli.nim:345-375 / src/cli/axiom_status.nim:534-547 / src/cli/axiom_engine.nim:598",
-      "resolution": "OPEN",
-      "lastVerifiedAt": "2026-08-23T00:00:00Z",
+      "resolution": "STALE — reader-vs-reference-store separation is now structurally and behaviorally asserted and passing. src/cli/shared/proof_hydration.nim:25-38: the pre-#936 vault-scan fallback that read the reference store was removed; getCanonicalVkdMetrics (:121-159) is journal-driven and cert_reconcile.computeJournalVkdAdmission:1081 never reads the reference vault. Tests: tests/verification/test_g6_runtime_reference_divergence.nim:67-84 (runtime VERIFIED=1 vs reference FAILED=0 divergence), test_g6_verify_journal_not_reference.nim:32-41 (verify journal-only; cvCanonicalRead not a product-state read target), test_g6_prove_runtime_vault.nim:23-28 (prove resolves cvRuntimeCanonical only). Command: AXIOM_HERMETIC_BUILDING=1 nim c -r -d:release <each test> -> exit 0, 'Test PASSED' each. Remaining reference-vault readers are engineering/VKD paths (baseline_snapshot_core.nim:32), allowed by the approved consumer-namespace design.",
+      "lastVerifiedAt": "2026-11-21T07:22:26Z",
       "description": "Product readers verified: ax prove reads cvRuntimeCanonical (data/trusted/certificates, axiom_engine.nim:598); ax verify reads TrustCommit journal (verify_cli.nim:46-67); ax report/status read logs/ax_proof_state.json. BUT proof_hydration.nim:22,178 defines StableVaultDir = 'src/verification/certificates' (reference store) and uses it as a fallback read for VKD metrics -- a reference-store read path potentially used by product readers via proof hydration. No structural test asserts product readers do not read the reference store (only write-scope guard I7 and I5 no-reexec exist). Per Contract Preservation Audit 2026-08-23, fix by consumer namespace (product reader -> runtime only; engineering/VKD reader -> tracked reference allowed), not removal: 'VKD computation may read reference artifacts, but Product State may not'. Require both structural AND behavioral tests (runtime=VERIFIED, tracked=FAILED -> verify/report/status output VERIFIED).",
       "files": [
         "src/cli/shared/proof_hydration.nim",
@@ -3358,7 +3358,9 @@
       "severity": "high",
       "source": "productization_contract_preservation_audit_2026-08-23",
       "productTruthImpact": "STALE",
-      "status": "open"
+      "status": "closed",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21"
     },
     {
       "id": "DEBT#434",
@@ -3757,8 +3759,11 @@
       "lineRange": "src/core/trusted/layer_enforcement.nim:27,158,176,193,199",
       "source": "physical_path_boundary_audit",
       "productTruthImpact": "NON_PRODUCT",
-      "status": "open",
-      "resolution": "DEFERRED — const-context sites cannot be wrapped in LogicalPath without compiler quirk; see docs/spec/artifact_determinism.md §2.4"
+      "status": "closed",
+      "resolution": "DOCUMENTED QUIRK — obligation discharged (AGENTS.md §0.5 Quirk Mandate). docs/spec/artifact_determinism.md:76 §2.4 'Const-Context Deferral (Known PhysicalPath-Leak Locations)' documents this file's const-context currentSourcePath()/instantiationInfo sites (row: src/core/trusted/layer_enforcement.nim) with reason and allowed contract; full symptom/root-cause/reproduction analysis in docs/spec/nim_const_context_path_type_quirk.md (titled DEBT#453/#454/#455). QUIRK marker pair intact: src/core/trusted/layer_enforcement.nim:28,32. Quirk-dissolution regression test tests/unit/test_const_context_path_type_quirk.nim:3-16 names DEBT#453; ran AXIOM_HERMETIC_BUILDING=1 nim c -r -d:release <test> -> exit 0, 8/8 OK incl. 'std/os path algebra rejects LogicalPath (DEBT#453 root resolution)'. Note: the §2.4 table line anchors predate later file growth (current sites :39,:351,:392); file+site identification is unchanged.",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21",
+      "lastVerifiedAt": "2026-11-21T07:23:34Z"
     },
     {
       "id": "DEBT#454",
@@ -3772,8 +3777,11 @@
       "lineRange": "src/core/trusted/architecture_invariants.nim:34,173",
       "source": "physical_path_boundary_audit",
       "productTruthImpact": "NON_PRODUCT",
-      "status": "open",
-      "resolution": "DEFERRED — const-context sites cannot be wrapped in LogicalPath without compiler quirk; see docs/spec/artifact_determinism.md §2.4"
+      "status": "closed",
+      "resolution": "DOCUMENTED QUIRK — obligation discharged (AGENTS.md §0.5 Quirk Mandate). docs/spec/artifact_determinism.md:76 §2.4 'Const-Context Deferral (Known PhysicalPath-Leak Locations)' documents this file's const InvariantSourceHash and executeAntiSlackingScan template currentSourcePath() sites (row: src/core/trusted/architecture_invariants.nim) with reason and allowed contract; full quirk analysis in docs/spec/nim_const_context_path_type_quirk.md (titled DEBT#453/#454/#455). QUIRK marker pair intact: src/core/trusted/architecture_invariants.nim:33,36. Quirk-dissolution regression test tests/unit/test_const_context_path_type_quirk.nim:3-16 names DEBT#454; ran AXIOM_HERMETIC_BUILDING=1 nim c -r -d:release <test> -> exit 0, 8/8 OK incl. 'staticRead rejects LogicalPath (DEBT#454 const-hash chain)'. Note: the §2.4 table line anchors predate later file growth (current sites :41,:180); file+site identification is unchanged.",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21",
+      "lastVerifiedAt": "2026-11-21T07:23:56Z"
     },
     {
       "id": "DEBT#455",
@@ -3787,8 +3795,11 @@
       "lineRange": "src/core/trusted/axiom_pragmas_macros.nim:280,345,365,371,419,592,595,597",
       "source": "physical_path_boundary_audit",
       "productTruthImpact": "NON_PRODUCT",
-      "status": "open",
-      "resolution": "DEFERRED — macro/template sites cannot be wrapped in LogicalPath without compiler quirk; see docs/spec/artifact_determinism.md §2.4"
+      "status": "closed",
+      "resolution": "DOCUMENTED QUIRK — obligation discharged (AGENTS.md §0.5 Quirk Mandate). docs/spec/artifact_determinism.md:76 §2.4 'Const-Context Deferral (Known PhysicalPath-Leak Locations)' documents this file's macro/template instantiationInfo(-1,true).filename and currentSourcePath() sites (row: src/core/trusted/axiom_pragmas_macros.nim) with reason and allowed contract; full quirk analysis in docs/spec/nim_const_context_path_type_quirk.md (titled DEBT#453/#454/#455). QUIRK marker pair intact: src/core/trusted/axiom_pragmas_macros.nim:3,8. Quirk-dissolution regression test tests/unit/test_const_context_path_type_quirk.nim:3-16 names DEBT#455; ran AXIOM_HERMETIC_BUILDING=1 nim c -r -d:release <test> -> exit 0, 8/8 OK incl. 'static string macro parameter rejects LogicalPath (DEBT#455 handoff)' and 'macro body instantiationInfo is ???'. Note: the §2.4 table line anchors predate later file growth (current sites :288,:353,:373,:379,:424,:597,:600); file+site identification is unchanged.",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21",
+      "lastVerifiedAt": "2026-11-21T07:25:32Z"
     },
     {
       "id": "DEBT#456",
@@ -4809,7 +4820,7 @@
       "symbol": "src/verification/counterexample_replay.nim:1234 proc runCounterexampleReplay(cfg: ReplayConfig): ReplayRecord; src/verification/rust_replay_adapter.nim:865 proc runRustCounterexampleReplay(cfg: RustReplayConfig): RustReplayRecord",
       "contentHash": "sha256:11dd585d97d872c6b8f0761fa9bbcc2ba3c43f92222c6ef9842b108761acbdcb",
       "lineRange": "src/verification/counterexample_replay.nim:1234-1257 (runCounterexampleReplay body; sha256 of the declaration-through-body block, next-declaration boundary at :1259, whole-block trimmed, computed 2026-11-03); src/verification/rust_replay_adapter.nim:865-903 (runRustCounterexampleReplay body; same rule, computed 2026-11-03)",
-      "description": "nimtry [dry-duplicates] exact-AST-fingerprint pair that is a DELIBERATE lane partition, not an accidental copy. Both procs execute the same observer-only orchestration skeleton — bind subject integrity → synthesize and run the replay harness → confirm post-run integrity (hash/porcelain) → decide replay agreement — but each over its own lane's types and helpers (ReplayConfig/ReplayRecord vs RustReplayConfig/RustReplayRecord; bindSubjectIntegrity vs bindRustSubjectIntegrity; synthesizeAndRunHarness vs synthesizeAndRunRustHarness; confirmPostRunIntegrity vs confirmRustPostRunIntegrity; decideReplayAgreement vs decideRustReplayAgreement). The Nim and Rust replay lanes are deliberately partitioned at the helper level (the Rust lane replays against real .rs subjects with a pinned channel; the Nim lane against Nim subjects), so the duplication is confined to the shared skeleton shape, not to any lane semantic. Disposition: registered here per the documented anchoring workflow (config/repository_surface.json v18 — data/nimtry_baseline.json CONTROLLED managed-data, 'nimtry --update-baseline 재앙커 + budget ledger 동기화'); the violation fingerprint is anchored in data/nimtry_baseline.json (v2 protocol) so bin/nimtry src/ passes with the pair counted as anchored debt. A structural refactor of these two load-bearing files at landing time is out of scope for the landing slice (AGENTS §2.2 minimal change — both files are verification-chain members and the landing is push-admissibility DRIFT resolution, not a redesign). FOLLOW-UP: extract one generic replay-orchestration skeleton parameterized over the lane ops (bind/run/confirm/decide) and re-point both lanes at it, then resolve the anchor and close this entry — its own slice, not this landing. Scope note: the OTHER dry-duplicates pair reported alongside this one (attestation_orchestrator.fileSha256Hex / extraction_provenance.llbcFileDigest) was a real duplicate and was genuinely deduplicated in the same landing; it is not covered by this entry.",
+      "description": "nimtry [dry-duplicates] exact-AST-fingerprint pair that is a DELIBERATE lane partition, not an accidental copy. Both procs execute the same observer-only orchestration skeleton — bind subject integrity → synthesize and run the replay harness → confirm post-run integrity (hash/porcelain) → decide replay agreement — but each over its own lane's types and helpers (ReplayConfig/ReplayRecord vs RustReplayConfig/RustReplayRecord; bindSubjectIntegrity vs bindRustSubjectIntegrity; synthesizeAndRunHarness vs synthesizeAndRunRustHarness; confirmPostRunIntegrity vs confirmRustPostRunIntegrity; decideReplayAgreement vs decideRustReplayAgreement). The Nim and Rust replay lanes are deliberately partitioned at the helper level (the Rust lane replays against real .rs subjects with a pinned channel; the Nim lane against Nim subjects), so the duplication is confined to the shared skeleton shape, not to any lane semantic. Disposition: registered here per the documented anchoring workflow (config/repository_surface.json v18 — data/nimtry_baseline.json CONTROLLED managed-data, 'nimtry --update-baseline re-anchor + budget ledger sync'); the violation fingerprint is anchored in data/nimtry_baseline.json (v2 protocol) so bin/nimtry src/ passes with the pair counted as anchored debt. A structural refactor of these two load-bearing files at landing time is out of scope for the landing slice (AGENTS §2.2 minimal change — both files are verification-chain members and the landing is push-admissibility DRIFT resolution, not a redesign). FOLLOW-UP: extract one generic replay-orchestration skeleton parameterized over the lane ops (bind/run/confirm/decide) and re-point both lanes at it, then resolve the anchor and close this entry — its own slice, not this landing. Scope note: the OTHER dry-duplicates pair reported alongside this one (attestation_orchestrator.fileSha256Hex / extraction_provenance.llbcFileDigest) was a real duplicate and was genuinely deduplicated in the same landing; it is not covered by this entry.",
       "file": "src/verification/counterexample_replay.nim",
       "files": [
         "src/verification/counterexample_replay.nim",
@@ -4817,9 +4828,11 @@
       ],
       "source": "nimtry dry-duplicates anchoring — feat/rust-subject-v1 push-admissibility DRIFT resolution 2026-10-13",
       "productTruthImpact": "STALE",
-      "status": "open",
-      "resolution": "UNRESOLVED deferred 2026-10-13 (deliberate Rust/Nim replay-lane partition copy; anchoring + registration is the disposition, generic skeleton extraction is the follow-up)",
-      "lastVerifiedAt": "2026-10-13T00:00:00Z"
+      "status": "closed",
+      "resolution": "STALE — the two replay lanes are no longer identical skeletons. runRustCounterexampleReplay (src/verification/rust_replay_adapter.nim:898-937) carries two Nim-lane-absent steps: explicit fail-closed outcome init 'outcome: rroUnavailable' (:909) and evidence-integrity admission rustReplayCommandMismatch (:923-930; func at :317) folding any recorded-vs-executed compile divergence to rvUnavailable; runCounterexampleReplay (src/verification/counterexample_replay.nim:1276-1300) has neither. data/nimtry_baseline.json has no entry for either symbol (jq select over .violations -> 0); 'bin/nimtry src/' on this tree reports 0 dry-duplicates findings (grep -c dry-duplicates = 0; 21 unrelated soc/effect new violations). Tests: AXIOM_HERMETIC_BUILDING=1 nim c -r -d:release tests/unit/test_counterexample_replay.nim -> exit 0; tests/unit/test_rust_replay_adapter.nim -> exit 0 incl. 'rustReplayCommandMismatch: non-empty diagnostic for a forged compileProfile / a tampered compileCommand'.",
+      "lastVerifiedAt": "2026-11-21T07:22:51Z",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21"
     },
     {
       "id": "DEBT#506",
