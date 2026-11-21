@@ -31,11 +31,6 @@ func axCommandHelpEntries*(): seq[CommandHelpEntry] =
       description: "Generate verification report, ASI metrics, and certificate status. --upstream files upstream GitHub issues for reportable bug findings (trusted executor; GitHub accessed only through the native gh client; --dry-run runs the full preflight, fingerprint and duplicate check without any external write)."
     ),
     CommandHelpEntry(
-      name: "ax seed-registry",
-      usage: "[--layer N+]",
-      description: "Compiler-validated algebraic property seeding for PBT infrastructure."
-    ),
-    CommandHelpEntry(
       name: "ax topology",
       usage: "<check|audit|explain> [args...]",
       description: "Validate topology lock compliance, audit policy drift, or explain module placement."
@@ -91,6 +86,26 @@ func axCommandHelpEntries*(): seq[CommandHelpEntry] =
       description: "Cache management — show status, clear, garbage collect, or inspect shadow workers."
     ),
     CommandHelpEntry(
+      name: "ax check",
+      usage: "[--all] [--dry-run]",
+      description: "Run nim check on changed src/ files (git diff HEAD~1), or on all src/ files with --all; --dry-run lists the files without invoking the compiler."
+    ),
+    CommandHelpEntry(
+      name: "ax shape",
+      usage: "analyze [--dry-run] [--threshold N]",
+      description: "Analyze goal-shape coverage from logs/ JSONL records — integer-only frequency distribution with an OK/BELOW threshold status."
+    ),
+    CommandHelpEntry(
+      name: "ax git",
+      usage: "<atomic|sync> [--dry-run]",
+      description: "Git maintenance helpers — atomic stages all changes and creates a signed commit; sync fetches and rebases the current branch onto origin/main; --dry-run previews."
+    ),
+    CommandHelpEntry(
+      name: "ax cst",
+      usage: "[--dry-run]",
+      description: "Validate vendor/tree-sitter prerequisites, then compile-check and smoke-test the CST parser tool; --dry-run checks prerequisites only."
+    ),
+    CommandHelpEntry(
       name: "ax help",
       usage: "",
       description: "Show this help message and exit."
@@ -141,6 +156,11 @@ func axCommandHelpEntries*(): seq[CommandHelpEntry] =
       description: "Show Product State (canonical claim/artifact summary) and gate dashboard status."
     ),
     CommandHelpEntry(
+      name: "ax budget",
+      usage: "<report|status>",
+      description: "Debt budget metrics — report renders the full budget report; status shows each metric's current value against target/baseline (OK, WARNING, or OVER)."
+    ),
+    CommandHelpEntry(
       name: "ax debt",
       usage: "<sync|check|budget|ledger> [args...]",
       description: "Manage architecture debt registry — sync, check, view budgets, or inspect the debt ledger."
@@ -151,9 +171,19 @@ func axCommandHelpEntries*(): seq[CommandHelpEntry] =
       description: "Merge-admission controller: evaluate a PR's CI evidence (Phase B+C); the live landing path is GitHub-native MERGE via the merge queue — the Landing App CAS lane is retired/uninstalled (ADR-0041)."
     ),
     CommandHelpEntry(
+      name: "ax admission",
+      usage: "<mint|append|show|list> [args...]",
+      description: "Admission Artifact A side-ref ledger — mint a merge-facts payload, append it idempotently by payload digest, or show/list stored artifacts."
+    ),
+    CommandHelpEntry(
       name: "ax landing",
       usage: "--cert <path> | --pr <N> [--main-sha <sha>] [--binding <path>] [--repo owner/name] [--dry-run]",
       description: "Native MERGE thin actuator — verify certificate(B,H) → A3 preflight (main tip == B, observation) → A2 ruleset check (admission-check + strict + integration_id, fail-closed) → PUT /pulls/{n}/merge (merge_method=merge, sha=H) → post-merge continuity observation (parents(M)==[B,H], tree(M)==certTree). No self CAS, no local merge-tree; GitHub ruleset is the merge-time enforcer."
+    ),
+    CommandHelpEntry(
+      name: "ax evidence",
+      usage: "<ledger-append|ledger-lookup> [args...]",
+      description: "Evidence CAS side-ref ledger — ledger-append stores a record idempotently by evidenceKey; ledger-lookup re-hash-verifies and prints one payload."
     ),
     CommandHelpEntry(
       name: "ax capability",

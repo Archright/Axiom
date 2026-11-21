@@ -1,12 +1,13 @@
 {.push raises: [].}
 
-## Unit tests for ax prove/report --help / -h handling.
+## Unit tests for ax CLI help handling and the help-table/parser SSOT alignment.
 ##
 ## Verifies that planAxActions intercepts --help/-h before flag parsing,
 ## emits cliPrintUsage + cliQuit(0), and that normal args pass through unchanged.
+## Also asserts that axCommandHelpEntries advertises exactly the subcommands
+## accepted by parseAxSubcommandKind.
 
-import std/sets
-import std/unittest
+import std/[os, sets, strutils, unittest]
 
 import cli/action_plan_cli
 import cli/cli_types
@@ -135,8 +136,8 @@ suite "planAxActions — other subcommands unaffected by --help":
 
   # Test-expectation alignment with the ratified R7 contract: the planner emits
   # CliOutcome.INVALID_INPUT.exitCode() = 3 for an unknown subcommand (see
-  # action_plan_cli.nim:252). Docs/spec/productization_contract.md:270,281 and
-  # docs/design/r7_cli_outcome_contract.md ratify INVALID_INPUT -> 3. This is a
+  # parseAxSubcommandKind / planAxActions). Docs/spec/productization_contract.md:270,281
+  # and docs/design/r7_cli_outcome_contract.md ratify INVALID_INPUT -> 3. This is a
   # contract alignment, not merely a red-test fix. (It does NOT claim "all invalid
   # input -> 3 is ratified"; the broader partition stays pending.)
   test "unknown subcommand exits INVALID_INPUT (3) per ratified R7 contract":
@@ -145,3 +146,65 @@ suite "planAxActions — other subcommands unaffected by --help":
     for a in actions:
       if a.kind == cliQuit and a.exitCode == 3: foundQuitThree = true
     check foundQuitThree
+
+# ---------------------------------------------------------------------------
+# Help table / parser SSOT alignment
+# ---------------------------------------------------------------------------
+
+const
+  RepoRoot = currentSourcePath().parentDir().parentDir().parentDir()
+  ActionPlanSource = staticRead(RepoRoot / "src" / "cli" / "action_plan_cli.nim")
+
+func helpTableKeys(source: string): HashSet[string] =
+  ## Keys advertised by axCommandHelpEntries (`name: "ax <key>"`).
+  const Marker = "name: \"ax "
+  for line in source.splitLines():
+    let at = line.find(Marker)
+    if at < 0:
+      continue
+    let rest = line[at + Marker.len .. ^1]
+    let close = rest.find('"')
+    if close >= 0:
+      result.incl(rest[0 ..< close])
+
+func parserKeys(source: string): HashSet[string] =
+  ## Tokens accepted by parseAxSubcommandKind (`of "<token>":`).
+  const StartMark = "func parseAxSubcommandKind"
+  const EndMark = "func dispatchCommandAction"
+  const Marker = "of \""
+  let start = source.find(StartMark)
+  let stop = source.find(EndMark)
+  if start < 0 or stop <= start:
+    return
+  for line in source[start ..< stop].splitLines():
+    let at = line.find(Marker)
+    if at < 0:
+      continue
+    let rest = line[at + Marker.len .. ^1]
+    let close = rest.find("\":")
+    if close >= 0:
+      result.incl(rest[0 ..< close])
+
+suite "help table matches parser-accepted subcommands":
+  test "help table advertises exactly one entry per accepted subcommand":
+    let helpKeys = helpTableKeys(ActionPlanSource)
+    let accepted = parserKeys(ActionPlanSource)
+    check helpKeys.len == 34
+    check accepted.len == 34
+    check helpKeys == accepted
+
+  test "seed-registry is neither advertised nor accepted":
+    let helpKeys = helpTableKeys(ActionPlanSource)
+    let accepted = parserKeys(ActionPlanSource)
+    check "seed-registry" notin helpKeys
+    check "seed-registry" notin accepted
+
+  test "every help entry routes to a known subcommand":
+    for key in helpTableKeys(ActionPlanSource):
+      let actions = planAxActions(@[key])
+      var unknown = false
+      for a in actions:
+        if a.kind == cliWriteStderrLine and
+           a.message.startsWith("unknown ax subcommand"):
+          unknown = true
+      check not unknown
