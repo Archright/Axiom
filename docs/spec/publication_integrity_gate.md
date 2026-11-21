@@ -1,6 +1,6 @@
 # publication-integrity 게이트 — 단일 판정 공개 준비성 계약
 
-**Status**: Normative (v1.4, 2026-11-21 — **venue 분리(vs-282)**: `pull_request`=preflight `{secret-scan}` / `merge_group|schedule|workflow_dispatch`=landing 5차원 전부 / 그 외 이벤트=FAIL. [ADR-0043](../adr/0043-publication-venue-split.md)이 ADR-0032 (a)(b)를 이 워크플로의 job 층으로 확장하고 (e)를 개정한다; v1.3 = license-scan shard 3-레그 확장(VS-PI-3) + self-heal 로컬 감사 스코프 정렬; v1.2 = 스테이징 단일 루트 스캔 재구성; v1.1 = 2-shard 구조화 도입)
+**Status**: Normative (v1.5, 2026-11-21 — **script-scan sixth landing dimension**: the landing venue runs all six dimensions, preflight remains `{secret-scan}`, and any other event is FAIL. [ADR-0044](../adr/0044-unicode-script-allowlist-admission.md) adds a Unicode Script allowlist over added diff lines without a new required check, App, workflow file, or permanent ruleset structure change. v1.4 = venue split (ADR-0043): `pull_request`=preflight `{secret-scan}` / `merge_group|schedule|workflow_dispatch`=landing, all dimensions / any other event=FAIL; ADR-0043 extended ADR-0032 (a)(b) to this workflow's job layer and amended (e); v1.3 = license-scan shard 3-leg expansion (VS-PI-3) + self-heal local audit scope alignment; v1.2 = staging single-root scan restructuring; v1.1 = 2-shard structuring)
 **워크플로**: `.github/workflows/publication-integrity.yml` (required context `publication-integrity`)
 **정책 SSOT**:
 - `compliance/policy/license-policy.yml` — 허용 라이선스 allowlist + 거부 가족
@@ -9,6 +9,7 @@
 - `compliance/policy/secret-scan-baseline.json` — 감사된 비밀 검출 핑거프린트 baseline
 - `compliance/provenance/source-origin.yml` — 전 트랙 파일 경로 기원 선언 (무 catch-all)
 - `compliance/provenance/license-attribution.yml` — 감사된 검출 attribution (무 glob catch-all)
+- `compliance/policy/script-scan-policy.yml` — Unicode Script allowlist, exact-path i18n exemptions, tool contract, declared limitations
 
 **권한 관계**: 본 게이트의 판정 논리 SSOT 전부가 `config/policy/merge_admission.json`
 trustSurface에 등록되어 있다 (v1.20.0) — 정책 약화 PR은 자동 병합이 거부된다
@@ -29,6 +30,12 @@ trustSurface에 등록되어 있다 (v1.20.0) — 정책 약화 PR은 자동 병
 4. **기원**: 트랙된 모든 파일이 정확히 하나의 기원 클래스로 선언되고, THIRD_PARTY는
    출처+허용 라이선스를, ORIGINAL은 자가 라이선스를 만족한다. 미선언·불일치 = FAIL.
 5. **SBOM**: SPDX-2.3 산출물이 비공허(≥1 package/file)로 생성·검증되고 sha256이 기록된다.
+6. **Script allowlist (landing diff, added lines only)**: the landing diff adds no
+   Unicode code point whose Unicode Script property is outside `{ASCII range, Latin,
+   Greek, Common, Inherited}`, except exact-path product i18n exemptions
+   (`data/i18n/ko.json`). Unlike items 1–5, this claim is scoped to the diff, not to
+   the whole repository surface; it is a Script allowlist, not an "English-only"
+   check, and its declared limitations are carried in every report (§3.6).
 
 본 게이트는 **침해 부재의 증명**이 아니다 (rightsVerificationLimit — 자동 분석 통과는
 권리 검증이 아니다). 계약은 "정책 SSOT와의 기계적 일치"이며, 정책 SSOT 자체는
@@ -41,17 +48,18 @@ trustSurface에 등록되어 있다 (v1.20.0) — 정책 약화 PR은 자동 병
 venue = github.event_name   (job-level if — the `steps` context does not exist yet)
 
 pull_request                                → preflight {secret-scan}
-merge_group | schedule | workflow_dispatch  → landing   all 5 dimensions
+merge_group | schedule | workflow_dispatch  → landing   all 6 dimensions
 anything else                               → FAIL (no venue → no verdict)
 
 secret-scan ──────┐  gitleaks 8.30.1 (release pin + sha256 verify)
 license-scan ─────┤  scancode-toolkit==32.5.0 + pluggy==1.5.0 (venv pin)
-dependency-scan ──┼─→ publication-integrity (종합 job, needs 전부 + if: !cancelled())
+dependency-scan ──┼─→ publication-integrity (aggregator job, needs all + if: !cancelled())
 provenance ───────┤  tools/ci/publication_provenance_validator.nim
-sbom ─────────────┘  syft v1.57.0 → publication_sbom_eval.nim
+sbom ─────────────┤  syft v1.57.0 → publication_sbom_eval.nim
+script-scan ──────┘  ripgrep 14.1.0 → publication_script_eval.nim
 ```
 
-- sub-job id = 차원 이름 (secret-scan, license-scan, dependency-scan, provenance, sbom).
+- sub-job id = dimension name (secret-scan, license-scan, dependency-scan, provenance, sbom, script-scan).
 - license-scan 차원은 내부적으로 `license-scan-shards`(matrix 3-레그 — HEAD 트리
   blob 집합에서 ScanCode 기본 무시 이름(`ignores_VCS`)을 뺀 스캔 표면의 **크기-그리디
   결정적 3-분할**, 각 레그는 자기 파일 집합을 **작업공간 basename과 동일명의 루트
@@ -65,11 +73,11 @@ sbom ─────────────┘  syft v1.57.0 → publication_sb
 - 종합 job은 `needs.*.result`와 **venue가 요구하는** 차원 보고서 JSON을 **이중** 검증한다
   (`tools/ci/publication_report.nim`, `--venue` 필수).
 
-### 2.1 venue 분리 (v1.4)
+### 2.1 venue split (v1.4; the landing set gains its sixth dimension in v1.5)
 
 | 요소 | preflight (`pull_request`) | landing (`merge_group`/`schedule`/`workflow_dispatch`) |
 |---|---|---|
-| 필수 차원 | `{secret-scan}` | 5차원 전부 |
+| Required dimensions | `{secret-scan}` | all 6 dimensions |
 | 판정 권위 | **착지 자격 아님** (early-warning) | **착지 자격의 유일 정본** |
 | PASS 문구 | `PREFLIGHT PASS — full publication verification is the merge_group venue` | `publication_report: PASS (venue=landing, canonical)` |
 | context 이름 | `publication-integrity` (불변) | `publication-integrity` (불변) |
@@ -91,18 +99,20 @@ sbom ─────────────┘  syft v1.57.0 → publication_sb
   결코 통과로 해석되지 않는다 (fail-closed).
 - 보고서·SBOM artifact는 `if: always()`로 업로드된다 (NOT-ADMIT도 증거가 남는다).
 
-### 2.2 왜 이 분리가 검증 약화가 아닌가
+### 2.2 Why this split is not a weakening of verification
 
-landing venue는 5차원 전부를 변경 없이 실행한다 — 착지 자격 판정의 의미·증거·발행
-주체가 모두 불변이다. 분리는 **PR에서 조기 경고를 줄이는 것**이지 최종 보증을 줄이는
-것이 아니다. PR에서 잡히지 않는 결함(라이선스·의존성·기원·SBOM)은 landing에서 처음
-발견되며, **그 격차는 명시적 수용**이다(ADR-0032 (b)와 동일 원칙, ADR-0043 (e')이
-"job skip 금지"의 범위를 admission leg·required-context aggregator로 한정한다).
+The landing venue runs all six dimensions unchanged — the meaning, evidence, and
+issuer of the landing credential are all invariant. The split **reduces early warning
+in PRs**; it does not reduce the final guarantee. Defects not caught in a PR (license,
+dependency, origin, SBOM, script allowlist) first surface at landing, and **that gap
+is explicitly accepted** (the same principle as ADR-0032 (b); ADR-0043 (e') limits
+the scope of "no job skip" to the admission legs and the required-context aggregator).
 
-preflight 집합이 `{secret-scan}`인 이유는 실행시간이 아니라 **비가역성**이다:
-public 저장소에서 PR 브랜치 push는 즉시 공개 노출되고 되돌릴 수 없다. 나머지 네
-차원은 미병합 트리가 배포물이 아니므로 조기 차단의 이득이 없다. 이 근거를 바꾸려면
-본 절의 개정이 필요하다(로컬 편집 금지).
+The preflight set is `{secret-scan}` because of **irreversibility**, not run time: on a
+public repository a PR branch push is exposed immediately and cannot be undone. The
+other five dimensions do not gate a deployable artifact before merge, so early
+blocking buys nothing. Changing this rationale requires an amendment of this section
+(no local edits).
 
 ## 3. 차원별 판정 시맨틱
 
@@ -169,6 +179,62 @@ public 저장소에서 PR 브랜치 push는 즉시 공개 노출되고 되돌릴
 - **선언된 한계**: syft에 Nim 카탈로거가 없어 nimble.lock 의존성은 파일 항목으로만
   나타난다 (매 보고서에 기록).
 
+### 3.6 script-scan
+
+- **Exact claim**: a landing diff may add no Unicode code point whose Unicode Script
+  property is outside `{ASCII range, Latin, Greek, Common, Inherited}`, except
+  exact-path product i18n exemptions (currently only `data/i18n/ko.json`, declared
+  with a reason; wildcards are rejected by the policy parser).
+- **Not the claim**: "English-only". The following are outside this stage's detection
+  and are copied into every report as `declaredLimitations`: Latin-script non-English
+  prose (French, Spanish, German); Greek prose (Greek is allowed for mathematical
+  notation); Common/Inherited punctuation (U+3002, U+3001, U+30FC, emoji, symbols);
+  HTML numeric entities and Unicode escapes (ASCII bytes); images and binaries
+  outside the policy's `documentExtensions` (`pdf`, `docx`, `xlsx`, `pptx`, `odt`,
+  `ods`, `odp`, `epub`); and PR titles, bodies, issues, reviews, and commit messages.
+- **Scope**: added lines only (`scope: added-lines`). Context and removed lines are
+  never scanned; a modified existing non-English line emits a new added line and
+  FAILS. Inside the non-exempt zone a rename keeps existing debt in place (it adds no
+  lines); a rename out of an exempt path is fully rescanned at its destination; a
+  rename into an exempt JSON path must still parse as JSON.
+- **Verdicts**: PASS / FAIL / UNKNOWN (closed set); exit 0 / 1 / 2. UNKNOWN is always
+  blocking and never a pass.
+- **Fail-closed UNKNOWN**: invalid UTF-8 (the evaluator validates strictly because
+  ripgrep silently drops invalid bytes), submodule/gitlink changes, binary files with
+  a `documentExtensions` extension, quoted or ambiguous paths, copy headers, an
+  exempt path that is not tracked, missing or version-mismatched tools, git below the
+  policy floor, unreadable base/head, a base that is not an ancestor of head, a
+  merge-base that differs from the declared base, upstream-read failures, and policy
+  parse errors.
+- **Tool binding**: ripgrep 14.1.0. The workflow pins the release tarball by sha256
+  (`f84757b07f425fe5cf11d87df6644691c644a5cd2348a2c670894272999d3ba7`) and verifies it
+  before extraction. The evaluator checks `rg --version` against the policy and records
+  the observed binary sha256 — the musl release artifact is
+  `c2feed7a376d3754958fa6235a6ef88a74bcabc9b0cfccacbd48939b5f87860d`; a local distro
+  build is recorded, not pinned, because the report binds the run's actual binary. Git
+  floor 2.40.0 (reference environment 2.43.0). The detector is
+  `[^\x00-\x7F\p{Latin}\p{Greek}\p{Common}\p{Inherited}]`, evaluated by the default
+  ripgrep engine (Unicode 15.0) over the collected added lines. The report binds the
+  policy sha256, tool/git versions, base/head/merge-base SHAs, and a sha256 of the diff
+  text.
+- **Existing four-point wiring**: the aggregator consumes the dimension through the
+  same four points as every other dimension — `needs.script-scan.result` (a skipped or
+  cancelled result is UNKNOWN), `--job script-scan=<result>`, `--report
+  script-scan=<report.json>`, and `--policy-file
+  compliance/policy/script-scan-policy.yml`. The job shares the landing venue
+  condition; a `success` result for a dimension the venue does not require is a
+  BLOCKER (§2.1 invariant 4), so the job must not run at preflight. The required
+  context name, job id, and workflow path are unchanged (ADR-0044).
+- **Baseline and base selection**: `baselineCommit
+  db0e977f6219d33dcfc91be1f9e238a72f2dd53b` is the evaluator's default base and the
+  measurement origin that freezes the pre-existing corpus — never a permanent
+  exemption list. The workflow passes an explicit base per venue (the merge-queue base
+  on `merge_group`; `HEAD~1` on `schedule`/`workflow_dispatch`), so a landing run
+  judges that landing's change set. The report binds `baseSha`, `headSha`,
+  `mergeBaseSha`, the policy `baselineCommit`, and a sha256 of the diff text; the
+  aggregator rejects a `script-scan` report that lacks a bound commit (UNKNOWN) or
+  binds a commit other than the gate head (BLOCKER).
+
 ## 4. 기존 required checks와의 직교성 (공백·중복 매트릭스)
 
 | 검사 | 담당 | publication-integrity와의 중복 |
@@ -178,12 +244,13 @@ public 저장소에서 PR 브랜치 push는 즉시 공개 노출되고 되돌릴
 | debt-registry-gate | 극장 레지스트리 계약 (data/debt_registry.json) | 0 — 등록부 스키마 강제, 콘텐츠 라이선스/비밀 무관 |
 | generation-acceptance | 정책·검증 세대 승격 (GPA L1-L4) | 0 — 세대 적합성이지 게이트 산출물이 아님 |
 | axiom-operational-slice | 제품 수직 슬라이스 종단 (prove + Lean 재생) | 0 — 검증 파이프라인 동작성, 배포 콘텐츠 무결성 아님 |
-| **publication-integrity** | **공개 준비성: 비밀·라이선스·기원·의존성·SBOM** | 신규 — 위 5검사 어디에서도 판정하지 않는 영역 |
+| **publication-integrity** | **Publication readiness: secrets, licenses, origin, dependencies, SBOM, Unicode Script allowlist** | New — an area none of the five checks above judges |
 
-공백 실증: 2026-11-09 로컬 전수 측정에서 본 게이트 도입 전 상태로는
-(비밀) 1,978개 검출의 감사 baseline 부재, (라이선스) 45파일 검출 무회계,
-(기원) 6,548파일 무선언, (SBOM) 산출물 부재 — 어느 기존 검사도 이를 차단하지
-못했다. 본 게이트의 5차원이 이 공백을 닫는다.
+Gap evidence: in the 2026-11-09 local full measurement, before this gate existed, the
+state was: (secrets) 1,978 detections with no audited baseline; (licenses) 45 files
+with unaccounted detections; (origin) 6,548 undeclared files; (SBOM) no artifact — no
+existing check blocked any of these. The gate closes that gap; its landing venue now
+runs six dimensions, with the script allowlist scoped to added diff lines (§3.6).
 
 ## 5. 도구 능력 매트릭스와 선언된 한계
 
@@ -193,6 +260,7 @@ public 저장소에서 PR 브랜치 push는 즉시 공개 노출되고 되돌릴
 | ScanCode | 32.5.0 + pluggy 1.5.0 (venv) | 라이선스 텍스트·저작권 행 탐지 | 텍스트 패턴 매칭 — 언급/부여 구분 불가 → attribution 기록이 감사 결론의 SSOT |
 | osv-scanner | v2.7.1 (binary sha256 검증) | OSV 색인 생태계 취약점 | Nim/Lean 색인 부재 (매 보고서 기록) |
 | syft | v1.57.0 (tarball sha256 검증) | SPDX-2.3 SBOM 생성 | Nim 카탈로거 부재 (매 보고서 기록) |
+| ripgrep | 14.1.0 (`--version` + binary sha256) | Unicode Script allowlist over added diff lines | Script property only — Latin-script non-English prose, Greek prose, and Common/Inherited punctuation pass (§3.6) |
 | publication_* 평가기 | 동일 커밋 소스 (trustSurface 보호) | 판정은 전부 Nim 평가기가 수행 (워크플로 bash는 판정하지 않는다) | — |
 
 툴체인 quirk 기록 (측정 2026-11-09): pluggy 1.7이 ScanCode 32.5의 플러그인
