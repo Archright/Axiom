@@ -65,6 +65,10 @@ TCB로 수용한 뒤 남는 잔여 위협과, `workflow_run` 단일 씨딩 write
   | `max_entries_to_merge` (1) | 함께 병합할 PR 수 상한("Merge limits do not combine merge_group builds" — GitHub Docs) | 감시 대상 아님 — 형상(1:1)은 설정값이 아니라 구조 층에서 강제 |
   | `max_entries_to_build` (2) | 동시 검사·빌드 수 제한(merge_group webhook throttle) — **그룹 크기 보장이 아니다** | 감시 대상 아님 — 운영 성능 파라미터; 감시 확장은 별도 Follow-up(독립 작업으로 분리) |
 
+  Footnote to the row above: the `max_entries_to_build` parenthetical `(2)` records
+  the 2026-10-11 measurement; the live value on 2026-11-21 is 100 - see the
+  2026-11-21 update below.
+
   **설정 감시 ≠ 형상 강제**: 드리프트 모니터는 구성 스냅샷·탐지일 뿐 보안 경계가
   아니며(NOT a security boundary — `docs/agents/rules_workflow.md` "Authority
   layering": "Never describe both as the same boundary"), 1:1 형상 강제는
@@ -87,6 +91,33 @@ TCB로 수용한 뒤 남는 잔여 위협과, `workflow_run` 단일 씨딩 write
   — 단일 PR 불변식 `parents(G).length == 2`가 `G`를 거부하므로, 스로틀이 형상
   강제를 대신하지 않고 형상 강제도 스로틀을 대신하지 않는다(위 "설정 감시 ≠ 형상
   강제"의 같은 경계). 불변식 정본: [docs/evidence/free_authority_migration_phase0_proof.md](../evidence/free_authority_migration_phase0_proof.md) §3.
+  **Update (2026-11-21 - supersedes the item (ii) state assertion above)**: the
+  live value of `max_entries_to_build` is **100** (`gh api
+  repos/Archright/Axiom/rulesets/27097366`; sibling values at that readback:
+  `max_entries_to_merge 1`, `grouping_strategy ALLGREEN`, `merge_method MERGE`,
+  `check_response_timeout_minutes 120`). Source: ruleset version `58904727`
+  (2026-11-21T05:13:00Z) applied `1 -> 100` via
+  `PUT /repos/Archright/Axiom/rulesets/27097366`; the application and readback are
+  recorded in `data/ci_optimization/merge_queue_concurrency_2026-11-21/summary.json`
+  (c100 experiment, `readback.max_entries_to_build: 100`). Item (ii) above
+  (2026-11-17, maintaining the value at 2) is therefore a **historical record as of
+  that date**, and the **current state is 100** - this update supersedes that state
+  assertion while the historical text stays verbatim. The 2026-10-11 measurement of
+  2 is likewise historical. Only the value statement is corrected; the
+  classification is unchanged: the table above still marks this parameter **not
+  monitored** (an operational performance parameter, not a group-size guarantee),
+  and the parameter-role / multi-PR-group fail-closed reasoning holds regardless of
+  the value. The drift monitor's non-expectation list is unchanged as well
+  (`tools/merge_ruleset_drift_monitor.nim` "NOT expectations" - this parameter is
+  not monitored).
+  **Caveat on the sibling `bypass_actors` readback (same day)**: the `[]` in that
+  readback is a **point-in-time snapshot** (2026-11-21T05:13:00Z), not an
+  invariant. Ruleset version `58918694` (2026-11-21T09:36:23Z) carries a non-empty
+  `bypass_actors` (one actor); bypass use is directly observed in
+  `rulesets/rule-suites` as five `result=bypass` suites
+  (`actor_name=wintrover`, `refs/heads/main`). The live readback at
+  2026-11-21T09:46:14Z shows `bypass_actors: []` restored. Config values are read
+  only as timestamped records.
 - **R3 — `workflow_run` + `cache-mode: write` cache-poisoning**. 공식 경고(GitHub 문서 원문):
   > "Explicitly declaring `cache-mode: write` or `cache-mode: write-only` reintroduces the
   > risk of cache-poisoning that the default untrusted-trigger read-only permissions are
