@@ -218,7 +218,7 @@ FAIL-CLOSED` — 재시도 루프 내부 reconciliation.
 권위 행위의 중복 경로가 구조적으로 제거된다. D6 멱등 해석(record 재계산 정당성 +
 CAS 3분기)으로 재실행 안전성이 멱등 판정 자체에 포함된다.
 
-**부정(residual):** [B2](b)의 semantic domain 확정 전까지 데이터 인과는 준비 계약이며
+**부정(residual):** `[B2](b)`의 semantic domain 확정 전까지 데이터 인과는 준비 계약이며
 구현(Phase 2)을 선행할 수 없다. cold ≤15m은 실측 전까지 예정 계약(임계 근접 —
 Phase 3 잔여 재설계 가능). mint 자체 빌드(C1)는 epoch N+5 계약 개정(§3 개정문,
 2026-09-29)으로 **해소**되었다 — prepare는 admission lane B-결속 바이트를 소비한다

@@ -29,7 +29,7 @@
 
 - 실측 합계: 파일 78(= 13+9+53 `.nim.vendored` + `nimblemeta.json` 3) + 디렉터리 12 = 90 엔트리.
 - 참고: B1 §1-C "(13/10/56 .nim)" 및 스테이징 `THIRD-PARTY-NOTICES.md` §5 "13/10/56 files"는 계수 기준 차이가 있다(실측 .nim.vendored는 13/9/53, 파일 총수는 14/10/54). 본 절차는 실측값 기준.
-- **아카이브 내 라이선스 전문 0건** — `LICENSE-APACHE`/`LICENSE-MIT` 미동봉(`nimblemeta.json`만 동반; nimblemeta에는 `license` 필드 없음 — 실측). 인라인 헤더를 가진 파일은 "Licensed under either of * Apache License, version 2.0, ([LICENSE-APACHE](LICENSE-APACHE)) * MIT license ([LICENSE-MIT](LICENSE-MIT))" 형태로 **존재하지 않는 파일을 참조** — 이것이 본 재패키징이 해소하는 갭.
+- **아카이브 내 라이선스 전문 0건** — `LICENSE-APACHE`/`LICENSE-MIT` 미동봉(`nimblemeta.json`만 동반; nimblemeta에는 `license` 필드 없음 — 실측). 인라인 헤더를 가진 파일은 "Licensed under either of * Apache License, version 2.0, (`[LICENSE-APACHE](LICENSE-APACHE)`) * MIT license (`[LICENSE-MIT](LICENSE-MIT)`)" 형태로 **존재하지 않는 파일을 참조** — 이것이 본 재패키징이 해소하는 갭.
 
 ### 1.3 tar/gzip 메타데이터 (전 엔트리 균일 — 재생성 파라미터의 근원)
 

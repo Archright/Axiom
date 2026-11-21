@@ -1,7 +1,7 @@
 # S1A 원인 분리 단계 A — lane-0 실행 레짐 귀속·정책-합법 레버 종결 (2026-10-18)
 
 > **종류**: 측정 기록 (원인 분리 단계 A — 종결 기록). **질문**: s1a judgment-CAS lane-0 실행 시간의 지배 인자 귀속 — (1) 호스트·레짐 인과성, (2) 정책-합법 속도 레버의 존재, (3) 분할 병렬화의 자격.
-> **권위**: 전 수치는 runs/jobs/logs API GET 관측값과 기존 러너 로그 헤더 추출이다 — **신규 실행 0건, 기존 로그만 소비**. merge-admission 판정 권위는 GitHub이며 본 기록은 Reporter다. 커널 계약 카운트의 권위는 `src/verification/judgment_cas.nim` 커니컬 상수(probeCount==14, kernelAcceptCount==17)와 [test_judgment_cas_contract.md](../spec/test_judgment_cas_contract.md)다. 레버 금지 축의 권위는 [ci_pareto_baseline.json](../../data/ci_pareto_baseline.json) SCOPE AMENDMENT v11과 [ADR-0029](../adr/0029-ci-generation-execution-epoch-and-reuse-verdict-binding.md)다.
+> **권위**: 전 수치는 runs/jobs/logs API GET 관측값과 기존 러너 로그 헤더 추출이다 — **신규 실행 0건, 기존 로그만 소비**. merge-admission 판정 권위는 GitHub이며 본 기록은 Reporter다. 커널 계약 카운트의 권위는 `src/verification/judgment_cas.nim` 커니컬 상수(probeCount==14, kernelAcceptCount==17)와 [test_judgment_cas_contract.md](../spec/test_judgment_cas_contract.md)다. 레버 금지 축의 권위는 `[ci_pareto_baseline.json](../../data/ci_pareto_baseline.json)` SCOPE AMENDMENT v11과 [ADR-0029](../adr/0029-ci-generation-execution-epoch-and-reuse-verdict-binding.md)다.
 
 ## 1. 표본 — lane-0 잡 전수 36건 (2026-10-16T07:35Z–2026-10-18T02:23Z)
 
@@ -35,7 +35,7 @@
 1. **라벨 내 선택 기제 없음** — 36/36 상이 VM: 배치는 GitHub 측 복권이고 합법적 핀 수단이 없다.
 2. **ubuntu-24.04-arm** — arch→a_fp 전파로 캐시 계통 전체 churn(action.yml:291–293 — a_fp가 b_key에 결속, :293이 a-key 출력) + [ADR-0029](../adr/0029-ci-generation-execution-epoch-and-reuse-verdict-binding.md) 실행-epoch 축. **속도 근거 없음**.
 3. **ubuntu-slim** — 1-vCPU 컨테이너 "not suitable for heavyweight CI", Lean 툴링 부재([hardware_smoke_static.md](hardware_smoke_static.md)).
-4. **대형 러너** — SCOPE AMENDMENT v11 금지([ci_pareto_baseline.json](../../data/ci_pareto_baseline.json): "large runners forbidden"). 개정되더라도 분당 과금 + 배치 지연을 **총 MG wall** 기준으로 평가해야 한다(이중 지표 규칙 — 잡 벽시계 단독 판정 금지).
+4. **대형 러너** — SCOPE AMENDMENT v11 금지(`[ci_pareto_baseline.json](../../data/ci_pareto_baseline.json)`: "large runners forbidden"). 개정되더라도 분당 과금 + 배치 지연을 **총 MG wall** 기준으로 평가해야 한다(이중 지표 규칙 — 잡 벽시계 단독 판정 금지).
 5. **잡 내 웜 공급** — 가치 2–5s뿐(관측 b-rest 0.2–4.1s).
 
 ## 5. 판정 3 — 분할 이관: **CONTRACT_REVISION_REQUIRED** (assessment only)

@@ -382,7 +382,7 @@ rules_workflow.md:118/:120 landing path(Phase 3) · operations.md Merge-Boundary
 3. **Z3 verdict**: pinned solver 정확성 가정 + self-validation 수준 — Lean kernel
    (독립 체커 보유)과 등급 구분 표기(INV-10).
 4. **self-hosted 러너 상 untrusted 빌드**: 시크릿 제거로 피해 상한을 러너 자체로
-   제한; VM-per-job 로드맵은 기존 [self_hosted_ci_migration.md](self_hosted_ci_migration.md)(CI=0 cutover,
+   제한; VM-per-job 로드맵은 기존 `[self_hosted_ci_migration.md](self_hosted_ci_migration.md)`(CI=0 cutover,
    2026-09-20로 삭제 — self-hosted 러너 인프라 자체가 제거됨)에 위임.
 5. **원장 ref 강제 push/삭제 방지 불가**(플랜) — I-3 감지로 흡수.
 6. **bookkeeping**: rebase chain publication은 GitHub merged 표기를 만들지 않음 —

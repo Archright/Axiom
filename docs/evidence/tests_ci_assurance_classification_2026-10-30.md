@@ -148,7 +148,7 @@
 
 - **실행 위치**: make test-unit 로컬 (Makefile:1086).
 - **검증 속성**: S5 verified-supply build-skip 계약(J3 §3.1) — s5-supply 판정 스텝 유일성·위치·mode 중립(:247-263), 컴파일 경로 3스텝만 build 컨정크트(집합 닫힘 :265-275), 명시적 판정 라인(SUPPLY REUSE/S5 COLD BUILD — 조용한 skip 금지 :310-314), 실행 시뮬레이션(HIT/MISS 전체·부분 결손/폐기 상태 콜드 폴백/emit fail-closed :357-439), Q4 보간 토큰 금지(:328-339).
-- **환경 요구**: **python3+PyYAML**(:78-108), **bash**(:180-200), **git**(freeze 태그 :164-176), **sha256sum**(:207-210). freeze 태그 부재 시 loud [SKIPPED](:291-294). 네트워크 0.
+- **환경 요구**: **python3+PyYAML**(:78-108), **bash**(:180-200), **git**(freeze 태그 :164-176), **sha256sum**(:207-210). freeze 태그 부재 시 loud `[SKIPPED](:291-294)`. 네트워크 0.
 - **실패 시 의미**: S5 재사용 계약 표류 = **제품 결함**(무증 아티팩트 공급·조용한 skip = 극장).
 - **분류 근거**: Makefile:1086; 소스 :41, :78-108, :291-294, :357-439.
 

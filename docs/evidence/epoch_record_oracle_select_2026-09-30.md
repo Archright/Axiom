@@ -52,7 +52,7 @@ org orchestrator `Archright/.github/.github/workflows/admission-gate.yml`(저장
 | main ruleset required check | `admission-check` (ruleset 20303214) + cross-repo required workflow `landing-integrity` (23943917) | `docs/evidence/canonical_run_graph.md:95` |
 | execution authority / freshness | org `workflows` ruleset 24041674 @SHA · strict required status check | ADR-0025 §2 |
 | K DAG | admission callee 2 + mint-prepare prepare + mint-publish publish + gateway callee(select 등) + verdict — "구 엔진 job 0건", release-ship → runner-pool force_full 위임 | `docs/evidence/canonical_run_graph.md §I`(:292-331) |
-| certificate 3-way identity | `testedTree == mergeTree == certTree` (gateway testedTreeDigest → mergeTree → mint provenance → certTree 서명) — **mint [B2](c) 재조정 메모: ADR-0025 Amendment C §(5)** | `docs/adr/0025-gateway-landing-authority.md:282`, src/cli/cert_cli.nim:1113 |
+| certificate 3-way identity | `testedTree == mergeTree == certTree` (gateway testedTreeDigest → mergeTree → mint provenance → certTree 서명) — **mint `[B2](c)` 재조정 메모: ADR-0025 Amendment C §(5)** | `docs/adr/0025-gateway-landing-authority.md:282`, src/cli/cert_cli.nim:1113 |
 | select decision envelope(현행) | `mode=selected ciBootstrap=true gatewayTestScope=ALL shards=[0..7] landingPolicyFloor=true` (run 36495330895 실측) | `docs/evidence/canonical_run_graph.md:314` |
 
 ### 2.4 Rollback reference
@@ -83,7 +83,7 @@ org orchestrator `Archright/.github/.github/workflows/admission-gate.yml`(저장
 | 연결 대상 | 내용 |
 |---|---|
 | `docs/adr/0017-incremental-verification-engine.md` **Amendment A2 (2026-09-30)** | oracle-evidence 계약 비준(schema ∅·5축·derivedEmpty·`oracleEvidence` binding token) + C15 4항목 요지 |
-| `docs/adr/0025-gateway-landing-authority.md` **Amendment C (2026-09-30)** | floor 비준 공백 기록 + EMPTY 모순 해소("영향-공집합 후보는 floor 면제") + SL-09 승격 전 선행 조건 + mint [B2](c) 3-way identity 재조정 메모 + selector B-pin 잔존 신뢰 경계 |
+| `docs/adr/0025-gateway-landing-authority.md` **Amendment C (2026-09-30)** | floor 비준 공백 기록 + EMPTY 모순 해소("영향-공집합 후보는 floor 면제") + SL-09 승격 전 선행 조건 + mint `[B2](c)` 3-way identity 재조정 메모 + selector B-pin 잔존 신뢰 경계 |
 | `docs/spec/canonical_execution_semantics.md` **부록 D — 2026-09-30 Amendment** | C15 4항목 — ① 오라클 스키마 ∅ 허용 ② 축의 정직한 열거(축③ 부재·§4.5 dangling) ③ CERTAIN-사유 분류 `derivedEmpty` ④ L0-baseline carve |
 | `docs/spec/incremental_ci_tiers_scheduling.md` **Amendment (2026-09-30)** | L0 "영향 폐쇄가 공집합이어도 항상 실행" 문장 vs 현행 CI 불일치 기록 + Known-branch witness(W4 클래스 미실현) |
 | `docs/adr/0019-verification-tiers-scheduling.md` **Status (2026-09-30)** | L0 문장 불일치·Known-branch witness·selector 신뢰 경계 역참조 |

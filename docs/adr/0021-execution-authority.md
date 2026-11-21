@@ -233,5 +233,5 @@ workflow_dispatch 기반 recovery 워크플로는 만들지 않는다(새 execut
 - ADR-0020 [`docs/adr/0020-axiom-queue-semantics-and-executor-boundary.md`](0020-axiom-queue-semantics-and-executor-boundary.md): trusted/untrusted executor boundary(D9), activation boundary
 - [`docs/spec/merge_admission_controller.md`](../spec/merge_admission_controller.md): §3 Model B dispatch path(본 ADR이 supersede), §6 trust model, §10 executor seam
 - [`docs/spec/certification_continuity_contract.md`](../spec/certification_continuity_contract.md): §4.1/§4.2 Trusted Attestation Boundary, §5 INV-13(본 ADR D6)
-- [`docs/spec/ci_admission_contract.md`](../spec/ci_admission_contract.md): 3분류 실패 + 12건 실패 매핑표(Phase 4)
+- `docs/spec/ci_admission_contract.md`: 3분류 실패 + 12건 실패 매핑표(Phase 4)
 - 실험 데이터: Phase -1(V-A idempotency) 결과 — **pending Phase -1** (아직 수행 안 됨; 완료 시 run URL + `created_at > T0` 필터 데이터로 교체)

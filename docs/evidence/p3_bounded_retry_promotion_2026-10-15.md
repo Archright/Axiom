@@ -13,8 +13,8 @@ Slice B S1(PR #843)이 증명한 `fetch_admission_zip` 바운디드 리트라이
 | # | 사이트 | 위치 (본 PR 기준) | 계약 다리 | 변화 |
 |---|---|---|---|---|
 | 1 | (P4) artifacts-list JSON GET | publish step, 기존 wrapper 직전 | DEBT#474 측정 경로의 선행 fetch — 503 시 wrapper에 도달 못 함 | 즉시 fail-closed → 바운디드 리트라이 |
-| 2 | (P5) artifacts-list GET + tested-tree-digest tree.zip | canonical tree identity step | [B2](b) — 전송 실패가 fully-green run을 red로 전환 | 두 fetch 모두 wrapper 적용 |
-| 3 | (P6) jobs-page GET **단일 페이지** | gateway lane conclusion step | [B2](c) — paginated | **단일 페이지 GET만** wrap; while-loop 자체는 wrap 금지 (loop-level retry의 페이지 중복 집계 부패 방지) |
+| 2 | (P5) artifacts-list GET + tested-tree-digest tree.zip | canonical tree identity step | `[B2](b)` — 전송 실패가 fully-green run을 red로 전환 | 두 fetch 모두 wrapper 적용 |
+| 3 | (P6) jobs-page GET **단일 페이지** | gateway lane conclusion step | `[B2](c)` — paginated | **단일 페이지 GET만** wrap; while-loop 자체는 wrap 금지 (loop-level retry의 페이지 중복 집계 부패 방지) |
 
 **안전 제약 준수 (C2 Task 5)**: ledger append(exactly-once FF-CAS — ax cert ledger-append, ax evidence ledger-append ×3)·`cert attest --sign`·모든 POST는 wrap·변경하지 않았다. `fetch_bounded`는 fetch-scoped로 재시도가 append를 재구동할 수 없다. 기존 `fetch_admission_zip` wrapper의 call-site 동작은 **무변경**이다.
 

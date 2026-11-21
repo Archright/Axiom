@@ -1,7 +1,7 @@
 # SL-0713 승격 결정 바인딩 — D6/[B2] 준비성 판정 + 영구 append 폭발반경 (2026-10-01)
 
 **결정 권위**: AGENTS.md §0.10 (Decision Binding Framework) · `docs/spec/decision_binding_framework.md`
-· ADR-0025 §C.5 (mint [B2](c) mode=none 재조정 메모 확정) · `tools/ci/epoch_transaction_gate.nim`
+· ADR-0025 §C.5 (mint `[B2](c)` mode=none 재조정 메모 확정) · `tools/ci/epoch_transaction_gate.nim`
 (S0-c — 카탈로그+매니페스트+엔진+pin 4-way) · freeze tag `ci-frozen-2026-09-30` (롤백 기준).
 본 문서는 `docs/evidence/merge_queue_operation_2026-09-29.md:50`의 후속 항목
 ("계획 필요 — G1/G2b 승격 트랜잭션 + D6/[B2] 준비성 판정(결정 바인딩) + 영구 append
@@ -24,7 +24,7 @@
 | ledger side-ref (append-only) | `src/verification/ledger_side_ref.nim:401-402` (PATCH `refs/heads/axiom/certificates` `force:false` CAS — 422 원자 거부) | 실존 ✓ |
 | 원장 테스트 | `tests/verification/test_attestation.nim` P11 (fake-transport append→tip→list·verify), P13 (dup-subject 재발행 거부) | 실존 ✓ |
 
-선행 확정: ADR-0025 §C.5 (mode=none candidate의 [B2](c) 대응 — scheduler 없는
+선행 확정: ADR-0025 §C.5 (mode=none candidate의 `[B2](c)` 대응 — scheduler 없는
 lane 결론 semantics) · 본 승격 epoch_transaction_gate L1(G1 원자 페어)/L2(3-way
 등식)/L3(pin 3-way) 통과 · `productionExecutionPin` 무변경 (admission blob 불변).
 판정: **승격 착수는 준비성 충족 — READY.** (모두 실존/기계 검증 대상이며
