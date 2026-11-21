@@ -100,6 +100,7 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/verification/test_g6_prove_runtime_vault.nim \
                   tests/verification/test_g6_verify_journal_not_reference.nim \
                   tests/verification/test_g6_runtime_reference_divergence.nim \
+                  tests/verification/test_cert_source_path_resolution.nim \
                   tests/unit/test_build_provenance_field.nim \
                   tests/unit/test_counterexample_replay.nim \
                   tests/unit/test_bug_verdict_projection.nim \
