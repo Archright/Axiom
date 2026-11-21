@@ -323,8 +323,8 @@ proc gitRun(repoRoot: string, args: seq[string]): RunResult =
     if fileExists(errPath):
       errText = readFile(errPath)
       removeFile(errPath)
-  except CatchableError:
-    discard
+  except CatchableError as exc:
+    errText = "stderr unreadable: " & exc.msg
   if r.exitCode != 0 and errText.len > 0:
     (detail(r.output & errText), r.exitCode)
   else:
@@ -599,8 +599,8 @@ proc main() {.raises: [].} =
         if fileExists(errPath):
           errText = readFile(errPath)
           removeFile(errPath)
-      except CatchableError:
-        discard
+      except CatchableError as exc:
+        errText = "stderr unreadable: " & exc.msg
       unknowns.add("git diff failed (" & $diffRun.exitCode & "): " & detail(errText))
     else:
       diffText = diffRun.output
@@ -735,7 +735,7 @@ proc main() {.raises: [].} =
 
   if scanPath.len > 0:
     try: removeFile(scanPath)
-    except CatchableError: discard
+    except CatchableError: discard  # axiom:best-effort(temp scan file cleanup — verdict already fixed)
 
   let verdict =
     if unknowns.len > 0: "UNKNOWN"
