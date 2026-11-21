@@ -1,4 +1,4 @@
-# publication-integrity 게이트 — 단일 판정 공개 준비성 계약
+# publication-integrity 게이트 — 단일 판정 공개 준비성 계약 (음성 대조군)
 
 **Status**: Normative (v1.5, 2026-11-21 — **script-scan sixth landing dimension**: the landing venue runs all six dimensions, preflight remains `{secret-scan}`, and any other event is FAIL. [ADR-0044](../adr/0044-unicode-script-allowlist-admission.md) adds a Unicode Script allowlist over added diff lines without a new required check, App, workflow file, or permanent ruleset structure change. v1.4 = venue split (ADR-0043): `pull_request`=preflight `{secret-scan}` / `merge_group|schedule|workflow_dispatch`=landing, all dimensions / any other event=FAIL; ADR-0043 extended ADR-0032 (a)(b) to this workflow's job layer and amended (e); v1.3 = license-scan shard 3-leg expansion (VS-PI-3) + self-heal local audit scope alignment; v1.2 = staging single-root scan restructuring; v1.1 = 2-shard structuring)
 **워크플로**: `.github/workflows/publication-integrity.yml` (required context `publication-integrity`)
