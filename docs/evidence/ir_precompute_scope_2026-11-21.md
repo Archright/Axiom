@@ -20,7 +20,7 @@ allowlist 밖이었다. trust surface(`src/cli/merge_cli.nim`)를 건드리지 �
 |---|---|---|---|
 | A | #316 | `data/debt_reduction_baseline.json` 4374→4381 (count-only) | closure 밖 → NORMAL |
 | B | #306 (재구성) | 소스 2파일 + 생성 메타데이터 + baseline/arch hash + closure pin 재앵커 | 전부 allowlist 안 → ROTATION |
-| C | 후속 | 회귀 테스트 + `TESTS_FAST_UNIT` 등록 | closure 밖 → NORMAL |
+| C | #320 | 회귀 테스트 + `TESTS_FAST_UNIT` 등록 (merge `48ea64f`) | closure 밖 → NORMAL |
 | D | 본 문서 | evidence | closure 밖 → NORMAL |
 
 ## §1. 기준점과 환경
@@ -30,7 +30,7 @@ allowlist 밖이었다. trust surface(`src/cli/merge_cli.nim`)를 건드리지 �
 | 변경 전 main | `f68ca0f` | `git log -1` |
 | PR-A merge commit | `974f4af` (PR #316) | `gh pr view 316 --json mergeCommit` |
 | PR-B merge commit | `4ea334d` (PR #306) | `gh pr view 306 --json mergeCommit` |
-| PR-C (tests) | PR #320 | `gh pr view 320 --json mergeCommit` |
+| PR-C merge commit | `48ea64f` (PR #320) | `gh pr view 320 --json mergeCommit` |
 | 호스트 | 16 CPU / 30 GiB / Linux 6.17.0-42-generic x86_64 | `nproc`, `free -g`, `uname -srm` |
 | Nim | 2.2.10 | `nim --version` |
 | 실행 모드 | release (`make build` 기본) | `bin/ax --version` |
@@ -108,3 +108,17 @@ main 기준 IR 창은 착지 전 A/B의 new 값(872/524 ms)과 같은 대역이�
   바꾸는 최적화는 `report --canonical-digest`를 이동시킨다. 판정 표면(verdict/tier/VKD)은 불변.
 - 래칫 cap 4381은 위반 해소가 아니라 **선언=실측 재앵커**다(감축은 별도 작업).
 - JRPC carrier 경로는 unit(55/55)로 닫았으며, 실제 JRPC lane `prove` 실행 증거는 이 슬라이스에 포함하지 않았다.
+
+## §6. Release 전환의 의미 검증 (컴파일러·계약 대조)
+
+release 기본 전환이 "검사 제거"를 뜻하는지 pinned toolchain과 계약 문서로 대조했다.
+
+| 질문 | 근거 | 결과 |
+|---|---|---|
+| `-d:release`가 bounds/range/overflow/assert를 끄는가? | `compiler/commands.nim:525-537` (nim 2.2.10), `config/nim.cfg:86-94` | **아니오.** release는 `optStackTrace`/`optLineTrace`/`optLineDir`만 제외하고 `optOptimizeSpeed`를 켠다. `optBoundsCheck`/`optRangeCheck`/`optOverflowCheck`/`optAssert`는 **유지**된다. 그 제거는 `-d:danger`(또는 `-d:quick`) 전용이다. |
+| Axiom에서 사라지는 계약 검사는 무엇인가? | `src/core/contracts/spec_binding_macro.nim:107,115,180,188` | `requires`/`ensures` DbC가 `when not defined(release)`로 컴파일 아웃된다. 모듈 docstring(:8)이 "non-release 빌드 전용, production zero cost"를 명시한 **의도된 개발용 진단**이다. 판정은 이 런타임 DbC가 아니라 증명 파이프라인이 낸다. |
+| `except Defect` 처리(8곳)는 release에서 유효한가? | `config.nims:47-49` `switch("panics","on")` + `lib/system/excpt.nim:487-491` | **유효하지 않다.** panics:on에서 Defect는 `reportUnhandledError` 후 `rawQuit(1)`이라 `try/except`가 잡지 못한다(`src/cli/main.nim:112` 포함 8곳 모두). |
+| 그때 exit code는? | probe: `nim c --panics:on` + out-of-bounds → `unhandled exception ... [IndexDefect]`, **exit 1**; `--panics:off` → catch → exit 2 | 계약(`docs/spec/productization_contract.md` §v1 CLI Exit-State)의 `1`=VERIFICATION_FAILURE, `2`=INTERNAL_ERROR와 대조하면 **crash가 `1`(fail-closed 상태)로 오분류**된다. 거짓 PASS를 만들 수는 없으나 `internal-error` 상태의 식별은 상실된다. 계약 문서의 해당 행은 "139(SIGSEGV), CLI 경계 핸들러 없음"으로 **현재 코드와 불일치**(OPEN-ITEM)다. |
+
+이 항목은 이 슬라이스에서 변경하지 않았다 — `config.nims`와 `main.nim`은 trust surface이며
+수정은 VerifierBuildId·RecipeDigest 회전을 동반한다(§2.6 authority/invariant protocol).
