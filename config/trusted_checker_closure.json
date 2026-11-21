@@ -84,7 +84,7 @@
     "src/cli/cert_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "c9d9bf12ee7ede6a45568cd0c357af9fda3911d5"
+      "sha": "06caa3226fd1df08abd95f78edbda6445e98f698"
     },
     "src/cli/check_cli.nim": {
       "mode": "100644",
@@ -1169,7 +1169,7 @@
     "src/core/judge/lean_replay.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "297219fafb27018e725f5872a7a83ef7945ce0dd"
+      "sha": "4a1a5bd65a71c856f63cc43cc0d08f211d52da46"
     },
     "src/core/judge/smart_search.nim": {
       "mode": "100644",
@@ -3514,12 +3514,12 @@
     "src/verification/attestation_orchestrator.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "e7a90ecb6f67a9084b6f41edcc240eaadfe462cf"
+      "sha": "14fb4482303a678c81cc28b746349ca014535133"
     },
     "src/verification/attestation_witness.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "2204b3258697e65dae872355fb97937e39fdabb7"
+      "sha": "4664b7c05c3961a8b8def03631b450659bc824a9"
     },
     "src/verification/ax_classify.nim": {
       "mode": "100644",
@@ -3674,7 +3674,7 @@
     "src/verification/certificate_verifier.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "033247d5a5d8514c9bc9fc5f30d9ebe9033266c9"
+      "sha": "c71a69175ae94fcfa308c4b6f2adeeb4332b8b2c"
     },
     "src/verification/charon_runner.nim": {
       "mode": "100644",
@@ -3744,7 +3744,7 @@
     "src/verification/evidence_cas.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "37bea109ee1dbf6d7912fac242d0c4fc2a049795"
+      "sha": "b5bcf1fd4f68673f179c52a798f0906935a5b309"
     },
     "src/verification/evidence_ledger.nim": {
       "mode": "100644",
@@ -3809,7 +3809,7 @@
     "src/verification/kernel_reexecution.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "2466f1c3f988eabf05fc58edbccb028d4bf1130d"
+      "sha": "9b2dc25705745d6fffe3976428d5a19727e9d475"
     },
     "src/verification/layer1_bmc.nim": {
       "mode": "100644",
@@ -4354,7 +4354,7 @@
     "src/verification/subject_continuity_writer.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "8a60cfa9e557712503d9f4801d1c4ab6f6f90313"
+      "sha": "6b117dc59780864798b985a37a2885f4e2d50c4c"
     },
     "src/verification/subject_store.nim": {
       "mode": "100644",
