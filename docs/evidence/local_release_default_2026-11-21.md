@@ -106,7 +106,7 @@ cold 증가분은 prove 약 2.2회로 상각된다.
 | 항목 | 처리 |
 |---|---|
 | `makeAxiomSession` timestamp ordering | 양 모드 미강제 — 제품 불변식 여부 판정 + 명시적 `return err` 필요(별도 계획) |
-| 다른 checkout에서 빌드한 `bin/ax`를 실행할 때 `subjectTreeMerkleRoot unmeasurable` | 내장 build-time root로 subject를 해석해 `""`(fail-closed)가 된다 — 소스 트리와 바이너리의 provenance가 다를 때의 정상 거부이나 진단이 간접적이다. 동일 checkout에서 `make build` 후에는 merkle이 통과하고, 남은 선행조건은 `proofs/.lake/build/bin/ircheck`(Lean 산출물)다. fresh-clone 셋업 문서화 + `--check-provenance` preflight 진단 개선은 별도 계획. |
+| 다른 checkout에서 빌드한 `bin/ax`를 실행할 때 `subjectTreeMerkleRoot unmeasurable` | 내장 build-time root로 subject를 해석해 `""`(fail-closed) — 소스 트리와 바이너리의 provenance가 다를 때의 정상 거부다(진단은 간접적). 동일 checkout에서 `make build` 후 merkle은 통과하고, 남은 선행조건은 `(cd proofs && lake build ircheck)`다 — `docs/agents/operations.md:201-235`의 Trap 4가 이 절차를 이미 규정한다. 추가 제품 변경 없음. |
 | `parallelBuild` | §2.5 Epoch Cutover + 실제 CI 러너 측정 후 |
 | `--passC:-O2` §2.5 분류 | 권한 있는 주체 판정 대기 |
 | `injectContradiction` 공개 API 파라미터 | release에서 무시됨 — API 정리/문서화 판단 필요 |
