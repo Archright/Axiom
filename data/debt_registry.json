@@ -3111,8 +3111,11 @@
       "severity": "high",
       "source": "P7 obligation_semantics audit",
       "productTruthImpact": "STALE",
-      "status": "open",
-      "resolution": "Migrate all rkNoObligation callers to explicit ObligationSkipReason mapping; remove coerce path."
+      "status": "closed",
+      "resolution": "STALE — no rkNoObligation variant exists in src/core/trusted/private/chc_build_result.nim (only ChcNotApplicableReason cnaNoObligations/cnaNoProperty, :23-25); the sole remaining normalization is the declared DECISION-0405 coerce at src/core/trusted/verification_result_types.nim:85-89, which preserves the distinction in ObligationVerdictInfo.kind. Evidence: ir_pipeline_runner.nim:593-607 sets ogrNoApplicableObligation; obligation_types.nim:660,670 maps osrNoObligation -> no_obligation; all 16 return sites audited.",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21",
+      "lastVerifiedAt": "2026-11-21T06:40:04Z"
     },
     {
       "id": "DEBT#422",
@@ -3125,8 +3128,11 @@
       "severity": "medium",
       "source": "P7 obligation_semantics audit",
       "productTruthImpact": "STALE",
-      "status": "open",
-      "resolution": "Unify skipReason enum across ir_pipeline_runner and loop_driver; deprecate string-literal mapping."
+      "status": "closed",
+      "resolution": "STALE — the canonical ObligationSkipReason enum (src/verification/obligation/obligation_types.nim:657-674) is the typed field at src/verification/batch_uap/loop_driver.nim:114 and is imported by ir_pipeline_runner.nim:39; git grep 'skipReason: \"' -- src/ returns zero call-site string mappings. The only remaining literals are inside the enum's own $ serializer (a declared serialization invariant).",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21",
+      "lastVerifiedAt": "2026-11-21T06:40:22Z"
     },
     {
       "id": "DEBT#423",
@@ -3138,8 +3144,11 @@
       "severity": "high",
       "source": "P7 obligation_semantics audit",
       "productTruthImpact": "STALE",
-      "status": "open",
-      "resolution": "Refactor TheaterGuard to preserve obligation counting even on early-return paths; record theater-detected targets with proper skipReason."
+      "status": "closed",
+      "resolution": "STALE — TheaterGuard returns theaterDetectedVerdict(generatedObligationCount) at src/verification/batch_uap/ir_pipeline_runner.nim:194-199,1316, preserving the count and the distinguishable reason theater_detected; the accumulator is declared :554-558 and assigned :761 so every post-generation return carries obligationVerdict. Caveat recorded: no test drives the firing path (test (d) asserts non-firing).",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21",
+      "lastVerifiedAt": "2026-11-21T06:40:42Z"
     },
     {
       "id": "DEBT#424",
@@ -3712,9 +3721,11 @@
       "lineRange": "src/gate/daemon/gate_daemon_server.nim:68-77; src/gate/daemon/gate_daemon_client.nim:82-88",
       "source": "verification-dag-contract P1",
       "productTruthImpact": "STALE",
-      "status": "open",
-      "resolution": "OPEN",
-      "lastVerifiedAt": "2026-08-31T00:00:00Z"
+      "status": "closed",
+      "resolution": "STALE — the gate-daemon cache is keyed on the opaque composite lock hash (DaemonProtocolVersion=2, src/gate/daemon/gate_daemon_types.nim:24,37-48; server :65-95 rejects empty identity and looks up by identity; MemoDb key = opaque composite identity, types:77). computeCompositeLockHash (src/core/gate/gate_memo.nim:269-288) binds inputHash|gateHash|repoRoot|buildEnv|subtreeRoot|binaryHash|envHash|toolchainSalt|transitiveHash|scopeHash, and gateHash is the gate entry's transitive import-closure Merkle root (memo.nim:90-105). Proof: memo_daemon_identity_roundtrip_test.nim, gate_daemon_server_test.nim, gate_daemon_client_test.nim, gate_daemon_types_test.nim all pass (same gate/subtree, different identity = MISS).",
+      "lastVerifiedAt": "2026-11-21T06:41:07Z",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21"
     },
     {
       "id": "DEBT#452",
@@ -5740,11 +5751,13 @@
       ],
       "source": "theater_audit",
       "productTruthImpact": "PRODUCT_TRUTH",
-      "status": "open",
-      "resolution": "UNRESOLVED",
-      "lastVerifiedAt": "2026-11-16T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED on canonical main via PR #296 (commit merged at 9f3955f). config/integrity.nims now hashes the four guarded files' CONTENTS (full paths passed to sha256sum, one 64-hex digest per file, digest-count checked) and compares the root against data/expected_merkle_root.txt. Verified independently: sha256(concat(sha256(file) x4)) == 6f77cf2b8a9d092bc0965f5cd572cafbe1deb32ebda9f2b207617bad7bc5fc0e; tamper probe (append one line to src/core/trusted/effect_types.nim) -> nim compile exits 1 with 'GUARD THE GUARD (Merkle Root): guarded file content hash mismatch'; clean tree compiles.",
+      "lastVerifiedAt": "2026-11-21T06:41:35Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is the NimScript include config/integrity.nims, outside the src/-only {.axiomDebt.} marker scan; trace: this entry's resolution (UNRESOLVED) and source (theater_audit), the reproduction pair (sha256 of the 4 'sha256sum:' diagnostic prefixes = the pinned expected root 62f0c2f4...; full-path recomputed root 6f77cf2b...), and the remediation slice VS-MERKLE-RESTORE-1 recorded in description."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is the NimScript include config/integrity.nims, outside the src/-only {.axiomDebt.} marker scan; trace: this entry's resolution (UNRESOLVED) and source (theater_audit), the reproduction pair (sha256 of the 4 'sha256sum:' diagnostic prefixes = the pinned expected root 62f0c2f4...; full-path recomputed root 6f77cf2b...), and the remediation slice VS-MERKLE-RESTORE-1 recorded in description.",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21"
     },
     {
       "id": "DEBT#547",
@@ -5903,11 +5916,13 @@
       ],
       "source": "vs_authority_separation_2026-11-17",
       "productTruthImpact": "PRODUCT_TRUTH",
-      "status": "open",
-      "resolution": "UNRESOLVED — registration only (a writer-side fix changes the exactly-once contract consumed by certificate-mint's D6 predicate and must be validated against the live merge_group path; this registration slice does not modify the ledger writer). Remediation as described; verification must cover (a) first-attempt duplicate rejection at a tip that already contains the subject, and (b) unchanged FF-CAS behaviour under a concurrent move.",
-      "lastVerifiedAt": "2026-11-17T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED on canonical main via PR #297. src/verification/ledger_side_ref.nim appendCertificate enforces subject uniqueness on EVERY attempt: after the tip read (and root creation when the ref is absent) the tip tree must not already contain <certId>.json; a duplicate is refused before any object is built. Bounded retry re-reads the tip and re-checks against the moved tip, so a raced first append cannot create a second entry for the same subjectId.",
+      "lastVerifiedAt": "2026-11-21T06:41:57Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registration-only finding; the append path is the ledger writer, so changing when uniqueness is checked alters a trust-boundary contract (AGENTS.md §2.6) and needs its own slice plus live acceptance. Trace: this entry's resolution (UNRESOLVED) and source (vs_authority_separation_2026-11-17); external: src/verification/ledger_side_ref.nim:575-582 and .github/workflows/certificate-mint.yml:2263-2274."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registration-only finding; the append path is the ledger writer, so changing when uniqueness is checked alters a trust-boundary contract (AGENTS.md §2.6) and needs its own slice plus live acceptance. Trace: this entry's resolution (UNRESOLVED) and source (vs_authority_separation_2026-11-17); external: src/verification/ledger_side_ref.nim:575-582 and .github/workflows/certificate-mint.yml:2263-2274.",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21"
     },
     {
       "id": "DEBT#554",
