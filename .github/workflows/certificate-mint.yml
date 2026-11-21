@@ -2249,9 +2249,10 @@ jobs:
       #      Provenance: cert_sha256 · gateway run_id · gateway headSha ·
       #      gateway tree identity · conclusion=success · field-binding 통과.
       #      SL-0713 scope — D6 + CAS (slice_catalog SL-0713).
-      #      D. DEBT#554 — ledger-list 3상태: exit 0 목록에서 subjectId 부재일
-      #         때만 append; exit≠0(전송/auth/5xx)은 stderr 보존 후 fail-closed
-      #         (읽기 실패 ≠ 부재). 재조회(reconciliation)도 같은 규칙.
+      #      D. DEBT#554 — ledger-list has three states: append only when the
+      #         exit-0 listing lacks subjectId; exit!=0 (transport/auth/5xx) is
+      #         fail-closed after preserving stderr (a failed read is not
+      #         absence). Reconciliation follows the same rule.
       # ────────────────────────────────────────────────────────────────
       - name: "(P7) D6 + FF-CAS 3분기 reconciliation + exactly-once (ledger append)"
         if: steps.slice-engine.outputs.scope_sl0713 == 'true' && steps.venue.outputs.venue == 'landing'
@@ -2272,9 +2273,9 @@ jobs:
           CERT_SHA256="$(sha256sum "$cert" | awk '{print $1}')"
           GW_TREE="$(jq -r '.certTree' "$cert")"
           commit_meta="B=$B H=${SUBJECT_HEAD:-$H} run_id=$RUN_ID run_attempt=$RUN_ATTEMPT pr=$PR_NUMBER artifact=subject-certificate-$RUN_ATTEMPT cert_sha256=$CERT_SHA256 gateway_run=$RUN_ID gateway_headSha=$H gateway_tree=$GW_TREE gateway_conclusion=success field_binding=ok"
-          # DEBT#554: ledger-list exit≠0은 "부재"가 아니라 "판정 불가"다. stderr를
-          # 폐기하지 않고 exit 0 목록에서만 present/absent를 판정하며, 읽기 실패는
-          # bounded retry 후 fail-closed (append 금지).
+          # DEBT#554: ledger-list exit!=0 means UNKNOWN, not absent. stderr is
+          # preserved, present/absent is decided only from an exit-0 listing,
+          # and a failed read is fail-closed after a bounded retry (no append).
           LEDGER_IDS_FILE=""
           ledger_list_ids() {
             local attempt rc out err
@@ -2312,7 +2313,7 @@ jobs:
               echo "MINT_PUB: OK — ledger append (first issuance, append 1) with provenance: $commit_meta"
             else
               # CAS 3분기 prong-2 — 실패 → 재조회 → (A) 성립 → PASS(0) / 불성립 → FAIL-CLOSED.
-              # DEBT#554: 재조회도 exit 0일 때만 판정에 사용한다 (읽기 실패 ≠ 부재).
+              # DEBT#554: reconciliation also decides only on an exit-0 listing (a failed read is not absence).
               ledger_list_ids
               if grep -qx "$SUBJECT_ID" "$LEDGER_IDS_FILE"; then
                 if ( cd "$B_CHECKOUT_DIR" && bin/ax cert ledger-verify "$cert" >/dev/null ); then
