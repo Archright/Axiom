@@ -205,6 +205,22 @@ close·PR MERGED 표기는 **Landing App이 수행하는 bookkeeping**이다(§1
   부재/공백은 결과를 바꿀 수 없다. envDigest/toolchainIdentity는 서명된 기록
   사실로 형식 검증만 하며 런타임 재계산하지 않는다. certificate 자체 무결성
   (Ed25519 attestation · 현재 policy/scope digest)으로 판정한다(INV-12).
+  **VS-188 관측 보존**: subject-continuity certificate는 `observation`
+  (Lean: `observed`/`theoremName`/`axiomSet`/`verdict`/`leanSourceDigest`/
+  `outputDigest`/`toolchainIdentity`/`skippedChecks`; Z3: `observed`/`queryDigest`/
+  `outputDigest`/`verdict`/`optionsDigest`/`binaryDigest`)과 `provenanceAnchor`
+  (`mergeSha`/`mergeTreeDigest`/`toolCommit`/`prHeadSha`/`prNumber`/`runId`/
+  `runAttempt`/`artifact`)를 서명된 기록 사실로 포함한다. closure
+  (`ax cert verify`)는 이 기록의 자기일관성과 `observationDigest` 결속만 검사하며
+  커널을 재실행하지 않는다 — 커널 재실행은 `ax cert verify --kernel`의 권위다.
+  `trusted=true`는 `provenanceAnchor`가 존재할 때만 성립하며, 앵커는 두 형태로
+  검증된다: (a) GitHub run/artifact 신원을 담은 **admission anchor**는 7필드 +
+  `prNumber`가 완전하고 `prHeadSha == headSha`여야 하고, (b) run 신원이 없는
+  **chain-local anchor**(legacy full-attest CLI)는 `source`/`scheme` 존재만
+  검증된다 — 이는 admission 근거가 아니며, 완전한 admission 앵커를 요구하는
+  권위는 capsule verifier다. Ed25519 서명 키는 공개 시드에서
+  유도되므로 **무결성 전용**이며 발행자 인증(provenance authenticity)이 아니다 —
+  두 속성은 별개 축이다.
 - **I-3 (원장)**: side-ref FF-only + webhook `forced`/`deleted` 감사 + gate_history
   병합 감사. 방지(prevent)는 플랜 상승 후 branch protection/rulesets(Phase 6).
 
@@ -255,7 +271,7 @@ commit SHAs")은 head 객체 도달성을 파괴하므로 Model B에서 금지�
 | INV-3 | continuity의 tree 재유도 금지 — 착지 merge commit의 parent2 tree OID 해시만 대조 | 계약 위반 = 구현 결함 | 내용주소 검증은 재유도가 아니라 대조 |
 | INV-4 | 구조적 독립성 — 동일 생성기 산출물 간 등가는 증거 불인정; 대응 검사 구현은 (다른 언어) 또는 (다른 유도·다른 spec 판독)이어야 함 | differential 무효화 | lean4lean: "not really an independent implementation"; Knight–Leveson |
 | INV-5 | evidence 등급: R-derive(재유도) > T-tool(main-built 도구 산출) > L1(생산자 자체 receipt — 인증 근거에서 배제) | L1 채용 = 인증 거부 | SLSA L1 "trivial to bypass or forge" |
-| INV-6 | kernel verdict만 unforgeable; `#print axioms` allowlist = {propext, Classical.choice, Quot.sound} (Lean 4.33.0 primitive axioms — `funext`는 `Quot.sound`에 의존하는 theorem alias이지 primitive axiom이 아니다: `#print axioms funext` → `[Quot.sound]`); `native_decide`/`Lean.trustCompiler` 계열 자동 거부 | 인증 거부 | Lean Reference §8.4/§8.5, ValidatingProofs, lean_sorry_gate.md §4 |
+| INV-6 | kernel verdict만 unforgeable; `#print axioms` allowlist = {propext, Classical.choice, Quot.sound} (Lean 4.33.0 primitive axioms — `funext`는 `Quot.sound`에 의존하는 theorem alias이지 primitive axiom이 아니다: `#print axioms funext` → `[Quot.sound]`; SSOT = `src/core/judge/lean_replay.nim`); `native_decide`/`Lean.trustCompiler`/프로젝트 공리 계열 자동 거부. **적용 범위 = subject-continuity/관측 경로** — Axiom 자체 증명 자산(`proofs/GateInvariants/*`, `axiom_prelude` 프로젝트 공리)은 이 계약의 non-claim (`docs/spec/lean_sorry_gate.md` §4a) | 인증 거부 | Lean Reference §8.4/§8.5, ValidatingProofs, lean_sorry_gate.md §4 |
 | INV-7 | untrusted tier는 contents:read + 시크릿 미참조(정적 게이트로 강제) | 매트릭스 위반 = gate FAIL | same-repo PR은 시크릿·write token 수급(fork만 샌드박스) |
 | INV-8 | certificate 원장은 main tree 밖 side-ref, FF-only append | 변조 감지(I-3) | git object 불변성 |
 | INV-9 | certificate 의미론 문장(§2) 스냅샷 + 금지 주장("Nim semantics certified", "최종 TCB 폐쇄" 등) 정적 스캔 | gate FAIL | §8.4 — 용어의 정직성 |

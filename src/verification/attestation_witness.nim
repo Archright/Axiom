@@ -81,6 +81,11 @@ type
                                   ## {subject, basis, evidenceKey, projection, projectionSha256}
                                   ## nodes (judgment_cas.judgmentWitnessNodeFor); nil = absent.
                                   ## The mint pairs each element to its per-subject record file.
+    observation*: JsonNode = nil  ## VS-188 Phase 1 — the fresh kernel observation block
+                                  ## (KernelObservation JSON: lean/z3/verificationMode) the
+                                  ## producing chain recorded. Additive like `judgment` and
+                                  ## covered by witnessDigest. REQUIRED at validation: the sign
+                                  ## surface never invents kernel facts (nil → reject).
 
   WitnessBundle* = object
     schema*: string
@@ -145,6 +150,8 @@ func witnessSemanticNode*(s: WitnessSemantic): JsonNode {.raises: [].} =
     result["judgment"] = s.judgment
   if not s.judgments.isNil:
     result["judgments"] = s.judgments
+  if not s.observation.isNil:
+    result["observation"] = s.observation
 
 func witnessProvenanceNode*(p: WitnessProvenance): JsonNode {.raises: [].} =
   %*{
@@ -194,6 +201,30 @@ func provenanceValidationError*(p: WitnessProvenance): string {.raises: [].} =
     return "witness: artifact must be '" & WitnessArtifactPrefix & "{run_attempt}' — deterministic name contract (WITNESS_PROVENANCE)"
   ""
 
+func witnessObservation*(s: WitnessSemantic): Result[KernelObservation, string] {.raises: [],
+    axiomDecision(id = "DECISION-VS188-02",
+      reason = "Single fail-closed decode shared by the witness parser and signWitness: an absent, unobserved, non-passing, allowlist-violating, or digest-mismatched observation is never signable",
+      adr = "docs/spec/certification_continuity_contract.md",
+      introduced = "v34-vs188").} =
+  ## Strict decode of the witness observation block against the bound evidence
+  ## sources. ANY of the sign-surface refusals lives here — absent block,
+  ## `observed=false`, non-pass verdict, allowlist violation, digest mismatch —
+  ## so the parser and `signWitness` cannot drift: the sign surface never runs
+  ## Lean/Z3 and never invents kernel facts.
+  if s.observation.isNil:
+    return err("witness: observation block is required — the sign surface never invents kernel facts (WITNESS_OBSERVATION)")
+  let parsed = parseKernelObservation(s.observation)
+  if parsed.isErr:
+    return err("witness: " & parsed.error)
+  let observation = parsed.get
+  let problem = kernelObservationValidationError(observation,
+    s.evidence.leanSource, s.evidence.smtlib2)
+  if problem.len > 0:
+    return err("witness: " & problem)
+  if not isPassingKernelObservation(observation, s.evidence.leanSource, s.evidence.smtlib2):
+    return err("witness: observation must record BOTH kernels observed and passed — a non-passing observation is never signable (WITNESS_OBSERVATION)")
+  ok(observation)
+
 func semanticValidationError*(s: WitnessSemantic): string {.raises: [].} =
   ## "" = well-formed; otherwise the rejection reason (fail-closed on every
   ## invariant the publisher tier relies on).
@@ -217,6 +248,9 @@ func semanticValidationError*(s: WitnessSemantic): string {.raises: [].} =
       let subjectNode = el{"subject"}
       if subjectNode.isNil or subjectNode.kind != JString or subjectNode.getStr().len == 0:
         return "witness: judgments[] element must name its subject (fail-closed)"
+  let obsProblem = witnessObservation(s)
+  if obsProblem.isErr:
+    return obsProblem.error
   ""
 
 # ---------------------------------------------------------------------------
@@ -226,14 +260,18 @@ func semanticValidationError*(s: WitnessSemantic): string {.raises: [].} =
 proc createWitnessBundle*(subject: VerificationSubject; evidence: AttestationInputs;
                           irHash, createdAt: string; provenance: WitnessProvenance;
                           judgment: JsonNode = nil;
-                          judgments: JsonNode = nil): Result[WitnessBundle, string]
+                          judgments: JsonNode = nil;
+                          observation: JsonNode = nil): Result[WitnessBundle, string]
     {.raises: [CatchableError, OSError, Exception], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Assemble ONE unsigned witness bundle. Fail-closed: the binding digest is
   ## RE-DERIVED here (never accepted from a caller-supplied value) and must
   ## equal the subject's recorded evidenceDigest; the evidence record must
   ## name the same subject/head. provenance is validated; createdAt/irHash
   ## must be well-formed. judgment (optional) must be a well-formed judgment
-  ## witness binding when present.
+  ## witness binding when present. observation (VS-188 Phase 1) is REQUIRED:
+  ## it must be a self-consistent, dual-passing KernelObservation bound to the
+  ## exact leanSource/smtlib2 — a producer cannot assemble a witness the sign
+  ## surface would have to reject.
   let evidenceProblem = validateAttestationInputs(evidence)
   if evidenceProblem.len > 0:
     return err("witness: " & evidenceProblem)
@@ -247,7 +285,7 @@ proc createWitnessBundle*(subject: VerificationSubject; evidence: AttestationInp
   let semanticProblem = semanticValidationError(WitnessSemantic(
     evidence: evidence, subject: subject, evidenceDigest: digest,
     irHash: irHash, createdAt: createdAt, judgment: judgment,
-    judgments: judgments))
+    judgments: judgments, observation: observation))
   if semanticProblem.len > 0:
     return err(semanticProblem)
   let provProblem = provenanceValidationError(provenance)
@@ -263,7 +301,7 @@ proc createWitnessBundle*(subject: VerificationSubject; evidence: AttestationInp
     schema: WitnessScheme,
     semantic: WitnessSemantic(evidence: evidence, subject: subject,
       evidenceDigest: digest, irHash: irHash, createdAt: createdAt,
-      judgment: judgment, judgments: judgments),
+      judgment: judgment, judgments: judgments, observation: observation),
     provenance: provenance)
   bundle.witnessDigest = witnessBundleDigest(bundle)
   ok(bundle)
@@ -285,12 +323,13 @@ type WitnessSemanticDecoded = object
   createdAt: string
   judgment: JsonNode
   judgments: JsonNode
+  observation: JsonNode
 
 func toWitnessSemantic*(decoded: WitnessSemanticDecoded): WitnessSemantic {.raises: [].} =
   WitnessSemantic(evidence: decoded.evidence, subject: decoded.subject,
     evidenceDigest: decoded.evidenceDigest, irHash: decoded.irHash,
     createdAt: decoded.createdAt, judgment: decoded.judgment,
-    judgments: decoded.judgments)
+    judgments: decoded.judgments, observation: decoded.observation)
 
 func witnessJsonObject(node: JsonNode; key: string; what: string): Result[JsonNode, string] {.raises: [].} =
   ## Strict JSON object-block accessor shared by the parse helpers below.
@@ -361,15 +400,22 @@ proc decodeWitnessSemantic(semanticNode: JsonNode): Result[WitnessSemanticDecode
       if subjectNode.isNil or subjectNode.kind != JString or subjectNode.getStr().len == 0:
         return err("witness: judgments[] element must name its subject (fail-closed)")
     judgments = judgmentsNode
+  ## VS-188 Phase 1: the observation block is REQUIRED. Its content is
+  ## validated by semanticValidationError (the single gate `signWitness` also
+  ## calls), so an absent or non-passing block never reaches reconstruction.
+  let observationNode = semanticNode{"observation"}
+  if observationNode.isNil or observationNode.kind != JObject:
+    return err("witness: observation block missing (WITNESS_OBSERVATION)")
+  let observation = observationNode
   let semantic = WitnessSemantic(evidence: evidence, subject: subject,
     evidenceDigest: recordedDigest, irHash: irHashRes.get, createdAt: createdAtRes.get,
-    judgment: judgment, judgments: judgments)
+    judgment: judgment, judgments: judgments, observation: observation)
   let semanticProblem = semanticValidationError(semantic)
   if semanticProblem.len > 0:
     return err(semanticProblem)
   ok(WitnessSemanticDecoded(evidence: evidence, subject: subject,
     evidenceDigest: recordedDigest, irHash: irHashRes.get, createdAt: createdAtRes.get,
-    judgment: judgment, judgments: judgments))
+    judgment: judgment, judgments: judgments, observation: observation))
 
 proc decodeWitnessProvenance(provNode: JsonNode; subject: VerificationSubject;
                              evidence: AttestationInputs): Result[WitnessProvenance, string]
@@ -460,13 +506,16 @@ proc parseWitnessBundleText*(text: string): Result[WitnessBundle, string]
 # ---------------------------------------------------------------------------
 
 func subjectCertInputFromWitness*(subject: VerificationSubject;
-    evidence: AttestationInputs; irHash, createdAt, mergeTreeDigest: string): SubjectCertificateInput {.raises: [].} =
+    evidence: AttestationInputs; irHash, createdAt, mergeTreeDigest: string;
+    observation: KernelObservation; provenanceAnchor: JsonNode): SubjectCertificateInput {.raises: [].} =
   ## Reconstruct the canonical SubjectCertificateInput from the witness
   ## semantic inputs — the EXACT field set attestMintStage builds (so the
   ## full-attest and witness→sign certificate representations coincide).
   ## No runId/runAttempt/M enter this representation (identity separation);
   ## certTree (the merge-candidate tree OID) is the provenance-observed
-  ## identity link — carry it into the binding block.
+  ## identity link — carry it into the binding block. The fresh observation is
+  ## the sole source of the kernel claims; the witness provenance block is the
+  ## presence-only anchor `trusted` requires (integrity, not authenticity).
   SubjectCertificateInput(
     subject: subject,
     modulePath: evidence.funcPath,
@@ -474,7 +523,7 @@ func subjectCertInputFromWitness*(subject: VerificationSubject;
     funcName: evidence.funcName,
     leanSource: evidence.leanSource,
     smtlib2: evidence.smtlib2,
-    leanProposition: firstDeclaredName(evidence.leanSource),
+    leanProposition: observation.lean.theoremName,
     prHeadSha: evidence.prHeadSha,
     prNumber: evidence.prNumber,
     envDigest: evidence.envDigest,
@@ -485,16 +534,33 @@ func subjectCertInputFromWitness*(subject: VerificationSubject;
     irHash: irHash,
     createdAt: createdAt,
     certTree: mergeTreeDigest,
-    axiomVersion: axiomVersionWithPrefix)
+    axiomVersion: axiomVersionWithPrefix,
+    observation: observation.lean,
+    z3Observation: observation.z3,
+    verificationMode: observation.verificationMode,
+    provenanceAnchor: provenanceAnchor)
 
 proc signWitness*(bundle: WitnessBundle; certDir: string): Result[SubjectCertificateMintResult, string]
-    {.raises: [CatchableError, OSError, Exception], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+    {.raises: [CatchableError, OSError, Exception], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect],
+     axiomDecision(id = "DECISION-VS188-03",
+       reason = "Sign surface trusts the witness only after re-validating its recorded observation against the bound sources; it performs no kernel execution and never invents the facts it signs",
+       adr = "docs/spec/certification_continuity_contract.md",
+       introduced = "v34-vs188").} =
   ## Verify → normalize → reconstruct → journal → sign the canonical
   ## certificate representation. NO kernel execution, NO network: the witness
   ## is the sole input. Reuses the v3 writer exactly (append-only, journal
   ## binding, deterministic Ed25519 attestation).
+  ## Fail-closed before reconstruction: the recorded observation must be
+  ## present, self-consistent against the bound leanSource/smtlib2, and
+  ## dual-passing — the sign surface never runs a kernel and never invents one.
+  let observationRes = witnessObservation(bundle.semantic)
+  if observationRes.isErr:
+    return err(observationRes.error)
+  let observation = observationRes.get
+  let provenanceAnchor = witnessProvenanceNode(bundle.provenance)
   let input = subjectCertInputFromWitness(bundle.semantic.subject, bundle.semantic.evidence,
-    bundle.semantic.irHash, bundle.semantic.createdAt, bundle.provenance.mergeTreeDigest)
+    bundle.semantic.irHash, bundle.semantic.createdAt, bundle.provenance.mergeTreeDigest,
+    observation, provenanceAnchor)
   writeSubjectContinuityCertificate(certDir, input)
 
 {.pop.}

@@ -7,6 +7,7 @@ import std/os
 import std/strutils
 import std/algorithm
 import core/crypto/hash_kernel
+import core/results
 import core/types/certificate_types
 import core/types/verification_tier
 import core/trusted/axiom_pragmas
@@ -15,17 +16,20 @@ import core/trusted/trust_commit
 import core/proof/source_fingerprint
 import core/utils/repo_root
 import core/io/file_utils
+import core/judge/lean_replay
+import verification/canonical_json
 import verification/certificate_identity
+import verification/kernel_reexecution
 import infrastructure/certificate_attestation
 {.push raises: [].}
 
-## Builtin axiom allowlist for pure-Lean kernel cert deep verification. Any
-## recorded axiom outside this set (notably sorryAx/Lean.sorryAx) → fail-closed.
-## Mirrors ax_vacuity_check.lean / lean_replay.nim. docs/spec/lean_sorry_gate.md.
-## INV-6 primitive set: `funext` is a theorem alias whose `#print axioms`
-## dependency is `Quot.sound`; it is not a primitive axiom and is rejected here.
-const leanCertBuiltinAxiomAllowlist*: array[3, string] =
-  ["Classical.choice", "Quot.sound", "propext"]
+## Builtin axiom allowlist for kernel cert deep verification. THE canonical
+## definition lives in core/judge/lean_replay.nim (a core-layer module, so the
+## verification layer may import it): Lean 4.33.0 exposes three primitive
+## axioms, and `funext` is a theorem over `Quot.sound`, not an axiom. Any
+## recorded axiom outside this set (notably sorryAx/Lean.sorryAx)
+## → fail-closed. docs/spec/lean_sorry_gate.md.
+const leanCertBuiltinAxiomAllowlist* = canonicalAxiomAllowlist
 
 proc certSourceHashMatchesSource*(cert: JsonNode; projectRoot: string): bool {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Fail-closed source-staleness check: the cert's `sourceHash` must equal
@@ -85,15 +89,17 @@ proc isDeepVerified*(cert: JsonNode; certPath: string;
     # Accept Lean-only verification (certLeanVerified) without requiring smtlib2
     let leanVerified = cert{"solverMeta"}{"leanCompilerVerified"}.getBool(false)
     let smtlib2 = cert.getOrDefault("smtlib2").getStr("")
+    let leanSource = cert.getOrDefault("leanSource").getStr("")
     if not leanVerified and smtlib2.len == 0:
       return dvcSmtMissing
-    # Fail-closed sorry gate for pure-Lean kernel certs. When verification is
-    # Lean-only (no smtlib2), the cert MUST record a non-empty `axiomsUsed` list
-    # free of sorryAx/Lean.sorryAx and restricted to the builtin allowlist.
-    # A missing/empty list or any offending axiom → dvcLeanNotVerified. Z3-based
-    # certs (non-empty smtlib2, leanCompilerVerified=false) are untouched and
-    # remain valid. See docs/spec/lean_sorry_gate.md (DEBT#296).
-    if leanVerified and smtlib2.len == 0:
+    # Fail-closed sorry gate. VS-188 Phase 1: enforce the allowlist whenever a
+    # leanSource is bound — previously this gate ran only for pure-Lean certs
+    # (smtlib2.len == 0), so subject-continuity certs (leanSource + smtlib2)
+    # never reached INV-6. An empty recorded set is legitimate ONLY when the
+    # cert carries an observation that proves the kernel observed it (the
+    # observation is validated below and in the closure gate); a legacy
+    # pure-Lean cert with no recorded set stays dvcNotCurrent.
+    if leanSource.len > 0:
       var names: seq[string] = @[]
       let axiomsNode = cert.getOrDefault("axiomsUsed")
       if axiomsNode != nil and axiomsNode.kind == JArray:
@@ -101,20 +107,17 @@ proc isDeepVerified*(cert: JsonNode; certPath: string;
           let name = ax.getStr("")
           if name.len > 0 and name notin names:
             names.add(name)
-      if names.len == 0:
-        # Empty axiomsUsed for a pure-Lean kernel cert means the cert
-        # was produced by an older toolchain that did not record the
-        # observed axiom set.  The artifact is structurally valid (its
-        # fingerprint, identityDigest, and attestation all check out);
-        # it is merely not current product truth.  dvcNotCurrent
-        # distinguishes this from genuine integrity violations
-        # (sorryAx / non-allowlisted axioms → dvcLeanNotVerified).
-        return dvcNotCurrent
       for ax in names:
         if ax == "sorryAx" or ax == "Lean.sorryAx":
           return dvcLeanNotVerified
-        if ax notin leanCertBuiltinAxiomAllowlist:
+        if not isCanonicalAxiom(ax):
           return dvcLeanNotVerified
+      if names.len == 0 and cert{"observation"}.isNil and
+          leanVerified and smtlib2.len == 0:
+        # Legacy pure-Lean artifact: the producing toolchain did not record
+        # the observed axiom set. Structurally valid but not current product
+        # truth — dvcNotCurrent, never a green claim.
+        return dvcNotCurrent
   # NOTE: the `passed` field was a legacy artifact from an earlier writer
   # (writeCertificateFromUapResult) that never emitted it.  The current
   # canonical evidence representation (solverStatus/smtlib2/solverMeta)
@@ -127,6 +130,25 @@ proc isDeepVerified*(cert: JsonNode; certPath: string;
   let parsedStatus = parseCertificateStatus(status)
   if parsedStatus notin {certGreen, certZ3Candidate, certLeanVerified, certDualVerified, certVerifiedAxiom}:
     return dvcTamperedStatus
+  # VS-188 Phase 1: a subject-continuity certGreen/dual-verified claim is a
+  # claim about a FRESH kernel observation. Without a recorded, self-consistent,
+  # dual-passing observation bound to the cert's own leanSource/smtlib2, the
+  # status is stronger than its evidence → tampered (existing result value).
+  # Scope: the subject-continuity contract only — legacy UAP certs (no `kind`)
+  # keep their pre-VS-188 deep-verification semantics, and are never upgraded
+  # to a fresh-verification claim (their legacy shape is classified elsewhere).
+  if parsedStatus in {certGreen, certDualVerified} and
+      cert.getOrDefault("kind").getStr("") == "subject-continuity":
+    let observationNode = cert{"observation"}
+    if observationNode.isNil or observationNode.kind != JObject:
+      return dvcTamperedStatus
+    let parsedObservation = parseKernelObservation(observationNode)
+    if parsedObservation.isErr:
+      return dvcTamperedStatus
+    if not isPassingKernelObservation(parsedObservation.get,
+        cert.getOrDefault("leanSource").getStr(""),
+        cert.getOrDefault("smtlib2").getStr("")):
+      return dvcTamperedStatus
   # P0 invariant: status must not be stronger than evidence.
   # certGreen without dual Z3∧Lean evidence → tampered.
   if not statusConsistentWithEvidence(cert):
@@ -202,16 +224,144 @@ func certSemanticProjection(node: JsonNode): string {.raises: [].} =
   ]
   sha256Hex(fields.join("|"))
 
+func observationProjection(node: JsonNode): string {.raises: [].} =
+  ## Canonical projection of the signed observation block: key order cannot
+  ## affect the comparison, but any value change does. Absent projects to "".
+  let observation = node{"observation"}
+  if observation.isNil:
+    return ""
+  canonical_json.canonicalJsonString(observation)
+
 func sameReplayInputs(certNode, journalClaim: JsonNode): bool {.raises: [].} =
   ## Replay input identity consistency (R4 §4): the inputs used for replay —
   ## sourceHash, irHash, solverStatus, policyId — must be identical between the
   ## certificate and the journal claim it points at. A mismatch means the cert
   ## was re-bound to a foreign journal (cert A + journal B) or the journal was
-  ## replayed with different inputs.
+  ## replayed with different inputs. VS-188 Phase 1: the observation block and
+  ## its digest are replay inputs too — a cert whose observation was altered
+  ## after minting can never replay against the journaled claim.
   for key in ["sourceHash", "irHash", "solverStatus", "policyId"]:
     if certNode.getOrDefault(key).getStr("") != journalClaim.getOrDefault(key).getStr(""):
       return false
+  if observationProjection(certNode) != observationProjection(journalClaim):
+    return false
+  if certNode.getOrDefault("observationDigest").getStr("") !=
+      journalClaim.getOrDefault("observationDigest").getStr(""):
+    return false
   true
+
+func subjectObservationProblem(node: JsonNode): string {.raises: [].} =
+  ## "" = the subject-continuity observation block is self-consistent AND the
+  ## recorded derived facts are exactly what that observation implies. Any
+  ## mismatch — absent block, tampered axiom set, digest that does not bind the
+  ## block, or a kernel/status claim the observation does not support — is a
+  ## fail-closed reason. Non-subject certs return "" (their gates are the
+  ## legacy deep-verification stages).
+  if node.getOrDefault("kind").getStr("") != "subject-continuity":
+    return ""
+  let observationNode = node{"observation"}
+  if observationNode.isNil or observationNode.kind != JObject:
+    return "subject-continuity certificate carries no observation (fail-closed)"
+  let parsed = parseKernelObservation(observationNode)
+  if parsed.isErr:
+    return "observation block: " & parsed.error
+  let observation = parsed.get
+  let leanSource = node.getOrDefault("leanSource").getStr("")
+  let smtlib2 = node.getOrDefault("smtlib2").getStr("")
+  if leanSource.len == 0 or smtlib2.len == 0:
+    return "subject-continuity certificate lacks leanSource/smtlib2 (fail-closed)"
+  let problem = kernelObservationValidationError(observation, leanSource, smtlib2)
+  if problem.len > 0:
+    return "observation: " & problem
+  if not isPassingKernelObservation(observation, leanSource, smtlib2):
+    return "observation is not a dual-kernel pass (fail-closed)"
+  let storedDigest = node.getOrDefault("observationDigest").getStr("")
+  if storedDigest.len == 0 or storedDigest != kernelObservationDigest(observation):
+    return "observationDigest does not bind the recorded observation (fail-closed)"
+  # Derived facts, all signed: they must be exactly the observation's
+  # implications, so a post-mint edit of one without the other is rejected.
+  if not node.getOrDefault("trusted").getBool(false):
+    return "trusted=false contradicts a provenance-anchored mint (fail-closed)"
+  if not node.getOrDefault("verified").getBool(false):
+    return "verified=false contradicts a dual-passing observation (fail-closed)"
+  if not node.getOrDefault("kernel").getBool(false):
+    return "kernel=false contradicts a passing Lean observation (fail-closed)"
+  if node.getOrDefault("status").getStr("") != "certGreen":
+    return "status is not the observation-derived certGreen (fail-closed)"
+  if node.getOrDefault("solverStatus").getStr("") != "unsat":
+    return "solverStatus is not the observation-derived unsat (fail-closed)"
+  if node.getOrDefault("reason").getStr("") != "dual-verified":
+    return "reason is not the observation-derived dual-verified (fail-closed)"
+  if node.getOrDefault("verificationTier").getStr("") != "dual-verified":
+    return "verificationTier is not the observation-derived dual-verified (fail-closed)"
+  if node.getOrDefault("winningStrategy").getStr("") != "lean-replay":
+    return "winningStrategy is not the observation-derived lean-replay (fail-closed)"
+  if node.getOrDefault("theoremName").getStr("") != observation.lean.theoremName:
+    return "theoremName does not match the observation (fail-closed)"
+  if node.getOrDefault("leanSourceDigest").getStr("") != observation.lean.leanSourceDigest:
+    return "leanSourceDigest does not match the observation (fail-closed)"
+  if node.getOrDefault("smtlib2Digest").getStr("") != sha256Hex(smtlib2):
+    return "smtlib2Digest does not bind the certificate's smtlib2 (fail-closed)"
+  if node.getOrDefault("z3QueryDigest").getStr("") != observation.z3.queryDigest:
+    return "z3QueryDigest does not match the observation (fail-closed)"
+  if node.getOrDefault("z3OptionsDigest").getStr("") != observation.z3.optionsDigest:
+    return "z3OptionsDigest does not match the observation (fail-closed)"
+  if node.getOrDefault("z3BinaryDigest").getStr("") != observation.z3.binaryDigest:
+    return "z3BinaryDigest does not match the observation (fail-closed)"
+  if node.getOrDefault("verificationMode").getStr("") != observation.verificationMode:
+    return "verificationMode does not match the observation (fail-closed)"
+  var recordedAxioms: seq[string] = @[]
+  let axiomsNode = node.getOrDefault("axiomsUsed")
+  if axiomsNode.isNil or axiomsNode.kind != JArray:
+    return "axiomsUsed missing (fail-closed)"
+  for axiom in axiomsNode.items:
+    if axiom.kind != JString:
+      return "axiomsUsed element is not a string (fail-closed)"
+    recordedAxioms.add axiom.getStr()
+  if normalizeAxiomSet(recordedAxioms) != normalizeAxiomSet(observation.lean.axiomSet):
+    return "axiomsUsed does not match the observed axiom set (fail-closed)"
+  if node.getOrDefault("leanProposition").getStr("") != observation.lean.theoremName:
+    return "leanProposition does not name the observed theorem (fail-closed)"
+  ## Provenance axis: `trusted=true` is an assertion about a run/artifact
+  ## anchor. The anchor itself must be recorded. Two shapes exist and both are
+  ## validated for what they actually claim:
+  ##   * admission anchor — carries GitHub run identity (any of the seven
+  ##     fields below). Then ALL seven fields + prNumber must be complete and
+  ##     prHeadSha must equal the certified headSha.
+  ##   * chain-local anchor — the legacy full-attest CLI surface. It carries
+  ##     no run identity, so it cannot support an admission claim; it is
+  ##     validated as a presence-only marker (source/scheme). Requiring the
+  ##     admission shape here would reject legitimate local mints, and
+  ##     accepting the marker as run identity would over-claim — the capsule
+  ##     verifier is the authority that requires the full admission anchor.
+  let anchor = node{"provenanceAnchor"}
+  if anchor.isNil or anchor.kind != JObject or anchor.len == 0:
+    return "trusted=true but provenanceAnchor is absent (fail-closed)"
+  var admissionFields = 0
+  for key in ["mergeSha", "mergeTreeDigest", "toolCommit", "prHeadSha",
+              "runId", "runAttempt", "artifact"]:
+    let v = anchor.getOrDefault(key)
+    if v.isNil:
+      continue
+    if v.kind != JString or v.getStr("").len == 0:
+      return "provenanceAnchor." & key & " present but not a non-empty string (fail-closed)"
+    admissionFields.inc
+  if admissionFields > 0:
+    for key in ["mergeSha", "mergeTreeDigest", "toolCommit", "prHeadSha",
+                "runId", "runAttempt", "artifact"]:
+      let v = anchor.getOrDefault(key)
+      if v.isNil or v.kind != JString or v.getStr("").len == 0:
+        return "provenanceAnchor." & key & " missing (fail-closed)"
+    if anchor.getOrDefault("prNumber").kind != JInt:
+      return "provenanceAnchor.prNumber missing (fail-closed)"
+    if anchor.getOrDefault("prHeadSha").getStr("") !=
+        node.getOrDefault("headSha").getStr(""):
+      return "provenanceAnchor.prHeadSha does not match the certified headSha (fail-closed)"
+  else:
+    if anchor.getOrDefault("source").getStr("").len == 0 or
+        anchor.getOrDefault("scheme").getStr("").len == 0:
+      return "chain-local provenanceAnchor lacks source/scheme (fail-closed)"
+  ""
 
 proc verifyCertificateClosureNode*(
   certNode: JsonNode; certPath: string; projectRoot: string
@@ -270,6 +420,15 @@ proc verifyCertificateClosureNode*(
     return CertClosureResult(
       status: ccsAttestationInvalid,
       detail: "attestation verification failed: " & attCheck.err)
+
+  # VS-188 Phase 1: a subject-continuity certificate must carry an observation
+  # that is self-consistent, dual-passing, and the exact basis of every
+  # recorded kernel/status claim. Missing or altered facts fail closed with
+  # the EXISTING result value (no new verdict member).
+  let observationProblem = subjectObservationProblem(certNode)
+  if observationProblem.len > 0:
+    return CertClosureResult(status: ccsNotDeepVerified,
+      detail: "observation gate: " & observationProblem)
 
   # Journal binding: trustCommitId must exist and resolve to a durable commit.
   # The journal is the AXIOM product's own artifact — it must resolve at the
