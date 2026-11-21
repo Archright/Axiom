@@ -1,14 +1,14 @@
-# 회전 allowlist 사전등록 — obligation-count 회전 동반 5경로 (ADR-0025 Amendment A8)
+# Rotation allowlist prereg -- obligation-count rotation companions, 5 paths (ADR-0025 Amendment A8)
 
-> **Status**: 사전등록(prereg). 본 문서는 **아직 착지하지 않은** 회전 동반 집합 확장의 근거·범위·비확장 논증을 착지 전에 고정한다.
+> **Status**: prereg. This document fixes the basis, scope, and non-expansion argument of a rotation companion-set expansion **before it lands**.
 > **Created**: 2026-11-21
-> **대상 PR**: #287 (`fix(batch-uap): keep obligation counts and rank the declared projection (DEBT#423/#487)`, head `a130d0b`)
-> **실측 verdict**: merge_group run `44882710554` (2026-11-21T08:07Z), `reasonCode=ROT_ALLOWLIST`
-> **개정 대상**: ADR-0025 Amendment A8 (`docs/adr/0025-gateway-landing-authority.md`)
+> **Target PR**: #287 (`fix(batch-uap): keep obligation counts and rank the declared projection (DEBT#423/#487)`, head `a130d0b`)
+> **Measured verdict**: merge_group run `44882710554` (2026-11-21T08:07Z), `reasonCode=ROT_ALLOWLIST`
+> **Amended document**: ADR-0025 Amendment A8 (`docs/adr/0025-gateway-landing-authority.md`)
 
-## §1. 실측 사실 (착지 전 관측)
+## Section 1. Measured facts (observed before landing)
 
-PR #287의 merge_group verdict에서 관측된 `rotationCheck`:
+The `rotationCheck` observed in the PR #287 merge_group verdict:
 
 ```json
 {
@@ -33,9 +33,9 @@ PR #287의 merge_group verdict에서 관측된 `rotationCheck`:
 }
 ```
 
-기존 허용 집합 안이었던 경로(4): `config/trusted_checker_closure.json`, `data/architecture_debt.json`, `data/nimtry_baseline.json`, `src/generated/type_registry_metadata.json`.
-클로저 멤버(pin@B 키)로 허용된 경로(1): `src/verification/batch_uap/ir_pipeline_runner.nim`.
-**허용 집합 밖이었던 경로(5)** — 본 개정이 수록하는 대상:
+Paths already inside the allow set (4): `config/trusted_checker_closure.json`, `data/architecture_debt.json`, `data/nimtry_baseline.json`, `src/generated/type_registry_metadata.json`.
+Path allowed as a closure member (pin@B key) (1): `src/verification/batch_uap/ir_pipeline_runner.nim`.
+**Paths outside the allow set (5)** -- the objects this amendment registers:
 
 1. `tests/unit/test_ir_pipeline_theaterguard.nim`
 2. `tests/unit/test_hotspot_ranker.nim`
@@ -43,77 +43,77 @@ PR #287의 merge_group verdict에서 관측된 `rotationCheck`:
 4. `tools/hotspot_ranker.nim`
 5. `data/debt_reduction_baseline.json`
 
-## §2. 회전 대상과 제품 결함 (왜 이 PR이 회전인가)
+## Section 2. Rotation subject and product defect (why this PR is a rotation)
 
-회전은 `src/verification/batch_uap/ir_pipeline_runner.nim`(클로저 멤버)의 변경 때문에 발생한다. 이 변경은 DEBT#423의 실제 결함을 고친다:
+The rotation is caused by a change to `src/verification/batch_uap/ir_pipeline_runner.nim` (a closure member). That change fixes the actual defect behind DEBT#423:
 
-- canonical success 경로가 `:740`에서 `obligationCount: generatedObligationCount`를 기록하지만, 이 변수의 대입은 `:761`에서 일어난다. 따라서 canonical success는 **항상 0**을 보고한다.
-- DEBT#304가 인용한 TheaterGuard(`:1316`)는 이 early-return 경로를 커버하지 못하므로, #304의 stale-close 서술은 canonical success 경로에 대해 거짓이다.
-- PR #287은 generation boundary에서 count를 고정하고(`runIrPipelineCore(..., generatedCount: var int)`), public wrapper에서 stamp한다.
+- The canonical-success path records `obligationCount: generatedObligationCount` at `:740`, but that variable is assigned at `:761`. A canonical-success path therefore reports **always 0**.
+- The TheaterGuard cited by DEBT#304 (`:1316`) does not cover this early-return path, so the stale-close statement in #304 is false for the canonical-success path.
+- PR #287 pins the count at the generation boundary (`runIrPipelineCore(..., generatedCount: var int)`) and stamps it in the public wrapper.
 
-## §3. 동반 경로 분류 (전부 회전 멤버의 계약/데이터 동반 클래스)
+## Section 3. Companion-path classification (all are rotation-member contract/data companions)
 
-| 경로 | 클래스 | 근거 |
+| Path | Class | Basis |
 |---|---|---|
-| `tests/unit/test_ir_pipeline_theaterguard.nim` | 회전 멤버 단위 계약 | test (g)가 실제 canonical-success 반환의 count 보존을 단언. 구 테스트는 비차단 경로만 단언하므로 동반 없이는 회전이 적색이 된다 (`test_judgment_cas.nim`·`wf_runners_test.nim` 동일 클래스) |
-| `tests/unit/test_hotspot_ranker.nim` | projection read-back 계약 테스트 | DEBT#487 — `generateProjections`가 실제로 내보내는 P1 projection을 `DebtRowFields` 선언 테이블로 읽는지 고정 |
-| `tools/ci/proof_unit_consistency_gate.nim` | 회전 기계의 계약 동반 | 신규 테스트의 Debt role 라인 핀(`tests/unit/test_hotspot_ranker.nim:50`) 등록 (`tools/merge_ruleset_drift_monitor.nim` 동일 클래스) |
-| `tools/hotspot_ranker.nim` | 비멤버 production `src/`가 아닌 도구 | downstream projection reader. positional 6-column 가정 → `DebtRowFields`/`parseMarkdownRows` 선언 소비로 교체 |
-| `data/debt_reduction_baseline.json` | 게이트 baseline 데이터 | `src/gate/runners/debt_integrity_gate.nim:27`, `src/gate/in_process_gates.nim:265`가 읽는 reduction baseline. nimtry 4374→4275 (`data/nimtry_baseline.json`·`data/quality_gate_baseline.json` 동일 클래스) |
+| `tests/unit/test_ir_pipeline_theaterguard.nim` | rotation-member unit contract | test (g) asserts the count survives a real canonical-success return. The old test asserted only the non-blocking path, so the rotation turns red without this companion (same class as `test_judgment_cas.nim`/`wf_runners_test.nim`) |
+| `tests/unit/test_hotspot_ranker.nim` | projection read-back contract test | DEBT#487 -- fix that the P1 projection `generateProjections` actually emits is read through the `DebtRowFields` declaration table |
+| `tools/ci/proof_unit_consistency_gate.nim` | rotation-machinery contract companion | Debt role line pin registration for the new test (`tests/unit/test_hotspot_ranker.nim:50`) (same class as `tools/merge_ruleset_drift_monitor.nim`) |
+| `tools/hotspot_ranker.nim` | a tool, not non-member production `src/` | downstream projection reader. Replaces the positional 6-column assumption with `DebtRowFields`/`parseMarkdownRows` declaration consumption |
+| `data/debt_reduction_baseline.json` | gate baseline data | the reduction baseline read by `src/gate/runners/debt_integrity_gate.nim:27` and `src/gate/in_process_gates.nim:265`. nimtry 4374 -> 4275 (same class as `data/nimtry_baseline.json`/`data/quality_gate_baseline.json`) |
 
-**production `src/` 아님**: 위 5경로 중 `src/` 아래 경로는 0건이다. A2 (i)의 "NON-member production src/ 금지" 클래스와 무관하다.
+**Not production `src/`**: none of the 5 paths above is under `src/`. They are unrelated to the A2 (i) "NON-member production src/ prohibited" class.
 
-## §4. 비확장 논증
+## Section 4. Non-expansion argument
 
-- ① allowlist는 `closureChange=true`인 ROTATION 경로에서만 평가된다(ADR-0025 A2 (ii)). 본 등재는 NORMAL 경로에서 이 5경로의 취급을 전혀 바꾸지 않는다.
-- 열거형만 수록한다 — glob 없음(A4 규율). `tests/**`·`tools/**`·`data/**` 접두 확장은 없다.
-- 본 등재는 회전 승인 범위만 최소 확장하며, 비회전 PR의 자유도는 불변이다.
+- (1) The allowlist is evaluated only on the ROTATION path where `closureChange=true` (ADR-0025 A2 (ii)). This registration changes the treatment of these 5 paths on the NORMAL path in no way.
+- Enumeration only -- no globs (A4 rule). There is no prefix expansion of `tests/**`, `tools/**` or `data/**`.
+- This registration minimally extends only the rotation approval scope; the freedom of non-rotation PRs is unchanged.
 
-## §5. 범위 한정
+## Section 5. Scope bound
 
-- 본 개정은 #287의 **착지 가능성**만 복원한다. #287의 제품 판정(#423 obligation count 보존, #487 projection read-back)은 별도 acceptance 대상이다.
-- 확장 PR 자신은 trustSurface(`src/cli/merge_cli.nim`) 변경이므로 merge queue가 아니라 MUST-T2a 수동 병합 lane을 탄다(선례: `docs/evidence/breakglass_trust_surface_landing_2026-11-19.md`).
+- This amendment restores only the **landability** of #287. The product verdict of #287 (DEBT#423 obligation count preserved, DEBT#487 projection read-back) is a separate acceptance target.
+- The expansion PR itself changes trustSurface (`src/cli/merge_cli.nim`), so it takes the MUST-T2a manual merge lane rather than the merge queue (precedent: `docs/evidence/breakglass_trust_surface_landing_2026-11-19.md`).
 
-## §5b. 두 번째 회전 — CLI fail-closed (#268, DEBT#225)
+## Section 5b. Second rotation -- CLI fail-closed (#268, DEBT#225)
 
-같은 fix class의 두 번째 회전: `src/cli/axiom_status.nim`·`src/cli/cert_cli.nim`·`src/cli/config_cli.nim`(클로저 멤버 3개)이 상태 부재 시 exit 0을 반환하는 "silent success"를 제거한다. 변경 13경로 중 허용 집합 밖 6경로:
+A second rotation of the same fix class: `src/cli/axiom_status.nim`, `src/cli/cert_cli.nim` and `src/cli/config_cli.nim` (three closure members) remove the "silent success" that returned exit 0 when state was absent. 6 of the 13 changed paths are outside the allow set:
 
-| 경로 | 클래스 | 근거 |
+| Path | Class | Basis |
 |---|---|---|
-| `tests/cli/test_axiom_status.nim` | 회전 멤버 단위 계약 | no-history/`--allow-missing` exit 단언 |
-| `tests/cli/test_cert_cli.nim` | 회전 멤버 단위 계약 | 빈 vault/부재 vault/id 거부 exit 단언 |
-| `tests/cli/test_config_cli.nim` | 회전 멤버 단위 계약 | strict/default 매트릭스 |
-| `tests/features/axiom_status.feature` | §0.7 비즈니스 시나리오 SSOT | fail-closed/opt-in 시나리오 갱신 |
-| `tests/gateway/axiom_status_feature_test.nim` | gateway 계약 테스트 | feature 시나리오 실행 |
-| `data/feature_manifest.json` | feature 등록 데이터 | 갱신된 feature의 등록 |
+| `tests/cli/test_axiom_status.nim` | rotation-member unit contract | no-history / `--allow-missing` exit assertions |
+| `tests/cli/test_cert_cli.nim` | rotation-member unit contract | empty vault / absent vault / id-rejection exit assertions |
+| `tests/cli/test_config_cli.nim` | rotation-member unit contract | strict/default matrix |
+| `tests/features/axiom_status.feature` | section 0.7 business-scenario SSOT | fail-closed / opt-in scenario update |
+| `tests/gateway/axiom_status_feature_test.nim` | gateway contract test | executes the feature scenarios |
+| `data/feature_manifest.json` | feature registration data | registers the updated feature |
 
-회전 자체는 3개 클로저 멤버의 변경이 원인이므로 `closureChange=true`이며, 위 6경로는 모두 변경된 멤버의 계약/데이터 동반 클래스다(production `src/` 0건).
+The rotation itself is caused by changes to the three closure members, so `closureChange=true`, and all 6 paths above are contract/data companions of the changed members (0 production `src/`).
 
-## §5c. 세 번째 회전 — 생성 메타데이터 동반 (#317 자신, A8 (iii))
+## Section 5c. Third rotation -- generated metadata companion (this PR, A8 (iii))
 
-본 개정 PR 자신의 delta(6경로) 실측에서 **자기차단 1경로**가 확인됐다:
+The delta measurement of this amendment PR itself (6 paths) identified **1 self-blocking path**:
 
-| 경로 | 클래스 | 근거 |
+| Path | Class | Basis |
 |---|---|---|
-| `src/generated/build_metadata.json` | 생성 데이터 동반 (A6와 동일 클래스) | `make build`가 `tools/build_metadata_generator.nim`으로 결정론적으로 재생성하는 산출물. `config.nims`가 staticRead하고 `config/paths.nims`·`config/vendors.nims`·`src/gate/self_ref_detect.nim`이 소비한다. 로컬 빌드를 수행하는 모든 회전 PR이 필연 동반하므로, 배제하면 회전이 구조적으로 불가능하다(A2 ① 자기모순). |
+| `src/generated/build_metadata.json` | generated-data companion (same class as A6) | an artifact that `make build` regenerates deterministically via `tools/build_metadata_generator.nim`. `config.nims` staticReads it and `config/paths.nims`, `config/vendors.nims`, `src/gate/self_ref_detect.nim` consume it. Every rotation PR that runs a local build necessarily carries it, so excluding it makes rotation structurally impossible (A2 (1) self-contradiction). |
 
-A6가 `src/generated/type_registry_metadata.json`을 수록한 것과 **동일 fix class**이며, production `src/`가 아니다(generated data). 열거형만 — glob 없음(A4).
+This is the **same fix class** as A6's registration of `src/generated/type_registry_metadata.json`, and it is not production `src/` (generated data). Enumeration only -- no globs (A4).
 
-## §5d. 네 번째 회전 — gate_hook 게이트웨이 테스트 동반 (#285, A8 (iv))
+## Section 5d. Fourth rotation -- gate_hook gateway test companion (#285, A8 (iv))
 
-PR #285(DEBT#520, head `03dc481`)의 diff 실측(origin/main 대비 5경로)에서 허용 집합 밖 1경로가 확인됐다:
+The diff measurement of PR #285 (DEBT#520, head `03dc481`; 5 paths against origin/main) identified 1 path outside the allow set:
 
-| 경로 | 클래스 | 근거 |
+| Path | Class | Basis |
 |---|---|---|
-| `tests/gateway/gate_hook_feature_test.nim` | 회전 멤버 gateway 계약 테스트 | 회전 대상 `src/gate/runners/gate_hook.nim`(클로저 멤버)의 AOT pre-flight manifest `.nim` 해석을 단언. A8 (ii)의 `axiom_status_feature_test.nim`과 동일 클래스. |
+| `tests/gateway/gate_hook_feature_test.nim` | rotation-member gateway contract test | asserts the AOT pre-flight manifest `.nim` resolution of the rotation subject `src/gate/runners/gate_hook.nim` (a closure member). Same class as `axiom_status_feature_test.nim` in A8 (ii). |
 
-나머지 4경로는 이미 허용: `src/gate/runners/gate_hook.nim`(클로저 멤버), `config/trusted_checker_closure.json`(pin), `data/architecture_debt.json`·`src/generated/type_registry_metadata.json`(allowlist extra).
+The remaining 4 paths are already allowed: `src/gate/runners/gate_hook.nim` (closure member), `config/trusted_checker_closure.json` (pin), `data/architecture_debt.json`, `src/generated/type_registry_metadata.json` (allowlist extra).
 
-## §6. 승인 기록
+## Section 6. Approval record
 
-| 항목 | 값 |
+| Item | Value |
 |---|---|
-| 승인자 | wintrover (소유자, sole `@Archright/architect`) |
-| 승인 일시 | 2026-11-21 |
-| 승인 근거 | 세션 명시 승인("권한이 필요한 부분은 전면 허가한다", 2026-11-21) + PR #287 merge_group verdict 실측(ROT_ALLOWLIST, changed 10경로 중 차단 5경로, run `44882710554`) + PR #268 diff 실측(changed 13경로 중 차단 6경로) |
-| 실행자 | agent (per-PR 명시 위임). 사람의 키 입력으로 기록하지 않는다. |
+| Approver | wintrover (owner, sole `@Archright/architect`) |
+| Approval date | 2026-11-21 |
+| Approval basis | session-level explicit approval of 2026-11-21, plus the PR #287 merge_group verdict measurement (ROT_ALLOWLIST, 5 of 10 changed paths blocked, run `44882710554`) and the PR #268 diff measurement (6 of 13 changed paths blocked) |
+| Executor | agent (per-PR explicit delegation). Not recorded as human keystrokes. |
