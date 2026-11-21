@@ -19,9 +19,11 @@ axiomLayer "infrastructure"
 ## canonicalization stays on the RFC 8785 serializer.
 
 import std/json
+import std/math
 import std/sets
 import std/strutils
 import std/unicode
+import core/parsers/safe_parsers
 import core/results
 
 const
@@ -181,11 +183,15 @@ func parseNumber(p: var StrictParser): JsonNode {.raises: [].} =
     while not p.atEnd and p.peek() in {'0'..'9'}: inc p.pos
   let token = p.text[start ..< p.pos]
   if isFloat:
-    try:
-      return %parseFloat(token)
-    except CatchableError:
+    let parsed = safeParseFloat(token)
+    if parsed.isErr:
       p.fail("number out of range")
       return nil
+    let value = parsed.get()
+    if classify(value) in {fcNan, fcInf, fcNegInf}:
+      p.fail("number out of range")
+      return nil
+    return %value
   else:
     try:
       return %parseBiggestInt(token)
