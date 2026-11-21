@@ -377,9 +377,27 @@
       "플랜 상향은 위 조건 충족 + 비용 근거(per-seat, 포함 compute)가 함께 제시될 때만 검토한다."
     ]
   },
+  "discoveredDefects": [
+    {
+      "id": "APP-PR-VENUE-HEAD-MOVE-RACE",
+      "observedAt": "2026-11-21T06:10:16Z",
+      "authority": "external Admission App 5795152 (agent 수정 권한 없음)",
+      "symptom": "PR #305에 두 번째 커밋을 push한 뒤, 이전 head(2f2135b)의 admission-gate run 44873857358(conclusion=failure)이 완료되자 App이 현재 head(434d4ce)에 failure를 발행했다. App 자신의 verdict에 reasons=run_head_mismatch가 기록되어 있다.",
+      "mechanism": [
+        "mint-publish A0 가드가 live PR head와 run headSha를 비교해 fail-closed: \"PR #305 head.sha 434d4ce9e5b4 != headSha input 2f2135b84832\".",
+        "App은 run 완료 시점의 PR head를 판정 대상으로 삼으므로, head가 이동한 뒤 도착한 run 결과가 새 head에 오귀속된다.",
+        "같은 PR의 이전 head(2f2135b)에는 conclusion=null인 App check-run이 25분 이상 잔류했다(06:05:08 시작)."
+      ],
+      "impact": "PR에 커밋을 두 번 이상 push하면 required check가 내용과 무관하게 failure로 고정될 수 있다. 재현 가능하다.",
+      "whyOutOfScope": "App 소스가 저장소에 없고 발행 권한이 외부에 있다. 저장소 YAML만으로는 판정 주체의 오귀속을 고칠 수 없다.",
+      "recovery": "새 head로 1회만 push해 단일 run 사이클을 만든다. 본 PR이 그 경로를 사용했다.",
+      "contractGap": "'run.head_sha == 판정 대상' 및 '동일 판정 키에 대한 직렬화'가 App의 PR venue 경로에서 아직 닫히지 않았다."
+    }
+  ],
   "openItems": [
     "after arm(c=100) n>=20 표본 수집 후 wall/queued/runner 및 merges/hour 재판정 (현재 n=3, PARTIAL — p50/p95 미산출)",
     "Admission App 5795152의 PR venue 계약 확인 (PR 13 job 축소 가능성 — agent 권한 밖)",
+    "App 5795152 PR venue의 run/subject 바인딩과 pending check 잔류 (discoveredDefects.APP-PR-VENUE-HEAD-MOVE-RACE, agent 권한 밖)",
     "#238 ROT_ALLOWLIST 결함 분리 해결 (MG 실패 23/50의 원인)",
     "main push 사후 검사 제거는 tree(merge_group head)==tree(main landed) 등가 입증 후에만 검토"
   ],
