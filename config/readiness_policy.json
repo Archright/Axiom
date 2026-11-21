@@ -285,7 +285,7 @@
         "key": "successExitCode",
         "type": "int",
         "presence": "required",
-        "perSubject": "policy:r5.contractCommands",
+        "perSubject": "policy:r5.successCommands",
         "onNull": "unknown",
         "onAbsent": "unknown",
         "onFalse": "pass",
@@ -294,8 +294,7 @@
       {
         "key": "verificationFailureExitCode",
         "type": "int",
-        "presence": "conditional",
-        "condition": "successor:successExitCode",
+        "presence": "required",
         "perSubject": "policy:r5.contractCommands",
         "onNull": "unknown",
         "onAbsent": "unknown",
@@ -305,8 +304,7 @@
       {
         "key": "invalidInputExitCode",
         "type": "int",
-        "presence": "conditional",
-        "condition": "successor:successExitCode",
+        "presence": "required",
         "perSubject": "policy:r5.contractCommands",
         "onNull": "unknown",
         "onAbsent": "unknown",
@@ -316,8 +314,7 @@
       {
         "key": "internalErrorExitCode",
         "type": "int",
-        "presence": "conditional",
-        "condition": "successor:successExitCode",
+        "presence": "vocabulary",
         "perSubject": "policy:r5.contractCommands",
         "onNull": "unknown",
         "onAbsent": "unknown",
@@ -487,6 +484,9 @@
   "r5": {
     "contractCommands": [
       "ax prove",
+      "ax report"
+    ],
+    "successCommands": [
       "ax report"
     ],
     "definedExitCodes": [

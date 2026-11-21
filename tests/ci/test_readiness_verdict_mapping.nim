@@ -293,18 +293,20 @@ proc r4Obs(): seq[JsonNode] =
   result.add(obs("subjectTreeImmutableAcrossRun", %true, "git"))
 
 proc r5Obs(): seq[JsonNode] =
-  ## Every contract command needs commandExists/helpSurface/successExitCode;
-  ## with successExitCode present the three failure buckets are conditionally
-  ## required for that same subject (DEBT#559 key contract).
+  ## R5 key contract (DEBT#559): commandExists/helpSurface are required for
+  ## every contract command; successExitCode is required only for the commands
+  ## the collection actually actuates to success (policy r5.successCommands =
+  ## ax report); verificationFailure/invalidInput exit codes are required for
+  ## every contract command; internalErrorExitCode is a declared vocabulary
+  ## value (presence=vocabulary) and never evidence.
   result = @[obs("jsonSchemaVersion", %"axiom.report.v1"),
-             obs("stdoutStderrSplit", %true)]
+             obs("stdoutStderrSplit", %true),
+             obs("successExitCode", %0, "observed", "ax report")]
   for cmd in ["ax prove", "ax report"]:
     result.add(obs("commandExists", %true, "surface", cmd))
     result.add(obs("helpSurface", %true, "surface", cmd))
-    result.add(obs("successExitCode", %0, "", cmd))
-    result.add(obs("verificationFailureExitCode", %1, "", cmd))
-    result.add(obs("invalidInputExitCode", %3, "", cmd))
-    result.add(obs("internalErrorExitCode", %2, "", cmd))
+    result.add(obs("verificationFailureExitCode", %1, "observed", cmd))
+    result.add(obs("invalidInputExitCode", %3, "observed", cmd))
 
 proc r6Obs(): seq[JsonNode] =
   @[obs("failureConvertsToSuccess", %false),

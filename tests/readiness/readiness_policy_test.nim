@@ -710,7 +710,7 @@ suite "DEBT#559 — observation-key closure (false GO regression)":
     else:
       skip()
 
-  test "conditional failure codes are demanded when successExitCode exists":
+  test "R5 success is demanded only for actuated commands; vocabulary is never evidence":
     when EVALUATOR_AVAILABLE:
       let missing = loadSyntheticFixture()
       removeObs(missing, "R5", "verificationFailureExitCode", "ax prove")
@@ -719,7 +719,18 @@ suite "DEBT#559 — observation-key closure (false GO regression)":
       let successMissing = loadSyntheticFixture()
       removeObs(successMissing, "R5", "successExitCode", "ax report")
       check stateOf(POLICY, successMissing, "R5") == "UNKNOWN"
-      echo "  [debt559] successor:successExitCode conditional demand enforced"
+
+      # `ax prove` has no independent success actuation in the collection
+      # (policy r5.successCommands = ["ax report"]): its absence is the
+      # contract, not a missing observation.
+      check stateOf(POLICY, loadSyntheticFixture(), "R5") == "PASS"
+
+      # internalErrorExitCode is declared vocabulary: dropping it never
+      # changes R5, and a contract-scoped value never satisfies an observed key.
+      let vocab = loadSyntheticFixture()
+      removeObs(vocab, "R5", "internalErrorExitCode", "ax prove")
+      check stateOf(POLICY, vocab, "R5") == "PASS"
+      echo "  [debt559] R5 success/scope contract: actuated-only demand, vocabulary excluded"
     else:
       skip()
 

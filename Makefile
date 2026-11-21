@@ -964,7 +964,8 @@ verify-contract-release-e2e-full: verify-proof-boundary ## G7-full — CI releas
 	bin/ax --check-provenance || exit 1; \
 	HASH_A="$$(sha256sum bin/ax | cut -d' ' -f1)"; \
 	bin/ax --version >/dev/null; \
-	AXIOM_CI=1 bin/ax prove --target normalizeMaxWorkers; \
+	AXIOM_CI=1 bin/ax prove --target normalizeMaxWorkers; PROVE_EXIT=$$?; \
+	mkdir -p logs; printf '%s\n' "$$PROVE_EXIT" > logs/verify_contract_e2e_prove_exit.txt; \
 	set +e; REPORT="$$(bin/ax report --json)"; REPORT_EXIT=$$?; set -e; \
 	[ -n "$$REPORT" ] || { echo "FAIL: report stdout empty"; exit 1; }; \
 	mkdir -p logs; printf '%s' "$$REPORT" > logs/verify_contract_e2e_report.json; \
@@ -997,10 +998,12 @@ verify-contract-release-e2e-full: verify-proof-boundary ## G7-full — CI releas
 	  bin/ax cert verify "$$VAULT/$$h.json" >/dev/null 2>&1 && CERT="$$VAULT/$$h.json"; \
 	done; \
 	[ -n "$$CERT" ] || { echo "FAIL: no current certificate for $$MODULE::$$FN"; exit 1; }; \
-	KERNEL_OUT="$$(bin/ax cert verify --kernel "$$CERT" 2>&1)" || \
-	  { echo "FAIL: cert verify --kernel rejected $$CERT"; echo "$$KERNEL_OUT"; exit 1; }; \
+	KERNEL_OUT="$$(bin/ax cert verify --kernel "$$CERT" 2>&1)"; KERNEL_EXIT=$$?; \
+	[ "$$KERNEL_EXIT" -eq 0 ] || \
+	  { echo "FAIL: cert verify --kernel rejected $$CERT (exit $$KERNEL_EXIT)"; echo "$$KERNEL_OUT"; exit 1; }; \
 	echo "$$KERNEL_OUT"; \
 	printf '%s\n' "$$KERNEL_OUT" > logs/verify_contract_e2e_kernel.out; \
+	printf '%s\n' "$$KERNEL_EXIT" > logs/verify_contract_e2e_kernel_exit.txt; \
 	jq -e --slurpfile c "$$CERT" \
 	  '.executionIdentity.executionBundleFingerprint==$$c[0].executionBundleFingerprint' \
 	  "$$STATE" >/dev/null || { echo "FAIL: run/cert identity mismatch"; exit 1; }; \
@@ -1011,6 +1014,8 @@ verify-contract-release-e2e-full: verify-proof-boundary ## G7-full — CI releas
 	printf '%s' "$$REPORT" | jq -e --argjson st "$$(cat "$$STATE")" \
 	  '.summary.verified==$$st.summary.verified and .summary.symbolCount==$$st.summary.symbolCount and .summary.verifiedRatio==$$st.summary.verifiedRatio and .summary.verificationSuccessRate==$$st.summary.verificationSuccessRate and .summary.totalSourceFunctions==$$st.summary.totalSourceFunctions and .summary.failedCount==$$st.summary.failedCount' \
 	  >/dev/null || { echo "FAIL: report/state inconsistency"; exit 1; }; \
+	cp "$$STATE" logs/verify_contract_e2e_state.json; \
+	echo "INFO: E2E state alias logs/verify_contract_e2e_state.json (the state this report was validated against)"; \
 	HASH_B="$$(sha256sum bin/ax | cut -d' ' -f1)"; \
 	[ "$$HASH_A" = "$$HASH_B" ] || { echo "FAIL: release binary changed during E2E"; exit 1; }; \
 	echo "INFO: G7 pass (tier=$$TIER status=$$STATUS cert=$$CERT)"

@@ -975,9 +975,15 @@ proc ruleR5(obs: seq[JsonNode], policy: JsonNode): InvState =
     if obsKey(o) == "successExitCode" and isNumber(obsValue(o)):
       let subject = obsSubject(o)
       let success = int(floatValue(obsValue(o), 0.0))
-      for need in ["verificationFailureExitCode", "internalErrorExitCode",
-                   "invalidInputExitCode"]:
-        let nv = findObserved(obs, need, subject = subject)
+      # Exit-code distinctness is a policy question: only keys the policy
+      # declares as required evidence for this subject participate. A
+      # vocabulary key is a declared value, not an observation, so it can
+      # neither witness nor refute distinctness.
+      for d in keyDispositions(policy, "R5"):
+        if d.presence == kpVocabulary: continue
+        if d.key == "successExitCode" or not d.key.endsWith("ExitCode"): continue
+        if subject notin subjectsOf(policy, d): continue
+        let nv = findObserved(obs, d.key, subject = subject)
         if nv.isNone:
           failure = true
         elif isNumber(nv.get):

@@ -25,7 +25,9 @@
 ##                          verify_contract_e2e_report_exit.txt,
 ##                          verify_contract_e2e_cert_path.txt,
 ##                          verify_contract_e2e_kernel.out, run-manifest.json,
-##                          ax_proof_state.json, r3_relocation.json (wp5).
+##                          verify_contract_e2e_state.json (the state the
+##                          report was validated against; legacy fallback
+##                          ax_proof_state.json), r3_relocation.json (wp5).
 ##   --out <dir>            evidence dir (default data/readiness/evidence).
 ##   --policy <file>        config/readiness_policy.json (observation-key and
 ##                          threshold SSOT; thresholds and key lists are read
@@ -427,6 +429,7 @@ type
     manifestErr: string
     state: JsonNode
     stateErr: string
+    statePath: string           ## resolved E2E state artifact (alias preferred)
     wp5: JsonNode               ## parsed logs/r3_relocation.json
     wp5Err: string
 
@@ -656,7 +659,16 @@ when isMainModule:
     art.manifest = r.node
     art.manifestErr = r.err
   block state:
-    let r = safeParseFile(artifactsDir / "ax_proof_state.json")
+    # The producer snapshots the state it validated against the E2E report as
+    # verify_contract_e2e_state.json (fixed transport alias, same pattern as
+    # e2e_certificate.json): later steps in the producing job run their own
+    # proves against the default logs/ax_proof_state.json and would otherwise
+    # leave a foreign run's state under the artifact name. The alias is
+    # preferred; the legacy name is the fallback for producers without it.
+    art.statePath = artifactsDir / "verify_contract_e2e_state.json"
+    if not fileExists(art.statePath):
+      art.statePath = artifactsDir / "ax_proof_state.json"
+    let r = safeParseFile(art.statePath)
     art.state = r.node
     art.stateErr = r.err
   block wp5:
@@ -676,7 +688,10 @@ when isMainModule:
     pr.help = runSplit(axBin, @["help"], repoRoot)
     pr.proveHelp = runSplit(axBin, @["prove", "--help"], repoRoot)
     pr.reportHelp = runSplit(axBin, @["report", "--help"], repoRoot)
-    let stateArg = artifactsDir / "ax_proof_state.json"
+    # The success/canonical probes consume the SAME state artifact the report
+    # was validated against (alias resolution in the state block above), so a
+    # probe can never mint evidence from a different run's state.
+    let stateArg = art.statePath
     pr.reportJson = runSplit(axBin, @["report", "--json", "--state-file", stateArg], repoRoot)
     pr.canon1 = runSplit(axBin, @["report", "--canonical-digest", "--state-file", stateArg], repoRoot)
     pr.canon2 = runSplit(axBin, @["report", "--canonical-digest", "--state-file", stateArg], repoRoot)
@@ -1331,9 +1346,12 @@ when isMainModule:
                          "'" & cmd & " --help' exited 0 but printed no usage " &
                          "surface naming the command — helpSurface measured false"))
       # successExitCode: only a real successful execution of the command is
-      # evidence. `ax report` is actuated here (reportJson); `ax prove` has no
-      # independent success run in this collection, so no observation is
-      # minted and R5 stays UNKNOWN (fail-closed) until one is observed.
+      # evidence. `ax report` is actuated here (reportJson) against the state
+      # artifact the E2E report was validated with. `ax prove` has no
+      # independent success run in this collection — its success bucket is
+      # declared by the R8 E2E contract instead (r8.successfulExecutionContract,
+      # consumed by ruleR8), so no successExitCode observation is minted for it
+      # and R5 never substitutes a help exit for a real success run.
       if pr.axPresent and sub == "report":
         if pr.reportJson.exitCode == successCode:
           obs.add(obsInt("successExitCode", successCode, "observed", cmd))
@@ -1360,36 +1378,37 @@ when isMainModule:
       # contract value at scope "contract" — the evaluator's key closure
       # excludes declared values, so an unactuated bucket keeps R5 UNKNOWN
       # instead of silently passing on a policy echo.
-      # invalid input: actuated only for the prove subject via the live probe.
-      if sub == "prove" and pr.axPresent:
-        obs.add(obsInt("invalidInputExitCode", pr.unknownOption.exitCode,
-                       "observed", cmd))
+      # invalid input: actuated for both contract commands — the probes are
+      # read-only and each command has its own rejection path (`ax prove`
+      # unknown option; `ax report` unknown flag / absent state file).
+      if pr.axPresent:
+        let invalidProbe = (if sub == "prove": pr.unknownOption else: pr.missingStateFile)
+        obs.add(obsInt("invalidInputExitCode", invalidProbe.exitCode, "observed", cmd))
         inc.add(incident(
-          "R5-EXIT-001", (if pr.unknownOption.exitCode == invalidCode: "info" else: "warning"),
-          "invalid-input probe for '" & cmd & "' exited " & $pr.unknownOption.exitCode &
+          "R5-EXIT-001", (if invalidProbe.exitCode == invalidCode: "info" else: "warning"),
+          "invalid-input probe for '" & cmd & "' exited " & $invalidProbe.exitCode &
           " (policy INVALID_INPUT=" & $invalidCode & ")"))
       else:
         obs.add(obsInt("invalidInputExitCode", invalidCode, "contract", cmd))
-        if pr.axPresent and sub == "report":
-          inc.add(incident(
-            "R5-EXIT-002", "info",
-            "ax report ignores unknown flags (probe: ax report " &
-            "--definitely-unknown-flag) — no invalid-input actuation for this " &
-            "subject; contract value recorded at scope=contract (known first-slice " &
-            "work item, cf. committed R5-INC-002)"))
-      # verification failure: actuated only when the E2E report exit was 1.
-      if art.reportExitOk and art.reportExit == verifFailCode:
-        obs.add(obsInt("verificationFailureExitCode", art.reportExit, "observed",
-                       cmd))
+      # verification failure: actuated when this collection observed a
+      # verification-failure exit (the E2E report exit, or the live `ax report`
+      # probe over the E2E state — the probe is the same exit family and runs
+      # on this checkout's binary).
+      let observedVerifFail =
+        (art.reportExitOk and art.reportExit == verifFailCode) or
+        (pr.axPresent and sub == "report" and pr.reportJson.exitCode == verifFailCode)
+      if observedVerifFail:
+        obs.add(obsInt("verificationFailureExitCode", verifFailCode, "observed", cmd))
       else:
-        obs.add(obsInt("verificationFailureExitCode", verifFailCode, "contract",
-                       cmd))
+        obs.add(obsInt("verificationFailureExitCode", verifFailCode, "contract", cmd))
+      # internal error: no safe inducible probe exists for either command, so
+      # the bucket stays a declared vocabulary value and never counts as
+      # evidence (policy presence=vocabulary for this key).
       obs.add(obsInt("internalErrorExitCode", internalCode, "contract", cmd))
     inc.add(incident("R5-EXIT-000", "info",
-                     "failure exit-code buckets not actuated by this collection are " &
-                     "recorded at scope=contract (policy echo); the evaluator excludes " &
-                     "declared observations from key closure, so R5 remains UNKNOWN " &
-                     "until every bucket is observed — never a default PASS (DEBT#559)"))
+                     "exit-code buckets with no safe actuation (internal-error) are " &
+                     "recorded at scope=contract (policy vocabulary, presence=vocabulary); " &
+                     "required buckets are actuated — never a default PASS (DEBT#559)"))
     if not pr.axPresent:
       inc.add(incident("R5-OBS-001", "warning",
                        "bin/ax absent — no exit-code actuation for any subject; " &

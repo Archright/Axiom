@@ -192,7 +192,7 @@ jobs:
           DIRTY="$(git status --porcelain -- src ':(exclude)src/generated' config.nims config/effects.nims src/gate/config.nims Makefile axiom.nimble axiom.lock proofs/lean-toolchain)"
           [ -z "$DIRTY" ] || fail "verifier build inputs dirty vs HEAD: $DIRTY"
           CERT="$(cat logs/verify_contract_e2e_cert_path.txt)"
-          jq -n -S -c -j --slurpfile cert "$CERT" --slurpfile st logs/ax_proof_state.json --slurpfile rep logs/verify_contract_e2e_report.json --arg certPath "$CERT" --arg scopeHash "$(bin/ax scope hash)" --arg gitHead "$EXPECTED_GIT_HEAD" --arg binSha "$EXPECTED_BIN_SHA" --arg engineBuild "$ENGINE_BUILD" --arg buildSourceHash "$ACTUAL_BUILD_SOURCE_HASH" --arg lockSha "$(sha256sum data/verification_scope.lock | cut -d' ' -f1)" --arg canon "$(bin/ax report --canonical-digest)" --arg certSha "$(sha256sum "$CERT" | cut -d' ' -f1)" --arg node "src/core/orchestrator/orchestrator_api.nim::normalizeMaxWorkers" --argjson proveExit 0 --argjson kernelExit 0 --argjson reportExit "$(cat logs/verify_contract_e2e_report_exit.txt)" --arg kernelOut "$(cat logs/verify_contract_e2e_kernel.out)" -f tools/ci/run_manifest.jq > logs/run-manifest.json
+          jq -n -S -c -j --slurpfile cert "$CERT" --slurpfile st logs/ax_proof_state.json --slurpfile rep logs/verify_contract_e2e_report.json --arg certPath "$CERT" --arg scopeHash "$(bin/ax scope hash)" --arg gitHead "$EXPECTED_GIT_HEAD" --arg binSha "$EXPECTED_BIN_SHA" --arg engineBuild "$ENGINE_BUILD" --arg buildSourceHash "$ACTUAL_BUILD_SOURCE_HASH" --arg lockSha "$(sha256sum data/verification_scope.lock | cut -d' ' -f1)" --arg canon "$(bin/ax report --canonical-digest)" --arg certSha "$(sha256sum "$CERT" | cut -d' ' -f1)" --arg node "src/core/orchestrator/orchestrator_api.nim::normalizeMaxWorkers" --argjson proveExit "$(cat logs/verify_contract_e2e_prove_exit.txt)" --argjson kernelExit "$(cat logs/verify_contract_e2e_kernel_exit.txt)" --argjson reportExit "$(cat logs/verify_contract_e2e_report_exit.txt)" --arg kernelOut "$(cat logs/verify_contract_e2e_kernel.out)" -f tools/ci/run_manifest.jq > logs/run-manifest.json
           [ "$(jq -r '.sourceTree.gitHead' logs/run-manifest.json)" = "$EXPECTED_GIT_HEAD" ] || fail "manifest gitHead != $EXPECTED_GIT_HEAD"
           [ "$(jq -r '.binary.sha256' logs/run-manifest.json)" = "$EXPECTED_BIN_SHA" ] || fail "manifest binary.sha256 != $EXPECTED_BIN_SHA"
           [ "$(jq -r '.toolchain.engineBuild' logs/run-manifest.json)" = "$ENGINE_BUILD" ] || fail "manifest engineBuild != $ENGINE_BUILD"
@@ -276,9 +276,12 @@ jobs:
             logs/verify_contract_e2e_report_exit.txt
             logs/verify_contract_e2e_cert_path.txt
             logs/verify_contract_e2e_kernel.out
+            logs/verify_contract_e2e_kernel_exit.txt
+            logs/verify_contract_e2e_prove_exit.txt
             logs/run-manifest.json
             logs/run-manifest.sha256
             logs/ax_proof_state.json
+            logs/verify_contract_e2e_state.json
             logs/e2e_certificate.json
           # upload-artifact v4+ artifacts are immutable and name-unique per run;
           # a re-run re-uploads this fixed name — overwrite replaces it

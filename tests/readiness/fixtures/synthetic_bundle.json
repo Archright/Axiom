@@ -11,7 +11,10 @@
     "observations": [
       {
         "key": "documentedCommand",
-        "value": ["ax prove", "ax report"],
+        "value": [
+          "ax prove",
+          "ax report"
+        ],
         "scope": "doc",
         "subject": "README.md"
       },
@@ -286,21 +289,15 @@
         "subject": "ax prove"
       },
       {
-        "key": "successExitCode",
-        "value": 0,
-        "scope": "",
-        "subject": "ax prove"
-      },
-      {
         "key": "verificationFailureExitCode",
         "value": 1,
-        "scope": "",
+        "scope": "observed",
         "subject": "ax prove"
       },
       {
         "key": "invalidInputExitCode",
         "value": 3,
-        "scope": "",
+        "scope": "observed",
         "subject": "ax prove"
       },
       {
@@ -324,19 +321,19 @@
       {
         "key": "successExitCode",
         "value": 0,
-        "scope": "",
+        "scope": "observed",
         "subject": "ax report"
       },
       {
         "key": "verificationFailureExitCode",
         "value": 1,
-        "scope": "",
+        "scope": "observed",
         "subject": "ax report"
       },
       {
         "key": "invalidInputExitCode",
         "value": 3,
-        "scope": "",
+        "scope": "observed",
         "subject": "ax report"
       },
       {
@@ -413,13 +410,17 @@
     "observations": [
       {
         "key": "claimedScope",
-        "value": ["ax prove"],
+        "value": [
+          "ax prove"
+        ],
         "scope": "",
         "subject": ""
       },
       {
         "key": "verifiedEmitterScope",
-        "value": ["ax prove"],
+        "value": [
+          "ax prove"
+        ],
         "scope": "",
         "subject": ""
       },
