@@ -101,6 +101,27 @@ base 로그는 `IR extraction — 4/231 entries (limit=1)`, new 로그는
 main 기준 IR 창은 착지 전 A/B의 new 값(872/524 ms)과 같은 대역이며, base(3,196/3,028 ms) 대비
 약 3.8×/5.6× 단축이다. 절대 wall 값은 호스트 부하에 따라 변동한다(R8: 성능은 판정 입력이 아니다).
 
+### 4.3 전체 착지 후 재관측 (`48ea64f`, PR-A/B/C 병합 완료 상태)
+
+명령: `git switch main && make build` → `AXIOM_CI=1 bin/ax prove --target normalizeMaxWorkers`.
+원본: `build/tmp/vs-ir-scope-final/`.
+
+| 항목 | 실측값 |
+|---|---|
+| `make build` | exit 0, `✅ Build successful`, wall 55,161 ms |
+| `bin/ax --check-provenance` | `OK — embedded BuildSourceHash == live src tree (vs1-tree-hash/1:-6394464270943497635)` |
+| 회귀 테스트 (main) | `nim c -r tests/unit/ir_precompute_scope_test.nim` → 7/7 OK |
+| normalizeMaxWorkers ×4 | exit 0/0/0/0, wall 3,708 / 2,954 / 2,773 / 2,714 ms (첫 실행 cold) |
+| IR 창 ×4 | 1,145 / 902 / 833 / 840 ms |
+| phase-10 로그 | `pool=4/231 requests=1 required=1 executed=1 (limit=1)` |
+| `report --canonical-digest` ×2 | 동일 — `fcf7a60ea07b6da6b8ca58f46619d14246545884973ca903d78e0e5fd0517e34` |
+| `report --json` | `nodeReports: 1` — `src/core/orchestrator/orchestrator_api.nim::normalizeMaxWorkers` → `verified`, `assuranceTier: dual-verified` |
+| verifierBuildId | `95a4245fce46…` (§4.2의 `4ea334d` 관측과 다른 세대) |
+
+digest가 §4.2(`2656f655…`)와 다른 것은 #320이 `Makefile`을 변경해 RecipeDigest→VerifierBuildId가
+회전했기 때문이다. **동일 identity 안에서는 결정론**(2/2 동일)이며 판정 표면(verdict/tier)은 불변이다 —
+"빌드 identity 회전 ≠ 판정 의미 변경"의 실측 예다.
+
 ## §5. 한계
 
 - 이 측정은 로컬 호스트의 단일 워크로드 2종이며, VKD 분자·분모는 변경 전후 모두 불변이다.
