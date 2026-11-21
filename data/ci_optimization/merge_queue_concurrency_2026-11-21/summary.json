@@ -163,7 +163,15 @@
       "queuedSeconds": "sum(started_at - created_at) where started_at present; skipped job -> 0",
       "percentile": "Hyndman-Fan type 7 (PR-to-main prereg §4와 동일 함수)",
       "prToMain": "mergedAt - createdAt (docs/evidence/pr_to_main_attribution_prereg_2026-10-19.md:74)",
-      "mergesPerHour": "main merge commits(parents>=2) by committer.date / window hours (계약 문서에 정의 없음 — 본 evidence의 운영 정의)"
+      "mergesPerHour": "main merge commits(parents>=2) by committer.date / window hours. 계약: docs/spec/ci_critical_path_metric.md §2.6 (본 PR에서 신설)"
+    },
+    "optimizationJudgments": {
+      "contract": "docs/spec/ci_optimization_tcb_judgments.md:255 — 후보는 J1∧J2∧J3∧J4 전부 PASS일 때만 VALID",
+      "J1_semanticParity": "PARTIAL — 이 변경은 검증 결과가 병렬성과 무관할 것을 요구한다. 49초 중첩 구간에서 두 후보(#302, #299)가 모두 success였고, 각 후보의 필수 컨텍스트 집합과 발행 주체가 동일했다. 반복 실험은 하지 않았으므로(n_overlap=1) PASS를 선언하지 않는다.",
+      "J2_evidenceEquivalence": "PARTIAL — 증거 집합(7 contexts + issuers)이 before/after 및 착지 후 main HEAD에서 동일함을 확인했다. 다만 이는 정적 비교이며 증거 payload 등가 실험은 수행하지 않았다.",
+      "J3_cacheSoundness": "N/A — 캐시 설정·키·무효화 로직을 건드리지 않았다.",
+      "J4_workerDeterminism": "N/A — worker 수·스케줄링·병렬 분할을 변경하지 않았다.",
+      "rationale": "네 판정을 생략하지 않고 각각 기록한다. J3/J4는 변경이 닿지 않아 N/A이고, J1/J2는 닿는 영역이므로 관측 근거와 함께 PARTIAL로 남긴다. 따라서 이 후보를 VALID로 선언하지 않으며, arm status도 PARTIAL이다."
     },
     "collector": {
       "path": "tools/ci/ci_acceptance_collect.nim",
@@ -200,15 +208,15 @@
       "window": "2026-11-21T05:13:00Z ~ (open)",
       "n": 3,
       "status": "PARTIAL",
-      "wallSecondsDefinition": "run.created_at -> run.updated_at (admission-gate workflow run). job-level span과 maxPerJobQueueWaitSeconds를 함께 기록한다.",
+      "wallSecondsDefinition": "wallSeconds는 metric 계약식 max(completed_at) - min(started_at) (job-level, skipped job 제외). runWallSeconds는 workflow run의 created_at -> updated_at이며 참고값이다.",
       "entries": [
         {
           "mergeGroupHeadSha": "f68ca0f68cdadf5cc3d0585f7104ffb2733a0411",
           "pr": 302,
           "createdAt": "2026-11-21T05:37:02Z",
           "admissionGateCompletedAt": "2026-11-21T05:43:27Z",
-          "wallSeconds": 385.0,
-          "jobSpanSeconds": 384.0,
+          "wallSeconds": 384.0,
+          "runWallSeconds": 385.0,
           "maxPerJobQueueWaitSeconds": 14.0,
           "jobs": 26,
           "conclusion": "success",
@@ -219,8 +227,8 @@
           "pr": 299,
           "createdAt": "2026-11-21T05:42:38Z",
           "admissionGateCompletedAt": "2026-11-21T05:50:20Z",
-          "wallSeconds": 462.0,
-          "jobSpanSeconds": 453.0,
+          "wallSeconds": 453.0,
+          "runWallSeconds": 462.0,
           "maxPerJobQueueWaitSeconds": 49.0,
           "jobs": 26,
           "conclusion": "success",
@@ -231,8 +239,8 @@
           "pr": 303,
           "createdAt": "2026-11-21T05:51:01Z",
           "admissionGateCompletedAt": "2026-11-21T05:58:19Z",
-          "wallSeconds": 438.0,
-          "jobSpanSeconds": 436.0,
+          "wallSeconds": 436.0,
+          "runWallSeconds": 438.0,
           "maxPerJobQueueWaitSeconds": 16.0,
           "jobs": 26,
           "conclusion": "success",
