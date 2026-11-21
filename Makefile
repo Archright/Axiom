@@ -179,9 +179,11 @@ bin/nimtry: src/gate/nimtry.nim $(wildcard src/gate/nimtry/*.nim)
 bin/purity_check: tools/local_purity_check.nim
 	$(NIM) c --hints:off -o:$@ $<
 
-# Mirrors the engine's audit_engine_inputs.manifest input set; Nim lacks --depfile
-# (verified), so transitive imports outside src/core/debt are an accepted untracked gap.
-DEBT_AUDIT_SRCS := tools/debt_engine.nim $(wildcard src/core/debt/*.nim)
+# Mirrors the engine's audit_engine_inputs.manifest source set (config/audit_rules.json
+# is data, not a compile dep); Nim lacks --depfile (verified), so transitive imports
+# outside those directories are an accepted untracked gap.
+DEBT_AUDIT_SRCS := tools/debt_engine.nim $(wildcard src/core/debt/*.nim) \
+                   $(wildcard src/infrastructure/debt_audit/*.nim)
 
 bin/debt_engine: $(DEBT_AUDIT_SRCS)
 	$(NIM) c $(NIM_TOOL_FLAGS) -o:$@ $<

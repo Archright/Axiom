@@ -56,10 +56,10 @@ SHA-256 of canonical 6-tuple (정렬된 `key=value` 줄, `\n` 연결):
 
 ### 4.3 engine_semantics_digest
 
-`audit_engine_inputs.manifest`는 정확히 `tools/debt_engine.nim`,
-`src/core/debt/*.nim`, `config/audit_rules.json`을 나열한다.
-**자기 참조 없음** — manifest 자체는 목록에 포함되지 않는다.
-manifest 작성 후 그 내용을 해시하여 산출.
+`audit_engine_inputs.manifest` lists exactly `tools/debt_engine.nim`,
+`src/core/debt/*.nim`, `src/infrastructure/debt_audit/*.nim`, and
+`config/audit_rules.json`. The manifest never lists itself (no
+self-reference). It is hashed after it is written.
 
 - 구현: `tools/debt_engine.nim` `buildEngineSemanticsDigest` (L2092–2113)
 

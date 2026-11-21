@@ -419,7 +419,7 @@ proc extractObservations*(ctx: var RuleCtx) {.raises: [CatchableError].} =
           let eid = entry["id"].getStr("")
           if eid.len > 0:
             ctx.registryEntries[eid] = entry
-          let files = entry["files"]
+          let files = entry{"files"}
           if files != nil and files.kind == JArray:
             for fe in files:
               if fe.kind == JString:

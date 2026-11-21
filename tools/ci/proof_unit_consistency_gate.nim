@@ -1959,7 +1959,7 @@ const
      role: RoleProjectionGen),
     (file: "tools/debt_engine.nim", line: 2281, artifact: "data/debt_registry.json",
      role: RoleSsotMutator),
-    (file: "tools/debt_engine.nim", line: 2877, artifact: "data/debt_registry.json",
+    (file: "tools/debt_engine.nim", line: 2880, artifact: "data/debt_registry.json",
      role: RoleSsotMutator),
     (file: "tests/unit/gate_negative_test.nim", line: 385,
      artifact: "data/debt_registry.json", role: RoleTestFixture),
