@@ -432,6 +432,19 @@ const
     # docs/evidence/rotation_allowlist_generated_metadata_prereg_2026-11-19.md
     "src/generated/type_registry_metadata.json",
     "docs/evidence/rotation_allowlist_generated_metadata_prereg_2026-11-19.md",
+    # Amendment A8 (iii) 생성 메타데이터 동반 (2026-11-21, 본 확장 PR 자신의
+    # ROT_ALLOWLIST 실측 — A8 자신의 delta 6경로 중 차단 1경로).
+    # `src/generated/build_metadata.json`은 A6가 수록한
+    # `src/generated/type_registry_metadata.json`과 **동일 클래스**다: 손으로
+    # 쓰는 production src/가 아니라 `make build`(config.nims staticRead 전제)가
+    # 결정론적으로 재생성하는 데이터 산출물이며(SSOT writer:
+    # tools/build_metadata_generator.nim; 소비: config/paths.nims·config/vendors.nims·
+    # src/gate/self_ref_detect.nim), 로컬 빌드를 수행하는 모든 회전 PR이 필연
+    # 동반한다 — 배제하면 회전이 구조적으로 불가능해진다(A2 ① 자기모순 해소).
+    # 비확장 근거: ①은 ROTATION 경로에서만 평가되므로(A2 (ii)) NORMAL 경로의
+    # 이 파일 취급은 불변이며, 본 등재는 회전 승인 범위를 넓히지 않는다.
+    # 열거형만 — glob 없음(A4 규율). 근거: ADR-0025 Amendment A8 (iii).
+    "src/generated/build_metadata.json",
     # Amendment A7 회전 동반 (2026-11-20, PR #233 ROT_ALLOWLIST 실측):
     # 종료 authority 회전 — 클로저 멤버 4개(src/core/utils/decision_algebra.nim,
     # src/cli/axiom_engine.nim·rust_lane_cli.nim·wf_runners.nim)의 ④ 재앵커 +

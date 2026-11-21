@@ -89,6 +89,16 @@ PR #287의 merge_group verdict에서 관측된 `rotationCheck`:
 
 회전 자체는 3개 클로저 멤버의 변경이 원인이므로 `closureChange=true`이며, 위 6경로는 모두 변경된 멤버의 계약/데이터 동반 클래스다(production `src/` 0건).
 
+## §5c. 세 번째 회전 — 생성 메타데이터 동반 (#317 자신, A8 (iii))
+
+본 개정 PR 자신의 delta(6경로) 실측에서 **자기차단 1경로**가 확인됐다:
+
+| 경로 | 클래스 | 근거 |
+|---|---|---|
+| `src/generated/build_metadata.json` | 생성 데이터 동반 (A6와 동일 클래스) | `make build`가 `tools/build_metadata_generator.nim`으로 결정론적으로 재생성하는 산출물. `config.nims`가 staticRead하고 `config/paths.nims`·`config/vendors.nims`·`src/gate/self_ref_detect.nim`이 소비한다. 로컬 빌드를 수행하는 모든 회전 PR이 필연 동반하므로, 배제하면 회전이 구조적으로 불가능하다(A2 ① 자기모순). |
+
+A6가 `src/generated/type_registry_metadata.json`을 수록한 것과 **동일 fix class**이며, production `src/`가 아니다(generated data). 열거형만 — glob 없음(A4).
+
 ## §6. 승인 기록
 
 | 항목 | 값 |
