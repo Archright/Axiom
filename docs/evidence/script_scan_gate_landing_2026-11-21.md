@@ -149,3 +149,60 @@ defense in depth, not a hole: the mutation is blocked either way.
 | App identities | `5795152`, `15368` unchanged |
 | Merge method | MERGE (native), unchanged |
 | Failure semantics | UNKNOWN blocks; missing report is UNKNOWN; skipped dimension never success |
+
+## 12. Post-landing live observations (same day, appended)
+
+These observations were made after this record landed (`647e83c3`). Earlier
+sections are kept as written; this section appends what the live queue then
+produced.
+
+### 12.1 Real PRs blocked by the gate (not synthetic mutations)
+
+| Control | PR | Mutation | Observed |
+|---|---|---|---|
+| NEG-5 | #317 | Korean prose added to `docs/adr/0025-gateway-landing-authority.md` (23 lines in the ADR; 131 across the PR) | FAIL — stacked merge-group run `44890395147`, head `446f55f5`, base `647e83c3`; report 2,158 code points, first `docs/adr/0025-gateway-landing-authority.md:1036 U+C2B9`; aggregator FAIL; entry evicted from the queue at 09:44:21Z; PR remains OPEN |
+| NEG-6 | #321 | 17 added lines carrying Korean prose in `docs/spec/github_delegation_residuals.md` | FAIL — merge-group run `44891148754`, head `e611416c`, base `48ea64fe`; report 256 code points in `docs/spec/github_delegation_residuals.md:66`; entry evicted; PR remains OPEN |
+
+Both PRs were authored outside this workstream and entered the queue through
+the normal path, so the gate blocks genuine contributions, not only fixtures.
+Neither PR was closed; each can land after its added prose is translated.
+
+`script-scan` is intentionally not part of `pull_request` admission. PR #321
+therefore reported `mergeStateStatus=CLEAN` at the pull-request level while it
+could not pass the merge queue. The landing venue remains the sole verdict;
+a green PR page is not an admission decision.
+
+### 12.2 Attribution and isolation in a stacked queue
+
+In the same queue cycle, PR #320 (English-only test) landed as `48ea64fe`
+while the stacked group `48ea64fe -> e611416c`, which contained #321, failed.
+The failure isolated to the PR that added Korean; ordinary English development
+continued in the same cycle.
+
+### 12.3 Out-of-band ruleset drift detected and reverted
+
+The final readback found that both rulesets had gained a `User` bypass actor
+at `2026-11-21T09:36:23Z`, after the §11 readback:
+
+```
+bypass_actors: [{actor_id: 53123826, actor_type: User, bypass_mode: always}]
+```
+
+This change was not made by this workstream and contradicted the frozen
+pre-change snapshot (both rulesets `[]`). The drifted bodies were snapshotted
+and the pre-change bodies restored at `2026-11-21T09:46:14Z` with
+`bypass_actors: []`. The final essential-field diff against the pre-change
+snapshot is empty for both rulesets (contexts, enforcement, conditions,
+merge-queue parameters, bypass actors). An `always` bypass would allow direct
+pushes and merges to bypass every required check, including `script-scan`;
+restoring the snapshot is part of acceptance, not housekeeping.
+
+### 12.4 Final canonical main state
+
+- main `48ea64fe` (PR #320) contains `647e83c3` (this record and the inventory).
+- `gh workflow run publication-integrity.yml --ref main` on `647e83c3`:
+  run `44891171515`, check-run `136808808137`, verdict **PASS**, all six
+  dimensions PASS including `script-scan` (report PASS, 0 violations,
+  0 unknowns; binding `4ea334d4 -> 647e83c3`).
+- Ruleset final readback: `27097366` 7 contexts, MERGE/ALLGREEN, bypass `[]`;
+  `27525972` 1 context, bypass `[]`.
