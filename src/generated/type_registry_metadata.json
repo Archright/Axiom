@@ -104342,6 +104342,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "List string",
+      "module": "src/infrastructure/debt_audit/audit_rules.nim",
+      "name": "entryFiles",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "List RuleResult",
       "module": "src/infrastructure/debt_audit/audit_rules.nim",
       "name": "evalAll",
@@ -104678,6 +104692,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "(bool, char, int)",
+      "module": "src/infrastructure/debt_audit/audit_rules.nim",
+      "name": "fenceRun",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "(bool, char, int)",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "String",
       "module": "src/infrastructure/debt_audit/audit_rules.nim",
       "name": "fingerprint",
@@ -104702,6 +104730,21 @@
       "returnType": "seq[string]",
       "smtSort": "(Seq string)",
       "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/infrastructure/debt_audit/audit_rules.nim",
+      "name": "isEscaped",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
     },
     {
       "hasAxiomHint": false,
@@ -104736,6 +104779,21 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/infrastructure/debt_audit/audit_rules.nim",
+      "name": "isExternalTarget",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "List RuleCat",
       "module": "src/infrastructure/debt_audit/audit_rules.nim",
       "name": "loadCatalog",
@@ -104752,7 +104810,49 @@
       "ignorable": false,
       "leanType": "String",
       "module": "src/infrastructure/debt_audit/audit_rules.nim",
+      "name": "maskInlineCode",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "(bool, string, int)",
+      "module": "src/infrastructure/debt_audit/audit_rules.nim",
+      "name": "parseLinkDestination",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "(bool, string, int)",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/infrastructure/debt_audit/audit_rules.nim",
       "name": "resolveSeverity",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/infrastructure/debt_audit/audit_rules.nim",
+      "name": "stripLineAnnotation",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (str.len result) 0)"
       ],
