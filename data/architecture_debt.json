@@ -183,12 +183,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:31ac96fff3c3b7442deb02d9238c2b46615002294f3f57694be8ff86c27cac0b",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:82eccdfdd3d469957a5d3aebd98f89b88b970ef6d303160e1ad3e380bc66508e",
       "count": 1,
       "file": "src/cli/lifecycle.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:c69f9d7767e0e5af419670f17bbdb083eb1b1d10a63def9663d16487e326db7a"
+      "rawContentHash": "sha256:0b61e3694d282b353613dff0780d94945fc0e40a494fff08bd079abe583ffd00"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
@@ -206,7 +206,7 @@
       "file": "src/cli/merge_cli.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:a3014c4159973d16f20a56bfda407c428f1bc954622ea4a176d0c1c090a82163"
+      "rawContentHash": "sha256:9ab6c025026326fe323f15751872862218b2389a0b90c36a529d1967f6ad4ef6"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
@@ -1560,12 +1560,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:4e07d4c27167fc5b5dbf2c9166a63a6d135522a537c3633a10d18b6aa308e28f",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:ba593a06dbb56356e3c923aa5f97ff999fe286b8b95508b528a20e574de851d1",
       "count": 1,
       "file": "src/core/proof/proof_vacuity_gate.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:ad34b2e517b7e80cb912259078a7c1b1495079043803c2aefc504beb9000e5ae"
+      "rawContentHash": "sha256:8c20eff74ff2e1d6547d81077832f5dca031c697828c9615da4a7cba45fc2bae"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
@@ -3431,12 +3431,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:ffd400c59c3949a4d331eec5442462513ba488d995c311cbc98293d3f9816e24",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:834972b2b058ee296f8668e0677062f9717ccac3e6c6eb84b993bb8ce5c64972",
       "count": 1,
       "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:76d0dbb5a3b8ec6cc5f7f03d8c0657de6f661fb82ce605856b444a3cd12e0974"
+      "rawContentHash": "sha256:c9eda2beff88dd1812398a36da11484a4192f6b531d8fe859d6db9c36ad87766"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
@@ -3512,12 +3512,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:2afc200ad734098443052a37cb7fc078e91c68733e870c620fa2a7e1cb9a8852",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:0f8617b6daaab3fa22a5177df5a81216a3ccbe78f4bb3823611225439c617d34",
       "count": 1,
       "file": "src/verification/cegar_engine.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:03503ee7662c2dda0428ee32912e507ee20f29ae463b760e01fe0b5f32d3e5bb"
+      "rawContentHash": "sha256:8cff2dbafecb3e99fe40fa06dbfc99568f580446b72edfe8b2cf033b92028fc4"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
@@ -3923,21 +3923,21 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:a9c85a5632ba47f53fe37c817e9a706367cea2549bf098029b6799d4e9a969a3",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:33c24aee6fe61059ffdeb0fd74315056dca35cd770d802b8587b109907af8308",
       "count": 1,
       "file": "src/verification/orchestrator.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:211597332a88d0024965682a41348dd0edcd04424cd9836d286e65523ac0b5c3"
+      "rawContentHash": "sha256:6791a8bc8f25017f4a0dc70a9ce235550b459340833ec97201406ac3d5392792"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:5a158c165864a82a6f4b1f444dff33dd264c39cca447dd2393b8bdfab21cf1a5",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:d6ecf8c5a3f4b601cde4350c889465fc67b6a6e0f5bd2acd9d9dee2ef2d86e1c",
       "count": 1,
       "file": "src/verification/orchestrator/healing_orchestrator.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:4e668e549d315bbc982e846abf2b1174ca80cb237f35611b5f8b75937c9a2d4d"
+      "rawContentHash": "sha256:e07dac9ed142f4ae502bfbbaa6ade0398b4edddb013f4cc1d031b0be6c4369ae"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
@@ -4328,21 +4328,21 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:e9bbbb60784b1a37d051a7fce34143b04491f63643ce922949cbd46d6f9e7bf4",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:a13017248eacfac32b35d0b785eb1577e0482b7463f8738b8cab3d5420378d83",
       "count": 1,
       "file": "src/verification/solver/provers.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:e1a5f554f4fa77771cb0204c1873983a182e820140c63c26d8abfb387bd30664"
+      "rawContentHash": "sha256:18853a26daa976b0f2db545fa04bdf4a98e5d811056bb4bda783b8a4e398b7cf"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:bd6b9768f6cc188013cca7ed04b5cc7fab3b7e4d64fb29c1fa0aacde7c6ef815",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:33c8e2a6d008c2acad754b68263aff4f4e329979104b1fd774396f1976defd4d",
       "count": 1,
       "file": "src/verification/solver/provider_impl.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:02de64845496f6106a58432b1e6c34b7ec814d227678f6c7a6fe3409604b0d1c"
+      "rawContentHash": "sha256:d92186ad7e55e87a125601b24b4d066e95f3d2e81ac72dd4b68e649212879507"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
@@ -4355,21 +4355,21 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:462793a1b5e0b5764f6febe18463d13420a0c842f77438f68df876a74406d767",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:8bd89b67567001b42e64883f617b4b0cbdab62b07bfa0dfbb8be9d568641ed6c",
       "count": 1,
       "file": "src/verification/solver/unsat_core_slicer.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:6a2b3422822495cdcbd5936edf60e2eb2fa13b126b505d28ec2a2c6c51c60ec2"
+      "rawContentHash": "sha256:e44a054d02714b830880a186a03789b3d27b9c886a81c1458108c104d6ce3907"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:a3e5edbdf43d2789abcb4865a87d545a6c1a1864bc91b4069ca81baa7ea452ba",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:bf2d92c0ce8a7ae42762f6da6698c4260354dc62db7519a69dce87112c0281c2",
       "count": 1,
       "file": "src/verification/solver/z3_pool.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:dc7812cbef6f6e6717912c37dd004365611b46a2e7991afd8c78ebf39562c7e4"
+      "rawContentHash": "sha256:8711315010d02d05d3ef63f60c9af54590b692850312c213bd5dcad915dfb2c0"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
