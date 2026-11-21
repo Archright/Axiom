@@ -1033,4 +1033,29 @@ observation)과의 성격 구분은 §11 원문 그대로다 — 착지 후 관�
 
 5. **잔여 사실**: 본 등재는 #233의 착지 가능성만 복원하며, #233의 제품 판정(FAIL→exit 1, PASS→exit 0)은 별도 acceptance 대상이다. 확장 PR 자신은 trustSurface 변경이므로 merge queue가 아니라 MUST-T2a 수동 병합 lane을 탄다(선례: `docs/evidence/breakglass_trust_surface_landing_2026-11-19.md`).
 
-**승인 기록(슬롯)**: 본 Amendment A7은 A2 (i)를 유한 개정하므로 A5/A6와 동일하게 명시 승인을 요구한다. 승인자: wintrover (소유자) · 승인 일시: 2026-11-20 · 승인 근거: 세션 명시 승인("권한이 필요한 부분은 전면 허가한다", 2026-11-20) + PR #233 merge_group verdict 실측(ROT_ALLOWLIST, changed 18경로 중 차단 9경로).
+**승인 기록(슬롯)**: 본 Amendment A7은 A2 (i)를 유한 개정하므로 A5/A6와 동일하게 명시 승인을 요구한다. 승인자: wintrover (소유자) · 승인 일시: 2026-11-20 · 승인 근거: 세션 명시 승인("권한이 필요한 부분은 전면 허가한다", 2026-11-20) + PR #233 merge_group verdict 실측(ROT_ALLOWLIST, changed 18경로 중 차단 9경로).## Amendment A8 (2026-11-21) — A2 회전 동반 집합 확장: obligation-count + CLI fail-closed 회전 동반 11경로 (A2 (i) 유한 개정, 결정 바인딩)
+
+> 근거: 두 회전의 merge_group landing verdict 실측 — (i) PR #287 (run `44882710554`, 2026-11-21T08:07Z) `ROT_ALLOWLIST`, `rotationCheck.changed` 10경로 중 5경로가 허용 집합 밖. 해당 회전은 DEBT#423(클로저 멤버 `src/verification/batch_uap/ir_pipeline_runner.nim` — canonical success 경로가 `:761`의 `generatedObligationCount` 대입 전 `:740`에서 count를 읽어 항상 0을 보고하는 bypass)과 DEBT#487(같은 projection 계약의 downstream reader) 수정이다. (ii) PR #268 (DEBT#225) — 클로저 멤버 3개(`src/cli/axiom_status.nim`·`cert_cli.nim`·`config_cli.nim`)의 상태-부재 exit 0 제거 회전이며, changed 13경로 중 6경로가 허용 집합 밖이었다. A2(2026-09-27)·A3(2026-10-12)·A4(2026-10-13)·A5(2026-10-14)·A6(2026-11-19)·A7(2026-11-20)가 확정한 "회전의 필수 동반을 allowlist가 배제하면 회전 자체가 착지 불가" 원칙과 A2 (iii)의 개정 경로(동일 스타일)를 따른다. 본문을 다시 쓰지 않으며, append로만 남는다.
+
+1. **개정 (A2 (i) 유한 개정 — 기존 클래스의 명시적 열거)**: `RotationAllowlistExtra`에 다음 11경로를 수록한다. 전부 "회전 대상 클로저 멤버의 계약/데이터 동반" 클래스이며 production `src/`가 아니다:
+   - (i) obligation-count 회전(#287) 동반 5경로:
+     - `tests/unit/test_ir_pipeline_theaterguard.nim` — 변경된 멤버의 단위 계약. test (g)가 실제 canonical-success 반환의 obligation count 보존을 단언한다(`test_judgment_cas.nim`·`wf_runners_test.nim`과 동일 클래스).
+     - `tests/unit/test_hotspot_ranker.nim` — 같은 delta의 projection read-back 계약 테스트(DEBT#487 — `DebtRowFields` 선언 테이블 소비).
+     - `tools/ci/proof_unit_consistency_gate.nim` — 신규 테스트의 Debt role 라인 핀 등록(회전 기계의 계약 동반 — `tools/merge_ruleset_drift_monitor.nim` 동일 클래스).
+     - `tools/hotspot_ranker.nim` — 비멤버 production `src/`가 아닌 도구(downstream projection reader). 같은 projection 계약의 read-back 수정.
+     - `data/debt_reduction_baseline.json` — `debt-integrity`/in-process gate가 읽는 reduction baseline(nimtry 4374→4275) — `data/nimtry_baseline.json`·`data/quality_gate_baseline.json`과 동일 데이터 동반 클래스.
+   - (ii) CLI fail-closed 회전(#268, DEBT#225) 동반 6경로:
+     - `tests/cli/test_axiom_status.nim`·`tests/cli/test_cert_cli.nim`·`tests/cli/test_config_cli.nim` — 변경된 멤버 3개의 단위 계약(no-history/빈 vault/누락 섹션의 fail-closed 단언).
+     - `tests/features/axiom_status.feature` — §0.7 비즈니스 시나리오 SSOT 갱신.
+     - `tests/gateway/axiom_status_feature_test.nim` — 변경된 멤버의 gateway 계약 테스트.
+     - `data/feature_manifest.json` — 갱신된 feature의 등록 데이터.
+
+2. **범위 한정**: A2 (i)는 유지된다 — 위 11경로 밖의 NON-member production `src/`는 여전히 allowlist 밖이다. 열거형만 — glob 없음(A4 규율): `tests/**`·`tools/**`·`data/**` 접두 확장은 없다.
+
+3. **비확장 논증**: ① allowlist는 `closureChange=true`인 ROTATION 경로에서만 평가된다(A2 (ii)) — 본 등재는 NORMAL 경로의 이 11경로 취급을 전혀 바꾸지 않는다. 즉 회전 승인 범위만 최소 확장하며, 비회전 PR의 자유도는 불변이다.
+
+4. **코드 동반 변경**: `src/cli/merge_cli.nim` `RotationAllowlistExtra` 갱신(본 개정과 동일 PR 착지 — trustSurface 멤버이므로 `TRUST_SURFACE_MODIFIED` → MUST-T2a 수동 병합 경로), 회전의 정식 `trustedCheckerTreeClosure` 재앵커(④ 일치 — ADR-0025 §7).
+
+5. **잔여 사실**: 본 등재는 #287·#268의 착지 가능성만 복원하며, 두 PR의 제품 판정(#287 — #423 obligation count 보존/#487 read-back, #268 — 상태 부재 시 비정상 exit)은 별도 acceptance 대상이다. 확장 PR 자신은 trustSurface 변경이므로 merge queue가 아니라 MUST-T2a 수동 병합 lane을 탄다(선례: `docs/evidence/breakglass_trust_surface_landing_2026-11-19.md`).
+
+**승인 기록(슬롯)**: 본 Amendment A8은 A2 (i)를 유한 개정하므로 A5/A6/A7와 동일하게 명시 승인을 요구한다. 승인자: wintrover (소유자) · 승인 일시: 2026-11-21 · 승인 근거: 세션 명시 승인("권한이 필요한 부분은 전면 허가한다", 2026-11-21) + PR #287 merge_group verdict 실측(ROT_ALLOWLIST, changed 10경로 중 차단 5경로, run 44882710554) + PR #268 diff 실측(changed 13경로 중 차단 6경로).

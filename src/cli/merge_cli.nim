@@ -466,7 +466,53 @@ const
     "tests/gateway/productization_start_vertical_slice_feature_test.nim",
     "docs/spec/productization_contract.md",
     "data/benchmarks/promotion_a_report_v2.json",
-    ".github/workflows/byo-agent-selftest.yml"]
+    ".github/workflows/byo-agent-selftest.yml",
+    # Amendment A8 회전 동반 (2026-11-21, PR #287 ROT_ALLOWLIST 실측 — changed
+    # 10경로 중 차단 5경로). 회전 대상: 클로저 멤버
+    # src/verification/batch_uap/ir_pipeline_runner.nim (#423 — canonical success
+    # 경로가 :761 대입 전 :740에서 obligation count를 읽어 항상 0을 보고하는
+    # bypass 수정). 동반 경로는 모두 "회전 대상 멤버의 계약/데이터 동반" 클래스이며
+    # production src/가 아니다(A2 (i)의 NON-member production src/ 금지 클래스와
+    # 무관):
+    # - tests/unit/test_ir_pipeline_theaterguard.nim: 변경된 멤버의 단위 계약 —
+    #   test (g)가 실제 canonical-success 반환의 count 보존을 단언한다
+    #   (test_judgment_cas·wf_runners 테스트와 동일 클래스).
+    # - tests/unit/test_hotspot_ranker.nim: 같은 delta의 projection read-back
+    #   계약 테스트(#487 — DebtRowFields 선언 테이블 소비).
+    # - tools/ci/proof_unit_consistency_gate.nim: 신규 테스트의 Debt role 라인
+    #   핀 등록 — 회전 기계의 계약 동반(merge_ruleset_drift_monitor 동일 클래스).
+    # - tools/hotspot_ranker.nim: 비멤버 production src/가 아닌 도구(downstream
+    #   projection reader). 같은 projection 계약의 read-back 수정.
+    # - data/debt_reduction_baseline.json: debt-integrity 게이트가 읽는 reduction
+    #   baseline(nimtry 4374→4275) — nimtry_baseline·quality_gate_baseline과 동일
+    #   데이터 동반 클래스.
+    # 비확장 근거: ①은 ROTATION 경로에서만 평가되므로(A2 (ii)) NORMAL 경로의
+    # 이 5경로 취급은 불변이며, 본 등재는 회전 승인 범위를 넓히지 않는다.
+    # 열거형만 — glob 없음(A4 규율). 근거: docs/adr/0025-gateway-landing-authority.md
+    # (Amendment A8).
+    "tests/unit/test_ir_pipeline_theaterguard.nim",
+    "tests/unit/test_hotspot_ranker.nim",
+    "tools/ci/proof_unit_consistency_gate.nim",
+    "tools/hotspot_ranker.nim",
+    "data/debt_reduction_baseline.json",
+    "docs/evidence/rotation_allowlist_obligation_count_prereg_2026-11-21.md",
+    # Amendment A8 (계속) — CLI fail-closed 회전 동반 (2026-11-21, PR #268
+    # ROT_ALLOWLIST 실측). 회전 대상: 클로저 멤버 3개(src/cli/axiom_status.nim·
+    # cert_cli.nim·config_cli.nim — 상태 부재 시 exit 0을 제거). 동반 6경로는
+    # 모두 "회전 대상 멤버의 계약/데이터 동반" 클래스이며 production src/가
+    # 아니다(A2 (i) 무관):
+    # - tests/cli/test_axiom_status.nim·test_cert_cli.nim·test_config_cli.nim:
+    #   변경된 멤버의 단위 계약(no-history/빈 vault/누락 섹션의 fail-closed 단언).
+    # - tests/features/axiom_status.feature: §0.7 비즈니스 시나리오 SSOT 갱신.
+    # - tests/gateway/axiom_status_feature_test.nim: gateway 계약 테스트.
+    # - data/feature_manifest.json: 갱신된 feature의 등록 데이터.
+    # 열거형만 — glob 없음(A4 규율). 근거: ADR-0025 Amendment A8.
+    "tests/cli/test_axiom_status.nim",
+    "tests/cli/test_cert_cli.nim",
+    "tests/cli/test_config_cli.nim",
+    "tests/features/axiom_status.feature",
+    "tests/gateway/axiom_status_feature_test.nim",
+    "data/feature_manifest.json"]
   ## VS-1 회전핀 프리플라이트 (2026-10-20): H2(④) 판정을 리프 모듈
   ## core/policy/rotation_closure_facts로 추출해 착지 predicate와 PR-head
   ## 오라클(tools/ci/rotation_pin_anchor_check.nim)이 **하나의 컴파일 구현**을
