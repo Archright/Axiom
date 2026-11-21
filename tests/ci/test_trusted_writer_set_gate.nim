@@ -16,7 +16,7 @@
 ##   * delta mode (base vs head) flags a job that gained write (R2), and a
 ##     declared `trustedWriterJobs` set must match exactly (R3).
 
-import std/[strutils, unittest]
+import std/[exitprocs, json, os, osproc, strutils, unittest]
 
 import ../../tools/ci/trusted_writer_set_gate
 
@@ -210,3 +210,125 @@ suite "trusted_writer_set_gate — judgment":
       if "byo-agent.yml" in note:
         sawKnown = true
     check sawKnown
+
+# ── acceptance — the built gate against fixture trees (DEBT#557) ─────────────
+#
+# The pure suites above pin the semantics; these cases run the real CLI over
+# on-disk trees, which is the acceptance shape: an undeclared job-level
+# `contents: write` must FAIL, and the same tree with that job enumerated in
+# `trustedWriterJobs` must PASS. The real tree is checked too, so config/tree
+# drift (a new job-level writer without enumeration) is a regression here as
+# well as in CI.
+
+const
+  TopLevelWriterFixture =
+    "name: mint\n" &
+    "on: workflow_call\n" &
+    "permissions:\n" &
+    "  contents: write\n" &
+    "jobs:\n" &
+    "  publish:\n" &
+    "    runs-on: ubuntu-latest\n" &
+    "    steps:\n" &
+    "      - run: echo\n"
+
+  UndeclaredJobWriterFixture =
+    "name: evil\n" &
+    "on: pull_request\n" &
+    "permissions:\n" &
+    "  contents: read\n" &
+    "jobs:\n" &
+    "  sneak:\n" &
+    "    permissions:\n" &
+    "      contents: write\n" &
+    "    runs-on: ubuntu-latest\n" &
+    "    steps:\n" &
+    "      - run: echo\n"
+
+var
+  GateWorkDir = ""
+  GateBinary = ""
+
+proc cleanupGateWork() =
+  if GateWorkDir.len > 0:
+    removeDir(GateWorkDir)
+
+addExitProc(cleanupGateWork)
+
+proc findRepoRootDir(): string =
+  var dir = getCurrentDir()
+  for _ in 0 ..< 10:
+    if fileExists(dir / ".axiom_root"):
+      return dir
+    dir = parentDir(dir)
+  ""
+
+proc ensureGateBinary(): string =
+  if GateBinary.len > 0:
+    return GateBinary
+  let repo = findRepoRootDir()
+  doAssert repo.len > 0, "repository root (.axiom_root) not found"
+  GateWorkDir = getTempDir() / ("axiom_tws557_" & $getCurrentProcessId())
+  removeDir(GateWorkDir)
+  createDir(GateWorkDir)
+  GateBinary = GateWorkDir / "trusted_writer_set_gate"
+  let cmd = "nim c --hints:off -d:release --skipParentCfg --skipProjCfg " &
+            "--skipUserCfg --noNimblePath --nimcache:" &
+            quoteShell(GateWorkDir / "nimcache") & " -o:" &
+            quoteShell(GateBinary) & " " &
+            quoteShell(repo / "tools" / "ci" / "trusted_writer_set_gate.nim")
+  let build = execCmdEx(cmd)
+  doAssert build.exitCode == 0, "gate build failed:\n" & build.output
+  GateBinary
+
+proc writeFixture(root: string; declaredJobs: seq[string]) =
+  createDir(root / "config")
+  createDir(root / ".github" / "workflows")
+  var jobs = newJArray()
+  for j in declaredJobs:
+    jobs.add(%j)
+  let declared = %*{
+    "trustedWriterWorkflow": WriterPath,
+    "trustedAdmissionWorkflowSha": AdmissionSha,
+    "trustedWriterJobs": jobs
+  }
+  writeFile(root / "config" / "trusted_writer_set.json",
+            declared.pretty() & "\n")
+  writeFile(root / ".github" / "workflows" / "certificate-mint.yml",
+            TopLevelWriterFixture)
+  writeFile(root / ".github" / "workflows" / "evil.yml",
+            UndeclaredJobWriterFixture)
+
+proc runGate(root: string): tuple[output: string, exitCode: int] =
+  execCmdEx(quoteShell(ensureGateBinary()) & " --root " & quoteShell(root))
+
+suite "trusted_writer_set_gate — acceptance fixture trees (DEBT#557)":
+  test "undeclared job-level contents: write FAILs":
+    let root = getTempDir() / ("axiom_tws557_neg_" & $getCurrentProcessId())
+    defer: removeDir(root)
+    removeDir(root)
+    writeFixture(root, @[WriterPath & "#publish"])
+    let r = runGate(root)
+    check r.exitCode == 1
+    check "tws_job_not_declared:.github/workflows/evil.yml#sneak" in r.output
+
+  test "enumerated job-level contents: write PASSes":
+    let root = getTempDir() / ("axiom_tws557_pos_" & $getCurrentProcessId())
+    defer: removeDir(root)
+    removeDir(root)
+    writeFixture(root, @[WriterPath & "#publish",
+                         ".github/workflows/evil.yml#sneak"])
+    let r = runGate(root)
+    check r.exitCode == 0
+    check "PASS" in r.output
+
+  test "real tree: every job-level writer is enumerated":
+    let repo = findRepoRootDir()
+    check repo.len > 0
+    if repo.len > 0:
+      let r = runGate(repo)
+      check r.exitCode == 0
+      for id in [WriterPath & "#publish",
+                 ".github/workflows/admission-gate-v2.yml#mint-prepare",
+                 ".github/workflows/admission-gate-v2.yml#mint-publish"]:
+        check id in r.output

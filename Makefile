@@ -1267,6 +1267,7 @@ test-unit:
 	@nim c -r tests/ci/test_landing_observe_acceptance.nim
 	@nim c -r tests/ci/test_l3_guard_fail_closed.nim
 	@nim c -r tests/ci/test_vs0_admission_aggregate_fail_closed.nim
+	@nim c -r tests/ci/test_trusted_writer_set_gate.nim
 	@nim c -r tests/cli/test_merge_cli.nim
 	@nim c -r tests/cli/test_report_cli.nim
 	@nim c -r tests/cli/test_evidence_bundle_v2.nim

@@ -40,6 +40,18 @@
   "trustedWriterWorkflow": ".github/workflows/certificate-mint.yml",
   "trustedAdmissionWorkflowSha": "433be3c34c51cfc3fc6f8741009135cfa5906a03",
   //
+  // DEBT#557: every job whose EFFECTIVE permissions grant `contents: write`.
+  // A job-level permissions block replaces the workflow-level block, so these
+  // are the jobs that can actually push, including the two transport wrappers
+  // that call certificate-mint.yml with a grant matching its callee declaration.
+  // tools/ci/trusted_writer_set_gate.nim R3 enforces exact equality against
+  // this list (⊆ ∧ ⊇); an undeclared job-level writer is a VIOLATION.
+  "trustedWriterJobs": [
+    ".github/workflows/admission-gate-v2.yml#mint-prepare",
+    ".github/workflows/admission-gate-v2.yml#mint-publish",
+    ".github/workflows/certificate-mint.yml#publish"
+  ],
+  //
   // DEBT#558 / ADR-0042 split layout: the execution closure records live in
   // config/trusted_checker_closure.json (derived, mutable values; NOT an App-
   // protected path). pathSetDigest anchors their PATH SET here. A value re-
