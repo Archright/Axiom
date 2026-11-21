@@ -2,7 +2,10 @@
   "schemaVersion": 1,
   "kind": "ci_optimization.verdict_attribution",
   "date": "2026-11-21",
-  "issues": [256, 305],
+  "issues": [
+    256,
+    305
+  ],
   "status": "REPOSITORY_SIDE_COMPLETE_EXTERNAL_APP_DEFECT_OPEN",
   "purpose": "어떤 커밋에 대한 검증 결과도 다른 커밋의 판정으로 둔갑하지 않게 하고, 그 결함이 실제로 존재함을 재현 가능한 detector와 원본 payload로 고정한다.",
   "ultimatePurpose": "Verdict(repo, venue, SHA)는 해당 저장소·검증 경로·SHA와 정확히 일치하는 실행 결과만으로 결정한다.",
@@ -34,7 +37,14 @@
     }
   ],
   "definitions": {
-    "executionIdentity": ["repository_id", "workflow_id", "run_id", "run_attempt", "venue", "head_sha"],
+    "executionIdentity": [
+      "repository_id",
+      "workflow_id",
+      "run_id",
+      "run_attempt",
+      "venue",
+      "head_sha"
+    ],
     "externalId": "특정 run·attempt를 가리키는 상관관계 식별자. 실행 신원 전체가 아니며(workflow_id·venue 미포함), GitHub는 external_id와 실제 Actions Run의 일치를 보증하지 않는다.",
     "authoritySources": {
       "runFacts": "GET /repos/{owner}/{repo}/actions/runs/{run_id} (+ /attempts/{n})",
@@ -55,8 +65,8 @@
       "stdout": "SELF-TEST PASS"
     },
     "modes": [
-      "--self-test (network 없음, fixture 3종: INCIDENT/CLEAN/EMPTY)",
-      "live: --repo OWNER/REPO --sha SHA...",
+      "--self-test (no network; 10 fixtures: PR INCIDENT/CLEAN/EMPTY + MG CLEAN/VIOLATION/UNRESOLVED + path suffix eligible/not-eligible + coverage/ratio-null)",
+      "live: --repo OWNER/REPO [--venue pull_request|merge_group] --sha SHA...",
       "--stdin: {repo_id, runs[], check_runs[]} (오프라인 재현)"
     ],
     "exitCodes": {
@@ -65,9 +75,16 @@
       "2": "검증 불가(도구·API·페이지네이션·run 해소 실패, 적격 0건)"
     },
     "eligibleScope": {
-      "runs": "path=.github/workflows/admission-gate-v2.yml AND event=pull_request AND status=completed AND head_sha in --sha set",
+      "pathNormalization": "workflow_run.path is compared after truncating everything from the first `@` (equivalent to ${RAW_PATH%%@*}). Quirk SSOT: docs/spec/ci_provider_failover_quirks.md Q6.",
+      "runs": "path(normalized)=.github/workflows/admission-gate-v2.yml AND event=pull_request AND status=completed AND head_sha in --sha set",
       "checkRuns": "app.id=5795152 AND name=admission-check AND external_id venue=pull_request",
-      "excluded": "external_id venue=merge_group(`v1|`)는 out-of-scope로 별도 카운트하며 절대 위반으로 판정하지 않는다."
+      "excluded": "external_id venue=merge_group (`v1|`) is out of scope and counted separately; it is never judged a violation.",
+      "merge_group": {
+        "runs": "path(normalized)=.github/workflows/admission-gate-v2.yml AND event=merge_group AND status=completed AND head_sha in --sha set",
+        "checkRuns": "app.id=5795152 AND name=admission-check AND external_id prefix `v1|`",
+        "runIdentity": "external_id carries no run id, so it is resolved from run=/attempt= in output.summary and cross-checked against the Actions Run API. Unresolvable is V2-UNRESOLVED -> exit 2.",
+        "excluded": "external_id prefix `v1p|` (pull_request) is out of scope and counted separately; it is not judged a violation."
+      }
     },
     "invariants": {
       "V1": "check_run.head_sha == external_id head_sha",
@@ -75,6 +92,26 @@
       "V3": "적격 run마다 external_id가 그 run을 지목하는 PR-venue check-run이 정확히 1개(대응 관계의 완전성)",
       "V4": "0 <= t(check completed) - t(run completed) <= max_lag. 미완료가 max_lag 초과면 PENDING, run 완료 전 완료되면 PREMATURE",
       "V5": "summary의 run/attempt/evaluated_commit은 일관성 검증용. A: summary run != external_id run, B: evaluated_commit != run head_sha, C: attempt 불일치"
+    },
+    "coverage": {
+      "perSubject": {
+        "RESOLVED_CLEAN": "exit 0 + eligible runs >= 1 + zero violations",
+        "RESOLVED_VIOLATION": "exit 1 (violations >= 1, no V2-UNRESOLVED/V4-UNVERIFIABLE)",
+        "UNRESOLVED": "exit 2 (zero eligible runs, or V2-UNRESOLVED/V4-UNVERIFIABLE present)"
+      },
+      "aggregateFields": [
+        "subjects",
+        "resolved",
+        "unresolved",
+        "violations",
+        "coverageRatio",
+        "perSubject"
+      ],
+      "resolvedDefinition": "resolved = count of RESOLVED_CLEAN + RESOLVED_VIOLATION subjects",
+      "violationsDefinition": "violations = count of RESOLVED_VIOLATION subjects (not the total number of violation rows)",
+      "coverageRatio": "resolved/(resolved+unresolved); null when the denominator is 0",
+      "resultInvariant": "PASS requires subjects>0, unresolved==0, and violations==0. With an UNRESOLVED subject and no definite violation the result is UNVERIFIABLE (exit 2) instead of PASS. A definite violation yields FAIL (exit 1), and unresolved subjects do not mask it.",
+      "oneExitCode": "one invocation emits a single exit code. Per-SHA attribution is read from per-SHA invocations or from coverage.perSubject."
     }
   },
   "thresholds": {
@@ -283,7 +320,9 @@
       "observed": {
         "eligible_runs": 0,
         "in_scope_check_runs": 0,
-        "excluded_check_runs": {"merge_group": 1},
+        "excluded_check_runs": {
+          "merge_group": 1
+        },
         "violations": 0,
         "note": "적격 PR-venue run이 없으므로 정상(0)이 아니라 검증 불가(2)다. merge_group check-run은 범위 밖으로 제외됐다."
       }
@@ -295,6 +334,20 @@
       "observed": {
         "eligible_runs": 1,
         "violations": 0
+      }
+    },
+    {
+      "name": "merge-group",
+      "command": "bash tools/ci/verdict_attribution_check.sh --venue merge_group --sha <9 heads>",
+      "exit": 0,
+      "observed": {
+        "subjects": 9,
+        "resolved": 9,
+        "unresolved": 0,
+        "violations": 0,
+        "coverageRatio": 1,
+        "in_scope_check_runs_per_subject": 1,
+        "note": "For each head, exactly one eligible merge_group run and one subject check-run were confirmed. Details in §mergeGroupObservation."
       }
     }
   ],
@@ -308,8 +361,9 @@
   "unknowns": [
     "App 내부가 first-writer-wins를 구현했는지 UNKNOWN",
     "동일 run attempt의 중복 webhook/retry에서도 재현되는지 UNKNOWN",
-    "merge_group venue에서 같은 완료 오귀속이 발생하는지 UNOBSERVED (venue 스코프 밖)",
-    "App이 superseded 실행의 check-run을 어떤 시점에 cancelled로 종결하는지 UNKNOWN"
+    "merge_group venue completion misbinding: OBSERVED — V-A (check-run 133843210523, G=13becf27) shows binding to a probe-merge-queue run and terminal completion 361s early. The separate 9-head sample was RESOLVED_CLEAN throughout (§mergeGroupObservation).",
+    "UNKNOWN whether, and at what point, the App closes a superseded run's check-run as cancelled",
+    "UNOBSERVED whether delayed or duplicated delivery of G1's completion event can invert G2's verdict under merge_group"
   ],
   "limits": [
     "detector는 저장소 측 관측 도구다. App을 수리하지 않으며, 오귀속된 check-run을 자동 복구하지 않는다.",
@@ -329,13 +383,34 @@
   "authorityPreflight": {
     "githubMergeAuthority": "GitHub repository ruleset 27097366 (main) — active, bypass 0",
     "requiredChecks": [
-      {"context": "admission-check", "integration_id": 5795152},
-      {"context": "bsec-integrity", "integration_id": 15368},
-      {"context": "debt-registry-gate", "integration_id": 15368},
-      {"context": "generation-acceptance", "integration_id": 15368},
-      {"context": "axiom-operational-slice", "integration_id": 15368},
-      {"context": "publication-integrity", "integration_id": 15368},
-      {"context": "readiness-verdict", "integration_id": 15368}
+      {
+        "context": "admission-check",
+        "integration_id": 5795152
+      },
+      {
+        "context": "bsec-integrity",
+        "integration_id": 15368
+      },
+      {
+        "context": "debt-registry-gate",
+        "integration_id": 15368
+      },
+      {
+        "context": "generation-acceptance",
+        "integration_id": 15368
+      },
+      {
+        "context": "axiom-operational-slice",
+        "integration_id": 15368
+      },
+      {
+        "context": "publication-integrity",
+        "integration_id": 15368
+      },
+      {
+        "context": "readiness-verdict",
+        "integration_id": 15368
+      }
     ],
     "mergeQueue": {
       "rulesetId": 27097366,
@@ -355,5 +430,235 @@
     "directory": "data/ci_optimization/app_verdict_attribution_2026-11-21/payloads",
     "repo": "repo.json",
     "perSha": "payloads/<sha>/check-runs.json, payloads/<sha>/runs.json (gh api --paginate --slurp 원본)"
+  },
+  "mergeGroupObservation": {
+    "venue": "merge_group",
+    "observedAt": "2026-11-21T09:43:20Z",
+    "thresholds": {
+      "max_lag_seconds": 600,
+      "authority": "OPERATIONAL_SLO"
+    },
+    "sample": "9 heads that have a merge_group run. Each head has exactly one eligible run in that venue and exactly one subject check-run.",
+    "perSha": [
+      {
+        "head_sha": "1c9cdc1117816e49543270dc5b95e9e9800e204c",
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "eligible_runs": 1,
+        "resolved_run": "44869804919#1",
+        "violations": []
+      },
+      {
+        "head_sha": "f68ca0f68cdadf5cc3d0585f7104ffb2733a0411",
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "eligible_runs": 1,
+        "resolved_run": "44871714191#1",
+        "violations": []
+      },
+      {
+        "head_sha": "52da049978c6fb81171735a96f80557ba1bcf646",
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "eligible_runs": 1,
+        "resolved_run": "44872137279#1",
+        "violations": []
+      },
+      {
+        "head_sha": "6a9ef54a2aaab62b26978185a6aaeb4b2580e6d8",
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "eligible_runs": 1,
+        "resolved_run": "44872777013#1",
+        "violations": []
+      },
+      {
+        "head_sha": "1eec4352cc3febf5cfcd0a8766755f8753c64f39",
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "eligible_runs": 1,
+        "resolved_run": "44874067378#1",
+        "violations": []
+      },
+      {
+        "head_sha": "db0e977f6219d33dcfc91be1f9e238a72f2dd53b",
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "eligible_runs": 1,
+        "resolved_run": "44875815676#1",
+        "violations": []
+      },
+      {
+        "head_sha": "ebfc56ff72a69f5f0b3a012ed55ea1c92512f222",
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "eligible_runs": 1,
+        "resolved_run": "44877825490#1",
+        "violations": []
+      },
+      {
+        "head_sha": "6716521d3136f9504c94dba328a9a207ca5b00dc",
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "eligible_runs": 1,
+        "resolved_run": "44879970973#1",
+        "violations": []
+      },
+      {
+        "head_sha": "61261568292f8b8b424abb459c900945338d1ddc",
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "eligible_runs": 1,
+        "resolved_run": "44881773724#1",
+        "violations": []
+      }
+    ],
+    "aggregate": {
+      "subjects": 9,
+      "resolved": 9,
+      "unresolved": 0,
+      "violations": 0,
+      "coverageRatio": 1
+    },
+    "result": "PASS",
+    "incidents": [
+      {
+        "id": "V-A",
+        "class": "completion-time misbinding",
+        "head_sha": "13becf270839ebeb458f7e1a9a130394ea994389",
+        "check_run": 133843210523,
+        "external_id": "v1|1454952493|13becf270839ebeb458f7e1a9a130394ea994389|e07a648e3b0262115be9921d44d4f38814487251|6d0d3335e8c001ebb3685a95387bd65323679a16",
+        "check_run_completed_at": "2026-11-17T05:34:35Z",
+        "summary_run": 44025040322,
+        "bound_run": {
+          "id": 44025040322,
+          "path": ".github/workflows/probe-merge-queue.yml",
+          "workflow_id": 415675142,
+          "conclusion": "success",
+          "updated_at": "2026-11-17T05:34:31Z"
+        },
+        "true_admission_run": {
+          "id": 44025040389,
+          "path": ".github/workflows/admission-gate-v2.yml",
+          "workflow_id": 420946486,
+          "conclusion": "success",
+          "updated_at": "2026-11-17T05:40:36Z"
+        },
+        "premature_seconds": 361,
+        "fact": "check-run 133843210523 is published on G=13becf27, but its summary points at probe-merge-queue run 44025040322. That check-run reached terminal (failure) 361s before the G's only eligible admission-gate run 44025040389 completed.",
+        "detector": {
+          "command": "bash tools/ci/verdict_attribution_check.sh --venue merge_group --sha 13becf27...",
+          "exit": 1,
+          "classification": "RESOLVED_VIOLATION",
+          "violations": [
+            "V2-WORKFLOW-ID-MISMATCH",
+            "V2-WORKFLOW-PATH-MISMATCH",
+            "V4-PREMATURE",
+            "V5A-SUMMARY-RUN-MISMATCH"
+          ]
+        },
+        "payload": {
+          "runs": "payloads/mg/13becf270839ebeb458f7e1a9a130394ea994389/runs.json",
+          "check_runs": "payloads/mg/13becf270839ebeb458f7e1a9a130394ea994389/check-runs.json"
+        }
+      },
+      {
+        "id": "V-B",
+        "class": "stuck pending check-run",
+        "head_sha": "1e4e1eb2aea0edd892a3c5c74e4117cb4f7942a0",
+        "check_run": 134495243352,
+        "external_id": "v1|1454952493|1e4e1eb2aea0edd892a3c5c74e4117cb4f7942a0|a2286003eaf0c42be2a74741590ddd3fd8040cdf|9c442122eeb1d07dc5820d54ca68f6e0f53071a6",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-11-18T01:03:40Z",
+        "completed_at": null,
+        "summary_run": null,
+        "subject_run": {
+          "id": 44212842619,
+          "path": ".github/workflows/admission-gate-v2.yml",
+          "workflow_id": 420946486,
+          "conclusion": "success",
+          "updated_at": "2026-11-18T01:12:47Z"
+        },
+        "stuck_seconds_at_2026_11_21T09_43_20Z": 290380,
+        "fact": "The summary has no run= line, so run identity cannot be resolved. It has been in_progress for 3.36 days after run 44212842619 completed (2026-11-18T01:12:47Z); the detector judges V2-UNRESOLVED -> exit 2.",
+        "detector": {
+          "command": "bash tools/ci/verdict_attribution_check.sh --venue merge_group --sha 1e4e1eb2...",
+          "exit": 2,
+          "classification": "UNRESOLVED",
+          "violations": [
+            "V2-UNRESOLVED"
+          ]
+        },
+        "payload": {
+          "runs": "payloads/mg/1e4e1eb2aea0edd892a3c5c74e4117cb4f7942a0/runs.json",
+          "check_runs": "payloads/mg/1e4e1eb2aea0edd892a3c5c74e4117cb4f7942a0/check-runs.json"
+        }
+      },
+      {
+        "id": "V-C",
+        "class": "late pending check-run",
+        "head_sha": "b43712104f413ed28dc3a682556f3215ef5cbcb1",
+        "check_run": 136785492935,
+        "status": "completed",
+        "conclusion": "failure",
+        "started_at": "2026-11-21T08:16:23Z",
+        "completed_at": "2026-11-21T08:26:37Z",
+        "subject_run": {
+          "id": 44884094411,
+          "path": ".github/workflows/admission-gate-v2.yml",
+          "workflow_id": 420946486,
+          "conclusion": "failure",
+          "updated_at": "2026-11-21T08:26:31Z"
+        },
+        "in_flight_seconds": 614,
+        "lag_after_run_completion_seconds": 6,
+        "fact": "The check-run closed 6s after run completion (2026-11-21T08:26:37Z vs run.updated_at 08:26:31Z). It was in-flight for 614s, inside max_lag=600. The audit summary's 604s does not recompute from the current payload's started_at->completed_at (614s).",
+        "detector": {
+          "command": "bash tools/ci/verdict_attribution_check.sh --venue merge_group --sha b4371210...",
+          "exit": 0,
+          "classification": "RESOLVED_CLEAN",
+          "violations": []
+        },
+        "payload": {
+          "runs": "payloads/mg/b43712104f413ed28dc3a682556f3215ef5cbcb1/runs.json",
+          "check_runs": "payloads/mg/b43712104f413ed28dc3a682556f3215ef5cbcb1/check-runs.json"
+        }
+      },
+      {
+        "id": "V-D",
+        "class": "inverted timestamps + absent external_id",
+        "head_sha": "b0967e551abdac05038820b923bcee69cc57e125",
+        "check_run": 136308870679,
+        "status": "completed",
+        "conclusion": "failure",
+        "started_at": "2026-11-20T13:12:59Z",
+        "completed_at": "2026-11-20T13:12:58Z",
+        "timestamp_inversion_seconds": 1,
+        "external_id": "",
+        "admission_run_for_head": {
+          "id": 44741298189,
+          "conclusion": "success",
+          "updated_at": "2026-11-20T13:12:56Z"
+        },
+        "fact": "completed_at (2026-11-20T13:12:58Z) precedes started_at (2026-11-20T13:12:59Z) by 1s, and external_id is empty. The same head's admission-gate run 44741298189 succeeded. The summary records that there was no in_progress check.",
+        "detector": {
+          "command": "bash tools/ci/verdict_attribution_check.sh --venue merge_group --sha b0967e55...",
+          "exit": 1,
+          "classification": "RESOLVED_VIOLATION",
+          "violations": [
+            "V2-MALFORMED",
+            "V3-MISSING"
+          ],
+          "note": "No dedicated inverted-timestamp code exists. The detector judges the missing external_id as V2-MALFORMED, and because the venue then cannot be resolved it counts in-scope check-runs as 0."
+        },
+        "payload": {
+          "runs": "payloads/mg/b0967e551abdac05038820b923bcee69cc57e125/runs.json",
+          "check_runs": "payloads/mg/b0967e551abdac05038820b923bcee69cc57e125/check-runs.json"
+        }
+      }
+    ],
+    "fact": "merge_group can be judged by the same detector, and completion-time misbinding occurs there as in the PR venue (V-A). The 9-head sample is entirely RESOLVED_CLEAN, so this does not claim merge_group is normal in general — it is a sample result.",
+    "payloadIndex": "payloads/mg/<sha>/runs.json (Actions runs, head_sha filter) + payloads/mg/<sha>/check-runs.json (commit check-runs, filter=all). Fields are limited to id/attempt/event/path/head_sha/conclusion and check-run id/status/conclusion/timestamps/external_id/summary."
   }
 }

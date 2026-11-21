@@ -75,6 +75,15 @@ Acceptance:
 5. A의 완료 이벤트를 지연·중복 전달해도 B의 `success`가 역전되지 않는다.
 6. ruleset이 B를 정상 병합한다.
 
+merge_group Acceptance (`G` = the group commit the queue creates):
+
+1. While `G1`'s admission-gate run is in-flight, the queue rebuilds the entry into `G2`.
+2. `G1`'s `admission-check` becomes terminal only on `G1` — it is not resolved by `G2`'s check-run.
+3. `G2` receives its own verdict from its own run's result.
+4. Delayed or duplicated delivery of `G1`'s completion event does not invert `G2`'s verdict.
+
+In both venues the judged subject is the single SHA the check-run was published on, never "the currently open check-run".
+
 check-run summary의 형태:
 
 ```text
@@ -101,7 +110,20 @@ run=<RUN_ID> attempt=<N> conclusion=success
 | PR-head checks | `gh pr checks <N> --watch` |
 | `G`의 check-runs | `gh api repos/Archright/Axiom/commits/<G>/check-runs?per_page=100` |
 | run 완료 추적 | `gh run watch <RUN_ID> --exit-status --interval 30` |
-| 판정 귀속 검사 | `bash tools/ci/verdict_attribution_check.sh --repo Archright/Axiom --sha <SHA>` (exit 0 정상 / 1 위반 / 2 검증 불가). 범위는 `pull_request` venue 전용이며 `merge_group` check-run은 제외·별도 카운트한다. |
+| verdict attribution check | `bash tools/ci/verdict_attribution_check.sh --repo Archright/Axiom [--venue pull_request\|merge_group] --sha <SHA>` (exit 0 clean / 1 violation / 2 unverifiable). It judges both venues: `pull_request` (default, external_id `v1p|`) and `merge_group` (external_id `v1|`; run identity is resolved from `run=`/`attempt=` in `output.summary` and cross-checked against the Actions Run API). Check-runs of the other venue are excluded and counted separately. The run path is compared after truncating from the first `@` (quirk Q6). |
+
+The `coverage` field reports per-SHA classification and aggregation:
+
+| field | meaning |
+|---|---|
+| `perSubject[].classification` | `RESOLVED_CLEAN` (exit 0 + eligible runs >= 1) / `RESOLVED_VIOLATION` (exit 1) / `UNRESOLVED` (exit 2: zero eligible runs, or V2-UNRESOLVED/V4-UNVERIFIABLE) |
+| `subjects` | number of judged SHAs (the `--sha` set, otherwise the observed SHAs) |
+| `resolved` | `RESOLVED_CLEAN` + `RESOLVED_VIOLATION` |
+| `unresolved` | `UNRESOLVED` |
+| `violations` | number of `RESOLVED_VIOLATION` subjects (not the total number of violation rows) |
+| `coverageRatio` | `resolved/(resolved+unresolved)`; `null` when the denominator is 0 |
+
+Coverage never weakens a violation verdict. `PASS` requires `subjects > 0`, `unresolved == 0`, and `violations == 0` — with an `UNRESOLVED` subject and no definite violation the result is `UNVERIFIABLE` (exit 2) instead of `PASS`. A definite violation yields `FAIL` (exit 1), and unresolved subjects do not mask it. There is no path that converts unresolved into pass. One invocation emits only one exit code, so per-SHA attribution is read from per-SHA invocations or from `coverage.perSubject`.
 
 `gh pr checks --watch`는 merge-queue 단계를 추적하지 않는다(PR-head checks 종료 시 exit). 큐 진입 후에는 `G`의 check-runs를 직접 조회한다 — quirk 정본: [docs/spec/gh_automerge_merge_queue_quirks.md](../spec/gh_automerge_merge_queue_quirks.md).
 
@@ -120,4 +142,6 @@ run=<RUN_ID> attempt=<N> conclusion=success
 - **`ax cert ledger-append` 경로에 서명 검증이 없다**: `src/verification/ledger_side_ref.nim` 전체에 ed25519/서명 검증 호출이 존재하지 않는다(2026-11-18 grep). 첫 발급 시 forged `certificate.json`이 원장에 들어갈 수 있으며, 원장의 신뢰는 전적으로 writer identity에 의존한다.
 - **`prepare`는 여전히 artifact 바이너리를 실행한다**: `admission-check-base-artifacts`의 `bin/ax`·`ircheck`를 워크스페이스에 설치해 `cert attest --sign`에 사용한다. 해당 잡은 `contents: read`라 write 탈취는 아니지만, SL-22가 닫은 것과 같은 공급 계열의 결함이다(별도 debt).
 - **App의 완료 시점 결속은 미해결 외부 결함이다(#256)**: App은 run 완료 시점의 현재 PR head에 판정을 발행하므로, 그 판정이 실행 주체와 어긋날 수 있다(§3.1 위반, §4 실측). 이 저장소는 §5의 판정 귀속 검사로 이를 관측하고 관측 결과를 기록한다. App 소스도 설치 토큰도 없으므로 **이 저장소는 이 결함을 수리할 수 없다** — 수리는 App 소유자(§6)의 몫이며, §4의 임시 우회책은 수리를 대체하지 않는다.
+- **The external App defect is tracked only at issue #256**: it is not registered in `data/debt_registry.json` — that schema has no owner/externalRef field, and adding a second status would duplicate authority.
+- **ruleset `27097366` bypass window (2026-11-21, observation record)**: history version `58912954` (2026-11-21T07:58:16Z) had `bypass_actors` = `[{actor_type: OrganizationAdmin, bypass_mode: pull_request}]`, and version `58913011` (07:59:24Z) restored it to `[]`. PR #309 merged inside that window, at 07:58:46Z, with merge commit `858710ae6f590d7dae06646142e79851dda10721`. On the same PR head `41c02cf096a934cbe1d7e94b96e8adbb2feb0ae6`, `admission-check` (App 5795152, check-run `136777708112`) had already completed as `failure` at 07:48:37Z. These values are facts observed through the ruleset history API and the check-runs API; this document does not judge intent.
 - 이 App 계약은 다음 잔여를 닫지 않는다: 같은 저장소 PR이 쓰기 잡을 추가하는 경로(§1.2/§11.4), 나머지 6 contexts의 producer가 Actions `15368`인 표면([docs/evidence/free_authority_migration_phase0_proof.md](../evidence/free_authority_migration_phase0_proof.md) §12.4). 둘 다 계획 항목이다.
