@@ -703,7 +703,7 @@ type
     counter: int
     rejectPatch: bool
     malformedBlob: bool
-    treePaths: seq[string]
+    entries: seq[string]              # certificate ids currently at the ledger tip
     garbageTree: bool
     fetchCalls: int
     postCalls: int
@@ -729,7 +729,7 @@ let foreignFile = tmpBase / "foreign_cert.json"
 writeFile(foreignFile, $ %*{"kind": "verification", "status": "certGreen"})
 
 let b1 = FakeBackend(tip: "", counter: 0, rejectPatch: false, malformedBlob: false,
-  treePaths: @[certIdB], garbageTree: false)
+  entries: @[], garbageTree: false)
 var fetch1: JsonFetcher = proc(url: string): Result[JsonNode, string] {.raises: [CatchableError, OSError, Exception].} =
   inc b1.fetchCalls
   if url.contains("/git/commits/"):
@@ -738,7 +738,7 @@ var fetch1: JsonFetcher = proc(url: string): Result[JsonNode, string] {.raises: 
     ok(%*{"sha": url[(url.rfind("/") + 1) .. ^1], "tree": {"sha": hex40a(905)}})
   elif url.contains("/git/trees/"):
     var entries = newJArray()
-    for p in b1.treePaths:
+    for p in b1.entries:
       entries.add(%*{"path": p & ".json", "type": "blob", "sha": fakeSha("b", b1)})
     if b1.garbageTree:
       entries.add(%*{"path": "note.txt", "type": "blob", "sha": fakeSha("g", b1)})
@@ -752,6 +752,11 @@ var post1: JsonPoster = proc(url: string; body: string): Result[JsonNode, string
       return ok(newJObject())  # malformed: missing sha
     ok(%*{"sha": fakeSha("blob", b1)})
   elif url.contains("/git/trees"):
+    let node = parseJson(body)
+    for entry in node.getOrDefault("tree").getElems():
+      let p = entry.getOrDefault("path").getStr("")
+      if p.endsWith(".json"):
+        b1.entries.add(p[0 ..< p.len - 5])
     ok(%*{"sha": fakeSha("tree", b1)})
   elif url.contains("/git/commits"):
     ok(%*{"sha": fakeSha("commit", b1)})
@@ -794,22 +799,23 @@ checkTrue("second append (FF on current tip) succeeds", append2.isOk)
 checkEq("second append advances tip", append2.get, b1.tip)
 let list1 = listLedgerCertIds(transport1, "owner/repo")
 checkTrue("ledger-list reads ids", list1.isOk)
-checkEq("ledger-list reads the appended id", list1.get.join(","), certIdB)
+checkTrue("ledger-list reads both appended ids",
+  list1.get.len == 2 and certIdA in list1.get and certIdB in list1.get)
 
 # persistent concurrent move (non-FF): EVERY PATCH is rejected 422 → the
 # bounded retry (LedgerAppendMaxAttempts attempts) exhausts and the append
 # fails closed — the tip never advances, no entry ever lands.
 let b2 = FakeBackend(tip: "", counter: 0, rejectPatch: true, malformedBlob: false,
-  treePaths: @[], garbageTree: false)
+  entries: @[], garbageTree: false)
 var fetch2: JsonFetcher = proc(url: string): Result[JsonNode, string] {.raises: [CatchableError, OSError, Exception].} =
   inc b2.fetchCalls
   if url.contains("/git/commits/"):
     # Commit → tree resolution (fetchTipTree): non-empty tree sha — the
-    # /git/trees/ branch below serves treePaths (empty here → no entries).
+    # /git/trees/ branch below serves entries (empty here → no entries).
     ok(%*{"sha": url[(url.rfind("/") + 1) .. ^1], "tree": {"sha": hex40a(906)}})
   elif url.contains("/git/trees/"):
     var entries = newJArray()
-    for p in b2.treePaths:
+    for p in b2.entries:
       entries.add(%*{"path": p & ".json", "type": "blob", "sha": fakeSha("b", b2)})
     ok(%*{"tree": entries})
   else:
@@ -845,10 +851,17 @@ checkTrue("persistent conflict: tip never advanced (no partial entry)", b2.tip.l
 
 # malformed blob response → fail-closed, never retried (a non-conflict error)
 let b3 = FakeBackend(tip: "", counter: 0, rejectPatch: false, malformedBlob: true,
-  treePaths: @[], garbageTree: false)
+  entries: @[], garbageTree: false)
 var fetch3: JsonFetcher = proc(url: string): Result[JsonNode, string] {.raises: [CatchableError, OSError, Exception].} =
   inc b3.fetchCalls
-  err("fake fetch3 unexpected " & url)
+  if url.contains("/git/commits/"):
+    # Empty first-attempt ledger: the uniqueness check resolves the tip to an
+    # empty tree, then the malformed blob response must stop the append.
+    ok(%*{"sha": url[(url.rfind("/") + 1) .. ^1], "tree": {"sha": hex40a(908)}})
+  elif url.contains("/git/trees/"):
+    ok(%*{"tree": []})
+  else:
+    err("fake fetch3 unexpected " & url)
 var post3: JsonPoster = proc(url: string; body: string): Result[JsonNode, string] {.raises: [CatchableError, OSError, Exception].} =
   inc b3.postCalls
   if url.contains("/git/blobs"):
@@ -865,11 +878,11 @@ let malformedAppend = appendCertificate(transport3, "owner/repo", certFile)
 checkTrue("malformed blob response → fail-closed", malformedAppend.isErr)
 checkTrue("malformed-response failure names blob", malformedAppend.error.contains("blob"))
 checkTrue("malformed blob response does NOT retry (1 blob POST attempt, 0 PATCHes)",
-  b3.blobPosts == 1 and b3.patchCalls == 0 and b3.fetchCalls == 0)
+  b3.blobPosts == 1 and b3.patchCalls == 0 and b3.fetchCalls == 2)
 
 # ledger-list integrity violation: non-canonical file in the ledger
 let b4 = FakeBackend(tip: hex40a(500), counter: 0, rejectPatch: false, malformedBlob: false,
-  treePaths: @[], garbageTree: true)
+  entries: @[], garbageTree: true)
 var fetch4: JsonFetcher = proc(url: string): Result[JsonNode, string] {.raises: [CatchableError, OSError, Exception].} =
   if url.contains("/git/commits/"):
     # Commit → tree resolution (fetchTipTree): non-empty tree sha — the
@@ -893,9 +906,11 @@ checkTrue("non-canonical file failure names the file", badList.error.contains("n
 # P11-retry — bounded retry-on-conflict INSIDE appendCertificate (PR-concurrent
 # mint redesign): ONLY concurrent-move conditions retry (HTTP 422 from the ref
 # PATCH, or a raced root-ref create), at most LedgerAppendMaxAttempts attempts.
-# Every retry re-reads the tip, re-checks subject uniqueness against the NEW
-# tip (a same-subject entry that landed with the moved tip must fail closed —
-# never re-appended), rebuilds the deterministic objects on the moved tip, and
+# Every attempt re-reads the tip and checks subject uniqueness against the tip
+# it will parent on — the FIRST attempt included (DEBT#553), so a caller-side
+# pre-check race cannot produce a duplicate. On a retry the checked tip is the
+# moved tip (a same-subject entry that landed with it must fail closed — never
+# re-appended). Each attempt rebuilds the deterministic objects on that tip and
 # PATCHes force=false again. Everything else fails closed immediately.
 # ---------------------------------------------------------------------------
 
@@ -965,6 +980,11 @@ proc retryTransport(b: RetryLedger): LedgerTransport =
       let tree = node.getOrDefault("tree").getStr("")
       let commitSha = retrySha(b, "rcommit")
       b.entries[commitSha] = if b.entries.hasKey(tree): b.entries[tree] else: newSeq[string]()
+      # A ROOT commit (no parents) is created on the well-known empty tree —
+      # model GitHub: its tree is EmptyTreeSha, not a fetchable object.
+      let parents = node.getOrDefault("parents")
+      if parents.isNil or parents.kind != JArray or parents.len == 0:
+        b.emptyTreeCommits.add(commitSha)
       return ok(%*{"sha": commitSha})
     if url.endsWith("/git/refs"):
       inc b.refCreateCalls
@@ -972,7 +992,11 @@ proc retryTransport(b: RetryLedger): LedgerTransport =
         if b.movedTip.len > 0:
           b.tip = b.movedTip
         return err("GitHub API POST " & url & " -> 422: Reference already exists")
-      return ok(%*{"sha": retrySha(b, "rref")})
+      # GitHub echoes the created ref object: object.sha = the requested root
+      # commit sha (returned top-level here because createLedgerRoot reads sha).
+      let rootSha = parseJson(body).getOrDefault("sha").getStr("")
+      b.tip = rootSha
+      return ok(%*{"sha": rootSha})
     err("fake retry post: unexpected " & url)
   var patch: JsonPatcher = proc(url: string; body: string): Result[JsonNode, string] {.raises: [CatchableError, OSError, Exception].} =
     inc b.patchCalls
@@ -1129,6 +1153,26 @@ let rfIds = listLedgerCertIds(transportRf, "owner/repo")
 checkTrue("empty-root race ledger holds exactly our entry",
   rfIds.isOk and rfIds.get.len == 1 and certIdA in rfIds.get)
 
+# (g) FIRST-ATTEMPT duplicate (DEBT#553): the tip ALREADY holds this subject
+#     and NO concurrent move ever happens — there is no 422 retry to carry the
+#     check. The append must refuse on attempt 1, before any blob/tree/commit
+#     is built or any PATCH is attempted. (The defect: the uniqueness check
+#     was gated behind `attempt > 1`, so this append would have parented a
+#     second <certId>.json entry on the tip and returned ok.)
+let t0g = hex40a(810)
+var entriesG = initTable[string, seq[string]]()
+entriesG[t0g] = @[certIdA]
+let rg = RetryLedger(tip: t0g, entries: entriesG, conflictPatches: 0)
+let transportRg = retryTransport(rg)
+let firstAttemptDup = appendCertificate(transportRg, "owner/repo", certFile)
+checkTrue("first-attempt duplicate → append refused (fail-closed)", firstAttemptDup.isErr)
+checkTrue("first-attempt duplicate names the subject",
+  firstAttemptDup.error.contains("duplicate subject") and firstAttemptDup.error.contains(certIdA))
+checkTrue("first-attempt duplicate → ZERO PATCH attempts", rg.patchCalls == 0)
+checkEq("first-attempt duplicate → NO objects built", rg.treeBases.join(","), "")
+checkTrue("first-attempt duplicate → tip/ledger unchanged (exactly one entry)",
+  rg.tip == t0g and rg.entries[t0g].len == 1 and rg.entries[t0g][0] == certIdA)
+
 # ---------------------------------------------------------------------------
 # P12 — `ax cert subject-register` (F8 2026-09-12): trusted-boundary subject
 # registration from VERIFIED evidence. Exercises the CLI verb against a scratch
@@ -1220,12 +1264,18 @@ checkTrue("makeSubject rejects malformed headTreeDigest", badIdMade.isErr)
 #             E2-head (not yet registered) and the ATTACKER blob denied —
 #             the E1(65a3c58f) vs E2(b1561094) phase distinction.
 #   post-merge fixture (main/post-merge) = {E1,E2}: E2 admitted.
-#   PR-head manipulation invariance (V-A'4): with the MAIN phase0 fixture as
-#   the decision root, verdicts are unchanged whether or not the manipulated
-#   PR head next to it injects an arbitrary blob (manipulated-1) or
-#   self-registers E2 (manipulated-2) — the untrusted PR-head copy is never
-#   consulted. The non-vacuity assertion proves the manipulated file itself
-#   has teeth: if a bind DID consult it, the attacker blob WOULD be admitted.
+#   PR-head manipulation invariance (V-A'4): the bind step is modelled with
+#   BOTH roots — the untrusted workspace that carries the candidate executor
+#   and the MAIN phase0 root that supplies the trusted set. For manipulated-1
+#   (arbitrary blob injected) and manipulated-2 (E2 self-registered) the bind
+#   verdict equals the main-root verdict. Each assertion is backed by a
+#   non-vacuity twin: the same workspace, used AS the decision root, returns a
+#   DIFFERENT verdict (attacker/E2 admitted), so a bind that consulted the
+#   workspace would fail the invariance check. The workspace set must also
+#   differ byte-wise from the main set — a copied file would make the teeth
+#   assertion prove nothing.
+#   The authoritative file (config/executor_authority.json in this checkout)
+#   is exercised directly: E1 is admitted and the attacker blob is denied.
 # ---------------------------------------------------------------------------
 echo "=== P15: TrustedExecutorSet membership (V-A'2) + PR-head manipulation invariance (V-A'4) ==="
 let e1Blob = "65a3c58f305baf46dd9e044316b46a19ccd01ba7"
@@ -1266,6 +1316,22 @@ proc membershipVerdict(mainRoot, blob: string): tuple[code: int, outText: string
     return (0, prefix & "blob " & blob & " in trusted executor set")
   (1, prefix & "blob " & blob & " not in trusted executor set (retired)")
 
+proc bindVerdict(workspaceRoot, mainRoot, blob: string):
+    tuple[code: int, outText: string] =
+  ## The bind step's two-root contract: `workspaceRoot` is the untrusted
+  ## checkout that carries the candidate executor, `mainRoot` is the default-
+  ## branch checkout that supplies the trusted set. The workspace is accepted
+  ## so the caller cannot silently omit it, but it is never a trust input —
+  ## membership comes from `mainRoot` alone. A workspace that cannot even
+  ## express the bind input (absent root / absent set) is a configuration
+  ## error, not a pass.
+  const prefix = "verify_executor_membership: "
+  if not dirExists(workspaceRoot):
+    return (2, prefix & "bind workspace '" & workspaceRoot & "' is not a directory")
+  if not fileExists(workspaceRoot / "config" / "executor_authority.json"):
+    return (2, prefix & "bind workspace has no trusted-set file: " & workspaceRoot)
+  membershipVerdict(mainRoot, blob)
+
 # Fixture presence is ASSERTED, never guarded: a missing golden fixture is a
 # FAIL (missing ≠ valid empty), not a skip.
 checkTrue("P15 golden trust-state fixtures present (missing ≠ valid empty)",
@@ -1287,23 +1353,38 @@ let rPostE2 = membershipVerdict($(fixRoot / "main" / "post-merge"), e2Blob)
 checkEq("post-merge: E2 blob admitted (verdict 0 = member)", $rPostE2.code, "0")
 let rPostAtt = membershipVerdict($(fixRoot / "main" / "post-merge"), attackerBlob)
 checkEq("post-merge: attacker blob still rejected (verdict 1)", $rPostAtt.code, "1")
-# (e) PR-head manipulation invariance (V-A'4): membership is decided ONLY by
-#     the main-root set — the manipulated PR-head copies (arbitrary-blob
-#     injection / E2 self-registration) sitting next to the main fixture are
-#     NOT consulted, so the judged outcome (verdict + message) for the main
-#     Phase 0 root is identical to the unmanipulated main-side run.
-let rClean = membershipVerdict($(fixRoot / "main" / "phase0"), attackerBlob)
-let rManip1 = membershipVerdict($(fixRoot / "main" / "phase0"), attackerBlob)
-checkEq("manipulated-1 (arbitrary blob injected in PR head): verdict unchanged (vc " & $rClean.code & ")", $rManip1.code, $rClean.code)
-checkTrue("manipulated-1: manipulated PR-head trusted set NOT consulted",
-  rManip1.outText == rClean.outText)
-let rManip2 = membershipVerdict($(fixRoot / "main" / "phase0"), e2Blob)
-checkEq("manipulated-2 (E2 self-registered in PR head): E2 still rejected vs main Phase 0 set (verdict 1)", $rManip2.code, "1")
-# (f) non-vacuity: the manipulated PR-head file ITSELF admits the attacker
-#     blob (fixture has teeth) — the manipulation WOULD change the verdict
-#     if the decision root were the untrusted copy.
-let rSelf = membershipVerdict($(fixRoot / "pr-head" / "manipulated-1"), attackerBlob)
-checkEq("non-vacuity: arbitrary attacker blob admitted by the manipulated PR-head set itself (fixture has teeth)", $rSelf.code, "0")
+# (e) PR-head manipulation invariance (V-A'4): the bind reads the MAIN Phase 0
+#     root, never the workspace. The workspace carries a real (byte-different)
+#     trusted set, and the teeth assertions in (f) prove that set WOULD change
+#     the verdict if the bind consulted it.
+let mainPhase0 = fixRoot / "main" / "phase0"
+let mainPhase0Set = mainPhase0 / "config" / "executor_authority.json"
+let ws1 = fixRoot / "pr-head" / "manipulated-1"
+let ws2 = fixRoot / "pr-head" / "manipulated-2"
+checkTrue("manipulated-1: PR-head set differs from the main Phase 0 set (not a copy)",
+  readFile(ws1 / "config" / "executor_authority.json") != readFile(mainPhase0Set))
+checkTrue("manipulated-2: PR-head set differs from the main Phase 0 set (not a copy)",
+  readFile(ws2 / "config" / "executor_authority.json") != readFile(mainPhase0Set))
+let rBind1E1 = bindVerdict(ws1, mainPhase0, e1Blob)
+checkEq("manipulated-1: legitimate E1 still admitted through the bind (verdict 0)",
+  $rBind1E1.code, "0")
+let rBind1Att = bindVerdict(ws1, mainPhase0, attackerBlob)
+checkEq("manipulated-1 (arbitrary blob injected at PR head): bind verdict unchanged vs main Phase 0 (verdict " & $rAtt.code & ")",
+  $rBind1Att.code, $rAtt.code)
+checkTrue("manipulated-1: bind decision text identical (workspace set never consulted)",
+  rBind1Att.outText == rAtt.outText)
+let rBind2E2 = bindVerdict(ws2, mainPhase0, e2Blob)
+checkEq("manipulated-2 (E2 self-registered at PR head): bind still rejects E2 vs main Phase 0 (verdict " & $rE2.code & ")",
+  $rBind2E2.code, $rE2.code)
+checkTrue("manipulated-2: bind decision text identical (workspace set never consulted)",
+  rBind2E2.outText == rE2.outText)
+# (f) non-vacuity: each manipulated workspace, used AS the decision root,
+#     returns the manipulated verdict (fixture has teeth) — otherwise (e)
+#     would pass even if the bind had consulted the workspace.
+let rSelfAtt = membershipVerdict(ws1, attackerBlob)
+checkEq("non-vacuity manipulated-1: arbitrary attacker blob admitted by the manipulated PR-head set itself (fixture has teeth)", $rSelfAtt.code, "0")
+let rSelfE2 = membershipVerdict(ws2, e2Blob)
+checkEq("non-vacuity manipulated-2: E2 admitted by the self-registering PR-head set itself (fixture has teeth)", $rSelfE2.code, "0")
 # (g) fail-closed configuration semantics (the deleted checker's verdict 2):
 #     an unusable trust basis is an error, never a silent pass.
 let p15NoSetRoot = getTempDir() / ("ax_p15_noset_" & runId)
@@ -1312,6 +1393,19 @@ let rNoSet = membershipVerdict(p15NoSetRoot, e1Blob)
 checkEq("config-error: missing trusted-set file fails closed (verdict 2)", $rNoSet.code, "2")
 let rBadBlob = membershipVerdict($(fixRoot / "main" / "phase0"), "zz")
 checkEq("config-error: malformed blob OID fails closed (verdict 2)", $rBadBlob.code, "2")
+let rBindNoWorkspace = bindVerdict(fixRoot / "pr-head" / "absent", mainPhase0, e1Blob)
+checkEq("config-error: absent PR-head workspace fails closed (verdict 2)", $rBindNoWorkspace.code, "2")
+# (h) the authoritative trust surface itself: config/executor_authority.json
+#     in this checkout must parse under the same predicate and keep E1 while
+#     never admitting the attacker blob. (The live executor action blob is NOT
+#     asserted here — re-anchoring trusted[] to it is the architect-gated
+#     DEBT#484 residual.)
+let rLiveE1 = membershipVerdict(repoRoot, e1Blob)
+checkEq("live config/executor_authority.json admits the registered E1 executor (authoritative source parses)",
+  $rLiveE1.code, "0")
+let rLiveAtt = membershipVerdict(repoRoot, attackerBlob)
+checkEq("live config/executor_authority.json denies the attacker blob (verdict 1)",
+  $rLiveAtt.code, "1")
 
 # ---------------------------------------------------------------------------
 # P16 — witness-only golden (DEBT#464 S4 Phase 1a): `ax cert attest
@@ -1792,10 +1886,11 @@ t4Rec["headSha"] = %hex40a(961)
 let t4RecRes = ledgerRecordConsistentWith(d6CertNode, t4Rec)
 checkTrue("T4 손상: record headSha field-vs-field mismatch also FAILs", t4RecRes.isErr)
 
-# ── T5 double-append race → exactly-once — concurrent move가 SAME-subject
-# record를 tip에 실은 뒤 우리의 append가 재시도 시 이를 감지 → fail-closed
-# "not re-appended" (형제 mint의 중복 발행 불가); 이어서 D6 pre-check가
-# record (A) 성립 → append 0 — 첫1/재실행0 assertion.
+# ── T5 double-append race → exactly-once — the tip already CONTAINS the
+# SAME-subject record (the concurrent winner landed it). Our append must
+# detect the duplicate at the tip BEFORE building objects or PATCHing →
+# fail-closed "not re-appended" (no second authority); the D6 pre-check then
+# reconciles the winner's record: append 0.
 var t5Fetch: JsonFetcher = proc(url: string): Result[JsonNode, string] {.raises: [CatchableError, OSError, Exception].} =
   if url.contains("/git/commits/"):
     # Commit → tree resolution (fetchTipTree): non-empty tree sha — the

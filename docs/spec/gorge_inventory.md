@@ -10,25 +10,25 @@
 
 | Category | Count | Action |
 |---|---|---|
-| `gorge()`/`gorgeEx()` | 6 sites (re-measured 2026-11-16 across `config.nims` + `config/*.nims` includes: 2 task-only in `config.nims` — `:152` computeSourceHash, `:249` binary checksums; 3 in the `config/integrity.nims` merkle block — `:36` probe, `:60` per-file, `:63` root — **6 invocations on every compile**; 1 `gorgeEx` AST-checker dispatch in `config/strict.nims:320`) | Replace with `build_env.nim` or pure-Nim; the merkle 6 are the DEBT#546 theater site |
+| `gorge()`/`gorgeEx()` | 6 sites (re-measured 2026-11-21 across `config.nims` + `config/*.nims` includes: 2 task-only in `config.nims` — `:152` computeSourceHash, `:249` binary checksums; 3 content-bound sites in the `config/integrity.nims` merkle block — `:53` probe, `:84` per-file batch, `:104` root — **3 invocations on every compile**; 1 `gorgeEx` AST-checker dispatch in `config/strict.nims:320`) | Replace with `build_env.nim` or pure-Nim; the merkle 3 are content-bound since the DEBT#546 restore |
 | `staticRead()` | 5 | Keep — compile-time policy guard (zero shell) |
 | `staticFileExists()` | 2 | Keep — compile-time existence check (zero shell) |
 | `exec` (NimScript runtime) | 12 | Keep — all inside `task` blocks, not on main path |
-| **Total shell-spawning calls on main build path** | **6 gorge invocations per compile (merkle block — DEBT#546) + 1 gorgeEx AST-checker dispatch when armed** | **Not hermetic — the 2026-06-28 "0 / Already hermetic" verdict predates the merkle theater finding** |
+| **Total shell-spawning calls on main build path** | **3 gorge invocations per compile (merkle block, content-bound) + 1 gorgeEx AST-checker dispatch when armed** | **Not hermetic — the 2026-06-28 "0 / Already hermetic" verdict is superseded** |
 | **Total compile-time file reads** | **7** | **Zero shell dependency** |
 
 ---
 
 ## §1. gorge() / gorgeEx() Calls
 
-These are the only compile-time shell-spawning calls. This 2026-06-28 inventory predates the `config/*.nims` decomposition and counted exactly 1 site in the then-monolithic `config.nims`. Re-measured 2026-11-16 across `config.nims` and its includes, there are **6** call sites, of which the merkle block's 3 sites execute on **every `nim c`** (6 invocations: 1 probe + 4 per-file + 1 root) — that block is the DEBT#546 theater site: the verdict binds to the `sha256sum:` diagnostic prefix, not to guarded file content.
+These are the only compile-time shell-spawning calls. This 2026-06-28 inventory predates the `config/*.nims` decomposition and counted exactly 1 site in the then-monolithic `config.nims`. Re-measured 2026-11-21 across `config.nims` and its includes, there are **6** call sites, of which the merkle block's 3 sites execute on **every `nim c`** (3 invocations: 1 probe + 1 batched per-file digest call + 1 root). Since the DEBT#546 restore (VS-MERKLE-RESTORE-1) that block hashes the guarded files' bytes through project-rooted paths and binds the verdict to validated digests, never to `sha256sum` diagnostic text.
 
 | # | Line | Call | Context | Purpose | Category | Can Replace? |
 |---|---|---|---|---|---|---|
 | G1 | 501 | `gorgeEx("sha256sum " & bin)` | `task buildGateRunners` | SHA256 checksum of compiled gate runner binaries → stored in `.axiom/cache/binary_checksums.json` | `build_metadata` | **yes** — can use `std/sha256` in Nim or move to `build_metadata.json` |
-| G2 | config/integrity.nims:36 | `gorge("echo axiom_gorge_probe")` | merkle self-test | detect whether gorge() is operational (main path, every compile) | `integrity_guard` | yes |
-| G3 | config/integrity.nims:60 | `gorge("sha256sum " & fullPath.extractFilename())` | merkle per-file hash (×4 per compile) | intended per-file digest — actual (DEBT#546): bare filename → ENOENT → `split(" ")[0]` harvests the `sha256sum:` diagnostic prefix | `integrity_guard` | yes — VS-MERKLE-RESTORE-1 (absolute path, fail-closed) |
-| G4 | config/integrity.nims:63 | `gorge("echo -n " & concat & " \| sha256sum")` | merkle root | hashes the concatenation of the 4 `sha256sum:` prefixes (main path, every compile) | `integrity_guard` | yes |
+| G2 | config/integrity.nims:53 | `gorge("echo axiom_gorge_probe")` | merkle self-test | detect whether gorge() is operational (main path, every compile) | `integrity_guard` | yes |
+| G3 | config/integrity.nims:84 | `gorge("sha256sum " & project-rooted paths)` | merkle per-file digests (one batched call over all 4 guarded files) | content-bound since DEBT#546 restore: every line must parse as one 64-hex digest, otherwise the compile quits(1) | `integrity_guard` | yes |
+| G4 | config/integrity.nims:104 | `gorge("printf %s " & concat & " \| sha256sum")` | merkle root | hashes the concatenation of the 4 validated guarded-file digests (main path, every compile) | `integrity_guard` | yes |
 | G5 | config/strict.nims:320 | `gorgeEx(checkerBin & " " & args)` | AST invariant checker | run the native checker over src/core, src/verification, src/engine (main path when armed) | `strict_guard` | no — NimScript VM iteration limits |
 | G6 | config.nims:152 | `gorge(cmd)` | `computeSourceHash` (task-only, via `task buildGateRunners`) | gate-runner freshness source hash | `build_metadata` | yes |
 
@@ -172,18 +172,18 @@ These are NimScript `exec` calls that spawn a shell process at **runtime** (not 
 
 ## §7. Conclusion
 
-**config.nims is NOT hermetic on the main build path (corrected 2026-11-16).** The merkle block in `config/integrity.nims` spawns 6 gorge invocations on every `nim c` (DEBT#546 theater — the verdict binds to the `sha256sum:` diagnostic prefix, not content), and `config/strict.nims` dispatches the AST invariant checker via `gorgeEx` when armed. The task-only calls (G1, G6) and the 7 compile-time intrinsics (`staticRead`/`staticFileExists`) are as originally classified.
+**config.nims is NOT hermetic on the main build path.** The content-bound merkle block in `config/integrity.nims` spawns 3 gorge invocations on every `nim c` (DEBT#546 restore: project-rooted paths, digests validated before they participate), and `config/strict.nims` dispatches the AST invariant checker via `gorgeEx` when armed. The task-only calls (G1, G6) and the 7 compile-time intrinsics (`staticRead`/`staticFileExists`) are as originally classified.
 
 ### Breakdown by Category
 
 ```
-gorge()/gorgeEx():    6 sites (2 task-only; 3 merkle = 6 invocations
-                      per compile — DEBT#546; 1 gorgeEx AST checker)
+gorge()/gorgeEx():    6 sites (2 task-only; 3 merkle = 3 invocations
+                      per compile, content-bound; 1 gorgeEx AST checker)
 staticRead():         5 calls (zero shell, keep)
 staticFileExists():   2 calls (zero shell, keep)
 exec (task/conditional): 12 calls (runtime, keep)
 ────────────────────────────────────────
-Total on main path:   6 shell invocations per compile (merkle, DEBT#546)
+Total on main path:   3 shell invocations per compile (merkle)
                       + 1 gorgeEx when the AST checker is armed
                       ← NOT hermetic (2026-06-28 "0" count superseded)
 ```

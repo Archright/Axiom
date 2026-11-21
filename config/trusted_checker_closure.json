@@ -314,7 +314,7 @@
     "src/cli/topology_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "73b1341907cf0c7ebe021ec83983fff9d0f44638"
+      "sha": "ccc5cc629658de052bf61e8c3b65c4bee656e10e"
     },
     "src/cli/upstream_report_cli.nim": {
       "mode": "100644",
@@ -1874,7 +1874,7 @@
     "src/core/topology/merkle_cache.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "d5e271e9eb4a8077d4de98d41f90afd8d95aeb51"
+      "sha": "722bc664350e22c314eb581ed701201bb5b69512"
     },
     "src/core/topology/node_filter.nim": {
       "mode": "100644",
@@ -1919,7 +1919,7 @@
     "src/core/topology/topology_engine.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "84a12ff999c1adeacd9d95906312ba9492f16cce"
+      "sha": "e6bba40b55405e743904820b8eac1bbb76bbbbf5"
     },
     "src/core/topology/topology_parser.nim": {
       "mode": "100644",
@@ -3889,7 +3889,7 @@
     "src/verification/ledger_side_ref.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "3d3568788ec70c20648fb285d62922dd120d2f5d"
+      "sha": "74ad9ee945f6b7034fb393934bda47bd471b155a"
     },
     "src/verification/llbc_to_canonical.nim": {
       "mode": "100644",

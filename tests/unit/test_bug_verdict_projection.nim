@@ -207,8 +207,8 @@ proc makeSubjectTreeProj(dirName: string; moduleSource: string): string =
                     options = {poStdErrToStdOut, poUsePath})
   root
 
-# The make test-fast / test-fast-one recipes link the test binary under
-# /tmp/opencode, where the runtime root walk (findRepoRoot from the
+# The make test-fast / test-fast-one recipes link the test binary outside the
+# repo (a /tmp slot), where the runtime root walk (findRepoRoot from the
 # binary's own dir) cannot reach the .axiom_root anchor and the overlay
 # load fails closed. AXIOM_ROOT is findRepoRoot's first resolution input
 # and is consumed as the root DIRECTLY (no anchor walk), so the pin must
