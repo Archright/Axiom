@@ -1,19 +1,51 @@
 import std/[json, os, strutils, unittest]
+import ../../src/core/crypto/hash_kernel
 import ../../src/core/types/verification_tier
+import ../../src/core/proof/proof_budget
 import ../../src/core/trusted/fingerprint_generator
 import ../../src/core/trusted/trust_commit
+import ../../src/core/trusted/solver_invocation
 import ../../src/core/proof/source_fingerprint
 import ../../src/verification/certificate_verifier
 import ../../src/verification/certificate_identity
+import ../../src/verification/kernel_reexecution
 
 suite "Phase 2 — Certificate trust closure (R4, v1 local replay-bound contract)":
 
-  proc makeFixtureCert(tmp: string): (string, JsonNode, string) =
+  proc fixtureObservation(leanSource, smtlib2: string): KernelObservation =
+    ## A self-consistent dual-kernel pass bound to the given sources. The
+    ## closure verifies the recorded observation; it never executes kernels.
+    KernelObservation(
+      lean: LeanObservation(
+        observed: true,
+        theoremName: "probe_spec",
+        axiomSet: @[],
+        verdict: krPassed,
+        leanSourceDigest: sha256Hex(leanSource),
+        outputDigest: sha256Hex("closure-lean-output"),
+        toolchainIdentity: "lean:test;checker:sha256:" & sha256Hex("test-checker"),
+        skippedChecks: @[]),
+      z3: Z3Observation(
+        observed: true,
+        queryDigest: sha256Hex(smtlib2),
+        outputDigest: sha256Hex("closure-z3-output"),
+        verdict: krPassed,
+        optionsDigest: deterministicSolverOptionsDigest(),
+        binaryDigest: sha256Hex("closure-z3-binary"),
+        randomSeed: Z3PinnedRandomSeed,
+        rlimit: z3DeterministicBudget,
+        timeoutMs: z3SafetyNetMs),
+      verificationMode: "lean+z3")
+
+  proc makeFixtureCert(tmp: string; status = "certZ3Candidate";
+                       leanSource = ""; observation: JsonNode = nil;
+                       observationDigest = ""): (string, JsonNode, string) =
     ## Build a KAA-less z3-verified cert (current canonical vocabulary:
     ## status=certZ3Candidate, kernel=false — DECISION-0630: persistent
     ## kernel=true comes only from a real KernelAcceptanceAttestation via
     ## bindReceipt, so a hand-built fixture must not claim it) + journal
-    ## commit; returns (certPath, certNode, sourceContent).
+    ## commit; returns (certPath, certNode, sourceContent). A certGreen
+    ## fixture must carry an observation bound to leanSource/smtlib2.
     let modulePath = "module_target.nim"
     let sourceContent = "proc probe(x: int): int = x + 1"
     writeFile(tmp / modulePath, sourceContent)
@@ -25,7 +57,7 @@ suite "Phase 2 — Certificate trust closure (R4, v1 local replay-bound contract
       "fingerprint": computeVerificationFingerprint(irHash, ""),
       "sourceHash": computeStableSourceFingerprint(sourceContent),
       "trusted": true,
-      "status": "certZ3Candidate",
+      "status": status,
       "reason": "z3-verified",
       "claimId": "claim-test-1",
       "specificationId": "spec-test-1",
@@ -52,6 +84,18 @@ suite "Phase 2 — Certificate trust closure (R4, v1 local replay-bound contract
       "solverInputDigest": "sha256:fixture-sinput",
       "solverResultDigest": "sha256:fixture-sresult"
     }
+    # leanSource is a v3 identity field: it must be present BEFORE the
+    # identityDigest is derived.
+    if leanSource.len > 0:
+      cert["leanSource"] = newJString(leanSource)
+    if not observation.isNil:
+      cert["observation"] = observation
+      cert["observationDigest"] = newJString(observationDigest)
+    # A certGreen claim is a dual-verified claim: the fixture must carry the
+    # kernel bit its status asserts (the P0 invariant gate rejects a
+    # certGreen whose stored evidence says kernel=false).
+    if status == "certGreen":
+      cert["kernel"] = newJBool(true)
     # identityDigest via the SHARED canonical v3 semantic-state function —
     # must equal what verifyCertificateClosure recomputes (v3IdentityFromJson).
     cert["identityDigest"] = newJString(v3IdentityFromJson(cert))
@@ -138,5 +182,45 @@ suite "Phase 2 — Certificate trust closure (R4, v1 local replay-bound contract
         writeFile(certPath, $cert)
         let res = verifyCertificateClosure(certPath, tmpDir)
         check res.status == ccsJournalBindingAbsent
+    finally:
+      removeDir(tmpDir)
+
+  test "certGreen without observation -> NOT deep-verified":
+    let tmpDir = getTempDir() / "ax_p2_noobs_" & $getCurrentProcessId()
+    createDir(tmpDir)
+    try:
+      withHermeticJournalRoot(tmpDir):
+        let (certPath, cert, _) = makeFixtureCert(tmpDir, status = "certGreen")
+        check cert["status"].getStr == "certGreen"
+        # VS-188 scope: the observation requirement binds subject-continuity
+        # certificates. A legacy-shaped cert (no kind) keeps the old closure
+        # semantics; this test exercises the subject contract.
+        cert["kind"] = newJString("subject-continuity")
+        writeFile(certPath, $cert)
+        let res = verifyCertificateClosure(certPath, tmpDir)
+        check res.status == ccsNotDeepVerified
+    finally:
+      removeDir(tmpDir)
+
+  test "tampered observation block -> replay input mismatch":
+    let tmpDir = getTempDir() / "ax_p2_obs_" & $getCurrentProcessId()
+    createDir(tmpDir)
+    try:
+      withHermeticJournalRoot(tmpDir):
+        let leanSource = "theorem probe_spec : True := by trivial"
+        let obs = fixtureObservation(leanSource, "(assert true)")
+        let (certPath, cert, _) = makeFixtureCert(tmpDir, status = "certGreen",
+          leanSource = leanSource, observation = kernelObservationJson(obs),
+          observationDigest = kernelObservationDigest(obs))
+        # control: the observed certGreen replays cleanly
+        let baseline = verifyCertificateClosure(certPath, tmpDir)
+        check baseline.status == ccsPass
+        # tamper ONLY the signed observation: identityDigest covers no
+        # observation field, so the replay-input gate is the discriminating
+        # stage that must catch it.
+        cert["observation"]["lean"]["theoremName"] = newJString("other_spec")
+        writeFile(certPath, $cert)
+        let res = verifyCertificateClosure(certPath, tmpDir)
+        check res.status == ccsReplayInputMismatch
     finally:
       removeDir(tmpDir)
