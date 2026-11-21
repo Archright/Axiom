@@ -115,7 +115,8 @@ type
                            ## on post-generation early-return paths (DEBT#423: TheaterGuard
                            ## must not bypass the obligation-attempted count).
 
-  ## DEBT#423: TheaterGuard wrapper allows early-return paths that bypass obligation-attempted count accumulator.
+  ## DEBT#423: the obligation-attempted count is fixed at generation and stamped
+  ## by the single public pipeline exit; early-return paths cannot bypass it.
   IrPipelineResult* = object
     funcName*: string
     modulePath*: string  ## Repo-relative module path (from ve.entry.sourcePath)
@@ -541,21 +542,20 @@ func deriveKernelClaim(funcDef: IRFuncDef): VerifiedClaim {.raises: [].} =
   )
   deriveClaim(ctx, apV1)
 
-proc runIrPipeline*(ve: ValidatedIrEntry,
-                     lspClient: LeanLspClient = nil,
-                     policy: BackendPolicy = bpRequire,
-                     subjectRepoRoot: string = ""): IrPipelineResult {.raises: [].} =
+proc runIrPipelineCore(ve: ValidatedIrEntry,
+                       lspClient: LeanLspClient,
+                       policy: BackendPolicy,
+                       subjectRepoRoot: string,
+                       generatedCount: var int): IrPipelineResult {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Run the full IR pipeline for a single validated entry.
   ## W4-B: Uses cached funcDef from ValidatedIrEntry (no re-deserialization).
   ## Returns success=false if any stage fails (sentinel: funcDef.name.len == 0).
   ## AGENT-L: Defense-in-depth Defect isolation wall at pipeline boundary.
+  ## DEBT#423: `generatedCount` is the obligation-attempted count, fixed once at
+  ## generation. The public `runIrPipeline` wrapper stamps it on the returned
+  ## verdict, so no early return in this proc can bypass the accounting.
   let entry = ve.entry
   var funcDef = ve.funcDef
-  # DEBT#423: obligation-attempted count accumulator. Populated immediately
-  # after obligation generation; every post-generation exit (including the
-  # TheaterGuard and the defect/error guards) reports this count instead of
-  # silently zeroing it on early-return paths.
-  var generatedObligationCount = 0
   try:
     if funcDef.name.len == 0:
       return IrPipelineResult(
@@ -584,6 +584,13 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
     #   ogrIllFormed       → rkObligationIllFormed (semantic validation failure)
     let scopePolicy = defaultScopePolicy()
     let ogr = generateCanonicalObligations(funcDef, scopePolicy)
+    # DEBT#423: fix the obligation-attempted count at the generation boundary,
+    # BEFORE any exit is reachable. Every exit from here on (canonical success,
+    # BMC pre-check, CHC loops, tautology, admission, legacy encoder,
+    # type-level fast-path, TheaterGuard, defect/error guards) observes this
+    # same value; the public wrapper below stamps it on the returned verdict.
+    generatedCount =
+      if ogr.kind == ogrGenerated: len(ogr.obligations.value) else: 0
     case ogr.kind
     of ogrNoApplicableObligation:
       # Proven absence of obligations — distinct from "not encodable".
@@ -737,7 +744,7 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
           obligationVerdict: ObligationVerdictInfo(
             kind: ogrGenerated,
             reason: "canonicalVerified",
-            obligationCount: generatedObligationCount),
+            obligationCount: generatedCount),
           verifiedClaim: some(deriveKernelClaim(funcDef)),
           evidence: canonicalResult.canonicalEvidence)
       # §0.9 (no silent discard): the canonical path DECLINED for this funcDef.
@@ -753,12 +760,6 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
       if canonicalResult.sealError.len > 0:
         decline.add(" sealError=" & canonicalResult.sealError)
       logWarn("ir_pipeline_runner", decline)
-
-    # DEBT#423: from this point forward every return must preserve the count —
-    # early-return paths (BMC pre-check, CHC loops, tautology, admission, legacy
-    # encoder, type-level fast-path, TheaterGuard) must NOT report 0 for
-    # obligations that were actually generated.
-    generatedObligationCount = len(ogr.obligations.value)
 
     # Phase-2 Evidence Capture: capture the (already-synthesized) postconditions as
     # an immutable SpecificationArtifact + DependencySnapshot + minimal SolverEvidence
@@ -805,7 +806,7 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
         fallbackReason: "",
         requestedBackend: vbCanonicalChc,
         selectedBackend: vbCanonicalChc,
-        obligationVerdict: generatedObligationVerdict(generatedObligationCount))
+        obligationVerdict: generatedObligationVerdict(generatedCount))
 
     # ── T4: Tier Classification ──────────────────────────────────────────────────
     let tierInfo = classifyFunction(funcDef)
@@ -855,7 +856,7 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
               fallbackOccurred: fbOccurred,
               fallbackReason: fbReason,
               complexity: fnComplexity,
-              obligationVerdict: generatedObligationVerdict(generatedObligationCount)
+              obligationVerdict: generatedObligationVerdict(generatedCount)
             )
             r.backend = vbCanonicalChc
             return r
@@ -882,7 +883,7 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
               requestedBackend: vbCanonicalChc,
               selectedBackend: selBackend,
               complexity: fnComplexity,
-              obligationVerdict: generatedObligationVerdict(generatedObligationCount)
+              obligationVerdict: generatedObligationVerdict(generatedCount)
             )
           # bpAllowFallback: fall through to legacy encoder.
           # Admission gate: only route to legacy if the obligation is
@@ -908,7 +909,7 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
               requestedBackend: vbCanonicalChc,
               selectedBackend: vbCanonicalChc,
               complexity: fnComplexity,
-              obligationVerdict: generatedObligationVerdict(generatedObligationCount))
+              obligationVerdict: generatedObligationVerdict(generatedCount))
           logInfo("ir_pipeline_runner",
             "[loop-chc-vm] " & entry.name & " — bpAllowFallback: routing to legacy CHC encoder")
         else:
@@ -946,7 +947,7 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
               requestedBackend: vbCanonicalChc,
               selectedBackend: selBackend,
               complexity: fnComplexity,
-              obligationVerdict: generatedObligationVerdict(generatedObligationCount)
+              obligationVerdict: generatedObligationVerdict(generatedCount)
              )
           # bpAllowFallback: fall through to legacy encoder.
           # Admission gate: only route to legacy if the obligation is
@@ -976,7 +977,7 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
               requestedBackend: vbCanonicalChc,
               selectedBackend: vbCanonicalChc,
               complexity: fnComplexity,
-              obligationVerdict: generatedObligationVerdict(generatedObligationCount))
+              obligationVerdict: generatedObligationVerdict(generatedCount))
           logInfo("ir_pipeline_runner",
             "[loop-chc-vm] " & entry.name & " — bpAllowFallback: routing to legacy CHC encoder")
         # === Legacy encoder path (only reached under bpAllowFallback) ===
@@ -1028,7 +1029,7 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
                 fallbackOccurred: fbOccurred,
                 fallbackReason: fbReason,
                 complexity: fnComplexity,
-                obligationVerdict: generatedObligationVerdict(generatedObligationCount)
+                obligationVerdict: generatedObligationVerdict(generatedCount)
               )
               r.backend = vbLegacy
               return r
@@ -1054,7 +1055,7 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
               requestedBackend: vbCanonicalChc,
               selectedBackend: selBackend,
               complexity: fnComplexity,
-              obligationVerdict: generatedObligationVerdict(generatedObligationCount)
+              obligationVerdict: generatedObligationVerdict(generatedCount)
             )
         of cmNotEncodable:
           logInfo("ir_pipeline_runner",
@@ -1084,7 +1085,7 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
           fallbackReason: "",
           requestedBackend: vbCanonicalChc,
           selectedBackend: vbCanonicalChc,
-          obligationVerdict: generatedObligationVerdict(generatedObligationCount)
+          obligationVerdict: generatedObligationVerdict(generatedCount)
         )
 
     # ── T3: Tautology Check ──────────────────────────────────────────────────────
@@ -1107,7 +1108,7 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
           fallbackReason: "",
           requestedBackend: vbCanonicalChc,
           selectedBackend: vbCanonicalChc,
-          obligationVerdict: generatedObligationVerdict(generatedObligationCount))
+          obligationVerdict: generatedObligationVerdict(generatedCount))
 
     # ── T5: Implication Check ─────────────────────────────────────────────────────
     if funcDef.preConditions.len > 0 and funcDef.postConditions.len > 0:
@@ -1140,7 +1141,7 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
             fallbackReason: "",
             requestedBackend: vbCanonicalChc,
             selectedBackend: vbCanonicalChc,
-            obligationVerdict: generatedObligationVerdict(generatedObligationCount))
+            obligationVerdict: generatedObligationVerdict(generatedCount))
       except CatchableError as e:
         logWarn("ir_pipeline_runner",
           "LSP route failed (" & e.msg & ") — falling back to standard pipeline")
@@ -1313,7 +1314,7 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
         fallbackReason: "",
         requestedBackend: vbCanonicalChc,
         selectedBackend: vbCanonicalChc,
-        obligationVerdict: theaterDetectedVerdict(generatedObligationCount))
+        obligationVerdict: theaterDetectedVerdict(generatedCount))
     if smtScript.len == 0:
       # Vacuous proof — no postconditions to check.
       # NOTE (DEBT#423): statically unreachable today — the case dispatch above
@@ -1463,7 +1464,7 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
       obligationVerdict: ObligationVerdictInfo(
         kind: ogrGenerated,
         reason: "",
-        obligationCount: generatedObligationCount),
+        obligationCount: generatedCount),
       obligationExecution: obligationExec
     )
   except Defect:
@@ -1484,7 +1485,7 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
       obligationVerdict: ObligationVerdictInfo(
         kind: ogrIllFormed,
         reason: "backendDefect",
-        obligationCount: generatedObligationCount)
+        obligationCount: generatedCount)
     )
   except CatchableError:
     # Should not happen with {.raises: []} but defense-in-depth.
@@ -1503,8 +1504,24 @@ proc runIrPipeline*(ve: ValidatedIrEntry,
       obligationVerdict: ObligationVerdictInfo(
         kind: ogrIllFormed,
         reason: "backendError",
-        obligationCount: generatedObligationCount)
+        obligationCount: generatedCount)
     )
+
+proc runIrPipeline*(ve: ValidatedIrEntry,
+                     lspClient: LeanLspClient = nil,
+                     policy: BackendPolicy = bpRequire,
+                     subjectRepoRoot: string = ""): IrPipelineResult {.raises: [].} =
+  ## DEBT#423: the single public pipeline exit. The core fixes the
+  ## obligation-attempted count at the generation boundary; this wrapper
+  ## stamps it on WHATEVER the core returns, so no early-return path inside
+  ## the core (canonical success, TheaterGuard, guards, CHC lanes, ...) can
+  ## bypass the obligation accounting. Pre-generation exits observe the
+  ## wrapper's initial 0, which is the correct count because generation
+  ## produced nothing.
+  var generatedCount = 0
+  result = runIrPipelineCore(ve, lspClient, policy, subjectRepoRoot,
+                             generatedCount)
+  result.obligationVerdict.obligationCount = generatedCount
 
 # ---------------------------------------------------------------------------
 # CAS memoization cache — 동일 IRFuncDef = 동일 출력 (멱등성)

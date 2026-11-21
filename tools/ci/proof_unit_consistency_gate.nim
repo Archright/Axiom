@@ -1991,6 +1991,8 @@ const
      artifact: "docs/DEBT_REGISTRY.md", role: RoleTestFixture),
     (file: "tests/gateway/debt_scan_gate_feature_test.nim", line: 58,
      artifact: "docs/DEBT_REGISTRY.md", role: RoleTestFixture),
+    (file: "tests/unit/test_hotspot_ranker.nim", line: 50,
+     artifact: "docs/DEBT_REGISTRY.md", role: RoleTestFixture),
   ]
 
 func isRegisteredDebtRoleEntry(rel: string, lineNo: int, artifact, role: string): bool =
