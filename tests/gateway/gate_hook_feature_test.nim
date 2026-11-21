@@ -10,6 +10,7 @@
 import std/[unittest, os, strutils, times]
 import gate/runners/gate_hook
 import gate/orchestrator_hook
+import gate/gate_contract
 import gate/types
 
 suite "Gate Hook — Stage Resolution":
@@ -121,3 +122,51 @@ suite "Gate Hook — Dangling Symlink Detection":
           removeFile(path)
     check fileExists(binDir / "regular_file")
     check readFile(binDir / "regular_file") == "content"
+
+suite "Gate Hook — AOT pre-flight entry resolution":
+  test "every manifest gate entry resolves to an on-disk source file":
+    ## Given the SSOT gate list consumed by the CI AOT guard
+    ## When every entry is audited
+    ## Then none is skipped or unresolved (DEBT#520)
+    let report = auditAotPreflightEntries(allGates(), getCurrentDir())
+    check report.resolved.len == allGates().len
+    check report.resolved.len == AxiomTotalGates
+    check report.skipped.len == 0
+    check report.unresolved.len == 0
+    for resolved in report.resolved:
+      check resolved.sourcePath.endsWith(".nim")
+      check fileExists(getCurrentDir() / resolved.sourcePath)
+
+  test "extensionless entry resolves through the '.nim' candidate":
+    ## Given an entry declared without its extension
+    ## When audited
+    ## Then the resolver recovers the .nim source path
+    let report = auditAotPreflightEntries(
+      @[GateConfig(id: "anti-theater-gate", entry: "src/gate/runners/anti_theater_gate")],
+      getCurrentDir())
+    check report.resolved.len == 1
+    check report.resolved[0].sourcePath == "src/gate/runners/anti_theater_gate.nim"
+
+  test "missing non-empty entry is reported unresolved (fail-closed input)":
+    ## Given an entry whose source file does not exist
+    ## When audited
+    ## Then the entry is reported with its id, not silently skipped
+    let report = auditAotPreflightEntries(
+      @[GateConfig(id: "deleted-gate", entry: "src/gate/runners/deleted_gate")],
+      getCurrentDir())
+    check report.unresolved.len == 1
+    check report.unresolved[0].id == "deleted-gate"
+    check report.unresolved[0].sourcePath == ""
+    check report.resolved.len == 0
+    check report.skipped.len == 0
+
+  test "empty entry is recorded as a declared non-file skip":
+    ## Given an entry declared empty (non-file gate contract)
+    ## When audited
+    ## Then it is recorded as a skip, not as a resolution failure
+    let report = auditAotPreflightEntries(
+      @[GateConfig(id: "in-process-gate", entry: "")], getCurrentDir())
+    check report.skipped.len == 1
+    check report.skipped[0].id == "in-process-gate"
+    check report.unresolved.len == 0
+    check report.resolved.len == 0

@@ -95589,6 +95589,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "AotPreflightReport",
+      "module": "src/gate/runners/gate_hook.nim",
+      "name": "auditAotPreflightEntries",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "AotPreflightReport",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "Bool",
       "module": "src/gate/runners/gate_hook.nim",
       "name": "isDuplicateAuditEntry",
