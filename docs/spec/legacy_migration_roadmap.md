@@ -1370,4 +1370,4 @@ git revert <phase-commit> --no-edit
 
 ---
 
-*이 문서는 [AGENTS.md](AGENTS.md) §0.6 (Static First), §0.3 (Trust Boundaries), §1 (Architecture v31)의 요구사항을 구현하기 위한 실행 계획이다. 모든 변경은 `a108c6ecd` (Tier 2 선행 마이그레이션)과 `7ec5102af` (Issue 3 — `loopVariant`)의 패턴을 따른다.*
+*이 문서는 [AGENTS.md](../../AGENTS.md) §0.6 (Static First), §0.3 (Trust Boundaries), §1 (Architecture v31)의 요구사항을 구현하기 위한 실행 계획이다. 모든 변경은 `a108c6ecd` (Tier 2 선행 마이그레이션)과 `7ec5102af` (Issue 3 — `loopVariant`)의 패턴을 따른다.*

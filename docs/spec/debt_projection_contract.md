@@ -3,7 +3,7 @@
 > **Status**: Normative contract — defines the single projection path for the debt registry.
 > **SSOT**: `data/debt_registry.json` (see AGENTS.md §5 SSOT locations table).
 > **Generator**: `tools/debt_engine.nim` compiled as `bin/debt_engine`.
-> **Authority**: [ADR-0029](adr/0029-debt-projection-writer-authority.md) — writer/generator authority, role-sets, and the canonical mutation device.
+> **Authority**: [ADR-0029](../adr/0029-debt-projection-writer-authority.md) — writer/generator authority, role-sets, and the canonical mutation device.
 > **Related**: DEBT#436 (dependency file drift / CI test-swallow fail-open remediation), DEBT#437 (dedicated `--close` mutation path — implemented as `bin/debt_engine --close`; see §5.1 and §9 Rationale).
 
 ---
@@ -49,7 +49,7 @@ Projection = Generate(Registry, GeneratorVersion)
 
 Where:
 
-- **Registry** = `data/debt_registry.json`. This is the **only** input that determines the output bytes. It carries hand-authored prose per entry, so it is an SSOT and not a derived projection (see [ADR-0029](adr/0029-debt-projection-writer-authority.md) — the `config/gates.json` projection model does not transfer to it).
+- **Registry** = `data/debt_registry.json`. This is the **only** input that determines the output bytes. It carries hand-authored prose per entry, so it is an SSOT and not a derived projection (see [ADR-0029](../adr/0029-debt-projection-writer-authority.md) — the `config/gates.json` projection model does not transfer to it).
 - **GeneratorVersion** = `DebtProjectionVersion` const embedded in the generator (`tools/debt_engine.nim:108`: `DebtProjectionVersion = "2"`).
 - **Projection** = the pair of output artifacts (`docs/DEBT_REGISTRY.md`, `src/generated/debt_constants.nim`).
 
@@ -66,7 +66,7 @@ been removed** — `func aggregate*(registry: JsonNode)` takes only the registry
 the assertion agree for the first time.
 
 The signature agreeing is necessary but not sufficient, which is why the invariant is **measured**
-rather than declared — see [ADR-0029](adr/0029-debt-projection-writer-authority.md) §4. A future
+rather than declared — see [ADR-0029](../adr/0029-debt-projection-writer-authority.md) §4. A future
 edit that adds a second read **inside** `aggregate` would change the projection bytes without
 changing any declared type, and no signature-shaped check would notice. The machine check that
 guards this is the counterfactual: **randomising the contents of a valid `architecture_debt.json`
@@ -538,7 +538,7 @@ resolve**.
 The remaining enforcement gap is the one §8 Enforcement describes: the check is **passive**. It
 catches a competing writer's damage after the fact and names only the canonical generator, so a
 developer clobbered by another tool is not told which tool did it. The sink-level check that closes
-this is declared in [ADR-0029](adr/0029-debt-projection-writer-authority.md) §2.
+this is declared in [ADR-0029](../adr/0029-debt-projection-writer-authority.md) §2.
 
 ---
 
