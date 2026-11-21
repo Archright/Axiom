@@ -12,19 +12,37 @@ name: publication-integrity
 #   compliance/provenance/license-attribution.yml (audited detection attributions)
 # SPEC: docs/spec/publication_integrity_gate.md
 #
-# REQUIRED-CHECK POSTURE: this workflow is bound by the repo ruleset as the
-# `publication-integrity` context. Therefore — NO path filters, NO
-# conditional job skips, NO concurrency cancellation: every event runs every
-# sub-job, and the aggregation job runs with `if: !cancelled()` so the
-# check-run ALWAYS reports the real conclusion (a skipped sub-job is a
-# MISSING verdict: the aggregator treats skipped/cancelled as UNKNOWN —
-# never success).
+# REQUIRED-CHECK POSTURE — VENUE SPLIT (ADR-0043, which amends ADR-0032 (e)
+# and extends ADR-0032 (a),(b) to this workflow's job layer): this workflow is bound by the repo ruleset as the
+# `publication-integrity` context. The context name is INVARIANT across venues;
+# what changes is the REQUIRED DIMENSION SET, which is a closed enum keyed by
+# `github.event_name`:
+#
+#   pull_request                      → venue=preflight → {secret-scan}
+#   merge_group | schedule | workflow_dispatch → venue=landing → all 5
+#   any other event                   → venue undeterminable → FAIL (exit 1)
+#
+# The landing venue is the SOLE canonical verdict: it runs every dimension.
+# The preflight venue is a fast early-warning lane, NOT a landing credential.
+#
+# THE THREE TRAPS THIS STRUCTURE CLOSES (each was a real green-while-blind path):
+#  1. Skipped job = success at the platform level. So NO dimension job may
+#     ever BE the required context — only the aggregator is required, and the
+#     aggregator itself must never be skipped (hence its `if: !cancelled()`).
+#  2. A blanket "skip when not landing" would silently drop dimensions and
+#     still report green. So the venue's required set is ENUMERATED, and a
+#     `success` result for a dimension this venue does not require is a
+#     BLOCKER, not a pass — the workflow can never earn credit for a check it
+#     did not intend to run (retired/renamed job ids included).
+#  3. The venue must be decided from event metadata ONLY (`github.event_name`
+#     is available in job-level `if:`; the `steps` context is not — it contains
+#     only steps of the current job that have already run).
 #
 # The license-scan dimension runs as an internal 3-shard matrix
-# (license-scan-shards) feeding the single adjudicating license-scan job: the
-# shards run on every event under the same NO-skip posture, and the dimension
-# verdict stays one evaluator over one set-checked merged report (a lost
-# shard is fail-closed, never a quiet partial pass).
+# (license-scan-shards) feeding the single adjudicating license-scan job. The
+# shards are gated by the same venue condition as their adjudicator, and the
+# dimension verdict stays one evaluator over one set-checked merged report (a
+# lost shard is fail-closed, never a quiet partial pass).
 #
 # The aggregation job id MUST stay `publication-integrity` (ruleset
 # required_status_checks + merge_admission.json RequiredChecks bind this
@@ -182,6 +200,8 @@ jobs:
   # adjudicating license-scan job below merges the (path-deduped) shard
   # reports into ONE report — single evaluator, single dimension verdict.
   license-scan-shards:
+    # venue=landing only — see the REQUIRED-CHECK POSTURE block at the top.
+    if: ${{ github.event_name == 'merge_group' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
     timeout-minutes: 45
     strategy:
@@ -280,10 +300,10 @@ jobs:
 
   license-scan:
     needs: [license-scan-shards]
-    # Always runs: a failed/cancelled shard leg leaves a shard-count mismatch
-    # below and this job reports the real FAIL conclusion — a skipped
-    # adjudication would surface as UNKNOWN downstream (fail-closed).
-    if: ${{ !cancelled() }}
+    # venue=landing only (same condition as its shard matrix). A failed or
+    # cancelled shard leg leaves a shard-count mismatch below and this job
+    # reports the real FAIL conclusion — never a quiet partial pass.
+    if: ${{ !cancelled() && (github.event_name == 'merge_group' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
     runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
     timeout-minutes: 45
     steps:
@@ -413,6 +433,8 @@ jobs:
 
   # ── dimension: dependency-scan ───────────────────────────────────────
   dependency-scan:
+    # venue=landing only — see the REQUIRED-CHECK POSTURE block at the top.
+    if: ${{ github.event_name == 'merge_group' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
     timeout-minutes: 20
     steps:
@@ -493,6 +515,8 @@ jobs:
 
   # ── dimension: provenance ─────────────────────────────────────────────
   provenance:
+    # venue=landing only — see the REQUIRED-CHECK POSTURE block at the top.
+    if: ${{ github.event_name == 'merge_group' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
     timeout-minutes: 20
     steps:
@@ -542,6 +566,8 @@ jobs:
 
   # ── dimension: sbom ────────────────────────────────────────────────────
   sbom:
+    # venue=landing only — see the REQUIRED-CHECK POSTURE block at the top.
+    if: ${{ github.event_name == 'merge_group' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
     timeout-minutes: 20
     steps:
@@ -613,9 +639,11 @@ jobs:
   # ── the single bound verdict ──────────────────────────────────────────
   publication-integrity:
     needs: [secret-scan, license-scan, dependency-scan, provenance, sbom]
-    # Always runs: a skipped/cancelled sub-job is a MISSING verdict, and the
-    # skipped-is-success platform trap must surface as UNKNOWN here, not as
-    # a green check-run (fail-closed).
+    # ALWAYS runs, on EVERY venue: the required context (this job id) must never
+    # report `skipped`, because the platform treats a skipped required check as
+    # SUCCESS. Venue is decided INSIDE the job from `github.event_name` (the
+    # `steps` context does not exist yet at job-if time) and an event this
+    # workflow does not recognise fails closed inside the evaluator.
     if: ${{ !cancelled() }}
     runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
     timeout-minutes: 20
@@ -676,7 +704,10 @@ jobs:
             --nimcache:build/nimcache/vsi_report \
             -o:build/vsi_report tools/ci/publication_report.nim
           D="$RUNNER_TEMP/dims"
+          # --venue is REQUIRED (closed enum). An unrecognised event fails
+          # closed in the evaluator: no venue → no run → no verdict.
           ./build/vsi_report \
+            --venue "${GITHUB_EVENT_NAME}" \
             --out "$RUNNER_TEMP/publication-integrity-report.json" \
             --head-sha "${{ github.sha }}" \
             --tree-sha "$(git rev-parse '${{ github.sha }}^{tree}')" \
