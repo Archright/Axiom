@@ -12,7 +12,7 @@ Tier-1 first-site-group(PR #850)이 착지한 `fetch_bounded <url> <outfile> <ta
 
 | # | 스텝 | 사이트 | 계약 다리 | 변화 |
 |---|---|---|---|---|
-| 1 | (P7b) [SL-15] evidence CAS | artifacts-list JSON GET | [B2](b) 동일 계약 — 503 시 append 단계에 도달 못 함 | 즉시 fail-closed → 바운디드 리트라이 |
+| 1 | (P7b) [SL-15] evidence CAS | artifacts-list JSON GET | `[B2](b)` 동일 계약 — 503 시 append 단계에 도달 못 함 | 즉시 fail-closed → 바운디드 리트라이 |
 | 2 | (P7b) | evidence-record artifact zip GET | DEBT#474 측정 경로와 동일한 artifact 전송 | 즉시 fail-closed → 바운디드 리트라이 |
 | 3 | (P7b) | admission artifact zip GET | witness 소스 전송 | 즉시 fail-closed → 바운디드 리트라이 |
 | 4 | (P7c) [SL-15] s1a judgment CAS | artifacts-list JSON GET | 선행 fetch — 503 시 zip에 도달 못 함 | 즉시 fail-closed → 바운디드 리트라이 |

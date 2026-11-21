@@ -1,7 +1,7 @@
 # Hook Migration Log: Bash → Nim
 
 > **Migration Plan**: `docs/spec/hooks_architecture.md`
-> **Plan Source**: [dove-raven-wolverine.md](../../.kimi-code/plans/dove-raven-wolverine.md)
+> **Plan Source**: `[dove-raven-wolverine.md](../../.kimi-code/plans/dove-raven-wolverine.md)`
 > **Started**: 2026-06-17
 
 ---

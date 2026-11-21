@@ -250,7 +250,7 @@ provenRequired(Δ) := { U | affected(U, Δ) == provably true } ∪ L0-baseline
 ### 참조 (A2)
 
 - `docs/evidence/epoch_record_oracle_select_2026-09-30.md` — Freeze(`ci-frozen-2026-09-30`)/Record/Tombstone
-- `docs/adr/0025-gateway-landing-authority.md` Amendment C(2026-09-30) — floor 비준·EMPTY 모순·mint [B2](c)·잔존 신뢰 경계
+- `docs/adr/0025-gateway-landing-authority.md` Amendment C(2026-09-30) — floor 비준·EMPTY 모순·mint `[B2](c)`·잔존 신뢰 경계
 - `docs/spec/canonical_execution_semantics.md` 부록 D(2026-09-30 Amendment) — C15 4항목
 - `docs/spec/incremental_ci_tiers_scheduling.md` Amendment(2026-09-30) — L0 문장 불일치·Known-branch witness
 - `data/debt_registry.json` — DEBT#466(b+), DEBT#467–470

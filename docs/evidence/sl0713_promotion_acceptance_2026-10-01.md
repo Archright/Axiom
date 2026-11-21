@@ -9,7 +9,7 @@
 - 승격 PR: **#425** (`feature/sl0713-promotion`) — native MERGE `9c4164bb0f32f7b6ba683ad0681e0e0813e3958c` (parents `1be4e4654` + `beedff6ec`, 2-parent, 12:41:05Z)
 - epoch: **N+7** — `config/policy/epoch_manifest.json`: `implementedSlices` ∋ `SL-0713` · `notYetImplementedSlices` ∌ SL-0713 · `productionExecutionPin` = `7539c1638f9e4c3023867f608b9b64c1f2714c06` (무변경 — admission blob 불변)
 - catalog: `src/gate/slice_catalog.nim` SL-0713 `implemented: true` (P1/P2/P4 → SL-04 귀속 정정, 증거 라인 :1014/:1284/:1337/:1387 실측)
-- 선행 확정: ADR-0025 §C.5 (mode=none [B2](c) 대응) · 결정 바인딩(영구 append 폭발반경) · epoch_transaction_gate L1/L2/L3 PASS (static + --diff)
+- 선행 확정: ADR-0025 §C.5 (mode=none `[B2](c)` 대응) · 결정 바인딩(영구 append 폭발반경) · epoch_transaction_gate L1/L2/L3 PASS (static + --diff)
 - 표면 선등록: #424 (surface v43 — 본 문서 경로 CONTROLLED)
 
 ## 2. 사전 검증 (승격 PR, 로컬 실측)
@@ -27,8 +27,8 @@
 | # | 실측 항목 | 관측 (원문) | 결과 |
 |---|---|---|---|
 | (a) | scope_sl0713 발화 | publish job 로그 (12:56:12Z): `[slice-engine] epoch=N+7 implemented=["SL-08","SL-01","SL-03","SL-04","SL-12","SL-10","SL-0713"] sl04=fire sl0713=fire` — (P0)/(P5)/(P6)/(P7) 실행 | **발화 확인** |
-| (a-2) | (P5) [B2](b) mode=none 3-way identity | `MINT_PUB_TREE: OK — canonical tree identity (b): testedTreeDigest == tree(github.sha) == certTree == 78ee196eebd4be117d33d61e013f32d83a4e4f09` | **PASS** (§C.5 ③ identity legs 실증) |
-| (b) | (P6) [B2](c) — **실패** | `MINT_PUB_JOBS: FAIL — 5 gateway-lane job(s) without conclusion=success — [B2] (c) (fail-closed) (fail-closed)` (12:56:16Z) — **실행된 엔진 = org callee pin `certificate-mint.yml@4b7719e15`(N+5 era, 구 semantics)** — 승격 (P6) 미배포 | **FAIL (엔진 pin 갭)** |
+| (a-2) | (P5) `[B2](b)` mode=none 3-way identity | `MINT_PUB_TREE: OK — canonical tree identity (b): testedTreeDigest == tree(github.sha) == certTree == 78ee196eebd4be117d33d61e013f32d83a4e4f09` | **PASS** (§C.5 ③ identity legs 실증) |
+| (b) | (P6) `[B2](c)` — **실패** | `MINT_PUB_JOBS: FAIL — 5 gateway-lane job(s) without conclusion=success — [B2] (c) (fail-closed) (fail-closed)` (12:56:16Z) — **실행된 엔진 = org callee pin `certificate-mint.yml@4b7719e15`(N+5 era, 구 semantics)** — 승격 (P6) 미배포 | **FAIL (엔진 pin 갭)** |
 | (b-2) | (P7) ledger append | 미도달 (P6 실패로 스텝 중단) — append 0 | 미발화 |
 | (d) | org verdict K | `ADMISSION_GATE: FAIL — needed job 'mint-publish' result='failure' (expected 'success' — skipped/cancelled/failed must block, never green) (fail-closed)` — env 실측: RESULT_ADMISSION=success RESULT_MINT_PREPARE=success RESULT_MINT_PUBLISH=failure RESULT_GATEWAY=success | **FAIL (fail-closed 정상 작동)** |
 | (c) | ledger record | side-ref 실존: `refs/heads/axiom/certificates` = `2abbbed537…` (tip tree = subjectId-명명 .json 140건, 역사적 기록) — **N+7 subject append 미발화** (P6 실패로 (P7) 미도달) | 미실현 (본 subject) |
