@@ -1264,12 +1264,18 @@ checkTrue("makeSubject rejects malformed headTreeDigest", badIdMade.isErr)
 #             E2-head (not yet registered) and the ATTACKER blob denied —
 #             the E1(65a3c58f) vs E2(b1561094) phase distinction.
 #   post-merge fixture (main/post-merge) = {E1,E2}: E2 admitted.
-#   PR-head manipulation invariance (V-A'4): with the MAIN phase0 fixture as
-#   the decision root, verdicts are unchanged whether or not the manipulated
-#   PR head next to it injects an arbitrary blob (manipulated-1) or
-#   self-registers E2 (manipulated-2) — the untrusted PR-head copy is never
-#   consulted. The non-vacuity assertion proves the manipulated file itself
-#   has teeth: if a bind DID consult it, the attacker blob WOULD be admitted.
+#   PR-head manipulation invariance (V-A'4): the bind step is modelled with
+#   BOTH roots — the untrusted workspace that carries the candidate executor
+#   and the MAIN phase0 root that supplies the trusted set. For manipulated-1
+#   (arbitrary blob injected) and manipulated-2 (E2 self-registered) the bind
+#   verdict equals the main-root verdict. Each assertion is backed by a
+#   non-vacuity twin: the same workspace, used AS the decision root, returns a
+#   DIFFERENT verdict (attacker/E2 admitted), so a bind that consulted the
+#   workspace would fail the invariance check. The workspace set must also
+#   differ byte-wise from the main set — a copied file would make the teeth
+#   assertion prove nothing.
+#   The authoritative file (config/executor_authority.json in this checkout)
+#   is exercised directly: E1 is admitted and the attacker blob is denied.
 # ---------------------------------------------------------------------------
 echo "=== P15: TrustedExecutorSet membership (V-A'2) + PR-head manipulation invariance (V-A'4) ==="
 let e1Blob = "65a3c58f305baf46dd9e044316b46a19ccd01ba7"
@@ -1310,6 +1316,22 @@ proc membershipVerdict(mainRoot, blob: string): tuple[code: int, outText: string
     return (0, prefix & "blob " & blob & " in trusted executor set")
   (1, prefix & "blob " & blob & " not in trusted executor set (retired)")
 
+proc bindVerdict(workspaceRoot, mainRoot, blob: string):
+    tuple[code: int, outText: string] =
+  ## The bind step's two-root contract: `workspaceRoot` is the untrusted
+  ## checkout that carries the candidate executor, `mainRoot` is the default-
+  ## branch checkout that supplies the trusted set. The workspace is accepted
+  ## so the caller cannot silently omit it, but it is never a trust input —
+  ## membership comes from `mainRoot` alone. A workspace that cannot even
+  ## express the bind input (absent root / absent set) is a configuration
+  ## error, not a pass.
+  const prefix = "verify_executor_membership: "
+  if not dirExists(workspaceRoot):
+    return (2, prefix & "bind workspace '" & workspaceRoot & "' is not a directory")
+  if not fileExists(workspaceRoot / "config" / "executor_authority.json"):
+    return (2, prefix & "bind workspace has no trusted-set file: " & workspaceRoot)
+  membershipVerdict(mainRoot, blob)
+
 # Fixture presence is ASSERTED, never guarded: a missing golden fixture is a
 # FAIL (missing ≠ valid empty), not a skip.
 checkTrue("P15 golden trust-state fixtures present (missing ≠ valid empty)",
@@ -1331,23 +1353,38 @@ let rPostE2 = membershipVerdict($(fixRoot / "main" / "post-merge"), e2Blob)
 checkEq("post-merge: E2 blob admitted (verdict 0 = member)", $rPostE2.code, "0")
 let rPostAtt = membershipVerdict($(fixRoot / "main" / "post-merge"), attackerBlob)
 checkEq("post-merge: attacker blob still rejected (verdict 1)", $rPostAtt.code, "1")
-# (e) PR-head manipulation invariance (V-A'4): membership is decided ONLY by
-#     the main-root set — the manipulated PR-head copies (arbitrary-blob
-#     injection / E2 self-registration) sitting next to the main fixture are
-#     NOT consulted, so the judged outcome (verdict + message) for the main
-#     Phase 0 root is identical to the unmanipulated main-side run.
-let rClean = membershipVerdict($(fixRoot / "main" / "phase0"), attackerBlob)
-let rManip1 = membershipVerdict($(fixRoot / "main" / "phase0"), attackerBlob)
-checkEq("manipulated-1 (arbitrary blob injected in PR head): verdict unchanged (vc " & $rClean.code & ")", $rManip1.code, $rClean.code)
-checkTrue("manipulated-1: manipulated PR-head trusted set NOT consulted",
-  rManip1.outText == rClean.outText)
-let rManip2 = membershipVerdict($(fixRoot / "main" / "phase0"), e2Blob)
-checkEq("manipulated-2 (E2 self-registered in PR head): E2 still rejected vs main Phase 0 set (verdict 1)", $rManip2.code, "1")
-# (f) non-vacuity: the manipulated PR-head file ITSELF admits the attacker
-#     blob (fixture has teeth) — the manipulation WOULD change the verdict
-#     if the decision root were the untrusted copy.
-let rSelf = membershipVerdict($(fixRoot / "pr-head" / "manipulated-1"), attackerBlob)
-checkEq("non-vacuity: arbitrary attacker blob admitted by the manipulated PR-head set itself (fixture has teeth)", $rSelf.code, "0")
+# (e) PR-head manipulation invariance (V-A'4): the bind reads the MAIN Phase 0
+#     root, never the workspace. The workspace carries a real (byte-different)
+#     trusted set, and the teeth assertions in (f) prove that set WOULD change
+#     the verdict if the bind consulted it.
+let mainPhase0 = fixRoot / "main" / "phase0"
+let mainPhase0Set = mainPhase0 / "config" / "executor_authority.json"
+let ws1 = fixRoot / "pr-head" / "manipulated-1"
+let ws2 = fixRoot / "pr-head" / "manipulated-2"
+checkTrue("manipulated-1: PR-head set differs from the main Phase 0 set (not a copy)",
+  readFile(ws1 / "config" / "executor_authority.json") != readFile(mainPhase0Set))
+checkTrue("manipulated-2: PR-head set differs from the main Phase 0 set (not a copy)",
+  readFile(ws2 / "config" / "executor_authority.json") != readFile(mainPhase0Set))
+let rBind1E1 = bindVerdict(ws1, mainPhase0, e1Blob)
+checkEq("manipulated-1: legitimate E1 still admitted through the bind (verdict 0)",
+  $rBind1E1.code, "0")
+let rBind1Att = bindVerdict(ws1, mainPhase0, attackerBlob)
+checkEq("manipulated-1 (arbitrary blob injected at PR head): bind verdict unchanged vs main Phase 0 (verdict " & $rAtt.code & ")",
+  $rBind1Att.code, $rAtt.code)
+checkTrue("manipulated-1: bind decision text identical (workspace set never consulted)",
+  rBind1Att.outText == rAtt.outText)
+let rBind2E2 = bindVerdict(ws2, mainPhase0, e2Blob)
+checkEq("manipulated-2 (E2 self-registered at PR head): bind still rejects E2 vs main Phase 0 (verdict " & $rE2.code & ")",
+  $rBind2E2.code, $rE2.code)
+checkTrue("manipulated-2: bind decision text identical (workspace set never consulted)",
+  rBind2E2.outText == rE2.outText)
+# (f) non-vacuity: each manipulated workspace, used AS the decision root,
+#     returns the manipulated verdict (fixture has teeth) — otherwise (e)
+#     would pass even if the bind had consulted the workspace.
+let rSelfAtt = membershipVerdict(ws1, attackerBlob)
+checkEq("non-vacuity manipulated-1: arbitrary attacker blob admitted by the manipulated PR-head set itself (fixture has teeth)", $rSelfAtt.code, "0")
+let rSelfE2 = membershipVerdict(ws2, e2Blob)
+checkEq("non-vacuity manipulated-2: E2 admitted by the self-registering PR-head set itself (fixture has teeth)", $rSelfE2.code, "0")
 # (g) fail-closed configuration semantics (the deleted checker's verdict 2):
 #     an unusable trust basis is an error, never a silent pass.
 let p15NoSetRoot = getTempDir() / ("ax_p15_noset_" & runId)
@@ -1356,6 +1393,19 @@ let rNoSet = membershipVerdict(p15NoSetRoot, e1Blob)
 checkEq("config-error: missing trusted-set file fails closed (verdict 2)", $rNoSet.code, "2")
 let rBadBlob = membershipVerdict($(fixRoot / "main" / "phase0"), "zz")
 checkEq("config-error: malformed blob OID fails closed (verdict 2)", $rBadBlob.code, "2")
+let rBindNoWorkspace = bindVerdict(fixRoot / "pr-head" / "absent", mainPhase0, e1Blob)
+checkEq("config-error: absent PR-head workspace fails closed (verdict 2)", $rBindNoWorkspace.code, "2")
+# (h) the authoritative trust surface itself: config/executor_authority.json
+#     in this checkout must parse under the same predicate and keep E1 while
+#     never admitting the attacker blob. (The live executor action blob is NOT
+#     asserted here — re-anchoring trusted[] to it is the architect-gated
+#     DEBT#484 residual.)
+let rLiveE1 = membershipVerdict(repoRoot, e1Blob)
+checkEq("live config/executor_authority.json admits the registered E1 executor (authoritative source parses)",
+  $rLiveE1.code, "0")
+let rLiveAtt = membershipVerdict(repoRoot, attackerBlob)
+checkEq("live config/executor_authority.json denies the attacker blob (verdict 1)",
+  $rLiveAtt.code, "1")
 
 # ---------------------------------------------------------------------------
 # P16 — witness-only golden (DEBT#464 S4 Phase 1a): `ax cert attest
