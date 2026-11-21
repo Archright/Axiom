@@ -93671,6 +93671,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "List string",
+      "module": "src/gate/runners/debt_integrity_gate.nim",
+      "name": "loadCanonicalStatuses",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "Bool",
       "module": "src/gate/runners/debt_integrity_gate.nim",
       "name": "matchesDebtId",
@@ -93781,6 +93795,20 @@
       "returnType": "DebtMetrics",
       "smtSort": "Int",
       "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "List string",
+      "module": "src/gate/runners/debt_integrity_gate.nim",
+      "name": "statusVocabulary",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
     },
     {
       "hasAxiomHint": false,

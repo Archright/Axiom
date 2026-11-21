@@ -39,6 +39,7 @@ const
   ArchitectureDebtPath = "data/architecture_debt.json"
   DebtRegistryPath = "data/debt_registry.json"
   DebtLedgerPath = "data/debt_ledger.json"
+  DebtSchemaPath = "data/debt_schema.json"
   DefaultCriticalThreshold = 20
 
 # ── Debt CT: Pure helpers ─────────────────────────────────────────────────────
@@ -57,8 +58,19 @@ func matchesDebtId(s: string): bool =
 func matchesSeverity(s: string): bool =
   s in ["critical", "high", "medium", "low", "low-medium"]
 
-func matchesStatus(s: string): bool =
-  s in ["open", "closed", "deferred", "resolved"]
+func statusVocabulary*(schema: JsonNode): seq[string] =
+  ## DEBT#512: data/debt_schema.json definitions.statusEnum.enum is the single
+  ## authority for the debt status vocabulary. An empty result means the
+  ## authority could not be established — callers fail closed, never guess.
+  let enumNode = schema{"definitions"}{"statusEnum"}{"enum"}
+  if enumNode.isNil or enumNode.kind != JArray: return @[]
+  for value in enumNode:
+    if value.kind != JString or value.getStr().len == 0: return @[]
+    result.add(value.getStr())
+
+func matchesStatus*(s: string; canonical: openArray[string]): bool =
+  ## Accept exactly the schema-canonical vocabulary (DEBT#512).
+  s in canonical
 
 func jsonStr(node: JsonNode): string =
   if node == nil or node.kind != JString: "" else: node.getStr("")
@@ -104,7 +116,8 @@ proc validateArchitectureDebtImpl(content: string): seq[string] =
             if entry{"canonicalSyntaxHash"}.getStr() != canonicalHash:
               result.add("entry[" & $idx & "].canonicalSyntaxHash mismatch")
 
-proc validateDebtRegistryImpl(content: string): seq[string] =
+proc validateDebtRegistryImpl*(content: string;
+                               canonicalStatuses: openArray[string]): seq[string] =
   result = @[]
   var json: JsonNode
   try: json = parseJson(content)
@@ -118,7 +131,7 @@ proc validateDebtRegistryImpl(content: string): seq[string] =
       result.add("entry[" & $idx & "].id: invalid format")
     if not matchesSeverity(jsonStr(entry{"severity"})):
       result.add("entry[" & $idx & "].severity: invalid")
-    if not matchesStatus(jsonStr(entry{"status"})):
+    if not matchesStatus(jsonStr(entry{"status"}), canonicalStatuses):
       result.add("entry[" & $idx & "].status: invalid")
 
 proc validateDebtLedgerImpl(content: string): seq[string] =
@@ -266,6 +279,23 @@ proc parseRegistry(jsonPath: string): seq[RegistryEntry] =
         binding: node{"binding"}.getStr(""),
         bindingRationale: node{"bindingRationale"}.getStr("")))
 
+proc loadCanonicalStatuses*(repoRoot: string): seq[string] =
+  ## DEBT#512: read the status vocabulary from its single authority
+  ## (data/debt_schema.json). An empty result means the authority is
+  ## unavailable; the caller fails closed instead of validating against a
+  ## guessed vocabulary.
+  let schemaPath = repoRoot / DebtSchemaPath
+  if not fileExists(schemaPath):
+    logError(GateTag, "debt_schema.json not found: " & schemaPath)
+    return @[]
+  try:
+    result = statusVocabulary(parseJson(readFile(schemaPath)))
+  except CatchableError as e:
+    logError(GateTag, "debt_schema.json unreadable: " & e.msg)
+    return @[]
+  if result.len == 0:
+    logError(GateTag, "debt_schema.json definitions.statusEnum.enum is missing, empty, or malformed")
+
 proc run(repoRoot: string): int =
   let jsonPath = repoRoot / "data" / "debt_registry.json"
   if not fileExists(jsonPath):
@@ -276,8 +306,12 @@ proc run(repoRoot: string): int =
   let archPath = repoRoot / ArchitectureDebtPath
   let ledgerPath = repoRoot / DebtLedgerPath
   if fileExists(archPath) and fileExists(ledgerPath):
+    let canonicalStatuses = loadCanonicalStatuses(repoRoot)
+    if canonicalStatuses.len == 0:
+      logError(GateTag, "status vocabulary unavailable — FAIL (fail-closed, DEBT#512)")
+      return 1
     let archErrors = validateArchitectureDebtImpl(readFile(archPath))
-    let registryErrors = validateDebtRegistryImpl(readFile(jsonPath))
+    let registryErrors = validateDebtRegistryImpl(readFile(jsonPath), canonicalStatuses)
     let ledgerErrors = validateDebtLedgerImpl(readFile(ledgerPath))
     for e in archErrors: logWarn(GateTag, "[architecture_debt] " & e)
     for e in registryErrors: logWarn(GateTag, "[debt_registry] " & e)
