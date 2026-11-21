@@ -14,7 +14,9 @@ import core/utils/io_utils
 import core/boundary/boundary_extractor
 import core/axiom_pragmas
 
-## DEBT#418: Directory/Documentation Debt Audit — 141 machine-grounded findings across src/, config, docs.
+## DEBT#418 (closed 2026-11-21): DATA-001 measures 0 findings under the post-PR#310
+## schema contract; the 141 recorded on 2026-08-17 was pre-contract duplicate/annotation
+## noise. The marker below is retained as the historical binding site.
 proc buildMinimalSmt(nodeId: string; sourceCode: string; impactIndex: int): string {.raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect], axiomDebt: "DEBT#418".} =
   if sourceCode.len == 0:
     return ""
