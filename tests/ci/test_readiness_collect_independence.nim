@@ -354,7 +354,14 @@ suite "readiness collector independence (DEBT#537)":
           check b.scope == "observed"
         check hasIncident(r5, "R5-EXIT-006")
 
-      # Absent: the same collector keeps the observed-null (fail-closed) shape.
+      # Absent: the producer artifact is not in this job's artifact set, so the
+      # collector's OWN negative control is the fallback evidence source — a
+      # fresh AXIOM_STATE_DIR seeded with the scope lock + baseline,
+      # `ax prove --fresh`, then `ax report --json`, with both measured exits
+      # and the persisted runOutcome verdict validated. A successful actuation
+      # mints observed 1 for both commands; an unmeasurable probe keeps both
+      # buckets observed null (fail-closed). Never a contract-scope echo, never
+      # a partial mint.
       let absentArtifacts = freshWorkDir("failure_obs_absent")
       let absentOut = freshWorkDir("case1b_absent_out")
       let a = runCollector(".", absentArtifacts, absentOut,
@@ -367,9 +374,22 @@ suite "readiness collector independence (DEBT#537)":
       else:
         let buckets = failureBuckets(r5a)
         check buckets.len == 2
+        var observedCount = 0
         for b in buckets:
-          check b.value.kind == JNull
           check b.scope == "observed"
+          if b.value.kind == JInt:
+            inc observedCount
+            check b.value.getInt(0) == 1
+          else:
+            check b.value.kind == JNull
+        # Homogeneous outcome: either the in-job probe actuated both commands
+        # or neither was measured (with an explicit non-actuation incident).
+        check observedCount == 0 or observedCount == 2
+        if observedCount == 2:
+          check hasIncident(r5a, "R5-EXIT-009")
+        else:
+          check hasIncident(r5a, "R5-EXIT-010") or
+                hasIncident(r5a, "R5-EXIT-005")
 
       # Contradictory measurement (one command did not exit 1): no partial
       # mint — both buckets stay null and the rejection is visible.

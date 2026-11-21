@@ -132,8 +132,16 @@
 ##                             producer's negative-control observation
 ##                             (verify_contract_e2e_failure_observation.json:
 ##                             both contract commands measured exit 1) ->
-##                             scope "observed"; otherwise an observed null
-##                             (never a policy echo)
+##                             scope "observed" when that artifact is present;
+##                             otherwise this collection's OWN negative control
+##                             (fresh AXIOM_STATE_DIR rooted at
+##                             build/tmp/readiness_r5_failure, seeded with the
+##                             scope lock + baseline, `ax prove --fresh` then
+##                             `ax report --json`): both measured exits must be
+##                             the policy verification-failure code and the
+##                             persisted runOutcome.verdict non-empty != PASS,
+##                             else nothing is minted. An unmeasured bucket is
+##                             an observed null (never a policy echo)
 ##     invalidInputExitCode   live invalid-input probe exit (3), else policy
 ##                             contract value (scope "contract")
 ##     internalErrorExitCode  policy r5.exitCodeContract (scope "contract";
@@ -172,7 +180,7 @@
 ##
 ## Exit codes: 0 = evidence written; 2 = tool failure.
 
-import std/[os, osproc, json, strutils, times, sequtils, streams]
+import std/[os, osproc, json, strutils, times, sequtils, streams, strtabs]
 import core/crypto/hash_kernel
 import core/types/verification_tier
 
@@ -181,6 +189,7 @@ const
   DefaultOutDir = "data" / "readiness" / "evidence"
   DefaultAxPath = "bin" / "ax"
   DefaultRustProbeDir = "tests" / "fixtures" / "rust" / "axiom_rust_probe"
+  R5FailureStateRel = "build" / "tmp" / "readiness_r5_failure"
   DefaultFreshnessDays = 30
   CollectorName = "tools/ci/readiness_collect_ci.nim"
 
@@ -213,6 +222,27 @@ proc runSplit(bin: string, args: seq[string], workingDir: string): RunResult =
   ## explicitly where a merged view is needed.
   let p = startProcess(bin, workingDir = workingDir, args = args,
                        options = {poUsePath})
+  result.stdout = p.outputStream.readAll()
+  result.stderr = p.errorStream.readAll()
+  result.exitCode = waitForExit(p)
+  close(p)
+
+proc baseEnvTable(): StringTableRef =
+  ## The ambient environment as a mutable table (PATH/toolchain intact).
+  result = newStringTable(modeCaseSensitive)
+  for k, v in envPairs():
+    result[k] = v
+
+proc runSplitEnv(bin: string, args: seq[string], workingDir: string,
+                 envPairs: seq[(string, string)]): RunResult =
+  ## runSplit with the ambient environment plus explicit overrides. The R5
+  ## failure probe relocates the CLI state root (AXIOM_STATE_DIR) without
+  ## dropping PATH or the solver/Lean variables the CLI resolves from env.
+  var env = baseEnvTable()
+  for (k, v) in envPairs:
+    env[k] = v
+  let p = startProcess(bin, workingDir = workingDir, args = args,
+                       env = env, options = {poUsePath})
   result.stdout = p.outputStream.readAll()
   result.stderr = p.errorStream.readAll()
   result.exitCode = waitForExit(p)
@@ -489,6 +519,14 @@ type
     unknownOption: RunResult    ## ax prove --definitely-unknown-option-xyz
     unknownSubcmd: RunResult    ## ax garbage-subcommand-xyz
     missingStateFile: RunResult ## ax report --json --state-file <absent>
+    failureRan: bool            ## in-job negative control executed
+    failureProve: RunResult     ## ax prove --fresh under a fresh state root
+    failureReport: RunResult    ## ax report --json under the same state root
+    failureValid: bool          ## both exits == policy verification-failure code,
+                                ## state parsed, verdict non-empty and != PASS
+    failureVerdict: string      ## ax_proof_state runOutcome.verdict
+    failureGateVerdict: string  ## ax_proof_state runOutcome.gateVerdict
+    failureStateErr: string     ## why the probe measured unusable ("" = none)
 
 func jSeq(items: seq[JsonNode]): JsonNode =
   let arr = newJArray()
@@ -807,6 +845,65 @@ when isMainModule:
         elif "verification-failure" in desc: verifFailCode = k.parseInt()
         elif "internal" in desc: internalCode = k.parseInt()
         elif "invalid" in desc: invalidCode = k.parseInt()
+
+  # ── R5 verification-failure actuation probe ──────────────────────────────
+  # The E2E producer writes logs/verify_contract_e2e_failure_observation.json,
+  # but that file is not in this job's artifact set (the workflow upload does
+  # not carry it), so the collector cannot depend on reading it here. Measure
+  # the same negative control in THIS job: a fresh state root seeded with the
+  # scope lock and baseline, one `ax prove --fresh` (a genuine non-PASS run),
+  # then `ax report --json` against that state. Both exits and the persisted
+  # runOutcome verdict are read back; any other outcome is recorded as a
+  # warning incident and mints NOTHING (fail-closed, never a policy echo).
+  # The producer artifact stays the primary evidence when it is present: the
+  # probe only runs when that artifact is absent/unparseable.
+  block r5FailureProbe:
+    pr.failureValid = false
+    if pr.axPresent and fileExists(repoRoot / DefaultAxPath) and
+        art.failureObs == nil:
+      let stateDir = repoRoot / R5FailureStateRel
+      var prepErr = ""
+      try:
+        if dirExists(stateDir):
+          removeDir(stateDir)
+        createDir(stateDir / "data")
+        createDir(stateDir / "logs")
+        for f in ["verification_scope.lock", "baseline.json"]:
+          let src = repoRoot / "data" / f
+          if fileExists(src):
+            copyFile(src, stateDir / "data" / f)
+          else:
+            prepErr.add((if prepErr.len > 0: "; " else: "") &
+                        "absent probe input: data/" & f)
+      except CatchableError as e:
+        prepErr = "state root preparation failed: " & e.msg
+      if prepErr.len > 0:
+        pr.failureStateErr = prepErr
+      else:
+        let stateEnv = @[("AXIOM_STATE_DIR", absolutePath(stateDir))]
+        pr.failureRan = true
+        pr.failureProve = runSplitEnv(axBin, @["prove", "--fresh"], repoRoot, stateEnv)
+        pr.failureReport = runSplitEnv(axBin, @["report", "--json"], repoRoot, stateEnv)
+        let st = safeParseFile(stateDir / "logs" / "ax_proof_state.json")
+        if st.err.len > 0:
+          pr.failureStateErr = st.err
+        else:
+          let outcome = jObj(st.node, "runOutcome")
+          pr.failureVerdict = jStr(outcome, "verdict")
+          pr.failureGateVerdict = jStr(outcome, "gateVerdict")
+          if pr.failureProve.exitCode != verifFailCode:
+            pr.failureStateErr = "prove exited " & $pr.failureProve.exitCode &
+              " != verification-failure " & $verifFailCode
+          elif pr.failureReport.exitCode != verifFailCode:
+            pr.failureStateErr = "report exited " & $pr.failureReport.exitCode &
+              " != verification-failure " & $verifFailCode
+          elif pr.failureVerdict.len == 0:
+            pr.failureStateErr = "ax_proof_state runOutcome.verdict missing"
+          elif pr.failureVerdict == "PASS":
+            pr.failureStateErr = "measured verdict is PASS — the verification-" &
+              "failure path did not actuate"
+          else:
+            pr.failureValid = true
 
   let readmeText = safeReadFile(repoRoot / "README.md")
   let contractPath = repoRoot / "docs" / "spec" / "productization_contract.md"
@@ -1430,17 +1527,23 @@ when isMainModule:
         obs.add(obsInt("invalidInputExitCode", invalidCode, "contract", cmd))
       # verification failure: actuated when this collection observed a
       # verification-failure exit (the E2E report exit, the live `ax report`
-      # probe over the E2E state, or — for BOTH contract commands — the
-      # producer's negative-control observation, which measured each command's
-      # exit on a genuine non-PASS full-scope run). The producer artifact is
-      # validated as a whole (parseFailureObservation): a partial or
-      # contradictory observation mints nothing.
+      # probe over the E2E state, the producer's negative-control observation,
+      # or — when that producer artifact is absent from this job's artifact
+      # set — this collection's own negative-control probe, whose two measured
+      # exits and persisted verdict live in pr.failure*). The producer artifact
+      # is validated as a whole (parseFailureObservation): a partial or
+      # contradictory observation mints nothing, and the in-job probe is only
+      # consulted when the artifact is absent (the artifact stays primary).
+      let probeUsable = art.failureObs == nil and pr.failureValid
       let observedVerifFail =
         (art.reportExitOk and art.reportExit == verifFailCode) or
         (pr.axPresent and sub == "report" and pr.reportJson.exitCode == verifFailCode) or
         (failObs.valid and
           ((sub == "prove" and failObs.proveExit == verifFailCode) or
-           (sub == "report" and failObs.reportExit == verifFailCode)))
+           (sub == "report" and failObs.reportExit == verifFailCode))) or
+        (probeUsable and
+          ((sub == "prove" and pr.failureProve.exitCode == verifFailCode) or
+           (sub == "report" and pr.failureReport.exitCode == verifFailCode)))
       if observedVerifFail:
         obs.add(obsInt("verificationFailureExitCode", verifFailCode, "observed", cmd))
       else:
@@ -1479,6 +1582,38 @@ when isMainModule:
                        "scope=full, fresh=true, stateSha256 64-hex — " &
                        "verificationFailureExitCode stays UNKNOWN (fail-closed, " &
                        "never a partial mint)"))
+    elif pr.failureValid:
+      inc.add(incident("R5-EXIT-009", "info",
+                       "in-job negative control actuated the verification-failure " &
+                       "exit for both contract commands (AXIOM_STATE_DIR=" &
+                       R5FailureStateRel &
+                       " proveExit=" & $pr.failureProve.exitCode &
+                       " reportExit=" & $pr.failureReport.exitCode &
+                       " verdict=" & pr.failureVerdict &
+                       " gateVerdict=" & pr.failureGateVerdict &
+                       "; producer artifact absent from this job's artifact set) — " &
+                       "verificationFailureExitCode recorded at scope=observed"))
+    elif pr.failureRan:
+      inc.add(incident("R5-EXIT-010", "warning",
+                       "in-job negative control unusable (" &
+                       (if pr.failureStateErr.len > 0: pr.failureStateErr
+                        else: "shape/exit contradiction") &
+                       "): proveExit/reportExit must both be " & $verifFailCode &
+                       ", ax_proof_state runOutcome.verdict non-empty and != PASS — " &
+                       "verificationFailureExitCode stays UNKNOWN (fail-closed, " &
+                       "never fabricated into evidence)"))
+    elif art.failureObs == nil and pr.failureStateErr.len > 0:
+      inc.add(incident("R5-EXIT-010", "warning",
+                       "in-job negative control not run (" & pr.failureStateErr &
+                       "): verificationFailureExitCode stays UNKNOWN (fail-closed, " &
+                       "never fabricated into evidence)"))
+    elif pr.axPresent and not fileExists(repoRoot / DefaultAxPath):
+      inc.add(incident("R5-EXIT-011", "warning",
+                       "in-job negative control not run: " &
+                       (repoRoot / DefaultAxPath) & " does not exist (the " &
+                       "--ax-bin target is not this checkout's canonical CLI) — " &
+                       "verificationFailureExitCode stays UNKNOWN unless another " &
+                       "probe actuated it (fail-closed)"))
     inc.add(incident("R5-EXIT-000", "info",
                      "exit-code buckets with no safe actuation (internal-error) are " &
                      "recorded at scope=contract (policy vocabulary, presence=vocabulary); " &
@@ -1522,6 +1657,11 @@ when isMainModule:
                       (if not pr.axPresent: "unmeasured: bin/ax absent"
                        else: "unmeasured: state artifact absent (" & art.stateErr & ")") &
                       " — UNKNOWN"))
+    if pr.failureRan:
+      cmds.add(cmdRecord("bin/ax prove --fresh (AXIOM_STATE_DIR=" &
+                         R5FailureStateRel & ")", pr.failureProve))
+      cmds.add(cmdRecord("bin/ax report --json (AXIOM_STATE_DIR=" &
+                         R5FailureStateRel & ")", pr.failureReport))
     if pr.axPresent:
       cmds.add(cmdRecord("bin/ax help", pr.help))
       cmds.add(cmdRecord("bin/ax prove --help", pr.proveHelp))
