@@ -2837,12 +2837,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:78db91496912391c2a3bfa06f3dbe37658c2fef3bab146573191ada07a5dd495",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:742a317dec168fa54aa1c4233ae8a1dda03c0898d9bf6077bc82a07e7118a78d",
       "count": 5,
       "file": "src/gate/runners/gate_hook.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:e694348e3dd771d783a0d17983d2a252ce4ee820f1d226fa335c58294ee02239"
+      "rawContentHash": "sha256:df560eb530dc6938067825e30464367a979219f5e49073e71ef03c53c30540db"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
