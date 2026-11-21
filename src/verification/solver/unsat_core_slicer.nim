@@ -209,6 +209,7 @@ proc isClauseRedundant(query: string, timeoutMs: int): bool =
   ## Check if removing a clause still results in UNSAT (clause is redundant).
   var cd, td: string
   let z3Result = z3ExecPersistent(query, timeoutMs, desiredWorkers = 1,
+    queryType = "unsat_core_slice",
     canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
   if z3Result.isOk:
     let response = z3Result.get().strip().toLowerAscii()
@@ -299,6 +300,7 @@ proc sliceUnsatCore*(
   # Execute Z3
   var cd, td: string
   let z3Result = z3ExecPersistent(query, timeoutMs, desiredWorkers = 1,
+    queryType = "unsat_core_slice",
     canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
 
   let endMs = int(getTime().toUnixFloat() * 1000)

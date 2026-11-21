@@ -297,7 +297,8 @@ suite "S6 mutant — PROPOSITION_DISPROVED projection":
     let res = mutantPipeline.get
     check res.smtScript.len > 0
     var env, transport: string
-    let oc = runZ3CheckViaIR(res.smtScript & "\n(get-model)", spBmc, env, transport)
+    let oc = runZ3CheckViaIR(res.smtScript & "\n(get-model)", spBmc, env, transport,
+      queryType = "test_bug_verdict_projection")
     check oc.status == sosSat
     check oc.modelBindings.len >= 1
     let ce = toCandidateEvidence(oc)

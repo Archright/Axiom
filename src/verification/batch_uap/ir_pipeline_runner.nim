@@ -310,6 +310,7 @@ proc runZ3CheckViaIR*(funcDef: IRFuncDef, phase: SmtPhase = spBmc;
   try:
     let budget = getBudgetFor(phase)
     let res = z3ExecPersistent(smtScript, timeoutMs = budget.timeoutMs,
+      queryType = "ir_pipeline_bmc",
       canonicalEnvelopeDigest = canonicalEnvelopeDigest, transportPayloadDigest = transportPayloadDigest)
     if res.isOk:
       let output = res.get()
@@ -331,12 +332,18 @@ proc runZ3CheckViaIR*(funcDef: IRFuncDef, phase: SmtPhase = spBmc;
     result.status = sosProcessError
 
 proc runZ3CheckViaIR*(smtScript: string, phase: SmtPhase = spBmc;
-    canonicalEnvelopeDigest: var string; transportPayloadDigest: var string): SolverOutcome {.gcsafe, raises: []} =
+    canonicalEnvelopeDigest: var string; transportPayloadDigest: var string;
+    queryType: string): SolverOutcome {.gcsafe, raises: []} =
+  ## `queryType` is required: the four script legs (dual, CHC-from-loop,
+  ## CHC-legacy, BMC) share this body but are distinct lanes. A default label
+  ## would silently attribute every leg to one lane in the telemetry record,
+  ## so each call site must name its own lane.
   if smtScript.len == 0:
     return SolverOutcome(status: sosUnknown)
   try:
     let budget = getBudgetFor(phase)
     let res = z3ExecPersistent(smtScript, timeoutMs = budget.timeoutMs,
+      queryType = queryType,
       canonicalEnvelopeDigest = canonicalEnvelopeDigest, transportPayloadDigest = transportPayloadDigest)
     if res.isOk:
       let output = res.get()
@@ -710,7 +717,7 @@ proc runIrPipelineCore(ve: ValidatedIrEntry,
               var ceDigest, tpDigest: string
               let outcome = runZ3CheckViaIR(dualScript & '\n' & "(get-model)",
                 phase = spBmc, canonicalEnvelopeDigest = ceDigest,
-                transportPayloadDigest = tpDigest)
+                transportPayloadDigest = tpDigest, queryType = "ir_pipeline_dual")
               if outcome.status == sosUnsat:
                 dualSmtScript = dualScript
                 dualZ3Sat = true
@@ -828,7 +835,8 @@ proc runIrPipelineCore(ve: ValidatedIrEntry,
           let chcScript = chcBuild.program
           var chcCanonicalDigest, chcTransportDigest: string
           let chcOutcome = runZ3CheckViaIR(chcScript, phase = spBmc,
-            canonicalEnvelopeDigest = chcCanonicalDigest, transportPayloadDigest = chcTransportDigest)
+            canonicalEnvelopeDigest = chcCanonicalDigest, transportPayloadDigest = chcTransportDigest,
+            queryType = "ir_pipeline_chc")
           let chcCe = toCandidateEvidence(chcOutcome)
           let loopModel = lowerLoopToTransition(loopExpr, funcDef.symbolTable, contract)
           let chcResult = if loopModel.isSome:
@@ -1001,7 +1009,8 @@ proc runIrPipelineCore(ve: ValidatedIrEntry,
             let fullScript = lines.join("\n")
             var chcCanonicalDigest, chcTransportDigest: string
             let chcOutcome = runZ3CheckViaIR(fullScript, phase = spBmc,
-              canonicalEnvelopeDigest = chcCanonicalDigest, transportPayloadDigest = chcTransportDigest)
+              canonicalEnvelopeDigest = chcCanonicalDigest, transportPayloadDigest = chcTransportDigest,
+              queryType = "ir_pipeline_chc_legacy")
             let chcCe = toCandidateEvidence(chcOutcome)
             let legacyModel = lowerLoopToTransition(loopExpr, funcDef.symbolTable, contract)
             let chcResult = if legacyModel.isSome:
@@ -1353,7 +1362,8 @@ proc runIrPipelineCore(ve: ValidatedIrEntry,
     )
     var bmcCanonicalDigest, bmcTransportDigest: string
     let bmcOutcome = runZ3CheckViaIR(smtScript & '\n' & "(get-model)", phase = spBmc,
-      canonicalEnvelopeDigest = bmcCanonicalDigest, transportPayloadDigest = bmcTransportDigest)
+      canonicalEnvelopeDigest = bmcCanonicalDigest, transportPayloadDigest = bmcTransportDigest,
+      queryType = "ir_pipeline_bmc")
     # C20: the BMC route now discharges through a VerificationModel. The raw
     # solver outcome becomes neutral CandidateEvidence (toCandidateEvidence)
     # and the existing evidenceVerdict (EvidenceValidator over the non-loop

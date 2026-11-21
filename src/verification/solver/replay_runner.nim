@@ -17,6 +17,7 @@ func parseZ3Outcome(raw: string): string {.raises: [].} =
 proc z3InvokeAdapter(smt: string; t: int): Result[string, string] {.raises: [], axiomDecision(id = "DECISION-0661", reason = "Bridge the replay runner to the Z3 CLI subprocess; wraps z3ExecPersistent with outcome parsing", adr = "docs/adr/0001-fail-closed-result-type.md", introduced = "v33").} =
   var cd, td: string
   let res = z3ExecPersistent(smt, t,
+    queryType = "replay",
     canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
   if res.isErr():
     return err(res.error())

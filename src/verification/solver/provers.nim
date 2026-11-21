@@ -36,10 +36,12 @@ const
                           ## SSOT: proof_budget.defaultRlimitBudget for QF_BV (30M).
                           ## QF_FP uses a tighter budget due to combinatorial blowup.
 
-proc prove*(p: Z3PoolProver; query: string; timeoutMs: int): bool {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, TimeEffect, RootEffect].} =
+proc prove*(p: Z3PoolProver; query: string; timeoutMs: int; queryType: string = "z3_pool_prover"): bool {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, TimeEffect, RootEffect].} =
   ## Execute Z3 via persistent pool, return true iff result is "unsat".
+  ## `queryType` names the lane; the default covers the generic ProverInterface
+  ## dispatcher, whose callers cannot thread a lane label.
   var cd, td: string
-  let res = z3ExecPersistent(query, timeoutMs, desiredWorkers = 2,
+  let res = z3ExecPersistent(query, timeoutMs, desiredWorkers = 2, queryType = queryType,
     canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
   return res.isOk and res.get().strip().toLowerAscii() == "unsat"
 
@@ -98,6 +100,7 @@ proc proveWithOutput*(p: Z3PoolProver; query: string; timeoutMs: int): Result[st
   ## for unsat core extraction and constructive witness parsing.
   var cd, td: string
   z3ExecPersistent(query, timeoutMs, desiredWorkers = 1,
+    queryType = "judge",
     canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
 
 proc proveRaw*(p: Z3PoolProver; query: string; timeoutMs: int): Result[string, string] {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, TimeEffect, RootEffect].} =
@@ -106,6 +109,7 @@ proc proveRaw*(p: Z3PoolProver; query: string; timeoutMs: int): Result[string, s
   ## for counterexample extraction and invariant parsing.
   var cd2, td2: string
   z3ExecPersistent(query, timeoutMs, desiredWorkers = 1,
+    queryType = "fixedpoint_chc",
     canonicalEnvelopeDigest = cd2, transportPayloadDigest = td2)
 
 # ---------------------------------------------------------------------------

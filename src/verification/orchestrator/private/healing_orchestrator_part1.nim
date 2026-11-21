@@ -248,6 +248,7 @@ proc counterExampleCheck*(proposition: string): Result[GateResult, SolverError] 
 """
   var healCanonicalDigest, healTransportDigest: string
   let z3Result = z3ExecPersistent(smtQuery, timeoutMs = 5000,
+    queryType = "healing",
     canonicalEnvelopeDigest = healCanonicalDigest, transportPayloadDigest = healTransportDigest)
   if z3Result.isErr:
     let errMsg = z3Result.error().toLowerAscii()

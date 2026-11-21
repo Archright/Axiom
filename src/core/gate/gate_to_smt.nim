@@ -114,6 +114,7 @@ proc runZ3WithQuery*(query: string; timeoutMs: int = NonVacuityTimeoutMs):
     Result[string, string] {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect], raises: [].} =
   var gateCanonicalDigest, gateTransportDigest: string
   z3ExecPersistent(query, timeoutMs,
+    queryType = "gate_to_smt",
     canonicalEnvelopeDigest = gateCanonicalDigest, transportPayloadDigest = gateTransportDigest)
 
 proc verifyNonVacuity*(ir: AxiomIRNode): bool {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect].} =

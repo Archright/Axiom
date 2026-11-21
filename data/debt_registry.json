@@ -6136,6 +6136,27 @@
       "status": "open",
       "resolution": "UNRESOLVED — registration only. No cap, baseline number, or policy threshold is changed by this entry. Closing-slice acceptance: (1) CI produces a measurement (runs bin/nimtry or otherwise emits data/nimtry_live_count.json) and the ratchet compares the measured count, failing closed as UNKNOWN when the measurement is absent; (2) an increase fixture (or staged measurement) is observed as FAIL; (3) the 4384 measurement is either driven down or accepted through a human-authored baseline change with owner/rationale. The {.axiomDebt: \"DEBT#563\".} marker on the sidecar-absent fallback binds this entry to the blind-spot site.",
       "lastVerifiedAt": "2026-11-21T00:00:00Z"
+    },
+    {
+      "id": "DEBT#564",
+      "category": "Theater/Dead Budget Control",
+      "impact": "high",
+      "severity": "high",
+      "title": "SMT timeout and memory budget controls are inert: timeoutMs never reaches Z3, and AXIOM_SMT_TIMEOUT / SmtBudget.memoryLimitMb have zero consumers",
+      "description": "Machine-observed 2026-11-22 on main be6c14c2. Axiom exposes three solver-budget controls that guarantee nothing. (1) buildZ3QueryEnvelope takes timeoutMs (src/verification/solver/z3_pool.nim:632) and never references it in its body (:633-664); the envelope always emits deterministicSolverOptions(z3DeterministicBudget, z3SafetyNetMs) (:648), i.e. a fixed rlimit 30000000 plus a 60000 ms liveness backstop. (2) z3ExecPersistent receives timeoutMs (:810) and forwards it only to that dead parameter (:908); its read deadline is built from z3SafetyNetMs (:896). (3) The per-phase budgets from getBudgetFor (:622-630; spBmc 8000, spBaseCase 2000, spInductiveStep 5000 ms) are passed to classifyZ3Output(output, 0, budget.timeoutMs) at src/verification/batch_uap/ir_pipeline_runner.nim:316 and :343 with elapsedMs hardcoded 0, so the only branch that reads the timeout (elapsedMs >= timeoutMs, :266-267) cannot fire for a positive budget. (4) SmtBudget.memoryLimitMb is declared (z3_pool.nim:120) and set (:626-628) but read nowhere in src/. (5) The --smt-timeout CLI flag (src/cli/axiom_engine.nim:7338-7339) feeds only the dead clamp in getBudgetFor. Consequence: an operator who sets AXIOM_SMT_TIMEOUT or --smt-timeout believes solver time is bounded by that value; the effective bound remains rlimit 30M steps plus the 60 s safety net. No verdict is falsified by this defect (the safety net and rlimit still terminate a query), which is why it is registered rather than patched: removing or honoring the parameter changes solver behavior and requires its own slice. Registration only; no budget value, query byte, or solver option is changed by this entry.",
+      "symbol": "buildZ3QueryEnvelope / z3ExecPersistent (src/verification/solver/z3_pool.nim:632,810)",
+      "lineRange": "src/verification/solver/z3_pool.nim:622-664,808-908",
+      "files": [
+        "src/verification/solver/z3_pool.nim:622-664,808-908",
+        "src/core/trusted/solver_invocation.nim:86-93",
+        "src/verification/batch_uap/ir_pipeline_runner.nim:266-267,305-358",
+        "src/cli/axiom_engine.nim:7338-7339"
+      ],
+      "source": "theater_audit",
+      "productTruthImpact": "PRODUCT_SUPPORT",
+      "status": "open",
+      "resolution": "UNRESOLVED - registration only. Closing-slice acceptance: (1) decide per control whether it is removed or honored, and record the decision; (2) if honored, a fixture asserts that a query exceeding the configured timeout is classified as timeout rather than returning a verdict; (3) if removed, the --smt-timeout flag and AXIOM_SMT_TIMEOUT are removed from help text and no dead parameter remains. Until then, documentation must not claim that phase budgets bound solver time.",
+      "lastVerifiedAt": "2026-11-22T00:00:00Z"
     }
   ]
 }

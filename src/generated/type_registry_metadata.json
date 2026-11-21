@@ -145854,6 +145854,17 @@
     },
     {
       "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/verification/solver/z3_pool.nim",
+      "name": "readProcStatusKb",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
       "ignorable": true,
       "leanType": "Unit",
       "module": "src/verification/solver/z3_pool.nim",

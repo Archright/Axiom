@@ -25,6 +25,7 @@ proc execute*(provider: Z3Provider; query: string): ProviderResult {.raises: [],
   ## Execute Z3 query via persistent pool.
   var cd, td: string
   let res = z3ExecPersistent(query, provider.timeoutMs, desiredWorkers = 2,
+    queryType = "z3_provider",
     canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
   if res.isOk():
     let output = res.get().strip()

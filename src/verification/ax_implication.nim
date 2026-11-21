@@ -80,6 +80,7 @@ proc checkImplication*(invariant: IRExpr, postCondition: IRExpr): ImplicationRes
   try:
     var implCanonicalDigest, implTransportDigest: string
     let z3Res = z3ExecPersistent(smtQuery, timeoutMs = 500,
+      queryType = "ax_implication",
       canonicalEnvelopeDigest = implCanonicalDigest, transportPayloadDigest = implTransportDigest)
     if z3Res.isOk:
       let output = z3Res.get().strip().toLowerAscii()

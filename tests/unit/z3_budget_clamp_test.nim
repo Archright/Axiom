@@ -88,6 +88,7 @@ proc execWorkerThread(p: ptr ExecProbe) {.thread.} =
   for i in 0 ..< 4:
     var cd, td: string
     let r = z3ExecPersistent(q, 5000, desiredWorkers = 2,
+      queryType = "budget_clamp_test",
       canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
     if r.isOk: inc p[].okCount
     else: inc p[].errCount
@@ -141,6 +142,7 @@ suite "Z3WorkerLease":
     var cd, td: string
     let okRes = z3ExecPersistent("(declare-fun x () Int)\n(assert (= x 1))\n(check-sat)\n",
       5000, desiredWorkers = 2,
+      queryType = "budget_clamp_test",
       canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
     check okRes.isOk
     # >60KB payload bypasses the persistent pipe into the one-shot fallback
@@ -149,6 +151,7 @@ suite "Z3WorkerLease":
     while big.len <= 61_000:
       big.add("(assert (>= x 0))\n")
     let bigRes = z3ExecPersistent(big, 20000, desiredWorkers = 2,
+      queryType = "budget_clamp_test",
       canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
     check bigRes.isOk
     # Both workers must be leasable again immediately; one leaked lease
@@ -179,6 +182,7 @@ suite "Z3WorkerWaitData":
     let start = getMonoTime()
     let res = z3ExecPersistent("(declare-fun x () Int)\n(assert (= x 7))\n(check-sat)\n",
       5000, desiredWorkers = 2,
+      queryType = "budget_clamp_test",
       canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
     let elapsedMs = (getMonoTime() - start).inMilliseconds
     check res.isOk

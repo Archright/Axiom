@@ -425,6 +425,7 @@ proc z3CheckViaProcess*(solverCmd: string; solverArgs: seq[string]): CegarZ3Chec
       # timeoutMs = process safety net only — Z3 self-limits via rlimit.
       var cd, td: string
       let res = z3ExecPersistent(query, timeoutMs = z3SafetyNetMs, desiredWorkers = 1,
+        queryType = "cegar",
         canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
       if res.isErr:
         return false

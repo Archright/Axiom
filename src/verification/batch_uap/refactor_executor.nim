@@ -32,6 +32,7 @@ proc executeRefactorTask*(
     let z3ModelQuery = proc(query: string): string {.closure, gcsafe, raises: [CatchableError].} =
       var cd, td: string
       let res = z3ExecPersistent(query, timeoutMs = 30_000,
+        queryType = "refactor",
         canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
       if res.isErr:
         raise newException(CatchableError, res.error())

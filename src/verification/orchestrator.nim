@@ -45,7 +45,7 @@ proc runCegarFallback(input: ParallelTaskInput; solverElapsed: int): Option[Para
     return none(ParallelTaskResult)
   let prover = Z3PoolProver()
   let z3CheckImpl = proc(query: string): bool {.closure, gcsafe, raises: [CatchableError].} =
-    prove(prover, query, 5000)
+    prove(prover, query, 5000, queryType = "cegar")
   try:
     let abstraction = applyCegarAbstraction(input.workItem.nodeId, cegarCfg, cegarHeaderId, z3CheckImpl, solverElapsed, input.request.timeoutMs,
       cegarRun = input.cegarEngine,

@@ -31,7 +31,7 @@ proc bootstrapAxiomRuntime*() =
   registerEvidenceWriter(writeSolverEvidence)
   registerZ3PersistentProver(
     proc(query: string; timeoutMs: int): bool {.gcsafe, raises: [].} =
-      Z3PoolProver().prove(query, timeoutMs)
+      Z3PoolProver().prove(query, timeoutMs, queryType = "gateway_prove")
   )
 
 {.pop.}

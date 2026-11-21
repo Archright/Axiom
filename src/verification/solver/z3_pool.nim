@@ -247,7 +247,7 @@ proc probeZ3Health*(): Z3HealthProbeResult {.axiomEffect: IOEffect, tags: [Axiom
     satProbe: satProbe, unsatProbe: unsatProbe)
 # Forward declarations (defined later in this file)
 proc z3EnsurePersistentPool*(desiredWorkers: int)
-proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; enableProofs: bool = false; queryType: string = "unknown"; cegarIters: int = 0;
+proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; enableProofs: bool = false; queryType: string; cegarIters: int = 0;
     canonicalEnvelopeDigest: var string; transportPayloadDigest: var string): Result[string, string] {.gcsafe, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, TimeEffect, RootEffect].}
 
 proc initVerifiedZ3Pool*(): Option[VerifiedZ3Pool] {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
@@ -265,6 +265,7 @@ proc execZ3Verified*(vp: VerifiedZ3Pool, query: string,
   ## Phase 1B: Fail-safe correction — Z3 unknown → verification failure.
   var poolCanonicalDigest, poolTransportDigest: string
   let res = z3ExecPersistent(query, timeoutMs,
+    queryType = "exec_z3_verified",
     canonicalEnvelopeDigest = poolCanonicalDigest, transportPayloadDigest = poolTransportDigest)
   if res.isErr:
     return err("z3-error: " & res.error())
@@ -629,6 +630,10 @@ proc getBudgetFor*(phase: SmtPhase): SmtBudget {.axiomEffect: IOEffect, tags: [A
   if userTimeoutMs > 0:
     result.timeoutMs = min(result.timeoutMs, userTimeoutMs)  # Per-Phase Clamp
 
+# DEBT#564: `timeoutMs` is accepted here and never read below — the envelope
+# always emits the pinned rlimit plus the z3SafetyNetMs liveness backstop.
+const debtMarker564 {.axiomDebt: "DEBT#564".} = true
+
 proc buildZ3QueryEnvelope*(query: string; timeoutMs: int; sentinel: string; enableProofs: bool = false; mode: Z3ExecutionMode = zmRaw;
     canonicalEnvelopeDigest: var string = ""): string =
   result = query
@@ -782,6 +787,25 @@ proc isZ3WorkerAlive*(worker: Z3PersistentWorker): bool {.axiomEffect: IOEffect,
   if codeRes.isErr: return false
   codeRes.get() == -1
 
+proc readProcStatusKb(pid: int; field: string): int =
+  ## Read one `/proc/<pid>/status` field value in kB (e.g. "VmRSS", "VmHWM").
+  ## Returns 0 on any failure: missing process, unreadable file, absent field,
+  ## or a non-numeric value. The single parser for every /proc sample.
+  when defined(linux):
+    try:
+      if pid > 0:
+        let statusPath = "/proc/" & $pid & "/status"
+        if fileExists(statusPath):
+          let key = field & ":"
+          for line in readFile(statusPath).splitLines():
+            if line.startsWith(key):
+              let parts = line.splitWhitespace()
+              if parts.len >= 2:
+                return int(parseBiggestInt(parts[1]))
+    except CatchableError:
+      discard  # Safe: sampling is best-effort  # axiom:best-effort(ioboundary catch)
+  return 0
+
 ## Z3Exec Persistent.
 # @axiom-hint: lean="query.length ≥ 0 ∧ timeoutMs ≥ -9223372036854775808 ∧ timeoutMs ≤ 9223372036854775807 ∧ desiredWorkers ≥ -9223372036854775808 ∧ desiredWorkers ≤ 9223372036854775807" smt="(assert (and (>= (str.len query) 0) (and (>= timeoutMs -9223372036854775808) (<= timeoutMs 9223372036854775807)) (and (>= desiredWorkers -9223372036854775808) (<= desiredWorkers 9223372036854775807))))"
 # @axiom-hint: lean="ast_parse_failed_isolated" smt="(assert ast_parse_failed_isolated)"
@@ -791,29 +815,31 @@ proc getWorkerPeakMemoryMb(worker: Z3PersistentWorker): int {.axiomEffect: IOEff
       if not worker.process.isNil:
         let pid = processID(worker.process)
         if pid > 0:
-          let statusPath = "/proc/" & $pid & "/status"
-          if fileExists(statusPath):
-            let content = readFile(statusPath)
-            for line in content.splitLines():
-              if line.startsWith("VmHWM:"):
-                let parts = line.splitWhitespace()
-                if parts.len >= 2:
-                  return int(parseBiggestInt(parts[1]) div 1024)
-            for line in content.splitLines():
-              if line.startsWith("VmPeak:"):
-                let parts = line.splitWhitespace()
-                if parts.len >= 2:
-                  return int(parseBiggestInt(parts[1]) div 1024)
+          let hwmKb = readProcStatusKb(pid, "VmHWM")
+          if hwmKb > 0:
+            return hwmKb div 1024
+          let peakKb = readProcStatusKb(pid, "VmPeak")
+          if peakKb > 0:
+            return peakKb div 1024
     except CatchableError:
       discard  # Safe: cleanup operation, failure acceptable  # axiom:best-effort(ioboundary catch)
   return 0
-proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; enableProofs: bool = false; queryType: string = "unknown"; cegarIters: int = 0;
+proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; enableProofs: bool = false; queryType: string; cegarIters: int = 0;
     canonicalEnvelopeDigest: var string; transportPayloadDigest: var string): Result[string, string] {.gcsafe, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, TimeEffect, RootEffect].} =
   let startMs = epochMilliseconds()
   var z3Result: Result[string, string]
   var resultStatus = "unknown"
   var payload: string
   var workerIdx = -1
+  # Lane-attribution samples. All default to 0/"none": a query that never
+  # dispatches records no attribution rather than a guessed one.
+  var executionPath = "none"
+  var workerAcquireMs = 0
+  var workerRoundtripMs = 0
+  var roundtripStartMs = 0'i64
+  var workerPid = 0
+  var rssBeforeKb = 0
+  var rssAfterKb = 0
 
   defer:
     # Per-query exclusive lease release: runs on every exit path — success,
@@ -828,6 +854,20 @@ proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; e
         memoryMb = getWorkerPeakMemoryMb(z3Manager().pool.workers[workerIdx])
     except CatchableError:
       discard  # Safe: cleanup operation, failure acceptable  # axiom:best-effort(ioboundary catch)
+    # Roundtrip fallback for non-success exits; the success path marks it
+    # precisely before the post-query clean, so this only fills error/timeout.
+    try:
+      if workerRoundtripMs == 0 and roundtripStartMs > 0 and executionPath == "persistent":
+        workerRoundtripMs = int(epochMilliseconds() - roundtripStartMs)
+    except CatchableError:
+      discard  # axiom:best-effort(ioboundary catch)
+    # Same-PID RSS at defer time. A worker restarted mid-query no longer owns
+    # that PID, so the sample stays 0 and rss_delta_valid stays false.
+    try:
+      if executionPath == "persistent" and workerPid > 0:
+        rssAfterKb = readProcStatusKb(workerPid, "VmRSS")
+    except CatchableError:
+      discard  # axiom:best-effort(ioboundary catch)
     if z3Result.isOk():
       # The response grammar is exactly sat | unsat | unknown, and "the stream
       # carried no decision at all" is recorded as an error because that is what
@@ -853,7 +893,16 @@ proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; e
       baseCaseResult: "",
       stepCaseResult: "",
       canonicalEnvelopeDigest: canonicalEnvelopeDigest,
-      transportPayloadDigest: transportPayloadDigest
+      transportPayloadDigest: transportPayloadDigest,
+      workerAcquireMs: workerAcquireMs,
+      workerRoundtripMs: workerRoundtripMs,
+      executionPath: executionPath,
+      workerPid: workerPid,
+      rssBeforeKb: rssBeforeKb,
+      rssAfterKb: rssAfterKb,
+      rssDeltaValid: executionPath == "persistent" and workerPid > 0 and
+                     rssBeforeKb > 0 and rssAfterKb > 0,
+      getModelRequested: payload.contains("(get-model)")
     )
     try: appendZ3Telemetry(record)
     except CatchableError: discard  # telemetry is non-critical  # axiom:best-effort(ioboundary catch)
@@ -892,6 +941,12 @@ proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; e
   except CatchableError:
     z3Result = err("z3 persistent pool error")
     return z3Result
+  # Lease + readiness barrier are complete: this is the wait attributable to
+  # worker acquisition (not to the query). 0 when no lease was granted.
+  try:
+    workerAcquireMs = int(epochMilliseconds() - startMs)
+  except CatchableError:
+    discard  # axiom:best-effort(ioboundary catch)
   # Liveness safety net ONLY — the logical solve budget is the rlimit in the SMT script.
   let livenessDeadlineMs = epochMilliseconds() + int64(z3SafetyNetMs)
   var readDeadlineMs = livenessDeadlineMs
@@ -923,14 +978,32 @@ proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; e
       if z3Bin.len == 0:
         z3Result = err("z3 command not configured")
         return z3Result
+      let oneShotStartMs = epochMilliseconds()
       let p = startProcess(z3Bin, args = @["-smt2", tmpFile],
                            options = {poUsePath, poStdErrToStdOut})
       defer: close(p)
+      # This PID is the process that runs the query. rss_after_kb stays 0 and
+      # rss_delta_valid stays false on this path: the process exits before the
+      # defer samples, so no same-PID delta exists.
+      try:
+        executionPath = "one_shot_file"
+        workerPid = processID(p)
+        rssBeforeKb = readProcStatusKb(workerPid, "VmRSS")
+      except CatchableError:
+        discard  # axiom:best-effort(ioboundary catch)
       let exited = p.waitForExit(z3SafetyNetMs)
+      try:
+        workerRoundtripMs = int(epochMilliseconds() - oneShotStartMs)
+      except CatchableError:
+        discard  # axiom:best-effort(ioboundary catch)
       if exited == -1:
         try: kill(p)
         except CatchableError: discard  # axiom:best-effort(ioboundary catch)
         discard p.waitForExit(2000)
+        try:
+          workerRoundtripMs = int(epochMilliseconds() - oneShotStartMs)
+        except CatchableError:
+          discard  # axiom:best-effort(ioboundary catch)
         z3Result = err("z3 timeout on large query (file-based fallback)")
         return z3Result
       let rawOutput = p.outputStream.readAll()
@@ -962,6 +1035,16 @@ proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; e
       return ok(largePayloadResult)
     return z3Result
   # ── End large-payload fallback ───────────────────────────────────
+  # Persistent dispatch: the leased worker is the process that runs this
+  # query. PID/RSS are sampled once; a later restart leaves rss_after 0.
+  try:
+    executionPath = "persistent"
+    if workerIdx >= 0 and workerIdx < z3Manager().pool.workers.len and
+       not z3Manager().pool.workers[workerIdx].process.isNil:
+      workerPid = processID(z3Manager().pool.workers[workerIdx].process)
+      rssBeforeKb = readProcStatusKb(workerPid, "VmRSS")
+  except CatchableError:
+    discard  # axiom:best-effort(ioboundary catch)
   var outputLines: seq[string] = @[]
   var restartAttempted = false
   while true:
@@ -975,6 +1058,13 @@ proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; e
       return z3Result
     var ok = true
     try:
+      # First write opens the measured roundtrip window; restarts do not reset
+      # it, so the sample covers the whole attempt sequence for this query.
+      try:
+        if roundtripStartMs == 0:
+          roundtripStartMs = epochMilliseconds()
+      except CatchableError:
+        discard  # axiom:best-effort(ioboundary catch)
       # W2-C: Acquire gate only for write (short critical section).
       # After flush, release gate immediately — the read phase is lock-free
       # because the pipe output belongs exclusively to this query until the
@@ -1045,6 +1135,13 @@ proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; e
     except CatchableError:
       ok = false
     if ok:
+      # Sentinel found: the result is established before the post-query clean,
+      # so the roundtrip excludes the clean's own sentinel wait.
+      try:
+        if roundtripStartMs > 0:
+          workerRoundtripMs = int(epochMilliseconds() - roundtripStartMs)
+      except CatchableError:
+        discard  # axiom:best-effort(ioboundary catch)
       z3Result = ok(outputLines.join("\n").strip())
       # W1: Record assertion hash for scope replay on restart
       try:

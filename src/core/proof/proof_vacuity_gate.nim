@@ -389,6 +389,7 @@ proc verifyNonTrivialityWithFallback*(
     "(check-sat)"
   var vacCanonicalDigest, vacTransportDigest: string
   let z3Result = z3ExecPersistent(smtQuery, timeoutMs,
+    queryType = "vacuity_gate",
     canonicalEnvelopeDigest = vacCanonicalDigest, transportPayloadDigest = vacTransportDigest)
   if not z3Result.isOk:
     let error = z3Result.error().strip().toLowerAscii()
