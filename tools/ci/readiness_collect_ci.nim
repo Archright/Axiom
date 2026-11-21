@@ -25,9 +25,7 @@
 ##                          verify_contract_e2e_report_exit.txt,
 ##                          verify_contract_e2e_cert_path.txt,
 ##                          verify_contract_e2e_kernel.out, run-manifest.json,
-##                          verify_contract_e2e_state.json (the state the
-##                          report was validated against; legacy fallback
-##                          ax_proof_state.json), r3_relocation.json (wp5).
+##                          ax_proof_state.json, r3_relocation.json (wp5).
 ##   --out <dir>            evidence dir (default data/readiness/evidence).
 ##   --policy <file>        config/readiness_policy.json (observation-key and
 ##                          threshold SSOT; thresholds and key lists are read
@@ -429,7 +427,6 @@ type
     manifestErr: string
     state: JsonNode
     stateErr: string
-    statePath: string           ## resolved E2E state artifact (alias preferred)
     wp5: JsonNode               ## parsed logs/r3_relocation.json
     wp5Err: string
 
@@ -659,16 +656,9 @@ when isMainModule:
     art.manifest = r.node
     art.manifestErr = r.err
   block state:
-    # The producer snapshots the state it validated against the E2E report as
-    # verify_contract_e2e_state.json (fixed transport alias, same pattern as
-    # e2e_certificate.json): later steps in the producing job run their own
-    # proves against the default logs/ax_proof_state.json and would otherwise
-    # leave a foreign run's state under the artifact name. The alias is
-    # preferred; the legacy name is the fallback for producers without it.
-    art.statePath = artifactsDir / "verify_contract_e2e_state.json"
-    if not fileExists(art.statePath):
-      art.statePath = artifactsDir / "ax_proof_state.json"
-    let r = safeParseFile(art.statePath)
+    # The ratchet restores logs/ax_proof_state.json after its legs, so the
+    # artifact carries the E2E state the report was validated against.
+    let r = safeParseFile(artifactsDir / "ax_proof_state.json")
     art.state = r.node
     art.stateErr = r.err
   block wp5:
@@ -688,10 +678,7 @@ when isMainModule:
     pr.help = runSplit(axBin, @["help"], repoRoot)
     pr.proveHelp = runSplit(axBin, @["prove", "--help"], repoRoot)
     pr.reportHelp = runSplit(axBin, @["report", "--help"], repoRoot)
-    # The success/canonical probes consume the SAME state artifact the report
-    # was validated against (alias resolution in the state block above), so a
-    # probe can never mint evidence from a different run's state.
-    let stateArg = art.statePath
+    let stateArg = artifactsDir / "ax_proof_state.json"
     pr.reportJson = runSplit(axBin, @["report", "--json", "--state-file", stateArg], repoRoot)
     pr.canon1 = runSplit(axBin, @["report", "--canonical-digest", "--state-file", stateArg], repoRoot)
     pr.canon2 = runSplit(axBin, @["report", "--canonical-digest", "--state-file", stateArg], repoRoot)
