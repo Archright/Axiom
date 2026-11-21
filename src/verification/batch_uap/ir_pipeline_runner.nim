@@ -546,7 +546,7 @@ proc runIrPipelineCore(ve: ValidatedIrEntry,
                        lspClient: LeanLspClient,
                        policy: BackendPolicy,
                        subjectRepoRoot: string,
-                       generatedCount: var int): IrPipelineResult {.raises: [].} =
+                       generatedCount: var int): IrPipelineResult {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Run the full IR pipeline for a single validated entry.
   ## W4-B: Uses cached funcDef from ValidatedIrEntry (no re-deserialization).
   ## Returns success=false if any stage fails (sentinel: funcDef.name.len == 0).
