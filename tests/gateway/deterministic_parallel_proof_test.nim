@@ -268,8 +268,21 @@ proc main() =
     if snapshotExisted:
       copyDir(cacheSnapshot, cacheDir)
 
+  # `ax prove` persists its canonical state to the default path
+  # (logs/ax_proof_state.json). This ratchet meters output/certificate
+  # determinism — never the state — so its legs' state must not outlive the
+  # test: the same CI run uploads that file as the E2E evidence artifact, and
+  # a leftover ratchet state would misidentify the run the report describes.
+  let proofStatePath = repo / "logs" / "ax_proof_state.json"
+  let hadProofState = fileExists(proofStatePath)
+  let proofStateSnapshot = (if hadProofState: readFile(proofStatePath) else: "")
+
   defer:
     restoreCacheState()
+    if hadProofState:
+      writeFile(proofStatePath, proofStateSnapshot)
+    elif fileExists(proofStatePath):
+      removeFile(proofStatePath)
     removeDir(baseDir)
 
   echo "Determinism ratchet: serial (workers=1, cold) ..."

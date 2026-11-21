@@ -1,7 +1,8 @@
 {
   "schemaVersion": 1,
   "policyId": "axiom-readiness-v1",
-  "description": "Readiness policy parameters for the Axiom v1 productization contract. Parameters only: invariant criticality, observation key schemas, thresholds, freshness. All semantics (PASS/FAIL/UNKNOWN algebra, promotion rules, verdict table) live in tools/readiness_evaluator.nim.",
+  "description": "Readiness policy parameters for the Axiom v1 productization contract. Parameters only: invariant criticality, observation-key contracts (type/presence/subject/absence semantics), thresholds, freshness. All semantics (PASS/FAIL/UNKNOWN algebra, promotion rules, verdict table) live in tools/readiness_evaluator.nim. A required key that is absent, null, or of the wrong JSON type is UNKNOWN; a present false is FAIL only where onFalse=fail. declared-scope observations (policy echoes) never count as PASS evidence.",
+  "unknownKeys": "ignore",
   "invariants": {
     "R1": {
       "name": "Product Contract",
@@ -40,174 +41,401 @@
     "R1": [
       {
         "key": "documentedCommand",
-        "type": "string"
+        "type": "stringlist",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       },
       {
         "key": "commandExists",
         "type": "bool",
-        "scope": "surface"
+        "scope": "surface",
+        "presence": "required",
+        "perSubject": "policy:r1.contractCommands",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "fail",
+        "observedScope": "observed"
       },
       {
         "key": "promiseOutputExists",
-        "type": "bool"
+        "type": "bool",
+        "scope": "artifact",
+        "presence": "required",
+        "perSubject": "policy:r1.promiseOutputs",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "fail",
+        "observedScope": "observed"
       },
       {
         "key": "subjectLane",
-        "type": "stringlist"
+        "type": "stringlist",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       }
     ],
     "R2": [
       {
         "key": "certGreenDualEvidenceRequired",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "fail",
+        "observedScope": "observed"
       },
       {
         "key": "z3OnlyCanProduceCertGreen",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       },
       {
         "key": "summaryVerifiedIncludesVacuous",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       },
       {
         "key": "z3VsDualDistinguishable",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "fail",
+        "observedScope": "observed"
       },
       {
         "key": "verifiedSemanticsDocumented",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "fail",
+        "observedScope": "observed"
       }
     ],
     "R3": [
       {
         "key": "canonicalProjectionHashEqual",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "fail",
+        "observedScope": "observed"
       },
       {
         "key": "canonicalInputHash",
-        "type": "string"
+        "type": "string",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       },
       {
         "key": "configHash",
-        "type": "string"
+        "type": "string",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       },
       {
         "key": "solverIdentity",
-        "type": "string"
+        "type": "string",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       },
       {
         "key": "cachePolicy",
-        "type": "string"
+        "type": "string",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       },
       {
         "key": "canonicalExecutionFingerprint",
-        "type": "string"
+        "type": "string",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       },
       {
         "key": "environmentControlled",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "fail",
+        "observedScope": "observed"
       },
       {
         "key": "subjectRunProjectionHashEqual",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "fail",
+        "observedScope": "observed"
       },
       {
         "key": "pathIndependentProjectionEqual",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "fail",
+        "observedScope": "observed"
       }
     ],
     "R4": [
       {
         "key": "certFieldPresent",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "policy:r4.requiredFields",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "fail",
+        "observedScope": "observed"
       },
       {
         "key": "provenanceReconstructible",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "fail",
+        "observedScope": "observed"
       },
       {
         "key": "subjectTreeImmutableAcrossRun",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "fail",
+        "observedScope": "observed"
       }
     ],
     "R5": [
       {
         "key": "commandExists",
-        "type": "bool"
+        "type": "bool",
+        "scope": "surface",
+        "presence": "required",
+        "perSubject": "policy:r5.contractCommands",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "fail",
+        "observedScope": "observed"
       },
       {
         "key": "helpSurface",
-        "type": "bool"
+        "type": "bool",
+        "scope": "surface",
+        "presence": "required",
+        "perSubject": "policy:r5.contractCommands",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "fail",
+        "observedScope": "observed"
       },
       {
         "key": "successExitCode",
-        "type": "int"
+        "type": "int",
+        "presence": "required",
+        "perSubject": "policy:r5.successCommands",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       },
       {
         "key": "verificationFailureExitCode",
-        "type": "int"
+        "type": "int",
+        "presence": "required",
+        "perSubject": "policy:r5.contractCommands",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       },
       {
         "key": "invalidInputExitCode",
-        "type": "int"
+        "type": "int",
+        "presence": "required",
+        "perSubject": "policy:r5.contractCommands",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       },
       {
         "key": "internalErrorExitCode",
-        "type": "int"
+        "type": "int",
+        "presence": "vocabulary",
+        "perSubject": "policy:r5.contractCommands",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       },
       {
         "key": "jsonSchemaVersion",
-        "type": "string"
+        "type": "string",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       },
       {
         "key": "stdoutStderrSplit",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "fail",
+        "observedScope": "observed"
       }
     ],
     "R6": [
       {
         "key": "failureConvertsToSuccess",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       },
       {
         "key": "exceptionSwallowed",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       }
     ],
     "R7": [
       {
         "key": "claimedScope",
-        "type": "stringlist"
+        "type": "stringlist",
+        "presence": "vocabulary",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "declared"
       },
       {
         "key": "measuredCoverage",
-        "type": "float"
+        "type": "float",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       },
       {
         "key": "verifiedEmitterScope",
-        "type": "stringlist"
+        "type": "stringlist",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       }
     ],
     "R8": [
       {
         "key": "installFollowed",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "fail",
+        "observedScope": "observed"
       },
       {
         "key": "manualStepsRequired",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "pass",
+        "observedScope": "observed"
       },
       {
         "key": "cleanRunSucceeded",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "fail",
+        "observedScope": "observed"
       },
       {
         "key": "documentedRunSteps",
-        "type": "bool"
-      },
-      {
-        "key": "axiomOwnedColdSetDeletedBeforeRun",
-        "type": "bool"
+        "type": "bool",
+        "presence": "required",
+        "perSubject": "single",
+        "onNull": "unknown",
+        "onAbsent": "unknown",
+        "onFalse": "fail",
+        "observedScope": "observed"
       }
     ]
   },
@@ -215,6 +443,10 @@
     "contractCommands": [
       "ax prove",
       "ax report"
+    ],
+    "promiseOutputs": [
+      "json-report",
+      "certificate"
     ],
     "surfaceCommandObservationScope": "surface",
     "trustBoundaryLanes": {
@@ -252,6 +484,9 @@
   "r5": {
     "contractCommands": [
       "ax prove",
+      "ax report"
+    ],
+    "successCommands": [
       "ax report"
     ],
     "definedExitCodes": [

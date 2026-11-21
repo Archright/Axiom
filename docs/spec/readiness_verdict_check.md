@@ -33,6 +33,8 @@
 
 부속: `tests/readiness/readiness_r8_sequence_test.nim`(R8 prepare 순서 기계 검증), `tests/unit/test_readiness_outcome_test.nim`(관찰상태 vs 결과 분류 — UNKNOWN/NOT_RUN이 확정 FAIL과 혼동되지 않음), `tests/ci/test_readiness_verdict_mapping.nim`(verdict→exit 매핑 단언).
 
+**커밋된 증거 스냅샷의 지위**: `data/readiness/evidence/*.json`은 판정 시점의 **역사적 동결 스냅샷**이다 — CI의 `readiness-verdict` 잡은 매 실행마다 수집기로 재생성한 증거를 게이트에 공급하며, 커밋된 스냅샷은 재현·감사 입력이지 현재성 보증이 아니다. 스냅샷이 `freshUntil`을 지났거나 현재 체크아웃/CI 신원과 불일치하면 evaluator가 INVALID로 버려 critical NOT_RUN → NO-GO가 된다(fail-closed). 로컬 게이트 기본 모드가 이를 정직하게 red로 보고하는 것은 정상 동작이며, 최신 증거가 필요하면 수집기를 다시 실행한다.
+
 ---
 
 ## §3. verdict → exit 매핑
@@ -60,14 +62,16 @@
 
 1. **GITHUB_SHA = merge group SHA** — identity authority(§1). 잡은 GitHub가 부여한 신원을 소비할 뿐이다.
 2. **`HEAD == $GITHUB_SHA` 단언** — checkout이 identity authority의 트리 그 자체임을 확인한다. 불일치 → exit 1.
-3. **treeDigest** — `git ls-tree -r HEAD`의 SHA-256(**커밋된** 트리; derived 경로 기록에 영향받지 않는다). 게이트 실행 시 `AXIOM_CI_TREE_DIGEST`로 전달된다.
-4. **증거 repoIdentity 스탬프 = env authority** — 수집기가 stamp한 증거의 `repoIdentity`(head·treeDigest)는 잡 환경(=`AXIOM_CI_REPO_HEAD=$GITHUB_SHA` + `AXIOM_CI_TREE_DIGEST`)이 권위다. 게이트가 증거의 `repoIdentity`와 env를 대조하여 불일치 시 `READINESS_IDENTITY_MISMATCH`로 exit 1한다 — 증거가 스스로 주장하는 신원은 권위가 아니다.
-5. **실행 바이너리 결속** — `bin/ax --check-provenance`(SourceCoherence: 내장 BuildSourceHash vs live tree 재계산)가 모든 레인의 선행 조건이고, 바이트 결속은 lane이 복원(웜)일 때만 적용된다. run-manifest는 증거를 산출한 E2E 잡의 verifier 바이너리 증명이다.
+3. **treeDigest** — `git ls-tree -r HEAD`의 SHA-256(**커밋된** 트리; derived 경로 기록에 영향받지 않는다). 게이트는 이 값을 **직접 측정**하며(정규화: trailing newline 제거 후 해시), 잡 환경의 `AXIOM_CI_TREE_DIGEST`와 일치해야 한다.
+4. **게이트의 독립 측정이 먼저다** — 게이트는 `git rev-parse HEAD`·`git rev-parse --abbrev-ref HEAD`·`git ls-tree -r HEAD`·`git status --porcelain`(derived 경로 제외)으로 체크아웃 신원을 스스로 측정해 evaluator에 전달한다. CI 모드에서 측정값이 env와 다르면 `READINESS_GIT_IDENTITY_MISMATCH <head|treeDigest> expected=<env> actual=<git>`로 exit 1한다(checkout이 CI 커밋이 아니다).
+5. **증거 repoIdentity 스탬프 = env authority** — 수집기가 stamp한 증거의 `repoIdentity`(head·treeDigest)는 잡 환경(=`AXIOM_CI_REPO_HEAD=$GITHUB_SHA` + `AXIOM_CI_TREE_DIGEST`)이 권위다. 게이트가 증거의 `repoIdentity`와 env를 대조하여 불일치 시 `READINESS_IDENTITY_MISMATCH`로 exit 1한다 — 증거가 스스로 주장하는 신원은 권위가 아니다. CI env가 없을 때도 증거 선언값은 신원 권위가 아니며, 측정된 git 신원과 불일치하는 증거는 evaluator가 INVALID로 버린다(critical NOT_RUN → NO-GO).
+   - **명시적 replay 모드** — `AXIOM_READINESS_REPLAY=1`일 때만 evidence-DECLARED identity가 evaluator 컨텍스트의 권위다(동결 스냅샷 감사 재현, §6.3-b). 이 모드는 CI identity env를 무시하며, `AXIOM_READINESS_EVAL_TIME`으로 평가시점을 고정할 수 있다. 로그에 replay임을 명시한다 — 현재 체크아웃의 판정이 아니다.
+6. **실행 바이너리 결속** — `bin/ax --check-provenance`(SourceCoherence: 내장 BuildSourceHash vs live tree 재계산)가 모든 레인의 선행 조건이고, 바이트 결속은 lane이 복원(웜)일 때만 적용된다. run-manifest는 증거를 산출한 E2E 잡의 verifier 바이너리 증명이다.
    - **lane 선택은 존재가 아니라 payload identity다**: `sha256sum bin/ax` vs run-manifest `.binary.sha256`. B-layer 키는 executor toolchain fingerprint를 포함하므로(`b_key = closure + recipe + a_fp`), 한 run의 두 job이 서로 다른 runner image 세대에 배치되면 consumer의 exact-hit은 같은 트리를 consumer의 toolchain으로 빌드한 정당한 바이너리이며 producer의 바이너리가 아니다. "복원된 bin/ax가 존재한다"는 것만으로 producer 바이너리라고 추론하지 않는다.
    - **복원(웜) 레인** — 바이트가 일치하는 경우: 복원된 bin/ax는 증거 run의 verifier 바이너리이므로 byte 대조가 성립한다. `--check-provenance` + 바이트 일치 둘 다 요구한다.
    - **콜드 레인** — 바이트가 다르거나 `bin/ax`가 없는 경우: byte 결속은 적용 불가임을 진단 라인으로 공개하고 `make ci-compile`로 이 트리에서 재유도한 뒤 의미 결속으로 대체한다 — `--check-provenance`가 산출하는 live tree hash == run-manifest `.sourceTree.buildSourceHash`(같은 트리에서 도출된 BuildSourceHash는 결정적이다). 재컴파일 시 바이트 동일성은 빌드 시스템이 보장하지 않는다([setup-axiom-toolchain action 계약](../../.github/actions/setup-axiom-toolchain/action.yml): per-TREE, never per-byte).
    - **불변**: 어느 레인에서도 `--check-provenance` 실패는 red다. 진단 라인은 원인 설명일 뿐 판정을 완화하지 않으며, 바이트 불일치는 더 이상 그 자체로 red가 아니다(다른 toolchain 세대의 정당한 빌드는 증거 불일치가 아니다).
-6. **판정 전 트리 불변 dirty check** — `git status --porcelain`에서 선언된 derived 경로(`data/readiness/evidence`, `logs`, `build`, `bin`, `.axiom`, `proofs`, `src/generated`)만 제외한 출력이 비어야 한다. 판정 입력 트리가 HEAD와 불변임을 단언한다.
+7. **판정 전 트리 불변 dirty check** — `git status --porcelain`에서 선언된 derived 경로(`data/readiness/evidence`, `logs`, `build`, `bin`, `.axiom`, `proofs`, `src/generated`)만 제외한 출력이 비어야 한다. 판정 입력 트리가 HEAD와 불변임을 단언한다.
 
 **스킵=Success 함정 방어**(required check의 구조적 전제): 잡 헤더 `needs: [axiom-operational-slice]` + `if: !cancelled()` — producer 실패 후에도 판정을 계산한다(증거는 producer의 `if: always()` 업로드가 보존; artifact 부재는 다운로드 실패로 잡을 red로 만든다). path 필터 없음(워크플로 `on:`은 pull_request + merge_group + push main + workflow_dispatch 그대로). 잡 수준 `name:` 키 금지 — **job id가 check-run context다**(`readiness-verdict`). 스텝 `if:`는 업로드의 `always()`뿐이다. 스킵된 required check는 success로 보고되므로, 어떤 조건으로도 스킵되는 잡은 이 계약 전체를 무효화한다.
 
@@ -94,6 +98,13 @@
      AXIOM_CI_TREE_DIGEST="$(printf '%s' "$(git ls-tree -r HEAD)" | sha256sum | cut -d' ' -f1)" \
      ./bin/readiness_start_gate
    ```
+   **동결 스냅샷 replay** — 게이트의 기본 모드는 체크아웃 신원을 독립 측정하므로 과거 커밋의 증거를 그대로 채택하지 않는다. 과거 판정 자체를 재계산할 때는 명시적 replay 모드를 쓴다(evidence 선언 identity가 권위가 되는 유일한 경로):
+   ```
+   AXIOM_READINESS_REPLAY=1 \
+     AXIOM_READINESS_EVAL_TIME=<decision.json evaluationTime> \
+     ./bin/readiness_start_gate
+   ```
+   로그의 `REPLAY mode` / `replay eval time pinned:` 라인으로 replay임을 확인한다. 이 모드에서 CI identity env는 무시된다.
 4. 비교: `verdict`, `conditions`, `invariantStates`, `decisionDigest`(및 결정적 보조 필드 `policyHash`, `bundleDigest`). 불일치 = 재현 실패(판정 도구가 비결정적이거나 증거가 변조됨).
 
 **decisionDigest의 실제 정의**(구현 대조 — `src/core/utils/decision_algebra.nim` `Decide` + `canonicalSha256`):
@@ -103,7 +114,7 @@
 - **비결정적 메타데이터는 포함되지 않는다**: `collection.generatedAt`/`freshUntil`(증거 envelope의 §4 스키마)과 `evaluationTime`은 validity 축에만 존재한다(`evaluationTime <= freshUntil` 검사) — 시간은 verdict의 직접 입력이 아니다(productization §4). 따라서 재판정 시점과 무관하게 동일 증거 → 동일 decisionDigest여야 하며, 이것이 비교 대상으로 정당하다.
 - `policyHash` = canonicalSha256(policy), `bundleDigest` = canonicalSha256(invariants bundle) — 모두 결정적이므로 재현 비교에 포함해도 좋다.
 
-**재현의 validity 축과 evaluationTime 기록**: 게이트는 평가시점을 `now()`로 잡고, decision 기록(`build/readiness_start_decision.json`, evaluator가 직접 기록)은 그 **평가시점을 `evaluationTime` 필드로 함께 남긴다**(additive — decisionDigest preimage는 불변). 따라서 재현자는 (1) `freshUntil` 경과 전 재판정: 위 절차 3의 `--eval-time` 대신 decision 기록의 `evaluationTime` 값을 전달해 동일 verdict·decisionDigest를 재계산한다. (2) 시간 경과 후: stale-evidence 거부(exit 1)가 정상 동작이다(판정은 시간에 유효범위가 있다).
+**재현의 validity 축과 evaluationTime 기록**: 게이트는 평가시점을 `now()`로 잡고, decision 기록(`build/readiness_start_decision.json`, evaluator가 직접 기록)은 그 **평가시점을 `evaluationTime` 필드로 함께 남긴다**(additive — decisionDigest preimage는 불변). 따라서 재현자는 (1) `freshUntil` 경과 전 재판정: 위 절차 3의 CI 재실행(현재 시각)으로 동일 verdict·decisionDigest를 재계산한다. (2) `freshUntil` 경과 후 또는 현재 체크아웃과 무관한 동결 스냅샷 재판정: replay 모드에서 `AXIOM_READINESS_EVAL_TIME`에 decision 기록의 `evaluationTime`을 전달한다. (3) 시간 경과 후 일반 모드: stale-evidence 거부(exit 1)가 정상 동작이다(판정은 시간에 유효범위가 있다).
 
 ---
 

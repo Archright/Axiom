@@ -250,6 +250,43 @@ proc freshWorkDir(name: string): string =
     removeDir(result)
   createDir(result)
 
+proc failureObservationJson(observedVerdict: string;
+                            proveExit, reportExit: int): string =
+  ## Producer negative-control artifact shape (Makefile target
+  ## verify-contract-release-e2e-full writes it with jq -n -S).
+  $ %*{
+    "schemaVersion": "axiom.verify-contract-failure-observation.v1",
+    "makeTarget": "verify-contract-release-e2e-full",
+    "target": "normalizeMaxWorkers",
+    "scope": "full",
+    "fresh": true,
+    "observedVerdict": observedVerdict,
+    "gateVerdict": "FAIL",
+    "proveExit": proveExit,
+    "reportExit": reportExit,
+    "verified": 0,
+    "failedCount": 2,
+    "stateFile": "build/tmp/r5_failure/logs/ax_proof_state.json",
+    "stateSha256": "f6b0fb8e572b3fbf7c2b9e86af0e8feb915a7bf43861e8b06114f8353d0aa0f6"}
+
+proc failureBuckets(r5: JsonNode):
+    seq[tuple[subject: string, value: JsonNode, scope: string]] =
+  ## The R5 verification-failure observations, one per contract command.
+  result = @[]
+  if r5 == nil:
+    return
+  for o in r5{"observations"}.items:
+    if o{"key"}.getStr("") == "verificationFailureExitCode":
+      result.add((o{"subject"}.getStr(""), o{"value"}, o{"scope"}.getStr("")))
+
+proc hasIncident(r5: JsonNode; id: string): bool =
+  result = false
+  if r5 == nil:
+    return
+  for i in r5{"incidents"}.items:
+    if i{"id"}.getStr("") == id:
+      return true
+
 suite "readiness collector independence (DEBT#537)":
 
   test "1. missing artifacts: exit 0, evidence produced, no forged success":
@@ -288,6 +325,91 @@ suite "readiness collector independence (DEBT#537)":
       check ev.exit == 0
       check ev.verdict != ""
       check ev.verdict != "GO"
+
+  test "1b. failure observation: measured exits mint observed, absent/invalid stay null":
+    if not fileExists(CollectorBin):
+      echo collectorPendingMsg("verification-failure observation consumption")
+      skip()
+    else:
+      # Present and valid: both contract commands' exits were actually
+      # measured (1) on a fresh full-scope non-PASS run -> observed buckets.
+      let obsArtifacts = freshWorkDir("failure_obs_artifacts")
+      writeFile(obsArtifacts / "verify_contract_e2e_failure_observation.json",
+                failureObservationJson("FAIL", 1, 1))
+      let obsOut = freshWorkDir("case1b_obs_out")
+      let r = runCollector(".", obsArtifacts, obsOut,
+                           rustProbeDir = tempProbeCopy())
+      checkpoint("collector exit " & $r.exit)
+      check r.exit == 0
+      let r5 = parseEvidenceFile(obsOut / "R5.json")
+      if r5 == nil:
+        checkpoint("R5.json missing or unparseable")
+        check false
+      else:
+        let buckets = failureBuckets(r5)
+        check buckets.len == 2
+        for b in buckets:
+          check b.value.kind == JInt
+          check b.value.getInt(0) == 1
+          check b.scope == "observed"
+        check hasIncident(r5, "R5-EXIT-006")
+
+      # Absent: the producer artifact is not in this job's artifact set, so the
+      # collector's OWN negative control is the fallback evidence source — a
+      # fresh AXIOM_STATE_DIR seeded with the scope lock + baseline,
+      # `ax prove --fresh`, then `ax report --json`, with both measured exits
+      # and the persisted runOutcome verdict validated. A successful actuation
+      # mints observed 1 for both commands; an unmeasurable probe keeps both
+      # buckets observed null (fail-closed). Never a contract-scope echo, never
+      # a partial mint.
+      let absentArtifacts = freshWorkDir("failure_obs_absent")
+      let absentOut = freshWorkDir("case1b_absent_out")
+      let a = runCollector(".", absentArtifacts, absentOut,
+                           rustProbeDir = tempProbeCopy())
+      check a.exit == 0
+      let r5a = parseEvidenceFile(absentOut / "R5.json")
+      if r5a == nil:
+        checkpoint("R5.json missing or unparseable (absent case)")
+        check false
+      else:
+        let buckets = failureBuckets(r5a)
+        check buckets.len == 2
+        var observedCount = 0
+        for b in buckets:
+          check b.scope == "observed"
+          if b.value.kind == JInt:
+            inc observedCount
+            check b.value.getInt(0) == 1
+          else:
+            check b.value.kind == JNull
+        # Homogeneous outcome: either the in-job probe actuated both commands
+        # or neither was measured (with an explicit non-actuation incident).
+        check observedCount == 0 or observedCount == 2
+        if observedCount == 2:
+          check hasIncident(r5a, "R5-EXIT-009")
+        else:
+          check hasIncident(r5a, "R5-EXIT-010") or
+                hasIncident(r5a, "R5-EXIT-005")
+
+      # Contradictory measurement (one command did not exit 1): no partial
+      # mint — both buckets stay null and the rejection is visible.
+      let badArtifacts = freshWorkDir("failure_obs_bad")
+      writeFile(badArtifacts / "verify_contract_e2e_failure_observation.json",
+                failureObservationJson("FAIL", 1, 0))
+      let badOut = freshWorkDir("case1b_bad_out")
+      let b = runCollector(".", badArtifacts, badOut,
+                           rustProbeDir = tempProbeCopy())
+      check b.exit == 0
+      let r5b = parseEvidenceFile(badOut / "R5.json")
+      if r5b == nil:
+        checkpoint("R5.json missing or unparseable (invalid case)")
+        check false
+      else:
+        for bucket in failureBuckets(r5b):
+          check bucket.value.kind == JNull
+          check bucket.scope == "observed"
+        check hasIncident(r5b, "R5-EXIT-007")
+      echo "  [failure-observation] present+valid -> observed 1; absent/invalid -> observed null"
 
   test "2. foreign identity refused; honest stamp; gate rejects foreign bundle":
     if not fileExists(CollectorBin):
@@ -387,14 +509,14 @@ suite "readiness collector independence (DEBT#537)":
       copyFile(Root / "config" / "readiness_policy.json",
                tmpRoot / "config" / "readiness_policy.json")
       writeFile(tmpRoot / ".axiom_root", "")
-      # The collector's R2 source-structure entry reads this file through an
+      # The collector's R2 source entry reads verification_tier.nim through an
       # unguarded shaFile; a checkout without it crashes the collector with
       # an unhandled IOError (exit 1, partial evidence — reported as a
       # robustness contract difference). A real checkout-without-bin/ax has
       # the source tree, so the fixture carries it.
       createDir(tmpRoot / "src" / "core" / "types")
-      copyFile(Root / "src" / "core" / "types" / "certificate_types.nim",
-               tmpRoot / "src" / "core" / "types" / "certificate_types.nim")
+      copyFile(Root / "src" / "core" / "types" / "verification_tier.nim",
+               tmpRoot / "src" / "core" / "types" / "verification_tier.nim")
       # No bin/ and no bin/ax: the CLI surface the R1/R5/R6 rules read is
       # deliberately absent — unmeasurable, so it must not become PASS.
       # The CI identity env pair is exported as in the workflow: the temp root

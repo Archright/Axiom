@@ -11,7 +11,10 @@
     "observations": [
       {
         "key": "documentedCommand",
-        "value": ["ax prove", "ax report"],
+        "value": [
+          "ax prove",
+          "ax report"
+        ],
         "scope": "doc",
         "subject": "README.md"
       },
@@ -26,6 +29,24 @@
         "value": true,
         "scope": "surface",
         "subject": "ax report"
+      },
+      {
+        "key": "promiseOutputExists",
+        "value": true,
+        "scope": "artifact",
+        "subject": "json-report"
+      },
+      {
+        "key": "promiseOutputExists",
+        "value": true,
+        "scope": "artifact",
+        "subject": "certificate"
+      },
+      {
+        "key": "subjectLane",
+        "value": [],
+        "scope": "trust-boundary",
+        "subject": ""
       }
     ],
     "sources": [
@@ -48,6 +69,24 @@
       "freshUntil": "2027-08-01T00:00:00Z"
     },
     "observations": [
+      {
+        "key": "certGreenDualEvidenceRequired",
+        "value": true,
+        "scope": "canonical-promotion",
+        "subject": ""
+      },
+      {
+        "key": "z3OnlyCanProduceCertGreen",
+        "value": false,
+        "scope": "canonical-promotion",
+        "subject": ""
+      },
+      {
+        "key": "summaryVerifiedIncludesVacuous",
+        "value": false,
+        "scope": "summary",
+        "subject": ""
+      },
       {
         "key": "z3VsDualDistinguishable",
         "value": true,
@@ -209,6 +248,12 @@
         "value": true,
         "scope": "",
         "subject": ""
+      },
+      {
+        "key": "subjectTreeImmutableAcrossRun",
+        "value": true,
+        "scope": "git",
+        "subject": ""
       }
     ],
     "sources": [
@@ -240,25 +285,19 @@
       {
         "key": "helpSurface",
         "value": true,
-        "scope": "",
-        "subject": "ax prove"
-      },
-      {
-        "key": "successExitCode",
-        "value": 0,
-        "scope": "",
+        "scope": "surface",
         "subject": "ax prove"
       },
       {
         "key": "verificationFailureExitCode",
         "value": 1,
-        "scope": "",
+        "scope": "observed",
         "subject": "ax prove"
       },
       {
         "key": "invalidInputExitCode",
         "value": 3,
-        "scope": "",
+        "scope": "observed",
         "subject": "ax prove"
       },
       {
@@ -276,25 +315,25 @@
       {
         "key": "helpSurface",
         "value": true,
-        "scope": "",
+        "scope": "surface",
         "subject": "ax report"
       },
       {
         "key": "successExitCode",
         "value": 0,
-        "scope": "",
+        "scope": "observed",
         "subject": "ax report"
       },
       {
         "key": "verificationFailureExitCode",
         "value": 1,
-        "scope": "",
+        "scope": "observed",
         "subject": "ax report"
       },
       {
         "key": "invalidInputExitCode",
         "value": 3,
-        "scope": "",
+        "scope": "observed",
         "subject": "ax report"
       },
       {
@@ -302,6 +341,18 @@
         "value": 2,
         "scope": "",
         "subject": "ax report"
+      },
+      {
+        "key": "jsonSchemaVersion",
+        "value": "axiom.report.v1",
+        "scope": "surface",
+        "subject": ""
+      },
+      {
+        "key": "stdoutStderrSplit",
+        "value": true,
+        "scope": "surface",
+        "subject": ""
       }
     ],
     "sources": [
@@ -359,20 +410,24 @@
     "observations": [
       {
         "key": "claimedScope",
-        "value": ["ax prove"],
+        "value": [
+          "ax prove"
+        ],
         "scope": "",
         "subject": ""
       },
       {
         "key": "verifiedEmitterScope",
-        "value": ["ax prove"],
+        "value": [
+          "ax prove"
+        ],
         "scope": "",
         "subject": ""
       },
       {
         "key": "measuredCoverage",
-        "value": 0.1,
-        "scope": "",
+        "value": 0.8,
+        "scope": "vkd",
         "subject": "vkd"
       }
     ],

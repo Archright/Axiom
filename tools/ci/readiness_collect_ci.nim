@@ -65,16 +65,18 @@
 ## Observation derivation table (source -> key):
 ##   R1 documentedCommand      policy r1.contractCommands ∩ README.md text
 ##     commandExists           `ax help` + `ax <cmd> --help` live probes (bin/ax)
-##     promiseOutputExists     E2E report artifact (schemaVersion) + resolved
-##                             certificate artifact (schemaVersion)
+##     promiseOutputExists     E2E report artifact (schemaVersion), subject
+##                             "json-report", + resolved certificate artifact
+##                             (schemaVersion), subject "certificate" (exactly
+##                             policy r1.promiseOutputs tokens)
 ##     subjectLane             policy r1.trustBoundaryLanes lanes exercised by
 ##                             this run's subject (Nim kernel target -> "nim";
 ##                             the rust lane is not exercised by this slice)
 ##   R2 certGreenDualEvidenceRequired
-##                             source structure of certificate_types.nim
-##                             (tierToCertStatus: vtDual→certGreen,
-##                             vtZ3Only→certZ3Candidate) corroborated by this
-##                             run's cert (certGreen ⇒ dual evidence fields)
+##                             this run's certificate: status is no stronger
+##                             than its stored evidence
+##                             (verification_tier.statusConsistentWithEvidence:
+##                             certGreen ⇒ Z3 ∧ Lean); cert absent -> null
 ##     z3OnlyCanProduceCertGreen
 ##                             this run's cert: certGreen without dual evidence
 ##                             -> true (red); cert absent -> null (fail-closed)
@@ -88,8 +90,9 @@
 ##                             report summary.tierCounts carries separate
 ##                             "z3-verified" and "dual-verified" buckets
 ##     verifiedSemanticsDocumented
-##                             docs/spec/verification_density.md (VKD formula)
-##                             + productization_contract.md existence checks
+##                             report metrics.vkd: total == policy
+##                             r7.vkdContract.vksSize and ratio ==
+##                             verified/total (artifact arithmetic, no docs grep)
 ##   R3 (from logs/r3_relocation.json produced by the E2E job's wp5 step)
 ##     pathIndependentProjectionEqual, subjectRunProjectionHashEqual,
 ##     negativeControlDigestDifferent, commentOnlyProjectionStable,
@@ -114,15 +117,31 @@
 ##     subjectTreeImmutableAcrossRun
 ##                             git status (tracked mutations) before any write
 ##   R5 commandExists/helpSurface
-##                             live help probes (same run as R1)
-##     successExitCode        `ax <cmd> --help` exit (0); subject == the
-##                             contract command — the evaluator's R5 join key
-##                             (every exit-code bucket of a command shares
-##                             one subject; provenance rides in the scope
-##                             field, "observed" vs "contract")
+##                             live command probes; helpSurface additionally
+##                             requires the dedicated help path to print a
+##                             usage surface naming the command
+##     successExitCode        a REAL successful execution of the command
+##                             (`ax report --json --state-file` exit 0);
+##                             `ax prove` has no independent success run, so
+##                             no observation is minted (R5 UNKNOWN). Subject
+##                             == the contract command — the evaluator's R5
+##                             join key (every exit-code bucket of a command
+##                             shares one subject; provenance rides in the
+##                             scope field, "observed" vs "contract")
 ##     verificationFailureExitCode
-##                             report exit artifact when it actuates 1, else
-##                             policy r5.exitCodeContract (scope "contract")
+##                             producer's negative-control observation
+##                             (verify_contract_e2e_failure_observation.json:
+##                             both contract commands measured exit 1) ->
+##                             scope "observed" when that artifact is present;
+##                             otherwise this collection's OWN negative control
+##                             (fresh AXIOM_STATE_DIR rooted at
+##                             build/tmp/readiness_r5_failure, seeded with the
+##                             scope lock + baseline, `ax prove --fresh` then
+##                             `ax report --json`): both measured exits must be
+##                             the policy verification-failure code and the
+##                             persisted runOutcome.verdict non-empty != PASS,
+##                             else nothing is minted. An unmeasured bucket is
+##                             an observed null (never a policy echo)
 ##     invalidInputExitCode   live invalid-input probe exit (3), else policy
 ##                             contract value (scope "contract")
 ##     internalErrorExitCode  policy r5.exitCodeContract (scope "contract";
@@ -147,10 +166,9 @@
 ##     cleanRunSucceeded      E2E report verdict PASS + exit 0 (absent -> false)
 ##     documentedRunSteps     README run flow + contract §10.6 prepare
 ##                             sequence verbatim in the checkout
-##     axiomOwnedColdSetDeletedBeforeRun
-##                             null (UNKNOWN): the producing job's cold-set
-##                             purge is not machine-observable from the
-##                             downloaded artifact set
+##     (cold-set purge is incident R8-COLD-001, not an observation key:
+##      it is not machine-observable from the downloaded artifact set and is
+##      never fabricated into an observation)
 ##     commands               §10.6 prepare sequence executed here against
 ##                             --rust-probe-dir when cargo + the crate exist;
 ##                             otherwise honestly absent (ruleR8 fails closed)
@@ -162,14 +180,16 @@
 ##
 ## Exit codes: 0 = evidence written; 2 = tool failure.
 
-import std/[os, osproc, json, strutils, times, sequtils, streams]
+import std/[os, osproc, json, strutils, times, sequtils, streams, strtabs]
 import core/crypto/hash_kernel
+import core/types/verification_tier
 
 const
   DefaultPolicyPath = "config" / "readiness_policy.json"
   DefaultOutDir = "data" / "readiness" / "evidence"
   DefaultAxPath = "bin" / "ax"
   DefaultRustProbeDir = "tests" / "fixtures" / "rust" / "axiom_rust_probe"
+  R5FailureStateRel = "build" / "tmp" / "readiness_r5_failure"
   DefaultFreshnessDays = 30
   CollectorName = "tools/ci/readiness_collect_ci.nim"
 
@@ -202,6 +222,27 @@ proc runSplit(bin: string, args: seq[string], workingDir: string): RunResult =
   ## explicitly where a merged view is needed.
   let p = startProcess(bin, workingDir = workingDir, args = args,
                        options = {poUsePath})
+  result.stdout = p.outputStream.readAll()
+  result.stderr = p.errorStream.readAll()
+  result.exitCode = waitForExit(p)
+  close(p)
+
+proc baseEnvTable(): StringTableRef =
+  ## The ambient environment as a mutable table (PATH/toolchain intact).
+  result = newStringTable(modeCaseSensitive)
+  for k, v in envPairs():
+    result[k] = v
+
+proc runSplitEnv(bin: string, args: seq[string], workingDir: string,
+                 envPairs: seq[(string, string)]): RunResult =
+  ## runSplit with the ambient environment plus explicit overrides. The R5
+  ## failure probe relocates the CLI state root (AXIOM_STATE_DIR) without
+  ## dropping PATH or the solver/Lean variables the CLI resolves from env.
+  var env = baseEnvTable()
+  for (k, v) in envPairs:
+    env[k] = v
+  let p = startProcess(bin, workingDir = workingDir, args = args,
+                       env = env, options = {poUsePath})
   result.stdout = p.outputStream.readAll()
   result.stderr = p.errorStream.readAll()
   result.exitCode = waitForExit(p)
@@ -294,6 +335,47 @@ func jFloat(node: JsonNode, key: string, default = 0.0): float =
     if v != nil and v.kind == JFloat: return v.getFloat()
     if v != nil and v.kind == JInt: return float(v.getInt())
   default
+
+type
+  FailureObservation = object
+    ## Producer negative-control observation
+    ## (logs/verify_contract_e2e_failure_observation.json). Every field this
+    ## consumer relies on is validated; anything incomplete or contradictory
+    ## stays valid=false so the caller records an observed null (fail-closed).
+    valid: bool
+    verdict: string
+    gateVerdict: string
+    proveExit: int
+    reportExit: int
+
+func parseFailureObservation(node: JsonNode,
+                             expectedExit: int): FailureObservation =
+  ## Accept ONLY a fresh full-scope observation whose two measured exits are
+  ## both the verification-failure code and whose verdict is a real non-PASS
+  ## class. The artifact is evidence of an actuated failure, never a policy
+  ## echo: a zero/absent exit or a PASS verdict is rejected.
+  result = FailureObservation(valid: false)
+  if node == nil or node.kind != JObject:
+    return
+  if jStr(node, "scope") != "full":
+    return
+  let fresh = node{"fresh"}
+  if fresh == nil or fresh.kind != JBool or not fresh.getBool:
+    return
+  let verdict = jStr(node, "observedVerdict")
+  if verdict.len == 0 or verdict == "PASS":
+    return
+  if not isHex64(jStr(node, "stateSha256")):
+    return
+  let pe = node{"proveExit"}
+  let re = node{"reportExit"}
+  if pe == nil or pe.kind != JInt or re == nil or re.kind != JInt:
+    return
+  if pe.getInt != expectedExit or re.getInt != expectedExit:
+    return
+  result = FailureObservation(valid: true, verdict: verdict,
+                              gateVerdict: jStr(node, "gateVerdict"),
+                              proveExit: pe.getInt, reportExit: re.getInt)
 
 func jObj(node: JsonNode, key: string): JsonNode =
   if node != nil and node.kind == JObject:
@@ -409,6 +491,8 @@ type
     reportErr: string
     reportExit: int
     reportExitOk: bool
+    failureObs: JsonNode        ## parsed producer negative-control observation
+    failureObsErr: string
     certPathDeclared: string    ## trimmed content of cert_path.txt
     certPath: string            ## resolved path ("" = not found)
     cert: JsonNode
@@ -435,6 +519,14 @@ type
     unknownOption: RunResult    ## ax prove --definitely-unknown-option-xyz
     unknownSubcmd: RunResult    ## ax garbage-subcommand-xyz
     missingStateFile: RunResult ## ax report --json --state-file <absent>
+    failureRan: bool            ## in-job negative control executed
+    failureProve: RunResult     ## ax prove --fresh under a fresh state root
+    failureReport: RunResult    ## ax report --json under the same state root
+    failureValid: bool          ## both exits == policy verification-failure code,
+                                ## state parsed, verdict non-empty and != PASS
+    failureVerdict: string      ## ax_proof_state runOutcome.verdict
+    failureGateVerdict: string  ## ax_proof_state runOutcome.gateVerdict
+    failureStateErr: string     ## why the probe measured unusable ("" = none)
 
 func jSeq(items: seq[JsonNode]): JsonNode =
   let arr = newJArray()
@@ -611,6 +703,10 @@ when isMainModule:
         art.reportExitOk = true
       except CatchableError:
         discard # axiom:best-effort(unparseable exit file records reportExit as unmeasured; the observation honestly stays unset)
+  block failureObservation:
+    let r = safeParseFile(artifactsDir / "verify_contract_e2e_failure_observation.json")
+    art.failureObs = r.node
+    art.failureObsErr = r.err
   block cert:
     art.certPathDeclared = ""
     let p = artifactsDir / "verify_contract_e2e_cert_path.txt"
@@ -648,6 +744,8 @@ when isMainModule:
     art.manifest = r.node
     art.manifestErr = r.err
   block state:
+    # The ratchet restores logs/ax_proof_state.json after its legs, so the
+    # artifact carries the E2E state the report was validated against.
     let r = safeParseFile(artifactsDir / "ax_proof_state.json")
     art.state = r.node
     art.stateErr = r.err
@@ -748,6 +846,65 @@ when isMainModule:
         elif "internal" in desc: internalCode = k.parseInt()
         elif "invalid" in desc: invalidCode = k.parseInt()
 
+  # ── R5 verification-failure actuation probe ──────────────────────────────
+  # The E2E producer writes logs/verify_contract_e2e_failure_observation.json,
+  # but that file is not in this job's artifact set (the workflow upload does
+  # not carry it), so the collector cannot depend on reading it here. Measure
+  # the same negative control in THIS job: a fresh state root seeded with the
+  # scope lock and baseline, one `ax prove --fresh` (a genuine non-PASS run),
+  # then `ax report --json` against that state. Both exits and the persisted
+  # runOutcome verdict are read back; any other outcome is recorded as a
+  # warning incident and mints NOTHING (fail-closed, never a policy echo).
+  # The producer artifact stays the primary evidence when it is present: the
+  # probe only runs when that artifact is absent/unparseable.
+  block r5FailureProbe:
+    pr.failureValid = false
+    if pr.axPresent and fileExists(repoRoot / DefaultAxPath) and
+        art.failureObs == nil:
+      let stateDir = repoRoot / R5FailureStateRel
+      var prepErr = ""
+      try:
+        if dirExists(stateDir):
+          removeDir(stateDir)
+        createDir(stateDir / "data")
+        createDir(stateDir / "logs")
+        for f in ["verification_scope.lock", "baseline.json"]:
+          let src = repoRoot / "data" / f
+          if fileExists(src):
+            copyFile(src, stateDir / "data" / f)
+          else:
+            prepErr.add((if prepErr.len > 0: "; " else: "") &
+                        "absent probe input: data/" & f)
+      except CatchableError as e:
+        prepErr = "state root preparation failed: " & e.msg
+      if prepErr.len > 0:
+        pr.failureStateErr = prepErr
+      else:
+        let stateEnv = @[("AXIOM_STATE_DIR", absolutePath(stateDir))]
+        pr.failureRan = true
+        pr.failureProve = runSplitEnv(axBin, @["prove", "--fresh"], repoRoot, stateEnv)
+        pr.failureReport = runSplitEnv(axBin, @["report", "--json"], repoRoot, stateEnv)
+        let st = safeParseFile(stateDir / "logs" / "ax_proof_state.json")
+        if st.err.len > 0:
+          pr.failureStateErr = st.err
+        else:
+          let outcome = jObj(st.node, "runOutcome")
+          pr.failureVerdict = jStr(outcome, "verdict")
+          pr.failureGateVerdict = jStr(outcome, "gateVerdict")
+          if pr.failureProve.exitCode != verifFailCode:
+            pr.failureStateErr = "prove exited " & $pr.failureProve.exitCode &
+              " != verification-failure " & $verifFailCode
+          elif pr.failureReport.exitCode != verifFailCode:
+            pr.failureStateErr = "report exited " & $pr.failureReport.exitCode &
+              " != verification-failure " & $verifFailCode
+          elif pr.failureVerdict.len == 0:
+            pr.failureStateErr = "ax_proof_state runOutcome.verdict missing"
+          elif pr.failureVerdict == "PASS":
+            pr.failureStateErr = "measured verdict is PASS — the verification-" &
+              "failure path did not actuate"
+          else:
+            pr.failureValid = true
+
   let readmeText = safeReadFile(repoRoot / "README.md")
   let contractPath = repoRoot / "docs" / "spec" / "productization_contract.md"
   let contractText = safeReadFile(contractPath)
@@ -793,17 +950,16 @@ when isMainModule:
       inc.add(incident("R1-OBS-001", "warning",
                        "bin/ax absent — commandExists for every contract command " &
                        "measured false (command not actuable in this collection)"))
-    # promiseOutputExists: this run's E2E artifacts.
+    # promiseOutputExists: this run's E2E artifacts. Subjects are EXACTLY the
+    # policy r1.promiseOutputs tokens — the evaluator joins on subject, so a
+    # descriptive string would be an unrelated key and could never satisfy
+    # closure (DEBT#559).
     let reportSchema = jStr(art.report, "schemaVersion")
     let promiseJson = art.report != nil and reportSchema == "axiom.report.v1"
-    obs.add(obsBool("promiseOutputExists", promiseJson, "artifact",
-                    "E2E report logs/verify_contract_e2e_report.json" &
-                    (if reportSchema.len > 0: " schemaVersion=" & reportSchema else: " (absent)")))
+    obs.add(obsBool("promiseOutputExists", promiseJson, "artifact", "json-report"))
     let certSchema = jStr(art.cert, "schemaVersion")
     let promiseCert = art.cert != nil and certSchema == "axiom.certificate.v3"
-    obs.add(obsBool("promiseOutputExists", promiseCert, "artifact",
-                    "certificate from logs/verify_contract_e2e_cert_path.txt" &
-                    (if certSchema.len > 0: " schemaVersion=" & certSchema else: " (absent)")))
+    obs.add(obsBool("promiseOutputExists", promiseCert, "artifact", "certificate"))
     if not promiseJson:
       inc.add(incident("R1-OBS-002", "warning",
                        "E2E report artifact absent or wrong schema (" & art.reportErr &
@@ -861,40 +1017,33 @@ when isMainModule:
       inc: seq[JsonNode] = @[]
       src: seq[JsonNode] = @[]
       cmds: seq[JsonNode] = @[]
-    # certGreenDualEvidenceRequired: source structure of this checkout's
-    # tier->status projection (vtDual maps to certGreen; z3-only tiers never
-    # do), corroborated by this run's certificate (certGreen implies dual
-    # evidence fields).
-    let certTypesPath = repoRoot / "src" / "core" / "types" / "certificate_types.nim"
-    var structureHolds = false
-    if fileExists(certTypesPath):
-      let txt = collapseSpaces(safeReadFile(certTypesPath))
-      structureHolds = ("of vtDual: certGreen" in txt) and
-                       ("of vtZ3Only: certZ3Candidate" in txt)
-    var certDualOk = true
+    # certGreenDualEvidenceRequired: this run's certificate status must be
+    # consistent with its stored evidence (certGreen ⟹ Z3 ∧ Lean), judged by
+    # the single trust reader in core/types/verification_tier.nim. No source
+    # grep: only stored evidence counts. Cert absent -> null (UNKNOWN).
+    var certEvidence = CertificateEvidence()
+    if art.cert != nil:
+      certEvidence = certificateEvidenceFromJson(art.cert)
+      obs.add(obsBool("certGreenDualEvidenceRequired",
+                      statusConsistentWithEvidence(art.cert), "observed",
+                      "certificate status=" & jStr(art.cert, "status") &
+                      " consistent with stored evidence (z3Passed=" &
+                      $certEvidence.z3Passed & ", leanVerified=" &
+                      $certEvidence.leanVerified &
+                      ") via verification_tier.statusConsistentWithEvidence"))
+    else:
+      obs.add(obsNull("certGreenDualEvidenceRequired", "observed",
+                      "unmeasured: certificate artifact absent (" & art.certErr &
+                      ") — UNKNOWN, never an implicit PASS"))
+      inc.add(incident("R2-CERT-001", "warning",
+                       "certificate artifact absent — certGreenDualEvidenceRequired " &
+                       "recorded UNKNOWN (no source-structure substitute)"))
+    # z3OnlyCanProduceCertGreen: red only when this run's cert declares
+    # certGreen WITHOUT dual evidence; cert absent -> null (fail-closed).
     if art.cert != nil:
       let status = jStr(art.cert, "status")
-      let tier = jStr(art.cert, "verificationTier")
-      let solverMeta = jObj(art.cert, "solverMeta")
-      let z3Ran = solverMeta != nil and
-                  (if solverMeta.hasKey("z3Executed"): solverMeta["z3Executed"].getBool(false) else: false)
-      let leanRan = (if art.cert.hasKey("kernel"): art.cert["kernel"].getBool(false) else: false) or
-                    (solverMeta != nil and solverMeta.hasKey("leanCompilerVerified") and
-                     solverMeta["leanCompilerVerified"].getBool(false))
-      certDualOk = (status != "certGreen") or
-                   (tier == "dual-verified" and z3Ran and leanRan)
-    obs.add(obsBool("certGreenDualEvidenceRequired", structureHolds and certDualOk,
-                    "contract",
-                    "certificate_types.nim tierToCertStatus: vtDual→certGreen, " &
-                    "vtZ3Only→certZ3Candidate" &
-                    (if art.cert != nil:
-                       "; this run's cert certGreen ⇒ dual evidence (tier/z3/lean fields)"
-                     else: "; cert absent — source structure only")))
-    # z3OnlyCanProduceCertGreen: red only when this run's cert is certGreen
-    # WITHOUT dual evidence; cert absent -> null (fail-closed default true).
-    if art.cert != nil:
-      let status = jStr(art.cert, "status")
-      let z3OnlyGreen = status == "certGreen" and not certDualOk
+      let z3OnlyGreen = status == "certGreen" and
+                        not (certEvidence.z3Passed and certEvidence.leanVerified)
       obs.add(obsBool("z3OnlyCanProduceCertGreen", z3OnlyGreen, "canonical",
                       "cert status=" & status & " verificationTier=" &
                       jStr(art.cert, "verificationTier") &
@@ -959,22 +1108,36 @@ when isMainModule:
       obs.add(obsNull("z3VsDualDistinguishable", "canonical",
                       "unmeasured: report tierCounts absent (" & art.reportErr &
                       ") — UNKNOWN"))
-    # verifiedSemanticsDocumented: this checkout's spec documents the verified
-    # semantics (VKD formula + product contract).
-    let densityPath = repoRoot / "docs" / "spec" / "verification_density.md"
-    let densityText = safeReadFile(densityPath)
-    let documented = densityText.len > 0 and "certGreen" in densityText and
-                     contractText.len > 0 and "ax report" in contractText
-    obs.add(obsBool("verifiedSemanticsDocumented", documented, "contract",
-                    "docs/spec/verification_density.md (VKD numerator certGreen-only) " &
-                    "+ docs/spec/productization_contract.md (ax prove/ax report semantics)"))
+    # verifiedSemanticsDocumented: the run's report metrics.vkd must agree with
+    # the policy VKS denominator and with its own verified/total arithmetic.
+    # Docs greps are not evidence (DEBT#559): only the artifact counts.
+    let vkdNode = jObj(jObj(art.report, "metrics"), "vkd")
+    if vkdNode != nil:
+      let total = jInt(vkdNode, "total", -1)
+      let verifiedN = jInt(vkdNode, "verified", -1)
+      let ratio = jFloat(vkdNode, "ratio", -1.0)
+      let expectedRatio = if total > 0: float(verifiedN) / float(total) else: -1.0
+      let consistent = total == vksSize and verifiedN >= 0 and ratio >= 0.0 and
+                       abs(ratio - expectedRatio) < 1e-9
+      obs.add(obsBool("verifiedSemanticsDocumented", consistent, "observed",
+                      "report metrics.vkd: total=" & $total &
+                      " (policy VKS=" & $vksSize & "), verified=" & $verifiedN &
+                      ", ratio=" & $ratio & " (verified/total=" & $expectedRatio & ")"))
+    else:
+      obs.add(obsNull("verifiedSemanticsDocumented", "observed",
+                      "unmeasured: report metrics.vkd absent (" & art.reportErr &
+                      ") — UNKNOWN, never an implicit PASS"))
+      inc.add(incident("R2-VKD-001", "warning",
+                       "report metrics.vkd absent — verifiedSemanticsDocumented " &
+                       "recorded UNKNOWN"))
     if art.reportErr != "":
       inc.add(incident("R2-OBS-001", "warning",
                        "E2E report artifact absent/unparsable (" & art.reportErr &
                        ") — R2 report-derived observations recorded UNKNOWN"))
-    src.add(sourceEntry("src/core/types/certificate_types.nim",
-                        "sha256:" & shaFile(certTypesPath), stamp.head,
-                        "tierToCertStatus vtDual→certGreen / vtZ3Only→certZ3Candidate"))
+    src.add(sourceEntry("src/core/types/verification_tier.nim",
+                        "sha256:" & shaFile(repoRoot / "src" / "core" / "types" /
+                                            "verification_tier.nim"), stamp.head,
+                        "statusConsistentWithEvidence / certificateEvidenceFromJson"))
     addSourceIf(src, repoRoot, "src/core/metrics.nim", stamp.head,
                 "computeVerified (vacuous demotion)")
     addSourceIf(src, repoRoot, "docs/spec/verification_density.md", stamp.head,
@@ -1296,6 +1459,7 @@ when isMainModule:
       src: seq[JsonNode] = @[]
       cmds: seq[JsonNode] = @[]
     let helpOut = (if pr.axPresent: pr.help.stdout & "\n" & pr.help.stderr else: "")
+    let failObs = parseFailureObservation(art.failureObs, verifFailCode)
     for cmd in r5Commands:
       let sub = cmd.split(' ')[1 .. ^1].join(" ")
       let dedicated = (if sub == "prove": pr.proveHelp elif sub == "report": pr.reportHelp
@@ -1304,8 +1468,39 @@ when isMainModule:
                    pr.help.exitCode == 0 and sub in helpOut and
                    dedicated.exitCode == 0
       obs.add(obsBool("commandExists", exists, "surface", cmd))
-      obs.add(obsBool("helpSurface", pr.axPresent and dedicated.exitCode == 0,
-                      "surface", cmd))
+      # helpSurface: the dedicated help path must exit 0 AND actually print a
+      # usage surface naming the command — an exit-0 with no help text is not
+      # a help surface (DEBT#559).
+      let helpText = dedicated.stdout & "\n" & dedicated.stderr
+      let helpShowsUsage = helpText.toLowerAscii().contains("usage") and
+                           (sub in helpText or cmd in helpText)
+      obs.add(obsBool("helpSurface", pr.axPresent and dedicated.exitCode == 0 and
+                      helpShowsUsage, "surface", cmd))
+      if pr.axPresent and dedicated.exitCode == 0 and not helpShowsUsage:
+        inc.add(incident("R5-HELP-001", "warning",
+                         "'" & cmd & " --help' exited 0 but printed no usage " &
+                         "surface naming the command — helpSurface measured false"))
+      # successExitCode: only a real successful execution of the command is
+      # evidence. `ax report` is actuated here (reportJson) against the state
+      # artifact the E2E report was validated with. `ax prove` has no
+      # independent success run in this collection — its success bucket is
+      # declared by the R8 E2E contract instead (r8.successfulExecutionContract,
+      # consumed by ruleR8), so no successExitCode observation is minted for it
+      # and R5 never substitutes a help exit for a real success run.
+      if pr.axPresent and sub == "report":
+        if pr.reportJson.exitCode == successCode:
+          obs.add(obsInt("successExitCode", successCode, "observed", cmd))
+        else:
+          obs.add(obsNull("successExitCode", "observed", cmd))
+          inc.add(incident("R5-EXIT-003", "warning",
+                           "`ax report` actuation exited " & $pr.reportJson.exitCode &
+                           " != success " & $successCode &
+                           " — successExitCode recorded UNKNOWN, never a help-exit " &
+                           "stand-in"))
+      else:
+        inc.add(incident("R5-EXIT-004", "warning",
+                         "no independent successful execution observed for '" & cmd &
+                         "' — successExitCode not minted (R5 UNKNOWN at the evaluator)"))
       # Exit-code observations, subject-scoped per contract command. The
       # subject is the evaluator's join key: ruleR5 groups a command's
       # success/failure exit codes by identical subject (pinned by
@@ -1315,35 +1510,114 @@ when isMainModule:
       # descriptive subject breaks the join and FAILs R5). Buckets actuated
       # by this collection are recorded at scope "observed" with the measured
       # code; buckets not actuated (no safe probe exists) record the policy
-      # contract value at scope "contract" — the scope field declares the
-      # value's provenance, and the actuation reality rides in incidents.
-      if pr.axPresent and dedicated.exitCode == 0:
-        obs.add(obsInt("successExitCode", dedicated.exitCode, "observed", cmd))
-      # invalid input: actuated only for the prove subject via the live probe.
-      if sub == "prove" and pr.axPresent:
-        obs.add(obsInt("invalidInputExitCode", pr.unknownOption.exitCode,
-                       "observed", cmd))
+      # contract value at scope "contract" — the evaluator's key closure
+      # excludes declared values, so an unactuated bucket keeps R5 UNKNOWN
+      # instead of silently passing on a policy echo.
+      # invalid input: actuated for both contract commands — the probes are
+      # read-only and each command has its own rejection path (`ax prove`
+      # unknown option; `ax report` unknown flag / absent state file).
+      if pr.axPresent:
+        let invalidProbe = (if sub == "prove": pr.unknownOption else: pr.missingStateFile)
+        obs.add(obsInt("invalidInputExitCode", invalidProbe.exitCode, "observed", cmd))
         inc.add(incident(
-          "R5-EXIT-001", (if pr.unknownOption.exitCode == invalidCode: "info" else: "warning"),
-          "invalid-input probe for '" & cmd & "' exited " & $pr.unknownOption.exitCode &
+          "R5-EXIT-001", (if invalidProbe.exitCode == invalidCode: "info" else: "warning"),
+          "invalid-input probe for '" & cmd & "' exited " & $invalidProbe.exitCode &
           " (policy INVALID_INPUT=" & $invalidCode & ")"))
       else:
         obs.add(obsInt("invalidInputExitCode", invalidCode, "contract", cmd))
-        if pr.axPresent and sub == "report":
-          inc.add(incident(
-            "R5-EXIT-002", "info",
-            "ax report ignores unknown flags (probe: ax report " &
-            "--definitely-unknown-flag) — no invalid-input actuation for this " &
-            "subject; contract value recorded at scope=contract (known first-slice " &
-            "work item, cf. committed R5-INC-002)"))
-      # verification failure: actuated only when the E2E report exit was 1.
-      if art.reportExitOk and art.reportExit == verifFailCode:
-        obs.add(obsInt("verificationFailureExitCode", art.reportExit, "observed",
-                       cmd))
+      # verification failure: actuated when this collection observed a
+      # verification-failure exit (the E2E report exit, the live `ax report`
+      # probe over the E2E state, the producer's negative-control observation,
+      # or — when that producer artifact is absent from this job's artifact
+      # set — this collection's own negative-control probe, whose two measured
+      # exits and persisted verdict live in pr.failure*). The producer artifact
+      # is validated as a whole (parseFailureObservation): a partial or
+      # contradictory observation mints nothing, and the in-job probe is only
+      # consulted when the artifact is absent (the artifact stays primary).
+      let probeUsable = art.failureObs == nil and pr.failureValid
+      let observedVerifFail =
+        (art.reportExitOk and art.reportExit == verifFailCode) or
+        (pr.axPresent and sub == "report" and pr.reportJson.exitCode == verifFailCode) or
+        (failObs.valid and
+          ((sub == "prove" and failObs.proveExit == verifFailCode) or
+           (sub == "report" and failObs.reportExit == verifFailCode))) or
+        (probeUsable and
+          ((sub == "prove" and pr.failureProve.exitCode == verifFailCode) or
+           (sub == "report" and pr.failureReport.exitCode == verifFailCode)))
+      if observedVerifFail:
+        obs.add(obsInt("verificationFailureExitCode", verifFailCode, "observed", cmd))
       else:
-        obs.add(obsInt("verificationFailureExitCode", verifFailCode, "contract",
-                       cmd))
+        # Not actuated on this collection: emit an observed-scope null, never a
+        # contract-scope copy. `contract` is a DECLARED scope — the evaluator
+        # discards it as non-evidence (DeclaredObservationScopes), so a
+        # contract-scope emission here would satisfy closure with the policy's
+        # own constant while claiming an observation that never happened
+        # (theater). A required bucket that was not actuated is UNKNOWN.
+        obs.add(obsNull("verificationFailureExitCode", "observed", cmd))
+        inc.add(incident("R5-EXIT-005", "warning",
+                         "verification-failure exit for '" & cmd &
+                         "' was not actuated in this collection — " &
+                         "verificationFailureExitCode recorded UNKNOWN, never a " &
+                         "contract-scope declaration passed off as evidence"))
+      # internal error: no safe inducible probe exists for either command, so
+      # the bucket stays a declared vocabulary value and never counts as
+      # evidence (policy presence=vocabulary for this key).
       obs.add(obsInt("internalErrorExitCode", internalCode, "contract", cmd))
+    if failObs.valid:
+      inc.add(incident("R5-EXIT-006", "info",
+                       "negative-control observation actuated the verification-failure " &
+                       "exit for both contract commands (observedVerdict=" & failObs.verdict &
+                       " gateVerdict=" & failObs.gateVerdict &
+                       " proveExit=" & $failObs.proveExit &
+                       " reportExit=" & $failObs.reportExit &
+                       ", scope=full fresh=true) — verificationFailureExitCode " &
+                       "recorded at scope=observed"))
+    elif art.failureObs != nil:
+      inc.add(incident("R5-EXIT-007", "warning",
+                       "negative-control observation present but unusable (" &
+                       (if art.failureObsErr.len > 0: art.failureObsErr
+                        else: "shape/exit contradiction") &
+                       "): proveExit/reportExit must both be " &
+                       $verifFailCode & ", observedVerdict non-empty and != PASS, " &
+                       "scope=full, fresh=true, stateSha256 64-hex — " &
+                       "verificationFailureExitCode stays UNKNOWN (fail-closed, " &
+                       "never a partial mint)"))
+    elif pr.failureValid:
+      inc.add(incident("R5-EXIT-009", "info",
+                       "in-job negative control actuated the verification-failure " &
+                       "exit for both contract commands (AXIOM_STATE_DIR=" &
+                       R5FailureStateRel &
+                       " proveExit=" & $pr.failureProve.exitCode &
+                       " reportExit=" & $pr.failureReport.exitCode &
+                       " verdict=" & pr.failureVerdict &
+                       " gateVerdict=" & pr.failureGateVerdict &
+                       "; producer artifact absent from this job's artifact set) — " &
+                       "verificationFailureExitCode recorded at scope=observed"))
+    elif pr.failureRan:
+      inc.add(incident("R5-EXIT-010", "warning",
+                       "in-job negative control unusable (" &
+                       (if pr.failureStateErr.len > 0: pr.failureStateErr
+                        else: "shape/exit contradiction") &
+                       "): proveExit/reportExit must both be " & $verifFailCode &
+                       ", ax_proof_state runOutcome.verdict non-empty and != PASS — " &
+                       "verificationFailureExitCode stays UNKNOWN (fail-closed, " &
+                       "never fabricated into evidence)"))
+    elif art.failureObs == nil and pr.failureStateErr.len > 0:
+      inc.add(incident("R5-EXIT-010", "warning",
+                       "in-job negative control not run (" & pr.failureStateErr &
+                       "): verificationFailureExitCode stays UNKNOWN (fail-closed, " &
+                       "never fabricated into evidence)"))
+    elif pr.axPresent and not fileExists(repoRoot / DefaultAxPath):
+      inc.add(incident("R5-EXIT-011", "warning",
+                       "in-job negative control not run: " &
+                       (repoRoot / DefaultAxPath) & " does not exist (the " &
+                       "--ax-bin target is not this checkout's canonical CLI) — " &
+                       "verificationFailureExitCode stays UNKNOWN unless another " &
+                       "probe actuated it (fail-closed)"))
+    inc.add(incident("R5-EXIT-000", "info",
+                     "exit-code buckets with no safe actuation (internal-error) are " &
+                     "recorded at scope=contract (policy vocabulary, presence=vocabulary); " &
+                     "required buckets are actuated — never a default PASS (DEBT#559)"))
     if not pr.axPresent:
       inc.add(incident("R5-OBS-001", "warning",
                        "bin/ax absent — no exit-code actuation for any subject; " &
@@ -1383,6 +1657,11 @@ when isMainModule:
                       (if not pr.axPresent: "unmeasured: bin/ax absent"
                        else: "unmeasured: state artifact absent (" & art.stateErr & ")") &
                       " — UNKNOWN"))
+    if pr.failureRan:
+      cmds.add(cmdRecord("bin/ax prove --fresh (AXIOM_STATE_DIR=" &
+                         R5FailureStateRel & ")", pr.failureProve))
+      cmds.add(cmdRecord("bin/ax report --json (AXIOM_STATE_DIR=" &
+                         R5FailureStateRel & ")", pr.failureReport))
     if pr.axPresent:
       cmds.add(cmdRecord("bin/ax help", pr.help))
       cmds.add(cmdRecord("bin/ax prove --help", pr.proveHelp))
@@ -1400,6 +1679,8 @@ when isMainModule:
                         "report schemaVersion")
     addArtifactSource(src, art.dir, "verify_contract_e2e_report_exit.txt", stamp.head,
                       "report exit observation")
+    addArtifactSource(src, art.dir, "verify_contract_e2e_failure_observation.json",
+                      stamp.head, "verification-failure actuation (negative control)")
     let envelope = makeEnvelope("R5", stamp, obs, inc, src, cmds)
     writeEnvelope(outDir / "R5.json", envelope)
     echo "[readiness_collect_ci] wrote " & (outDir / "R5.json") &
@@ -1580,17 +1861,14 @@ when isMainModule:
                     "operability",
                     "README run flow + contract §10.6 prepare sequence verbatim " &
                     "(checked commands: " & r8Sequence.join(" -> ") & ")"))
-    # axiomOwnedColdSetDeletedBeforeRun: not machine-observable from the
-    # downloaded artifact set — recorded UNKNOWN, never fabricated.
-    obs.add(obsNull("axiomOwnedColdSetDeletedBeforeRun", "operability",
-                    "UNKNOWN: the producing job's cold-set purge (build/nimcache, " &
-                    ".axiom/cache, proofs/.lake, proofs/build) is not part of the " &
-                    "downloaded artifact set, so deletion before the E2E run is not " &
-                    "machine-observable from this collector — measurement " &
-                    "definition: axiom-owned cold state absent at run start"))
+    # Cold-set purge is a property of the producing CI job, not a machine
+    # observation this collector can make; it is deliberately not an
+    # observation key (DEBT#559). The fact stays visible as an incident, never
+    # as a fabricated observation.
     inc.add(incident("R8-COLD-001", "info",
-                     "axiomOwnedColdSetDeletedBeforeRun recorded UNKNOWN (not " &
-                     "observable from artifacts; no fabrication)"))
+                     "cold-set purge before the E2E run is not machine-observable " &
+                     "from the downloaded artifact set; not emitted as an " &
+                     "observation key (no fabrication)"))
     # commands: §10.6 prepare sequence — executed ONLY when cargo and the probe
     # crate are actually available here (collect_evidence_probe reuse); a
     # missing cargo leaves the commands honestly absent and ruleR8 fails
