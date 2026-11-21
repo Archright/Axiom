@@ -1387,7 +1387,18 @@ when isMainModule:
       if observedVerifFail:
         obs.add(obsInt("verificationFailureExitCode", verifFailCode, "observed", cmd))
       else:
-        obs.add(obsInt("verificationFailureExitCode", verifFailCode, "contract", cmd))
+        # Not actuated on this collection: emit an observed-scope null, never a
+        # contract-scope copy. `contract` is a DECLARED scope — the evaluator
+        # discards it as non-evidence (DeclaredObservationScopes), so a
+        # contract-scope emission here would satisfy closure with the policy's
+        # own constant while claiming an observation that never happened
+        # (theater). A required bucket that was not actuated is UNKNOWN.
+        obs.add(obsNull("verificationFailureExitCode", "observed", cmd))
+        inc.add(incident("R5-EXIT-005", "warning",
+                         "verification-failure exit for '" & cmd &
+                         "' was not actuated in this collection — " &
+                         "verificationFailureExitCode recorded UNKNOWN, never a " &
+                         "contract-scope declaration passed off as evidence"))
       # internal error: no safe inducible probe exists for either command, so
       # the bucket stays a declared vocabulary value and never counts as
       # evidence (policy presence=vocabulary for this key).
