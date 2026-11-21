@@ -1268,6 +1268,9 @@ test-unit:
 	@nim c -r tests/cli/test_report_cli.nim
 	@nim c -r tests/cli/test_evidence_bundle_v2.nim
 	@nim c -r tests/verification/test_strict_json_number_semantics.nim
+	@nim c -r tests/cli/test_axiom_status.nim
+	@nim c -r tests/cli/test_cert_cli.nim
+	@nim c -r tests/cli/test_config_cli.nim
 	@nim c -r tests/unit/test_judgment_set_derivation.nim
 
 # ── oracle-evidence mode=none floor 회귀 픽스처 (Phase 2d, 계획 CE #13) ────
