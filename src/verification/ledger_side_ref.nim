@@ -9,11 +9,13 @@ axiomLayer "infrastructure"
 ## commit containing `<certId>.json` (the canonical certificate bytes of one
 ## subject-continuity certificate; certId = subjectId). The ref update is a
 ## fast-forward CAS: PATCH with force=false against the tip read moments
-## earlier — a concurrent move makes the PATCH fail (422) and the append
-## RETRIES on conflict (bounded: re-read tip → re-check subject uniqueness →
-## rebuild on the moved tip → PATCH again, ≤ LedgerAppendMaxAttempts
-## attempts), then FAILS CLOSED on exhaustion — no force, no overwrite, no
-## duplicate entry (§8.2 REST git/refs).
+## earlier. Every attempt — the first one included — checks that the tip it
+## will parent on does not already contain the subject. A concurrent move
+## makes the PATCH fail (422) and the append RETRIES on conflict (bounded:
+## re-read tip → re-check subject uniqueness → rebuild on the moved tip →
+## PATCH again, ≤ LedgerAppendMaxAttempts attempts), then FAILS CLOSED on
+## exhaustion — no force, no overwrite, no duplicate entry (§8.2 REST
+## git/refs).
 ##
 ## Object pipeline (Git Data API): blob (certificate bytes) → tree with the
 ## current tip as base_tree → commit with parent = tip → FF ref update.
@@ -477,7 +479,7 @@ const
   LedgerAppendMaxAttempts = 4
     ## Bounded retry-on-conflict budget for ONE appendCertificate call
     ## (PR-concurrent certificate minting): at most this many
-    ## tip-read → uniqueness-re-check → object-build → FF-PATCH attempts.
+    ## tip-read → uniqueness-check → object-build → FF-PATCH attempts.
     ## ONLY concurrent-move conditions are retried (HTTP 422 from the ref
     ## PATCH, or a raced root-ref create); every other failure fails closed
     ## immediately; exhaustion returns the last conflict error.
@@ -493,11 +495,11 @@ proc isRefConflictError(err: string): bool {.raises: [].} =
 
 proc ledgerHasCertAtTip(transport: LedgerTransport; repo, tip, certId: string): Result[bool, string]
     {.raises: [CatchableError, OSError, Exception], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
-  ## Duplicate-subject re-check for a RETRY: does the ledger tip we are about
-  ## to parent on already contain `<certId>.json`? Consumes the same data the
-  ## workflow D6 predicate (ledgerHasSubjectCert → listLedgerCertIds) reads —
+  ## Duplicate-subject check for an append attempt: does the ledger tip we are
+  ## about to parent on already contain `<certId>.json`? Consumes the same data
+  ## the workflow D6 predicate (ledgerHasSubjectCert → listLedgerCertIds) reads —
   ## the recursive tree of the tip. Any read failure fails closed: an
-  ## unverifiable ledger is never appended to by a retry.
+  ## unverifiable ledger is never appended to.
   let tree = fetchTipTree(transport, repo, tip, "duplicate re-check failed")
   if tree.isErr:
     return err(tree.error)
@@ -513,6 +515,13 @@ proc appendCertificate*(transport: LedgerTransport; repo, certPath: string;
   ## tip sha. Fail-closed at every step: unreadable/malformed/foreign cert,
   ## blob create failure, tree/commit failure, or a non-FF ref update — the
   ## caller journals the outcome; no partial ledger state is ever "ok".
+  ##
+  ## Subject uniqueness is enforced by the writer on EVERY attempt: after the
+  ## tip read (and root creation when the ref is absent), the tip tree must
+  ## not already contain `<certId>.json`; a duplicate is refused before any
+  ## object is built, so a second ledger entry for an existing subject is
+  ## impossible even when the caller-side pre-check raced or is absent. An
+  ## unreadable tip tree fails closed.
   ##
   ## Bounded retry-on-conflict (PR-concurrent minting): the FF CAS PATCH can
   ## be rejected (HTTP 422) because a CONCURRENT mint moved the tip between
@@ -572,19 +581,21 @@ proc appendCertificate*(transport: LedgerTransport; repo, certPath: string;
           continue
         return err("ledger_side_ref.appendCertificate: ledger root creation failed: " & rootRes.error)
       tip = rootRes.get
-    # retry correctness: a retry parents on a tip we have not seen before. If
-    # a SAME-subject entry arrived with the moved tip, appending again would
-    # duplicate it (the workflow D6 predicate guarded the ORIGINAL tip only).
-    # Re-check uniqueness against the tip we are about to parent on; a read
-    # failure fails closed — an unverifiable ledger is never appended to.
-    if attempt > 1:
-      let dupRes = ledgerHasCertAtTip(transport, repo, tip, certId.get)
-      if dupRes.isErr:
-        return err("ledger_side_ref.appendCertificate: " & dupRes.error)
-      if dupRes.get:
-        return err("ledger_side_ref.appendCertificate: duplicate subject " & certId.get &
-          " already present at ledger tip " & tip &
-          " after concurrent move (fail-closed — not re-appended)")
+    # uniqueness is enforced on EVERY attempt, including the first: the tip we
+    # are about to parent on must not already hold this subject. A first
+    # append carrying a subject that is already at the ledger tip is never
+    # legitimate — the caller-side workflow D6 predicate runs in another
+    # process and cannot close the window — and the append-only ledger cannot
+    # remove a duplicate afterwards, so it is REFUSED before any object is
+    # built. On a retry the same check covers the moved tip (a same-subject
+    # entry that arrived with the concurrent move). A read failure fails
+    # closed — an unverifiable ledger is never appended to.
+    let dupRes = ledgerHasCertAtTip(transport, repo, tip, certId.get)
+    if dupRes.isErr:
+      return err("ledger_side_ref.appendCertificate: " & dupRes.error)
+    if dupRes.get:
+      return err("ledger_side_ref.appendCertificate: duplicate subject " & certId.get &
+        " already present at ledger tip " & tip & " (fail-closed — not re-appended)")
     # 2-4. object pipeline: blob → tree(base=tip) → commit(parent=tip)
     let objects = createLedgerObjects(transport, repo, blobContent, tip, certId.get, commitProvenance)
     if objects.isErr:
