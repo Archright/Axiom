@@ -1047,9 +1047,10 @@ readiness-collect: bin/readiness_collect_ci ## Collect R1–R8 readiness evidenc
 	rm -rf "$$PROBE_DIR/target"; \
 	./bin/readiness_collect_ci --repo-root . --artifacts logs --out data/readiness/evidence --rust-probe-dir "$$PROBE_DIR"
 
-build: $(METADATA) ## 전체 CLI 빌드 (nim check)
+# debug 진단 경로: nim c --hints:off -d:allowMissingZ3 -o:bin/ax src/cli/main.nim
+build: $(METADATA) ## 전체 CLI 빌드 (release)
 	@echo "=== [3/4] Full Build ==="
-	$(NIM) c --hints:off -d:allowMissingZ3 -o:bin/ax src/cli/main.nim
+	$(NIM) c -d:release --hints:off -o:bin/ax src/cli/main.nim
 	@echo "✅ Build successful"
 	@echo ""
 
