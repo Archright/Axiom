@@ -459,35 +459,73 @@ suite "sbom — vacuous or malformed SPDX never passes":
     check run(bins[4], @["--report", d / "valid.json"] & common &
       @["--out", d / "r2.json"]).code == 0
 
-suite "report — skipped is UNKNOWN, failure is FAIL, missing report is UNKNOWN":
+suite "report — venue gate, skipped is UNKNOWN, failure is FAIL, missing report is UNKNOWN":
 
-  test "aggregator fail-closed matrix":
-    let d = fixtureDir("rep")
-    for dim in ["secret-scan", "license-scan", "dependency-scan", "provenance", "sbom"]:
+  const Dims5 = ["secret-scan", "license-scan", "dependency-scan", "provenance", "sbom"]
+
+  proc writeDimensions(d: string) =
+    for dim in Dims5:
       writeFile(d / (dim & ".json"),
         $(%*{"dimension": dim, "verdict": "PASS", "tool": "fixture"}))
-    let common = @["--out", d / "gate.json",
+
+  test "landing venue fail-closed matrix":
+    let d = fixtureDir("rep_landing")
+    writeDimensions(d)
+    let common = @["--venue", "merge_group",
+                   "--out", d / "gate.json",
                    "--head-sha", "ffff0000ffff0000ffff0000ffff0000ffff0000",
                    "--tree-sha", "0000ffff0000ffff0000ffff0000ffff0000ffff",
                    "--policy-file", RepoRoot / "compliance/policy/license-policy.yml"] &
-      (@["secret-scan", "license-scan", "dependency-scan", "provenance", "sbom"]
-        .mapIt("--report" & "=" & it & "=" & (d / it & ".json")))
+      (Dims5.mapIt("--report" & "=" & it & "=" & (d / it & ".json")))
     var allOk: seq[string] = @[]
-    for dim in ["secret-scan", "license-scan", "dependency-scan", "provenance", "sbom"]:
+    for dim in Dims5:
       allOk.add("--job" & "=" & dim & "=success")
     # 1) everything success → PASS
-    check run(bins[5], allOk & common).code == 0
+    check run(bins[5], common & allOk).code == 0
     # 2) one failure → FAIL
-    check run(bins[5], (allOk.mapIt(
-      if it.endsWith("secret-scan=success"): "--job=secret-scan=failure" else: it)) &
-      common).code == 1
+    check run(bins[5], common & (allOk.mapIt(
+      if it.endsWith("secret-scan=success"): "--job=secret-scan=failure" else: it))).code == 1
     # 3) one skipped → UNKNOWN (the platform skipped-is-success trap)
-    check run(bins[5], (allOk.mapIt(
-      if it.endsWith("license-scan=success"): "--job=license-scan=skipped" else: it)) &
-      common).code == 2
+    check run(bins[5], common & (allOk.mapIt(
+      if it.endsWith("license-scan=success"): "--job=license-scan=skipped" else: it))).code == 2
     # 4) a dimension report file missing → UNKNOWN
     removeFile(d / "sbom.json")
-    check run(bins[5], allOk & common).code == 2
+    check run(bins[5], common & allOk).code == 2
+
+  test "preflight venue requires exactly {secret-scan}":
+    let d = fixtureDir("rep_preflight")
+    writeDimensions(d)
+    let preJobs = @["--job=secret-scan=success", "--job=license-scan=skipped",
+                    "--job=dependency-scan=skipped", "--job=provenance=skipped",
+                    "--job=sbom=skipped"]
+    let preBase = @["--venue", "pull_request",
+                 "--out", d / "gate.json",
+                 "--head-sha", "ffff0000ffff0000ffff0000ffff0000ffff0000",
+                 "--tree-sha", "0000ffff0000ffff0000ffff0000ffff0000ffff",
+                 "--policy-file", RepoRoot / "compliance/policy/license-policy.yml",
+                 "--report", "secret-scan=" & (d / "secret-scan.json")]
+    # 1) the declared preflight set, all success → PASS
+    check run(bins[5], preBase & preJobs).code == 0
+    # 2) required dimension skipped → UNKNOWN
+    check run(bins[5], preBase & preJobs.mapIt(
+      if it.endsWith("secret-scan=success"): "--job=secret-scan=skipped" else: it)).code == 2
+    # 3) a NON-required dimension reporting success may never contribute credit → FAIL
+    check run(bins[5], preBase & preJobs.mapIt(
+      if it.endsWith("license-scan=skipped"): "--job=license-scan=success" else: it)).code == 1
+    # 4) an out-of-venue report is gating drift → UNKNOWN, never silently ignored
+    check run(bins[5], preBase & preJobs &
+      @["--report", "license-scan=" & (d / "license-scan.json")]).code == 2
+
+  test "venue is required and closed":
+    let d = fixtureDir("rep_venue")
+    writeDimensions(d)
+    let base = @["--out", d / "gate.json",
+                 "--head-sha", "ffff0000ffff0000ffff0000ffff0000ffff0000",
+                 "--tree-sha", "0000ffff0000ffff0000ffff0000ffff0000ffff"]
+    # no --venue → rejected input (UNKNOWN), never a pass
+    check run(bins[5], base).code == 2
+    # an event this workflow does not run on → FAIL (no venue, no verdict)
+    check run(bins[5], @["--venue", "push"] & base).code == 1
 
 suite "attestor — out-of-tree SHA-bound attestation rejects stale commit/tree SHAs":
 

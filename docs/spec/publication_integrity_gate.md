@@ -1,6 +1,6 @@
 # publication-integrity 게이트 — 단일 판정 공개 준비성 계약
 
-**Status**: Normative (v1.3, 2026-11-13 — license-scan shard 3-레그 확장(VS-PI-3) 반영 + self-heal 로컬 감사 스코프 정렬; v1.2 = 2026-11-10 스테이징 단일 루트 스캔 재구성; v1.1 = 2-shard 구조화 도입)
+**Status**: Normative (v1.4, 2026-11-21 — **venue 분리(vs-282)**: `pull_request`=preflight `{secret-scan}` / `merge_group|schedule|workflow_dispatch`=landing 5차원 전부 / 그 외 이벤트=FAIL. [ADR-0043](../adr/0043-publication-venue-split.md)이 ADR-0032 (a)(b)를 이 워크플로의 job 층으로 확장하고 (e)를 개정한다; v1.3 = license-scan shard 3-레그 확장(VS-PI-3) + self-heal 로컬 감사 스코프 정렬; v1.2 = 스테이징 단일 루트 스캔 재구성; v1.1 = 2-shard 구조화 도입)
 **워크플로**: `.github/workflows/publication-integrity.yml` (required context `publication-integrity`)
 **정책 SSOT**:
 - `compliance/policy/license-policy.yml` — 허용 라이선스 allowlist + 거부 가족
@@ -38,6 +38,12 @@ trustSurface에 등록되어 있다 (v1.20.0) — 정책 약화 PR은 자동 병
 ## 2. 구조와 판정
 
 ```
+venue = github.event_name   (job-level if — the `steps` context does not exist yet)
+
+pull_request                                → preflight {secret-scan}
+merge_group | schedule | workflow_dispatch  → landing   all 5 dimensions
+anything else                               → FAIL (no venue → no verdict)
+
 secret-scan ──────┐  gitleaks 8.30.1 (release pin + sha256 verify)
 license-scan ─────┤  scancode-toolkit==32.5.0 + pluggy==1.5.0 (venv pin)
 dependency-scan ──┼─→ publication-integrity (종합 job, needs 전부 + if: !cancelled())
@@ -54,14 +60,49 @@ sbom ─────────────┘  syft v1.57.0 → publication_sb
   잡)로 실행된다. **판정은 단일 평가기·단일 병합 보고서로 유지된다** —
   "sub-job id = 차원 이름" 규칙은 판정 잡 `license-scan`이 담당하며 shards는 내부
   실행 구조다 (required context·종합 잡 needs·차원 보고서 artifact 표면 불변).
-- 종합 job은 `needs.*.result`와 5개 차원 보고서 JSON을 **이중** 검증한다
-  (`tools/ci/publication_report.nim`).
-- **skipped/cancelled sub-job = UNKNOWN(차단)** — required check의 스킵=성공
-  플랫폼 함정을 종합 job이 항상 실결론으로 보고한다. 종합 job 자체는
-  `if: !cancelled()`로 절대 스킵되지 않는다.
+  shards와 판정 잡은 **동일한 venue 조건**을 공유한다: 부분 shard 집합은 병합 단계의
+  정확히-3 단언에서 FAIL하므로, 반쪽 실행이 조용한 부분 통과로 새는 경로가 없다.
+- 종합 job은 `needs.*.result`와 **venue가 요구하는** 차원 보고서 JSON을 **이중** 검증한다
+  (`tools/ci/publication_report.nim`, `--venue` 필수).
+
+### 2.1 venue 분리 (v1.4)
+
+| 요소 | preflight (`pull_request`) | landing (`merge_group`/`schedule`/`workflow_dispatch`) |
+|---|---|---|
+| 필수 차원 | `{secret-scan}` | 5차원 전부 |
+| 판정 권위 | **착지 자격 아님** (early-warning) | **착지 자격의 유일 정본** |
+| PASS 문구 | `PREFLIGHT PASS — full publication verification is the merge_group venue` | `publication_report: PASS (venue=landing, canonical)` |
+| context 이름 | `publication-integrity` (불변) | `publication-integrity` (불변) |
+
+계약 불변식:
+
+1. **종합 job은 어떤 venue에서도 스킵되지 않는다** (`if: !cancelled()`). required
+   context는 종합 job id 하나뿐이며, 차원 job은 required context가 **아니다** —
+   플랫폼이 skipped required check를 성공으로 보고하는 함정을 구조적으로 차단한다.
+2. **venue는 `github.event_name`만으로 결정된다** — job-level `if:` 시점에 `steps`
+   context는 존재하지 않는다(현재 job의 이미 실행된 step만 담는다).
+3. **미인식 이벤트 = FAIL** (exit 1). venue 부재는 관측 부재가 아니라 **거부된 입력**이다.
+4. **비요구 차원의 `success`는 credit이 아니다** — BLOCKER로 처리한다. 워크플로가
+   실행하지 않기로 한 검사에 대해 초록을 얻는 경로가 없어야 한다(퇴역·개명 job id 포함).
+5. **비요구 차원의 report 공급 = 게이팅 드리프트** — UNKNOWN으로 차단한다. 계약과
+   워크플로가 서로 다른 집합을 말하는 상태를 조용히 통과시키지 않는다.
+6. **skipped/cancelled 필수 차원 = UNKNOWN(차단)** — 필수 집합에 대해서만 적용된다.
 - 판정·exit: PASS=0, FAIL=1, UNKNOWN=2 (폐쇄 집합). UNKNOWN은 항상 차단이며
   결코 통과로 해석되지 않는다 (fail-closed).
 - 보고서·SBOM artifact는 `if: always()`로 업로드된다 (NOT-ADMIT도 증거가 남는다).
+
+### 2.2 왜 이 분리가 검증 약화가 아닌가
+
+landing venue는 5차원 전부를 변경 없이 실행한다 — 착지 자격 판정의 의미·증거·발행
+주체가 모두 불변이다. 분리는 **PR에서 조기 경고를 줄이는 것**이지 최종 보증을 줄이는
+것이 아니다. PR에서 잡히지 않는 결함(라이선스·의존성·기원·SBOM)은 landing에서 처음
+발견되며, **그 격차는 명시적 수용**이다(ADR-0032 (b)와 동일 원칙, ADR-0043 (e')이
+"job skip 금지"의 범위를 admission leg·required-context aggregator로 한정한다).
+
+preflight 집합이 `{secret-scan}`인 이유는 실행시간이 아니라 **비가역성**이다:
+public 저장소에서 PR 브랜치 push는 즉시 공개 노출되고 되돌릴 수 없다. 나머지 네
+차원은 미병합 트리가 배포물이 아니므로 조기 차단의 이득이 없다. 이 근거를 바꾸려면
+본 절의 개정이 필요하다(로컬 편집 금지).
 
 ## 3. 차원별 판정 시맨틱
 
