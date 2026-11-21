@@ -2249,6 +2249,10 @@ jobs:
       #      Provenance: cert_sha256 · gateway run_id · gateway headSha ·
       #      gateway tree identity · conclusion=success · field-binding 통과.
       #      SL-0713 scope — D6 + CAS (slice_catalog SL-0713).
+      #      D. DEBT#554 — ledger-list has three states: append only when the
+      #         exit-0 listing lacks subjectId; exit!=0 (transport/auth/5xx) is
+      #         fail-closed after preserving stderr (a failed read is not
+      #         absence). Reconciliation follows the same rule.
       # ────────────────────────────────────────────────────────────────
       - name: "(P7) D6 + FF-CAS 3분기 reconciliation + exactly-once (ledger append)"
         if: steps.slice-engine.outputs.scope_sl0713 == 'true' && steps.venue.outputs.venue == 'landing'
@@ -2259,6 +2263,7 @@ jobs:
           set -euo pipefail
           fail() { echo "MINT_PUB: FAIL — $1 (fail-closed)" >&2; exit 1; }
           : "${B:?B not set}"; : "${H:?H not set}"; : "${PR_NUMBER:?PR_NUMBER not set}"
+          : "${GITHUB_TOKEN:?GITHUB_TOKEN not set}"
           ax="$B_CHECKOUT_DIR/bin/ax"
           [ -x "$ax" ] || fail "B-built bin/ax missing at $ax"
           cert="$B_CHECKOUT_DIR/certificate.json"
@@ -2268,8 +2273,33 @@ jobs:
           CERT_SHA256="$(sha256sum "$cert" | awk '{print $1}')"
           GW_TREE="$(jq -r '.certTree' "$cert")"
           commit_meta="B=$B H=${SUBJECT_HEAD:-$H} run_id=$RUN_ID run_attempt=$RUN_ATTEMPT pr=$PR_NUMBER artifact=subject-certificate-$RUN_ATTEMPT cert_sha256=$CERT_SHA256 gateway_run=$RUN_ID gateway_headSha=$H gateway_tree=$GW_TREE gateway_conclusion=success field_binding=ok"
+          # DEBT#554: ledger-list exit!=0 means UNKNOWN, not absent. stderr is
+          # preserved, present/absent is decided only from an exit-0 listing,
+          # and a failed read is fail-closed after a bounded retry (no append).
+          LEDGER_IDS_FILE=""
+          ledger_list_ids() {
+            local attempt rc out err
+            out="$RUNNER_TEMP/mint_d6_ledger_list.out"
+            err="$RUNNER_TEMP/mint_d6_ledger_list.err"
+            for attempt in 1 2 3; do
+              rc=0
+              ( cd "$B_CHECKOUT_DIR" && GITHUB_TOKEN="$GITHUB_TOKEN" bin/ax cert ledger-list ) \
+                >"$out" 2>"$err" || rc=$?
+              if [ "$rc" -eq 0 ]; then
+                LEDGER_IDS_FILE="$out"
+                return 0
+              fi
+              echo "MINT_D6_RETRY: ledger-list attempt $attempt/3 exit=$rc — $(tr '\n' ' ' < "$err" | cut -c1-400)" >&2
+              [ "$attempt" -lt 3 ] || break
+              sleep 5
+            done
+            echo "MINT_D6_UNREADABLE: ledger-list stderr:" >&2
+            cat "$err" >&2
+            fail "ledger-list exited non-zero (exit=$rc) after 3 attempt(s) — subject presence UNKNOWN, never treated as absent (DEBT#554)"
+          }
           APPEND_COUNT=0
-          if ( cd "$B_CHECKOUT_DIR" && bin/ax cert ledger-list 2>/dev/null | grep -qx "$SUBJECT_ID" ); then
+          ledger_list_ids
+          if grep -qx "$SUBJECT_ID" "$LEDGER_IDS_FILE"; then
             # (A) 멱등 — record 검증 (손상 = fail-closed). append 없음 (exactly-once: 0).
             if ( cd "$B_CHECKOUT_DIR" && bin/ax cert ledger-verify "$cert" >/dev/null ); then
               echo "MINT_D6: OK — idempotent re-run: ledger record consistent (append exactly-once: 0)"
@@ -2283,11 +2313,16 @@ jobs:
               echo "MINT_PUB: OK — ledger append (first issuance, append 1) with provenance: $commit_meta"
             else
               # CAS 3분기 prong-2 — 실패 → 재조회 → (A) 성립 → PASS(0) / 불성립 → FAIL-CLOSED.
-              if ( cd "$B_CHECKOUT_DIR" && GITHUB_TOKEN="$GITHUB_TOKEN" bin/ax cert ledger-list 2>/dev/null | grep -qx "$SUBJECT_ID" \
-                  && bin/ax cert ledger-verify "$cert" >/dev/null ); then
-                echo "MINT_PUB: OK — append raced/failed but reconciliation (A) holds: record consistent (append exactly-once: 0)"
+              # DEBT#554: reconciliation also decides only on an exit-0 listing (a failed read is not absence).
+              ledger_list_ids
+              if grep -qx "$SUBJECT_ID" "$LEDGER_IDS_FILE"; then
+                if ( cd "$B_CHECKOUT_DIR" && bin/ax cert ledger-verify "$cert" >/dev/null ); then
+                  echo "MINT_PUB: OK — append raced/failed but reconciliation (A) holds: record consistent (append exactly-once: 0)"
+                else
+                  fail "FF-CAS append failed; ledger record present but INCONSISTENT — FAIL-CLOSED"
+                fi
               else
-                fail "FF-CAS append failed and reconciliation does NOT hold (record absent or inconsistent) — FAIL-CLOSED"
+                fail "FF-CAS append failed and reconciliation does NOT hold (record absent in a readable ledger) — FAIL-CLOSED"
               fi
             fi
           fi
