@@ -1,0 +1,408 @@
+{
+  "schemaVersion": 1,
+  "kind": "ci_optimization.merge_queue_concurrency",
+  "date": "2026-11-21",
+  "issue": 256,
+  "relatedIssues": [282],
+  "status": "APPLIED_AFTER_ARM_OBSERVED_N34_COMPLETED_32",
+  "purpose": "merge queue build concurrency 1 -> 100 적용 이후 arm의 관측 표본을 n>=20으로 확장해, wall/runner/queued 분포와 용량 포화 여부를 before/after 동일 정의로 확정한다. 판정 어휘·재개 조건·계약은 arm 파일을 그대로 상속하며 이 파일은 측정만 추가한다.",
+  "supersedesNothing": "data/ci_optimization/merge_queue_concurrency_2026-11-21/summary.json (arm, c=100 n=3)은 불변이며 이 파일이 대체하지 않는다. 이 파일은 같은 arm의 표본 확장이다.",
+  "change": {
+    "authority": "GitHub repository ruleset (merge authority는 GitHub에 위임)",
+    "rulesetId": 27097366,
+    "rulesetName": "main",
+    "field": "rules[type=merge_queue].parameters.max_entries_to_build",
+    "value": 100,
+    "appliedAt": "2026-11-21T05:13:00Z",
+    "appliedAtSource": "arm 파일 change.appliedAtSource (ruleset.updated_at = 2026-11-21T14:13:00.763+09:00)",
+    "readbackAtObservation": {
+      "max_entries_to_build": 100,
+      "max_entries_to_merge": 1,
+      "min_entries_to_merge": 1,
+      "min_entries_to_merge_wait_minutes": 0,
+      "grouping_strategy": "ALLGREEN",
+      "merge_method": "MERGE",
+      "check_response_timeout_minutes": 120
+    },
+    "readbackMatchesArm": true,
+    "readbackMovedAt": {
+      "ruleset27097366UpdatedAt": "2026-11-21T18:46:14.588+09:00",
+      "ruleset27525972UpdatedAt": "2026-11-21T18:46:15.267+09:00",
+      "armRecordedUpdatedAt": "2026-11-21T14:13:00.763+09:00",
+      "parameterDiff": "NONE",
+      "note": "두 ruleset의 updated_at이 관측 창이 닫힌 뒤(09:46:14Z/09:46:15Z) 함께 전진했으나, readback한 모든 파라미터와 required context 7종·bypass 0은 arm 기록과 동일하다. 무엇이 updated_at을 갱신했는지는 read-only API로 관측되지 않는다(observationGaps 참조). 이 파일은 규칙을 변경하지 않았다."
+    },
+    "reversible": true
+  },
+  "authorityPreflight": {
+    "authoritativeOwners": [
+      { "output": "main merge 허가/거부", "owner": "GitHub repository ruleset 27097366" },
+      { "output": "merge_group 후보 dispatch", "owner": "GitHub merge queue (max_entries_to_build)" },
+      { "output": "admission-check", "owner": "external App 5795152 (agent 수정 권한 없음)" },
+      { "output": "나머지 6개 required context", "owner": "GitHub Actions App 15368" },
+      { "output": "runner 동시 실행 용량", "owner": "GitHub plan (Free 20 / Pro 40 / Team 60 / Enterprise 500)" },
+      { "output": "plan 선택·결제", "owner": "인간 소유자" }
+    ],
+    "agentAuthority": { "read": true, "modifyRuleset": false, "executeWorkflow": false, "mergePr": false, "externalApp": false, "billing": false },
+    "thisSlice": "측정 전용. ruleset·workflow·gate·required context를 변경하지 않았다.",
+    "invarianceObserved": {
+      "requiredStatusChecks": [
+        { "context": "admission-check", "integration_id": 5795152 },
+        { "context": "bsec-integrity", "integration_id": 15368 },
+        { "context": "debt-registry-gate", "integration_id": 15368 },
+        { "context": "generation-acceptance", "integration_id": 15368 },
+        { "context": "axiom-operational-slice", "integration_id": 15368 },
+        { "context": "publication-integrity", "integration_id": 15368 },
+        { "context": "readiness-verdict", "integration_id": 15368 }
+      ],
+      "requiredStatusChecksDiff": "IDENTICAL to arm",
+      "bypassActors": { "before": 0, "after": 0 },
+      "enforcement": "active",
+      "conditions": { "ref_name": { "exclude": [], "include": ["~DEFAULT_BRANCH"] } },
+      "siblingRuleset": { "id": 27525972, "name": "main-admission", "enforcement": "active", "bypassActors": 0, "required": ["admission-check"], "changed": false }
+    }
+  },
+  "documentationBasis": {
+    "inherited": "data/ci_optimization/merge_queue_concurrency_2026-11-21/summary.json#documentationBasis (인용 출처·quote의 SSOT). 이 파일은 새 인용을 추가하지 않는다.",
+    "appliedHere": [
+      { "claim": "max_entries_to_build는 동시에 dispatch할 merge_group webhook 수 상한이며 merge 속도에 영향을 준다", "usedFor": "build-group 동시성 상한이 실제로 binding인지 판정" },
+      { "claim": "플랜별 동시 job 한도 Free 20", "usedFor": "관측된 peak 동시 job 20이 한도 도달인지 판정" },
+      { "claim": "45분 규칙은 queued workflow run을 폐기한다", "usedFor": "runner 용량 포화로 인한 폐기 여부 판정(폐기 conclusion 매핑은 NOT STATED)" }
+    ]
+  },
+  "measurementContract": {
+    "cohort": "event=merge_group, workflow path .github/workflows/admission-gate-v2.yml, terminal attempt only, created_at >= 2026-11-21T05:13:00Z (ruleset apply), cohort cutoff created_at <= 2026-11-21T09:40:00Z",
+    "spec": "docs/spec/ci_critical_path_metric.md (origin/main 647e83c)",
+    "specSections": { "cohort": "§1", "wall": "§2.1", "runner": "§2.2", "queued": "§2.3", "mergesPerHour": "§2.6", "p95Withholding": "§5 (n<20이면 p95 미선언, INCOMPLETE)" },
+    "canonicalWallSource": "docs/spec/ci_acceptance_contract.md §6 — wall_seconds = max(job.completed_at) - min(job.started_at) over jobs whose started_at and completed_at are both non-null",
+    "minimums": { "decision": 5, "sloClaim": 20 },
+    "formulas": {
+      "wallSeconds": "max(completed_at) - min(started_at) over jobs with both timestamps",
+      "runnerSeconds": "sum(max(0, completed_at - started_at)); skipped job contributes 0",
+      "queuedSeconds": "sum(max(0, started_at - created_at)) over jobs with started_at; skipped job -> 0",
+      "worstJobQueuedSeconds": "max over jobs of max(0, started_at - created_at); skipped job -> 0",
+      "admissionGateEntryQueuedSeconds": "max(0, started_at - created_at) of the workflow entry job (`closure-deriver`)",
+      "percentile": "Hyndman-Fan type 7; sorted values are whole seconds because every GitHub timestamp is whole seconds",
+      "mergesPerHour": "|{c : c ∈ first-parent main commits, |parents(c)| >= 2, c.committer.date ∈ (t-W, t]}| / W(hours) — docs/spec/ci_critical_path_metric.md §2.6"
+    },
+    "metricScoping": {
+      "admissionGateEntryVsWorstJob": "admissionGateEntryQueuedSeconds(closure-deriver)와 worstJobQueuedSeconds는 다른 양이다. 전자는 merge queue dispatch -> gate 진입 job의 runner 배정 지연이고, 후자는 job graph(31건은 26개, 1건은 19개 job) 중 가장 오래 큐에 있던 job의 대기다. 후자는 concurrency가 높을수록 커진다.",
+      "literalAdmissionCheckJob": "required context를 발행하는 마지막 `admission-check` job의 created_at -> started_at은 p50 3.0s / p95 39.0s / max 81.0s에 불과하다. dependency graph가 끝난 뒤에만 뜨는 rollup job이므로 큐 지연 지표로 쓰면 과소평가된다. 'admission-gate 큐 대기'의 대리값은 entry job(closure-deriver)을 써야 한다."
+    },
+    "optimizationJudgments": {
+      "contract": "docs/spec/ci_optimization_tcb_judgments.md:255 — 후보는 J1∧J2∧J3∧J4 전부 PASS일 때만 VALID",
+      "J1_semanticParity": "NOT APPLICABLE — 이 슬라이스는 어떤 후보도 변경하지 않는다(측정 전용).",
+      "J2_evidenceEquivalence": "NOT APPLICABLE — 측정 전용.",
+      "J3_cacheSoundness": "NOT APPLICABLE — 캐시 설정·키·무효화 로직을 건드리지 않았다.",
+      "J4_workerDeterminism": "NOT APPLICABLE — worker 수·스케줄링·병렬 분할을 변경하지 않았다.",
+      "conclusion": "네 판정을 생략하지 않고 각각 기록한다. 전부 NOT APPLICABLE이므로 이 파일은 어떤 후보도 VALID로 선언하지 않는다. PARTIAL을 PASS로 올림하지 않는다 — 여기서는 PASS 자체가 존재하지 않는다."
+    },
+    "collector": {
+      "path": "tools/ci/ci_acceptance_collect.nim",
+      "mode": "REPORTER ONLY, read-only gh api GET",
+      "build": "nim c -d:release (Nim 2.2.10) → exit 0",
+      "crossCheckCommand": "./ci_acceptance_collect --repo Archright/Axiom --baseline-live --window 32 --baseline-until 2026-11-21T09:30:00Z --out <dir>",
+      "crossCheckResult": { "canonical": { "n": 32, "p50": 536.5, "mean": 591.15625, "min": 335, "max": 1044 }, "legacy": { "n": 32, "p50": 538.5, "mean": 593.46875 } },
+      "agreement": "AGREES_EXACTLY — collector의 run-id 집합 32건이 이 파일의 주 통계 집합과 완전히 동일하고, run별 canonical wall 32/32가 오차 0.5s 이내로 일치하며, p50/mean/min/max가 모두 일치한다. 도구가 canonical wall의 권위이며 도구와 이 파일 사이의 불일치는 없다.",
+      "whyTheUntilPin": "--baseline-until 2026-11-21T09:30:00Z는 '그 시점까지 생성된 완료 run'을 고정해 n=32 집합을 재현 가능하게 만든다. pin이 없으면 라이브 큐가 전진하면서 같은 명령이 다른 집합을 낳는다. 09:30:00Z는 이후 생성된 44890062520(09:32:28Z)·44890395238(09:36:37Z)을 배제하고 그 이전 완료 32건만 남긴다.",
+      "artifact": "payloads/collector_crosscheck.json"
+    }
+  },
+  "cohort": {
+    "boundary": {
+      "createdAtOrAfter": "2026-11-21T05:13:00Z",
+      "cohortCutoffCreatedAtOrBefore": "2026-11-21T09:40:00Z",
+      "completedCutoffUpdatedAtOrBefore": "2026-11-21T09:40:00Z",
+      "why": "분모를 고정하지 않으면 라이브 큐가 전진할 때마다 같은 파일의 n이 달라진다. 생성 시각 cutoff로 후보 집합을, 그 시점의 updated_at cutoff로 완료 집합을 고정한다."
+    },
+    "mergeGroupObservationCount": 34,
+    "completedObservationCount": 32,
+    "mergedPRCount": 13,
+    "denominatorsAreSeparate": "34 != 32 != 13. 세 수는 서로 다른 모집단이며 하나의 n으로 합쳐서 읽으면 안 된다. 34는 이벤트가 dispatch된 merge group 수, 32는 cutoff 시점에 완료된 run 수, 13은 main에 실제로 착지한 PR 수다.",
+    "distinctHeadSha": 34,
+    "runAttempts": "all run_attempt = 1 (재시도 없음)",
+    "completedByConclusion": { "success": 16, "failure": 16 },
+    "exclusions": [
+      {
+        "pr": 300,
+        "reason": "dispatch가 apply 경계 이전이다",
+        "mergeGroupRunId": 44869804919,
+        "mergeGroupRunCreatedAt": "2026-11-21T05:12:50Z",
+        "mergeGroupHeadSha": "1c9cdc1117816e49543270dc5b95e9e9800e204c",
+        "secondsBeforeBoundary": 10,
+        "armCitation": "arm 파일 invariance.landedValidation.dispatchedBeforeApply 가 동일 배제를 이미 기록한다. 이 파일은 새 배제 사유를 만들지 않고 그 기록을 인용한다."
+      },
+      {
+        "runId": 44890062520,
+        "headSha": "647e83c32a98275bc38ff4ae4ad7c80167b293db",
+        "pr": 319,
+        "reason": "cutoff 시점에는 in-flight였고 완료(updated_at)가 2026-11-21T09:42:33Z로 cutoff 이후다",
+        "conclusionNow": "success"
+      },
+      {
+        "runId": 44890395238,
+        "headSha": "446f55f5ed31",
+        "pr": 317,
+        "reason": "cutoff 시점에 in_progress이며 관측 종료 시점에도 미완료",
+        "statusNow": "in_progress"
+      },
+      {
+        "runId": 44890993309,
+        "headSha": "48ea64fee3d4",
+        "reason": "cohortCutoff 이후 생성(2026-11-21T09:44:24Z). 관측 중 나타났으므로 기록하되 집합에서 제외한다",
+        "statusNow": "queued"
+      }
+    ],
+    "sensitivity": {
+      "what": "in-flight였던 44890062520이 관측 중 완료(success)되었으므로, 그 run을 포함한 n=33으로도 동일 지표를 계산했다.",
+      "purpose": "cutoff 선택이 결론을 바꾸지 않음을 보이기 위한 것이다. 주 통계는 n=32다.",
+      "result": "wall p50 551.0 / runner p50 901.0 / queued p50 277.0 / worstJobQueued p50 69.0 — n=32 대비 p50 이동은 wall +14.5s(2.7%), runner +8.5s(1.0%), queued -14.0s(-4.8%)로 방향이 일정하지 않고 모두 5% 이내다."
+    }
+  },
+  "statistics": {
+    "cohort": "completedObservationCount = 32",
+    "p95Policy": "n=32 >= 20이므로 주 통계 5개 지표 전부 p95를 선언한다(§5). 참고 지표(literalAdmissionCheckJob)도 같은 n이므로 선언한다. 어느 지표도 INCOMPLETE가 아니다.",
+    "wallSeconds": { "n": 32, "p50": 536.5, "p95": 944.1, "min": 335.0, "max": 1044.0, "mean": 591.2, "p95Status": "DECLARED" },
+    "runnerSeconds": { "n": 32, "p50": 892.5, "p95": 995.5, "min": 647.0, "max": 1005.0, "mean": 876.3, "p95Status": "DECLARED" },
+    "queuedSecondsSum": { "n": 32, "p50": 291.0, "p95": 1064.5, "min": 22.0, "max": 1348.0, "mean": 402.4, "p95Status": "DECLARED" },
+    "worstJobQueuedSeconds": { "n": 32, "p50": 70.0, "p95": 210.9, "min": 2.0, "max": 248.0, "mean": 86.8, "p95Status": "DECLARED" },
+    "admissionGateEntryQueuedSeconds": { "n": 32, "p50": 17.5, "p95": 106.8, "min": 1.0, "max": 143.0, "mean": 32.2, "p95Status": "DECLARED" },
+    "literalAdmissionCheckJobQueuedSeconds": { "n": 32, "p50": 3.0, "p95": 39.0, "min": 1.0, "max": 81.0, "mean": 11.4, "p95Status": "DECLARED", "note": "rollup job이라 큐 지연 대리값이 아니다. 참고용." },
+    "strata": {
+      "why": "성공/실패 두 모집단을 합친 p50은 어느 쪽도 대표하지 않는다. arm 파일 confounds.implication이 요구한 분리다.",
+      "success": { "n": 16, "wallSeconds": { "p50": 479.5, "p95": 669.8, "min": 384.0, "max": 780.0 }, "runnerSeconds": { "p50": 858.0, "p95": 963.0 }, "queuedSecondsSum": { "p50": 114.5, "p95": 635.8, "max": 998.0 }, "worstJobQueuedSeconds": { "p50": 38.0, "p95": 126.8, "max": 192.0 } },
+      "failure": { "n": 16, "wallSeconds": { "p50": 626.0, "p95": 1026.0, "min": 335.0, "max": 1044.0 }, "runnerSeconds": { "p50": 913.0, "p95": 995.2 }, "queuedSecondsSum": { "p50": 455.5, "p95": 1159.8, "max": 1348.0 }, "worstJobQueuedSeconds": { "p50": 96.5, "p95": 221.0, "max": 248.0 } },
+      "reading": "실패 run은 성공 run보다 wall p50이 146.5s 길고 큐 대기 p50이 341.0s 길다. 실패는 더 느리고 더 오래 큐에 머문다. 실패 원인 분류는 이 파일의 범위가 아니다(로그 귀속 필요)."
+    },
+    "longPole": {
+      "lastCompletingJob": "32/32 run에서 `admission-check` (rollup wrapper, 구조상 항상 마지막)",
+      "longestRunningJob": "26/32 run에서 `attest / go-critical-lane (1)`, 5/32에서 `attest / go-critical-lane (0)`, 1/32에서 `gateway / select`",
+      "interpretation": "admission-gate 안의 시간 상한은 여전히 go-critical-lane shard가 만든다. publication-integrity는 wall의 long pole이 아니라 동시성 소비자다(saturationAndEviction 참조)."
+    }
+  },
+  "crossCheck": {
+    "whatSupplied": "작업 지시에는 n=32에 대한 사전 계산 표가 함께 왔다. 이 파일은 그 값을 채택하지 않고 독립 재계산하며, 차이가 나면 차이를 기록한다.",
+    "expected": {
+      "wallSeconds": { "p50": 536, "p95": 944, "min": 335, "max": 1044 },
+      "runnerSeconds": { "p50": 889, "p95": 986, "min": 647, "max": 1000 },
+      "queuedSecondsSum": { "p50": 291, "p95": 1065, "min": 22, "max": 1348 },
+      "worstJobQueuedSeconds": { "p50": 70, "p95": 211, "min": 2, "max": 248 },
+      "admissionGateEntryQueuedSeconds": { "p50": 17, "p95": 101, "min": 1, "max": 143 }
+    },
+    "recomputed": {
+      "wallSeconds": { "p50": 536.5, "p95": 944.1, "min": 335, "max": 1044, "delta": "MATCH (0.5s 이하 반올림 차이)" },
+      "runnerSeconds": { "p50": 892.5, "p95": 995.5, "min": 647, "max": 1005, "delta": "+3.5 / +9.5 / 0 / +5.0" },
+      "queuedSecondsSum": { "p50": 291.0, "p95": 1064.5, "min": 22, "max": 1348, "delta": "MATCH (0.5s 이하)" },
+      "worstJobQueuedSeconds": { "p50": 70.0, "p95": 210.9, "min": 2, "max": 248, "delta": "MATCH (0.5s 이하)" },
+      "admissionGateEntryQueuedSeconds": { "p50": 17.5, "p95": 106.8, "min": 1, "max": 143, "delta": "+0.5 / +5.8 / 0 / 0" }
+    },
+    "unresolved": [
+      "runnerSeconds의 p50/p95/max 차이(+3.5s / +9.5s / +5.0s)는 이 payload 집합만으로는 원인을 특정하지 못한다. clamp 방식 차이(round/trunc/clamp)를 모두 재현해 봤으나 동일한 892.5가 나왔고, 집합 차이도 아니다(canonical wall로 확인한 run 집합이 collector와 32/32 동일). 공급된 표의 산출 경로를 알 수 없으므로 차이를 기록만 한다. 판정에 쓰이는 canonical wall이 권위 도구와 정확히 일치하므로 결론에는 영향이 없다.",
+      "admissionGateEntryQueuedSeconds의 p95 차이(+5.8s)는 지표 정의 차이로 보인다. 공급된 표의 p50/min/max(17/1/143)는 entry job(closure-deriver)과 정확히 맞고, p95만 101 vs 106.8로 어긋난다. 정의를 entry job으로 명시하고 재계산값을 채택한다."
+    ]
+  },
+  "mergesPerHour": {
+    "definition": "docs/spec/ci_critical_path_metric.md §2.6 — main의 first-parent merge commit(parents>=2)을 committer.date로 세고 창 시간으로 나눈다.",
+    "window": { "from": "2026-11-21T05:13:00Z", "to": "2026-11-21T09:40:00Z", "hours": 4.45, "seconds": 16020, "interval": "(from, to]" },
+    "merges": 13,
+    "ratePerHour": 2.921,
+    "firstParentCommand": "git log --first-parent --merges --since=\"2026-11-21T05:13:00Z\" --until=\"2026-11-21T09:40:00Z\" --format=\"%H %cI %s\" origin/main",
+    "whyFirstParent": "REST `/commits?sha=main`는 main에서 도달 가능한 모든 commit을 돌려주므로 브랜치 내부 병합 commit까지 포함된다. 같은 창에서 first-parent는 13건, 전체 도달 가능 merge는 17건이다. '착지한 PR 수'는 first-parent 13건이다.",
+    "theoreticalCeiling": { "ratePerHour": 6.710, "derivation": "3600 / wallSeconds p50(536.5)" },
+    "ceilingComparison": { "c1CeilingPerHour": 7.258, "c100CeilingPerHour": 6.710, "measured": 2.921, "reading": "실측 2.921/h는 이론 상한의 43.5%다. 상한이 낮아졌다고 해서 처리량이 용량에 붙은 것이 아니다 — 병목은 여전히 처리량이 아니라 입력(PR 공급)이다." },
+    "landedPRs": [302, 299, 303, 290, 305, 304, 273, 308, 306, 316, 315, 319, 309],
+    "landedOutsideQueue": [309],
+    "landedOutsideQueueNote": "PR #309는 07:58:46Z에 merge commit 858710ae로 착지했으나, 대응하는 merge_group run이 관측 집합에 없고 PR timeline에도 added_to_merge_queue 이벤트가 없다(merge_queue_events.json). merged_by는 인간 계정이다. 따라서 13건 중 12건만 merge queue를 통과했다. 원인은 observationGaps에 기록하며 우회 주장으로 승격하지 않는다."
+  },
+  "queueSupply": {
+    "distinctPRsOffered": 20,
+    "mergeGroupRuns": 34,
+    "addedToQueueEventsInWindow": 26,
+    "removedFromQueueEventsInWindow": 24,
+    "mergedThroughQueue": 12,
+    "unmergedAmongOffered": { "count": 8, "open": [287, 307, 268, 310, 317], "closedUnmerged": [311, 312, 313] },
+    "queueDwellSeconds": {
+      "cohort": "merged PR 중 timeline의 added_to_merge_queue(mergedAt 직전) -> mergedAt",
+      "n": 12,
+      "p50": 521.5,
+      "min": 417,
+      "max": 1177,
+      "values": { "302": 417, "303": 474, "304": 454, "299": 505, "273": 520, "305": 523, "308": 484, "290": 532, "315": 528, "306": 543, "316": 1177, "319": 649 },
+      "reading": "큐 체류 p50 521.5s는 MG wall p50 536.5s와 거의 같다. 즉 큐에 들어간 뒤 dispatch까지의 추가 대기는 사실상 없다. 병목은 큐 대기가 아니라 gate 실행 시간이다. #316의 1177s는 큐 재진입이 반복된 outlier다."
+    },
+    "whyItMatters": "merges/hour 2.921을 runner 용량으로 읽으면 안 된다. 20개 PR이 공급되어 12개가 큐로 착지했다. 공급이 끊긴 구간(08:48~09:01 사이 착지 없음 등)은 처리량 부족이 아니라 후보 부재다."
+  },
+  "saturationAndEviction": {
+    "liveQueryApproach": "arm 파일과 동일한 방식 — merge_group run 목록을 paginate로 받고, 각 run의 terminal attempt jobs를 `filter=latest`로 받아 job interval을 재구성한다.",
+    "scope": "merge_group이 유발한 8개 워크플로 34개 그룹, 총 272개 workflow run. 동일 창의 PR/push 유발 run은 포함하지 않는다.",
+    "jobsMeasured": { "admissionGateOnly": 877, "allMergeGroupWorkflows": 1478 },
+    "runsMeasured": { "admissionGateOnly": 34, "allMergeGroupWorkflows": 272 },
+    "peakConcurrentJobs": {
+      "admissionGateOnly": { "value": 11, "at": "2026-11-21T08:48:16Z" },
+      "allMergeGroupWorkflows": { "value": 20, "at": "2026-11-21T08:27:17Z" },
+      "verification": "08:27:17Z 시점에 살아 있던 job 20개를 개별 열거해 확인했다(publication-integrity 10, axiom-operational-slice 3, observation 3, admission-gate 2, debt-registry-gate 1, bsec-integrity 1). 중복 계상 없음 — 1478 job entry / 1478 distinct (run,job) pair."
+    },
+    "freeConcurrencyLimitReached": {
+      "limit": 20,
+      "reached": true,
+      "timeAtOrAbove20Seconds": 111,
+      "windowSeconds": 16020,
+      "fractionPercent": 0.693,
+      "bursts": [
+        { "from": "2026-11-21T08:27:17Z", "to": "2026-11-21T08:27:24Z", "wallSeconds": 7 },
+        { "from": "2026-11-21T08:52:14Z", "to": "2026-11-21T08:54:56Z", "wallSeconds": 162 }
+      ],
+      "distinctIntervalsAtCap": 24,
+      "interpretation": "한도는 이론이 아니라 실제로 닿았다. 다만 창의 0.69%에 불과하고, 두 burst 모두 수 분 이내였다. 관측값 20은 merge_group workflow만 센 하한이다 — PR 유발 run도 같은 20 슬롯을 쓰므로 실제 동시 실행은 20 이상이었을 수 있고, 한도가 20에서 clamp되므로 20을 넘는 값은 관측 불가능하다. 즉 '한도 도달'은 참이지만 '한도가 지속적으로 throughput을 구속했다'는 별개 명제이며 아래 대기 분포가 그 반대 증거다."
+    },
+    "perJobQueueWait": {
+      "admissionGateOnly": { "p50": 2.0, "p99": 180.7, "max": { "value": 248.0, "runId": 44884910785, "job": "verdict / admission-check" } },
+      "allMergeGroupWorkflows": { "p50": 2.0, "p99": 237.2, "max": { "value": 385.0, "runId": 44885637541, "workflow": "publication-integrity.yml", "job": "secret-scan" } },
+      "jobsAtOrAbove2700s": 0,
+      "jobsAtOrAbove600s": 0,
+      "jobsWithNoStartedAtNonSkipped": 0
+    },
+    "timeoutEvictions": {
+      "runnerUnassignedDiscards": 0,
+      "evidence": "non-skipped job 중 started_at이 없는 job 0건, 600초 이상 대기 0건, 2700초(45분) 이상 대기 0건.",
+      "checkResponseTimeoutEvictions": 0,
+      "checkResponseTimeout": "120분",
+      "maxWallObservedSeconds": 1044,
+      "maxWallObservedMinutes": 17.4,
+      "note": "check_response_timeout_minutes 120분에 가장 가까운 run도 17.4분으로 한도의 14.5%다."
+    },
+    "buildGroupConcurrency": {
+      "configuredMaxEntriesToBuild": 100,
+      "peakConcurrentAdmissionGateRuns": { "value": 6, "at": "2026-11-21T08:35:59Z" },
+      "peakConcurrentMergeGroupWorkflowRuns": { "value": 30, "at": "2026-11-21T08:26:41Z" },
+      "binding": false,
+      "reading": "dispatch 상한 100은 전혀 구속하지 않았다(peak 6). 동시에 살아있는 merge_group workflow run은 최대 30개였다. 상한을 더 올려도 얻을 것이 없다."
+    },
+    "conclusion": "runner 용량 포화로 후보가 폐기된 증거는 0건이다. Free 20 한도에는 실제로 닿았으나(0.69% of window) 그 구간에서도 job 대기는 최대 385초에 그쳤고 45분 폐기 임계에 7배 미달이다."
+  },
+  "planVerdict": {
+    "decision": "STAY_FREE_PENDING_AFTER_ARM",
+    "evidenceForUpgrade": "none",
+    "afterArmObservation": {
+      "n": 32,
+      "cohortSize": 34,
+      "observedAt": "2026-11-21T09:52:00Z",
+      "cohortCutoff": "2026-11-21T09:40:00Z",
+      "facts": [
+        "n=32 완료 run(34개 merge group 중). 성공 16 / 실패 16. run_attempt는 전부 1이다.",
+        "canonical wall: p50 536.5s / p95 944.1s / min 335.0s / max 1044.0s / mean 591.2s. 권위 도구(ci_acceptance_collect)가 동일한 32건에서 p50 536.5 / mean 591.2 / min 335 / max 1044로 일치했다.",
+        "runnerSeconds(합): p50 892.5s. wall보다 크다 — job graph(31건은 26개, 1건은 19개 job)가 병렬로 돌기 때문에 합은 wall을 초과한다.",
+        "queuedSeconds(합): p50 291.0s / p95 1064.5s. 합이므로 동시 job의 대기가 중복 계상된다(wall 기여 시간이 아니다).",
+        "worst single job queued: p50 70.0s / p95 210.9s / max 248.0s. 이것이 '가장 오래 기다린 job' 기준의 정직한 큐 대기 분포다.",
+        "admission-gate entry job(closure-deriver) queued: p50 17.5s / p95 106.8s / max 143.0s. '큐 대기 p50 36분 -> 18초' 주장이 가리키는 값은 이 지표이며 대략 재현된다(17.5초).",
+        "peak 동시 job 20 (2026-11-21T08:27:17Z, 8개 merge_group 워크플로 합산) — Free 한도에 실제로 닿았다. 창의 0.693%(111s/16020s)에서만 그랬고 최장 burst는 162초다.",
+        "job 큐 대기 최대 385초(publication-integrity `secret-scan`), 600초 초과 0건, 2700초 초과 0건. 45분 runner 미배정 폐기 0건.",
+        "max wall 1044s = 17.4분으로 check_response_timeout_minutes 120분의 14.5%다.",
+        "merges/hour 2.921 (13건 / 4.45h, first-parent merge commit by committer.date). 이론 상한 6.710/h의 43.5%다.",
+        "큐 체류(added_to_merge_queue -> mergedAt) p50 521.5s는 MG wall p50 536.5s와 거의 같다. 큐 진입 후 dispatch 지연은 사실상 0이다."
+      ],
+      "statisticalStatus": "n=32 >= 20이므로 wall/runner/queued/worst-job/entry-job 5개 지표 모두 p50과 p95를 선언한다. 어느 지표도 INCOMPLETE가 아니다. 다만 성공/실패 strata는 각 n=16 < 20이므로 strata의 p95는 선언하지 않고 참고값으로만 적었다(statistics.strata).",
+      "throughputCeilingTest": "c1 직렬화 상한은 wall p50 496.0s(arm) -> 7.258/h, c100 상한은 536.5s -> 6.710/h다. 상한 자체가 낮아졌으므로(병렬화가 wall을 줄이지 못했다) '상한에 도달했다'는 형태의 반증은 성립하지 않는다. 실측 2.921/h는 두 상한 어느 쪽에도 못 미친다. 즉 처리량 병목은 용량이 아니라 입력이다.",
+      "whatItDoesEstablish": "build concurrency 100에서 (1) dispatch 상한은 binding이 아니고(peak 6), (2) merge queue는 후보를 즉시 dispatch하며(큐 체류 = wall), (3) 7개 필수 컨텍스트를 포함한 착지가 12건 성공했고, (4) Free 20 동시 실행 한도에 실제로 닿는 순간이 있으나 그때도 job 대기는 385초를 넘지 않아 폐기 임계에 도달하지 않는다는 것."
+    },
+    "reopenConditions": [
+      "자연 발생 burst에서 active jobs가 20에 붙은 표본 비율 >= 30% AND queuedSeconds p95 > 300s AND 45분 폐기 > 0",
+      "또는 c100 arm n>=20에서 merges/hour가 c1 대비 증가하지 않는데 대기열 적체(큐 entry 수)가 지속",
+      "플랜 상향은 위 조건 충족 + 비용 근거(per-seat, 포함 compute)가 함께 제시될 때만 검토한다."
+    ],
+    "reopenConditionEvaluation": {
+      "note": "재개 조건을 재량으로 완화하지 않는다. 각 절을 그대로 평가하고, 충족되지 않은 절을 명시한다. 결론은 '조건 미충족'이며 '조건이 가까웠다'로 바꿔 쓰지 않는다.",
+      "condition1": {
+        "clauseA_activeJobsAtCapFraction": { "threshold": ">= 30%", "measured": "0.693% (111s / 16020s)", "satisfied": false },
+        "clauseB_queuedP95Over300s": { "threshold": "> 300s", "measured": { "worstJobQueuedP95": 210.9, "queuedSecondsSumP95": 1064.5, "allMergeGroupPerJobP99": 237.2 }, "satisfied": "DEFINITION_DEPENDENT", "explanation": "queuedSeconds(합) 정의로는 1064.5s로 충족되지만, 합은 동시 job 대기를 중복 계상하므로 wall 기여 시간이 아니다. wall에 귀속 가능한 worst-job 정의로는 210.9s로 미충족이다. 어느 정의를 쓰는지에 따라 절의 참/거짓이 뒤집히므로 PARTIAL로 기록하고 PASS로 올리지 않는다." },
+        "clauseC_discards": { "threshold": "> 0", "measured": 0, "satisfied": false },
+        "conjunction": "FALSE (clauseA FALSE, clauseC FALSE). clauseB가 참이어도 AND이므로 조건 1은 성립하지 않는다."
+      },
+      "condition2": { "satisfied": "NOT EVALUABLE", "explanation": "c1 구간의 독립 merges/hour를 이 파일에서 측정하지 않았다. arm 파일에는 24h 2.417/h, 7d 1.393/h만 있고 두 값 모두 c1·c100 구간을 함께 포함하므로 c1 단독 비율이 아니다. 대기열 적체가 '지속'되는지도 판정 기준(기간·비율)이 사전 등록되어 있지 않다. 미평가로 남긴다." },
+      "condition3": { "satisfied": "N/A", "explanation": "비용 근거는 인간 소유자 판단이며 이 슬라이스의 권한 밖이다." }
+    },
+    "reasoning": [
+      "용량 포화의 정의를 '한도에 닿았는가'로 잡으면 답은 '닿았다'(peak 20). 그러나 그 정의로 플랜 상향을 정당화할 수 없다 — 한도에 닿은 111초 동안에도 job 대기는 최대 385초였고 45분 폐기 임계의 7분의 1이다. 포화의 실질 기준은 대기열이 임계까지 자라나는지이며, 그 신호는 0건이다.",
+      "재개 조건 1의 세 절 중 두 개(비율 0.693% < 30%, 폐기 0건)가 거짓이고, 나머지 한 절은 정의에 따라 참/거짓이 뒤집힌다. AND 조건이므로 재개 사유가 되지 못한다. 이 판정을 '조건에 근접'으로 완화하지 않는다.",
+      "worst single job queued p95 210.9s는 check_response_timeout 120분과 45분 runner 배정 임계 양쪽에 대해 10배 이상 여유가 있다(210.9s vs 2700s = 12.8배, vs 7200s = 34배). 대기 때문에 후보가 폐기되거나 timeout으로 잘린 관측은 0건이다.",
+      "wall p50 536.5s의 대부분은 runner 실행이다. 큐 체류 p50 521.5s가 wall과 거의 같다는 것은 큐 진입 후 dispatch 지연이 없고, wall이 전부 gate 실행이라는 뜻이다. 즉 남은 지연은 merge queue나 runner 용량이 아니라 admission-gate의 job graph(go-critical-lane shard)가 만든다.",
+      "merges/hour 2.921은 이론 상한 6.710의 43.5%다. 상한에 붙지 않았다는 것은 입력 부족을 뜻하며, queueSupply(20개 PR 공급, 그중 12개 큐 착지)가 그 근거다. 플랜 상향은 이 병목을 건드리지 못한다.",
+      "동시성 소비자는 admission-gate가 아니다. peak 20 시점의 20개 job 중 10개가 publication-integrity 워크플로였고, 그중 5개가 license-scan-shards 매트릭스(shard 0/1/2 × 2개 그룹)였다. 한도 압박이 다시 문제가 된다면 대상은 publication-integrity shard이지 merge queue가 아니다."
+    ]
+  },
+  "confounds": [
+    {
+      "id": "SUCCESS_FAILURE_MIX",
+      "detail": "32건 중 16건이 실패다. 실패 run은 wall p50 626.0s / worst-job queued p50 96.5s, 성공 run은 479.5s / 38.0s다. 합친 p50 536.5s / 70.0s는 어느 쪽도 대표하지 않는다.",
+      "handling": "statistics.strata에 분리 보고. 처리량·지연 비교는 strata를 분리해 읽어야 한다."
+    },
+    {
+      "id": "ARM_TIME_DISTRIBUTION",
+      "detail": "arm 파일이 이미 기록한 confound와 동일하다 — c2 arm은 11-18~11-21, c1 arm은 15표본·약 2시간, c100 after arm은 4.45시간이다. 세 구간의 시간대 분포가 달라 wall/queued 차이를 설정 효과로 단정할 수 없다.",
+      "handling": "이 파일은 before/after 비율을 주장하지 않는다. c100 분포만 보고한다."
+    },
+    {
+      "id": "RETRY_CHAINS",
+      "detail": "34개 merge group이 20개 PR에서 나왔다. PR #313은 4회, #287은 3회, #307은 3회, #312는 3회 재dispatch됐다. 재시도는 같은 PR의 실패 반복이며 독립 표본이 아니다.",
+      "handling": "run 단위 통계는 run을 독립 단위로 센다(계약 §1의 cohort 정의). PR 단위 재표집은 하지 않았다."
+    },
+    {
+      "id": "LANDED_OUTSIDE_QUEUE",
+      "detail": "13건 착지 중 1건(#309)은 merge_group run도, added_to_merge_queue 이벤트도 없다. merged_by는 인간 계정이다.",
+      "handling": "merges/hour의 분자는 계약(§2.6)대로 first-parent merge commit을 세므로 13이다. 다만 '큐 처리량'으로 읽으면 1건이 과대 계상된다. landedOutsideQueue에 명시했다. 원인 미확정이므로 우회로 단정하지 않는다."
+    }
+  ],
+  "observationGaps": [
+    "in-flight run의 check-run `output.summary`에는 완료 전까지 `run=`/`attempt=`/`conclusion=` 줄이 없다(코호트 측정 시점의 44890062520에서 관측). 완료 후에는 `run=44890062520 attempt=1 conclusion=success`가 기록된다. check-run -> workflow run 조인은 이 줄 부재를 견뎌야 한다.",
+    "`removed_from_merge_queue` timeline 이벤트에는 reason 필드가 없다(assayed 33건 전부 null). 'merged로 인한 제거'와 'dequeue/eviction'을 이벤트만으로 구분할 수 없다. 따라서 queue drop을 0으로 단정하지 않는다 — 대신 added/removed 개수가 PR별로 동일하고, 제거 시각이 mergedAt과 ±수 초 내에 있는지로만 분류했다. #268·#287·#306·#299 등은 재진입이 반복되어 dequeue가 있었음은 알 수 있으나 사유는 알 수 없다.",
+    "동시 실행 총량은 merge_group workflow만 측정했다. 같은 20 슬롯을 쓰는 PR/push 유발 run은 포함하지 않았으므로 peak 20은 하한이다. 한도가 20에서 clamp되므로 실제값은 관측 불가능하다.",
+    "runner label별 용량(예: 특정 runner pool의 한도)은 플랜 전체 동시 실행 한도와 별개로 관측되지 않는다.",
+    "두 ruleset의 updated_at이 창 종료 후(2026-11-21T09:46:14Z/15Z) 전진했으나 파라미터 변경은 없다. 갱신 주체는 read-only API로 관측되지 않는다.",
+    "PR #309가 merge queue를 거치지 않고 착지한 경로는 관측되지 않는다. ruleset bypass_actors는 0이고 required context 7종은 그대로다. 우회라고 단정하지 않는다.",
+    "실패 16건의 원인 분류는 로그 귀속이 필요하며 이 파일의 범위가 아니다. arm 파일 confounds.failureTaxonomyAdmissionGateMG_n50은 11-21 이전 표본의 분류이므로 이 코호트에 그대로 적용하지 않는다."
+  ],
+  "openItems": [
+    {
+      "id": "DECISION-REQUEST:planVerdict-decision-enum",
+      "type": "decision_request",
+      "status": "OPEN — 변경하지 않음",
+      "request": "planVerdict.decision을 기계 판독 가능한 reason enum으로 분리할지 결정해 달라.",
+      "problem": "현재 사용 중인 유일한 값은 `STAY_FREE_PENDING_AFTER_ARM`이다(저장소·git history에서 이 값만 쓰이고, `STAY_FREE`·`NO_CAPACITY_SATURATION_EVIDENCE`는 0회 등장한다). 이 이름은 두 가지 상태를 하나로 뭉친다 — (a) 'Free 플랜에 머문다'는 결정과 (b) 'after-arm 증거를 기다린다'는 진행 상태다.",
+      "whyStale": "after-arm 증거는 이제 존재한다(n=32, p95 선언 완료). 이름의 'PENDING_AFTER_ARM' 절은 더 이상 사실이 아니지만, 그 문구가 결정 자체를 담고 있어서 값만 바꾸면 '결정이 바뀌었다'로 오독된다.",
+      "proposalOnly": "예: `decision: \"STAY_FREE\"` + `reason: \"NO_CAPACITY_SATURATION_EVIDENCE|AWAITING_AFTER_ARM|COST_UNJUSTIFIED\"` 분리. 기존 값과의 매핑 표를 함께 커밋해야 한다.",
+      "notDoneHere": "이 파일은 enum을 변경하지 않는다. 어휘 변경은 이 슬라이스의 권한 밖이며, 단독 변경은 기존 소비자(문서·게이트)를 조용히 깨뜨린다."
+    },
+    "c1 구간 단독 merges/hour 측정 — 재개 조건 2를 평가하려면 c1 창(2026-11-21T03:02:12Z ~ 05:13:00Z)의 first-parent merge commit 비율이 필요하다. 이 파일에는 없다.",
+    "재개 조건 1의 clauseB가 어느 queuedSeconds 정의를 쓰는지 계약에 명문화할지 결정 — sum 정의와 worst-job 정의가 이번 표본에서 정반대 답(1064.5s vs 210.9s)을 낸다.",
+    "#238 ROT_ALLOWLIST 결함 분리 해결 (arm 파일에서 이월 — arm의 n=50 분류에서 최대 원인군이었다. 이 코호트의 실패 16건은 원인 미분류다)",
+    "PR #309의 merge queue 미경유 착지 경로 확인 (ruleset·App 권한 밖이면 인간 소유자 확인 필요)",
+    "publication-integrity 워크플로가 동시성 소비의 50%를 차지한다(peak 20 중 10 job, 그중 5개가 license-scan shards). 한도 압박이 재발하면 이 shard 구성이 첫 조정 대상이다 — 이 파일은 관측만 한다.",
+    "main push 사후 검사 제거는 tree(merge_group head)==tree(main landed) 등가 입증 후에만 검토 (arm 파일에서 이월)"
+  ],
+  "caveats": [
+    "admission-gate-only 큐 대기와 worst-job 큐 대기는 다른 지표다. '큐 대기 p50 36분 -> 18초'류의 주장이 가리키는 값은 entry job(closure-deriver) 대기로 p50 17.5s / max 143.0s이고, 코호트 전체의 worst-job 대기는 p50 70.0s / max 248.0s다. 두 수치를 같은 것으로 제시하면 안 된다.",
+    "queuedSeconds(합)는 동시 job의 대기를 중복 계상한다. job 26개가 병렬이면 각 job이 70초씩만 기다려도 합은 291초가 된다. 따라서 queued/wall 비율(중앙값 0.541)은 'wall의 54%가 큐 대기'라는 뜻이 아니다 — wall에 귀속 가능한 큐 대기는 worst-job 기준 p50 70.0s(약 13%)다.",
+    "in-flight run 2건(44890062520, 44890395238)은 cutoff 시점 기준으로 주 통계에서 제외했다. 44890062520은 관측 중 완료(success)되었고, 이를 포함한 n=33 민감도 계산을 cohort.sensitivity에 병기했다.",
+    "in-flight merge_group check-run의 `output.summary`에는 완료 전까지 `run=` 줄이 없을 수 있다(44890062520에서 관측). check-run을 workflow run에 조인하는 소비자는 이 부재를 처리해야 한다.",
+    "peak 동시 job 20은 merge_group 유발 workflow만 센 하한이다. PR/push 유발 run이 같은 한도를 공유하므로 실제값은 더 높을 수 있으나 한도 clamp 때문에 관측되지 않는다.",
+    "Free 20 한도에는 실제로 닿았다. 이 파일은 '한도 미도달'을 주장하지 않는다 — 주장하는 것은 '한도 도달이 지속적인 대기열 성장으로 이어지지 않았다'는 것이다.",
+    "runnerSeconds(합)는 wall보다 크다(892.5 vs 536.5). 병렬 실행의 합이므로 wall의 구성요소로 더하면 안 된다.",
+    "GitHub Actions runs API pagination 상한 1,000건으로 최신 1,000건만 관측했다(총계 2,500건). 관측 창(05:13~09:40Z)은 그 안에 충분히 들어온다.",
+    "job timestamp는 GitHub이 초 단위로 기록하므로 백분위 계산의 기저 값은 정수 초다. type-7 보간 결과만 소수 한 자리로 표기했다.",
+    "45분 폐기의 conclusion 매핑은 공식 문서에 없다(NOT STATED). 폐기 탐지는 'non-skipped job의 started_at 부재'와 job 단위 대기 시간으로 대리했고, 둘 다 0건이다.",
+    "이 파일은 SLO 준수를 주장하지 않는다. SLO-PR에는 선언된 target이 없으며(arm 파일 prToMain.sloNote), 재개 조건의 판정만 기록한다."
+  ],
+  "reproduce": [
+    "git log --first-parent --merges --since=\"2026-11-21T05:13:00Z\" --until=\"2026-11-21T09:40:00Z\" --format=\"%H %cI %s\" origin/main",
+    "gh api \"repos/Archright/Axiom/actions/runs?event=merge_group&per_page=100\" --paginate --slurp > runs.json",
+    "jq -r '[.[].workflow_runs[]] | map(select(.path==\".github/workflows/admission-gate-v2.yml\" and .created_at>=\"2026-11-21T05:13:00Z\" and .created_at<=\"2026-11-21T09:40:00Z\")) | length' runs.json   # 34",
+    "jq -r '[.[].workflow_runs[]] | map(select(.path==\".github/workflows/admission-gate-v2.yml\" and .created_at>=\"2026-11-21T05:13:00Z\" and .created_at<=\"2026-11-21T09:40:00Z\" and .status==\"completed\" and .updated_at<=\"2026-11-21T09:40:00Z\")) | length' runs.json   # 32",
+    "gh api \"repos/Archright/Axiom/actions/runs/<run_id>/jobs?per_page=100&filter=latest\" > jobs.json   # per run; payloads/jobs_digest.json is the collected set",
+    "python3 -c \"import json;d=json.load(open('payloads/jobs_digest.json'))['runs'];e=[r for r in d if r['statisticsEligible']];print('observed',len(d),'eligible',len(e));print(sorted(r['wallSeconds'] for r in e))\"   # observed 34 / eligible 32",
+    "gh api \"repos/Archright/Axiom/issues/<pr>/timeline?per_page=100\" --paginate   # added_to_merge_queue / removed_from_merge_queue (reason 필드 없음)",
+    "gh api graphql -f query='query { repository(owner:\"Archright\", name:\"Axiom\") { mergeQueue(branch:\"main\") { entries(first:50) { totalCount nodes { position state enqueuedAt pullRequest { number } } } } } }'",
+    "nim c -d:release -o:ci_acceptance_collect tools/ci/ci_acceptance_collect.nim && ./ci_acceptance_collect --repo Archright/Axiom --baseline-live --window 32 --baseline-until 2026-11-21T09:30:00Z --out ./collector",
+    "gh api repos/Archright/Axiom/rulesets/27097366 --jq '[.rules[]|select(.type==\"merge_queue\")|.parameters]|.[0]'",
+    "# saturation: payloads/saturation_intervals.json 의 [started_at, completed_at] 구간을 스윕하면 peak 동시 job과 >=20 구간 비율이 재현된다"
+  ]
+}

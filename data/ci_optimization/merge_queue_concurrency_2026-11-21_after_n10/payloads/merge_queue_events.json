@@ -1,0 +1,261 @@
+{
+ "legend": {
+  "api": "GET /repos/Archright/Axiom/issues/{n}/timeline (paginate)",
+  "note": "removed_from_merge_queue carries no reason field; merged vs dequeued is not distinguishable from the event"
+ },
+ "prs": {
+  "302": {
+   "state": "closed",
+   "mergedAt": "2026-11-21T05:43:41Z",
+   "mergedBy": "wintrover",
+   "addedToQueue": [
+    "2026-11-21T05:36:44Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T05:43:40Z"
+   ]
+  },
+  "299": {
+   "state": "closed",
+   "mergedAt": "2026-11-21T05:50:45Z",
+   "mergedBy": "wintrover",
+   "addedToQueue": [
+    "2026-11-21T03:56:29Z",
+    "2026-11-21T05:42:20Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T04:59:04Z",
+    "2026-11-21T05:50:44Z"
+   ]
+  },
+  "303": {
+   "state": "closed",
+   "mergedAt": "2026-11-21T05:58:43Z",
+   "mergedBy": "wintrover",
+   "addedToQueue": [
+    "2026-11-21T05:50:49Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T05:58:42Z"
+   ]
+  },
+  "290": {
+   "state": "closed",
+   "mergedAt": "2026-11-21T06:16:19Z",
+   "mergedBy": "wintrover",
+   "addedToQueue": [
+    "2026-11-21T06:07:27Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T06:16:18Z"
+   ]
+  },
+  "305": {
+   "state": "closed",
+   "mergedAt": "2026-11-21T06:38:23Z",
+   "mergedBy": "wintrover",
+   "addedToQueue": [
+    "2026-11-21T06:29:40Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T06:38:23Z"
+   ]
+  },
+  "304": {
+   "state": "closed",
+   "mergedAt": "2026-11-21T07:02:53Z",
+   "mergedBy": "wintrover",
+   "addedToQueue": [
+    "2026-11-21T06:55:19Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T07:02:52Z"
+   ]
+  },
+  "273": {
+   "state": "closed",
+   "mergedAt": "2026-11-21T07:31:06Z",
+   "mergedBy": "wintrover",
+   "addedToQueue": [
+    "2026-11-21T07:22:26Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T07:31:05Z"
+   ]
+  },
+  "287": {
+   "state": "open",
+   "mergedAt": null,
+   "mergedBy": null,
+   "addedToQueue": [
+    "2026-11-21T03:08:27Z",
+    "2026-11-21T03:57:18Z",
+    "2026-11-21T07:31:46Z",
+    "2026-11-21T07:57:53Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T03:36:09Z",
+    "2026-11-21T05:08:28Z",
+    "2026-11-21T07:37:55Z",
+    "2026-11-21T08:07:26Z"
+   ]
+  },
+  "308": {
+   "state": "closed",
+   "mergedAt": "2026-11-21T07:54:00Z",
+   "mergedBy": "wintrover",
+   "addedToQueue": [
+    "2026-11-21T07:45:56Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T07:53:59Z"
+   ]
+  },
+  "307": {
+   "state": "open",
+   "mergedAt": null,
+   "mergedBy": null,
+   "addedToQueue": [
+    "2026-11-21T07:51:24Z",
+    "2026-11-21T08:16:05Z",
+    "2026-11-21T09:16:18Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T07:52:25Z",
+    "2026-11-21T08:17:33Z",
+    "2026-11-21T09:21:25Z"
+   ]
+  },
+  "306": {
+   "state": "closed",
+   "mergedAt": "2026-11-21T09:30:33Z",
+   "mergedBy": "wintrover",
+   "addedToQueue": [
+    "2026-11-21T08:04:45Z",
+    "2026-11-21T08:05:46Z",
+    "2026-11-21T08:10:26Z",
+    "2026-11-21T09:21:30Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T08:05:27Z",
+    "2026-11-21T08:07:26Z",
+    "2026-11-21T08:22:13Z",
+    "2026-11-21T09:30:33Z"
+   ]
+  },
+  "268": {
+   "state": "open",
+   "mergedAt": null,
+   "mergedBy": null,
+   "addedToQueue": [
+    "2026-11-20T15:30:21Z",
+    "2026-11-20T15:55:24Z",
+    "2026-11-20T16:14:48Z",
+    "2026-11-21T03:51:38Z",
+    "2026-11-21T08:18:57Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-20T15:44:30Z",
+    "2026-11-20T16:14:43Z",
+    "2026-11-20T16:23:48Z",
+    "2026-11-21T04:59:03Z",
+    "2026-11-21T08:35:53Z"
+   ]
+  },
+  "311": {
+   "state": "closed",
+   "mergedAt": null,
+   "mergedBy": null,
+   "addedToQueue": [
+    "2026-11-21T08:26:22Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T08:44:24Z"
+   ]
+  },
+  "312": {
+   "state": "closed",
+   "mergedAt": null,
+   "mergedBy": null,
+   "addedToQueue": [
+    "2026-11-21T08:26:24Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T08:51:39Z"
+   ]
+  },
+  "313": {
+   "state": "closed",
+   "mergedAt": null,
+   "mergedBy": null,
+   "addedToQueue": [
+    "2026-11-21T08:26:26Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T08:59:14Z"
+   ]
+  },
+  "316": {
+   "state": "closed",
+   "mergedAt": "2026-11-21T09:07:44Z",
+   "mergedBy": "wintrover",
+   "addedToQueue": [
+    "2026-11-21T08:48:07Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T09:07:41Z"
+   ]
+  },
+  "315": {
+   "state": "closed",
+   "mergedAt": "2026-11-21T09:10:27Z",
+   "mergedBy": "wintrover",
+   "addedToQueue": [
+    "2026-11-21T09:01:39Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T09:10:26Z"
+   ]
+  },
+  "310": {
+   "state": "open",
+   "mergedAt": null,
+   "mergedBy": null,
+   "addedToQueue": [
+    "2026-11-21T09:10:41Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T09:16:03Z"
+   ]
+  },
+  "319": {
+   "state": "closed",
+   "mergedAt": "2026-11-21T09:42:59Z",
+   "mergedBy": "wintrover",
+   "addedToQueue": [
+    "2026-11-21T09:32:10Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T09:42:58Z"
+   ]
+  },
+  "317": {
+   "state": "open",
+   "mergedAt": null,
+   "mergedBy": null,
+   "addedToQueue": [
+    "2026-11-21T09:36:29Z"
+   ],
+   "removedFromQueue": [
+    "2026-11-21T09:44:21Z"
+   ]
+  },
+  "309": {
+   "state": "closed",
+   "mergedAt": "2026-11-21T07:58:46Z",
+   "mergedBy": "wintrover",
+   "addedToQueue": [],
+   "removedFromQueue": []
+  }
+ }
+}
