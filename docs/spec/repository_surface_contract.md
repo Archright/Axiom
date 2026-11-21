@@ -682,3 +682,48 @@ v101에서도 동일하게 성립한다.
 **v3의 비자기증명**: v3는 자신의 정확성을 스스로 승인하지 않는다. 승인 근거는
 ① base v2가 허용한 정확한 변경 범위, ② 인간 아키텍트의 adjudication 승인(PR 본문),
 ③ v3 자체의 구조적·부정적 단위 테스트, ④ shipped 정책의 liveness 테스트다.
+## 부록 — v108 개정 (2026-11-21, #282, workstream/ci-282-publication-venue-split)
+
+**배경**: `publication-integrity.yml`은 ruleset `27097366`의 7개 required context 중
+하나이며, 동시에 App trust-surface manifest 18경로 중 하나다. v102(DEBT#545)는 이
+경로를 FROZEN 의도로 확정했다. 그 결과 이 파일을 수정하는 정당한 레인
+(MUST-T2 break-glass — `config/policy/trust_surface_manifest.json`이 이미
+`admission-check` 발급을 거부하므로 binding 통제는 그쪽에 있다)의 push가
+pre-push `SURFACE_FORBIDDEN`으로 막혀, 문서화된 `--no-verify` 수용-리스크 경로
+외에는 PR을 만들 수 없었다. v105·v106·v107이 정확히 같은 이유로 같은 방식을
+3회 채택했다.
+
+**개정 내용** (`policyVersion` 107 → 108):
+
+| 경로 | 클래스 | 그룹 |
+|---|---|---|
+| `.github/workflows/publication-integrity.yml` | `CONTROLLED` (exact) | `publication-venue-split` |
+
+- `frozenExceptions.paths` 등재는 DEBT#545가 요구하는 **교차 선언**이다 —
+  exact CONTROLLED 등재가 FROZEN glob과 교차하므로 등재하지 않으면 `POLICY_INVALID`다.
+  등재는 런타임 carve-out이 아니라 선언이며, 분류는 `resolutionOrder`의 first-match
+  (PRODUCT → CONTROLLED → FROZEN)를 따른다.
+- 와일드카드 없음. 단일 exact 경로만 등록한다. 신규 workflow ADD는 FROZEN FAIL로
+  유지된다(v106/v107과 동일).
+
+**불변 조건**: required context 이름 `publication-integrity`·job id·`workflowPath`는
+바이트 수준 불변이다. 따라서 ruleset required check 등록, SL-21 producer tuple
+(`merge_admission.json` `requiredValidations[]`), `src/cli/merge_cli.nim`
+`RequiredWorkflowIds` 중 어느 것도 회전하지 않는다. App trust surface·blob 등가
+비교·merge authority는 불변이다.
+
+**왜 이것이 검증 약화가 아닌가**: 분류 변경은 *누가 push할 수 있는가*만 바꾼다.
+*무엇이 착지할 수 있는가*는 여전히 GitHub ruleset(7 required contexts, `bypass_actors`
+비상시 `[]`)과 독립 App 5795152의 `blob(G) == blob(B_mg)` 판정이 결정한다. 본 개정이
+가능하게 하는 본문 변경은 [ADR-0043](../adr/0043-publication-venue-split.md)이 정의하며,
+그 변경 역시 trust-surface 레인(break-glass)으로 착지한다.
+
+**자기승인 차단 유지**: 본 정책 PR은 `config/repository_surface.json`(FROZEN,
+`allowedPaths` 포함)과 이 문서(`allowedPaths` 포함)만 수정하고 `policyVersion`을
+단조 증가시킨다 — selfAmendment 조건 (a)–(d)의 정확한 형태다. 본 개정이 착지한 뒤에야
+본문 PR이 base v108로 `OK` 판정을 받는다(one-generation lag, v102 부록과 동일).
+
+**관측 의무**: 본문 PR 착지 후 (i) `publication-integrity` context가 PR·merge_group
+양 venue에서 동일 발행 주체(Actions 15368)로 success인지, (ii) PR push 1회의 runner
+할당이 감소했는지, (iii) landing venue에서 5개 차원이 전부 실행되는지를
+`ci_critical_path_metric.md` 규약으로 측정해 `data/ci_optimization/`에 기록한다.
