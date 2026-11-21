@@ -772,6 +772,7 @@ suite "golden — SPEC-B36-COUT live display projection":
 when declared(BugVerdictSubjectIdentity):
   import ../../src/cli/axiom_engine
   import ../../src/cli/external_subject_registry
+  import ../../src/core/crypto/hash_kernel
   import ../../src/verification/accounting/run_accounting
   import ../../src/verification/obligation/verification_decision_authority
 
@@ -1299,6 +1300,78 @@ suite "golden — SPEC-LIBP2P-BV-SLICE live display projection":
       check persisted.isOk()
       let stateDoc = parseJson(readFile(statePath))
       check not stateDoc.hasKey("findingEvidence")
+
+  # -------------------------------------------------------------------------
+  # unitEvidenceRefs — the run-scoped canonical-evidence set at the state ROOT
+  # -------------------------------------------------------------------------
+  # The engine persists the wave loop's cross-wave keyed union here so the
+  # Evidence Bundle v2 exporter can select the run's VDA-decided evidence.
+  # `canonicalEvidence.canonicalProposition` is the §6 fallback for the
+  # external --propositions map; the sealed CLE guarantees
+  # sha256Hex(proposition) == propositionHash.
+  proc stateRunResult(unitKey: string): CanonicalRunResult =
+    let wave = %*{"nodeReports": @[
+      %*{"nodeId": unitKey, "status": "verified", "cacheHit": false,
+         "dependencyDepth": 0}]}
+    let elig = %*{unitKey: "elProofCandidate"}
+    var crr = buildCanonicalRunResult(@[wave], elig, @[@[unitKey]])
+    crr.runOutcome = evaluateRunOutcome(crr.runAccounting,
+      NoObligationProvenance(universeEnumerated: true,
+                             source: "canonical_ogr_eligibility"),
+      false)
+    crr
+
+  suite "unitEvidenceRefs — the run-scoped canonical-evidence set":
+
+    test "renderPersist writes the provided union and the proposition hashes to its propositionHash":
+      let fixture = scopeFixture()
+      let unitKey = fixture{"candidateB"}{"unit"}.getStr()
+      let proposition = "theorem axiom_unit : True"
+      let propositionHash = sha256Hex(proposition)
+      let unitEvidenceRefs = %*{unitKey: {
+        "verificationDecision": "vdVerified",
+        "canonicalEvidence": {
+          "obligationId": repeat("1a", 32),
+          "propositionHash": propositionHash,
+          "leanSourceHash": repeat("2b", 32),
+          "kaaDigest": repeat("3c", 32),
+          "toolchainFingerprint": repeat("4d", 32),
+          "canonicalProposition": proposition}}}
+      let statePath = getTempDir() / ("ax_unit_evidence_refs_" &
+        $getCurrentProcessId() & ".json")
+      defer:
+        try:
+          removeFile(statePath)
+        except CatchableError:
+          discard  # axiom:best-effort(tempfile cleanup — assertions already ran)
+      let persisted = renderPersist(statePath, stateRunResult(unitKey),
+        %*{"summary": {"totalNodes": 1}}, %*{"scopeObservability": {}},
+        nil, nil, nil, unitEvidenceRefs)
+      check persisted.isOk()
+      let stateDoc = parseJson(readFile(statePath))
+      check stateDoc.hasKey("unitEvidenceRefs")
+      check stateDoc{"unitEvidenceRefs"} == unitEvidenceRefs
+      let ce = stateDoc{"unitEvidenceRefs"}{unitKey}{"canonicalEvidence"}
+      check ce{"canonicalProposition"}.getStr() == proposition
+      check sha256Hex(ce{"canonicalProposition"}.getStr()) ==
+        ce{"propositionHash"}.getStr()
+
+    test "renderPersist without the union writes no unitEvidenceRefs key (absence, never fabricated)":
+      let fixture = scopeFixture()
+      let unitKey = fixture{"candidateB"}{"unit"}.getStr()
+      let statePath = getTempDir() / ("ax_unit_evidence_absent_" &
+        $getCurrentProcessId() & ".json")
+      defer:
+        try:
+          removeFile(statePath)
+        except CatchableError:
+          discard  # axiom:best-effort(tempfile cleanup — assertions already ran)
+      let persisted = renderPersist(statePath, stateRunResult(unitKey),
+        %*{"summary": {"totalNodes": 1}}, %*{"scopeObservability": {}},
+        nil, nil, nil, nil)
+      check persisted.isOk()
+      let stateDoc = parseJson(readFile(statePath))
+      check not stateDoc.hasKey("unitEvidenceRefs")
 
 # ---------------------------------------------------------------------------
 # §3 two-axis state model — display.propositions[] capability rollup

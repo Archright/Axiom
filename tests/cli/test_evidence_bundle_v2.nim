@@ -36,8 +36,10 @@ type
     vault: string
     proofStatePath: string
     propositionsPath: string
+    emptyPropositionsPath: string
     bundleDir: string
     commit: string
+    proposition: string
 
 proc sh(cmd: string): string =
   let (output, code) = execCmdWithTimeout(cmd, timeoutMs = 120_000)
@@ -155,25 +157,32 @@ proc buildFixture(): Fixture =
   result.propositionsPath = result.root / "propositions.json"
   writeText(result.propositionsPath, canonicalJsonString(props) & "\n")
 
+  result.emptyPropositionsPath = result.root / "propositions-empty.json"
+  writeText(result.emptyPropositionsPath, "{}\n")
+  result.proposition = proposition
+
   result.bundleDir = result.root / "bundle"
 
-proc exportFixture(f: Fixture): BundleExportOutcome =
-  let opts = BundleExportOptions(
-    proofStatePath: f.proofStatePath,
+proc exportWith(f: Fixture; proofStatePath, propositionsPath,
+                outDir: string): Result[BundleExportOutcome, string] =
+  exportEvidenceBundle(BundleExportOptions(
+    proofStatePath: proofStatePath,
     subjectRepo: "Archright/Axiom",
     subjectCommit: f.commit,
     baseSha: f.commit,
     subjectRoot: f.subject,
-    outDir: f.bundleDir,
+    outDir: outDir,
     vaultDir: f.vault,
-    propositionsPath: f.propositionsPath,
+    propositionsPath: propositionsPath,
     runId: "12345",
     runAttempt: "1",
     workflowPath: ".github/workflows/ci.yml",
     workflowRef: "Archright/Axiom/.github/workflows/ci.yml@refs/heads/main",
     event: "push",
-    headSha: f.commit)
-  let exported = exportEvidenceBundle(opts)
+    headSha: f.commit))
+
+proc exportFixture(f: Fixture): BundleExportOutcome =
+  let exported = exportWith(f, f.proofStatePath, f.propositionsPath, f.bundleDir)
   if exported.isErr:
     raise newException(IOError, "export failed: " & exported.error)
   exported.get
@@ -278,6 +287,56 @@ suite "evidence bundle v2":
     check manifest["schema"].getStr() == "axiom.evidence-bundle.v2"
     check manifest["counts"]["certs"].getInt() == 1
     check manifest["counts"]["kernelSymbols"].getInt() == 1
+
+    # ── canonicalProposition fallback (§6): proof state, not the map ──────
+    # The engine persists the sealed CLE's proposition into
+    # canonicalEvidence.canonicalProposition. Export must succeed with an
+    # EMPTY propositions map (the file is still required by the CLI contract)
+    # and the verifier must accept the resulting bundle.
+    proc stateWithCanonicalProposition(text: string): JsonNode =
+      result = loadStrict(f.proofStatePath)
+      let unit = result["unitEvidenceRefs"]["src/demo.nim::f"]
+      unit["canonicalEvidence"]["canonicalProposition"] = %text
+
+    let stateWithPropPath = f.root / "proof-state-with-proposition.json"
+    writeText(stateWithPropPath,
+      canonicalJsonString(stateWithCanonicalProposition(f.proposition)) & "\n")
+
+    let fromStateDir = f.root / "bundle-from-state-proposition"
+    let fromState = exportWith(f, stateWithPropPath,
+      f.emptyPropositionsPath, fromStateDir)
+    check fromState.isOk
+    if fromState.isOk:
+      check fromState.get.certCount == 1
+      let fromStateClean = verifyBundle(fromStateDir)
+      check fromStateClean.exitCode == 0
+      if fromStateClean.exitCode != 0: dumpOutcome(fromStateClean)
+    else:
+      echo "    export from state proposition failed: ", fromState.error
+
+    # Tampering the proposition (it no longer hashes to propositionHash)
+    # must still fail, even with the fallback path.
+    let tamperedStatePath = f.root / "proof-state-tampered-proposition.json"
+    writeText(tamperedStatePath,
+      canonicalJsonString(stateWithCanonicalProposition(
+        "theorem demo_f : False")) & "\n")
+    let tampered = exportWith(f, tamperedStatePath,
+      f.emptyPropositionsPath, f.root / "bundle-tampered-proposition")
+    check tampered.isErr
+    if tampered.isErr:
+      check tampered.error.contains("does not hash to propositionHash")
+    else:
+      echo "    tampered proposition unexpectedly exported"
+
+    # Without either source the export is refused (the fallback is the state
+    # field, never an implicit empty proposition).
+    let noProp = exportWith(f, f.proofStatePath, f.emptyPropositionsPath,
+      f.root / "bundle-empty-propositions")
+    check noProp.isErr
+    if noProp.isErr:
+      check noProp.error.contains("canonicalProposition is missing")
+    else:
+      echo "    empty propositions unexpectedly exported"
 
     # ── kernel re-execution (real Lean + Z3) ──────────────────────────────
     let kernel = verifyBundle(f.bundleDir, kernel = true)
