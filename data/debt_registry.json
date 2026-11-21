@@ -6086,6 +6086,28 @@
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the subject is a cache artifact with no dedicated symbol, so a {.axiomDebt.} marker would bind the whole analyze proc and mask unrelated code. §10.2 trace: this entry's resolution (UNRESOLVED) and source (theater_audit); external evidence: src/cli/topology_cli.nim:348 (constant), :373 (Merkle cache load), :386-398 (write-only block); reader search over src/, tools/, .github/, Makefile, config.nims returns the definition and write site only.",
       "resolvedAt": "2026-11-21",
       "resolvedBy": "debt_engine --close"
+    },
+    {
+      "id": "DEBT#563",
+      "category": "Theater/Unmeasured Ratchet",
+      "impact": "high",
+      "severity": "high",
+      "title": "nimtry reduction ratchet compares the self-declared baseline to the cap instead of the measured count, so CI cannot detect violation growth (main measures 4384 vs declared 4272; cap 4275)",
+      "description": "Machine-observed 2026-11-21 at origin/main 4bfbc8f (clean `git archive origin/main` export, current nimtry 8.30.1-era binary): the live measurement is 4384 violations, while data/nimtry_baseline.json declares 4272 and data/debt_reduction_baseline.json caps the metric at 4275. 128 new violations are therefore on main without a ratchet observation (2 of the new ERROR-severity rows are covered by PR #276; the rest are warnings). Root cause: the reduction ratchet (src/gate/runners/debt_integrity_gate.nim:324-344) compares the pairs from scanDebtMetrics, and the only nimtry pair is countNimtryViolations — data/nimtry_baseline.json's declared total_violations, a checked-in constant. The measured side, countNimtryActiveViolations, reads the gitignored data/nimtry_live_count.json and returns -1 when absent; Step 2b (src/gate/runners/debt_integrity_gate.nim:346-353) only logs that value. .github/workflows/debt-registry-gate.yml deliberately runs without bin/nimtry (provision-scope: nim; its comment at :22-25 records that the metric reports 'unmeasured' there), so CI never produces the sidecar and never measures. Consequence: a PR that adds nimtry violations without editing either baseline file passes the gate — the PASS compares 4272 <= 4275 while the live measurement is 4384. The fallback's '(unmeasured; nimtry not run yet)' label is informational only and does not fail the run.",
+      "symbol": "countNimtryViolations / countNimtryActiveViolations (src/gate/runners/debt_integrity_gate.nim:190-207)",
+      "contentHash": "sha256:df412061fa614328ce51df37e88728a71dbc84e8eba0c1b77881a03a28943ba5",
+      "lineRange": "src/gate/runners/debt_integrity_gate.nim:190-207",
+      "files": [
+        ".github/workflows/debt-registry-gate.yml",
+        "data/debt_reduction_baseline.json",
+        "data/nimtry_baseline.json",
+        "src/gate/runners/debt_integrity_gate.nim:190-207"
+      ],
+      "source": "theater_audit",
+      "productTruthImpact": "PRODUCT_TRUTH",
+      "status": "open",
+      "resolution": "UNRESOLVED — registration only. No cap, baseline number, or policy threshold is changed by this entry. Closing-slice acceptance: (1) CI produces a measurement (runs bin/nimtry or otherwise emits data/nimtry_live_count.json) and the ratchet compares the measured count, failing closed as UNKNOWN when the measurement is absent; (2) an increase fixture (or staged measurement) is observed as FAIL; (3) the 4384 measurement is either driven down or accepted through a human-authored baseline change with owner/rationale. The {.axiomDebt: \"DEBT#563\".} marker on the sidecar-absent fallback binds this entry to the blind-spot site.",
+      "lastVerifiedAt": "2026-11-21T00:00:00Z"
     }
   ]
 }
