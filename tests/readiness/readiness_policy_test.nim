@@ -716,6 +716,14 @@ suite "DEBT#559 — observation-key closure (false GO regression)":
       removeObs(missing, "R5", "verificationFailureExitCode", "ax prove")
       check stateOf(POLICY, missing, "R5") == "UNKNOWN"
 
+      # The collector's fail-closed shape for an unactuated bucket is a
+      # PRESENT observed-scope null (never an absent key, never a contract
+      # echo): both must map to UNKNOWN.
+      let nullObs = loadSyntheticFixture()
+      setObsValue(nullObs, "R5", "verificationFailureExitCode", "ax prove",
+                  newJNull())
+      check stateOf(POLICY, nullObs, "R5") == "UNKNOWN"
+
       let successMissing = loadSyntheticFixture()
       removeObs(successMissing, "R5", "successExitCode", "ax report")
       check stateOf(POLICY, successMissing, "R5") == "UNKNOWN"

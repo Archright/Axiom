@@ -129,8 +129,11 @@
 ##                             shares one subject; provenance rides in the
 ##                             scope field, "observed" vs "contract")
 ##     verificationFailureExitCode
-##                             report exit artifact when it actuates 1, else
-##                             policy r5.exitCodeContract (scope "contract")
+##                             producer's negative-control observation
+##                             (verify_contract_e2e_failure_observation.json:
+##                             both contract commands measured exit 1) ->
+##                             scope "observed"; otherwise an observed null
+##                             (never a policy echo)
 ##     invalidInputExitCode   live invalid-input probe exit (3), else policy
 ##                             contract value (scope "contract")
 ##     internalErrorExitCode  policy r5.exitCodeContract (scope "contract";
@@ -303,6 +306,47 @@ func jFloat(node: JsonNode, key: string, default = 0.0): float =
     if v != nil and v.kind == JInt: return float(v.getInt())
   default
 
+type
+  FailureObservation = object
+    ## Producer negative-control observation
+    ## (logs/verify_contract_e2e_failure_observation.json). Every field this
+    ## consumer relies on is validated; anything incomplete or contradictory
+    ## stays valid=false so the caller records an observed null (fail-closed).
+    valid: bool
+    verdict: string
+    gateVerdict: string
+    proveExit: int
+    reportExit: int
+
+func parseFailureObservation(node: JsonNode,
+                             expectedExit: int): FailureObservation =
+  ## Accept ONLY a fresh full-scope observation whose two measured exits are
+  ## both the verification-failure code and whose verdict is a real non-PASS
+  ## class. The artifact is evidence of an actuated failure, never a policy
+  ## echo: a zero/absent exit or a PASS verdict is rejected.
+  result = FailureObservation(valid: false)
+  if node == nil or node.kind != JObject:
+    return
+  if jStr(node, "scope") != "full":
+    return
+  let fresh = node{"fresh"}
+  if fresh == nil or fresh.kind != JBool or not fresh.getBool:
+    return
+  let verdict = jStr(node, "observedVerdict")
+  if verdict.len == 0 or verdict == "PASS":
+    return
+  if not isHex64(jStr(node, "stateSha256")):
+    return
+  let pe = node{"proveExit"}
+  let re = node{"reportExit"}
+  if pe == nil or pe.kind != JInt or re == nil or re.kind != JInt:
+    return
+  if pe.getInt != expectedExit or re.getInt != expectedExit:
+    return
+  result = FailureObservation(valid: true, verdict: verdict,
+                              gateVerdict: jStr(node, "gateVerdict"),
+                              proveExit: pe.getInt, reportExit: re.getInt)
+
 func jObj(node: JsonNode, key: string): JsonNode =
   if node != nil and node.kind == JObject:
     let v = node{key}
@@ -417,6 +461,8 @@ type
     reportErr: string
     reportExit: int
     reportExitOk: bool
+    failureObs: JsonNode        ## parsed producer negative-control observation
+    failureObsErr: string
     certPathDeclared: string    ## trimmed content of cert_path.txt
     certPath: string            ## resolved path ("" = not found)
     cert: JsonNode
@@ -619,6 +665,10 @@ when isMainModule:
         art.reportExitOk = true
       except CatchableError:
         discard # axiom:best-effort(unparseable exit file records reportExit as unmeasured; the observation honestly stays unset)
+  block failureObservation:
+    let r = safeParseFile(artifactsDir / "verify_contract_e2e_failure_observation.json")
+    art.failureObs = r.node
+    art.failureObsErr = r.err
   block cert:
     art.certPathDeclared = ""
     let p = artifactsDir / "verify_contract_e2e_cert_path.txt"
@@ -1312,6 +1362,7 @@ when isMainModule:
       src: seq[JsonNode] = @[]
       cmds: seq[JsonNode] = @[]
     let helpOut = (if pr.axPresent: pr.help.stdout & "\n" & pr.help.stderr else: "")
+    let failObs = parseFailureObservation(art.failureObs, verifFailCode)
     for cmd in r5Commands:
       let sub = cmd.split(' ')[1 .. ^1].join(" ")
       let dedicated = (if sub == "prove": pr.proveHelp elif sub == "report": pr.reportHelp
@@ -1378,12 +1429,18 @@ when isMainModule:
       else:
         obs.add(obsInt("invalidInputExitCode", invalidCode, "contract", cmd))
       # verification failure: actuated when this collection observed a
-      # verification-failure exit (the E2E report exit, or the live `ax report`
-      # probe over the E2E state — the probe is the same exit family and runs
-      # on this checkout's binary).
+      # verification-failure exit (the E2E report exit, the live `ax report`
+      # probe over the E2E state, or — for BOTH contract commands — the
+      # producer's negative-control observation, which measured each command's
+      # exit on a genuine non-PASS full-scope run). The producer artifact is
+      # validated as a whole (parseFailureObservation): a partial or
+      # contradictory observation mints nothing.
       let observedVerifFail =
         (art.reportExitOk and art.reportExit == verifFailCode) or
-        (pr.axPresent and sub == "report" and pr.reportJson.exitCode == verifFailCode)
+        (pr.axPresent and sub == "report" and pr.reportJson.exitCode == verifFailCode) or
+        (failObs.valid and
+          ((sub == "prove" and failObs.proveExit == verifFailCode) or
+           (sub == "report" and failObs.reportExit == verifFailCode)))
       if observedVerifFail:
         obs.add(obsInt("verificationFailureExitCode", verifFailCode, "observed", cmd))
       else:
@@ -1403,6 +1460,25 @@ when isMainModule:
       # the bucket stays a declared vocabulary value and never counts as
       # evidence (policy presence=vocabulary for this key).
       obs.add(obsInt("internalErrorExitCode", internalCode, "contract", cmd))
+    if failObs.valid:
+      inc.add(incident("R5-EXIT-006", "info",
+                       "negative-control observation actuated the verification-failure " &
+                       "exit for both contract commands (observedVerdict=" & failObs.verdict &
+                       " gateVerdict=" & failObs.gateVerdict &
+                       " proveExit=" & $failObs.proveExit &
+                       " reportExit=" & $failObs.reportExit &
+                       ", scope=full fresh=true) — verificationFailureExitCode " &
+                       "recorded at scope=observed"))
+    elif art.failureObs != nil:
+      inc.add(incident("R5-EXIT-007", "warning",
+                       "negative-control observation present but unusable (" &
+                       (if art.failureObsErr.len > 0: art.failureObsErr
+                        else: "shape/exit contradiction") &
+                       "): proveExit/reportExit must both be " &
+                       $verifFailCode & ", observedVerdict non-empty and != PASS, " &
+                       "scope=full, fresh=true, stateSha256 64-hex — " &
+                       "verificationFailureExitCode stays UNKNOWN (fail-closed, " &
+                       "never a partial mint)"))
     inc.add(incident("R5-EXIT-000", "info",
                      "exit-code buckets with no safe actuation (internal-error) are " &
                      "recorded at scope=contract (policy vocabulary, presence=vocabulary); " &
@@ -1463,6 +1539,8 @@ when isMainModule:
                         "report schemaVersion")
     addArtifactSource(src, art.dir, "verify_contract_e2e_report_exit.txt", stamp.head,
                       "report exit observation")
+    addArtifactSource(src, art.dir, "verify_contract_e2e_failure_observation.json",
+                      stamp.head, "verification-failure actuation (negative control)")
     let envelope = makeEnvelope("R5", stamp, obs, inc, src, cmds)
     writeEnvelope(outDir / "R5.json", envelope)
     echo "[readiness_collect_ci] wrote " & (outDir / "R5.json") &
