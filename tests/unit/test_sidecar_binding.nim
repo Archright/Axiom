@@ -46,9 +46,9 @@ import ../../src/core/trusted/verification_result_types as vrt
 
 putEnv("AXIOM_STATE_DIR", getTempDir() / "ax_sidecar_test_state")
 
-# The make test-fast / test-fast-one recipes link the test binary under
-# /tmp/opencode, where the strict runtime root walk (findRepoRootStrict from
-# the binary's own dir) cannot reach the .axiom_root anchor and the sidecar
+# The make test-fast / test-fast-one recipes link the test binary outside the
+# repo (a /tmp slot), where the strict runtime root walk (findRepoRootStrict
+# from the binary's own dir) cannot reach the .axiom_root anchor and the sidecar
 # overlay load fails closed (loadNimSidecarOverlayDomain → runtimeSpec-
 # OverlayPath); the parse-bound differential's ircheck worker resolution
 # (measureExtractionAgreement → resolveRepoRoot) misses the same walk. AXIOM_
