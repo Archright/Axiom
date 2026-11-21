@@ -84,7 +84,7 @@ type
     skipped*: seq[AotPreflightEntry]     ## empty entry — declared non-file gate
     unresolved*: seq[AotPreflightEntry]  ## non-empty entry with no source file
 
-proc auditAotPreflightEntries*(gates: seq[GateConfig], repoRoot: string): AotPreflightReport {.raises: [].} =
+proc auditAotPreflightEntries*(gates: seq[GateConfig], repoRoot: string): AotPreflightReport {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Resolve every gate entry through the SSOT resolver (core/gate/gate_resolver),
   ## the same mapping precompile_gates uses. An empty entry is the manifest's
   ## declared non-file gate and is recorded, never silently dropped. A non-empty
