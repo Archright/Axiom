@@ -1,6 +1,6 @@
 # config/integrity.nims — Immutable Verification, Merkle Root, Build Constraints
 # Extracted from config.nims lines 280-379
-# Provides: immutable policy verification, merkle root (vacuous — DEBT#546), build constraint, bin/ax check, hooks, manifest bootstrap
+# Provides: immutable policy verification, content-bound merkle root, build constraint, bin/ax check, hooks, manifest bootstrap
 
 when (NimMajor, NimMinor) >= (2, 0):
   const projectRoot = thisDir()
@@ -25,13 +25,26 @@ static:
 # Now executes only during pre-commit/pre-push gate runs.
 # See: src/gate/compile_time_checks.nim → checkGuardTheGuard()
 
-# ── Guard the Guard: Merkle Root Integrity (SA-γ3) — THEATER (DEBT#546, open) ──
-# Does NOT hash guarded file contents: sha256sum is invoked on bare filenames
-# (extractFilename), so all 4 guarded files hit ENOENT and the verdict binds to
-# the sha256sum diagnostic prefix ("sha256sum:" x4) hashed as if it were content —
-# it always equals the expected root, so content tampering always passes.
-# Registration: DEBT#546 (Theater/Vacuous Check). Restore: VS-MERKLE-RESTORE-1
-# (absolute paths, fail-closed on missing/empty digests).
+# ── Guard the Guard: Merkle Root Integrity (SA-γ3) — content-bound ────────────
+# Each guarded file's bytes are hashed with the host `sha256sum` primitive
+# (std/sha1 and std/sha256 cannot run in the NimScript VM — see
+# docs/spec/gorge_inventory.md G1), the digests are concatenated in the declared
+# order below, and the concatenation is hashed once. Content tampering changes
+# the root and fails the compile.
+#
+# Fail-closed contract (DEBT#546 / VS-MERKLE-RESTORE-1):
+#   - every guarded path is resolved against projectRoot; a missing file quits(1)
+#   - sha256sum must return exactly one 64-lowercase-hex digest per guarded file;
+#     a short/non-hex result (ENOENT, missing binary, format drift) quits(1)
+#   - a present but empty/non-hex data/expected_merkle_root.txt quits(1)
+#   - only validated digests participate in the verdict — never diagnostic text
+#   - an ABSENT data/expected_merkle_root.txt stays a warning: the gate
+#     self-bootstrap sandbox (src/gate/bootstrap_verifier.nim) copies config/ but
+#     deliberately blacklists data/, so the anchor cannot exist there.
+# Regeneration authority: tools/merkle_hash.nim — same order, same algorithm.
+# After an intentional guarded-file change, from a clean tree:
+#   nim c --hints:off -d:AXIOM_GATE_BOND -o:bin/merkle_hash tools/merkle_hash.nim
+#   bin/merkle_hash > data/expected_merkle_root.txt
 when not defined(AXIOM_GATE_BOND):
   static:
     # ── Gorge Self-Test: detect if gorge() is functional ──
@@ -43,35 +56,72 @@ when not defined(AXIOM_GATE_BOND):
     const expectedMerklePath = projectRoot / "data/expected_merkle_root.txt"
     when staticFileExists(expectedMerklePath):
       const expectedMerkle = staticRead(expectedMerklePath).strip()
-      when expectedMerkle.len > 0:
+      block:
+        var expectedIsHex = expectedMerkle.len == 64
+        if expectedIsHex:
+          for ch in expectedMerkle:
+            if ch notin {'0'..'9', 'a'..'f'}:
+              expectedIsHex = false
+        if not expectedIsHex:
+          echo "[integrity] GUARD THE GUARD (Merkle Root): data/expected_merkle_root.txt " &
+               "is not a 64-char lowercase sha256: '" & expectedMerkle & "'"
+          quit(1)
         if gorgeAvailable:
-          # Intended: per-file SHA-256 via host sha256sum, digests concatenated,
-          # concatenation hashed (tools/merkle_hash.nim lineage; std sha1/sha256
-          # are unavailable in the NimScript VM). Actual (DEBT#546): each call
-          # passes the bare filename, sha256sum fails with ENOENT, gorge() returns
-          # the failure output, and split(" ")[0] harvests the "sha256sum:"
-          # diagnostic prefix — no guarded file content participates in the hash.
           block:
-            let guardedList = [
+            const guardedList = [
               "src/core/trusted/architecture_invariants.nim",
               "src/core/trusted/axiom_pragmas.nim",
               "src/core/trusted/effect_types.nim",
               "src/core/trusted/effect_bridge.nim"
             ]
-            var concat = ""
+            var cmd = "sha256sum"
             for rel in guardedList:
               let fullPath = projectRoot / rel
-              if staticFileExists(fullPath):
-                let hex = gorge("sha256sum " & fullPath.extractFilename()).split(" ")[0]
-                concat.add(hex)
-            echo "[integrity] merkle concat: " & concat
-            let actualMerkle = gorge("echo -n " & concat.quoteShell() & " | sha256sum").split(" ")[0]
-            echo "[integrity] expected: " & expectedMerkle & "\n[integrity] actual:   " & actualMerkle
-            if actualMerkle.len > 0 and actualMerkle != expectedMerkle:
-              assert false, "GUARD THE GUARD (Merkle Root): critical files hash mismatch!\n" &
-                    "  Expected: " & expectedMerkle & "\n" &
-                    "  Actual:   " & actualMerkle & "\n" &
-                    "  If you intentionally modified guarded files, update data/expected_merkle_root.txt"
+              if not staticFileExists(fullPath):
+                echo "[integrity] GUARD THE GUARD (Merkle Root): guarded file missing: " & rel
+                quit(1)
+              cmd.add " " & fullPath.quoteShell()
+            let rawDigests = gorge(cmd)
+            var digests: seq[string] = @[]
+            for line in rawDigests.strip().splitLines():
+              let fields = line.splitWhitespace()
+              var isDigest = fields.len >= 2 and fields[0].len == 64
+              if isDigest:
+                for ch in fields[0]:
+                  if ch notin {'0'..'9', 'a'..'f'}:
+                    isDigest = false
+              if not isDigest:
+                echo "[integrity] GUARD THE GUARD (Merkle Root): sha256sum did not return " &
+                     "one digest per guarded file\n  command: " & cmd &
+                     "\n  output:  " & rawDigests.strip()
+                quit(1)
+              digests.add(fields[0])
+            if digests.len != guardedList.len:
+              echo "[integrity] GUARD THE GUARD (Merkle Root): expected " & $guardedList.len &
+                   " digests, got " & $digests.len
+              quit(1)
+            let concat = digests.join("")
+            let rawRoot = gorge("printf %s " & concat.quoteShell() & " | sha256sum")
+            let rootFields = rawRoot.splitWhitespace()
+            var actualMerkle = ""
+            if rootFields.len >= 1 and rootFields[0].len == 64:
+              var rootIsHex = true
+              for ch in rootFields[0]:
+                if ch notin {'0'..'9', 'a'..'f'}:
+                  rootIsHex = false
+              if rootIsHex:
+                actualMerkle = rootFields[0]
+            if actualMerkle.len == 0:
+              echo "[integrity] GUARD THE GUARD (Merkle Root): cannot compute the content root " &
+                   "(sha256sum unavailable or malformed output): " & rawRoot.strip()
+              quit(1)
+            if actualMerkle != expectedMerkle:
+              echo "[integrity] GUARD THE GUARD (Merkle Root): guarded file content hash mismatch"
+              echo "  Expected: " & expectedMerkle
+              echo "  Actual:   " & actualMerkle
+              echo "  If the change is intentional, re-anchor: bin/merkle_hash > data/expected_merkle_root.txt"
+              quit(1)
+            echo "[integrity] merkle root OK: " & actualMerkle
         else:
           echo "[integrity] gorge() unavailable — skipping merkle evaluation"
     else:
