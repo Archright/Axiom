@@ -75,6 +75,15 @@ Acceptance:
 5. A의 완료 이벤트를 지연·중복 전달해도 B의 `success`가 역전되지 않는다.
 6. ruleset이 B를 정상 병합한다.
 
+merge_group Acceptance (`G` = 큐가 만든 그룹 커밋):
+
+1. `G1`의 admission-gate run이 in-flight인 동안 큐가 엔트리를 재구성해 `G2`를 만든다.
+2. `G1`의 `admission-check`는 `G1`에서만 terminal이 된다 — `G2`의 check-run으로 해소되지 않는다.
+3. `G2`는 자기 run의 결과로 자기 verdict를 받는다.
+4. `G1`의 완료 이벤트가 지연·중복 전달되어도 `G2`의 verdict는 역전되지 않는다.
+
+두 venue 모두에서 판정 대상은 그 check-run이 발행된 SHA 하나이며, "현재 열린 check-run"이 아니다.
+
 check-run summary의 형태:
 
 ```text
@@ -101,7 +110,20 @@ run=<RUN_ID> attempt=<N> conclusion=success
 | PR-head checks | `gh pr checks <N> --watch` |
 | `G`의 check-runs | `gh api repos/Archright/Axiom/commits/<G>/check-runs?per_page=100` |
 | run 완료 추적 | `gh run watch <RUN_ID> --exit-status --interval 30` |
-| 판정 귀속 검사 | `bash tools/ci/verdict_attribution_check.sh --repo Archright/Axiom --sha <SHA>` (exit 0 정상 / 1 위반 / 2 검증 불가). 범위는 `pull_request` venue 전용이며 `merge_group` check-run은 제외·별도 카운트한다. |
+| 판정 귀속 검사 | `bash tools/ci/verdict_attribution_check.sh --repo Archright/Axiom [--venue pull_request\|merge_group] --sha <SHA>` (exit 0 정상 / 1 위반 / 2 검증 불가). 두 venue를 판정한다: `pull_request`(기본, external_id `v1p|`)와 `merge_group`(external_id `v1|`; run 신원은 `output.summary`의 `run=`/`attempt=`에서 해소해 Actions Run API와 교차 대조). 상대 venue check-run은 제외·별도 카운트한다. run path는 첫 `@` 이후를 절단해 비교한다(quirk Q6). |
+
+출력의 `coverage`는 SHA별 분류와 집계를 담는다:
+
+| 필드 | 의미 |
+|---|---|
+| `perSubject[].classification` | `RESOLVED_CLEAN`(exit 0 + 적격 run >= 1) / `RESOLVED_VIOLATION`(exit 1) / `UNRESOLVED`(exit 2: 적격 run 0 또는 V2-UNRESOLVED·V4-UNVERIFIABLE) |
+| `subjects` | 판정 대상 SHA 수(`--sha` 집합, 없으면 관측된 SHA) |
+| `resolved` | `RESOLVED_CLEAN` + `RESOLVED_VIOLATION` |
+| `unresolved` | `UNRESOLVED` |
+| `violations` | `RESOLVED_VIOLATION` subject 수(전체 violation 건수가 아니다) |
+| `coverageRatio` | `resolved/(resolved+unresolved)`; 분모 0이면 `null` |
+
+coverage는 위반 판정을 약화시키지 않는다. `PASS`는 `subjects > 0`, `unresolved == 0`, `violations == 0`일 때만 성립한다 — `UNRESOLVED` subject가 있고 확정 위반이 없으면 `PASS` 대신 `UNVERIFIABLE`(exit 2)이다. 확정 위반이 있으면 `FAIL`(exit 1)이며 unresolved는 그 verdict를 가리지 않는다. unresolved를 pass로 변환하는 경로는 없다. 한 호출은 exit code 하나만 내므로 SHA별 귀속은 SHA별 호출 또는 `coverage.perSubject`로 읽는다.
 
 `gh pr checks --watch`는 merge-queue 단계를 추적하지 않는다(PR-head checks 종료 시 exit). 큐 진입 후에는 `G`의 check-runs를 직접 조회한다 — quirk 정본: [docs/spec/gh_automerge_merge_queue_quirks.md](../spec/gh_automerge_merge_queue_quirks.md).
 
@@ -120,4 +142,6 @@ run=<RUN_ID> attempt=<N> conclusion=success
 - **`ax cert ledger-append` 경로에 서명 검증이 없다**: `src/verification/ledger_side_ref.nim` 전체에 ed25519/서명 검증 호출이 존재하지 않는다(2026-11-18 grep). 첫 발급 시 forged `certificate.json`이 원장에 들어갈 수 있으며, 원장의 신뢰는 전적으로 writer identity에 의존한다.
 - **`prepare`는 여전히 artifact 바이너리를 실행한다**: `admission-check-base-artifacts`의 `bin/ax`·`ircheck`를 워크스페이스에 설치해 `cert attest --sign`에 사용한다. 해당 잡은 `contents: read`라 write 탈취는 아니지만, SL-22가 닫은 것과 같은 공급 계열의 결함이다(별도 debt).
 - **App의 완료 시점 결속은 미해결 외부 결함이다(#256)**: App은 run 완료 시점의 현재 PR head에 판정을 발행하므로, 그 판정이 실행 주체와 어긋날 수 있다(§3.1 위반, §4 실측). 이 저장소는 §5의 판정 귀속 검사로 이를 관측하고 관측 결과를 기록한다. App 소스도 설치 토큰도 없으므로 **이 저장소는 이 결함을 수리할 수 없다** — 수리는 App 소유자(§6)의 몫이며, §4의 임시 우회책은 수리를 대체하지 않는다.
+- **외부 App 결함의 추적 위치는 issue #256뿐이다**: 이 결함은 `data/debt_registry.json`에 등록하지 않는다 — 그 스키마에는 owner/externalRef 필드가 없고, 두 번째 상태를 추가하면 권위가 중복된다.
+- **ruleset `27097366` bypass 창 (2026-11-21, 관측 기록)**: history version `58912954`(2026-11-21T07:58:16Z)의 `bypass_actors`는 `[{actor_type: OrganizationAdmin, bypass_mode: pull_request}]`였고, version `58913011`(07:59:24Z)에서 `[]`로 복원됐다. 그 창(07:58:16Z–07:59:24Z) 안의 07:58:46Z에 PR #309가 병합됐으며 merge commit은 `858710ae6f590d7dae06646142e79851dda10721`이다. 같은 PR head `41c02cf096a934cbe1d7e94b96e8adbb2feb0ae6`의 `admission-check`(App 5795152, check-run `136777708112`)는 07:48:37Z에 `failure`로 종료돼 있었다. 위 값은 ruleset history API와 check-runs API에서 관측한 사실이며, 의도는 판정하지 않는다.
 - 이 App 계약은 다음 잔여를 닫지 않는다: 같은 저장소 PR이 쓰기 잡을 추가하는 경로(§1.2/§11.4), 나머지 6 contexts의 producer가 Actions `15368`인 표면([docs/evidence/free_authority_migration_phase0_proof.md](../evidence/free_authority_migration_phase0_proof.md) §12.4). 둘 다 계획 항목이다.

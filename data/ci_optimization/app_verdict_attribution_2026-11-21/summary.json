@@ -2,7 +2,10 @@
   "schemaVersion": 1,
   "kind": "ci_optimization.verdict_attribution",
   "date": "2026-11-21",
-  "issues": [256, 305],
+  "issues": [
+    256,
+    305
+  ],
   "status": "REPOSITORY_SIDE_COMPLETE_EXTERNAL_APP_DEFECT_OPEN",
   "purpose": "어떤 커밋에 대한 검증 결과도 다른 커밋의 판정으로 둔갑하지 않게 하고, 그 결함이 실제로 존재함을 재현 가능한 detector와 원본 payload로 고정한다.",
   "ultimatePurpose": "Verdict(repo, venue, SHA)는 해당 저장소·검증 경로·SHA와 정확히 일치하는 실행 결과만으로 결정한다.",
@@ -34,7 +37,14 @@
     }
   ],
   "definitions": {
-    "executionIdentity": ["repository_id", "workflow_id", "run_id", "run_attempt", "venue", "head_sha"],
+    "executionIdentity": [
+      "repository_id",
+      "workflow_id",
+      "run_id",
+      "run_attempt",
+      "venue",
+      "head_sha"
+    ],
     "externalId": "특정 run·attempt를 가리키는 상관관계 식별자. 실행 신원 전체가 아니며(workflow_id·venue 미포함), GitHub는 external_id와 실제 Actions Run의 일치를 보증하지 않는다.",
     "authoritySources": {
       "runFacts": "GET /repos/{owner}/{repo}/actions/runs/{run_id} (+ /attempts/{n})",
@@ -55,8 +65,8 @@
       "stdout": "SELF-TEST PASS"
     },
     "modes": [
-      "--self-test (network 없음, fixture 3종: INCIDENT/CLEAN/EMPTY)",
-      "live: --repo OWNER/REPO --sha SHA...",
+      "--self-test (network 없음, fixture 10종: PR INCIDENT/CLEAN/EMPTY + MG CLEAN/VIOLATION/UNRESOLVED + path suffix eligible/not-eligible + coverage/ratio-null)",
+      "live: --repo OWNER/REPO [--venue pull_request|merge_group] --sha SHA...",
       "--stdin: {repo_id, runs[], check_runs[]} (오프라인 재현)"
     ],
     "exitCodes": {
@@ -65,9 +75,16 @@
       "2": "검증 불가(도구·API·페이지네이션·run 해소 실패, 적격 0건)"
     },
     "eligibleScope": {
-      "runs": "path=.github/workflows/admission-gate-v2.yml AND event=pull_request AND status=completed AND head_sha in --sha set",
+      "pathNormalization": "workflow_run.path는 첫 `@` 이후를 절단한 뒤 비교한다(${RAW_PATH%%@*}와 동등). quirk 정본: docs/spec/ci_provider_failover_quirks.md Q6.",
+      "runs": "path(normalized)=.github/workflows/admission-gate-v2.yml AND event=pull_request AND status=completed AND head_sha in --sha set",
       "checkRuns": "app.id=5795152 AND name=admission-check AND external_id venue=pull_request",
-      "excluded": "external_id venue=merge_group(`v1|`)는 out-of-scope로 별도 카운트하며 절대 위반으로 판정하지 않는다."
+      "excluded": "external_id venue=merge_group(`v1|`)는 out-of-scope로 별도 카운트하며 절대 위반으로 판정하지 않는다.",
+      "merge_group": {
+        "runs": "path(normalized)=.github/workflows/admission-gate-v2.yml AND event=merge_group AND status=completed AND head_sha in --sha set",
+        "checkRuns": "app.id=5795152 AND name=admission-check AND external_id prefix `v1|`",
+        "runIdentity": "external_id에 run id가 없으므로 output.summary의 run=/attempt=에서 해소하고 Actions Run API와 교차 대조한다. 해소 불가는 V2-UNRESOLVED → exit 2.",
+        "excluded": "external_id prefix `v1p|` (pull_request)는 out-of-scope로 별도 카운트하며 위반으로 판정하지 않는다."
+      }
     },
     "invariants": {
       "V1": "check_run.head_sha == external_id head_sha",
@@ -75,6 +92,26 @@
       "V3": "적격 run마다 external_id가 그 run을 지목하는 PR-venue check-run이 정확히 1개(대응 관계의 완전성)",
       "V4": "0 <= t(check completed) - t(run completed) <= max_lag. 미완료가 max_lag 초과면 PENDING, run 완료 전 완료되면 PREMATURE",
       "V5": "summary의 run/attempt/evaluated_commit은 일관성 검증용. A: summary run != external_id run, B: evaluated_commit != run head_sha, C: attempt 불일치"
+    },
+    "coverage": {
+      "perSubject": {
+        "RESOLVED_CLEAN": "exit 0 + 적격 run >= 1 + 위반 0",
+        "RESOLVED_VIOLATION": "exit 1 (위반 >= 1, V2-UNRESOLVED/V4-UNVERIFIABLE 없음)",
+        "UNRESOLVED": "exit 2 (적격 run 0, 또는 V2-UNRESOLVED/V4-UNVERIFIABLE 존재)"
+      },
+      "aggregateFields": [
+        "subjects",
+        "resolved",
+        "unresolved",
+        "violations",
+        "coverageRatio",
+        "perSubject"
+      ],
+      "resolvedDefinition": "resolved = RESOLVED_CLEAN + RESOLVED_VIOLATION subject 수",
+      "violationsDefinition": "violations = RESOLVED_VIOLATION subject 수 (전체 violation 건수가 아니다)",
+      "coverageRatio": "resolved/(resolved+unresolved); 분모 0이면 null",
+      "resultInvariant": "PASS는 subjects>0, unresolved==0, violations==0일 때만 성립한다. UNRESOLVED subject가 있고 확정 위반이 없으면 PASS 대신 UNVERIFIABLE(exit 2)이다. 확정 위반이 있으면 FAIL(exit 1)이며 unresolved는 그 verdict를 가리지 않는다.",
+      "oneExitCode": "한 호출은 exit code 하나만 낸다. SHA별 귀속은 SHA별 호출 또는 coverage.perSubject로 읽는다."
     }
   },
   "thresholds": {
@@ -283,7 +320,9 @@
       "observed": {
         "eligible_runs": 0,
         "in_scope_check_runs": 0,
-        "excluded_check_runs": {"merge_group": 1},
+        "excluded_check_runs": {
+          "merge_group": 1
+        },
         "violations": 0,
         "note": "적격 PR-venue run이 없으므로 정상(0)이 아니라 검증 불가(2)다. merge_group check-run은 범위 밖으로 제외됐다."
       }
@@ -295,6 +334,20 @@
       "observed": {
         "eligible_runs": 1,
         "violations": 0
+      }
+    },
+    {
+      "name": "merge-group",
+      "command": "bash tools/ci/verdict_attribution_check.sh --venue merge_group --sha <9 heads>",
+      "exit": 0,
+      "observed": {
+        "subjects": 9,
+        "resolved": 9,
+        "unresolved": 0,
+        "violations": 0,
+        "coverageRatio": 1,
+        "in_scope_check_runs_per_subject": 1,
+        "note": "각 head에서 적격 merge_group run 1개와 그 subject check-run 1개를 확인했다. 상세는 §mergeGroupObservation."
       }
     }
   ],
@@ -308,8 +361,9 @@
   "unknowns": [
     "App 내부가 first-writer-wins를 구현했는지 UNKNOWN",
     "동일 run attempt의 중복 webhook/retry에서도 재현되는지 UNKNOWN",
-    "merge_group venue에서 같은 완료 오귀속이 발생하는지 UNOBSERVED (venue 스코프 밖)",
-    "App이 superseded 실행의 check-run을 어떤 시점에 cancelled로 종결하는지 UNKNOWN"
+    "merge_group venue 완료 오귀속: OBSERVED — V-A(check-run 133843210523, G=13becf27)에서 probe-merge-queue run으로의 오귀속과 361초 조기 종결을 확인했다. 별도 9-head 표본은 전부 RESOLVED_CLEAN이었다(§mergeGroupObservation).",
+    "App이 superseded 실행의 check-run을 어떤 시점에 cancelled로 종결하는지 UNKNOWN",
+    "merge_group에서 G1 완료 이벤트의 지연·중복 전달이 G2의 판정을 역전시키는지 UNOBSERVED"
   ],
   "limits": [
     "detector는 저장소 측 관측 도구다. App을 수리하지 않으며, 오귀속된 check-run을 자동 복구하지 않는다.",
@@ -329,13 +383,34 @@
   "authorityPreflight": {
     "githubMergeAuthority": "GitHub repository ruleset 27097366 (main) — active, bypass 0",
     "requiredChecks": [
-      {"context": "admission-check", "integration_id": 5795152},
-      {"context": "bsec-integrity", "integration_id": 15368},
-      {"context": "debt-registry-gate", "integration_id": 15368},
-      {"context": "generation-acceptance", "integration_id": 15368},
-      {"context": "axiom-operational-slice", "integration_id": 15368},
-      {"context": "publication-integrity", "integration_id": 15368},
-      {"context": "readiness-verdict", "integration_id": 15368}
+      {
+        "context": "admission-check",
+        "integration_id": 5795152
+      },
+      {
+        "context": "bsec-integrity",
+        "integration_id": 15368
+      },
+      {
+        "context": "debt-registry-gate",
+        "integration_id": 15368
+      },
+      {
+        "context": "generation-acceptance",
+        "integration_id": 15368
+      },
+      {
+        "context": "axiom-operational-slice",
+        "integration_id": 15368
+      },
+      {
+        "context": "publication-integrity",
+        "integration_id": 15368
+      },
+      {
+        "context": "readiness-verdict",
+        "integration_id": 15368
+      }
     ],
     "mergeQueue": {
       "rulesetId": 27097366,
@@ -355,5 +430,235 @@
     "directory": "data/ci_optimization/app_verdict_attribution_2026-11-21/payloads",
     "repo": "repo.json",
     "perSha": "payloads/<sha>/check-runs.json, payloads/<sha>/runs.json (gh api --paginate --slurp 원본)"
+  },
+  "mergeGroupObservation": {
+    "venue": "merge_group",
+    "observedAt": "2026-11-21T09:43:20Z",
+    "thresholds": {
+      "max_lag_seconds": 600,
+      "authority": "OPERATIONAL_SLO"
+    },
+    "sample": "merge_group run이 존재하는 9개 head. 각 head는 해당 venue의 적격 run 1개와 그 subject check-run 1개를 가진다.",
+    "perSha": [
+      {
+        "head_sha": "1c9cdc1117816e49543270dc5b95e9e9800e204c",
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "eligible_runs": 1,
+        "resolved_run": "44869804919#1",
+        "violations": []
+      },
+      {
+        "head_sha": "f68ca0f68cdadf5cc3d0585f7104ffb2733a0411",
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "eligible_runs": 1,
+        "resolved_run": "44871714191#1",
+        "violations": []
+      },
+      {
+        "head_sha": "52da049978c6fb81171735a96f80557ba1bcf646",
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "eligible_runs": 1,
+        "resolved_run": "44872137279#1",
+        "violations": []
+      },
+      {
+        "head_sha": "6a9ef54a2aaab62b26978185a6aaeb4b2580e6d8",
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "eligible_runs": 1,
+        "resolved_run": "44872777013#1",
+        "violations": []
+      },
+      {
+        "head_sha": "1eec4352cc3febf5cfcd0a8766755f8753c64f39",
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "eligible_runs": 1,
+        "resolved_run": "44874067378#1",
+        "violations": []
+      },
+      {
+        "head_sha": "db0e977f6219d33dcfc91be1f9e238a72f2dd53b",
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "eligible_runs": 1,
+        "resolved_run": "44875815676#1",
+        "violations": []
+      },
+      {
+        "head_sha": "ebfc56ff72a69f5f0b3a012ed55ea1c92512f222",
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "eligible_runs": 1,
+        "resolved_run": "44877825490#1",
+        "violations": []
+      },
+      {
+        "head_sha": "6716521d3136f9504c94dba328a9a207ca5b00dc",
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "eligible_runs": 1,
+        "resolved_run": "44879970973#1",
+        "violations": []
+      },
+      {
+        "head_sha": "61261568292f8b8b424abb459c900945338d1ddc",
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "eligible_runs": 1,
+        "resolved_run": "44881773724#1",
+        "violations": []
+      }
+    ],
+    "aggregate": {
+      "subjects": 9,
+      "resolved": 9,
+      "unresolved": 0,
+      "violations": 0,
+      "coverageRatio": 1
+    },
+    "result": "PASS",
+    "incidents": [
+      {
+        "id": "V-A",
+        "class": "completion-time misbinding",
+        "head_sha": "13becf270839ebeb458f7e1a9a130394ea994389",
+        "check_run": 133843210523,
+        "external_id": "v1|1454952493|13becf270839ebeb458f7e1a9a130394ea994389|e07a648e3b0262115be9921d44d4f38814487251|6d0d3335e8c001ebb3685a95387bd65323679a16",
+        "check_run_completed_at": "2026-11-17T05:34:35Z",
+        "summary_run": 44025040322,
+        "bound_run": {
+          "id": 44025040322,
+          "path": ".github/workflows/probe-merge-queue.yml",
+          "workflow_id": 415675142,
+          "conclusion": "success",
+          "updated_at": "2026-11-17T05:34:31Z"
+        },
+        "true_admission_run": {
+          "id": 44025040389,
+          "path": ".github/workflows/admission-gate-v2.yml",
+          "workflow_id": 420946486,
+          "conclusion": "success",
+          "updated_at": "2026-11-17T05:40:36Z"
+        },
+        "premature_seconds": 361,
+        "fact": "check-run 133843210523은 G=13becf27에 발행됐지만 summary가 probe-merge-queue run 44025040322를 지목한다. 이 check-run은 그 G의 유일한 적격 admission-gate run 44025040389 완료 361초 전에 terminal(failure)이 됐다.",
+        "detector": {
+          "command": "bash tools/ci/verdict_attribution_check.sh --venue merge_group --sha 13becf27...",
+          "exit": 1,
+          "classification": "RESOLVED_VIOLATION",
+          "violations": [
+            "V2-WORKFLOW-ID-MISMATCH",
+            "V2-WORKFLOW-PATH-MISMATCH",
+            "V4-PREMATURE",
+            "V5A-SUMMARY-RUN-MISMATCH"
+          ]
+        },
+        "payload": {
+          "runs": "payloads/mg/13becf270839ebeb458f7e1a9a130394ea994389/runs.json",
+          "check_runs": "payloads/mg/13becf270839ebeb458f7e1a9a130394ea994389/check-runs.json"
+        }
+      },
+      {
+        "id": "V-B",
+        "class": "stuck pending check-run",
+        "head_sha": "1e4e1eb2aea0edd892a3c5c74e4117cb4f7942a0",
+        "check_run": 134495243352,
+        "external_id": "v1|1454952493|1e4e1eb2aea0edd892a3c5c74e4117cb4f7942a0|a2286003eaf0c42be2a74741590ddd3fd8040cdf|9c442122eeb1d07dc5820d54ca68f6e0f53071a6",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-11-18T01:03:40Z",
+        "completed_at": null,
+        "summary_run": null,
+        "subject_run": {
+          "id": 44212842619,
+          "path": ".github/workflows/admission-gate-v2.yml",
+          "workflow_id": 420946486,
+          "conclusion": "success",
+          "updated_at": "2026-11-18T01:12:47Z"
+        },
+        "stuck_seconds_at_2026_11_21T09_43_20Z": 290380,
+        "fact": "summary에 run= 줄이 없어 실행 신원을 해소할 수 없다. run 44212842619 완료(2026-11-18T01:12:47Z) 후 3.36일째 in_progress이며, detector는 V2-UNRESOLVED → exit 2로 판정한다.",
+        "detector": {
+          "command": "bash tools/ci/verdict_attribution_check.sh --venue merge_group --sha 1e4e1eb2...",
+          "exit": 2,
+          "classification": "UNRESOLVED",
+          "violations": [
+            "V2-UNRESOLVED"
+          ]
+        },
+        "payload": {
+          "runs": "payloads/mg/1e4e1eb2aea0edd892a3c5c74e4117cb4f7942a0/runs.json",
+          "check_runs": "payloads/mg/1e4e1eb2aea0edd892a3c5c74e4117cb4f7942a0/check-runs.json"
+        }
+      },
+      {
+        "id": "V-C",
+        "class": "late pending check-run",
+        "head_sha": "b43712104f413ed28dc3a682556f3215ef5cbcb1",
+        "check_run": 136785492935,
+        "status": "completed",
+        "conclusion": "failure",
+        "started_at": "2026-11-21T08:16:23Z",
+        "completed_at": "2026-11-21T08:26:37Z",
+        "subject_run": {
+          "id": 44884094411,
+          "path": ".github/workflows/admission-gate-v2.yml",
+          "workflow_id": 420946486,
+          "conclusion": "failure",
+          "updated_at": "2026-11-21T08:26:31Z"
+        },
+        "in_flight_seconds": 614,
+        "lag_after_run_completion_seconds": 6,
+        "fact": "check-run은 run 완료 6초 후(2026-11-21T08:26:37Z, run.updated_at 08:26:31Z)에 종결됐다. 614초 in-flight였고 max_lag=600 이내다. 감사 요약의 604초는 현재 payload의 started_at→completed_at(614초)로 재계산되지 않는다.",
+        "detector": {
+          "command": "bash tools/ci/verdict_attribution_check.sh --venue merge_group --sha b4371210...",
+          "exit": 0,
+          "classification": "RESOLVED_CLEAN",
+          "violations": []
+        },
+        "payload": {
+          "runs": "payloads/mg/b43712104f413ed28dc3a682556f3215ef5cbcb1/runs.json",
+          "check_runs": "payloads/mg/b43712104f413ed28dc3a682556f3215ef5cbcb1/check-runs.json"
+        }
+      },
+      {
+        "id": "V-D",
+        "class": "inverted timestamps + absent external_id",
+        "head_sha": "b0967e551abdac05038820b923bcee69cc57e125",
+        "check_run": 136308870679,
+        "status": "completed",
+        "conclusion": "failure",
+        "started_at": "2026-11-20T13:12:59Z",
+        "completed_at": "2026-11-20T13:12:58Z",
+        "timestamp_inversion_seconds": 1,
+        "external_id": "",
+        "admission_run_for_head": {
+          "id": 44741298189,
+          "conclusion": "success",
+          "updated_at": "2026-11-20T13:12:56Z"
+        },
+        "fact": "completed_at(2026-11-20T13:12:58Z)이 started_at(2026-11-20T13:12:59Z)보다 1초 이르고, external_id가 비어 있다. 같은 head의 admission-gate run 44741298189는 success다. summary는 in_progress check가 없었다고 기록한다.",
+        "detector": {
+          "command": "bash tools/ci/verdict_attribution_check.sh --venue merge_group --sha b0967e55...",
+          "exit": 1,
+          "classification": "RESOLVED_VIOLATION",
+          "violations": [
+            "V2-MALFORMED",
+            "V3-MISSING"
+          ],
+          "note": "역전 타임스탬프 전용 코드는 없다. detector는 external_id 부재를 V2-MALFORMED로 판정하고, 그 결과 venue를 해소하지 못해 in-scope check-run 0으로 센다."
+        },
+        "payload": {
+          "runs": "payloads/mg/b0967e551abdac05038820b923bcee69cc57e125/runs.json",
+          "check_runs": "payloads/mg/b0967e551abdac05038820b923bcee69cc57e125/check-runs.json"
+        }
+      }
+    ],
+    "fact": "merge_group도 같은 detector로 판정 가능하며, 완료 시점 오귀속은 PR venue와 동일하게 발생한다(V-A). 9-head 표본은 전부 RESOLVED_CLEAN이므로 merge_group 일반의 정상성을 주장하지 않는다 — 표본 결과일 뿐이다.",
+    "payloadIndex": "payloads/mg/<sha>/runs.json (Actions runs, head_sha 필터) + payloads/mg/<sha>/check-runs.json (commit check-runs, filter=all). 필드는 id/attempt/event/path/head_sha/conclusion 및 check-run id/status/conclusion/timestamps/external_id/summary로 제한했다."
   }
 }
