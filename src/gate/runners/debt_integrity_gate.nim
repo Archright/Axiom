@@ -198,7 +198,11 @@ proc countNimtryActiveViolations(repoRoot: string): int =
   ## Falls back to the baseline cap when the sidecar is absent (nimtry not
   ## run yet in this workspace) — the fallback is labeled by callers.
   let path = repoRoot / "data" / "nimtry_live_count.json"
-  if not fileExists(path): return -1
+  if not fileExists(path):
+    # DEBT#563: without the sidecar the reduction ratchet compares the declared
+    # baseline instead of a measurement, so CI cannot observe violation growth.
+    const debtMarker563 {.axiomDebt: "DEBT#563".} = true
+    return -1
   try: parseJson(readFile(path))["total_violations"].getInt()
   except CatchableError: -1
 
