@@ -1,4 +1,5 @@
 import std/[json, os, strutils]
+import core/crypto/hash_kernel
 import core/results
 import verification/kernel_reexecution
 
@@ -20,6 +21,10 @@ import verification/kernel_reexecution
 ##   P10 leanchecker independent deep check (Phase 6): absent checker →
 ##       lcSkipped additive; fresh-compile re-validation pass/mismatch
 ##       (SKIP loudly if leanchecker absent)
+##   P11 VS-188 observations: observed return, theorem binding, ambiguous
+##       target, hazard rejection, observation self-consistency (real tools
+##       gated for the execution legs)
+##   P12 leanchecker probe recorded in skippedChecks (label, not a silent skip)
 ## ═══════════════════════════════════════════════════════════════════════
 
 var passCount = 0
@@ -279,6 +284,118 @@ if leanAvailable() and findExe("leanchecker").len > 0:
     lcMismatch)
 else:
   skip("real leanchecker deep-check suite", "lean/lake or leanchecker not found")
+
+# ---------------------------------------------------------------------------
+# P11 — VS-188 observations: target binding, hazards, observed runs
+# ---------------------------------------------------------------------------
+echo "=== P11: VS-188 observation target + hazards (pure) ==="
+checkEq("single theorem binds", leanObservationTarget(
+  "theorem obs_single : True := trivial").target, "obs_single")
+checkEq("single theorem has no problem", leanObservationTarget(
+  "theorem obs_single : True := trivial").problem, "")
+checkEq("explicit #print axioms wins", leanObservationTarget(
+  "theorem obs_a : True := trivial\n#print axioms obs_other").target, "obs_other")
+checkTrue("zero theorems → problem", leanObservationTarget(
+  "def obs_def := 1").problem.len > 0)
+checkTrue("two theorems → ambiguous problem", leanObservationTarget(
+  "theorem obs_a : True := trivial\ntheorem obs_b : True := trivial").problem.len > 0)
+checkEq("private theorem binds", leanObservationTarget(
+  "private theorem obs_private : True := trivial").target, "obs_private")
+checkEq("attributed theorem binds", leanObservationTarget(
+  "@[simp] theorem obs_attr : True := trivial").target, "obs_attr")
+checkEq("namespace-qualified theorem binds", leanObservationTarget(
+  "namespace ObsN\ntheorem obs_ns : True := trivial\nend ObsN").target, "ObsN.obs_ns")
+checkTrue("hazard: debug.skipKernelTC", "debug.skipKernelTC" in leanSourceHazards(
+  "set_option debug.skipKernelTC true\ntheorem obs_h : True := trivial"))
+checkTrue("hazard: run_cmd", "run_cmd" in leanSourceHazards(
+  "theorem obs_h : True := trivial\nrun_cmd pure ()"))
+checkTrue("hazard: #eval", "#eval" in leanSourceHazards(
+  "theorem obs_h : True := trivial\n#eval 1"))
+checkTrue("comments do not trigger hazards", leanSourceHazards(
+  "-- #eval run_cmd debug.skipKernelTC in a comment\ntheorem obs_ok : True := trivial").len == 0)
+
+let missingLeanObs = reexecuteLeanObservedKernel(makeCert(""), "", 5_000)
+checkTrue("missing leanSource → unobserved (observed variant)", not missingLeanObs.observed)
+checkVerdict("missing leanSource → krMissingInput (observed variant)",
+  missingLeanObs.verdict, krMissingInput)
+let hazardObs = reexecuteLeanObservedKernel(makeCert(
+  "set_option debug.skipKernelTC true\ntheorem obs_h : True := trivial"),
+  "/nonexistent/lean", 1_000)
+checkVerdict("hazard source → krMissingInput (no new verdict)", hazardObs.verdict, krMissingInput)
+checkTrue("hazard is recorded in skippedChecks", hazardObs.skippedChecks.len == 1 and
+  hazardObs.skippedChecks[0].startsWith("lean-hazard:"))
+let ambiguousObs = reexecuteLeanObservedKernel(makeCert(
+  "theorem obs_a : True := trivial\ntheorem obs_b : True := trivial"),
+  "/nonexistent/lean", 1_000)
+checkVerdict("ambiguous target → krMissingInput", ambiguousObs.verdict, krMissingInput)
+checkTrue("ambiguous target recorded in skippedChecks", ambiguousObs.skippedChecks.len == 1 and
+  ambiguousObs.skippedChecks[0].startsWith("lean-target:"))
+
+const ObsLeanSource = "theorem obs_real : True := by trivial"
+const ObsSmt = "(declare-const x Int)\n(assert (and (> x 0) (< x 0)))\n(check-sat)"
+if leanAvailable() and z3Available():
+  let leanObs = reexecuteLeanObservedKernel(makeCert(ObsLeanSource), "", 120_000)
+  checkTrue("real lean observation is observed", leanObs.observed)
+  checkVerdict("real lean observation passed", leanObs.verdict, krPassed)
+  checkEq("observation binds the selected theorem", leanObs.theoremName, "obs_real")
+  checkEq("kernel-pure theorem → empty observed axiom set", leanObs.axiomSet.join(","), "")
+  checkEq("leanSourceDigest binds the exact source",
+    leanObs.leanSourceDigest, sha256Hex(ObsLeanSource))
+  checkTrue("lean outputDigest recorded (64 hex)", leanObs.outputDigest.len == 64)
+  if findExe("leanchecker").len > 0:
+    checkTrue("present leanchecker → no unavailable marker",
+      leanCheckerUnavailableMarker notin leanObs.skippedChecks)
+  else:
+    checkTrue("absent leanchecker → loud skippedChecks marker",
+      leanCheckerUnavailableMarker in leanObs.skippedChecks)
+  let z3Obs = reexecuteZ3Observed(makeCert("", ObsSmt), "", 60_000)
+  checkTrue("real z3 observation is observed", z3Obs.observed)
+  checkVerdict("real z3 observation passed", z3Obs.verdict, krPassed)
+  checkEq("z3 queryDigest binds the exact query", z3Obs.queryDigest, sha256Hex(ObsSmt))
+  checkTrue("z3 outputDigest recorded", z3Obs.outputDigest.len == 64)
+  checkTrue("z3 binaryDigest recorded", z3Obs.binaryDigest.len == 64)
+  let dual = KernelObservation(lean: leanObs, z3: z3Obs,
+    verificationMode: observationVerificationMode(leanObs.observed, z3Obs.observed))
+  checkEq("dual observation mode", dual.verificationMode, "lean+z3")
+  checkEq("dual observation validates clean",
+    kernelObservationValidationError(dual, ObsLeanSource, ObsSmt), "")
+  checkTrue("dual observation is a passing observation",
+    isPassingKernelObservation(dual, ObsLeanSource, ObsSmt))
+  let obsNode = kernelObservationJson(dual)
+  let obsRoundTrip = parseKernelObservation(obsNode)
+  checkTrue("observation JSON round-trips", obsRoundTrip.isOk)
+  if obsRoundTrip.isOk:
+    checkEq("observationDigest is stable across the round-trip",
+      kernelObservationDigest(obsRoundTrip.get), kernelObservationDigest(dual))
+  var tamperedAxioms = dual
+  tamperedAxioms.lean.axiomSet = @["sorryAx"]
+  checkTrue("tampered axiom set fails validation",
+    kernelObservationValidationError(tamperedAxioms, ObsLeanSource, ObsSmt).len > 0)
+  checkTrue("tampered axiom set is not a passing observation",
+    not isPassingKernelObservation(tamperedAxioms, ObsLeanSource, ObsSmt))
+  checkTrue("leanSource digest mismatch fails validation",
+    kernelObservationValidationError(dual, ObsLeanSource & "\n", ObsSmt).len > 0)
+  checkTrue("smtlib2 digest mismatch fails validation",
+    kernelObservationValidationError(dual, ObsLeanSource, ObsSmt & "\n").len > 0)
+  var flippedMode = dual
+  flippedMode.verificationMode = "lean-only"
+  checkTrue("mode inconsistent with observed flags fails validation",
+    kernelObservationValidationError(flippedMode, ObsLeanSource, ObsSmt).len > 0)
+else:
+  skip("real observation suite", "lean/z3 not found")
+
+# ---------------------------------------------------------------------------
+# P12 — leanchecker probe label (VS-188 Phase 1)
+# ---------------------------------------------------------------------------
+echo "=== P12: leanchecker probe recorded in the observation ==="
+if leanAvailable():
+  let probeObs = reexecuteLeanObservedKernel(makeCert(ObsLeanSource), "", 120_000)
+  checkTrue("leanchecker probe is an explicit skippedChecks contract",
+    (findExe("leanchecker").len > 0 and probeObs.skippedChecks.len == 0) or
+    (findExe("leanchecker").len == 0 and
+      leanCheckerUnavailableMarker in probeObs.skippedChecks))
+else:
+  skip("leanchecker probe label", "lean/lake not found")
 
 # ---------------------------------------------------------------------------
 echo ""
