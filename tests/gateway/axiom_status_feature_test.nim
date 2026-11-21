@@ -38,9 +38,9 @@ suite "Axiom Status — CLI Flag Parsing":
     let code = runStatusCli(@["--gate"])
     check code == 1
 
-  test "runStatusCli with no history file returns 0 gracefully":
-    ## Given no gate_history.jsonl exists in the current directory
-    ## When runStatusCli is called with no flags
+  test "runStatusCli with no history and --allow-missing returns 0":
+    ## Given the caller explicitly opts in to absent gate history
+    ## When runStatusCli is called with --allow-missing
     ## Then it returns 0 and prints a "no history" message
-    let code = runStatusCli(@[])
+    let code = runStatusCli(@["--allow-missing"])
     check code == 0
