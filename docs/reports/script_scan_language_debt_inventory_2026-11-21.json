@@ -1,0 +1,748 @@
+{
+ "schemaVersion": 1,
+ "generatedAt": "2026-11-21T09:13:53Z",
+ "baseCommit": "075bc10274787ab51f8a5ed6d6085aee6074f787",
+ "policy": "compliance/policy/script-scan-policy.yml",
+ "pattern": "[^\\x00-\\x7F\\p{Latin}\\p{Greek}\\p{Common}\\p{Inherited}]",
+ "method": "ripgrep --count-matches (default Unicode engine); excludes vendor/, build/, .cache/, .axiom/, data/i18n/ko.json, and this inventory file",
+ "totals": {
+  "files": 1025,
+  "codePoints": 1184951
+ },
+ "byTopDir": [
+  {
+   "prefix": "docs/evidence",
+   "codePoints": 629678
+  },
+  {
+   "prefix": "docs/spec",
+   "codePoints": 249804
+  },
+  {
+   "prefix": "docs/adr",
+   "codePoints": 77888
+  },
+  {
+   "prefix": "experiments/act2-wp-toml-b1-input-integrity",
+   "codePoints": 27377
+  },
+  {
+   "prefix": "docs/history",
+   "codePoints": 24114
+  },
+  {
+   "prefix": "docs/agents",
+   "codePoints": 19528
+  },
+  {
+   "prefix": "docs/design",
+   "codePoints": 13940
+  },
+  {
+   "prefix": "tests/ci",
+   "codePoints": 12012
+  },
+  {
+   "prefix": "data/promotions",
+   "codePoints": 8971
+  },
+  {
+   "prefix": "docs/reports",
+   "codePoints": 8685
+  },
+  {
+   "prefix": "docs/incidents",
+   "codePoints": 7070
+  },
+  {
+   "prefix": "experiments/act2-wp4d-symbol-identity",
+   "codePoints": 6678
+  },
+  {
+   "prefix": "experiments/nim-libp2p-bytesview-slice-e2e",
+   "codePoints": 5879
+  },
+  {
+   "prefix": ".",
+   "codePoints": 5761
+  },
+  {
+   "prefix": "experiments/act2-r0-reanchor",
+   "codePoints": 5636
+  },
+  {
+   "prefix": "tools/ci",
+   "codePoints": 5518
+  },
+  {
+   "prefix": "docs/audit",
+   "codePoints": 5224
+  },
+  {
+   "prefix": "src/core",
+   "codePoints": 5115
+  },
+  {
+   "prefix": "config",
+   "codePoints": 5054
+  },
+  {
+   "prefix": "experiments/jrpc-errcode-slice-e2e",
+   "codePoints": 4730
+  },
+  {
+   "prefix": "data",
+   "codePoints": 4181
+  },
+  {
+   "prefix": "data/ci_optimization",
+   "codePoints": 3484
+  },
+  {
+   "prefix": "src/gate",
+   "codePoints": 3350
+  },
+  {
+   "prefix": "experiments/act2-wpj1-strategy-admission",
+   "codePoints": 2965
+  },
+  {
+   "prefix": "experiments/act2-wp4g-cert-reconcile",
+   "codePoints": 2954
+  },
+  {
+   "prefix": "tools",
+   "codePoints": 2856
+  },
+  {
+   "prefix": "experiments/act2-wp3-exact-external-proof-outcome",
+   "codePoints": 2604
+  },
+  {
+   "prefix": "experiments/act2-wpj2-semantic-facts",
+   "codePoints": 2590
+  },
+  {
+   "prefix": "docs/guides",
+   "codePoints": 2401
+  },
+  {
+   "prefix": "config/policy",
+   "codePoints": 2299
+  },
+  {
+   "prefix": "docs",
+   "codePoints": 2255
+  },
+  {
+   "prefix": "src/cli",
+   "codePoints": 2141
+  },
+  {
+   "prefix": "experiments/act3-o1-verified-warm-protocol",
+   "codePoints": 1788
+  },
+  {
+   "prefix": "src/verification",
+   "codePoints": 1770
+  },
+  {
+   "prefix": "experiments/u64-scalar-2026-11-02",
+   "codePoints": 1611
+  },
+  {
+   "prefix": "experiments/serde-json-escape-slice-2026-11",
+   "codePoints": 1523
+  },
+  {
+   "prefix": "experiments/act2-wpk-obligation-execution",
+   "codePoints": 1246
+  },
+  {
+   "prefix": "tests/unit",
+   "codePoints": 1244
+  },
+  {
+   "prefix": "experiments/rust-file-origin-2026-11-01",
+   "codePoints": 1142
+  },
+  {
+   "prefix": "experiments/act2-wpj-obligation-driven-sieve",
+   "codePoints": 1111
+  },
+  {
+   "prefix": "experiments/act2-wp4g1-cert-reconcile-semantics",
+   "codePoints": 1102
+  },
+  {
+   "prefix": "experiments/impl-identity-2026-11-02",
+   "codePoints": 1011
+  },
+  {
+   "prefix": "experiments/act2-wp4h2-lowering",
+   "codePoints": 1009
+  },
+  {
+   "prefix": "ci",
+   "codePoints": 872
+  },
+  {
+   "prefix": "experiments/u64-add-2026-11-02",
+   "codePoints": 861
+  },
+  {
+   "prefix": "experiments/act2-wp4a-external-proof-candidate-semantics",
+   "codePoints": 664
+  },
+  {
+   "prefix": "tools/release",
+   "codePoints": 661
+  },
+  {
+   "prefix": "experiments/act2-wp0-execution-context",
+   "codePoints": 587
+  },
+  {
+   "prefix": "src/sieve",
+   "codePoints": 580
+  },
+  {
+   "prefix": "experiments/act2-wp15-universe-semantic-boundary",
+   "codePoints": 466
+  },
+  {
+   "prefix": "experiments/act2-r0-atom-getbitsbe",
+   "codePoints": 444
+  },
+  {
+   "prefix": "experiments/act2-wp1-external-symbol-ingress",
+   "codePoints": 408
+  },
+  {
+   "prefix": "data/debt",
+   "codePoints": 370
+  },
+  {
+   "prefix": "tests/verification",
+   "codePoints": 310
+  },
+  {
+   "prefix": "data/bug_attribution",
+   "codePoints": 191
+  },
+  {
+   "prefix": "data/policy",
+   "codePoints": 177
+  },
+  {
+   "prefix": "tests/specs",
+   "codePoints": 165
+  },
+  {
+   "prefix": "tests/gateway",
+   "codePoints": 139
+  },
+  {
+   "prefix": "data/benchmarks",
+   "codePoints": 100
+  },
+  {
+   "prefix": "tests/test_data",
+   "codePoints": 89
+  },
+  {
+   "prefix": "src/infrastructure",
+   "codePoints": 72
+  },
+  {
+   "prefix": "data/reports",
+   "codePoints": 66
+  },
+  {
+   "prefix": "tools/refactor",
+   "codePoints": 50
+  },
+  {
+   "prefix": "tests/solver",
+   "codePoints": 45
+  },
+  {
+   "prefix": "tests",
+   "codePoints": 44
+  },
+  {
+   "prefix": "src/shared_types",
+   "codePoints": 44
+  },
+  {
+   "prefix": "tests/cli",
+   "codePoints": 34
+  },
+  {
+   "prefix": "tests/fixtures",
+   "codePoints": 34
+  },
+  {
+   "prefix": "tools/pr",
+   "codePoints": 26
+  },
+  {
+   "prefix": "tests/nightly",
+   "codePoints": 22
+  },
+  {
+   "prefix": "tests/features",
+   "codePoints": 22
+  },
+  {
+   "prefix": "experiments/act2-wp4h3-proofir",
+   "codePoints": 19
+  },
+  {
+   "prefix": "experiments/rust-skreport-relocation-2026-11-01",
+   "codePoints": 18
+  },
+  {
+   "prefix": "config/spec",
+   "codePoints": 15
+  },
+  {
+   "prefix": "experiments/nim-libp2p-varint-roundtrip-e2e",
+   "codePoints": 15
+  },
+  {
+   "prefix": "tests/gate",
+   "codePoints": 10
+  },
+  {
+   "prefix": "experiments/act2-wp4h1-intrinsic",
+   "codePoints": 10
+  },
+  {
+   "prefix": "experiments/serde-json-claim-2026-10-31",
+   "codePoints": 7
+  },
+  {
+   "prefix": "experiments/sidecar-adoption-e2e",
+   "codePoints": 4
+  },
+  {
+   "prefix": "experiments/act2-wp22-proof-slice-discovery",
+   "codePoints": 4
+  },
+  {
+   "prefix": "src/personas",
+   "codePoints": 3
+  },
+  {
+   "prefix": "tests/fuzz",
+   "codePoints": 2
+  },
+  {
+   "prefix": "config/changes",
+   "codePoints": 2
+  }
+ ],
+ "topFiles": [
+  {
+   "path": "docs/adr/0025-gateway-landing-authority.md",
+   "codePoints": 12100
+  },
+  {
+   "path": "docs/evidence/ci_runner_bootstrap_disable_updates_2026-10-27.md",
+   "codePoints": 10325
+  },
+  {
+   "path": "docs/spec/repository_surface_contract.md",
+   "codePoints": 10155
+  },
+  {
+   "path": "docs/spec/gh_run_observation_quirks.md",
+   "codePoints": 9408
+  },
+  {
+   "path": "docs/spec/productization_contract.md",
+   "codePoints": 9312
+  },
+  {
+   "path": "docs/spec/test_judgment_cas_contract.md",
+   "codePoints": 7202
+  },
+  {
+   "path": "docs/spec/certification_continuity_contract.md",
+   "codePoints": 6950
+  },
+  {
+   "path": "docs/evidence/incident_emergency_disable_window_2026-10-20.md",
+   "codePoints": 6018
+  },
+  {
+   "path": "docs/spec/capsule_minimal_materialization.md",
+   "codePoints": 5969
+  },
+  {
+   "path": "docs/spec/ci_optimization_tcb_judgments.md",
+   "codePoints": 5862
+  },
+  {
+   "path": "docs/spec/admission_evidence_export_contract.md",
+   "codePoints": 5829
+  },
+  {
+   "path": "docs/evidence/residual_issue_ledger_2026-10-31.md",
+   "codePoints": 5738
+  },
+  {
+   "path": "docs/adr/0027-queue-delegation.md",
+   "codePoints": 5733
+  },
+  {
+   "path": "docs/evidence/ci_cost_waste_ledger_2026-11-03.md",
+   "codePoints": 5618
+  },
+  {
+   "path": "docs/adr/0036-generation-promotion-acceptance.md",
+   "codePoints": 5524
+  },
+  {
+   "path": "docs/evidence/b2m_1d_minimal_capsule_materialization_2026-11-08.md",
+   "codePoints": 5444
+  },
+  {
+   "path": "docs/evidence/oct_outage_gpa_regression_mapping.md",
+   "codePoints": 5430
+  },
+  {
+   "path": "docs/agents/merge_admission_observation.md",
+   "codePoints": 5340
+  },
+  {
+   "path": "docs/spec/byo_agent_proposition_contract.md",
+   "codePoints": 5264
+  },
+  {
+   "path": "docs/evidence/b1_gate_b_capability_census_2026-11-04.md",
+   "codePoints": 5241
+  },
+  {
+   "path": "docs/audit/ci_semantic_reduction_audit_2026-09-27.md",
+   "codePoints": 5224
+  },
+  {
+   "path": "docs/spec/obligation_semantics.md",
+   "codePoints": 5224
+  },
+  {
+   "path": "docs/adr/0029-nim-semantic-authority-and-unresolved-facts.md",
+   "codePoints": 5207
+  },
+  {
+   "path": "docs/evidence/serde_json_c7_semantics_aeneas_2026-11-03.md",
+   "codePoints": 5104
+  },
+  {
+   "path": "docs/evidence/sal10_publication/E10_gen3_repo_recreation.md",
+   "codePoints": 5082
+  },
+  {
+   "path": "docs/evidence/b1_semantic_unit_selection_survey_2026-11-04.md",
+   "codePoints": 5051
+  },
+  {
+   "path": "docs/evidence/e3_measurement_contract_2026-10-11.md",
+   "codePoints": 5044
+  },
+  {
+   "path": "docs/evidence/node24_mint_tail_decomposition_2026-11-02.md",
+   "codePoints": 4898
+  },
+  {
+   "path": "docs/spec/bug_verdict_glossary.md",
+   "codePoints": 4698
+  },
+  {
+   "path": "docs/spec/rearm_recovery_status.md",
+   "codePoints": 4695
+  },
+  {
+   "path": "docs/evidence/slo_judgment_window_prereg_2026-11-16.md",
+   "codePoints": 4617
+  },
+  {
+   "path": "docs/spec/canonical_execution_semantics.md",
+   "codePoints": 4608
+  },
+  {
+   "path": "docs/adr/0022-admission-artifact-authority.md",
+   "codePoints": 4578
+  },
+  {
+   "path": "docs/evidence/tests_ci_assurance_classification_2026-10-30.md",
+   "codePoints": 4576
+  },
+  {
+   "path": "docs/spec/replay_harness_config_quirks.md",
+   "codePoints": 4570
+  },
+  {
+   "path": "docs/evidence/epoch_record_pi_shard_2026-11-10.md",
+   "codePoints": 4554
+  },
+  {
+   "path": "config/repository_surface.json",
+   "codePoints": 4515
+  },
+  {
+   "path": "docs/spec/gh_automerge_merge_queue_quirks.md",
+   "codePoints": 4450
+  },
+  {
+   "path": "docs/evidence/ef_cas_isolation_verdict_2026-11-09.md",
+   "codePoints": 4444
+  },
+  {
+   "path": "experiments/act2-wp-toml-b1-input-integrity/bsec/JUDGMENT.md",
+   "codePoints": 4418
+  },
+  {
+   "path": "docs/evidence/sal10_publication/DEPS_REPACKAGE_PROCEDURE.md",
+   "codePoints": 4408
+  },
+  {
+   "path": "docs/evidence/serde_json_c7_adjudication_closure_2026-11-03.md",
+   "codePoints": 4282
+  },
+  {
+   "path": "docs/evidence/cross_venue_b_reuse_closure_2026-11-02.md",
+   "codePoints": 4265
+  },
+  {
+   "path": "docs/evidence/admission_chain_l3_dependency_audit_2026-11-03.md",
+   "codePoints": 4209
+  },
+  {
+   "path": "docs/evidence/github_free_parity_2026-11-19.md",
+   "codePoints": 4195
+  },
+  {
+   "path": "data/promotions/baseline/authorities.md",
+   "codePoints": 4184
+  },
+  {
+   "path": "data/debt_registry.json",
+   "codePoints": 4181
+  },
+  {
+   "path": "docs/spec/ci_provider_failover_quirks.md",
+   "codePoints": 4179
+  },
+  {
+   "path": "docs/spec/config_nims_hermetic_cache_quirk.md",
+   "codePoints": 4168
+  },
+  {
+   "path": "docs/evidence/b1_gate_a_minimal_proof_2026-11-04.md",
+   "codePoints": 4135
+  },
+  {
+   "path": "docs/evidence/merge_queue_dag_attribution_2026-11-01.md",
+   "codePoints": 4126
+  },
+  {
+   "path": "docs/design/debt464_mint_authority_design_2026-09-18.md",
+   "codePoints": 4117
+  },
+  {
+   "path": "docs/evidence/epoch_record_pi_toolscope_2026-11-12.md",
+   "codePoints": 4079
+  },
+  {
+   "path": "experiments/jrpc-errcode-slice-e2e/FREEZE.md",
+   "codePoints": 4068
+  },
+  {
+   "path": "docs/evidence/vs_perf_attr_acceptance_2026-11-16.md",
+   "codePoints": 4060
+  },
+  {
+   "path": "docs/adr/0023-scale-set-authority-supersession.md",
+   "codePoints": 4043
+  },
+  {
+   "path": "docs/spec/github_delegation_residuals.md",
+   "codePoints": 4031
+  },
+  {
+   "path": "docs/evidence/decision_binding_escalation_survey_2026-11-04.md",
+   "codePoints": 4018
+  },
+  {
+   "path": "docs/history/reports/technical_debt_context7_root_cause_analysis_2026_05_30.md",
+   "codePoints": 4002
+  },
+  {
+   "path": "docs/evidence/l3_go_prereg_2026-11-03.md",
+   "codePoints": 3955
+  },
+  {
+   "path": "docs/spec/admission-generation.md",
+   "codePoints": 3954
+  },
+  {
+   "path": "docs/evidence/northflank_existing_env_router_hosting_2026-11-02.md",
+   "codePoints": 3939
+  },
+  {
+   "path": "docs/spec/architecture_v2.md",
+   "codePoints": 3908
+  },
+  {
+   "path": "docs/evidence/node24_merge_group_job_decomposition_2026-11-02.md",
+   "codePoints": 3880
+  },
+  {
+   "path": "docs/evidence/stale_debt_verification_2026-11-02.md",
+   "codePoints": 3845
+  },
+  {
+   "path": "experiments/nim-libp2p-bytesview-slice-e2e/PROPOSAL_C5_VARINT.md",
+   "codePoints": 3843
+  },
+  {
+   "path": "docs/evidence/slo_judgment_window_prereg_2026-11-02.md",
+   "codePoints": 3810
+  },
+  {
+   "path": "docs/spec/legacy_migration_roadmap.md",
+   "codePoints": 3754
+  },
+  {
+   "path": "docs/evidence/nimtry_evaporate_plan_2026-10-12.md",
+   "codePoints": 3747
+  },
+  {
+   "path": "docs/evidence/dual_lane_assurance_audit_2026-11-03.md",
+   "codePoints": 3737
+  },
+  {
+   "path": "docs/spec/nim_effect_system_quirks.md",
+   "codePoints": 3691
+  },
+  {
+   "path": "experiments/act2-wp-toml-b1-input-integrity/bsec/README.md",
+   "codePoints": 3682
+  },
+  {
+   "path": "docs/spec/publication_integrity_gate.md",
+   "codePoints": 3610
+  },
+  {
+   "path": "docs/evidence/mg_reuse_policy_redecision_2026-10-18.md",
+   "codePoints": 3602
+  },
+  {
+   "path": "docs/evidence/epoch_record_base_artifact_2026-10-01.md",
+   "codePoints": 3596
+  },
+  {
+   "path": "docs/evidence/e3_amendment_a2_2026-10-11.md",
+   "codePoints": 3538
+  },
+  {
+   "path": "docs/evidence/b2m_1d_s2_provenance_2026-11-09/capsule_min_measure_report_snapshot.md",
+   "codePoints": 3538
+  },
+  {
+   "path": "docs/evidence/lean_toolchain_scope_analysis_2026-11-02.md",
+   "codePoints": 3538
+  },
+  {
+   "path": "docs/evidence/ci_toolchain_scope_2026-09-30.md",
+   "codePoints": 3522
+  },
+  {
+   "path": "docs/evidence/slo_official_measurement_prereg_2026-11-01.md",
+   "codePoints": 3513
+  },
+  {
+   "path": "docs/adr/0017-incremental-verification-engine.md",
+   "codePoints": 3444
+  },
+  {
+   "path": "docs/evidence/judgment_key_v5_adjudication_2026-10-31.md",
+   "codePoints": 3424
+  },
+  {
+   "path": "docs/evidence/actions_cache_rotation_observation_2026-11-02.md",
+   "codePoints": 3398
+  },
+  {
+   "path": "docs/evidence/merge_queue_first_attempt_failure_2026-10-31.md",
+   "codePoints": 3386
+  },
+  {
+   "path": "docs/spec/external_verification_campaign_contract.md",
+   "codePoints": 3381
+  },
+  {
+   "path": "docs/evidence/h4_routing_protocol.md",
+   "codePoints": 3376
+  },
+  {
+   "path": "docs/spec/proof_dependency_closure.md",
+   "codePoints": 3370
+  },
+  {
+   "path": "docs/design/build_supply_single_provisioning_design_2026-10-15.md",
+   "codePoints": 3363
+  },
+  {
+   "path": "docs/spec/evidence_identity_epoch.md",
+   "codePoints": 3330
+  },
+  {
+   "path": "docs/evidence/vst_dependency_authority_handoff_2026-11-08.md",
+   "codePoints": 3326
+  },
+  {
+   "path": "docs/spec/nim_gendepend_quirks.md",
+   "codePoints": 3317
+  },
+  {
+   "path": "tools/ci/derive_checker_closure.nim",
+   "codePoints": 3286
+  },
+  {
+   "path": "docs/evidence/go_matrix_parallelization_prereg_2026-10-16.md",
+   "codePoints": 3265
+  },
+  {
+   "path": "docs/evidence/serde_json_claim_adjudication_2026-10-31.md",
+   "codePoints": 3261
+  },
+  {
+   "path": "docs/spec/aeneas_generation_contract.md",
+   "codePoints": 3239
+  },
+  {
+   "path": "experiments/act2-wp-toml-b1-input-integrity/p0d2g/AGENT_SPEC.md",
+   "codePoints": 3199
+  },
+  {
+   "path": "docs/evidence/adr0027_measurement_mapping_2026-10-17.md",
+   "codePoints": 3192
+  },
+  {
+   "path": "docs/evidence/slo_status_snapshot_2026-11-02.md",
+   "codePoints": 3188
+  },
+  {
+   "path": "docs/spec/jrpc_errcode_class_binding_contract.md",
+   "codePoints": 3179
+  },
+  {
+   "path": "docs/spec/readiness_verdict_check.md",
+   "codePoints": 3179
+  }
+ ]
+}
