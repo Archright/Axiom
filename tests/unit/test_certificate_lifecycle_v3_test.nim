@@ -1,7 +1,9 @@
 import std/[json, os, strutils, unittest, options]
 import ../../src/verification/cert_writer
+import ../../src/core/proof/proof_budget
 import ../../src/core/trusted/fingerprint_generator
 import ../../src/core/trusted/trust_commit
+import ../../src/core/trusted/solver_invocation
 import ../../src/core/trusted/axiom_pragmas
 import ../../src/verification/certificate_identity
 import ../../src/core/crypto/hash_kernel
@@ -14,8 +16,35 @@ import ../../src/verification/certificate_manager
 import ../../src/core/proof/proof_integrity
 import ../../src/core/utils/repo_root
 import ../../src/core/results
+import ../../src/verification/kernel_reexecution
 import ../../src/verification/obligation/kernel_acceptance_authority
 import ../../src/verification/obligation/lean_kernel_boundary
+
+proc lifecycleObservation(smtlib2: string): JsonNode =
+  ## VS-188: a certGreen claim is admissible only with a recorded dual-passing
+  ## observation bound to the cert's smtlib2. This fixture records what a fresh
+  ## kernel run would have observed; isDeepVerified re-validates every binding.
+  kernelObservationJson(KernelObservation(
+    lean: LeanObservation(
+      observed: true,
+      theoremName: "probeLifecycleGreenKernel",
+      axiomSet: @[],
+      verdict: krPassed,
+      leanSourceDigest: sha256Hex("theorem probeLifecycleGreenKernel : True := trivial\n"),
+      outputDigest: sha256Hex("lifecycle-lean-output"),
+      toolchainIdentity: "lean:test;checker:sha256:" & sha256Hex("test-checker"),
+      skippedChecks: @[]),
+    z3: Z3Observation(
+      observed: true,
+      queryDigest: sha256Hex(smtlib2),
+      outputDigest: sha256Hex("lifecycle-z3-output"),
+      verdict: krPassed,
+      optionsDigest: deterministicSolverOptionsDigest(),
+      binaryDigest: sha256Hex("lifecycle-z3-binary"),
+      randomSeed: Z3PinnedRandomSeed,
+      rlimit: z3DeterministicBudget,
+      timeoutMs: z3SafetyNetMs),
+    verificationMode: "lean+z3"))
 
 ## START gate block C — certificate lifecycle (plan: yelena-belova-constantine-jean-grey.md).
 ##
@@ -246,7 +275,7 @@ suite "START-C — v3 certificate lifecycle (generate → validate → persist �
           leanProposition = fixtureLeanProp,
           kaa = some(kaa.get()))
         check ok
-        let certJson = parseFile(tmpDir / "ir-hash-green-001.json")
+        var certJson = parseFile(tmpDir / "ir-hash-green-001.json")
         check certJson["status"].getStr() == "certGreen"
         check certJson["kernel"].getBool() == true
         # manager hard-gate accepts a certGreen with dual evidence
@@ -254,6 +283,10 @@ suite "START-C — v3 certificate lifecycle (generate → validate → persist �
         let gateWrite = writeCertificate(tmpDir / "hardgate_ok.json", certJson)
         check gateWrite
         check fileExists(tmpDir / "hardgate_ok.json")
+        # VS-188: the VKD deep-verification predicate requires the fresh
+        # observation behind a certGreen claim; record the fixture's observed
+        # kernel facts (the cert's own smtlib2 binding is re-validated).
+        certJson["observation"] = lifecycleObservation(fixtureSmt)
         # VKD admission predicate admits it against the REAL scope lock
         let scope = loadKernelScope(repoRoot / "data" / "verification_scope.lock",
                                     failClosed = true)

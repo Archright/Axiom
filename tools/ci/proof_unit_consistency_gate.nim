@@ -1987,7 +1987,9 @@ const
      artifact: "data/debt_registry.json", role: RoleTestFixture),
     (file: "tests/unit/test_debt_projection_determinism.nim", line: 591,
      artifact: "docs/DEBT_REGISTRY.md", role: RoleTestFixture),
-    (file: "tests/gateway/debt_scan_gate_feature_test.nim", line: 43,
+    (file: "tests/gateway/debt_scan_gate_feature_test.nim", line: 47,
+     artifact: "docs/DEBT_REGISTRY.md", role: RoleTestFixture),
+    (file: "tests/gateway/debt_scan_gate_feature_test.nim", line: 58,
      artifact: "docs/DEBT_REGISTRY.md", role: RoleTestFixture),
   ]
 

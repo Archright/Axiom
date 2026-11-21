@@ -28,6 +28,7 @@ import infrastructure/certificate_attestation
 import verification/canonical_certificate_payload
 import verification/canonical_json
 import verification/certificate_identity
+import verification/kernel_reexecution
 import verification/verification_subject
 
 when fileExists("src/generated/build_env.nim"):
@@ -62,6 +63,19 @@ type
                                  ## surfaces without merge context
     axiomVersion*: string
 
+    ## VS-188 Phase 1 — the fresh kernel observation is the ONLY source of
+    ## the certificate's kernel/status/solver claims. `observed=false` or a
+    ## non-pass verdict refuses the mint (no weaker status is emitted).
+    observation*: LeanObservation
+    z3Observation*: Z3Observation
+    verificationMode*: string    ## "lean+z3" for a dual-verified subject cert
+    ## Provenance presence anchor (witness provenance block on the sign
+    ## surface; the chain's own provenance on the full-attest surface). A cert
+    ## without one cannot mint `trusted`/`certGreen` — the writer returns an
+    ## error instead of emitting a weaker status. The anchor is presence-only:
+    ## it is NOT producer authenticity (Ed25519 here is integrity-only).
+    provenanceAnchor*: JsonNode = nil
+
   SubjectCertificateMintResult* = object
     path*: string
     commitId*: string
@@ -74,14 +88,74 @@ func subjectCertEvidenceId*(evidenceDigest: string): string {.raises: [].} =
   else:
     ""
 
+func subjectCertObservation*(input: SubjectCertificateInput): KernelObservation {.raises: [].} =
+  ## The single projection the certificate binds: both halves of the fresh run
+  ## plus the mode derived from which halves were observed.
+  KernelObservation(
+    lean: input.observation,
+    z3: input.z3Observation,
+    verificationMode: input.verificationMode)
+
+func subjectCertProvenancePresent*(input: SubjectCertificateInput): bool {.raises: [].} =
+  ## Presence-only provenance anchor. This is NOT producer authenticity: it
+  ## records that the mint had a provenance block to bind, and `trusted` is
+  ## never emitted without it.
+  not input.provenanceAnchor.isNil and
+    input.provenanceAnchor.kind == JObject and
+    input.provenanceAnchor.len > 0
+
+func subjectCertVerified*(input: SubjectCertificateInput): bool {.raises: [].} =
+  ## `verified` is a PURE function of the observation — never of a recorded
+  ## string. Both kernels must have observed and passed.
+  input.observation.observed and input.observation.verdict == krPassed and
+    input.z3Observation.observed and input.z3Observation.verdict == krPassed
+
+func subjectCertStatus*(input: SubjectCertificateInput): string {.raises: [].} =
+  ## The status is derived from the observation, never hardcoded. A
+  ## non-passing observation has NO status (the writer refuses before this
+  ## value can reach a certificate).
+  if subjectCertVerified(input) and subjectCertProvenancePresent(input):
+    "certGreen"
+  else:
+    ""
+
+func subjectCertKernel*(input: SubjectCertificateInput): bool {.raises: [].} =
+  ## `kernel` records that the Lean kernel produced the observation.
+  input.observation.observed and input.observation.verdict == krPassed
+
+func subjectCertSolverStatus*(input: SubjectCertificateInput): string {.raises: [].} =
+  ## z3 solver status from the observed verdict ("" when nothing was observed).
+  if not input.z3Observation.observed:
+    ""
+  elif input.z3Observation.verdict == krPassed:
+    "unsat"
+  else:
+    $input.z3Observation.verdict
+
+func subjectCertReason*(input: SubjectCertificateInput): string {.raises: [].} =
+  ## Human-facing reason, derived from the same facts as the status.
+  if subjectCertVerified(input) and subjectCertProvenancePresent(input):
+    "dual-verified"
+  else:
+    ""
+
+func subjectCertWinningStrategy*(input: SubjectCertificateInput): string {.raises: [].} =
+  if subjectCertVerified(input) and subjectCertProvenancePresent(input):
+    "lean-replay"
+  else:
+    ""
+
 func subjectCertDigestSet*(input: SubjectCertificateInput): tuple[
     sourceHash, claimJson, inputHash, solverInputDigest, solverResultDigest: string] {.raises: [].} =
   ## The digest family shared by the payload, the identity projection and the
   ## attestation block — computed once so writer and attestation cannot drift.
+  ## Every value is DERIVED from the observation: the solver status/result
+  ## digest covers the observed z3 verdict, and the claim carries the same
+  ## status the core fields emit (a single derivation point, not two).
   let sourceHash = computeStableSourceFingerprint(input.sourceCode)
   let claimJson = canonical_json.canonicalJsonString(%*{
     "type": "subject-continuity",
-    "status": "certGreen",
+    "status": subjectCertStatus(input),
     "modulePath": input.modulePath,
     "functionName": input.funcName
   })
@@ -98,10 +172,13 @@ func subjectCertDigestSet*(input: SubjectCertificateInput): tuple[
   else:
     ""
   let solverResultRaw = join([
-    "solverStatus", "unsat",
-    "z3Executed", "true",
+    "solverStatus", subjectCertSolverStatus(input),
+    "z3Executed", $(input.z3Observation.observed and input.z3Observation.verdict == krPassed),
     "solverInputBytes", $input.smtlib2.len,
-    "tier", "certGreen"
+    "tier", subjectCertStatus(input),
+    "z3QueryDigest", input.z3Observation.queryDigest,
+    "z3OptionsDigest", input.z3Observation.optionsDigest,
+    "z3BinaryDigest", input.z3Observation.binaryDigest
   ], "\n")
   (sourceHash: sourceHash,
    claimJson: claimJson,
@@ -120,9 +197,9 @@ func subjectCertIdentity*(input: SubjectCertificateInput; digests: tuple[
     sourceHash: digests.sourceHash,
     irHash: input.irHash,
     leanProposition: input.leanProposition,
-    solverStatus: "unsat",
-    status: "certGreen",
-    winningStrategy: "lean-replay",
+    solverStatus: subjectCertSolverStatus(input),
+    status: subjectCertStatus(input),
+    winningStrategy: subjectCertWinningStrategy(input),
     inputHash: digests.inputHash,
     solverInputDigest: digests.solverInputDigest,
     solverResultDigest: digests.solverResultDigest,
@@ -141,22 +218,29 @@ func subjectCertCoreFields*(input: SubjectCertificateInput; digests: tuple[
   result["functionName"] = %input.funcName
   result["fingerprint"] = %computeVerificationFingerprint(input.irHash, input.leanProposition)
   result["sourceHash"] = %digests.sourceHash
-  result["trusted"] = %true
-  result["kernel"] = %true
-  result["status"] = %"certGreen"
-  result["reason"] = %"dual-verified"
-  result["solverStatus"] = %"unsat"
-  result["winningStrategy"] = %"lean-replay"
+  ## `trusted` and `verified` are SEMANTICALLY SEPARATE:
+  ##   verified — the fresh observation (both kernels observed + passed);
+  ##   trusted  — a provenance anchor was present at mint time. Integrity
+  ##              provenance only; the Ed25519 signature is not producer
+  ##              authenticity. A nil anchor cannot mint certGreen (the
+  ##              writer validates before reaching this projection).
+  result["trusted"] = %subjectCertProvenancePresent(input)
+  result["verified"] = %subjectCertVerified(input)
+  result["kernel"] = %subjectCertKernel(input)
+  result["status"] = %subjectCertStatus(input)
+  result["reason"] = %subjectCertReason(input)
+  result["solverStatus"] = %subjectCertSolverStatus(input)
+  result["winningStrategy"] = %subjectCertWinningStrategy(input)
   result["solverMeta"] = %*{
-    "leanCompilerVerified": true,
+    "leanCompilerVerified": subjectCertKernel(input),
     "negativeTestResult": false,
     "vacuityChecked": false,
     "vacuityProven": false,
     "solverVersion": BuildEnvZ3Version,
     "solverProvenance": "spZ3SAT",
-    "z3Executed": true
+    "z3Executed": input.z3Observation.observed
   }
-  result["verificationTier"] = %"dual-verified"
+  result["verificationTier"] = %subjectCertReason(input)
   result["leanProposition"] = %input.leanProposition
   result["smtlib2"] = %input.smtlib2
   result["leanSource"] = %input.leanSource
@@ -166,13 +250,40 @@ func subjectCertCoreFields*(input: SubjectCertificateInput; digests: tuple[
   result["translationVersion"] = %"axiom-ir-smt-v1"
   result["claim"] = %*{
     "type": "subject-continuity",
-    "status": "certGreen",
+    "status": subjectCertStatus(input),
     "modulePath": input.modulePath,
     "functionName": input.funcName
   }
   result["inputHash"] = %digests.inputHash
   result["solverInputDigest"] = %digests.solverInputDigest
   result["solverResultDigest"] = %digests.solverResultDigest
+  ## VS-188 Phase 1 signed observation block — OUTSIDE the 13-field identity
+  ## projection (certificate_identity.nim) and covered by the Ed25519 payload
+  ## signature + journal replay projection.
+  let observation = subjectCertObservation(input)
+  result["observation"] = kernelObservationJson(observation)
+  result["observationDigest"] = %kernelObservationDigest(observation)
+  result["theoremName"] = %input.observation.theoremName
+  var axiomsUsed = newJArray()
+  for name in input.observation.axiomSet:
+    axiomsUsed.add(%name)
+  result["axiomsUsed"] = axiomsUsed
+  result["leanSourceDigest"] = %input.observation.leanSourceDigest
+  result["smtlib2Digest"] = %sha256Hex(input.smtlib2)
+  result["z3QueryDigest"] = %input.z3Observation.queryDigest
+  result["z3OptionsDigest"] = %input.z3Observation.optionsDigest
+  result["z3BinaryDigest"] = %input.z3Observation.binaryDigest
+  result["verificationMode"] = %input.verificationMode
+  var skippedChecks = newJArray()
+  for check in input.observation.skippedChecks:
+    skippedChecks.add(%check)
+  result["skippedChecks"] = skippedChecks
+  ## Provenance axis — the anchor the mint saw, recorded verbatim so a
+  ## verifier can compare it against the external GitHub run/artifact
+  ## identity. `trusted` alone is an unverifiable assertion; the anchor is
+  ## the evidence. Ed25519 remains integrity-only (public-seed key).
+  if not input.provenanceAnchor.isNil:
+    result["provenanceAnchor"] = input.provenanceAnchor
   result["identityDigest"] = %subjectCertIdentity(input, digests)
 
 func subjectCertBindingFields*(input: SubjectCertificateInput): JsonNode {.raises: [].} =
@@ -221,6 +332,28 @@ proc subjectCertValidate*(input: SubjectCertificateInput): string {.raises: [].}
     return "subject_continuity_writer: certTree must be 40 lowercase hex — the merge-candidate tree OID (fail-closed)"
   if input.toolchainIdentity.len == 0 or not isValidIso8601Zulu(input.createdAt):
     return "subject_continuity_writer: toolchain identity and ISO createdAt required (fail-closed)"
+  ## VS-188 Phase 1 — the certificate only records a fresh observation it can
+  ## defend. An absent/non-passing half, a mode the observed flags cannot
+  ## justify, a digest that does not bind the exact inputs, or an axiom outside
+  ## the INV-6 allowlist all refuse the mint (no weaker status is emitted).
+  if not subjectCertVerified(input):
+    return "subject_continuity_writer: both kernels must have observed and passed — absent/non-passing observation refuses the mint (fail-closed)"
+  if input.verificationMode != "lean+z3":
+    return "subject_continuity_writer: verificationMode must be 'lean+z3' for a dual-verified subject cert (fail-closed)"
+  if not subjectCertProvenancePresent(input):
+    return "subject_continuity_writer: provenance anchor required — a cert without provenance cannot mint trusted/certGreen (fail-closed)"
+  ## Claim identity: the proposition the certificate names must be the exact
+  ## theorem the kernel observed. A source that proves a different theorem
+  ## (decoy) can never be bound to the adopted proposition.
+  if input.leanProposition.len == 0 or
+      input.leanProposition != input.observation.theoremName:
+    return "subject_continuity_writer: leanProposition must equal the observed theoremName (fail-closed)"
+  let observationProblem = kernelObservationValidationError(
+    subjectCertObservation(input), input.leanSource, input.smtlib2)
+  if observationProblem.len > 0:
+    return "subject_continuity_writer: " & observationProblem
+  if subjectCertStatus(input) != "certGreen":
+    return "subject_continuity_writer: derived status is not certGreen — refusing to emit a weaker status (fail-closed)"
   ""
 
 proc subjectCertJournalBind*(certDir: string; node: JsonNode; input: SubjectCertificateInput): Result[string, string]

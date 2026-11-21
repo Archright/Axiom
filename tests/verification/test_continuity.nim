@@ -37,10 +37,13 @@
 
 import std/[json, os, strutils]
 import core/crypto/hash_kernel
+import core/proof/proof_budget
 import core/results
+import core/trusted/solver_invocation
 import infrastructure/certificate_attestation
 import verification/certificate_identity
 import verification/continuity_check
+import verification/kernel_reexecution
 import verification/subject_continuity_writer
 import verification/verification_subject
 
@@ -157,6 +160,32 @@ func evidenceDigestNow(): string =
   ## A stable 64-hex evidence digest for fixtures (identity wire field only).
   sha256Hex("continuity-test-evidence")
 
+func fixtureObservation(leanSource, smtlib2, theoremName: string): KernelObservation =
+  ## A self-consistent dual-kernel pass bound to the fixture's exact sources.
+  ## The continuity predicate verifies certificates, never kernels; the writer
+  ## projection still re-validates every binding it records.
+  KernelObservation(
+    lean: LeanObservation(
+      observed: true,
+      theoremName: theoremName,
+      axiomSet: @[],
+      verdict: krPassed,
+      leanSourceDigest: sha256Hex(leanSource),
+      outputDigest: sha256Hex("continuity-lean-output"),
+      toolchainIdentity: "lean:test;checker:sha256:" & sha256Hex("test-checker"),
+      skippedChecks: @[]),
+    z3: Z3Observation(
+      observed: true,
+      queryDigest: sha256Hex(smtlib2),
+      outputDigest: sha256Hex("continuity-z3-output"),
+      verdict: krPassed,
+      optionsDigest: deterministicSolverOptionsDigest(),
+      binaryDigest: sha256Hex("continuity-z3-binary"),
+      randomSeed: Z3PinnedRandomSeed,
+      rlimit: z3DeterministicBudget,
+      timeoutMs: z3SafetyNetMs),
+    verificationMode: "lean+z3")
+
 proc journalFreeSubjectCert(): JsonNode
     {.raises: [CatchableError].} =
   ## A structurally complete subject-continuity certificate WITHOUT any
@@ -177,15 +206,19 @@ proc journalFreeSubjectCert(): JsonNode
     scopeDigestNow(), evidenceDigestNow(), 1, "2026-09-09T09:00:00Z")
   if subjectMade.isErr:
     quit("fixture subject failed: " & subjectMade.error)
+  let leanSource = "theorem axiom_continuity_probe_sanity (x : Int) (r : Int)\n" &
+    "  (h1 : r = if x * 2 > 100 then 0 else x * 2)\n" &
+    "  (h2 : x * 2 > 100) : r = 0 := by\n  simp [h1, h2]\n"
+  let smtlib2 = "(declare-const x Int)\n(declare-const r Int)\n(check-sat)\n"
+  let observation = fixtureObservation(leanSource, smtlib2,
+    "axiom_continuity_probe_sanity")
   let input = SubjectCertificateInput(
     subject: subjectMade.get,
     modulePath: "src/verification/continuity_probe.nim",
     sourceCode: "func continuityProbe(a: int): int = a",
     funcName: "continuityProbe",
-    leanSource: "theorem axiom_continuity_probe_sanity (x : Int) (r : Int)\n" &
-      "  (h1 : r = if x * 2 > 100 then 0 else x * 2)\n" &
-      "  (h2 : x * 2 > 100) : r = 0 := by\n  simp [h1, h2]\n",
-    smtlib2: "(declare-const x Int)\n(declare-const r Int)\n(check-sat)\n",
+    leanSource: leanSource,
+    smtlib2: smtlib2,
     leanProposition: "axiom_continuity_probe_sanity",
     prHeadSha: headSha,
     prNumber: 1,
@@ -196,7 +229,11 @@ proc journalFreeSubjectCert(): JsonNode
     evidenceDigest: evidenceDigestNow(),
     irHash: "00f88a21f9211258ffa0b90003fb337c80a8cca0b7964b44b8c017920698e563",
     createdAt: "2026-09-09T23:15:15Z",
-    axiomVersion: "test")
+    axiomVersion: "test",
+    observation: observation.lean,
+    z3Observation: observation.z3,
+    verificationMode: observation.verificationMode,
+    provenanceAnchor: %*{"source": "continuity-test", "scheme": "axiom.subject-cert.v1"})
   let digests = subjectCertDigestSet(input)
   var node = subjectCertCoreFields(input, digests)
   let binding = subjectCertBindingFields(input)

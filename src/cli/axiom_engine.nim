@@ -980,12 +980,21 @@ proc runBatchVerification*(
       if r.evidence.isSome:
         let ev = r.evidence.get()
         node["verificationDecision"] = %verificationDecisionVerifiedSpelling
-        node["canonicalEvidence"] = %*{
+        var canonicalEvidence = %*{
           "obligationId": ev.cleObligationId(),
           "propositionHash": ev.clePropositionHash(),
           "leanSourceHash": ev.cleLeanSourceHash(),
           "kaaDigest": ev.cleKaaDigest(),
           "toolchainFingerprint": ev.cleToolchainFingerprint()}
+        # Evidence Bundle v2 §6: the canonical proposition text is the one
+        # identity input the certificate body does not persist. The sealed
+        # CLE carries it and its constructor guarantees
+        # sha256Hex(proposition) == propositionHash. Non-empty only —
+        # absence, never a fabricated empty string.
+        let canonicalProposition = ev.cleProposition()
+        if canonicalProposition.len > 0:
+          canonicalEvidence["canonicalProposition"] = %canonicalProposition
+        node["canonicalEvidence"] = canonicalEvidence
       if r.counterExample.len > 0:
         node["counterExample"] = %r.counterExample
       if node.len > 0:
@@ -1062,7 +1071,8 @@ proc renderPersist*(
   projections: JsonNode;
   display: JsonNode = nil;
   findingEvidence: JsonNode = nil;
-  freshness: JsonNode = nil
+  freshness: JsonNode = nil;
+  unitEvidenceRefs: JsonNode = nil
 ): Result[string, string] {.raises: [CatchableError].} =
   ## State-file projection: the post-loop persist writes
   ## projection(RunResult, PreRunContext) — the last-wave document is never
@@ -1074,6 +1084,10 @@ proc renderPersist*(
   ## by targetSymbol (machine observations + raw quartet payload lines +
   ## subject probe identity) — a FIXED reporter-consumed interface persisted
   ## at the state document ROOT (never a display-unit key); nil = no block.
+  ## `unitEvidenceRefs` = the wave loop's cross-wave keyed union
+  ## (WaveOutcome.unitEvidence) — the run-scoped canonical-evidence set the
+  ## Evidence Bundle v2 exporter selects from. Never a last-wave copy; nil =
+  ## no block (a zero-wave run's empty union is still written as {}).
   let reportJson = renderLegacyReport(runResult, preRun, projections)
   if not display.isNil:
     reportJson["display"] = display
@@ -1081,6 +1095,8 @@ proc renderPersist*(
     reportJson["findingEvidence"] = findingEvidence
   if not freshness.isNil:
     reportJson["freshness"] = freshness
+  if not unitEvidenceRefs.isNil:
+    reportJson["unitEvidenceRefs"] = unitEvidenceRefs
   persistAxProofState(statePath, reportJson)
 
 # DEBT#458 marker removed — canonical boundary installed (Phase X1): the wave
@@ -7085,10 +7101,14 @@ proc appendDisplayAndPersist(prepared: PreparedRun; proofReport: var ProofReport
     else:
       newJArray()),
     "authoritative": false}
-  renderPersist(prepared.statePath, runResult, prepared.preRun, projections,
-    displayContainer,
+  let persisted = renderPersist(prepared.statePath, runResult, prepared.preRun,
+    projections, displayContainer,
     (if findingEvidence.len > 0: findingEvidence else: nil),
-    freshnessMarker)
+    freshnessMarker,
+    waves.unitEvidence)
+  if persisted.isErr():
+    return err(persisted.error)
+  ok(persisted.get)
 
 proc canonicalProofExitCode(priorExit: int; reportJson: JsonNode): int {.
     raises: [Exception, IOEffect], axiomEffect: IOEffect,

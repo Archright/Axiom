@@ -62,6 +62,20 @@ const volatileKeys* = [
   # wp5 sensitivity gate (comment-only must-not-flip) executed for the first
   # time.
   "topologyScore", "complexityScore",
+  # Canonical evidence identity envelope — the provenance block a v2 bundle
+  # export selects from (obligationId/propositionHash/leanSourceHash/
+  # kaaDigest/toolchainFingerprint/canonicalProposition). Its `obligationId`
+  # is `computeBoundObligationId`: H(subjectModuleSha256 | subjectGitRef |
+  # treeMerkle | irDigest | …) — a subject-BYTE and commit identity, so a
+  # semantically inert comment moves it. The R3 wp5 sensitivity control
+  # (comment-only must-not-flip) measured exactly this: with the envelope in
+  # the projection, the digest flipped; every other field in it stayed put.
+  # §6 동기화 (2026-11-20, 증거-신원 봉투 배제): the envelope binds WHICH
+  # artifact/execution produced the evidence, not WHAT was decided — the
+  # verdict fields (verificationDecision, claimOutcome, status/tier) remain
+  # in the projection, and the state keeps the envelope for bundle export;
+  # it is excluded from the canonical digest only.
+  "canonicalEvidence",
 ]
 
 func isVolatileKey*(k: string): bool {.raises: [].} =

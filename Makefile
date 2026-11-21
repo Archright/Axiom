@@ -77,6 +77,7 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/test_debt_budget_sync.nim \
                   tests/unit/test_debt_engine_sync_budget.nim \
                   tests/unit/test_debt_projection_determinism.nim \
+                  tests/unit/test_debt_status_vocabulary.nim \
                   tests/unit/test_theater_allowlist_structure.nim \
                   tests/unit/test_lane_module_resolution.nim \
                   tests/unit/test_hollow_cas_closure.nim \
@@ -100,6 +101,7 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/verification/test_g6_prove_runtime_vault.nim \
                   tests/verification/test_g6_verify_journal_not_reference.nim \
                   tests/verification/test_g6_runtime_reference_divergence.nim \
+                  tests/verification/test_cert_source_path_resolution.nim \
                   tests/unit/test_build_provenance_field.nim \
                   tests/unit/test_counterexample_replay.nim \
                   tests/unit/test_bug_verdict_projection.nim \
@@ -1045,9 +1047,10 @@ readiness-collect: bin/readiness_collect_ci ## Collect R1–R8 readiness evidenc
 	rm -rf "$$PROBE_DIR/target"; \
 	./bin/readiness_collect_ci --repo-root . --artifacts logs --out data/readiness/evidence --rust-probe-dir "$$PROBE_DIR"
 
-build: $(METADATA) ## 전체 CLI 빌드 (nim check)
+# debug 진단 경로: nim c --hints:off -d:allowMissingZ3 -o:bin/ax src/cli/main.nim
+build: $(METADATA) ## 전체 CLI 빌드 (release)
 	@echo "=== [3/4] Full Build ==="
-	$(NIM) c --hints:off -d:allowMissingZ3 -o:bin/ax src/cli/main.nim
+	$(NIM) c -d:release --hints:off -o:bin/ax src/cli/main.nim
 	@echo "✅ Build successful"
 	@echo ""
 

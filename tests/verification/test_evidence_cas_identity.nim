@@ -3,6 +3,7 @@ import core/crypto/hash_kernel
 import core/proof/proof_budget
 import core/trusted/solver_invocation
 import verification/evidence_cas
+import verification/kernel_reexecution
 
 ## Evidence CAS — metamorphic identity test (PURE: no z3, no lean, no
 ## network, no git, no filesystem). Exercises the EvidenceKey derivation
@@ -56,16 +57,44 @@ proc baseKeyInputs(): EvidenceKeyInputs =
     policyDigest: digest64("policy-set-base"),
     scopeDigest: digest64("scope-lock-base"))
 
+proc sampleObservation(leanSource, smtlib2: string): KernelObservation =
+  ## A self-consistent dual-kernel pass bound to the exact sources below: the
+  ## verdict members restate this observation, and its digests bind the sources.
+  KernelObservation(
+    lean: LeanObservation(
+      observed: true,
+      theoremName: "add_spec",
+      axiomSet: @[],
+      verdict: krPassed,
+      leanSourceDigest: sha256Hex(leanSource),
+      outputDigest: sha256Hex("lean-output"),
+      toolchainIdentity: "lean:test;checker:sha256:" & sha256Hex("test-checker"),
+      skippedChecks: @[]),
+    z3: Z3Observation(
+      observed: true,
+      queryDigest: sha256Hex(smtlib2),
+      outputDigest: sha256Hex("z3-output"),
+      verdict: krPassed,
+      optionsDigest: deterministicSolverOptionsDigest(),
+      binaryDigest: sha256Hex("z3-binary"),
+      randomSeed: Z3PinnedRandomSeed,
+      rlimit: z3DeterministicBudget,
+      timeoutMs: z3SafetyNetMs),
+    verificationMode: "lean+z3")
+
 proc sampleNormalized(): NormalizedEvidence =
+  let leanSource = "theorem add_spec (a b : Int) : add a b = a + b := by simp"
+  let smtlib2 = "(set-option :random-seed 42)\n(declare-fun x () Int)\n(assert (> x 0))\n(check-sat)\n"
   NormalizedEvidence(
     funcSource: "func add(a, b: int): int = a + b",
     funcName: "add",
-    leanSource: "theorem add_spec (a b : Int) : add a b = a + b := by simp",
-    smtlib2: "(set-option :random-seed 42)\n(declare-fun x () Int)\n(assert (> x 0))\n(check-sat)\n",
+    leanSource: leanSource,
+    smtlib2: smtlib2,
     irHash: digest64("ir-base"),
     extractionVerdict: eaAgree,
     leanVerdict: krPassed,
-    z3Verdict: krPassed)
+    z3Verdict: krPassed,
+    observation: sampleObservation(leanSource, smtlib2))
 
 type
   RunContext = object
@@ -138,7 +167,7 @@ proc main() =
     "POSITIVE (c): the normalized digest itself is stable across derivations"
   var lastPos = -1
   for key in ["extractionVerdict", "funcName", "funcSource", "irHash",
-              "leanSource", "smtlib2", "z3Verdict"]:
+              "leanSource", "observation", "smtlib2", "z3Verdict"]:
     let at = wire1.find("\"" & key & "\":")
     doAssert at > lastPos,
       "POSITIVE (c): field '" & key & "' must appear in the fixed RFC-8785 canonical order"
@@ -189,9 +218,27 @@ proc main() =
       "NEGATIVE: z3 verdict change must change the normalized digest"
     doAssert not isReusableOutcome(m),
       "a non-passing z3 verdict must never count as a reusable outcome"
+  block:
+    var m = evidence; m.observation.lean.theoremName = "other_spec"
+    doAssert normalizedEvidenceDigest(m) != recordDigest,
+      "NEGATIVE: observation theoremName change must change the normalized digest"
+  block:
+    var m = evidence; m.observation.z3.observed = false
+    doAssert normalizedEvidenceDigest(m) != recordDigest,
+      "NEGATIVE: observation observed-flag change must change the normalized digest"
+    doAssert validateNormalizedEvidence(m) != "",
+      "an observation whose flags contradict its verificationMode must be rejected"
+    doAssert not isReusableOutcome(m),
+      "a half-observed record must never count as a reusable outcome"
+  block:
+    var m = evidence; m.observation = KernelObservation()
+    doAssert normalizedEvidenceDigest(m) != recordDigest,
+      "NEGATIVE: dropping the observation must change the normalized digest"
+    doAssert not isReusableOutcome(m),
+      "a record without a recorded observation must never count as a reusable outcome"
   doAssert isReusableOutcome(evidence),
-    "the all-pass sample (eaAgree + krPassed + krPassed) must count as a reusable outcome"
-  echo "  OK: normalized record — all 8 member mutations move the digest; reusability gate correct"
+    "the all-pass sample (eaAgree + krPassed + krPassed + dual-kernel observation) must count as a reusable outcome"
+  echo "  OK: normalized record — all 9 member mutations move the digest; reusability gate correct"
 
   # ── NEGATIVE mutations: every semantic input change MUST move the key ─────
   var matrix: seq[string] = @[$k1]

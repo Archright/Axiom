@@ -1,6 +1,8 @@
 import std/[base64, json, os, strutils]
 import core/crypto/hash_kernel
+import core/proof/proof_budget
 import core/results
+import core/trusted/solver_invocation
 import verification/attestation_orchestrator
 import verification/canonical_json
 import verification/evidence_cas
@@ -100,6 +102,32 @@ func inc3(a: int): int =
 """
 const AttestLeanPass = "theorem axiom_attest_prop : True := by trivial"
 const AttestSmtUnsat = "(declare-const x Int)\n(assert (and (> x 0) (< x 0)))\n(check-sat)"
+
+proc attestObservation(leanSource, smtlib2: string): KernelObservation =
+  ## A self-consistent dual-kernel pass bound to the fixture's exact sources:
+  ## the stored payload verdicts restate this observation, and its digests bind
+  ## the sources a HIT is re-verified against.
+  KernelObservation(
+    lean: LeanObservation(
+      observed: true,
+      theoremName: "axiom_attest_prop",
+      axiomSet: @[],
+      verdict: krPassed,
+      leanSourceDigest: sha256Hex(leanSource),
+      outputDigest: sha256Hex("attest-lean-output"),
+      toolchainIdentity: "lean:test;checker:sha256:" & sha256Hex("test-checker"),
+      skippedChecks: @[]),
+    z3: Z3Observation(
+      observed: true,
+      queryDigest: sha256Hex(smtlib2),
+      outputDigest: sha256Hex("attest-z3-output"),
+      verdict: krPassed,
+      optionsDigest: deterministicSolverOptionsDigest(),
+      binaryDigest: sha256Hex("attest-z3-binary"),
+      randomSeed: Z3PinnedRandomSeed,
+      rlimit: z3DeterministicBudget,
+      timeoutMs: z3SafetyNetMs),
+    verificationMode: "lean+z3")
 
 proc hex40(seed: int): string =
   sha256Hex("candidate" & $seed & runId)[0 ..< 40]
@@ -310,7 +338,8 @@ block:
     irHash: knownIrHash,
     extractionVerdict: eaAgree,
     leanVerdict: krPassed,
-    z3Verdict: krPassed)
+    z3Verdict: krPassed,
+    observation: attestObservation(evidence.leanSource, evidence.smtlib2))
   let storedPayload = normalizedEvidenceWire(storedNe)
   let storedRecRes = makeEvidenceRecord($casKey, storedPayload,
     %*{"attestation": "sha256:" & sha256Hex("t2-att")}, "2026-10-06T00:00:00Z",
@@ -335,6 +364,10 @@ block:
   expectVerdict("T2: HIT chain passes WITHOUT stages (b)+(c) (poisoned tools prove the skip)",
     r, atPassed)
   checkEqStr("T2: reusedIrHash == the stored payload's irHash", reusedIrHash, knownIrHash)
+  expect(r.observation.verificationMode == "lean+z3" and
+    r.observation.lean.theoremName == "axiom_attest_prop" and
+    r.observation.z3.observed,
+    "T2: HIT reuses the stored observation only after re-validating it")
   expect(agree.nimDigest == "" and agree.leanDigest == "",
     "T2: extraction agreement never ran (stage-b sanctioned skip)")
   # The rebound record (what the CLI writes on HIT): same identity, same
@@ -378,7 +411,7 @@ block:
       expect(agree.verdict == eaAgree and agree.nimDigest.len == 64,
         "T3: fresh agreement recorded (stages b+c ran for real)")
       expect(reusedIrHash.len == 0, "T3: MISS never reuses")
-      let neRes = normalizedEvidenceForRun(evidence, agree)
+      let neRes = normalizedEvidenceForRun(evidence, agree, r.observation)
       expect(neRes.isOk, "T3: normalizedEvidenceForRun: " &
         (if neRes.isErr: neRes.error else: ""))
       if neRes.isOk:
@@ -462,7 +495,8 @@ block:
     funcSource: evidence.funcSource, funcName: evidence.funcName,
     leanSource: evidence.leanSource, smtlib2: evidence.smtlib2,
     irHash: hex64(419), extractionVerdict: eaAgree,
-    leanVerdict: krPassed, z3Verdict: krPassed)
+    leanVerdict: krPassed, z3Verdict: krPassed,
+    observation: attestObservation(evidence.leanSource, evidence.smtlib2))
   let payload = normalizedEvidenceWire(ne)
   let recRes = makeEvidenceRecord($casKey, payload, newJObject(), "2026-10-06T00:00:00Z",
     evidenceBundleDigest(evidence))
