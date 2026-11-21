@@ -120,6 +120,7 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/config_nims_source_identity_test.nim \
                   tests/unit/test_push_admission_integrity.nim \
                   tests/unit/test_source_merkle_delegation.nim \
+                  tests/unit/ir_precompute_scope_test.nim \
                   tests/unit/test_integrity_merkle_guard.nim \
                   tests/unit/test_merge_ruleset_drift_monitor.nim \
                   tests/unit/test_axiom_allowlist_ssot.nim \
@@ -178,9 +179,11 @@ bin/nimtry: src/gate/nimtry.nim $(wildcard src/gate/nimtry/*.nim)
 bin/purity_check: tools/local_purity_check.nim
 	$(NIM) c --hints:off -o:$@ $<
 
-# Mirrors the engine's audit_engine_inputs.manifest input set; Nim lacks --depfile
-# (verified), so transitive imports outside src/core/debt are an accepted untracked gap.
-DEBT_AUDIT_SRCS := tools/debt_engine.nim $(wildcard src/core/debt/*.nim)
+# Mirrors the engine's audit_engine_inputs.manifest source set (config/audit_rules.json
+# is data, not a compile dep); Nim lacks --depfile (verified), so transitive imports
+# outside those directories are an accepted untracked gap.
+DEBT_AUDIT_SRCS := tools/debt_engine.nim $(wildcard src/core/debt/*.nim) \
+                   $(wildcard src/infrastructure/debt_audit/*.nim)
 
 bin/debt_engine: $(DEBT_AUDIT_SRCS)
 	$(NIM) c $(NIM_TOOL_FLAGS) -o:$@ $<
@@ -1017,6 +1020,48 @@ verify-contract-release-e2e-full: verify-proof-boundary ## G7-full — CI releas
 	HASH_B="$$(sha256sum bin/ax | cut -d' ' -f1)"; \
 	[ "$$HASH_A" = "$$HASH_B" ] || { echo "FAIL: release binary changed during E2E"; exit 1; }; \
 	echo "INFO: G7 pass (tier=$$TIER status=$$STATUS cert=$$CERT)"
+	@set -eu; \
+	FAIL_STATE=build/tmp/r5_failure; \
+	rm -rf "$$FAIL_STATE"; \
+	mkdir -p "$$FAIL_STATE/data" "$$FAIL_STATE/logs"; \
+	cp data/verification_scope.lock data/baseline.json "$$FAIL_STATE/data/"; \
+	set +e; \
+	AXIOM_STATE_DIR="$$FAIL_STATE" bin/ax prove --fresh > "$$FAIL_STATE/prove.out" 2>&1; \
+	FAIL_PROVE=$$?; \
+	AXIOM_STATE_DIR="$$FAIL_STATE" bin/ax report --json > "$$FAIL_STATE/report.json"; \
+	FAIL_REPORT=$$?; \
+	set -e; \
+	[ "$$FAIL_PROVE" -eq 1 ] || { echo "FAIL: negative-control prove exit $$FAIL_PROVE != 1 (verification-failure exit not actuated)"; exit 1; }; \
+	[ "$$FAIL_REPORT" -eq 1 ] || { echo "FAIL: negative-control report exit $$FAIL_REPORT != 1 (verification-failure exit not actuated)"; exit 1; }; \
+	FAIL_STATE_FILE="$$FAIL_STATE/logs/ax_proof_state.json"; \
+	[ -f "$$FAIL_STATE_FILE" ] || { echo "FAIL: negative-control state SSOT missing: $$FAIL_STATE_FILE"; exit 1; }; \
+	FAIL_VERDICT="$$(jq -r '.runOutcome.verdict // "MISSING"' "$$FAIL_STATE_FILE")"; \
+	FAIL_GATE="$$(jq -r '.runOutcome.gateVerdict // "MISSING"' "$$FAIL_STATE_FILE")"; \
+	[ "$$FAIL_VERDICT" != "PASS" ] || { echo "FAIL: negative control produced a PASS verdict — the verification-failure path did not actuate"; exit 1; }; \
+	FAIL_VERIFIED="$$(jq -r '.summary.verified // 0' "$$FAIL_STATE_FILE")"; \
+	FAIL_FAILED="$$(jq -r '.summary.failedCount // 0' "$$FAIL_STATE_FILE")"; \
+	FAIL_STATE_SHA="$$(sha256sum "$$FAIL_STATE_FILE" | cut -d' ' -f1)"; \
+	mkdir -p logs; \
+	jq -n -S \
+	  --arg schemaVersion "axiom.verify-contract-failure-observation.v1" \
+	  --arg makeTarget "verify-contract-release-e2e-full" \
+	  --arg target "normalizeMaxWorkers" \
+	  --arg scope "full" \
+	  --arg observedVerdict "$$FAIL_VERDICT" \
+	  --arg gateVerdict "$$FAIL_GATE" \
+	  --arg stateFile "$$FAIL_STATE_FILE" \
+	  --arg stateSha256 "$$FAIL_STATE_SHA" \
+	  --argjson proveExit "$$FAIL_PROVE" \
+	  --argjson reportExit "$$FAIL_REPORT" \
+	  --argjson verified "$$FAIL_VERIFIED" \
+	  --argjson failedCount "$$FAIL_FAILED" \
+	  --argjson fresh true \
+	  '{schemaVersion: $$schemaVersion, makeTarget: $$makeTarget, target: $$target, scope: $$scope, fresh: $$fresh, observedVerdict: $$observedVerdict, gateVerdict: $$gateVerdict, proveExit: $$proveExit, reportExit: $$reportExit, verified: $$verified, failedCount: $$failedCount, stateFile: $$stateFile, stateSha256: $$stateSha256}' \
+	  > logs/verify_contract_e2e_failure_observation.json; \
+	jq -e '.proveExit == 1 and .reportExit == 1 and .observedVerdict != "PASS"' \
+	  logs/verify_contract_e2e_failure_observation.json >/dev/null || \
+	  { echo "FAIL: emitted failure observation contradicts the measured exits/verdict"; exit 1; }; \
+	echo "INFO: R5 negative control actuated (verdict=$$FAIL_VERDICT gate=$$FAIL_GATE proveExit=$$FAIL_PROVE reportExit=$$FAIL_REPORT) -> logs/verify_contract_e2e_failure_observation.json"
 	@echo "✅ verify-contract-release-e2e-full PASSED"
 
 bin/readiness_start_gate: src/gate/runners/readiness_start_gate.nim
@@ -1227,6 +1272,9 @@ test-unit:
 	@nim c -r tests/cli/test_report_cli.nim
 	@nim c -r tests/cli/test_evidence_bundle_v2.nim
 	@nim c -r tests/verification/test_strict_json_number_semantics.nim
+	@nim c -r tests/cli/test_axiom_status.nim
+	@nim c -r tests/cli/test_cert_cli.nim
+	@nim c -r tests/cli/test_config_cli.nim
 	@nim c -r tests/unit/test_judgment_set_derivation.nim
 
 # ── oracle-evidence mode=none floor 회귀 픽스처 (Phase 2d, 계획 CE #13) ────

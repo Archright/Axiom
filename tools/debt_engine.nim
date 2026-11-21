@@ -2650,9 +2650,10 @@ proc cmdAuditDirDoc(applyRegistry: bool; rerunOnly: bool; projectOnly: bool)
 
   # ── engine_semantics_digest via audit_engine_inputs.manifest ─────────────
   ## The manifest lists EXACTLY: tools/debt_engine.nim, every src/core/debt/*.nim,
-  ## config/audit_rules.json. The manifest itself is NOT in the list (no self-ref).
-  ## We compute each file hash first, write the manifest, then digest the written
-  ## manifest content (canonical form — no stripping).
+  ## every src/infrastructure/debt_audit/*.nim, config/audit_rules.json.
+  ## The manifest itself is NOT in the list (no self-ref). We compute each file
+  ## hash first, write the manifest, then digest the written manifest content
+  ## (canonical form — no stripping).
   proc buildEngineSemanticsDigest(): string {.raises: [CatchableError].} =
     let manifestPath = bundleDir / "audit_engine_inputs.manifest"
     var manifestLines: seq[string]
@@ -2660,6 +2661,8 @@ proc cmdAuditDirDoc(applyRegistry: bool; rerunOnly: bool; projectOnly: bool)
     var srcFiles: seq[string]
     srcFiles.add("tools/debt_engine.nim")
     for p in walkDirRec("src/core/debt"):
+      if p.endsWith(".nim"): srcFiles.add(p)
+    for p in walkDirRec("src/infrastructure/debt_audit"):
       if p.endsWith(".nim"): srcFiles.add(p)
     srcFiles.add("config/audit_rules.json")
     srcFiles.sort()

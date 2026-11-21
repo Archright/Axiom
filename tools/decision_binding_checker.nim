@@ -340,7 +340,12 @@ proc scanFile(filePath: string, waiver: WaiverConfig): tuple[violations: bool, r
             if validation:
               reasons.add("validation logic without axiomDecision")
 
-            let msg = procName & " (" & filePath & ":" & $(i+1) & ") " & reasons.join("; ")
+            let displayPath =
+              if filePath.startsWith(projectRoot & "/"):
+                filePath[projectRoot.len + 1 .. ^1]
+              else:
+                filePath
+            let msg = procName & " (" & displayPath & ":" & $(i+1) & ") " & reasons.join("; ")
             result.violations = true
             result.reasons.add(msg)
 
@@ -405,16 +410,24 @@ proc loadBaseline(path: string): tuple[ok: bool, baseline: RatchetBaseline,
                                     count: item["count"].getInt()))
   result = (true, b, "")
 
+func reasonCategory(reason: string): string =
+  ## Committed baselines must be checkout-independent: a violation string is
+  ## `proc (/abs/path:line) categories; categories`, and only the category
+  ## suffix after the final ") " belongs in data/.
+  let marker = reason.rfind(") ")
+  if marker >= 0: reason[marker + 2 .. ^1] else: reason
+
 proc reasonHistogram(reasons: seq[string]): seq[ReasonCount] =
   for r in reasons:
+    let category = reasonCategory(r)
     var hit = false
     for i in 0 ..< result.len:
-      if result[i].reason == r:
+      if result[i].reason == category:
         inc result[i].count
         hit = true
         break
     if not hit:
-      result.add(ReasonCount(reason: r, count: 1))
+      result.add(ReasonCount(reason: category, count: 1))
   result.sort(proc (a, b: ReasonCount): int = cmp(a.reason, b.reason))
 
 proc writeBaseline(path: string, files: int, reasons: seq[string],

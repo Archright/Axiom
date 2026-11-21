@@ -173,6 +173,7 @@ func entryToJson(entry: MerkleCacheEntry): JsonNode {.raises: [].} =
     "cstHash": entry.cstHash,
     "symbolNames": entry.symbolNames,
     "lastModified": entry.lastModified,
+    "fileSize": entry.fileSize,
     "cachedSymbols": symbolsArray
   }
 
@@ -180,9 +181,10 @@ proc jsonToEntry(node: JsonNode): Option[MerkleCacheEntry] {.raises: [],
   axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Deserialize one cache entry from JSON.
   ## Required fields (must be present with the correct kind, else entry is invalid):
-  ##   contentHash (JString), cstHash (JString), lastModified (JInt)
+  ##   contentHash (JString), cstHash (JString), lastModified (JInt),
+  ##   cachedSymbols (JArray of JObject — may be empty: "scanned, zero symbols")
   ## Optional fields (defaults when absent):
-  ##   symbolNames (JArray of JString), cachedSymbols (JArray of JObject)
+  ##   symbolNames (JArray of JString), fileSize (JInt, default 0 = unknown)
   ## Per-symbol required fields: modulePath, functionName, nodeType, nodeIdStr,
   ##   declarationLine, bodyStartLine, bodyEndLine, exported, boundaryKind,
   ##   branchCount, nestingDepth, lineSpan, hasAxiomImpl.
@@ -204,6 +206,11 @@ proc jsonToEntry(node: JsonNode): Option[MerkleCacheEntry] {.raises: [],
     if lm.isNil or lm.kind != JInt:
       return none(MerkleCacheEntry)
     entry.lastModified = lm.getInt()
+    let fs = node{"fileSize"}
+    if not fs.isNil:
+      if fs.kind != JInt:
+        return none(MerkleCacheEntry)
+      entry.fileSize = fs.getInt()
     let sn = node{"symbolNames"}
     if not sn.isNil and sn.kind == JArray:
       for s in sn:
@@ -211,64 +218,65 @@ proc jsonToEntry(node: JsonNode): Option[MerkleCacheEntry] {.raises: [],
           return none(MerkleCacheEntry)
         entry.symbolNames.add(s.getStr())
     let cs = node{"cachedSymbols"}
-    if not cs.isNil and cs.kind == JArray:
-      for s in cs:
-        if s.isNil or s.kind != JObject:
-          return none(MerkleCacheEntry)
-        let mp = s{"modulePath"}
-        if mp.isNil or mp.kind != JString: return none(MerkleCacheEntry)
-        let fn = s{"functionName"}
-        if fn.isNil or fn.kind != JString: return none(MerkleCacheEntry)
-        let nt = s{"nodeType"}
-        if nt.isNil or nt.kind != JString: return none(MerkleCacheEntry)
-        let nid = s{"nodeIdStr"}
-        if nid.isNil or nid.kind != JString: return none(MerkleCacheEntry)
-        let dl = s{"declarationLine"}
-        if dl.isNil or dl.kind != JInt: return none(MerkleCacheEntry)
-        let bs = s{"bodyStartLine"}
-        if bs.isNil or bs.kind != JInt: return none(MerkleCacheEntry)
-        let be = s{"bodyEndLine"}
-        if be.isNil or be.kind != JInt: return none(MerkleCacheEntry)
-        let ex = s{"exported"}
-        if ex.isNil or ex.kind != JBool: return none(MerkleCacheEntry)
-        let bk = s{"boundaryKind"}
-        if bk.isNil or bk.kind != JInt: return none(MerkleCacheEntry)
-        let br = s{"branchCount"}
-        if br.isNil or br.kind != JInt: return none(MerkleCacheEntry)
-        let nd = s{"nestingDepth"}
-        if nd.isNil or nd.kind != JInt: return none(MerkleCacheEntry)
-        let ls = s{"lineSpan"}
-        if ls.isNil or ls.kind != JInt: return none(MerkleCacheEntry)
-        let ai = s{"hasAxiomImpl"}
-        if ai.isNil or ai.kind != JBool: return none(MerkleCacheEntry)
-        let rct = s{"rawCallTargets"}
-        var targets: seq[string] = @[]
-        if not rct.isNil and rct.kind == JArray:
-          for t in rct:
-            if t.isNil or t.kind != JString:
-              return none(MerkleCacheEntry)
-            targets.add(t.getStr())
-        let df = s{"definitionFingerprint"}
-        var defFingerprint = ""
-        if not df.isNil and df.kind == JString:
-          defFingerprint = df.getStr()
-        entry.cachedSymbols.add(CachedTopologySymbol(
-          modulePath: mp.getStr(),
-          functionName: fn.getStr(),
-          nodeType: nt.getStr(),
-          nodeIdStr: nid.getStr(),
-          declarationLine: dl.getInt(),
-          bodyStartLine: bs.getInt(),
-          bodyEndLine: be.getInt(),
-          exported: ex.getBool(),
-          boundaryKind: bk.getInt(),
-          branchCount: br.getInt(),
-          nestingDepth: nd.getInt(),
-          lineSpan: ls.getInt(),
-          hasAxiomImpl: ai.getBool(),
-          rawCallTargets: targets,
-          definitionFingerprint: defFingerprint
-        ))
+    if cs.isNil or cs.kind != JArray:
+      return none(MerkleCacheEntry)
+    for s in cs:
+      if s.isNil or s.kind != JObject:
+        return none(MerkleCacheEntry)
+      let mp = s{"modulePath"}
+      if mp.isNil or mp.kind != JString: return none(MerkleCacheEntry)
+      let fn = s{"functionName"}
+      if fn.isNil or fn.kind != JString: return none(MerkleCacheEntry)
+      let nt = s{"nodeType"}
+      if nt.isNil or nt.kind != JString: return none(MerkleCacheEntry)
+      let nid = s{"nodeIdStr"}
+      if nid.isNil or nid.kind != JString: return none(MerkleCacheEntry)
+      let dl = s{"declarationLine"}
+      if dl.isNil or dl.kind != JInt: return none(MerkleCacheEntry)
+      let bs = s{"bodyStartLine"}
+      if bs.isNil or bs.kind != JInt: return none(MerkleCacheEntry)
+      let be = s{"bodyEndLine"}
+      if be.isNil or be.kind != JInt: return none(MerkleCacheEntry)
+      let ex = s{"exported"}
+      if ex.isNil or ex.kind != JBool: return none(MerkleCacheEntry)
+      let bk = s{"boundaryKind"}
+      if bk.isNil or bk.kind != JInt: return none(MerkleCacheEntry)
+      let br = s{"branchCount"}
+      if br.isNil or br.kind != JInt: return none(MerkleCacheEntry)
+      let nd = s{"nestingDepth"}
+      if nd.isNil or nd.kind != JInt: return none(MerkleCacheEntry)
+      let ls = s{"lineSpan"}
+      if ls.isNil or ls.kind != JInt: return none(MerkleCacheEntry)
+      let ai = s{"hasAxiomImpl"}
+      if ai.isNil or ai.kind != JBool: return none(MerkleCacheEntry)
+      let rct = s{"rawCallTargets"}
+      var targets: seq[string] = @[]
+      if not rct.isNil and rct.kind == JArray:
+        for t in rct:
+          if t.isNil or t.kind != JString:
+            return none(MerkleCacheEntry)
+          targets.add(t.getStr())
+      let df = s{"definitionFingerprint"}
+      var defFingerprint = ""
+      if not df.isNil and df.kind == JString:
+        defFingerprint = df.getStr()
+      entry.cachedSymbols.add(CachedTopologySymbol(
+        modulePath: mp.getStr(),
+        functionName: fn.getStr(),
+        nodeType: nt.getStr(),
+        nodeIdStr: nid.getStr(),
+        declarationLine: dl.getInt(),
+        bodyStartLine: bs.getInt(),
+        bodyEndLine: be.getInt(),
+        exported: ex.getBool(),
+        boundaryKind: bk.getInt(),
+        branchCount: br.getInt(),
+        nestingDepth: nd.getInt(),
+        lineSpan: ls.getInt(),
+        hasAxiomImpl: ai.getBool(),
+        rawCallTargets: targets,
+        definitionFingerprint: defFingerprint
+      ))
     some(entry)
   except CatchableError as e:
     logError("jsonToEntry: " & e.msg)
@@ -325,7 +333,7 @@ proc saveCache*(engine: MerkleQueryEngine; path: string): Result[void, AxiomErro
       filesObj[filePath] = entryToJson(entry)
     let root = %*{"files": filesObj, "merkleRoot": engine.merkleRoot}
     let tmpPath = path & ".tmp"
-    let writeRes = writeFileOpt(tmpPath, pretty(root))
+    let writeRes = writeFileOpt(tmpPath, $root)
     if writeRes.isErr:
       return err(ioError("saveCache write: " & writeRes.error))
     let moveRes = moveFileOpt(tmpPath, path)

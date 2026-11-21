@@ -59,12 +59,12 @@
     "src/cli/axiom_engine.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "75a650ee0b83259c6ba2f1f83689ee5440f62155"
+      "sha": "d814f3d2674d00c1a032a3639b116013d5e3af04"
     },
     "src/cli/axiom_status.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "6a0992d4affa0ec7089ce29f9a5cc1704b9c1c9c"
+      "sha": "5b4e260b43cddc71f48559543d8b50312ed03a45"
     },
     "src/cli/baseline_cli.nim": {
       "mode": "100644",
@@ -84,7 +84,7 @@
     "src/cli/cert_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "06caa3226fd1df08abd95f78edbda6445e98f698"
+      "sha": "e8fcf9e741c33476e713f0814273f92ae2405d36"
     },
     "src/cli/check_cli.nim": {
       "mode": "100644",
@@ -139,7 +139,7 @@
     "src/cli/config_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "fdf4ab92d294149cc6634d861b5077a7f9a41e76"
+      "sha": "6c92df979a9f9416dd3bd5b9d912e835e1c6392b"
     },
     "src/cli/config_loader.nim": {
       "mode": "100644",
@@ -224,7 +224,7 @@
     "src/cli/merge_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "67dc0bc7b23f39ae8714c2d7274aacc0173a0a37"
+      "sha": "d642aff1978c8811d4e91ba8c6b7acd566dca2c7"
     },
     "src/cli/payload_bridge.nim": {
       "mode": "100644",
@@ -314,7 +314,7 @@
     "src/cli/topology_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "73b1341907cf0c7ebe021ec83983fff9d0f44638"
+      "sha": "ccc5cc629658de052bf61e8c3b65c4bee656e10e"
     },
     "src/cli/upstream_report_cli.nim": {
       "mode": "100644",
@@ -1874,7 +1874,7 @@
     "src/core/topology/merkle_cache.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "d5e271e9eb4a8077d4de98d41f90afd8d95aeb51"
+      "sha": "722bc664350e22c314eb581ed701201bb5b69512"
     },
     "src/core/topology/node_filter.nim": {
       "mode": "100644",
@@ -1919,7 +1919,7 @@
     "src/core/topology/topology_engine.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "84a12ff999c1adeacd9d95906312ba9492f16cce"
+      "sha": "e6bba40b55405e743904820b8eac1bbb76bbbbf5"
     },
     "src/core/topology/topology_parser.nim": {
       "mode": "100644",
@@ -3139,7 +3139,7 @@
     "src/gate/runners/gate_hook.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "f35b164394c8af8d014f56e5e1de157fb8830c64"
+      "sha": "7dccbd257e815489aa95a22806da2dee0c0cd3ad"
     },
     "src/gate/runners/golden_master_gate.nim": {
       "mode": "100644",
@@ -3559,7 +3559,7 @@
     "src/verification/batch_uap/ir_pipeline_runner.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "89d563845d3f1c3e636e35157507ffc39852137d"
+      "sha": "a06ec1fadae932a1623cc1d3137ab4ff9ecd6f12"
     },
     "src/verification/batch_uap/loop_depth_scheduler.nim": {
       "mode": "100644",
@@ -3569,7 +3569,7 @@
     "src/verification/batch_uap/loop_driver.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "a734d15b4eaac74e6d75dfa3d65bc12d7f29ddc4"
+      "sha": "4973291fc4638dbf05812a2ea467a60d0ac79cf8"
     },
     "src/verification/batch_uap/loop_topology.nim": {
       "mode": "100644",

@@ -387,9 +387,10 @@ proc analyzeTopologySourceRoot*(
       createDir(merkleCacheDir)
     except CatchableError:
       discard  # best-effort cache persistence  # axiom:best-effort(ioboundary catch)
-  let saveRes = saveCache(engine, merkleCachePath)
-  if saveRes.isErr:
-    logError("topology_cli", "saveCache: " & saveRes.error.message)
+  if resultData.cacheDirty:
+    let saveRes = saveCache(engine, merkleCachePath)
+    if saveRes.isErr:
+      logError("topology_cli", "saveCache: " & saveRes.error.message)
   let effectiveDepth =
     if diagnosisDepthExplicit: diagnosisDepth
     else: max(1, min(3, analysis.structuralBottlenecks.len))

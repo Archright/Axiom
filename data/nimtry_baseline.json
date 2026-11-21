@@ -1,9 +1,9 @@
 {
   "version": 2,
-  "created": "2026-11-21T09:08:53+09:00",
-  "total_violations": 4374,
+  "created": "2026-11-21T10:18:10+09:00",
+  "total_violations": 4375,
   "by_severity": {
-    "warning": 4000,
+    "warning": 4001,
     "error": 374
   },
   "violations": [
@@ -3095,24 +3095,24 @@
       "severity": "warning"
     },
     {
-      "id": "31a2c960edb9f8ab84be2c2c7680942717aa5ef97aed89a0280a3a197ebe2c52",
+      "id": "2321e95c952f792e0226a4c7f34ef8c162352645c37f7bb52e13ea9dba51d1fc",
       "rule": "SOLID",
       "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
-      "detail": "[soc-surface-area] src/verification/batch_uap/ir_pipeline_runner.nim:544 function runIrPipeline spans 845 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/verification/batch_uap/ir_pipeline_runner.nim:545 function runIrPipelineCore spans 845 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "774def395394c11cf345e8568e0ffb612f9def47511d501f64833a2644a7e959",
       "rule": "SOLID",
       "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
-      "detail": "[soc-surface-area] src/verification/batch_uap/ir_pipeline_runner.nim:1743 function selectProofCandidates spans 60 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/verification/batch_uap/ir_pipeline_runner.nim:1760 function selectProofCandidates spans 60 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
       "id": "7aa398964007f27b250e952119356920029ae73d495624ef5ee4426e14755dc0",
       "rule": "SOLID",
       "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
-      "detail": "[soc-surface-area] src/verification/batch_uap/ir_pipeline_runner.nim:1898 function toProofCertificate spans 68 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/verification/batch_uap/ir_pipeline_runner.nim:1915 function toProofCertificate spans 68 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
@@ -4519,14 +4519,14 @@
       "id": "903b6b8269d655f5540066fbcff1cffd4bf5a027551aac767e411f805b534ac1",
       "rule": "SOLID",
       "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
-      "detail": "[solid-forbidden-calls] src/verification/batch_uap/ir_pipeline_runner.nim:311:31 calls concrete backend z3ExecPersistent from src/verification/batch_uap/ir_pipeline_runner.nim; allowed only from src/core/solver_bridge.nim, src/core/provider_interface.nim, src/core/solver/fixedpoint_engine.nim, src/verification/solver/triviality_filter.nim, src/verification/solver/provider_impl.nim, src/verification/solver/provers.nim",
+      "detail": "[solid-forbidden-calls] src/verification/batch_uap/ir_pipeline_runner.nim:312:31 calls concrete backend z3ExecPersistent from src/verification/batch_uap/ir_pipeline_runner.nim; allowed only from src/core/solver_bridge.nim, src/core/provider_interface.nim, src/core/solver/fixedpoint_engine.nim, src/verification/solver/triviality_filter.nim, src/verification/solver/provider_impl.nim, src/verification/solver/provers.nim",
       "severity": "error"
     },
     {
       "id": "903b6b8269d655f5540066fbcff1cffd4bf5a027551aac767e411f805b534ac1",
       "rule": "SOLID",
       "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
-      "detail": "[solid-forbidden-calls] src/verification/batch_uap/ir_pipeline_runner.nim:338:31 calls concrete backend z3ExecPersistent from src/verification/batch_uap/ir_pipeline_runner.nim; allowed only from src/core/solver_bridge.nim, src/core/provider_interface.nim, src/core/solver/fixedpoint_engine.nim, src/verification/solver/triviality_filter.nim, src/verification/solver/provider_impl.nim, src/verification/solver/provers.nim",
+      "detail": "[solid-forbidden-calls] src/verification/batch_uap/ir_pipeline_runner.nim:339:31 calls concrete backend z3ExecPersistent from src/verification/batch_uap/ir_pipeline_runner.nim; allowed only from src/core/solver_bridge.nim, src/core/provider_interface.nim, src/core/solver/fixedpoint_engine.nim, src/verification/solver/triviality_filter.nim, src/verification/solver/provider_impl.nim, src/verification/solver/provers.nim",
       "severity": "error"
     },
     {
@@ -18939,91 +18939,98 @@
       "id": "d1c9332a7293cebc727f27f21df8d1ab5e230e53edf091d0f07dcfddf90984ed",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:304 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func. (whitelisted in impure_procedures_whitelist)",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:305 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func. (whitelisted in impure_procedures_whitelist)",
       "severity": "warning"
     },
     {
       "id": "d1c9332a7293cebc727f27f21df8d1ab5e230e53edf091d0f07dcfddf90984ed",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:332 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func. (whitelisted in impure_procedures_whitelist)",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:333 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func. (whitelisted in impure_procedures_whitelist)",
       "severity": "warning"
     },
     {
       "id": "d7371ba8fea6a8cb87336fa5942fda74e1971a655f8f07c8a693cf3a4022592e",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:359 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
-      "severity": "warning"
-    },
-    {
-      "id": "d1c9332a7293cebc727f27f21df8d1ab5e230e53edf091d0f07dcfddf90984ed",
-      "rule": "PURITY-new-code-must-be-func",
-      "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:544 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func. (whitelisted in impure_procedures_whitelist)",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:360 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "d7371ba8fea6a8cb87336fa5942fda74e1971a655f8f07c8a693cf3a4022592e",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1516 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:545 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "severity": "warning"
+    },
+    {
+      "id": "d1c9332a7293cebc727f27f21df8d1ab5e230e53edf091d0f07dcfddf90984ed",
+      "rule": "PURITY-new-code-must-be-func",
+      "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1510 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func. (whitelisted in impure_procedures_whitelist)",
       "severity": "warning"
     },
     {
       "id": "d7371ba8fea6a8cb87336fa5942fda74e1971a655f8f07c8a693cf3a4022592e",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1557 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
-      "severity": "warning"
-    },
-    {
-      "id": "d1c9332a7293cebc727f27f21df8d1ab5e230e53edf091d0f07dcfddf90984ed",
-      "rule": "PURITY-new-code-must-be-func",
-      "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1597 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func. (whitelisted in impure_procedures_whitelist)",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1533 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "d7371ba8fea6a8cb87336fa5942fda74e1971a655f8f07c8a693cf3a4022592e",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1649 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1574 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "d1c9332a7293cebc727f27f21df8d1ab5e230e53edf091d0f07dcfddf90984ed",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1660 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func. (whitelisted in impure_procedures_whitelist)",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1614 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func. (whitelisted in impure_procedures_whitelist)",
+      "severity": "warning"
+    },
+    {
+      "id": "d7371ba8fea6a8cb87336fa5942fda74e1971a655f8f07c8a693cf3a4022592e",
+      "rule": "PURITY-new-code-must-be-func",
+      "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1666 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func.",
       "severity": "warning"
     },
     {
       "id": "d1c9332a7293cebc727f27f21df8d1ab5e230e53edf091d0f07dcfddf90984ed",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1689 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func. (whitelisted in impure_procedures_whitelist)",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1677 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func. (whitelisted in impure_procedures_whitelist)",
       "severity": "warning"
     },
     {
       "id": "d1c9332a7293cebc727f27f21df8d1ab5e230e53edf091d0f07dcfddf90984ed",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1743 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func. (whitelisted in impure_procedures_whitelist)",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1706 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func. (whitelisted in impure_procedures_whitelist)",
       "severity": "warning"
     },
     {
       "id": "d1c9332a7293cebc727f27f21df8d1ab5e230e53edf091d0f07dcfddf90984ed",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1843 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func. (whitelisted in impure_procedures_whitelist)",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1760 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func. (whitelisted in impure_procedures_whitelist)",
       "severity": "warning"
     },
     {
       "id": "d1c9332a7293cebc727f27f21df8d1ab5e230e53edf091d0f07dcfddf90984ed",
       "rule": "PURITY-new-code-must-be-func",
       "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
-      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1856 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func. (whitelisted in impure_procedures_whitelist)",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1860 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func. (whitelisted in impure_procedures_whitelist)",
+      "severity": "warning"
+    },
+    {
+      "id": "d1c9332a7293cebc727f27f21df8d1ab5e230e53edf091d0f07dcfddf90984ed",
+      "rule": "PURITY-new-code-must-be-func",
+      "file": "src/verification/batch_uap/ir_pipeline_runner.nim",
+      "detail": "[purity-new-code-must-be-func] src/verification/batch_uap/ir_pipeline_runner.nim:1873 new proc declaration in non-I/O module. Use 'func' instead of 'proc'. AGENTS.md §0.6: all core logic MUST default to func. (whitelisted in impure_procedures_whitelist)",
       "severity": "warning"
     },
     {

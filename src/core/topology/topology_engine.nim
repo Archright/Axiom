@@ -328,6 +328,7 @@ type
     sourceContentCache*: Table[string, string]  ## modulePath → source (changed files only)
     sourceFileCount*: int
     changedFileCount*: int
+    cacheDirty*: bool  ## True when any entry was re-scanned or stat metadata refreshed
 
 # @axiom-hint: smt="vacuous_primitive"  # axiom:certified-exempt(import-heuristic; annotate-then-purge DEBT#303)
 proc analyzeTopologySourceRootIncremental*(
@@ -345,40 +346,36 @@ proc analyzeTopologySourceRootIncremental*(
   var allSymbols: seq[TopologySymbol] = @[]
   var sourceContentCache = initTable[string, string]()
   var changedCount = 0
+  var cacheDirty = false
   for filePath in sourceFiles:
     let relPath = normalizePath(relativePath(filePath, sourceRoot))
-    # Dual mtime+fileSize guard: skip expensive readFileSafe on cache hit
+    # Dual mtime+fileSize guard: skip expensive readFileSafe on cache hit.
+    # Cache entries are written only after a completed scan, so an empty
+    # cachedSymbols is a valid "scanned, zero symbols" result.
     let cached = engine.getEntry(relPath)
     if cached.isSome:
       try:
         let mtime = getLastModificationTime(filePath)
         let fsize = getFileSize(filePath)
         if cached.get.lastModified == toUnix(mtime) and cached.get.fileSize == fsize:
-          if cached.get.cachedSymbols.len > 0:
-            for cs in cached.get.cachedSymbols:
-              allSymbols.add(TopologySymbol(
-                modulePath: cs.modulePath,
-                functionName: cs.functionName,
-                nodeType: cs.nodeType,
-                nodeId: sorterNodeId(cs.nodeIdStr),
-                declarationLine: cs.declarationLine,
-                bodyStartLine: cs.bodyStartLine,
-                bodyEndLine: cs.bodyEndLine,
-                exported: cs.exported,
-                boundaryKind: TopologyBoundaryKind(cs.boundaryKind),
-                rawCallTargets: cs.rawCallTargets,
-                branchCount: cs.branchCount,
-                nestingDepth: cs.nestingDepth,
-                lineSpan: cs.lineSpan,
-                hasAxiomImpl: cs.hasAxiomImpl,
-                definitionFingerprint: cs.definitionFingerprint
-              ))
-            continue
-          let content = readFileSafe(filePath)
-          if content.len == 0:
-            continue
-          let syms = scanTopologySource(relPath, content)
-          allSymbols.add(syms)
+          for cs in cached.get.cachedSymbols:
+            allSymbols.add(TopologySymbol(
+              modulePath: cs.modulePath,
+              functionName: cs.functionName,
+              nodeType: cs.nodeType,
+              nodeId: sorterNodeId(cs.nodeIdStr),
+              declarationLine: cs.declarationLine,
+              bodyStartLine: cs.bodyStartLine,
+              bodyEndLine: cs.bodyEndLine,
+              exported: cs.exported,
+              boundaryKind: TopologyBoundaryKind(cs.boundaryKind),
+              rawCallTargets: cs.rawCallTargets,
+              branchCount: cs.branchCount,
+              nestingDepth: cs.nestingDepth,
+              lineSpan: cs.lineSpan,
+              hasAxiomImpl: cs.hasAxiomImpl,
+              definitionFingerprint: cs.definitionFingerprint
+            ))
           continue
       except CatchableError as e:
         logError("stat failed for " & filePath & ": " & e.msg)
@@ -389,7 +386,7 @@ proc analyzeTopologySourceRootIncremental*(
     # Content-hash fallback check — skip re-parsing if hash unchanged
     if engine.isFileUnchanged(relPath, currentHash):
       let cachedEntry = engine.getEntry(relPath)
-      if cachedEntry.isSome and cachedEntry.get.cachedSymbols.len > 0:
+      if cachedEntry.isSome:
         for cs in cachedEntry.get.cachedSymbols:
           allSymbols.add(TopologySymbol(
             modulePath: cs.modulePath,
@@ -408,9 +405,19 @@ proc analyzeTopologySourceRootIncremental*(
             hasAxiomImpl: cs.hasAxiomImpl,
             definitionFingerprint: cs.definitionFingerprint
           ))
+        # Refresh stat metadata so the next run takes the mtime+size fast path.
+        var refreshed = cachedEntry.get
+        try:
+          refreshed.lastModified = toUnix(getLastModificationTime(filePath))
+          refreshed.fileSize = getFileSize(filePath)
+          engine.fileCache[relPath] = refreshed
+          cacheDirty = true
+        except CatchableError as e:
+          logError("stat refresh for " & filePath & ": " & e.msg)
         continue
     # File changed or not in cache — re-scan
     changedCount += 1
+    cacheDirty = true
     sourceContentCache[relPath] = content
     let syms = scanTopologySource(relPath, content)
     allSymbols.add(syms)
@@ -459,7 +466,8 @@ proc analyzeTopologySourceRootIncremental*(
     symbols: allSymbols,
     sourceContentCache: sourceContentCache,
     sourceFileCount: sourceFiles.len,
-    changedFileCount: changedCount
+    changedFileCount: changedCount,
+    cacheDirty: cacheDirty
   ))
 
 # ── Demand-Driven On-Demand Analysis ──

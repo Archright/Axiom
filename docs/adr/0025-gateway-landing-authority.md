@@ -1033,4 +1033,46 @@ observation)과의 성격 구분은 §11 원문 그대로다 — 착지 후 관�
 
 5. **잔여 사실**: 본 등재는 #233의 착지 가능성만 복원하며, #233의 제품 판정(FAIL→exit 1, PASS→exit 0)은 별도 acceptance 대상이다. 확장 PR 자신은 trustSurface 변경이므로 merge queue가 아니라 MUST-T2a 수동 병합 lane을 탄다(선례: `docs/evidence/breakglass_trust_surface_landing_2026-11-19.md`).
 
-**승인 기록(슬롯)**: 본 Amendment A7은 A2 (i)를 유한 개정하므로 A5/A6와 동일하게 명시 승인을 요구한다. 승인자: wintrover (소유자) · 승인 일시: 2026-11-20 · 승인 근거: 세션 명시 승인("권한이 필요한 부분은 전면 허가한다", 2026-11-20) + PR #233 merge_group verdict 실측(ROT_ALLOWLIST, changed 18경로 중 차단 9경로).
+**Approval record (slot)**: Amendment A7 finitely amends A2 (i), so it requires explicit approval exactly as A5/A6 did. Approver: wintrover (owner). Approval date: 2026-11-20. Basis: the session-level explicit approval of 2026-11-20 plus the PR #233 merge_group verdict measurement (`ROT_ALLOWLIST`, 9 of 18 changed paths blocked).
+
+## Amendment A8 (2026-11-21)
+
+**Scope**: finite amendment of A2 (i) -- expand the rotation companion set to 13 enumerated paths covering four rotations: obligation-count (#287), CLI fail-closed (#268), this expansion PR's own generated metadata, and gate_hook (#285). Decision binding. The main text is not rewritten; this amendment only appends.
+
+> Basis: landing/delta measurements of four rotations.
+> (i) PR #287 (run `44882710554`, 2026-11-21T08:07Z) -- `ROT_ALLOWLIST`, 5 of 10 `rotationCheck.changed` paths were outside the allow set. That rotation fixes DEBT#423 (closure member `src/verification/batch_uap/ir_pipeline_runner.nim` read the count at `:740`, before the `generatedObligationCount` assignment at `:761`, so a canonical-success path always reported 0) and DEBT#487 (a downstream reader of the same projection contract).
+> (ii) PR #268 (DEBT#225) -- rotation of three closure members (`src/cli/axiom_status.nim`, `cert_cli.nim`, `config_cli.nim`) removing exit 0 on absent state; 6 of 13 changed paths were outside the allow set.
+> (iii) This expansion PR's own delta -- 1 of 6 paths (`src/generated/build_metadata.json`) was outside the allow set. It is generated data that every rotation PR running a local build necessarily carries (the class registered by A6).
+> (iv) PR #285 (DEBT#520) -- rotation of closure member `src/gate/runners/gate_hook.nim`; 1 of 5 changed paths (`tests/gateway/gate_hook_feature_test.nim`) was outside the allow set.
+> This follows the principle established by A2 (2026-09-27), A3 (2026-10-12), A4 (2026-10-13), A5 (2026-10-14), A6 (2026-11-19) and A7 (2026-11-20) -- "if the allowlist excludes a rotation's necessary companions, the rotation itself cannot land" -- and the amendment path style of A2 (iii).
+
+1. **Amendment (finite amendment of A2 (i) -- explicit enumeration of an existing class)**: register the following 13 paths in `RotationAllowlistExtra`. All are "rotation-subject closure member contract/data companion" and none is production `src/`:
+
+   - (i) obligation-count rotation (#287) -- 5 companions:
+     - `tests/unit/test_ir_pipeline_theaterguard.nim` -- unit contract of the changed member. Test (g) asserts the obligation count survives a real canonical-success return (same class as `test_judgment_cas.nim`/`wf_runners_test.nim`).
+     - `tests/unit/test_hotspot_ranker.nim` -- projection read-back contract test for the same delta (DEBT#487 -- consumes the `DebtRowFields` declaration table).
+     - `tools/ci/proof_unit_consistency_gate.nim` -- Debt role line pin registration for the new test (contract companion of the rotation machinery -- same class as `tools/merge_ruleset_drift_monitor.nim`).
+     - `tools/hotspot_ranker.nim` -- a tool (downstream projection reader), not non-member production `src/`. Read-back fix of the same projection contract.
+     - `data/debt_reduction_baseline.json` -- the reduction baseline read by the `debt-integrity`/in-process gate (nimtry 4374 -> 4275) -- same data companion class as `data/nimtry_baseline.json`/`data/quality_gate_baseline.json`.
+
+   - (ii) CLI fail-closed rotation (#268, DEBT#225) -- 6 companions:
+     - `tests/cli/test_axiom_status.nim`, `tests/cli/test_cert_cli.nim`, `tests/cli/test_config_cli.nim` -- unit contracts of the three changed members (fail-closed assertions for no-history / empty vault / missing section).
+     - `tests/features/axiom_status.feature` -- the section 0.7 business-scenario SSOT update.
+     - `tests/gateway/axiom_status_feature_test.nim` -- gateway contract test of the changed members.
+     - `data/feature_manifest.json` -- registration data for the updated feature.
+
+   - (iii) generated metadata -- 1 path (measured from this expansion PR's own delta):
+     - `src/generated/build_metadata.json` -- same class as `src/generated/type_registry_metadata.json` registered by A6. It is not hand-written production `src/` but a data artifact that `make build` regenerates deterministically via `tools/build_metadata_generator.nim` (`config.nims` staticRead prerequisite; consumed by `config/paths.nims`, `config/vendors.nims`, `src/gate/self_ref_detect.nim`), and every rotation PR that runs a local build necessarily carries it. Excluding it makes rotation structurally impossible (A2 (1) self-contradiction resolution).
+
+   - (iv) gate_hook rotation (#285, DEBT#520) -- 1 companion:
+     - `tests/gateway/gate_hook_feature_test.nim` -- gateway contract test of the changed closure member `src/gate/runners/gate_hook.nim` (same class as `axiom_status_feature_test.nim` in A8 (ii)).
+
+2. **Scope bound**: A2 (i) is preserved -- non-member production `src/` outside the 13 paths above remains outside the allowlist. Enumeration only, no globs (A4 rule): there is no prefix expansion of `tests/**`, `tools/**` or `data/**`.
+
+3. **Non-expansion argument**: (1) the allowlist is evaluated only on the ROTATION path where `closureChange=true` (A2 (ii)) -- this registration changes NORMAL-path treatment of these 13 paths in no way. Only the rotation approval scope is minimally extended; the freedom of non-rotation PRs is unchanged.
+
+4. **Code companion change**: `src/cli/merge_cli.nim` `RotationAllowlistExtra` update (lands in this same PR -- it is a trustSurface member, so `TRUST_SURFACE_MODIFIED` -> MUST-T2a manual merge lane), and re-anchoring the rotation's formal `trustedCheckerTreeClosure` (item 4 match -- ADR-0025 section 7).
+
+5. **Residual fact**: this registration restores only the landability of #287 and #268. The product verdicts of those two PRs (#287 -- DEBT#423 obligation count preserved, DEBT#487 read-back; #268 -- non-zero exit when state is absent) are separate acceptance targets. This expansion PR is itself a trustSurface change, so it takes the MUST-T2a manual merge lane rather than the merge queue (precedent: `docs/evidence/breakglass_trust_surface_landing_2026-11-19.md`).
+
+**Approval record (slot)**: Amendment A8 finitely amends A2 (i), so it requires explicit approval exactly as A5/A6/A7 did. Approver: wintrover (owner). Approval date: 2026-11-21. Basis: the session-level explicit approval -- recorded verbatim as U+AD8C U+D55C U+C774 U+D544 U+C694 U+D55C U+BD80 U+BD84 U+C740 U+C804 U+BA74 U+D5C8 U+AC00 U+D55C U+B2E4 ("all parts requiring authority are fully approved", 2026-11-21) -- plus four measured verdicts -- PR #287 merge_group verdict (`ROT_ALLOWLIST`, 5 of 10 changed paths blocked, run `44882710554`), PR #268 diff measurement (6 of 13 changed paths blocked), this expansion PR's own delta measurement (1 of 6 paths blocked), and the PR #285 diff measurement (1 of 5 paths blocked).

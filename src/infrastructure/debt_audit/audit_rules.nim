@@ -330,41 +330,82 @@ proc evalDirArt001*(ctx: RuleCtx): seq[RuleResult] {.raises: [].} =
   except CatchableError:
     discard
 
-# --- DATA-001: registry.files paths missing / double SSOT ---
+# --- DATA-001: live registry.files paths missing on disk ---
+
+func stripLineAnnotation(p: string): string {.raises: [].} =
+  ## Strip a trailing line-annotation suffix (":N", ":N-M", or comma lists
+  ## such as ":221-236,439-526"). Mirrors the canonical helper in
+  ## tools/debt_engine.nim; the schema states annotations do not affect
+  ## existence (data/debt_schema.json, fileRef).
+  result = p
+  let pos = result.rfind(':')
+  if pos <= 0 or pos + 1 >= result.len: return
+  var i = pos + 1
+  var sawDigits = false
+  while i < result.len and result[i] in Digits:
+    inc i; sawDigits = true
+  if not sawDigits: return
+  if i < result.len and result[i] == '-':
+    inc i
+    var sawRangeEnd = false
+    while i < result.len and result[i] in Digits:
+      inc i; sawRangeEnd = true
+    if not sawRangeEnd: return
+  while i < result.len and result[i] == ',':
+    inc i
+    var sawNext = false
+    while i < result.len and result[i] in Digits:
+      inc i; sawNext = true
+    if not sawNext: return
+    if i < result.len and result[i] == '-':
+      inc i
+      var sawNextEnd = false
+      while i < result.len and result[i] in Digits:
+        inc i; sawNextEnd = true
+      if not sawNextEnd: return
+  if i == result.len:
+    result = result[0 ..< pos]
+
+func entryFiles(entry: JsonNode): seq[string] {.raises: [].} =
+  ## `files` refs of one registry entry; absent/non-array → empty.
+  let node = entry{"files"}
+  if node != nil and node.kind == JArray:
+    for r in node:
+      if r.kind == JString:
+        result.add(r.getStr())
 
 proc evalData001*(ctx: RuleCtx): seq[RuleResult] {.raises: [].} =
-  ## Check registry.files paths: missing on disk or listed more than once.
-  if ctx.registryFiles.len == 0: return @[]
-  # Count occurrences per path
-  var counts: Table[string, int]
-  for p in ctx.registryFiles:
-    counts[p] = counts.getOrDefault(p, 0) + 1
-  for p in ctx.registryFiles:
-    let count = counts.getOrDefault(p, 0)
-    let sev = resolveSeverity("DATA-001")
-    if not fileExists(p):
+  ## Schema contract (data/debt_schema.json): existence is enforced only for
+  ## `files` of open/deferred entries; line annotations do not affect
+  ## existence, directories are valid targets, and cross-entry duplicates are
+  ## not prohibited.
+  var ids: seq[string]
+  for id in ctx.registryEntries.keys:
+    ids.add(id)
+  ids.sort()
+  var seenMissing = initHashSet[string]()
+  for id in ids:
+    let entry = ctx.registryEntries.getOrDefault(id)
+    if entry == nil or entry.kind != JObject: continue
+    if entry{"status"}.getStr("").toLowerAscii() notin ["open", "deferred"]:
+      continue
+    for p in entryFiles(entry):
+      let base = stripLineAnnotation(p)
+      if base.len == 0: continue
+      if fileExists(base) or dirExists(base): continue
+      if base in seenMissing: continue
+      seenMissing.incl(base)
+      let sev = resolveSeverity("DATA-001")
       result.add(RuleResult(
         findingKey: fingerprint("DATA-001", p, "missing",
           "registry-file-not-on-disk",
           "missing-registry-file"),
         ruleId: "DATA-001", ruleVersion: "1", path: p,
         locator: "file",
-        claim: "registry.files paths must exist on disk",
+        claim: "open/deferred registry.files paths must exist on disk",
         rootCause: "file not found at path",
         severity: sev, evidence: @[p],
         dispositionHint: "Create file or remove from registry"
-      ))
-    elif count > 1:
-      result.add(RuleResult(
-        findingKey: fingerprint("DATA-001", p, "dup=" & $count,
-          "double-ssot-reference",
-          "double-ssot"),
-        ruleId: "DATA-001", ruleVersion: "1", path: p,
-        locator: "count=" & $count,
-        claim: "registry.files paths must be unique (single SSOT)",
-        rootCause: "path appears " & $count & " times across entries",
-        severity: sev, evidence: @[p, "duplicate_count=" & $count],
-        dispositionHint: "Remove duplicate reference from registry"
       ))
 
 # --- TOOL-001: tools/**/*.nim with zero references ---
@@ -451,30 +492,219 @@ proc isExcludedPath*(ctx: RuleCtx, p: string): bool {.raises: [].} =
       return true
   false
 
+func isEscaped(s: string; idx: int): bool {.raises: [].} =
+  ## True when the character at `idx` is preceded by an odd run of backslashes.
+  var backslashes = 0
+  var i = idx - 1
+  while i >= 0 and s[i] == '\\':
+    inc backslashes
+    dec i
+  (backslashes mod 2) == 1
+
+func maskInlineCode(line: string): string {.raises: [].} =
+  ## Replace CommonMark code spans (matched backtick runs) with spaces,
+  ## preserving length so column positions stay valid.
+  result = line
+  var i = 0
+  while i < result.len:
+    if result[i] != '`':
+      inc i
+      continue
+    var runEnd = i
+    while runEnd < result.len and result[runEnd] == '`':
+      inc runEnd
+    let runLen = runEnd - i
+    var j = runEnd
+    var closeAt = -1
+    while j < result.len:
+      if result[j] == '`':
+        var k = j
+        while k < result.len and result[k] == '`':
+          inc k
+        if k - j == runLen:
+          closeAt = j
+          break
+        j = k
+      else:
+        inc j
+    if closeAt < 0:
+      i = runEnd
+      continue
+    for x in i ..< closeAt + runLen:
+      result[x] = ' '
+    i = closeAt + runLen
+
+func fenceRun(line: string): (bool, char, int) {.raises: [].} =
+  ## Detect a fenced-code delimiter (``` or ~~~, indented at most 3 spaces).
+  ## Returns (isRun, fenceChar, runLength).
+  var i = 0
+  while i < line.len and line[i] == ' ' and i < 4:
+    inc i
+  if i > 3 or i >= line.len: return (false, '\0', 0)
+  let c = line[i]
+  if c != '`' and c != '~': return (false, '\0', 0)
+  var j = i
+  while j < line.len and line[j] == c:
+    inc j
+  if j - i < 3: return (false, '\0', 0)
+  if c == '`':
+    # Backtick info strings may not contain backticks (CommonMark).
+    for k in j ..< line.len:
+      if line[k] == '`': return (false, '\0', 0)
+  (true, c, j - i)
+
+func parseLinkDestination(line: string; start: int): (bool, string, int) {.raises: [].} =
+  ## Parse a CommonMark inline-link destination starting just after "](".
+  ## Returns (ok, destination, indexAfterCloseParen). Invalid link syntax is
+  ## rejected instead of treating arbitrary bracketed prose as a link.
+  var i = start
+  while i < line.len and line[i] in {' ', '\t'}:
+    inc i
+  if i >= line.len: return (false, "", -1)
+  var dest = ""
+  if line[i] == '<':
+    inc i
+    var closed = false
+    while i < line.len:
+      if line[i] == '\\' and i + 1 < line.len:
+        dest.add(line[i + 1])
+        i += 2
+        continue
+      if line[i] == '>':
+        inc i
+        closed = true
+        break
+      if line[i] == '<' or line[i] == '\n':
+        break
+      dest.add(line[i])
+      inc i
+    if not closed: return (false, "", -1)
+  else:
+    var depth = 0
+    while i < line.len:
+      let c = line[i]
+      if c == '\\' and i + 1 < line.len:
+        dest.add(line[i + 1])
+        i += 2
+        continue
+      if c in {' ', '\t'}:
+        break
+      if c == '(':
+        inc depth
+        dest.add(c)
+        inc i
+        continue
+      if c == ')':
+        if depth == 0: break
+        dec depth
+        dest.add(c)
+        inc i
+        continue
+      dest.add(c)
+      inc i
+    if depth != 0: return (false, "", -1)
+  var j = i
+  while j < line.len and line[j] in {' ', '\t'}:
+    inc j
+  if j < line.len and line[j] == ')':
+    return (true, dest, j + 1)
+  # Optional link title: "...", '...', or (...).
+  if j < line.len and line[j] in {'"', '\'', '('}:
+    let opener = line[j]
+    let closer = if opener == '(': ')' else: opener
+    inc j
+    var titleClosed = false
+    while j < line.len:
+      if line[j] == '\\' and j + 1 < line.len:
+        j += 2
+        continue
+      if line[j] == closer:
+        inc j
+        titleClosed = true
+        break
+      inc j
+    if not titleClosed: return (false, "", -1)
+    while j < line.len and line[j] in {' ', '\t'}:
+      inc j
+    if j < line.len and line[j] == ')':
+      return (true, dest, j + 1)
+  (false, "", -1)
+
+func isExternalTarget(target: string): bool {.raises: [].} =
+  ## URLs with a scheme, protocol-relative, root-absolute, and home-relative
+  ## targets are not repository-relative filesystem paths.
+  if target.startsWith("//") or target.startsWith("/") or target.startsWith("~"):
+    return true
+  let colon = target.find(':')
+  if colon > 0 and target[0].isAlphaAscii():
+    var scheme = true
+    for i in 0 ..< colon:
+      let c = target[i]
+      if not (c.isAlphaNumeric or c in {'+', '-', '.'}):
+        scheme = false
+        break
+    if scheme: return true
+  false
+
 proc evalDocLink001*(ctx: RuleCtx): seq[RuleResult] {.raises: [].} =
-  ## Check relative link targets in docs/**/*.md against repo root.
+  ## Only CommonMark inline links (`](target)`) outside fenced code blocks and
+  ## inline code spans are inspected. `#anchor` fragments are not path
+  ## components, and the locator records the real 1-based source line.
   if ctx.docsDir.len == 0 or not dirExists(ctx.docsDir): return @[]
   try:
     let mdFiles = globFiles(ctx.docsDir & "/**/*.md")
     for mdFile in mdFiles:
       if isExcludedPath(ctx, mdFile): continue
       let content = readFile(mdFile)
-      for line in content.splitLines:
-        # Match [text](relative/path) patterns
+      var inFence = false
+      var fenceChar = '\0'
+      var fenceLen = 0
+      var lineNum = 0
+      for rawLine in content.splitLines:
+        inc lineNum
+        let (isRun, fc, fl) = fenceRun(rawLine)
+        if isRun:
+          if not inFence:
+            inFence = true
+            fenceChar = fc
+            fenceLen = fl
+          elif fc == fenceChar and fl >= fenceLen:
+            var trailing = rawLine.strip()
+            var onlyFence = trailing.len >= fl
+            if onlyFence:
+              for c in trailing:
+                if c != fc:
+                  onlyFence = false
+                  break
+            if onlyFence:
+              inFence = false
+          continue
+        if inFence: continue
+        let line = maskInlineCode(rawLine)
         var pos = 0
-        while pos < line.len:
-          let bracketOpen = line.find("[", pos)
-          if bracketOpen < 0 or bracketOpen >= line.len - 1: break
-          let parenOpen = line.find("(", bracketOpen + 1)
-          if parenOpen < 0: break
-          let parenClose = line.find(")", parenOpen + 1)
-          if parenClose < 0: break
-          let linkTarget = line[(parenOpen + 1)..(parenClose - 1)]
-          # Only check relative links (not http, not anchors-only)
-          if linkTarget.startsWith("http") or linkTarget.startsWith("#"):
-            pos = parenClose + 1
+        while pos + 1 < line.len:
+          let closeBracket = line.find("](", pos)
+          if closeBracket < 0: break
+          var hasOpener = false
+          var k = closeBracket - 1
+          while k >= 0:
+            if line[k] == '[' and not isEscaped(line, k):
+              hasOpener = true
+              break
+            dec k
+          if not hasOpener or isEscaped(line, closeBracket):
+            pos = closeBracket + 2
             continue
-          # Resolve relative to the markdown file's directory
+          let (ok, rawTarget, afterLink) = parseLinkDestination(line, closeBracket + 2)
+          if not ok:
+            pos = closeBracket + 2
+            continue
+          pos = afterLink
+          let hashPos = rawTarget.find('#')
+          let linkTarget = if hashPos >= 0: rawTarget[0 ..< hashPos] else: rawTarget
+          if linkTarget.len == 0 or isExternalTarget(linkTarget):
+            continue
+          # Resolve relative to the markdown file's directory.
           let mdDir = parentDir(mdFile)
           let resolved = joinPath(mdDir, linkTarget)
           if not fileExists(resolved) and not dirExists(resolved):
@@ -484,13 +714,12 @@ proc evalDocLink001*(ctx: RuleCtx): seq[RuleResult] {.raises: [].} =
                 "broken-relative-link",
                 "doc-link-broken"),
               ruleId: "DOC-LINK-001", ruleVersion: "1", path: mdFile,
-              locator: "line=" & $(bracketOpen + 1),
+              locator: "line=" & $lineNum,
               claim: "docs markdown relative links must resolve",
-              rootCause: "link target does not exist: " & linkTarget,
+              rootCause: "link target does not exist: " & rawTarget,
               severity: sev, evidence: @[resolved],
               dispositionHint: "Fix broken link or remove dead reference"
             ))
-          pos = parenClose + 1
   except CatchableError:
     discard
 

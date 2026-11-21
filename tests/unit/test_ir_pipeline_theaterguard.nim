@@ -10,15 +10,24 @@
 ##   4. Pre-generation exits (ogrNoApplicableObligation) still report count 0 —
 ##      the "0 for non-generated" invariant is not broken by the fix.
 ##
-## No z3/lean binaries are required: assertions only touch obligation verdicts.
+## No z3/lean binaries are required for (a)-(f): those assertions only touch
+## obligation verdicts. Test (g) exercises the real canonical-success return
+## and skips when the pinned Lean toolchain or the built ircheck extractor is
+## absent.
 
-import std/[unittest, options]
+import std/[unittest, options, os]
 import core/trusted/axiom_ir
 import core/trusted/contract_synthesis
 import core/trusted/verification_result_types
+import core/trusted/semantic_fact_types
 import core/axiom_pragmas
+import core/deterministic_cas_key
+import infrastructure/evidence_artifact_io
+import infrastructure/external_ir_materializer
 import verification/obligation/obligation_ir
 import verification/obligation/canonical_obligation_generator
+import verification/obligation/canonical_verification
+import verification/obligation/golden_fixture_ir
 import verification/batch_uap/ir_pipeline_runner
 
 # ---------------------------------------------------------------------------
@@ -60,6 +69,21 @@ func expectedGeneratedCount(f: IRFuncDef): int =
   let ogr = generateCanonicalObligations(fd, defaultScopePolicy())
   doAssert ogr.kind == ogrGenerated, "fixture must generate obligations"
   len(ogr.obligations.value)
+
+proc materializeCanonicalCompleteness(fd: IRFuncDef; sourcePath: string): bool =
+  ## Test-boundary producer role for the §2.1a artifacts the canonical chain
+  ## requires (same materialization as tests/unit/test_s1a_lean_golden.nim).
+  let key = computeDeterministicCasKey(serializeIRFuncDef(fd))
+  let evidence = CompletenessEvidence(
+    translationLossFree: true,
+    bindingUniverseComplete: true,
+    opaqueExpansionStatus: "none",
+    sourceBindingCount: 1,
+    irBindingCount: 1)
+  saveEvidenceArtifact(key, evidence)
+  let capture = measureCompletenessSourceCapture("", sourcePath,
+    readFile(sourcePath), contentCarried = false)
+  saveCompletenessEvidenceDual(key, fd, capture, evidence)
 
 # ---------------------------------------------------------------------------
 # Suite
@@ -141,3 +165,32 @@ suite "DEBT#423: TheaterGuard / Early-Return Obligation Count Preservation":
 
     check result.obligationVerdict.kind == ogrNoApplicableObligation
     check result.obligationVerdict.obligationCount == 0
+
+  test "(g) canonical-success early return preserves the generated obligation count":
+    # DEBT#423 pre-fix behavior: the canonical-success return sits inside the
+    # ogrGenerated dispatch, BEFORE the old count assignment, so it reported
+    # obligationCount=0 although obligations were generated. This drives the
+    # real Lean kernel lane (the same golden subject as S1-A) and asserts the
+    # canonical return itself carries the generation-boundary count.
+    let sourcePath = "tests/golden/sub_postcondition.nim"
+    let toolchainReady = findExe("lean").len > 0 and findExe("lake").len > 0 and
+      fileExists("proofs/.lake/build/bin/ircheck")
+    if not toolchainReady:
+      skip()
+    else:
+      let funcDef = gfSubPostcondition()
+      let expected = expectedGeneratedCount(funcDef)
+      check expected == 1
+      check materializeCanonicalCompleteness(funcDef, sourcePath) == true
+      let bound = measureParseBoundComponents(readFile(sourcePath), funcDef.name)
+      var entry = makeEntry(funcDef.name, bmcSkippable = false)
+      entry.sourcePath = sourcePath
+      entry.isKernel = true
+      let ve = ValidatedIrEntry(entry: entry, funcDef: funcDef,
+                                parseBound: bound)
+      let result = runIrPipeline(ve)
+
+      # Reason pins the canonical-success return, not a fall-through path.
+      check result.obligationVerdict.reason == "canonicalVerified"
+      check result.obligationVerdict.obligationCount == expected
+      check result.obligationVerdict.obligationCount > 0

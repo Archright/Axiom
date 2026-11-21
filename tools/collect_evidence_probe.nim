@@ -198,12 +198,9 @@ when isMainModule:
   observations.add(%*{"key": "commandExists", "value": surfaceCert,
                       "scope": "surface", "subject": "ax cert verify"})
   observations.add(%*{"key": "promiseOutputExists", "value": promiseJson,
-                      "scope": "artifact",
-                      "subject": "json-report: ax report --json top-level schemaVersion" &
-                                  (if reportSchema.len > 0: "=" & reportSchema else: "")})
+                      "scope": "artifact", "subject": "json-report"})
   observations.add(%*{"key": "promiseOutputExists", "value": promiseCert,
-                      "scope": "artifact",
-                      "subject": "v3 certificate artifact under build/certificates/"})
+                      "scope": "artifact", "subject": "certificate"})
 
   # --- envelope ---
   let envelope = newJObject()

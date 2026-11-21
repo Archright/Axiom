@@ -15,7 +15,16 @@
 ##   NO-GO          -> exit 1
 ##   stale evidence -> INVALID -> critical NOT_RUN -> NO-GO -> exit 1
 ##   evidence head ≠ AXIOM_CI_REPO_HEAD -> exit 1 + READINESS_IDENTITY_MISMATCH
+##   (CI env must equal the measured git HEAD/tree; otherwise
+##    READINESS_GIT_IDENTITY_MISMATCH fires before the evidence check)
+##   evidence identity without AXIOM_READINESS_REPLAY=1 is never authority:
+##     a GO-shaped snapshot declaring a foreign commit -> NO-GO -> exit 1
 ##   missing critical evidence file     -> exit 1
+##
+## Frozen fixture identities (FixtureHead) are validated through the gate's
+## explicit replay mode (AXIOM_READINESS_REPLAY=1 + pinned eval time); the
+## default gate mode measures this checkout with git and would (correctly)
+## reject the fixtures' self-declared identity.
 ##
 ## Fixtures replicate the committed data/readiness/evidence/R*.json envelope
 ## (collection + repoIdentity + observations + sources). Each verdict
@@ -69,6 +78,25 @@ const
 
 let
   ProbeAx = Root / "build" / "readiness_c3_probe" / "ax"
+
+proc gitTrim(cmdline: string): string =
+  let (outp, code) = execCmdEx(cmdline, workingDir = Root)
+  if code == 0: outp.strip() else: ""
+
+let
+  ## The checkout's own identity — the gate measures these itself in normal
+  ## mode. `ActualTree` uses the CI/collector formula: command substitution
+  ## strips the trailing newline before hashing.
+  ActualHead = gitTrim("git rev-parse HEAD")
+  ActualTree = block:
+    let parts = gitTrim(
+      "printf '%s' \"$(git ls-tree -r HEAD)\" | sha256sum").splitWhitespace()
+    if parts.len > 0: parts[0] else: ""
+
+proc replayEnv(): seq[(string, string)] =
+  ## Fixture snapshots declare a frozen identity; replay is the only mode in
+  ## which an evidence declaration is authority (explicit audit reproduction).
+  @[("AXIOM_READINESS_REPLAY", "1"), ("AXIOM_READINESS_EVAL_TIME", EvalTime)]
 
 proc ensureProbeAxBinary(): bool =
   ## The productization E2E inside the gate execs `bin/ax` unless
@@ -226,11 +254,15 @@ proc envelope(invId: string; observations: seq[JsonNode];
   (name: invId & ".json", content: doc.pretty())
 
 proc r1Obs(): seq[JsonNode] =
-  ## ruleR1: documented ∪ policy contractCommands all exist on the surface.
+  ## ruleR1: documented ∪ policy contractCommands all exist on the surface;
+  ## every policy r1.promiseOutputs subject and the subjectLane key (empty
+  ## array = no lane claimed) close the DEBT#559 key contract.
   @[obs("documentedCommand", %["ax prove", "ax report"], "doc", "README.md"),
     obs("commandExists", %true, "surface", "ax prove"),
     obs("commandExists", %true, "surface", "ax report"),
-    obs("promiseOutputExists", %true, "artifact", "json-report")]
+    obs("promiseOutputExists", %true, "artifact", "json-report"),
+    obs("promiseOutputExists", %true, "artifact", "certificate"),
+    obs("subjectLane", %[], "trust-boundary")]
 
 proc r2Obs(dualEvidenceRequired: bool): seq[JsonNode] =
   @[obs("certGreenDualEvidenceRequired", %dualEvidenceRequired),
@@ -258,16 +290,23 @@ proc r4Obs(): seq[JsonNode] =
             "solverResultDigest"]:
     result.add(obs("certFieldPresent", %true, "", f))
   result.add(obs("provenanceReconstructible", %true))
+  result.add(obs("subjectTreeImmutableAcrossRun", %true, "git"))
 
 proc r5Obs(): seq[JsonNode] =
-  @[obs("commandExists", %true, "surface", "ax prove"),
-    obs("commandExists", %true, "surface", "ax report"),
-    obs("successExitCode", %0, "", "ax prove"),
-    obs("verificationFailureExitCode", %1, "", "ax prove"),
-    obs("invalidInputExitCode", %3, "", "ax prove"),
-    obs("internalErrorExitCode", %2, "", "ax prove"),
-    obs("jsonSchemaVersion", %"axiom.report.v1"),
-    obs("stdoutStderrSplit", %true)]
+  ## R5 key contract (DEBT#559): commandExists/helpSurface are required for
+  ## every contract command; successExitCode is required only for the commands
+  ## the collection actually actuates to success (policy r5.successCommands =
+  ## ax report); verificationFailure/invalidInput exit codes are required for
+  ## every contract command; internalErrorExitCode is a declared vocabulary
+  ## value (presence=vocabulary) and never evidence.
+  result = @[obs("jsonSchemaVersion", %"axiom.report.v1"),
+             obs("stdoutStderrSplit", %true),
+             obs("successExitCode", %0, "observed", "ax report")]
+  for cmd in ["ax prove", "ax report"]:
+    result.add(obs("commandExists", %true, "surface", cmd))
+    result.add(obs("helpSurface", %true, "surface", cmd))
+    result.add(obs("verificationFailureExitCode", %1, "observed", cmd))
+    result.add(obs("invalidInputExitCode", %3, "observed", cmd))
 
 proc r6Obs(): seq[JsonNode] =
   @[obs("failureConvertsToSuccess", %false),
@@ -418,7 +457,7 @@ suite "readiness verdict mapping (DEBT#537)":
       check evidenceMatches(backup)
     let installed = verdictFixtures("go")
     installFixtures(installed)
-    let r = runGate(logName = "go")
+    let r = runGate(replayEnv(), logName = "go")
     check evidenceMatches(installed)
     check r.exit == 0
     if GateEmitsVerdictLine:
@@ -439,7 +478,7 @@ suite "readiness verdict mapping (DEBT#537)":
       check evidenceMatches(backup)
     let installed = verdictFixtures("cg")
     installFixtures(installed)
-    let r = runGate(logName = "cg")
+    let r = runGate(replayEnv(), logName = "cg")
     check evidenceMatches(installed)
     check r.exit == 0
     if GateEmitsVerdictLine:
@@ -467,7 +506,7 @@ suite "readiness verdict mapping (DEBT#537)":
       check evidenceMatches(backup)
     let installed = verdictFixtures("nogo")
     installFixtures(installed)
-    let r = runGate(logName = "nogo")
+    let r = runGate(replayEnv(), logName = "nogo")
     check evidenceMatches(installed)
     check r.exit == 1
     if GateEmitsVerdictLine:
@@ -486,7 +525,7 @@ suite "readiness verdict mapping (DEBT#537)":
       check evidenceMatches(backup)
     let installed = verdictFixtures("stale")
     installFixtures(installed)
-    let r = runGate(logName = "stale")
+    let r = runGate(replayEnv(), logName = "stale")
     check evidenceMatches(installed)
     check r.exit == 1
     checkpoint("stale INVALID diag surfaced by evaluator: " &
@@ -500,21 +539,26 @@ suite "readiness verdict mapping (DEBT#537)":
       echo pendingContractMsg("stale verdict line", "READINESS_VERDICT emission")
       skip()
 
-  test "identity mismatch (evidence head != AXIOM_CI_REPO_HEAD): exit 1 + READINESS_IDENTITY_MISMATCH":
+  test "identity mismatch (evidence head != env==git commit): exit 1 + READINESS_IDENTITY_MISMATCH":
     let backup = committedEvidence()
     defer:
       installFixtures(backup)
       check evidenceMatches(backup)
     let installed = verdictFixtures("mismatch")
     installFixtures(installed)
-    let env = @[("AXIOM_CI_REPO_HEAD", FixtureHead),
-                ("AXIOM_CI_TREE_DIGEST", FixtureTree)]
+    check ActualHead.len == 40
+    check ActualTree.len == 64
+    # The environment names the real checkout commit; the evidence declares
+    # OtherHead. The gate's own git measurement agrees with the env, so the
+    # only violation is the evidence's declaration.
+    let env = @[("AXIOM_CI_REPO_HEAD", ActualHead),
+                ("AXIOM_CI_TREE_DIGEST", ActualTree)]
     if GateBindsCiIdentity:
       let r = runGate(env, logName = "mismatch")
       check evidenceMatches(installed)
       check r.exit == 1
       check "READINESS_IDENTITY_MISMATCH" in r.output
-      check ("expected=" & FixtureHead) in r.output
+      check ("expected=" & ActualHead) in r.output
       check ("actual=" & OtherHead) in r.output
     else:
       let r = runGate(env, logName = "mismatch_legacy")
@@ -523,6 +567,32 @@ suite "readiness verdict mapping (DEBT#537)":
       checkpoint("legacy gate observed exit " & $r.exit &
                  " (identity is trusted FROM the evidence; mismatch unreachable)")
 
+  test "without replay a self-declared evidence identity is not authority":
+    let backup = committedEvidence()
+    defer:
+      installFixtures(backup)
+      check evidenceMatches(backup)
+    # A GO-shaped snapshot that declares FixtureHead cannot be trusted by
+    # itself: the gate measures this checkout, the evaluator drops every
+    # envelope (identity mismatch) -> critical NOT_RUN -> NO-GO. No replay
+    # flag, no CI identity env.
+    let installed = verdictFixtures("go")
+    installFixtures(installed)
+    let r = runGate(
+      @[("AXIOM_READINESS_REPLAY", "0"),
+        ("AXIOM_CI_REPO_HEAD", ""), ("AXIOM_CI_TREE_DIGEST", "")],
+      logName = "no-replay")
+    check evidenceMatches(installed)
+    check r.exit == 1
+    if GateEmitsVerdictLine:
+      let vl = verdictLines(r.output)
+      check vl.len == 1
+      if vl.len == 1:
+        check vl[0].startsWith("READINESS_VERDICT NO-GO")
+    else:
+      echo pendingContractMsg("no-replay verdict line", "READINESS_VERDICT emission")
+      skip()
+
   test "missing critical evidence file (R2.json absent): exit 1":
     let backup = committedEvidence()
     defer:
@@ -530,7 +600,7 @@ suite "readiness verdict mapping (DEBT#537)":
       check evidenceMatches(backup)
     let installed = verdictFixtures("missing-r2")
     installFixtures(installed)
-    let r = runGate(logName = "missing-r2")
+    let r = runGate(replayEnv(), logName = "missing-r2")
     check evidenceMatches(installed)
     check r.exit == 1
     if GateEmitsVerdictLine:

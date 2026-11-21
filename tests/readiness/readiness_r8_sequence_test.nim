@@ -214,18 +214,23 @@ suite "Phase 3-G — R8 prepare-sequence machine verification":
     check r.reasons.anyIt(it.contains("has no integer exitCode"))
     echo "  [r8-seq] non-integer exitCode -> FAIL (fail-closed)"
 
-  test "sequence is policy-driven (r8.prepareSequenceCommands), fallback anchored":
+  test "sequence is policy-driven (r8.prepareSequenceCommands), no fallback":
     let custom = %*{"r8": {"prepareSequenceCommands": ["alpha step", "beta step"]}}
     check readiness_evaluator.r8SequenceViolations(
       mergedOf(commandsOf(("alpha step", 0), ("beta step", 0))), custom).len == 0
-    # empty/missing policy -> the §10.6 strings anchor the gate (never empty)
+    # No fallback: an empty/missing policy cannot anchor the gate, so it fails
+    # closed instead of silently accepting the §10.6 strings.
+    let noPolicy = newJObject()
     check readiness_evaluator.r8SequenceViolations(
       mergedOf(commandsOf(("alpha step", 0), ("beta step", 0))),
-      newJObject()).len > 0
+      noPolicy).len > 0
     check readiness_evaluator.r8SequenceViolations(
       mergedOf(commandsOf(fetchStep(), metadataStep(), buildStep())),
-      newJObject()).len == 0
-    echo "  [r8-seq] policy read live; contract strings remain the fallback"
+      noPolicy).len > 0
+    check readiness_evaluator.r8SequenceViolations(
+      mergedOf(commandsOf(fetchStep(), metadataStep(), buildStep())),
+      POLICY).len == 0
+    echo "  [r8-seq] policy read live; undeclared sequence fails closed"
 
   test "commands enter the canonical evidence identity (bundleDigest)":
     let withC = readiness_evaluator.normalizeBundle(

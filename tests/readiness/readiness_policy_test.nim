@@ -11,7 +11,7 @@
 ##   nim c -r --hints:off --nimcache:/tmp/axiom_readiness_nimcache \
 ##       tests/readiness/readiness_policy_test.nim
 
-import std/[json, unittest, strutils, algorithm, sequtils, tables, os]
+import std/[json, unittest, strutils, algorithm, sequtils, tables, os, osproc]
 import ../../src/core/trusted/trust_boundary
 
 # ── Conditional evaluator import ────────────────────────────────────────────
@@ -251,15 +251,19 @@ suite "Contradiction resolution":
     else:
       skip()
 
-  test "different scope -> no contradiction (values computed normally)":
+  test "different scope -> no contradiction recorded":
     when EVALUATOR_AVAILABLE:
       let b = readiness_evaluator.normalizeBundle(@[
         readiness_evaluator.makeEvidence("R1", @[
           readiness_evaluator.makeObs("commandExists", %true, "surface", "ax prove"),
           readiness_evaluator.makeObs("commandExists", %false, "docs", "ax prove")])]).get
-      let d = readiness_evaluator.evaluateReadiness(POLICY, b)
-      check d.invariantStates["R1"].getStr() != "UNKNOWN"
-      echo "  [contradiction] different scope -> no UNKNOWN"
+      # A different scope is a different fact, not a contradiction: the
+      # normalization boundary must not flag R1. (R1 itself is UNKNOWN here
+      # under the DEBT#559 key contract because required keys are absent —
+      # that is closure, never a contradiction-derived UNKNOWN.)
+      let inv = b["invariants"]["R1"]
+      check not (inv.hasKey("contradiction") and inv["contradiction"].getBool())
+      echo "  [contradiction] different scope -> no contradiction flag"
     else:
       skip()
 
@@ -382,12 +386,11 @@ suite "Golden fixture":
       let goldenPath = "data/golden/readiness/decision.golden.json"
       check fileExists(goldenPath)
       let golden = parseFile(goldenPath)
-      check golden["verdict"].getStr() == "CONDITIONAL GO"
-      check golden["conditions"].toSeq().mapIt(it.getStr()) == @["R7=FAIL"]
+      check golden["verdict"].getStr() == "GO"
+      check golden["conditions"].toSeq().mapIt(it.getStr()) == newSeq[string]()
       let states = golden["invariantStates"]
-      check states["R1"].getStr() == "PASS"
-      check states["R7"].getStr() == "FAIL"
-      check states["R8"].getStr() == "PASS"
+      for invId in INV_IDS:
+        check states[invId].getStr() == "PASS"
       var arr: seq[InvState] = @[]
       for invId in INV_IDS:
         arr.add(if states[invId].getStr() == "PASS": stPass else: stFail)
@@ -543,6 +546,280 @@ suite "U1 — trust-boundary register as observation key (lane readiness)":
       check d.invariantStates["R1"].getStr() == "PASS"
       echo "  [u1] register flip flips the gate; production wiring matches " &
         "the register accessor"
+    else:
+      skip()
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Suite 10 — DEBT#559 observation-key closure (false-GO regression)
+# ══════════════════════════════════════════════════════════════════════════════
+
+when EVALUATOR_AVAILABLE:
+  proc envelopeOf(fixture: JsonNode, invId: string): JsonNode =
+    for e in fixture.items:
+      if e["invariantId"].getStr() == invId:
+        return e
+    doAssert false, "fixture has no " & invId & " envelope"
+
+  proc replaceObservations(fixture: JsonNode, invId: string,
+                           obs: openArray[JsonNode]) =
+    let arr = newJArray()
+    for o in obs:
+      arr.add(o)
+    envelopeOf(fixture, invId)["observations"] = arr
+
+  proc removeObs(fixture: JsonNode, invId, key: string) =
+    let kept = newJArray()
+    for o in envelopeOf(fixture, invId)["observations"].items:
+      if o["key"].getStr() != key:
+        kept.add(o)
+    envelopeOf(fixture, invId)["observations"] = kept
+
+  proc removeObs(fixture: JsonNode, invId, key, subject: string) =
+    let kept = newJArray()
+    for o in envelopeOf(fixture, invId)["observations"].items:
+      if o["key"].getStr() != key or o["subject"].getStr() != subject:
+        kept.add(o)
+    envelopeOf(fixture, invId)["observations"] = kept
+
+  proc setObsValue(fixture: JsonNode, invId, key, subject: string,
+                   value: JsonNode) =
+    for o in envelopeOf(fixture, invId)["observations"].items:
+      if o["key"].getStr() == key and o["subject"].getStr() == subject:
+        o["value"] = value
+        return
+    doAssert false, "fixture has no " & invId & "." & key & "[" & subject & "]"
+
+  proc setObsScope(fixture: JsonNode, invId, key, scope: string) =
+    for o in envelopeOf(fixture, invId)["observations"].items:
+      if o["key"].getStr() == key:
+        o["scope"] = %scope
+        return
+    doAssert false, "fixture has no " & invId & "." & key
+
+  proc evaluateFixture(policy: JsonNode,
+                       fixture: JsonNode): readiness_evaluator.ReadinessDecision =
+    let bundle = readiness_evaluator.normalizeBundle(
+      readiness_evaluator.loadEvidenceFromJson(fixture)).get
+    readiness_evaluator.evaluateReadiness(policy, bundle)
+
+  proc stateOf(policy: JsonNode, fixture: JsonNode, invId: string): string =
+    evaluateFixture(policy, fixture).invariantStates[invId].getStr()
+
+suite "DEBT#559 — observation-key closure (false GO regression)":
+  test "unrelated keys do not satisfy R2/R6/R8":
+    when EVALUATOR_AVAILABLE:
+      let fixture = loadSyntheticFixture()
+      for invId in ["R2", "R6", "R8"]:
+        replaceObservations(fixture, invId,
+          [readiness_evaluator.makeObs("unrelatedProbe", %true)])
+      let d = evaluateFixture(POLICY, fixture)
+      for invId in ["R2", "R6", "R8"]:
+        check d.invariantStates[invId].getStr() == "UNKNOWN"
+      for invId in ["R1", "R3", "R4", "R5", "R7"]:
+        check d.invariantStates[invId].getStr() == "PASS"
+      check d.verdict == "NO-GO"
+      check d.outcome == "UNRESOLVED"
+      echo "  [debt559] unrelated keys -> R2/R6/R8 UNKNOWN, NO-GO/UNRESOLVED"
+    else:
+      skip()
+
+  test "one missing required key -> that invariant UNKNOWN":
+    when EVALUATOR_AVAILABLE:
+      for (invId, key) in [("R1", "documentedCommand"),
+                           ("R2", "certGreenDualEvidenceRequired"),
+                           ("R3", "canonicalInputHash"),
+                           ("R4", "provenanceReconstructible"),
+                           ("R5", "helpSurface"),
+                           ("R6", "failureConvertsToSuccess"),
+                           ("R7", "measuredCoverage"),
+                           ("R8", "cleanRunSucceeded")]:
+        let fixture = loadSyntheticFixture()
+        removeObs(fixture, invId, key)
+        let d = evaluateFixture(POLICY, fixture)
+        check d.invariantStates[invId].getStr() == "UNKNOWN"
+        if invId == "R7":
+          check d.verdict == "CONDITIONAL GO"
+        else:
+          check d.verdict == "NO-GO"
+      echo "  [debt559] every invariant's required keys are load-bearing"
+    else:
+      skip()
+
+  test "required key null or wrong JSON type -> UNKNOWN":
+    when EVALUATOR_AVAILABLE:
+      let nullFixture = loadSyntheticFixture()
+      setObsValue(nullFixture, "R8", "manualStepsRequired", "", newJNull())
+      check stateOf(POLICY, nullFixture, "R8") == "UNKNOWN"
+
+      let wrongType = loadSyntheticFixture()
+      setObsValue(wrongType, "R8", "cleanRunSucceeded", "", %"yes")
+      check stateOf(POLICY, wrongType, "R8") == "UNKNOWN"
+      echo "  [debt559] null / wrong-type required values -> UNKNOWN"
+    else:
+      skip()
+
+  test "present false fails only where onFalse=fail":
+    when EVALUATOR_AVAILABLE:
+      let failing = loadSyntheticFixture()
+      setObsValue(failing, "R2", "certGreenDualEvidenceRequired", "", %false)
+      let dFail = evaluateFixture(POLICY, failing)
+      check dFail.invariantStates["R2"].getStr() == "FAIL"
+      check dFail.verdict == "NO-GO"
+
+      # manualStepsRequired=false is the healthy value (onFalse=pass); the same
+      # false shape on a fail-on-false key is caught above.
+      let healthy = loadSyntheticFixture()
+      check stateOf(POLICY, healthy, "R8") == "PASS"
+      echo "  [debt559] present-false semantics follow policy onFalse"
+    else:
+      skip()
+
+  test "subjectLane is required and lane claims gate R1":
+    when EVALUATOR_AVAILABLE:
+      let absent = loadSyntheticFixture()
+      removeObs(absent, "R1", "subjectLane")
+      check stateOf(POLICY, absent, "R1") == "UNKNOWN"
+
+      let empty = loadSyntheticFixture()
+      check stateOf(POLICY, empty, "R1") == "PASS"
+
+      let blocked = loadSyntheticFixture()
+      setObsValue(blocked, "R1", "subjectLane", "", %["rust"])
+      check stateOf(POLICY, blocked, "R1") == "FAIL"
+      echo "  [debt559] subjectLane absent -> UNKNOWN; claimed lane still gates"
+    else:
+      skip()
+
+  test "conditional claim:subjectLane skips when no lane is claimed":
+    when EVALUATOR_AVAILABLE:
+      var conditional = copy(POLICY)
+      for k in conditional["observationKeys"]["R1"].items:
+        if k["key"].getStr() == "subjectLane":
+          k["presence"] = %"conditional"
+          k["condition"] = %"claim:subjectLane"
+      check readiness_evaluator.validatePolicyShape(conditional).isOk
+
+      let noClaim = loadSyntheticFixture()
+      removeObs(noClaim, "R1", "subjectLane")
+      check stateOf(conditional, noClaim, "R1") == "PASS"
+
+      let claimed = loadSyntheticFixture()
+      setObsValue(claimed, "R1", "subjectLane", "", %["rust"])
+      check stateOf(conditional, claimed, "R1") == "FAIL"
+      echo "  [debt559] conditional claim:subjectLane follows the claim"
+    else:
+      skip()
+
+  test "R5 success is demanded only for actuated commands; vocabulary is never evidence":
+    when EVALUATOR_AVAILABLE:
+      let missing = loadSyntheticFixture()
+      removeObs(missing, "R5", "verificationFailureExitCode", "ax prove")
+      check stateOf(POLICY, missing, "R5") == "UNKNOWN"
+
+      # The collector's fail-closed shape for an unactuated bucket is a
+      # PRESENT observed-scope null (never an absent key, never a contract
+      # echo): both must map to UNKNOWN.
+      let nullObs = loadSyntheticFixture()
+      setObsValue(nullObs, "R5", "verificationFailureExitCode", "ax prove",
+                  newJNull())
+      check stateOf(POLICY, nullObs, "R5") == "UNKNOWN"
+
+      let successMissing = loadSyntheticFixture()
+      removeObs(successMissing, "R5", "successExitCode", "ax report")
+      check stateOf(POLICY, successMissing, "R5") == "UNKNOWN"
+
+      # `ax prove` has no independent success actuation in the collection
+      # (policy r5.successCommands = ["ax report"]): its absence is the
+      # contract, not a missing observation.
+      check stateOf(POLICY, loadSyntheticFixture(), "R5") == "PASS"
+
+      # internalErrorExitCode is declared vocabulary: dropping it never
+      # changes R5, and a contract-scoped value never satisfies an observed key.
+      let vocab = loadSyntheticFixture()
+      removeObs(vocab, "R5", "internalErrorExitCode", "ax prove")
+      check stateOf(POLICY, vocab, "R5") == "PASS"
+      echo "  [debt559] R5 success/scope contract: actuated-only demand, vocabulary excluded"
+    else:
+      skip()
+
+  test "scope=contract echo is not observed evidence":
+    when EVALUATOR_AVAILABLE:
+      let fixture = loadSyntheticFixture()
+      setObsScope(fixture, "R2", "certGreenDualEvidenceRequired", "contract")
+      check stateOf(POLICY, fixture, "R2") == "UNKNOWN"
+      check stateOf(POLICY, loadSyntheticFixture(), "R2") == "PASS"
+      echo "  [debt559] declared scope never satisfies a required observed key"
+    else:
+      skip()
+
+  test "complete key closure yields GO with the golden digest":
+    when EVALUATOR_AVAILABLE:
+      let d = evaluateFixture(POLICY, loadSyntheticFixture())
+      for invId in INV_IDS:
+        check d.invariantStates[invId].getStr() == "PASS"
+      check d.verdict == "GO"
+      check d.decisionDigest ==
+        "2450f1a283a21d97ccdd4432076d921be6dc5aae9c759d348cc31b7237c70dea"
+      echo "  [debt559] strict fixture -> GO, golden digest"
+    else:
+      skip()
+
+  test "malformed policy shape is rejected, never defaulted":
+    when EVALUATOR_AVAILABLE:
+      check readiness_evaluator.validatePolicyShape(POLICY).isOk
+
+      proc shapeRejected(mutate: proc(p: JsonNode)): bool =
+        var p = copy(POLICY)
+        mutate(p)
+        readiness_evaluator.validatePolicyShape(p).isErr
+
+      check shapeRejected(proc(p: JsonNode) =
+        p["observationKeys"].delete("R6"))
+      check shapeRejected(proc(p: JsonNode) =
+        p["observationKeys"]["R2"][0]["presence"] = %"sometimes")
+      check shapeRejected(proc(p: JsonNode) =
+        p["observationKeys"]["R3"][0]["type"] = %"boolish")
+      check shapeRejected(proc(p: JsonNode) =
+        p["observationKeys"]["R8"][0]["observedScope"] = %"hoped")
+      check shapeRejected(proc(p: JsonNode) =
+        p["observationKeys"]["R5"][1]["onAbsent"] = %"shrug")
+      check shapeRejected(proc(p: JsonNode) =
+        p["observationKeys"]["R5"][3]["condition"] = %"successor:nonexistent")
+      check shapeRejected(proc(p: JsonNode) =
+        p["r4"].delete("requiredFields"))
+      check shapeRejected(proc(p: JsonNode) =
+        p["r5"]["successExitCode"] = %"zero")
+      check shapeRejected(proc(p: JsonNode) =
+        p["r8"].delete("prepareSequenceCommands"))
+      check shapeRejected(proc(p: JsonNode) =
+        p["invariants"].delete("R8"))
+      check shapeRejected(proc(p: JsonNode) =
+        p["unknownKeys"] = %"whatever")
+      echo "  [debt559] malformed shapes rejected by validatePolicyShape"
+    else:
+      skip()
+
+  test "CLI exits 1 on malformed policy (silent default prohibited)":
+    when EVALUATOR_AVAILABLE:
+      let evaluatorBin =
+        if fileExists("bin/readiness_evaluator"): "bin/readiness_evaluator"
+        else: REPO_ROOT / "bin/readiness_evaluator"
+      if not fileExists(evaluatorBin):
+        echo "  [debt559] SKIP CLI exit check: " & evaluatorBin & " not built"
+      else:
+        var bad = copy(POLICY)
+        bad["observationKeys"].delete("R6")
+        let tmpPolicy = getTempDir() / "axiom_readiness_shape_probe.json"
+        writeFile(tmpPolicy, $bad)
+        let fixture = currentSourcePath().parentDir() / "fixtures" /
+          "synthetic_bundle.json"
+        let cmd = quoteShell(evaluatorBin) & " --policy " & quoteShell(tmpPolicy) &
+          " --bundle-file " & quoteShell(fixture) &
+          " --eval-time 2026-11-20T00:00:00Z"
+        let (output, code) = execCmdEx(cmd)
+        check code == 1
+        check output.contains("invalid policy shape")
+        echo "  [debt559] malformed policy -> CLI exit 1"
     else:
       skip()
 

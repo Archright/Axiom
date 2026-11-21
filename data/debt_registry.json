@@ -3111,8 +3111,11 @@
       "severity": "high",
       "source": "P7 obligation_semantics audit",
       "productTruthImpact": "STALE",
-      "status": "open",
-      "resolution": "Migrate all rkNoObligation callers to explicit ObligationSkipReason mapping; remove coerce path."
+      "status": "closed",
+      "resolution": "STALE — no rkNoObligation variant exists in src/core/trusted/private/chc_build_result.nim (only ChcNotApplicableReason cnaNoObligations/cnaNoProperty, :23-25); the sole remaining normalization is the declared DECISION-0405 coerce at src/core/trusted/verification_result_types.nim:85-89, which preserves the distinction in ObligationVerdictInfo.kind. Evidence: ir_pipeline_runner.nim:593-607 sets ogrNoApplicableObligation; obligation_types.nim:660,670 maps osrNoObligation -> no_obligation; all 16 return sites audited.",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21",
+      "lastVerifiedAt": "2026-11-21T06:40:04Z"
     },
     {
       "id": "DEBT#422",
@@ -3125,8 +3128,11 @@
       "severity": "medium",
       "source": "P7 obligation_semantics audit",
       "productTruthImpact": "STALE",
-      "status": "open",
-      "resolution": "Unify skipReason enum across ir_pipeline_runner and loop_driver; deprecate string-literal mapping."
+      "status": "closed",
+      "resolution": "STALE — the canonical ObligationSkipReason enum (src/verification/obligation/obligation_types.nim:657-674) is the typed field at src/verification/batch_uap/loop_driver.nim:114 and is imported by ir_pipeline_runner.nim:39; git grep 'skipReason: \"' -- src/ returns zero call-site string mappings. The only remaining literals are inside the enum's own $ serializer (a declared serialization invariant).",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21",
+      "lastVerifiedAt": "2026-11-21T06:40:22Z"
     },
     {
       "id": "DEBT#423",
@@ -3138,8 +3144,11 @@
       "severity": "high",
       "source": "P7 obligation_semantics audit",
       "productTruthImpact": "STALE",
-      "status": "open",
-      "resolution": "Refactor TheaterGuard to preserve obligation counting even on early-return paths; record theater-detected targets with proper skipReason."
+      "status": "closed",
+      "resolution": "STALE — TheaterGuard returns theaterDetectedVerdict(generatedObligationCount) at src/verification/batch_uap/ir_pipeline_runner.nim:194-199,1316, preserving the count and the distinguishable reason theater_detected; the accumulator is declared :554-558 and assigned :761 so every post-generation return carries obligationVerdict. Caveat recorded: no test drives the firing path (test (d) asserts non-firing).",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21",
+      "lastVerifiedAt": "2026-11-21T06:40:42Z"
     },
     {
       "id": "DEBT#424",
@@ -3336,8 +3345,8 @@
       "symbol": "proof_hydration.nim StableVaultDir / product readers (verify_cli, report_cli, axiom_status, axiom_engine)",
       "contentHash": "sha256:unbound-placeholder-runtime-reference-g6",
       "lineRange": "src/cli/shared/proof_hydration.nim:22,178 / src/cli/verify_cli.nim:46-101 / src/cli/report_cli.nim:345-375 / src/cli/axiom_status.nim:534-547 / src/cli/axiom_engine.nim:598",
-      "resolution": "OPEN",
-      "lastVerifiedAt": "2026-08-23T00:00:00Z",
+      "resolution": "STALE — reader-vs-reference-store separation is now structurally and behaviorally asserted and passing. src/cli/shared/proof_hydration.nim:25-38: the pre-#936 vault-scan fallback that read the reference store was removed; getCanonicalVkdMetrics (:121-159) is journal-driven and cert_reconcile.computeJournalVkdAdmission:1081 never reads the reference vault. Tests: tests/verification/test_g6_runtime_reference_divergence.nim:67-84 (runtime VERIFIED=1 vs reference FAILED=0 divergence), test_g6_verify_journal_not_reference.nim:32-41 (verify journal-only; cvCanonicalRead not a product-state read target), test_g6_prove_runtime_vault.nim:23-28 (prove resolves cvRuntimeCanonical only). Command: AXIOM_HERMETIC_BUILDING=1 nim c -r -d:release <each test> -> exit 0, 'Test PASSED' each. Remaining reference-vault readers are engineering/VKD paths (baseline_snapshot_core.nim:32), allowed by the approved consumer-namespace design.",
+      "lastVerifiedAt": "2026-11-21T07:22:26Z",
       "description": "Product readers verified: ax prove reads cvRuntimeCanonical (data/trusted/certificates, axiom_engine.nim:598); ax verify reads TrustCommit journal (verify_cli.nim:46-67); ax report/status read logs/ax_proof_state.json. BUT proof_hydration.nim:22,178 defines StableVaultDir = 'src/verification/certificates' (reference store) and uses it as a fallback read for VKD metrics -- a reference-store read path potentially used by product readers via proof hydration. No structural test asserts product readers do not read the reference store (only write-scope guard I7 and I5 no-reexec exist). Per Contract Preservation Audit 2026-08-23, fix by consumer namespace (product reader -> runtime only; engineering/VKD reader -> tracked reference allowed), not removal: 'VKD computation may read reference artifacts, but Product State may not'. Require both structural AND behavioral tests (runtime=VERIFIED, tracked=FAILED -> verify/report/status output VERIFIED).",
       "files": [
         "src/cli/shared/proof_hydration.nim",
@@ -3349,7 +3358,9 @@
       "severity": "high",
       "source": "productization_contract_preservation_audit_2026-08-23",
       "productTruthImpact": "STALE",
-      "status": "open"
+      "status": "closed",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21"
     },
     {
       "id": "DEBT#434",
@@ -3712,9 +3723,11 @@
       "lineRange": "src/gate/daemon/gate_daemon_server.nim:68-77; src/gate/daemon/gate_daemon_client.nim:82-88",
       "source": "verification-dag-contract P1",
       "productTruthImpact": "STALE",
-      "status": "open",
-      "resolution": "OPEN",
-      "lastVerifiedAt": "2026-08-31T00:00:00Z"
+      "status": "closed",
+      "resolution": "STALE — the gate-daemon cache is keyed on the opaque composite lock hash (DaemonProtocolVersion=2, src/gate/daemon/gate_daemon_types.nim:24,37-48; server :65-95 rejects empty identity and looks up by identity; MemoDb key = opaque composite identity, types:77). computeCompositeLockHash (src/core/gate/gate_memo.nim:269-288) binds inputHash|gateHash|repoRoot|buildEnv|subtreeRoot|binaryHash|envHash|toolchainSalt|transitiveHash|scopeHash, and gateHash is the gate entry's transitive import-closure Merkle root (memo.nim:90-105). Proof: memo_daemon_identity_roundtrip_test.nim, gate_daemon_server_test.nim, gate_daemon_client_test.nim, gate_daemon_types_test.nim all pass (same gate/subtree, different identity = MISS).",
+      "lastVerifiedAt": "2026-11-21T06:41:07Z",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21"
     },
     {
       "id": "DEBT#452",
@@ -3746,8 +3759,11 @@
       "lineRange": "src/core/trusted/layer_enforcement.nim:27,158,176,193,199",
       "source": "physical_path_boundary_audit",
       "productTruthImpact": "NON_PRODUCT",
-      "status": "open",
-      "resolution": "DEFERRED — const-context sites cannot be wrapped in LogicalPath without compiler quirk; see docs/spec/artifact_determinism.md §2.4"
+      "status": "closed",
+      "resolution": "DOCUMENTED QUIRK — obligation discharged (AGENTS.md §0.5 Quirk Mandate). docs/spec/artifact_determinism.md:76 §2.4 'Const-Context Deferral (Known PhysicalPath-Leak Locations)' documents this file's const-context currentSourcePath()/instantiationInfo sites (row: src/core/trusted/layer_enforcement.nim) with reason and allowed contract; full symptom/root-cause/reproduction analysis in docs/spec/nim_const_context_path_type_quirk.md (titled DEBT#453/#454/#455). QUIRK marker pair intact: src/core/trusted/layer_enforcement.nim:28,32. Quirk-dissolution regression test tests/unit/test_const_context_path_type_quirk.nim:3-16 names DEBT#453; ran AXIOM_HERMETIC_BUILDING=1 nim c -r -d:release <test> -> exit 0, 8/8 OK incl. 'std/os path algebra rejects LogicalPath (DEBT#453 root resolution)'. Note: the §2.4 table line anchors predate later file growth (current sites :39,:351,:392); file+site identification is unchanged.",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21",
+      "lastVerifiedAt": "2026-11-21T07:23:34Z"
     },
     {
       "id": "DEBT#454",
@@ -3761,8 +3777,11 @@
       "lineRange": "src/core/trusted/architecture_invariants.nim:34,173",
       "source": "physical_path_boundary_audit",
       "productTruthImpact": "NON_PRODUCT",
-      "status": "open",
-      "resolution": "DEFERRED — const-context sites cannot be wrapped in LogicalPath without compiler quirk; see docs/spec/artifact_determinism.md §2.4"
+      "status": "closed",
+      "resolution": "DOCUMENTED QUIRK — obligation discharged (AGENTS.md §0.5 Quirk Mandate). docs/spec/artifact_determinism.md:76 §2.4 'Const-Context Deferral (Known PhysicalPath-Leak Locations)' documents this file's const InvariantSourceHash and executeAntiSlackingScan template currentSourcePath() sites (row: src/core/trusted/architecture_invariants.nim) with reason and allowed contract; full quirk analysis in docs/spec/nim_const_context_path_type_quirk.md (titled DEBT#453/#454/#455). QUIRK marker pair intact: src/core/trusted/architecture_invariants.nim:33,36. Quirk-dissolution regression test tests/unit/test_const_context_path_type_quirk.nim:3-16 names DEBT#454; ran AXIOM_HERMETIC_BUILDING=1 nim c -r -d:release <test> -> exit 0, 8/8 OK incl. 'staticRead rejects LogicalPath (DEBT#454 const-hash chain)'. Note: the §2.4 table line anchors predate later file growth (current sites :41,:180); file+site identification is unchanged.",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21",
+      "lastVerifiedAt": "2026-11-21T07:23:56Z"
     },
     {
       "id": "DEBT#455",
@@ -3776,8 +3795,11 @@
       "lineRange": "src/core/trusted/axiom_pragmas_macros.nim:280,345,365,371,419,592,595,597",
       "source": "physical_path_boundary_audit",
       "productTruthImpact": "NON_PRODUCT",
-      "status": "open",
-      "resolution": "DEFERRED — macro/template sites cannot be wrapped in LogicalPath without compiler quirk; see docs/spec/artifact_determinism.md §2.4"
+      "status": "closed",
+      "resolution": "DOCUMENTED QUIRK — obligation discharged (AGENTS.md §0.5 Quirk Mandate). docs/spec/artifact_determinism.md:76 §2.4 'Const-Context Deferral (Known PhysicalPath-Leak Locations)' documents this file's macro/template instantiationInfo(-1,true).filename and currentSourcePath() sites (row: src/core/trusted/axiom_pragmas_macros.nim) with reason and allowed contract; full quirk analysis in docs/spec/nim_const_context_path_type_quirk.md (titled DEBT#453/#454/#455). QUIRK marker pair intact: src/core/trusted/axiom_pragmas_macros.nim:3,8. Quirk-dissolution regression test tests/unit/test_const_context_path_type_quirk.nim:3-16 names DEBT#455; ran AXIOM_HERMETIC_BUILDING=1 nim c -r -d:release <test> -> exit 0, 8/8 OK incl. 'static string macro parameter rejects LogicalPath (DEBT#455 handoff)' and 'macro body instantiationInfo is ???'. Note: the §2.4 table line anchors predate later file growth (current sites :288,:353,:373,:379,:424,:597,:600); file+site identification is unchanged.",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21",
+      "lastVerifiedAt": "2026-11-21T07:25:32Z"
     },
     {
       "id": "DEBT#456",
@@ -4798,7 +4820,7 @@
       "symbol": "src/verification/counterexample_replay.nim:1234 proc runCounterexampleReplay(cfg: ReplayConfig): ReplayRecord; src/verification/rust_replay_adapter.nim:865 proc runRustCounterexampleReplay(cfg: RustReplayConfig): RustReplayRecord",
       "contentHash": "sha256:11dd585d97d872c6b8f0761fa9bbcc2ba3c43f92222c6ef9842b108761acbdcb",
       "lineRange": "src/verification/counterexample_replay.nim:1234-1257 (runCounterexampleReplay body; sha256 of the declaration-through-body block, next-declaration boundary at :1259, whole-block trimmed, computed 2026-11-03); src/verification/rust_replay_adapter.nim:865-903 (runRustCounterexampleReplay body; same rule, computed 2026-11-03)",
-      "description": "nimtry [dry-duplicates] exact-AST-fingerprint pair that is a DELIBERATE lane partition, not an accidental copy. Both procs execute the same observer-only orchestration skeleton — bind subject integrity → synthesize and run the replay harness → confirm post-run integrity (hash/porcelain) → decide replay agreement — but each over its own lane's types and helpers (ReplayConfig/ReplayRecord vs RustReplayConfig/RustReplayRecord; bindSubjectIntegrity vs bindRustSubjectIntegrity; synthesizeAndRunHarness vs synthesizeAndRunRustHarness; confirmPostRunIntegrity vs confirmRustPostRunIntegrity; decideReplayAgreement vs decideRustReplayAgreement). The Nim and Rust replay lanes are deliberately partitioned at the helper level (the Rust lane replays against real .rs subjects with a pinned channel; the Nim lane against Nim subjects), so the duplication is confined to the shared skeleton shape, not to any lane semantic. Disposition: registered here per the documented anchoring workflow (config/repository_surface.json v18 — data/nimtry_baseline.json CONTROLLED managed-data, 'nimtry --update-baseline 재앙커 + budget ledger 동기화'); the violation fingerprint is anchored in data/nimtry_baseline.json (v2 protocol) so bin/nimtry src/ passes with the pair counted as anchored debt. A structural refactor of these two load-bearing files at landing time is out of scope for the landing slice (AGENTS §2.2 minimal change — both files are verification-chain members and the landing is push-admissibility DRIFT resolution, not a redesign). FOLLOW-UP: extract one generic replay-orchestration skeleton parameterized over the lane ops (bind/run/confirm/decide) and re-point both lanes at it, then resolve the anchor and close this entry — its own slice, not this landing. Scope note: the OTHER dry-duplicates pair reported alongside this one (attestation_orchestrator.fileSha256Hex / extraction_provenance.llbcFileDigest) was a real duplicate and was genuinely deduplicated in the same landing; it is not covered by this entry.",
+      "description": "nimtry [dry-duplicates] exact-AST-fingerprint pair that is a DELIBERATE lane partition, not an accidental copy. Both procs execute the same observer-only orchestration skeleton — bind subject integrity → synthesize and run the replay harness → confirm post-run integrity (hash/porcelain) → decide replay agreement — but each over its own lane's types and helpers (ReplayConfig/ReplayRecord vs RustReplayConfig/RustReplayRecord; bindSubjectIntegrity vs bindRustSubjectIntegrity; synthesizeAndRunHarness vs synthesizeAndRunRustHarness; confirmPostRunIntegrity vs confirmRustPostRunIntegrity; decideReplayAgreement vs decideRustReplayAgreement). The Nim and Rust replay lanes are deliberately partitioned at the helper level (the Rust lane replays against real .rs subjects with a pinned channel; the Nim lane against Nim subjects), so the duplication is confined to the shared skeleton shape, not to any lane semantic. Disposition: registered here per the documented anchoring workflow (config/repository_surface.json v18 — data/nimtry_baseline.json CONTROLLED managed-data, 'nimtry --update-baseline re-anchor + budget ledger sync'); the violation fingerprint is anchored in data/nimtry_baseline.json (v2 protocol) so bin/nimtry src/ passes with the pair counted as anchored debt. A structural refactor of these two load-bearing files at landing time is out of scope for the landing slice (AGENTS §2.2 minimal change — both files are verification-chain members and the landing is push-admissibility DRIFT resolution, not a redesign). FOLLOW-UP: extract one generic replay-orchestration skeleton parameterized over the lane ops (bind/run/confirm/decide) and re-point both lanes at it, then resolve the anchor and close this entry — its own slice, not this landing. Scope note: the OTHER dry-duplicates pair reported alongside this one (attestation_orchestrator.fileSha256Hex / extraction_provenance.llbcFileDigest) was a real duplicate and was genuinely deduplicated in the same landing; it is not covered by this entry.",
       "file": "src/verification/counterexample_replay.nim",
       "files": [
         "src/verification/counterexample_replay.nim",
@@ -4806,9 +4828,11 @@
       ],
       "source": "nimtry dry-duplicates anchoring — feat/rust-subject-v1 push-admissibility DRIFT resolution 2026-10-13",
       "productTruthImpact": "STALE",
-      "status": "open",
-      "resolution": "UNRESOLVED deferred 2026-10-13 (deliberate Rust/Nim replay-lane partition copy; anchoring + registration is the disposition, generic skeleton extraction is the follow-up)",
-      "lastVerifiedAt": "2026-10-13T00:00:00Z"
+      "status": "closed",
+      "resolution": "STALE — the two replay lanes are no longer identical skeletons. runRustCounterexampleReplay (src/verification/rust_replay_adapter.nim:898-937) carries two Nim-lane-absent steps: explicit fail-closed outcome init 'outcome: rroUnavailable' (:909) and evidence-integrity admission rustReplayCommandMismatch (:923-930; func at :317) folding any recorded-vs-executed compile divergence to rvUnavailable; runCounterexampleReplay (src/verification/counterexample_replay.nim:1276-1300) has neither. data/nimtry_baseline.json has no entry for either symbol (jq select over .violations -> 0); 'bin/nimtry src/' on this tree reports 0 dry-duplicates findings (grep -c dry-duplicates = 0; 21 unrelated soc/effect new violations). Tests: AXIOM_HERMETIC_BUILDING=1 nim c -r -d:release tests/unit/test_counterexample_replay.nim -> exit 0; tests/unit/test_rust_replay_adapter.nim -> exit 0 incl. 'rustReplayCommandMismatch: non-empty diagnostic for a forged compileProfile / a tampered compileCommand'.",
+      "lastVerifiedAt": "2026-11-21T07:22:51Z",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21"
     },
     {
       "id": "DEBT#506",
@@ -4963,15 +4987,17 @@
       "symbol": "matchesStatus (src/gate/runners/debt_integrity_gate.nim:60-62) / statusEnum (data/debt_schema.json:12-16)",
       "contentHash": "sha256:6ad7558fadeb774b00c6f1d5910cbf5fd3a550784b080973eac2d3c42e901ed8",
       "lineRange": "src/gate/runners/debt_integrity_gate.nim:60-62; data/debt_schema.json:12-16",
-      "lastVerifiedAt": "2026-11-01T23:52:00Z",
-      "resolution": "UNRESOLVED",
+      "lastVerifiedAt": "2026-11-21T03:38:31Z",
+      "resolution": "FIXED 2026-11-21 (PR #274, merge ed18841): the gate dropped its second literal vocabulary — statusVocabulary (src/gate/runners/debt_integrity_gate.nim:61) now reads data/debt_schema.json definitions.statusEnum.enum as the single authority and matchesStatus (src/gate/runners/debt_integrity_gate.nim:71) validates against it, failing closed when the authority is unavailable; evidence: make test-fast-one T=tests/unit/test_debt_status_vocabulary.nim -> 5/5 [OK] (schema statusEnum is the canonical lifecycle set; every schema value is accepted by the gate predicate; non-schema values are rejected; gate vocabulary is loaded from the schema, not a second literal; pre-fix dual vocabulary diverges in both directions) and a direct validateDebtRegistryImpl probe -> gateErrors=@[] for status=accepted and status=in_progress, @[\"entry[0].status: invalid\"] for status=resolved, while the pre-fix vocabulary [open,closed,deferred,resolved] accepts resolved and rejects accepted/in_progress",
       "source": "audit",
       "productTruthImpact": "NON_PRODUCT",
-      "status": "open",
+      "status": "closed",
       "files": [
         "src/gate/runners/debt_integrity_gate.nim:60-62",
         "data/debt_schema.json:12-16"
-      ]
+      ],
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "debt_engine --close"
     },
     {
       "id": "DEBT#513",
@@ -5738,11 +5764,13 @@
       ],
       "source": "theater_audit",
       "productTruthImpact": "PRODUCT_TRUTH",
-      "status": "open",
-      "resolution": "UNRESOLVED",
-      "lastVerifiedAt": "2026-11-16T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED on canonical main via PR #296 (commit merged at 9f3955f). config/integrity.nims now hashes the four guarded files' CONTENTS (full paths passed to sha256sum, one 64-hex digest per file, digest-count checked) and compares the root against data/expected_merkle_root.txt. Verified independently: sha256(concat(sha256(file) x4)) == 6f77cf2b8a9d092bc0965f5cd572cafbe1deb32ebda9f2b207617bad7bc5fc0e; tamper probe (append one line to src/core/trusted/effect_types.nim) -> nim compile exits 1 with 'GUARD THE GUARD (Merkle Root): guarded file content hash mismatch'; clean tree compiles.",
+      "lastVerifiedAt": "2026-11-21T06:41:35Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is the NimScript include config/integrity.nims, outside the src/-only {.axiomDebt.} marker scan; trace: this entry's resolution (UNRESOLVED) and source (theater_audit), the reproduction pair (sha256 of the 4 'sha256sum:' diagnostic prefixes = the pinned expected root 62f0c2f4...; full-path recomputed root 6f77cf2b...), and the remediation slice VS-MERKLE-RESTORE-1 recorded in description."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the site is the NimScript include config/integrity.nims, outside the src/-only {.axiomDebt.} marker scan; trace: this entry's resolution (UNRESOLVED) and source (theater_audit), the reproduction pair (sha256 of the 4 'sha256sum:' diagnostic prefixes = the pinned expected root 62f0c2f4...; full-path recomputed root 6f77cf2b...), and the remediation slice VS-MERKLE-RESTORE-1 recorded in description.",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21"
     },
     {
       "id": "DEBT#547",
@@ -5901,11 +5929,13 @@
       ],
       "source": "vs_authority_separation_2026-11-17",
       "productTruthImpact": "PRODUCT_TRUTH",
-      "status": "open",
-      "resolution": "UNRESOLVED — registration only (a writer-side fix changes the exactly-once contract consumed by certificate-mint's D6 predicate and must be validated against the live merge_group path; this registration slice does not modify the ledger writer). Remediation as described; verification must cover (a) first-attempt duplicate rejection at a tip that already contains the subject, and (b) unchanged FF-CAS behaviour under a concurrent move.",
-      "lastVerifiedAt": "2026-11-17T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED on canonical main via PR #297. src/verification/ledger_side_ref.nim appendCertificate enforces subject uniqueness on EVERY attempt: after the tip read (and root creation when the ref is absent) the tip tree must not already contain <certId>.json; a duplicate is refused before any object is built. Bounded retry re-reads the tip and re-checks against the moved tip, so a raced first append cannot create a second entry for the same subjectId.",
+      "lastVerifiedAt": "2026-11-21T06:41:57Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registration-only finding; the append path is the ledger writer, so changing when uniqueness is checked alters a trust-boundary contract (AGENTS.md §2.6) and needs its own slice plus live acceptance. Trace: this entry's resolution (UNRESOLVED) and source (vs_authority_separation_2026-11-17); external: src/verification/ledger_side_ref.nim:575-582 and .github/workflows/certificate-mint.yml:2263-2274."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — registration-only finding; the append path is the ledger writer, so changing when uniqueness is checked alters a trust-boundary contract (AGENTS.md §2.6) and needs its own slice plus live acceptance. Trace: this entry's resolution (UNRESOLVED) and source (vs_authority_separation_2026-11-17); external: src/verification/ledger_side_ref.nim:575-582 and .github/workflows/certificate-mint.yml:2263-2274.",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "stale-debt-audit-2026-11-21"
     },
     {
       "id": "DEBT#554",
@@ -6024,20 +6054,25 @@
       "severity": "high",
       "title": "Readiness evaluator fails open across declared-key absences — R2/R6/R8 PASS on one unrelated key, and R1/R3/R4/R5/R7 skip individual declared keys",
       "description": "Machine-observed 2026-11-18 (main ad96ed2; evaluator and policy bytes are identical at main 295bb02, where the independent probe was reproduced). Root cause: validateEvidence (tools/readiness_evaluator.nim:283-287) requires only >=1 observation and >=1 source and never checks observation-key membership against policy.observationKeys; rawStateOf (:836-855) dispatches the list to rules written as 'if present and bad -> FAIL', so absence falls through to stPass. Whole-rule fail-open on a non-empty unrelated list: R2 (:486-514, all 5 keys), R6 (:611-620, both keys), R8 observation keys (:753-766; the separate r8SequenceViolations commands gate at :703-751 still fails closed). Independent probe (/tmp/debt558-probe/report.md, 2026-11-18): the real CLI rebuilt from source is byte-identical to shipped bin/readiness_evaluator (sha256 d49de6a65174d08e9312a6018655d095b36200ed787fb9a1e98085e8dda70f5e); an 8-envelope bundle whose R2/R6/R8 observations are [{\"key\":\"unrelated\",\"value\":true}] is accepted 8/8 valid and returns verdict GO with R2=R6=R8=PASS; the observations=[] control returns UNKNOWN/NO-GO via the API (CLI: NOT_RUN/NO-GO, rejected by validateEvidence). Broader partial fail-open (removing one declared key leaves PASS/GO): R1 documentedCommand; R3 canonicalProjectionHashEqual, environmentControlled; R4 provenanceReconstructible; R5 helpSurface, jsonSchemaVersion, stdoutStderrSplit, per-subject successExitCode; R7 verifiedEmitterScope (non-critical; absence disables scope-overclaim promotion). Declared but never read by the evaluator: R1 promiseOutputExists, R4 subjectTreeImmutableAcrossRun, R8 axiomOwnedColdSetDeletedBeforeRun — collectors record them and the evaluator ignores them, so a measured violation can still yield PASS. Earlier focused probe at ad96ed2: three valid envelopes containing only the undeclared key `unrelatedProbe` yielded R2=PASS, R6=PASS, R8=PASS; negative control certGreenDualEvidenceRequired=false yielded R2=FAIL. Intended direction: missing required observation key => UNKNOWN (fail-closed).",
-      "symbol": "ruleR2 / ruleR6 / ruleR8 fail-open (tools/readiness_evaluator.nim:486-514, :611-620, :753-770)",
-      "contentHash": "sha256:82b788876e3b69c0865406c0dee5e51481c2eac0444fc630a056dc70f074428c",
-      "lineRange": "tools/readiness_evaluator.nim:486-514; tools/readiness_evaluator.nim:611-620; tools/readiness_evaluator.nim:753-770",
+      "symbol": "observation-key closure (tools/readiness_evaluator.nim validatePolicyShape/requiredKeyStatus/closureState; config/readiness_policy.json observationKeys)",
+      "contentHash": "sha256:a5620a51b218807ad4e4e3c6b3a7cb5e5a024291ef9b2e26183688a052c7220f",
+      "lineRange": "tools/readiness_evaluator.nim:340-432; tools/readiness_evaluator.nim:573-608",
       "files": [
         "tools/readiness_evaluator.nim",
-        "config/readiness_policy.json"
+        "config/readiness_policy.json",
+        "tools/ci/readiness_collect_ci.nim",
+        "tools/collect_evidence_probe.nim",
+        "src/gate/runners/readiness_start_gate.nim"
       ],
       "source": "theater_audit",
-      "productTruthImpact": "PRODUCT_TRUTH",
-      "status": "open",
-      "resolution": "UNRESOLVED — registration only. The fix (missing required observation key => UNKNOWN, fail-closed) is deliberately deferred to a separate approved slice: flipping critical invariants to UNKNOWN can change live verdicts and requires positive/negative probes plus updated evidence. Acceptance for that slice: (1) every policy-declared observationKeys entry for critical invariants (R1-R6, R8; R7 is contract-decided separately) is present or the invariant evaluates to UNKNOWN; (2) declared-but-never-read keys R1 promiseOutputExists, R4 subjectTreeImmutableAcrossRun, R8 axiomOwnedColdSetDeletedBeforeRun are either enforced or removed from config/readiness_policy.json — no collector-only keys remain; (3) the R7 verifiedEmitterScope absence behavior is decided by the product contract, not by fall-through; (4) the negative control with certGreenDualEvidenceRequired=false still evaluates to FAIL; (5) the then-current decision evidence is regenerated.",
-      "lastVerifiedAt": "2026-11-18T00:00:00Z",
+"productTruthImpact": "PRODUCT_TRUTH",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-20 (workstream/readiness-key-closure). (1) Every policy observationKeys entry now declares type/presence/subject scope plus onNull/onAbsent/onFalse semantics; requiredKeyStatus/closureState evaluate them before each ruleR1..R8, so a missing, null, wrong-type, or declared-scope (scope=contract policy echo) required key is UNKNOWN, never fall-through PASS; unknownKeys=reject additionally fails closure on undeclared keys. (2) Declared-but-never-read keys are enforced or removed: R1 promiseOutputExists is joined per subject to r1.promiseOutputs (json-report, certificate) in both collectors, R4 subjectTreeImmutableAcrossRun is required, R8 axiomOwnedColdSetDeletedBeforeRun was removed from policy and is an incident only (R8-COLD-001). (3) R7 verifiedEmitterScope is a required key; claimedScope stays vocabulary/declared and the scope-overclaim promotion is unchanged. (4) Negative control holds: certGreenDualEvidenceRequired present-false with onFalse=fail yields R2 FAIL (tests/readiness/readiness_policy_test.nim DEBT#559 matrix). (5) Evidence freshness/identity is no longer self-authoritative: the gate measures git identity itself and only AXIOM_READINESS_REPLAY=1 adopts a declared snapshot identity; committed data/readiness/evidence snapshots are historical (CI regenerates every run). Verified: readiness_policy_test 29/29, readiness_r8_sequence_test 13/13, readiness_feature_test 30/30, test_readiness_verdict_mapping 10/10, test_readiness_collect_independence 4/4 (all exit 0); strict fixture decisionDigest equals data/golden/readiness/decision.golden.json.",
+      "lastVerifiedAt": "2026-11-20T00:00:00Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the evaluator is the audited subject and the finding is registration-only, so a self-fix in the same slice would remove its own evidence path (AGENTS.md §2.2 discovery is registered, never quietly patched). Trace: this entry's resolution (UNRESOLVED) and source (theater_audit); external: tools/readiness_evaluator.nim:486-514, :611-620, :753-770, :836-857; config/readiness_policy.json invariants.R2/R6/R8 and observationKeys."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the finding spans the evaluator, policy data, and both collectors, so no single {.axiomDebt.} pragma site exists; the registry entry is the binding medium. Trace: this entry's resolution (FIXED 2026-11-20) and source (theater_audit); external: tools/readiness_evaluator.nim validatePolicyShape/requiredKeyStatus/closureState, config/readiness_policy.json observationKeys, tools/ci/readiness_collect_ci.nim, tools/collect_evidence_probe.nim, src/gate/runners/readiness_start_gate.nim.",
+      "resolvedAt": "2026-11-20",
+      "resolvedBy": "Kimi Code CLI agent (user-authorized)"
     },
     {
       "id": "DEBT#560",
@@ -6075,11 +6110,35 @@
       ],
       "source": "theater_audit",
       "productTruthImpact": "UNKNOWN",
-      "status": "open",
-      "resolution": "UNRESOLVED — registration only. Closing-slice acceptance: (1) either the write-only persistence block (:386-398) is removed and `ax topology analyze` output is byte-identical before/after on a fixed subject root, or a reader is added with an explicit invalidation contract keyed on the Merkle root and its hit path is exercised by a test; (2) no new file under .axiom/cache/ is written without a cited reader; (3) the change lands through the standard pin/debt re-anchor path.",
-      "lastVerifiedAt": "2026-11-20T00:00:00Z",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-21 (PR #279, merge 75dd326): the write-only persistence block was deleted from analyzeTopologySourceRoot (src/cli/topology_cli.nim) so the only cache still written is the one that is read — the Merkle cache .axiom/cache/topology_merkle.json (loadCache/saveCache at the same call site), and no topology_analysis_cache identifier survives in the tree; evidence: git grep -n \"topology_analysis_cache\" origin/main -- src/ tools/ config/ tests/ -> no output (exit 1) and make test-fast-one T=tests/cli/test_topology_cli.nim -> all suites [OK], including analyzeTopologySourceRoot (non-existent directory returns error; empty directory returns error; directory with .nim files succeeds; diagnosisDepthExplicit/queueLimitExplicit pass through; sourceContentCache is populated)",
+      "lastVerifiedAt": "2026-11-21T03:38:56Z",
       "binding": "registry_disposition",
-      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the subject is a cache artifact with no dedicated symbol, so a {.axiomDebt.} marker would bind the whole analyze proc and mask unrelated code. §10.2 trace: this entry's resolution (UNRESOLVED) and source (theater_audit); external evidence: src/cli/topology_cli.nim:348 (constant), :373 (Merkle cache load), :386-398 (write-only block); reader search over src/, tools/, .github/, Makefile, config.nims returns the definition and write site only."
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the subject is a cache artifact with no dedicated symbol, so a {.axiomDebt.} marker would bind the whole analyze proc and mask unrelated code. §10.2 trace: this entry's resolution (UNRESOLVED) and source (theater_audit); external evidence: src/cli/topology_cli.nim:348 (constant), :373 (Merkle cache load), :386-398 (write-only block); reader search over src/, tools/, .github/, Makefile, config.nims returns the definition and write site only.",
+      "resolvedAt": "2026-11-21",
+      "resolvedBy": "debt_engine --close"
+    },
+    {
+      "id": "DEBT#563",
+      "category": "Theater/Unmeasured Ratchet",
+      "impact": "high",
+      "severity": "high",
+      "title": "nimtry reduction ratchet compares the self-declared baseline to the cap instead of the measured count, so CI cannot detect violation growth (main measures 4384 vs declared 4272; cap 4275)",
+      "description": "Machine-observed 2026-11-21 at origin/main 4bfbc8f (clean `git archive origin/main` export, current nimtry 8.30.1-era binary): the live measurement is 4384 violations, while data/nimtry_baseline.json declares 4272 and data/debt_reduction_baseline.json caps the metric at 4275. 128 new violations are therefore on main without a ratchet observation (2 of the new ERROR-severity rows are covered by PR #276; the rest are warnings). Root cause: the reduction ratchet (src/gate/runners/debt_integrity_gate.nim:324-344) compares the pairs from scanDebtMetrics, and the only nimtry pair is countNimtryViolations — data/nimtry_baseline.json's declared total_violations, a checked-in constant. The measured side, countNimtryActiveViolations, reads the gitignored data/nimtry_live_count.json and returns -1 when absent; Step 2b (src/gate/runners/debt_integrity_gate.nim:346-353) only logs that value. .github/workflows/debt-registry-gate.yml deliberately runs without bin/nimtry (provision-scope: nim; its comment at :22-25 records that the metric reports 'unmeasured' there), so CI never produces the sidecar and never measures. Consequence: a PR that adds nimtry violations without editing either baseline file passes the gate — the PASS compares 4272 <= 4275 while the live measurement is 4384. The fallback's '(unmeasured; nimtry not run yet)' label is informational only and does not fail the run.",
+      "symbol": "countNimtryViolations / countNimtryActiveViolations (src/gate/runners/debt_integrity_gate.nim:190-207)",
+      "contentHash": "sha256:df412061fa614328ce51df37e88728a71dbc84e8eba0c1b77881a03a28943ba5",
+      "lineRange": "src/gate/runners/debt_integrity_gate.nim:190-207",
+      "files": [
+        ".github/workflows/debt-registry-gate.yml",
+        "data/debt_reduction_baseline.json",
+        "data/nimtry_baseline.json",
+        "src/gate/runners/debt_integrity_gate.nim:190-207"
+      ],
+      "source": "theater_audit",
+      "productTruthImpact": "PRODUCT_TRUTH",
+      "status": "open",
+      "resolution": "UNRESOLVED — registration only. No cap, baseline number, or policy threshold is changed by this entry. Closing-slice acceptance: (1) CI produces a measurement (runs bin/nimtry or otherwise emits data/nimtry_live_count.json) and the ratchet compares the measured count, failing closed as UNKNOWN when the measurement is absent; (2) an increase fixture (or staged measurement) is observed as FAIL; (3) the 4384 measurement is either driven down or accepted through a human-authored baseline change with owner/rationale. The {.axiomDebt: \"DEBT#563\".} marker on the sidecar-absent fallback binds this entry to the blind-spot site.",
+      "lastVerifiedAt": "2026-11-21T00:00:00Z"
     }
   ]
 }

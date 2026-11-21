@@ -431,10 +431,19 @@ proc renderGateDetail(gateId: string; history: seq[GateRecord];
     stdout.write "\n"
 
   stdout.write "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+proc noHistoryJson*(): JsonNode {.raises: [].} =
+  ## Explicit machine-readable absence state. `ax status --json` must never
+  ## leave stdout empty: callers parse the document, then read the exit code
+  ## (docs/spec/productization_contract.md §v1 CLI Exit-State Contract).
+  result = newJObject()
+  result["status"] = newJString("no-history")
+  result["run"] = newJNull()
+
 proc runStatusCli*(args: seq[string]): int {.axiomEffect: IOEffect, raises: [CatchableError].} =
   var
     jsonMode = false
     historyMode = false
+    allowMissing = false
     gateFilter = ""
 
   # Parse flags
@@ -445,6 +454,8 @@ proc runStatusCli*(args: seq[string]): int {.axiomEffect: IOEffect, raises: [Cat
       jsonMode = true
     of "--history":
       historyMode = true
+    of "--allow-missing":
+      allowMissing = true
     of "--gate":
       if i + 1 < args.len:
         inc i
@@ -460,6 +471,7 @@ proc runStatusCli*(args: seq[string]): int {.axiomEffect: IOEffect, raises: [Cat
       echo "  ax status --json       Machine-parseable JSON output"
       echo "  ax status --history    Last 10 pipeline runs trend table"
       echo "  ax status --gate <id>  Detailed info for a specific gate"
+      echo "  ax status --allow-missing  Exit 0 when no gate history exists"
       echo "  ax status --help       Show this help message"
       return 0
     else:
@@ -476,12 +488,19 @@ proc runStatusCli*(args: seq[string]): int {.axiomEffect: IOEffect, raises: [Cat
     let noHistMsg = "No gate history found. Run a pipeline first."
     let noHistDetail = "  (Expected file: " & HistoryPath & ")"
     if jsonMode:
+      # Absence must still emit a parseable document — an empty stdout is
+      # indistinguishable from a crashed producer for JSON consumers.
+      stdout.write $noHistoryJson() & "\n"
       stderr.writeLine noHistMsg
       stderr.writeLine noHistDetail
     else:
       echo noHistMsg
       echo noHistDetail
-    return 0
+    if allowMissing:
+      return 0
+    if not jsonMode:
+      echo "  (pass --allow-missing to treat absence as success)"
+    return 1
 
   let runs = groupByTimestamp(history)
 

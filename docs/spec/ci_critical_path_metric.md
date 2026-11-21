@@ -80,6 +80,19 @@ stepSeconds(stepName) = Σ max(0, step.completed_at - step.started_at)
 
 `criticalPathShare = criticalPathSeconds / wallSeconds`로 직렬성을 보고한다.
 
+### §2.6 `mergesPerHour` — 처리량
+
+```
+mergesPerHour = |{c : c ∈ main 커밋, |parents(c)| ≥ 2, c.committer.date ∈ (t−W, t]}| / W(시간)
+```
+
+- **`mergedAt`이 아니라 커밋의 `committer.date`를 쓴다.** GitHub merge queue가 만든 merge commit과 로컬·직접 merge를 동일 기준으로 세기 위해서다.
+- `parents`가 2개 미만인 커밋(squash·rebase·direct push)은 merge가 아니므로 제외한다.
+- 창 경계는 반개구간 `(t−W, t]`이다. 경계에 걸친 커밋은 어느 창에도 이중 계상하지 않는다.
+- 이 지표는 **처리량**이며 지연이 아니다. §2.1의 `wallSeconds`, PR-to-main TOT와 함께 보고하되 서로 대체하지 않는다.
+- **분모는 벽시계 시간이지 runner 시간이 아니다.** 따라서 이 값만으로 병목의 위치를 말할 수 없고, `queuedSeconds`·`runnerSeconds`와 함께 읽어야 한다.
+- 이론 상한은 `3600 / wallSeconds p50`이며, 실측 처리량이 상한에 근접했다면 그때 용량(capacity)이 병목이다. 상한에 한참 못 미치면 병목은 처리량이 아니라 **입력(PR 도착)** 이다.
+
 ## §4. 이전 인용값과의 화해 (필수)
 
 2026-11-19 기준선(`docs/evidence/ci_performance_baseline_2026-11-19.md`)은 **wall p50 574s / runner-seconds p50 979s**를 기록했다. 이 값들은 **다른 5-run cohort A**에서 나왔다. 두 cohort는 4개 run이 겹치고 5번째가 다르다.

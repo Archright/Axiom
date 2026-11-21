@@ -432,6 +432,21 @@ const
     # docs/evidence/rotation_allowlist_generated_metadata_prereg_2026-11-19.md
     "src/generated/type_registry_metadata.json",
     "docs/evidence/rotation_allowlist_generated_metadata_prereg_2026-11-19.md",
+    # Amendment A8 (iii) generated-metadata companion (2026-11-21; measured from
+    # this expansion PR's own ROT_ALLOWLIST verdict -- 1 of 6 changed paths was
+    # blocked). `src/generated/build_metadata.json` is the same class as the
+    # `src/generated/type_registry_metadata.json` registered by A6: it is not
+    # hand-written production src/ but a data artifact that `make build`
+    # regenerates deterministically (a config.nims staticRead prerequisite;
+    # SSOT writer: tools/build_metadata_generator.nim; consumers:
+    # config/paths.nims, config/vendors.nims, src/gate/self_ref_detect.nim).
+    # Every rotation PR that runs a local build necessarily carries it --
+    # excluding it makes rotation structurally impossible (A2 (1) self-
+    # contradiction resolution). Non-expansion argument: (1) is evaluated only
+    # on the ROTATION path (A2 (ii)), so NORMAL-path treatment of this file is
+    # unchanged; this registration does not widen the rotation approval scope.
+    # Enumeration only -- no globs (A4 rule). Authority: ADR-0025 A8 (iii).
+    "src/generated/build_metadata.json",
     # Amendment A7 회전 동반 (2026-11-20, PR #233 ROT_ALLOWLIST 실측):
     # 종료 authority 회전 — 클로저 멤버 4개(src/core/utils/decision_algebra.nim,
     # src/cli/axiom_engine.nim·rust_lane_cli.nim·wf_runners.nim)의 ④ 재앵커 +
@@ -466,7 +481,72 @@ const
     "tests/gateway/productization_start_vertical_slice_feature_test.nim",
     "docs/spec/productization_contract.md",
     "data/benchmarks/promotion_a_report_v2.json",
-    ".github/workflows/byo-agent-selftest.yml"]
+    ".github/workflows/byo-agent-selftest.yml",
+    # Amendment A8 rotation companions (2026-11-21; measured from the PR #287
+    # ROT_ALLOWLIST verdict -- 5 of 10 changed paths were blocked). Rotation
+    # subject: closure member src/verification/batch_uap/ir_pipeline_runner.nim
+    # (#423 -- a canonical-success path read the obligation count at :740 before
+    # the :761 assignment, so it always reported 0; this is the bypass fix).
+    # Every companion path is a rotation-subject contract/data companion and is
+    # not production src/ (unrelated to the A2 (i) NON-member production src/
+    # prohibition):
+    # - tests/unit/test_ir_pipeline_theaterguard.nim: unit contract of the
+    #   changed member -- test (g) asserts the count survives a real
+    #   canonical-success return (same class as test_judgment_cas/wf_runners).
+    # - tests/unit/test_hotspot_ranker.nim: projection read-back contract test
+    #   for the same delta (#487 -- consumes the DebtRowFields declaration table).
+    # - tools/ci/proof_unit_consistency_gate.nim: Debt role line pin registration
+    #   for the new test -- contract companion of the rotation machinery (same
+    #   class as merge_ruleset_drift_monitor).
+    # - tools/hotspot_ranker.nim: a tool (downstream projection reader), not
+    #   non-member production src/. Read-back fix of the same projection contract.
+    # - data/debt_reduction_baseline.json: the reduction baseline the
+    #   debt-integrity gate reads (nimtry 4374->4275) -- same data companion
+    #   class as nimtry_baseline/quality_gate_baseline.
+    # Non-expansion argument: (1) is evaluated only on the ROTATION path (A2
+    # (ii)), so NORMAL-path treatment of these 5 paths is unchanged; this
+    # registration does not widen the rotation approval scope.
+    # Enumeration only -- no globs (A4 rule). Authority: ADR-0025 Amendment A8.
+    "tests/unit/test_ir_pipeline_theaterguard.nim",
+    "tests/unit/test_hotspot_ranker.nim",
+    "tools/ci/proof_unit_consistency_gate.nim",
+    "tools/hotspot_ranker.nim",
+    "data/debt_reduction_baseline.json",
+    "docs/evidence/rotation_allowlist_obligation_count_prereg_2026-11-21.md",
+    # Amendment A8 (continued) -- CLI fail-closed rotation companions
+    # (2026-11-21; measured from the PR #268 ROT_ALLOWLIST verdict). Rotation
+    # subjects: three closure members (src/cli/axiom_status.nim, cert_cli.nim,
+    # config_cli.nim -- removing exit 0 when state is absent). All 6 companion
+    # paths are rotation-subject contract/data companions and are not
+    # production src/ (unrelated to A2 (i)):
+    # - tests/cli/test_axiom_status.nim, test_cert_cli.nim, test_config_cli.nim:
+    #   unit contracts of the changed members (fail-closed assertions for
+    #   no-history / empty vault / missing section).
+    # - tests/features/axiom_status.feature: the section 0.7 business-scenario
+    #   SSOT update.
+    # - tests/gateway/axiom_status_feature_test.nim: gateway contract test of
+    #   the changed members.
+    # - data/feature_manifest.json: registration data for the updated feature.
+    # Enumeration only -- no globs (A4 rule). Authority: ADR-0025 Amendment A8.
+    "tests/cli/test_axiom_status.nim",
+    "tests/cli/test_cert_cli.nim",
+    "tests/cli/test_config_cli.nim",
+    "tests/features/axiom_status.feature",
+    "tests/gateway/axiom_status_feature_test.nim",
+    "data/feature_manifest.json",
+    # Amendment A8 (iv) gate_hook rotation companion (2026-11-21; measured from
+    # the PR #285 diff -- 1 of 5 changed paths was blocked). Rotation subject:
+    # closure member src/gate/runners/gate_hook.nim (DEBT#520 -- fixing the
+    # missing .nim resolution 40/54 for AOT pre-flight manifest entries).
+    # The companion path is a rotation-subject contract companion and is not
+    # production src/ (unrelated to A2 (i)):
+    # - tests/gateway/gate_hook_feature_test.nim: gateway contract test of the
+    #   changed member (same class as axiom_status_feature_test in A8 (ii)).
+    # Non-expansion argument: (1) is evaluated only on the ROTATION path (A2
+    # (ii)), so NORMAL-path treatment of this path is unchanged; this
+    # registration does not widen the rotation approval scope.
+    # Enumeration only -- no globs (A4 rule). Authority: ADR-0025 A8 (iv).
+    "tests/gateway/gate_hook_feature_test.nim"]
   ## VS-1 회전핀 프리플라이트 (2026-10-20): H2(④) 판정을 리프 모듈
   ## core/policy/rotation_closure_facts로 추출해 착지 predicate와 PR-head
   ## 오라클(tools/ci/rotation_pin_anchor_check.nim)이 **하나의 컴파일 구현**을
