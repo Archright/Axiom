@@ -127,7 +127,8 @@ with the reason.
 ## 4. What lineage does not do
 
 - It does not authorize a translation. Authorization comes from the contribution and
-  review process (`CONTRIBUTING.md`).
+  review process (issue #373; the root `CONTRIBUTING.md` awaits the audited
+  trust-surface lane).
 - It does not replace the CLA. A contributor grants rights under the CLA; lineage
   records the transformation.
 - It does not make a translated third-party text lawful. Third-party material stays
@@ -177,4 +178,5 @@ The digests above are illustrative placeholders, not recorded values.
   terminal criteria, detector pinning.
 - `compliance/provenance/source-origin.yml` -- legal provenance (separate record).
 - `tools/ci/publication_yaml.nim` -- the YAML subset parser.
-- `CONTRIBUTING.md` -- contributor obligations for translated changes.
+- Issue #373 -- contributor obligations for translated changes (the root
+  `CONTRIBUTING.md` awaits the audited trust-surface lane).

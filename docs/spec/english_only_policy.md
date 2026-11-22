@@ -48,9 +48,9 @@ are judged by their own format contracts. Natural-language string data inside th
 counted separately as a non-prose finding (section 7) and is never silently passed.
 
 **Out of scope -- conversation**: PR titles, PR bodies, issues, reviews, and commit
-messages are tracked by the contributor contract (`CONTRIBUTING.md`) and are not
-reachable by any repository-side scan. They are declared as a limitation, not as a
-pass.
+messages are governed by the contributor contract (issue #373; the root
+`CONTRIBUTING.md` awaits the audited trust-surface lane) and are not reachable by any
+repository-side scan. They are declared as a limitation, not as a pass.
 
 ## 3. Ownership classes
 
@@ -282,4 +282,5 @@ gate convention: 0 PASS, 1 FAIL, 2 UNKNOWN.
 - `compliance/provenance/source-origin.yml` -- ownership classes.
 - `compliance/policy/script-scan-policy.yml` -- the Script detector contract this
   policy consumes.
-- `CONTRIBUTING.md` -- the contributor-facing language rule.
+- Issue #373 -- the contributor-facing language rule (the root `CONTRIBUTING.md`
+  awaits the audited trust-surface lane).

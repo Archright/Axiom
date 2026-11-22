@@ -196,7 +196,8 @@ counted, not exempted, under the English-only terminal criteria.
 - `docs/spec/english_only_policy.md` -- scope, ownership classes, modes, metrics,
   terminal criteria, detector pinning, UNKNOWN semantics.
 - `docs/spec/translation_lineage.md` -- batch manifest schema and translation rules.
-- `CONTRIBUTING.md` -- contributor-facing language rule, CLA path, landing path.
+- Issue #373 -- contributor-facing language rule, CLA path, landing path (the root
+  `CONTRIBUTING.md` awaits the audited trust-surface lane).
 - `docs/adr/0044-unicode-script-allowlist-admission.md` -- the Unicode Script
   allowlist dimension; explicitly not an English-only guarantee.
 - `docs/spec/publication_integrity_gate.md` section 3.6 -- `script-scan` semantics and
