@@ -14,6 +14,7 @@ axiomLayer "gate"
 import std/[algorithm, json, os, re, sets, strutils]
 import core/axiom_pragmas
 import core/trusted/env_access
+import core/utils/repo_root
 import gate/lib/debt_scanner
 import infrastructure/logging_facade
 import core/debt/debt_integrity
@@ -300,6 +301,81 @@ proc loadCanonicalStatuses*(repoRoot: string): seq[string] =
   if result.len == 0:
     logError(GateTag, "debt_schema.json definitions.statusEnum.enum is missing, empty, or malformed")
 
+# -- Whole-file contentHash verification (docs/spec/debt_registry_schema.md section 6) --
+type
+  ContentHashReport* = object
+    entriesTotal*: int
+    entriesWithHash*: int
+    checked*: int
+    skippedNoLineRange*: int
+    skippedNonPlain*: int
+    skippedMissingFile*: int
+
+func isPlainRelativePath(p: string): bool =
+  ## True only for a bare relative file path. Line spans (`:12-34`), multi-path
+  ## prose (`;`, `|`), annotations (`(...)`), and every other non-mechanical
+  ## form are rejected here and counted as a skip by the caller - a form this
+  ## check cannot resolve is never treated as verified.
+  if p.len == 0 or p.isAbsolute: return false
+  for c in p:
+    if c notin {'A'..'Z', 'a'..'z', '0'..'9', '.', '_', '-', '/'}:
+      return false
+  for segment in p.split('/'):
+    if segment.len == 0 or segment == "." or segment == "..": return false
+  true
+
+proc validateRegistryContentHashes*(content: string; repoRoot: string):
+    tuple[errors: seq[string]; report: ContentHashReport]
+    {.raises: [], axiomEffect: IOEffect,
+      tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## Recompute `sha256:` over the exact file bytes for entries whose lineRange
+  ## is a plain relative path naming an existing file. Function-body hashes
+  ## and prose/line-span lineRanges are not mechanically resolvable here; they
+  ## are counted in `report`, never assumed correct. Paths resolve against
+  ## `repoRoot`, so the verdict does not depend on the caller's CWD.
+  result.errors = @[]
+  var json: JsonNode
+  try: json = parseJson(content)
+  except CatchableError:
+    result.errors.add("registry: invalid JSON")
+    return
+  let entries = json{"entries"}
+  if entries.isNil or entries.kind != JArray:
+    result.errors.add("registry: missing 'entries' array")
+    return
+  result.report.entriesTotal = entries.len
+  for idx in 0 ..< entries.len:
+    let entry = entries[idx]
+    let id = entry{"id"}.getStr("")
+    let hashNode = entry{"contentHash"}
+    if hashNode.isNil or hashNode.kind != JString or hashNode.getStr().len == 0:
+      continue
+    inc result.report.entriesWithHash
+    let recorded = hashNode.getStr()
+    let lineNode = entry{"lineRange"}
+    if lineNode.isNil or lineNode.kind != JString or lineNode.getStr().len == 0:
+      inc result.report.skippedNoLineRange
+      continue
+    let rel = lineNode.getStr()
+    if not isPlainRelativePath(rel):
+      inc result.report.skippedNonPlain
+      continue
+    let fullPath = repoRoot / rel
+    if not fileExists(fullPath):
+      inc result.report.skippedMissingFile
+      continue
+    var actual: string
+    try:
+      actual = computeRawContentHash(readFile(fullPath))
+    except CatchableError as e:
+      result.errors.add("entry[" & $idx & "] (" & id & ").contentHash unreadable: " &
+        rel & ": " & e.msg)
+      continue
+    inc result.report.checked
+    if actual != recorded:
+      result.errors.add("entry[" & $idx & "] (" & id & ").contentHash mismatch: " &
+        "lineRange=" & rel & " recorded=" & recorded & " actual=" & actual)
+
 proc run(repoRoot: string): int =
   let jsonPath = repoRoot / "data" / "debt_registry.json"
   if not fileExists(jsonPath):
@@ -320,6 +396,25 @@ proc run(repoRoot: string): int =
     for e in archErrors: logWarn(GateTag, "[architecture_debt] " & e)
     for e in registryErrors: logWarn(GateTag, "[debt_registry] " & e)
     for e in ledgerErrors: logWarn(GateTag, "[debt_ledger] " & e)
+
+  # Step 1b: Whole-file contentHash enforcement (unconditional, fail-closed).
+  # docs/spec/debt_registry_schema.md section 6 binds contentHash to exact artifact
+  # content; presence alone was never the contract. Only bare relative
+  # lineRanges naming an existing file are mechanically recomputable - every
+  # other form is counted below so the skip set is visible, never silent.
+  let (hashErrors, hashReport) =
+    validateRegistryContentHashes(readFile(jsonPath), repoRoot)
+  logInfo(GateTag, "contentHash: " & $hashReport.checked &
+    " whole-file artifact(s) verified; skipped " &
+    $hashReport.skippedNoLineRange & " (no lineRange), " &
+    $hashReport.skippedNonPlain & " (non-plain lineRange), " &
+    $hashReport.skippedMissingFile & " (lineRange path is not a file); " &
+    $hashReport.entriesWithHash & "/" & $hashReport.entriesTotal &
+    " entries carry contentHash")
+  if hashErrors.len > 0:
+    for e in hashErrors: logError(GateTag, "[debt_registry] " & e)
+    logError(GateTag, $hashErrors.len & " contentHash failure(s) - FAIL")
+    return 1
 
   # Step 2: Debt reduction metrics (merged from debt-reduction-gate)
   var updateBaseline = false
@@ -409,5 +504,8 @@ proc run(repoRoot: string): int =
   return 0
 
 when isMainModule:
-  let repoRoot = getCurrentDir()
-  quit(run(repoRoot))
+  # Root resolution is CWD-independent: AXIOM_ROOT wins, else the `.axiom_root`
+  # anchor is walked up from the binary's own location (not the caller's CWD).
+  # The whole-file contentHash check resolves registry lineRange paths against
+  # this same root.
+  quit(run(findRepoRoot()))
