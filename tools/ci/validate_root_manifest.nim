@@ -42,9 +42,10 @@ type
     removalCondition*: string
     reviewBy*: string
 
-const ExactAllowedEntries*: array[37, RootEntry] = [
+const ExactAllowedEntries*: array[38, RootEntry] = [
   # single files
   RootEntry(name: "AGENTS.md", basis: sbInternal),
+  RootEntry(name: "CONTRIBUTING.md", basis: sbPlatform),
   RootEntry(name: "README.md", basis: sbPlatform),
   RootEntry(name: "LICENSE", basis: sbPlatform),
   RootEntry(name: "THIRD-PARTY-NOTICES.md", basis: sbPlatform),
