@@ -10,8 +10,8 @@ Legislator invariant drafting MUST use LLM-based auto-formalization (`callLeanst
 
 ## Scope
 
-- 본 정책의 의무 대상은 **Axiom 저장소 내부의 Legislator 페르소나** — 명제 입법자(`legislator.nim`)다. **BYO 고객 외부 에이전트**(고객이 자신의 AI 에이전트로 명제를 제출하는 BYO Agent intake — `ax prove --proposals`, [byo_agent_proposition_contract.md](./byo_agent_proposition_contract.md))는 Legislator 페르소나가 **아니다** — AGENTS.md §0.2a와 본 정책의 Leanstral 전용 의무는 고객 외부 에이전트에 **적용되지 않는다**(2026-11-02 범위 명확화).
-- 고객 외부 에이전트는 Axiom의 명제 입법을 수행하지 않는다 — 그 제출물은 커밋된 카탈로그 specId의 참조·파라미터화에 한정되고(`soExplicit` 신규 약속화는 인간 커밋 경로 전용), `explanation`은 증거가 아니며(byo_agent_proposition_contract.md §2·§5), 검증 판정은 기존 결정적 레인(`ax prove`)이 생산한다. 본 정책의 Enforcement는 Axiom 내부 Legislator 모듈에 한정된다.
+- The mandatory subject of this policy is the **Legislator persona inside the Axiom repository** — the proposition legislator (`legislator.nim`). **BYO customer external agents** (BYO Agent intake, where a customer submits propositions through their own AI agent — `ax prove --proposals`, [byo_agent_proposition_contract.md](./byo_agent_proposition_contract.md)) are **not** the Legislator persona — the Leanstral-only duty of AGENTS.md §0.2a and of this policy **does not apply** to customer external agents (2026-11-02 scope clarification).
+- Customer external agents do not perform Axiom's proposition legislation — their submissions are limited to referencing and parameterizing committed catalog specIds (`soExplicit` new commitment is reserved for the human commit path), `explanation` is not evidence (byo_agent_proposition_contract.md §2 and §5), and verification verdicts are produced by the existing deterministic lane (`ax prove`). Enforcement of this policy is limited to the Axiom-internal Legislator module.
 
 ## Enforcement
 
