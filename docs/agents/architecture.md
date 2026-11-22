@@ -6,7 +6,7 @@
 - **MCP as Extension**: `src/mcp/` calls `src/core/`; does not replace CLI.
 - **Language Ban**: Nim only. Exceptions: Lean 4 proofs, Markdown, build configs. Rust source files (`.rs`) are a narrow exception: permitted ONLY under `src/frontend/rust/` and `tests/fixtures/rust/` (verification subject frontend and fixtures); this does NOT permit porting Axiom itself to Rust. Python(`.py`), Shell(`.sh`, `.bash`), and other interpreted scripts are **prohibited as project source**. Existing scripts MUST be ported to Nim-compiled static binaries and the originals deleted. No new Python/Shell files may be added.
 - **Closed-World Build**: The project builds inside a hermetic, network-less environment. The only valid build/test entry points are `nimble build`, `nimble test`, and `bin/run-gate`. All policy documents are embedded into Nim binaries at compile time; runtime reads of policy files are forbidden (Zero-Input Principle).
-- **Writing Language**: English for code/docs/commits; Korean for dialogue.
+- **Writing Language**: English for code, docs, commits, issues, PRs, and reviews; Korean for private dialogue.
 - Top-Down: BDD → DDD → Nim.
 - **Layered Gate Architecture**: L0 Orchestrator (`gate_hook.nim`) → L1 Meta (`gate-self-check`, `sentinel`, `quality-gate-marker`) → L2 Functional (remaining gates). L1 gates MUST NOT reference L0 entry points. Enforced by compile-time `static` assertion + runtime guard in `dispatchGate`.
 - **Verification Workflow**: `ax prove` → Topology Analysis → Batch UAP Orchestrator → 4-Layer Pipeline (Scout/BMC → Detective/CEGAR+Z3 → Scribe/Leanstral → Judge/Lean Kernel) → certificate gate → report.
