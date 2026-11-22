@@ -3472,18 +3472,20 @@
       "title": "ci_critical_path manifest cites non-existent SSOT latency decomposition files",
       "impact": "high",
       "severity": "high",
-      "description": "docs/reports/ci_critical_path_2026-08-25.md lines 5-6 declare 실측값의 단일 출처 = docs/audit/ci_latency_decomposition_2026-08-24.md (§17.1) and 랜딩 SSOT = docs/audit/ci_latency_current_state_2026-08-25.md, and lines 13-28 quote measured values from docs/audit/ci_latency_decomposition_2026-08-24.md:790-811. Confirmed via `find docs -iname '*latency*'` that BOTH files do not exist anywhere, and via `git log --all -- <path>` that they never existed in git history. Report numbers (verify-contract≈633s, G1≈249s, G6+G4≈191s, G2≈134s, G7≈59s) are unbacked. Category chosen: Documentation (best-matching existing category; Data Integrity/SSOT category does not exist in the registry).",
+      "description": "docs/reports/ci_critical_path_2026-08-25.md lines 5-6 (before the 2026-11-22 correction) declared the single source of measured values = docs/audit/ci_latency_decomposition_2026-08-24.md (section 17.1) and the landing SSOT = docs/audit/ci_latency_current_state_2026-08-25.md, and lines 13-28 quoted measured values from docs/audit/ci_latency_decomposition_2026-08-24.md:790-811. Confirmed via `find docs -iname '*latency*'` that BOTH files do not exist anywhere, and via `git log --all -- <path>` that they never existed in git history. Report numbers (verify-contract ~633s, G1 ~249s, G6+G4 ~191s, G2 ~134s, G7 ~59s) are unbacked. Category chosen: Documentation (best-matching existing category; Data Integrity/SSOT category does not exist in the registry).",
       "symbol": "ci_critical_path_2026-08-25.md (docs/reports)",
-      "contentHash": "sha256:45180dfbc666b9bc01fe4b828d1ff23ed3c99c36ec841e90b50bdd3ba548ee98",
-      "lineRange": "docs/reports/ci_critical_path_2026-08-25.md:5-28",
-      "resolution": "UNRESOLVED deferred 2026-08-31 (explicit policy decision, PR #18 gate-compatible state restoration): UNRESOLVED backlog/plan item - no implementation site exists in src/, so the open=>source-marker contract is not applicable. Marker deferred until implementation. This is NOT a satisfied debt.",
-      "lastVerifiedAt": "2026-08-28T00:00:00Z",
+      "contentHash": "sha256:31f8793b51ebba349321a5774beea49525142b64cbc6993fc43b6f5c98f3a102",
+      "lineRange": "docs/reports/ci_critical_path_2026-08-25.md:3-26",
+      "resolution": "FIXED 2026-11-22 on workstream/debt-486-439: docs/reports/ci_critical_path_2026-08-25.md now opens with a correction block (lines 3-26) stating that docs/audit/ci_latency_decomposition_2026-08-24.md and docs/audit/ci_latency_current_state_2026-08-25.md do not exist in this repository and never existed in its git history, that every number quoted by the report is therefore unbacked and must not be used as evidence, and that the rest of the document is retained as a historical structural plan rather than a measurement. The original text remains visible below the correction. Measurement commands: find docs -iname '*latency*' returns neither cited path, and git log --all -- docs/audit/ci_latency_decomposition_2026-08-24.md docs/audit/ci_latency_current_state_2026-08-25.md returns no commit (history is squashed at c021c33). No replacement numbers were invented. The registered defect was the false citation, not the absence of a latency measurement; contentHash/lineRange are re-anchored to the correction block.",
+      "lastVerifiedAt": "2026-11-22T05:40:38Z",
       "files": [
         "docs/reports/ci_critical_path_2026-08-25.md"
       ],
       "source": "theater_audit",
       "productTruthImpact": "NON_PRODUCT",
-      "status": "deferred"
+      "status": "closed",
+      "resolvedAt": "2026-11-22",
+      "resolvedBy": "debt_engine --close (workstream/debt-486-439)"
     },
     {
       "id": "DEBT#440",
@@ -4408,18 +4410,20 @@
       "title": "debt_scan_gate's exemption scan honours zero exemptions — it matches a marker the projection generator never emits",
       "impact": "high",
       "severity": "high",
-      "description": "src/gate/runners/debt_scan_gate.nim:101 (loadExemptionText/isExempted, :84-102) scans docs/DEBT_REGISTRY.md for the literal marker '### [Exemption APPROVED] '. The projection generator only ever emits '## <Severity>' headings plus markdown tables, so that marker has 0 occurrences in the artifact: the gate resolves an empty exemption set and reports success while honouring nothing. Its own docstring (:15) claims approved exemptions in that file are honoured. The gate is live (Makefile:37 GATES_FAST, :54 push-admissibility).",
-      "lineRange": "src/gate/runners/debt_scan_gate.nim:84-102",
-      "resolution": "UNRESOLVED — deferred. Discovered and registered 2026-10-04 on fix/debt-registry-single-writer. NOT fixed here: the repair depends on the downstream-consumer decision that this workstream explicitly scoped out (see docs/spec/debt_projection_contract.md §6.1 scope boundary and DEBT#487).",
-      "lastVerifiedAt": "2026-10-04T00:00:00Z",
+      "description": "Historical finding (fixed by 9ba25bb): src/gate/runners/debt_scan_gate.nim:101 (loadExemptionText/isExempted, :84-102 at registration) scanned docs/DEBT_REGISTRY.md for the literal marker '### [Exemption APPROVED] '. The projection generator only ever emitted '## <Severity>' headings plus markdown tables, so that marker had 0 occurrences in the artifact: the gate resolved an empty exemption set and reported success while honouring nothing. Its own docstring (:15) claimed approved exemptions in that file were honoured. The gate was live (Makefile:37 GATES_FAST, :54 push-admissibility).",
+      "lineRange": "src/gate/runners/debt_scan_gate.nim:15-20",
+      "resolution": "FIXED by commit 9ba25bb (PR #318, 2026-11-21): the dead exemption scan was removed from src/gate/runners/debt_scan_gate.nim rather than left inert, and the module docstring at src/gate/runners/debt_scan_gate.nim:15-20 now states that exemptions are not supported and that the former '### [Exemption APPROVED]' scan honoured zero exemptions because the projection generator never emits that marker. tests/gateway/debt_scan_gate_feature_test.nim now asserts that a hand-written marker does not suppress a real bare-except finding, so the gate no longer claims an exemption mechanism it cannot honour. lineRange/contentHash are re-anchored to the docstring statement of the removal; the description preserves the original :84-102 finding as history. Verified at origin/main f7fbb0b.",
+      "lastVerifiedAt": "2026-11-22T05:40:29Z",
       "files": [
         "src/gate/runners/debt_scan_gate.nim"
       ],
       "source": "theater_audit",
       "productTruthImpact": "NON_PRODUCT",
-      "status": "deferred",
+      "status": "closed",
       "symbol": "loadExemptionText / isExempted",
-      "contentHash": "sha256:447377208b202cdf85c4786df7e0c3a1c93866b143b6422cd73a55d4a4f38bac"
+      "contentHash": "sha256:0937d42c37c9bd7fe532d6361ee8fdea7f5bbee17b2a359ec71596fdd5f797db",
+      "resolvedAt": "2026-11-22",
+      "resolvedBy": "debt_engine --close (workstream/debt-486-439)"
     },
     {
       "id": "DEBT#487",
@@ -6062,7 +6066,7 @@
         "src/gate/runners/readiness_start_gate.nim"
       ],
       "source": "theater_audit",
-"productTruthImpact": "PRODUCT_TRUTH",
+      "productTruthImpact": "PRODUCT_TRUTH",
       "status": "closed",
       "resolution": "FIXED 2026-11-20 (workstream/readiness-key-closure). (1) Every policy observationKeys entry now declares type/presence/subject scope plus onNull/onAbsent/onFalse semantics; requiredKeyStatus/closureState evaluate them before each ruleR1..R8, so a missing, null, wrong-type, or declared-scope (scope=contract policy echo) required key is UNKNOWN, never fall-through PASS; unknownKeys=reject additionally fails closure on undeclared keys. (2) Declared-but-never-read keys are enforced or removed: R1 promiseOutputExists is joined per subject to r1.promiseOutputs (json-report, certificate) in both collectors, R4 subjectTreeImmutableAcrossRun is required, R8 axiomOwnedColdSetDeletedBeforeRun was removed from policy and is an incident only (R8-COLD-001). (3) R7 verifiedEmitterScope is a required key; claimedScope stays vocabulary/declared and the scope-overclaim promotion is unchanged. (4) Negative control holds: certGreenDualEvidenceRequired present-false with onFalse=fail yields R2 FAIL (tests/readiness/readiness_policy_test.nim DEBT#559 matrix). (5) Evidence freshness/identity is no longer self-authoritative: the gate measures git identity itself and only AXIOM_READINESS_REPLAY=1 adopts a declared snapshot identity; committed data/readiness/evidence snapshots are historical (CI regenerates every run). Verified: readiness_policy_test 29/29, readiness_r8_sequence_test 13/13, readiness_feature_test 30/30, test_readiness_verdict_mapping 10/10, test_readiness_collect_independence 4/4 (all exit 0); strict fixture decisionDigest equals data/golden/readiness/decision.golden.json.",
       "lastVerifiedAt": "2026-11-20T00:00:00Z",

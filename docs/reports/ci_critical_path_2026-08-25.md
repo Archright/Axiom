@@ -1,5 +1,30 @@
 # CI Critical Path Manifest — 2026-08-25
 
+> **CORRECTION (2026-11-22, DEBT#439): the citations below are unbacked.**
+>
+> The two audit files this document names as its source of measured values,
+> `docs/audit/ci_latency_decomposition_2026-08-24.md` and
+> `docs/audit/ci_latency_current_state_2026-08-25.md`, do not exist in this
+> repository and never existed in its git history. The evidence is:
+>
+> - `find docs -iname '*latency*'` - neither cited path is returned. The
+>   matches are unrelated merge-latency guides and evidence documents.
+> - `git log --all -- docs/audit/ci_latency_decomposition_2026-08-24.md docs/audit/ci_latency_current_state_2026-08-25.md`
+>   - no output: no commit on any ref adds, modifies, or deletes either path.
+>   Repository history is squashed at `c021c33`, so that is the entire
+>   available history.
+>
+> Therefore every number quoted below as a measured value (verify-contract
+> ~633s, G1 ~249s, G6+G4 ~191s, G2 ~134s, G7 ~59s, and the remaining
+> durations) is unbacked. These numbers MUST NOT be used as evidence, as a
+> baseline, or as an input to optimization work. No replacement numbers are
+> supplied here; a real measurement must come from a source that exists.
+>
+> The remainder of this document is retained unchanged as a historical
+> structural plan - the node taxonomy, ownership boundaries, and the proposed
+> manifest shape. It is not a measurement, and its quoted values are not
+> observations of this repository.
+
 > 구조적 결정: WP1 (thin projection, docs-only). 새 분석 프레임워크 없음.
 > 정적 DAG 스펙/별도 duration JSON/도구 코드 **없음**.
 > 실측값의 단일 출처 = `docs/audit/ci_latency_decomposition_2026-08-24.md` (§17.1),
