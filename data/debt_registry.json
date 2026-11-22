@@ -3283,9 +3283,9 @@
       "symbol": ".github/workflows/ci.yml (baseline check step) + Makefile:300 ci-bootstrap",
       "contentHash": "sha256:unbound-placeholder-ci-baseline-check-g3",
       "lineRange": "ci/checker.mk:484-491 (was Makefile:300; ci.yml:8 deleted in CI epoch cutover)",
-      "resolution": "OPEN",
+      "resolution": "FIXED 2026-11-22: the admission path does run `bin/ax baseline check` — ci/checker.mk:584 in the ci-bootstrap-cheap tail (install CAS, hooks, scope hash, baseline), consumed by .github/workflows/admission-check.yml:493 `make ci-bootstrap`. The premise 'no CI step invokes ax baseline check' is false. The file the entry cites (.github/workflows/ci.yml) does not exist on canonical main (`git ls-tree origin/main .github/workflows/` has no ci.yml). Scope note: on a verified B-cache HIT the cold-build path is skipped, so the check is cold-path-conditional — the entry's registered claim was absence from CI, which no longer holds.",
       "lastVerifiedAt": "2026-10-07T00:00:00Z",
-      "description": "ci.yml:8 comment states 'push CI is ax baseline check' but no step invokes `ax baseline check` (VKD checker). Only Makefile:300 ci-bootstrap (local-only) invokes it. Proof-bearing regressions lowering VKD escape push CI and are only caught in nightly. Per Contract Preservation Audit 2026-08-23, this is G3; note G3 is an ADDITIONAL adopted operating policy beyond the frozen GO 6-condition contract (see policy note in audit doc). ci.yml is §-1 protected, so any fix requires explicit architect approval (4c) before modification. REF HYGIENE 2026-10-07: Makefile ref retired — the ci-bootstrap recipe now lives in ci/checker.mk:490 (baseline check invocation at ci/checker.mk:488; consumed via Makefile:11 `include ci/checker.mk`), and the Makefile itself contains no ax baseline check invocation. files[] updated to the live locus ci/checker.mk; Makefile moved to historicalFiles. G3 substance unchanged: baseline check still absent from the authoritative admission path (probe-merge-queue.yml and admission-check.yml invoke no baseline check; h4-routing-measure.yml:410 invokes it but is workflow_dispatch-only and self-declared 비권위 non-required).",
+      "description": "ci.yml:8 comment states 'push CI is ax baseline check' but no step invokes `ax baseline check` (VKD checker). Only Makefile:300 ci-bootstrap (local-only) invokes it. Proof-bearing regressions lowering VKD escape push CI and are only caught in nightly. Per Contract Preservation Audit 2026-08-23, this is G3; note G3 is an ADDITIONAL adopted operating policy beyond the frozen GO 6-condition contract (see policy note in audit doc). ci.yml is §-1 protected, so any fix requires explicit architect approval (4c) before modification. REF HYGIENE 2026-10-07: Makefile ref retired — the ci-bootstrap recipe now lives in ci/checker.mk:490 (baseline check invocation at ci/checker.mk:488; consumed via Makefile:11 `include ci/checker.mk`), and the Makefile itself contains no ax baseline check invocation. files[] updated to the live locus ci/checker.mk; Makefile moved to historicalFiles. G3 substance unchanged: baseline check still absent from the authoritative admission path (probe-merge-queue.yml and admission-check.yml invoke no baseline check; h4-routing-measure.yml:410 invokes it but is workflow_dispatch-only and self-declared non-authoritative and non-required).",
       "files": [
         "ci/checker.mk"
       ],
@@ -3296,7 +3296,10 @@
       "severity": "medium",
       "source": "productization_contract_preservation_audit_2026-08-23",
       "productTruthImpact": "STALE",
-      "status": "open"
+      "status": "closed",
+      "resolvedAt": "2026-11-22T09:45:00Z",
+      "resolvedBy": "debt_status_truth_2026-11-22",
+      "resolutionNote": "baseline check is wired into ci-bootstrap (cold path); stale premise removed"
     },
     {
       "id": "DEBT#431",
@@ -3329,7 +3332,7 @@
       "symbol": "Makefile TESTS_FAST_UNIT:35-48 + ci-unit-tests:255-275",
       "contentHash": "sha256:unbound-placeholder-ci-wiring-g5",
       "lineRange": "historical: Makefile:35-48,255-275 (2026-08-23 audit); current: TESTS_FAST_UNIT Makefile:63-92 + CONTRACT_UNIT_TESTS Makefile:711-720 (verify-contract-unit G2); ci-unit-tests target dissolved in CI epoch cutover",
-      "resolution": "UNRESOLVED open 2026-10-07 (BLOCKED — residual wiring edits target the FROZEN Makefile surface class and the registered CI-job leg no longer exists in the CI=0 generation): 8 of the listed GO-critical tests are now wired (TESTS_FAST_UNIT Makefile:78-92 + CONTRACT_UNIT_TESTS → verify-contract-unit G2, fanned out by verify-contract, the canonical contract-preservation entrypoint); ci-unit-tests target is gone (CI epoch cutover); proof_integrity_test.nim / test_s1a_lean_golden.nim / test_d2_golden.nim / test_d2_persist.nim remain unwired into any Makefile lane. Makefile is FROZEN in config/repository_surface.json (classResolutionOrder PRODUCT→CONTROLLED→FROZEN; ADD/MODIFY/DELETE = FAIL) — unblocking requires an explicit surface transaction/Owner decision, out of scope for debt-truth reconciliation.",
+      "resolution": "FIXED 2026-11-22: all four named tests execute in the required admission path — .github/workflows/admission-check.yml:1787-1790 maps the s1a/proof_integrity/d2_golden/d2_persist lanes to tests/unit/test_s1a_lean_golden.nim, tests/unit/proof_integrity_test.nim, tests/unit/test_d2_golden.nim, tests/unit/test_d2_persist.nim; the GO-critical lane drives them (:3909, :4489). The `ci-unit-tests` Makefile target no longer exists (`git grep -c ci-unit-tests origin/main -- Makefile` = 0), as the entry itself recorded. 'Only reachable via manual make test-fast-one' is false; none of the four is in TESTS_FAST_UNIT, but required-workflow execution is the regression protection the entry demanded.",
       "lastVerifiedAt": "2026-10-07T00:00:00Z",
       "description": "Tests resolve_node_outcome, evidence_propagation, candidate_eligibility, execution_identity_propagation, bundle_digest, promotion_semantics, proof_integrity, proof_state_machine, certificate_eligibility, test_s1a_lean_golden, test_d2_* are absent from TESTS_FAST_UNIT (Makefile:35-48) and ci-unit-tests (255-275); only reachable via manual `make test-fast-one T=...`. Test file existence is not regression protection; must prove make target -> CI job -> test -> non-zero propagation connection. Per Contract Preservation Audit 2026-08-23, this is G5 (P0). REVERIFY 2026-10-07 (debt-truth reconciliation, BLOCKED — facts on origin/main 4805fe1df): the registered claim is now only partially true — resolve_node_outcome, evidence_propagation, candidate_eligibility, execution_identity_propagation, bundle_digest, promotion_semantics, certificate_eligibility, proof_state_machine ARE present in TESTS_FAST_UNIT (Makefile:78-92) and the same set is wired into CONTRACT_UNIT_TESTS (Makefile:711-720) consumed via verify-contract-unit (G2) inside verify-contract (canonical local entrypoint); the ci-unit-tests Makefile target and the ci.yml CI-job leg are both dissolved (CI epoch cutover — no per-PR CI unit-test lane exists in the current generation, and no current workflow consumes test-fast/verify-contract); proof_integrity_test.nim, test_s1a_lean_golden.nim, test_d2_golden.nim, test_d2_persist.nim still exist under tests/unit/ but remain unwired into any Makefile lane. Further wiring edits are blocked by the FROZEN Makefile surface class (config/repository_surface.json; ADD/MODIFY/DELETE = FAIL). REVERIFY 2026-11-16 (debt-truth reconciliation, fact refresh — facts on origin/main 0d924ab): two statements recorded above are now stale. (1) The FROZEN claim is false under repository_surface policy v99: the Makefile is individually registered CONTROLLED (MODIFY=PASS) and matches no FROZEN entry (the FROZEN class is a 12-item enumeration not covering the Makefile) — current-generation Makefile landings are routine (598b8e2, a9e762b, 87065f3). (2) The claim that no current workflow consumes test-fast/verify-contract is now partially false: admission-check.yml consumes `make test-fast-one` — the evidenceId contract-check battery lane (checker tools/ci/check_evidence_id_contract.nim, admission-check.yml:4041; real-chain probe tests/unit/test_evidence_id_contract_probe.nim, :4053) and the GO-critical lane loop for the four DEBT#432 subjects (test_s1a_lean_golden.nim, proof_integrity_test.nim, test_d2_golden.nim, test_d2_persist.nim, :4203-4205; CAS basis=REUSED skips are re-verified at attest) — 6 unique test-fast-one targets total. Evidence: docs/evidence/vs_t3_evidenceid_battery_profile_2026-11-16.md; docs/evidence/vs_t3a_build_mode_passc_o2_2026-11-16.md (on branch workstream/vs-t3a-passc-o2). Fact-record refresh only — status remains open and the wiring claim itself is not adjudicated here; disposition belongs to the debt owner.",
       "files": [
@@ -3341,7 +3344,10 @@
       "severity": "high",
       "source": "productization_contract_preservation_audit_2026-08-23",
       "productTruthImpact": "STALE",
-      "status": "open"
+      "status": "closed",
+      "resolvedAt": "2026-11-22T09:45:00Z",
+      "resolvedBy": "debt_status_truth_2026-11-22",
+      "resolutionNote": "four GO-critical tests execute in admission-check lanes"
     },
     {
       "id": "DEBT#433",
@@ -3374,7 +3380,7 @@
       "symbol": ".github/workflows/ci.yml (nim c -d:release -o:bin/ax step absent)",
       "contentHash": "sha256:unbound-placeholder-release-build-g7",
       "lineRange": ".github/workflows/ci.yml:1-279",
-      "resolution": "OPEN",
+      "resolution": "FIXED 2026-11-22: .github/workflows/axiom-operational-slice.yml:159 runs `make verify-contract-release-e2e-full` in the required operational slice; Makefile:970-982 checks provenance and version of bin/ax, records the same-run sha256, runs `ax prove --target normalizeMaxWorkers`, then asserts `ax report --json` schema (axiom.report.v1) and the pinned exit pair. A release build of bin/ax and product E2E on that binary both execute in CI.",
       "lastVerifiedAt": "2026-08-23T00:00:00Z",
       "description": "bin/ax release binary is produced only as a transitive side effect of ci-unit-tests -> nimble build -> nim c -d:release, with no explicit build step and no job running product E2E (ax prove -> evidence -> persist -> replay) on the release binary. This leaves a path where a stale bin/ax could be used for testing. Per Contract Preservation Audit 2026-08-23, require explicit `nim c -d:release -o:bin/ax` build + same-job executable hash + product E2E on that exact binary. Note Nim doAssert is always active in release (no debug/release divergence was ever relied upon), but release E2E is still required for dev/product semantics separation. ci.yml is §-1 protected; requires architect approval (4c).",
       "files": [],
@@ -3384,7 +3390,10 @@
       "severity": "medium",
       "source": "productization_contract_preservation_audit_2026-08-23",
       "productTruthImpact": "STALE",
-      "status": "open"
+      "status": "closed",
+      "resolvedAt": "2026-11-22T09:45:00Z",
+      "resolvedBy": "debt_status_truth_2026-11-22",
+      "resolutionNote": "release bin/ax + product E2E run in axiom-operational-slice"
     },
     {
       "id": "DEBT#435",
@@ -3399,10 +3408,13 @@
         "build/nimcache/release/@pstd@sobjectdollar.nim.c"
       ],
       "source": "ci_migration_audit",
-      "resolution": "OPEN deferred 2026-08-31 (explicit policy decision, PR #18 gate-compatible state restoration): UNRESOLVED backlog/plan item - no implementation site exists in src/, so the open=>source-marker contract is not applicable. Marker deferred until implementation. This is NOT a satisfied debt.",
+      "resolution": "FIXED 2026-11-22: config.nims:50-59 makes LTO opt-in (`-d:axiomLto`); default release/danger builds link WITHOUT LTO, so GCC lto1 -Wstringop-overflow false positives cannot occur. No Makefile, ci/, or .github/workflows build sets -d:axiomLto (0 hits). The quirk stays documented at docs/spec/lto_link_parallelism.md and -Wno-stringop-overflow is added only when LTO is explicitly enabled.",
       "productTruthImpact": "NON_PRODUCT",
-      "status": "deferred",
-      "lastVerifiedAt": "2026-08-26T18:00:00Z"
+      "status": "closed",
+      "lastVerifiedAt": "2026-08-26T18:00:00Z",
+      "resolvedAt": "2026-11-22T09:45:00Z",
+      "resolvedBy": "debt_status_truth_2026-11-22",
+      "resolutionNote": "LTO is opt-in; default builds cannot hit the GCC false positive"
     },
     {
       "id": "DEBT#436",
@@ -4066,7 +4078,7 @@
       "title": "SL-09 policy-gate EMPTY 의미 충돌 — ci/checker.mk(EMPTY=FAIL) vs runner-pool-acceptance.yml(EMPTY=PASS)",
       "impact": "high",
       "severity": "high",
-      "description": "동일 'EMPTY' 조건(영향-공집합 후보 / zero-shard)에 대해 두 게이트 표면이 상반된다: ci/checker.mk:191·:204-205 — landing-required set membership gate: 'Junit 없음(junit_files=0, EMPTY 모드 포함) = 전 항목 not-executed → FAIL — 착지 집합은 스코프 선택기와 무관하게 실행되어야 한다'(EMPTY=FAIL, fail-closed) vs .github/workflows/runner-pool-acceptance.yml:661-666 — gateway-identity-gate: 'mode=none / selected-W8-미포함: shard 0개 실행 → identity-gate는 통과 처리 (EXPECTED_GATEWAY_TESTS=EMPTY — junit 항목 0개 검증)'(EMPTY=PASS, fail-open). 2026-09-30 문서 트랙 결정: '영향-공집합 후보는 floor 면제'로 해소 — landingFloor=true 무조건 실행(tools/ci/impact_closure_selector.nim:1414, PR-B에서 조건부식 lgPolicyNonEmpty ∧ ¬oracleDerivedEmpty로 교체 예정) 하의 현행 조합에서는 EMPTY가 실제 발화하지 않아 잠복하며, 조건부식 교체 후 SL-09 승격(scope_sl09 게이트 — gateway-shard×8·gateway-identity-gate·proof-reconcile 발화 복원) 전에 반드시 두 표면을 일치시켜야 한다(SL-09 승격 전 선행 조건). cross-ref: docs/adr/0025-gateway-landing-authority.md Amendment C(2026-09-30), docs/evidence/epoch_record_oracle_select_2026-09-30.md §Tombstone, :661-666 vs ci/checker.mk:191,:204-205.",
+      "description": "The same 'EMPTY' condition (impact-empty candidate / zero-shard) used to be judged oppositely by two gate surfaces: ci/checker.mk:191 and :204-205 treated 'no junit files (junit_files=0, EMPTY mode included)' as all-items-not-executed -> FAIL (fail-closed), while .github/workflows/runner-pool-acceptance.yml:661-666 treated 'shard count 0' as pass (EXPECTED_GATEWAY_TESTS=EMPTY, zero junit items verified) (fail-open). The 2026-09-30 documentation-track decision resolved the impact-empty candidate by a floor exemption; under the then-current landingFloor=true combination EMPTY could not actually fire, so the conflict was latent, and the two surfaces had to be aligned before the conditional-expression replacement and SL-09 promotion (scope_sl09 gate: gateway-shard x8, gateway-identity-gate, proof-reconcile firing restored). FIXED 2026-11-22: the two surfaces converged on one recorded-derivation rule. ci/checker.mk:316-320 admits an EMPTY gateway scope ONLY when that derivation is RECORDED and bound to the run's decisionHash (GATEWAY_RECORDED_EMPTY_SCOPE -> ci-select-decision artifact -> GATEWAY_DECISION_DIR), and an empty scope without that record is FAIL ('infrastructure not executing is NotExecuted, not a valid empty set'); the policy-gate path at :412-420 applies the same rule. runner-pool-acceptance.yml:1152, :1179 and :1208 cite the same contract. The EMPTY=FAIL vs EMPTY=PASS contradiction no longer exists. Cross-ref retained: docs/adr/0025-gateway-landing-authority.md Amendment C (2026-09-30), docs/evidence/epoch_record_oracle_select_2026-09-30.md section Tombstone.",
       "files": [
         "ci/checker.mk",
         ".github/workflows/runner-pool-acceptance.yml",
@@ -4074,9 +4086,12 @@
       ],
       "source": "epoch-cutover-oracle-select-pr-b 2026-09-30",
       "productTruthImpact": "STALE",
-      "status": "deferred",
-      "resolution": "UNRESOLVED deferred 2026-09-30 (PR-B epoch cutover 문서 트랙 — SL-09 승격 전 선행 조건으로 명기): 두 표면의 정합(EMPTY 의미 단일화 + floor 면제 서술)은 SL-09 승격 PR 소관. Implementation site가 .github/·ci/(워크플로·makefile)이라 open=>source-marker contract는 적용 불가 — marker deferred. NOT satisfied, NOT resolved — 열린 정책 항목.",
-      "lastVerifiedAt": "2026-09-30T00:00:00Z"
+      "status": "closed",
+      "resolution": "FIXED 2026-11-22: the two EMPTY surfaces converged on one recorded-derivation rule — ci/checker.mk:316-320 admits an EMPTY gateway scope only when the derivation is RECORDED and bound to the run's decisionHash (GATEWAY_RECORDED_EMPTY_SCOPE), and the policy-gate path at :412-420 applies the same rule; .github/workflows/runner-pool-acceptance.yml:1152/:1179/:1208 cite the same contract. The EMPTY=FAIL (ci/checker.mk) vs EMPTY=PASS (runner-pool-acceptance.yml) contradiction no longer exists.",
+      "lastVerifiedAt": "2026-09-30T00:00:00Z",
+      "resolvedAt": "2026-11-22T09:45:00Z",
+      "resolvedBy": "debt_status_truth_2026-11-22",
+      "resolutionNote": "both EMPTY paths require a recorded, decisionHash-bound derivation"
     },
     {
       "id": "DEBT#471",
