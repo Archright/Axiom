@@ -1,0 +1,18 @@
+{
+  "decision": "STAY_FREE",
+  "reason": "NO_CAPACITY_SATURATION_EVIDENCE",
+  "evidenceStatus": "AFTER_ARM_COMPLETE",
+  "statistics": {
+    "p95": "DECLARED",
+    "mergeGroupObservationCount": 34,
+    "mergedPRCount": 13
+  },
+  "reopenConditionStatus": {
+    "condition1": "NOT_MET",
+    "condition2": "NOT_EVALUABLE",
+    "condition3": "NOT_MET"
+  },
+  "legacyMapping": {
+    "STAY_FREE_PENDING_AFTER_ARM": "STAY_FREE / AFTER_ARM_COMPLETE"
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "head_sha": "2609f6081d0a3184c9e347037b740c461265d8f9",
+  "query": "repos/Archright/Axiom/actions/runs?head_sha=2609f6081d0a3184c9e347037b740c461265d8f9&per_page=100",
+  "total_count": 8,
+  "workflow_runs": [
+    {
+      "conclusion": "success",
+      "created_at": "2026-11-21T12:10:38Z",
+      "event": "merge_group",
+      "head_sha": "2609f6081d0a3184c9e347037b740c461265d8f9",
+      "id": 44902593790,
+      "name": "admission-gate",
+      "path": ".github/workflows/admission-gate-v2.yml",
+      "run_attempt": 1,
+      "status": "completed",
+      "updated_at": "2026-11-21T12:18:18Z",
+      "workflow_id": 420946486
+    },
+    {
+      "conclusion": "success",
+      "created_at": "2026-11-21T12:10:38Z",
+      "event": "merge_group",
+      "head_sha": "2609f6081d0a3184c9e347037b740c461265d8f9",
+      "id": 44902593449,
+      "name": "probe-merge-queue",
+      "path": ".github/workflows/probe-merge-queue.yml",
+      "run_attempt": 1,
+      "status": "completed",
+      "updated_at": "2026-11-21T12:11:00Z",
+      "workflow_id": 415675142
+    },
+    {
+      "conclusion": "success",
+      "created_at": "2026-11-21T12:10:38Z",
+      "event": "merge_group",
+      "head_sha": "2609f6081d0a3184c9e347037b740c461265d8f9",
+      "id": 44902593428,
+      "name": "generation-acceptance",
+      "path": ".github/workflows/generation-acceptance.yml",
+      "run_attempt": 1,
+      "status": "completed",
+      "updated_at": "2026-11-21T12:10:51Z",
+      "workflow_id": 415675127
+    },
+    {
+      "conclusion": "success",
+      "created_at": "2026-11-21T12:10:38Z",
+      "event": "merge_group",
+      "head_sha": "2609f6081d0a3184c9e347037b740c461265d8f9",
+      "id": 44902593517,
+      "name": "debt-registry-gate",
+      "path": ".github/workflows/debt-registry-gate.yml",
+      "run_attempt": 1,
+      "status": "completed",
+      "updated_at": "2026-11-21T12:11:56Z",
+      "workflow_id": 415675114
+    },
+    {
+      "conclusion": "success",
+      "created_at": "2026-11-21T12:10:38Z",
+      "event": "merge_group",
+      "head_sha": "2609f6081d0a3184c9e347037b740c461265d8f9",
+      "id": 44902593430,
+      "name": "observer-manifest-consistency",
+      "path": ".github/workflows/observation.yml",
+      "run_attempt": 1,
+      "status": "completed",
+      "updated_at": "2026-11-21T12:11:51Z",
+      "workflow_id": 415675138
+    },
+    {
+      "conclusion": "success",
+      "created_at": "2026-11-21T12:10:38Z",
+      "event": "merge_group",
+      "head_sha": "2609f6081d0a3184c9e347037b740c461265d8f9",
+      "id": 44902593446,
+      "name": "bsec-integrity",
+      "path": ".github/workflows/bsec-integrity.yml",
+      "run_attempt": 1,
+      "status": "completed",
+      "updated_at": "2026-11-21T12:11:47Z",
+      "workflow_id": 415675104
+    },
+    {
+      "conclusion": "failure",
+      "created_at": "2026-11-21T12:10:38Z",
+      "event": "merge_group",
+      "head_sha": "2609f6081d0a3184c9e347037b740c461265d8f9",
+      "id": 44902593470,
+      "name": "publication-integrity",
+      "path": ".github/workflows/publication-integrity.yml",
+      "run_attempt": 1,
+      "status": "completed",
+      "updated_at": "2026-11-21T12:16:15Z",
+      "workflow_id": 415675144
+    },
+    {
+      "conclusion": "success",
+      "created_at": "2026-11-21T12:10:38Z",
+      "event": "merge_group",
+      "head_sha": "2609f6081d0a3184c9e347037b740c461265d8f9",
+      "id": 44902593543,
+      "name": "axiom-operational-slice",
+      "path": ".github/workflows/axiom-operational-slice.yml",
+      "run_attempt": 1,
+      "status": "completed",
+      "updated_at": "2026-11-21T12:17:12Z",
+      "workflow_id": 415675102
+    }
+  ]
+}

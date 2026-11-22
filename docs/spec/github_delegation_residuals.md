@@ -274,6 +274,126 @@ TCB로 수용한 뒤 남는 잔여 위협과, `workflow_run` 단일 씨딩 write
   (`docs/evidence/orphan_seed_quota_delegation_2026-10-08.md` §2.1). 미정의
   표면에서의 소비 성립 여부는 플랫폼 변경에 노출된 가속 전용 사실(J3)로만 취급한다.
 
+## 2.1 GitHub-native CI limits (platform ceilings and observation semantics)
+
+Section 1 delegates "do not reimplement what GitHub guarantees"; this section is
+the opposite boundary -- **do not read what GitHub does not guarantee as
+guaranteed**. Every quotation below is verbatim from the official documentation,
+and live values are point-in-time records (the canonical source is the ruleset
+API -- R2).
+
+### 2.1.1 `max_entries_to_build` -- concurrent-build throttle, not a group-size guarantee
+
+> "The maximum number of merge_group webhooks to dispatch (between 1 and 100),
+> throttling the total amount of concurrent CI builds."
+> -- docs.github.com, *Managing a merge queue* ("Build concurrency")
+> https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue
+
+The live value is **100** (measured 2026-11-21 -- section 2 R2 update). This
+parameter caps how many `merge_group` webhooks the queue dispatches concurrently;
+it is **not a group-size guarantee**. Therefore the 1:1 shape obligation
+(merge_group parentage and candidate-tree equality) is never attributed to this
+value: the throttle does not substitute for shape enforcement, and shape
+enforcement does not substitute for the throttle (the same boundary as section 2
+R2, 2026-11-17 update, item (ii)).
+
+### 2.1.2 `Status check timeout` -- 120 minutes is the queue's bounded response window
+
+> "Choose how long the queue should wait for a response from CI before assuming
+> that checks have failed."
+> -- docs.github.com, *Managing a merge queue* ("Status check timeout")
+> https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue
+
+An entry that exceeds the ceiling is removed from the queue -- one of the official
+dequeue reasons is "Timed out awaiting a successful CI result based off the
+configured timeout setting" (same page, "Failing CI"). Axiom's live ruleset
+`27097366` has `check_response_timeout_minutes` = **120** (2026-11-22 readback).
+
+Those 120 minutes are **a different layer** from the 14-day stale marker. Do not
+conflate the three layers.
+
+| layer | boundary | meaning | Axiom reading |
+|---|---|---|---|
+| (a) platform stale marker | 14 days | GitHub **marks** the conclusion of an incomplete check run as `stale`; this is neither queue eviction nor a verdict | never read an old pending check run as "waiting" |
+| (b) queue status-check timeout | 120 minutes (ruleset value) | the queue waits for CI and then **treats it as failed**, removing the entry | bounded response window on the queue path; exceeding it equals dequeue |
+| (c) current-head pending required check | within (b) | the current head's required check is pending | **operational incident**, not a waiting state |
+
+Verbatim for (a):
+
+> "If a check run is in an incomplete state for more than 14 days, then the
+> check run's `conclusion` becomes `stale` and appears on GitHub as stale..."
+> "Only GitHub can mark check runs as `stale`."
+> -- docs.github.com, *Using the REST API to interact with checks* ("About check
+> runs")
+> https://docs.github.com/en/rest/guides/using-the-rest-api-to-interact-with-checks
+
+(The original renders an inline icon after "stale"; it is elided here with an
+ellipsis.) So (a) is the **display** layer and (b) is the **queue-eviction**
+layer. (c) is not a platform ceiling but an Axiom operating rule: if the current
+head's required check is still pending within (b), that is not normal waiting but
+an incident. Classifying it as waiting would be fail-open.
+
+### 2.1.3 `merge_group` is a separate event -- a PR check does not substitute for it
+
+> "You must use the merge_group event to trigger your GitHub Actions workflow
+> when a pull request is added to a merge queue."
+> "The merge_group event is separate from the pull_request and push events."
+> -- docs.github.com, *Managing a merge queue* ("Triggering merge group checks
+> with GitHub Actions")
+> https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue
+
+The same section warns: "Otherwise, status checks will not be triggered when you
+add a pull request to a merge queue. The merge will fail as the required status
+check will not be reported." Therefore a merge-queue required check must fire on
+`merge_group`, and a check that passed on `pull_request` does not take its place.
+Axiom's required context `admission-check` (job name) fires on both
+`pull_request` and `merge_group` in `admission-gate-v2.yml`, but PR-path GREEN is
+not queue-path GREEN.
+
+### 2.1.4 `pull_request_target` public-repository default policy -- enforcement on 2026-12-02
+
+> "GitHub provides a default event policy that blocks the pull_request_target
+> event in public repositories."
+> "Currently runs in evaluate mode. In this mode, workflow runs continue, but
+> you can use policy insights to identify runs that would be blocked after
+> enforcement."
+> "On December 2, 2026, GitHub will enforce the default policy for affected
+> repositories that were using the default pull_request_target policy before
+> general availability."
+> -- docs.github.com, *Securely using pull_request_target* ("Default policy for
+> pull_request_target")
+> https://docs.github.com/en/actions/reference/security/securely-using-pull_request_target
+
+Axiom is a public repository, so it falls inside this policy's scope. The workflow
+that uses `pull_request_target` (`merge-queue-rearm.yml`) **still runs today
+because the policy is in evaluate mode**, but after enforcement on 2026-12-02 it
+is blocked without an explicit allow policy.
+
+The **explicit presence** of a policy is API-readable --
+`GET /repos/{owner}/{repo}/actions/policies` and `GET /orgs/{org}/actions/policies`
+(both require "Administration" write, so the CI-token path is not a reading
+channel). 2026-11-22 readback: zero repo policies; five org policies, all scoped
+to specific workflows via `workflow_path`, and zero targeting
+`merge-queue-rearm.yml`. However, **the implicit default policy itself and
+evaluate-mode insights are not returned as policy objects**: confirming "would
+this workflow actually be blocked right now" requires a policy-insights (UI)
+check, which is a human settings review. This document does not claim the outcome
+of that review.
+
+### 2.1.5 Skipped jobs report "Success" -- a skip is not execution evidence
+
+> "A job that is skipped will report its status as "Success". It will not
+> prevent a pull request from merging, even if it is a required check."
+> -- docs.github.com, *Using conditions to control job execution*
+> https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-jobs-with-conditions
+
+Therefore (1) deleting skipped jobs is not a throughput optimization: a skipped
+job consumes zero runner time, so removing it does not reduce build work, and its
+check run reports "Success" either way; and (2) a skipped required check is **not
+evidence of execution** -- GREEN across the required set can mean "not blocked"
+rather than "executed and passed" (the same boundary as
+`rearm_observation_quirks.md` Q1).
+
 ## 3. 실패 모드 — Phase 0 linchpin
 
 `workflow_run`이 org required workflow(`.github/workflows/admission-gate.yml`) 완료에
