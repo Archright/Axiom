@@ -94,7 +94,7 @@ MCP server selection rules and Allowlist Gate requirements are enforced by `src/
 
 ## Standard Language and Environment
 
-- Final outputs/user interactions use Korean as the standard.
+- Final outputs and user-facing messages use English; private conversational dialogue may use Korean.
 - Follow Git commit message conventions, and **commit messages must be written in English.**
 - **Git Command Execution**: Repo-level `core.pager = cat` is configured in `.git/config`. Git commands no longer need `--no-pager` — the repo config handles non-interactive pager suppression automatically.
 - **Agent Environment Common Settings**: Non-interactive execution and Git execution rules follow the gate pipeline in [docs/agents/quality-gates.md](quality-gates.md) and the Git rules in [docs/agents/rules_workflow.md](rules_workflow.md) §2.8. The `prek-quality-gate` skill was migrated to gates (see `docs/agents/plugin-migration.md`).

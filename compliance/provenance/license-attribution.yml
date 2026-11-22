@@ -160,8 +160,11 @@ attributions:
       - "JSON"
       - "MIT"
       - "SSPL-1.0"
+      - "LicenseRef-scancode-generic-cla"
+      - "LicenseRef-scancode-unknown-license-reference"
     copyrights:
       - "Copyright in Third-Party Materials"
+      - "(c) Past Git"
       - "Copyright (c) 2017 Nim Authors"
       - "Copyright (c) 2019-2025 Status Research & Development GmbH"
       - "concurrency group - YAML"
@@ -174,6 +177,22 @@ attributions:
       - "let start i inc - Nim"
       - "tokens.add($c) inc - Nim"
       - "copyrights .copyrights"
+  - file: "CONTRIBUTING.md"
+    classification: "documentary-mention"
+    evidence: "the contributor guide summarizes the CLA grant terms ('Grant the Licensor ... a perpetual ... copyright license', 'Grant a patent license') and links the authoritative texts in CLA/; it states its own limits ('The full texts control; the summary above does not')"
+    licenses:
+      - "LicenseRef-scancode-generic-cla"
+      - "LicenseRef-scancode-unknown-license-reference"
+  - file: "docs/adr/0045-english-only-canonical-main.md"
+    classification: "documentary-mention"
+    evidence: "ADR-0045 decision (b) names the CC-BY-4.0 SVF-SVC PDF as excluded third-party rights material; a license mention, not a grant"
+    licenses:
+      - "CC-BY-4.0"
+  - file: "docs/spec/english_only_policy.md"
+    classification: "documentary-mention"
+    evidence: "the policy's scope section names the CC-BY-4.0 SVF-SVC PDF as excluded third-party rights material; a license mention, not a grant"
+    licenses:
+      - "CC-BY-4.0"
   - file: "docs/spec/publication_integrity_gate.md"
     classification: "documentary-mention"
     evidence: "the gate spec names the denied license families and allowed licenses as policy text (§3.2, §4); the §5 J1-quirk text quotes the measured single-file-argument emission example 'MIT.txt' (a path form, not a grant)"
@@ -681,6 +700,11 @@ attributions:
       - "CC-BY-4.0"
       - "MIT"
       - "Zlib"
+  - file: "docs/adr/0045-english-only-canonical-main.md"
+    classification: "spurious-scanner-match"
+    evidence: "'(c) Past Git objects are preserved ...' — the parenthesized letter is decision (c)'s list marker, not a copyright notice (B2: '(c)' enumerate noise)"
+    copyrights:
+      - "(c) Past Git"
 
   # ── upstream-header ────────────────────────────────────────────────────
   - file: "vendor/ed25519/ed25519/readme.md"
