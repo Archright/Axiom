@@ -38,7 +38,8 @@ translatedPaths:
 engine:
   name: "<engine>"
   version: "<version>"
-  modelSha256: "<64-hex>"
+  modelId: "<provider>/<model>"
+  modelSha256: "<64-hex | declared-unavailable>"
 glossarySha256: "<64-hex>"
 review:
   status: "approved"
@@ -67,7 +68,8 @@ Field semantics:
 | `translatedPaths[].blobSha256` | sha256 of the exact blob bytes at `translatedCommit` |
 | `engine.name` | engine identity (deterministic translator, LLM, or human-assisted tool) |
 | `engine.version` | engine version string |
-| `engine.modelSha256` | sha256 of the model weights; required when the engine uses a model |
+| `engine.modelId` | provider-qualified model identifier; required when the engine is a hosted model |
+| `engine.modelSha256` | sha256 of the model weights when they are locally available; the literal `declared-unavailable` when the engine is hosted and the weights are not distributable |
 | `glossarySha256` | sha256 of the glossary file that pins terminology for the batch |
 | `review.status` | closed set: `pending` / `approved` / `rejected` |
 | `review.reviewers` | human reviewers; the engine is never a reviewer |
@@ -103,9 +105,13 @@ with the reason.
 5. **Review precedes landing.** `review.status` MUST be `approved` before the batch
    lands. Reviewers are humans. `pending` and `rejected` are blocking.
 6. **Engine pinning mirrors detector pinning.** `engine.name` and `engine.version`
-   alone are not a pin; `modelSha256` is required when a model is involved. An
-   unpinned engine produces no lineage record that can support the English-only
-   claim.
+   alone are not a pin. A locally run model additionally requires `modelSha256`. A
+   hosted model requires `engine.modelId` and MUST record `modelSha256` as
+   `declared-unavailable` when the weights are not distributable; such a batch MUST
+   NOT claim bit reproducibility, because the provider controls the weights. Same
+   model id, prompt contract, and glossary reproduce the procedure, not necessarily
+   the bytes. An unpinned engine produces no lineage record that can support the
+   English-only claim.
 7. **References travel with the translation.** Renaming or translating a document can
    break links, anchors, and path mentions. Every such update is listed in
    `referenceUpdates` so a reviewer can check the batch's blast radius without
@@ -145,6 +151,7 @@ translatedPaths:
 engine:
   name: "example-engine"
   version: "1.0.0"
+  modelId: "example-provider/example-model"
   modelSha256: "3333333333333333333333333333333333333333333333333333333333333333"
 glossarySha256: "4444444444444444444444444444444444444444444444444444444444444444"
 review:

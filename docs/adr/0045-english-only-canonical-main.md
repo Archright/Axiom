@@ -16,10 +16,14 @@ later phase and follows the same rules.
 The tracked tree carries Axiom-owned text in two languages. English is the language of
 code, commit messages, and the contract documents; a large part of `docs/` (notably
 `docs/evidence/`, `docs/spec/`, and `docs/adr/`) is Korean-heavy prose, and the product
-ships a Korean locale catalog at `data/i18n/ko.json`. Measured for this plan with the
-scope defined in `docs/spec/english_only_policy.md` (tracked tree, `.github` included,
-`.git` excluded), the baseline inventory is 1,049 files, 67,440 lines, and 1,221,999
-code points carrying text outside the Latin/Greek/Common/Inherited Script set. The
+ships a Korean locale catalog at `data/i18n/ko.json`. Measured by
+`tools/ci/english_audit_inventory.nim` at `be7db250` and pinned in
+`docs/reports/english_audit_inventory_be7db250.json`, the baseline inventory over the
+tracked tree (`.github` included, `.git` excluded) is 1,072 files, 68,251 lines, and
+1,233,507 code points carrying text outside the Latin/Greek/Common/Inherited Script
+set. Of those, 24 files and 11,772 code points are in gitignored-but-tracked files;
+the report exposes that subset separately (`gitIgnoredMatchedFiles`,
+`gitIgnoredCodePoints`), so a filtered reading is explicit rather than accidental. The
 number is a measurement origin, not a target for deletion: every one of those code
 points stays reachable in Git history.
 
