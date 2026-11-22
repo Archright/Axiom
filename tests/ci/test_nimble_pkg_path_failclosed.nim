@@ -20,9 +20,12 @@
 ##       is ever emitted;
 ##   (b) present package -> exit 0 and the resolved directory appears as
 ##       `--path:<dir>` (the normal single-match case keeps working);
-##   (c) a target that does not compile (no NIM_TOOL_FLAGS expansion) keeps
-##       working on a host without the nimble closure - the guard is deferred,
-##       not a parse-time abort;
+##   (c) the guard is immediate: with a package absent, EVERY target of both
+##       entry points aborts while the makefile is parsed, including targets
+##       that never compile. That is deliberate - NIM_TOOL_FLAGS stays an
+##       immediately-expanded variable because .githooks/pre-push derives the
+##       gate build identity from `make -pn` (grep '^NIM_TOOL_FLAGS := ') and a
+##       recursive variable is printed as '=', which the hook rejects;
 ##   (d) the two consumers cannot drift: the Makefile does not redefine the
 ##       package paths, and its tool flag set is the checker.mk set verbatim
 ##       plus its own nimcache.
@@ -155,12 +158,18 @@ suite "DEBT#509 - absent Nimble package path fails closed":
     check "--nimcache:build/nimcache/tools" in r.outp
     echo "[positive/Makefile] exit=", r.code
 
-  test "non-compiling target still works without the nimble closure":
+  test "guard is immediate: a non-compiling target aborts too":
+    # Deliberate: NIM_TOOL_FLAGS must stay immediately expanded for the
+    # pre-push identity extractor, so the $(error) cannot be deferred to the
+    # recipe. Every target therefore fails closed on a host without the
+    # nimble closure, which is the point of DEBT#509.
     let home = mktempDir("ax509_help_home")
     defer: removeDir(home)
     let r = makeDryRun(Makefile, NonCompileTarget,
                        @["NIMBLE_PKGS=" & (home / "no-pkgs")], home)
-    check r.code == 0
+    check r.code != 0
+    check "DEBT#509" in r.outp
+    check "nimble install checksums" in r.outp
     echo "[non-compile] ", NonCompileTarget, " exit=", r.code
 
   test "single source of truth: Makefile does not redefine the paths":

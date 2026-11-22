@@ -14,8 +14,8 @@ include ci/test_fast_one_slot.mk
 NIMBLE := $(HOME)/.nimble/bin/nimble
 
 # NIMBLE_PKGS / CHECKSUMS_PATH / FUSION_PATH are NOT redefined here: the only
-# definition is ci/checker.mk:15-27 (DEBT#509), so the two consumers of
-# NIM_TOOL_FLAGS cannot drift apart.
+# definition is the DEBT#509 resolver in ci/checker.mk, so the two consumers
+# of NIM_TOOL_FLAGS cannot drift apart.
 # Resolve the toolchain ROOT (must contain compiler/*.nim for kernel builds
 # importing compiler/[ast, idents]). `which nim` can point at the choosenim
 # shim in ~/.nimble/bin whose parent has no compiler/ — observed on the CX23
