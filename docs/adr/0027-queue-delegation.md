@@ -666,3 +666,56 @@ Amendment E는 `rearmed@<head12>`를 **arm 성공 직후**에만 기록했다. �
 - 기능 수용(이벤트 도착·정확한 run 결속·동일 판정 함수)과 통계 수용
   (자연 표본 n≥20에서의 안정성)은 **분리**한다. n<20은 통계 미완이지
   기능 미완이 아니다.
+
+### F.8 적대적 검토 하드닝 (2026-11-22, 같은 Slice)
+
+착지 전 실행체를 대상으로 한 읽기 전용 적대적 검토에서 **fail-open 경로
+9건**이 재현되었다. 아래는 구현에 대해 규범적이며, F.1–F.7의 의도를
+바꾸지 않는다 — 전부 "증거가 없으면 arm하지 않는다"의 강화다.
+
+1. **영구 실패 title matcher.** 발행자는 코드를 `NOT_ADMIT_` 접두사로
+   낸다(`NOT_ADMIT_ROT_NEW_PIN`, `NOT_ADMIT_NO_CERT`,
+   `NOT_ADMIT_TRUST_SURFACE_INCOMPLETE`, `NOT_ADMIT_MUST_*`). 접두사를
+   허용하지 않는 정규식은 이들을 전부 `OTHER`로 떨어뜨려 로그 앵커
+   패스에서 TRANSIENT arm될 수 있었다. matcher는
+   `^(NOT_ADMIT_)?(ROT_|TRUST_SURFACE|NO_CERT|MUST_)`다.
+2. **예산 라벨 평가 순서.** 확정 arm은 `rearm-intent@`와 `rearmed@`를
+   **둘 다** 남긴다. `rearmed@`를 먼저 평가해야 정상 소진 상태가
+   exhausted로 판정된다(intent 우선은 이를 orphan으로 오진하고
+   `rearm-exhausted` 마커를 누락시켰다). intent만 있는 경우는 종전대로
+   `intent-orphan`/spent/no-arm이며, 이 분기도 `rearm-exhausted`를
+   best-effort로 보장한다.
+3. **HTTP 403 ≠ TRANSIENT.** class (c)는 5xx만 TRANSIENT다(사용자 계약:
+   "명백한 일시적 API 5xx·전송 오류"). 403은 토큰에 대해 결정적이며
+   검증이 일시적이었다는 증거가 아니므로 `UNKNOWN`/no-arm이다.
+4. **G–head 결속.** `G`는 큐의 trial merge이고 그 부모는 실제로 검증한
+   base와 head다. 현재 PR head가 `G`의 부모에 없으면 그 verdict는 다른
+   head의 것이므로 arm하지 않는다(`UNKNOWN`, `g-parent-mismatch`).
+5. **실행 정체성.** merge_group run은 후보의 workflow 파일로 실행되므로
+   `name`/`path` 문자열은 후보 통제 하에 있다. `name == admission-gate`
+   **AND** `path`가 `admission-gate-v2.yml` **AND** `workflow_id`가
+   워크플로 레지스트리에서 해석한 정본 id와 일치해야 한다. check-runs는
+   `--paginate --slurp`로 전 페이지를 읽는다(단일 페이지는 재실행 누적으로
+   필수 check를 누락시킬 수 있다).
+6. **큐 가드.** `isInMergeQueue == true`면 entry state와 무관하게
+   no-arm이다. 종전에는 `QUEUED|AWAITING_CHECKS|MERGEABLE`만 막아
+   `LOCKED|UNMERGEABLE`에서 실패할 arm을 발행했다.
+7. **동시 wake-up.** 라벨에는 compare-and-swap이 없고 workflow-level
+   concurrency group은 이벤트별로 키가 달라 두 wake-up을 직렬화하지
+   않는다. 따라서 (a) arm 직전 auto-merge를 한 번 더 읽어 형제 arm을
+   reconcile하고, (b) arm 명령이 오류여도 auto-merge가 존재하면
+   `arm-reconciled`로 1회 소비 처리한다. 잔여 창은 "두 요청이 동시에
+   auto-merge 부재를 관측"하는 경우뿐이며, 그 결과는 멱등 요청 1회
+   중복이지 검증 우회가 아니다(큐가 재검증한다).
+8. **HISTORICAL 순서.** publisher binding은 historical return **이전**에
+   해석된다. 종전 순서는 forensic lane이 `publisher-unresolved`로
+   항상 종료되어 아무것도 분류하지 못했다.
+9. **jq 가드.** annotation 병합/집계 파이프라인의 파싱 실패는 red job이
+   아니라 `UNKNOWN`/no-arm이다.
+
+**남는 한계(은폐하지 않는다)**: 위 7의 직렬화는 완전한 상호배제가
+아니다. 완전 직렬화는 PR 번호를 job-level concurrency key로 쓰는
+resolver job 분리가 필요하며, 이는 별도 Slice다. 또한
+`merge-queue-rearm.yml` 자체는 아직 trust surface에 등록되어 있지
+않다(등록은 `config/policy/trust_surface_manifest.json` 수정 = epoch
+rotation을 요구하므로 별도 승인 사안이다).

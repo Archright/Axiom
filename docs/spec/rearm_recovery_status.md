@@ -339,6 +339,14 @@ PR #787 사례(2026-10-13, `docs/agents/merge_admission_observation.md` 부록 (
 > `.github/workflows/merge-queue-rearm.yml`에 구현되어 있다. 본 절과
 > Amendment F가 충돌하면 Amendment F가 우선한다.
 
+> **F.8 하드닝 (2026-11-22)**: 착지 전 적대적 검토에서 확인된 fail-open
+> 9건을 수정했다 — 영구 실패 title의 `NOT_ADMIT_` 접두사, `rearmed@` 우선
+> 평가, 403≠TRANSIENT(5xx만), G 부모에 현재 head 결속, `workflow_id`
+> 정본 결속 + check-runs 전 페이지, `isInMergeQueue=true` 무조건 no-arm,
+> arm 직전/실패 시 auto-merge reconcile, HISTORICAL publisher binding
+> 순서, jq 파싱 가드. 정본은 ADR-0027 **Amendment F.8**이다. 예산
+> key·평가 key·2회/head 상한은 불변이다.
+
 | 항목 | 현 규칙 | 도입 시 요구 |
 |---|---|---|
 | 동일 key 상한 | `rearm-intent@<head12>`(arm **이전** 청구) + `rearmed@<head12>`(arm 확인 후) → 총 검증 시도 2회/head | **유지**. 자동 경로가 추가 budget을 만들면 안 됨 |
