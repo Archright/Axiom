@@ -102,6 +102,7 @@ Every entry carries a **Basis** — the kind of authority that requires it at th
 | Entry | Basis |
 |---|---|
 | `AGENTS.md` | INTERNAL |
+| `CONTRIBUTING.md` | PLATFORM |
 | `README.md` | PLATFORM |
 | `LICENSE` | PLATFORM |
 | `THIRD-PARTY-NOTICES.md` | PLATFORM |
