@@ -31,12 +31,16 @@
 # the 403 swallowed by 2>/dev/null. API errors are now captured and echoed to
 # stderr verbatim — error swallowing is forbidden in this workflow.
 #
-# Classification (Amendment E, evidence-first DEFAULT-NO-ARM):
+# Classification (Amendment E, evidence-first DEFAULT-NO-ARM; Amendment F
+# narrows the allowlist):
 #   T1 title family — annotations attached to the check-run object named
 #     exactly "verdict / admission-check" on the merge_group candidate commit
 #     G whose stable titles are ALL in {NOT_ADMIT_BINDING_MISMATCH,
-#     NOT_ADMIT_STALE_BASE, ADM_IDENTITY, CANDIDATE_MERGE_BASE_UNRESOLVED}
-#     classify TRANSIENT (Amendment D allowlist, kept as-is).
+#     NOT_ADMIT_STALE_BASE, ADM_IDENTITY} classify TRANSIENT (Amendment D
+#     allowlist). CANDIDATE_* titles — including the former member
+#     CANDIDATE_MERGE_BASE_UNRESOLVED — are UNKNOWN/no-arm: S1 splits that one
+#     code into RESOLVED/UNRELATED/UNKNOWN, so a title alone can no longer
+#     establish "retryable" (condition 6c short-circuits the log-anchor pass).
 #   Titles alone NEVER imply TRANSIENT otherwise:
 #     - ROT_* / TRUST_SURFACE* / NO_CERT* / MUST_* titles classify PERMANENT
 #       (never re-armed);
