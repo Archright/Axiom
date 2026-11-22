@@ -206,3 +206,26 @@ restoring the snapshot is part of acceptance, not housekeeping.
   0 unknowns; binding `4ea334d4 -> 647e83c3`).
 - Ruleset final readback: `27097366` 7 contexts, MERGE/ALLGREEN, bypass `[]`;
   `27525972` 1 context, bypass `[]`.
+
+### 12.5 Subsequent outcome (2026-11-22)
+
+The two real PRs blocked in §12.1 were later remediated by rewriting their
+added prose in Latin script, and both merged through the same queue:
+
+| PR | Merge | Added non-Latin code points in the merge diff |
+|---|---|---|
+| #317 | `b6b9674a32b0a86fef3132453a02f1653b0de349` | 0 |
+| #321 | `e22f4eb310e0fa94023e5e7614e9b676c722e718` | 0 |
+
+The failed queue refs (`446f55f5`, `e611416c`) were superseded; the merged
+heads carry the translated text. The §12.1 state ("PR remains OPEN") is kept
+as the observation-time record.
+
+Both rulesets' `updated_at` stayed at `2026-11-21T09:46:14Z` and
+`09:46:15Z` through these merges, so `bypass_actors` remained `[]`; neither
+merge used a bypass. main then advanced to `bb77bd75` (PR #324 `94aadd26`,
+then PR #325).
+
+A final canonical dispatch on `bb77bd75` (run `44901739544`, check-run
+`136840605393`) reported verdict PASS: all six dimensions PASS, including
+`script-scan` (0 violations, 0 unknowns), no blockers.
