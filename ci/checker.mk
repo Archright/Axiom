@@ -14,9 +14,10 @@ SHELL := /bin/bash
 NIM ?= nim
 # Some gate probes clear the environment before invoking make (doc_path_validator
 # runs `make -n <target>` with only LC_ALL/LANG), so HOME may be empty. Fall back
-# to the passwd home; if both are empty the package lookup below still fails
-# closed naming the package.
-AXIOM_NIMBLE_HOME := $(or $(HOME),$(shell getent passwd $$(id -u) 2>/dev/null | cut -d: -f6))
+# to the passwd home via bash tilde expansion (SHELL is /bin/bash above; dash
+# would emit a literal ~). Only shell builtins are used, so the closure
+# derived in tools/ci/derive_checker_closure.nim stays resolvable.
+AXIOM_NIMBLE_HOME := $(or $(HOME),$(shell echo ~))
 NIMBLE_PKGS := $(AXIOM_NIMBLE_HOME)/.nimble/pkgs2
 # DEBT#509: a missing Nimble package must break the build instead of becoming
 # an empty --path: argument. `wildcard` yields the empty string when the
