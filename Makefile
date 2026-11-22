@@ -1265,6 +1265,7 @@ test-unit:
 	@nim c -r tests/ci/test_b_cache_anchor.nim
 	@nim c -r tests/ci/test_admission_check_stages.nim
 	@nim c -r tests/ci/test_admission_venue_split.nim
+	@nim c -r tests/ci/test_merge_queue_rearm.nim
 	@nim c -r tests/ci/test_s5_build_skip.nim
 	@nim c -r tests/ci/test_sl02_consumer_binding.nim
 	@nim c -r tests/ci/test_landing_observe_acceptance.nim

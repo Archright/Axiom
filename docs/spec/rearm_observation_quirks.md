@@ -158,6 +158,75 @@ deployment_status 중 하나로 트리거돼야 하고, "Merge queues require th
 `merge_group` event"다 —
 https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks.
 
+## Q8 — The `workflow_run` payload is not subject identity
+
+For a run started by the `workflow_run` event:
+
+- `github.event.workflow_run.head_sha` is the **merge-group SHA**, not the PR head.
+- Per the documentation, `github.event.workflow_run.pull_requests[]` lists
+  **open** PRs whose head_sha or head_branch matches; it **does not guarantee
+  the triggering PR** (there may be zero or several).
+- That run's `GITHUB_SHA` is the **last commit on the default branch**.
+- `workflow_run` can access **higher privileges and secrets** than the workflow
+  that triggered it — checking out PR code or treating an earlier run's artifact
+  as verified executable code becomes a privilege-escalation path.
+
+**Response rule**: parse the PR number only from the **single-PR queue-branch
+shape** of `head_branch` (`^gh-readonly-queue/[^/]+/pr-([0-9]+)-[0-9a-f]{40}$`),
+and **re-read** the PR head via `GET /repos/{owner}/{repo}/pulls/{N}`. If the
+shape does not match (including multi-PR groups), the result is `UNKNOWN`/no-arm.
+Completion must be bound to
+`run_id × run_attempt × (event=merge_group, workflow name/path)` + run `head_sha` + the expected MG SHA.
+
+## Q9 — A required check's publisher and a same-named Actions job are different objects
+
+An **Actions job check** named `admission-check` (the job in `admission-gate-v2.yml`)
+and the **required status check** the ruleset demands (published by an App) share the
+**same name but different publishers**. Selecting by name alone misattributes pass/fail authority.
+
+**Response rule**: the required check selector is `name == <ctx>` **AND**
+`app.id == <base policy's requiredCheckSources.byContext[ctx]>`. Read the expected
+App ID from the **base branch policy** (never the PR copy). If the publisher check
+is absent, the result is `required-check=absent` / `UNKNOWN`, and a same-named Actions check must not be substituted.
+
+## Q10 — The publisher App check carries no annotations (measured 2026-11-22)
+
+All three failed `admission-check` check-runs had **zero annotations** (`text_len=0`).
+That is, the reason code cannot be read from the publisher check's `output.annotations`.
+
+**Response rule**: read the reason code from the check-run annotations of the
+**failed Actions legs on the same merge-group SHA `G`** (`admission-check`, `attest / *`,
+`verdict / *`); if absent, fall back to job log anchors. The publisher check's
+`output.summary` is consumed only as a **rejection signal** such as `trust_surface=FAIL`.
+
+## Q11 — The label budget must confirm "write success" by re-reading
+
+The budget labels (`rearm-intent@<head12>`, `rearmed@<head12>`) cannot be
+confirmed by a single successful GitHub API response. The arm request and the
+label write are **not an atomic transaction**; if the label write fails, a gap
+opens where the budget was consumed but no record exists.
+
+**Response rule**: write the intent label **before** arming, and arm **only after
+confirming its existence by re-reading**. If the arm result is unclear, **do not delete**
+the intent — the intent's existence is itself durable evidence that the budget was
+consumed. Budget exhaustion is expressed not as a red check but as the `rearm-exhausted` marker + `exit 0`.
+
+## Q12 — The add-issue-labels API **auto-creates missing labels** (measured 2026-11-22)
+
+Sending a label name that **does not exist** in the repository to
+`POST /repos/{owner}/{repo}/issues/{issue_number}/labels` returns **200** rather than 422;
+the response contains the new label object (new `id`, `color: "ededed"`, `default: false`)
+and the label is attached to the issue. In other words, labels **need no pre-registration**.
+
+Measured: POSTed `probe-intent-<epoch>` to PR #369 → 200 + new label id
+`13177306671` → confirmed by re-reading the issue and repository label lists → deleted both.
+
+**Response rule**: the budget labels (`rearm-intent@<head12>`, `rearmed@<head12>`,
+`rearm-exhausted`) work without pre-registration. However, **auto-creation is a side effect**,
+so the judgment "the label already exists, hence the budget was consumed" must always be
+made by **re-reading the issue label list** (do not trust the write response alone — Q11).
+To reduce repository label pollution, operators must treat `rearm-intent@*`/`rearmed@*` as cleanup targets.
+
 ## 운영 규범 (이 저장소 한정)
 
 재arm·프리플라이트 관측을 새로 만드는 구현자는 다음을 따른다.

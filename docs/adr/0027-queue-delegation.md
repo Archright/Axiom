@@ -513,4 +513,231 @@ R2 문서화 의무(후속). `admission-check.yml` 주석의 "ADR-0026" 참조�
 ---
 
 *작성일: 2026-09-29. PROPOSED — Phase 0 측정(α/β) 완료 전 "착지 형상 확정" 선언
-금지. γ 판정 시 본 ADR은 재의결 대상이다.*
+is prohibited. On a γ verdict this ADR is subject to re-decision.*---
+
+## Amendment F (2026-11-22): outcome-aware re-evaluation — second wake-up, triple run binding, publisher-binding verdict, budget charged before arm
+
+> **Nature**: this amendment appends a **second wake-up** and a **swap of
+> the budget-charging order** on top of the re-arm path established by
+> Amendments C/D/E. The body and Amendments A–E are not rewritten. The
+> Amendment E clauses this amendment explicitly amends are enumerated in
+> §F.6 below.
+
+### F.0 Problem (measured)
+
+If verification is still **in progress** at dequeue time, the classifier
+emits `UNKNOWN` and exits `no-arm` (Amendment E — the correct judgment).
+However, even if that verification **completes later**, there is no trigger
+to re-evaluate, so automatic recovery stops permanently. That is, the defect
+is not the `UNKNOWN` verdict but the **absence of a re-evaluation path after
+the terminal result arrives**.
+
+### F.1 Second wake-up — `workflow_run[completed]`
+
+- There are two triggers, sharing **one decision pipeline**:
+  `pull_request_target[dequeued]` (= `source=dequeued`) and
+  `workflow_run[completed]` (workflows: `["admission-gate"]`,
+  = `source=workflow_run_completed`). `workflow_dispatch` remains a
+  verification-only channel (`REARM_LIVE=0`).
+- **Events are wake-up signals, not state.** Whichever event arrives, the
+  decision function **re-reads GitHub's current state**. The arrival order,
+  duplication, or loss of the two events does not affect correctness.
+- The `workflow_run` payload is not used as fact:
+  `head_sha` is the **merge-group SHA** (not the PR head), `pull_requests[]`
+  does not guarantee the triggering PR, and that run's `GITHUB_SHA` is the
+  **base branch tip**. The PR number is parsed only from the single-PR queue
+  branch shape in `head_branch`, `gh-readonly-queue/<base>/pr-<N>-<40hex>`,
+  and the PR head is **re-fetched** via `GET /repos/{owner}/{repo}/pulls/{N}`.
+- **Multi-PR queue groups are fail-closed `UNKNOWN`**. Since the live queue
+  has `maximumEntriesToMerge=1`, a multi-PR group is outside the configured
+  shape, and we do not guess which member's verdict it is.
+- `concurrency.group` includes `github.event_name`. GitHub keeps only
+  running 1 + pending 1 per group, and a new pending replaces the existing
+  pending, so the two wake-ups must not push each other out of the pending
+  slot. Mutual exclusion is not a correctness requirement — **a single
+  label** carries the arm charge.
+
+### F.2 Execution identity is a triple binding (run_attempt alone is prohibited)
+
+To cite the result of a specific verification run, the following must match
+**simultaneously**:
+
+| axis | value |
+|---|---|
+| run | `run_id` (numeric) × `run_attempt` |
+| workflow | `event == merge_group` AND (`name == admission-gate` OR `path` ends with `admission-gate-v2.yml`) |
+| subject | run `head_sha` (= merge-group SHA `G`) and the expected `G` specified by the wake-up |
+| attempt | `status == completed` AND `conclusion != null` |
+
+- **If the latest attempt is in progress, `UNKNOWN`/no-arm**. Do not fall
+  back to the conclusion of a completed **earlier** attempt (that verdict is
+  not the current attempt's verdict).
+- The `cancelled`, `action_required`, `stale`, and `skipped` conclusions are
+  not verification results, so they are `UNKNOWN`.
+
+### F.3 Verdict authority is the required check's **publisher**
+
+An Actions job check with the same name is not the required check. The
+publisher of the required context `admission-check` is the ruleset's
+`required_status_checks[].integration_id`, and its expected App ID is read
+from the **base branch policy**
+(`requiredCheckSources.byContext["admission-check"]` in
+`config/policy/merge_admission.json`) — the PR does not supply its own copy
+of the policy.
+
+- Selector: `name == <ctx>` **AND** `app.id == <requiredApp>`.
+- If the publisher check is absent on `G`, `UNKNOWN` (`required-check=absent`).
+- `conclusion == success` → `UNKNOWN`/no-arm (a green verification plus
+  removal is the intended behavior).
+- `conclusion == null` (pending) → `UNKNOWN`.
+- Only `conclusion == failure` is classifiable.
+- If the publisher check's `output.summary` contains `trust_surface=FAIL`,
+  **unconditionally `PERMANENT`**/no-arm.
+- The publisher check carries no annotation (2026-11-22 measurement: all
+  three failed check-runs had 0 annotations). The reason code is read from
+  the **failed Actions leg check-run of the same `G`**.
+
+### F.4 Exclude `CANDIDATE_*` from the TRANSIENT allowlist
+
+**Remove** `CANDIDATE_MERGE_BASE_UNRESOLVED` from Amendment E's 4-code title
+allowlist. Until S1's three-state split
+(`RESOLVED`/`UNRELATED`/`UNKNOWN`) lands, a single title cannot imply
+"retryable".
+
+- A `CANDIDATE_*` title is **`UNKNOWN`/no-arm** and does not proceed to the
+  log-anchor pass (short-circuit).
+- The allowlist is `NOT_ADMIT_BINDING_MISMATCH`, `NOT_ADMIT_STALE_BASE`,
+  and `ADM_IDENTITY` — 3 codes. `ADM_IDENTITY` is now read from the failed
+  check-run annotation of `attest / admission-independents`, so it is
+  reachable.
+- The `PERMANENT` family (`ROT_*`/`TRUST_SURFACE*`/`NO_CERT*`/`MUST_*`)
+  remains no-arm as before.
+
+### F.5 Charge the budget **before** arm — `rearm-intent@<head12>`
+
+Amendment E recorded `rearmed@<head12>` only **immediately after a successful
+arm**. That order creates a gap in "arm succeeded → label write failed"
+where the budget was consumed but no record exists. This amendment reverses
+the order:
+
+```
+Budget check → rearm-intent@<head12> POST → verify existence via label re-read
+             → gh pr merge --auto --match-head-commit <HEAD_SHA>
+             → on success rearmed@<head12> POST (failure is WARN, intent kept)
+```
+
+- `rearm-intent@<head12>` is a **permanent arm charge**. This workflow does
+  not remove it. The issue-label add API **auto-creates** a missing label
+  (2026-11-22 measurement — `docs/spec/rearm_observation_quirks.md` Q12), so
+  pre-registration of the label is unnecessary, but a "the label exists, so
+  the budget is spent" verdict must be made by **re-reading** the issue label
+  (Q11).
+- If intent exists and `rearmed@` does not, **the budget is considered
+  spent** (`evidence.line="intent-orphan"`, `budget=spent`,
+  `action=no-arm`). The budget may be spent conservatively, but **a
+  duplicate arm is impossible**.
+- If the arm request result is unclear (command failure), keep the intent,
+  attach `rearm-exhausted` on a best-effort basis, and exit with
+  `evidence.line="arm-failed"`, `budget=spent`, `action=no-arm`. The
+  operator must adjust the PR state.
+- **Budget exhaustion is not a red check.** **Remove** Amendment E's
+  `exit 1` (explicit terminal failure) and replace it with `exit 0` + a
+  `rearm-exhausted` marker. The retry budget is an operator-visibility
+  signal, not a verification verdict.
+- Re-check immediately before arm (all from a single GraphQL snapshot +
+  label re-read): PR `state == OPEN`, `headRefOid == <classified head>`,
+  not returned to the queue
+  (`mergeQueueEntry.state ∉ {QUEUED, AWAITING_CHECKS, MERGEABLE}`),
+  `autoMergeRequest == null` (if already armed, correct only `rearmed@`
+  without re-arming), `rearmed@` absent, `rearm-intent@` absent.
+- If the head has moved, `UNKNOWN`/no-arm. Classification, budget, and run
+  binding are all tied to the head.
+
+### F.6 Amendment E clauses this amendment explicitly amends
+
+| Amendment E clause | This amendment |
+|---|---|
+| "record `rearmed@<head12>` only immediately after a successful arm" | **Amended** — charge `rearm-intent@<head12>` **before** arm + confirm `rearmed@` after success |
+| "`exit 1` on budget exhaustion (explicit terminal failure)" | **Amended** — `exit 0` + `rearm-exhausted` marker |
+| 4-code title allowlist (including `CANDIDATE_MERGE_BASE_UNRESOLVED`) | **Amended** — 3-code allowlist, `CANDIDATE_*` is `UNKNOWN`/no-arm |
+| single trigger (`pull_request_target[dequeued]`) | **Amended** — add `workflow_run[completed]`, single pipeline |
+
+The remainder (the closed enumeration of evidence anchors (a)/(b)/(c),
+DEFAULT-NO-ARM, no trust-surface crossing, `--match-head-commit`, the
+structured summary contract, and the 2-per-PR-head budget) is **kept as
+is**.
+
+### F.7 Remaining limits (not concealed)
+
+- While `REARM_APP_PRIVATE_KEY` is not registered, **the positive arm path
+  is unreachable**, and every live arm is `token-missing`/no-arm. This is a
+  credential gate, not a code defect.
+- Whether the public-repository policy enforcement for `pull_request_target`
+  (announced for 2026-12-02) applies to this repository cannot be determined
+  via the API — a UI settings check is required.
+- Functional acceptance (event arrival, exact run binding, the same decision
+  function) and statistical acceptance (stability at a natural sample of
+  n≥20) are **separated**. n<20 means statistical incompleteness, not
+  functional incompleteness.
+
+### F.8 Adversarial-review hardening (2026-11-22, same Slice)
+
+A read-only adversarial review of the pre-landing implementation reproduced
+**9 fail-open paths**. The following is normative for the implementation and
+does not change the intent of F.1–F.7 — all of it reinforces "if there is no
+evidence, do not arm".
+
+1. **Permanent-failure title matcher.** The publisher emits codes with the
+   `NOT_ADMIT_` prefix (`NOT_ADMIT_ROT_NEW_PIN`, `NOT_ADMIT_NO_CERT`,
+   `NOT_ADMIT_TRUST_SURFACE_INCOMPLETE`, `NOT_ADMIT_MUST_*`). A regex that
+   does not allow the prefix dropped all of them to `OTHER`, so they could
+   be TRANSIENT-armed in the log-anchor pass. The matcher is
+   `^(NOT_ADMIT_)?(ROT_|TRUST_SURFACE|NO_CERT|MUST_)`.
+2. **Budget-label evaluation order.** A confirmed arm leaves **both**
+   `rearm-intent@` and `rearmed@`. `rearmed@` must be evaluated first so
+   that a normally exhausted state is judged exhausted (evaluating intent
+   first misdiagnosed it as orphan and omitted the `rearm-exhausted`
+   marker). When only intent exists, the result remains
+   `intent-orphan`/spent/no-arm, and this branch also guarantees
+   `rearm-exhausted` on a best-effort basis.
+3. **HTTP 403 ≠ TRANSIENT.** In class (c), only 5xx is TRANSIENT (user
+   contract: "obvious transient API 5xx / transport errors"). A 403 is
+   deterministic with respect to the token and is not evidence that the
+   verification was transient, so it is `UNKNOWN`/no-arm.
+4. **G–head binding.** `G` is the queue's trial merge, and its parents are
+   the base and head that were actually verified. If the current PR head is
+   not among `G`'s parents, that verdict belongs to a different head, so do
+   not arm (`UNKNOWN`, `g-parent-mismatch`).
+5. **Execution identity.** A merge_group run executes with the candidate's
+   workflow file, so the `name`/`path` strings are under candidate control.
+   `name == admission-gate` **AND** `path` is `admission-gate-v2.yml`
+   **AND** `workflow_id` must match the canonical id resolved from the
+   workflow registry. check-runs are read across all pages with
+   `--paginate --slurp` (a single page can miss required checks due to
+   accumulated reruns).
+6. **Queue guard.** If `isInMergeQueue == true`, no-arm regardless of the
+   entry state. Previously only `QUEUED|AWAITING_CHECKS|MERGEABLE` were
+   blocked, so an arm that would fail was issued for
+   `LOCKED|UNMERGEABLE`.
+7. **Concurrent wake-ups.** Labels have no compare-and-swap, and the
+   workflow-level concurrency group is keyed per event, so it does not
+   serialize the two wake-ups. Therefore (a) immediately before arm, read
+   auto-merge once more and reconcile a sibling arm, and (b) even if the arm
+   command errors, if auto-merge exists, treat it as one consumption via
+   `arm-reconciled`. The remaining window is only the case where "two
+   requests observe the absence of auto-merge simultaneously", and the
+   result is one duplicate idempotent request, not a verification bypass
+   (the queue re-verifies).
+8. **HISTORICAL order.** The publisher binding is resolved **before** the
+   historical return. In the previous order, the forensic lane always ended
+   with `publisher-unresolved` and could not classify anything.
+9. **jq guard.** A parse failure in the annotation merge/aggregation
+   pipeline is `UNKNOWN`/no-arm, not a red job.
+
+**Remaining limitation (not concealed)**: the serialization in item 7 above
+is not complete mutual exclusion. Full serialization requires splitting out
+a resolver job that uses the PR number as a job-level concurrency key, and
+that is a separate Slice. Also, `merge-queue-rearm.yml` itself is not yet
+registered in the trust surface (registration requires a modification to
+`config/policy/trust_surface_manifest.json` = epoch rotation, so it is a
+separate approval matter).
