@@ -2894,7 +2894,7 @@
     {
       "id": "DEBT#420",
       "category": "Directory/Documentation Debt Audit",
-      "description": "DOC-LINK-001: 0 finding(s) after PR #318 converted all 17 measured occurrences to code spans (6 genuine broken targets in 5 files; 11 bracket-label/line-reference pseudo-links). Prior 304 was pre-contract naive scanning (2026-08-17).",
+      "description": "DOC-LINK-001: 17 finding(s) on canonical main (f7fbb0b). The PR #318 tree (head de9fc6b) measures 0 under the post-#310 rule contract, but that fix is not landed, so the live debt stays open. Prior 304 was pre-contract naive scanning (2026-08-17).",
       "files": [],
       "historicalFiles": [
         "docs/guides/ci_credit_savings.md",
@@ -3101,11 +3101,9 @@
       "severity": "medium",
       "source": "dir_doc_debt_audit_2026-08-17",
       "productTruthImpact": "NON_PRODUCT",
-      "status": "closed",
-      "resolution": "FIXED 2026-11-21: DOC-LINK-001 measures 0 findings after PR #318 (branch workstream/debt-doc-links, head de9fc6b) converted all 17 measured occurrences to code spans: 6 genuine broken targets across 5 files and 11 bracket-label/line-reference pseudo-links that were never markdown links. The 17 were measured under the post-PR#310 rule contract: PR #310 (merge commit 1d10e75) judges DOC-LINK-001 by real link syntax instead of naive bracket scanning (src/infrastructure/debt_audit/audit_rules.nim), so the 304 recorded on 2026-08-17 was pre-contract scanning noise. Measurement: AXIOM_HERMETIC_BUILDING=1 nim c -d:danger --hints:off -o:bin/debt_engine tools/debt_engine.nim; bin/debt_engine --audit-dir-doc; then count rows with rule_id==DOC-LINK-001 in build/tmp/audit_20260817/canonical_findings.jsonl -> 17 rows at 6d551e3, 17 rows at e22f4eb, 0 rows on the PR #318 tree de9fc6b measured with the post-#310 engine. files[] moved to historicalFiles (data/debt_schema.json:144-157): a closed entry has no live-existence obligation, and PR #318 rewrote every listed document. historicalFiles preserves the 2026-08-17 files[] census verbatim (198 files[] refs over 87 unique paths plus 2 prior historicalFiles), duplicate paths included.",
-      "resolvedAt": "2026-11-21T11:39:16Z",
-      "resolvedBy": "debt_registry_truth_2026-11-21",
-      "resolutionNote": "DOC-LINK-001 closed after PR #318; post-PR#310 rule judges real link syntax, so the 304 was pre-contract scanning noise. Old live-target list kept in historicalFiles."
+      "status": "open",
+      "resolution": "REOPENED 2026-11-21: canonical main f7fbb0b still measures 17 DOC-LINK-001 findings. PR #318 (branch workstream/debt-doc-links, head de9fc6b) measures 0 on its tree with the post-#310 engine, but its 14-file diff rewrites lines that carry Hangul prose, and the landing script policy rejects added non-ASCII code points, so the fix cannot land as-is. Closing this entry on an unlanded fix would make the registry claim false. Remaining work: a policy decision on editing existing non-ASCII lines (or an ASCII rewrite of the affected prose). Measurement: bin/debt_engine --audit-dir-doc; count rows with rule_id==DOC-LINK-001 in build/tmp/audit_20260817/canonical_findings.jsonl -> 17 rows on main f7fbb0b, 0 rows on de9fc6b.",
+      "resolutionNote": "Reopened: canonical main still measures 17; the fix exists only on the unlanded PR #318 tree. historicalFiles preserves the 2026-08-17 census verbatim."
     },
     {
       "id": "DEBT#421",
