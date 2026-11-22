@@ -1,0 +1,34 @@
+# Translation glossary en-v1 -- pinned terminology for English migration batches.
+#
+# One glossary, many batches. A batch manifest records the sha256 of the exact
+# bytes of this file at the sourceBaseCommit of the batch. Changing a rule here
+# produces a new glossary revision (en-v2) instead of an in-place edit.
+#
+# Rules are English-only by construction: the source language text is never
+# embedded (a raw non-Latin code point would itself violate the Script
+# allowlist). A rule states how a term is rendered, not what it was.
+
+schemaVersion: "axiom.translation-glossary.v1"
+glossaryId: "en-v1"
+
+terms:
+  - term: "Legislator"
+    rule: "Keep the persona name verbatim and capitalized. Never render as lawmaker or legislator-role."
+  - term: "proposition legislator"
+    rule: "Render the role as 'proposition legislator'; the module stays legislator.nim."
+  - term: "BYO customer external agent"
+    rule: "Keep the BYO qualifier. The noun phrase is 'customer external agent'."
+  - term: "static heuristic"
+    rule: "Use 'static heuristic' for non-LLM invariant sources; never 'heuristic guess'."
+  - term: "invariant"
+    rule: "Use 'invariant'. Drafting is 'invariant drafting'."
+  - term: "deterministic lane"
+    rule: "Use 'deterministic lane' for the fixed verification path; never 'pipeline' in that sense."
+  - term: "enforcement"
+    rule: "Use 'Enforcement' as the section name and 'enforcement' in prose."
+  - term: "scope clarification"
+    rule: "Render dated clarifications as '(YYYY-MM-DD scope clarification)'."
+  - term: "specId"
+    rule: "Keep the identifier casing exactly as written."
+  - term: "soExplicit"
+    rule: "Keep the identifier casing exactly as written."
