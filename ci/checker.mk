@@ -12,7 +12,12 @@
 SHELL := /bin/bash
 
 NIM ?= nim
-NIMBLE_PKGS := $(HOME)/.nimble/pkgs2
+# Some gate probes clear the environment before invoking make (doc_path_validator
+# runs `make -n <target>` with only LC_ALL/LANG), so HOME may be empty. Fall back
+# to the passwd home; if both are empty the package lookup below still fails
+# closed naming the package.
+AXIOM_NIMBLE_HOME := $(or $(HOME),$(shell getent passwd $$(id -u) 2>/dev/null | cut -d: -f6))
+NIMBLE_PKGS := $(AXIOM_NIMBLE_HOME)/.nimble/pkgs2
 # DEBT#509: a missing Nimble package must break the build instead of becoming
 # an empty --path: argument. `wildcard` yields the empty string when the
 # directory is absent and an empty --path: is a silent no-op for Nim, so the
