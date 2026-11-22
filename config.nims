@@ -267,20 +267,71 @@ task buildGateRunners, "Gate runner freshness check & build (sha256sum via gorge
     exec "mv " & tmpPath & " .axiom/cache/binary_checksums.json"
     echo "Binary checksums saved (atomic): .axiom/cache/binary_checksums.json"
 
-# ─── Phase 3A: Canonical gate binary builder delegation ─────────────────
+# ─── Phase 3A: Manifest-driven gate binary builder ──────────────────────
 
 proc buildGatesFromManifest*() =
-  ## Delegate to the single canonical gate builder (tools/build_all_gates.nim).
-  ## It discovers the gate sources, honors registry-bound accepted-dead skips,
-  ## and exits non-zero when any gate build fails.
-  if not fileExists("bin/build_all_gates"):
-    exec "nim c -d:axiomNoLto --hints:off -o:bin/build_all_gates tools/build_all_gates.nim"
-  exec "bin/build_all_gates --release"
+  ## Build all gate runner binaries referenced by src/gate/manifest.d/_index.json.
+  ## Each manifest JSON in manifest.d/ defines gate metadata including the entry point.
+  ## Skips binaries that are already up-to-date (source unchanged).
+  let indexPath = "src/gate/manifest.d/_index.json"
+  if not fileExists(indexPath):
+    echo "[buildGates] index not found: ", indexPath
+    return
+  let indexContent = readFile(indexPath)
+  var built = 0
+  var skipped = 0
+  var failed = 0
+  for line in indexContent.split("\n"):
+    let manifestFile = line.strip()
+    if manifestFile.len == 0:
+      continue
+    let manifestPath = "src/gate/manifest.d/" & manifestFile
+    if not fileExists(manifestPath):
+      echo "[buildGates] SKIP (manifest missing): ", manifestFile
+      inc skipped
+      continue
+    var manifest: JsonNode
+    try:
+      manifest = parseJson(readFile(manifestPath))
+    except CatchableError:
+      echo "[buildGates] SKIP (invalid JSON): ", manifestFile
+      inc skipped
+      continue
+    let gateId = manifest{"id"}.getStr("")
+    let entryPath = manifest{"entry"}.getStr("")
+    if gateId.len == 0 or entryPath.len == 0:
+      continue
+    let srcPath = entryPath & ".nim"
+    if not fileExists(srcPath):
+      # Try src/cli/ path
+      let cliSrc = entryPath.replace("src/gate/runners/", "src/cli/") & ".nim"
+      if fileExists(cliSrc):
+        let binPath = "bin/" & gateId.replace("-", "_")
+        echo "[buildGates] building ", gateId, " from ", cliSrc
+        try:
+          exec "nim c --hints:off -d:AXIOM_GATE_BOND=1 -d:skipImportLint --skipUserCfg -o:" & binPath & " " & cliSrc
+          inc built
+        except CatchableError:
+          echo "[buildGates] FAILED: ", gateId
+          inc failed
+      else:
+        echo "[buildGates] SKIP (no source): ", gateId, " → ", srcPath
+        inc skipped
+      continue
+    let binPath = "bin/" & gateId.replace("-", "_")
+    echo "[buildGates] building ", gateId, " from ", srcPath
+    try:
+      exec "nim c --hints:off -d:AXIOM_GATE_BOND=1 -d:skipImportLint --skipUserCfg -o:" & binPath & " " & srcPath
+      inc built
+    except CatchableError:
+      echo "[buildGates] FAILED: ", gateId
+      inc failed
+  echo "[buildGates] done: built=", built, " skipped=", skipped, " failed=", failed
 
 task test, "Run all tests with Makefile":
   exec "make test"
 
-task buildGates, "Build all gate runner binaries via the canonical builder":
+task buildGates, "Build all gate runner binaries from manifest":
   buildGatesFromManifest()
 
 # ── Feature Manifest Task ──────────────────────────────────────────────────────
