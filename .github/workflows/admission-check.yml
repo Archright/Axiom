@@ -2506,6 +2506,46 @@ jobs:
         run: |
           set -euo pipefail
           fail() { echo "[check] FAIL: $1 (run-level err — fail-closed)" >&2; exit 1; }
+          # ── ancestry_resolve — sanctioned primitives only (git_access_scan clause 1/3)
+          # RESOLVED sets ANCESTRY_TREE; every other state is fail-closed.
+          ancestry_resolve() {
+            local repo="$1" B="$2" H="$3" D="${AXIOM_ANCESTRY_DEPTH:-512}" rc m
+            if [ "$(git -C "$repo" rev-parse --is-shallow-repository)" = "true" ]; then
+              git -C "$repo" fetch --depth="$D" --no-tags --force origin \
+                "+$B:refs/axiom/ancestry/base" "+$H:refs/axiom/ancestry/head" \
+                || fail "CANDIDATE_SUBJECT_UNAVAILABLE: ancestry subjects unfetchable (B=$B H=$H — fail-closed)"
+            else
+              git -C "$repo" fetch --no-tags --force origin \
+                "+$B:refs/axiom/ancestry/base" "+$H:refs/axiom/ancestry/head" \
+                || fail "CANDIDATE_SUBJECT_UNAVAILABLE: ancestry subjects unfetchable (B=$B H=$H — fail-closed)"
+            fi
+            git -C "$repo" cat-file -e "refs/axiom/ancestry/base^{commit}" 2>/dev/null \
+              || fail "CANDIDATE_SUBJECT_UNAVAILABLE: base ref absent after fetch"
+            git -C "$repo" cat-file -e "refs/axiom/ancestry/head^{commit}" 2>/dev/null \
+              || fail "CANDIDATE_SUBJECT_UNAVAILABLE: head ref absent after fetch"
+            rc=0
+            m="$(git -C "$repo" merge-tree --write-tree refs/axiom/ancestry/base refs/axiom/ancestry/head 2>/dev/null)" || rc=$?
+            if [ "$rc" -gt 1 ]; then
+              if [ "$(git -C "$repo" rev-parse --is-shallow-repository)" = "true" ]; then
+                git -C "$repo" fetch --unshallow --no-tags --force origin "$B" "$H" \
+                  || fail "CANDIDATE_MERGE_BASE_UNRESOLVED: complete-history acquisition failed (B=$B H=$H — fail-closed)"
+              fi
+              rc=0
+              m="$(git -C "$repo" merge-tree --write-tree refs/axiom/ancestry/base refs/axiom/ancestry/head 2>/dev/null)" || rc=$?
+              if [ "$rc" -gt 1 ]; then
+                rc=0
+                m="$(git -C "$repo" merge-tree --write-tree --allow-unrelated-histories refs/axiom/ancestry/base refs/axiom/ancestry/head 2>/dev/null)" || rc=$?
+                if [ "$rc" -le 1 ]; then
+                  fail "CANDIDATE_ANCESTRY_UNRELATED: ancestry($B, $H) proven unrelated on a complete object graph (fail-closed)"
+                fi
+                fail "CANDIDATE_MERGE_BASE_UNRESOLVED: ancestry($B, $H) unresolved on a complete object graph (fail-closed)"
+              fi
+            fi
+            if [ "$rc" -eq 1 ]; then
+              fail "CANDIDATE_TREE_CONFLICT: merge-tree($B, $H) reports conflict (rc=1; rc-first contract — fail-closed)"
+            fi
+            ANCESTRY_TREE="$m"
+          }
           # DERIVED_SETS_DIR from the same-run artifact (all-or-none:
           # absent → derive in-place below; partial → fail-closed corrupt;
           # post-gate a transient download loss still fail-closes at the
@@ -2766,11 +2806,15 @@ jobs:
             #   identity step's MERGE_CANDIDATE_TREE_OID cannot cross jobs;
             #   the supply posture is the SAME in-place re-derivation as the
             #   derived-closure set above).
-            # The re-derivation reuses the deterministic history-fetch
-            # contract from the identity step (shallow probe → by-object
-            # side tips → bounded 8x64 deepen → rc-first merge-tree), or the
-            # shallow B checkout (fetch-depth: 1) re-creates the measured
-            # trap: merge-base unresolvable → merge-tree rc=128. The equality
+            # The re-derivation consumes the ONE inline ancestry contract
+            # (ancestry_resolve, defined above and byte-identical at the
+            # identity step): bounded ref acquisition by refspec (depth
+            # AXIOM_ANCESTRY_DEPTH, default 512) → rc-first merge-tree → on
+            # an unresolvable rc, complete-history acquisition → explicit
+            # unrelated-history discrimination. Re-fetching BOTH subjects by
+            # refspec defeats the measured trap (the shallow B checkout's
+            # grafted tips make merge-base unresolvable → merge-tree rc=128)
+            # without a history walk. The equality
             # against the TESTED landing candidate — tree(github.sha), the
             # attest step's MERGE_TREE_OID identity — is RE-ESTABLISHED here
             # by object: a mismatch/conflict/merge error is a
@@ -2782,37 +2826,8 @@ jobs:
             # the verification COMPARISON target only (Amendment F §5).
             # ────────────────────────────────────────────────────────────
             CD_REPO="$GITHUB_WORKSPACE"
-            CD_SHALLOW="$(git -C "$CD_REPO" rev-parse --is-shallow-repository)" \
-              || fail "cannot probe shallow state of the verdict workspace (candidate delta — fail-closed)"
-            git -C "$CD_REPO" rev-parse --verify --quiet "$B_EVT^{commit}" >/dev/null 2>&1 \
-              || git -C "$CD_REPO" fetch --depth=1 --no-tags --force origin "$B_EVT" \
-              || fail "cannot fetch base $B_EVT by object (candidate delta — fail-closed)"
-            git -C "$CD_REPO" rev-parse --verify --quiet "$H_EVT^{commit}" >/dev/null 2>&1 \
-              || git -C "$CD_REPO" fetch --depth=1 --no-tags --force origin "$H_EVT" \
-              || fail "cannot fetch subject head $H_EVT by object (candidate delta — fail-closed)"
-            CD_RC=0
-            CD_M="$(git -C "$CD_REPO" merge-tree --write-tree "$B_EVT" "$H_EVT" 2>/dev/null)" || CD_RC=$?
-            if [ "$CD_RC" -eq 128 ]; then
-              if [ "$CD_SHALLOW" != "true" ]; then
-                fail "CANDIDATE_MERGE_BASE_UNRESOLVED: ancestry($B_EVT, $H_EVT) unresolved on a full clone (unrelated histories or unusable object graph — fail-closed)"
-              fi
-              CD_ROUND=0
-              while [ "$CD_ROUND" -lt 8 ]; do
-                git -C "$CD_REPO" fetch --deepen=64 --no-tags --force origin \
-                  || fail "CANDIDATE_MERGE_BASE_UNRESOLVED: history deepen fetch failed (round $((CD_ROUND + 1))/8 — fail-closed)"
-                CD_SHALLOW="$(git -C "$CD_REPO" rev-parse --is-shallow-repository)" \
-                  || fail "cannot probe shallow state of the verdict workspace (candidate delta — fail-closed)"
-                CD_RC=0
-                CD_M="$(git -C "$CD_REPO" merge-tree --write-tree "$B_EVT" "$H_EVT" 2>/dev/null)" || CD_RC=$?
-                [ "$CD_RC" -ne 128 ] && break
-                CD_ROUND=$((CD_ROUND + 1))
-              done
-              [ "$CD_RC" -ne 128 ] || fail "CANDIDATE_MERGE_BASE_UNRESOLVED: ancestry($B_EVT, $H_EVT) unresolved after 8x64-commit deepening (history cap reached — fail-closed)"
-            fi
-            if [ "$CD_RC" -eq 1 ]; then
-              fail "CANDIDATE_TREE_CONFLICT: merge-tree($B_EVT, $H_EVT) reports conflict (rc=1; conflict output not compared — rc-first contract — fail-closed)"
-            fi
-            [ "$CD_RC" -eq 0 ] || fail "CANDIDATE_TREE_MERGE_ERROR: merge-tree($B_EVT, $H_EVT) rc=$CD_RC (output unspecified per the git merge-tree contract — fail-closed)"
+            ancestry_resolve "$CD_REPO" "$B_EVT" "$H_EVT"
+            CD_M="$ANCESTRY_TREE"
             printf '%s' "$CD_M" | grep -qE '^[0-9a-f]{40}$' \
               || fail "CANDIDATE_TREE_MERGE_ERROR: merge-tree output '$CD_M' not a 40-hex tree OID (fail-closed)"
             CD_TESTED="${GITHUB_SHA}"
@@ -3427,6 +3442,46 @@ jobs:
             echo "ADM_IDENTITY: FAIL — $msg (fail-closed)" >&2
             exit 1
           }
+          # ── ancestry_resolve — sanctioned primitives only (git_access_scan clause 1/3)
+          # RESOLVED sets ANCESTRY_TREE; every other state is fail-closed.
+          ancestry_resolve() {
+            local repo="$1" B="$2" H="$3" D="${AXIOM_ANCESTRY_DEPTH:-512}" rc m
+            if [ "$(git -C "$repo" rev-parse --is-shallow-repository)" = "true" ]; then
+              git -C "$repo" fetch --depth="$D" --no-tags --force origin \
+                "+$B:refs/axiom/ancestry/base" "+$H:refs/axiom/ancestry/head" \
+                || fail "CANDIDATE_SUBJECT_UNAVAILABLE: ancestry subjects unfetchable (B=$B H=$H — fail-closed)"
+            else
+              git -C "$repo" fetch --no-tags --force origin \
+                "+$B:refs/axiom/ancestry/base" "+$H:refs/axiom/ancestry/head" \
+                || fail "CANDIDATE_SUBJECT_UNAVAILABLE: ancestry subjects unfetchable (B=$B H=$H — fail-closed)"
+            fi
+            git -C "$repo" cat-file -e "refs/axiom/ancestry/base^{commit}" 2>/dev/null \
+              || fail "CANDIDATE_SUBJECT_UNAVAILABLE: base ref absent after fetch"
+            git -C "$repo" cat-file -e "refs/axiom/ancestry/head^{commit}" 2>/dev/null \
+              || fail "CANDIDATE_SUBJECT_UNAVAILABLE: head ref absent after fetch"
+            rc=0
+            m="$(git -C "$repo" merge-tree --write-tree refs/axiom/ancestry/base refs/axiom/ancestry/head 2>/dev/null)" || rc=$?
+            if [ "$rc" -gt 1 ]; then
+              if [ "$(git -C "$repo" rev-parse --is-shallow-repository)" = "true" ]; then
+                git -C "$repo" fetch --unshallow --no-tags --force origin "$B" "$H" \
+                  || fail "CANDIDATE_MERGE_BASE_UNRESOLVED: complete-history acquisition failed (B=$B H=$H — fail-closed)"
+              fi
+              rc=0
+              m="$(git -C "$repo" merge-tree --write-tree refs/axiom/ancestry/base refs/axiom/ancestry/head 2>/dev/null)" || rc=$?
+              if [ "$rc" -gt 1 ]; then
+                rc=0
+                m="$(git -C "$repo" merge-tree --write-tree --allow-unrelated-histories refs/axiom/ancestry/base refs/axiom/ancestry/head 2>/dev/null)" || rc=$?
+                if [ "$rc" -le 1 ]; then
+                  fail "CANDIDATE_ANCESTRY_UNRELATED: ancestry($B, $H) proven unrelated on a complete object graph (fail-closed)"
+                fi
+                fail "CANDIDATE_MERGE_BASE_UNRESOLVED: ancestry($B, $H) unresolved on a complete object graph (fail-closed)"
+              fi
+            fi
+            if [ "$rc" -eq 1 ]; then
+              fail "CANDIDATE_TREE_CONFLICT: merge-tree($B, $H) reports conflict (rc=1; rc-first contract — fail-closed)"
+            fi
+            ANCESTRY_TREE="$m"
+          }
           # ── Candidate-fetch credential transport (helper) ────────────────
           # The `_candidate` checkout is provisioned with
           # persist-credentials: false → its OWN git config carries NO
@@ -3580,35 +3635,30 @@ jobs:
           # merge-tree needs merge-base(B, SUBJECT_HEAD), and the depth-1
           # fetches above graft BOTH tips — measured (git 2.43): merge-base
           # exits 1 with empty output and merge-tree exits 128 ("refusing to
-          # merge unrelated histories"). The deterministic history-fetch
-          # contract below makes that state unreachable before the
-          # merge-tree call:
-          #   (a) shallow probe — `git rev-parse --is-shallow-repository`,
-          #       explicit, never inferred.
-          #   (b) side objects — B and SUBJECT_HEAD commit objects ensured BY
-          #       OBJECT (depth-1; the same clause-2 object-set shape as the
-          #       fetches above). A missing side object makes merge-tree exit
-          #       rc=1 with an argument-error line on stdout (measured) —
-          #       indistinguishable from a real conflict by rc alone — so
-          #       object presence is asserted BEFORE any rc interpretation.
-          #   (c) ancestry — the merge-tree rc is the ancestry gate. No
-          #       separate ancestry probe: an explicit ancestry-walk command
-          #       is a git_access_scan clause-1 breaker and adds no
-          #       information — merge-tree computes the merge base itself and
-          #       reports unresolvable ancestry as rc=128 (measured on
-          #       grafted tips, git 2.43). rc=128 on a shallow repo →
-          #       bounded deterministic deepening: `git fetch --deepen=64`,
-          #       re-probe, at most 8 rounds (fixed constants — the
-          #       procedure is a fixed function of repository state: same
-          #       inputs → same outcome, success or explicit failure). Still
-          #       rc=128 → CANDIDATE_MERGE_BASE_UNRESOLVED. rc=128 on a FULL
-          #       clone = genuinely unrelated histories → the same fail, no
-          #       deepening attempted.
-          #   (d) merge-tree rc-first contract: 0 = clean (stdout is the tree
+          # merge unrelated histories"). The ONE inline ancestry_resolve
+          # contract (defined above; byte-identical at the candidate-delta
+          # consumer) makes the acquisition deterministic:
+          #   (a) ref acquisition — both subjects are fetched by refspec into
+          #       refs/axiom/ancestry/{base,head} (bounded depth
+          #       AXIOM_ANCESTRY_DEPTH, default 512; full fetch on a
+          #       non-shallow repo). Fetch failure or a ref that does not
+          #       peel to a commit = CANDIDATE_SUBJECT_UNAVAILABLE (UNKNOWN —
+          #       never PASS).
+          #   (b) ancestry — merge-tree computes the merge base in-process;
+          #       no separate ancestry probe (an explicit ancestry walk is a
+          #       git_access_scan clause-1 breaker). rc>1 is never
+          #       interpreted directly: it triggers complete-history
+          #       acquisition (`fetch --unshallow`), then a re-probe, then
+          #       the positive discriminator
+          #       `merge-tree --allow-unrelated-histories` — rc<=1 on a
+          #       complete object graph PROVES the histories unrelated →
+          #       CANDIDATE_ANCESTRY_UNRELATED. Still rc>1 →
+          #       CANDIDATE_MERGE_BASE_UNRESOLVED.
+          #   (c) merge-tree rc-first contract: 0 = clean (stdout is the tree
           #       OID), 1 = conflict (fail — the conflict output is NEVER
           #       compared), other = fail (output unspecified per the git
           #       merge-tree contract).
-          #   (e) equality — M == MERGE_TREE_OID else CANDIDATE_TREE_MISMATCH
+          #   (d) equality — M == MERGE_TREE_OID else CANDIDATE_TREE_MISMATCH
           #       (the tested tree is not the recomputed landing candidate —
           #       identity chain broken).
           # Journal codes: CANDIDATE_* only. The ROT_ prefix is reserved for
@@ -3616,37 +3666,8 @@ jobs:
           # not used here.
           # ────────────────────────────────────────────────────────────────
           CAND_REPO="$GITHUB_WORKSPACE/_candidate"
-          CAND_SHALLOW="$(git -C "$CAND_REPO" rev-parse --is-shallow-repository)" \
-            || fail "cannot probe shallow state of _candidate (fail-closed)"
-          git -C "$CAND_REPO" rev-parse --verify --quiet "$B^{commit}" >/dev/null 2>&1 \
-            || cand_fetch "$CAND_REPO" --depth=1 --no-tags --force origin "$B" \
-            || fail "cannot fetch base $B by object (candidate identity — fail-closed)"
-          git -C "$CAND_REPO" rev-parse --verify --quiet "$SUBJECT_HEAD^{commit}" >/dev/null 2>&1 \
-            || cand_fetch "$CAND_REPO" --depth=1 --no-tags --force origin "$SUBJECT_HEAD" \
-            || fail "cannot fetch subject head $SUBJECT_HEAD by object (candidate identity — fail-closed)"
-          CAND_RC=0
-          CAND_M="$(git -C "$CAND_REPO" merge-tree --write-tree "$B" "$SUBJECT_HEAD" 2>/dev/null)" || CAND_RC=$?
-          if [ "$CAND_RC" -eq 128 ]; then
-            if [ "$CAND_SHALLOW" != "true" ]; then
-              fail "CANDIDATE_MERGE_BASE_UNRESOLVED: ancestry($B, $SUBJECT_HEAD) unresolved on a full clone (unrelated histories or unusable object graph — fail-closed)"
-            fi
-            CAND_ROUND=0
-            while [ "$CAND_ROUND" -lt 8 ]; do
-              cand_fetch "$CAND_REPO" --deepen=64 --no-tags --force origin \
-                || fail "CANDIDATE_MERGE_BASE_UNRESOLVED: history deepen fetch failed (round $((CAND_ROUND + 1))/8 — fail-closed)"
-              CAND_SHALLOW="$(git -C "$CAND_REPO" rev-parse --is-shallow-repository)" \
-                || fail "cannot probe shallow state of _candidate (fail-closed)"
-              CAND_RC=0
-              CAND_M="$(git -C "$CAND_REPO" merge-tree --write-tree "$B" "$SUBJECT_HEAD" 2>/dev/null)" || CAND_RC=$?
-              [ "$CAND_RC" -ne 128 ] && break
-              CAND_ROUND=$((CAND_ROUND + 1))
-            done
-            [ "$CAND_RC" -ne 128 ] || fail "CANDIDATE_MERGE_BASE_UNRESOLVED: ancestry($B, $SUBJECT_HEAD) unresolved after 8x64-commit deepening (history cap reached — fail-closed)"
-          fi
-          if [ "$CAND_RC" -eq 1 ]; then
-            fail "CANDIDATE_TREE_CONFLICT: merge-tree($B, $SUBJECT_HEAD) reports conflict (rc=1; conflict output not compared — rc-first contract — fail-closed)"
-          fi
-          [ "$CAND_RC" -eq 0 ] || fail "CANDIDATE_TREE_MERGE_ERROR: merge-tree($B, $SUBJECT_HEAD) rc=$CAND_RC (output unspecified per the git merge-tree contract — fail-closed)"
+          ancestry_resolve "$CAND_REPO" "$B" "$SUBJECT_HEAD"
+          CAND_M="$ANCESTRY_TREE"
           printf '%s' "$CAND_M" | grep -qE '^[0-9a-f]{40}$' \
             || fail "CANDIDATE_TREE_MERGE_ERROR: merge-tree output '$CAND_M' not a 40-hex tree OID (fail-closed)"
           [ "$CAND_M" = "$MERGE_TREE_OID" ] \

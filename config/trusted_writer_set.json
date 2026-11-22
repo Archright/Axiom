@@ -38,7 +38,7 @@
   // NOTE: this file carries full-line `//` documentation comments (like
   // config/executor_authority.json) — the verifier strips them before parsing.
   "trustedWriterWorkflow": ".github/workflows/certificate-mint.yml",
-  "trustedAdmissionWorkflowSha": "433be3c34c51cfc3fc6f8741009135cfa5906a03",
+  "trustedAdmissionWorkflowSha": "7361f7969fde7456e806ab92e614b2eb4d7f9fb2",
   //
   // DEBT#558 / ADR-0042 split layout: the execution closure records live in
   // config/trusted_checker_closure.json (derived, mutable values; NOT an App-

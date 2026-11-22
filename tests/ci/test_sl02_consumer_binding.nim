@@ -26,6 +26,8 @@ import std/[unittest, os, osproc, strutils, strtabs]
 const
   AdmissionRel = ".github/workflows/admission-check.yml"
   PredStepPrefix = "[check] Admission predicate evaluation"
+  IdentityStepPrefix = "[check] Re-derive admission identity"
+  AncestryMarker = "# ── ancestry_resolve — sanctioned primitives only (git_access_scan clause 1/3)"
   # Deterministic sandbox identities (40-hex; never resolved by the failing
   # paths — L1/L2 fire before any object access on these vectors).
   HOther = "0123456789abcdef0123456789abcdef01234567"
@@ -69,6 +71,23 @@ print(hits[0].get('run', ''), end='')
   doAssert code == 0, "run-block extraction 실패: " & outp
   result = outp
 
+proc extractAncestryFn(body: string): string =
+  ## ancestry_resolve 정의를 run 본문에서 그대로 추출 (marker → 첫 단독 `}`).
+  let lines = body.splitLines()
+  var start = -1
+  for i, l in lines:
+    if l == AncestryMarker:
+      start = i
+      break
+  doAssert start >= 0, "ancestry_resolve marker absent from the run block"
+  var stop = -1
+  for j in start + 1 ..< lines.len:
+    if lines[j] == "}":
+      stop = j
+      break
+  doAssert stop > start, "ancestry_resolve body unterminated"
+  result = lines[start .. stop].join("\n")
+
 proc substituteTokens(body: string): string =
   ## GitHub Actions expression tokens → env 참조 (production bash 그대로 유지).
   ## 기존 토큰은 PR-context leg 전용 — 부정 경로는 도달하지 않고, 도달해도
@@ -88,7 +107,8 @@ proc substituteTokens(body: string): string =
   result = result.replace("${{ secrets.GITHUB_TOKEN }}", "${SL02_TEST_TOKEN}")
   doAssert "${{" notin result, "unsubstituted GitHub Actions token in extracted block"
 
-proc runStepSandbox(body: string; ws: string; head, base: string): tuple[outp: string; code: int] =
+proc runStepSandbox(body: string; ws: string; head, base: string;
+                    gitConfigGlobal = ""): tuple[outp: string; code: int] =
   ## 추출+치환된 스텝 본문을 production 패리티로 실행 (CWD == GITHUB_WORKSPACE).
   let env = newStringTable(modeCaseInsensitive)
   for k, v in envPairs():
@@ -130,6 +150,13 @@ proc runStepSandbox(body: string; ws: string; head, base: string): tuple[outp: s
   # as the local head (tree(head) == merge-tree(base, head) whenever base
   # is head's ancestor, which the real-repo fixtures use).
   env["GITHUB_SHA"] = head
+  if gitConfigGlobal.len > 0:
+    # S1 Phase A: the production ancestry_resolve fetches its subjects from
+    # `origin`. Point that URL at a local bare fixture for hermetic execution
+    # (git honors `url.<fixture>.insteadOf` for remote resolution; the real
+    # repository config is never modified). GIT_CONFIG_GLOBAL is process-local
+    # to this sandbox run; the step needs no global identity (no commits).
+    env["GIT_CONFIG_GLOBAL"] = gitConfigGlobal
   inc shCounter
   let script = getTempDir() / ("sl02_step_" & $getCurrentProcessId() & "_" & $shCounter & ".sh")
   writeFile(script, body)
@@ -186,7 +213,17 @@ suite "SL-02 consumer binding — step contract structure (ADR-0033)":
     check "CANDIDATE_TREE_MISMATCH" in body
     check "CANDIDATE_TREE_CONFLICT" in body
     check "CANDIDATE_MERGE_BASE_UNRESOLVED" in body
-    check "fetch --deepen=64" in body
+    # S1 Phase A — ONE inline ancestry contract at both consumer paths:
+    # bounded refspec acquisition → rc-first merge-tree → complete-history
+    # acquisition → positive unrelated-history discriminator. The old
+    # 8x64-deepen loop is gone; UNKNOWN (UNAVAILABLE) and UNRELATED stay red.
+    check "ancestry_resolve" in body
+    check "CANDIDATE_SUBJECT_UNAVAILABLE" in body
+    check "CANDIDATE_ANCESTRY_UNRELATED" in body
+    check "--allow-unrelated-histories" in body
+    check "refs/axiom/ancestry/base" in body
+    check "refs/axiom/ancestry/head" in body
+    check "fetch --deepen=64" notin body
     check "derive_checker_closure --tree" in body
     check "export AXIOM_DERIVED_M_PATH=" in body
     check "CANDIDATE_M_DIGEST_MISMATCH" in body
@@ -397,13 +434,38 @@ suite "SL-02 consumer binding — T6 + positive path (real repo, real deriver)":
     check "L2①: derived-H digest mismatch" in outp
     check "member loss/excess" in outp
 
+  proc hermeticOrigin(): tuple[cfg, remote: string] =
+    ## Local bare fixture exposing the test head: the production
+    ## ancestry_resolve fetches B/H from `origin`; `url.<fixture>.insteadOf`
+    ## rewrites that name for this sandbox process only (no repo mutation,
+    ## no network). depth bounds the fixture even when the checkout is
+    ## itself a depth-1 clone (shallow→shallow fetch with --depth works).
+    let remote = getTempDir() / ("sl02_origin_" & $getCurrentProcessId())
+    removeDir(remote)
+    var (outp, code) = execCmdEx("git init -q --bare " & quoteShell(remote))
+    doAssert code == 0, "origin fixture init 실패: " & outp
+    (outp, code) = execCmdEx(
+      "git -C " & quoteShell(remote) & " fetch -q --depth=512 --no-tags " &
+      quoteShell(repoRoot()) & " " & quoteShell("HEAD:refs/heads/fixture"))
+    doAssert code == 0, "origin fixture fetch 실패: " & outp
+    let originUrl = gitOut("remote get-url origin")
+    doAssert originUrl.len > 0, "origin URL absent — hermetic rewrite impossible"
+    doAssert "@" notin originUrl, "credential-bearing origin URL — refusing to persist it"
+    let cfg = getTempDir() / ("sl02_origin_cfg_" & $getCurrentProcessId())
+    writeFile(cfg, "[url \"file://" & remote & "\"]\n\tinsteadOf = " & originUrl & "\n")
+    result = (cfg, remote)
+
   test "positive path (정확한 5파일 공급) → L1 OK + L2 OK + candidate-delta OK, PR-context에서만 종료":
     cleanArtifacts()
     writeRealArtifact(realDerivedSet())
     defer: cleanArtifacts()
     let body = substituteTokens(
       stepRun(repoRoot() / AdmissionRel, "admission-check", PredStepPrefix))
-    let (outp, code) = runStepSandbox(body, repoRoot(), head, base)
+    let origin = hermeticOrigin()
+    defer:
+      removeDir(origin.remote)
+      removeFile(origin.cfg)
+    let (outp, code) = runStepSandbox(body, repoRoot(), head, base, origin.cfg)
     # L1/L2/candidate-delta must PASS; the step then fail-closes at its own
     # PR-context leg (sandbox repo is unresolvable) — the expected sandbox
     # boundary.
@@ -415,3 +477,196 @@ suite "SL-02 consumer binding — T6 + positive path (real repo, real deriver)":
     check "PR context unresolvable" in outp
     check "[check] FAIL: L1" notin outp
     check "[check] FAIL: L2" notin outp
+# ───────────────────────────────────────────────────────────────────────────
+# S1 Phase A — ancestry determinism: ONE inline contract, byte-identical at
+# both consumer paths, with the verdict states measured by executing the
+# EXTRACTED production function against local file remotes (no network, no
+# mutation of the real repository).
+# ───────────────────────────────────────────────────────────────────────────
+
+type AncestryFixture = object
+  root, remote, work: string
+  bq, h, htree, sib, sibTree, unrelated, gone: string
+
+proc sh(cmd: string; cwd = ""): string {.discardable.} =
+  let full = if cwd.len > 0: "cd " & quoteShell(cwd) & " && " & cmd else: cmd
+  let (outp, code) = execCmdEx(full, options = {poUsePath, poStdErrToStdOut})
+  doAssert code == 0, "fixture command failed: " & cmd & "\n" & outp
+  result = outp.strip()
+
+proc fixtureCommit(work, name, content, msg: string): string =
+  writeFile(work / name, content)
+  sh("git -C " & quoteShell(work) & " add " & quoteShell(name))
+  sh("git -C " & quoteShell(work) & " commit -q -m " & quoteShell(msg))
+  result = sh("git -C " & quoteShell(work) & " rev-parse HEAD")
+
+proc fixtureCommitOnly(work, name, content, msg: string) =
+  ## Topology-only fixture commit: no later assertion needs the oid, but its
+  ## shape is still verified so a failed commit can never be dropped silently.
+  doAssert fixtureCommit(work, name, content, msg).len == 40
+
+proc buildAncestryFixture(): AncestryFixture =
+  # main: c0 → c1. queue: q1 (on c0, NOT on main) → sib-merge.
+  # head: qb + pr merge (H) — q1 is reachable from H but is not a ref tip.
+  # unrelated: orphan root. gone: branch deleted before F4b.
+  result.root = getTempDir() / ("axiom_ancestry_fx_" & $getCurrentProcessId())
+  removeDir(result.root)
+  createDir(result.root)
+  result.remote = result.root / "remote.git"
+  result.work = result.root / "work"
+  sh("git init -q --bare " & quoteShell(result.remote))
+  sh("git -C " & quoteShell(result.remote) & " symbolic-ref HEAD refs/heads/main")
+  sh("git init -q " & quoteShell(result.work))
+  sh("git -C " & quoteShell(result.work) & " config user.email t@t")
+  sh("git -C " & quoteShell(result.work) & " config user.name t")
+  let c0 = fixtureCommit(result.work, "c0", "c0\n", "c0")
+  fixtureCommitOnly(result.work, "c1", "c1\n", "c1")
+  sh("git -C " & quoteShell(result.work) & " branch -M main")
+  sh("git -C " & quoteShell(result.work) & " checkout -q -b qb " & quoteShell(c0))
+  result.bq = fixtureCommit(result.work, "q1", "q1\n", "q1")
+  sh("git -C " & quoteShell(result.work) & " checkout -q -b sib " & quoteShell(c0))
+  result.sib = fixtureCommit(result.work, "s1", "s1\n", "s1")
+  sh("git -C " & quoteShell(result.work) & " checkout -q qb")
+  sh("git -C " & quoteShell(result.work) & " merge -q --no-ff -m sibmerge sib")
+  result.sibTree = sh("git -C " & quoteShell(result.work) & " rev-parse 'HEAD^{tree}'")
+  sh("git -C " & quoteShell(result.work) & " checkout -q main")
+  sh("git -C " & quoteShell(result.work) & " checkout -q -b pr")
+  fixtureCommitOnly(result.work, "p1", "p1\n", "p1")
+  sh("git -C " & quoteShell(result.work) & " checkout -q qb")
+  sh("git -C " & quoteShell(result.work) & " merge -q --no-ff -m hmerge pr")
+  sh("git -C " & quoteShell(result.work) & " branch queue-head")
+  result.h = sh("git -C " & quoteShell(result.work) & " rev-parse HEAD")
+  result.htree = sh("git -C " & quoteShell(result.work) & " rev-parse 'HEAD^{tree}'")
+  sh("git -C " & quoteShell(result.work) & " checkout -q --orphan unrelated")
+  sh("git -C " & quoteShell(result.work) & " rm -rfq .")
+  fixtureCommitOnly(result.work, "u0", "u0\n", "u0")
+  fixtureCommitOnly(result.work, "u1", "u1\n", "u1")
+  result.unrelated = sh("git -C " & quoteShell(result.work) & " rev-parse HEAD")
+  sh("git -C " & quoteShell(result.work) & " checkout -q main")
+  sh("git -C " & quoteShell(result.work) & " checkout -q -b gone")
+  result.gone = fixtureCommit(result.work, "g", "g\n", "g0")
+  discard sh("git -C " & quoteShell(result.work) & " push -q " &
+             quoteShell(result.remote) & " main queue-head unrelated gone")
+
+proc fixtureWorkspace(fx: AncestryFixture; name: string; remote = ""): string =
+  result = fx.root / name
+  removeDir(result)
+  let url = if remote.len > 0: remote else: fx.remote
+  discard sh("git clone -q --depth=1 " & quoteShell("file://" & url) & " " &
+             quoteShell(result))
+
+proc runAncestryFn(fn, ws, b, h: string; depth = ""): tuple[outp: string; code: int] =
+  let script = getTempDir() / ("axiom_ancestry_run_" & $getCurrentProcessId() &
+                               "_" & $shCounter & ".sh")
+  inc shCounter
+  writeFile(script, "set -euo pipefail\n" &
+    "fail() { echo \"FAIL:$1\" >&2; exit 1; }\n" & fn &
+    "\nANCESTRY_TREE=\"\"\n" &
+    "ancestry_resolve \"$ANC_REPO\" \"$ANC_B\" \"$ANC_H\"\n" &
+    "printf '%s\\n' \"$ANCESTRY_TREE\"\n")
+  let env = newStringTable(modeCaseInsensitive)
+  for k, v in envPairs():
+    env[k] = v
+  env["ANC_REPO"] = ws
+  env["ANC_B"] = b
+  env["ANC_H"] = h
+  if depth.len > 0:
+    env["AXIOM_ANCESTRY_DEPTH"] = depth
+  let (outp, code) = execCmdEx("bash " & quoteShell(script), env = env,
+                               options = {poUsePath, poStdErrToStdOut})
+  removeFile(script)
+  result = (outp, code)
+
+proc lastLine(s: string): string =
+  let lines = s.strip().splitLines()
+  result = if lines.len > 0: lines[^1] else: ""
+
+suite "S1 ancestry determinism — one contract, four states (Phase A)":
+
+  let fx = buildAncestryFixture()
+  let predBody = stepRun(repoRoot() / AdmissionRel, "admission-check", PredStepPrefix)
+  let fn = extractAncestryFn(predBody)
+  let fnIdentity = extractAncestryFn(
+    stepRun(repoRoot() / AdmissionRel, "admission-independents", IdentityStepPrefix))
+
+  test "both consumer paths carry a byte-identical ancestry_resolve body":
+    # Same contract at the predicate (candidate-delta) and identity
+    # (candidate identity) consumers — divergence would recreate the
+    # two-drift defect this phase removes.
+    check fn == fnIdentity
+    check fn.len == fnIdentity.len
+    check "refs/axiom/ancestry/base" in fn
+    check "refs/axiom/ancestry/head" in fn
+
+  test "F1 queue-only base (not on main, reachable from head) → RESOLVED":
+    ## The measured production failure class: a queue base that is not a
+    ## main-reachable ref tip. The refspec fetch acquires it; merge-tree
+    ## (base is an ancestor of head) yields tree(head).
+    let ws = fixtureWorkspace(fx, "f1")
+    defer: removeDir(ws)
+    let (outp, code) = runAncestryFn(fn, ws, fx.bq, fx.h)
+    check code == 0
+    check lastLine(outp) == fx.htree
+
+  test "F1b depth=1 acquisition (grafted tips) → unshallow → RESOLVED":
+    ## Both subjects are sibling tips, so a depth-1 object set has no merge
+    ## base: the first merge-tree is unresolvable (rc>1), the contract
+    ## upgrades to complete history, and the merge resolves.
+    let ws = fixtureWorkspace(fx, "f1b")
+    defer: removeDir(ws)
+    let (outp, code) = runAncestryFn(fn, ws, fx.bq, fx.sib, depth = "1")
+    check code == 0
+    check lastLine(outp) == fx.sibTree
+    check sh("git -C " & quoteShell(ws) & " rev-parse --is-shallow-repository") == "false"
+
+  test "F2 truly unrelated histories (complete graph) → CANDIDATE_ANCESTRY_UNRELATED (red)":
+    let ws = fixtureWorkspace(fx, "f2")
+    defer: removeDir(ws)
+    let (outp, code) = runAncestryFn(fn, ws, fx.bq, fx.unrelated)
+    check code != 0
+    check "CANDIDATE_ANCESTRY_UNRELATED" in outp
+
+  test "F3 absent head object → CANDIDATE_SUBJECT_UNAVAILABLE (UNKNOWN, red)":
+    let ws = fixtureWorkspace(fx, "f3")
+    defer: removeDir(ws)
+    let (outp, code) = runAncestryFn(
+      fn, ws, fx.bq, "1111111111111111111111111111111111111111")
+    check code != 0
+    check "CANDIDATE_SUBJECT_UNAVAILABLE" in outp
+    check "CANDIDATE_ANCESTRY_UNRELATED" notin outp
+
+  test "F4a post-freeze ref deletion → verdict unchanged (frozen objects)":
+    let copy = fx.root / "remote_f4a.git"
+    removeDir(copy)
+    sh("git clone -q --bare --no-hardlinks " & quoteShell(fx.remote) & " " & quoteShell(copy))
+    let ws = fixtureWorkspace(fx, "f4a", copy)
+    defer:
+      removeDir(ws)
+      removeDir(copy)
+    let (outp, code) = runAncestryFn(fn, ws, fx.bq, fx.h)
+    check code == 0
+    let frozen = lastLine(outp)
+    check frozen == fx.htree
+    # Delete the only ref that reaches the base/head, prune the remote's
+    # objects, and re-derive from the FROZEN local refs: identical tree.
+    sh("git -C " & quoteShell(copy) & " update-ref -d refs/heads/queue-head")
+    sh("git -C " & quoteShell(copy) & " gc --prune=now -q")
+    let (mt, mtCode) = execCmdEx(
+      "git -C " & quoteShell(ws) &
+      " merge-tree --write-tree refs/axiom/ancestry/base refs/axiom/ancestry/head")
+    check mtCode == 0
+    check mt.strip() == frozen
+
+  test "F4b pre-freeze ref absence → CANDIDATE_SUBJECT_UNAVAILABLE (never PASS)":
+    let copy = fx.root / "remote_f4b.git"
+    removeDir(copy)
+    sh("git clone -q --bare --no-hardlinks " & quoteShell(fx.remote) & " " & quoteShell(copy))
+    sh("git -C " & quoteShell(copy) & " update-ref -d refs/heads/gone")
+    sh("git -C " & quoteShell(copy) & " gc --prune=now -q")
+    let ws = fixtureWorkspace(fx, "f4b", copy)
+    defer:
+      removeDir(ws)
+      removeDir(copy)
+    let (outp, code) = runAncestryFn(fn, ws, fx.bq, fx.gone)
+    check code != 0
+    check "CANDIDATE_SUBJECT_UNAVAILABLE" in outp
