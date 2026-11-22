@@ -158,6 +158,59 @@ deployment_status 중 하나로 트리거돼야 하고, "Merge queues require th
 `merge_group` event"다 —
 https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks.
 
+## Q8 — `workflow_run` 페이로드는 subject identity가 아니다
+
+`workflow_run` 이벤트로 시작한 run에서:
+
+- `github.event.workflow_run.head_sha`는 **merge-group SHA**이지 PR head가 아니다.
+- `github.event.workflow_run.pull_requests[]`는 문서상 "head_sha 또는
+  head_branch가 일치하는 **열린** PR"이며, **트리거 PR을 보장하지 않는다**
+  (0개일 수도, 여러 개일 수도 있다).
+- 그 run의 `GITHUB_SHA`는 **기본 브랜치의 마지막 커밋**이다.
+- `workflow_run`은 트리거한 workflow보다 **높은 권한과 secrets**에 접근할 수
+  있다 — PR 코드를 checkout하거나 이전 run의 artifact를 검증된 실행 코드로
+  취급하면 권한 상승 경로가 된다.
+
+**대응 규칙**: PR 번호는 `head_branch`의 **단일-PR 큐 브랜치 형상**
+(`^gh-readonly-queue/[^/]+/pr-([0-9]+)-[0-9a-f]{40}$`)에서만 파싱하고, PR head는
+`GET /repos/{owner}/{repo}/pulls/{N}`으로 **재조회**한다. 형상이 맞지 않으면
+(다중 PR 그룹 포함) `UNKNOWN`/no-arm이다. 종료는 반드시
+`run_id × run_attempt × (event=merge_group, workflow name/path)` +
+run `head_sha` + 기대 MG SHA로 결속한다.
+
+## Q9 — required check의 발행자와 동명 Actions job은 다른 객체다
+
+`admission-check`라는 이름의 **Actions job check**(`admission-gate-v2.yml`의
+job)과, ruleset이 요구하는 **required status check**(App이 발행)는 **같은
+이름, 다른 발행자**다. 이름만으로 선택하면 통과/실패 권위를 오귀속한다.
+
+**대응 규칙**: required check 선택자는 `name == <ctx>` **AND**
+`app.id == <base policy의 requiredCheckSources.byContext[ctx]>`다. 기대 App
+ID는 **base 브랜치 정책**에서 읽는다(PR 사본 금지). 발행자 check가 없으면
+`required-check=absent` / `UNKNOWN`이며, 동명 Actions check로 대체하지 않는다.
+
+## Q10 — 발행자 App check는 annotation을 싣지 않는다 (2026-11-22 실측)
+
+실패한 `admission-check` check-run 3건 모두 **annotation 0개**(`text_len=0`)
+였다. 즉 발행자 check의 `output.annotations`에서 사유 코드를 읽을 수 없다.
+
+**대응 규칙**: 사유 코드는 **같은 merge-group SHA `G`의 실패한 Actions leg**
+(`admission-check`, `attest / *`, `verdict / *`) check-run annotation에서 읽고,
+없으면 job log 앵커로 내려간다. 발행자 check의 `output.summary`는
+`trust_surface=FAIL` 같은 **거부 신호**로만 소비한다.
+
+## Q11 — 라벨 예산은 "쓰기 성공"을 재조회로 확인해야 한다
+
+예산 라벨(`rearm-intent@<head12>`, `rearmed@<head12>`)은 GitHub API 호출
+1회의 성공 응답만으로 확정할 수 없다. arm 요청과 라벨 기록은 **원자적
+트랜잭션이 아니며**, 라벨 기록이 실패하면 예산이 소비되었는데 기록이 없는
+틈이 생긴다.
+
+**대응 규칙**: arm **이전**에 intent 라벨을 쓰고 **재조회로 존재를 확인한
+뒤에만** arm한다. arm 결과가 불명확하면 intent를 **지우지 않는다** — intent의
+존재가 곧 "예산 소비됨"의 durable 증거다. 예산 소진은 red check가 아니라
+`rearm-exhausted` 마커 + `exit 0`으로 표현한다.
+
 ## 운영 규범 (이 저장소 한정)
 
 재arm·프리플라이트 관측을 새로 만드는 구현자는 다음을 따른다.

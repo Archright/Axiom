@@ -513,4 +513,153 @@ R2 문서화 의무(후속). `admission-check.yml` 주석의 "ADR-0026" 참조�
 ---
 
 *작성일: 2026-09-29. PROPOSED — Phase 0 측정(α/β) 완료 전 "착지 형상 확정" 선언
-금지. γ 판정 시 본 ADR은 재의결 대상이다.*
+금지. γ 판정 시 본 ADR은 재의결 대상이다.*---
+
+## Amendment F (2026-11-22): outcome-aware re-evaluation — 두 번째 wake-up, 삼중 run 결속, 발행자 결속 판정, arm 이전 예산 청구
+
+> **성격**: Amendment C/D/E가 확정한 재arm 경로 위에 **깨우기(wake-up)의
+> 추가**와 **예산 청구 순서의 교체**를 append한다. 본문과 Amendment A–E는
+> 다시 쓰지 않는다. 본 개정이 명시적으로 개정하는 Amendment E 조항은 아래
+> §F.6에 열거한다.
+
+### F.0 문제 (실측)
+
+dequeue 시점에 검증이 아직 **진행 중**이면 분류기는 `UNKNOWN`을 내고
+`no-arm`으로 종료한다(Amendment E — 옳은 판단이다). 그러나 그 검증이
+**나중에 종료되어도** 다시 판정할 계기가 없어 자동 복구가 영구 정지한다.
+즉 결함은 `UNKNOWN` 판정이 아니라 **terminal 결과 도착 후 재평가 경로의
+부재**다.
+
+### F.1 두 번째 wake-up — `workflow_run[completed]`
+
+- 트리거는 두 개이며 **하나의 결정 파이프라인**을 공유한다:
+  `pull_request_target[dequeued]`(= `source=dequeued`)와
+  `workflow_run[completed]`(workflows: `["admission-gate"]`,
+  = `source=workflow_run_completed`). `workflow_dispatch`는 검증 전용
+  채널로 남는다(`REARM_LIVE=0`).
+- **이벤트는 상태가 아니라 깨우기 신호다.** 어느 이벤트가 도착하든 판정
+  함수는 GitHub의 **현재 상태를 다시 읽는다**. 두 이벤트의 도착 순서,
+  중복, 누락은 정확성에 영향을 주지 않는다.
+- `workflow_run` 페이로드를 사실로 쓰지 않는다:
+  `head_sha`는 **merge-group SHA**(PR head 아님), `pull_requests[]`는
+  트리거 PR을 보장하지 않으며, 해당 run의 `GITHUB_SHA`는 **기본 브랜치
+  tip**이다. PR 번호는 `head_branch`의 단일-PR 큐 브랜치 형상
+  `gh-readonly-queue/<base>/pr-<N>-<40hex>`에서만 파싱하고, PR head는
+  `GET /repos/{owner}/{repo}/pulls/{N}`으로 **재조회**한다.
+- **다중 PR 큐 그룹은 fail-closed `UNKNOWN`**이다. 라이브 큐가
+  `maximumEntriesToMerge=1`이므로 다중 PR 그룹은 구성된 형상 밖이며,
+  어느 구성원의 verdict인지 추측하지 않는다.
+- `concurrency.group`에 `github.event_name`을 포함한다. GitHub는 그룹당
+  running 1 + pending 1만 유지하고 새 pending이 기존 pending을
+  대체하므로, 두 wake-up이 서로의 pending 슬롯을 밀어내면 안 된다.
+  상호 배제는 정확성 요건이 아니다 — **arm 청구는 라벨 하나**가 담당한다.
+
+### F.2 실행 정체성은 삼중 결속이다 (run_attempt 단독 금지)
+
+특정 검증 실행의 결과를 인용하려면 다음이 **동시에** 일치해야 한다:
+
+| 축 | 값 |
+|---|---|
+| run | `run_id`(숫자) × `run_attempt` |
+| workflow | `event == merge_group` AND (`name == admission-gate` OR `path`가 `admission-gate-v2.yml`로 종료) |
+| subject | run `head_sha`(= merge-group SHA `G`) 및 wake-up이 지정한 기대 `G` |
+| attempt | `status == completed` AND `conclusion != null` |
+
+- **최신 attempt가 진행 중이면 `UNKNOWN`/no-arm**이다. 완료된 **이전**
+  attempt의 결론으로 대체하지 않는다(그 verdict는 현재 attempt의 verdict가
+  아니다).
+- `cancelled`·`action_required`·`stale`·`skipped` 결론은 검증 결과가
+  아니므로 `UNKNOWN`이다.
+
+### F.3 판정 권위는 required check의 **발행자**다
+
+동명의 Actions job check는 required check가 아니다. required context
+`admission-check`의 발행자는 ruleset의
+`required_status_checks[].integration_id`이며, 그 기대 App ID는 **base
+브랜치 정책**(`config/policy/merge_admission.json`의
+`requiredCheckSources.byContext["admission-check"]`)에서 읽는다 — PR이
+자기 정책 사본을 공급하지 않는다.
+
+- 선택자: `name == <ctx>` **AND** `app.id == <requiredApp>`.
+- 발행자 check가 `G`에 없으면 `UNKNOWN`(`required-check=absent`).
+- `conclusion == success` → `UNKNOWN`/no-arm (초록 검증 + 제거는 의도된
+  동작이다).
+- `conclusion == null`(pending) → `UNKNOWN`.
+- `conclusion == failure`만 분류 가능하다.
+- 발행자 check의 `output.summary`에 `trust_surface=FAIL`이 있으면
+  **무조건 `PERMANENT`**/no-arm.
+- 발행자 check는 annotation을 싣지 않는다(2026-11-22 실측: 실패
+  check-run 3건 모두 annotation 0개). 사유 코드는 **같은 `G`의 실패한
+  Actions leg** check-run에서 읽는다.
+
+### F.4 `CANDIDATE_*`는 TRANSIENT allowlist에서 제외한다
+
+Amendment E의 4코드 title allowlist에서
+`CANDIDATE_MERGE_BASE_UNRESOLVED`를 **제거**한다. S1의 3상태 분리
+(`RESOLVED`/`UNRELATED`/`UNKNOWN`)가 착지하기 전에는 하나의 title이
+"재시도 가능"을 함의할 수 없기 때문이다.
+
+- `CANDIDATE_*` title은 **`UNKNOWN`/no-arm**이며 로그 앵커 패스로
+  진행하지 않는다(short-circuit).
+- allowlist는 `NOT_ADMIT_BINDING_MISMATCH`, `NOT_ADMIT_STALE_BASE`,
+  `ADM_IDENTITY` 3개다. `ADM_IDENTITY`는 이제 `attest /
+  admission-independents`의 실패 check-run annotation에서 읽히므로
+  도달 가능하다.
+- `PERMANENT` 계열(`ROT_*`/`TRUST_SURFACE*`/`NO_CERT*`/`MUST_*`)은
+  종전대로 no-arm이다.
+
+### F.5 예산은 arm **이전**에 청구한다 — `rearm-intent@<head12>`
+
+Amendment E는 `rearmed@<head12>`를 **arm 성공 직후**에만 기록했다. 그
+순서는 "arm 성공 → 라벨 기록 실패"에서 예산이 소비되었는데도 기록이
+없는 틈을 만든다. 본 개정은 순서를 뒤집는다:
+
+```
+예산 확인 → rearm-intent@<head12> POST → 라벨 재조회로 존재 확인
+          → gh pr merge --auto --match-head-commit <HEAD_SHA>
+          → 성공 시 rearmed@<head12> POST (실패는 WARN, intent 유지)
+```
+
+- `rearm-intent@<head12>`는 **영구 arm 청구**다. 이 워크플로는 그것을
+  지우지 않는다.
+- intent가 있고 `rearmed@`가 없으면 **예산은 소비된 것으로 간주**한다
+  (`evidence.line="intent-orphan"`, `budget=spent`, `action=no-arm`).
+  보수적으로 예산을 소비할 수는 있어도 **중복 arm은 불가능**하다.
+- arm 요청 결과가 불명확하면(명령 실패) intent를 유지하고
+  `rearm-exhausted`를 best-effort로 부착한 뒤
+  `evidence.line="arm-failed"`, `budget=spent`, `action=no-arm`으로
+  종료한다. operator가 PR 상태를 조정해야 한다.
+- **예산 소진은 red check가 아니다.** Amendment E의 `exit 1`(명시적
+  종결 실패)을 **제거**하고 `exit 0` + `rearm-exhausted` 마커로 바꾼다.
+  재시도 예산은 검증 verdict가 아니라 운영자 가시성 신호다.
+- arm 직전 재확인(모두 단일 GraphQL 스냅샷 + 라벨 재조회):
+  PR `state == OPEN`, `headRefOid == <분류된 head>`, 큐 미복귀
+  (`mergeQueueEntry.state ∉ {QUEUED, AWAITING_CHECKS, MERGEABLE}`),
+  `autoMergeRequest == null`(이미 armed면 재arm 없이 `rearmed@`만 보정),
+  `rearmed@` 부재, `rearm-intent@` 부재.
+- head가 이동했으면 `UNKNOWN`/no-arm이다. 분류·예산·실행 결속이 모두
+  head에 묶여 있기 때문이다.
+
+### F.6 Amendment E 조항 중 본 개정이 명시적으로 개정하는 것
+
+| Amendment E 조항 | 본 개정 |
+|---|---|
+| "arm 성공 직후에만 `rearmed@<head12>` 기록" | **개정** — arm **이전** `rearm-intent@<head12>` 청구 + 성공 후 `rearmed@` 확인 |
+| "예산 소진 시 `exit 1`(명시적 종결 실패)" | **개정** — `exit 0` + `rearm-exhausted` 마커 |
+| 4코드 title allowlist(`CANDIDATE_MERGE_BASE_UNRESOLVED` 포함) | **개정** — 3코드 allowlist, `CANDIDATE_*`는 `UNKNOWN`/no-arm |
+| 단일 트리거(`pull_request_target[dequeued]`) | **개정** — `workflow_run[completed]` 추가, 단일 파이프라인 |
+
+나머지(증거 앵커 (a)/(b)/(c)의 닫힌 열거, DEFAULT-NO-ARM, trust-surface
+교차 금지, `--match-head-commit`, 구조화 summary 계약, 2회/PR head 예산)는
+**그대로 유지**한다.
+
+### F.7 남는 한계 (은폐하지 않는다)
+
+- `REARM_APP_PRIVATE_KEY`가 등록되지 않은 동안 **양성 arm 경로는
+  도달 불가**하며 모든 live arm은 `token-missing`/no-arm이다. 이는
+  자격 증명 게이트이지 코드 결함이 아니다.
+- `pull_request_target`의 public 저장소 정책 강제(2026-12-02 예고)가 본
+  저장소에 적용되는지는 API로 판독할 수 없다 — UI 설정 확인이 필요하다.
+- 기능 수용(이벤트 도착·정확한 run 결속·동일 판정 함수)과 통계 수용
+  (자연 표본 n≥20에서의 안정성)은 **분리**한다. n<20은 통계 미완이지
+  기능 미완이 아니다.

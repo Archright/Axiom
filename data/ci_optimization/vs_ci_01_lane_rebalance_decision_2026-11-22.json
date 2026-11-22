@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "kind": "ci_optimization.lane_rebalance_decision",
+  "decisionId": "VS-CI-01",
+  "slice": "VS-CI-01 GO-critical lane rebalancing",
+  "date": "2026-11-22",
+  "decision": "REJECTED",
+  "reason": "INSUFFICIENT_BENEFIT_FIXED_PROVISIONING_DOMINATES",
+  "evidenceStatus": "MEASURED",
+  "definitions": "docs/spec/ci_critical_path_metric.md",
+  "evidence": "docs/evidence/ci_lane_balance_2026-11-22.md",
+  "question": "Can a deterministic rebalance of the two GO-critical lanes (go-critical-lane lane 0 / lane 1) materially reduce merge-group wall time?",
+  "cohort": {
+    "event": "merge_group",
+    "workflow": "admission-gate",
+    "workflowPath": ".github/workflows/admission-gate-v2.yml",
+    "job": "go-critical-lane",
+    "sample": "25 completed merge-group runs",
+    "n": 25,
+    "window": "2026-11-21/2026-11-22",
+    "laneComposition": {
+      "lane0": [
+        "s1a"
+      ],
+      "lane1": [
+        "proof_integrity",
+        "d2_golden",
+        "d2_persist"
+      ],
+      "source": ".github/workflows/admission-check.yml go-critical-lane matrix"
+    }
+  },
+  "measurement": {
+    "laneWallP50Seconds": {
+      "lane0": 139,
+      "lane1": 152
+    },
+    "laneGapP50Seconds": 10,
+    "slowestRebalanceableItem": {
+      "subject": "s1a",
+      "secondsAfterCacheWarmUp": 26
+    },
+    "maximumRebalanceGain": {
+      "targetLaneSeconds": 152,
+      "gainSecondsMin": 2,
+      "gainSecondsMax": 4,
+      "gainShare": "~2%",
+      "approximate": true,
+      "note": "optimal deterministic rebalance; no rebalance was implemented"
+    },
+    "fixedPerLaneProvisioning": {
+      "seconds": 110,
+      "approximate": true,
+      "components": [
+        {
+          "name": "setup-axiom-toolchain",
+          "secondsMin": 47,
+          "secondsMax": 48
+        },
+        {
+          "name": "evidenceId",
+          "seconds": 36
+        }
+      ],
+      "note": "the two named components are the individually measured ones and do not exhaust the ~110 s per lane"
+    }
+  },
+  "conclusion": "Rebalancing the two GO-critical lanes cannot change wall time materially; the cost is fixed provisioning, not work imbalance.",
+  "invariants": {
+    "verificationRemoved": false,
+    "verificationSkipped": false,
+    "requiredChecksChanged": false,
+    "maxEntriesToBuild": 100,
+    "statement": "This decision removes no verification and changes no required check. Do not delete or skip any verification; max_entries_to_build remains 100."
+  },
+  "notClaimed": [
+    "no lane rebalance was implemented",
+    "no workflow, check, or verification change was made"
+  ],
+  "limits": [
+    "n=25 completed merge-group runs; only p50 values and the measured gap are recorded",
+    "the ~2-4 s gain is an upper bound for an optimal deterministic rebalance; no rebalance run was performed",
+    "provisioning components other than setup-axiom-toolchain and evidenceId are covered only by the ~110 s per-lane total"
+  ]
+}
