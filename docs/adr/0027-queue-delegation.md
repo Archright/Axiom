@@ -621,7 +621,10 @@ Amendment E는 `rearmed@<head12>`를 **arm 성공 직후**에만 기록했다. �
 ```
 
 - `rearm-intent@<head12>`는 **영구 arm 청구**다. 이 워크플로는 그것을
-  지우지 않는다.
+  지우지 않는다. 이슈 라벨 추가 API는 없는 라벨을 **자동 생성**하므로
+  (2026-11-22 실측 — `docs/spec/rearm_observation_quirks.md` Q12) 라벨
+  선등록은 필요 없지만, "라벨이 있으니 예산 소비" 판정은 반드시 이슈 라벨
+  **재조회**로 한다(Q11).
 - intent가 있고 `rearmed@`가 없으면 **예산은 소비된 것으로 간주**한다
   (`evidence.line="intent-orphan"`, `budget=spent`, `action=no-arm`).
   보수적으로 예산을 소비할 수는 있어도 **중복 arm은 불가능**하다.
