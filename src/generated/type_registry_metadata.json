@@ -41070,6 +41070,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "Table[string, PNode]",
+      "module": "src/core/parsers/pnode_nav.nim",
+      "name": "buildFunctionNodeIndexP",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Table is not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Table[string, PNode]",
+      "smtSort": "Int",
+      "typeCategory": "table"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "List PNode",
       "module": "src/core/parsers/pnode_nav.nim",
       "name": "childElements",
@@ -41182,6 +41196,21 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "Option string",
+      "module": "src/core/parsers/pnode_nav.nim",
+      "name": "declarationNameP",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Option is not numeric",
+        "Use 'isSome(result) or isNone(result)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result none) (exists ((v T)) (= result (some v))))",
+      "returnType": "Option[string]",
+      "smtSort": "(Option string)",
+      "typeCategory": "option"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "List tuple[varName, expr: string]",
       "module": "src/core/parsers/pnode_nav.nim",
       "name": "extractAssignmentsP",
@@ -41258,6 +41287,21 @@
       "leanType": "Option PNode",
       "module": "src/core/parsers/pnode_nav.nim",
       "name": "findFunctionNodeP",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Option is not numeric",
+        "Use 'isSome(result) or isNone(result)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result none) (exists ((v T)) (= result (some v))))",
+      "returnType": "Option[PNode]",
+      "smtSort": "(Option PNode)",
+      "typeCategory": "option"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Option PNode",
+      "module": "src/core/parsers/pnode_nav.nim",
+      "name": "findIndexedFunctionNode",
       "negativeConstraints": [
         "result >= 0 is invalid — Option is not numeric",
         "Use 'isSome(result) or isNone(result)' instead"

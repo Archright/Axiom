@@ -2037,12 +2037,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:c7f21015a342636a78a90a0afc83336559b30e5c53e83358a502ff8b5e115083",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:309b81fb2aa0f51ea8d5b37cd41bc92a335549828ffd6bd15e39969766ab86bc",
       "count": 1,
       "file": "src/core/topology/topology_engine.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:01fed0cbbc432366fbf95282f95eeca62df3d15d426bdf1f8cf3f7236c3e87bc"
+      "rawContentHash": "sha256:4097b1c765fd92c07f4d5af81b70f6056f7ff88a78007bf981b893c0798f5225"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",

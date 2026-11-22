@@ -532,23 +532,46 @@ func findFirstNode*(root: PNode; tag: string): Option[PNode]  {.axiomDecision.} 
         return found
   none(PNode)
 
+func declarationNameP(node: PNode): Option[string]  {.axiomDecision.} =
+  ## Normalized declared name of a ProcDef node — the single name test shared
+  ## by findFunctionNode and buildFunctionNodeIndexP.
+  if node.len > 0 and not node[0].isNil:
+    let nameNodeOpt = findFirstNodeP(node[0], {nkIdent})
+    if nameNodeOpt.isSome:
+      let nm = if nameNodeOpt.get.kind == nkIdent:
+                  nameNodeOpt.get.ident.s
+                elif nameNodeOpt.get.kind == nkSym:
+                  nameNodeOpt.get.sym.name.s
+                else:
+                  ""
+      return some(nm.strip().toLowerAscii())
+  none(string)
+
 func findFunctionNode*(ast: PNode; functionName: string): Option[PNode]  {.axiomDecision.} =
   ## PNode-compatible findFunctionNode (compat with legacy XmlNode API).
   if ast.isNil: return none(PNode)
   let target = functionName.strip().toLowerAscii()
   for node in findNodesP(ast, ProcDefKinds):
-    if node.len > 0 and not node[0].isNil:
-      let nameNodeOpt = findFirstNodeP(node[0], {nkIdent})
-      if nameNodeOpt.isSome:
-        let nm = if nameNodeOpt.get.kind == nkIdent:
-                    nameNodeOpt.get.ident.s
-                  elif nameNodeOpt.get.kind == nkSym:
-                    nameNodeOpt.get.sym.name.s
-                  else:
-                    ""
-        if nm.strip().toLowerAscii() == target:
-          return some(node)
+    let nameOpt = declarationNameP(node)
+    if nameOpt.isSome and nameOpt.get == target:
+      return some(node)
   none(PNode)
+
+func buildFunctionNodeIndexP*(ast: PNode): Table[string, PNode] =
+  ## Collect ProcDef nodes keyed by normalized name in one O(AST) walk.
+  ## First declaration wins, matching findFunctionNode's DFS order.
+  if ast.isNil: return
+  for node in findNodesP(ast, ProcDefKinds):
+    let nameOpt = declarationNameP(node)
+    if nameOpt.isSome and not result.hasKey(nameOpt.get):
+      result[nameOpt.get] = node
+
+func findIndexedFunctionNode*(index: Table[string, PNode];
+                              functionName: string): Option[PNode]  {.axiomDecision.} =
+  ## Table-backed equivalent of findFunctionNode over a prebuilt module index.
+  let target = functionName.strip().toLowerAscii()
+  let node = index.getOrDefault(target)
+  if node.isNil: none(PNode) else: some(node)
 
 
 # ── PNode Construction Helpers ──
