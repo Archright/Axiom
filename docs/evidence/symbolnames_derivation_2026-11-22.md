@@ -112,3 +112,44 @@ rotation commit (the same abort documented in
   removed; making it a pure function would touch every construction site.
 - The 3.70% figure is for this repository snapshot; it scales with the symbol
   count, not with file count.
+
+## Section 8. Operational acceptance at HEAD `bd7175b4` (2026-11-22)
+
+Whole operational path, same workload for every row:
+
+```
+AXIOM_STATE_DIR=<dir> AXIOM_CI=1 ./bin/ax prove --target normalizeMaxWorkers
+AXIOM_STATE_DIR=<dir> ./bin/ax report --canonical-digest
+```
+
+| Run | State | wall | prove exit | `[VERIFIED]` | canonical digest |
+|---|---|---|---|---|---|
+| 1 | fresh `/tmp/axA` | 4,748 ms | 0 | 1 | `d125f917…2861` |
+| 2 | warm `/tmp/axA` (rerun) | 2,408 ms | 0 | 1 | `d125f917…2861` |
+| 3 | fresh `/tmp/axB` (independent) | 4,758 ms | 0 | 1 | `d125f917…2861` |
+| 4 | `/tmp/axL` = warm A + poisoned legacy cache | 2,400 ms | 0 | 1 | `d125f917…2861` |
+
+Run 4 is the derivation-equivalence probe. Before the run, every entry of
+`.axiom/cache/topology_merkle.json` was given a legacy `symbolNames` array
+holding the file's `cachedSymbols[].functionName` **in reverse order**;
+1,721 of 2,600 entries carried a poisoned value that differs from the derived
+order. `jsonToEntry` shape-checks the array and ignores its contents, so the
+engine, verdict, and digest are unchanged. This is direct operational evidence
+that the field is inert and the projection is derived from `cachedSymbols`,
+not read.
+
+IR execution accounting was identical in all four runs:
+
+```
+pool=4/231 requests=1 required=1 executed=1 (limit=1)
+```
+
+The regression test on the same HEAD: `make test-fast-one
+T=tests/unit/merkle_cache_test.nim` → 4/4 `[OK]`.
+
+Claim boundary: the digest is a whole-tree hash that transitively includes the
+`src/` tree (see `z3_lane_attribution_2026-11-22.md` Section 3), so
+`d125f917…` is not comparable to the digest recorded before these source
+commits. Equality is asserted only *within* one binary, across cache shapes and
+independent state directories — which is exactly the R3 question this slice
+raises.
