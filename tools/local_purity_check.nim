@@ -452,9 +452,18 @@ proc main() =
       echo "ERROR: bin/ax still missing after cold rebuild (exit=", rebuildCode, "):", rebuildOut
       quit(4)
 
-  let (gatesOut, gatesCode) = execCmdEx("nimble buildGates", workingDir = wtPath)
+  # The canonical builder's exit status is the only success signal.
+  if not fileExists(wtPath / "bin" / "build_all_gates"):
+    let (builderOut, builderCode) = execCmdEx(
+      "nim c -d:axiomNoLto --hints:off -o:bin/build_all_gates tools/build_all_gates.nim",
+      workingDir = wtPath)
+    if builderCode != 0 or not fileExists(wtPath / "bin" / "build_all_gates"):
+      echo "ERROR: bin/build_all_gates could not be built (exit=", builderCode, "):", builderOut
+      quit(4)
+
+  let (gatesOut, gatesCode) = execCmdEx("bin/build_all_gates --release", workingDir = wtPath)
   if gatesCode != 0:
-    echo "ERROR: 'nimble buildGates' failed (exit=", gatesCode, "):", gatesOut
+    echo "ERROR: 'bin/build_all_gates --release' failed (exit=", gatesCode, "):", gatesOut
     quit(4)
 
   # --- Warm nimcache copy-out (O1) ----------------------------------
@@ -466,7 +475,7 @@ proc main() =
   # when the copy-in above reused a cache. A COLD run still produced a valid
   # nimcache from a successful build — persisting it is what enables the NEXT run
   # to start warm. Gate copy-out only on build success (we are past the
-  # `quit(4)` on buildGates failure above) and on the flag.
+  # `quit(4)` on canonical-builder failure above) and on the flag.
   if warmCacheDir.len > 0:
     try:
       # The unit is named by its CONTENT STAMP, so publishing is idempotent:

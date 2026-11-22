@@ -6136,6 +6136,27 @@
       "status": "open",
       "resolution": "UNRESOLVED — registration only. No cap, baseline number, or policy threshold is changed by this entry. Closing-slice acceptance: (1) CI produces a measurement (runs bin/nimtry or otherwise emits data/nimtry_live_count.json) and the ratchet compares the measured count, failing closed as UNKNOWN when the measurement is absent; (2) an increase fixture (or staged measurement) is observed as FAIL; (3) the 4384 measurement is either driven down or accepted through a human-authored baseline change with owner/rationale. The {.axiomDebt: \"DEBT#563\".} marker on the sidecar-absent fallback binds this entry to the blind-spot site.",
       "lastVerifiedAt": "2026-11-21T00:00:00Z"
+    },
+    {
+      "id": "DEBT#564",
+      "category": "Theater/Swallowed Failure",
+      "impact": "medium",
+      "severity": "medium",
+      "title": "config.nims buildGates duplicate builder builds 0 of 54 gates and exits 0; local_purity_check gate prebuild was fail-open",
+      "description": "Machine-observed 2026-11-22 at origin/main f7fbb0b, re-confirmed on this branch. Two defects composed a fail-open. (1) Producer: the repository's `nim buildGates` task (config.nims buildGatesFromManifest) is a duplicate gate builder. src/gate/manifest.d/_index.json is a newline-separated list of bare gate IDs (single writer tools/sync_topology.nim), but the task resolves `src/gate/manifest.d/<id>` without the `.json` suffix, so all 54 entries are reported `SKIP (manifest missing)` and the task prints `[buildGates] done: built=0 skipped=54 failed=0` with EXIT=0. Malformed manifest entries are silently `continue`d without being counted, and per-gate compile failures are only accumulated into `failed=` (throwaway NimScript reproduction: failing `nim c` -> `FAILED`, `failed=1`, process exit 0). (2) Consumer: tools/local_purity_check.nim invoked the gate prebuild through this task and treated its exit status as success, so the purity check silently skipped the gate build. This PR fixes the consumer side only: local_purity_check.nim now ensures bin/build_all_gates exists (compiles tools/build_all_gates.nim with -d:axiomNoLto when absent) and runs `bin/build_all_gates --release`, treating its exit status as the only success signal (quit(4) on non-zero; no output-string matching). The canonical builder builds 82 gates, honors 2 registry-bound accepted-dead skips (DEBT#491/#492), and exits non-zero when Failed > 0. The producer defect remains in config.nims because config.nims is a trusted-checker closure key (config/trusted_checker_closure.json trustedCheckerTreeClosure, 891 keys): any candidate delta touching it is classified ROTATION by ADR-0025 §13, and every changed path must then be in the rotation allowlist in src/cli/merge_cli.nim. This PR's other paths are not in that allowlist, and modifying the allowlist to admit this PR would be self-authorizing. The producer fix therefore requires a governed rotation amendment; until then `nim buildGates` still exits 0 without building gates.",
+      "symbol": "local_purity_check main() canonical gate prebuild (bin/build_all_gates --release)",
+      "contentHash": "sha256:5a559f1afcafc3288d2b903826f52c6693c812499a7fca1579529905da6d1edc",
+      "lineRange": "tools/local_purity_check.nim:455-467",
+      "files": [
+        "tools/local_purity_check.nim"
+      ],
+      "source": "theater_audit",
+      "productTruthImpact": "PRODUCT_SUPPORT",
+      "status": "open",
+      "resolution": "UNRESOLVED — consumer-side fail-open fixed in PR #343 (workstream/purity-buildgates): tools/local_purity_check.nim no longer invokes `nim buildGates`; it compiles bin/build_all_gates if absent and runs `bin/build_all_gates --release`, trusting only the exit status. Producer-side defect remains in config.nims (duplicate builder: bare gate IDs resolved without `.json`, 0/54 built, exit 0 on failure) and is blocked by the ADR-0025 §13 rotation allowlist: touching the trusted-checker closure path classifies the candidate as ROTATION, and every changed path must be allowlisted in src/cli/merge_cli.nim; adding this PR's paths to that allowlist would be self-authorizing. Acceptance for closure: a governed rotation amendment makes config.nims `buildGates` delegate to bin/build_all_gates (or removes it), and `nim buildGates` reports 82 built / 2 accepted-dead skips / 0 failed and exits non-zero on any gate failure. Measured consumer-side evidence in this PR: `bin/purity_check --exec-cmd 'true'` exit 0; negative control with the canonical builder compile refused -> exit 4; `bin/build_all_gates --release` -> 82 built / 2 accepted-dead / 0 failed.",
+      "lastVerifiedAt": "2026-11-22T07:10:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md §10.1 — the audited consumer site is tools/local_purity_check.nim, outside debt_integrity_gate's src/ marker-scan root (src/gate/runners/debt_integrity_gate.nim:378 scans `src`), and the producer site config.nims is a trusted-checker closure key this PR must not touch; the registry entry itself is the binding medium, with the site anchored by symbol/lineRange/contentHash at tools/local_purity_check.nim:455-467. Trace: this entry's resolution (UNRESOLVED) and source (theater_audit); external: docs/adr/0025-gateway-landing-authority.md §13, src/cli/merge_cli.nim rotation allowlist, DEBT#557 as the tools/-artifact precedent."
     }
   ]
 }
