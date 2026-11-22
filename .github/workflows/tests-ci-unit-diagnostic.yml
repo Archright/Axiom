@@ -74,3 +74,20 @@ jobs:
         run: |
           set -euo pipefail
           nim c -r --hints:off --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath --nimcache:build/nimcache/tests_ci_unit_diag -o:build/tests_ci_unit_diag/test_admission_check_stages tests/ci/test_admission_check_stages.nim
+      - name: "Diagnostic: merge-queue rearm outcome-aware contract (test_merge_queue_rearm)"
+        # Unlike test_admission_check_stages, this source executes the shipped
+        # run: scalars of merge-queue-rearm.yml conditions 0/8/9 against a
+        # stateful `gh` PATH stub (ADR-0032 execute-the-block precedent), so it
+        # needs bash + PyYAML at runtime in addition to the toolchain payload.
+        # Fail-fast on missing PyYAML mirrors axiom-operational-slice.yml: an
+        # absent tool must not be indistinguishable from a contract violation.
+        # Failure here is a RED diagnostic signal in this job's log; it does
+        # not gate merges (same non-blocking classification as the step above).
+        run: |
+          set -euo pipefail
+          python3 -c 'import yaml'
+          mkdir -p build/tests_ci_unit_diag
+          nim c -r --hints:off --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath \
+            --nimcache:build/nimcache/tests_ci_unit_diag_rearm \
+            -o:build/tests_ci_unit_diag/test_merge_queue_rearm \
+            tests/ci/test_merge_queue_rearm.nim
