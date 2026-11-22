@@ -1,6 +1,6 @@
 # merge-queue rearm 자동 복구 상태 선언 (rearm_recovery_status)
 
-**Status**: Normative contract — 현재 상태 **INACTIVE** (자동 복구 아님) · 관측 기준시각 **2026-10-21T18:48:14Z** (2026-10-22 03:48 KST) · 최초 작성 2026-10-22 · **실행체 개정 2026-11-22 (ADR-0027 Amendment F): 두 번째 wake-up·삼중 run 결속·발행자 결속 판정·arm 이전 intent 청구. 상태 선언(INACTIVE)과 관측 기준시각은 갱신하지 않는다 — 마지막 arm 성공 관측 전까지 §0은 그대로 유효하다.**
+**Status**: Normative contract — current state **INACTIVE** (not automatic recovery) · observation reference time **2026-10-21T18:48:14Z** (2026-10-22 03:48 KST) · first authored 2026-10-22 · **execution-body amendment 2026-11-22 (ADR-0027 Amendment F): second wake-up, triple run binding, publisher binding determination, pre-arm intent claim. The state declaration (INACTIVE) and observation reference time are not updated — §0 remains in force as-is until the last arm success is observed.**
 **Related**: `docs/adr/0027-queue-delegation.md` (ADR-0027 Amendment C/D/E — rearm 정책 원본) · `.github/workflows/merge-queue-rearm.yml` (실행체) · `docs/agents/merge_admission_observation.md` §(c) (failure→recovery 유한 절차) · `docs/agents/rules_workflow.md` §Auto-Merge Default Policy (정본 arm 명령) · `docs/spec/diagnostic_execution_delegation.md` §2 (App 등록 = 인간 게이트 선례) · `docs/spec/gh_run_observation_quirks.md` Q12 (dequeued 이벤트는 이탈 사유를 운반하지 않음) · AGENTS.md §0.9 (극장 금지) · §2.4 (자격 증명 권한).
 
 > **이 문서의 정본 성격**: "rearm가 무엇을 하는가"의 설계 정본은 ADR-0027과 `.github/workflows/merge-queue-rearm.yml`에 있다. **이 문서가 정본인 것은 "지금 실제로 무엇이 되는가"의 상태 선언**이다 — 즉 기능의 설계가 아니라 **운영 사실의 기록**이며, 이 두 개는 충돌하지 않는다.
@@ -331,29 +331,30 @@ PR #787 사례(2026-10-13, `docs/agents/merge_admission_observation.md` 부록 (
 
 현 워크플로의 예산 판정(`.github/workflows/merge-queue-rearm.yml` condition 8/9, ADR-0027 Amendment E)이 **그대로 유지**되어야 한다. 자동화 도입이 예산을 느슨하게 해서는 안 된다.
 
-> **Amendment F (2026-11-22) 반영**: 아래 §4.3–§4.6은 이제 **설계 요구**가
-> 아니라 **착지한 계약**의 서술을 포함한다. 두 번째 wake-up
-> (`workflow_run[completed]`), 삼중 run 결속, 발행자 결속 판정,
-> `rearm-intent@<head12>` 사전 청구는
-> `docs/adr/0027-queue-delegation.md` **Amendment F**가 정본이며
-> `.github/workflows/merge-queue-rearm.yml`에 구현되어 있다. 본 절과
-> Amendment F가 충돌하면 Amendment F가 우선한다.
+> **Amendment F (2026-11-22) reflected**: §4.3–§4.6 below now contain descriptions
+> of the **landed contract**, not **design requirements**. The second wake-up
+> (`workflow_run[completed]`), triple run binding, publisher binding
+> determination, and the `rearm-intent@<head12>` pre-claim are canonically
+> specified by `docs/adr/0027-queue-delegation.md` **Amendment F** and
+> implemented in `.github/workflows/merge-queue-rearm.yml`. If this section
+> and Amendment F conflict, Amendment F takes precedence.
 
-> **F.8 하드닝 (2026-11-22)**: 착지 전 적대적 검토에서 확인된 fail-open
-> 9건을 수정했다 — 영구 실패 title의 `NOT_ADMIT_` 접두사, `rearmed@` 우선
-> 평가, 403≠TRANSIENT(5xx만), G 부모에 현재 head 결속, `workflow_id`
-> 정본 결속 + check-runs 전 페이지, `isInMergeQueue=true` 무조건 no-arm,
-> arm 직전/실패 시 auto-merge reconcile, HISTORICAL publisher binding
-> 순서, jq 파싱 가드. 정본은 ADR-0027 **Amendment F.8**이다. 예산
-> key·평가 key·2회/head 상한은 불변이다.
+> **F.8 hardening (2026-11-22)**: fixed the 9 fail-open cases found in
+> adversarial review before landing — the `NOT_ADMIT_` prefix on permanent-failure
+> titles, `rearmed@` evaluated first, 403≠TRANSIENT (5xx only), current head
+> bound to the G parent, `workflow_id` canonical binding + all check-runs pages,
+> unconditional no-arm when `isInMergeQueue=true`, auto-merge reconcile immediately
+> before arm/on failure, HISTORICAL publisher binding order, and a jq parsing guard.
+> The canonical source is ADR-0027 **Amendment F.8**. The budget key, evaluation
+> key, and 2-per-head limit are unchanged.
 
 | 항목 | 현 규칙 | 도입 시 요구 |
 |---|---|---|
-| 동일 key 상한 | `rearm-intent@<head12>`(arm **이전** 청구) + `rearmed@<head12>`(arm 확인 후) → 총 검증 시도 2회/head | **유지**. 자동 경로가 추가 budget을 만들면 안 됨 |
-| **예산 key** | `(repository, PR, head)` — 라벨이 정본 | **유지**. G·run은 예산 key가 **아니다**(같은 head에서 MG SHA·attempt가 달라진다) |
-| **평가 key** | `(repository, PR, head, G, run_id, run_attempt)` — 중복 평가 방지용 | **유지**. 예산 key와 **분리**한다 |
-| intent 고아 | intent 있고 `rearmed@` 없음 → 예산 소비 간주, `no-arm`, `intent-orphan` | **유지**. 보수적 소비는 허용, 중복 arm은 불가 |
-| exhausted 시 | `no-arm`, 구조화 summary, `rearm-exhausted` 마커, **`exit 0`**(red 아님) | **유지** — Amendment E의 `exit 1`은 Amendment F가 개정했다 |
+| Same-key limit | `rearm-intent@<head12>` (claimed **before** arm) + `rearmed@<head12>` (after arm confirmation) → total verification attempts 2/head | **Maintained**. The automatic path must not create additional budget |
+| **Budget key** | `(repository, PR, head)` — the label is canonical | **Maintained**. G and run are **not** budget key components (MG SHA and attempt differ for the same head) |
+| **Evaluation key** | `(repository, PR, head, G, run_id, run_attempt)` — for duplicate-evaluation prevention | **Maintained**. Kept **separate** from the budget key |
+| Intent orphan | intent present and no `rearmed@` → treated as budget consumed, `no-arm`, `intent-orphan` | **Maintained**. Conservative consumption is allowed; duplicate arm is not |
+| On exhausted | `no-arm`, structured summary, `rearm-exhausted` marker, **`exit 0`** (not red) | **Maintained** — Amendment F amended Amendment E's `exit 1` |
 | 백오프 | **현 규칙에 없음** — 도입 시 정의하거나 "없음"을 명시 | 자동 경로는 무한 재시도 위험이 있으므로, 도입 시점에 명시적으로 결정 |
 
 ### 4.4 재진입 조건 (도입 시 요구사항)
@@ -375,18 +376,18 @@ PR #787 사례(2026-10-13, `docs/agents/merge_admission_observation.md` 부록 (
 
 | 상태 | 판정 기준 | 산출물 |
 |---|---|---|
-| **성공** | arm 뮤테이션이 실제로 성공 (auto-merge 등록 확인) | `rearmed@<head12>` 부착 + 구조화 레코드 `action=armed` (intent는 영구 잔류) |
-| **실패** | arm을 **시도했고** 실패 — 결과 불명확 포함 | 원문 오류 + `action=no-arm` + `evidence.line="arm-failed"` + **intent 유지** + `rearm-exhausted` |
-| **미실행** | arm 단계에 도달하지 않음 | `action=no-arm` + `evidence.line=<게이트 사유>` (intent 없음) |
-| **이미 armed** | `autoMergeRequest != null` — 재arm 없음 | `action=armed` + `evidence.line="already-armed"` + `rearmed@` 보정 |
+| **Success** | the arm mutation actually succeeded (auto-merge registration confirmed) | `rearmed@<head12>` attached + structured record `action=armed` (intent remains permanently) |
+| **Failure** | arm was **attempted** and failed — including indeterminate outcomes | original error + `action=no-arm` + `evidence.line="arm-failed"` + **intent retained** + `rearm-exhausted` |
+| **Not executed** | the arm step was not reached | `action=no-arm` + `evidence.line=<gate reason>` (no intent) |
+| **Already armed** | `autoMergeRequest != null` — no re-arm | `action=armed` + `evidence.line="already-armed"` + `rearmed@` correction |
 
-**요구**: 성공·실패·미실행은 **각각 집계 가능**해야 하고, run conclusion(`success`)이 이 셋을 구분해 주지 않는다면 **보고 계층이 그 구분을 대신해야 한다**. §1.5가 보인 오독이 자동화 후에도 재발하지 않게 하는 것이 이 항의 목적이다. **intent 라벨의 존재 + `rearmed@`의 부재**가 "실패(불명확)"의 지속적이고 기계 판독 가능한 흔적이다.
+**Requirement**: success, failure, and not-executed must be **individually aggregatable**, and if the run conclusion (`success`) does not distinguish these three, the **reporting layer must supply that distinction**. The purpose of this clause is to prevent the misreading shown in §1.5 from recurring after automation. **The presence of the intent label plus the absence of `rearmed@`** is the persistent, machine-readable trace of "failure (indeterminate)".
 
 ### 4.6 도입 게이트 (착지 전 통과해야 하는 것)
 
 1. **uniqueness 사전 검증** — `generation-acceptance` 계열과 신규 rearm 컨텍스트의 유일 producer 확인(동일 규칙을 `docs/adr/0036` 계열 설계가 사용).
 2. **권한 사전 검증(실측)** — §4.2의 후보 권한으로 arm이 실제로 성공하는지 **dry-run이 아닌 실측**으로 1회 확인. 확인 전까지 "권한이 충분하다"는 주장을 문서에 쓰지 않는다.
-3. **계약 동등성** — 분류기·예산·마커·에러 비삼킴이 `docs/adr/0027` **Amendment F** 및 `tests/ci/test_merge_queue_rearm.nim`의 단정과 일치함을 확인한다. **(구 요구 "현 리비전과 바이트 동일"은 Amendment F로 대체되었다** — Amendment F는 예산 청구 순서·exhausted 종결코드·title allowlist를 **의도적으로** 개정하므로 바이트 동일을 요구하면 개정 자체가 불가능해진다. 대체 계약은 실행 가능한 테스트다.**)**
+3. **Contract equivalence** — confirm that the classifier, budget, markers, and error non-swallowing match the assertions in `docs/adr/0027` **Amendment F** and `tests/ci/test_merge_queue_rearm.nim`. **(The old requirement "byte-identical to the current revision" is superseded by Amendment F** — Amendment F **intentionally** amends the budget-claim order, the exhausted exit code, and the title allowlist, so requiring byte identity would make the amendment itself impossible. The replacement contract is an executable test.**)**
 4. **관측 신호** — 성공/실패/미실행 3상태가 **운영자가 읽을 수 있는** 곳(구조화 summary + issue)에 남는지 확인.
 5. **롤백** — 워크플로를 **원래 리비전으로 되돌리는** 절차가 살아 있는지 확인(되돌리기 불가한 상태로 만들지 않는다 — AGENTS.md §2.5).
 6. **§0 상태 갱신** — 실측이 1회 이상 arm 성공을 관측한 뒤에야 이 문서의 §0을 INACTIVE → ACTIVE로 **기계 관측 증거와 함께** 갱신한다.

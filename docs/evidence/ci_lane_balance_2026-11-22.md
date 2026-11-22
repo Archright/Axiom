@@ -1,77 +1,77 @@
-# GO-critical 2-lane 재배치 결정 — VS-CI-01 REJECTED (2026-11-22)
+# GO-critical 2-lane rebalance decision — VS-CI-01 REJECTED (2026-11-22)
 
-> **Status**: 측정 완료. 본 문서는 결정 기록만 추가한다 — 워크플로·검사·required check·`max_entries_to_build` 변경 없음.
-> **Metric contract**: `docs/spec/ci_critical_path_metric.md` (지표 정의 문서)
+> **Status**: Measurement complete. This document adds the decision record only — no change to workflows, checks, required checks, or `max_entries_to_build`.
+> **Metric contract**: `docs/spec/ci_critical_path_metric.md` (metric definition document)
 > **Decision data**: `data/ci_optimization/vs_ci_01_lane_rebalance_decision_2026-11-22.json`
 > **Sample**: 25 completed merge-group runs (2026-11-21/2026-11-22)
 > **Lane composition**: `.github/workflows/admission-check.yml` `go-critical-lane` matrix — lane 0 = `s1a`; lane 1 = `proof_integrity` + `d2_golden` + `d2_persist`
 
-## §0. 판정
+## §0. Verdict
 
 > **Verdict: REJECTED — benefit ~2–4 s (≈2%) is inside noise; no verification change**
 
-| 항목 | 값 | 비고 |
+| Item | Value | Note |
 |---|---:|---|
 | lane 0 wall p50 | **139 s** | 25 completed merge-group runs |
-| lane 1 wall p50 | **152 s** | 동일 cohort |
-| lane gap p50 | **10 s** | run별 두 lane의 차이 p50 |
-| cache warm-up 후 최장 재배치 가능 항목 | **`s1a` 26 s** | 측정된 유일한 재배치 후보 |
-| 고정 per-lane provisioning (합) | **≈110 s** | lane 비용의 지배 항 |
-| — `setup-axiom-toolchain` | 47–48 s | provisioning 구성요소 |
-| — `evidenceId` | 36 s | provisioning 구성요소 |
-| 최적 결정론 재배치의 최대 이득 (유도값) | **≈2–4 s / 152 s lane (≈2%)** | 재배치는 구현되지 않음 |
+| lane 1 wall p50 | **152 s** | same cohort |
+| lane gap p50 | **10 s** | p50 of the per-run difference between the two lanes |
+| longest rebalanceable item after cache warm-up | **`s1a` 26 s** | the only measured rebalance candidate |
+| fixed per-lane provisioning (sum) | **≈110 s** | dominant term in lane cost |
+| — `setup-axiom-toolchain` | 47–48 s | provisioning component |
+| — `evidenceId` | 36 s | provisioning component |
+| maximum benefit of an optimal deterministic rebalance (derived value) | **≈2–4 s / 152 s lane (≈2%)** | no rebalance was implemented |
 
-결론: GO-critical 두 lane을 어떻게 재배치해도 wall time은 실질적으로 변하지 않는다. 비용의 지배 항은 작업 불균형이 아니라 **고정 provisioning**이다.
+Conclusion: however the two GO-critical lanes are rebalanced, wall time does not change materially. The dominant cost term is not work imbalance but **fixed provisioning**.
 
 > wall time is dominated by fixed per-lane provisioning, not by work imbalance.
 
-## §1. 배경
+## §1. Background
 
-`go-critical-lane`은 GO-critical admission-contract 테스트를 두 개의 병렬 lane으로 나눠 실행한다. 제안 VS-CI-01("GO-critical lane rebalancing")의 전제는 두 lane의 작업 배분을 바꾸면 더 느린 lane이 짧아져 merge-group wall time이 줄어든다는 것이었다. 본 측정은 그 전제의 상한을 실측했다.
+`go-critical-lane` splits the GO-critical admission-contract tests across two parallel lanes. The premise of proposal VS-CI-01 ("GO-critical lane rebalancing") was that changing the work split between the two lanes would shorten the slower lane and thus reduce merge-group wall time. This measurement measured the upper bound of that premise.
 
-## §2. 측정
+## §2. Measurement
 
-대상은 2026-11-21/22에 완료된 merge-group run 25건이다. 표의 값은 lane별 wall의 p50과 run별 lane 차이의 p50이며, 표본은 완료된 run만 포함한다.
+The subject is 25 merge-group runs completed on 2026-11-21/22. Table values are the p50 of per-lane wall and the p50 of the per-run lane difference, and the sample includes only completed runs.
 
-| 지표 | 실측값 |
+| Metric | Measured value |
 |---|---:|
 | lane 0 wall p50 | 139 s |
 | lane 1 wall p50 | 152 s |
 | lane gap p50 | 10 s |
-| 고정 per-lane provisioning | ≈110 s (`setup-axiom-toolchain` 47–48 s, `evidenceId` 36 s) |
-| cache warm-up 후 최장 재배치 가능 항목 | `s1a` 26 s |
-| 최적 결정론 재배치의 최대 이득 | ≈2–4 s (152 s lane 대비 ≈2%) |
+| fixed per-lane provisioning | ≈110 s (`setup-axiom-toolchain` 47–48 s, `evidenceId` 36 s) |
+| longest rebalanceable item after cache warm-up | `s1a` 26 s |
+| maximum benefit of an optimal deterministic rebalance | ≈2–4 s (≈2% of the 152 s lane) |
 
-## §3. 해석
+## §3. Interpretation
 
-- lane 1의 152 s 중 약 110 s가 고정 provisioning이다. 재배치로 줄일 수 있는 것은 나머지 작업 구간뿐이다.
-- cache warm-up 이후 재배치 가능한 최장 항목은 `s1a`의 26 s다. 이 항목을 포함해 최적으로 배분해도 이득은 **≈2–4 s**에 그친다.
-- 이는 152 s lane 대비 **≈2%**이며, 25-run 표본에서 관측된 변동(noise) 안에 들어간다. 따라서 lane 재배치는 wall time을 실질적으로 바꾸지 못한다.
+- About 110 s of lane 1's 152 s is fixed provisioning. Only the remaining work segment can be reduced by rebalancing.
+- After cache warm-up, the longest rebalanceable item is `s1a` at 26 s. Even an optimal distribution that includes this item yields a benefit of only **≈2–4 s**.
+- That is **≈2%** of the 152 s lane and falls within the variation (noise) observed in the 25-run sample. Lane rebalancing therefore cannot materially change wall time.
 
-## §4. 결정
+## §4. Decision
 
 - **Decision id**: VS-CI-01
 - **Decision**: `REJECTED`
 - **Reason code**: `INSUFFICIENT_BENEFIT_FIXED_PROVISIONING_DOMINATES`
-- **결정 내용**: GO-critical 두 lane의 재배치는 CI 최적화로서 기각한다. 어떤 재배치도 구현하지 않았다.
-- **불변식**: 이 결정은 검증을 제거하지 않는다. 어떤 검사도 삭제·skip하지 않으며, required check를 변경하지 않는다. `max_entries_to_build=100`도 변경하지 않는다.
+- **Decision content**: Rebalancing the two GO-critical lanes is rejected as a CI optimization. No rebalance of any kind was implemented.
+- **Invariant**: This decision removes no verification. No check is deleted or skipped, and no required check is changed. `max_entries_to_build=100` is also unchanged.
 
 > this decision removes no verification and changes no required check
 
-## §5. 재검토 조건
+## §5. Revisit conditions
 
-고정 per-lane provisioning이 줄어 작업 불균형이 lane 비용의 지배 항이 되면, 동일 cohort 규약(`docs/spec/ci_critical_path_metric.md` §1·§5)으로 다시 측정한다. 본 기록은 그때까지의 결정을 고정한다.
+When fixed per-lane provisioning decreases and work imbalance becomes the dominant term in lane cost, re-measure under the same cohort protocol (`docs/spec/ci_critical_path_metric.md` §1·§5). This record fixes the decision until then.
 
-## §6. 참조
+## §6. References
 
-- `docs/spec/ci_critical_path_metric.md` — 지표 정의 문서 (cohort·wall·step 귀속 규약)
-- `docs/evidence/ci_critical_path_baseline_2026-11-20.md` — 선행 critical-path baseline (provisioning family 지배 관측)
-- `docs/evidence/ci_provisioning_decomposition_2026-11-20.md` — `setup-axiom-toolchain` 구성요소 분해
-- `data/ci_optimization/vs_ci_01_lane_rebalance_decision_2026-11-22.json` — 본 결정의 기계 판독 기록
+- `docs/spec/ci_critical_path_metric.md` — metric definition document (cohort, wall, and step attribution conventions)
+- `docs/evidence/ci_critical_path_baseline_2026-11-20.md` — prior critical-path baseline (observation that the provisioning family dominates)
+- `docs/evidence/ci_provisioning_decomposition_2026-11-20.md` — component decomposition of `setup-axiom-toolchain`
+- `data/ci_optimization/vs_ci_01_lane_rebalance_decision_2026-11-22.json` — machine-readable record of this decision
 
-## §7. 한계
+## §7. Limitations
 
-- n=25 completed merge-group runs다. p50과 측정된 gap만 기록하며 p95를 선언하지 않는다.
-- ≈2–4 s는 최적 결정론 재배치의 상한이다. 재배치 실행은 없었으므로 실측 after 값이 아니다.
-- ≈110 s provisioning 합계 중 개별 측정된 구성요소는 `setup-axiom-toolchain`과 `evidenceId`뿐이며, 나머지 구성요소는 합계로만 기록했다.
-- lane별 값은 `go-critical-lane` matrix leg 기준이다. run 전체 wall의 정본 정의는 `docs/spec/ci_acceptance_contract.md` §6을 따른다.
+- n=25 completed merge-group runs. Only p50 and the measured gap are recorded; no p95 is declared.
+- ≈2–4 s is the upper bound of an optimal deterministic rebalance. No rebalance was executed, so it is not a measured after value.
+- Of the ≈110 s provisioning sum, only `setup-axiom-toolchain` and `evidenceId` were measured individually; the remaining components are recorded only as a total.
+- Per-lane values are per `go-critical-lane` matrix leg. The canonical definition of whole-run wall follows `docs/spec/ci_acceptance_contract.md` §6.

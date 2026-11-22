@@ -158,74 +158,74 @@ deployment_status 중 하나로 트리거돼야 하고, "Merge queues require th
 `merge_group` event"다 —
 https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks.
 
-## Q8 — `workflow_run` 페이로드는 subject identity가 아니다
+## Q8 — The `workflow_run` payload is not subject identity
 
-`workflow_run` 이벤트로 시작한 run에서:
+For a run started by the `workflow_run` event:
 
-- `github.event.workflow_run.head_sha`는 **merge-group SHA**이지 PR head가 아니다.
-- `github.event.workflow_run.pull_requests[]`는 문서상 "head_sha 또는
-  head_branch가 일치하는 **열린** PR"이며, **트리거 PR을 보장하지 않는다**
-  (0개일 수도, 여러 개일 수도 있다).
-- 그 run의 `GITHUB_SHA`는 **기본 브랜치의 마지막 커밋**이다.
-- `workflow_run`은 트리거한 workflow보다 **높은 권한과 secrets**에 접근할 수
-  있다 — PR 코드를 checkout하거나 이전 run의 artifact를 검증된 실행 코드로
-  취급하면 권한 상승 경로가 된다.
+- `github.event.workflow_run.head_sha` is the **merge-group SHA**, not the PR head.
+- Per the documentation, `github.event.workflow_run.pull_requests[]` lists
+  **open** PRs whose head_sha or head_branch matches; it **does not guarantee
+  the triggering PR** (there may be zero or several).
+- That run's `GITHUB_SHA` is the **last commit on the default branch**.
+- `workflow_run` can access **higher privileges and secrets** than the workflow
+  that triggered it — checking out PR code or treating an earlier run's artifact
+  as verified executable code becomes a privilege-escalation path.
 
-**대응 규칙**: PR 번호는 `head_branch`의 **단일-PR 큐 브랜치 형상**
-(`^gh-readonly-queue/[^/]+/pr-([0-9]+)-[0-9a-f]{40}$`)에서만 파싱하고, PR head는
-`GET /repos/{owner}/{repo}/pulls/{N}`으로 **재조회**한다. 형상이 맞지 않으면
-(다중 PR 그룹 포함) `UNKNOWN`/no-arm이다. 종료는 반드시
-`run_id × run_attempt × (event=merge_group, workflow name/path)` +
-run `head_sha` + 기대 MG SHA로 결속한다.
+**Response rule**: parse the PR number only from the **single-PR queue-branch
+shape** of `head_branch` (`^gh-readonly-queue/[^/]+/pr-([0-9]+)-[0-9a-f]{40}$`),
+and **re-read** the PR head via `GET /repos/{owner}/{repo}/pulls/{N}`. If the
+shape does not match (including multi-PR groups), the result is `UNKNOWN`/no-arm.
+Completion must be bound to
+`run_id × run_attempt × (event=merge_group, workflow name/path)` + run `head_sha` + the expected MG SHA.
 
-## Q9 — required check의 발행자와 동명 Actions job은 다른 객체다
+## Q9 — A required check's publisher and a same-named Actions job are different objects
 
-`admission-check`라는 이름의 **Actions job check**(`admission-gate-v2.yml`의
-job)과, ruleset이 요구하는 **required status check**(App이 발행)는 **같은
-이름, 다른 발행자**다. 이름만으로 선택하면 통과/실패 권위를 오귀속한다.
+An **Actions job check** named `admission-check` (the job in `admission-gate-v2.yml`)
+and the **required status check** the ruleset demands (published by an App) share the
+**same name but different publishers**. Selecting by name alone misattributes pass/fail authority.
 
-**대응 규칙**: required check 선택자는 `name == <ctx>` **AND**
-`app.id == <base policy의 requiredCheckSources.byContext[ctx]>`다. 기대 App
-ID는 **base 브랜치 정책**에서 읽는다(PR 사본 금지). 발행자 check가 없으면
-`required-check=absent` / `UNKNOWN`이며, 동명 Actions check로 대체하지 않는다.
+**Response rule**: the required check selector is `name == <ctx>` **AND**
+`app.id == <base policy's requiredCheckSources.byContext[ctx]>`. Read the expected
+App ID from the **base branch policy** (never the PR copy). If the publisher check
+is absent, the result is `required-check=absent` / `UNKNOWN`, and a same-named Actions check must not be substituted.
 
-## Q10 — 발행자 App check는 annotation을 싣지 않는다 (2026-11-22 실측)
+## Q10 — The publisher App check carries no annotations (measured 2026-11-22)
 
-실패한 `admission-check` check-run 3건 모두 **annotation 0개**(`text_len=0`)
-였다. 즉 발행자 check의 `output.annotations`에서 사유 코드를 읽을 수 없다.
+All three failed `admission-check` check-runs had **zero annotations** (`text_len=0`).
+That is, the reason code cannot be read from the publisher check's `output.annotations`.
 
-**대응 규칙**: 사유 코드는 **같은 merge-group SHA `G`의 실패한 Actions leg**
-(`admission-check`, `attest / *`, `verdict / *`) check-run annotation에서 읽고,
-없으면 job log 앵커로 내려간다. 발행자 check의 `output.summary`는
-`trust_surface=FAIL` 같은 **거부 신호**로만 소비한다.
+**Response rule**: read the reason code from the check-run annotations of the
+**failed Actions legs on the same merge-group SHA `G`** (`admission-check`, `attest / *`,
+`verdict / *`); if absent, fall back to job log anchors. The publisher check's
+`output.summary` is consumed only as a **rejection signal** such as `trust_surface=FAIL`.
 
-## Q11 — 라벨 예산은 "쓰기 성공"을 재조회로 확인해야 한다
+## Q11 — The label budget must confirm "write success" by re-reading
 
-예산 라벨(`rearm-intent@<head12>`, `rearmed@<head12>`)은 GitHub API 호출
-1회의 성공 응답만으로 확정할 수 없다. arm 요청과 라벨 기록은 **원자적
-트랜잭션이 아니며**, 라벨 기록이 실패하면 예산이 소비되었는데 기록이 없는
-틈이 생긴다.
+The budget labels (`rearm-intent@<head12>`, `rearmed@<head12>`) cannot be
+confirmed by a single successful GitHub API response. The arm request and the
+label write are **not an atomic transaction**; if the label write fails, a gap
+opens where the budget was consumed but no record exists.
 
-**대응 규칙**: arm **이전**에 intent 라벨을 쓰고 **재조회로 존재를 확인한
-뒤에만** arm한다. arm 결과가 불명확하면 intent를 **지우지 않는다** — intent의
-존재가 곧 "예산 소비됨"의 durable 증거다. 예산 소진은 red check가 아니라
-`rearm-exhausted` 마커 + `exit 0`으로 표현한다.
+**Response rule**: write the intent label **before** arming, and arm **only after
+confirming its existence by re-reading**. If the arm result is unclear, **do not delete**
+the intent — the intent's existence is itself durable evidence that the budget was
+consumed. Budget exhaustion is expressed not as a red check but as the `rearm-exhausted` marker + `exit 0`.
 
-## Q12 — 이슈 라벨 추가 API는 **없는 라벨을 자동 생성한다** (2026-11-22 실측)
+## Q12 — The add-issue-labels API **auto-creates missing labels** (measured 2026-11-22)
 
-`POST /repos/{owner}/{repo}/issues/{issue_number}/labels`에 저장소에
-**존재하지 않는** 라벨 이름을 보내면 422가 아니라 **200**이며, 응답에 새
-라벨 객체(`id` 신규, `color: "ededed"`, `default: false`)가 반환되고
-이슈에 부착된다. 즉 라벨 **선등록은 필요 없다**.
+Sending a label name that **does not exist** in the repository to
+`POST /repos/{owner}/{repo}/issues/{issue_number}/labels` returns **200** rather than 422;
+the response contains the new label object (new `id`, `color: "ededed"`, `default: false`)
+and the label is attached to the issue. In other words, labels **need no pre-registration**.
 
-실측: PR #369에 `probe-intent-<epoch>`를 POST → 200 + 새 라벨 id
-`13177306671` → 이슈·저장소 라벨 목록에서 재조회로 확인 → 둘 다 삭제.
+Measured: POSTed `probe-intent-<epoch>` to PR #369 → 200 + new label id
+`13177306671` → confirmed by re-reading the issue and repository label lists → deleted both.
 
-**대응 규칙**: 예산 라벨(`rearm-intent@<head12>`, `rearmed@<head12>`,
-`rearm-exhausted`)은 선등록 없이 동작한다. 다만 **자동 생성은 부작용**이므로
-"라벨이 이미 있으니 예산이 소비되었다"는 판정은 반드시 **이슈 라벨 목록
-재조회**로 한다(쓰기 응답만 믿지 않는다 — Q11). 저장소 라벨 오염을 줄이려면
-운영자가 `rearm-intent@*`/`rearmed@*`를 정리 대상으로 인지해야 한다.
+**Response rule**: the budget labels (`rearm-intent@<head12>`, `rearmed@<head12>`,
+`rearm-exhausted`) work without pre-registration. However, **auto-creation is a side effect**,
+so the judgment "the label already exists, hence the budget was consumed" must always be
+made by **re-reading the issue label list** (do not trust the write response alone — Q11).
+To reduce repository label pollution, operators must treat `rearm-intent@*`/`rearmed@*` as cleanup targets.
 
 ## 운영 규범 (이 저장소 한정)
 

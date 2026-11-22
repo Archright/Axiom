@@ -513,209 +513,231 @@ R2 문서화 의무(후속). `admission-check.yml` 주석의 "ADR-0026" 참조�
 ---
 
 *작성일: 2026-09-29. PROPOSED — Phase 0 측정(α/β) 완료 전 "착지 형상 확정" 선언
-금지. γ 판정 시 본 ADR은 재의결 대상이다.*---
+is prohibited. On a γ verdict this ADR is subject to re-decision.*---
 
-## Amendment F (2026-11-22): outcome-aware re-evaluation — 두 번째 wake-up, 삼중 run 결속, 발행자 결속 판정, arm 이전 예산 청구
+## Amendment F (2026-11-22): outcome-aware re-evaluation — second wake-up, triple run binding, publisher-binding verdict, budget charged before arm
 
-> **성격**: Amendment C/D/E가 확정한 재arm 경로 위에 **깨우기(wake-up)의
-> 추가**와 **예산 청구 순서의 교체**를 append한다. 본문과 Amendment A–E는
-> 다시 쓰지 않는다. 본 개정이 명시적으로 개정하는 Amendment E 조항은 아래
-> §F.6에 열거한다.
+> **Nature**: this amendment appends a **second wake-up** and a **swap of
+> the budget-charging order** on top of the re-arm path established by
+> Amendments C/D/E. The body and Amendments A–E are not rewritten. The
+> Amendment E clauses this amendment explicitly amends are enumerated in
+> §F.6 below.
 
-### F.0 문제 (실측)
+### F.0 Problem (measured)
 
-dequeue 시점에 검증이 아직 **진행 중**이면 분류기는 `UNKNOWN`을 내고
-`no-arm`으로 종료한다(Amendment E — 옳은 판단이다). 그러나 그 검증이
-**나중에 종료되어도** 다시 판정할 계기가 없어 자동 복구가 영구 정지한다.
-즉 결함은 `UNKNOWN` 판정이 아니라 **terminal 결과 도착 후 재평가 경로의
-부재**다.
+If verification is still **in progress** at dequeue time, the classifier
+emits `UNKNOWN` and exits `no-arm` (Amendment E — the correct judgment).
+However, even if that verification **completes later**, there is no trigger
+to re-evaluate, so automatic recovery stops permanently. That is, the defect
+is not the `UNKNOWN` verdict but the **absence of a re-evaluation path after
+the terminal result arrives**.
 
-### F.1 두 번째 wake-up — `workflow_run[completed]`
+### F.1 Second wake-up — `workflow_run[completed]`
 
-- 트리거는 두 개이며 **하나의 결정 파이프라인**을 공유한다:
-  `pull_request_target[dequeued]`(= `source=dequeued`)와
-  `workflow_run[completed]`(workflows: `["admission-gate"]`,
-  = `source=workflow_run_completed`). `workflow_dispatch`는 검증 전용
-  채널로 남는다(`REARM_LIVE=0`).
-- **이벤트는 상태가 아니라 깨우기 신호다.** 어느 이벤트가 도착하든 판정
-  함수는 GitHub의 **현재 상태를 다시 읽는다**. 두 이벤트의 도착 순서,
-  중복, 누락은 정확성에 영향을 주지 않는다.
-- `workflow_run` 페이로드를 사실로 쓰지 않는다:
-  `head_sha`는 **merge-group SHA**(PR head 아님), `pull_requests[]`는
-  트리거 PR을 보장하지 않으며, 해당 run의 `GITHUB_SHA`는 **기본 브랜치
-  tip**이다. PR 번호는 `head_branch`의 단일-PR 큐 브랜치 형상
-  `gh-readonly-queue/<base>/pr-<N>-<40hex>`에서만 파싱하고, PR head는
-  `GET /repos/{owner}/{repo}/pulls/{N}`으로 **재조회**한다.
-- **다중 PR 큐 그룹은 fail-closed `UNKNOWN`**이다. 라이브 큐가
-  `maximumEntriesToMerge=1`이므로 다중 PR 그룹은 구성된 형상 밖이며,
-  어느 구성원의 verdict인지 추측하지 않는다.
-- `concurrency.group`에 `github.event_name`을 포함한다. GitHub는 그룹당
-  running 1 + pending 1만 유지하고 새 pending이 기존 pending을
-  대체하므로, 두 wake-up이 서로의 pending 슬롯을 밀어내면 안 된다.
-  상호 배제는 정확성 요건이 아니다 — **arm 청구는 라벨 하나**가 담당한다.
+- There are two triggers, sharing **one decision pipeline**:
+  `pull_request_target[dequeued]` (= `source=dequeued`) and
+  `workflow_run[completed]` (workflows: `["admission-gate"]`,
+  = `source=workflow_run_completed`). `workflow_dispatch` remains a
+  verification-only channel (`REARM_LIVE=0`).
+- **Events are wake-up signals, not state.** Whichever event arrives, the
+  decision function **re-reads GitHub's current state**. The arrival order,
+  duplication, or loss of the two events does not affect correctness.
+- The `workflow_run` payload is not used as fact:
+  `head_sha` is the **merge-group SHA** (not the PR head), `pull_requests[]`
+  does not guarantee the triggering PR, and that run's `GITHUB_SHA` is the
+  **base branch tip**. The PR number is parsed only from the single-PR queue
+  branch shape in `head_branch`, `gh-readonly-queue/<base>/pr-<N>-<40hex>`,
+  and the PR head is **re-fetched** via `GET /repos/{owner}/{repo}/pulls/{N}`.
+- **Multi-PR queue groups are fail-closed `UNKNOWN`**. Since the live queue
+  has `maximumEntriesToMerge=1`, a multi-PR group is outside the configured
+  shape, and we do not guess which member's verdict it is.
+- `concurrency.group` includes `github.event_name`. GitHub keeps only
+  running 1 + pending 1 per group, and a new pending replaces the existing
+  pending, so the two wake-ups must not push each other out of the pending
+  slot. Mutual exclusion is not a correctness requirement — **a single
+  label** carries the arm charge.
 
-### F.2 실행 정체성은 삼중 결속이다 (run_attempt 단독 금지)
+### F.2 Execution identity is a triple binding (run_attempt alone is prohibited)
 
-특정 검증 실행의 결과를 인용하려면 다음이 **동시에** 일치해야 한다:
+To cite the result of a specific verification run, the following must match
+**simultaneously**:
 
-| 축 | 값 |
+| axis | value |
 |---|---|
-| run | `run_id`(숫자) × `run_attempt` |
-| workflow | `event == merge_group` AND (`name == admission-gate` OR `path`가 `admission-gate-v2.yml`로 종료) |
-| subject | run `head_sha`(= merge-group SHA `G`) 및 wake-up이 지정한 기대 `G` |
+| run | `run_id` (numeric) × `run_attempt` |
+| workflow | `event == merge_group` AND (`name == admission-gate` OR `path` ends with `admission-gate-v2.yml`) |
+| subject | run `head_sha` (= merge-group SHA `G`) and the expected `G` specified by the wake-up |
 | attempt | `status == completed` AND `conclusion != null` |
 
-- **최신 attempt가 진행 중이면 `UNKNOWN`/no-arm**이다. 완료된 **이전**
-  attempt의 결론으로 대체하지 않는다(그 verdict는 현재 attempt의 verdict가
-  아니다).
-- `cancelled`·`action_required`·`stale`·`skipped` 결론은 검증 결과가
-  아니므로 `UNKNOWN`이다.
+- **If the latest attempt is in progress, `UNKNOWN`/no-arm**. Do not fall
+  back to the conclusion of a completed **earlier** attempt (that verdict is
+  not the current attempt's verdict).
+- The `cancelled`, `action_required`, `stale`, and `skipped` conclusions are
+  not verification results, so they are `UNKNOWN`.
 
-### F.3 판정 권위는 required check의 **발행자**다
+### F.3 Verdict authority is the required check's **publisher**
 
-동명의 Actions job check는 required check가 아니다. required context
-`admission-check`의 발행자는 ruleset의
-`required_status_checks[].integration_id`이며, 그 기대 App ID는 **base
-브랜치 정책**(`config/policy/merge_admission.json`의
-`requiredCheckSources.byContext["admission-check"]`)에서 읽는다 — PR이
-자기 정책 사본을 공급하지 않는다.
+An Actions job check with the same name is not the required check. The
+publisher of the required context `admission-check` is the ruleset's
+`required_status_checks[].integration_id`, and its expected App ID is read
+from the **base branch policy**
+(`requiredCheckSources.byContext["admission-check"]` in
+`config/policy/merge_admission.json`) — the PR does not supply its own copy
+of the policy.
 
-- 선택자: `name == <ctx>` **AND** `app.id == <requiredApp>`.
-- 발행자 check가 `G`에 없으면 `UNKNOWN`(`required-check=absent`).
-- `conclusion == success` → `UNKNOWN`/no-arm (초록 검증 + 제거는 의도된
-  동작이다).
-- `conclusion == null`(pending) → `UNKNOWN`.
-- `conclusion == failure`만 분류 가능하다.
-- 발행자 check의 `output.summary`에 `trust_surface=FAIL`이 있으면
-  **무조건 `PERMANENT`**/no-arm.
-- 발행자 check는 annotation을 싣지 않는다(2026-11-22 실측: 실패
-  check-run 3건 모두 annotation 0개). 사유 코드는 **같은 `G`의 실패한
-  Actions leg** check-run에서 읽는다.
+- Selector: `name == <ctx>` **AND** `app.id == <requiredApp>`.
+- If the publisher check is absent on `G`, `UNKNOWN` (`required-check=absent`).
+- `conclusion == success` → `UNKNOWN`/no-arm (a green verification plus
+  removal is the intended behavior).
+- `conclusion == null` (pending) → `UNKNOWN`.
+- Only `conclusion == failure` is classifiable.
+- If the publisher check's `output.summary` contains `trust_surface=FAIL`,
+  **unconditionally `PERMANENT`**/no-arm.
+- The publisher check carries no annotation (2026-11-22 measurement: all
+  three failed check-runs had 0 annotations). The reason code is read from
+  the **failed Actions leg check-run of the same `G`**.
 
-### F.4 `CANDIDATE_*`는 TRANSIENT allowlist에서 제외한다
+### F.4 Exclude `CANDIDATE_*` from the TRANSIENT allowlist
 
-Amendment E의 4코드 title allowlist에서
-`CANDIDATE_MERGE_BASE_UNRESOLVED`를 **제거**한다. S1의 3상태 분리
-(`RESOLVED`/`UNRELATED`/`UNKNOWN`)가 착지하기 전에는 하나의 title이
-"재시도 가능"을 함의할 수 없기 때문이다.
+**Remove** `CANDIDATE_MERGE_BASE_UNRESOLVED` from Amendment E's 4-code title
+allowlist. Until S1's three-state split
+(`RESOLVED`/`UNRELATED`/`UNKNOWN`) lands, a single title cannot imply
+"retryable".
 
-- `CANDIDATE_*` title은 **`UNKNOWN`/no-arm**이며 로그 앵커 패스로
-  진행하지 않는다(short-circuit).
-- allowlist는 `NOT_ADMIT_BINDING_MISMATCH`, `NOT_ADMIT_STALE_BASE`,
-  `ADM_IDENTITY` 3개다. `ADM_IDENTITY`는 이제 `attest /
-  admission-independents`의 실패 check-run annotation에서 읽히므로
-  도달 가능하다.
-- `PERMANENT` 계열(`ROT_*`/`TRUST_SURFACE*`/`NO_CERT*`/`MUST_*`)은
-  종전대로 no-arm이다.
+- A `CANDIDATE_*` title is **`UNKNOWN`/no-arm** and does not proceed to the
+  log-anchor pass (short-circuit).
+- The allowlist is `NOT_ADMIT_BINDING_MISMATCH`, `NOT_ADMIT_STALE_BASE`,
+  and `ADM_IDENTITY` — 3 codes. `ADM_IDENTITY` is now read from the failed
+  check-run annotation of `attest / admission-independents`, so it is
+  reachable.
+- The `PERMANENT` family (`ROT_*`/`TRUST_SURFACE*`/`NO_CERT*`/`MUST_*`)
+  remains no-arm as before.
 
-### F.5 예산은 arm **이전**에 청구한다 — `rearm-intent@<head12>`
+### F.5 Charge the budget **before** arm — `rearm-intent@<head12>`
 
-Amendment E는 `rearmed@<head12>`를 **arm 성공 직후**에만 기록했다. 그
-순서는 "arm 성공 → 라벨 기록 실패"에서 예산이 소비되었는데도 기록이
-없는 틈을 만든다. 본 개정은 순서를 뒤집는다:
+Amendment E recorded `rearmed@<head12>` only **immediately after a successful
+arm**. That order creates a gap in "arm succeeded → label write failed"
+where the budget was consumed but no record exists. This amendment reverses
+the order:
 
 ```
-예산 확인 → rearm-intent@<head12> POST → 라벨 재조회로 존재 확인
-          → gh pr merge --auto --match-head-commit <HEAD_SHA>
-          → 성공 시 rearmed@<head12> POST (실패는 WARN, intent 유지)
+Budget check → rearm-intent@<head12> POST → verify existence via label re-read
+             → gh pr merge --auto --match-head-commit <HEAD_SHA>
+             → on success rearmed@<head12> POST (failure is WARN, intent kept)
 ```
 
-- `rearm-intent@<head12>`는 **영구 arm 청구**다. 이 워크플로는 그것을
-  지우지 않는다. 이슈 라벨 추가 API는 없는 라벨을 **자동 생성**하므로
-  (2026-11-22 실측 — `docs/spec/rearm_observation_quirks.md` Q12) 라벨
-  선등록은 필요 없지만, "라벨이 있으니 예산 소비" 판정은 반드시 이슈 라벨
-  **재조회**로 한다(Q11).
-- intent가 있고 `rearmed@`가 없으면 **예산은 소비된 것으로 간주**한다
-  (`evidence.line="intent-orphan"`, `budget=spent`, `action=no-arm`).
-  보수적으로 예산을 소비할 수는 있어도 **중복 arm은 불가능**하다.
-- arm 요청 결과가 불명확하면(명령 실패) intent를 유지하고
-  `rearm-exhausted`를 best-effort로 부착한 뒤
-  `evidence.line="arm-failed"`, `budget=spent`, `action=no-arm`으로
-  종료한다. operator가 PR 상태를 조정해야 한다.
-- **예산 소진은 red check가 아니다.** Amendment E의 `exit 1`(명시적
-  종결 실패)을 **제거**하고 `exit 0` + `rearm-exhausted` 마커로 바꾼다.
-  재시도 예산은 검증 verdict가 아니라 운영자 가시성 신호다.
-- arm 직전 재확인(모두 단일 GraphQL 스냅샷 + 라벨 재조회):
-  PR `state == OPEN`, `headRefOid == <분류된 head>`, 큐 미복귀
+- `rearm-intent@<head12>` is a **permanent arm charge**. This workflow does
+  not remove it. The issue-label add API **auto-creates** a missing label
+  (2026-11-22 measurement — `docs/spec/rearm_observation_quirks.md` Q12), so
+  pre-registration of the label is unnecessary, but a "the label exists, so
+  the budget is spent" verdict must be made by **re-reading** the issue label
+  (Q11).
+- If intent exists and `rearmed@` does not, **the budget is considered
+  spent** (`evidence.line="intent-orphan"`, `budget=spent`,
+  `action=no-arm`). The budget may be spent conservatively, but **a
+  duplicate arm is impossible**.
+- If the arm request result is unclear (command failure), keep the intent,
+  attach `rearm-exhausted` on a best-effort basis, and exit with
+  `evidence.line="arm-failed"`, `budget=spent`, `action=no-arm`. The
+  operator must adjust the PR state.
+- **Budget exhaustion is not a red check.** **Remove** Amendment E's
+  `exit 1` (explicit terminal failure) and replace it with `exit 0` + a
+  `rearm-exhausted` marker. The retry budget is an operator-visibility
+  signal, not a verification verdict.
+- Re-check immediately before arm (all from a single GraphQL snapshot +
+  label re-read): PR `state == OPEN`, `headRefOid == <classified head>`,
+  not returned to the queue
   (`mergeQueueEntry.state ∉ {QUEUED, AWAITING_CHECKS, MERGEABLE}`),
-  `autoMergeRequest == null`(이미 armed면 재arm 없이 `rearmed@`만 보정),
-  `rearmed@` 부재, `rearm-intent@` 부재.
-- head가 이동했으면 `UNKNOWN`/no-arm이다. 분류·예산·실행 결속이 모두
-  head에 묶여 있기 때문이다.
+  `autoMergeRequest == null` (if already armed, correct only `rearmed@`
+  without re-arming), `rearmed@` absent, `rearm-intent@` absent.
+- If the head has moved, `UNKNOWN`/no-arm. Classification, budget, and run
+  binding are all tied to the head.
 
-### F.6 Amendment E 조항 중 본 개정이 명시적으로 개정하는 것
+### F.6 Amendment E clauses this amendment explicitly amends
 
-| Amendment E 조항 | 본 개정 |
+| Amendment E clause | This amendment |
 |---|---|
-| "arm 성공 직후에만 `rearmed@<head12>` 기록" | **개정** — arm **이전** `rearm-intent@<head12>` 청구 + 성공 후 `rearmed@` 확인 |
-| "예산 소진 시 `exit 1`(명시적 종결 실패)" | **개정** — `exit 0` + `rearm-exhausted` 마커 |
-| 4코드 title allowlist(`CANDIDATE_MERGE_BASE_UNRESOLVED` 포함) | **개정** — 3코드 allowlist, `CANDIDATE_*`는 `UNKNOWN`/no-arm |
-| 단일 트리거(`pull_request_target[dequeued]`) | **개정** — `workflow_run[completed]` 추가, 단일 파이프라인 |
+| "record `rearmed@<head12>` only immediately after a successful arm" | **Amended** — charge `rearm-intent@<head12>` **before** arm + confirm `rearmed@` after success |
+| "`exit 1` on budget exhaustion (explicit terminal failure)" | **Amended** — `exit 0` + `rearm-exhausted` marker |
+| 4-code title allowlist (including `CANDIDATE_MERGE_BASE_UNRESOLVED`) | **Amended** — 3-code allowlist, `CANDIDATE_*` is `UNKNOWN`/no-arm |
+| single trigger (`pull_request_target[dequeued]`) | **Amended** — add `workflow_run[completed]`, single pipeline |
 
-나머지(증거 앵커 (a)/(b)/(c)의 닫힌 열거, DEFAULT-NO-ARM, trust-surface
-교차 금지, `--match-head-commit`, 구조화 summary 계약, 2회/PR head 예산)는
-**그대로 유지**한다.
+The remainder (the closed enumeration of evidence anchors (a)/(b)/(c),
+DEFAULT-NO-ARM, no trust-surface crossing, `--match-head-commit`, the
+structured summary contract, and the 2-per-PR-head budget) is **kept as
+is**.
 
-### F.7 남는 한계 (은폐하지 않는다)
+### F.7 Remaining limits (not concealed)
 
-- `REARM_APP_PRIVATE_KEY`가 등록되지 않은 동안 **양성 arm 경로는
-  도달 불가**하며 모든 live arm은 `token-missing`/no-arm이다. 이는
-  자격 증명 게이트이지 코드 결함이 아니다.
-- `pull_request_target`의 public 저장소 정책 강제(2026-12-02 예고)가 본
-  저장소에 적용되는지는 API로 판독할 수 없다 — UI 설정 확인이 필요하다.
-- 기능 수용(이벤트 도착·정확한 run 결속·동일 판정 함수)과 통계 수용
-  (자연 표본 n≥20에서의 안정성)은 **분리**한다. n<20은 통계 미완이지
-  기능 미완이 아니다.
+- While `REARM_APP_PRIVATE_KEY` is not registered, **the positive arm path
+  is unreachable**, and every live arm is `token-missing`/no-arm. This is a
+  credential gate, not a code defect.
+- Whether the public-repository policy enforcement for `pull_request_target`
+  (announced for 2026-12-02) applies to this repository cannot be determined
+  via the API — a UI settings check is required.
+- Functional acceptance (event arrival, exact run binding, the same decision
+  function) and statistical acceptance (stability at a natural sample of
+  n≥20) are **separated**. n<20 means statistical incompleteness, not
+  functional incompleteness.
 
-### F.8 적대적 검토 하드닝 (2026-11-22, 같은 Slice)
+### F.8 Adversarial-review hardening (2026-11-22, same Slice)
 
-착지 전 실행체를 대상으로 한 읽기 전용 적대적 검토에서 **fail-open 경로
-9건**이 재현되었다. 아래는 구현에 대해 규범적이며, F.1–F.7의 의도를
-바꾸지 않는다 — 전부 "증거가 없으면 arm하지 않는다"의 강화다.
+A read-only adversarial review of the pre-landing implementation reproduced
+**9 fail-open paths**. The following is normative for the implementation and
+does not change the intent of F.1–F.7 — all of it reinforces "if there is no
+evidence, do not arm".
 
-1. **영구 실패 title matcher.** 발행자는 코드를 `NOT_ADMIT_` 접두사로
-   낸다(`NOT_ADMIT_ROT_NEW_PIN`, `NOT_ADMIT_NO_CERT`,
-   `NOT_ADMIT_TRUST_SURFACE_INCOMPLETE`, `NOT_ADMIT_MUST_*`). 접두사를
-   허용하지 않는 정규식은 이들을 전부 `OTHER`로 떨어뜨려 로그 앵커
-   패스에서 TRANSIENT arm될 수 있었다. matcher는
-   `^(NOT_ADMIT_)?(ROT_|TRUST_SURFACE|NO_CERT|MUST_)`다.
-2. **예산 라벨 평가 순서.** 확정 arm은 `rearm-intent@`와 `rearmed@`를
-   **둘 다** 남긴다. `rearmed@`를 먼저 평가해야 정상 소진 상태가
-   exhausted로 판정된다(intent 우선은 이를 orphan으로 오진하고
-   `rearm-exhausted` 마커를 누락시켰다). intent만 있는 경우는 종전대로
-   `intent-orphan`/spent/no-arm이며, 이 분기도 `rearm-exhausted`를
-   best-effort로 보장한다.
-3. **HTTP 403 ≠ TRANSIENT.** class (c)는 5xx만 TRANSIENT다(사용자 계약:
-   "명백한 일시적 API 5xx·전송 오류"). 403은 토큰에 대해 결정적이며
-   검증이 일시적이었다는 증거가 아니므로 `UNKNOWN`/no-arm이다.
-4. **G–head 결속.** `G`는 큐의 trial merge이고 그 부모는 실제로 검증한
-   base와 head다. 현재 PR head가 `G`의 부모에 없으면 그 verdict는 다른
-   head의 것이므로 arm하지 않는다(`UNKNOWN`, `g-parent-mismatch`).
-5. **실행 정체성.** merge_group run은 후보의 workflow 파일로 실행되므로
-   `name`/`path` 문자열은 후보 통제 하에 있다. `name == admission-gate`
-   **AND** `path`가 `admission-gate-v2.yml` **AND** `workflow_id`가
-   워크플로 레지스트리에서 해석한 정본 id와 일치해야 한다. check-runs는
-   `--paginate --slurp`로 전 페이지를 읽는다(단일 페이지는 재실행 누적으로
-   필수 check를 누락시킬 수 있다).
-6. **큐 가드.** `isInMergeQueue == true`면 entry state와 무관하게
-   no-arm이다. 종전에는 `QUEUED|AWAITING_CHECKS|MERGEABLE`만 막아
-   `LOCKED|UNMERGEABLE`에서 실패할 arm을 발행했다.
-7. **동시 wake-up.** 라벨에는 compare-and-swap이 없고 workflow-level
-   concurrency group은 이벤트별로 키가 달라 두 wake-up을 직렬화하지
-   않는다. 따라서 (a) arm 직전 auto-merge를 한 번 더 읽어 형제 arm을
-   reconcile하고, (b) arm 명령이 오류여도 auto-merge가 존재하면
-   `arm-reconciled`로 1회 소비 처리한다. 잔여 창은 "두 요청이 동시에
-   auto-merge 부재를 관측"하는 경우뿐이며, 그 결과는 멱등 요청 1회
-   중복이지 검증 우회가 아니다(큐가 재검증한다).
-8. **HISTORICAL 순서.** publisher binding은 historical return **이전**에
-   해석된다. 종전 순서는 forensic lane이 `publisher-unresolved`로
-   항상 종료되어 아무것도 분류하지 못했다.
-9. **jq 가드.** annotation 병합/집계 파이프라인의 파싱 실패는 red job이
-   아니라 `UNKNOWN`/no-arm이다.
+1. **Permanent-failure title matcher.** The publisher emits codes with the
+   `NOT_ADMIT_` prefix (`NOT_ADMIT_ROT_NEW_PIN`, `NOT_ADMIT_NO_CERT`,
+   `NOT_ADMIT_TRUST_SURFACE_INCOMPLETE`, `NOT_ADMIT_MUST_*`). A regex that
+   does not allow the prefix dropped all of them to `OTHER`, so they could
+   be TRANSIENT-armed in the log-anchor pass. The matcher is
+   `^(NOT_ADMIT_)?(ROT_|TRUST_SURFACE|NO_CERT|MUST_)`.
+2. **Budget-label evaluation order.** A confirmed arm leaves **both**
+   `rearm-intent@` and `rearmed@`. `rearmed@` must be evaluated first so
+   that a normally exhausted state is judged exhausted (evaluating intent
+   first misdiagnosed it as orphan and omitted the `rearm-exhausted`
+   marker). When only intent exists, the result remains
+   `intent-orphan`/spent/no-arm, and this branch also guarantees
+   `rearm-exhausted` on a best-effort basis.
+3. **HTTP 403 ≠ TRANSIENT.** In class (c), only 5xx is TRANSIENT (user
+   contract: "obvious transient API 5xx / transport errors"). A 403 is
+   deterministic with respect to the token and is not evidence that the
+   verification was transient, so it is `UNKNOWN`/no-arm.
+4. **G–head binding.** `G` is the queue's trial merge, and its parents are
+   the base and head that were actually verified. If the current PR head is
+   not among `G`'s parents, that verdict belongs to a different head, so do
+   not arm (`UNKNOWN`, `g-parent-mismatch`).
+5. **Execution identity.** A merge_group run executes with the candidate's
+   workflow file, so the `name`/`path` strings are under candidate control.
+   `name == admission-gate` **AND** `path` is `admission-gate-v2.yml`
+   **AND** `workflow_id` must match the canonical id resolved from the
+   workflow registry. check-runs are read across all pages with
+   `--paginate --slurp` (a single page can miss required checks due to
+   accumulated reruns).
+6. **Queue guard.** If `isInMergeQueue == true`, no-arm regardless of the
+   entry state. Previously only `QUEUED|AWAITING_CHECKS|MERGEABLE` were
+   blocked, so an arm that would fail was issued for
+   `LOCKED|UNMERGEABLE`.
+7. **Concurrent wake-ups.** Labels have no compare-and-swap, and the
+   workflow-level concurrency group is keyed per event, so it does not
+   serialize the two wake-ups. Therefore (a) immediately before arm, read
+   auto-merge once more and reconcile a sibling arm, and (b) even if the arm
+   command errors, if auto-merge exists, treat it as one consumption via
+   `arm-reconciled`. The remaining window is only the case where "two
+   requests observe the absence of auto-merge simultaneously", and the
+   result is one duplicate idempotent request, not a verification bypass
+   (the queue re-verifies).
+8. **HISTORICAL order.** The publisher binding is resolved **before** the
+   historical return. In the previous order, the forensic lane always ended
+   with `publisher-unresolved` and could not classify anything.
+9. **jq guard.** A parse failure in the annotation merge/aggregation
+   pipeline is `UNKNOWN`/no-arm, not a red job.
 
-**남는 한계(은폐하지 않는다)**: 위 7의 직렬화는 완전한 상호배제가
-아니다. 완전 직렬화는 PR 번호를 job-level concurrency key로 쓰는
-resolver job 분리가 필요하며, 이는 별도 Slice다. 또한
-`merge-queue-rearm.yml` 자체는 아직 trust surface에 등록되어 있지
-않다(등록은 `config/policy/trust_surface_manifest.json` 수정 = epoch
-rotation을 요구하므로 별도 승인 사안이다).
+**Remaining limitation (not concealed)**: the serialization in item 7 above
+is not complete mutual exclusion. Full serialization requires splitting out
+a resolver job that uses the PR number as a job-level concurrency key, and
+that is a separate Slice. Also, `merge-queue-rearm.yml` itself is not yet
+registered in the trust surface (registration requires a modification to
+`config/policy/trust_surface_manifest.json` = epoch rotation, so it is a
+separate approval matter).
