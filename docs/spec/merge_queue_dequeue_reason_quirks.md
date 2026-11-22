@@ -71,7 +71,7 @@ and **all 33 carried no reason field** (all null). That null is a property of
 the sampled REST event shape; it does **not** prove that the API has no reason,
 and it says nothing about the GraphQL field.
 
-기존 사용 경로에서는 사유를 관측하지 못했으며, GraphQL `RemovedFromMergeQueueEvent.reason` 필드의 실제 값 가용성을 추가 검증해야 한다.
+The existing consumption path did not observe a reason; the actual value availability of the GraphQL `RemovedFromMergeQueueEvent.reason` field still requires additional verification.
 
 ### Verification of the GraphQL field (2026-11-22, read-only)
 
