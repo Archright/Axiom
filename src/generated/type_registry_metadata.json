@@ -93659,6 +93659,21 @@
       "ignorable": false,
       "leanType": "Bool",
       "module": "src/gate/runners/debt_integrity_gate.nim",
+      "name": "isPlainRelativePath",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/gate/runners/debt_integrity_gate.nim",
       "name": "isRegistryDisposition",
       "negativeConstraints": [
         "result >= 0 is invalid — Bool is not numeric",
@@ -93880,6 +93895,22 @@
       "returnType": "seq[string]",
       "smtSort": "(Seq string)",
       "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/gate/runners/debt_integrity_gate.nim",
+      "name": "validateRegistryContentHashes",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
     },
     {
       "hasAxiomHint": false,
