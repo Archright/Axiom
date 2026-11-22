@@ -32,7 +32,7 @@ ax cert verify <cert.json>  # verify a certificate against the local trust journ
 ax help                 # full command surface
 ```
 
-> **Product scope**: bounded preview — for actual measured coverage, see `metrics.vkd` in `ax report --json`.
+> **제품 범위**: bounded preview — 실제 measured coverage는 `ax report --json`의 `metrics.vkd`를 참조하세요.
 
 ## Status
 
