@@ -126,6 +126,26 @@
       "Historical event: PR #309 landed at 2026-11-21T07:58:46Z while its required admission-check was failure.",
       "These are different facts and neither substitutes for the other."
     ],
-    "limitation": "GitHub does not expose repository-ruleset configuration history through the REST rulesets endpoints, so the add/remove timeline of the bypass actor is a session observation and not an API readback. It is recorded as such and not as a platform-verified timeline."
+    "configurationHistory": {
+      "endpoint": "GET /repos/Archright/Axiom/rulesets/27097366/history and .../history/{version_id}",
+      "versions": [
+        {
+          "versionId": 58912954,
+          "updatedAt": "2026-11-21T07:58:16Z",
+          "enforcement": "active",
+          "bypassActors": [{ "actorId": null, "actorType": "OrganizationAdmin", "bypassMode": "pull_request" }],
+          "actorUserId": 53123826
+        },
+        {
+          "versionId": 58913011,
+          "updatedAt": "2026-11-21T07:59:24Z",
+          "enforcement": "active",
+          "bypassActors": []
+        }
+      ],
+      "windowSeconds": 68,
+      "secondsFromWindowOpenToMerge": 30
+    },
+    "correction": "An earlier revision of this file stated that repository-ruleset configuration history is not readable through the REST rulesets endpoints. That was false; the history endpoints above returned both versions. The timeline is a platform readback, not a session observation."
   }
 }

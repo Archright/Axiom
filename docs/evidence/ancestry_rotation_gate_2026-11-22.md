@@ -245,10 +245,21 @@ The second claim, stated exactly:
 - The ruleset's required context set did not change and the check was still required, so the
   landing was not a normal admission.
 
-Limitation, stated rather than smoothed: GitHub does not expose repository-ruleset
-configuration history through the REST rulesets endpoints. The add/remove timing of the bypass
-actor is a session observation, recorded as such, not a platform-verified timeline. What is
-platform-verified is the merge, the merged check conclusion, and the current readback.
+The configuration timeline is platform-verified, not a session observation. Repository ruleset
+history is readable at `GET /repos/{owner}/{repo}/rulesets/{id}/history` and
+`GET /repos/{owner}/{repo}/rulesets/{id}/history/{version_id}`:
+
+| version_id | updated_at (UTC) | `bypass_actors` |
+|---|---|---|
+| `58912954` | `2026-11-21T07:58:16Z` | `[{actor_id: null, actor_type: OrganizationAdmin, bypass_mode: pull_request}]` |
+| `58913011` | `2026-11-21T07:59:24Z` | `[]` |
+
+Both versions record `enforcement=active`, and the change actor on `58912954` is user id
+`53123826` (`wintrover`). The window is therefore 68 seconds, and PR #309 merged 30 seconds
+after it opened. This supersedes the earlier statement in this document that the timeline was
+only a session observation: that statement was wrong about the API, and the correction is a
+readback rather than a rewording. `docs/agents/axiom_admission_verifier_ops.md` records the
+same two version ids independently.
 
 This document does not re-derive any cohort-level bypass statistic. It records one subject
 with its own identifiers and stops there.
