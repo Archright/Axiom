@@ -72,7 +72,8 @@ print(hits[0].get('run', ''), end='')
   result = outp
 
 proc extractAncestryFn(body: string): string =
-  ## ancestry_resolve 정의를 run 본문에서 그대로 추출 (marker → 첫 단독 `}`).
+  ## Extract the ancestry_resolve definition verbatim from the run block
+  ## (marker line through the first standalone `}`).
   let lines = body.splitLines()
   var start = -1
   for i, l in lines:
@@ -443,11 +444,11 @@ suite "SL-02 consumer binding — T6 + positive path (real repo, real deriver)":
     let remote = getTempDir() / ("sl02_origin_" & $getCurrentProcessId())
     removeDir(remote)
     var (outp, code) = execCmdEx("git init -q --bare " & quoteShell(remote))
-    doAssert code == 0, "origin fixture init 실패: " & outp
+    doAssert code == 0, "origin fixture init failed: " & outp
     (outp, code) = execCmdEx(
       "git -C " & quoteShell(remote) & " fetch -q --depth=512 --no-tags " &
       quoteShell(repoRoot()) & " " & quoteShell("HEAD:refs/heads/fixture"))
-    doAssert code == 0, "origin fixture fetch 실패: " & outp
+    doAssert code == 0, "origin fixture fetch failed: " & outp
     let originUrl = gitOut("remote get-url origin")
     doAssert originUrl.len > 0, "origin URL absent — hermetic rewrite impossible"
     doAssert "@" notin originUrl, "credential-bearing origin URL — refusing to persist it"
