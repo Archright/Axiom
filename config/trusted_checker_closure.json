@@ -229,7 +229,7 @@
     "src/cli/payload_bridge.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "c33cf368bbc730ac7a86119cc1480a584262c707"
+      "sha": "6856a591deb632aa2154eb6a9c648a5c6b8f4dbe"
     },
     "src/cli/precompile_gates.nim": {
       "mode": "100644",
