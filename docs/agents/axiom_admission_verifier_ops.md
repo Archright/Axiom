@@ -125,6 +125,11 @@ The `coverage` field reports per-SHA classification and aggregation:
 
 Coverage never weakens a violation verdict. `PASS` requires `subjects > 0`, `unresolved == 0`, and `violations == 0` — with an `UNRESOLVED` subject and no definite violation the result is `UNVERIFIABLE` (exit 2) instead of `PASS`. A definite violation yields `FAIL` (exit 1), and unresolved subjects do not mask it. There is no path that converts unresolved into pass. One invocation emits only one exit code, so per-SHA attribution is read from per-SHA invocations or from `coverage.perSubject`.
 
+### 5.1 Detector invocation requirements
+
+- **`--sha` must be a full 40-hex (or 64-hex) commit id.** The detector rejects a short SHA before any API call: stderr is `ERROR invalid --sha: <value>` (no JSON is emitted on stdout) and the exit code is `2` (UNRESOLVED). Resolve the full SHA first (for example from `gh api "repos/Archright/Axiom/actions/runs?event=merge_group&per_page=100"`), and never truncate a SHA when invoking the detector.
+- **In the `merge_group` venue the `external_id` prefix `v1|` does not encode a run id.** Its fields are `v1|<repo_id>|<head_sha>|<base_sha>|<baseline>`; there is no `run=`/`#attempt` segment. Run identity is resolved from `run=`/`attempt=` in the check-run `output.summary` and **MUST be cross-checked against** `GET /repos/{owner}/{repo}/actions/runs/{run_id}` (id, `run_attempt`, `event`, `path`, `head_sha`). `output.summary` is consistency data — **not an authority** for run facts. An absent or unresolvable `run=`/`attempt=` is `V2-UNRESOLVED` and exits `2`; it is never treated as clean.
+
 `gh pr checks --watch`는 merge-queue 단계를 추적하지 않는다(PR-head checks 종료 시 exit). 큐 진입 후에는 `G`의 check-runs를 직접 조회한다 — quirk 정본: [docs/spec/gh_automerge_merge_queue_quirks.md](../spec/gh_automerge_merge_queue_quirks.md).
 
 ## 6. 소유권과 에스컬레이션

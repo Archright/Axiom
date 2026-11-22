@@ -1,0 +1,1 @@
+{"eligible_runs":1,"check_runs":1,"excluded_check_runs":{"pull_request":0},"violations":[],"coverage":{"subjects":1,"resolved":1,"unresolved":0,"violations":0,"coverageRatio":1,"perSubject":[{"sha":"478f27d27e1fc58b6a65632c7df39d8cc32f7485","classification":"RESOLVED_CLEAN","eligibleRuns":1,"violations":[]}]},"max_lag_seconds":600,"result":"PASS"}

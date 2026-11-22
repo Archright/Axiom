@@ -1,0 +1,450 @@
+{
+  "schemaVersion": 1,
+  "kind": "ci_optimization.verdict_attribution.merge_group_observation",
+  "date": "2026-11-22",
+  "parent": "data/ci_optimization/app_verdict_attribution_2026-11-21/summary.json (PR-venue payloads; immutable, not rewritten)",
+  "venue": "merge_group",
+  "observedAt": "2026-11-22T04:21:56Z",
+  "purpose": "Extend the verdict-attribution evidence to the merge_group venue for four queue generations of PR #322, preserving detector exit codes and raw JSON. The detector judges verdict-subject binding only; a RESOLVED_CLEAN admission-check verdict does not assert that the generation passed every required context.",
+  "generationsUnderObservation": [
+    "5a5fbfd760d0105314e44dfdc8c64e61118c4fe5",
+    "2609f6081d0a3184c9e347037b740c461265d8f9",
+    "478f27d27e1fc58b6a65632c7df39d8cc32f7485",
+    "be6c14c2602e8b5b7dd763c4a1bfb1ea40d0df59"
+  ],
+  "detector": {
+    "path": "tools/ci/verdict_attribution_check.sh",
+    "invocation": "bash tools/ci/verdict_attribution_check.sh --venue merge_group --sha <40-hex> --json",
+    "selfTest": {
+      "command": "bash tools/ci/verdict_attribution_check.sh --self-test",
+      "exit": 0,
+      "stdout": "SELF-TEST PASS"
+    },
+    "exitCodes": {
+      "0": "RESOLVED_CLEAN (>=1 eligible run, zero violations)",
+      "1": "RESOLVED_VIOLATION (>=1 violation)",
+      "2": "UNRESOLVED (zero eligible runs, API/pagination failure, or unresolved run identity)"
+    },
+    "classificationRule": "exit 0 -> RESOLVED_CLEAN; exit 1 -> RESOLVED_VIOLATION; exit 2 -> UNRESOLVED. Exit 2 is never converted to clean.",
+    "rawOutputs": "detector/<sha>.json (stdout), detector/<sha>.exit (exact exit code)",
+    "fortyHexRequirement": {
+      "requirement": "--sha accepts only 40-hex (or 64-hex) commit ids; a short SHA is rejected before any API call.",
+      "probeCommand": "bash tools/ci/verdict_attribution_check.sh --venue merge_group --sha 5a5fbfd7 --json",
+      "exit": 2,
+      "observedAt": "2026-11-22T04:21:56Z",
+      "evidence": "detector/short-sha-probe.txt, detector/short-sha-probe.exit",
+      "conclusion": "SHORT_SHA_REJECTED_AS_UNRESOLVED (exit 2, no JSON on stdout)",
+      "output": "ERROR invalid --sha: 5a5fbfd7",
+      "outputStream": "stderr; no JSON is emitted on stdout"
+    }
+  },
+  "runIdentityCrossCheck": {
+    "rule": "The merge_group external_id prefix `v1|` encodes repo_id/head_sha/base_sha/baseline but no run id. Run identity is resolved from the check-run output.summary (`run=`/`attempt=`) and MUST be cross-checked against GET /repos/{owner}/{repo}/actions/runs/{run_id}. output.summary is consistency data, not an authority.",
+    "observed": "4/4 check-runs resolved to an Actions Run whose id/attempt/event/path/head_sha matched the summary and the subject SHA.",
+    "authoritySources": {
+      "runFacts": "GET /repos/Archright/Axiom/actions/runs/{run_id}",
+      "verdictRecords": "GET /repos/Archright/Axiom/commits/{sha}/check-runs"
+    },
+    "rawEvidence": "payloads/<sha>/runs.json, payloads/<sha>/check-runs.json, queue/run_44902266464.json, queue/run_44905101444.json"
+  },
+  "perGeneration": [
+    {
+      "generation": "5a5fbfd7",
+      "headSha": "5a5fbfd760d0105314e44dfdc8c64e61118c4fe5",
+      "admissionGateRun": {
+        "id": 44902266464,
+        "runAttempt": 1,
+        "event": "merge_group",
+        "headSha": "5a5fbfd760d0105314e44dfdc8c64e61118c4fe5",
+        "workflowId": 420946486,
+        "path": ".github/workflows/admission-gate-v2.yml",
+        "status": "completed",
+        "conclusion": "failure",
+        "createdAt": "2026-11-21T12:06:36Z",
+        "updatedAt": "2026-11-21T12:14:20Z"
+      },
+      "checkRun": {
+        "id": 136840441402,
+        "name": "admission-check",
+        "appId": 5795152,
+        "status": "completed",
+        "conclusion": "failure",
+        "startedAt": "2026-11-21T12:06:35Z",
+        "completedAt": "2026-11-21T12:14:23Z",
+        "externalId": "v1|1454952493|5a5fbfd760d0105314e44dfdc8c64e61118c4fe5|d99487c45e7c74600f042622d927832630461345|eb5700cee71683c10263a72f16078859f33362e9",
+        "summaryRun": 44902266464,
+        "summaryAttempt": 1,
+        "summaryConclusion": "failure"
+      },
+      "runApiCrossCheck": {
+        "status": "MATCH",
+        "checks": [
+          "summary run= equals Actions run id",
+          "summary attempt= equals run_attempt",
+          "run.event=merge_group",
+          "run.path=.github/workflows/admission-gate-v2.yml",
+          "run.head_sha=subject SHA"
+        ],
+        "authorityNote": "summary is consistency data; the Actions Run API is the run-fact source"
+      },
+      "detector": {
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "result": "PASS",
+        "eligibleRuns": 1,
+        "inScopeCheckRuns": 1,
+        "violationCodes": [],
+        "coverage": {
+          "subjects": 1,
+          "resolved": 1,
+          "unresolved": 0,
+          "violations": 0,
+          "coverageRatio": 1,
+          "perSubject": [
+            {
+              "sha": "5a5fbfd760d0105314e44dfdc8c64e61118c4fe5",
+              "classification": "RESOLVED_CLEAN",
+              "eligibleRuns": 1,
+              "violations": []
+            }
+          ]
+        },
+        "rawJson": "detector/5a5fbfd760d0105314e44dfdc8c64e61118c4fe5.json",
+        "rawExit": "detector/5a5fbfd760d0105314e44dfdc8c64e61118c4fe5.exit"
+      },
+      "otherFailureCheckRuns": [
+        {
+          "name": "admission-check",
+          "app": 15368,
+          "conclusion": "failure",
+          "completedAt": "2026-11-21T12:14:19Z"
+        },
+        {
+          "name": "verdict / admission-check",
+          "app": 15368,
+          "conclusion": "failure",
+          "completedAt": "2026-11-21T12:13:30Z"
+        },
+        {
+          "name": "publication-integrity",
+          "app": 15368,
+          "conclusion": "failure",
+          "completedAt": "2026-11-21T12:13:05Z"
+        },
+        {
+          "name": "script-scan",
+          "app": 15368,
+          "conclusion": "failure",
+          "completedAt": "2026-11-21T12:07:17Z"
+        }
+      ],
+      "queueOutcome": "superseded (no RemovedFromMergeQueueEvent names this SHA): its admission-gate run failed at 12:14:20Z while the next generation 2609f608 (run created 12:10:38Z) was already in flight; 2609f608 is the beforeCommit of the 12:16:31Z failed_checks removal.",
+      "note": "Fail-closed verdict (not an attribution violation): the admission-check check-run is bound to its own run and SHA; the failure reason recorded in output.summary is base_not_on_main(status=behind)."
+    },
+    {
+      "generation": "2609f608",
+      "headSha": "2609f6081d0a3184c9e347037b740c461265d8f9",
+      "admissionGateRun": {
+        "id": 44902593790,
+        "runAttempt": 1,
+        "event": "merge_group",
+        "headSha": "2609f6081d0a3184c9e347037b740c461265d8f9",
+        "workflowId": 420946486,
+        "path": ".github/workflows/admission-gate-v2.yml",
+        "status": "completed",
+        "conclusion": "success",
+        "createdAt": "2026-11-21T12:10:38Z",
+        "updatedAt": "2026-11-21T12:18:18Z"
+      },
+      "checkRun": {
+        "id": 136841422528,
+        "name": "admission-check",
+        "appId": 5795152,
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-11-21T12:10:38Z",
+        "completedAt": "2026-11-21T12:18:20Z",
+        "externalId": "v1|1454952493|2609f6081d0a3184c9e347037b740c461265d8f9|572c0a4b929a6ba0f94b7e3b5fd4c95a3bbf5d65|b465c6032a6adaea538145173e3a1ff2e7d0b9c0",
+        "summaryRun": 44902593790,
+        "summaryAttempt": 1,
+        "summaryConclusion": "success"
+      },
+      "runApiCrossCheck": {
+        "status": "MATCH",
+        "checks": [
+          "summary run= equals Actions run id",
+          "summary attempt= equals run_attempt",
+          "run.event=merge_group",
+          "run.path=.github/workflows/admission-gate-v2.yml",
+          "run.head_sha=subject SHA"
+        ],
+        "authorityNote": "summary is consistency data; the Actions Run API is the run-fact source"
+      },
+      "detector": {
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "result": "PASS",
+        "eligibleRuns": 1,
+        "inScopeCheckRuns": 1,
+        "violationCodes": [],
+        "coverage": {
+          "subjects": 1,
+          "resolved": 1,
+          "unresolved": 0,
+          "violations": 0,
+          "coverageRatio": 1,
+          "perSubject": [
+            {
+              "sha": "2609f6081d0a3184c9e347037b740c461265d8f9",
+              "classification": "RESOLVED_CLEAN",
+              "eligibleRuns": 1,
+              "violations": []
+            }
+          ]
+        },
+        "rawJson": "detector/2609f6081d0a3184c9e347037b740c461265d8f9.json",
+        "rawExit": "detector/2609f6081d0a3184c9e347037b740c461265d8f9.exit"
+      },
+      "otherFailureCheckRuns": [
+        {
+          "name": "publication-integrity",
+          "app": 15368,
+          "conclusion": "failure",
+          "completedAt": "2026-11-21T12:16:15Z"
+        },
+        {
+          "name": "script-scan",
+          "app": 15368,
+          "conclusion": "failure",
+          "completedAt": "2026-11-21T12:11:07Z"
+        }
+      ],
+      "queueOutcome": "removed_from_merge_queue reason=failed_checks at 2026-11-21T12:16:31Z (beforeCommit=2609f6081d0a3184c9e347037b740c461265d8f9, actor=github-merge-queue).",
+      "note": "Admission-check attribution is clean. The queue removal is corroborated by a failing publication-integrity/script-scan check-run on the same SHA; the detector scope is admission-check only."
+    },
+    {
+      "generation": "478f27d2",
+      "headSha": "478f27d27e1fc58b6a65632c7df39d8cc32f7485",
+      "admissionGateRun": {
+        "id": 44903511021,
+        "runAttempt": 1,
+        "event": "merge_group",
+        "headSha": "478f27d27e1fc58b6a65632c7df39d8cc32f7485",
+        "workflowId": 420946486,
+        "path": ".github/workflows/admission-gate-v2.yml",
+        "status": "completed",
+        "conclusion": "success",
+        "createdAt": "2026-11-21T12:21:43Z",
+        "updatedAt": "2026-11-21T12:28:48Z"
+      },
+      "checkRun": {
+        "id": 136844160573,
+        "name": "admission-check",
+        "appId": 5795152,
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-11-21T12:21:42Z",
+        "completedAt": "2026-11-21T12:28:51Z",
+        "externalId": "v1|1454952493|478f27d27e1fc58b6a65632c7df39d8cc32f7485|572c0a4b929a6ba0f94b7e3b5fd4c95a3bbf5d65|c74c1ff733fb227c0b2d8e14458ea7f53c1abbd8",
+        "summaryRun": 44903511021,
+        "summaryAttempt": 1,
+        "summaryConclusion": "success"
+      },
+      "runApiCrossCheck": {
+        "status": "MATCH",
+        "checks": [
+          "summary run= equals Actions run id",
+          "summary attempt= equals run_attempt",
+          "run.event=merge_group",
+          "run.path=.github/workflows/admission-gate-v2.yml",
+          "run.head_sha=subject SHA"
+        ],
+        "authorityNote": "summary is consistency data; the Actions Run API is the run-fact source"
+      },
+      "detector": {
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "result": "PASS",
+        "eligibleRuns": 1,
+        "inScopeCheckRuns": 1,
+        "violationCodes": [],
+        "coverage": {
+          "subjects": 1,
+          "resolved": 1,
+          "unresolved": 0,
+          "violations": 0,
+          "coverageRatio": 1,
+          "perSubject": [
+            {
+              "sha": "478f27d27e1fc58b6a65632c7df39d8cc32f7485",
+              "classification": "RESOLVED_CLEAN",
+              "eligibleRuns": 1,
+              "violations": []
+            }
+          ]
+        },
+        "rawJson": "detector/478f27d27e1fc58b6a65632c7df39d8cc32f7485.json",
+        "rawExit": "detector/478f27d27e1fc58b6a65632c7df39d8cc32f7485.exit"
+      },
+      "otherFailureCheckRuns": [
+        {
+          "name": "publication-integrity",
+          "app": 15368,
+          "conclusion": "failure",
+          "completedAt": "2026-11-21T12:27:12Z"
+        },
+        {
+          "name": "script-scan",
+          "app": 15368,
+          "conclusion": "failure",
+          "completedAt": "2026-11-21T12:22:27Z"
+        }
+      ],
+      "queueOutcome": "removed_from_merge_queue reason=failed_checks at 2026-11-21T12:27:23Z (beforeCommit=478f27d27e1fc58b6a65632c7df39d8cc32f7485, actor=github-merge-queue).",
+      "note": "Admission-check attribution is clean. The queue removal is corroborated by a failing publication-integrity/script-scan check-run on the same SHA; the detector scope is admission-check only."
+    },
+    {
+      "generation": "be6c14c2",
+      "headSha": "be6c14c2602e8b5b7dd763c4a1bfb1ea40d0df59",
+      "admissionGateRun": {
+        "id": 44905101444,
+        "runAttempt": 1,
+        "event": "merge_group",
+        "headSha": "be6c14c2602e8b5b7dd763c4a1bfb1ea40d0df59",
+        "workflowId": 420946486,
+        "path": ".github/workflows/admission-gate-v2.yml",
+        "status": "completed",
+        "conclusion": "success",
+        "createdAt": "2026-11-21T12:40:46Z",
+        "updatedAt": "2026-11-21T12:47:21Z"
+      },
+      "checkRun": {
+        "id": 136848871519,
+        "name": "admission-check",
+        "appId": 5795152,
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-11-21T12:40:46Z",
+        "completedAt": "2026-11-21T12:47:23Z",
+        "externalId": "v1|1454952493|be6c14c2602e8b5b7dd763c4a1bfb1ea40d0df59|572c0a4b929a6ba0f94b7e3b5fd4c95a3bbf5d65|c74c1ff733fb227c0b2d8e14458ea7f53c1abbd8",
+        "summaryRun": 44905101444,
+        "summaryAttempt": 1,
+        "summaryConclusion": "success"
+      },
+      "runApiCrossCheck": {
+        "status": "MATCH",
+        "checks": [
+          "summary run= equals Actions run id",
+          "summary attempt= equals run_attempt",
+          "run.event=merge_group",
+          "run.path=.github/workflows/admission-gate-v2.yml",
+          "run.head_sha=subject SHA"
+        ],
+        "authorityNote": "summary is consistency data; the Actions Run API is the run-fact source"
+      },
+      "detector": {
+        "exit": 0,
+        "classification": "RESOLVED_CLEAN",
+        "result": "PASS",
+        "eligibleRuns": 1,
+        "inScopeCheckRuns": 1,
+        "violationCodes": [],
+        "coverage": {
+          "subjects": 1,
+          "resolved": 1,
+          "unresolved": 0,
+          "violations": 0,
+          "coverageRatio": 1,
+          "perSubject": [
+            {
+              "sha": "be6c14c2602e8b5b7dd763c4a1bfb1ea40d0df59",
+              "classification": "RESOLVED_CLEAN",
+              "eligibleRuns": 1,
+              "violations": []
+            }
+          ]
+        },
+        "rawJson": "detector/be6c14c2602e8b5b7dd763c4a1bfb1ea40d0df59.json",
+        "rawExit": "detector/be6c14c2602e8b5b7dd763c4a1bfb1ea40d0df59.exit"
+      },
+      "otherFailureCheckRuns": [],
+      "queueOutcome": "merged at 2026-11-21T12:47:45Z; RemovedFromMergeQueueEvent reason=merged beforeCommit=be6c14c2602e8b5b7dd763c4a1bfb1ea40d0df59.",
+      "note": "Admission-check attribution is clean and the generation merged."
+    }
+  ],
+  "mergeGroupObservationCount": 4,
+  "resolvedCount": 4,
+  "unresolvedCount": 0,
+  "violationCount": 0,
+  "coverageRatio": 1,
+  "coverageDenominatorNote": "coverageRatio = resolved/(resolved+unresolved) = 4/(4+0) = 1. All four generations were resolved; no exit-2 observation exists in this sample.",
+  "coverageResult": "PASS",
+  "queueOutcomes": {
+    "authority": "GitHub merge queue GraphQL RemovedFromMergeQueueEvent.reason (REST issue timeline has a null reason; see docs/spec/merge_queue_dequeue_reason_quirks.md)",
+    "pr": 322,
+    "events": [
+      {
+        "type": "AddedToMergeQueueEvent",
+        "createdAt": "2026-11-21T12:06:18Z"
+      },
+      {
+        "type": "RemovedFromMergeQueueEvent",
+        "createdAt": "2026-11-21T12:16:31Z",
+        "reason": "failed_checks",
+        "beforeCommit": "2609f6081d0a3184c9e347037b740c461265d8f9",
+        "actor": "github-merge-queue"
+      },
+      {
+        "type": "AddedToMergeQueueEvent",
+        "createdAt": "2026-11-21T12:21:25Z"
+      },
+      {
+        "type": "RemovedFromMergeQueueEvent",
+        "createdAt": "2026-11-21T12:27:23Z",
+        "reason": "failed_checks",
+        "beforeCommit": "478f27d27e1fc58b6a65632c7df39d8cc32f7485",
+        "actor": "github-merge-queue"
+      },
+      {
+        "type": "AddedToMergeQueueEvent",
+        "createdAt": "2026-11-21T12:40:29Z"
+      },
+      {
+        "type": "MergedEvent",
+        "createdAt": "2026-11-21T12:47:45Z"
+      },
+      {
+        "type": "RemovedFromMergeQueueEvent",
+        "createdAt": "2026-11-21T12:47:45Z",
+        "reason": "merged",
+        "beforeCommit": "be6c14c2602e8b5b7dd763c4a1bfb1ea40d0df59",
+        "actor": "github-merge-queue"
+      }
+    ],
+    "rawEvidence": "queue/pr322_timeline_merge_queue_graphql.json (GraphQL raw), queue/pr322_timeline_rest.json (REST raw, reason null), queue/generations.json (all 8 workflow runs per generation)",
+    "attribution": "The 12:16:31Z removal names 2609f608 as beforeCommit and the 12:27:23Z removal names 478f27d2. No removal event names 5a5fbfd7; its run failed and the queue had already dispatched 2609f608. The 12:47:45Z merged event names be6c14c2."
+  },
+  "facts": [
+    "All four detector invocations returned exit 0 with exactly one eligible merge_group run and one in-scope admission-check check-run per SHA.",
+    "The four generations are the queue generation SHAs observed for PR #322 in dispatch order: 5a5fbfd7 -> 2609f608 -> 478f27d2 -> be6c14c2. The first two overlapped in time (2609f608 was created at 12:10:38Z, before 5a5fbfd7 ended at 12:14:20Z), so \"next\" means dispatch order, not strict serial completion.",
+    "5a5fbfd7 (run 44902266464) failed admission-gate for a real gate reason recorded in the check-run summary: base_not_on_main(status=behind). The detector classifies it RESOLVED_CLEAN because the check-run is correctly bound to its own run and SHA: a fail-closed verdict is not an attribution violation.",
+    "2609f608 and 478f27d2 had clean admission-check attribution but the merge queue removed them with reason=failed_checks; the same SHAs carry failure check-runs from publication-integrity and script-scan (both outside the detector scope).",
+    "be6c14c2 has no failure check-runs on the observed SHA and merged at 2026-11-21T12:47:45Z.",
+    "The 40-hex requirement is enforced before any API call: a short SHA prints ERROR invalid --sha and exits 2 (UNRESOLVED), which must not be read as clean."
+  ],
+  "unknowns": [
+    "Root cause of the publication-integrity/script-scan failures is not attributed here (workflow logs were not inspected).",
+    "The queue-level event that superseded 5a5fbfd7 is inferred from the 12:16:31Z removal beforeCommit and the run timeline; no RemovedFromMergeQueueEvent names 5a5fbfd7 itself.",
+    "The 12:16:31Z removal event precedes 2609f608 run completion (12:18:18Z) while naming it as beforeCommit; the platform-internal sequencing behind that ordering is UNKNOWN.",
+    "Whether the external App defect (completion-time subject selection) reproduces in other merge_group generations is outside this four-generation sample; the 2026-11-21 summary records separate MG incidents V-A/V-B."
+  ],
+  "reproduce": [
+    "gh api \"repos/Archright/Axiom/actions/runs?event=merge_group&per_page=100\" --paginate --slurp   # resolve the generation SHAs",
+    "bash tools/ci/verdict_attribution_check.sh --venue merge_group --sha 5a5fbfd760d0105314e44dfdc8c64e61118c4fe5 --json; echo $?",
+    "bash tools/ci/verdict_attribution_check.sh --venue merge_group --sha 2609f6081d0a3184c9e347037b740c461265d8f9 --json; echo $?",
+    "bash tools/ci/verdict_attribution_check.sh --venue merge_group --sha 478f27d27e1fc58b6a65632c7df39d8cc32f7485 --json; echo $?",
+    "bash tools/ci/verdict_attribution_check.sh --venue merge_group --sha be6c14c2602e8b5b7dd763c4a1bfb1ea40d0df59 --json; echo $?",
+    "gh api \"repos/Archright/Axiom/actions/runs/44902266464\"",
+    "gh api graphql -f query='query { repository(owner:\"Archright\", name:\"Axiom\") { pullRequest(number:322){ timelineItems(last:20, itemTypes:[REMOVED_FROM_MERGE_QUEUE_EVENT, ADDED_TO_MERGE_QUEUE_EVENT, MERGED_EVENT]){ nodes{ __typename ... on RemovedFromMergeQueueEvent { createdAt reason beforeCommit{oid} actor{login} } ... on AddedToMergeQueueEvent { createdAt } ... on MergedEvent { createdAt } } } } } }'"
+  ]
+}
