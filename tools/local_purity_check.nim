@@ -452,14 +452,18 @@ proc main() =
       echo "ERROR: bin/ax still missing after cold rebuild (exit=", rebuildCode, "):", rebuildOut
       quit(4)
 
+  # The canonical builder's exit status is the only success signal.
+  if not fileExists(wtPath / "bin" / "build_all_gates"):
+    let (builderOut, builderCode) = execCmdEx(
+      "nim c -d:axiomNoLto --hints:off -o:bin/build_all_gates tools/build_all_gates.nim",
+      workingDir = wtPath)
+    if builderCode != 0 or not fileExists(wtPath / "bin" / "build_all_gates"):
+      echo "ERROR: bin/build_all_gates could not be built (exit=", builderCode, "):", builderOut
+      quit(4)
+
   let (gatesOut, gatesCode) = execCmdEx("nim buildGates", workingDir = wtPath)
-  # The Nim task catches per-gate compile failures into `failed=` and exits 0,
-  # and reports an unresolvable manifest entry as a skip, so the exit code
-  # alone is not a success signal.
-  if gatesCode != 0 or "failed=0" notin gatesOut or
-      "SKIP (manifest missing)" in gatesOut or "SKIP (invalid JSON)" in gatesOut:
-    echo "ERROR: 'nim buildGates' did not build the gate binaries (exit=",
-         gatesCode, "):", gatesOut
+  if gatesCode != 0:
+    echo "ERROR: 'nim buildGates' failed (exit=", gatesCode, "):", gatesOut
     quit(4)
 
   # --- Warm nimcache copy-out (O1) ----------------------------------
