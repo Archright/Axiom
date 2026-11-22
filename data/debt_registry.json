@@ -3145,7 +3145,7 @@
       "source": "P7 obligation_semantics audit",
       "productTruthImpact": "STALE",
       "status": "closed",
-      "resolution": "STALE — TheaterGuard returns theaterDetectedVerdict(generatedObligationCount) at src/verification/batch_uap/ir_pipeline_runner.nim:194-199,1316, preserving the count and the distinguishable reason theater_detected; the accumulator is declared :554-558 and assigned :761 so every post-generation return carries obligationVerdict. Caveat recorded: no test drives the firing path (test (d) asserts non-firing).",
+      "resolution": "FIXED by PR #287 (merge 6d551e3). The prior stale-close resolution was falsified: before the merge, the canonical-success return read the obligation count at src/verification/batch_uap/ir_pipeline_runner.nim:737-740 while the accumulator was assigned later at :761, so a canonical success reported obligationCount=0 although obligations had been generated. PR #287 fixes the count once at the generation boundary (:592-594), reads it at the canonical-success return (:747), and the public runIrPipeline wrapper stamps result.obligationVerdict.obligationCount at :1524, so no early return bypasses the accounting. Regression coverage: tests/unit/test_ir_pipeline_theaterguard.nim case (g) drives the canonical-success return and asserts a positive count.",
       "resolvedAt": "2026-11-21",
       "resolvedBy": "stale-debt-audit-2026-11-21",
       "lastVerifiedAt": "2026-11-21T06:40:42Z"
@@ -3193,13 +3193,13 @@
     {
       "id": "DEBT#426",
       "category": "Gate Pipeline / Always-Fail",
-      "title": "static-analyzer gate cannot pass: 2694 unreconciled findings, no whitelist/baseline mechanism",
+      "title": "static-analyzer gate remains disabled in config/gates.json with unreconciled findings; the whitelist mechanism exists",
       "symbol": "static_analyzer.nim main() / scanDeadCode / runArchConfigChecks",
       "contentHash": "sha256:680e71d262fbfc9e1b3ca073dc83df4455f34aca82ee988101f8a8e417d16049",
       "lineRange": "tools/static_analyzer.nim:152-230 (scanDeadCode) / 555-608 (main)",
       "resolution": "DISABLED_IN_GATES_JSON",
       "lastVerifiedAt": "2026-08-20T01:36:24Z",
-      "description": "static-analyzer (topology id=static-analyzer, entry tools/static_analyzer, stages=[skCI], enabled) exits 1 on ANY violation with no threshold/baseline/whitelist policy. Full first CI run (2026-08-19, after interpreted-gate CI unlock 7b1821678) reports 2694 violations: mostly vkDeadCode 'dead symbol' hits incl. FFI bindings (c_flock/c_rename/c_fsync in atomic_ops.nim) and legit cross-file/macro-referenced symbols — the naive text-occurrence scan (no compiled symbol graph) cannot distinguish true dead code. Gate is an honest fail-closed analyzer, NOT theater, but as configured it is a permanent CI blocker. Decision: disable via gates.json runtime switch (stays in topology+source, runnable via manual mode), pending architect decision on a symbol-graph-based analyzer or explicit whitelist/baseline mechanism. Related: first-run crash 'cannot open: tools/static_analyzer.nim' (transient CAS compile race, not reproduced). VERIFIED 2026-08-20: gate remains disabled in config/gates.json (\"static-analyzer\": {\"enabled\": false}) per approved resolution DISABLED_IN_GATES_JSON; no further action required.",
+      "description": "static-analyzer (topology id=static-analyzer, entry tools/static_analyzer, stages=[skCI]) is an honest fail-closed analyzer, but its findings have not been reconciled, so the gate remains disabled in config/gates.json:57. The whitelist mechanism DOES exist: tools/static_analyzer.nim:31 declares WhitelistPath = data/dead_code_whitelist.json, loadDeadCodeWhitelist (:118-120) reads that file, and scanDeadCode consumes it at :153 and :164, skipping whitelisted symbols. The remaining work is a policy decision, not absent tooling: either enable the gate and reconcile its findings, or retire the gate. Historical context: the first CI run on 2026-08-19 reported a large vkDeadCode set including FFI bindings (c_flock/c_rename/c_fsync in atomic_ops.nim) and cross-file/macro-referenced symbols that a text-occurrence scan without a compiled symbol graph cannot distinguish from dead code. This correction replaces the earlier claim that no whitelist/baseline mechanism existed and intentionally does not restate an unmeasured finding count. Verified 2026-11-21.",
       "files": [
         "tools/static_analyzer.nim",
         "config/gates.json"
@@ -4429,14 +4429,14 @@
       "severity": "medium",
       "description": "tools/hotspot_ranker.nim:29 skips rows with fewer than 8 pipe-split fields and reads Status from parts[7]; the P1 projection emits 6 columns, so splitting on '|' yields 8 elements with Status at index 6. Measured on the live artifact: 223 lines pass the length gate and 0 match 'Open', so rankModules() (tools/hotspot_ranker.nim:61-89) returns an empty queue on every run. Reachable through tools/full_transform.nim:241.",
       "lineRange": "tools/hotspot_ranker.nim:18-42",
-      "resolution": "UNRESOLVED — deferred. Discovered and registered 2026-10-04 on fix/debt-registry-single-writer. NOT fixed here: the repair requires the downstream-consumer column contract to be decided first (out of scope per the projection contract's declared scope boundary).",
+      "resolution": "FIXED by PR #287 (merge 6d551e3): tools/hotspot_ranker.nim:28 declares StatusColumn = declaredColumn(\"status\"), rankModules at :80 reads row.cells[StatusColumn], and tests/unit/test_hotspot_ranker.nim covers a non-empty queue. The projection/consumer column contract is now explicit rather than assumed. Verified 2026-11-21.",
       "lastVerifiedAt": "2026-10-04T00:00:00Z",
       "files": [
         "tools/hotspot_ranker.nim"
       ],
       "source": "theater_audit",
       "productTruthImpact": "STALE",
-      "status": "deferred",
+      "status": "closed",
       "symbol": "parseDebtRegistry",
       "contentHash": "sha256:95df8cd9fb86e98be5e97a0f9b3344d94c79b387000861d8c729667466049766"
     },
@@ -5166,8 +5166,8 @@
       ],
       "source": "vst_dependency_authority_handoff_2026-11-08",
       "productTruthImpact": "PRODUCT_TRUTH",
-      "status": "open",
-      "resolution": "UNRESOLVED — registered as follow-up; deliberately not fixed in the VS-T slice (frozen-file scope discipline: src/gate/** untouched)",
+      "status": "closed",
+      "resolution": "FIXED by PR #285 (merge fd09eb8): gate_hook resolves every manifest entry through the extension-aware resolver, so the 40 extensionless entries are no longer skipped; tests/gateway/gate_hook_feature_test.nim covers the resolution. Verified on canonical main 2026-11-21.",
       "binding": "registry_disposition",
       "bindingRationale": "The defect site is a FROZEN runner (src/gate/**) and cannot be edited without architect approval; trace: evidence docs/evidence/vst_dependency_authority_handoff_2026-11-08.md §7.2, gate_hook.nim:399-400"
     },
@@ -5943,7 +5943,7 @@
       "impact": "medium",
       "severity": "medium",
       "title": "certificate-mint treats any ledger-list failure as subject absence (stderr discarded) and falls through to ledger-append, so a transient read failure can create a duplicate permanent entry",
-      "description": "Machine-observed 2026-11-17 (VS-AUTHORITY-SEPARATION, main ed014de). .github/workflows/certificate-mint.yml:2263 decides idempotency with a pipeline of the form `bin/ax cert ledger-list 2>/dev/null | grep -qx \"$SUBJECT_ID\"`. The pipeline status is the status of grep, not of ledger-list: a transport/auth/5xx failure is discarded by 2>/dev/null, grep sees empty input and exits 1, and the else branch at :2270 calls `bin/ax cert ledger-append`. A read failure is therefore indistinguishable from a genuinely absent subject. Because appendCertificate does not re-check uniqueness on its first attempt (DEBT#553) and the ledger ref rejects non-fast-forward updates, the duplicate entry is permanent. Remediation: run ledger-list without discarding stderr, require exit 0 before interpreting output (bounded retry on transient failure, fail-closed on exhaustion), and distinguish unreadable from absent in the branch condition.",
+      "description": "Machine-observed 2026-11-17 (VS-AUTHORITY-SEPARATION, main ed014de). .github/workflows/certificate-mint.yml:2263 decides idempotency with a pipeline of the form `bin/ax cert ledger-list 2>/dev/null | grep -qx \"$SUBJECT_ID\"`. The pipeline status is the status of grep, not of ledger-list: a transport/auth/5xx failure is discarded by 2>/dev/null, grep sees empty input and exits 1, and the else branch at :2270 calls `bin/ax cert ledger-append`. A read failure is therefore indistinguishable from a genuinely absent subject. DEBT#553 (first-attempt uniqueness) is now fixed by PR #297, so a permanent duplicate is no longer producible; the residual failure mode is a confusing duplicate append attempt that aborts. Remediation: run ledger-list without discarding stderr, require exit 0 before interpreting output (bounded retry on transient failure, fail-closed on exhaustion), and distinguish unreadable from absent in the branch condition.",
       "symbol": "D6 idempotency predicate (certificate-mint.yml:2263-2274)",
       "contentHash": "sha256:a64c25c9856dab39231ea9501807b9553ae505dccf311824c9f78ad92dec38bc",
       "lineRange": ".github/workflows/certificate-mint.yml:2263-2274",
@@ -6120,8 +6120,8 @@
       "category": "Theater/Unmeasured Ratchet",
       "impact": "high",
       "severity": "high",
-      "title": "nimtry reduction ratchet compares the self-declared baseline to the cap instead of the measured count, so CI cannot detect violation growth (main measures 4384 vs declared 4272; cap 4275)",
-      "description": "Machine-observed 2026-11-21 at origin/main 4bfbc8f (clean `git archive origin/main` export, current nimtry 8.30.1-era binary): the live measurement is 4384 violations, while data/nimtry_baseline.json declares 4272 and data/debt_reduction_baseline.json caps the metric at 4275. 128 new violations are therefore on main without a ratchet observation (2 of the new ERROR-severity rows are covered by PR #276; the rest are warnings). Root cause: the reduction ratchet (src/gate/runners/debt_integrity_gate.nim:324-344) compares the pairs from scanDebtMetrics, and the only nimtry pair is countNimtryViolations — data/nimtry_baseline.json's declared total_violations, a checked-in constant. The measured side, countNimtryActiveViolations, reads the gitignored data/nimtry_live_count.json and returns -1 when absent; Step 2b (src/gate/runners/debt_integrity_gate.nim:346-353) only logs that value. .github/workflows/debt-registry-gate.yml deliberately runs without bin/nimtry (provision-scope: nim; its comment at :22-25 records that the metric reports 'unmeasured' there), so CI never produces the sidecar and never measures. Consequence: a PR that adds nimtry violations without editing either baseline file passes the gate — the PASS compares 4272 <= 4275 while the live measurement is 4384. The fallback's '(unmeasured; nimtry not run yet)' label is informational only and does not fail the run.",
+      "title": "nimtry reduction ratchet compares the self-declared baseline to the cap instead of the measured count, so CI cannot detect violation growth (declared 4375 vs cap 4381; local measurement 4374 at 2026-11-21)",
+      "description": "Machine-observed 2026-11-21 at origin/main 4bfbc8f (clean `git archive origin/main` export, current nimtry 8.30.1-era binary): the local measurement was 4374 violations, while data/nimtry_baseline.json declares 4375 and data/debt_reduction_baseline.json caps the metric at 4381. CI compares the declared 4375 to the cap 4381 and never measures, so up to 7 new violations relative to the local measurement would pass unobserved. Re-measured on origin/main fd09eb8: data/nimtry_baseline.json still declares 4375 and the cap is still 4381; the local sidecar is gitignored and is not evidence for the CI path. Root cause: the reduction ratchet (src/gate/runners/debt_integrity_gate.nim:324-344) compares the pairs from scanDebtMetrics, and the only nimtry pair is countNimtryViolations — data/nimtry_baseline.json's declared total_violations, a checked-in constant. The measured side, countNimtryActiveViolations, reads the gitignored data/nimtry_live_count.json and returns -1 when absent; Step 2b (src/gate/runners/debt_integrity_gate.nim:346-353) only logs that value. .github/workflows/debt-registry-gate.yml deliberately runs without bin/nimtry (provision-scope: nim; its comment at :22-25 records that the metric reports 'unmeasured' there), so CI never produces the sidecar and never measures. Consequence: a PR that adds nimtry violations without editing either baseline file passes the gate — the PASS compares 4375 <= 4381 while the local measurement is 4374. The fallback's '(unmeasured; nimtry not run yet)' label is informational only and does not fail the run.",
       "symbol": "countNimtryViolations / countNimtryActiveViolations (src/gate/runners/debt_integrity_gate.nim:190-207)",
       "contentHash": "sha256:df412061fa614328ce51df37e88728a71dbc84e8eba0c1b77881a03a28943ba5",
       "lineRange": "src/gate/runners/debt_integrity_gate.nim:190-207",
