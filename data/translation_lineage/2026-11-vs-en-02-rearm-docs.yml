@@ -1,0 +1,63 @@
+# Translation lineage -- VS-EN-02 rearm documentation batch.
+#
+# Batch: the newly added Korean prose of the VS-S2 rearm work (ADR-0027
+# Amendment F/F.8, rearm quirks Q8-Q12, the rearm status amendment note, and
+# the VS-CI-01 lane-balance evidence record). The merge queue dequeued PR #369
+# with reason=failed_checks because the landing-only script-scan dimension
+# found those added lines outside the Script allowlist.
+#
+# Scope of the batch: added lines only. Pre-existing Korean prose in the same
+# files is grandfathered by the added-lines policy and was not touched, so
+# these files are not zero-non-Latin after the batch. This is a translation of
+# new text, not a migration of the files.
+#
+# Review scope: the project architect gave blanket approval for the VS-S2
+# execution (2026-11-22), which covers the landing-diff language conformance of
+# this batch. The approval is not a line-by-line review of the translated prose.
+
+schemaVersion: "axiom.translation-lineage.v1"
+batchId: "2026-11-vs-en-02-rearm-docs"
+sourceBaseCommit: "44967d54f7fe247e97f976238d3f85fa0dce4b4f"
+translatedCommit: "f23177369f2c2915f024afa6387bb13f2ec913d5"
+
+sourcePaths:
+  - path: "docs/adr/0027-queue-delegation.md"
+    blobSha256: "48c3a60a1b18db50a93bfefee300573399a516c5865514d71e84e55a6007022c"
+  - path: "docs/evidence/ci_lane_balance_2026-11-22.md"
+    blobSha256: "128fd7b4d820e496c256b2d39a8213ca9f3920ceab56ff376bd940388dcfa9e8"
+  - path: "docs/spec/rearm_observation_quirks.md"
+    blobSha256: "a8f0bdbd88f683a952ba5bb2cb6c98469079bf7fa2f70132746c6c941aefd2f6"
+  - path: "docs/spec/rearm_recovery_status.md"
+    blobSha256: "1fafb3e6c6e89fd706bb1967183804572775d27ebc5fee01281d98b9eac2da18"
+
+translatedPaths:
+  - path: "docs/adr/0027-queue-delegation.md"
+    blobSha256: "30bd2fcde3787156a79ec8beac0d6ae430c2f6cccaa5afb37ec6226b10b16c8f"
+  - path: "docs/evidence/ci_lane_balance_2026-11-22.md"
+    blobSha256: "2778033dc69b11c321d2bfc11459654c866db8f25d74f9cf25425de229260c84"
+  - path: "docs/spec/rearm_observation_quirks.md"
+    blobSha256: "25a7d4722aa4a252a8bf73cf8d6b9c95500b9048896194c3e1d5203cb8c3a954"
+  - path: "docs/spec/rearm_recovery_status.md"
+    blobSha256: "b3f33fe9697633da1178009ff656f4188f278bb15d718a1f2366ee87c1bacaf2"
+
+engine:
+  name: "kimi-code-agent"
+  version: "2.3.3"
+  modelId: "surplus/deepseek-v4.1-flash-1017"
+  modelSha256: "declared-unavailable"
+
+glossarySha256: "9fda01fbdf03988f7075dc7ec495e077ff493136527f626689d2a9f0e79ef84e"
+
+review:
+  status: "approved"
+  reviewers:
+    - "architect"
+  date: "2026-11-22"
+
+referenceUpdates:
+  - path: "docs/adr/0027-queue-delegation.md"
+    note: "Amendment F.8 keeps its section numbering and anchors; only the prose language changed"
+
+exceptions:
+  - path: "docs/adr/0027-queue-delegation.md"
+    reason: "pre-existing Korean above line 516 stays verbatim; the added-lines policy does not judge it"
