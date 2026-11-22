@@ -438,7 +438,7 @@ jobs:
             exit 0
           fi
           errf="$(mktemp)"
-          if ! LABELS=$(gh api "repos/$REPO/issues/$PR_NUMBER/labels?per_page=100" --jq '.[].name' 2>"$errf"); then
+          if ! LABELS=$(gh api --paginate "repos/$REPO/issues/$PR_NUMBER/labels?per_page=100" --jq '.[].name' 2>"$errf"); then
             { echo "[rearm] ERROR: label query failed:"; sed 's/^/  | /' "$errf"; } >&2
             emit UNKNOWN "label query failed (fail-safe no-arm)" available no-arm rearm marker "label-query"
             echo "REARM_DONE=1" >> "$GITHUB_ENV"
@@ -579,7 +579,10 @@ jobs:
           fi
           : > /tmp/rearm_files.txt
           page=1
-          while [ "$page" -le 40 ]; do
+          FETCHED=0
+          # 30 pages = the platform's 3000-file listing cap; a full page 30
+          # means the listing may be truncated and is handled as UNKNOWN below.
+          while [ "$page" -le 30 ]; do
             if ! BODY=$(gh api "repos/$REPO/pulls/$PR_NUMBER/files?per_page=100&page=$page" 2>"$errf"); then
               { echo "[rearm] ERROR: PR files query failed (page $page):"; sed 's/^/  | /' "$errf"; } >&2
               emit UNKNOWN "PR files query failed (page $page) (fail-safe no-arm)" available no-arm rearm trust-surface "files-query"
@@ -592,15 +595,30 @@ jobs:
               echo "REARM_DONE=1" >> "$GITHUB_ENV"
               exit 0
             fi
-            if ! printf '%s' "$BODY" | jq -r '.[].filename' >> /tmp/rearm_files.txt 2>"$errf"; then
+            # Both the current path and (for renames) the previous path are
+            # appended: a rename OUT of a trust-surface path must still
+            # intersect. The canonical predicate does the same
+            # (src/cli/merge_cli.nim trustSurfaceMatch: filename OR renamedFrom).
+            if ! printf '%s' "$BODY" | jq -r '.[] | .filename, (.previous_filename // empty)' >> /tmp/rearm_files.txt 2>"$errf"; then
               { echo "[rearm] ERROR: PR files list extraction failed (page $page):"; sed 's/^/  | /' "$errf"; } >&2
               emit UNKNOWN "PR files list extraction failed (fail-safe no-arm)" available no-arm rearm trust-surface "files-list"
               echo "REARM_DONE=1" >> "$GITHUB_ENV"
               exit 0
             fi
+            FETCHED=$((FETCHED + CNT))
             if [ "$CNT" -lt 100 ]; then break; fi
             page=$((page + 1))
           done
+          # Truncation guard: the platform caps this listing at 3000 files, so
+          # a full 30th page means the listing may be cut off. An unproven
+          # listing must never read as "no trust-surface hit" — the canonical
+          # predicate returns complete=false at the same cap and fails closed.
+          if [ "$FETCHED" -ge 3000 ]; then
+            emit UNKNOWN "PR files listing reached the platform 3000-file cap — completeness unprovable (fail-safe no-arm)" available no-arm rearm trust-surface "files-truncated"
+            echo "REARM_DONE=1" >> "$GITHUB_ENV"
+            echo "SKIPPED: PR files listing truncated at the 3000-file platform cap"
+            exit 0
+          fi
           HIT=""
           while IFS= read -r pat; do
             if [ -z "$pat" ]; then continue; fi
@@ -1014,7 +1032,7 @@ jobs:
           errf="$(mktemp)"
           : > /tmp/rearm_ann_merged.jsonl
           for cid in $CIDS; do
-            if ! ANN=$(gh api "repos/$REPO/check-runs/$cid/annotations?per_page=100" 2>"$errf"); then
+            if ! ANN=$(gh api --paginate "repos/$REPO/check-runs/$cid/annotations?per_page=100" 2>"$errf"); then
               CODE=$(sed -n 's/.*HTTP \([0-9][0-9][0-9]\).*/\1/p' "$errf" | head -1)
               { echo "[rearm] ERROR: annotations query failed for check-run $cid (http=${CODE:-unknown}):"; sed 's/^/  | /' "$errf"; } >&2
               case "$CODE" in
@@ -1220,13 +1238,17 @@ jobs:
             fi
           fi
           # (ii)+(iii) jobs API step conclusions + names, then failed-job logs.
-          if ! JOBS_RAW=$(gh api "repos/$REPO/actions/runs/$MGRUN/jobs?per_page=100" 2>"$errf"); then
+          # --paginate --slurp: a matrix run can exceed one 100-job page and the
+          # response object is per-page; a bare --paginate keeps only the LAST
+          # page (measured 2026-11-22). The flatten lives in the projection
+          # below so this fetch keeps gh's HTTP error text for the log branch.
+          if ! JOBS_RAW=$(gh api --paginate --slurp "repos/$REPO/actions/runs/$MGRUN/jobs?per_page=100" 2>"$errf"); then
             { echo "[rearm] ERROR: jobs query failed for run $MGRUN:"; sed 's/^/  | /' "$errf"; } >&2
             emit UNKNOWN "jobs query failed (fail-safe no-arm)" available no-arm rearm evidence "jobs-query"
             echo "REARM_DONE=1" >> "$GITHUB_ENV"
             exit 0
           fi
-          if ! FJ=$(printf '%s' "$JOBS_RAW" | jq -c '.jobs[] | select((.conclusion // "") == "failure" or (.conclusion // "") == "startup_failure") | {id, name, steps: [.steps[]? | select((.conclusion // "") == "failure") | .name]}' 2>"$errf"); then
+          if ! FJ=$(printf '%s' "$JOBS_RAW" | jq -c '.[] | .jobs[]? | select((.conclusion // "") == "failure" or (.conclusion // "") == "startup_failure") | {id, name, steps: [.steps[]? | select((.conclusion // "") == "failure") | .name]}' 2>"$errf"); then
             { echo "[rearm] ERROR: failed-jobs projection failed:"; sed 's/^/  | /' "$errf"; } >&2
             emit UNKNOWN "failed-jobs projection failed (fail-safe no-arm)" available no-arm rearm evidence "jobs-projection"
             echo "REARM_DONE=1" >> "$GITHUB_ENV"
@@ -1309,7 +1331,7 @@ jobs:
             exit 0
           fi
           errf="$(mktemp)"
-          if ! LABELS=$(gh api "repos/$REPO/issues/$PR_NUMBER/labels?per_page=100" --jq '.[].name' 2>"$errf"); then
+          if ! LABELS=$(gh api --paginate "repos/$REPO/issues/$PR_NUMBER/labels?per_page=100" --jq '.[].name' 2>"$errf"); then
             { echo "[rearm] ERROR: label query failed (budget unevaluable):"; sed 's/^/  | /' "$errf"; } >&2
             emit UNKNOWN "budget label query failed (fail-safe no-arm)" available no-arm rearm budget "label-query"
             echo "REARM_DONE=1" >> "$GITHUB_ENV"
@@ -1534,7 +1556,7 @@ jobs:
             exit 0
           fi
           # ---- immediate pre-arm re-reads (facts may have changed above) -----
-          if ! LABELS2=$(gh api "repos/$REPO/issues/$PR_NUMBER/labels?per_page=100" --jq '.[].name' 2>"$errf"); then
+          if ! LABELS2=$(gh api --paginate "repos/$REPO/issues/$PR_NUMBER/labels?per_page=100" --jq '.[].name' 2>"$errf"); then
             emit UNKNOWN "pre-arm label re-read failed (fail-safe no-arm)" available no-arm rearm arm "label-reread"
             echo "REARM_DONE=1" >> "$GITHUB_ENV"
             exit 0
@@ -1564,7 +1586,7 @@ jobs:
             echo "REARM_DONE=1" >> "$GITHUB_ENV"
             exit 0
           fi
-          if ! LABELS3=$(gh api "repos/$REPO/issues/$PR_NUMBER/labels?per_page=100" --jq '.[].name' 2>"$errf") \
+          if ! LABELS3=$(gh api --paginate "repos/$REPO/issues/$PR_NUMBER/labels?per_page=100" --jq '.[].name' 2>"$errf") \
              || ! printf '%s\n' "$LABELS3" | grep -Fxq "rearm-intent@$H12"; then
             emit UNKNOWN "rearm-intent@$H12 write not observed on re-read — arm claim unverified, no arm (fail-safe)" available no-arm rearm arm "intent-missing"
             echo "REARM_DONE=1" >> "$GITHUB_ENV"

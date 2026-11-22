@@ -227,6 +227,125 @@ so the judgment "the label already exists, hence the budget was consumed" must a
 made by **re-reading the issue label list** (do not trust the write response alone — Q11).
 To reduce repository label pollution, operators must treat `rearm-intent@*`/`rearmed@*` as cleanup targets.
 
+## Q13 — `gh api --paginate` merges ARRAY pages but keeps only ONE page of an OBJECT response
+
+Measured 2026-11-22 with `gh 2.102.0` against this repository.
+
+| Response shape | `--paginate` alone | Correct idiom |
+|---|---|---|
+| JSON array (labels, annotations, PR files, issues) | one merged array containing **all** items | `--paginate` (or `--paginate` + `--jq`, which applies the filter per page and concatenates) |
+| JSON object (actions runs, run jobs, workflows) | **one object holding only one page** — `total_count: 28` with a 5-item page yielded five `.workflows` items | `--paginate --slurp` (array of page objects) and flatten in the consumer, or `--paginate --jq '<per-page filter>'` |
+
+Two consequences that are easy to get wrong:
+
+- **Silent truncation on object endpoints.** `gh api --paginate "repos/$REPO/actions/runs/$ID/jobs?per_page=100"`
+  looks paginated and is not: the last page overwrites the earlier ones. The observed
+  shape is a single object, so no error is raised and the caller sees a plausible subset.
+  Use `--slurp` and project with `.[] | .jobs[]?`.
+- **`--slurp` cannot be combined with `--jq`.** `gh` rejects the pair with
+  ``the `--slurp` option is not supported with `--jq` or `--template` ``. Choose one.
+
+Measured page-shape evidence: `actions/workflows?per_page=5` (28 total, 6 pages) under
+`--paginate --slurp` yields `[6, "object", 5]` (6 page objects, 5 workflows each);
+the same endpoint under plain `--paginate` yields `.workflows | length == 5`.
+A single-page array endpoint (`labels?per_page=100`, 12 items) stays a valid `ARRAY` of 12.
+
+**Response rule**: a list read in this repository must either return the complete set or
+fail closed. Adding `--paginate` to an array endpoint is safe and shape-preserving; adding
+it to an object endpoint is a correctness bug unless `--slurp` (or `--jq`) is used.
+
+## Q14 — the `workflow_run` wake-up is idempotent under both rerun semantics, and this repository has no rerun instance
+
+`workflow_run: workflows: ["admission-gate"]` matches by workflow **name**, and
+`types: [completed]` fires when a watched run reaches a terminal state. A re-run
+(`gh run rerun <id>`) creates a new `run_attempt` on the **same** `run_id`.
+
+Measured 2026-11-22: of the latest 100 workflow runs of **any** event, and of the latest
+100 `merge_group` runs, **zero** carry `run_attempt > 1`; every observed run is attempt 1.
+The "does a rerun emit a second `completed` event?" question therefore has **no local
+instance** and is recorded as UNKNOWN rather than asserted.
+
+The design does not depend on the answer:
+
+- If a rerun **does** emit, the decision function binds `run_id`, `run_attempt`,
+  `workflow_id`, `event`, and `head_sha` before acting, so the duplicate event resolves to
+  the same facts and cannot produce a second arm (the `rearm-intent@` claim already blocks it).
+- If a rerun **does not** emit, the PR remains `UNKNOWN`/no-arm until a `dequeued` event or
+  an explicit `workflow_dispatch` re-evaluation. That is fail-closed, not a false arm.
+
+**Response rule**: treat events as wake-ups, never as state. Any future claim about
+rerun-emission must be backed by an observed attempt-2 run, not by inference.
+
+## Q15 — public repositories lose `pull_request_target` by default on 2026-12-02 unless an Actions event policy allows it
+
+GitHub changelog (2026-11-02): "Starting December 2, 2026, GitHub Actions will block
+`pull_request_target` events by default in all public repositories, unless an applicable
+Actions event policy explicitly allows them." Brownouts already ran on 2026-11-09 and
+2026-11-16 (16:00-18:00 UTC). Private and internal repositories are not affected; the
+change applies to Free, Team, and Enterprise Cloud.
+
+Axiom is public and had **no applicable policy** (measured 2026-11-22):
+`GET /repos/Archright/Axiom/actions/policies` returned `total_count: 0`; the five
+organization policies named `authority-first-P-*` are scoped to `repository_id 1182104685`,
+while Axiom is `1454952493`. `.github/workflows/merge-queue-rearm.yml` is the only workflow
+in the repository with a real `pull_request_target` trigger, so the blast radius of the
+mitigation is exactly one file.
+
+Mitigation in force: repository policy **id 16826** (`allow-merge-queue-rearm-events`),
+`enforcement: active`, conditions `workflow_path.include = [".github/workflows/merge-queue-rearm.yml"]`,
+rule `restrict_action_events` with
+`allowed_events = ["pull_request_target", "workflow_run", "workflow_dispatch"]`.
+
+`allowed_events` is an **allowlist**. The policy must list every trigger of the matched
+workflow: allowing only `pull_request_target` would block the `workflow_run` second wake-up
+and the manual `workflow_dispatch` path. A future trigger added to this workflow requires a
+matching policy update in the same change.
+
+Verification (read-only):
+
+```
+gh api "repos/Archright/Axiom/actions/policies?has_parents=true" \
+  --jq '.total_count as $n | "total=\($n)", (.policies[]|"\(.id) \(.source_type) \(.enforcement) \(.name)")'
+gh api repos/Archright/Axiom/actions/policies/16826 --jq '{enforcement, conditions, rules}'
+```
+
+**Response rule**: the policy is platform enablement, not a safety proof. It restores the
+ability to receive `dequeued`; it does not make PR-supplied code trusted. The workflow must
+keep running trusted code only and must never check out the candidate's tree.
+
+## Q16 — `workflow_run: completed` fires once per ATTEMPT, so re-runs mint duplicate wake-ups (measured 2026-11-22)
+
+`run_attempt` is not part of the event's identity. A re-run of the watched workflow emits a
+**second** `workflow_run: completed` delivery that keeps the same `workflow_run.id` and raises
+`workflow_run.run_attempt` (1 → 2). The `requested` activity type is the one that does not
+repeat on re-run; `completed` does.
+
+Measured on a third-party repository (`sysown/proxysql`) because Axiom has no re-run of a
+watched workflow at the current trusted pin:
+
+| upstream attempt | `completed` delivered | downstream runs | payload `run_attempt` |
+|---|---|---|---|
+| run `44743813943` attempt 1 | `13:27:04Z` | 62, titled `trigger=44743813943/1` | 1 |
+| run `44743813943` attempt 2 | `14:35:03Z` | 62 more, titled `trigger=44743813943/2` | 2 |
+
+The official webhook schema marks `run_attempt`, `previous_attempt_url`, and `run_started_at`
+as required members of `workflow_run`, described as "1 for first attempt and higher if the
+workflow was re-run". Axiom-side observations: `conclusion=cancelled` is delivered (run
+`45009434294` → `ci-cache-publisher` run `45010134738`); `conclusion=startup_failure` is in
+the schema enum but has no runtime observation in this repository — treat it as UNKNOWN, not
+as absent or as success. A re-run preserves the upstream `event`, so a re-run `merge_group`
+still presents `event=merge_group`.
+
+**Response rule**: a duplicate wake-up is a normal input, never an error and never a reason to
+arm. The decision function must bind the outcome to `(run_id, run_attempt, workflow path,
+event, upstream head_sha, expected merge-group SHA)` and must treat a wake-up whose attempt is
+not the latest completed attempt as stale. An attempt still running means UNKNOWN/no-arm: the
+older attempt's failure must never be fetched and re-registered while a newer attempt can
+still produce a different outcome. Duplicates are contained by the existing `concurrency`
+group (`cancel-in-progress: false`), by the `rearm-intent@`/`rearmed@` budget re-read
+immediately before arming (Q11), and by the pre-arm attempt comparison — so a duplicate spends
+runs, not a second arm.
+
 ## 운영 규범 (이 저장소 한정)
 
 재arm·프리플라이트 관측을 새로 만드는 구현자는 다음을 따른다.
@@ -245,3 +364,10 @@ To reduce repository label pollution, operators must treat `rearm-intent@*`/`rea
   금지(Q4, Q6; `gh_automerge_merge_queue_quirks.md` Q3).
 - **unknown/deny/재진입 성공 구분**: dequeue 사유는 재진입 성공률의 척도가
   아니다. 세 상태를 구분 기록하고 서로 대체하지 않는다(Q5).
+- **complete listing or fail closed**: every list read must return the complete
+  set or emit UNKNOWN/no-arm. Array endpoints take `--paginate`; object
+  endpoints take `--paginate --slurp` and flatten in the consumer (Q13). A read
+  that stops on a page cap is a truncation, never a "no match" verdict.
+- **event-policy parity**: a trigger added to a workflow that an Actions event
+  policy covers must be added to that policy's `allowed_events` in the same
+  change, or the event is blocked before the workflow runs (Q15).
