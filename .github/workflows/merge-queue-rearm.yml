@@ -72,30 +72,38 @@
 #         HTTP-prefixed codes) — closed enumeration unchanged,
 #         false-TRANSIENT reduced; discovery runs
 #         38737926027/38737950147/38737968883.
-#     (c) check-runs/annotations query infra failures (403/5xx on the gh api
-#         calls themselves — with checks: read fixed this must not fire; kept
-#         as a class anyway).
+#     (c) check-runs/annotations query infra failures: HTTP 5xx on the gh
+#         api calls themselves (explicitly allowed as TRANSIENT by the S2
+#         contract). A 403 is an authorization failure — deterministic for
+#         this token, not evidence that the verification was transient — and
+#         classifies UNKNOWN/no-arm. With checks: read fixed, 403 must not
+#         fire; kept as a fail-closed branch anyway.
 #   Evidence sources: (i) check-run annotation MESSAGE texts for the failing
 #   leg (titles insufficient), (ii) jobs API step conclusions + names, (iii)
 #   failed job logs via repos/$REPO/actions/jobs/<id>/logs. If no explicit
 #   anchor matches → UNKNOWN → no-arm. A plain 'failure' conclusion, missing
 #   checks, or NOT_ADMIT_* titles alone NEVER classify TRANSIENT.
 #
-# Retry budget (Amendment E — user-fixed 2026-10-15): total verification
+# Retry budget (Amendment E, tightened by Amendment F): total verification
 # attempts ≤ 2 per PR head = initial + 1 auto-requeue. Logical key =
-# (repository, PR number, PR head SHA). Enforced by the durable PR label
-#   rearmed@<head12> — set immediately after a successful arm only. Its
-#   presence for the current head means the budget is spent: the workflow
-#   adds/ensures rearm-exhausted, prints the structured summary, and FAILS
-#   the job (explicit terminal failure — never success). An arm failure sets
-#   no label (fail-safe). This REPLACES the Amendment D display_title /
-#   run-history counter, which is superseded.
+# (repository, PR number, PR head SHA). Enforced by TWO durable PR labels:
+#   rearm-intent@<head12> — written BEFORE the arm request, never removed;
+#   rearmed@<head12>      — written only after a CONFIRMED arm.
+#   A confirmed arm therefore leaves BOTH labels. condition 8 evaluates
+#   rearmed@ FIRST: exhausted → ensure rearm-exhausted, structured summary,
+#   exit 0 (an operator marker — a red check would be indistinguishable from
+#   a broken workflow). An intent without rearmed@ is an unobserved arm
+#   outcome → budget spent, no-arm, rearm-exhausted ensured. An unobserved
+#   arm request is therefore never retried. This REPLACES the Amendment D
+#   display_title / run-history counter, which is superseded.
 #
 # Marker protocol (user-intent surface; the dequeue reason is not API-visible
 # — ADR-0027 Amendment D):
 #   no-auto-rearm   — manual dequeue intent marker; never re-armed.
 #   rearm-exhausted — retry budget spent; operator intervention required.
-#   rearmed@<head12>— budget bookkeeping (machine-written), NOT user intent.
+#   rearm-intent@<head12> — arm claim written BEFORE the request (machine).
+#   rearmed@<head12>      — confirmed-spend bookkeeping (machine).
+# The two @-labels are machine bookkeeping, NOT user intent.
 #
 # Structured summary: every terminal path prints exactly one single-line JSON
 # object {"rearm":{pr,head,class,reason,budget,action,evidence{job,step,line}}}
@@ -121,11 +129,13 @@
 # gates skipped — classification-only, never arms' line: PR OPEN-state
 # (condition 2), merge-queue absence (condition 4), trust-surface
 # intersection (condition 5). Everything else runs identically: context
-# 40-hex validation, three-field run identity binding (run_id + run_attempt +
-# workflow event/path/head), required-check outcome gate bound to the
-# publisher App declared in config/policy/merge_admission.json
-# (requiredCheckSources), evidence anchors, pre-arm intent label, retry budget
-# REPORT-ONLY. Two wake-up sources share ONE decision pipeline:
+# 40-hex validation, run identity binding (run_id + run_attempt + workflow
+# event + name AND path AND canonical workflow_id + run head_sha = G, and G's
+# parents must contain the current PR head), required-check outcome gate bound
+# to the publisher App declared in config/policy/merge_admission.json
+# (requiredCheckSources — resolved in condition 5 for EVERY mode, including
+# historical, so the forensic lane has an outcome authority), evidence
+# anchors, pre-arm intent label, retry budget REPORT-ONLY. Two wake-up sources share ONE decision pipeline:
 # pull_request_target[dequeued] and workflow_run[completed] of the
 # admission-gate workflow (ADR-0027 Amendment F). Events are wake-ups, never
 # state: every run re-reads GitHub's current state. Historical mode can never
@@ -510,10 +520,6 @@ jobs:
           if [ "${REARM_DONE:-}" = "1" ]; then exit 0; fi
           H12="${HEAD_SHA:0:12}"
           PRJ="$PR_NUMBER"
-          if [ "${HISTORICAL:-}" = "true" ]; then
-            echo "[rearm] HISTORICAL MODE: live gates skipped — classification-only, never arms (trust-surface intersection gate cannot hold for a merged historical PR)"
-            exit 0
-          fi
           if ! printf '%s' "$PR_NUMBER" | grep -Eq '^[0-9]+$' || ! printf '%s' "$HEAD_SHA" | grep -Eq '^[0-9a-f]{40}$'; then
             exit 0
           fi
@@ -539,6 +545,36 @@ jobs:
             { echo "[rearm] ERROR: trustSurface parse failed:"; sed 's/^/  | /' "$errf"; } >&2
             emit UNKNOWN "trustSurface parse failed (fail-safe no-arm)" available no-arm rearm trust-surface "parse"
             echo "REARM_DONE=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          # Required-check publisher binding (base-policy read, never the PR's
+          # own copy): merge_admission.json declares which App must have
+          # published each required context. The classifier consumes this as
+          # the outcome authority — a same-name check from another app is NOT
+          # the required check (ADR-0027 Amendment F). This runs in EVERY mode,
+          # including historical: without it the forensic lane reaches 6b with
+          # an unresolved publisher and can never classify anything.
+          if ! REQ_APP=$(printf '%s\n' "$TRUST" | jq -r '.requiredCheckSources.byContext["admission-check"] // empty' 2>"$errf"); then
+            { echo "[rearm] ERROR: requiredCheckSources projection failed:"; sed 's/^/  | /' "$errf"; } >&2
+            emit UNKNOWN "requiredCheckSources projection failed (fail-safe no-arm)" available no-arm rearm trust-surface "required-check-source-parse"
+            echo "REARM_DONE=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          if ! printf '%s' "$REQ_APP" | grep -Eq '^[0-9]+$'; then
+            emit UNKNOWN "requiredCheckSources.byContext['admission-check'] missing or non-numeric — required-check publisher binding unevaluable (fail closed)" available no-arm rearm trust-surface "required-check-source=missing"
+            echo "REARM_DONE=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          DEF_APP=$(printf '%s\n' "$TRUST" | jq -r '.requiredCheckSources.default // empty' 2>/dev/null || true)
+          if ! printf '%s' "$DEF_APP" | grep -Eq '^[0-9]+$'; then DEF_APP=""; fi
+          {
+            echo "REARM_REQUIRED_CTX=admission-check"
+            echo "REARM_REQUIRED_APP=$REQ_APP"
+            echo "REARM_ACTIONS_APP=$DEF_APP"
+          } >> "$GITHUB_ENV"
+          echo "[rearm] required-check binding: context=admission-check publisher_app=$REQ_APP actions_app=${DEF_APP:-unset}"
+          if [ "${HISTORICAL:-}" = "true" ]; then
+            echo "[rearm] HISTORICAL MODE: live gates skipped — classification-only, never arms (trust-surface intersection gate cannot hold for a merged historical PR)"
             exit 0
           fi
           : > /tmp/rearm_files.txt
@@ -585,30 +621,6 @@ jobs:
             exit 0
           fi
           echo "[rearm] no trust-surface intersection ($(wc -l < /tmp/rearm_files.txt) changed files vs $(wc -l < /tmp/rearm_trust_patterns.txt) trustSurface patterns)"
-          # Required-check publisher binding (base-policy read, never the PR's
-          # own copy): merge_admission.json declares which App must have
-          # published each required context. The classifier consumes this as
-          # the outcome authority — a same-name check from another app is NOT
-          # the required check (ADR-0027 Amendment F).
-          if ! REQ_APP=$(printf '%s\n' "$TRUST" | jq -r '.requiredCheckSources.byContext["admission-check"] // empty' 2>"$errf"); then
-            { echo "[rearm] ERROR: requiredCheckSources projection failed:"; sed 's/^/  | /' "$errf"; } >&2
-            emit UNKNOWN "requiredCheckSources projection failed (fail-safe no-arm)" available no-arm rearm trust-surface "required-check-source-parse"
-            echo "REARM_DONE=1" >> "$GITHUB_ENV"
-            exit 0
-          fi
-          if ! printf '%s' "$REQ_APP" | grep -Eq '^[0-9]+$'; then
-            emit UNKNOWN "requiredCheckSources.byContext['admission-check'] missing or non-numeric — required-check publisher binding unevaluable (fail closed)" available no-arm rearm trust-surface "required-check-source=missing"
-            echo "REARM_DONE=1" >> "$GITHUB_ENV"
-            exit 0
-          fi
-          DEF_APP=$(printf '%s\n' "$TRUST" | jq -r '.requiredCheckSources.default // empty' 2>/dev/null || true)
-          if ! printf '%s' "$DEF_APP" | grep -Eq '^[0-9]+$'; then DEF_APP=""; fi
-          {
-            echo "REARM_REQUIRED_CTX=admission-check"
-            echo "REARM_REQUIRED_APP=$REQ_APP"
-            echo "REARM_ACTIONS_APP=$DEF_APP"
-          } >> "$GITHUB_ENV"
-          echo "[rearm] required-check binding: context=admission-check publisher_app=$REQ_APP actions_app=${DEF_APP:-unset}"
           exit 0
 
       - name: "condition 6: failure classification I — run, check-runs, annotations"
@@ -631,11 +643,14 @@ jobs:
           # ── Target run resolution ────────────────────────────────────────
           # Identity is a triple, never run_attempt alone:
           #   run_id × run_attempt × workflow identity (event=merge_group,
-          #   path=<admission-gate-v2.yml>/name=admission-gate)
-          # plus the run's head_sha (the MERGE-GROUP commit G) and, when the
+          #   name=admission-gate AND path=admission-gate-v2.yml AND the
+          #   canonical workflow_id resolved from the API)
+          # plus the run's head_sha (the MERGE-GROUP commit G), and, when the
           # wake-up already knows it, the expected G. A newer attempt that is
           # still running is UNKNOWN — never a fallback to an older completed
           # attempt (its verdict is not the verdict of the current attempt).
+          # A merge_group run executes the workflow file from G, so name and
+          # path strings are candidate-controlled; workflow_id is not.
           if [ -n "${RUN_ID:-}" ]; then
             if ! RR=$(gh api "repos/$REPO/actions/runs/$RUN_ID" 2>"$errf"); then
               { echo "[rearm] ERROR: run query failed (run_id=$RUN_ID):"; sed 's/^/  | /' "$errf"; } >&2
@@ -691,7 +706,8 @@ jobs:
             fi
             if ! MG=$(printf '%s' "$MG_RAW" | jq -r --arg num "$PR_NUMBER" '
                   [ .[]
-                    | select((.name == "admission-gate") or ((.path // "") | endswith("/admission-gate-v2.yml")))
+                    | select((.name // "") == "admission-gate")
+                    | select((.path // "") | endswith("/admission-gate-v2.yml"))
                     | select((.head_branch // "") | test("^gh-readonly-queue/[^/]+/pr-" + $num + "-[0-9a-f]{40}$")) ]
                   | sort_by(.id)
                   | if length == 0 then "null"
@@ -735,9 +751,30 @@ jobs:
             echo "REARM_DONE=1" >> "$GITHUB_ENV"
             exit 0
           fi
-          if [ "${RNAME:-}" != "admission-gate" ] && ! printf '%s' "${RPATH:-}" | grep -q 'admission-gate-v2\.yml$'; then
+          if [ "${RNAME:-}" != "admission-gate" ] || ! printf '%s' "${RPATH:-}" | grep -q '/admission-gate-v2\.yml$'; then
             emit UNKNOWN "run $MGRUN is not the admission-gate kernel (name=${RNAME:-none} path=${RPATH:-none})" available no-arm rearm run-resolution "run-path=${RPATH:-none}"
             echo "REARM_DONE=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          # (2b) canonical workflow identity. A candidate that adds its own
+          # `on: merge_group` workflow can copy the name and path strings; it
+          # cannot acquire the registered workflow's id. Resolve the id from
+          # the base repository's workflow registry and require exact equality.
+          if ! CANON_WID=$(gh api "repos/$REPO/actions/workflows/admission-gate-v2.yml" --jq '.id' 2>"$errf"); then
+            { echo "[rearm] ERROR: canonical workflow id query failed:"; sed 's/^/  | /' "$errf"; } >&2
+            emit UNKNOWN "canonical workflow id unresolved (fail-safe no-arm)" available no-arm rearm run-resolution "workflow-id-query"
+            echo "REARM_DONE=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          if ! printf '%s' "$CANON_WID" | grep -Eq '^[0-9]+$'; then
+            emit UNKNOWN "canonical workflow id is not numeric (${CANON_WID:-none})" available no-arm rearm run-resolution "workflow-id-shape"
+            echo "REARM_DONE=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          if [ "${RWID:-}" != "$CANON_WID" ]; then
+            emit UNKNOWN "run $MGRUN workflow_id=${RWID:-none} != canonical admission-gate workflow id=$CANON_WID — not the admission-gate kernel (candidate-supplied workflow refused)" available no-arm rearm run-resolution "workflow-id-mismatch"
+            echo "REARM_DONE=1" >> "$GITHUB_ENV"
+            echo "SKIPPED: workbook identity mismatch (run workflow_id=${RWID:-none})"
             exit 0
           fi
           # (3) terminal attempt only; an in-progress newer attempt is UNKNOWN
@@ -762,6 +799,24 @@ jobs:
           if [ -n "${REARM_EXPECTED_G:-}" ] && [ "$G" != "${REARM_EXPECTED_G}" ]; then
             emit UNKNOWN "run head_sha ${G:0:12} != expected merge-group sha ${REARM_EXPECTED_G:0:12}" available no-arm rearm run-resolution "g-mismatch"
             echo "REARM_DONE=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          # (5b) subject binding. G is the merge queue's trial merge; its
+          # parents are the base and the head it actually verified. If the
+          # current PR head is not among them, this verdict belongs to an
+          # older head (the author pushed after enqueue) and must never
+          # authorize an arm for the current one — the evidence would be
+          # attached to a subject it never observed.
+          if ! PARENTS=$(gh api "repos/$REPO/git/commits/$G" --jq '.parents[].sha' 2>"$errf"); then
+            { echo "[rearm] ERROR: merge-group commit query failed (G=$G):"; sed 's/^/  | /' "$errf"; } >&2
+            emit UNKNOWN "merge-group commit query failed (fail-safe no-arm)" available no-arm rearm run-resolution "g-commit-query"
+            echo "REARM_DONE=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          if ! printf '%s\n' "$PARENTS" | grep -Fxq "$HEAD_SHA"; then
+            emit UNKNOWN "merge-group commit ${G:0:12} does not have the current PR head ${H12} as a parent — the verdict belongs to a different head (fail closed)" available no-arm rearm run-resolution "g-parent-mismatch"
+            echo "REARM_DONE=1" >> "$GITHUB_ENV"
+            echo "SKIPPED: G is not a trial merge of the current head"
             exit 0
           fi
           # (6) conclusions that carry no verification outcome
@@ -811,13 +866,18 @@ jobs:
             exit 0
           fi
           errf="$(mktemp)"
-          # checks: read is what makes THIS query legal for GITHUB_TOKEN. A
-          # 403/5xx here is evidence class (c) — query infra.
-          if ! CR=$(gh api "repos/$REPO/commits/$G/check-runs?per_page=100" 2>"$errf"); then
+          # checks: read is what makes THIS query legal for GITHUB_TOKEN. A 5xx
+          # is evidence class (c) — query infra, explicitly allowed as
+          # TRANSIENT by the S2 contract. A 403 is an authorization failure:
+          # deterministic for this token, never evidence that the verification
+          # was transient → UNKNOWN/no-arm. --paginate --slurp: check-run
+          # counts grow with re-runs; a single page would silently drop the
+          # required App check and misreport absence.
+          if ! CRP=$(gh api --paginate --slurp "repos/$REPO/commits/$G/check-runs?per_page=100&filter=all" 2>"$errf"); then
             CODE=$(sed -n 's/.*HTTP \([0-9][0-9][0-9]\).*/\1/p' "$errf" | head -1)
             { echo "[rearm] ERROR: check-runs query failed for G=$G (http=${CODE:-unknown}):"; sed 's/^/  | /' "$errf"; } >&2
             case "$CODE" in
-              403|5[0-9][0-9])
+              5[0-9][0-9])
                 {
                   echo "REARM_CLASS=TRANSIENT"
                   echo "REARM_CODE=(c) checkrun-query-infra"
@@ -829,10 +889,15 @@ jobs:
                 echo "CLASSIFIED: (c) check-runs query infra failure (http=$CODE) — TRANSIENT per closed enumeration"
                 exit 0;;
               *)
-                emit UNKNOWN "check-runs query failed for G=${G:0:12} (http=${CODE:-unknown})" available no-arm rearm required-check "http=${CODE:-unknown}"
+                emit UNKNOWN "check-runs query failed for G=${G:0:12} (http=${CODE:-unknown}) — not a transient verification outcome" available no-arm rearm required-check "http=${CODE:-unknown}"
                 echo "REARM_DONE=1" >> "$GITHUB_ENV"
                 exit 0;;
             esac
+          fi
+          if ! CR=$(printf '%s' "$CRP" | jq -c 'if (type == "array") and (length > 0) then {check_runs: ([.[] | .check_runs[]])} else empty end' 2>"$errf"); then
+            emit UNKNOWN "check-runs pagination envelope unparsable (fail-safe no-arm)" available no-arm rearm required-check "envelope-parse"
+            echo "REARM_DONE=1" >> "$GITHUB_ENV"
+            exit 0
           fi
           if [ -z "$CR" ]; then
             emit UNKNOWN "check-runs query returned empty for G=${G:0:12}" available no-arm rearm required-check "empty"
@@ -953,7 +1018,7 @@ jobs:
               CODE=$(sed -n 's/.*HTTP \([0-9][0-9][0-9]\).*/\1/p' "$errf" | head -1)
               { echo "[rearm] ERROR: annotations query failed for check-run $cid (http=${CODE:-unknown}):"; sed 's/^/  | /' "$errf"; } >&2
               case "$CODE" in
-                403|5[0-9][0-9])
+                5[0-9][0-9])
                   {
                     echo "REARM_CLASS=TRANSIENT"
                     echo "REARM_CODE=(c) checkrun-query-infra"
@@ -965,14 +1030,22 @@ jobs:
                   echo "CLASSIFIED: (c) annotations query infra failure (http=$CODE) — TRANSIENT per closed enumeration"
                   exit 0;;
                 *)
-                  emit UNKNOWN "annotations query failed for check-run $cid (http=${CODE:-unknown})" available no-arm rearm annotations "http=${CODE:-unknown}"
+                  emit UNKNOWN "annotations query failed for check-run $cid (http=${CODE:-unknown}) — not a transient verification outcome" available no-arm rearm annotations "http=${CODE:-unknown}"
                   echo "REARM_DONE=1" >> "$GITHUB_ENV"
                   exit 0;;
               esac
             fi
-            printf '%s' "$ANN" | jq -c '.[]?' >> /tmp/rearm_ann_merged.jsonl
+            if ! printf '%s' "$ANN" | jq -c '.[]?' >> /tmp/rearm_ann_merged.jsonl 2>"$errf"; then
+              emit UNKNOWN "annotations page unparsable for check-run $cid (fail-safe no-arm)" available no-arm rearm annotations "ann-parse"
+              echo "REARM_DONE=1" >> "$GITHUB_ENV"
+              exit 0
+            fi
           done
-          jq -s '.' /tmp/rearm_ann_merged.jsonl > /tmp/rearm_ann.json
+          if ! jq -s '.' /tmp/rearm_ann_merged.jsonl > /tmp/rearm_ann.json 2>"$errf"; then
+            emit UNKNOWN "annotations aggregation failed (fail-safe no-arm)" available no-arm rearm annotations "ann-aggregate"
+            echo "REARM_DONE=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
           if ! ANN_TITLES=$(jq -r '.[].title' /tmp/rearm_ann.json 2>"$errf"); then
             { echo "[rearm] ERROR: annotations title extraction failed:"; sed 's/^/  | /' "$errf"; } >&2
             emit UNKNOWN "annotations title extraction failed (fail-safe no-arm)" available no-arm rearm annotations "titles-parse"
@@ -994,7 +1067,12 @@ jobs:
           # CANDIDATE_* title is UNKNOWN/no-arm and short-circuits the log-anchor
           # pass (no arm on an ambiguous ancestry/candidate code).
           ALLOWED="NOT_ADMIT_BINDING_MISMATCH NOT_ADMIT_STALE_BASE ADM_IDENTITY"
-          PERM_RE='^(ROT_|TRUST_SURFACE|NO_CERT|MUST_)'
+          # The publisher prefixes stable codes with NOT_ADMIT_ (measured
+          # 2026-11-22: ::error title=NOT_ADMIT_ROT_NEW_PIN / NOT_ADMIT_NO_CERT /
+          # NOT_ADMIT_TRUST_SURFACE_INCOMPLETE / NOT_ADMIT_MUST_*). A regex
+          # anchored on the bare family name would classify every one of those
+          # as OTHER and let the evidence pass arm a permanent failure.
+          PERM_RE='^(NOT_ADMIT_)?(ROT_|TRUST_SURFACE|NO_CERT|MUST_)'
           CAND_RE='^CANDIDATE_'
           CLASS=""
           PERM=""
@@ -1240,16 +1318,12 @@ jobs:
           # Budget contract (ADR-0027 Amendment F): the per-head budget has TWO
           # labels. `rearm-intent@<head12>` is written BEFORE the arm request
           # and is never removed by this workflow; `rearmed@<head12>` is
-          # written only after an arm is CONFIRMED. An intent label without a
-          # rearmed@ label means a previous attempt consumed budget whose
-          # outcome was never observed — the budget is treated as SPENT so a
-          # second arm can never happen (conservative by construction).
-          if printf '%s\n' "$LABELS" | grep -Fxq "rearm-intent@$H12"; then
-            emit UNKNOWN "rearm-intent@$H12 present without a confirmed arm — budget treated as spent (intent-orphan; operator must reconcile the PR state before any further attempt)" spent no-arm rearm budget "intent-orphan"
-            echo "REARM_DONE=1" >> "$GITHUB_ENV"
-            echo "SKIPPED: intent label present — budget treated as spent, no arm"
-            exit 0
-          fi
+          # written only after an arm is CONFIRMED. A CONFIRMED arm therefore
+          # leaves BOTH labels behind — `rearmed@` must be evaluated FIRST or
+          # the normal spent state is misreported as an orphan. An intent label
+          # without a rearmed@ label means a previous attempt consumed budget
+          # whose outcome was never observed; the budget is treated as SPENT so
+          # a second arm can never happen (conservative by construction).
           if printf '%s\n' "$LABELS" | grep -Fxq "rearmed@$H12"; then
             echo "[rearm] BUDGET EXHAUSTED: rearmed@$H12 already present (total verification attempts ≤ 2 per PR head — user-fixed policy 2026-10-15, ADR-0027 Amendment E/F)"
             # Historical mode must never write labels — the HISTORICAL conjunct
@@ -1268,6 +1342,21 @@ jobs:
             emit TRANSIENT "retry budget exhausted for head $H12 (rearmed@$H12 present — initial + 1 requeue spent; operator intervention required)" spent exhausted rearm budget "label=rearmed@$H12"
             echo "REARM_DONE=1" >> "$GITHUB_ENV"
             echo "SKIPPED: retry budget exhausted — terminal no-op (rearm-exhausted marker is the operator signal)"
+            exit 0
+          fi
+          if printf '%s\n' "$LABELS" | grep -Fxq "rearm-intent@$H12"; then
+            # An intent without a confirmed arm is an unambiguous terminal
+            # state: the outcome of the only allowed attempt was never
+            # observed. Mark it so the operator sees it without the log.
+            if [ "${REARM_LIVE:-0}" = "1" ] && [ "${DRY_RUN:-}" != "true" ] && [ "${HISTORICAL:-}" != "true" ]; then
+              if ! gh api -X POST "repos/$REPO/issues/$PR_NUMBER/labels" -f "labels[]=rearm-exhausted" 2>"$errf"; then
+                echo "[rearm] WARN: rearm-exhausted label write failed (verdict unchanged — apply manually):" >&2
+                sed 's/^/  | /' "$errf" >&2
+              fi
+            fi
+            emit UNKNOWN "rearm-intent@$H12 present without a confirmed arm — budget treated as spent (intent-orphan; operator must reconcile the PR state before any further attempt)" spent no-arm rearm budget "intent-orphan"
+            echo "REARM_DONE=1" >> "$GITHUB_ENV"
+            echo "SKIPPED: intent label present — budget treated as spent, no arm"
             exit 0
           fi
           echo "[rearm] budget available for head $H12 (neither rearm-intent@$H12 nor rearmed@$H12 present)"
@@ -1415,10 +1504,14 @@ jobs:
               exit 0
               ;;
           esac
-          if [ "$INQ" = "true" ] && [ -z "$MQE" ]; then
-            emit "$REARM_CLASS" "PR reports isInMergeQueue=true with no entry state — queue state unevaluable, no arm" available no-arm rearm arm "queued-again"
+          # Any isInMergeQueue=true is terminal for this run: the entry state
+          # may be QUEUED/AWAITING_CHECKS/MERGEABLE (covered above) or
+          # LOCKED/UNMERGEABLE (previous versions fell through and issued a
+          # doomed arm). Armed-and-present is always no-arm.
+          if [ "$INQ" = "true" ]; then
+            emit "$REARM_CLASS" "PR reports isInMergeQueue=true (entry=${MQE:-absent}) — re-arm not needed, queue state is broker-owned" available no-arm rearm arm "queued-again"
             echo "REARM_DONE=1" >> "$GITHUB_ENV"
-            echo "SKIPPED: isInMergeQueue=true (entry state absent)"
+            echo "SKIPPED: isInMergeQueue=true (entry=${MQE:-absent})"
             exit 0
           fi
           # ---- already-armed reconciliation ----------------------------------
@@ -1478,6 +1571,39 @@ jobs:
             exit 0
           fi
           echo "[rearm] intent recorded: rearm-intent@$H12 (arm claim durable)"
+          # ---- last-moment auto-merge reconciliation -------------------------
+          # The two wake-ups for one PR are not serialized (the concurrency
+          # group key includes the event name; labels have no compare-and-swap
+          # primitive). A sibling run can pass every check above in the same
+          # window and arm first. Re-read the one fact that makes a second arm
+          # unnecessary — an existing auto-merge request — immediately before
+          # the mutating call. If it appeared, confirm ARMED and never issue a
+          # duplicate request.
+          if ! SNAP2=$(gh api graphql \
+                -f query='query($o:String!,$n:String!,$num:Int!){repository(owner:$o,name:$n){pullRequest(number:$num){autoMergeRequest{enabledAt}}}}' \
+                -f o="${REPO%%/*}" -f n="${REPO##*/}" -F num="$PR_NUMBER" 2>"$errf"); then
+            emit UNKNOWN "last-moment auto-merge re-read failed — arm not attempted (fail-safe)" spent no-arm rearm arm "prearm-reread"
+            echo "REARM_DONE=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          if ! AME2=$(printf '%s' "$SNAP2" | jq -r '.data.repository.pullRequest.autoMergeRequest.enabledAt // ""' 2>"$errf"); then
+            emit UNKNOWN "last-moment auto-merge re-read unparsable — arm not attempted (fail-safe)" spent no-arm rearm arm "prearm-parse"
+            echo "REARM_DONE=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          if [ -n "$AME2" ]; then
+            if ! gh api -X POST "repos/$REPO/issues/$PR_NUMBER/labels" -f "labels[]=rearmed@$H12" 2>"$errf"; then
+              echo "[rearm] WARN: rearmed@$H12 reconciliation write failed (apply manually):" >&2
+              sed 's/^/  | /' "$errf" >&2
+            fi
+            {
+              echo "REARM_ARMED=1"
+              echo "REARM_DONE=1"
+            } >> "$GITHUB_ENV"
+            emit "$REARM_CLASS" "auto-merge appeared at the last moment (enabledAt=${AME2}) — reconciled, no second arm" spent armed rearm arm "prearm-armed"
+            echo "REARMED (observed) pr#$PR_NUMBER — concurrent arm reconciled before mutation"
+            exit 0
+          fi
           if ERR=$(gh pr merge "$PR_NUMBER" --repo "$REPO" --auto --match-head-commit "$HEAD_SHA" 2>&1); then
             MSG="REARMED pr#$PR_NUMBER key=(pr$PR_NUMBER, h$H12, c${REARM_G:0:12}, ${REARM_CODE:-})"
             echo "$MSG"
@@ -1502,6 +1628,29 @@ jobs:
             echo "[rearm] SKIPPED: arm command failed — verbatim error below (fail-safe no-arm, no escalation):"
             printf '%s\n' "$ERR"
           } >&2
+          # A failed arm request is not proof that nothing happened: the API
+          # may have accepted the mutation and lost the response, or a sibling
+          # wake-up may have armed in the same window. Re-read auto-merge once;
+          # a present request is a reconciliation, not an ambiguous failure.
+          AME3=""
+          if SNAP3=$(gh api graphql \
+                -f query='query($o:String!,$n:String!,$num:Int!){repository(owner:$o,name:$n){pullRequest(number:$num){autoMergeRequest{enabledAt}}}}' \
+                -f o="${REPO%%/*}" -f n="${REPO##*/}" -F num="$PR_NUMBER" 2>"$errf"); then
+            AME3=$(printf '%s' "$SNAP3" | jq -r '.data.repository.pullRequest.autoMergeRequest.enabledAt // ""' 2>/dev/null || true)
+          fi
+          if [ -n "$AME3" ]; then
+            if ! gh api -X POST "repos/$REPO/issues/$PR_NUMBER/labels" -f "labels[]=rearmed@$H12" 2>"$errf"; then
+              echo "[rearm] WARN: rearmed@$H12 reconciliation write failed (apply manually):" >&2
+              sed 's/^/  | /' "$errf" >&2
+            fi
+            {
+              echo "REARM_ARMED=1"
+              echo "REARM_DONE=1"
+            } >> "$GITHUB_ENV"
+            emit "$REARM_CLASS" "arm command errored but auto-merge is present (enabledAt=${AME3}) — reconciled, budget spent once" spent armed rearm arm "arm-reconciled"
+            echo "REARMED (reconciled) pr#$PR_NUMBER — auto-merge present after an errored request"
+            exit 0
+          fi
           # The intent label is NOT removed (user directive: an ambiguous arm
           # outcome must consume budget). rearm-exhausted is applied best-effort
           # so an operator sees the PR without reading the run log.

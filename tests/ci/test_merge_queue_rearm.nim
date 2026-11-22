@@ -350,11 +350,14 @@ suite "structural — budget contract (Amendment F)":
   let c8 = stepRun(wfPath, "rearm", "condition 8")
   let c9 = stepRun(wfPath, "rearm", "condition 9")
 
-  test "condition 8 checks the intent label before the confirmed-spend label":
-    let intent = c8.find("rearm-intent@$H12\"; then")
+  test "condition 8 checks the confirmed-spend label before the intent label":
+    # A CONFIRMED arm leaves BOTH labels behind (intent is never removed).
+    # Evaluating intent first would report that normal spent state as an
+    # orphan; the exhausted branch must win.
     let rearmed = c8.find("rearmed@$H12\"; then")
-    check intent > 0
-    check rearmed > intent
+    let intent = c8.find("rearm-intent@$H12\"; then")
+    check rearmed > 0
+    check intent > rearmed
 
   test "budget exhaustion is a terminal no-op, not a red job":
     let exhaust = c8.find("BUDGET EXHAUSTED")
@@ -478,6 +481,17 @@ suite "condition 8 executes — the budget is spent before it can be re-spent":
     check actionOf(r.summary) == "no-arm"
     check budgetOf(r.summary) == "spent"
     check lineOf(r.summary) == "intent-orphan"
+    check "rearm-exhausted" in labelsNow()   # operator marker, not log-only
+
+  test "a confirmed spend plus the retained intent is exhaustion, not an orphan":
+    prepare()
+    setLabels(["rearm-intent@" & Sha[0 .. 11], "rearmed@" & Sha[0 .. 11]])
+    let r = runStep(c8, budgetEnv())
+    check r.code == 0
+    check actionOf(r.summary) == "exhausted"
+    check budgetOf(r.summary) == "spent"
+    check lineOf(r.summary) == "label=rearmed@" & Sha[0 .. 11]
+    check "rearm-exhausted" in labelsNow()
 
   test "a confirmed spend is an operator marker, not a red job":
     prepare()
