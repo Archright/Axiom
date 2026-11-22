@@ -12,9 +12,27 @@
 SHELL := /bin/bash
 
 NIM ?= nim
-NIMBLE_PKGS := $(HOME)/.nimble/pkgs2
-CHECKSUMS_PATH := $(wildcard $(NIMBLE_PKGS)/checksums-*)
-FUSION_PATH := $(wildcard $(NIMBLE_PKGS)/fusion-*)
+# Some gate probes clear the environment before invoking make (doc_path_validator
+# runs `make -n <target>` with only LC_ALL/LANG), so HOME may be empty. Fall back
+# to the passwd home via bash tilde expansion (SHELL is /bin/bash above; dash
+# would emit a literal ~). Only shell builtins are used, so the closure
+# derived in tools/ci/derive_checker_closure.nim stays resolvable.
+AXIOM_NIMBLE_HOME := $(or $(HOME),$(shell echo ~))
+NIMBLE_PKGS := $(AXIOM_NIMBLE_HOME)/.nimble/pkgs2
+# DEBT#509: a missing Nimble package must break the build instead of becoming
+# an empty --path: argument. `wildcard` yields the empty string when the
+# directory is absent and an empty --path: is a silent no-op for Nim, so the
+# compile failed later with a misleading "cannot open file: checksums/sha2".
+# First match only: several matches used to be interpolated space-separated,
+# which emitted a bare directory token instead of a --path: argument.
+# Immediate (:=) assignments below: $(error) fires while this file is parsed,
+# so the failure is deterministic for every target. NIM_TOOL_FLAGS must stay
+# immediately expanded as well - .githooks/pre-push reads the resolved value
+# from `make -pn` (grep '^NIM_TOOL_FLAGS := ') to derive the gate build
+# identity, and a recursively expanded variable is printed as '=' there.
+AXIOM_NIMBLE_PKG = $(or $(firstword $(wildcard $(NIMBLE_PKGS)/$(1)-*)),$(error [DEBT#509] Nimble package '$(1)' is missing: no $(NIMBLE_PKGS)/$(1)-* directory. Install it with: nimble install $(1)))
+CHECKSUMS_PATH := $(call AXIOM_NIMBLE_PKG,checksums)
+FUSION_PATH := $(call AXIOM_NIMBLE_PKG,fusion)
 # Resolve the toolchain ROOT (must contain compiler/*.nim for kernel builds
 # importing compiler/[ast, idents]).
 NIM_TOOLCHAIN_ROOT := $(if $(wildcard $(HOME)/.choosenim/toolchains/nim-2.2.10/compiler/ast.nim),$(HOME)/.choosenim/toolchains/nim-2.2.10,$(patsubst %/bin/nim,%,$(shell which nim 2>/dev/null || echo $(HOME)/.choosenim/toolchains/nim-2.2.10/bin/nim)))
