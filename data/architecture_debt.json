@@ -206,7 +206,7 @@
       "file": "src/cli/merge_cli.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:a3014c4159973d16f20a56bfda407c428f1bc954622ea4a176d0c1c090a82163"
+      "rawContentHash": "sha256:9ab6c025026326fe323f15751872862218b2389a0b90c36a529d1967f6ad4ef6"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
