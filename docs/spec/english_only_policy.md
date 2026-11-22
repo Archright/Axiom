@@ -37,7 +37,7 @@ and the declared root files.
 **Out of scope -- third-party**: paths declared `THIRD_PARTY` in
 `compliance/provenance/source-origin.yml`, including `LICENSES/**`, `vendor/**`,
 verbatim upstream code excerpts embedded in tests and experiments, third-party
-fixtures, and the CC-BY-4.0 PDF
+fixtures, and the third-party PDF
 `docs/spec/SVF-SVC_Software_Verification_Using_SVF.pdf`. Axiom does not own the
 wording and cannot lawfully translate it.
 

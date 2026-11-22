@@ -66,22 +66,22 @@ contributor obligation for the untracked conversation surface.
 
 ## Decision
 
-**(a) Axiom-owned tracked text is English single-source.** "Text" means prose,
+**a. Axiom-owned tracked text is English single-source.** "Text" means prose,
 documentation, comments, user-facing strings, identifiers as they appear in prose,
 commit messages, and the repository-tracked artifacts of collaboration. Axiom-owned
 means every path declared `ORIGINAL` in `compliance/provenance/source-origin.yml`.
 The ownership declaration is the SSOT; this ADR does not carry a second path list.
 
-**(b) Scope excludes third-party rights material and non-prose.** Paths declared
+**b. Scope excludes third-party rights material and non-prose.** Paths declared
 `THIRD_PARTY` in `compliance/provenance/source-origin.yml` are out of scope:
 `LICENSES/**`, `vendor/**`, verbatim upstream code excerpts embedded in tests and
-experiments, third-party fixtures, and the CC-BY-4.0 PDF
+experiments, third-party fixtures, and the third-party PDF
 `docs/spec/SVF-SVC_Software_Verification_Using_SVF.pdf`. Axiom does not own the
 wording of that material and cannot lawfully translate it. Binary files and declared
 generated artifacts are non-prose and are judged by their own format contracts, not by
 language.
 
-**(c) Past Git objects are preserved and originals are traceable by blob SHA.**
+**c. Past Git objects are preserved and originals are traceable by blob SHA.**
 Translation is additive: a new commit adds the English text, and the source blob
 remains reachable at `sourceBaseCommit`. No history rewrite, no force-push of `main`,
 no filter-repo. Every translation batch records the source and translated blob
@@ -89,26 +89,26 @@ digests in a translation lineage manifest
 (`docs/spec/translation_lineage.md`). "English-only" is a claim about the current tree
 and the current conversation surface, never about history.
 
-**(d) Two modes, one ratchet.** Migration mode judges against a findings baseline:
+**d. Two modes, one ratchet.** Migration mode judges against a findings baseline:
 an increase over the baseline is FAIL, a decrease is PASS, and the baseline moves only
 through a reviewed policy change. Strict mode scans the full tree with no baseline and
 requires zero findings. The baseline is a measurement origin, never an exemption list.
 Mode definitions, metric definitions, and terminal criteria are normative in
 `docs/spec/english_only_policy.md`.
 
-**(e) The existing `publication-integrity` required check remains the sole landing
+**e. The existing `publication-integrity` required check remains the sole landing
 verdict.** The English-only judgment, when activated, arrives as an additional
 dimension of that context, through the same aggregation seam every existing dimension
 uses (job result, report artifact, policy file). The context name, the job id, and the
 workflow path stay unchanged.
 
-**(f) No new required check, no new GitHub App, no ruleset change.** The ruleset, its
+**f. No new required check, no new GitHub App, no ruleset change.** The ruleset, its
 seven required contexts, the producer identities, the merge queue parameters, and
 `bypass_actors: []` are unchanged by this ADR and by every phase that implements it.
 The judgment cannot ride the merge queue until it is inside the existing context,
 which is the only reason to prefer the seam over a new check.
 
-**(g) NLID is required before claiming "English-only".** The claim requires a pinned
+**g. NLID is required before claiming "English-only".** The claim requires a pinned
 natural-language identification detector to report `nonEnglish = 0` over the in-scope
 set. Until that detector exists, is pinned by name, version, and artifact sha256, and
 runs, the only supportable claim is "clean under the Unicode Script allowlist". The
@@ -116,17 +116,17 @@ distinction is mandatory in every report and every human summary. This is the
 anti-theater clause of the ADR (AGENTS.md section 0.9): a Script table is not a
 language detector, and reporting it as one would be a false guarantee.
 
-**(h) UNKNOWN is blocking and never a pass.** Unreadable input, invalid UTF-8, an
+**h. UNKNOWN is blocking and never a pass.** Unreadable input, invalid UTF-8, an
 unpinned or version-mismatched detector, a missing model digest, and an ambiguous
 classification all produce UNKNOWN. UNKNOWN blocks the claim and, once the dimension is
 wired, blocks the landing verdict for that dimension.
 
-**(i) Exceptions are exact paths only.** An exception names one path and one reason.
+**i. Exceptions are exact paths only.** An exception names one path and one reason.
 Directory wildcards are forbidden except where the directory root is itself a declared
 third-party root in `compliance/provenance/source-origin.yml`. No new wildcard is
 invented by this policy.
 
-**(j) ADR-0044 is retained unchanged.** The Unicode Script allowlist remains a
+**j. ADR-0044 is retained unchanged.** The Unicode Script allowlist remains a
 separate, weaker judgment with its own declared limitations. The English-only
 dimension does not replace it, does not weaken it, and does not inherit its
 exemptions. `data/i18n/ko.json` stays an exact-path exemption for `script-scan` and is
