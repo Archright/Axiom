@@ -274,6 +274,118 @@ TCB로 수용한 뒤 남는 잔여 위협과, `workflow_run` 단일 씨딩 write
   (`docs/evidence/orphan_seed_quota_delegation_2026-10-08.md` §2.1). 미정의
   표면에서의 소비 성립 여부는 플랫폼 변경에 노출된 가속 전용 사실(J3)로만 취급한다.
 
+## 2.1 GitHub-native CI 한계 (플랫폼 상한·관측 의미)
+
+§1의 위임은 "GitHub이 보장하는 것을 재구현하지 않는다"이고, 본 절은 그 반대
+방향의 경계다 — **GitHub이 보장하지 않는 것을 보장된 것으로 읽지 않는다**.
+아래 인용은 모두 공식 문서 원문이며, 라이브 값은 시점 기록이다(정본은 ruleset
+API 실측 — R2).
+
+### 2.1.1 `max_entries_to_build` — 동시 빌드 스로틀 (그룹 크기 보장 아님)
+
+> "The maximum number of merge_group webhooks to dispatch (between 1 and 100),
+> throttling the total amount of concurrent CI builds."
+> — docs.github.com, *Managing a merge queue* ("Build concurrency")
+> https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue
+
+라이브 값은 **100**(2026-11-21 실측 — §2 R2 갱신). 이 파라미터는 큐가 동시에
+디스패치하는 `merge_group` webhook 수의 상한이며 **그룹 크기 보장이 아니다**.
+따라서 1:1 형상 강제(merge_group 부모 관계·후보 트리 동등성)를 이 값에
+귀속시키지 않는다 — 스로틀은 형상 강제를 대신하지 않고, 형상 강제도 스로틀을
+대신하지 않는다(§2 R2 2026-11-17 갱신 (ii)의 같은 경계).
+
+### 2.1.2 `Status check timeout` — 120분은 큐의 유한 응답 상한이다
+
+> "Choose how long the queue should wait for a response from CI before assuming
+> that checks have failed."
+> — docs.github.com, *Managing a merge queue* ("Status check timeout")
+> https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue
+
+상한을 넘긴 엔트리는 큐에서 제거된다 — 공식 dequeue 사유 목록의 한 항목이
+"Timed out awaiting a successful CI result based off the configured timeout
+setting"이다(같은 페이지, "Failing CI"). Axiom 라이브 ruleset `27097366`의
+`check_response_timeout_minutes`는 **120**이다(2026-11-22 readback).
+
+이 120분은 **14일 stale 표시와 다른 계층**이다. 세 계층을 혼동하지 않는다.
+
+| 계층 | 경계 | 의미 | Axiom 판독 |
+|---|---|---|---|
+| (a) 플랫폼 stale 표시 | 14일 | 미완료 check run의 conclusion을 GitHub이 `stale`로 **표시** — 큐 축출도 판정도 아니다 | 오래된 pending check run을 "대기 중"으로 읽지 않는다 |
+| (b) 큐 status check timeout | 120분 (ruleset 값) | 큐가 CI 응답을 기다리다 **실패로 간주**하고 엔트리를 제거(eviction) | 큐 경로의 유한 응답 상한 — 초과 = dequeue |
+| (c) current-head pending required check | (b) 이내 | 현재 head의 required check가 pending | **운영 사고(incident)** — 대기 상태가 아니다 |
+
+(a)의 공식 문장:
+
+> "If a check run is in an incomplete state for more than 14 days, then the
+> check run's `conclusion` becomes `stale` and appears on GitHub as stale…"
+> "Only GitHub can mark check runs as `stale`."
+> — docs.github.com, *Using the REST API to interact with checks* ("About check
+> runs")
+> https://docs.github.com/en/rest/guides/using-the-rest-api-to-interact-with-checks
+
+(원문에서 "stale" 뒤에는 인라인 아이콘이 렌더되므로 줄임표로 생략했다.) 즉
+(a)는 **표시** 계층이고 (b)는 **큐 축출** 계층이다. (c)는 플랫폼 상한이 아니라
+Axiom의 운영 규칙이다 — 현재 head의 required check가 (b) 이내인데도 pending이면
+그것은 정상 대기가 아니라 사고다. 대기 상태로 분류하면 fail-open이 된다.
+
+### 2.1.3 `merge_group`은 별도 이벤트다 — PR check는 대체가 아니다
+
+> "You must use the merge_group event to trigger your GitHub Actions workflow
+> when a pull request is added to a merge queue."
+> "The merge_group event is separate from the pull_request and push events."
+> — docs.github.com, *Managing a merge queue* ("Triggering merge group checks
+> with GitHub Actions")
+> https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue
+
+같은 절의 경고: "Otherwise, status checks will not be triggered when you add a
+pull request to a merge queue. The merge will fail as the required status check
+will not be reported." 따라서 merge queue의 required check는 `merge_group`에서
+발화해야 하며, `pull_request`에서 통과한 check는 그 자리를 대체하지 않는다.
+Axiom의 required check context `admission-check`(job name)는
+`admission-gate-v2.yml`에서 `pull_request`와 `merge_group` 양쪽에 발화하지만,
+PR 경로의 GREEN은 큐 경로의 GREEN이 아니다.
+
+### 2.1.4 `pull_request_target` 공개 저장소 기본 정책 — 2026-12-02 집행
+
+> "GitHub provides a default event policy that blocks the pull_request_target
+> event in public repositories."
+> "Currently runs in evaluate mode. In this mode, workflow runs continue, but
+> you can use policy insights to identify runs that would be blocked after
+> enforcement."
+> "On December 2, 2026, GitHub will enforce the default policy for affected
+> repositories that were using the default pull_request_target policy before
+> general availability."
+> — docs.github.com, *Securely using pull_request_target* ("Default policy for
+> pull_request_target")
+> https://docs.github.com/en/actions/reference/security/securely-using-pull_request_target
+
+Axiom은 공개 저장소이므로 이 정책의 적용 범위에 있다. `pull_request_target`을
+사용하는 워크플로(`merge-queue-rearm.yml`)는 **현재 evaluate mode라 실행이
+계속되지만**, 2026-12-02 집행 후에는 명시적 allow 정책 없이는 차단된다.
+
+정책의 **명시적 존재 여부**는 API로 읽힌다 — `GET
+/repos/{owner}/{repo}/actions/policies`와 `GET /orgs/{org}/actions/policies`
+(둘 다 "Administration" write 권한을 요구하므로 CI 토큰 경로의 판독 수단은
+아니다). 2026-11-22 readback: repo 정책 0건, org 정책 5건은 모두
+`workflow_path`로 특정 워크플로만 대상으로 하며 `merge-queue-rearm.yml` 대상은
+0건이다. 그러나 **암묵적 기본 정책 자체와 evaluate-mode 인사이트는 정책 객체로
+반환되지 않는다** — "지금 이 워크플로가 실제로 차단될 것인가"의 확정은 정책
+인사이트(UI) 확인이며, 이는 사람 설정 점검이다. 본 문서는 그 점검 결과를
+주장하지 않는다.
+
+### 2.1.5 skip된 job은 "Success"로 보고된다 — skip은 실행 증거가 아니다
+
+> "A job that is skipped will report its status as "Success". It will not
+> prevent a pull request from merging, even if it is a required check."
+> — docs.github.com, *Using conditions to control job execution*
+> https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-jobs-with-conditions
+
+따라서 ① skip된 job을 삭제하는 것은 처리량 최적화가 아니다 — skip된 job은
+runner 시간을 소비하지 않으므로 제거해도 빌드 작업이 줄지 않고, check run은
+어차피 "Success"로 남는다 ② skip된 required check는 **실행의 증거가 아니다** —
+required 집합의 GREEN은 "실행되어 통과함"이 아니라 "차단되지 않음"일 수 있다
+(`rearm_observation_quirks.md` Q1의 같은 경계).
+
 ## 3. 실패 모드 — Phase 0 linchpin
 
 `workflow_run`이 org required workflow(`.github/workflows/admission-gate.yml`) 완료에
