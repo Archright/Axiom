@@ -1,0 +1,131 @@
+{
+  "schema": "axiom.ci-measurement.v1",
+  "measurementId": "ancestry-three-state-gate-2026-11-22",
+  "recorder": "agent",
+  "approver": "wintrover",
+  "observedAt": "2026-11-22T05:30:00Z",
+  "observationAnchor": {
+    "mainTip": "4c346b7e9f8faae6645f13831c6cd93bc77c745e",
+    "mainTipNote": "merge commit of PR #332; the observation sample predates and includes this landing",
+    "appId": 5795152,
+    "appSlug": "axiom-admission-verifier",
+    "requiredCheckName": "admission-check"
+  },
+  "question": "Does the three-state ancestry contract currently fail in production, and if so at what rate, on each venue?",
+
+  "prVenue": {
+    "sampling": {
+      "command": "gh pr list --state all --limit 60 --json number,headRefOid | for each head: GET /repos/Archright/Axiom/commits/{sha}/check-runs, filter app.id==5795152",
+      "denominator": 60,
+      "denominatorDefinition": "the 60 most recently updated pull requests in any state; not a merge-queue cohort"
+    },
+    "results": {
+      "success": 53,
+      "failure": 7,
+      "failureBreakdown": {
+        "trustSurfaceFail": 6,
+        "gateRunConclusionFailure": 1
+      },
+      "candidateReasonCodeOccurrences": 0
+    },
+    "failureSubjects": [
+      { "pr": 333, "head": "e35af1fb6531a733b19c63ba9b14e286480e541e", "kind": "trust_surface=FAIL", "reasons": "mismatch:.github/workflows/admission-check.yml,mismatch:config/policy/epoch_manifest.json,tws_protected_field:trustedAdmissionWorkflowSha" },
+      { "pr": 314, "head": "ec85cd3de5978d75a53fcf85b14342e25985b74a", "kind": "gate run conclusion failure", "reasons": "trust_surface=PASS; reasons=conclusion=failure" },
+      { "pr": 309, "head": "41c02cf096a934cbe1d7e94b96e8adbb2feb0ae6", "kind": "trust_surface=FAIL", "reasons": "mismatch:.github/workflows/publication-integrity.yml,mismatch:config/policy/merge_admission.json" },
+      { "pr": 301, "head": "356f28723afd06ce91be168df912393efbf69e93", "kind": "trust_surface=FAIL", "reasons": "tws_new_field:trustedWriterJobs" },
+      { "pr": 293, "head": "59640ca354b3f6862c40412a634c1819e5987ed9", "kind": "trust_surface=FAIL", "reasons": "mismatch:.github/workflows/certificate-mint.yml" },
+      { "pr": 291, "head": "b238a07ebf0f7f995d3ccf3db29eab1b3fdde61a", "kind": "trust_surface=FAIL", "reasons": "mismatch:.github/workflows/publication-integrity.yml" },
+      { "pr": 289, "head": "b8ca675ff31fe50f39a29a8db44ec73b87ba6605", "kind": "trust_surface=FAIL", "reasons": "mismatch:config/repository_surface.json" }
+    ]
+  },
+
+  "mergeGroupVenue": {
+    "sampling": {
+      "command": "git log --first-parent --merges -40 --format=%H origin/main | for each sha: GET /repos/Archright/Axiom/commits/{sha}/check-runs, filter app.id==5795152",
+      "denominator": 38,
+      "denominatorDefinition": "the 40 most recent first-parent merge commits on main, minus 2 that carry no check-run from app 5795152"
+    },
+    "results": {
+      "success": 38,
+      "failure": 0,
+      "venuesObserved": { "merge_group": 38 },
+      "candidateReasonCodeOccurrences": 0
+    }
+  },
+
+  "interpretation": {
+    "ancestryFailureObserved": false,
+    "claim": "In the sampled window no admission-check verdict on either venue carried a CANDIDATE_* reason code.",
+    "notClaimed": [
+      "That the 8x64 deepen loop is correct. The sample shows it is not currently load-bearing, not that it is sound.",
+      "That the callee job logs were scanned. Callee job log retrieval returned no bytes for the sampled run, so the scan surface was the App-issued check-run summary only.",
+      "That the two venues share a denominator. The PR sample and the merge-group sample are different populations and are never pooled."
+    ],
+    "decision": "DEFER_LANDING",
+    "decisionReason": "ZERO_OBSERVED_OCCURRENCE_AND_BYPASS_BASELINE_HELD"
+  },
+
+  "landingGate": {
+    "candidatePullRequest": 333,
+    "candidateHead": "e35af1fb6531a733b19c63ba9b14e286480e541e",
+    "verdict": "BLOCKED_BY_TRUST_SURFACE",
+    "mechanism": "Any change to the verifier changes paths listed in config/policy/trust_surface_manifest.json, and the manifest requires those paths to be byte-identical between the evaluation commit and its base. A verifier upgrade is therefore self-authorizing by construction and is denied.",
+    "documentedLane": "docs/evidence/breakglass_trust_surface_landing_2026-11-19.md (audited break-glass, MUST-T2a delegation record pre-registered as a PR comment, temporary ruleset bypass on both required-check rulesets, REST merge, immediate restore)",
+    "laneTaken": false,
+    "laneTakenReason": "The measured failure rate is zero on both venues, so the governance cost of opening a bypass window is not currently justified. The ruleset remains frozen and bypass_actors remains empty."
+  },
+
+  "pinChainAtObservation": {
+    "mainTip": "4c346b7e9f8faae6645f13831c6cd93bc77c745e",
+    "verifierBlobAtMain": "433be3c34c51cfc3fc6f8741009135cfa5906a03",
+    "usesPinCommit": "7f3424cca91f343aa55354b3084af97e30bf65d4",
+    "blocksAtUsesPinCommit": "433be3c34c51cfc3fc6f8741009135cfa5906a03",
+    "trustedAdmissionWorkflowSha": "433be3c34c51cfc3fc6f8741009135cfa5906a03",
+    "productionExecutionPin": "433be3c34c51cfc3fc6f8741009135cfa5906a03",
+    "coherent": true,
+    "note": "The two uses pins are commit SHAs; trusted_writer_set and epoch_manifest hold the blob SHA of the verifier inside that commit. Coherence is the composition of both equalities, not equality between the commit SHA and the blob SHA.",
+    "candidateHeadBlob": "7361f7969fde7456e806ab92e614b2eb4d7f9fb2",
+    "candidateHeadBlobNote": "the blob proposed by PR #333; it is not the current production blob"
+  },
+
+  "authorityReadback": {
+    "rulesetId": 27097366,
+    "rulesetName": "main",
+    "enforcement": "active",
+    "bypassActorCount": 0,
+    "requiredContexts": [
+      { "context": "admission-check", "integrationId": 5795152 },
+      { "context": "bsec-integrity", "integrationId": 15368 },
+      { "context": "debt-registry-gate", "integrationId": 15368 },
+      { "context": "generation-acceptance", "integrationId": 15368 },
+      { "context": "axiom-operational-slice", "integrationId": 15368 },
+      { "context": "publication-integrity", "integrationId": 15368 },
+      { "context": "readiness-verdict", "integrationId": 15368 }
+    ],
+    "mergeQueue": {
+      "groupingStrategy": "ALLGREEN",
+      "maxEntriesToBuild": 100,
+      "maxEntriesToMerge": 1,
+      "minEntriesToMerge": 1,
+      "mergeMethod": "MERGE",
+      "checkResponseTimeoutMinutes": 120
+    },
+    "strictRequiredStatusChecksPolicy": false
+  },
+
+  "bypassExceptionRecord": {
+    "subject": "PR #309",
+    "head": "41c02cf096a934cbe1d7e94b96e8adbb2feb0ae6",
+    "mergeCommit": "858710ae6f590d7dae06646142e79851dda10721",
+    "mergedAt": "2026-11-21T07:58:46Z",
+    "admissionCheckConclusionAtMerge": "failure",
+    "admissionCheckReason": "trust_surface=FAIL; mismatch:.github/workflows/publication-integrity.yml,mismatch:config/policy/merge_admission.json",
+    "currentReadbackAfterEvent": { "bypassActorCount": 0, "enforcement": "active" },
+    "separationOfClaims": [
+      "Current readback: ruleset 27097366 is active and declares no bypass actor.",
+      "Historical event: PR #309 landed at 2026-11-21T07:58:46Z while its required admission-check was failure.",
+      "These are different facts and neither substitutes for the other."
+    ],
+    "limitation": "GitHub does not expose repository-ruleset configuration history through the REST rulesets endpoints, so the add/remove timeline of the bypass actor is a session observation and not an API readback. It is recorded as such and not as a platform-verified timeline."
+  }
+}
