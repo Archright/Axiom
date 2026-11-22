@@ -6136,6 +6136,27 @@
       "status": "open",
       "resolution": "UNRESOLVED — registration only. No cap, baseline number, or policy threshold is changed by this entry. Closing-slice acceptance: (1) CI produces a measurement (runs bin/nimtry or otherwise emits data/nimtry_live_count.json) and the ratchet compares the measured count, failing closed as UNKNOWN when the measurement is absent; (2) an increase fixture (or staged measurement) is observed as FAIL; (3) the 4384 measurement is either driven down or accepted through a human-authored baseline change with owner/rationale. The {.axiomDebt: \"DEBT#563\".} marker on the sidecar-absent fallback binds this entry to the blind-spot site.",
       "lastVerifiedAt": "2026-11-21T00:00:00Z"
+    },
+    {
+      "id": "DEBT#564",
+      "category": "Theater/Swallowed Failure",
+      "impact": "medium",
+      "severity": "medium",
+      "title": "local_purity_check gate-binary prebuild invoked a nonexistent nimble task, so the build was skipped with exit 0",
+      "description": "Machine-observed 2026-11-22 at origin/main f7fbb0b in a fresh worktree. tools/local_purity_check.nim:455 ran `nimble buildGates`, which is not a Nimble task: `nimble buildGates; echo EXIT=$?` prints `Error: Could not find task buildGates in .../axiom.nimble` and exits 0, so the gate-binary prebuild was silently skipped and the purity check continued. The repository defines the task in config.nims:334 as the Nim task `buildGates` (`nim buildGates`). Additional machine measurement of that task on the same tree: `nim buildGates` exits 0 and prints `[buildGates] done: built=0 skipped=54 failed=0` because src/gate/manifest.d/_index.json is gate-ID format (bare IDs, single writer tools/sync_topology.nim) while buildGatesFromManifest resolves `src/gate/manifest.d/<id>` without the `.json` suffix, so every entry is reported as `SKIP (manifest missing)`. Per-gate compile failures are also caught into the `failed=` counter and never produce a non-zero exit (throwaway NimScript reproduction: a failing `nim c` inside the task prints `FAILED` and `failed=1`, then exits 0). The fix replaces the invocation with `nim buildGates` and fails closed on non-zero exit, on a missing `failed=0` summary, and on unresolved-manifest skips. The config.nims task no-op is authority-owned (config.nims is immutable per AGENTS.md -1) and is left as an explicit residual: the purity check now aborts at this step instead of continuing.",
+      "symbol": "local_purity_check main() gate-binary prebuild (nimble buildGates -> nim buildGates)",
+      "contentHash": "sha256:d1f87702f5ae9dd4d862e0676063aef86c0d9d9960fddd24ecc5df7cf1f48da5",
+      "lineRange": "tools/local_purity_check.nim:455-463",
+      "files": [
+        "tools/local_purity_check.nim"
+      ],
+      "source": "theater_audit",
+      "productTruthImpact": "PRODUCT_SUPPORT",
+      "status": "closed",
+      "resolution": "FIXED 2026-11-22 (workstream/purity-buildgates): tools/local_purity_check.nim now runs `nim buildGates` and exits 4 unless the task reports `failed=0` with no unresolved-manifest skips. Measured before: `nimble buildGates; echo EXIT=$?` -> 'Error: Could not find task buildGates in .../axiom.nimble', EXIT=0. Measured after (same tree, upstream task unchanged): `nim buildGates; echo EXIT=$?` -> '[buildGates] done: built=0 skipped=54 failed=0', EXIT=0; the new guard rejects that output as unresolved-manifest skips. Verification commands: `make bin/purity_check` (compiles), `bin/purity_check --exec-cmd 'true'` (aborts with exit 4 at the prebuild and prints the SKIP evidence), `bin/debt_engine --validate` (all checks pass). Residual for the human architect: config.nims buildGatesFromManifest must resolve `<id>.json` and exit non-zero when `failed>0`; config.nims is immutable here, so this PR only makes the consumer fail closed.",
+      "lastVerifiedAt": "2026-11-22T06:04:43Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "The audited artifact is a shell-command invocation and exit-code guard inside a compiled Nim tool, not a gate function with a dedicated {.axiomDebt.} marker site; a pragma on main() would bind hundreds of unrelated lines and mask the finding. Trace: this entry's resolution (FIXED, with the exact measured commands) and source (theater_audit); external evidence: docs/spec/debt_registry_schema.md 10.1-10.2 and AGENTS.md 0.9."
     }
   ]
 }
