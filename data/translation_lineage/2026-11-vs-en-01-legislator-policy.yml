@@ -1,0 +1,37 @@
+# Translation lineage -- VS-EN-01 pilot batch.
+#
+# Batch: the two Korean bullets in the Scope section of
+# docs/spec/legislator_llm_only_policy.md (190 code points, 2 lines).
+# The file reaches zero non-Latin code points in one translation commit.
+#
+# Review scope: the project architect approved this batch under the delegated
+# blanket approval given for the English-only execution (2026-11-22). The
+# approval covers this batch; it is not a claim that the architect reviewed a
+# larger corpus line by line.
+
+schemaVersion: "axiom.translation-lineage.v1"
+batchId: "2026-11-vs-en-01-legislator-policy"
+sourceBaseCommit: "be7db2507ad80c1c020f0c040e51c3100254b647"
+translatedCommit: "b9580b4d0abb1c45724781185e380ede5dc0010a"
+
+sourcePaths:
+  - path: "docs/spec/legislator_llm_only_policy.md"
+    blobSha256: "da2e948142330698f7369ffc7306635e15dfbcac54d428c44fcc269505e8d9bf"
+
+translatedPaths:
+  - path: "docs/spec/legislator_llm_only_policy.md"
+    blobSha256: "4f2748ee282fdab9da36c5edf5a5dcfb7c21c268861584f67c367ffb8bf32b47"
+
+engine:
+  name: "kimi-code-agent"
+  version: "2.3.3"
+  modelId: "surplus/deepseek-v4.1-flash-1017"
+  modelSha256: "declared-unavailable"
+
+glossarySha256: "9fda01fbdf03988f7075dc7ec495e077ff493136527f626689d2a9f0e79ef84e"
+
+review:
+  status: "approved"
+  reviewers:
+    - "architect"
+  date: "2026-11-22"
