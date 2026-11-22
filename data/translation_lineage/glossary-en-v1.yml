@@ -1,8 +1,10 @@
 # Translation glossary en-v1 -- pinned terminology for English migration batches.
 #
 # One glossary, many batches. A batch manifest records the sha256 of the exact
-# bytes of this file at the sourceBaseCommit of the batch. Changing a rule here
-# produces a new glossary revision (en-v2) instead of an in-place edit.
+# bytes of the revision this file had when the batch was reviewed. A glossary
+# introduced after a batch's sourceBaseCommit is bound by its introducing commit,
+# not by the batch's base. Changing a rule here produces a new glossary revision
+# (en-v2) instead of an in-place edit.
 #
 # Rules are English-only by construction: the source language text is never
 # embedded (a raw non-Latin code point would itself violate the Script
