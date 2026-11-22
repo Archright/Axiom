@@ -19,9 +19,11 @@ code, commit messages, and the contract documents; a large part of `docs/` (nota
 ships a Korean locale catalog at `data/i18n/ko.json`. Measured by
 `tools/ci/english_audit_inventory.nim` at `be7db250` and pinned in
 `docs/reports/english_audit_inventory_be7db250.json`, the baseline inventory over the
-tracked tree (`.github` included, `.git` excluded) is 1,072 files, 68,251 lines, and
+tracked tree is 1,072 matched files out of 6,800 scanned, 68,251 matched lines, and
 1,233,507 code points carrying text outside the Latin/Greek/Common/Inherited Script
-set. Of those, 24 files and 11,772 code points are in gitignored-but-tracked files;
+set. The scanner contract excludes `vendor/`, `build/`, `.cache/`, and `.axiom/`, and
+does not enter `.git`; `.github` is included. Of those, 24 files and 11,772 code points
+are in gitignored-but-tracked files;
 the report exposes that subset separately (`gitIgnoredMatchedFiles`,
 `gitIgnoredCodePoints`), so a filtered reading is explicit rather than accidental. The
 number is a measurement origin, not a target for deletion: every one of those code
@@ -33,8 +35,10 @@ Four facts constrain the design.
    `publication-integrity` enforces a Unicode Script allowlist over added diff lines.
    Its own declared limitations state that Latin-script non-English prose (French,
    Spanish, German), Greek prose, Common/Inherited punctuation, HTML numeric entities,
-   Unicode escapes, binaries, and GitHub conversation text all pass. A tree that is
-   green under `script-scan` can still be mostly non-English. Any wording that presents
+   and Unicode escapes all pass; binaries outside the document extensions are not
+   inspected; non-UTF-8 text is UNKNOWN and blocks; and GitHub conversation text is not
+   read. A tree that is green under `script-scan` can still be mostly non-English. Any
+   wording that presents
    the Script allowlist as "English-only" is a contract violation (ADR-0044
    Consequences; `docs/spec/publication_integrity_gate.md` section 3.6).
 
@@ -54,15 +58,18 @@ Four facts constrain the design.
 4. **Landing authority is GitHub and is not ours to widen.** The `main` ruleset
    (`27097366`, `enforcement: active`, `bypass_actors: []`) requires seven contexts and
    a merge queue (`ALLGREEN`, native `MERGE`). `publication-integrity` is the only
-   required context that judges repository content. Adding a required check, a GitHub
+   required context that judges publication prose (other contexts judge their own
+   domains: debt, generation, build security). Adding a required check, a GitHub
    App, or a ruleset rule would change the merge-authority surface; this plan is not
    authorized to do that and does not need to.
 
-A fifth fact shapes the language rule itself: the repository can judge tracked text,
-but it cannot judge conversation. PR titles, bodies, issues, reviews, and commit
-messages never enter a landing diff, so no repository-side gate can read them. The
-single-language rule therefore has two halves: a machine-judged tree property and a
-contributor obligation for the untracked conversation surface.
+A fifth fact shapes the language rule itself: the repository can judge tracked text
+today, but its landing gate does not judge conversation. PR titles, bodies, issues,
+reviews, and commit messages never enter a landing diff. A workflow could read PR
+fields from the event payload, commit messages from `git log`, and issues or reviews
+through the API; no such gate exists. The single-language rule therefore has two
+halves: a machine-judged tree property and a contributor obligation for the
+conversation surface.
 
 ## Decision
 
@@ -73,8 +80,9 @@ means every path declared `ORIGINAL` in `compliance/provenance/source-origin.yml
 The ownership declaration is the SSOT; this ADR does not carry a second path list.
 
 **b. Scope excludes third-party rights material and non-prose.** Paths declared
-`THIRD_PARTY` in `compliance/provenance/source-origin.yml` are out of scope:
-`LICENSES/**`, `vendor/**`, verbatim upstream code excerpts embedded in tests and
+`THIRD_PARTY` in `compliance/provenance/source-origin.yml` are out of scope: the
+license texts under `LICENSES/`, `vendor/**` except the recorded `ORIGINAL`
+`.gitignore`, verbatim upstream code excerpts embedded in tests and
 experiments, third-party fixtures, and the third-party PDF
 `docs/spec/SVF-SVC_Software_Verification_Using_SVF.pdf`. Axiom does not own the
 wording of that material and cannot lawfully translate it. Binary files and declared
@@ -106,7 +114,12 @@ workflow path stay unchanged.
 seven required contexts, the producer identities, the merge queue parameters, and
 `bypass_actors: []` are unchanged by this ADR and by every phase that implements it.
 The judgment cannot ride the merge queue until it is inside the existing context,
-which is the only reason to prefer the seam over a new check.
+which is the only reason to prefer the seam over a new check. Activation still edits
+`.github/workflows/publication-integrity.yml` and its evaluator, and both are on the
+trust surface (`config/policy/trust_surface_manifest.json` and the `trustSurface` list
+in `config/policy/merge_admission.json`); that edit lands through the audited
+break-glass lane, not through the normal PR path. The required-check set itself does
+not change.
 
 **g. NLID is required before claiming "English-only".** The claim requires a pinned
 natural-language identification detector to report `nonEnglish = 0` over the in-scope

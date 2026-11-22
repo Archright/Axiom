@@ -11,7 +11,9 @@ evaluator and report MUST use.
 ## 1. Claim and non-claim
 
 **The claim this policy defines**: Axiom-owned tracked text is English
-single-source, and the current tree satisfies the terminal criteria in section 8.
+single-source. The claim does not hold for the current tree: section 8 defines the
+terminal criteria, and Phase 0 reaches none of them (see the pinned inventory and
+section 8).
 
 **Explicit non-equivalence**: the existing `script-scan` dimension of
 `publication-integrity` is a **Unicode Script allowlist over added diff lines**. It is
@@ -35,7 +37,8 @@ At the time of writing this includes `docs/**`, `src/**`, `tests/**`, `tools/**`
 and the declared root files.
 
 **Out of scope -- third-party**: paths declared `THIRD_PARTY` in
-`compliance/provenance/source-origin.yml`, including `LICENSES/**`, `vendor/**`,
+`compliance/provenance/source-origin.yml`, including the license texts under
+`LICENSES/`, `vendor/**` except the recorded `ORIGINAL` `.gitignore`,
 verbatim upstream code excerpts embedded in tests and experiments, third-party
 fixtures, and the third-party PDF
 `docs/spec/SVF-SVC_Software_Verification_Using_SVF.pdf`. Axiom does not own the
@@ -49,8 +52,10 @@ counted separately as a non-prose finding (section 7) and is never silently pass
 
 **Out of scope -- conversation**: PR titles, PR bodies, issues, reviews, and commit
 messages are governed by the contributor contract (issue #373; the root
-`CONTRIBUTING.md` awaits the audited trust-surface lane) and are not reachable by any
-repository-side scan. They are declared as a limitation, not as a pass.
+`CONTRIBUTING.md` awaits the audited trust-surface lane). No current gate reads them.
+A workflow could read PR fields from the event payload, commit messages from `git
+log`, and issues or reviews through the API, so this is a gap in the gate, not a
+platform impossibility. They are declared as a limitation, not as a pass.
 
 ## 3. Ownership classes
 
@@ -180,9 +185,13 @@ string alone is not a pin.
 
 - **Script detector**: `ripgrep` 14.1.0 over the pattern
   `[^\x00-\x7F\p{Latin}\p{Greek}\p{Common}\p{Inherited}]`, default engine, Unicode
-  15.0. This is the same detector contract as `script-scan`
-  (`compliance/policy/script-scan-policy.yml`); this policy consumes it, it does not
-  redefine it.
+  15.0. This policy consumes the detector that `script-scan` already runs; it does not
+  redefine it. The pin is split across two files today:
+  `compliance/policy/script-scan-policy.yml` carries `ripgrepVersion` and
+  `gitMinVersion`, and `.github/workflows/publication-integrity.yml` pins the ripgrep
+  release tarball by sha256 before extraction. The evaluator reports the observed
+  binary digest but does not compare it to a policy-pinned value. The English-only
+  detector MUST close that gap by binding `sha256` into the policy itself.
 - **NLID detector**: deterministic, offline, no network call, no per-run model
   download. The model digest MUST be recorded even when the model ships inside the
   artifact, because the artifact digest and the model digest answer different

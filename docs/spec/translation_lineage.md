@@ -44,14 +44,10 @@ glossarySha256: "<64-hex>"
 review:
   status: "approved"
   reviewers:
-    - "<handle>"
+    - "<handle | role>"
   date: "YYYY-MM-DD"
-referenceUpdates:
-  - path: "<reference path>"
-    note: "<what changed and why>"
-exceptions:
-  - path: "<exact path>"
-    reason: "<why the segment stays verbatim>"
+referenceUpdates: []   # omit only when the batch updated no reference
+exceptions: []         # omit only when the batch declares no exception
 ```
 
 Field semantics:
@@ -70,12 +66,12 @@ Field semantics:
 | `engine.version` | engine version string |
 | `engine.modelId` | provider-qualified model identifier; required when the engine is a hosted model |
 | `engine.modelSha256` | sha256 of the model weights when they are locally available; the literal `declared-unavailable` when the engine is hosted and the weights are not distributable |
-| `glossarySha256` | sha256 of the glossary file that pins terminology for the batch |
+| `glossarySha256` | sha256 of the glossary revision that pinned terminology when the batch was reviewed; see section 3 |
 | `review.status` | closed set: `pending` / `approved` / `rejected` |
-| `review.reviewers` | human reviewers; the engine is never a reviewer |
-| `review.date` | review date, `YYYY-MM-DD` |
-| `referenceUpdates[]` | references (links, anchors, path mentions) updated because of the translation |
-| `exceptions[]` | exact paths in the batch that stay verbatim, with a reason |
+| `review.reviewers` | human reviewers; a GitHub handle, or a governance role when the approval is role-bound; the engine is never a reviewer |
+| `review.date` | review date, `YYYY-MM-DD`; a date-only value does not prove review-before-landing, so a conforming batch SHOULD also record the review commit |
+| `referenceUpdates[]` | references (links, anchors, path mentions) updated because of the translation; the key MAY be omitted only when the list is empty |
+| `exceptions[]` | exact paths in the batch that stay verbatim, with a reason; the key MAY be omitted only when the list is empty |
 
 `sourcePaths` and `translatedPaths` are paired positionally; the entries at index `i`
 describe one translation relation. A batch that also renames a path records the old
@@ -123,6 +119,13 @@ with the reason.
    spread over several commits is several batches, each with its own id.
 10. **The manifest is tracked.** It is a tracked record under `data/`, covered by the
     `data/**` origin declaration, and it is reviewed like any other change.
+
+**Glossary revision semantics.** A glossary may be introduced after a batch's
+`sourceBaseCommit`. `glossarySha256` therefore binds the glossary revision that the
+review actually used, not a file that must exist at `sourceBaseCommit`; the glossary's
+introducing commit is the audit anchor. A later edit to the glossary is a new revision
+(for example `en-v2`) and never an in-place edit, so a recorded digest never changes
+meaning retroactively.
 
 ## 4. What lineage does not do
 
