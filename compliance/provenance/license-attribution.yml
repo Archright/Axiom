@@ -673,6 +673,14 @@ attributions:
     evidence: "'(c) let start i inc' — Nim code with a parenthesized parameter, not a holder (B2: '(c)' code-param noise)"
     copyrights:
       - "let start i inc"
+  - file: "docs/reports/english_audit_inventory_be7db250.json"
+    classification: "spurious-scanner-match"
+    evidence: "the English audit inventory manifest at be7db250 lists every tracked path with a sha256 and counters; the four LICENSES/*.txt path strings are data rows whose path tokens match license-reference rules (apache-2.0, cc-by-4.0, mit, zlib) — no license text is embedded, matched content is counted and never copied"
+    licenses:
+      - "Apache-2.0"
+      - "CC-BY-4.0"
+      - "MIT"
+      - "Zlib"
 
   # ── upstream-header ────────────────────────────────────────────────────
   - file: "vendor/ed25519/ed25519/readme.md"
