@@ -82,3 +82,25 @@ Facts only, no attribution.
 - [.github/workflows/publication-integrity.yml](../../.github/workflows/publication-integrity.yml)
 - [tools/ci/publication_script_eval.nim](../../tools/ci/publication_script_eval.nim)
 - [docs/spec/ci_provider_failover_quirks.md](ci_provider_failover_quirks.md)
+
+## Undeclared leak classes (audit 2026-11-22)
+
+The detector `[^\x00-\x7F\p{Latin}\p{Greek}\p{Common}\p{Inherited}]` is a negated Unicode class: it can match only code points that DECODE to a script outside the allowlist, so a payload is invisible when the bytes are not valid UTF-8, when the characters are Script=Common or Inherited despite being invisible or lookalike, or when the non-Latin text is carried in ASCII. Rows are detector-level for the pinned ripgrep 14.1.0; "where declared" cites `declaredLimitations` in `compliance/policy/script-scan-policy.yml`.
+
+| leak class | example | detected? | where declared |
+|---|---|---|---|
+| Non-UTF-8 encodings | Japanese prose in EUC-JP, Shift-JIS, CP932, ISO-2022-JP, UTF-16LE without BOM | per 10 strings: UTF-8 10/10, EUC-JP 7/10, Shift-JIS 4/10, CP932 4/10, ISO-2022-JP 0/10, UTF-16LE 0/10; the non-zero non-UTF-8 counts are accidental byte coincidences | partial: "Non-UTF-8 text is UNKNOWN" covers only the lines `isValidUtf8` sees |
+| UTF-16LE with BOM | leading `FF FE` | yes: ripgrep BOM-sniffs and transcodes | `declaredLimitations` (same entry) |
+| Invisible Common/Inherited | tag characters U+E0000-U+E007F, U+202E, U+200D, U+200B, U+00AD | no | undeclared |
+| Common-script alphanumerics | U+1D400-U+1D7FF (e.g. U+1D407 MATHEMATICAL BOLD CAPITAL H), U+2460-U+24FF (e.g. U+24B6 CIRCLED LATIN CAPITAL LETTER A) | no | undeclared |
+| Fullwidth Latin | U+FF21-U+FF3A | no (Script=Latin) | undeclared |
+| Percent-encoded UTF-8 | `%ED%95%9C%EA%B8%80` (decodes to Hangul) | no (ASCII on the wire) | undeclared |
+| HTML numeric entities, `\uXXXX` escapes | `&#54620;`, `&#xD55C;` | no (ASCII on the wire) | `declaredLimitations`: "HTML numeric entities and Unicode escapes are ASCII" |
+| Greek prose | U+03C0, U+0394, U+03A9, U+03B1, U+03A3 | no by design: the allowlist exists so mathematical notation does not produce false positives | `declaredLimitations`: "Greek prose is not detected" |
+
+Consequences:
+
+- A tag-character sequence can carry hidden ASCII text that renders as nothing, and bidi/format controls can reorder a line without adding a visible non-Latin code point.
+- The evaluator is not fail-open on tool errors: `publication_script_eval.nim` maps `ripgrep` exit code 2 to UNKNOWN in the `else: unknowns.add("ripgrep exited ...")` branch, and UNKNOWN blocks. The shell idiom `if rg -q ...; then fail; fi` WOULD be fail-open because it reads exit 2 as "no match"; the `script-scan` job runs the Nim evaluator, not that idiom.
+- Invalid UTF-8 on added lines is already fail-closed (`isValidUtf8` -> UNKNOWN), so the measured non-UTF-8 residual is limited to paths that are transcoded or skipped (binary-sniffed, submodule, quoted path) before the scan.
+- The normative limitations list is `declaredLimitations` in `compliance/policy/script-scan-policy.yml`, a merge-admission trust-surface path; this document records the gap only, and the amendment belongs to issue #359 ([english-only] Extend publication-integrity: tree mode, NLID dimension, escape decoding, NEG-SKIP-01).
