@@ -295,8 +295,21 @@ DYNAMIC_REF_MARKERS = (
     "github.event.workflow_run.",
     "github.event.pull_request.",
     "github.head_ref",
+    "github.ref_name",
     "github.sha",
 )
+# A `uses:` is provenance-pinned only when it is a 40-hex commit sha. Anything
+# else (a tag, a branch, `main`, `refs/pull/<n>/merge`, or a `${{ }}`
+# expression) can be re-pointed after review, so the reviewed bytes are not
+# the executed bytes. `./`-relative actions are handled by the checkout rule
+# below instead, because their provenance is the checked-out tree.
+SHA_PIN_RE = re.compile(r"^[^@]+@[0-9a-f]{40}$")
+# Workspace re-point commands that can change the bytes a `uses: ./...` runs.
+# `git -C <path>` and `git --git-dir` prefixes are matched so the bypass forms
+# measured on 2026-11-23 (`git -C . checkout`, `git switch --detach`,
+# `git worktree add`, `git reset --hard`) are all covered.
+REPOINT_RE = re.compile(
+    r"\bgit\b[^|;&]*\b(checkout|switch|worktree|reset|read-tree|restore)\b")
 
 
 def check_publisher_exec_boundary(doc, rel):
@@ -309,6 +322,24 @@ def check_publisher_exec_boundary(doc, rel):
     out = []
     for jname, job in doc["jobs"].items():
         steps = [s for _, _, s in iter_steps({"jobs": {jname: job}})]
+        # Rule D: every non-`./` action must be pinned to a 40-hex commit sha.
+        # A tag or branch can be re-pointed after review, so the reviewed bytes
+        # are not the executed bytes; `@refs/pull/<n>/merge` would even execute
+        # candidate code inside this write-capable workflow. Job-level
+        # `uses:` (reusable workflows) is checked too: iter_steps only walks
+        # `steps`, so it would otherwise be invisible.
+        job_uses = job.get("uses")
+        if isinstance(job_uses, str):
+            if not job_uses.startswith("./") and not SHA_PIN_RE.match(job_uses):
+                out.append("job `%s` calls a reusable workflow at a non-sha ref "
+                           "`%s` - a mutable ref can execute unreviewed code with "
+                           "default-branch cache write authority" % (jname, job_uses))
+        for s in steps:
+            u = str(s.get("uses", ""))
+            if u and not u.startswith("./") and not SHA_PIN_RE.match(u):
+                out.append("job `%s` uses `%s` - not pinned to a 40-hex commit sha, "
+                           "so the executed bytes are not the reviewed bytes "
+                           "(fail closed)" % (jname, u))
         local = [s for s in steps if str(s.get("uses", "")).startswith("./")]
         if not local:
             continue
@@ -336,9 +367,13 @@ def check_publisher_exec_boundary(doc, rel):
                 st = line.strip()
                 if st.startswith("#"):
                     continue
-                if "git checkout" in st and ("$" in st or "`" in st):
+                # Rule C, widened: any workspace re-point command that can change
+                # the bytes a `uses: ./...` will execute. The literal `git checkout`
+                # form alone was bypassable via `git -C . checkout`,
+                # `git switch --detach`, `git worktree add`, `git reset --hard`.
+                if REPOINT_RE.search(st) and ("$" in st or "`" in st):
                     out.append("job `%s` executes `uses: ./...` and also re-points the "
-                               "workspace with a dynamic `git checkout` (%s) - bypass "
+                               "workspace with a dynamic workspace command (%s) - bypass "
                                "path around the fixed-ref rule" % (jname, st[:120]))
     return out
 
