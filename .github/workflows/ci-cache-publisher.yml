@@ -292,23 +292,17 @@ jobs:
           clean: false
 
       # ────────────────────────────────────────────────────────────────────────
-      # A-cache seeding path (헤더 A 경로 참조): setup 액션을 full scope로
-      # 1회 실행 — A-restore(HIT이면 설치 전체 생략) 후 lock-complete
-      # materialization을 거쳐 액션 내부의 기존 A-save가 default-branch 스코프에
-      # 기록한다. checkout(head_sha) 직후·lane 다운로드 전 배치: 이 위치에서
-      # 액션 내부 B-restore(b-key = 입력 폐쇄 digest(head_sha 트리))는 publisher가 유일한 B
-      # writer(게이트는 B를 쓰지 않음)이므로 통상 MISS(~1s) — 동일 트리 재시드
-      # 시 HIT해도 트리-일관 내용이라 lane 다운로드가 덮어쓰고 sha256 검증이
-      # 바인딩한다. 워크스페이스 오염 없이 lane/base 체인을 그대로 유지.
-      # 프로비저닝 실패 = 시딩 생략(fail-open, J3) — publisher를 red로 만들지
-      # 않는다(continue-on-error).
-      - name: "A seed: provision toolchain (full scope; installs only on A-miss)"
-        id: a-seed
-        if: steps.trees.outputs.proceed == 'true' && github.event.workflow_run.event == 'merge_group'
-        continue-on-error: true
-        uses: ./.github/actions/setup-axiom-toolchain
-        with:
-          cache-build-source: ${{ steps.trees.outputs.head_sha }}
+      # A-cache 시딩은 여기 없다 — `seed-toolchain` 잡이 **default branch 트리**에서
+      # 수행한다. 종전 `a-seed`는 이 자리(후보 트리 checkout 직후)에서
+      # `uses: ./.github/actions/setup-axiom-toolchain`을 실행했고, 이는
+      # `cache-mode: write` 잡 안에서 **후보 트리의 action.yml 바디**를 실행한다
+      # (A-MISS 시 nimble install → 후보의 axiom.nimble NimScript 훅 실행).
+      # 시드의 목적은 "default-branch 스코프에 A 항목을 공급"하는 것 하나뿐이고,
+      # A 키는 트리-상대 2파일(action.yml·nimble.lock) 해시이므로 default branch
+      # 에서 계산해도 소비자가 요청하는 키와 바이트-동일하다(로컬 재계산 =
+      # 40c34681…, 라이브 키 꼬리와 일치). 따라서 후보 코드를 실행할 이유가 없다.
+      # 격리는 실행 코드뿐 아니라 **워크스페이스 오염**까지 제거한다 — 종전에는
+      # 프로비저닝이 남긴 산출물을 lane 다운로드가 덮어쓰는 순서에 의존했다.
 
       - name: "Download gate artifact (cross-run, actions:read)"
         # lane 전용 — guard.proceed(ci-bootstrap 아티팩트 존재)가 lane 체인 진입
@@ -404,7 +398,13 @@ jobs:
       - name: "Derive b-key (keygen-only, byte-identical formula)"
         id: keygen
         if: steps.verify.outputs.proceed == 'true'
-        uses: ./.github/actions/setup-axiom-toolchain
+        # 실행 바디 = 고정 revision(신뢰) · 데이터 = 워크스페이스(후보 트리).
+        # keygen은 워크스페이스 상대경로만 해시하므로(script_hash·recipe_hash·
+        # 입력 폐쇄) **키는 후보 트리 기준 그대로**이고, 후보가 action.yml을
+        # 바꿔도 그 바이트가 실행되지 않는다. 이 스텝은 $GITHUB_OUTPUT만 쓰므로
+        # 바디/키 발산으로 오염될 페이로드가 없다.
+        # 유지보수: action.yml을 수정하는 PR은 같은 PR에서 이 pin을 갱신한다.
+        uses: Archright/Axiom/.github/actions/setup-axiom-toolchain@ba51c8d7c5d005ac35b95f890e358568847042ab
         with:
           keygen-only: 'true'
           cache-build-source: ${{ steps.verify.outputs.build_sha }}
@@ -603,7 +603,9 @@ jobs:
       - name: "Base seed: derive base b-key (keygen-only, cache-build-source = manifest build_sha)"
         id: base-keygen
         if: steps.verify-base.outputs.proceed == 'true'
-        uses: ./.github/actions/setup-axiom-toolchain
+        # 고정 revision 바디(위 lane keygen과 동일 근거). 키는 base 트리의
+        # 워크스페이스 해시에서 나오므로 base 소비자와 바이트-동일하게 유지된다.
+        uses: Archright/Axiom/.github/actions/setup-axiom-toolchain@ba51c8d7c5d005ac35b95f890e358568847042ab
         with:
           keygen-only: 'true'
           cache-build-source: ${{ steps.verify-base.outputs.base_sha }}
@@ -782,7 +784,7 @@ jobs:
           echo "[publish] base-guard=${{ steps.base-check.outputs.proceed }} base-verify=${{ steps.verify-base.outputs.proceed }} base-key=${{ steps.base-keygen.outputs.b-key }}"
           echo "[publish] base-nimcache-carrier: outcome=${{ steps.base-nimcache-dl.outcome }} (failure = carrier absent → partial 8-path base entry, J3 fail-open)"
           echo "[publish] base-fold: lane0=${{ steps.base-lane0-nimcache-dl.outcome }} lane1=${{ steps.base-lane1-nimcache-dl.outcome }} (failure = lane artifact absent → fold union degrades to what arrived, J3 fail-open)"
-          echo "[publish] a-seed: hit=${{ steps.a-seed.outputs.a-cache-hit }} (merge_group-only; empty = skipped or fail-open)"
+          echo "[publish] a-seed: (moved to seed-toolchain job — default-branch tree; see [seed-toolchain] lines)"
           echo "[publish] lane-lookup: outcome=${{ steps.lane-lookup.outcome }} hit=${{ steps.lane-lookup.outputs.cache-hit }} (hit=true → save withheld, single-flight)"
           echo "[publish] lane-save: outcome=${{ steps.lane-save.outcome }} (skipped=single-flight skip / failure=reservation lost or save error, J3 fail-open — next firing re-emits via lookup-only)"
           echo "[publish] base-lookup: outcome=${{ steps.base-lookup.outcome }} hit=${{ steps.base-lookup.outputs.cache-hit }} (hit=true → save withheld, single-flight)"
@@ -824,3 +826,86 @@ jobs:
           RUN_PATH: ${{ github.event.workflow_run.path }}
         run: |
           echo "[publish-skip] reason=gate-conclusion-not-success workflow_run.conclusion=$CONCLUSION path=$RUN_PATH"
+
+  # ── A-layer toolchain 공급 (default-branch 스코프, 신뢰 트리) ───────────────
+  # 왜 이 잡이 필요한가 — 두 개의 **구조적** 결함을 하나의 공급 계약으로 닫는다.
+  #
+  # (1) runtime 스코프는 default-branch 공급자가 없었다. `certificate-mint`
+  #     prepare(provision-scope=runtime)가 요청하는 A 키 `axiom-a-rt-…`는
+  #     ref-독립(단일 키)인데 `refs/heads/main`에 항목이 0개다(2026-11-23 실측).
+  #     runtime의 save-allowed는 무조건 true(action.yml:1234)이므로 런마다 자기
+  #     ref 스코프에 14MB를 새로 쓴다 → 단일 키 301개 엔트리 / 4.24GB = 저장소
+  #     캡 10GiB의 39.5%, created_at == last_accessed_at **전건**(쓰기만, 복원 0회).
+  #     GitHub 공식 계약: PR 런이 만든 캐시는 merge ref에 귀속되어 "can only be
+  #     restored by re-runs of the pull request" — 즉 301개는 아무도 읽을 수 없는
+  #     사문(死文)이다. 반면 런은 "current branch or the default branch"를 복원할
+  #     수 있다(실측: merge_group 런 45154199975가 refs/heads/main의 full A 키를
+  #     exact-hit=true로 복원). 따라서 default-branch에 1회 시드하면 모든 런이
+  #     히트하고, save 스텝은 cache-hit 가드(action.yml:1256)로 자연 소멸한다.
+  #
+  # (2) 종전 시드는 후보 트리에서 실행됐다(`publish` 잡의 제거된 `a-seed`).
+  #     `cache-mode: write` 잡 안에서 후보 트리의 action.yml 바디가 실행되고,
+  #     A-MISS 시 `nimble install`이 후보의 axiom.nimble NimScript 훅을 돌린다.
+  #     이 잡은 워크스페이스가 **default branch 트리**이므로 `uses: ./…`가 실행하는
+  #     바디도 default branch 바이트다 — 후보 코드 실행 0.
+  #
+  # 키 불변: A 키 = f(RUNNER_OS, gcc_fp, glibc_fp, script_hash)이고
+  # script_hash = sha256sha256(action.yml, nimble.lock) 트리-상대 2파일이다.
+  # default branch에서 계산해도 소비자가 요청하는 키와 바이트-동일하다 —
+  # 로컬 재계산 40c34681d4d9148a9d4373895f0b524ea1b71496 = 라이브 키 꼬리와 일치.
+  #
+  # 권위 준수 (이 잡이 하지 **않는** 것): 시딩 억제 없음, 자체 TTL 없음,
+  # `gh cache delete` 없음. 잔존 301개는 플랫폼 LRU eviction에 위임한다
+  # (R11 2026-10-08 폐쇄 결정 — 시딩 억제·자체 만료는 권위 누수로 금지).
+  # 캐시는 가속일 뿐 증거가 아니다(J3): 실패는 continue-on-error로 삼켜지고
+  # publisher를 red로 만들지 않는다 — 공급 실패 = 종전과 동일한 콜드 실행.
+  seed-toolchain:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.path == '.github/workflows/admission-gate-v2.yml' || startsWith(github.event.workflow_run.path, '.github/workflows/admission-gate-v2.yml@')) }}
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 30
+    # default-branch 스코프 쓰기 — 단일 최소 공급자에만 부여한다.
+    cache-mode: write
+    steps:
+      # 후보 데이터 0 — 트리거 페이로드에서 읽는 것은 gate path 하나뿐이다.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 1
+          clean: false
+
+      # cache-build-source는 keygen fail-closed 계약상 필수(required: true)이고
+      # 커밋 객체가 체크아웃에 있어야 한다. 트리거 시점의 github.sha가 아니라
+      # **체크아웃된 HEAD**를 쓴다 — main이 전진해 shallow 체크아웃에 없는 SHA를
+      # 넘기면 keygen이 실패하고 시드가 조용히 사라진다(결정론 위반).
+      - name: "Resolve seeded tree (default-branch HEAD — identical input, identical key)"
+        id: head
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # full 스코프: 종전 `a-seed`의 공급 역할을 신뢰 트리에서 승계한다(A-full의
+      # 유일한 default-branch writer). 키가 이미 존재하면 A-HIT → 설치·저장 0.
+      - name: "A seed: provision toolchain (full scope, default-branch tree; installs only on A-miss)"
+        id: a-seed-full
+        continue-on-error: true
+        uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          provision-scope: full
+          cache-build-source: ${{ steps.head.outputs.sha }}
+
+      # runtime 스코프: 위 (1)의 공급. full이 먼저 ~/.local/bin을 채우므로
+      # A-MISS여도 설치 비용이 거의 없다(순서 의도적).
+      - name: "A seed: provision runtime scope (default-branch tree; installs only on A-miss)"
+        id: a-seed-runtime
+        continue-on-error: true
+        uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          provision-scope: runtime
+          cache-build-source: ${{ steps.head.outputs.sha }}
+
+      # 구조 라인 — G1 관측이 grep하는 형태. hit이 비면 A-MISS(설치+저장 실행).
+      - name: "Seed observation (hit/miss identity — acceleration only)"
+        if: always()
+        run: |
+          echo "[seed-toolchain] tree=${{ steps.head.outputs.sha }}"
+          echo "[seed-toolchain] full: hit=${{ steps.a-seed-full.outputs.a-cache-hit }} outcome=${{ steps.a-seed-full.outcome }}"
+          echo "[seed-toolchain] runtime: hit=${{ steps.a-seed-runtime.outputs.a-cache-hit }} outcome=${{ steps.a-seed-runtime.outcome }}"
+          echo "[seed-toolchain] J3: cache is acceleration, never evidence"
