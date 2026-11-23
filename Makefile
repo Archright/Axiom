@@ -957,6 +957,151 @@ verify-proof-boundary: ## §3 direct proof boundary conformance (docs/spec/direc
 	@$(NIM) c -r --hints:off --nimcache:$(VC_NIMCACHE_pb) tests/trusted/test_direct_proof_boundary.nim || exit 1
 	@echo "✅ verify-proof-boundary PASSED"
 
+## ── Rust lane live venue (issue #397) ────────────────────────────────────────
+## The extraction venue is pin-exact Charon BUILT FROM SOURCE. The upstream
+## release tarball is refused: it reports 0.1.281 (cde1085a08aeb97c333e80cb6bec…
+## …9155d826924f) — a different commit than the pin (docs/spec/
+## rust_toolchain_quirks.md Q7). `make build-charon-rust` does not exist.
+## No CI cache exists for it: .github/actions/setup-axiom-toolchain declares
+## ~/.local/bin "z3/jq ONLY" and quarantines it on a non-exact restore, and
+## ~/.rustup/~/.cargo are outside the action — so the binary is installed
+## repo-locally under build/charon/ (gitignored) and rebuilt per run.
+## The lane's exit contract (axiom.rust-lane.exit.v1) answers exit 1 on an
+## unresolved unknown-only report; that fail-closed shape IS the success
+## condition here, because exit 0 would claim a verification nothing supports.
+
+CHARON_PIN_VERSION    := 0.1.281
+CHARON_PIN_COMMIT     := 798016509139eb51f0d764645f76d068d34ba5f6
+CHARON_PIN_IDENTITY   := $(CHARON_PIN_VERSION) ($(CHARON_PIN_COMMIT))
+CHARON_RUST_TOOLCHAIN := nightly-2026-09-17
+CHARON_REPO_URL       := https://github.com/AeneasVerif/charon
+CHARON_BUILD_DIR      := build/charon
+CHARON_BIN            := $(CHARON_BUILD_DIR)/bin/charon
+CHARON_DRIVER         := $(CHARON_BUILD_DIR)/bin/charon-driver
+CHARON_NET_RETRIES    := 3
+
+RUST_LANE_PROJECT     := tests/fixtures/rust/axiom_escape_probe
+RUST_LANE_EXPECT_EXIT := 1
+RUST_LANE_COVERAGE    := coverage: total=2 addressable=2 guardAttempted=2 verified=0 unknown=2 error=0
+RUST_LANE_DONE        := done: verified=0/2 failed=0 unknown=2 error=0
+RUST_LANE_LEAN_OLEAN  := proofs/.lake/build/lib/lean/IR/AxiomIRExpr.olean
+RUST_LANE_BUILD_STAMP := src/generated/build_metadata.json
+
+.PHONY: provision-charon-pinned verify-rust-lane-live
+
+provision-charon-pinned: ## Pin-exact Charon (source build) installed at build/charon/bin
+	@set -eu; \
+	ROOT="$$PWD"; \
+	BDIR="$$ROOT/$(CHARON_BUILD_DIR)"; \
+	SRCDIR="$$BDIR/src"; CRATEDIR="$$SRCDIR/charon"; TDIR="$$BDIR/target"; \
+	PIN='$(CHARON_PIN_IDENTITY)'; \
+	fail() { echo "[charon][FAIL] $$*" >&2; exit 1; }; \
+	retry() { n=0; while [ "$$n" -lt $(CHARON_NET_RETRIES) ]; do \
+	    n=$$((n + 1)); \
+	    if "$$@"; then return 0; fi; \
+	    echo "[charon] network step failed (attempt $$n/$(CHARON_NET_RETRIES)): $$*" >&2; \
+	    sleep $$((n * 5)); \
+	  done; return 1; }; \
+	if [ -x "$$BDIR/bin/charon" ] && [ -x "$$BDIR/bin/charon-driver" ]; then \
+	  M="$$("$$BDIR/bin/charon" version 2>/dev/null | head -n 1 | tr -d '\r' || true)"; \
+	  if [ "$$M" = "$$PIN" ]; then \
+	    echo "[charon] idempotent skip — $$BDIR/bin already reports '$$M'"; exit 0; \
+	  fi; \
+	  echo "[charon] installed binary reports '$${M:-<none>}' != pin — reprovisioning"; \
+	fi; \
+	command -v rustup >/dev/null 2>&1 || \
+	  fail "rustup is not on PATH. It is a RUNTIME requirement, not only a build one: the charon driver resolves its toolchain via 'rustup run $(CHARON_RUST_TOOLCHAIN) …' (charon/src/bin/charon/toolchain.rs:in_toolchain), so extraction cannot start without it"; \
+	mkdir -p "$$BDIR/bin"; \
+	echo "[charon] [1/4] toolchain $(CHARON_RUST_TOOLCHAIN) (--profile minimal + --toolchain, so the rust-toolchain file's miri + 7 cross-targets are NOT pulled)"; \
+	retry rustup toolchain install '$(CHARON_RUST_TOOLCHAIN)' --profile minimal --no-self-update >/dev/null 2>&1 \
+	  || fail "rustup toolchain install $(CHARON_RUST_TOOLCHAIN) failed after $(CHARON_NET_RETRIES) attempts"; \
+	retry rustup component add rustc-dev llvm-tools rust-src --toolchain '$(CHARON_RUST_TOOLCHAIN)' >/dev/null 2>&1 \
+	  || fail "rustup component add (rustc-dev llvm-tools rust-src) failed after $(CHARON_NET_RETRIES) attempts"; \
+	echo "[charon] [2/4] source clone at commit $(CHARON_PIN_COMMIT)"; \
+	if [ ! -d "$$SRCDIR/.git" ]; then \
+	  rm -rf "$$SRCDIR"; \
+	  retry git clone --filter=blob:none '$(CHARON_REPO_URL)' "$$SRCDIR" >/dev/null 2>&1 \
+	    || fail "git clone $(CHARON_REPO_URL) failed after $(CHARON_NET_RETRIES) attempts"; \
+	fi; \
+	if [ "$$(git -C "$$SRCDIR" rev-parse HEAD 2>/dev/null || echo none)" != '$(CHARON_PIN_COMMIT)' ]; then \
+	  retry git -C "$$SRCDIR" fetch --depth 1 origin '$(CHARON_PIN_COMMIT)' >/dev/null 2>&1 \
+	    || fail "git fetch --depth 1 origin $(CHARON_PIN_COMMIT) failed after $(CHARON_NET_RETRIES) attempts"; \
+	  git -C "$$SRCDIR" checkout --force '$(CHARON_PIN_COMMIT)' >/dev/null 2>&1 \
+	    || fail "git checkout --force $(CHARON_PIN_COMMIT) failed"; \
+	fi; \
+	AT="$$(git -C "$$SRCDIR" rev-parse HEAD 2>/dev/null || echo none)"; \
+	[ "$$AT" = '$(CHARON_PIN_COMMIT)' ] || fail "source is at '$$AT', not the pin '$(CHARON_PIN_COMMIT)'"; \
+	echo "[charon] [3/4] cargo build --release --locked (CARGO_TARGET_DIR=$(CHARON_BUILD_DIR)/target)"; \
+	if [ ! -x "$$TDIR/release/charon" ]; then \
+	  ( cd "$$CRATEDIR" && retry env RUSTUP_TOOLCHAIN='$(CHARON_RUST_TOOLCHAIN)' CARGO_TARGET_DIR="$$TDIR" cargo build --release --locked ) \
+	    || fail "cargo build --release --locked failed after $(CHARON_NET_RETRIES) attempts (cold: ~4-6 min / ~460 MB build tree on 4 cores)"; \
+	fi; \
+	[ -x "$$TDIR/release/charon" ] || fail "no build product at $(CHARON_BUILD_DIR)/target/release/charon"; \
+	echo "[charon] [4/4] install to $(CHARON_BUILD_DIR)/bin (charon and charon-driver must be co-located — toolchain.rs:driver_path uses current_exe().with_file_name)"; \
+	install -m 0755 "$$TDIR/release/charon" "$$BDIR/bin/charon"; \
+	install -m 0755 "$$TDIR/release/charon-driver" "$$BDIR/bin/charon-driver"; \
+	M="$$("$$BDIR/bin/charon" version 2>/dev/null | head -n 1 | tr -d '\r' || true)"; \
+	[ "$$M" = "$$PIN" ] || fail "pin identity mismatch (fail-closed, never a skip): pinned='$$PIN' measured='$${M:-<none>}'"; \
+	echo "[charon] pinned identity ok: $$M"
+
+verify-rust-lane-live: provision-charon-pinned ## Rust lane runs real pinned-Charon extraction; success is the lane's expected fail-closed exit 1
+	@set -eu; \
+	CHARON="$${AXIOM_CHARON_BIN:-$(abspath $(CHARON_BIN))}"; \
+	BASE="$${TMPDIR:-/tmp}/ax-rust-lane-live"; \
+	STATE="$$BASE/state"; VAULT="$$BASE/vault"; \
+	OUT="$$BASE/stdout.txt"; ERR="$$BASE/stderr.txt"; \
+	fail() { echo "[smoke][FAIL] $$*" >&2; exit 1; }; \
+	dirt() { git status --porcelain | grep -v -F '$(RUST_LANE_BUILD_STAMP)' || true; }; \
+	[ -x ./bin/ax ] || fail "no ./bin/ax — run 'make build' first (absence is a failure, never a skip)"; \
+	[ -f data/verification_scope.lock ] || fail "missing data/verification_scope.lock (run from the repo root)"; \
+	case $$CHARON in \
+	  */*) [ -f "$$CHARON" ] || fail "pinned charon not found at '$$CHARON' (absent != skip)" ;; \
+	  *) command -v "$$CHARON" >/dev/null 2>&1 || fail "pinned charon '$$CHARON' not on PATH (absent != skip)" ;; \
+	esac; \
+	MEASURED="$$("$$CHARON" version 2>/dev/null | head -n 1 | tr -d '\r' || true)"; \
+	[ "$$MEASURED" = '$(CHARON_PIN_IDENTITY)' ] || \
+	  fail "charon identity mismatch (fail-closed): pinned='$(CHARON_PIN_IDENTITY)' measured='$${MEASURED:-<none>}'"; \
+	command -v lake >/dev/null 2>&1 || \
+	  fail "'lake' is not on PATH — the lane's reference extractor shells out to it"; \
+	[ -f '$(RUST_LANE_LEAN_OLEAN)' ] || \
+	  fail "Lean oleans absent at $(RUST_LANE_LEAN_OLEAN) — run: (cd proofs && lake build ircheck). Without them the lane demotes every symbol to NOT_VERIFIABLE and the guardAttempted funnel silently collapses to 0 (leanOleanMissing)"; \
+	rm -rf "$$BASE"; mkdir -p "$$STATE/data" "$$VAULT"; \
+	cp data/verification_scope.lock "$$STATE/data/verification_scope.lock"; \
+	PRE="$$(dirt)"; \
+	if [ -n "$$PRE" ]; then \
+	  echo "[smoke] pre-existing worktree dirt (not this run's footprint, retained for the pre==post comparison): $$(printf '%s' "$$PRE" | tr '\n' ';')"; \
+	fi; \
+	echo "[smoke] env -u GITHUB_TOKEN -u GH_TOKEN AXIOM_STATE_DIR=$$STATE AXIOM_CHARON_BIN=$$CHARON ./bin/ax prove --project $(RUST_LANE_PROJECT)"; \
+	if env -u GITHUB_TOKEN -u GH_TOKEN \
+	     AXIOM_STATE_DIR="$$STATE" AXIOM_PROVE_VAULT_DIR="$$VAULT" \
+	     AXIOM_CHARON_BIN="$$CHARON" \
+	     ./bin/ax prove --project $(RUST_LANE_PROJECT) >"$$OUT" 2>"$$ERR"; then \
+	  LANE_RC=0; \
+	else \
+	  LANE_RC=$$?; \
+	fi; \
+	sed -n 's/^\(\[AXIOM\]\[rust-lane\].*\)$$/[smoke] lane| \1/p' "$$ERR"; \
+	[ "$$LANE_RC" -eq $(RUST_LANE_EXPECT_EXIT) ] || \
+	  fail "lane exit $$LANE_RC != $(RUST_LANE_EXPECT_EXIT) under axiom.rust-lane.exit.v1 (unknown-only stays unresolved; 0 would be a hidden success)"; \
+	[ -s "$$OUT" ] && fail "plain 'ax prove' printed $$(wc -c <"$$OUT") bytes to stdout"; \
+	grep -Fq "[AXIOM][rust-lane] charon pinned='$(CHARON_PIN_IDENTITY)' measured='$(CHARON_PIN_IDENTITY)' ok=true" "$$ERR" \
+	  || fail "missing the pinned-charon identity line (extraction did not run against the pin)"; \
+	grep -Fq "[AXIOM][rust-lane] $(RUST_LANE_COVERAGE)" "$$ERR" \
+	  || fail "coverage funnel mismatch — expected '$(RUST_LANE_COVERAGE)'"; \
+	grep -Fq "[AXIOM][rust-lane] $(RUST_LANE_DONE)" "$$ERR" \
+	  || fail "lane done-line mismatch — expected '$(RUST_LANE_DONE)'"; \
+	grep -Fq "[AXIOM][rust-lane] ledger transport absent — provenance will fail closed" "$$ERR" \
+	  || fail "the ledger transport was not tokenless-absent — a token leaked into the run"; \
+	[ -f "$$STATE/logs/ax_prove_trajectory.jsonl" ] || \
+	  fail "no trajectory SSOT at $$STATE/logs/ax_prove_trajectory.jsonl"; \
+	CERTS=0; \
+	for f in "$$VAULT"/*.json; do if [ -e "$$f" ]; then CERTS=$$((CERTS + 1)); fi; done; \
+	[ "$$CERTS" -eq 0 ] || fail "$$CERTS certificate(s) minted tokenless — provenance did not fail closed"; \
+	POST="$$(dirt)"; \
+	[ "$$POST" = "$$PRE" ] || \
+	  fail "the run added worktree drift (zero-footprint violation): before='$$PRE' after='$$POST'"; \
+	echo "[smoke][PASS] exit=$$LANE_RC coverage='$(RUST_LANE_COVERAGE)' certs=0 drift=none"
+
 # G7-full — CI release E2E. Canonical product-outcome assertion.
 # 정확한 정의: "certificate storage-layout independent + canonical persisted-state projection consistency".
 #  - certificate(data/trusted/certificates 등) 저장구조에는 비의존한다(스캔/열거 없음).
@@ -968,7 +1113,7 @@ verify-proof-boundary: ## §3 direct proof boundary conformance (docs/spec/direc
 # 따라서 이 target은 PASS∧PASS를 요구하고, V/F/TO는 PASS와 모순되지 않는지
 # 독립적으로 확인한다 — count가 판정을 대체하지 않는다.
 # status·tier는 보고된 값 그대로 소비만 — 둘 사이 관계(status→tier/tier→status)를 CI가 새로 해석하지 않음(금지).
-verify-contract-release-e2e-full: verify-proof-boundary ## G7-full — CI release E2E (canonical product-outcome assertion, §계획 v7)
+verify-contract-release-e2e-full: verify-proof-boundary verify-rust-lane-live ## G7-full — CI release E2E (canonical product-outcome assertion, plan v7)
 	@set -eu; \
 	NODE="src/core/orchestrator/orchestrator_api.nim::normalizeMaxWorkers"; \
 	bin/ax --check-provenance || exit 1; \
