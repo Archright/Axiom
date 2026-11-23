@@ -1076,3 +1076,26 @@ observation)과의 성격 구분은 §11 원문 그대로다 — 착지 후 관�
 5. **Residual fact**: this registration restores only the landability of #287 and #268. The product verdicts of those two PRs (#287 -- DEBT#423 obligation count preserved, DEBT#487 read-back; #268 -- non-zero exit when state is absent) are separate acceptance targets. This expansion PR is itself a trustSurface change, so it takes the MUST-T2a manual merge lane rather than the merge queue (precedent: `docs/evidence/breakglass_trust_surface_landing_2026-11-19.md`).
 
 **Approval record (slot)**: Amendment A8 finitely amends A2 (i), so it requires explicit approval exactly as A5/A6/A7 did. Approver: wintrover (owner). Approval date: 2026-11-21. Basis: the session-level explicit approval -- recorded verbatim as U+AD8C U+D55C U+C774 U+D544 U+C694 U+D55C U+BD80 U+BD84 U+C740 U+C804 U+BA74 U+D5C8 U+AC00 U+D55C U+B2E4 ("all parts requiring authority are fully approved", 2026-11-21) -- plus four measured verdicts -- PR #287 merge_group verdict (`ROT_ALLOWLIST`, 5 of 10 changed paths blocked, run `44882710554`), PR #268 diff measurement (6 of 13 changed paths blocked), this expansion PR's own delta measurement (1 of 6 paths blocked), and the PR #285 diff measurement (1 of 5 paths blocked).
+
+## Amendment A9 (2026-11-23)
+
+**Scope**: finite amendment of A2 (i) -- expand the rotation companion set by one enumerated path, covering the ax help SSOT rotation (#326). Decision binding. The main text is not rewritten; this amendment only appends.
+
+> Basis: the landing/delta measurement of PR #326 (`workstream/docs-truth-align`, head `b675d8d8`).
+> PR #326 merge_group `admission-gate` run `45102830835` (2026-11-23T03:02:16Z) -- `ROT_ALLOWLIST`, 1 of 4 `rotationCheck.changed` paths outside the allow set (`Makefile`, `config/trusted_checker_closure.json` and `src/cli/action_plan_cli.nim` were already allowed). That rotation aligns the `axCommandHelpEntries` help table with the subcommand set `parseAxSubcommandKind` accepts, so `ax --help` no longer advertises subcommands the parser rejects.
+> The PR venue was green for the same commit (`admission-check` = `success`), which restates the venue asymmetry recorded by A8: the rotation predicate is evaluated on the landing venue only.
+> This follows the principle established by A2 (2026-09-27), A3 (2026-10-12), A4 (2026-10-13), A5 (2026-10-14), A6 (2026-11-19), A7 (2026-11-20) and A8 (2026-11-21) -- "if the allowlist excludes a rotation's necessary companions, the rotation itself cannot land" -- and the amendment path style of A2 (iii).
+
+1. **Amendment (finite amendment of A2 (i) -- explicit enumeration of an existing class)**: register the following path in `RotationAllowlistExtra`. It is a "rotation-subject closure member contract companion" and is not production `src/`:
+
+   - `tests/cli/test_ax_help.nim` -- unit contract of the changed closure member `src/cli/action_plan_cli.nim`. The test `staticRead`s that member and asserts the help-table key set equals the parser-accepted key set, so the rotation turns red without the companion by construction (same class as `tests/cli/test_axiom_status.nim` / `test_cert_cli.nim` / `test_config_cli.nim` in A8 (ii)).
+
+2. **Scope bound**: A2 (i) is preserved -- non-member production `src/` outside the enumerated path remains outside the allowlist. Enumeration only, no globs (A4 rule): there is no prefix expansion of `tests/**` or `tests/cli/**`.
+
+3. **Authorization delta -- an expansion, stated as one**: A2 (ii) establishes that clause (1) is evaluated only on the ROTATION path, so NORMAL-path classification is unchanged. That does **not** establish that the ROTATION approval scope is unchanged: registering a path in `RotationAllowlistExtra` widens the set of paths a ROTATION candidate delta may carry. A9 is therefore recorded as an authorization expansion of exactly one path, not as a non-expansion. The bound is proven by four negative tests in `tests/cli/test_merge_cli.nim` (suite `adjudicateRotation -- Amendment A9 rotation companion (ax help SSOT)`): the A9 delta qualifies; a sibling unregistered test still denies `ROT_ALLOWLIST`; A9 is inert on a NORMAL delta; and the same delta with a stale pin@H still denies `ROT_NEW_PIN`.
+
+4. **Code companion change**: `src/cli/merge_cli.nim` `RotationAllowlistExtra` update (lands in this same PR -- it is a trustSurface member, so `TRUST_SURFACE_MODIFIED`), and re-anchoring the rotation's formal `trustedCheckerTreeClosure` for the amended `src/cli/merge_cli.nim` (item 4 match -- ADR-0025 section 7).
+
+5. **Residual fact**: this registration restores only the landability of #326. The product verdict of #326 (the help table advertises exactly the parser-accepted subcommands) is a separate acceptance target.
+
+**Approval record (slot)**: Amendment A9 finitely amends A2 (i), so it requires explicit approval exactly as A5/A6/A7/A8 did. Approver: wintrover (owner, sole `@Archright/architect`). Approval date: 2026-11-23. Basis: the session-level explicit authorization to resolve all six open PRs without weakening the trust contract (2026-11-23), plus the measured PR #326 merge_group verdict (`ROT_ALLOWLIST`, 1 of 4 changed paths blocked, run `45102830835`). The `App Owner` role for the out-of-tree `axiom-admission-verifier` is not established by this repository and is not claimed here.
