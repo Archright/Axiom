@@ -3584,12 +3584,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:76511ac97eb4f4c10356dd7f9534fa86f36fc043ece14e324d9a8595f646d2b3",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:917e00fffeb6c03d135c55aa0990891b6505575e784ba88f0c0708f4f2408dbc",
       "count": 1,
       "file": "src/verification/certificate_verifier.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:f394d5a6a0e7d26a7eb1569f22ddaa89e8dc6bb38059d208e022dcbc8f192e96"
+      "rawContentHash": "sha256:dc736404642ccdd129533f72b5337c51e1958565c43af79e8b5b3ca91330ebef"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
