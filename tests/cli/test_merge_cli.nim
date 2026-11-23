@@ -913,6 +913,73 @@ suite "adjudicateRotation — Amendment A5 companion paths (rust lane landing)":
     check not adj.check.allowlistOk
     check not adj.check.subjectDeltaZero
 
+suite "adjudicateRotation — Amendment A9 rotation companion (ax help SSOT)":
+  test "PR #326's candidate delta (4 paths) → ROTATION (allowlist OK)":
+    # Measured, not assumed: the merge_group verdict at 2026-11-23T03:02:16Z
+    # blocked exactly this delta with ROT_ALLOWLIST on
+    # tests/cli/test_ax_help.nim -- the other three paths (Makefile,
+    # config/trusted_checker_closure.json, src/cli/action_plan_cli.nim) were
+    # already allowed. A9 registers that ONE companion and nothing else.
+    let b = lineSet("100644 blob a1	src/cli/action_plan_cli.nim")
+    let h = lineSet("100644 blob a2	src/cli/action_plan_cli.nim")
+    let adj = adjudicateRotation(h, b, h, some(b), some(h),
+      @["Makefile",
+        "config/trusted_checker_closure.json",
+        "src/cli/action_plan_cli.nim",
+        "tests/cli/test_ax_help.nim"])
+    check adj.qualification == rqRotation
+    check adj.check.closureChange
+    check adj.check.allowlistOk
+    check adj.check.subjectDeltaZero
+    check adj.check.oldAnchorOk
+    check adj.check.newAnchorOk
+    check adj.reasonCode.len == 0
+
+  test "A9 admits one enumerated path — an unregistered test stays ROT_ALLOWLIST":
+    # A9's authorization delta is bounded by enumeration, never by a glob:
+    # a sibling test file does not ride the registration.
+    let b = lineSet("100644 blob a1	src/cli/action_plan_cli.nim")
+    let h = lineSet("100644 blob a2	src/cli/action_plan_cli.nim")
+    let adj = adjudicateRotation(h, b, h, some(b), some(h),
+      @["src/cli/action_plan_cli.nim",
+        "tests/cli/test_ax_help_extra.nim"])
+    check adj.qualification == rqNone
+    check adj.reasonCode == "ROT_ALLOWLIST"
+    check not adj.check.allowlistOk
+
+  test "A9 is inert outside ROTATION — a NORMAL delta gains no approval":
+    # (1) is evaluated only on the ROTATION path (A2 (ii)): a candidate delta
+    # that does not change the closure is classified NORMAL and the
+    # registration is never consulted as an approval.
+    let b = lineSet("100644 blob a1	src/cli/action_plan_cli.nim")
+    let adj = adjudicateRotation(b, b, b, some(b), some(b),
+      @["tests/cli/test_ax_help.nim"])
+    check adj.qualification == rqNormal
+    check not adj.check.closureChange
+    check adj.reasonCode.len == 0
+
+  test "A9 leaves ④ untouched — a stale pin@H is still annotated ROT_NEW_PIN":
+    # A9 moves (1) only. ④ is a classification-independent FACT on every path
+    # and never denies in this function (ladder step 3); its single policy deny
+    # site is Pass 2.75 in MergeAdmissible. So the proof here is the annotation:
+    # the same 4-path delta with pin@H still anchored at B stays ROTATION with ④
+    # recorded false — and ④ is then the only difference from a clean verdict.
+    let b = lineSet("100644 blob a1	src/cli/action_plan_cli.nim")
+    let h = lineSet("100644 blob a2	src/cli/action_plan_cli.nim")
+    let delta = @["Makefile",
+                  "config/trusted_checker_closure.json",
+                  "src/cli/action_plan_cli.nim",
+                  "tests/cli/test_ax_help.nim"]
+    let stale = adjudicateRotation(h, b, h, some(b), some(b), delta)
+    check stale.check.closureChange
+    check stale.check.allowlistOk         # A9 does not suppress ① ...
+    check not stale.check.newAnchorOk     # ... and does not authorize ④
+    check stale.qualification == rqRotation
+    check stale.reasonCode == "ROT_NEW_PIN"
+    let anchored = adjudicateRotation(h, b, h, some(b), some(h), delta)
+    check anchored.check.newAnchorOk
+    check anchored.reasonCode.len == 0
+
 suite "adjudicateRotation — stale old anchor (③ → NOT-ADMIT, single deny point)":
   test "pin@B key present but != derived(B) → NONE (ROT_OLD_PIN)":
     let b = lineSet("100644 blob a1\tci/checker.mk")
