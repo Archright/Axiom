@@ -155,6 +155,53 @@ suite "Phase 2 — Certificate trust closure (R4, v1 local replay-bound contract
     finally:
       removeDir(tmpDir)
 
+  test "#246: swapped leanProposition -> FAIL (semantics are replay identity)":
+    let tmpDir = getTempDir() / "ax_p2_prop_swap_" & $getCurrentProcessId()
+    createDir(tmpDir)
+    try:
+      withHermeticJournalRoot(tmpDir):
+        let (certPath, cert, _) = makeFixtureCert(tmpDir)
+        # The attack the issue reports: keep every input hash, replace the claim.
+        cert["leanProposition"] = newJString("True")
+        writeFile(certPath, $cert)
+        let res = verifyCertificateClosure(certPath, tmpDir)
+        # Measured 2026-11-23: the proposition swap is rejected by the deep /
+        # observation gate BEFORE replay equality is reached. The value that
+        # matters is that a swapped claim never yields PASS.
+        check res.status != ccsPass
+        check res.status == ccsNotDeepVerified
+    finally:
+      removeDir(tmpDir)
+
+  test "#246: swapped leanSource -> FAIL (proof body is replay identity)":
+    let tmpDir = getTempDir() / "ax_p2_src_swap_" & $getCurrentProcessId()
+    createDir(tmpDir)
+    try:
+      withHermeticJournalRoot(tmpDir):
+        let (certPath, cert, _) = makeFixtureCert(tmpDir)
+        cert["leanSource"] = newJString("theorem normalizeMaxWorkers : True := by trivial")
+        writeFile(certPath, $cert)
+        let res = verifyCertificateClosure(certPath, tmpDir)
+        check res.status == ccsReplayMismatch
+    finally:
+      removeDir(tmpDir)
+
+  test "#246: swapped propositionHash -> FAIL (input digests are replay inputs)":
+    let tmpDir = getTempDir() / "ax_p2_phash_swap_" & $getCurrentProcessId()
+    createDir(tmpDir)
+    try:
+      withHermeticJournalRoot(tmpDir):
+        let (certPath, cert, _) = makeFixtureCert(tmpDir)
+        cert["propositionHash"] = newJString(repeat('a', 64))
+        writeFile(certPath, $cert)
+        let res = verifyCertificateClosure(certPath, tmpDir)
+        # Measured 2026-11-23: rejected by the replay-INPUT identity leg
+        # (sameReplayInputs), before the projection comparison runs.
+        check res.status != ccsPass
+        check res.status == ccsReplayInputMismatch
+    finally:
+      removeDir(tmpDir)
+
   test "journal missing -> JOURNAL_REQUIRED":
     let tmpDir = getTempDir() / "ax_p2_journal_missing_" & $getCurrentProcessId()
     createDir(tmpDir)
