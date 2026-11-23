@@ -108,7 +108,7 @@ type
   LeanLspClientPool* {.error: "AGENTS.md §1.2: Domain (core/) MUST NOT use verification/LeanLspClientPool. LSP pools belong to Infrastructure layer.".} = object
     ## Poison stub for lean_lsp.LeanLspClientPool.
 
-proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1) {.error: "AGENTS.md §1.2: Domain (core/) MUST NOT call verification/z3ExecPersistent. Z3 pool belongs to Infrastructure layer.", axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+proc z3ExecPersistent*(query: string; desiredWorkers: int = 1) {.error: "AGENTS.md §1.2: Domain (core/) MUST NOT call verification/z3ExecPersistent. Z3 pool belongs to Infrastructure layer.", axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Poison stub for z3_pool.z3ExecPersistent. Real definition in src/verification/solver/z3_pool.nim.
 
 func proveWithFixedpoint*() {.error: "AGENTS.md §1.2: Domain (core/) MUST NOT call verification/proveWithFixedpoint. Fixed-point engine belongs to Infrastructure layer.".} =

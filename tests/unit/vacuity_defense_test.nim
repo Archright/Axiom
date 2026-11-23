@@ -121,7 +121,6 @@ suite "End-to-End Real Validation (Conditional)":
       let result = verifyNonTrivialityWithFallback(
         @["(>= idx 0)"],
         @[("idx", "Int"), ("length", "Int")],
-        "proc foo(idx: int, length: int) = assert idx >= 0",
-        5000
+        "proc foo(idx: int, length: int) = assert idx >= 0"
       )
       check result.nonTrivial == true

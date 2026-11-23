@@ -79,7 +79,7 @@ proc checkImplication*(invariant: IRExpr, postCondition: IRExpr): ImplicationRes
     return irUnknown
   try:
     var implCanonicalDigest, implTransportDigest: string
-    let z3Res = z3ExecPersistent(smtQuery, timeoutMs = 500,
+    let z3Res = z3ExecPersistent(smtQuery,
       canonicalEnvelopeDigest = implCanonicalDigest, transportPayloadDigest = implTransportDigest)
     if z3Res.isOk:
       let output = z3Res.get().strip().toLowerAscii()

@@ -24,7 +24,7 @@ import core/axiom_pragmas
 proc execute*(provider: Z3Provider; query: string): ProviderResult {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Execute Z3 query via persistent pool.
   var cd, td: string
-  let res = z3ExecPersistent(query, provider.timeoutMs, desiredWorkers = 2,
+  let res = z3ExecPersistent(query, desiredWorkers = 2,
     canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
   if res.isOk():
     let output = res.get().strip()

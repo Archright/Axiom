@@ -478,7 +478,7 @@ else:
 
     var cd, td: string
     let queryRes = z3ExecPersistent(
-      script, timeoutMs, desiredWorkers = 1,
+      script, desiredWorkers = 1,
       enableProofs = false, queryType = "spacer_chc",
       canonicalEnvelopeDigest = cd, transportPayloadDigest = td
     )

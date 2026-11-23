@@ -419,8 +419,7 @@ proc checkVacuityGate(
   let z3Result = verifyNonTrivialityWithFallback(
     invariantClauses = @[artifact.finalInvariant],
     stateVars = stateVars,
-    sourceContext = sourceCode,
-    timeoutMs = 5000
+    sourceContext = sourceCode
   )
 
   # Layer 4: Negative Mutation Test

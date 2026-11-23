@@ -134,7 +134,7 @@ proc main() =
     let query = "(assert (= x 0))\n(check-sat)"
     let sentinel = "AXIOM_Z3_EOF_TEST"
     var digestA = ""
-    let env = buildZ3QueryEnvelope(query, timeoutMs = 8000, sentinel = sentinel,
+    let env = buildZ3QueryEnvelope(query, sentinel = sentinel,
                                    mode = zmRaw, canonicalEnvelopeDigest = digestA)
     let echoLine = "(echo \"" & sentinel & "\")\n"
     doAssert env.endsWith(echoLine), "envelope must end with sentinel echo"
@@ -146,9 +146,9 @@ proc main() =
     let sentinel = "AXIOM_Z3_EOF_DET"
     var digestB = ""
     var digestC = ""
-    let env1 = buildZ3QueryEnvelope(query, timeoutMs = 8000, sentinel = sentinel,
+    let env1 = buildZ3QueryEnvelope(query, sentinel = sentinel,
                                     mode = zmRaw, canonicalEnvelopeDigest = digestB)
-    let env2 = buildZ3QueryEnvelope(query, timeoutMs = 8000, sentinel = sentinel,
+    let env2 = buildZ3QueryEnvelope(query, sentinel = sentinel,
                                     mode = zmRaw, canonicalEnvelopeDigest = digestC)
     assert digestB == digestC, "digests differ across identical inputs"
     assert env1 == env2, "envelope bytes differ across identical inputs"
@@ -157,9 +157,9 @@ proc main() =
   check "O9: different payload -> different canonical digest":
     var d1 = ""
     var d2 = ""
-    discard buildZ3QueryEnvelope("(assert (= x 0))", timeoutMs = 8000,
+    discard buildZ3QueryEnvelope("(assert (= x 0))",
                                  sentinel = "S1", mode = zmRaw, canonicalEnvelopeDigest = d1)
-    discard buildZ3QueryEnvelope("(assert (= x 1))", timeoutMs = 8000,
+    discard buildZ3QueryEnvelope("(assert (= x 1))",
                                  sentinel = "S2", mode = zmRaw, canonicalEnvelopeDigest = d2)
     assert d1 != d2, "different payloads must yield different digests"
 
@@ -170,10 +170,10 @@ proc main() =
     var digestRunA = ""
     var digestRunB = ""
     let obligationSmt = "(assert (not (= resultBits 0)))\n(check-sat)"
-    discard buildZ3QueryEnvelope(obligationSmt, timeoutMs = 8000,
+    discard buildZ3QueryEnvelope(obligationSmt,
                                  sentinel = "AXIOM_Z3_EOF_R", mode = zmRaw,
                                  canonicalEnvelopeDigest = digestRunA)
-    discard buildZ3QueryEnvelope(obligationSmt, timeoutMs = 8000,
+    discard buildZ3QueryEnvelope(obligationSmt,
                                  sentinel = "AXIOM_Z3_EOF_R", mode = zmRaw,
                                  canonicalEnvelopeDigest = digestRunB)
     assert digestRunA == digestRunB, "identical obligation must reproduce digest"

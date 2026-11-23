@@ -183,7 +183,7 @@ block:
 
   var envelopeDigest = ""
   let envelope = buildZ3QueryEnvelope(
-    "(assert false)\n(check-sat)\n", z3SafetyNetMs, "AXIOM_TEST_SENTINEL",
+    "(assert false)\n(check-sat)\n", "AXIOM_TEST_SENTINEL",
     canonicalEnvelopeDigest = envelopeDigest)
 
   for spec in deterministicSolverOptions(z3DeterministicBudget, z3SafetyNetMs):
@@ -198,11 +198,23 @@ block:
     "envelope never emits the opt-out seed")
   expect(envelopeDigest.len > 0, "envelope digest is computed over the pinned envelope")
 
+  # Issue #347: the envelope has no per-call budget input. Its solve bound is
+  # the pinned rlimit and its wall-clock bound is the pinned liveness net, so no
+  # caller can move either number — the bytes are a function of the query alone.
+  expect(envelope.count("(set-option :timeout ") == 1,
+    "envelope carries exactly one :timeout directive")
+  expect(envelope.contains("(set-option :timeout " & $z3SafetyNetMs & ")"),
+    "the only :timeout is the pinned z3SafetyNetMs liveness net")
+  expect(envelope.count("(set-option :rlimit ") == 1,
+    "envelope carries exactly one :rlimit directive")
+  expect(envelope.contains("(set-option :rlimit " & $z3DeterministicBudget & ")"),
+    "the only :rlimit is the pinned deterministic budget")
+
   # An envelope that carries a caller-supplied option must not be double-set.
   var callerDigest = ""
   let pinnedByCaller = buildZ3QueryEnvelope(
     "(set-option :random-seed 7)\n(assert false)\n(check-sat)\n",
-    z3SafetyNetMs, "AXIOM_TEST_SENTINEL",
+    "AXIOM_TEST_SENTINEL",
     canonicalEnvelopeDigest = callerDigest)
   expect(pinnedByCaller.split("(set-option :random-seed").len == 2,
     "a caller-pinned seed is respected, not overridden or duplicated")

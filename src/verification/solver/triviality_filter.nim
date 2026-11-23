@@ -35,8 +35,6 @@ type
     z3Output*: string
     errorMessage*: string
 
-const TrivialityTimeoutMs = 10_000
-
 func detectVacuousContradiction(smt2: string): bool {.raises: [].} =
   ## Fast syntactic guard against the old bug where both `P` and `not P`
   ## were asserted, making the query trivially contradictory.
@@ -55,7 +53,7 @@ proc checkSmtValidity*(smt2: string): ValidityCheckResult {.raises: [], axiomEff
                                z3Output: "", errorMessage: "vacuous contradiction detected")
 
   var cd, td: string
-  let z3res = z3ExecPersistent(smt2, TrivialityTimeoutMs, desiredWorkers = 1,
+  let z3res = z3ExecPersistent(smt2, desiredWorkers = 1,
                                queryType = "triviality_filter",
                                canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
   if z3res.isErr():

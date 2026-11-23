@@ -31,7 +31,7 @@ proc executeRefactorTask*(
     ## Wraps z3ExecPersistent to return raw Z3 output (including counterexample models).
     let z3ModelQuery = proc(query: string): string {.closure, gcsafe, raises: [CatchableError].} =
       var cd, td: string
-      let res = z3ExecPersistent(query, timeoutMs = 30_000,
+      let res = z3ExecPersistent(query,
         canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
       if res.isErr:
         raise newException(CatchableError, res.error())

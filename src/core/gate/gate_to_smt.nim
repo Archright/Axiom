@@ -110,10 +110,10 @@ proc gateToSmtLib2*(ir: AxiomIRNode): string {.raises: [].} =
   result.add("(assert (not (= |result| 0)))\n")
   result.add("(check-sat)\n")
 
-proc runZ3WithQuery*(query: string; timeoutMs: int = NonVacuityTimeoutMs):
+proc runZ3WithQuery*(query: string):
     Result[string, string] {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect], raises: [].} =
   var gateCanonicalDigest, gateTransportDigest: string
-  z3ExecPersistent(query, timeoutMs,
+  z3ExecPersistent(query,
     canonicalEnvelopeDigest = gateCanonicalDigest, transportPayloadDigest = gateTransportDigest)
 
 proc verifyNonVacuity*(ir: AxiomIRNode): bool {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect].} =
