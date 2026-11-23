@@ -187,3 +187,120 @@ Measured against the live API, and enforced by `tests/ci/test_ci_admission_obser
   shows the target it named (`publication-integrity`) is not the longest chain; the serial
   `axiom-operational-slice` -> `readiness-verdict` chain is. Both files are trust-surface
   entries, so shortening them is an architect decision, not an agent edit.
+
+## Addendum — step-level attribution (2026-11-24, post-landing)
+
+This addendum corrects one sentence in the section above and adds the step-level attribution
+that the original measurement could not make. Everything here is measured from
+`GET /actions/runs/{id}/jobs` `steps[]` on the two observed queue cycles (#416 run
+`45189948196`, #415 run `45195134265`) and the paired `publication-integrity.yml` runs
+(`45189948255`, `45195134581`).
+
+### Correction: the ~83s environment setup DOES reproduce
+
+The section above states that `"Environment setup is ~83s" does not reproduce`. That is
+wrong, and the error matters because it understates the finding.
+
+Measured `setup-axiom-toolchain` spans inside `publication-integrity.yml`:
+
+| job | #416 | #415 |
+|---|---:|---:|
+| `license-scan` (serial, after the 3 shards) | 13s | **41s** |
+| `publication-integrity` (serial, after `license-scan`) | 10s | **43s** |
+| **serial tail total** | **23s / 50s wall** | **84s / 124s wall** |
+
+In #415 the serial tail is 124s of which 84s — **68%** — is provisioning of the SAME
+toolchain, twice, in two consecutive jobs. The ~83s figure was accurate. It is not in the
+scans; it is in the two adjudication jobs that follow them.
+
+### The correction does not rescue #421, and this is why
+
+The 84s is real but it is not on the critical path, because `publication-integrity.yml`
+finishes with slack:
+
+| workflow | chain start | last job complete | chain wall |
+|---|---|---|---:|
+| `axiom-operational-slice.yml` (#415) | 14:31:35 | **14:40:28** | **533s** |
+| `publication-integrity.yml` (#415) | 14:31:33 | 14:38:09 | 396s |
+
+139s of slack (#415), 208s (#416). Removing all 84s of the tail provisioning moves that
+workflow's completion to ~14:36:45 — still 223s before the last required context. Net effect
+on `T_admission`: **zero**.
+
+So #421's *measurement* was right and its *attribution* was wrong. It named a workflow that
+has slack, while the same defect (the same toolchain provisioned twice in one serial chain)
+sits inside the chain that has none.
+
+### Where the time actually goes on the critical chain
+
+`axiom-operational-slice.yml` is two jobs joined by `needs:`. Both provision from scratch.
+#415, 533s total:
+
+| | span | share |
+|---|---:|---:|
+| `axiom-operational-slice` job | 304s | 57% |
+| — `Prove, replay the same certificate ...` | 205s | 38% |
+| — `setup-axiom-toolchain` | 53s | 10% |
+| `readiness-verdict` job | 227s | 43% |
+| — `Readiness decision test suite` | 85s | 16% |
+| — `setup-axiom-toolchain` | 61s | 11% |
+| — `Run the readiness gate` | 34s | 6% |
+| — `Collect R1–R8 evidence` | 29s | 5% |
+| **serial provisioning, both jobs** | **114s** | **21.4%** |
+
+#416 gives 86s of 579s (14.9%), with `Prove` at 277s (48%).
+
+Two facts follow that the earlier text did not have:
+
+1. **The removable block is 114s of duplicate provisioning, not 83s in the scanner**, and it
+   is inside a trust-surface workflow.
+2. **An exact cache HIT costs ~28s.** In #415 the A-layer restore reported
+   `exact-hit=true` at `14:37:20.688` after starting at `14:36:52.354` — 28.3s to restore a
+   payload it already matched. Raising hit rate past 100% cannot go below this floor, so
+   the "restore is the win" model is already exhausted at the current hit rate.
+
+### Reconciliation with the canonical collector
+
+The canonical `wall_seconds` and the admission wall are different quantities, measured:
+
+| quantity | #416 | #415 |
+|---|---:|---:|
+| collector `wall_seconds` (`admission-gate` job span) | 568s | 423s |
+| `admission-check` check-run span (App 5795152) | 579s | 432s |
+| observer `verify` (first required start → last required complete) | 582s | 536s |
+| observer `ready` (queue entry → all 7 complete) | 589s | 555s |
+| observer `admission` (queue entry → merged) | 602s | 588s |
+
+The collector's number tracks the *verdict-issuing workflow* (568 vs 579 = 11s of
+check-run framing), not admission. That is correct by its own contract and must not be
+re-labelled; it simply cannot answer the admission question, which is why this instrument
+exists.
+
+### Cache inventory at measurement time
+
+`GET /repos/Archright/Axiom/actions/caches`, all pages:
+
+| family | entries | size |
+|---|---:|---:|
+| `axiom-b-` (build artifacts) | 103 | 5.24 GiB |
+| `axiom-a-rt-` (runtime) | 118 | 1.55 GiB |
+| `axiom-a-` full (single entry) | 1 | 1.05 GiB |
+| `axiom-a-nim-` | 1 | 0.19 GiB |
+| **total** | **223** | **7.91 GiB** |
+
+By ref: 106 entries / 6.52 GiB on `main`, 117 entries / 1.57 GiB on `refs/pull/**`.
+
+Two consequences for previously stated acceptance numbers:
+
+- `PR-scope cache = 117 entries / 1573.6 MiB` reproduces exactly; the figure in the earlier
+  plan was correct.
+- A `≤ 2 GiB total` target is **not reachable** from hygiene alone: a single `A full` entry
+  is 1.05 GiB and is the canonical supply for the merge-group lane. The target must be
+  restated per family before it can be used as an acceptance gate.
+
+### The `§3` gap in `docs/spec/ci_critical_path_metric.md`
+
+The document numbers `§2.6` then jumps to `§4`. `git log -S"## §3"` over the file's three
+commits returns nothing, so no content was lost — it is an authoring gap in the frozen
+document. It is recorded here rather than silently renumbered, because that document is a
+frozen metric contract and renumbering it would break references.
