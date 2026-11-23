@@ -704,6 +704,24 @@ proc classifyIssuanceBlock(rec: RustIssuanceRecord): tuple[status: string; reaso
 
 const rustLaneExitContract* = "axiom.rust-lane.exit.v1"
 
+func llbcRawFunDeclCount(root: JsonNode): Option[int] {.raises: [].} =
+  ## The discovery denominator: every `fun_decl` in the document, addressable
+  ## or not. `llbcFunDeclNamePaths` filters by construction (trait impl blocks,
+  ## scalar/primitive owners, non-Ident name elements), so its length can never
+  ## stand in for this number — the two would be identical by arithmetic and
+  ## the "discovered vs addressable" distinction would be vacuous.
+  ##
+  ## `none` = not measurable from the document (no `translated`, or no
+  ## `fun_decls` array). Callers must report that as `enumerated: false` rather
+  ## than asserting enumeration it did not perform. An `Option` rather than a
+  ## `-1` sentinel: a numeric sentinel invites readers (and the generated type
+  ## registry's numeric template) to treat the value as a count.
+  let translated = root{"translated"}
+  if translated.isNil or translated.kind != JObject: return none(int)
+  let decls = translated{"fun_decls"}
+  if decls.isNil or decls.kind != JArray: return none(int)
+  some(decls.elems.len)
+
 func rustLaneExitCode*(report: JsonNode; requirePerfectAsi: bool = false): int {.
     raises: [], axiomDecision(id = "DECISION-0830", reason = "Rust lane exit projection consumes the lane's own summary as its declared contract (axiom.rust-lane.exit.v1); unknown/error/blocking are unresolved and fail closed. This lane does not emit canonical runOutcome, so it must not route through projectRunOutcome", adr = "docs/adr/0001-fail-closed-result-type.md", introduced = "v34").} =
   ## Explicit, versioned exit contract for the rust subject lane
@@ -908,6 +926,7 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
     }
     return ok(finish(report))
   let declNames = llbcFunDeclNamePaths(llbcRoot)
+  let rawDeclCount = llbcRawFunDeclCount(llbcRoot)
   let llbcPath = run.llbcPath
   # The rustc dep-info is the authoritative input set for the Phase 1-A
   # contract (the exact-set mode is structurally impossible for real crates:
@@ -1161,24 +1180,38 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
   if errorCount > 0:
     summary["blockingFailure"] = %true
   report["summary"] = summary
-  # Coverage honesty: discovery, addressability, attempt and verification are
-  # DISTINCT counts. `addressable` is the selected candidate set — never the
-  # discovered declaration count — and `attempted` is how many candidates
-  # actually reached a guard-obligation attempt. Every non-verified target
-  # carries its own reason in `targets[]`, so a candidate count is never
-  # reported as a verified count.
-  report["coverage"] = %*{
-    "enumerated": %true,
-    "total": %declNames.len,
+  # Coverage honesty. Each key names exactly one stage and none is a synonym
+  # for another:
+  #   `total`          — every fun_decl in the document (measured raw count).
+  #     `declNames.len` is NOT this number: `llbcFunDeclNamePaths` skips
+  #     unresolvable declarations by construction (trait impl blocks,
+  #     scalar/primitive owners, non-Ident name elements), so its length is
+  #     the ADDRESSABLE count. Reporting it as the discovery count would make
+  #     the two keys identical by arithmetic and the distinction vacuous.
+  #   `addressable`    — the selected candidate set (`--target` filtered).
+  #   `guardAttempted` — candidates that reached the undeclared guard lane.
+  #     Deliberately not called `attempted`: declared targets stop at the
+  #     provenance/issuance stage, so they are never guard attempts and a
+  #     bare `attempted` would under-count the funnel's second stage while
+  #     `verified` could exceed it.
+  #   `enumerated`     — whether `total` was measurable at all. It is derived
+  #     from the document, never asserted: an LLBC with no `translated` /
+  #     `fun_decls` reports `false` and omits `total`.
+  var coverage = %*{
+    "enumerated": %rawDeclCount.isSome,
     "addressable": %total,
-    "attempted": %attemptedCount,
+    "guardAttempted": %attemptedCount,
     "verified": %verified,
     "failed": %failed,
     "unknown": %unknownCount,
     "error": %errorCount
   }
-  log.add("[AXIOM][rust-lane] coverage: total=" & $declNames.len &
-          " addressable=" & $total & " attempted=" & $attemptedCount &
+  if rawDeclCount.isSome:
+    coverage["total"] = %rawDeclCount.get
+  report["coverage"] = coverage
+  log.add("[AXIOM][rust-lane] coverage: total=" &
+          (if rawDeclCount.isSome: $rawDeclCount.get else: "unmeasurable") &
+          " addressable=" & $total & " guardAttempted=" & $attemptedCount &
           " verified=" & $verified & " unknown=" & $unknownCount &
           " error=" & $errorCount)
   log.add("[AXIOM][rust-lane] done: verified=" & $verified & "/" & $total &

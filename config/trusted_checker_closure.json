@@ -274,7 +274,7 @@
     "src/cli/rust_lane_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "c0f0db321a122d3ef8229e26df9449185d884455"
+      "sha": "a7f64ec5878bb024f0d8c6d742159621b9bd0bc7"
     },
     "src/cli/scaffold_cli.nim": {
       "mode": "100644",

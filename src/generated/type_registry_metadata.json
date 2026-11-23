@@ -10374,6 +10374,21 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "Option int",
+      "module": "src/cli/rust_lane_cli.nim",
+      "name": "llbcRawFunDeclCount",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Option is not numeric",
+        "Use 'isSome(result) or isNone(result)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result none) (exists ((v T)) (= result (some v))))",
+      "returnType": "Option[int]",
+      "smtSort": "(Option int)",
+      "typeCategory": "option"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "Result[JsonNode, CliError]",
       "module": "src/cli/rust_lane_cli.nim",
       "name": "loadScopeLock",
