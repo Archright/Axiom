@@ -535,7 +535,8 @@ proc confirmGuardByReplay(g: var RustGuardGoalOutcome; modelRaw: string;
 proc rustGuardObligationAttempt*(llbcText: string; funcName: string;
     rcheckExe: string = ""; projectRoot: string = "";
     timeoutMs: int = 60_000; subjectRoot: string = "";
-    subjectModulePath: string = ""): RustGuardAttemptRecord {.
+    subjectModulePath: string = "";
+    depInfoPath: string = ""): RustGuardAttemptRecord {.
     raises: [CatchableError], axiomEffect: IOEffect,
     tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect].} =
   ## The declaration-free attempt for one (llbcText, funcName): producer +
@@ -547,8 +548,14 @@ proc rustGuardObligationAttempt*(llbcText: string; funcName: string;
   ## Never issues anything; every reason text is non-claiming by contract.
   ## The default `subjectModulePath = ""` keeps confirmation disarmed for
   ## existing callers (unconfirmed fallback text, byte-identical behavior).
+  ## `depInfoPath` MUST be forwarded wherever the caller has it: the input
+  ## contract runs in dep-info mode only when it is supplied, and the legacy
+  ## exact-set mode is structurally impossible for real crates (cfg-excluded
+  ## files never reach the LLBC), so omitting it turns every undeclared
+  ## candidate into a silent `attempted = false` (rust_input_contract §c2).
   result.outcome = rustSubjectOutcome(llbcText, funcName, rcheckExe,
-                                      projectRoot, timeoutMs, subjectRoot)
+                                      projectRoot, timeoutMs, subjectRoot,
+                                      depInfoPath)
   if not outcomeProceedToProof(result.outcome):
     # attempted stays false — the same stages the lane surfaces directly;
     # the stage's own reason passes through (lane text shape).
