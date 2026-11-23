@@ -187,3 +187,217 @@ Measured against the live API, and enforced by `tests/ci/test_ci_admission_obser
   shows the target it named (`publication-integrity`) is not the longest chain; the serial
   `axiom-operational-slice` -> `readiness-verdict` chain is. Both files are trust-surface
   entries, so shortening them is an architect decision, not an agent edit.
+
+## Addendum — step-level attribution (2026-11-24, post-landing)
+
+This addendum corrects one sentence in the section above and adds the step-level attribution
+that the original measurement could not make. Everything here is measured from
+`GET /actions/runs/{id}/jobs` `steps[]` on the two observed queue cycles (#416 run
+`45189948196`, #415 run `45195134265`) and the paired `publication-integrity.yml` runs
+(`45189948255`, `45195134581`).
+
+### Correction: the ~83s environment setup DOES reproduce
+
+The section above states that `"Environment setup is ~83s" does not reproduce`. That is
+wrong, and the error matters because it understates the finding.
+
+Measured `setup-axiom-toolchain` spans inside `publication-integrity.yml`:
+
+| job | #416 | #415 |
+|---|---:|---:|
+| `license-scan` (serial, after the 3 shards) | 13s | **41s** |
+| `publication-integrity` (serial, after `license-scan`) | 10s | **43s** |
+| **serial tail total** | **23s / 50s wall** | **84s / 124s wall** |
+
+In #415 the serial tail is 124s of which 84s — **68%** — is provisioning of the SAME
+toolchain, twice, in two consecutive jobs. The ~83s figure was accurate. It is not in the
+scans; it is in the two adjudication jobs that follow them.
+
+### The correction does not rescue #421, and this is why
+
+The 84s is real but it is not on the critical path, because `publication-integrity.yml`
+finishes with slack:
+
+| workflow | chain start | last job complete | chain wall |
+|---|---|---|---:|
+| `axiom-operational-slice.yml` (#415) | 14:31:35 | **14:40:28** | **533s** |
+| `publication-integrity.yml` (#415) | 14:31:33 | 14:38:09 | 396s |
+
+139s of slack (#415), 208s (#416). Removing all 84s of the tail provisioning moves that
+workflow's completion to ~14:36:45 — still 223s before the last required context. Net effect
+on `T_admission`: **zero**.
+
+So #421's *measurement* was right and its *attribution* was wrong. It named a workflow that
+has slack, while the same defect (the same toolchain provisioned twice in one serial chain)
+sits inside the chain that has none.
+
+### Where the time actually goes on the critical chain
+
+`axiom-operational-slice.yml` is two jobs joined by `needs:`. Both provision from scratch.
+#415, 533s total:
+
+| | span | share |
+|---|---:|---:|
+| `axiom-operational-slice` job | 304s | 57% |
+| — `Prove, replay the same certificate ...` | 205s | 38% |
+| — `setup-axiom-toolchain` | 53s | 10% |
+| `readiness-verdict` job | 227s | 43% |
+| — `Readiness decision test suite` | 85s | 16% |
+| — `setup-axiom-toolchain` | 61s | 11% |
+| — `Run the readiness gate` | 34s | 6% |
+| — `Collect R1–R8 evidence` | 29s | 5% |
+| **serial provisioning, both jobs** | **114s** | **21.4%** |
+
+#416 gives 86s of 579s (14.9%), with `Prove` at 277s (48%).
+
+Two facts follow that the earlier text did not have:
+
+1. **The removable block is 114s of duplicate provisioning, not 83s in the scanner**, and it
+   is inside a trust-surface workflow.
+2. **An exact cache HIT costs ~28s.** In #415 the A-layer restore reported
+   `exact-hit=true` at `14:37:20.688` after starting at `14:36:52.354` — 28.3s to restore a
+   payload it already matched. Raising hit rate past 100% cannot go below this floor, so
+   the "restore is the win" model is already exhausted at the current hit rate.
+
+### Reconciliation with the canonical collector
+
+The canonical `wall_seconds` and the admission wall are different quantities, measured:
+
+| quantity | #416 | #415 |
+|---|---:|---:|
+| collector `wall_seconds` (`admission-gate` job span) | 568s | 423s |
+| `admission-check` check-run span (App 5795152) | 579s | 432s |
+| observer `verify` (first required start → last required complete) | 582s | 536s |
+| observer `ready` (queue entry → all 7 complete) | 589s | 555s |
+| observer `admission` (queue entry → merged) | 602s | 588s |
+
+The collector's number tracks the *verdict-issuing workflow* (568 vs 579 = 11s of
+check-run framing), not admission. That is correct by its own contract and must not be
+re-labelled; it simply cannot answer the admission question, which is why this instrument
+exists.
+
+### Cache inventory at measurement time
+
+`GET /repos/Archright/Axiom/actions/caches`, all pages:
+
+| family | entries | size |
+|---|---:|---:|
+| `axiom-b-` (build artifacts) | 103 | 5.24 GiB |
+| `axiom-a-rt-` (runtime) | 118 | 1.55 GiB |
+| `axiom-a-` full (single entry) | 1 | 1.05 GiB |
+| `axiom-a-nim-` | 1 | 0.19 GiB |
+| **total** | **223** | **7.91 GiB** |
+
+By ref: 106 entries / 6.52 GiB on `main`, 117 entries / 1.57 GiB on `refs/pull/**`.
+
+Two consequences for previously stated acceptance numbers:
+
+- `PR-scope cache = 117 entries / 1573.6 MiB` reproduces exactly; the figure in the earlier
+  plan was correct.
+- A `≤ 2 GiB total` target is **not reachable** from hygiene alone: a single `A full` entry
+  is 1.05 GiB and is the canonical supply for the merge-group lane. The target must be
+  restated per family before it can be used as an acceptance gate.
+
+### The `§3` gap in `docs/spec/ci_critical_path_metric.md`
+
+The document numbers `§2.6` then jumps to `§4`. `git log -S"## §3"` over the file's three
+commits returns nothing, so no content was lost — it is an authoring gap in the frozen
+document. It is recorded here rather than silently renumbered, because that document is a
+frozen metric contract and renumbering it would break references.
+### Post-landing re-measurement on canonical main (n=5)
+
+Run after this instrument and its evidence landed (`f3661487`), on the same boundary and the
+same cohort rule as the baseline, so the two are comparable:
+
+```bash
+./bin/ci_acceptance_collect --repo Archright/Axiom \
+  --boundary a759f2da1770e51bd4dd6569df01ae65c7152351 \
+  --window 20 --mode initial --out build/ci_acceptance_post
+./build/bin/ci_admission_observe --repo Archright/Axiom \
+  --cohort-from build/ci_acceptance_post/ci_acceptance_report.json \
+  --ruleset 27097366 --out build/ci_admission_post
+```
+
+The window grew from 8 to 14 post-boundary candidates; 5 are OBSERVED and 9 are UNKNOWN for
+legitimate reasons (3 merged a different commit because the same PR re-entered the queue, 3
+had not merged when the cycle closed, 3 likewise on a later cycle). UNKNOWN stays UNKNOWN.
+
+| phase | n | p50 | p90 | min | max |
+|---|---:|---:|---:|---:|---:|
+| `queue` | 5 | 19s | 20.2s | 7s | 21s |
+| `verify` | 5 | **599s** | **651.2s** | 536s | 666s |
+| `publication` | 5 | **0s** | 11.4s | 0s | 19s |
+| `merge` | 5 | 14s | 28.2s | 10s | 33s |
+| `ready` | 5 | 618s | 682.4s | 555s | 704s |
+| `admission` | 5 | **639s** | **694.8s** | 588s | 718s |
+
+`T_admission` decomposes as 3% queue, **94% verification**, 0% publication, 2% merge. The
+verification term is the whole problem; nothing else is worth touching first.
+
+Per candidate, and which context actually finished last:
+
+| PR | head | queue | verify | publication | merge | admission | last finisher |
+|---|---|---:|---:|---:|---:|---:|---|
+| #416 | `e2d35ccd` | 7 | 582 | 0 | 13 | 602 | `readiness-verdict` |
+| #415 | `38960f92` | 19 | 536 | 0 | 33 | 588 | `readiness-verdict` |
+| #407 | `75c6d8d4` | 19 | 666 | 19 | 14 | 718 | `admission-check` |
+| #402 | `d5fc8c77` | 19 | 599 | 0 | 21 | 639 | `readiness-verdict` |
+| #423 | `f3661487` | 21 | 629 | 0 | 10 | 660 | `readiness-verdict` |
+
+**`readiness-verdict` is the last finisher in 4 of 5.** `publication-integrity` is never the
+last finisher in any observed cycle. This is the causal claim #421 needed and did not have,
+now replicated beyond n=2.
+
+Determinism: re-running the observer over the identical `ci_acceptance_report.json` produced
+byte-identical `phase_stats`, `candidates`, `authority` and `last_finisher_counts`. Same
+snapshot, same numbers.
+
+Two things this sample does NOT do:
+
+- It does not establish a distribution. n=5 is a first operational window; `p90` over five
+  points is the fifth point. No SLO claim follows, and the canonical `p50=603.5s` (n=14) is a
+  different quantity from `admission p50=639s` (n=5) over a different cohort.
+- It does not show any improvement. It is the baseline the next change must be measured
+  against, taken on the same instrument.
+### Verification of the #420 timeline, and the same-SHA collision
+
+The candidate timeline quoted for #420 reproduces exactly against the live API, which is worth
+recording because it is the sample the time definitions were derived from:
+
+| #420 event | quoted | measured |
+|---|---|---|
+| `added_to_merge_queue` | 13:51:42Z | 13:51:42Z |
+| first required context start (`admission-check`) | 13:52:00Z | 13:52:00Z |
+| last general context complete (`publication-integrity`) | 13:59:16Z | 13:59:16Z |
+| App 5795152 verdict complete | 13:59:19Z | 13:59:19Z |
+| `merged` | 13:59:42Z | 13:59:42Z |
+
+So `T_queue=18s`, `T_verify=436s`, `T_publication=3s`, `T_ready=457s`, `T_merge=23s`,
+`T_admission=480s`, and `T_exec=439s = T_verify + T_publication` — i.e. `T_exec` is a sum of
+two phases, not a fourth phase. Adding `T_publication` on top of `T_exec` double-counts it.
+
+The same query also demonstrates the hazard directly. `check-runs?filter=all` on the merge
+commit `a759f2da` returns **nine** rows for seven context names, from two different cycles:
+
+```
+admission-check        app 5795152  13:52:00 -> 13:59:19   <- the verdict that admitted #420
+publication-integrity  app 15368    13:58:44 -> 13:59:16
+admission-check        app 15368    13:59:10 -> 13:59:15   <- a same-name run, DIFFERENT app
+axiom-operational-slice app 15368   13:59:46 -> 14:02:02   <- AFTER the merge
+readiness-verdict      app 15368    14:02:05 -> 14:05:49   <- AFTER the merge
+```
+
+Three distinct traps in one response:
+
+1. `admission-check` appears twice on the same SHA with **different producer apps**. Taking
+   "the newest" or "the only one" both produce a wrong verdict; the app id is part of the
+   identity, which is why the binding requires the declared producer app AND uniqueness.
+2. Two contexts have check-runs that **start after the PR merged**. A `filter=latest`
+   query would happily return those as if they were the admission evidence.
+3. Therefore "the check-runs on this SHA" is not a usable set without event, ref, and
+   producing-attempt binding. The instrument's attempt-exact edge is what makes the set
+   well-defined; anything looser silently admits post-merge runs.
+
+This is also why the same SHA can appear twice in one cohort with different outcomes (PR 402
+and PR 400 each appear twice in the n=14 window): the PR number is not the candidate, the
+`(PR, head_sha, queue cycle)` triple is.
