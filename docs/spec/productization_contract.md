@@ -389,7 +389,7 @@ v1 exit contract = **5-state (4-state + `NOT_CURRENT`) + non-contract signal**. 
 | `3` | INVALID_INPUT |
 | `4` | NOT_CURRENT (valid artifact, not current product truth) |
 | signal (e.g. 139) | out-of-contract failure — 5-state 밖 |
-| panic abort (observed `1`) | out-of-contract termination — 5-state 밖 (no canonical `runOutcome` exists, so the observed `1` is NOT `VERIFICATION_FAILED`) |
+| panic abort (observed `1`) | out-of-contract termination — outside the 5-state model (no canonical `runOutcome` exists, so the observed `1` is NOT `VERIFICATION_FAILED`) |
 
 ### Notes
 
