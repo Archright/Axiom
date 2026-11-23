@@ -359,3 +359,45 @@ Two things this sample does NOT do:
   different quantity from `admission p50=639s` (n=5) over a different cohort.
 - It does not show any improvement. It is the baseline the next change must be measured
   against, taken on the same instrument.
+### Verification of the #420 timeline, and the same-SHA collision
+
+The candidate timeline quoted for #420 reproduces exactly against the live API, which is worth
+recording because it is the sample the time definitions were derived from:
+
+| #420 event | quoted | measured |
+|---|---|---|
+| `added_to_merge_queue` | 13:51:42Z | 13:51:42Z |
+| first required context start (`admission-check`) | 13:52:00Z | 13:52:00Z |
+| last general context complete (`publication-integrity`) | 13:59:16Z | 13:59:16Z |
+| App 5795152 verdict complete | 13:59:19Z | 13:59:19Z |
+| `merged` | 13:59:42Z | 13:59:42Z |
+
+So `T_queue=18s`, `T_verify=436s`, `T_publication=3s`, `T_ready=457s`, `T_merge=23s`,
+`T_admission=480s`, and `T_exec=439s = T_verify + T_publication` — i.e. `T_exec` is a sum of
+two phases, not a fourth phase. Adding `T_publication` on top of `T_exec` double-counts it.
+
+The same query also demonstrates the hazard directly. `check-runs?filter=all` on the merge
+commit `a759f2da` returns **nine** rows for seven context names, from two different cycles:
+
+```
+admission-check        app 5795152  13:52:00 -> 13:59:19   <- the verdict that admitted #420
+publication-integrity  app 15368    13:58:44 -> 13:59:16
+admission-check        app 15368    13:59:10 -> 13:59:15   <- a same-name run, DIFFERENT app
+axiom-operational-slice app 15368   13:59:46 -> 14:02:02   <- AFTER the merge
+readiness-verdict      app 15368    14:02:05 -> 14:05:49   <- AFTER the merge
+```
+
+Three distinct traps in one response:
+
+1. `admission-check` appears twice on the same SHA with **different producer apps**. Taking
+   "the newest" or "the only one" both produce a wrong verdict; the app id is part of the
+   identity, which is why the binding requires the declared producer app AND uniqueness.
+2. Two contexts have check-runs that **start after the PR merged**. A `filter=latest`
+   query would happily return those as if they were the admission evidence.
+3. Therefore "the check-runs on this SHA" is not a usable set without event, ref, and
+   producing-attempt binding. The instrument's attempt-exact edge is what makes the set
+   well-defined; anything looser silently admits post-merge runs.
+
+This is also why the same SHA can appear twice in one cohort with different outcomes (PR 402
+and PR 400 each appear twice in the n=14 window): the PR number is not the candidate, the
+`(PR, head_sha, queue cycle)` triple is.
