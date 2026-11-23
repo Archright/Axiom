@@ -304,3 +304,58 @@ The document numbers `§2.6` then jumps to `§4`. `git log -S"## §3"` over the 
 commits returns nothing, so no content was lost — it is an authoring gap in the frozen
 document. It is recorded here rather than silently renumbered, because that document is a
 frozen metric contract and renumbering it would break references.
+### Post-landing re-measurement on canonical main (n=5)
+
+Run after this instrument and its evidence landed (`f3661487`), on the same boundary and the
+same cohort rule as the baseline, so the two are comparable:
+
+```bash
+./bin/ci_acceptance_collect --repo Archright/Axiom \
+  --boundary a759f2da1770e51bd4dd6569df01ae65c7152351 \
+  --window 20 --mode initial --out build/ci_acceptance_post
+./build/bin/ci_admission_observe --repo Archright/Axiom \
+  --cohort-from build/ci_acceptance_post/ci_acceptance_report.json \
+  --ruleset 27097366 --out build/ci_admission_post
+```
+
+The window grew from 8 to 14 post-boundary candidates; 5 are OBSERVED and 9 are UNKNOWN for
+legitimate reasons (3 merged a different commit because the same PR re-entered the queue, 3
+had not merged when the cycle closed, 3 likewise on a later cycle). UNKNOWN stays UNKNOWN.
+
+| phase | n | p50 | p90 | min | max |
+|---|---:|---:|---:|---:|---:|
+| `queue` | 5 | 19s | 20.2s | 7s | 21s |
+| `verify` | 5 | **599s** | **651.2s** | 536s | 666s |
+| `publication` | 5 | **0s** | 11.4s | 0s | 19s |
+| `merge` | 5 | 14s | 28.2s | 10s | 33s |
+| `ready` | 5 | 618s | 682.4s | 555s | 704s |
+| `admission` | 5 | **639s** | **694.8s** | 588s | 718s |
+
+`T_admission` decomposes as 3% queue, **94% verification**, 0% publication, 2% merge. The
+verification term is the whole problem; nothing else is worth touching first.
+
+Per candidate, and which context actually finished last:
+
+| PR | head | queue | verify | publication | merge | admission | last finisher |
+|---|---|---:|---:|---:|---:|---:|---|
+| #416 | `e2d35ccd` | 7 | 582 | 0 | 13 | 602 | `readiness-verdict` |
+| #415 | `38960f92` | 19 | 536 | 0 | 33 | 588 | `readiness-verdict` |
+| #407 | `75c6d8d4` | 19 | 666 | 19 | 14 | 718 | `admission-check` |
+| #402 | `d5fc8c77` | 19 | 599 | 0 | 21 | 639 | `readiness-verdict` |
+| #423 | `f3661487` | 21 | 629 | 0 | 10 | 660 | `readiness-verdict` |
+
+**`readiness-verdict` is the last finisher in 4 of 5.** `publication-integrity` is never the
+last finisher in any observed cycle. This is the causal claim #421 needed and did not have,
+now replicated beyond n=2.
+
+Determinism: re-running the observer over the identical `ci_acceptance_report.json` produced
+byte-identical `phase_stats`, `candidates`, `authority` and `last_finisher_counts`. Same
+snapshot, same numbers.
+
+Two things this sample does NOT do:
+
+- It does not establish a distribution. n=5 is a first operational window; `p90` over five
+  points is the fifth point. No SLO claim follows, and the canonical `p50=603.5s` (n=14) is a
+  different quantity from `admission p50=639s` (n=5) over a different cohort.
+- It does not show any improvement. It is the baseline the next change must be measured
+  against, taken on the same instrument.
