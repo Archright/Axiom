@@ -220,6 +220,17 @@ func certSemanticProjection(node: JsonNode): string {.raises: [].} =
     node.getOrDefault("policyId").getStr(""),
     node.getOrDefault("modulePath").getStr(""),
     node.getOrDefault("functionName").getStr(""),
+    # #246: the replay identity must cover the CLAIMED SEMANTICS, not only the
+    # hashes of its inputs. Without these, an attestation-less certificate whose
+    # `leanProposition` / `leanSource` was swapped (with sourceHash/irHash
+    # recomputed) still projected identically to its journal claim and replayed
+    # PASS. theoremName is included for the same reason: the theorem the proof
+    # establishes is part of what was certified.
+    node.getOrDefault("leanProposition").getStr(""),
+    node.getOrDefault("propositionHash").getStr(""),
+    node.getOrDefault("leanSource").getStr(""),
+    node.getOrDefault("leanSourceHash").getStr(""),
+    node.getOrDefault("theoremName").getStr(""),
     solverMetaProjection(node)
   ]
   sha256Hex(fields.join("|"))
@@ -240,7 +251,11 @@ func sameReplayInputs(certNode, journalClaim: JsonNode): bool {.raises: [].} =
   ## replayed with different inputs. VS-188 Phase 1: the observation block and
   ## its digest are replay inputs too — a cert whose observation was altered
   ## after minting can never replay against the journaled claim.
-  for key in ["sourceHash", "irHash", "solverStatus", "policyId"]:
+  # #246: the proposition/source digests are replay inputs too. A cert whose
+  # claimed semantics differ from the journaled claim is a DIFFERENT subject,
+  # not a replay of the same one.
+  for key in ["sourceHash", "irHash", "solverStatus", "policyId",
+              "propositionHash", "leanSourceHash"]:
     if certNode.getOrDefault(key).getStr("") != journalClaim.getOrDefault(key).getStr(""):
       return false
   if observationProjection(certNode) != observationProjection(journalClaim):

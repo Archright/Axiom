@@ -3674,7 +3674,7 @@
     "src/verification/certificate_verifier.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "c71a69175ae94fcfa308c4b6f2adeeb4332b8b2c"
+      "sha": "741169976ef60522ce6fef1ae265c766385f38ae"
     },
     "src/verification/charon_runner.nim": {
       "mode": "100644",
