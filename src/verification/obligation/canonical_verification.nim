@@ -755,15 +755,31 @@ proc scanSorryMarkers*(artifactSource: string; kernelObservation: string): seq[s
   if "sorry" in loweredObservation:
     result.add("declaration uses 'sorry'")
 
+func axiomProbeOutcome*(probeExit: int; probeOutput: string): Result[seq[string], string] {.raises: [].} =
+  ## #367 - the exit status is part of the observation. A probe that did not
+  ## run to completion has observed nothing; that is UNKNOWN, not EMPTY. Only a
+  ## completed probe may contribute an axiom set, and that set may legitimately
+  ## be empty (a theorem depending on no axioms reports none).
+  if probeExit != 0:
+    return err("axiom probe did not complete (exit " & $probeExit &
+      ") - the observed axiom set is UNKNOWN, not empty")
+  Result[seq[string], string](ok: true, value: parseAxiomProfile(probeOutput))
+
 proc captureKernelAxioms(receipt: LeanKernelCheckReceipt;
-                         leanSource: string): seq[string] {.raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect].} =
+                         leanSource: string): Result[seq[string], string] {.raises: [CatchableError], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect].} =
   ## Step 6: the axiom profile is the honest record of what the Lean kernel
   ## actually consumed; it feeds the cert's axiomsUsed field for the lean sorry
   ## gate (isDeepVerified).
+  ##
+  ## UNKNOWN is not EMPTY (#367): a probe that did not run to completion has
+  ## observed nothing, which is a different fact from observing an empty axiom
+  ## set. The exit status is therefore part of the observation. A failed probe
+  ## returns an error instead of the vacuous `@[]` that parsing its empty output
+  ## would manufacture, so no certificate can be minted from an unobserved set.
   let probeSource = leanSource & "\n#print axioms " &
     receipt.receiptTheoremIdentity & "\n"
-  let (probeOutput, _) = runLeanProbe(probeSource, "_axioms", 120_000)
-  parseAxiomProfile(probeOutput)
+  let (probeOutput, probeExit) = runLeanProbe(probeSource, "_axioms", 120_000)
+  axiomProbeOutcome(probeExit, probeOutput)
 
 proc buildExecutionContract(inputId: string): ExecutionContract =
   ## §10/D3 role projection: workdir and fsBoundary use role literals, never
@@ -1752,7 +1768,11 @@ proc verifyGeneratedObligation(funcDef: IRFuncDef;
 
   # Step 6: capture the axiom profile and the measured sorry profile, then
   # bindReceipt → KAA (the KAA records what was actually observed).
-  let kaaResult = bindReceipt(receipt, captureKernelAxioms(receipt, leanSource),
+  let axiomProfile = captureKernelAxioms(receipt, leanSource)
+  if axiomProfile.isErr:
+    return kernelRejectedResult(firstObl.kind, obligationCount, inputHash, irHash,
+      propositionHash, leanSourceHash, axiomProfile.error)
+  let kaaResult = bindReceipt(receipt, axiomProfile.get(),
                               scanSorryMarkers(leanSource, receipt.receiptKernelObservation))
   if kaaResult.isErr:
     return kernelRejectedResult(firstObl.kind, obligationCount, inputHash, irHash, propositionHash, leanSourceHash, receipt.receiptKernelObservation)
