@@ -1710,3 +1710,129 @@ jobs:
           fi
           echo "[post-arm] isInMergeQueue=$INQ mergeQueueEntry=$ST (async — null/false immediately after arm is not a failure; log only, no waiting loop)"
           exit 0
+
+      - name: "condition 11: dequeued with no re-arm — tell the PR (5-minute cooldown)"
+        if: always()
+        run: |
+          set -uo pipefail
+          # Silent edge this closes, measured 2026-11-23 on PR #388:
+          #   removed_from_merge_queue 06:37:39Z (GitHub timeline, no reason)
+          #   this workflow woke on pull_request_target[dequeued] 06:37:42Z and
+          #   succeeded, classified the failure PERMANENT (ROT_ALLOWLIST),
+          #   correctly declined to re-arm -- and told nobody. The PR ended
+          #   with zero comments and auto-merge cleared by GitHub on ejection.
+          # Declining to re-arm is the right decision; declining silently is
+          # the defect. Not every no-arm is a safety decline (budget spent,
+          # manual no-auto-rearm marker, unclassifiable run), so the deciding
+          # record is read BACK from $GITHUB_STEP_SUMMARY instead of being
+          # re-derived here: every terminal path emits exactly one
+          # {"rearm":{class,reason,budget,action,...}} line there.
+          # Scope: the dequeued wake-up only. A workflow_run wake-up can end in
+          # no-arm while the PR is still queued, and a PR MERGED out of the
+          # queue also fires `dequeued` -- both must not produce this notice.
+          if [ "${EVENT_SOURCE:-}" != "dequeued" ]; then exit 0; fi
+          if [ "${REARM_DONE:-}" != "1" ]; then exit 0; fi
+          if [ "${REARM_ARMED:-}" = "1" ]; then exit 0; fi
+          if [ "${DRY_RUN:-}" = "true" ] || [ "${HISTORICAL:-}" = "true" ]; then exit 0; fi
+          if ! printf '%s' "${PR_NUMBER:-}" | grep -Eq '^[0-9]+$'; then exit 0; fi
+          if ! printf '%s' "${HEAD_SHA:-}" | grep -Eq '^[0-9a-f]{40}$'; then exit 0; fi
+
+          H12="${HEAD_SHA:0:12}"
+          MARK="<!-- rearm-signal:no-arm:${H12} -->"
+          COOLDOWN=300
+          errf="$(mktemp)"
+
+          # Condition 2 already declined to arm for STATE != OPEN. Announcing a
+          # removal on a PR that landed via the queue would fabricate an
+          # ejection, so re-read the state; also refuse to speak about a head
+          # that is no longer current (the decline would be stale).
+          if ! RAW=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}" 2>"$errf"); then
+            echo "[notify] PR re-read failed (non-blocking; no signal):" >&2
+            sed 's/^/  | /' "$errf" >&2
+            exit 0
+          fi
+          PSTAT=$(printf '%s' "$RAW" | jq -r '.state // ""' 2>/dev/null || echo "")
+          if [ "$PSTAT" != "OPEN" ]; then
+            echo "[notify] PR state is '${PSTAT:-unknown}' (not OPEN) — no removal signal"
+            exit 0
+          fi
+          PSHA=$(printf '%s' "$RAW" | jq -r '.head.sha // ""' 2>/dev/null || echo "")
+          if [ "$PSHA" != "$HEAD_SHA" ]; then
+            echo "[notify] head moved ${H12} -> ${PSHA:0:12}; this decline is stale — no signal"
+            exit 0
+          fi
+
+          CLS=""; RSN=""; BUD=""; ACT=""
+          if [ -n "${GITHUB_STEP_SUMMARY:-}" ] && [ -f "${GITHUB_STEP_SUMMARY:-}" ]; then
+            LAST="$(grep -o '^{"rearm".*}$' "$GITHUB_STEP_SUMMARY" 2>/dev/null | tail -n 1)"
+            if [ -n "$LAST" ]; then
+              CLS=$(printf '%s' "$LAST" | jq -r '.rearm.class // ""' 2>/dev/null || echo "")
+              RSN=$(printf '%s' "$LAST" | jq -r '.rearm.reason // ""' 2>/dev/null || echo "")
+              BUD=$(printf '%s' "$LAST" | jq -r '.rearm.budget // ""' 2>/dev/null || echo "")
+              ACT=$(printf '%s' "$LAST" | jq -r '.rearm.action // ""' 2>/dev/null || echo "")
+            fi
+          fi
+
+          # Cooldown is keyed on the head, not the run: repeated wake-ups for
+          # one head must not produce repeated comments. --paginate is required
+          # or a PR past 100 comments reports "no previous signal" forever.
+          if ! hist=$(gh api --paginate "repos/${REPO}/issues/${PR_NUMBER}/comments?per_page=100" \
+                       --jq '.[] | [.created_at, .body] | @tsv' 2>"$errf"); then
+            echo "[notify] comment listing failed (non-blocking; no signal):" >&2
+            sed 's/^/  | /' "$errf" >&2
+            exit 0
+          fi
+          last_ts="$(printf '%s\n' "$hist" | awk -v m="$MARK" 'index($0,m){print substr($0,1,20)}' | sort | tail -n 1)"
+          now="$(date -u +%s)"
+          if [ -n "$last_ts" ]; then
+            last_epoch="$(date -u -d "$last_ts" +%s 2>/dev/null || echo 0)"
+            if [ "$last_epoch" -gt 0 ] && [ "$((now - last_epoch))" -lt "$COOLDOWN" ]; then
+              echo "[notify] suppressed — last no-arm signal for ${H12} was ${last_ts} (<${COOLDOWN}s cooldown)"
+              exit 0
+            fi
+          fi
+
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          body="$(mktemp)"
+          {
+            echo "**This PR left the merge queue and nothing was auto-re-armed.**"
+            echo
+            echo "- Head: \`${HEAD_SHA}\`"
+            if [ -n "$RSN" ]; then
+              echo "- Declined because: ${RSN}"
+              echo "  \`class=${CLS:-unknown} budget=${BUD:-unknown} action=${ACT:-unknown}\`"
+            else
+              echo "- Declined because: the run summary carries no classification record."
+            fi
+            echo "- Auto-merge: **off**. GitHub clears the request when a PR leaves the"
+            echo "  queue, so nothing re-enters the queue on its own."
+            echo "- GitHub's \`removed_from_merge_queue\` timeline event records no reason, so"
+            echo "  it is not evidence of why the PR was ejected. The classification above"
+            echo "  comes from [this run](${RUN_URL})."
+            echo
+            if [ "$BUD" = "exhausted" ] || [ "$BUD" = "spent" ]; then
+              echo "The retry budget for this head is spent. Fix the failing required check on"
+              echo "the merge-group candidate, then decide deliberately whether to re-arm:"
+            else
+              echo "Fix the failing required check on the merge-group candidate, then re-arm"
+              echo "deliberately:"
+            fi
+            echo "\`gh pr merge ${PR_NUMBER} --auto --match-head-commit ${HEAD_SHA}\`"
+            echo
+            echo "This notice repeats at most once per \`${COOLDOWN}\`s for a given head."
+            echo
+            echo "${MARK}"
+          } >"$body"
+
+          if ! jq -Rs '{body: .}' "$body" >"$body.json" 2>"$errf"; then
+            echo "[notify] payload build failed (non-blocking; no signal):" >&2
+            sed 's/^/  | /' "$errf" >&2
+            exit 0
+          fi
+          if gh api -X POST "repos/${REPO}/issues/${PR_NUMBER}/comments" --input "$body.json" >/dev/null 2>"$errf"; then
+            echo "[notify] posted no-arm signal for ${H12} on PR #${PR_NUMBER}"
+          else
+            echo "[notify] comment POST failed (non-blocking; the run summary still holds the classification):" >&2
+            sed 's/^/  | /' "$errf" >&2
+          fi
+          exit 0
