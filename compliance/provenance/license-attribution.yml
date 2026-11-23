@@ -152,6 +152,7 @@ attributions:
       - "CC-BY-4.0"
       - "CC-BY-NC-4.0"
       - "CC-BY-NC-ND-3.0"
+      - "CC-BY-SA-3.0"
       - "AGPL-3.0-or-later"
       - "GPL-1.0-or-later"
       - "GPL-2.0-or-later"
@@ -473,6 +474,17 @@ attributions:
     licenses:
       - "Apache-2.0"
       - "MIT"
+  - file: "docs/adr/0050-english-only-phase1-authority-records.md"
+    classification: "documentary-mention"
+    evidence: "the ADR's c.2 licence check names the four licences this repository declares plus the rejected candidates' licences (fastText model CC BY-SA 3.0, langdetect Apache-2.0) and their SPDX/path tokens - a comparison of candidates, not a grant of any of them; the json and LicenseRef-scancode-* atoms are scanner decompositions of data/i18n/ko.json path mentions and of the quoted licence names"
+    licenses:
+      - "apache-2.0"
+      - "cc-by-4.0"
+      - "cc-by-sa-3.0"
+      - "json"
+      - "mit"
+      - "licenseref-scancode-other-copyleft"
+      - "licenseref-scancode-unknown-license-reference"
 
   # ── subject-manifest-record ────────────────────────────────────────────
   - file: "experiments/act2-wp-toml-b1-input-integrity/MANIFEST"
