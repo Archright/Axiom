@@ -13,9 +13,9 @@
 #     only at execution.
 # Second invariant (2026-11-23): `.github/workflows/ci-cache-publisher.yml` is the
 # ONLY workflow holding `cache-mode: write` (default-branch cache write authority).
-# A step in it that executes a WORKSPACE-LOCAL action (`uses: ./…`) inside a job
+# A step in it that executes a WORKSPACE-LOCAL action (`uses: ./...`) inside a job
 # whose workspace can hold a dynamically checked-out tree runs CANDIDATE code with
-# that write authority — the cache-poisoning surface. Such a job must therefore pin
+# that write authority - the cache-poisoning surface. Such a job must therefore pin
 # `with.ref: ${{ github.event.repository.default_branch }}` and must not re-point the
 # workspace with a dynamic `git checkout` in a `run:` block. Rationale + the measured
 # pre-change defect (`a-seed` executing the candidate tree's action.yml body, then
@@ -275,11 +275,11 @@ def iter_steps(doc):
             yield jname, (step.get("name") or ("step#%d" % i)), step
 
 
-# ── Publisher execution-boundary rule (2026-11-23) ────────────────────────
+# -- Publisher execution-boundary rule (2026-11-23) -----------------------
 # `.github/workflows/ci-cache-publisher.yml` holds `cache-mode: write` (the only
 # default-branch cache writer). Any step there that executes a WORKSPACE-LOCAL
-# action (`uses: ./…`) inside a job whose workspace can hold a dynamically
-# checked-out tree runs CANDIDATE code with default-branch write authority —
+# action (`uses: ./...`) inside a job whose workspace can hold a dynamically
+# checked-out tree runs CANDIDATE code with default-branch write authority:
 # the cache-poisoning surface. Invariant: such a job must pin
 # `with.ref: ${{ github.event.repository.default_branch }}` and must not
 # `git checkout` a dynamic ref inside a `run:` block.
@@ -304,7 +304,7 @@ def check_publisher_exec_boundary(doc, rel):
     if os.path.basename(rel) != PUBLISHER_WF:
         return []
     if not isinstance(doc, dict) or not isinstance(doc.get("jobs"), dict):
-        return ["`jobs` mapping absent — the exec-boundary invariant is undecidable "
+        return ["`jobs` mapping absent - the exec-boundary invariant is undecidable "
                 "(fail closed)"]
     out = []
     for jname, job in doc["jobs"].items():
@@ -321,12 +321,12 @@ def check_publisher_exec_boundary(doc, rel):
         dyn = [r for r in refs if r is not None
                and any(m in r for m in DYNAMIC_REF_MARKERS)]
         if dyn:
-            out.append("job `%s` executes `uses: ./…` (local action) while checking out "
-                       "a candidate/dynamic ref %s — candidate code would run with "
+            out.append("job `%s` executes `uses: ./...` (local action) while checking out "
+                       "a candidate/dynamic ref %s - candidate code would run with "
                        "default-branch cache write authority" % (jname, dyn))
         if DEFAULT_BRANCH_REF not in refs:
-            out.append("job `%s` executes `uses: ./…` but no checkout pins "
-                       "`with.ref: %s` (refs=%s) — the executed body's provenance is "
+            out.append("job `%s` executes `uses: ./...` but no checkout pins "
+                       "`with.ref: %s` (refs=%s) - the executed body's provenance is "
                        "not the default branch" % (jname, DEFAULT_BRANCH_REF, refs))
         for s in steps:
             body = s.get("run")
@@ -337,8 +337,8 @@ def check_publisher_exec_boundary(doc, rel):
                 if st.startswith("#"):
                     continue
                 if "git checkout" in st and ("$" in st or "`" in st):
-                    out.append("job `%s` executes `uses: ./…` and also re-points the "
-                               "workspace with a dynamic `git checkout` (%s) — bypass "
+                    out.append("job `%s` executes `uses: ./...` and also re-points the "
+                               "workspace with a dynamic `git checkout` (%s) - bypass "
                                "path around the fixed-ref rule" % (jname, st[:120]))
     return out
 
