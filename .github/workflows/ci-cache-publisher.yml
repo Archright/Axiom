@@ -842,15 +842,24 @@ jobs:
   #     entries for it (measured 2026-11-23). `save-allowed` is unconditionally
   #     true for runtime (action.yml:1234), so every run wrote ~14MB into its own
   #     ref scope: 301 entries for one key / 4.24GB = 39.5% of the 10GiB repo
-  #     cap, with created_at == last_accessed_at on ALL of them (writes only, zero
-  #     restores). GitHub's documented contract: a cache created by a PR run
-  #     belongs to the merge ref and "can only be restored by re-runs of the pull
-  #     request" - so those 301 entries are unreadable dead weight. A run may
-  #     restore from "the current branch or the default branch", and that is
-  #     measured here: merge_group run 45154199975 restored the full A key from
-  #     refs/heads/main with exact-hit=true. One default-branch seed therefore
-  #     serves every run, and the save step retires by itself on the cache-hit
-  #     guard (action.yml:1256).
+  #     cap. GitHub's documented contract: a cache created by a PR run belongs to
+  #     the merge ref and "can only be restored by re-runs of the pull request".
+  #     Scope of the loss, stated precisely (erratum 2026-11-23, measured): a
+  #     LATER attempt of the same PR is the same merge ref, so it can and does
+  #     self-hit - merge_group run 45172757994 restored the entry that run
+  #     45168650595 had saved under the same queue ref. What never worked is
+  #     REUSE ACROSS candidates: each new (PR, base_sha) queue ref starts with no
+  #     entry and pays the runtime install again (measured A-MISS: 30s and 72s on
+  #     runs 45168650595 / 45159516631). So the 301 entries are not unreadable,
+  #     they are unshareable - one install per candidate either way.
+  #     A run may restore from "the current branch or the default branch", and
+  #     that is measured here: merge_group run 45154199975 restored the full A key
+  #     from refs/heads/main with exact-hit=true. One default-branch seed
+  #     therefore serves every candidate, and the save step retires by itself on
+  #     the cache-hit guard (action.yml:1256). Verified after landing: run
+  #     45178859503 seeded refs/heads/main (12:56:28Z) and merge_group run
+  #     45179559090, a first attempt for a new candidate, restored it with
+  #     exact-hit=true + A_VERIFY OK + install skipped (~29s vs 30-72s).
   # (2) The old seed ran from the candidate tree (the removed `a-seed` inside
   #     `publish`). Inside a `cache-mode: write` job that executed the candidate
   #     tree's action.yml body, and on an A-MISS `nimble install` ran the
