@@ -11,6 +11,19 @@
 #     proven at gate run 36250541060.
 #   * a `cmp` filename bug class — exact filename/argument mismatch surfaced
 #     only at execution.
+# Second invariant (2026-11-23): `.github/workflows/ci-cache-publisher.yml` is the
+# ONLY workflow holding `cache-mode: write` (default-branch cache write authority).
+# A step in it that executes a WORKSPACE-LOCAL action (`uses: ./...`) inside a job
+# whose workspace can hold a dynamically checked-out tree runs CANDIDATE code with
+# that write authority - the cache-poisoning surface. Such a job must therefore pin
+# `with.ref: ${{ github.event.repository.default_branch }}` and must not re-point the
+# workspace with a dynamic `git checkout` in a `run:` block. Rationale + the measured
+# pre-change defect (`a-seed` executing the candidate tree's action.yml body, then
+# `nimble install` running the candidate's axiom.nimble hooks) is inline at
+# `check_publisher_exec_boundary`. This rule rides this gate instead of adding a new
+# tool: `.gitignore` bans new `*.sh`/`*.py` files (Language Ban), and this validator
+# is already wired into the push-admissibility recipe.
+#
 # The gate is fail-closed: ANY syntax error in ANY block → exit 1; a workflow
 # with NO run blocks, an unparsable YAML file, or a missing extractor
 # dependency is also a failure (exit 2) — never a silent pass.
@@ -247,6 +260,89 @@ def iter_run_steps(doc):
                 continue
             yield jname, (step.get("name") or ("step#%d" % i)), step["run"]
 
+def iter_steps(doc):
+    if not isinstance(doc, dict) or "jobs" not in doc:
+        return
+    for jname, job in doc["jobs"].items():
+        if not isinstance(job, dict):
+            continue
+        steps = job.get("steps")
+        if not isinstance(steps, list):
+            continue
+        for i, step in enumerate(steps):
+            if not isinstance(step, dict):
+                continue
+            yield jname, (step.get("name") or ("step#%d" % i)), step
+
+
+# -- Publisher execution-boundary rule (2026-11-23) -----------------------
+# `.github/workflows/ci-cache-publisher.yml` holds `cache-mode: write` (the only
+# default-branch cache writer). Any step there that executes a WORKSPACE-LOCAL
+# action (`uses: ./...`) inside a job whose workspace can hold a dynamically
+# checked-out tree runs CANDIDATE code with default-branch write authority:
+# the cache-poisoning surface. Invariant: such a job must pin
+# `with.ref: ${{ github.event.repository.default_branch }}` and must not
+# `git checkout` a dynamic ref inside a `run:` block.
+# Measured 2026-11-23: the pre-change `a-seed` step ran
+# `uses: ./.github/actions/setup-axiom-toolchain` right after
+# `checkout(ref: steps.trees.outputs.head_sha)`, so the executed body was the
+# candidate's `action.yml`, and an A-miss ran `nimble install`, executing the
+# candidate's `axiom.nimble` NimScript hooks with cache write authority.
+PUBLISHER_WF = "ci-cache-publisher.yml"
+DEFAULT_BRANCH_REF = "${{ github.event.repository.default_branch }}"
+DYNAMIC_REF_MARKERS = (
+    "steps.",
+    "github.event.workflow_run.",
+    "github.event.pull_request.",
+    "github.head_ref",
+    "github.sha",
+)
+
+
+def check_publisher_exec_boundary(doc, rel):
+    """Return a list of violation messages (empty = invariant holds)."""
+    if os.path.basename(rel) != PUBLISHER_WF:
+        return []
+    if not isinstance(doc, dict) or not isinstance(doc.get("jobs"), dict):
+        return ["`jobs` mapping absent - the exec-boundary invariant is undecidable "
+                "(fail closed)"]
+    out = []
+    for jname, job in doc["jobs"].items():
+        steps = [s for _, _, s in iter_steps({"jobs": {jname: job}})]
+        local = [s for s in steps if str(s.get("uses", "")).startswith("./")]
+        if not local:
+            continue
+        refs = []
+        for s in steps:
+            if str(s.get("uses", "")).startswith("actions/checkout@"):
+                with_ = s.get("with")
+                ref = (with_ or {}).get("ref") if isinstance(with_, dict) else None
+                refs.append(None if ref is None else str(ref))
+        dyn = [r for r in refs if r is not None
+               and any(m in r for m in DYNAMIC_REF_MARKERS)]
+        if dyn:
+            out.append("job `%s` executes `uses: ./...` (local action) while checking out "
+                       "a candidate/dynamic ref %s - candidate code would run with "
+                       "default-branch cache write authority" % (jname, dyn))
+        if DEFAULT_BRANCH_REF not in refs:
+            out.append("job `%s` executes `uses: ./...` but no checkout pins "
+                       "`with.ref: %s` (refs=%s) - the executed body's provenance is "
+                       "not the default branch" % (jname, DEFAULT_BRANCH_REF, refs))
+        for s in steps:
+            body = s.get("run")
+            if not isinstance(body, str):
+                continue
+            for line in body.splitlines():
+                st = line.strip()
+                if st.startswith("#"):
+                    continue
+                if "git checkout" in st and ("$" in st or "`" in st):
+                    out.append("job `%s` executes `uses: ./...` and also re-points the "
+                               "workspace with a dynamic `git checkout` (%s) - bypass "
+                               "path around the fixed-ref rule" % (jname, st[:120]))
+    return out
+
+
 fails = 0
 if max_report:
     overall = 0
@@ -283,6 +379,10 @@ with tempfile.TemporaryDirectory(prefix="wfshchk-") as td:
             print("  " + str(e).splitlines()[0])
             fails += 1
             continue
+        for msg in check_publisher_exec_boundary(doc, rel):
+            fails += 1
+            print("FAIL:%s:<publisher-exec-boundary>" % rel)
+            print("  " + msg)
         lane_hits = has_lane_pattern(text)
         if lane_hits and not (has_transcript_disclosure(text)
                               and has_always_upload(doc)):

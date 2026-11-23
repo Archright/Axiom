@@ -292,23 +292,20 @@ jobs:
           clean: false
 
       # ────────────────────────────────────────────────────────────────────────
-      # A-cache seeding path (헤더 A 경로 참조): setup 액션을 full scope로
-      # 1회 실행 — A-restore(HIT이면 설치 전체 생략) 후 lock-complete
-      # materialization을 거쳐 액션 내부의 기존 A-save가 default-branch 스코프에
-      # 기록한다. checkout(head_sha) 직후·lane 다운로드 전 배치: 이 위치에서
-      # 액션 내부 B-restore(b-key = 입력 폐쇄 digest(head_sha 트리))는 publisher가 유일한 B
-      # writer(게이트는 B를 쓰지 않음)이므로 통상 MISS(~1s) — 동일 트리 재시드
-      # 시 HIT해도 트리-일관 내용이라 lane 다운로드가 덮어쓰고 sha256 검증이
-      # 바인딩한다. 워크스페이스 오염 없이 lane/base 체인을 그대로 유지.
-      # 프로비저닝 실패 = 시딩 생략(fail-open, J3) — publisher를 red로 만들지
-      # 않는다(continue-on-error).
-      - name: "A seed: provision toolchain (full scope; installs only on A-miss)"
-        id: a-seed
-        if: steps.trees.outputs.proceed == 'true' && github.event.workflow_run.event == 'merge_group'
-        continue-on-error: true
-        uses: ./.github/actions/setup-axiom-toolchain
-        with:
-          cache-build-source: ${{ steps.trees.outputs.head_sha }}
+      # A-layer seeding does NOT happen here. The `seed-toolchain` job does it from
+      # the DEFAULT BRANCH tree. The removed `a-seed` step ran
+      # `uses: ./.github/actions/setup-axiom-toolchain` at this point (right after
+      # the candidate-tree checkout), which executed the CANDIDATE tree's
+      # action.yml body inside a `cache-mode: write` job - and on an A-MISS the
+      # `nimble install` would run the candidate's axiom.nimble NimScript hooks.
+      # Seeding has exactly one purpose: publish an A entry into the
+      # default-branch scope. The A key is a tree-relative 2-file hash
+      # (action.yml, nimble.lock), so it is byte-identical when computed from the
+      # default branch (local recompute = 40c34681..., matches the live key tail).
+      # There is therefore no reason to execute candidate code at all. The split
+      # also removes WORKSPACE CONTAMINATION, not just code execution: the seed no
+      # longer depends on the order in which provisioning artifacts happen to be
+      # overwritten by the lane download.
 
       - name: "Download gate artifact (cross-run, actions:read)"
         # lane 전용 — guard.proceed(ci-bootstrap 아티팩트 존재)가 lane 체인 진입
@@ -404,7 +401,14 @@ jobs:
       - name: "Derive b-key (keygen-only, byte-identical formula)"
         id: keygen
         if: steps.verify.outputs.proceed == 'true'
-        uses: ./.github/actions/setup-axiom-toolchain
+        # Executed body = pinned revision (trusted) | data = workspace (candidate
+        # tree). The keygen hashes workspace-relative paths only (script_hash,
+        # recipe_hash, input closure), so the KEY is unchanged and stays
+        # candidate-relative; a candidate edit to action.yml is never executed.
+        # This step writes only $GITHUB_OUTPUT, so no payload can be poisoned by
+        # body/key divergence.
+        # Maintenance: a PR that edits action.yml bumps this pin in the same PR.
+        uses: Archright/Axiom/.github/actions/setup-axiom-toolchain@ba51c8d7c5d005ac35b95f890e358568847042ab
         with:
           keygen-only: 'true'
           cache-build-source: ${{ steps.verify.outputs.build_sha }}
@@ -603,7 +607,10 @@ jobs:
       - name: "Base seed: derive base b-key (keygen-only, cache-build-source = manifest build_sha)"
         id: base-keygen
         if: steps.verify-base.outputs.proceed == 'true'
-        uses: ./.github/actions/setup-axiom-toolchain
+        # Pinned-revision body (same rationale as the lane keygen above). The key
+        # derives from the base tree's workspace hashes, so it stays
+        # byte-identical to what base consumers request.
+        uses: Archright/Axiom/.github/actions/setup-axiom-toolchain@ba51c8d7c5d005ac35b95f890e358568847042ab
         with:
           keygen-only: 'true'
           cache-build-source: ${{ steps.verify-base.outputs.base_sha }}
@@ -782,7 +789,7 @@ jobs:
           echo "[publish] base-guard=${{ steps.base-check.outputs.proceed }} base-verify=${{ steps.verify-base.outputs.proceed }} base-key=${{ steps.base-keygen.outputs.b-key }}"
           echo "[publish] base-nimcache-carrier: outcome=${{ steps.base-nimcache-dl.outcome }} (failure = carrier absent → partial 8-path base entry, J3 fail-open)"
           echo "[publish] base-fold: lane0=${{ steps.base-lane0-nimcache-dl.outcome }} lane1=${{ steps.base-lane1-nimcache-dl.outcome }} (failure = lane artifact absent → fold union degrades to what arrived, J3 fail-open)"
-          echo "[publish] a-seed: hit=${{ steps.a-seed.outputs.a-cache-hit }} (merge_group-only; empty = skipped or fail-open)"
+          echo "[publish] a-seed: (moved to seed-toolchain job - default-branch tree; see [seed-toolchain] lines)"
           echo "[publish] lane-lookup: outcome=${{ steps.lane-lookup.outcome }} hit=${{ steps.lane-lookup.outputs.cache-hit }} (hit=true → save withheld, single-flight)"
           echo "[publish] lane-save: outcome=${{ steps.lane-save.outcome }} (skipped=single-flight skip / failure=reservation lost or save error, J3 fail-open — next firing re-emits via lookup-only)"
           echo "[publish] base-lookup: outcome=${{ steps.base-lookup.outcome }} hit=${{ steps.base-lookup.outputs.cache-hit }} (hit=true → save withheld, single-flight)"
@@ -824,3 +831,97 @@ jobs:
           RUN_PATH: ${{ github.event.workflow_run.path }}
         run: |
           echo "[publish-skip] reason=gate-conclusion-not-success workflow_run.conclusion=$CONCLUSION path=$RUN_PATH"
+
+  # A-layer toolchain supply (default-branch scope, trusted tree)
+  # Why this job exists: it closes two STRUCTURAL defects with one supply
+  # contract.
+  #
+  # (1) The runtime scope had no default-branch supplier. `certificate-mint`
+  #     prepare (provision-scope=runtime) requests the A key `axiom-a-rt-...`,
+  #     which is ref-independent (a single key), yet `refs/heads/main` held ZERO
+  #     entries for it (measured 2026-11-23). `save-allowed` is unconditionally
+  #     true for runtime (action.yml:1234), so every run wrote ~14MB into its own
+  #     ref scope: 301 entries for one key / 4.24GB = 39.5% of the 10GiB repo
+  #     cap, with created_at == last_accessed_at on ALL of them (writes only, zero
+  #     restores). GitHub's documented contract: a cache created by a PR run
+  #     belongs to the merge ref and "can only be restored by re-runs of the pull
+  #     request" - so those 301 entries are unreadable dead weight. A run may
+  #     restore from "the current branch or the default branch", and that is
+  #     measured here: merge_group run 45154199975 restored the full A key from
+  #     refs/heads/main with exact-hit=true. One default-branch seed therefore
+  #     serves every run, and the save step retires by itself on the cache-hit
+  #     guard (action.yml:1256).
+  # (2) The old seed ran from the candidate tree (the removed `a-seed` inside
+  #     `publish`). Inside a `cache-mode: write` job that executed the candidate
+  #     tree's action.yml body, and on an A-MISS `nimble install` ran the
+  #     candidate's axiom.nimble NimScript hooks. This job's workspace IS the
+  #     default branch tree, so the body executed by `uses: ./...` is also
+  #     default-branch bytes: candidate code execution = 0.
+  #
+  # Key invariance: the A key = f(RUNNER_OS, gcc_fp, glibc_fp, script_hash) and
+  # script_hash = sha256 over (action.yml, nimble.lock), both tree-relative. The
+  # key computed on the default branch is byte-identical to what consumers
+  # request: local recompute 40c34681d4d9148a9d4373895f0b524ea1b71496 equals the
+  # live key tail.
+  #
+  # Authority compliance (what this job does NOT do): no seeding suppression, no
+  # self-managed TTL, no `gh cache delete`. The 301 leftovers are delegated to
+  # platform LRU eviction (R11, closed 2026-10-08: seeding suppression and
+  # self-managed expiry are both authority leaks and are forbidden).
+  # A cache is acceleration, never evidence (J3): failures are swallowed by
+  # continue-on-error and never turn the publisher red - a supply failure simply
+  # degrades to the same cold run as before.
+  seed-toolchain:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.path == '.github/workflows/admission-gate-v2.yml' || startsWith(github.event.workflow_run.path, '.github/workflows/admission-gate-v2.yml@')) }}
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 30
+    # Default-branch scope write - granted to this single minimal supplier only.
+    cache-mode: write
+    steps:
+      # Candidate data: none. The only value read from the trigger payload is the
+      # gate path.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 1
+          clean: false
+
+      # `cache-build-source` is required by the keygen fail-closed contract
+      # (required: true) and the commit object must exist in the checkout. Use the
+      # CHECKED OUT HEAD, not the trigger's github.sha: if main advances and that
+      # SHA is absent from a shallow checkout, the keygen fails and the seed
+      # silently disappears (a determinism violation).
+      - name: "Resolve seeded tree (default-branch HEAD - identical input, identical key)"
+        id: head
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # full scope: inherits the old `a-seed` supply role, from the trusted tree
+      # (the only default-branch writer of A-full). If the key already exists this
+      # is an A-HIT -> zero install, zero save.
+      - name: "A seed: provision toolchain (full scope, default-branch tree; installs only on A-miss)"
+        id: a-seed-full
+        continue-on-error: true
+        uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          provision-scope: full
+          cache-build-source: ${{ steps.head.outputs.sha }}
+
+      # runtime scope: the supply for (1) above. full runs first and populates
+      # ~/.local/bin, so an A-MISS here costs almost nothing (order is deliberate).
+      - name: "A seed: provision runtime scope (default-branch tree; installs only on A-miss)"
+        id: a-seed-runtime
+        continue-on-error: true
+        uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          provision-scope: runtime
+          cache-build-source: ${{ steps.head.outputs.sha }}
+
+      # Structural line - the shape G1 observation greps for. An empty hit means
+      # A-MISS (install + save actually ran).
+      - name: "Seed observation (hit/miss identity - acceleration only)"
+        if: always()
+        run: |
+          echo "[seed-toolchain] tree=${{ steps.head.outputs.sha }}"
+          echo "[seed-toolchain] full: hit=${{ steps.a-seed-full.outputs.a-cache-hit }} outcome=${{ steps.a-seed-full.outcome }}"
+          echo "[seed-toolchain] runtime: hit=${{ steps.a-seed-runtime.outputs.a-cache-hit }} outcome=${{ steps.a-seed-runtime.outcome }}"
+          echo "[seed-toolchain] J3: cache is acceleration, never evidence"
