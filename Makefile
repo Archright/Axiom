@@ -125,6 +125,7 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/test_integrity_merkle_guard.nim \
                   tests/unit/test_merge_ruleset_drift_monitor.nim \
                   tests/unit/test_axiom_allowlist_ssot.nim \
+                  tests/unit/test_axiom_probe_unknown_not_empty.nim \
                   tests/unit/test_const_context_path_type_quirk.nim
 
 

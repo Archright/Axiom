@@ -131698,6 +131698,21 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "Result[seq[string], string]",
+      "module": "src/verification/obligation/canonical_verification.nim",
+      "name": "axiomProbeOutcome",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[seq[string], string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "CanonicalVerificationResult",
       "module": "src/verification/obligation/canonical_verification.nim",
       "name": "baseVerificationResult",
@@ -131783,16 +131798,17 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
-      "leanType": "List string",
+      "leanType": "Result[seq[string], string]",
       "module": "src/verification/obligation/canonical_verification.nim",
       "name": "captureKernelAxioms",
       "negativeConstraints": [
-        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
       ],
-      "resultConstraintTemplate": "(>= (seq.len result) 0)",
-      "returnType": "seq[string]",
-      "smtSort": "(Seq string)",
-      "typeCategory": "seq"
+      "resultConstraintTemplate": "",
+      "returnType": "Result[seq[string], string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
     },
     {
       "hasAxiomHint": false,
