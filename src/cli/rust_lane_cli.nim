@@ -1002,6 +1002,7 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
   var failed = 0
   var errorCount = 0
   var unknownCount = 0
+  var attemptedCount = 0
 
   for name in candidates:
     # The candidate IS the producer's structured match key (the enumeration
@@ -1052,7 +1053,10 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
                                            projectRoot = repoRoot,
                                            timeoutMs = 60_000,
                                            subjectRoot = projectAbs,
-                                           subjectModulePath = guardModulePath)
+                                           subjectModulePath = guardModulePath,
+                                           depInfoPath = depInfoPath)
+      if rec.attempted:
+        inc attemptedCount
       entries.add(entryFor(name, "unknown", rec.reason))
       inc unknownCount
       for i, g in rec.goalOutcomes:
@@ -1157,6 +1161,26 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
   if errorCount > 0:
     summary["blockingFailure"] = %true
   report["summary"] = summary
+  # Coverage honesty: discovery, addressability, attempt and verification are
+  # DISTINCT counts. `addressable` is the selected candidate set — never the
+  # discovered declaration count — and `attempted` is how many candidates
+  # actually reached a guard-obligation attempt. Every non-verified target
+  # carries its own reason in `targets[]`, so a candidate count is never
+  # reported as a verified count.
+  report["coverage"] = %*{
+    "enumerated": %true,
+    "total": %declNames.len,
+    "addressable": %total,
+    "attempted": %attemptedCount,
+    "verified": %verified,
+    "failed": %failed,
+    "unknown": %unknownCount,
+    "error": %errorCount
+  }
+  log.add("[AXIOM][rust-lane] coverage: total=" & $declNames.len &
+          " addressable=" & $total & " attempted=" & $attemptedCount &
+          " verified=" & $verified & " unknown=" & $unknownCount &
+          " error=" & $errorCount)
   log.add("[AXIOM][rust-lane] done: verified=" & $verified & "/" & $total &
           " failed=" & $failed & " unknown=" & $unknownCount & " error=" & $errorCount)
   ok(finish(report))

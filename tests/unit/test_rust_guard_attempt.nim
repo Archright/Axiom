@@ -410,6 +410,34 @@ if attemptLaneRunnable and rustcPresent:
       check a.goalOutcomes[0].reason == b.goalOutcomes[0].reason
       check a.goalOutcomes[0].z3ScriptDigest == b.goalOutcomes[0].z3ScriptDigest
 
+    test "dep-info mode is the real-crate contract: an on-disk source rustc " &
+        "never read (cfg-excluded shape) fails exact mode and passes dep-info " &
+        "mode — a missing dep-info must never silently skip the attempt":
+      # The real-crate shape: the crate carries a source file that cfg-excluded
+      # it out of the LLBC. Exact-set equivalence cannot hold there by
+      # construction (rust_input_contract §c2), so the guard lane MUST run in
+      # dep-info mode. Both halves are asserted: exact mode refuses, and the
+      # same subject attempts once the dep-info is supplied.
+      let subject = materializeGuardProbeCopy("ax_guard_depinfo_subject",
+                                              gitBind = false)
+      writeFile(subject / "src" / "excluded.rs",
+                "pub fn excluded() -> u8 { 1 }\n")
+      let depInfo = subject / "axiom_guard_probe.d"
+      writeFile(depInfo, subject / "guard_probe.rlib" & ": " &
+                         subject / "src" / "lib.rs" & "\n")
+      let exact = rustGuardObligationAttempt(probeText, "bump0",
+                                             projectRoot = RepoRoot,
+                                             subjectRoot = subject)
+      check not exact.attempted
+      check exact.reason.contains("LLBC not current")
+      let bound = rustGuardObligationAttempt(probeText, "bump0",
+                                             projectRoot = RepoRoot,
+                                             subjectRoot = subject,
+                                             depInfoPath = depInfo)
+      check bound.attempted
+      check bound.goalCount == 1
+      check bound.goalOutcomes[0].proved
+
 # ─── Suite 4: SMT semantics — the goal refutes mathematically (real z3) ─────
 
 suite "rust guard attempt — SMT semantics via rustCanonicalToIrFuncDef (z3)":
