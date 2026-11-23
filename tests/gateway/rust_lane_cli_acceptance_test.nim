@@ -107,6 +107,7 @@
 
 import std/[algorithm, json, os, osproc, streams, strutils, unittest]
 import checksums/sha2
+import cli/rust_lane_cli as rustlane
 
 const
   ProjectArg = "tests/fixtures/rust/axiom_rust_probe"
@@ -154,6 +155,98 @@ proc sha256Hex(s: string): string =
   var h = initSha_256()
   h.update(s)
   $h.digest()
+
+# ── Suite 0: exit predicate — report self-consistency (issue #404) ──────────
+#
+# A PURE JSON table over `rustLaneExitCode`: no `bin/ax`, no charon, no `gh`,
+# no filesystem — so it runs in every environment. It is declared BEFORE the
+# file-level gates below, each of which `quit(0)`s when its tool is absent;
+# `require` (not `check`) is used so a failure here can never be masked by a
+# later skip-gate exit. Without this table the #404 regression is unreachable:
+# both `gh` and charon gate the product-CLI suites that would observe it.
+#
+# The contract under test (`src/cli/rust_lane_cli.nim` rustLaneExitCode):
+# success requires the report to be self-consistent about what it measured,
+# not merely that every recorded counter is zero.
+
+proc laneSummary(verified, failed, timeouts, unknown, errors: int): JsonNode =
+  ## `summary` verbatim from runRustLaneCli §⑦ (the four outcome counters).
+  %*{"verified": %verified, "failedCount": %failed,
+     "timeoutCount": %timeouts, "verifiedRatio": %1.0,
+     "statusCounts": %*{"verified": %verified, "failed": %failed,
+                        "unknown": %unknown, "error": %errors}}
+
+proc laneCoverage(enumerated: bool; total, addressable,
+                  verified, failed, unknown, errors: int): JsonNode =
+  ## `coverage` verbatim from runRustLaneCli §⑦ (`guardAttempted` is the
+  ## undeclared guard lane only — it is NOT a funnel key).
+  %*{"enumerated": %enumerated, "total": %total, "addressable": %addressable,
+     "guardAttempted": %0, "verified": %verified, "failed": %failed,
+     "unknown": %unknown, "error": %errors}
+
+proc laneExit(summary, coverage: JsonNode): int =
+  rustlane.rustLaneExitCode(%*{"summary": summary, "coverage": coverage})
+
+suite "rust lane exit — report self-consistency (issue #404)":
+
+  test "(a) coverage absent, or not an object → 1":
+    # "no coverage key" used to reach the no-op success branch when the summary
+    # was all zeros — an extraction failure with zero declared targets exited 0.
+    require rustlane.rustLaneExitCode(%*{"summary": laneSummary(0, 0, 0, 0, 0)}) == 1
+    require laneExit(laneSummary(0, 0, 0, 0, 0), %"not-an-object") == 1
+    require laneExit(laneSummary(0, 0, 0, 0, 0), newJNull()) == 1
+
+  test "(b) enumerated=false → 1 (unmeasurable is not empty)":
+    # `enumerated: false` means `total` was not measurable from the document;
+    # that is indistinguishable from an empty document, so it cannot be read as
+    # "no declared target" — fail closed.
+    require laneExit(laneSummary(1, 0, 0, 0, 0),
+                     laneCoverage(false, 1, 1, 1, 0, 0, 0)) == 1
+
+  test "(c) total missing → 1":
+    # An `enumerated: true` coverage without `total` asserts a denominator it
+    # does not carry.
+    require laneExit(laneSummary(1, 0, 0, 0, 0),
+                     %*{"enumerated": %true, "addressable": %1,
+                        "guardAttempted": %0, "verified": %1,
+                        "failed": %0, "unknown": %0, "error": %0}) == 1
+
+  test "(d) total negative → 1":
+    require laneExit(laneSummary(1, 0, 0, 0, 0),
+                     laneCoverage(true, -1, 1, 1, 0, 0, 0)) == 1
+
+  test "(e) total=3, addressable=0, verified=0 → 1 (declared but unaddressed)":
+    # Declarations exist and none reached the candidate set: a coverage hole,
+    # not the empty run. `verified == 0 and nothing unresolved` must not be
+    # read as success when the document says targets were there.
+    require laneExit(laneSummary(0, 0, 0, 0, 0),
+                     laneCoverage(true, 3, 0, 0, 0, 0, 0)) == 1
+
+  test "(f) total=0, no outcomes, enumerated=true → 0 (documented no-op)":
+    # The one zero-verified success the contract keeps: nothing was declared,
+    # nothing was recorded, and the emptiness was MEASURED.
+    require laneExit(laneSummary(0, 0, 0, 0, 0),
+                     laneCoverage(true, 0, 0, 0, 0, 0, 0)) == 0
+
+  test "(g) total=0 with verified=1 → 1 (counters describe another document)":
+    require laneExit(laneSummary(1, 0, 0, 0, 0),
+                     laneCoverage(true, 0, 1, 1, 0, 0, 0)) == 1
+
+  test "(h) addressable=2, verified=1, others 0 → 1 (funnel arithmetic)":
+    # One addressable target produced NO outcome counter — the funnel leaked.
+    require laneExit(laneSummary(1, 0, 0, 0, 0),
+                     laneCoverage(true, 2, 2, 1, 0, 0, 0)) == 1
+
+  test "(i) summary ↔ coverage disagreement → 1":
+    # Both views sum to `addressable` (1) on their own, so the arithmetic check
+    # alone would pass this document — only the agreement check can reject it.
+    let summary = laneSummary(1, 0, 0, 0, 0) # 1 verified, 0 unknown
+    let coverage = laneCoverage(true, 1, 1, 0, 0, 1, 0) # 0 verified, 1 unknown
+    require laneExit(summary, coverage) == 1
+
+  test "(j) consistent, fully verified report → 0 (the check cannot over-reject)":
+    require laneExit(laneSummary(3, 0, 0, 0, 0),
+                     laneCoverage(true, 5, 3, 3, 0, 0, 0)) == 0
 
 # ── File-level environment gates ────────────────────────────────────────────
 # Declared before the run helpers (runLane arms GITHUB_TOKEN from GhToken).

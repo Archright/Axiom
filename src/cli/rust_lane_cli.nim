@@ -722,8 +722,49 @@ func llbcRawFunDeclCount(root: JsonNode): Option[int] {.raises: [].} =
   if decls.isNil or decls.kind != JArray: return none(int)
   some(decls.elems.len)
 
+func intFieldOr(node: JsonNode; fallback: int): int {.raises: [].} =
+  ## The node's value when it is an integer, `fallback` otherwise. Callers pass
+  ## a value outside their own domain (every count here is >= 0), so "absent or
+  ## mistyped" collapses into the same rejection as "out of range".
+  if node != nil and node.kind == JInt: node.getInt() else: fallback
+
+func laneCoverageSelfConsistent(report: JsonNode; verified, failed, unknown,
+                                errors, timeouts: int): bool {.raises: [].} =
+  ## Can this report's own `coverage` block support its own `summary`? Both
+  ## blocks are written by the same producer (`runRustLaneCli` §⑦), so these are
+  ## self-consistency conditions on one document — not a second verdict
+  ## authority. A document that cannot measure its denominator, or that carries
+  ## two disagreeing views of the same counters, proves nothing: fail closed.
+  let coverage = report.getOrDefault("coverage")
+  let enumerated = coverage.getOrDefault("enumerated")
+  let total = intFieldOr(coverage.getOrDefault("total"), -1)
+  let addressable = intFieldOr(coverage.getOrDefault("addressable"), -1)
+  let outcomeSum = verified + failed + unknown + errors
+  # The denominator must be MEASURED and carried: `enumerated: false` (or a
+  # missing/negative `total`) makes "no targets" indistinguishable from "not
+  # measurable", and absence must never be read as emptiness.
+  let measured = coverage != nil and coverage.kind == JObject and
+    enumerated != nil and enumerated.kind == JBool and enumerated.getBool()
+  let denominatorOk = total >= 0 and addressable >= 0
+  # Declared but unaddressable: a coverage hole, not an empty run.
+  let noHole = not (verified == 0 and total > 0 and addressable == 0)
+  # Nothing declared yet outcomes recorded: the counters describe no document.
+  let describesRun = not (total == 0 and outcomeSum > 0)
+  let agrees = intFieldOr(coverage.getOrDefault("verified"), -1) == verified and
+    intFieldOr(coverage.getOrDefault("failed"), -1) == failed and
+    intFieldOr(coverage.getOrDefault("unknown"), -1) == unknown and
+    intFieldOr(coverage.getOrDefault("error"), -1) == errors
+  # Funnel arithmetic: every addressable target lands in exactly one of the four
+  # outcome counters. `timeoutCount` is not one of them (this lane emits it as a
+  # literal 0 and never increments `failed` on a timeout), so a nonzero timeout
+  # suspends the identity — such a report is already failed closed by the
+  # `timeouts > 0` rule in the caller.
+  let funnelHolds = timeouts > 0 or outcomeSum == addressable
+  measured and denominatorOk and noHole and describesRun and agrees and
+    funnelHolds
+
 func rustLaneExitCode*(report: JsonNode; requirePerfectAsi: bool = false): int {.
-    raises: [], axiomDecision(id = "DECISION-0830", reason = "Rust lane exit projection consumes the lane's own summary as its declared contract (axiom.rust-lane.exit.v1); unknown/error/blocking are unresolved and fail closed. This lane does not emit canonical runOutcome, so it must not route through projectRunOutcome", adr = "docs/adr/0001-fail-closed-result-type.md", introduced = "v34").} =
+    raises: [], axiomDecision(id = "DECISION-0830", reason = "Rust lane exit projection consumes the lane's own summary and coverage block as its declared contract (axiom.rust-lane.exit.v1); unknown/error/blocking are unresolved and fail closed. This lane does not emit canonical runOutcome, so it must not route through projectRunOutcome", adr = "docs/adr/0001-fail-closed-result-type.md", introduced = "v34").} =
   ## Explicit, versioned exit contract for the rust subject lane
   ## (`axiom.rust-lane.exit.v1`). This lane produces extraction/issuance
   ## observations, not canonical run accounting, so it does NOT route through
@@ -737,6 +778,11 @@ func rustLaneExitCode*(report: JsonNode; requirePerfectAsi: bool = false): int {
   ## targets at all). Undeclared guard-probe targets are non-claiming and land
   ## in `unknown` today — this contract keeps them fail-closed until the lane
   ## emits a `NOT_REQUIRED` decision for zero-goal probes.
+  ##
+  ## Issue #404 — the report's own `coverage` block is checked for
+  ## self-consistency before any success return: it is the same producer's
+  ## second view of the same counters (`runRustLaneCli` §⑦), not a new verdict
+  ## authority — the check only asks whether this document proves its claim.
   let summary = report.getOrDefault("summary")
   if summary.isNil or summary.kind != JObject:
     return 1
@@ -760,6 +806,14 @@ func rustLaneExitCode*(report: JsonNode; requirePerfectAsi: bool = false): int {
   let unknown = unknownNode.getInt()
   let errors = errorNode.getInt()
   if verified < 0 or failed < 0 or timeouts < 0 or unknown < 0 or errors < 0:
+    return 1
+  # ── Report self-consistency (issue #404) ───────────────────────────────
+  # Reads ONLY the document this lane already produced (`coverage` and
+  # `summary` are written together in `runRustLaneCli` §⑦), so it adds no
+  # authority: the question is whether the report proves its own claim, never
+  # what the claim should have been.
+  if not laneCoverageSelfConsistent(report, verified, failed, unknown, errors,
+                                    timeouts):
     return 1
   if failed > 0 or timeouts > 0 or errors > 0:
     return 1

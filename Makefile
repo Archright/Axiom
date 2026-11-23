@@ -116,6 +116,7 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/test_language_ban_gate.nim \
                   tests/unit/test_release_version_gate.nim \
                   tests/unit/test_rust_guard_attempt.nim \
+                  tests/gateway/rust_lane_cli_acceptance_test.nim \
                   tests/unit/z3_binary_identity_cache_test.nim \
                   tests/unit/hermetic_source_hash_gate_test.nim \
                   tests/unit/config_nims_source_identity_test.nim \
