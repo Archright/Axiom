@@ -947,7 +947,7 @@ proc reexecuteZ3Observed*(certJson: JsonNode; z3Path: string; timeoutMs: int): Z
     return
   var envelopeDigest = ""
   let payload = buildZ3QueryEnvelope(
-    smtlib2, timeoutMs, kernelReexecSentinel,
+    smtlib2, kernelReexecSentinel,
     canonicalEnvelopeDigest = envelopeDigest)
   var queryPath = ""
   try:

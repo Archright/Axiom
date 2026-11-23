@@ -205,10 +205,11 @@ func buildReducedClauses(invariantClauses: seq[string], remaining: seq[int], can
     if idx != candidate:
       result.add(invariantClauses[idx])
 
-proc isClauseRedundant(query: string, timeoutMs: int): bool =
+proc isClauseRedundant(query: string): bool =
   ## Check if removing a clause still results in UNSAT (clause is redundant).
+  ## The solve budget is the pool's pinned rlimit — there is no per-call budget.
   var cd, td: string
-  let z3Result = z3ExecPersistent(query, timeoutMs, desiredWorkers = 1,
+  let z3Result = z3ExecPersistent(query, desiredWorkers = 1,
     canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
   if z3Result.isOk:
     let response = z3Result.get().strip().toLowerAscii()
@@ -220,8 +221,7 @@ proc minimizeSlice*(
   invariantClauses: seq[string];
   transitionRelation: string;
   propertyToVerify: string;
-  variables: seq[string] = @[];
-  timeoutMs: int = 10000
+  variables: seq[string] = @[]
 ): UnsatCoreSlice =
   ## Iterative minimization: for each clause in the core, remove it and
   ## re-check. If still UNSAT, the clause was redundant.
@@ -239,7 +239,7 @@ proc minimizeSlice*(
     let reducedClauses = buildReducedClauses(invariantClauses, remaining, candidate)
     let query = buildChcWithNamedClauses(
       reducedClauses, transitionRelation, propertyToVerify, variables)
-    if isClauseRedundant(query, timeoutMs):
+    if isClauseRedundant(query):
       # Still UNSAT without this clause — it is redundant, remove it
       remaining.delete(i)
       # Don't increment i; check next element at same position
@@ -271,7 +271,6 @@ proc sliceUnsatCore*(
   transitionRelation: string;
   propertyToVerify: string;
   variables: seq[string] = @[];
-  timeoutMs: int = 30000;
   minimize: bool = true
 ): UnsatCoreSlice =
   ## Query Z3 for the actual unsat core of invariant clauses.
@@ -298,7 +297,7 @@ proc sliceUnsatCore*(
 
   # Execute Z3
   var cd, td: string
-  let z3Result = z3ExecPersistent(query, timeoutMs, desiredWorkers = 1,
+  let z3Result = z3ExecPersistent(query, desiredWorkers = 1,
     canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
 
   let endMs = int(getTime().toUnixFloat() * 1000)
@@ -332,7 +331,7 @@ proc sliceUnsatCore*(
   if minimize and result.coreIndices.len > 1:
     result = minimizeSlice(
       result, clauseStrings, transitionRelation,
-      propertyToVerify, variables, timeoutMs = min(timeoutMs div 2, 10000))
+      propertyToVerify, variables)
     # Re-populate coreClauses after minimization
     populateCoreClauses(result, invariantClauses)
 

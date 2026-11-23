@@ -305,18 +305,15 @@ block:
     let pool = initVerifiedZ3Pool()
     if pool.isSome:
       expect(execZ3Verified(pool.get(), "(set-logic QF_BV)\n" &
-        "(declare-fun x () BlahSort)\n(assert (= x y))\n(check-sat)\n",
-        30_000).isErr,
+        "(declare-fun x () BlahSort)\n(assert (= x y))\n(check-sat)\n").isErr,
         "execZ3Verified refuses a script Z3 rejected — it never returns ok(sat)")
       expect(execZ3Verified(pool.get(),
         "(set-logic QF_BV)\n(declare-fun bytesCount () (_ BitVec 8))\n" &
-        "(assert (let ((a missingCount)) (= a #x05)))\n(check-sat)\n",
-        30_000).isErr,
+        "(assert (let ((a missingCount)) (= a #x05)))\n(check-sat)\n").isErr,
         "execZ3Verified refuses the out-of-scope `let` script")
       expect(execZ3Verified(pool.get(),
         "(set-logic QF_BV)\n(declare-fun bytesCount () (_ BitVec 8))\n" &
-        "(assert (= bytesCount #x05))\n(assert (not (= bytesCount #x05)))\n(check-sat)\n",
-        30_000).isOk,
+        "(assert (= bytesCount #x05))\n(assert (not (= bytesCount #x05)))\n(check-sat)\n").isOk,
         "a well-formed contradiction through the same boundary still proves")
     else:
       echo "  SKIP: z3 health probe failed; pool-boundary assertions not exercised"
@@ -424,7 +421,7 @@ block:
 
     for c in cases:
       var envelopeDigest, payloadDigest: string
-      let res = z3ExecPersistent(c.query, 10_000, desiredWorkers = 1,
+      let res = z3ExecPersistent(c.query, desiredWorkers = 1,
         canonicalEnvelopeDigest = envelopeDigest, transportPayloadDigest = payloadDigest)
       expect(res.isOk, "the pool still returns the solver's answer — " & c.label)
       if res.isOk:

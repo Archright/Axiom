@@ -39,7 +39,7 @@ const
 proc prove*(p: Z3PoolProver; query: string; timeoutMs: int): bool {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, TimeEffect, RootEffect].} =
   ## Execute Z3 via persistent pool, return true iff result is "unsat".
   var cd, td: string
-  let res = z3ExecPersistent(query, timeoutMs, desiredWorkers = 2,
+  let res = z3ExecPersistent(query, desiredWorkers = 2,
     canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
   return res.isOk and res.get().strip().toLowerAscii() == "unsat"
 
@@ -97,7 +97,7 @@ proc proveWithOutput*(p: Z3PoolProver; query: string; timeoutMs: int): Result[st
   ## Unlike prove (which returns bool), this preserves the full Z3 response
   ## for unsat core extraction and constructive witness parsing.
   var cd, td: string
-  z3ExecPersistent(query, timeoutMs, desiredWorkers = 1,
+  z3ExecPersistent(query, desiredWorkers = 1,
     canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
 
 proc proveRaw*(p: Z3PoolProver; query: string; timeoutMs: int): Result[string, string] {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, TimeEffect, RootEffect].} =
@@ -105,7 +105,7 @@ proc proveRaw*(p: Z3PoolProver; query: string; timeoutMs: int): Result[string, s
   ## Unlike prove (which returns bool), this preserves the full Z3 response
   ## for counterexample extraction and invariant parsing.
   var cd2, td2: string
-  z3ExecPersistent(query, timeoutMs, desiredWorkers = 1,
+  z3ExecPersistent(query, desiredWorkers = 1,
     canonicalEnvelopeDigest = cd2, transportPayloadDigest = td2)
 
 # ---------------------------------------------------------------------------

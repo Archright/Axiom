@@ -422,9 +422,9 @@ proc z3CheckViaProcess*(solverCmd: string; solverArgs: seq[string]): CegarZ3Chec
   result = proc (query: string): bool {.closure, gcsafe, raises: [CatchableError].} =
     try:
       # [DETERMINISTIC] rlimit injected by z3_pool.buildZ3QueryEnvelope (PRIMARY).
-      # timeoutMs = process safety net only — Z3 self-limits via rlimit.
+      # The pool's read deadline is z3SafetyNetMs — a liveness net, never a verdict.
       var cd, td: string
-      let res = z3ExecPersistent(query, timeoutMs = z3SafetyNetMs, desiredWorkers = 1,
+      let res = z3ExecPersistent(query, desiredWorkers = 1,
         canonicalEnvelopeDigest = cd, transportPayloadDigest = td)
       if res.isErr:
         return false

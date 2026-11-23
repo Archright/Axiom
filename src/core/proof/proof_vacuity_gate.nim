@@ -372,8 +372,7 @@ func isGenuinelyProven*(status: VacuityProofStatus): bool =
 proc verifyNonTrivialityWithFallback*(
   invariantClauses: seq[string];
   stateVars: seq[tuple[name: string, smtType: string]];
-  sourceContext: string;
-  timeoutMs: int = 5000
+  sourceContext: string
 ): tuple[nonTrivial: bool, fallback: bool, reason: string] =
   if not hasSecurityConstraintsInSource(sourceContext):
     return (false, false, "missing security constraints")
@@ -388,7 +387,7 @@ proc verifyNonTrivialityWithFallback*(
     "(assert (not " & invBody & "))\n" &
     "(check-sat)"
   var vacCanonicalDigest, vacTransportDigest: string
-  let z3Result = z3ExecPersistent(smtQuery, timeoutMs,
+  let z3Result = z3ExecPersistent(smtQuery,
     canonicalEnvelopeDigest = vacCanonicalDigest, transportPayloadDigest = vacTransportDigest)
   if not z3Result.isOk:
     let error = z3Result.error().strip().toLowerAscii()

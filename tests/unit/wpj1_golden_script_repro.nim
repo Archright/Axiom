@@ -45,19 +45,19 @@ for logic in [slQfBv, slQfAufbv]:
   echo "--- symbolic operands: " & $lowered.symbolicOperands
   echo ""
   var dRaw = ""
-  discard buildZ3QueryEnvelope(lowered.smtScript, timeoutMs = 8000, sentinel = "PROBE",
+  discard buildZ3QueryEnvelope(lowered.smtScript, sentinel = "PROBE",
                                enableProofs = false, mode = zmRaw,
                                canonicalEnvelopeDigest = dRaw)
   var dInc = ""
-  discard buildZ3QueryEnvelope(lowered.smtScript, timeoutMs = 8000, sentinel = "PROBE",
+  discard buildZ3QueryEnvelope(lowered.smtScript, sentinel = "PROBE",
                                enableProofs = false, mode = zmIncremental,
                                canonicalEnvelopeDigest = dInc)
   var dRawP = ""
-  discard buildZ3QueryEnvelope(lowered.smtScript, timeoutMs = 8000, sentinel = "PROBE",
+  discard buildZ3QueryEnvelope(lowered.smtScript, sentinel = "PROBE",
                                enableProofs = true, mode = zmRaw,
                                canonicalEnvelopeDigest = dRawP)
   var dIncP = ""
-  discard buildZ3QueryEnvelope(lowered.smtScript, timeoutMs = 8000, sentinel = "PROBE",
+  discard buildZ3QueryEnvelope(lowered.smtScript, sentinel = "PROBE",
                                enableProofs = true, mode = zmIncremental,
                                canonicalEnvelopeDigest = dIncP)
   echo "  digest zmRaw:          " & dRaw

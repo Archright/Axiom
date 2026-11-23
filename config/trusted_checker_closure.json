@@ -1534,7 +1534,7 @@
     "src/core/proof/proof_vacuity_gate.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "c68434635dfbacae5cce308ec0a13f0c5990214b"
+      "sha": "6e19f3da826d11e22b5e4a4006e15732582d7504"
     },
     "src/core/proof/source_fingerprint.nim": {
       "mode": "100644",
@@ -3319,7 +3319,7 @@
     "src/personas/judge.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "09f940bad10cd5185955e3de61b0bb49490a9e1e"
+      "sha": "929b3a1988ea48e34748aaa76217c55700acae0a"
     },
     "src/personas/judge_automation.nim": {
       "mode": "100644",
@@ -3529,12 +3529,12 @@
     "src/verification/ax_implication.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "c5b8ae9ad37018b3b5f366cfdfbfe5fa1b8b777c"
+      "sha": "d16124fcbc975c65f2c846b232ffe79c76c6b9ad"
     },
     "src/verification/ax_tautology.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "b6c07740b5717b22d87c471bcc0d3a61668a04e4"
+      "sha": "93927849e44ad3120e21bbe6c682998534ab025f"
     },
     "src/verification/batch_uap/ast_hash.nim": {
       "mode": "100644",
@@ -3559,7 +3559,7 @@
     "src/verification/batch_uap/ir_pipeline_runner.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "a06ec1fadae932a1623cc1d3137ab4ff9ecd6f12"
+      "sha": "da8dac3ed9e7f597205c5ee89639a2ac935b1c28"
     },
     "src/verification/batch_uap/loop_depth_scheduler.nim": {
       "mode": "100644",
@@ -3594,7 +3594,7 @@
     "src/verification/batch_uap/refactor_executor.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "bb6212b322d3e0ffe93a58004384412ad5c8d418"
+      "sha": "5317c91a6f72c174a1344050a437418f61d3fec0"
     },
     "src/verification/batch_uap/refactor_vfs.nim": {
       "mode": "100644",
@@ -3624,7 +3624,7 @@
     "src/verification/cegar_engine.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "3b492e189ca242eb01c26ea35174075e98d7fe0e"
+      "sha": "c72fa21f702579e4039da3b81937e0bc26e7ff39"
     },
     "src/verification/cert_export.nim": {
       "mode": "100644",
@@ -3809,7 +3809,7 @@
     "src/verification/kernel_reexecution.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "9b2dc25705745d6fffe3976428d5a19727e9d475"
+      "sha": "8020879a54f7f500c1654c2cb64e11e2e40001a5"
     },
     "src/verification/layer1_bmc.nim": {
       "mode": "100644",
@@ -4304,22 +4304,22 @@
     "src/verification/solver/provers.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "5cbcfb6471f86da5babccbcbc9b1201df190b30b"
+      "sha": "886227ce4c2756130f0392cf74125810b4f34ded"
     },
     "src/verification/solver/triviality_filter.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "5c77e9d04918d592b6d0c69d8ed8bff29d4e642f"
+      "sha": "e981e9767df2a4ee23a2fcac3338fc6ca6b3ce1b"
     },
     "src/verification/solver/unsat_core_slicer.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "3aa185115d6028708768a8e207429b571e0c740f"
+      "sha": "987e275c7d7e4c1ecd23bbc8ded3a1a40adbfe28"
     },
     "src/verification/solver/z3_pool.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "2177c8c27cb2b9ff27b0e36f5f954133c10f8b39"
+      "sha": "2a348d38aa9c7f5f8d221f21b5eac3c05267a115"
     },
     "src/verification/solver_adapter.nim": {
       "mode": "100644",
@@ -4329,7 +4329,7 @@
     "src/verification/spacer_chc_router.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "3401a6abab801c74cd347700da7fcaa78a2128ac"
+      "sha": "2c78c28d1d0b7d38866db0106b5f8cab1b7b80e7"
     },
     "src/verification/spacer_integration_gate.nim": {
       "mode": "100644",

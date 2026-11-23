@@ -30,7 +30,7 @@ proc checkTautology*(condition: IRExpr): TautologyCheckResult =
     return tcUnknown
   try:
     var tautCanonicalDigest, tautTransportDigest: string
-    let res = z3ExecPersistent(smtScript, timeoutMs = 500,
+    let res = z3ExecPersistent(smtScript,
       canonicalEnvelopeDigest = tautCanonicalDigest, transportPayloadDigest = tautTransportDigest)
     if res.isOk:
       let output = res.get().strip().toLowerAscii()

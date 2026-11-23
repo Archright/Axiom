@@ -247,7 +247,11 @@ proc probeZ3Health*(): Z3HealthProbeResult {.axiomEffect: IOEffect, tags: [Axiom
     satProbe: satProbe, unsatProbe: unsatProbe)
 # Forward declarations (defined later in this file)
 proc z3EnsurePersistentPool*(desiredWorkers: int)
-proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; enableProofs: bool = false; queryType: string = "unknown"; cegarIters: int = 0;
+# Issue #347: the per-call `timeoutMs` is gone. It was never read — the
+# envelope always emitted the pinned `:rlimit` from z3DeterministicBudget plus
+# the z3SafetyNetMs liveness backstop, so every caller's value produced the
+# same bytes. The budget is the rlimit; wall clock never decides an answer.
+proc z3ExecPersistent*(query: string; desiredWorkers: int = 1; enableProofs: bool = false; queryType: string = "unknown"; cegarIters: int = 0;
     canonicalEnvelopeDigest: var string; transportPayloadDigest: var string): Result[string, string] {.gcsafe, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, TimeEffect, RootEffect].}
 
 proc initVerifiedZ3Pool*(): Option[VerifiedZ3Pool] {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
@@ -257,14 +261,13 @@ proc initVerifiedZ3Pool*(): Option[VerifiedZ3Pool] {.axiomEffect: IOEffect, tags
     return none(VerifiedZ3Pool)
   z3EnsurePersistentPool(1)
   return some(VerifiedZ3Pool(z3Path: probe.z3Path))
-proc execZ3Verified*(vp: VerifiedZ3Pool, query: string,
-    timeoutMs: int = 30000): Result[string, string] {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect].} =
+proc execZ3Verified*(vp: VerifiedZ3Pool, query: string): Result[string, string] {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect].} =
   ## z3ExecPersistent wrapper that classifies Z3 output.
   ## Returns ok(output) only for "unsat" (proven property).
   ## Returns err for sat/unknown/timeout/error — never silently succeeds.
   ## Phase 1B: Fail-safe correction — Z3 unknown → verification failure.
   var poolCanonicalDigest, poolTransportDigest: string
-  let res = z3ExecPersistent(query, timeoutMs,
+  let res = z3ExecPersistent(query,
     canonicalEnvelopeDigest = poolCanonicalDigest, transportPayloadDigest = poolTransportDigest)
   if res.isErr:
     return err("z3-error: " & res.error())
@@ -629,8 +632,12 @@ proc getBudgetFor*(phase: SmtPhase): SmtBudget {.axiomEffect: IOEffect, tags: [A
   if userTimeoutMs > 0:
     result.timeoutMs = min(result.timeoutMs, userTimeoutMs)  # Per-Phase Clamp
 
-proc buildZ3QueryEnvelope*(query: string; timeoutMs: int; sentinel: string; enableProofs: bool = false; mode: Z3ExecutionMode = zmRaw;
+proc buildZ3QueryEnvelope*(query: string; sentinel: string; enableProofs: bool = false; mode: Z3ExecutionMode = zmRaw;
     canonicalEnvelopeDigest: var string = ""): string =
+  ## The envelope's solver options are the ONE pinned projection below — there
+  ## is no per-call budget parameter, because a caller-scaled wall-clock budget
+  ## would make the answer depend on host speed (performance is not a verdict
+  ## input: wall-clock expiry is a run abort, never a verification verdict).
   result = query
   # Conditionally enable proof production for trace extraction
   if enableProofs and result.find("(set-option :produce-proofs") < 0:
@@ -855,7 +862,7 @@ func telemetryTransportOf(raw: string): string {.raises: [].} =
   ## it is not worth an s-expression parser in the trusted layer).
   result = if solverStreamHasErrorResponse(raw): "error-response" else: ""
 
-proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; enableProofs: bool = false; queryType: string = "unknown"; cegarIters: int = 0;
+proc z3ExecPersistent*(query: string; desiredWorkers: int = 1; enableProofs: bool = false; queryType: string = "unknown"; cegarIters: int = 0;
     canonicalEnvelopeDigest: var string; transportPayloadDigest: var string): Result[string, string] {.gcsafe, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, TimeEffect, RootEffect].} =
   let startMs = epochMilliseconds()
   var z3Result: Result[string, string]
@@ -952,7 +959,7 @@ proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; e
     let mode = if workerIdx >= 0 and workerIdx < z3Manager().pool.workers.len and
                   z3Manager().pool.workers[workerIdx].scopeTracker.enabled: zmIncremental
                else: zmRaw
-    payload = buildZ3QueryEnvelope(query, timeoutMs, sentinel, enableProofs, mode, canonicalEnvelopeDigest)
+    payload = buildZ3QueryEnvelope(query, sentinel, enableProofs, mode, canonicalEnvelopeDigest)
   except CatchableError:
     z3Result = err("z3 persistent pool error")
     return z3Result

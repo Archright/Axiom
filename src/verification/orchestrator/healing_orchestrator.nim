@@ -211,7 +211,7 @@ proc counterExampleCheck*(proposition: string): GateResult {.axiomEffect: IOEffe
 (check-sat)
 """
   var healCanonicalDigest, healTransportDigest: string
-  let z3Result = z3ExecPersistent(smtQuery, timeoutMs = 5000,
+  let z3Result = z3ExecPersistent(smtQuery,
     canonicalEnvelopeDigest = healCanonicalDigest, transportPayloadDigest = healTransportDigest)
   if z3Result.isOk:
     let output = z3Result.get().strip()

@@ -309,7 +309,7 @@ proc runZ3CheckViaIR*(funcDef: IRFuncDef, phase: SmtPhase = spBmc;
     return SolverOutcome(status: sosUnknown)
   try:
     let budget = getBudgetFor(phase)
-    let res = z3ExecPersistent(smtScript, timeoutMs = budget.timeoutMs,
+    let res = z3ExecPersistent(smtScript,
       canonicalEnvelopeDigest = canonicalEnvelopeDigest, transportPayloadDigest = transportPayloadDigest)
     if res.isOk:
       let output = res.get()
@@ -336,7 +336,7 @@ proc runZ3CheckViaIR*(smtScript: string, phase: SmtPhase = spBmc;
     return SolverOutcome(status: sosUnknown)
   try:
     let budget = getBudgetFor(phase)
-    let res = z3ExecPersistent(smtScript, timeoutMs = budget.timeoutMs,
+    let res = z3ExecPersistent(smtScript,
       canonicalEnvelopeDigest = canonicalEnvelopeDigest, transportPayloadDigest = transportPayloadDigest)
     if res.isOk:
       let output = res.get()
