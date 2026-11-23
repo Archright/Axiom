@@ -568,7 +568,34 @@ const
     # Authority: ADR-0025 Amendment A9.
     # Prereg: docs/evidence/rotation_allowlist_a9_prereg_2026-11-23.md
     "tests/cli/test_ax_help.nim",
-    "docs/evidence/rotation_allowlist_a9_prereg_2026-11-23.md"]
+    "docs/evidence/rotation_allowlist_a9_prereg_2026-11-23.md",
+    # Amendment A10 rotation companion (2026-11-23; measured from the PR #388
+    # merge_group verdict -- ROT_ALLOWLIST, 1 of 5 changed paths blocked:
+    # tests/unit/test_axiom_probe_unknown_not_empty.nim). Rotation subject:
+    # closure member src/verification/obligation/canonical_verification.nim
+    # (#367 -- a failed Lean axiom probe was read as an EMPTY axiom set, so an
+    # unobserved set could produce a PASS certificate).
+    #
+    # AUTHORIZATION EFFECT -- stated without the A2 "non-expansion" wording,
+    # for the same reason A9 states it: registering a path here DOES widen the
+    # set of paths a ROTATION candidate delta may carry. Clause (1) runs only
+    # on the ROTATION path (A2 (ii)), so NORMAL-path classification is
+    # unchanged -- but within ROTATION this registration admits exactly one
+    # new path. The bound is proven, not asserted, by the tests in
+    # tests/cli/test_merge_cli.nim ("Amendment A10" suite):
+    #   * the new companion is admitted in the measured 5-path delta;
+    #   * a sibling path in the same directory stays ROT_ALLOWLIST, and so
+    #     does an exact-prefix sibling (test_axiom_probe_unknown_not_empty_
+    #     extra.nim) -- no glob and no prefix widening;
+    #   * A10 alone on a NORMAL delta admits nothing (inert off ROTATION);
+    #   * the same delta with a stale pin@H still records ROT_NEW_PIN.
+    # The companion is the unit contract of the changed member, not production
+    # src/ (unrelated to A2 (i)). Enumeration only -- no globs (A4 rule).
+    # Authority: ADR-0025 Amendment A10. Prereg: the A10 section of
+    # docs/adr/0025-gateway-landing-authority.md itself -- docs/adr/** is
+    # RotationAdrGlob-allowed, whereas a separate docs/evidence/ prereg file
+    # would add a second unregistered path to the very rotation it registers.
+    "tests/unit/test_axiom_probe_unknown_not_empty.nim"]
   ## VS-1 회전핀 프리플라이트 (2026-10-20): H2(④) 판정을 리프 모듈
   ## core/policy/rotation_closure_facts로 추출해 착지 predicate와 PR-head
   ## 오라클(tools/ci/rotation_pin_anchor_check.nim)이 **하나의 컴파일 구현**을
