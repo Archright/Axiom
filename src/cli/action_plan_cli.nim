@@ -302,6 +302,12 @@ func planAxActions*(args: seq[string]): seq[CliAction] =
     result.add(CliAction(kind: cliWriteStderrLine, message: axUsageMessage()))
     result.add(CliAction(kind: cliQuit, exitCode: CliOutcome.INVALID_INPUT.exitCode()))
     return
+  # Handled before parseAxSubcommandKind: --help/-h are flags, not subcommand
+  # tokens, and the R7 contract fixes top-level help at exit 0.
+  if args[0] == "--help" or args[0] == "-h":
+    result.add(CliAction(kind: cliPrintUsage))
+    result.add(CliAction(kind: cliQuit, exitCode: 0))
+    return
   let parsedSubcommand = parseAxSubcommandKind(args[0])
   if parsedSubcommand.isNone():
     if args[0] == "heal":
