@@ -377,6 +377,8 @@ v1 exit contract = **5-state (4-state + `NOT_CURRENT`) + non-contract signal**. 
 
 **Non-contract signal (out-of-contract failure):** **Uncaught process signal (SIGSEGV=139 등) = out-of-contract failure** — 5-state의 일원이 아니다. supported execution에서 관측되면 R5/R8 FAIL로 기록한다. signal→exit-code 변환 shim 신설 금지 (signal은 계약 상태가 아니며, 변환 shim은 theater risk).
 
+**Panic abort under `--panics:on` (out-of-contract termination):** `config.nims:49` sets `switch("panics", "on")` for `release`/`danger` builds on the GCC path, so an unrecoverable `Defect` (div-by-zero, range/index, `doAssert`) **ends the process at the defect** — it is not recoverable: no `except Defect` arm runs, and the CLI's `except Defect` handler (`src/cli/main.nim:112`) is dead code under that switch. The observed exit code on that path is **`1`** (Nim's unhandled-exception exit; the `--panics:off` control of the same program runs the handler and exits `0`) and it is an **out-of-contract abort, NEVER a verification claim**: no canonical `runOutcome` is produced, so `projectRunOutcome` never runs and the 5-state model never assigns a state. The meanings of `0`/`1`/`2`/`3`/`4` are unchanged and are not renumbered — `1` remains `VERIFICATION_FAILED` only as the projection of a canonical verdict, never as a crash (the same distinction the `invalid-input` OPEN-ITEM row already records: observed `1`, target `3` — the code alone is not the claim; the authority that writes it is). No signal→exit-code and no panic→exit-code shim is added, and no trap handler is installed at the CLI boundary (converting a crash into a designed state would be theater, §0.9). Machine-read anchor (`tests/cli/test_panics_exit_contract.nim` fails when measurement drifts from it): `panicAbortExit=1` `panicRecoveredExit=0`.
+
 **5-state ↔ exit code 매핑 (고정):**
 
 | Exit code | State |
@@ -387,6 +389,7 @@ v1 exit contract = **5-state (4-state + `NOT_CURRENT`) + non-contract signal**. 
 | `3` | INVALID_INPUT |
 | `4` | NOT_CURRENT (valid artifact, not current product truth) |
 | signal (e.g. 139) | out-of-contract failure — 5-state 밖 |
+| panic abort (observed `1`) | out-of-contract termination — outside the 5-state model (no canonical `runOutcome` exists, so the observed `1` is NOT `VERIFICATION_FAILED`) |
 
 ### Notes
 
@@ -400,6 +403,7 @@ v1 exit contract = **5-state (4-state + `NOT_CURRENT`) + non-contract signal**. 
 - **JSON is emitted regardless of exit code** (`src/cli/report_cli.nim:480-485` — `$stateJson` is always serialized into `outputJson`). Consumers must not infer success from JSON presence; read the exit code.
 - **Internal-error handling**: no trap/panic handler is installed at the CLI boundary. A `SIGSEGV` (`139`) is an observed bug state, not a designed contract state. v1 target is that internal faults exit a distinct, documented code — currently OPEN-ITEM.
 - **Signal policy (v1)**: uncaught process signal (SIGSEGV=139 등) 은 **out-of-contract failure** 이다. 5-state(0/1/2/3/4)의 일원이 아니며, supported execution에서 관측되면 R5/R8 FAIL로 기록한다. **signal→exit-code 변환 shim 신설 금지** — signal은 계약 상태가 아니며, shim은 theater risk (§0.9)를 유발한다.
+- **Panic policy (v1)**: `--panics:on` (`config.nims:49`) makes an unrecoverable `Defect` terminal — the process ends at the defect and `except Defect` (`src/cli/main.nim:112`) never runs. The observed exit code on that path is an out-of-contract abort and is **never a verification claim** (no canonical `runOutcome` → no 5-state assignment; see "Panic abort under `--panics:on`" above). `0/1/2/3/4` meanings unchanged; no signal→exit and no panic→exit shim. Probe: `tests/cli/test_panics_exit_contract.nim` — `make test-panics-exit-contract`, wired into `TESTS_FAST_UNIT` (`make test-fast`) and into the CI-executed `make verify-contract-release-e2e-full`.
 - **Invalid-input 해석 규칙 (v1)**: 지원되지 않는/잘못된 입력 → 문서화된 non-success → verification claim이 아니다 (Not a verification claim). INVALID_INPUT=3 확장/result.status 구현은 post-v1 유지 — 코드 변경 금지.
 
 ### v1 Contract Scope

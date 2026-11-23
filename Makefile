@@ -127,10 +127,11 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/test_merge_ruleset_drift_monitor.nim \
                   tests/unit/test_axiom_allowlist_ssot.nim \
                   tests/unit/test_axiom_probe_unknown_not_empty.nim \
-                  tests/unit/test_const_context_path_type_quirk.nim
+                  tests/unit/test_const_context_path_type_quirk.nim \
+                  tests/cli/test_panics_exit_contract.nim
 
 
-.PHONY: check-push-admissibility-integrity test perf-check bench-cost-probe verify-all meta-gate registry-check env-check doc-path-validator check-determinism check-mutation-harness check-decision-binding check-topology-drift check-decision-graph-drift check-git-purity check-manifest-consistency check-scope-consistency check-proof-unit-consistency check-proof-unit-reconcile check-epoch-transaction check-merge-admission-cert-mirror sloc-verify check-quality-gate local-verify-static local-verify-static-full check-toolchain-pin check-build-state-coherence check-binary-liveness local-verify-contract-exact check-mcp check-cert-integrity check-cert-integrity-fast check-readiness-start readiness-collect check-workflow-shell-syntax promote-assets promote-assets-apply test-fast test-fast-one perf-baseline clean-cache clean-test-cache clean-release-cache build verify-contract verify-contract-unit verify-contract-release-e2e ci-compile ci-bootstrap-cheap test-gateway-identity-gate gate-binaries validate-root-layout
+.PHONY: check-push-admissibility-integrity test perf-check bench-cost-probe verify-all meta-gate registry-check env-check doc-path-validator check-determinism check-mutation-harness check-decision-binding check-topology-drift check-decision-graph-drift check-git-purity check-manifest-consistency check-scope-consistency check-proof-unit-consistency check-proof-unit-reconcile check-epoch-transaction check-merge-admission-cert-mirror sloc-verify check-quality-gate local-verify-static local-verify-static-full check-toolchain-pin check-build-state-coherence check-binary-liveness local-verify-contract-exact check-mcp check-cert-integrity check-cert-integrity-fast check-readiness-start readiness-collect check-workflow-shell-syntax promote-assets promote-assets-apply test-fast test-fast-one test-panics-exit-contract perf-baseline clean-cache clean-test-cache clean-release-cache build verify-contract verify-contract-unit verify-contract-release-e2e ci-compile ci-bootstrap-cheap test-gateway-identity-gate gate-binaries validate-root-layout
 
 # ── Φ1: Build Metadata Prerequisite ──────────────────────────────────────────
 # build_metadata.json must exist before config.nims can staticRead it.
@@ -1212,7 +1213,27 @@ verify-contract-release-e2e-full: verify-proof-boundary verify-rust-lane-live ##
 	  logs/verify_contract_e2e_failure_observation.json >/dev/null || \
 	  { echo "FAIL: emitted failure observation contradicts the measured exits/verdict"; exit 1; }; \
 	echo "INFO: R5 negative control actuated (verdict=$$FAIL_VERDICT gate=$$FAIL_GATE proveExit=$$FAIL_PROVE reportExit=$$FAIL_REPORT) -> logs/verify_contract_e2e_failure_observation.json"
+	@$(MAKE) --no-print-directory test-panics-exit-contract
 	@echo "✅ verify-contract-release-e2e-full PASSED"
+
+# ── R5 exit-state contract probe: --panics:on/off abort matrix (issue #346) ───
+# docs/spec/productization_contract.md ("Panic abort under `--panics:on`")
+# declares what the panic path may observe. This target re-measures it instead
+# of restating it: the probe compiles the same program twice
+# (--panics:on / --panics:off), runs both, and fails when the abort acquires a
+# designed state's exit code other than the documented numeric collision with 1
+# (that would be a panic->exit shim), when it becomes recoverable, or when the
+# contract's fixed 0..4 table is renumbered.
+# Config isolation: the probe source is generated outside the project, so the
+# repo's config.nims (and its prebuild hooks) is not part of the measurement —
+# the --panics switch is the only variable. The nimcache stays outside
+# build/nimcache/ for the DEBT#481 reason (config.nims clears that tree on an
+# envHash miss).
+test-panics-exit-contract: ## R5 — measure the --panics:on/off abort matrix against the contract
+	@mkdir -p build
+	@$(NIM) c -r --hints:off --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath \
+	  --nimcache:$(VERIFY_CONTRACT_NIMCACHE_ROOT)/panics-exit-contract \
+	  -o:build/panics-exit-contract tests/cli/test_panics_exit_contract.nim
 
 bin/readiness_start_gate: src/gate/runners/readiness_start_gate.nim
 	AXIOM_CI=1 AXIOM_CI_PRESERVE_CACHE=1 $(NIM) c --hints:off -d:release -o:$@ $<
