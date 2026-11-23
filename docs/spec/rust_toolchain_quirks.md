@@ -372,6 +372,119 @@ see Q1's reproducible acquisition above and `docs/spec/rust_certified_subset.md`
 
 ---
 
+## Q7 — The upstream Charon release tarball is NOT the pin: it reports the same semver at a different commit, so the CI venue must build from source, and no CI cache can hold the result
+
+### Symptom [measured]
+
+The `nightly-2026.10.03` release tarball
+(`charon-linux-x86_64.tar.gz`, 10,583,503 B) ships a `charon` that answers:
+
+```
+$ /tmp/charon-prebuilt/charon version
+0.1.281 (cde1085a08aeb97c333e80cb6bec9155d826924f)
+exit=0
+```
+
+The pin (`src/verification/extraction_provenance.nim:68,:73`) is:
+
+```
+0.1.281 (798016509139eb51f0d764645f76d068d34ba5f6)
+```
+
+Same semver, **different commit**. The pinned runner compares the whole
+identity string, so the tarball fails closed as `crPinMismatch` — it never
+reaches extraction. A tarball path is therefore not a slower or cheaper
+route to the pin; it is a different tool.
+
+### Why a same-semver/different-commit release exists [measured]
+
+`0.1.281` is the `charon_version` of the pinned revision, not a release
+identifier that uniquely names it (Q3: the pin authority is the Aeneas
+consumer repo's `./charon-pin`, never a Charon release tag). A release built
+from a later commit on the same release line carries the same semver and a
+new commit hash. Identity is the PAIR; the semver alone is not an identity.
+
+### CI acquisition = source build, and it cannot be cached
+
+`make provision-charon-pinned` (Makefile) is the venue: shallow-fetch the
+pinned commit, install `nightly-2026-09-17` with `--profile minimal`, build
+`--release --locked`, install into `build/charon/bin/`. Two constraints force
+a per-run source build:
+
+1. **`build/charon/` is the only viable install location.** The repo's
+   toolchain action declares `~/.local/bin` as *"~/.nimble, ~/.choosenim,
+   ~/.elan, ~/.local/bin (z3/jq) ONLY"*
+   (`.github/actions/setup-axiom-toolchain/action.yml:54`) and, on a
+   non-exact restore, quarantines the whole directory
+   (`mv "$HOME/.local/bin" "$QUARANTINE"`, `:431-438`) then asserts the
+   recreated directory is empty (`:440`). A charon installed there would be
+   destroyed or — worse — survive unverified. `~/.rustup` and `~/.cargo` are
+   outside the action's key set entirely, and are not restored across jobs.
+   `build/` is gitignored (`.gitignore:27`), so the install is repo-local and
+   leaves no tracked footprint.
+2. **`make build-charon-rust` does not exist.** `make: *** No rule to make
+   target 'build-charon-rust'. Stop.` [measured]. The upstream Charon
+   Makefile is not usable either: it runs `cargo fmt` (needs the `rustfmt`
+   component the pin omits — Q1) and sets `CARGO_PROFILE_RELEASE_DEBUG=true`,
+   producing an ~830 MB binary instead of the ~40 MB release binary. The
+   provision target invokes `cargo build --release --locked` directly.
+
+The build must also pin the toolchain via the env var, not the ambient
+default: `RUSTUP_TOOLCHAIN=nightly-2026-09-17 cargo build` prevents rustup
+from resolving `charon/rust-toolchain`'s component list (which includes
+`miri` and 7 cross-targets, +921 MB measured) during the build. The
+`rustup component add rustc-dev llvm-tools rust-src --toolchain …` call is
+what satisfies the build's real needs.
+
+**Measured cost** (16-vCPU WSL host; cold = `rm -rf build/charon`, so no
+target dir and no source clone, but a warm cargo registry):
+
+| Step | Time / size |
+|---|---|
+| clone + `fetch --depth 1` + checkout at pin | ~5 s |
+| `cargo fetch` on an empty registry | 11 s, 531 MB |
+| `cargo build --release --locked -j4` | 214 s |
+| `cargo build --release --locked -j16` | 142 s (cargo's own line: `Finished release profile in 1m 52s`) |
+| **end-to-end `make provision-charon-pinned` (cold)** | **119 s** |
+| `build/charon/` on disk | 463 MB (`src` 22 MB + `target` 403 MB + `bin` 39 MB) |
+| cargo registry (outside the repo) | 146–531 MB |
+| `nightly-2026-09-17` with `rustc-dev`/`llvm-tools`/`rust-src` (outside the repo) | ~1.3 GB |
+
+CI totals are therefore ~2–2.5 GB outside the repo plus ~460 MB inside it.
+On a 4-vCPU runner the compile step is expected at ~4–6 min (214 s of
+compile at `-j4` on this host is the closest local lower bound; the runner
+has neither the registry nor the toolchain). The installed `charon` measured
+16,415,256 B here and 16,412,504 B from a different build path — **the sha256
+is build-path dependent, so it must not be used as a pin**; the pin is the
+`charon version` identity pair.
+
+### Runtime requirement: `rustup` must be on PATH
+
+The built `charon` embeds the pinned toolchain via
+`include_str!("../../../rust-toolchain")` and always drives the compiler
+through `rustup run nightly-2026-09-17 <program>`
+(`charon/src/bin/charon/toolchain.rs` — `in_toolchain`), panicking with
+*"Can't find `rustup`"* when neither `rustup` is on PATH nor
+`CHARON_TOOLCHAIN_IS_IN_PATH` is set. So `rustup` is a **runtime** dependency
+of extraction, not only a build dependency; `cargo` need not be on PATH at
+runtime. `rustfmt` and `miri` are not needed at runtime [measured].
+
+`charon` and `charon-driver` must be **co-located**: `toolchain.rs::driver_path`
+resolves the driver as `current_exe().with_file_name("charon-driver")`, so
+`AXIOM_CHARON_BIN` pointing at a lone binary fails. The provision target
+installs both into `build/charon/bin/`.
+
+### Resolution status
+
+Resolved by construction — `make provision-charon-pinned` builds the pin from
+source every run and refuses any other identity. `make verify-rust-lane-live`
+then consumes it and asserts the lane's observed funnel. The upstream
+packaging gap (a release artifact that cannot be identified by its semver)
+stays external and is why the tarball must never be re-introduced as a
+shortcut.
+
+---
+
 ## Registry linkage
 
 No DEBT id is assigned for Q1–Q3: those quirks are documented-only — no code
@@ -389,7 +502,13 @@ field in `RunnerPoolSpecDigest`). Q5 is code-adjacent like Q4 (implemented
 in `src/verification/rust_replay_adapter.nim` — `RustReplayProfileFlags`,
 `RustReplayOutcome`) but records a deliberate PROFILE PIN, not a defect:
 no DEBT id is assigned; the same deferred `Quirk/Toolchain` registration
-applies when a Rust environment composition site materializes.
+applies when a Rust environment composition site materializes. Q7 is
+code-adjacent like Q4/Q5: its resolution is the `Makefile` venue
+(`provision-charon-pinned` / `verify-rust-lane-live`), which is a build
+target, not a `src/` implementation site — so no `axiomDebt` marker attaches
+and no DEBT id is assigned. Register a `Quirk/Toolchain` entry if a Rust
+environment composition site (or a vendored acquisition helper under
+`tools/`) materializes.
 
 ---
 
@@ -434,8 +553,20 @@ applies when a Rust environment composition site materializes.
 - `experiments/serde-json-claim-2026-10-31/` +
   `docs/evidence/serde_json_claim_adjudication_2026-10-31.md` — the campaign
   that measured Q6 live (`charon pinned=… measured=… ok=true`)
+- Charon `charon/src/bin/charon/toolchain.rs` — `in_toolchain` (the
+  `rustup run <channel> <program>` contract and the `CHARON_TOOLCHAIN_IS_IN_PATH`
+  escape hatch) and `driver_path` (`current_exe().with_file_name("charon-driver")`,
+  the co-location requirement) quoted in Q7 [measured, read at the pinned
+  commit]
+- `.github/actions/setup-axiom-toolchain/action.yml:54` (the
+  `~/.local/bin (z3/jq) ONLY` declaration) and `:431-438` (the non-exact-restore
+  quarantine + the `:440` empty-directory invariant) — the CI-cache
+  impossibility recorded in Q7
+- `Makefile` `provision-charon-pinned` / `verify-rust-lane-live` — the Q7
+  resolution (source build into the gitignored `build/charon/`, then the
+  observed-funnel assertion)
 
 ---
 
-| **Last update**: 2026-11-01
+| **Last update**: 2026-11-23
 | **Registry**: none (doc-only; see Registry linkage above)
