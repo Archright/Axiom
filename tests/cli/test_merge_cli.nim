@@ -980,6 +980,86 @@ suite "adjudicateRotation — Amendment A9 rotation companion (ax help SSOT)":
     check anchored.check.newAnchorOk
     check anchored.reasonCode.len == 0
 
+suite "adjudicateRotation — Amendment A10 rotation companion (axiom probe fail-closed)":
+  test "PR #388's measured candidate delta (5 paths) → ROTATION (allowlist OK)":
+    # Measured, not assumed: the merge_group verdict at 2026-11-23T06:37Z
+    # blocked exactly this delta with ROT_ALLOWLIST on
+    # tests/unit/test_axiom_probe_unknown_not_empty.nim -- the other four
+    # paths (Makefile, config/trusted_checker_closure.json,
+    # src/generated/type_registry_metadata.json and the closure member
+    # src/verification/obligation/canonical_verification.nim) were already
+    # allowed. A10 registers that ONE companion and nothing else.
+    let b = lineSet("100644 blob p1\tsrc/verification/obligation/canonical_verification.nim")
+    let h = lineSet("100644 blob p2\tsrc/verification/obligation/canonical_verification.nim")
+    let adj = adjudicateRotation(h, b, h, some(b), some(h),
+      @["Makefile",
+        "config/trusted_checker_closure.json",
+        "src/generated/type_registry_metadata.json",
+        "src/verification/obligation/canonical_verification.nim",
+        "tests/unit/test_axiom_probe_unknown_not_empty.nim"])
+    check adj.qualification == rqRotation
+    check adj.check.closureChange
+    check adj.check.allowlistOk
+    check adj.check.subjectDeltaZero
+    check adj.check.oldAnchorOk
+    check adj.check.newAnchorOk
+    check adj.reasonCode.len == 0
+
+  test "A10 admits one enumerated path -- an unregistered sibling in the same directory stays ROT_ALLOWLIST":
+    # A10's authorization delta is bounded by enumeration, never by a glob:
+    # another file in tests/unit/ does not ride the registration.
+    let b = lineSet("100644 blob p1\tsrc/verification/obligation/canonical_verification.nim")
+    let h = lineSet("100644 blob p2\tsrc/verification/obligation/canonical_verification.nim")
+    let adj = adjudicateRotation(h, b, h, some(b), some(h),
+      @["src/verification/obligation/canonical_verification.nim",
+        "tests/unit/test_axiom_probe_other.nim"])
+    check adj.qualification == rqNone
+    check adj.reasonCode == "ROT_ALLOWLIST"
+    check not adj.check.allowlistOk
+
+  test "A10 is exact-match, not a prefix -- the _extra sibling is still denied":
+    # The registered string is compared whole (extra == path). A path that
+    # merely STARTS with it is a different path and stays denied.
+    let b = lineSet("100644 blob p1\tsrc/verification/obligation/canonical_verification.nim")
+    let h = lineSet("100644 blob p2\tsrc/verification/obligation/canonical_verification.nim")
+    let adj = adjudicateRotation(h, b, h, some(b), some(h),
+      @["src/verification/obligation/canonical_verification.nim",
+        "tests/unit/test_axiom_probe_unknown_not_empty_extra.nim"])
+    check adj.qualification == rqNone
+    check adj.reasonCode == "ROT_ALLOWLIST"
+    check not adj.check.allowlistOk
+
+  test "A10 is inert outside ROTATION -- a NORMAL delta gains no approval":
+    # (1) is evaluated only on the ROTATION path (A2 (ii)): a candidate delta
+    # that does not change the closure is classified NORMAL and the
+    # registration is never consulted as an approval.
+    let b = lineSet("100644 blob p1\tsrc/verification/obligation/canonical_verification.nim")
+    let adj = adjudicateRotation(b, b, b, some(b), some(b),
+      @["tests/unit/test_axiom_probe_unknown_not_empty.nim"])
+    check adj.qualification == rqNormal
+    check not adj.check.closureChange
+    check adj.reasonCode.len == 0
+
+  test "A10 leaves ④ untouched -- a stale pin@H on the same delta is still ROT_NEW_PIN":
+    # A10 moves (1) only. The same 4-path delta with pin@H still anchored at B
+    # stays ROTATION with ④ recorded false -- ④ is then the only difference
+    # from a clean verdict.
+    let b = lineSet("100644 blob p1\tsrc/verification/obligation/canonical_verification.nim")
+    let h = lineSet("100644 blob p2\tsrc/verification/obligation/canonical_verification.nim")
+    let delta = @["Makefile",
+                  "config/trusted_checker_closure.json",
+                  "src/verification/obligation/canonical_verification.nim",
+                  "tests/unit/test_axiom_probe_unknown_not_empty.nim"]
+    let stale = adjudicateRotation(h, b, h, some(b), some(b), delta)
+    check stale.check.closureChange
+    check stale.check.allowlistOk         # A10 does not suppress (1) ...
+    check not stale.check.newAnchorOk     # ... and does not authorize (4)
+    check stale.qualification == rqRotation
+    check stale.reasonCode == "ROT_NEW_PIN"
+    let anchored = adjudicateRotation(h, b, h, some(b), some(h), delta)
+    check anchored.check.newAnchorOk
+    check anchored.reasonCode.len == 0
+
 suite "adjudicateRotation — stale old anchor (③ → NOT-ADMIT, single deny point)":
   test "pin@B key present but != derived(B) → NONE (ROT_OLD_PIN)":
     let b = lineSet("100644 blob a1\tci/checker.mk")
