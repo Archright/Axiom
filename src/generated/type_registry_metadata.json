@@ -10316,6 +10316,17 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "Int",
+      "module": "src/cli/rust_lane_cli.nim",
+      "name": "intFieldOr",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "Bool",
       "module": "src/cli/rust_lane_cli.nim",
       "name": "isSpecIdentChar",
@@ -10334,6 +10345,21 @@
       "leanType": "Bool",
       "module": "src/cli/rust_lane_cli.nim",
       "name": "isSpecIdentStart",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/cli/rust_lane_cli.nim",
+      "name": "laneCoverageSelfConsistent",
       "negativeConstraints": [
         "result >= 0 is invalid — Bool is not numeric",
         "Use '(= result true) or (= result false)' instead"
