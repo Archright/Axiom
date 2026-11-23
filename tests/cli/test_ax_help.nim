@@ -148,6 +148,46 @@ suite "planAxActions — other subcommands unaffected by --help":
     check foundQuitThree
 
 # ---------------------------------------------------------------------------
+# planAxActions — top-level ax --help / -h (issue #222)
+# ---------------------------------------------------------------------------
+
+suite "planAxActions — top-level --help":
+  test "top-level --help emits usage + quit(0)":
+    let actions = planAxActions(@["--help"])
+    var foundUsage = false
+    var foundQuitZero = false
+    var foundUnknown = false
+    for a in actions:
+      if a.kind == cliPrintUsage: foundUsage = true
+      if a.kind == cliQuit and a.exitCode == 0: foundQuitZero = true
+      if a.kind == cliWriteStderrLine and
+         a.message.startsWith("unknown ax subcommand"):
+        foundUnknown = true
+    check foundUsage
+    check foundQuitZero
+    check not foundUnknown
+
+  test "top-level -h emits usage + quit(0)":
+    let actions = planAxActions(@["-h"])
+    var foundUsage = false
+    var foundQuitZero = false
+    for a in actions:
+      if a.kind == cliPrintUsage: foundUsage = true
+      if a.kind == cliQuit and a.exitCode == 0: foundQuitZero = true
+    check foundUsage
+    check foundQuitZero
+
+  test "genuinely unknown subcommand still exits 3 (rule not weakened)":
+    let actions = planAxActions(@["definitely-not-a-subcommand"])
+    var foundQuitThree = false
+    var foundUsage = false
+    for a in actions:
+      if a.kind == cliQuit and a.exitCode == 3: foundQuitThree = true
+      if a.kind == cliPrintUsage: foundUsage = true
+    check foundQuitThree
+    check foundUsage
+
+# ---------------------------------------------------------------------------
 # Help table / parser SSOT alignment
 # ---------------------------------------------------------------------------
 
