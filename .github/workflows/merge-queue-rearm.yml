@@ -12,7 +12,11 @@
 # admission-ssot-drift.yml / ci-provider-router.yml) from the REARM_APP_ID
 # Actions variable (vars.REARM_APP_ID) and the REARM_APP_PRIVATE_KEY Actions
 # secret, with per-issuance scope pull-requests:write + issues:write +
-# contents:read; the action's post step revokes the token at job end. The
+# contents:write (contents:read was MEASURED insufficient for
+# enablePullRequestAutoMerge on 2026-11-23: the mutation returned
+# FORBIDDEN / "Resource not accessible by integration"; the App installation
+# floor was then raised to contents:write so this request cannot exceed it);
+# the action's post step revokes the token at job end. The
 # rearm-exhausted budget-label POST is the one mutating act issued with this
 # workflow's own GITHUB_TOKEN (the rearm job's permissions block declares
 # issues: write for it). Credential history: an earlier revision of
@@ -1409,16 +1413,24 @@ jobs:
           private-key: ${{ secrets.REARM_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
-          # Per-issuance ceiling = the landing checklist's minimum set. The
-          # exact enablePullRequestAutoMerge scope floor is pending separate
-          # verification (docs/spec/rearm_recovery_status.md §4.2) — a
-          # verified addition moves the App installation AND this request
-          # together. Mint also runs in validation mode: it verifies the App
-          # registration without arming (condition 9's validation branch exits
-          # before any arm-token API call).
+          # Per-issuance ceiling = the landing checklist's minimum set, with
+          # one measured addition (2026-11-23). enablePullRequestAutoMerge has
+          # a contents:write FLOOR — proven by differential probe, not inferred
+          # from the REST merge permission table: at contents:read the arm
+          # mutation returned FORBIDDEN / "Resource not accessible by
+          # integration"; after the App installation was raised to
+          # contents:write the same mutation cleared the permission gate and
+          # failed only on repo policy (UNPROCESSABLE / "Auto merge is not
+          # allowed for this repository" — measured on a repo with
+          # allow_auto_merge=false; Axiom has allow_auto_merge=true). The App
+          # installation and this request move together: a request above the
+          # installation fails the mint, so read-here/write-there is
+          # structurally unrepresentable. Mint also runs in validation mode: it
+          # verifies the App registration without arming (condition 9's
+          # validation branch exits before any arm-token API call).
           permission-pull-requests: write
           permission-issues: write
-          permission-contents: read
+          permission-contents: write
       - name: "condition 9: arm + budget label (only here; dispatch = validation, never arms)"
         env:
           # Arm authority: GITHUB_TOKEN cannot enable auto-merge on a
@@ -1427,7 +1439,9 @@ jobs:
           # token minted above in this same job (steps.arm-app-token; the
           # action's post step revokes it at job end). Per-issuance scope:
           # pull-requests:write (enable auto-merge) + issues:write
-          # (rearmed@/rearm-exhausted budget labels) + contents:read.
+          # (rearmed@/rearm-exhausted budget labels) + contents:write
+          # (enablePullRequestAutoMerge floor — measured 2026-11-23, not
+          # assumed from the REST merge permission table).
           GH_TOKEN: ${{ steps.arm-app-token.outputs.token }}
         run: |
           set -euo pipefail
