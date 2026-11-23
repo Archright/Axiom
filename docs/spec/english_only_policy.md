@@ -1,8 +1,12 @@
 # English-only policy -- scope, modes, metrics, and terminal criteria
 
-**Status**: Proposed (2026-11-22). Normative contract for the English-only plan
-([ADR-0045](../adr/0045-english-only-canonical-main.md)). Phase 0 declares the
-contract; no detector and no gate dimension is active yet.
+**Status**: Accepted (2026-11-23). Normative contract for the English-only plan
+([ADR-0045](../adr/0045-english-only-canonical-main.md)), ratified by the
+repository's sole Architect (the repository owner) in the same act that accepted
+ADR-0045. Phase 0 declares the contract; no detector and no gate dimension is
+active yet. The ratification changed this line and nothing else: sections 1-14,
+the metric definitions, the UNKNOWN conditions, and the terminal criteria stand
+as written.
 
 This document is machine-relevant: the field names, the metric definitions, the
 terminal criteria, and the UNKNOWN conditions are the vocabulary a conforming

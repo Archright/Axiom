@@ -2,10 +2,28 @@
 
 ## Status
 
-**Proposed (2026-11-22)** -- architecture decision record for Phase 0 of the
-English-only plan. This ADR declares the contract. It does not land a detector, it
-does not add a gate dimension, and it does not translate any content. Activation is a
-later phase and follows the same rules.
+**Accepted (2026-11-23)** -- ratified by the repository's sole Architect (the
+repository owner). The decision text of this ADR is ratified as written; the act of
+ratification amended no clause.
+
+- **Time and authority**: 2026-11-23, in-session. The deciding authority is the human
+  Architect of this repository (the repository owner) and no one else. There was no
+  delegation and no second reviewer; this record is the owner's own instruction and it
+  is not represented as a signature artifact, a committee decision, or a review by a
+  party that did not sit in the session.
+- **Act and scope**: the status of this ADR and of
+  [`docs/spec/english_only_policy.md`](../spec/english_only_policy.md) moves from
+  `Proposed` to `Accepted`. The ratification covers the *contract*, not its
+  *activation*: this ADR still lands no detector, adds no gate dimension, translates
+  no content, and changes no required check. Sections (a)-(j), the alternatives
+  rejected, and the declared limitations stand as written.
+- **Boundary unchanged**: ADR-0044 is untouched and remains the only admitted Script
+  judgment. The `script-scan` behaviour, the dimension set of `publication-integrity`,
+  ruleset `27097366`, and `bypass_actors: []` are unchanged. Ratification transfers no
+  authority over any path: the AGENTS.md instruction, the `data/i18n/ko.json` product
+  decision, and the NLID detector pin are recorded separately in
+  [ADR-0050](0050-english-only-phase1-authority-records.md), and the Korean-locale
+  question is returned there to the Architect as an open decision.
 
 ## Date
 
