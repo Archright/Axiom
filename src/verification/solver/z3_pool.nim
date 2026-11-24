@@ -807,11 +807,60 @@ proc getWorkerPeakMemoryMb(worker: Z3PersistentWorker): int {.axiomEffect: IOEff
     except CatchableError:
       discard  # Safe: cleanup operation, failure acceptable  # axiom:best-effort(ioboundary catch)
   return 0
+
+## Telemetry is the record of what happened, not a verdict — and a response
+## stream carries two INDEPENDENT facts: the answer the solver gave, and whether
+## the transport refused a command. Issue #349 is the collapse of the second into
+## the first: Z3 answers `(get-model)` after `unsat` with
+## `(error "... model is not available")`, and a whole-stream reader turned a real
+## `unsat` into `result:"error"`.
+##
+## `solverResponse` is therefore deliberately NOT what `result` is read with: it
+## rejects the whole stream once any `(error ...)` response is present
+## (DECISION-0825), which is the right rule for a VERDICT — a refused script must
+## never score one — and the wrong one for telemetry. `result` reads the answer
+## the way the verdict path reads it (`classifyZ3Output` skips the `(...)`
+## response lines) and keeps the DECISION-0825 gate on the SAT mint, so telemetry
+## can never claim a verdict the verdict path would refuse.
+func telemetryResultOf(raw: string): string {.raises: [].} =
+  for line in raw.splitLines():
+    let trimmed = line.strip()
+    if trimmed.len == 0:
+      continue
+    if trimmed.startsWith("("):
+      # ⟨error_response⟩ and every other s-expression payload — an elaboration
+      # of some command's output, never the ⟨check_sat_response⟩.
+      continue
+    let lower = trimmed.toLowerAscii()
+    if lower == "unsat":
+      return "unsat"
+    if lower == "sat":
+      # Same gate as the SAT mint: a stream Z3 refused somewhere does not get to
+      # be recorded as `sat` either.
+      if solverResponse(raw) == srSat:
+        return "sat"
+      return "unknown"
+    if lower == "unknown":
+      return "unknown"
+  # No ⟨check_sat_response⟩ at all. `result:"error"` has always meant exactly
+  # this — the stream carried no answer — and it still does.
+  "error"
+
+func telemetryTransportOf(raw: string): string {.raises: [].} =
+  ## The transport fact on its own axis: the stream carries an SMT-LIB
+  ## ⟨error_response⟩, i.e. Z3 refused at least one command. Empty otherwise.
+  ##
+  ## The row records the TCB matcher's verdict, not a re-parse of it: the error
+  ## payload is free text (`solverStreamHasErrorResponse` documents why balancing
+  ## it is not worth an s-expression parser in the trusted layer).
+  result = if solverStreamHasErrorResponse(raw): "error-response" else: ""
+
 proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; enableProofs: bool = false; queryType: string = "unknown"; cegarIters: int = 0;
     canonicalEnvelopeDigest: var string; transportPayloadDigest: var string): Result[string, string] {.gcsafe, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, TimeEffect, RootEffect].} =
   let startMs = epochMilliseconds()
   var z3Result: Result[string, string]
   var resultStatus = "unknown"
+  var transportError = ""
   var payload: string
   var workerIdx = -1
 
@@ -829,12 +878,9 @@ proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; e
     except CatchableError:
       discard  # Safe: cleanup operation, failure acceptable  # axiom:best-effort(ioboundary catch)
     if z3Result.isOk():
-      # The response grammar is exactly sat | unsat | unknown, and "the stream
-      # carried no decision at all" is recorded as an error because that is what
-      # it is: a refusal or a truncated read, not an answer the solver gave.
-      let response = solverResponse(z3Result.get())
-      resultStatus =
-        if response == srNoDecision: "error" else: $response
+      let raw = z3Result.get()
+      resultStatus = telemetryResultOf(raw)
+      transportError = telemetryTransportOf(raw)
     else:
       let errLower = z3Result.error().toLowerAscii()
       if errLower.contains("deadline") or errLower.contains("timeout"):
@@ -847,6 +893,7 @@ proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; e
       queryType: queryType,
       rlimit: z3DeterministicBudget,
       result: resultStatus,
+      transportError: transportError,
       timeMs: timeMs,
       memoryMb: memoryMb,
       cegarIters: cegarIters,
