@@ -1919,7 +1919,7 @@
     "src/core/topology/topology_engine.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "e6bba40b55405e743904820b8eac1bbb76bbbbf5"
+      "sha": "0607d0459a798a34c2207e6d07fe3bd2c11aedd0"
     },
     "src/core/topology/topology_parser.nim": {
       "mode": "100644",
