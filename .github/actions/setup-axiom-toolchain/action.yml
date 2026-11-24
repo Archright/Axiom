@@ -676,11 +676,24 @@ runs:
       # source, not an authority: every tier must end with the exact pinned
       # identity installed, and a tier that cannot obtain it aborts instead of
       # reporting success.
+      #
+      # Ordering (2026-11-24, merge-group dea3cce0 / admission-gate run
+      # 45346019458): the immutable asset is tried FIRST, ahead of apt. Same
+      # package, same pin, same three-way identity check. On that one merge
+      # group the identical step cost 6,915 / 16,0xx / 32,0xx / 34,266 / 36,832
+      # ms across five jobs — a 5.3x spread around 0.08s of actual install work,
+      # so ~99.8% of the cost was lock, index and database work rather than
+      # installation. Tier 1 therefore extracts the payload and rebuilds the
+      # loader cache directly (~0.2s measured), and the package-manager path is
+      # kept only as fallback, where a 300s lock budget is a retry allowance
+      # instead of the critical path.
       #   tier 0  already present (ldconfig hit)
-      #   tier 1  apt default sources — version-pinned, fully signed
-      #   tier 2  pinned release asset — immutable release, digest-checked
-      #   tier 3  ordered official mirrors — isolated apt view, still signed
-      #   tier 4  explicit external_dependency failure (never a silent success)
+      #   tier 1  pinned release asset — immutable release, digest-checked,
+      #           payload extracted onto / + `ldconfig` (no dpkg database)
+      #   tier 2  the same pinned asset through `dpkg -i` (registers the package)
+      #   tier 3  apt default sources — version-pinned, fully signed
+      #   tier 4  ordered official mirrors — isolated apt view, still signed
+      #   tier 5  explicit external_dependency failure (never a silent success)
       if: inputs.keygen-only != 'true'
       env:
         AXIOM_PCRE_VERSION: "2:8.39-15build1"
@@ -701,6 +714,22 @@ runs:
         work=$(mktemp -d)
         trap 'rm -rf "$work"' EXIT
 
+        # Contention source, not a correctness dependency: the image ships
+        # unattended-upgrades on a boot timer and it holds the dpkg frontend
+        # lock while it resolves the base image's own updates. Stopping it is
+        # best-effort — a runner without those units, or without the rights to
+        # mask them, must still install correctly — so every outcome is logged
+        # and none of them aborts. `dpkg -i` has no lock-wait budget, so an
+        # unsuppressed updater surfaces as an immediate tier-1 failure and the
+        # ladder falls through to apt rather than hanging.
+        for unit in apt-daily.service apt-daily-upgrade.service unattended-upgrades.service; do
+          if sudo systemctl stop "$unit" 2>/dev/null && sudo systemctl mask "$unit" 2>/dev/null; then
+            echo "lock contention: $unit stopped and masked"
+          else
+            echo "lock contention: $unit not masked (absent, already inactive, or no rights)"
+          fi
+        done
+
         # The pin is the trust anchor: bytes and package identity must both
         # match before anything outside apt's signed view is installed.
         verify_pinned_deb() {
@@ -716,13 +745,64 @@ runs:
         }
 
         install_pinned_deb() {
-          sudo apt-get -o DPkg::Lock::Timeout=300 install -y -qq "$1"
+          # `dpkg -i`, not `apt-get install`: verify_pinned_deb has already
+          # pinned the exact bytes and the package identity, so no resolver
+          # decision remains. The argument MUST stay quoted: an unexpanded glob
+          # makes dpkg exit 2 with "cannot access archive".
+          sudo dpkg -i "$1"
+        }
+
+        # Materialize the two shared objects directly instead of registering a
+        # package. This archive is a pure payload: no maintainer scripts, no
+        # conffiles, no dependencies beyond libc6, and its one trigger
+        # (`activate-noawait ldconfig`) does exactly what the explicit
+        # `ldconfig` below does.
+        #
+        # Why not extract onto `/`: this image is merged-usr (`/lib` is a
+        # symlink to `usr/lib`), and the archive ships a real `./lib/` directory.
+        # Extracting onto `/` REPLACES that symlink with a real directory, which
+        # hides /usr/lib/x86_64-linux-gnu/libm.so.6 and makes every later link
+        # fail with `ld: cannot find /lib/x86_64-linux-gnu/libm.so.6`. Staging
+        # first and copying only the four payload members into the real
+        # directory keeps the symlink intact.
+        #
+        # Why not `dpkg`: unpacking is 0.08s but dpkg additionally reads its
+        # 216,720-entry database (~6s) and runs the libc-bin trigger (~7s) on
+        # every job. Measured across one merge group, that residual is ~13s x 5
+        # jobs and is what stands between this change and the critical-path
+        # floor. Stage-copy plus a cache rebuild measures ~0.2s total.
+        supply_extracted() {
+          local stage="$work/root" real=/usr/lib/x86_64-linux-gnu member src
+          verify_pinned_deb "$1" || return 1
+          mkdir -p "$stage" || return 1
+          dpkg-deb -x "$1" "$stage" || return 1
+          for member in libpcre.so.3.13.3 libpcre.so.3 \
+                        libpcreposix.so.3.13.3 libpcreposix.so.3; do
+            src=$(find "$stage" -name "$member" -print -quit)
+            [ -n "$src" ] || {
+              echo "external_dependency: payload member $member absent from the archive"; return 1; }
+            sudo cp -a "$src" "$real/$member" || return 1
+          done
+          sudo ldconfig || return 1
+          # The ladder's own postcondition, asserted here rather than assumed:
+          # if the loader still cannot see the soname, this tier has not
+          # succeeded and the caller falls through to the package-manager path.
+          # The second assertion guards the merged-usr hazard above — if copying
+          # ever displaced a system library, fail loudly instead of succeeding.
+          ldconfig -p | grep -q 'libpcre\.so\.3' || return 1
+          [ -e "$real/libm.so.6" ] || {
+            echo "external_dependency: system library libm.so.6 missing after payload copy"; return 1; }
         }
 
         supply_asset() {
           curl -fsSL --max-time 60 -o "$work/asset.deb" "$AXIOM_PCRE_ASSET" || return 1
           verify_pinned_deb "$work/asset.deb" || return 1
           install_pinned_deb "$work/asset.deb"
+        }
+
+        supply_asset_to_root() {
+          curl -fsSL --max-time 60 -o "$work/asset.deb" "$AXIOM_PCRE_ASSET" || return 1
+          supply_extracted "$work/asset.deb"
         }
 
         # Each mirror attempt uses an isolated apt list/cache view so a dead
@@ -757,22 +837,30 @@ runs:
           return 1
         }
 
-        # tier 1 — GH-hosted image indexes are fresh enough for a direct
+        # tier 1 — the immutable release asset, materialized by extraction. This
+        # is the tier the critical path is expected to take. A failure here is
+        # not swallowed: it falls through, and is reported as external_dependency
+        # only when every tier has failed.
+        if supply_asset_to_root; then
+          echo "supply tier 1: extracted the pinned release asset"
+        # tier 2 — the same pinned asset through dpkg, so a runner whose
+        # ldconfig cache cannot be rebuilt still gets the package registered.
+        elif supply_asset; then
+          echo "supply tier 2: installed the pinned release asset via dpkg"
+        # tier 3 — GH-hosted image indexes are fresh enough for a direct
         # install; `apt-get update` (~14s, measured run 36614815220) only when
         # install fails. DPkg::Lock::Timeout — unattended-upgrades가
         # lock-frontend를 잡고 있는 동안 즉시 exit 100으로 죽지 않고 최대 300초
         # 대기한다(관측: run 2026-10-27 `E: Could not get lock /var/lib/dpkg/lock-frontend`).
-        if sudo apt-get -o DPkg::Lock::Timeout=300 install -y -qq "libpcre3=$AXIOM_PCRE_VERSION"; then
+        elif sudo apt-get -o DPkg::Lock::Timeout=300 install -y -qq "libpcre3=$AXIOM_PCRE_VERSION"; then
           :
         elif sudo apt-get -o DPkg::Lock::Timeout=300 update -qq \
           && sudo apt-get -o DPkg::Lock::Timeout=300 install -y -qq "libpcre3=$AXIOM_PCRE_VERSION"; then
           :
-        elif supply_asset; then
-          echo "supply tier 2: installed the pinned release asset"
         elif supply_mirrors; then
           echo "supply tier 3: installed from an approved official mirror"
         else
-          echo "external_dependency: libpcre3 unavailable (tier 1 apt, tier 2 asset, tier 3 mirrors all failed)"
+          echo "external_dependency: libpcre3 unavailable (tier 1 extract, tier 2 dpkg, tier 3 apt, tier 4 mirrors all failed)"
           exit 1
         fi
         ldconfig -p | grep 'libpcre\.so\.3'
@@ -802,7 +890,7 @@ runs:
       # bin/ax swap, and a missing ircheck (DEBT#502 partial-payload shape) is
       # a FAIL, not a silent pass. Detection -> discard -> cold fallback (same
       # contract as the digest loop). Runs AFTER the Install system deps step:
-      # the binaries link libpcre.so.3 and cannot exec without it. Expectations
+      # the binaries dlopen libpcre.so.3 and cannot exec without it. Expectations
       # are per-TREE, never per-byte: same-tree rebuilds differ byte-wise
       # (build_env embedding, tools/hermetic_build.nim) and stay accepted —
       # semantic identity only (J1 §1.2; evidence_cas.nim
