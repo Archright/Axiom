@@ -224,3 +224,96 @@ suite "Phase 2 — Certificate trust closure (R4, v1 local replay-bound contract
         check res.status == ccsReplayInputMismatch
     finally:
       removeDir(tmpDir)
+
+  test "#246: swapped leanProposition -> FAIL (semantics are replay identity)":
+    let tmpDir = getTempDir() / "ax_p2_prop_swap_" & $getCurrentProcessId()
+    createDir(tmpDir)
+    try:
+      withHermeticJournalRoot(tmpDir):
+        let (certPath, cert, _) = makeFixtureCert(tmpDir)
+        # Keep every input hash intact; replace only the claimed proposition.
+        cert["leanProposition"] = newJString("True")
+        writeFile(certPath, $cert)
+        let res = verifyCertificateClosure(certPath, tmpDir)
+        check res.status != ccsPass
+        check res.status == ccsNotDeepVerified
+    finally:
+      removeDir(tmpDir)
+
+  test "#246: swapped leanSource -> FAIL (proof body is replay identity)":
+    let tmpDir = getTempDir() / "ax_p2_src_swap_" & $getCurrentProcessId()
+    createDir(tmpDir)
+    try:
+      withHermeticJournalRoot(tmpDir):
+        let (certPath, cert, _) = makeFixtureCert(tmpDir)
+        cert["leanSource"] = newJString("theorem normalizeMaxWorkers : True := by trivial")
+        writeFile(certPath, $cert)
+        let res = verifyCertificateClosure(certPath, tmpDir)
+        check res.status != ccsPass
+        check res.status == ccsReplayMismatch
+    finally:
+      removeDir(tmpDir)
+
+  test "#246: swapped propositionHash -> FAIL (input digests are replay inputs)":
+    let tmpDir = getTempDir() / "ax_p2_phash_swap_" & $getCurrentProcessId()
+    createDir(tmpDir)
+    try:
+      withHermeticJournalRoot(tmpDir):
+        let (certPath, cert, _) = makeFixtureCert(tmpDir)
+        cert["propositionHash"] = newJString(repeat('a', 64))
+        writeFile(certPath, $cert)
+        let res = verifyCertificateClosure(certPath, tmpDir)
+        check res.status != ccsPass
+        check res.status == ccsReplayInputMismatch
+    finally:
+      removeDir(tmpDir)
+
+  test "#246: swapped proposition and Lean source together with recomputed hashes -> FAIL":
+    let tmpDir = getTempDir() / "ax_p2_both_swap_" & $getCurrentProcessId()
+    createDir(tmpDir)
+    try:
+      withHermeticJournalRoot(tmpDir):
+        let leanSource = "theorem probe_spec : True := by trivial"
+        let obs = fixtureObservation(leanSource, "(assert true)")
+        let (certPath, cert, _) = makeFixtureCert(tmpDir, status = "certGreen",
+          leanSource = leanSource, observation = kernelObservationJson(obs),
+          observationDigest = kernelObservationDigest(obs))
+        let baseline = verifyCertificateClosure(certPath, tmpDir)
+        check baseline.status == ccsPass
+        let fakeProp = "True"
+        let fakeSource = "theorem fake_spec : True := by trivial"
+        let fakeObs = fixtureObservation(fakeSource, "(assert true)")
+        cert["leanProposition"] = newJString(fakeProp)
+        cert["propositionHash"] = newJString(sha256Hex(fakeProp))
+        cert["leanSource"] = newJString(fakeSource)
+        cert["leanSourceHash"] = newJString(sha256Hex(fakeSource))
+        cert["observation"] = kernelObservationJson(fakeObs)
+        cert["observationDigest"] = newJString(kernelObservationDigest(fakeObs))
+        cert["identityDigest"] = newJString(v3IdentityFromJson(cert))
+        writeFile(certPath, $cert)
+        let res = verifyCertificateClosure(certPath, tmpDir)
+        check res.status != ccsPass
+        check res.status == ccsNotDeepVerified
+    finally:
+      removeDir(tmpDir)
+
+  test "#246: swapped propositionHash and leanSourceHash -> FAIL (replay input mismatch)":
+    let tmpDir = getTempDir() / "ax_p2_hashes_swap_" & $getCurrentProcessId()
+    createDir(tmpDir)
+    try:
+      withHermeticJournalRoot(tmpDir):
+        let leanSource = "theorem probe_spec : True := by trivial"
+        let obs = fixtureObservation(leanSource, "(assert true)")
+        let (certPath, cert, _) = makeFixtureCert(tmpDir, status = "certGreen",
+          leanSource = leanSource, observation = kernelObservationJson(obs),
+          observationDigest = kernelObservationDigest(obs))
+        let baseline = verifyCertificateClosure(certPath, tmpDir)
+        check baseline.status == ccsPass
+        cert["propositionHash"] = newJString(repeat('a', 64))
+        cert["leanSourceHash"] = newJString(repeat('b', 64))
+        writeFile(certPath, $cert)
+        let res = verifyCertificateClosure(certPath, tmpDir)
+        check res.status != ccsPass
+        check res.status == ccsReplayInputMismatch
+    finally:
+      removeDir(tmpDir)
