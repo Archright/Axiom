@@ -222,8 +222,15 @@ let interpretCliActions* = proc (actions: seq[CliAction]) {.raises: [CatchableEr
         )
       ), action.args)
     of cliPrintUsage:
-      for line in axUsageLines():
-        logInfo("action_interpreter_cli", line)
+      # Help is the command's ANSWER, not a diagnostic: it goes to stdout with
+      # no log-level prefix, so `ax prove --help | grep -- --project` sees it.
+      # A subcommand help flag carries its own single row (helpUsageLines);
+      # the top-level table is the fallback for `ax help`, `ax --help`, and the
+      # unknown-subcommand path.
+      let lines = if action.helpUsageLines.len > 0: action.helpUsageLines
+                  else: axUsageLines()
+      for line in lines:
+        stdout.writeLine(line)
     of cliWriteStderrLine:
       logInfo("action_interpreter_cli", action.message)
     of cliQuit:

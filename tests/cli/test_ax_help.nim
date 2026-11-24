@@ -148,6 +148,71 @@ suite "planAxActions — other subcommands unaffected by --help":
     check foundQuitThree
 
 # ---------------------------------------------------------------------------
+# planAxActions — command-scoped help rows (issue #222)
+#
+# `ax prove --help` used to emit the 35-row top-level table, so the answer to
+# "what does prove take?" was buried in every sibling's row. The help flag now
+# carries that ONE command's row. `ax help` / `ax --help` keep the full table.
+# ---------------------------------------------------------------------------
+
+proc helpLinesOf(actions: seq[CliAction]): seq[string] {.raises: [CatchableError].} =
+  ## Mirrors interpretCliActions' cliPrintUsage projection: a scoped seq when
+  ## the planner carried one, otherwise the whole axUsageLines table. The test
+  ## must resolve the fallback the same way the interpreter does, or it would
+  ## assert on an empty seq that is never what the user sees.
+  for a in actions:
+    if a.kind == cliPrintUsage:
+      return if a.helpUsageLines.len > 0: a.helpUsageLines else: axUsageLines()
+  @[]
+
+suite "planAxActions — command-scoped help rows":
+  test "prove --help carries exactly the ax prove row":
+    let lines = helpLinesOf(planAxActions(@["prove", "--help"]))
+    check lines.len == 2                       # "usage:" + the one row
+    check lines[0] == "usage:"
+    check lines[1].startsWith("  ax prove ")
+    check lines[1].contains("--project")
+    check lines[1].contains("--target")
+    check lines[1].contains("--smt-timeout")
+
+  test "prove -h is the same scope as --help":
+    check helpLinesOf(planAxActions(@["prove", "-h"])) ==
+          helpLinesOf(planAxActions(@["prove", "--help"]))
+
+  test "prove --help no longer advertises sibling commands":
+    let lines = helpLinesOf(planAxActions(@["prove", "--help"]))
+    for line in lines:
+      check not line.contains("ax report")
+      check not line.contains("ax topology")
+      check not line.contains("ax capability")
+
+  test "report --help carries exactly the ax report row":
+    let lines = helpLinesOf(planAxActions(@["report", "--help"]))
+    check lines.len == 2
+    check lines[1].startsWith("  ax report ")
+    check lines[1].contains("--upstream")
+
+  test "ax help still carries the whole surface":
+    let scoped = helpLinesOf(planAxActions(@["prove", "--help"]))
+    let full = helpLinesOf(planAxActions(@["help"]))
+    check full.len == 35                       # "usage:" + 34 commands
+    check scoped.len < full.len
+
+  test "top-level ax --help still carries the whole surface":
+    let full = helpLinesOf(planAxActions(@["--help"]))
+    check full.len == 35
+    check helpLinesOf(planAxActions(@["-h"])) == full
+
+  test "unknown subcommand falls back to the whole surface":
+    # No subcommand matched, so there is no scoped row to scope to — the full
+    # table is the only useful answer, and the exit class stays INVALID_INPUT.
+    let lines = helpLinesOf(planAxActions(@["nonexistent"]))
+    check lines.len == 35
+
+  test "axCommandUsageLines is empty for an unknown help-table name":
+    check axCommandUsageLines("ax no-such-command").len == 0
+
+# ---------------------------------------------------------------------------
 # planAxActions — top-level ax --help / -h (issue #222)
 # ---------------------------------------------------------------------------
 
@@ -248,3 +313,12 @@ suite "help table matches parser-accepted subcommands":
            a.message.startsWith("unknown ax subcommand"):
           unknown = true
       check not unknown
+
+  test "every accepted subcommand has a scoped help row that names itself":
+    # The scoped row is the SSOT row for that command, so it must exist for
+    # every command the parser accepts — a missing row would silently fall
+    # back to the whole table.
+    for key in helpTableKeys(ActionPlanSource):
+      let lines = axCommandUsageLines("ax " & key)
+      check lines.len == 2
+      check lines[1].startsWith("  ax " & key)

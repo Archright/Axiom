@@ -12,12 +12,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:4feec5e2f110082fad9725732e8192a1f1c648c17cb5e490dac342cba952ba03",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:1e2ad9d4132e1fa3e72531f19e727bfd4b2ac43a56a033761c97ac6da839c3f3",
       "count": 1,
       "file": "src/cli/action_interpreter_cli.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:d0cc3f997498d08191ab7d618e2b384dacc70d36d71dac33edca0cf5de4115be"
+      "rawContentHash": "sha256:fc327156baa43892df3d1f0c653bc9d05a4d41cc857e5cb40ba96f3d12238eb9"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",

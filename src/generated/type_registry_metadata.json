@@ -230,6 +230,34 @@
       "ignorable": false,
       "leanType": "List string",
       "module": "src/cli/action_plan_cli.nim",
+      "name": "axCommandUsageLines",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (seq.len result) 0)",
+      "returnType": "seq[string]",
+      "smtSort": "(Seq string)",
+      "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": true,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/cli/action_plan_cli.nim",
+      "name": "axUsageLine",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": true,
+      "ignorable": false,
+      "leanType": "List string",
+      "module": "src/cli/action_plan_cli.nim",
       "name": "axUsageLines",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (seq.len result) 0)"
