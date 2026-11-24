@@ -76,6 +76,30 @@ const volatileKeys* = [
   # in the projection, and the state keeps the envelope for bundle export;
   # it is excluded from the canonical digest only.
   "canonicalEvidence",
+  # Execution-scope accounting — `executionStats.eligibleTargets` is the count
+  # of IR rows the executor was HANDED in this run (`loop_driver.nim:929`:
+  # `ogrEligibleTargets = irResultMap.len`), not the count of units the plan
+  # required or the obligations selected. On the canonical `ax prove` path the
+  # executor is handed a pre-computed set (`axiom_engine.nim:663`
+  # `scopeIrEntriesToRequiredKeys(irPool, requiredIrKeys, …)`) whose width is a
+  # function of the VKD fetch ratchet (`computeVkdRequiredLimit`), of the
+  # ProofVault already-certified set (`selectRegistryEntries` excludes
+  # `verifiedFuncs` — cache state, the same class as cacheHit above), and of the
+  # requested-key slice; on the computed branch only `irResults[idx].success`
+  # rows enter the map, so a transient IR derivation failure moves it too.
+  # Measured: one tree, one requested target, `eligibleTargets` 4 then 1 under
+  # two precompute scopes with identical nodeReports/certificates/exit
+  # (docs/evidence/ir_precompute_scope_2026-11-21.md §3). Criterion (same as
+  # the §6 exclusions above): a value that can legitimately differ between two
+  # runs of the same source and obligations is not logical identity. The
+  # verification SCOPE stays projected — nodeReports (status/tier per executed
+  # unit), summary.classifiedNodes/preSieved/totalSourceFunctions and
+  # tierCounts/statusCounts all remain in the digest, so a genuine scope change
+  # still moves it. The sibling run-result digest (`canonicalSerialize`,
+  # execution_accounting_contract.md §10) already excludes `executionStats`
+  # wholesale; this entry makes the two digests agree on this field instead of
+  # disagreeing.
+  "eligibleTargets",
 ]
 
 func isVolatileKey*(k: string): bool {.raises: [].} =
