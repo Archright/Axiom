@@ -476,12 +476,23 @@ installs both into `build/charon/bin/`.
 
 ### Resolution status
 
-Resolved by construction — `make provision-charon-pinned` builds the pin from
-source every run and refuses any other identity. `make verify-rust-lane-live`
-then consumes it and asserts the lane's observed funnel. The upstream
-packaging gap (a release artifact that cannot be identified by its semver)
-stays external and is why the tarball must never be re-introduced as a
-shortcut.
+Resolved by construction:
+
+1. **Pinned source authority + immutable supply asset fast-path (`Makefile` `provision-charon-pinned`)**:
+   the `libpcre3` pattern (`supply-pins-libpcre3-8.39-15build1`) extends to an
+   immutable GitHub Release asset (`supply-pins-charon-0.1.281-79801650`,
+   `charon-0.1.281-79801650-linux-x86_64.tar.gz`) built on Ubuntu 24.04 (GLIBC 2.39)
+   from the exact pinned commit `798016509139eb51f0d764645f76d068d34ba5f6` and
+   `nightly-2026-09-17`, anchored by its SHA-256 digest in `Makefile`
+   (see `docs/evidence/supply_policy_registration_charon_2026-11-24.md`).
+2. **Fail-closed fallback**: `provision-charon-pinned` always guarantees the
+   `rustup` `nightly-2026-09-17` runtime toolchain first, verifies the tarball's
+   SHA-256 and `charon version` pin before admitting the fast-path, and falls back
+   to the full source `cargo build --release --locked` on any mismatch, fetch
+   error, or non-x86_64 host.
+3. **Upstream tarball ban preserved**: upstream `AeneasVerif/charon` nightly
+   tarballs remain refused because their commit diverges from the pin. `make verify-rust-lane-live`
+   continues to assert `charon version == pin` and the observed funnel.
 
 ---
 
