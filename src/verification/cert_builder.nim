@@ -14,7 +14,6 @@ import core/asset_collector
 import verification/cert_fingerprinter
 import verification/cert_vault_role
 import verification/cert_writer
-import verification/cert_vault_role
 # axiomIoBoundary
 
 {.push raises: [].}

@@ -439,14 +439,25 @@ proc run(repoRoot: string): int =
         return 1
 
   # Step 2b: Active vs Historical Cap disambiguation (nimtry)
+  #
+  # DEBT#563 closing criteria: an absent measurement is UNKNOWN, not green.
+  # The sidecar is produced only by a live `bin/nimtry src/` run (it is
+  # gitignored, .gitignore:422), so `-1` here means nothing was measured and
+  # the ratchet above compared the declared cap against itself — a comparison
+  # that can never fail. Recorded as a flag, not an early return, so the
+  # registry<->marker binding check below stays enforced in the same run.
   let active = currentMetrics.nimtryActiveViolations
   let cap = currentMetrics.nimtryViolationCount
+  var unmeasuredNimtry = false
   if active >= 0:
     logInfo(GateTag, "nimtry — Active Violations: " & $active &
       " / Historical Baseline Cap: " & $cap)
   else:
-    logInfo(GateTag, "nimtry — Active Violations: (unmeasured; nimtry not run yet) " &
-      "/ Historical Baseline Cap: " & $cap)
+    unmeasuredNimtry = true
+    logError(GateTag, "nimtry — Active Violations: UNMEASURED " &
+      "(no live `bin/nimtry src/` run in this tree) / Historical Baseline Cap: " & $cap)
+    logError(GateTag, "FAIL: nimtry_active_violations is unmeasured — " &
+      "missing evidence is not a valid empty set (DEBT#563 fail-closed)")
 
   # Step 3: Parse registry (original)
   let entries = parseRegistry(jsonPath)
@@ -499,7 +510,12 @@ proc run(repoRoot: string): int =
   for w in warnings: logWarn(GateTag, w)
   for f in failures: logError(GateTag, f)
   if failures.len > 0:
-    logError(GateTag, $failures.len & " stale debt(s) — FAIL"); return 1
+    logError(GateTag, $failures.len & " stale debt(s) — FAIL")
+    return 1
+  if unmeasuredNimtry:
+    logError(GateTag, "All " & $openIds.len & " open debts have code markers, " &
+      "but the nimtry ratchet is UNMEASURED — FAIL")
+    return 1
   logInfo(GateTag, "All " & $openIds.len & " open debts have code markers. PASS.")
   return 0
 
