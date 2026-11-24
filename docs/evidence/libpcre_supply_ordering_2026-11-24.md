@@ -451,3 +451,43 @@ aborted on `ROT_ALLOWLIST`.
 The honest status is: integrity preserved and verified, propagation verified,
 supply-step latency reduced and measured, **admission-wall reduction pending
 observation**.
+
+## §10. Self-healing probe — B-layer cache generation after rotation
+
+> **Probe.** Intent, not result — no post-re-seed merge group has been observed yet.
+
+### 10.1 Why the rotation cost anything
+
+The tier-1 reorder edits `.github/actions/setup-axiom-toolchain/action.yml`, so
+`script_hash = sha256(action.yml + nimble.lock)` moved, and with it `a_key`,
+`a_fp = sha256(a_key)[:32]` and `b_key = axiom-b-<b_identity>-<recipe_hash><a_fp>` —
+the B-layer cache generation rotated. A miss falls back to `B-layer supply
+unusable (exact-hit='', bin/ax present=no)` and rebuilds `bin/ax` (~83 s).
+
+### 10.2 Measured cost of the rotation
+
+Step `(P3)` in `mint-publish / publish` — the trusted-B-supply step that
+resolves `bin/ax`:
+
+| window | P3 |
+|---|---|
+| pre-cutover merge groups | 0 – 1 s (B-layer exact hit) |
+| merge group #451 | 88 s |
+| merge group #455 | 126 s |
+| merge group #454 | 90 s |
+
+`attest / build-base-artifacts` moved 80 s → 186 s over the same window, on the
+same fallback. The B-layer cache was since re-seeded at `refs/heads/main`,
+including `axiom-b-dc96a23cc1e076ba…-…ef3898b4029e8767594d28586e1df852` for main
+tip `ec93f97c`.
+
+### 10.3 What this PR measures
+
+Whether the re-seed restores the exact hit on a *default-branch* merge group —
+whether P3 returns to ~0 s. The sample is **this PR's own merge group**.
+
+The candidate is docs-only on purpose: `docs/evidence/*.md` is not a closure
+member, so `derived(M) == derived(B)` → `closureChange=false`, and `ROT_ALLOWLIST`
+is auto-satisfied on the NORMAL path (`src/cli/merge_cli.nim:1126-1131`). Any
+`src/` or `.github/` change would move `b_identity` and destroy the measurement.
+No P3, `exact-hit=`, `T_ready` or `T_admission` value is asserted here.
