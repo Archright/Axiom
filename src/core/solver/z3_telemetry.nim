@@ -8,12 +8,35 @@ import std/os
 import std/strutils
 import core/trusted/axiom_pragmas
 
+const Z3TelemetrySchema* = "axiom-z3-telemetry/2"
+  ## What a row MEANS, so a reader never has to guess which definition of
+  ## `result` it is looking at.
+  ##
+  ## `/1` is the rows written before this key existed: `result` was the
+  ## whole-stream `solverResponse`, so any `(error ...)` in the stream collapsed
+  ## a real verdict into `"error"` (issue #349). Those rows are NOT reinterpreted
+  ## — `"error"` in a `.jsonl` without this key still means what it meant when it
+  ## was written.
+  ##
+  ## `/2` splits the two facts apart: `result` is the solver's answer
+  ## (`sat`/`unsat`/`unknown`) read the way the verdict path reads it, and
+  ## `transport_error` carries the refused-command fact on its own axis.
+
 type
   Z3TelemetryRecord* = object
     ts*: string          ## ISO timestamp
     queryType*: string   ## "bmc", "cegar", "k_induction", etc.
     rlimit*: int         ## Injected rlimit value
-    result*: string      ## "sat", "unsat", "unknown", "timeout", "error"
+    result*: string      ## The lane's ⟨check_sat_response⟩ — "sat" | "unsat" |
+                         ## "unknown" — or "timeout" | "error" when the pool
+                         ## itself produced no answer (read-deadline, transport
+                         ## failure, or a stream with no response line at all).
+    transportError*: string ## "error-response" when the raw stream carried an
+                         ## SMT-LIB ⟨error_response⟩ — Z3 refused a command, e.g.
+                         ## `(error "... model is not available")` answering
+                         ## `(get-model)` after `unsat` — else "". Independent of
+                         ## `result`: a stream can answer `unsat` AND have a
+                         ## command refused.
     timeMs*: int         ## Wall-clock time in milliseconds
     memoryMb*: int       ## Peak memory in megabytes
     cegarIters*: int       ## CEGAR iterations if applicable, else 0
@@ -28,10 +51,12 @@ proc appendZ3Telemetry*(record: Z3TelemetryRecord) {.raises: [], axiomEffect: IO
   ## Fails silently on I/O errors to avoid disrupting solver execution.
   try:
     let jsonObj = %*{
+      "schema": Z3TelemetrySchema,
       "ts": record.ts,
       "query_type": record.queryType,
       "rlimit": record.rlimit,
       "result": record.result,
+      "transport_error": record.transportError,
       "time_ms": record.timeMs,
       "memory_mb": record.memoryMb,
       "cegar_iters": record.cegarIters,
