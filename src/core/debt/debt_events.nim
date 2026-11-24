@@ -52,7 +52,7 @@ type
     decisions*: seq[PolicyDecision]
     events*: seq[ClassificationEvent]
 
-proc frameTagToStr(t: FrameTag): string {.raises: [].} =
+func frameTagToStr(t: FrameTag): string {.raises: [].} =
   case t
   of fgBegin:    "B"
   of fgDecision: "D"
@@ -284,7 +284,7 @@ type
   JournalHealth = enum   # internal; maps 1:1 onto ReadHealth
     jhClean, jhRecoverableTail, jhMalformedRecord, jhIntegrityFailure
 
-proc healthToReadHealth(h: JournalHealth): ReadHealth =
+func healthToReadHealth(h: JournalHealth): ReadHealth =
   case h
   of jhClean:               rhClean
   of jhRecoverableTail:     rhRecoverableTail

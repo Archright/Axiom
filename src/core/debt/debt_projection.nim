@@ -112,7 +112,7 @@ func orderedEvents*(events: openArray[ClassificationEvent];
 # universeDigest 는 전체 canonical 서술의 결정적 해시.
 # ---------------------------------------------------------------------------
 
-proc severityLabel(dc: DebtClass): string {.raises: [].} =
+func severityLabel(dc: DebtClass): string {.raises: [].} =
   ## 결정론적 severity 라벨 — 결과에서 파생되는 작은 로컬 매핑.
   ## 분류·세기·순서에 의존하지 않고 외부 계약이 없는 보조 필드.
   case dc
@@ -123,7 +123,7 @@ proc severityLabel(dc: DebtClass): string {.raises: [].} =
   of dcQuirk:       "low"
   of dcBudgetDrift: "medium"
 
-proc canonicalCandidate(c: CandidateProjection): string {.raises: [].} =
+func canonicalCandidate(c: CandidateProjection): string {.raises: [].} =
   ## CandidateProjection 원자적 canonical 텍스트 — digest 입력 전용.
   c.candidateId & "\x1e" &
     debtClassToStr(c.classification) & "\x1e" &
@@ -139,13 +139,13 @@ proc cmpCandidateId(a, b: CandidateProjection): int {.raises: [].} =
   ## candidateId 오름차순 — 결정적 candidates 순서 보장.
   cmp(a.candidateId, b.candidateId)
 
-proc containsSeq(s: seq[uint64]; v: uint64): bool {.raises: [].} =
+func containsSeq(s: seq[uint64]; v: uint64): bool {.raises: [].} =
   for x in s:
     if x == v:
       return true
   false
 
-proc containsStr(s: seq[string]; v: string): bool {.raises: [].} =
+func containsStr(s: seq[string]; v: string): bool {.raises: [].} =
   for x in s:
     if x == v:
       return true

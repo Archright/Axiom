@@ -123,7 +123,6 @@ import verification/llbc_to_canonical
   # producer's own structured match keys, ONE source of name semantics)
 import verification/rust_replay_adapter
   # subjectGitIdentity + rustToolchainFingerprint — §6c v2 measured anchors
-import verification/rust_input_contract
 import verification/rust_rust_pipeline
 import verification/unified_trajectory  # logStage/skReport — the trajectory SSOT the engine's report stage uses
 import verification/vault_manifest      # loadManifest / mergeResult / atomicWriteManifest (#247)
