@@ -962,27 +962,36 @@ verify-proof-boundary: ## §3 direct proof boundary conformance (docs/spec/direc
 	@echo "✅ verify-proof-boundary PASSED"
 
 ## ── Rust lane live venue (issue #397) ────────────────────────────────────────
-## The extraction venue is pin-exact Charon BUILT FROM SOURCE. The upstream
-## release tarball is refused: it reports 0.1.281 (cde1085a08aeb97c333e80cb6bec…
-## …9155d826924f) — a different commit than the pin (docs/spec/
+## The extraction venue is pin-exact Charon. The upstream AeneasVerif/charon
+## release tarball is refused: it reports 0.1.281 (cde1085a08aeb97c333e80cb6bec...
+## ...9155d826924f) -- a different commit than the pin (docs/spec/
 ## rust_toolchain_quirks.md Q7). `make build-charon-rust` does not exist.
-## No CI cache exists for it: .github/actions/setup-axiom-toolchain declares
-## ~/.local/bin "z3/jq ONLY" and quarantines it on a non-exact restore, and
-## ~/.rustup/~/.cargo are outside the action — so the binary is installed
-## repo-locally under build/charon/ (gitignored) and rebuilt per run.
+## No actions/cache entry exists for it: .github/actions/setup-axiom-toolchain
+## declares ~/.local/bin "z3/jq ONLY" and quarantines it on a non-exact restore,
+## and ~/.rustup/~/.cargo are outside the action. Instead, a sha256-pinned
+## immutable GitHub Release asset built from CHARON_PIN_COMMIT on Ubuntu 24.04
+## provides the fast-path into gitignored build/charon/bin, falling back
+## fail-closed to a full source build on any fetch, digest, or identity mismatch.
 ## The lane's exit contract (axiom.rust-lane.exit.v1) answers exit 1 on an
 ## unresolved unknown-only report; that fail-closed shape IS the success
 ## condition here, because exit 0 would claim a verification nothing supports.
 
-CHARON_PIN_VERSION    := 0.1.281
-CHARON_PIN_COMMIT     := 798016509139eb51f0d764645f76d068d34ba5f6
-CHARON_PIN_IDENTITY   := $(CHARON_PIN_VERSION) ($(CHARON_PIN_COMMIT))
-CHARON_RUST_TOOLCHAIN := nightly-2026-09-17
-CHARON_REPO_URL       := https://github.com/AeneasVerif/charon
-CHARON_BUILD_DIR      := build/charon
-CHARON_BIN            := $(CHARON_BUILD_DIR)/bin/charon
-CHARON_DRIVER         := $(CHARON_BUILD_DIR)/bin/charon-driver
-CHARON_NET_RETRIES    := 3
+CHARON_PIN_VERSION     := 0.1.281
+CHARON_PIN_COMMIT      := 798016509139eb51f0d764645f76d068d34ba5f6
+CHARON_PIN_IDENTITY    := $(CHARON_PIN_VERSION) ($(CHARON_PIN_COMMIT))
+CHARON_RUST_TOOLCHAIN  := nightly-2026-09-17
+CHARON_REPO_URL        := https://github.com/AeneasVerif/charon
+CHARON_BUILD_DIR       := build/charon
+CHARON_BIN             := $(CHARON_BUILD_DIR)/bin/charon
+CHARON_DRIVER          := $(CHARON_BUILD_DIR)/bin/charon-driver
+CHARON_NET_RETRIES     := 3
+CHARON_ASSET_VERSION   := 0.1.281
+CHARON_ASSET_COMMIT    := 798016509139eb51f0d764645f76d068d34ba5f6
+CHARON_ASSET_TOOLCHAIN := nightly-2026-09-17
+CHARON_ASSET_TAG       := supply-pins-charon-0.1.281-79801650
+CHARON_ASSET_NAME      := charon-0.1.281-79801650-linux-x86_64.tar.gz
+CHARON_ASSET_URL       := https://github.com/Archright/Axiom/releases/download/$(CHARON_ASSET_TAG)/$(CHARON_ASSET_NAME)
+CHARON_ASSET_SHA256    := ff5054ce03d8ad8a93f05ca2ca8971ed8968b3ce3e6d3ec4b3bdf21013d7176c
 
 RUST_LANE_PROJECT     := tests/fixtures/rust/axiom_escape_probe
 RUST_LANE_EXPECT_EXIT := 1
@@ -993,7 +1002,7 @@ RUST_LANE_BUILD_STAMP := src/generated/build_metadata.json
 
 .PHONY: provision-charon-pinned verify-rust-lane-live
 
-provision-charon-pinned: ## Pin-exact Charon (source build) installed at build/charon/bin
+provision-charon-pinned: ## Pin-exact Charon (immutable supply asset fast-path + source fallback) at build/charon/bin
 	@set -eu; \
 	ROOT="$$PWD"; \
 	BDIR="$$ROOT/$(CHARON_BUILD_DIR)"; \
@@ -1006,21 +1015,60 @@ provision-charon-pinned: ## Pin-exact Charon (source build) installed at build/c
 	    echo "[charon] network step failed (attempt $$n/$(CHARON_NET_RETRIES)): $$*" >&2; \
 	    sleep $$((n * 5)); \
 	  done; return 1; }; \
-	if [ -x "$$BDIR/bin/charon" ] && [ -x "$$BDIR/bin/charon-driver" ]; then \
-	  M="$$("$$BDIR/bin/charon" version 2>/dev/null | head -n 1 | tr -d '\r' || true)"; \
-	  if [ "$$M" = "$$PIN" ]; then \
-	    echo "[charon] idempotent skip — $$BDIR/bin already reports '$$M'"; exit 0; \
-	  fi; \
-	  echo "[charon] installed binary reports '$${M:-<none>}' != pin — reprovisioning"; \
-	fi; \
 	command -v rustup >/dev/null 2>&1 || \
-	  fail "rustup is not on PATH. It is a RUNTIME requirement, not only a build one: the charon driver resolves its toolchain via 'rustup run $(CHARON_RUST_TOOLCHAIN) …' (charon/src/bin/charon/toolchain.rs:in_toolchain), so extraction cannot start without it"; \
+	  fail "rustup is not on PATH. It is a RUNTIME requirement, not only a build one: the charon driver resolves its toolchain via 'rustup run $(CHARON_RUST_TOOLCHAIN) ...' (charon/src/bin/charon/toolchain.rs:in_toolchain), so extraction cannot start without it"; \
+	if [ -x "$$BDIR/bin/charon" ] && [ -x "$$BDIR/bin/charon-driver" ]; then \
+	  M=""; \
+	  if OUT="$$("$$BDIR/bin/charon" version 2>/dev/null)"; then \
+	    M="$$(printf '%s\n' "$$OUT" | head -n 1 | tr -d '\r')"; \
+	  fi; \
+	  if [ "$$M" = "$$PIN" ] && rustup run '$(CHARON_RUST_TOOLCHAIN)' rustc --version >/dev/null 2>&1; then \
+	    echo "[charon] idempotent skip -- $$BDIR/bin already reports '$$M'"; exit 0; \
+	  fi; \
+	  echo "[charon] installed binary or toolchain incomplete ('$${M:-<none>}') -- reprovisioning"; \
+	fi; \
 	mkdir -p "$$BDIR/bin"; \
 	echo "[charon] [1/4] toolchain $(CHARON_RUST_TOOLCHAIN) (--profile minimal + --toolchain, so the rust-toolchain file's miri + 7 cross-targets are NOT pulled)"; \
 	retry rustup toolchain install '$(CHARON_RUST_TOOLCHAIN)' --profile minimal --no-self-update >/dev/null 2>&1 \
 	  || fail "rustup toolchain install $(CHARON_RUST_TOOLCHAIN) failed after $(CHARON_NET_RETRIES) attempts"; \
 	retry rustup component add rustc-dev llvm-tools rust-src --toolchain '$(CHARON_RUST_TOOLCHAIN)' >/dev/null 2>&1 \
 	  || fail "rustup component add (rustc-dev llvm-tools rust-src) failed after $(CHARON_NET_RETRIES) attempts"; \
+	if [ "$$(uname -s)" = "Linux" ] && [ "$$(uname -m)" = "x86_64" ] && \
+	   [ '$(CHARON_PIN_VERSION)' = '$(CHARON_ASSET_VERSION)' ] && \
+	   [ '$(CHARON_PIN_COMMIT)' = '$(CHARON_ASSET_COMMIT)' ] && \
+	   [ '$(CHARON_RUST_TOOLCHAIN)' = '$(CHARON_ASSET_TOOLCHAIN)' ] && \
+	   command -v curl >/dev/null 2>&1; then \
+	  echo "[charon] [fast-path] fetching immutable supply asset $(CHARON_ASSET_TAG)"; \
+	  TMP_TAR="$$(mktemp)"; \
+	  if retry curl -fsSL --max-time 60 -o "$$TMP_TAR" '$(CHARON_ASSET_URL)'; then \
+	    ACT_SHA="$$(sha256sum "$$TMP_TAR" | cut -d' ' -f1)"; \
+	    if [ "$$ACT_SHA" = '$(CHARON_ASSET_SHA256)' ]; then \
+	      if tar -xzf "$$TMP_TAR" -C "$$BDIR/bin" charon charon-driver; then \
+	        chmod 0755 "$$BDIR/bin/charon" "$$BDIR/bin/charon-driver"; \
+	        rm -f "$$TMP_TAR"; \
+	        M=""; \
+	        if OUT="$$("$$BDIR/bin/charon" version 2>/dev/null)"; then \
+	          M="$$(printf '%s\n' "$$OUT" | head -n 1 | tr -d '\r')"; \
+	        fi; \
+	        if [ "$$M" = "$$PIN" ]; then \
+	          echo "[charon] pinned identity ok (supply asset): $$M"; \
+	          exit 0; \
+	        fi; \
+	        echo "[charon] supply asset pin mismatch ('$${M:-<none>}' != '$$PIN') -- falling back to source build" >&2; \
+	        rm -f "$$BDIR/bin/charon" "$$BDIR/bin/charon-driver"; \
+	      else \
+	        rm -f "$$TMP_TAR"; \
+	        echo "[charon] supply asset extract failed -- falling back to source build" >&2; \
+	      fi; \
+	    else \
+	      rm -f "$$TMP_TAR"; \
+	      echo "[charon] supply asset sha256 mismatch (got $$ACT_SHA) -- falling back to source build" >&2; \
+	    fi; \
+	  else \
+	    rm -f "$$TMP_TAR"; \
+	    echo "[charon] supply asset download failed -- falling back to source build" >&2; \
+	  fi; \
+	fi; \
 	echo "[charon] [2/4] source clone at commit $(CHARON_PIN_COMMIT)"; \
 	if [ ! -d "$$SRCDIR/.git" ]; then \
 	  rm -rf "$$SRCDIR"; \
