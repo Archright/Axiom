@@ -188,6 +188,50 @@ check-imports: bin/check_imports_ast ## Import boundary scan (AST-based, parseSt
 bin/nimtry: src/gate/nimtry.nim $(wildcard src/gate/nimtry/*.nim)
 	$(NIM) c $(NIM_TOOL_FLAGS) -o:$@ $<
 
+# Reference data for the nimtry verdict (issue #462).
+#
+# An absent or malformed data/nimtry_baseline.json makes bin/nimtry PASS
+# unconditionally: loadBaseline yields none, so the v1 ratchet fallback sets
+# limit = total and errorLimit = errorCount and every comparison is x > x
+# (src/gate/nimtry/nimtry_cli.nim:513-520). Missing reference data read as a
+# valid set is the DEBT#563 defect class one level up from the sidecar.
+#
+# That reader is FROZEN (config/repository_surface.json: src/gate/**), so the
+# contract cannot be corrected at its source. It is stated here instead: no
+# governed consumer may build, measure with, or gate on bin/nimtry unless the
+# baseline is present AND loadable by the v2 fingerprint protocol that makes
+# the unconditional pass unreachable. The predicate mirrors loadBaselineV2
+# exactly — version >= 2 and a non-empty violations[] with string ids — so a
+# baseline this check accepts is one that protocol actually loads.
+NIMTRY_BASELINE := data/nimtry_baseline.json
+.PHONY: nimtry-baseline-check
+nimtry-baseline-check: ## Fail closed when data/nimtry_baseline.json is absent or not a v2 baseline
+	@printf '%s\n' \
+	  'import json, sys' \
+	  'p = "$(NIMTRY_BASELINE)"' \
+	  'def die(m):' \
+	  '    print("[nimtry-baseline-check] FAIL: " + m, file=sys.stderr)' \
+	  '    sys.exit(1)' \
+	  'try:' \
+	  '    b = json.load(open(p))' \
+	  'except FileNotFoundError:' \
+	  '    die(p + " is absent — bin/nimtry would report a clean tree without it (issue #462)")' \
+	  'except Exception as exc:' \
+	  '    die(p + " is unreadable: " + repr(exc))' \
+	  'if not isinstance(b, dict):' \
+	  '    die(p + " is not a JSON object")' \
+	  'v = b.get("version")' \
+	  'if isinstance(v, bool) or not isinstance(v, int) or v < 2:' \
+	  '    die(p + ": version must be an integer >= 2 (v2 fingerprint protocol), got " + repr(v))' \
+	  'vs = b.get("violations")' \
+	  'if not isinstance(vs, list) or not vs:' \
+	  '    die(p + ": violations[] is empty — the v2 protocol needs a non-empty fingerprint set")' \
+	  'bad = [i for i, x in enumerate(vs) if not isinstance(x, dict) or not isinstance(x.get("id"), str)]' \
+	  'if bad:' \
+	  '    die(p + ": violations[" + str(bad[0]) + "] carries no string id")' \
+	  'print("[nimtry-baseline-check] OK: " + str(len(vs)) + " fingerprints, version " + str(v))' \
+	  | python3 -
+
 # Measured nimtry count for the debt ratchet (DEBT#563).
 #
 # `bin/nimtry` exits 1 whenever the fingerprint set has New entries, so it is
@@ -198,7 +242,7 @@ bin/nimtry: src/gate/nimtry.nim $(wildcard src/gate/nimtry/*.nim)
 # this one's measurement. The verdict itself belongs to bin/debt_integrity_gate,
 # which fails closed on an absent sidecar.
 .PHONY: nimtry-measure
-nimtry-measure: bin/nimtry ## Produce the measured nimtry count consumed by the debt ratchet
+nimtry-measure: bin/nimtry nimtry-baseline-check ## Produce the measured nimtry count consumed by the debt ratchet
 	@rm -f data/nimtry_live_count.json
 	@set +e; ./bin/nimtry src/ > /dev/null 2>&1; \
 	if [ ! -f data/nimtry_live_count.json ]; then \
@@ -286,7 +330,7 @@ check-layer-negative: bin/layer_enforcement_gate ## DEBT#287 negative fixtures m
 	  echo "[check-layer-negative] FAIL: approved_pair_new_target failed without the exact verdict"; echo "$$out"; exit 1; }; \
 	echo "[check-layer-negative] approved_pair_new_target: deterministic FAIL (rc=$$rc) — a whitelisted file CANNOT add a new forbidden target"
 
-check-arch: bin/nimtry ## 아키텍처 위반 검사 (nimtry v2 fingerprint gate — exit-code gated)
+check-arch: bin/nimtry nimtry-baseline-check ## Architecture violation check (nimtry v2 fingerprint gate — exit-code gated)
 	@echo "=== [2/4] Architecture Violation Check ==="
 	@if [ -f bin/nimtry ]; then \
 		OUT=$$(bin/nimtry src/ 2>&1); \
@@ -563,7 +607,7 @@ check-toolchain-pin:
 # `&& bin/debt_engine --validate`를 실행한다 — 훅의 symlink 목록은 FROZEN이므로
 # 스냅샷 폐쇄는 여기서 닫히며, SKIP 경로에서는 두 평가자의 불필요한 스냅숏
 # 재빌드(콜드 ~6.80s, CC 139)가 발생하지 않는다.
-push-admissibility-debt-prereqs: bin/effect_contract_projection bin/nimtry ## check-debt RUN 경로 전용 평가자 스테이징 (SKIP 시 미빌드)
+push-admissibility-debt-prereqs: bin/effect_contract_projection bin/nimtry nimtry-baseline-check ## Evaluator staging for the check-debt RUN path only (not built on SKIP)
 	@echo "push-admissibility-debt-prereqs: debt evaluators staged (snapshot closure)"
 
 push-admissibility: ## pre-push push-target OID static admissibility (snapshot CWD)
@@ -1598,7 +1642,7 @@ test-prelude: ## prelude.lean integration tests (NimInt mapping, Int.natCast_non
 	@echo "✅ Prelude integration tests passed"
 	@echo ""
 
-audit: ## 4-dimension quality audit + nimtry + stub check (로컬 실행)
+audit: nimtry-baseline-check ## 4-dimension quality audit + nimtry + stub check (local run)
 	$(NIM) c -r src/gate/runners/quality_gate_runner.nim
 	$(NIM) c -r src/gate/runners/debt_scan_gate.nim
 	$(NIM) c -r src/core/audit/governance_engine.nim
