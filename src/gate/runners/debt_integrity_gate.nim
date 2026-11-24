@@ -189,15 +189,30 @@ proc countStaleGeneratedPbt(repoRoot: string): int =
     if path.endsWith(".nim"): inc result
 
 proc countNimtryViolations(repoRoot: string): int =
+  ## The total recorded in nimtry's v2 fingerprint anchor. Under the v2
+  ## protocol nimtry gates on fingerprint membership, so this is the anchor's
+  ## recorded total, not a threshold — the ratchet cap lives in
+  ## data/debt_reduction_baseline.json.
+  ##
+  ## Absent/malformed/keyless → -1, never 0. A 0 is indistinguishable from a
+  ## clean tree and is strictly weaker than every real baseline, so it would let
+  ## the Step 2 comparison pass while reporting a total of zero. -1 is routed to
+  ## the blocking `failures` list, matching countNimtryActiveViolations
+  ## (DEBT#563 fail-closed). data/nimtry_baseline.json is CONTROLLED with
+  ## DELETE=PASS, so its disappearance is an admitted change and must not be
+  ## able to weaken the ratchet silently.
+  ## The DEBT#563 marker for this fail-closed contract lives on
+  ## countNimtryActiveViolations below; one marker per debt per file.
   let path = repoRoot / NimtryBaselineRelPath
-  if not fileExists(path): return 0
-  try: parseJson(readFile(path))["total_violations"].getInt()
-  except CatchableError: 0
+  if not fileExists(path):
+    return -1
+  try: parseJson(readFile(path))["total_violations"].getInt(-1)
+  except CatchableError: -1
 
 proc countNimtryActiveViolations(repoRoot: string): int =
   ## Live measured violations from the nimtry run sidecar.
-  ## Falls back to the baseline cap when the sidecar is absent (nimtry not
-  ## run yet in this workspace) — the fallback is labeled by callers.
+  ## -1 when the sidecar is absent (nimtry not run yet in this workspace), which
+  ## callers treat as UNMEASURED rather than as zero.
   let path = repoRoot / "data" / "nimtry_live_count.json"
   if not fileExists(path):
     # DEBT#563: without the sidecar the reduction ratchet compares the declared
@@ -234,6 +249,16 @@ proc loadBaselineMetrics(repoRoot: string): seq[(string, int)] =
     keys.sort()
     for k in keys: result.add((k, metrics[k].getInt()))
   except CatchableError: result = @[]
+
+func baselineCap(baseline: seq[(string, int)]; key: string): int =
+  ## The single threshold for one metric: the `metrics` entry in
+  ## data/debt_reduction_baseline.json. The ratchet comparison and every
+  ## report of the cap read it through this function, so the number a log line
+  ## displays is the number the gate adjudicates. A missing key caps at 0,
+  ## which no measured count can satisfy.
+  for (k, v) in baseline:
+    if k == key: return v
+  0
 
 proc saveBaselineMetrics(repoRoot: string, metrics: seq[(string, int)]) =
   let baselinePath = repoRoot / BaselineRelPath
@@ -427,9 +452,7 @@ proc run(repoRoot: string): int =
     logInfo(GateTag, "Baseline updated"); return 0
   let baseline = loadBaselineMetrics(repoRoot)
   for (key, value) in currentPairs:
-    var base = 0
-    for (k, v) in baseline:
-      if k == key: base = v; break
+    let base = baselineCap(baseline, key)
     if value > base:
       let isDevMode = (not defined(release)) or getAxiomEnv(evDevMode) == "1"
       if isDevMode:
@@ -440,12 +463,18 @@ proc run(repoRoot: string): int =
 
   # Step 2b: an absent nimtry measurement is UNKNOWN, not green (DEBT#563).
   # The sidecar exists only after a live `bin/nimtry src/` run (gitignored,
-  # .gitignore:422), so `-1` means Step 2 compared the declared cap against
-  # itself — a comparison that cannot fail.
+  # .gitignore:422). The cap printed here is baselineCap's, the same value
+  # Step 2 compared `nimtry_active_violations` against.
+  # The recorded total can be absent too (countNimtryViolations → -1), which
+  # blocks below through the same `failures` list.
   let active = currentMetrics.nimtryActiveViolations
-  let cap = currentMetrics.nimtryViolationCount
+  let cap = baselineCap(baseline, "nimtry_active_violations")
+  let declaredTotal = currentMetrics.nimtryViolationCount
   if active < 0:
     logError(GateTag, "nimtry — Active Violations: UNMEASURED / Cap: " & $cap)
+  elif declaredTotal < 0:
+    logError(GateTag, "nimtry — Active Violations: " & $active &
+      " / Cap: " & $cap & " / Declared total: UNMEASURED")
   else:
     logInfo(GateTag, "nimtry — Active Violations: " & $active & " / Cap: " & $cap)
 
@@ -500,6 +529,10 @@ proc run(repoRoot: string): int =
   if active < 0:
     failures.add("UNMEASURED: nimtry_active_violations — " &
       "missing evidence is not a valid empty set (DEBT#563 fail-closed)")
+  if declaredTotal < 0:
+    failures.add("UNMEASURED: nimtry_violation_count — " &
+      NimtryBaselineRelPath & " is absent or unreadable; the declared total " &
+      "cannot be silently zero (DEBT#563 fail-closed)")
   for w in warnings: logWarn(GateTag, w)
   for f in failures: logError(GateTag, f)
   if failures.len > 0:
