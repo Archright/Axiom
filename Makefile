@@ -110,6 +110,7 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/test_bug_verdict_projection.nim \
                   tests/unit/test_canonical_projection_paths.nim \
                   tests/unit/test_scope_lock_rust.nim \
+                  tests/unit/test_scope_lock_signature_binding.nim \
                   tests/unit/test_rust_replay_adapter.nim \
                   tests/unit/test_llbc_to_canonical.nim \
                   tests/unit/test_rust_lane_coverage_line.nim \
