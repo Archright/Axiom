@@ -6204,6 +6204,88 @@
       "lastVerifiedAt": "2026-11-22T11:36:39Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md section 10.1: the audited site is a GitHub Actions workflow file outside debt_integrity_gate's src/ marker-scan root, so a nim_pragma marker cannot carry the binding. The registry entry is the binding medium, with the site anchored by symbol/lineRange/contentHash at .github/workflows/merge-queue-rearm.yml:510-638. Trace: this entry's resolution (FIXED) and source (theater_audit); external: src/cli/merge_cli.nim trustSurfaceMatch/getPrFiles (the canonical predicate this gate is aligned to), docs/evidence/rearm_followup_2026-11-22.md."
+    },
+    {
+      "id": "DEBT#566",
+      "category": "Supply Chain / Unpinned Install",
+      "title": "landing-verdict path installs libpcre3 via unpinned apt-get with no version, hash, or identity check",
+      "description": "Machine-observed 2026-11-24 at origin/main 4311749e. .github/workflows/admission-check.yml:889-902 installs libpcre3 with `sudo apt-get install -y -qq libpcre3`, falling back to `apt-get update` then the same unpinned install. No version, no sha256, no package-identity assertion. The postcondition at :902 only asserts libpcre.so.3 is loadable, so any bytes the mirror serves satisfy the gate. The step runs on the landing-verdict path (stage==verdict, venue==landing) where setup-axiom-toolchain is skipped, so the pinned-deb ladder in .github/actions/setup-axiom-toolchain/action.yml:735-753 cannot be reused as-is. admission-check is one of the 7 required contexts.",
+      "files": [
+        ".github/workflows/admission-check.yml"
+      ],
+      "severity": "high",
+      "source": "supply_chain_audit",
+      "status": "open",
+      "productTruthImpact": "NON_PRODUCT"
+    },
+    {
+      "id": "DEBT#567",
+      "category": "Supply Chain / Unenforced Lock",
+      "title": "publication-integrity installs scancode-toolkit and pluggy by version only; the committed hash lock is never consumed",
+      "description": "Machine-observed 2026-11-24 at origin/main 4311749e. .github/workflows/publication-integrity.yml:215-221 runs `pip install --quiet scancode-toolkit==32.5.0 pluggy==1.5.0` inside a throwaway venv. The pins are version strings only: pip resolves the transitive closure from the live index with no hash verification. A hash-bearing lock exists at compliance/scancode-requirements.lock (211 lines, 80 distributions, 90 --hash entries, zero distributions without a hash), but no workflow consumes it, so the lock is documentation, not enforcement. publication-integrity is one of the 7 required contexts.",
+      "files": [
+        ".github/workflows/publication-integrity.yml",
+        "compliance/scancode-requirements.lock"
+      ],
+      "severity": "high",
+      "source": "supply_chain_audit",
+      "status": "open",
+      "productTruthImpact": "NON_PRODUCT"
+    },
+    {
+      "id": "DEBT#568",
+      "category": "Supply Chain / Unpinned Install",
+      "title": "debt-registry-gate installs jsonschema by version only with an unpinned transitive closure, and has no frozen exception",
+      "description": "Machine-observed 2026-11-24 at origin/main 4311749e. .github/workflows/debt-registry-gate.yml:44 runs `PIP_BREAK_SYSTEM_PACKAGES=1 python3 -m pip install --user jsonschema==4.26.0`. Version pin only; the transitive closure (attrs, jsonschema-specifications, referencing, rpds-py) is resolved live with no hash. No lock file exists for this closure. Separately, the file is absent from both classes.CONTROLLED and frozenExceptions.paths in config/repository_surface.json, so it resolves to FROZEN through the .github/** glob and a push touching it is rejected by the pre-push surface guard (tools/surface_guard.nim:521-522) before any PR can exist. Closing this debt therefore needs a policy amendment (policyVersion 108->109) in a separate PR before the pin itself.",
+      "files": [
+        ".github/workflows/debt-registry-gate.yml",
+        "config/repository_surface.json"
+      ],
+      "severity": "high",
+      "source": "supply_chain_audit",
+      "status": "open",
+      "productTruthImpact": "NON_PRODUCT"
+    },
+    {
+      "id": "DEBT#569",
+      "category": "Supply Chain / Unpinned Install",
+      "title": "release-ship installs libpcre3 twice via unpinned apt-get on the manual release path",
+      "description": "Machine-observed 2026-11-24 at origin/main 4311749e. .github/workflows/release-ship.yml:479-489 and :575-585 both run `apt-get update` then `apt-get install -y -qq libpcre3` with no version, hash, or identity assertion; the postcondition is a loadability check only. Trigger is workflow_dispatch only (allowed_events=[workflow_dispatch]; tag-push auto-fire retired per ADR-0024), so exposure is lower than the required-context sites, but the produced release artifacts inherit the unpinned bytes. The file is CONTROLLED-with-frozenException (group ci-infra) and is NOT trust-surface, so a fix needs no break-glass.",
+      "files": [
+        ".github/workflows/release-ship.yml"
+      ],
+      "severity": "medium",
+      "source": "supply_chain_audit",
+      "status": "open",
+      "productTruthImpact": "NON_PRODUCT"
+    },
+    {
+      "id": "DEBT#570",
+      "category": "Supply Chain / Accepted Exception",
+      "title": "closure-watcher reinstalls libc6 unpinned as a deliberate needrestart probe; pinning it would void the measurement",
+      "description": "Machine-observed 2026-11-24 at origin/main 4311749e. .github/workflows/closure-watcher.yml:1009 runs `apt-get install --reinstall -y libc6` with no pin. This is not a supply installation: it is the deliberate trigger that makes needrestart's APT hook fire, and the NEEDRESTART-* lines it captures (:1006-1008) are the only direct evidence that the policy actually fired. Recorded as accepted/WONT_FIX so the unpinned call is auditable rather than silent (AGENTS.md 0.9). Trigger is schedule plus workflow_dispatch. If the probe is ever retired, the call must be pinned or removed in the same change.",
+      "files": [
+        ".github/workflows/closure-watcher.yml"
+      ],
+      "severity": "low",
+      "source": "supply_chain_audit",
+      "status": "accepted",
+      "resolution": "WONT_FIX",
+      "note": "Deliberate measurement probe. Pinning defeats the measurement.",
+      "productTruthImpact": "NON_PRODUCT"
+    },
+    {
+      "id": "DEBT#571",
+      "category": "Supply Chain / Implicit Platform Dependency",
+      "title": "ci-cache-publisher must declare cache-mode write because merge_group is a read-only cache trigger; the dependency is recorded nowhere",
+      "description": "Documented-behaviour gap, 2026-11-24. Per the GitHub Actions dependency-caching reference, only push, workflow_dispatch, repository_dispatch, delete, registry_package, page_build and schedule may create or overwrite caches in the default branch scope; every other trigger resolving to the default branch is granted read-only cache access. merge_group is not on the write list, so a merge_group run can restore but never save. .github/workflows/ci-cache-publisher.yml does declare cache-mode: write at :217 and :888, which is the correct and only way to re-seed the A/B layers; the cache-poisoning risk in the upstream warning does not apply there because those jobs run trusted base-built code, not candidate code. The debt is that nothing records WHY the declaration is mandatory: an edit that removes cache-mode: write would silently turn every save into a no-op that logs an informational message and continues, with no workflow failure, and cache self-healing would stop with no red check.",
+      "files": [
+        ".github/workflows/ci-cache-publisher.yml"
+      ],
+      "severity": "medium",
+      "source": "supply_chain_audit",
+      "status": "open",
+      "productTruthImpact": "NON_PRODUCT"
     }
   ]
 }
