@@ -208,13 +208,25 @@ Z3's `:memory` option cannot be recovered from.
 
 ### Telemetry Classification Logic
 
+Two independent facts live in a response stream, and the row records them on two
+axes (issue #349, schema `axiom-z3-telemetry/2`):
+
+- `result` — the ⟨check_sat_response⟩ the solver gave. It is read the way the
+  verdict path reads it (`classifyZ3Output` skips the `(...)` response lines) and
+  keeps the DECISION-0825 gate on the SAT mint, so telemetry can never claim a
+  verdict the verdict path would refuse.
+- `transport_error` — `"error-response"` when the raw stream carried an SMT-LIB
+  ⟨error_response⟩ (Z3 refused a command), else `""`. Z3 answers `(get-model)`
+  after `unsat` with `(error "… model is not available")`; the answer is still
+  `unsat`, and it used to be recorded as `result:"error"` because `solverResponse`
+  rejects the whole stream once any error response is present.
+
 ```
 defer:
   if z3Result.isOk():
-    output = z3Result.get().toLowerAscii()
-    if output.contains("unsat"): resultStatus = "unsat"
-    elif output.contains("sat"): resultStatus = "sat"
-    elif output.contains("unknown"): resultStatus = "unknown"
+    resultStatus = telemetryResultOf(raw)        # first top-level sat|unsat|unknown,
+                                                 # sat only through solverResponse
+    transportError = telemetryTransportOf(raw)   # solverStreamHasErrorResponse(raw)
   else:
     errLower = z3Result.error().toLowerAscii()
     if errLower.contains("deadline") or errLower.contains("timeout"):
@@ -224,6 +236,11 @@ defer:
 ```
 
 **Note**: A default-initialized `Result[string, string]` has `error = ""`, classified as `"error"`.
+
+**Note**: `result:"error"` with no answer line means the stream carried no
+⟨check_sat_response⟩ at all — a refusal or a truncated read, not an answer the
+solver gave. That meaning is unchanged, so rows written before the split (no
+`schema` key) are read exactly as they were written and are never re-derived.
 
 ## 5. Verification
 
