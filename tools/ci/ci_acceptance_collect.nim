@@ -666,14 +666,23 @@ func legitimatePolicyRefusal*(text: string): bool {.raises: [].} =
                                "carrier", "sizing", "c_out"])
 
 func reasonCodeValue*(text: string): string {.raises: [].} =
-  ## Extract the value of a verdict `reasonCode` field (reasonCode=CODE,
-  ## reasonCode: CODE, "reasonCode": "CODE"). Empty when absent.
+  ## Extract the FIRST value of a verdict `reasonCode` field. Accepts
+  ##   reasonCode=CODE / reasonCode: CODE / "reasonCode": "CODE" / 'reasonCode': 'CODE'
+  ## Empty when absent.
+  ##
+  ## Callers that must decide *whether a refusal was declared* cannot use this:
+  ## a log bundle holds several `reasonCode` mentions (step outputs, health
+  ## probes, a `"reasonCode": "OK"` readiness echo) and the first one is rarely
+  ## the verdict. Use `declaredReasonCodes` for that.
   var i = 0
   while i < text.len:
     let at = text.find("reasonCode", i)
     if at < 0:
       break
     var j = at + "reasonCode".len
+    ## A JSON key closes its own quote before the colon: "reasonCode": "CODE"
+    if j < text.len and text[j] in {'"', '\''}:
+      inc j
     while j < text.len and text[j] in {' ', '\t'}:
       inc j
     if j < text.len and (text[j] == '=' or text[j] == ':'):
@@ -689,9 +698,71 @@ func reasonCodeValue*(text: string): string {.raises: [].} =
     i = at + "reasonCode".len
   result = ""
 
+func declaredReasonCodes*(text: string): seq[string] {.raises: [].} =
+  ## EVERY `reasonCode` value in the text, in order, de-duplicated.
+  ##
+  ## Why every one: an attempt's evidence is the whole log bundle, and that
+  ## bundle mentions `reasonCode` in unrelated places. Run 45380275553 (PR #451)
+  ## carried `"reasonCode": "OK"` in the `attest / admission-check` log and the
+  ## actual verdict `"reasonCode":"ROT_ALLOWLIST"` in `verdict / admission-check`.
+  ## A first-match reader returned `OK`, found no legible refusal, and let the
+  ## supply heuristic claim the attempt. Scanning all of them makes the real
+  ## verdict reachable regardless of file order.
+  var i = 0
+  while i < text.len:
+    let at = text.find("reasonCode", i)
+    if at < 0:
+      break
+    var j = at + "reasonCode".len
+    if j < text.len and text[j] in {'"', '\''}:
+      inc j
+    while j < text.len and text[j] in {' ', '\t'}:
+      inc j
+    if j < text.len and (text[j] == '=' or text[j] == ':'):
+      inc j
+      while j < text.len and text[j] in {' ', '\t', '"', '\''}:
+        inc j
+      let start = j
+      while j < text.len and
+          text[j] in {'a' .. 'z', 'A' .. 'Z', '0' .. '9', '_', '-'}:
+        inc j
+      if j > start:
+        let code = text[start ..< j]
+        if code notin result:
+          result.add code
+    i = at + "reasonCode".len
+
 func certificateRefusalCode*(text: string): string {.raises: [].} =
   let code = reasonCodeValue(text)
   result = if code in CertificateRefusalCodes: code else: ""
+
+func structuredLegitReason*(text: string): string {.raises: [].} =
+  ## The verdict's own `reasonCode` field, when it names a policy refusal this
+  ## repository accepts. This is a STRUCTURED statement of why admission
+  ## refused; it outranks any free-text substring match elsewhere in the same
+  ## attempt.
+  ##
+  ## Why the rank matters (run 45380275553, PR #451): the attempt's verdict was
+  ## `{"result":"mergeAborted","reasonCode":"ROT_ALLOWLIST", ...}`, while the
+  ## `mint-prepare` log held the shell comment
+  ##   `# waits (observed: run 2026-10-27 E: Could not get lock ...)`
+  ## echoed verbatim by the runner ahead of the step body. That comment carries
+  ## an `ExternalSupplySignatures` needle and its neighbouring `apt-get` line
+  ## carries a `PackageContextMarkers` needle, so the free-text rule claimed
+  ## `external_dependency` and masked the real refusal — the collector reported
+  ## `external_supply_unavailable` for a run that never had a supply outage.
+  ## A quoted failure string is context, not a verdict; a declared reasonCode
+  ## is the verdict.
+  let code = reasonCodeValue(text)
+  result = if code in LegitSignatures: code else: ""
+
+func structuredLegitReasonFrom*(text: string): string {.raises: [].} =
+  ## A declared policy-refusal reasonCode, scanning EVERY reasonCode in the
+  ## text rather than only the first (see `declaredReasonCodes`).
+  for code in declaredReasonCodes(text):
+    if code in LegitSignatures:
+      return code
+  result = ""
 
 func isMintJob*(name: string): bool {.raises: [].} =
   let lower = name.toLowerAscii()
@@ -803,6 +874,17 @@ func classifyAttemptCore(a: ObservedAttempt, replacementExists,
       else: "no artifact or log evidence available"
     return AttemptClass(kind: ckUnclassified, evidence: evPtr & "/evidence:missing",
                         gap: true, gapReason: why)
+  let declaredRefusal = structuredLegitReasonFrom(text)
+  if declaredRefusal.len > 0:
+    ## A declared policy-refusal reasonCode is the verifier's own statement of
+    ## why it refused. It outranks every free-text inference below, including
+    ## the supply rule: run 45380275553 (PR #451) refused with
+    ## reasonCode=ROT_ALLOWLIST while a quoted lock string in an echoed shell
+    ## comment matched ExternalSupplySignatures and was reported instead.
+    return AttemptClass(kind: ckLegitimatePolicy,
+                        evidence: findEvidence(a, @[declaredRefusal]),
+                        detail: "legitimate policy refusal (declared reasonCode=" &
+                                declaredRefusal & ")")
   if hasSoundnessFailure(text):
     return AttemptClass(kind: ckInternalDefect, subtype: dsSoundnessFailure,
                         evidence: findEvidence(a, signatureNeedles(dsSoundnessFailure)),
