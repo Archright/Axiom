@@ -9,7 +9,7 @@ axiomLayer "domain"
 ## Design:
 ##   - contentHash  = SHA-256(raw source text) — fast change detection
 ##   - cstHash      = SHA-256(CST node structure) — structural fingerprint
-##   - symbolNames  = cached function/proc names — skip re-scan
+##   - symbolNames  = derived from cachedSymbols on load; never persisted
 ##   - merkleRoot   = Merkle tree root of all file hashes — O(1) global check
 
 import core/crypto/hash_kernel
@@ -31,7 +31,7 @@ type
     ## Per-file cache entry with content hash and symbol metadata.
     contentHash*: string       ## SHA-256 hex of file content (fast change detection)
     cstHash*: string           ## SHA-256 hex of CST node structure
-    symbolNames*: seq[string]  ## Function/proc names discovered in this file
+    symbolNames*: seq[string]  ## Function/proc names (derived from cachedSymbols on load)
     lastModified*: int64       ## File modification timestamp (0 = unknown)
     fileSize*: int64           ## File size in bytes for dual mtime+size guard
     cachedSymbols*: seq[CachedTopologySymbol]  ## Full symbol data for cache hit reconstruction
@@ -171,7 +171,6 @@ func entryToJson(entry: MerkleCacheEntry): JsonNode {.raises: [].} =
   %*{
     "contentHash": entry.contentHash,
     "cstHash": entry.cstHash,
-    "symbolNames": entry.symbolNames,
     "lastModified": entry.lastModified,
     "fileSize": entry.fileSize,
     "cachedSymbols": symbolsArray
@@ -184,7 +183,10 @@ proc jsonToEntry(node: JsonNode): Option[MerkleCacheEntry] {.raises: [],
   ##   contentHash (JString), cstHash (JString), lastModified (JInt),
   ##   cachedSymbols (JArray of JObject — may be empty: "scanned, zero symbols")
   ## Optional fields (defaults when absent):
-  ##   symbolNames (JArray of JString), fileSize (JInt, default 0 = unknown)
+  ##   fileSize (JInt, default 0 = unknown)
+  ## Legacy field: symbolNames (JArray of JString) is accepted and shape-checked
+  ##   but its value is ignored — entry.symbolNames is derived from cachedSymbols
+  ##   below, so old and new caches produce identical engines.
   ## Per-symbol required fields: modulePath, functionName, nodeType, nodeIdStr,
   ##   declarationLine, bodyStartLine, bodyEndLine, exported, boundaryKind,
   ##   branchCount, nestingDepth, lineSpan, hasAxiomImpl.
@@ -211,12 +213,14 @@ proc jsonToEntry(node: JsonNode): Option[MerkleCacheEntry] {.raises: [],
       if fs.kind != JInt:
         return none(MerkleCacheEntry)
       entry.fileSize = fs.getInt()
+    # Legacy caches may carry a redundant 'symbolNames' array. Validate its
+    # shape (preserves the old reject-on-corruption contract) but discard its
+    # value: symbolNames is derived from cachedSymbols below.
     let sn = node{"symbolNames"}
     if not sn.isNil and sn.kind == JArray:
       for s in sn:
         if s.isNil or s.kind != JString:
           return none(MerkleCacheEntry)
-        entry.symbolNames.add(s.getStr())
     let cs = node{"cachedSymbols"}
     if cs.isNil or cs.kind != JArray:
       return none(MerkleCacheEntry)
@@ -277,6 +281,9 @@ proc jsonToEntry(node: JsonNode): Option[MerkleCacheEntry] {.raises: [],
         rawCallTargets: targets,
         definitionFingerprint: defFingerprint
       ))
+    # Canonical derivation: symbolNames is a projection of cachedSymbols.
+    for sym in entry.cachedSymbols:
+      entry.symbolNames.add(sym.functionName)
     some(entry)
   except CatchableError as e:
     logError("jsonToEntry: " & e.msg)
