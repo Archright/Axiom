@@ -205,7 +205,7 @@ nimtry-measure: bin/nimtry ## Produce the measured nimtry count consumed by the 
 	  echo "[nimtry-measure] FAIL: no measurement produced (bin/nimtry wrote no sidecar)"; \
 	  exit 1; \
 	fi; \
-	echo "[nimtry-measure] measured: $$(sed -n 's/.*"total_violations": \\([0-9]*\\).*/\\1/p' data/nimtry_live_count.json)"
+	echo "[nimtry-measure] sidecar produced; the count is reported by the gate that consumes it"
 
 bin/purity_check: tools/local_purity_check.nim
 	$(NIM) c --hints:off -o:$@ $<

@@ -438,26 +438,16 @@ proc run(repoRoot: string): int =
         logError(GateTag, "FAIL: " & key & " increased (" & $value & " > " & $base & ")")
         return 1
 
-  # Step 2b: Active vs Historical Cap disambiguation (nimtry)
-  #
-  # DEBT#563 closing criteria: an absent measurement is UNKNOWN, not green.
-  # The sidecar is produced only by a live `bin/nimtry src/` run (it is
-  # gitignored, .gitignore:422), so `-1` here means nothing was measured and
-  # the ratchet above compared the declared cap against itself — a comparison
-  # that can never fail. Recorded as a flag, not an early return, so the
-  # registry<->marker binding check below stays enforced in the same run.
+  # Step 2b: an absent nimtry measurement is UNKNOWN, not green (DEBT#563).
+  # The sidecar exists only after a live `bin/nimtry src/` run (gitignored,
+  # .gitignore:422), so `-1` means Step 2 compared the declared cap against
+  # itself — a comparison that cannot fail.
   let active = currentMetrics.nimtryActiveViolations
   let cap = currentMetrics.nimtryViolationCount
-  var unmeasuredNimtry = false
-  if active >= 0:
-    logInfo(GateTag, "nimtry — Active Violations: " & $active &
-      " / Historical Baseline Cap: " & $cap)
+  if active < 0:
+    logError(GateTag, "nimtry — Active Violations: UNMEASURED / Cap: " & $cap)
   else:
-    unmeasuredNimtry = true
-    logError(GateTag, "nimtry — Active Violations: UNMEASURED " &
-      "(no live `bin/nimtry src/` run in this tree) / Historical Baseline Cap: " & $cap)
-    logError(GateTag, "FAIL: nimtry_active_violations is unmeasured — " &
-      "missing evidence is not a valid empty set (DEBT#563 fail-closed)")
+    logInfo(GateTag, "nimtry — Active Violations: " & $active & " / Cap: " & $cap)
 
   # Step 3: Parse registry (original)
   let entries = parseRegistry(jsonPath)
@@ -507,14 +497,13 @@ proc run(repoRoot: string): int =
     if s.id notin allRegistryIds:
       warnings.add("ORPHAN-CODE: " & s.id & " (" & s.file & ":" & $s.line & ")")
 
+  if active < 0:
+    failures.add("UNMEASURED: nimtry_active_violations — " &
+      "missing evidence is not a valid empty set (DEBT#563 fail-closed)")
   for w in warnings: logWarn(GateTag, w)
   for f in failures: logError(GateTag, f)
   if failures.len > 0:
-    logError(GateTag, $failures.len & " stale debt(s) — FAIL")
-    return 1
-  if unmeasuredNimtry:
-    logError(GateTag, "All " & $openIds.len & " open debts have code markers, " &
-      "but the nimtry ratchet is UNMEASURED — FAIL")
+    logError(GateTag, $failures.len & " blocking debt finding(s) — FAIL")
     return 1
   logInfo(GateTag, "All " & $openIds.len & " open debts have code markers. PASS.")
   return 0
