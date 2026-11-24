@@ -15,7 +15,7 @@
 ##     match inside the attempt window; duplicates are UNKNOWN, not a pick;
 ##   * one mismatching producer is authority_substitution, never a success.
 
-import std/[json, strutils, unittest]
+import std/[algorithm, json, strutils, unittest]
 
 import ../../tools/ci/ci_admission_observe
 from ../../tools/ci/ci_acceptance_collect import p50Seconds
@@ -32,6 +32,8 @@ const
   TMerged = "2026-11-23T13:59:42Z"
   AppId = 5795152
   ActionsId = 15368
+  RunId = "45189948255"
+  RunSha = "7f3424cca91f343aa55354b3084af97e30bf65d4"
 
 func chk(name, start, done: string; app = ActionsId; verdict = false;
          bound = true): CheckState =
@@ -544,3 +546,609 @@ suite "attempt selection":
     check found
     # selectAttemptRun reports it; the fetch layer refuses attempt <= 0.
     check sel.runAttempt == 0
+
+# ---------------------------------------------------------------------------
+# 8. Workflow YAML — `jobs:` and `needs:` only
+# ---------------------------------------------------------------------------
+
+const GateYaml = """name: admission-gate-v2
+on:
+  merge_group:
+jobs:
+  anchor-resolve:
+    runs-on: ubuntu-latest
+    steps:
+      - name: resolve
+        run: |
+          echo "needs: [rogue-job]"
+          echo "  attest:"
+  closure-deriver:
+    needs: [anchor-resolve]
+  attest:
+    needs: [anchor-resolve]
+  mint-prepare:
+    needs: [attest, anchor-resolve]
+  mint-publish:
+    needs: [mint-prepare, gateway, anchor-resolve]
+  gateway:
+    needs: [closure-deriver]
+  verdict:
+    needs: [mint-prepare, closure-deriver, anchor-resolve]
+  admission-check:
+    name: admission-check
+    needs: [anchor-resolve, closure-deriver, attest, mint-prepare, mint-publish, verdict, gateway]
+"""
+
+suite "workflow YAML":
+  test "the declared job ids and needs edges are read from `jobs:`":
+    let (ok, g, err) = parseWorkflowJobs(GateYaml)
+    check ok
+    check err.len == 0
+    check g.jobs == @["admission-check", "anchor-resolve", "attest",
+                       "closure-deriver", "gateway", "mint-prepare",
+                       "mint-publish", "verdict"]
+    check g.needs.len == 18
+    # admission-check needs all seven producers; anchor-resolve needs nothing.
+    var headCount = 0
+    for e in g.needs:
+      if e.jobId == "anchor-resolve":
+        inc headCount
+    check headCount == 0
+    var acCount = 0
+    for e in g.needs:
+      if e.jobId == "admission-check":
+        inc acCount
+    check acCount == 7
+    check graphValidation(g).len == 0
+
+  test "a `run: |` body is never mistaken for job or needs structure":
+    # The block scalar above contains `needs: [rogue-job]` and `  attest:`, both
+    # of which would fabricate a job id or an edge if indentation were ignored.
+    let (ok, g, _) = parseWorkflowJobs(GateYaml)
+    check ok
+    check "rogue-job" notin g.jobs
+    for e in g.needs:
+      check e.need != "rogue-job"
+
+  test "a job-level `name:` is captured, not treated as a job id":
+    let (ok, g, _) = parseWorkflowJobs(GateYaml)
+    check ok
+    check g.jobNames.len == 1
+    check g.jobNames[0].jobId == "admission-check"
+    check g.jobNames[0].name == "admission-check"
+
+  test "the block-list needs form is parsed the same as the flow form":
+    let yaml = """
+jobs:
+  a:
+    needs:
+      - b
+      - c
+  b:
+  c:
+"""
+    let (ok, g, err) = parseWorkflowJobs(yaml)
+    check ok
+    check err.len == 0
+    check g.needs == @[(jobId: "a", need: "b"), (jobId: "a", need: "c")]
+
+  test "a needs edge naming an undeclared job is an error, not a dropped edge":
+    let yaml = """
+jobs:
+  a:
+    needs: [ghost]
+"""
+    let (ok, _, err) = parseWorkflowJobs(yaml)
+    check not ok
+    check "undeclared job 'ghost'" in err
+
+  test "a needs cycle is an error":
+    let yaml = """
+jobs:
+  a:
+    needs: [b]
+  b:
+    needs: [a]
+"""
+    let (ok, _, err) = parseWorkflowJobs(yaml)
+    check not ok
+    check "cycle" in err
+
+  test "a duplicate job id is an error":
+    let yaml = """
+jobs:
+  a:
+  a:
+"""
+    let (ok, _, err) = parseWorkflowJobs(yaml)
+    check not ok
+    check "duplicate job id" in err
+
+  test "a document with no `jobs:` is an error":
+    let (ok, _, err) = parseWorkflowJobs("name: x\non: push\n")
+    check not ok
+    check "no top-level 'jobs:'" in err
+
+# ---------------------------------------------------------------------------
+# 9. DAG attribution — prefix rule, never suffix inversion
+# ---------------------------------------------------------------------------
+
+func gateJobIds(): seq[string] =
+  @["admission-check", "anchor-resolve", "attest", "closure-deriver", "gateway",
+    "mint-prepare", "mint-publish", "verdict"]
+
+suite "DAG attribution":
+  test "`attest / admission-check` attributes to `attest`, not to `admission-check`":
+    # `admission-check` IS a top-level job id, so a suffix parse silently binds
+    # the callee's inner job to the WRONG producer. The prefix rule is the whole
+    # defence; this assertion is the proof that it is the rule in force.
+    let (id, reason) = attributeRecord(gateJobIds(), "attest / admission-check")
+    check reason.len == 0
+    check id == "attest"
+
+  test "`verdict / admission-check` attributes to `verdict`":
+    let (id, _) = attributeRecord(gateJobIds(), "verdict / admission-check")
+    check id == "verdict"
+
+  test "a matrix instance attributes to its caller job id":
+    check attributeRecord(gateJobIds(), "attest / go-critical-lane (0)").jobId == "attest"
+    check attributeRecord(gateJobIds(), "attest / go-critical-lane (3)").jobId == "attest"
+
+  test "an exact job id attributes to itself":
+    check attributeRecord(gateJobIds(), "admission-check").jobId == "admission-check"
+    check attributeRecord(gateJobIds(), "gateway").jobId == "gateway"
+
+  test "a separator is required; a bare prefix is not an attribution":
+    # "attestation" starts with "attest" but is a different job.
+    let (id, reason) = attributeRecord(gateJobIds(), "attestation")
+    check id.len == 0
+    check reason.len > 0
+
+  test "an unattributable name is UNKNOWN, never a nearest guess":
+    let (id, reason) = attributeRecord(gateJobIds(), "mystery-job")
+    check id.len == 0
+    check "attributes to no declared job id" in reason
+
+  test "a name that declares an undeclared job id is a hard rejection":
+    let (id, reason) = attributeRecord(gateJobIds(), "rogue-job / build")
+    check id.len == 0
+    check "does not declare" in reason
+
+  test "a job-level `name:` makes a bare record name unattributable":
+    let names = @[JobNameDecl(jobId: "admission-check", name: "Final Verdict")]
+    let (id, reason) = attributeRecord(gateJobIds(), "Final Verdict", names)
+    check id.len == 0
+    check "`name:`" in reason
+
+# ---------------------------------------------------------------------------
+# 10. DAG bucketing — reusable-workflow expansion
+# ---------------------------------------------------------------------------
+
+func dagRecord(name, start, done: string; conclusion = "success";
+               created = ""; jobSha = RunSha;
+               attempt = 2): JobRecord =
+  JobRecord(name: name, runId: RunId, runAttempt: attempt, headSha: jobSha,
+            status: "completed", conclusion: conclusion, startedAt: start,
+            completedAt: done, createdAt: created)
+
+# The real bucket sizes of one observed attempt: 26 records over 8 job ids.
+const
+  AttestNames = ["attest / build-base-artifacts",
+                 "attest / go-critical-lane (0)", "attest / go-critical-lane (1)",
+                 "attest / go-critical-lane (2)", "attest / admission-check",
+                 "attest / admission-independents"]
+  GatewayNames = ["gateway / select", "gateway / candidate-build",
+                  "gateway / candidate-build-arm", "gateway / gateway-shard (0)",
+                  "gateway / gateway-shard (1)", "gateway / gateway-identity-gate",
+                  "gateway / proof-reconcile", "gateway / sl09-scope"]
+  VerdictNames = ["verdict / build-base-artifacts", "verdict / go-critical-lane (0)",
+                  "verdict / go-critical-lane (1)", "verdict / admission-check",
+                  "verdict / admission-independents"]
+  MintPrepareNames = ["mint-prepare / prepare", "mint-prepare / publish"]
+  MintPublishNames = ["mint-publish / prepare", "mint-publish / publish"]
+
+func expansionRecords(): seq[JobRecord] =
+  ## 6 + 8 + 5 + 2 + 2 + 1 + 1 + 1 = 26 records onto 8 declared job ids, on ONE
+  ## coherent timeline: the chain comes out exactly equal to the run's own wall.
+  ## anchor-resolve 04:34:50-04:34:55, closure-deriver ...-04:35:00,
+  ## attest ...-04:35:10, gateway ...-04:36:00, mint-prepare ...-04:36:00,
+  ## mint-publish ...-04:36:30, verdict ...-04:37:00,
+  ## admission-check 04:37:01-04:37:10.
+  for n in AttestNames:
+    result.add dagRecord(n, "2026-11-24T04:35:00Z", "2026-11-24T04:35:10Z",
+                         created = "2026-11-24T04:35:00Z")
+  for n in GatewayNames:
+    result.add dagRecord(n, "2026-11-24T04:35:00Z", "2026-11-24T04:36:00Z",
+                         created = "2026-11-24T04:35:00Z")
+  for n in VerdictNames:
+    result.add dagRecord(n, "2026-11-24T04:36:01Z", "2026-11-24T04:37:00Z",
+                         created = "2026-11-24T04:36:01Z")
+  # prepare runs, publish is ALWAYS skipped — retained, never filtered.
+  result.add dagRecord(MintPrepareNames[0], "2026-11-24T04:35:10Z",
+                       "2026-11-24T04:36:00Z",
+                       created = "2026-11-24T04:35:10Z")
+  result.add dagRecord(MintPrepareNames[1], "2026-11-24T04:36:00Z",
+                       "2026-11-24T04:36:00Z", conclusion = "skipped",
+                       created = "2026-11-24T04:36:00Z")
+  result.add dagRecord(MintPublishNames[0], "2026-11-24T04:36:00Z",
+                       "2026-11-24T04:36:30Z",
+                       created = "2026-11-24T04:36:00Z")
+  result.add dagRecord(MintPublishNames[1], "2026-11-24T04:36:30Z",
+                       "2026-11-24T04:36:30Z", conclusion = "skipped",
+                       created = "2026-11-24T04:36:30Z")
+  result.add dagRecord("anchor-resolve", "2026-11-24T04:34:50Z",
+                       "2026-11-24T04:34:55Z",
+                       created = "2026-11-24T04:34:50Z")
+  result.add dagRecord("closure-deriver", "2026-11-24T04:34:56Z",
+                       "2026-11-24T04:35:00Z",
+                       created = "2026-11-24T04:34:56Z")
+  result.add dagRecord("admission-check", "2026-11-24T04:37:01Z",
+                       "2026-11-24T04:37:10Z",
+                       created = "2026-11-24T04:37:01Z")
+
+suite "DAG bucketing":
+  test "26 records expand onto 8 job ids with zero remainder":
+    let (ok, g, err) = parseWorkflowJobs(GateYaml)
+    check ok
+    check err.len == 0
+    let recs = expansionRecords()
+    check recs.len == 26
+    let b = bucketRecords(g, recs, RunId, 2, RunSha)
+    check b.status == dsMeasured
+    check b.reason.len == 0
+    check b.buckets.len == 8
+    var total = 0
+    for x in b.buckets:
+      total += x.members
+      case x.jobId
+      of "attest": check x.members == 6
+      of "gateway": check x.members == 8
+      of "verdict": check x.members == 5
+      of "mint-prepare": check x.members == 2
+      of "mint-publish": check x.members == 2
+      of "anchor-resolve": check x.members == 1
+      of "closure-deriver": check x.members == 1
+      of "admission-check": check x.members == 1
+      else: check false
+    # Zero remainder: every record landed in exactly one bucket.
+    check total == recs.len
+
+  test "the skipped half of a reusable expansion is retained":
+    let (ok, g, _) = parseWorkflowJobs(GateYaml)
+    check ok
+    let b = bucketRecords(g, expansionRecords(), RunId, 2, RunSha)
+    var mp: Bucket
+    for x in b.buckets:
+      if x.jobId == "mint-prepare":
+        mp = x
+    check mp.members == 2
+    check mp.skippedMembers == 1
+    # A skipped record is not a success, and it never becomes one.
+    check not mp.allSuccess
+
+  test "bucket completed_at is max across the bucket, never min or any member":
+    let (ok, g, _) = parseWorkflowJobs(GateYaml)
+    check ok
+    var recs = expansionRecords()
+    # attest members finish at 04:36:00 except one at 04:35:10.
+    recs.add dagRecord("attest / late-shard", "2026-11-24T04:35:00Z",
+                       "2026-11-24T04:37:00Z")
+    let b = bucketRecords(g, recs, RunId, 2, RunSha)
+    check b.status == dsMeasured
+    check b.reason.len == 0
+    for x in b.buckets:
+      if x.jobId == "attest":
+        check x.completedAt == "2026-11-24T04:37:00Z"
+
+  test "input record order does not change the buckets":
+    let (ok, g, _) = parseWorkflowJobs(GateYaml)
+    check ok
+    let forward = expansionRecords()
+    var backward = expansionRecords()
+    backward.reverse()
+    let a = bucketRecords(g, forward, RunId, 2, RunSha)
+    let b = bucketRecords(g, backward, RunId, 2, RunSha)
+    check a.status == b.status
+    check a.buckets.len == b.buckets.len
+    for i in 0 ..< a.buckets.len:
+      check a.buckets[i].jobId == b.buckets[i].jobId
+      check a.buckets[i].members == b.buckets[i].members
+      check a.buckets[i].startedAt == b.buckets[i].startedAt
+      check a.buckets[i].completedAt == b.buckets[i].completedAt
+      check a.buckets[i].seconds == b.buckets[i].seconds
+
+  test "a job SHA that differs from the run SHA is rejected":
+    let (ok, g, _) = parseWorkflowJobs(GateYaml)
+    check ok
+    var recs = expansionRecords()
+    recs[0] = dagRecord(recs[0].name, recs[0].startedAt, recs[0].completedAt,
+                        jobSha = "0000000000000000000000000000000000000000")
+    let b = bucketRecords(g, recs, RunId, 2, RunSha)
+    check b.status == dsFailed
+    check "head_sha" in b.reason
+
+  test "a run_attempt mismatch is rejected":
+    let (ok, g, _) = parseWorkflowJobs(GateYaml)
+    check ok
+    var recs = expansionRecords()
+    recs[0] = dagRecord(recs[0].name, recs[0].startedAt, recs[0].completedAt,
+                        attempt = 1)
+    let b = bucketRecords(g, recs, RunId, 2, RunSha)
+    check b.status == dsFailed
+    check "run_attempt" in b.reason
+
+  test "a record present in the API but absent from the graph is rejected":
+    let (ok, g, _) = parseWorkflowJobs(GateYaml)
+    check ok
+    var recs = expansionRecords()
+    recs.add dagRecord("rogue-job / build", "2026-11-24T04:35:00Z",
+                       "2026-11-24T04:35:10Z")
+    let b = bucketRecords(g, recs, RunId, 2, RunSha)
+    check b.status == dsFailed
+    check "does not declare" in b.reason
+
+  test "a declared job with no record is UNKNOWN, never a zero-weight node":
+    let (ok, g, _) = parseWorkflowJobs(GateYaml)
+    check ok
+    var recs = expansionRecords()
+    var kept: seq[JobRecord] = @[]
+    for r in recs:
+      if r.name != "closure-deriver":
+        kept.add r
+    let b = bucketRecords(g, kept, RunId, 2, RunSha)
+    check b.status == dsUnknown
+    check "no job record" in b.reason
+
+# ---------------------------------------------------------------------------
+# 11. Critical path
+# ---------------------------------------------------------------------------
+
+suite "critical path":
+  func simpleGraph(): WorkflowGraph =
+    WorkflowGraph(jobs: @["a", "b", "c"],
+                  needs: @[(jobId: "b", need: "a"), (jobId: "c", need: "b")])
+
+  func bucket(id, start, done, created: string): Bucket =
+    Bucket(jobId: id, members: 1, startedAt: start, completedAt: done,
+           createdAt: created, allSuccess: true,
+           seconds: max(0, secsBetween(done, start)))
+
+  test "the longest path is the sum of node spans plus handoff waits":
+    let buckets = @[
+      bucket("a", "2026-11-24T04:00:00Z", "2026-11-24T04:01:00Z",
+             "2026-11-24T03:59:00Z"),
+      bucket("b", "2026-11-24T04:01:05Z", "2026-11-24T04:03:00Z",
+             "2026-11-24T04:01:05Z"),
+      bucket("c", "2026-11-24T04:03:02Z", "2026-11-24T04:03:10Z",
+             "2026-11-24T04:03:02Z")]
+    # a=60, edge a->b = 5, b=115, edge b->c = 2, c=8  => 190
+    let cp = criticalPath(simpleGraph(), buckets, 200)
+    check cp.status == dsMeasured
+    check cp.reason.len == 0
+    check cp.seconds == 190
+    check cp.path == @["a", "b", "c"]
+
+  test "multiple predecessors: the one carrying the longer chain wins":
+    # A predecessor's total contribution is (consumer created_at - its own chain
+    # root start + consumer span), so the EARLIEST chain root wins. The tie a
+    # plain "longer job span" would produce is broken by an earlier root here.
+    var g = WorkflowGraph(
+      jobs: @["p", "q", "s"],
+      needs: @[(jobId: "s", need: "p"), (jobId: "s", need: "q")])
+    let buckets = @[
+      bucket("p", "2026-11-24T04:04:00Z", "2026-11-24T04:04:55Z",
+             "2026-11-24T04:04:00Z"),
+      bucket("q", "2026-11-24T04:00:00Z", "2026-11-24T04:05:00Z",
+             "2026-11-24T04:00:00Z"),
+      bucket("s", "2026-11-24T04:05:01Z", "2026-11-24T04:06:00Z",
+             "2026-11-24T04:05:01Z")]
+    let cp = criticalPath(g, buckets, 400)
+    check cp.status == dsMeasured
+    check cp.reason.len == 0
+    # q: 300 + edge(1) + s(59) = 360. p: 55 + edge(6) + 59 = 120.
+    check cp.path == @["q", "s"]
+    check cp.seconds == 360
+
+  test "a negative edge weight clamps to 0 and is recorded as an anomaly":
+    # A real run has `gateway / proof-reconcile` completed 2s BEFORE its own
+    # created_at — a GitHub artifact on skipped jobs. Never a negative weight.
+    let buckets = @[
+      bucket("a", "2026-11-24T04:00:00Z", "2026-11-24T04:01:00Z",
+             "2026-11-24T03:59:00Z"),
+      bucket("b", "2026-11-24T04:00:58Z", "2026-11-24T04:01:30Z",
+             "2026-11-24T04:00:58Z"),
+      bucket("c", "2026-11-24T04:01:31Z", "2026-11-24T04:01:40Z",
+             "2026-11-24T04:01:31Z")]
+    let cp = criticalPath(simpleGraph(), buckets, 200)
+    check cp.status == dsMeasured
+    check cp.reason.len == 0
+    var found = false
+    for a in cp.anomalies:
+      if "negative edge 'a' -> 'b'" in a:
+        found = true
+    check found
+    check cp.seconds == 60 + 0 + 32 + 1 + 9
+
+  test "an absent consumer created_at makes the answer a LOWER BOUND":
+    # The edge weight is the CONSUMER's created_at, so a consumer without one
+    # leaves the gap unknown. Unknown is a lower bound, never a 0.
+    var buckets = @[
+      bucket("a", "2026-11-24T04:00:00Z", "2026-11-24T04:01:00Z",
+             "2026-11-24T03:59:00Z"),
+      bucket("b", "2026-11-24T04:01:05Z", "2026-11-24T04:03:00Z", ""),
+      bucket("c", "2026-11-24T04:03:02Z", "2026-11-24T04:03:10Z",
+             "2026-11-24T04:03:02Z")]
+    let cp = criticalPath(simpleGraph(), buckets, 200)
+    check cp.status == dsMeasured
+    check cp.reason.len == 0
+    check cp.lowerBound
+    var flagged = false
+    for a in cp.anomalies:
+      if "NO_LOG_SOURCE" in a:
+        flagged = true
+    check flagged
+    # 60 + (unknown -> 0) + 115 + 2 + 8
+    check cp.seconds == 185
+
+  test "a missing instant on a node fails closed, never substituted as 0":
+    var buckets = @[
+      bucket("a", "2026-11-24T04:00:00Z", "2026-11-24T04:01:00Z",
+             "2026-11-24T03:59:00Z"),
+      bucket("b", "", "", "2026-11-24T04:01:05Z"),
+      bucket("c", "2026-11-24T04:03:02Z", "2026-11-24T04:03:10Z",
+             "2026-11-24T04:03:02Z")]
+    let cp = criticalPath(simpleGraph(), buckets, 200)
+    check cp.status == dsUnknown
+    check "no usable started_at/completed_at" in cp.reason
+
+  test "a missing created_at on a node with no predecessor is not an anomaly":
+    # The first batch has no edge weight to lose, so its absent created_at only
+    # affects `queuedSeconds` — which is reported separately and as NO_LOG_SOURCE.
+    var buckets = @[
+      bucket("a", "2026-11-24T04:00:00Z", "2026-11-24T04:01:00Z", ""),
+      bucket("b", "2026-11-24T04:01:05Z", "2026-11-24T04:03:00Z",
+             "2026-11-24T04:01:05Z"),
+      bucket("c", "2026-11-24T04:03:02Z", "2026-11-24T04:03:10Z",
+             "2026-11-24T04:03:02Z")]
+    let cp = criticalPath(simpleGraph(), buckets, 200)
+    check cp.status == dsMeasured
+    check not cp.lowerBound
+    # 60 + 5 + 115 + 2 + 8
+    check cp.seconds == 190
+
+  test "identical completed_at resolves deterministically, not by input order":
+    var g = WorkflowGraph(
+      jobs: @["a", "b"],
+      needs: @[(jobId: "b", need: "a")])
+    let one = @[
+      bucket("a", "2026-11-24T04:00:00Z", "2026-11-24T04:01:00Z",
+             "2026-11-24T03:59:00Z"),
+      bucket("b", "2026-11-24T04:01:00Z", "2026-11-24T04:02:00Z",
+             "2026-11-24T04:01:00Z")]
+    var two = one
+    two.reverse()
+    let p1 = criticalPath(g, one, 200)
+    let p2 = criticalPath(g, two, 200)
+    check p1.status == dsMeasured
+    check p1.seconds == p2.seconds
+    check p1.path == p2.path
+
+  test "a critical path longer than the workflow wall is a hard error":
+    # Two overlapping jobs declared as a chain: the serial reconstruction exceeds
+    # the observed wall, so the graph and the timestamps contradict each other.
+    var g = WorkflowGraph(jobs: @["a", "b"], needs: @[(jobId: "b", need: "a")])
+    let buckets = @[
+      bucket("a", "2026-11-24T04:00:00Z", "2026-11-24T04:01:00Z",
+             "2026-11-24T04:00:00Z"),
+      bucket("b", "2026-11-24T04:00:30Z", "2026-11-24T04:01:30Z",
+             "2026-11-24T04:00:30Z")]
+    # path = 60 + 0 + 60 = 120, wall = 90
+    let cp = criticalPath(g, buckets, 90)
+    check cp.status == dsFailed
+    check "exceeds wallSeconds" in cp.reason
+
+  test "a needs cycle in a hand-built graph is a hard error":
+    var g = WorkflowGraph(jobs: @["a", "b"],
+                          needs: @[(jobId: "a", need: "b"),
+                                   (jobId: "b", need: "a")])
+    let buckets = @[
+      bucket("a", "2026-11-24T04:00:00Z", "2026-11-24T04:01:00Z", ""),
+      bucket("b", "2026-11-24T04:00:00Z", "2026-11-24T04:01:00Z", "")]
+    let cp = criticalPath(g, buckets, 200)
+    check cp.status == dsFailed
+    check "cycle" in cp.reason
+
+  test "skipped, cancelled and null conclusions are never a success":
+    var recs = @[
+      dagRecord("a", "2026-11-24T04:00:00Z", "2026-11-24T04:01:00Z"),
+      dagRecord("b", "2026-11-24T04:01:00Z", "2026-11-24T04:02:00Z",
+                conclusion = "skipped"),
+      dagRecord("c", "2026-11-24T04:02:00Z", "2026-11-24T04:03:00Z",
+                conclusion = "cancelled"),
+      dagRecord("d", "2026-11-24T04:03:00Z", "2026-11-24T04:04:00Z",
+                conclusion = "")]
+    let g = WorkflowGraph(jobs: @["a", "b", "c", "d"], needs: @[])
+    let b = bucketRecords(g, recs, RunId, 2, RunSha)
+    check b.status == dsMeasured
+    check b.reason.len == 0
+    for x in b.buckets:
+      if x.jobId == "a":
+        check x.allSuccess
+      else:
+        check not x.allSuccess
+
+  test "measureWorkflowDag divides by the same workflow's wall only":
+    let (ok, g, _) = parseWorkflowJobs(GateYaml)
+    check ok
+    var gg = g
+    gg.blobSha = "abc123"
+    gg.yamlRef = RunSha
+    let r = measureWorkflowDag(gg, expansionRecords(),
+                               ".github/workflows/admission-gate-v2.yml",
+                               RunId, 2, RunSha)
+    check r.status == dsMeasured
+    check r.reason.len == 0
+    check r.blobSha == "abc123"
+    check r.yamlRef == RunSha
+    check r.wallSeconds == secsBetween("2026-11-24T04:37:10Z",
+                                       "2026-11-24T04:34:50Z")
+    check r.criticalPathSeconds <= r.wallSeconds
+    check abs(r.shareOfWall - float(r.criticalPathSeconds) /
+               float(r.wallSeconds)) < 0.0001
+
+# ---------------------------------------------------------------------------
+# 12. Queue decomposition — two phenomena, never one sum
+# ---------------------------------------------------------------------------
+
+suite "queue decomposition":
+  func qbucket(id, start, done, created: string): Bucket =
+    Bucket(jobId: id, members: 1, startedAt: start, completedAt: done,
+           createdAt: created, allSuccess: true,
+           seconds: max(0, secsBetween(done, start)))
+
+  test "batch 0 is the set with no needs":
+    let g = WorkflowGraph(jobs: @["a", "b", "c"],
+                          needs: @[(jobId: "b", need: "a"),
+                                   (jobId: "c", need: "b")])
+    let batches = batchIndexOf(g)
+    for e in batches:
+      case e.jobId
+      of "a": check e.batch == 0
+      of "b": check e.batch == 1
+      of "c": check e.batch == 2
+      else: check false
+
+  test "first-batch queueing and dependency handoff stay separate":
+    let g = WorkflowGraph(jobs: @["a", "b"],
+                          needs: @[(jobId: "b", need: "a")])
+    let buckets = @[
+      qbucket("a", "2026-11-24T04:00:10Z", "2026-11-24T04:01:00Z",
+              "2026-11-24T04:00:00Z"),
+      qbucket("b", "2026-11-24T04:01:03Z", "2026-11-24T04:02:00Z",
+              "2026-11-24T04:01:03Z")]
+    let q = queueReport(g, buckets)
+    check q.status == "MEASURED"
+    check q.firstBatch.len == 1
+    check q.firstBatch[0].jobId == "a"
+    check q.firstBatch[0].seconds == 10
+    check q.handoff.len == 1
+    check q.handoff[0].jobId == "b"
+    check q.handoff[0].seconds == 3
+    # Never a single mixed sum.
+    check q.firstBatch[0].seconds + q.handoff[0].seconds != 10
+
+  test "an absent created_at is NO_LOG_SOURCE, never 0":
+    let g = WorkflowGraph(jobs: @["a", "b"],
+                          needs: @[(jobId: "b", need: "a")])
+    let buckets = @[
+      qbucket("a", "2026-11-24T04:00:10Z", "2026-11-24T04:01:00Z", ""),
+      qbucket("b", "2026-11-24T04:01:03Z", "2026-11-24T04:02:00Z",
+              "2026-11-24T04:01:03Z")]
+    let q = queueReport(g, buckets)
+    check q.status == "NO_LOG_SOURCE"
+    check q.firstBatch.len == 0
+    var flagged = false
+    for a in q.anomalies:
+      if "NO_LOG_SOURCE" in a:
+        flagged = true
+    check flagged

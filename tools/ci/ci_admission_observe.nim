@@ -127,6 +127,81 @@ type
     endAt*: string
     seconds*: int
 
+  DagStatus* = enum
+    dsMeasured = "MEASURED"
+    dsUnknown = "UNKNOWN"          ## an input is unobservable; never a guess
+    dsFailed = "FAILED"            ## the observation contradicts the contract
+
+  JobRecord* = object
+    ## One job object of GET /actions/runs/{id}/attempts/{n}/jobs.
+    ## `createdAt` is NOT part of the documented Jobs REST object. It is observed
+    ## in practice; its absence is reported as NO_LOG_SOURCE, never as 0.
+    name*: string
+    runId*: string
+    runAttempt*: int
+    headSha*: string
+    status*: string
+    conclusion*: string
+    startedAt*: string
+    completedAt*: string
+    createdAt*: string
+
+  Bucket* = object
+    ## Every record whose name attributes to one declared job id.
+    jobId*: string
+    members*: int
+    skippedMembers*: int
+    startedAt*: string             ## min over members that carry one
+    completedAt*: string           ## MAX over the bucket — never min, never "any"
+    createdAt*: string             ## min over members; "" when none carried one
+    allSuccess*: bool
+    seconds*: int                  ## max(0, completed - started)
+
+  JobNameDecl* = object
+    jobId*: string
+    name*: string                  ## a job-level `name:` REPLACES the record name
+
+  WorkflowGraph* = object
+    jobs*: seq[string]             ## sorted job ids declared under `jobs:`
+    needs*: seq[tuple[jobId, need: string]]
+    jobNames*: seq[JobNameDecl]
+    blobSha*: string               ## git blob sha of the YAML, recorded in the report
+    yamlRef*: string               ## the sha the YAML was read at
+
+  DagResult* = object
+    status*: DagStatus
+    reason*: string
+    workflowPath*: string
+    blobSha*: string
+    yamlRef*: string
+    runId*: string
+    runAttempt*: int
+    headSha*: string
+    recordCount*: int
+    declaredJobs*: seq[string]
+    buckets*: seq[Bucket]
+    criticalPathSeconds*: int
+    criticalPath*: seq[string]
+    wallSeconds*: int
+    shareOfWall*: float            ## criticalPathSeconds / wallSeconds of THIS workflow
+    lowerBound*: bool              ## an edge weight was unobservable
+    anomalies*: seq[string]
+    queue*: QueueReport
+
+  QueueSample* = object
+    jobId*: string
+    batch*: int
+    seconds*: int
+
+  QueueReport* = object
+    ## First-batch queueing and dependency handoff are DIFFERENT phenomena and are
+    ## never summed together: the first is runner assignment, the second is a
+    ## `needs:` edge. `status` is NO_LOG_SOURCE when `created_at` is absent.
+    status*: string
+    firstBatch*: seq[QueueSample]
+    handoff*: seq[QueueSample]
+    anomalies*: seq[string]
+
   Candidate* = object
     prNumber*: int
     headSha*: string
@@ -137,6 +212,7 @@ type
     mergeCommit*: string
     checks*: seq[CheckState]
     phases*: seq[PhaseSpan]
+    dags*: seq[DagResult]
     outcome*: Outcome
     unknownReason*: string
 
@@ -150,6 +226,7 @@ type
     workflowPath*: string
     appId*: int
     isAppVerdict*: bool
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # §1. Pure core — estimator, interval algebra, phase partition, reconciliation
@@ -593,6 +670,626 @@ func statsOf*(values: seq[int]): Stats {.raises: [].} =
         mean: meanSeconds(v), minSeconds: v[0], maxSeconds: v[^1])
 
 # ═══════════════════════════════════════════════════════════════════════════
+# §4b. Workflow DAG — job-id attribution, bucket instants, critical path
+#
+# The four-phase partition above is a CROSS-WORKFLOW quantity and is untouched
+# here. This section measures ONE workflow's own `needs:` graph. The two are
+# different objects: `criticalPathShare` is a fraction of that workflow's own
+# wall, never a fraction of T_admission.
+#
+# A reusable-workflow call (`uses:`) expands to the callee's WHOLE declared job
+# set, so one caller job id owns several records — including the always-skipped
+# half of the callee. Skipped records are therefore retained: dropping them
+# would drop graph nodes.
+# ═══════════════════════════════════════════════════════════════════════════
+
+const
+  DagSchemaVersion* = "axiom.ci_workflow_dag.v1"
+  QueueLogSourceMissing* = "NO_LOG_SOURCE"
+
+func ownRecord(jobId, recordName: string): bool {.raises: [].} =
+  ## The separator is space-slash-space (matrix instances look like
+  ## `"attest / go-critical-lane (0)"`).
+  if jobId.len == 0 or recordName.len == 0:
+    return false
+  recordName == jobId or recordName.startsWith(jobId & " / ") or
+    recordName.startsWith(jobId & " (")
+
+func recordNameHead(recordName: string): string {.raises: [].} =
+  ## The token before the first ` / ` or ` (`, or "" when the name carries
+  ## neither separator. Used ONLY to distinguish "not attributable" (UNKNOWN)
+  ## from "attributed to a job id the YAML does not declare" (hard error) — the
+  ## value is never used as an attribution.
+  var cut = recordName.len
+  let slash = recordName.find(" / ")
+  if slash >= 0 and slash < cut:
+    cut = slash
+  let paren = recordName.find(" (")
+  if paren >= 0 and paren < cut:
+    cut = paren
+  if cut == recordName.len:
+    return ""
+  recordName[0 ..< cut].strip()
+
+func attributeRecord*(jobIds: seq[string]; recordName: string;
+                      declaredNames: seq[JobNameDecl] = @[]):
+    tuple[jobId: string, reason: string] {.raises: [].} =
+  ## The prefix rule, and only the prefix rule. Suffix inversion is forbidden:
+  ## `attest / admission-check` and `verdict / admission-check` both end in a
+  ## name that is also a top-level job id, so parsing from the right silently
+  ## mis-attributes both.
+  result = ("", "")
+  let ids = distinctSorted(jobIds)
+  var matched: seq[string] = @[]
+  for id in ids:
+    if ownRecord(id, recordName):
+      matched.add id
+  if matched.len == 1:
+    return (matched[0], "")
+  if matched.len > 1:
+    result.reason = "job record name '" & recordName & "' attributes to " &
+      $matched.len & " declared job ids (" & matched.join(", ") &
+      "); the naming convention is violated"
+    return
+  let head = recordNameHead(recordName)
+  if head.len > 0 and head notin ids:
+    result.reason = "job record name '" & recordName & "' names job id '" & head &
+      "', which the workflow YAML at this ref does not declare"
+    return
+  var renamed = ""
+  for d in declaredNames:
+    if d.name == recordName:
+      renamed = d.jobId
+  if renamed.len > 0:
+    result.reason = "job record name '" & recordName & "' is the job-level " &
+      "`name:` of '" & renamed & "', not a job id; attribution is impossible"
+    return
+  if declaredNames.len > 0:
+    result.reason = "job record name '" & recordName & "' attributes to no " &
+      "declared job id, and the workflow renames jobs via job-level `name:`"
+    return
+  result.reason = "job record name '" & recordName &
+    "' attributes to no declared job id under the prefix rule"
+
+func bucketRecords*(graph: WorkflowGraph; records: seq[JobRecord];
+                    runId: string; runAttempt: int; runHeadSha: string):
+    tuple[status: DagStatus, buckets: seq[Bucket], reason: string,
+          anomalies: seq[string]] {.raises: [].} =
+  ## Groups records onto declared job ids. Any record that contradicts the run
+  ## identity (run id, attempt, head sha) is rejected: the payload would not be
+  ## the attempt-exact job set the rest of this tool binds on.
+  result = (dsUnknown, @[], "", @[])
+  var anomalies: seq[string] = @[]
+  for r in records:
+    if runId.len > 0 and r.runId.len > 0 and r.runId != runId:
+      return (dsFailed, @[], "job record '" & r.name & "' belongs to run " &
+              r.runId & ", not to run " & runId, @[])
+    if r.runAttempt != runAttempt:
+      return (dsFailed, @[], "job record '" & r.name & "' reports run_attempt " &
+              $r.runAttempt & ", but the payload is attempt " & $runAttempt, @[])
+    if runHeadSha.len > 0 and r.headSha.len > 0 and r.headSha != runHeadSha:
+      return (dsFailed, @[], "job record '" & r.name & "' carries head_sha " &
+              r.headSha & " but the run carries " & runHeadSha, @[])
+
+  var acc: seq[Bucket] = @[]
+  for id in graph.jobs:
+    acc.add Bucket(jobId: id, startedAt: "", completedAt: "", createdAt: "",
+                   allSuccess: true)
+  var indexOf = initTable[string, int]()
+  for i, b in acc:
+    indexOf[b.jobId] = i
+
+  for r in records:
+    let (id, reason) = attributeRecord(graph.jobs, r.name, graph.jobNames)
+    if id.len == 0:
+      # A name that names an undeclared job id, or a renamed job, means the YAML
+      # does not describe this run — that is a contract violation, not a gap.
+      let hard = reason.contains("does not declare") or reason.contains("`name:`")
+      if hard:
+        return (dsFailed, @[], reason, @[])
+      return (dsUnknown, @[], reason, @[])
+    let k = indexOf.getOrDefault(id, -1)
+    if k < 0:
+      return (dsFailed, @[], "job record '" & r.name & "' attributes to '" & id &
+              "', which is not a bucket", @[])
+    inc acc[k].members
+    if r.startedAt.len > 0 and
+       (acc[k].startedAt.len == 0 or r.startedAt < acc[k].startedAt):
+      acc[k].startedAt = r.startedAt
+    if r.completedAt.len > 0 and r.completedAt > acc[k].completedAt:
+      acc[k].completedAt = r.completedAt
+    if r.createdAt.len > 0 and
+       (acc[k].createdAt.len == 0 or r.createdAt < acc[k].createdAt):
+      acc[k].createdAt = r.createdAt
+    let done = r.conclusion == "success"
+    if not done:
+      acc[k].allSuccess = false
+    if r.conclusion == "skipped" or r.conclusion == "cancelled":
+      inc acc[k].skippedMembers
+
+  for i in 0 ..< acc.len:
+    if acc[i].members == 0:
+      return (dsUnknown, @[], "job id '" & acc[i].jobId &
+              "' is declared in the workflow but has no job record in attempt " &
+              $runAttempt, @[])
+    let span = secsBetween(acc[i].completedAt, acc[i].startedAt)
+    if span < 0:
+      anomalies.add "negative node span '" & acc[i].jobId &
+        "' (completed_at < started_at)"
+      acc[i].seconds = 0
+    else:
+      acc[i].seconds = span
+    if acc[i].createdAt.len > 0 and acc[i].completedAt.len > 0 and
+       epochOf(acc[i].completedAt) < epochOf(acc[i].createdAt):
+      anomalies.add "node '" & acc[i].jobId &
+        "' completed_at precedes its own created_at"
+  result = (dsMeasured, acc, "", distinctSorted(anomalies))
+
+func wallSecondsOf*(records: seq[JobRecord]): int {.raises: [].} =
+  ## max(completed_at) - min(started_at) over the run's job records, skipped
+  ## included — `docs/spec/ci_critical_path_metric.md` §2.1.
+  var lo = ""
+  var hi = ""
+  for r in records:
+    if r.startedAt.len == 0 or r.completedAt.len == 0:
+      continue
+    if lo.len == 0 or r.startedAt < lo:
+      lo = r.startedAt
+    if hi.len == 0 or r.completedAt > hi:
+      hi = r.completedAt
+  if lo.len == 0 or hi.len == 0:
+    return -1
+  secsBetween(hi, lo)
+
+func gapKind(later, earlier: string): tuple[seconds: int, kind: string]
+    {.raises: [].} =
+  ## "ok" | "negative" (an impossible ordering that is CLAMPED and recorded) |
+  ## "missing" (no usable instant — the weight is unknown, never 0).
+  if later.len == 0 or earlier.len == 0:
+    return (0, "missing")
+  let a = epochOf(later)
+  let b = epochOf(earlier)
+  if a < 0 or b < 0:
+    return (0, "missing")
+  if a < b:
+    return (0, "negative")
+  (int(a - b), "ok")
+
+func criticalPath*(graph: WorkflowGraph; buckets: seq[Bucket]; wallSeconds: int):
+    tuple[status: DagStatus, seconds: int, path: seq[string],
+          anomalies: seq[string], reason: string, lowerBound: bool] {.raises: [].} =
+  ## Longest path through `needs:`. Node weight = bucket duration; edge weight =
+  ## consumer bucket `created_at` - producer bucket max `completed_at`.
+  result = (dsUnknown, 0, @[], @[], "", false)
+  let order = graph.jobs
+  if order.len == 0:
+    return (dsFailed, 0, @[], @[], "the workflow declares no jobs", false)
+
+  var indexOf = initTable[string, int]()
+  for i, id in order:
+    indexOf[id] = i
+  var bOf = newSeq[Bucket](order.len)
+  var haveBucket = newSeq[bool](order.len)
+  for b in buckets:
+    let k = indexOf.getOrDefault(b.jobId, -1)
+    if k >= 0:
+      bOf[k] = b
+      haveBucket[k] = true
+
+  for i in 0 ..< order.len:
+    if not haveBucket[i]:
+      return (dsUnknown, 0, @[], @[], "job id '" & order[i] &
+              "' has no bucket; the path is unmeasurable", false)
+    # A timestamp that is absent must never be substituted as 0. The path is not
+    # known in advance, so any node that could carry the path fails it closed.
+    if epochOf(bOf[i].startedAt) < 0 or epochOf(bOf[i].completedAt) < 0:
+      return (dsUnknown, 0, @[], @[], "job id '" & order[i] &
+              "' has no usable started_at/completed_at; the path is unmeasurable", false)
+
+  var succ: seq[seq[int]] = newSeq[seq[int]](order.len)
+  var indeg = newSeq[int](order.len)
+  for e in graph.needs:
+    let p = indexOf.getOrDefault(e.need, -1)
+    let c = indexOf.getOrDefault(e.jobId, -1)
+    if p < 0 or c < 0:
+      return (dsFailed, 0, @[], @[], "needs edge " & e.need & " -> " & e.jobId &
+              " names a job the workflow does not declare", false)
+    succ[p].add c
+    inc indeg[c]
+  for s in succ.mitems:
+    s.sort()
+
+  var ready: seq[int] = @[]
+  for i in 0 ..< order.len:
+    if indeg[i] == 0:
+      ready.add i
+  var topo: seq[int] = @[]
+  var qi = 0
+  while qi < ready.len:
+    let v = ready[qi]
+    inc qi
+    topo.add v
+    for s in succ[v]:
+      dec indeg[s]
+      if indeg[s] == 0:
+        ready.add s
+  if topo.len != order.len:
+    var cyc: seq[string] = @[]
+    for i in 0 ..< order.len:
+      if indeg[i] > 0:
+        cyc.add order[i]
+    return (dsFailed, 0, @[], @[], "the needs graph has a cycle among: " &
+            cyc.join(", "), false)
+
+  var dist = newSeq[int](order.len)
+  var has = newSeq[bool](order.len)
+  var prev = newSeq[int](order.len)
+  for i in 0 ..< order.len:
+    prev[i] = -1
+  var anomalies: seq[string] = @[]
+  var lowerBound = false
+  for v in topo:
+    if not has[v]:
+      dist[v] = bOf[v].seconds
+      has[v] = true
+    for s in succ[v]:
+      let g = gapKind(bOf[s].createdAt, bOf[v].completedAt)
+      var ew = 0
+      case g.kind
+      of "ok":
+        ew = g.seconds
+      of "negative":
+        anomalies.add "negative edge '" & order[v] & "' -> '" & order[s] &
+          "' (consumer created_at precedes producer completed_at)"
+      of "missing":
+        lowerBound = true
+        anomalies.add QueueLogSourceMissing & " edge '" & order[v] & "' -> '" &
+          order[s] & "': created_at absent, weight unknown"
+      else:
+        discard
+      let cand = dist[v] + ew + bOf[s].seconds
+      if not has[s] or cand > dist[s] or
+         (cand == dist[s] and (prev[s] < 0 or v < prev[s])):
+        dist[s] = cand
+        has[s] = true
+        prev[s] = v
+
+  var best = -1
+  for i in 0 ..< order.len:
+    if not has[i]:
+      continue
+    if best < 0 or dist[i] > dist[best] or (dist[i] == dist[best] and i < best):
+      best = i
+  if best < 0:
+    return (dsUnknown, 0, @[], distinctSorted(anomalies),
+            "no bucket could be weighted", false)
+
+  var path: seq[string] = @[]
+  var cur = best
+  while cur >= 0:
+    path.add order[cur]
+    cur = prev[cur]
+  var rev: seq[string] = @[]
+  for i in countdown(path.high, 0):
+    rev.add path[i]
+
+  if wallSeconds >= 0 and dist[best] > wallSeconds:
+    return (dsFailed, dist[best], rev, distinctSorted(anomalies),
+            "criticalPathSeconds (" & $dist[best] & ") exceeds wallSeconds (" &
+            $wallSeconds & ") for the same run", lowerBound)
+  result = (dsMeasured, dist[best], rev, distinctSorted(anomalies), "", lowerBound)
+func batchIndexOf*(graph: WorkflowGraph): seq[tuple[jobId: string, batch: int]]
+    {.raises: [].} =
+  ## Longest-path depth of each job id; batch 0 is the set with no `needs`.
+  var indexOf = initTable[string, int]()
+  for i, id in graph.jobs:
+    indexOf[id] = i
+  var depth = newSeq[int](graph.jobs.len)
+  var changed = true
+  var rounds = 0
+  while changed and rounds <= graph.jobs.len:
+    changed = false
+    inc rounds
+    for e in graph.needs:
+      let c = indexOf.getOrDefault(e.jobId, -1)
+      let p = indexOf.getOrDefault(e.need, -1)
+      if c < 0 or p < 0:
+        continue
+      if depth[c] < depth[p] + 1:
+        depth[c] = depth[p] + 1
+        changed = true
+  for i, id in graph.jobs:
+    result.add (jobId: id, batch: depth[i])
+
+func queueReport*(graph: WorkflowGraph; buckets: seq[Bucket]): QueueReport
+    {.raises: [].} =
+  ## `queuedSeconds` is NOT a single sum: first-batch queueing (runner
+  ## assignment) and dependency handoff (a `needs:` edge) are reported as two
+  ## separate aggregates over per-batch samples. A bucket without `created_at`
+  ## contributes nothing and flips the status to NO_LOG_SOURCE.
+  result = QueueReport(status: "MEASURED")
+  var batch = initTable[string, int]()
+  for e in batchIndexOf(graph):
+    batch[e.jobId] = e.batch
+  var anomalies: seq[string] = @[]
+  for b in buckets:
+    let bt = batch.getOrDefault(b.jobId, 0)
+    if b.createdAt.len == 0 or epochOf(b.createdAt) < 0 or
+       epochOf(b.startedAt) < 0:
+      result.status = QueueLogSourceMissing
+      anomalies.add QueueLogSourceMissing & " '" & b.jobId &
+        "': created_at absent, queue wait unknown"
+      continue
+    if bt == 0:
+      let s = secsBetween(b.startedAt, b.createdAt)
+      if s < 0:
+        anomalies.add "negative first-batch queue wait '" & b.jobId & "'"
+        result.firstBatch.add QueueSample(jobId: b.jobId, batch: bt, seconds: 0)
+      else:
+        result.firstBatch.add QueueSample(jobId: b.jobId, batch: bt, seconds: s)
+  for e in graph.needs:
+    var pb: Bucket
+    var cb: Bucket
+    var haveP = false
+    var haveC = false
+    for b in buckets:
+      if b.jobId == e.need:
+        pb = b
+        haveP = true
+      if b.jobId == e.jobId:
+        cb = b
+        haveC = true
+    if not haveP or not haveC:
+      continue
+    let bt = batch.getOrDefault(e.jobId, 0)
+    if cb.createdAt.len == 0 or epochOf(cb.createdAt) < 0 or
+       epochOf(pb.completedAt) < 0:
+      result.status = QueueLogSourceMissing
+      anomalies.add QueueLogSourceMissing & " handoff '" & e.need & "' -> '" &
+        e.jobId & "': created_at absent, handoff unknown"
+      continue
+    let s = secsBetween(cb.createdAt, pb.completedAt)
+    if s < 0:
+      anomalies.add "negative handoff '" & e.need & "' -> '" & e.jobId & "'"
+      result.handoff.add QueueSample(jobId: e.jobId, batch: bt, seconds: 0)
+    else:
+      result.handoff.add QueueSample(jobId: e.jobId, batch: bt, seconds: s)
+  result.anomalies = distinctSorted(anomalies)
+
+func measureWorkflowDag*(graph: WorkflowGraph; records: seq[JobRecord];
+                         workflowPath, runId: string; runAttempt: int;
+                         runHeadSha: string): DagResult {.raises: [].} =
+  result = DagResult(status: dsUnknown, workflowPath: workflowPath,
+                     blobSha: graph.blobSha, yamlRef: graph.yamlRef, runId: runId,
+                     runAttempt: runAttempt, headSha: runHeadSha,
+                     recordCount: records.len, declaredJobs: graph.jobs)
+  let wall = wallSecondsOf(records)
+  result.wallSeconds = wall
+  let b = bucketRecords(graph, records, runId, runAttempt, runHeadSha)
+  if b.status != dsMeasured:
+    result.status = b.status
+    result.reason = b.reason
+    return
+  result.buckets = b.buckets
+  let cp = criticalPath(graph, b.buckets, wall)
+  result.anomalies = distinctSorted(b.anomalies & cp.anomalies)
+  result.criticalPathSeconds = cp.seconds
+  result.criticalPath = cp.path
+  result.lowerBound = cp.lowerBound
+  if cp.status != dsMeasured:
+    result.status = cp.status
+    result.reason = cp.reason
+    return
+  result.status = dsMeasured
+  result.shareOfWall = if wall > 0: float(cp.seconds) / float(wall) else: 0.0
+  result.queue = queueReport(graph, result.buckets)
+
+func samplesSeconds*(samples: seq[QueueSample]): seq[int] {.raises: [].} =
+  for s in samples:
+    result.add s.seconds
+
+# ── workflow YAML: `jobs:` + `needs:` only ────────────────────────────────
+
+const JobIdChars = {'a' .. 'z', 'A' .. 'Z', '0' .. '9', '_', '-'}
+
+func isJobToken(s: string): bool {.raises: [].} =
+  if s.len == 0:
+    return false
+  for ch in s:
+    if ch notin JobIdChars:
+      return false
+  true
+
+func stripYamlComment(line: string): string {.raises: [].} =
+  var inQuote = false
+  for i, ch in line:
+    if ch == '"':
+      inQuote = not inQuote
+    elif ch == '#' and not inQuote and (i == 0 or line[i - 1] == ' '):
+      return line[0 ..< i]
+  line
+
+func isNeedsKey(text: string): bool {.raises: [].} =
+  if not text.startsWith("needs:"):
+    return false
+  text.len == 6 or text[6] in {' ', '\t'}
+
+func isNameKey(text: string): bool {.raises: [].} =
+  if not text.startsWith("name:"):
+    return false
+  text.len == 5 or text[5] in {' ', '\t'}
+
+func parseNeedsFlow(v: string): tuple[items: seq[string], err: string]
+    {.raises: [].} =
+  if v.len == 0:
+    return (@[], "empty value")
+  if v[0] == '[':
+    if v[^1] != ']':
+      return (@[], "'[' without a closing ']'")
+    for part in v[1 .. ^2].split(','):
+      let t = part.strip()
+      if not isJobToken(t):
+        return (@[], "'" & t & "' is not a job id")
+      result.items.add t
+    if result.items.len == 0:
+      return (@[], "empty flow list")
+    return
+  if not isJobToken(v):
+    return (@[], "'" & v & "' is neither a flow list nor a job id")
+  (@[v], "")
+
+func graphValidation*(graph: WorkflowGraph): string {.raises: [].} =
+  ## "" when every `needs:` target is a declared job id and the graph is acyclic.
+  var ids = distinctSorted(graph.jobs)
+  for e in graph.needs:
+    if e.jobId notin ids:
+      return "needs edge declared on undeclared job '" & e.jobId & "'"
+    if e.need notin ids:
+      return "needs edge names undeclared job '" & e.need & "'"
+    if e.jobId == e.need:
+      return "job '" & e.jobId & "' needs itself"
+  var indexOf = initTable[string, int]()
+  for i, id in ids:
+    indexOf[id] = i
+  var indeg = newSeq[int](ids.len)
+  var succ: seq[seq[int]] = newSeq[seq[int]](ids.len)
+  for e in graph.needs:
+    let pe = indexOf.getOrDefault(e.need, -1)
+    let ce = indexOf.getOrDefault(e.jobId, -1)
+    if pe < 0 or ce < 0:
+      return "needs edge names an undeclared job"
+    succ[pe].add ce
+    inc indeg[ce]
+  var ready: seq[int] = @[]
+  for i in 0 ..< ids.len:
+    if indeg[i] == 0:
+      ready.add i
+  var qi = 0
+  var seen = 0
+  while qi < ready.len:
+    let v = ready[qi]
+    inc qi
+    inc seen
+    for s in succ[v]:
+      dec indeg[s]
+      if indeg[s] == 0:
+        ready.add s
+  if seen != ids.len:
+    return "the needs graph has a cycle"
+  ""
+
+func parseWorkflowJobs*(yaml: string):
+    tuple[ok: bool, graph: WorkflowGraph, err: string] {.raises: [].} =
+  ## Reads ONLY `jobs:` and each job's `needs:`/`name:`. Job ids live at indent
+  ## 2 and job-level keys at indent 4, so `run: |` block content (always deeper
+  ## than its own key) can never be mistaken for a job-level key. Anything that
+  ## does not match the expected shape is an error, never a skipped line.
+  result = (false, WorkflowGraph(), "")
+  var lines: seq[tuple[indent: int, text: string, num: int]] = @[]
+  var num = 0
+  for raw in yaml.splitLines():
+    inc num
+    var t = stripYamlComment(raw)
+    while t.len > 0 and t[^1] in {' ', '\t', '\r'}:
+      t.setLen(t.len - 1)
+    if t.len == 0:
+      continue
+    var ind = 0
+    while ind < t.len and t[ind] == ' ':
+      inc ind
+    lines.add (indent: ind, text: t[ind .. ^1], num: num)
+
+  var jobsStart = -1
+  for i in 0 ..< lines.len:
+    if lines[i].indent == 0 and lines[i].text == "jobs:":
+      jobsStart = i
+      break
+  if jobsStart < 0:
+    return (false, WorkflowGraph(), "no top-level 'jobs:' key")
+
+  var g = WorkflowGraph()
+  var curJob = ""
+  var i = jobsStart + 1
+  while i < lines.len:
+    let l = lines[i]
+    if l.indent == 0:
+      break
+    if l.indent == 2:
+      if not l.text.endsWith(":"):
+        return (false, WorkflowGraph(), "line " & $l.num &
+                ": a jobs.<id> entry must be '  <id>:' with no inline value")
+      let id = l.text[0 ..< l.text.len - 1].strip()
+      if not isJobToken(id):
+        return (false, WorkflowGraph(), "line " & $l.num & ": '" & id &
+                "' is not a job id")
+      if id in g.jobs:
+        return (false, WorkflowGraph(), "line " & $l.num & ": duplicate job id '" &
+                id & "'")
+      g.jobs.add id
+      curJob = id
+      inc i
+      continue
+    if l.indent == 4:
+      if curJob.len == 0:
+        return (false, WorkflowGraph(), "line " & $l.num &
+                ": job-level key outside any job")
+      if isNeedsKey(l.text):
+        let v = l.text["needs:".len .. ^1].strip()
+        if v.len == 0:
+          var j = i + 1
+          var found = 0
+          while j < lines.len and lines[j].indent > 4:
+            if not lines[j].text.startsWith("- "):
+              return (false, WorkflowGraph(), "line " & $lines[j].num &
+                      ": expected a '- <job id>' needs item")
+            let nid = lines[j].text[2 .. ^1].strip()
+            if not isJobToken(nid):
+              return (false, WorkflowGraph(), "line " & $lines[j].num & ": '" &
+                      nid & "' is not a job id")
+            g.needs.add (jobId: curJob, need: nid)
+            inc found
+            inc j
+          if found == 0:
+            return (false, WorkflowGraph(), "line " & $l.num &
+                    ": 'needs:' with no value")
+          i = j
+          continue
+        let f = parseNeedsFlow(v)
+        if f.err.len > 0:
+          return (false, WorkflowGraph(), "line " & $l.num & ": " & f.err)
+        for nid in f.items:
+          g.needs.add (jobId: curJob, need: nid)
+        inc i
+        continue
+      if isNameKey(l.text):
+        var v = l.text["name:".len .. ^1].strip()
+        if v.len >= 2 and v[0] == '"' and v[^1] == '"':
+          v = v[1 .. ^2]
+        g.jobNames.add JobNameDecl(jobId: curJob, name: v)
+        inc i
+        continue
+      inc i
+      continue
+    inc i
+
+  if g.jobs.len == 0:
+    return (false, WorkflowGraph(), "'jobs:' declares no job")
+  g.jobs.sort()
+  var normalised: seq[tuple[jobId, need: string]] = @[]
+  for e in g.needs:
+    normalised.add e
+  normalised.sort(proc (a, b: tuple[jobId, need: string]): int =
+    result = cmp(a.jobId, b.jobId)
+    if result == 0:
+      result = cmp(a.need, b.need))
+  g.needs = normalised
+  g.jobNames.sort(proc (a, b: JobNameDecl): int = cmp(a.jobId, b.jobId))
+  let issue = graphValidation(g)
+  if issue.len > 0:
+    return (false, WorkflowGraph(), issue)
+  result = (true, g, "")
+
+# ═══════════════════════════════════════════════════════════════════════════
 # §5. I/O boundary — GET only
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -784,6 +1481,69 @@ proc fetchAttemptJobCheckRuns(repo: string; run: AttemptRun):
       break
   (true, distinctSorted(ids), "")
 
+func jobRecordOf(j: JsonNode): JobRecord {.raises: [].} =
+  ## `created_at` is read here and used ONLY by the DAG section, which reports
+  ## its absence as NO_LOG_SOURCE: it is not part of the documented Jobs REST
+  ## object even though the live API returns it.
+  JobRecord(name: jsonStr(j, "name"), runId: jsonId(j, "run_id"),
+            runAttempt: jsonInt(j, "run_attempt"),
+            headSha: jsonStr(j, "head_sha"), status: jsonStr(j, "status"),
+            conclusion: jsonStr(j, "conclusion"),
+            startedAt: jsonStr(j, "started_at"),
+            completedAt: jsonStr(j, "completed_at"),
+            createdAt: jsonStr(j, "created_at"))
+
+proc fetchAttemptJobRecords(repo: string; run: AttemptRun):
+    tuple[ok: bool, records: seq[JobRecord], err: string]
+    {.axiomEffect: IoEffect.} =
+  ## The unprojected job records of one attempt. The DAG section consumes only
+  ## JobRecord fields, so an added field cannot change the measurement.
+  if run.runAttempt <= 0:
+    return (false, @[], "run " & run.runId & " reports no run_attempt")
+  var records: seq[JobRecord] = @[]
+  for page in 1 .. MaxPages:
+    let (ok, node, err) = ghGetJson("repos/" & repo & "/actions/runs/" & run.runId &
+      "/attempts/" & $run.runAttempt & "/jobs?per_page=100&page=" & $page)
+    if not ok:
+      return (false, @[], err)
+    let jobs = at(node, "jobs")
+    if jobs.isNil or jobs.kind != JArray:
+      return (false, @[], "jobs is not an array")
+    for j in items(jobs):
+      records.add jobRecordOf(j)
+    if jobs.len < 100:
+      break
+  (true, records, "")
+
+proc fetchBlobSha(repo, atSha, path: string):
+    tuple[ok: bool, sha: string, err: string] {.axiomEffect: IoEffect.} =
+  ## The git blob sha of the workflow YAML read at `atSha`. Recording it next to
+  ## the run id / attempt / head sha makes the `needs:` graph that produced the
+  ## numbers identifiable after the fact.
+  let (ok, node, err) = ghGetJson("repos/" & repo & "/contents/" & path &
+                                  "?ref=" & atSha)
+  if not ok:
+    return (false, "", err)
+  let sha = jsonStr(node, "sha")
+  if sha.len == 0:
+    return (false, "", "no blob sha for " & path & " at " & atSha)
+  (true, sha, "")
+
+proc fetchWorkflowYaml(repo, atSha, path: string):
+    tuple[ok: bool, text: string, err: string] {.axiomEffect: IoEffect.} =
+  ## `application/vnd.github.raw` returns the file body, not the base64 JSON
+  ## envelope, so the text is used verbatim. A response that is still a JSON
+  ## envelope has not been decoded and is refused rather than parsed as YAML.
+  ## Reading at `atSha` (the candidate sha) is mandatory: the graph must be the
+  ## one the run executed, not the branch tip.
+  let (output, code) = execCmdEx("gh api -H 'Accept: application/vnd.github.raw' " &
+    quoteShell("repos/" & repo & "/contents/" & path & "?ref=" & atSha))
+  if code != 0:
+    return (false, "", "gh api contents exited " & $code)
+  if output.startsWith("{") or output.startsWith("["):
+    return (false, "", "the contents response is still a JSON envelope")
+  (true, output, "")
+
 proc fetchCheckRuns(repo: string; sha: string):
     tuple[ok: bool, node: JsonNode, err: string] {.axiomEffect: IoEffect.} =
   ## `filter=all` is mandatory: the API default (`latest`) is scoped per check
@@ -833,6 +1593,58 @@ proc liveRequiredContexts(repo: string; rulesetId: string):
 # §6. Report
 # ═══════════════════════════════════════════════════════════════════════════
 
+func bucketJson(b: Bucket): JsonNode {.raises: [].} =
+  %*{
+    "job_id": b.jobId,
+    "members": b.members,
+    "skipped_members": b.skippedMembers,
+    "started_at": b.startedAt,
+    "completed_at": b.completedAt,
+    "created_at": b.createdAt,
+    "all_success": b.allSuccess,
+    "seconds": b.seconds
+  }
+
+func samplesJson(samples: seq[QueueSample]): JsonNode {.raises: [].} =
+  result = newJArray()
+  for s in samples:
+    result.add %*{"job_id": s.jobId, "batch": s.batch, "seconds": s.seconds}
+
+func dagJson(d: DagResult): JsonNode {.raises: [].} =
+  var buckets = newJArray()
+  for b in d.buckets:
+    buckets.add bucketJson(b)
+  var anomalies = newJArray()
+  for a in d.anomalies:
+    anomalies.add %a
+  result = %*{
+    "schema_version": DagSchemaVersion,
+    "status": $d.status,
+    "reason": d.reason,
+    "workflow_path": d.workflowPath,
+    "workflow_yaml_blob_sha": d.blobSha,
+    "workflow_yaml_ref": d.yamlRef,
+    "workflow_run_id": d.runId,
+    "run_attempt": d.runAttempt,
+    "head_sha": d.headSha,
+    "record_count": d.recordCount,
+    "declared_jobs": %d.declaredJobs,
+    "buckets": buckets,
+    "critical_path_seconds": d.criticalPathSeconds,
+    "critical_path": %d.criticalPath,
+    "wall_seconds": d.wallSeconds,
+    "critical_path_share": d.shareOfWall,
+    "lower_bound": d.lowerBound,
+    "anomalies": anomalies
+  }
+  if d.status == dsMeasured:
+    result["queue"] = %*{
+      "status": d.queue.status,
+      "first_batch": samplesJson(d.queue.firstBatch),
+      "handoff": samplesJson(d.queue.handoff),
+      "anomalies": %d.queue.anomalies
+    }
+
 func checkJson(c: CheckState): JsonNode {.raises: [].} =
   %*{
     "context": c.context,
@@ -862,6 +1674,9 @@ func candidateJson(c: Candidate): JsonNode {.raises: [].} =
   var checks = newJArray()
   for ch in c.checks:
     checks.add checkJson(ch)
+  var dags = newJArray()
+  for d in c.dags:
+    dags.add dagJson(d)
   %*{
     "pr_number": c.prNumber,
     "head_sha": c.headSha,
@@ -875,6 +1690,7 @@ func candidateJson(c: Candidate): JsonNode {.raises: [].} =
     "ready_seconds": readySeconds(c.phases),
     "admission_seconds": admissionSeconds(c.phases),
     "last_finisher": lastFinisher(c.checks),
+    "workflow_dags": dags,
     "checks": checks
   }
 
@@ -946,7 +1762,9 @@ proc writeReport(outDir: string; repo: string; policyPath: string;
       "general_context": "check_run.id in the attempt job set of the context's declared workflow",
       "app_verdict": "check_run.app.id == expected producer AND started_at >= attempt created_at AND unique in the window",
       "check_runs_filter": "all (latest is per-suite scoped and collapses re-runs)",
-      "ambiguity_policy": "UNKNOWN (never a guessed check-run)"
+      "ambiguity_policy": "UNKNOWN (never a guessed check-run)",
+      "workflow_dag": "attribution by prefix (own(N,I) = N==I or N startsWith I&' / ' or I&' ('); bucket completed_at = max; suffix inversion is never used; skipped records are retained; the YAML is read at the candidate sha and its blob sha recorded",
+      "critical_path_share_scope": "per workflow only — never a fraction of T_admission"
     },
     "authority": {
       "live_ruleset_required_contexts": rulesetNames,
@@ -1005,6 +1823,26 @@ proc writeReport(outDir: string; repo: string; policyPath: string;
 
   md.add "## Last-finishing required context\n\n"
   md.add "| context | candidates |\n|---|---:|\n"
+  for k, v in finisherCounts:
+    md.add "| `" & k & "` | " & $v & " |\n"
+  md.add "\nThe last finisher is an OBSERVATION. It is not by itself proof that the " &
+         "context's execution is the bottleneck — that requires the workflow's `needs` " &
+         "edges and per-step attribution.\n\n"
+
+  md.add "## Per-workflow critical path (diagnostic)\n\n"
+  md.add "`critical_path_share` is `criticalPathSeconds / wallSeconds` for THAT " &
+         "workflow only. It is never a fraction of `T_admission`: the fractions of " &
+         "different workflows are not commensurable and do not sum to 1.\n\n"
+  md.add "| pr | workflow | status | run | yaml blob sha | criticalPath | wall | share | reason |\n"
+  md.add "|---:|---|---|---|---|---:|---:|---:|---|\n"
+  for c in candidates:
+    for d in c.dags:
+      md.add "| " & $c.prNumber & " | `" & d.workflowPath & "` | " & $d.status & " | `" &
+             d.runId & "#" & $d.runAttempt & "` | `" &
+             (if d.blobSha.len > 8: d.blobSha[0 .. 7] else: d.blobSha) & "` | " &
+             fmtSec(d.criticalPathSeconds) & " | " & fmtSec(d.wallSeconds) & " | " &
+             formatOneDecimal(d.shareOfWall) & " | " & d.reason & " |\n"
+  md.add "\n"
   for k, v in finisherCounts:
     md.add "| `" & k & "` | " & $v & " |\n"
   md.add "\nThe last finisher is an OBSERVATION. It is not by itself proof that the " &
@@ -1229,6 +2067,55 @@ proc main() {.axiomEffect: IoEffect.} =
       cand.unknownReason = "phase residue " & $residue & "s — the four phases do not cover the interval"
       candidates.add cand
       continue
+
+    # Per-workflow DAG diagnostics are ADDITIVE: they never gate the candidate's
+    # outcome, because a workflow whose YAML cannot be read at the candidate sha
+    # says nothing about whether the admission phases were observed.
+    for e in expected:
+      if e.isAppVerdict or e.workflowPath.len == 0:
+        continue
+      let (sok, sel, sreason) = selectAttemptRun(runs, e.workflowPath)
+      if not sok:
+        cand.dags.add DagResult(status: dsUnknown, workflowPath: e.workflowPath,
+                                reason: sreason)
+        continue
+      let (bok2, blobSha, berr) = fetchBlobSha(repo, cand.headSha, e.workflowPath)
+      if not bok2:
+        cand.dags.add DagResult(status: dsUnknown, workflowPath: e.workflowPath,
+                                runId: sel.runId, runAttempt: sel.runAttempt,
+                                headSha: cand.headSha,
+                                reason: "workflow YAML unavailable at the candidate sha: " & berr)
+        continue
+      let (yok, yaml, yerr) = fetchWorkflowYaml(repo, cand.headSha, e.workflowPath)
+      if not yok:
+        cand.dags.add DagResult(status: dsUnknown, workflowPath: e.workflowPath,
+                                blobSha: blobSha, yamlRef: cand.headSha,
+                                runId: sel.runId, runAttempt: sel.runAttempt,
+                                headSha: cand.headSha,
+                                reason: "workflow YAML unreadable: " & yerr)
+        continue
+      let (pok, graph, perr) = parseWorkflowJobs(yaml)
+      if not pok:
+        cand.dags.add DagResult(status: dsFailed, workflowPath: e.workflowPath,
+                                blobSha: blobSha, yamlRef: cand.headSha,
+                                runId: sel.runId, runAttempt: sel.runAttempt,
+                                headSha: cand.headSha,
+                                reason: "workflow YAML parse failed: " & perr)
+        continue
+      var g = graph
+      g.blobSha = blobSha
+      g.yamlRef = cand.headSha
+      let (jok2, records, jerr2) = fetchAttemptJobRecords(repo, sel)
+      if not jok2:
+        cand.dags.add DagResult(status: dsUnknown, workflowPath: e.workflowPath,
+                                blobSha: blobSha, yamlRef: cand.headSha,
+                                runId: sel.runId, runAttempt: sel.runAttempt,
+                                headSha: cand.headSha,
+                                reason: "attempt job records unavailable: " & jerr2)
+        continue
+      cand.dags.add measureWorkflowDag(g, records, e.workflowPath, sel.runId,
+                                       sel.runAttempt, cand.headSha)
+
     cand.outcome = ocObserved
     candidates.add cand
 
