@@ -49,6 +49,17 @@ proc main() =
 
   const
     Sig1 = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ## Well-formed but meaningless: kept for the serializer-only assertions
+      ## (`buildRustScopeJson` emits bytes; it is not the binding check).
+    # Real digests of the fixture module's declaration lines below — the writer
+    # accepts a Rust declaration only when its signatureHash BINDS to the module
+    # it names (issue #223), so these fixtures must be true digests:
+    #   sha256("pub fn u8_add(a: u8, b: u8) -> u8")
+    SigAdd = "fa5b440e70f07a0fefdf966784bb79c6e7e101c7e2d8930830b24220073be920"
+    #   sha256("pub fn u8_rem(a: u8, b: u8) -> u8")
+    SigRem = "fc4a42e7de544cdb91035acc462dc9dd84c37f99417fa76c4573ea69a4aa99c5"
+    LibRs = "pub fn u8_add(a: u8, b: u8) -> u8 {\n    a + b\n}\n\n" &
+            "pub fn u8_rem(a: u8, b: u8) -> u8 {\n    a % b\n}\n"
     Commit1 = "0123456789abcdef0123456789abcdef01234567"
     Commit2 = "fedcba9876543210fedcba9876543210fedcba98"
     SpecRef = "docs/spec/rust_certified_subset.md"
@@ -59,10 +70,10 @@ proc main() =
        "signatureHash": sig, "specRef": specRef, "conditions": conditions}
 
   let validTarget1 = targetJson(Commit1, "rs/crate/src/lib.rs", "u8_add",
-                                Sig1, SpecRef & "#width-precondition",
+                                SigAdd, SpecRef & "#width-precondition",
                                 @["0 <= a", "0 <= b", "a + b < 256"])
   let validTarget2 = targetJson(Commit2, "rs/crate/src/lib.rs", "u8_rem",
-                                Sig1, SpecRef, @["b != 0"])
+                                SigRem, SpecRef, @["b != 0"])
 
   proc lockJson(targets: JsonNode; vksRust: int): JsonNode =
     result = %*{"schema_version": 3, "kernel_total": 0, "kernel_symbols": [],
@@ -80,6 +91,10 @@ proc main() =
     let d = getTempDir() / "axiom_scope_lock_rust_test_" & tag & "_" &
             $getCurrentProcessId()
     createDir(d / "data")
+    createDir(d / "rs" / "crate" / "src")
+    # The module the fixtures name: the writer binds every declared digest to
+    # the signature line in it, so the fixture tree must carry the declaration.
+    writeFile(d / "rs" / "crate" / "src" / "lib.rs", LibRs)
     d
 
   proc writeLock(root: string; node: JsonNode) =
@@ -206,12 +221,16 @@ proc main() =
     let legacyRoot = tempRoot("legacy")
     writeExempt(legacyRoot)
     writeLock(legacyRoot, legacyLockJson())
-    let legacyOut = parseJson(buildScopeLockJson(legacyRoot, readLock(legacyRoot)))
+    let (legacyOk, _) = writeScopeLockFromRegistry(legacyRoot)
+    assert legacyOk, "legacy lock regeneration must succeed"
+    let legacyOut = readLock(legacyRoot)
     # Rust lock: two declared targets, same Nim registry + exemptions.
     let rustRoot = tempRoot("rustdenom")
     writeExempt(rustRoot)
     writeLock(rustRoot, lockJson(%[validTarget1, validTarget2], 2))
-    let rustOut = parseJson(buildScopeLockJson(rustRoot, readLock(rustRoot)))
+    let (rustOk, _) = writeScopeLockFromRegistry(rustRoot)
+    assert rustOk, "rust lock regeneration must succeed"
+    let rustOut = readLock(rustRoot)
     # Nim denominator (2 kernel − 1 exempt = 1) identical in both.
     assertEq(legacyOut["vksTotal"].getInt(), 1)
     assertEq(rustOut["vksTotal"].getInt(), 1)
