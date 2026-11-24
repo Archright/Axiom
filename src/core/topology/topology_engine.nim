@@ -419,7 +419,9 @@ proc analyzeTopologySourceRootIncremental*(
     changedCount += 1
     cacheDirty = true
     sourceContentCache[relPath] = content
-    let syms = scanTopologySource(relPath, content)
+    var syms = scanTopologySource(relPath, content)
+    if syms.len > 0:
+      enrichAxiomImplFlags(syms, sourceContentCache)
     allSymbols.add(syms)
     # Update Merkle cache entry with full symbol data
     var cachedSyms: seq[CachedTopologySymbol] = @[]
@@ -456,8 +458,6 @@ proc analyzeTopologySourceRootIncremental*(
     for sym in syms:
       entry.symbolNames.add(sym.functionName)
     engine.fileCache[relPath] = entry
-  # Enrich axiomImpl flags (only for files in sourceContentCache = changed files)
-  enrichAxiomImplFlags(allSymbols, sourceContentCache)
   # Rebuild symbol index
   rebuildSymbolIndex(engine)
   # Compute Merkle root
