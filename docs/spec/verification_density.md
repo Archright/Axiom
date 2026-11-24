@@ -175,6 +175,71 @@ Contract rules:
 
 $$VKD = \frac{\left\vert VKS \cap \text{certGreen}\right\vert}{\left\vert VKS\right\vert}$$
 
+### The Two Denominators Are Separate (Nim VKS vs Rust Subject Scope)
+
+The ratio above has exactly one denominator, and it is a Nim one. A second,
+independent denominator exists for Rust subjects. They are two separate
+measurements: never summed, never substituted for each other.
+
+| Lane | Denominator | Declared at | Read by |
+|------|-------------|-------------|---------|
+| Nim kernel | `vksTotal` = 23 (`kernel_total` 40 - `kernel_exempt_symbols` 17) | `data/verification_scope.lock` | `loadKernelScope` (`src/core/proof/proof_integrity.nim`) |
+| Rust subject | `vksRust` = 6 (one per `rust_targets` entry) | `data/verification_scope.lock` | the Rust lane scope check (`src/cli/rust_lane_cli.nim`) |
+
+Non-mergeability is structural, not a naming convention (measured at HEAD
+`c07b8354`):
+
+1. **The lock declares both, separately.** `vksRust` is 6 over 6
+   `rust_targets` entries, and the Rust lane refuses a mismatch between the
+   declared integer and the `rust_targets` count (fail-closed). The Rust
+   denominator therefore cannot silently absorb or donate scope.
+2. **The Nim reader cannot see Rust scope.** `KernelScopeInfo`
+   (`src/core/proof/proof_integrity.nim:27-31`) carries only `kernelSymbols`,
+   `kernelTotal`, `vksTotal` and `kernelExemptSymbols`. `loadKernelScope`
+   never parses `rust_targets` or `vksRust`, so no Rust entry can reach either
+   the Nim denominator or the Nim numerator.
+3. **The two key spaces are disjoint.** All 40 `kernel_symbols` are Nim
+   `modulePath::funcName` keys whose module lives under `src/`; all 6
+   `rust_targets` symbols are Rust fixture targets (for example
+   `axiom_rust_probe::add_u8`). The set intersection is empty.
+4. **The numerator walks the Nim set only.** `countKernelSymbolsDeepVerified`
+   (`src/cli/shared/proof_hydration.nim:77`) iterates `scope.kernelSymbols`,
+   skips proof-exempt symbols (:78), and admits via `isVkdAdmissible` (:89). A
+   Rust proof is not a member of that set and cannot be counted by it.
+
+Consequence, stated explicitly so it is not re-litigated: **verifying more Rust
+subjects cannot move the Nim VKD ratio.** `0/23` becomes `n/23` only when n Nim
+kernel certificates are `isVkdAdmissible`. Symmetrically, a nonzero Rust result
+must never be reported as VKD progress, and a zero VKD must never be read as a
+Rust-lane regression.
+
+### R7 criticality: what 0/23 does and does not gate
+
+`0/23` is a measurement with a named condition attached, not a blocking
+precondition.
+
+| Fact | Value | Source |
+|------|-------|--------|
+| R7 name / criticality | `Scope/Coverage Honesty` / `non-critical` | `config/readiness_policy.json:31-33` |
+| State on 0/23 | `FAIL` - coverage below `r7.vkdMinThreshold` | `tools/readiness_evaluator.nim:1065` |
+| Start-gate behavior on that FAIL | PASS - the condition is logged, `quit(1)` is not reached | `src/gate/runners/readiness_start_gate.nim:653-662` |
+| Verdict algebra for a non-critical FAIL | `VerdictConditionalGo` / `OutcomeContinue` | `src/core/utils/decision_algebra.nim:119-121` |
+
+A non-critical FAIL resolves to `CONDITIONAL GO`, and `readiness_start_gate` never
+exits non-zero for `CONDITIONAL GO`: it quits only for `NO-GO`
+(`src/gate/runners/readiness_start_gate.nim:654-657`) or for a verdict outside
+the evaluator's table (fail-closed, `:665-668`). In the recorded decision
+artifacts under `data/readiness/` (`decision.2026-08-17.rerun.json`,
+`decision.2026-08-18.r4.json`, `decision.2026-08-18.r5.json`,
+`decision.GO.2026-08-17.json`) R1-R6 and R8 are `PASS` and the condition list is
+exactly `["R7=FAIL"]`.
+
+So in the current snapshot `0/23` is **the only non-PASS invariant**, and it is
+not the condition that blocks readiness - the start gate passes on
+`CONDITIONAL GO`. It MUST NOT be described as "the blocking readiness
+condition". Raising it is product progress; it is not a precondition for the
+start gate.
+
 ### 검증 엔진 분류
 
 | 엔진 | 대상 | 방법 |
