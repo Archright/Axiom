@@ -6222,10 +6222,9 @@
       "id": "DEBT#567",
       "category": "Supply Chain / Unenforced Lock",
       "title": "publication-integrity installs scancode-toolkit and pluggy by version only; the committed hash lock is never consumed",
-      "description": "Machine-observed 2026-11-24 at origin/main 4311749e. .github/workflows/publication-integrity.yml:215-221 runs `pip install --quiet scancode-toolkit==32.5.0 pluggy==1.5.0` inside a throwaway venv. The pins are version strings only: pip resolves the transitive closure from the live index with no hash verification. A hash-bearing lock exists at compliance/scancode-requirements.lock (211 lines, 80 distributions, 90 --hash entries, zero distributions without a hash), but no workflow consumes it, so the lock is documentation, not enforcement. publication-integrity is one of the 7 required contexts.",
+      "description": "Machine-observed 2026-11-24 at origin/main 4311749e. .github/workflows/publication-integrity.yml:215-221 runs `pip install --quiet scancode-toolkit==32.5.0 pluggy==1.5.0` inside a throwaway venv. The pins are version strings only: pip resolves the transitive closure from the live index with no hash verification. A hash-bearing lock (211 lines, 80 distributions, 90 --hash entries, zero distributions without a hash) has been prepared on branch ci/scancode-hash-pinned-supply at commit 7c0a5a8d but is not yet on main, so no workflow can consume it and there is no hash enforcement at all on this required context today.",
       "files": [
-        ".github/workflows/publication-integrity.yml",
-        "compliance/scancode-requirements.lock"
+        ".github/workflows/publication-integrity.yml"
       ],
       "severity": "high",
       "source": "supply_chain_audit",
