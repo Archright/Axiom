@@ -24,7 +24,7 @@
     "src/cli/action_interpreter_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "1871d3a073c923d1a7335132b31a6ce73059b105"
+      "sha": "0a1b44d1f9313bcccf0bb6b3bc78eb9966f80905"
     },
     "src/cli/action_invariants_sync.nim": {
       "mode": "100644",
@@ -39,7 +39,7 @@
     "src/cli/action_plan_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "cfac37ca921a564092dc49bb8f29dd43c09c88fd"
+      "sha": "7cc3ced4384add9b5f2e0bb8a3f530ddf009329b"
     },
     "src/cli/admission_cli.nim": {
       "mode": "100644",
@@ -119,7 +119,7 @@
     "src/cli/cli_types.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "c4308208b133aea0d2927f7584748697c0272052"
+      "sha": "5dc926e965a6965e81c6500e7d9a262fcbea6d02"
     },
     "src/cli/commands/command_registry.nim": {
       "mode": "100644",

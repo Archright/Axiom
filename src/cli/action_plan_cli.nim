@@ -295,7 +295,33 @@ func hasHelpFlag*(args: seq[string]): bool =
   for arg in args:
     if arg == "--help" or arg == "-h":
       return true
-  false
+  result = false
+
+## Usage Lines.
+# @axiom-hint: lean="depth >= 0" smt="(assert (>= depth 0))"
+func axUsageLine(entry: CommandHelpEntry): string =
+  "  " & entry.name &
+    (if entry.usage.len > 0: " " & entry.usage else: "") &
+    "  " & entry.description
+
+# @axiom-hint: lean="depth >= 0" smt="(assert (>= depth 0))"
+func axUsageLines*(): seq[string] =
+  result = @["usage:"]
+  for entry in axCommandHelpEntries():
+    result.add(axUsageLine(entry))
+
+# @axiom-hint: lean="depth >= 0" smt="(assert (>= depth 0))"
+func axCommandUsageLines*(name: string): seq[string] =
+  ## Usage rows for ONE subcommand (`name` is the help-table name, e.g.
+  ## "ax prove"). Empty when `name` is not in the table. `ax prove --help`
+  ## emits these instead of the whole surface: the help flag asks what THIS
+  ## command does, and a 35-row table buries the answer it was asked for.
+  result = @["usage:"]
+  for entry in axCommandHelpEntries():
+    if entry.name == name:
+      result.add(axUsageLine(entry))
+  if result.len == 1:
+    result = @[]
 
 func planAxActions*(args: seq[string]): seq[CliAction] =
   if args.len == 0:
@@ -321,14 +347,16 @@ func planAxActions*(args: seq[string]): seq[CliAction] =
   case parsedSubcommand.get()
   of axSubcommandProve:
     if hasHelpFlag(subArgs):
-      result.add(CliAction(kind: cliPrintUsage))
+      result.add(CliAction(kind: cliPrintUsage,
+        helpUsageLines: axCommandUsageLines("ax prove")))
       result.add(CliAction(kind: cliQuit, exitCode: 0))
       return
     result.add(CliAction(kind: cliRunAxiomEngine, args: subArgs))
     return
   of axSubcommandReport:
     if hasHelpFlag(subArgs):
-      result.add(CliAction(kind: cliPrintUsage))
+      result.add(CliAction(kind: cliPrintUsage,
+        helpUsageLines: axCommandUsageLines("ax report")))
       result.add(CliAction(kind: cliQuit, exitCode: 0))
       return
     result.add(dispatchCommandAction(cliCommandReport, subArgs))
@@ -430,16 +458,6 @@ func planAxActions*(args: seq[string]): seq[CliAction] =
   of axSubcommandCapability:
     result.add(dispatchCommandAction(cliCommandCapability, subArgs))
     return
-
-  ## Usage Lines.
-# @axiom-hint: lean="depth >= 0" smt="(assert (>= depth 0))"
-func axUsageLines*(): seq[string] =
-  result = @["usage:"]
-  for entry in axCommandHelpEntries():
-    let line = "  " & entry.name &
-      (if entry.usage.len > 0: " " & entry.usage else: "") &
-      "  " & entry.description
-    result.add(line)
 
 ## Main Loop.
 # `ax` is the sole CLI entry point. All commands route through planAxActions.

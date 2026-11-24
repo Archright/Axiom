@@ -132,6 +132,11 @@ type
     message*: string
     exitCode*: int
     commandContext*: CommandContext
+    helpUsageLines*: seq[string]
+      ## Command-scoped usage rows for cliPrintUsage. Empty means the
+      ## top-level table (the whole product surface); a non-empty value is the
+      ## help-flag path of ONE subcommand, so ``ax prove --help`` documents
+      ## ``prove`` instead of dumping every sibling's row.
 
   AxProofStatus* = enum
     axProofVerified,
