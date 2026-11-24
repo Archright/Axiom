@@ -1167,6 +1167,85 @@ suite "llbc_to_canonical — impl identity (axiom_impl_probe fixture)":
     check paths[3].lastSegment == "new"
     check paths[4].lastSegment == "speak"
 
+  test "(issue #219) llbcFunDeclCoverage: the ledger of the decls the " &
+      "structured-name filter skipped — 8 fun_decls, 7 addressable, 1 " &
+      "scalar-owner impl":
+    let cover = llbcFunDeclCoverage(f.root)
+    check cover.measured
+    check cover.funDecls == 8
+    check cover.names.len == 7
+    check cover.funDecls - cover.names.len == 1
+    var buckets: seq[string] = @[]
+    var skippedTotal = 0
+    for s in cover.skippedByReason:
+      buckets.add(s.reason & "=" & $s.count)
+      skippedTotal += s.count
+    # the ledger explains the skip: a scalar/primitive owner has no nominal
+    # path — documented UNADDRESSABLE scope, not a defect to be widened
+    check buckets == @["impl-owner-unaddressable=1"]
+    check skippedTotal == cover.funDecls - cover.names.len
+
+  test "(issue #219) the ledger's addressable set IS llbcFunDeclNamePaths — " &
+      "one enumeration, document order (the two can never diverge)":
+    let cover = llbcFunDeclCoverage(f.root)
+    var viaLedger: seq[(string, string)] = @[]
+    for p in cover.names:
+      viaLedger.add((p.fullName, p.lastSegment))
+    var viaPaths: seq[(string, string)] = @[]
+    for p in llbcFunDeclNamePaths(f.root):
+      viaPaths.add((p.fullName, p.lastSegment))
+    check viaLedger == viaPaths
+    check viaLedger.len == 7
+    check viaLedger[0] == ("axiom_impl_probe::free_add_u8", "free_add_u8")
+    check viaLedger[3] == ("axiom_impl_probe::m1::Dog::new", "new")
+
+  test "(issue #219) synthetic document: two DIFFERENT filters fire, the " &
+      "tally is per-reason and the arithmetic closes":
+    # A minimal translated document — no intern tables, no type_decls: the
+    # walk only needs item_meta.name shapes. Decl 2 is a non-Ident path
+    # element (the else branch), decl 3 carries no name path at all (the
+    # entry guard) — a case the committed fixture cannot produce.
+    let doc = %*{
+      "translated": {
+        "crate_name": "synth",
+        "type_decls": [],
+        "item_names": {"types": {}},
+        "fun_decls": [
+          {"item_meta": {"name": [
+            {"Ident": ["synth", 0]}, {"Ident": ["free_fn", 0]}]}},
+          {"item_meta": {"name": [
+            {"Ident": ["synth", 0]}, {"Builtin": {"Impl": ["f64"]}}]}},
+          {"item_meta": {}}
+        ]
+      }
+    }
+    let cover = llbcFunDeclCoverage(doc)
+    check cover.measured
+    check cover.funDecls == 3
+    check cover.names.len == 1
+    check cover.names[0].fullName == "synth::free_fn"
+    check cover.names[0].lastSegment == "free_fn"
+    check cover.funDecls - cover.names.len == 2
+    var buckets: seq[string] = @[]
+    for s in cover.skippedByReason:
+      buckets.add(s.reason & "=" & $s.count)
+    check buckets == @["no-name-path=1", "non-ident-element=1"]
+
+  test "(issue #219) a document with no fun_decls array is UNMEASURED, not " &
+      "a measured zero — never enumeration it did not perform":
+    let noTranslated = newJObject()
+    check not llbcFunDeclCoverage(noTranslated).measured
+    check llbcFunDeclCoverage(noTranslated).funDecls == 0
+    let noArray = %*{"translated": {"crate_name": "synth"}}
+    check not llbcFunDeclCoverage(noArray).measured
+    # an EMPTY array IS enumerated: measured zero, empty ledger
+    let emptyArray = %*{"translated": {"fun_decls": []}}
+    let emptyCover = llbcFunDeclCoverage(emptyArray)
+    check emptyCover.measured
+    check emptyCover.funDecls == 0
+    check emptyCover.names.len == 0
+    check emptyCover.skippedByReason.len == 0
+
   test "DEBT#510: bare add_u8 → EXPLICIT Ambiguous naming both candidates " &
       "(never the first document-order m1 match)":
     let r = llbcFunctionToCanonical(f.root, "add_u8")

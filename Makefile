@@ -112,6 +112,7 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/test_scope_lock_rust.nim \
                   tests/unit/test_rust_replay_adapter.nim \
                   tests/unit/test_llbc_to_canonical.nim \
+                  tests/unit/test_rust_lane_coverage_line.nim \
                   tests/unit/test_binop_unsigned.nim \
                   tests/unit/test_language_ban_gate.nim \
                   tests/unit/test_release_version_gate.nim \
