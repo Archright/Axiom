@@ -22,11 +22,14 @@ axiomLayer "presentation"
 ##       identity gate dominates — a non-matching charon NEVER reaches cargo;
 ##       the produced LLBC is the ONLY LLBC this lane consumes: no fallback to
 ##       any pre-existing file, the committed fixture LLBC is test-only input)
-##     → LLBC fun_decl enumeration (llbcFunDeclNamePaths — the producer's own
+##     → LLBC fun_decl enumeration (llbcFunDeclCoverage — the producer's own
 ##       structured-name SSOT: free functions = the Ident-path join;
 ##       inherent-impl methods = the owner's nominal Adt path + method,
 ##       intern-resolved; scalar-owner impls are unaddressable and skipped,
-##       Q11)
+##       Q11). The enumeration's OWN accounting is observable as one
+##       `addressability:` log line (`named` / `skipped` / the closed
+##       skip-reason breakdown, issue #219): the documented scope limit made
+##       COUNTABLE — never widened, and never a report field
 ##     → per-target classification:
 ##         a. producer grammar rejection (rustSubjectOutcome →
 ##            outcomeOutOfScopeUnknown) → "unknown", fail-closed out-of-subset.
@@ -716,11 +719,12 @@ func llbcRawFunDeclCount(root: JsonNode): Option[int] {.raises: [].} =
   ## than asserting enumeration it did not perform. An `Option` rather than a
   ## `-1` sentinel: a numeric sentinel invites readers (and the generated type
   ## registry's numeric template) to treat the value as a count.
-  let translated = root{"translated"}
-  if translated.isNil or translated.kind != JObject: return none(int)
-  let decls = translated{"fun_decls"}
-  if decls.isNil or decls.kind != JArray: return none(int)
-  some(decls.elems.len)
+  ##
+  ## (issue #219) A PROJECTION of `llbcFunDeclCoverage`, never a second count:
+  ## the addressability ledger's `funDecls - names.len` must close against the
+  ## SAME number this reports, so both are read from one walk of the document.
+  let coverage = llbcFunDeclCoverage(root)
+  if coverage.measured: some(coverage.funDecls) else: none(int)
 
 func intFieldOr(node: JsonNode; fallback: int): int {.raises: [].} =
   ## The node's value when it is an integer, `fallback` otherwise. Callers pass
@@ -835,6 +839,43 @@ func rustLaneExitCode*(report: JsonNode; requirePerfectAsi: bool = false): int {
   # claim-establishing success. verified == 0 with nothing unresolved is the
   # empty (no declared target) run — nothing was claimed, so nothing failed.
   0
+
+func rustLaneCoverageLine*(coverage: LlbcFunDeclCoverage): string {.
+    raises: [].} =
+  ## (issue #219) THE lane's ADDRESSABILITY observable — ONE log line on the
+  ## EXISTING log channel (logLines → ProofReport.logLines → stderr), never a
+  ## report field: the schema stays `axiom.report.v1`
+  ## (docs/spec/replay_evidence_policy.md §8 "no new JSON fields";
+  ## docs/spec/productization_contract.md §6c compares payload leaves —
+  ## a summary key would be a new payload leaf).
+  ##
+  ## `named=<names.len> skipped=<n - names.len>` is the producer's OWN ledger
+  ## (llbcFunDeclCoverage — nothing is re-derived here), and the parenthesized
+  ## suffix names WHICH structured-name filter dropped each skipped decl (the
+  ## closed LlbcSkipReasons vocabulary).
+  ##
+  ## WHAT IS NEW HERE, and what is deliberately NOT: that run-coverage line
+  ## already reports `total` (the document's measured fun_decl count) and
+  ## `addressable` (the SELECTED candidate set, post `--target`), but it cannot
+  ## say how many enumerated decls carry a structured name nor WHY the rest do
+  ## not. This line carries exactly those two facts: `named` = the
+  ## enumeration's addressable decls (the set the candidate stage selects
+  ## from) and `skipped` = their complement. It does NOT re-print the raw
+  ## fun_decl count — `coverage: total=` owns that number — and it does NOT
+  ## reuse the word `addressable` for a different quantity. Read together,
+  ## `named + skipped == coverage total`.
+  ##
+  ## The addressability LIMIT is documented intentional scope
+  ## (docs/spec/rust_certified_subset.md §1 "honest limits", repeated in this
+  ## module's docstring): the line makes it COUNTABLE, it never widens it.
+  result = "[AXIOM][rust-lane] addressability: named=" & $coverage.names.len &
+    " skipped=" & $(coverage.funDecls - coverage.names.len)
+  var buckets: seq[string] = @[]
+  for s in coverage.skippedByReason:
+    if s.count > 0:
+      buckets.add(s.reason & "=" & $s.count)
+  if buckets.len > 0:
+    result.add(" (" & buckets.join(", ") & ")")
 
 proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
     Result[RustLaneCliReport, CliError] {.
@@ -979,7 +1020,8 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
       "statusCounts": %*{"verified": %0, "failed": %0, "unknown": %0, "error": %declCount}
     }
     return ok(finish(report))
-  let declNames = llbcFunDeclNamePaths(llbcRoot)
+  let declCoverage = llbcFunDeclCoverage(llbcRoot)
+  let declNames = declCoverage.names
   let rawDeclCount = llbcRawFunDeclCount(llbcRoot)
   let llbcPath = run.llbcPath
   # The rustc dep-info is the authoritative input set for the Phase 1-A
@@ -1268,6 +1310,16 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
           " addressable=" & $total & " guardAttempted=" & $attemptedCount &
           " verified=" & $verified & " unknown=" & $unknownCount &
           " error=" & $errorCount)
+  # (issue #219) The ENUMERATION's own ledger, next to the run-coverage line:
+  # of the document's fun_decls, how many carry a resolvable structured name
+  # (`named`) and WHICH closed-label filter dropped each of the rest. Emitted
+  # only when the walk actually ran (`measured`) — an LLBC with no `fun_decls`
+  # array has nothing to account for, and the coverage line above already says
+  # `total=unmeasurable`. Log-only: the addressability limit is documented
+  # intentional scope (docs/spec/rust_certified_subset.md §1) and no report
+  # field is added for it.
+  if declCoverage.measured:
+    log.add(rustLaneCoverageLine(declCoverage))
   log.add("[AXIOM][rust-lane] done: verified=" & $verified & "/" & $total &
           " failed=" & $failed & " unknown=" & $unknownCount & " error=" & $errorCount)
   ok(finish(report))

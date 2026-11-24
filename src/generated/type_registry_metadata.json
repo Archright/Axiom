@@ -10503,6 +10503,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "String",
+      "module": "src/cli/rust_lane_cli.nim",
+      "name": "rustLaneCoverageLine",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "Int",
       "module": "src/cli/rust_lane_cli.nim",
       "name": "rustLaneExitCode",
@@ -130860,6 +130874,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "LlbcFunDeclCoverage",
+      "module": "src/verification/llbc_to_canonical.nim",
+      "name": "llbcFunDeclCoverage",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "LlbcFunDeclCoverage",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "List LlbcFunDeclNamePath",
       "module": "src/verification/llbc_to_canonical.nim",
       "name": "llbcFunDeclNamePaths",
@@ -131104,6 +131132,17 @@
       "returnType": "string",
       "smtSort": "String",
       "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/verification/llbc_to_canonical.nim",
+      "name": "skipReasonIndex",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
     },
     {
       "hasAxiomHint": false,

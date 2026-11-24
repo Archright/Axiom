@@ -649,6 +649,37 @@ func decodeNamePath(name: JsonNode):
 # structured names (Q11) — the ADDRESSABLE identity of a fun_decl
 # ---------------------------------------------------------------------------
 
+# (issue #219) The CLOSED skip-reason vocabulary of the structured-name
+# filter: WHICH filter fired, named for the observable coverage line
+# (`llbcFunDeclCoverage` → the lane log). Labels only — the filters, the
+# addressable set and the report schema are unchanged; the documented scope
+# limit (docs/spec/rust_certified_subset.md §1 "honest limits") stands.
+const
+  LlbcSkipNoNamePath = "no-name-path"
+    ## item_meta.name absent/empty — `funDeclStructuredName` entry guard.
+  LlbcSkipNonIdentElement = "non-ident-element"
+    ## malformed Ident element or a non-Ident path element (Builtin, …).
+  LlbcSkipImplNotPenultimate = "impl-not-penultimate"
+    ## Impl element not at the measured penultimate position (or repeated).
+  LlbcSkipImplOwnerUnaddressable = "impl-owner-unaddressable"
+    ## `implOwnerNominalPath` returned rceUnsupportedGrammar: trait impl blocks
+    ## (any non-InherentImplBlock kind) and scalar/primitive owners (no nominal
+    ## path) — the two documented UNADDRESSABLE classes (Q11).
+  LlbcSkipImplOwnerMalformed = "impl-owner-malformed"
+    ## `implOwnerNominalPath` returned rceMalformed: broken document shapes
+    ## (unresolved owner type id, bad Adt id, def_id pin violation, …).
+  LlbcSkipEmptyNameParts = "empty-name-parts"
+    ## no Ident segment survived the walk (a name path of Impl elements only).
+  LlbcSkipNoLastSegment = "no-last-segment"
+    ## addressable by structured name but no bare last segment: unreachable
+    ## while the filter is `ok` on a trailing Ident; tallied so the ledger
+    ## stays exhaustive if that invariant ever changes.
+
+  LlbcSkipReasons: array[7, string] = [
+    LlbcSkipNoNamePath, LlbcSkipNonIdentElement, LlbcSkipImplNotPenultimate,
+    LlbcSkipImplOwnerUnaddressable, LlbcSkipImplOwnerMalformed,
+    LlbcSkipEmptyNameParts, LlbcSkipNoLastSegment]
+
 func implOwnerNominalPath(implElem: JsonNode; ctx: LlbcDeclCtx):
     tuple[e: Err, ownerPath: string] =
   ## (Q11) The inherent-impl block's OWNER type as a nominal path: the
@@ -711,7 +742,7 @@ func implOwnerNominalPath(implElem: JsonNode; ctx: LlbcDeclCtx):
   (okErr(), ownerModule & "::" & ownerLast)
 
 func funDeclStructuredName(ctx: LlbcDeclCtx; fd: JsonNode):
-    tuple[ok: bool, fullName: string] =
+    tuple[ok: bool, fullName, skipReason: string] =
   ## (Q11/DEBT#510) The decl's structured match key — the addressable name
   ## `llbcFunDeclNamePaths` exposes and `llbcFunctionToCanonical` binds
   ## exactly:
@@ -726,9 +757,12 @@ func funDeclStructuredName(ctx: LlbcDeclCtx; fd: JsonNode):
   ## element, Impl not penultimate, more than one Impl) → ok=false: the
   ## decl is UNADDRESSABLE, the enumeration skips it, and the producer's
   ## last-segment fallback still sees it (never silently dropped).
+  ## `skipReason` (issue #219) is the CLOSED label of the filter that fired
+  ## (one of LlbcSkipReasons, "" when ok) — carried so the skip is
+  ## OBSERVABLE without re-deriving the decision anywhere else.
   let name = jField(jField(fd, "item_meta"), "name")
   if name.isNil or name.kind != JArray or name.elems.len == 0:
-    return (false, "")
+    return (false, "", LlbcSkipNoNamePath)
   var parts: seq[string] = @[]
   var implOwner = ""
   var implSeen = false
@@ -740,23 +774,28 @@ func funDeclStructuredName(ctx: LlbcDeclCtx; fd: JsonNode):
       if ident.isNil or ident.kind != JArray or ident.elems.len != 2 or
           ident.elems[0].isNil or ident.elems[0].kind != JString or
           ident.elems[0].str.len == 0:
-        return (false, "")
+        return (false, "", LlbcSkipNonIdentElement)
       parts.add(ident.elems[0].str)
     elif key == "Impl":
       if implSeen or i != name.elems.len - 2:
-        return (false, "")
+        return (false, "", LlbcSkipImplNotPenultimate)
       implSeen = true
       let (oe, owner) = implOwnerNominalPath(elem, ctx)
       if oe.err != rceNone:
-        return (false, "")
+        # The owner is unresolvable: the documented UNADDRESSABLE classes
+        # (trait impl block, scalar/primitive owner) surface as unsupported;
+        # a broken document shape as malformed. Distinct LOG LABELS only —
+        # the filter's verdict is `oe.err != rceNone`, unchanged.
+        return (false, "", (if oe.err == rceUnsupportedGrammar:
+            LlbcSkipImplOwnerUnaddressable else: LlbcSkipImplOwnerMalformed))
       implOwner = owner
     else:
-      return (false, "")
+      return (false, "", LlbcSkipNonIdentElement)
   if parts.len == 0:
-    return (false, "")
+    return (false, "", LlbcSkipEmptyNameParts)
   if implSeen:
-    return (true, implOwner & "::" & parts[parts.len - 1])
-  (true, parts.join("::"))
+    return (true, implOwner & "::" & parts[parts.len - 1], "")
+  (true, parts.join("::"), "")
 
 func decodeSourceIdentity(span: JsonNode; ctx: LlbcDeclCtx):
     tuple[e: Err, identity: string] =
@@ -1792,15 +1831,52 @@ type
     fullName*: string
     lastSegment*: string
 
-proc llbcFunDeclNamePaths*(root: JsonNode): seq[LlbcFunDeclNamePath] {.
+  LlbcFunDeclSkip* = object
+    ## (issue #219) One skip-reason bucket of the structured-name filter: the
+    ## CLOSED label (LlbcSkipReasons) and how many decls it dropped.
+    reason*: string
+    count*: int
+
+  LlbcFunDeclCoverage* = object
+    ## (issue #219) The enumeration's OWN addressability accounting, read
+    ## only: `funDecls` = every fun_decl the translated document carries,
+    ## `names` = the addressable subset in document order (the SAME walk that
+    ## produces llbcFunDeclNamePaths — one source of truth) and
+    ## `skippedByReason` = the closed-label tally of the rest, so
+    ## `funDecls - names.len == sum(skippedByReason.count)` holds by
+    ## construction (pinned by tests/unit/test_llbc_to_canonical.nim).
+    ## Nothing here widens addressability: the filters, the addressable set
+    ## and the report schema are unchanged — the documented intentional scope
+    ## (docs/spec/rust_certified_subset.md §1 "honest limits") stands; this
+    ## type only makes the limit COUNTABLE.
+    ##
+    ## `measured` = the document actually carried a `fun_decls` array, so the
+    ## zero ledger of a document that was never enumerated is distinguishable
+    ## from a measured "0 decls" (the `enumerated: false` discipline).
+    measured*: bool
+    funDecls*: int
+    names*: seq[LlbcFunDeclNamePath]
+    skippedByReason*: seq[LlbcFunDeclSkip]
+
+func skipReasonIndex(reason: string): int =
+  ## Position of `reason` in the CLOSED vocabulary (-1 when outside it — the
+  ## invariant-breaking case the coverage test fails on, never silently
+  ## absorbed: an unledgered skip breaks sum(count) == funDecls - names.len).
+  result = -1
+  for k in 0 ..< LlbcSkipReasons.len:
+    if LlbcSkipReasons[k] == reason: return k
+
+proc llbcFunDeclCoverage*(root: JsonNode): LlbcFunDeclCoverage {.
     raises: [].} =
-  ## Every ADDRESSABLE fun_decl name, document order. A decl whose
-  ## structured name is unresolvable (trait impl blocks, scalar/primitive
-  ## owners — Q11 — non-Ident elements) is skipped: callers report what IS
-  ## addressable, and the producer's last-segment fallback still sees every
-  ## decl. Body form is NOT filtered here (extraction reports prototypes
-  ## honestly — "extern prototype" is a measured reason, not a skip).
-  result = @[]
+  ## Every ADDRESSABLE fun_decl name, document order, PLUS the coverage
+  ## ledger of the decls the structured-name filter skipped (issue #219). A
+  ## decl whose structured name is unresolvable (trait impl blocks,
+  ## scalar/primitive owners — Q11 — non-Ident elements) is skipped: callers
+  ## report what IS addressable, and the producer's last-segment fallback
+  ## still sees every decl. Body form is NOT filtered here (extraction
+  ## reports prototypes honestly — "extern prototype" is a measured reason,
+  ## not a skip).
+  result = LlbcFunDeclCoverage(names: @[], skippedByReason: @[])
   if root.isNil or root.kind != JObject: return
   let translated = jField(root, "translated")
   if translated.isNil or translated.kind != JObject: return
@@ -1812,13 +1888,34 @@ proc llbcFunDeclNamePaths*(root: JsonNode): seq[LlbcFunDeclNamePath] {.
   collectInterns(jField(translated, "item_names"), ownerInterns)
   ctx.ownerTypes = ownerInterns.types
   collectInterns(translated, ctx.interns)
+  result.measured = true
+  result.funDecls = decls.elems.len
+  var tally: array[LlbcSkipReasons.len, int]
   for i in 0 ..< decls.elems.len:
     let fd = decls.elems[i]
     let s = funDeclStructuredName(ctx, fd)
-    if not s.ok: continue
+    if not s.ok:
+      let k = skipReasonIndex(s.skipReason)
+      if k >= 0: inc tally[k]
+      continue
     let fn = lastNameSegment(fd)
-    if fn.len == 0: continue
-    result.add(LlbcFunDeclNamePath(fullName: s.fullName, lastSegment: fn))
+    if fn.len == 0:
+      let k = skipReasonIndex(LlbcSkipNoLastSegment)
+      if k >= 0: inc tally[k]
+      continue
+    result.names.add(LlbcFunDeclNamePath(fullName: s.fullName, lastSegment: fn))
+  for k in 0 ..< LlbcSkipReasons.len:
+    if tally[k] > 0:
+      result.skippedByReason.add(
+        LlbcFunDeclSkip(reason: LlbcSkipReasons[k], count: tally[k]))
+
+proc llbcFunDeclNamePaths*(root: JsonNode): seq[LlbcFunDeclNamePath] {.
+    raises: [].} =
+  ## The ADDRESSABLE subset of llbcFunDeclCoverage — every addressable
+  ## fun_decl name, document order. The skip ledger is NOT carried here:
+  ## a caller that reports coverage uses llbcFunDeclCoverage (one walk, one
+  ## addressable set).
+  llbcFunDeclCoverage(root).names
 
 func llbcFunctionNames*(root: JsonNode): seq[string] =
   ## Last-path name of every fun_decl carrying a Structured body, in

@@ -196,6 +196,26 @@ land a minimal coherent slice; inclusion is a follow-up extension, not an open i
    monomorphic gate on its anonymous region generic — the first measured
    honest reason — before param decoding names `Ref`; `Adt`/`Call` rejections
    unchanged — semantic admission is the ③ follow-up, not this slice).
+   **Observability update (issue #219, `fix/219-rust-coverage-counters`)** — the
+   limit above is COUNTABLE, never widened: the enumeration now exposes its own
+   ledger (`llbcFunDeclCoverage` — the document's fun_decl count, the
+   addressable subset, and the closed-label tally of the filters that skipped
+   the rest), and the lane prints ONE `[AXIOM][rust-lane] addressability:
+   named=<m> skipped=<n-m> (<filter>=<count>, …)` line on its EXISTING log
+   channel (stderr, next to `coverage:`/`done:`) that names WHICH filter
+   dropped each skipped declaration (`impl-owner-unaddressable`,
+   `non-ident-element`, `impl-not-penultimate`, …). The line carries only what
+   the run-coverage line cannot: `coverage: total=` already reports the
+   MEASURED fun_decl count and `coverage: addressable=` the SELECTED candidate
+   set, so the ledger re-prints neither — `named` is the enumeration's
+   addressable decls and `named + skipped == coverage total` holds by
+   construction. The numbers are log-only — no report field is added, the
+   payload schema stays `axiom.report.v1`, and the `addressability:` axis label
+   keeps them apart from the run-coverage keys. Pinned by
+   `tests/unit/test_rust_lane_coverage_line.nim` (the printed line), the
+   impl-identity suite of `tests/unit/test_llbc_to_canonical.nim` (the ledger)
+   and the impl-probe scenario of
+   `tests/gateway/rust_lane_cli_acceptance_test.nim`.
    **Status update (2026-10-14, `feat/rust-lane-live-cli`)** — the LIVE WIRING now exists:
    `ax prove --project <cargo-root>` branches to the Rust lane (`src/cli/rust_lane_cli.nim`),
    which runs the PINNED charon (`src/verification/charon_runner.nim` — identity gate
