@@ -191,6 +191,31 @@ func indexFunctionNodesP*(ast: PNode): Table[string, PNode] =
       if nm.len > 0:
         result[nm] = node
 
+type FunctionNodeIndex* = Table[string, PNode]
+  ## Case-folded declaration-name → ProcDef node. Built once per module; callers
+  ## that resolve many names in the same AST look up in O(1) instead of
+  ## re-walking every ProcDef per name.
+
+func buildFunctionNodeIndexP*(ast: PNode): FunctionNodeIndex =
+  ## Build the lookup `findIndexedFunctionNodeP` consumes. The key is the same
+  ## `strip().toLowerAscii()` form `findFunctionNodeP` compares against, so the
+  ## two resolve identically; later duplicates win exactly as they do in the
+  ## linear scan's `return some(node)` order.
+  if ast.isNil: return
+  for node in findNodesP(ast, ProcDefKinds):
+    if node.len > 0 and not node[0].isNil:
+      let nm = declarationNameP(node[0]).strip().toLowerAscii()
+      if nm.len > 0:
+        result[nm] = node
+
+func findIndexedFunctionNodeP*(index: FunctionNodeIndex; functionName: string): Option[PNode] =
+  ## O(1) counterpart of `findFunctionNodeP` over a prebuilt index.
+  let target = functionName.strip().toLowerAscii()
+  if target.len == 0: return none(PNode)
+  let node = index.getOrDefault(target)
+  if node.isNil: return none(PNode)
+  some(node)
+
 # ── PNode predicate helpers ───────────────────────────────────────
 
 func hasIdentifierNamedP*(ast: PNode; name: string): bool =

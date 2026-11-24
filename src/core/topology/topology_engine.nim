@@ -292,7 +292,10 @@ proc checkAxiomImplCST*(source: string; funcName: string): bool {.raises: [], ax
 proc enrichAxiomImplFlags*(symbols: var seq[TopologySymbol]; sourceContentCache: Table[string, string]) {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Scan each symbol's source via PNode CST to detect {.axiomImpl.} pragma.
   ## AGENT-19 FIX: cache parse result per module path to avoid O(symbols) PNode parses.
+  ## The per-module declaration index keeps the pragma lookup O(1) per symbol
+  ## instead of re-walking every ProcDef of the module for each of them.
   var parsedAsts = initTable[string, Option[PNode]]()
+  var moduleIndexes = initTable[string, FunctionNodeIndex]()
   for i in 0 ..< symbols.len:
     let modPath = symbols[i].modulePath
     if modPath notin parsedAsts:
@@ -304,7 +307,10 @@ proc enrichAxiomImplFlags*(symbols: var seq[TopologySymbol]; sourceContentCache:
         parsedAsts[modPath] = none(PNode)
     let cached = parsedAsts.getOrDefault(modPath, none(PNode))
     if cached.isSome:
-      let fnNode = findFunctionNode(cached.get, symbols[i].functionName)
+      if modPath notin moduleIndexes:
+        moduleIndexes[modPath] = buildFunctionNodeIndexP(cached.get)
+      let idx = moduleIndexes.getOrDefault(modPath)
+      let fnNode = findIndexedFunctionNodeP(idx, symbols[i].functionName)
       if fnNode.isSome():
         symbols[i].hasAxiomImpl = hasPragmaNamedP(fnNode.get(), "axiomImpl")
 
