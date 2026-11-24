@@ -194,13 +194,27 @@ own work: `dbread 22.182 s` + `postinst 27.211 s` + `unpack 0.815 s` +
 
 Tier 1 removes the whole step, not just the apt phase, because it never invokes
 `dpkg` at all — it stages the payload and copies four members. That places the
-expected outcome in the S1b band rather than the S1a band, which is why the
-Terminal Outcome is reachable: the second-latest required context on the audited
-run finished 85 s after `admission-gate` started its tail, and S1b's realized
-saving is 98.4 s at its minimum.
+expected outcome above the S1a band and below the S1b band — see §6a for the
+correction that keeps this from overstating the saving.
 
-A 50 s residual would have landed at ~401 s and missed. The distinction is the
-whole reason tier 1 does not use `dpkg -i`.
+### 6a. Correction — tier 1 is cheap, not free
+
+S1b models the step as **gone**. Tier 1 does not remove it; it replaces a
+dpkg-driven path with a short one. Measured on the head commit (§9.2), the nine
+jobs that materialized the payload through tier 1 took 0.96 – 8.6 s, median ≈ 7.9 s.
+Treating the step as zero would overstate the saving by roughly five calls ×
+7 s ≈ 35 s.
+
+The honest expectation is therefore **between** the two bands:
+
+| bound | derivation | wall |
+|---|---|---|
+| S1b (upper bound, not achievable) | step removed entirely | 331.9 s |
+| realistic | 130.099 s − (5 × ≈7 s) | ≈ 357 – 370 s |
+| S1a (lower bound, superseded) | apt phase only removed | 382.2 s |
+
+The acceptance threshold stays at ≤ 377 s, which the realistic band clears with
+margin but not with the S1b margin. Landing, not arithmetic, decides it.
 
 ## 7. Remote-SHA pins that this change does not reach
 
