@@ -93728,6 +93728,17 @@
       "ignorable": false,
       "leanType": "Int",
       "module": "src/gate/runners/debt_integrity_gate.nim",
+      "name": "baselineCap",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Int",
+      "module": "src/gate/runners/debt_integrity_gate.nim",
       "name": "countForwardingStubs",
       "resultConstraintTemplate": "(>= result 0)",
       "returnType": "int",
