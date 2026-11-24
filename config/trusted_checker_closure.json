@@ -274,7 +274,7 @@
     "src/cli/rust_lane_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "9214c50baaa752ac1b3fb7bc5aef702c9347ed9b"
+      "sha": "841450b6999bc0bf0917cb27a9c1997697627ed4"
     },
     "src/cli/scaffold_cli.nim": {
       "mode": "100644",
@@ -284,7 +284,7 @@
     "src/cli/scope_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "0462fc3d2d948afd55e1bed86489e15bdd624a86"
+      "sha": "fb88250f25f97a6d2acdac6481eb28686e58dd2a"
     },
     "src/cli/selection_state.nim": {
       "mode": "100644",
@@ -2039,7 +2039,7 @@
     "src/core/trusted/axiom_pragmas_procs.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "d01ab4511ec433239683f0c01123f680316e41de"
+      "sha": "e644bdecd653f98c50c1ad27cfbb26c8952a4f6e"
     },
     "src/core/trusted/axiom_pragmas_types.nim": {
       "mode": "100644",
@@ -4224,7 +4224,7 @@
     "src/verification/rust_input_contract.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "760ca832c3c53be86dbf2edea19c3bce03717c69"
+      "sha": "89f182fb170c197db4bac35b9b5d92d6a1fabe6e"
     },
     "src/verification/rust_obligation_render.nim": {
       "mode": "100644",

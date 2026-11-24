@@ -241,6 +241,18 @@ land a minimal coherent slice; inclusion is a follow-up extension, not an open i
    `buildRustScopeJson`; `src/cli/scope_cli.nim`):
    - every `rust_targets` entry must be present and well-formed; a missing `specRef`,
      malformed `commit`/`signatureHash`, or a duplicate `(module, symbol)` pair fails closed;
+   - **`signatureHash` is BOUND, not decorative (issue #223).** Shape validity alone admits
+     ANY 64-char lowercase-hex string, so it certifies nothing. The digest is sha256 over
+     the target's canonical declaration line (`rustSignatureDigest` /
+     `canonicalRustSignatureLine` — `pub` included, the body-opening `{` and the newline
+     removed, the convention of `tests/fixtures/rust/axiom_u64_probe/README.md`), and every
+     reader RECOMPUTES it from the `module` + `symbol` the entry itself names
+     (`verifyRustSignatureBinding`) and compares. Fail-closed classes are distinct and are
+     never coerced into PASS: missing field, malformed field, unresolvable module, ambiguous
+     module (two roots holding different bytes), absent signature line, digest mismatch. The
+     rust lane (`src/cli/rust_lane_cli.nim` `loadScopeLock`) and `ax scope check`
+     (`src/cli/scope_cli.nim`) refuse on any of them, and `ax scope lock` refuses to
+     regenerate a lock over an unbound declaration — regeneration never launders an identity;
    - the DECLARED `vksRust` integer is cross-checked against the count derived from the
      entries themselves (two independently derived values — not a tautology); a mismatch
      fails closed (lock regeneration refused, consistency check FAIL);

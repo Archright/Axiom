@@ -1,10 +1,11 @@
 # nim-check: skip (include fragment — not an independent translation unit)
 axiomLayer "trusted.core.pragmas-procs"
 
+import core/crypto/hash_kernel
 import core/macros/best_effort
 import core/trusted/scope_version
 
-import std/json
+import std/[json, strutils]
 
 func isKernelScopeMember*(x: RuntimeAxiomEntry): bool {.axiomDecision(
   id = "DECISION-0410",
@@ -141,6 +142,16 @@ type
       ## JSON members derived separately, so editing one side without the
       ## other fails closed (a real comparison, not a tautology).
 
+  RustSignatureBinding* = object
+    ## Result of binding the declared `rust_targets[].signatureHash` values to
+    ## the signatures those entries NAME (issue #223). `checked` is false for a
+    ## lock declaring no rust_targets — nothing declared, nothing to bind.
+    checked*: bool
+    ok*: bool
+    reason*: string
+    boundTargets*: int
+      ## entries whose declared digest equals the recomputed one
+
 func isLowerHexOfLen(s: string; n: int): bool {.raises: [].} =
   if s.len != n:
     return false
@@ -148,6 +159,97 @@ func isLowerHexOfLen(s: string; n: int): bool {.raises: [].} =
     if c notin {'0'..'9', 'a'..'f'}:
       return false
   true
+
+func canonicalRustSignatureLine*(declLine: string): string {.raises: [].} =
+  ## The canonical serialisation a `signatureHash` is taken over: surrounding
+  ## whitespace removed and the body-opening `{` (and whitespace before it)
+  ## dropped. Multi-line declarations are NOT folded (fail-closed).
+  result = declLine.strip()
+  if result.endsWith("{"):
+    result = result[0 ..< result.len - 1].strip()
+
+func rustSignatureDigest*(declLine: string): string {.raises: [].} =
+  ## sha256 hex of `canonicalRustSignatureLine(declLine)`.
+  hash_kernel.sha256Hex(canonicalRustSignatureLine(declLine))
+
+func findRustSignatureLine*(source, fnName: string): string {.raises: [].} =
+  ## The declaration line introducing `fn <fnName>` — "" when absent.
+  if fnName.len == 0:
+    return ""
+  let needle = "fn " & fnName
+  for rawLine in source.splitLines():
+    let line = rawLine.strip()
+    if line.len == 0 or line.startsWith("//"):
+      continue
+    let at = line.find(needle)
+    if at < 0:
+      continue
+    let after = at + needle.len
+    if after < line.len and line[after] notin {'(', '<', ' ', '\t'}:
+      continue
+    return line
+  ""
+
+func rustTargetFnName*(symbol: string): string {.raises: [].} =
+  let sep = symbol.rfind("::")
+  if sep < 0: symbol else: symbol[sep + 2 ..< symbol.len]
+
+func verifyRustSignatureBindingFromSources*(moduleSources: Table[string, string];
+    lockData: JsonNode;
+    modulePaths: Table[string, string] = initTable[string, string]()):
+    RustSignatureBinding {.raises: [].} =
+  ## Pure signatureHash binding check (issue #223) over pre-loaded module
+  ## sources keyed by `moduleRel`.
+  let targetsNode = lockData.getOrDefault("rust_targets")
+  if targetsNode.isNil:
+    return RustSignatureBinding(checked: false, ok: true)
+  if targetsNode.kind != JArray:
+    return RustSignatureBinding(checked: true, ok: false,
+      reason: "rust_targets must be an array")
+  var bound = 0
+  for i in 0 ..< targetsNode.len:
+    let entry = targetsNode[i]
+    if entry.kind != JObject:
+      return RustSignatureBinding(checked: true, ok: false,
+        reason: "rust_targets[" & $i & "] is not an object")
+    let declaredNode = entry.getOrDefault("signatureHash")
+    if declaredNode.isNil:
+      return RustSignatureBinding(checked: true, ok: false,
+        reason: "rust_targets[" & $i & "].signatureHash missing: the field is " &
+                "mandatory and must equal the digest of the declared signature " &
+                "(fail-closed)")
+    if declaredNode.kind != JString:
+      return RustSignatureBinding(checked: true, ok: false,
+        reason: "rust_targets[" & $i & "].signatureHash malformed: not a string " &
+                "(fail-closed)")
+    let declared = declaredNode.getStr()
+    if not isLowerHexOfLen(declared, 64):
+      return RustSignatureBinding(checked: true, ok: false,
+        reason: "rust_targets[" & $i & "].signatureHash malformed: '" & declared &
+                "' is not 64-char lowercase hex (sha256) (fail-closed)")
+    let symbol = entry.getOrDefault("symbol").getStr()
+    let moduleRel = entry.getOrDefault("module").getStr()
+    if moduleRel.len == 0 or not moduleSources.hasKey(moduleRel):
+      return RustSignatureBinding(checked: true, ok: false,
+        reason: "rust_targets[" & $i & "].module unresolvable: '" & moduleRel &
+                "' was not loaded (fail-closed)")
+    let source = moduleSources.getOrDefault(moduleRel)
+    let displayPath = modulePaths.getOrDefault(moduleRel, moduleRel)
+    let fnName = rustTargetFnName(symbol)
+    let declLine = findRustSignatureLine(source, fnName)
+    if declLine.len == 0:
+      return RustSignatureBinding(checked: true, ok: false,
+        reason: "rust_targets[" & $i & "] signature line not found: module '" &
+                displayPath & "' declares no 'fn " & fnName & "' (fail-closed)")
+    let recomputed = rustSignatureDigest(declLine)
+    if recomputed != declared:
+      return RustSignatureBinding(checked: true, ok: false,
+        reason: "rust_targets[" & $i & "].signatureHash mismatch: declared '" &
+                declared & "' != recomputed '" & recomputed & "' for " & symbol &
+                " at " & displayPath & " (canonical line: \"" &
+                canonicalRustSignatureLine(declLine) & "\")")
+    inc bound
+  RustSignatureBinding(checked: true, ok: true, boundTargets: bound)
 
 func validateRustTargetEntry(entry: JsonNode; idx: int): string {.raises: [].} =
   ## "" when the entry is well-formed; otherwise the fail-closed reason.
@@ -241,17 +343,16 @@ func buildRustScopeJson*(targets: JsonNode; vksRust: int): string {.raises: [].}
   arr.add("]")
   "\"rust_targets\":" & arr & ",\"vksRust\":" & $vksRust
 
-proc buildScopeLockJson*(projectRoot: string; existingLock: JsonNode = nil): string {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+proc buildScopeLockJson*(projectRoot: string; existingLock: JsonNode = nil;
+    moduleSources: Table[string, string] = initTable[string, string]()): string {.
+    raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Deterministic verification_scope.lock JSON (schema v3, additively extended
   ## with the vks_rust members `rust_targets` + `vksRust`) derived from the
   ## runtime kernel registry. Must be called after `generateAxiomInit()` so the
   ## registry is populated.
-  ## The existing-lock Rust declaration is passed in pre-parsed by the caller
-  ## (I/O stays at the CLI boundary — core purity: this proc reads no lock file
-  ## itself; the only anchored readFile in this file belongs to
-  ## loadKernelExemptSymbols). An invalid Rust declaration in `existingLock`
-  ## returns "" (regeneration refused) instead of writing a lock that would
-  ## launder an inconsistent Rust denominator.
+  ## The existing-lock Rust declaration and pre-loaded `moduleSources` are
+  ## passed in by the caller (core purity: zero new file reads in src/core/).
+  ## An invalid or unbound Rust declaration returns "" (regeneration refused).
   let kernelExemptSymbols = loadKernelExemptSymbols(projectRoot)
   let (kernelTotal, kernelSymbols) = collectKernelSymbols(projectRoot)
   var rustCheck = RustScopeCheck(checked: false, ok: true, computedVksRust: 0)
@@ -259,6 +360,8 @@ proc buildScopeLockJson*(projectRoot: string; existingLock: JsonNode = nil): str
   if existingLock != nil:
     rustCheck = validateRustScopeSection(existingLock)
     if rustCheck.checked and rustCheck.ok:
+      if not verifyRustSignatureBindingFromSources(moduleSources, existingLock).ok:
+        return ""
       rustTargets = existingLock.getOrDefault("rust_targets")
   if not rustCheck.ok:
     return ""

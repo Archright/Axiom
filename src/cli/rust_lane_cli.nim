@@ -113,6 +113,7 @@ import verification/charon_runner
 import verification/evidence_ledger  # EvidenceCasRefName — the side ref the extraction record lands on
 import verification/extraction_agreement  # ea* verdict vocabulary
 import verification/extraction_provenance
+import verification/rust_input_contract
   # fileSha256Hex + rustToolchainIdentityToken/validate — the §6c v2
   # measurement primitives (cli→verification has existing precedent)
 import verification/ledger_side_ref  # liveLedgerTransport / LedgerTransport
@@ -435,12 +436,17 @@ proc findDepInfo(workDir, crateName: string): string {.
   hits.sort()
   hits[0]
 
-proc loadScopeLock(stateRoot: string): Result[JsonNode, CliError] {.
+proc loadScopeLock(stateRoot: string; bindingRoots: openArray[string]):
+    Result[JsonNode, CliError] {.
     raises: [CatchableError], axiomEffect: IOEffect,
     tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## The scope lock follows the STATE root (resolveScopeLockPath discipline:
   ## with --project the lock lives at $AXIOM_STATE_DIR/data). Missing,
   ## unreadable, or rust-section-invalid → INVALID_INPUT, fail-closed.
+  ## The declared `signatureHash` values must BIND to the signatures the
+  ## entries name (issue #223): the digest is recomputed from the module each
+  ## entry declares, resolved against `bindingRoots` (repo root, then subject
+  ## root — the same order resolveLaneModule applies).
   let lockPath = stateRoot / "data" / "verification_scope.lock"
   if not fileExists(lockPath):
     return err(CliError(kind: CliOutcome.INVALID_INPUT, msg:
@@ -459,6 +465,12 @@ proc loadScopeLock(stateRoot: string): Result[JsonNode, CliError] {.
     return err(CliError(kind: CliOutcome.INVALID_INPUT, msg:
       "[AXIOM] rust lane refuses an invalid vks_rust scope declaration " &
       "(fail-closed): " & rustCheck.reason))
+  if rustCheck.checked:
+    let binding = verifyRustSignatureBinding(bindingRoots, lockData)
+    if not binding.ok:
+      return err(CliError(kind: CliOutcome.INVALID_INPUT, msg:
+        "[AXIOM] rust lane refuses a scope declaration whose signatureHash does " &
+        "not bind to the declared signature (fail-closed): " & binding.reason))
   ok(lockData)
 
 proc resolveSpecsFile(specRefPath: string; projectAbs: string;
@@ -886,7 +898,7 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
   let repoRoot = resolveRepoRoot()
 
   # ① Scope lock (state-root discipline) → the declared denominator.
-  let lockRes = loadScopeLock(stateRoot)
+  let lockRes = loadScopeLock(stateRoot, [repoRoot, projectAbs])
   if lockRes.isErr:
     return err(lockRes.error)
   let lockData = lockRes.get()
