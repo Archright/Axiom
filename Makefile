@@ -185,8 +185,20 @@ check-imports: bin/check_imports_ast ## Import boundary scan (AST-based, parseSt
 # Same --depfile gap as DEBT_AUDIT_SRCS below: the stub-only dep let a stale
 # bin/nimtry (pre root-write-closure cache path) silently re-create .nimcache/
 # at the repo root. Implementation files must force a rebuild.
+#
+# -d:release is mandatory for the same reason the gate binary carries it below:
+# config.nims gates `switch("opt","speed")` behind `defined(release)`, so a dev
+# build runs the full-tree AST scan with no -O2. Measured on 1341 src/*.nim
+# (2026-11-25, 3 warm runs each, same tree, same commit): dev 17.22/17.38/17.71s
+# vs release 2.38/2.30s — ~7.5x, and it is the largest single item in the
+# required check's build step (T_scan was 59% of it; T_gate itself is 0.34s).
+# The optimization cannot move the verdict: src/gate/nimtry/** contains no
+# `defined(release)` branch and no runtime assert/doAssert, and both builds
+# emitted the identical sidecar (4370 total = 368 error + 4002 warning) on the
+# same tree. Do not remove this as a "speed tweak" — it is the difference
+# between a 14s and a 2s measurement inside a required merge check.
 bin/nimtry: src/gate/nimtry.nim $(wildcard src/gate/nimtry/*.nim)
-	$(NIM) c $(NIM_TOOL_FLAGS) -o:$@ $<
+	$(NIM) c $(NIM_TOOL_FLAGS) -d:release -o:$@ $<
 
 # Reference data for the nimtry verdict (issue #462).
 #
