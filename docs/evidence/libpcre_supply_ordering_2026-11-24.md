@@ -366,4 +366,88 @@ Acceptance is a separate observation, recorded after landing:
 3. the seven required contexts still mapped to App `5795152` +
    `15368`, verdict bytes unchanged, and `admission-check` now `success` on
    those merge groups because `B_mg` contains the new blob;
-4. two consecutive real merge-queue landings.
+4. two consecutive real merge-queue landings.### 9.7 Acceptance record — landing and the first post-cutover merge group
+
+Recorded after the cutover. Split into what the observation proves and what it
+does not, because the first post-cutover merge group failed for a reason that
+has nothing to do with this change.
+
+#### Landing
+
+| item | value |
+|---|---|
+| merge commit | `eaf204a418e4370c32bd6c9242c75ab3e3c9283e` (main tip) |
+| lane | break-glass (App `5795152` `admission-check` = `failure`, by design — §8) |
+| rulesets armed / restored | `27097366`, `27525972` — `bypass_actors` `[]→[OrganizationAdmin/pull_request]→[]` |
+| readback | **RESTORE_IDENTICAL** — body sha256 `5423a80e…` and `f2f0c096…` both equal the frozen pre-snapshots; `current_user_can_bypass=never` on both; rules 5/1 and contexts 7+1 unchanged |
+
+The App's rejection on the landing head was `trust_surface=FAIL — venue=pull_request
+manifest_ref=dea3cce touched=2 manifest_touched=1 reasons=mismatch:.github/actions/setup-axiom-toolchain/action.yml`.
+It was recorded as a failure and not reclassified.
+
+#### Self-heal, verified
+
+The first post-cutover merge group (`a1b09f8b…`, base `eaf204a4`) published:
+
+```
+trust_surface=PASS — venue=merge_group manifest_ref=eaf204a touched=18 reasons=none
+```
+
+The path that failed at the `pull_request` venue passes at the `merge_group`
+venue because `B_mg` now contains the new blob. That is the mechanism §8
+describes, observed rather than asserted.
+
+#### Propagation, verified
+
+Every base-tree consumer in that merge group switched from the old ladder to
+tier 1 with no further change, which is what §9.3 predicted:
+
+| job | revision on PR #450 | revision after cutover | tier after cutover |
+|---|---|---|---|
+| `attest / build-base-artifacts` | base (old) | base (new) | 1 |
+| `attest / admission-independents` | base (old) | base (new) | 1 |
+| `attest / admission-check` | base (old) | base (new) | 1 |
+| `attest / go-critical-lane (0)`, `(1)` | base (old) | base (new) | 1 |
+| `mint-prepare / prepare` | base (old) | base (new) | 1 |
+| `closure-deriver` | pinned `c021c338…` | pinned `c021c338…` | apt — unchanged, §7 |
+
+#### Supply-step latency, measured on both event types
+
+The step provisions a system library; it does not read candidate content, so
+the same job name is comparable across candidates even when the candidate
+differs. Values are the composite-action `duration_ms`.
+
+| job | pre-cutover | post-cutover | delta |
+|---|---|---|---|
+| `attest / build-base-artifacts` | 36.832 s | 1.019 s | −35.813 s |
+| `mint-prepare / prepare` | 36.392 s | 7.192 s | −29.200 s |
+| `attest / admission-check` | 6.915 s | 1.482 s | −5.433 s |
+| `attest / admission-independents` | 6.419 s | 8.086 s | +1.667 s |
+| `axiom-operational-slice` | 28.265 s | 9.095 s | −19.170 s |
+| **sum** | **114.823 s** | **26.874 s** | **−87.949 s** |
+
+The `+1.667 s` row is runner variance, not a regression: the same tier-1 path on
+nine other invocations ran 0.96 – 9.10 s, and the pre value on that job was
+already at the low end of the old ladder's bimodal 6 s/36 s split.
+
+#### What this record does **not** claim
+
+`T_admission` was **not** reduced to any asserted number, and the ≤ 377 s
+threshold is **not** claimed met. The single post-cutover merge group is not a
+usable sample:
+
+- it failed with `reasonCode=ROT_ALLOWLIST` at the verdict leg — the pre-existing
+  rotation-allowlist gate that also aborted PR #449 twice, unrelated to this
+  change and not fixed here;
+- `gateway / select` took 8 m 44 s on it versus 50 s on the pre-cutover baseline,
+  a +474 s confound that is 5× larger than the −88 s this change can move;
+- job wall times are not comparable across different candidate PRs at all.
+
+The acceptance cohort therefore still requires n ≥ 5 clean post-cutover merge
+groups with a stable `gateway` leg, and two consecutive real merge-queue
+landings. Zero of two have occurred: the only post-cutover queue attempt
+aborted on `ROT_ALLOWLIST`.
+
+The honest status is: integrity preserved and verified, propagation verified,
+supply-step latency reduced and measured, **admission-wall reduction pending
+observation**.
