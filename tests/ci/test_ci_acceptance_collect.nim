@@ -319,6 +319,44 @@ suite "classification hierarchy":
       check ac.kind == ckLegitimatePolicy
       check not ac.gap
 
+  test "a declared ROT_ALLOWLIST verdict outranks a quoted lock string in a comment":
+    ## run 45380275553 (PR #451). The verdict was
+    ##   {"result":"mergeAborted","reasonCode":"ROT_ALLOWLIST", ...}
+    ## while the mint-prepare log carried the shell comment
+    ##   # waits (observed: run 2026-10-27 E: Could not get lock ...)
+    ## echoed verbatim ahead of the step body, and the step body is full of
+    ## `apt-get`. Both supply needles matched, so the entry was reported
+    ## `external_dependency/external_supply_unavailable` — a class for a supply
+    ## outage that never happened, masking the real refusal.
+    ##
+    ## The evidence must be LOGS, not artifacts: that is the shape the real
+    ## attempt has (its artifacts had expired, so `observeEvidence` took the
+    ## log path), and `failure()` puts text in artifacts instead.
+    let verdictLog = """  v_rc="$(jq -r '.verdict.reasonCode // empty' .admission.stdout 2>/dev/null || true)"
+  if [ -n "$v_rc" ]; then
+    echo "::error title=NOT_ADMIT_${v_rc}::admission verdict NOT-ADMIT (reasonCode=${v_rc})"
+{"prNumber":451,"headSha":"4cddd74d","baseSha":"eaf204a4","verdict":{"result":"mergeAborted","reasonCode":"ROT_ALLOWLIST","reason":"closure changed ..."},"rotationCheck":{"allowlistOk":false}}"""
+    let mintLog = """    # waits (observed: run 2026-10-27 `E: Could not get lock /var/lib/dpkg/lock-frontend`).
+    elif sudo apt-get -o DPkg::Lock::Timeout=300 install -y -qq "libpcre3=$AXIOM_PCRE_VERSION"; then"""
+    var a = failure("45380275553")
+    a.artifacts = @[]
+    a.logs = @[ev("logs/14_mint-prepare _ prepare.txt", mintLog),
+               ev("logs/9_verdict _ admission-check.txt", verdictLog)]
+    let ac = classifyAttempt(a, false, true)
+    check ac.kind == ckLegitimatePolicy
+    check not ac.gap
+    check ac.controlOutcome != coFailClosed
+    check "ROT_ALLOWLIST" in ac.detail
+
+  test "a real supply outage with no declared verdict stays external_dependency":
+    ## The guard above must not swallow a genuine outage: no reasonCode, only
+    ## the apt/dpkg signatures.
+    let text = """E: Failed to fetch https://security.ubuntu.com/ubuntu/pool/universe/p/pcre3/libpcre3_8.39-15build1_amd64.deb  503  Service Unavailable [IP: 52.15.107.13 80]
+E: Unable to fetch some archives, maybe run apt-get update or try with --fix-missing?"""
+    let ac = classifyAttempt(failure("44521587339", text = text), false, true)
+    check ac.kind == ckExternalDependency
+    check ac.subtype == dsExternalSupply
+
   test "explicit INVALID_INPUT subject-pin/document refusal is legitimate":
     let text = "[ERROR] INVALID_INPUT: SUBJECT_PIN_REJECTED — subject pin does not match"
     let ac = classifyAttempt(failure("1", text = text), false, true)
