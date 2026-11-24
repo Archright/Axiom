@@ -99,3 +99,49 @@ suite "canonical projection — path & cache key stripping":
               "subjectRoot", "stateRoot", "repoRoot", "cacheHit",
               "cacheHitCount", "evidenceLogJson"]:
       check isVolatileKey(k)
+
+suite "canonical projection — execution-scope accounting (issue #348)":
+
+  test "eligibleTargets is a deliberate volatile entry":
+    # Deliberate classification, not an accidental omission from the set: the
+    # key lives in ONE place (canonical_projection.volatileKeys).
+    check isVolatileKey("eligibleTargets")
+
+  test "two runs differing ONLY in eligibleTargets project to the same digest":
+    ## Discriminating pair: if eligibleTargets were a state input the two
+    ## documents below would hash differently. The inputs are asserted to
+    ## actually differ, so the equality cannot be satisfied vacuously.
+    let runA = stateWithNode(absValNode("/vault/absval.json", false))
+    runA["executionStats"] = %*{
+      "eligibleTargets": 4,
+      "targetsWithObligations": 2,
+      "obligationGeneratedCount": 3
+    }
+    let runB = stateWithNode(absValNode("/vault/absval.json", false))
+    runB["executionStats"] = %*{
+      "eligibleTargets": 1,
+      "targetsWithObligations": 2,
+      "obligationGeneratedCount": 3
+    }
+    # Non-vacuity: the two documents really do carry different values, in the
+    # nested position wf_render.nim:587 emits them.
+    check runA["executionStats"]["eligibleTargets"].getInt() == 4
+    check runB["executionStats"]["eligibleTargets"].getInt() == 1
+    check canonicalProjectionHash(runA) == canonicalProjectionHash(runB)
+    # The key is removed, not merely neutralized: the rest of executionStats
+    # survives the projection (a genuine scope change still moves the digest).
+    check stripVolatile(runA)["executionStats"].hasKey("eligibleTargets") == false
+    check stripVolatile(runA)["executionStats"].hasKey("targetsWithObligations")
+
+  test "the same pair still flips on a semantic change (negative control)":
+    ## Proves the equality above is caused by the classification and not by a
+    ## projection that ignores this part of the document.
+    let base = stateWithNode(absValNode("/vault/absval.json", false))
+    base["executionStats"] = %*{"eligibleTargets": 4}
+    let scopeChanged = parseJson($base)
+    scopeChanged["executionStats"]["eligibleTargets"] = %1
+    let verdictChanged = parseJson($base)
+    verdictChanged["nodeReports"][0]["status"] = %"failed"
+    verdictChanged["summary"]["verified"] = %0
+    check canonicalProjectionHash(scopeChanged) == canonicalProjectionHash(base)
+    check canonicalProjectionHash(verdictChanged) != canonicalProjectionHash(base)
