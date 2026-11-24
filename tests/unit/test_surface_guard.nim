@@ -15,11 +15,56 @@
 ## groups without rationale/approvedBy; the shipped policy must stay valid
 ## and keep its FROZEN intent.
 ##
-## Run from repo root:
-##   nim c -r --hints:off --nimcache:/tmp/nimc_guard tests/unit/test_surface_guard.nim
+## v4 additions: the shipped-policy assertions are SEMANTIC, not pinned
+## literals. v3 asserted `len == 109` and `policyVersion == 102`; both went
+## stale the moment the policy was revised (actual: 116 / 108), so the file
+## was red while proving nothing. The registry is now compared against a set
+## recomputed from the policy itself — the exact PRODUCT/CONTROLLED
+## registrations that a FROZEN glob would otherwise catch — and policyVersion
+## is checked for the properties that matter (positive integer, echoed by
+## every entry point, recorded in the changelog) rather than for a number.
+## A back-ported `116`/`108` would have been the same defect one revision
+## later. v4 also pins the abuse vectors of the selfAmendment exception: the
+## allow-list is read from the BASE policy, matched exactly, and applied
+## all-or-nothing, so a head policy cannot widen its own lane.
+##
+## Hermetic: only std/[json, unittest, strutils] plus the guard module. The
+## sole filesystem read is the guard's own loadPolicy() boundary.
+##
+## Run from repo root (project config is skipped so the build needs no
+## bin/ax or nimble path):
+##   nim c -r --hints:off --skipParentCfg --skipProjCfg --skipUserCfg \
+##     --noNimblePath --nimcache:build/nimcache/tsg -o:build/tsg \
+##     tests/unit/test_surface_guard.nim
 
 import std/[json, unittest, strutils]
 import ../../tools/surface_guard
+
+const SHIPPED_POLICY = "config/repository_surface.json"
+
+proc frozenOnlyView(policy: JsonNode): JsonNode =
+  ## Copy of `policy` with PRODUCT/CONTROLLED emptied and a non-FROZEN
+  ## defaultClass, so the guard's own glob engine answers exactly one
+  ## question: "would a FROZEN pattern catch this path if no earlier
+  ## registration shadowed it?" Used to recompute the exception set instead
+  ## of trusting frozenExceptions to describe itself.
+  result = parseJson($policy)
+  result["classes"]["PRODUCT"] = newJArray()
+  result["classes"]["CONTROLLED"] = newJArray()
+  result["defaultClass"] = %"PRODUCT"
+
+proc shadowedExceptionSet(policy: JsonNode): seq[string] =
+  ## The registry the policy OUGHT to carry, derived only from `classes`:
+  ## every exact (wildcard-free) PRODUCT/CONTROLLED registration that a
+  ## FROZEN pattern also matches. Duplicate-free, declaration order.
+  let probe = frozenOnlyView(policy)
+  for cls in ["PRODUCT", "CONTROLLED"]:
+    for entry in policy["classes"][cls].items:
+      let path = entry.getStr()
+      if '*' in path:
+        continue
+      if resolveClass(probe, path) == "FROZEN" and path notin result:
+        result.add(path)
 
 let POLICY = parseJson("""
 {
@@ -661,6 +706,153 @@ suite "selfAmendment exception (v2)":
     check j1 == j2
     echo "  [selfAmendment] byte-identical verdict JSON"
 
+suite "selfAmendment abuse resistance (v4)":
+  ## The v2 suite proves the four documented conditions; it does not prove the
+  ## conditions cannot be subverted. These tests pin the remaining vectors: the
+  ## head policy must not be able to widen its own lane, and the exception must
+  ## be all-or-nothing rather than per-violation.
+  const abuseBase = """
+    {"schemaVersion": 1, "policyVersion": 10,
+     "classes": {"PRODUCT": ["src/**"], "CONTROLLED": ["tools/**"],
+                 "FROZEN": ["config/policy.json", "config/guard.nim"]},
+     "defaultClass": "PRODUCT",
+     "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+               "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+               "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}},
+     "selfAmendment": {"allowedPaths": ["config/policy.json"]}}
+  """
+  let base = parseJson(abuseBase)
+
+  test "a head policy cannot widen allowedPaths on its own behalf":
+    # The allow-list is read from the BASE policy (condition (b)). A head that
+    # lists the forbidden path must not arm itself — otherwise the exception
+    # would be self-granting and revocable only by the same actor it binds.
+    let headSelfWide = parseJson("""
+      {"schemaVersion": 1, "policyVersion": 11,
+       "classes": {"PRODUCT": ["src/**"], "CONTROLLED": ["tools/**"],
+                   "FROZEN": ["config/policy.json", "config/guard.nim"]},
+       "defaultClass": "PRODUCT",
+       "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}},
+       "selfAmendment": {"allowedPaths": ["config/policy.json", "config/guard.nim"]}}
+    """)
+    let v = classify(base, @[ChangeRecord(status: 'M', path: "config/guard.nim")],
+                     headSelfWide)
+    check v["verdict"].getStr() == "FAIL"
+    check v["reasonCode"].getStr() == "SURFACE_FORBIDDEN"
+    check v["amendments"].len == 0
+    echo "  [v4] head cannot widen the base allow-list"
+
+  test "a head policy cannot relax the rules that produced the violation":
+    # Rules are read from the BASE policy. A head whose FROZEN rules are all
+    # PASS must not clear a violation the base forbids — otherwise the "newer
+    # revision" condition would be a licence to rewrite the judgment.
+    let headPermissive = parseJson("""
+      {"schemaVersion": 1, "policyVersion": 11,
+       "classes": {"PRODUCT": ["src/**"], "CONTROLLED": ["tools/**"],
+                   "FROZEN": ["config/policy.json", "config/guard.nim"]},
+       "defaultClass": "PRODUCT",
+       "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "FROZEN": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"}},
+       "selfAmendment": {"allowedPaths": ["config/policy.json"]}}
+    """)
+    let v = classify(base, @[ChangeRecord(status: 'M', path: "config/guard.nim")],
+                     headPermissive)
+    check v["verdict"].getStr() == "FAIL"
+    check v["reasonCode"].getStr() == "SURFACE_FORBIDDEN"
+    check v["amendments"].len == 0
+    echo "  [v4] head rules do not overwrite the base rules"
+
+  test "the exception is all-or-nothing across FROZEN violations":
+    # One allowed path plus one forbidden path must leave BOTH violations
+    # standing. Partial amendment would silently launder the forbidden one by
+    # reporting PASS, so the guard requires every FROZEN violation to be
+    # inside allowedPaths before it clears any of them.
+    let headOk = parseJson("""
+      {"schemaVersion": 1, "policyVersion": 11,
+       "classes": {"PRODUCT": ["src/**"], "CONTROLLED": ["tools/**"],
+                   "FROZEN": ["config/policy.json", "config/guard.nim"]},
+       "defaultClass": "PRODUCT",
+       "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}},
+       "selfAmendment": {"allowedPaths": ["config/policy.json"]}}
+    """)
+    for recs in @[
+        @[ChangeRecord(status: 'M', path: "config/policy.json"),
+          ChangeRecord(status: 'M', path: "config/guard.nim")],
+        @[ChangeRecord(status: 'M', path: "config/guard.nim"),
+          ChangeRecord(status: 'M', path: "config/policy.json")]]:
+      let v = classify(base, recs, headOk)
+      check v["verdict"].getStr() == "FAIL"
+      check v["amendments"].len == 0
+      # neither path is laundered: both violations survive
+      check v["violations"].len == 2
+      var sawAllowed = false
+      var sawForbidden = false
+      for vio in v["violations"].items:
+        if vio["path"].getStr() == "config/policy.json": sawAllowed = true
+        if vio["path"].getStr() == "config/guard.nim": sawForbidden = true
+      check sawAllowed
+      check sawForbidden
+    echo "  [v4] one forbidden path blocks amendment of the allowed one too"
+
+  test "a wildcard in allowedPaths is inert (exact membership only)":
+    # allowedPaths is an exact allow-list: membership is `notin`, never a glob.
+    # A wildcard entry therefore arms nothing rather than arming everything.
+    let wildBase = parseJson("""
+      {"schemaVersion": 1, "policyVersion": 10,
+       "classes": {"PRODUCT": ["src/**"], "CONTROLLED": ["tools/**"],
+                   "FROZEN": ["config/policy.json", "config/guard.nim"]},
+       "defaultClass": "PRODUCT",
+       "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}},
+       "selfAmendment": {"allowedPaths": ["config/*"]}}
+    """)
+    let wildHead = parseJson("""
+      {"schemaVersion": 1, "policyVersion": 11,
+       "classes": {"PRODUCT": ["src/**"], "CONTROLLED": ["tools/**"],
+                   "FROZEN": ["config/policy.json", "config/guard.nim"]},
+       "defaultClass": "PRODUCT",
+       "rules": {"PRODUCT": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "CONTROLLED": {"ADD": "PASS", "MODIFY": "PASS", "DELETE": "PASS"},
+                 "FROZEN": {"ADD": "FAIL", "MODIFY": "FAIL", "DELETE": "FAIL"}},
+       "selfAmendment": {"allowedPaths": ["config/*"]}}
+    """)
+    let v = classify(wildBase, @[ChangeRecord(status: 'M', path: "config/policy.json")],
+                     wildHead)
+    check v["verdict"].getStr() == "FAIL"
+    check v["amendments"].len == 0
+    echo "  [v4] wildcard allow-list arms nothing"
+
+  test "shipped policy allow-list is exact paths, not patterns":
+    # The live policy's self-evolution lane must obey the same rule the
+    # synthetic wildcard test pins: exact membership, never a glob.
+    let loaded = loadPolicy(SHIPPED_POLICY)
+    check loaded.ok
+    let allowed = selfAmendmentPaths(loaded.node)
+    check allowed.len > 0
+    var wild: seq[string] = @[]
+    for p in allowed:
+      if '*' in p:
+        wild.add(p)
+    check wild.len == 0
+    # The lane may also name non-FROZEN paths (the shipped policy does: the
+    # test file is PRODUCT and the contract doc is CONTROLLED). Those entries
+    # are inert — the exception only ever clears FROZEN violations — so the
+    # invariant is that at least one allowed path IS FROZEN, i.e. the lane is
+    # not entirely decorative.
+    var frozenAllowed = 0
+    for p in allowed:
+      if resolveClass(loaded.node, p) == "FROZEN":
+        inc frozenAllowed
+    check frozenAllowed > 0
+    echo "  [v4] shipped allow-list: ", allowed.len, " exact paths, ",
+         frozenAllowed, " FROZEN"
+
 # ---------------------------------------------------------------------------
 # v3 (DEBT#545): frozenExceptions contract.
 # ---------------------------------------------------------------------------
@@ -695,6 +887,19 @@ proc v3WithExceptions(groups, paths: JsonNode): JsonNode =
 
 proc okGroups(): JsonNode =
   %* {"generated-manifest": {"rationale": "generated", "approvedBy": "architect"}}
+
+proc mentionsVersion(text: string, v: int): bool =
+  ## True when `text` records revision `v` as a `v<N>` token. The trailing
+  ## digit guard keeps v108 from being satisfied by "v1080".
+  let token = "v" & $v
+  var i = 0
+  while i + token.len <= text.len:
+    if text[i] == 'v' and text[i ..< i + token.len] == token:
+      let after = i + token.len
+      if after >= text.len or text[after] notin {'0'..'9'}:
+        return true
+    inc i
+  false
 
 suite "v3 frozenExceptions (DEBT#545)":
   test "unregistered exact/FROZEN conflict -> POLICY_INVALID":
@@ -759,15 +964,95 @@ suite "v3 frozenExceptions (DEBT#545)":
     check v["reasonCode"].getStr() == "POLICY_INVALID"
     echo "  [v3] schema string is pinned"
 
-  test "shipped policy v102 is valid and registers 109 exceptions":
-    let loaded = loadPolicy("config/repository_surface.json")
+  test "shipped policy is structurally valid and its registry is derived, not declared":
+    let loaded = loadPolicy(SHIPPED_POLICY)
     check loaded.ok
     check not loaded.invalidContent
-    check frozenExceptionPaths(loaded.node).len == 109
+    # Structural validity: an empty-diff classify only reaches PASS/OK after
+    # isValidPolicy accepts every field, including the frozenExceptions block.
     let v = classify(loaded.node, @[])
     check v["verdict"].getStr() == "PASS"
-    check v["policyVersion"].getInt() == 102
-    echo "  [v3] shipped v102 is valid"
+    check v["reasonCode"].getStr() == "OK"
+
+    # The registry must equal the set the policy's own class tables imply —
+    # recomputed here from PRODUCT/CONTROLLED x FROZEN, never read back from
+    # frozenExceptions. Equality in BOTH directions is what makes this
+    # semantic: a missing entry means a FROZEN declaration is silently inert
+    # (DEBT#545), and a surplus entry is a dead exception.
+    let registered = frozenExceptionPaths(loaded.node)
+    let derived = shadowedExceptionSet(loaded.node)
+    check registered.len > 0
+    var missing: seq[string] = @[]
+    for p in derived:
+      if p notin registered:
+        missing.add(p)
+    var surplus: seq[string] = @[]
+    for p in registered:
+      if p notin derived:
+        surplus.add(p)
+    check missing.len == 0
+    check surplus.len == 0
+    echo "  [v4] shipped registry == derived shadowed set (", registered.len, " paths)"
+
+  test "every shipped exception is exact, uniquely grouped and load-bearing":
+    let loaded = loadPolicy(SHIPPED_POLICY)
+    check loaded.ok
+    let policy = loaded.node
+    let paths = policy["frozenExceptions"]["paths"]
+    let groups = policy["frozenExceptions"]["groups"]
+    let probe = frozenOnlyView(policy)
+
+    var wildcards: seq[string] = @[]
+    var noGroup: seq[string] = @[]
+    var notShadowing: seq[string] = @[]
+    var stillFrozen: seq[string] = @[]
+    for e in frozenExceptionPaths(policy):
+      # (a) exact only — a wildcard registration would re-arm the theater.
+      if '*' in e:
+        wildcards.add(e)
+      # (b) attribution: the path must name a group declared with rationale
+      # and approvedBy (isValidPolicy rejects dangling refs, so a group hit
+      # here is a fully attributed one).
+      let gid = paths[e]
+      if gid.isNil or gid.kind != JString or not groups.hasKey(gid.getStr()):
+        noGroup.add(e)
+      # (c) shadowing: some FROZEN pattern must match it, else the entry is
+      # dead and the guard would reject the policy as POLICY_INVALID.
+      if resolveClass(probe, e) != "FROZEN":
+        notShadowing.add(e)
+      # (d) the override is real: under the shipped policy the path must not
+      # resolve FROZEN, or the registration would buy nothing.
+      if resolveClass(policy, e) == "FROZEN":
+        stillFrozen.add(e)
+
+    check wildcards.len == 0
+    check noGroup.len == 0
+    check notShadowing.len == 0
+    check stillFrozen.len == 0
+    # No duplicates: `paths` is a JSON object, so duplicates are impossible
+    # by construction — the check above on set equality is what pins it.
+    echo "  [v4] ", frozenExceptionPaths(policy).len,
+         " exceptions are exact, attributed, shadowing and effective"
+
+  test "policyVersion is a positive integer recorded in the changelog":
+    let loaded = loadPolicy(SHIPPED_POLICY)
+    check loaded.ok
+    let policy = loaded.node
+    let pv = policy["policyVersion"]
+    # (a) type and sign — the property that matters, not a pinned literal.
+    check pv.kind == JInt
+    check pv.getInt() > 0
+    # (b) every entry point echoes that same version, so the policy cannot
+    # disagree with itself about which revision it is.
+    check classify(policy, @[])["policyVersion"].getInt() == pv.getInt()
+    check checkClosure(policy, %*{"schemaVersion": 1, "reachableFiles": []}
+    )["policyVersion"].getInt() == pv.getInt()
+    # (c) internal consistency: the description's changelog records the
+    # version being shipped (house style appends one "vN (" paragraph per
+    # revision). A bump without a changelog entry is caught here.
+    check mentionsVersion(policy["description"].getStr(), pv.getInt())
+    echo "  [v4] policyVersion v", pv.getInt(),
+         " is positive, echoed by classify/closure and in the changelog"
 
   test "shipped policy: dropping one exception is caught (liveness)":
     let loaded = loadPolicy("config/repository_surface.json")
