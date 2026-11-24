@@ -143,6 +143,35 @@ func nodeFieldP*(node: PNode; fieldName: string): Option[PNode]  {.axiomDecision
     if fieldName == "right" and node.len > 1 and not node[1].isNil:
       return some(node[1])
 
+# ── PNode declaration name resolution ─────────────────────────────
+
+func declarationNameP(declNameNode: PNode): string =
+  ## Resolve a declaration's own name from its name node (`declNode[0]`).
+  ## An exported declaration wraps the name: `proc foo*()` carries
+  ## `nkPostfix(nkIdent"*", nkIdent"foo")` (docs/spec/nim_ast_node_shape_quirks
+  ## .md Q1), so `findFirstNodeP` returns the marker `"*"`, not the name.
+  ## Unwrapping to the last nkIdent son keeps working if a declaration gains
+  ## another wrapping form. Same rule as procNameFromDeclNode in
+  ## symbol_graph/global_symbol_graph_builder_part2.nim and extractName in
+  ## gate/nimtry/nimtry_extract_part1.nim; neither is reachable from here (the
+  ## first imports this module, the second is the gate layer), so the predicate
+  ## lives once, in this file.
+  if declNameNode.isNil: return ""
+  var nameNode: PNode
+  if declNameNode.kind == nkPostfix:
+    if declNameNode.len < 2: return ""
+    for identNode in findNodesP(declNameNode, {nkIdent}):
+      nameNode = identNode
+  else:
+    let nameNodeOpt = findFirstNodeP(declNameNode, {nkIdent})
+    if nameNodeOpt.isNone: return ""
+    nameNode = nameNodeOpt.get
+  if nameNode.isNil: return ""
+  if nameNode.kind == nkIdent:
+    result = nameNode.ident.s
+  elif nameNode.kind == nkSym:
+    result = nameNode.sym.name.s
+
 # ── PNode function discovery ──────────────────────────────────────
 
 func findFunctionNodeP*(ast: PNode; functionName: string): Option[PNode]  {.axiomDecision.} =
@@ -150,32 +179,17 @@ func findFunctionNodeP*(ast: PNode; functionName: string): Option[PNode]  {.axio
   let target = functionName.strip().toLowerAscii()
   for node in findNodesP(ast, ProcDefKinds):
     if node.len > 0 and not node[0].isNil:
-      let nameNodeOpt = findFirstNodeP(node[0], {nkIdent})
-      if nameNodeOpt.isSome:
-        let nm = if nameNodeOpt.get.kind == nkIdent:
-                    nameNodeOpt.get.ident.s
-                  elif nameNodeOpt.get.kind == nkSym:
-                    nameNodeOpt.get.sym.name.s
-                  else:
-                    ""
-        if nm.strip().toLowerAscii() == target:
-          return some(node)
+      if declarationNameP(node[0]).strip().toLowerAscii() == target:
+        return some(node)
   none(PNode)
 
 func indexFunctionNodesP*(ast: PNode): Table[string, PNode] =
   if ast.isNil: return
   for node in findNodesP(ast, ProcDefKinds):
     if node.len > 0 and not node[0].isNil:
-      let nameNodeOpt = findFirstNodeP(node[0], {nkIdent})
-      if nameNodeOpt.isSome:
-        let nm = if nameNodeOpt.get.kind == nkIdent:
-                    nameNodeOpt.get.ident.s
-                  elif nameNodeOpt.get.kind == nkSym:
-                    nameNodeOpt.get.sym.name.s
-                  else:
-                    ""
-        if nm.len > 0:
-          result[nm] = node
+      let nm = declarationNameP(node[0])
+      if nm.len > 0:
+        result[nm] = node
 
 # ── PNode predicate helpers ───────────────────────────────────────
 
@@ -229,14 +243,7 @@ func extractFunctionDefsFromAstP*(ast: PNode): seq[FunctionDef] =
   for node in findNodesP(ast, ProcDefKinds):
     var fd: FunctionDef
     if node.len > 0 and not node[0].isNil:
-      let nameNodeOpt = findFirstNodeP(node[0], {nkIdent})
-      if nameNodeOpt.isSome:
-        fd.name = if nameNodeOpt.get.kind == nkIdent:
-                    nameNodeOpt.get.ident.s
-                  elif nameNodeOpt.get.kind == nkSym:
-                    nameNodeOpt.get.sym.name.s
-                  else:
-                    ""
+      fd.name = declarationNameP(node[0])
     if fd.name.len == 0: continue
     for paramNode in findNodesP(node, {nkIdentDefs}):
       var paramName = ""
@@ -538,16 +545,8 @@ func findFunctionNode*(ast: PNode; functionName: string): Option[PNode]  {.axiom
   let target = functionName.strip().toLowerAscii()
   for node in findNodesP(ast, ProcDefKinds):
     if node.len > 0 and not node[0].isNil:
-      let nameNodeOpt = findFirstNodeP(node[0], {nkIdent})
-      if nameNodeOpt.isSome:
-        let nm = if nameNodeOpt.get.kind == nkIdent:
-                    nameNodeOpt.get.ident.s
-                  elif nameNodeOpt.get.kind == nkSym:
-                    nameNodeOpt.get.sym.name.s
-                  else:
-                    ""
-        if nm.strip().toLowerAscii() == target:
-          return some(node)
+      if declarationNameP(node[0]).strip().toLowerAscii() == target:
+        return some(node)
   none(PNode)
 
 

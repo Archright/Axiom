@@ -1384,7 +1384,7 @@
     "src/core/parsers/pnode_nav.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "17690e093886d1fe396060fc908865e50553a5ca"
+      "sha": "8133e2657abc6389e53e76b67f000298474c9ab3"
     },
     "src/core/parsers/pred.nim": {
       "mode": "100644",
