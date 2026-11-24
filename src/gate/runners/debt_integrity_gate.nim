@@ -201,9 +201,10 @@ proc countNimtryViolations(repoRoot: string): int =
   ## (DEBT#563 fail-closed). data/nimtry_baseline.json is CONTROLLED with
   ## DELETE=PASS, so its disappearance is an admitted change and must not be
   ## able to weaken the ratchet silently.
+  ## The DEBT#563 marker for this fail-closed contract lives on
+  ## countNimtryActiveViolations below; one marker per debt per file.
   let path = repoRoot / NimtryBaselineRelPath
   if not fileExists(path):
-    const debtMarker563 {.axiomDebt: "DEBT#563".} = true
     return -1
   try: parseJson(readFile(path))["total_violations"].getInt(-1)
   except CatchableError: -1
