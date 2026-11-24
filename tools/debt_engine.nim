@@ -1695,24 +1695,31 @@ proc evalLayerViolations(): int {.raises: [CatchableError].} =
 ## ── Nimtry baseline evaluator ─────────────────────────────────────────
 
 proc evalNimtryViolations(): int {.raises: [CatchableError].} =
-  ## Projection from `bin/nimtry src/` (check-arch gate, exit-code gated):
-  ## exit 0 → 0 violations (locked-baseline PASS). Non-zero → best-effort
-  ## count of reported violation lines ([soc-*] markers), min 1 when the
-  ## output carries no parseable marker (fail-closed to ≥1).
-  ## NOTE: data/nimtry_baseline.json is NOT the live measurement — it is an
-  ## archived anchor snapshot and must not be used as the metric source.
+  ## Projection of the live violation count from the sidecar `bin/nimtry src/`
+  ## rewrites on every run (`data/nimtry_live_count.json`). That sidecar is the
+  ## measurement authority named in src/gate/nimtry/nimtry_cli.nim ("the
+  ## authoritative runtime number — the baseline total is the Historical Cap")
+  ## and is the same source debt_integrity_gate reads for
+  ## `nimtry_active_violations`, so both report one number.
+  ## The gate's exit code is NOT a count: it stays 0 while every violation is
+  ## already debt-anchored, so reading it as "0 violations" declared the metric
+  ## clean while thousands of active violations remained.
+  ## NOTE: data/nimtry_baseline.json is the Historical Cap, never the metric.
+  ## Unmeasured (binary or sidecar absent) → -1, so the ledger keeps its last
+  ## verified value instead of a fabricated one (DEBT#543 fail-closed).
   let tool = "bin/nimtry"
   if not fileExists(tool):
     echo "  [skip] nimtry_violations: evaluator binary unavailable (" & tool & ")"
     return -1
-  let (outp, code) = execCmdEx(tool & " src/")
-  if code == 0: return 0
-  var count = 0
-  for line in outp.splitLines():
-    if line.contains("[soc-") or line.contains("violation"):
-      inc count
-  if count == 0: return 1
-  count
+  discard execCmdEx(tool & " src/")   # refreshes the live-count sidecar
+  let livePath = "data/nimtry_live_count.json"
+  if not fileExists(livePath):
+    echo "  [skip] nimtry_violations: live-count sidecar unavailable (" & livePath & ")"
+    return -1
+  try:
+    result = parseJson(readFile(livePath)){"total_violations"}.getInt(-1)
+  except CatchableError:
+    result = -1
 
 ## ── Import lint evaluator (from-scratch static regex count) ───────────
 

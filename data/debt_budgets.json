@@ -22,7 +22,7 @@
     "nimtry_violations": {
       "baseline": 704,
       "target": 0,
-      "description": "soc-domain-imports violations reported by bin/nimtry src/ (check-arch gate); 0 after registry re-baseline + nimtry build restored"
+      "description": "active violations across all nimtry queries over src/ (live count from data/nimtry_live_count.json; data/nimtry_baseline.json is the Historical Cap, not a clean-state target)"
     },
     "debt_registry_open": {
       "baseline": 107,
