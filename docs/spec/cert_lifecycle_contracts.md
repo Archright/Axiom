@@ -385,3 +385,221 @@ SelectionPolicy = RejectMultiple   # variants.size > 1 → AMBIGUOUS
 **--cert 스코핑**: `--cert`는 on-disk 파일명 prefix(또는 content irHash prefix)와 매치한다. 매치하는 tracked reference cert가 0개이면 `CERT_NOT_FOUND` 반환코드 2.
 
 **trackedCertName replace-in-place semantics**: tracked reference cert 파일명은 안정적 identity이다. 재물질화(reconciliation)는 content만 교체한다 — 파일명은 변경되지 않는다. content 교체 후 irHash는 새 evidence의 irHash(`891b6daee9...`)로 갱신된다.
+## 8. Sign-Surface Guarantee Boundary (`--sign`)
+
+**Status: normative. Class: PRODUCT.** This section states what `ax cert attest
+--sign` guarantees and what it does not. It is not a trust surface: it adds no
+authority, relaxes no existing invariant, and grants no new claim. It extends the
+sibling statement in `docs/spec/certification_continuity_contract.md` section 4.4 - that
+the closure checks only the recorded block's self-consistency and
+`observationDigest` binding, and that kernel re-execution is `ax cert verify
+--kernel`'s authority - to the sign surface itself.
+
+### 8.1 The guarantee
+
+`--sign` guarantees exactly one property: **the observation block it signs is
+internally self-consistent.** Nothing more.
+
+**(a) Presence and internal coherence of the observation block.**
+
+`runSignWitnessCli` (`src/cli/cert_cli.nim:987`) parses the witness
+(`parseWitnessBundleText`, `src/verification/attestation_witness.nim:474`) and
+calls `signWitness` (`src/verification/attestation_witness.nim:543`,
+DECISION-VS188-03), whose decision reason states it "performs no kernel execution
+and never invents the facts it signs". The module imports no process-execution
+facility: `src/verification/attestation_witness.nim:38-46` brings in
+`json`/`os`/`strutils` plus core and verification modules only - no `osproc`, no
+`startProcess`.
+
+The gate both paths share is `kernelObservationValidationError`
+(`src/verification/kernel_reexecution.nim:606`). It requires every recorded field
+to be present and well-typed; the axiom set to be sorted, deduplicated and inside
+the INV-6 allowlist; `leanSourceDigest == sha256(leanSource)`; `queryDigest ==
+sha256(smtlib2)`; `optionsDigest == deterministicSolverOptionsDigest()`;
+`randomSeed == Z3PinnedRandomSeed`; `rlimit == z3DeterministicBudget`;
+`timeoutMs > 0`; the Lean verdict to equal the allowlist evaluation of the
+**recorded** axiom set; and `verificationMode` to equal the mode implied by the
+**recorded** observed flags. Every one of these compares the record against the
+certificate's own bytes or against a pinned constant. None compares it against a
+fresh run.
+
+`subjectCertValidate` (`src/verification/subject_continuity_writer.nim:312`) adds
+the same shape of checks, plus the anti-decoy rule at
+`src/verification/subject_continuity_writer.nim:345-350` requiring
+`leanProposition == observation.theoremName`. That rule is an equality between two
+values that both originate in the same witness; it rejects a mangled record, not a
+fabricated one.
+
+**(b) `digest` is a data-integrity identifier, not an authenticity proof.**
+
+`observationDigest` is the canonical-JSON hash of the observation projection
+(`kernelObservationDigest`, `src/verification/kernel_reexecution.nim:484`) - a
+content address. Anyone who writes the content can compute it.
+
+The Ed25519 attestation over the payload
+(`src/infrastructure/certificate_attestation.nim:239`, DECISION-0662; verified by
+`verifyCertificateAttestation`, `src/infrastructure/certificate_attestation.nim:254`,
+DECISION-0663) is likewise a consistency anchor. The keypair derives from the
+PUBLIC in-source seed `AttestationDomainSeed`
+(`src/infrastructure/certificate_attestation.nim:185`), and the module's own
+honesty note (`src/infrastructure/certificate_attestation.nim:21-31`) states the
+signature is "NOT a confidentiality root", is not producer authenticity, and that
+any claim it protects against an adversary who controls the source tree is "FALSE
+theater". Attestation verification detects accidental corruption, partial
+tampering and cross-writer canonicalization drift. It does not establish who
+produced the values, nor that any run produced them.
+
+**(c) Authenticity authority is outside this surface.**
+
+Authenticity - the claim that a proof was actually produced - is established only
+by (i) cold re-execution of the embedded artifacts and (ii) the attestation /
+check-run / ruleset cross-checks. Sections 8.3 and 8.4 name the code that carries
+each.
+
+### 8.2 What is not guaranteed
+
+**A consistently forged observation passes `--sign`.** Every sign-time check is
+internal to the witness, so a witness whose observation block is fabricated but
+self-consistent is accepted and minted.
+
+This is measured, not inferred. A witness was constructed claiming
+`theoremName=inc3_correct`, `axiomSet=[]`, a dual pass verdict, and fabricated
+`outputDigest` / `toolchainIdentity` / `binaryDigest`, over an embedded
+`leanSource` that proves only `theorem decoy_true : True := by trivial` (the
+claimed theorem is never stated anywhere). It was fed to the real `--sign` path:
+
+```
+ax cert attest --sign <witness>   -> exit 0, certificate minted
+```
+
+The resulting certificate records `theoremName=inc3_correct`,
+`leanProposition=inc3_correct`, `axiomsUsed=[]`, `status=certGreen`,
+`verified=true`, `trusted=true`, `kind=subject-continuity`, over
+`leanSource="theorem decoy_true : True := by trivial"`.
+
+**The same forged certificate also passes cold re-execution.** See 8.3. Neither
+path blocks a forgery whose embedded artifacts happen to pass.
+
+Not guaranteed, by construction:
+
+| Not guaranteed | Reason (code fact) |
+|---|---|
+| That the recorded observation was produced by any run | All sign-time checks are record-internal: `src/verification/kernel_reexecution.nim:606`, `src/verification/subject_continuity_writer.nim:312` |
+| That `theoremName` is the theorem the embedded source states | The decoy rule compares the record against itself: `src/verification/subject_continuity_writer.nim:345-350`; the cold path's fresh observation is derived from the source, not from the record: `src/verification/kernel_reexecution.nim:1161` |
+| Producer identity | Keypair derives from a public seed: `src/infrastructure/certificate_attestation.nim:185`, `:21-31` |
+| That `digest` values attest authenticity | They are content addresses: `src/verification/kernel_reexecution.nim:484` |
+
+### 8.3 What cold re-execution adds, and what it still does not
+
+`ax cert verify --kernel` (`src/cli/cert_cli.nim:78`, dispatched from
+`verifyCert`, `src/cli/cert_cli.nim:143`) re-executes the **embedded artifacts**.
+It calls `reexecuteLean` (`src/verification/kernel_reexecution.nim:1267`) and
+`reexecuteZ3` (`src/verification/kernel_reexecution.nim:969`), thin verdict
+wrappers over the observation-producing `reexecuteLeanObservedKernel`
+(`src/verification/kernel_reexecution.nim:1161`) and `reexecuteZ3Observed`
+(`src/verification/kernel_reexecution.nim:913`), plus
+`checkLeanWithLeanChecker` (`src/verification/kernel_reexecution.nim:1064`),
+joined by `composeKernelVerdict` (`src/verification/kernel_reexecution.nim:360`).
+Without
+`--kernel`, `ax cert verify` (`src/cli/cert_cli.nim:114`) runs only the structural
+closure `verifyCertificateClosure` (`src/verification/certificate_verifier.nim:486`,
+observe `:34`, `:268`, `:433`) and performs no kernel execution at all
+(`src/cli/cert_cli.nim:134-137`, the non-`--kernel` PASS path).
+
+Cold re-execution independently re-derives the **artifact-level** facts: the
+embedded Lean source typechecks on the pinned kernel, its observed axioms are
+allowlisted, and the embedded SMT query is unsat. That is strictly stronger than
+`--sign`. It still is not provenance, for a specific reason: the cold path reads
+`leanSource` / `smtlib2` **from the certificate** and re-runs those, then derives
+its fresh observation from them. It never compares the fresh observation against
+the recorded observation block - and on this path the comparison is not merely
+skipped, it is structurally impossible: `reexecuteLean` returns only
+`reexecuteLeanObservedKernel(...).verdict`
+(`src/verification/kernel_reexecution.nim:1271`), so the freshly observed theorem
+name, axiom set and output digests are computed and discarded.
+
+Measured on the forged certificate of 8.2:
+
+```
+ax cert verify <cert>          -> exit 0  PASS (replayMatched=true, ...)
+ax cert verify --kernel <cert> -> exit 0  PASS (kernel re-execution - lean=re-executed,
+                                          z3=unsat, leanchecker=passed)
+```
+
+So a consistently forged observation passes **both** paths. The honest statement
+is that this surface does not distinguish it, on either path.
+
+Cold re-execution does block a forgery whose **embedded artifacts** fail. A
+certificate carrying `theorem forged_claim : 1 = 2 := by rfl` (which does not
+compile) is rejected:
+
+```
+ax cert verify --kernel <cert> -> exit 1
+KERNEL_REEXECUTION_FAILED - leanchecker re-validation MISMATCH - independent
+kernel-level re-check failed
+```
+
+That catch is artifact-level, not provenance-level: it fires because the embedded
+proof does not hold, not because the record disagrees with a run.
+
+**Reproducibility note.** The two `--kernel` observations above require a resolvable
+Lean toolchain (`ELAN_TOOLCHAIN` exported). Without it the leanchecker leg reports
+a mismatch for environment reasons, which is an elan artifact and not a finding.
+
+### 8.4 The one path that compares a fresh observation to a recorded one
+
+Exactly one verifier path performs the provenance-shaped comparison: the evidence
+bundle verifier `verifyKernel`
+(`src/verification/evidence_bundle/bundle_verify.nim:584`), which compares the
+freshly observed axiom set against the recorded `axiomsUsed`
+(`src/verification/evidence_bundle/bundle_verify.nim:659`). Its admission-side
+companions are `checkAttestation` (`:684`), `checkCheckRuns` (`:711`) and
+`checkRuleset` (`:752`). Its exit codes are documented at
+`src/verification/evidence_bundle/bundle_verify.nim:36`: 0 pass, 1 fail, 3
+`KERNEL_SKIPPED` - a skipped prerequisite is never a pass.
+
+`ax cert verify --kernel` is already wired as a required leg of a local
+verification target: `Makefile:1211` runs it and fails the target on rejection.
+This is a local/CI leg; it is not, by itself, the ruleset-required admission gate.
+
+`verifyCertBinding` (`src/cli/landing_cli.nim:108`) re-verifies the Ed25519
+attestation and the exact `(base, head)` pair only. Check-run and ruleset
+evaluation is GitHub's authority: `src/cli/merge_cli.nim:154-157` records that the
+admission predicate deliberately does not collect check-runs.
+
+### 8.5 Obligations on an external verifier
+
+A certificate - however well-formed, signed, and digest-bound - is a **claim, not
+a proof**. To distinguish a real proof from a consistently forged one, an external
+verifier MUST:
+
+1. Re-execute the embedded artifacts itself: `ax cert verify --kernel <cert>`, and
+   additionally run the evidence-bundle kernel leg (`verifyKernel`,
+   `src/verification/evidence_bundle/bundle_verify.nim:584`), which is the only
+   path that compares a fresh observation against the recorded one.
+2. Cross-check the attestation, check-run and ruleset legs
+   (`src/verification/evidence_bundle/bundle_verify.nim:684`, `:711`, `:752`)
+   against the recorded `provenanceAnchor` fields (`mergeSha`, `mergeTreeDigest`,
+   `toolCommit`, `prHeadSha`, `prNumber`, `runId`, `runAttempt`, `artifact`).
+3. Treat `digest` values and the Ed25519 signature as integrity evidence only
+   (8.1b), never as authenticity evidence.
+4. Treat PASS from `--sign`, and PASS from plain `ax cert verify` without
+   `--kernel`, as statements about recorded bytes - not about a run.
+
+Failure to perform 1 and 2 leaves the verifier unable to distinguish a real proof
+from a consistently forged one. That is the gap this section documents; it does
+not close it.
+
+### 8.6 Issue #253 disposition
+
+This section implements **option 3** of issue #253: state the guarantee /
+non-guarantee split explicitly in a contract, and record that cold verification
+(`--kernel`) already exists as a required leg of a local verification target.
+
+- Option 1 (verifier-side re-execution **before** signing) remains **open**.
+- Option 2 (execution receipt) remains **open**.
+- Issue #253's first completion criterion - a negative-control test showing a
+  forged self-consistent observation is **blocked** on at least one path - is
+  **not satisfied** by this change, and this section does not claim it is. The
+  measurement in 8.2 and 8.3 shows the forged certificate passing both the sign
+  path and the cold path. Only the documentation half of #253 is addressed here.
