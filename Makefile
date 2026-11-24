@@ -330,7 +330,7 @@ check-layer-negative: bin/layer_enforcement_gate ## DEBT#287 negative fixtures m
 	  echo "[check-layer-negative] FAIL: approved_pair_new_target failed without the exact verdict"; echo "$$out"; exit 1; }; \
 	echo "[check-layer-negative] approved_pair_new_target: deterministic FAIL (rc=$$rc) — a whitelisted file CANNOT add a new forbidden target"
 
-check-arch: bin/nimtry nimtry-baseline-check ## 아키텍처 위반 검사 (nimtry v2 fingerprint gate — exit-code gated)
+check-arch: bin/nimtry nimtry-baseline-check ## Architecture violation check (nimtry v2 fingerprint gate — exit-code gated)
 	@echo "=== [2/4] Architecture Violation Check ==="
 	@if [ -f bin/nimtry ]; then \
 		OUT=$$(bin/nimtry src/ 2>&1); \
@@ -607,7 +607,7 @@ check-toolchain-pin:
 # `&& bin/debt_engine --validate`를 실행한다 — 훅의 symlink 목록은 FROZEN이므로
 # 스냅샷 폐쇄는 여기서 닫히며, SKIP 경로에서는 두 평가자의 불필요한 스냅숏
 # 재빌드(콜드 ~6.80s, CC 139)가 발생하지 않는다.
-push-admissibility-debt-prereqs: bin/effect_contract_projection bin/nimtry nimtry-baseline-check ## check-debt RUN 경로 전용 평가자 스테이징 (SKIP 시 미빌드)
+push-admissibility-debt-prereqs: bin/effect_contract_projection bin/nimtry nimtry-baseline-check ## Evaluator staging for the check-debt RUN path only (not built on SKIP)
 	@echo "push-admissibility-debt-prereqs: debt evaluators staged (snapshot closure)"
 
 push-admissibility: ## pre-push push-target OID static admissibility (snapshot CWD)
@@ -1642,7 +1642,7 @@ test-prelude: ## prelude.lean integration tests (NimInt mapping, Int.natCast_non
 	@echo "✅ Prelude integration tests passed"
 	@echo ""
 
-audit: nimtry-baseline-check ## 4-dimension quality audit + nimtry + stub check (로컬 실행)
+audit: nimtry-baseline-check ## 4-dimension quality audit + nimtry + stub check (local run)
 	$(NIM) c -r src/gate/runners/quality_gate_runner.nim
 	$(NIM) c -r src/gate/runners/debt_scan_gate.nim
 	$(NIM) c -r src/core/audit/governance_engine.nim
