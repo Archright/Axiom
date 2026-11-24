@@ -545,6 +545,33 @@ proc targetEntry(report: JsonNode; suffix: string): JsonNode =
       return t
   nil
 
+proc addressabilityLine(stdErr: string): string =
+  ## (issue #219) The lane's ADDRESSABILITY observable, verbatim — the last
+  ## `[AXIOM][rust-lane] addressability: named=… skipped=…` line on stderr.
+  ## "" when the line is absent (which is what the assertions fail on). It
+  ## rides the EXISTING lane log channel: no report field carries these
+  ## numbers (schema stays axiom.report.v1).
+  for l in stdErr.splitLines():
+    if l.contains("[AXIOM][rust-lane] addressability: named="):
+      result = l.strip()
+
+proc addressabilityNumbers(line: string): seq[int] =
+  ## The (named, skipped) pair as the line's OWN labels spell it — parsed from
+  ## the printed text, never re-derived from JSON. `named` is the
+  ## enumeration's addressable decls and `skipped` their complement; the raw
+  ## fun_decl count is NOT repeated on this line (the run-coverage line's
+  ## `total=` owns it), so closure is checked against `coverage.total`.
+  for label in ["named=", "skipped="]:
+    let at = line.find(label)
+    if at < 0: return @[]
+    var i = at + label.len
+    var digits = ""
+    while i < line.len and line[i] in {'0'..'9'}:
+      digits.add(line[i])
+      inc i
+    if digits.len == 0: return @[]
+    result.add(parseInt(digits))
+
 # ── Suite 1: positive — add_u8 verified, cert minted, N=3 determinism ──────
 
 suite "rust lane product-CLI — positive: add_u8 verified, cert minted (N=3 determinism)":
@@ -652,6 +679,28 @@ suite "rust lane product-CLI — positive: add_u8 verified, cert minted (N=3 det
       check rep{"summary"}{"statusCounts"}{"unknown"}.getInt() == 1
       check r1.stdErr.contains(LaneDoneLine)
       check r1.stdErr.contains("[AXIOM][rust-lane] verified: axiom_rust_probe::add_u8 → ")
+
+    test "addressability (issue #219): the enumeration's ledger is on stderr " &
+        "and closes against the run-coverage total — named + skipped == " &
+        "coverage total; no report field carries it":
+      for r in @[r1, r2, r3]:
+        let line = addressabilityLine(r.stdErr)
+        check line.len > 0
+        check line.startsWith("[AXIOM][rust-lane] addressability: named=")
+        let n = addressabilityNumbers(line)
+        check n.len == 2
+        check n[0] > 0 # the enumeration's addressable decls
+        check n[0] >= 0 and n[1] >= 0
+        # closure against the SAME measured denominator the coverage line
+        # reports (this suite runs without --target, so the enumeration's
+        # addressable set IS the selected candidate set here)
+        let total = r.report{"coverage"}{"total"}.getInt()
+        check total > 0
+        check n[0] + n[1] == total
+        check n[0] == r.report{"coverage"}{"addressable"}.getInt()
+      # The numbers are LOG-ONLY: the report document keeps its v1 shape.
+      check r1.report{"coverage"}{"skipped"}.isNil
+      check r1.report{"coverage"}{"named"}.isNil
 
     test "lane re-extracts every run into the state workDir (the committed " &
         "fixture LLBC is never consumed)":
@@ -1054,6 +1103,24 @@ suite "rust lane product-CLI — impl identity: DEBT#510 ambiguity + structured 
         check rep{"summary"}{"statusCounts"}{"unknown"}.getInt() == 1
       check m1AddB.report{"targets"}.elems[0]{"reason"}.getStr() ==
         m1AddA.report{"targets"}.elems[0]{"reason"}.getStr()
+
+    test "(F) addressability (issue #219): the fixture's scalar-owner impl is " &
+        "reported as a SKIP — documented UNADDRESSABLE scope, made COUNTABLE " &
+        "on the lane log, not widened; the ledger closes":
+      # axiom_impl_probe declares an `impl u8` method (core::num::<impl
+      # u8>::wrapping_add): no nominal owner path (Q11), so the enumeration
+      # skips it and the addressability ledger must account for it. The
+      # addressable side is the 7 free/inherent-impl decls the suite addresses
+      # above; the fixture carries 8 fun_decls in total.
+      let line = addressabilityLine(dogSpeak.stdErr)
+      check line.len > 0
+      check line.contains("impl-owner-unaddressable=")
+      let n = addressabilityNumbers(line)
+      check n.len == 2
+      check n[0] == 7 # the 7 structured-name-addressable decls
+      check n[1] == 1 # the scalar-owner prototype
+      check n[0] + n[1] ==
+        dogSpeak.report{"coverage"}{"total"}.getInt() # == 8, measured
 
 # ─── Suite 8: u64 boundary types (axiom_u64_probe, ③ u64-scalar-2026-11-02) ──
 
