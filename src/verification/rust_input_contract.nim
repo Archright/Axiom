@@ -38,7 +38,7 @@ axiomLayer "infrastructure"
 ## eaMismatch (the existing mismatch axis, no new verdict vocabulary) and
 ## NEVER to eaInternalError; the reason carries the diagnostic.
 
-import std/[json, os, strutils, algorithm, unicode]
+import std/[json, os, strutils, algorithm, unicode, tables]
 import core/axiom_pragmas
 import core/crypto/hash_kernel
 import core/results
@@ -363,5 +363,108 @@ proc rustSubjectInputContract*(root: JsonNode; subjectRoot: string;
       "with the subject source — fail-closed): " & problems.join("; ")
     return
   result.ok = true
+
+# ---------------------------------------------------------------------------
+# signatureHash binding I/O boundary (issue #223)
+# ---------------------------------------------------------------------------
+
+func rootListText(roots: openArray[string]): string {.raises: [].} =
+  var parts: seq[string] = @[]
+  for r in roots:
+    parts.add("'" & r & "'")
+  parts.join(", ")
+
+proc rustTargetModuleSource(roots: openArray[string]; moduleRel: string;
+                            idx: int): tuple[source, path, reason: string] {.raises: [],
+    axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  if moduleRel.len == 0:
+    return ("", "", "rust_targets[" & $idx & "].module empty: the signature cannot be bound (fail-closed)")
+  var source = ""
+  var path = ""
+  for root in roots:
+    if root.len == 0:
+      continue
+    let candidate = root / moduleRel
+    var text = ""
+    try:
+      if not fileExists(candidate):
+        continue
+      text = readFile(candidate)
+    except CatchableError:
+      return ("", "", "rust_targets[" & $idx & "].module unreadable: '" & candidate &
+              "' (fail-closed)")
+    if path.len == 0:
+      source = text
+      path = candidate
+    elif text != source:
+      return ("", "", "rust_targets[" & $idx & "].module ambiguous: '" & moduleRel &
+              "' names distinct files under " & rootListText(roots) &
+              " ('" & path & "' vs '" & candidate & "') — no binding is chosen (fail-closed)")
+  if path.len == 0:
+    return ("", "", "rust_targets[" & $idx & "].module unresolvable: '" & moduleRel &
+            "' is not a file under " & rootListText(roots) & " (fail-closed)")
+  (source, path, "")
+
+proc loadRustTargetModuleSources*(roots: openArray[string];
+    lockData: JsonNode): tuple[ok: bool, sources, paths: Table[string, string], reason: string] {.
+    raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## Load module texts at the Infrastructure I/O boundary for all `rust_targets`
+  ## entries so `src/core/trusted/axiom_pragmas_procs` stays pure.
+  result.sources = initTable[string, string]()
+  result.paths = initTable[string, string]()
+  result.ok = true
+  if lockData.isNil:
+    return
+  let targetsNode = lockData.getOrDefault("rust_targets")
+  if targetsNode.isNil or targetsNode.kind != JArray:
+    return
+  for i in 0 ..< targetsNode.len:
+    let entry = targetsNode[i]
+    if entry.kind != JObject:
+      continue
+    let declaredNode = entry.getOrDefault("signatureHash")
+    if declaredNode.isNil or declaredNode.kind != JString:
+      continue
+    let declared = declaredNode.getStr()
+    if declared.len != 64:
+      continue
+    var hexOk = true
+    for ch in declared:
+      if ch notin {'0'..'9', 'a'..'f'}:
+        hexOk = false
+        break
+    if not hexOk:
+      continue
+    let moduleRel = entry.getOrDefault("module").getStr()
+    if moduleRel.len > 0 and result.sources.hasKey(moduleRel):
+      continue
+    let modRes = rustTargetModuleSource(roots, moduleRel, i)
+    if modRes.reason.len > 0:
+      result.ok = false
+      result.reason = modRes.reason
+      return
+    result.sources[moduleRel] = modRes.source
+    result.paths[moduleRel] = modRes.path
+
+proc verifyRustSignatureBinding*(roots: openArray[string];
+    lockData: JsonNode): RustSignatureBinding {.raises: [],
+    axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  let targetsNode = lockData.getOrDefault("rust_targets")
+  if targetsNode.isNil:
+    return RustSignatureBinding(checked: false, ok: true)
+  if targetsNode.kind != JArray:
+    return RustSignatureBinding(checked: true, ok: false,
+      reason: "rust_targets must be an array")
+  let loaded = loadRustTargetModuleSources(roots, lockData)
+  if not loaded.ok:
+    # Check missing/malformed signatureHash on earlier entries before reporting
+    # module resolution errors on later entries, preserving failure precedence.
+    let pre = verifyRustSignatureBindingFromSources(loaded.sources, lockData, loaded.paths)
+    if not pre.ok and ("signatureHash missing" in pre.reason or
+                       "signatureHash malformed" in pre.reason or
+                       "not an object" in pre.reason):
+      return pre
+    return RustSignatureBinding(checked: true, ok: false, reason: loaded.reason)
+  verifyRustSignatureBindingFromSources(loaded.sources, lockData, loaded.paths)
 
 {.pop.}

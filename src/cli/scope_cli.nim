@@ -1,6 +1,6 @@
 import core/trusted/layer_declaration
 axiomLayer "presentation"
-import std/[json, os, strutils, algorithm]
+import std/[json, os, strutils, algorithm, tables]
 import checksums/sha2
 import core/config/toolchain_config
 import core/trusted/axiom_pragmas
@@ -10,6 +10,7 @@ import core/trusted/scope_version
 import core/utils/repo_root
 import infrastructure/logging_facade
 import cli/config_loader
+import verification/rust_input_contract
 
 proc writeScopeLockFromRegistry*(root: string): tuple[ok: bool, kernelTotal: int] {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Regenerate data/verification_scope.lock from the runtime kernel registry.
@@ -34,7 +35,18 @@ proc writeScopeLockFromRegistry*(root: string): tuple[ok: bool, kernelTotal: int
     except CatchableError:
       existingLock = nil
       lockUnreadable = true
-  let content = buildScopeLockJson(root, existingLock)
+  var moduleSources = initTable[string, string]()
+  var moduleLoadReason = ""
+  if existingLock != nil:
+    let preCheck = validateRustScopeSection(existingLock)
+    if preCheck.checked and preCheck.ok:
+      let loaded = loadRustTargetModuleSources([root], existingLock)
+      if loaded.ok:
+        moduleSources = loaded.sources
+      else:
+        moduleLoadReason = loaded.reason
+  let content = if moduleLoadReason.len > 0: ""
+                else: buildScopeLockJson(root, existingLock, moduleSources)
   # Unreadable existing lock: refuse regeneration here (the fail-closed
   # semantics the builder previously carried; a corrupt lock must not be
   # silently overwritten by a fresh one).
@@ -58,10 +70,16 @@ proc writeScopeLockFromRegistry*(root: string): tuple[ok: bool, kernelTotal: int
   if content.len == 0:
     var reason = "existing verification_scope.lock is unreadable — delete it to redeclare an empty Rust scope"
     try:
-      if existingLock != nil:
+      if moduleLoadReason.len > 0:
+        reason = moduleLoadReason
+      elif existingLock != nil:
         let declared = validateRustScopeSection(existingLock)
         if not declared.ok:
           reason = declared.reason
+        else:
+          let binding = verifyRustSignatureBinding([root], existingLock)
+          if not binding.ok:
+            reason = binding.reason
     except CatchableError:
       discard  # axiom:best-effort(re-validate failure keeps the default diagnostic reason — the caller already fails closed via logError + return false)
     logError("scope_cli", "[scope-invariant] rust scope declaration invalid: " & reason)
@@ -169,9 +187,15 @@ proc checkScopeLockConsistency(root: string): int {.axiomEffect: IOEffect, tags:
   if rustCheck.checked and not rustCheck.ok:
     logInfo("scope_cli", "[FAIL] rust scope declaration invalid: " & rustCheck.reason)
     return 1
+  var rustBinding = RustSignatureBinding(checked: false, ok: true)
+  if rustCheck.checked:
+    rustBinding = verifyRustSignatureBinding([root], lockData)
+    if not rustBinding.ok:
+      logInfo("scope_cli", "[FAIL] rust signatureHash binding invalid: " & rustBinding.reason)
+      return 1
   let rustSuffix = if rustCheck.checked:
       " + rust scope declaration valid (rust_targets=" & $rustCheck.computedVksRust &
-      " == vksRust)"
+      " == vksRust, signatureHash bound for " & $rustBinding.boundTargets & ")"
     else:
       ""
   logInfo("scope_cli", "[PASS] scope_consistency — derived kernel scope matches lock (kernel_total=" & $derivedTotal & ", kernel_symbols=" & $expectedSymbols.len & ")" & rustSuffix)

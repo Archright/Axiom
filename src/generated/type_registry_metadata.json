@@ -10414,18 +10414,19 @@
     },
     {
       "hasAxiomHint": false,
-      "ignorable": false,
-      "leanType": "Result[JsonNode, CliError]",
+      "ignorable": true,
+      "leanType": "Unit",
       "module": "src/cli/rust_lane_cli.nim",
       "name": "loadScopeLock",
       "negativeConstraints": [
-        "result >= 0 is invalid — Result is not numeric",
-        "Use 'result.isOk or result.isErr' instead"
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
       ],
       "resultConstraintTemplate": "",
-      "returnType": "Result[JsonNode, CliError]",
-      "smtSort": "Int",
-      "typeCategory": "result"
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
     },
     {
       "hasAxiomHint": false,
@@ -62370,6 +62371,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "String",
+      "module": "src/core/trusted/axiom_pragmas_procs.nim",
+      "name": "canonicalRustSignatureLine",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "tuple[kernelTotal: int, kernelSymbols: seq[string]]",
       "module": "src/core/trusted/axiom_pragmas_procs.nim",
       "name": "collectKernelSymbols",
@@ -62391,6 +62406,20 @@
       "returnType": "int",
       "smtSort": "Int",
       "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/core/trusted/axiom_pragmas_procs.nim",
+      "name": "findRustSignatureLine",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
     },
     {
       "hasAxiomHint": false,
@@ -62503,6 +62532,34 @@
       "ignorable": false,
       "leanType": "String",
       "module": "src/core/trusted/axiom_pragmas_procs.nim",
+      "name": "rustSignatureDigest",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/core/trusted/axiom_pragmas_procs.nim",
+      "name": "rustTargetFnName",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/core/trusted/axiom_pragmas_procs.nim",
       "name": "scopeJsonEscape",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (str.len result) 0)"
@@ -62539,6 +62596,22 @@
       "returnType": "string",
       "smtSort": "String",
       "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/core/trusted/axiom_pragmas_procs.nim",
+      "name": "verifyRustSignatureBindingFromSources",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
     },
     {
       "hasAxiomHint": false,
@@ -141512,9 +141585,37 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "tuple[ok: bool, sources, paths: Table[string, string], reason: string]",
+      "module": "src/verification/rust_input_contract.nim",
+      "name": "loadRustTargetModuleSources",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "tuple[ok: bool, sources, paths: Table[string, string], reason: string]",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "String",
       "module": "src/verification/rust_input_contract.nim",
       "name": "rawDigestHex",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/rust_input_contract.nim",
+      "name": "rootListText",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (str.len result) 0)"
       ],
@@ -141540,6 +141641,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "tuple[source, path, reason: string]",
+      "module": "src/verification/rust_input_contract.nim",
+      "name": "rustTargetModuleSource",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "tuple[source, path, reason: string]",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "String",
       "module": "src/verification/rust_input_contract.nim",
       "name": "subjectRelativePath",
@@ -141550,6 +141665,20 @@
       "returnType": "string",
       "smtSort": "String",
       "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "RustSignatureBinding",
+      "module": "src/verification/rust_input_contract.nim",
+      "name": "verifyRustSignatureBinding",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "RustSignatureBinding",
+      "smtSort": "Int",
+      "typeCategory": "object"
     },
     {
       "hasAxiomHint": false,
