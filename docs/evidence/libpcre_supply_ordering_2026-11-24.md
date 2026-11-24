@@ -230,4 +230,126 @@ an unpinned-supply fix into a latency change would make neither attributable.
 compares blob-for-blob between G and `B_mg`. The manifest requires the audited
 break-glass lane for such a change. `config/repository_surface.json` is a
 registration of the same path and is itself a manifest entry, so no separate
-surface-policy amendment is possible or useful here.
+surface-policy amendment is possible or useful here.## 9. CI epoch record (AGENTS.md §2.5)
+
+This change edits the shared toolchain action that every workflow executes, so it
+is a CI change regardless of size and follows the cutover protocol in
+`docs/agents/ci_epoch_cutover.md` rather than an in-place patch.
+
+### 9.1 Freeze
+
+| item | value |
+|---|---|
+| freeze tag | `ci-frozen-2026-11-24-pcre-supply` (annotated, pushed to origin) |
+| tag → commit | `dea3cce064c570a4738d11470d62fbe44d62be13` — main before this cutover |
+| frozen `action.yml` blob | `d01432f6dde45cfe7ff101f8494387fe79cb4621` (old ladder) |
+| rollback reference | the tag above; nothing else is needed to restore the previous execution surface |
+
+The tag is the rollback reference required by protocol step 10. It is not a
+gate exemption and carries no authority.
+
+### 9.2 Record — what the pre-cutover epoch charges per job
+
+Measured on the head commit `85550955…` of this PR, by reading each job's
+composite-action step markers rather than inferring from job wall time:
+
+| job (required context marked) | action revision executed | supply tier | step wall |
+|---|---|---|---|
+| `tests-ci-unit-diagnostic` | head | 1 (extract) | 5.505 s |
+| `verify-trusted-writer-set` | head | 1 (extract) | 6.574 s |
+| `secret-scan` | head | 1 (extract) | 6.999 s |
+| `fresh-prove-observation` | head | 1 (extract) | 7.285 s |
+| `debt-registry-gate` ★ | head | 1 (extract) | 7.904 s |
+| `repository-surface` | head | 1 (extract) | 8.592 s |
+| `axiom-operational-slice` ★ | head | 1 (extract) | 8.048 s |
+| `publication-integrity` ★ | head | 1 (extract) | 0.959 s |
+| `readiness-verdict` ★ | head | 1 (extract) | 8.1 s |
+| `generation-acceptance` ★ | base | old ladder | 36.387 s |
+| `observe` | base | old ladder | 23.129 s |
+| `closure-deriver` | pinned `c021c338…` | old ladder | 30.429 s |
+| `attest / build-base-artifacts` | base | old ladder | 30.295 s |
+| `attest / admission-independents` | base | old ladder | 31.110 s |
+| `attest / admission-check` | base | old ladder | 39.611 s |
+
+Tier 1 succeeded on **9 of 9** jobs that executed the head revision; no job fell
+through to tier 2, tier 3, or `external_dependency`, and none hit the tier-0
+guard either — every one of the nine materialized the payload.
+
+The 0.959 s entry is the same tier-1 path, not a skip, on a runner whose payload
+fetch was fast. The log does not distinguish download from `ldconfig` cost, so
+the reason for the spread (0.96 – 8.6 s) is recorded as unexplained rather than
+assumed; the acceptance cohort in §9.6 re-measures it.
+
+### 9.3 Why nine jobs still show the old ladder
+
+ADR-0021 requires the execution surface to be read from the trusted base tree,
+never from the candidate. Each of the nine reads the action from a **checked-out
+base tree**, by one of two mechanisms:
+
+- `generation-acceptance.yml:94` and `observation.yml:36` check out
+  `merge_group.base_sha || pull_request.base.sha` into the workspace root and
+  then resolve `./.github/actions/setup-axiom-toolchain` from it.
+- `admission-check.yml:277` does the same with `inputs.baseSha` for the
+  `attest/*` jobs and the verdict leg, and `certificate-mint.yml:1326` does it
+  with `inputs.baseSha` for both mint jobs.
+
+The ninth, `closure-deriver`, is the remote-SHA pin from §7 — a different
+mechanism, not part of this propagation path.
+
+Because `B` on this PR is `dea3cce0…`, those jobs executed the **pre-cutover**
+revision. This is the propagation path rather than a coverage gap: on the first
+merge-group run whose base is post-cutover main, they inherit the new ladder
+with no further change.
+
+It also bounds the blast radius. A tier-1 failure is not swallowed — it falls
+through to `dpkg -i`, then apt, which is exactly what production runs today. The
+worst case for a base-tree job is therefore today's latency, not a broken job.
+
+The three remote-SHA pins in §7 are a different mechanism entirely: they resolve
+the action from the repository at a pinned commit and are not reached by this
+change at all.
+
+### 9.4 Atomic binding update
+
+Protocol step 5 requires workflow bytes and their trust bindings to move as one
+unit. This cutover moves the action blob `d01432f6…` → `fe590d1d…` and changes
+**no** binding, because no reachable binding consumes that blob:
+
+- `config/executor_authority.json` lists six action blobs as the
+  TrustedExecutorSet, but `EXECUTOR_MISMATCH` has zero occurrences under
+  `.github/`, `src/`, `bin/`, and `tools/` — the enforcement that ADR-0021 D7
+  describes is not wired anywhere, and the set has been stale since
+  `eb48f902…` (main's blob has been `d01432f6…` for several generations).
+  Rotating a set nothing reads would be theater, so this record states the fact
+  instead of performing an update that changes no behaviour.
+- `config/trusted_writer_set.json`'s `trustedCheckerTreeClosure` covers the Nim
+  checker closure, not `action.yml`; `trustedAdmissionWorkflowSha` pins
+  `admission-check.yml`, which this PR does not touch. `epoch_manifest.json`'s
+  `productionExecutionPin` is likewise unchanged.
+- The A-layer cache key includes `script_hash = sha256(action.yml + nimble.lock)`,
+  so the key rotates exactly once, by construction, with no manual re-anchor.
+
+### 9.5 Tombstone
+
+The retired implementation is the apt-first ladder: `apt-get install` as the
+primary path with the pinned asset demoted behind it. Nothing is removed from
+the gate surface — all six tiers remain reachable, the pinned-asset
+verification is unchanged, and `external_dependency` still fails closed when
+every tier fails. No required check, producer identity, or trust condition is
+retired by this cutover.
+
+### 9.6 Cutover and acceptance
+
+Cutover is the break-glass merge of PR #450 (see §8 for why the App verdict must
+be `failure` here: the manifest is read from `B_mg`, so a passing verdict would
+mean it had been read from the candidate's own tree).
+
+Acceptance is a separate observation, recorded after landing:
+
+1. merge-group cohort with `base_sha` at or after the cutover commit, n ≥ 5;
+2. `admission-gate` wall ≤ 377 s and the tier census above re-run on those runs,
+   with `generation-acceptance` and `observe` now showing tier 1;
+3. the seven required contexts still mapped to App `5795152` +
+   `15368`, verdict bytes unchanged, and `admission-check` now `success` on
+   those merge groups because `B_mg` contains the new blob;
+4. two consecutive real merge-queue landings.
