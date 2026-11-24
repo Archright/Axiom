@@ -466,7 +466,8 @@ unusable (exact-hit='', bin/ax present=no)` and rebuilds `bin/ax` (~83 s).
 
 ### 10.2 Measured cost of the rotation
 
-Step `(P3) Bin/ax 준비 — trusted B supply` in `mint-publish / publish`:
+Step `(P3)` in `mint-publish / publish` — the trusted-B-supply step that
+resolves `bin/ax`:
 
 | window | P3 |
 |---|---|
