@@ -52,6 +52,7 @@ proc runAllQueries*(
         rule: v.rule,
         detail: "[" & query.name & "] " & v.detail,
         files: v.files,
+        line: v.line,
         severity: query.severity))
 
 {.pop.}

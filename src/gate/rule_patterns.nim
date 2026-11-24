@@ -21,6 +21,7 @@ type
     detail*: string
     files*: seq[string]
     severity*: string
+    line*: int
 
 # ---------------------------------------------------------------------------
 # Rule: SoC — Layer Edge Violations

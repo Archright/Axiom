@@ -96,6 +96,7 @@ func reportMissingIoAnnotations(
           rule: "EFFECT-transitive-io",
           detail: fn.name & " transitively reaches I/O but lacks {.raises: [].}",
           files: @[facts.path],
+          line: fn.location.line,
           severity: "warning"
         ))
 func checkTransitiveIoAnnotation*(
@@ -262,6 +263,7 @@ func checkEnforceProcPurity*(
         rule: "EFFECT-enforce-proc-purity",
         detail: fn.name & " is proc but not in impure_procedures_whitelist and not marked {.raises: [].}",
         files: @[facts.path],
+        line: fn.location.line,
         severity: "error"
       ))
 func checkTripleAnnotation*(
@@ -282,6 +284,7 @@ func checkTripleAnnotation*(
           rule: "EFFECT-triple-annotation",
           detail: fn.name & " has {.axiomEffect: IOEffect.} but missing {.tags: [AxiomIOEffect].}",
           files: @[facts.path],
+          line: fn.location.line,
           severity: "warning"
         ))
 func checkEffectPragmaConsistency*(
@@ -302,6 +305,7 @@ func checkEffectPragmaConsistency*(
           rule: "EFFECT-pragma-consistency",
           detail: fn.name & " has unrecognized axiomEffect value: " & ev.get,
           files: @[facts.path],
+          line: fn.location.line,
           severity: "error"
         ))
 func registerEffectQueries*(): seq[NimtryQuery] {.raises: [].} =

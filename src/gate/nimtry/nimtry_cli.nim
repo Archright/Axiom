@@ -117,6 +117,16 @@ proc normalizeDetail(detail: string): string {.raises: [], axiomEffect: IOEffect
           continue
     inc i
 
+func compareViolations(a, b: ArchitectureViolationArtifact): int {.raises: [].} =
+  ## Canonical total order — the fingerprint preimage plus position.
+  let aFile = if a.files.len > 0: a.files[0] else: ""
+  let bFile = if b.files.len > 0: b.files[0] else: ""
+  result = cmp(a.rule, b.rule)
+  if result == 0: result = cmp(aFile, bFile)
+  if result == 0: result = cmp(a.line, b.line)
+  if result == 0: result = cmp(a.detail, b.detail)
+  if result == 0: result = cmp(a.severity, b.severity)
+
 proc computeViolationFingerprint(rule, file, detail: string): string {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   var normalized = normalizeDetail(detail)
   let root = try: findRepoRoot() except CatchableError: (try: getCurrentDir() except OSError: "")
@@ -403,7 +413,8 @@ proc runNimtryInProcess*(args: seq[string]): NimtryResult {.raises: [], axiomEff
     return NimtryResult(status: nsFail, message: "policy invalid", exitCode: 1)
   let policy = parsedPolicy.policy
 
-  let violations = runAllQueries(allModuleFacts, policy)
+  var violations = runAllQueries(allModuleFacts, policy)
+  algorithm.sort(violations, compareViolations)
 
   # Live-count sidecar: current measured violations, consumed by
   # debt_integrity_gate.nim for the "Active Violations" metric. This is the
@@ -422,7 +433,8 @@ proc runNimtryInProcess*(args: seq[string]): NimtryResult {.raises: [], axiomEff
     try:
       for v in violations:
         let sev = v.severity.toUpperAscii()
-        logInfo("nimtry_cli", "  [" & sev & "] " & v.rule & ": " & v.detail)
+        let pos = if v.line > 0 and v.files.len > 0: v.files[0] & ":" & $v.line & ": " else: ""
+        logInfo("nimtry_cli", "  [" & sev & "] " & v.rule & ": " & pos & v.detail)
     except IOError:
       discard
 
@@ -476,7 +488,8 @@ proc runNimtryInProcess*(args: seq[string]): NimtryResult {.raises: [], axiomEff
       try:
         logError("nimtry_cli", "[nimtry] FAIL: " & $newErrors.len & " new ERROR violations not in baseline (debt anchoring)")
         for v in newErrors:
-          logError("nimtry_cli", "  [error] " & v.rule & " — " & v.detail)
+          if not listViolations:
+            logError("nimtry_cli", "  [error] " & v.rule & " — " & v.detail)
       except IOError: # axiom:best-effort(logging failure must not block gate result)
         discard
       return NimtryResult(status: nsFail, message: "new ERROR violations", exitCode: 1)
@@ -484,7 +497,8 @@ proc runNimtryInProcess*(args: seq[string]): NimtryResult {.raises: [], axiomEff
       try:
         logError("nimtry_cli", "[nimtry] FAIL: " & $newViolations.len & " new violations not in baseline (debt anchoring)")
         for v in newViolations:
-          logInfo("nimtry_cli", "  [" & v.severity & "] " & v.rule & " — " & v.detail)
+          if not listViolations:
+            logInfo("nimtry_cli", "  [" & v.severity & "] " & v.rule & " — " & v.detail)
       except IOError: # axiom:best-effort(logging failure must not block gate result)
         discard
       return NimtryResult(status: nsFail, message: "new violations", exitCode: 1)

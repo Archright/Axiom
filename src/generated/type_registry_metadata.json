@@ -86652,6 +86652,17 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "Int",
+      "module": "src/gate/nimtry/nimtry_cli.nim",
+      "name": "compareViolations",
+      "resultConstraintTemplate": "(>= result 0)",
+      "returnType": "int",
+      "smtSort": "Int",
+      "typeCategory": "numeric"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "String",
       "module": "src/gate/nimtry/nimtry_cli.nim",
       "name": "computeViolationFingerprint",
