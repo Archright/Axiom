@@ -41154,6 +41154,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "FunctionNodeIndex",
+      "module": "src/core/parsers/pnode_nav.nim",
+      "name": "buildFunctionNodeIndexP",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "FunctionNodeIndex",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "List PNode",
       "module": "src/core/parsers/pnode_nav.nim",
       "name": "childElements",
@@ -41356,6 +41370,21 @@
       "leanType": "Option PNode",
       "module": "src/core/parsers/pnode_nav.nim",
       "name": "findFunctionNodeP",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Option is not numeric",
+        "Use 'isSome(result) or isNone(result)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result none) (exists ((v T)) (= result (some v))))",
+      "returnType": "Option[PNode]",
+      "smtSort": "(Option PNode)",
+      "typeCategory": "option"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Option PNode",
+      "module": "src/core/parsers/pnode_nav.nim",
+      "name": "findIndexedFunctionNodeP",
       "negativeConstraints": [
         "result >= 0 is invalid — Option is not numeric",
         "Use 'isSome(result) or isNone(result)' instead"
