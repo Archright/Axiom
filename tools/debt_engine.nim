@@ -1471,6 +1471,11 @@ proc runValidateCore(): ValidateOutcome {.raises: [CatchableError].} =
   else:
     echo "  [skip] " & BudgetsPath & " not found"
 
+  if driftCount > 0:
+    echo "  \u274c " & $driftCount & " metric(s) not converged (DRIFT or no committed ledger record)" &
+      " — run: bin/debt_engine --sync-budget"
+    hasErrorDisposition = true
+
   # Policy disposition resolution
   echo ""
   echo "=== Part D.1: Policy disposition resolution ==="
@@ -1615,7 +1620,7 @@ proc cmdValidate() {.raises: [CatchableError].} =
     quit(1)
   elif outcome == voErrorDisposition:
     echo ""
-    echo "  Validation FAILED (ERROR disposition in policy)."
+    echo "  Validation FAILED (ERROR disposition or fail-closed condition)."
     quit(1)
   elif outcome == voFatal:
     quit(1)
