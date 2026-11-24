@@ -1983,12 +1983,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:33f6f958d96bd0dcc48aa137229f6d97d4f0b5132cf17c98850497c58d08f71a",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:a63704144b15cc2a4237e801b66a425aea21aa7f5695bcf2eb9598353a1e39be",
       "count": 1,
       "file": "src/core/topology/merkle_cache.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:24585fff2240d321e311cdd85df34ad63dac4d2a662c9a1652351eec5b67df44"
+      "rawContentHash": "sha256:287858dd135d36ccce348be35b06e6edde4f61c5ac11f307e2662f54f9e82d81"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",

@@ -1874,7 +1874,7 @@
     "src/core/topology/merkle_cache.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "722bc664350e22c314eb581ed701201bb5b69512"
+      "sha": "74bc0b5f4f8d76398f2a9df8ae53d61596351b26"
     },
     "src/core/topology/node_filter.nim": {
       "mode": "100644",
