@@ -6216,7 +6216,9 @@
       "severity": "high",
       "source": "supply_chain_audit",
       "status": "open",
-      "productTruthImpact": "NON_PRODUCT"
+      "productTruthImpact": "NON_PRODUCT",
+      "binding": "registry_disposition",
+      "bindingRationale": "Non-Nim medium (.github/workflows/admission-check.yml): a Nim {.axiomDebt.} pragma is structurally impossible on a workflow YAML surface, so the registry entry itself is the binding medium (same basis as DEBT#472 and DEBT-CI#003). Trace: source=supply_chain_audit 2026-11-24 at origin/main 4311749e; the step at :889-902 is gated on stage==verdict && venue==landing, where setup-axiom-toolchain is skipped, so the pinned-deb ladder in .github/actions/setup-axiom-toolchain/action.yml:735-753 cannot be reused as-is. The defect is already recorded but deliberately deferred in docs/evidence/libpcre_supply_ordering_2026-11-24.md:234-238."
     },
     {
       "id": "DEBT#567",
@@ -6229,7 +6231,9 @@
       "severity": "high",
       "source": "supply_chain_audit",
       "status": "open",
-      "productTruthImpact": "NON_PRODUCT"
+      "productTruthImpact": "NON_PRODUCT",
+      "binding": "registry_disposition",
+      "bindingRationale": "Non-Nim medium (.github/workflows/publication-integrity.yml): workflow YAML cannot carry a Nim {.axiomDebt.} pragma, so the registry entry is the binding medium. Trace: source=supply_chain_audit 2026-11-24 at origin/main 4311749e; the install is the venv pip call at :219-220, checkout precedes it at :212 so a requirements file is readable from the workspace. The prepared lock lives on branch ci/scancode-hash-pinned-supply @ 7c0a5a8d (211 lines, 80 distributions, 90 --hash entries, every distribution hash-bearing); it is not on main, which is why this entry names only the workflow file in `files`."
     },
     {
       "id": "DEBT#568",
@@ -6243,7 +6247,9 @@
       "severity": "high",
       "source": "supply_chain_audit",
       "status": "open",
-      "productTruthImpact": "NON_PRODUCT"
+      "productTruthImpact": "NON_PRODUCT",
+      "binding": "registry_disposition",
+      "bindingRationale": "Non-Nim medium (.github/workflows/debt-registry-gate.yml): workflow YAML cannot carry a Nim {.axiomDebt.} pragma, so the registry entry is the binding medium. Trace: source=supply_chain_audit 2026-11-24 at origin/main 4311749e; the install is at :44 and its Python consumer is tests/ci/test_debt_schema_theater_rule.py:8. Two blockers are recorded in the description: no lock exists for the jsonschema closure, and the workflow file has neither a classes.CONTROLLED entry nor a frozenExceptions entry in config/repository_surface.json, so it resolves FROZEN through the .github/** glob and tools/surface_guard.nim:521-522 rejects the push before a PR can exist."
     },
     {
       "id": "DEBT#569",
@@ -6256,7 +6262,9 @@
       "severity": "medium",
       "source": "supply_chain_audit",
       "status": "open",
-      "productTruthImpact": "NON_PRODUCT"
+      "productTruthImpact": "NON_PRODUCT",
+      "binding": "registry_disposition",
+      "bindingRationale": "Non-Nim medium (.github/workflows/release-ship.yml): workflow YAML cannot carry a Nim {.axiomDebt.} pragma, so the registry entry is the binding medium. Trace: source=supply_chain_audit 2026-11-24 at origin/main 4311749e; both install sites are at :479-489 and :575-585, and the trigger restriction (allowed_events=[workflow_dispatch], tag-push auto-fire retired per ADR-0024) is declared at :4."
     },
     {
       "id": "DEBT#570",
@@ -6284,7 +6292,9 @@
       "severity": "medium",
       "source": "supply_chain_audit",
       "status": "open",
-      "productTruthImpact": "NON_PRODUCT"
+      "productTruthImpact": "NON_PRODUCT",
+      "binding": "registry_disposition",
+      "bindingRationale": "Non-Nim medium (.github/workflows/ci-cache-publisher.yml): workflow YAML cannot carry a Nim {.axiomDebt.} pragma, so the registry entry is the binding medium. Trace: source=supply_chain_audit 2026-11-24; the mandatory declarations are at :217 and :888, and the platform rule they depend on is the GitHub Actions dependency-caching reference (cache access for low-trust workflow triggers: only push, workflow_dispatch, repository_dispatch, delete, registry_package, page_build and schedule may create or overwrite default-branch-scope caches; merge_group is not among them, so a merge_group run is read-only). Removing the declaration is silently fail-open, which is why it is registered rather than left as an undocumented invariant."
     }
   ]
 }
