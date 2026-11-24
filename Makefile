@@ -1610,7 +1610,7 @@ pre-commit: ## [Axiom v5.1] Compile-time overhead zero — all tools pre-built, 
 	@echo "✅ [Axiom v5.1] Pre-commit integrity fixed. Safe to git commit."
 
 # ── Φ2: Fail-Closed Paradigm Shift CI Scanners ──────────────────────────────────────────
-.PHONY: check-nim-theater check-lean-vacuity check-vacuity check-vacuity-simple check-perf doc-path-validator
+.PHONY: check-nim-theater check-lean-vacuity check-vacuity check-vacuity-simple check-perf doc-path-validator preflight-script-scan
 
 check-nim-theater: bin/check_nim_theater ## Static theater pattern scan (Nim code)
 	@echo "=== [Φ2a] Nim Theater Pattern Scan ==="
@@ -1667,3 +1667,9 @@ doc-path-validator: ## Validate documentation file path references (fail-closed;
 
 check-perf:
 	@$(NIM) c -r -o:bin/check_perf tools/ci/check_perf.nim
+
+bin/preflight_script_scan: tools/ci/preflight_script_scan.nim
+	$(NIM) c $(NIM_TOOL_FLAGS) -o:$@ $<
+
+preflight-script-scan: bin/preflight_script_scan ## Local preflight for publication-integrity script-scan (issue #422)
+	./bin/preflight_script_scan $(PREFLIGHT_SCRIPT_SCAN_ARGS)
