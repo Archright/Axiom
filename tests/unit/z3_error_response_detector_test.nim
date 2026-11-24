@@ -16,6 +16,7 @@ import core/results
 import core/sync/sync_utils_process
 import core/trusted/solver_invocation
 import core/types/z3_solver_config
+import std/json
 import std/os
 import std/options
 import std/strutils
@@ -362,5 +363,104 @@ block:
   # timeout into an UNKNOWN.
   expect(classifyZ3Output("timeout\n", 30_000, 30_000) == solver_adapter.sosTimeout,
     "a timeout is still a timeout (regression)")
+
+block:
+  echo "=== 8. telemetry records the answer and the transport separately (#349) ==="
+
+  # The reported defect: an `unsat` run whose `(get-model)` is refused. The
+  # verdict path reads `unsat` (block 7 above), and the telemetry row used to
+  # read `result:"error"` because `solverResponse` rejects the WHOLE stream once
+  # an `(error …)` response is present — the right rule for a verdict and the
+  # wrong one for a record of what happened.
+  #
+  # The row is the observable surface, so this block runs the real persistent
+  # pool (the only producer on this path) with AXIOM_STATE_DIR aimed at a scratch
+  # directory and reads back logs/z3_telemetry.jsonl — no internals inspected.
+  # `result` must be the answer the verdict path reads; `transport_error` must
+  # carry the refused-command fact on its own axis.
+
+  let z3Bin = resolveZ3Path()
+  if z3Bin.len == 0 or not fileExists(z3Bin):
+    echo "  SKIP: no resolvable z3 binary; the telemetry row cannot be produced"
+  else:
+    type TelemetryCase = object
+      label: string
+      query: string
+      result: string
+      transportError: string
+
+    # Every stream below was measured on the pinned Z3 4.13.3 binary:
+    #   (assert false) (check-sat) (get-model)
+    #     → unsat
+    #     → (error "line 3 column 10: model is not available")
+    #   (declare-fun x () sat) (check-sat)
+    #     → (error "line 1 column 18: … unknown sort 'sat'")
+    #     → sat
+    # The second case is why the SAT gate cannot be dropped: the transport was
+    # refused, so the verdict path mints no SAT, and the record must not either.
+    let cases = [
+      TelemetryCase(label: "unsat, then (get-model) refused",
+        query: "(assert false)\n(check-sat)\n(get-model)\n",
+        result: "unsat", transportError: "error-response"),
+      TelemetryCase(label: "refused declaration, then a bare sat",
+        query: "(declare-fun x () sat)\n(check-sat)\n",
+        result: "unknown", transportError: "error-response"),
+      TelemetryCase(label: "clean sat, nothing refused",
+        query: "(declare-fun x () Int)\n(assert (= x 1))\n(check-sat)\n",
+        result: "sat", transportError: "")
+    ]
+
+    let stateDir = getTempDir() / ("axiom_349_telemetry_" & $getCurrentProcessId())
+    try: removeDir(stateDir)
+    except CatchableError: discard  # axiom:best-effort(ioboundary catch)
+    createDir(stateDir)
+    let prevStateDir = getEnv("AXIOM_STATE_DIR", "")
+    putEnv("AXIOM_STATE_DIR", stateDir)
+    defer:
+      if prevStateDir.len > 0: putEnv("AXIOM_STATE_DIR", prevStateDir)
+      else: delEnv("AXIOM_STATE_DIR")
+      try: removeDir(stateDir)
+      except CatchableError: discard  # axiom:best-effort(ioboundary catch)
+
+    for c in cases:
+      var envelopeDigest, payloadDigest: string
+      let res = z3ExecPersistent(c.query, 10_000, desiredWorkers = 1,
+        canonicalEnvelopeDigest = envelopeDigest, transportPayloadDigest = payloadDigest)
+      expect(res.isOk, "the pool still returns the solver's answer — " & c.label)
+      if res.isOk:
+        # The verdict path is untouched: whatever it reads is what the row must
+        # record. This is the equivalence the split is required to keep.
+        let verdict = classifyZ3Output(res.get(), 0, 10_000)
+        case c.result
+        of "unsat": expect(verdict == solver_adapter.sosUnsat,
+          "verdict path reads unsat — " & c.label)
+        of "sat": expect(verdict == solver_adapter.sosSat,
+          "verdict path reads sat — " & c.label)
+        else: expect(verdict != solver_adapter.sosUnsat and verdict != solver_adapter.sosSat,
+          "verdict path mints no verdict — " & c.label)
+
+    let logPath = stateDir / "logs" / "z3_telemetry.jsonl"
+    expect(fileExists(logPath), "the pool wrote a telemetry row per query")
+    var rows: seq[JsonNode] = @[]
+    if fileExists(logPath):
+      for line in readFile(logPath).splitLines():
+        if line.strip().len == 0:
+          continue
+        rows.add(parseJson(line))
+    expect(rows.len == cases.len,
+      "one row per query: " & $rows.len & " rows for " & $cases.len & " queries")
+
+    for i in 0 ..< min(rows.len, cases.len):
+      let c = cases[i]
+      let row = rows[i]
+      echo "  ROW: " & $row
+      expect(row{"schema"}.getStr("") == "axiom-z3-telemetry/2",
+        "the row declares which definition of `result` it uses — " & c.label)
+      expect(row{"result"}.getStr("") == c.result,
+        "result is the solver's answer, not the transport outcome — " & c.label &
+        " (got '" & row{"result"}.getStr("") & "')")
+      expect(row{"transport_error"}.getStr("") == c.transportError,
+        "transport_error carries the refused-command fact — " & c.label &
+        " (got '" & row{"transport_error"}.getStr("") & "')")
 
   echo "=== Z3 Error Response Detector OK ==="
