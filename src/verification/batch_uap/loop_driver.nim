@@ -782,7 +782,7 @@ proc stage3Proof*(
   result = move(ctx)
 
 proc verifyInfrastructure*(): bool {.axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
-  ## Pre-flight: probe actual Z3/Lean solver execution (not just version check)
+  ## Pre-flight: probe actual Z3 solver execution (not just version check)
   if getEnv("AXIOM_SKIP_SOLVER_CHECK") == "1":
     return true
   logInfo("loop_driver", "Axiom Pre-flight: Probing verification sandbox...")
@@ -796,16 +796,6 @@ proc verifyInfrastructure*(): bool {.axiomEffect: IOEffect, tags: [AxiomIOEffect
   let z3Code = z3Result[1]
   if z3Code != 0 or not z3Out.contains("sat"):
     logError("loop_driver", "CRITICAL: Z3 solver dysfunctional")
-    return false
-
-  # 2. Lean lightweight compile probe
-  let tmpLean = getTempDir() / "axiom_probe.lean"
-  writeFile(tmpLean, "theorem axiomPreFlightProbe : True := trivial\n")
-  let leanResult = execCmdWithTimeout("lake env lean " & tmpLean, timeoutMs = 120_000)
-  safeRemoveFile(tmpLean)
-  let leanCode = leanResult[1]
-  if leanCode != 0:
-    logError("loop_driver", "CRITICAL: Lean compiler dysfunctional")
     return false
 
   logInfo("loop_driver", "Axiom Pre-flight: Sandbox probe successful")

@@ -3449,12 +3449,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:8b39f59816c4ea0ead604e7105d56cda665582e0aee1e986a64093d4892a9376",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:93d551c2e2bfcc2ecb80bca803419b3e35ba03cf36e1e0d33d8c5814184c9512",
       "count": 1,
       "file": "src/verification/batch_uap/loop_driver.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:d5f84d22e9d68b6f0865496c923299adac4a2ad566b10746d6030eebbea27b2c"
+      "rawContentHash": "sha256:466ef9878c78272b094747c64db02a20e04c8cf8580b670dad9d687d506322f3"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
