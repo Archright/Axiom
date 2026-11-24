@@ -281,6 +281,21 @@ bin/debt_integrity_gate: src/gate/runners/debt_integrity_gate.nim \
                          src/gate/lib/debt_scanner.nim | nimtry-measure
 	$(NIM) c $(NIM_TOOL_FLAGS) -d:release -o:$@ $<
 
+# Single local entrypoint for the debt registry↔code verdict, mirroring the CI
+# `debt-registry-gate` sequence (measure → build → judge). The measure step is
+# transitive: `bin/debt_integrity_gate` carries `nimtry-measure` as an order-only
+# prerequisite, so depending on the binary is what forces a fresh sidecar —
+# building the binary alone stops short of the verdict, and running the binary
+# alone reads whatever sidecar happens to be on disk.
+#
+# This target owns no judgment. It exists so the sequence cannot be half-run;
+# the pass/fail belongs to bin/debt_integrity_gate, which fails closed on an
+# absent sidecar. A make-level failure here therefore means the judge failed or
+# the measurement never happened — never that make decided something.
+.PHONY: debt-check
+debt-check: bin/debt_integrity_gate ## Measure nimtry, build the debt binding gate, and run it (single local verdict entrypoint)
+	@./bin/debt_integrity_gate
+
 bin/layer_enforcement_gate: src/gate/runners/layer_enforcement_gate.nim \
                             src/core/trusted/layer_rules.nim \
                             src/core/trusted/layer_enforcement.nim \
