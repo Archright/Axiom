@@ -123,8 +123,10 @@ import verification/llbc_to_canonical
   # producer's own structured match keys, ONE source of name semantics)
 import verification/rust_replay_adapter
   # subjectGitIdentity + rustToolchainFingerprint — §6c v2 measured anchors
+import verification/rust_input_contract
 import verification/rust_rust_pipeline
 import verification/unified_trajectory  # logStage/skReport — the trajectory SSOT the engine's report stage uses
+import verification/vault_manifest      # loadManifest / mergeResult / atomicWriteManifest (#247)
 
 # ---------------------------------------------------------------------------
 # Types
@@ -1130,22 +1132,34 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
   var errorCount = 0
   var unknownCount = 0
   var attemptedCount = 0
+  # #229: run-scoped input contract computed ONCE instead of O(candidates) times.
+  let precomputedContract = rustSubjectInputContract(llbcRoot, projectAbs, depInfoPath)
+  # #247: sync vault manifest when Rust Lane certificates are issued so
+  # `ax cert export --vault <dir>` has a consistent inventory.
+  let manifestPath = vaultDir / "manifest.json"
+  var vaultManifest = loadManifest(manifestPath)
+  var vaultManifestDirty = false
 
-  for name in candidates:
+  for idx, name in candidates:
     # The candidate IS the producer's structured match key (the enumeration
     # SSOT) — the run binds exactly the SELECTED decl, never its bare last
     # segment re-derived here (the DEBT#510 first-match re-binding is gone).
-    let outcome = rustSubjectOutcome(llbcText, name, rcheckExe = "",
-                                     projectRoot = repoRoot,
-                                     timeoutMs = 60_000,
-                                     subjectRoot = projectAbs,
-                                     depInfoPath = depInfoPath)
+    let outcome = rustSubjectOutcomeParsed(llbcRoot, precomputedContract, name,
+                                           rcheckExe = "",
+                                           projectRoot = repoRoot,
+                                           timeoutMs = 60_000)
     if candidates.len == 1:
       laneClaim.embedded = outcome.embeddedFiles
     if outcomeOutOfScopeUnknown(outcome):
       entries.add(entryFor(name, "unknown",
         "out-of-subset grammar (fail-closed): " & outcome.agreement.reason))
       inc unknownCount
+      if candidates.len > 1 and (((idx + 1) mod 25 == 0) or (idx + 1 == candidates.len)):
+        logStage(skReport, "", "rust subject lane progress", extra = %*{
+          "completed": %(idx + 1), "total": %candidates.len, "target": %name,
+          "verified": %verified, "failed": %failed,
+          "unknown": %unknownCount, "error": %errorCount
+        })
       continue
     if outcome.agreement.verdict != eaAgree:
       # Fail-closed BEFORE the obligation stage: this is mechanically the
@@ -1162,6 +1176,12 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
         laneClaim.rejection = outcome.rejection
         laneClaim.leafReason = reasonTxt
       inc unknownCount
+      if candidates.len > 1 and (((idx + 1) mod 25 == 0) or (idx + 1 == candidates.len)):
+        logStage(skReport, "", "rust subject lane progress", extra = %*{
+          "completed": %(idx + 1), "total": %candidates.len, "target": %name,
+          "verified": %verified, "failed": %failed,
+          "unknown": %unknownCount, "error": %errorCount
+        })
       continue
     if not declared.hasKey(name):
       # Undeclared + extraction-sound: the declaration-free guard attempt.
@@ -1181,7 +1201,8 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
                                            timeoutMs = 60_000,
                                            subjectRoot = projectAbs,
                                            subjectModulePath = guardModulePath,
-                                           depInfoPath = depInfoPath)
+                                           depInfoPath = depInfoPath,
+                                           precomputedOutcome = some(outcome))
       if rec.attempted:
         inc attemptedCount
       entries.add(entryFor(name, "unknown", rec.reason))
@@ -1198,6 +1219,12 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
                 " admissionNote=<<<" & g.admissionNote & ">>>" &
                 " replayToolchain=" & g.replayToolchain &
                 " extraction=" & pinnedCharonIdentity())
+      if candidates.len > 1 and (((idx + 1) mod 25 == 0) or (idx + 1 == candidates.len)):
+        logStage(skReport, "", "rust subject lane progress", extra = %*{
+          "completed": %(idx + 1), "total": %candidates.len, "target": %name,
+          "verified": %verified, "failed": %failed,
+          "unknown": %unknownCount, "error": %errorCount
+        })
       continue
 
     # Declared + extraction agreed: the closed spec parse, then issuance.
@@ -1249,7 +1276,9 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
       depInfoPath = depInfoPath,
       llbcPath = llbcPath,
       extractionLedger = extractionLedger,
-      extractionLedgerRepo = ledgerRepo)
+      extractionLedgerRepo = ledgerRepo,
+      precomputedOutcome = some(outcome),
+      precomputedLlbcRoot = llbcRoot)
     if rec.issued:
       var entry = entryFor(name, "verified", "")
       entry["certPath"] = %rec.certPath
@@ -1257,6 +1286,18 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
       entries.add(entry)
       inc verified
       log.add("[AXIOM][rust-lane] verified: " & name & " → " & rec.certPath)
+      # Sync vault manifest entry matching the persisted certificate body (#247).
+      try:
+        let certNode = parseJson(readFile(rec.certPath))
+        vaultManifest.mergeResult(
+          certNode.getOrDefault("functionName").getStr(name),
+          certNode.getOrDefault("modulePath").getStr(modulePath),
+          rec.irHash,
+          certNode.getOrDefault("status").getStr("certLeanVerified"),
+          "smLean")
+        vaultManifestDirty = true
+      except CatchableError as e:
+        log.add("[AXIOM][rust-lane] manifest merge warning for " & rec.certPath & ": " & e.msg)
       continue
     let (status, reason) = classifyIssuanceBlock(rec)
     var entry = entryFor(name, status, reason)
@@ -1270,6 +1311,9 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
       inc unknownCount
     log.add("[AXIOM][rust-lane] " & name & " → " & status &
             " (stage=" & rec.blockStage & "): " & reason)
+
+  if vaultManifestDirty:
+    vaultManifest.atomicWriteManifest(manifestPath)
 
   # ⑦ The report + the pinned exit projection.
   let total = candidates.len

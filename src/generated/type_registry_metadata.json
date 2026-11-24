@@ -142552,17 +142552,19 @@
     },
     {
       "hasAxiomHint": false,
-      "ignorable": false,
-      "leanType": "RustGuardAttemptRecord",
+      "ignorable": true,
+      "leanType": "Unit",
       "module": "src/verification/rust_rust_pipeline.nim",
       "name": "rustGuardObligationAttempt",
       "negativeConstraints": [
-        "result >= 0 is invalid — object types are not numeric"
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
       ],
       "resultConstraintTemplate": "",
-      "returnType": "RustGuardAttemptRecord",
-      "smtSort": "Int",
-      "typeCategory": "object"
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
     },
     {
       "hasAxiomHint": false,
@@ -142626,6 +142628,20 @@
       "leanType": "RustSubjectOutcome",
       "module": "src/verification/rust_rust_pipeline.nim",
       "name": "rustSubjectOutcome",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "RustSubjectOutcome",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "RustSubjectOutcome",
+      "module": "src/verification/rust_rust_pipeline.nim",
+      "name": "rustSubjectOutcomeParsed",
       "negativeConstraints": [
         "result >= 0 is invalid — object types are not numeric"
       ],

@@ -267,6 +267,30 @@ func outcomeFailClosed*(o: RustSubjectOutcome): bool {.raises: [].} =
   ## eaUnsupported, eaReferenceError, eaInternalError — fail-closed, no seal.
   not (outcomeOutOfScopeUnknown(o) or outcomeProceedToProof(o))
 
+proc rustSubjectOutcomeParsed*(llbcRoot: JsonNode;
+    contract: RustInputContractResult; funcName: string;
+    rcheckExe: string = ""; projectRoot: string = "";
+    timeoutMs: int = 60_000): RustSubjectOutcome {.
+    raises: [CatchableError], axiomEffect: IOEffect,
+    tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## Pre-parsed / pre-contracted entry point of `rustSubjectOutcome` (#229):
+  ## avoids re-parsing the LLBC JSON and re-hashing the subject `.rs` file set
+  ## on every candidate in a multi-target sweep.
+  result.embeddedFiles = contract.embeddedFiles
+  if not contract.ok:
+    result.producer = LlbcToCanonicalResult(ok: false,
+      error: rceMalformed, reason: contract.reason)
+    result.agreement = contractRejectionAgreement(contract)
+    result.rejection = contract.rejection
+    return
+  result.producer = llbcFunctionToCanonical(llbcRoot, funcName)
+  if result.producer.ok:
+    result.agreement = runRustExtractionAgreement(result.producer.canonical,
+                                                  rcheckExe, projectRoot,
+                                                  timeoutMs)
+  else:
+    result.agreement = producerRejectionAgreement(result.producer)
+
 proc rustSubjectOutcome*(llbcText: string; funcName: string;
     rcheckExe: string = ""; projectRoot: string = "";
     timeoutMs: int = 60_000; subjectRoot: string = "";
@@ -292,18 +316,8 @@ proc rustSubjectOutcome*(llbcText: string; funcName: string;
       result.agreement = producerRejectionAgreement(result.producer)
       return
     let contract = rustSubjectInputContract(f.root, subjectRoot, depInfoPath)
-    # §6d: a MEASUREMENT, not a verdict input — the attested entries survive
-    # a refusal from a LATER contract sub-check (the file table passed;
-    # `contract.embeddedFiles` is empty when the table itself was rejected,
-    # so no attestation stands for a rejected table).
-    result.embeddedFiles = contract.embeddedFiles
-    if not contract.ok:
-      result.producer = LlbcToCanonicalResult(ok: false,
-        error: rceMalformed, reason: contract.reason)
-      result.agreement = contractRejectionAgreement(contract)
-      result.rejection = contract.rejection
-      return
-    result.producer = llbcFunctionToCanonical(f.root, funcName)
+    return rustSubjectOutcomeParsed(f.root, contract, funcName, rcheckExe,
+                                    projectRoot, timeoutMs)
   else:
     result.producer = rustSubjectToCanonical(llbcText, funcName)
   if result.producer.ok:
@@ -536,7 +550,9 @@ proc rustGuardObligationAttempt*(llbcText: string; funcName: string;
     rcheckExe: string = ""; projectRoot: string = "";
     timeoutMs: int = 60_000; subjectRoot: string = "";
     subjectModulePath: string = "";
-    depInfoPath: string = ""): RustGuardAttemptRecord {.
+    depInfoPath: string = "";
+    precomputedOutcome: Option[RustSubjectOutcome] = none(RustSubjectOutcome)):
+    RustGuardAttemptRecord {.
     raises: [CatchableError], axiomEffect: IOEffect,
     tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect].} =
   ## The declaration-free attempt for one (llbcText, funcName): producer +
@@ -553,9 +569,10 @@ proc rustGuardObligationAttempt*(llbcText: string; funcName: string;
   ## exact-set mode is structurally impossible for real crates (cfg-excluded
   ## files never reach the LLBC), so omitting it turns every undeclared
   ## candidate into a silent `attempted = false` (rust_input_contract §c2).
-  result.outcome = rustSubjectOutcome(llbcText, funcName, rcheckExe,
-                                      projectRoot, timeoutMs, subjectRoot,
-                                      depInfoPath)
+  result.outcome = if precomputedOutcome.isSome: precomputedOutcome.get()
+                   else: rustSubjectOutcome(llbcText, funcName, rcheckExe,
+                                            projectRoot, timeoutMs, subjectRoot,
+                                            depInfoPath)
   if not outcomeProceedToProof(result.outcome):
     # attempted stays false — the same stages the lane surfaces directly;
     # the stage's own reason passes through (lane text shape).
@@ -769,7 +786,9 @@ proc rustSubjectIssuance*(llbcText: string; funcName: string; specPost: IRExpr;
                           axiomVersion: string = axiomVersionWithPrefix;
                           llbcPath: string = "";
                           extractionLedger: Option[LedgerTransport] = none(LedgerTransport);
-                          extractionLedgerRepo: string = ""): RustIssuanceRecord {.
+                          extractionLedgerRepo: string = "";
+                          precomputedOutcome: Option[RustSubjectOutcome] = none(RustSubjectOutcome);
+                          precomputedLlbcRoot: JsonNode = nil): RustIssuanceRecord {.
     raises: [CatchableError, OSError, Exception], axiomEffect: IOEffect,
     tags: [AxiomIOEffect, IOEffect, RootEffect, TimeEffect].} =
   ## Drive ONE (llbcText, funcName, specPost) request through the existing
@@ -789,8 +808,10 @@ proc rustSubjectIssuance*(llbcText: string; funcName: string; specPost: IRExpr;
     return result
 
   # Stage: producer + extraction differential (the Phase 1 outcome).
-  let outcome = rustSubjectOutcome(llbcText, funcName, rcheckExe, projectRoot,
-                                   timeoutMs, subjectRoot, depInfoPath)
+  let outcome = if precomputedOutcome.isSome: precomputedOutcome.get()
+                else: rustSubjectOutcome(llbcText, funcName, rcheckExe,
+                                         projectRoot, timeoutMs, subjectRoot,
+                                         depInfoPath)
   if outcome.producer.ok:
     result.irHash = outcome.agreement.nimDigest
   else:
@@ -848,18 +869,21 @@ proc rustSubjectIssuance*(llbcText: string; funcName: string; specPost: IRExpr;
     # (4) the record: pinned Charon pin (consumer-repo SSOT, quirk Q3) +
     # charon_version RECORDED from the LLBC header + the measured
     # fingerprint + the recorded contract + subject identity + llbcDigest.
-    let parsed = parseLlbcText(llbcText)
-    if not parsed.ok:
-      blockHere("provenance", parsed.reason)
+    var parsedRoot = precomputedLlbcRoot
+    if parsedRoot.isNil:
+      let parsed = parseLlbcText(llbcText)
+      if not parsed.ok:
+        blockHere("provenance", parsed.reason)
+      parsedRoot = parsed.root
     var headerVersion = ""
-    let header = parsed.root{"charon_version"}
+    let header = parsedRoot{"charon_version"}
     if not header.isNil and header.kind == JString:
       headerVersion = header.getStr()
     jobRecord = ExtractionJobRecord(
       charonPinCommit: PinnedCharonPinCommit,
       charonVersion: headerVersion,
       rustcFingerprint: fingerprint,
-      extractionContract: recordedExtractionContract(parsed.root),
+      extractionContract: recordedExtractionContract(parsedRoot),
       subjectGitRef: git.gitRef,
       subjectTreeMerkle: git.treeMerkle,
       moduleSha256: moduleDigest.get,
