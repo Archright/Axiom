@@ -188,6 +188,25 @@ check-imports: bin/check_imports_ast ## Import boundary scan (AST-based, parseSt
 bin/nimtry: src/gate/nimtry.nim $(wildcard src/gate/nimtry/*.nim)
 	$(NIM) c $(NIM_TOOL_FLAGS) -o:$@ $<
 
+# Measured nimtry count for the debt ratchet (DEBT#563).
+#
+# `bin/nimtry` exits 1 whenever the fingerprint set has New entries, so it is
+# NOT a success signal here: the measurement is the sidecar it writes before
+# that exit (src/gate/nimtry/nimtry_cli.nim, sidecar write precedes the
+# fingerprint exits). What IS fatal is failing to produce the sidecar at all —
+# a stale sidecar is deleted first so a previous run can never be misread as
+# this one's measurement. The verdict itself belongs to bin/debt_integrity_gate,
+# which fails closed on an absent sidecar.
+.PHONY: nimtry-measure
+nimtry-measure: bin/nimtry ## Produce the measured nimtry count consumed by the debt ratchet
+	@rm -f data/nimtry_live_count.json
+	@set +e; ./bin/nimtry src/ > /dev/null 2>&1; \
+	if [ ! -f data/nimtry_live_count.json ]; then \
+	  echo "[nimtry-measure] FAIL: no measurement produced (bin/nimtry wrote no sidecar)"; \
+	  exit 1; \
+	fi; \
+	echo "[nimtry-measure] sidecar produced; the count is reported by the gate that consumes it"
+
 bin/purity_check: tools/local_purity_check.nim
 	$(NIM) c --hints:off -o:$@ $<
 
@@ -210,9 +229,12 @@ bin/check_debt_sync: tools/check_debt_sync.nim
 # violation to WARN (debt_integrity_gate.nim:301-303), which would let a
 # baseline regression pass as green — exactly the theater this gate exists
 # to forbid. CI runs the binary unconditionally after this target.
+# Order-only: `nimtry-measure` must have produced data/nimtry_live_count.json
+# before the gate reads it (the gate fails closed when it is absent), but the
+# sidecar is not a build input, so touching it must not force a recompile.
 bin/debt_integrity_gate: src/gate/runners/debt_integrity_gate.nim \
                          src/core/debt/debt_integrity.nim \
-                         src/gate/lib/debt_scanner.nim
+                         src/gate/lib/debt_scanner.nim | nimtry-measure
 	$(NIM) c $(NIM_TOOL_FLAGS) -d:release -o:$@ $<
 
 bin/layer_enforcement_gate: src/gate/runners/layer_enforcement_gate.nim \
