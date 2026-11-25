@@ -108,6 +108,21 @@ proc runSync(engineBin, sandbox: string; dryRun = false): tuple[output: string, 
   let cmd = quoteShell(engineBin) & " --sync-budget" & (if dryRun: " --dry-run" else: "")
   execCmdEx(cmd, workingDir = sandbox)
 
+proc writeNimtryBaseline(sandbox: string; doc: string) =
+  ## Place data/nimtry_baseline.json in the sandbox (issue #462 fixtures).
+  writeFile(sandbox / "data" / "nimtry_baseline.json", doc)
+
+proc writeFakeNimtry(sandbox: string; sidecarTotal: int) =
+  ## Executable stand-in for bin/nimtry that always reports a measurement by
+  ## writing the live-count sidecar. It exists so the baseline precondition is
+  ## proven to gate the INVOCATION: if the evaluator ran it, the sidecar would
+  ## appear and the metric would read `sidecarTotal` instead of staying unmeasured.
+  createDir(sandbox / "bin")
+  let fake = sandbox / "bin" / "nimtry"
+  writeFile(fake, "#!/bin/sh\n" &
+    "printf '{\"total_violations\": " & $sidecarTotal & "}\\n' > \"$(dirname \"$0\")/../data/nimtry_live_count.json\"\n")
+  setFilePermissions(fake, {fpUserRead, fpUserWrite, fpUserExec})
+
 proc ledgerJson(sandbox: string): JsonNode =
   parseJson(readFile(sandbox / "data" / "debt_ledger.json"))
 
@@ -216,5 +231,75 @@ suite "debt_engine --sync-budget CLI contract (DEBT#543)":
     check not outText.contains("Sync complete.")
     # The unmeasured record is preserved untouched.
     check recordByMetric(sb, "unknown_metric")["current"].getInt() == 4
+
+  test "fail-closed: absent v2 baseline refuses the run as a measurement (#462)":
+    ## An absent data/nimtry_baseline.json makes bin/nimtry PASS unconditionally
+    ## (the v1 fallback sets limit = total, so every comparison is x > x). The
+    ## evaluator must therefore not invoke it at all — a fake binary that would
+    ## always write the sidecar proves the invocation itself is gated.
+    let sb = writeSandbox(suiteDir, "no_baseline", @[
+      ("BUDGET#005", "debt_registry_open", "107", "0", "0", "closed", "FIXED"),
+      ("BUDGET#004", "nimtry_violations", "704", "0", "7", "open", "WONT_FIX"),
+    ])
+    defer: removeDir(sb)
+    writeFakeNimtry(sb, sidecarTotal = 4370)
+
+    let (outText, rc) = runSync(engineBin, sb)
+    check rc == 1
+    check outText.contains("[skip] nimtry_violations: v2 baseline unavailable (data/nimtry_baseline.json)")
+    check outText.contains("BUDGET#004 (evaluator error)")
+    check outText.contains("Sync INCOMPLETE: 1 of 2 BUDGET record(s) unmeasured")
+    check not outText.contains("Sync complete.")
+    # The self-disabling PASS never reached the ledger: no sidecar was written,
+    # and the record keeps its last verified value instead of 4370.
+    check not fileExists(sb / "data" / "nimtry_live_count.json")
+    let unmeasured = recordByMetric(sb, "nimtry_violations")
+    check unmeasured["current"].getInt() == 7
+    check unmeasured["lastVerifiedAt"].getStr() == "2026-11-15T00:00:00Z"
+
+  test "fail-closed: non-v2 baseline refuses the run as a measurement (#462)":
+    ## The precondition mirrors the acceptance test at nimtry_cli.nim:443
+    ## (`version >= 2` and a non-empty fingerprint set). Each document below
+    ## fails it, so loadBaselineV2 yields no fingerprints and the v1 fallback
+    ## takes over — the run must be refused, not measured.
+    let sb = writeSandbox(suiteDir, "bad_baseline", @[
+      ("BUDGET#005", "debt_registry_open", "107", "0", "0", "closed", "FIXED"),
+      ("BUDGET#004", "nimtry_violations", "704", "0", "7", "open", "WONT_FIX"),
+    ])
+    defer: removeDir(sb)
+    writeFakeNimtry(sb, sidecarTotal = 4370)
+
+    for (tag, doc) in [
+      ("v1 baseline", "{\"version\": 1, \"total_violations\": 704}"),
+      ("empty fingerprints", "{\"version\": 2, \"violations\": []}"),
+      ("no violations key", "{\"version\": 2, \"total_violations\": 704}"),
+      ("not an object", "[1, 2, 3]"),
+    ]:
+      checkpoint(tag)
+      writeNimtryBaseline(sb, doc)
+      let (outText, rc) = runSync(engineBin, sb)
+      check rc == 1
+      check outText.contains("v2 baseline unavailable (data/nimtry_baseline.json)")
+      check recordByMetric(sb, "nimtry_violations")["current"].getInt() == 7
+      check not fileExists(sb / "data" / "nimtry_live_count.json")
+
+  test "v2 baseline present: the measurement path is unchanged (#462)":
+    ## The precondition must not narrow the governed path: with an accepted v2
+    ## baseline the evaluator invokes the binary and projects the sidecar.
+    let sb = writeSandbox(suiteDir, "good_baseline", @[
+      ("BUDGET#005", "debt_registry_open", "107", "0", "0", "closed", "FIXED"),
+      ("BUDGET#004", "nimtry_violations", "704", "0", "7", "open", "WONT_FIX"),
+    ])
+    defer: removeDir(sb)
+    writeNimtryBaseline(sb,
+      "{\"version\": 2, \"violations\": [{\"id\": \"fp1\"}, {\"id\": \"fp2\"}]}")
+    writeFakeNimtry(sb, sidecarTotal = 4370)
+
+    let (outText, rc) = runSync(engineBin, sb)
+    check not outText.contains("v2 baseline unavailable")
+    check rc == 0
+    check outText.contains("Sync complete.")
+    check fileExists(sb / "data" / "nimtry_live_count.json")
+    check recordByMetric(sb, "nimtry_violations")["current"].getInt() == 4370
 
   removeDir(suiteDir)
