@@ -209,18 +209,45 @@ proc countNimtryViolations(repoRoot: string): int =
   try: parseJson(readFile(path))["total_violations"].getInt(-1)
   except CatchableError: -1
 
-proc countNimtryActiveViolations(repoRoot: string): int =
+func consistentActiveTotal(root: JsonNode): int =
+  ## Cross-checks the sidecar's own arithmetic: total == error + warning, the
+  ## three counts nimtry_cli derives from one `violations` seq. Checked here
+  ## rather than trusted because the sidecar is a plain gitignored file any
+  ## writer can forge; a self-consistent payload is the only admission evidence.
+  ## Missing/non-integer parts are inconsistent, not absent. -1 = UNMEASURED.
+  if isNil(root) or root.kind != JObject: return -1
+  let total = root{"total_violations"}
+  let errors = root{"error_violations"}
+  let warnings = root{"warning_violations"}
+  for node in [total, errors, warnings]:
+    if isNil(node) or node.kind != JInt: return -1
+  let value = total.getInt(-1)
+  if value < 0 or value != errors.getInt(-1) + warnings.getInt(-1): return -1
+  value
+
+proc countNimtryActiveViolations*(repoRoot: string): int =
   ## Live measured violations from the nimtry run sidecar.
   ## -1 when the sidecar is absent (nimtry not run yet in this workspace), which
-  ## callers treat as UNMEASURED rather than as zero.
-  let path = repoRoot / "data" / "nimtry_live_count.json"
+  ## callers treat as UNMEASURED rather than as zero. -1 too when the payload is
+  ## unreadable or its counts do not sum, but those two are logged here so they
+  ## stay distinguishable from an absent sidecar.
+  const RelPath = "data/nimtry_live_count.json"
+  let path = repoRoot / RelPath
   if not fileExists(path):
     # DEBT#563: without the sidecar the reduction ratchet compares the declared
     # baseline instead of a measurement, so CI cannot observe violation growth.
     const debtMarker563 {.axiomDebt: "DEBT#563".} = true
     return -1
-  try: parseJson(readFile(path))["total_violations"].getInt()
-  except CatchableError: -1
+  var parsed: JsonNode
+  try: parsed = parseJson(readFile(path))
+  except CatchableError:
+    logError(GateTag, "nimtry — " & RelPath & " is unreadable (torn or invalid JSON)")
+    return -1
+  result = consistentActiveTotal(parsed)
+  if result < 0:
+    logError(GateTag, "nimtry — " & RelPath &
+      " is self-inconsistent: total_violations must equal " &
+      "error_violations + warning_violations")
 
 proc scanDebtMetrics(repoRoot: string): DebtMetrics =
   DebtMetrics(
