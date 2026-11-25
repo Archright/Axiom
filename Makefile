@@ -134,7 +134,9 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/merkle_cache_test.nim \
                   tests/unit/test_topology_cache_axiom_impl.nim \
                   tests/unit/test_rust_lane_manifest_and_cache.nim \
-                  tests/unit/pnode_function_index_test.nim
+                  tests/unit/pnode_function_index_test.nim \
+                  tests/unit/test_surface_guard.nim \
+                  tests/unit/test_rule_suite_bypass_ledger.nim
 
 
 .PHONY: check-push-admissibility-integrity test perf-check bench-cost-probe verify-all meta-gate registry-check env-check doc-path-validator check-determinism check-mutation-harness check-decision-binding check-topology-drift check-decision-graph-drift check-git-purity check-manifest-consistency check-scope-consistency check-proof-unit-consistency check-proof-unit-reconcile check-epoch-transaction check-merge-admission-cert-mirror sloc-verify check-quality-gate local-verify-static local-verify-static-full check-toolchain-pin check-build-state-coherence check-binary-liveness local-verify-contract-exact check-mcp check-cert-integrity check-cert-integrity-fast check-readiness-start readiness-collect check-workflow-shell-syntax promote-assets promote-assets-apply test-fast test-fast-one test-panics-exit-contract perf-baseline clean-cache clean-test-cache clean-release-cache build verify-contract verify-contract-unit verify-contract-release-e2e ci-compile ci-bootstrap-cheap test-gateway-identity-gate gate-binaries validate-root-layout
