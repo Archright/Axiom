@@ -6315,7 +6315,10 @@
       "resolution": "UNRESOLVED",
       "lastVerifiedAt": "2026-11-25T11:30:00Z",
       "binding": "registry_disposition",
-      "bindingRationale": "Closes by binding the claim to a fresh kernel observation rather than by adding another gate. The predicate lives once, in the pinned kernel_reexecution module, and both verifier surfaces consume it."
+      "bindingRationale": "Closes by binding the claim to a fresh kernel observation rather than by adding another gate. The predicate lives once, in the pinned kernel_reexecution module, and both verifier surfaces consume it.",
+      "symbol": "freshObservationBindingError",
+      "lineRange": "src/verification/kernel_reexecution.nim:675-711",
+      "contentHash": "sha256:c4b07ff4810d7a0ed63e5ed99bbe3fb39067575dfa69fe0bd261aabee0b5ab8d"
     }
   ]
 }
