@@ -603,3 +603,54 @@ non-guarantee split explicitly in a contract, and record that cold verification
   **not satisfied** by this change, and this section does not claim it is. The
   measurement in 8.2 and 8.3 shows the forged certificate passing both the sign
   path and the cold path. Only the documentation half of #253 is addressed here.
+
+### 8.7 Closure of the 8.2 / 8.3 forgery (DEBT#572)
+
+Sections 8.2-8.6 are a historical measurement and are left verbatim. The
+forgery they record is now **blocked on both kernel paths**.
+
+8.3 named the exact cause: the fresh observation was computed and then
+discarded. `reexecuteLean` returned only
+`reexecuteLeanObservedKernel(...).verdict`, and the evidence-bundle replay
+returned only `tuple[verdict, axes]`. Neither caller could compare a run against
+a claim, so a consistently forged `theoremName` survived.
+
+The comparison now exists and is single-sourced:
+`freshObservationBindingError` (`src/verification/kernel_reexecution.nim`) takes
+a recorded `KernelObservation` and a fresh `LeanObservation` and returns the
+first fail-closed mismatch across, in order: the `observed` flag,
+`theoremName`, the normalized axiom set, `leanSourceDigest`, `outputDigest` and
+`toolchainIdentity`. An unobserved fresh run is rejected before any comparison,
+because "could not verify" is never "verified".
+
+Two consumers, one predicate:
+
+| Consumer | Behaviour |
+|---|---|
+| `ax cert verify --kernel` (`src/cli/cert_cli.nim`) | On the PASS branch, a certificate that records an `observation` must have it reproduced by the fresh run. Certificates with no `observation` block (legacy shape) are unchanged. |
+| Evidence-bundle kernel leg (`src/verification/evidence_bundle/bundle_verify.nim`) | The fresh run's theorem must equal the certificate's `theoremName`, in addition to the existing `axiomsUsed` comparison. `src/verification/evidence_bundle/lean_replay.nim` now returns `theoremName`, derived from the source **before** execution so it cannot be echoed back from the certificate. |
+
+The observed theorem is derived from the embedded source, never read from the
+record, so the second operand is evidence rather than assertion. This is why the
+fix does not need a new gate: it repairs the comparison the paths were already
+positioned to make.
+
+Negative control (issue #253 first completion criterion, now satisfied):
+`tests/verification/test_kernel_reexecution.nim` P13 builds the 8.2 forgery and
+asserts it is rejected, that an honest record over the same source is accepted
+(the check discriminates rather than rejecting everything), that an unobserved
+run is rejected, and repeats the forged/honest pair against the real Lean kernel
+when the toolchain resolves. Recorded run: 128 checks, 0 skipped.
+
+Scope limits, stated because they are unchanged by this fix:
+
+- Option 1 (verifier-side re-execution **before** signing) remains **open**. A
+  consistently forged witness is still minted; it is now rejected on verification
+  instead of passing.
+- Option 2 (execution receipt) remains **open**.
+- Producer identity is still not established; `digest` values remain content
+  addresses and the Ed25519 signature remains integrity-only (8.1b, 8.5).
+- The comparison is only as strong as the pinned Lean toolchain. A run that
+  cannot resolve Lean fails closed rather than passing, which is why the
+  reproducibility note in 8.3 still applies: export `ELAN_TOOLCHAIN`, otherwise
+  the leanchecker leg reports a mismatch for environment reasons.
