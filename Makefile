@@ -1464,9 +1464,17 @@ test:
 # (gitignored): stage 1 regenerates it in place on every run, so repeated
 # gate runs leave `git status` clean. Only the baselines are versioned —
 # perf-baseline below stays the explicit-only writer of perf_baseline.json.
+#
+# Ordering is load-bearing: both stages below consume the artifact that
+# stage 1 writes, so neither may move ahead of the harness (nor be wired into
+# a target that runs without a measurement — a fail-closed checker on an
+# absent artifact is a guaranteed false red on every clean checkout).
+# perf-check is the sole in-tree caller of check-perf: without it the budget
+# validator is orphaned and rots (#350).
 perf-check:
 	@nim c -r tools/perf_measure.nim latest
 	@nim c -r tools/perf_checker.nim --baseline:data/benchmarks/perf_baseline.json --latest:data/benchmarks/perf_latest.json --max-regression:5.0
+	@$(MAKE) check-perf
 
 # perf-baseline은 EXPLICIT-ONLY다: 그 어떤 타깃도 이 타깃에 의존해서는 안 된다.
 # tools/perf_measure.nim baseline (min-of-5)으로 data/benchmarks/perf_baseline.json을
