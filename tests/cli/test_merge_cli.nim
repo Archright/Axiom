@@ -1060,6 +1060,115 @@ suite "adjudicateRotation — Amendment A10 rotation companion (axiom probe fail
     check anchored.check.newAnchorOk
     check anchored.reasonCode.len == 0
 
+suite "adjudicateRotation — Amendment A11 rotation companion (cert semantic binding)":
+  # The measured delta of PR #493 (DEBT#572): a fresh Lean kernel observation
+  # is bound to the recorded certificate claim, so a witness claiming
+  # inc3_correct over a source stating only decoy_true can no longer verify.
+  # The 14 measured paths less the reverted axiom.nimble = 13.
+  #
+  # pin@B carries the two closure members this rotation actually changes --
+  # src/verification/kernel_reexecution.nim and src/cli/cert_cli.nim (both are
+  # keys of config/trusted_checker_closure.json). The other eleven paths are
+  # non-members riding the A2 companion clause: that is exactly the shape A11
+  # authorizes, and building the fixture any other way would prove nothing
+  # about the registration.
+  func a11Pin(): HashSet[string] {.raises: [].} =
+    lineSet("100644 blob a11b1\tsrc/verification/kernel_reexecution.nim",
+            "100644 blob a11b2\tsrc/cli/cert_cli.nim")
+  func a11PinH(): HashSet[string] {.raises: [].} =
+    lineSet("100644 blob a11h1\tsrc/verification/kernel_reexecution.nim",
+            "100644 blob a11h2\tsrc/cli/cert_cli.nim")
+
+  let a11Delta = @[
+    "tests/verification/test_kernel_reexecution.nim",
+    "src/verification/evidence_bundle/bundle_verify.nim",
+    "src/verification/evidence_bundle/lean_replay.nim",
+    "docs/spec/cert_lifecycle_contracts.md",
+    "data/debt_registry.json",
+    "docs/DEBT_REGISTRY.md",
+    "src/generated/debt_constants.nim",
+    "config/trusted_checker_closure.json",
+    "src/verification/kernel_reexecution.nim",
+    "src/cli/cert_cli.nim",
+    "data/architecture_debt.json",
+    "data/debt_ledger.json",
+    "src/generated/type_registry_metadata.json"]
+
+  test "PR #493's measured candidate delta (13 paths) → ROTATION (allowlist OK)":
+    # Measured, not assumed: the merge_group verdict at 2026-11-25T11:49Z
+    # blocked this delta with ROT_ALLOWLIST on 8 of 15 paths. Five of those
+    # eight were already allowed (config/trusted_checker_closure.json,
+    # src/verification/kernel_reexecution.nim, src/cli/cert_cli.nim,
+    # data/architecture_debt.json, data/debt_ledger.json,
+    # src/generated/type_registry_metadata.json); axiom.nimble is reverted.
+    # A11 registers the remaining seven and nothing else.
+    let b = a11Pin()
+    let h = a11PinH()
+    let adj = adjudicateRotation(h, b, h, some(b), some(h), a11Delta)
+    check adj.qualification == rqRotation
+    check adj.check.closureChange
+    check adj.check.allowlistOk
+    check adj.check.subjectDeltaZero
+    check adj.check.oldAnchorOk
+    check adj.check.newAnchorOk
+    check adj.reasonCode.len == 0
+
+  test "A11 admits enumerated paths only -- an unregistered sibling in the same directory stays ROT_ALLOWLIST":
+    # Clause (a) registers two files in src/verification/evidence_bundle/.
+    # A third file in that directory does NOT ride the registration: the
+    # expansion of A2 (i) is bounded by enumeration, never by a directory.
+    let b = a11Pin()
+    let h = a11PinH()
+    let adj = adjudicateRotation(h, b, h, some(b), some(h),
+      @["tests/verification/test_kernel_reexecution.nim",
+        "src/verification/evidence_bundle/other.nim"])
+    check adj.qualification == rqNone
+    check adj.reasonCode == "ROT_ALLOWLIST"
+    check not adj.check.allowlistOk
+
+  test "A11 is exact-match, not a prefix -- the _extra sibling is still denied":
+    let b = a11Pin()
+    let h = a11PinH()
+    let adj = adjudicateRotation(h, b, h, some(b), some(h),
+      @["tests/verification/test_kernel_reexecution.nim",
+        "tests/verification/test_kernel_reexecution_extra.nim"])
+    check adj.qualification == rqNone
+    check adj.reasonCode == "ROT_ALLOWLIST"
+    check not adj.check.allowlistOk
+
+  test "A11 does not register axiom.nimble -- reverting it is load-bearing":
+    # The eighth measured path was unrelated scope contamination, not a
+    # companion of this rotation. Registering it would have widened the
+    # allowlist for a file this rotation has no business changing.
+    let b = a11Pin()
+    let h = a11PinH()
+    let adj = adjudicateRotation(h, b, h, some(b), some(h),
+      @["tests/verification/test_kernel_reexecution.nim", "axiom.nimble"])
+    check adj.qualification == rqNone
+    check adj.reasonCode == "ROT_ALLOWLIST"
+    check not adj.check.allowlistOk
+
+  test "A11 is inert outside ROTATION -- a NORMAL delta gains no approval":
+    let b = a11Pin()
+    let adj = adjudicateRotation(b, b, b, some(b), some(b),
+      @["src/verification/evidence_bundle/lean_replay.nim"])
+    check adj.qualification == rqNormal
+    check not adj.check.closureChange
+    check adj.reasonCode.len == 0
+
+  test "A11 leaves ④ untouched -- a stale pin@H on the same delta is still ROT_NEW_PIN":
+    let b = a11Pin()
+    let h = a11PinH()
+    let stale = adjudicateRotation(h, b, h, some(b), some(b), a11Delta)
+    check stale.check.closureChange
+    check stale.check.allowlistOk         # A11 does not suppress (1) ...
+    check not stale.check.newAnchorOk     # ... and does not authorize (4)
+    check stale.qualification == rqRotation
+    check stale.reasonCode == "ROT_NEW_PIN"
+    let anchored = adjudicateRotation(h, b, h, some(b), some(h), a11Delta)
+    check anchored.check.newAnchorOk
+    check anchored.reasonCode.len == 0
+
 suite "adjudicateRotation — stale old anchor (③ → NOT-ADMIT, single deny point)":
   test "pin@B key present but != derived(B) → NONE (ROT_OLD_PIN)":
     let b = lineSet("100644 blob a1\tci/checker.mk")

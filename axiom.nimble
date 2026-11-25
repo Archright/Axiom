@@ -128,7 +128,7 @@ task z3precache, "Build z3-precache tool and scan source for Z3 queries":
   exec "bin/z3-precache --scan"
   echo "[nimble] Z3 precache complete."
 
-task syncTopology, "Sync manifest.d/*.json from topology_spec.nim SSOT":
+task syncTopology, "Sync manifest.d/*.json + manifest_registry.nim from topology_spec.nim SSOT":
   ensureBinDir()
   exec "nim c --hints:off -o:bin/sync_topology tools/sync_topology.nim"
   exec "bin/sync_topology"
