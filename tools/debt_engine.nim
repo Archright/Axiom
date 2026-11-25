@@ -1716,8 +1716,17 @@ proc evalNimtryViolations(): int {.raises: [CatchableError].} =
   if not fileExists(tool):
     echo "  [skip] nimtry_violations: evaluator binary unavailable (" & tool & ")"
     return -1
-  discard execCmdEx(tool & " src/")   # refreshes the live-count sidecar
   let livePath = "data/nimtry_live_count.json"
+  ## Delete the sidecar BEFORE measuring (same order as `make nimtry-measure`).
+  ## The run refreshes it, so whatever exists afterwards is this run's
+  ## measurement; without the delete, a crash before the sidecar write leaves
+  ## the PREVIOUS run's file behind and it is read as the current measurement —
+  ## a stale value presented as fresh. A delete that fails must not leave that
+  ## file readable: it raises OSError (a CatchableError, permitted by the
+  ## signature) and the caller's fail-closed handler records the metric as
+  ## unmeasured rather than guessing.
+  removeFile(livePath)
+  discard execCmdEx(tool & " src/")   # refreshes the live-count sidecar
   if not fileExists(livePath):
     echo "  [skip] nimtry_violations: live-count sidecar unavailable (" & livePath & ")"
     return -1
