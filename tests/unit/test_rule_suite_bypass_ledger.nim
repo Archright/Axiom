@@ -32,6 +32,29 @@ proc entry(id: int; pushedAt: string; afterSha = "aa"; verdict = "bypass"): Json
     "result": verdict
   }
 
+const
+  ## A fixed judgment clock. Every freshness case below passes this as
+  ## `--now`-equivalent, so the suite is deterministic: a test that read the
+  ## host clock would pass today and fail on the day the fixture aged out,
+  ## which is the same silent-rot failure the freshness check exists to catch.
+  NewestPushedAt = "2026-11-24T19:58:18+09:00"   # epoch 1795517898
+  NewestEpoch = 1795517898'i64
+  Day = 86400'i64
+
+proc judgeAt(rows: seq[JsonNode]; nowEpoch: int64; maxAgeDays: int64;
+             maxAgeSupplied = true): LedgerReport =
+  ## Freshness-only judgment with the other two checks deliberately UNKNOWN —
+  ## the point of each case is the freshness dimension alone.
+  judge(rows, initHashSet[string](), false, @[], false, nowEpoch, maxAgeDays,
+        maxAgeSupplied)
+
+proc parseClock(iso: string): int64 =
+  ## The suite parses its own clock inputs through the SHIPPED parser, so a
+  ## fixture cannot silently encode a different instant than the tool reads.
+  let e = pushedEpoch(iso)
+  doAssert e.isSome, "clock fixture must parse: " & iso
+  e.get()
+
 proc main() =
   var passed = 0
   var failed = 0
@@ -272,36 +295,155 @@ proc main() =
   # ── the report must never look clean when a check did not run ────────────
   echo "=== UNKNOWN is not zero ==="
 
-  check "judge: nothing supplied -> both checks UNKNOWN, no findings":
+  check "judge: nothing supplied -> all three checks UNKNOWN, no findings":
     let rows = @[entry(1, "2026-11-21T11:40:45+09:00")]
-    let r = judge(rows, initHashSet[string](), false, @[], false)
+    let r = judge(rows, initHashSet[string](), false, @[], false, 0'i64, 0'i64, false)
     assert not r.directPushCheckable, "unperformed check must not be checkable"
     assert not r.windowCheckable
+    assert r.freshness == freshUnknown
+    assert not r.isFinding
     assert r.directPushes.len == 0
     assert r.total == 1
 
   check "judge: unperformed checks render as UNKNOWN text, never PASS":
     let rows = @[entry(1, "2026-11-21T11:40:45+09:00")]
-    let txt = renderReport(judge(rows, initHashSet[string](), false, @[], false))
+    let txt = renderReport(judge(rows, initHashSet[string](), false, @[], false,
+                                 0'i64, 0'i64, false))
     assert txt.contains("UNKNOWN")
     assert not txt.contains("PASS"), "an unrun check must not read as PASS"
+    assert not txt.contains("FRESH"), "unasked freshness must not read as FRESH"
 
   check "judge: direct-push supplied and clean -> PASS, windows still UNKNOWN":
     let rows = @[entry(1, "2026-11-21T11:40:45+09:00", afterSha = "known")]
     var fp = initHashSet[string]()
     fp.incl("known")
-    let txt = renderReport(judge(rows, fp, true, @[], false))
+    let txt = renderReport(judge(rows, fp, true, @[], false, 0'i64, 0'i64, false))
     assert txt.contains("PASS")
     assert txt.contains("UNKNOWN"), "the unrun check must still be flagged"
 
   check "judge: json projection distinguishes PERFORMED from UNKNOWN":
     let rows = @[entry(1, "2026-11-21T11:40:45+09:00", afterSha = "k")]
-    let unknown = reportJson(judge(rows, initHashSet[string](), false, @[], false))
+    let unknown = reportJson(judge(rows, initHashSet[string](), false, @[], false,
+                                   0'i64, 0'i64, false))
     assert unknown["directPushCheck"].getStr() == "UNKNOWN"
     var fp = initHashSet[string]()
     fp.incl("k")
-    let performed = reportJson(judge(rows, fp, true, @[], false))
+    let performed = reportJson(judge(rows, fp, true, @[], false, 0'i64, 0'i64, false))
     assert performed["directPushCheck"].getStr() == "PERFORMED"
+
+  # ── freshness: is the ledger new enough to be evidence? ──────────────────
+  echo "=== freshness ==="
+
+  check "freshness: absent limit -> UNKNOWN, never FRESH, never a finding":
+    let rows = @[entry(1, NewestPushedAt)]
+    let r = judgeAt(rows, NewestEpoch + 400 * Day, 0, maxAgeSupplied = false)
+    assert r.freshness == freshUnknown, "got " & $r.freshness
+    assert not r.isFinding, "an unasked question must not become a finding"
+    let txt = renderReport(r)
+    assert txt.contains("freshness: UNKNOWN")
+    assert not txt.contains("FRESH"), "UNKNOWN must not print FRESH anywhere"
+    assert reportJson(r)["freshnessCheck"].getStr() == "UNKNOWN"
+
+  check "freshness: exactly N days old is FRESH (inclusive boundary)":
+    let rows = @[entry(1, NewestPushedAt)]
+    let r = judgeAt(rows, NewestEpoch + 2 * Day, 2)
+    assert r.freshness == freshFresh, "N days must be within a limit of N"
+    assert r.newestAgeDays == 2, "got " & $r.newestAgeDays
+    assert not r.isFinding
+
+  check "freshness: one second inside N days is FRESH":
+    let rows = @[entry(1, NewestPushedAt)]
+    let r = judgeAt(rows, NewestEpoch + 2 * Day - 1, 2)
+    assert r.freshness == freshFresh
+
+  check "freshness: N days + 1 second is still FRESH (age is whole days)":
+    # The limit is a day count, so the discriminating comparison is on whole
+    # days: one second past the boundary is still age N under div, which
+    # reads FRESH. The boundary the tool must honour is N inclusive,
+    # N+1 exclusive, and this pins that off-by-one explicitly.
+    let rows = @[entry(1, NewestPushedAt)]
+    let r = judgeAt(rows, NewestEpoch + (2 * Day) + 1, 2)
+    assert r.freshness == freshFresh,
+      "age is whole days, so N+1s is still age N — the tool must not " &
+      "report STALE for a sub-day overshoot (got " & $r.freshness & ")"
+
+  check "freshness: N+1 whole days is STALE":
+    let rows = @[entry(1, NewestPushedAt)]
+    let r = judgeAt(rows, NewestEpoch + 3 * Day, 2)
+    assert r.freshness == freshStale, "got " & $r.freshness
+    assert r.newestAgeDays == 3
+    assert r.isFinding, "STALE must be a finding (exit 1)"
+
+  check "freshness: STALE renders the age and the limit":
+    let rows = @[entry(1, NewestPushedAt)]
+    let txt = renderReport(judgeAt(rows, NewestEpoch + 5 * Day, 2))
+    assert txt.contains("freshness: STALE (age=5d, limit=2d)"),
+      "report must state the measurement: " & txt
+
+  check "freshness: STALE json is machine-readable":
+    let rows = @[entry(1, NewestPushedAt)]
+    let j = reportJson(judgeAt(rows, NewestEpoch + 5 * Day, 2))
+    assert j["freshness"].getStr() == "STALE"
+    assert j["freshnessCheck"].getStr() == "PERFORMED"
+    assert j["freshnessAgeDays"].getBiggestInt() == 5
+    assert j["freshnessMaxAgeDays"].getBiggestInt() == 2
+    assert j["finding"].getBool()
+
+  check "freshness: oldest row does not drive the verdict, only the newest":
+    # A ledger with one ancient row and one fresh row is fresh: the question
+    # is whether anything newer than the newest row is unrecorded.
+    let rows = @[entry(1, "2020-01-01T00:00:00+00:00"),
+                 entry(2, NewestPushedAt)]
+    let r = judgeAt(rows, NewestEpoch + Day, 2)
+    assert r.freshness == freshFresh, "got " & $r.freshness
+
+  check "freshness: unwrapped clock skew -> FUTURE, its own verdict":
+    # The newest row is ahead of the judgment clock. A negative age trivially
+    # satisfies `age <= limit`, so folding it into FRESH would let a
+    # hand-edited (or clock-skewed) row attest freshness forever.
+    let rows = @[entry(1, NewestPushedAt)]
+    let r = judgeAt(rows, NewestEpoch - 3600, 2)
+    assert r.freshness == freshFuture, "got " & $r.freshness
+    assert r.isFinding, "an unauditable record must not exit 0"
+    let txt = renderReport(r)
+    assert txt.contains("freshness: FUTURE")
+    assert not txt.contains("FRESH ("), "FUTURE must not render as FRESH"
+
+  check "freshness: FUTURE json distinct from STALE json":
+    let rows = @[entry(1, NewestPushedAt)]
+    let j = reportJson(judgeAt(rows, NewestEpoch - 3600, 2))
+    assert j["freshness"].getStr() == "FUTURE"
+    assert j["freshnessCheck"].getStr() == "PERFORMED"
+    assert j["finding"].getBool()
+
+  check "freshness: empty ledger is UNKNOWN, not STALE and not FRESH":
+    # No rows means no age to measure. STALE would invent a measurement;
+    # FRESH would attest a ledger that recorded nothing.
+    let r = judgeAt(@[], NewestEpoch, 2)
+    assert r.freshness == freshUnknown, "got " & $r.freshness
+    assert not r.isFinding, "no measurement is not a staleness finding"
+
+  check "freshness: judgeFreshness is total over the epoch extremes":
+    # `now` far past / far before the row must not overflow or wrap.
+    let f1 = judgeFreshness(0'i64, true, high(int64) - 1, 2, true)
+    assert f1.verdict == freshStale, "got " & $f1.verdict
+    let f2 = judgeFreshness(high(int64) - 1, true, 0'i64, 2, true)
+    assert f2.verdict == freshFuture, "got " & $f2.verdict
+
+  check "freshness: a limit of 1 still catches a 2-day-old ledger":
+    let rows = @[entry(1, NewestPushedAt)]
+    assert judgeAt(rows, NewestEpoch + Day, 1).freshness == freshFresh
+    assert judgeAt(rows, NewestEpoch + 2 * Day, 1).freshness == freshStale
+
+  check "freshness: a 30-day-old ledger is STALE under a 2-day limit":
+    # The concrete rot scenario the README named: nothing collected for a
+    # month, so every landing in that month is unrecorded. Before freshness
+    # existed this file reported a clean PASS over exactly these contents.
+    let rows = @[entry(1, NewestPushedAt)]
+    let r = judgeAt(rows, NewestEpoch + 30 * Day, 2)
+    assert r.freshness == freshStale, "got " & $r.freshness
+    assert r.newestAgeDays == 30
+    assert r.isFinding, "a month-stale ledger must exit non-zero"
 
   # ── Summary ──────────────────────────────────────────────────────────────
 

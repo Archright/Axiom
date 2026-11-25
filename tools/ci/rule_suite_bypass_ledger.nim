@@ -14,7 +14,7 @@
 ## reader: the ledger is the permanent per-landing record, the API is only a
 ## rolling feed into it.
 ##
-## THREE JUDGMENTS, ONE AUTHORITY MODEL:
+## FOUR JUDGMENTS, ONE AUTHORITY MODEL:
 ##   1. append + dedupe by `id`  — the API page contents are not stable
 ##      across runs (entries enter and leave the window), so merging is
 ##      set-union keyed on the immutable `id` and re-sorting on
@@ -31,6 +31,16 @@
 ##      not evidence of a defect. The windows are an INPUT (a JSON document
 ##      of [start, end] intervals); with no windows document every landing is
 ##      UNKNOWN, never "unexplained".
+##   4. freshness — the ledger is only evidence about the window it covers.
+##      A ledger whose newest row is months old says nothing about the
+##      bypasses of the last month, so "0 findings" over stale contents is
+##      the same statement as "no bypasses", which is exactly the collapse
+##      AGENTS.md §0.9 forbids. The age limit and the clock are both INPUTS
+##      (`--max-age-days`, `--now`): without the limit the verdict is
+##      UNKNOWN, never FRESH. A ledger whose newest row is in the FUTURE is
+##      its own verdict, not a negative age that quietly satisfies the
+##      limit — a future row means the clock or the record is wrong, and
+##      neither can be attested as fresh.
 ##
 ## EVIDENCE FIDELITY: an entry is canonicalised to a FIXED field order and a
 ## FIXED field set (the ten fields below). Extra API fields — notably
@@ -49,16 +59,35 @@
 ##       tracked file).
 ##   rule_suite_bypass_ledger assert --ledger <ledger.jsonl>
 ##                                   [--first-parent <shas.txt>]
-##                                   [--windows <windows.json>] [--json]
-##       Read-only report: total landings + date range, direct pushes,
-##       elevation-window matches. Exit 0 = no finding, 1 = finding,
-##       2 = usage/config/parse error. A check that was not supplied is
-##       reported UNKNOWN in the text AND in the JSON.
+##                                   [--windows <windows.json>]
+##                                   [--max-age-days <N>] [--now <iso8601>]
+##                                   [--json]
+##       Read-only report: total landings + date range, freshness,
+##       direct pushes, elevation-window matches.
 ##
+##       EXIT CONTRACT (three codes, and a finding is a finding — freshness
+##       does not get its own code, because a caller that had to distinguish
+##       "stale" from "direct push" would need to parse the text, and a
+##       caller that only looks at zero/non-zero must see both):
+##         0 = no finding (every PERFORMED check clean)
+##         1 = FINDING — a direct push, an elevation-window match, or
+##             freshness STALE. Any one of them makes the exit non-zero.
+##         2 = usage/config/parse error, or a judgment that could not be
+##             performed (unparsable ledger, empty first-parent set,
+##             malformed windows document, non-positive --max-age-days).
+##       A check that was not supplied is reported UNKNOWN in the text AND
+##       in the JSON; UNKNOWN never exits 1, because "not asked" is not
+##       "found", and never exits 0 as a clean result either — the UNKNOWN
+##       line is the finding-shaped notice, printed unconditionally.
+##
+##       `--now` exists so the freshness judgment is reproducible: the
+##       wall clock is read exactly once, in `runAssert`, and passed in as a
+##       value. Every judgment below it stays `func` + {.raises: [].}.
+
 ## Effect boundary: every judgment above is `func` + {.raises: [].}; only
 ## file reads/writes and process exit carry {.axiomEffect: IoEffect.}.
 
-import std/[algorithm, json, options, os, sets, strutils, tables]
+import std/[algorithm, json, options, os, sets, strutils, tables, times]
 import api/tools_facade
 
 const
@@ -86,6 +115,15 @@ type
     startEpoch*: int64
     endEpoch*: int64
 
+  Freshness* = enum
+    ## The third verdict dimension. `UNKNOWN` is the default and the only
+    ## state reachable without an explicit age limit — a ledger that is
+    ## never asked to be fresh can never be reported FRESH.
+    freshUnknown = "UNKNOWN"
+    freshFresh = "FRESH"
+    freshStale = "STALE"
+    freshFuture = "FUTURE"
+
   LedgerReport* = object
     ## The read-only judgment. `checkable` distinguishes "no findings" from
     ## "not asked" — the difference between a clean audit and a silent pass.
@@ -96,6 +134,15 @@ type
     directPushes*: seq[JsonNode]
     windowCheckable*: bool
     windowMatches*: seq[JsonNode]
+    freshness*: Freshness
+    ## Age of the newest row in whole days, and the limit it was measured
+    ## against. Both are only meaningful when `freshness != freshUnknown`
+    ## (limit) or when a newest row exists (age).
+    newestAgeDays*: int64
+    maxAgeDays*: int64
+    ## The clock the judgment used, so a STALE verdict is re-checkable
+    ## rather than a claim about an unstated "now".
+    judgedAtEpoch*: int64
 
 func field(node: JsonNode; key: string): JsonNode {.raises: [].} =
   ## Pure: `node[key]` as a value (nil when absent) — never raises on a
@@ -378,10 +425,44 @@ func findWindowMatches*(rows: seq[JsonNode];
         outNode["window"] = %w.label
         result.add(outNode)
 
+func judgeFreshness*(newestEpoch: int64; hasNewest: bool; nowEpoch: int64;
+                     maxAgeDays: int64; maxAgeSupplied: bool):
+    tuple[verdict: Freshness; ageDays: int64] {.raises: [].} =
+  ## Pure: is the ledger new enough to be evidence about the current window?
+  ##
+  ## Whole days are counted by integer division of the epoch delta, so the
+  ## boundary is exact for the only shape a caller can express: a row exactly
+  ## N days old yields ageDays == N and is FRESH under a limit of N. The
+  ## comparison is `<=`, i.e. the limit is inclusive — an off-by-one that
+  ## made N days STALE would force every operator to pad the limit
+  ## downward, and padding is how a real limit stops meaning anything.
+  ##
+  ## `hasNewest` false means the ledger has no parsable rows at all. That is
+  ## UNKNOWN rather than STALE: there is no age to measure, and reporting
+  ## STALE would invent a measurement. (An empty ledger is already refused
+  ## by `merge`; this is the read side declining to guess.)
+  ##
+  ## A NEGATIVE age (newest row in the future) is FUTURE, not a very fresh
+  ## ledger. Clock skew and a hand-edited record are both real, both mean the
+  ## attestation is untrustworthy, and neither is a limit violation — so it
+  ## is reported as its own verdict rather than folded into STALE. It is
+  ## still a finding: an unauditable record must not exit 0.
+  if not maxAgeSupplied:
+    return (freshUnknown, 0'i64)
+  if not hasNewest:
+    return (freshUnknown, 0'i64)
+  if newestEpoch > nowEpoch:
+    return (freshFuture, 0'i64)
+  let age = (nowEpoch - newestEpoch) div 86400
+  let verdict = if age <= maxAgeDays: freshFresh else: freshStale
+  (verdict, age)
+
 func judge*(rows: seq[JsonNode]; firstParent: HashSet[string];
             firstParentSupplied: bool; windows: seq[Window];
-            windowsSupplied: bool): LedgerReport {.raises: [].} =
-  ## Pure: the whole audit as one value. The two `*Supplied` flags are what
+            windowsSupplied: bool; nowEpoch: int64;
+            maxAgeDays: int64;
+            maxAgeSupplied: bool): LedgerReport {.raises: [].} =
+  ## Pure: the whole audit as one value. The `*Supplied` flags are what
   ## keep an unperformed check out of the finding set — they are reported as
   ## UNKNOWN instead of masquerading as a clean result.
   result.total = rows.len
@@ -394,10 +475,34 @@ func judge*(rows: seq[JsonNode]; firstParent: HashSet[string];
   result.windowCheckable = windowsSupplied
   if windowsSupplied:
     result.windowMatches = findWindowMatches(rows, windows)
+  result.judgedAtEpoch = nowEpoch
+  result.maxAgeDays = maxAgeDays
+  # `dateRange` renders the newest row as text; re-parse it here so the
+  # freshness judgment is over the same absolute instant the sort used
+  # rather than over a second, possibly divergent, read of the rows.
+  let newest = pushedEpoch(range.newest)
+  let fresh = judgeFreshness(newest.get(0'i64), newest.isSome, nowEpoch,
+                             maxAgeDays, maxAgeSupplied)
+  result.freshness = fresh.verdict
+  result.newestAgeDays = fresh.ageDays
+
+func isFinding*(report: LedgerReport): bool {.raises: [].} =
+  ## Pure: the single place that decides "finding". Kept next to the report
+  ## so the exit code and the text can never disagree about what counts.
+  report.directPushes.len > 0 or report.windowMatches.len > 0 or
+    report.freshness == freshStale or report.freshness == freshFuture
+
 
 func reportJson*(report: LedgerReport): JsonNode {.raises: [].} =
   ## Pure: machine-readable projection of the report (the text renderer and
   ## this share the same struct, so the two can never disagree).
+  ##
+  ## `freshnessCheck` is PERFORMED/UNKNOWN exactly like the other two, so a
+  ## consumer that reads only the check fields still cannot mistake an
+  ## unasked freshness question for a clean ledger. The measured age is
+  ## emitted alongside the verdict rather than recomputed by the consumer:
+  ## two clocks would let a consumer re-derive a different answer from the
+  ## one the tool exited on.
   %*{
     "schemaVersion": LedgerSchema,
     "totalBypassLandings": report.total,
@@ -410,7 +515,14 @@ func reportJson*(report: LedgerReport): JsonNode {.raises: [].} =
     "directPushes": report.directPushes,
     "elevationWindowCheck": (if report.windowCheckable: "PERFORMED"
                              else: "UNKNOWN"),
-    "elevationWindowMatches": report.windowMatches
+    "elevationWindowMatches": report.windowMatches,
+    "freshness": $report.freshness,
+    "freshnessCheck": (if report.freshness == freshUnknown: "UNKNOWN"
+                       else: "PERFORMED"),
+    "freshnessAgeDays": report.newestAgeDays,
+    "freshnessMaxAgeDays": report.maxAgeDays,
+    "freshnessJudgedAtEpoch": report.judgedAtEpoch,
+    "finding": isFinding(report)
   }
 
 func renderReport*(report: LedgerReport): string {.raises: [].} =
@@ -447,6 +559,27 @@ func renderReport*(report: LedgerReport): string {.raises: [].} =
     for m in report.windowMatches:
       result.add("    - " & scalar(m, "id") & " " & scalar(m, "pushed_at") &
                  " [" & scalar(m, "window") & "]\n")
+  case report.freshness
+  of freshUnknown:
+    result.add("  freshness: UNKNOWN (no --max-age-days supplied — unperformed," &
+               " NOT fresh; without it a rotted ledger clears its own" &
+               " contents)\n")
+  of freshFresh:
+    result.add("  freshness: FRESH (age=" & $report.newestAgeDays &
+               "d, limit=" & $report.maxAgeDays & "d)\n")
+  of freshStale:
+    result.add("  freshness: STALE (age=" & $report.newestAgeDays &
+               "d, limit=" & $report.maxAgeDays & "d) — FINDING: landings" &
+               " newer than the ledger's newest row are unrecorded\n")
+  of freshFuture:
+    # No day count is printed: the exact skew can be seconds, and rounding it
+    # to whole days would state a measurement the tool did not make. The two
+    # timestamps are both shown so the reader can see the gap directly.
+    result.add("  freshness: FUTURE (newest pushed_at " &
+               report.newestPushedAt & " is ahead of the judgment clock " &
+               $report.judgedAtEpoch & ") — FINDING: the clock or the record" &
+               " is wrong, so NEITHER freshness NOR staleness can be" &
+               " attested\n")
 
 # ── I/O boundary (the only effectful procs) ─────────────────────────────────
 
@@ -482,7 +615,46 @@ proc fail(msg: string)
 proc usage() {.axiomEffect: IoEffect, noreturn, raises: [CatchableError].} =
   fail("usage: merge --raw <api.json> --ledger <ledger.jsonl> [--out <path>]" &
        " | assert --ledger <ledger.jsonl> [--first-parent <shas.txt>]" &
-       " [--windows <windows.json>] [--json]")
+       " [--windows <windows.json>] [--max-age-days <N>] [--now <iso8601>]" &
+       " [--json]")
+
+proc parseMaxAgeDays(text: string): int64
+    {.raises: [CatchableError].} =
+  ## `--max-age-days` must be a POSITIVE integer. Zero or negative is a
+  ## configuration error rather than a very strict limit: `0` would report
+  ## STALE for a ledger written seconds ago, and a negative limit can never
+  ## be satisfied by any real clock — both are almost certainly a mistake,
+  ## and a limit nobody can meet silently turns the check into a red light
+  ## that gets ignored.
+  try:
+    result = parseBiggestInt(text).int64
+  except ValueError:
+    raise newException(ValueError,
+                       "--max-age-days is not an integer: " & text)
+  if result <= 0:
+    raise newException(ValueError,
+                       "--max-age-days must be positive: " & text)
+
+proc parseNow(text: string): int64
+    {.raises: [CatchableError].} =
+  ## `--now` accepts exactly the shape the ledger records
+  ## (`YYYY-MM-DDTHH:MM:SS±HH:MM`) so the test clock and the judged
+  ## timestamps go through ONE parser — a second, more permissive parser
+  ## here would let the two disagree about what an instant is.
+  let parsed = pushedEpoch(text)
+  if parsed.isNone:
+    raise newException(ValueError,
+                       "--now is not YYYY-MM-DDTHH:MM:SS±HH:MM: " & text)
+  parsed.get()
+
+proc wallClockEpoch(): int64
+    {.axiomEffect: IoEffect, raises: [CatchableError].} =
+  ## The ONLY reading of the wall clock in this tool. Isolated here so every
+  ## judgment above receives `now` as a value and stays `func` +
+  ## {.raises: [].} — which is what makes the freshness tests deterministic
+  ## instead of racing the host clock.
+  getTime().toUnix
+
 
 proc runMerge(args: seq[string])
     {.axiomEffect: IoEffect, raises: [CatchableError].} =
@@ -528,14 +700,21 @@ proc runMerge(args: seq[string])
 
 proc runAssert(args: seq[string])
     {.axiomEffect: IoEffect, raises: [CatchableError].} =
-  var ledgerPath, fpPath, windowsPath = ""
+  var ledgerPath, fpPath, windowsPath, nowText = ""
+  var maxAgeText = ""
   var asJson = false
   var i = 0
   while i < args.len:
+    if i + 1 >= args.len and args[i] in ["--ledger", "--first-parent",
+                                         "--windows", "--max-age-days",
+                                         "--now"]:
+      fail(args[i] & " requires a value")
     case args[i]
     of "--ledger": ledgerPath = args[i + 1]; i += 2
     of "--first-parent": fpPath = args[i + 1]; i += 2
     of "--windows": windowsPath = args[i + 1]; i += 2
+    of "--max-age-days": maxAgeText = args[i + 1]; i += 2
+    of "--now": nowText = args[i + 1]; i += 2
     of "--json": asJson = true; i += 1
     else: usage()
   if ledgerPath.len == 0:
@@ -564,12 +743,31 @@ proc runAssert(args: seq[string])
     windows = parsedWindows.windows
     windowsSupplied = true
 
-  let report = judge(parsed.rows, firstParent, fpSupplied, windows, windowsSupplied)
+  var maxAgeDays = 0'i64
+  var maxAgeSupplied = false
+  if maxAgeText.len > 0:
+    try:
+      maxAgeDays = parseMaxAgeDays(maxAgeText)
+    except ValueError as e:
+      fail(e.msg)
+    maxAgeSupplied = true
+
+  var nowEpoch = 0'i64
+  if nowText.len > 0:
+    try:
+      nowEpoch = parseNow(nowText)
+    except ValueError as e:
+      fail(e.msg)
+  else:
+    nowEpoch = wallClockEpoch()
+
+  let report = judge(parsed.rows, firstParent, fpSupplied, windows,
+                     windowsSupplied, nowEpoch, maxAgeDays, maxAgeSupplied)
   if asJson:
     stdout.write($reportJson(report) & "\n")
   else:
     stdout.write(renderReport(report))
-  if report.directPushes.len > 0 or report.windowMatches.len > 0:
+  if isFinding(report):
     quit(1)
 
 proc main() {.axiomEffect: IoEffect, raises: [].} =
