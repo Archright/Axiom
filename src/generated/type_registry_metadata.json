@@ -4515,6 +4515,20 @@
       "ignorable": false,
       "leanType": "String",
       "module": "src/cli/cert_cli.nim",
+      "name": "theoremBindingFailure",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/cli/cert_cli.nim",
       "name": "validateAttestArgs",
       "negativeConstraints": [
         "result >= 0 directly is invalid — use (>= (str.len result) 0)"
@@ -126858,6 +126872,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "canonicalKaaReceiptTheoremIdentity",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "KernelVerdict",
       "module": "src/verification/kernel_reexecution.nim",
       "name": "checkIRWithLeanWorker",
@@ -126882,6 +126910,49 @@
       "returnType": "LeanCheckerVerdict",
       "smtSort": "Int",
       "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "claimFieldObj",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "claimFieldStr",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "Result[string, string]",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "claimedTheoremIdentity",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Result is not numeric",
+        "Use 'result.isOk or result.isErr' instead"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "Result[string, string]",
+      "smtSort": "Int",
+      "typeCategory": "result"
     },
     {
       "hasAxiomHint": false,
@@ -127472,6 +127543,20 @@
       "returnType": "seq[string]",
       "smtSort": "(Seq string)",
       "typeCategory": "seq"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "String",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "theoremIdentityBindingError",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
     },
     {
       "hasAxiomHint": false,

@@ -23,6 +23,7 @@ import verification/evidence_bundle/bundle_schema
 import verification/evidence_bundle/bundle_toolchain
 import verification/evidence_bundle/bundle_verify
 import verification/evidence_bundle/strict_json
+import verification/kernel_reexecution
 
 const
   TestAttestationSchema = "axiom.evidence-bundle.attestation.v1"
@@ -97,6 +98,9 @@ proc buildFixture(): Fixture =
   var kaa = newJObject()
   kaa["observedAxiomSet"] = newJArray()
   kaa["receiptArtifactIdentity"] = %leanSourceHash
+  # `canonicalizeKaa` always projects `receiptTheoremIdentity`; a fixture without
+  # it is a malformed projection, and the verifier now rejects exactly that.
+  kaa["receiptTheoremIdentity"] = %"demo_f"
   kaa["schema"] = %"axiom.kaa.v1"
   let canonicalKaa = canonicalJsonString(kaa)
   let kaaDigest = sha256Hex(canonicalKaa)
@@ -557,3 +561,46 @@ suite "evidence bundle v2":
       m["certs"][0]["evidenceId"] = doc["evidenceId"]
       writeCert(dir, m, 0, doc)
       reseal(dir, m))
+
+    # ── theorem identity (DEBT#572) ────────────────────────────────────────
+    # The declaration the kernel printed axioms FOR is the axis a decoy source
+    # attacks. `CertKeys` admits no flat `theoremName` and no `observation`, so
+    # a bundle certificate's ONLY claim carrier is `canonicalKaa.
+    # receiptTheoremIdentity`; the previous comparison read the flat field,
+    # which is always "" here, and therefore never ran.
+    proc mutateKaaTheorem(dir: string; claimed: string) =
+      let m = manifestOf(dir)
+      var doc = readCert(dir, m, 0)
+      var kaa = parseStrictJson(doc["canonicalKaa"].getStr()).get
+      kaa["receiptTheoremIdentity"] = %claimed
+      let canonicalKaa = canonicalJsonString(kaa)
+      doc["canonicalKaa"] = %canonicalKaa
+      doc["kaaDigest"] = %sha256Hex(canonicalKaa)
+      doc["evidenceId"] = %legacyEvidenceId(doc["obligationId"].getStr(),
+        doc["propositionHash"].getStr(), doc["leanSourceHash"].getStr(),
+        doc["kaaDigest"].getStr(), doc["toolchainFingerprint"].getStr(),
+        doc["executionContractDigest"].getStr())
+      m["certs"][0]["evidenceId"] = doc["evidenceId"]
+      writeCert(dir, m, 0, doc)
+      reseal(dir, m)
+
+    # An absent claim is a malformed projection, not "nothing to check".
+    expectFail(f, "t_kaa_theorem_absent", "certEvidence", proc(dir: string) =
+      mutateKaaTheorem(dir, ""))
+
+    # The measured 8.2 forgery: every recorded field stays self-consistent and
+    # the claim is simply a theorem the embedded source never states, so only a
+    # fresh run can tell the difference.
+    expectKernelFail(f, "t_kernel_theorem", proc(dir: string) =
+      mutateKaaTheorem(dir, "inc3_correct"))
+
+    # The resolver itself, without Lean or a bundle: carriers must agree, and
+    # absence is an error rather than a skipped comparison.
+    check claimedTheoremIdentity(%*{"theoremName": "decoy_true"}).get == "decoy_true"
+    check claimedTheoremIdentity(%*{"theoremName": "inc3_correct",
+      "observation": {"lean": {"theoremName": "decoy_true"}}}).isErr
+    check claimedTheoremIdentity(%*{}).isErr
+    check theoremIdentityBindingError("inc3_correct", "decoy_true").len > 0
+    check theoremIdentityBindingError("decoy_true", "decoy_true").len == 0
+    check theoremIdentityBindingError("", "decoy_true").len > 0
+    check theoremIdentityBindingError("decoy_true", "").len > 0
