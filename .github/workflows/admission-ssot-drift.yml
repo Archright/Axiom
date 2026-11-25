@@ -6,7 +6,8 @@
 #
 # 이 워크플로는 **required check가 아니다** — required 집합은 그대로 3개
 # (admission-check / bsec-integrity / debt-registry-gate). 병합을 막지 않으며
-# GitHub 상태를 변경하지 않는다(GET 전용 관측 — monitor purity 게이트 대상).
+# GitHub 상태를 변경하지 않는다(GET 전용 관측 — monitor purity 게이트 대상;
+# leg 4도 rule-suites·commits/<sha>/pulls·check-runs의 GET만 한다).
 # 드리프트가 있으면 이 job 자체가 RED로 loudly 실패한다(관측 신호).
 #
 # 3변 대조(ADR-0035 §3 — 같은 값 3곳 복사는 SSOT가 아님):
@@ -26,17 +27,42 @@
 #                               mergeCommit) check-runs 생산 App 확인 —
 #                               checks:read 필요(작업 GITHUB_TOKEN으로 가능).
 #
+# leg 4 (bypass 관측 — 부가 관측, ADR-0035 §3의 3변 대조 **밖**):
+#   rulesets/rule-suites에서 result=bypass 착지를 찾아, 그 착지 PR head의
+#   admission-check(App 5795152) 결론으로 귀속한다. bypass 착지에 SUCCESS
+#   check가 붙어 있으면 DRIFT(= 게이트가 통과시킨 착지를 ruleset이 막은 모순).
+#   모니터에서는 --observe-bypasses로만 켜지며 기본은 OFF다.
+#   [credential 실측 2026-11-25, run 45562165170 — 이 워크플로 자신의 run]
+#   job 자신의 GITHUB_TOKEN으로 `GET /repos/{r}/rulesets/rule-suites`는
+#   **HTTP 403 "Resource not accessible by integration"**이다. GitHub 문서상
+#   이 엔드포인트의 fine-grained 요구 스코프는 "Administration" repository
+#   permissions (read)인데, 워크플로 `permissions:` 키의 허용 스코프 집합에
+#   administration은 존재하지 않는다(docs.github.com/en/rest/repos/rule-suites;
+#   docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+#   의 permissions 절 — administration은 그 목록에 없다, grep 0건) —
+#   즉 job token에는 **부여 자체가 불가능**하다. 따라서 leg 4는
+#   **diagnostic-app tier에서만** 켠다.
+#   모니터에는 leg 4용 degraded 플래그가 없다(--allow-unavailable-ruleset은
+#   leg 2 전용) — rule-suites 읽기 실패는 하드 FAIL(exit 1)이다. 즉 tier 2에
+#   플래그를 넘기면 매 실행이 FALSE RED가 되므로 넘기지 않는다. tier 2에서
+#   leg 4는 모니터가 스스로 출력하는
+#   "bypass observation: NOT PERFORMED (no --observe-bypasses)"로 정직하게
+#   표시된다 — false PASS도, hard failure도 아니다(조용한 생략 금지).
+#
 # credential 2단 계약 (fail-closed, 명시적):
 #   tier 1 (diagnostic-app): 진단 App 시크릿이 등록된 경우 — job 안에서
 #     installation token을 민팅(diagnostic-authority.yml과 동일 패턴)하고
-#     rulesets API를 읽는다 → 3개 다 판정.
+#     rulesets API를 읽는다 → 4개 다 판정(leg 4 포함: 민팅 시 부여하는
+#     permission-administration:read가 rule-suites를, contents:read가
+#     commits/<sha>/pulls를, checks:read가 PR-head check-runs를 각각 덮는다).
 #   tier 2 (job-token): 진단 App이 아직 등록되지 않은 경우(현행 — 진단 App
 #     등록은 인간 게이트, docs/spec/diagnostic_execution_delegation.md §2;
 #     GitHub API로 App을 만들 수 없다) — job 자신의 GITHUB_TOKEN을 쓴다.
-#     실측: 이 토큰은 repository ruleset을 읽을 수 있다 → 3개 다 판정된다.
+#     실측: 이 토큰은 repository ruleset을 읽을 수 있다 → leg 1·2·3 판정.
 #     ruleset 읽기가 실패하면 모니터가 그 leg을 NOT PERFORMED로 명시 보고한다
-#     (degraded mode — 조용한 생략 금지). 부분 판정을 전체 GREEN으로
-#     위장하지 않는다.
+#     (degraded mode — 조용한 생략 금지). leg 4는 위 실측대로 이 tier에서
+#     성립하지 않으므로 켜지 않고 NOT PERFORMED로 남긴다. 부분 판정을
+#     전체 GREEN으로 위장하지 않는다.
 #
 # 권한 상한: contents:read / actions:read / checks:read / pull-requests:read —
 # 최소 상한(pull-requests:read는 관찰 SHA 선택기의 gh pr list --state merged
@@ -98,6 +124,7 @@ jobs:
               echo "- credential used: the job's own GITHUB_TOKEN (contents/actions/checks: read)"
               echo "- leg 2 (policy <-> ruleset): PERFORMED with this token (measured 2026-10-21 — ruleset drift 4/4 PASS); on read failure it is reported as NOT PERFORMED by the monitor, never silently skipped"
               echo "- legs 1 (policy <-> constants) and 3 (policy <-> live producer) are performed"
+              echo "- leg 4 (bypass observation): NOT PERFORMED on this tier — rule-suites returns HTTP 403 \"Resource not accessible by integration\" for the job GITHUB_TOKEN (measured 2026-11-25, run 45562165170), and the endpoint's required scope is Administration (read), which is not among the workflow permissions: keys grantable to GITHUB_TOKEN. The flag is therefore passed only on the diagnostic-app tier; the monitor prints its own NOT PERFORMED line here."
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 
@@ -250,7 +277,14 @@ jobs:
           AXIOM_HERMETIC_BUILDING=1 nim c --hints:off -o:bin/ssot_drift_monitor tools/merge_ruleset_drift_monitor.nim
 
           ARGS="--policy-file config/policy/merge_admission.json --merge-cli-source src/cli/merge_cli.nim --repo $REPO --observe-sha $SHA"
-          if [ "${{ steps.tier.outputs.tier }}" != "diagnostic-app" ]; then
+          if [ "${{ steps.tier.outputs.tier }}" = "diagnostic-app" ]; then
+            # leg 4 (bypass 관측)는 **이 tier에서만** 켠다 — job token은
+            # rule-suites에서 403 "Resource not accessible by integration"이고
+            # (실측 2026-11-25, run 45562165170), 모니터에 leg 4 degraded
+            # 플래그가 없어 읽기 실패가 하드 FAIL(exit 1)이기 때문이다.
+            # 켜지 않으면 모니터가 스스로 NOT PERFORMED를 출력한다(헤더 참조).
+            ARGS="$ARGS --observe-bypasses"
+          else
             # tier 2: Administration:read credential가 없다 — ruleset leg은
             # 통째로 불가하므로, 실패 시 명시적 DEGRADED MODE로 내려간다
             # (monitor가 NOT PERFORMED로 보고한다 — 부분 판정을 전체 GREEN으로
