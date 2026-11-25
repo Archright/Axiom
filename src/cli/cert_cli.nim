@@ -75,6 +75,42 @@ proc showCerts*(allowMissing: bool = false): int  {.axiomEffect: IOEffect, tags:
     echo "[cert] " & $count & " certificate(s) found."
   return 0
 
+proc theoremBindingFailure(node: JsonNode; fresh: LeanObservation): string {.
+    raises: [CatchableError].} =
+  ## "" = the fresh run reproduces the claim this document shape makes; the
+  ## fail-closed reason otherwise. Extracted from `verifyKernelReexecution` so
+  ## that proc stays within the surface budget.
+  ##
+  ## A passed re-execution is necessary but NOT sufficient: it proves the
+  ## embedded source compiles and its axioms are allowlisted, not that the
+  ## source states the theorem the certificate claims. The claim is resolved
+  ## from the carrier THIS shape uses - the canonical KAA's
+  ## `receiptTheoremIdentity` for the KAA-shaped certificates the vault holds,
+  ## the observation for re-execution certificates - so neither shape goes
+  ## unbound. A document with no carrier at all keeps the legacy behaviour: no
+  ## new requirement is invented for certificates that never made the claim.
+  result = ""
+  let recordedNode = node{"observation"}
+  let observationShaped = recordedNode != nil and recordedNode.kind == JObject
+  # The shape predicate is "carries a KAA projection", not "the field is
+  # non-empty": a legacy `axiom.certificate.v3` certificate stores a bare digest
+  # there and never made a theorem claim, so no requirement is invented for it.
+  # A projection that parses but omits `receiptTheoremIdentity` still denies
+  # through `claimedTheoremIdentity` below.
+  let kaaShaped = kaaProjectionPresent(node)
+  if kaaShaped or observationShaped:
+    let claim = claimedTheoremIdentity(node)
+    if claim.isErr():
+      result = claim.error
+    else:
+      result = theoremIdentityBindingError(claim.get, fresh.theoremName)
+      if result.len == 0 and observationShaped:
+        let recorded = parseKernelObservation(recordedNode)
+        if recorded.isErr():
+          result = "recorded " & recorded.error
+        else:
+          result = freshObservationBindingError(recorded.get, fresh)
+
 proc verifyKernelReexecution(node: JsonNode): int {.
   axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## --kernel body (extracted so verifyCert stays within the surface budget):
@@ -110,22 +146,12 @@ proc verifyKernelReexecution(node: JsonNode): int {.
     return 1
   let verdict = composeKernelVerdict(leanVerdict, z3Verdict, leanPresent, z3Present)
   if verdict == krPassed:
-    # A passed re-execution is necessary but NOT sufficient: it proves the
-    # embedded source compiles and its axioms are allowlisted, not that the
-    # source states the theorem the certificate claims. When the certificate
-    # records an observation, the fresh run must reproduce it field by field.
-    # Absent a recorded observation the legacy shape is unchanged (no new
-    # requirement is invented for documents that never made the claim).
-    let recordedNode = node{"observation"}
-    if leanPresent and recordedNode != nil and recordedNode.kind == JObject:
-      let recorded = parseKernelObservation(recordedNode)
-      if recorded.isErr():
-        echo "[cert] Verify: KERNEL_REEXECUTION_FAILED - recorded " & recorded.error
-        return 1
-      let mismatch = freshObservationBindingError(recorded.get, fresh)
-      if mismatch.len > 0:
-        echo "[cert] Verify: KERNEL_REEXECUTION_FAILED - " & mismatch
-        return 1
+    # The fresh run must reproduce the claim the document makes; the shape
+    # dispatch and every fail-closed reason live in `theoremBindingFailure`.
+    let unbound = if leanPresent: theoremBindingFailure(node, fresh) else: ""
+    if unbound.len > 0:
+      echo "[cert] Verify: KERNEL_REEXECUTION_FAILED - " & unbound
+      return 1
     echo "[cert] Verify: PASS (kernel re-execution — lean=" &
       (if leanPresent: "re-executed, observation bound" else: "absent") &
       ", z3=" & (if z3Present: "unsat" else: "absent") &

@@ -615,20 +615,43 @@ discarded. `reexecuteLean` returned only
 returned only `tuple[verdict, axes]`. Neither caller could compare a run against
 a claim, so a consistently forged `theoremName` survived.
 
-The comparison now exists and is single-sourced:
-`freshObservationBindingError` (`src/verification/kernel_reexecution.nim`) takes
-a recorded `KernelObservation` and a fresh `LeanObservation` and returns the
-first fail-closed mismatch across, in order: the `observed` flag,
-`theoremName`, the normalized axiom set, `leanSourceDigest`, `outputDigest` and
-`toolchainIdentity`. An unobserved fresh run is rejected before any comparison,
-because "could not verify" is never "verified".
+The comparison now exists and is single-sourced. It is split along the two
+questions a verifier has to answer separately:
 
-Two consumers, one predicate:
+**1. What does this document claim?** `claimedTheoremIdentity`
+(`src/verification/evidence_bundle/bundle_schema.nim`) resolves the claim from
+the carrier the document's *shape* uses — `canonicalKaa.receiptTheoremIdentity`
+(projected by `canonicalizeKaa` onto every KAA), `observation.lean.theoremName`,
+or a legacy flat `theoremName`. Carriers present at once must agree; a document
+with no carrier at all is an error, never "nothing to check". That distinction
+matters: `CertKeys` admits neither `observation` nor `theoremName` into an
+evidence-bundle certificate, so the KAA projection is the **only** carrier a
+bundle certificate has.
+
+**2. Does the fresh run reproduce it?** `theoremIdentityBindingError`
+(`src/verification/kernel_reexecution.nim`) is the single theorem-axis
+predicate. `freshObservationBindingError` delegates its theorem axis to it and
+keeps the remaining axes: the `observed` flag, the normalized axiom set,
+`leanSourceDigest`, `outputDigest` and `toolchainIdentity`. An unobserved fresh
+run is rejected before any comparison, because "could not verify" is never
+"verified".
+
+Three consumers, two predicates:
 
 | Consumer | Behaviour |
 |---|---|
-| `ax cert verify --kernel` (`src/cli/cert_cli.nim`) | On the PASS branch, a certificate that records an `observation` must have it reproduced by the fresh run. Certificates with no `observation` block (legacy shape) are unchanged. |
-| Evidence-bundle kernel leg (`src/verification/evidence_bundle/bundle_verify.nim`) | The fresh run's theorem must equal the certificate's `theoremName`, in addition to the existing `axiomsUsed` comparison. `src/verification/evidence_bundle/lean_replay.nim` now returns `theoremName`, derived from the source **before** execution so it cannot be echoed back from the certificate. |
+| `ax cert verify --kernel` (`src/cli/cert_cli.nim`) | On the PASS branch, the claim is resolved by `claimedTheoremIdentity` and bound by `theoremIdentityBindingError`; a certificate that additionally records an `observation` is bound field by field by `freshObservationBindingError`. A document with no carrier (legacy shape) is unchanged. |
+| Evidence-bundle kernel leg (`src/verification/evidence_bundle/bundle_verify.nim`) | The claim is resolved from the KAA and bound by `theoremIdentityBindingError`, in addition to the existing `axiomsUsed` comparison. `src/verification/evidence_bundle/lean_replay.nim` returns `theoremName` derived from the source **before** execution, so the second operand is evidence rather than an assertion. |
+| Evidence-bundle structural leg (`validateCertDoc`) | A `canonicalKaa` without `receiptTheoremIdentity`, or carriers that disagree, is a `certEvidence` failure. This runs without any toolchain, so an unresolvable claim is rejected even where Lean is unavailable. |
+
+Correction to the earlier text in this section: it described the bundle consumer
+as comparing the fresh theorem against "the certificate's `theoremName`". No
+bundle certificate carries that field, so on every KAA-shaped document the guard
+`recordedTheorem.len > 0` was false and the comparison silently did not run —
+the axiom set was compared, the theorem identity was not. The direction was
+right and the wiring was not; `ax cert verify --kernel` had the same gap for the
+same reason (the vault's certificates are KAA-shaped and carry no
+`observation`). Both are now bound through the claim resolver above.
 
 The observed theorem is derived from the embedded source, never read from the
 record, so the second operand is evidence rather than assertion. This is why the
@@ -636,11 +659,13 @@ fix does not need a new gate: it repairs the comparison the paths were already
 positioned to make.
 
 Negative control (issue #253 first completion criterion, now satisfied):
-`tests/verification/test_kernel_reexecution.nim` P13 builds the 8.2 forgery and
-asserts it is rejected, that an honest record over the same source is accepted
-(the check discriminates rather than rejecting everything), that an unobserved
-run is rejected, and repeats the forged/honest pair against the real Lean kernel
-when the toolchain resolves. Recorded run: 128 checks, 0 skipped.
+`tests/cli/test_evidence_bundle_v2.nim` rejects an absent KAA claim at the
+`certEvidence` leg, rejects a claim of `inc3_correct` over a source declaring
+`demo_f` at the kernel leg, and exercises `claimedTheoremIdentity` /
+`theoremIdentityBindingError` directly without Lean.
+`tests/verification/test_kernel_reexecution.nim` P13 keeps the
+observation-shaped forgery pair and repeats it against the real Lean kernel when
+the toolchain resolves.
 
 Scope limits, stated because they are unchanged by this fix:
 

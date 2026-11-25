@@ -672,6 +672,140 @@ func isPassingKernelObservation*(o: KernelObservation;
     o.z3.observed and o.z3.verdict == krPassed and
     o.verificationMode == "lean+z3"
 
+# ─── Theorem claim resolution — the input to the binding predicate ───────────
+# The claim a certificate makes must be read from the carrier its shape
+# actually uses, and BOTH kernel paths must resolve it identically. The
+# resolver lives next to `theoremIdentityBindingError` because this module is
+# already inside the executable trust surface
+# (`config/trusted_checker_closure.json`) and both legs already import it.
+# Placing it in a schema module instead pulled `bundle_schema` and its
+# `strict_json` dependency INTO that closure — two new TCB members for a
+# predicate whose soundness does not depend on that placement. Resolution is
+# not schema validation.
+#
+# Parsing note: `parseJson` (std) is lenient about duplicate keys where
+# `strict_json` is not. That is not a soundness gap here — the resolved claim
+# is only ever compared against a declaration derived from a REAL kernel run,
+# so an ambiguous claim cannot survive the comparison. The behaviour is shared
+# by both legs by construction, so neither can read a different claim.
+
+func claimFieldStr(node: JsonNode; key: string): string {.raises: [].} =
+  ## "" unless the field is present AND a string — absence is never a value.
+  if node.isNil or node.kind != JObject: return ""
+  let v = node{key}
+  if v.isNil or v.kind != JString: "" else: v.getStr()
+
+func claimFieldObj(node: JsonNode; key: string): JsonNode {.raises: [].} =
+  if node.isNil or node.kind != JObject: return nil
+  let v = node{key}
+  if v.isNil or v.kind != JObject: nil else: v
+
+func parseKaaProjection(canonicalKaa: string): JsonNode {.raises: [].} =
+  ## The KAA projection a document carries, or nil when the field does not hold
+  ## one. `canonicalKaa` is a JSON *string* on every shape, so the projection is
+  ## the parsed value, never the node itself: a legacy certificate stores a bare
+  ## digest there and parses to nothing.
+  if canonicalKaa.len == 0: return nil
+  var node: JsonNode
+  try:
+    ## [SEE: docs/spec/nim_effect_system_quirks.md §cast_noSideEffect]
+    ## parseJson's only mutation is its private buffer; the parsed tree is
+    ## fresh and nothing outside this proc is touched.
+    {.cast(noSideEffect).}:
+      node = parseJson(canonicalKaa)
+  except CatchableError:
+    return nil
+  if node.isNil or node.kind != JObject: return nil
+  node
+
+func canonicalKaaReceiptTheoremIdentity*(canonicalKaa: string): string {.raises: [].} =
+  ## `theoremIdentity` is carried inside the canonical KAA projection as
+  ## `receiptTheoremIdentity` — the declaration the kernel actually accepted.
+  ## Every projection `canonicalizeKaa` emits carries it. A malformed
+  ## projection yields "" (fail-closed at the caller: an absent claim is not
+  ## "nothing to check", it is a claim the verifier cannot bind a run to).
+  let node = parseKaaProjection(canonicalKaa)
+  if node.isNil: return ""
+  claimFieldStr(node, "receiptTheoremIdentity")
+
+func kaaProjectionPresent*(doc: JsonNode): bool {.raises: [].} =
+  ## Whether the document carries a KAA projection at all — the precondition
+  ## that separates "this shape makes a theorem claim" from "this document never
+  ## made one". A certificate whose `canonicalKaa` is a bare digest (the
+  ## `axiom.certificate.v3` vault shape) carries no projection, so no claim can
+  ## be read and none is invented for it: the binding is not applied. A
+  ## projection that parses but omits `receiptTheoremIdentity` is a malformed
+  ## projection, NOT an absent claim, and stays fail-closed at
+  ## `claimedTheoremIdentity` — that distinction is the whole point, since
+  ## reading the malformed case as "nothing to check" is how the KAA-shaped
+  ## certificates went unbound (DEBT#572).
+  not parseKaaProjection(claimFieldStr(doc, "canonicalKaa")).isNil
+
+func claimedTheoremIdentity*(doc: JsonNode): Result[string, string] {.raises: [],
+    axiomDecision(id = "DECISION-VS188-09",
+      reason = "A cold re-execution must bind the FRESH observation to the recorded one field by field; deriving a verdict from the embedded artifact alone cannot tell a forged claim from an honest one",
+      adr = "docs/spec/cert_lifecycle_contracts.md",
+      introduced = "v34-vs188").} =
+  ## The theorem a certificate CLAIMS, resolved from the carrier its shape uses:
+  ## the canonical KAA's `receiptTheoremIdentity` (every bundle certificate is
+  ## KAA-shaped — `validateCertDoc` refuses an empty `canonicalKaa`), the
+  ## observation's `lean.theoremName` (re-execution certificates), or the flat
+  ## `theoremName` a legacy document carries. Carriers present at the same time
+  ## must agree, so a consistent forgery cannot hide behind one of them.
+  ##
+  ## An absent claim is an err, never "". Reading absence as "nothing to check"
+  ## is exactly how a forged `theoremName` went unread on the KAA-shaped
+  ## certificates (DEBT#572): the verifier skipped the comparison instead of
+  ## rejecting the document.
+  if doc.isNil or doc.kind != JObject:
+    return err("certificate is not a JSON object")
+  var carriers: seq[tuple[name, value: string]] = @[]
+  let kaaClaim = canonicalKaaReceiptTheoremIdentity(claimFieldStr(doc, "canonicalKaa"))
+  if kaaClaim.len > 0:
+    carriers.add(("canonicalKaa.receiptTheoremIdentity", kaaClaim))
+  let observation = claimFieldObj(doc, "observation")
+  if observation != nil:
+    let observed = claimFieldStr(claimFieldObj(observation, "lean"), "theoremName")
+    if observed.len > 0:
+      carriers.add(("observation.lean.theoremName", observed))
+  let flat = claimFieldStr(doc, "theoremName")
+  if flat.len > 0:
+    carriers.add(("theoremName", flat))
+  if carriers.len == 0:
+    return err("certificate claims no theorem identity (no canonicalKaa." &
+      "receiptTheoremIdentity, observation.lean.theoremName or theoremName)")
+  for i in 1 ..< carriers.len:
+    if carriers[i].value != carriers[0].value:
+      return err("certificate carriers disagree on the claimed theorem: " &
+        carriers[0].name & "='" & carriers[0].value & "' vs " &
+        carriers[i].name & "='" & carriers[i].value & "'")
+  ok(carriers[0].value)
+
+func theoremIdentityBindingError*(claimed, observed: string): string {.raises: [],
+    axiomDecision(id = "DECISION-VS188-09",
+      reason = "A cold re-execution must bind the FRESH observation to the recorded one field by field; deriving a verdict from the embedded artifact alone cannot tell a forged claim from an honest one",
+      adr = "docs/spec/cert_lifecycle_contracts.md",
+      introduced = "v34-vs188").} =
+  ## "" = the run observed exactly the declaration the certificate claims;
+  ## otherwise the fail-closed rejection reason.
+  ##
+  ## The single theorem-identity predicate: both kernel paths route their claim
+  ## through it (`ax cert verify --kernel` via `freshObservationBindingError`,
+  ## the evidence-bundle kernel leg directly), so a certificate cannot be bound
+  ## on one path and unbound on the other. `claimed` is resolved by
+  ## `claimedTheoremIdentity`; `observed` is derived from the embedded source
+  ## BEFORE execution, so it is evidence rather than an echoed assertion.
+  if claimed.len == 0:
+    return "theorem identity: the certificate claims no theorem, so the run " &
+      "cannot be bound to it (fail-closed)"
+  if observed.len == 0:
+    return "theorem identity: the run observed no declaration (fail-closed)"
+  if observed != claimed:
+    return "theorem identity: observed theorem '" & observed &
+      "' is not the claimed theorem '" & claimed &
+      "' - the embedded source does not state the claimed theorem (fail-closed)"
+  ""
+
 func freshObservationBindingError*(recorded: KernelObservation;
                                    fresh: LeanObservation): string {.raises: [],
     axiomDecision(id = "DECISION-VS188-09",
@@ -692,10 +826,10 @@ func freshObservationBindingError*(recorded: KernelObservation;
   ## the exact bytes and toolchain.
   if not fresh.observed:
     return "fresh observation: the re-executed run produced no #print axioms result (fail-closed)"
-  if recorded.lean.theoremName != fresh.theoremName:
-    return "fresh observation: observed theorem '" & fresh.theoremName &
-      "' is not the recorded theoremName '" & recorded.lean.theoremName &
-      "' - the embedded source does not state the claimed theorem (fail-closed)"
+  let theoremAxis = theoremIdentityBindingError(recorded.lean.theoremName,
+    fresh.theoremName)
+  if theoremAxis.len > 0:
+    return theoremAxis
   if normalizeAxiomSet(recorded.lean.axiomSet) != normalizeAxiomSet(fresh.axiomSet):
     return "fresh observation: observed axiom set [" & fresh.axiomSet.join(", ") &
       "] is not the recorded set [" & recorded.lean.axiomSet.join(", ") & "] (fail-closed)"

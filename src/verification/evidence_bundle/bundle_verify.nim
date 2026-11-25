@@ -536,6 +536,19 @@ func validateCertDoc(manifestCert, doc: JsonNode; problems: var seq[string]) {.r
     if manifestAxioms.isErr or manifestAxioms.get != certAxioms.get:
       problems.add("certificate " & irHash & ": axiomsUsed disagrees with the manifest")
 
+  # Theorem identity is the axis a decoy source attacks, and it is structural:
+  # the claim must be resolvable AND self-consistent before any run can be bound
+  # to it. Every KAA `canonicalizeKaa` emits carries `receiptTheoremIdentity`,
+  # so an absent one is a malformed projection, not a document that makes no
+  # claim - reading it as "nothing to check" is what left the KAA-shaped
+  # certificates unbound (DEBT#572).
+  let kaaTheorem = canonicalKaaReceiptTheoremIdentity(canonicalKaa)
+  if kaaTheorem.len == 0:
+    problems.add("certificate " & irHash & ": canonicalKaa carries no receiptTheoremIdentity")
+  let claim = claimedTheoremIdentity(doc)
+  if claim.isErr:
+    problems.add("certificate " & irHash & ": " & claim.error)
+
   if strOf(doc, "backend") != strOf(manifestCert, "backend"):
     problems.add("certificate " & irHash & ": backend disagrees with the manifest")
 
@@ -659,12 +672,18 @@ proc verifyKernel(contents: BundleContents;
         failures.add(irHash & ": fresh lean axiom set (" & observed.join(",") &
           ") != recorded set")
       # Theorem identity: the axiom set above can agree while the source proves
-      # a DIFFERENT declaration than the certificate names. A bundle that
-      # records a claim must have it reproduced by the fresh run (DEBT#572).
-      let recordedTheorem = strOf(doc, "theoremName")
-      if recordedTheorem.len > 0 and lean.theoremName != recordedTheorem:
-        failures.add(irHash & ": fresh run observed theorem '" & lean.theoremName &
-          "' but the certificate claims '" & recordedTheorem & "'")
+      # a DIFFERENT declaration than the certificate names. The claim is
+      # resolved from the carrier this document shape uses (`canonicalKaa`
+      # `receiptTheoremIdentity` for every bundle certificate) and bound through
+      # the SAME predicate `ax cert verify --kernel` uses, so the two paths can
+      # never disagree about what a certificate claims (DEBT#572).
+      let claim = claimedTheoremIdentity(doc)
+      if claim.isErr:
+        failures.add(irHash & ": " & claim.error)
+      else:
+        let mismatch = theoremIdentityBindingError(claim.get, lean.theoremName)
+        if mismatch.len > 0:
+          failures.add(irHash & ": " & mismatch)
     let z3 = reexecuteZ3(doc, z3Bin, Z3ReexecTimeoutMs)
     if z3 != krPassed:
       failures.add(irHash & ": z3 " & kernelVerdictReason(z3))

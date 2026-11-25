@@ -648,7 +648,43 @@ const
     "tests/verification/test_kernel_reexecution.nim",
     "data/debt_registry.json",
     "docs/DEBT_REGISTRY.md",
-    "src/generated/debt_constants.nim"]
+    "src/generated/debt_constants.nim",
+    # Amendment A12 rotation companion (2026-11-25; measured from the PR #497
+    # merge_group verdict — ROT_ALLOWLIST, run 45671222200: 10 changed paths,
+    # 9 already allowed, exactly 1 outside). Rotation subject: the SAME
+    # certificate semantic binding as A11, completed for the document shapes
+    # the vault actually holds. A11 left the claim unresolvable — CertKeys
+    # admits neither a flat `theoremName` nor `observation`, so on every
+    # KAA-shaped certificate the guard `recordedTheorem.len > 0` was false and
+    # the comparison A11 introduced never executed. The claim is now resolved
+    # from `canonicalKaa.receiptTheoremIdentity` and bound through one predicate
+    # both kernel legs consume; the resolver lives in the already-pinned
+    # kernel_reexecution module so closure membership did not change
+    # (missing-from-pin=0, pin-only=0) and the pin update was value-only.
+    # `oldAnchorOk` and `newAnchorOk` were both true in that verdict.
+    #
+    # AUTHORIZATION EFFECT — an expansion, stated as one, for the same reason
+    # A9/A10/A11 state it: registering a path here DOES widen the set of paths a
+    # ROTATION candidate delta may carry. A2 (ii) keeps NORMAL-path
+    # classification unchanged — clause (1) runs only on the ROTATION path. The
+    # bound is proven, not asserted, by the tests in tests/cli/test_merge_cli.nim
+    # ("Amendment A12" suite).
+    #
+    # One path, one class: the unit contract of the changed closure members.
+    # tests/cli/test_evidence_bundle_v2.nim carries the negative controls this
+    # rotation would otherwise lack — an absent KAA claim fails the certEvidence
+    # leg deterministically (no toolchain), and a claim of `inc3_correct` over a
+    # source declaring something else fails the kernel leg (the measured 8.2
+    # forgery shape). Without it the fix lands with no in-tree proof that the
+    # KAA-shaped documents are bound at all (same class as the A9/A10/A11 test
+    # companions).
+    # Enumeration only — no globs (A4 rule), and not a directory registration:
+    # a sibling test under tests/cli/ still denies.
+    # Authority: ADR-0025 Amendment A12. Prereg: the A12 section of
+    # docs/adr/0025-gateway-landing-authority.md itself (docs/adr/** is
+    # RotationAdrGlob-allowed; a separate docs/evidence/ prereg file would add a
+    # second unregistered path to the very rotation it registers).
+    "tests/cli/test_evidence_bundle_v2.nim"]
   ## VS-1 회전핀 프리플라이트 (2026-10-20): H2(④) 판정을 리프 모듈
   ## core/policy/rotation_closure_facts로 추출해 착지 predicate와 PR-head
   ## 오라클(tools/ci/rotation_pin_anchor_check.nim)이 **하나의 컴파일 구현**을
