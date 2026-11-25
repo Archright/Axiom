@@ -1169,6 +1169,102 @@ suite "adjudicateRotation — Amendment A11 rotation companion (cert semantic bi
     check anchored.check.newAnchorOk
     check anchored.reasonCode.len == 0
 
+suite "adjudicateRotation — Amendment A12 rotation companion (cert claim resolution)":
+  # The measured delta of PR #497, taken from the merge_group verdict artifact
+  # (run 45671222200): 10 changed paths, 9 already allowed, exactly one --
+  # tests/cli/test_evidence_bundle_v2.nim -- outside, so the merge aborted with
+  # ROT_ALLOWLIST while oldAnchorOk and newAnchorOk were both true. A12
+  # registers that one path and nothing else.
+  #
+  # A11 bound the claim on the flat `theoremName` shape. The vault holds
+  # KAA-shaped certificates, whose claim lives at
+  # canonicalKaa.receiptTheoremIdentity: on those documents the A11 guard
+  # `recordedTheorem.len > 0` was false, so the comparison A11 introduced never
+  # executed. The claim is now resolved from the canonical KAA receipt and bound
+  # through one predicate both kernel legs consume, and the resolver lives in
+  # the already-pinned kernel_reexecution module -- closure membership did not
+  # change, the pin update was value-only.
+  #
+  # pin@B carries the closure members this delta touches (kernel_reexecution,
+  # cert_cli, merge_cli itself). The rest ride A2 companion clauses, which is
+  # the shape A12 authorizes.
+  func a12Pin(): HashSet[string] {.raises: [].} =
+    lineSet("100644 blob a12b1\tsrc/verification/kernel_reexecution.nim",
+            "100644 blob a12b2\tsrc/cli/cert_cli.nim",
+            "100644 blob a12b3\tsrc/cli/merge_cli.nim")
+  func a12PinH(): HashSet[string] {.raises: [].} =
+    lineSet("100644 blob a12h1\tsrc/verification/kernel_reexecution.nim",
+            "100644 blob a12h2\tsrc/cli/cert_cli.nim",
+            "100644 blob a12h3\tsrc/cli/merge_cli.nim")
+
+  let a12Delta = @[
+    "config/trusted_checker_closure.json",
+    "data/architecture_debt.json",
+    "data/debt_registry.json",
+    "docs/DEBT_REGISTRY.md",
+    "docs/spec/cert_lifecycle_contracts.md",
+    "src/cli/cert_cli.nim",
+    "src/generated/type_registry_metadata.json",
+    "src/verification/evidence_bundle/bundle_verify.nim",
+    "src/verification/kernel_reexecution.nim",
+    "tests/cli/test_evidence_bundle_v2.nim"]
+
+  test "PR #497's measured candidate delta (10 paths) → ROTATION (allowlist OK)":
+    let b = a12Pin()
+    let h = a12PinH()
+    let adj = adjudicateRotation(h, b, h, some(b), some(h), a12Delta)
+    check adj.qualification == rqRotation
+    check adj.check.closureChange
+    check adj.check.allowlistOk
+    check adj.check.subjectDeltaZero
+    check adj.check.oldAnchorOk
+    check adj.check.newAnchorOk
+    check adj.reasonCode.len == 0
+
+  test "A12 admits the enumerated path only -- an unregistered sibling under tests/cli/ stays ROT_ALLOWLIST":
+    # A12 (i) is bounded by enumeration. tests/cli/ is not a registered
+    # directory: a second test in it does not ride the registration, even
+    # though it sits next to the registered file.
+    let b = a12Pin()
+    let h = a12PinH()
+    let adj = adjudicateRotation(h, b, h, some(b), some(h),
+      @["src/verification/kernel_reexecution.nim",
+        "tests/cli/test_evidence_bundle_other.nim"])
+    check adj.qualification == rqNone
+    check adj.reasonCode == "ROT_ALLOWLIST"
+    check not adj.check.allowlistOk
+
+  test "A12 is exact-match, not a prefix -- the _extra sibling is still denied":
+    let b = a12Pin()
+    let h = a12PinH()
+    let adj = adjudicateRotation(h, b, h, some(b), some(h),
+      @["src/verification/kernel_reexecution.nim",
+        "tests/cli/test_evidence_bundle_v2_extra.nim"])
+    check adj.qualification == rqNone
+    check adj.reasonCode == "ROT_ALLOWLIST"
+    check not adj.check.allowlistOk
+
+  test "A12 is inert outside ROTATION -- a NORMAL delta gains no approval":
+    let b = a12Pin()
+    let adj = adjudicateRotation(b, b, b, some(b), some(b),
+      @["tests/cli/test_evidence_bundle_v2.nim"])
+    check adj.qualification == rqNormal
+    check not adj.check.closureChange
+    check adj.reasonCode.len == 0
+
+  test "A12 leaves ④ untouched -- a stale pin@H on the same delta is still ROT_NEW_PIN":
+    let b = a12Pin()
+    let h = a12PinH()
+    let stale = adjudicateRotation(h, b, h, some(b), some(b), a12Delta)
+    check stale.check.closureChange
+    check stale.check.allowlistOk         # A12 does not suppress (1) ...
+    check not stale.check.newAnchorOk     # ... and does not authorize (4)
+    check stale.qualification == rqRotation
+    check stale.reasonCode == "ROT_NEW_PIN"
+    let anchored = adjudicateRotation(h, b, h, some(b), some(h), a12Delta)
+    check anchored.check.newAnchorOk
+    check anchored.reasonCode.len == 0
+
 suite "adjudicateRotation — stale old anchor (③ → NOT-ADMIT, single deny point)":
   test "pin@B key present but != derived(B) → NONE (ROT_OLD_PIN)":
     let b = lineSet("100644 blob a1\tci/checker.mk")
