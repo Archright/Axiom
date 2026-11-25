@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Ratchet ledger for the 8 pre-existing divergences between the App trust-surface manifest (config/policy/trust_surface_manifest.json, 18 exact paths, blob-compared out-of-repo by App 5795152) and the in-repo 3-class repository-surface policy (config/repository_surface.json). A manifest path is CONVERGENT only when it resolves to FROZEN; every non-FROZEN resolution is a DIVERGENCE where the in-repo gates PASS while the App FAILs. This file registers the divergences that already exist so that tools/ci/trust_surface_divergence.nim can distinguish them from newly introduced ones. It is a DETECTOR ledger, not an admission gate: it does not prevent the App preflight deadlock, it makes future divergence visible before a PR opens. Entries are exact paths only (no wildcards), and an entry that no longer corresponds to a real divergence is itself a failure, so the ledger ratchets downward as the divergences are reconciled.",
+  "paths": {
+    ".github/actions/setup-axiom-toolchain/action.yml": {
+      "rationale": "Exact-path CONTROLLED registration (v105) narrows the .github/** FROZEN glob so the sanctioned MUST-T2 trust-surface lane can be pushed at all; the App manifest still denies admission-check on every byte change, so binding merge control exists but the repository-surface class is not FROZEN. Resolves CONTROLLED, not FROZEN.",
+      "trackedAs": "VS-A/break-glass-b-surface-reconciliation"
+    },
+    ".github/workflows/admission-check.yml": {
+      "rationale": "Exact-path CONTROLLED registration (v106/v52) exists so the epoch-rotation body PR is pushable; the App manifest keeps the binding control via admission-check denial plus MUST-T2 break-glass and explicit epoch rotation. Resolves CONTROLLED, not FROZEN.",
+      "trackedAs": "VS-A/break-glass-b-surface-reconciliation"
+    },
+    ".github/workflows/admission-gate-v2.yml": {
+      "rationale": "Exact-path CONTROLLED registration (v107) narrows the .github/** FROZEN glob for the admission-mint pin-rotation lane. The App manifest already refuses admission-check for this path, so the merge control is the trust-surface lane, not the repository-surface class. Resolves CONTROLLED, not FROZEN.",
+      "trackedAs": "VS-A/break-glass-b-surface-reconciliation"
+    },
+    ".github/workflows/certificate-mint.yml": {
+      "rationale": "Exact-path CONTROLLED registration (v107) narrows the .github/** FROZEN glob so the mint producer can be edited inside a sanctioned trust-surface lane. App-side blob comparison remains the binding control. Resolves CONTROLLED, not FROZEN.",
+      "trackedAs": "VS-A/break-glass-b-surface-reconciliation"
+    },
+    ".github/workflows/publication-integrity.yml": {
+      "rationale": "Exact-path CONTROLLED registration (v108) narrows the .github/** FROZEN glob for the publication venue split lane (workstream/ci-282-publication-venue-split). The App manifest is the binding control for this path. Resolves CONTROLLED, not FROZEN.",
+      "trackedAs": "VS-A/break-glass-b-surface-reconciliation"
+    },
+    "config/policy/epoch_manifest.json": {
+      "rationale": "Exact-path CONTROLLED registration (v106, re-registration of v52/v25) exists so the epoch-rotation body PR is pushable; the App manifest keeps the binding control through admission-check denial. Resolves CONTROLLED, not FROZEN, even though config/policy/** is otherwise a FROZEN glob.",
+      "trackedAs": "VS-A/break-glass-b-surface-reconciliation"
+    },
+    "config/trusted_writer_set.json": {
+      "rationale": "Exact-path CONTROLLED registration (v52, re-registration of v26/v25) predates the config/policy/** FROZEN glob and wins first-match in resolutionOrder. The App manifest is the binding control; the repository-surface class is CONTROLLED. Resolves CONTROLLED, not FROZEN.",
+      "trackedAs": "VS-A/break-glass-b-surface-reconciliation"
+    },
+    "tests/ci/test_vs0_admission_aggregate_fail_closed.nim": {
+      "rationale": "Unregistered in every class, so it falls through to defaultClass PRODUCT: the weakest possible class for a test that guards the VS-0 admission aggregate fail-closed contract. It is in the App manifest but in no repository-surface class at all. Resolves PRODUCT (default), not FROZEN. The reconciliation is an FROZEN (or at minimum CONTROLLED) registration, not a break-glass question.",
+      "trackedAs": "VS-A/vs0-aggregate-frozen-promotion"
+    }
+  }
+}
