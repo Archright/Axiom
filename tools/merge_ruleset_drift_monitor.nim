@@ -125,6 +125,49 @@
 ## to an explicitly-labelled DEGRADED MODE in which leg 3 (and leg 1) decide
 ## the verdict.
 ##
+## FOURTH LEG — THE READ-ONLY BYPASS OBSERVABLE (leg 4, --observe-bypasses):
+## a landing whose rule-suites `result` is `bypass` must be accompanied by a
+## FAILED App-5795152 `admission-check` on that landing's pull request head;
+## a bypass landing with a SUCCESSFUL App check is DRIFT.
+##
+## WHY THE PR HEAD AND NOT THE MERGE COMMIT (measured 2026-11-25, read-only
+## probe of 358 rule-suites entries / 26 bypass landings): the App-5795152
+## `admission-check` is published on the PULL-REQUEST HEAD SHA, never on the
+## merge commit. Across the measured month EVERY bypass landing (26/26) has
+## an ABSENT App check at its merge commit, while the same 26 landings split
+## 18 failure / 1 success / 3 NULL(in-progress) / 4 ABSENT at the PR head.
+## A merge-commit-scoped predicate would therefore report UNATTRIBUTED for
+## every bypass landing — a constant, i.e. no signal at all. The 214 PASS
+## landings that DO carry a merge-commit App check are the merge-queue path
+## (the App runs on the merge-group commit); a bypass landing never enters
+## the queue, so it never gets one. The attribution surface is thus the PR
+## head, reached via GET commits/<sha>/pulls (read-only).
+##
+## THE OUTCOME SET IS ENUMERATED, NOT COLLAPSED (success/failure/ABSENT are
+## three different facts):
+##   failure    -> EXPECTED  the bypass was used BECAUSE the gate refused;
+##   success    -> DRIFT     the gate passed yet the ruleset was bypassed —
+##                           a shape that should be impossible;
+##   ABSENT     -> UNATTRIBUTED, reported separately and NEVER folded into
+##                           either verdict (no check was published, so the
+##                           two-valued predicate has no subject);
+##   null (any other non-terminal/unknown conclusion, e.g. in_progress) ->
+##               UNATTRIBUTED too, for the same reason: an unfinished check
+##               is not a verdict.
+## A landing whose ruleset `result` is `pass` or `fail` is NOT a bypass
+## landing: it is counted and stays QUIET (no line, no finding) — the leg
+## must not fire on ordinary traffic.
+##
+## THIS IS A READ-ONLY INVARIANT. It asserts on rule-suites `result` + the
+## App check conclusion — both readable with `administration: read` /
+## `checks: read` (measured). It CANNOT assert on the ruleset's actor-level
+## bypass field: that field is returned only to callers holding ruleset WRITE
+## access, and GitHub Actions `permissions:` has no `administration` scope at
+## all, so a non-admin watcher never receives it. Asserting on its absence
+## would be theatre (AGENTS.md §0.9) — WHO bypassed is therefore permanently
+## outside this monitor's reach; only THAT a bypass occurred, and whether the
+## App gate agreed, is inside it.
+##
 ## DRIFT DETECTION IS NOT MERGE-TIME ENFORCEMENT: this monitor is post-hoc
 ## monitoring (ADR-0035 §4). Merge-time enforcement stays with the platform
 ## (the repository ruleset's required status checks; the org ruleset's
@@ -202,9 +245,20 @@
 ## --merge-cli-source selects the compiled-in constant mirror leg 1 compares
 ## the policy against (default: src/cli/merge_cli.nim).
 ## --observe-sha enables leg 3 (the producer observation) on that SHA.
+## --observe-bypasses enables leg 4 (the read-only bypass observable): it
+## reads GET repos/<repo>/rulesets/rule-suites?ref=refs/heads/main&time_period=
+## <period> and, for every landing whose `result` is `bypass`, attributes the
+## App-5795152 `admission-check` conclusion from the landing's PR head. See
+## the FOURTH LEG section above for the enumerated outcomes.
+## --time-period selects the rule-suites window (default: day; GitHub accepts
+## day|week|month).
 ## --allow-unavailable-ruleset downgrades an unperformable live ruleset read
 ## to an explicitly-labelled DEGRADED MODE instead of a hard failure.
 ## Exit codes: 0 = all performed legs hold, 1 = drift or fetch/parse failure.
+## Leg 4 contributes to exit 1 on DRIFT only (a bypass landing whose App check
+## SUCCEEDED). UNATTRIBUTED is reported but never fails the run: no verdict
+## exists to contradict the gate, and failing on it would make the leg red on
+## every landing whose check had not finished — a false alarm, not a signal.
 
 import std/[algorithm, json, os, osproc, sets, strutils]
 import api/tools_facade
@@ -248,10 +302,29 @@ const
     "auto-merge queue until the ruleset matches EXPECTED; merge them " &
     "manually: `gh pr merge <N> --disable-auto` (see docs/agents/operations.md)"
   # <!-- monitor-purity:end -->
+  ## Leg 4's finding guidance. Deliberately NOT the ruleset SuggestionText: a
+  # <!-- monitor-purity:begin --> bypass observation is about a past landing,
+  # not the current ruleset shape — reusing the manual-merge advice here would
+  # be misdirection. No mutation verb: the monitor only GETs.
+  BypassSuggestionText* =
+    "SUGGESTION: a bypass landing carried a PASSING admission-check — the App " &
+    "gate agreed with a landing the ruleset did not admit. Investigate whether " &
+    "the ruleset was bypassed while the check was green (actor-level bypass " &
+    "data is NOT readable with this credential tier — see the leg-4 header)"
+  # <!-- monitor-purity:end -->
   ## Total number of EXPECTED ruleset expectations judged by
   ## judgeRulesetDrift. The unparsable-structure path reports 0 against this
   ## total, so the expectation count cannot silently rot.
   NumExpectations = 4
+  ## The context whose producing-App verdict leg 4 attributes. It is the
+  ## policy SSOT's requiredWorkflowDetection.verdictJob in the shipped policy;
+  ## leg 4 reads the LIVE policy for it (see bypassVerdictContext) and falls
+  ## back to this literal only when the policy carries no verdictJob — an
+  ## unreadable policy is a caller failure, not a silent default.
+  DefaultVerdictContext* = "admission-check"
+  ## Default rule-suites window for leg 4. `day` keeps a scheduled run inside
+  ## the workflow's timeout; an operator widens it with --time-period.
+  DefaultTimePeriod* = "day"
 
 type
   DriftResult* = object
@@ -316,6 +389,28 @@ type
     kind*: WorkflowBindingKind
     legacyInt*: seq[tuple[jobName: string, workflowId: int]]
     paths*: seq[tuple[jobName: string, workflowPath: string]]
+
+  ## The attributed App-gate verdict of ONE bypass landing (leg 4). The
+  ## enumerated outcomes are deliberately NOT a bool: `success` and `failure`
+  ## are verdicts, `ABSENT`/`OTHER` are the absence of one, and collapsing
+  ## the absence into "not success" is exactly the fail-open shape the leg
+  ## exists to prevent.
+  BypassAttribution* = enum
+    baFailure      ## EXPECTED — the gate refused, so the bypass is explained
+    baSuccess      ## DRIFT — the gate passed yet the ruleset was bypassed
+    baAbsent       ## UNATTRIBUTED — no App check published for the landing
+    baOther        ## UNATTRIBUTED — a non-terminal/unknown conclusion
+                   ## (in_progress, neutral, cancelled, ...) is not a verdict
+
+  ## One bypass landing with its attribution. `attribution` is valid iff the
+  ## PR head was reachable and its check-runs read completely; otherwise
+  ## `note` carries the explicit reason and the landing is UNATTRIBUTED.
+  BypassLanding* = object
+    afterSha*: string
+    pushedAt*: string
+    actorName*: string
+    attribution*: BypassAttribution
+    note*: string           ## non-empty iff the attribution is UNATTRIBUTED
 
 # ---------------------------------------------------------------------------
 # Pure core
@@ -1234,6 +1329,160 @@ func judgeProducerObservation*(checkRuns: JsonNode; expectedContexts: seq[string
   result.ok = holds == expectedContexts.len
 
 # ---------------------------------------------------------------------------
+# Leg 4 pure core — the read-only bypass observable
+# ---------------------------------------------------------------------------
+
+func bypassLandings*(ruleSuites: JsonNode): seq[BypassLanding] {.raises: [].} =
+  ## Pure: the `bypass`-result landings of a rule-suites page run. Accepts the
+  ## flattened array and the `gh api --paginate --slurp` array-of-pages shape
+  ## (the same dual-shape rule the ruleset list uses). Duplicate ids are
+  ## collapsed: one landing is one fact, even when a page boundary repeats it.
+  ## A non-array payload yields @[] — the CALLER distinguishes that from a
+  ## genuinely empty window (see judgeBypassObservation's `complete`).
+  if ruleSuites.isNil or ruleSuites.kind != JArray:
+    return
+  var seen = initHashSet[string]()
+  for page in ruleSuites.items:
+    if page.isNil:
+      continue
+    if page.kind == JObject:
+      let res = child(page, "result")
+      if res.isNil or res.kind != JString or res.getStr() != "bypass":
+        continue
+      let after = child(page, "after_sha")
+      let sha = if not after.isNil and after.kind == JString: after.getStr() else: ""
+      if sha.len == 0 or sha in seen:
+        continue
+      seen.incl(sha)
+      let pushed = child(page, "pushed_at")
+      let actor = child(page, "actor_name")
+      result.add(BypassLanding(
+        afterSha: sha,
+        pushedAt: if not pushed.isNil and pushed.kind == JString: pushed.getStr() else: "",
+        actorName: if not actor.isNil and actor.kind == JString: actor.getStr() else: ""))
+    elif page.kind == JArray:
+      # a slurp page: recurse into it (one level, exactly the shape gh emits)
+      let inner = bypassLandings(page)
+      for b in inner:
+        if b.afterSha notin seen:
+          seen.incl(b.afterSha)
+          result.add(b)
+
+func attributeAppVerdict*(checkRuns: JsonNode; context: string;
+                           appId: int = 5795152): BypassAttribution {.raises: [].} =
+  ## Pure: the attribution of ONE landing from its PR-head check-runs payload.
+  ## Existential over the array like judgeProducerObservation — a same-named
+  ## run from another app is ignored (identity, not array order).
+  ##   no run named `context` by `appId`            -> baAbsent
+  ##   conclusion == "failure" / ("timed_out",
+  ##     "action_required")                         -> baFailure
+  ##   conclusion == "success"                      -> baSuccess
+  ##   anything else ("null", "neutral", "cancelled",
+  ##     "skipped", "in_progress", absent)          -> baOther
+  ## A TRUNCATED read (total_count > fetched) is baAbsent with the caller
+  ## recording the reason: a truncated read cannot decide presence, so it can
+  ## certainly not decide success. That fail-closed direction is deliberate —
+  ## the leg's only failing verdict is baSuccess, and absence never produces
+  ## it.
+  let arr = child(checkRuns, "check_runs")
+  if arr.isNil or arr.kind != JArray:
+    return baAbsent
+  let totalNode = child(checkRuns, "total_count")
+  if not totalNode.isNil and totalNode.kind == JInt and totalNode.getInt() > arr.len:
+    return baAbsent
+  for cr in arr.items:
+    if cr.isNil or cr.kind != JObject:
+      continue
+    let name = child(cr, "name")
+    if name.isNil or name.kind != JString or name.getStr() != context:
+      continue
+    let app = child(cr, "app")
+    if app.isNil or app.kind != JObject:
+      continue
+    let id = child(app, "id")
+    if id.isNil or id.kind != JInt or id.getInt() != appId:
+      continue
+    let concl = child(cr, "conclusion")
+    if concl.isNil or concl.kind != JString:
+      return baOther          # present but unfinished (status in_progress)
+    case concl.getStr()
+    of "success":
+      return baSuccess
+    of "failure", "timed_out", "action_required":
+      return baFailure
+    else:
+      return baOther
+  baAbsent
+
+func attributionName*(a: BypassAttribution): string {.raises: [].} =
+  ## Pure: the one-word outcome token used in every leg-4 line.
+  case a
+  of baFailure: "EXPECTED"
+  of baSuccess: "DRIFT"
+  of baAbsent: "UNATTRIBUTED"
+  of baOther: "UNATTRIBUTED"
+
+func judgeBypassObservation*(landings: seq[BypassLanding];
+                             complete: bool;
+                             context: string = DefaultVerdictContext;
+                             appId: int = 5795152): DriftResult {.raises: [].} =
+  ## Pure: leg 4's judgment over landings whose `attribution`/`note` the
+  ## caller already resolved (the pure core performs no I/O — the same split
+  ## judgeProducerObservation uses for its already-fetched payload).
+  ##
+  ## QUIET ON ORDINARY TRAFFIC: this function emits lines ONLY for bypass
+  ## landings. A window with no bypass landing produces a single summary line
+  ## and ok == true, so a nightly run over normal (queue-mediated) landings is
+  ## silent. That property is a test, not an intention.
+  ##
+  ## FAIL-CLOSED ON THE OBSERVATION ITSELF: `complete == false` (a truncated
+  ## or unparsable rule-suites read) is DRIFT — an unreadable window can never
+  ## be read as "no bypasses happened", which is precisely the fail-open shape
+  ## this leg exists to forbid ("a stale zero looks exactly like no bypasses").
+  if not complete:
+    result.ok = false
+    result.lines = @["DRIFT bypass observation: the rule-suites read is " &
+      "INCOMPLETE or unparsable — an unreadable window cannot be read as " &
+      "\"no bypass landed\" (fail-closed)"]
+    result.summary = "bypass observation: 0/0 landings attributable (UNKNOWN)"
+    result.suggestion = SuggestionText
+    return
+  result.ok = true
+  var expected = 0
+  var drift: seq[string] = @[]
+  var unattributed: seq[string] = @[]
+  for l in landings:
+    let shortSha = if l.afterSha.len > 12: l.afterSha[0 ..< 12] else: l.afterSha
+    case l.attribution
+    of baFailure:
+      inc expected
+      result.lines.add("OK    bypass observation: landing " & shortSha &
+        " (result=bypass, " & l.pushedAt & ") is accompanied by a FAILED " &
+        context & " (App " & $appId & ") — the bypass is explained: the gate said no")
+    of baSuccess:
+      result.lines.add("DRIFT bypass observation: landing " & shortSha &
+        " (result=bypass, " & l.pushedAt & ") carries a SUCCESSFUL " & context &
+        " (App " & $appId & ") — the gate passed yet the ruleset was " &
+        "bypassed, which should be impossible")
+      drift.add(l.afterSha)
+    of baAbsent, baOther:
+      let note = if l.note.len > 0: l.note else: "no verdict published"
+      result.lines.add("UNATTRIBUTED bypass observation: landing " & shortSha &
+        " (result=bypass, " & l.pushedAt & ") — " & note &
+        " (neither EXPECTED nor DRIFT: absence of a verdict is not a verdict)")
+      unattributed.add(l.afterSha)
+  if landings.len == 0:
+    result.lines.add("OK    bypass observation: no bypass landing in the window " &
+      "(quiet — the leg fires only on bypasses)")
+  result.summary = "bypass observation: " & $landings.len & " bypass landing(s) — " &
+    $expected & " EXPECTED (gate refused), " & $drift.len & " DRIFT (gate passed), " &
+    $unattributed.len & " UNATTRIBUTED (no verdict)"
+  result.lines.add(result.summary)
+  if drift.len > 0:
+    result.ok = false
+    result.suggestion = BypassSuggestionText
+
+# ---------------------------------------------------------------------------
 # IO boundary
 # ---------------------------------------------------------------------------
 
@@ -1325,6 +1574,55 @@ proc fetchCheckRuns*(repo, sha: string): tuple[ok: bool; text: string] {.axiomEf
     return (false, "empty response from gh api")
   (true, output)
 
+proc fetchRuleSuites*(repo, branch, timePeriod: string):
+    tuple[ok: bool; text: string] {.axiomEffect: IoEffect.} =
+  ## IO: the rule-suites history of one ref (leg 4's landing feed). Needs only
+  ## `administration: read` (measured 2026-11-25: the job token reads it).
+  ## `--paginate --slurp` yields the array-of-pages shape bypassLandings
+  ## flattens. Any non-zero exit in the page run -> ok=false: an incomplete
+  ## page run is UNKNOWN, never an empty window.
+  let (output, code) = execCmdEx("gh api --paginate --slurp \"repos/" & repo &
+    "/rulesets/rule-suites?ref=" & branch & "&time_period=" & timePeriod &
+    "&per_page=100\"")
+  if code != 0:
+    return (false, output.strip())
+  if output.strip().len == 0:
+    return (false, "empty response from gh api")
+  (true, output)
+
+proc fetchAssociatedPulls*(repo, sha: string):
+    tuple[ok: bool; text: string] {.axiomEffect: IoEffect.} =
+  ## IO: the commits/<sha>/pulls attribution read — which PR produced this
+  ## landing, and what its HEAD sha was. The App-5795152 `admission-check` is
+  ## published on that head, NOT on the merge commit (measured 2026-11-25:
+  ## 26/26 bypass landings have an ABSENT App check at the merge commit).
+  ## `contents: read` suffices. Any failure -> ok=false (fail closed: an
+  ## unreachable attribution surface is UNATTRIBUTED, never "no bypass").
+  let (output, code) = execCmdEx(
+    "gh api repos/" & repo & "/commits/" & sha & "/pulls")
+  if code != 0:
+    return (false, output.strip())
+  if output.strip().len == 0:
+    return (false, "empty response from gh api")
+  (true, output)
+
+func firstPullHead*(pulls: JsonNode): tuple[ok: bool; sha: string] {.raises: [].} =
+  ## Pure: the head sha of the first associated PR. `ok == false` means no
+  ## associated PR was found (a direct push) — a distinct fact from a read
+  ## failure, which the caller records separately.
+  if pulls.isNil or pulls.kind != JArray:
+    return (false, "")
+  for p in pulls.items:
+    if p.isNil or p.kind != JObject:
+      continue
+    let head = child(p, "head")
+    if head.isNil or head.kind != JObject:
+      continue
+    let sha = child(head, "sha")
+    if not sha.isNil and sha.kind == JString and sha.getStr().len > 0:
+      return (true, sha.getStr())
+  (false, "")
+
 proc loadPolicy(path: string): tuple[ok: bool; text: string] {.axiomEffect: IoEffect.} =
   ## IO: the policy SSOT read (CWD-relative default). Unreadable -> fail
   ## closed: the expectation set cannot be derived, so no judgment is
@@ -1343,6 +1641,8 @@ proc main() {.axiomEffect: IoEffect.} =
   var repo = DefaultRulesetRepo
   var id = ""
   var observeSha = ""
+  var observeBypasses = false
+  var timePeriod = DefaultTimePeriod
   var allowUnavailableRuleset = false
   let args = commandLineParams()
   var i = 0
@@ -1365,13 +1665,19 @@ proc main() {.axiomEffect: IoEffect.} =
     elif args[i] == "--observe-sha" and i + 1 < args.len:
       observeSha = args[i + 1]
       inc i
+    elif args[i] == "--observe-bypasses":
+      observeBypasses = true
+    elif args[i] == "--time-period" and i + 1 < args.len:
+      timePeriod = args[i + 1]
+      inc i
     elif args[i] == "--allow-unavailable-ruleset":
       allowUnavailableRuleset = true
     else:
       stderr.writeLine("merge_ruleset_drift_monitor: unknown argument: " & args[i])
       stderr.writeLine("usage: merge_ruleset_drift_monitor [--ruleset-file <path>] " &
         "[--policy-file <path>] [--merge-cli-source <path>] [--repo <owner/repo>] " &
-        "[--ruleset-id <id>] [--observe-sha <sha>] [--allow-unavailable-ruleset]")
+        "[--ruleset-id <id>] [--observe-sha <sha>] [--observe-bypasses] " &
+        "[--time-period day|week|month] [--allow-unavailable-ruleset]")
       quit(1)
     inc i
 
@@ -1414,7 +1720,7 @@ proc main() {.axiomEffect: IoEffect.} =
   var ok = mirror.ok
 
   # ── credential: resolved ONCE, before any live fetch ──
-  if rulesetFile.len == 0 or observeSha.len > 0:
+  if rulesetFile.len == 0 or observeSha.len > 0 or observeBypasses:
     applyDiagCredential("merge_ruleset_drift_monitor")
 
   # ── leg 2: policy <-> live ruleset (needs Administration:read) ──
@@ -1550,6 +1856,102 @@ proc main() {.axiomEffect: IoEffect.} =
   else:
     echo "  producer observation: NOT PERFORMED (no --observe-sha) — additive observation, " &
       "not one of the four normative expectations"
+
+  # ── leg 4: the read-only bypass observable (rule-suites + PR-head App check) ──
+  if observeBypasses:
+    let verdictContext = block:
+      var c = DefaultVerdictContext
+      let rwd = child(policy, "requiredWorkflowDetection")
+      if not rwd.isNil and rwd.kind == JObject:
+        let vj = child(rwd, "verdictJob")
+        if not vj.isNil and vj.kind == JString and vj.getStr().len > 0:
+          c = vj.getStr()
+      c
+    let verdictApp = expectedCheckSourceId(policy, verdictContext)
+    let suites = fetchRuleSuites(repo, "refs/heads/" & DefaultBranchName, timePeriod)
+    if not suites.ok:
+      # fail closed: an unreadable window is UNKNOWN, never "no bypasses"
+      echo "  DRIFT bypass observation: rule-suites fetch failed (fail closed): " &
+        firstLine(suites.text)
+      ok = false
+    else:
+      var suitesJson: JsonNode = nil
+      var parsed = true
+      try:
+        suitesJson = parseJson(suites.text)
+      except JsonParsingError:
+        parsed = false
+      if not parsed:
+        echo "  DRIFT bypass observation: unparsable rule-suites JSON (fail closed)"
+        ok = false
+      else:
+        # Resolve each bypass landing's attribution at the PR head (the surface
+        # the App check actually appears on), then judge the resolved set.
+        var landings = bypassLandings(suitesJson)
+        for i in 0 ..< landings.len:
+          let afterSha = landings[i].afterSha
+          let pulls = fetchAssociatedPulls(repo, afterSha)
+          if not pulls.ok:
+            landings[i].attribution = baAbsent
+            landings[i].note = "the associated-PR read failed (" &
+              firstLine(pulls.text) & ") — the attribution surface is unreachable"
+            continue
+          var pullsJson: JsonNode = nil
+          var pullsParsed = true
+          try:
+            pullsJson = parseJson(pulls.text)
+          except JsonParsingError:
+            pullsParsed = false
+          if not pullsParsed:
+            landings[i].attribution = baAbsent
+            landings[i].note = "the associated-PR payload is unparsable"
+            continue
+          let head = firstPullHead(pullsJson)
+          if not head.ok:
+            landings[i].attribution = baAbsent
+            landings[i].note = "no associated pull request (direct push) — the App " &
+              "check has no PR head to be published on"
+            continue
+          let runs = fetchCheckRuns(repo, head.sha)
+          if not runs.ok:
+            landings[i].attribution = baAbsent
+            landings[i].note = "the PR-head check-runs read failed (" &
+              firstLine(runs.text) & ")"
+            continue
+          var runsJson: JsonNode = nil
+          var runsParsed = true
+          try:
+            runsJson = parseJson(runs.text)
+          except JsonParsingError:
+            runsParsed = false
+          if not runsParsed:
+            landings[i].attribution = baAbsent
+            landings[i].note = "the PR-head check-runs payload is unparsable"
+            continue
+          let a = attributeAppVerdict(runsJson, verdictContext, verdictApp)
+          landings[i].attribution = a
+          let shortHead = if head.sha.len > 12: head.sha[0 ..< 12] else: head.sha
+          case a
+          of baAbsent:
+            landings[i].note = "no " & verdictContext & " check-run from App " &
+              $verdictApp & " on the PR head " & shortHead
+          of baOther:
+            landings[i].note = "the " & verdictContext & " check-run from App " &
+              $verdictApp & " on the PR head " & shortHead &
+              " carries no terminal verdict (in_progress/neutral/cancelled)"
+          else:
+            landings[i].note = ""
+        let verdict = judgeBypassObservation(landings, true, verdictContext, verdictApp)
+        echo "  bypass observation (" & repo & " " & timePeriod & ", context " &
+          verdictContext & " <- App " & $verdictApp & " at the PR head)"
+        for line in verdict.lines:
+          echo "  " & line
+        if not verdict.ok:
+          echo "  " & verdict.suggestion
+          ok = false
+  else:
+    echo "  bypass observation: NOT PERFORMED (no --observe-bypasses) — additive " &
+      "read-only observation, not one of the four normative expectations"
 
   quit(if ok: 0 else: 1)
 

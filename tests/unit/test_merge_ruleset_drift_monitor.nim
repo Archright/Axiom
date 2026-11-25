@@ -1012,3 +1012,243 @@ const
 """)
     let b = policyWorkflowBindings(malformed)
     check b.kind == wbkUnreadable
+
+# ---------------------------------------------------------------------------
+# Leg 4 — the read-only bypass observable
+#
+# Fixtures are the MEASURED shapes (read-only probe 2026-11-25, 358 rule-suites
+# entries / 26 bypass landings): the rule-suites entry carries
+# {result, after_sha, before_sha, pushed_at, actor_name}; the App check lives on
+# the PR HEAD, never on the merge commit.
+# ---------------------------------------------------------------------------
+
+## One rule-suites page as gh emits it (flat array shape).
+let SUITES_MIXED = parseJson("""
+[
+  {"id": 1, "result": "pass",   "after_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "pushed_at": "2026-11-24T01:00:00+09:00", "actor_name": "wintrover"},
+  {"id": 2, "result": "bypass", "after_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "pushed_at": "2026-11-24T02:00:00+09:00", "actor_name": "wintrover"},
+  {"id": 3, "result": "fail",   "after_sha": "cccccccccccccccccccccccccccccccccccccccc",
+   "pushed_at": "2026-11-24T03:00:00+09:00", "actor_name": "wintrover"},
+  {"id": 4, "result": "bypass", "after_sha": "dddddddddddddddddddddddddddddddddddddddd",
+   "pushed_at": "2026-11-24T04:00:00+09:00", "actor_name": "wintrover"}
+]
+""")
+
+## The same window with NO bypass landing — the ordinary-traffic baseline.
+let SUITES_QUIET = parseJson("""
+[
+  {"id": 1, "result": "pass", "after_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "pushed_at": "2026-11-24T01:00:00+09:00", "actor_name": "wintrover"},
+  {"id": 2, "result": "pass", "after_sha": "cccccccccccccccccccccccccccccccccccccccc",
+   "pushed_at": "2026-11-24T02:00:00+09:00", "actor_name": "wintrover"},
+  {"id": 3, "result": "fail", "after_sha": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+   "pushed_at": "2026-11-24T03:00:00+09:00", "actor_name": "wintrover"}
+]
+""")
+
+## Check-runs payloads — the App 5795152 admission-check at three conclusions.
+## These are the shapes actually observed (PR #450 / #155 / #136).
+let RUNS_SUCCESS = parseJson("""
+{"total_count": 2, "check_runs": [
+  {"name": "admission-check", "conclusion": "success", "status": "completed",
+   "app": {"id": 5795152, "slug": "axiom-admission-verifier"}},
+  {"name": "bsec-integrity", "conclusion": "success",
+   "app": {"id": 15368, "slug": "github-actions"}}]}
+""")
+
+let RUNS_FAILURE = parseJson("""
+{"total_count": 2, "check_runs": [
+  {"name": "admission-check", "conclusion": "failure", "status": "completed",
+   "app": {"id": 5795152, "slug": "axiom-admission-verifier"}},
+  {"name": "bsec-integrity", "conclusion": "success",
+   "app": {"id": 15368, "slug": "github-actions"}}]}
+""")
+
+let RUNS_ABSENT = parseJson("""
+{"total_count": 1, "check_runs": [
+  {"name": "bsec-integrity", "conclusion": "success",
+   "app": {"id": 15368, "slug": "github-actions"}}]}
+""")
+
+let RUNS_IN_PROGRESS = parseJson("""
+{"total_count": 1, "check_runs": [
+  {"name": "admission-check", "conclusion": null, "status": "in_progress",
+   "app": {"id": 5795152, "slug": "axiom-admission-verifier"}}]}
+""")
+
+proc landing(afterSha: string; a: BypassAttribution; note = ""): BypassLanding =
+  BypassLanding(afterSha: afterSha, pushedAt: "2026-11-24T02:00:00+09:00",
+                actorName: "wintrover", attribution: a, note: note)
+
+suite "attributeAppVerdict — success/failure/ABSENT are three different facts":
+  test "a successful App check is baSuccess (the DRIFT shape)":
+    check attributeAppVerdict(RUNS_SUCCESS, "admission-check") == baSuccess
+
+  test "a failed App check is baFailure (the EXPECTED shape)":
+    check attributeAppVerdict(RUNS_FAILURE, "admission-check") == baFailure
+
+  test "no App check at all is baAbsent — never folded into failure or success":
+    check attributeAppVerdict(RUNS_ABSENT, "admission-check") == baAbsent
+
+  test "a present-but-unfinished App check is baOther, not success":
+    check attributeAppVerdict(RUNS_IN_PROGRESS, "admission-check") == baOther
+
+  test "a same-named check from ANOTHER app does not satisfy the identity":
+    # The Actions app also publishes an admission-check in some windows; only
+    # the App-5795152 copy is the gate. Identity, not the name alone.
+    let otherApp = parseJson("""
+{"total_count": 1, "check_runs": [
+  {"name": "admission-check", "conclusion": "success", "status": "completed",
+   "app": {"id": 15368, "slug": "github-actions"}}]}
+""")
+    check attributeAppVerdict(otherApp, "admission-check") == baAbsent
+
+  test "a truncated read is baAbsent (cannot decide presence, let alone success)":
+    var truncated = copy(RUNS_SUCCESS)
+    truncated["total_count"] = %(truncated["check_runs"].len + 5)
+    check attributeAppVerdict(truncated, "admission-check") == baAbsent
+
+  test "an unparsable payload is baAbsent, never success":
+    check attributeAppVerdict(nil, "admission-check") == baAbsent
+    check attributeAppVerdict(parseJson("""{"nope": []}"""),
+                              "admission-check") == baAbsent
+
+  test "timed_out and action_required are refusals, not successes":
+    for c in ["timed_out", "action_required"]:
+      let payload = parseJson("""
+{"total_count": 1, "check_runs": [
+  {"name": "admission-check", "conclusion": "CONCL", "status": "completed",
+   "app": {"id": 5795152, "slug": "axiom-admission-verifier"}}]}
+""".replace("CONCL", c))
+      check attributeAppVerdict(payload, "admission-check") == baFailure
+
+  test "skipped/neutral/cancelled are baOther (no verdict), never DRIFT":
+    for c in ["skipped", "neutral", "cancelled"]:
+      let payload = parseJson("""
+{"total_count": 1, "check_runs": [
+  {"name": "admission-check", "conclusion": "CONCL", "status": "completed",
+   "app": {"id": 5795152, "slug": "axiom-admission-verifier"}}]}
+""".replace("CONCL", c))
+      check attributeAppVerdict(payload, "admission-check") == baOther
+
+suite "bypassLandings — only bypass results become landings":
+  test "pass and fail landings are NOT bypass landings (quiet baseline)":
+    let l = bypassLandings(SUITES_MIXED)
+    check l.len == 2
+    check l[0].afterSha == "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    check l[1].afterSha == "dddddddddddddddddddddddddddddddddddddddd"
+
+  test "a window with no bypass yields no landings":
+    check bypassLandings(SUITES_QUIET).len == 0
+
+  test "the slurp array-of-pages shape flattens identically":
+    let slurped = %* [SUITES_MIXED]
+    check bypassLandings(slurped).len == 2
+
+  test "duplicate after_sha across pages collapses to one landing":
+    let doubled = %* [SUITES_MIXED, SUITES_MIXED]
+    check bypassLandings(doubled).len == 2
+
+  test "a non-array payload yields no landings (the caller fails closed)":
+    check bypassLandings(nil).len == 0
+    check bypassLandings(parseJson("""{"entries": []}""")).len == 0
+
+suite "judgeBypassObservation — the enumerated outcomes":
+  test "a FAILED App check is EXPECTED and quiet-ok (exit 0)":
+    let v = judgeBypassObservation(@[landing("bbbb", baFailure)], true)
+    check v.ok
+    check v.lines.filterIt(it.startsWith("OK")).len == 1
+    check "bypass is explained" in v.lines[0]
+
+  test "a SUCCESSFUL App check is DRIFT (bypass + green gate is impossible)":
+    let v = judgeBypassObservation(@[landing("bbbb", baSuccess)], true)
+    check not v.ok
+    let d = v.lines.filterIt(it.startsWith("DRIFT"))
+    check d.len == 1
+    check "should be impossible" in d[0]
+    check v.suggestion.len > 0
+
+  test "an ABSENT App check is UNATTRIBUTED — neither OK nor DRIFT":
+    let v = judgeBypassObservation(
+      @[landing("bbbb", baAbsent, "no admission-check check-run from App 5795152")],
+      true)
+    check v.ok
+    let u = v.lines.filterIt(it.startsWith("UNATTRIBUTED"))
+    check u.len == 1
+    check "absence of a verdict is not a verdict" in u[0]
+    check v.lines.filterIt(it.startsWith("DRIFT")).len == 0
+
+  test "an unfinished check is UNATTRIBUTED, not success and not drift":
+    let v = judgeBypassObservation(
+      @[landing("bbbb", baOther, "no terminal verdict")], true)
+    check v.ok
+    check v.lines.filterIt(it.startsWith("UNATTRIBUTED")).len == 1
+
+  test "the no-bypass baseline is QUIET (one line, ok, no finding)":
+    let v = judgeBypassObservation(@[], true)
+    check v.ok
+    check v.lines.len == 2          # the "no bypass landing" line + summary
+    check v.suggestion.len == 0
+    check "quiet" in v.lines[0]
+    check v.lines.filterIt(
+      it.startsWith("DRIFT") or it.startsWith("UNATTRIBUTED")).len == 0
+
+  test "the three outcomes are counted separately in the summary":
+    let v = judgeBypassObservation(@[
+      landing("a", baFailure), landing("b", baSuccess),
+      landing("c", baAbsent, "none")], true)
+    check not v.ok
+    check "3 bypass landing(s)" in v.summary
+    check "1 EXPECTED" in v.summary
+    check "1 DRIFT" in v.summary
+    check "1 UNATTRIBUTED" in v.summary
+
+  test "an INCOMPLETE read is DRIFT — an unreadable window is never 'no bypass'":
+    let v = judgeBypassObservation(@[], false)
+    check not v.ok
+    check v.lines.filterIt(it.startsWith("DRIFT")).len == 1
+    check "fail-closed" in v.lines[0]
+
+  test "many EXPECTED landings stay ok (the measured month: 18/26)":
+    var all: seq[BypassLanding] = @[]
+    for i in 0 ..< 18:
+      all.add(landing("sha" & $i, baFailure))
+    let v = judgeBypassObservation(all, true)
+    check v.ok
+    check "18 EXPECTED" in v.summary
+    check "0 DRIFT" in v.summary
+
+suite "firstPullHead — the attribution surface":
+  test "the head sha of the first associated PR":
+    let pulls = parseJson("""
+[{"number": 450, "head": {"sha": "b9a6c79395a9341d13ae0dc0905100b29f80fe77"},
+  "base": {"sha": "dea3cce064c570a4738d11470d62fbe44d62be13"}}]
+""")
+    let h = firstPullHead(pulls)
+    check h.ok
+    check h.sha == "b9a6c79395a9341d13ae0dc0905100b29f80fe77"
+
+  test "no associated PR is not-an-ok result (a direct push), never a crash":
+    check not firstPullHead(parseJson("[]")).ok
+    check not firstPullHead(nil).ok
+    check not firstPullHead(parseJson("""{"head": {"sha": "x"}}""")).ok
+
+  test "a PR entry without a head sha is skipped, not guessed":
+    let pulls = parseJson("""
+[{"number": 1, "head": {}},
+ {"number": 2, "head": {"sha": "deadbeef"}}]
+""")
+    let h = firstPullHead(pulls)
+    check h.ok
+    check h.sha == "deadbeef"
+
+suite "the policy-derived verdict context (never hardcoded)":
+  test "the shipped policy's verdictJob selects the context and its App":
+    check expectedStatusContexts(POLICY_APP).contains("admission-check")
+    check expectedCheckSourceId(POLICY_APP, "admission-check") == 5795152
+    check expectedCheckSourceId(POLICY_APP, "bsec-integrity") == 15368
+
+  test "the attribution default matches the shipped policy constant":
+    check DefaultVerdictContext == "admission-check"
