@@ -77,23 +77,28 @@ suite "push-admissibility declared == executed (DEBT#534/535)":
   let declaredGates = declaredSetViaMake(repoRoot)
   let realMakefile = repoRoot / "Makefile"
 
-  test "declared set resolves to 12 gates including the mirror gate":
-    check declaredGates.splitWhitespace().len == 12
+  test "declared set resolves to 9 gates including the mirror gate":
+    check declaredGates.splitWhitespace().len == 9
     check "check-merge-admission-cert-mirror" in declaredGates.splitWhitespace()
 
   test "real Makefile: declared == executed (DEBT#534/535 fix state)":
     let (outText, rc) = runGate(gate, realMakefile, declaredGates)
     check rc == 0
-    check outText.contains("PASS: declared == executed (12 = 12)")
+    check outText.contains("PASS: declared == executed (9 = 9)")
 
   test "--executed-summary emits the executed set incl. mirror gate":
     let (outText, rc) = runGate(gate, realMakefile, "", emission = true)
     check rc == 0
     let names = outText.splitWhitespace()
-    check names.len == 12
+    check names.len == 9
     check "check-merge-admission-cert-mirror" in names
     check "check-debt" notin names
-    check "validate-root-layout" in names
+    # CI-covered gates are not re-executed on the push path (second pruning):
+    # repository-surface (SL-20), root-layout and workflow-shell-syntax all
+    # judge the real merge candidate on the landing venue itself.
+    check "validate-root-layout" notin names
+    check "check-repository-surface" notin names
+    check "check-workflow-shell-syntax" notin names
 
   test "DEBT#534 replay: declared gate without recipe invocation FAILs":
     # A staged change that adds a name to the declaration without wiring
@@ -124,7 +129,7 @@ suite "push-admissibility declared == executed (DEBT#534/535)":
     let (outText, rc) = runGate(gate, mutatedPath, "", emission = true)
     check rc == 0
     let names = outText.splitWhitespace()
-    check names.len == 11
+    check names.len == 8
     check "check-merge-admission-cert-mirror" notin names
 
   test "DEBT#535 regression: auditor removed from recipe FAILs":

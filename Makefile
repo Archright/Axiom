@@ -75,7 +75,36 @@ GATES_FULL    := check-lean-vacuity check-vacuity-simple
 # `git push --no-verify` all bypass it), so a second local copy only duplicated
 # a required check. The three remain in GATES_FAST and their make targets are
 # unchanged — this removes them from the PUSH set only.
-PUSH_ADMISSIBILITY_GATES := doc-path-validator check-determinism check-proof-unit-reconcile check-repository-surface check-git-access check-monitor-purity check-workflow-shell-syntax check-epoch-transaction check-merge-admission-cert-mirror check-layer-enforcement check-layer-negative validate-root-layout
+#
+# 2026-11-25 (second pruning): check-repository-surface, validate-root-layout and
+# check-workflow-shell-syntax left this set. Each was verified to run on the
+# landing venue itself, on the real merge candidate, in the required workflows —
+# PR #495's merge_group run, judged from the job logs (a green step is not a
+# judgment; these three logged their actual verdicts):
+#   * check-repository-surface — admission-check.yml `attest` job, step
+#     "[check] [SL-20] Repository surface admission (B-built guard, base policy x
+#     changed paths)" printed `[SL-20] changed files: 2` and
+#     `[SL-20] repository surface verdict: PASS` (run 45646654401).
+#   * validate-root-layout — same run, job `attest / admission-independents`,
+#     printed `[venue] venue=landing — full canonical verification` then
+#     `[root-layout] PASS — B executor (judge + test battery) + H candidate
+#     closed-by-default root layout` (the loud SKIP branch did not fire).
+#   * check-workflow-shell-syntax — bsec-integrity.yml step 4 runs
+#     tools/ci/validate_workflow_shell.sh over ../candidate/.github/workflows
+#     UNCONDITIONALLY: no `if:`, no path filter (stated in the workflow source,
+#     bsec-integrity.yml:107-112).
+# NOT removed, with the reason each is not yet safe to drop:
+#   * check-determinism — the toolchain pins (nim 2.2.10 / lean 4.33.0 / z3
+#     4.13.3) are judged by setup-axiom-toolchain's `Verify toolchain pins` on
+#     every admission-check run, but the `git floor` conjunct (Makefile:415) has
+#     no equivalent in that step: its only CI analogue is
+#     tools/ci/publication_script_eval.nim (compliance/policy/script-scan-policy
+#     gitMinVersion 2.40.0) inside publication-integrity, which is a different
+#     workflow and a different event trigger. Dropping it now would open exactly
+#     the enforcement gap this pruning is required to avoid.
+#   * the remaining five have no executor on the landing venue at all.
+# GATES_FAST/GATES_STATIC membership is untouched — this is the PUSH set only.
+PUSH_ADMISSIBILITY_GATES := doc-path-validator check-determinism check-proof-unit-reconcile check-git-access check-monitor-purity check-epoch-transaction check-merge-admission-cert-mirror check-layer-enforcement check-layer-negative
 # ── Test suite (별도 축 — gate taxonomy와 미혼합) ─────────────────────────────────
 TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/test_debt_events.nim tests/unit/test_debt_pipeline.nim \
@@ -655,13 +684,10 @@ push-admissibility: ## pre-push push-target OID static admissibility (snapshot C
 	fi  # @pushGate check-epoch-transaction
 	@$(MAKE) --no-print-directory check-merge-admission-cert-mirror  # @pushGate check-merge-admission-cert-mirror
 	@$(MAKE) --no-print-directory check-determinism  # @pushGate check-determinism
-	@$(MAKE) --no-print-directory check-repository-surface  # @pushGate check-repository-surface
 	@$(MAKE) --no-print-directory check-git-access  # @pushGate check-git-access
 	@$(MAKE) --no-print-directory check-monitor-purity  # @pushGate check-monitor-purity
-	@$(MAKE) --no-print-directory check-workflow-shell-syntax  # @pushGate check-workflow-shell-syntax
 	@$(MAKE) --no-print-directory check-layer-enforcement  # @pushGate check-layer-enforcement
 	@$(MAKE) --no-print-directory check-layer-negative  # @pushGate check-layer-negative
-	@$(MAKE) --no-print-directory validate-root-layout  # @pushGate validate-root-layout
 	@gates=$$(bin/push_admission_integrity_gate --executed-summary) || { echo "[push-admissibility FAIL] executed-set emission failed — PASS summary suppressed (fail-closed)"; exit 1; }; \
 	echo "PASS: $$gates green (snapshot)"
 
