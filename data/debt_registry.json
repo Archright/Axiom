@@ -6300,7 +6300,7 @@
       "id": "DEBT#572",
       "category": "Theater/Unenforced Claim",
       "title": "Cold re-execution discarded the fresh observation, so a consistently forged theoremName passed both kernel verify paths",
-      "description": "Documented and now closed (issue #253 negative control). docs/spec/cert_lifecycle_contracts.md section 8.2 records a measured forgery: a witness claiming theoremName=inc3_correct over an embedded leanSource that only states 'theorem decoy_true : True := by trivial'. Every recorded field was self-consistent, so --sign minted it and ax cert verify --kernel passed it. Two independent causes: (1) reexecuteLeanObservedKernel built the complete LeanObservation and reexecuteLean returned only .verdict, discarding the observed theorem name, axiom set and digests one frame above the caller; (2) the evidence-bundle replay returned only tuple[verdict, axes], so bundle_verify could compare the axiom set but never the theorem identity. Neither path therefore compared a fresh observation against the recorded one. Fix: freshObservationBindingError (src/verification/kernel_reexecution.nim) compares the recorded KernelObservation against the fresh LeanObservation field by field (observed flag, theoremName, normalized axiom set, leanSourceDigest, outputDigest, toolchainIdentity) and returns the first fail-closed reason. Both consumers now call it: src/cli/cert_cli.nim on the --kernel PASS branch (legacy certificates with no observation block keep their prior behaviour) and src/verification/evidence_bundle/bundle_verify.nim plus lean_replay.nim, whose return type now carries theoremName derived from the source before execution so it cannot be echoed back from the certificate. Negative control: tests/verification/test_kernel_reexecution.nim P13 rejects the forged claim, accepts the honest one over the same source, rejects an unobserved run, and repeats the pair against the real Lean 4.33.0 kernel (128 checks, 0 skipped).",
+      "description": "Documented and now closed (issue #253 negative control). docs/spec/cert_lifecycle_contracts.md section 8.2 records a measured forgery: a witness claiming theoremName=inc3_correct over an embedded leanSource that only states 'theorem decoy_true : True := by trivial'. Every recorded field was self-consistent, so --sign minted it and ax cert verify --kernel passed it. Two independent causes: (1) reexecuteLeanObservedKernel built the complete LeanObservation and reexecuteLean returned only .verdict, discarding the observed theorem name, axiom set and digests one frame above the caller; (2) the evidence-bundle replay returned only tuple[verdict, axes], so bundle_verify could compare the axiom set but never the theorem identity. Neither path compared a fresh observation against the recorded one. Fix: freshObservationBindingError (src/verification/kernel_reexecution.nim) compares the recorded KernelObservation against the fresh LeanObservation field by field (observed flag, theoremName, normalized axiom set, leanSourceDigest, outputDigest, toolchainIdentity) and returns the first fail-closed reason. Both consumers call it: src/cli/cert_cli.nim on the --kernel PASS branch (legacy certificates with no observation block keep prior behaviour) and the evidence-bundle kernel leg via lean_replay, whose return type now carries theoremName derived from the source before execution so it cannot be echoed back from the certificate. Negative control: tests/verification/test_kernel_reexecution.nim P13 rejects the forged claim, accepts the honest one over the same source, rejects an unobserved run, and repeats the pair against the real Lean 4.33.0 kernel (128 checks, 0 skipped).",
       "files": [
         "src/cli/cert_cli.nim:78",
         "src/verification/kernel_reexecution.nim:675",
@@ -6310,10 +6310,12 @@
       ],
       "severity": "high",
       "source": "theater_audit",
-      "status": "resolved",
-      "productTruthImpact": "A certificate claiming a theorem its embedded source does not state was accepted as verified proof. The claim surface and the evidence surface are now bound to a real run on both paths.",
+      "status": "open",
+      "productTruthImpact": "PRODUCT_TRUTH",
+      "resolution": "UNRESOLVED",
+      "lastVerifiedAt": "2026-11-25T11:30:00Z",
       "binding": "registry_disposition",
-      "bindingRationale": "Closed by binding the claim to a fresh kernel observation rather than by adding another gate. The predicate lives once, in the pinned kernel_reexecution module, and both verifier surfaces consume it."
+      "bindingRationale": "Closes by binding the claim to a fresh kernel observation rather than by adding another gate. The predicate lives once, in the pinned kernel_reexecution module, and both verifier surfaces consume it."
     }
   ]
 }
