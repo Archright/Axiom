@@ -66,7 +66,16 @@ GATES_FULL    := check-lean-vacuity check-vacuity-simple
 # 경계가 아니다(호출 토큰의 실제 권한까지는 강제 불가 — GitHub가 request
 # method를 감사하지 않음). ~수십 ms.
 # Measured 2026-08-29 (snapshot/warm, dev host): 총 ~22-27s (debt 지배적 21-26s).
-PUSH_ADMISSIBILITY_GATES := check-debt check-nim-theater doc-path-validator check-determinism check-proof-unit-consistency check-proof-unit-reconcile check-repository-surface check-git-access check-monitor-purity check-workflow-shell-syntax check-epoch-transaction check-merge-admission-cert-mirror check-layer-enforcement check-layer-negative validate-root-layout
+# 2026-11-25 hook pruning: check-debt, check-nim-theater and
+# check-proof-unit-consistency left this set — the required check
+# `debt-registry-gate` (.github/workflows/debt-registry-gate.yml) already runs
+# all three unconditionally on every run: `bin/debt_engine --validate` (:48),
+# `make check-nim-theater` (:52), `bin/proof_unit_consistency_gate` (:72).
+# A client-side hook has no merge authority (web merge, merge-queue landing and
+# `git push --no-verify` all bypass it), so a second local copy only duplicated
+# a required check. The three remain in GATES_FAST and their make targets are
+# unchanged — this removes them from the PUSH set only.
+PUSH_ADMISSIBILITY_GATES := doc-path-validator check-determinism check-proof-unit-reconcile check-repository-surface check-git-access check-monitor-purity check-workflow-shell-syntax check-epoch-transaction check-merge-admission-cert-mirror check-layer-enforcement check-layer-negative validate-root-layout
 # ── Test suite (별도 축 — gate taxonomy와 미혼합) ─────────────────────────────────
 TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/test_debt_events.nim tests/unit/test_debt_pipeline.nim \
@@ -619,70 +628,25 @@ check-toolchain-pin:
 # 첫 단계로 배선된 check-push-admissibility-integrity가 선언 == 실행 집합을 양방향
 # 강제하고, 요약 라인은 --executed-summary 사출(마커 집합)만 인쇄한다(DEBT#534/535).
 #
-# check-debt skip predicate (sound input-set scoping): the debt engine's
-# verdict-relevant input set is exactly (a) every `file` in
-# data/architecture_debt.json (content re-hashed), (b) every `files[]` path of
-# open/deferred debt_registry.json entries (W7 live-file EXISTENCE check;
-# `:NN` line annotations stripped, dir-prefixed inputs match by prefix), and
-# (c) the fixed sync/projection/policy files enumerated below. Part D budget
-# metrics are advisory (DRIFT never affects the exit code), so their scan
-# inputs are excluded. Skip ONLY when the branch diff (merge-base..HEAD) is
-# disjoint from that set; ANY error (git, JSON, python) exits 1 = run the
-# gate — fail-safe direction is always to do the work. check-debt itself and
-# its GATES_FAST/local-ci uses remain UNCONDITIONAL.
-# [skip] effect_violations / nimtry_violations 스테이징 폐쇄 (VS-PUSH-1):
-# pre-push 스냅샷은 현재 Makefile을 복사해 실행하므로(.githooks/pre-push
-# "Ensure snapshot has the current Makefile"), RUN 경로의 sub-make 타깃
-# `push-admissibility-debt-prereqs`가 스냅샷 CWD의 bin/에 두 평가자
-# (bin/effect_contract_projection, bin/nimtry)를 조건부 스테이징한 뒤에만
-# `&& bin/debt_engine --validate`를 실행한다 — 훅의 symlink 목록은 FROZEN이므로
-# 스냅샷 폐쇄는 여기서 닫히며, SKIP 경로에서는 두 평가자의 불필요한 스냅숏
-# 재빌드(콜드 ~6.80s, CC 139)가 발생하지 않는다.
-push-admissibility-debt-prereqs: bin/effect_contract_projection bin/nimtry nimtry-baseline-check ## Evaluator staging for the check-debt RUN path only (not built on SKIP)
+# check-debt is NO LONGER a push-set member (2026-11-25 hook pruning): it left
+# PUSH_ADMISSIBILITY_GATES together with check-nim-theater and
+# check-proof-unit-consistency. Enforcement lives in the required check
+# `debt-registry-gate` (.github/workflows/debt-registry-gate.yml), which runs
+# `bin/debt_engine --validate` (:48), `make check-nim-theater` (:52) and
+# `bin/proof_unit_consistency_gate` (:72) unconditionally on every run, on the
+# real merge candidate. check-debt itself and its GATES_FAST/local-ci uses
+# remain UNCONDITIONAL.
+# `push-admissibility-debt-prereqs` below staged the debt evaluators
+# (bin/effect_contract_projection, bin/nimtry) for the removed RUN path; the
+# recipe no longer invokes it. It is kept as an explicit manual entrypoint so
+# the staging recipe is not lost — no recipe line depends on it.
+push-admissibility-debt-prereqs: bin/effect_contract_projection bin/nimtry nimtry-baseline-check ## Evaluator staging for the manual debt path (no longer invoked by push-admissibility)
 	@echo "push-admissibility-debt-prereqs: debt evaluators staged (snapshot closure)"
 
 push-admissibility: ## pre-push push-target OID static admissibility (snapshot CWD)
 	@echo "=== push-admissibility: snapshot OID gates ==="
 	@$(MAKE) --no-print-directory check-push-admissibility-integrity
-	@if printf '%s\n' \
-	  'import json, subprocess, sys' \
-	  'def die(msg):' \
-	  '    print("[check-debt] predicate error: " + msg + " - running full validation (fail-safe)")' \
-	  '    sys.exit(1)' \
-	  'try:' \
-	  '    mb = subprocess.run(["git", "merge-base", "origin/main", "HEAD"], capture_output=True, text=True)' \
-	  '    if mb.returncode != 0: die("git merge-base failed")' \
-	  '    diff = subprocess.run(["git", "-c", "core.quotePath=false", "diff", "--name-only", "-z", mb.stdout.strip(), "HEAD"], capture_output=True, text=True)' \
-	  '    if diff.returncode != 0: die("git diff failed")' \
-	  '    ch = set(p for p in diff.stdout.split("\0") if p)' \
-	  '    inputs = set()' \
-	  '    for e in json.load(open("data/architecture_debt.json")).get("entries", []):' \
-	  '        if e.get("file"): inputs.add(e["file"])' \
-	  '    for e in json.load(open("data/debt_registry.json")).get("entries", []):' \
-	  '        if (e.get("status") or "").lower() not in ("open", "deferred"): continue' \
-	  '        for f in e.get("files", []):' \
-	  '            b = f.rsplit(":", 1)[0] if (f.count(":") and f.rsplit(":", 1)[1].isdigit()) else f' \
-	  '            if b: inputs.add(b)' \
-	  '    inputs.update(["data/debt_registry.json", "data/architecture_debt.json", "data/debt_ledger.json", "data/debt_budgets.json", "data/debt_schema.json", "docs/DEBT_REGISTRY.md", "src/generated/debt_constants.nim", "config/policy/policy_dispositions.json", "config/policy/policy_revisions.json"])' \
-	  '    inter = sorted(ch.intersection(inputs))' \
-	  '    dirhit = sorted(c for c in ch if any(p.endswith("/") and c.startswith(p) for p in inputs))' \
-	  '    if not inter and not dirhit:' \
-	  '        print("[check-debt] SKIP (loud): branch diff disjoint from debt input set (" + str(len(ch)) + " changed paths, 0 debt inputs) — full validation remains unconditional in GATES_FAST/local-ci")' \
-	  '        sys.exit(0)' \
-	  '    hits = (inter + [c for c in dirhit if c not in inter])[:3]' \
-	  '    print("[check-debt] RUN: branch diff intersects debt input set (" + str(len(ch)) + " changed paths, " + str(len(hits)) + " hit(s): " + ", ".join(hits) + ") — full validation proceeds")' \
-	  '    sys.exit(1)' \
-	  'except SystemExit:' \
-	  '    raise' \
-	  'except Exception as exc:' \
-	  '    die("exception: " + repr(exc))' \
-	  | python3 -; then :; \
-	else \
-		$(MAKE) --no-print-directory push-admissibility-debt-prereqs && bin/debt_engine --validate; \
-	fi  # @pushGate check-debt
-	@bin/check_nim_theater --allowlist tools/ci/nim_theater_allowlist.json src/ tests/ tools/  # @pushGate check-nim-theater
 	@bin/doc_path_validator  # @pushGate doc-path-validator
-	@bin/proof_unit_consistency_gate  # @pushGate check-proof-unit-consistency
 	@bin/proof_reconcile_gate  # @pushGate check-proof-unit-reconcile
 	@if [ -f config/policy/epoch_manifest.json ]; then \
 		bin/epoch_transaction_gate --diff "$$(git merge-base origin/main HEAD)" HEAD; \

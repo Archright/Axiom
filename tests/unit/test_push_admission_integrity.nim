@@ -77,22 +77,22 @@ suite "push-admissibility declared == executed (DEBT#534/535)":
   let declaredGates = declaredSetViaMake(repoRoot)
   let realMakefile = repoRoot / "Makefile"
 
-  test "declared set resolves to 15 gates including the mirror gate":
-    check declaredGates.splitWhitespace().len == 15
+  test "declared set resolves to 12 gates including the mirror gate":
+    check declaredGates.splitWhitespace().len == 12
     check "check-merge-admission-cert-mirror" in declaredGates.splitWhitespace()
 
   test "real Makefile: declared == executed (DEBT#534/535 fix state)":
     let (outText, rc) = runGate(gate, realMakefile, declaredGates)
     check rc == 0
-    check outText.contains("PASS: declared == executed (15 = 15)")
+    check outText.contains("PASS: declared == executed (12 = 12)")
 
   test "--executed-summary emits the executed set incl. mirror gate":
     let (outText, rc) = runGate(gate, realMakefile, "", emission = true)
     check rc == 0
     let names = outText.splitWhitespace()
-    check names.len == 15
+    check names.len == 12
     check "check-merge-admission-cert-mirror" in names
-    check "check-debt" in names
+    check "check-debt" notin names
     check "validate-root-layout" in names
 
   test "DEBT#534 replay: declared gate without recipe invocation FAILs":
@@ -124,7 +124,7 @@ suite "push-admissibility declared == executed (DEBT#534/535)":
     let (outText, rc) = runGate(gate, mutatedPath, "", emission = true)
     check rc == 0
     let names = outText.splitWhitespace()
-    check names.len == 14
+    check names.len == 11
     check "check-merge-admission-cert-mirror" notin names
 
   test "DEBT#535 regression: auditor removed from recipe FAILs":
