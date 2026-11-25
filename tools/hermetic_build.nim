@@ -747,6 +747,47 @@ proc prettySorted(node: JsonNode, indent: int = 2): string =
       result = n
   result = sortedNode(node).pretty(indent = indent)
 
+type
+  RegistryCommitState = enum
+    rcsCommitted, rcsDiverged, rcsUnrecorded
+
+func judgeRegistryCommit(committed, regenerated: string,
+                         committedReadable: bool): RegistryCommitState =
+  ## `committedReadable` separates "nothing recorded to compare with" from
+  ## "recorded copy differs" — the two need opposite responses.
+  if not committedReadable:
+    return rcsUnrecorded
+  if committed == regenerated:
+    return rcsCommitted
+  rcsDiverged
+
+func registryDivergenceMessage(relPath: string): string =
+  "FATAL: refusing to write " & relPath & " — it would diverge from HEAD\n" &
+  "  cause: src/ declares a proc/func/method/template/macro the committed\n" &
+  "         " & relPath & " does not carry, so the regenerated projection\n" &
+  "         differs from the one under version control (or the file was\n" &
+  "         edited by hand without being committed)\n" &
+  "  effect: the write is refused here. Left unchecked it would dirty the\n" &
+  "          working tree, and a later clean-tree check would fail on a bare\n" &
+  "          boolean without naming this file\n" &
+  "  fix:    commit the regenerated projection alongside the declaration\n" &
+  "            git add " & relPath & "\n" &
+  "          or discard local edits to it and re-check the declaration\n" &
+  "            git restore " & relPath
+
+proc readCommittedBlob(relPath, root: string): (string, bool) {.raises: [].} =
+  ## Bytes of `relPath` at HEAD, and whether they are readable at all.
+  ## Unreadable covers "not a git repo" and "path not tracked".
+  try:
+    let (outp, exitCode) = execCmdEx(
+      "git -C " & quoteShell(root) & " show " & quoteShell("HEAD:" & relPath),
+      options = {})
+    if exitCode == 0:
+      return (outp, true)
+  except CatchableError:  # axiom:best-effort(git absent or unreadable — unrecorded, logged by caller)
+    discard
+  ("", false)
+
 proc writeTypeRegistryIfChanged(path: string, projectRoot: string): bool =
   ## Generate and write type_registry_metadata.json (idempotent).
   let json = generateTypeRegistry(projectRoot)
@@ -758,6 +799,17 @@ proc writeTypeRegistryIfChanged(path: string, projectRoot: string): bool =
     let existing = readFile(path)
     if existing == newContent:
       return false  # No change
+  let relPath = relativePath(path, projectRoot)
+  let (committed, committedReadable) = readCommittedBlob(relPath, projectRoot)
+  case judgeRegistryCommit(committed, newContent, committedReadable)
+  of rcsDiverged:
+    stderr.writeLine(registryDivergenceMessage(relPath))
+    quit(1)
+  of rcsUnrecorded:
+    echo "[hermetic] " & relPath &
+         ": no HEAD blob to compare against — divergence check skipped"
+  of rcsCommitted:
+    discard
   let dir = parentDir(path)
   if not dirExists(dir):
     createDir(dir)

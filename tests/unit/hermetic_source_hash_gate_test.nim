@@ -194,3 +194,93 @@ suite "hermetic_build source-hash gate & native hash route (DEBT#532)":
     check not fileExists(sb / "src" / "generated" / "build_env.nim")
 
   removeDir(suiteDir)
+
+suite "hermetic_build type-registry divergence guard (issue #469)":
+  ## The registry projection is generated from `src/` by string-parsing
+  ## proc/func/method/template/macro declarations. Before the guard, a build
+  ## that changed it rewrote the tracked file, and the dirty tree failed a
+  ## later clean-tree check on a bare boolean that never named the file.
+  ## The guard refuses the write at its source instead.
+  ##
+  ## Assertions target the guard's own observable behaviour (message + zero
+  ## write), never the process exit code: a minimal sandbox also fails the
+  ## invariant-hash and scope-lock gates, so a global status would not
+  ## discriminate this guard from those.
+  let repoRoot = findRepoRoot()
+  let suiteDir = getTempDir() / ("axiom_hb_registry_" & $getCurrentProcessId() &
+                                 "_" & $epochTime().int)
+  createDir(suiteDir)
+  discard chmod(suiteDir.cstring, 0o755)
+  let hbBin = ensureHermeticBuildBin(repoRoot, suiteDir)
+
+  proc gitIn(sandboxRoot: string; args: string): tuple[output: string, exitCode: int] =
+    execCmdEx("git -C " & quoteShell(sandboxRoot) & " " & args)
+
+  proc registryPath(sandboxRoot: string): string =
+    sandboxRoot / "src" / "generated" / "type_registry_metadata.json"
+
+  proc registryDirty(sandboxRoot: string): bool =
+    let (outp, _) = gitIn(sandboxRoot,
+      "status --porcelain -- src/generated/type_registry_metadata.json")
+    outp.strip().len > 0
+
+  proc seedCommittedRegistry(sandboxRoot: string) =
+    ## Generate the projection exactly as the generator would, then commit it,
+    ## so a subsequent run has something recorded at HEAD to compare against.
+    ## `alpha.nim` needs a declaration: an empty projection is rejected by
+    ## validateTypeRegistry before the guard is ever reached.
+    writeFile(sandboxRoot / "src" / "alpha.nim", "proc alpha*(): int = 1\n")
+    discard runHb(hbBin, sandboxRoot, [])
+    discard gitIn(sandboxRoot, "add -A")
+    discard gitIn(sandboxRoot,
+      "-c user.email=t@t -c user.name=t commit -qm seed")
+
+  test "R1 committed projection matches: no refusal, file left byte-identical":
+    let sb = newSandbox(suiteDir, "r1_clean")
+    defer: removeDir(sb)
+    check gitIn(sb, "init -q .").exitCode == 0
+    seedCommittedRegistry(sb)
+
+    let registry = registryPath(sb)
+    check fileExists(registry)
+    let bytesBefore = readFile(registry)
+    let snapBefore = statSnap(registry)
+
+    let (outText, _) = runHb(hbBin, sb, [])
+    check outText.contains("type_registry_metadata.json unchanged (idempotent)")
+    check not outText.contains("FATAL")
+    check not registryDirty(sb)
+    check readFile(registry) == bytesBefore
+    check statSnap(registry) == snapBefore
+
+  test "R2 new src declaration: write refused, file named, tracked file untouched":
+    let sb = newSandbox(suiteDir, "r2_diverged")
+    defer: removeDir(sb)
+    check gitIn(sb, "init -q .").exitCode == 0
+    seedCommittedRegistry(sb)
+
+    let registry = registryPath(sb)
+    let bytesBefore = readFile(registry)
+    writeFile(sb / "src" / "alpha.nim",
+      "proc alpha*(): int = 1\nproc gamma*(): int = 3\n")
+
+    let (outText, _) = runHb(hbBin, sb, [])
+    check outText.contains("FATAL: refusing to write")
+    check outText.contains("src/generated/type_registry_metadata.json")
+    check outText.contains("proc/func/method/template/macro")
+    # The whole point: the tracked projection is never rewritten, so no
+    # downstream clean-tree check can trip over it.
+    check not registryDirty(sb)
+    check readFile(registry) == bytesBefore
+
+  test "R3 no git repository: divergence check is skipped, not failed":
+    let sb = newSandbox(suiteDir, "r3_unrecorded")
+    defer: removeDir(sb)
+    writeFile(sb / "src" / "alpha.nim", "proc alpha*(): int = 1\n")
+
+    let (outText, _) = runHb(hbBin, sb, [])
+    check outText.contains("no HEAD blob to compare against")
+    check not outText.contains("FATAL")
+    check fileExists(registryPath(sb))
+
+  removeDir(suiteDir)
