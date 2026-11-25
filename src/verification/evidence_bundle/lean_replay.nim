@@ -20,6 +20,31 @@ import core/trusted/env_types
 import infrastructure/process_utils
 import verification/kernel_reexecution
 
+func observedTheoremName(leanSource: string): string {.raises: [].} =
+  ## The declaration this run will observe - determined from the SOURCE before
+  ## execution, so the verifier compares the certificate's claim against what
+  ## was actually asked, never against a value echoed back from the certificate.
+  ## Mirrors `leanObservationTarget`: an explicit `#print axioms <name>` wins,
+  ## otherwise the single declared theorem/lemma is the target.
+  let explicitTarget = explicitAxiomPrintTarget(leanSource)
+  if explicitTarget.len > 0:
+    return explicitTarget
+  let declared = declaredTheorems(leanSource)
+  if declared.len == 1:
+    return declared[0]
+  firstDeclaredName(leanSource)
+
+func leanReplaySource(leanSource: string): string {.raises: [].} =
+  ## The bytes this run will actually hand the kernel: the embedded source plus
+  ## an appended `#print axioms <target>` when the source states no target
+  ## itself. "" = nothing to replay (no declaration to observe).
+  if "#print axioms" in leanSource:
+    return leanSource
+  let target = firstDeclaredName(leanSource)
+  if target.len == 0:
+    return ""
+  leanSource & "\n#print axioms " & target & "\n"
+
 proc reexecuteLeanObserved*(certJson: JsonNode; leanExe: string; timeoutMs: int):
     tuple[verdict: KernelVerdict; axes: seq[string]; theoremName: string] {.
   raises: [CatchableError], axiomEffect: IOEffect,
@@ -27,32 +52,18 @@ proc reexecuteLeanObserved*(certJson: JsonNode; leanExe: string; timeoutMs: int)
   ## Mirrors `reexecuteLean` exactly (QUIRK(runGitEx-argv-flattening): the Lean
   ## source travels through a temp FILE, never inline) and additionally returns
   ## the observed axiom names AND the declaration they were actually printed
-  ## for, so the verifier can compare the three surfaces (certificate
-  ## `axiomsUsed`, KAA `observedAxiomSet`, fresh run) plus theorem identity.
+  ## for, so the verifier can compare the certificate `axiomsUsed`, the KAA
+  ## `observedAxiomSet`, the fresh run and the theorem identity.
   result = (verdict: krMissingInput, axes: @[], theoremName: "")
   if certJson.isNil or certJson.kind != JObject:
     return
   let leanSource = certJson.getOrDefault("leanSource").getStr("")
   if leanSource.len == 0:
     return
-  # The declaration this run will observe - determined from the SOURCE before
-  # execution, so the verifier compares the certificate's claim against what
-  # was actually asked, never against a value echoed back from the certificate.
-  # This mirrors `leanObservationTarget`: an explicit `#print axioms <name>`
-  # wins, otherwise the single declared theorem/lemma is the target.
-  let explicitTarget = explicitAxiomPrintTarget(leanSource)
-  let derivedTarget = firstDeclaredName(leanSource)
-  let artifactSource =
-    if "#print axioms" in leanSource:
-      leanSource
-    else:
-      if derivedTarget.len == 0:
-        return
-      leanSource & "\n#print axioms " & derivedTarget & "\n"
-  result.theoremName =
-    if explicitTarget.len > 0: explicitTarget
-    elif declaredTheorems(leanSource).len == 1: declaredTheorems(leanSource)[0]
-    else: derivedTarget
+  let artifactSource = leanReplaySource(leanSource)
+  if artifactSource.len == 0:
+    return
+  result.theoremName = observedTheoremName(leanSource)
   let cmdBase =
     if leanExe.len > 0:
       leanExe
