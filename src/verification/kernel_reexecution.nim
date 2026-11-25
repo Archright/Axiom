@@ -672,6 +672,44 @@ func isPassingKernelObservation*(o: KernelObservation;
     o.z3.observed and o.z3.verdict == krPassed and
     o.verificationMode == "lean+z3"
 
+func freshObservationBindingError*(recorded: KernelObservation;
+                                   fresh: LeanObservation): string {.raises: [],
+    axiomDecision(id = "DECISION-VS188-09",
+      reason = "A cold re-execution must bind the FRESH observation to the recorded one field by field; deriving a verdict from the embedded artifact alone cannot tell a forged claim from an honest one",
+      adr = "docs/spec/cert_lifecycle_contracts.md",
+      introduced = "v34-vs188").} =
+  ## "" = the fresh Lean run observed exactly what the certificate records;
+  ## otherwise the fail-closed rejection reason. This is the comparison the
+  ## cold paths were missing: `kernelObservationValidationError` only checks a
+  ## record against ITSELF, so a consistently forged cert (claim
+  ## `theoremName=inc3_correct` over a source that proves `decoy_true`) passed
+  ## every check. Here the second operand comes from a real run, so the claim
+  ## can only survive by being true.
+  ##
+  ## Order matters for diagnosis, not for strength: an unobserved run is
+  ## rejected first (nothing to compare), then the theorem identity - the axis
+  ## a decoy source attacks - then the axiom set, then the digests that bind
+  ## the exact bytes and toolchain.
+  if not fresh.observed:
+    return "fresh observation: the re-executed run produced no #print axioms result (fail-closed)"
+  if recorded.lean.theoremName != fresh.theoremName:
+    return "fresh observation: observed theorem '" & fresh.theoremName &
+      "' is not the recorded theoremName '" & recorded.lean.theoremName &
+      "' - the embedded source does not state the claimed theorem (fail-closed)"
+  if normalizeAxiomSet(recorded.lean.axiomSet) != normalizeAxiomSet(fresh.axiomSet):
+    return "fresh observation: observed axiom set [" & fresh.axiomSet.join(", ") &
+      "] is not the recorded set [" & recorded.lean.axiomSet.join(", ") & "] (fail-closed)"
+  if recorded.lean.leanSourceDigest != fresh.leanSourceDigest:
+    return "fresh observation: leanSourceDigest '" & fresh.leanSourceDigest &
+      "' does not bind the recorded digest '" & recorded.lean.leanSourceDigest & "' (fail-closed)"
+  if recorded.lean.outputDigest != fresh.outputDigest:
+    return "fresh observation: outputDigest '" & fresh.outputDigest &
+      "' is not the recorded output digest '" & recorded.lean.outputDigest & "' (fail-closed)"
+  if recorded.lean.toolchainIdentity != fresh.toolchainIdentity:
+    return "fresh observation: toolchain '" & fresh.toolchainIdentity &
+      "' is not the recorded toolchain '" & recorded.lean.toolchainIdentity & "' (fail-closed)"
+  ""
+
 # ─── Loader (fail-closed, never crashes on malformed input) ──────────────────
 
 proc loadCertJsonForReexecution*(certPath: string): Result[JsonNode, string] {.

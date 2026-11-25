@@ -658,6 +658,13 @@ proc verifyKernel(contents: BundleContents;
       if recorded.isErr or recorded.get != observed:
         failures.add(irHash & ": fresh lean axiom set (" & observed.join(",") &
           ") != recorded set")
+      # Theorem identity: the axiom set above can agree while the source proves
+      # a DIFFERENT declaration than the certificate names. A bundle that
+      # records a claim must have it reproduced by the fresh run (DEBT#572).
+      let recordedTheorem = strOf(doc, "theoremName")
+      if recordedTheorem.len > 0 and lean.theoremName != recordedTheorem:
+        failures.add(irHash & ": fresh run observed theorem '" & lean.theoremName &
+          "' but the certificate claims '" & recordedTheorem & "'")
     let z3 = reexecuteZ3(doc, z3Bin, Z3ReexecTimeoutMs)
     if z3 != krPassed:
       failures.add(irHash & ": z3 " & kernelVerdictReason(z3))

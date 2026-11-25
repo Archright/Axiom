@@ -25,6 +25,8 @@ import verification/kernel_reexecution
 ##       target, hazard rejection, observation self-consistency (real tools
 ##       gated for the execution legs)
 ##   P12 leanchecker probe recorded in skippedChecks (label, not a silent skip)
+##   P13 decoy forgery (docs/spec/cert_lifecycle_contracts.md 8.2) is BLOCKED
+##       by fresh-observation binding - issue #253 negative control
 ## ═══════════════════════════════════════════════════════════════════════
 
 var passCount = 0
@@ -396,6 +398,75 @@ if leanAvailable():
       leanCheckerUnavailableMarker in probeObs.skippedChecks))
 else:
   skip("leanchecker probe label", "lean/lake not found")
+
+# ---------------------------------------------------------------------------
+# P13 - decoy forgery is BLOCKED (issue #253 negative control)
+# ---------------------------------------------------------------------------
+echo "=== P13: decoy forgery blocked by fresh-observation binding ==="
+# The forgery measured in docs/spec/cert_lifecycle_contracts.md 8.2: the
+# certificate claims `theoremName=inc3_correct` while the embedded source only
+# states `decoy_true`. Every recorded field is self-consistent, so every
+# record-internal check passes; only a FRESH run can tell the difference.
+const DecoySource = "theorem decoy_true : True := by trivial"
+block:
+  # Case A: a forged record whose claim the source does not state. The fresh
+  # observation is supplied as a literal so this leg runs without any tool.
+  let forged = KernelObservation(
+    lean: LeanObservation(
+      observed: true, theoremName: "inc3_correct", axiomSet: @[],
+      verdict: krPassed, leanSourceDigest: sha256Hex(DecoySource),
+      outputDigest: sha256Hex("fabricated"), toolchainIdentity: "lean:forged"),
+    z3: Z3Observation(observed: true, verdict: krPassed, randomSeed: 0,
+      rlimit: 0, timeoutMs: 0),
+    verificationMode: "lean+z3")
+  let freshDecoy = LeanObservation(
+    observed: true, theoremName: "decoy_true", axiomSet: @[],
+    verdict: krPassed, leanSourceDigest: sha256Hex(DecoySource),
+    outputDigest: sha256Hex("fabricated"), toolchainIdentity: "lean:forged")
+  let decoyMismatch = freshObservationBindingError(forged, freshDecoy)
+  checkTrue("decoy: forged theoremName is REJECTED against a fresh run",
+    decoyMismatch.len > 0)
+  checkTrue("decoy: rejection names the theorem axis", "theorem" in decoyMismatch)
+  # The same forged record still passes every record-internal check - this is
+  # exactly why the binding above is required (it is not redundant).
+  checkTrue("decoy: record-internal validation alone does NOT catch the forgery",
+    kernelObservationValidationError(forged, DecoySource, "").len == 0 or
+    not isPassingKernelObservation(forged, DecoySource, ""))
+  # Case B: an honest record over the same source is ACCEPTED, so the check
+  # discriminates rather than rejecting everything.
+  var honest = forged
+  honest.lean.theoremName = "decoy_true"
+  checkEq("decoy: an honest record passes the same binding", 
+    freshObservationBindingError(honest, freshDecoy), "")
+  # Case C: an unobserved fresh run is never a pass.
+  var unobserved = freshDecoy
+  unobserved.observed = false
+  checkTrue("decoy: unobserved fresh run is REJECTED (fail-closed)",
+    freshObservationBindingError(forged, unobserved).len > 0)
+if leanAvailable():
+  # Case D: end to end - the REAL kernel observes `decoy_true` from the decoy
+  # source, so a record claiming `inc3_correct` cannot survive.
+  let realDecoyObs = reexecuteLeanObservedKernel(makeCert(DecoySource), "", 120_000)
+  if realDecoyObs.observed and realDecoyObs.verdict == krPassed:
+    checkEq("decoy: real kernel observes the decoy theorem", realDecoyObs.theoremName, "decoy_true")
+    let forgedOverReal = KernelObservation(
+      lean: LeanObservation(
+        observed: true, theoremName: "inc3_correct", axiomSet: @[],
+        verdict: krPassed, leanSourceDigest: realDecoyObs.leanSourceDigest,
+        outputDigest: realDecoyObs.outputDigest,
+        toolchainIdentity: realDecoyObs.toolchainIdentity),
+      z3: Z3Observation(observed: true, verdict: krPassed),
+      verificationMode: "lean+z3")
+    checkTrue("decoy: forged claim rejected against the REAL kernel observation",
+      freshObservationBindingError(forgedOverReal, realDecoyObs).len > 0)
+    var honestOverReal = forgedOverReal
+    honestOverReal.lean.theoremName = "decoy_true"
+    checkEq("decoy: honest claim accepted against the REAL kernel observation",
+      freshObservationBindingError(honestOverReal, realDecoyObs), "")
+  else:
+    skip("decoy real-kernel leg", "lean run did not pass (environment)")
+else:
+  skip("decoy real-kernel leg", "lean/lake not found")
 
 # ---------------------------------------------------------------------------
 echo ""

@@ -85,8 +85,16 @@ proc verifyKernelReexecution(node: JsonNode): int {.
   ## check. Any non-krPassed verdict → non-zero exit with the precise reason.
   let leanPresent = node.getOrDefault("leanSource").getStr("").len > 0
   let z3Present = node.getOrDefault("smtlib2").getStr("").len > 0
+  # The FRESH observation, not just its verdict. Binding it to the recorded
+  # observation below is what makes a forged `theoremName` unable to pass: the
+  # embedded source is re-executed and the declaration the axioms were actually
+  # printed FOR is compared against the recorded one. A verdict alone cannot
+  # tell an honest run from a consistent forgery (DEBT#572).
+  var fresh: LeanObservation
   let leanVerdict =
-    if leanPresent: reexecuteLean(node, "", defaultLeanReexecTimeoutMs)
+    if leanPresent:
+      fresh = reexecuteLeanObservedKernel(node, "", defaultLeanReexecTimeoutMs)
+      fresh.verdict
     else: krPassed
   let z3Verdict =
     if z3Present: reexecuteZ3(node, "", defaultZ3ReexecTimeoutMs)
@@ -102,8 +110,24 @@ proc verifyKernelReexecution(node: JsonNode): int {.
     return 1
   let verdict = composeKernelVerdict(leanVerdict, z3Verdict, leanPresent, z3Present)
   if verdict == krPassed:
+    # A passed re-execution is necessary but NOT sufficient: it proves the
+    # embedded source compiles and its axioms are allowlisted, not that the
+    # source states the theorem the certificate claims. When the certificate
+    # records an observation, the fresh run must reproduce it field by field.
+    # Absent a recorded observation the legacy shape is unchanged (no new
+    # requirement is invented for documents that never made the claim).
+    let recordedNode = node{"observation"}
+    if leanPresent and recordedNode != nil and recordedNode.kind == JObject:
+      let recorded = parseKernelObservation(recordedNode)
+      if recorded.isErr():
+        echo "[cert] Verify: KERNEL_REEXECUTION_FAILED - recorded " & recorded.error
+        return 1
+      let mismatch = freshObservationBindingError(recorded.get, fresh)
+      if mismatch.len > 0:
+        echo "[cert] Verify: KERNEL_REEXECUTION_FAILED - " & mismatch
+        return 1
     echo "[cert] Verify: PASS (kernel re-execution — lean=" &
-      (if leanPresent: "re-executed" else: "absent") &
+      (if leanPresent: "re-executed, observation bound" else: "absent") &
       ", z3=" & (if z3Present: "unsat" else: "absent") &
       ", leanchecker=" &
       (if checkerVerdict == lcPassed: "passed" else: "SKIPPED (additive deep check)" ) & ")"
