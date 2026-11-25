@@ -224,7 +224,7 @@
     "src/cli/merge_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "edda309cd5bde34a10c94a8822621a1428ba78c6"
+      "sha": "86b9e955d27fcc59d6fc30f03b4503925dbc0643"
     },
     "src/cli/payload_bridge.nim": {
       "mode": "100644",
