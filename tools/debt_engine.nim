@@ -99,6 +99,7 @@ const
   ConstantsOut          = "src/generated/debt_constants.nim"
   MarkdownOut           = "docs/DEBT_REGISTRY.md"
   BudgetsPath           = "data/debt_budgets.json"
+  NimtryBaselinePath    = "data/nimtry_baseline.json"
   MetricSpecsPath       = "config/policy/metric_specs.json"
   CacheHashPath         = ".cache/debt/hashes.json"
   CacheHashVersion      = "v2"
@@ -1699,6 +1700,33 @@ proc evalLayerViolations(): int {.raises: [CatchableError].} =
 
 ## ── Nimtry baseline evaluator ─────────────────────────────────────────
 
+proc nimtryBaselineProvider(): int {.raises: [].} =
+  ## Fingerprint count of a v2-loadable data/nimtry_baseline.json, else -1.
+  ##
+  ## Mirrors the acceptance test that makes the v2 protocol reachable in
+  ## src/gate/nimtry/nimtry_cli.nim:443 — `version >= 2` and a non-empty
+  ## fingerprint set. A baseline that fails it is not a weaker measurement,
+  ## it is NO measurement: the reader falls through to the v1 fallback, which
+  ## sets limit = total and the gate PASSes unconditionally (issue #462).
+  ##
+  ## This precondition cannot live at that reader: src/gate/** is FROZEN by
+  ## config/repository_surface.json (issue #463). It is enforced here, on the
+  ## governed measurement path, so this consumer never reports a fabricated
+  ## count in the window where the baseline is absent or not yet v2.
+  if not fileExists(NimtryBaselinePath): return -1
+  try:
+    let j = parseFile(NimtryBaselinePath)
+    if j.kind != JObject: return -1
+    let version = if j.hasKey("version"): j["version"].getInt else: 1
+    if version < 2: return -1
+    if not j.hasKey("violations"): return -1
+    let violations = j["violations"]
+    if violations.kind != JArray: return -1
+    if violations.len == 0: return -1
+    result = violations.len
+  except CatchableError:
+    result = -1
+
 proc evalNimtryViolations(): int {.raises: [CatchableError].} =
   ## Projection of the live violation count from the sidecar `bin/nimtry src/`
   ## rewrites on every run (`data/nimtry_live_count.json`). That sidecar is the
@@ -1709,12 +1737,21 @@ proc evalNimtryViolations(): int {.raises: [CatchableError].} =
   ## The gate's exit code is NOT a count: it stays 0 while every violation is
   ## already debt-anchored, so reading it as "0 violations" declared the metric
   ## clean while thousands of active violations remained.
-  ## NOTE: data/nimtry_baseline.json is the Historical Cap, never the metric.
-  ## Unmeasured (binary or sidecar absent) → -1, so the ledger keeps its last
-  ## verified value instead of a fabricated one (DEBT#543 fail-closed).
+  ## NOTE: data/nimtry_baseline.json is the Historical Cap, never the metric —
+  ## but it is the precondition. Without a v2-loadable baseline the run is not
+  ## a measurement at all (see nimtryBaselineProvider), so the tool is not
+  ## invoked: running it would only rewrite the sidecar with a self-disabling
+  ## PASS over the previous run's real number (#462).
+  ## Unmeasured (binary, baseline, or sidecar absent) → -1, so the ledger keeps
+  ## its last verified value instead of a fabricated one (DEBT#543 fail-closed).
   let tool = "bin/nimtry"
   if not fileExists(tool):
     echo "  [skip] nimtry_violations: evaluator binary unavailable (" & tool & ")"
+    return -1
+  let baselineFingerprints = nimtryBaselineProvider()
+  if baselineFingerprints < 0:
+    echo "  [skip] nimtry_violations: v2 baseline unavailable (" & NimtryBaselinePath &
+         ") — bin/nimtry would PASS unconditionally (issue #462)"
     return -1
   let livePath = "data/nimtry_live_count.json"
   ## Delete the sidecar BEFORE measuring (same order as `make nimtry-measure`).
