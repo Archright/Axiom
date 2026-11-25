@@ -700,13 +700,12 @@ func claimFieldObj(node: JsonNode; key: string): JsonNode {.raises: [].} =
   let v = node{key}
   if v.isNil or v.kind != JObject: nil else: v
 
-func canonicalKaaReceiptTheoremIdentity*(canonicalKaa: string): string {.raises: [].} =
-  ## `theoremIdentity` is carried inside the canonical KAA projection as
-  ## `receiptTheoremIdentity` — the declaration the kernel actually accepted.
-  ## Every projection `canonicalizeKaa` emits carries it. A malformed
-  ## projection yields "" (fail-closed at the caller: an absent claim is not
-  ## "nothing to check", it is a claim the verifier cannot bind a run to).
-  if canonicalKaa.len == 0: return ""
+func parseKaaProjection(canonicalKaa: string): JsonNode {.raises: [].} =
+  ## The KAA projection a document carries, or nil when the field does not hold
+  ## one. `canonicalKaa` is a JSON *string* on every shape, so the projection is
+  ## the parsed value, never the node itself: a legacy certificate stores a bare
+  ## digest there and parses to nothing.
+  if canonicalKaa.len == 0: return nil
   var node: JsonNode
   try:
     ## [SEE: docs/spec/nim_effect_system_quirks.md §cast_noSideEffect]
@@ -715,9 +714,32 @@ func canonicalKaaReceiptTheoremIdentity*(canonicalKaa: string): string {.raises:
     {.cast(noSideEffect).}:
       node = parseJson(canonicalKaa)
   except CatchableError:
-    return ""
-  if node.isNil or node.kind != JObject: return ""
+    return nil
+  if node.isNil or node.kind != JObject: return nil
+  node
+
+func canonicalKaaReceiptTheoremIdentity*(canonicalKaa: string): string {.raises: [].} =
+  ## `theoremIdentity` is carried inside the canonical KAA projection as
+  ## `receiptTheoremIdentity` — the declaration the kernel actually accepted.
+  ## Every projection `canonicalizeKaa` emits carries it. A malformed
+  ## projection yields "" (fail-closed at the caller: an absent claim is not
+  ## "nothing to check", it is a claim the verifier cannot bind a run to).
+  let node = parseKaaProjection(canonicalKaa)
+  if node.isNil: return ""
   claimFieldStr(node, "receiptTheoremIdentity")
+
+func kaaProjectionPresent*(doc: JsonNode): bool {.raises: [].} =
+  ## Whether the document carries a KAA projection at all — the precondition
+  ## that separates "this shape makes a theorem claim" from "this document never
+  ## made one". A certificate whose `canonicalKaa` is a bare digest (the
+  ## `axiom.certificate.v3` vault shape) carries no projection, so no claim can
+  ## be read and none is invented for it: the binding is not applied. A
+  ## projection that parses but omits `receiptTheoremIdentity` is a malformed
+  ## projection, NOT an absent claim, and stays fail-closed at
+  ## `claimedTheoremIdentity` — that distinction is the whole point, since
+  ## reading the malformed case as "nothing to check" is how the KAA-shaped
+  ## certificates went unbound (DEBT#572).
+  not parseKaaProjection(claimFieldStr(doc, "canonicalKaa")).isNil
 
 func claimedTheoremIdentity*(doc: JsonNode): Result[string, string] {.raises: [],
     axiomDecision(id = "DECISION-VS188-09",

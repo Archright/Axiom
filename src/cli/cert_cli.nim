@@ -92,7 +92,12 @@ proc theoremBindingFailure(node: JsonNode; fresh: LeanObservation): string {.
   result = ""
   let recordedNode = node{"observation"}
   let observationShaped = recordedNode != nil and recordedNode.kind == JObject
-  let kaaShaped = node.getOrDefault("canonicalKaa").getStr("").len > 0
+  # The shape predicate is "carries a KAA projection", not "the field is
+  # non-empty": a legacy `axiom.certificate.v3` certificate stores a bare digest
+  # there and never made a theorem claim, so no requirement is invented for it.
+  # A projection that parses but omits `receiptTheoremIdentity` still denies
+  # through `claimedTheoremIdentity` below.
+  let kaaShaped = kaaProjectionPresent(node)
   if kaaShaped or observationShaped:
     let claim = claimedTheoremIdentity(node)
     if claim.isErr():

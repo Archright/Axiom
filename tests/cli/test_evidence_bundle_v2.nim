@@ -604,3 +604,26 @@ suite "evidence bundle v2":
     check theoremIdentityBindingError("decoy_true", "decoy_true").len == 0
     check theoremIdentityBindingError("", "decoy_true").len > 0
     check theoremIdentityBindingError("decoy_true", "").len > 0
+
+    # The shape predicate is what separates "never made a claim" from "made a
+    # claim we cannot read". Both are `canonicalKaa` strings, so the
+    # discriminator is whether the value parses to a projection — not whether
+    # the field is non-empty. The legacy vault certificate
+    # (axiom.certificate.v3, src/verification/certificates/) stores a bare
+    # digest: it carries no projection, so `ax cert verify --kernel` must not
+    # invent a theorem requirement for it. A projection that parses but omits
+    # `receiptTheoremIdentity` is the malformed case and still denies.
+    let legacyShape = %*{"canonicalKaa": sha256Hex("legacy")}
+    check not kaaProjectionPresent(legacyShape)
+    check claimedTheoremIdentity(legacyShape).isErr   # nothing to read ...
+    check not kaaProjectionPresent(%*{"canonicalKaa": ""})
+    check not kaaProjectionPresent(%*{"canonicalKaa": "not json at all"})
+    check not kaaProjectionPresent(%*{"canonicalKaa": "[1, 2]"})
+    var projection = newJObject()
+    projection["schema"] = %"axiom.kaa.v1"
+    check kaaProjectionPresent(%*{"canonicalKaa": canonicalJsonString(projection)})
+    check claimedTheoremIdentity(
+      %*{"canonicalKaa": canonicalJsonString(projection)}).isErr  # ... malformed projection denies
+    projection["receiptTheoremIdentity"] = %"demo_f"
+    check claimedTheoremIdentity(
+      %*{"canonicalKaa": canonicalJsonString(projection)}).get == "demo_f"

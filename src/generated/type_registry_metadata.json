@@ -127086,6 +127086,21 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "Bool",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "kaaProjectionPresent",
+      "negativeConstraints": [
+        "result >= 0 is invalid — Bool is not numeric",
+        "Use '(= result true) or (= result false)' instead"
+      ],
+      "resultConstraintTemplate": "(or (= result true) (= result false))",
+      "returnType": "bool",
+      "smtSort": "Bool",
+      "typeCategory": "bool"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "String",
       "module": "src/verification/kernel_reexecution.nim",
       "name": "kernelObservationDigest",
@@ -127353,6 +127368,20 @@
       "returnType": "string",
       "smtSort": "String",
       "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "JsonNode",
+      "module": "src/verification/kernel_reexecution.nim",
+      "name": "parseKaaProjection",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "JsonNode",
+      "smtSort": "Int",
+      "typeCategory": "object"
     },
     {
       "hasAxiomHint": false,
