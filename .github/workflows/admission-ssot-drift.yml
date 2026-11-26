@@ -6,7 +6,8 @@
 #
 # 이 워크플로는 **required check가 아니다** — required 집합은 그대로 3개
 # (admission-check / bsec-integrity / debt-registry-gate). 병합을 막지 않으며
-# GitHub 상태를 변경하지 않는다(GET 전용 관측 — monitor purity 게이트 대상).
+# it changes no GitHub state (GET-only observation — subject to the monitor purity gate;
+# leg 4 likewise issues only GETs of rule-suites, commits/<sha>/pulls, and check-runs).
 # 드리프트가 있으면 이 job 자체가 RED로 loudly 실패한다(관측 신호).
 #
 # 3변 대조(ADR-0035 §3 — 같은 값 3곳 복사는 SSOT가 아님):
@@ -26,17 +27,42 @@
 #                               mergeCommit) check-runs 생산 App 확인 —
 #                               checks:read 필요(작업 GITHUB_TOKEN으로 가능).
 #
+# leg 4 (bypass observation — an additional observation, **outside** the 3-way comparison of ADR-0035 §3):
+#   it finds landings with result=bypass in rulesets/rule-suites and attributes each to the
+#   admission-check (App 5795152) conclusion of that landing PR's head. A bypass landing that
+#   carries a SUCCESS check is DRIFT (= the contradiction of a landing the gate let through being blocked by the ruleset).
+#   On the monitor it turns on only with --observe-bypasses; the default is OFF.
+#   [credential measurement 2026-11-25, run 45562165170 — this workflow's own run]
+#   With the job's own GITHUB_TOKEN, `GET /repos/{r}/rulesets/rule-suites` is
+#   **HTTP 403 "Resource not accessible by integration"**. Per GitHub's documentation the
+#   fine-grained required scope of this endpoint is the "Administration" repository
+#   permissions (read), but the set of scopes the workflow `permissions:` key may grant
+#   does not include administration (docs.github.com/en/rest/repos/rule-suites;
+#   docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+#   permissions section — administration is absent from that list, grep 0 hits) —
+#   that is, the job token **cannot be granted it at all**. Leg 4 is therefore
+#   enabled **only on the diagnostic-app tier**.
+#   The monitor has no degraded flag for leg 4 (--allow-unavailable-ruleset is
+#   leg 2 only) — a rule-suites read failure is a hard FAIL (exit 1). So passing
+#   the flag on tier 2 would turn every run into a FALSE RED, and it is not passed. On tier 2
+#   leg 4 is honestly rendered by the monitor itself as
+#   "bypass observation: NOT PERFORMED (no --observe-bypasses)"
+#   — neither a false PASS nor a hard failure (no silent omission).
+#
 # credential 2단 계약 (fail-closed, 명시적):
 #   tier 1 (diagnostic-app): 진단 App 시크릿이 등록된 경우 — job 안에서
 #     installation token을 민팅(diagnostic-authority.yml과 동일 패턴)하고
-#     rulesets API를 읽는다 → 3개 다 판정.
+#     reads the rulesets API → adjudicates all 4 (leg 4 included: on mint, the
+#     permission-administration:read covers rule-suites, contents:read covers
+#     commits/<sha>/pulls, and checks:read covers the PR-head check-runs).
 #   tier 2 (job-token): 진단 App이 아직 등록되지 않은 경우(현행 — 진단 App
 #     등록은 인간 게이트, docs/spec/diagnostic_execution_delegation.md §2;
 #     GitHub API로 App을 만들 수 없다) — job 자신의 GITHUB_TOKEN을 쓴다.
-#     실측: 이 토큰은 repository ruleset을 읽을 수 있다 → 3개 다 판정된다.
+#     measured: this token can read the repository ruleset → legs 1, 2 and 3 adjudicated.
 #     ruleset 읽기가 실패하면 모니터가 그 leg을 NOT PERFORMED로 명시 보고한다
-#     (degraded mode — 조용한 생략 금지). 부분 판정을 전체 GREEN으로
-#     위장하지 않는다.
+#     (degraded mode — no silent omission). As measured above, leg 4 does not hold on this tier,
+#     so it is not enabled and stays NOT PERFORMED. A partial adjudication is not
+#     disguised as an overall GREEN.
 #
 # 권한 상한: contents:read / actions:read / checks:read / pull-requests:read —
 # 최소 상한(pull-requests:read는 관찰 SHA 선택기의 gh pr list --state merged
@@ -98,6 +124,7 @@ jobs:
               echo "- credential used: the job's own GITHUB_TOKEN (contents/actions/checks: read)"
               echo "- leg 2 (policy <-> ruleset): PERFORMED with this token (measured 2026-10-21 — ruleset drift 4/4 PASS); on read failure it is reported as NOT PERFORMED by the monitor, never silently skipped"
               echo "- legs 1 (policy <-> constants) and 3 (policy <-> live producer) are performed"
+              echo "- leg 4 (bypass observation): NOT PERFORMED on this tier — rule-suites returns HTTP 403 \"Resource not accessible by integration\" for the job GITHUB_TOKEN (measured 2026-11-25, run 45562165170), and the endpoint's required scope is Administration (read), which is not among the workflow permissions: keys grantable to GITHUB_TOKEN. The flag is therefore passed only on the diagnostic-app tier; the monitor prints its own NOT PERFORMED line here."
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 
@@ -250,7 +277,14 @@ jobs:
           AXIOM_HERMETIC_BUILDING=1 nim c --hints:off -o:bin/ssot_drift_monitor tools/merge_ruleset_drift_monitor.nim
 
           ARGS="--policy-file config/policy/merge_admission.json --merge-cli-source src/cli/merge_cli.nim --repo $REPO --observe-sha $SHA"
-          if [ "${{ steps.tier.outputs.tier }}" != "diagnostic-app" ]; then
+          if [ "${{ steps.tier.outputs.tier }}" = "diagnostic-app" ]; then
+            # leg 4 (bypass observation) is turned on **only on this tier** — the job token gets a
+            # 403 "Resource not accessible by integration" from rule-suites
+            # (measured 2026-11-25, run 45562165170), and the monitor has no leg 4 degraded
+            # flag, so a read failure is a hard FAIL (exit 1).
+            # When it is not turned on, the monitor prints NOT PERFORMED itself (see the header).
+            ARGS="$ARGS --observe-bypasses"
+          else
             # tier 2: Administration:read credential가 없다 — ruleset leg은
             # 통째로 불가하므로, 실패 시 명시적 DEGRADED MODE로 내려간다
             # (monitor가 NOT PERFORMED로 보고한다 — 부분 판정을 전체 GREEN으로
