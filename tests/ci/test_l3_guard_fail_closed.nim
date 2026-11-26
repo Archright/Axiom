@@ -15,11 +15,10 @@
 ##   * 가드는 venue 스텝 직후(잡 내 최초 판정 스텝)·attest+landing 전용 —
 ##     preflight(레인 합법 스킵)·verdict(레인 무소비) 의미론 보존.
 ##   * 가드 env는 잡의 direct needs와 정확히 일대일 대응 — 커버 안 된
-##     need는 가려진 green 구멍이다. Contract-probe 추출(2026-11-26,
-##     ci/contract-probe-parallel)로 `go-contract-probe`가 네 번째 direct
-##     need가 됐다: 매트릭스의 형제 잡(레그로부터 needs 엣지 없음)이므로
-##     잡 자체로는 어떤 레그도 그 결과를 판정하지 않는다 — 가드와
-##     go-critical-rollup 두 곳에서만 판정된다.
+##     need is a masked-green hole. The contract-probe extraction (2026-11-26,
+##     ci/contract-probe-parallel) made `go-contract-probe` the FOURTH direct
+##     need: it is a SIBLING of the matrix (no needs edge from the legs), so
+##     no leg judges its result -- only the guard and go-critical-rollup do.
 ##   * 잡 if는 !cancelled() — 가드가 판정할 수 있는 생존 전제(취소 배치는
 ##     병합 불가 상태로 남는다, §2.4).
 ##   * 이동 4스텝은 cut-not-copy(잔여 잡 부재) + 본문 해시가 사전분할

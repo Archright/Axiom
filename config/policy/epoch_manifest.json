@@ -1,5 +1,5 @@
 {
-  "ciEpochId": "N+11",
+  "ciEpochId": "N+12",
   "implementedSlices": [
     "SL-08",
     "SL-01",
@@ -25,6 +25,6 @@
     "SL-16",
     "SL-17"
   ],
-  "productionExecutionPin": "433be3c34c51cfc3fc6f8741009135cfa5906a03",
+  "productionExecutionPin": "04d1d0e6a4b33b622937585a4a2dc13749f13c2e",
   "mode": "ci-migration"
 }

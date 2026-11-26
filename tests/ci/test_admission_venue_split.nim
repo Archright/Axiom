@@ -322,13 +322,15 @@ suite "ADR-0032 — heavy steps are landing-gated, exactly":
     ##   + 6 (admission-independents 잡: Download base-built · Verify manifest ·
     ##        Core purity · Stage D9 · Register subject · Upload evidence chain)
     ##   = 34 (3잡 — AdmissionJobs가 job2a를 포함하므로 카운트는 3잡 합계다).
-    ## Contract-probe 추출 (2026-11-26, ci/contract-probe-parallel):
-    ##   + 2 (admission-check 신규 landing-gated: [check] Download
-    ##        contract-probe evidence · [check] Verify contract-probe evidence
-    ##        — 형제 잡 증거의 fail-closed 소비 경계 2스텝).
-    ##   = 37 (3잡 실측 — go-contract-probe 잡은 AdmissionJobs에 들지 않는다:
-    ##        go-critical-lane과 같은 이유로 merge_group|workflow_call 전용
-    ##        잡 레벨 가드이며 venue 마커가 없다).
+    ## Contract-probe extraction (2026-11-26, ci/contract-probe-parallel):
+    ##   + 2 (admission-check's new landing-gated steps: [check] Download
+    ##        contract-probe evidence / [check] Verify contract-probe evidence
+    ##        -- the two-step fail-closed consumption boundary for a SIBLING
+    ##        job's evidence).
+    ##   = 37 (measured over 3 jobs -- the go-contract-probe job is not in
+    ##        AdmissionJobs: it is a job-level guard scoped to
+    ##        merge_group|workflow_call for the same reason go-critical-lane
+    ##        is, and it carries no venue marker).
     ## 구핀 33의 개별 조성 항목(toolchain-handoff +4 · G2 job-matrix +4−2 ·
     ## accounting +1)은 실측 29와 대응되지 않는 산술이므로 본 핀에서
     ## 제거했다 — 커밋 이력(git log -p tests/ci/test_admission_venue_split.nim)이
