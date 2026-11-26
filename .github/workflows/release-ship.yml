@@ -801,7 +801,7 @@ jobs:
       #   발급 (curl + openssl dgst -sha256 -sign PEM — ADR-0024 §8 PEM 절차).
       - name: Create App installation token (release-authority)
         id: app-token
-        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
         with:
           # numeric App ID(5082347)와 일치하는 app-id 입력 사용 (v3의 client-id는
           # Client ID 문자열(Iv...) 전용 — README: legacy app-id 입력도 계속 지원).
@@ -1025,7 +1025,7 @@ jobs:
       # 시크릿 부재 시 이 step이 실패한다 — 조용한 우회 없음(fail-closed).
       - name: Create axiom-cli App installation token (release-authority)
         id: cli-app-token
-        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
         with:
           app-id: ${{ secrets.AXIOM_CLI_RELEASE_APP_ID }}
           private-key: ${{ secrets.AXIOM_CLI_RELEASE_PRIVATE_KEY }}
