@@ -408,7 +408,7 @@ jobs:
         # This step writes only $GITHUB_OUTPUT, so no payload can be poisoned by
         # body/key divergence.
         # Maintenance: a PR that edits action.yml bumps this pin in the same PR.
-        uses: Archright/Axiom/.github/actions/setup-axiom-toolchain@ba51c8d7c5d005ac35b95f890e358568847042ab
+        uses: Archright/Axiom/.github/actions/setup-axiom-toolchain@84a5940184a566fc3d8c47f4f8cbb317047d8d88
         with:
           keygen-only: 'true'
           cache-build-source: ${{ steps.verify.outputs.build_sha }}
@@ -610,7 +610,7 @@ jobs:
         # Pinned-revision body (same rationale as the lane keygen above). The key
         # derives from the base tree's workspace hashes, so it stays
         # byte-identical to what base consumers request.
-        uses: Archright/Axiom/.github/actions/setup-axiom-toolchain@ba51c8d7c5d005ac35b95f890e358568847042ab
+        uses: Archright/Axiom/.github/actions/setup-axiom-toolchain@84a5940184a566fc3d8c47f4f8cbb317047d8d88
         with:
           keygen-only: 'true'
           cache-build-source: ${{ steps.verify-base.outputs.base_sha }}
