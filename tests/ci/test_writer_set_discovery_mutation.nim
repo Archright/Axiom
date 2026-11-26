@@ -134,23 +134,32 @@ proc collectCalls(root: PNode; callee: string): seq[PNode] =
   result = @[]
   walkCalls(root, callee, result)
 
-proc registeredDebtEngineLines(gateText: string): seq[int] =
-  ## 게이트 텍스트에서 `file: "tools/debt_engine.nim", line: <n>` 형태로
-  ## 등록된 줄 번호 전체 (RegisteredDebtRoleEntries/RegisteredGatesWriters
-  ## 등 어느 엔트리든 이 형태면 잡힌다).
+proc registeredDebtEngineAnchors(gateText: string): seq[tuple[procName, artifact: string]] =
+  ## Every debt_engine site registered in the gate text in content-anchor form:
+  ## `(file: ..., procName: "<p>", artifact: "<a>", role: ...)`.
+  ## The proc name, not the line, is the site's identity (#483).
   result = @[]
-  let needle = "file: \"" & DebtEngineRel & "\", line: "
   var at = 0
   while true:
-    let pos = gateText.find(needle, at)
+    let marker = "procName: \""
+    let pos = gateText.find(marker, at)
     if pos < 0:
       break
-    at = pos + needle.len
-    var j = at
-    while j < gateText.len and gateText[j] in {'0' .. '9'}:
-      inc j
-    if j > at:
-      result.add(parseInt(gateText[at ..< j]))
+    let nameStart = pos + marker.len
+    let nameEnd = gateText.find('"', nameStart)
+    if nameEnd < 0:
+      break
+    let artMarker = "artifact: \""
+    let artPos = gateText.find(artMarker, nameEnd)
+    if artPos < 0:
+      break
+    let artStart = artPos + artMarker.len
+    let artEnd = gateText.find('"', artStart)
+    if artEnd < 0:
+      break
+    result.add((procName: gateText[nameStart ..< nameEnd],
+                artifact: gateText[artStart ..< artEnd]))
+    at = artEnd
 
 # ── Check 2 — 게이트 슬라이스 harness (라이브 vs 돌연변이) ────────────────
 
@@ -343,12 +352,20 @@ suite "DEBT#527 writer-set discovery — 독립 오라클":
         for required in ["RegistryPath", "ConstantsOut", "MarkdownOut"]:
           checkpoint("cmdClose atomicWriteJson first-arg: " & required)
           check required in seen
-        let regLines = registeredDebtEngineLines(gateText)
+        let anchors = registeredDebtEngineAnchors(gateText)
+        check anchors.len >= 3
         for site in sites:
-          if site.arg in ["RegistryPath", "ConstantsOut", "MarkdownOut"]:
-            checkpoint(DebtEngineRel & ":" & $site.line & " (" & site.arg &
-                       ") must be a registered debt-role entry line")
-            check site.line in regLines
+          # Only sinks whose first argument is the artifact SSOT are pinned
+          # (P1 materialization).
+          let artifact = case site.arg
+            of "RegistryPath": "data/debt_registry.json"
+            of "ConstantsOut": "src/generated/debt_constants.nim"
+            of "MarkdownOut": "docs/DEBT_REGISTRY.md"
+            else: ""
+          if artifact.len > 0:
+            checkpoint("cmdClose " & site.arg &
+                       " must be registered as a content anchor over " & artifact)
+            check (procName: "cmdClose", artifact: artifact) in anchors
 
   test "harness: 라이브 슬라이스는 경쟁 writer를 잡고 돌연변이는 놓친다 (killed)":
     let repo = findRepoRootDir()
