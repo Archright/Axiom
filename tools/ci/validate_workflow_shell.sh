@@ -91,6 +91,26 @@
 # the upload marker (steps are walked via the same yaml.safe_load tree as the
 # run blocks — no regex over step semantics).
 #
+# Required-context placement rule (2026-11-26) — the deadlock / silent-pass
+# pair on a REQUIRED check. Contract: `docs/spec/ci_admission_budget_contract.md`
+# §4 R2/R3; the required set is read from `config/policy/merge_admission.json`
+# in the BASE tree (this script is the TRUSTED copy; the candidate tree is only
+# ever scanned, never asked what is required). R2: a required workflow must not
+# carry `paths`, `paths-ignore`, or `branches-ignore` — a skipped workflow
+# leaves its checks "Pending", so the requiring PR is blocked from merging. R3:
+# a required JOB's `if:` may be only absent, `always()`, `!cancelled()`, or a
+# `&&`-conjunction of those — a job skipped by `jobs.<id>.if` reports "Success"
+# and does not block merging even as a required check, which is a SILENT pass.
+# Scope is the (workflowPath, job) pair from the policy, never the job name
+# (`.github/workflows/admission-check.yml` has a callee job of the same name
+# that is not the required context) and never the whole workflow
+# (`go-critical-rollup` and the attest lanes are sub-jobs and may be
+# conditional). Locus, stated rather than faked: allow-list COVERAGE (does a
+# present `branches` list still contain the trunk?) is NOT decided here — the
+# policy records no trunk, and a second configuration is exactly what R2
+# forbids; its failure mode is the same visible Pending deadlock, never a
+# silent pass.
+#
 # Usage:   validate_workflow_shell.sh [--self-test] [--scan-dir <dir>] [--max-report]
 #   --scan-dir <dir>  scan <dir>/*.yml instead of .github/workflows (fixture
 #                     harness entry; identical rules, identical fail-closed
@@ -106,13 +126,14 @@
 #   0 — every run: block parsed cleanly and no parse-poison violation (block
 #      count printed); --self-test: broken snippet caught AND valid snippet
 #      accepted; --max-report: report emitted
-#   1 — bash syntax error(s), parse-poison violation(s), or lane-stderr emission
-#      violation(s) found (fail-closed;
+#   1 — bash syntax error(s), parse-poison violation(s), lane-stderr emission
+#      violation(s), publisher exec-boundary violation(s), or required-context
+#      placement violation(s) found (fail-closed;
 #      exact workflow/job/step + reason printed); --self-test: the broken
 #      snippet was NOT caught (gate itself broken)
 #   2 — environment/configuration error (missing scan target directory,
 #      python3 or PyYAML unavailable, unknown argument, extractor produced no
-#      summary)
+#      summary, required-context policy missing/unparsable/empty)
 
 set -euo pipefail
 
@@ -177,7 +198,7 @@ python3 -c 'import yaml' 2>/dev/null || {
 # ---------------------------------------------------------------------------
 check_workflows() {
   python3 - "$ROOT" "$SCAN_DIR" "$MAX_REPORT" <<'PYEOF'
-import glob, os, re, subprocess, sys, tempfile
+import glob, json, os, re, subprocess, sys, tempfile
 
 root, scan_dir, max_report = sys.argv[1], sys.argv[2], sys.argv[3] == "1"
 wf_dir = scan_dir if scan_dir else os.path.join(root, ".github", "workflows")
@@ -273,6 +294,167 @@ def iter_steps(doc):
             if not isinstance(step, dict):
                 continue
             yield jname, (step.get("name") or ("step#%d" % i)), step
+
+
+# -- Required-context placement rules (2026-11-26, contract §4 R2/R3) -------
+# Contract: `docs/spec/ci_admission_budget_contract.md` §4. Authority for the
+# required set: `config/policy/merge_admission.json`, read from ROOT — that is
+# the BASE tree, because bsec-integrity runs the TRUSTED copy of this file and
+# points it at the candidate tree. The candidate never supplies its own
+# required set (that would be self-certification).
+#
+# Two platform semantics make a required check stop being a gate, and neither
+# is a silent local failure — they are documented GitHub behaviour:
+#   R2  a required WORKFLOW skipped by a trigger filter (`paths`,
+#       `paths-ignore`, `branches-ignore`) leaves its checks in "Pending", so
+#       a PR requiring them is blocked from merging (deadlock, not a pass).
+#       https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs
+#   R3  a required JOB skipped by `jobs.<id>.if` reports its status as
+#       "Success" and does not block merging — a SILENT pass on a required
+#       check, which is strictly worse than a deadlock.
+#       https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-jobs-with-conditions
+# R3 therefore admits exactly: absent, `always()`, `!cancelled()`, or a
+# `&&`-conjunction of those. Venue selection belongs INSIDE the job via
+# `github.event_name`, never in the job's `if:`.
+#
+# Scope is the REQUIRED JOB, keyed by (workflowPath, job) — not by job name and
+# not by the whole workflow. Keying by name would false-fail
+# `.github/workflows/admission-check.yml`, whose callee job `admission-check`
+# is not the required context (the context is published by
+# `admission-gate-v2.yml`); `go-critical-rollup` and the attest lanes are
+# sub-jobs of a required workflow and are legitimately conditional.
+#
+# Locus (what this rule does NOT decide, stated instead of faked): the
+# allow-list COVERAGE question — whether a present `pull_request.branches` /
+# `merge_group.branches` list still contains the trunk — needs a trunk
+# authority that does not exist in the policy (no `trunk` field; R2 forbids
+# introducing a second configuration). It is review-enforced only, and its
+# failure mode is the same visible Pending deadlock as R2, never a silent
+# pass. `paths`/`paths-ignore`/`branches-ignore` have no legitimate use on a
+# required workflow at all, so those are banned unconditionally.
+POLICY_PATH = os.path.join(root, "config", "policy", "merge_admission.json")
+MERGE_VENUES = ("pull_request", "pull_request_target", "merge_group")
+BANNED_FILTERS = ("paths", "paths-ignore", "branches-ignore")
+ADMISSIBLE_IF_ATOMS = ("always()", "!cancelled()")
+
+
+def load_required_pairs():
+    """Required (workflowPath, job) pairs from the BASE policy. Fail closed."""
+    try:
+        with open(POLICY_PATH, encoding="utf-8") as fh:
+            pol = json.load(fh)
+    except (OSError, ValueError) as e:
+        print("validate_workflow_shell: required-context policy unreadable (%s: %s) — "
+              "configuration error, fail closed" % (POLICY_PATH, e), file=sys.stderr)
+        sys.exit(2)
+    pairs = []
+    for e in (pol.get("requiredValidations") or []):
+        wp, job = e.get("workflowPath"), e.get("job")
+        if isinstance(wp, str) and isinstance(job, str):
+            pairs.append((wp, job))
+    det = pol.get("requiredWorkflowDetection") or {}
+    if isinstance(det.get("workflowPath"), str) and isinstance(det.get("verdictJob"), str):
+        pairs.append((det["workflowPath"], det["verdictJob"]))
+    if not pairs:
+        # "missing does not equal valid empty" — an empty required set would
+        # make every rule below vacuous.
+        print("validate_workflow_shell: required-context policy declares no required "
+              "(workflowPath, job) pairs (%s) — configuration error, fail closed"
+              % POLICY_PATH, file=sys.stderr)
+        sys.exit(2)
+    return pairs
+
+
+def policy_key(rel, scan_dir):
+    """Map a scanned file to its policy workflowPath."""
+    if scan_dir:
+        return ".github/workflows/" + os.path.basename(rel)
+    return rel.replace(os.sep, "/")
+
+
+def _strip_parens(s):
+    while s.startswith("(") and s.endswith(")"):
+        depth = 0
+        balanced = True
+        for i, ch in enumerate(s):
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+                if depth == 0 and i != len(s) - 1:
+                    balanced = False
+                    break
+        if not balanced:
+            break
+        s = s[1:-1].strip()
+    return s
+
+
+def admissible_if(cond):
+    """R3: (ok, normalized) for a required job's `if:` value."""
+    if cond is None:
+        return True, "absent"
+    if cond is True:
+        return True, "true"
+    if not isinstance(cond, str):
+        return False, repr(cond)
+    s = cond.strip()
+    while s.startswith("${{") and s.endswith("}}"):
+        s = s[3:-2].strip()
+    if not s:
+        return False, cond
+    atoms = [a.strip() for a in s.split("&&")]
+    for a in atoms:
+        if _strip_parens(a) not in ADMISSIBLE_IF_ATOMS:
+            return False, cond
+    return True, cond
+
+
+def check_required_rules(doc, key, required_pairs):
+    """R2/R3 violations for one scanned file (empty = the rules hold)."""
+    jobs_required = sorted({job for wp, job in required_pairs if wp == key})
+    if not jobs_required:
+        return []
+    if not isinstance(doc, dict):
+        return ["required workflow is not a YAML mapping - the placement rules are "
+                "undecidable (fail closed)"]
+    out = []
+    jobs = doc.get("jobs")
+    if not isinstance(jobs, dict):
+        return ["required workflow declares no `jobs` mapping - no required context "
+                "can ever report"]
+    on = doc.get("on", doc.get(True))
+    if on is None:
+        out.append("required workflow declares no `on:` triggers - its required context "
+                   "can never report")
+    elif isinstance(on, dict):
+        for venue in MERGE_VENUES:
+            cfg = on.get(venue)
+            if not isinstance(cfg, dict):
+                continue
+            for key_name in BANNED_FILTERS:
+                if key_name in cfg:
+                    out.append(
+                        "`%s.%s` on a REQUIRED workflow: a skipped workflow leaves its "
+                        "checks in \"Pending\", so every PR requiring this context is "
+                        "blocked from merging. A required workflow must not be filterable "
+                        "away from a merge candidate; select the venue INSIDE the job from "
+                        "`github.event_name` instead" % (venue, key_name))
+    for job in jobs_required:
+        jd = jobs.get(job)
+        if not isinstance(jd, dict):
+            out.append("required job `%s` is absent from this workflow - the required "
+                       "context can never report (the queue stalls; it does not pass)" % job)
+            continue
+        ok, why = admissible_if(jd.get("if"))
+        if not ok:
+            out.append(
+                "required job `%s` carries `if: %s`: a job skipped by `jobs.<id>.if` "
+                "reports its status as \"Success\" and does not block merging, even as a "
+                "required check. Admissible values are exactly: absent, `always()`, "
+                "`!cancelled()`, or a `&&`-conjunction of those - decide the venue inside "
+                "the job from `github.event_name`, never by skipping it" % (job, why))
+    return out
 
 
 # -- Publisher execution-boundary rule (2026-11-23) -----------------------
@@ -402,6 +584,8 @@ if max_report:
 
 total = 0
 guard_fails = 0
+policy_fails = 0
+REQUIRED_PAIRS = load_required_pairs()
 with tempfile.TemporaryDirectory(prefix="wfshchk-") as td:
     for wf in wfs:
         rel = os.path.relpath(wf, root)
@@ -414,6 +598,10 @@ with tempfile.TemporaryDirectory(prefix="wfshchk-") as td:
             print("  " + str(e).splitlines()[0])
             fails += 1
             continue
+        for msg in check_required_rules(doc, policy_key(rel, scan_dir), REQUIRED_PAIRS):
+            policy_fails += 1
+            print("FAIL:%s:<required-context-rules>" % rel)
+            print("  " + msg)
         for msg in check_publisher_exec_boundary(doc, rel):
             fails += 1
             print("FAIL:%s:<publisher-exec-boundary>" % rel)
@@ -477,9 +665,10 @@ with tempfile.TemporaryDirectory(prefix="wfshchk-") as td:
                     print("  " + line)
             else:
                 print("PASS:%s:%s:%s" % (rel, jname, sname))
-print("SUMMARY: run blocks checked=%d failures=%d lane-guard violations=%d"
-      % (total, fails, guard_fails))
-sys.exit(1 if (fails or guard_fails) else 0)
+print("SUMMARY: run blocks checked=%d failures=%d lane-guard violations=%d "
+      "required-context violations=%d"
+      % (total, fails, guard_fails, policy_fails))
+sys.exit(1 if (fails or guard_fails or policy_fails) else 0)
 PYEOF
 }
 
@@ -569,6 +758,79 @@ with tempfile.TemporaryDirectory(prefix="wfshchk-selftest-lane-") as td:
         print(out)
         sys.exit(1)
 
+# required-context placement rules round-trip (contract §4 R2/R3, 2026-11-26):
+# a required workflow carrying a banned trigger filter, and a required job
+# carrying a disjunctive `if:`, must both FAIL with the
+# <required-context-rules> attribution; the admissible `if:` forms and a
+# non-required file with the same banned filter must PASS. The fixture carries
+# the unquoted `on:` key so the PyYAML boolean-key quirk (YAML 1.1: `on` →
+# True) is exercised, not bypassed.
+TEMPLATE = (
+    "name: fixture\n"
+    "on:\n"
+    "  pull_request:\n"
+    "  merge_group:\n"
+    "    types: [checks_requested]\n"
+    "jobs:\n"
+    "  bsec-integrity:\n"
+    "    runs-on: ubuntu-latest\n"
+    "%s"
+    "    steps:\n"
+    "      - name: noop\n"
+    "        run: echo ok\n"
+)
+FILTER_CASE = (
+    "name: fixture\n"
+    "on:\n"
+    "  pull_request:\n"
+    "    paths:\n"
+    "      - 'docs/**'\n"
+    "  merge_group:\n"
+    "    types: [checks_requested]\n"
+    "    branches-ignore:\n"
+    "      - main\n"
+    "jobs:\n"
+    "  bsec-integrity:\n"
+    "    runs-on: ubuntu-latest\n"
+    "    steps:\n"
+    "      - name: noop\n"
+    "        run: echo ok\n"
+)
+cases = [
+    ("r2_paths+branches-ignore", "bsec-integrity.yml", FILTER_CASE, True,
+     ("pull_request.paths", "merge_group.branches-ignore")),
+    ("r3_venue_disjunction", "bsec-integrity.yml",
+     TEMPLATE % "    if: '${{ github.event_name == \"pull_request\" }}'\n", True, ("if:",)),
+    ("r3_stage_conjunction", "bsec-integrity.yml",
+     TEMPLATE % "    if: '${{ always() && inputs.stage == \"attest\" }}'\n", True, ("if:",)),
+    ("r3_absent", "bsec-integrity.yml", TEMPLATE % "", False, ()),
+    ("r3_not_cancelled", "bsec-integrity.yml",
+     TEMPLATE % "    if: '${{ !cancelled() }}'\n", False, ()),
+    ("r3_conjunction_admissible", "bsec-integrity.yml",
+     TEMPLATE % "    if: '${{ always() && !cancelled() }}'\n", False, ()),
+    ("r3_bare_always", "bsec-integrity.yml",
+     TEMPLATE % "    if: 'always()'\n", False, ()),
+    ("scope_non_required_file", "unrelated.yml", FILTER_CASE, False, ()),
+]
+for label, fname, body, expect_fail, needles in cases:
+    with tempfile.TemporaryDirectory(prefix="wfshchk-selftest-req-") as td:
+        with open(os.path.join(td, fname), "w", encoding="utf-8") as fh:
+            fh.write(body)
+        r = subprocess.run(["bash", script, "--scan-dir", td],
+                           capture_output=True, text=True)
+        out = r.stdout + r.stderr
+        caught = "<required-context-rules>" in out
+        missing = [n for n in needles if n not in out]
+        ok = (caught == expect_fail) and not missing and \
+            ((r.returncode != 0) == expect_fail)
+        print("self-test required-context %-28s expect_fail=%-5s caught=%-5s rc=%d -> %s"
+              % (label, expect_fail, caught, r.returncode, "OK" if ok else "BROKEN"))
+        if not ok:
+            if missing:
+                print("  missing attribution: %s" % ", ".join(missing))
+            print(out)
+            sys.exit(1)
+
 print("self-test: PASS")
 sys.exit(0)
 PYEOF
@@ -577,7 +839,7 @@ PYEOF
 if [ "$SELF_TEST" -eq 1 ]; then
   echo "== validate_workflow_shell: self-test =="
   if self_test; then
-    echo "validate_workflow_shell: SELF-TEST PASS — broken snippet caught, valid snippet accepted, lane-guard negative FAILs with guard attribution / positive passes"
+    echo "validate_workflow_shell: SELF-TEST PASS — broken snippet caught, valid snippet accepted, lane-guard negative FAILs with guard attribution / positive passes, required-context matrix (R2 filters + R3 job-if) FAILs on violation and PASSes on every admissible form"
     exit 0
   fi
   echo "validate_workflow_shell: SELF-TEST FAIL — gate did not fail closed on broken snippet" >&2
