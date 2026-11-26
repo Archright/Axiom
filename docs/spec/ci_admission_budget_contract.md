@@ -204,7 +204,7 @@ capability can keep growing off the critical chain immediately.
 - Diff-scoped skip sets for a required context (R2, R3). The repository already refuses
   automatic affected-test selection as nondeterministic (`Makefile:1515`).
 - Any new hash scheme, evidence CAS, or planner. `docs/spec/verification_dag_contract.md:19`
-  lists "제로베이스 planner/CAS 신규 구축" as a **non-goal**, and `:125` forbids starting
+  lists "building a zero-base planner/CAS anew" as a **non-goal**, and `:125` forbids starting
   frontier reuse before Phase 4 closure. Existing reuse surfaces (`evidence_cas`,
   `judgment_cas`, gate memo) are consumed, not re-derived.
 - `ciGeneration` (the CI cutover generation number) as an identity input. Existing identity
