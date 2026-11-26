@@ -11,7 +11,7 @@ import std/[algorithm, json, os, strutils]
 ## disagree. That disagreement is the structural cause of "a PR touches the
 ## trust surface and CI deadlocks".
 ##
-##   1. config/policy/trust_surface_manifest.json — 18 exact paths,
+##   1. config/policy/trust_surface_manifest.json — 17 exact paths,
 ##      "comparison": "blob-based", "readFrom": "B_mg". Enforced OUT OF REPO by
 ##      App 5795152 as a preflight. Any byte change to a listed path ⇒ the App
 ##      publishes admission-check = failure with reasons=mismatch:<path>, and
@@ -20,7 +20,7 @@ import std/[algorithm, json, os, strutils]
 ##      (PRODUCT/CONTROLLED/FROZEN, first match in resolutionOrder order, else
 ##      defaultClass), enforced IN REPO by tools/surface_guard.nim.
 ##
-## Measured at HEAD: of the 18 manifest paths only 10 resolve to FROZEN. The
+## Measured at HEAD: of the 17 manifest paths only 2 resolve to FROZEN. The
 ## other 8 resolve CONTROLLED or default-PRODUCT — so on those 8 the in-repo
 ## gates PASS while the App FAILs.
 ##
@@ -46,7 +46,7 @@ import std/[algorithm, json, os, strutils]
 ## is refactored, and a shared helper would make the two definitions converge
 ## by construction, which would hide exactly the drift this file exists to
 ## report. Fidelity is pinned instead by a test that runs this resolver over
-## the real policy and asserts 10 FROZEN / 8 divergent — a divergence between
+## the real policy and asserts 2 FROZEN / 15 divergent — a divergence between
 ## the two resolvers fails that test loudly.
 ##
 ## Exit codes (fail-closed; a read/parse failure is NEVER "no divergence"):

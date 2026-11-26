@@ -473,3 +473,33 @@ truncation is covered by Q19 of `docs/spec/gh_run_observation_quirks.md`.
   independent measurement of the four control devices (A = manifest 18,
   B = trustSurface 39, C = checker closure 891, D = surface classes) over 14
   files. Its verdicts for the 7 CONTROLLED paths agree with Q2 independently.
+## Addendum -- v111 (2026-11-27, `app-trust-mirror`): the divergence is now the intended state
+
+Q2's measurement above (**8 of 18 paths diverge**, manifest 18) is a snapshot of
+v108. It is preserved as history, not as the current state. Current, machine-read
+values: manifest **17** paths, convergent **2**, divergent **15** -- printed by
+`tools/ci/trust_surface_divergence.nim` and pinned in
+`tests/unit/test_trust_surface_divergence.nim` case (a).
+
+v111 registers the seven remaining App-manifest paths that were still resolved
+FROZEN as exact CONTROLLED under a new group, `app-trust-mirror`. The reasoning
+is the same one v105-v108 used for six earlier paths, and that repetition is the
+point: a single-path exception per lane was treating a symptom. The cause is
+that `FROZEN` denies MODIFY and DELETE with no scoped escape on paths whose merge
+is *already* decided by the App's blob comparison, so the only way to push such a
+PR was `--no-verify`, which skips all nine pre-push gates rather than one.
+
+The two paths that are deliberately **not** registered are the interesting ones:
+
+- `config/repository_surface.json` and `tools/surface_guard.nim` stay FROZEN.
+  FROZEN on those two is what arms the `selfAmendment` AMENDED verdict (guard v2
+  conditions a-d). Carving them would not weaken merge authority -- the App still
+  denies admission-check -- but it would convert an audited amendment into an
+  untracked plain `PASS`, which is the §0.9 failure mode this quirk document
+  exists to describe.
+
+Divergence is therefore not a defect to drive to zero. It is the measured shape
+of a policy whose binding control lives outside the repository on those paths.
+The ledger (`data/ci_optimization/trust_surface_divergence/ledger.json`) still
+ratchets: unregistered divergence and dead entries both fail, so a path cannot
+drift out of FROZEN silently or stay registered after the App stops protecting it.
