@@ -3,7 +3,7 @@
 ##
 ## The detector exists because Axiom carries two independent definitions of
 ## "trust surface": the App manifest (config/policy/trust_surface_manifest.json,
-## 18 exact paths, blob-compared out of repo) and the in-repo 3-class policy
+## 17 exact paths, blob-compared out of repo) and the in-repo 3-class policy
 ## (config/repository_surface.json, first match in resolutionOrder order, else
 ## defaultClass). A manifest path is CONVERGENT only when it resolves to FROZEN;
 ## every other resolution is a DIVERGENCE where the in-repo gates PASS while the
@@ -11,7 +11,7 @@
 ##
 ## Case (a) is the FIDELITY PIN, and it is the reason this file imports no
 ## resolver from tools/surface_guard.nim: it runs the detector over the REAL
-## policies and asserts the measured 10 FROZEN / 8 divergent split with the 8
+## policies and asserts the measured 9 FROZEN / 8 divergent split with the 8
 ## exact paths. If the detector's resolution semantics ever drift from the
 ## guard's, this test fails loudly instead of the two silently agreeing.
 ##
@@ -133,8 +133,8 @@ suite "trust_surface_divergence — real repository state (fidelity pin)":
     for expected in ExpectedDivergences:
       check expected in found
     # 10 of the 18 manifest paths are FROZEN — the convergent remainder.
-    check hasLine(verdict.lines, "SUMMARY manifest=18 convergent=10 divergent=8")
-    echo "  [pin] 18 manifest paths -> 10 convergent / 8 divergent, all registered"
+    check hasLine(verdict.lines, "SUMMARY manifest=17 convergent=9 divergent=8")
+    echo "  [pin] 17 manifest paths -> 9 convergent / 8 divergent, all registered"
 
     # Every reported divergence names how it resolved; nothing is unexplained.
     for line in verdict.lines:
@@ -161,7 +161,7 @@ suite "trust_surface_divergence — mutations":
     let verdict = evaluate(probe, policy, ledger)
     check verdict.exitCode == 1
     check "tests/unit/test_pareto_harness.nim" in divergencePaths(verdict.lines)
-    check hasLine(verdict.lines, "SUMMARY manifest=19")
+    check hasLine(verdict.lines, "SUMMARY manifest=18")
     discard manifest
     echo "  [mut] injected CONTROLLED 19th path -> exit 1, path named"
 
@@ -171,7 +171,7 @@ suite "trust_surface_divergence — mutations":
     let verdict = evaluate(probe, policy, ledger)
     check verdict.exitCode == 0
     check "src/gate/runner_probe.nim" notin divergencePaths(verdict.lines)
-    check hasLine(verdict.lines, "SUMMARY manifest=19 convergent=11 divergent=8")
+    check hasLine(verdict.lines, "SUMMARY manifest=18 convergent=10 divergent=8")
     echo "  [mut] injected FROZEN 19th path -> convergent, not reported"
 
   test "(d) a missing manifest file exits 2 (fail closed)":
@@ -197,7 +197,7 @@ suite "trust_surface_divergence — mutations":
     check verdict.exitCode == 1
     check hasLine(verdict.lines, "DEAD src/gate/already_frozen.nim")
     # The counters live on the SUMMARY line, not on a line of their own.
-    check hasLine(verdict.lines, "SUMMARY manifest=18 convergent=10 divergent=8 registered=8 unregistered=0 dead=1")
+    check hasLine(verdict.lines, "SUMMARY manifest=17 convergent=9 divergent=8 registered=8 unregistered=0 dead=1")
     echo "  [mut] dead ledger entry -> exit 1, DEAD line emitted"
 
   test "(g) a wildcard ledger entry exits 2":
