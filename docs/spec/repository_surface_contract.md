@@ -727,3 +727,68 @@ pre-push `SURFACE_FORBIDDEN`으로 막혀, 문서화된 `--no-verify` 수용-리
 양 venue에서 동일 발행 주체(Actions 15368)로 success인지, (ii) PR push 1회의 runner
 할당이 감소했는지, (iii) landing venue에서 5개 차원이 전부 실행되는지를
 `ci_critical_path_metric.md` 규약으로 측정해 `data/ci_optimization/`에 기록한다.
+## 부록 — v111 개정 (2026-11-27, `app-trust-mirror`)
+
+**배경**: v105·v106·v107·v108은 각각 한 레인이 막혔을 때 그 레인의 경로 1~2개를
+`CONTROLLED`로 등재했다. 네 번 모두 사유가 동일했다 — App trust-surface manifest가
+이미 그 경로의 병합을 거부하는데 `FROZEN`이 같은 결정 지점에서 한 번 더 거부했고,
+`FROZEN`에는 범위 한정 탈출구가 없으므로 남는 push 경로는 `--no-verify` 하나뿐이었다.
+그 플래그는 pre-push 게이트 **9개 전부**를 건너뛴다(표면 게이트 1개가 아니다).
+같은 사유가 4회 반복되었다는 사실 자체가 경로별 예외가 원인이 아니라 증상이었음을
+말해준다. v111은 남은 7경로를 하나의 그룹으로 등재해 그 반복을 끝낸다.
+
+**개정 내용** (`policyVersion` 110 → 111):
+
+| 경로 | 클래스 | 그룹 |
+|---|---|---|
+| `.github/workflows/axiom-operational-slice.yml` | `CONTROLLED` (exact) | `app-trust-mirror` |
+| `.github/workflows/bsec-integrity.yml` | `CONTROLLED` (exact) | `app-trust-mirror` |
+| `.github/workflows/debt-registry-gate.yml` | `CONTROLLED` (exact) | `app-trust-mirror` |
+| `.github/workflows/generation-acceptance.yml` | `CONTROLLED` (exact) | `app-trust-mirror` |
+| `.github/workflows/runner-pool-acceptance.yml` | `CONTROLLED` (exact) | `app-trust-mirror` |
+| `config/policy/merge_admission.json` | `CONTROLLED` (exact) | `app-trust-mirror` |
+| `config/policy/trust_surface_manifest.json` | `CONTROLLED` (exact) | `app-trust-mirror` |
+
+- 7경로 전부 App manifest 17경로의 구성원이다. 즉 이 변경 이전에도 이 경로들의
+  병합은 App의 `blob(G) == blob(B_mg)` 비교가 이미 거부했다.
+- 윗 5개는 ruleset의 required context를 발행하는 workflow다. 이들을 수정하는
+  정당한 레인(MUST-T2 delegation + epoch rotation)이 매번 `--no-verify`를 요구했다는
+  뜻이고, 그 레인은 이 저장소에서 가장 위험한 변경이 지나가는 레인이다.
+- `config/policy/merge_admission.json`은 App manifest의 미러가 아니다. 그것은
+  `src/cli/merge_cli.nim`의 로컬 `ax merge` admission predicate 정책이며, **동시에**
+  App manifest 구성원이다. 두 사실은 별개이고 여기서는 후자만이 근거다.
+- `config/policy/trust_surface_manifest.json`은 App이 `readFrom: B_mg`로 읽는
+  파일 자신이며 그 목록 안에 자기 자신이 들어 있다. 따라서 어떤 편집도 App이 거부한다.
+- `frozenExceptions.paths` 등재는 DEBT#545가 요구하는 교차 선언이다. 등재하지 않으면
+  `POLICY_INVALID`다. 와일드카드 없음.
+
+**등재하지 않은 2경로 (의도적 제외)**: `config/repository_surface.json`과
+`tools/surface_guard.nim`은 `FROZEN`으로 남는다. 이 둘에서 `FROZEN`은 머지 차단이
+아니라 **selfAmendment의 AMENDED 판정을 무장시키는 장치**다(guard v2 조건 a–d:
+head 정책 제출 + base `allowedPaths` + FROZEN 위반 전부가 allowedPaths 안 + 버전 단조 증가).
+이 둘을 `CONTROLLED`로 내리면 merge authority는 그대로지만(App이 여전히 거부한다)
+정책 개정이 **감사된 AMENDED에서 무기록 PASS로** 바뀐다. 그것은 검증 약화가 아니라
+감사 추적의 소실이며, DEBT#542가 종결 근거로 인용한 계약을 무력화한다.
+
+**불변 조건**: App trust surface 17경로, blob 등가 비교, required context 7개,
+ruleset `bypass_actors` 정상 상태 `[]` 전부 불변이다. `.github/**`와
+`config/policy/**`의 신규 파일 ADD는 여전히 `FROZEN` FAIL이다 — 미검토 workflow나
+정책 파일을 새로 들여올 수 없다. 즉 이 개정이 바꾸는 것은 *기존 검토된 파일을 누가
+push할 수 있는가*뿐이고, *무엇이 착지할 수 있는가*는 바뀌지 않는다.
+
+**부수 효과 (의도된 것)**: 본 개정 이후 7경로를 수정하는 PR은 `--no-verify` 없이
+push된다. 따라서 그 PR들에서 나머지 8개 pre-push 게이트가 실제로 실행된다.
+검증 커버리지는 줄지 않고 늘어난다.
+
+**자기승인 차단 유지**: 본 정책 PR은 `config/repository_surface.json`(FROZEN,
+`allowedPaths` 포함)과 이 문서(`allowedPaths` 포함)만 수정하고 `policyVersion`을
+110→111로 단조 증가시킨다 — selfAmendment 조건 (a)–(d)의 정확한 형태이며, 따라서
+본 PR 자신은 `AMENDED`로 판정된다. `changeCount=1`, `violations=[]`,
+`amendments=[config/repository_surface.json]`가 관측 기대값이다.
+
+**관측 의무**: 착지 후 (i) `tools/ci/trust_surface_divergence.nim`이
+`manifest=17 convergent=2 divergent=15 registered=15`를 출력하는지, (ii) SL-20이
+base v111로 7경로에 `PASS`를 내는지, (iii) 신규 `.github/workflows/*.yml` ADD가
+여전히 `SURFACE_FORBIDDEN`인지, (iv) App이 7경로 수정 PR에 대해 여전히
+`admission-check`를 거부하는지를 확인한다. (iii)과 (iv)가 실패하면 이 개정은
+검증 약화이므로 즉시 revert 대상이다.

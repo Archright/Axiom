@@ -11,7 +11,7 @@
 ##
 ## Case (a) is the FIDELITY PIN, and it is the reason this file imports no
 ## resolver from tools/surface_guard.nim: it runs the detector over the REAL
-## policies and asserts the measured 9 FROZEN / 8 divergent split with the 8
+## policies and asserts the measured 2 FROZEN / 15 divergent split with the 15
 ## exact paths. If the detector's resolution semantics ever drift from the
 ## guard's, this test fails loudly instead of the two silently agreeing.
 ##
@@ -30,15 +30,22 @@ const
   RealPolicy = PolicyPath
   RealLedger = LedgerPath
 
-  ## The measured divergence set at HEAD: 7 CONTROLLED + 1 default-PRODUCT.
+  ## The measured divergence set at HEAD: 14 CONTROLLED + 1 default-PRODUCT.
   ## Sorted, because the detector sorts its output.
   ExpectedDivergences = [
     ".github/actions/setup-axiom-toolchain/action.yml",
     ".github/workflows/admission-check.yml",
     ".github/workflows/admission-gate-v2.yml",
+    ".github/workflows/axiom-operational-slice.yml",
+    ".github/workflows/bsec-integrity.yml",
     ".github/workflows/certificate-mint.yml",
+    ".github/workflows/debt-registry-gate.yml",
+    ".github/workflows/generation-acceptance.yml",
     ".github/workflows/publication-integrity.yml",
+    ".github/workflows/runner-pool-acceptance.yml",
     "config/policy/epoch_manifest.json",
+    "config/policy/merge_admission.json",
+    "config/policy/trust_surface_manifest.json",
     "config/trusted_writer_set.json",
     "tests/ci/test_vs0_admission_aggregate_fail_closed.nim",
   ]
@@ -123,18 +130,18 @@ suite "trust_surface_divergence — resolver semantics":
 
 suite "trust_surface_divergence — real repository state (fidelity pin)":
 
-  test "(a) HEAD produces exactly the 8 registered divergences and exit 0":
+  test "(a) HEAD produces exactly the 15 registered divergences and exit 0":
     let verdict = runPaths(RealManifest, RealPolicy, RealLedger)
     check verdict.exitCode == 0
 
     let found = divergencePaths(verdict.lines)
-    check found.len == 8
-    # The pin: the measured 7 CONTROLLED + 1 default-PRODUCT set, path for path.
+    check found.len == 15
+    # The pin: the measured 14 CONTROLLED + 1 default-PRODUCT set, path for path.
     for expected in ExpectedDivergences:
       check expected in found
-    # 10 of the 18 manifest paths are FROZEN — the convergent remainder.
-    check hasLine(verdict.lines, "SUMMARY manifest=17 convergent=9 divergent=8")
-    echo "  [pin] 17 manifest paths -> 9 convergent / 8 divergent, all registered"
+    # 2 of the 17 manifest paths are FROZEN — the convergent remainder.
+    check hasLine(verdict.lines, "SUMMARY manifest=17 convergent=2 divergent=15")
+    echo "  [pin] 17 manifest paths -> 2 convergent / 15 divergent, all registered"
 
     # Every reported divergence names how it resolved; nothing is unexplained.
     for line in verdict.lines:
@@ -171,7 +178,7 @@ suite "trust_surface_divergence — mutations":
     let verdict = evaluate(probe, policy, ledger)
     check verdict.exitCode == 0
     check "src/gate/runner_probe.nim" notin divergencePaths(verdict.lines)
-    check hasLine(verdict.lines, "SUMMARY manifest=18 convergent=10 divergent=8")
+    check hasLine(verdict.lines, "SUMMARY manifest=18 convergent=3 divergent=15")
     echo "  [mut] injected FROZEN 19th path -> convergent, not reported"
 
   test "(d) a missing manifest file exits 2 (fail closed)":
@@ -193,11 +200,11 @@ suite "trust_surface_divergence — mutations":
       %*{"rationale": "stale", "trackedAs": "probe/dead"}
     let (manifest, policy, _) = realFiles()
     let verdict = evaluate(manifest, policy, $ledger)
-    # The new entry is dead, and the 8 real ones are still registered.
+    # The new entry is dead, and the 15 real ones are still registered.
     check verdict.exitCode == 1
     check hasLine(verdict.lines, "DEAD src/gate/already_frozen.nim")
     # The counters live on the SUMMARY line, not on a line of their own.
-    check hasLine(verdict.lines, "SUMMARY manifest=17 convergent=9 divergent=8 registered=8 unregistered=0 dead=1")
+    check hasLine(verdict.lines, "SUMMARY manifest=17 convergent=2 divergent=15 registered=15 unregistered=0 dead=1")
     echo "  [mut] dead ledger entry -> exit 1, DEAD line emitted"
 
   test "(g) a wildcard ledger entry exits 2":
