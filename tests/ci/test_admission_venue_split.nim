@@ -301,7 +301,7 @@ suite "ADR-0032 — heavy steps are landing-gated, exactly":
           if "steps.slice-engine.outputs.scope_" in s.guard and not isException:
             check s.guard.contains(Landing)
 
-  test "landing-gated guard counts are exact (34 admission + 16 mint)":
+  test "landing-gated guard counts are exact (37 admission + 16 mint)":
     ## 정확 카운트: 무분별한 컨정크트 추가도 잡는다 — 새 landing 게드 스텝을
     ## 추가하면 이 카운트와 이 테스트를 함께 개정한다 (계약 핀).
     ## 소급 정정 (2026-11-04 실측, b1659ef16 선례의 다섯 번째 사례): 본 핀은
@@ -322,6 +322,13 @@ suite "ADR-0032 — heavy steps are landing-gated, exactly":
     ##   + 6 (admission-independents 잡: Download base-built · Verify manifest ·
     ##        Core purity · Stage D9 · Register subject · Upload evidence chain)
     ##   = 34 (3잡 — AdmissionJobs가 job2a를 포함하므로 카운트는 3잡 합계다).
+    ## Contract-probe 추출 (2026-11-26, ci/contract-probe-parallel):
+    ##   + 2 (admission-check 신규 landing-gated: [check] Download
+    ##        contract-probe evidence · [check] Verify contract-probe evidence
+    ##        — 형제 잡 증거의 fail-closed 소비 경계 2스텝).
+    ##   = 37 (3잡 실측 — go-contract-probe 잡은 AdmissionJobs에 들지 않는다:
+    ##        go-critical-lane과 같은 이유로 merge_group|workflow_call 전용
+    ##        잡 레벨 가드이며 venue 마커가 없다).
     ## 구핀 33의 개별 조성 항목(toolchain-handoff +4 · G2 job-matrix +4−2 ·
     ## accounting +1)은 실측 29와 대응되지 않는 산술이므로 본 핀에서
     ## 제거했다 — 커밋 이력(git log -p tests/ci/test_admission_venue_split.nim)이
@@ -341,7 +348,7 @@ suite "ADR-0032 — heavy steps are landing-gated, exactly":
     for job in AdmissionJobs:
       for s in stepsOfJob(admissionPath, job):
         if s.guard.contains(Landing): inc nAdmission
-    check nAdmission == 34
+    check nAdmission == 37
     ## 16 = 15 (venue split 계약) + 1 (P7c-x judgment CAS ledger append의
     ## landing venue gate 복원분 — bc22d36b2, 2026-10-09 병합. 게드 추가 시
     ## 본 핀 동시 개정 규칙이 누락돼 2026-10-10 재측정으로 소급 정합).
@@ -365,6 +372,8 @@ suite "ADR-0032 — heavy steps are landing-gated, exactly":
                  "[check] Verify artifact manifest",
                  "[check] Download lane-0 judgment artifacts",
                  "[check] Download lane-1 judgment artifacts",
+                 "[check] Download contract-probe evidence",
+                 "[check] Verify contract-probe evidence",
                  "[check] Download admission-independents evidence",
                  "[guard] Every direct need must be success",
                  "[check] Attest witness-only",

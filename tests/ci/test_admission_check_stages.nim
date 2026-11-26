@@ -33,6 +33,20 @@
 ## results, and the occurrence counts below are re-pinned for the three-job
 ## topology (preamble steps 3x, slice engine 4x, candidate-H checkout 2x).
 ##
+## Contract-probe extraction (2026-11-26, ci/contract-probe-parallel): the
+## evidenceId contract check left the 2-leg matrix for a FOURTH payer of the
+## same preamble — `go-contract-probe`, a SIBLING job of the matrix
+## (`needs: [build-base-artifacts]` only, deliberately no edge from the legs,
+## so it is scheduled in parallel and never enters their critical path). Its
+## provisioning steps are copied from the lane byte-for-byte apart from the
+## matrix removal, so the occurrence counts are re-pinned once more: each
+## preamble step occurs FOUR times (admission-check + admission-independents +
+## go-critical-lane + go-contract-probe) and the slice engine FIVE times (the
+## probe's copy plus build-base-artifacts'). The probe consumes the same
+## supply for the same reason the lane does: its real-chain contract test
+## compiles under tests/config.nims, whose integrity guard refuses to run
+## without the base-built `bin/ax` the manifest verify materializes.
+##
 ## Structural, fail-closed text assertions over the workflow source — no YAML
 ## parser is available to the toolchain, and a missing file, a renamed step, or
 ## a vanished conjunct all fail here rather than degrade to a partial match.
@@ -204,20 +218,23 @@ suite "admission-check — stage dispatch is selectable":
     ## provisioning this job performs (B checkout, slice engine, toolchain,
     ## base-artifact manifest verify)" — workflow header). L3 split
     ## (2026-11-04) adds the third payer: `admission-independents` re-pays
-    ## the same preamble, so each preamble step now occurs THREE times
-    ## (admission-check + go-critical-lane + admission-independents) and the
-    ## slice engine FOUR times (build-base-artifacts too).
+    ## the same preamble. The contract-probe extraction (2026-11-26) adds the
+    ## fourth: `go-contract-probe` — a sibling of the matrix with
+    ## `needs: [build-base-artifacts]` only. So each preamble step now occurs
+    ## FOUR times (admission-check + admission-independents + go-critical-lane
+    ## + go-contract-probe) and the slice engine FIVE times
+    ## (build-base-artifacts too).
     ## The exact counts pin that topology — a renamed/vanished step reads as
     ## 0 and an unexpected clone inflates the count, both failing here — and
     ## EVERY occurrence must stay free of `inputs.stage`.
     for step in ["Checkout executor tree = B", "Verify artifact manifest",
                  "Download base-built artifacts"]:
       let guards = stepIfs(src, step)
-      check guards.len == 3
+      check guards.len == 4
       for guard in guards:
         check "inputs.stage" notin guard
     let engines = stepIfs(src, "Load epoch manifest implementedSlices")
-    check engines.len == 4
+    check engines.len == 5
     for guard in engines:
       check "inputs.stage" notin guard
 

@@ -720,7 +720,7 @@ jobs:
     # would skip this job on a failed need, and a skipped job reports
     # Success without blocking merges (prereg §2.4: that is the masked
     # green the guard exists to close).
-    needs: [build-base-artifacts, go-critical-lane, admission-independents]
+    needs: [build-base-artifacts, go-critical-lane, go-contract-probe, admission-independents]
     runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
     # 45 (was 30): the DEBT#432 GO-critical admission tests — now the
     # `go-critical-lane` 2-lane job matrix below (G2 generation,
@@ -816,10 +816,11 @@ jobs:
           NEED_BUILD_BASE: ${{ needs.build-base-artifacts.result }}
           NEED_GO_LANES: ${{ needs.go-critical-lane.result }}
           NEED_INDEPENDENTS: ${{ needs.admission-independents.result }}
+          NEED_PROBE: ${{ needs.go-contract-probe.result }}
         run: |
           set -euo pipefail
           fail() { echo "[guard] FAIL — $1 (fail-closed, ADR-0032 (f))" >&2; exit 1; }
-          echo "[guard] needs: build-base-artifacts=$NEED_BUILD_BASE go-critical-lane=$NEED_GO_LANES admission-independents=$NEED_INDEPENDENTS"
+          echo "[guard] needs: build-base-artifacts=$NEED_BUILD_BASE go-critical-lane=$NEED_GO_LANES go-contract-probe=$NEED_PROBE admission-independents=$NEED_INDEPENDENTS"
           case "$NEED_BUILD_BASE" in
             success) ;;
             *) fail "needs.build-base-artifacts.result='$NEED_BUILD_BASE' != success" ;;
@@ -832,7 +833,15 @@ jobs:
             success) ;;
             *) fail "needs.admission-independents.result='$NEED_INDEPENDENTS' != success" ;;
           esac
-          echo "[guard] PASS — every direct need success (build-base-artifacts, go-critical-lane, admission-independents)"
+          # The contract probe is a SIBLING of the matrix (no needs edge from
+          # the legs), so its result is enforced here as well as in
+          # go-critical-rollup — a skipped, cancelled, or failed probe is
+          # never green.
+          case "$NEED_PROBE" in
+            success) ;;
+            *) fail "needs.go-contract-probe.result='$NEED_PROBE' != success (a skipped, cancelled, or failed contract probe is never green)" ;;
+          esac
+          echo "[guard] PASS — every direct need success (build-base-artifacts, go-critical-lane, go-contract-probe, admission-independents)"
 
 
       # B checkout at the workspace root = the EXECUTOR tree (policy, vault,
@@ -1669,6 +1678,37 @@ jobs:
         with:
           name: go-judgment-lane-1-${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }}-${{ github.run_attempt }}
           path: .
+      - name: "[check] Download contract-probe evidence (sibling-of-matrix handoff, fail-closed on landing)"
+        if: always() && inputs.stage == 'attest' && steps.venue.outputs.venue == 'landing'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: go-contract-probe-${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }}-${{ github.run_attempt }}
+          path: .
+      - name: "[check] Verify contract-probe evidence (fail-closed — contract version == B's)"
+        if: always() && inputs.stage == 'attest' && steps.venue.outputs.venue == 'landing'
+        run: |
+          set -euo pipefail
+          fail() { echo "[check][probe] FAIL — $1 (fail-closed)" >&2; exit 1; }
+          P=go-contract-probe.txt
+          [ -f "$P" ] || fail "contract-probe evidence $P missing — the go-contract-probe job published nothing (a skipped, cancelled, or failed probe is never green)"
+          val() { sed -n "s/^$1=//p" "$P" | head -1; }
+          [ "$(val verdict)" = "PASS" ] || fail "contract-probe verdict='$(val verdict)' != PASS"
+          [ -n "$(val b_tree)" ] || fail "contract-probe b_tree missing"
+          [ -n "$(val m_sha)" ] || fail "contract-probe m_sha missing"
+          [ -n "$(val overlay_manifest_digest)" ] || fail "contract-probe overlay_manifest_digest missing"
+          # The version the probe reported is the B-owned checker's own
+          # self-check value, compiled against the OVERLAID candidate src/.
+          # Recompute it from B: src/core/deterministic_cas_key.nim is pinned
+          # in config/trusted_checker_closure.json, so M==B holds unless the
+          # closure pin was rotated with the change — an unequal pair means
+          # the probe measured a different contract than the one the checker
+          # enforces, and its evidence is not about this generation.
+          B_CONTRACT="$(git show HEAD:src/core/deterministic_cas_key.nim \
+            | sed -n 's/.*EvidenceIdContractVersion\* *= *"\([^"]*\)".*/\1/p' | head -1)"
+          [ -n "$B_CONTRACT" ] || fail "cannot read EvidenceIdContractVersion from src/core/deterministic_cas_key.nim at B (fail-closed)"
+          [ "$(val contract)" = "$B_CONTRACT" ] \
+            || fail "contract-probe contract='$(val contract)' != B's '$B_CONTRACT' (the probe measured a different contract than the checker enforces)"
+          echo "[check][probe] PASS — contract=$B_CONTRACT (== probe), m_sha=$(val m_sha), b_tree=$(val b_tree), overlay_manifest_digest=$(val overlay_manifest_digest)"
       # ────────────────────────────────────────────────────────────────
       # [independents] L3 file channel (prereg §2.2): the
       # admission-independents job stages draft-assembled.json + the
@@ -4476,31 +4516,37 @@ jobs:
             echo "[overlay] executor surfaces: Makefile/config.nims/tests/config.nims/config.effects/nimble.lock verified B-byte-identical"
           } | tee -a "$GITHUB_STEP_SUMMARY"
 
-      - name: "[lane] evidenceId contract check (B-owned checker — self-check battery, EXECUTED always)"
+      - name: "[lane] GO-critical input approval gate (B-owned checker — approval judgment, AHEAD of the tests)"
         run: |
           set -euo pipefail
-          fail() { echo "[contract-check] FAIL — $1 (fail-closed)" >&2; exit 1; }
+          fail() { echo "[contract-approval] FAIL — $1 (fail-closed)" >&2; exit 1; }
           mkdir -p /tmp/opencode
-          # (a) The checker's own fixture battery (positive legacy + strict,
-          # and every rejection class) — B-owned bytes, never overlaid, never
-          # CAS-eligible: it compiles against the OVERLAID src (M's
-          # kernel_acceptance_authority) but carries ITS OWN normative
-          # preimage formula.
-          make test-fast-one T=tools/ci/check_evidence_id_contract.nim \
-            || fail "evidenceId contract self-check battery failed (tool: tools/ci/check_evidence_id_contract.nim)"
-          # The tool's own self-check names the contract version it enforces
-          # (the core SSOT constant) — export it for the execution records.
-          CONTRACT_VERSION="$(/tmp/opencode/ax-one --self-check 2>/dev/null | grep -o 'contract evidence-id-contract\.[a-z0-9.]*' | awk '{print $2}' || true)"
-          printf '%s' "$CONTRACT_VERSION" | grep -qE '^evidence-id-contract\.[a-z0-9.]+$' \
-            || fail "cannot read the contract version from the checker's self-check output"
-          echo "GO_CONTRACT_VERSION=$CONTRACT_VERSION" >> "$GITHUB_ENV"
-          echo "[contract-check] contract version: $CONTRACT_VERSION"
-          # (b) The real-chain probe: executes the canonical chain through
-          # the OVERLAID candidate src/ and hands the raw CLE components to
-          # the B-owned checker — claimed==recomputed or FAIL.
-          make test-fast-one T=tests/unit/test_evidence_id_contract_probe.nim \
-            || fail "evidenceId contract probe failed (real chain vs B-owned recomputation)"
-          echo "[contract-check] PASS — contract check EXECUTED+PASS (self-check battery + real-chain probe, contract=evidence-id-contract.v1)"
+          # WHY THIS STEP STILL EXISTS after the contract check moved to the
+          # go-contract-probe job (parallel sibling): the PREVENTIVE
+          # property. tools/ci/check_evidence_id_contract.nim runs
+          # checkGoCriticalInputs() FIRST inside main(), before ANY mode
+          # dispatch — so the candidate's GO-critical test/golden bytes are
+          # judged HERE, ahead of the tests below, and a candidate whose
+          # judgment-input bytes are neither B's nor an approved blob never
+          # gets them executed. Without this step the tests would run
+          # concurrently with the judgment (a real verification weakening).
+          # CHEAP: no mode runs the approval phase alone, and a candidate may
+          # not add a flag to a B-owned checker (tools/ is never overlaid, so
+          # the running bytes are B's either way) — the minimal invocation is
+          # the checker's default --self-check: approval judgment first, then
+          # its in-memory fixture battery (no I/O, no chain execution). The
+          # expensive half — the real-chain probe — runs in go-contract-probe.
+          APPROVAL_LOG="$(make test-fast-one T=tools/ci/check_evidence_id_contract.nim 2>&1)" || {
+            printf '%s\n' "$APPROVAL_LOG"
+            fail "evidenceId approval gate failed (tool: tools/ci/check_evidence_id_contract.nim) — the candidate's GO-critical judgment inputs are not B's and not an approved blob"
+          }
+          printf '%s\n' "$APPROVAL_LOG"
+          # An INERT judge (GITHUB_ACTIONS/event env not seen → ok("") with no
+          # report) prints no ARMED line: that would be a silent skip of the
+          # preventive gate, so it is a FAIL here, never a pass.
+          printf '%s' "$APPROVAL_LOG" | grep -q '\[go-critical-inputs\] ARMED' \
+            || fail "the approval judgment did not arm (no '[go-critical-inputs] ARMED' line) — an inert judge would silently let unapproved judgment-input bytes execute"
+          echo "[contract-approval] PASS — approval phase armed ahead of the GO-critical tests (battery + real-chain probe: go-contract-probe)"
 
       # ────────────────────────────────────────────────────────────────
       # THE GO-CRITICAL TESTS — this lane's half of the DEBT#432 set, the
@@ -4553,11 +4599,18 @@ jobs:
           M_TREE="${{ steps.overlay.outputs.m_tree }}"
           OVERLAY_DIGEST="${{ steps.overlay.outputs.overlay_manifest_digest }}"
           TOOLCHAIN_DIGEST="${{ steps.overlay.outputs.toolchain_digest }}"
-          CONTRACT_VERSION="${{ env.GO_CONTRACT_VERSION }}"
+          # Independent derivation (no needs edge to go-contract-probe
+          # exists, so no job output may be consumed here): the contract
+          # version is read from the ALREADY-OVERLAID candidate source —
+          # the same SSOT constant the B-owned checker compiles in
+          # (src/core/trusted scope; pinned in
+          # config/trusted_checker_closure.json, so M==B holds unless the
+          # closure pin was rotated with the change).
+          CONTRACT_VERSION="$(sed -n 's/.*EvidenceIdContractVersion\* *= *"\([^"]*\)".*/\1/p' src/core/deterministic_cas_key.nim | head -1)"
           [ -n "$B_TREE" ] && [ -n "$M_TREE" ] && [ -n "$OVERLAY_DIGEST" ] \
             || fail "overlay identity outputs missing — the overlay step must run first"
           [ -n "$TOOLCHAIN_DIGEST" ] || fail "toolchain identity digest missing"
-          [ -n "$CONTRACT_VERSION" ] || fail "contract version missing (the contract-check step must run first)"
+          [ -n "$CONTRACT_VERSION" ] || fail "contract version missing — EvidenceIdContractVersion not derivable from the overlaid src/core/deterministic_cas_key.nim; the execution record cannot name the contract it was minted under (fail-closed)"
           # Judgment identity belt — the tested tree the plan was minted with
           # and the overlay digest the execution records carry must be the SAME
           # values. AXIOM_JUDGMENT_CAS_TESTED_TREE_OID is the LIVE process
@@ -4761,6 +4814,477 @@ jobs:
           retention-days: 3
 
   # ────────────────────────────────────────────────────────────────
+  # go-contract-probe — the evidenceId contract check EXTRACTED from the
+  # 2-leg matrix into ONE job that runs in PARALLEL with both legs.
+  #
+  # WHY (measured): the check runs byte-identically inside both lanes
+  # (38s in lane 0, 51s in lane 1) while the merge gate's wall clock is set
+  # by the SLOWER leg (161s) — the duplicated 51s is pure critical-path cost.
+  # Moving it here removes it from every leg's timeline; the legs keep a
+  # CHEAP approval-only invocation of the same B-owned checker AHEAD of their
+  # tests (the lane's "[lane] GO-critical input approval gate" step), so the
+  # PREVENTIVE property survives the move: a candidate that modifies a
+  # GO-critical test/golden file without approval still never gets its bytes
+  # executed — the approval judgment (checkGoCriticalInputs, ALWAYS the first
+  # thing the checker does, before any mode dispatch) runs in the leg itself.
+  #
+  # TOPOLOGY (hard constraint, not a preference):
+  #   * `needs: [build-base-artifacts]` ONLY. The matrix legs get NO needs
+  #     edge to this job — GitHub then schedules it concurrently with the
+  #     legs, and any edge from a leg would put the probe back on the
+  #     critical path it exists to shorten.
+  #   * Consequence: NO job output is published to the legs (job outputs
+  #     require a needs edge). Each leg derives the contract version it
+  #     records INDEPENDENTLY from the already-overlaid candidate source.
+  #
+  # FAIL-CLOSED (three independent consumers, so a skipped/cancelled/failed
+  # probe is never green):
+  #   * go-critical-rollup — needs.result arm (sibling of the matrix);
+  #   * admission-check [guard] — needs-result arm (direct need);
+  #   * admission-check artifact download — hard fail on the absent artifact.
+  #
+  # IDENTITY: the probe re-derives the SAME set the lanes derive (B tree, M
+  # sha/tree, overlay manifest digest, toolchain digest) and reports it with
+  # the contract version in go-contract-probe.txt; the attest job recomputes
+  # the contract version from B and requires equality.
+  # ────────────────────────────────────────────────────────────────
+  go-contract-probe:
+    needs: [build-base-artifacts]
+    if: >-
+      always() &&
+      inputs.stage == 'attest' &&
+      (github.event_name == 'merge_group' || github.event_name == 'workflow_call')
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+
+      - name: "[probe] Checkout executor tree = B (base.sha, workspace root)"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.baseSha || github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      # ────────────────────────────────────────────────────────────────
+      # B/M SPLIT — candidate head resolution (fail-closed venue identity).
+      # The candidate M is WHAT THE PROBE MEASURES (its src/ + the
+      # tests/golden fixtures are overlaid below); B remains the EXECUTOR
+      # (workspace root: Makefile, tests/config.nims, toolchain, bin/ax).
+      #   merge_group   → M := merge_group.head_sha, and the queue commit
+      #                   GITHUB_SHA MUST equal it (a job that measures
+      #                   anything but the queued head is a false GO).
+      #   pull_request  → M := pull_request.head.sha (preflight venue —
+      #                   the probe skips here; this arm exists so the job's
+      #                   venue expression and the head resolution can
+      #                   never drift apart).
+      #   workflow_call → M := GITHUB_SHA (the caller-pinned landing sha —
+      #                   the admission orchestrator dispatches with the same
+      #                   identity the merge_group queue recorded).
+      # Anything unresolvable or self-inconsistent = exit 1 (fail-closed),
+      # never a fallback to B (a B-only run is exactly the gap this split
+      # closes).
+      # ────────────────────────────────────────────────────────────────
+      - name: "[probe] Resolve candidate head (M — fail-closed venue identity)"
+        id: candidate-head
+        run: |
+          set -euo pipefail
+          fail() { echo "[candidate-head] FAIL — $1 (fail-closed)" >&2; exit 1; }
+          case "${{ github.event_name }}" in
+            merge_group)
+              M="${{ github.event.merge_group.head_sha }}"
+              printf '%s' "$M" | grep -qE '^[0-9a-f]{40}$' || fail "merge_group.head_sha='$M' not a 40-hex OID"
+              if [ "$M" != "${GITHUB_SHA:-}" ]; then
+                fail "merge_group.head_sha=$M != GITHUB_SHA=${GITHUB_SHA:-<unset>} — the lane refuses to test a head the queue did not record (fail-closed)"
+              fi
+              ;;
+            pull_request)
+              M="${{ github.event.pull_request.head.sha }}"
+              printf '%s' "$M" | grep -qE '^[0-9a-f]{40}$' || fail "pull_request.head.sha='$M' not a 40-hex OID"
+              ;;
+            workflow_call)
+              M="${GITHUB_SHA:-}"
+              printf '%s' "$M" | grep -qE '^[0-9a-f]{40}$' || fail "workflow_call GITHUB_SHA='$M' not a 40-hex OID (caller must pin the landing sha)"
+              ;;
+            *)
+              fail "unrecognized event_name '${{ github.event_name }}' — candidate head undeterminable (no M, no run)"
+              ;;
+          esac
+          echo "m_sha=$M" >> "$GITHUB_OUTPUT"
+          echo "[candidate-head] candidate M=$M (venue=${{ github.event_name }})"
+
+      - name: "[probe] Checkout candidate = M (overlay-only source, no credential persistence)"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ steps.candidate-head.outputs.m_sha }}
+          path: _candidate
+          fetch-depth: 1
+          persist-credentials: false
+
+      # ────────────────────────────────────────────────────────────────
+      # SLICE ENGINE — verbatim copy of the admission-check job's step
+      # (same authority + mapping). Manifest @B decides which semantic
+      # stages fire; scope_sl15 arms the lanes' Judgment CAS (not consumed
+      # in this job — the probe runs no CAS plan), scope_sl08 gates the
+      # base-artifact supply.
+      # ────────────────────────────────────────────────────────────────
+      - name: "[slice-engine] Load epoch manifest implementedSlices (B tree — scope authority)"
+        id: slice-engine
+        run: |
+          set -euo pipefail
+          fail() { echo "[slice-engine] FAIL — $1 (fail-closed)" >&2; exit 1; }
+          B="${{ inputs.baseSha || github.event.pull_request.base.sha || github.event.merge_group.base_sha }}"
+          printf '%s' "$B" | grep -qE '^[0-9a-f]{40}$' || fail "B='$B' not a 40-hex OID"
+          MANIFEST="$(git -C "$GITHUB_WORKSPACE" show "$B:config/policy/epoch_manifest.json")" \
+            || fail "config/policy/epoch_manifest.json unreadable at B=$B — engine execution scope undeterminable (manifest must land on main with the promotion PR)"
+          parsed="$(printf '%s' "$MANIFEST" | jq -e . 2>/dev/null)" \
+            || fail "epoch manifest unparsable at B=$B"
+          printf '%s' "$parsed" | jq -e '(.ciEpochId? // "") | (type == "string") and (length > 0) and (test("^[A-Za-z0-9][A-Za-z0-9._+-]*$"))' >/dev/null \
+            || fail "ciEpochId missing/malformed at B=$B"
+          printf '%s' "$parsed" | jq -e '(.implementedSlices? // null) | (type == "array") and (all(.[]; type == "string"))' >/dev/null \
+            || fail "implementedSlices missing or not a string array at B=$B"
+          printf '%s' "$parsed" | jq -e '(.notYetImplementedSlices? // null) | (type == "array") and (all(.[]; type == "string"))' >/dev/null \
+            || fail "notYetImplementedSlices missing or not a string array at B=$B"
+          printf '%s' "$parsed" | jq -e 'all(.implementedSlices[]; test("^SL-[0-9]{2,4}$"))' >/dev/null \
+            || fail "implementedSlices contains malformed slice id (expected SL-NN)"
+          printf '%s' "$parsed" | jq -e 'all(.notYetImplementedSlices[]; test("^SL-[0-9]{2,4}$"))' >/dev/null \
+            || fail "notYetImplementedSlices contains malformed slice id (expected SL-NN)"
+          printf '%s' "$parsed" | jq -e '(([.implementedSlices[]] - [.notYetImplementedSlices[]]) | length) == (.implementedSlices | length)' >/dev/null \
+            || fail "implementedSlices ∩ notYetImplementedSlices ≠ ∅ at B=$B"
+          printf '%s' "$parsed" | jq -e '(.productionExecutionPin? // "") | (type == "string") and (length > 0)' >/dev/null \
+            || fail "productionExecutionPin missing/empty at B=$B"
+          printf '%s' "$parsed" | jq -e '((.mode? // "") as $m | ($m == "ci-migration") or ($m == "normal"))' >/dev/null \
+            || fail "mode must be 'ci-migration' or 'normal' at B=$B"
+          EPOCH="$(printf '%s' "$parsed" | jq -r '.ciEpochId')"
+          IMPL="$(printf '%s' "$parsed" | jq -c '.implementedSlices')"
+          echo "epoch_id=$EPOCH" >> "$GITHUB_OUTPUT"
+          echo "implemented_slices=$IMPL" >> "$GITHUB_OUTPUT"
+          RPT="[slice-engine] epoch=$EPOCH implemented=$IMPL"
+          for spec in "sl08=SL-08" "sl15=SL-15"; do
+            key="${spec%%=*}"
+            slice="${spec##*=}"
+            if printf '%s' "$parsed" | jq -e --arg s "$slice" '.implementedSlices | index($s) != null' >/dev/null 2>&1; then
+              echo "scope_$key=true" >> "$GITHUB_OUTPUT"
+              RPT="$RPT $key=fire"
+            else
+              echo "scope_$key=false" >> "$GITHUB_OUTPUT"
+              RPT="$RPT $key=NO-FIRE"
+            fi
+          done
+          echo "$RPT"
+
+      # Same provisioning as the admission-check attest preamble (attest
+      # stage ⇒ the toolchain action always provisions here): read-only
+      # B-cache restore (the publisher stays the sole save authority) —
+      # warm compile supply for this job's `nim c` runs.
+      - uses: ./.github/actions/setup-axiom-toolchain
+        with:
+          cache-save-enabled: 'false'
+          cache-build-source: ${{ inputs.baseSha || github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          provision-scope: 'full'
+
+      - name: "[probe] Download base-built artifacts (B bin/ax + ircheck)"
+        if: steps.slice-engine.outputs.scope_sl08 == 'true'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: admission-check-base-artifacts
+          # STAGING dir (attest preamble convention): the verify step below
+          # materializes into canonical paths.
+          path: _base-artifacts
+
+      - name: "[probe] Verify artifact manifest (fail-closed — build_sha == B)"
+        if: steps.slice-engine.outputs.scope_sl08 == 'true'
+        env:
+          EXPECT_BUILD_SHA: ${{ inputs.baseSha || github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+        run: |
+          set -euo pipefail
+          test -f _base-artifacts/manifest.txt || { echo "FAIL: manifest.txt missing in downloaded artifact"; exit 1; }
+          mkdir -p bin proofs/.lake/build/bin
+          mv -f _base-artifacts/manifest.txt manifest.txt
+          mv -f _base-artifacts/bin/ax _base-artifacts/bin/install_ax_cas bin/
+          mv -f _base-artifacts/proofs/.lake/build/bin/ircheck proofs/.lake/build/bin/ircheck
+          mv -f _base-artifacts/bin/derive_checker_closure _base-artifacts/bin/jq bin/
+          # Gate binaries: FALLBACK supply — a valid B-restore already left
+          # its copies in place (restored bytes win; attest-preamble
+          # convention). The manifest loop below digest-binds whichever
+          # source supplied each file.
+          for g in gate_hook precompile_gates; do
+            if [ -f "bin/$g" ]; then
+              echo "gate supply: bin/$g already present (B-restore — artifact copy withheld)"
+            else
+              test -f "_base-artifacts/bin/$g" \
+                || { echo "FAIL: bin/$g absent from B-restore AND base artifact (no supply — fail-closed)"; exit 1; }
+              cp "_base-artifacts/bin/$g" "bin/$g"
+              echo "gate supply: bin/$g from base artifact (B-restore absent)"
+            fi
+          done
+          rm -rf _base-artifacts
+          while IFS=$'\t' read -r f expect; do
+            test -f "$f" || { echo "FAIL: artifact file missing: $f"; exit 1; }
+            actual=$(sha256sum "$f" | awk '{print $1}')
+            if [ "$actual" != "$expect" ]; then
+              echo "FAIL: sha256 mismatch for $f (manifest=$expect actual=$actual)"
+              exit 1
+            fi
+            echo "OK: $f (B-built)"
+          done < <(awk '/^[0-9a-f]{64}[[:space:]]{2}/{print $2 "\t" $1}' manifest.txt)
+          expect_sha=$(awk -F' = ' '/^build_sha =/{print $2; exit}' manifest.txt)
+          if [ -z "$expect_sha" ] || [ "$expect_sha" != "$EXPECT_BUILD_SHA" ]; then
+            echo "FAIL: manifest build_sha=$expect_sha != B=$EXPECT_BUILD_SHA (verifier is NOT base-built — Gate A violation)"
+            exit 1
+          fi
+          # upload/download-artifact@v4 drops unix executable bits — restore
+          # them before any execution (attest-preamble convention).
+          chmod +x bin/ax bin/install_ax_cas proofs/.lake/build/bin/ircheck bin/gate_hook bin/precompile_gates bin/derive_checker_closure bin/jq
+          echo "MANIFEST VERIFIED: verifier is built from B=$EXPECT_BUILD_SHA"
+
+      # ────────────────────────────────────────────────────────────────
+      # CANDIDATE IDENTITY — the pre-overlay derivation of the probe's
+      # identity set (M sha/tree, B tree, overlay manifest digest) and the
+      # point where M's tree objects become resolvable in the EXECUTOR's
+      # object store.
+      #
+      # It runs BEFORE the M overlay — the only ordering constraint that
+      # applies here, because the B-built binaries self-check
+      # SourceCoherence against the LIVE src/ (src/cli/main.nim) and
+      # refuse to run once M's src/ is in place. This job runs NO
+      # Judgment CAS plan (the lanes own that), so nothing here separates
+      # the derivation from the overlay.
+      # The M-object fetch lives here for the same reason the lanes do it:
+      # the overlay digest is cut from M's tree objects, which must be
+      # resolvable in the EXECUTOR's object store.
+      # ────────────────────────────────────────────────────────────────
+      - name: "[probe] Candidate identity (M sha/tree, B tree, M objects, overlay digest)"
+        id: candidate-identity
+        run: |
+          set -euo pipefail
+          fail() { echo "[candidate-identity] FAIL — $1 (fail-closed)" >&2; exit 1; }
+          M_SHA="${{ steps.candidate-head.outputs.m_sha }}"
+          printf '%s' "$M_SHA" | grep -qE "^[0-9a-f]{40}\$" \
+            || fail "resolved candidate head M='$M_SHA' is not a 40-hex OID"
+          [ -d "$GITHUB_WORKSPACE/_candidate/.git" ] || fail "_candidate checkout missing"
+          CAND_HEAD="$(git -C "$GITHUB_WORKSPACE/_candidate" rev-parse HEAD)"
+          [ "$CAND_HEAD" = "$M_SHA" ] || fail "_candidate HEAD=$CAND_HEAD != resolved M=$M_SHA"
+          M_TREE="$(git -C "$GITHUB_WORKSPACE/_candidate" rev-parse 'HEAD^{tree}')" \
+            || fail "cannot resolve M^{tree} from the candidate checkout"
+          B_TREE="$(git -C "$GITHUB_WORKSPACE" rev-parse 'HEAD^{tree}')" \
+            || fail "cannot resolve B^{tree} from the executor checkout"
+          printf '%s' "$M_TREE" | grep -qE "^[0-9a-f]{40}\$" || fail "M^{tree} is not a 40-hex OID"
+          printf '%s' "$B_TREE" | grep -qE "^[0-9a-f]{40}\$" || fail "B^{tree} is not a 40-hex OID"
+          # M's tree objects must be resolvable in the EXECUTOR's object
+          # store before the plan reads them (closure component 5 shells
+          # `git ls-tree -r <tested-tree>` against THIS repository). The
+          # fetch is a local-path fetch from the candidate checkout — no
+          # network, no credentials (both checkouts run
+          # persist-credentials: false).
+          git -C "$GITHUB_WORKSPACE" fetch --no-tags "$GITHUB_WORKSPACE/_candidate" "$M_SHA" \
+            || fail "cannot fetch M objects into the executor object store"
+          git -C "$GITHUB_WORKSPACE" cat-file -e "$M_TREE^{tree}" \
+            || fail "M^{tree} unresolvable in the executor object store after fetch"
+          # Overlay manifest digest — sorted (path, blob sha) list of the
+          # overlaid paths of the CANDIDATE tree (the identity of WHAT
+          # will be overlaid; deterministic from M). The composition is
+          # byte-identical to the attest-stage recomputation.
+          OVERLAY_LIST="$(git -C "$GITHUB_WORKSPACE/_candidate" ls-tree -r --full-tree "$M_TREE" -- src tests/golden | LC_ALL=C sort)"
+          [ -n "$OVERLAY_LIST" ] || fail "overlay manifest list empty — the candidate tree carries no src/"
+          OVERLAY_DIGEST="$(printf '%s\n' "$OVERLAY_LIST" | sha256sum | awk '{print $1}')"
+          {
+            echo "m_sha=$M_SHA"
+            echo "m_tree=$M_TREE"
+            echo "b_tree=$B_TREE"
+            echo "overlay_manifest_digest=$OVERLAY_DIGEST"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "AXIOM_JUDGMENT_OVERLAY_MANIFEST_DIGEST=$OVERLAY_DIGEST"
+          } >> "$GITHUB_ENV"
+          {
+            echo "[candidate-identity] M(candidate) sha=$M_SHA tree=$M_TREE"
+            echo "[candidate-identity] B(executor) tree=$B_TREE"
+            echo "[candidate-identity] overlay_manifest_digest=$OVERLAY_DIGEST (src + tests/golden)"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # ────────────────────────────────────────────────────────────────
+      # B/M OVERLAY — the probe measures the CANDIDATE, executed by B:
+      #   * workspace src/ := M's src/ EXACTLY (delete + copy — no stale B
+      #     files survive under src/),
+      #   * the runtime fixtures of the contract chain (tests/golden/) :=
+      #     M's bytes — the candidate's fixtures ride along; the probe's
+      #     own test surfaces stay B's (the B-owned checker and the
+      #     B-owned probe test are never overlaid, so the judgment is
+      #     B's contract against M's implementation),
+      #   * EVERYTHING ELSE stays B: Makefile, config.nims, tests/config.nims,
+      #     toolchain, bin/ax — the candidate never supplies the build system
+      #     or the executor (no candidate-controlled Makefile/config/workflow
+      #     execution).
+      # The overlay is content-addressed: overlay_manifest_digest = sha256
+      # over the sorted (path, blob sha) list of the overlaid candidate tree
+      # paths — derived pre-overlay by the candidate-identity step and
+      # re-derived here as an equality belt — consumed by the execution
+      # records + the attest-stage cross-check, so a record can never
+      # outlive the exact bytes it was minted under.
+      #
+      # ORDER: this job runs NO Judgment CAS plan (the lanes own it), so
+      # the overlay is the first writer to src/ here. Nothing after it may
+      # execute a B-built binary: their SourceCoherence self-check hashes
+      # the LIVE src/ and refuses to run once M's src/ is in place.
+      # ────────────────────────────────────────────────────────────────
+      - name: "[probe] Overlay M src/+GO-critical golden fixtures onto the B workspace (manifest digest, identity log)"
+        id: overlay
+        run: |
+          set -euo pipefail
+          fail() { echo "[overlay] FAIL — $1 (fail-closed)" >&2; exit 1; }
+          B_SHA="${{ inputs.baseSha || github.event.pull_request.base.sha || github.event.merge_group.base_sha }}"
+          M_SHA="${{ steps.candidate-head.outputs.m_sha }}"
+          [ -d "$GITHUB_WORKSPACE/_candidate/.git" ] || fail "_candidate checkout missing"
+          CAND_HEAD="$(git -C "$GITHUB_WORKSPACE/_candidate" rev-parse HEAD)"
+          [ "$CAND_HEAD" = "$M_SHA" ] || fail "_candidate HEAD=$CAND_HEAD != resolved M=$M_SHA"
+          M_TREE="$(git -C "$GITHUB_WORKSPACE/_candidate" rev-parse 'HEAD^{tree}')" \
+            || fail "cannot resolve M^{tree} from the candidate checkout"
+          B_TREE="$(git -C "$GITHUB_WORKSPACE" rev-parse 'HEAD^{tree}')" \
+            || fail "cannot resolve B^{tree} from the executor checkout"
+          # Identity belt: the overlay re-derives the identities
+          # INDEPENDENTLY of the candidate-identity step and must agree with
+          # it exactly (fail-closed on drift — the identity the execution
+          # records carry must describe the same candidate the plan was
+          # minted for).
+          [ "$M_SHA" = "${{ steps.candidate-identity.outputs.m_sha }}" ] \
+            || fail "candidate sha drifted from the pre-overlay derivation"
+          [ "$M_TREE" = "${{ steps.candidate-identity.outputs.m_tree }}" ] \
+            || fail "M^{tree} drifted from the pre-overlay derivation"
+          [ "$B_TREE" = "${{ steps.candidate-identity.outputs.b_tree }}" ] \
+            || fail "B^{tree} drifted from the pre-overlay derivation"
+          # Executor-tree immutability pre-record: the five executor-owned
+          # surfaces are hashed BEFORE the overlay; the post-overlay guard
+          # below proves the overlay never touched them.
+          : > /tmp/go-overlay-executor-before.txt
+          for f in Makefile config.nims tests/config.nims config/effects.nims nimble.lock; do
+            printf '%s  %s\n' "$(sha256sum "$f" | awk '{print $1}')" "$f" >> /tmp/go-overlay-executor-before.txt
+          done
+          # (1) candidate src/ — exact replacement.
+          rm -rf "$GITHUB_WORKSPACE/src"
+          cp -a "$GITHUB_WORKSPACE/_candidate/src" "$GITHUB_WORKSPACE/src"
+          # (2) the runtime fixtures of the contract chain (tests/golden/).
+          mkdir -p "$GITHUB_WORKSPACE/tests/golden"
+          for f in "$GITHUB_WORKSPACE"/_candidate/tests/golden/*.nim; do
+            [ -e "$f" ] || continue
+            cp -f "$f" "$GITHUB_WORKSPACE/tests/golden/$(basename "$f")"
+          done
+          # (3) executor-owned surfaces untouched (fail-closed belt).
+          : > /tmp/go-overlay-executor-after.txt
+          for f in Makefile config.nims tests/config.nims config/effects.nims nimble.lock; do
+            printf '%s  %s\n' "$(sha256sum "$f" | awk '{print $1}')" "$f" >> /tmp/go-overlay-executor-after.txt
+          done
+          diff -u /tmp/go-overlay-executor-before.txt /tmp/go-overlay-executor-after.txt \
+            || fail "executor-owned build surfaces changed during overlay (Makefile/config must stay B's)"
+          # The candidate Makefile is NEVER read: the overlay copies only src/
+          # + tests/golden/, and the executor-surface guard above proves B's
+          # Makefile/config survived the overlay.
+          # (4) overlay manifest digest — re-derived here over the overlaid
+          # paths of the CANDIDATE tree and asserted equal to the
+          # pre-overlay derivation (the identity of WHAT was overlaid;
+          # deterministic from M).
+          OVERLAY_LIST="$(git -C "$GITHUB_WORKSPACE/_candidate" ls-tree -r --full-tree "$M_TREE" -- src tests/golden | LC_ALL=C sort)"
+          [ -n "$OVERLAY_LIST" ] || fail "overlay manifest list empty — the candidate tree carries no src/"
+          OVERLAY_DIGEST="$(printf '%s\n' "$OVERLAY_LIST" | sha256sum | awk '{print $1}')"
+          [ "$OVERLAY_DIGEST" = "${{ steps.candidate-identity.outputs.overlay_manifest_digest }}" ] \
+            || fail "overlay manifest digest drifted from the pre-overlay derivation"
+          # (5) toolchain identity (the executor's — measured, never asserted).
+          NIM_ID="$(nim --version 2>/dev/null | head -1 || true)"
+          LEAN_ID="$(lean --version 2>/dev/null | head -1 || true)"
+          [ -n "$NIM_ID" ] || fail "toolchain identity: nim not resolvable (executor provisioning failed)"
+          [ -n "$LEAN_ID" ] || fail "toolchain identity: lean not resolvable (executor provisioning failed)"
+          TOOLCHAIN_DIGEST="$(printf '%s' "$NIM_ID | $LEAN_ID" | sha256sum | awk '{print $1}')"
+          {
+            echo "b_sha=$B_SHA"
+            echo "b_tree=$B_TREE"
+            echo "m_sha=$M_SHA"
+            echo "m_tree=$M_TREE"
+            echo "overlay_manifest_digest=$OVERLAY_DIGEST"
+            echo "toolchain_identity=$NIM_ID | $LEAN_ID"
+            echo "toolchain_digest=$TOOLCHAIN_DIGEST"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "[overlay] B(executor) sha=$B_SHA tree=$B_TREE"
+            echo "[overlay] M(candidate) sha=$M_SHA tree=$M_TREE"
+            echo "[overlay] overlay_manifest_digest=$OVERLAY_DIGEST (src + tests/golden)"
+            echo "[overlay] toolchain=$NIM_ID | $LEAN_ID"
+            echo "[overlay] executor surfaces: Makefile/config.nims/tests/config.nims/config.effects/nimble.lock verified B-byte-identical"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: "[probe] evidenceId contract check (B-owned checker — self-check battery + real-chain probe, EXECUTED always)"
+        id: contract-probe
+        run: |
+          set -euo pipefail
+          fail() { echo "[contract-check] FAIL — $1 (fail-closed)" >&2; exit 1; }
+          mkdir -p /tmp/opencode
+          # (a) The checker's own fixture battery (positive legacy + strict,
+          # and every rejection class) — B-owned bytes, never overlaid, never
+          # CAS-eligible: it compiles against the OVERLAID src (M's
+          # kernel_acceptance_authority) but carries ITS OWN normative
+          # preimage formula.
+          make test-fast-one T=tools/ci/check_evidence_id_contract.nim \
+            || fail "evidenceId contract self-check battery failed (tool: tools/ci/check_evidence_id_contract.nim)"
+          # The tool's own self-check names the contract version it enforces
+          # (the core SSOT constant) — reported in this job's evidence
+          # artifact and consumed by the attest job's equality belt.
+          CONTRACT_VERSION="$(/tmp/opencode/ax-one --self-check 2>/dev/null | grep -o 'contract evidence-id-contract\.[a-z0-9.]*' | awk '{print $2}' || true)"
+          printf '%s' "$CONTRACT_VERSION" | grep -qE '^evidence-id-contract\.[a-z0-9.]+$' \
+            || fail "cannot read the contract version from the checker's self-check output"
+          # Job-local output only: the lanes derive this version themselves
+          # (no needs edge exists, so a job output could never reach them).
+          echo "contract_version=$CONTRACT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "[contract-check] contract version: $CONTRACT_VERSION"
+          # (b) The real-chain probe: executes the canonical chain through
+          # the OVERLAID candidate src/ and hands the raw CLE components to
+          # the B-owned checker — claimed==recomputed or FAIL.
+          make test-fast-one T=tests/unit/test_evidence_id_contract_probe.nim \
+            || fail "evidenceId contract probe failed (real chain vs B-owned recomputation)"
+          echo "[contract-check] PASS — contract check EXECUTED+PASS (self-check battery + real-chain probe, contract=$CONTRACT_VERSION)"
+
+      - name: "[probe] Write contract-probe evidence (identity set + contract version)"
+        run: |
+          set -euo pipefail
+          fail() { echo "[probe] FAIL — $1 (fail-closed)" >&2; exit 1; }
+          # The SAME identity set the lanes carry in their execution records,
+          # measured HERE (this job re-derives it from M and B independently
+          # of the legs — the probe is a sibling, never a consumer).
+          B_TREE="${{ steps.overlay.outputs.b_tree }}"
+          M_SHA="${{ steps.overlay.outputs.m_sha }}"
+          M_TREE="${{ steps.overlay.outputs.m_tree }}"
+          OVERLAY_DIGEST="${{ steps.overlay.outputs.overlay_manifest_digest }}"
+          TOOLCHAIN_DIGEST="${{ steps.overlay.outputs.toolchain_digest }}"
+          CONTRACT_VERSION="${{ steps.contract-probe.outputs.contract_version }}"
+          [ -n "$B_TREE" ] && [ -n "$M_SHA" ] && [ -n "$M_TREE" ] \
+            || fail "B/M identity outputs missing — the overlay step must run first"
+          [ -n "$OVERLAY_DIGEST" ] || fail "overlay manifest digest missing"
+          [ -n "$TOOLCHAIN_DIGEST" ] || fail "toolchain identity digest missing"
+          printf '%s' "$CONTRACT_VERSION" | grep -qE '^evidence-id-contract\.[a-z0-9.]+$' \
+            || fail "contract version '$CONTRACT_VERSION' not reported by the contract check"
+          {
+            echo "probe=go-contract-probe"
+            echo "b_tree=$B_TREE"
+            echo "m_sha=$M_SHA"
+            echo "m_tree=$M_TREE"
+            echo "overlay_manifest_digest=$OVERLAY_DIGEST"
+            echo "toolchain_digest=$TOOLCHAIN_DIGEST"
+            echo "contract=$CONTRACT_VERSION"
+            echo "verdict=PASS"
+          } > go-contract-probe.txt
+          cat go-contract-probe.txt
+
+      - name: "[probe] Upload contract-probe evidence (attest handoff — fail-closed download)"
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: go-contract-probe-${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }}-${{ github.run_attempt }}
+          path: go-contract-probe.txt
+          # error, not warn: the attest job's download is fail-closed, so an
+          # absent artifact and an empty one must both be visible HERE.
+          if-no-files-found: error
+          retention-days: 30
+
+  # ────────────────────────────────────────────────────────────────
   # go-critical-rollup — fail-closed all-lanes-success enforcement for the
   # landing venue (pre-registration §2-(v): skipped/cancelled lanes are
   # NEVER green). needs.go-critical-lane.result is the matrix's WORST leg
@@ -4780,7 +5304,7 @@ jobs:
   # reads them there); this job needs no extra token scope for that.
   # ────────────────────────────────────────────────────────────────
   go-critical-rollup:
-    needs: [go-critical-lane]
+    needs: [go-critical-lane, go-contract-probe]
     if: >-
       always() &&
       inputs.stage == 'attest' &&
@@ -4793,12 +5317,21 @@ jobs:
       - name: "[go-rollup] Every lane must be success (skipped/cancelled → FAILURE, never green)"
         env:
           LANE_RESULT: ${{ needs.go-critical-lane.result }}
+          PROBE_RESULT: ${{ needs.go-contract-probe.result }}
         run: |
           set -euo pipefail
           fail() { echo "[go-rollup] FAIL — $1 (fail-closed)" >&2; exit 1; }
-          echo "[go-rollup] needs.go-critical-lane.result=$LANE_RESULT"
+          echo "[go-rollup] needs.go-critical-lane.result=$LANE_RESULT needs.go-contract-probe.result=$PROBE_RESULT"
           case "$LANE_RESULT" in
             success) ;;
             *) fail "go-critical-lane matrix result=$LANE_RESULT — the landing verdict requires every lane == success; a skipped or cancelled lane is never green (pre-registration §2-(v), fail-closed)" ;;
           esac
-          echo "[go-rollup] PASS — all lanes success; landing aggregate fail-closed rollup verified"
+          # The contract probe is a SIBLING of the matrix (no needs edge from
+          # the legs, so it must be enforced HERE): the evidenceId contract
+          # check is part of the admission verdict, and a skipped, cancelled,
+          # or failed probe is never green.
+          case "$PROBE_RESULT" in
+            success) ;;
+            *) fail "go-contract-probe result=$PROBE_RESULT — the landing verdict requires the contract probe (sibling of the matrix) == success; a skipped or cancelled probe is never green (pre-registration §2-(v), fail-closed)" ;;
+          esac
+          echo "[go-rollup] PASS — all lanes success and contract probe success; landing aggregate fail-closed rollup verified"

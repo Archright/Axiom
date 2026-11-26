@@ -4,7 +4,7 @@
 ## 대상: .github/workflows/admission-check.yml의 L3 분할 — attest 스테이지의
 ## GO-독립 4스텝(core purity / admission identity / D9 / register)이 병렬 잡
 ## `admission-independents`로 이동한 뒤, 잔여 `admission-check` 잡의 [guard]
-## 스텝이 direct needs 3종의 실행 결과를 명시 판정한다. 고정 계약:
+## 스텝이 direct needs 4종의 실행 결과를 명시 판정한다. 고정 계약:
 ##
 ##   * 양면 oracle — 플랫폼 의미론: 스킵된 잡은 Success로 보고되어 병합을
 ##     막지 않고, 기본 needs 전파는 실패한 need에 대해 이 잡 자체를 스킵
@@ -15,7 +15,11 @@
 ##   * 가드는 venue 스텝 직후(잡 내 최초 판정 스텝)·attest+landing 전용 —
 ##     preflight(레인 합법 스킵)·verdict(레인 무소비) 의미론 보존.
 ##   * 가드 env는 잡의 direct needs와 정확히 일대일 대응 — 커버 안 된
-##     need는 가려진 green 구멍이다.
+##     need는 가려진 green 구멍이다. Contract-probe 추출(2026-11-26,
+##     ci/contract-probe-parallel)로 `go-contract-probe`가 네 번째 direct
+##     need가 됐다: 매트릭스의 형제 잡(레그로부터 needs 엣지 없음)이므로
+##     잡 자체로는 어떤 레그도 그 결과를 판정하지 않는다 — 가드와
+##     go-critical-rollup 두 곳에서만 판정된다.
 ##   * 잡 if는 !cancelled() — 가드가 판정할 수 있는 생존 전제(취소 배치는
 ##     병합 불가 상태로 남는다, §2.4).
 ##   * 이동 4스텝은 cut-not-copy(잔여 잡 부재) + 본문 해시가 사전분할
@@ -214,7 +218,7 @@ proc sha256Of(path: string): string =
 
 var shCounter = 0
 
-proc runGuard(body: string; needs: tuple[bb, lanes, indep: string]): tuple[outp: string; code: int] =
+proc runGuard(body: string; needs: tuple[bb, lanes, indep, probe: string]): tuple[outp: string; code: int] =
   ## 가드 본문을 production 그대로 실행 — 값은 GitHub Actions가 실을
   ## 스텝 env를 하니스가 동일하게 공급한다(본문 무보간).
   inc shCounter
@@ -226,6 +230,7 @@ proc runGuard(body: string; needs: tuple[bb, lanes, indep: string]): tuple[outp:
   env["NEED_BUILD_BASE"] = needs.bb
   env["NEED_GO_LANES"] = needs.lanes
   env["NEED_INDEPENDENTS"] = needs.indep
+  env["NEED_PROBE"] = needs.probe
   let (outp, code) = execCmdEx("bash " & quoteShell(script), env = env)
   removeFile(script)
   result = (outp, code)
@@ -244,14 +249,15 @@ suite "L3 — structure (가드 배치·배선·생존 전제)":
   test "가드 if는 attest+landing 정확히 이 조합 — preflight/verdict 불발화":
     check stepField(admissionPath, CheckJob, GuardPrefix, "if") == GuardIf
 
-  test "가드 env는 잡의 direct needs 3종과 정확히 일대일 (커버리지 닫힘)":
+  test "가드 env는 잡의 direct needs 4종과 정확히 일대일 (커버리지 닫힘)":
     let needs = jobField(admissionPath, CheckJob, "needs")
-    check needs == "build-base-artifacts go-critical-lane admission-independents"
+    check needs == "build-base-artifacts go-critical-lane go-contract-probe admission-independents"
     let env = mapLines(admissionPath, CheckJob, GuardPrefix, "env")
     check env == @[
       ("NEED_BUILD_BASE", "${{ needs.build-base-artifacts.result }}"),
       ("NEED_GO_LANES", "${{ needs.go-critical-lane.result }}"),
       ("NEED_INDEPENDENTS", "${{ needs.admission-independents.result }}"),
+      ("NEED_PROBE", "${{ needs.go-contract-probe.result }}"),
     ]
 
   test "admission-check 잡 if는 !cancelled() — 가드가 판정할 생존 전제":
@@ -330,25 +336,28 @@ suite "L3 — guard 본문 양면 oracle (원문 실행)":
     stepRun(admissionPath, CheckJob, GuardPrefix)
 
   test "GREEN — needs 전부 success ⇒ 통과 (죽은 게이트 아님)":
-    let r = runGuard(guardBody(), ("success", "success", "success"))
+    let r = runGuard(guardBody(), ("success", "success", "success", "success"))
     check r.code == 0
     check PassLine in r.outp
     check FailLine notin r.outp
 
-  test "RED 격자 — need 3종 × 비정상 5상태 전수 (귀속 포함)":
+  test "RED 격자 — need 4종 × 비정상 5상태 전수 (귀속 포함)":
     const
       Vars = [
         ("NEED_BUILD_BASE", "build-base-artifacts"),
         ("NEED_GO_LANES", "go-critical-lane"),
         ("NEED_INDEPENDENTS", "admission-independents"),
+        ("NEED_PROBE", "go-contract-probe"),
       ]
       Bads = ["failure", "cancelled", "skipped", "", "Success"]
     for (envVar, wfName) in Vars:
       for bad in Bads:
-        var n: tuple[bb, lanes, indep: string] = ("success", "success", "success")
+        var n: tuple[bb, lanes, indep, probe: string] =
+          ("success", "success", "success", "success")
         case envVar
         of "NEED_BUILD_BASE": n.bb = bad
         of "NEED_GO_LANES": n.lanes = bad
+        of "NEED_PROBE": n.probe = bad
         else: n.indep = bad
         let r = runGuard(guardBody(), n)
         check r.code != 0
@@ -357,7 +366,7 @@ suite "L3 — guard 본문 양면 oracle (원문 실행)":
         check PassLine notin r.outp
 
   test "RED — 전 needs 동시 비정상도 red (최초 판정에서 즉시 차단)":
-    let r = runGuard(guardBody(), ("failure", "cancelled", "skipped"))
+    let r = runGuard(guardBody(), ("failure", "cancelled", "skipped", "failure"))
     check r.code != 0
     check FailLine in r.outp
 
