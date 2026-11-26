@@ -35,12 +35,16 @@
 ## Exit codes: 0 = evidence written; 2 = CLI misuse; 3 = infrastructure absence;
 ##             4 = measurement invalid (a control failed; no evidence emitted).
 
-import std/[os, osproc, json, strutils, times, strtabs]
+import std/[algorithm, os, osproc, json, strutils, times, strtabs]
 import core/crypto/hash_kernel
 
 const
   ProveTimeoutSeconds = 300
   ReportTimeoutSeconds = 60
+  # WP5-TREE-001 names the tracked paths that dirty the tree; the enumeration is
+  # bounded so a wide dirty tree (or a docs/ PROSE edit) cannot inflate the
+  # evidence envelope the gate consumes.
+  DirtyPathCap = 20
   SubjectFileName = "proximity.nim"
   # Certified-subset subject (cf. topology_dependency.nim::proximityScore,
   # tests/unit/test_proximity_score_canonical_spike.nim): the early-return
@@ -126,12 +130,17 @@ proc runTimed(timeoutSec: int, cmdline: string, workingDir: string,
   if result.exitCode == 124:
     die("command exceeded " & $timeoutSec & "s deadline: " & cmdline, 3)
 
-proc gitOut(repoRoot: string, args: seq[string]): string =
+proc gitOut(repoRoot: string, args: seq[string], trim = true): string =
+  ## `trim = false` for the porcelain status: its two status columns are
+  ## whitespace (a clean ` M` column starts with a space), so trimming the
+  ## output would shift the fixed-width prefix of the first entry.
   let r = runCmd("git " & quoted(args), repoRoot)
   if r.exitCode != 0:
     die("git " & args.join(" ") & " failed (exit " & $r.exitCode & "): " &
         r.output.strip(), 3)
-  r.output.strip()
+  result = r.output
+  if trim:
+    result = result.strip()
 
 proc firstLine(s: string): string =
   for line in s.splitLines():
@@ -221,6 +230,94 @@ proc addCommandEntry(commands: JsonNode, cmd: string, exitCode: int,
 proc shaFile(p: string): string =
   sha256Hex(readFile(p))
 
+func decodeGitPath(s: string): string =
+  ## Decode one path field as `git status --porcelain` writes it. git C-quotes
+  ## a path holding a control byte, `"`, `\`, or (core.quotePath, on by
+  ## default) a non-ASCII byte, escaping it as `\n`, `\"`, `\\`, or three
+  ## octal digits — an undecoded field would name a path that does not exist.
+  if s.len < 2 or s[0] != '"' or s[^1] != '"':
+    return s
+  var i = 1
+  while i < s.len - 1:
+    if s[i] != '\\':
+      result.add(s[i])
+      inc i
+      continue
+    inc i
+    if i >= s.len - 1:
+      break
+    case s[i]
+    of 'a': result.add('\a')
+    of 'b': result.add('\b')
+    of 'f': result.add('\f')
+    of 'n': result.add('\n')
+    of 'r': result.add('\r')
+    of 't': result.add('\t')
+    of 'v': result.add('\v')
+    of '\\': result.add('\\')
+    of '"': result.add('"')
+    of '0' .. '7':
+      var octet = 0
+      var digits = 0
+      while digits < 3 and i < s.len - 1 and s[i] in {'0' .. '7'}:
+        octet = octet * 8 + (ord(s[i]) - ord('0'))
+        inc i
+        inc digits
+      result.add(char(octet))
+      continue
+    else:
+      result.add(s[i])
+    inc i
+
+func porcelainPathCandidates(entry: string): seq[string] =
+  ## Split one porcelain path field at its rename arrow: `old -> new` yields
+  ## both names, a quoted field (`"a -> b"`) yields one. git quotes each side
+  ## independently, so the scan skips a quoted field wholesale instead of
+  ## hunting for ` -> ` in its bytes.
+  var
+    start = 0
+    i = 0
+  while i < entry.len:
+    if entry[i] == '"':
+      inc i
+      while i < entry.len and entry[i] != '"':
+        if entry[i] == '\\':
+          inc i
+        inc i
+      inc i
+      continue
+    if entry.continuesWith(" -> ", i):
+      result.add(entry[start ..< i])
+      i += " -> ".len
+      start = i
+      continue
+    inc i
+  result.add(entry[start ..< entry.len])
+
+func dirtyTrackedPaths(porcelain: string): seq[string] =
+  ## Tracked paths that differ from HEAD, from
+  ## `git status --porcelain --untracked-files=no`. An entry is `XY <path>` or,
+  ## for a rename, `XY <old> -> <new>`; the destination is reported — the
+  ## tracked path that exists after the change. Sorted (and deduplicated) so
+  ## the incident detail is a function of the tree alone, never of git's entry
+  ## order.
+  for line in porcelain.splitLines():
+    # Two fixed-width status columns, then one separator space, then the path:
+    # the offset is the porcelain format's. A scan would corrupt a path that
+    # itself starts with a space.
+    if line.len < 4 or line[2] != ' ':
+      continue
+    let candidates = porcelainPathCandidates(line[3 .. ^1])
+    let path = decodeGitPath(candidates[^1])
+    if path.len > 0:
+      result.add(path)
+  result.sort()
+  var unique: seq[string]
+  for p in result:
+    if unique.len == 0 or unique[^1] != p:
+      unique.add(p)
+  result = unique
+
 when isMainModule:
   var
     repoRoot = ""
@@ -265,8 +362,10 @@ when isMainModule:
   let repoHead = gitOut(repoRoot, @["rev-parse", "HEAD"])
   let repoBranch = gitOut(repoRoot, @["rev-parse", "--abbrev-ref", "HEAD"])
   let treeDigest = sha256Hex(gitOut(repoRoot, @["ls-tree", "-r", "HEAD"]))
-  let porcelain = gitOut(repoRoot, @["status", "--porcelain", "--untracked-files=no"])
-  let workingTreeClean = porcelain.len == 0
+  let porcelain = gitOut(repoRoot,
+                         @["status", "--porcelain", "--untracked-files=no"],
+                         trim = false)
+  let workingTreeClean = porcelain.strip().len == 0
 
   # ── measurement: five cold runs, each with its own physical root and a
   #    fresh AXIOM_STATE_DIR (same cache policy on both sides of every
@@ -372,8 +471,22 @@ when isMainModule:
        "summary": "all comparisons used the same cache policy: cold, fresh AXIOM_STATE_DIR per run"},
   ]
   if not workingTreeClean:
+    # The verdict is `workingTreeClean` — unchanged. This incident only adds
+    # the detail a reader needs to find the cause without downloading the job
+    # artifact and guessing which build step wrote which tracked path.
+    let dirty = dirtyTrackedPaths(porcelain)
+    let shown = if dirty.len > DirtyPathCap: dirty[0 ..< DirtyPathCap] else: dirty
+    var summary = "working tree not clean — R3 evidence requires " &
+                  "workingTreeClean=true; the evaluator will invalidate this envelope"
+    if dirty.len > 0:
+      summary.add("; " & $dirty.len & " tracked path(s) differ from HEAD: " &
+                  shown.join(", "))
+      if dirty.len > shown.len:
+        summary.add(" (+" & $(dirty.len - shown.len) & " more)")
     incidents.add(%*{"id": "WP5-TREE-001", "severity": "warning",
-      "summary": "working tree not clean — R3 evidence requires workingTreeClean=true; the evaluator will invalidate this envelope"})
+                     "summary": summary,
+                     "dirtyPaths": shown,
+                     "dirtyPathCount": dirty.len})
 
   var envelope = newJObject()
   envelope["schemaVersion"] = %1
