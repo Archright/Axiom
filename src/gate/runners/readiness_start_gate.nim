@@ -85,6 +85,10 @@ axiomLayer "gate"
 ## (both required together) enable CI identity authority mode;
 ## AXIOM_READINESS_REPLAY=1 enables the explicit replay (evidence-declared
 ## identity) mode and AXIOM_READINESS_EVAL_TIME pins its evaluation instant;
+## AXIOM_START_GATE_AX_BIN overrides the `ax` binary the productization E2E
+## execs; AXIOM_READINESS_E2E_MEMO=1 lets that E2E reuse a recorded PASS when
+## the identity of its source, ax binary, compile profile and toolchain is
+## byte-identical (unset = always execute);
 ## registered in docs/spec/environment_inputs.md §2.15.
 
 import std/[os, osproc, strutils, times, json, sequtils, algorithm]
@@ -102,12 +106,19 @@ const
   EvidenceDir = "data" / "readiness" / "evidence"
   E2EOutDir = "build" / "readiness_start" / "e2e"
   E2ENimcacheDir = "build" / "nimcache" / "readiness_start"
+  E2EMemoDir = "build" / "readiness_start"
   DecisionOut = "build" / "readiness_start_decision.json"
   RootMarker = ".axiom_root"
   CiRepoHeadEnv = "AXIOM_CI_REPO_HEAD"
   CiTreeDigestEnv = "AXIOM_CI_TREE_DIGEST"
   ReplayEnv = "AXIOM_READINESS_REPLAY"
   EvalTimeEnv = "AXIOM_READINESS_EVAL_TIME"
+  StartGateAxBinaryEnv = "AXIOM_START_GATE_AX_BIN"
+  E2EMemoEnv = "AXIOM_READINESS_E2E_MEMO"
+  E2EMemoSchema = "axiom.readiness-start.e2e-memo.v1"
+  E2ECompileProfile =
+    "nim c -d:release --threads:on --listFullPaths:off --hints:off " &
+    "-d:AXIOM_GATE_BOND=1"
   VerdictInputExcludes =
     "':(exclude)data/readiness/evidence' ':(exclude)logs' " &
     "':(exclude)build' ':(exclude)bin' ':(exclude).axiom' " &
@@ -142,6 +153,86 @@ proc runCmd(cmd: string, root: string): tuple[output: string, exitCode: int] =
   putEnv("AXIOM_GATE_BOND", "1")
   execCmdEx(cmd, workingDir = root)
 
+proc sha256File(path: string): string =
+  ## SHA-256 of a file's bytes, or "" when it cannot be read. Uses the same
+  ## `sha256sum` the gate already shells out to for the tree digest: coreutils
+  ## hashes the 13 MB `bin/ax` in milliseconds, where the pure-Nim digest took
+  ## ~3.5 s per megabyte and would cost more than the E2E it is meant to save.
+  ## A failed read yields "", which matches no memo (fail-closed).
+  if not fileExists(path):
+    return ""
+  let (outp, code) = execCmdEx("sha256sum " & quoteShell(path))
+  if code != 0:
+    return ""
+  let fields = outp.strip().splitWhitespace()
+  if fields.len == 0:
+    return ""
+  fields[0]
+
+proc e2eMemoIdentity(root, src: string): string =
+  ## Identity of everything that decides what `compileAndRunE2E` computes: the
+  ## E2E source bytes, the `ax` binary the E2E actually execs, the compile
+  ## profile, and the toolchain that compiles it. No timestamps and no commit
+  ## ids, so the same inputs always produce the same identity. An unreadable
+  ## input yields "" and no memo can match it.
+  let override = getEnv(StartGateAxBinaryEnv)
+  let axBin =
+    if override != "" and fileExists(override): override
+    else: root / "bin" / "ax"
+  let srcDigest = sha256File(src)
+  let axDigest = sha256File(axBin)
+  if srcDigest == "" or axDigest == "":
+    return ""
+  E2EMemoSchema & "\n" & E2ECompileProfile & "\nnim=" & NimVersion &
+    "\nsrc=" & src & ":" & srcDigest & "\nax=" & axBin & ":" & axDigest
+
+proc e2eMemoPath(root: string): string =
+  ## One record per checkout: the identity is stored INSIDE the record and
+  ## compared in full, so a changed input simply fails the comparison and the
+  ## E2E runs. Keeping a single path keeps the read cheap on every invocation.
+  root / E2EMemoDir / "readiness_start_e2e.memo.json"
+
+proc readE2EMemo(root, src, identity: string): bool =
+  ## True only for a record that is well-formed, records a PASS, and was
+  ## written for exactly this identity and this source. Every other shape
+  ## (missing, unparsable, partial, FAIL, other identity) is a miss, so the
+  ## E2E runs.
+  let path = e2eMemoPath(root)
+  if not fileExists(path):
+    return false
+  try:
+    let node = parseFile(path)
+    node{"schema"}.getStr("") == E2EMemoSchema and
+      node{"source"}.getStr("") == src and
+      node{"identity"}.getStr("") == identity and
+      node{"result"}.getStr("") == "PASS"
+  except CatchableError:
+    false
+
+proc writeE2EMemo(root, src, identity: string; name: string; elapsedMs: int64) =
+  ## Record a real PASS. Best effort: a memo that cannot be written only
+  ## costs the next invocation a full E2E, which is the always-safe fallback.
+  try:
+    let path = e2eMemoPath(root)
+    createDir(path.parentDir())
+    writeFile(path, $(%*{
+      "schema": E2EMemoSchema,
+      "source": src,
+      "identity": identity,
+      "name": name,
+      "result": "PASS",
+      "elapsedMs": elapsedMs
+    }))
+  except CatchableError as e:
+    logWarn("readiness_start_gate",
+            "[E2E] memo not written (next invocation re-runs the E2E): " & e.msg)
+
+proc memoEnabled(): bool =
+  ## OFF unless explicitly requested. The workflow never sets this, so every
+  ## CI gate judgment still compiles and runs the E2E; the switch exists for
+  ## callers that invoke the same gate repeatedly against fixed inputs.
+  getEnv(E2EMemoEnv) == "1"
+
 proc compileAndRunE2E(root: string, src: string): bool =
   ## Compile + run one productization E2E test with the canonical gateway
   ## compile profile (mirrors tests/gateway/all_gateway_runner.nim's compile
@@ -149,15 +240,23 @@ proc compileAndRunE2E(root: string, src: string): bool =
   let name = src.splitFile().name
   let outBin = root / E2EOutDir / (name & ".e2e")
   let nimcacheDir = root / E2ENimcacheDir / name
+  let identity = if memoEnabled(): e2eMemoIdentity(root, src) else: ""
+  if identity != "" and readE2EMemo(root, src, identity):
+    logInfo("readiness_start_gate",
+            "[E2E] memo HIT for " & src & " — " & e2eMemoPath(root) &
+            " records a PASS for source bytes, ax binary, compile profile and " &
+            "toolchain identical to this invocation's, so the compile+run " &
+            "would reproduce it; skipped.")
+    return true
   if not dirExists(root / E2EOutDir):
     createDir(root / E2EOutDir)
   if not dirExists(nimcacheDir):
     createDir(nimcacheDir)
   logInfo("readiness_start_gate", "[E2E] compiling " & src)
   let compileCmd =
-    "nim c -d:release --threads:on --listFullPaths:off --hints:off " &
-    "-d:AXIOM_GATE_BOND=1 --nimcache:" & quoteShell(nimcacheDir) &
+    E2ECompileProfile & " --nimcache:" & quoteShell(nimcacheDir) &
     " --out:" & quoteShell(outBin) & " " & quoteShell(src)
+  let started = epochTime()
   let (cOut, cCode) = runCmd(compileCmd, root)
   stdout.write(cOut)
   if cCode != 0:
@@ -170,6 +269,9 @@ proc compileAndRunE2E(root: string, src: string): bool =
     logError("readiness_start_gate", "[E2E] run FAILED exit=" & $rCode)
     return false
   logInfo("readiness_start_gate", "[E2E] OK: " & src & " (exit 0)")
+  if identity != "":
+    writeE2EMemo(root, src, identity, name,
+                 int64((epochTime() - started) * 1000.0))
   true
 
 # ---------------------------------------------------------------------------

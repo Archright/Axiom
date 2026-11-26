@@ -78,6 +78,18 @@ const
 
 let
   ProbeAx = Root / "build" / "readiness_c3_probe" / "ax"
+  # Mirrors E2EMemoDir/E2EMemoSchema in src/gate/runners/readiness_start_gate.nim.
+  E2EMemoFile = Root / "build" / "readiness_start" / "readiness_start_e2e.memo.json"
+
+# A memo surviving from an earlier suite run would let this suite's very first
+# case reuse that older PASS, so the run would never execute the E2E it exists
+# to exercise. Removing it makes case 1 a real compile+run; the memo written by
+# that run is then the evidence for the final test's "exactly one real E2E
+# execution" assertion. Stale logs go too, so that count cannot see older ones.
+if fileExists(E2EMemoFile):
+  removeFile(E2EMemoFile)
+if dirExists(Work / "gate_logs"):
+  removeDir(Work / "gate_logs")
 
 proc gitTrim(cmdline: string): string =
   let (outp, code) = execCmdEx(cmdline, workingDir = Root)
@@ -158,6 +170,16 @@ proc runGate(extraEnv: openArray[(string, string)] = @[];
   var env = @[("AXIOM_START_GATE_AX_BIN", ProbeAx)]
   for (k, v) in extraEnv:
     env.add((k, v))
+  # Every case below drives the SAME gate binary, and part (a) of that gate —
+  # the productization E2E — reads only its own source file and the `ax`
+  # binary it execs. Neither changes anywhere in this suite, so compiling and
+  # running that E2E once per case computes the identical verdict seven times.
+  # The memo switch lets the gate reuse a PASS it recorded for an identity
+  # built from exactly those inputs. It stays fail-closed: no memo, an
+  # unreadable input, a memo written for other inputs, or a recorded failure
+  # all make the gate run the E2E. The suite deletes the memo above, before
+  # its first case, so case 1 always performs a real run.
+  env.add(("AXIOM_READINESS_E2E_MEMO", "1"))
   result = runBin(GateBin, @[], env, Root)
   if logName != "":
     createDir(Work / "gate_logs")
@@ -611,6 +633,36 @@ suite "readiness verdict mapping (DEBT#537)":
     else:
       echo pendingContractMsg("missing-evidence verdict line", "READINESS_VERDICT emission")
       skip()
+
+  test "productization E2E executed once; every later case reused that PASS":
+    # The suite drives the gate seven times over identical E2E inputs, so the
+    # switch in runGate turns six of those into a memo hit. This asserts the
+    # shape of that saving instead of trusting it: exactly one recorded gate
+    # invocation compiled the E2E, every other one reported a memo HIT, and a
+    # PASS record for this identity exists. If the memo ever started standing
+    # in for a run that did not happen, `compiled` would drop to 0 and this
+    # fails rather than silently saving time.
+    var logs: seq[string] = @[]
+    var compiled = 0
+    var reused = 0
+    for f in walkFiles(Work / "gate_logs" / "*.log"):
+      logs.add(extractFilename(f))
+      let recorded = readFile(f)
+      if "[E2E] compiling" in recorded:
+        inc compiled
+      if "[E2E] memo HIT" in recorded:
+        inc reused
+    logs.sort()
+    checkpoint("gate invocations recorded: " & $logs.len & " " & $logs.join(","))
+    checkpoint("E2E compiled for real in " & $compiled & ", reused in " & $reused)
+    check logs.len >= 2
+    check compiled == 1
+    check reused == logs.len - 1
+    check fileExists(E2EMemoFile)
+    let memo = parseFile(E2EMemoFile)
+    check memo{"result"}.getStr("") == "PASS"
+    check memo{"identity"}.getStr("").contains("axiom.readiness-start.e2e-memo.v1")
+    check memo{"source"}.getStr("").endsWith("productization_start_vertical_slice_feature_test.nim")
 
   test "committed evidence snapshot restored byte-exact after all cases":
     check evidenceMatches(OriginalEvidence)
