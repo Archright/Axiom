@@ -857,6 +857,15 @@ func telemetryTransportOf(raw: string): string {.raises: [].} =
 
 proc z3ExecPersistent*(query: string; timeoutMs: int; desiredWorkers: int = 1; enableProofs: bool = false; queryType: string = "unknown"; cegarIters: int = 0;
     canonicalEnvelopeDigest: var string; transportPayloadDigest: var string): Result[string, string] {.gcsafe, raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, TimeEffect, RootEffect].} =
+  ## `timeoutMs` is ADVISORY and is never read: neither here (the read deadline
+  ## is the fixed `z3SafetyNetMs` liveness backstop, not the caller's value) nor
+  ## by `buildZ3QueryEnvelope`, which projects every emitted option from the one
+  ## pinned set in `core/trusted/solver_invocation` (`z3DeterministicBudget` for
+  ## `:rlimit`, `z3SafetyNetMs` for `:timeout`). A caller-supplied value
+  ## therefore cannot change the bytes handed to Z3, the recorded
+  ## `solverOptionsDigest`, or the telemetry row. Wiring it in would make the
+  ## answer depend on host speed, which `canonical_projection` forbids. The
+  ## parameter is retained for call-site stability only (issue #347).
   let startMs = epochMilliseconds()
   var z3Result: Result[string, string]
   var resultStatus = "unknown"
