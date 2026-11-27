@@ -1936,31 +1936,54 @@ proc hooksPathAuthorityFailures(repoRoot: string,
 type
   ArtifactSpec = tuple[path: string, ownerRole: string]
 
+  ## A debt-engine write site addressed by CONTENT, never by position. The
+  ## enclosing top-level proc is the site's identity: an insertion anywhere
+  ## above the sink cannot invalidate the declaration, and an unauthorized
+  ## writer still lands in a proc no declaration covers. A line number is
+  ## positional state, not identity (#483 — PR #478 inserted 10 unrelated
+  ## lines and this check reported the security condition "competing
+  ## authority" for what was a stale pin).
+  DebtSiteAnchor = tuple[file: string, procName: string, artifact: string,
+                         role: string]
+
 const
+  ## The one file that holds both the registry-mutation role and the
+  ## projection-generation role; its sites carry content anchors.
+  DebtEngineSource = "tools/debt_engine.nim"
+
   DebtArtifacts: seq[ArtifactSpec] = @[
     (path: "data/debt_registry.json", ownerRole: RoleSsotMutator),
     (path: "docs/DEBT_REGISTRY.md", ownerRole: RoleProjectionGen),
     (path: "src/generated/debt_constants.nim", ownerRole: RoleProjectionGen),
   ]
 
-  ## Registered (artifact, role) entries. Owner-role entries are the generating
-  ## or mutating authority; TEST_FIXTURE entries are sanctioned temp-dir test
-  ## fixtures, verified to resolve into a temp dir on every run.
+  ## Registered debt-engine (artifact, role) sites, addressed by the enclosing
+  ## proc. The comparison in (j.1)/(j.4) is unchanged — only the locator moved
+  ## from an offset to a content anchor. Every entry must resolve to exactly
+  ## one live site inside its own proc (j.4a); zero is PIN_DRIFT (mechanical),
+  ## more than one is an unclosed universe (exit 2).
+  RegisteredDebtAnchors: seq[DebtSiteAnchor] = @[
+    (file: DebtEngineSource, procName: "cmdCodegen",
+     artifact: "src/generated/debt_constants.nim", role: RoleProjectionGen),
+    (file: DebtEngineSource, procName: "cmdCodegen",
+     artifact: "docs/DEBT_REGISTRY.md", role: RoleProjectionGen),
+    (file: DebtEngineSource, procName: "cmdClose",
+     artifact: "data/debt_registry.json", role: RoleSsotMutator),
+    (file: DebtEngineSource, procName: "cmdClose",
+     artifact: "src/generated/debt_constants.nim", role: RoleProjectionGen),
+    (file: DebtEngineSource, procName: "cmdClose",
+     artifact: "docs/DEBT_REGISTRY.md", role: RoleProjectionGen),
+    (file: DebtEngineSource, procName: "cmdPrune",
+     artifact: "data/debt_registry.json", role: RoleSsotMutator),
+    (file: DebtEngineSource, procName: "cmdAuditDirDoc",
+     artifact: "data/debt_registry.json", role: RoleSsotMutator),
+  ]
+
+  ## Registered (artifact, role) entries addressed by POSITION. TEST_FIXTURE
+  ## entries are sanctioned temp-dir fixtures, verified to resolve into a temp
+  ## dir on every run; they live in test files nobody inserts production code
+  ## above, so the positional form is not the trap #483 names.
   RegisteredDebtRoleEntries: seq[RoleEntry] = @[
-    (file: "tools/debt_engine.nim", line: 266, artifact: "src/generated/debt_constants.nim",
-     role: RoleProjectionGen),
-    (file: "tools/debt_engine.nim", line: 268, artifact: "docs/DEBT_REGISTRY.md",
-     role: RoleProjectionGen),
-    (file: "tools/debt_engine.nim", line: 2218, artifact: "data/debt_registry.json",
-     role: RoleSsotMutator),
-    (file: "tools/debt_engine.nim", line: 2221, artifact: "src/generated/debt_constants.nim",
-     role: RoleProjectionGen),
-    (file: "tools/debt_engine.nim", line: 2222, artifact: "docs/DEBT_REGISTRY.md",
-     role: RoleProjectionGen),
-    (file: "tools/debt_engine.nim", line: 2339, artifact: "data/debt_registry.json",
-     role: RoleSsotMutator),
-    (file: "tools/debt_engine.nim", line: 2938, artifact: "data/debt_registry.json",
-     role: RoleSsotMutator),
     (file: "tests/unit/gate_negative_test.nim", line: 385,
      artifact: "data/debt_registry.json", role: RoleTestFixture),
     (file: "tests/unit/gate_negative_test.nim", line: 401,
@@ -1998,6 +2021,28 @@ const
 func isRegisteredDebtRoleEntry(rel: string, lineNo: int, artifact, role: string): bool =
   for e in RegisteredDebtRoleEntries:
     if e.file == rel and e.line == lineNo and e.artifact == artifact and e.role == role:
+      return true
+  false
+
+func enclosingProcNames(raw: string): seq[string] =
+  ## For every 0-based line index, the name of the nearest enclosing top-level
+  ## declaration ("" outside every body). Reuses collectProcInfos so the gate
+  ## holds ONE notion of a declaration range.
+  let lines = raw.splitLines()
+  result = newSeq[string](lines.len)
+  for p in collectProcInfos(lines):
+    if p.name.len == 0 or p.bodyEnd < p.headerEnd:
+      continue
+    for i in max(0, p.headerEnd) .. min(p.bodyEnd, lines.len - 1):
+      if result[i].len == 0:
+        result[i] = p.name
+
+func anchorCovered(anchors: seq[DebtSiteAnchor], file, procName, artifact,
+                   role: string): bool =
+  ## True iff a content anchor declares this exact (file, proc, artifact, role).
+  for a in anchors:
+    if a.file == file and a.procName == procName and a.artifact == artifact and
+       a.role == role:
       return true
   false
 
@@ -2059,17 +2104,22 @@ proc debtRegistryRoleFailures(repoRoot: string,
 
   # ── pass 1: persistence sites, bucketed by (artifact, role) ──
   var discovered: seq[RoleEntry] = @[]
+  var anchored: seq[DebtSiteAnchor] = @[]
   var fileRoles = initTable[string, Table[string, string]]()
   for rel in files:
     let raw = readFileLenient(repoRoot / rel)
     if raw.len == 0:
       continue
+    let pnames = enclosingProcNames(raw)
     for hit in enumerateSinkSites(rel, raw):
+      let pname = if hit.line >= 1 and hit.line <= pnames.len: pnames[hit.line - 1] else: ""
       for artifact in DebtArtifacts:
         if targetHitsArtifact(hit.target, artifact.path):
           let role = debtSiteRole(rel, hit.target, artifact)
           discovered.add((file: hit.file, line: hit.line,
                           artifact: artifact.path, role: role))
+          anchored.add((file: hit.file, procName: pname,
+                        artifact: artifact.path, role: role))
           # A file that writes an artifact under its owner role IS that
           # artifact's authority; a mixed file is reported as the owner so the
           # delegate inherits the stricter role (fail closed).
@@ -2086,6 +2136,7 @@ proc debtRegistryRoleFailures(repoRoot: string,
     let raw = readFileLenient(repoRoot / rel)
     if raw.len == 0:
       continue
+    let pnames = enclosingProcNames(raw)
     for hit in enumerateExecSites(rel, raw, delegateNames):
       let site = rel & ":" & $(hit.line)
       if hit.target.len == 0:
@@ -2094,9 +2145,11 @@ proc debtRegistryRoleFailures(repoRoot: string,
             unclassified.add(artifact.path & " reached through a command-execution site " &
                              "with no resolvable repository tool: " & site)
         continue
+      let pname = if hit.line >= 1 and hit.line <= pnames.len: pnames[hit.line - 1] else: ""
       let perFile = fileRoles.getOrDefault(hit.target, initTable[string, string]())
       for artifactPath, role in perFile:
         discovered.add((file: rel, line: hit.line, artifact: artifactPath, role: role))
+        anchored.add((file: rel, procName: pname, artifact: artifactPath, role: role))
 
   # ── j.1/j.3/j.4/j.5: per-artifact role-set verdicts ──
   for artifact in DebtArtifacts:
@@ -2117,9 +2170,28 @@ proc debtRegistryRoleFailures(repoRoot: string,
     for d in discovered:
       if d.artifact != artifact.path:
         continue
+      if d.file == DebtEngineSource:
+        # Positional pins do not exist for this file any more; j.1a judges it
+        # by content anchor below.
+        continue
       if not isRegisteredDebtRoleEntry(d.file, d.line, d.artifact, d.role):
         result.add("unregistered " & artifact.path & " " & d.role & ": " &
-                   d.file & ":" & $(d.line) & " (competing authority)")
+                   d.file & ":" & $(d.line) & " (COMPETING_AUTHORITY)")
+    # (j.1a) debt-engine sites are located by CONTENT: the declared identity is
+    # (file, enclosing proc, artifact, role). A live site that no declaration
+    # covers is still a competing authority; a declaration that resolves to
+    # nothing is PIN_DRIFT (j.4a). Separating the two is the point: the old
+    # check reported a 10-line insertion as an authorization failure.
+    for d in anchored:
+      if d.artifact != artifact.path or d.file != DebtEngineSource:
+        continue
+      if d.procName.len == 0:
+        result.add("unresolved enclosing proc for " & d.file & " " & d.artifact &
+                   " " & d.role & " (fail closed)")
+      elif not anchorCovered(RegisteredDebtAnchors, d.file, d.procName, d.artifact, d.role):
+        result.add("unregistered " & artifact.path & " " & d.role & ": " & d.file &
+                   " proc '" & d.procName &
+                   "' (COMPETING_AUTHORITY — no declaration covers this proc)")
     # (j.4) registry hygiene — a registered entry must still be a live site of
     # its own artifact under its own role.
     for e in RegisteredDebtRoleEntries:
@@ -2159,6 +2231,26 @@ proc debtRegistryRoleFailures(repoRoot: string,
         result.add("registered " & artifact.path & " fixture does not resolve into a " &
                    "temp dir at " & e.file & ":" & $(e.line) & " — resolved target '" &
                    liveTarget & "' addresses the repo-root artifact")
+
+  # (j.4a) content-anchor hygiene — every declaration must still resolve to
+  # EXACTLY one live site inside its own proc. Zero is PIN_DRIFT (mechanical:
+  # re-derive the declaration, there is no authority change to review); more
+  # than one means the anchor stopped naming a site, so the scan universe is
+  # not closed and the gate exits 2 rather than guessing.
+  for a in RegisteredDebtAnchors:
+    var hits = 0
+    for d in anchored:
+      if d.file == a.file and d.artifact == a.artifact and d.role == a.role and
+         d.procName == a.procName:
+        inc hits
+    if hits == 0:
+      result.add("PIN_DRIFT: declared " & a.artifact & " " & a.role &
+                 " site is not live in " & a.file & " proc '" & a.procName &
+                 "' (mechanical staleness, not an authority change)")
+    elif hits > 1:
+      unclassified.add("ambiguous content anchor: " & a.file & " proc '" &
+                       a.procName & "' " & a.artifact & " " & a.role &
+                       " resolves to " & $hits & " sites")
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Runner
