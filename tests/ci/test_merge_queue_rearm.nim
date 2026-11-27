@@ -346,6 +346,63 @@ suite "structural — failure classification keeps the closed enumerations":
     check "trust_surface=FAIL" in c6b
     check "emit PERMANENT" in c6b
 
+  test "anchor (d) exists and is scoped to the pinned installer span":
+    # 2026-11-27: the class is the installer NAME prefix plus the curl -f 403
+    # message shape. Version strings rotate, so they must never enter the
+    # matcher (a version bump would silently kill the anchor).
+    check "Install (Z3|jq) " in c7
+    check "curl: \\(22\\) The requested URL returned error: 403" in c7
+    check "REARM_CODE=(d) release-asset-edge-403" in c7
+    check "4.13.3" notin c7
+    check "1.7.1" notin c7
+
+  test "anchor (d) never matches a bare 403":
+    # A token 403 on gh api / check-runs / annotations stays anchor (c)
+    # territory (UNKNOWN/no-arm). The only 403 the (d) matcher accepts is
+    # the curl -f message shape, and there is no bare 403 alternative.
+    check "error: 403" in c7
+    check c7.count("error: 403") == 1
+    check "|403" notin c7
+    check "4[0-9][0-9]" notin c7
+    check "HTTP 403" notin c7
+
+  test "anchor (d) requires an OPEN installer span (executable probe)":
+    # The shipped awk program is extracted verbatim and executed against
+    # fixture logs: it fires inside an 'Install (Z3|jq)' span and stays
+    # silent once that span is closed, so a token 403 later in the same log
+    # cannot be promoted to TRANSIENT.
+    let i = c7.find("D_IN_AWK='")
+    check i >= 0
+    let j = c7.find("'", i + 10)
+    check j > i
+    let prog = c7[i + 10 ..< j]
+    check prog.len > 0
+    let dir = getTempDir() / ("rearm_d_" & $getCurrentProcessId())
+    if dirExists(dir): removeDir(dir)
+    createDir(dir)
+    let progFile = dir / "d.awk"
+    writeFile(progFile, prog & "\n")
+    let inside = dir / "inside.log"
+    writeFile(inside,
+      "T1 ##[start-action display=Install jq 1.7.1 (pinned static binary);id=a1]\n" &
+      "T2 curl: (22) The requested URL returned error: 403\n" &
+      "T3 ##[end-action id=a1;outcome=failure;conclusion=failure;duration_ms=9]\n")
+    let closed = dir / "closed.log"
+    writeFile(closed,
+      "T1 ##[start-action display=Install jq 1.7.1 (pinned static binary);id=a1]\n" &
+      "T2 ##[end-action id=a1;outcome=success;conclusion=success;duration_ms=9]\n" &
+      "T3 gh: Resource not accessible by integration (HTTP 403)\n" &
+      "T4 curl: (22) The requested URL returned error: 403\n")
+    let (hitOut, hitCode) = execCmdEx(
+      "awk -v n=2 -f " & quoteShell(progFile) & " " & quoteShell(inside))
+    check hitCode == 0
+    check hitOut.strip == "1"
+    let (missOut, missCode) = execCmdEx(
+      "awk -v n=4 -f " & quoteShell(progFile) & " " & quoteShell(closed))
+    check missCode == 0
+    check missOut.strip == "0"
+    removeDir(dir)
+
 suite "structural — budget contract (Amendment F)":
   let c8 = stepRun(wfPath, "rearm", "condition 8")
   let c9 = stepRun(wfPath, "rearm", "condition 9")

@@ -348,6 +348,27 @@ PR #787 사례(2026-10-13, `docs/agents/merge_admission_observation.md` 부록 (
 > The canonical source is ADR-0027 **Amendment F.8**. The budget key, evaluation
 > key, and 2-per-head limit are unchanged.
 
+> **Anchor (d) correction (2026-11-27)** - scopes the F.8 line that says
+> "403 is not TRANSIENT"; it does not repeal it. The F.8 rule holds for
+> token-authenticated calls: a 403 on a `gh api` check-runs / annotations /
+> jobs request is an authorization failure, deterministic for that token, and
+> still classifies UNKNOWN -> no-arm (anchor (c) semantics unchanged). The
+> rule does NOT hold for anonymous pinned-release-binary downloads. Measured:
+> run 45994802546, job 140493600793 (workflow `publication-integrity`, job
+> `mint-publish / publish`, PR #532 merge_group head `e312a928`, step
+> `Restore trusted B supply (setup-axiom-toolchain ...)`) failed with five
+> `curl: (22) The requested URL returned error: 403` attempts over 8127 ms of
+> step-internal time with `--retry 4 --retry-delay 2`: 4 x 2 s of backoff plus
+> ~30 ms per response, i.e. every response was rejected immediately at the
+> edge. That is an abuse-limit / throttle on the shared hosted-runner IP for
+> an anonymous `releases/download/...` URL - transient by nature, never a
+> credential problem - yet the classifier matched no anchor, returned UNKNOWN
+> -> no-arm, and the merge queue stalled until a human re-enqueued.
+> Anchor (d) in `.github/workflows/merge-queue-rearm.yml` now classifies that
+> exact shape, and only when the `curl -f` 403 line sits inside an open
+> `Install (Z3|jq) ` log span. Contract: the workflow header and the
+> structural and executable tests in `tests/ci/test_merge_queue_rearm.nim`.
+
 | 항목 | 현 규칙 | 도입 시 요구 |
 |---|---|---|
 | Same-key limit | `rearm-intent@<head12>` (claimed **before** arm) + `rearmed@<head12>` (after arm confirmation) → total verification attempts 2/head | **Maintained**. The automatic path must not create additional budget |
