@@ -1263,7 +1263,15 @@ verify-rust-lane-live: provision-charon-pinned ## Rust lane runs real pinned-Cha
 # 따라서 이 target은 PASS∧PASS를 요구하고, V/F/TO는 PASS와 모순되지 않는지
 # 독립적으로 확인한다 — count가 판정을 대체하지 않는다.
 # status·tier는 보고된 값 그대로 소비만 — 둘 사이 관계(status→tier/tier→status)를 CI가 새로 해석하지 않음(금지).
-verify-contract-release-e2e-full: verify-proof-boundary verify-rust-lane-live ## G7-full — CI release E2E (canonical product-outcome assertion, plan v7)
+# The two prerequisites are independent: verify-proof-boundary writes only its
+# own nimcache under build/, and verify-rust-lane-live keeps all state in TMPDIR
+# and touches no tracked path. CI calls this target without -j, so the pair gets
+# its own two slots here; the sub-make's exit status gates the target.
+.PHONY: verify-e2e-prereq-pair
+verify-e2e-prereq-pair:
+	@$(MAKE) --no-print-directory -j2 verify-proof-boundary verify-rust-lane-live
+
+verify-contract-release-e2e-full: verify-e2e-prereq-pair ## G7-full — CI release E2E (canonical product-outcome assertion, plan v7)
 	@set -eu; \
 	NODE="src/core/orchestrator/orchestrator_api.nim::normalizeMaxWorkers"; \
 	bin/ax --check-provenance || exit 1; \
