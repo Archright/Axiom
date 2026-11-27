@@ -1133,6 +1133,10 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
   var attemptedCount = 0
   # #229: run-scoped input contract computed ONCE instead of O(candidates) times.
   let precomputedContract = rustSubjectInputContract(llbcRoot, projectAbs, depInfoPath)
+  # #229: the document's declaration form (intern tables + per-decl structured
+  # names) is a per-RUN fact, not a per-target one — prepare it once so the
+  # sweep resolves each candidate by lookup instead of re-walking the document.
+  let preparedDoc = prepareLlbcDocument(llbcRoot)
   # #247: sync vault manifest when Rust Lane certificates are issued so
   # `ax cert export --vault <dir>` has a consistent inventory.
   let manifestPath = vaultDir / "manifest.json"
@@ -1143,10 +1147,9 @@ proc runRustLaneCli*(projectAbs: string; stateRoot: string; target: string):
     # The candidate IS the producer's structured match key (the enumeration
     # SSOT) — the run binds exactly the SELECTED decl, never its bare last
     # segment re-derived here (the DEBT#510 first-match re-binding is gone).
-    let outcome = rustSubjectOutcomeParsed(llbcRoot, precomputedContract, name,
-                                           rcheckExe = "",
-                                           projectRoot = repoRoot,
-                                           timeoutMs = 60_000)
+    let outcome = rustSubjectOutcomePrepared(
+      preparedDoc, precomputedContract, name,
+      rcheckExe = "", projectRoot = repoRoot, timeoutMs = 60_000)
     if candidates.len == 1:
       laneClaim.embedded = outcome.embeddedFiles
     if outcomeOutOfScopeUnknown(outcome):
