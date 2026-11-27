@@ -274,7 +274,7 @@
     "src/cli/rust_lane_cli.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "6d01cb9c5b043a2e3960640ea50fc25d913ef634"
+      "sha": "65d94a1ef1ed5a6bfad76a751b5ba1b9cecf65c5"
     },
     "src/cli/scaffold_cli.nim": {
       "mode": "100644",
@@ -3894,7 +3894,7 @@
     "src/verification/llbc_to_canonical.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "c30178a5a643bb21b9597e941bae85b8922caa9e"
+      "sha": "97d9a14bf46943d045079ee40ecdab38d88de584"
     },
     "src/verification/llm_backend.nim": {
       "mode": "100644",
@@ -4239,7 +4239,7 @@
     "src/verification/rust_rust_pipeline.nim": {
       "mode": "100644",
       "type": "blob",
-      "sha": "0ec1c0f020525ec62d8d50bafdf41d59ed6a1fa7"
+      "sha": "4c197ca050574bd9e60cc6a7e25798a5f05836a4"
     },
     "src/verification/rust_symbolic_test_synth.nim": {
       "mode": "100644",
