@@ -16,6 +16,11 @@
 ##   * the four preflight legs are REAL fail-closed checks (§0.9), gated to
 ##     `venue == 'preflight'`, and each states "preflight success ≠ landing
 ##     evidence" (ADR-0032 (f) — the non-canonical marking);
+##   * the two SL legs (SL-20 surface admission, SL-21 producer closure) are
+##     venue-AGNOSTIC **by decision**, not by omission: their guards carry the
+##     stage + scope conjuncts and NO venue conjunct at all, so they execute on
+##     `pull_request` as well as on `merge_group`. The name list alone cannot
+##     express that, so a dedicated suite pins each guard byte-exactly;
 ##   * the A2 pin pair stays atomic: git blob(HEAD admission-check.yml) ==
 ##     trusted_writer_set.json trustedAdmissionWorkflowSha ==
 ##     epoch_manifest.json productionExecutionPin;
@@ -289,9 +294,27 @@ suite "ADR-0032 — heavy steps are landing-gated, exactly":
     ## 돌아온다 (역 ~202분 루프 재조립). 예외는 의도적으로 가벼운 두 스텝뿐:
     ## identity 재유도(sl01)와 (P0) activation guard — 둘 다 PR preflight의
     ## identity 내용이며 아래 별도 테스트가 무게이트를 고정한다.
+    ## SL-20 / SL-21 (the two entries below) are ungated BY DECISION: both legs
+    ## must still produce a verdict on the PR venue.
+    ##   SL-20 - docs/spec/repository_surface_contract.md, "judgment layers"
+    ##     item 4, fixes the split: the PR venue uses the files-API full census,
+    ##     the merge_group venue uses the B-vs-G diff, and "both venues use the
+    ##     same policy SSOT and the same judge" (verdict parity). 598b8e26
+    ##     (PR #107) wired that contract. Adding a landing conjunct to SL-20
+    ##     would delete the PR venue verdict and break the parity the contract
+    ##     requires.
+    ##   SL-21 - d949d1db (PR #144) commit body: "Landing venue only (PR venue
+    ##     is advisory, ADR-0032)". The step runs on both venues, and the PR
+    ##     venue branch prints an advisory line and exits before any landing
+    ##     work (body: `if [ "$VENUE" != "landing" ]`). Ungated therefore means
+    ##     "the body itself adjudicates the venue", not "a guard was forgotten".
+    ## Both entries are not a silent exemption: the dedicated suite below pins
+    ## each guard byte-exactly and both venue branches of each body.
     const UngatedByDesign = [
       "[check] Re-derive admission identity",
-      "(P0) Publish activation guard"]
+      "(P0) Publish activation guard",
+      "[check] [SL-20] Repository surface admission",
+      "[check] [SL-21] Producer closure admission"]
     for (path, jobs) in [(admissionPath, AdmissionJobs), (mintPath, MintJobs)]:
       for job in jobs:
         for s in stepsOfJob(path, job):
@@ -301,17 +324,29 @@ suite "ADR-0032 — heavy steps are landing-gated, exactly":
           if "steps.slice-engine.outputs.scope_" in s.guard and not isException:
             check s.guard.contains(Landing)
 
-  test "landing-gated guard counts are exact (34 admission + 16 mint)":
+  test "landing-gated guard counts are exact (35 admission + 16 mint)":
     ## 정확 카운트: 무분별한 컨정크트 추가도 잡는다 — 새 landing 게드 스텝을
     ## 추가하면 이 카운트와 이 테스트를 함께 개정한다 (계약 핀).
-    ## 소급 정정 (2026-11-04 실측, b1659ef16 선례의 다섯 번째 사례): 본 핀은
-    ## 33이었으나 50d781e82 (PR #1262 merge, 사전분할 tip)에서 2잡
-    ## (build-base-artifacts + admission-check) 실측은 29였다 — 선존재 red.
-    ## 33의 조성 산술(아래 사슬의 26+4+4−2+1)은 어느 시점의 실측과도
-    ## 대응되지 않는, 개정 의무가 누락된 채 산술로만 유지된 값이었다.
-    ## 실측 29를 기저로 재핀한다(과대 계상된 조성 항의 특정은 유추하지
-    ## 않는다 — 실측이 정본).
-    ## L3 split (work/l3-go-split-2026-11-04,
+    ## Retroactive correction (measured 2026-11-27, the sixth instance of the
+    ## b1659ef16 precedent): this pin read 34, the tree measures 35. The cause
+    ## is NOT an added landing-gated step. The last term of the chain above
+    ## enumerates 6 landing-gated steps in the admission-independents job; that
+    ## job actually carries 7, and the one omitted from the enumeration is
+    ## `[check] Root layout gate (B-built judge + H payload — Filesystem
+    ## Contract V2)`. So 34 corresponds to no measurement at any point (the
+    ## same failure mode as the 33 -> 29 correction: the measurement is the
+    ## authority).
+    ## Evidence: at every commit that touched admission-check.yml, including
+    ## 8ec4c9dc (c021c338, 598b8e26, 8ec4c9dc, d949d1db, 1eaede8c, 7f3424cc),
+    ## the three-job measurement is 9 + 19 + 7 = 35 without exception. In
+    ## particular the SL-20 / SL-21 guards carry no landing conjunct (pinned by
+    ## the suite above), so neither contributes to this count - those two
+    ## commits are NOT the cause of this pin.
+    ## Of the 34 arithmetic, only the two-job term (28) matches a measurement;
+    ## the final "+ 6" term is the undercount of 7. The individual terms of the
+    ## old 33 pin (toolchain-handoff +4, G2 job-matrix +4-2, accounting +1) do
+    ## not match the measured 29 either, so this pin drops them.
+    ## [superseded by the correction above] L3 split (work/l3-go-split-2026-11-04,
     ## docs/evidence/l3_go_prereg_2026-11-03.md):
     ##   29 (50d781e82 2잡 실측)
     ##   − 3 (Core purity gate · Stage D9 evidence · Register subject가
@@ -322,10 +357,9 @@ suite "ADR-0032 — heavy steps are landing-gated, exactly":
     ##   + 6 (admission-independents 잡: Download base-built · Verify manifest ·
     ##        Core purity · Stage D9 · Register subject · Upload evidence chain)
     ##   = 34 (3잡 — AdmissionJobs가 job2a를 포함하므로 카운트는 3잡 합계다).
-    ## 구핀 33의 개별 조성 항목(toolchain-handoff +4 · G2 job-matrix +4−2 ·
-    ## accounting +1)은 실측 29와 대응되지 않는 산술이므로 본 핀에서
-    ## 제거했다 — 커밋 이력(git log -p tests/ci/test_admission_venue_split.nim)이
-    ## 원문을 보존한다. 이전 세대의 실측 기반 조성 사슬은 아래에 남긴다.
+    ##   ^ this "+ 6" term is the undercount - the real value is 7 (see the
+    ##   correction above).
+    ## The measured composition chain of the previous generation is kept below.
     ## 26의 조성 = 20 (venue split, ci-frozen-2026-10-09-venue-split)
     ##      + 1 (S5 supply-mode judgment — d3ccad320, J3 §3.1 검증 공급 재사용)
     ##      + 3 (Pass 2.75 verdict cluster — 9b8791b53: FAIL-CLOSED guard ·
@@ -341,7 +375,7 @@ suite "ADR-0032 — heavy steps are landing-gated, exactly":
     for job in AdmissionJobs:
       for s in stepsOfJob(admissionPath, job):
         if s.guard.contains(Landing): inc nAdmission
-    check nAdmission == 34
+    check nAdmission == 35
     ## 16 = 15 (venue split 계약) + 1 (P7c-x judgment CAS ledger append의
     ## landing venue gate 복원분 — bc22d36b2, 2026-10-09 병합. 게드 추가 시
     ## 본 핀 동시 개정 규칙이 누락돼 2026-10-10 재측정으로 소급 정합).
@@ -472,6 +506,75 @@ suite "ADR-0032 — the four preflight legs are real, fail-closed, preflight-onl
             inc total
             check s.guard.contains(Preflight)
       check total == 2
+
+suite "ADR-0032 - the two SL legs are venue-AGNOSTIC by decision":
+
+  proc agnosticLeg(path, job, namePrefix, scopeConjunct: string): string =
+    ## The ABSENCE of a venue conjunct is the contract: both legs also run on
+    ## the PR venue, and whether a leg is landing-only is adjudicated by the
+    ## body's venue branch, not by a guard. Re-adding a landing conjunct here
+    ## would delete the PR venue verdict and break verdict parity.
+    let s = stepNamed(path, job, namePrefix)
+    check s.guard.contains("inputs.stage == 'attest'")
+    check scopeConjunct in s.guard
+    check Landing notin s.guard    # therefore it also runs on pull_request
+    check Preflight notin s.guard  # and it is not a preflight-only leg
+    result = s.guard
+
+  test "SL-20 runs on BOTH venues - one judge, one policy SSOT (repository_surface_contract judgment layers)":
+    ## Contract: "the PR venue uses the files-API full census, the merge_group
+    ## venue uses the B-vs-G diff - both venues use the same policy SSOT and the
+    ## same judge". Both paths must exist in the body; deleting either one
+    ## breaks verdict parity, so both are pinned here.
+    const Name = "[check] [SL-20] Repository surface admission"
+    let guard = agnosticLeg(admissionPath, "admission-check", Name,
+      "steps.slice-engine.outputs.scope_sl20 == 'true'")
+    check guard == "inputs.stage == 'attest' && steps.slice-engine.outputs.scope_sl20 == 'true'"
+    let body = stepRun(admissionPath, "admission-check", Name)
+    # PR venue branch - files-API full census; over 3000 files / 30 pages = fail
+    check "pull_request venue" in body
+    check "/pulls/$PR_NUMBER/files?per_page=100&page=$page" in body
+    check "census completeness unprovable" in body
+    check "census stale" in body
+    # merge_group venue branch - exact two-commit B-vs-G diff
+    check "merge_group venue" in body
+    check "diff --name-status \"$B\" \"$G\"" in body
+    # one judge on both venues - same binary, same base policy (the B object)
+    check body.count("bin/surface_guard --policy .axiom/sl20/base_policy.json") == 2
+    check "show \"$B:config/repository_surface.json\"" in body
+    # fail-closed - fail() routes to exit 1, plus the verdict FAIL branch
+    check "exit 1" in body
+    check "[SL-20] surface verdict: FAIL" in body
+
+  test "SL-21 dispatches the venue IN-BODY - PR venue advisory, landing fail-closed":
+    ## d949d1db (PR #144): "Landing venue only (PR venue is advisory,
+    ## ADR-0032)". The step runs on both venues, and the PR venue branch prints
+    ## an advisory line and exits BEFORE any landing work. Pinning both
+    ## branches together is what keeps the absent guard from being a fail-open
+    ## path: the advisory line alone would make exit 0 an unconditional pass,
+    ## and the reason codes alone would lose which venue is advisory.
+    const Name = "[check] [SL-21] Producer closure admission"
+    let guard = agnosticLeg(admissionPath, "admission-check", Name,
+      "steps.slice-engine.outputs.scope_sl21 == 'true'")
+    check guard == "inputs.stage == 'attest' && steps.slice-engine.outputs.scope_sl21 == 'true'"
+    let body = stepRun(admissionPath, "admission-check", Name)
+    # venue resolution - an empty venue output falls back to event_name; any
+    # other event is fail-closed
+    check "venue undeterminable" in body
+    # PR venue branch - advisory, then exit before landing work starts
+    check "[SL-21] advisory: PR venue — gate runs on merge_group only (ADR-0032)" in body
+    check "if [ \"$VENUE\" != \"landing\" ]; then" in body
+    check "exit 0" in body
+    check body.find("[SL-21] advisory") < body.find("mkdir -p .axiom/sl21")
+    # landing branch - a producer closure violation reports its reason code
+    # and exits 1
+    check "PRODUCER_POLICY_UNPARSABLE" in body
+    check "PRODUCER_MISSING" in body
+    check "PRODUCER_AMBIGUOUS" in body
+    check "PRODUCER_UNEXPECTED" in body
+    check "PRODUCER_SKIPPABLE" in body
+    check "PRODUCER_TRIGGER_MISSING" in body
+    check "exit 1" in body
 
 suite "ADR-0032 — A2 pin pairing stays atomic (3-way)":
 
