@@ -1587,6 +1587,7 @@ test-unit:
 	@nim c -r tests/ci/test_reanchor_pin.nim
 	@nim c -r tests/ci/test_verify_b_artifact.nim
 	@nim c -r tests/ci/test_b_cache_anchor.nim
+	@nim c -r tests/ci/test_setup_toolchain_skip_a_restore.nim
 	@nim c -r tests/ci/test_admission_check_stages.nim
 	@nim c -r tests/ci/test_admission_venue_split.nim
 	@nim c -r tests/ci/test_merge_queue_rearm.nim

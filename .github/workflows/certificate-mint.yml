@@ -1345,6 +1345,15 @@ jobs:
           cache-save-enabled: 'false'
           cache-build-source: ${{ inputs.baseSha }}
           provision-scope: 'full'
+          # This job consumes only bin/ax (B layer) + libpcre3; it never runs
+          # nim/lean. Skipping the ~1084 MB A-layer restore removes 34.4 s of
+          # a 69 s job. provision-scope stays 'full' — the A key namespace is
+          # what b-key is derived from, so changing scope would rotate b-key
+          # and turn every B restore into a structural MISS. The input is
+          # self-guarding: the native installers still run unless a verified
+          # B supply is on disk, so the (P3) cold-build fallback keeps its
+          # toolchain.
+          skip-a-restore: 'true'
 
       # ────────────────────────────────────────────────────────────────
       # [slice-engine] Slice Engine execution scope gate (publish, N+5) —
