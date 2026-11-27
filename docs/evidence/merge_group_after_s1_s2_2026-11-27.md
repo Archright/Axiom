@@ -1,4 +1,4 @@
-# merge_group wall-clock after S1 and S2 - four cycles on main, two warm samples
+# merge_group wall-clock after S1 and S2 - five cycles on main, three warm samples
 
 > **Status**: measurement record (reporter). This document **creates no authority of any kind**: it
 > changes no policy, workflow, ruleset, gate, or pin, and no gate consumes its values. The normative
@@ -6,9 +6,9 @@
 > preserves the per-run observations that an admission decision can later be argued from.
 > **Created**: 2026-11-27
 > **Measured commits**: `main` @ `a6805fc4` (cycle 1), `dd1ddb93` (cycle 2), `f21e9ec1` (cycle 3),
-> `87c480f4` (sample 2, section 13)
-> **Measured cycles**: four merge_group windows on the same day -
-> `2026-11-27T04:30:44Z`, `2026-11-27T08:15:56Z`, `2026-11-27T08:54:20Z`, `2026-11-27T09:49:48Z`
+> `87c480f4` (sample 2, section 13), `64c3edf0` (sample 3, section 14)
+> **Measured cycles**: five merge_group windows on the same day - `2026-11-27T04:30:44Z`,
+> `2026-11-27T08:15:56Z`, `2026-11-27T08:54:20Z`, `2026-11-27T09:49:48Z`, `2026-11-27T10:38:30Z`
 > **Observation method**: GET-only REST reads through native `gh` authentication (AGENTS.md section
 > 2.4). No local timer, no instrumentation, no added workflow step. Every number below is a
 > subtraction of two platform-recorded timestamps (`run_started_at`, `updated_at`, `started_at`,
@@ -52,7 +52,10 @@ The judgment is in section 8, with the steady-state sample added in section 13. 
 cannot be read as a hedge: **Class A holds on the evidence quoted here, and Class B's target was not
 met on the cycle measured in section 4** - the one warm sample is **400 s** against a 345 s target.
 The second warm sample (section 13) is **312 s**, which is below the target but does not demonstrate
-it, because the contract is on a median and two samples give 356 s (section 13.5).
+it, because the contract is on a median and two samples give 356 s (section 13.5). **A third warm
+sample (section 14) is 346 s**, which fixes the median of three at **346 s** - still 1 s above the
+target, so the target remains **not demonstrated** while the mechanism gains behind it are real
+(section 14.5).
 
 ---
 
@@ -559,9 +562,10 @@ cycles 2 and 3. That is an observation, not an attribution.
   The 392 s figure they are compared against is a session-recorded median of 11 candidates; a median
   of two is not a median. No p50, p90, or confidence interval is claimed.
 - **Sample 3 is the next cycle's own merge_group run.** Sample 2 (section 13) is read here because it
-  is a prior landing; sample 3 is the merge_group run of the PR that carries this section, and is
-  deliberately not in this document, because a document cannot quote the run that created it.
-  Section 10's commands reproduce it. Its numbers are a follow-up read, not a claim here.
+  is a prior landing; sample 3 is the merge_group run of the PR that carried section 13, and was
+  deliberately not in that revision, because a document cannot quote the run that created it.
+  Section 14 now measures it from the run record; the run that creates section 14 is **sample 4** and
+  remains a follow-up read of the same kind.
 - **Not measured**: queue wait before each window opens (out of the run record), the internal
   scheduling of the merge group, and per-step costs inside each job (step spans are not edge costs
   under the metric contract, so they are used here only to locate the tail).
@@ -687,7 +691,7 @@ done
 | 2 | Determine whether the `mint-prepare` B-key divergence (section 4.5) is intentional | **A** (correctness) | declared == executed is stated for that job's B identity, either by fixing the key or by documenting the second identity | before any `mint-prepare` span work; a 13 s delta is currently unattributable |
 | 3 | Make `go-critical-lane (1)`'s 155 s the next speed target | **B** (speed) | observed merge_group wall-clock drop on the tail | the growth question is **answered** (section 13.2): it was S2's one-time `Makefile` re-judgement, not variance, and the steady-state lane is 105 s. Target the 105 s steady-state span, not the 155 s judgement span |
 | 4 | Re-appraise S2's 49 s result now that it is not the binder | **B** (speed) | observed tail drop | after item 3 lands; S2's gain is real but is currently absorbed by a slower neighbour |
-| 5 | Collect a median over warm samples | **B** (speed) | a median over >= 3 warm cycles that is <= 345 s | **in progress** - sample 2 is 312 s (section 13), sample 3 is this PR's own merge_group run (section 13.6); two samples give 356 s against a 345 s target, so the target is still undemonstrated |
+| 5 | Collect a median over warm samples | **B** (speed) | a median over >= 3 warm cycles that is <= 345 s | **in progress** - sample 2 is 312 s (section 13), sample 3 is 346 s (section 14.1). Three warm samples (400 / 312 / 346) give a median of **346 s**, 1 s above the target, so the target is still undemonstrated. Sample 4 is this PR's own merge_group run (section 14.6) |
 
 ---
 
@@ -910,3 +914,156 @@ creates it. It is read with section 10's commands against `gh pr view <n> --json
 Three warm samples would permit a median of three in the sense the contract needs, but a three-sample
 median of a variable quantity is still not a stable estimator; the honest threshold is that the
 target number is reported alongside n every time it is compared.
+
+**Added later.** That run now exists. It is `64c3edf0` (PR #530), it is measured in section 14, and
+the median of three warm samples is 346 s - 1 s above the target, with the mechanism gains and the
+variance-of-the-same-order caveat both stated there. The paragraph above is kept as written, as the
+prediction it was.---
+
+## 14. Sample #3 - the landing of `64c3edf0` (section 13's own cycle)
+
+Section 13.6 promised this sample and left it unquoted, on the ground that a document cannot observe
+the run that creates it. The promise is now payable: the PR that carried section 13 was **#530**, its
+merge commit is `64c3edf0`, and the cycle that landing produced is measured here. Its gate window
+opens `2026-11-27T10:38:30Z`; the PR merged at `10:44:43Z`, 27 s after the gate had finished.
+
+**What makes it a comparable sample.** PR #530 changes one file - this document - with `+266 / -21`
+lines, all under `docs/evidence/`. No source, test, golden fixture, workflow, `Makefile` or
+`nimble.lock` byte moves, so the judgement recipe is sample 2's and the cycle is warm-and-reuse by
+construction. Section 14.2 confirms that from the log rather than from the diff.
+
+### 14.1 The three runs
+
+| workflow | run | window (UTC) | wall |
+|---|---|---|---|
+| `admission-gate` | `45983808095` | `10:38:30` -> `10:44:16` | **346 s** |
+| `publication-integrity` | `45983807567` | `10:38:29` -> `10:42:14` | 225 s |
+| `axiom-operational-slice` | `45983807518` | `10:38:29` -> `10:43:49` | 320 s |
+
+`admission-gate`, with the sample-2 column for comparison:
+
+| job | window (UTC) | span | vs sample 2 |
+|---|---|---|---|
+| `closure-deriver` | `10:38:32` -> `10:39:04` | 32 s | +7 s |
+| `attest / build-base-artifacts` | `10:38:32` -> `10:39:28` | 56 s | +1 s |
+| `gateway / select` | `10:39:07` -> `10:40:09` | 62 s | -9 s |
+| `attest / admission-independents` | `10:39:30` -> `10:40:42` | 72 s | -2 s |
+| `attest / go-critical-lane (0)` | `10:39:30` -> `10:40:56` | 86 s | -15 s |
+| `attest / go-critical-lane (1)` (slower lane, on chain) | `10:39:31` -> `10:41:17` | **106 s** | +1 s |
+| `gateway / executed-jobs` | `10:40:18` -> `10:40:30` | 12 s | +8 s |
+| `attest / admission-check` | `10:41:20` -> `10:42:40` | **80 s** | **+20 s** |
+| `attest / go-critical-rollup` | `10:41:20` -> `10:41:24` | 4 s | +1 s |
+| `mint-prepare / prepare` | `10:42:43` -> `10:43:15` | **32 s** | **+14 s** |
+| `mint-publish / publish` | `10:43:18` -> `10:43:54` | 36 s | **-17 s** |
+| `verdict / admission-check` (parallel to mint) | `10:43:18` -> `10:44:10` | **52 s** | -1 s |
+| `admission-check` (final context) | `10:44:12` -> `10:44:16` | 4 s | -1 s |
+
+`gateway / sl09-scope` ran 7 s. `gateway / ci-bootstrap`, `gateway / gateway-shard`,
+`gateway / candidate-build-arm`, `gateway / gateway-identity-gate` and `gateway / proof-reconcile` are
+`skipped`, the same selection sample 2 recorded (`ciBootstrap: false`, empty `selectedWorkUnits`).
+
+**Current binding path:**
+
+```
+build-base-artifacts 56 s -> go-critical-lane (1) 106 s -> attest/admission-check 80 s
+  -> mint-prepare 32 s -> verdict/admission-check 52 s -> admission-check (final) 4 s
+```
+
+That is 330 s of job spans plus 16 s of scheduling gaps = 346 s.
+
+`publication-integrity` (225 s): shards `150 / 152 / 171 / 140 / 135 s`, aggregate 21 s, final 25 s.
+Straggler is shard (2) at 171 s. PI margin to the admission tail is **121 s**.
+
+`axiom-operational-slice` (320 s): slice job 146 s (`10:38:31` -> `10:40:57`), `readiness-verdict`
+170 s (`10:40:58` -> `10:43:48`). Margin to the admission tail is 26 s.
+
+### 14.2 The lane reused again
+
+Job `attest / go-critical-lane (1)` (`140454596578`):
+
+```
+AXIOM_JUDGMENT_CAS [proof_integrity] : REUSED - record 05f84c0428e3 re-verified (closure re-derivation + executionEpoch + per-read re-hash all passed)
+[admission-tests] PASS - EXECUTED 0/0, REUSED(skip) 3 (lane=1: tests/unit/proof_integrity_test.nim tests/unit/test_d2_golden.nim tests/unit/test_d2_persist.nim); every GO-critical judgment carries an outcome (EXECUTED or REUSED - never none)
+```
+
+Both lines carry a typographic dash (U+2014) in the log, reproduced as ASCII `-`. All three subjects
+reused, at the keys sample 2 read (`05f84c0428e3`, `e71e28d5244b`, `880e24cc66c5` - section 13.2), and
+lane (0) reused too (`EXECUTED 0/0, REUSED(skip) 1`, subject `s1a`, key `fb26806977ef`). This is the
+second consecutive reuse and the third reuse in the series; cycles 2 and 3 remain the only cycles that
+executed (section 13.2).
+
+### 14.3 `mint-publish`: S2 still applied, and the B restore is now 8 s
+
+Job `mint-publish / publish` (`140456409502`), step 4 `Restore trusted B supply`, ran
+`10:43:22` -> `10:43:30` = **8 s** inside a 36 s job. The A layer was skipped again:
+
+```
+AXIOM_CACHE_A_PINS: skip-a-restore - native toolchain deliberately not provisioned (B supply verified); asserting z3/jq only
+AXIOM_CACHE_B_RESTORE: exact-hit=true requested-key=<B> primary-key=<B> matched-key=<B>
+```
+
+with `skip-a-restore: true` as the step input and no `AXIOM_CACHE_A_RESTORE` line anywhere in that job
+(count: 0). The step's arc across the series is the cleanest single mechanism reading in this record:
+**42 s in cycle 1** (before S2, both restores run), **16 s in sample 2**, **8 s here**. The saving S2
+bought on this step is real and it grew - and it buys no wall, because this job stopped being the
+binder (section 14.4).
+
+### 14.4 The tail binder is `verdict / admission-check` again
+
+Sample 2's final context waited on `mint-publish`, which finished 1 s before `verdict` (section 13.1).
+Sample 3 inverts that relation back: `mint-publish` completes `10:43:54`, `verdict / admission-check`
+completes `10:44:10` - **16 s later** - and the final context starts 2 s after `verdict`. So the tail
+binder this cycle is `verdict / admission-check` at 52 s, and `mint-publish` carries 16 s of slack at
+the point of consumption, the structural position cycle 3 recorded (14 s).
+
+| property | cycle 3 | sample 2 | sample 3 |
+|---|---|---|---|
+| PI margin to the admission tail | 133 s | 51 s | 121 s |
+| finisher of the mount chain | `verdict` 62 s | `mint-publish` 53 s | **`verdict` 52 s** |
+| `mint-publish` vs its consumer | 14 s slack | binder (1 s tie) | **16 s slack** |
+| `admission-gate` wall | 400 s | 312 s | **346 s** |
+
+### 14.5 Three warm samples: median 346 s, one second above the target
+
+This is the first sample set that can produce the median the contract is written on (section 8.2:
+median `392 s` -> `<= 345 s`).
+
+| sample | tree | judgement | wall |
+|---|---|---|---|
+| cycle 3 | `f21e9ec1` | EXECUTED | 400 s |
+| sample 2 | `87c480f4` | REUSED | 312 s |
+| sample 3 | `64c3edf0` | REUSED | **346 s** |
+
+**Median of three warm samples: 346 s. Target: 345 s. Class B is still not met**, by one second - and
+the honest reading is narrower than either previous verdict:
+
+- **On REUSED-only samples**, which is the steady state (section 13.2), the series is 312 / 346 s
+  against a **single-sample REUSED baseline of 368 s** (cycle 1). Both samples are below that baseline:
+  by 56 s and by 22 s.
+- **The mechanism gains are proven.** `publication-integrity` is off the binding chain in every sample
+  since cycle 2 (225-267 s against tails of 312-421 s, 121 s of margin here), and the `mint-publish`
+  B-restore step went **42 s -> 8-16 s** (section 14.3). Those are structural and reproducible.
+- **But run-to-run variance in steps nobody targeted is of the same order as part of the gain.** The
+  chain spans went 296 s -> 330 s, and that +34 s is **exactly** two unmodified jobs:
+  `attest / admission-check` **60 s -> 80 s** and `mint-prepare` **18 s -> 32 s** (+20 and +14), with
+  every other on-chain job within +-1 s. Inside them the largest single term is the toolchain action
+  step: 31 s -> 38 s in the former, 4 s -> 10 s in the latter. Neither job was a target of S1 or S2.
+- **So the statement this record makes** is: the median over three warm samples is 346 s, 1 s above the
+  target, with the mechanism gains proven and with variance of the same magnitude as part of them. The
+  target is not claimed as met, and it is not claimed as missed for a determined cause.
+
+Two observations belong with that, and neither is an attribution. First, `mint-prepare / prepare`'s B
+restore is **again a miss** in this cycle (`Cache not found`, empty `exact-hit`), the shape section 4.5
+recorded for cycles 2 and 3; the same miss is present in sample 2. Second, `attest / admission-check`
+growing 20 s while `go-critical-lane (1)` moves +1 s is the opposite pattern from cycle 3's, where the
+lane moved and this job did not - which is another way of saying that the movable cost in this lane is
+not attached to a single job.
+
+### 14.6 Sample #4
+
+Sample #4 is the merge_group cycle of the merge commit of the PR that carries **this** section. It is
+not quoted here, for the reason section 9 gives. It is read with section 10's commands against
+`gh pr view <n> --json mergeCommit`, then `GET /actions/runs?event=merge_group&head_sha=<sha>`, and
+the `[lane] evidenceId contract check` step span in each of the two lane jobs is read at the same
+time - that span is the observable which says whether the in-progress probe speed-up, recorded as a
+correction in the wall-budget record, has landed ahead of it.
