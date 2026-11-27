@@ -82,6 +82,35 @@
 #         this token, not evidence that the verification was transient — and
 #         classifies UNKNOWN/no-arm. With checks: read fixed, 403 must not
 #         fire; kept as a fail-closed branch anyway.
+#     (d) 2026-11-27 amendment: anonymous pinned-release-binary download
+#         rejected at the edge. Matches ONLY the curl -f failure message
+#         shape 'curl: (22) The requested URL returned error: 403' AND ONLY
+#         inside a job-log span opened by 'start-action display=Install
+#         (Z3|jq) '. Those two steps (setup-axiom-toolchain: 'Install Z3
+#         <version> (pinned release binary)' and 'Install jq <version>
+#         (pinned static binary)') are the pipeline's only anonymous
+#         github.com/<owner>/<repo>/releases/download/... consumers, so a
+#         403 there is an edge throttle / abuse limit on a shared
+#         hosted-runner IP - transient by nature. The scope is the installer
+#         name prefix; version strings rotate and are deliberately excluded
+#         from the class. This is NOT class (c): (c)'s 403 is a token
+#         authorization failure on gh api / check-runs / annotations calls
+#         and stays UNKNOWN/no-arm.
+#   AMENDMENT 2026-11-27 (anchor (d), discovery run 45994802546 / job
+#   140493600793): the T2 closed-enumeration clause above is EXTENDED by this
+#   dated entry, not repealed. Evidence: workflow publication-integrity, job
+#   'mint-publish / publish', PR #532 merge_group head e312a928, step
+#   'Restore trusted B supply (setup-axiom-toolchain ...)'. That step made
+#   five attempts at 'curl: (22) The requested URL returned error: 403' and
+#   ended with '##[error]Process completed with exit code 22' in 8127 ms of
+#   step-internal time. With --retry 4 --retry-delay 2 that is 4 x 2 s of
+#   backoff plus ~30 ms per response: every 403 was rejected immediately at
+#   the edge, i.e. anonymous release-asset throttling from a shared hosted
+#   runner IP, not a credential problem. The classifier matched no anchor,
+#   returned UNKNOWN -> no-arm, and a human had to re-enqueue. The 429/403
+#   question for token-authenticated calls is NOT reopened: (d) needs the
+#   curl -f 403 message AND an Install (Z3|jq) log span, so a genuine token
+#   403 on a gh api call matches no anchor and still no-arms.
 #   Evidence sources: (i) check-run annotation MESSAGE texts for the failing
 #   leg (titles insufficient), (ii) jobs API step conclusions + names, (iii)
 #   failed job logs via repos/$REPO/actions/jobs/<id>/logs. If no explicit
@@ -1171,6 +1200,8 @@ jobs:
           fi
           errf="$(mktemp)"
           # Closed anchor enumerations (Amendment E — never extended here).
+          # 2026-11-27: amended by anchor (d) below, which is both message-
+          # shape-scoped and installer-span-scoped; (a)-(c) are unchanged.
           # (a) errno phrases match in tool-stderr shape only — strerror text
           # after a command's colon (": Text file busy" / ": Permission
           # denied") plus the link-corruption triad. 2026-10-15 precision
@@ -1194,6 +1225,13 @@ jobs:
           # Closed enumeration unchanged — this only REDUCES false TRANSIENT.
           TRANS_RE='curl: \((7|28|35|56)\)|HTTP 5[0-9][0-9]'
           DL_RE='download|artifact|zip|admission-check-|actions/runs|jobs\?page'
+          # (d) 2026-11-27 amendment (header contract): exactly the curl -f
+          # 403 message shape - never a bare 403 token. The step scope lives
+          # in D_IN_AWK below ('Install (Z3|jq) '): version strings rotate, so
+          # the class is the installer-name prefix only. Anchor (c)'s 403
+          # (token authorization failure on gh api) matches neither the
+          # message shape nor an installer span and still no-arms.
+          D_RE='curl: \(22\) The requested URL returned error: 403'
           sanitize() { printf '%s' "$1" | tr '\n' ' ' | tr -d '\r' | cut -c1-140; }
           # (i) annotation MESSAGE texts (titles are never sufficient here).
           # Matched text is TITLE :: MESSAGE only — the path/line projection
@@ -1307,6 +1345,48 @@ jobs:
                 echo "CLASSIFIED: (b) via job '$JNAME' log line $LN"
                 exit 0
               fi
+            fi
+            # (d) 2026-11-27: anonymous pinned-release-binary download rejected
+            # at the edge (contract in the header). The scope is a LOG SPAN,
+            # not the jobs-API step name: the installers run INSIDE the
+            # composite action setup-axiom-toolchain, so the API reports the
+            # outer step ('Restore trusted B supply ...') and the installer
+            # name appears only in the '##[start-action display=...]' markers
+            # (measured in job 140493600793). Requiring an OPEN installer span
+            # is what keeps this from becoming a bare-403 class: a token 403
+            # elsewhere in the same log matches nothing here and still falls
+            # through to UNKNOWN/no-arm.
+            # The program lives in a variable so the CI test can extract and
+            # execute it verbatim; it must never contain a single quote.
+            D_IN_AWK='
+              /##\[start-action display=Install (Z3|jq) / { inspan = 1 }
+              /##\[end-action id=/ { inspan = 0 }
+              NR == n { print (inspan ? 1 : 0); exit }
+            '
+            D_HIT=""
+            if grep -nE "$D_RE" "$LOGF" > /tmp/rearm_dhits.txt 2>/dev/null; then
+              while IFS= read -r D_ROW; do
+                if [ -z "$D_ROW" ]; then continue; fi
+                D_LN="${D_ROW%%:*}"
+                D_IN="$(awk -v n="$D_LN" "$D_IN_AWK" "$LOGF")"
+                if [ "$D_IN" = "1" ]; then
+                  D_HIT="$D_ROW"
+                  break
+                fi
+              done < /tmp/rearm_dhits.txt
+            fi
+            if [ -n "$D_HIT" ]; then
+              LN=$(printf '%s' "$D_HIT" | cut -d: -f1)
+              {
+                echo "REARM_CLASS=TRANSIENT"
+                echo "REARM_CODE=(d) release-asset-edge-403"
+                echo "REARM_REASON=anchor (d): anonymous pinned release-asset download rejected with curl -f 403 inside an Install (Z3|jq) step - $(printf '%s' "$D_HIT" | cut -c1-160 | tr '\n' ' ')"
+                echo "REARM_EV_JOB=$JNAME"
+                echo "REARM_EV_STEP=$STEP1"
+                echo "REARM_EV_LINE=$LN"
+              } >> "$GITHUB_ENV"
+              echo "CLASSIFIED: (d) via job '$JNAME' log line $LN"
+              exit 0
             fi
           done <<< "$FJ"
           emit UNKNOWN "no explicit evidence anchor matched (DEFAULT-NO-ARM — a 'failure' conclusion alone never implies TRANSIENT)" available no-arm rearm evidence "no-anchor"
