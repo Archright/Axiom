@@ -117,7 +117,11 @@ has_git_token() {
 }
 
 # ── 2. script invocation resolver (bash tools/ci/*.sh, sh ..., .sh direct) ──
-# Emits "path" for each resolvable script; records UNRESOLVED elsewhere.
+# Appends "path" + newline to the global RESOLVED_OUT for each resolvable
+# script; records UNRESOLVED elsewhere. Appends rather than emitting on stdout
+# on purpose: this runs once per run-block line (~10.9k in this tree), and a
+# `$(...)` here forks a subshell per line to discover that ~99% match nothing.
+# The caller strips the final newline, which is what command substitution did.
 resolve_script_candidates() {
   local no="$1" content="$2"
   if is_mention_line "$content"; then
@@ -131,17 +135,17 @@ resolve_script_candidates() {
   local re_bin='bin/[A-Za-z0-9_.-]+'
   if [[ "$content" =~ $re_sh ]]; then
     candidate="${BASH_REMATCH[3]}"
-    case "$candidate" in -*) ;; *) echo "$candidate" ;; esac
+    case "$candidate" in -*) ;; *) RESOLVED_OUT+="$candidate"$'\n' ;; esac
   fi
   if [[ "$content" =~ $re_sheet ]]; then
-    echo "./${BASH_REMATCH[2]}"
+    RESOLVED_OUT+="./${BASH_REMATCH[2]}"$'\n'
   fi
   # compiled artifact mention at invocation position: `bin/<name>` (also via
   # assignment like `ax="$WORKSPACE/bin/ax"` — conservative, reported).
   if [[ "$content" =~ $re_bin ]]; then
     candidate="${BASH_REMATCH[0]}"
     candidate="${candidate%%[.!:,)]}"
-    echo "$candidate"
+    RESOLVED_OUT+="$candidate"$'\n'
   fi
 }
 
@@ -180,8 +184,11 @@ while IFS= read -r WF; do
     [ -n "$BLOCK_LINE" ] || continue
     NO="${BLOCK_LINE%%:*}"
     CONTENT="${BLOCK_LINE#*:}"
-    # git invocations → inventory (a git-command token; `github` is not git)
-    if has_git_token "$CONTENT" && ! is_mention_line "$CONTENT"; then
+    # git invocations → inventory (a git-command token; `github` is not git).
+    # The literal `*git*` test is a pure short-circuit: has_git_token's ERE can
+    # only match a line that contains the substring somewhere, so skipping the
+    # regex on lines without it cannot change the set of sites.
+    if [[ "$CONTENT" == *git* ]] && has_git_token "$CONTENT" && ! is_mention_line "$CONTENT"; then
       TOTAL_SITES=$((TOTAL_SITES + 1))
       SITE_COUNT=$((SITE_COUNT + 1))
       echo "  site $WF:$NO | $CONTENT"
@@ -193,7 +200,9 @@ while IFS= read -r WF; do
       fi
     fi
     # script/helper resolution
-    RESOLVED="$(resolve_script_candidates "$NO" "$CONTENT")"
+    RESOLVED_OUT=""
+    resolve_script_candidates "$NO" "$CONTENT"
+    RESOLVED="${RESOLVED_OUT%$'\n'}"
     if [ -n "$RESOLVED" ]; then
       CAND="$RESOLVED"
       case "$CAND" in
