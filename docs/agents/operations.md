@@ -267,6 +267,56 @@ Extracted from AGENTS.md §3 (2026-08-17 slim-down). Hard environment requiremen
 **Axiom의 비관할(merge 정책)** — Axiom은 위 표의 무결성·증거만 소유한다.
 `main` 수렴 판정은 GitHub merge authority가 관할한다.
 
+## Credential Authority (ruleset write/bypass)
+
+**Invariant.** The credential used by agents and CI must not carry repository
+administration or ruleset write. Rulesets, required status checks and merge-queue
+configuration are managed by the human architect only: an agent that can rewrite
+its own admission rules is not under governance.
+
+**Merge capability does not depend on it.** `bypass_actors` is a separate option
+on the merge call and only an actor permitted to bypass may use it, so removing
+bypass does not remove the ability to enqueue or merge. The measured repository
+evidence is E10 in [docs/evidence/merge_queue_operation_2026-09-29.md](../evidence/merge_queue_operation_2026-09-29.md):
+an administrator credential running `gh pr merge 369 --admin --merge` exits 1
+with "Changes must be made through the merge queue". Merge needs write-level
+access plus the queue, not administration.
+
+**Measured state (2026-11-27).**
+
+```text
+gh api repos/Archright/Axiom/rulesets/27097366 --jq '{bypass:(.bypass_actors|length), ctx:([.rules[]|select(.type=="required_status_checks")|.parameters.required_status_checks[].context]|length)}'
+# => {"bypass":0,"ctx":7}
+
+gh api repos/Archright/Axiom/rulesets/27525972 --jq '{name,bypass:(.bypass_actors|length)}'
+# => {"name":"main-admission","bypass":0}
+```
+
+Both rulesets are `active` with an empty bypass list. Required contexts are
+unchanged: 7 on `main` (admission-check, bsec-integrity, debt-registry-gate,
+generation-acceptance, axiom-operational-slice, publication-integrity,
+readiness-verdict) and 1 on `main-admission`.
+
+**Open residual: #360 acceptance item 1.** The negative test (a `PUT
+/repos/Archright/Axiom/rulesets/{id}` returning 403/404) has NOT been observed.
+The credential in use today derives from repository ownership and still holds
+administration, so the test cannot pass yet. Reducing that credential and running
+the test is a human org-admin action. Until then this section records a boundary
+that is configured but not yet enforced at the credential layer. It must not be
+restated as "capability removed".
+
+**Observation discipline.** `admission-check` is published by two different apps:
+the admission verifier (app `5795152`, the required context per
+`config/policy/merge_admission.json` `requiredCheckSources`) and the Actions app
+(`15368`). Read the producer, not the name:
+
+```text
+gh api "repos/Archright/Axiom/commits/<sha>/check-runs?app_id=5795152&check_name=admission-check" \
+  --jq '.check_runs[]|{name,app:.app.id,conclusion}'
+```
+
+The credential-handling rule this section depends on is AGENTS.md section 2.4.
+
 ## U2 Slot Lifecycle Abandonment
 
 U2 slot lifecycle = 폐기된 구현. 이번 전환에서 호출·확장·의존하지 않는다. 물리적 삭제와 git 정리는 별도 cleanup 단계. execution adapter 소관.
