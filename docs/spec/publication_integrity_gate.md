@@ -1,6 +1,6 @@
 # publication-integrity 게이트 — 단일 판정 공개 준비성 계약
 
-**Status**: Normative (v1.5, 2026-11-21 — **script-scan sixth landing dimension**: the landing venue runs all six dimensions, preflight remains `{secret-scan}`, and any other event is FAIL. [ADR-0044](../adr/0044-unicode-script-allowlist-admission.md) adds a Unicode Script allowlist over added diff lines without a new required check, App, workflow file, or permanent ruleset structure change. v1.4 = venue split (ADR-0043): `pull_request`=preflight `{secret-scan}` / `merge_group|schedule|workflow_dispatch`=landing, all dimensions / any other event=FAIL; ADR-0043 extended ADR-0032 (a)(b) to this workflow's job layer and amended (e); v1.3 = license-scan shard 3-leg expansion (VS-PI-3) + self-heal local audit scope alignment; v1.2 = staging single-root scan restructuring; v1.1 = 2-shard structuring)
+**Status**: Normative (v1.6, 2026-11-27 — **license-scan 5-shard expansion + the dead duplicate-path check repaired**: `license-scan-shards` runs `[0..4]` (5-way LPT split), the shard-count assertion and the split's `n` are the same constant, and the cross-shard duplicate-path guard now reads the RAW per-shard reports BEFORE the merge dedup — the previous placement (after `group_by(.path) | map(.[0])`) was unreachable and could never fire (§0.9 theater). A zero-report shard directory now prints the count diagnostic instead of dying inside the command substitution. v1.5, 2026-11-21 — **script-scan sixth landing dimension**: the landing venue runs all six dimensions, preflight remains `{secret-scan}`, and any other event is FAIL. [ADR-0044](../adr/0044-unicode-script-allowlist-admission.md) adds a Unicode Script allowlist over added diff lines without a new required check, App, workflow file, or permanent ruleset structure change. v1.4 = venue split (ADR-0043): `pull_request`=preflight `{secret-scan}` / `merge_group|schedule|workflow_dispatch`=landing, all dimensions / any other event=FAIL; ADR-0043 extended ADR-0032 (a)(b) to this workflow's job layer and amended (e); v1.3 = license-scan shard 3-leg expansion (VS-PI-3) + self-heal local audit scope alignment; v1.2 = staging single-root scan restructuring; v1.1 = 2-shard structuring)
 **워크플로**: `.github/workflows/publication-integrity.yml` (required context `publication-integrity`)
 **정책 SSOT**:
 - `compliance/policy/license-policy.yml` — 허용 라이선스 allowlist + 거부 가족
@@ -60,16 +60,26 @@ script-scan ──────┘  ripgrep 14.1.0 → publication_script_eval.ni
 ```
 
 - sub-job id = dimension name (secret-scan, license-scan, dependency-scan, provenance, sbom, script-scan).
-- license-scan 차원은 내부적으로 `license-scan-shards`(matrix 3-레그 — HEAD 트리
-  blob 집합에서 ScanCode 기본 무시 이름(`ignores_VCS`)을 뺀 스캔 표면의 **크기-그리디
-  결정적 3-분할**, 각 레그는 자기 파일 집합을 **작업공간 basename과 동일명의 루트
-  디렉터리에 스테이징해 그 디렉터리 하나를 스캔** — 단일 디렉터리 인자가 ScanCode가
-  올바르게 취급하는 유일한 입력 형태다, §5) + `license-scan`(shard 보고서 병합·판정
-  잡)로 실행된다. **판정은 단일 평가기·단일 병합 보고서로 유지된다** —
-  "sub-job id = 차원 이름" 규칙은 판정 잡 `license-scan`이 담당하며 shards는 내부
-  실행 구조다 (required context·종합 잡 needs·차원 보고서 artifact 표면 불변).
-  shards와 판정 잡은 **동일한 venue 조건**을 공유한다: 부분 shard 집합은 병합 단계의
-  정확히-3 단언에서 FAIL하므로, 반쪽 실행이 조용한 부분 통과로 새는 경로가 없다.
+- license-scan runs internally as `license-scan-shards` (a matrix of 5 legs — the
+  scan surface is the HEAD tree blob set minus the ScanCode default-ignored names
+  (`ignores_VCS`), split by a **size-greedy deterministic 5-partition**
+  (longest-processing-time placement); each leg stages its own file set under a
+  root directory named like the workspace basename and scans that ONE directory
+  — a single directory argument is the only input form ScanCode handles
+  correctly, §5) + `license-scan` (the shard-report merge and adjudication job).
+  **Adjudication stays one evaluator over one merged report** — the
+  "sub-job id = dimension name" rule is carried by the adjudicating
+  `license-scan` job, and the shards are internal execution structure (required
+  context, aggregate-job needs, and the dimension report artifact surface are
+  unchanged). The shards and the adjudicating job share the **same venue
+  condition**: a partial shard set FAILs the merge step's exactly-5 assertion, so
+  a half-run has no path to a silent partial pass.
+  The shard count is one value in three places (matrix length, the partition's
+  awk `-v n=`, the merge assertion `-eq`), and
+  `tests/ci/test_publication_shard_merge.nim` pins them as a set. That contract
+  is executed, not declared — the same test also runs from a diagnostic step in
+  `tests-ci-unit-diagnostic.yml`, outside `make test-unit`, because no CI target
+  runs `make test-unit` (AGENTS.md §0.9).
 - 종합 job은 `needs.*.result`와 **venue가 요구하는** 차원 보고서 JSON을 **이중** 검증한다
   (`tools/ci/publication_report.nim`, `--venue` 필수).
 
@@ -150,11 +160,22 @@ blocking buys nothing. Changing this rationale requires an amendment of this sec
   명시적으로 주장).
 - 신규 검출에 attribution 항목이 없으면 FAIL (fail-closed; 항목 추가는 리뷰되는
   가시적 행위다 — 극장 금지 §0.9).
-- **shard 병합 완전성 계약**: 병합 보고서의 파일 경로 **집합** == **기대 스캔
-  가능 집합**(`git ls-tree -r -l HEAD` blob 집합에서 ScanCode `ignores_VCS` 이름을
-  뺀 집합 — shard 분할과 동일 유도, 중복 없음). 누락·중복·예상 밖 파일 전부
-  FAIL이다. 집합 비교이지 개수 비교가 아니며, shard 보고서가 정확히 3개가 아니면
-  판정 자체를 진행하지 않는다 (부분 스캔 표면 위 판정 금지 — fail-closed).
+- **shard merge completeness contract**: the merged report's file-path **set**
+  == the **expected scannable set** (the `git ls-tree -r -l HEAD` blob set minus
+  the ScanCode `ignores_VCS` names — derived exactly like the shard partition, no
+  duplicates). Missing or unexpected files FAIL. This is a set comparison, not a
+  count comparison, and adjudication does not proceed unless the shard report
+  count is exactly 5 (no verdict over a partial scan surface — fail-closed; even
+  at zero reports the `expected 5 shard reports, found 0` diagnostic is printed).
+- **cross-shard duplicate-path contract (v1.6)**: the duplicate check runs on the
+  **raw shard reports, BEFORE the merge jq**. The merge jq dedups `.files` by path
+  (`sort_by(.path) | group_by(.path) | map(.[0])`), so a duplicate cannot exist in
+  the merged report and a check placed there was unreachable — a dead check
+  (measured 2026-11-27). A file emitted by two shards now FAILS: the partition is
+  disjoint by construction, so a duplicate is a real split/merge defect.
+  `tests/ci/test_publication_shard_merge.nim` pins this path — a fixture in which
+  two shards both emit one file (`b.txt`) FAILs, and a valid five-shard set
+  passes.
   (v1.1까지의 "`git ls-files` 집합" 기술은 오류였다 — ScanCode가
   `.gitignore`·`.gitattributes`를 어떤 토폴로지에서도 방출하지 않으므로(§5) 그
   기대집합으로는 검사가 항상 FAIL한다.)
@@ -328,6 +349,11 @@ shard 분할·완전성 기대집합 유도는 평문 이름을 미러링한다(
 각각 방출되므로 병합 jq는 경로 기준 dedup(`sort_by(.path)` 뒤 `group_by(.path) |
 map(.[0])`)으로 단일 스캔의 유니크 형태를 복원한다. 파일 엔트리는 분할상 disjoint라
 dedup 대상이 아니며, 병합 후 파일 중복 경로 검사는 여전히 fail-closed다.
+(v1.6 correction: that placement is unreachable — the post-merge report cannot hold a
+duplicate path because the merge jq dedups by it. The file duplicate-path check now
+runs on the **raw shard reports, before the merge jq**: `jq -r '.files[] |
+select(.type=="file") | .path'` over every shard report, workspace-basename prefix
+stripped, `LC_ALL=C sort | uniq -d`, non-empty → FAIL. See §3.2 and DEBT#573.)
 ④ "VCS 이름 파일만 담긴 디렉터리"(예: `.gitignore`만 트래킹된 디렉터리)는 스테이징에
 부재할 수 있다(그 파일은 분할에서 이미 제외됨) — 완전성 검사는 **파일 집합**
 기준이므로 무영향이다(디렉터리 엔트리 수는 판정 입력이 아니다).
