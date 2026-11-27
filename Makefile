@@ -39,7 +39,7 @@ CHECK_THEATER_TARGETS := check-nim-theater check-lean-vacuity check-vacuity-simp
 # F = fast local sanity   S = structural/invariant   R = full/release
 GATES_FAST    := check-determinism env-check check-imports check-debt check-nim-theater \
                  check-proof-unit-consistency check-proof-unit-reconcile check-epoch-transaction \
-                 validate-root-layout
+                 validate-root-layout check-type-registry-drift
 GATES_STATIC  := check-arch check-mcp doc-path-validator check-decision-binding \
                  check-topology-drift check-decision-graph-drift \
                  check-manifest-consistency check-cert-manifest-drift \
@@ -463,6 +463,13 @@ bin/decision_binding_checker: tools/decision_binding_checker.nim tools/decision_
 check-decision-binding: bin/decision_binding_checker ## Decision binding ratchet (count baseline: growth fails, a date never does)
 	@echo "=== [check-decision-binding] decision binding ratchet ==="
 	@bin/decision_binding_checker
+
+check-type-registry-drift: ## Type registry must equal the declarations in src/ (not merely contain them)
+	@echo "=== [check-type-registry-drift] registry == source declarations ==="
+	@AXIOM_HERMETIC_BUILDING=1 $(NIM) c -r --hints:off --verbosity:0 \
+		--nimcache:$${TMPDIR:-/tmp}/ax-type-registry-drift-cache \
+		-o:$${TMPDIR:-/tmp}/ax-type-registry-drift \
+		tests/unit/test_type_registry_drift.nim
 
 check-topology-drift: ## Topology drift guard (regenerates + git diff --exit-code)
 	@echo "=== [check-topology-drift] topology drift guard ==="
