@@ -238,6 +238,54 @@ type
     pending: PendingAdd
     assigned: seq[string]
 
+  LlbcDeclDocument* = object
+    ## An LLBC document prepared for REPEATED target resolution (#229).
+    ## WITHOUT this, resolving N targets against one document re-derives the
+    ## whole translated-subtree intern collection N times: `buildDeclCtx`
+    ## walks every node of the document, and the resolution loop then
+    ## re-scans all fun_decls calling `funDeclStructuredName` on each. Both
+    ## are per-document facts, not per-target facts, so they are derived here
+    ## ONCE and REUSED — the resolution result itself is unchanged, because
+    ## every derivation below is a pure function of the document.
+    ##
+    ## `ok == false` carries the whole-document failure that
+    ## `llbcFunctionToCanonical` would have returned for EVERY target
+    ## (`error`/`reason` verbatim): a document failing `has_errors`, the
+    ## shape checks, or file-table pre-validation is not resolvable at all.
+    ok*: bool
+    error*: RustCanonicalError
+    reason*: string
+    ctx: LlbcDeclCtx         ## the intern/owner/file tables, built once
+    decls*: JsonNode         ## translated.fun_decls (the enumeration SSOT)
+    nameKnown*: seq[bool]    ## per-decl: `funDeclStructuredName` succeeded.
+                             ## Kept SEPARATE from the name text so the exact
+                             ## match tests the same pair the inline loop did
+                             ## (`s.ok and s.fullName == funcName`) instead of
+                             ## inferring resolvability from a non-empty string.
+    fullNames*: seq[string]  ## per-decl structured full name (`""` when
+                             ## `nameKnown` is false)
+    lastSegments*: seq[string]
+                             ## per-decl last name segment (`lastNameSegment`)
+
+  LlbcDeclMatchKind* = enum
+    ## TARGET RESOLUTION outcome of one `--target` name against a prepared
+    ## document. The four cases are the closed set the resolution rules
+    ## discriminate — named here so a caller can REPORT which one held without
+    ## re-deriving the scan (issue #494 needs the not-found class to be
+    ## distinguishable; this is measurement of what the rules already decided,
+    ## never a new judgment).
+    ldmNotFound
+    ldmUnique
+    ldmAmbiguousFullName
+    ldmAmbiguousLastSegment
+
+  LlbcDeclMatch* = object
+    kind*: LlbcDeclMatchKind
+    index*: int              ## the chosen decl, -1 unless kind == ldmUnique
+    candidateNames*: seq[string]
+                             ## the colliding structured names, ambiguous cases
+                             ## only (document order)
+
 # ---------------------------------------------------------------------------
 # raise-free JsonNode accessors — nil-guarded everywhere; never index or
 # take a case-branch field of a node without checking its kind first
@@ -1933,22 +1981,15 @@ func llbcFunctionNames*(root: JsonNode): seq[string] =
     if fn.len > 0:
       result.add(fn)
 
-proc llbcFunctionToCanonical*(root: JsonNode; funcName: string):
-    LlbcToCanonicalResult =
-  ## Extract ONE function into the shared canonical. TARGET RESOLUTION
-  ## (DEBT#510 closure — the first document-order last-segment match is
-  ## GONE, the producer binds the SELECTED decl):
-  ##   1. an EXACT structured-name match (llbcFunDeclNamePaths' fullName)
-  ##      selects that decl;
-  ##   2. a bare LAST-SEGMENT match selects the decl ONLY when exactly one
-  ##      fun_decl in the whole document carries that last segment — more
-  ##      than one is an EXPLICIT Ambiguous rejection naming every
-  ##      candidate (structured names where addressable), never a silent
-  ##      first match;
-  ##   3. otherwise NotFound.
-  ## Fail-closed on every shape outside docs/spec/rust_certified_subset.md
-  ## §1/§2.
-  result = LlbcToCanonicalResult(ok: false, error: rceMalformed, reason: "")
+func prepareLlbcDocument*(root: JsonNode): LlbcDeclDocument =
+  ## Prepare ONE document for repeated target resolution (#229) — the
+  ## per-document half of `llbcFunctionToCanonical`, hoisted out of the
+  ## per-target path. Everything here is a pure function of the document, so
+  ## the prepared form resolves every name to the same decl the un-hoisted
+  ## form would, with the same reasons: the structured names and last
+  ## segments are derived once, in document order, by the very predicates
+  ## the inline loop called per candidate.
+  result = LlbcDeclDocument(ok: false, error: rceMalformed, reason: "")
   if root.isNil or root.kind != JObject:
     result.reason = "LLBC document is not a JSON object"
     return
@@ -1968,49 +2009,114 @@ proc llbcFunctionToCanonical*(root: JsonNode; funcName: string):
   # per-function span failure).
   let ft = validateLlbcFileTable(root)
   if not ft.ok:
-    result.error = rceMalformed
     result.reason = "LLBC files table pre-validation failed: " & ft.reason
     return
-  let ctx = buildDeclCtx(translated, ft.entries)
+  result.ctx = buildDeclCtx(translated, ft.entries)
+  result.decls = decls
+  result.nameKnown = newSeq[bool](decls.elems.len)
+  result.fullNames = newSeq[string](decls.elems.len)
+  result.lastSegments = newSeq[string](decls.elems.len)
+  for i in 0 ..< decls.elems.len:
+    let fd = decls.elems[i]
+    let s = funDeclStructuredName(result.ctx, fd)
+    result.nameKnown[i] = s.ok
+    result.fullNames[i] = if s.ok: s.fullName else: ""
+    result.lastSegments[i] = lastNameSegment(fd)
+  result.ok = true
+  result.error = rceNone
+  result.reason = ""
+
+func resolveInLlbcDocument*(doc: LlbcDeclDocument; funcName: string):
+    LlbcDeclMatch =
+  ## TARGET RESOLUTION against a prepared document — the half that is
+  ## genuinely per-target. Same three rules as `llbcFunctionToCanonical`
+  ## (DEBT#510: exact structured name, then a last-segment match only when it
+  ## is unique, then not-found; never a silent first match), expressed as a
+  ## discriminated outcome so a caller can REPORT the class it hit (#494)
+  ## without re-deriving the scan.
+  result = LlbcDeclMatch(kind: ldmNotFound, index: -1)
+  if not doc.ok: return
   var exact: seq[int] = @[]
   var lastSeg: seq[int] = @[]
   var lastSegNames: seq[string] = @[]
-  for i in 0 ..< decls.elems.len:
-    let fd = decls.elems[i]
-    let s = funDeclStructuredName(ctx, fd)
-    if s.ok and s.fullName == funcName:
+  for i in 0 ..< doc.decls.elems.len:
+    if doc.nameKnown[i] and doc.fullNames[i] == funcName:
       exact.add(i)
-    if lastNameSegment(fd) == funcName:
+    if doc.lastSegments[i] == funcName:
       lastSeg.add(i)
-      lastSegNames.add(if s.ok: s.fullName
-                       else: "<unaddressable decl " & $i & ">")
-  var chosen = -1
+      lastSegNames.add(
+        if doc.nameKnown[i]: doc.fullNames[i]
+        else: "<unaddressable decl " & $i & ">")
   if exact.len == 1:
-    chosen = exact[0]
+    result = LlbcDeclMatch(kind: ldmUnique, index: exact[0])
   elif exact.len > 1:
-    result.error = rceMalformed
-    result.reason = "ambiguous target '" & funcName & "': " & $exact.len &
-      " declarations share the structured name — a malformed document " &
-      "(structured names are unique per crate)"
-    return
+    result.kind = ldmAmbiguousFullName
+    for i in exact: result.candidateNames.add(doc.fullNames[i])
   elif lastSeg.len == 1:
-    chosen = lastSeg[0]
+    result = LlbcDeclMatch(kind: ldmUnique, index: lastSeg[0])
   elif lastSeg.len > 1:
-    result.error = rceMalformed
-    result.reason = "ambiguous target '" & funcName & "': " & $lastSeg.len &
-      " declarations share the last name segment (" & lastSegNames.join(", ") &
-      ") — use the structured full name (llbcFunDeclNamePaths); the first " &
-      "document-order match is never taken silently (DEBT#510)"
+    result.kind = ldmAmbiguousLastSegment
+    result.candidateNames = lastSegNames
+
+proc llbcFunctionToCanonicalIn*(doc: LlbcDeclDocument; funcName: string):
+    LlbcToCanonicalResult =
+  ## Extract ONE named function from a PREPARED document (#229). Byte-
+  ## identical to `llbcFunctionToCanonical` for the same document: the
+  ## resolution rules and the reason strings are the same, only the
+  ## per-document derivations are no longer repeated per target.
+  result = LlbcToCanonicalResult(ok: false, error: rceMalformed, reason: "")
+  if not doc.ok:
+    result.error = doc.error
+    result.reason = doc.reason
     return
-  else:
+  let match = resolveInLlbcDocument(doc, funcName)
+  case match.kind
+  of ldmAmbiguousFullName:
+    result.error = rceMalformed
+    result.reason = "ambiguous target '" & funcName & "': " &
+      $match.candidateNames.len & " declarations share the structured name — " &
+      "a malformed document (structured names are unique per crate)"
+    return
+  of ldmAmbiguousLastSegment:
+    result.error = rceMalformed
+    result.reason = "ambiguous target '" & funcName & "': " &
+      $match.candidateNames.len & " declarations share the last name segment (" &
+      match.candidateNames.join(", ") & ") — use the structured full name " &
+      "(llbcFunDeclNamePaths); the first document-order match is never taken " &
+      "silently (DEBT#510)"
+    return
+  of ldmNotFound:
     result.reason = "function '" & funcName & "' not found in fun_decls"
     return
-  let fd = decls.elems[chosen]
+  of ldmUnique:
+    discard
+  let fd = doc.decls.elems[match.index]
   if not hasStructuredBody(fd):
     result.reason = "function '" & funcName &
       "' has no Structured body (extern prototype — not extractable)"
     return
-  return extractFunDecl(ctx, fd)
+  return extractFunDecl(doc.ctx, fd)
+
+proc llbcFunctionToCanonical*(root: JsonNode; funcName: string):
+    LlbcToCanonicalResult =
+  ## Extract ONE function into the shared canonical. TARGET RESOLUTION
+  ## (DEBT#510 closure — the first document-order last-segment match is
+  ## GONE, the producer binds the SELECTED decl):
+  ##   1. an EXACT structured-name match (llbcFunDeclNamePaths' fullName)
+  ##      selects that decl;
+  ##   2. a bare LAST-SEGMENT match selects the decl ONLY when exactly one
+  ##      fun_decl in the whole document carries that last segment — more
+  ##      than one is an EXPLICIT Ambiguous rejection naming every
+  ##      candidate (structured names where addressable), never a silent
+  ##      first match;
+  ##   3. otherwise NotFound.
+  ## Fail-closed on every shape outside docs/spec/rust_certified_subset.md
+  ## §1/§2.
+  ##
+  ## The whole-document derivations live in `prepareLlbcDocument` (#229) so a
+  ## multi-target sweep derives them once; this single-target entry point
+  ## prepares and resolves in one call, so its result is unchanged.
+  return llbcFunctionToCanonicalIn(prepareLlbcDocument(root), funcName)
 
 proc llbcAllToCanonical*(root: JsonNode): seq[LlbcToCanonicalResult] =
   ## EVERY fun_decl in document order — extraction result or explicit

@@ -267,6 +267,33 @@ func outcomeFailClosed*(o: RustSubjectOutcome): bool {.raises: [].} =
   ## eaUnsupported, eaReferenceError, eaInternalError — fail-closed, no seal.
   not (outcomeOutOfScopeUnknown(o) or outcomeProceedToProof(o))
 
+proc rustSubjectOutcomePrepared*(doc: LlbcDeclDocument;
+    contract: RustInputContractResult; funcName: string;
+    rcheckExe: string = ""; projectRoot: string = "";
+    timeoutMs: int = 60_000): RustSubjectOutcome {.
+    raises: [CatchableError], axiomEffect: IOEffect,
+    tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## The (document, contract) entry point of `rustSubjectOutcome` (#229): both
+  ## per-RUN derivations — the parsed LLBC plus its prepared declaration form,
+  ## and the subject input contract — are computed ONCE and reused for every
+  ## candidate. A multi-target sweep is therefore O(document + contract) plus
+  ## one resolution and one differential per candidate, instead of
+  ## O(candidates x (document + contract)).
+  result.embeddedFiles = contract.embeddedFiles
+  if not contract.ok:
+    result.producer = LlbcToCanonicalResult(ok: false,
+      error: rceMalformed, reason: contract.reason)
+    result.agreement = contractRejectionAgreement(contract)
+    result.rejection = contract.rejection
+    return
+  result.producer = llbcFunctionToCanonicalIn(doc, funcName)
+  if result.producer.ok:
+    result.agreement = runRustExtractionAgreement(result.producer.canonical,
+                                                  rcheckExe, projectRoot,
+                                                  timeoutMs)
+  else:
+    result.agreement = producerRejectionAgreement(result.producer)
+
 proc rustSubjectOutcomeParsed*(llbcRoot: JsonNode;
     contract: RustInputContractResult; funcName: string;
     rcheckExe: string = ""; projectRoot: string = "";
@@ -275,21 +302,11 @@ proc rustSubjectOutcomeParsed*(llbcRoot: JsonNode;
     tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Pre-parsed / pre-contracted entry point of `rustSubjectOutcome` (#229):
   ## avoids re-parsing the LLBC JSON and re-hashing the subject `.rs` file set
-  ## on every candidate in a multi-target sweep.
-  result.embeddedFiles = contract.embeddedFiles
-  if not contract.ok:
-    result.producer = LlbcToCanonicalResult(ok: false,
-      error: rceMalformed, reason: contract.reason)
-    result.agreement = contractRejectionAgreement(contract)
-    result.rejection = contract.rejection
-    return
-  result.producer = llbcFunctionToCanonical(llbcRoot, funcName)
-  if result.producer.ok:
-    result.agreement = runRustExtractionAgreement(result.producer.canonical,
-                                                  rcheckExe, projectRoot,
-                                                  timeoutMs)
-  else:
-    result.agreement = producerRejectionAgreement(result.producer)
+  ## on every candidate in a multi-target sweep. The document is prepared here,
+  ## so this call is the single-target shape of
+  ## `rustSubjectOutcomePrepared` and returns exactly what it returns.
+  rustSubjectOutcomePrepared(prepareLlbcDocument(llbcRoot), contract, funcName,
+                             rcheckExe, projectRoot, timeoutMs)
 
 proc rustSubjectOutcome*(llbcText: string; funcName: string;
     rcheckExe: string = ""; projectRoot: string = "";
