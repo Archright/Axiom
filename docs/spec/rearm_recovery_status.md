@@ -354,7 +354,7 @@ PR #787 사례(2026-10-13, `docs/agents/merge_admission_observation.md` 부록 (
 > jobs request is an authorization failure, deterministic for that token, and
 > still classifies UNKNOWN -> no-arm (anchor (c) semantics unchanged). The
 > rule does NOT hold for anonymous pinned-release-binary downloads. Measured:
-> run 45994802546, job 140493600793 (workflow `publication-integrity`, job
+> run 45994802546, job 140493600793 (workflow `admission-gate`, job
 > `mint-publish / publish`, PR #532 merge_group head `e312a928`, step
 > `Restore trusted B supply (setup-axiom-toolchain ...)`) failed with five
 > `curl: (22) The requested URL returned error: 403` attempts over 8127 ms of

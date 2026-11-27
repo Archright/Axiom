@@ -98,7 +98,7 @@
 #         and stays UNKNOWN/no-arm.
 #   AMENDMENT 2026-11-27 (anchor (d), discovery run 45994802546 / job
 #   140493600793): the T2 closed-enumeration clause above is EXTENDED by this
-#   dated entry, not repealed. Evidence: workflow publication-integrity, job
+#   dated entry, not repealed. Evidence: workflow admission-gate, job
 #   'mint-publish / publish', PR #532 merge_group head e312a928, step
 #   'Restore trusted B supply (setup-axiom-toolchain ...)'. That step made
 #   five attempts at 'curl: (22) The requested URL returned error: 403' and
