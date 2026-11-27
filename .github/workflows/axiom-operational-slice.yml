@@ -137,6 +137,19 @@ jobs:
       - name: Restore tracked build metadata after make build
         run: git restore src/generated/build_metadata.json
 
+      - name: "Enforce the declared static gate set (GATES_FAST + GATES_STATIC)"
+        # DEBT#573: the declared set was executed by NO required check - only the
+        # local L2 target and the bypassable pre-push hook. This step is the
+        # merge-admission enforcement. It MUST stay unconditional: this job's own
+        # header forbids `if:` gating, because a skipped required check reports
+        # SUCCESS and the guarantee would silently vanish. It runs AFTER
+        # `make ci-compile` because `env-check` requires bin/ax.
+        # The gate set has exactly one definition: the Makefile target. Do not
+        # inline gate names here.
+        run: |
+          set -euo pipefail
+          make local-verify-static-ci
+
       - name: R3 relocation-invariance measurement (wp5)
         run: |
           set -euo pipefail

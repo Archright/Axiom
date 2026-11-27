@@ -179,7 +179,7 @@ TESTS_FAST_UNIT := tests/unit/axiom_ir_test.nim tests/unit/ir_to_lean_test.nim \
                   tests/unit/test_rule_suite_bypass_ledger.nim
 
 
-.PHONY: check-push-admissibility-integrity test perf-check bench-cost-probe verify-all meta-gate registry-check env-check doc-path-validator check-determinism check-mutation-harness check-decision-binding check-topology-drift check-decision-graph-drift check-git-purity check-manifest-consistency check-scope-consistency check-proof-unit-consistency check-proof-unit-reconcile check-epoch-transaction check-merge-admission-cert-mirror sloc-verify check-quality-gate local-verify-static local-verify-static-full check-toolchain-pin check-build-state-coherence check-binary-liveness local-verify-contract-exact check-mcp check-cert-integrity check-cert-integrity-fast check-readiness-start readiness-collect check-workflow-shell-syntax promote-assets promote-assets-apply test-fast test-fast-one test-panics-exit-contract perf-baseline clean-cache clean-test-cache clean-release-cache build verify-contract verify-contract-unit verify-contract-release-e2e ci-compile ci-bootstrap-cheap test-gateway-identity-gate gate-binaries validate-root-layout
+.PHONY: check-push-admissibility-integrity test perf-check bench-cost-probe verify-all meta-gate registry-check env-check doc-path-validator check-determinism check-mutation-harness check-decision-binding check-topology-drift check-decision-graph-drift check-git-purity check-manifest-consistency check-scope-consistency check-proof-unit-consistency check-proof-unit-reconcile check-epoch-transaction check-merge-admission-cert-mirror sloc-verify check-quality-gate local-verify-static local-verify-static-full local-verify-static-ci check-toolchain-pin check-build-state-coherence check-binary-liveness local-verify-contract-exact check-mcp check-cert-integrity check-cert-integrity-fast check-readiness-start readiness-collect check-workflow-shell-syntax promote-assets promote-assets-apply test-fast test-fast-one test-panics-exit-contract perf-baseline clean-cache clean-test-cache clean-release-cache build verify-contract verify-contract-unit verify-contract-release-e2e ci-compile ci-bootstrap-cheap test-gateway-identity-gate gate-binaries validate-root-layout
 
 # ── Φ1: Build Metadata Prerequisite ──────────────────────────────────────────
 # build_metadata.json must exist before config.nims can staticRead it.
@@ -613,6 +613,24 @@ local-verify-static: $(GATES_FAST) $(GATES_STATIC) ## 16 non-intrusive verify-st
 
 local-verify-static-full: $(GATES_FAST) $(GATES_STATIC) $(GATES_FULL) check-mutation-harness check-git-purity ## All 18 verify-static gates (worktree-only: mutation + purity)
 	@echo "✅ local-verify-static-full PASSED — 18 gates green"
+
+# ── Merge-admission enforcement of the declared static gate set ──────
+# DEBT#573: GATES_FAST ∪ GATES_STATIC was declared but executed by no required
+# check — the only invocation surface was the local L2 target and the (bypassable)
+# pre-push hook. This wrapper is what `.github/workflows/axiom-operational-slice.yml`
+# invokes, so the workflow stays one `make` line and the gate set has exactly ONE
+# definition. Requires bin/ax (env-check): the workflow runs it AFTER `make ci-compile`.
+#
+# Exclusions: none. Measured on base 5ddebdb3 every member is green; add a gate to
+# LOCAL_VERIFY_STATIC_CI_EXCLUDED only together with its DEBT id in that variable.
+LOCAL_VERIFY_STATIC_CI_EXCLUDED :=
+local-verify-static-ci: ## Merge-admission enforcement of GATES_FAST ∪ GATES_STATIC (required check step)
+	@echo "=== [local-verify-static-ci] merge-admission static gate set ==="
+	@if [ -n "$(LOCAL_VERIFY_STATIC_CI_EXCLUDED)" ]; then \
+	  echo "EXCLUDED (DEBT-tracked): $(LOCAL_VERIFY_STATIC_CI_EXCLUDED)"; \
+	fi
+	@$(MAKE) --no-print-directory $(filter-out $(LOCAL_VERIFY_STATIC_CI_EXCLUDED),$(GATES_FAST) $(GATES_STATIC))
+	@echo "✅ local-verify-static-ci PASSED — declared static gate set enforced at merge admission"
 
 # ── P3: Runtime preflight contracts ──────────────────────────────────
 # Two independent substrate contracts; must NOT be merged into one target.

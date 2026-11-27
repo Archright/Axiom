@@ -186,8 +186,8 @@ git --no-pager status
 |------|------|------|----------|-----------|
 | **L0 Edit** | 소스 편집 — 변경 사항 작성 | 편집기에서 작업 | — | 캐시 해당 없음 |
 | **L1 test-fast** | 반복 개발 — 빠른 증분 correctness 확인 | `make test-fast` | 6 (GATES_FAST) | reusable(persistent test/debug nimcache) |
-| **L2 local-verify-static** | 로컬 최종 — 모든 local static gate 통과 여부 확인 | `make local-verify-static` | 16 (GATES_FAST + GATES_STATIC) | reusable(persistent test/debug nimcache) |
-| **L3 CI** | 푸시·CI — hermetic full verification (source of truth) | `make ci-integration` (CI 파이프라인) | 18+ (GATES_FAST + GATES_STATIC + GATES_FULL + CI-only) | isolated + disposable (release/LTO nimcache) |
+| **L2 local-verify-static** | 로컬 최종 — 모든 local static gate 통과 여부 확인 | `make local-verify-static` | 24 (GATES_FAST 10 + GATES_STATIC 14) | reusable(persistent test/debug nimcache) |
+| **L3 CI** | 병합 차단 — hermetic full verification (source of truth) | `make local-verify-static-ci` — `axiom-operational-slice` required check의 "Enforce the declared static gate set" 스텝 | 24 (GATES_FAST + GATES_STATIC). GATES_FULL 2개는 CI 미포함 | isolated + disposable (release/LTO nimcache) |
 
 ### 10.2 Hermetic(Incremental) vs Hermetic(CI)
 
