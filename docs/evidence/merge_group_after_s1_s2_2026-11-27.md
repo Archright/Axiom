@@ -1,0 +1,667 @@
+# merge_group wall-clock after S1 and S2 - three cycles on main, one warm sample
+
+> **Status**: measurement record (reporter). This document **creates no authority of any kind**: it
+> changes no policy, workflow, ruleset, gate, or pin, and no gate consumes its values. The normative
+> rules for admitting CI work stay with `docs/spec/ci_admission_budget_contract.md`; this record only
+> preserves the per-run observations that an admission decision can later be argued from.
+> **Created**: 2026-11-27
+> **Measured commits**: `main` @ `a6805fc4` (cycle 1), `dd1ddb93` (cycle 2), `f21e9ec1` (cycle 3)
+> **Measured cycles**: three merge_group windows on the same day -
+> `2026-11-27T04:30:44Z`, `2026-11-27T08:15:56Z`, `2026-11-27T08:54:20Z`
+> **Observation method**: GET-only REST reads through native `gh` authentication (AGENTS.md section
+> 2.4). No local timer, no instrumentation, no added workflow step. Every number below is a
+> subtraction of two platform-recorded timestamps (`run_started_at`, `updated_at`, `started_at`,
+> `completed_at`), or a verbatim quotation of a log line. The Class A test results in section 7 were
+> produced by running the in-tree tests on the measured tree, not read from a prior record.
+> **ASCII note**: this page is 7-bit clean. Quoted log text that contains a typographic dash
+> (U+2014) is reproduced with an ASCII `-` and says so at the quotation site.
+> **Elision note**: in the quoted cache-marker lines, the long cache-key bodies are replaced with
+> `<A>` and `<B>`. This is a secret-scan constraint, not a redaction of meaning: the repository's
+> secret-scan gate classifies a full key body as a `generic-api-key` finding, and this record is a
+> documentation-only change that must not require a baseline edit. Every elision is marked, the
+> markers around it (`exact-hit`, `skip-a-restore`, the absence of an A-restore line) are verbatim,
+> and section 4.5 preserves the one key distinction the argument depends on. The full values are
+> reproducible with section 10's commands.
+
+---
+
+## 0. Purpose, and the two outcome classes that must not be mixed
+
+**Scope.** Measure whether the two changes that landed on 2026-11-27 between cycle 1 and cycle 3 -
+S1 (PI license-scan 5-shard split) and S2 (`mint-publish` skip-A-restore) - moved merge_group
+wall-clock on `main`, and separate that from the correctness question, which a wall-clock number
+cannot answer.
+
+The two outcome classes are the same two this repository already uses
+(`docs/evidence/merge_group_critical_path_2026-11-27.md` section 0), repeated here so this page
+stands alone:
+
+- **Class A - correctness slices.** Wall-clock expectation: **0 s**. Completion is defined by
+  *re-run determinism* and *declared == executed*. A correctness slice is complete when those
+  properties are observed, **not** when a timer moves.
+- **Class B - speed slices.** Completion is defined by an **observed merge_group wall-clock change**
+  in the run records. A speed slice is complete only when a later cycle's tail shrinks; the code
+  change alone is not completion.
+
+**Judgment rule.** Each slice is judged only on the completion criterion of its own class. A
+correctness slice that moves no timer is a **success**, not a weak result; a speed slice that ships
+with no observed wall-clock delta is **not done**, even if every test is green.
+
+The judgment is in section 8. Stated up front so it cannot be read as a hedge: **Class A holds on
+the evidence quoted here, and Class B's target was not met** - the one warm sample is **400 s**
+against a 345 s target.
+
+---
+
+## 1. The three measured cycles
+
+All nine runs below were created by a merge-queue event on `main`. Cycle 1 is the baseline already
+decomposed in `docs/evidence/merge_group_critical_path_2026-11-27.md`; cycles 2 and 3 are new here.
+
+| cycle | tree | queue group commit | window (UTC) | `admission-gate` | `publication-integrity` | `axiom-operational-slice` |
+|---|---|---|---|---|---|---|
+| 1 - baseline | `a6805fc4` | - (pre-split tip) | `04:30:44` | **368 s** (`45940366569`) | 356 s (`45940366345`) | 297 s (`45940366417`) |
+| 2 - S1 only, S2 not landed | `dd1ddb93` (PR #527) | `dd1ddb93` | `08:15:56` | **421 s** (`45964332106`) | 258 s (`45964331956`) | 284 s (`45964332053`) |
+| 3 - S1 + S2, warm | `f21e9ec1` (PR #528, docs-only) | `f21e9ec1` | `08:54:20` | **400 s** (`45969305727`) | 267 s (`45969305538`) | 289 s (`45969305608`) |
+
+Cycle 3 is the sample that includes both changes. Its merge subject is a docs-only PR, which is what
+makes it usable: a docs-only head changes no workflow, so cycle 3 runs the same workflow bytes as
+cycle 2 while carrying S2 in the tree.
+
+**Read this before the numbers.** Cycle 3 is the **first** cycle with both changes in the tree, and
+it is **warm** - the toolchain caches were repopulated by a push run off the queue path (section 5).
+It is **one sample**, not a controlled A/B, and a median cannot be computed from it (section 9).
+
+---
+
+## 2. Cycle 1 - baseline, 368 s
+
+Already decomposed in `docs/evidence/merge_group_critical_path_2026-11-27.md` sections 2-4. The
+spans re-derived from the run records for this page agree with that document, so it is cited rather
+than duplicated:
+
+- `admission-gate` chain: `build-base-artifacts` 78 s, `go-critical-lane (1)` 117 s,
+  `attest / admission-check` 65 s, `mint-prepare` 20 s, `mint-publish` 69 s, final context 5 s.
+- `publication-integrity`: three shards at 225 / 293 / 263 s, aggregate 33 s, final 24 s.
+- `axiom-operational-slice`: slice 144 s, `readiness-verdict` 148 s (sequential).
+
+The session record that set the target quotes **392 s as the median of 11 merge_group candidates**
+for this lane. That median is the number the Class B target in section 8 is measured against; it is
+a session-recorded aggregate, not re-derived here.
+
+---
+
+## 3. Cycle 2 - S1 landed, S2 not: 421 s
+
+Group commit `dd1ddb93` (PR #527), window opens `2026-11-27T08:15:56Z`. S1 (PI 5-shard) is in this
+tree; S2 (`mint-publish` skip-A-restore) is **not** - it lands later, in `c3433cd6` (PR #525).
+
+### 3.1 `admission-gate` run `45964332106`, `08:15:56` -> `08:22:57` (421 s)
+
+| job | window (UTC) | span |
+|---|---|---|
+| `attest / build-base-artifacts` | `08:15:59` -> `08:17:06` | 67 s |
+| `attest / go-critical-lane (1)` (slower lane, on chain) | `08:17:08` -> `08:19:40` | **152 s** |
+| `attest / go-critical-lane (0)` | `08:17:08` -> `08:19:01` | 113 s |
+| `attest / admission-independents` | `08:17:08` -> `08:18:44` | 96 s |
+| `attest / admission-check` | `08:19:42` -> `08:20:45` | 63 s |
+| `mint-prepare / prepare` | `08:20:48` -> `08:21:23` | 35 s |
+| `mint-publish / publish` | `08:21:26` -> `08:22:52` | **86 s** |
+| `verdict / admission-check` (parallel to mint) | `08:21:24` -> `08:22:01` | 37 s |
+| `admission-check` (final context) | `08:22:54` -> `08:22:57` | 3 s |
+
+**Binding predecessor of the final context in this cycle is `mint-publish`**: it completes at
+`08:22:52`, **51 s later** than `verdict / admission-check` (`08:22:01`). The final context starts
+2 s after `mint-publish`. S2 exists to remove exactly this dependency (section 4.4).
+
+### 3.2 `publication-integrity` run `45964331956`, `08:15:56` -> `08:20:14` (258 s)
+
+| job | window (UTC) | span |
+|---|---|---|
+| `license-scan-shards (0)` | `08:15:58` -> `08:18:26` | 148 s |
+| `license-scan-shards (1)` | `08:15:58` -> `08:18:22` | 144 s |
+| `license-scan-shards (2)` | `08:15:58` -> `08:18:45` | 167 s |
+| `license-scan-shards (3)` (straggler) | `08:15:58` -> `08:19:37` | **219 s** |
+| `license-scan-shards (4)` | `08:15:58` -> `08:18:45` | 167 s |
+| `license-scan` (aggregate) | `08:19:39` -> `08:19:53` | 14 s |
+| `publication-integrity` (final context) | `08:19:55` -> `08:20:14` | 19 s |
+
+S1 is visibly in effect: five shards instead of three, and the wall drops from 356 s (cycle 1) to
+**258 s**. The spread is still unbalanced - 144 to 219 s - but the straggler is 219 s, not 293 s.
+
+### 3.3 `axiom-operational-slice` run `45964332053`, `08:15:56` -> `08:20:40` (284 s)
+
+| job | window (UTC) | span |
+|---|---|---|
+| `axiom-operational-slice` | `08:15:58` -> `08:18:06` | 128 s |
+| `readiness-verdict` | `08:18:08` -> `08:20:40` | 152 s |
+
+Still two sequential jobs; the shape did not change in this cycle.
+
+---
+
+## 4. Cycle 3 - S1 + S2, warm: 400 s
+
+Group commit `f21e9ec1` (PR #528, docs-only), window opens `2026-11-27T08:54:20Z`. Both changes are
+in the tree and the caches were repopulated before the cycle (section 5), so this is the cycle in
+which S2's effect is visible if it has one.
+
+### 4.1 `admission-gate` run `45969305727`, `08:54:20` -> `09:01:00` (400 s)
+
+| job | window (UTC) | span | vs cycle 1 | vs cycle 2 |
+|---|---|---|---|---|
+| `attest / build-base-artifacts` | `08:54:23` -> `08:55:30` | 67 s | -11 s | 0 s |
+| `attest / go-critical-lane (1)` (slower lane, on chain) | `08:55:32` -> `08:58:07` | **155 s** | **+38 s** | +3 s |
+| `attest / go-critical-lane (0)` | `08:55:32` -> `08:57:37` | 125 s | +8 s | +12 s |
+| `attest / admission-independents` | `08:55:32` -> `08:57:04` | 92 s | +8 s | -4 s |
+| `attest / admission-check` | `08:58:08` -> `08:59:14` | 66 s | +1 s | +3 s |
+| `mint-prepare / prepare` | `08:59:16` -> `08:59:49` | 33 s | **+13 s** | -2 s |
+| `mint-publish / publish` | `08:59:51` -> `09:00:40` | **49 s** | **-20 s** | **-37 s** |
+| `verdict / admission-check` (parallel to mint) | `08:59:52` -> `09:00:54` | 62 s | **+25 s** | **+25 s** |
+| `admission-check` (final context) | `09:00:56` -> `09:00:59` | 3 s | -2 s | 0 s |
+
+**The binding predecessor inverted in this cycle.** The final context now waits on
+`verdict / admission-check`, which completes at `09:00:54`; `mint-publish` completes at `09:00:40`,
+so at the point of consumption it carries **14 s of slack**. In cycle 2 that relation was reversed
+and `mint-publish` was the binder by 51 s. That is the structural change S2 was aimed at, and it is
+observed here - but see section 8 for why it did not produce a shorter tail.
+
+**Current binding path** (the `needs` chain that determines this cycle's tail):
+
+```
+build-base-artifacts 67 s -> go-critical-lane (1) 155 s -> attest/admission-check 66 s
+  -> mint-prepare 33 s -> verdict/admission-check 62 s -> admission-check (final) 3 s
+```
+
+### 4.2 `publication-integrity` run `45969305538`, `08:54:20` -> `08:58:47` (267 s)
+
+| job | window (UTC) | span |
+|---|---|---|
+| `license-scan-shards (0)` (straggler) | `08:54:22` -> `08:58:07` | **225 s** |
+| `license-scan-shards (1)` | `08:54:23` -> `08:58:00` | 217 s |
+| `license-scan-shards (2)` | `08:54:22` -> `08:57:05` | 163 s |
+| `license-scan-shards (3)` | `08:54:22` -> `08:56:51` | 149 s |
+| `license-scan-shards (4)` | `08:54:23` -> `08:56:38` | 135 s |
+| `license-scan` (aggregate) | `08:58:09` -> `08:58:25` | 16 s |
+| `publication-integrity` (final context) | `08:58:27` -> `08:58:46` | 19 s |
+
+The verdict string from this run's log, quoted verbatim:
+
+```
+publication_license_eval: PASS (files=7605 licenseDetections=72 copyrightDetections=46)
+```
+
+**PI is no longer anywhere near the tail.** Its wall is 267 s against the 400 s admission tail -
+**133 s of margin** in this cycle, and 163 s against cycle 2's 421 s tail. Against cycle 1's 12 s
+margin (368 vs 356) that is a change of an order of magnitude. Per the L-W rule this record already
+cites (`docs/spec/ci_admission_budget_contract.md` section 3), a context that is not the slowest
+recovers **0 s** of wall whatever is saved inside it. S1's 89 s of PI wall reduction (356 -> 267 s)
+is therefore real internal work that is **not currently payable**, exactly as
+`merge_group_critical_path_2026-11-27.md` section 6 predicted.
+
+### 4.3 `axiom-operational-slice` run `45969305608`, `08:54:20` -> `08:59:09` (289 s)
+
+| job | window (UTC) | span |
+|---|---|---|
+| `axiom-operational-slice` | `08:54:23` -> `08:56:46` | 143 s |
+| `readiness-verdict` | `08:56:48` -> `08:59:09` | 141 s |
+
+Still two sequential jobs, and still well off the tail (111 s of margin).
+
+### 4.4 S2's application evidence in the run log
+
+Quoted from run `45969305727`, job `mint-publish / publish`. Log text is reproduced verbatim with
+its typographic dash rendered as ASCII `-`:
+
+```
+AXIOM_CACHE_A_PINS: skip-a-restore - native toolchain deliberately not provisioned (B supply verified); asserting z3/jq only
+AXIOM_CACHE_B_RESTORE: exact-hit=true requested-key=<B> primary-key=<B> matched-key=<B>
+```
+
+That job has **no `AXIOM_CACHE_A_RESTORE` line at all** - the A restore step did not run, which is
+what `skip-a-restore` means. Counted over the whole run: `skip-a-restore: true` appears **once** (in
+this job) and `skip-a-restore: false` appears **seven** times (`attest / build-base-artifacts`,
+`attest / go-critical-lane (0)`, `attest / go-critical-lane (1)`, `attest / admission-independents`,
+`gateway / ci-bootstrap`, `attest / admission-check`, `mint-prepare / prepare`).
+
+The `attest / *` jobs, by contrast, did **both** restores exactly, e.g. from
+`attest / build-base-artifacts`:
+
+```
+AXIOM_CACHE_A_RESTORE: exact-hit=true requested-key=<A> primary-key=<A> matched-key=<A>
+AXIOM_CACHE_B_RESTORE: exact-hit=true requested-key=<B> primary-key=<B> matched-key=<B>
+```
+
+### 4.5 One observation, cause not determined
+
+`mint-prepare / prepare` in the same run requested a **different** B key from every other job:
+
+```
+Cache not found for input keys: <B-alt>
+AXIOM_CACHE_B_RESTORE: exact-hit= requested-key=<B-alt> primary-key=<B-alt> matched-key=
+```
+
+Note the shape: `<B>` and `<B-alt>` are byte-identical up to and including their `...e692` segment
+and diverge only in the final 32 hex characters - the `recipe_hash` + `a_fp` suffix that `b_key`
+appends to the B identity (`.github/actions/setup-axiom-toolchain/action.yml:373`). Every job
+except `mint-prepare / prepare` requests `<B>`; this job requests `<B-alt>`. The restore is a
+**miss** (empty `exact-hit`). The span of that job across the three cycles is 20 s (cycle 1) ->
+35 s (cycle 2) -> 33 s (cycle 3).
+
+**The cause is not determined here.** What is recorded is the observation: a B-key miss in
+`mint-prepare` on both cycles 2 and 3, and a `mint-prepare` span above baseline in both. Whether the
+key divergence is deliberate (a different B identity for the prepare job) or a defect, and whether
+it is responsible for the span delta, is **not established by this record**.
+
+---
+
+## 5. Cold-cycle accounting - where S2's rotation cost was paid
+
+S2 changed `.github/actions/setup-axiom-toolchain/action.yml` (67 insertions / 10 deletions between
+`a6805fc4` and `c3433cd6`), which **rotated the A/B cache keys once**. A rotation necessarily costs
+a cold cycle somewhere. This section records where that cost fell, so it is not attributed to the
+steady-state numbers in sections 3 and 4.
+
+### 5.1 The push run off the queue path - `45966298981`
+
+`event=push`, head `c3433cd6`, `08:31:11` -> `08:41:27Z`. This run is **not** a merge_group cycle; it
+is the main push.
+
+| job | window (UTC) | span |
+|---|---|---|
+| `axiom-operational-slice` | `08:31:14` -> `08:37:03` | 349 s |
+| `readiness-verdict` | `08:37:05` -> `08:41:26` | 261 s |
+
+The slice job paid the rotation:
+
+```
+AXIOM_CACHE_A_RESTORE: DISCARDED - non-exact restore (exact-hit=); native install runs (fail-closed: cache is acceleration, never evidence)
+AXIOM_CACHE_A_SAVE: authority=true scope=full exact-hit=
+```
+
+with `Cache not found` lines naming both the A key and the B key, earlier in the same job. That job
+is the **save authority** for the new A key (`authority=true scope=full`).
+
+Then `readiness-verdict`, in the same run, already found A exact:
+
+```
+AXIOM_CACHE_A_RESTORE: exact-hit=true requested-key=<A> matched-key=<A>
+AXIOM_CACHE_B_RESTORE: exact-hit= requested-key=<B> matched-key=
+```
+
+So A was warm within the same push run while **B was still a miss**. **The rotation cost was paid
+off the merge-queue path**, which is why cycles 2 and 3 are not cold.
+
+### 5.2 Cache publisher runs
+
+`ci-cache-publisher.yml` is a `workflow_run` workflow. Two runs on head `c3433cd6`:
+
+| run | window (UTC) | jobs | conclusion |
+|---|---|---|---|
+| `45968914880` | `08:51:21` -> `08:52:14` | `publish` 23 s, `seed-toolchain` 49 s | success |
+| `45970194565` | `09:01:03` -> `09:02:06` | `publish` 28 s, `seed-toolchain` 60 s | success |
+
+**Timing fact, stated as an observation.** At `08:31Z` the B key
+`axiom-b-be2eda56...-...d4e29e6778...` was a `Cache not found` miss (`45966298981`). At `08:54Z` the
+same key was an `exact-hit=true` in the cycle 3 gate run (`45969305727`, section 4.4). Between those
+two observations, exactly **one** `ci-cache-publisher` run fired: `45968914880` at `08:51:21Z`. That
+is consistent with the publisher being the **save authority for B** at that requested key.
+
+It is **not separately proven here.** The publisher's own job log was not inspected for a save
+marker naming this key - only its run window, job spans, and conclusion were read. The statement
+this record supports is the weaker one: the timing is compatible with the publisher having produced
+the B entry, and no other publisher run exists in the interval.
+
+---
+
+## 6. App main-venue check-suite, by landing mode
+
+Observed `2026-11-27T09:07:33Z` via `GET /commits/{sha}/check-suites?app_id=5795152`, and
+**re-observed for this record** (section 10 gives the command). The re-observation reproduces both
+columns exactly, including `created_at == updated_at` on every bypass row.
+
+### 6.1 Queue landings - `completed` / `success`
+
+| merge SHA | PR | suite created | suite updated | status | conclusion |
+|---|---|---|---|---|---|
+| `86a8e9ed` | #523 | `06:15:03` | `06:21:09` | `completed` | `success` |
+| `e3087364` | #524 | `06:42:27` | `06:50:06` | `completed` | `success` |
+| `6444c116` | (queue) | `06:48:46` | `06:55:17` | `completed` | `success` |
+| `dd1ddb93` | #527 | `08:15:55` | `08:23:01` | `completed` | `success` |
+| `f21e9ec1` | #528 | `08:54:19` | `09:01:04` | `completed` | `success` |
+
+### 6.2 Bypass landings (MUST-T2 rotation) - `queued`, `conclusion` null, never updated
+
+| merge SHA | PR | suite created | suite updated | status | conclusion |
+|---|---|---|---|---|---|
+| `8b35a06d` | #521 | `06:10:35` | `06:10:35` | `queued` | null |
+| `53359b1e` | #526 | `07:45:38` | `07:45:38` | `queued` | null |
+| `c3433cd6` | #525 | `08:31:11` | `08:31:11` | `queued` | null |
+
+**The split is by landing mode, and it is exact in this sample: 5 queue landings completed
+`success`, 3 bypass landings stuck `queued` with a null conclusion and an `updated_at` identical to
+`created_at`.** The pending state is a property of the **bypass** path, not of "every landing on
+this repository". Section 7 of `docs/evidence/rule_suite_bypass_5404140486_2026-11-27.md` stated the
+broader generalisation; it is corrected in the same change against this table.
+
+---
+
+## 7. Class A - correctness: the three suites, run on the measured tree
+
+Executed on the worktree at `f21e9ec1` (= cycle 3's tree) with
+`nim c -r --hints:off --warnings:off <path>`. Exit codes and result lines below are quoted from the
+run logs, not from any prior record.
+
+| test | exit | `[OK]` | `[FAILED]` | `[SKIPPED]` |
+|---|---|---|---|---|
+| `tests/ci/test_admission_venue_split.nim` | **1** | 20 | **2** | 1 |
+| `tests/ci/test_setup_toolchain_skip_a_restore.nim` | **0** | 10 | 0 | 0 |
+| `tests/ci/test_publication_shard_merge.nim` | **0** | 10 | 0 | 0 |
+
+### 7.1 `test_admission_venue_split.nim` - 2 FAILED on `main`
+
+```
+  [FAILED] every slice-scoped step keeps the landing conjunct (both files)
+    tests/ci/test_admission_venue_split.nim(302, 34): Check failed: s.guard.contains(Landing)
+    tests/ci/test_admission_venue_split.nim(302, 34): Check failed: s.guard.contains(Landing)
+  [FAILED] landing-gated guard counts are exact (34 admission + 16 mint)
+    tests/ci/test_admission_venue_split.nim(344, 21): Check failed: nAdmission == 34
+    nAdmission was 35
+```
+
+plus one `[SKIPPED]`:
+
+```
+  [SKIPPED] upload/download artifact names = exact freeze + sanctioned additions since ci-frozen-2026-10-09-venue-split
+  [freeze-tag-missing] ci-frozen-2026-10-09-venue-split - freeze comparison SKIPPED.
+```
+
+**Cause, determined: a stale pin in the test, not a defect in the workflow.** The two failures the
+first check reports are both steps in `.github/workflows/admission-check.yml` that carry a `scope_`
+conjunct without the landing conjunct:
+
+```
+- name: "[check] [SL-20] Repository surface admission (B-built guard, base policy x changed paths)"
+  if: inputs.stage == 'attest' && steps.slice-engine.outputs.scope_sl20 == 'true'
+```
+```
+- name: "[check] [SL-21] Producer closure admission (B policy x G producer tuples)"
+  if: inputs.stage == 'attest' && steps.slice-engine.outputs.scope_sl21 == 'true'
+```
+
+Both are **deliberately venue-ungated** - they are meant to run in PR preflight as well as in
+landing, so that preflight produces their judgement - but the test's `UngatedByDesign` exception
+list (`tests/ci/test_admission_venue_split.nim:294`) names only
+`[check] Re-derive admission identity` and `(P0) Publish activation guard`. The two SL steps are not
+in it. Independently, the landing-gate count pin is 34 while the tree measures **35** - one short,
+not two.
+
+**Attribution: not caused by today's landings.** The blob identity of both files is unchanged across
+the whole day:
+
+| commit | `admission-check.yml` blob | `test_admission_venue_split.nim` blob |
+|---|---|---|
+| `f1852b8b` | `433be3c34c51` | `68dad64a5deb` |
+| `a6805fc4` | `433be3c34c51` | `68dad64a5deb` |
+| `dd1ddb93` | `433be3c34c51` | `68dad64a5deb` |
+| `c3433cd6` | `433be3c34c51` | `68dad64a5deb` |
+| `f21e9ec1` | `433be3c34c51` | `68dad64a5deb` |
+
+Byte-identical at every commit, so the failure is **pre-existing** and independent of S1 and S2. The
+same two failures were observed on `main` at `c3433cd6` (S2's landing) before this record, and are
+reproduced here at `f21e9ec1`.
+
+**Is it enforced in CI?** The test is wired only into `make test-unit` (`Makefile:1592`). Whether a
+required CI lane runs `test-unit` is **not established by this record** - it was not checked. The
+suite is red on `main` regardless, and this change does not fix it.
+
+**Not fixed here.** The repair is a test re-pin (add the two SL steps to `UngatedByDesign`, bring the
+admission count pin to 35), following the `b1659ef16` precedent that this test's own comments cite
+as the retroactive-correction pattern. It is a separate change with its own review; see section 11.
+
+### 7.2 `test_setup_toolchain_skip_a_restore.nim` - 10 / 10 on `main`
+
+Exit 0. All ten lines, including the one that pins S2's caller contract:
+
+```
+  [OK] input exists with default 'false' (existing callers unchanged)
+  [OK] the input never enters the keygen step (key formula unchanged)
+  [OK] keygen still derives keys from script_hash and a_fp -> b_key
+  [OK] A-restore is gated on the input
+  [OK] every step that reads a-restore.cache-hit is gated too
+  [OK] native installers are suppressed only behind a verified B supply
+  [OK] A-layer save authority is never granted on a skipped restore
+  [OK] pins verify asserts z3/jq unconditionally and mirrors the B witness
+  [OK] jq/z3 install steps are NOT gated (supply on every path)
+  [OK] mint-publish sets skip-a-restore='true' without changing scope
+```
+
+### 7.3 `test_publication_shard_merge.nim` - 10 / 10 on `main`
+
+Exit 0. All ten lines:
+
+```
+  [OK] valid five-shard set PASSES (dead-gate guard)
+  [OK] one shard report missing FAILS with the count diagnostic
+  [OK] zero shard reports FAILS with a diagnostic (no silent die)
+  [OK] the same file in two shard reports FAILS (duplicate guard fires)
+  [OK] a tracked file in no shard report FAILS the set comparison
+  [OK] valid JSON with one file entry dropped FAILS (set, not count)
+  [OK] directory entries shared by every shard PASS (dedup is legitimate)
+  [OK] the three shard-count sites agree (currently 5)
+  [OK] a mutated copy (awk n=4) is reported as drift
+  [OK] a mutated copy (count assertion -eq 4) is reported as drift
+```
+
+This suite is green and still asserts the fail-closed shape S1 depends on: a missing shard fails, a
+duplicate fails, and the three count sites must agree.
+
+---
+
+## 8. Judgment, per class
+
+### 8.1 Class A (correctness) - **holds**
+
+The evidence for Class A, and only this evidence, is:
+
+- **S2 is applied, and observed applying.** Section 4.4: `skip-a-restore: true` on exactly one job
+  (`mint-publish / publish`), that job has no A-restore line, and the seven other consuming jobs run
+  both restores with `skip-a-restore: false`. That is declared == executed for S2's contract, at the
+  granularity of the run log.
+- **S2's safety properties are pinned by a green suite.** Section 7.2, 10 / 10 at `main`, including
+  `native installers are suppressed only behind a verified B supply` and
+  `A-layer save authority is never granted on a skipped restore` - the two properties whose violation
+  would make the skip unsafe rather than fast.
+- **S1's contract is pinned by a green suite.** Section 7.3, 10 / 10 at `main`, including the
+  fail-closed cases.
+- **The ruleset was restored and the bypass landings were recorded.** PR #524/#527/#528 each record
+  the rotation and the restore; section 6.1 shows all five queue landings since with a `completed`
+  / `success` App suite, which is consistent with a live, enforcing ruleset.
+- **One suite is red on `main`, and it is reported as red.** Section 7.1. It is attributed by blob
+  identity to a pre-existing stale pin, not to S1 or S2. **This record does not claim `main`'s test
+  tree is green**, because it is not.
+
+The red suite is a Class A finding in the negative: it is not a S1/S2 failure, and it is not waved
+away. It is disclosed here and carried as a follow-up (section 11, item 1).
+
+### 8.2 Class B (speed) - **target not met / not demonstrated**
+
+The session contract for these two changes is: **merge_group wall-clock median `392 s` -> `<= 345 s`**.
+
+The measured warm sample with both changes is **400 s** (section 4.1). That is:
+
+- **55 s above** the 345 s target;
+- **8 s above** the 392 s baseline median it was supposed to beat.
+
+**Therefore Class B is not met.** One warm sample also cannot demonstrate a median at all, so the
+stronger statement is that the target is **not demonstrated** as well as not met. Either reading
+gives the same verdict.
+
+What did change structurally is recorded separately, because it is fact and it is the mechanism the
+next attempt would build on:
+
+| property | cycle 1 (baseline) | cycle 2 (S1) | cycle 3 (S1+S2) |
+|---|---|---|---|
+| PI tail margin (tail - PI wall) | 12 s | 163 s | 133 s |
+| `mint-publish` vs its consumer | binder (0 s slack) | binder, 51 s late | **14 s slack** |
+| finisher of the mount chain | `mint-publish` 69 s | `mint-publish` 86 s | `verdict / admission-check` 62 s |
+
+- **PI has left the critical path.** 356 s -> 258 s -> 267 s against tails of 368 / 421 / 400 s. It
+  is not the binder in any of the three cycles.
+- **`mint-publish` has left the critical path.** It was the binding predecessor in cycles 1 and 2
+  and now finishes 14 s before its consumer needs it.
+- **Neither exit shortened the tail**, because each job was replaced as binder by something else.
+  The current binder set is `go-critical-lane (1)` at 155 s and `verdict / admission-check` at 62 s.
+
+**And the offsets are the same size as the savings.** Jobs that were not targets moved up:
+
+| job | cycle 1 | cycle 2 | cycle 3 | delta (c1 -> c3) |
+|---|---|---|---|---|
+| `attest / go-critical-lane (1)` | 117 s | 152 s | 155 s | **+38 s** |
+| `mint-prepare / prepare` | 20 s | 35 s | 33 s | **+13 s** |
+| `verdict / admission-check` | 37 s | 37 s | 62 s | **+25 s** |
+| `mint-publish / publish` | 69 s | 86 s | 49 s | -20 s |
+| `publication-integrity` (wall) | 356 s | 258 s | 267 s | -89 s |
+
+The +38 s on `go-critical-lane (1)` alone is nearly twice the -20 s S2 bought on `mint-publish`.
+**The cause of these increases is not determined.** They are within the range host variance and
+runner assignment can produce, and this record has no controlled sample that separates variance from
+regression. What can be said without speculation is the arithmetic: **the observed savings and the
+observed increases are of the same magnitude, so the net is inside the noise this lane already
+shows.**
+
+`mint-prepare`'s increase has a recorded companion observation (section 4.5): a B-key miss on both
+cycles 2 and 3. That is an observation, not an attribution.
+
+---
+
+## 9. Honest limits
+
+- **Not a controlled A/B.** The three cycles are at three different trees, on one host class, on one
+  day. S1 and S2 are not isolated from each other, from the docs-only landing in cycle 3, or from
+  ordinary variance. The comparison is a before/after, not an experiment.
+- **One warm sample, so no median.** Cycle 3 is a single cycle. The 392 s figure it is compared
+  against is a session-recorded median of 11 candidates; a median of one is not a median. No p50,
+  p90, or confidence interval is claimed.
+- **The second warm sample is this change's own merge_group run.** It is read from the run record
+  after this PR lands - it is deliberately not in this document, because a document cannot quote the
+  run that created it. Section 10's commands reproduce it. Its numbers are a follow-up read, not a
+  claim here.
+- **Not measured**: queue wait before each window opens (out of the run record), the internal
+  scheduling of the merge group, and per-step costs inside each job (step spans are not edge costs
+  under the metric contract, so they are used here only to locate the tail).
+- **Second-granularity timestamps.** GitHub records whole seconds; a 3 s job (final
+  `admission-check`) has +-1 s of quantization. No conclusion here depends on a sub-5 s difference -
+  the smallest delta the judgment uses is 8 s.
+- **The `mint-prepare` B-key divergence (section 4.5) is unexplained.** It is recorded as an
+  observation. A document that later attributes a `mint-prepare` regression to a specific cause must
+  not cite this record as having established one.
+- **The App check-suite sample is 8 landings on one day.** It is enough to show that the split
+  follows landing mode rather than being uniform, which is all section 6 claims. It is not a claim
+  about the App's behaviour on any other day.
+
+---
+
+## 10. Reproduction
+
+Run records (native `gh`, GET-only):
+
+```
+gh run view 45940366569 -R Archright/Axiom --json name,headSha,createdAt,updatedAt,jobs
+gh run view 45940366345 -R Archright/Axiom --json name,headSha,createdAt,updatedAt,jobs
+gh run view 45940366417 -R Archright/Axiom --json name,headSha,createdAt,updatedAt,jobs
+gh run view 45964332106 -R Archright/Axiom --json name,headSha,createdAt,updatedAt,jobs
+gh run view 45964331956 -R Archright/Axiom --json name,headSha,createdAt,updatedAt,jobs
+gh run view 45964332053 -R Archright/Axiom --json name,headSha,createdAt,updatedAt,jobs
+gh run view 45969305727 -R Archright/Axiom --json name,headSha,createdAt,updatedAt,jobs
+gh run view 45969305538 -R Archright/Axiom --json name,headSha,createdAt,updatedAt,jobs
+gh run view 45969305608 -R Archright/Axiom --json name,headSha,createdAt,updatedAt,jobs
+```
+
+Job spans only, per run:
+
+```
+gh api repos/Archright/Axiom/actions/runs/45969305727/jobs --paginate \
+  --jq '.jobs[] | "\(.name) \(.started_at) -> \(.completed_at) \(.conclusion)"'
+```
+
+Cold-cycle accounting (section 5):
+
+```
+gh run view 45966298981 -R Archright/Axiom --json name,event,headSha,createdAt,updatedAt,conclusion
+gh api "repos/Archright/Axiom/actions/runs/45966298981/jobs?per_page=100" \
+  --jq '.jobs[] | "\(.name) \(.started_at) -> \(.completed_at)"'
+gh api "repos/Archright/Axiom/actions/runs/45968914880/jobs?per_page=100" --jq '.jobs[].name'
+gh api "repos/Archright/Axiom/actions/runs/45970194565/jobs?per_page=100" --jq '.jobs[].name'
+```
+
+Cache markers (sections 4.4, 4.5, 5.1) - download the run log and strip ANSI:
+
+```
+gh run view 45969305727 -R Archright/Axiom --log \
+  | sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' \
+  | grep -E "skip-a-restore: '|AXIOM_CACHE_[AB]_RESTORE: |Cache not found|AXIOM_CACHE_A_PINS"
+gh run view 45966298981 -R Archright/Axiom --log \
+  | sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' \
+  | grep -E "AXIOM_CACHE_[AB]_(RESTORE|SAVE): |Cache not found"
+```
+
+PI verdict string (section 4.2):
+
+```
+gh run view 45969305538 -R Archright/Axiom --log \
+  | sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' | grep publication_license_eval
+```
+
+App main-venue check-suites (section 6):
+
+```
+for sha in 86a8e9ed e3087364 6444c116 dd1ddb93 f21e9ec1 8b35a06d 53359b1e c3433cd6; do
+  full=$(gh api "repos/Archright/Axiom/commits/$sha" --jq .sha)
+  gh api "repos/Archright/Axiom/commits/$full/check-suites?app_id=5795152" \
+    --jq '.check_suites[] | "\(.status)|\(.conclusion)|\(.created_at)|\(.updated_at)"'
+done
+```
+
+Class A suites (section 7), on the measured tree:
+
+```
+nim c -r --hints:off --warnings:off tests/ci/test_admission_venue_split.nim
+nim c -r --hints:off --warnings:off tests/ci/test_setup_toolchain_skip_a_restore.nim
+nim c -r --hints:off --warnings:off tests/ci/test_publication_shard_merge.nim
+```
+
+Blob identity (section 7.1, requires WSL git and the `rev:path` form):
+
+```
+for c in f1852b8b a6805fc4 dd1ddb93 c3433cd6 f21e9ec1; do
+  echo "$c $(git rev-parse $c:.github/workflows/admission-check.yml) $(git rev-parse $c:tests/ci/test_admission_venue_split.nim)"
+done
+```
+
+---
+
+## 11. Follow-ups, each with its trigger
+
+| # | item | class | completion criterion | trigger / precondition |
+|---|---|---|---|---|
+| 1 | Re-pin `tests/ci/test_admission_venue_split.nim`: add `[check] [SL-20] ...` and `[check] [SL-21] ...` to `UngatedByDesign`, bring the admission count pin to 35 | **A** (correctness) | the suite exits 0 on `main`; the count pin equals the measured count | any time; wall-clock **0 s**; `b1659ef16` precedent. Independent of S1/S2 (section 7.1) |
+| 2 | Determine whether the `mint-prepare` B-key divergence (section 4.5) is intentional | **A** (correctness) | declared == executed is stated for that job's B identity, either by fixing the key or by documenting the second identity | before any `mint-prepare` span work; a 13 s delta is currently unattributable |
+| 3 | Make `go-critical-lane (1)`'s 155 s the next speed target | **B** (speed) | observed merge_group wall-clock drop on the tail | **now** - it is the largest single block on the binding path and it grew +38 s across these cycles. Separately: establish whether that growth is variance or regression before optimizing against it |
+| 4 | Re-appraise S2's 49 s result now that it is not the binder | **B** (speed) | observed tail drop | after item 3 lands; S2's gain is real but is currently absorbed by a slower neighbour |
+| 5 | Collect the second warm sample | **B** (speed) | a median over >= 2 warm cycles | this PR's own merge_group run is sample 2 (section 9); a median still needs a third |
+
+---
+
+## 12. What this record does not assert
+
+- It does **not** assert that `main`'s test tree is green. It is not (section 7.1).
+- It does **not** assert that S1 or S2 improved merge_group wall-clock. They did not, on the samples
+  available (section 8.2).
+- It does **not** assert that the `go-critical-lane (1)`, `mint-prepare`, or `verdict` increases are
+  regressions. Their cause is not determined (section 8.2).
+- It does **not** assert that the cache publisher saved the B key observed as a hit at `08:54Z`
+  (section 5.2). It asserts only that the timing is compatible and that no other publisher run
+  exists in the interval.
+- It **creates no authority**. Nothing here is consumed by a gate, and no policy, workflow, ruleset,
+  or pin is changed by it.
