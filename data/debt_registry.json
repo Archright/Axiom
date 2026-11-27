@@ -6364,6 +6364,30 @@
       "lastVerifiedAt": "2026-11-27T00:00:00Z",
       "binding": "registry_disposition",
       "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md section 10.1: the audited site is a GitHub Actions workflow file, and a Nim {.axiomDebt.} pragma is structurally impossible on workflow YAML; debt_integrity_gate's marker scan also does not cover .github/. The registry entry is the binding medium, with the site anchored by symbol/lineRange/contentHash. lineRange is written as a bare path (not path:start-end) deliberately: debt_integrity_gate verifies the whole-file sha256 only when lineRange is a plain relative path, and a colon makes the value skippedNonPlain and therefore unverified - the bare path is the one form that is mechanically enforced by the required check. Consequence accepted: any future byte change to this trust-surface workflow must update this contentHash, which is the intended ratchet. DEBT#565 and DEBT#572 are the workflow-YAML registry_disposition precedents."
+    },
+    {
+      "id": "DEBT#576",
+      "category": "Theater/Unenforced Claim",
+      "severity": "high",
+      "title": "The required admission context is green while every gateway verification lane is skipped, and the executed_jobs set that reveals this is published but never compared on the admission path",
+      "description": "Machine-observed 2026-11-27. On merge_group run 46001605346 (head 393419e3, conclusion success) the gateway lane of the required admission path reports: candidate-build-arm skipped, gateway-shard skipped, gateway-identity-gate skipped, proof-reconcile skipped, executed-jobs success, admission-check success. That is, the required context admission-check is green although no gateway verification executed. Mechanism. (1) .github/workflows/runner-pool-acceptance.yml gates every substantive verification lane on the same flag: candidate-build-arm at line 889, gateway-shard (8 legs) at line 1007, gateway-identity-gate at line 1177, and proof-reconcile at line 1249, each requiring needs.sl09-scope.outputs.scope_sl09 == true. config/policy/epoch_manifest.json lists SL-09 under notYetImplementedSlices, so scope_sl09 is false and all four lanes skip on every run at both venues, not intermittently. (2) The rollup executed-jobs (lines 1328-1385) accepts skipped as an ordinary conclusion: its only failing branch is an unexpected conclusion, and a skipped lane whose flag is false is recorded as skipped(sl09_not_promoted) rather than failing. The callee run therefore concludes success. (3) .github/workflows/admission-gate-v2.yml calls that callee from the gateway job (lines 640-650) and the aggregate at lines 738-780 tests needs.gateway.result against success, which is satisfied because the callee concluded success. The gateway job declares no outputs mapping, and the only outputs block in that workflow is anchor-resolve.B_STAR at line 214, so the executed_jobs value never reaches the adjudication. The information needed to distinguish skipped from verified is published and is compared elsewhere: .github/workflows/release-ship.yml lines 416-424 asserts an exact expected skip-set string. The admission path has no such comparison. Self-consistency check. docs/spec/ci_admission_budget_contract.md line 132 states that reuse and scoping are permitted only inside an always-running adjudicator that emits an explicit per-unit basis and that a skipped lane MUST fail the rollup. go-critical-rollup obeys that rule (admission-check.yml lines 4784-4800 fail on any non-success lane result); executed-jobs publishes and defers. Adjacent and distinct. Two further skips are not this entry: the PR venue skips the GO-critical lanes because their jobs are gated off pull_request, which is already recorded as the known PR-venue gap; and the aggregate shell of admission-gate-v2 is sound and pinned by tests/ci/test_vs0_admission_aggregate_fail_closed.nim against 15 mutations. R3 constrains required jobs and the aggregate constrains its direct needs; neither reaches jobs inside a uses: callee, which is exactly the seam this entry registers. Why registered rather than patched. AGENTS.md 0.9 requires discovered theater to be registered and forbids silent patching. This entry does not change any workflow and does not claim the gap is closed. The repair is a trust-surface change on both .github/workflows/admission-gate-v2.yml and .github/workflows/runner-pool-acceptance.yml, so it requires the trust-surface rotation lane rather than an agent edit.",
+      "symbol": "executed-jobs",
+      "contentHash": "sha256:d0a6acea2a15bbf6b27a391777ce7f96250163966db8a07bd830b215acd223f7",
+      "lineRange": ".github/workflows/runner-pool-acceptance.yml",
+      "files": [
+        ".github/workflows/runner-pool-acceptance.yml",
+        ".github/workflows/admission-gate-v2.yml",
+        "config/policy/epoch_manifest.json",
+        "docs/spec/ci_admission_budget_contract.md"
+      ],
+      "source": "theater_audit",
+      "status": "open",
+      "lastVerifiedAt": "2026-11-27T00:00:00Z",
+      "binding": "registry_disposition",
+      "bindingRationale": "registry_disposition per docs/spec/debt_registry_schema.md section 10.1: the audited sites are GitHub Actions workflow files, and a Nim {.axiomDebt.} pragma is structurally impossible on workflow YAML. The registry entry is the binding medium, with the site anchored by symbol/lineRange/contentHash. lineRange is a bare path (not path:start-end) so debt_integrity_gate verifies the whole-file sha256; a colon would make the value unverified. Consequence accepted: any byte change to this trust-surface workflow must update this contentHash, which is the intended ratchet. DEBT#575, DEBT#565 and DEBT#572 are the workflow-YAML registry_disposition precedents.",
+      "impact": "high",
+      "resolution": "OPEN",
+      "productTruthImpact": "PRODUCT_SUPPORT"
     }
   ]
 }
