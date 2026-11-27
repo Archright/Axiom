@@ -131341,6 +131341,22 @@
     },
     {
       "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/llbc_to_canonical.nim",
+      "name": "llbcFunctionToCanonicalIn",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
+    },
+    {
+      "hasAxiomHint": false,
       "ignorable": false,
       "leanType": "Bool",
       "module": "src/verification/llbc_to_canonical.nim",
@@ -131487,6 +131503,20 @@
     },
     {
       "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "LlbcDeclDocument",
+      "module": "src/verification/llbc_to_canonical.nim",
+      "name": "prepareLlbcDocument",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "LlbcDeclDocument",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
       "ignorable": true,
       "leanType": "Unit",
       "module": "src/verification/llbc_to_canonical.nim",
@@ -131528,6 +131558,22 @@
       "returnType": "Err",
       "smtSort": "Int",
       "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": true,
+      "leanType": "Unit",
+      "module": "src/verification/llbc_to_canonical.nim",
+      "name": "resolveInLlbcDocument",
+      "negativeConstraints": [
+        "result does not exist in this function's scope",
+        "SMT: (>= result 0) is a SORT ERROR — result has no type",
+        "Lean: referencing result will cause 'unknown identifier' error"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "void",
+      "smtSort": "Unit",
+      "typeCategory": "void"
     },
     {
       "hasAxiomHint": false,
@@ -142979,6 +143025,20 @@
       "leanType": "RustSubjectOutcome",
       "module": "src/verification/rust_rust_pipeline.nim",
       "name": "rustSubjectOutcomeParsed",
+      "negativeConstraints": [
+        "result >= 0 is invalid — object types are not numeric"
+      ],
+      "resultConstraintTemplate": "",
+      "returnType": "RustSubjectOutcome",
+      "smtSort": "Int",
+      "typeCategory": "object"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
+      "leanType": "RustSubjectOutcome",
+      "module": "src/verification/rust_rust_pipeline.nim",
+      "name": "rustSubjectOutcomePrepared",
       "negativeConstraints": [
         "result >= 0 is invalid — object types are not numeric"
       ],
