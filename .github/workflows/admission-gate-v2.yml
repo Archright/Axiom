@@ -292,7 +292,16 @@ jobs:
         # warm every run (202,171,572 B). The B-layer key stays bound to
         # a_fp=sha256(a-key), so this scope change cannot cross-match a full
         # B payload; the deriver consumes no B artifact, so a miss is inert.
-        uses: Archright/Axiom/.github/actions/setup-axiom-toolchain@c021c33801455a481e05b75c396d95c84bbdc45d
+        # Pin rotated c021c338 -> 84a5940: 84a5940's action.yml is byte-identical
+        # to origin/main's (sha256 35dc4de2d842dc49), while c021c338 is the
+        # 2026-11-12 clean-room baseline (15fea97a0511edcb) whose libpcre3 step
+        # is still `apt-get install` — measured 31,826 ms in this very job on
+        # run 45932832329, i.e. the whole remaining provisioning cost after the
+        # scope change. 84a5940 materializes the pinned release asset instead
+        # (~0.2 s measured in its own commit). The pin's trust property is
+        # preserved: it is still an immutable SHA, and its bytes are exactly
+        # what main already runs via the local `./` path everywhere else.
+        uses: Archright/Axiom/.github/actions/setup-axiom-toolchain@84a5940184a566fc3d8c47f4f8cbb317047d8d88
         with:
           provision-scope: 'nim'
           cache-save-enabled: 'false'
