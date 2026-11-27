@@ -205,7 +205,124 @@ observation must not repeat the pooling error documented in section 6.
 | Discard condition | zero required-check failures attributable to the change, and no entry discarded for verification timeout |
 | Reversion trigger | if the c1 success-stratum wall p50 exceeds the c100 success-stratum p50 of 479.5 s by more than the p95 uncertainty at the declared n, revert per section 8 |
 
-## 10. Provenance
+## 10. Where the wall clock actually sits
+
+This section is a measurement, not a config change. It answers a question section 9 cannot
+answer from inside its own cohort: when the bound is at risk, which part of the pipeline is
+long.
+
+### 10.1 Population
+
+| Item | Value |
+|---|---|
+| Query | `event=merge_group`, four pages of 100 runs, de-duplicated by run id |
+| Heads | 50 distinct merge-group heads with a completed `admission-gate` run |
+| Window | `2026-11-26T03:27Z` to `2026-11-27T14:28Z` |
+| Wall definition | min `created_at` to max `updated_at` across every workflow of that head |
+
+| Statistic | `admission-gate` | Whole merge group |
+|---|---|---|
+| min | 312 s | 312 s |
+| p50 | 368 s | 400 s |
+| max | 713 s | 713 s |
+| runs at or above 600 s | 1 | 1 |
+
+The single breach is `7a307c32`, `2026-11-26T16:57:12Z` to `17:09:05Z`, 713 s. It is
+decomposed in section 10.4, because it is the one datapoint that decides whether the bound
+fails by accumulation or by one slow job.
+
+Section 7 states that no observed run reached 600 s. That is true of the population declared
+in section 9, which begins 68 minutes after `7a307c32` ended, and false of the wider window
+measured here. The narrower sentence is not wrong, it just does not generalise, and this
+record should not carry the ambiguity.
+
+### 10.2 The pole moved
+
+For each head the pole is whichever of `admission-gate` and `axiom-operational-slice` finished
+last. That one decides the merge group's wall clock.
+
+| Population | `admission-gate` is the pole | `axiom-operational-slice` is the pole |
+|---|---|---|
+| Before #535 (`n=47`) | 45 | 2 |
+| After #535 (`n=3`) | 1 | 2 |
+
+`axiom-operational-slice` is a two-job serial chain: `readiness-verdict` declares
+`needs: [axiom-operational-slice]` (`.github/workflows/axiom-operational-slice.yml:319-320`),
+so it cannot start until the producer job completes.
+
+| Head | producer job | `readiness-verdict` | workflow total |
+|---|---|---|---|
+| `43464090` | 114 s | 164 s | 285 s |
+| `4b5878c4` | 197 s | 165 s | 390 s |
+| `d2b8c651` | 229 s | 169 s | 403 s |
+| `c8b65051` | 265 s | 160 s | 434 s |
+
+The consumer job is flat at 160 to 169 s across all four. The producer job is what moved.
+
+### 10.3 #535 added one serial step, and it costs one for one
+
+#535 (`ci/enforce-static-gates`, merged `2026-11-27T13:29:58Z`) inserted a step named
+`Enforce the declared static gate set (GATES_FAST + GATES_STATIC)` into the producer job.
+Step timings were read from the jobs API and are not inferred.
+
+| Head | static gate step | producer job |
+|---|---|---|
+| `43464090` (before #535) | absent | 114 s |
+| `97e874d7` | 110 s | not measured |
+| `d2b8c651` | not measured | 229 s |
+| `4b5878c4` | 78 s | 197 s |
+| `c8b65051` | 132 s | 265 s |
+
+Producer job duration before #535 was p50 303 s over 46 heads, with a maximum of 366 s. The
+four producers observed after #535 are 390, 403, 412 and 434 s. The fastest post-#535 merge
+group is slower than the slowest pre-#535 one. The step's own duration, 78 to 132 s, is the
+same order as the whole shift.
+
+This is the mechanism the bound has to be defended against. It is not the count of checks. It
+is whether a check lands on a chain that already gates the finish.
+
+### 10.4 The one breach was a single slow job
+
+`7a307c32` decomposition, from the jobs API:
+
+| Job | Duration | Same job on `4b5878c4` |
+|---|---|---|
+| `closure-deriver` | 100 s | 36 s |
+| `attest / build-base-artifacts` | 374 s | 76 s |
+| `attest / go-critical-lane (1)` | 134 s | 86 s |
+| `attest / admission-check` | 58 s | 70 s |
+| `mint-publish / publish` | 69 s | 52 s |
+| rollup | 3 s | 4 s |
+
+`build-base-artifacts` alone accounts for 374 of the 713 s, and every job after it waited. The
+breach is one degraded job on the serial chain, not 713 s of accumulated verification.
+
+### 10.5 Consequence for the bound
+
+Merge-group wall clock is a maximum over a few serial chains, not a sum over the verification
+inventory. Two consequences follow, and both are arithmetic rather than policy:
+
+1. A check added to a parallel lane is close to free. It moves the maximum only if it becomes
+   the longest pole.
+2. A step added to an existing serial chain costs its own duration, once, on every merge.
+   #535 is the demonstration: 78 to 132 s of step, 78 to 132 s of merge group.
+
+At p50 400 s against a 600 s bound the headroom is 200 s. The maximum observed after #535 is
+434 s, leaving 166 s. That is roughly three steps of #535's size, on the longest chain, before
+the bound is reached. That headroom, not the number of checks, is the budget to spend
+deliberately.
+
+### 10.6 What this section does not claim
+
+- It does not claim the `c1` change moved the pole. The pole moved because #535 lengthened a
+  serial chain. The two changes are 15 minutes apart and this population cannot separate them.
+- It does not claim a p50 improvement from `c1`. Section 6 stands unchanged.
+- It does not claim `build-base-artifacts` is systematically slow. That is one observation.
+- It does not propose a change. Reducing the serial depth of `axiom-operational-slice`, or
+  moving the static gate set off the finish path, both require edits under `.github/workflows`,
+  which is a trust surface. Neither is decided here.
+
+## 11. Provenance
 
 | Item | Value |
 |---|---|
