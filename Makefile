@@ -608,11 +608,11 @@ sloc-verify: ## SLOC governance verify (Ratified Manifest ⊆ policy; sibling ga
 	bin/sloc_verify
 	@echo "✅ sloc-verify PASS — governance contract honored"
 
-local-verify-static: $(GATES_FAST) $(GATES_STATIC) ## 16 non-intrusive verify-static gates (in-place safe)
-	@echo "✅ local-verify-static PASSED — 16 gates green"
+local-verify-static: $(GATES_FAST) $(GATES_STATIC) ## non-intrusive verify-static gates (GATES_FAST ∪ GATES_STATIC; in-place safe)
+	@echo "✅ local-verify-static PASSED — $(words $^) gates green"
 
-local-verify-static-full: $(GATES_FAST) $(GATES_STATIC) $(GATES_FULL) check-mutation-harness check-git-purity ## All 18 verify-static gates (worktree-only: mutation + purity)
-	@echo "✅ local-verify-static-full PASSED — 18 gates green"
+local-verify-static-full: $(GATES_FAST) $(GATES_STATIC) $(GATES_FULL) check-mutation-harness check-git-purity ## All verify-static gates (worktree-only: mutation + purity)
+	@echo "✅ local-verify-static-full PASSED — $(words $^) gates green"
 
 # ── Merge-admission enforcement of the declared static gate set ──────
 # DEBT#573: GATES_FAST ∪ GATES_STATIC was declared but executed by no required
@@ -624,13 +624,14 @@ local-verify-static-full: $(GATES_FAST) $(GATES_STATIC) $(GATES_FULL) check-muta
 # Exclusions: none. Measured on base 5ddebdb3 every member is green; add a gate to
 # LOCAL_VERIFY_STATIC_CI_EXCLUDED only together with its DEBT id in that variable.
 LOCAL_VERIFY_STATIC_CI_EXCLUDED :=
+LOCAL_VERIFY_STATIC_CI_GATES := $(filter-out $(LOCAL_VERIFY_STATIC_CI_EXCLUDED),$(GATES_FAST) $(GATES_STATIC))
 local-verify-static-ci: ## Merge-admission enforcement of GATES_FAST ∪ GATES_STATIC (required check step)
 	@echo "=== [local-verify-static-ci] merge-admission static gate set ==="
 	@if [ -n "$(LOCAL_VERIFY_STATIC_CI_EXCLUDED)" ]; then \
 	  echo "EXCLUDED (DEBT-tracked): $(LOCAL_VERIFY_STATIC_CI_EXCLUDED)"; \
 	fi
-	@$(MAKE) --no-print-directory $(filter-out $(LOCAL_VERIFY_STATIC_CI_EXCLUDED),$(GATES_FAST) $(GATES_STATIC))
-	@echo "✅ local-verify-static-ci PASSED — declared static gate set enforced at merge admission"
+	@$(MAKE) --no-print-directory $(LOCAL_VERIFY_STATIC_CI_GATES)
+	@echo "✅ local-verify-static-ci PASSED — $(words $(LOCAL_VERIFY_STATIC_CI_GATES)) declared static gates green at merge admission"
 
 # ── P3: Runtime preflight contracts ──────────────────────────────────
 # Two independent substrate contracts; must NOT be merged into one target.

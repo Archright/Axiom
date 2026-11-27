@@ -199,8 +199,8 @@ git --no-pager status
 ### 10.3 의사결정 규칙
 
 - **반복 개발** = `make test-fast` (L1, 6게이트)
-- **로컬 최종** = `make local-verify-static` (L2, 16게이트)
-- **푸시·CI** = full (L3, 18+게이트)
+- **로컬 최종** = `make local-verify-static` (L2, GATES_FAST ∪ GATES_STATIC)
+- **푸시·CI** = full (L3, 동일 집합 + GATES_FULL 2 + mutation + purity)
 
 ### 10.4 L2 주의사항
 
