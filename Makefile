@@ -1525,6 +1525,11 @@ test-fast: ## L1: 빠른 증분 developer verify (캐시 보존, no LTO, 병렬 
 # 은 소비자(워크플로/픽스처)용 명시 슬롯이며 정리 책임도 소비자에게 있다.
 # GitHub Actions에서만 ci/test_fast_one_slot.mk의 frozen callee 슬롯을 쓴다
 # (고정 핀이 --self-check로 직접 실행하는 계약).
+# No C optimization flag here on purpose: --passC:-O2 was landed (318e9d1f) to
+# cut the 119,585,096-byte ircheck sha256 from 40s to 12s in a debug build, but
+# fb4012a0 (34 min later) moved multi-MB digests to platform sha256sum (0.09s),
+# so the flag's only remaining effect is 2x C compile time (probe 18.4s -> 9.6s,
+# self-check 8.2s -> 5.0s; run times unchanged).
 test-fast-one: ## test-fast <FILE|TARGET> — 단일 대상만 증분 검증 /usage: make test-fast-one T=testFilePath/name
 	@if [ -z "$(T)" ]; then echo "usage: make test-fast-one T=tests/unit/axiom_ir_test.nim"; exit 1; fi
 	@export AXIOM_CI_PRESERVE_CACHE=1; \
@@ -1540,7 +1545,7 @@ test-fast-one: ## test-fast <FILE|TARGET> — 단일 대상만 증분 검증 /us
 	  trap 'exit 130' HUP INT TERM; \
 	fi; \
 	mkdir -p "$$(dirname "$$out")"; \
-	AXIOM_CI_PRESERVE_CACHE=1 $(NIM) c -r --hints:off --passC:-O2 --nimcache:build/nimcache/test -o:"$$out" "$(T)"
+	AXIOM_CI_PRESERVE_CACHE=1 $(NIM) c -r --hints:off --nimcache:build/nimcache/test -o:"$$out" "$(T)"
 
 test-all: ## 전체 테스트: 단위 + gateway 순차 실행
 	@$(MAKE) test-unit
