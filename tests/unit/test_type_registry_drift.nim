@@ -1,4 +1,4 @@
-import std/[os, json, sets, strutils]
+import std/[os, json, sets, strutils, algorithm]
 
 proc collectRegistryNames(): HashSet[string] =
   let jsonPath = getCurrentDir() / "src/generated/type_registry_metadata.json"
@@ -49,4 +49,23 @@ when isMainModule:
   let sourceNames = collectSourceDeclNames()
   doAssert registryNames.len > 0, "Registry must be non-empty"
   doAssert "deriveAssurance" in registryNames, "deriveAssurance must be in registry"
-  doAssert registryNames <= sourceNames, "Stale registry entries detected: registry has symbols not present in src/"
+  ## Both directions are asserted, not just the subset. `registry <= source`
+  ## alone passes when `src/` declares a symbol the registry never emitted, so a
+  ## generator that under-emits and a hand-edited registry that drops an entry
+  ## were both indistinguishable from a clean tree. Set equality makes the
+  ## registry a claim about the tree rather than a lower bound on it.
+  var registryOnly, sourceOnly: seq[string]
+  for name in registryNames:
+    if name notin sourceNames: registryOnly.add name
+  for name in sourceNames:
+    if name notin registryNames: sourceOnly.add name
+  registryOnly.sort()
+  sourceOnly.sort()
+  doAssert registryOnly.len == 0,
+    "Stale registry entries detected (" & $registryOnly.len &
+    "): in src/generated/type_registry_metadata.json but not declared in src/: " &
+    registryOnly.join(", ")
+  doAssert sourceOnly.len == 0,
+    "Unregistered declarations detected (" & $sourceOnly.len &
+    "): declared in src/ but absent from src/generated/type_registry_metadata.json: " &
+    sourceOnly.join(", ")
