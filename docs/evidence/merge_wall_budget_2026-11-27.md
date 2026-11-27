@@ -10,27 +10,40 @@
 ## 1. Verdict summary
 
 1. **Merge wall is the DAG critical path.** It is not the sum of checks (required contexts, jobs, steps). So adding verification does **not** grow the wall as long as the new work lands in a lane that is off the critical path.
-2. **The 10-minute ceiling already holds.** Over the n=12 window: p50 **381 s (6.35 min)**, mean 405 s (6.75 min), max 713 s. Eleven of twelve are **under 8 minutes**.
+2. **The 10-minute ceiling already holds.** Over the current generation (n=67, 2026-11-24T12:01:09Z – 2026-11-27T00:48:25Z): p50 **399 s (6.65 min)**, p90 **470 s**, max 713 s, and **zero runs above 720 s**. Averaging in the superseded earlier regime produces a p50 of 544 s that describes no real run (section 2).
 3. **The only run above 10 minutes (713 s) was a platform checkout stall, not accumulated verification** — `[build] Checkout B only` spent **307 s** instead of the normal 3–6 s. In the same batch the toolchain step took 44 s, i.e. normal.
 4. **There is at least 106 s of slack in lanes that are off the critical path.** New verification should be placed only there (section 7).
-5. **The single largest non-verification fixed cost is the toolchain cache transfer at 49.6 s = 15.3% of the wall**, because two jobs each receive the same 1.06 GiB payload (section 5).
+5. **The single largest non-verification fixed cost is the toolchain cache transfer**, because the same 1.06 GiB payload is restored **seven times per run** (about 7.95 GB of egress). The portion that lands on the serial critical path measured 31.5 s / 44.6 s / 59.4 s in three runs (10.1% / 12.4% / 17.3% of the wall). An earlier revision of this document counted two restores and reported 49.6 s; that count was wrong (section 5).
 
 ---
 
-## 2. Wall distribution (merge_group `admission-gate`, n=12)
+## 2. Wall distribution — a regime change splits the history
 
-| Metric | Value |
-|---|---|
-| Sample | 12 (2026-11-26T03:27:30Z – 23:48:05Z, all success) |
-| Min | **314 s** |
-| p50 | **381 s (6.35 min)** |
-| Mean | 405 s (6.75 min) |
-| Max | **713 s (11.9 min)** — one run |
-| Over 500 s | **1 / 12** |
+The full run history is **not one population**. There is a sharp, sustained regime change at **2026-11-24T12:01:09Z**: walls go `582, 627` → `427, 406, 360, 358, 400, 359, 386`. The job graph is byte-identical on both sides of the boundary (same 26 jobs, same `go-critical-lane` shards, same `mint-prepare` / `mint-publish`, same skips), so this is a behavioural change, not a job-count change. Averaging across the boundary produces a p50 of 544 s that describes no real run.
 
-Raw values (seconds, newest first): `334, 324, 362, 713, 362, 450, 348, 314, 416, 418, 417, 400`.
+| Cohort | Window (UTC) | n | min | p50 | p90 | mean | max | >500 s | >600 s |
+|---|---|---|---|---|---|---|---|---|---|
+| Full history (all conclusions) | 11-17T05:34:19 → 11-27T00:48:25 | 478 | 247 | 544 | 1369 | 718.1 | 4920 | 285 | 188 |
+| Full history (success only) | same | 326 | 277 | 503 | 1216 | 656.5 | 4920 | 171 | 102 |
+| **Current generation** (all conclusions) | 11-24T12:01:09 → 11-27T00:48:25 | **67** | 247 | **399** | **470** | **405.8** | **713** | **5** | **3** |
+| Current generation (success only) | same | 56 | 312 | 396 | 451 | 399.4 | 713 | 2 | 1 |
+| Last 40 successes (baseline re-test) | 11-25T04:38 → 11-27T00:48 | 40 | 312 | 373 | 435 | 387.8 | 713 | 1 | 1 |
 
-**Attribution for the 713 s run**: in that batch (run `45863436934`) `attest / build-base-artifacts` went from 47 s to **374 s**, and nearly all of the excess is `[build] Checkout B only` = **307 s** (normal 3–6 s). `setup-axiom-toolchain` in the same job stayed at 44 s, inside the normal range. The wall is therefore **not a function of the number of checks**.
+Conclusions over the current generation: **56 success / 11 failure / 0 cancelled**. All 11 failures are policy rejections (`admission verdict NOT-ADMIT (reasonCode=ROT_ALLOWLIST)`); **zero timeouts**.
+
+The earlier n=12 sample in this document quoted p50 381 s. That figure reproduces on a wider success-only slice (last 40 successes: p50 373 s, max 713 s, exactly 1 of 40 over 500 s), so it was a fair sample of the **current** generation — it simply could not see the older regime. The current generation is the only cohort relevant to the ceiling.
+
+**Every run over 500 s in the current generation** (5 of 67), with attribution:
+
+| Run | Date (UTC) | Wall | Conclusion | Attribution | Evidence |
+|---|---|---|---|---|---|
+| 45415238812 | 11-24T14:32:31 | 557 | failure | platform (queue) | no dominant step; longest job 152 s |
+| 45415241102 | 11-24T14:32:32 | 653 | failure | platform (cold bootstrap) | `gateway / ci-bootstrap` **180 s** (normally 0) |
+| 45415708596 | 11-24T14:35:01 | 536 | success | platform (queue) | longest job 149 s; same 4-way burst |
+| 45415710888 | 11-24T14:35:01 | 651 | failure | platform (cold bootstrap) | `gateway / ci-bootstrap` **160 s** |
+| 45863436934 | 11-26T16:57:12 | 713 | success | platform (checkout stall) | `[build] Checkout B only` = **307 s**; toolchain in the same job = **44 s** |
+
+**5 of 5 outliers are platform or infrastructure; 0 of 5 are verification growth.** The four 11-24 runs launched within 2.5 minutes of each other (a merge-queue batch) and two of them fell onto a cold `ci-bootstrap` path. The wall is therefore **not a function of the number of checks**: the check graph is constant across the window and p90 is 470 s.
 
 ---
 
@@ -86,22 +99,30 @@ This batch had supply-mode **HIT**, so `nimcache functional probe`, `Lake build 
 | GO-critical admission tests | 1 |
 | upload judgment files + nimcache | 1 + 5 |
 
-The `A-cache` entry is the **same a-key and the same ≈ 1.06 GiB** in both jobs, and both report `exact-hit=true`.
+The `A-cache` entry is the **same a-key and the same ≈ 1.06 GiB** in both jobs, and both report `exact-hit=true`. Those two are only the critical-path pair: the same payload is in fact restored in **seven** jobs per run (section 5), under three different action-id namespaces, which is why a two-job count is easy to make and wrong.
 
 ---
 
-## 4. Slack calculation — why adding verification does not grow the wall
+## 4. Where the wall actually comes from — and what "slack" really means
+
+An earlier revision of this document described the interval between `gateway/select` finishing and `mint-prepare` starting as **≈ 106 s of idle** and told new checks to hide inside it. Both halves of that were wrong.
+
+Measured across four runs, that interval is **median 86 s (range 84–142 s)**, and it is **not idle**: `attest / admission-check` runs inside it on every run. `mint-prepare` is gated on the attest stage, not on `gateway/select`, so removing `gateway/select` would reclaim approximately nothing.
+
+| Run | Wall | `gateway/select` end | `mint-prepare` start | Interval | Occupied by `attest / admission-check`? |
+|---|---|---|---|---|---|
+| 45911585676 | 324 s | 147 s | 233 s | **86 s** | yes — 169→231 s |
+| 45918881224 (PR #511) | 343 s | 177 s | 261 s | **84 s** | yes — 182→259 s |
+| 45917004272 | 312 s | 137 s | 223 s | **86 s** | yes — 141→220 s |
+| 45915810375 | 359 s | 122 s | 264 s | **142 s** | yes — 198→262 s |
+
+The defensible statement is therefore structural, not a window: **the wall is the longest dependency chain, so a new check raises the wall only if it becomes the last term of that chain.** A check that runs in parallel with, or earlier than, the current last term costs nothing in wall time — but a check that merely *appears* to fit in a gap may still be occupying that gap for a reason.
 
 | Point | Finish / start | Basis |
 |---|---|---|
-| `gateway/select` finish | **141 s** | closure-deriver 80 + 61 |
-| `mint-prepare` start | **≈ 247 s** | 53 + 108 + 62 + gaps |
-| **Idle** | **≈ 106 s** | verification added inside this window leaves the wall unchanged |
 | `verdict` finish | ≈ 281 s | 247 + 58 (parallel with publish, so it does not dominate) |
 | `go-critical-lane (0)` finish | 91 s | sharded in parallel; the 108 s shard dominates |
 | Off-wall lanes (same batch) | bsec 99 / debt 78 / observer 64 / generation 34 / probe 15 | all finished before 141 s |
-
-**So the claim "adding verification pushes CI upward" holds only for the critical path.** As long as an added check finishes inside the idle window in section 4, the wall does not move.
 
 ---
 
@@ -109,7 +130,7 @@ The `A-cache` entry is the **same a-key and the same ≈ 1.06 GiB** in both jobs
 
 | Item | Amount | Critical-path contribution | Verdict |
 |---|---|---|---|
-| toolchain A-cache transfer (2 jobs x 1.06 GiB) | 1,136,276,758 B x2 | **49.6 s (15.3%)** | **Not reducible** — payload is `~/.nimble`+`~/.choosenim`+`~/.elan`+`~/.local/bin`. Both jobs need it: `lean --version` (go-critical) and `lake build` (build-base, on supply MISS). The org is on the **free plan with a public repo**, so larger runners, custom images, and self-hosted runners are not available, and `jobs.<id>.container` runs a `docker pull` before the steps per job, which adds wall time. |
+| toolchain A-cache restore (**7 jobs x 1.06 GiB**) | 1,136,276,758 B x7 ≈ 7.95 GB egress/run | **31.5–59.4 s on the serial path (10.1–17.3%)**; ~160–178 s of total restore time across jobs, mostly parallel | **Not reducible by deleting a job** — six of the seven restores are parallel, so only the critical-path pair sets the wall, and both `lean --version` (go-critical) and `lake build` (build-base, on supply MISS) need the payload. The org is on the **free plan with a public repo**, so larger runners, custom images, and self-hosted runners are not available, and `jobs.<id>.container` runs a `docker pull` before the steps per job, which adds wall time. This is the largest identified fixed cost. |
 | B-cache transfer | 53,422,937 B x2 | 1.2 + 2.7 s | Not reducible (the B payload is itself the supply) |
 | `evidenceId contract check` | 35 s | 35 s | **Not reducible** — it runs **exactly once** across the whole pipeline (`admission-check.yml:4479`). Not a duplicate: it is pure verification. Standalone profile: [vs_t3_evidenceid_battery_profile_2026-11-16.md](vs_t3_evidenceid_battery_profile_2026-11-16.md). |
 | checkouts | 6 + 7 + 2 s | 15 s | Not reducible (contract: one job sees two trees) |
@@ -146,7 +167,7 @@ These are pinned with measured values so the same discussion does not reopen and
 
 **R4 (do not skip).** Do not exempt a check through path-based skipping — the required check would stay Pending and block the merge. Keep the budget by **lane placement**.
 
-**R5 (where to add).** The largest current slack is the **≈ 106 s** between `closure-deriver` (80 s) and `mint-prepare` (247 s). Place new lanes so they finish inside that window.
+**R5 (where to add, corrected).** There is no idle window to hide in — the interval between `gateway/select` and `mint-prepare` is occupied by `attest / admission-check` on every measured run (section 4). The usable rule is: place new work so it does **not** become the last term of the longest chain, and prefer attaching it to a lane that already finishes earlier than the last term. On current data the chain ends with `attest` → `mint-prepare` → `mint-publish`, so work attached to `build-base` or to a `go-critical-lane` shard costs nothing, while work appended after `mint-publish` costs all of its own duration. The only two levers that provably shorten the chain are the toolchain restore on the critical path (section 5) and the `evidenceId` battery that dominates the slowest `go-critical-lane` shard.
 
 ---
 
@@ -179,7 +200,24 @@ grep -n "Cache Size" /tmp/bb.log
 ## 9. Limitations
 
 1. This document is a **Reporter**. It is not a gate, and it adds no new `make` target, workflow job, or verdict producer.
-2. The sample is **12 runs from a single date**. Platform network variance (the 713 s run in section 2) can recur regardless of sample size.
-3. A-cache transfer time varied between **19.4 s and 30.2 s** for the same payload (two jobs, one run). That spread is a property of the cache service and the network, not of repository code.
+2. The **ceiling** statement rests on the current generation (n=67 across 2026-11-24T12:01:09Z – 2026-11-27T00:48:25Z), not on the 12-run subset that revision 1 used. Platform network variance (the 713 s run in section 2) can recur regardless of sample size.
+3. A-cache restore time varied between **15.5 s and 34.5 s per job for the same payload**, and the serial-path sum between 31.5 s and 59.4 s across runs. That spread is a property of the cache service and the network, not of repository code.
 4. The defect where `recipe_hash` (`action.yml:350`) reads `Makefile config.nims config/effects.nims src/gate/config.nims` from the **working tree** is only **reported** here (a separate matter that moves the B key generation).
 5. The "not reducible" verdicts in section 5 depend on this repository's platform conditions (free plan, public repo, hosted runners). They must be re-evaluated if those conditions change.
+6. The sample now spans a **regime change at 2026-11-24T12:01:09Z**. Only the current generation (n=67) bears on the ceiling. The 411 pre-boundary runs contain 280 further runs over 500 s that were characterised statistically but not attributed individually, because they belong to superseded workflow behaviour.
+7. The cause of that regime change is **UNCONFIRMED**: the job graph is byte-identical on both sides, and the workflow-file commit history was not inspected.
+8. The tail is not fully domestic: a checkout stall and a cold `ci-bootstrap` can each add 100–390 s with no warning. With p90 at 470 s the headroom is about 130 s, thinner than p50 implies, and a coincidence of a stall and a cold bootstrap inside one 600 s window is plausible though not observed (0 of 67 above 720 s).
+
+---
+
+## 10. Revision record
+
+**Revision 2 (2026-11-27).** Three numbers in revision 1 were wrong, and the error was in the direction of making the budget look more addressable than it is. They are corrected here rather than silently edited, because the placement rule R5 was derived from one of them.
+
+| Claim in revision 1 | Measured | Effect on the rules |
+|---|---|---|
+| A-cache restored in **2** jobs, 49.6 s = 15.3% | restored in **7** jobs, ≈ 7.95 GB egress; 31.5–59.4 s on the serial path | R2 unchanged; section 5 inventory corrected upward |
+| **≈ 106 s idle** between `gateway/select` and `mint-prepare` | median **86 s** (84–142), **occupied** by `attest / admission-check` | **R5 rewritten** — there is no idle window; the rule is now "do not become the last term of the chain" |
+| n=12, p50 381 s, 1 of 12 over 500 s | reproduces on last-40 successes (p50 373 s); current generation is n=67, p50 399, p90 470 | R3's 309 s batch figure stands; the ceiling statement is now cohort-scoped |
+
+R1, R2, R3 and R4 are unchanged. The finding that the wall is the DAG critical path rather than the sum of check durations is unchanged and is now supported at n=67 with per-outlier attribution.
