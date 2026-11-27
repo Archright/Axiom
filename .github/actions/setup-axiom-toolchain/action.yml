@@ -167,6 +167,27 @@ inputs:
       so an arch or version change starts a new cache generation.
     required: false
     default: 'full'
+  skip-a-restore:
+    description: >-
+      Skip the A-layer (toolchain) restore AND every step that would react to
+      the resulting empty cache-hit: the restore observation, the non-exact
+      discard, the functional probes, the nim/nimble/lean installers and the
+      A-layer save authority. This gates the RESTORE only. The keygen step and
+      its key formula are untouched — the input never enters a key — but
+      script_hash hashes this action.yml, so landing the change rotates every
+      A-layer and B-layer key exactly once (expected one-shot cold, documented
+      in the header). For callers that consume only the B layer and never
+      build (mint-publish runs prebuilt bin/ax): the full A payload (~1084 MB)
+      was 34.4 s of a 69 s job at a ~1/20 exact-hit rate. The
+      always-provisioned supply (libpcre3, z3, jq) is NOT skipped, and
+      'Verify toolchain pins' still asserts z3/jq. Default 'false' keeps every
+      existing caller on the restore path. Safe by construction: the native
+      installers and probes are skipped ONLY when the B layer is a verified
+      exact hit, so a caller that falls back to a cold build still gets the
+      toolchain it needs. A caller that sets this MUST NOT depend on
+      nim/lean/nimble for anything the B supply does not already satisfy.
+    required: false
+    default: 'false'
   nim-version:
     description: >-
       Nim toolchain version provisioned and verified by this action. Bound into
@@ -383,7 +404,14 @@ runs:
         echo "AXIOM_CACHE_KEYGEN: a-paths scope=${{ inputs.provision-scope }}: $(printf '%s' "$a_paths" | tr '\n' ' ')"
 
     - name: A-layer restore (toolchain — exact key only, no restore-keys)
-      if: inputs.keygen-only != 'true'
+      # skip-a-restore: the A-layer memo is skipped ONLY when the caller
+      # declares it never builds (B-layer-only consumers). A skipped restore
+      # leaves cache-hit empty, which the fail-closed gates below read as
+      # "not a verified hit" — so EVERY step that reacts to that outcome is
+      # gated on the same input. Gating the restore alone would flip the
+      # installers/probes/pins verify back ON (cache-hit != 'true') and turn
+      # a skip into a full native provisioning run.
+      if: inputs.keygen-only != 'true' && inputs.skip-a-restore != 'true'
       id: a-restore
       uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
@@ -397,7 +425,7 @@ runs:
       # requested key, the primary key and the key the platform actually
       # restored (empty on a plain miss) so a non-exact restore is attributable
       # from the run log. Logging only — no key formula or restore semantics.
-      if: inputs.keygen-only != 'true'
+      if: inputs.keygen-only != 'true' && inputs.skip-a-restore != 'true'
       shell: bash
       env:
         A_KEY: ${{ steps.keygen.outputs.a-key }}
@@ -414,7 +442,7 @@ runs:
       # toolchain already present (choosenim "already selected") would no-op
       # and the UNVERIFIED bytes would be used. Delete the scope's paths first
       # so the install path always starts from a clean state.
-      if: inputs.keygen-only != 'true' && steps.a-restore.outputs.cache-hit != 'true'
+      if: inputs.keygen-only != 'true' && inputs.skip-a-restore != 'true' && steps.a-restore.outputs.cache-hit != 'true'
       shell: bash
       run: |
         set -euo pipefail
@@ -897,6 +925,7 @@ runs:
       # VerifierIdentityInputs precedent excludes artifact bytes from
       # identity by construction).
       if: steps.b-restore.outputs.cache-hit == 'true' && steps.b-verify.outputs.b-verify-ok == 'true'
+      id: b-probe
       shell: bash
       run: |
         set -uo pipefail
@@ -905,9 +934,16 @@ runs:
           rm -rf build/nimcache .axiom/cache proofs/.lake proofs/build
           rm -f bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas
           echo "AXIOM_CACHE_B_PROBE: DISCARDED — native build runs (fail-closed: cache is acceleration, never evidence)"
+          # b-probe-ok is the "a usable B supply is on disk" witness that
+          # skip-a-restore reads before it suppresses the native toolchain
+          # installers. A discarded payload is NOT a usable supply: the cold
+          # build fallback then needs nim and must install it.
+          echo "b-probe-ok=false" >> "$GITHUB_OUTPUT"
         }
         if ! printf '%s' "$identity" | grep -qE '^[0-9a-f]{40}$'; then
           echo "AXIOM_CACHE_B_PROBE: SKIP — probe tree '${identity:0:12}' is not a 40-hex tree OID (experiment namespace): no trusted tree to re-derive from; the B-verify digest + re-derived identity bindings remain the anchor"
+          # Unprobed is not verified: do not claim a usable supply.
+          echo "b-probe-ok=false" >> "$GITHUB_OUTPUT"
           exit 0
         fi
         probe_root="$(mktemp -d /tmp/axiom-b-probe.XXXXXX)"
@@ -957,6 +993,8 @@ runs:
         fi
         if [ "$probe_fail" -ne 0 ]; then
           discard_b
+        else
+          echo "b-probe-ok=true" >> "$GITHUB_OUTPUT"
         fi
 
     - name: Toolchain functional probes (fail-closed — catch version-matching-but-broken)
@@ -968,7 +1006,7 @@ runs:
       # install the install steps re-probe (fail-closed chain: verify/probe
       # failure -> discard -> native install -> re-probe). scope=runtime has no
       # nim/lean toolchain at all — probes are skipped there.
-      if: inputs.keygen-only != 'true'
+      if: inputs.keygen-only != 'true' && inputs.skip-a-restore != 'true'
       id: a-probe
       shell: bash
       run: |
@@ -1064,7 +1102,11 @@ runs:
       # every run even on cache HIT). The stale-~/.choosenim purge that used
       # to live here moved to the Toolchain functional probes step; the
       # fail-closed re-probe below still guards a native install.
-      if: inputs.keygen-only != 'true' && inputs.provision-scope != 'runtime' && (steps.a-restore.outputs.cache-hit != 'true' || steps.a-verify.outputs.a-verify-ok != 'true' || steps.a-probe.outputs.a-probe-ok != 'true')
+      # skip-a-restore: the native installers are suppressed ONLY when a
+      # usable B supply is on disk (b-restore exact hit + b-verify OK +
+      # b-probe OK). Anything less and the caller's cold-build fallback needs
+      # a real toolchain, so the installers run exactly as before.
+      if: inputs.keygen-only != 'true' && inputs.provision-scope != 'runtime' && (inputs.skip-a-restore != 'true' || steps.b-restore.outputs.cache-hit != 'true' || steps.b-verify.outputs.b-verify-ok != 'true' || steps.b-probe.outputs.b-probe-ok != 'true') && (steps.a-restore.outputs.cache-hit != 'true' || steps.a-verify.outputs.a-verify-ok != 'true' || steps.a-probe.outputs.a-probe-ok != 'true')
       run: |
         set -e
         NIM_VERSION="${{ inputs.nim-version }}"
@@ -1112,7 +1154,7 @@ runs:
       # Additional gates: scope=full only, and skipped on a verified hit +
       # probe pass (deps were materialized when the entry was saved — the
       # stamp self-guard below is then moot, run 36572463965).
-      if: inputs.keygen-only != 'true' && inputs.provision-scope != 'runtime' && inputs.skip-nimble-install != 'true' && (steps.a-restore.outputs.cache-hit != 'true' || steps.a-verify.outputs.a-verify-ok != 'true' || steps.a-probe.outputs.a-probe-ok != 'true')
+      if: inputs.keygen-only != 'true' && inputs.provision-scope != 'runtime' && inputs.skip-nimble-install != 'true' && (inputs.skip-a-restore != 'true' || steps.b-restore.outputs.cache-hit != 'true' || steps.b-verify.outputs.b-verify-ok != 'true' || steps.b-probe.outputs.b-probe-ok != 'true') && (steps.a-restore.outputs.cache-hit != 'true' || steps.a-verify.outputs.a-verify-ok != 'true' || steps.a-probe.outputs.a-probe-ok != 'true')
       run: |
         set -e
         # co-restored unit (C4): stamp+pkgs2 coupling — witness that pkgs2
@@ -1134,7 +1176,7 @@ runs:
       # re-probe below still guards a native install (fail-closed chain:
       # verify/probe failure -> discard -> native install -> re-probe; never
       # skip-and-trust).
-      if: inputs.keygen-only != 'true' && inputs.provision-scope == 'full' && (steps.a-restore.outputs.cache-hit != 'true' || steps.a-verify.outputs.a-verify-ok != 'true' || steps.a-probe.outputs.a-probe-ok != 'true')
+      if: inputs.keygen-only != 'true' && inputs.provision-scope == 'full' && (inputs.skip-a-restore != 'true' || steps.b-restore.outputs.cache-hit != 'true' || steps.b-verify.outputs.b-verify-ok != 'true' || steps.b-probe.outputs.b-probe-ok != 'true') && (steps.a-restore.outputs.cache-hit != 'true' || steps.a-verify.outputs.a-verify-ok != 'true' || steps.a-probe.outputs.a-probe-ok != 'true')
       run: |
         set -e
         # The invariant is a FUNCTIONAL check (lean loads `import Lake` from an
@@ -1252,7 +1294,22 @@ runs:
       if: inputs.keygen-only != 'true'
       run: |
         set -e
-        if [ "${{ inputs.provision-scope }}" = "full" ]; then
+        # skip-a-restore: the native toolchain is deliberately not provisioned
+        # ONLY on a fully verified B supply (the same conjunct that suppresses
+        # the installers). Mirror it exactly: any deviation from that witness
+        # and the assertions below run unchanged — the relaxation can never be
+        # reached by an unverified or discarded payload. z3/jq are asserted on
+        # every path because Install Z3 / Install jq are NOT gated.
+        a_suppressed=false
+        if [ "${{ inputs.skip-a-restore }}" = "true" ] \
+          && [ "${{ steps.b-restore.outputs.cache-hit }}" = "true" ] \
+          && [ "${{ steps.b-verify.outputs.b-verify-ok }}" = "true" ] \
+          && [ "${{ steps.b-probe.outputs.b-probe-ok }}" = "true" ]; then
+          a_suppressed=true
+        fi
+        if [ "$a_suppressed" = "true" ]; then
+          echo "AXIOM_CACHE_A_PINS: skip-a-restore - native toolchain deliberately not provisioned (B supply verified); asserting z3/jq only"
+        elif [ "${{ inputs.provision-scope }}" = "full" ]; then
           nim --version | grep "${{ inputs.nim-version }}"
           lean --version | grep 4.33.0
           lake --version | head -1
@@ -1312,7 +1369,7 @@ runs:
       # run-local verified stamp. A non-exact restore never reaches this step
       # with a payload (the discard step removed it) and cache-hit != 'true' is
       # required, so a save can only ever publish a freshly installed payload.
-      if: inputs.keygen-only != 'true' && steps.a-restore.outputs.cache-hit != 'true'
+      if: inputs.keygen-only != 'true' && inputs.skip-a-restore != 'true' && steps.a-restore.outputs.cache-hit != 'true'
       id: a-save-auth
       shell: bash
       run: |
@@ -1341,7 +1398,7 @@ runs:
       # Measured 2026-09-29 (run 36614815220): runtime scope re-downloaded
       # z3/jq on every run (design: no save) — saving under axiom-a-rt-* lets
       # later runtime jobs and same-ref re-runs restore instead.
-      if: inputs.keygen-only != 'true' && steps.a-restore.outputs.cache-hit != 'true' && steps.a-save-auth.outputs.save-allowed == 'true'
+      if: inputs.keygen-only != 'true' && inputs.skip-a-restore != 'true' && steps.a-restore.outputs.cache-hit != 'true' && steps.a-save-auth.outputs.save-allowed == 'true'
       continue-on-error: true
       uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
