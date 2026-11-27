@@ -38,7 +38,7 @@ name: publication-integrity
 #     is available in job-level `if:`; the `steps` context is not — it contains
 #     only steps of the current job that have already run).
 #
-# The license-scan dimension runs as an internal 3-shard matrix
+# The license-scan dimension runs as an internal 5-shard matrix
 # (license-scan-shards) feeding the single adjudicating license-scan job. The
 # shards are gated by the same venue condition as their adjudicator, and the
 # dimension verdict stays one evaluator over one set-checked merged report (a
@@ -192,13 +192,14 @@ jobs:
 
   # ── dimension: license-scan ──────────────────────────────────────────
   # Internal execution structure (epoch ci-frozen-2026-11-10-pi-shard,
-  # restructured same day — epoch_record §2.6; expanded to 3 shards in v1.3):
-  # the deterministic scan surface (HEAD tree blobs, minus the basenames
-  # ScanCode default-ignores) is split by a size-greedy 3-partition; each leg
-  # stages its file set under a root named like the workspace and scans that
-  # ONE root — the only input form ScanCode handles correctly (spec §5). The
-  # adjudicating license-scan job below merges the (path-deduped) shard
-  # reports into ONE report — single evaluator, single dimension verdict.
+  # restructured same day — epoch_record §2.6; expanded to 3 shards in v1.3,
+  # to 5 shards in v1.6): the deterministic scan surface (HEAD tree blobs,
+  # minus the basenames ScanCode default-ignores) is split by a size-greedy
+  # 5-partition (longest-processing-time); each leg stages its file set under
+  # a root named like the workspace and scans that ONE root — the only input
+  # form ScanCode handles correctly (spec §5). The adjudicating license-scan
+  # job below merges the (path-deduped) shard reports into ONE report —
+  # single evaluator, single dimension verdict.
   license-scan-shards:
     # venue=landing only — see the REQUIRED-CHECK POSTURE block at the top.
     if: ${{ github.event_name == 'merge_group' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
@@ -207,7 +208,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2]
+        shard: [0, 1, 2, 3, 4]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (repo sha-pin)
         with:
@@ -224,14 +225,14 @@ jobs:
           set -euo pipefail
           SHARD="${{ matrix.shard }}"
           # Deterministic split, bound to the HEAD tree (not the checkout
-          # index): a size-greedy 3-partition over `git ls-tree -r -l HEAD`
+          # index): a size-greedy 5-partition over `git ls-tree -r -l HEAD`
           # blobs (fields: mode, type, sha, size, path), largest-first with
           # path tiebreak — same tree → same split (AGENTS.md §0.2
-          # determinism), and size-greedy balances the scan work across the
-          # three legs (tie-break: lowest shard index 0→1→2). Both ls-tree
-          # sites enforce a fail-closed guard (`NF != 5 || $5 ~ /"/'`) so any
-          # tracked path with whitespace or git C-quoting aborts immediately
-          # instead of truncating silently.
+          # determinism), and longest-processing-time placement balances the
+          # scan work across the five legs (tie-break: lowest shard index
+          # 0→1→2→3→4). Both ls-tree sites enforce a fail-closed guard
+          # (`NF != 5 || $5 ~ /"/'`) so any tracked path with whitespace or
+          # git C-quoting aborts immediately instead of truncating silently.
           # The VCS-name filter mirrors ScanCode's own walk ignore so the
           # scan surface is exactly what the scanner can emit:
           # commoncode/ignore.py `ignores_VCS` (scancode-toolkit 32.5.0
@@ -246,7 +247,7 @@ jobs:
             | awk 'NF != 5 || $5 ~ /"/ { print "FATAL: ls-tree record is not a plain 5-field unquoted entry: " $0 > "/dev/stderr"; exit 1 }
                    tolower($5) !~ /(^|\/)(\.bzr|\.bzrignore|\.git|\.gitignore|\.gitattributes|\.hg|\.hgignore|\.repo|\.svn|\.svnignore|\.tfignore|vssver\.scc|cvs|\.cvsignore)$/ {print $4, $5}' \
             | LC_ALL=C sort -k1,1rn -k2,2 \
-            | awk -v s="$SHARD" -v n=3 'BEGIN{for(i=0;i<n;i++)w[i]=0} {m=0;for(i=1;i<n;i++)if(w[i]<w[m])m=i;w[m]+=$1;if(m==s)print $2}' \
+            | awk -v s="$SHARD" -v n=5 'BEGIN{for(i=0;i<n;i++)w[i]=0} {m=0;for(i=1;i<n;i++)if(w[i]<w[m])m=i;w[m]+=$1;if(m==s)print $2}' \
             | LC_ALL=C sort > "$RUNNER_TEMP/shard_files.txt"
           test -s "$RUNNER_TEMP/shard_files.txt"
           # Stage the shard under a root named EXACTLY like the workspace
@@ -312,7 +313,7 @@ jobs:
           persist-credentials: false
       - name: "[evidence] download the shard scans"
         # Pattern download extracts each artifact into its own subdirectory
-        # (license-scan-shard-0/, license-scan-shard-1/, license-scan-shard-2/).
+        # (license-scan-shard-0/ … license-scan-shard-4/).
         # A shard that failed before uploading leaves a count mismatch — the
         # merge step below FAILS closed, it never adjudicates a partial scan
         # surface.
@@ -324,23 +325,47 @@ jobs:
         run: |
           set -euo pipefail
           S="$RUNNER_TEMP/shards"
-          # Exactly 3 shard reports must be present — a missing leg is
+          # Exactly 5 shard reports must be present — a missing leg is
           # fail-closed: never adjudicate over a partial scan surface.
+          # The count comes from awk, not `grep -c`: grep exits 1 on zero
+          # matches and under `set -e` that ends the step INSIDE the command
+          # substitution, before the assertion can print anything — an empty
+          # shard directory died silently with a bare exit 1 (measured
+          # 2026-11-27). awk always exits 0, so the assertion below is the one
+          # place that decides and reports, and `set -e` keeps its meaning.
+          mkdir -p "$S"
           SHARD_REPORTS=$(find "$S" -name scancode_shard.json | LC_ALL=C sort)
-          SHARD_COUNT=$(printf '%s\n' "$SHARD_REPORTS" | grep -c .)
-          [ "$SHARD_COUNT" -eq 3 ] || { echo "expected 3 shard reports, found $SHARD_COUNT" >&2; exit 1; }
+          SHARD_COUNT=$(printf '%s\n' "$SHARD_REPORTS" | awk 'NF{c++} END{print c+0}')
+          [ "$SHARD_COUNT" -eq 5 ] || { echo "expected 5 shard reports, found $SHARD_COUNT" >&2; exit 1; }
+          # Duplicate-file guard on the RAW per-shard reports, BEFORE the merge
+          # jq: that merge dedups by path (group_by(.path) | map(.[0])), so a
+          # file emitted by two shards collapses into ONE entry and a check on
+          # the MERGED report can never fire (measured 2026-11-27 — the
+          # previous placement made the duplicate check dead). The partition is
+          # disjoint by construction, so a path seen twice is a real
+          # split/merge defect and FAILS here. Every shard stages under the
+          # same workspace basename, so a duplicate compares equal with or
+          # without the prefix stripped.
+          PFX="$(basename "$GITHUB_WORKSPACE")"
+          jq -r '.files[] | select(.type=="file") | .path' $SHARD_REPORTS \
+            | sed "s|^${PFX}/||" | LC_ALL=C sort | uniq -d > "$RUNNER_TEMP/dup_paths.txt"
+          if [ -s "$RUNNER_TEMP/dup_paths.txt" ]; then
+            echo "duplicate file paths across shard reports — each path must belong to exactly one shard:" >&2
+            head -20 "$RUNNER_TEMP/dup_paths.txt" >&2
+            exit 1
+          fi
           # Deterministic merge: files = concat + sort_by(.path) + per-path
           # dedup; top-level license_detections = per-identifier
           # detection_count re-aggregation (the evaluator consumes only
           # per-file inline fields — measured; the key is preserved for
           # shape); headers from shard 0. Same input → same output.
-          # The per-path dedup exists for DIRECTORY entries: each shard
-          # stages its own tree, so every directory holding files of MULTIPLE
-          # legs is emitted once per shard report (group_by needs sorted
-          # input — the preceding sort_by provides it). FILE entries are
-          # disjoint by the partition, so the dedup is a shape no-op for
-          # files and the duplicate-file check below remains the fail-closed
-          # net.
+          # The per-path dedup is what restores a single-scan shape for
+          # DIRECTORY entries: each shard stages its own tree, so every
+          # directory holding files of SEVERAL legs is emitted once per shard
+          # report (group_by needs sorted input — the preceding sort_by
+          # provides it). FILE entries are disjoint by the partition and the
+          # raw-report guard above already rejected cross-shard duplicates, so
+          # for files the dedup is a shape no-op.
           jq -s '{
             headers: .[0].headers,
             files: (map(.files) | add | sort_by(.path)
@@ -351,8 +376,9 @@ jobs:
           }' $SHARD_REPORTS > "$RUNNER_TEMP/scancode.json"
           test -s "$RUNNER_TEMP/scancode.json"
           # Global completeness — SET equality (not a count): merged file
-          # path set == expected scannable set, no duplicate paths. Missing,
-          # duplicated, or unexpected files all FAIL. The expected set is
+          # path set == expected scannable set. Missing or unexpected files
+          # FAIL; cross-shard duplicates were already rejected above on the
+          # raw reports. The expected set is
           # derived from the HEAD tree EXACTLY like the shard partition in
           # the scan step (ls-tree blobs minus the ScanCode ignores_VCS
           # basenames — identical filter, keep in lockstep): a raw
@@ -360,14 +386,8 @@ jobs:
           # .gitignore/.gitattributes files ScanCode never emits in ANY
           # topology (its walk default-ignores them — spec §5), making the
           # check unpassable; the expectation must be the scannable set.
-          PFX="$(basename "$GITHUB_WORKSPACE")"
           jq -r '.files[] | select(.type=="file") | .path' "$RUNNER_TEMP/scancode.json" \
             | sed "s|^${PFX}/||" > "$RUNNER_TEMP/merged_paths.txt"
-          if [ "$(LC_ALL=C sort "$RUNNER_TEMP/merged_paths.txt" | uniq -d | wc -l)" -ne 0 ]; then
-            echo "duplicate paths in merged report:" >&2
-            LC_ALL=C sort "$RUNNER_TEMP/merged_paths.txt" | uniq -d | head >&2
-            exit 1
-          fi
           LC_ALL=C sort -u "$RUNNER_TEMP/merged_paths.txt" > "$RUNNER_TEMP/merged_set.txt"
           git ls-tree -r -l HEAD \
             | awk 'NF != 5 || $5 ~ /"/ { print "FATAL: ls-tree record is not a plain 5-field unquoted entry: " $0 > "/dev/stderr"; exit 1 }

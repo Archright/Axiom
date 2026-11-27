@@ -91,3 +91,23 @@ jobs:
             --nimcache:build/nimcache/tests_ci_unit_diag_rearm \
             -o:build/tests_ci_unit_diag/test_merge_queue_rearm \
             tests/ci/test_merge_queue_rearm.nim
+      - name: "Diagnostic: publication-integrity shard merge contract (test_publication_shard_merge)"
+        # Same shape as the rearm step above and for the same reason: this
+        # source extracts the license-scan merge step's own run: body from
+        # publication-integrity.yml and executes it against a git fixture tree,
+        # so it needs bash + jq + PyYAML at runtime. jq is on the runner image
+        # (the workbook step itself already requires it); PyYAML is asserted
+        # fail-fast so an absent tool cannot look like a contract violation.
+        # This is what makes the repair in DEBT#573 observable in CI rather
+        # than only on a developer machine: the dead duplicate-path guard and
+        # the zero-shard silent exit are both pinned here. Failure is a RED
+        # diagnostic signal in this job's log; it does not gate merges.
+        run: |
+          set -euo pipefail
+          python3 -c 'import yaml'
+          jq --version
+          mkdir -p build/tests_ci_unit_diag
+          nim c -r --hints:off --skipParentCfg --skipProjCfg --skipUserCfg --noNimblePath \
+            --nimcache:build/nimcache/tests_ci_unit_diag_pi_shard \
+            -o:build/tests_ci_unit_diag/test_publication_shard_merge \
+            tests/ci/test_publication_shard_merge.nim

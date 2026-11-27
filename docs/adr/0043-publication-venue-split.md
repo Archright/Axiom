@@ -43,7 +43,7 @@ skip)와 8~9분의 critical path를 점유한다.
 | 차원 | job | venue |
 |---|---|---|
 | secret-scan | `secret-scan` | preflight **+** landing |
-| license-scan | `license-scan-shards (0..2)` → `license-scan` | landing only |
+| license-scan | `license-scan-shards (0..4)` → `license-scan` | landing only |
 | dependency-scan | `dependency-scan` | landing only |
 | provenance | `provenance` | landing only |
 | sbom | `sbom` | landing only |
