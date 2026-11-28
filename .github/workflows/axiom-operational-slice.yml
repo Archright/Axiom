@@ -8,6 +8,13 @@
 # success — so no job-level or step-level `if:` may gate it. `if: always()` on
 # the artifact upload only widens execution (evidence survives a failure).
 # Producers: `tools/ci/run_manifest.jq` + Makefile `verify-contract-release-e2e-full`.
+#
+# DAG: `axiom-operational-slice` and `static-gates` are PARALLEL lanes (no
+# `needs:` between them); `readiness-verdict` is the single join and the only
+# required context this file contributes. A check added to a lane is absorbed by
+# the join's wait - it costs the max of the DAG, not the sum. A check added to
+# the join extends the merge queue's wall clock by its full duration. That is the
+# whole placement rule: new checks belong on a lane, never on the join.
 
 name: axiom-operational-slice
 
@@ -136,19 +143,6 @@ jobs:
         working-directory: proofs
       - name: Restore tracked build metadata after make build
         run: git restore src/generated/build_metadata.json
-
-      - name: "Enforce the declared static gate set (GATES_FAST + GATES_STATIC)"
-        # DEBT#573: the declared set was executed by NO required check - only the
-        # local L2 target and the bypassable pre-push hook. This step is the
-        # merge-admission enforcement. It MUST stay unconditional: this job's own
-        # header forbids `if:` gating, because a skipped required check reports
-        # SUCCESS and the guarantee would silently vanish. It runs AFTER
-        # `make ci-compile` because `env-check` requires bin/ax.
-        # The gate set has exactly one definition: the Makefile target. Do not
-        # inline gate names here.
-        run: |
-          set -euo pipefail
-          make local-verify-static-ci
 
       - name: R3 relocation-invariance measurement (wp5)
         run: |
@@ -311,6 +305,127 @@ jobs:
           # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
           overwrite: true
 
+  # static-gates - the GATES_FAST union GATES_STATIC enforcement, as a PARALLEL
+  # sibling of the producer instead of a serial step inside it.
+  #
+  # DEBT#573 put the declared static gate set on the pole: the step measured
+  # 79-133 s inside the job that is the merge_group's last finisher, so every
+  # second of it was added to the queue's wall clock. The set is a free-standing
+  # detector - it writes no artifact the producer reads and no later producer
+  # step consumes its output - so it belongs on a second lane of the same DAG,
+  # where its cost is absorbed by the producer's own runtime instead of
+  # extending it (AGENTS.md 2.6: a check on a lane with slack costs the max of
+  # the DAG, never the sum).
+  #
+  # It lives in THIS file, not in a new workflow, because the gate set must be
+  # enforced by a required check: a second workflow would be a second authority
+  # and a second context set. Its verdict reaches the required surface through
+  # `readiness-verdict` (`needs:` plus the explicit result assertion below), so
+  # the required context set is unchanged at seven.
+  #
+  # The job id IS a check-run context (no job-level `name:` key) and the job
+  # carries no `if:` of its own - the file header's rule. It has no `needs:`,
+  # which is what makes it a sibling lane: with no upstream it cannot be skipped
+  # by a failed dependency, and the workflow-level concurrency group cancels
+  # whole runs (`cancel-in-progress: false`), never this job alone.
+  #
+  # Supply policy is the producer's, duplicated rather than simplified:
+  # ci/checker.mk's AXIOM_S5_BUILD_SKIP contract requires the CALLER to have
+  # passed this B-verify before it sets the flag, so a cheaper variant here would
+  # be a second and weaker supply policy inside one workflow. The gate set needs
+  # bin/ax (`check-scope-consistency` runs `bin/ax scope`), so the supply block
+  # must come first; it does not need Lean, so no `lake build` here.
+  static-gates:
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-axiom-toolchain
+        id: setup-tc
+        with:
+          cache-build-source: ${{ github.sha }}
+      - name: "S5 gate: B-verified supply-reuse eligibility (5-member SHA-256 + 4x SourceCoherence)"
+        id: s5-gate
+        if: steps.setup-tc.outputs.b-cache-hit == 'true'
+        env:
+          EXPECT_B_IDENTITY: ${{ steps.setup-tc.outputs.b-identity }}
+          EXPECT_B_KEY: ${{ steps.setup-tc.outputs.b-key }}
+        run: |
+          set -uo pipefail
+          probe_fail=0
+          if [ ! -f build/.axiom-b-fingerprint.json ]; then
+            echo "[S5] gate: FAIL - build/.axiom-b-fingerprint.json missing; eligibility withheld"
+            probe_fail=1
+          elif ! jq -e --arg bsha "$EXPECT_B_IDENTITY" --arg bkey "$EXPECT_B_KEY" \
+            '.schema == "axiom-b-fingerprint-v1" and .buildSha == $bsha and .bKey == $bkey' \
+            build/.axiom-b-fingerprint.json >/dev/null 2>&1; then
+            echo "[S5] gate: FAIL - fingerprint manifest identity mismatch; eligibility withheld"
+            probe_fail=1
+          else
+            for f in bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas proofs/.lake/build/bin/ircheck; do
+              if [ ! -x "$f" ]; then
+                echo "[S5] gate: FAIL - required supply binary missing or not executable: $f"
+                probe_fail=1
+              else
+                exp_sha="$(jq -r --arg k "$f" '.files[$k] // empty' build/.axiom-b-fingerprint.json 2>/dev/null || true)"
+                act_sha="$(sha256sum "$f" | cut -d' ' -f1)"
+                if [ -z "$exp_sha" ] || [ "$exp_sha" != "$act_sha" ]; then
+                  echo "[S5] gate: FAIL - SHA-256 mismatch for $f (expected=$exp_sha actual=$act_sha)"
+                  probe_fail=1
+                fi
+              fi
+            done
+          fi
+          for b in bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas; do
+            if [ -x "$b" ] && AXIOM_ROOT= "$b" --check-provenance >/dev/null 2>&1; then
+              echo "[S5] gate: OK - restored $b embedded BuildSourceHash == live trusted tree"
+            else
+              echo "[S5] gate: FAIL - restored $b provenance mismatch (SourceCoherence FATAL); eligibility withheld"
+              probe_fail=1
+            fi
+          done
+          if [ "$probe_fail" -eq 0 ]; then
+            echo "s5-skip=true" >> "$GITHUB_OUTPUT"
+            echo "[S5] gate: ELIGIBLE - 5/5 SHA-256 digests and 4/4 SourceCoherence probes passed; 4-binary recompile skipped"
+          else
+            echo "[S5] gate: DISCARD - purging B-cache paths to enforce clean cold build"
+            rm -rf build/nimcache .axiom/cache proofs/.lake proofs/build
+            rm -f build/.axiom-b-fingerprint.json bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas
+          fi
+      - name: Build the release verifier (ci-compile authority)
+        env:
+          AXIOM_S5_BUILD_SKIP: ${{ steps.s5-gate.outputs.s5-skip == 'true' && '1' || '0' }}
+        run: |
+          set -euo pipefail
+          if [ "$AXIOM_S5_BUILD_SKIP" = "1" ]; then
+            echo "SUPPLY REUSE - verified payload restored; measuring build_env.nim VerifierBuildId then skipping 4-binary recompile (J3 3.1)"
+            make -f ci/checker.mk ci-compile-hermetic-measure
+            AXIOM_S5_BUILD_SKIP=1 make ci-compile -j4
+          else
+            echo "S5 COLD BUILD - verified supply absent; purging residual B-cache paths and compiling from clean state with -j4"
+            rm -rf build/nimcache .axiom/cache proofs/.lake proofs/build
+            rm -f build/.axiom-b-fingerprint.json bin/ax bin/gate_hook bin/precompile_gates bin/install_ax_cas
+            make ci-compile -j4
+          fi
+      - name: Restore tracked build metadata after make build
+        run: git restore src/generated/build_metadata.json
+      - name: "Enforce the declared static gate set (GATES_FAST + GATES_STATIC)"
+        # DEBT#573: the declared set was executed by NO required check - only the
+        # local L2 target and the bypassable pre-push hook. This step is the
+        # merge-admission enforcement, and it must stay unconditional: this file
+        # forbids `if:` gating because a skipped required check reports SUCCESS
+        # and the guarantee would silently vanish. It closes through
+        # `readiness-verdict`, which fails when this job's result is not success.
+        # The gate set has exactly one definition: the Makefile target. Do not
+        # inline gate names here.
+        run: |
+          set -euo pipefail
+          make local-verify-static-ci
+
   # readiness-verdict — DEBT#537 closure: the R1–R8 evidence → evaluator →
   # verdict → exit chain as a merge-admission check (the 7th required
   # context; the ruleset PUT is the operator's POST-landing step — ADR-0037
@@ -329,14 +444,36 @@ jobs:
   # single atomic job addition to this workflow — the existing check identity
   # (job id `axiom-operational-slice`) is unchanged, and this PR's own run of
   # that check self-validates the new job.
+  # static-gates is a second dependency, deliberately: the DAG has to carry the
+  # gate set's verdict into a REQUIRED context, and this job is that context.
+  # `!cancelled()` keeps the job running when either dependency fails, so the
+  # assertion below always executes and names the reason; it can never turn a
+  # failed gate set into a green verdict. The assertion is a `run:` guard, not an
+  # `if:` - a conditional here would be the skip-as-success hazard this file's
+  # header forbids.
   readiness-verdict:
-    needs: [axiom-operational-slice]
+    needs: [axiom-operational-slice, static-gates]
     if: ${{ !cancelled() }}
     runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
     timeout-minutes: 60
     permissions:
       contents: read
     steps:
+      - name: "Dependency verdict: the static gate set must have run and passed"
+        # Positive equality, never a denylist: needs.<job>.result is one of
+        # success / failure / cancelled / skipped, and only `success` means the
+        # gate set actually ran and passed. The platform reports a skipped job as
+        # SUCCESS, so filtering out known-bad values would let exactly the two
+        # conclusions that mean "never ran" read as green.
+        run: |
+          set -euo pipefail
+          r='${{ needs.static-gates.result }}'
+          p='${{ needs.axiom-operational-slice.result }}'
+          echo "dependency verdicts: axiom-operational-slice=$p static-gates=$r"
+          if [ "$r" != "success" ]; then
+            echo "BLOCKED: static-gates result is '$r' (required: success) - the declared static gate set did not run or did not pass"
+            exit 1
+          fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
