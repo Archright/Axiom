@@ -747,22 +747,128 @@ proc prettySorted(node: JsonNode, indent: int = 2): string =
       result = n
   result = sortedNode(node).pretty(indent = indent)
 
-proc writeTypeRegistryIfChanged(path: string, projectRoot: string): bool =
-  ## Generate and write type_registry_metadata.json (idempotent).
+type
+  TypeRegistryWrite = enum
+    trwUnchanged,  ## the tracked projection already equals the generator output
+    trwWritten,    ## explicit regeneration, consented to by the caller
+    trwRefused,    ## drift detected in a build: the tracked file was NOT touched
+    trwInvalid     ## generator output failed validation: nothing was written
+
+const
+  TypeRegistryRelPath = "src/generated/type_registry_metadata.json"
+  TypeRegistryWriteConsentEnv = "AXIOM_ALLOW_TYPE_REGISTRY_WRITE"
+  TypeRegistryEntryFields = ["module", "name", "returnType", "hasAxiomHint",
+    "typeCategory", "smtSort", "leanType", "resultConstraintTemplate", "ignorable"]
+  TypeRegistryDriftSampleLimit = 5
+
+proc registryEntryKey(entry: JsonNode): string =
+  entry{"module"}.getStr("?") & "::" & entry{"name"}.getStr("?")
+
+proc registryFieldDiff(a, b: JsonNode): string =
+  ## First emitted field that differs between two records, rendered as
+  ## "field: tracked -> generated". Empty when every emitted field agrees.
+  for field in TypeRegistryEntryFields:
+    let tracked = if a.hasKey(field): $a[field] else: "<absent>"
+    let generated = if b.hasKey(field): $b[field] else: "<absent>"
+    if tracked != generated:
+      return field & ": " & tracked & " -> " & generated
+  if a.hasKey("negativeConstraints") != b.hasKey("negativeConstraints"):
+    return "negativeConstraints: presence differs"
+  if a.hasKey("negativeConstraints") and
+      $a["negativeConstraints"] != $b["negativeConstraints"]:
+    return "negativeConstraints: " & $a["negativeConstraints"] &
+      " -> " & $b["negativeConstraints"]
+  ""
+
+proc describeTypeRegistryDrift(trackedContent: string, generated: JsonNode): seq[string] =
+  ## Up to TypeRegistryDriftSampleLimit records whose emitted fields differ
+  ## between the tracked projection and the generator, sorted by module::name.
+  ## Every emitted field is compared, not just the name: a record that is stale
+  ## in one field is as wrong as a record whose name no longer exists.
+  ## (module, name) is NOT unique (overloads and forward declarations share it),
+  ## so each key keeps the ordered list of its records and the lists are compared.
+  var tracked: Table[string, seq[JsonNode]]
+  try:
+    for entry in parseJson(trackedContent)["entries"]:
+      tracked.mgetOrPut(registryEntryKey(entry), @[]).add entry
+  except CatchableError:
+    return @["the tracked file is not parseable as the generator's JSON shape"]
+
+  var generatedByKey: Table[string, seq[JsonNode]]
+  for entry in generated["entries"]:
+    generatedByKey.mgetOrPut(registryEntryKey(entry), @[]).add entry
+
+  var keys: seq[string] = @[]
+  for key in tracked.keys:
+    keys.add key
+  for key in generatedByKey.keys:
+    if key notin tracked:
+      keys.add key
+  keys.sort()
+
+  var drift: seq[string] = @[]
+  for key in keys:
+    let trackedRecords = tracked.getOrDefault(key, @[])
+    let generatedRecords = generatedByKey.getOrDefault(key, @[])
+    if trackedRecords.len == 0:
+      drift.add(key & ": absent from " & TypeRegistryRelPath &
+        ", " & $generatedRecords.len & " record(s) emitted by the generator")
+    elif generatedRecords.len == 0:
+      drift.add(key & ": present in " & TypeRegistryRelPath &
+        ", not emitted by the generator")
+    elif trackedRecords.len != generatedRecords.len:
+      drift.add(key & ": record count " & $trackedRecords.len &
+        " -> " & $generatedRecords.len)
+    else:
+      for idx in 0..<trackedRecords.len:
+        let diff = registryFieldDiff(trackedRecords[idx], generatedRecords[idx])
+        if diff.len > 0:
+          drift.add(key & " " & diff)
+        elif prettySorted(trackedRecords[idx], indent = 0) !=
+            prettySorted(generatedRecords[idx], indent = 0):
+          drift.add(key & ": differs in a field this tool does not enumerate")
+  if drift.len > TypeRegistryDriftSampleLimit:
+    let more = drift.len - TypeRegistryDriftSampleLimit
+    drift.setLen(TypeRegistryDriftSampleLimit)
+    drift.add("... and " & $more & " more differing record(s)")
+  drift
+
+proc writeTypeRegistryIfChanged(path: string, projectRoot: string): TypeRegistryWrite =
+  ## Generate type_registry_metadata.json and write it only when the caller has
+  ## explicitly allowed the write. The tracked artifact is a projection of src/:
+  ## a build that rewrites it destroys the in-band evidence that it drifted and
+  ## hands the failure to a distant gate that reports a bare false (issue #469).
   let json = generateTypeRegistry(projectRoot)
   if not validateTypeRegistry(json):
-    return false  # Validation failed — caller should abort
+    return trwInvalid  # Validation failed — caller should abort
 
   let newContent = prettySorted(json, indent = 2)
   if fileExists(path):
     let existing = readFile(path)
     if existing == newContent:
-      return false  # No change
+      return trwUnchanged  # No change
+
+  if getEnv(TypeRegistryWriteConsentEnv) != "1":
+    stderr.writeLine("FATAL: " & TypeRegistryRelPath &
+      " is stale: the generator's output differs from the tracked file.")
+    if fileExists(path):
+      for line in describeTypeRegistryDrift(readFile(path), json):
+        stderr.writeLine("  " & line)
+    else:
+      stderr.writeLine("  the tracked file is missing")
+    stderr.writeLine("Refusing to rewrite a tracked projection from a build: the write is the")
+    stderr.writeLine("only in-band signal that the artifact drifted, and it defers that signal")
+    stderr.writeLine("to a distant gate that reports a bare false (issue #469).")
+    stderr.writeLine("Nothing was written. Regenerate explicitly, then commit the result:")
+    stderr.writeLine("  " & TypeRegistryWriteConsentEnv & "=1 bin/hermetic_build")
+    stderr.writeLine("  git add " & TypeRegistryRelPath)
+    return trwRefused
+
   let dir = parentDir(path)
   if not dirExists(dir):
     createDir(dir)
   writeFile(path, newContent)
-  return true
+  return trwWritten
 proc getGitHash(): string =
   ## Get current git commit hash.
   ## Uses .git/HEAD directly to support worktrees (no git rev-parse).
@@ -1276,14 +1382,14 @@ proc main() =
     echo "[hermetic] AXIOM_FAST_BUILD=1 — skipping type registry generation"
   else:
     echo ""
-    let trChanged = writeTypeRegistryIfChanged(TypeRegistryPath, projectRoot)
-    if trChanged:
-      echo "[hermetic] type_registry_metadata.json generated"
-    else:
-      if fileExists(TypeRegistryPath):
-        echo "[hermetic] type_registry_metadata.json unchanged (idempotent)"
-      else:
-        echo "[hermetic] type_registry_metadata.json generated (first run)"
+    case writeTypeRegistryIfChanged(TypeRegistryPath, projectRoot)
+    of trwWritten:
+      echo "[hermetic] type_registry_metadata.json regenerated (" &
+        TypeRegistryWriteConsentEnv & "=1)"
+    of trwUnchanged:
+      echo "[hermetic] type_registry_metadata.json unchanged (idempotent)"
+    of trwRefused, trwInvalid:
+      allPassed = false
 
     # 7. Type registry validation (fail-fast)
     if fileExists(TypeRegistryPath):
