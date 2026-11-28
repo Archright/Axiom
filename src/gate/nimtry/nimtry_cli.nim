@@ -117,9 +117,25 @@ proc normalizeDetail(detail: string): string {.raises: [], axiomEffect: IOEffect
           continue
     inc i
 
+proc resolveRepoRoot*(fallback = ""): string {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## The engine's single root-resolution convention.
+  ##
+  ## `findRepoRoot()` anchors on the `.axiom_root` file (and honours `AXIOM_ROOT`),
+  ## so the answer does not depend on the process working directory. Two call sites
+  ## used `getCurrentDir()` instead, which made the scanned tree, the sidecar path
+  ## and the stripped path identity depend on where the binary was invoked from:
+  ## the same input produced two different measurements. `fallback` is only reached
+  ## when both the anchor walk and the CWD read fail.
+  result = findRepoRoot()
+  if result.len == 0:
+    try:
+      result = getCurrentDir()
+    except OSError:
+      result = fallback
+
 proc computeViolationFingerprint(rule, file, detail: string): string {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   var normalized = normalizeDetail(detail)
-  let root = try: findRepoRoot() except CatchableError: (try: getCurrentDir() except OSError: "")
+  let root = resolveRepoRoot()
   let prefix = root.replace("\\", "/").strip(chars = {'/'}) & "/"
   if prefix != "/" and prefix.len > 1:
     normalized = normalized.replace(prefix, "")
@@ -190,7 +206,7 @@ proc normalizedPath(path: string): string {.raises: [], axiomEffect: IOEffect, t
   except OSError:
     discard
   # Strip repo root prefix for consistent comparison
-  let repoRoot = try: getCurrentDir() except OSError: ""
+  let repoRoot = resolveRepoRoot()
   if repoRoot.len > 0:
     let prefix = repoRoot.replace("\\", "/") & "/"
     if p.startsWith(prefix):
@@ -233,7 +249,7 @@ proc parseAddedLineRanges(baseRef: string; filePath: string): seq[tuple[
   ## extract line ranges of added code.
   if baseRef.len == 0:
     return @[]
-  let cmd = "git diff --unified=0 --no-color " & shellQuote(baseRef) & " -- " &
+  let cmd = "git -C " & shellQuote(resolveRepoRoot(".")) & " diff --unified=0 --no-color " & shellQuote(baseRef) & " -- " &
       shellQuote(filePath)
   let (output, exitCode) = try:
     execCmdEx(cmd)
@@ -349,7 +365,7 @@ proc runNimtryInProcess*(args: seq[string]): NimtryResult {.raises: [], axiomEff
   if not fullTree and files.len == 0:
     fullTree = true
 
-  let repoRoot = try: getCurrentDir() except OSError: "."
+  let repoRoot = resolveRepoRoot(".")
   let sourceFiles = collectSourceFiles(repoRoot, fullTree, files)
 
   # policyHash: only files that affect nimtry analysis results.
@@ -396,7 +412,7 @@ proc runNimtryInProcess*(args: seq[string]): NimtryResult {.raises: [], axiomEff
 
   if updateLock:
     ## Ground Truth mode: skip policy validation, derive directly from codebase
-    let lockContent = generatePolicyLock(allModuleFacts, loadArchitecturePolicy().policy)
+    let lockContent = generatePolicyLock(allModuleFacts, loadArchitecturePolicy(repoRoot / architecturePolicyPath).policy)
     if not writeFileSafe(repoRoot / "src/gate/architecture_policy.lock", lockContent):
       try:
         logError("nimtry_cli", "[nimtry] FAILED — could not write lock file")
@@ -406,7 +422,7 @@ proc runNimtryInProcess*(args: seq[string]): NimtryResult {.raises: [], axiomEff
     logger.info("[nimtry] LOCK UPDATED — Ground Truth written to architecture_policy.lock")
     return NimtryResult(status: nsPass, message: "lock updated", exitCode: 0)
 
-  let parsedPolicy = loadArchitecturePolicy()
+  let parsedPolicy = loadArchitecturePolicy(repoRoot / architecturePolicyPath)
   if not parsedPolicy.ok:
     try:
       logError("nimtry_cli", "[nimtry] FAILED — policy invalid: " &
