@@ -86767,6 +86767,20 @@
     {
       "hasAxiomHint": false,
       "ignorable": false,
+      "leanType": "String",
+      "module": "src/gate/nimtry/nimtry_cli.nim",
+      "name": "resolveRepoRoot",
+      "negativeConstraints": [
+        "result >= 0 directly is invalid — use (>= (str.len result) 0)"
+      ],
+      "resultConstraintTemplate": "(>= (str.len result) 0)",
+      "returnType": "string",
+      "smtSort": "String",
+      "typeCategory": "string"
+    },
+    {
+      "hasAxiomHint": false,
+      "ignorable": false,
       "leanType": "NimtryResult",
       "module": "src/gate/nimtry/nimtry_cli.nim",
       "name": "runNimtry",
