@@ -792,3 +792,37 @@ base v111로 7경로에 `PASS`를 내는지, (iii) 신규 `.github/workflows/*.y
 여전히 `SURFACE_FORBIDDEN`인지, (iv) App이 7경로 수정 PR에 대해 여전히
 `admission-check`를 거부하는지를 확인한다. (iii)과 (iv)가 실패하면 이 개정은
 검증 약화이므로 즉시 revert 대상이다.
+---
+
+## 부록 — v112 개정 (nimtry_cli.nim 단일 경로 등록, 2026-11-28)
+
+**변경**: `src/gate/nimtry/nimtry_cli.nim` 1경로를 `classes.CONTROLLED`에 등재하고
+`frozenExceptions.paths`에 그룹 `gate-infra`로 교차 선언했다. `policyVersion` 111→112.
+
+**근거 (예외 신설이 아니라 선언 누락의 교정)**: `gate-infra` 그룹의 rationale은
+"Non-TCB gate implementation modules (handlers, predicates, orchestrators, runners and
+utilities)"를 이미 포함한다. `nimtry_cli.nim`은 nimtry 엔진의 driver/orchestrator이며
+형제 모듈 `nimtry_cache.nim`·`soc_queries.nim`은 같은 그룹으로 등재돼 있다. 즉 이 개정은
+새 예외 클래스를 만드는 것이 아니라 **그룹의 선언된 범위와 실제 등재 목록의 불일치**를
+닫는다.
+
+**불변 조건**: App trust surface 17경로, required context 7개, ruleset
+`bypass_actors == []`, TCB(`static_gate_scanner.nim`, `import_encapsulation_gate.nim`)
+전부 불변이다. `src/gate/**`의 신규 파일 ADD는 여전히 `SURFACE_FORBIDDEN` FAIL이다.
+
+**자기승인 판정**: 본 PR은 `config/repository_surface.json`(FROZEN, `allowedPaths` 포함)과
+이 문서(`allowedPaths` 포함)만 수정하고 `policyVersion`을 111→112로 단조 증가시킨다 —
+selfAmendment 조건 (a)–(d)의 형태이며, 따라서 본 PR 자신은 `AMENDED`로 판정된다.
+기대 관측값: `PASS`, `reasonCode=AMENDED`, `changeCount=1`, `violations=[]`,
+`amendments=[config/repository_surface.json]`.
+
+**2단계 바인딩**: base-policy binding 때문에 본 개정은 착지 전까지 효력이 없다.
+코드 변경(`getCurrentDir()` → `findRepoRoot()`)은 별도 본문 PR에서 착지하며, 그 PR은
+FROZEN·App trust surface 경로를 포함하지 않으므로 **정상 merge queue**로 통과해야 한다.
+그 통과가 이 개정의 실효 증거다.
+
+**관측 의무**: 착지 후 (i) `bin/surface_guard --policy <main 정책> --diff "M<TAB>src/gate/nimtry/nimtry_cli.nim"`
+이 `PASS pv=112`인지, (ii) TCB(`src/gate/runners/import_encapsulation_gate.nim`)의 MODIFY와
+`src/gate/` 하위의 미등록 신규 파일 ADD가 여전히 `SURFACE_FORBIDDEN`인지, (iii) `nimtry_cli.nim`을
+수정한 본문 PR이 `admission-check`(app 5795152)를 정상 수령하는지 확인한다. (ii)가
+실패하면 이 개정은 검증 약화이므로 즉시 revert 대상이다.
