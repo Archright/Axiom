@@ -101,6 +101,14 @@
 # a required JOB's `if:` may be only absent, `always()`, `!cancelled()`, or a
 # `&&`-conjunction of those — a job skipped by `jobs.<id>.if` reports "Success"
 # and does not block merging even as a required check, which is a SILENT pass.
+# The same silent pass has a SECOND route, and it was open: a required job that
+# declares `needs:` with NO `if:` inherits the implicit `success()` gate, so a
+# failed or skipped dependency skips it and the skipped required check reports
+# Success (docs/adr/0036-generation-promotion-acceptance.md MUST#3; "an upstream
+# dependency that skips", docs/design/workflow_parse_poison_lint_wiring_design
+# _2026-10-14.md section 4). Absent `if:` is therefore admissible only for a job
+# that declares no `needs:`; a required job carrying `needs:` must pin
+# `if: always()` or `if: !cancelled()`.
 # Scope is the (workflowPath, job) pair from the policy, never the job name
 # (`.github/workflows/admission-check.yml` has a callee job of the same name
 # that is not the required context) and never the whole workflow
@@ -313,8 +321,13 @@ def iter_steps(doc):
 #       "Success" and does not block merging — a SILENT pass on a required
 #       check, which is strictly worse than a deadlock.
 #       https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-jobs-with-conditions
+#       A required job is ALSO skipped when it declares `needs:` and no `if:`:
+#       the absent condition is the implicit `success()` gate over the
+#       dependencies, so any failed or skipped dependency skips the job. Both
+#       routes end in the same "Success" report, so both are covered here.
 # R3 therefore admits exactly: absent, `always()`, `!cancelled()`, or a
-# `&&`-conjunction of those. Venue selection belongs INSIDE the job via
+# `&&`-conjunction of those - where ABSENT is admissible only for a job that
+# declares no `needs:`. Venue selection belongs INSIDE the job via
 # `github.event_name`, never in the job's `if:`.
 #
 # Scope is the REQUIRED JOB, keyed by (workflowPath, job) — not by job name and
@@ -410,6 +423,18 @@ def admissible_if(cond):
     return True, cond
 
 
+def declared_needs(jd):
+    """R3: the job's declared dependency set, normalized (empty = no needs:)."""
+    needs = jd.get("needs")
+    if needs is None:
+        return []
+    if isinstance(needs, str):
+        return [needs] if needs.strip() else []
+    if isinstance(needs, list):
+        return list(needs)
+    return [needs]
+
+
 def check_required_rules(doc, key, required_pairs):
     """R2/R3 violations for one scanned file (empty = the rules hold)."""
     jobs_required = sorted({job for wp, job in required_pairs if wp == key})
@@ -451,9 +476,21 @@ def check_required_rules(doc, key, required_pairs):
             out.append(
                 "required job `%s` carries `if: %s`: a job skipped by `jobs.<id>.if` "
                 "reports its status as \"Success\" and does not block merging, even as a "
-                "required check. Admissible values are exactly: absent, `always()`, "
-                "`!cancelled()`, or a `&&`-conjunction of those - decide the venue inside "
-                "the job from `github.event_name`, never by skipping it" % (job, why))
+                "required check. Admissible values are exactly: absent (only for a job "
+                "with no `needs:`), `always()`, `!cancelled()`, or a `&&`-conjunction of "
+                "those - decide the venue inside the job from `github.event_name`, never "
+                "by skipping it" % (job, why))
+        else:
+            needs = declared_needs(jd)
+            if needs and jd.get("if") is None:
+                out.append(
+                    "required job `%s` in `%s` declares `needs: %s` and no job-level "
+                    "`if:`: an absent `if:` on a job with dependencies is the implicit "
+                    "`success()` gate, so the job is SKIPPED when any dependency fails "
+                    "or is skipped - and a skipped required check reports its status as "
+                    "\"Success\" and does not block merging, the same SILENT pass as an "
+                    "inadmissible `if:`. A required job carrying `needs:` must pin "
+                    "`if: always()` or `if: !cancelled()`" % (job, key, needs))
     return out
 
 
@@ -796,6 +833,30 @@ FILTER_CASE = (
     "      - name: noop\n"
     "        run: echo ok\n"
 )
+# R3's second silent-pass route: the required job below declares a REAL
+# dependency (`prep`), so the fixture is a valid workflow. With no `if:`, the
+# implicit `success()` gate skips the required job whenever `prep` fails or is
+# skipped, and a skipped required check reports Success.
+NEEDS_TEMPLATE = (
+    "name: fixture\n"
+    "on:\n"
+    "  pull_request:\n"
+    "  merge_group:\n"
+    "    types: [checks_requested]\n"
+    "jobs:\n"
+    "  prep:\n"
+    "    runs-on: ubuntu-latest\n"
+    "    steps:\n"
+    "      - name: noop\n"
+    "        run: echo ok\n"
+    "  bsec-integrity:\n"
+    "    runs-on: ubuntu-latest\n"
+    "    needs: prep\n"
+    "%s"
+    "    steps:\n"
+    "      - name: noop\n"
+    "        run: echo ok\n"
+)
 cases = [
     ("r2_paths+branches-ignore", "bsec-integrity.yml", FILTER_CASE, True,
      ("pull_request.paths", "merge_group.branches-ignore")),
@@ -810,6 +871,10 @@ cases = [
      TEMPLATE % "    if: '${{ always() && !cancelled() }}'\n", False, ()),
     ("r3_bare_always", "bsec-integrity.yml",
      TEMPLATE % "    if: 'always()'\n", False, ()),
+    ("r3_needs_absent_if", "bsec-integrity.yml", NEEDS_TEMPLATE % "", True,
+     ("declares `needs:", "skipped required check")),
+    ("r3_needs_not_cancelled", "bsec-integrity.yml",
+     NEEDS_TEMPLATE % "    if: '${{ !cancelled() }}'\n", False, ()),
     ("scope_non_required_file", "unrelated.yml", FILTER_CASE, False, ()),
 ]
 for label, fname, body, expect_fail, needles in cases:
@@ -839,7 +904,7 @@ PYEOF
 if [ "$SELF_TEST" -eq 1 ]; then
   echo "== validate_workflow_shell: self-test =="
   if self_test; then
-    echo "validate_workflow_shell: SELF-TEST PASS — broken snippet caught, valid snippet accepted, lane-guard negative FAILs with guard attribution / positive passes, required-context matrix (R2 filters + R3 job-if) FAILs on violation and PASSes on every admissible form"
+    echo "validate_workflow_shell: SELF-TEST PASS — broken snippet caught, valid snippet accepted, lane-guard negative FAILs with guard attribution / positive passes, required-context matrix (R2 filters + R3 job-if and needs-without-if) FAILs on violation and PASSes on every admissible form"
     exit 0
   fi
   echo "validate_workflow_shell: SELF-TEST FAIL — gate did not fail closed on broken snippet" >&2

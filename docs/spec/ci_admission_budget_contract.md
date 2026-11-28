@@ -152,6 +152,13 @@ of those. Anything else, including `always() && inputs.stage == 'attest'`, is **
 a job skipped by `jobs.<id>.if` reports its status as **"Success"** and does not block merging
 even when it is a required check
 (https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-jobs-with-conditions).
+**Absent is admissible only for a job that declares no `needs:`** - an absent `if:` on a job
+with dependencies is the implicit `success()` gate, so the job is skipped whenever a dependency
+fails or is skipped, and the skipped required check reports the same **"Success"**. A required
+job carrying a non-empty `needs:` MUST therefore pin `always()` or `!cancelled()`; the second
+route to the same silent pass is not a separate rule, it is the dependency-driven half of this
+one (docs/adr/0036-generation-promotion-acceptance.md MUST#3, "an upstream dependency that
+skips", docs/design/workflow_parse_poison_lint_wiring_design_2026-10-14.md section 4).
 Venue selection is decided **inside** the job from `github.event_name`, never by skipping it.
 Enforced by `validate_workflow_shell.sh` (R3), keyed by the **(workflowPath, job) pair** — never
 by job name, which would false-fail the non-required callee job of the same name in
@@ -277,12 +284,13 @@ capability can keep growing off the critical chain immediately.
    **BASE copy against the candidate tree**, inside a job that is itself a required context, so
    the marginal wall cost is zero (form (a)) — no new gate, check, context, or Makefile target.
    The predicates read the required set from `config/policy/merge_admission.json` in **BASE**;
-   the candidate is never asked what is required. The self-test carries an 8-case decision
-   matrix (banned filter → FAIL, disjunctive `if:` → FAIL, `always() && !cancelled()` / bare
-   `always()` / `!cancelled()` / absent → PASS, non-required filename with the same filter →
-   PASS), and an external mutation of the real `bsec-integrity.yml` (adding `paths:`, or
-   conditioning the required job on `github.event_name`) fails with the
-   `<required-context-rules>` attribution.
+   the candidate is never asked what is required. The self-test carries a decision
+   matrix (banned filter → FAIL, disjunctive `if:` → FAIL, `needs:` with no `if:` → FAIL,
+   `always() && !cancelled()` / bare `always()` / `!cancelled()` / absent-without-`needs:` /
+   `needs:` + `!cancelled()` → PASS, non-required filename with the same filter →
+   PASS), and an external mutation of the real `bsec-integrity.yml` (adding `paths:`,
+   conditioning the required job on `github.event_name`, or giving it a `needs:` with no
+   `if:`) fails with the `<required-context-rules>` attribution.
    **Amended scope, stated rather than overstated**: R2's allow-list *coverage* rows and R1's
    headroom condition are **not** machine-decided (see the R2 locus paragraph) — R1 needs a
    trust-surface headroom record and R2 coverage needs a trunk authority, neither of which
