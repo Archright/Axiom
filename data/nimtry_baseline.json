@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "created": "2026-11-28T16:57:10+09:00",
+  "created": "2026-11-28T21:52:51+09:00",
   "total_violations": 4376,
   "by_severity": {
     "warning": 4008,
@@ -2209,14 +2209,14 @@
       "id": "8906517e296466820aa37cac71d1948f069ea06df795fd025fccd71580c78cf5",
       "rule": "SOLID",
       "file": "src/gate/nimtry/nimtry_cli.nim",
-      "detail": "[soc-surface-area] src/gate/nimtry/nimtry_cli.nim:230 function parseAddedLineRanges spans 52 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/gate/nimtry/nimtry_cli.nim:261 function parseAddedLineRanges spans 52 effective SLOC (max 50)",
       "severity": "warning"
     },
     {
-      "id": "37b0b921fb1afa08ed4d1d508217ae8b205e7f0582c1687448f5a3dbc7f61430",
+      "id": "9cafbd45efc0011a6bca4e5fd0de7573f7f2b31c7609a72cf56e14588a5b052f",
       "rule": "SOLID",
       "file": "src/gate/nimtry/nimtry_cli.nim",
-      "detail": "[soc-surface-area] src/gate/nimtry/nimtry_cli.nim:285 function runNimtryInProcess spans 273 effective SLOC (max 50)",
+      "detail": "[soc-surface-area] src/gate/nimtry/nimtry_cli.nim:316 function runNimtryInProcess spans 275 effective SLOC (max 50)",
       "severity": "warning"
     },
     {

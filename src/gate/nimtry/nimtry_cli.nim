@@ -243,6 +243,21 @@ proc shellQuote(s: string): string {.raises: [], axiomEffect: IOEffect, tags: [A
   ## Simple POSIX shell single-quote escaping.
   "'" & s.replace("'", "'\\''") & "'"
 
+proc measuredHeadSha(root: string): string {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
+  ## HEAD of the checkout this measurement ran in (#474 Gap 2). Acquired at RUN
+  ## time, never at compile time: bin/nimtry is a cached binary rebuilt only when
+  ## src/gate/nimtry* sources change, so a compile-time constant would name the
+  ## BUILD's commit while claiming to name the MEASUREMENT's.
+  ## Empty when git is unavailable — the consumer fails closed on an empty
+  ## identity rather than treating an unassertable subject as a match.
+  let (output, exitCode) = try:
+    execCmdEx("git -C " & shellQuote(root) & " rev-parse HEAD")
+  except CatchableError:
+    return ""
+  if exitCode != 0:
+    return ""
+  result = output.strip()
+
 proc parseAddedLineRanges(baseRef: string; filePath: string): seq[tuple[
     startLine, endLine: int]] {.raises: [], axiomEffect: IOEffect, tags: [AxiomIOEffect, IOEffect, RootEffect].} =
   ## Run git diff --unified=0 against baseRef for the given file and
@@ -437,11 +452,25 @@ proc runNimtryInProcess*(args: seq[string]): NimtryResult {.raises: [], axiomEff
   # Live-count sidecar: current measured violations, consumed by
   # debt_integrity_gate.nim for the "Active Violations" metric. This is the
   # authoritative runtime number — the baseline total is the Historical Cap.
+  #
+  # PAYLOAD CONTRACT (6 keys, #474 Gap 2). The counts alone could be produced by
+  # any commit on any machine; these two add the subject and the extent, which is
+  # what makes the reduction ratchet an assertion instead of an assumption:
+  #   * source_file_count — modules actually measured, not files requested. The
+  #     consumer rejects a non-positive extent; a zero-yield scan is not "clean".
+  #   * measured_head_sha — the commit this measurement ran in. Empty when git is
+  #     unavailable; the consumer fails closed on empty.
+  # Scope of the claim, stated so it is not overread: this binds the sidecar to a
+  # COMMIT, not to a clean working tree. Under CI both sides are the same
+  # checkout by construction, so the check is conservatively redundant there; its
+  # non-vacuous value is the local stale-sidecar path and the negative tests.
   let livePath = repoRoot / "data/nimtry_live_count.json"
   try:
     let liveCount = %*{"total_violations": violations.len,
                        "error_violations": violations.filterIt(it.severity == "error").len,
                        "warning_violations": violations.filterIt(it.severity == "warning").len,
+                       "source_file_count": allModuleFacts.len,
+                       "measured_head_sha": measuredHeadSha(repoRoot),
                        "generated_at": now().format("yyyy-MM-dd'T'HH:mm:ss'Z'")}
     discard writeFileSafe(livePath, liveCount.pretty()) # axiom:best-effort(live-count sidecar — informational, gating uses baseline cap)
   except CatchableError:
