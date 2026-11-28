@@ -10,11 +10,18 @@
 # Producers: `tools/ci/run_manifest.jq` + Makefile `verify-contract-release-e2e-full`.
 #
 # DAG: `axiom-operational-slice` and `static-gates` are PARALLEL lanes (no
-# `needs:` between them); `readiness-verdict` is the single join and the only
-# required context this file contributes. A check added to a lane is absorbed by
-# the join's wait - it costs the max of the DAG, not the sum. A check added to
-# the join extends the merge queue's wall clock by its full duration. That is the
-# whole placement rule: new checks belong on a lane, never on the join.
+# `needs:` between them). `readiness-payload` joins the PRODUCER only, because
+# every step it runs consumes producer artifacts and nothing else, so its work
+# starts the moment the producer's uploads exist. `readiness-verdict` is the only
+# required context this file contributes and the single join over the whole
+# graph: it asserts both dependencies by positive equality and republishes the
+# decision. It computes nothing, so it costs seconds rather than the payload's
+# 160-175 s.
+# A check added to a lane is absorbed by the join's wait - it costs the max of
+# the DAG, not the sum. A check added to a job that sits between evidence and
+# verdict extends the merge queue's wall clock by its full duration. That is the
+# whole placement rule: new checks belong on a lane, never on the path between
+# the evidence producer and the verdict.
 
 name: axiom-operational-slice
 
@@ -426,54 +433,41 @@ jobs:
           set -euo pipefail
           make local-verify-static-ci
 
-  # readiness-verdict — DEBT#537 closure: the R1–R8 evidence → evaluator →
-  # verdict → exit chain as a merge-admission check (the 7th required
-  # context; the ruleset PUT is the operator's POST-landing step — ADR-0037
-  # operator-PUT-first ordering). Contract: docs/spec/readiness_verdict_check.md.
-  # The job id IS the check-run context — no job-level `name:` key (it would
-  # rename the context and break required-check registration; same rule as the
-  # job above). Designed to become a required check, so it must NEVER be
-  # conditionally skipped — a skipped required check reports success: the only
-  # job-level `if:` is `!cancelled()` (the job runs even when the producer job
-  # failed — fail-closed: the verdict is still computed over whatever evidence
-  # the producer's `if: always()` uploads preserved; an absent artifact fails
-  # this job red, never green), and no step may gain a conditional `if:`
-  # except the upload's `always()`. Triggers are the workflow's `on:` header —
+  # readiness-payload - DEBT#537 closure: the R1-R8 evidence -> evaluator ->
+  # verdict -> exit chain, executed as WORK instead of as the required context.
+  # The required context is `readiness-verdict` at the end of this file (the 7th
+  # required context; the ruleset PUT is the operator's POST-landing step -
+  # ADR-0037 operator-PUT-first ordering). Contract:
+  # docs/spec/readiness_verdict_check.md.
+  # Why the work is here and not in the join (Slice A, 2026-11-26): every step
+  # below consumes the PRODUCER job's artifacts. None of it reads `static-gates`
+  # output - the gate set writes no artifact and feeds no step here - yet the old
+  # single job declared that lane as a dependency and therefore started only
+  # after it ended: 175 s measured on merge_group 46143448551, added to this
+  # work's start time for zero information. Trimming the dependency would have
+  # dropped the assertion that the gate set ran, so the job was split instead:
+  # the wait is gone, the assertion survives in `readiness-verdict`.
+  # This job publishes no required context, so a skip here cannot become a silent
+  # pass - the join asserts this job's result by POSITIVE EQUALITY and goes red
+  # on anything but `success`. It keeps the job-level `if: !cancelled()` (the
+  # file header's skip-as-success rule): when the producer failed, the verdict is
+  # still computed over whatever evidence the producer's `if: always()` upload
+  # preserved, an absent artifact fails the downloads below (red, never green),
+  # and the evidence upload still runs. No step may gain a conditional `if:`
+  # except that upload's `always()`. Triggers are the workflow's `on:` header -
   # no path filter.
-  # Coherent generation (AGENTS.md §2.5, the DEBT#508 step pattern above):
-  # single atomic job addition to this workflow — the existing check identity
-  # (job id `axiom-operational-slice`) is unchanged, and this PR's own run of
-  # that check self-validates the new job.
-  # static-gates is a second dependency, deliberately: the DAG has to carry the
-  # gate set's verdict into a REQUIRED context, and this job is that context.
-  # `!cancelled()` keeps the job running when either dependency fails, so the
-  # assertion below always executes and names the reason; it can never turn a
-  # failed gate set into a green verdict. The assertion is a `run:` guard, not an
-  # `if:` - a conditional here would be the skip-as-success hazard this file's
-  # header forbids.
-  readiness-verdict:
-    needs: [axiom-operational-slice, static-gates]
+  # Coherent generation (AGENTS.md 2.5, the DEBT#508 step pattern above): one
+  # atomic job split inside this workflow - the two check identities
+  # (`axiom-operational-slice`, `readiness-verdict`) are unchanged, and this
+  # PR's own run of `readiness-verdict` self-validates the new graph.
+  readiness-payload:
+    needs: [axiom-operational-slice]
     if: ${{ !cancelled() }}
     runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
     timeout-minutes: 60
     permissions:
       contents: read
     steps:
-      - name: "Dependency verdict: the static gate set must have run and passed"
-        # Positive equality, never a denylist: needs.<job>.result is one of
-        # success / failure / cancelled / skipped, and only `success` means the
-        # gate set actually ran and passed. The platform reports a skipped job as
-        # SUCCESS, so filtering out known-bad values would let exactly the two
-        # conclusions that mean "never ran" read as green.
-        run: |
-          set -euo pipefail
-          r='${{ needs.static-gates.result }}'
-          p='${{ needs.axiom-operational-slice.result }}'
-          echo "dependency verdicts: axiom-operational-slice=$p static-gates=$r"
-          if [ "$r" != "success" ]; then
-            echo "BLOCKED: static-gates result is '$r' (required: success) - the declared static gate set did not run or did not pass"
-            exit 1
-          fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -698,3 +692,80 @@ jobs:
           # a re-run re-uploads this fixed name — overwrite replaces it
           # deterministically instead of failing (Q1: docs/spec/github_artifact_attempt_quirks.md).
           overwrite: true
+
+  # readiness-verdict - the 7th required context and this file's only
+  # join. Split out of the payload job (Slice A, 2026-11-26): the work moved to
+  # `readiness-payload`, which depends on the producer alone; this job waits for
+  # BOTH dependencies and asserts them. It computes nothing, so its duration is
+  # scheduling plus a ~4 KB download - the whole of this workflow's serial tail.
+  #
+  # The job id IS the check-run context - no job-level `name:` key (it would
+  # rename the context and break required-check registration; same rule as the
+  # jobs above). A required check must NEVER be conditionally skipped - a skipped
+  # required check reports SUCCESS - so the only job-level `if:` is
+  # `!cancelled()`: the job runs even when a dependency failed, so the assertion
+  # below always executes and names the reason, and it can never turn a failed
+  # lane into a green verdict. The assertion is a `run:` guard, not an `if:`.
+  #
+  # static-gates is a dependency because the DAG has to carry the gate set's
+  # verdict into a REQUIRED context, and this job is that context. That is no
+  # longer a serialization of the gate lane with the payload: this job starts
+  # when the LAST of (payload, gate set) ends, so whichever lane is shorter is
+  # absorbed by the other instead of being added to it.
+  readiness-verdict:
+    needs: [readiness-payload, static-gates]
+    if: ${{ !cancelled() }}
+    runs-on: [ "${{ fromJSON(vars.CI_RUNNER_MAP).x64 }}" ]
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - name: "Dependency verdict: both dependencies must have run and passed"
+        # Positive equality, never a denylist: needs.<job>.result is one of
+        # success / failure / cancelled / skipped, and only `success` means the
+        # dependency actually ran and passed. The platform reports a skipped job
+        # as SUCCESS, so filtering out known-bad values would let exactly the two
+        # conclusions that mean "never ran" read as green.
+        run: |
+          set -euo pipefail
+          r='${{ needs.readiness-payload.result }}'
+          g='${{ needs.static-gates.result }}'
+          echo "dependency verdicts: readiness-payload=$r static-gates=$g"
+          if [ "$r" != "success" ]; then
+            echo "BLOCKED: readiness-payload result is '$r' (required: success) - the readiness evidence chain did not run or did not pass"
+            exit 1
+          fi
+          if [ "$g" != "success" ]; then
+            echo "BLOCKED: static-gates result is '$g' (required: success) - the declared static gate set did not run or did not pass"
+            exit 1
+          fi
+      - name: Restore the readiness decision artifact (same run, needs-scoped)
+        # The payload job's evidence upload has the REPOSITORY ROOT as its
+        # artifact root - its paths span data/, build/ and logs/, so
+        # upload-artifact has no narrower least-common ancestor to strip - so a
+        # download into the workspace restores build/readiness_start_decision.json
+        # at the path it was written to. Fail-closed: a missing artifact fails
+        # this download, which makes this REQUIRED check red; missing evidence is
+        # UNKNOWN, never a silent green. No `continue-on-error` here, by design.
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: readiness-verdict-evidence
+          path: .
+      - name: "Step summary: the readiness decision record"
+        # Read from the ARTIFACT, never from a job output: the decision is a file,
+        # and a job output would be capped at 1 MB, silently unset when empty, and
+        # would need escaping into the output stream.
+        run: |
+          set -euo pipefail
+          if [ ! -f build/readiness_start_decision.json ]; then
+            echo "MISSING: build/readiness_start_decision.json absent from the evidence artifact - UNKNOWN, never a silent green" >&2
+            exit 1
+          fi
+          {
+            echo "## Readiness verdict (build/readiness_start_decision.json)"
+            echo ""
+            echo '```json'
+            cat build/readiness_start_decision.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat build/readiness_start_decision.json
