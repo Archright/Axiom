@@ -6,6 +6,7 @@
 > **Required-context authority**: `config/policy/merge_admission.json` (v1.25.0 — seven required contexts: six `requiredValidations` jobs plus the `admission-check` verdict published through `requiredWorkflowDetection.verdictJob`). This contract does not amend it.
 > **Creates no new verdict** — same discipline as [evidence_capsule_contract.md](evidence_capsule_contract.md) §1.2. Rules here constrain *where* a verification may run; they never decide *whether* a change is admissible.
 > **Protection grade**: this document belongs to neither the trust surface manifest, `trustSurface`, nor the checker closure — a revision requires no trust rotation. R2 (banned trigger filters) and R3 (required-job `if:`) are machine-enforced by `tools/ci/validate_workflow_shell.sh` since §9.2; R1 and R2's allow-list coverage are review-enforced and labelled as such at their rule.
+> **Amendment (v1.1, 2026-11-27)**: closes an asymmetry in R1 -- form (b) required a measured headroom and form (a) required none, while a step added to the pole costs its full duration just the same. Adds R1(a) as a declaration requirement, one measured case to section 1, and one row each to section 6 and section 8. No verdict, gate, check, context, or configuration is added; R5 and the seven required contexts are unchanged; this document remains outside the trust surface, so no rotation is required.
 
 ---
 
@@ -29,6 +30,16 @@ slowest one costs its full duration. The repository has measured both cases:
 - `axiom-operational-slice` → `readiness-verdict` is a two-job serial chain in one workflow,
   and it was the last finisher in **4 of 5** observed cycles.
   Authority: same document, §"Post-landing re-measurement on canonical main (n=5)".
+
+- A **step** inside the workflow that is already the pole costs its full duration on
+  `T_admission` and is invisible to both cases above. On 2026-11-27, `#535` added
+  `Enforce the declared static gate set (GATES_FAST + GATES_STATIC)` as one step of the
+  already-provisioned `axiom-operational-slice` producer job. Measured step spans were 78 s,
+  110 s and 132 s; the producer job moved from 114 s to 197-265 s; the merge-group wall moved
+  from 285 s to 373-433 s. The pole changed owner over the same boundary: `admission-gate` was
+  the last required finisher in 45 of 47 pre-change merge groups, and
+  `axiom-operational-slice` was the last finisher in 4 of 4 post-change ones.
+  Authority: `docs/evidence/merge_queue_build_serialization_2026-11-27.md` section 10.
 
 The contract therefore does not budget *compute*. It budgets **placement**.
 
@@ -86,6 +97,25 @@ already-provisioned job costs approximately its work; adding a job costs provisi
 | (b) job in a required workflow | the workflow's **measured** headroom must be ≥ the job's measured p50 |
 | (c) off-chain venue (`schedule`, `push@main`, `workflow_dispatch`) | always admissible; cost is not on `T_admission` |
 | (d) coverage plane (`tests/gateway_coverage/`, not consumed by CI gates) | always admissible; see `ci/checker.mk` LANDING_POLICY / coverage split |
+
+**R1(a) headroom declaration.** Form (a) is preferred only while it is off the pole. When the
+host job belongs to the workflow that was the last required finisher in the most recent
+recorded cohort, form (a) costs its full step duration on `T_admission`, exactly as a new job
+would, so the declaration of form (b) applies unchanged: the change must state the host
+workflow's measured headroom and the step's measured p50, per metric section 1.2. Without both
+numbers the admission is **not made**.
+
+`#535` is the case that required this clause. It was a compliant form-(a) change under R1 as
+originally written, because form (a) carried no headroom condition, and it still moved the wall
+by 78-132 s. The escape from a breached ceiling (section 6) is meant to be growth *off* the
+critical chain; form (a) is off the chain only when its host job is not the pole, and nothing
+in R1 tested that.
+
+Enforcement locus: review only, covered by the annotation already on R1 in the protection-grade
+line above. A machine rule would need a second configuration recording which workflow is the
+current pole, which R2 forbids as a second configuration and R5 would make a second authority.
+The residual failure mode is a declared headroom number that is wrong, which is visible in the
+same PR body that carries it: never a silent pass, and never a merge-verdict input (section 5.3).
 
 A form-(b) admission requires a recorded measurement of the added job's p50 and of the target
 workflow's headroom, per metric §1.2 (`n≥5` to decide). Without both numbers the admission is
@@ -191,6 +221,7 @@ against an absolute number is forbidden, because the three quantities in circula
 | observation | meaning | what it does | what it does not do |
 |---|---|---|---|
 | `T_admission` p50 > 600 s | the ceiling is breached | blocks **form-(b)** admission of new verification until a measured reduction lands | does not fail a merge; does not demote a verification to nightly |
+| a step is added to a required job that is the pole | the wall grows by the step's own duration | requires a declared headroom and step p50 (R1(a)); blocks form-(a) admission onto the pole while the ceiling is breached | does not fail a merge; does not move the step to an off-chain venue by itself |
 | a required workflow is the last finisher | this workflow defines the wall | moves the wall only by shortening it | does not authorize skipping its checks |
 | a verifier has no recorded measurement | unknown, not zero | blocks form-(b) admission | is not read as "fits in slack" |
 
@@ -217,6 +248,7 @@ capability can keep growing off the critical chain immediately.
 |---|---|
 | `T_admission` p50 639 s / p90 694.8 s / max 718 s; `T_verify` = 94 % | `docs/evidence/ci_admission_measurement_2026-11-24.md` |
 | `readiness-verdict` last finisher 4/5; `publication-integrity` never last | same |
+| step inside the pole: 78-132 s step, 285 s -> 373-433 s wall; pole 45/47 admission-gate -> 4/4 opslice | `docs/evidence/merge_queue_build_serialization_2026-11-27.md` section 10 |
 | `wall` mean 513 s, floor 85 % of wall, ceiling 0 s in 2/10 | `data/ci_optimization/admission_latency_2026-11-24/slack_reconciliation.md` |
 | provisioning = 84 % of `runnerSeconds`; `install_extract` 899.5/1076.6 s | `data/ci_optimization/ci_provisioning_decomposition_2026-11-20/summary.json` |
 | lane rebalance rejected; ~110 s fixed per lane; 2–4 s max gain | `data/ci_optimization/vs_ci_01_lane_rebalance_decision_2026-11-22.json` |
