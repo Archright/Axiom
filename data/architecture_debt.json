@@ -2594,12 +2594,12 @@
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",
-      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:0ed3c910932e9dd3f731414a3420fc7e7edbdfdfbc760782b9c8c6c9934f23e3",
+      "canonicalSyntaxHash": "sha256:v2:nim-pnode-canonical-v2:b89a6668e9c7c7141114a9eaedfeb6fad44da4fcfb5a3f09754fce044c8026dc",
       "count": 18,
       "file": "src/gate/nimtry/nimtry_cli.nim",
       "firstSeen": "",
       "lastSeen": "",
-      "rawContentHash": "sha256:d0ff231db9741eb4ee0e265e80fff9ea02717c2d232ba008714e5327ac6e3a62"
+      "rawContentHash": "sha256:fad9e47d19bf7af22cea0ca69c5de9d837759230536316a2b57cdb338e0029ce"
     },
     {
       "canonicalHashAlgorithm": "nim-pnode-canonical-v2",

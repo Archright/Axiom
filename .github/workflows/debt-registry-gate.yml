@@ -26,9 +26,15 @@ jobs:
           # (`bin/check_nim_theater`), and `make bin/debt_integrity_gate` +
           # `bin/debt_integrity_gate` (bidirectional debt registry↔code
           # binding, VS-2). The gate is compiled -d:release so the reduction
-          # ratchet cannot downgrade to WARN, and runs without bin/nimtry,
-          # so its nimtry active-violation metric reports "unmeasured" here
-          # while marker binding is enforced unconditionally.
+          # ratchet cannot downgrade to WARN.
+          #
+          # This job DOES run bin/nimtry. `make bin/debt_integrity_gate` carries
+          # `nimtry-measure` as an order-only prerequisite (Makefile:333-335),
+          # and that target runs `nimtry-baseline-check` and then
+          # `bin/nimtry src/` (built -d:release, Makefile:242-243) to write
+          # data/nimtry_live_count.json. That sidecar is the gate's Active
+          # Violations input; when it is absent the gate exits 1 (DEBT#563), so
+          # "unmeasured" is a failure here, never a silent pass.
           # Makefile:14-22 compiles these with
           # --skipParentCfg --skipProjCfg and none invokes lean/lake.
           # ~/.elan is the only path this scope drops and it dominates the

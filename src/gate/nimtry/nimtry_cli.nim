@@ -381,6 +381,19 @@ proc runNimtryInProcess*(args: seq[string]): NimtryResult {.raises: [], axiomEff
     saveCachedFacts(path, facts, policyHash, binaryHash)
     cacheMisses += 1
 
+  # Zero-yield guard (#474): an empty collection is not a clean tree. Absent
+  # evidence is already fatal one level up (DEBT#563); empty evidence must not
+  # be able to write `total_violations: 0`, and must not be able to derive an
+  # empty policy lock or baseline from a scan that read nothing.
+  if sourceFiles.len == 0 or allModuleFacts.len == 0:
+    try:
+      logError("nimtry_cli", "[nimtry] FAILED - zero-yield scan: " &
+        $sourceFiles.len & " source files collected, " & $allModuleFacts.len &
+        " module facts extracted. An empty scan is not a clean tree (#474)")
+    except IOError: # axiom:best-effort(logging failure must not block gate result)
+      discard
+    return NimtryResult(status: nsFail, message: "zero-yield scan", exitCode: 1)
+
   if updateLock:
     ## Ground Truth mode: skip policy validation, derive directly from codebase
     let lockContent = generatePolicyLock(allModuleFacts, loadArchitecturePolicy().policy)
@@ -513,11 +526,28 @@ proc runNimtryInProcess*(args: seq[string]): NimtryResult {.raises: [], axiomEff
   # ── Ratchet Protocol (FALLBACK: v1 baselines only) ──
   # Activates only when v2 fingerprint baseline is unavailable.
   let baseline = loadBaseline(baselinePath)
+  if baseline.isNone:
+    # #462: a missing baseline is not "no ratchet". The limits below would
+    # otherwise be seeded from the observed counts (limit = total), making every
+    # comparison `x > x` and every verdict a green exit 0 - the DEBT#563 defect
+    # class (missing evidence read as a valid empty set) one level up from the
+    # sidecar. Governed consumers already refuse to invoke this binary in that
+    # state (Makefile `nimtry-baseline-check`, tools/debt_engine.nim); the
+    # producer now agrees with them instead of disagreeing.
+    try:
+      logError("nimtry_cli", "[nimtry] UNMEASURED - baseline unavailable (" &
+        baselinePath & " is absent or carries no v1 limits); refusing to report" &
+        " a clean tree (#462)")
+    except IOError: # axiom:best-effort(logging failure must not block gate result)
+      discard
+    return NimtryResult(status: nsFail,
+      message: "baseline unavailable (UNMEASURED)", exitCode: 1)
+  let base = baseline.get
   let total = violations.len
   let errorCount = violations.filterIt(it.severity == "error").len
   let warningCount = total - errorCount
-  let limit = if baseline.isSome: baseline.get.totalViolations else: total
-  let errorLimit = if baseline.isSome: baseline.get.errorCount else: errorCount
+  let limit = base.totalViolations
+  let errorLimit = base.errorCount
 
   if errorCount > errorLimit:
     try:
